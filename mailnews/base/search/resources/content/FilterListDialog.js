@@ -69,8 +69,10 @@ function onOk()
 function onServerClick(event)
 {
     var item = event.target;
-    setServer(item.id);
-    updateButtons();
+
+    // don't check this in.
+    dump("setServer(\"" + item.id + "\");\n");
+    setTimeout("setServer(\"" + item.id + "\");", 0);
 }
 
 // roots the tree at the specified server
@@ -78,6 +80,22 @@ function setServer(uri)
 {
     var tree = document.getElementById("filterTree");
     tree.setAttribute("ref", uri);
+    updateButtons();
+}
+
+function onToggleEnabled(event)
+{
+    var item = event.target;
+    while (item && item.localName != "treeitem") {
+        lastItem = item;
+        item = item.parentNode;
+    }
+    
+    var filterResource = rdf.GetResource(item.id);
+    filter = filterResource.GetDelegate("filter",
+                                        Components.interfaces.nsIMsgFilter);
+    filter.enabled = !filter.enabled;
+    refreshFilterList();
 }
 
 // sets up the menulist and the tree

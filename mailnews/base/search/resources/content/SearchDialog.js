@@ -22,3 +22,4 @@ function searchOnLoad() {
     initializeSearchWidgets();
     setSearchScope(0);
 }
+

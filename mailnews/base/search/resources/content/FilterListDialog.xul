@@ -63,7 +63,10 @@ Rights Reserved.
                    Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
                   <treerow >
                     <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                    <treecell allowevents="true" class="enabledcol image" onclick="toggleEnabled(event);"/>
+                    <treecell allowevents="true"
+                              class="enabledcol treecell-image"
+                              value="rdf:http://home.netscape.com/NC-rdf#Enabled"
+                              onclick="onToggleEnabled(event);"/>
                   </treerow>
             </treeitem>
             </treechildren>
