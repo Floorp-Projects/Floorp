@@ -18,7 +18,7 @@
 !endif
 
 ## Include support for MOZ_LITE/MOZ_MEDIUM
-include <$(DEPTH)/config/liteness.mak>
+#include <$(DEPTH)/config/liteness.mak>
 
 RCFLAGS=$(RCFLAGS) $(MOZ_LITENESS_FLAGS)
 
@@ -98,6 +98,7 @@ CONFIG_OBJ_INC=1
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).cpp
 <<KEEP
+
 
 {.\_jmc\}.cpp{.\$(OBJDIR)\}.obj:
     @$(CC) @<<$(CFGFILE)

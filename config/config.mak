@@ -96,7 +96,7 @@ LCFLAGS=$(LCFLAGS) -DSMOOTH_PROGRESS
 
 
 ## Include support for MOZ_LITE/MOZ_MEDIUM
-include <$(DEPTH)/config/liteness.mak>
+#include <$(DEPTH)/config/liteness.mak>
 
 !if "$(MOZ_BITS)" == "16"
 
