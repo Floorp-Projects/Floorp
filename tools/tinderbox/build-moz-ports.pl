@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.35 $';
+$Version = '$Revision: 1.36 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -209,6 +209,7 @@ sub SetupEnv {
 		$NSPRArgs .= 'BUILD_OPT=1 NS_USE_NATIVE=1';
 	    } elsif ( $ENV{'HOST'} eq 'nebiros' || $ENV{'HOST'} eq 'liekkio' ) {
 		$ENV{'PATH'} = '/tools/ns/workshop-5.0/bin:' . $ENV{'PATH'};
+	        $ConfigureArgs .= '--disable-tests';
 		$ConfigureEnvArgs = 'CC=cc CXX=CC';
 		$comptmp = `cc -V 2>&1 | head -1`;
 		chop($comptmp);
@@ -274,7 +275,7 @@ sub FinalizeLDLibPath {
 		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop/lib:/usrlocal/lib:' . $ENV{'LD_LIBRARY_PATH'};
 	    }
 	    if ( $ENV{'HOST'} eq 'nebiros' || $ENV{'HOST'} eq 'liekkio' ) {
-		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop-5.0/lib:' . $ENV{'LD_LIBRARY_PATH'};
+		$ENV{"LD_LIBRARY_PATH"} = '/tools/ns/workshop-5.0/lib:/opt/usr/local/lib:' . $BaseDir . '/' . $DirName . '/mozilla/' . $BuildObjName . '/dist/bin:' . $NSPRDir . '/lib:/usr/lib/png';
 	    }
 	}
     }
@@ -679,7 +680,12 @@ sub CVSTime {
     $mon++; # month is 0 based.
 
     if ( $UseTimeStamp ) {
-	$BuildStart = `date '+%m/%d/%Y %H:%M'`;
+	if ( $OS eq 'SunOS' && $OSVerMajor eq '4' ) {
+	    # SunOS4's date command doesn't support %Y
+	    $BuildStart = `date '+%m/%d/%y %H:%M' | sed 's|/:|/200|'`;
+	} else {
+	    $BuildStart = `date '+%m/%d/%Y %H:%M'`;
+	}
 	chop($BuildStart);
 	$CVSCO .= " -D '$BuildStart'";
     }
