@@ -92,6 +92,8 @@ private:
   void GenericShellNotify(DWORD aMessage);
   void SetToolTipStringOnIconData(const PRUnichar * aToolTipString);
   void DestroyBiffIcon();
+  void RevertToNonUnicodeShellAPI();
+
   PRUint32 GetToolTipSize(); // available space for the tooltip string
   nsresult ShowAlertMessage(const PRUnichar * aAlertText, const char * aFolderURI);
   nsresult GetFirstFolderWithNewMail(char ** aFolderURI);

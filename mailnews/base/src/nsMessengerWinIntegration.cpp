@@ -722,9 +722,35 @@ void nsMessengerWinIntegration::SetToolTipStringOnIconData(const PRUnichar * aTo
 void nsMessengerWinIntegration::GenericShellNotify(DWORD aMessage)
 {
   if (mUseWideCharBiffIcon)
-    mShellNotifyWideChar( aMessage, &mWideBiffIconData );
+  {
+    BOOL res = mShellNotifyWideChar( aMessage, &mWideBiffIconData );
+    if (!res)
+      RevertToNonUnicodeShellAPI(); // oops we don't really implement the unicode shell apis...fall back.
   else
+      return; 
+  }
+  
     ::Shell_NotifyIcon( aMessage, &mAsciiBiffIconData ); 
+}
+
+// some flavors of windows define ShellNotifyW but when you actually try to use it,
+// they return an error. In this case, we'll have a routine which converts us over to the 
+// default ASCII version. 
+void nsMessengerWinIntegration::RevertToNonUnicodeShellAPI()
+{
+  mUseWideCharBiffIcon = PR_FALSE;
+  if (mWideBiffIconData.hIcon)  // release any windows handles
+	  DestroyIcon(mWideBiffIconData.hIcon);
+
+  // now initialize the ascii shell notify struct
+  InitializeBiffStatusIcon();
+
+  // now we need to copy over any left over tool tip strings
+  if (mWideBiffIconData.szTip)
+  {
+    const PRUnichar * oldTooltipString = mWideBiffIconData.szTip;
+    SetToolTipStringOnIconData(oldTooltipString);
+  }
 }
 
 NS_IMETHODIMP
