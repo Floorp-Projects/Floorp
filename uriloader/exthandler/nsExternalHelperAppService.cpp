@@ -26,6 +26,7 @@
 #include "nsIFile.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
+#include "nsMemory.h"
 #include "nsIStreamListener.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsExternalHelperAppService)
@@ -82,10 +83,14 @@ NS_INTERFACE_MAP_END_THREADSAFE
 nsExternalAppHandler::nsExternalAppHandler()
 {
   NS_INIT_ISUPPORTS();
+
+  mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
 {
+  if (mDataBuffer)
+    nsMemory::Free(mDataBuffer);
 }
 
 NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
@@ -118,10 +123,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   nsCOMPtr<nsIFileChannel> mFileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_PROGID);
   if (mFileChannel)
   {
-    mFileChannel->Init(mTempFile, nsIFileChannel::NS_WRONLY || nsIFileChannel::NS_TRUNCATE, 0);
-    nsCOMPtr<nsIOutputStream> outStream;
-    mFileChannel->OpenOutputStream(getter_AddRefs(outStream));
-    mbufferOutStream = do_QueryInterface(outStream);
+    mFileChannel->Init(mTempFile, -1, 0);
+    mFileChannel->OpenOutputStream(getter_AddRefs(mOutStream));
   }
 
   return NS_OK;
@@ -132,8 +135,20 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIChannel * aChannel, nsISu
 {
   // read the data out of the stream and write it to the temp file.
   PRUint32 numBytesRead = 0;
-  if (mbufferOutStream)
-    mbufferOutStream->WriteFrom(inStr, count, &numBytesRead);
+  if (mOutStream && mDataBuffer && count > 0)
+  {
+    PRUint32 numBytesRead = 0; 
+    PRUint32 numBytesWritten = 0;
+    while (count > 0) // while we still have bytes to copy...
+    {
+      inStr->Read(mDataBuffer, PR_MIN(count, DATA_BUFFER_SIZE - 1), &numBytesRead);
+      if (count >= numBytesRead)
+        count -= numBytesRead; // subtract off the number of bytes we just read
+      else
+        count = 0;
+      mOutStream->Write(mDataBuffer, numBytesRead, &numBytesWritten);
+    }
+  }
   return NS_OK;
 }
 
@@ -146,8 +161,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
   // on the mac...right now the mac implementation ignores all arguments passed in.
 
   // close the stream...
-  if (mbufferOutStream)
-    mbufferOutStream->Close();
+  if (mOutStream)
+    mOutStream->Close();
 
   return NS_OK;
 }
