@@ -990,13 +990,15 @@ PRBool CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode, nsICSSDeclaration* a
 // Common combinations of variants
 #define VARIANT_KL   (VARIANT_KEYWORD | VARIANT_LENGTH)
 #define VARIANT_KLP  (VARIANT_KEYWORD | VARIANT_LENGTH | VARIANT_PERCENT)
-#define VARIANT_KLPN (VARIANT_KLP | VARIANT_NUMBER)
 #define VARIANT_KP   (VARIANT_KEYWORD | VARIANT_PERCENT)
-#define VARIANT_AHLP (VARIANT_AUTO | VARIANT_INHERIT | VARIANT_LP)
-#define VARIANT_AHI  (VARIANT_AUTO | VARIANT_INHERIT | VARIANT_INTEGER)
-#define VARIANT_AHK  (VARIANT_AUTO | VARIANT_INHERIT | VARIANT_KEYWORD)
-#define VARIANT_HLP  (VARIANT_INHERIT | VARIANT_LP)
+#define VARIANT_AH   (VARIANT_AUTO | VARIANT_INHERIT)
+#define VARIANT_AHLP (VARIANT_AH | VARIANT_LP)
+#define VARIANT_AHI  (VARIANT_AH | VARIANT_INTEGER)
+#define VARIANT_AHK  (VARIANT_AH | VARIANT_KEYWORD)
+#define VARIANT_AHL  (VARIANT_AH | VARIANT_LENGTH)
 #define VARIANT_HL   (VARIANT_INHERIT | VARIANT_LENGTH)
+#define VARIANT_HLP  (VARIANT_HL | VARIANT_PERCENT)
+#define VARIANT_HLPN (VARIANT_HLP | VARIANT_NUMBER)
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
 #define VARIANT_LP   (VARIANT_LENGTH | VARIANT_PERCENT)
 #define VARIANT_CK   (VARIANT_COLOR | VARIANT_KEYWORD)
@@ -1103,11 +1105,6 @@ static PRInt32 kFontStyleKTable[] = {
 static PRInt32 kFontVariantKTable[] = {
   KEYWORD_NORMAL, NS_STYLE_FONT_VARIANT_NORMAL,
   KEYWORD_SMALL_CAPS, NS_STYLE_FONT_VARIANT_SMALL_CAPS,
-  -1
-};
-
-static PRInt32 kLineHeightKTable[] = {
-  KEYWORD_NORMAL, NS_STYLE_LINE_HEIGHT_NORMAL,
   -1
 };
 
@@ -1568,8 +1565,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_LEFT:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHLP, nsnull);
   case PROP_LINE_HEIGHT:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLPN,
-                        kLineHeightKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_HLPN | VARIANT_NORMAL,
+                        nsnull);
   case PROP_LIST_STYLE:
     return ParseListStyle(aErrorCode, aDeclaration);
   case PROP_LIST_STYLE_IMAGE:
@@ -1916,6 +1913,11 @@ PRBool CSSParserImpl::ParseClip(PRInt32* aErrorCode, nsICSSDeclaration* aDeclara
       aDeclaration->AddValue(kClipNames[i], nsCSSValue(eCSSUnit_Auto));
     }
     return PR_TRUE;
+  } else if (ident->EqualsIgnoreCase("inherit")) {
+    for (int i = 0; i < 4; i++) {
+      aDeclaration->AddValue(kClipNames[i], nsCSSValue(eCSSUnit_Inherit));
+    }
+    return PR_TRUE;
   } else if (ident->EqualsIgnoreCase("rect")) {
     if (!ExpectSymbol(aErrorCode, '(', PR_TRUE)) {
       return PR_FALSE;
@@ -1975,7 +1977,7 @@ PRBool CSSParserImpl::ParseFont(PRInt32* aErrorCode, nsICSSDeclaration* aDeclara
   // Get optional "/" line-height
   if (ExpectSymbol(aErrorCode, '/', PR_TRUE)) {
     if (!ParseVariant(aErrorCode, aDeclaration, "line-height",
-                      VARIANT_KLPN, kLineHeightKTable)) {
+                      VARIANT_HLPN | VARIANT_NORMAL, nsnull)) {
       return PR_FALSE;
     }
   }
