@@ -61,6 +61,7 @@
 #include "nsIChannel.h"
 #include "nsIInputStreamChannel.h"
 #include "nsITransport.h"
+#include "nsIStreamTransportService.h"
 #include "nsIHttpChannel.h"
 #include "nsIDownloader.h"
 #include "nsIResumableEntityID.h"
@@ -750,6 +751,52 @@ NS_NewLocalFileOutputStream(nsIOutputStream** aResult,
     *aResult = out;
     NS_ADDREF(*aResult);
     return NS_OK;
+}
+
+inline nsresult
+NS_BackgroundInputStream(nsIInputStream** aResult,
+                         nsIInputStream* aStream,
+                         PRUint32 aSegmentSize = 0,
+                         PRUint32 aSegmentCount = 0)
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsIStreamTransportService> sts =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsITransport> inTransport;
+    rv = sts->CreateInputTransport(aStream, -1, -1, PR_TRUE,
+                                   getter_AddRefs(inTransport));
+    if (NS_FAILED(rv))
+        return rv;
+
+    return inTransport->OpenInputStream(nsITransport::OPEN_BLOCKING,
+                                        aSegmentSize, aSegmentCount, aResult);
+}
+
+inline nsresult
+NS_BackgroundOutputStream(nsIOutputStream** aResult,
+                          nsIOutputStream* aStream,
+                          PRUint32 aSegmentSize = 0,
+                          PRUint32 aSegmentCount = 0)
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsIStreamTransportService> sts =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsITransport> inTransport;
+    rv = sts->CreateOutputTransport(aStream, -1, -1, PR_TRUE,
+                                    getter_AddRefs(inTransport));
+    if (NS_FAILED(rv))
+        return rv;
+
+    return inTransport->OpenOutputStream(nsITransport::OPEN_BLOCKING,
+                                         aSegmentSize, aSegmentCount, aResult);
 }
 
 inline nsresult
