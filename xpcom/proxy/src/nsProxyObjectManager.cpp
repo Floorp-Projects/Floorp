@@ -27,8 +27,6 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
-#include "plevent.h"
-
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 
@@ -136,7 +134,7 @@ nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInst
 
 
 NS_IMETHODIMP 
-nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, ProxyType proxyType, void** aProxyObject)
+nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, ProxyType proxyType, void** aProxyObject)
 {
     
     *aProxyObject = nsnull;
@@ -153,7 +151,7 @@ nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue, REFNSIID aIID, nsI
 
 
 NS_IMETHODIMP 
-nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue, 
+nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, 
                                      const nsCID &aClass, 
                                      nsISupports *aDelegate, 
                                      const nsIID &aIID, 

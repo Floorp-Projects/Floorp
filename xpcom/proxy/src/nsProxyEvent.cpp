@@ -52,8 +52,6 @@ nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_IMPL_ISUPPORTS(nsProxyObject, kISupportsIID)
 
-static NS_DEFINE_IID(kIEventQIID, NS_IEVENTQUEUE_IID);
-
 nsProxyObject::nsProxyObject()
 {
     NS_INIT_REFCNT();
@@ -66,7 +64,7 @@ nsProxyObject::nsProxyObject()
 }
 
 
-nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject)
+nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -74,29 +72,23 @@ nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, nsISu
     mRealObjectOwned = PR_FALSE;
     mRealObject      = realObject;
     mProxyType       = proxyType;
+    mDestQueue       = destQueue;
 
-    mRealObject->AddRef();
-
-    nsresult rv = nsComponentManager::CreateInstance(NS_EVENTQUEUE_PROGID,
-                                                     nsnull,
-                                                     kIEventQIID,
-                                                     (void **)&mDestQueue);
-
-    if (NS_SUCCEEDED(rv))
-    {
-        mDestQueue->InitFromPLQueue(destQueue);
-    }
-
+    NS_ADDREF(mRealObject);
+    NS_ADDREF(mDestQueue);
 }
 
 
-nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
+nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
     mRealObjectOwned = PR_TRUE;
     mProxyType       = proxyType;
+    mDestQueue       = destQueue;
+
+    NS_ADDREF(mDestQueue);
     
     nsresult rv = nsComponentManager::CreateInstance(aClass, 
                                                      aDelegate,
@@ -108,17 +100,6 @@ nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, const
         mRealObjectOwned = PR_FALSE;
         mRealObject      = nsnull;
     }
-
-    rv = nsComponentManager::CreateInstance(NS_EVENTQUEUE_PROGID,
-                                            nsnull,
-                                            kIEventQIID,
-                                            (void **)&mDestQueue);
-
-    if (NS_SUCCEEDED(rv))
-    {
-        mDestQueue->InitFromPLQueue(destQueue);
-    }
-
 }
 
 nsProxyObject::~nsProxyObject()
@@ -130,7 +111,7 @@ nsProxyObject::~nsProxyObject()
     if(mRealObject != nsnull)
     {
         if (!mRealObjectOwned)
-            mRealObject->Release();
+            NS_RELEASE(mRealObject);
         else
             NS_RELEASE(mRealObject);
     }
@@ -210,7 +191,7 @@ void DestroyHandler(PLEvent *self)
     }
 
     // decrement once since we increased it during the Post()
-    proxyObject->Release();
+    NS_RELEASE(proxyObject);
 }
 
 void* EventHandler(PLEvent *self) 

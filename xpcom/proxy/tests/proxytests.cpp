@@ -66,7 +66,6 @@ class nsITestXPCFoo : public nsISupports {
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
-
 /***************************************************************************/
 /* Setup nsIAllocator                                                      */
 /***************************************************************************/
@@ -218,7 +217,7 @@ NS_IMETHODIMP nsTestXPCFoo2::Test2()
 
 typedef struct _ArgsStruct
 {
-    PLEventQueue* queue;
+    nsIEventQueue* queue;
     PRInt32           threadNumber;
 }ArgsStruct;
 
@@ -359,30 +358,55 @@ static void PR_CALLBACK ProxyTest( void *arg )
     TestCase_TwoClassesOneInterface(arg);
    // TestCase_2(arg);
 
+    NS_RELEASE( ((ArgsStruct*) arg)->queue);
     free((void*) arg);
 }
 
 
-PLEventQueue *gEventQueue = nsnull;
+#include "nsIEventQueueService.h"
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+
+nsIEventQueue *gEventQueue = nsnull;
 
 static void PR_CALLBACK EventLoop( void *arg )
 {
+    nsresult rv;
     printf("Creating EventQueue...\n");
 
-    gEventQueue = PL_CreateEventQueue("mainqueue", PR_GetCurrentThread());
+    nsIEventQueue* eventQ;
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+      if (NS_FAILED(rv))
+          rv = eventQService->CreateThreadEventQueue();
+      if (NS_FAILED(rv))
+          return;
+      else
+          rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+    }
+    if (NS_FAILED(rv)) return;
+
+    rv = eventQ->QueryInterface(nsIEventQueue::GetIID(), (void**)&gEventQueue);
+    if (NS_FAILED(rv)) return;
      
     printf("Looping for events.\n");
+
+    PLEvent* event = nsnull;
     
     while ( PR_SUCCESS == PR_Sleep( PR_MillisecondsToInterval(1)) )
     {
-		PL_HandleEvent(PL_GetEvent(gEventQueue));
+        rv = gEventQueue->GetEvent(&event);
+        if (NS_FAILED(rv))
+            return;
+		gEventQueue->HandleEvent(event);
     }
 
-    PL_ProcessPendingEvents(gEventQueue);
+    gEventQueue->ProcessPendingEvents(); 
 
     printf("Closing down Event Queue.\n");
-    PL_DestroyEventQueue( gEventQueue );
-
+    delete gEventQueue;
+    gEventQueue = nsnull;
 
     printf("End looping for events.\n\n");
 }
@@ -412,7 +436,7 @@ main(int argc, char **argv)
     
     PR_Sleep(PR_MillisecondsToInterval(1000));
 
-    PR_ASSERT(gEventQueue); // BAD BAD BAD.  EVENT THREAD DID NOT CREATE QUEUE.  This may be a timing issue, set the 
+    NS_ASSERTION(gEventQueue, "no main event queue"); // BAD BAD BAD.  EVENT THREAD DID NOT CREATE QUEUE.  This may be a timing issue, set the 
                             // sleep about longer, and try again.
 
     printf("Spawn Threads:\n");
@@ -422,6 +446,7 @@ main(int argc, char **argv)
         ArgsStruct *args = (ArgsStruct *) malloc (sizeof(ArgsStruct));
         
         args->queue = gEventQueue;
+        NS_ADDREF(args->queue);
         args->threadNumber = spawn;
 
         threads[spawn]  =   PR_CreateThread(PR_USER_THREAD,
