@@ -895,7 +895,9 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 	{
 		// Convert to a date literal
 		PRInt64		dateVal;
+#ifdef	BUG_NEEDS_FIXING
 		LL_MUL32(dateVal, aTime, PR_USEC_PER_SEC);	// convert from seconds to microseconds (PRTime)
+#endif
 
 		nsIRDFDate	*dateLiteral;
 		if (NS_FAILED(rv = gRDF->GetDateLiteral(dateVal, &dateLiteral)))
