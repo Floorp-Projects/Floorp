@@ -57,12 +57,14 @@ public:
                                          PRBool aIsRoot,
                                          nsIBoxLayout* aLayoutManager);
 
-  NS_IMETHODIMP Init(nsIPresContext*  aPresContext,
-                     nsIContent*      aContent,
-                     nsIFrame*        aParent,
-                     nsStyleContext*  aContext,
-                     nsIFrame*        aPrevInFlow);
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsStyleContext*  aContext,
+                  nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+ 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, // Overridden to capture events
                               nsFramePaintLayer aWhichLayer,

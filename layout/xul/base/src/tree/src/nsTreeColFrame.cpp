@@ -118,6 +118,19 @@ nsTreeColFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP                                                                   
+nsTreeColFrame::Destroy(nsIPresContext* aPresContext)                          
+{
+  EnsureTree();
+  if (mTree) {
+    nsCOMPtr<nsITreeColumns> cols;
+    mTree->GetColumns(getter_AddRefs(cols));
+    if (cols)
+      cols->InvalidateColumns();
+  }
+  return nsBoxFrame::Destroy(aPresContext);
+}
+
 NS_IMETHODIMP
 nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      const nsPoint& aPoint, 
