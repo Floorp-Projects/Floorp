@@ -650,6 +650,7 @@ var panel_observer = {
     //debug ("observer: assert");
     // "refresh" is asserted by select menu and by customize.js.
     if (prop == RDF.GetResource(NC + "refresh")) {
+      sidebarObj.panels.initialized = false; // reset so panels are put in view
       sidebarObj.panels.refresh();
     } else if (prop == RDF.GetResource(NC + "refresh_panel")) {
       var panel_id = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -1003,6 +1004,7 @@ function SidebarReload() {
 }
  
 function SidebarRebuild() {
+  sidebarObj.panels.initialized = false; // reset so panels are brought in view
   var panels = document.getElementById("sidebar-panels");
   panels.builder.rebuild();
   sidebar_open_default_panel(100, 0);
@@ -1112,12 +1114,15 @@ function SidebarShowHide() {
 
   if (sidebar_is_hidden()) {
     debug("Showing the sidebar");
-    sidebar_box.removeAttribute('hidden'); // older profiles may have this set
+
+    // for older profiles: 
+    sidebar_box.setAttribute('hidden', 'false'); 
+    sidebar_panels_splitter_box.setAttribute('hidden', 'false'); 
+
     sidebar_box.removeAttribute('collapsed');
     if (sidebar_splitter.getAttribute('state') == 'collapsed')
       sidebar_splitter.removeAttribute('state');
     title_box.removeAttribute('hidden');
-    sidebar_panels_splitter_box.removeAttribute('hidden'); // for older profiles
     sidebar_panels_splitter_box.removeAttribute('collapsed');
     sidebar_splitter.removeAttribute('hidden');
     if (sidebar_box.firstChild != sidebar_panels_splitter) {
