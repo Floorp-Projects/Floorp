@@ -152,9 +152,11 @@ protected:
   nsresult ReturnInParagraph(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
   nsresult ReturnInListItem(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection);
-  nsresult RemovePartOfBlock(nsIDOMNode *curBlockQuote, 
-                             nsIDOMNode *firstBQChild, 
-                             nsIDOMNode *lastBQChild);
+  nsresult RemovePartOfBlock(nsIDOMNode *aBlock, 
+                             nsIDOMNode *aStartChild, 
+                             nsIDOMNode *aEndChild,
+                             nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
+                             nsCOMPtr<nsIDOMNode> *aRightNode = 0);
   nsresult ConvertListType(nsIDOMNode *aList, nsCOMPtr<nsIDOMNode> *outList, const nsAReadableString& aListType, const nsAReadableString& aItemType);
   nsresult CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocument *aDoc);
   nsresult IsEmptyBlock(nsIDOMNode *aNode, 

@@ -376,19 +376,30 @@ PRBool
 nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
 {
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsMailCite");
-  if (IsBlockquote(node))
+  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
+  if (!elem) return PR_FALSE;
+  nsAutoString attrName (NS_LITERAL_STRING("type")); 
+  
+  // don't ask me why, but our html mailcites are id'd by "type=cite"...
+  nsAutoString attrVal;
+  nsresult res = elem->GetAttribute(attrName, attrVal);
+  attrVal.ToLowerCase();
+  if (NS_SUCCEEDED(res))
   {
-    nsCOMPtr<nsIDOMElement> bqElem = do_QueryInterface(node);
-    nsAutoString typeAttrName(NS_LITERAL_STRING("type"));
-    nsAutoString typeAttrVal;
-    nsresult res = bqElem->GetAttribute(typeAttrName, typeAttrVal);
-    typeAttrVal.ToLowerCase();
-    if (NS_SUCCEEDED(res))
-    {
-      if (typeAttrVal.EqualsWithConversion("cite", PR_TRUE, 4))
-        return PR_TRUE;
-    }
+    if (attrVal.Equals(NS_LITERAL_STRING("cite")))
+      return PR_TRUE;
   }
+
+  // ... but our plaintext mailcites by "_moz_quote=true".  go figure.
+  attrName.Assign(NS_LITERAL_STRING("_moz_quote"));
+  res = elem->GetAttribute(attrName, attrVal);
+  if (NS_SUCCEEDED(res))
+  {
+    attrVal.ToLowerCase();
+    if (attrVal.Equals(NS_LITERAL_STRING("true")))
+      return PR_TRUE;
+  }
+
   return PR_FALSE;
 }
 
@@ -412,6 +423,26 @@ nsHTMLEditUtils::IsMap(nsIDOMNode *node)
   return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("map"));
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// IsFormWidget: true if node is a form widget of some kind
+//                  
+PRBool 
+nsHTMLEditUtils::IsFormWidget(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsFormWidget");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag.Equals(NS_LITERAL_STRING("textarea")) || 
+      tag.Equals(NS_LITERAL_STRING("select")) ||
+      tag.Equals(NS_LITERAL_STRING("button")) ||
+      tag.Equals(NS_LITERAL_STRING("input")) )
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
 
 PRBool 
 nsHTMLEditUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset) 
