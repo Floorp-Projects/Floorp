@@ -73,6 +73,7 @@ EXPORTS		= \
 		nsMessageViewDataSource.h \
 		nsMsgAccountManagerDS.h \
 		nsMsgRDFDataSource.h \
+		nsMsgRDFUtils.h \
 		nsMsgBiffManager.h \
 		nsMsgNotificationManager.h \
 		nsCopyMessageStreamListener.h \
