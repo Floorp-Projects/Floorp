@@ -48,7 +48,21 @@ public:
 #endif
 
 private:
-  struct Node;
+  struct NodeArena;
+
+  struct Node {
+    void* mKey;
+    void* mValue;
+    Node* mLeft;   // left subtree
+    Node* mRight;  // right subtree
+
+    Node(void* aKey, void* aValue);
+    int IsLeaf() const;
+
+    // Overloaded placement operator for allocating from an arena
+    void* operator new(size_t aSize, NodeArena& aArena);
+  };
+
   struct NodeArena {
     PLArenaPool mPool;
     Node*       mFreeList;
@@ -60,16 +74,22 @@ private:
     void  FreeNode(void*);
     void  FreeArenaPool();
   };
+
   Node*       mRoot;  // root node of the tree
   NodeArena   mArena;
   PtrBits     mLevelZeroBit;
 
+  friend struct Node;       // needs access to struct NodeArena
+  friend struct NodeArena;  // needs access to struct Node
+
 private:
+  // Helper functions
   Node** SearchTree(void* aKey) const;
   Node** FindLeafNode(Node** aNode) const;
   void   DestroyNode(Node* aNode);
 
 #ifdef NS_DEBUG
+  // Diagnostic functions
   Node* DepthFirstSearch(Node* aNode, void* aKey) const;
   void  VerifyTree(Node* aNode, int aLevel = 0, PtrBits aLevelKeyBits = 0) const;
   void  GatherStatistics(Node* aNode,
