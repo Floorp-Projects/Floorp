@@ -479,6 +479,13 @@ public:
   NS_IMETHOD  GetWindow(nsIWidget*&) const = 0;
 
   /**
+   * Get the "type" of the frame. May return a NULL atom pointer
+   *
+   * @see nsLayoutAtoms
+   */
+  NS_IMETHOD  GetFrameType(nsIAtom*& aType) const = 0;
+  
+  /**
    * Is this frame a "containing block"?
    */
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const = 0;

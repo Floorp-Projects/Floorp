@@ -191,6 +191,7 @@ public:
   NS_IMETHOD  GetParentWithView(nsIFrame*& aParent) const;
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const;
   NS_IMETHOD  GetWindow(nsIWidget*&) const;
+  NS_IMETHOD  GetFrameType(nsIAtom*& aType) const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const;
   NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const;
