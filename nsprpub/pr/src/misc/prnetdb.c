@@ -245,19 +245,27 @@ static PRStatus CopyHostent(
 	memcpy(to->h_name, from->h_name, len);
 
 	/* Count the aliases, then allocate storage for the pointers */
-	for (na = 1, ap = from->h_aliases; *ap != 0; na++, ap++){;} /* nothing to execute */
+	if (!from->h_aliases) {
+		na = 1;
+	} else {
+		for (na = 1, ap = from->h_aliases; *ap != 0; na++, ap++){;} /* nothing to execute */
+	}
 	to->h_aliases = (char**)Alloc(
 	    na * sizeof(char*), &buf, &bufsize, sizeof(char**));
 	if (!to->h_aliases) return PR_FAILURE;
 
 	/* Copy the aliases, one at a time */
-	for (na = 0, ap = from->h_aliases; *ap != 0; na++, ap++) {
-		len = strlen(*ap) + 1;
-		to->h_aliases[na] = Alloc(len, &buf, &bufsize, 0);
-		if (!to->h_aliases[na]) return PR_FAILURE;
-		memcpy(to->h_aliases[na], *ap, len);
+	if (!from->h_aliases) {
+		to->h_aliases[0] = 0;
+	} else {
+		for (na = 0, ap = from->h_aliases; *ap != 0; na++, ap++) {
+			len = strlen(*ap) + 1;
+			to->h_aliases[na] = Alloc(len, &buf, &bufsize, 0);
+			if (!to->h_aliases[na]) return PR_FAILURE;
+			memcpy(to->h_aliases[na], *ap, len);
+		}
+		to->h_aliases[na] = 0;
 	}
-	to->h_aliases[na] = 0;
 
 	/* Count the addresses, then allocate storage for the pointers */
 	for (na = 1, ap = from->h_addr_list; *ap != 0; na++, ap++){;} /* nothing to execute */
