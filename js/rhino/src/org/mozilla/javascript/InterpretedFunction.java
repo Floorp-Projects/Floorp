@@ -79,11 +79,10 @@ class InterpretedFunction extends NativeFunction {
         itsData.itsScope = scope;
         itsData.itsThisObj = thisObj;
         itsData.itsInArgs = args;
-        return Interpreter.interpret(itsData);    
+        return Interpreter.interpret(itsData);
     }
-
+    
     InterpreterData itsData;
     Scriptable itsClosure;
-    InterpretedFunction itsOtherSelf;
 }
     
