@@ -847,6 +847,7 @@ JSString *nsDOMClassInfo::sOnpaint_id         = nsnull;
 JSString *nsDOMClassInfo::sOnresize_id        = nsnull;
 JSString *nsDOMClassInfo::sOnscroll_id        = nsnull;
 JSString *nsDOMClassInfo::sScrollIntoView_id  = nsnull;
+JSString *nsDOMClassInfo::sOpen_id            = nsnull;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
@@ -855,9 +856,11 @@ static inline JSObject *
 GetGlobalJSObject(JSContext *cx, JSObject *obj)
 {
   JSObject *tmp;
+
   while ((tmp = ::JS_GetParent(cx, obj))) {
     obj = tmp;
   }
+
   return obj;
 }
 
@@ -913,6 +916,7 @@ nsDOMClassInfo::DefineStaticJSStrings(JSContext *cx)
   sOnresize_id       = ::JS_InternString(cx, "onresize");
   sOnscroll_id       = ::JS_InternString(cx, "onscroll");
   sScrollIntoView_id = ::JS_InternString(cx, "scrollIntoView");
+  sOpen_id           = ::JS_InternString(cx, "open");
 
   return NS_OK;
 }
@@ -2266,12 +2270,7 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   }
 #endif
 
-  JSObject *global = obj;
-  JSObject *tmp;
-
-  while ((tmp = ::JS_GetParent(cx, global))) {
-    global = tmp;
-  }
+  JSObject *global = GetGlobalJSObject(cx, obj);
 
   jsval val;
   if (!::JS_GetProperty(cx, global, ci_data.mName, &val)) {
@@ -2386,8 +2385,13 @@ static inline const PRUnichar *
 JSValIDToString(JSContext *aJSContext, const jsval idval)
 {
   JSString *str = JS_ValueToString(aJSContext, idval);
-  if(!str)
+
+  if(!str) {
+    NS_ERROR("JS_ValueToString() returned null!");
+
     return nsnull;
+  }
+
   return NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(str));
 }
 
@@ -2563,6 +2567,7 @@ nsDOMClassInfo::ShutDown()
   sOnresize_id        = jsnullstring;
   sOnscroll_id        = jsnullstring;
   sScrollIntoView_id  = jsnullstring;
+  sOpen_id            = jsnullstring;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -2635,7 +2640,6 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
   } while (!fp_obj);
 
   if (fp_obj) {
-
     JSObject *global = GetGlobalJSObject(cx, fp_obj);
 
     JSObject *wrapper_obj = nsnull;
@@ -3536,7 +3540,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // A readonly "replaceable" property is being set, or a
         // readwrite "replaceable" property is being set w/o being
         // fully qualified. Define the property on obj with the value
-        // undefined to override the predefined property.
+        // undefined to override the predefined property. This is done
+        // for compatibility with other browsers.
 
         *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                          ::JS_GetStringLength(str),
@@ -4199,6 +4204,7 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 // HTMLDocument helper
 
+// static
 nsresult
 nsHTMLDocumentSH::ResolveImpl(nsIXPConnectWrappedNative *wrapper, jsval id,
                               nsISupports **result)
@@ -4218,6 +4224,45 @@ nsHTMLDocumentSH::ResolveImpl(nsIXPConnectWrappedNative *wrapper, jsval id,
                                ::JS_GetStringLength(str));
 
   return doc->ResolveName(name, nsnull, result);
+}
+
+// static
+JSBool JS_DLL_CALLBACK
+nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
+                               jsval *argv, jsval *rval)
+{
+  if (argc > 2) {
+    JSObject *global = GetGlobalJSObject(cx, obj);
+
+    // DOM0 quirk that makes document.open() call window.open() if
+    // called with 3 or more arguments.
+
+    return ::JS_CallFunctionName(cx, global, "open", argc, argv, rval);
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+
+  nsresult rv =
+    sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
+  NS_ENSURE_SUCCESS(rv, JS_FALSE);
+
+  nsCOMPtr<nsISupports> native;
+  rv = wrapper->GetNative(getter_AddRefs(native));
+  NS_ENSURE_SUCCESS(rv, JS_FALSE);
+
+  nsCOMPtr<nsIDOMNSHTMLDocument> doc(do_QueryInterface(native));
+  NS_ENSURE_TRUE(doc, JS_FALSE);
+
+  nsCOMPtr<nsIDOMDocument> retval;
+
+  rv = doc->Open(getter_AddRefs(retval));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  rv = WrapNative(cx, ::JS_GetGlobalObject(cx), retval,
+                  NS_GET_IID(nsIDOMDocument), rval);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to wrap native!");
+
+  return NS_SUCCEEDED(rv);
 }
 
 NS_IMETHODIMP
@@ -4241,6 +4286,16 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       *objp = obj;
 
       return ok ? NS_OK : NS_ERROR_FAILURE;
+    }
+
+    if (id == STRING_TO_JSVAL(sOpen_id)) {
+      JSFunction *fnc =
+        ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(sOpen_id),
+                            DocumentOpen, 0, JSPROP_ENUMERATE);
+
+      *objp = obj;
+
+      return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
     }
   }
 
