@@ -37,6 +37,8 @@ void nsXtWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data);
 
+void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data);
+
 #endif  // __nsXtEventHandler.h
 
 

@@ -23,93 +23,121 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
+#include <Xm/Text.h>
 
-void nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
+#define DBG 0
+
+
+//-------------------------------------------------------------------------
+void nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 {
-  if (nsnull != aInitData) {
-    nsTextWidgetInitData* data = (nsTextWidgetInitData *) aInitData;
-    mIsPassword = data->mIsPassword;
+  XmTextSetMaxLength(mWidget, (int)aChars);
+}
+
+//-------------------------------------------------------------------------
+PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) 
+{
+  char * str = XmTextGetString(mWidget);
+  aTextBuffer.SetLength(0);
+  aTextBuffer.Append(str);
+  PRUint32 len = (PRUint32)strlen(str);
+  XtFree(str);
+  return len;
+}
+
+//-------------------------------------------------------------------------
+PRUint32  nsTextHelper::SetText(const nsString& aText)
+{ 
+  if (!mIsReadOnly) {
+    NS_ALLOC_STR_BUF(buf, aText, 512);
+    XmTextSetString(mWidget, buf);
+    NS_FREE_STR_BUF(buf);
+    return(aText.Length());
+  }
+
+  return 0;
+}
+
+//-------------------------------------------------------------------------
+PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
+{ 
+  if (!mIsReadOnly) {
+    NS_ALLOC_STR_BUF(buf, aText, 512);
+    XmTextInsert(mWidget, aStartPosbuf);
+    NS_FREE_STR_BUF(buf);
+  }
+  return(0);
+}
+
+//-------------------------------------------------------------------------
+void  nsTextHelper::RemoveText()
+{
+  char blank[2];
+  blank[0] = 0;
+
+  if (!mIsReadOnly) {
+    XmTextSetString(mWidget, buf);
   }
 }
 
-void nsTextHelper::SetMaxTextLength(PRUint32 aChars)
-{
-  //::SendMessage(mWnd, EM_SETLIMITTEXT, (WPARAM) (INT)aChars, 0);
-}
-
-PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
-
-  /*int length = GetWindowTextLength(mWnd);
-  int bufLength = length + 1;
-  NS_ALLOC_CHAR_BUF(buf, 512, bufLength);
-  int charsCopied = GetWindowText(mWnd, buf, bufLength);
-  aTextBuffer.SetLength(0);
-  aTextBuffer.Append(buf);
-  NS_FREE_CHAR_BUF(buf);
-  */
-
-  return(0);
-}
-
-PRUint32  nsTextHelper::SetText(const nsString& aText)
-{ 
-/*
-  NS_ALLOC_STR_BUF(buf, aText, 512);
-  SetWindowText(mWnd, buf);
-  NS_FREE_STR_BUF(buf);
-  return(aText.Length());
-*/
-return 0;
-}
-
-PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
-{ 
-   // NOT IMPLEMENTED
-  return(0);
-}
-
-void  nsTextHelper::RemoveText()
-{
-  //SetWindowText(mWnd, "");
-}
-
+//-------------------------------------------------------------------------
 void  nsTextHelper::SetPassword(PRBool aIsPassword)
 {
   mIsPassword = aIsPassword;
 }
 
+//-------------------------------------------------------------------------
 PRBool  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag)
 {
   PRBool oldSetting = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
+  XmTextSetEditable(mWidget, aReadOnlyFlag);
   return(oldSetting);
 }
 
   
+//-------------------------------------------------------------------------
 void nsTextHelper::SelectAll()
 {
-  //::SendMessage(mWnd, EM_SETSEL, (WPARAM) 0, (LPARAM)-1);
+  nsString text;
+  PRUint32 numChars = GetText(text, 0);
+  SetSelection(0, numChars);
 }
 
 
+//-------------------------------------------------------------------------
 void  nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
-  //::SendMessage(mWnd, EM_SETSEL, (WPARAM) (INT)aStartSel, (INT) (LPDWORD)aEndSel); 
+  XmTextPosition left  = (XmTextPosition)aStartSel;
+  XmTextPosition right = (XmTextPosition)aEndSel;
+
+  Time time;
+
+  XmTextSetSelection(mWidget, left, right, time);
 }
 
 
+//-------------------------------------------------------------------------
 void  nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
-  //::SendMessage(mWnd, EM_GETSEL, (WPARAM) (LPDWORD)aStartSel, (LPARAM) (LPDWORD)aEndSel); 
+  XmTextPosition left;
+  XmTextPosition right;
+
+  XmTextGetSelectionPosition(mWidget, &left, &right);
+  *aStartSel = left;
+  *aEndSel   = right;
 }
 
+//-------------------------------------------------------------------------
 void  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
 {
+  XmTextSetInsertionPosition(mWidget, (XmTextPosition)aPosition);
 }
 
+//-------------------------------------------------------------------------
 PRUint32  nsTextHelper::GetCaretPosition()
 {
-  return(0);
+  return (PRUin32)XmTextGetInsertionPosition(mWidget);
 }
 
 //-------------------------------------------------------------------------
@@ -134,11 +162,6 @@ nsTextHelper::~nsTextHelper()
 }
 
 //-------------------------------------------------------------------------
-//
-// Clear window before paint
-//
-//-------------------------------------------------------------------------
-
 PRBool nsTextHelper::AutoErase()
 {
   return(PR_TRUE);
