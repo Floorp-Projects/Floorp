@@ -785,23 +785,36 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				else if (strcmp(pcmd, "VerifySet") == 0)
 				{
 					// VerifySet checks to see if the first parameter has any value
-					//   If (p1) then continue else show error dialog and return FALSE
 
-					char *p2 = strchr(parms, ',');
-
-					if (p2)
-						*p2++ = '\0';
-					else
-						p2 = "A message belongs here.";
-						
+					int i=0;
+					char *token[3];
+					token[i] = strtok(parms, ",");
+					while ((token[i] != NULL) && (i<2))
+					{
+						i++;
+						token[i]=strtok(NULL, ",");
+					}
+					
 					CString value = replaceVars(parms, NULL);
 
 					if (!value || value.IsEmpty())
 					{
 						CWnd myWnd;
-						myWnd.MessageBox(p2, "Error", MB_OK|MB_SYSTEMMODAL);
+						myWnd.MessageBox(token[1], "Error", MB_OK|MB_SYSTEMMODAL);
 						return FALSE;
 					}
+
+					// Check if the user agent string contains spaces
+					if (token[2])
+					{
+						if (value.Find(' ') != -1)
+						{
+							CWnd myWnd;
+							myWnd.MessageBox(token[2], "Error", MB_OK|MB_SYSTEMMODAL);
+							return FALSE;
+						}
+					}
+
 				}
 				else if (strcmp(pcmd, "CopyFile") == 0)
 				{
