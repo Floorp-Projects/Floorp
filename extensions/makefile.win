@@ -33,6 +33,7 @@ DIRS = wallet \
 !if !defined(DISABLE_XSLT)
 	transformiix \
 !endif 
+	universalchardet \
 	xml-rpc \
 	xmlextras \
 	$(NULL)
