@@ -212,9 +212,9 @@ js_InitScanner(JSContext *cx);
 extern JS_FRIEND_API(void)
 js_MapKeywords(void (*mapfun)(const char *));
 
-void
+extern JSBool
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
-		      const uintN errorNumber, ...);
+                            const uintN errorNumber, ...);
 
 /*
  * Look ahead one token and return its type.

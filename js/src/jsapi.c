@@ -2968,14 +2968,48 @@ JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
     va_end(ap);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API(JSBool)
 JS_ReportWarning(JSContext *cx, const char *format, ...)
 {
     va_list ap;
+    JSBool ok;
 
     va_start(ap, format);
-    js_ReportErrorVA(cx, JSREPORT_WARNING, format, ap);
+    ok = js_ReportErrorVA(cx, JSREPORT_WARNING, format, ap);
     va_end(ap);
+    return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ReportErrorFlagsAndNumber(JSContext *cx, uintN flags,
+                             JSErrorCallback errorCallback, void *userRef,
+                             const uintN errorNumber, ...)
+{
+    va_list ap;
+    JSBool ok;
+
+    CHECK_REQUEST(cx);
+    va_start(ap, errorNumber);
+    ok = js_ReportErrorNumberVA(cx, flags, errorCallback, userRef,
+                                errorNumber, JS_TRUE, ap);
+    va_end(ap);
+    return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ReportErrorFlagsAndNumberUC(JSContext *cx, uintN flags,
+                               JSErrorCallback errorCallback, void *userRef,
+                               const uintN errorNumber, ...)
+{
+    va_list ap;
+    JSBool ok;
+
+    CHECK_REQUEST(cx);
+    va_start(ap, errorNumber);
+    ok = js_ReportErrorNumberVA(cx, flags, errorCallback, userRef,
+                                errorNumber, JS_FALSE, ap);
+    va_end(ap);
+    return ok;
 }
 
 JS_PUBLIC_API(void)

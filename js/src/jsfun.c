@@ -340,6 +340,16 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 static JSBool
 Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    if (JS_HAS_STRICT_OPTION(cx)) {
+        if (!JS_ReportErrorFlagsAndNumber(cx,
+                                          JSREPORT_WARNING | JSREPORT_STRICT,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_DEPRECATED_USAGE,
+                                          js_CallClass.name)) {
+            return JS_FALSE;
+        }
+    }
+
     if (!cx->fp->constructing) {
 	obj = js_NewObject(cx, &js_CallClass, NULL, NULL);
 	if (!obj)
@@ -635,13 +645,25 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	return JS_TRUE;
 
     /* Find fun's top-most activation record. */
-    for (fp = cx->fp; fp && (fp->fun != fun || fp->flags); fp = fp->down)
+    for (fp = cx->fp; fp && (fp->fun != fun || fp->special); fp = fp->down)
 	continue;
 
     slot = (jsint)JSVAL_TO_INT(id);
     switch (slot) {
-#if JS_HAS_ARGS_OBJECT
       case CALL_ARGUMENTS:
+#if JS_HAS_ARGS_OBJECT
+        /* Warn if strict about f.arguments or similar qualified uses. */
+        if (JS_HAS_STRICT_OPTION(cx) &&
+            (!fp ||
+             !fp->pc ||
+             (js_CodeSpec[*fp->pc].format & JOF_MODEMASK) != JOF_NAME) &&
+            !JS_ReportErrorFlagsAndNumber(cx,
+                                          JSREPORT_WARNING | JSREPORT_STRICT,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_DEPRECATED_USAGE,
+                                          js_arguments_str)) {
+            return JS_FALSE;
+        }
 	if (fp && fp->fun) {
 	    JSObject *argsobj = js_GetArgsObject(cx, fp);
 	    if (!argsobj)
@@ -652,7 +674,6 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	}
 	break;
 #else  /* !JS_HAS_ARGS_OBJECT */
-      case CALL_ARGUMENTS:
 	*vp = OBJECT_TO_JSVAL(fp ? obj : NULL);
 	break;
 #endif /* !JS_HAS_ARGS_OBJECT */
@@ -703,15 +724,14 @@ fun_enumProperty(JSContext *cx, JSObject *obj)
     JSScope *scope;
     JSScopeProperty *sprop;
 
-    /* Because properties of function objects such as "length" are
-     * not defined in function_props to avoid interfering with
-     * unqualified lookups in local scopes (which pass through the
-     * function object as a stand-in for the call object), we
-     * must twiddle any of the special properties not to be enumer-
-     * ated in this callback, rather than simply predefining the
-     * properties without JSPROP_ENUMERATE.
+    /*
+     * Because properties of function objects such as "length" are not defined
+     * in function_props to avoid interfering with unqualified lookups in local
+     * scopes (which use the function object as a proxy for the call object),
+     * we must twiddle any of the special properties not to be enumerated in
+     * this callback, rather than simply predefining the properties without
+     * JSPROP_ENUMERATE.
      */
-
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
     for (sprop = scope->props; sprop; sprop = sprop->next) {
@@ -750,7 +770,7 @@ fun_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	if (!fp)
 	    goto read_only;
 	if (fp->fun == fun) {
-	    if (!fp->flags)
+	    if (!fp->special)
 		break;
 	} else {
 	    if (fp->script)
@@ -838,7 +858,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 	 * here in fun_resolve, but eagerly define the latter in JS_InitClass,
 	 * with the right attributes.
 	 */
-	if (!js_SetClassPrototype(cx, fun->object, proto, 0)) {
+	if (!js_SetClassPrototype(cx, obj, proto, 0)) {
 	    cx->newborn[GCX_OBJECT] = NULL;
 	    return JS_FALSE;
 	}
@@ -1468,10 +1488,13 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     if (JS_HAS_STRICT_OPTION(cx)) {
                         JS_ASSERT(SPROP_GETTER(sprop, obj) == js_GetArgument);
                         OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
-                                                    JSMSG_DUPLICATE_FORMAL,
-                                                    ATOM_BYTES(atom));
-                        goto bad_formal;
+                        if (!js_ReportCompileErrorNumber(cx, ts,
+                                                         JSREPORT_WARNING |
+                                                         JSREPORT_STRICT,
+                                                         JSMSG_DUPLICATE_FORMAL,
+                                                         ATOM_BYTES(atom))) {
+                            goto bad_formal;
+                        }
                     }
 
 		    /*

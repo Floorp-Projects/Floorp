@@ -546,6 +546,8 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
 
     /* Find the exception index associated with this error. */
     JS_ASSERT(reportp);
+    if (JSREPORT_IS_WARNING(reportp->flags))
+        return JS_FALSE;
     errorNumber = reportp->errorNumber;
     exn = errorToExceptionNum[errorNumber];
     JS_ASSERT(exn < JSEXN_LIMIT);

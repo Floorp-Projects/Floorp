@@ -400,7 +400,8 @@ JS_StringToVersion(const char *string);
  * JS options are orthogonal to version, and may be freely composed with one
  * another as well as with version.
  */
-#define JSOPTION_STRICT         JS_BIT(0)
+#define JSOPTION_STRICT         JS_BIT(0)       /* warn on dubious practice */
+#define JSOPTION_WERROR         JS_BIT(1)       /* convert warning to error */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
@@ -562,9 +563,6 @@ struct JSIdArray {
     jsint length;
     jsid  vector[1];    /* actually, length jsid words */
 };
-
-extern JS_PUBLIC_API(JSIdArray *)
-JS_NewIdArray(JSContext *cx, jsint length);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida);
@@ -1096,10 +1094,23 @@ JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
 		     void *userRef, const uintN errorNumber, ...);
 
 /*
- * As above, but report a warning instead (JSREPORT_IS_WARNING(report->flags)).
+ * As above, but report a warning instead (JSREPORT_IS_WARNING(report.flags)).
+ * Return true if there was no error trying to issue the warning, and if the
+ * warning was not converted into an error due to the JSOPTION_WERROR option
+ * being set, false otherwise.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(JSBool)
 JS_ReportWarning(JSContext *cx, const char *format, ...);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ReportErrorFlagsAndNumber(JSContext *cx, uintN flags,
+                             JSErrorCallback errorCallback, void *userRef,
+                             const uintN errorNumber, ...);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ReportErrorFlagsAndNumberUC(JSContext *cx, uintN flags,
+                               JSErrorCallback errorCallback, void *userRef,
+                               const uintN errorNumber, ...);
 
 /*
  * Complain when out of memory.
@@ -1121,12 +1132,12 @@ struct JSErrorReport {
 };
 
 /*
- * JSErrorReport flag values.
+ * JSErrorReport flag values.  These may be freely composed.
  */
-
-/* XXX need better classification system */
-#define JSREPORT_ERROR			0x0
-#define JSREPORT_WARNING		0x1 /* reported via JS_ReportWarning */
+#define JSREPORT_ERROR      0x0     /* pseudo-flag for default case */
+#define JSREPORT_WARNING    0x1     /* reported via JS_ReportWarning */
+#define JSREPORT_EXCEPTION  0x2     /* exception was thrown */
+#define JSREPORT_STRICT     0x4     /* error or warning due to strict option */
 
 /*
  * If JSREPORT_EXCEPTION is set, then a JavaScript-catchable exception
@@ -1135,10 +1146,9 @@ struct JSErrorReport {
  * JS_ExecuteScript returns failure, and signal or propagate the exception, as
  * appropriate.
  */
-#define JSREPORT_EXCEPTION		0x2
-
-#define JSREPORT_IS_WARNING(flags)	(flags & JSREPORT_WARNING)
-#define JSREPORT_IS_EXCEPTION(flags)	(flags & JSREPORT_EXCEPTION)
+#define JSREPORT_IS_WARNING(flags)      (((flags) & JSREPORT_WARNING) != 0)
+#define JSREPORT_IS_EXCEPTION(flags)    (((flags) & JSREPORT_EXCEPTION) != 0)
+#define JSREPORT_IS_STRICT(flags)       (((flags) & JSREPORT_STRICT) != 0)
 
 extern JS_PUBLIC_API(JSErrorReporter)
 JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);

@@ -236,12 +236,47 @@ js_ContextIterator(JSRuntime *rt, JSContext **iterp)
     return cx;
 }
 
-void
+static void
+ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
+{
+    /*
+     * Check the error report, and set a JavaScript-catchable exception
+     * if the error is defined to have an associated exception.  If an
+     * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
+     * on the error report, and exception-aware hosts should ignore it.
+     */
+    if (reportp && reportp->errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
+        reportp->flags |= JSREPORT_EXCEPTION;
+
+#if JS_HAS_ERROR_EXCEPTIONS
+    /*
+     * Call the error reporter only if an exception wasn't raised.
+     *
+     * If an exception was raised, then we call the debugErrorHook
+     * (if present) to give it a chance to see the error before it
+     * propagates out of scope.  This is needed for compatability
+     * with the old scheme.
+     */
+    if (!js_ErrorToException(cx, message, reportp)) {
+        js_ReportErrorAgain(cx, message, reportp);
+    } else if (cx->runtime->debugErrorHook && cx->errorReporter) {
+        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
+        /* test local in case debugErrorHook changed on another thread */
+        if (hook)
+            hook(cx, message, reportp, cx->runtime->debugErrorHookData);
+    }
+#else
+    js_ReportErrorAgain(cx, message, reportp);
+#endif
+}
+
+JSBool
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {
     JSStackFrame *fp;
     JSErrorReport report, *reportp;
     char *last;
+    JSBool warning;
 
     fp = cx->fp;
 
@@ -269,10 +304,17 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     }
     last = JS_vsmprintf(format, ap);
     if (!last)
-	return;
+	return JS_FALSE;
 
-    js_ReportErrorAgain(cx, last, reportp);
+    ReportError(cx, last, reportp);
     free(last);
+
+    warning = JSREPORT_IS_WARNING(reportp->flags);
+    if (warning && JS_HAS_WERROR_OPTION(cx)) {
+        reportp->flags &= ~JSREPORT_WARNING;
+        warning = JS_FALSE;
+    }
+    return warning;
 }
 
 /*
@@ -284,17 +326,23 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
  * is to be replaced by the Nth argument from the va_list. The complete
  * message is placed into reportp->ucmessage converted to a JSString.
  *
- * returns true/false if the expansion succeeds (can fail for memory errors)
+ * Returns true if the expansion succeeds (can fail if out of memory).
  */
 JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 			void *userRef, const uintN errorNumber,
 			char **messagep, JSErrorReport *reportp,
-                        JSBool charArgs, va_list ap)
+                        JSBool *warningp, JSBool charArgs, va_list ap)
 {
     const JSErrorFormatString *fmtData;
     int i;
     int argCount;
+
+    *warningp = JSREPORT_IS_WARNING(reportp->flags);
+    if (*warningp && JS_HAS_WERROR_OPTION(cx)) {
+        reportp->flags &= ~JSREPORT_WARNING;
+        *warningp = JS_FALSE;
+    }
 
     *messagep = NULL;
     if (callback) {
@@ -406,7 +454,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
     return JS_TRUE;
 }
 
-void
+JSBool
 js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
                        void *userRef, const uintN errorNumber,
                        JSBool charArgs, va_list ap)
@@ -414,6 +462,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     JSStackFrame *fp;
     JSErrorReport report;
     char *message;
+    JSBool warning;
 
     report.messageArgs = NULL;
     report.ucmessage = NULL;
@@ -444,7 +493,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     report.errorNumber = errorNumber;
 
     /*
-     * js_ExpandErrorArguments only sometimes fills these in, so we
+     * XXX js_ExpandErrorArguments only sometimes fills these in, so we
      * initialize them to clear garbage.
      */
     report.uclinebuf = NULL;
@@ -453,41 +502,11 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     report.messageArgs = NULL;
 
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
-				 &message, &report, charArgs, ap))
-	return;
-
-    /*
-     * Check the error report, and set a JavaScript-catchable exception
-     * if the error is defined to have an associated exception.  If an
-     * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
-     * on the error report, and exception-aware hosts should ignore it.
-
-     * We set the JSREPORT_EXCEPTION flag for the special case of
-     * user-thrown exeptions.
-     */
-    if (errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
-        report.flags |= JSREPORT_EXCEPTION;
-
-#if JS_HAS_ERROR_EXCEPTIONS
-    /*
-     * Only call the error reporter if an exception wasn't raised.
-     *
-     * If an exception was raised, then we call the debugErrorHook
-     * (if present) to give it a chance to see the error before it
-     * propigates out of scope. This is needed for compatability with
-     * the old scheme.
-     */
-    if (!js_ErrorToException(cx, message, &report))
-        js_ReportErrorAgain(cx, message, &report);
-    else if (cx->runtime->debugErrorHook && cx->errorReporter) {
-        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
-        /* test local in case debugErrorHook changed on another thread */
-        if (hook)
-            hook(cx, message, &report, cx->runtime->debugErrorHookData);
+				 &message, &report, &warning, charArgs, ap)) {
+	return JS_FALSE;
     }
-#else
-    js_ReportErrorAgain(cx, message, &report);
-#endif
+
+    ReportError(cx, message, &report);
 
     if (message)
 	JS_free(cx, message);
@@ -499,6 +518,8 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     }
     if (report.ucmessage)
         JS_free(cx, (void *)report.ucmessage);
+
+    return warning;
 }
 
 JS_FRIEND_API(void)
@@ -508,12 +529,14 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
 
     if (!message)
 	return;
+
     if (cx->lastMessage)
 	free(cx->lastMessage);
     cx->lastMessage = JS_strdup(cx, message);
     if (!cx->lastMessage)
 	return;
     onError = cx->errorReporter;
+
     /*
      * If debugErrorHook is present then we give it a chance to veto
      * sending the error on to the regular ErrorReporter.
@@ -542,7 +565,6 @@ void js_traceon(JSContext *cx)  { cx->tracefp = stderr; }
 void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
 #endif
 
-
 JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
 #if JS_HAS_DFLT_MSG_STRINGS
 #define MSG_DEF(name, number, count, exception, format) \
@@ -559,8 +581,6 @@ const JSErrorFormatString *
 js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 {
     if ((errorNumber > 0) && (errorNumber < JSErr_Limit))
-	    return &js_ErrorFormatString[errorNumber];
-	else
-	    return NULL;
+        return &js_ErrorFormatString[errorNumber];
+    return NULL;
 }
-

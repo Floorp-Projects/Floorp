@@ -236,6 +236,7 @@ struct JSContext {
 
 /* Slightly more readable macros, also to hide bitset implementation detail. */
 #define JS_HAS_STRICT_OPTION(cx)    ((cx)->options & JSOPTION_STRICT)
+#define JS_HAS_WERROR_OPTION(cx)    ((cx)->options & JSOPTION_WERROR)
 
 extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize);
@@ -262,9 +263,10 @@ extern const JSErrorFormatString *
 js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
 #ifdef va_start
-extern void
+extern JSBool
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
-extern void
+
+extern JSBool
 js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
 		       void *userRef, const uintN errorNumber,
                        JSBool charArgs, va_list ap);
@@ -273,11 +275,12 @@ extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 			void *userRef, const uintN errorNumber,
 			char **message, JSErrorReport *reportp,
-                        JSBool charArgs, va_list ap);
+                        JSBool *warningp, JSBool charArgs, va_list ap);
 #endif
 
 /*
  * Report an exception using a previously composed JSErrorReport.
+ * XXXbe remove from "friend" API
  */
 extern JS_FRIEND_API(void)
 js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *report);

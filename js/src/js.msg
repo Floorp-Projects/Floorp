@@ -190,7 +190,7 @@ MSG_DEF(JSMSG_TOO_MANY_DEFAULTS,      114, 0, JSEXN_SYNTAXERR, "more than one sw
 MSG_DEF(JSMSG_TOO_MANY_CASES,         115, 0, JSEXN_INTERNALERR, "too many switch cases")
 MSG_DEF(JSMSG_BAD_SWITCH,             116, 0, JSEXN_SYNTAXERR, "invalid switch statement")
 MSG_DEF(JSMSG_BAD_FOR_LEFTSIDE,       117, 0, JSEXN_SYNTAXERR, "invalid for/in left-hand side")
-MSG_DEF(JSMSG_CATCH_AFTER_GENERAL,    118, 0, JSEXN_NONE, "catch clause after general catch")
+MSG_DEF(JSMSG_CATCH_AFTER_GENERAL,    118, 0, JSEXN_SYNTAXERR, "catch after unconditional catch")
 MSG_DEF(JSMSG_CATCH_WITHOUT_TRY,      119, 0, JSEXN_SYNTAXERR, "catch without try")
 MSG_DEF(JSMSG_FINALLY_WITHOUT_TRY,    120, 0, JSEXN_SYNTAXERR, "finally without try")
 MSG_DEF(JSMSG_LABEL_NOT_FOUND,        121, 0, JSEXN_SYNTAXERR, "label not found")
@@ -230,3 +230,4 @@ MSG_DEF(JSMSG_BAD_APPLY_ARGS,         154, 0, JSEXN_TYPEERR, "second argument to
 MSG_DEF(JSMSG_REDECLARED_VAR,         155, 2, JSEXN_TYPEERR, "redeclaration of {0} {1}")
 MSG_DEF(JSMSG_UNDECLARED_VAR,         156, 1, JSEXN_TYPEERR, "assignment to undeclared variable {0}")
 MSG_DEF(JSMSG_ANON_NO_RETURN_VALUE,   157, 0, JSEXN_TYPEERR, "anonymous function does not always return a value")
+MSG_DEF(JSMSG_DEPRECATED_USAGE,       158, 1, JSEXN_REFERENCEERR, "deprecated {0} usage")

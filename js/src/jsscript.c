@@ -250,17 +250,21 @@ static JSBool
 XDRAtom1(JSXDRState *xdr, JSAtomListElement *ale)
 {
     jsval value;
+    jsatomid index;
 
     if (xdr->mode == JSXDR_ENCODE)
-	value = ATOM_KEY(ale->atom);
+	value = ATOM_KEY(ALE_ATOM(ale));
 
-    if (!JS_XDRUint32(xdr, &ale->index) ||
-	!JS_XDRValue(xdr, &value))
+    index = ALE_INDEX(ale);
+    if (!JS_XDRUint32(xdr, &index))
+	return JS_FALSE;
+    ALE_SET_INDEX(ale, index);
+
+    if (!JS_XDRValue(xdr, &value))
 	return JS_FALSE;
 
     if (xdr->mode == JSXDR_DECODE) {
-	ale->atom = js_AtomizeValue(xdr->cx, value, 0);
-	if (!ale->atom)
+	if (!ALE_SET_ATOM(ale, js_AtomizeValue(xdr->cx, value, 0)))
 	    return JS_FALSE;
     }
     return JS_TRUE;
@@ -297,7 +301,7 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 		JS_ARENA_RELEASE(&cx->tempPool, mark);
 		return JS_FALSE;
 	    }
-	    ale->next = al.list;
+	    ALE_SET_NEXT(ale, al.list);
 	    al.count++;
 	    al.list = ale;
 	}
@@ -310,8 +314,8 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 	JSAtomListElement ale;
 
 	for (i = 0; i < map->length; i++) {
-	    ale.atom = map->vector[i];
-	    ale.index = i;
+	    ALE_SET_ATOM(&ale, map->vector[i]);
+	    ALE_SET_INDEX(&ale, i);
 	    if (!XDRAtom1(xdr, &ale))
 		return JS_FALSE;
 	}

@@ -199,29 +199,37 @@ extern JS_PUBLIC_API(JSInt64) JSLL_Zero(void);
 #define JSLL_INIT(hi, lo) {JS_INT32(hi), JS_INT32(lo)}
 #endif
 
-#define JSLL_IS_ZERO(a)        (((a).hi == 0) && ((a).lo == 0))
-#define JSLL_EQ(a, b)        (((a).hi == (b).hi) && ((a).lo == (b).lo))
-#define JSLL_NE(a, b)        (((a).hi != (b).hi) || ((a).lo != (b).lo))
-#define JSLL_GE_ZERO(a)        (((a).hi >> 31) == 0)
+#define JSLL_IS_ZERO(a)         (((a).hi == 0) && ((a).lo == 0))
+#define JSLL_EQ(a, b)           (((a).hi == (b).hi) && ((a).lo == (b).lo))
+#define JSLL_NE(a, b)           (((a).hi != (b).hi) || ((a).lo != (b).lo))
+#define JSLL_GE_ZERO(a)         (((a).hi >> 31) == 0)
 
-#define JSLL_CMP(a, op, b)    (((JSInt32)(a).hi op (JSInt32)(b).hi) || \
-                 (((a).hi == (b).hi) && ((a).lo op (b).lo)))
-#define JSLL_UCMP(a, op, b)    (((a).hi op (b).hi) || \
-                 (((a).hi == (b).hi) && ((a).lo op (b).lo)))
+#ifdef DEBUG
+#define JSLL_CMP(a, op, b)      (JS_ASSERT((#op)[1] != '='), JSLL_REAL_CMP(a, op, b))
+#define JSLL_CMP(a, op, b)      (JS_ASSERT((#op)[1] != '='), JSLL_REAL_CMP(a, op, b))
+#else
+#define JSLL_CMP(a, op, b)      JSLL_REAL_CMP(a, op, b)
+#define JSLL_CMP(a, op, b)      JSLL_REAL_CMP(a, op, b)
+#endif
 
-#define JSLL_AND(r, a, b)        ((r).lo = (a).lo & (b).lo, \
-                 (r).hi = (a).hi & (b).hi)
+#define JSLL_REAL_CMP(a,op,b)   (((JSInt32)(a).hi op (JSInt32)(b).hi) || \
+                                 (((a).hi == (b).hi) && ((a).lo op (b).lo)))
+#define JSLL_REAL_UCMP(a,op,b)  (((a).hi op (b).hi) || \
+                                 (((a).hi == (b).hi) && ((a).lo op (b).lo)))
+
+#define JSLL_AND(r, a, b)       ((r).lo = (a).lo & (b).lo, \
+                                 (r).hi = (a).hi & (b).hi)
 #define JSLL_OR(r, a, b)        ((r).lo = (a).lo | (b).lo, \
-                 (r).hi = (a).hi | (b).hi)
-#define JSLL_XOR(r, a, b)        ((r).lo = (a).lo ^ (b).lo, \
-                 (r).hi = (a).hi ^ (b).hi)
-#define JSLL_OR2(r, a)        ((r).lo = (r).lo | (a).lo, \
-                 (r).hi = (r).hi | (a).hi)
-#define JSLL_NOT(r, a)        ((r).lo = ~(a).lo, \
-                 (r).hi = ~(a).hi)
+                                 (r).hi = (a).hi | (b).hi)
+#define JSLL_XOR(r, a, b)       ((r).lo = (a).lo ^ (b).lo, \
+                                 (r).hi = (a).hi ^ (b).hi)
+#define JSLL_OR2(r, a)          ((r).lo = (r).lo | (a).lo, \
+                                 (r).hi = (r).hi | (a).hi)
+#define JSLL_NOT(r, a)          ((r).lo = ~(a).lo, \
+                                 (r).hi = ~(a).hi)
 
-#define JSLL_NEG(r, a)        ((r).lo = -(JSInt32)(a).lo, \
-                 (r).hi = -(JSInt32)(a).hi - ((r).lo != 0))
+#define JSLL_NEG(r, a)          ((r).lo = -(JSInt32)(a).lo, \
+                                 (r).hi = -(JSInt32)(a).hi - ((r).lo != 0))
 #define JSLL_ADD(r, a, b) { \
     JSInt64 _a, _b; \
     _a = a; _b = b; \
