@@ -104,8 +104,7 @@ CPPSRCS = \
     npwin.cpp
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-CPPSRCS += \
-    XPConnect.cpp
+CPPSRCS += XPConnect.cpp
 endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
