@@ -109,6 +109,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		Rect wRect;
 		nsRectToMacRect(aRect, wRect);
 		wRect.top += ::LMGetMBarHeight() + kWindowTitleBarHeight;
+		wRect.bottom += ::LMGetMBarHeight() + kWindowTitleBarHeight;
 		mWindowPtr = ::NewCWindow(nil, &wRect, "\p-", false, 0, (GrafPort*)-1, true, (long)nsnull);
 		mWindowMadeHere = PR_TRUE;
 	}
