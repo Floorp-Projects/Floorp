@@ -120,6 +120,39 @@ foreach $key (keys %newMap) {
 
 ################################################################################
 
+# Print a value of bytes out in a reasonable
+# KB, MB, or GB form.  Copied from build-seamonkey-util.pl, sorry.  -mcafee
+sub PrintSize($) {
+
+    # print a number with 3 significant figures
+    sub PrintNum($) {
+        my ($num) = @_;
+        my $rv;
+        if ($num < 1) {
+            $rv = sprintf "%.3f", ($num);
+        } elsif ($num < 10) {
+            $rv = sprintf "%.2f", ($num);
+        } elsif ($num < 100) {
+            $rv = sprintf "%.1f", ($num);
+        } else {
+            $rv = sprintf "%d", ($num);
+        }
+    }
+
+    my ($size) = @_;
+    my $rv;
+    if ($size > 1000000000) {
+        $rv = PrintNum($size / 1000000000.0) . "G";
+    } elsif ($size > 1000000) {
+        $rv = PrintNum($size / 1000000.0) . "M";
+    } elsif ($size > 1000) {
+        $rv = PrintNum($size / 1000.0) . "K";
+    } else {
+        $rv = PrintNum($size);
+    }
+}
+
+
 print "Bloat/Leak Delta Report\n";
 print "--------------------------------------------------------------------------------------\n";
 print "Current file:  $NEWFILE\n";
@@ -129,6 +162,12 @@ printf "%-40s %10s %10.2f%% %10s %10.2f%%\n",
        ("TOTAL",
         $newMap{"TOTAL"}{leaked}, $newMap{"TOTAL"}{leakPercent},
         $newMap{"TOTAL"}{bloat}, $newMap{"TOTAL"}{bloatPercent});
+
+my $leakstr  = PrintSize($newMap{"TOTAL"}{leaked}) . "\n";
+my $bloatstr = PrintSize($newMap{"TOTAL"}{bloat}) . "\n";
+
+print "TinderboxPrint:Lk:$leakstr\n";
+print "TinderboxPrint:Bl:$bloatstr\n";
 
 ################################################################################
 
