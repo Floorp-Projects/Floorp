@@ -104,6 +104,7 @@ static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
 #endif
 
 //#define NOISY
+const nscoord kSuggestedNotSet = -1;
 
 
 /************************************** MODULE NOTES ***********************************
@@ -829,7 +830,43 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
-  nsresult rv = Inherited::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+  nsresult rv;
+  nsHTMLReflowState suggestedReflowState(aReflowState);
+  if ((kSuggestedNotSet != mSuggestedWidth) || 
+      (kSuggestedNotSet != mSuggestedHeight)) {
+      // Honor the suggested width and/or height.
+    if (kSuggestedNotSet != mSuggestedWidth) {
+      suggestedReflowState.mComputedWidth = mSuggestedWidth;
+      aMetrics.width = mSuggestedWidth;
+    }
+
+    if (kSuggestedNotSet != mSuggestedHeight) {
+      suggestedReflowState.mComputedHeight = mSuggestedHeight;
+      aMetrics.height = mSuggestedHeight;
+    }
+    rv = NS_OK;
+    if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+      nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    }
+    // XXX PostCreateWidget is misnamed for GFX widgets
+    if (!mDidInit) {
+      PostCreateWidget(&aPresContext, aMetrics.width, aMetrics.height);
+      mDidInit = PR_TRUE;
+    }
+  
+    aMetrics.ascent = aMetrics.height;
+    aMetrics.descent = 0;
+
+    if (nsnull != aMetrics.maxElementSize) {
+      //XXX aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
+    }
+    aStatus = NS_FRAME_COMPLETE;
+  } else {
+    rv = Inherited::Reflow(aPresContext, aMetrics, suggestedReflowState, aStatus);
+  }
+
+    
+
 #ifdef NOISY
   printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
            aMetrics.width, aMetrics.height);
@@ -878,7 +915,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       mDummyInitialized = PR_TRUE;
     }
     nsHTMLReflowMetrics metrics = aMetrics;
-    nsHTMLReflowState reflowState = aReflowState;
+    nsHTMLReflowState reflowState = suggestedReflowState;
     nsReflowStatus status = aStatus;
     nsresult dummyResult = mDummyFrame->Reflow(aPresContext, metrics, reflowState, status);
     NS_ASSERTION((NS_SUCCEEDED(dummyResult)), "dummy frame reflow failed.");
