@@ -76,7 +76,11 @@ class nsITimer;
 class nsIMemory;
 
 class NS_COM nsRecyclingAllocator {
+#ifdef XP_OS2
+ public:
+#else
  protected:
+#endif
     struct Block {
       PRUint32 bytes;
     };
