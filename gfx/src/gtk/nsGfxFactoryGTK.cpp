@@ -70,6 +70,7 @@
 #include "nsFontMetricsUtils.h"
 #include "nsPrintSession.h"
 #include "gfxImageFrame.h"
+#include "x11shared/nsFT2FontCatalog.h"
 
 // objects that just require generic constructors
 
@@ -89,6 +90,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFT2FontCatalog)
 
 // our custom constructors
 
@@ -284,6 +286,10 @@ static const nsModuleComponentInfo components[] =
     NS_PRINTSESSION_CID,
     "@mozilla.org/gfx/printsession;1",
     nsPrintSessionConstructor },
+  { "TrueType Font Catalog Service",
+    NS_FONTCATALOGSERVICE_CID,
+    "@mozilla.org/gfx/xfontcatalogservice;1",
+    nsFT2FontCatalogConstructor },
 #ifdef NATIVE_THEME_SUPPORT
    { "Native Theme Renderer",
     NS_THEMERENDERER_CID,

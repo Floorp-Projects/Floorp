@@ -1,0 +1,118 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Christopher Blizzard
+ * <blizzard@mozilla.org>.  Portions created by the Initial Developer
+ * are Copyright (C) 2002 the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Pete Zha <pete.zha@sun.com>
+ *   Brian Stell <bstell@ix.netcom.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsISupportsArray.idl"
+
+[noscript, uuid(70406f93-5b53-49a0-b5a7-ebf533bfe59b)]
+interface nsIFontCatalogEntry : nsISupports
+{
+  const short FONT_CATALOG_TRUETYPE = 1;
+
+  readonly attribute unsigned short fontCatalogType;
+};
+
+[noscript, uuid(11f3efad-316e-4982-b9cf-9c304b0d5237)]
+interface nsITrueTypeFontCatalogEntry : nsIFontCatalogEntry
+{
+  readonly attribute ACString        fileName;
+  readonly attribute ACString        familyName;
+  readonly attribute ACString        styleName;
+  readonly attribute ACString        vendorID;
+  readonly attribute short           faceIndex;
+  readonly attribute short           numFaces;
+  readonly attribute short           numEmbeddedBitmaps;
+  readonly attribute long            numGlyphs;
+  readonly attribute long            numUsableGlyphs;
+  readonly attribute unsigned short  weight;
+  readonly attribute unsigned short  width;
+  readonly attribute unsigned long   flags;
+  readonly attribute long long       faceFlags;
+  readonly attribute long long       styleFlags;
+  readonly attribute unsigned long   codePageRange1;
+  readonly attribute unsigned long   codePageRange2;
+  readonly attribute long long       fileModTime;
+
+  void getCCMap(out unsigned long size,
+                [retval, array, size_is(size)] out unsigned short ccMaps);
+
+  void getEmbeddedBitmapHeights(out unsigned long size,
+                [retval, array, size_is(size)] out long heights);
+};
+
+[noscript, uuid(a3057187-c40f-4ffa-9160-2b16482053b1)]
+interface nsIFontCatalogService : nsISupports
+{
+  nsISupportsArray getFontCatalogEntries(in ACString familyName,
+                                         in ACString language,
+                                         in unsigned short weight,
+                                         in unsigned short width,
+                                         in unsigned short slant,
+                                         in unsigned short spacing);
+
+  // Definition for weight
+  const unsigned short kFCWeightLight    = 300;
+  const unsigned short kFCWeightBook     = 400;
+  const unsigned short kFCWeightMedium   = 400;
+  const unsigned short kFCWeightRegular  = 400;
+  const unsigned short kFCWeightDemi     = 600;
+  const unsigned short kFCWeightDemibold = 600;
+  const unsigned short kFCWeightBold     = 700;
+  const unsigned short kFCWeighBlack     = 900;
+
+  // Definition for width
+  const unsigned short kFCWidthNarrow        = 3;
+  const unsigned short kFCWidthSemicondensed = 4;
+  const unsigned short kFCWidthBlock         = 5;
+  const unsigned short kFCWidthMedium        = 5;
+  const unsigned short kFCWidthNormal        = 5;
+  const unsigned short kFCWidthBold          = 7;
+  const unsigned short kFCWidthWide          = 7;
+  const unsigned short kFCWidthDoubleWide    = 9;
+
+  // Definition for slant
+  const unsigned short kFCSlantRoman          = 1;
+  const unsigned short kFCSlantItalic         = 2;
+  const unsigned short kFCSlantOblique        = 3;
+  const unsigned short kFCSlantReverseItalic  = 4;
+  const unsigned short kFCSlantReverseOblique = 5;
+
+  // Definition for spacing
+  const unsigned short kFCSpacingMonospace    = 1;
+  const unsigned short kFCSpacingProportional = 2;
+};
