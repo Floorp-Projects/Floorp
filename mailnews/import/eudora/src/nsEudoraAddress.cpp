@@ -705,7 +705,7 @@ void nsEudoraAddress::ConvertToUnicode( const char *pStr, nsString& uniStr)
 		m_pService->SystemStringToUnicode( pStr, uniStr);
 	}
 	else
-		uniStr.Assign( pStr);
+		uniStr.AssignWithConversion( pStr);
 }
 
 void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, nsIAddrDatabase *pDb)

@@ -304,7 +304,7 @@ nsresult nsEudoraMac::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *pA
 
 nsresult nsEudoraMac::FoundMailbox( nsIFileSpec *mailFile, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName = pName;
+	nsString								displayName; displayName.AssignWithConversion(pName);
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
 
@@ -345,7 +345,7 @@ nsresult nsEudoraMac::FoundMailbox( nsIFileSpec *mailFile, const char *pName, ns
 
 nsresult nsEudoraMac::FoundMailFolder( nsIFileSpec *mailFolder, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName = pName;
+	nsString								displayName; displayName.AssignWithConversion(pName);
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
 
@@ -601,7 +601,7 @@ PRBool nsEudoraMac::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **local
 		pStrs[i] = new nsCString;
 	}
 	
-	nsString accName = "Eudora Settings";
+	nsString accName; accName.AssignWithConversion("Eudora Settings");
 	nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_ACCOUNTNAME, accName);
 	
 	// This is a little overkill but we're not sure yet how multiple accounts
@@ -1140,7 +1140,7 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 			rv = spec->IsFile( &isFile);
 			rv = spec->GetLeafName( &pName);
 			if (pName)	{
-				displayName = pName;
+				displayName.AssignWithConversion(pName);
 				nsCRT::free( pName);
 			}
 			if (NS_SUCCEEDED( rv) && pName && isFile) {

@@ -92,9 +92,9 @@ PRUnichar *nsEudoraStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle
 			return( ptrv);
 	}
 
-	nsString resultString( "[StringID ");
-	resultString.Append(stringID, 10);
-	resultString += "?]";
+	nsString resultString; resultString.AssignWithConversion( "[StringID ");
+	resultString.AppendInt(stringID, 10);
+	resultString.AppendWithConversion("?]");
 
 	return( resultString.ToNewUnicode());
 }
