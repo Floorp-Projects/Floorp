@@ -62,7 +62,9 @@
         </treechildren>
       </template>
     
-      <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
+      <treecolgroup>
+        <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
+      </treecolgroup>
     
       <treehead>
         <treerow>
@@ -72,6 +74,8 @@
                     onclick="return doSort('NameColumn', null);" />
         </treerow>
       </treehead>
+
+      <treechildren flex="1"/>
     </tree>
     <box orient="vertical">
   		<spring flex="1"/>
