@@ -59,6 +59,7 @@ protected:
 
 protected:
    nsBrowserWindow*  mBrowserWindow;
+   PRInt32           mProgressStatusFlags;
 };
 
 #endif /* nsWebBrowserChrome_h__ */
