@@ -35,6 +35,7 @@ public:
     NS_IMETHOD GetScope(PRThreadScope *result);
     NS_IMETHOD GetType(PRThreadType *result);
     NS_IMETHOD GetState(PRThreadState *result);
+    NS_IMETHOD GetPRThread(PRThread* *result);
 
     // nsThread methods:
     nsThread();
@@ -46,7 +47,13 @@ public:
                   PRThreadPriority priority,
                   PRThreadScope scope,
                   PRThreadState state);
+    nsresult RegisterThreadSelf();
+    void SetPRThread(PRThread* thread) { mThread = thread; }
+
     static void Main(void* arg);
+    static void Exit(void* arg);
+
+    static PRUintn kIThreadSelf;
 
 protected:
     PRThread*           mThread;
@@ -62,6 +69,8 @@ public:
 
     // nsIThreadPool methods:
     NS_IMETHOD DispatchRequest(nsIRunnable* runnable);
+    NS_IMETHOD Join();
+    NS_IMETHOD Interrupt();
 
     // nsThreadPool methods:
     nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads);
@@ -72,11 +81,12 @@ public:
                   PRThreadPriority priority,
                   PRThreadScope scope,
                   PRThreadState state);
-    nsIRunnable* Dequeue();
+    nsIRunnable* GetRequest();
     
 protected:
     nsISupportsArray*   mThreads;
     nsISupportsArray*   mRequests;
+    PRMonitor*          mRequestMonitor;
     PRUint32            mMinThreads;
     PRUint32            mMaxThreads;
 };
