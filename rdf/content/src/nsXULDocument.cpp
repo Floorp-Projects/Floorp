@@ -2319,9 +2319,12 @@ XULDocumentImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Capturing stage
-  if (NS_EVENT_FLAG_BUBBLE != aFlags) {
-    // XXX Check back with nsGenericDocument.cpp later to find out if this
-    // has been implemented.
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && nsnull != mScriptContextOwner) {
+    nsIScriptGlobalObject* global;
+    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&global)) {
+      global->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+      NS_RELEASE(global);
+    }
   }
   
   //Local handling stage
