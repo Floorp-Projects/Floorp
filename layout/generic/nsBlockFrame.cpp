@@ -5740,17 +5740,26 @@ nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       }
       if (mFloaters.NotEmpty()) {
 
-        rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
+        rv = GetFrameForPointUsing(aPresContext, aPoint,
+                                   nsLayoutAtoms::floaterList,
+                                   NS_FRAME_PAINT_LAYER_FOREGROUND,
+                                   PR_FALSE, aFrame);
         if (NS_OK == rv) {
           return NS_OK;
         }
 
-        rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, NS_FRAME_PAINT_LAYER_FLOATERS, PR_FALSE, aFrame);
+        rv = GetFrameForPointUsing(aPresContext, aPoint,
+                                   nsLayoutAtoms::floaterList,
+                                   NS_FRAME_PAINT_LAYER_FLOATERS,
+                                   PR_FALSE, aFrame);
         if (NS_OK == rv) {
           return NS_OK;
         }
 
-        return GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, NS_FRAME_PAINT_LAYER_BACKGROUND, PR_FALSE, aFrame);
+        return GetFrameForPointUsing(aPresContext, aPoint,
+                                     nsLayoutAtoms::floaterList,
+                                     NS_FRAME_PAINT_LAYER_BACKGROUND,
+                                     PR_FALSE, aFrame);
 
       } else {
         return NS_ERROR_FAILURE;
@@ -5759,7 +5768,9 @@ nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
     case NS_FRAME_PAINT_LAYER_BACKGROUND:
       // we're a block, so PR_TRUE for consider self
-      return GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_BACKGROUND, PR_TRUE, aFrame);
+      return GetFrameForPointUsing(aPresContext, aPoint, nsnull,
+                                   NS_FRAME_PAINT_LAYER_BACKGROUND,
+                                   PR_TRUE, aFrame);
       break;
   }
   // we shouldn't get here
