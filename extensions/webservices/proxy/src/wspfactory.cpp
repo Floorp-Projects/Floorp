@@ -77,7 +77,7 @@ WSPAsyncProxyCreator::~WSPAsyncProxyCreator()
 
 NS_IMPL_ISUPPORTS2(WSPAsyncProxyCreator,
                    nsIWSDLLoadListener,
-                   nsIWebServiceErrorHandler);
+                   nsIWebServiceErrorHandler)
 
 nsresult
 WSPAsyncProxyCreator::Run(const nsAString& wsdlURL, const nsAString& portname,
