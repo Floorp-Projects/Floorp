@@ -1392,9 +1392,8 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
    * If the entry is not found in the list, then it must have been cancelled
    * via Stop(...). So ignore just it... 
    */
-  nsresult res;
-  res = m_LoadingDocsList->RemoveElement(aBindInfo);
-  if (NS_SUCCEEDED(res)) {
+  rv = m_LoadingDocsList->RemoveElement(aBindInfo);
+  if (PR_FALSE != rv) {
     nsILoadAttribs* loadAttributes;
     nsURLLoadType loadType = nsURLLoadNormal;
 

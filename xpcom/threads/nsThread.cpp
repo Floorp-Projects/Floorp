@@ -280,7 +280,7 @@ nsThreadPool::Init(PRUint32 stackSize,
         NS_RELEASE(runnable);
         if (NS_FAILED(rv)) goto exit;
 
-        rv = mThreads->AppendElement(thread);
+        rv = mThreads->AppendElement(thread) ? NS_OK : NS_ERROR_FAILURE;
         NS_RELEASE(thread);
         if (NS_FAILED(rv)) goto exit;
     }
@@ -318,7 +318,8 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
         rv = NS_ERROR_FAILURE;
     }
     else {
-        rv = mRequests->AppendElement(runnable);
+        // XXX for now AppendElement returns a PRBool
+        rv = ((PRBool) mRequests->AppendElement(runnable)) ? NS_OK : NS_ERROR_FAILURE;
         if (NS_SUCCEEDED(rv))
             PR_Notify(mRequestMonitor);
     }
