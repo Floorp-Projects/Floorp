@@ -6,6 +6,14 @@
 # Tue Oct 16 16:48:36 PDT 2001
 # <mcafee@netscape.com>
 
+use strict;
+
+# For --option1, --option2, ...
+use Getopt::Long;
+Getopt::Long::Configure("bundling_override");
+Getopt::Long::Configure("auto_abbrev");
+
+
 sub PrintUsage {
   die <<END_USAGE
   Prints out directories needed for a given list of components.
@@ -121,14 +129,15 @@ sub dir_for_required_component {
 }
 
 my $list_only_mode = 0;
+my $opt_list_only;
 {
   PrintUsage() if $#ARGV == -1;
 
-  # Test for --list-only argument, and shift args if found.
-  # Hack, should use Getopt::Long for proper arg processing.
-  if($ARGV[0] eq "--list-only") {
-	$list_only_mode = 1;
-	shift @ARGV;
+  PrintUsage() if !GetOptions('list-only' => \$opt_list_only);
+
+  # Pick up arguments, if any.
+  if($opt_list_only) {
+  	$list_only_mode = 1;
   }
 
   my $arg;
