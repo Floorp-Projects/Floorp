@@ -367,6 +367,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
     nsFrameState state;
     kid->GetFrameState(state);
     if (NS_FRAME_OUTSIDE_CHILDREN & state) {
+      kid->GetRect(kidRect);
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
       if (NS_OK == kid->GetFrameForPoint(tmp, aFrame)) {
         return NS_OK;
