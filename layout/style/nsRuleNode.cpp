@@ -364,8 +364,6 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
     nsILookAndFeel* look = nsnull;
     if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
       nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID)aValue.GetIntValue();
-      if (colorID == nsILookAndFeel::eColor_theme)
-        return PR_FALSE;
       if (NS_SUCCEEDED(look->GetColor(colorID, aResult))) {
         result = PR_TRUE;
       }
@@ -807,8 +805,7 @@ CheckFontCallback(const nsCSSStruct& aData)
         (family == NS_STYLE_FONT_BUTTON) ||
         (family == NS_STYLE_FONT_PULL_DOWN_MENU) ||
         (family == NS_STYLE_FONT_LIST) ||
-        (family == NS_STYLE_FONT_FIELD) ||
-        (family == NS_STYLE_FONT_THEME))
+        (family == NS_STYLE_FONT_FIELD))
       // Mixed rather than Reset in case another sub-property has
       // an explicit 'inherit'.   XXXperf Could check them.
       return nsRuleNode::eRuleFullMixed;
@@ -1875,7 +1872,6 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       case NS_STYLE_FONT_PULL_DOWN_MENU:sysID = eSystemFont_PullDownMenu; break;
       case NS_STYLE_FONT_LIST:          sysID = eSystemFont_List;         break;
       case NS_STYLE_FONT_FIELD:         sysID = eSystemFont_Field;        break;
-      case NS_STYLE_FONT_THEME:         sysID = eSystemFont_Theme;        break;
     }
 
     nsCOMPtr<nsIDeviceContext> dc;
@@ -3090,18 +3086,8 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
     parentColor = color;
 
   // color: color, string, inherit
-  if (!SetColor(colorData.mColor, parentColor->mColor, mPresContext, color->mColor, 
-                inherited) && colorData.mColor.GetUnit() == eCSSUnit_Integer) {
-    // See if this is a special theme color.  Theme colors must always be resolved
-    // dynamically at paint time.
-    nsCOMPtr<nsILookAndFeel> look;
-    mPresContext->GetLookAndFeel(getter_AddRefs(look));
-    if (look) {
-      nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID)colorData.mColor.GetIntValue();
-      if (colorID == nsILookAndFeel::eColor_theme)
-        color->mColorFlags = NS_COLORFLAGS_THEME;
-    }
-  }
+  SetColor(colorData.mColor, parentColor->mColor, mPresContext, color->mColor, 
+           inherited);
 
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the

@@ -315,7 +315,6 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword_window, nsILookAndFeel::eColor_window,
   eCSSKeyword_windowframe, nsILookAndFeel::eColor_windowframe,
   eCSSKeyword_windowtext, nsILookAndFeel::eColor_windowtext,
-  eCSSKeyword_theme, nsILookAndFeel::eColor_theme,
   eCSSKeyword__moz_field, nsILookAndFeel::eColor__moz_field,
   eCSSKeyword__moz_fieldtext, nsILookAndFeel::eColor__moz_fieldtext,
   eCSSKeyword__moz_dialog, nsILookAndFeel::eColor__moz_dialog,
@@ -359,16 +358,17 @@ const PRInt32 nsCSSProps::kCursorKTable[] = {
   eCSSKeyword_text, NS_STYLE_CURSOR_TEXT,
   eCSSKeyword_wait, NS_STYLE_CURSOR_WAIT,
   eCSSKeyword_help, NS_STYLE_CURSOR_HELP,
-  eCSSKeyword_copy, NS_STYLE_CURSOR_COPY, // CSS3
-  eCSSKeyword_alias, NS_STYLE_CURSOR_ALIAS,
-  eCSSKeyword_context_menu, NS_STYLE_CURSOR_CONTEXT_MENU,
-  eCSSKeyword_cell, NS_STYLE_CURSOR_CELL,
-  eCSSKeyword_grab, NS_STYLE_CURSOR_GRAB,
-  eCSSKeyword_grabbing, NS_STYLE_CURSOR_GRABBING,
-  eCSSKeyword_spinning, NS_STYLE_CURSOR_SPINNING,
-  eCSSKeyword_count_up, NS_STYLE_CURSOR_COUNT_UP,
-  eCSSKeyword_count_down, NS_STYLE_CURSOR_COUNT_DOWN,
-  eCSSKeyword_count_up_down, NS_STYLE_CURSOR_COUNT_UP_DOWN,
+  // CSS3 proposed
+  eCSSKeyword__moz_copy, NS_STYLE_CURSOR_COPY,
+  eCSSKeyword__moz_alias, NS_STYLE_CURSOR_ALIAS,
+  eCSSKeyword__moz_context_menu, NS_STYLE_CURSOR_CONTEXT_MENU,
+  eCSSKeyword__moz_cell, NS_STYLE_CURSOR_CELL,
+  eCSSKeyword__moz_grab, NS_STYLE_CURSOR_GRAB,
+  eCSSKeyword__moz_grabbing, NS_STYLE_CURSOR_GRABBING,
+  eCSSKeyword__moz_spinning, NS_STYLE_CURSOR_SPINNING,
+  eCSSKeyword__moz_count_up, NS_STYLE_CURSOR_COUNT_UP,
+  eCSSKeyword__moz_count_down, NS_STYLE_CURSOR_COUNT_DOWN,
+  eCSSKeyword__moz_count_up_down, NS_STYLE_CURSOR_COUNT_UP_DOWN,
   -1,-1
 };
 
@@ -381,13 +381,13 @@ const PRInt32 nsCSSProps::kDirectionKTable[] = {
 const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_inline,             NS_STYLE_DISPLAY_INLINE,
   eCSSKeyword_block,              NS_STYLE_DISPLAY_BLOCK,
-  eCSSKeyword_inline_block,       NS_STYLE_DISPLAY_INLINE_BLOCK,
+  eCSSKeyword__moz_inline_block,  NS_STYLE_DISPLAY_INLINE_BLOCK,
   eCSSKeyword_list_item,          NS_STYLE_DISPLAY_LIST_ITEM,
-  eCSSKeyword_run_in,             NS_STYLE_DISPLAY_RUN_IN,
-  eCSSKeyword_compact,            NS_STYLE_DISPLAY_COMPACT,
-  eCSSKeyword_marker,             NS_STYLE_DISPLAY_MARKER,
+  eCSSKeyword__moz_run_in,        NS_STYLE_DISPLAY_RUN_IN,
+  eCSSKeyword__moz_compact,       NS_STYLE_DISPLAY_COMPACT,
+  eCSSKeyword__moz_marker,        NS_STYLE_DISPLAY_MARKER,
   eCSSKeyword_table,              NS_STYLE_DISPLAY_TABLE,
-  eCSSKeyword_inline_table,       NS_STYLE_DISPLAY_INLINE_TABLE,
+  eCSSKeyword__moz_inline_table,  NS_STYLE_DISPLAY_INLINE_TABLE,
   eCSSKeyword_table_row_group,    NS_STYLE_DISPLAY_TABLE_ROW_GROUP,
   eCSSKeyword_table_header_group, NS_STYLE_DISPLAY_TABLE_HEADER_GROUP,
   eCSSKeyword_table_footer_group, NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP,
@@ -396,7 +396,6 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_table_column,       NS_STYLE_DISPLAY_TABLE_COLUMN,
   eCSSKeyword_table_cell,         NS_STYLE_DISPLAY_TABLE_CELL,
   eCSSKeyword_table_caption,      NS_STYLE_DISPLAY_TABLE_CAPTION,
-  eCSSKeyword_menu,               NS_STYLE_DISPLAY_MENU,
   eCSSKeyword__moz_box,           NS_STYLE_DISPLAY_BOX,
   eCSSKeyword__moz_inline_box,    NS_STYLE_DISPLAY_INLINE_BOX,
   eCSSKeyword__moz_grid,          NS_STYLE_DISPLAY_GRID,
@@ -423,9 +422,9 @@ const PRInt32 nsCSSProps::kElevationKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kEmptyCellsKTable[] = {
-  eCSSKeyword_show,             NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
-  eCSSKeyword_hide,             NS_STYLE_TABLE_EMPTY_CELLS_HIDE,
-  eCSSKeyword_show_background,  NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND,
+  eCSSKeyword_show,                 NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
+  eCSSKeyword_hide,                 NS_STYLE_TABLE_EMPTY_CELLS_HIDE,
+  eCSSKeyword__moz_show_background, NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND,
   -1,-1
 };
 
@@ -444,23 +443,25 @@ const PRInt32 nsCSSProps::kFloatEdgeKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kFontKTable[] = {
-  eCSSKeyword_caption, NS_STYLE_FONT_CAPTION,			// css2
+  // CSS2.
+  eCSSKeyword_caption, NS_STYLE_FONT_CAPTION,
   eCSSKeyword_icon, NS_STYLE_FONT_ICON,
   eCSSKeyword_menu, NS_STYLE_FONT_MENU,
   eCSSKeyword_message_box, NS_STYLE_FONT_MESSAGE_BOX,
   eCSSKeyword_small_caption, NS_STYLE_FONT_SMALL_CAPTION,
   eCSSKeyword_status_bar, NS_STYLE_FONT_STATUS_BAR,
-  eCSSKeyword_window, NS_STYLE_FONT_WINDOW,				// css3
-  eCSSKeyword_document, NS_STYLE_FONT_DOCUMENT,
-  eCSSKeyword_workspace, NS_STYLE_FONT_WORKSPACE,
-  eCSSKeyword_desktop, NS_STYLE_FONT_DESKTOP,
-  eCSSKeyword_info, NS_STYLE_FONT_INFO,
-  eCSSKeyword_dialog, NS_STYLE_FONT_DIALOG,
-  eCSSKeyword_button, NS_STYLE_FONT_BUTTON,
-  eCSSKeyword_pull_down_menu, NS_STYLE_FONT_PULL_DOWN_MENU,
-  eCSSKeyword_list, NS_STYLE_FONT_LIST,
-  eCSSKeyword_field, NS_STYLE_FONT_FIELD,
-  eCSSKeyword_theme, NS_STYLE_FONT_THEME,
+
+  // Proposed for CSS3.
+  eCSSKeyword__moz_window, NS_STYLE_FONT_WINDOW,
+  eCSSKeyword__moz_document, NS_STYLE_FONT_DOCUMENT,
+  eCSSKeyword__moz_workspace, NS_STYLE_FONT_WORKSPACE,
+  eCSSKeyword__moz_desktop, NS_STYLE_FONT_DESKTOP,
+  eCSSKeyword__moz_info, NS_STYLE_FONT_INFO,
+  eCSSKeyword__moz_dialog, NS_STYLE_FONT_DIALOG,
+  eCSSKeyword__moz_button, NS_STYLE_FONT_BUTTON,
+  eCSSKeyword__moz_pull_down_menu, NS_STYLE_FONT_PULL_DOWN_MENU,
+  eCSSKeyword__moz_list, NS_STYLE_FONT_LIST,
+  eCSSKeyword__moz_field, NS_STYLE_FONT_FIELD,
   -1,-1
 };
 
@@ -503,12 +504,13 @@ const PRInt32 nsCSSProps::kFontVariantKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kFontWeightKTable[] = {
-    eCSSKeyword_bold, NS_STYLE_FONT_WEIGHT_BOLD,
-    eCSSKeyword_bolder, NS_STYLE_FONT_WEIGHT_BOLDER,
-    eCSSKeyword_lighter, NS_STYLE_FONT_WEIGHT_LIGHTER,
-    -1,-1
+  eCSSKeyword_bold, NS_STYLE_FONT_WEIGHT_BOLD,
+  eCSSKeyword_bolder, NS_STYLE_FONT_WEIGHT_BOLDER,
+  eCSSKeyword_lighter, NS_STYLE_FONT_WEIGHT_LIGHTER,
+  -1,-1
 };
 
+// XXX What's the point?
 const PRInt32 nsCSSProps::kKeyEquivalentKTable[] = {
   -1,-1
 };

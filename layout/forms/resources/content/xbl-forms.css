@@ -50,7 +50,7 @@ select, select[size="1"] {
   display: -moz-inline-box;
   -moz-box-orient: horizontal;
   -moz-user-focus: normal;
-  font: list;
+  font: -moz-list;
 }
 
 select[size] > option,
@@ -197,7 +197,7 @@ input {
   border: 2px inset ThreeDFace;
   color: -moz-FieldText;
   cursor: text;
-  font: field;
+  font: -moz-field;
   text-align: start;
   vertical-align: text-bottom;
   -moz-box-sizing: border-box;

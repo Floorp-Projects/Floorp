@@ -954,7 +954,6 @@ PRInt32 nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther) con
 //
 
 nsStyleColor::nsStyleColor(nsIPresContext* aPresContext)
-:mColorFlags(NS_COLORFLAGS_NONE)
 {
   aPresContext->GetDefaultColor(&mColor);
 }
@@ -962,7 +961,6 @@ nsStyleColor::nsStyleColor(nsIPresContext* aPresContext)
 nsStyleColor::nsStyleColor(const nsStyleColor& aSource)
 {
   mColor = aSource.mColor;
-  mColorFlags = aSource.mColorFlags;
 }
 
 PRInt32 nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
