@@ -41,4 +41,5 @@ public:
 
 }; // class nsIXULTreeSlice
 
-#endif
+#endif /* nsIXULTreeSlice_h___ */
+
