@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.16 2001/07/25 00:37:28 bryner%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.17 2001/08/01 23:01:37 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -67,9 +67,12 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 #define PIP_PKCS12_TMPFILENAME   ".pip_p12tmp"
 #define PIP_PKCS12_BUFFER_SIZE   2048
-#define PIP_PKCS12_RESTORE_OK    1
-#define PIP_PKCS12_BACKUP_OK     2
-#define PIP_PKCS12_USER_CANCELED 3
+#define PIP_PKCS12_RESTORE_OK          1
+#define PIP_PKCS12_BACKUP_OK           2
+#define PIP_PKCS12_USER_CANCELED       3
+#define PIP_PKCS12_NOSMARTCARD_EXPORT  4
+#define PIP_PKCS12_RESTORE_FAILED      5
+#define PIP_PKCS12_BACKUP_FAILED       6
 
 // constructor
 nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
@@ -179,7 +182,7 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   handleError(PIP_PKCS12_RESTORE_OK);
 finish:
   if (NS_FAILED(rv) || srv != SECSuccess) {
-    handleError();
+    handleError(PIP_PKCS12_RESTORE_FAILED);
   }
   // finish the decoder
   if (dcx)
@@ -253,6 +256,10 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   nsCOMPtr<nsILocalFile> localFileRef;
   NS_ASSERTION(mToken, "Need to set the token before exporting");
   // init slot
+
+  PRBool InformedUserNoSmartcardBackup = PR_FALSE;
+  int numCertsExported = 0;
+
   rv = mToken->Login(PR_TRUE);
   if (NS_FAILED(rv)) goto finish;
   // get file password (unicode)
@@ -301,6 +308,11 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     // the cert is not in the internal db.
     if (nssCert->slot && !PK11_IsInternal(nssCert->slot)) {
       CERT_DestroyCertificate(nssCert);
+
+      if (!InformedUserNoSmartcardBackup) {
+        InformedUserNoSmartcardBackup = PR_TRUE;
+        handleError(PIP_PKCS12_NOSMARTCARD_EXPORT);
+      }
       continue;
     }
 
@@ -326,7 +338,11 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     if (srv) goto finish;
     // cert was dup'ed, so release it
     CERT_DestroyCertificate(nssCert);
+    ++numCertsExported;
   }
+  
+  if (!numCertsExported) goto finish;
+  
   // prepare the instance to write to an export file
   this->mTmpFile = NULL;
   file->GetPath(getter_Copies(xpidlFilePath));
@@ -353,7 +369,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   handleError(PIP_PKCS12_BACKUP_OK);
 finish:
   if (NS_FAILED(rv) || srv != SECSuccess) {
-    handleError();
+    handleError(PIP_PKCS12_BACKUP_FAILED);
   }
   if (ecx)
     SEC_PKCS12DestroyExportContext(ecx);
@@ -635,6 +651,27 @@ nsPKCS12Blob::handleError(int myerr)
     return PR_TRUE;
   case PIP_PKCS12_USER_CANCELED:
     return PR_TRUE;  /* Just ignore it for now */
+  case PIP_PKCS12_NOSMARTCARD_EXPORT:
+    rv = nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("PKCS12InfoNoSmartcardBackup").get(), 
+                              errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.get());
+    return PR_TRUE;
+  case PIP_PKCS12_RESTORE_FAILED:
+    rv = nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("PKCS12UnknownErrRestore").get(), 
+                              errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.get());
+    return PR_TRUE;
+  case PIP_PKCS12_BACKUP_FAILED:
+    rv = nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("PKCS12UnknownErrBackup").get(), 
+                              errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.get());
+    return PR_TRUE;
   case 0: 
   default:
     break;
@@ -678,7 +715,7 @@ nsPKCS12Blob::handleError(int myerr)
     break;
   default:
     rv = nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("PKCS12UnknownErrRestore").get(), 
+                            NS_LITERAL_STRING("PKCS12UnknownErr").get(), 
                             errorMsg);
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
