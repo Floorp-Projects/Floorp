@@ -1358,8 +1358,16 @@ RDFTreeBuilderImpl::SetWidgetAttribute(nsIContent* aTreeItemElement,
     PRInt32 index;
     if (NS_SUCCEEDED(rv = GetColumnForProperty(mRoot, aProperty, &index))) {
         // ...yep.
+        nsCOMPtr<nsIContent> treerow;
+        rv = EnsureElementHasGenericChild(aTreeItemElement,
+                                          kNameSpaceID_XUL,
+                                          kTreeRowAtom,
+                                          getter_AddRefs(treerow));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to ensure item's treerow exists");
+        if (NS_FAILED(rv)) return rv;
+
         nsCOMPtr<nsIContent> cellElement;
-        rv = EnsureCell(aTreeItemElement, index, getter_AddRefs(cellElement));
+        rv = EnsureCell(treerow, index, getter_AddRefs(cellElement));
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to ensure cell exists");
         if (NS_FAILED(rv)) return rv;
 
@@ -1399,8 +1407,16 @@ RDFTreeBuilderImpl::UnsetWidgetAttribute(nsIContent* aTreeItemElement,
     PRInt32 index;
     if (NS_SUCCEEDED(rv = GetColumnForProperty(mRoot, aProperty, &index))) {
         // it's a cell. find it.
+        nsCOMPtr<nsIContent> treerow;
+        rv = EnsureElementHasGenericChild(aTreeItemElement,
+                                          kNameSpaceID_XUL,
+                                          kTreeRowAtom,
+                                          getter_AddRefs(treerow));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to ensure item's treerow exists");
+        if (NS_FAILED(rv)) return rv;
+
         nsCOMPtr<nsIContent> cellElement;
-        rv = EnsureCell(aTreeItemElement, index, getter_AddRefs(cellElement));
+        rv = EnsureCell(treerow, index, getter_AddRefs(cellElement));
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to ensure cell exists");
         if (NS_FAILED(rv)) return rv;
 
