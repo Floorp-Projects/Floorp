@@ -668,7 +668,6 @@ VR_INTERFACE(REGERR) VR_PackRegistry(void *userData, nr_RegPackCallbackFunc fn)
 #endif /* STANDALONE_REGISTRY */
 
 
-#ifdef STANDALONE_REGISTRY
 VR_INTERFACE(REGERR) VR_CreateRegistry( char *installation, char *programPath, char *versionStr )
 {
     REGERR      err;
@@ -720,7 +719,6 @@ VR_INTERFACE(REGERR) VR_CreateRegistry( char *installation, char *programPath, c
     return err;
 
 }   /* CreateRegistry */
-#endif
 
 
 VR_INTERFACE(REGERR) VR_Close(void)
