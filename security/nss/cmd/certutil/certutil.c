@@ -562,47 +562,62 @@ printCertCB(CERTCertificate *cert, void *arg)
 }
 
 static SECStatus
-ListCerts(CERTCertDBHandle *handle, char *name, PRBool raw, PRBool ascii)
+ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
+          PRBool raw, PRBool ascii)
 {
     SECStatus rv;
     CERTCertificate *cert;
     SECItem data;
     PRInt32 numBytes;
 
-    if (name == NULL) {
-#if 1
-	rv = SECU_PrintCertificateNames_(handle, stdout, PR_FALSE, PR_TRUE);
-#else
-	rv = SECU_PrintCertificateNames(handle, stdout);
-#endif
+    /* For now, split handling of slot to internal vs. other.  slot should
+     * probably be allowed to be NULL so that all slots can be listed.
+     * In that case, need to add a call to PK11_TraverseSlotCerts().
+     */
+    if (PK11_IsInternal(slot)) {
+	if (name == NULL) {
+	    /* Print all certs in internal slot db. */
+	    rv = SECU_PrintCertificateNames(handle, PR_STDOUT, 
+	                                    PR_FALSE, PR_TRUE);
+	    if (rv) {
+		SECU_PrintError(progName, 
+		                "problem printing certificate nicknames");
+		return SECFailure;
+	    }
+	} else if (raw || ascii) {
+	    /* Dump binary or ascii DER for the cert to stdout. */
+	    cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
+	    if (!cert) {
+		SECU_PrintError(progName,
+		               "could not find certificate named \"%s\"", name);
+		return SECFailure;
+	    }
+	    data.data = cert->derCert.data;
+	    data.len = cert->derCert.len;
+	    if (ascii) {
+		PR_fprintf(PR_STDOUT, "%s\n%s\n%s\n", NS_CERT_HEADER, 
+		        BTOA_DataToAscii(data.data, data.len), NS_CERT_TRAILER);
+	    } else if (raw) {
+	        numBytes = PR_Write(PR_STDOUT, data.data, data.len);
+	        if (numBytes != data.len) {
+		    SECU_PrintSystemError(progName, "error writing raw cert");
+		    return SECFailure;
+		}
+	    }
+	} else {
+	    /* Pretty-print cert. */
+	    rv = CERT_TraversePermCertsForNickname(handle, name, printCertCB,
+	                                           NULL);
+	}
+    } else {
+	/* List certs on a non-internal slot. */
+	if (PK11_NeedLogin(slot))
+	    PK11_Authenticate(slot, PR_TRUE, NULL);
+	rv = PK11_TraverseCertsInSlot(slot, SECU_PrintCertNickname, stdout);
 	if (rv) {
 	    SECU_PrintError(progName, "problem printing certificate nicknames");
 	    return SECFailure;
 	}
-    } else if (raw || ascii) {
-	cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
-	if (!cert) {
-	    SECU_PrintError(progName,
-			    "could not find certificate named \"%s\"", name);
-	    return SECFailure;
-	}
-
-	data.data = cert->derCert.data;
-	data.len = cert->derCert.len;
-
-	if (ascii) {
-	    fprintf(stdout, "%s\n%s\n%s\n", NS_CERT_HEADER, 
-		    BTOA_DataToAscii(data.data, data.len), NS_CERT_TRAILER);
-	} else if (raw) {
-	    numBytes = PR_Write(PR_STDOUT, data.data, data.len);
-	    if (numBytes != data.len) {
-		SECU_PrintSystemError(progName, "error writing raw cert");
-		return SECFailure;
-	    }
-	}
-    } else {
-	rv = CERT_TraversePermCertsForNickname(handle, name, printCertCB,
-					       NULL);
     }
 
     return SECSuccess;	/* not rv ?? */
@@ -814,7 +829,6 @@ DumpPrivateKey(int dbindex, char *nickname, FILE *out)
     return SECSuccess;
 }
 
-#if 0
 static SECStatus
 printKeyCB(SECKEYPublicKey *key, SECItem *data, void *arg)
 {
@@ -827,7 +841,26 @@ printKeyCB(SECKEYPublicKey *key, SECItem *data, void *arg)
     }
     return SECSuccess;
 }
-#endif
+
+/* callback for listing certs through pkcs11 */
+SECStatus
+secu_PrintKeyFromCert(CERTCertificate *cert, void *data)
+{
+    FILE *out;
+    char *name;
+    SECKEYPublicKey *key;
+
+    out = (FILE *)data;
+    key = CERT_ExtractPublicKey(cert);
+    if (!key) {
+	fprintf(out, "XXX could not extract key for %s.\n", cert->nickname);
+	return SECFailure;
+    }
+    /* XXX should have a type field also */
+    fprintf(out, "<%d> %s\n", 0, cert->nickname);
+
+    return SECSuccess;
+}
 
 static SECStatus
 ListKeys(PK11SlotInfo *slot, char *keyname, int index, 
@@ -842,9 +875,31 @@ ListKeys(PK11SlotInfo *slot, char *keyname, int index,
 	    return DumpPublicKey(index, keyname, stdout);
 	}
     }
-    /*rv = PK11_TraverseSlotKeys(slotname, keyType, all, tall);*/
+    /* For now, split handling of slot to internal vs. other.  slot should
+     * probably be allowed to be NULL so that all slots can be listed.
+     * In that case, need to add a call to PK11_TraverseSlotCerts().
+     */
+    if (PK11_IsInternal(slot)) {
+	/* Print all certs in internal slot db. */
+	rv = SECU_PrintKeyNames(SECKEY_GetDefaultKeyDB(), stdout);
+	if (rv) {
+	    SECU_PrintError(progName, "problem listing keys");
+	    return SECFailure;
+	}
+    } else {
+	/* XXX need a function as below */
+	/* could iterate over certs on slot and print keys */
+	/* this would miss stranded keys */
     /*rv = PK11_TraverseSlotKeys(slotname, keyType, printKeyCB, NULL, NULL);*/
-    rv = SECU_PrintKeyNames(SECKEY_GetDefaultKeyDB(), stdout);
+	if (PK11_NeedLogin(slot))
+	    PK11_Authenticate(slot, PR_TRUE, NULL);
+	rv = PK11_TraverseCertsInSlot(slot, secu_PrintKeyFromCert, stdout);
+	if (rv) {
+	    SECU_PrintError(progName, "problem listing keys");
+	    return SECFailure;
+	}
+	return SECFailure;
+    }
     return rv;
 }
 
@@ -928,12 +983,11 @@ Usage(char *progName)
 	progName);
     FPS "\t%s -U [-d certdir]\n", progName);
     exit(-1);
-#undef FPS
 }
 
 static void LongUsage(char *progName)
 {
-#define FPS printf( 
+
     FPS "%-15s Add a certificate to the database        (create if needed)\n",
 	"-A");
     FPS "%-15s Add an Email certificate to the database (create if needed)\n",
@@ -2372,19 +2426,17 @@ main(int argc, char **argv)
 
     /*  List certs (-L)  */
     if (certutil.commands[cmd_ListCerts].activated) {
-	rv = ListCerts(certHandle, name, 
+	rv = ListCerts(certHandle, name, slot,
 	               certutil.options[opt_BinaryDER].activated,
 	               certutil.options[opt_ASCIIForIO].activated);
 	return !rv - 1;
     }
     /*  XXX needs work  */
-#if 0
     /*  List keys (-K)  */
     if (certutil.commands[cmd_ListKeys].activated) {
-	rv = ListKeys(slot, keynickname, keyindex, keytype, dopriv);
+	rv = ListKeys(slot, name, 0 /*keyindex*/, keytype, PR_FALSE /*dopriv*/);
 	return !rv - 1;
     }
-#endif
     /*  List modules (-U)  */
     if (certutil.commands[cmd_ListModules].activated) {
 	rv = ListModules();
