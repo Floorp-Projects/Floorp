@@ -181,12 +181,11 @@ public:
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Init() { return NS_OK; }
 
-  // Helper method
-  NS_IMETHOD SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
-                                 nsIStatefulFrame::StateType aStateType,
-                                 PRBool aValue);
-
 protected:
+  // Helper method
+  void SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
+                           nsIStatefulFrame::StateType aStateType,
+                           PRBool aValue);
 
   nsresult   GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
@@ -498,21 +497,20 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
   return NS_OK;      
 }
 
-NS_IMETHODIMP 
+void
 nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
                                         nsIStatefulFrame::StateType aStateType,
                                         PRBool aValue)
 {
   nsCOMPtr<nsIPresState> presState;
-  nsGenericHTMLElement::GetPrimaryPresState(aHTMLContent, aStateType, getter_AddRefs(presState));
+  nsGenericHTMLElement::GetPrimaryPresState(aHTMLContent, aStateType,
+                                            getter_AddRefs(presState));
 
   // Obtain the value property from the presentation state.
   if (presState) {
     nsAutoString value; value.AssignWithConversion( aValue ? "1" : "0" );
     presState->SetStateProperty(NS_ConvertASCIItoUCS2("checked"), value);
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 
@@ -543,9 +541,7 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
     GetType(&type);
     nsIStatefulFrame::StateType stateType = (type == NS_FORM_INPUT_CHECKBOX?nsIStatefulFrame::eCheckboxType:
                                                                             nsIStatefulFrame::eRadioType);
-    if (NS_FAILED(SetPresStateChecked(this, stateType, aValue))) {
-      return NS_ERROR_FAILURE;
-    }
+    SetPresStateChecked(this, stateType, aValue);
 
     if (stateType == nsIStatefulFrame::eRadioType) {
       nsIDOMHTMLInputElement * radioElement = (nsIDOMHTMLInputElement*)this;
@@ -553,7 +549,7 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
       GetName(name);
     
       nsCOMPtr<nsIDOMHTMLFormElement> formElement;
-      if (NS_SUCCEEDED(GetForm(getter_AddRefs(formElement)))) {
+      if (NS_SUCCEEDED(GetForm(getter_AddRefs(formElement))) && formElement) {
         nsCOMPtr<nsIDOMHTMLCollection> controls; 
         nsresult rv = formElement->GetElements(getter_AddRefs(controls)); 
         if (controls) {
