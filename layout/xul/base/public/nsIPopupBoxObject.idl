@@ -17,7 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
+ * Original Authors: 
+ *   David W. Hyatt <hyatt@netscape.com>
+ *   Ben Goodger <ben@netscape.com>
  *
  * Contributor(s): 
  */
@@ -35,6 +37,33 @@ interface nsIPopupBoxObject : nsISupports
                  in wstring popupType, in wstring anchorAlignment, 
                  in wstring popupAlignment);
   void hidePopup();
+
+
+  /** 
+   * Allow the popup to automatically position itself.
+   */
+  attribute boolean autoPosition;
+
+  /**
+   * Allow the popup to eat all key events
+   */
+  void enableKeyboardNavigator(in boolean enableKeyboardNavigator);
+
+  /** 
+   * Enable automatic popup dismissal
+   */
+  void enableRollup(in boolean enableRollup);
+
+  /** 
+   * Size the popup to the given dimensions
+   */
+  void sizeTo(in long width, in long height);
+
+  /**
+   * Move the popup to a point on screen
+   */
+  void moveTo(in long left, in long top);
+
 };
 
 %{C++
