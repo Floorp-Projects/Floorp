@@ -2412,7 +2412,7 @@ nsGfxTextControlFrame2::GetSizeFromContent(PRInt32* aSize) const
       *aSize = 20;
     }
 #else
-      *aSize = 1;
+      *aSize = 20; // use '1' to be compatable with Nav 4.x, Use '20' to be compatable with IE
 #endif
   }
   return result;
