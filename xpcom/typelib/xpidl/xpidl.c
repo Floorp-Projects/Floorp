@@ -71,7 +71,7 @@ PRUint8  major_version              = XPT_MAJOR_VERSION;
 PRUint8  minor_version              = XPT_MINOR_VERSION;
 
 static char xpidl_usage_str[] =
-"Usage: %s [-m mode] [-w] [-v] [-t version number]\n"
+"Usage: %s -m mode [-w] [-v] [-t version number]\n"
 "          [-I path] [-o basename | -e filename.ext] filename.idl\n"
 "       -a emit annotations to typelib\n"
 "       -w turn on warnings (recommended)\n"
