@@ -60,7 +60,7 @@ if (NS_FAILED(rv))				\
 	return rv;						\
 }
 
-#ifdef DEBUG
+#ifdef MIW_DEBUG
 #define XPISTUB_DLL "\pxpistubDebug.shlb"
 #else
 #define XPISTUB_DLL "\pxpistub.shlb"
