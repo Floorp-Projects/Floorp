@@ -411,6 +411,18 @@ function awAppendNewRow(setFocus)
         {
    			  input[0].setAttribute("value", "");
     	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
+          
+          // We always clone the first row.  The problem is that the first row
+          // could be focused.  When we clone that row, we end up with a cloned
+          // XUL textfield that has a focused attribute set.  Therefore we think
+          // we're focused and don't properly refocus.  The best solution to this
+          // would be to clone a template row that didn't really have any presentation,
+          // rather than using the real visible first row of the tree.
+          //
+          // For now we'll just put in a hack that ensures the focused attribute
+          // is never copied when the node is cloned.
+          if (input[0].getAttribute('focused') != '')
+            input[0].removeAttribute('focused');
     	  }
         var select = newNode.getElementsByTagName(awSelectElementName());
         if ( select && select.length == 1 )
