@@ -29,6 +29,11 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+#tree {
+  margin: 0px !important;
+  border: none;
+}
+
 .treecell-filename {
   list-style-image: url("chrome://communicator/skin/directory/file-icon.gif");
 }

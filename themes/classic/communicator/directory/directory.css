@@ -43,6 +43,11 @@
 
 @import url(chrome://communicator/skin/);
 
+#tree {
+  margin: 0px !important;
+  border: none;
+}
+
 /* Hide twisty for files */
 .treecell-indent[type="FILE"] > .tree-cell-twisty 
   {
