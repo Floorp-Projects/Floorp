@@ -76,9 +76,10 @@ function SetUpTree()
 
 		subscribableServer.subscribeListener = MySubscribeListener;
 
-		subscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */);
 		// Turn progress meter on.
       	gStatusBar.setAttribute("mode","undetermined");	
+
+		subscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */);
 	}
 	catch (ex) {
 		dump("failed to populate subscribe ds: " + ex + "\n");

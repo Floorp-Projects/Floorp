@@ -51,6 +51,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgFolderFlags.h"
+#include "nsISubscribableServer.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -2753,6 +2754,20 @@ nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
 NS_IMETHODIMP
 nsImapService::BuildSubscribeDatasource(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow)
 {
-	printf("doesn't work yet.\n");
+	NS_ASSERTION(PR_FALSE,"imap subscribe doesn't work yet.");
+	nsresult rv;
+
+    nsCOMPtr<nsISubscribeListener> listener;
+	nsCOMPtr<nsISubscribableServer> server = do_QueryInterface(aServer,&rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!server) return NS_ERROR_FAILURE;
+
+	rv = server->GetSubscribeListener(getter_AddRefs(listener));
+	if (NS_FAILED(rv)) return rv;
+	if (!listener) return NS_ERROR_FAILURE;
+	
+	rv = listener->OnStopPopulating();
+	if (NS_FAILED(rv)) return rv;
+
 	return NS_OK;
 } 
