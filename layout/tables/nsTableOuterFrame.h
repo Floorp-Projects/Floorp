@@ -377,7 +377,8 @@ protected:
                               nsMargin&                 aMarginNoAuto,
                               nsMargin&                 aPadding,
                               nsReflowReason            aReflowReason,
-                              nsReflowStatus&           aStatus);
+                              nsReflowStatus&           aStatus,
+                              PRBool*                   aNeedToReflowCaption = nsnull);
 
   // Set the reflow metrics,  aInnerMarginNoAuto is  aInnerMargin, but with 
   // auto margins set to 0
@@ -394,7 +395,7 @@ protected:
 
   void InvalidateDamage(nsIPresContext* aPresContext,
                         PRUint8         aCaptionSide,
-                        nsSize&         aOuterSize,
+                        const nsSize&   aOuterSize,
                         PRBool          aInnerChanged,
                         PRBool          aCaptionChanged,
                         nsRect*         aOldOverflowArea);
