@@ -108,8 +108,7 @@
     (defrecord class
       (local-bindings (list-set local-binding) :var)
       (parent class-opt)
-      (instance-bindings (list-set instance-binding) :var)
-      (v-table (list-set v-table-entry) :var)
+      (instance-members (list-set instance-member) :var)
       (instance-init-order (vector instance-variable) :var)
       (complete boolean :var)
       (super class-opt)
@@ -343,14 +342,6 @@
       (content local-member)
       (explicit boolean))
     
-    (deftuple instance-binding 
-      (qname qualified-name)
-      (access access)
-      (index v-table-index))
-    
-    (defrecord v-table-index)
-    (deftype v-table-index-opt (union v-table-index (tag none)))
-    
     
     (deftag forbidden)
     (deftype local-member (union (tag forbidden) dynamic-var variable constructor-method getter setter))
@@ -381,32 +372,33 @@
       (env environment-i))
     
     
-    (deftuple v-table-entry
-      (index v-table-index)
-      (content instance-member))
-    
-    
     (deftype instance-member (union instance-variable instance-method instance-getter instance-setter))
     (deftype instance-member-opt (union instance-member (tag none)))
     
     (defrecord instance-variable
+      (multiname multiname :opt-const)
       (final boolean)
       (type class :opt-const)
       (eval-initial-value (-> () object-opt))
       (immutable boolean))
+    (deftype instance-variable-opt (union instance-variable (tag none)))
     
     (defrecord instance-method
+      (multiname multiname :opt-const)
       (final boolean)
       (signature parameter-frame)
       (call (-> (object argument-list phase) object)))
+    (deftype instance-method-opt (union instance-method (tag none)))
     
     (defrecord instance-getter
+      (multiname multiname :opt-const)
       (final boolean)
       (type class :opt-const)
       (call (-> (object environment phase) object))
       (env environment))
     
     (defrecord instance-setter
+      (multiname multiname :opt-const)
       (final boolean)
       (type class :opt-const)
       (call (-> (object object environment phase) void))
@@ -1011,97 +1003,68 @@
     
     (%heading (3 :semantics) "Adding Instance Definitions")
     
-    (define (search-for-overrides (c class) (id string) (namespaces (list-set namespace)) (access access))
-            (list-set v-table-index)
-      (var overridden-indices (list-set v-table-index) (list-set-of v-table-index))
+    (define (search-for-overrides (c class) (multiname multiname) (accesses access-set)) instance-member-opt
+      (var m-base instance-member-opt none)
       (const s class-opt (& super c))
-      (for-each namespaces ns
-        (const qname qualified-name (new qualified-name ns id))
-        (when (not-in s (tag none) :narrow-true)
-          (const i v-table-index-opt (find-v-table-index s (list-set qname) access))
-          (when (not-in i (tag none) :narrow-true)
-            (<- overridden-indices (set+ overridden-indices (list-set i))))))
-      (rwhen (> (length overridden-indices) 1)
-        (throw definition-error))
-      (return overridden-indices))
-    
-    
-    (deftuple override-status
-      (overridden-indices (list-set v-table-index))
-      (defined-multiname multiname))
-    
-    (define (check-override-conflicts (c class) (cxt context) (id string) (namespaces (list-set namespace)) (access access) (m instance-member))
-            override-status
-      (var overridden-indices (list-set v-table-index))
-      (var defined-multiname multiname)
-      (cond
-       ((empty namespaces)
-        (<- overridden-indices (search-for-overrides c id (& open-namespaces cxt) access))
-        (if (empty overridden-indices)
-          (<- defined-multiname (list-set (new qualified-name public-namespace id)))
-          (<- defined-multiname (list-set-of qualified-name))))
-       (nil
-        (<- overridden-indices (search-for-overrides c id namespaces access))
-        (<- defined-multiname (map namespaces ns (new qualified-name ns id)))))
-      (rwhen (some (& instance-bindings c) b (and (set-in (& qname b) defined-multiname) (= (& access b) access access)))
-        (throw definition-error))
-      (for-each overridden-indices i
-        (rwhen (some (& v-table c) ve (= (& index ve) i v-table-index))
-          (// "Throw an error because the same member cannot be overridden twice in the same class")
-          (throw definition-error))
-        (const m-overridden instance-member (get-instance-member c i))
-        (rwhen (& final m-overridden)
-          (throw definition-error))
-        (const overriding-a-method boolean (in m-overridden instance-method))
-        (const defining-a-method boolean (in m instance-method))
-        (rwhen (/= defining-a-method overriding-a-method boolean)
-          (throw definition-error)))
-      (return (new override-status overridden-indices defined-multiname)))
-    
-    
-    (define (define-instance-member-half (c class) (os override-status) (access access) (m instance-member)) void
-      (var index v-table-index)
-      (if (empty (& overridden-indices os))
-        (<- index (new v-table-index))
-        (<- index (unique-elt-of (& overridden-indices os))))
-      (&= v-table c (set+ (& v-table c) (list-set (new v-table-entry index m))))
-      (&= instance-bindings c (set+ (& instance-bindings c) (map (& defined-multiname os) qname (new instance-binding qname access index)))))
+      (when (not-in s (tag none) :narrow-true)
+        (for-each multiname qname
+          (const m instance-member-opt (find-base-instance-member s (list-set qname) accesses))
+          (cond
+           ((in m-base (tag none) :narrow-false) (<- m-base m))
+           ((and (not-in m (tag none) :narrow-true) (/= m m-base instance-member))
+            (throw definition-error)))))
+      (return m-base))
     
     
     (define (define-instance-member (c class) (cxt context) (id string) (namespaces (list-set namespace))
-              (override-mod override-modifier) (explicit boolean) (accesses access-set) (m instance-member))
-            (list-set v-table-index)
+              (override-mod override-modifier) (explicit boolean) (m instance-member))
+            instance-member-opt
       (rwhen explicit
         (throw definition-error))
-      (var read-status override-status (new override-status (list-set-of v-table-index) (list-set-of qualified-name)))
-      (var write-status override-status (new override-status (list-set-of v-table-index) (list-set-of qualified-name)))
-      (when (in accesses (tag read read-write))
-        (<- read-status (check-override-conflicts c cxt id namespaces read m)))
-      (when (in accesses (tag write read-write))
-        (<- write-status (check-override-conflicts c cxt id namespaces write m)))
-      (var overridden-indices (list-set v-table-index) (set+ (& overridden-indices read-status) (& overridden-indices write-status)))
+      (const accesses access-set (instance-member-accesses m))
+      (const requested-multiname multiname (map namespaces ns (new qualified-name ns id)))
+      (const open-multiname multiname (map (& open-namespaces cxt) ns (new qualified-name ns id)))
+      (var defined-multiname multiname)
+      (var searched-multiname multiname)
+      (cond
+       ((empty requested-multiname)
+        (<- defined-multiname (list-set (new qualified-name public-namespace id)))
+        (<- searched-multiname open-multiname)
+        (assert (set<= defined-multiname searched-multiname multiname) (:assertion) " because the " (:character-literal "public") " namespace is always open."))
+       (nil
+        (<- defined-multiname requested-multiname)
+        (<- searched-multiname requested-multiname)))
+      (const m-base instance-member-opt (search-for-overrides c searched-multiname accesses))
+      (var m-overridden instance-member-opt none)
+      (when (not-in m-base (tag none) :narrow-true)
+        (<- m-overridden (get-derived-instance-member c m-base accesses))
+        (<- defined-multiname (&opt multiname (assert-not-in m-overridden (tag none))))
+        (rwhen (not (set<= requested-multiname defined-multiname multiname))
+          (throw definition-error))
+        (var good-kind boolean)
+        (case m
+          (:select instance-variable (<- good-kind (in m-overridden instance-variable)))
+          (:select instance-getter (<- good-kind (in m-overridden (union instance-variable instance-getter))))
+          (:select instance-setter (<- good-kind (in m-overridden (union instance-variable instance-setter))))
+          (:select instance-method (<- good-kind (in m-overridden instance-method))))
+        (rwhen (or (& final (assert-not-in m-overridden (tag none))) (not good-kind))
+          (throw definition-error)))
+      (rwhen (some (& instance-members c) m2 (and (nonempty (set* (&opt multiname m2) defined-multiname)) (accesses-overlap (instance-member-accesses m2) accesses)))
+        (throw definition-error))
       (case override-mod
         (:select (tag none)
-          (rwhen (nonempty overridden-indices)
-            (throw definition-error))
-          (var warned-namespaces (list-set namespace) (list-set-of namespace))
-          (when (nonempty namespaces)
-            (<- warned-namespaces (set- (& open-namespaces cxt) namespaces)))
-          (rwhen (or (and (in accesses (tag read read-write)) (nonempty (search-for-overrides c id warned-namespaces read)))
-                     (and (in accesses (tag write read-write)) (nonempty (search-for-overrides c id warned-namespaces write))))
+          (rwhen (or (not-in m-base (tag none)) (not-in (search-for-overrides c open-multiname accesses) (tag none)))
             (throw definition-error)))
         (:select (tag false)
-          (rwhen (nonempty overridden-indices)
+          (rwhen (not-in m-base (tag none))
             (throw definition-error)))
         (:select (tag true)
-          (rwhen (empty overridden-indices)
+          (rwhen (in m-base (tag none))
             (throw definition-error)))
         (:select (tag undefined)))
-      (when (in accesses (tag read read-write))
-        (define-instance-member-half c read-status read m))
-      (when (in accesses (tag write read-write))
-        (define-instance-member-half c write-status write m))
-      (return overridden-indices))
+      (&const= multiname m defined-multiname)
+      (&= instance-members c (set+ (& instance-members c) (list-set m)))
+      (return m-overridden))
     
     
     (%heading (3 :semantics) "Instantiation")
@@ -1283,25 +1246,30 @@
         (throw property-access-error))))
     
     
-    (define (find-local-v-table-index (c class) (multiname multiname) (access access))
-            v-table-index-opt
-      (const matching-indices (list-set v-table-index)
-        (map (& instance-bindings c) b (& index b) (and (set-in (& qname b) multiname) (= (& access b) access access))))
-      (note "If the same " (:type instance-member) " was found via several different bindings " (:local b)
-            ", then it will appear only once in the set " (:local matching-indices) ".")
+    (define (instance-member-accesses (m instance-member)) access-set
+      (case m
+        (:select (union instance-variable instance-method) (return read-write))
+        (:select instance-getter (return read))
+        (:select instance-setter (return write))))
+    
+    
+    (define (find-local-instance-member (c class) (multiname multiname) (accesses access-set))
+            instance-member-opt
+      (const matching-members (list-set instance-member)
+        (map (& instance-members c) m m (and (nonempty (set* (&opt multiname m) multiname)) (accesses-overlap (instance-member-accesses m) accesses))))
       (cond
-       ((empty matching-indices)
+       ((empty matching-members)
         (return none))
-       ((= (length matching-indices) 1)
-        (return (unique-elt-of matching-indices)))
+       ((= (length matching-members) 1)
+        (return (unique-elt-of matching-members)))
        (nil
-        (note "This access is ambiguous because the bindings it found belong to several different members in the same class.")
+        (note "This access is ambiguous because it found several different instance members in the same class.")
         (throw property-access-error))))
     
     
     (define (find-common-member (o object) (multiname multiname) (access access) (flat boolean))
-            (union (tag none) local-member v-table-index)
-      (var m (union (tag none) local-member v-table-index))
+            (union (tag none) local-member instance-member)
+      (var m (union (tag none) local-member instance-member))
       (case o
         (:select (union undefined null boolean long u-long float32 float64 character string namespace compound-attribute method-closure)
           (return none))
@@ -1312,7 +1280,7 @@
         (:narrow class
           (<- m (find-local-member o multiname access))
           (when (in m (tag none))
-            (<- m (find-local-v-table-index o multiname access)))))
+            (<- m (find-local-instance-member o multiname access)))))
       (rwhen (not-in m (tag none))
         (return m))
       (const parent object-opt (& parent (assert-in o (union simple-instance reg-exp date global-object class))))
@@ -1323,31 +1291,33 @@
       (return m))
     
     
-    (define (find-v-table-index (c class) (multiname multiname) (access access))
-            v-table-index-opt
+    (define (find-base-instance-member (c class) (multiname multiname) (accesses access-set))
+            instance-member-opt
       (note "Start from the root class (" (:character-literal "Object") ") and proceed through more specific classes that are ancestors of " (:local c) ".")
       (for-each (ancestors c) s
-        (const i v-table-index-opt (find-local-v-table-index s multiname access))
-        (rwhen (not-in i (tag none))
-          (return i)))
+        (const m instance-member-opt (find-local-instance-member s multiname accesses))
+        (rwhen (not-in m (tag none))
+          (return m)))
       (return none))
     
     
-    (%text :comment (:global-call get-instance-member c index) " returns the instance member at location " (:local index) " in class " (:local c)
-           :apostrophe "s vtable. The caller of " (:global get-instance-member) " ensures that such a member always exists.")
-    (define (get-instance-member (c class) (index v-table-index)) instance-member
-      (reserve ve)
-      (if (some (& v-table c) ve (= (& index ve) index v-table-index) :define-true)
-        (return (& content ve))
-        (return (get-instance-member (assert-not-in (& super c) (tag none)) index))))
+    (%text :comment (:global-call get-derived-instance-member c m-base accesses) " returns the most derived instance member whose name includes that of " (:local m-base)
+           " and whose access includes " (:local access) ". The caller of " (:global get-derived-instance-member) " ensures that such a member always exists. "
+           "If " (:local accesses) " is " (:tag read-write) " then it is possible that this search could find both a getter and a setter defined in the same class; "
+           "in this case either the getter or the setter is returned at the implementation" :apostrophe "s discretion.")
+    (define (get-derived-instance-member (c class) (m-base instance-member) (accesses access-set)) instance-member
+      (reserve m)
+      (if (some (& instance-members c) m (and (set<= (&opt multiname m-base) (&opt multiname m) multiname) (accesses-overlap (instance-member-accesses m) accesses)) :define-true)
+        (return m)
+        (return (get-derived-instance-member (assert-not-in (& super c) (tag none)) m-base accesses))))
     
     
     ;***** Used for initialisation only
     (define (lookup-instance-member (c class) (qname qualified-name) (access access)) instance-member-opt
-      (const index v-table-index-opt (find-v-table-index c (list-set qname) access))
-      (rwhen (in index (tag none) :narrow-false)
+      (const m-base instance-member-opt (find-base-instance-member c (list-set qname) access))
+      (rwhen (in m-base (tag none) :narrow-false)
         (return none))
-      (return (get-instance-member c index)))
+      (return (get-derived-instance-member c m-base access)))
     
     
     
@@ -1357,10 +1327,10 @@
       (case container
         (:narrow object
           (const c class (object-type container))
-          (const index v-table-index-opt (find-v-table-index c multiname read))
-          (rwhen (not-in index (tag none) :narrow-true)
-            (return (read-instance-member container c index phase)))
-          (const m (union (tag none) local-member v-table-index) (find-common-member container multiname read false))
+          (const m-base instance-member-opt (find-base-instance-member c multiname read))
+          (rwhen (not-in m-base (tag none) :narrow-true)
+            (return (read-instance-member container c m-base phase)))
+          (const m (union (tag none) local-member instance-member) (find-common-member container multiname read false))
           (case m
             (:select (tag none)
               (if (and (in kind (tag property-lookup))
@@ -1372,7 +1342,7 @@
                   (:select (tag run) (return undefined)))
                 (return none)))
             (:narrow local-member (return (read-local-member m phase)))
-            (:narrow v-table-index
+            (:narrow instance-member
               (rwhen (or (not-in container class :narrow-false) (in kind (tag property-lookup) :narrow-false))
                 (throw property-access-error))
               (const this object-i-opt (& this kind))
@@ -1389,15 +1359,15 @@
           (const superclass class-opt (& super (& limit container)))
           (rwhen (in superclass (tag none) :narrow-false)
             (return none))
-          (const index v-table-index-opt (find-v-table-index superclass multiname read))
-          (if (not-in index (tag none) :narrow-true)
-            (return (read-instance-member (& instance container) superclass index phase))
+          (const m-base instance-member-opt (find-base-instance-member superclass multiname read))
+          (if (not-in m-base (tag none) :narrow-true)
+            (return (read-instance-member (& instance container) superclass m-base phase))
             (return none)))))
     
     
-    (define (read-instance-member (this object) (c class) (index v-table-index) (phase phase))
+    (define (read-instance-member (this object) (c class) (m-base instance-member) (phase phase))
             object
-      (const m instance-member (get-instance-member c index))
+      (const m instance-member (get-derived-instance-member c m-base read))
       (case m
         (:narrow instance-variable
           (rwhen (and (in phase (tag compile)) (not (& immutable m)))
@@ -1466,11 +1436,11 @@
       (case container
         (:narrow object
           (const c class (object-type container))
-          (const index v-table-index-opt (find-v-table-index c multiname write))
-          (rwhen (not-in index (tag none) :narrow-true)
-            (write-instance-member container c index new-value phase)
+          (const m-base instance-member-opt (find-base-instance-member c multiname write))
+          (rwhen (not-in m-base (tag none) :narrow-true)
+            (write-instance-member container c m-base new-value phase)
             (return ok))
-          (const m (union (tag none) local-member v-table-index) (find-common-member container multiname write true))
+          (const m (union (tag none) local-member instance-member) (find-common-member container multiname write true))
           (case m
             (:select (tag none)
               (reserve qname)
@@ -1480,7 +1450,7 @@
                          (some multiname qname (= (& namespace qname) public-namespace namespace) :define-true))
                 (note "Before trying to create a new dynamic property named " (:local qname)
                       ", check that there is no read-only fixed property with the same name.")
-                (rwhen (and (in (find-v-table-index c (list-set qname) read) (tag none))
+                (rwhen (and (in (find-base-instance-member c (list-set qname) read) (tag none))
                             (in (find-common-member container (list-set qname) read true) (tag none)))
                   (const dv dynamic-var (new dynamic-var new-value false))
                   (&= local-bindings container (set+ (& local-bindings container) (list-set (new local-binding qname read-write dv false))))
@@ -1489,7 +1459,7 @@
             (:narrow local-member
               (write-local-member m new-value phase)
               (return ok))
-            (:narrow v-table-index
+            (:narrow instance-member
               (rwhen (or (not-in container class :narrow-false) (in kind (tag property-lookup) :narrow-false))
                 (throw property-access-error))
               (note (:local this) " cannot be " (:tag inaccessible) " during the " (:tag run) " phase.")
@@ -1511,17 +1481,17 @@
           (const superclass class-opt (& super (& limit container)))
           (rwhen (in superclass (tag none) :narrow-false)
             (return none))
-          (const index v-table-index-opt (find-v-table-index superclass multiname write))
+          (const m-base instance-member-opt (find-base-instance-member superclass multiname write))
           (cond
-           ((not-in index (tag none) :narrow-true)
-            (write-instance-member (& instance container) superclass index new-value phase)
+           ((not-in m-base (tag none) :narrow-true)
+            (write-instance-member (& instance container) superclass m-base new-value phase)
             (return ok))
            (nil (return none))))))
     
     
-    (define (write-instance-member (this object) (c class) (index v-table-index) (new-value object) (phase (tag run)))
+    (define (write-instance-member (this object) (c class) (m-base instance-member) (new-value object) (phase (tag run)))
             void
-      (const m instance-member (get-instance-member c index))
+      (const m instance-member (get-derived-instance-member c m-base write))
       (case m
         (:narrow instance-variable
           (const s slot (find-slot this m))
@@ -1584,9 +1554,9 @@
       (case container
         (:narrow object
           (const c class (object-type container))
-          (rwhen (not-in (find-v-table-index c multiname write) (tag none))
+          (rwhen (not-in (find-base-instance-member c multiname write) (tag none))
             (return false))
-          (const m (union (tag none) local-member v-table-index) (find-common-member container multiname write true))
+          (const m (union (tag none) local-member instance-member) (find-common-member container multiname write true))
           (case m
             (:select (tag none) (return none))
             (:select (tag forbidden) (throw property-access-error))
@@ -1599,7 +1569,7 @@
                     (map (& local-bindings (assert-in container (union class simple-instance reg-exp date package global-object)))
                          b b (or (set-not-in (& qname b) multiname) (/= (& content b) m local-member))))
                 (return true))))
-            (:narrow v-table-index
+            (:narrow instance-member
               (rwhen (or (not-in container class :narrow-false) (in kind (tag property-lookup) :narrow-false))
                 (return false))
               (note (:local this) " cannot be " (:tag inaccessible) " during the " (:tag run) " phase.")
@@ -1615,7 +1585,7 @@
           (const superclass class-opt (& super (& limit container)))
           (rwhen (in superclass (tag none) :narrow-false)
             (return none))
-          (if (not-in (find-v-table-index superclass multiname write) (tag none))
+          (if (not-in (find-base-instance-member superclass multiname write) (tag none))
             (return false)
             (return none)))))
     
@@ -1647,57 +1617,73 @@
     (%print-actions)
     
     (%heading 2 "Qualified Identifiers")
-    (rule :qualifier ((validate (-> (context environment) namespace)))
+    (rule :qualifier ((open-namespaces (writable-cell (list-set namespace)))
+                      (validate (-> (context environment) void))
+                      (eval (-> (environment phase) namespace)))
       (production :qualifier (:identifier) qualifier-identifier
-        ((validate cxt env)
-         (const multiname multiname (map (& open-namespaces cxt) ns (new qualified-name ns (name :identifier))))
-         (const a object (lexical-read env multiname compile))
+        ((validate cxt (env :unused))
+         (action<- (open-namespaces :qualifier 0) (& open-namespaces cxt)))
+        ((eval env phase)
+         (const multiname multiname (map (open-namespaces :qualifier 0) ns (new qualified-name ns (name :identifier))))
+         (const a object (lexical-read env multiname phase))
          (rwhen (not-in a namespace :narrow-false) (throw bad-value-error))
          (return a)))
       (production :qualifier (public) qualifier-public
-        ((validate (cxt :unused) (env :unused))
-         (return public-namespace)))
+        ((validate (cxt :unused) (env :unused)))
+        ((eval (env :unused) (phase :unused)) (return public-namespace)))
       (production :qualifier (private) qualifier-private
         ((validate (cxt :unused) env)
          (const c class-opt (get-enclosing-class env))
-         (rwhen (in c (tag none) :narrow-false)
-           (throw syntax-error))
+         (rwhen (in c (tag none))
+           (throw syntax-error)))
+        ((eval env (phase :unused))
+         (const c class-opt (get-enclosing-class env))
+         (assert (not-in c (tag none) :narrow-true)
+           (:action validate) " already ensured that " (:assertion) ".")
          (return (& private-namespace c)))))
     
-    (rule :simple-qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)) (setup (-> () void)))
+    (rule :simple-qualified-identifier ((open-namespaces (writable-cell (list-set namespace)))
+                                        (validate (-> (context environment) void))
+                                        (setup (-> () void))
+                                        (eval (-> (environment phase) multiname)))
       (production :simple-qualified-identifier (:identifier) simple-qualified-identifier-identifier
         ((validate cxt (env :unused))
-         (const multiname multiname (map (& open-namespaces cxt) ns (new qualified-name ns (name :identifier))))
-         (action<- (multiname :simple-qualified-identifier 0) multiname))
-        ((setup)))
+         (action<- (open-namespaces :simple-qualified-identifier 0) (& open-namespaces cxt)))
+        ((setup))
+        ((eval (env :unused) (phase :unused))
+         (return (map (open-namespaces :simple-qualified-identifier 0) ns (new qualified-name ns (name :identifier))))))
       (production :simple-qualified-identifier (:qualifier \:\: :identifier) simple-qualified-identifier-qualifier
         ((validate cxt env)
-         (const q namespace ((validate :qualifier) cxt env))
-         (action<- (multiname :simple-qualified-identifier 0) (list-set (new qualified-name q (name :identifier)))))
-        ((setup))))
+         ((validate :qualifier) cxt env))
+        ((setup))
+        ((eval env phase)
+         (const q namespace ((eval :qualifier) env phase))
+         (return (list-set (new qualified-name q (name :identifier)))))))
     
-    (rule :expression-qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)) (setup (-> () void)))
+    (rule :expression-qualified-identifier ((validate (-> (context environment) void))
+                                            (setup (-> () void))
+                                            (eval (-> (environment phase) multiname)))
       (production :expression-qualified-identifier (:paren-expression \:\: :identifier) expression-qualified-identifier-identifier
         ((validate cxt env)
-         ((validate :paren-expression) cxt env)
-         ((setup :paren-expression))
-         (const q object (read-reference ((eval :paren-expression) env compile) compile))
+         ((validate :paren-expression) cxt env))
+        ((setup) ((setup :paren-expression)))
+        ((eval env phase)
+         (const q object (read-reference ((eval :paren-expression) env phase) phase))
          (rwhen (not-in q namespace :narrow-false) (throw bad-value-error))
-         (action<- (multiname :expression-qualified-identifier 0) (list-set (new qualified-name q (name :identifier)))))
-        ((setup))))
+         (return (list-set (new qualified-name q (name :identifier)))))))
     
-    (rule :qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)) (setup (-> () void)))
+    (rule :qualified-identifier ((validate (-> (context environment) void))
+                                 (setup (-> () void))
+                                 (eval (-> (environment phase) multiname)))
       (production :qualified-identifier (:simple-qualified-identifier) qualified-identifier-simple
-        ((validate cxt env)
-         ((validate :simple-qualified-identifier) cxt env)
-         (action<- (multiname :qualified-identifier 0) (multiname :simple-qualified-identifier)))
-        ((setup) :forward))
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase) (return ((eval :simple-qualified-identifier) env phase))))
       (production :qualified-identifier (:expression-qualified-identifier) qualified-identifier-expression
-        ((validate cxt env)
-         ((validate :expression-qualified-identifier) cxt env)
-         (action<- (multiname :qualified-identifier 0) (multiname :expression-qualified-identifier)))
-        ((setup) :forward)))
-    (%print-actions ("Validation" multiname validate) ("Setup" setup))
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase) (return ((eval :expression-qualified-identifier) env phase)))))
+    (%print-actions ("Validation" open-namespaces validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Primary Expressions")
@@ -1734,7 +1720,7 @@
         ((eval env (phase :unused))
          (const this object-i-opt (find-this env true))
          (assert (not-in this (tag none) :narrow-true)
-           (:action validate) " ensured that " (:local this) " cannot be " (:tag none) " at this point.")
+           (:action validate) " ensured that " (:assertion) " at this point.")
          (rwhen (in this (tag inaccessible) :narrow-false)
            (throw compile-expression-error))
          (return this)))
@@ -1995,8 +1981,9 @@
          ((validate :simple-qualified-identifier) cxt env)
          (action<- (strict :attribute-expression 0) (& strict cxt)))
         ((setup) :forward)
-        ((eval env (phase :unused))
-         (return (new lexical-reference env (multiname :simple-qualified-identifier) (strict :attribute-expression 0)))))
+        ((eval env phase)
+         (const m multiname ((eval :simple-qualified-identifier) env phase))
+         (return (new lexical-reference env m (strict :attribute-expression 0)))))
       (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator
         ((validate cxt env)
          ((validate :attribute-expression) cxt env)
@@ -2028,8 +2015,9 @@
          ((validate :expression-qualified-identifier) cxt env)
          (action<- (strict :full-postfix-expression 0) (& strict cxt)))
         ((setup) :forward)
-        ((eval env (phase :unused))
-         (return (new lexical-reference env (multiname :expression-qualified-identifier) (strict :full-postfix-expression 0)))))
+        ((eval env phase)
+         (const m multiname ((eval :expression-qualified-identifier) env phase))
+         (return (new lexical-reference env m (strict :full-postfix-expression 0)))))
       (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression
         ((validate cxt env) ((validate :full-new-expression) cxt env))
         ((setup) :forward)
@@ -2107,8 +2095,9 @@
          ((validate :qualified-identifier) cxt env)
          (action<- (strict :full-new-subexpression 0) (& strict cxt)))
         ((setup) :forward)
-        ((eval env (phase :unused))
-         (return (new lexical-reference env (multiname :qualified-identifier) (strict :full-new-subexpression 0)))))
+        ((eval env phase)
+         (const m multiname ((eval :qualified-identifier) env phase))
+         (return (new lexical-reference env m (strict :full-new-subexpression 0)))))
       (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression
         ((validate cxt env) ((validate :full-new-expression) cxt env))
         ((setup) :forward)
@@ -2197,7 +2186,9 @@
       (production :member-operator (\. :qualified-identifier) member-operator-qualified-identifier
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval (env :unused) base (phase :unused)) (return (new dot-reference base (multiname :qualified-identifier)))))
+        ((eval env base phase)
+         (const m multiname ((eval :qualified-identifier) env phase))
+         (return (new dot-reference base m))))
       (production :member-operator (:brackets) member-operator-brackets
         ((validate cxt env) :forward)
         ((setup) :forward)
@@ -2668,8 +2659,8 @@
          (const name string (to-string a phase))
          (const qname qualified-name (new qualified-name public-namespace name))
          (const c class (object-type b))
-         (return (or (not-in (find-v-table-index c (list-set qname) read) (tag none))
-                     (not-in (find-v-table-index c (list-set qname) write) (tag none))
+         (return (or (not-in (find-base-instance-member c (list-set qname) read) (tag none))
+                     (not-in (find-base-instance-member c (list-set qname) write) (tag none))
                      (not-in (find-common-member b (list-set qname) read false) (tag none))
                      (not-in (find-common-member b (list-set qname) write false) (tag none))))))
       (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof
@@ -4082,7 +4073,7 @@
     
     (rule (:variable-binding :beta) ((compile-env (writable-cell environment))
                                      (compile-var (writable-cell (union dynamic-var variable instance-variable)))
-                                     (overridden-indices (writable-cell (list-set v-table-index)))
+                                     (overridden-var (writable-cell instance-variable-opt))
                                      (multiname (writable-cell multiname))
                                      (validate (-> (context environment attribute-opt-not-false boolean) void))
                                      (setup (-> () void))
@@ -4133,9 +4124,9 @@
                (const c class (assert-in (nth env 0) class))
                (function (eval-initial-value) object-opt
                  (return ((eval :variable-initialisation) env run)))
-               (const v instance-variable (new instance-variable (in member-mod (tag final)) :uninit eval-initial-value immutable))
-               (action<- (overridden-indices :variable-binding 0) (define-instance-member c cxt name (& namespaces a) (& override-mod a) (& explicit a)
-                                                                    read-write v))
+               (const v instance-variable (new instance-variable :uninit (in member-mod (tag final)) :uninit eval-initial-value immutable))
+               (action<- (overridden-var :variable-binding 0) (assert-in (define-instance-member c cxt name (& namespaces a) (& override-mod a) (& explicit a) v)
+                                                                         instance-variable-opt))
                (action<- (compile-var :variable-binding 0) v))
              (:select (tag constructor)
                (throw definition-error))))))
@@ -4166,14 +4157,10 @@
            (:narrow instance-variable
              (var t class-opt ((setup-and-eval :typed-identifier) env))
              (when (in t (tag none))
-               (const c class (assert-in (nth env 0) class))
-               (const overridden-types (list-set class)
-                 (map (overridden-indices :variable-binding 0) i
-                      (&opt type (assert-not-in (get-instance-member (assert-not-in (& super c) (tag none)) i) instance-method))))
-               (cond
-                ((empty overridden-types) (<- t object-class))
-                ((= (length overridden-types) 1) (<- t (unique-elt-of overridden-types)))
-                (nil (throw definition-error))))
+               (const overridden-var instance-variable-opt (overridden-var :variable-binding 0))
+               (if (not-in overridden-var (tag none) :narrow-true)
+                 (<- t (&opt type overridden-var))
+                 (<- t object-class)))
              (&const= type v (assert-not-in t (tag none)))
              ((setup :variable-initialisation)))))
         
@@ -4242,7 +4229,7 @@
         ((validate cxt env) ((validate :type-expression) cxt env))
         ((setup-and-eval env) (return ((setup-and-eval :type-expression) env)))))
     ;(production (:typed-identifier :beta) ((:type-expression :beta) :identifier) typed-identifier-type-and-identifier)
-    (%print-actions ("Validation" compile-env compile-var overridden-indices multiname name plain immutable validate)
+    (%print-actions ("Validation" compile-env compile-var overridden-var multiname name plain immutable validate)
                     ("Setup" setup)
                     ("Evaluation" setup-and-eval eval))
     
@@ -4294,7 +4281,7 @@
     
     (%heading 2 "Function Definition")
     (rule :function-definition ((enclosing-frame (writable-cell frame))
-                                (overridden-indices (writable-cell (list-set v-table-index)))
+                                (overridden-method (writable-cell instance-method-opt))
                                 (validate (-> (context environment plurality attribute-opt-not-false) void))
                                 (setup (-> () void)))
       (production :function-definition (function :function-name :function-common) function-definition-definition
@@ -4336,35 +4323,26 @@
               (nil
                (const v variable (new variable function-class f true))
                (exec (define-local-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v))))
-             (action<- (overridden-indices :function-definition 0) (list-set-of v-table-index)))
+             (action<- (overridden-method :function-definition 0) none))
            (:narrow (tag virtual final)
              (assert (in pl (tag singular)))
              (rwhen (in kind (tag get set))
                (todo))
              ((validate :function-common) cxt env inaccessible false prototype)
-             (const method instance-method (new instance-method (in member-mod (tag final)) (compile-frame :function-common) (eval-instance-call :function-common)))
-             (action<- (overridden-indices :function-definition 0)
-                       (define-instance-member (assert-in (nth env 0) class) cxt name (& namespaces a) (& override-mod a) (& explicit a) read-write method)))
+             (const method instance-method (new instance-method :uninit (in member-mod (tag final)) (compile-frame :function-common) (eval-instance-call :function-common)))
+             (action<- (overridden-method :function-definition 0)
+                       (assert-in (define-instance-member (assert-in (nth env 0) class) cxt name (& namespaces a) (& override-mod a) (& explicit a) method)
+                                  instance-method-opt)))
            (:select (tag constructor)
              (assert (in pl (tag singular)))
-             (action<- (overridden-indices :function-definition 0) (list-set-of v-table-index))
+             (action<- (overridden-method :function-definition 0) none)
              (todo))))
         
         ((setup)
-         (const overridden-indices (list-set v-table-index) (overridden-indices :function-definition 0))
-         (cond
-          ((empty overridden-indices)
-           ((setup :function-common)))
-          (nil
-           (const c class (assert-in (enclosing-frame :function-definition 0) class))
-           (const overridden-signatures (list-set parameter-frame)
-             (map (overridden-indices :function-definition 0) i
-                  (& signature (assert-in (get-instance-member (assert-not-in (& super c) (tag none)) i) instance-method))))
-           (cond
-            ((= (length overridden-signatures) 1)
-             (const overridden-signature parameter-frame (unique-elt-of overridden-signatures))
-             ((setup-override :function-common) overridden-signature))
-            (nil (throw definition-error))))))))
+         (const overridden-method instance-method-opt (overridden-method :function-definition 0))
+         (if (not-in overridden-method (tag none) :narrow-true)
+           ((setup-override :function-common) (& signature overridden-method))
+           ((setup :function-common))))))
     
     
     (rule :function-name ((kind function-kind) (name string))
@@ -4456,7 +4434,7 @@
            ;***** This would be better using a function that constructs the slots out of the Function type.
            (return (new uninstantiated-function function-class initial-slots false (eval-static-call :function-common 0) none (list-set-of simple-instance))))))))
 
-    (%print-actions ("Validation" enclosing-frame overridden-indices kind name plain compile-env compile-frame validate validate-static-function)
+    (%print-actions ("Validation" enclosing-frame overridden-method kind name plain compile-env compile-frame validate validate-static-function)
                     ("Setup" setup setup-override)
                     ("Evaluation" eval-static-call eval-prototype-construct))
     
@@ -4866,7 +4844,7 @@
            (:select (tag constructor virtual) (throw definition-error)))
          (const private-namespace namespace (new namespace "private"))
          (const dynamic boolean (or (& dynamic a) (& dynamic superclass)))
-         (const c class (new class (list-set-of local-binding) superclass (list-set-of instance-binding) (list-set-of v-table-entry)
+         (const c class (new class (list-set-of local-binding) superclass (list-set-of instance-member)
                              (vector-of instance-variable) false superclass prototype "object" private-namespace dynamic final
                              call construct :uninit :uninit null))
          (function (is-instance-of (o object)) boolean
@@ -4969,7 +4947,7 @@
       (function (implicit-coerce (o object :unused) (silent boolean :unused)) object
         (todo))
       (const private-namespace namespace (new namespace "private"))
-      (const c class (new class (list-set-of local-binding) superclass (list-set-of instance-binding) (list-set-of v-table-entry)
+      (const c class (new class (list-set-of local-binding) superclass (list-set-of instance-member)
                           (vector-of instance-variable) true superclass null typeof-string private-namespace dynamic final
                           call construct :uninit implicit-coerce default-value))
       (function (is-instance-of (o object)) boolean
@@ -5004,7 +4982,7 @@
             (return (real-to-float64 i)))))
         (throw bad-value-error))
       (const private-namespace namespace (new namespace "private"))
-      (return (new class (list-set-of local-binding) number-class (list-set-of instance-binding) (list-set-of v-table-entry)
+      (return (new class (list-set-of local-binding) number-class (list-set-of instance-member)
                    (vector-of instance-variable) true number-class null "number" private-namespace false true
                    call construct is-instance-of implicit-coerce +zero64)))
     
