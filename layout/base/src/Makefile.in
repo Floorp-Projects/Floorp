@@ -46,6 +46,7 @@ CPPSRCS		= \
 		nsFrameTraversal.cpp \
 		nsFrameUtil.cpp \
 		nsGalleyContext.cpp \
+		nsGeneratedIterator.cpp \
 		nsGenericDOMDataNode.cpp \
 		nsGenericDOMNodeList.cpp \
 		nsGenericElement.cpp \
