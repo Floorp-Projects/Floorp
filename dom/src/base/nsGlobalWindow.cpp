@@ -1634,6 +1634,7 @@ GlobalWindowImpl::UpdateCommands(const nsString& anAction)
       nsCOMPtr<nsIDocument> doc;
       content->GetDocument(*getter_AddRefs(doc));
       nsCOMPtr<nsIScriptGlobalObject> global;
+      if (!doc) return NS_ERROR_NULL_POINTER;
       doc->GetScriptGlobalObject(getter_AddRefs(global));
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
       return domWindow->UpdateCommands(anAction);
