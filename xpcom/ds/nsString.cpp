@@ -927,7 +927,7 @@ PRInt32 nsString::Right(nsString& aCopy,PRInt32 aCount) {
  */
 PRInt32 nsString::Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
   aCount=(aCount>aCopy.mLength) ? aCopy.mLength : aCount; //don't try to copy more than you are given
-  if(0<anOffset) {
+  if(0<=anOffset) {
     if(aCount>0) {
 
       //1st optimization: If you're inserting at end, then simply append!
