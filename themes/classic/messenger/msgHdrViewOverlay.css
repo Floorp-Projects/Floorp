@@ -36,12 +36,14 @@ mail-emailaddress {
   visibility: collapse;
 }
 
-spring.buttonTopSpacer     { height: .3em; }
-spring.buttonSpacer        { width: .5em; }
-box.headerBox              { overflow: hidden; min-width:50px;}
-box.header-part1           { background-color: #EEEEEE; border: none; }
-box.header-part2           { background-color: #CCCCCC; border: none; }
-box.header-part3           { background-color: #CCCCCC; border: none; }
+.buttonTopSpacer     { height: .3em; }
+.buttonSpacer        { width: .5em; }
+.headerBox              { overflow: hidden; min-width:50px;}
+.header-part1           { background-color: #EEEEEE; border: none; }
+.header-part2           { background-color: #CCCCCC; border: none; }
+.header-part3           { background-color: #CCCCCC; border: none; }
+
+.headerValueBox { width: 7.4em; text-align: right;}
 
 #addToAddressBookButton {
 	list-style-image:url("chrome://messenger/skin/addtoab.gif");
@@ -54,34 +56,36 @@ box.header-part3           { background-color: #CCCCCC; border: none; }
   min-height: 20px;
   margin: 0px;
 }
-
-image.emailDisplayImage
+ 
+.emailDisplayImage
 {
   align: right;
 }
 
-text.emailSeparator {
+.emailSeparator {
   display: inline;
 }
 
-text.emailDisplayButton {
+.emailDisplayButton {
   color: blue;
   text-decoration: underline;
   cursor: pointer;
   max-height: 15px;
+  display: inline;
+  orient: horizontal;
 }
 
-image.showMoreAddressesButton {
+.showMoreAddressesButton {
   list-style-image: url("chrome://messenger/skin/more.gif");
   display: inline;
 }
 
-image.showFewerAddressesButton {
+.showFewerAddressesButton {
   list-style-image: url("chrome://messenger/skin/less.gif");
   display: inline;
 }
 
-html.headerValue   { white-space: normal; min-width: 50px; }
+html.headerValue   { white-space: normal; min-width: 50px; margin: 0px; }
 html.subjectvalue      {font-weight: bold;}
 
 text.headerdisplayname { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
