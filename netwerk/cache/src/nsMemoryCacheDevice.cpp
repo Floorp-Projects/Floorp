@@ -74,7 +74,7 @@ nsMemoryCacheDevice::FindEntry(nsCString * key)
 nsresult
 nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
-    nsCString * key = entry->GetKey();
+    nsCString * key = entry->Key();
 
     nsCacheEntry * ourEntry = mInactiveEntries.GetEntry(key);
     NS_ASSERTION(ourEntry, "DeactivateEntry called for an entry we don't have!");

@@ -47,28 +47,28 @@ public:
     nsCacheEntry(nsCString * key, nsCacheStoragePolicy storagePolicy);
     ~nsCacheEntry();
 
-    nsCString *  GetKey(void)            { return mKey; }
+    nsCString *  Key(void)  { return mKey; }
 
-    void GetFetchCount( PRInt32 * result)    { if (result) *result = mFetchCount; }
-    void SetFetchCount( PRInt32   count)     { mFetchCount = count; }
+    PRInt32  FetchCount(void)                     { return mFetchCount;}
+    void     SetFetchCount( PRInt32   count)      { mFetchCount = count;}
 
-    void GetLastFetched( PRTime * result)      { if (result) *result = mLastFetched; }
-    void SetLastFetched( PRTime   lastFetched) { mLastFetched = lastFetched; }
+    PRTime   LastFetched(void)                    { return mLastFetched;}
+    void     SetLastFetched( PRTime lastFetched)  { mLastFetched = lastFetched;}
 
-    void GetLastValidated( PRTime * result)   { if (result) *result = mLastValidated; }
-    void SetLastValidated( PRTime   lastValidated) { mLastValidated = lastValidated; }
+    PRTime   LastValidated(void)                     { return mLastValidated;}
+    void     SetLastValidated( PRTime lastValidated) { mLastValidated = lastValidated;}
 
-    void GetExpirationTime( PRTime * result)  { if (result) *result = mExpirationTime; }
-    void SetExpirationTime( PRTime   expires) { mExpirationTime = expires; }
+    PRTime   ExpirationTime(void)               { return mExpirationTime;}
+    void     SetExpirationTime( PRTime expires) { mExpirationTime = expires;}
 
-    void GetDataSize( PRUint32 * result)      { if (result) *result = mDataSize; }
-    void SetDataSize( PRUint32   size)        { mDataSize = size; }
+    PRUint32 DataSize(void)                     { return mDataSize;}
+    void     SetDataSize( PRUint32   size)      { mDataSize = size;}
 
-    void GetMetaDataSize( PRUint32 * result)  { if (result) *result = mMetaSize; }
-    void SetMetaDataSize( PRUint32   size)    { mMetaSize = size; }
+    PRUint32 MetaDataSize(void)                 { return mMetaSize;}
+    void     SetMetaDataSize( PRUint32   size)  { mMetaSize = size;}
 
-    void GetCacheDevice( nsCacheDevice ** result) { if (result) *result = mCacheDevice; }
-    void SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device; }
+    nsCacheDevice * CacheDevice(void)                        { return mCacheDevice;}
+    void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device;}
 
     nsresult GetData( nsISupports ** result);
     nsresult SetData( nsISupports *  data);
@@ -123,8 +123,12 @@ public:
     PRBool   RemoveRequest( nsCacheRequest * request);
     PRBool   RemoveDescriptor( nsCacheEntryDescriptor * descriptor);
 
-    nsCacheDevice * CacheDevice(void) { return mCacheDevice; }
+    PRCList*              GetListNode(void)        { return &mListLink;   }
+    static nsCacheEntry*  GetInstance(PRCList* qp) {
+        return (nsCacheEntry*) ((char*)qp - offsetof(nsCacheEntry, mListLink));
+    }
 
+    
 private:
     friend class nsCacheEntryHashTable;
     friend class nsCacheService;
@@ -134,6 +138,7 @@ private:
     void MarkStreamBased() { mFlags |= eStreamDataMask; }
     void MarkInitialized() { mFlags |= eInitializedMask; }
 
+    PRCList                mListLink;       // 8  for holding entry on various lists
     nsCString *            mKey;            // 4  //** ask scc about const'ness
     PRUint32               mFetchCount;     // 4
     PRTime                 mLastFetched;    // 8

@@ -43,6 +43,7 @@ nsCacheEntry::nsCacheEntry(nsCString * key, nsCacheStoragePolicy storagePolicy)
       mData(nsnull),
       mMetaData(nsnull)
 {
+    PR_INIT_CLIST(&mListLink);
     PR_INIT_CLIST(&mRequestQ);
     PR_INIT_CLIST(&mDescriptorQ);
 
@@ -71,7 +72,6 @@ nsCacheEntry::~nsCacheEntry()
 nsresult
 nsCacheEntry::GetData(nsISupports **result)
 {
-    if (IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
     if (!result)         return NS_ERROR_NULL_POINTER;
 
     NS_IF_ADDREF(*result = mData);
@@ -82,9 +82,6 @@ nsCacheEntry::GetData(nsISupports **result)
 nsresult
 nsCacheEntry::SetData(nsISupports * data)
 {
-    if (IsStreamData())
-        return NS_ERROR_CACHE_DATA_IS_STREAM;
-
     mData = data;
     return NS_OK;
 }
@@ -179,7 +176,8 @@ nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
         if (descriptor == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        NS_ADDREF(descriptor);
+        NS_ADDREF(*result = descriptor);
+
         rv = descriptor->QueryInterface(NS_GET_IID(nsICacheEntryDescriptor), 
                                         (void**)result);
 
