@@ -3090,8 +3090,8 @@ NS_IMETHODIMP nsMsgDBFolder::AddSubfolder(const nsAString& name,
     return rv;
 
   nsFileSpec path;
-  nsMsgDBFolder *dbFolder = NS_STATIC_CAST(nsMsgDBFolder *, NS_STATIC_CAST(nsIMsgFolder *, folder.get()));
-  rv = dbFolder->CreateDirectoryForFolder(path);
+  // we just need to do this for the parent folder, i.e., "this".
+  rv = CreateDirectoryForFolder(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
   folder->GetFlags((PRUint32 *)&flags);
