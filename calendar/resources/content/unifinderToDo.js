@@ -136,13 +136,6 @@ function toDoUnifinderRefresh()
    refreshToDoTree( taskTable );
 }
 
-function unifinderToDoHasFocus()
-{
-   var tree = document.getElementById( ToDoUnifinderTreeName );
-   return( tree.treeBoxObject.focused );
-}
-
-
 function getToDoFromEvent( event )
 {
    var tree = document.getElementById( ToDoUnifinderTreeName );
