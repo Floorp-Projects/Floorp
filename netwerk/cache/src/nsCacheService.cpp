@@ -1305,7 +1305,9 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
             return;
         }
     } else {
-        NS_WARNING("DeactivateEntry: bad cache entry state\n");
+        // if mCacheServiceLock == nsnull,
+        // then we're shutting down and this state is okay.
+        NS_ASSERTION(!mCacheServiceLock, "DeactivateEntry: bad cache entry state\n");
     }
 
     device = entry->CacheDevice();
