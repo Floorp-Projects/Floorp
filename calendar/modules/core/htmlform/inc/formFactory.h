@@ -98,7 +98,7 @@ private:
             Busy_State
         };
 
-        Julian_Duration	MinutesPerSlot;
+        nsCalDuration	MinutesPerSlot;
         int32			SlotsPerHour;
         XP_Bool         displayTimeZone;
         int32           scaleType; // 1 = days 1 to 31, 2 = hours 0 to 24

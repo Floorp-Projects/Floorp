@@ -1783,7 +1783,7 @@ void
 JulianFormFactory::makeHourFBTable()
 {
     UnicodeString usFBT_TickSetting = FBT_TickSetting;
-    MinutesPerSlot = Julian_Duration(usFBT_TickSetting);
+    MinutesPerSlot = nsCalDuration(usFBT_TickSetting);
 	SlotsPerHour = (60 / MinutesPerSlot.getMinute());
     displayTimeZone = TRUE;
     scaleType = 2;
@@ -1796,7 +1796,7 @@ void
 JulianFormFactory::makeDaysFBTable()
 {
     UnicodeString usFBT_TickDaySetting = FBT_TickDaySetting;
-    MinutesPerSlot = Julian_Duration(usFBT_TickDaySetting);
+    MinutesPerSlot = nsCalDuration(usFBT_TickDaySetting);
 	SlotsPerHour = 1;
     displayTimeZone = FALSE;
     scaleType = 1;
@@ -1814,7 +1814,7 @@ JulianFormFactory::doMakeFreeBusyTable()
 	if (isFreeBusy)
 	{
 		JulianString	timezoneformat = "z";
-        Julian_Duration tempdur;
+        nsCalDuration tempdur;
         int32           x;
 		char*           temp2 = nil;
         char*           temp;
@@ -1885,7 +1885,7 @@ JulianFormFactory::doMakeFreeBusyTable()
 		{
             char* temp;
 
-		    Julian_Duration d_offset = Julian_Duration(usFBT_TickOffset);
+		    nsCalDuration d_offset = nsCalDuration(usFBT_TickOffset);
 			// int32 slot_count;
 			DateTime StartOfSlot, EndOfSlot;
 
