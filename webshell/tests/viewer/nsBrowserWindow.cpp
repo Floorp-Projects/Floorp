@@ -89,6 +89,23 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 
+#if defined(CookieManagement) || defined(SingleSignon) || defined(ClientWallet)
+#include "nsIServiceManager.h"
+#endif
+
+#if defined(CookieManagement) || defined(SingleSignon)
+#include "nsINetService.h"
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#endif
+
+#ifdef ClientWallet
+#include "nsIWalletService.h"
+static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
+static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+#endif
+
+
 #define THROBBING_N
 
 // XXX greasy constants
@@ -450,6 +467,18 @@ HandleLocationEvent(nsGUIEvent *aEvent)
 nsEventStatus
 nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
+#if defined(CookieManagement) || defined(SingleSignon) || defined(ClientWallet)
+  nsresult res;
+#if defined(CookieManagement) || defined(SingleSignon)
+  nsINetService *netservice;
+#endif
+#ifdef ClientWallet
+#define WALLET_EDITOR_URL "file:///y|/walleted.html"
+  nsIWalletService *walletservice;
+  nsAutoString urlString(WALLET_EDITOR_URL);
+#endif
+#endif
+
   nsEventStatus result;
 #ifdef NS_DEBUG
   result = DispatchDebugMenu(aID);
@@ -574,6 +603,76 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_IMAGE_INSPECTOR:
     DoImageInspector();
     break;
+
+#ifdef ClientWallet
+  case PRVCY_PREFILL:
+  case PRVCY_QPREFILL:
+  nsIPresShell* shell;
+  shell = nsnull;
+  shell = GetPresShell();
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_Prefill(shell, (PRVCY_QPREFILL == aID));
+    NS_RELEASE(walletservice);
+  }
+
+#ifndef HTMLDialogs 
+  if (aID == PRVCY_PREFILL) {
+    nsAutoString url("file:///y|/htmldlgs.htm");
+    nsIBrowserWindow* bw = nsnull;
+    mApp->OpenWindow(PRUint32(~0), bw);
+    bw->Show();
+    ((nsBrowserWindow *)bw)->GoTo(url);
+    NS_RELEASE(bw);
+  }
+#endif
+  break;
+
+  case PRVCY_DISPLAY_WALLET:
+
+  /* set a cookie for the javascript wallet editor */
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    nsIURL * url;
+    if (!NS_FAILED(NS_NewURL(&url, WALLET_EDITOR_URL))) {
+      res = walletservice->WALLET_PreEdit(url);
+      NS_RELEASE(walletservice);
+    }
+  }
+
+  /* invoke the javascript wallet editor */
+  mWebShell->LoadURL(urlString);
+
+  break;
+#endif
+
+#if defined(CookieManagement)
+  case PRVCY_DISPLAY_COOKIES:
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&netservice);
+  if ((NS_OK == res) && (nsnull != netservice)) {
+    res = netservice->NET_DisplayCookieInfoAsHTML();
+    NS_RELEASE(netservice);
+  }
+  break;
+#endif
+
+#if defined(SingleSignon)
+  case PRVCY_DISPLAY_SIGNONS:
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&netservice);
+  if ((NS_OK == res) && (nsnull != netservice)) {
+    res = netservice->SI_DisplaySignonInfoAsHTML();
+    NS_RELEASE(netservice);
+  }
+  break;
+#endif
 
   }
 
@@ -837,7 +936,6 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 
     return result;
 }
-
 
 void
 nsBrowserWindow::DoFind()

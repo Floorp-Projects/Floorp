@@ -51,20 +51,40 @@
 #include "nsHTMLParts.h"
 #include "nsIReflowCommand.h"
 
+// GetParentHTMLFrameDocument
+#include "nsIWebShell.h"
+#include "nsIContentViewerContainer.h"
+#include "nsIDocumentViewer.h"
+
 #include "net.h"
 #include "xp_file.h"
 #include "prio.h"
 #include "prmem.h"
 #include "prenv.h"
 
+#if defined(ClientWallet) || defined(SingleSignon)
+#include "nsIServiceManager.h"
+#endif
+
+// GetParentHTMLFrameDocument
+static NS_DEFINE_IID(kIWebshellIID, NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+
 #ifdef SingleSignon
 #define FORM_TYPE_TEXT          1
 #define FORM_TYPE_PASSWORD      7
 #include "nsINetService.h"
-#include "nsIServiceManager.h"
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #endif
+
+#ifdef ClientWallet
+#include "nsIWalletService.h"
+static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
+static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+#endif
+
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
@@ -546,10 +566,14 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsIURL* docURL = nsnull;
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
-    if (nsnull != doc) {
+    while (doc && !docURL) {
       doc->GetBaseURL(docURL);
-      NS_RELEASE(doc);
+      if (!docURL) {
+        doc = GetParentHTMLFrameDocument(doc);
+        if (!doc) break;
+      }
     }
+    NS_IF_RELEASE(doc);
 
     nsAutoString target;
     GetTarget(&target);
@@ -563,6 +587,33 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsAutoString base;
     NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
     NS_IF_RELEASE(docURL);
+
+#ifdef ClientWallet
+#ifndef HTMLDialogs 
+    if (href == "internal-walletPrefill-handler") {
+      nsresult res;
+      nsIWalletService *walletservice;
+      res = nsServiceManager::GetService(kWalletServiceCID,
+                                         kIWalletServiceIID,
+                                         (nsISupports **)&walletservice);
+      if ((NS_OK == res) && (nsnull != walletservice)) {
+        res = walletservice->WALLET_Prefill(nsnull, PR_FALSE);
+        NS_RELEASE(walletservice);
+      }
+    }
+    if (href == "internal-walletEditor-handler") {
+      nsresult res;
+      nsIWalletService *walletservice;
+      res = nsServiceManager::GetService(kWalletServiceCID,
+                                         kIWalletServiceIID,
+                                         (nsISupports **)&walletservice);
+      if ((NS_OK == res) && (nsnull != walletservice)) {
+        res = walletservice->WALLET_PreEdit(nsnull);
+        NS_RELEASE(walletservice);
+      }
+    }
+#endif
+#endif
 
     // Now pass on absolute url to the click handler
     nsIPostData* postData = nsnull;
@@ -630,6 +681,44 @@ nsString* URLEncode(nsString& aString)
 	return result;
 }
 
+// Hack to get the document from the parent HTML Frame.
+// We need this to find the base URL for submitting forms that are created in Javascript
+nsIDocument*
+nsFormFrame::GetParentHTMLFrameDocument(nsIDocument* doc) {
+  nsIDocument* parentDocument = nsnull;
+  nsIScriptContextOwner* webshellOwner = nsnull;
+  if (!doc) return nsnull;
+  if ((webshellOwner = doc->GetScriptContextOwner())) {
+    nsIWebShell* webshell = nsnull;
+    if (NS_OK == webshellOwner->QueryInterface(kIWebshellIID, (void **)&webshell)) {
+      nsIWebShell* pWebshell = nsnull;
+      if (NS_OK == webshell->GetParent(pWebshell)) {
+        nsIContentViewerContainer* pContentViewerContainer = nsnull;
+        if (NS_OK == pWebshell->QueryInterface(kIContentViewerContainerIID, (void **)&pContentViewerContainer)) {
+          nsIContentViewer* pContentViewer = nsnull;
+          if (NS_OK == pContentViewerContainer->GetContentViewer(&pContentViewer)) {
+            nsIDocumentViewer* pDocumentViewer;
+            if (NS_OK == pContentViewer->QueryInterface(kIDocumentViewerIID, (void **)&pDocumentViewer)) {
+              nsIDocument* pDocument = nsnull;
+              if (NS_OK == pDocumentViewer->GetDocument(pDocument)) {
+                parentDocument = pDocument;
+                NS_RELEASE(doc); // Release the child doc for the caller
+              }
+              NS_RELEASE (pDocumentViewer);
+            }
+            NS_RELEASE(pContentViewer);
+          }
+          NS_RELEASE(pContentViewerContainer);
+        }
+        NS_RELEASE(pWebshell);
+      }
+      NS_RELEASE(webshell);
+     }
+     NS_RELEASE(webshellOwner);
+  }
+  return parentDocument;
+}
+
 #define CRLF "\015\012"   
 void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
 {
@@ -637,26 +726,59 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
   PRBool firstTime = PR_TRUE;
   PRUint32 numChildren = mFormControls.Count();
 
+#if defined(ClientWallet) || defined(SingleSignon)
+  /* get url name as ascii string */
+  char *URLName = nsnull;
+  nsIURL* docURL = nsnull;
+  nsIDocument* doc = nsnull;
+  mContent->GetDocument(doc);
+
+  while (doc && !docURL) {
+    docURL = doc->GetDocumentURL();
+    if (!docURL) {
+      doc = GetParentHTMLFrameDocument(doc);
+      if (!doc) break;
+    }
+  }
+  if (nsnull != docURL) {
+    const char* spec;
+    (void)docURL->GetSpec(&spec);
+    URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
+    PL_strcpy(URLName, spec);
+    NS_IF_RELEASE(docURL);
+  }
+#endif
+
 #ifdef SingleSignon
 #define MAX_ARRAY_SIZE 50
   char* name_array[MAX_ARRAY_SIZE];
   char* value_array[MAX_ARRAY_SIZE];
   uint8 type_array[MAX_ARRAY_SIZE];
   PRInt32 value_cnt = 0;
+#endif
 
-  /* get url name as ascii string */
-  char *URLName;
-  nsIURL* docURL = nsnull;
-  nsIDocument* doc = nsnull;
-  mContent->GetDocument(doc);
-  if (nsnull != doc) {
-	  docURL = doc->GetDocumentURL();
-	  NS_RELEASE(doc);
-    const char* spec;
-    (void)docURL->GetSpec(&spec);
-	  URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-	  PL_strcpy(URLName, spec);
-    NS_RELEASE(docURL);
+#ifdef ClientWallet
+  /* determine if form is significant enough to capture data for */
+  PRBool OKToCapture = FALSE;
+  PRInt32 count = 0;
+  PRUint32 numChildren2 = mFormControls.Count();
+  for (PRUint32 childX2 = 0; childX2 < numChildren2; childX2++) {
+    nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX2);
+    if (child && child->IsSuccessful(aFrame)) {
+      PRInt32 type;
+      child->GetType(&type);
+      if (type == NS_FORM_INPUT_TEXT) {
+        count++;
+      }
+    }
+  }
+  nsIWalletService *service2;
+  nsresult res2 = nsServiceManager::GetService(kWalletServiceCID,
+    kIWalletServiceIID,
+    (nsISupports **)&service2);
+  if ((NS_OK == res2) && (nsnull != service2)) {
+    service2->WALLET_OKToCapture(&OKToCapture, count, URLName);
+    NS_RELEASE(service2);
   }
 #endif
 
@@ -672,9 +794,23 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 		  nsString* names = new nsString[maxNumValues];
 		  nsString* values = new nsString[maxNumValues];
 			if (PR_TRUE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
-#ifdef SingleSignon
+#if defined(ClientWallet) || defined(SingleSignon)
 				PRInt32 type;
 				child->GetType(&type);
+#endif
+#ifdef ClientWallet
+                              if (OKToCapture && (NS_FORM_INPUT_TEXT == type)) {
+                                      nsIWalletService *service;
+                                      nsresult res = nsServiceManager::GetService(kWalletServiceCID,
+                                              kIWalletServiceIID,
+                                              (nsISupports **)&service);
+                                      if ((NS_OK == res) && (nsnull != service)) {
+                                              res = service->WALLET_Capture(doc, *names, *values);
+                                              NS_RELEASE(service);
+                                      }
+                              }
+#endif
+#ifdef SingleSignon
 				if ((type == NS_FORM_INPUT_PASSWORD) || (type == NS_FORM_INPUT_TEXT)) {
 					if (type == NS_FORM_INPUT_PASSWORD) {
 						type_array[value_cnt] = FORM_TYPE_PASSWORD;
@@ -718,10 +854,17 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 		(URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
 	  NS_RELEASE(service);
   }
-  PR_FREEIF(URLName);
   while (value_cnt--) {
 	PR_FREEIF(name_array[value_cnt]);
 	PR_FREEIF(value_array[value_cnt]);
+  }
+#endif
+#if defined(ClientWallet) || defined(SingleSignon)
+  if (nsnull != doc) {
+        NS_RELEASE(doc);
+  }
+  if (nsnull != URLName) {
+        PR_FREEIF(URLName);
   }
 #endif
 

@@ -124,6 +124,15 @@ VIEWER MENU DISCARDABLE
     MENUITEM "&JavaScript Console", JS_CONSOLE
     MENUITEM "&Editor Mode", EDITOR_MODE
     MENUITEM SEPARATOR
+    POPUP "&Privacy Tools"
+    {
+      MENUITEM "Safe Prefill from &Wallet", PRVCY_PREFILL
+      MENUITEM "&Quick Prefill from &Wallet", PRVCY_QPREFILL
+      MENUITEM SEPARATOR
+      MENUITEM "Display Wa&llet", PRVCY_DISPLAY_WALLET
+      MENUITEM "Display &Cookies", PRVCY_DISPLAY_COOKIES
+      MENUITEM "Display &Signons", PRVCY_DISPLAY_SIGNONS
+    }
     POPUP    "Editor Tests"
     {
       MENUITEM  "Insert Table",   VIEWER_EDIT_INSERT_TABLE  
