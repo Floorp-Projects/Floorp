@@ -303,7 +303,7 @@ function acknowledgeAlarm( Event )
 {
    Event.lastAlarmAck = new Date();
 
-   opener.refreshRemoteCalendarAndRunFunction( Event, Event.parent.server, "modifyEvent" );
+   opener.saveItem( Event, Event.parent.server, "modifyEvent" );
 
    var Id = getArrayId( Event )
 
@@ -370,7 +370,7 @@ function snoozeAlarm( Event )
    
    Event.setSnoozeTime( DateObjOfNextAlarm );
    
-   opener.refreshRemoteCalendarAndRunFunction( Event, Event.parent.server, "modifyEvent" );
+   opener.saveItem( Event, Event.parent.server, "modifyEvent" );
 
    var Id = getArrayId( Event )
 

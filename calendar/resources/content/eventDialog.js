@@ -83,6 +83,7 @@ var debugenabled=false;
 
 var gEvent;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
+var gOriginalEvent;  //Event before edits
 
 var gDuration = -1;   // used to preserve duration when changing event start.
 
@@ -129,6 +130,7 @@ function loadCalendarEventDialog()
    else
    {
       titleDataItem = document.getElementById( "data-event-title-edit" );
+      gOriginalEvent =  gEvent.clone(); 
    }
    
    var titleString = titleDataItem.getAttribute( "value" );
@@ -488,7 +490,7 @@ function onOKCommand()
    // :TODO: REALLY only do this if the alarm or start settings change.?
    //if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function
-   gOnOkFunction( gEvent, Server );
+   gOnOkFunction( gEvent, Server, gOriginalEvent );
       
    // tell standard dialog stuff to close the dialog
    return true;

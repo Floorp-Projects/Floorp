@@ -713,7 +713,7 @@ function createToDo ()
 
 function isEvent ( aObject )
 {
-   return aObject instanceof Components.interfaces.oeIICalEvent;
+   return (aObject instanceof Components.interfaces.oeIICalEvent) && !(aObject instanceof Components.interfaces.oeIICalTodo);
 }
 
 
@@ -723,6 +723,41 @@ function isToDo ( aObject )
 }
 
 
+/* 
+* returns true if lastModified match
+*
+*If a client for some reason modifies the item without
+*touching lastModified this will obviously fail
+*/
+function compareItems( aObject1, aObject2 ){
+   if ( aObject1 == null || aObject2 == null){
+      return false;
+   }
+   //workaround Bug 270644, normally I should only check lastModified
+   //but on new events such property throws an error and need a try
+   try{ 
+      return (aObject1.lastModified == aObject2.lastModified);
+   }catch(er){
+      return (aObject1.stamp.getTime() == aObject2.stamp.getTime());
+   }
+}
+
+
+/* 
+* useful to get the new version of an item
+* in order to check if it changed 
+*/
+function fetchItem( aObject ){
+   try{
+      if ( isToDo(aObject) ) {
+         return gICalLib.fetchTodo( aObject.id ); 
+      } else {
+         return gICalLib.fetchEvent( aObject.id );
+      }
+   }catch(er){
+   }
+   return null;
+}
 
 /** 
 * Defaults null start/end date based on selected date in current view.
@@ -833,7 +868,7 @@ function editNewToDo( calendarToDo, server )
 
 function addEventDialogResponse( calendarEvent, Server )
 {
-   refreshRemoteCalendarAndRunFunction( calendarEvent, Server, "addEvent" );
+   saveItem( calendarEvent, Server, "addEvent" );
 }
 
 
@@ -844,7 +879,7 @@ function addEventDialogResponse( calendarEvent, Server )
 
 function addToDoDialogResponse( calendarToDo, Server )
 {
-    refreshRemoteCalendarAndRunFunction( calendarToDo, Server, "addTodo" );
+    saveItem( calendarToDo, Server, "addTodo" );
 }
 
 
@@ -881,9 +916,9 @@ function editToDo( calendarToDo )
 * notified of the change through their respective observers
 */
 
-function modifyEventDialogResponse( calendarEvent, Server )
+function modifyEventDialogResponse( calendarEvent, Server, originalEvent )
 {
-   refreshRemoteCalendarAndRunFunction( calendarEvent, Server, "modifyEvent" );
+   saveItem( calendarEvent, Server, "modifyEvent", originalEvent );
 }
 
 
@@ -894,9 +929,9 @@ function modifyEventDialogResponse( calendarEvent, Server )
 * notified of the change through their respective observers
 */
 
-function modifyToDoDialogResponse( calendarToDo, Server )
+function modifyToDoDialogResponse( calendarToDo, Server, originalToDo )
 {
-    refreshRemoteCalendarAndRunFunction( calendarToDo, Server, "modifyTodo" );
+    saveItem( calendarToDo, Server, "modifyTodo", originalToDo );
 }
 
 
@@ -932,6 +967,7 @@ function openToDoDialog(calendarToDo, mode, onOk, server)
   args.calendarEvent = calendarToDo;
   args.mode = mode;
   args.onOk = onOk;
+  
   if( server )
     args.server = server;
    
@@ -959,39 +995,68 @@ function editEventCommand()
 }
 
 
-function refreshRemoteCalendarAndRunFunction( calendarEvent, Server, functionToRun )
+//originalEvent is the item before edits were committed, 
+//used to check if there were external changes for shared calendar
+function saveItem( calendarEvent, Server, functionToRun, originalEvent )
 {
-   var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( Server )
+   var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( Server );
+   var path = calendarServer.getAttribute("http://home.netscape.com/NC-rdf#path");
+   var shared = (calendarServer.getAttribute("http://home.netscape.com/NC-rdf#shared" ) == "true");
+   var publishAutomatically = (calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true");
+   if( calendarServer ) {
    
-   if( calendarServer )
-   {
-      if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true" )
-      {
-         var onResponseExtra = function( )
-         {
+      if( publishAutomatically ) {
+         var onResponseExtra = function( ) {
             //add the event
             eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
-   
             gCalendarWindow.clearSelectedEvent( calendarEvent );
-            
             //publish the changes back to the server
             gCalendarWindow.calendarManager.publishCalendar( calendarServer );
          }
-   
          //refresh the calendar file.
          gCalendarWindow.calendarManager.retrieveAndSaveRemoteCalendar( calendarServer, onResponseExtra );
-      }
-      else
-      {
-         eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
-   
+            
+      } else if ( shared ) {
+         
+         if ( !gCalendarWindow.calendarManager.startLocalLock(calendarServer)) {
+            alert(gCalendarBundle.getString( "unableToWrite" ) + path + ".lock");
+            return;
+         }
+         
+         //Do not override external changes to other events, reload all calendar and merge only modified event... 
+         //check if the same event was edited externally  before edits were committed since the last reload.
+         if (gCalendarWindow.calendarManager.reloadCalendar(calendarServer, true)) {
+            //calendar edited externally
+            var uneditedEvent = fetchItem(calendarEvent);
+            if (uneditedEvent != null) {
+               //not a new event
+               if (!compareItems( uneditedEvent, originalEvent )) {
+                  //event edited externally
+                  alert(gCalendarBundle.getString("concurrentEdit"));
+                  return;
+               }
+            }
+         }
+         
+         //Merge single edited event and save
+         eval( "gICalLib." + functionToRun + "(calendarEvent, path)" );
+         gCalendarWindow.calendarManager.removeLocalLock(calendarServer);
+         
+         //Check if the edited event is actually in the calendar file in case the lock failed
+         gCalendarWindow.calendarManager.reloadCalendar( calendarServer );
+         if ( !compareItems( fetchItem( calendarEvent ), calendarEvent ) ){ 
+            alert(gCalendarBundle.getString( "unableToWrite" ) + path );  
+         }
+         gCalendarWindow.clearSelectedEvent( calendarEvent );
+         
+      } else {
+         //Normal local calendar
+         eval("gICalLib."+functionToRun+"(calendarEvent, path)");
          gCalendarWindow.clearSelectedEvent( calendarEvent );
       }
-   }
-   else
-   {
+
+   } else {
       eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
-   
       gCalendarWindow.clearSelectedEvent( calendarEvent );
    }
 }
@@ -999,127 +1064,159 @@ function refreshRemoteCalendarAndRunFunction( calendarEvent, Server, functionToR
 
 /**
 *  This is called from the unifinder's delete command
+*
 */
-
-function deleteEventCommand( DoNotConfirm )
+function deleteItems( SelectedItems, DoNotConfirm )
 {
-   var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
-   outerLoop:
-      if ( SelectedItems )
-      {
-         if ( !DoNotConfirm )
-         {
-            var calendarEvent = SelectedItems[0];
-            var confirmText
+   if ( !SelectedItems ) {
+      return;
+   }
 
-            if ( SelectedItems.length > 1 )
-               confirmText = confirmDeleteAllEvents;
-            else if ( calendarEvent.title )
-               confirmText = (confirmDeleteEvent+" "+calendarEvent.title+"?" );
-            else 
-               confirmText = confirmDeleteUntitledEvent;
+   //Confirmation
+   if ( !DoNotConfirm ) {
+      var calendarEvent = SelectedItems[0];
+      var confirmText;
+      if ( SelectedItems.length > 1 ) {
+         confirmText = confirmDeleteAllEvents;
+      } else if ( calendarEvent.title ) {
+         confirmText = (confirmDeleteEvent+" "+calendarEvent.title+"?" );
+      } else {
+         confirmText = confirmDeleteUntitledEvent;
+      }
+      if ( !confirm( confirmText ) ) {
+         return;
+      }
+   }
 
-            if ( !confirm( confirmText ) )
-               break outerLoop;
+   //group items to delete by calendarServer
+   calendarsToPublish = new Array();
+   var autoPublishEnabled = false;
+   var serverInArray = false;
+   for( i = 0; i < SelectedItems.length; i++ ) {
+      var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( SelectedItems[i].parent.server );
+      var calendarId = calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" );
+      if (!(calendarId in calendarsToPublish)) {
+         calendarsToPublish[calendarId] = new Object();
+         calendarsToPublish[calendarId].items =new Array();
+      }
+      calendarsToPublish[calendarId].calendarServer = calendarServer;
+      calendarsToPublish[calendarId].items.push(SelectedItems[i]);
+   }
+   
+   //process each calendarServer
+   for (calendarId in calendarsToPublish) {
+      calendarServer = calendarsToPublish[calendarId].calendarServer;
+      var path = calendarServer.getAttribute("http://home.netscape.com/NC-rdf#path");
+      var shared = (calendarServer.getAttribute("http://home.netscape.com/NC-rdf#shared" )  == "true");
+      var publishAutomatically = (calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true");
+      
+      //pre-processing
+      if( publishAutomatically ) {
+         //download
+         gCalendarWindow.calendarManager.retrieveAndSaveRemoteCalendar(calendarServer);
+      } else if ( shared ) {
+         //lock
+         if ( !gCalendarWindow.calendarManager.startLocalLock(calendarServer)){
+            alert(gCalendarBundle.getString( "unableToWrite" ) + path + ".lock");
+            continue; 
+            //skip deleting items from this calendar, try other calendars 
          }
+         //reload 
+         var isModified = gCalendarWindow.calendarManager.reloadCalendar(calendarServer, true); 
+      }
+         
+      //delete selected items of this calendarServer locally 
+      gICalLib.batchMode = true;
+      for (eventId in calendarsToPublish[calendarId].items) {
+         var selectedItem = calendarsToPublish[calendarId].items[eventId]; //item to delte
 
-         calendarsToPublish = new Array();
-         var autoPublishEnabled = false;
-         var serverInArray = false;
-         for( i = 0; i < SelectedItems.length; i++ )
-         {
-            var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( SelectedItems[i].parent.server );
-            if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true" )
-            {
-
-               // If the calendarsToPublish array is empty, add this alarm's calendar's parent server to the array
-               if( calendarsToPublish.length == 0 )
-                  serverInArray = false;
-               else
-               {
-                  // Check if this alarm's parent calendar's server is already in the calendarsToPublish array
-                  serverInArray = false;
-                  for( var j = 0; j < calendarsToPublish.length; j++ )
-                  {
-                     if( calendarsToPublish[j].getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ) ==
-                         calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ) )
-                     {
-                        serverInArray = true;
-                     }
+         //item-level checks
+         if ( shared ) {
+            //Check if the same event was edited externally since the last reload.
+            if ( isModified ) {
+               //calendar edited externally
+               var uneditedEvent = fetchItem(selectedItem );
+               if (uneditedEvent != null ){
+                  //not already deleted
+                  if (!compareItems( uneditedEvent, selectedItem )){
+                     //event edited externally
+                     alert(gCalendarBundle.getString("concurrentEdit") + " " + selectedItem.title);
+                     continue; 
+                     //skip deleting this item
                   }
                }
-
-               // If this event's parent calendar's server isn't in the array, add it
-               if( !serverInArray )
-                  calendarsToPublish.push(calendarServer);
             }
          }
 
-         gICalLib.batchMode = true;
-         for( i = 0; i < SelectedItems.length; i++ )
-         {
-            try {
-               gCalendarWindow.clearSelectedEvent( SelectedItems[i] );
-               gICalLib.deleteEvent( SelectedItems[i].id );
+         //delete item
+         try {
+            if( isToDo(selectedItem) ) {
+               gICalLib.deleteTodo( selectedItem.id );
+            }else{
+               gICalLib.deleteEvent( selectedItem.id );
             }
-            catch (ex) {
-               dump("*** deleteEventCommand failed: "+ ex + "\n");
-            }
-         }
-         gICalLib.batchMode = false;
-
-         // If we need to publish at least one calendar, publish to each calendarServer in the array
-         if( calendarsToPublish.length )
-         {
-            for( i = 0; i < calendarsToPublish.length; i++ )
-            {
-               gCalendarWindow.calendarManager.publishCalendar( calendarsToPublish[i] );
-            }
+         } catch (ex) {
+            dump("*** deleteItems failed: "+ ex + "\n");
          }
       }
+      gICalLib.batchMode = false;
+
+      //post-processing 
+      if ( publishAutomatically) {
+         //publish
+         gCalendarWindow.calendarManager.publishCalendar(calendarServer);
+      } else if ( shared) {
+         //unlock
+         gCalendarWindow.calendarManager.removeLocalLock(calendarServer);
+      }
+   }
 }
 
 
 /**
 *  Delete the current selected item with focus from the ToDo unifinder list
 */
+function deleteEventCommand( DoNotConfirm )
+{
+   var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
+   deleteItems( SelectedItems, DoNotConfirm );
+   for ( i in  SelectedItems) {
+      gCalendarWindow.clearSelectedEvent( SelectedItems[i] );
+   }
+}
 
+
+/**
+*  Delete the current selected item with focus from the ToDo unifinder list
+*/
 function deleteToDoCommand( DoNotConfirm )
 {
-   // TODO Implement Confirm
-
-    var tree = document.getElementById( ToDoUnifinderTreeName );
-    var start = new Object();
-    var end = new Object();
-    var numRanges = tree.view.selection.getRangeCount();
-
-    // delete in reverse order so indexes of remaining selected tasks stay same
-    var t;
-    var v;
-    var toDoItem;
-    if( numRanges == 1 ) {
-        for (t=numRanges-1; t>=0; t--){
-            tree.view.selection.getRangeAt(t,start,end);
-            for (v=end.value; v>=start.value; v--){
-                toDoItem = tree.taskView.getCalendarTaskAtRow( v );
-                refreshRemoteCalendarAndRunFunction( toDoItem.id, toDoItem.parent.server, "deleteTodo" );
-            }
-        }
-    } else {
-        gICalLib.batchMode = true;
-
-        for (t=numRanges; t>=0; t--){
-            tree.view.selection.getRangeAt(t,start,end);
-            for (v=end.value; v>=start.value; v--){
-                toDoItem = tree.taskView.getCalendarTaskAtRow( v );
-                var todoId = toDoItem.id
-                gICalLib.deleteTodo( todoId );   
-            }
-        }
-        gICalLib.batchMode = false;
-    }
-    // all selected tasks deleted, now clear selection
-    tree.view.selection.clearSelection();
+   var SelectedItems = new Array();
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   var start = new Object();
+   var end = new Object();
+   var numRanges = tree.view.selection.getRangeCount();
+   var t;
+   var v;
+   if( numRanges == 1 ) {
+      for (t=numRanges-1; t>= 0; t--) {
+         tree.view.selection.getRangeAt(t, start, end);
+         for (v=end.value; v>=start.value; v--){
+            var toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+            SelectedItems.push(toDoItem);
+         }
+      }
+   } else {
+      for (t=numRanges; t >= 0; t--) {
+         tree.view.selection.getRangeAt(t,start,end);
+         for (v=end.value; v >= start.value; v--){
+            var toDoItem=tree.taskView.getCalendarTaskAtRow( v );
+            SelectedItems.push(toDoItem);
+         }
+      }
+   }
+   deleteItems( SelectedItems, DoNotConfirm );
+   tree.view.selection.clearSelection();
 }
 
 
