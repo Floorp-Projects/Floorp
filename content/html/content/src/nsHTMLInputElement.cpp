@@ -95,8 +95,10 @@ public:
   NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) { 
     nsAutoString valueAttribute;
     nsHTMLAtoms::value->ToString(valueAttribute);
-    if (PR_TRUE==valueAttribute.Equals(aName))
-      return SetValue(aValue);
+    if (PR_TRUE==valueAttribute.Equals(aName)) {
+      SetValue(aValue);
+      // Don't return here, need to set the attribute in the content model too.
+    }
     return mInner.SetAttribute(aName, aValue);                                 
   }                                                                        
   NS_IMETHOD RemoveAttribute(const nsString& aName) {                      
