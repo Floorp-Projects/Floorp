@@ -1,0 +1,45 @@
+Changes since 1.0d6:
+
+1. Using cfref template class to simplify and guard releases of CFTypeRef objects. This fixes
+several crashing bugs.
+
+Changes since 1.0d5:
+
+1. Converting between HFS+ paths POSIX paths when processing URLs. This fixes bugzilla bug #108519
+and addresses a mismatch between the way Mozilla (FizzillaCFM) and Java represent paths. Mozilla
+uses HFS+ file paths, and simply converts them to URLs with the same path elements. Java uses the
+POSIX representation, where the boot volume is simply "/" and all other volumes appear under
+"/Volumes". The workaround code is a little messy, and is only necessary for file: URLs.
+
+2. Added NULL check to showDocumentCallback as a workaround for bug #108054. For some strange reason,
+url is NULL when that applet calls getAppletContext().showDocument(url, "_blank").
+
+Changes since 1.0d4:
+
+1. Need an applet object for LiveConnect. Is it available? Doing a little digging,
+I find that the applet's frame is an instance of com.apple.mrj.JavaEmbedding.JE_AppletViewer.
+This class has a getApplet(String) method, which should do the trick. I need to tell Apple that
+I am calling its methods. Actually, getApplet()/getApplets() is part of the interface
+java.applet.AppletContext, which the applet frame's class implements. For applets that have
+a name attribute in their HTML element, then getApplet(String) can be used. If a name attribute
+isn't specified, then AppletContext.getApplets() can be used, which returns a java.util.Enumeration,
+and presumably the first applet it returns is the one we want.
+
+2. Created JNIRunnable, LiveConnectProxy classes to implement a rudimentary security architecture.
+Slowly removing cross thread calls, which are terribly slow and didn't actually do anything for
+security.
+
+Changes since 1.0d3:
+
+1. Added system version check to make sure only runs on 10.1 or later.
+
+2. Talked to Scott Kovatch, he told me how to interact with applet
+security. Added code to netscape.oji.JNIThread's constructor to start the thread
+using a privileged action. ** Doesn't work, since code isn't in boot class path. **
+
+3. Added code to netscape.oji.MRJSession to install com.apple.mrj.JavaEmbedding.JE_AppletSecurity
+as the system security manager, so that it is always there, not just after applets run.
+
+4. Added MRJPlugin.properties to configure the plugin.
+
+5. Added MRJPlugin.policy so that classes in MRJPlugin.jar can execute with all privileges.
