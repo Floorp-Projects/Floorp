@@ -49,7 +49,6 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 
