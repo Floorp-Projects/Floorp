@@ -27,9 +27,13 @@
 
 #include "nsDiskCacheBinding.h"
 
+#include "nsCache.h"
+
 #include "nsIStreamIO.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+
+#include "pratom.h"
 
 class nsDiskCacheInputStream;
 class nsDiskCacheOutputStream;
@@ -37,8 +41,8 @@ class nsDiskCacheDevice;
 
 class nsDiskCacheStreamIO : public nsIStreamIO {
 
+// we're implementing nsIStreamIO to leverage the AsyncRead on the FileTransport thread
 
-// XXX we're implementing nsIStreamIO to leverage the AsyncRead on the FileTransport thread
 
 public:
              nsDiskCacheStreamIO(nsDiskCacheBinding *   binding);
@@ -46,11 +50,10 @@ public:
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMIO
-    
-    // Create(nsDiskCacheBinding );
-    
+//  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISUPPORTS_IID)
+        
     void        CloseInputStream(nsDiskCacheInputStream *  inputStream);
-    void        CloseOutputStream(nsDiskCacheOutputStream *  outputStream);
+    nsresult    CloseOutputStream(nsDiskCacheOutputStream *  outputStream);
         
     nsresult    Write( const char * buffer,
                        PRUint32     count,
@@ -60,18 +63,29 @@ public:
     nsresult    Tell(PRUint32 * position);    
     nsresult    SetEOF();
 
-    PRBool      EnsureLocalFile();
+    void        ClearBinding() { mBinding = nsnull; }
+    
+    void        IncrementInputStreamCount() { PR_AtomicIncrement(&mInStreamCount); }
+    void        DecrementInputStreamCount()
+                {
+                    PR_AtomicDecrement(&mInStreamCount);
+                    NS_ASSERTION(mInStreamCount >= 0, "mInStreamCount has gone negative");
+                }
+
+private:
+
     nsresult    OpenCacheFile(PRIntn flags, PRFileDesc ** fd);
     nsresult    ReadCacheBlocks();
     nsresult    FlushBufferToFile(PRBool  clearBuffer);
     PRUint32    WriteToBuffer(const char * buffer, PRUint32 count);
+    nsresult    UpdateFileSize();
 
-private:
 
     nsDiskCacheBinding *        mBinding;
     nsDiskCacheDevice *         mDevice;
+    nsCOMPtr<nsCacheLock>       mDeviceLock;
     nsDiskCacheOutputStream *   mOutStream;
-    PRCList                     mInStreamQ;
+    PRInt32                     mInStreamCount;
     nsCOMPtr<nsILocalFile>      mLocalFile;
     PRFileDesc *                mFD;
 

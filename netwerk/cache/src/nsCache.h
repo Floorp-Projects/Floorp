@@ -30,6 +30,7 @@
 #ifndef _nsCache_h_
 #define _nsCache_h_
 
+#include "nsISupports.h"
 #include "nsAString.h"
 #include "prtime.h"
 #include "nsError.h"
@@ -59,5 +60,23 @@ extern PRTime    PRTimeFromSeconds(PRUint32 seconds);
 
 extern nsresult  ClientIDFromCacheKey(const nsACString&  key, char ** result);
 extern nsresult  ClientKeyFromCacheKey(const nsACString& key, char ** result);
+
+
+class nsCacheLock : public nsISupports {
+public:
+
+    NS_DECL_ISUPPORTS
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISUPPORTS_IID)
+    
+                nsCacheLock();
+    virtual    ~nsCacheLock();
+    
+    static nsCacheLock * Create();
+    PRLock *    GetPRLock() { return mLock; }
+
+private:
+    PRLock *    mLock;
+};
+
 
 #endif // _nsCache_h

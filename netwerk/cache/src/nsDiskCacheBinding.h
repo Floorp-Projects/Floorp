@@ -32,11 +32,8 @@
 #include "nsISupports.h"
 #include "nsCacheEntry.h"
 
-#ifdef MOZ_NEW_CACHE_REUSE_TRANSPORTS
-#include "nsITransport.h"
-#endif
-
 #include "nsDiskCacheMap.h"
+#include "nsDiskCacheStreams.h"
 
 
 /******************************************************************************
@@ -55,30 +52,14 @@ public:
     nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * record);
     virtual ~nsDiskCacheBinding();
 
-#ifdef MOZ_NEW_CACHE_REUSE_TRANSPORTS
-    /**
-     * Maps a cache access mode to a cached nsITransport for that access
-     * mode. We keep these cached to avoid repeated trips to the
-     * file transport service.
-     */
-    nsCOMPtr<nsITransport>& getTransport(nsCacheAccessMode mode)
-    {
-        return mTransports[mode - 1];
-    }
-#endif
-
 
 // XXX make friends
 public:
     nsCacheEntry*           mCacheEntry;    // back pointer to parent nsCacheEntry
     nsDiskCacheRecord       mRecord;
+    nsCOMPtr<nsIStreamIO>   mStreamIO;
     PRBool                  mDoomed;        // record is not stored in cache map
     PRUint8                 mGeneration;    // possibly just reservation
-
-private:
-#ifdef MOZ_NEW_CACHE_REUSE_TRANSPORTS
-    nsCOMPtr<nsITransport>  mTransports[3];
-#endif
 };
 
 

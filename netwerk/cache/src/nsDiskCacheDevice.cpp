@@ -24,9 +24,32 @@
 
 #include <limits.h>
 
+// include files for ftruncate (or equivalent)
+#if defined(XP_UNIX)
+#include <unistd.h>
+#elif defined(XP_MAC)
+#include <Files.h>
+#elif defined(XP_WIN)
+#include <windows.h>
+#elif defined(XP_OS2)
+#define INCL_DOSERRORS
+#include <os2.h>
+#else
+// XXX add necessary include file for ftruncate (or equivalent)
+#endif
+
+#if defined(XP_MAC)
+#include "pprio.h"
+#else
+#include "private/pprio.h"
+#endif
+
+
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheEntry.h"
 #include "nsDiskCacheMap.h"
+#include "nsDiskCacheStreams.h"
+
 #include "nsDiskCache.h"
 
 #include "nsCacheService.h"
@@ -39,6 +62,7 @@
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsAutoLock.h"
 #include "nsCRT.h"
 
 
@@ -115,9 +139,9 @@ nsDiskCacheEvictor::VisitRecord(nsDiskCacheRecord *  mapRecord)
         // we are currently using this entry, so all we can do is doom it
         
         // since we're enumerating the records, we don't want to call DeleteRecord
-        // when nsCacheService::GlobalInstance()->DoomEntry_Locked() calls us back.
+        // when nsCacheService::DoomEntry() calls us back.
         binding->mDoomed = PR_TRUE;         // mark binding record as 'deleted'
-        nsCacheService::GlobalInstance()->DoomEntry_Locked(binding->mCacheEntry);
+        nsCacheService::DoomEntry(binding->mCacheEntry);
         result = kDeleteRecordAndContinue;  // this will REALLY delete the record
 
     } else {
@@ -247,6 +271,43 @@ nsDiskCache::Hash(const char * key)
 }
 
 
+nsresult
+nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
+{
+    // use modified SetEOF from nsFileStreams::SetEOF()
+
+#if defined(XP_UNIX)
+    if (ftruncate(PR_FileDesc2NativeHandle(fd), newEOF) != 0) {
+        NS_ERROR("ftruncate failed");
+        return NS_ERROR_FAILURE;
+    }
+
+#elif defined(XP_MAC)
+    if (::SetEOF(PR_FileDesc2NativeHandle(fd), newEOF) != 0) {
+        NS_ERROR("SetEOF failed");
+        return NS_ERROR_FAILURE;
+    }
+
+#elif defined(XP_WIN)
+    PRInt32 cnt = PR_Seek(fd, newEOF, PR_SEEK_SET);
+    if (cnt == -1)  return NS_ERROR_FAILURE;
+    if (!SetEndOfFile((HANDLE) PR_FileDesc2NativeHandle(fd))) {
+        NS_ERROR("SetEndOfFile failed");
+        return NS_ERROR_FAILURE;
+    }
+
+#elif defined(XP_OS2)
+    if (DosSetFileSize((HFILE) PR_FileDesc2NativeHandle(fd), newEOF) != NO_ERROR) {
+        NS_ERROR("DosSetFileSize failed");
+        return NS_ERROR_FAILURE;
+    }
+#else
+    // add implementations for other platforms here
+#endif
+    return NS_OK;
+}
+
+
 /******************************************************************************
  *  nsDiskCacheDevice
  *****************************************************************************/
@@ -258,7 +319,9 @@ static nsCOMPtr<nsIFileTransportService> gFileTransportService;
 #endif
 
 nsDiskCacheDevice::nsDiskCacheDevice()
-    :   mInitialized(PR_FALSE), mCacheCapacity(0), mCacheMap(nsnull)
+    : mDeviceLock(nsnull)
+    , mCacheCapacity(0)
+    , mCacheMap(nsnull)
 {
 }
 
@@ -277,8 +340,8 @@ nsDiskCacheDevice::Init()
 {
     nsresult rv;
 
-    NS_ENSURE_TRUE(!mInitialized, NS_ERROR_FAILURE);
-   
+    NS_ENSURE_TRUE(!Initialized(), NS_ERROR_FAILURE);
+       
     if (!mCacheDirectory) return NS_ERROR_FAILURE;
     rv = mBindery.Init();
     if (NS_FAILED(rv)) return rv;
@@ -287,7 +350,7 @@ nsDiskCacheDevice::Init()
     gFileTransportService = do_GetService("@mozilla.org/network/file-transport-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // XXX are we sure we want to do this on startup?
+    // XXX we should spawn another thread to do this after startup
     // delete "Cache.Trash" folder
     nsCOMPtr<nsIFile> cacheTrashDir;
     rv = GetCacheTrashDirectory(getter_AddRefs(cacheTrashDir));
@@ -307,7 +370,13 @@ nsDiskCacheDevice::Init()
         if (NS_FAILED(rv))  goto error_exit;
     }
     
-    mInitialized = PR_TRUE;                     // record that initialization succeeded.
+    mDeviceLock = nsCacheLock::Create();
+    if (mDeviceLock == nsnull) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto error_exit;
+    }
+    // creation of lock indicates successful initialization
+    
     return NS_OK;
 
 error_exit:
@@ -326,19 +395,22 @@ error_exit:
 nsresult
 nsDiskCacheDevice::Shutdown()
 {
-    if (mInitialized) {
-        // check cache limits in case we need to evict.
-        EvictDiskCacheEntries();
+    if (Initialized()) {
+        {   // code block for nsAutoLock
+            nsAutoLock lock(mDeviceLock->GetPRLock());
+            // check cache limits in case we need to evict.
+            EvictDiskCacheEntries((PRInt32)mCacheCapacity);
 
-        // write out persistent information about the cache.
-        (void) mCacheMap->Close();
-        delete mCacheMap;
-        mCacheMap = nsnull;
+            // write out persistent information about the cache.
+            (void) mCacheMap->Close();
+            delete mCacheMap;
+            mCacheMap = nsnull;
 
-        mBindery.Reset();
+            mBindery.Reset();
+        }
 
         // no longer initialized.
-        mInitialized = PR_FALSE;
+        mDeviceLock = nsnull;
     }
 
     // release the reference to the cached file transport service.
@@ -387,6 +459,8 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
     nsDiskCacheBinding *    binding = nsnull;
     PLDHashNumber           hashNumber = nsDiskCache::Hash(key->get());
 
+    nsAutoLock  lock(mDeviceLock->GetPRLock());     // grab device lock
+    
 #if DEBUG  /*because we shouldn't be called for active entries */
     binding = mBindery.FindActiveBinding(hashNumber);
     NS_ASSERTION(!binding, "### FindEntry() called for a bound entry.");
@@ -423,6 +497,8 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
 nsresult
 nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
+    nsAutoLock  lock(mDeviceLock->GetPRLock());     // grab device lock
+
     nsresult              rv = NS_OK;
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "DeactivateEntry: binding == nsnull");
@@ -466,6 +542,7 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 {
     nsresult rv = NS_OK;
     nsDiskCacheRecord record, oldRecord;
+    nsAutoLock        lock(mDeviceLock->GetPRLock());     // grab device lock
     
     // create a new record for this entry
     record.SetHashNumber(nsDiskCache::Hash(entry->Key()->get()));
@@ -485,7 +562,7 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 
                 if (!oldBinding->mCacheEntry->IsDoomed()) {
                 // we've got a live one!
-                    nsCacheService::GlobalInstance()->DoomEntry_Locked(oldBinding->mCacheEntry);
+                    nsCacheService::DoomEntry(oldBinding->mCacheEntry);
                     // storage will be delete when oldBinding->mCacheEntry is Deactivated
                 }
             } else {
@@ -510,6 +587,7 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 void
 nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 {
+    nsAutoLock           lock(mDeviceLock->GetPRLock());     // grab device lock
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "DoomEntry: binding == nsnull");
     if (!binding)  return;
@@ -524,13 +602,14 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 
 
 nsresult
-nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
-                                        nsCacheAccessMode mode, 
-                                        nsITransport ** result)
+nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry *      entry,
+                                        nsCacheAccessMode   mode, 
+                                        nsITransport **     result)
 {
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
+    nsAutoLock           lock(mDeviceLock->GetPRLock());     // grab device lock
     nsresult             rv;
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "GetTransportForEntry: binding == nsnull");
@@ -538,51 +617,14 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
     
     NS_ASSERTION(binding->mCacheEntry == entry, "binding & entry don't point to each other");
 
-#ifdef MOZ_NEW_CACHE_REUSE_TRANSPORTS
-    nsCOMPtr<nsITransport>& transport = binding->getTransport(mode);
-    if (transport) {
-        NS_ADDREF(*result = transport);
-        return NS_OK;
+    if (!binding->mStreamIO) {
+        binding->mStreamIO = new nsDiskCacheStreamIO(binding);
+        if (!binding->mStreamIO)  return NS_ERROR_OUT_OF_MEMORY;
     }
-#endif
-
-    // check/set binding->mRecord for separate file, sync w/mCacheMap
-    if (binding->mRecord.DataLocationInitialized()) {
-        NS_ASSERTION(binding->mRecord.DataFile() == 0, "error: cache block file"); // make sure it's a separate file
-        NS_ASSERTION(binding->mRecord.DataFileGeneration() == binding->mGeneration, "error generations out of sync");
-    } else {
-        binding->mRecord.SetDataFileGeneration(binding->mGeneration);
-        binding->mRecord.SetDataFileSize(0);    // 1k minimum
-        if (!binding->mDoomed) {
-            // record stored in cache map, so update it
-            rv = mCacheMap->UpdateRecord(&binding->mRecord);
-            if (NS_FAILED(rv))  return rv;
-        }
-    }
-
-    // generate the name of the cache entry from the hash code of its key,
-    // modulo the number of files we're willing to keep cached.
-    nsCOMPtr<nsIFile> file;
-    rv = mCacheMap->GetFileForDiskCacheRecord(&binding->mRecord,
-                                              nsDiskCache::kData,
-                                              getter_AddRefs(file));
-    if (NS_FAILED(rv))  return rv;
-    
-    PRInt32 ioFlags = 0;
-    switch (mode) {
-    case nsICache::ACCESS_READ:
-        ioFlags = PR_RDONLY;
-        break;
-    case nsICache::ACCESS_WRITE:
-        ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
-        break;
-    case nsICache::ACCESS_READ_WRITE:
-        ioFlags = PR_RDWR | PR_CREATE_FILE;
-        break;
-    }
-
-    rv = gFileTransportService->CreateTransport(file, ioFlags, PR_IRUSR | PR_IWUSR, PR_FALSE, result);
-    return rv;
+    // XXX assumption: CreateTransportFromStreamIO() is light-weight
+    // PR_FALSE = keep streamIO open for lifetime of transport
+    rv = gFileTransportService->CreateTransportFromStreamIO(binding->mStreamIO, PR_FALSE, result);
+    return rv;    
 }
 
 
@@ -590,14 +632,23 @@ nsresult
 nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
                                    nsIFile **        result)
 {
+    NS_ENSURE_ARG_POINTER(result);
+    *result = nsnull;
+
+    nsAutoLock           lock(mDeviceLock->GetPRLock());     // grab device lock
     nsresult             rv;
+        
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
-    NS_ASSERTION(binding, "GetFileForEntry: binding == nsnull");
-    if (!binding)  return NS_ERROR_UNEXPECTED;
+    if (!binding) {
+        NS_WARNING("GetFileForEntry: binding == nsnull");
+        return NS_ERROR_UNEXPECTED;
+    }
     
     // check/set binding->mRecord for separate file, sync w/mCacheMap
     if (binding->mRecord.DataLocationInitialized()) {
-        NS_ASSERTION(binding->mRecord.DataFile() == 0, "error: cache block file"); // make sure it's a separate file
+        if (binding->mRecord.DataFile() != 0)
+            return NS_ERROR_NOT_AVAILABLE;  // data not stored as separate file
+
         NS_ASSERTION(binding->mRecord.DataFileGeneration() == binding->mGeneration, "error generations out of sync");
     } else {
         binding->mRecord.SetDataFileGeneration(binding->mGeneration);
@@ -626,6 +677,7 @@ nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
 nsresult
 nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
+    nsAutoLock           lock(mDeviceLock->GetPRLock());     // grab device lock
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "OnDataSizeChange: binding == nsnull");
     if (!binding)  return NS_ERROR_UNEXPECTED;
@@ -634,22 +686,20 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 
     PRUint32  newSize = entry->DataSize() + deltaSize;
     if (newSize > mCacheCapacity) {
-        nsresult rv = nsCacheService::GlobalInstance()->DoomEntry_Locked(entry);
-        NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry_Locked() failed.");
+        nsresult rv = nsCacheService::DoomEntry(entry);
+        NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
         return NS_ERROR_ABORT;
     }
 
-    PRUint32  sizeK = ((entry->DataSize() + 0x0399) >> 10); // round up to next 1k
-    PRUint32  newSizeK =  ((newSize + 0x399) >> 10);
+    PRUint32  sizeK = ((entry->DataSize() + 0x03FF) >> 10); // round up to next 1k
+    PRUint32  newSizeK =  ((newSize + 0x3FF) >> 10);
 
-    NS_ASSERTION((sizeK < USHRT_MAX) && (sizeK == binding->mRecord.DataFileSize()),
-                 "data size out of sync");
+    NS_ASSERTION(sizeK < USHRT_MAX, "data size out of range");
+    NS_ASSERTION(newSizeK < USHRT_MAX, "data size out of range");
 
-    mCacheMap->IncrementTotalSize((newSizeK - sizeK) * 1024);
-    newSizeK = (newSizeK < USHRT_MAX) ? newSizeK : USHRT_MAX;   // record file size ceiling
-    binding->mRecord.SetDataFileSize(newSizeK);     // update binding->mRecord
-
-    EvictDiskCacheEntries();
+    // pre-evict entries to make space for new data
+    PRInt32  targetCapacity = (PRInt32)(mCacheCapacity - ((newSizeK - sizeK) * 1024));
+    EvictDiskCacheEntries(targetCapacity);
     
     return NS_OK;
 }
@@ -728,6 +778,9 @@ nsDiskCacheDevice::EvictEntries(const char * clientID)
 {
     nsDiskCacheEvictor  evictor(this, mCacheMap, &mBindery, 0, clientID);
     nsresult       rv = mCacheMap->VisitRecords(&evictor);
+    
+    if (clientID == nsnull)     // we tried to clear the entire cache
+        rv = mCacheMap->Trim(); // so trim cache block files (if possible)
     return rv;
 }
 
@@ -804,13 +857,13 @@ nsDiskCacheDevice::GetCacheTrashDirectory(nsIFile ** result)
 
 
 nsresult
-nsDiskCacheDevice::EvictDiskCacheEntries()
+nsDiskCacheDevice::EvictDiskCacheEntries(PRInt32  targetCapacity)
 {
     nsresult rv;
     
-    if (mCacheMap->TotalSize() < (PRInt32) mCacheCapacity)  return NS_OK;
+    if (mCacheMap->TotalSize() < targetCapacity)  return NS_OK;
 
-    nsDiskCacheEvictor  evictor(this, mCacheMap, &mBindery, mCacheCapacity, nsnull);
+    nsDiskCacheEvictor  evictor(this, mCacheMap, &mBindery, targetCapacity, nsnull);
     rv = mCacheMap->EvictRecords(&evictor);
     
     return rv;
@@ -831,7 +884,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     nsresult rv;
     PRBool  exists;
 
-    if (mInitialized) {
+    if (Initialized()) {
         NS_ASSERTION(PR_FALSE, "Cannot switch cache directory when initialized");
         return;
     }
@@ -896,9 +949,10 @@ void
 nsDiskCacheDevice::SetCapacity(PRUint32  capacity)
 {
     mCacheCapacity = capacity * 1024;
-    if (mInitialized) {
+    if (Initialized()) {
+        nsAutoLock  lock(mDeviceLock->GetPRLock());     // grab device lock
         // start evicting entries if the new size is smaller!
-        EvictDiskCacheEntries();
+        EvictDiskCacheEntries((PRInt32)mCacheCapacity);
     }
 }
 

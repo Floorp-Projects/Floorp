@@ -124,6 +124,11 @@ nsDiskCacheBinding::~nsDiskCacheBinding()
     NS_ASSERTION(PR_CLIST_IS_EMPTY(this), "binding deleted while still on list");
     if (!PR_CLIST_IS_EMPTY(this))
         PR_REMOVE_LINK(this);       // XXX why are we still on a list?
+    
+    // sever streamIO/binding link
+    // XXX what's the right way to call a method on the concrete class?
+    nsDiskCacheStreamIO * streamIO = (nsDiskCacheStreamIO *)mStreamIO.get();
+    if (streamIO)  streamIO->ClearBinding();
 }
 
 

@@ -35,6 +35,7 @@
 
 class nsDiskCacheMap;
 
+
 class nsDiskCacheDevice : public nsCacheDevice {
 public:
     nsDiskCacheDevice();
@@ -78,18 +79,22 @@ public:
     PRUint32                getCacheSize();
     PRUint32                getEntryCount();
     
+    nsCacheLock *           DeviceLock()  { return mDeviceLock; }
+    PRBool                  Initialized() { return (mDeviceLock != nsnull); }
+    nsDiskCacheMap *        CacheMap()    { return mCacheMap; }
+    
 private:    
     /**
      *  Private methods
      */
     nsresult    InitializeCacheDirectory();
     nsresult    GetCacheTrashDirectory(nsIFile ** result);
-    nsresult    EvictDiskCacheEntries();
+    nsresult    EvictDiskCacheEntries(PRInt32  targetCapacity);
     
     /**
      *  Member variables
      */
-    PRBool                  mInitialized;
+    nsCOMPtr<nsCacheLock>   mDeviceLock;
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
     nsDiskCacheBindery      mBindery;
     PRUint32                mCacheCapacity;     // XXX need soft/hard limits, currentTotal
