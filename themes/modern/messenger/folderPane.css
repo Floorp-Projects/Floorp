@@ -110,8 +110,6 @@ outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-imap, 
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
 }
 
-/* ..... Local Servers ..... */
-
 outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-none) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-local.gif");

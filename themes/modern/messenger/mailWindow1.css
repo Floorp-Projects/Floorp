@@ -1,0 +1,197 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== mailWindow1.css ================================================
+  == Styles for the main Mail window in the default layout scheme.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+@import url("chrome://messenger/skin/primaryToolbar.css");
+@import url("chrome://messenger/skin/folderMenus.css");
+@import url("chrome://communicator/skin/sidebar/sidebar.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: account central :::::: */
+
+#accountCentralBox {
+  background-color: #FFFFFF;
+}
+
+/* :::::
+   :: Make sure the min height is small so we can
+   :: resize the pane vertically -EDV
+   ::::: */
+
+#messagepanebox {
+  min-height: 10px;
+  height: 0px;
+}
+
+/* ::::: tree focus-ring border adjustments ::::: */
+
+/* ..... status bar adjustments ..... */
+
+statusbarpanel,
+#component-bar,
+.progressmeter-statusbar {
+  border-top: none !important;
+}
+
+/* ..... splitter adjustments ..... */
+
+#sidebar-splitter {
+  border-right: none;
+}
+
+#sidebar-splitter > .splitter-internal-box {
+  border-right: none;
+  border-bottom: none;
+}
+
+#threadpane-splitter,
+#threadpane-splitter > .splitter-internal-box {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+}
+
+#threadpane-splitter[state="collapsed"] {
+  border-bottom: 1px solid #000000;
+}
+
+#threadpane-splitter[state="collapsed"] > box {
+  border-bottom: 1px solid #414B75;
+}
+
+.gray-vertical-splitter,
+.gray-vertical-splitter > .splitter-internal-box {
+  border-right: none;
+}
+
+.gray-vertical-splitter > .splitter-internal-box {
+  border-bottom: none;
+}
+
+#sidebar-panels-splitter,
+#sidebar-panels-splitter > .splitter-internal-box {
+  border-top: none;
+}
+
+/* ..... sidebar adjustments ..... */
+
+#sidebar-box {
+  border-top: none;
+}
+
+#sidebar-box > .sidebarheader-main {
+  border-top: none;
+  border-bottom: 1px solid #63676B;
+  border-left: 1px solid #63676B;
+  padding: 0px;
+  background-color: #C7D0D9;
+}
+
+#sidebar-box > .sidebarheader-main > .sidebarheader-internal-box {
+  border-top: 1px solid #EEF0F3;
+  border-left: 1px solid #EEF0F3;
+  color: #000000;
+}
+
+/* ..... tree adjustments ..... */
+ 
+#folderOutliner,
+#threadOutliner {
+  border-top: none;
+  border-right: none;
+  border-bottom: 1px solid #EBF4FF;
+  min-width: 1px;
+}
+
+#threadOutliner {
+  border-left: 1px solid #A5ABB0;
+}
+
+#threadOutliner > .outliner-columns {
+  border-left: 1px solid #000000;
+}
+
+#folderOutliner > outlinerrows {
+  border-bottom: 1px solid #C7D0D9;
+}
+
+#threadOutliner > outlinerrows {
+  border-right: none;
+  border-bottom: 1px solid #C7D0D9;
+  border-left: 1px solid #000000;
+}
+
+#threadOutliner > outlinerrows > .outliner-bodybox {
+  border: 1px solid transparent;
+}
+
+#threadOutliner:focus > outlinerrows > .outliner-bodybox {
+  border-color: #000000;
+}
+
+/* ..... message pane adjustments ..... */
+
+#messagepanebox {
+  border-top: 1px solid #A5ABB0;
+  border-bottom: 1px solid #EBF4FF;
+  border-left: 1px solid #A5ABB0;
+}
+
+#msgHeaderView {
+  border-top: 1px solid #000000;
+  border-right: 1px solid #7B969C;
+  border-bottom: 1px solid #FFFFFF;
+  border-left: 1px solid #000000;
+}
+
+#messagepane {
+  border-right: 1px solid #FFFFFF;
+  border-bottom: 1px solid #C7D0D9;
+  border-left: 1px solid #000000;
+}
+
+#messagepanebox[focusring="true"] > #messagepane {
+  border-color: #000000;
+}
+
+#messagepanebox[focusring="true"] > #msgHeaderView {
+  border-bottom-color: #000000;
+}
+
+/* ..... account central adjustments ..... */
+
+#accountCentralBox {
+  border-bottom: 1px solid #EBF4FF;
+  border-left: 1px solid #A5ABB0;
+}
+
+[name="accountCentralPane"] {
+  border-bottom: 1px solid #C7D0D9;
+  border-left: 1px solid #000000;
+}

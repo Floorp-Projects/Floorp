@@ -21,7 +21,7 @@
  *
  */
 
-/* ===== msgHdrViewOverlay.css ==========================================
+/* ===== messageHeader.css ==============================================
   == Styles for the header toolbars of a mail message.
   ======================================================================= */
 
@@ -100,10 +100,6 @@ text.headerdisplayname {
 }
 
 /* ::::: msg header email addresses ::::: */
-
-mail-emailaddress {
-  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-emailaddress");
-}
 
 .emailDisplayButton {
   cursor: pointer;

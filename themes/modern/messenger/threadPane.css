@@ -28,15 +28,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: outliner rows ::::: */
-
-outliner:focus > outliner-bodybox {
-  border: 1px solid black;
-}
-
-outliner > outliner-bodybox {
-  border: 1px solid transparent;
-}
+/* ::::: thread decoration ::::: */
 
 outlinerbody:-moz-outliner-cell-text(unread) {
   font-weight: bold;

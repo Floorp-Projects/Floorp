@@ -25,7 +25,15 @@
   == Styles for the Subscribe dialog.
   ======================================================================= */
 
+@import url("chrome://messenger/skin/");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: margin adjustments :::::: */
+
+#subscribetree {
+  margin: 0px 0px 0px 0px !important;
+}
 
 /* ::::: subscribed icons  :::::: */
 
@@ -65,9 +73,6 @@
   list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
 }
 
-#subscribetree {
-  margin: 0px 0px 0px 0px !important;
-}
 /* ::::: statusbar adjustments :::::: */
 
 statusbarpanel,
@@ -76,7 +81,7 @@ statusbarpanel,
   border: none !important;
 }
 
-/* for search in subscribe */
+/* ::::: for search in subscribe ::::: */
 
 outlinerbody:-moz-outliner-image(nameCol, nntp) {
  padding-right: 2px;

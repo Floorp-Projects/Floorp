@@ -21,17 +21,11 @@
  *
  */
 
-/* ===== pref-mailnews.css ==============================================
-  == Styles for the Messenger preference panels.
+/* ===== sidebarPanel.css ===============================================
+  == Styles for the Address Book sidebar panel.
   ======================================================================= */
 
+@import url("chrome://messenger/skin/addressbook/addressbook.css");
+  
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-#classic {
-  list-style-image: url("chrome://messenger/skin/icons/layout1.gif");
-}
-
-#wide {
-  list-style-image: url("chrome://messenger/skin/icons/layout2.gif");
-}
 

@@ -21,28 +21,22 @@
  *
  */
 
-/* ===== messenger.css ==================================================
-  == Styles shared throughout the Messenger application.
+/* ===== mailWindow2.css ================================================
+  == Styles for the main Mail window in the optional layout scheme.
   ======================================================================= */
 
-@import url("chrome://communicator/skin/");
-@import url("chrome://messenger/content/messenger.css");
+@import url("chrome://messenger/skin/mailWindow1.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: image precacheing ::::: */
-
-#resource_bundle_messenger {
-   -moz-binding: url("chrome://messenger/skin/resources.xml#resource_bundle_messenger");
+#folderOutliner {
+  border-left: 1px solid #A5ABB0;
 }
 
-/* ::::: miscellany :::::: */
-
-spring.spacer {
-  width: 5px;
-  height: 5px;
+#folderOutliner > .outliner-columns {
+  border-left: 1px solid #000000;
 }
 
-
-
-
+#folderOutliner > outlinerrows {
+  border-left: 1px solid #000000;
+}

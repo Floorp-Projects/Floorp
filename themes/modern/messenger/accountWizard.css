@@ -18,27 +18,21 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Pete Collins
- *   Ben Goodger
  *
  */
 
-/* ===== fieldMapImport.css =============================================
-  == Styles used by the text import dialog.
+/* ===== accountWizard.css ==============================================
+  == Styles for the Mail Account Wizard.
   ======================================================================= */
 
-@import url("chrome://communicator/skin/");
+@import url("chrome://messenger/skin/");
+@import url("chrome://global/skin/wizardOverlay.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-treecell.importsampledata {
-  border-left: 3px solid #C2D0D0;
-  padding-left: 10px;
-}
+/* ::::: account wizard :::::: */
 
-#fieldList-box {
-  margin: 1.5em 3em 1.5em 3em;
-  border: 1px inset white;
-  width: 32em;
-  height: 300px;
+.awIdentityLabel {
+  width: 8em;
+  margin-left: 5px;
 }

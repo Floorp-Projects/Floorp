@@ -1,0 +1,239 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== primaryToolbar.css =============================================
+  == Images for the Mail primary toolbar.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar masthead ::::: */
+
+#msgToolbar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://messenger/skin/icons/mast-mail.gif");
+}
+
+/* ::::: primary toolbar buttons ::::: */
+
+.button-toolbar-2 {
+  min-width: 52px;
+}
+
+#button-getmsg {
+  list-style-image: url("chrome://messenger/skin/btn1/getmsg.gif");
+}
+
+#button-getmsg[disabled="true"],
+#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/getmsg-dis.gif");
+} 
+
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/getmsg-hov.gif");
+} 
+
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/getmsg-act.gif");
+} 
+
+#button-newmsg {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg.gif");
+}
+
+#button-newmsg[disabled="true"],
+#button-newmsg[disabled="true"]:hover,
+#button-newmsg[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-dis.gif");
+} 
+
+#button-newmsg:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-hov.gif");
+} 
+
+#button-newmsg:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-act.gif");
+} 
+
+#button-reply {
+  list-style-image: url("chrome://messenger/skin/btn1/reply.gif");
+}
+
+#button-reply[disabled="true"],
+#button-reply[disabled="true"]:hover,
+#button-reply[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/reply-dis.gif");
+} 
+
+#button-reply:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/reply-hov.gif");
+} 
+
+#button-reply:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/reply-act.gif");
+} 
+
+#button-replyall {
+  list-style-image: url("chrome://messenger/skin/btn1/replyall.gif");
+}
+
+#button-replyall[disabled="true"],
+#button-replyall[disabled="true"]:hover,
+#button-replyall[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/replyall-dis.gif");
+} 
+
+#button-replyall:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/replyall-hov.gif");
+} 
+
+#button-replyall:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/replyall-act.gif");
+} 
+
+#button-forward {
+  list-style-image: url("chrome://messenger/skin/btn1/forward.gif");
+}
+
+#button-forward[disabled="true"],
+#button-forward[disabled="true"]:hover,
+#button-forward[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/forward-dis.gif");
+} 
+
+#button-forward:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/forward-hov.gif");
+} 
+
+#button-forward:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/forward-act.gif");
+} 
+
+#button-file {
+  list-style-image: url("chrome://messenger/skin/btn1/file.gif");
+}
+
+#button-file:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/file-hov.gif");
+} 
+
+#button-file[disabled="true"],
+#button-file[disabled="true"]:hover,
+#button-file[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/file-dis.gif");
+} 
+
+#button-file:hover:active,
+#button-file[open="true"] {
+  list-style-image: url("chrome://messenger/skin/btn1/file-act.gif");
+} 
+
+#button-next {
+  list-style-image: url("chrome://messenger/skin/btn1/next.gif");
+}
+
+#button-next[disabled="true"],
+#button-next[disabled="true"]:hover,
+#button-next[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/next-dis.gif");
+} 
+
+#button-next:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/next-hov.gif");
+} 
+
+#button-next:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/next-act.gif");
+} 
+
+#button-delete {
+  list-style-image: url("chrome://messenger/skin/btn1/delete.gif");
+}
+
+#button-delete[disabled="true"],
+#button-delete[disabled="true"]:hover,
+#button-delete[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/delete-dis.gif");
+} 
+
+#button-delete:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/delete-hov.gif");
+} 
+
+#button-delete:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/delete-act.gif");
+}
+
+#button-mark {
+  list-style-image: url("chrome://messenger/skin/btn1/mark.gif");
+}
+
+#button-mark[disabled="true"],
+#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/mark-dis.gif");
+} 
+
+#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/mark-hov.gif");
+} 
+
+#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/mark-act.gif");
+} 
+
+#button-print {
+  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
+}
+
+#button-print[disabled="true"],
+#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+}
+
+#button-print > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+}
+
+#button-print > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+}
+
+#button-stop {
+  list-style-image: url("chrome://communicator/skin/btn1/stop.gif");
+}
+
+#button-stop[disabled="true"],
+#button-stop[disabled="true"]:hover,
+#button-stop[disabled="true"]:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/stop-dis.gif");
+} 
+
+#button-stop:hover {
+  list-style-image: url("chrome://communicator/skin/btn1/stop-hov.gif");
+} 
+
+#button-stop:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
+}

@@ -21,7 +21,7 @@
  *
  */
 
-/* ===== mailheader.css =================================================
+/* ===== messageBody.css =================================================
   == Styles for the body of a mail message.
   ======================================================================= */
 
@@ -36,6 +36,7 @@ window {
 }
 
 html|html {
+  /* XXX Doesn't seem to work. (Same with "html|body".) */
   background-color: white;
 }
 
@@ -92,25 +93,31 @@ div.headerdisplayname {
   margin: inherit;
   font-family: inherit;
 }
+
 .moz-text-plain[wrap="true"] {
   white-space: -moz-pre-wrap;
 }
+
 .moz-text-plain[wrap="false"] {
   white-space: pre;
 }
+
 .moz-text-plain[wrap="flow"] .moz-txt-sig {
   white-space: -moz-pre-wrap;
 }
+
 .moz-text-plain[graphical-quote="false"] blockquote {
   margin: inherit;
   border-left: inherit;
   padding-left: inherit;
 }
+
 .moz-text-plain[graphical-quote="true"] blockquote {
   margin: inherit;
   border-width: medium;
   border-color: gray;
 }
+
 .moz-text-plain[graphical-quote="true"] .moz-txt-citetags {
   display: none;
 }
@@ -121,9 +128,10 @@ div.headerdisplayname {
 .moz-signature {
   color: gray;
 }
+
 .moz-txt-sig > a,
 .moz-signature > a {
-  color: #7777FF /* light blue */;
+  color: #7777FF; /* light blue */
 }
 
 
@@ -135,6 +143,7 @@ span[-moz-smiley] {
   background-repeat: no-repeat; 
   background-position: center center;
 }
+
 span[-moz-smiley] > span {
     display: none;
 }
@@ -142,21 +151,27 @@ span[-moz-smiley] > span {
 span[-moz-smiley="s1"] {
   background-image: url(chrome://global/skin/smiley/smile_n.gif);
 }
+
 span[-moz-smiley="s2"] {
   background-image: url(chrome://global/skin/smiley/frown_n.gif);
 }
+
 span[-moz-smiley="s3"] {
   background-image: url(chrome://global/skin/smiley/wink_n.gif);
 }
+
 span[-moz-smiley="s4"] { 
   background-image: url(chrome://global/skin/smiley/tongue_n.gif);
 }
+
 span[-moz-smiley="s5"] {
   background-image: url(chrome://global/skin/smiley/laughing_n.gif);
 }
+
 span[-moz-smiley="s6"] {
   background-image: url(chrome://global/skin/smiley/embarrassed_n.gif);
 }
+
 span[-moz-smiley="s7"] {
   background-image: url(chrome://global/skin/smiley/undecided_n.gif);
 }

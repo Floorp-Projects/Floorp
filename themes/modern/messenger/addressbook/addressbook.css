@@ -25,20 +25,21 @@
   == Styles for the main Address Book window.
   ======================================================================= */
 
-@import url("chrome://communicator/skin/");
+@import url("chrome://messenger/skin/");
+@import url("chrome://communicator/skin/sidebar/sidebar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/* ::::: primary toolbar masthead ::::: */
-
-#abToolbar > .toolbar-holder > .toolbar-primary-icon {
-  background-image: url("chrome://messenger/skin/addressbook/icons/mast-ab.gif");
-}
 
 /* :::::  addressbook image precaching ::::: */
 
 #resource_bundle_addressbook {
    -moz-binding: url("chrome://messenger/skin/addressbook/resources.xml#resource_bundle_addressbook");
+}
+
+/* ::::: primary toolbar masthead ::::: */
+
+#abToolbar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://messenger/skin/addressbook/icons/mast-ab.gif");
 }
 
 /* ::::: primary toolbar buttons ::::: */
@@ -151,29 +152,20 @@
   list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
 }
 
-/* ::::: AB Directory tree ::::: */
+/* ::::: sidebar header ::::: */
 
-tree.abDirectory treeitem > treerow > treecell > .tree-cell-primary-icon {
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/myaddrbk.gif");
+sidebarheader {
+  border: 1px outset #C7D0D9;
 }
 
-tree.abDirectory treeitem > treerow > treecell[IsMailList="true"] > .tree-cell-primary-icon {
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/list.gif");
-}
-
-tree.abResults treeitem > treerow > treecell.cardicon {
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/person.gif");
+#sidebar-title-box {
+  border: none;
 }
 
 /* ::::: Card View pane ::::: */
 
-#CardViewOuterBox {
-  border-left: 1px solid #414B75;
-}
-
 #CardViewBox {
   -moz-user-focus: ignore;
-  border-left: 1px solid #000000;
   min-width: 150px;
   background-color: #EFEFEF;
   overflow: auto;
@@ -226,135 +218,4 @@ html|p {
   border: none !important;
 }
 
-/* ::::: border adjustments ::::: */
-
-tree { 
-  border-left: 1px solid transparent;
-}
-
-#results-splitter > box {
-  border-left: none;
-}
-
-#results-splitter[state="collapsed"] {
-  border-bottom: none;
-}
-
-/* ..... status bar border ..... */
-
-statusbarpanel,
-#component-bar,
-.progressmeter-statusbar {
-  border-top: 1px solid #E0ECF6 !important;
-}
-
-/* ::::: Card Edit dialog ::::: */
-
-.CardEditWidth {
-  width: 25em;
-}
-
-.CardEditLabel {
-  padding: 0px;
-  margin-top: 3px;
-}
-
-.alignBoxWithFieldset {
-  margin-left: 6px;
-  margin-right: 5px;
-}
-
-.stateZipSpacer {
-  width: 3em;
-}
-
-/* ::::: Select Addresses dialog ::::: */
-
-#3PaneBox {
-  border-top: 1px solid #000000; 
-  border-bottom: 1px solid #000000;
-  border-left: 1px solid #000000;
-}
-
-#dirTreeBox {
-  width: 180px;
-  height: 100%; 
-  background-color: #FFFFFF;
-}
-
-#dirTree {
-  height: 100px;
-  min-width: 10px;
-}
-
-#vertical-splitter,
-#vertical-splitter > box {
-  border-right: none;
-}
-
-#results-bucket-tree-box {
-  border-right: 1px solid #000000;
-}
-
-#resultsTreeBox {
-  background-color: #FFFFFF; 
-  border-bottom: 1px solid #000000;
-}
-
-#resultsTree, #dirTree
-#resultsTree > .tree-container-treerows,
-#dirTree > .tree-container-treerows {
-  border: none;
-}
-
-#resultsTree {
-  height: 100px; 
-  min-width: 10px;
-  border-left: 1px solid #414B75;
-}
-
-#resultsTree > treerows {
-  border-left: 1px solid #000000;
-}
-
-#bucket-splitter > box {
-  border-left: none;
-}
-
-#addToBucketButtonBox {
-  border-left: 1px solid #000000;
-  min-width: 10px;
-  padding: 0.3em; 
-}
-
-#bucketBox {
-  height: 170px;
-}
-
-#addressBucket {
-  border-left: 1px solid #414B75;
-  min-width: 10px;
-  height: 100px; 
-}
-
-#addressBucket > treerows {
-  border-left: 1px solid #000000;
-}
-
-#rightColumnButtonBox {
-  padding: .5em; 
-  padding-right: 0px;
-}
-
-.third-column-spring {
-  height: 10px;
-}
-
-.middle-button-spring {
-  width: 10px;
-}
-
-[hide] {
-  visibility: collapse;
-}
 

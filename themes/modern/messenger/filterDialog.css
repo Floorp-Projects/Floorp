@@ -21,28 +21,20 @@
  *
  */
 
-/* ===== messenger.css ==================================================
-  == Styles shared throughout the Messenger application.
+/* ===== filterDialog.css ===============================================
+  == Styles for the Mail Filters dialog.
   ======================================================================= */
 
-@import url("chrome://communicator/skin/");
-@import url("chrome://messenger/content/messenger.css");
+@import url("chrome://messenger/skin/");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: image precacheing ::::: */
+/* ::::: columns :::::: */
 
-#resource_bundle_messenger {
-   -moz-binding: url("chrome://messenger/skin/resources.xml#resource_bundle_messenger");
+.enabledcol {
+  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
-/* ::::: miscellany :::::: */
-
-spring.spacer {
-  width: 5px;
-  height: 5px;
+.enabledcol[Enabled="true"] {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
-
-
-
-
