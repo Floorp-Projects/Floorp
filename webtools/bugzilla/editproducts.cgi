@@ -29,6 +29,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 require "globals.pl";
