@@ -613,6 +613,7 @@ case "$target" in
         MKSHLIB='$(CC) -o $@ $(DSO_LDOPTS)'
         DSO_CFLAGS=-fPIC
         DSO_LDOPTS='-shared -Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
+        STRIP="$STRIP -d"
         case "$target_os" in
         bsdi4.2*)
             AC_DEFINE(_PR_HAVE_GETPROTO_R)
