@@ -1447,7 +1447,7 @@ HTMLAttributesImpl::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
         const PRUnichar* class2Buf;
         classList->mAtom->GetUnicode(&class2Buf);
         nsDependentString class2(class2Buf);
-        if (Compare(class1, class2, nsCaseInsensitiveStringComparator()) == 0)
+        if (class1.Equals(class2, nsCaseInsensitiveStringComparator()))
           return NS_OK;
         classList = classList->mNext;
       } while (classList);

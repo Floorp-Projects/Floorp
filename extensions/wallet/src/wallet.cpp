@@ -1960,14 +1960,16 @@ wallet_StepForwardOrBack
       if (goForward) {
         if (NS_SUCCEEDED(result) &&
             (type.IsEmpty() ||
-             (Compare(type, NS_LITERAL_STRING("text"), 
-                      nsCaseInsensitiveStringComparator()) == 0))) {
+             type.Equals(NS_LITERAL_STRING("text"), 
+                         nsCaseInsensitiveStringComparator()))) {
           /* at <input> element and it's type is either "text" or is missing ("text" by default) */
           atInputOrSelect = PR_TRUE;
           return;
         }
       } else {
-        if (NS_SUCCEEDED(result) && (Compare(type, NS_LITERAL_STRING("hidden"), nsCaseInsensitiveStringComparator()) != 0)) {
+        if (NS_SUCCEEDED(result) &&
+            !type.Equals(NS_LITERAL_STRING("hidden"),
+                         nsCaseInsensitiveStringComparator())) {
           /* at <input> element and it's type is not "hidden" */
           atInputOrSelect = PR_TRUE;
           return;
@@ -2402,7 +2404,10 @@ wallet_GetPrefills(
   if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
     nsAutoString type;
     result = inputElement->GetType(type);
-    if ((NS_SUCCEEDED(result)) && ((type.IsEmpty()) || (Compare(type, NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()) == 0))) {
+    if (NS_SUCCEEDED(result) &&
+        (type.IsEmpty() ||
+         type.Equals(NS_LITERAL_STRING("text"),
+                     nsCaseInsensitiveStringComparator()))) {
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
@@ -3636,8 +3641,10 @@ wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
     /* it's an input element */
     nsAutoString type;
     result = inputElement->GetType(type);
-    if ((NS_SUCCEEDED(result)) &&
-        (type.IsEmpty() || (Compare(type, NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()) == 0))) {
+    if (NS_SUCCEEDED(result) &&
+        (type.IsEmpty() ||
+         type.Equals(NS_LITERAL_STRING("text"),
+                     nsCaseInsensitiveStringComparator()))) {
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
@@ -3992,8 +3999,8 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                 rv = inputElement->GetType(type);
                 if (NS_SUCCEEDED(rv)) {
 
-                  PRBool isText = (type.IsEmpty() || (Compare(type, NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator())==0));
-                  PRBool isPassword = (Compare(type, NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator())==0);
+                  PRBool isText = (type.IsEmpty() || type.Equals(NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()));
+                  PRBool isPassword = type.Equals(NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator());
 
                   // don't save password if field was left blank
                   if (isPassword) {

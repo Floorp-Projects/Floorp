@@ -1179,7 +1179,8 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
       if (!htmlValueString.Equals(NS_LITERAL_STRING(""))) {
         nsAutoString leftHTMLValue;
         htmlValueString.Left(leftHTMLValue, 5);
-        aIsSet = PRBool(!Compare(leftHTMLValue, leftCSSValue, nsCaseInsensitiveStringComparator()));
+        aIsSet = leftHTMLValue.Equals(leftCSSValue,
+                                      nsCaseInsensitiveStringComparator());
       }
       else {
         aIsSet = (leftCSSValue.Equals(NS_LITERAL_STRING("times")) ||
@@ -1202,7 +1203,8 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
     }
 
     if (!htmlValueString.Equals(NS_LITERAL_STRING(""))) {
-      if (!Compare(htmlValueString, valueString, nsCaseInsensitiveStringComparator())) {
+      if (htmlValueString.Equals(valueString,
+                                 nsCaseInsensitiveStringComparator())) {
         aIsSet = PR_TRUE;
       }
     }

@@ -799,8 +799,8 @@ nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpe
       PR_FREEIF(leaf);
 
       if (!leafName.IsEmpty() &&
-          Compare(nsDependentString(folderName), leafName,
-                  nsCaseInsensitiveStringComparator()) == 0)
+          leafName.Equals(nsDependentString(folderName), 
+                          nsCaseInsensitiveStringComparator()))
       {
            if (msgWindow)
               AlertFolderExists(msgWindow);
