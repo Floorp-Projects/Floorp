@@ -47,6 +47,17 @@
 
 #include "nsIDebugPlugin.h"
 #include "nsIClassInfo.h"
+#include "nsILocalFile.h"
+#include "nsIDebugObject.h"
+#include "nsXPIDLString.h"
+#include "nsIFile.h"
+#include "nsILocalFile.h"
+#include "nsISimpleEnumerator.h"
+#include "nsMemory.h"
+#include "nsNetUtil.h"
+#include "nsString.h"
+#include "nsIPref.h"
+
 
 class nsPluginInstance;
 
@@ -91,6 +102,9 @@ public:
 
 protected:
   nsPluginInstance* mPlugin;
+  nsCOMPtr<nsIDebugObject> mDebugObj;
+  nsCOMPtr<nsISimpleEnumerator> mIter;
+
 };
 
 #endif

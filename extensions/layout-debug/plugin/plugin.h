@@ -61,22 +61,15 @@ public:
   NPError	GetValue(NPPVariable variable, void *value);
 
   // locals
-  void    OutPutLayoutFrames(nsISupports *aWindow,const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags, PRInt32 *aRetVal);
-  void    CompareLayoutFrames(const PRUnichar *aBasePath, const PRUnichar *aVerPath, 
-              const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aRetVal);
   nsIDebugPlugin* getScriptablePeer();
-
-  NS_DECL_NSIDEBUGPLUGIN
 
 private:
   NPP                           mInstance;
   NPBool                        mInitialized;
-  nsIDebugPlugin *              mScriptablePeer;
-  nsCOMPtr<nsISimpleEnumerator> mIter;
+  nsIDebugPlugin                *mScriptablePeer;
 
-  nsCOMPtr<nsIDebugObject> mDebugObj;
 public:
-  char mString[128];
+
 };
 
 #endif // __PLUGIN_H__
