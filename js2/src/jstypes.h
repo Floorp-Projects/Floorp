@@ -242,6 +242,18 @@ namespace JSTypes {
         {
             return (mProperties[name] = value);
         }
+        
+        const JSValue& deleteProperty(const String& name)
+        {
+            JSProperties::iterator i = mProperties.find(name);
+            if (i != mProperties.end()) {
+                mProperties.erase(i);
+                return kTrue;
+            }
+            if (mPrototype)
+                return mPrototype->deleteProperty(name);
+            return kFalse;
+        }
 
         void setPrototype(JSObject* prototype)
         {
@@ -445,14 +457,14 @@ namespace JSTypes {
 
     class JSType : public JSObject {
     protected:
-        String mName;
+        JSString mName;
         const JSType *mBaseType;
     public:
         JSType(const String &name, const JSType *baseType) : mName(name), mBaseType(baseType) { }
 
         enum { NoRelation = 0x7FFFFFFF };
 
-        const String& getName() const { return mName; }
+        const JSString& getName() const { return mName; }
 
         int32 distance(const JSType *other) const;
     };
