@@ -35,6 +35,10 @@ REQUIRES=	xpcom \
 			timer \
 			uconv \
 			intl \
+			locale \
+			webshell \
+			docshell \
+			layout \
 			$(NULL)
 
 include <$(DEPTH)\config\config.mak>
