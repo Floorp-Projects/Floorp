@@ -85,9 +85,9 @@ function test()
  /* This example is from jim@jibbering.com (see Bugzilla bug 92942)
   * It is a variation on the example below.
   *
-  * Here we are using the regexp /$/ instead of the regexp //.
-  * Now /$/ means we should match the "empty string" conceived of
-  * at the end-boundary of the word, instead of the one at the beginning.
+  * Namely, we are using the regexp /$/ instead of the regexp //.
+  * The regexp /$/ means we should match the "empty string" at the 
+  * end-boundary of the word, instead of the one at the beginning.
   */
   status = 'Section E of test';
   var strJim = 'aa$aa';
