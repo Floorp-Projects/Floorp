@@ -362,7 +362,7 @@ protected:
     nsDocShellEditorData*      mEditorData;          // editor data, if any
 
     // Transferable hooks/callbacks
-    nsTransferableHookData*    mTransferableHookData;
+    nsCOMPtr<nsIClipboardDragDropHookList>  mTransferableHookData;
 
     // WEAK REFERENCES BELOW HERE.
     // Note these are intentionally not addrefd.  Doing so will create a cycle.
