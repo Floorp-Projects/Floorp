@@ -1936,10 +1936,12 @@ NET_GetURL (URL_Struct *URL_s,
 
     /* Hack to allow special URL for new Editor doc 
      *   and still allow filtering of non-editable doc types
-     * All editor GetUrl calls should use FO_CACHE_AND_EDIT
-     *   except in the case of the new document URL
+     * All editor GetUrl calls should use FO_EDIT or FO_CACHE_AND_EDIT
+     * When we know we have a new document, we change it to FO_CACHE_AND_PRESENT
+     *   so it can load the "about:" url without complaining
     */
-    if( EDT_IS_EDITOR(window_id) && window_id->is_new_document ) {
+    if( EDT_IS_EDITOR(window_id) && window_id->is_new_document && 
+        (output_format == FO_EDIT || output_format == FO_CACHE_AND_EDIT) ){
         output_format = FO_CACHE_AND_PRESENT;
     }
 #endif
