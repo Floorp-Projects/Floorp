@@ -293,6 +293,25 @@ function FlavourToXfer(aData, aLength, aFlavour)
   return new TransferData([new FlavourData(aData, aLength, aFlavour)]);
 }
 
+var transferUtils = {
+
+  retrieveURLFromData: function (aData, flavour)
+  {
+    switch (flavour) {
+      case "text/unicode":
+        return aData;
+      case "text/x-moz-url":
+        return aData.toString().split("\n")[0];
+      case "application/x-moz-file":
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService);
+        return ioService.getURLSpecFromFile(aData);
+    }
+    return null;                                                   
+  }
+
+}
+
 /*
 function DUMP_obj (aObj) 
 {
