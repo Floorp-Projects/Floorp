@@ -1,0 +1,292 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   John Bandhauer (jband@netscape.com)
+ *   Vidur Apparao (vidur@netscape.com)
+ *
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIWSDL.idl"
+#include "nsIEnumerator.idl"
+#include "nsIException.idl"
+
+%{ C++
+#include "nsAWritableString.h"
+%} 
+
+interface nsIWebServiceProxy;
+interface nsIWebServiceProxyListener;
+// XXX Should be replaced with an include
+interface nsISOAPResponse;
+interface nsISOAPParameter;
+
+[scriptable, uuid(693611be-bb38-40e0-a98e-b46ff8a5bcca)]
+interface nsIWebServiceProxyFactory : nsISupports {
+  /**
+   * Create a service proxy. Loading of the WSDL URL will occur
+   * in a synchronous manner. Calls to web service can be made as
+   * soon as this method completes.
+   *
+   * @param wsdlURL The URL of the WSDL service description. This
+   *                description will be loaded and used as the basis
+   *                for the service proxy.
+   * @param portname The name of the port of the service that this 
+   *                 service proxy represents. Currently the port
+   *                 must represent a SOAP binding.
+   * @param qualifier The user-specified qualifier is incorporated into
+   *                  the names of XPCOM interfaces created for the 
+   *                  service proxy. For C++ callers, this qualifier 
+   *                  should be the  same one used in creating the IDL 
+   *                  used at compile time. Script callers need not 
+   *                  specify a qualifier.
+   * @param isAsync If PR_TRUE, the method signatures of the service
+   *                proxy represent an asynchronous calling convention.
+   *                A callback instance must be registered with the proxy.
+   *                A method call to a web service is only completed when
+   *                the corresponding callback method is invoked.
+   *                If PR_FALSE, the method signatures of the service
+   *                proxy represent a synchronous callling convention.
+   *                A method call to a web service is completed when the
+   *                method call to the proxy returns.
+   */
+  nsIWebServiceProxy createProxy(in AString wsdlURL, in AString portname, 
+                                 in AString qualifier, in boolean isAsync);
+
+  /**
+   * Create a service proxy. Loading of the WSDL URL will occur
+   * in an asynchronous manner. Methods on the listener instance will
+   * be invoked when the proxy has been created. Any method invocations
+   * on the service proxy prior to asynchronous completion of the 
+   * intialization step will fail. The caller is guaranteed that this
+   * method will return before the listener is invoked.
+   *
+   * @param wsdlURL The URL of the WSDL service description. This
+   *                description will be loaded and used as the basis
+   *                for the service proxy.
+   * @param portname The name of the port of the service that this 
+   *                 service proxy represents. Currently the port
+   *                 must represent a SOAP binding.
+   * @param qualifier The user-specified qualifier is incorporated into
+   *                  the names of XPCOM interfaces created for the 
+   *                  service proxy. For C++ callers, this qualifier 
+   *                  should be the same one used in creating the IDL 
+   *                  used at compile time. Script callers need not 
+   *                  specify a qualifier.
+   * @param isAsync If PR_TRUE, the method signatures of the service
+   *                proxy represent an asynchronous calling convention.
+   *                A callback instance must be registered with the proxy.
+   *                A method call to a web service is only completed when
+   *                the corresponding callback method is invoked.
+   *                If PR_FALSE, the method signatures of the service
+   *                proxy represent a synchronous callling convention.
+   *                A method call to a web service is completed when the
+   *                method call to the proxy returns.
+   * @param listener The callback instance which will be invoked when
+   *                 the proxy is completely initialized.
+   */
+  void createProxyAsync(in AString wsdlURL, in AString portname, 
+                        in AString qualifier, in boolean isAsync,
+                        in nsIWebServiceProxyListener listener);
+};
+
+[scriptable, uuid(2122421c-1326-41db-87f8-25519d8a12cb)]
+interface nsIWebServiceProxy : nsISupports {
+  /**
+   * The WSDL port that this service proxy represents.
+   *
+   * @see nsIWSDLPort
+   */
+  readonly attribute nsIWSDLPort port;
+
+  /**
+   * PR_TRUE if the service proxy methods represent an asynchronous
+   * calling convention. PR_FALSE if the methods are synchronous.
+   */
+  readonly attribute boolean isAsync;
+
+  /**
+   * The qualifier used for interface names related to
+   * this service proxy.
+   */
+  readonly attribute AString qualifier;
+
+  /**
+   * The collection of interfaces related to this service proxy. This
+   * will include the primary interface implemented by the service
+   * proxy as well as any listener or complex type interfaces required
+   * for method parameters and return values.
+   */
+  // readonly attribute nsIXPCComponents_Interfaces  interfaces;
+
+  /**
+   * An enumerator that returns the set of pending calls for the
+   * service proxy. Each call is an instance of the 
+   * <code>nsIWebServiceCallContext</code> interface.
+   *
+   * @see nsIWebServiceCallContext
+   */
+  readonly attribute nsISimpleEnumerator pendingCalls;  
+};
+
+/**
+ * This interface should be implemented by a user who creates
+ * a web service proxy in an asynchronous manner. An instance
+ * of this interface is passed into the <code>initAsync</code>
+ * method of the proxy.
+ */
+[scriptable, uuid(a711250b-47da-4f16-a1fd-593de16375a1)]
+interface nsIWebServiceProxyListener : nsISupports {
+  /**
+   * Invoked when the proxy is completely initialized. Method
+   * calls on the proxy can be made once this method is called.
+   * 
+   * @param proxy The initialized web service proxy
+   */
+  void onLoad(in nsIWebServiceProxy proxy);
+
+  /**
+   * Invoked if an error occurs during web service proxy
+   * initialization. This error code be a result of attempting
+   * to load the specified WSDL URL or a result of processing
+   * the WSDL and creating the interface information for the 
+   * proxy.
+   *
+   * @param error The exception generated as a result of the
+   *                  error. This object can be introspected
+   *                  for further information.
+   */ 
+  void onError(in nsIException error);
+};
+
+/**
+ * A representation of a method invocation on a web service.
+ * An instance of this interface is returned as a result of making
+ * an asynchronous call and can be queried for status of the
+ * call.
+ */
+[scriptable, uuid(87d87900-f102-4a15-b345-7b77a49d2df2)]
+interface nsIWebServiceCallContext : nsISupports {
+  
+  /** 
+   * Possible values of the <code>status</code> attribute. A pending
+   * call has a status of PENDING. A completed call has a status of
+   * SUCCEEDED or FAILED depending on the result of the call.
+   */
+  const PRUint32 PENDING = 0;
+  const PRUint32 SUCCEEDED = 1;
+  const PRUint32 FAILED = 2;
+  const PRUint32 ABORTED = 3;
+
+  /**
+   * The proxy object on which the call was made.
+   * 
+   * @see nsIWebServiceProxy
+   */
+  readonly attribute nsIWebServiceProxy proxy;
+
+  /**
+   * The name of the method that was invoked.
+   */
+  readonly attribute AString methodName;
+
+  /**
+   * The status of the call, whether pending, completed successfully
+   * or completed with a fault.
+   */
+  readonly attribute PRUint32 status;
+
+  /**
+   * The exception generated by the call if the status is FAILURE.
+   * The exception object can be introspected for more information.
+   * The <code>data</code> member can be QIed to a 
+   * <code>nsISOAPFault</code> instance for calls that use a
+   * SOAP binding.
+   */ 
+  readonly attribute nsIException pendingException;
+
+  /**
+   * The WSDL operation that correpsonds to the method being invoked.
+   *
+   * @see nsIWSDLOperation
+   */
+  readonly attribute nsIWSDLOperation operation;
+
+  /**
+   * For users who want access to the lower-level constructs that
+   * are used for the method invocation, this attributes provides
+   * the SOAP response once the call has completed.
+   *
+   * @see nsISOAPResponse
+   */
+  readonly attribute nsISOAPResponse soapResponse;
+
+  /**
+   * For user who want access to the lower-level constructs that
+   * are used for the method invocation, this method provides
+   * the SOAP parameters that were passed to the lower-level API.
+   *
+   * @see nsISOAPParameter
+   * @param paramCount The number of parameters in the array.
+   * @param params The array of parameters passed to the
+   *               lower-level API.
+   */
+  void getParameters(out PRUint32 paramCount, [retval, array, size_is(paramCount)] out nsISOAPParameter params);
+
+  /**
+   * For user who want access to the lower-level constructs that
+   * are used for the method invocation, this method provides
+   * the SOAP parameters that were returned from the call
+   * to the lower-level API. This list is only available after
+   * the call completes successfully.
+   *
+   * @see nsISOAPParameter
+   * @param resultCount The number of results in the array.
+   * @param results The array of results returned from the
+   *                lower-level API.
+   */
+  void getResults(out PRUint32 resultCount, [retval, array, size_is(resultCount)] out nsISOAPParameter results);
+
+  /**
+   * Called to abort a pending call. If the call is still pending,
+   * its callback instance's <code>onError</code> will be invoked,
+   * passing in the specified exception.
+   *
+   * @param error The exception passed to the callback instance's
+   *              <code>onError</code> method.
+   */
+  void abort(in nsIException error);
+};
+
