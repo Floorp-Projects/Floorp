@@ -349,7 +349,7 @@ interface(TreeState *state)
           case IDLN_OP_DCL:
             write_indent(state->file);
             write_method_signature(data, state->file, AS_DECL, NULL);
-            fputs(" { return _to ## ", state->file);
+            fputs(" { return _to ", state->file);
             write_method_signature(data, state->file, AS_CALL, NULL);
             break;
 
@@ -357,7 +357,7 @@ interface(TreeState *state)
             write_indent(state->file);
             if (!write_attr_accessor(data, state->file, TRUE, AS_DECL, NULL))
                 FAIL;
-            fputs(" { return _to ## ", state->file);
+            fputs(" { return _to ", state->file);
             if (!write_attr_accessor(data, state->file, TRUE, AS_CALL, NULL))
                 FAIL;
             if (!IDL_ATTR_DCL(data).f_readonly) {
@@ -366,7 +366,7 @@ interface(TreeState *state)
                 if (!write_attr_accessor(data, state->file,
                                          FALSE, AS_DECL, NULL))
                     FAIL;
-                fputs(" { return _to ## ", state->file);
+                fputs(" { return _to ", state->file);
                 if (!write_attr_accessor(data, state->file,
                                          FALSE, AS_CALL, NULL))
                     FAIL;
@@ -417,7 +417,7 @@ interface(TreeState *state)
           case IDLN_OP_DCL:
             write_indent(state->file);
             write_method_signature(data, state->file, AS_DECL, NULL);
-            fputs(" { return !_to ## ? NS_ERROR_NULL_POINTER : _to ##-> ", state->file);
+            fputs(" { return !_to ? NS_ERROR_NULL_POINTER : _to->", state->file);
             write_method_signature(data, state->file, AS_CALL, NULL);
             break;
 
@@ -425,7 +425,7 @@ interface(TreeState *state)
             write_indent(state->file);
             if (!write_attr_accessor(data, state->file, TRUE, AS_DECL, NULL))
                 FAIL;
-            fputs(" { return !_to ## ? NS_ERROR_NULL_POINTER : _to ##->", state->file);
+            fputs(" { return !_to ? NS_ERROR_NULL_POINTER : _to->", state->file);
             if (!write_attr_accessor(data, state->file, TRUE, AS_CALL, NULL))
                 FAIL;
             if (!IDL_ATTR_DCL(data).f_readonly) {
@@ -434,7 +434,7 @@ interface(TreeState *state)
                 if (!write_attr_accessor(data, state->file,
                                          FALSE, AS_DECL, NULL))
                     FAIL;
-                fputs(" { return !_to ## ? NS_ERROR_NULL_POINTER : _to ##->", state->file);
+                fputs(" { return !_to ? NS_ERROR_NULL_POINTER : _to->", state->file);
                 if (!write_attr_accessor(data, state->file,
                                          FALSE, AS_CALL, NULL))
                     FAIL;
