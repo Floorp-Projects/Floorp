@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dan Mosedale <dmose@mozilla.org>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -65,6 +66,7 @@ use Mysql;
 use Date::Format;               # For time2str().
 use Date::Parse;               # For str2time().
 # use Carp;                       # for confess
+use RelationSet;
 
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.9';
@@ -118,9 +120,6 @@ sub SqlLog {
     }
 }
     
-
-
-
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
@@ -756,22 +755,12 @@ sub GetLongDescriptionAsHTML {
 }
 
 sub ShowCcList {
-    my ($num) = (@_);
-    my @ccids;
-    my @row;
-    SendSQL("select who from cc where bug_id = $num");
-    while (@row = FetchSQLData()) {
-        push(@ccids, $row[0]);
-    }
-    my @result = ();
-    foreach my $i (@ccids) {
-        push @result, DBID_to_name($i);
-    }
-
-    return join(',', @result);
+   my ($num) = (@_);
+   
+   my $ccSet = new RelationSet();
+   $ccSet->mergeFromDB("select who from cc where bug_id=$num");
+   return $ccSet->toString();
 }
-
-
 
 # Fills in a hashtable with info about the columns for the given table in the
 # database.  The hashtable has the following entries:
@@ -903,7 +892,7 @@ sub RemoveVotes {
 }
 
 
-sub Param {
+sub Param ($) {
     my ($value) = (@_);
     if (defined $::param{$value}) {
         return $::param{$value};

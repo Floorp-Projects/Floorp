@@ -26,7 +26,7 @@ other necessary ingredient is a web server set up to run cgi scripts.
 
    The software packages necessary for the proper running of bugzilla are:
 
-        1. MySQL database server and the mysql client
+        1. MySQL database server and the mysql client (3.22.5 or greater)
         2. Perl (5.004 or greater)
         3. DBI Perl module 
         4. Data::Dumper Perl module
@@ -39,7 +39,7 @@ other necessary ingredient is a web server set up to run cgi scripts.
    Bugzilla has quite a few prerequisites, but none of them are TCL.
 Previous versions required TCL, but it no longer needed (or used).
 
-1.1. Getting and setting up MySQL database
+1.1. Getting and setting up MySQL database (3.22.5 or greater)
 
    Visit MySQL homepage at http://www.mysql.org and grab the latest stable
 release of the server.  Both binaries and source are available and which

@@ -28,6 +28,7 @@ my $UserInEditGroupSet = -1;
 my $UserInCanConfirmGroupSet = -1;
 
 require "CGI.pl";
+use RelationSet;
 
 # Shut up misguided -w warnings about "used only once":
 
@@ -373,23 +374,20 @@ if (defined $::FORM{'qa_contact'}) {
 
 ConnectToDatabase();
 
-my %ccids;
-my $origcclist = "";
+my $formCcSet = new RelationSet;
+my $origCcSet = new RelationSet;
+my $origCcString;
 
 # We make sure to check out the CC list before we actually start touching any
-# bugs.
+# bugs.  mergeFromString() ultimately searches the database using a quoted
+# form of the data it gets from $::FORM{'cc'}, so anything bogus from a 
+# security standpoint should trigger an abort there.
+#
 if (defined $::FORM{'cc'} && defined $::FORM{'id'}) {
-    $origcclist = ShowCcList($::FORM{'id'});
-    if ($origcclist ne $::FORM{'cc'}) {
-        foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
-            if ($person ne "") {
-                my $cid = DBNameToIdAndCheck($person);
-                $ccids{$cid} = 1;
-            }
-        }
-    }
+    $origCcSet->mergeFromDB("select who from cc where bug_id = $::FORM{'id'}");
+    $origCcString = $origCcSet->toString();  # cache a copy of the string vers
+    $formCcSet->mergeFromString($::FORM{'cc'});
 }
-
 
 if ( Param('strictvaluechecks') ) {
     CheckFormFieldDefined(\%::FORM, 'knob');
@@ -759,22 +757,25 @@ The changes made were:
         AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
     }
     
-    if (defined $::FORM{'cc'} && $origcclist ne $::FORM{'cc'}) {
-        SendSQL("delete from cc where bug_id = $id");
-        foreach my $ccid (keys %ccids) {
-            SendSQL("insert into cc (bug_id, who) values ($id, $ccid)");
-        }
-        my $newcclist = ShowCcList($id);
-        if ($newcclist ne $origcclist) {
-            my $col = GetFieldID('cc');
-            my $origq = SqlQuote($origcclist);
-            my $newq = SqlQuote($newcclist);
-            SendSQL("INSERT INTO bugs_activity " .
-                    "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
-                    "($id,$whoid,'$timestamp',$col,$origq,$newq)");
-        }
-    }
+    if (defined $::FORM{'cc'} && defined $::FORM{'id'}
+        && ! $origCcSet->isEqual($formCcSet) ) {
 
+        # update the database to look like the form
+        #
+        my @CCDELTAS = $origCcSet->generateSqlDeltas($formCcSet, "cc", 
+                                                     "bug_id", $::FORM{'id'},
+                                                     "who");
+        $CCDELTAS[0] eq "" || SendSQL($CCDELTAS[0]);
+        $CCDELTAS[1] eq "" || SendSQL($CCDELTAS[1]);
+
+        my $col = GetFieldID('cc');
+        my $origq = SqlQuote($origCcString);
+        my $newq = SqlQuote($::FORM{'cc'});
+        SendSQL("INSERT INTO bugs_activity " . 
+                "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " . 
+                "($id,$whoid,'$timestamp',$col,$origq,$newq)");
+    }
+  
 
     if (defined $::FORM{'dependson'}) {
         my $me = "blocked";
@@ -850,9 +851,9 @@ The changes made were:
             if ($col eq 'assigned_to' || $col eq 'qa_contact') {
                 $old = DBID_to_name($old) if $old != 0;
                 $new = DBID_to_name($new) if $new != 0;
-                $origcclist .= ",$old"; # make sure to send mail to people
-                                        # if they are going to no longer get
-                                        # updates about this bug.
+                $origCcString .= ",$old"; # make sure to send mail to people
+                                          # if they are going to no longer get
+                                          # updates about this bug.
             }
             if ($col eq 'product') {
                 RemoveVotes($id, 0,
@@ -869,7 +870,7 @@ The changes made were:
     
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
-    system("./processmail", "-forcecc", $origcclist, $id, $::FORM{'who'});
+    system("./processmail", "-forcecc", $origCcString, $id, $::FORM{'who'});
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
     foreach my $k (keys(%dependencychanged)) {

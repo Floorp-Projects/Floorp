@@ -550,6 +550,10 @@ DefParam("commentonclose",
 DefParam("commentonduplicate",
          "If this option is on, the user needs to enter a short comment if the bug is marked as duplicate",
          "b", 0 );
-
+DefParam("supportwatchers",
+         "Support one user watching (ie getting copies of all related email" .
+         " about) another's bugs.  Useful for people going on vacation, and" .
+         " QA folks watching particular developers' bugs",
+         "b", 0 );
 1;
 

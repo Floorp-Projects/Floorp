@@ -22,6 +22,8 @@
 use diagnostics;
 use strict;
 
+use RelationSet;
+
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
@@ -147,8 +149,10 @@ my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'});
 my $component_popup = make_options($::components{$bug{'product'}},
 				   $bug{'component'});
 
+my $ccSet = new RelationSet;
+$ccSet->mergeFromDB("select who from cc where bug_id=$id");
 my $cc_element = '<INPUT NAME=cc SIZE=30 VALUE="' .
-    ShowCcList($id) . '">';
+  $ccSet->toString() . '">';
 
 
 my $URL = $bug{'bug_file_loc'};
@@ -208,7 +212,9 @@ if (Param("usetargetmilestone")) {
     if ($url eq "") {
         $url = "notargetmilestone.html";
     }
-
+    if ($bug{'target_milestone'} eq "") {
+        $bug{'target_milestone'} = " ";
+    }
     print "
 <TD ALIGN=RIGHT><A href=\"$url\"><B>Target Milestone:</B></A></TD>
 <TD><SELECT NAME=target_milestone>" .

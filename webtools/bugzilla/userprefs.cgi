@@ -14,11 +14,14 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dan Mosedale <dmose@mozilla.org>
 
 use diagnostics;
 use strict;
 
 require "CGI.pl";
+
+use RelationSet;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
@@ -134,6 +137,29 @@ risk any bugs), check here.
         EmitEntry("Check here to sign up (and risk any bugs)",
                   qq{<INPUT TYPE="checkbox" NAME="newemailtech" $checkedpart>New email tech});
     }
+
+    if (Param("supportwatchers")) {
+      my $watcheduserSet = new RelationSet;
+      $watcheduserSet->mergeFromDB("SELECT watched FROM watch WHERE" .
+                                    " watcher=$userid");
+      my $watchedusers = $watcheduserSet->toString();
+
+      print qq{
+<TR><TD COLSPAN="2"><HR></TD></TR>
+<TR><TD COLSPAN="2"><FONT COLOR="red">New!</FONT>
+If you want to help cover for someone when they're on vacation, or if 
+you need to do the QA related to all of their bugs, you can tell bugzilla
+to send mail related to their bugs to you also.  List the email addresses
+of any users you wish to watch here, separated by commas.
+<FONT COLOR="red">Note that you MUST have the above "New email tech" 
+button selected in order to use this feature.</FONT>
+</TD></TR>
+};
+      EmitEntry("Users to watch",
+              qq{<INPUT SIZE=35 NAME="watchedusers" VALUE="$watchedusers">});
+
+    }
+
 }
 
 sub SaveDiffs {
@@ -144,6 +170,47 @@ sub SaveDiffs {
     SendSQL("UPDATE profiles " .
             "SET emailnotification = " . SqlQuote($::FORM{'emailnotification'})
             . ", newemailtech = $newemailtech WHERE userid = $userid");
+
+    # deal with any watchers
+    #
+    if (Param("supportwatchers") ) {
+
+        if (exists $::FORM{'watchedusers'}) {
+
+            Error ('You must have "New email tech" set to watch someone')
+                if ( $::FORM{'watchedusers'} ne "" && $newemailtech == 0);
+
+            # Just in case.  Note that this much locking is actually overkill:
+            # we don't really care if anyone reads the watch table.  So 
+            # some small amount of contention could be gotten rid of by
+            # using user-defined locks rather than table locking.
+            #
+            SendSQL("LOCK TABLES watch WRITE, profiles READ");
+
+            # what the db looks like now
+            #
+            my $origWatchedUsers = new RelationSet;
+            $origWatchedUsers->mergeFromDB("SELECT watched FROM watch WHERE" .
+                                           " watcher=$userid");
+
+            # update the database to look like the form
+            #
+            my $newWatchedUsers = new RelationSet($::FORM{'watchedusers'});
+            my @CCDELTAS = $origWatchedUsers->generateSqlDeltas(
+                                                             $newWatchedUsers, 
+                                                             "watch", 
+                                                             "watcher", 
+                                                             $userid,
+                                                             "watched");
+            $CCDELTAS[0] eq "" || SendSQL($CCDELTAS[0]);
+            $CCDELTAS[1] eq "" || SendSQL($CCDELTAS[1]);
+
+            # all done
+            #
+            SendSQL("UNLOCK TABLES");
+        
+        }
+    }
 }
 
 

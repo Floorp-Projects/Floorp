@@ -19,7 +19,8 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>,
-# Bryce Nesbitt <bryce-mozilla@nextbus.com>
+#                 Bryce Nesbitt <bryce-mozilla@nextbus.com>
+#                 Dan Mosedale <dmose@mozilla.org>
 
 # To recreate the shadow database,  run "processmail regenerate" .
 
@@ -27,6 +28,8 @@ use diagnostics;
 use strict;
 
 require "globals.pl";
+
+use RelationSet;
 
 $| = 1;
 
@@ -100,11 +103,11 @@ sub Different {
 
 
 sub DescCC {
-    my ($cclist) = (@_);
-    if (scalar(@$cclist) <= 0) {
-        return "";
-    }
-    return "Cc: " . join(", ", @$cclist) . "\n";
+    my $cclist = shift();
+
+    return "" if ( $cclist->size() == 0 );
+
+    return "Cc: " . $cclist->toString() . "\n";
 }
 
 
@@ -201,20 +204,20 @@ sub GetBugText {
 
     $::bug{'long_desc'} = GetLongDescriptionAsText($id);
 
-    my @cclist;
-    @cclist = split(/,/, ShowCcList($id));
+    my $cclist = new RelationSet();
+    $cclist->mergeFromDB("select who from cc where bug_id = $id");
     my @voterlist;
     SendSQL("select profiles.login_name from votes, profiles where votes.bug_id = $id and profiles.userid = votes.who");
     while (MoreSQLData()) {
         my $v = FetchOneColumn();
         push(@voterlist, $v);
     }
-    $::bug{'cclist'} = join(',', @cclist);
+    $::bug{'cclist'} = $cclist->toString();
     $::bug{'voterlist'} = join(',', @voterlist);
 
     if (Param("prettyasciimail")) {
         $^A = "";
-        my $temp = formline <<'END',$::bug{'short_desc'},$id,$::bug{'product'},$::bug{'bug_status'},$::bug{'version'},$::bug{'resolution'},$::bug{'rep_platform'},$::bug{'bug_severity'},$::bug{'op_sys'},$::bug{'priority'},$::bug{'component'},$::bug{'assigned_to'},$::bug{'reporter'},$qa_contact,DescCC(\@cclist),$target_milestone,${status_whiteboard},$::bug{'bug_file_loc'},DescDependencies($id);
+        my $temp = formline <<'END',$::bug{'short_desc'},$id,$::bug{'product'},$::bug{'bug_status'},$::bug{'version'},$::bug{'resolution'},$::bug{'rep_platform'},$::bug{'bug_severity'},$::bug{'op_sys'},$::bug{'priority'},$::bug{'component'},$::bug{'assigned_to'},$::bug{'reporter'},$qa_contact,DescCC($cclist),$target_milestone,${status_whiteboard},$::bug{'bug_file_loc'},DescDependencies($id);
 +============================================================================+
 | @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
 +----------------------------------------------------------------------------+
@@ -255,7 +258,7 @@ Component: $::bug{'component'}
 AssignedTo: $::bug{'assigned_to'}                            
 ReportedBy: $::bug{'reporter'}               
 $qa_contact$target_milestone${status_whiteboard}URL: $::bug{'bug_file_loc'}
-" . DescCC(\@cclist) . "Summary: $::bug{'short_desc'}
+" . DescCC($cclist) . "Summary: $::bug{'short_desc'}
 " . DescDependencies($id) . "
 $::bug{'long_desc'}
 ";
@@ -357,7 +360,9 @@ sub NewProcessOneBug {
         $values{$i} = shift(@row);
     }
     my ($start, $end) = (@row);
-    $values{'cc'} = ShowCcList($id);
+    my $ccSet = new RelationSet();
+    $ccSet->mergeFromDB("SELECT who FROM cc WHERE bug_id = $id");
+    $values{'cc'} = $ccSet->toString();
     
     my @voterlist;
     SendSQL("SELECT profiles.login_name FROM votes, profiles " .
@@ -463,137 +468,140 @@ sub NewProcessOneBug {
                     @voterlist,
                     @forcecc) {
         $count++;
-        if ($seen{$person}) {
-            next;
-        }
-        
-        SendSQL("SELECT userid, emailnotification, newemailtech," .
-                "       groupset & $values{'groupset'} " .
-                "FROM profiles WHERE login_name = " . SqlQuote($person));
-        my ($userid, $emailnotification, $newemailtech,
-            $groupset) = (FetchSQLData());
-        if (!$newemailtech || !Param('newemailtech')) {
-            next;
-        }
-        $seen{$person} = 1;
-        if ($groupset ne $values{'groupset'}) {
-            next;
-        }
-        if ($emailnotification eq "ExcludeSelfChanges" &&
-            lc($person) eq $nametoexclude) {
-            $didexclude = 1;
-            next;
-        }
-        if ($emailnotification eq "CCOnly" && $count < 3) {
-            next;
-        }
 
-        my %mailhead = %defmailhead;
-
-#          SendSQL("SELECT name, mailhead, maildiffs FROM diffprefs, fielddefs WHERE fielddefs.fieldid = diffprefs.fieldid AND userid = $userid");
-#          while (MoreSQLData()) {
-#              my ($field, $h, $d) = (FetchSQLData());
-#              $mailhead{$field} = $h;
-#              $maildiffs{$field} = $d;
-#          }
-
-#          my $maxlen = 0;
-#          foreach my $f (keys %mailhead) {
-#              if ($mailhead{$f}) {
-#                  my $l = length($fielddescription{$f});
-#                  if ($maxlen < $l) {
-#                      $maxlen = $l;
-#                  }
-#              }
-#          }
-
-
-        my $head = "";
-        
-        foreach my $f (@headerlist) {
-            if ($mailhead{$f}) {
-                my $value = $values{$f};
-                if (!defined $value) {
-                    # Probaby ought to whine or something. ###
-                    next;
-                }
-                my $desc = $fielddescription{$f};
-                $head .= FormatDouble($desc, $value);
-
-#                  my $extra = $maxlen - length($desc);
-#                  $head .= ($extra x " ");
-#                  $head .= $desc . ": ";
-#                  while (1) {
-#                      if (length($value) < 70) {
-#                          $head .= $value . "\n";
-#                          last;
-#                      }
-#                      my $pos = rindex($value, " ", 70);
-#                      if ($pos < 0) {
-#                          $pos = rindex($value, ",", 70);
-#                          if ($pos < 0) {
-#                              $pos = 70;
-#                          }
-#                      }
-#                      $head .= substr($value, 0, 70) . "\n";
-#                      $head .= (($extra + 2) x " ");
-#                      $value = substr($value, 70);
-#                  }
-            }
-        }
-
-        
-
-        if ($difftext eq "" && $newcomments eq "") {
-            # Whoops, no differences!
-            next;
-        }
-
-        my $isnew = ($start !~ m/[1-9]/);
-
-        my %substs;
-        $substs{"neworchanged"} = $isnew ? "New" : "Changed";
-        $substs{"to"} = $person;
-        $substs{"cc"} = '';
-        $substs{"bugid"} = $id;
-        if ($isnew) {
-            $substs{"diffs"} = $head . "\n\n" . $newcomments;
-        } else {
-            $substs{"diffs"} = $difftext . "\n\n" . $newcomments;
-        }
-        $substs{"summary"} = $values{'short_desc'};
-        
-        my $template = Param("newchangedmail");
-
-        my $msg = PerformSubsts($template, \%substs);
-        open(SENDMAIL, "|/usr/lib/sendmail -t") ||
-            die "Can't open sendmail";
-        
-        print SENDMAIL trim($msg) . "\n";
-        close SENDMAIL;
-        push(@sentlist, $person);
+        NewProcessOnePerson($person, $count, \@headerlist, \%values,
+                            \%defmailhead, \%fielddescription, $difftext, 
+                            $newcomments, $start, $id, 1);
     }
-
-        
-
-
 
     SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = delta_ts " .
             "WHERE bug_id = $id");
 }
 
+sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
+    my ($person, $count, $hlRef, $valueRef, $dmhRef, $fdRef, $difftext, 
+        $newcomments, $start, $id, $checkWatchers) = @_;
+
+    my %values = %$valueRef;
+    my @headerlist = @$hlRef;
+    my %defmailhead = %$dmhRef;
+    my %fielddescription = %$fdRef;
+
+    if ($seen{$person}) {
+      return;
+    }
+        
+    SendSQL("SELECT userid, emailnotification, newemailtech," .
+            "       groupset & $values{'groupset'} " .
+            "FROM profiles WHERE login_name = " . SqlQuote($person));
+    my ($userid, $emailnotification, $newemailtech, 
+        $groupset) =  (FetchSQLData());
+    
+    # check for watchers, and recurse if we find any, but tell the
+    # recursive call not to check for watchers 
+    #
+    if (Param("supportwatchers") && $checkWatchers)  {
+      my $personId = DBname_to_id($person);
+      my $watcherSet = new RelationSet();
+      $watcherSet->mergeFromDB("SELECT watcher FROM watch WHERE" .
+                               " watched = $personId");
+
+      foreach my $watcher ( $watcherSet->toArray() ) {
+        
+        NewProcessOnePerson(DBID_to_name($watcher), 
+                            $count, \@headerlist, \%values,
+                            \%defmailhead, \%fielddescription, $difftext, 
+                            $newcomments, $start, $id, 0);
+      }
+
+    }
+
+    if (!$newemailtech || !Param('newemailtech')) {
+      return;
+    }
+    $seen{$person} = 1;
+
+
+    # if this person doesn't have permission to see info on this bug, 
+    # return.
+    #
+    # XXX - I _think_ this currently means that if a bug is suddenly given
+    # more restrictive permissions, people without those permissions won't
+    # see the action of restricting the bug itself; the bug will just 
+    # quietly disappear from their radar.
+    #
+    if ($groupset ne $values{'groupset'}) {
+      return;
+    }
+    if ($emailnotification eq "ExcludeSelfChanges" &&
+        lc($person) eq $nametoexclude) {
+      $didexclude = 1;
+      return;
+    }
+    # "$count < 3" means "this person is either assigned_to or reporter"
+    #
+    if ($emailnotification eq "CCOnly" && $count < 3) {
+      return;
+    }
+    
+    my %mailhead = %defmailhead;
+    
+    my $head = "";
+    
+    foreach my $f (@headerlist) {
+      if ($mailhead{$f}) {
+        my $value = $values{$f};
+        if (!defined $value) {
+          # Probaby ought to whine or something. ###
+          next;
+        }
+        my $desc = $fielddescription{$f};
+        $head .= FormatDouble($desc, $value);
+      }
+    }
+    
+    if ($difftext eq "" && $newcomments eq "") {
+      # Whoops, no differences!
+      return;
+    }
+    
+    my $isnew = ($start !~ m/[1-9]/);
+    
+    my %substs;
+    $substs{"neworchanged"} = $isnew ? "New" : "Changed";
+    $substs{"to"} = $person;
+    $substs{"cc"} = '';
+    $substs{"bugid"} = $id;
+    if ($isnew) {
+      $substs{"diffs"} = $head . "\n\n" . $newcomments;
+    } else {
+      $substs{"diffs"} = $difftext . "\n\n" . $newcomments;
+    }
+    $substs{"summary"} = $values{'short_desc'};
+    
+    my $template = Param("newchangedmail");
+    
+    my $msg = PerformSubsts($template, \%substs);
+    open(SENDMAIL, "|/usr/lib/sendmail -t") ||
+      die "Can't open sendmail";
+    
+    print SENDMAIL trim($msg) . "\n";
+    close SENDMAIL;
+    push(@sentlist, $person);
+    
+}
 
 
 sub ProcessOneBug {
-    my $i = $_[0];
-    NewProcessOneBug($i);
-    my $old = "shadow/$i";
-    my $new = "shadow/$i.tmp.$$";
-    my $diffs = "shadow/$i.diffs.$$";
-    my $verb = "Changed";
-    if (!stat($old)) {
-        mkdir "shadow", 0777;
-        chmod 0777, "shadow";
+  my $i = $_[0];
+  NewProcessOneBug($i);
+  my $old = "shadow/$i";
+  my $new = "shadow/$i.tmp.$$";
+  my $diffs = "shadow/$i.diffs.$$";
+  my $verb = "Changed";
+  if (!stat($old)) {
+    mkdir "shadow", 0777;
+    chmod 0777, "shadow";
         open(OLD, ">$old") || die "Couldn't create null $old";
         close OLD;
         $verb = "New";
@@ -683,7 +691,7 @@ if (open(FID, "<data/nomail")) {
 }
 
 # To recreate the shadow database,  run "processmail regenerate" .
-if ($ARGV[0] eq "regenerate") {
+if ($#ARGV >= 0 && $ARGV[0] eq "regenerate") {
     $regenerate = 1;
     shift @ARGV;
     SendSQL("select bug_id from bugs order by bug_id");
@@ -700,7 +708,7 @@ if ($ARGV[0] eq "regenerate") {
     exit;
 }
 
-if ($ARGV[0] eq "-forcecc") {
+if ($#ARGV >= 0 && $ARGV[0] eq "-forcecc") {
     shift(@ARGV);
     foreach my $i (split(/,/, shift(@ARGV))) {
         push(@forcecc, trim($i));

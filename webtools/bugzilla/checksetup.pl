@@ -20,6 +20,7 @@
 #
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #                 Terry Weissman <terry@mozilla.org>
+#                 Dan Mosedale <dmose@mozilla.org>
 #
 #
 # Direct any questions on this source code to
@@ -591,8 +592,15 @@ $table{cc} =
    'bug_id mediumint not null,
     who mediumint not null,
 
-    index(bug_id),
-    index(who)';
+    index(who),
+    unique(bug_id,who)';
+
+$table{watch} =
+   'watcher mediumint not null,
+    watched mediumint not null,
+
+    index(watched),
+    unique(watcher,watched)';
 
 
 $table{longdescs} = 
@@ -742,8 +750,8 @@ $table{keywords} =
     'bug_id mediumint not null,
      keywordid smallint not null,
 
-     index(bug_id),
-     index(keywordid)';
+     index(keywordid),
+     unique(bug_id,keywordid)';
 
 $table{keyworddefs} =
     'id smallint not null primary key,
@@ -994,6 +1002,49 @@ sub GetIndexDef ($$)
    }
 }
 
+sub CountIndexes ($)
+{
+    my ($table) = @_;
+    
+    my $sth = $dbh->prepare("SHOW INDEX FROM $table");
+    $sth->execute;
+
+    if ( $sth->rows == -1 ) {
+      die ("Unexpected response while counting indexes in $table:" .
+           " \$sth->rows == -1");
+    }
+    
+    return ($sth->rows);
+}
+
+sub DropIndexes ($)
+{
+    my ($table) = @_;
+    my %SEEN;
+
+    # get the list of indexes
+    #
+    my $sth = $dbh->prepare("SHOW INDEX FROM $table");
+    $sth->execute;
+
+    # drop each index
+    #
+    while ( my $ref = $sth->fetchrow_arrayref) {
+      
+      # note that some indexes are described by multiple rows in the
+      # index table, so we may have already dropped the index described
+      # in the current row.
+      # 
+      next if exists $SEEN{$$ref[2]};
+
+      my $dropSth = $dbh->prepare("ALTER TABLE $table DROP INDEX $$ref[2]");
+      $dropSth->execute;
+      $dropSth->finish;
+      $SEEN{$$ref[2]} = 1;
+
+    }
+
+}
 #
 # Check if the enums in the bugs table return the same values that are defined
 # in the various locally changeable variables. If this is true, then alter the
@@ -1506,7 +1557,6 @@ AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
 AddField('products', 'votestoconfirm', 'smallint not null');
 AddField('profiles', 'blessgroupset', 'bigint not null');
 
-
 # 2000-03-21 Adding a table for target milestones to 
 # database - matthew@zeroknowledge.com
 
@@ -1577,6 +1627,29 @@ if (!GetFieldDef('products', 'defaultmilestone')) {
     }
 }
 
+# 2000-03-24 Added unique indexes into the cc and keyword tables.  This
+# prevents certain database inconsistencies, and, moreover, is required for
+# new generalized list code to work.
+
+if ( CountIndexes('cc') != 3 ) {
+
+    # XXX should eliminate duplicate entries before altering
+    #
+    print "Recreating indexes on cc table.\n";
+    DropIndexes('cc');
+    $dbh->do("ALTER TABLE cc ADD UNIQUE (bug_id,who)");
+    $dbh->do("ALTER TABLE cc ADD INDEX (who)");
+}    
+
+if ( CountIndexes('keywords') != 3 ) {
+
+    # XXX should eliminate duplicate entries before altering
+    #
+    print "Recreating indexes on keywords table.\n";
+    DropIndexes('keywords');
+    $dbh->do("ALTER TABLE keywords ADD INDEX (keywordid)");
+    $dbh->do("ALTER TABLE keywords ADD UNIQUE (bug_id,keywordid)");
+}    
 
 #
 # If you had to change the --TABLE-- definition in any way, then add your
@@ -1594,4 +1667,6 @@ if ($regenerateshadow) {
     print "Now regenerating the shadow database for all bugs.\n";
     system("./processmail regenerate");
 }
+
 unlink "data/versioncache";
+print "Reminder: Bugzilla now requires version 3.22.5 or later of MySQL.\n";
