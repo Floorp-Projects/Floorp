@@ -512,6 +512,7 @@ protected:
   nsDocument();
   virtual ~nsDocument();
 
+  nsCString mReferrer;
   nsCString mLastModified;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 

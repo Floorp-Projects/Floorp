@@ -773,6 +773,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mContentType.Truncate();
   mContentLanguage.Truncate();
   mBaseTarget.Truncate();
+  mReferrer.Truncate();
 
   mXMLDeclarationBits = 0;
 }
@@ -923,6 +924,13 @@ nsDocument::SetContentType(const nsAString& aContentType)
                "Do you really want to change the content-type?");
 
   CopyUTF16toUTF8(aContentType, mContentType);
+}
+
+NS_IMETHODIMP
+nsDocument::GetReferrer(nsAString& aReferrer)
+{
+  CopyUTF8toUTF16(mReferrer, aReferrer);
+  return NS_OK;
 }
 
 nsresult
@@ -4093,6 +4101,13 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       mLastModified.Truncate();
     }
 
+    // The misspelled key 'referer' is as per the HTTP spec
+    rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
+                                       mReferrer);
+    if (NS_FAILED(rv)) {
+      mReferrer.Truncate();
+    }
+    
     rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Language"),
                                         mContentLanguage);
 

@@ -72,8 +72,6 @@ public:
 
   NS_IMETHOD RemoveImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
-  NS_IMETHOD SetReferrer(const nsAString& aReferrer) = 0;
-
   /**
    * Access compatibility mode for this document
    */

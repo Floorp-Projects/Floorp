@@ -712,29 +712,6 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
   }
 }
 
-void
-nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
-{
-  mChannel = aChannel;
-  mHttpChannel = do_QueryInterface(aChannel);
-
-  nsDocument::RetrieveRelevantHeaders(aChannel);
-
-  if (mHttpChannel) {
-    nsCAutoString header;
-    nsresult rv;
-
-    // The misspelled key 'referer' is as per the HTTP spec
-    rv = mHttpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
-                                        header);
-    if (NS_SUCCEEDED(rv)) {
-      SetReferrer(NS_ConvertASCIItoUCS2(header));
-    }
-  }
-
-  return;
-}
-
 nsresult
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIChannel* aChannel,
@@ -1196,14 +1173,6 @@ nsHTMLDocument::InternalGetNumberOfStyleSheets() const
   --count; // for the attr sheet
   NS_ASSERTION(count >= 0, "Why did we end up with a negative count?");
   return count;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetReferrer(const nsAString& aReferrer)
-{
-  mReferrer.Assign(aReferrer);
-
-  return NS_OK;
 }
 
 nsICSSLoader*
@@ -1805,9 +1774,7 @@ nsHTMLDocument::GetTitle(nsAString& aTitle)
 NS_IMETHODIMP
 nsHTMLDocument::GetReferrer(nsAString& aReferrer)
 {
-  aReferrer.Assign(mReferrer);
-
-  return NS_OK;
+  return nsDocument::GetReferrer(aReferrer);
 }
 
 void
