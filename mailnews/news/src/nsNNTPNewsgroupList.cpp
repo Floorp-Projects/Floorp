@@ -233,8 +233,8 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 			rv = m_newsDB->GetDBFolderInfo(getter_AddRefs(newsGroupInfo));
 			if (NS_SUCCEEDED(rv) && newsGroupInfo)
 			{
-				nsAutoString knownArtsString(eOneByte);
-                		nsMsgKey mark;
+				nsAutoString knownArtsString;
+                nsMsgKey mark;
 				newsGroupInfo->GetKnownArtsSet(&knownArtsString);
                 
                 rv = newsGroupInfo->GetHighWater(&mark);
@@ -246,7 +246,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				if (m_knownArts.set) {
 					delete m_knownArts.set;
 				}
-				m_knownArts.set = nsMsgKeySet::Create(knownArtsString.GetBuffer());
+				m_knownArts.set = nsMsgKeySet::Create(nsCAutoString(knownArtsString));
 			}
 			else
 			{	

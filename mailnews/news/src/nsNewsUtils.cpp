@@ -191,18 +191,18 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
 /* parses NewsMessageURI */
 nsresult 
-nsParseNewsMessageURI(const char* uri, nsString& messageUriWithoutKey, PRUint32 *key)
+nsParseNewsMessageURI(const char* uri, nsCString& messageUriWithoutKey, PRUint32 *key)
 {
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
 
-	nsAutoString uriStr = uri;
+	nsCAutoString uriStr = uri;
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
 		uriStr.Left(messageUriWithoutKey, keySeparator);
 
-		nsAutoString keyStr;
+		nsCAutoString keyStr;
 		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
 		PRInt32 errorCode;
 		*key = keyStr.ToInteger(&errorCode);

@@ -130,9 +130,7 @@ nsresult nsNntpTestDriver::TestPostMessage()
 	nsresult rv;
 	nsFilePath fileToPost("c:\\temp\\foo.txt");
 	
-	nsString newsgroups(eOneByte);
-
-	newsgroups = "news://news.mozilla.org/netscape.test";
+	nsCAutoString newsgroups = "news://news.mozilla.org/netscape.test";
 
 	/*
 	nsIURI PostMessage (in nsFilePath pathToFile, in string newsgroupNames, in nsIUrlListener aUrlListener);

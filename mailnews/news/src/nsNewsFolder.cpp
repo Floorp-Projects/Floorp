@@ -533,7 +533,7 @@ NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
   rv = pathSpec->GetFileSpec(&path);
   if (NS_FAILED(rv)) return rv;
 #if defined(XP_MAC)
-  nsAutoString tmpPath((nsFilePath)path, eOneByte); //ducarroz: please don't cast a nsFilePath to char* on Mac
+  nsCAutoString tmpPath((nsFilePath)path); //ducarroz: please don't cast a nsFilePath to char* on Mac
   *url = PR_smprintf("%s%s", urlScheme, tmpPath.GetBuffer());
 #else
   const char *pathName = path;

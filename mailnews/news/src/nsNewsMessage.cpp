@@ -71,11 +71,11 @@ nsresult nsNewsMessage::GetFolderFromURI(nsIMsgFolder **folder)
 	if(NS_SUCCEEDED( rv = QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(resource))))
 	{
 		resource->GetValue( getter_Copies(uri) );
-		nsString messageFolderURIStr;
+		nsCAutoString messageFolderURIStr;
 		nsMsgKey key;
 		nsParseNewsMessageURI(uri, messageFolderURIStr, &key);
-		nsString folderOnly(eOneByte);
-		nsString folderURIStr(eOneByte);
+		nsCAutoString folderOnly;
+		nsCAutoString folderURIStr;
 
 		if (messageFolderURIStr.Find(kNewsMessageRootURI) != ((PRInt32)-1))			{
 			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() - kNewsMessageRootURILen);
@@ -86,7 +86,7 @@ nsresult nsNewsMessage::GetFolderFromURI(nsIMsgFolder **folder)
 			NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
 			if (NS_SUCCEEDED(rv))   // always check this before proceeding 
 			{
-				rv = rdfService->GetResource(folderURIStr.GetBuffer(), getter_AddRefs(folderResource));
+				rv = rdfService->GetResource(folderURIStr, getter_AddRefs(folderResource));
 				if(NS_SUCCEEDED(rv))
 				{
 					rv = NS_SUCCEEDED(folderResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)folder));

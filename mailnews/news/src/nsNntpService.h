@@ -39,7 +39,7 @@ public:
 
   NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURI **_retval);
 
-  NS_IMETHOD RunNewsUrl (nsString& urlString, nsString& newsgroupName, nsMsgKey aKey, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURI **_retval);
+  NS_IMETHOD RunNewsUrl (const char * urlString, const char* newsgroupName, nsMsgKey aKey, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURI **_retval);
 
   NS_IMETHOD GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURI **_retval);
 
@@ -67,12 +67,12 @@ public:
   nsNntpService();
   virtual ~nsNntpService();
   nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI,
-                                         nsString &newsURI,
-                                         nsString &newsgroupName,
+                                         nsCString &newsURI,
+                                         nsCString &newsgroupName,
                                          nsMsgKey *aKey);
   
-  nsresult DetermineHostForPosting(nsString &host, const char *newsgroupNames);
-  nsresult FindHostFromGroup(nsString &host, nsString &groupName);
+  nsresult DetermineHostForPosting(nsCString &host, const char *newsgroupNames);
+  nsresult FindHostFromGroup(nsCString &host, nsCString &groupName);
   
   NS_DECL_ISUPPORTS  
 };

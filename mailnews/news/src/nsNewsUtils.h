@@ -35,7 +35,7 @@ extern nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
 
 extern nsresult
-nsParseNewsMessageURI(const char* uri, nsString& messageUriWithoutKey, PRUint32 *key);
+nsParseNewsMessageURI(const char* uri, nsCString& messageUriWithoutKey, PRUint32 *key);
 
 extern nsresult 
 nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri);
