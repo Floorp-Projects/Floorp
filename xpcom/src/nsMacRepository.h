@@ -49,7 +49,7 @@ typedef struct MacLibrary
 #ifdef IMPL_MAC_REPOSITORY
 
 // entry points
-// extern nsresult		NSGetFactory_WIDGET_DLL(const nsCID &, nsIFactory **);
+// extern "C" nsresult		NSGetFactory_WIDGET_DLL(const nsCID &, nsIFactory **);
 extern "C" nsresult		NSGetFactory_GFXWIN_DLL(const nsCID &, nsIFactory **);
 extern "C" nsresult		NSGetFactory_VIEW_DLL(const nsCID &, nsIFactory **);
 extern "C" nsresult		NSGetFactory_WEB_DLL(const nsCID &, nsIFactory **);
