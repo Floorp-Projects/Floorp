@@ -1561,15 +1561,6 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         return TRUE;
     }
 
-    // Don't pass shift, control and alt as key press events
-    if (aEvent->keyval == GDK_Shift_L
-        || aEvent->keyval == GDK_Shift_R
-        || aEvent->keyval == GDK_Control_L
-        || aEvent->keyval == GDK_Control_R
-        || aEvent->keyval == GDK_Alt_L
-        || aEvent->keyval == GDK_Alt_R) {
-        return TRUE;
-    }
 
     // If the key repeat flag isn't set then set it so we don't send
     // another key down event on the next key press -- DOM events are
@@ -1586,11 +1577,24 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         DispatchEvent(&downEvent, status);
     }
 
+    // Don't pass modifiers as NS_KEY_PRESS events.
+    // TODO: Instead of selectively excluding some keys from NS_KEY_PRESS events,
+    //       we should instead selectively include (as per MSDN spec; no official
+    //       spec covers KeyPress events).
+    if (aEvent->keyval == GDK_Shift_L
+        || aEvent->keyval == GDK_Shift_R
+        || aEvent->keyval == GDK_Control_L
+        || aEvent->keyval == GDK_Control_R
+        || aEvent->keyval == GDK_Alt_L
+        || aEvent->keyval == GDK_Alt_R
+        || aEvent->keyval == GDK_Meta_L
+        || aEvent->keyval == GDK_Meta_R) {
+        return TRUE;
+    }
     nsKeyEvent event(NS_KEY_PRESS, this);
     InitKeyEvent(event, aEvent);
     event.charCode = nsConvertCharCodeToUnicode(aEvent);
     if (event.charCode) {
-        event.keyCode = 0;
         // if the control, meta, or alt key is down, then we should leave
         // the isShift flag alone (probably not a printable character)
         // if none of the other modifier keys are pressed then we need to
@@ -1649,16 +1653,6 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     mInKeyRepeat = PR_FALSE;
 
     // send the key event as a key up event
-    // Don't pass shift, control and alt as key press events
-    if (aEvent->keyval == GDK_Shift_L
-        || aEvent->keyval == GDK_Shift_R
-        || aEvent->keyval == GDK_Control_L
-        || aEvent->keyval == GDK_Control_R
-        || aEvent->keyval == GDK_Alt_L
-        || aEvent->keyval == GDK_Alt_R) {
-        return TRUE;
-    }
-
     nsKeyEvent event(NS_KEY_UP, this);
     InitKeyEvent(event, aEvent);
 
