@@ -287,8 +287,8 @@ nsresult nsImapMailFolder::AddDirectorySeparator(nsFileSpec &path)
   if (nsCRT::strcmp(mURI, kImapRootURI) == 0) 
   {
       // don't concat the full separator with .sbd
-    }
-    else 
+  }
+  else 
   {
       nsAutoString sep;
       rv = nsGetMailFolderSeparator(sep);
@@ -760,7 +760,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleE
   if (!mDatabase)
     GetDatabase(nsnull);
   if (mDatabase)
-		return mDatabase->EnumerateMessages(result);
+    return mDatabase->EnumerateMessages(result);
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -856,7 +856,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 
   // Create an empty database for this mail folder, set its name from the user  
   nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-    nsCOMPtr<nsIMsgFolder> child;
+  nsCOMPtr<nsIMsgFolder> child;
 
   rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
   if (NS_SUCCEEDED(rv) && mailDBFactory)
@@ -870,9 +870,9 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 
     rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 
-        if (NS_SUCCEEDED(rv) && unusedDB)
-        {
-      //need to set the folder name
+    if (NS_SUCCEEDED(rv) && unusedDB)
+    {
+    //need to set the folder name
       nsCOMPtr <nsIDBFolderInfo> folderInfo;
       rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 //      if(NS_SUCCEEDED(rv))
@@ -1479,37 +1479,37 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
        newNameStr = leafname;
        NS_MsgHashIfNecessary(newNameStr);
        newNameStr += ".sbd";
-	   char *leafName = dirSpec.GetLeafName();
-	   if (nsCRT::strcmp(leafName, newNameStr.get()) != 0 )
-	   {
-           dirSpec.Rename(newNameStr.get());      // in case of rename operation leaf names will differ
-		   nsCRT::free(leafName);
-		   return rv;
-	   }
-	   nsCRT::free(leafName);
-                                               
-	   parentPath += newNameStr.get();    //only for move we need to progress further in case the parent differs
+       char *leafName = dirSpec.GetLeafName();
+       if (nsCRT::strcmp(leafName, newNameStr.get()) != 0 )
+       {
+         dirSpec.Rename(newNameStr.get());      // in case of rename operation leaf names will differ
+         nsCRT::free(leafName);
+         return rv;
+       }
+       nsCRT::free(leafName);
+                                           
+       parentPath += newNameStr.get();    //only for move we need to progress further in case the parent differs
 
-	   if (!parentPath.IsDirectory())
-		   parentPath.CreateDirectory();
-	   else
-		   NS_ASSERTION(0,"Directory already exists.");
-	   
-	   nsCOMPtr<nsILocalFile> srcDir = (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-	   NS_ENSURE_SUCCESS(rv,rv);
+       if (!parentPath.IsDirectory())
+         parentPath.CreateDirectory();
+       else
+         NS_ASSERTION(0,"Directory already exists.");
+       
+       nsCOMPtr<nsILocalFile> srcDir = (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+       NS_ENSURE_SUCCESS(rv,rv);
 
-	   nsCOMPtr<nsILocalFile> destDir = (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-	   NS_ENSURE_SUCCESS(rv,rv);
+       nsCOMPtr<nsILocalFile> destDir = (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+       NS_ENSURE_SUCCESS(rv,rv);
 	  
        srcDir->InitWithNativePath(nsDependentCString(dirSpec.GetNativePathCString()));
 	   
        destDir->InitWithNativePath(nsDependentCString(parentPath.GetNativePathCString()));
        
-	   rv = RecursiveCopy(srcDir, destDir);
-       
-	   NS_ENSURE_SUCCESS(rv,rv);
+       rv = RecursiveCopy(srcDir, destDir);
+   
+       NS_ENSURE_SUCCESS(rv,rv);
 
-	   dirSpec.Delete(PR_TRUE);                         // moving folders
+       dirSpec.Delete(PR_TRUE);                         // moving folders
     }
     return rv;
 }
@@ -2247,7 +2247,8 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
   nsCOMPtr<nsIMsgFolder> rootFolder;
   nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
 
-  if(NS_SUCCEEDED(rv) && rootFolder) {
+  if(NS_SUCCEEDED(rv) && rootFolder) 
+  {
 
     nsCOMPtr<nsIImapIncomingServer> imapServer;
     GetImapIncomingServer(getter_AddRefs(imapServer));
@@ -2266,25 +2267,25 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
     PRBool checkAllFolders = PR_FALSE;
 
     nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv) && prefBranch) {
+    if (NS_SUCCEEDED(rv) && prefBranch) 
       // This pref might not exist, which is OK. We'll only check inbox and marked ones
       rv = prefBranch->GetBoolPref("mail.check_all_imap_folders_for_new", &checkAllFolders); 
-    }
+
     m_urlListener = aListener;                                                  
 
     // Get new messages for inbox
-      PRUint32 numFolders;
-      nsCOMPtr<nsIMsgFolder> inbox;
-      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
-      if (inbox)
-      {
-        nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(inbox, &rv);
-        if (imapFolder)
-          imapFolder->SetPerformingBiff(performingBiff);
+    PRUint32 numFolders;
+    nsCOMPtr<nsIMsgFolder> inbox;
+    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
+    if (inbox)
+    {
+      nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(inbox, &rv);
+      if (imapFolder)
+        imapFolder->SetPerformingBiff(performingBiff);
 
-        inbox->SetGettingNewMessages(PR_TRUE);
-        rv = inbox->UpdateFolder(aWindow);
-      }
+      inbox->SetGettingNewMessages(PR_TRUE);
+      rv = inbox->UpdateFolder(aWindow);
+    }
 
     // Get new messages for other folders if marked, or all of them if the pref is set
     if (imapServer)
@@ -2516,6 +2517,11 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       }
     }
     SyncFlags(flagState);
+    PRInt32 numUnreadFromServer;
+    aSpec->numUnseenMessages(&numUnreadFromServer);
+    if (mNumUnreadMessages + keysToFetch.GetSize() > numUnreadFromServer)
+      mDatabase->SyncCounts();
+
     if (keysToFetch.GetSize())
     {     
       PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);

@@ -104,8 +104,8 @@ protected:
   PRUint32  m_folderDate;
   nsMsgKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
   
-  //  m_numNewMessages and m_numMessages can never be negative. 0 means 'no msgs'.
-  PRInt32   m_numNewMessages;
+  //  m_numUnreadMessages and m_numMessages can never be negative. 0 means 'no msgs'.
+  PRInt32   m_numUnreadMessages;
   PRInt32   m_numMessages;    // includes expunged and ignored messages
   
   PRInt32   m_flags;  // folder specific flags. This holds things like re-use thread pane,
@@ -138,7 +138,7 @@ protected:
   // tokens for the pre-set columns - we cache these for speed, which may be silly
   mdb_token     m_mailboxNameColumnToken;
   mdb_token     m_numMessagesColumnToken;
-  mdb_token     m_numNewMessagesColumnToken;
+  mdb_token     m_numUnreadMessagesColumnToken;
   mdb_token     m_flagsColumnToken;
   mdb_token     m_folderSizeColumnToken;
   mdb_token     m_expungedBytesColumnToken;

@@ -519,7 +519,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
         }
         
         folderInfo->GetNumMessages(&mNumTotalMessages);
-        folderInfo->GetNumNewMessages(&mNumUnreadMessages);
+        folderInfo->GetNumUnreadMessages(&mNumUnreadMessages);
         folderInfo->GetExpungedBytes((PRInt32 *)&mExpungedBytes);
         
         nsXPIDLCString utf8Name;

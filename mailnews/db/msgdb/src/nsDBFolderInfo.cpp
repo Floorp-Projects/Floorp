@@ -56,7 +56,8 @@ static const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
 struct mdbOid gDBFolderInfoOID;
 
 static const char * kNumMessagesColumnName ="numMsgs";
-static const char * kNumNewMessagesColumnName = "numNewMsgs";
+// have to leave this as numNewMsgs even though it's numUnread Msgs
+static const char * kNumUnreadMessagesColumnName = "numNewMsgs"; 
 static const char * kFlagsColumnName = "flags";
 static const char * kFolderSizeColumnName = "folderSize";
 static const char * kExpungedBytesColumnName = "expungedBytes";
@@ -180,7 +181,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
   m_expungedBytes = 0;	// sum of size of deleted messages in folder
   m_highWaterMessageKey = 0;
   
-  m_numNewMessages = 0;
+  m_numUnreadMessages = 0;
   m_numMessages = 0;
   // IMAP only
   m_ImapUidValidity = 0;
@@ -370,7 +371,7 @@ nsresult nsDBFolderInfo::InitMDBInfo()
     nsIMdbEnv	*env = m_mdb->GetEnv();
     
     store->StringToToken(env,  kNumMessagesColumnName, &m_numMessagesColumnToken);
-    store->StringToToken(env,  kNumNewMessagesColumnName, &m_numNewMessagesColumnToken);
+    store->StringToToken(env,  kNumUnreadMessagesColumnName, &m_numUnreadMessagesColumnToken);
     store->StringToToken(env,  kFlagsColumnName, &m_flagsColumnToken);
     store->StringToToken(env,  kFolderSizeColumnName, &m_folderSizeColumnToken);
     store->StringToToken(env,  kExpungedBytesColumnName, &m_expungedBytesColumnToken);
@@ -394,7 +395,7 @@ nsresult nsDBFolderInfo::LoadMemberVariables()
   nsresult ret = NS_OK;
   // it's really not an error for these properties to not exist...
   GetInt32PropertyWithToken(m_numMessagesColumnToken, m_numMessages);
-  GetInt32PropertyWithToken(m_numNewMessagesColumnToken, m_numNewMessages);
+  GetInt32PropertyWithToken(m_numUnreadMessagesColumnToken, m_numUnreadMessages);
   GetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
   GetInt32PropertyWithToken(m_folderSizeColumnToken, m_folderSize);
   GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
@@ -511,18 +512,18 @@ NS_IMETHODIMP nsDBFolderInfo::GetMailboxName(nsString *boxName)
   return GetPropertyWithToken(m_mailboxNameColumnToken, boxName);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::ChangeNumNewMessages(PRInt32 delta)
+NS_IMETHODIMP nsDBFolderInfo::ChangeNumUnreadMessages(PRInt32 delta)
 {
-  m_numNewMessages += delta;
-  // m_numNewMessages can never be set to negative.
-  if (m_numNewMessages < 0)
+  m_numUnreadMessages += delta;
+  // m_numUnreadMessages can never be set to negative.
+  if (m_numUnreadMessages < 0)
   {
 #ifdef DEBUG_bienvenu1
      NS_ASSERTION(PR_FALSE, "Hardcoded assertion");
 #endif
-      m_numNewMessages = 0;
+      m_numUnreadMessages = 0;
   }
-  return SetUint32PropertyWithToken(m_numNewMessagesColumnToken, m_numNewMessages);
+  return SetUint32PropertyWithToken(m_numUnreadMessagesColumnToken, m_numUnreadMessages);
 }
 
 NS_IMETHODIMP nsDBFolderInfo::ChangeNumMessages(PRInt32 delta)
@@ -540,16 +541,16 @@ NS_IMETHODIMP nsDBFolderInfo::ChangeNumMessages(PRInt32 delta)
 }
 
 
-NS_IMETHODIMP nsDBFolderInfo::GetNumNewMessages(PRInt32 *result) 
+NS_IMETHODIMP nsDBFolderInfo::GetNumUnreadMessages(PRInt32 *result) 
 {
-  *result = m_numNewMessages;
+  *result = m_numUnreadMessages;
   return NS_OK;
 }
 
-NS_IMETHODIMP	nsDBFolderInfo::SetNumNewMessages(PRInt32 numNewMessages) 
+NS_IMETHODIMP	nsDBFolderInfo::SetNumUnreadMessages(PRInt32 numUnreadMessages) 
 {
-  m_numNewMessages = numNewMessages;
-  return SetUint32PropertyWithToken(m_numNewMessagesColumnToken, m_numNewMessages);
+  m_numUnreadMessages = numUnreadMessages;
+  return SetUint32PropertyWithToken(m_numUnreadMessagesColumnToken, m_numUnreadMessages);
 }
 
 NS_IMETHODIMP	nsDBFolderInfo::GetNumMessages(PRInt32 *result) 

@@ -248,7 +248,8 @@ NS_IMETHODIMP nsMailDatabase::EndBatch()
     m_folderStream = nsnull;
     m_ownFolderStream = PR_FALSE;
   }
-  SetFolderInfoValid(m_folderSpec, 0, 0);
+  SetSummaryValid(PR_TRUE);
+  Commit(nsMsgDBCommitType::kLargeCommit);
   return NS_OK;
 }
 
@@ -501,7 +502,7 @@ NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
   PRUint32 folderSize;
   PRUint32  folderDate;
   nsFileSpec::TimeStamp actualFolderTimeStamp;
-  PRInt32 numNewMessages;
+  PRInt32 numUnreadMessages;
   nsAutoString errorMsg;
 
         
@@ -511,7 +512,7 @@ NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
   {
     actualFolderTimeStamp = GetMailboxModDate();
   
-    m_dbFolderInfo->GetNumNewMessages(&numNewMessages);
+    m_dbFolderInfo->GetNumUnreadMessages(&numUnreadMessages);
     m_dbFolderInfo->GetFolderSize(&folderSize);
     m_dbFolderInfo->GetFolderDate(&folderDate);
 
@@ -521,7 +522,7 @@ NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
 
     m_dbFolderInfo->GetVersion(&version);
     if (folderSize == m_folderSpec->GetFileSize() &&
-        numNewMessages >= 0 && GetCurVersion() == version)
+        numUnreadMessages >= 0 && GetCurVersion() == version)
     {
       GetGlobalPrefs();
       // if those values are ok, check time stamp
@@ -548,9 +549,9 @@ NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
       errorMsg.AppendWithConversion(" actual size = ");
       errorMsg.AppendInt(m_folderSpec->GetFileSize());
     }
-    else if (numNewMessages < 0)
+    else if (numUnreadMessages < 0)
     {
-      errorMsg.AppendWithConversion("numNewMessages < 0");
+      errorMsg.AppendWithConversion("numUnreadMessages < 0");
     }
   }
   if (errorMsg.Length())
@@ -826,7 +827,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
     nsFileSpec::TimeStamp actualFolderTimeStamp = pMessageDB->GetMailboxModDate();
     pMessageDB->m_dbFolderInfo->SetFolderSize(folderName->GetFileSize());
     pMessageDB->m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
-    pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);
+    pMessageDB->m_dbFolderInfo->ChangeNumUnreadMessages(numunread);
     pMessageDB->m_dbFolderInfo->ChangeNumMessages(num);
   }
   // if we opened the db, then we'd better close it. Otherwise, we found it in the cache,

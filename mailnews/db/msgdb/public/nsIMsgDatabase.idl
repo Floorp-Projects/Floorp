@@ -142,7 +142,9 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
 
   nsISimpleEnumerator EnumerateMessages();
   nsISimpleEnumerator EnumerateThreads();
-  boolean hasThreads();
+
+  // count the total and unread msgs, and adjust global count if needed
+  void syncCounts();
 
   nsIMsgThread GetThreadContainingMsgHdr(in nsIMsgDBHdr msgHdr) ;
 
@@ -218,7 +220,6 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
                          in nsIDBChangeListener instigator);
   void SetLabel(in nsMsgKey key, in nsMsgLabelValue label);
   void setStringProperty(in nsMsgKey aKey, in string aProperty, in string aValue);
-  [noscript] void AllMsgKeysImapDeleted(in nsMsgKeyArrayPtr keys, out boolean allDeleted);
 
   void MarkImapDeleted(in nsMsgKey key, in boolean deleted,
                              in nsIDBChangeListener instigator);

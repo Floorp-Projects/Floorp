@@ -417,7 +417,7 @@ nsresult nsNewsDatabase::SyncWithReadSet()
 
   PRBool hasMore = PR_FALSE, readInNewsrc, isReadInDB, changed = PR_FALSE;
   nsCOMPtr <nsIMsgDBHdr> header;
-  PRInt32 numMessages = 0, numNewMessages = 0;
+  PRInt32 numMessages = 0, numUnreadMessages = 0;
   nsMsgKey messageKey;
   nsCOMPtr <nsIMsgThread> threadHdr;
 
@@ -435,7 +435,7 @@ nsresult nsNewsDatabase::SyncWithReadSet()
 
       numMessages++;
       if (!readInNewsrc) 
-        numNewMessages++;
+        numUnreadMessages++;
 
       // If DB and readSet disagree on Read/Unread, fix DB
       if (readInNewsrc!=isReadInDB) 
@@ -446,18 +446,18 @@ nsresult nsNewsDatabase::SyncWithReadSet()
   }
   
   // Update FolderInfo Counters
-  PRInt32 oldMessages, oldNewMessages;
+  PRInt32 oldMessages, oldUnreadMessages;
   rv = m_dbFolderInfo->GetNumMessages(&oldMessages);
   if (NS_SUCCEEDED(rv) && oldMessages!=numMessages) 
   {
       changed = PR_TRUE;
       m_dbFolderInfo->ChangeNumMessages(numMessages-oldMessages);
   }
-  rv = m_dbFolderInfo->GetNumNewMessages(&oldNewMessages);
-  if (NS_SUCCEEDED(rv) && oldNewMessages!=numNewMessages) 
+  rv = m_dbFolderInfo->GetNumUnreadMessages(&oldUnreadMessages);
+  if (NS_SUCCEEDED(rv) && oldUnreadMessages!=numUnreadMessages) 
   {
       changed = PR_TRUE;
-      m_dbFolderInfo->ChangeNumNewMessages(numNewMessages-oldNewMessages);
+      m_dbFolderInfo->ChangeNumUnreadMessages(numUnreadMessages-oldUnreadMessages);
   }
 
   if (changed)

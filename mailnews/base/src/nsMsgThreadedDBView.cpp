@@ -44,11 +44,12 @@
 
 #define MSGHDR_CACHE_LOOK_AHEAD_SIZE  25    // Allocate this more to avoid reallocation on new mail.
 #define MSGHDR_CACHE_MAX_SIZE         8192  // Max msghdr cache entries.
+#define MSGHDR_CACHE_DEFAULT_SIZE     100
 
 nsMsgThreadedDBView::nsMsgThreadedDBView()
 {
   /* member initializers and constructor code */
-	m_havePrevView = PR_FALSE;
+  m_havePrevView = PR_FALSE;
 }
 
 nsMsgThreadedDBView::~nsMsgThreadedDBView()
@@ -61,43 +62,64 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
   nsresult rv = nsMsgDBView::Open(folder, sortType, sortOrder, viewFlags, pCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!m_db)
+    return NS_ERROR_NULL_POINTER;
   // Preset msg hdr cache size for performance reason.
-  if (m_db)
-  {
-    PRInt32 totalMessages, unreadMessages;
-    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
-    rv = m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-    // save off sort type and order, view type and flags
-    dbFolderInfo->SetSortType(m_sortType);
-    dbFolderInfo->SetSortOrder(m_sortOrder);
-    dbFolderInfo->SetViewFlags(m_viewFlags);
-    nsMsgViewTypeValue viewType;
-    GetViewType(&viewType);
-    dbFolderInfo->SetViewType(viewType);
-    if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
-    { 
-      // Set unread msg size + extra entries to avoid reallocation on new mail.
-      dbFolderInfo->GetNumNewMessages(&unreadMessages);
-      totalMessages = (PRUint32)unreadMessages+MSGHDR_CACHE_LOOK_AHEAD_SIZE;  
-    }
-    else
-    {
-      dbFolderInfo->GetNumMessages(&totalMessages);
-      if (totalMessages > MSGHDR_CACHE_MAX_SIZE) 
-        totalMessages = MSGHDR_CACHE_MAX_SIZE;        // use max default
-      else if (totalMessages > 0)
-        totalMessages += MSGHDR_CACHE_LOOK_AHEAD_SIZE;// allocate extra entries to avoid reallocation on new mail.
-    }
-    // if total messages is 0, then we probably don't have any idea how many headers are in the db
-    // so we have no business setting the cache size.
-    if (totalMessages > 0)
-      m_db->SetMsgHdrCacheSize((PRUint32)totalMessages);
+  PRInt32 totalMessages, unreadMessages;
+  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+  rv = m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // save off sort type and order, view type and flags
+  dbFolderInfo->SetSortType(m_sortType);
+  dbFolderInfo->SetSortOrder(m_sortOrder);
+  dbFolderInfo->SetViewFlags(m_viewFlags);
+  dbFolderInfo->GetNumUnreadMessages(&unreadMessages);
+  dbFolderInfo->GetNumMessages(&totalMessages);
+  nsMsgViewTypeValue viewType;
+  GetViewType(&viewType);
+  dbFolderInfo->SetViewType(viewType);
+  if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
+  { 
+    // Set unread msg size + extra entries to avoid reallocation on new mail.
+    totalMessages = (PRUint32)unreadMessages+MSGHDR_CACHE_LOOK_AHEAD_SIZE;  
   }
+  else
+  {
+    if (totalMessages > MSGHDR_CACHE_MAX_SIZE) 
+      totalMessages = MSGHDR_CACHE_MAX_SIZE;        // use max default
+    else if (totalMessages > 0)
+      totalMessages += MSGHDR_CACHE_LOOK_AHEAD_SIZE;// allocate extra entries to avoid reallocation on new mail.
+  }
+  // if total messages is 0, then we probably don't have any idea how many headers are in the db
+  // so we have no business setting the cache size.
+  if (totalMessages > 0)
+    m_db->SetMsgHdrCacheSize((PRUint32)totalMessages);
   
   if (pCount)
     *pCount = 0;
-  return InitThreadedView(pCount);
+  rv = InitThreadedView(pCount);
+
+  // this is a hack, but we're trying to find a way to correct
+  // incorrect total and unread msg counts w/o paying a big
+  // performance penalty. So, if we're not threaded, just add
+  // up the total and unread messages in the view and see if that
+  // matches what the db totals say. Except ignored threads are
+  // going to throw us off...hmm. Unless we just look at the
+  // unread counts which is what mostly tweaks people anyway...
+  PRInt32 unreadMsgsInView = 0;
+  if (!(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
+  {
+    for (PRInt32 i = 0; i < m_flags.GetSize(); i++)
+    {
+      if (! (m_flags.GetAt(i) & MSG_FLAG_READ))
+        unreadMsgsInView++;
+    }
+    if (unreadMessages != unreadMsgsInView)
+      m_db->SyncCounts();
+  }
+  m_db->SetMsgHdrCacheSize(MSGHDR_CACHE_DEFAULT_SIZE);
+
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgThreadedDBView::Close()
@@ -231,7 +253,7 @@ nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const ch
     numAdded++;
     // we expand as we build the view, which allows us to insert at the end of the key array,
     // instead of the middle, and is much faster.
-    if (!(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) && flag & MSG_FLAG_ELIDED)
+    if ((!(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) || m_viewFlags & nsMsgViewFlagsType::kExpandAll) && flag & MSG_FLAG_ELIDED)
        ExpandByIndex(m_keys.GetSize() - 1, NULL);
   }
   return numAdded;
@@ -559,7 +581,7 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
       rv = AddHdr(msgHdr);
     else	// need to find the thread we added this to so we can change the hasnew flag
       // added message to existing thread, but not to view
-    {		// Fix flags on thread header.
+    {	// Fix flags on thread header.
       PRInt32 threadCount;
       PRUint32 threadFlags;
       nsMsgViewIndex threadIndex = ThreadIndexOfMsg(newKey, nsMsgViewIndex_None, &threadCount, &threadFlags);
@@ -695,8 +717,8 @@ nsresult nsMsgThreadedDBView::AddMsgToThreadNotInView(nsIMsgThread *threadHdr, n
   nsresult rv = NS_OK;
   PRUint32 threadFlags;
   threadHdr->GetFlags(&threadFlags);
-	if (!(threadFlags & MSG_FLAG_IGNORED))
-		rv = AddHdr(msgHdr);
+  if (!(threadFlags & MSG_FLAG_IGNORED))
+    rv = AddHdr(msgHdr);
   return rv;
 }
 
