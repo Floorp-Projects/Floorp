@@ -1802,7 +1802,7 @@ SinkContext::DemoteForm(const nsIParserNode& aNode)
         }
 
         // Set mIsDemotingForm here so that the above FlushTags()
-        // calls really flushes the tags.
+        // call really flushes the tags.
         mSink->mIsDemotingForm = PR_TRUE;
 
         // Set a flag on the form to let people know it's being demoted.
