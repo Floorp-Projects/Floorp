@@ -72,7 +72,7 @@
 
       <!-- Create the treechildren here so we can attach event handlers
            at this level (rather than at the tree level -->
-      <treechildren flex="1" onclick="OnClick(event);" onkeypress="OnClick(event);"/>
+      <treechildren flex="1" onclick="OnClick(event, event.target.parentNode.parentNode);" onkeypress="OnClick(event, event.target.parentNode.parentNode);"/>
 
   </tree>
 </window>

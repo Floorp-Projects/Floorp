@@ -83,12 +83,14 @@ function OpenBookmarkURL(node, datasources)
 	else
 	{
 		if(appCore)
-		   appCore.loadUrl(url);
-		else {
-		  // May be it s'd look for a Browser window or create one
-		  // and redirect this to the browser.
-		  dump("BrowserAppCore is not initialised\n");
+		{
+		    // support session history (if appCore is available)
+            appCore.loadUrl(url);
 		}
-        
+		else
+		{
+		    // fallback case (if appCore isn't available)
+            window._content.location = url;
+		}
   	}
 }

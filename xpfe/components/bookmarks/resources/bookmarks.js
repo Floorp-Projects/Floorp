@@ -610,10 +610,17 @@ function OpenURL(event, node, root)
 }
 
 
-function update_sort_menuitems(column, direction) {
+function update_sort_menuitems(column, direction)
+{
     var unsorted_menuitem = document.getElementById("unsorted_menuitem");
     var sort_ascending = document.getElementById('sort_ascending');
     var sort_descending = document.getElementById('sort_descending');
+
+    // as this function may be called from various places, including the
+    // bookmarks sidebar panel (which doesn't have any menu items)
+    // ensure that the document contains the elements
+    if ((!unsorted_menuitem) || (!sort_ascending) || (!sort_descending))
+        return;
 
     if (direction == "natural") {
         unsorted_menuitem.setAttribute('checked','true');
