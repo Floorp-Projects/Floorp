@@ -1383,9 +1383,9 @@ BookmarksService::IsBookmarkDropValid(BookmarkItem* proposedParent, int index, N
     {
       BookmarkItem* draggedItem = [draggedItems objectAtIndex:0];
       nsCOMPtr<nsIContent> parentContent = [draggedItem contentNode]->GetParent();
-      PRInt32 childIndex;
-      if (parentContent && NS_SUCCEEDED(parentContent->IndexOf([draggedItem contentNode], childIndex)))
+      if (parentContent)
       {
+        PRInt32 childIndex = parentContent->IndexOf([draggedItem contentNode]);
         if (childIndex == index || (childIndex + 1) == index)
           return false;
       }
@@ -1454,7 +1454,7 @@ BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, BookmarkItem* before
 
     PRInt32 existingIndex = 0;
     if (draggedParent)
-      draggedParent->IndexOf(draggedNode, existingIndex);
+      existingIndex = draggedParent->IndexOf(draggedNode);
     
     //  if the deleted nodes parent and the proposed parents are equal
     //  and if the deleted point is earlier in the list than the inserted point

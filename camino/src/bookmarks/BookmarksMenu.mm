@@ -171,8 +171,7 @@
   if (!container) return;
   if (!isRoot) return;			// this code reconstructs submenus itself
     
-  PRInt32 index = -1;
-  container->IndexOf(bookmark, index);
+  PRInt32 index = container->IndexOf(bookmark);
   NSMenu* menu = [self locateMenuForContent:container];
   if (menu)
     [self addBookmark:menu parent:container child:bookmark index:index];
