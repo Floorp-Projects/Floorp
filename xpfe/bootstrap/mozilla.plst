@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
+
+<!-- The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 2001 Netscape Communications Corporation. All
+Rights Reserved.
+-->
+
+
+<plist version="0.9">
+<dict>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>html</string>
+				<string>htm</string>
+				<string>text</string>
+				<string>txt</string>
+				<string>shtml</string>
+				<string>css</string>
+				<string>xml</string>
+				<string>xhtml</string>
+				<string>xul</string>
+				<string>js</string>
+				<string>rdf</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>129</string>
+			<key>CFBundleTypeName</key>
+			<string>Text File</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>TEXT</string>
+				<string>utxt</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>jpeg</string>
+				<string>jpg</string>
+				<string>png</string>
+				<string>gif</string>
+				<string>mng</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Image File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>130</string>
+			<key>CFBundleTypeName</key>
+			<string>Preferences</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>pref</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>131</string>
+			<key>CFBundleTypeName</key>
+			<string>Plugin</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>NSPL</string>
+				<string>IEPL</string>
+				<string>BRPL</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>142</string>
+			<key>CFBundleTypeName</key>
+			<string>Command Line File</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>CMDL</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>shlb</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>138</string>
+			<key>CFBundleTypeName</key>
+			<string>Shared Library</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>shlb</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>mab</string>
+				<string>bag</string>
+				<string>na2</string>
+				<string>dat</string>
+				<string>jar</string>
+				<string>msf</string>
+				<string>sbd</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>139</string>
+			<key>CFBundleTypeName</key>
+			<string>Binary File</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>BiNA</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+	</array>
+	<key>CFBundleIconFile</key>
+	<string>128</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.mozilla.mozilla</string>
+	<key>CFBundleName</key>
+	<string>Mozilla</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>MOZZ</string>
+	<key>CFBundleVersion</key>
+	<string>0.9.1</string>
+	<key>LSRequiresCarbon</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>©1998-2001The Mozilla Organization</string>
+</dict>
+</plist>
