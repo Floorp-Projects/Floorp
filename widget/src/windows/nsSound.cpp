@@ -77,6 +77,18 @@ nsSound::nsSound()
 
 nsSound::~nsSound()
 {
+  PurgeLastSound();
+}
+
+void nsSound::PurgeLastSound() {
+  if (mLastSound) {
+    // Purge the current sound buffer.
+    ::PlaySound(mLastSound, NULL, SND_PURGE);  // This call halts the sound if it was still playing.
+  
+    // Now delete the buffer.
+    free(mLastSound);
+    mLastSound = nsnull;
+  }
 }
 
 NS_METHOD nsSound::Beep()
@@ -114,18 +126,14 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     }
   }
 
+  PurgeLastSound();
+
   if (string && stringLen > 0) {
     // XXX this shouldn't be SYNC, but unless we make a copy of the memory, we can't play it async.
     // We shouldn't have to hold on to this and free it.
-    //char *playBuf = (char *) PR_Malloc(stringLen /* * sizeof(char) ?*/  );
-    //memcpy(playBuf, string, stringLen);
-#if 1
-    ::PlaySound(string, nsnull, SND_MEMORY | SND_NODEFAULT | SND_SYNC);
-#else
-    CWinMM& theMM=CWinMM::GetModule();
-    theMM.PlaySound(string, nsnull, SND_MEMORY | SND_NODEFAULT | SND_SYNC);
-#endif
-
+    mLastSound = (char *) malloc(stringLen);
+    memcpy(mLastSound, string, stringLen);
+    ::PlaySound(mLastSound, nsnull, SND_MEMORY | SND_NODEFAULT | SND_ASYNC);
   }
 
   return NS_OK;
