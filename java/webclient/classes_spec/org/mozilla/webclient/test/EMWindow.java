@@ -54,7 +54,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.22 2000/11/02 23:33:10 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.23 2000/11/03 01:25:31 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -95,6 +95,11 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
     private Component stopButton;
     private Component refreshButton;
 
+    private PopupMenu popup;
+    private MenuItem popup_ViewSource, popup_SelectAll;
+    private PopupActionListener contextListener;
+
+
   public static void main(String [] arg)
     {
     }
@@ -103,6 +108,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
     public EMWindow (String title, String binDir, String url, int winnum, EmbeddedMozilla Creator) 
     {
 	super(title);
+    popup = new PopupMenu();
 	creator = Creator;
     currentURL = url;
 	winNum = winnum;
@@ -113,34 +119,34 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		// Create the Menu Bar
 		menuBar = new MenuBar();
 		this.setMenuBar(menuBar);
-        //		Menu fileMenu = new Menu("File");
+       		Menu fileMenu = new Menu("File");
 		Menu viewMenu = new Menu("View");
-        //		Menu searchMenu = new Menu("Search");
+       		Menu searchMenu = new Menu("Search");
 		Menu editMenu = new Menu("Edit");
-        //		MenuItem newItem = new MenuItem("New Window");
-        //		MenuItem closeItem = new MenuItem("Close");
-        //		MenuItem findItem = new MenuItem("Find");
-        //		MenuItem findNextItem = new MenuItem("Find Next");
+       		MenuItem newItem = new MenuItem("New Window");
+       		MenuItem closeItem = new MenuItem("Close");
+       		MenuItem findItem = new MenuItem("Find");
+       		MenuItem findNextItem = new MenuItem("Find Next");
 		MenuItem sourceItem = new MenuItem("View Page Source");
 		MenuItem pageInfoItem = new MenuItem("View Page Info");
 		MenuItem selectAllItem = new MenuItem("Select All");
         MenuItem copyItem = new MenuItem("Copy");
-        //		menuBar.add(fileMenu);
+       		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
-        //		menuBar.add(searchMenu);
+       		menuBar.add(searchMenu);
 		menuBar.add(editMenu);
-        //		fileMenu.add(newItem);
-        //		newItem.addActionListener(this);
-        //		fileMenu.add(closeItem);
-        //		closeItem.addActionListener(this);
-        //		searchMenu.add(findItem);
-        //		findItem.addActionListener(this);
-        //		searchMenu.add(findNextItem);
-        //		findNextItem.addActionListener(this);
+       		fileMenu.add(newItem);
+       		newItem.addActionListener(this);
+       		fileMenu.add(closeItem);
+       		closeItem.addActionListener(this);
+       		searchMenu.add(findItem);
+       		findItem.addActionListener(this);
+       		searchMenu.add(findNextItem);
+       		findNextItem.addActionListener(this);
 		viewMenu.add(sourceItem);
 		sourceItem.addActionListener(this);
-        //		viewMenu.add(pageInfoItem);
-        //		pageInfoItem.addActionListener(this);
+       		viewMenu.add(pageInfoItem);
+       		pageInfoItem.addActionListener(this);
 		editMenu.add(selectAllItem);
 		selectAllItem.addActionListener(this);
         editMenu.add(copyItem);
@@ -220,6 +226,17 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		    }
 		});
 	 
+        // Create the Context Menus
+        add(popup);
+
+        popup.add(popup_ViewSource = new MenuItem("View Source"));
+        popup.add(popup_SelectAll = new MenuItem("Select All"));
+        
+        contextListener = new PopupActionListener();
+       
+        popup_ViewSource.addActionListener (contextListener);
+        popup_SelectAll.addActionListener (contextListener);
+
 		show();
 		toFront();
 
@@ -553,6 +570,7 @@ public void mouseClicked(java.awt.event.MouseEvent e)
     }
     if (0 != (modifiers & InputEvent.BUTTON3_MASK)) {
         System.out.println("Button3 ");
+	popup.show(this, e.getX(), e.getY());
     }
 }
 
@@ -605,6 +623,23 @@ public void mousePressed(java.awt.event.MouseEvent e)
 
 public void mouseReleased(java.awt.event.MouseEvent e)
 {
+}
+
+class PopupActionListener implements ActionListener {
+public void actionPerformed(ActionEvent event) {
+    String command = event.getActionCommand();
+    if (command.equals("View Source"))
+        {
+            System.out.println("I will now View Soure");
+            EMWindow.this.currentPage.getSourceBytes(EMWindow.this.viewMode);
+            EMWindow.this.viewMode = !EMWindow.this.viewMode;
+        }
+    else if (command.equals("Select All"))
+        {
+            System.out.println("I will now Select All");
+            EMWindow.this.currentPage.selectAll();
+        }
+}
 }
 
 
