@@ -43,11 +43,13 @@
 #include "nsISerializable.idl"
 
 %{C++
+struct JSContext;
 struct JSPrincipals;
 %}
 
 interface nsIURI;
 
+[ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
@@ -90,7 +92,7 @@ interface nsIPrincipal : nsISerializable
      * Returns the JS equivalent of the principal.
      * @see JSPrincipals.h
      */
-    readonly attribute JSPrincipals jsPrincipals;
+    JSPrincipals getJSPrincipals(in JSContext cx);
 
     /**
      * The domain security policy of the principal.

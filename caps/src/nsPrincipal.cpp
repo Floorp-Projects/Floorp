@@ -141,16 +141,12 @@ nsPrincipal::~nsPrincipal(void)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetJsPrincipals(JSPrincipals **jsprin)
+nsPrincipal::GetJSPrincipals(JSContext *cx, JSPrincipals **jsprin)
 {
   NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitalized!");
 
+  JSPRINCIPALS_HOLD(cx, &mJSPrincipals);
   *jsprin = &mJSPrincipals;
-
-  // JSPRINCIPALS_HOLD does not use its first argument.
-  // Just use a dummy cx to save the codesize.
-  JSPRINCIPALS_HOLD(nsnull, *jsprin);
-
   return NS_OK;
 }
 

@@ -141,7 +141,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
                     nsMemory::Free(olddata);
                     ::JS_XDRMemSetData(xdr, data, size);
 
-                    prin->GetJsPrincipals(jsprinp);
+                    prin->GetJSPrincipals(xdr->cx, jsprinp);
                 }
             }
         }

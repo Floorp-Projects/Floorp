@@ -299,7 +299,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     /* we can't hold onto jsPrincipals as a module var because the
      * JSPRINCIPALS_DROP macro takes a JSContext, which we won't have in the
      * destructor */
-    rv = mSystemPrincipal->GetJsPrincipals(&jsPrincipals);
+    rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
     if (NS_FAILED(rv) || !jsPrincipals) {
         delete[] buf;
         return rv;
