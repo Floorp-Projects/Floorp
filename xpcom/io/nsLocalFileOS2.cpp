@@ -1345,7 +1345,11 @@ nsLocalFile::SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal)
     
     // PR_ExplodeTime expects usecs...
     PR_ExplodeTime(aLastModifiedTime * PR_USEC_PER_MSEC, PR_LocalTimeParameters, &pret);
-    pathInfo.fdateLastWrite.year      = pret.tm_year;    
+    /* fdateLastWrite.year is based off of 1980 */
+    if (pret.tm_year >= 1980)
+      pathInfo.fdateLastWrite.year      = pret.tm_year-1980;
+    else
+      pathInfo.fdateLastWrite.year      = pret.tm_year;
     pathInfo.fdateLastWrite.month    = pret.tm_month + 1; // Convert start offset -- Win32: Jan=1; NSPR: Jan=0
 // ???? OS2TODO    st.wDayOfWeek       = pret.tm_wday;    
     pathInfo.fdateLastWrite.day        = pret.tm_mday;    
