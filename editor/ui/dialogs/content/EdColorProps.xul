@@ -46,10 +46,10 @@
 
   <text class="label bold" value="&pageColors.label;"/>
   <box orient="vertical">
-    <radiogroup orient="vertical" autostretch="never">
-      <radio id="DefaultColorsRadio" value="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
+    <radiogroup id="pageColorGroup" orient="vertical" autostretch="never">
+      <radio group="pageColorGroup" id="DefaultColorsRadio" value="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
         tooltip="aTooltip"     tooltiptext="&defaultColorsRadio.tooltip;" />
-      <radio id="CustomColorsRadio" value="&customColorsRadio.label;" oncommand="UseCustomColors()"
+      <radio group="pageColorGroup" id="CustomColorsRadio" value="&customColorsRadio.label;" oncommand="UseCustomColors()"
         tooltip="aTooltip"     tooltiptext="&customColorsRadio.tooltip;" />
     </radiogroup>
   </box>

@@ -108,13 +108,15 @@
         <!-- //////// Image Dimensions //////// -->
         <titledbox orient="vertical" flex="1">
           <title><text id="dimensionsLabel" value="&dimensionsBox.label;"/></title>
-          <radiogroup orient="vertical">
+          <radiogroup id="imgSizeGroup" orient="vertical">
             <radio
+              group   = "imgSizeGroup"
               id      = "originalsizeRadio" 
               value   = "&originalSizeRadio.label;"
               tooltip = "aTooltip" tooltiptext="&originalSizeRadio.tooltip;"
               oncommand = "doDimensionEnabling( true );"/>
             <radio
+              group   = "imgSizeGroup"
               id      = "customsizeRadio" 
               value   = "&customSizeRadio.label;"
               tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
