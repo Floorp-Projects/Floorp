@@ -129,4 +129,7 @@ ifeq ($(OS_ARCH),WINNT)
 STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 Urlmon version winspool)
 endif
 
+ifeq ($(OS_ARCH),AIX)
+STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,odm cfg)
+endif
 
