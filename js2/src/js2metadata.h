@@ -680,6 +680,8 @@ public:
 
     void *uData;
 
+    virtual ~AlienInstance()    { }
+
     virtual bool readProperty(Multiname *m, js2val *rval);      // return true/false to signal whether the property is available
     virtual void writeProperty(Multiname *m, js2val rval);
 };
