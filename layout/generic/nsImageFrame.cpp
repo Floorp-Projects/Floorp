@@ -324,15 +324,6 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
 
   nsRect r(aRect->x, aRect->y, aRect->width, aRect->height);
 
-  /* XXX Why do we subtract 1 here?  The rect is (for example): (0, 0, 600, 1)..
-         Why do we have to make y -1?
-   */
-
-  // The y coordinate of aRect is passed as a scanline where the first scanline is given
-  // a value of 1. We need to convert this to the nsFrames coordinate space by subtracting
-  // 1.
-  r.y -= 1;
-
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
   r.x = NSIntPixelsToTwips(r.x, p2t);
