@@ -24,8 +24,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE      = xpcom
 
 XPIDL_MODULE = proxyObjInst
+
 XPIDLSRCS =                        \
-        .\nsIProxyCreateInstance.idl \
+        nsIProxyCreateInstance.idl \
         $(NULL)
 
 EXPORTS     = nsProxyEvent.h        \
