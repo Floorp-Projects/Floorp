@@ -487,7 +487,7 @@ static void ParseClasses(const nsString& aClassString, nsClassList** aClassList)
   nsAutoString  classStr(aClassString);  // copy to work buffer
   classStr.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr;
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr.GetUnicode();
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {
