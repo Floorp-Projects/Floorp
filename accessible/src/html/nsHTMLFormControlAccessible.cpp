@@ -165,7 +165,7 @@ nsFormControlAccessible(aNode, aShell)
 NS_IMETHODIMP nsHTMLButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
-  return NS_OK;;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
