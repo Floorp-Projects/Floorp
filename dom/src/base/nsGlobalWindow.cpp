@@ -4246,6 +4246,9 @@ const   char* sMovePageDown  = "cmd_scrollPageDown";
 const   char* sSelectMovePageUp     = "cmd_selectPageUp";
 const   char* sSelectMovePageDown   = "cmd_selectPageDown";
 
+const   char* sScrollLeft  = "cmd_scrollLeft";
+const   char* sScrollRight = "cmd_scrollRight";
+
 NS_IMPL_ADDREF( nsDOMWindowController )
 NS_IMPL_RELEASE( nsDOMWindowController )
 
@@ -4390,7 +4393,9 @@ NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand, 
       (PR_TRUE== nsCAutoString(sMovePageUp).EqualsWithConversion(aCommand)) ||
       (PR_TRUE== nsCAutoString(sMovePageDown).EqualsWithConversion(aCommand)) ||
       (PR_TRUE== nsCAutoString(sSelectMovePageUp).EqualsWithConversion(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectMovePageDown).EqualsWithConversion(aCommand))
+      (PR_TRUE== nsCAutoString(sSelectMovePageDown).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sScrollLeft).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sScrollRight).EqualsWithConversion(aCommand))      
       )
   {
     *aResult = PR_TRUE;
@@ -4445,6 +4450,16 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollLine(PR_TRUE);
+  }
+  else if (PR_TRUE == nsCAutoString(sScrollLeft).EqualsWithConversion(aCommand))
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->ScrollHorizontal(PR_TRUE);
+  }
+  else if (PR_TRUE == nsCAutoString(sScrollRight).EqualsWithConversion(aCommand))
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->ScrollHorizontal(PR_FALSE);
   }
 
   return NS_OK;
