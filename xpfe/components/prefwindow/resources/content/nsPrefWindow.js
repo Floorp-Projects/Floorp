@@ -45,7 +45,7 @@ function nsPrefWindow( frame_id )
 
   this.contentFrame   = frame_id
   this.wsm            = new nsWidgetStateManager( frame_id );
-  this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "disabled", "localname"];
+  this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "disabled"];
   this.pref           = null;
   
   this.cancelHandlers = [];
@@ -193,9 +193,9 @@ nsPrefWindow.prototype =
                   {
                 for( var elementID in pageData )
                   {
+                    if (elementID == "initialized") continue;
                     var itemObject = pageData[elementID];
-                    if (typeof(itemObject) != "object") break;
-                    if ( "prefstring" in itemObject && itemObject.prefstring  )
+                    if ( "prefstring" in itemObject && itemObject.prefstring )
                       {
                         var elt = itemObject.localname;
                         var prefattribute = itemObject.prefattribute;
@@ -283,6 +283,9 @@ nsPrefWindow.prototype =
       onpageload: 
         function ( aPageTag )
           {
+            var header = document.getElementById("header");
+            header.setAttribute("title",
+                                window.frames[this.contentFrame].document.documentElement.getAttribute("headertitle"));
             if( !(aPageTag in this.wsm.dataManager.pageData) )
               {
                 var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "prefstring", "*" );
@@ -335,7 +338,7 @@ nsPrefWindow.prototype =
                     root[prefattribute] = prefvalue;              
                     var isPrefLocked = this.getPrefIsLocked(prefstring);
                     if (isPrefLocked)
-                      root.disabled="true";
+                      root.disabled = "true";
                     root.localname = prefElements[i].localName;
                   }
               }      

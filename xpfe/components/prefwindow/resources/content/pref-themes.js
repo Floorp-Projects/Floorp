@@ -2,8 +2,6 @@
 // Theme Selector
 // ( 05/09/2000, Ben Goodger <ben@netscape.com> )
 
-var gPrefutilitiesBundle;
-var gBrandBundle;
 var gShowDescription = true;
 
 const DEBUG_USE_PROFILE = true;
@@ -22,19 +20,12 @@ const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
 
 function Startup()
 {
-  gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
-  gBrandBundle = document.getElementById("bundle_brand");
-
   var tree = document.getElementById( "skinsTree" );
   var theSkinKids = document.getElementById("theSkinKids");
   if (theSkinKids.hasChildNodes() && theSkinKids.firstChild)
     tree.selectItem(theSkinKids.firstChild);
-  try {
-    var strbundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
-  }
-  catch(e) {
-  }
-  var showSkinsDescription = strbundle.GetStringFromName("showskinsdescription");
+  var navbundle = document.getElementById("bundle_navigator");
+  var showSkinsDescription = navbundle.getString("showskinsdescription");
   if( showSkinsDescription == "false" )
   {
     gShowDescription = false;
@@ -57,18 +48,12 @@ function applySkin()
   observerService.notifyObservers(null, "skin-selected", null);
 
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  try {
-    var strbundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
-    var brandbundle = srGetStrBundle("chrome://global/locale/brand.properties");
-  }
-  catch(e) {
-    return;
-  }
-  
   if (promptService) {
-    var dialogTitle = strbundle.GetStringFromName("switchskinstitle");
-    var brandName = brandbundle.GetStringFromName("brandShortName");
-    var msg = strbundle.formatStringFromName("switchskins",
+    var navbundle = document.getElementById("bundle_navigator");
+    var brandbundle = document.getElementById("bundle_brand");
+    var dialogTitle = navbundle.getString("switchskinstitle");
+    var brandName = brandbundle.getString("brandShortName");
+    var msg = navbundle.formatStringFromName("switchskins",
                                              [brandName],
                                              1);
     promptService.alert(window, dialogTitle, msg);
@@ -94,6 +79,8 @@ function themeSelect()
   if (!tree)
     return;
 
+  var prefbundle = document.getElementById("bundle_prefutilities");
+
   var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
   var applyButton = document.getElementById("applySkin");
   if (selectedItem && selectedItem.getAttribute("skin") == "true") {
@@ -115,8 +102,8 @@ function themeSelect()
     var descText = document.createTextNode(selectedItem.getAttribute("description"));
     var description = document.getElementById("description");
     var uninstallButton = document.getElementById("uninstallSkin");
-    var applyLabel = gPrefutilitiesBundle.getString("applyThemePrefix");
-    var uninstallLabel = gPrefutilitiesBundle.getString("uninstallThemePrefix");
+    var applyLabel = prefbundle.getString("applyThemePrefix");
+    var uninstallLabel = prefbundle.getString("uninstallThemePrefix");
 
     while (description.hasChildNodes())
       description.removeChild(description.firstChild);
@@ -146,7 +133,8 @@ function themeSelect()
       uninstallButton.label = uninstallLabel;
     }
     else {
-      applyLabel = gPrefutilitiesBundle.getString("applyThemePrefix");
+      var brandbundle = document.getElementById("bundle_brand");
+      applyLabel = prefbundle.getString("applyThemePrefix");
       applyLabel = applyLabel.replace(/%theme_name%/, themeName);
       applyButton.label = applyLabel;
       applyButton.disabled = selectedSkin == skinName;
@@ -157,10 +145,10 @@ function themeSelect()
       applyButton.setAttribute("disabled", true);
       uninstallButton.disabled = selectedSkin == skinName;
 
-      var newText = gPrefutilitiesBundle.getString("oldTheme");
+      var newText = prefbundle.getString("oldTheme");
       newText = newText.replace(/%theme_name%/, themeName);
       
-      newText = newText.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
+      newText = newText.replace(/%brand%/g, brandbundle.getString("brandShortName"));
 
       if( gShowDescription )  {
         descText = document.createTextNode(newText);

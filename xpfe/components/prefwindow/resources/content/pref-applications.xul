@@ -23,21 +23,19 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');">
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');"
+      headertitle="&lHeader;">
 
   <stringbundle id="bundle_prefApplications"
                 src="chrome://communicator/locale/pref/pref-applications.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-applications.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
         
-  <hbox class="box-smallheader" title="&lHeader;"/>
-
   <groupbox flex="1">
     <caption label="&descript;"/>
     <label value="&fileTypes.label;"/>
