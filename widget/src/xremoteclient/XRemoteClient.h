@@ -20,16 +20,22 @@
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
+
 #include "nsIXRemoteClient.h"
 
-class XRemoteClient : public nsIXRemoteClient
+class XRemoteClient
+#ifndef XREMOTE_STANDALONE
+: public nsIXRemoteClient
+#endif
 {
  public:
   XRemoteClient();
   virtual ~XRemoteClient();
 
+#ifndef XREMOTE_STANDALONE
   // nsISupports
   NS_DECL_ISUPPORTS
+#endif
 
   // nsIXRemoteClient
   NS_DECL_NSIXREMOTECLIENT
