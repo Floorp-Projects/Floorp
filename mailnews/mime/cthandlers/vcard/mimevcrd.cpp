@@ -1879,6 +1879,9 @@ VCardGetStringByIDREAL(PRInt32 stringID)
   if (!NS_SUCCEEDED(res) || !prefs)
     propertyURL = PL_strdup(VCARD_URL);
 
+  // we're not using propertyURL anywhere, so free it.
+  PL_strfree(propertyURL);
+  
   NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &res); 
   if (!NS_SUCCEEDED(res) || (nsnull == pNetService)) 
   {
