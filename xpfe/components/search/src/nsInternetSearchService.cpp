@@ -4289,23 +4289,18 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 			line.Trim(" \t");
 			value = line;
 
-			// strip of any enclosing quotes
-			PRUnichar	quoteChar;
-			PRBool		foundQuoteChar = PR_FALSE;
-
+			// strip of any enclosing quotes and trailing comments
 			if ((value[0] == PRUnichar('\"')) || (value[0] == PRUnichar('\'')))
 			{
-				foundQuoteChar = PR_TRUE;
-				quoteChar = value[0];
+				PRUnichar quoteChar = value[0];
 				value.Cut(0,1);
-			}
-			len = value.Length();
-			if ((len > 0) && (foundQuoteChar == PR_TRUE))
-			{
-				PRInt32 quoteEnd = value.FindChar(quoteChar);
-				if (quoteEnd >= 0)
+				if (value.Length() > 0)
 				{
-					value.Truncate(quoteEnd);
+					PRInt32 quoteEnd = value.FindChar(quoteChar);
+					if (quoteEnd >= 0)
+					{
+						value.Truncate(quoteEnd);
+					}
 				}
 			}
 			else
