@@ -769,10 +769,10 @@ JSClass WinRegClass = {
 
 static JSConstDoubleSpec winreg_constants[] = 
 {
-    { nsWinReg::HKEY_CLASSES_ROOT,           "HKEY_CLASSES_ROOT"            },
-    { nsWinReg::HKEY_CURRENT_USER,           "HKEY_CURRENT_USER"            },
-    { nsWinReg::HKEY_LOCAL_MACHINE,          "HKEY_LOCAL_MACHINE"           },
-    { nsWinReg::HKEY_USERS,                  "HKEY_USERS"                   },
+    { nsWinReg::NS_HKEY_CLASSES_ROOT,        "HKEY_CLASSES_ROOT"            },
+    { nsWinReg::NS_HKEY_CURRENT_USER,        "HKEY_CURRENT_USER"            },
+    { nsWinReg::NS_HKEY_LOCAL_MACHINE,       "HKEY_LOCAL_MACHINE"           },
+    { nsWinReg::NS_HKEY_USERS,               "HKEY_USERS"                   },
     {0}
 };
 
