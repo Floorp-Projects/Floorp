@@ -515,7 +515,9 @@ public:
     /** xml processing instructions */
     ePROCESSING_INSTRUCTION = 0x00000020,
     /** svg elements */
-    eSVG                 = 0x00000040
+    eSVG                 = 0x00000040,
+    /** comment nodes */
+    eCOMMENT             = 0x00000080
   };
 
   /**
