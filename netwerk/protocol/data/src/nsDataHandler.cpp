@@ -80,12 +80,15 @@ nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // no concept of a relative data url
     NS_ASSERTION(!aBaseURI, "base url passed into data protocol handler");
 
+    nsCAutoString spec(aSpec);
+    spec.StripWhitespace();
+
     nsIURI* url;
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                             NS_GET_IID(nsIURI),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
-    rv = url->SetSpec((char*)aSpec);
+    rv = url->SetSpec(spec.GetBuffer());
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;

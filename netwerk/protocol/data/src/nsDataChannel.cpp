@@ -157,11 +157,14 @@ nsDataChannel::ParseData() {
     if (lBase64) {
         *base64 = 'b';
         PRInt32 resultLen = 0;
-        if (comma[dataLen-1] == '=')
+        if (comma[dataLen-1] == '=') {
             if (comma[dataLen-2] == '=')
                 resultLen = dataLen-2;
             else
                 resultLen = dataLen-1;
+        } else {
+            resultLen = dataLen;
+        }
 
         char * decodedData = PL_Base64Decode(comma+1, dataLen, nsnull);
         if (!decodedData) return NS_ERROR_OUT_OF_MEMORY;
