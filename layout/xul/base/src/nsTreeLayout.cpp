@@ -260,12 +260,11 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     box->GetNextBox(&box);
   }
 
-  if (availableHeight > outer->GetRowHeightTwips() || availableHeight < 0) {
-      // of if we have enough available height left to add some more rows
-      // or we have to much then we need to add or create some rows. We
-      // can't do this durning layout but we can do it after. So post
-      // a callback to do it after.
-      outer->PostReflowCallback();
+  if (group && (group == outer) && availableHeight > 0) {
+    // We have enough available height left to add some more rows
+    // Since we can't do this during layout, we post a callback
+    // that will be processed after the reflow completes.
+    outer->PostReflowCallback();
   }
 
   // if rows were pushed down or pulled up because some rows were added
