@@ -74,7 +74,7 @@ function Init()
 
     if (value) value = value.QueryInterface(Components.interfaces.nsIRDFLiteral);
     if (value) value = value.Value;
-    if (value != "")
+    if ((value) && (value != ""))
     {
 	var sep;
 	
@@ -110,9 +110,6 @@ function Init()
 			startHour = hours.substr(0, dashSep);
 			endHour = hours.substr(dashSep + 1, hours.length-1);
 		}
-
-		dump("start: " + startHour + "\n");
-		dump("end: " + endHour + "\n");
 
 		// set start hour
 		var startHourNode = document.getElementById("startHourRange");
