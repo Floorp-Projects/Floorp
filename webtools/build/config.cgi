@@ -172,6 +172,9 @@ or <code>apprunner</code> when the tree is built,
 </td></tr><tr><td></td><td>
   2b.</td><td>  <code>gmake run_apprunner
 </td></tr></table>
+<P>
+Check out the <A HREF="http://www.mozilla.org/build/configurator-faq.html">Build Configuator FAQ</A>
+for more information.
 <p>
 <hr align=left width=600>
            Send questions or comments to 
