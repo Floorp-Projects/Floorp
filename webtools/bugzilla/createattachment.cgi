@@ -89,9 +89,10 @@ What kind of file is this?
     if ($mimetype !~ m@^(\w|-)+/(\w|-)+$@) {
         Punt("You must select a legal mime type.  '<tt>$mimetype</tt>' simply will not do.");
     }
-    SendSQL("insert into attachments (bug_id, filename, description, mimetype, ispatch, thedata) values ($id," .
+    SendSQL("insert into attachments (bug_id, filename, description, mimetype, ispatch, submitter_id, thedata) values ($id," .
             SqlQuote($::FILENAME{'data'}) . ", " . SqlQuote($desc) . ", " .
             SqlQuote($mimetype) . ", $ispatch, " .
+            DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'}) . ", " .
             SqlQuote($::FORM{'data'}) . ")");
     SendSQL("select LAST_INSERT_ID()");
     my $attachid = FetchOneColumn();

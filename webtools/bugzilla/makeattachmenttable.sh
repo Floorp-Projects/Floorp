@@ -37,6 +37,7 @@ mimetype mediumtext not null,
 ispatch tinyint,
 filename mediumtext not null,
 thedata longblob not null,
+submitter_id mediumint not null,
 
 index(bug_id),
 index(creation_ts)

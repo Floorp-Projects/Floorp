@@ -10,6 +10,48 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+6/22/99 Added an entry to the attachments table to record who the submitter
+was.  Nothing uses this yet, but it still should be recorded.
+
+	alter table attachments add column submitter_id mediumint not null;
+
+You should also run this script to populate the new field:
+
+#!/usr/bonsaitools/bin/perl -w
+use diagnostics;
+use strict;
+require "globals.pl";
+$|=1;
+ConnectToDatabase();
+SendSQL("select bug_id, attach_id from attachments order by bug_id");
+my @list;
+while (MoreSQLData()) {
+    my @row = FetchSQLData();
+    push(@list, \@row);
+}
+foreach my $ref (@list) {
+    my ($bug, $attach) = (@$ref);
+    SendSQL("select long_desc from bugs where bug_id = $bug");
+    my $comment = FetchOneColumn() . "Created an attachment (id=$attach)";
+
+    if ($comment =~ m@-* Additional Comments From ([^ ]*)[- 0-9/:]*\nCreated an attachment \(id=$attach\)@) {
+	print "Found $1\n";
+	SendSQL("select userid from profiles where login_name=" .
+		SqlQuote($1));
+	my $userid = FetchOneColumn();
+	if (defined $userid && $userid > 0) {
+	    SendSQL("update attachments set submitter_id=$userid where attach_id = $attach");
+	}
+    } else {
+	print "Bug $bug can't find comment for attachment $attach\n";
+    }
+}
+
+
+
+
+
+
 6/14/99 Added "BeOS" to the list of OS's. Feed this to mysql:
 
 	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "Mac System 8.6", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "FreeBSD", "OSF/1", "Solaris", "SunOS", "Neutrino", "OS/2", "BeOS", "other") not null;
