@@ -1273,7 +1273,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
 
   aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, nsRect(0, 0, aDesiredSize.width,
 	                                                                      aDesiredSize.height)); 
-  StoreOverflow(aPresContext, aDesiredSize);
+  FinishAndStoreOverflow(&aDesiredSize);
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
@@ -1698,7 +1698,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
       for (nsTableRowFrame* rowFrame = GetFirstRow(); rowFrame; rowFrame = rowFrame->GetNextRow()) {
         ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, rowFrame);
       }
-      StoreOverflow(aPresContext, aDesiredSize);
+      FinishAndStoreOverflow(&aDesiredSize);
     }
   }
   

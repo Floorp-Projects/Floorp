@@ -49,6 +49,8 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
+#include "nsFrameManager.h"
+#include "nsLayoutAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -540,7 +542,7 @@ nsBox::GetBounds(nsRect& aRect)
 }
 
 NS_IMETHODIMP
-nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect)
+nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOverflowArea)
 {
     NS_BOX_ASSERTION(this, aRect.width >=0 && aRect.height >= 0, "SetBounds Size < 0");
 
@@ -564,7 +566,15 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect)
     else
       frame->SetRect(aRect);
 
-    
+    // Nuke the overflow area. The caller is responsible for restoring
+    // it if necessary.
+    if (aRemoveOverflowArea && (frame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)) {
+      // remove the previously stored overflow area 
+      frame->GetPresContext()->FrameManager()->
+        RemoveFrameProperty(frame, nsLayoutAtoms::overflowAreaProperty);
+      frame->RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
+    }
+
     if (!(flags & NS_FRAME_NO_MOVE_VIEW))
     {
       nsContainerFrame::PositionFrameView(presContext, frame);
@@ -773,7 +783,7 @@ nsBox::Collapse(nsBoxLayoutState& aState)
   SetWasCollapsed(aState, PR_TRUE);
   nsIFrame* frame;
   GetFrame(&frame);
-  SetBounds(aState, nsRect(0,0,0,0));
+  SetBounds(aState, nsRect(0,0,0,0), PR_TRUE);
 
   return CollapseChild(aState, frame, PR_TRUE);
 }
@@ -1025,8 +1035,6 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
                          | NS_FRAME_FIRST_REFLOW | NS_FRAME_IN_REFLOW);
 
   nsIPresContext* presContext = aState.PresContext();
-  nsRect rect(0,0,0,0);
-  GetBounds(rect);
 
   PRUint32 flags = 0;
   GetLayoutFlags(flags);
@@ -1035,21 +1043,48 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 
   flags |= stateFlags;
 
-  nsIView* view = frame->GetView();
+  nsRect rect(nsPoint(0, 0), frame->GetSize());
 
-/*
-      // only if the origin changed
-    if ((mX != rect.x) || (mY != rect.y)) {
-        if (view) {
-            nsContainerFrame::PositionFrameView(presContext, frame, view);
-        } else
-            nsContainerFrame::PositionChildViews(presContext, frame);
-
-        mX = rect.x;
-        mY = rect.y;
+  if (ComputesOwnOverflowArea()) {
+    if (frame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+      nsRect* overflow = frame->GetOverflowAreaProperty();
+      NS_ASSERTION(overflow, "should have overflow area property");
+      rect = *overflow;
     }
-*/
+  } else {
+    if (!DoesClipChildren()) {
+      // See if our child frames caused us to overflow after being laid
+      // out. If so, store the overflow area.  This normally can't happen
+      // in XUL, but it can happen with the CSS 'outline' property and
+      // possibly with other exotic stuff (e.g. relatively positioned
+      // frames in HTML inside XUL).
+      nsIBox* box;
+      GetChildBox(&box);
+      while (box)
+        {    
+          nsIFrame* f = nsnull;
+          box->GetFrame(&f);
+  
+          if (f) {
+            nsRect bounds;
+            if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+              nsRect* overflowArea = f->GetOverflowAreaProperty();
+              NS_ASSERTION(overflowArea, "Should have created property for overflowing frame");
+              bounds = *overflowArea + f->GetPosition();
+            } else {
+              bounds = f->GetRect();
+            }
+            rect.UnionRect(rect, bounds);
+          }
 
+          box->GetNextBox(&box);
+        }
+    }
+
+    frame->FinishAndStoreOverflow(&rect, frame->GetSize());
+  }
+
+  nsIView* view = frame->GetView();
   if (view) {
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
@@ -1057,7 +1092,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
                              presContext, 
                              frame, 
                              view,
-                             nsnull,
+                             &rect,
                              flags);
   } 
 
@@ -1085,18 +1120,8 @@ nsBox::Redraw(nsBoxLayoutState& aState,
   nsRect damageRect(0,0,0,0);
   if (aDamageRect)
     damageRect = *aDamageRect;
-  else 
-    GetContentRect(damageRect);
-
-  // Checks to see if the damaged rect should be infalted 
-  // to include the outline
-  // XXX This makes NO SENSE. if the damage rect is just a small part of
-  // this frame's rect then adding the outline width doesn't make any sense.
-  nscoord width;
-  frame->GetStyleOutline()->GetOutlineWidth(width);
-  if (width > 0) {
-    damageRect.Inflate(width, width);
-  }
+  else
+    damageRect = frame->GetOutlineRect();
 
   frame->Invalidate(damageRect, aImmediate);
 

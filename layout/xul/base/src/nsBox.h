@@ -59,7 +59,8 @@ public:
   NS_IMETHOD HasDirtyChildren(PRBool& aIsDirty);
   NS_IMETHOD MarkDirty(nsBoxLayoutState& aState);
   NS_IMETHOD MarkDirtyChildren(nsBoxLayoutState& aState);
-  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect);
+  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                       PRBool aRemoveOverflowArea = PR_FALSE);
   NS_IMETHOD GetBounds(nsRect& aRect);
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
   NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding);
@@ -110,6 +111,12 @@ public:
 
   nsBox(nsIPresShell* aShell);
   virtual ~nsBox();
+
+  /**
+   * Returns PR_TRUE if this box clips its children, e.g., if this box is an scrollbox.
+   */
+  virtual PRBool DoesClipChildren() { return PR_FALSE; }
+  virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
   virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
 

@@ -640,11 +640,18 @@ nsStyleOutline::RecalcData(void)
 
 nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 {
-  if ((mOutlineWidth != aOther.mOutlineWidth) ||
-      (mOutlineStyle != aOther.mOutlineStyle) ||
+  PRBool outlineWasVisible =
+    mCachedOutlineWidth > 0 && mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
+  PRBool outlineIsVisible = 
+    aOther.mCachedOutlineWidth > 0 && aOther.mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
+  if (outlineWasVisible != outlineIsVisible || 
+      mOutlineWidth != aOther.mOutlineWidth) {
+    return NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame);
+  }
+  if ((mOutlineStyle != aOther.mOutlineStyle) ||
       (mOutlineColor != aOther.mOutlineColor) ||
       (mOutlineRadius != aOther.mOutlineRadius)) {
-    return NS_STYLE_HINT_VISUAL;	// XXX: should be VISUAL: see bugs 9809 and 9816
+    return nsChangeHint_RepaintFrame;
   }
   return NS_STYLE_HINT_NONE;
 }
