@@ -52,6 +52,7 @@ CPPSRCS = \
 	nsNSSDialogs.cpp \
 	nsPKIModule.cpp \
         nsCertificateManager.cpp \
+	nsPKIParamBlock.cpp \
 	$(NULL)
 
 REQUIRES = nspr security js

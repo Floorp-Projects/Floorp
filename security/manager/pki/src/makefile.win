@@ -63,6 +63,7 @@ OBJS = \
     .\$(OBJDIR)\nsNSSDialogs.obj \
     .\$(OBJDIR)\nsPKIModule.obj \
     .\$(OBJDIR)\nsCertificateManager.obj \
+    .\$(OBJDIR)\nsPKIParamBlock.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

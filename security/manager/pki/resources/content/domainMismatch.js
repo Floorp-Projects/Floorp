@@ -45,6 +45,10 @@ function onLoad()
   setText("message2", message2);
 }
 
+function viewCert()
+{
+}
+
 function doOK()
 {
   params.SetInt(1,1);
