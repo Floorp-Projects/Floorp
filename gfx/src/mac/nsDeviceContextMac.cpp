@@ -147,6 +147,91 @@ NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+{
+  nsresult status = NS_OK;
+
+  switch (anID) {
+    //---------
+    // Colors
+    //---------
+    case eSystemAttr_Color_WindowBackground:
+        *aInfo->mColor = NS_RGB(0xdd,0xdd,0xdd);
+        break;
+    case eSystemAttr_Color_WindowForeground:
+        *aInfo->mColor = NS_RGB(0x00,0x00,0x00);        
+        break;
+    case eSystemAttr_Color_WidgetBackground:
+        *aInfo->mColor = NS_RGB(0xdd,0xdd,0xdd);
+        break;
+    case eSystemAttr_Color_WidgetForeground:
+        *aInfo->mColor = NS_RGB(0x00,0x00,0x00);        
+        break;
+    case eSystemAttr_Color_WidgetSelectBackground:
+        *aInfo->mColor = NS_RGB(0x80,0x80,0x80);
+        break;
+    case eSystemAttr_Color_WidgetSelectForeground:
+        *aInfo->mColor = NS_RGB(0x00,0x00,0x80);
+        break;
+    case eSystemAttr_Color_Widget3DHighlight:
+        *aInfo->mColor = NS_RGB(0xa0,0xa0,0xa0);
+        break;
+    case eSystemAttr_Color_Widget3DShadow:
+        *aInfo->mColor = NS_RGB(0x40,0x40,0x40);
+        break;
+    case eSystemAttr_Color_TextBackground:
+        *aInfo->mColor = NS_RGB(0xff,0xff,0xff);
+        break;
+    case eSystemAttr_Color_TextForeground: 
+        *aInfo->mColor = NS_RGB(0x00,0x00,0x00);
+        break;
+    case eSystemAttr_Color_TextSelectBackground:
+        *aInfo->mColor = NS_RGB(0x00,0x00,0x80);
+        break;
+    case eSystemAttr_Color_TextSelectForeground:
+        *aInfo->mColor = NS_RGB(0xff,0xff,0xff);
+        break;
+
+    //---------
+    // Size
+    //---------
+    case eSystemAttr_Size_ScrollbarHeight : 
+        aInfo->mSize = 21;
+        break;
+    case eSystemAttr_Size_ScrollbarWidth : 
+        aInfo->mSize = 21;
+        break;
+    case eSystemAttr_Size_WindowTitleHeight:
+        aInfo->mSize = 0;
+        break;
+    case eSystemAttr_Size_WindowBorderWidth:
+        aInfo->mSize = 4;
+        break;
+    case eSystemAttr_Size_WindowBorderHeight:
+        aInfo->mSize = 4;
+        break;
+    case eSystemAttr_Size_Widget3DBorder:
+        aInfo->mSize = 4;
+        break;
+
+    //---------
+    // Fonts
+    //---------
+    case eSystemAttr_Font_Caption : 
+    case eSystemAttr_Font_Icon : 
+    case eSystemAttr_Font_Menu : 
+    case eSystemAttr_Font_MessageBox : 
+    case eSystemAttr_Font_SmallCaption : 
+    case eSystemAttr_Font_StatusBar : 
+    case eSystemAttr_Font_Tooltips : 
+      status = NS_ERROR_FAILURE;
+      break;
+
+  } // switch 
+
+  return NS_OK;
+}
+
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsDeviceContextMac :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
