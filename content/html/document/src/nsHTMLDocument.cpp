@@ -174,27 +174,19 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
     *mDocumentTitle = aTitle;
   }
 
-  // XXX should be in nsDocument
-  // Pass on title to observers
-  PRInt32 i, n = mObservers.Count();
-  for (i = 0; i < n; i++) {
-    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->SetTitle(*mDocumentTitle);
-  }
-
   // Pass on to any interested containers
-  n = mPresShells.Count();
+  PRInt32 i, n = mPresShells.Count();
   for (i = 0; i < n; i++) {
     nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(i);
     nsIPresContext* cx = shell->GetPresContext();
     nsISupports* container;
     if (NS_OK == cx->GetContainer(&container)) {
       if (nsnull != container) {
-        nsIDocumentObserver* docob;
-        if (NS_OK == container->QueryInterface(kIDocumentObserverIID,
-                                               (void**) &docob)) {
-          docob->SetTitle(aTitle);
-          NS_RELEASE(docob);
+        nsIWebShell* ws = nsnull;
+        container->QueryInterface(kIWebShellIID, (void**) &ws);
+        if (nsnull != ws) {
+          ws->SetTitle(aTitle);
+          NS_RELEASE(ws);
         }
         NS_RELEASE(container);
       }
