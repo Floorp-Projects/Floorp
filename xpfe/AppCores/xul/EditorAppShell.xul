@@ -113,7 +113,7 @@
       if (toolkitCore)
         toolkitCore.Init("ToolkitCore");
     }
-    if (toolkitCore)
+    if (toolkitCore) {
       toolkitCore.ShowWindow("resource:/res/samples/printsetup.html", window);
     }
   }
