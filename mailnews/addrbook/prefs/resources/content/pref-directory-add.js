@@ -41,7 +41,7 @@ function fillSettings()
   }
   try{
     var prefValue = gPrefInt.getComplexValue(gCurrentDirectoryString +".description",
-                                             Components.interfaces.nsISupportsWString);
+                                             Components.interfaces.nsISupportsWString).data;
   }
   catch(ex){
     prefValue="";
@@ -143,7 +143,7 @@ function createUniqueServername()
     temp = "";
     try{ 
       temp = gPrefInt.getComplexValue(gPrefstring+gPref_string_desc+".description",
-                                      Components.interfaces.nsISupportsWString);
+                                      Components.interfaces.nsISupportsWString).data;
     } catch(e){}
     if (temp)
       gPref_string_desc += str[0];

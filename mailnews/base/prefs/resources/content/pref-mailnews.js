@@ -30,7 +30,7 @@ function setHomePageToDefaultPage(folderFieldId)
                               .getService(Components.interfaces.nsIPrefService);
   var prefs = prefService.getDefaultBranch(null);
   var url = prefs.getComplexValue("mailnews.start_page.url",
-                                  Components.interfaces.nsIPrefLocalizedString);
+                                  Components.interfaces.nsIPrefLocalizedString).data;
   homePageField.value = url;
 }
 

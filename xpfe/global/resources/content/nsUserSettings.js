@@ -54,7 +54,7 @@ var nsPreferences = {
       try
         {
           return this.mPrefService.getComplexValue(aPrefName,
-                                                   Components.interfaces.nsISupportsWString);
+                                                   Components.interfaces.nsISupportsWString).data;
         }
       catch(e)
         {
@@ -92,7 +92,7 @@ var nsPreferences = {
       try
         {
           return this.mPrefService.getComplexValue(aPrefName,
-                                                   Components.interfaces.nsIPrefLocalizedString);
+                                                   Components.interfaces.nsIPrefLocalizedString).data;
         }
       catch(e)
         {

@@ -747,7 +747,7 @@ function setupLdapAutocompleteSession()
                 ldapFormatter.nameFormat = 
                     prefs.getComplexValue(autocompleteDirectory + 
                                       ".autoComplete.nameFormat",
-                                      Components.interfaces.nsISupportsWString);
+                                      Components.interfaces.nsISupportsWString).data;
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsAbLDAPAutoCompFormatter use its default.
@@ -759,7 +759,7 @@ function setupLdapAutocompleteSession()
                 ldapFormatter.addressFormat = 
                     prefs.getComplexValue(autocompleteDirectory + 
                                       ".autoComplete.addressFormat",
-                                      Components.interfaces.nsISupportsWString);
+                                      Components.interfaces.nsISupportsWString).data;
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsAbLDAPAutoCompFormatter use its default.
@@ -783,7 +783,7 @@ function setupLdapAutocompleteSession()
                     //
                     ldapFormatter.commentFormat = prefs.getComplexValue(
                                 autocompleteDirectory + ".description",
-                                Components.interfaces.nsISupportsWString);
+                                Components.interfaces.nsISupportsWString).data;
                     break;
 
                 case 2:
@@ -793,7 +793,7 @@ function setupLdapAutocompleteSession()
                         ldapFormatter.commentFormat = 
                             prefs.getComplexValue(autocompleteDirectory + 
                                         ".autoComplete.commentFormat",
-                                        Components.interfaces.nsISupportsWString);
+                                        Components.interfaces.nsISupportsWString).data;
                     } catch (innerException) {
                         // if nothing has been specified, use the ldap
                         // organization field
@@ -823,7 +823,7 @@ function setupLdapAutocompleteSession()
                 LDAPSession.outputFormat = 
                     prefs.getComplexValue(autocompleteDirectory + 
                                       ".autoComplete.outputFormat",
-                                      Components.interfaces.nsISupportsWString);
+                                      Components.interfaces.nsISupportsWString).data;
 
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
@@ -835,7 +835,7 @@ function setupLdapAutocompleteSession()
             try { 
                 LDAPSession.filterTemplate = prefs.getComplexValue(
                     autocompleteDirectory + ".autoComplete.filterTemplate",
-                    Components.interfaces.nsISupportsWString);
+                    Components.interfaces.nsISupportsWString).data;
 
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
@@ -1292,7 +1292,7 @@ function SetDocumentCharacterSet(aCharset)
 function UpdateMailEditCharset()
 {
   var send_default_charset = prefs.getComplexValue("mailnews.send_default_charset",
-                                     Components.interfaces.nsIPrefLocalizedString);
+                                     Components.interfaces.nsIPrefLocalizedString).data;
 //  dump("send_default_charset is " + send_default_charset + "\n");
 
   var compFieldsCharset = msgCompose.compFields.characterSet;
@@ -1338,7 +1338,7 @@ function GetCharsetUIString()
   var charset = msgCompose.compFields.characterSet;
   if (g_send_default_charset == null) {
     g_send_default_charset = prefs.getComplexValue("mailnews.send_default_charset",
-                                     Components.interfaces.nsIPrefLocalizedString);
+                                     Components.interfaces.nsIPrefLocalizedString).data;
   }
 
   charset = charset.toUpperCase();

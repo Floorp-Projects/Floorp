@@ -77,7 +77,7 @@ function nsLDAPPrefsService() {
         if ((position != 0) && (dirType == 1)) {
           try{
             description = gPrefInt.getComplexValue(arrayOfDirectories[i]+".description",
-                                                   Components.interfaces.nsISupportsWString);
+                                                   Components.interfaces.nsISupportsWString).data;
           }
           catch(ex){
             description = null;
@@ -170,7 +170,7 @@ function () {
       ldapUrl.host = host;
       try{
         dn = gPrefInt.getComplexValue(pref_string + ".searchBase",
-                                      Components.interfaces.nsISupportsWString);
+                                      Components.interfaces.nsISupportsWString).data;
       }
       catch (ex) {
         dn = null;

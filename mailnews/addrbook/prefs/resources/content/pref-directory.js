@@ -81,7 +81,7 @@ function setupDirectoriesList()
         document.getElementById("identity.directoryServer").getAttribute('value');
   try {
     var directoryServerString = gPrefInt.getComplexValue(directoryServer + ".description",
-                                                         Components.interfaces.nsISupportsWString);
+                                                         Components.interfaces.nsISupportsWString).data;
   }
   catch(ex) {}
   if (directoryServerFlag || !directoryServerString) {
@@ -154,7 +154,7 @@ function LoadDirectories(popup)
         if ((position != 0) && (dirType == 1)) {
           try{
             description = gPrefInt.getComplexValue(arrayOfDirectories[i]+".description",
-                                                   Components.interfaces.nsISupportsWString);
+                                                   Components.interfaces.nsISupportsWString).data;
           }
           catch(ex){
             description="";
@@ -192,7 +192,7 @@ function LoadDirectories(popup)
           try {
             directoryDescription = gPrefInt.
                      getComplexValue(directoriesList.value + ".description",
-                                     Components.interfaces.nsISupportsWString);
+                                     Components.interfaces.nsISupportsWString).data;
           }
           catch (ex) {}
         }
@@ -220,7 +220,7 @@ function LoadDirectories(popup)
           try {
             directoryDescription = gPrefInt.
                      getComplexValue(directoriesList.value + ".description",
-                                     Components.interfaces.nsISupportsWString);
+                                     Components.interfaces.nsISupportsWString).data;
           }
           catch (ex) {}
         }
@@ -259,7 +259,7 @@ function LoadDirectories(popup)
         pref_string_title = directoryServer + ".description";
         try {
           description = gPrefInt.getComplexValue(pref_string_title,
-                                                 Components.interfaces.nsISupportsWString);
+                                                 Components.interfaces.nsISupportsWString).data;
         }
         catch (ex) {
           description = "";

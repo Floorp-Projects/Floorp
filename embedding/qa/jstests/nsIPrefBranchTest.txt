@@ -129,7 +129,7 @@ Test last run on 05/09/01.
 	alert("Array content: " + childArray.toString());
 
 	/*
-	var defaultName = nsIPrefBranchObj.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
+	var defaultName = nsIPrefBranchObj.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString).data;
     alert(defaultName);
 	*/
     alert("End");

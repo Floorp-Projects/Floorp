@@ -49,7 +49,7 @@
         pref = pref.QueryInterface( Components.interfaces.nsIPrefBranch );
         if(pref) {
           tutorialURL = pref.getComplexValue("wallet.TutorialFromMenu",
-                                             Components.interfaces.nsIPrefLocalizedString);
+                                             Components.interfaces.nsIPrefLocalizedString).data;
         }
       }
     }

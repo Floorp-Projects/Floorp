@@ -434,7 +434,7 @@ function loadStartPage() {
 
         if (startpageenabled) {
             var startpage = pref.getComplexValue("mailnews.start_page.url",
-                                                 Components.interfaces.nsIPrefLocalizedString);
+                                                 Components.interfaces.nsIPrefLocalizedString).data;
             if (startpage != "") {
                 // first, clear out the charset setting.
                 messenger.setDisplayCharset("");
@@ -460,7 +460,7 @@ function ShowAccountCentral()
     try
     {
         var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
-                                                   Components.interfaces.nsIPrefLocalizedString);
+                                                   Components.interfaces.nsIPrefLocalizedString).data;
         switch (gPaneConfig)
         {
             case 0:

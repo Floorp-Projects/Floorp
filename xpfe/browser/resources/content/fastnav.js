@@ -167,7 +167,7 @@ function getHomePage()
   var url;
   try {
     url = pref.getComplexValue("browser.startup.homepage",
-                               Components.interfaces.nsIPrefLocalizedString);
+                               Components.interfaces.nsIPrefLocalizedString).data;
   } catch (e) {
   }
 
@@ -575,7 +575,7 @@ function ensureDefaultEnginePrefs(aRDF,aDS)
 
     mPrefs = Components.classes["@mozilla.org/preferences-service;1"]
                        .getService(Components.interfaces.nsIPrefBranch);
-    var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
+    var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename", Components.interfaces.nsIPrefLocalizedString).data;
 	kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
     kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
     kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
@@ -625,7 +625,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   try {
     autoOpenSearchPanel = pref.getBoolPref("browser.search.opensidebarsearchpanel");
     defaultSearchURL = pref.getComplexValue("browser.search.defaulturl",
-                                            Components.interfaces.nsIPrefLocalizedString);
+                                            Components.interfaces.nsIPrefLocalizedString).data;
   } catch (ex) {
   }
 
