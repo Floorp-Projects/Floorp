@@ -2060,8 +2060,10 @@ nsInstall::SaveError(PRInt32 errcode)
 PRBool DeleteEntry(nsHashKey *aKey, void *aData, void *closure)
 {
     nsFileSpec* data = (nsFileSpec *)aData;
-    delete data;
-    data = nsnull;
+    if (data) {
+	    delete data;
+	    data = nsnull;
+    }
     return PR_TRUE;
 }
 
