@@ -728,6 +728,7 @@ var MessageWindowController =
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
+      case "cmd_markReadByDate":
 			case "cmd_markAsFlagged":
       case "cmd_label0":
       case "cmd_label1":
@@ -824,6 +825,7 @@ var MessageWindowController =
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
+      case "cmd_markReadByDate":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -990,6 +992,9 @@ var MessageWindowController =
 			case "cmd_markAllRead":
 				MsgMarkAllRead();
 				return;
+      case "cmd_markReadByDate":
+        MsgMarkReadByDate();
+        return;
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
 				return;

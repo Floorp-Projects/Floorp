@@ -193,6 +193,7 @@ var DefaultController =
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
+      case "cmd_markReadByDate":
 			case "cmd_markAsFlagged":
 			case "cmd_markAsJunk":
 			case "cmd_markAsNotJunk":
@@ -349,6 +350,7 @@ var DefaultController =
       case "cmd_previousUnreadMsg":
         return (MailAreaHasFocus() && IsViewNavigationItemEnabled());
       case "cmd_markAllRead":
+      case "cmd_markReadByDate":
         return (MailAreaHasFocus() && IsFolderSelected());
       case "cmd_find":
       case "cmd_findAgain":
@@ -566,6 +568,9 @@ var DefaultController =
 			case "cmd_findAgain":
 				MsgFindAgain(false);
 				return;
+      case "cmd_markReadByDate":
+        MsgMarkReadByDate();
+        return;
 			case "cmd_findPrev":
 				MsgFindAgain(true);
 				return;
@@ -584,7 +589,7 @@ var DefaultController =
 				return;
 			case "cmd_markAllRead":
         gDBView.doCommand(nsMsgViewCommandType.markAllRead);
-				return;
+				return;       
       case "button_junk":
         MsgJunk();
         return;
