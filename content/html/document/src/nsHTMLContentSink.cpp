@@ -1937,25 +1937,17 @@ HTMLContentSink::StartLayout()
   }
   mLayoutStarted = PR_TRUE;
 
-  // determine if this is a top level frameset
-  PRBool topLevelFrameset = PR_FALSE;
-  if (mFrameset && mWebShell) {
-    nsIWebShell* rootWebShell;
-    mWebShell->GetRootWebShell(rootWebShell);
-    if (mWebShell == rootWebShell) {
-      topLevelFrameset = PR_TRUE;
-    }
-    NS_IF_RELEASE(rootWebShell);
-  }
-
-  // If it's a top level frameset document then disable scrolling. If it is a non frame 
+  // If it's a frameset document then disable scrolling. If it is not a <frame> 
   // document, then let the style dictate. We need to do this before the initial reflow...
   if (mWebShell) {
-    if (topLevelFrameset) {
+    if (mFrameset) {
       mWebShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
-    } else if (mBody) {
+    } 
+    else if (mBody) {
       PRBool isFrameDoc = PR_FALSE;
       mWebShell->GetIsFrame(isFrameDoc);
+      // a <frame> webshell will have its scrolling set by the parent nsFramesetFrame. 
+      // a <body> webshell is reset here just for safety.
       if (!isFrameDoc) {
         mWebShell->SetScrolling(-1);
       }
@@ -1985,7 +1977,7 @@ HTMLContentSink::StartLayout()
     }
   }
 
-  // If the document we are loading has a reference or it is a top level
+  // If the document we are loading has a reference or it is a 
   // frameset document, disable the scroll bars on the views.
   const char* ref;
   nsresult rv = mDocumentURL->GetRef(&ref);
@@ -1993,7 +1985,7 @@ HTMLContentSink::StartLayout()
     mRef = new nsString(ref);
   }
 
-  if ((nsnull != ref) || topLevelFrameset) {
+  if ((nsnull != ref) || mFrameset) {
     // XXX support more than one presentation-shell here
 
     // Get initial scroll preference and save it away; disable the
@@ -2011,7 +2003,7 @@ HTMLContentSink::StartLayout()
             nsIScrollableView* sview = nsnull;
             rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
             if (nsnull != sview) {
-              if (topLevelFrameset)
+              if (mFrameset)
                 mOriginalScrollPreference = nsScrollPreference_kNeverScroll;
               else
                 sview->GetScrollPreference(mOriginalScrollPreference);
