@@ -80,7 +80,9 @@ DIRS = \
   webshell			\
   xpfe				\
   editor 			\
+!ifndef DISABLE_MAILNEWS
   mailnews			\
+!endif
   extensions			\
   $(NULL)
 
