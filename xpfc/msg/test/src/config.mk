@@ -51,6 +51,8 @@ LD_LIBS += \
 	$(NATIVE_LIBNLS_LIBS) \
 	xpcom$(MOZ_BITS) \
 	util10 \
+	$(NATIVE_MSG_COMM_LIB) \
+	$(NATIVE_SMTP_LIB) \
 	$(XP_REG_LIB)
 
 ifeq ($(OS_ARCH),Linux)
