@@ -1185,7 +1185,21 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   PRBool resetTreeOwner = PR_FALSE;
 
   PRInt32 count = mContentShells.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+
+  // First null any extant references to us in any of the content shell
+  // fields.
+  PRInt32 i;
+  for (i = 0; i < count; i++) {
+    nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
+    nsAutoString srcID(info->id);
+    if (info->child == aContentShell) {
+      info->child = nsnull;
+      resetTreeOwner = PR_TRUE;
+    }
+  }
+
+  // Now find the appropriate entry and put ourselves in as the content shell.
+  for (i = 0; i < count; i++) {
     nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
     nsAutoString srcID(info->id);
        
@@ -1193,16 +1207,6 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
       // We already exist. Do a replace.
       info->child = aContentShell;
       shellInfo = info;
-      break;
-    }
-    else if (info->child == aContentShell) {
-      if (info->primary == aPrimary)
-        return NS_OK; // Nothing to do.
-
-      // Do an update in place.
-      info->primary = aPrimary;
-      shellInfo = info;
-      resetTreeOwner = PR_TRUE;
       break;
     }
   }
