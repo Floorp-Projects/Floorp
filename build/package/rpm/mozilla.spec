@@ -1,6 +1,6 @@
 Summary:		Mozilla and stuff
 Name:			mozilla
-Version:		5.0
+Version:		666
 Release:		0
 Serial:			0
 Copyright:		NPL/MPL
@@ -241,13 +241,14 @@ then
 ###
 ###
 rm -f $here/blank
+
 touch $here/blank
+
 MOZCONFIG=blank
+
 export MOZCONFIG
 
-./configure --disable-tests --with-xlib=no --with-motif=no --disable-gtk-mozilla
-
-#./configure --disable-debug --enable-optimize --disable-mailnews --disable-tests --with-xlib=no --with-motif=no --enable-strip-libs --disable-gtk-mozilla
+./configure --disable-tests --with-xlib=no --with-motif=no --enable-strip-libs --disable-debug --enable-optimize --disable-gtk-mozilla
 
 make
 
@@ -263,6 +264,7 @@ mkdir -p $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/plugins
 #
 ################################
 here=`pwd`
+
 mkdir -p $here/file-lists
 
 cd build/package/rpm
@@ -368,7 +370,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f file-lists/mozilla-xptoolkit-file-list.txt xptoolkit
 %defattr(-,root,root)
-%{prefix}/lib/mozilla/bin/mozilla
 
 %files -f file-lists/mozilla-xptoolkit-devel-file-list.txt xptoolkit-devel
 %defattr(-,root,root)
