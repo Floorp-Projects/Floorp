@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.16 2002/12/17 02:08:51 wtc%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.17 2002/12/19 00:26:34 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -596,7 +596,7 @@ NSS_CMSSignerInfo_GetSigningCertificate(NSSCMSSignerInfo *signerinfo, CERTCertDB
 	cert = CERT_FindCertByIssuerAndSN(certdb, sid->id.issuerAndSN);
 	break;
     case NSSCMSSignerID_SubjectKeyID:
-	cert = CERT_FindCertBySubjKeyID(certdb, sid->id.subjectKeyID);
+	cert = CERT_FindCertBySubjectKeyID(certdb, sid->id.subjectKeyID);
 	break;
     default:
 	cert = NULL;

@@ -107,6 +107,26 @@ SECStatus PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
 SECStatus pbe_PK11AlgidToParam(SECAlgorithmID *algid,SECItem *mech);
 SECStatus PBE_PK11ParamToAlgid(SECOidTag algTag, SECItem *param, 
 				PRArenaPool *arena, SECAlgorithmID *algId);
+
+extern void pk11sdr_Init(void);
+extern void pk11sdr_Shutdown(void);
+
+typedef struct SECMODCallOnceType {
+    PRIntn initialized;
+    PRInt32 inProgress;
+    SECStatus status;
+} SECMODCallOnceType;
+
+typedef SECStatus (PR_CALLBACK *SECMODCallOnceFN)(void *arg);
+
+extern void SECMOD_InitCallOnce();
+
+extern SECStatus SECMOD_CallOnce(SECMODCallOnceType *once,
+                                 SECMODCallOnceFN    func,
+                                 void               *arg);
+
+extern void SECMOD_CleanupCallOnce();
+
 SEC_END_PROTOS
 
 #endif

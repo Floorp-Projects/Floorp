@@ -42,6 +42,8 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
+	secmodi.h \
+	secmodti.h \
 	pk11init.h \
 	dev3hack.h \
 	$(NULL)

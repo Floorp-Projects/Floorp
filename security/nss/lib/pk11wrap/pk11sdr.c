@@ -41,7 +41,6 @@
 #include "pkcs11.h"
 #include "pk11func.h"
 #include "pk11sdr.h"
-#include "pk11init.h"
 
 /*
  * Data structure and template for encoding the result of an SDR operation

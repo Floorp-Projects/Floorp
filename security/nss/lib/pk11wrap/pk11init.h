@@ -49,7 +49,4 @@ struct PK11PreSlotInfoStr {
     char hasRootTrust;		/* is this the root cert PKCS #11 module? */
 };
 
-extern void PK11SDR_Init(void);
-extern void PK11SDR_Shutdown(void);
-
 #endif /* _PK11_INIT_H_ 1 */

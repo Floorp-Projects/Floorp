@@ -719,12 +719,12 @@ SECKEY_CopyPublicKey;
 CERT_CRLCacheRefreshIssuer;
 CERT_DestroyOCSPResponse;
 CERT_EncodeAltNameExtension;
-CERT_FindCertBySubjKeyID;
+CERT_FindCertBySubjectKeyID;
 CERT_FindSubjectKeyIDExtension;
 CERT_GetFirstEmailAddress;
 CERT_GetNextEmailAddress;
-CERT_VerifySignedDataWithPubKeyInfo;
 CERT_VerifySignedDataWithPublicKey;
+CERT_VerifySignedDataWithPublicKeyInfo;
 PK11_WaitForTokenEvent;
 ;+    local:
 ;+       *;
