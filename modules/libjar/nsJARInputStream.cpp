@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* nsJARInputStream.cpp
  * 
  * The contents of this file are subject to the Mozilla Public
@@ -19,6 +20,7 @@
  * Contributor(s): 
  * Mitch Stoltz <mstoltz@netscape.com>
  */
+
 #include "nsJARInputStream.h"
 #include "zipfile.h"           // defines ZIP error codes
 #include "nsZipArchive.h"
@@ -37,51 +39,27 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputStream, nsIInputStream);
 NS_IMETHODIMP 
 nsJARInputStream::Available(PRUint32 *_retval)
 {
-  if (Zip() == nsnull)
-    *_retval = 0;
-  else
-    *_retval = Zip()->Available(&mReadInfo);
-
-  return NS_OK;
+    *_retval = mReadInfo.Available();
+    
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
 {
-  if (Zip() == nsnull)
-  {
-    *bytesRead = 0;
-    return NS_OK;
-  }
-
-  PRInt32 err = Zip()->Read(&mReadInfo, buf, count, bytesRead);
-  return err == ZIP_OK ? NS_OK : NS_ERROR_FAILURE;
+    if (!mJAR)
+        return NS_BASE_STREAM_CLOSED;
+    
+    PRInt32 err = mReadInfo.Read(buf, count, bytesRead);
+    return err == ZIP_OK ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
-   char *readBuf = (char *)nsMemory::Alloc(count);
-   PRUint32 nBytes;
-   if (!readBuf)
-     return NS_ERROR_OUT_OF_MEMORY;
-   
-   nsresult rv = Read(readBuf, count, &nBytes);
- 
-   *_retval = 0;
-   if (NS_SUCCEEDED(rv)) {
-     rv = writer(this, closure, readBuf, 0, nBytes, _retval);
-
-     // XXX _retval may be less than nBytes!!  This is the wrong
-     // way to synthesize ReadSegments.
-     NS_ASSERTION(*_retval == nBytes, "data loss");
-
-     // errors returned from the writer end here! 
-     rv = NS_OK;
-   }
- 
-   nsMemory::Free(readBuf);
-   return rv;
+    // don't have a buffer to read from, so this better not be called!
+    NS_NOTREACHED("Consumers should be using Read()!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -94,8 +72,8 @@ nsJARInputStream::IsNonBlocking(PRBool *aNonBlocking)
 NS_IMETHODIMP
 nsJARInputStream::Close()
 {
-  NS_IF_RELEASE(mJAR);
-  return NS_OK;
+    NS_IF_RELEASE(mJAR);
+    return NS_OK;
 }
 
 nsresult 
@@ -106,23 +84,17 @@ nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
   mJAR = aJAR;
   NS_ADDREF(mJAR);
 
-  PRInt32 result; 
-  result = Zip()->ReadInit(aFilename, &mReadInfo);
+  PRInt32 result;
+  PRFileDesc* fd = aJAR->OpenFile();
+  NS_ASSERTION(fd, "Couldn't open JAR!");
+
+  if (!fd)
+      return NS_ERROR_UNEXPECTED;
+  
+  result = aJAR->mZip.ReadInit(aFilename, &mReadInfo, fd);
   if (result != ZIP_OK)
     return NS_ERROR_FAILURE;
   return NS_OK;
-}
-
-NS_METHOD
-nsJARInputStream::Create(nsISupports* ignored, const nsIID& aIID, void* *aResult)
-{    
-  nsJARInputStream* is = new nsJARInputStream();
-  if (is == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(is);
-  nsresult rv = is->QueryInterface(aIID, aResult);
-  NS_RELEASE(is);
-  return rv;
 }
 
 //----------------------------------------------
@@ -130,7 +102,7 @@ nsJARInputStream::Create(nsISupports* ignored, const nsIID& aIID, void* *aResult
 //----------------------------------------------
 
 nsJARInputStream::nsJARInputStream()
-  : mJAR(nsnull)
+    : mJAR(nsnull)
 {
 }
 
@@ -138,5 +110,4 @@ nsJARInputStream::~nsJARInputStream()
 {
   Close();
 }
-
 
