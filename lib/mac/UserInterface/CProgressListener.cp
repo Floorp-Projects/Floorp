@@ -21,7 +21,7 @@
 
 #include "CProgressListener.h"
 
-#include "CPatternProgressBar.h"
+#include "CProgressCaption.h"
 #include "CNSContext.h"	// for progress messages
 #include "xp.h"
 
@@ -35,7 +35,7 @@ CProgressListener::CProgressListener(LView* super, LBroadcaster* context)
 {
 	Assert_(super);
 	Assert_(context);
-	mProgressCaption = dynamic_cast<CPatternProgressCaption*>(super->FindPaneByID('Stat'));
+	mProgressCaption = dynamic_cast<CProgressCaption*>(super->FindPaneByID('Stat'));
 	mProgressLastTicks = 0;
 	mMessageLastTicks = 0;
 	mPercentLastTicks = 0;
@@ -67,16 +67,12 @@ void CProgressListener::ListenToMessage(MessageT inMessage, void *ioParam)
 
 	switch (inMessage)
 	{
-//		case msg_NSCStartLoadURL:
-//		case msg_NSCProgressBegin:
-//			// context is busy
-//			break;
-
 		case msg_NSCProgressEnd:
 		case msg_NSCAllConnectionsComplete:
+		case msg_NSCFinishedLayout:
 			if (mLaziness == lazy_VeryButForThisCommandOnly)
 				mLaziness = mPreviousLaziness;
-			mProgressCaption->SetValue(CPatternProgressCaption::eSeamless);
+			mProgressCaption->SetValue(0);
 			mProgressCaption->SetDescriptor("\p");
 			break;
 
@@ -88,7 +84,6 @@ void CProgressListener::ListenToMessage(MessageT inMessage, void *ioParam)
 					mProgressLastTicks = ::TickCount(); 
 					CContextProgress* progress = (CContextProgress*)ioParam;
 					mProgressCaption->SetDescriptor(progress->mMessage);
-//					mProgressCaption->SetValue(progress->mPercent);
 				}
 			}
 			break;
@@ -109,6 +104,7 @@ void CProgressListener::ListenToMessage(MessageT inMessage, void *ioParam)
 					mProgressCaption->SetDescriptor("\p");
 			}
 			break;
+
 		case msg_NSCProgressPercentChanged:
 			if (::TickCount() - mPercentLastTicks >= MIN_TICKS)
 			{

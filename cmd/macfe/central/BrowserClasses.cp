@@ -60,6 +60,7 @@
 	#include "CPatternBevelView.h"
 	#include "CBevelButton.h"
 	#include "CPatternButtonPopup.h"
+	#include "CPatternProgressBar.h"
 		
 // еее PowerPlant Grayscale Classes
 	#include <UGALibRegistry.h>
@@ -91,8 +92,8 @@
 	#include "CPaneEnabler.h"
 	#include "CStringListToolTipPane.h"	
 	#include "CSaveProgress.h"	
-	#include "CPatternProgressBar.h"
 	#include "CScrollerWithArrows.h"
+	#include "CProgressCaption.h"
 	
 #ifdef MOZ_MAIL_NEWS
 	#include "CBiffButtonAttachment.h"
@@ -246,6 +247,8 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CDeluxeBevelButton);
 	RegisterClass_(CPatternButton);
 	RegisterClass_(CPatternButtonPopup);
+	RegisterClass_(CPatternProgressBar);
+	RegisterClass_(CPatternProgressCaption);
 
 	// еее General Purpose UI Classes
 	RegisterClass_(CToolbarBevelButton);	
@@ -273,7 +276,7 @@ void RegisterAllBrowserClasses(void)
 //	RegisterClass_(CBiffButtonAttachment);
 #endif // MOZ_MAIL_NEWS
 	RegisterClass_(CSimpleDividedView);
-	//RegisterClass_(CProgressCaption);
+	RegisterClass_(CProgressCaption);
 	RegisterClass_(CTaskBarView);
 
 	RegisterClass_(CToolTipPane);
@@ -282,8 +285,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LTableHeader);
 	RegisterClass_(LTableViewHeader);
 
-	RegisterClass_(CPatternProgressBar);
-	RegisterClass_(CPatternProgressCaption);
 
 	RegisterClass_(CTextEdit);
 	RegisterClass_(CEditBroadcaster);
