@@ -48,7 +48,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="console.onLoad();" onunload="console.onUnload();"
-  persist="width height screenX screenY" title="&vkm.MainWindow.title;"
+  persist="width height screenX screenY" title="&MainWindow.title;"
   onkeypress="console.onWindowKeyPress(event)" windowtype="mozapp:venkman">
 
   <script>
@@ -94,14 +94,27 @@
     <key id="key_quit"/>
   </keyset>
 
+<!--
+    Step into = F11
+    Step out of = Shift+F11
+    Step over is F10 then?
+-->
+
   <commandset id="venkmanCommands">
     <command id="cmd_reload_ui"
       oncommand="if (DEBUG) window.location.href = window.location.href;"/>
   </commandset>
 
+  <commandset id="venkmanDebuggerCommands">
+    <command id="cmd_step_in" oncommand="console.doCommandStep();"/>
+    <command id="cmd_cont" oncommand="console.doCommandCont();"/>
+  </commandset>
+
   <keyset id="venkmanKeys">
     <key id="key_reload_ui" observes="cmd_reload_ui" 
       modifiers="control alt" key="R"/>
+    <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
+    <key id="key_step_in" observes="cmd_step_in" keycode="VK_F10"/>
   </keyset>
 
   <popupset id="tooltip-set">
@@ -115,15 +128,35 @@
     <menubar id="main-menubar" persist="collapsed">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
-          <menuitem id="menu_reload_ui" key="key_reload_ui"
+          <menuitem id="menu_ReloadUI" key="key_reload_ui"
             observes="cmd_reload_ui"
-            label="&vkm.ReloadUI.label;" accesskey="&vkm.ReloadUI.akey;"/>
+            label="&ReloadUI.label;" accesskey="&ReloadUI.aKey;"/>
           <menuseperator/>
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
+      <menu id="menu_Debug" label="&Debug.label;" accesskey="&Debug.aKey;">
+        <menupopup id="menu_DebugPopup">
+          <menuitem id="menu_Cont" key="key_cont"
+            observes="cmd_cont"
+            label="&Cont.label;" accesskey="&Cont.aKey;"/>
+          <menuitem id="menu_StepInto" key="key_step_in"
+            observes="cmd_step_in"
+            label="&StepIn.label;" accesskey="&StepIn.aKey;"/>
+        </menupopup>
+      </menu>
       <menu id="tasksMenu"/>
     </menubar>
+
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="main-toolbar">
+      <hbox id="main-toolbar-buttons">
+        <button class="button-toolbar-1 top" id="cont-button"
+                label="&Cont.label;" observes="cmd_cont"/>
+        <button class="button-toolbar-1 top" id="step-in-button"
+                label="&StepIn.label;" observes="cmd_step_in"/>
+      </hbox>
+    </toolbar>
+      
   </toolbox>
 
   <vbox flex="1">
@@ -134,8 +167,8 @@
         <outliner flex="1" id="script-list-outliner"
           onclick="console.onScriptClick(event);">
 
-          <outlinercol id="script-file-name" label="&FileName.header;"
-            class="outlinercol-header outlinercol-inset-header" flex="95"/>
+          <outlinercol id="script-file-name" label="&FileName.header;" 
+           class="outlinercol-header outlinercol-inset-header" flex="95"/>
           <splitter class="tree-splitter"/>
           <outlinercol flex="5" id="script-count"
             label="&ScriptCount.header;"
@@ -159,7 +192,7 @@
             class="outlinercol-header outlinercol-inset-header"/>
           <splitter class="tree-splitter"/>
           <outlinercol flex="50" id="file-name"
-            label="&FileName.header;"
+            label="&FileName.header;" crop="left"
             class="outlinercol-header outlinercol-inset-header"/>
           <outlinerbody id="call-stack-body" flex="1"/>
         </outliner>
