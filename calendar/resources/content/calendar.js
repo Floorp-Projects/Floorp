@@ -89,9 +89,6 @@ var gCalendarStyleSheet;
 //an array of indexes to boxes for the week view
 var gHeaderDateItemArray = null;
 
-// Show event details on mouseover (sometimes this is false in the code)
-var showTooltip = true;
-
 //Show only the working days (changed in different menus)
 var gOnlyWorkdayChecked ;
 // ShowToDoInView
@@ -1104,174 +1101,6 @@ function launchWizard()
    openDialog("chrome://calendar/content/wizard.xul", "caWizard", "chrome,modal", args );
 }
 
-/**
-*  Called when a user hovers over a todo element and the text for the mouse over is changed.
-*/
-
-function getPreviewTextForTask( toDoItem )
-{
-   var HolderBox = document.createElement( "vbox" );
-   var textString ;
-
-   if( toDoItem )
-   {
-      showTooltip = true; //needed to show the tooltip.
-         
-      if (toDoItem.title)
-      {
-         var TitleHtml = document.createElement( "description" );
-	 textString = gCalendarBundle.getFormattedString("tooltipTitleElement", [toDoItem.title]);
-	 var TitleText = document.createTextNode( textString );
-         TitleHtml.appendChild( TitleText );
-         HolderBox.appendChild( TitleHtml );
-      }
-   
-      var DateHtml = document.createElement( "description" );
-      var startDate = new Date( toDoItem.start.getTime() );
-      textString = gCalendarBundle.getFormattedString("tooltipTaskStart", 
-						   [gCalendarWindow.dateFormater.getFormatedDate( startDate )]);
-      var DateText = document.createTextNode( textString );
-      DateHtml.appendChild( DateText );
-      HolderBox.appendChild( DateHtml );
-   
-      DateHtml = document.createElement( "description" );
-      var dueDate = new Date( toDoItem.due.getTime() );
-      textString = gCalendarBundle.getFormattedString("tooltipTaskEnd", 
-						      [gCalendarWindow.dateFormater.getFormatedDate( dueDate )]);
-      DateText = document.createTextNode( textString );
-      DateHtml.appendChild( DateText );
-      HolderBox.appendChild( DateHtml );
-   
-      if (toDoItem.description)
-      {
-	var text = gCalendarBundle.getFormattedString("tooltipTaskDescription", [toDoItem.description]);
-	
-	var lines = text.split("\n");
-	var nbmaxlines = 5 ;
-	var nblines = lines.length ;
-	if( nblines > nbmaxlines ) {
-	  nblines = nbmaxlines ;
-	  lines[ nblines - 1 ] = "..." ;
-	}
-	
-	for (var i = 0; i < nblines; i++) {
-	  var DescriptionHtml = document.createElement("description");
-	  var DescriptionText = document.createTextNode(lines[i]);
-	  DescriptionHtml.appendChild(DescriptionText);
-	  HolderBox.appendChild(DescriptionHtml);
-	}
-      }
-      
-      return ( HolderBox );
-   } 
-   else
-   {
-      showTooltip = false; //Don't show the tooltip
-   }
-   return null;
-}
-
-/**
-*  Called when a user hovers over an element and the text for the mouse over is changed.
-*/
-
-function getPreviewTextForRepeatingEvent( calendarEventDisplay )
-{
-	showTooltip = true;
-      
-   var HolderBox = document.createElement( "vbox" );
-  var textString ;
-    
-   if (calendarEventDisplay.event.title)
-   {
-      var TitleHtml = document.createElement( "description" );
-      textString = gCalendarBundle.getFormattedString("tooltipTitleElement", [calendarEventDisplay.event.title]);
-      
-      /*
-      if( calendarEventDisplay.event.recurUnits == "years" )
-      {
-         //count the number of years to figure out
-         
-         TitleText = TitleText+" "+getNumberOfRepeatTimes( calendarEventDisplay.event, false );
-      }*/
-      var TitleTextNode = document.createTextNode( textString );
-      TitleHtml.appendChild( TitleTextNode );
-      HolderBox.appendChild( TitleHtml );
-   }
-
-   var startDate = new Date( calendarEventDisplay.displayDate );
-   var endDate = new Date( calendarEventDisplay.displayEndDate );
-
-   var DateHtml = document.createElement( "description" );
-   if (!calendarEventDisplay.event.allDay) {
-     textString = gCalendarBundle.getFormattedString("tooltipEventStart", 
-						  ["",
-					           gCalendarWindow.dateFormater.getFormatedTime( startDate )]);
-   
-     var DateText = document.createTextNode( textString );
-   DateHtml.appendChild( DateText );
-   HolderBox.appendChild( DateHtml );
-
-   DateHtml = document.createElement( "description" );
-     textString = gCalendarBundle.getFormattedString("tooltipEventEnd", 
-						  ["",
-						   gCalendarWindow.dateFormater.getFormatedTime( endDate )]);
-
-     DateText = document.createTextNode( textString );
-   DateHtml.appendChild( DateText );
-   HolderBox.appendChild( DateHtml );
-   }
-   
-   if (calendarEventDisplay.event.location)
-   {
-      var LocationHtml = document.createElement( "description" );
-      textString = gCalendarBundle.getFormattedString("tooltipEventLocation", [calendarEventDisplay.event.location]);
-      var LocationText = document.createTextNode( textString );
-      LocationHtml.appendChild( LocationText );
-      HolderBox.appendChild( LocationHtml );
-   }
-
-   if (calendarEventDisplay.event.description)
-   {
-     textString = gCalendarBundle.getFormattedString("tooltipEventDescription", [calendarEventDisplay.event.description]);
-     var lines = textString.split("\n");
-     var nbmaxlines = 5 ;
-     var nblines = lines.length ;
-     if( nblines > nbmaxlines ) {
-       nblines = nbmaxlines ;
-       lines[ nblines - 1 ] = "..." ;
-     }
-  
-     for (var i = 0; i < nblines; i++) {
-       var DescriptionHtml = document.createElement("description");
-       var DescriptionText = document.createTextNode(lines[i]);
-       DescriptionHtml.appendChild(DescriptionText);
-       HolderBox.appendChild(DescriptionHtml);
-     }
-   }
-
-   return ( HolderBox );
-}
-
-function getNumberOfRepeatTimes( Event, DateToCompare )
-{
-   if( !DateToCompare )
-   {
-      DateToCompare = new Date();
-   }
-   
-   var startDate = new Date( Event.start.getTime() );
-   
-   //get the difference in the number of years from now.
-   var NumberOfYears = DateToCompare.getFullYear() - startDate.getFullYear();
-
-   //find out if the event has happened this year or not.
-
-   //add on the proper extension.
-   
-   return( NumberOfYears );
-}
-
 function reloadApplication()
 {
 	gEventSource.calendarManager.refreshAllRemoteCalendars();
@@ -1407,16 +1236,6 @@ function publishCalendarDataDialogResponse( CalendarPublishObject )
    calendarPublish(calendarString, CalendarPublishObject.remotePath, "text/calendar");
 }
 
-/*
-** A little function to see if we can show the tooltip
-*/
-function checkTooltip( event )
-{
-   //returns true if you can show the tooltip
-   //or false if the tooltip should not be shown
-   
-   return( showTooltip );
-}
 
 
 function getCharPref (prefObj, prefName, defaultValue)

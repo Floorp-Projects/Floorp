@@ -58,6 +58,7 @@ calendar.jar:
     content/calendar/weekView.xul (content/weekView.xul)
     content/calendar/wizard.js (content/wizard.js)
     content/calendar/wizard.xul (content/wizard.xul)
+    content/calendar/mouseoverPreviews.js (content/mouseoverPreviews.js)
     content/calendar/converters/date-time.xsl (content/converters/date-time.xsl)
     content/calendar/converters/ecsJune.xsl (content/converters/ecsJune.xsl)
     content/calendar/converters/sortEvents.xsl (content/converters/sortEvents.xsl)

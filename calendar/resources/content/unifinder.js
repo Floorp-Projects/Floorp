@@ -548,18 +548,7 @@ var treeView =
             return( calendarEvent.location );
          
          case "unifinder-search-results-tree-col-status":
-            switch( calendarEvent.status )
-            {
-               case calendarEvent.ICAL_STATUS_TENTATIVE:
-                  return( gCalendarBundle.getString( "Tentative" ) );
-               case calendarEvent.ICAL_STATUS_CONFIRMED:
-                  return( gCalendarBundle.getString( "Confirmed" ) );
-               case calendarEvent.ICAL_STATUS_CANCELLED:
-                  return( gCalendarBundle.getString( "Cancelled" ) );
-               default: 
-                  return false;
-            }
-            return false;
+            return getEventStatusString(calendarEvent);
 
         case "unifinder-search-results-tree-col-filename":
             var thisCalendar = gCalendarWindow.calendarManager.getCalendarByName( calendarEvent.parent.server );
@@ -735,111 +724,14 @@ function changeToolTipTextForEvent( event )
 {
    var thisEvent = getCalendarEventFromEvent( event );
    
-   var Html = document.getElementById( "eventTreeListTooltip" );
+   var toolTip = document.getElementById( "eventTreeListTooltip" );
 
-   while( Html.hasChildNodes() )
+   while( toolTip.hasChildNodes() )
    {
-      Html.removeChild( Html.firstChild ); 
+      toolTip.removeChild( toolTip.firstChild );
    }
-   
-   if( !thisEvent )
-   {
-      showTooltip = false;
-      return;
-   }
-      
-   showTooltip = true;
-   
-   var HolderBox = getPreviewText( thisEvent );
-   
-   Html.appendChild( HolderBox );
-}
-
-function getPreviewText( calendarEvent )
-{
-	var HolderBox = document.createElement( "vbox" );
-  var textString ;
-   if (calendarEvent.title)
-   {
-      var TitleHtml = document.createElement( "description" );
-      textString = gCalendarBundle.getFormattedString("tooltipTitleElement", [calendarEvent.title]);
-      var TitleText = document.createTextNode( textString );
-      TitleHtml.appendChild( TitleText );
-      HolderBox.appendChild( TitleHtml );
-   }
-
-   var startDate = new Date( calendarEvent.start.getTime() );
-   var endDate = new Date( calendarEvent.end.getTime() );
-   var diff = DateUtils.getDifferenceInDays(startDate, endDate) ;
-
-   var DateHtml = document.createElement( "description" );
-   var DateText;
-   if (calendarEvent.allDay) {
-     if ( diff > 1 )  {
-       textString = gCalendarBundle.getFormattedString("tooltipEventStart", 
-						   [gCalendarWindow.dateFormater.getFormatedDate( startDate ),
-						    ""]);
-       DateText = document.createTextNode( textString );
-       DateHtml.appendChild( DateText );
-       HolderBox.appendChild( DateHtml );
-       DateHtml = document.createElement( "description" );
-       
-       endDate.setDate( endDate.getDate() - 1 ); //allday enddate for user
-       textString = gCalendarBundle.getFormattedString("tooltipEventEnd", 
-						   [gCalendarWindow.dateFormater.getFormatedDate( endDate ),
-						    ""]);
-     }
-     else {
-       textString = gCalendarBundle.getFormattedString("tooltipAlldayEventDate", 
-						   [gCalendarWindow.dateFormater.getFormatedDate( startDate ),
-						    ""]);
-     }
-   }
-   else {
-     textString = gCalendarBundle.getFormattedString("tooltipEventStart", 
-						  [gCalendarWindow.dateFormater.getFormatedDate( startDate ),
-					           gCalendarWindow.dateFormater.getFormatedTime( startDate )]);
-     DateText = document.createTextNode( textString );
-     DateHtml.appendChild( DateText );
-     HolderBox.appendChild( DateHtml );
-     DateHtml = document.createElement( "description" );
-
-     textString = gCalendarBundle.getFormattedString("tooltipEventEnd", 
-						  [gCalendarWindow.dateFormater.getFormatedDate( endDate ),
-						   gCalendarWindow.dateFormater.getFormatedTime( endDate )]);
-   }
-   DateText = document.createTextNode( textString );
-   DateHtml.appendChild( DateText );
-   HolderBox.appendChild( DateHtml );
-
-   if (calendarEvent.location)
-   {
-      var LocationHtml = document.createElement( "description" );
-      textString = gCalendarBundle.getFormattedString("tooltipEventLocation", [calendarEvent.location]);
-      var LocationText = document.createTextNode( textString );
-      LocationHtml.appendChild( LocationText );
-      HolderBox.appendChild( LocationHtml );
-   }
-
-   if (calendarEvent.description)
-   {
-      textString = gCalendarBundle.getFormattedString("tooltipEventDescription", [calendarEvent.description]);
-      var lines = textString.split("\n");
-      var nbmaxlines = 5 ;
-      var nblines = lines.length ;
-      if( nblines > nbmaxlines ) {
-	  nblines = nbmaxlines ;
-	  lines[ nblines - 1 ] = "..." ;
-      }
-	
-      for (var i = 0; i < nblines; i++) {
-      var DescriptionHtml = document.createElement( "description" );
-	var DescriptionText = document.createTextNode(lines[i]);
-	DescriptionHtml.appendChild(DescriptionText);
-	HolderBox.appendChild(DescriptionHtml);
-	}
-   }
-
-   return ( HolderBox );
+   var holderBox = getPreviewForEvent( thisEvent );
+   if (holderBox)
+     toolTip.appendChild( holderBox );
 }
 

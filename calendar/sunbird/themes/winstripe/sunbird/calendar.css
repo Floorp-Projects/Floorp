@@ -1912,3 +1912,25 @@ listitem[selected="true"] > .calendar-list-item-class
 {
    min-height : 40px ;
 }
+
+/*--------------------------------------------------------------------
+ * tooltips
+ *-------------------------------------------------------------------*/
+label.tooltipHeaderLabel
+{
+  font-weight : bold;
+  text-align  : right;
+}
+
+description.tooltipHeaderDescription
+{
+  font-weight : normal;
+  text-align  : left;
+  white-space : normal;
+}
+
+description.tooltipBody
+{
+  font-weight : normal;
+  white-space : normal;
+}

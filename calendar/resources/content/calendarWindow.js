@@ -482,24 +482,24 @@ CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
 
 CalendarWindow.prototype.changeMouseOverInfo = function calWin_changeMouseOverInfo( calendarEvent, event )
 {
-   var Html = document.getElementById( "eventTooltip" );
+   const toolTip = document.getElementById( "eventTooltip" );
 
-   while( Html.hasChildNodes() )
+   while( toolTip.hasChildNodes() )
    {
-      Html.removeChild( Html.firstChild ); 
+      toolTip.removeChild( toolTip.firstChild ); 
    }
 
-   var HolderBox;
+   var holderBox;
    if("calendarToDo" in event.currentTarget) 
    {
-      HolderBox = getPreviewTextForTask( event.currentTarget.calendarToDo );
+     holderBox = getPreviewForTask( event.currentTarget.calendarToDo );
    }
    else
    {
-      HolderBox = getPreviewTextForRepeatingEvent( event.currentTarget.calendarEventDisplay );
+     holderBox = getPreviewForEventDisplay( event.currentTarget.calendarEventDisplay );
    }
    
-   Html.appendChild( HolderBox );
+   toolTip.appendChild( holderBox );
 }
 
 /** PRIVATE

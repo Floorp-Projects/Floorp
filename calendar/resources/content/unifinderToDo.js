@@ -597,14 +597,15 @@ function changeToolTipTextForToDo( event )
 {
    var toDoItem = getToDoFromEvent( event );
 
-   var Html = document.getElementById( "taskTooltip" );
+   var toolTip = document.getElementById( "taskTooltip" );
 
-   while( Html.hasChildNodes() )
+   while( toolTip.hasChildNodes() )
    {
-      Html.removeChild( Html.firstChild ); 
+      toolTip.removeChild( toolTip.firstChild ); 
    }
-   var HolderBox = getPreviewTextForTask( toDoItem ) ;
-   if( HolderBox ) Html.appendChild( HolderBox ) ;
+   var holderBox = getPreviewForTask( toDoItem );
+   if( holderBox )
+     toolTip.appendChild( holderBox );
 }
 
 function changeContextMenuForToDo( event )

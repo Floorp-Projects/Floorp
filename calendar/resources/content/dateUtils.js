@@ -599,3 +599,17 @@ DateFormater.prototype.formatDateTime = function formatDateTime(datetime, relati
   }
 }
 
+
+/** TEMP function until oeICalDateTime.isSet is implemented (see bug220075).*/
+function oeICalDateTime_isSet(oeICalDate) { 
+  // ms value for -0001/11/30 00:00:00 UTC, libical value for no date.
+  // (Note: javascript Date interprets kNODATE ms as -0001/11/15 00:00:00.)
+  const kLIBICAL_NODATE_UTC_MSEC = -62171280000000;
+  // recalculate NODATE with current tz offset (offset might change during
+  // session due to travel or daylight/summer-time begin or end).
+  var localTZOffsetMinutes = new Date().getTimezoneOffset();
+  var noDateMSec = kLIBICAL_NODATE_UTC_MSEC + localTZOffsetMinutes * 60 * 1000;
+  var oeICalMSec = oeICalDate.getTime();
+  // offset might not include daylight/summer time, so two possible offsets.
+  return oeICalMSec != noDateMSec && oeICalMSec != noDateMSec + 60*60*1000;
+}
