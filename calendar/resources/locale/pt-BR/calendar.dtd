@@ -154,6 +154,7 @@
 <!ENTITY newtodo.duedate.warning    "Sua data de in&#xED;cio &#xE9; ap&#xF4;s a sua data prevista para t&#xE9;rmino.">
 <!ENTITY newtodo.repeatstart.warning "Hora de in&#xED;cio necess&#xE1;ria para recorr&#xEA;ncia.">
 
+<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Voc&#xEA; tem certeza de que quer apagar o seguinte evento: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Voc&#xEA; tem certeza de que quer apagar este evento sem t&#xED;tulo?" >
 
@@ -280,6 +281,11 @@
 <!ENTITY calendar.export.button.label              "Exportar" >
 <!ENTITY calendar.subscribe.button.label           "Subscrever" >
 <!ENTITY calendar.publish.button.label             "Publicar" >
+
+<!ENTITY calendar.localreload.button.label   "Local Reload" >
+<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
+<!ENTITY calendar.remotereload.button.label   "Reload" >
+<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
 
 <!ENTITY calendar.dayview.button.label          "Dia" >
 <!ENTITY calendar.weekview.button.label         "Semana" >

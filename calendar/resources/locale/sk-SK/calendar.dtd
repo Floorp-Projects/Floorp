@@ -153,6 +153,7 @@
 <!ENTITY newtodo.duedate.warning    "Dátum štartu je po dátume ukončenia.">
 <!ENTITY newtodo.repeatstart.warning "Dátum začiatku je potrebný pre opakovanie.">
 
+<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Skutočne chcete odstrániť udalosť nazvanú: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Skutočne chcete odstrániť túto nepomenovanú udalosť?" >
 
@@ -279,6 +280,11 @@
 <!ENTITY calendar.export.button.label              "Export" >
 <!ENTITY calendar.subscribe.button.label           "Odber" >
 <!ENTITY calendar.publish.button.label             "Publikovanie" >
+
+<!ENTITY calendar.localreload.button.label   "Local Reload" >
+<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
+<!ENTITY calendar.remotereload.button.label   "Reload" >
+<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
 
 <!ENTITY calendar.dayview.button.label          "Denný" >
 <!ENTITY calendar.weekview.button.label         "Týždenný" >

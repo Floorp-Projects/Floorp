@@ -153,6 +153,7 @@
 <!ENTITY newtodo.duedate.warning    "Datum pričetka je po roku opravka.">
 <!ENTITY newtodo.repeatstart.warning "Za ponavljanje je potreben datum pričetka.">
 
+<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Želite res zbrisati dogodek: ">
 <!ENTITY calendar.confirm.deleteuntitledevent "Želite res zbrisati ta neimenovani dogodek?">
 
@@ -279,6 +280,11 @@
 <!ENTITY calendar.export.button.label              "Izvoz" >
 <!ENTITY calendar.subscribe.button.label           "Naroči" >
 <!ENTITY calendar.publish.button.label             "Objavi" >
+
+<!ENTITY calendar.localreload.button.label   "Local Reload" >
+<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
+<!ENTITY calendar.remotereload.button.label   "Reload" >
+<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
 
 <!ENTITY calendar.dayview.button.label          "Dnevni pogled">
 <!ENTITY calendar.weekview.button.label         "Tedenski pogled">

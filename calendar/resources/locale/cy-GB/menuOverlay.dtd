@@ -78,10 +78,10 @@
 <!ENTITY calendar.printpreview.label            "Rhagolwg Argraffu">
 <!ENTITY calendar.printpreview.accesskey        "R">
 
-<!ENTITY calendar.pagesetup.label               "Gosodiad Tudalen...">
+<!ENTITY calendar.pagesetup.label               "Gosodiad Tudalen…">
 <!ENTITY calendar.pagesetup.accesskey           "s">
 
-<!ENTITY calendar.import.label                  "Mewnforio...">
+<!ENTITY calendar.import.label                  "Mewnforio…">
 <!ENTITY calendar.import.key                    "I">
 <!ENTITY calendar.import.accesskey              "M">
 
@@ -91,10 +91,14 @@
 <!ENTITY calendar.export.label                  "Allforio...">
 <!ENTITY calendar.export.accesskey              "A">
 
-<!ENTITY calendar.subscribe.label               "Tanysgrifio...">
+<!ENTITY calendar.subscribe.label               "Tanysgrifio…">
 <!ENTITY calendar.subscribe.accesskey           "T">
 
-<!ENTITY calendar.publish.label                 "Cyhoeddi'r Digwyddiadau Dewisol...">
+<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.key              "R">
+<!ENTITY calendar.reloadserver.accesskey        "R">
+
+<!ENTITY calendar.publish.label                 "Cyhoeddi'r Digwyddiadau Dewisol…">
 <!ENTITY calendar.publish.accesskey             "y">
 
 <!ENTITY calendar.about.label                   "Ynghylch Calendr">
@@ -116,7 +120,7 @@
 <!ENTITY calendar.selectall.key                 "A">
 <!ENTITY calendar.selectall.accesskey           "D">
 
-<!ENTITY calendar.preferences.label             "Dewisiadau...">
+<!ENTITY calendar.preferences.label             "Dewisiadau…">
 <!ENTITY calendar.preferences.accesskey         "w">
 
 <!ENTITY goMenu.label                           "Mynd">
@@ -134,8 +138,8 @@
 <!ENTITY goNextCmd.label                        "Nesaf">
 <!ENTITY goNextCmd.accesskey                    "N">
 
-<!ENTITY taskMenu.label                        "Tasks">
-<!ENTITY taskMenu.accesskey                    "k">
+<!ENTITY taskMenu.label                         "Tasks">
+<!ENTITY taskMenu.accesskey                     "k">
 
 <!ENTITY toolsMenu.label                        "Tools">
 <!ENTITY toolsMenu.accesskey                    "T">
@@ -164,7 +168,7 @@
 
 <!ENTITY editMenu.label                         "Edit">
 <!ENTITY editMenu.accesskey                     "E">
-<!ENTITY preferencesCmd.label                   "Options...">
+<!ENTITY preferencesCmd.label                   "Options…">
 <!ENTITY preferencesCmd.accesskey               "O">
 
 <!ENTITY viewMenu.label                         "View">

@@ -154,6 +154,7 @@
 <!ENTITY newtodo.duedate.warning    "Ditt startdatum är efter ditt förfallodatum.">
 <!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
+<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Är du säker på att du vill radera händelsen med titeln: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Är du säker på att du vill radera denna händelse utan namn?" >
 
@@ -280,6 +281,11 @@
 <!ENTITY calendar.export.button.label              "Export" >
 <!ENTITY calendar.subscribe.button.label           "Subscribe" >
 <!ENTITY calendar.publish.button.label             "Publish" >
+
+<!ENTITY calendar.localreload.button.label   "Local Reload" >
+<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
+<!ENTITY calendar.remotereload.button.label   "Reload" >
+<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
 
 <!ENTITY calendar.dayview.button.label          "Dagsöversikt" >
 <!ENTITY calendar.weekview.button.label         "Veckoöversikt" >

@@ -94,6 +94,10 @@
 <!ENTITY calendar.subscribe.label               "Sottoscrivi Calendario Remoto...">
 <!ENTITY calendar.subscribe.accesskey           "s">
 
+<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.key              "R">
+<!ENTITY calendar.reloadserver.accesskey        "R">
+
 <!ENTITY calendar.publish.label                 "Pubblica Eventi selezionati...">
 <!ENTITY calendar.publish.accesskey             "p">
 

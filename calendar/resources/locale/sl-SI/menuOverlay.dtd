@@ -94,6 +94,10 @@
 <!ENTITY calendar.subscribe.label               "Prijava na oddaljeni koledar ...">
 <!ENTITY calendar.subscribe.accesskey           "l">
 
+<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.key              "R">
+<!ENTITY calendar.reloadserver.accesskey        "R">
+
 <!ENTITY calendar.publish.label                 "Objavi izbrane dogodke ...">
 <!ENTITY calendar.publish.accesskey             "O">
 

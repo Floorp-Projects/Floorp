@@ -43,7 +43,7 @@
 
 <!ENTITY event.new.event                        "Nieuwe gebeurtenis…">
 <!ENTITY event.new.event.key                    "N">
-<!ENTITY event.new.event.accesskey "G">
+<!ENTITY event.new.event.accesskey              "G">
 
 <!ENTITY event.new.todo                         "Nieuwe taak…">
 <!ENTITY event.new.todo.key                     "T">
@@ -93,6 +93,10 @@
 
 <!ENTITY calendar.subscribe.label               "Aanmelden bij kalender op andere computer...">
 <!ENTITY calendar.subscribe.accesskey           "A">
+
+<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.key              "R">
+<!ENTITY calendar.reloadserver.accesskey        "R">
 
 <!ENTITY calendar.publish.label                 "Publiceer geselecteerde gebeurtenissen...">
 <!ENTITY calendar.publish.accesskey             "P">

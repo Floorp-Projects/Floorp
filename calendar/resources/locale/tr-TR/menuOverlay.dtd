@@ -94,6 +94,10 @@
 <!ENTITY calendar.subscribe.label               "Uzaktaki takvime kaydol...">
 <!ENTITY calendar.subscribe.accesskey           "u">
 
+<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.key              "R">
+<!ENTITY calendar.reloadserver.accesskey        "R">
+
 <!ENTITY calendar.publish.label                 "Olayları yayınla...">
 <!ENTITY calendar.publish.accesskey             "y">
 

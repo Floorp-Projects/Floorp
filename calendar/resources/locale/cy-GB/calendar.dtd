@@ -153,6 +153,7 @@
 <!ENTITY newtodo.duedate.warning    "Mae eich dyddiad cychwyn ar ôl eich dyddiad cyflawni.">
 <!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
+<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Ydych chi'n siwr eich bod am ddileu'r digwyddiad: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Ydych chi'n siwr eich bod am ddileu'r digwyddiad di-enw?" >
 
@@ -279,6 +280,11 @@
 <!ENTITY calendar.export.button.label              "Export" >
 <!ENTITY calendar.subscribe.button.label           "Subscribe" >
 <!ENTITY calendar.publish.button.label             "Publish" >
+
+<!ENTITY calendar.localreload.button.label   "Local Reload" >
+<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
+<!ENTITY calendar.remotereload.button.label   "Reload" >
+<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
 
 <!ENTITY calendar.dayview.button.label          "Golwg Diwrnod" >
 <!ENTITY calendar.weekview.button.label         "Golwg Wythnos" >

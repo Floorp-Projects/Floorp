@@ -153,6 +153,7 @@
 <!ENTITY newtodo.duedate.warning    "La vostra data d'inici es posterior a la d'acabada.">
 <!ENTITY newtodo.repeatstart.warning "La data d'inici és necessària per a la recurrència.">
 
+<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Esteu segur de voler suprimir la cita titolada:" >
 <!ENTITY calendar.confirm.deleteuntitledevent "Esteu segur de voler suprimir aquesta cita sense nom?" >
 
@@ -279,6 +280,11 @@
 <!ENTITY calendar.export.button.label              "Exporta les cites seleccionades..." >
 <!ENTITY calendar.subscribe.button.label           "Subscriu" >
 <!ENTITY calendar.publish.button.label             "Publica" >
+
+<!ENTITY calendar.localreload.button.label   "Local Reload" >
+<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
+<!ENTITY calendar.remotereload.button.label   "Reload" >
+<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
 
 <!ENTITY calendar.dayview.button.label          "Vista diària" >
 <!ENTITY calendar.weekview.button.label         "Vista setmanal" >

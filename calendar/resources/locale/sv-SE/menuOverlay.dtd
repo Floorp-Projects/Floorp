@@ -95,6 +95,10 @@
 <!ENTITY calendar.subscribe.label               "Prenumerera På Länkad Kalender...">
 <!ENTITY calendar.subscribe.accesskey           "p">
 
+<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.key              "R">
+<!ENTITY calendar.reloadserver.accesskey        "R">
+
 <!ENTITY calendar.publish.label                 "Publicera Valda Händelser...">
 <!ENTITY calendar.publish.accesskey             "u">
 

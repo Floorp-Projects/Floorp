@@ -150,6 +150,7 @@
 <!ENTITY newtodo.duedate.warning    "Ihr Startdatum ist nach Ihrem Enddatum.">
 <!ENTITY newtodo.repeatstart.warning "Beginnzeit wird für Wiederholung benötigt.">
 
+<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Wollen Sie dieses Ereignis wirklich löschen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Wollen Sie dieses unbenannte Ereignis wirklich löschen?" >
 
@@ -276,6 +277,11 @@
 <!ENTITY calendar.export.button.label              "Exportieren" >
 <!ENTITY calendar.subscribe.button.label           "Abonnieren" >
 <!ENTITY calendar.publish.button.label             "Publizieren" >
+
+<!ENTITY calendar.localreload.button.label   "Local Reload" >
+<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
+<!ENTITY calendar.remotereload.button.label   "Reload" >
+<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
 
 <!ENTITY calendar.dayview.button.label          "Tagesansicht" >
 <!ENTITY calendar.weekview.button.label         "Wochenansicht" >
