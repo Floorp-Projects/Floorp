@@ -138,7 +138,7 @@ NS_NewMessengerBootstrap(const nsIID &aIID, void ** msgboot,
 class nsMessenger : public nsIMessenger {
 
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 };
 
 NS_IMPL_ISUPPORTS(nsMessenger, nsIMessenger::GetIID())
