@@ -988,8 +988,7 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, txAtom* aLName,
     txSingleNodeContext evalContext(mSourceDocument, this);
     txIEvalContext* priorEC = setEvalContext(&evalContext);
     XSLTProcessor processor;
-    globVar->mValue = processor.processVariable(mSourceDocument, varElem,
-                                                this);
+    globVar->mValue = processor.processVariable(varElem, this);
     setEvalContext(priorEC);
     mLocalVariables = oldVars;
 
