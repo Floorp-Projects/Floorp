@@ -392,7 +392,6 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 			PR_FREEIF(mOutputFormat);
 			mOutputFormat = nsCRT::strdup("text/xul");
       break;
-
 		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
 			mWrapperOutput = PR_TRUE;
 			PR_FREEIF(mOutputFormat);
@@ -402,7 +401,6 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 			PR_FREEIF(mOutputFormat);
 			mOutputFormat = nsCRT::strdup("text/xml");
 			break;
-
 		case nsMimeOutput::nsMimeMessageBodyDisplay:   // the split header/body display
 			PR_FREEIF(mOutputFormat);
 			mOutputFormat = nsCRT::strdup("text/html");
@@ -810,6 +808,19 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
   else
   {
     aChannel = do_QueryInterface(aCtxt, &rv);
+  }
+
+	if (!mAlreadyKnowOutputType && aToType)
+  {
+    // when displaying a message, if aToType is text/xul we want to use the xul emitter,
+    // if the aToType is text/html, we want to use the new html display emitter....this is the only
+    // way I can think of to allow us to toggle back and forth...based on how the user wants the content.
+    if (nsCRT::strcasecmp(aToType, "text/html") == 0)
+    {
+        mOutputType = nsMimeOutput::nsMimeMessageBodyDisplay;
+        mAlreadyKnowOutputType = PR_TRUE;
+    }
+
   }
 
 	NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
