@@ -239,7 +239,7 @@ sub FindMakefiles {
   $dirs_string_no_mozilla = $dirs_string;
   $dirs_string_no_mozilla =~ s/mozilla\/+//g;
 
-  print "dirs_string_no_mozilla = $dirs_string_no_mozilla\n";
+  print "\ndirs_string_no_mozilla = $dirs_string_no_mozilla\n";
 
   # Checkout directories.
   unless($skip_cvs) { 
