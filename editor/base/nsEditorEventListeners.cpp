@@ -171,7 +171,19 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (PR_FALSE==keyProcessed)
   {
     PRUint32     keyCode;
+    PRUint32 flags;
     keyEvent->GetKeyCode(&keyCode);
+
+    // if we are readonly or disabled, then do nothing.
+    if (NS_SUCCEEDED(mEditor->GetFlags(&flags)))
+    {
+      if (flags & nsIHTMLEditor::eEditorReadonlyMask || 
+          flags & nsIHTMLEditor::eEditorDisabledMask) 
+        return NS_OK;
+    }
+    else
+      return NS_ERROR_FAILURE;  // Editor unable to handle this.
+
 
     nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
     if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
