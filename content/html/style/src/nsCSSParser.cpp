@@ -668,7 +668,8 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
         rv = errorCode;
       }
 
-      break;
+      if (NS_FAILED(errorCode))
+        break;
     }
   } while (!aParseOnlyOneDecl);
 
