@@ -2482,6 +2482,10 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
                               aTableCreator, childItems, captionFrame);
     if (NS_FAILED(rv)) return rv;
 
+    // if there are any anonymous children for the table, create frames for them
+    CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aContent, aNewInnerFrame,
+                          childItems);
+
     // Set the inner table frame's initial primary list 
     aNewInnerFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
 
@@ -2609,12 +2613,19 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsIPresShell*            aPre
       }
       // Stop the processing if we're lazy. The tree row group frame 
       // builds its children as needed.
+      // Still install event handlers and methods/properties
+      CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aContent, aNewFrame,
+                            childItems);
     }
     else {
       nsIFrame* captionFrame;
       rv = TableProcessChildren(aPresShell, aPresContext, aState, aContent, 
                                 aNewFrame, aTableCreator, childItems, captionFrame);
       if (NS_FAILED(rv)) return rv;
+      // if there are any anonymous children for the table, create frames for them
+      CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aContent, aNewFrame,
+                            childItems);
+
       aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     }
     if (aIsPseudoParent) {
@@ -2721,6 +2732,10 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresShell*            aPresShel
     rv = TableProcessChildren(aPresShell, aPresContext, aState, aContent, aNewFrame,
                               aTableCreator, childItems, captionFrame);
     if (NS_FAILED(rv)) return rv;
+    // if there are any anonymous children for the table, create frames for them
+    CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aContent, aNewFrame,
+                          childItems);
+
     aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (aIsPseudoParent) {
       aState.mPseudoFrames.mRowGroup.mChildList.AddChild(aNewFrame);
@@ -2851,6 +2866,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*            aPresShe
     nsCOMPtr<nsIAtom> tagName;
     aContent->GetTag(*getter_AddRefs(tagName));
     if (tagName && tagName.get() == nsXULAtoms::treecell) {
+      // XXX hyatt - Should work with table cells also!!!!
       CreateAnonymousTreeCellFrames(aPresShell, aPresContext, tagName, aState, aContent, 
                                     aNewCellInnerFrame, aNewCellOuterFrame, childItems);
     }
@@ -5179,6 +5195,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsFrameItems&            aChildItems)
 {
 #ifndef XULTREE
+  // XXX hyatt - This should be checking for a display type of table cell!
   if (aTag == nsXULAtoms::treecell)
     return NS_OK; // Don't even allow the XBL check.  The inner cell frame throws it off.
                   // There's a separate special method for XBL treecells.
