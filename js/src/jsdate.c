@@ -612,7 +612,7 @@ date_parseString(JSString *str, jsdouble *result)
 		if (tzoffset != 0 && tzoffset != -1)
 		    goto syntax;
 		tzoffset = n;
-	    } else if (n >= 70  ||
+	    } else if (n >= 70 ||
 		       (prevc == '/' && mon >= 0 && mday >= 0 && year < 0)) {
 		if (year >= 0)
 		    goto syntax;
@@ -1546,19 +1546,19 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
              * Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
              * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
              */
-            /* Tue Oct 31 09:41:40 GMT-0800 (PST) 2000 */
+            /* Tue Oct 31 2000 09:41:40 GMT-0800 (PST) */
             JS_snprintf(buf, sizeof buf,
-                        "%s %s %.2d %.2d:%.2d:%.2d GMT%+.4d %s%s%.4d",
+                        "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d%s%s",
                         days[WeekDay(local)],
                         months[MonthFromTime(local)],
                         DateFromTime(local),
+                        YearFromTime(local),
                         HourFromTime(local),
                         MinFromTime(local),
                         SecFromTime(local),
                         offset,
-                        usetz ? tzbuf : "",
                         usetz ? " " : "",
-                        YearFromTime(local));
+                        usetz ? tzbuf : "");
             break;
           case FORMATSPEC_DATE:
             /* Tue Oct 31 2000 */
