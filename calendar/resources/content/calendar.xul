@@ -422,33 +422,36 @@
                   >
                <treecols id="unifinder-search-results-tree-cols">
                   <treecol id="unifinder-search-results-tree-col-title"
-                      persist="hidden ordinal width sortDirection sortActive" flex="1" 
+                      persist="hidden ordinal width sortDirection sortActive"
+                      flex="1"
                       label="&calendar.unifinder.tree.title.label;" />
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-search-results-tree-col-startdate"
                       persist="hidden ordinal width sortDirection sortActive" 
-                      hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.startdate.label;"/>
+                      flex="1"
+                      label="&calendar.unifinder.tree.startdate.label;"/>
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-search-results-tree-col-enddate"
                       persist="hidden ordinal width sortDirection sortActive" 
-                      hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.enddate.label;"/>
+                      flex="1"
+                      label="&calendar.unifinder.tree.enddate.label;"/>
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-search-results-tree-col-categories"
                       persist="hidden ordinal width sortDirection sortActive" 
-                      hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.categories.label;"/>
-                  <splitter class="tree-splitter"/>
+                      flex="1"
+                      label="&calendar.unifinder.tree.categories.label;"/>
+                   <splitter class="tree-splitter"/>
                    <treecol id="unifinder-search-results-tree-col-location"
                       persist="hidden ordinal width sortDirection sortActive" 
+                      flex="1"
                       hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.location.label;"/>
-                  <splitter class="tree-splitter"/>
+                      label="&calendar.unifinder.tree.location.label;"/>
+                   <splitter class="tree-splitter"/>
                    <treecol id="unifinder-search-results-tree-col-status"
                       persist="hidden ordinal width sortDirection sortActive" 
+                      flex="1"
                       hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.status.label;"/>
+                      label="&calendar.unifinder.tree.status.label;"/>
                   </treecols>
        
                   <!-- on mousedown here happens before onclick above -->
