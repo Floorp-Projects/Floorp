@@ -57,6 +57,10 @@ sub parse_params {
     $query->param(-name=>'--with-nspr',
 		  -values=>['/usr']);
   }
+  if ($query->param('nspr_option') eq 'tip') {
+    $query->param(-name=>'MOZ_WITH_NSPR',
+		  -values=>['@OBJDIR@/nspr']);
+  }
   if ($query->param('debug_option') eq 'userdefined') {
     $query->param(-name=>'--enable-debug',
 		  -values=>[$query->param('debug_dirs')]);
@@ -166,7 +170,8 @@ sub print_script {
   print "#\n";
   print "\n";
 
-  print "# Options for client.mk\n";
+  print "# Options for client.mk.\n";
+  print "# (client.mk also understands some 'configure' options.)\n";
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
       next if $query->param($param) eq '';
@@ -242,6 +247,23 @@ sub print_configure_form {
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/../obj-\@CONFIG_GUESS\@">
     mozilla/../obj-\@CONFIG_GUESS\@ (e.g. <code>mozilla/../obj-i686-pc-linux-gnu</code>)<br>
     -->
+    </td></tr>
+
+    <!-- Threads -->
+    <tr bgcolor="$chrome_color"><td>
+    <font face="Helvetica,Arial"><b>Threads:</b></font><br>
+    </td></tr><tr><td>
+    NSPR and mozilla can both be built with or without
+    pthreads (POSIX threads). <br>
+    Check
+    <a href="http://www.mozilla.org/docs/refList/refNSPR/platforms.html">
+    the NSPR supported platforms</a>
+    to see if you can choose this option.<p>
+    <input type="checkbox" name="--with-pthreads" value="yes">
+    Build both NSPR and mozilla with pthreads<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    (Sets <code>USE_PTHREADS=1</code> for nspr, 
+    and <code>--with-pthreads</code> for mozilla client.)
     </td></tr>
 
     <!-- NSPR -->
