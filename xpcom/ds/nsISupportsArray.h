@@ -53,12 +53,15 @@ public:
   NS_IMETHOD_(PRBool) RemoveElementAt(PRInt32 aIndex) = 0;
   NS_IMETHOD_(PRBool) RemoveElement(const nsISupports* aElement, PRInt32 aStartIndex = 0) = 0;
   NS_IMETHOD_(PRBool) RemoveLastElement(const nsISupports* aElement) = 0;
+
+  NS_IMETHOD_(PRBool) AppendElements(nsISupportsArray* aElements) = 0;
+
   NS_IMETHOD_(void)   Clear(void) = 0;
 
   NS_IMETHOD_(void)   Compact(void) = 0;
 
-  NS_IMETHOD_(PRBool) EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData) = 0;
-  NS_IMETHOD_(PRBool) EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData) = 0;
+  NS_IMETHOD_(PRBool) EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData) const = 0;
+  NS_IMETHOD_(PRBool) EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData) const = 0;
 
 private:
   // Copy constructors are not allowed
