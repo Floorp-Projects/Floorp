@@ -65,13 +65,13 @@ interface nsIJVMManager : nsISupports {
      * calling this method multiple times from the same thread will return
      * the same proxy JNI.
      */
-	void CreateProxyJNI(in nsISecureEnv secureEnv, out JNIEnv outProxyEnv);
+	[noscript] void CreateProxyJNI(in nsISecureEnv secureEnv, out JNIEnv outProxyEnv);
 
 	/**
 	 * Returns the proxy JNI associated with the current thread, or NULL if no
 	 * such association exists.
 	 */
-	void GetProxyJNI(out JNIEnv outProxyEnv);
+	[noscript] void GetProxyJNI(out JNIEnv outProxyEnv);
 
 	/**
 	 * Returns whether or not Java is enabled.
