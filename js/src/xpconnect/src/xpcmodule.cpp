@@ -28,6 +28,7 @@ static NS_DEFINE_CID(kJSID_CID,  NS_JS_ID_CID);
 static NS_DEFINE_CID(kXPCException_CID,  NS_XPCEXCEPTION_CID);
 static NS_DEFINE_CID(kXPConnect_CID, NS_XPCONNECT_CID);
 static NS_DEFINE_CID(kXPCThreadJSContextStack_CID, NS_XPC_THREAD_JSCONTEXT_STACK_CID);
+static NS_DEFINE_CID(kJSRuntime_CID, NS_JS_RUNTIME_SERVICE_CID);
 
 /********************************************/
 
@@ -100,6 +101,29 @@ Construct_nsXPCThreadJSContextStack(nsISupports *aOuter, REFNSIID aIID, void **a
     return rv;
 }
 
+static NS_IMETHODIMP
+Construct_nsJSRuntimeService(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsresult rv;
+    nsISupports *obj;
+
+    if(!aResult)
+        return NS_ERROR_NULL_POINTER;
+    *aResult = nsnull;
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    obj = nsJSRuntimeServiceImpl::GetSingleton();
+
+    if (!obj)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = obj->QueryInterface(aIID, aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
+    NS_RELEASE(obj);
+    return rv;
+}
+
 /********************************************/
 
 extern "C" PR_IMPLEMENT(nsresult)
@@ -132,6 +156,8 @@ NSGetFactory(nsISupports* aServMgr,
         rv = factory->SetConstructor(Construct_nsXPCThreadJSContextStack);
     else if(aClass.Equals(kXPCException_CID))
         rv = factory->SetConstructor(nsXPCExceptionConstructor);
+    else if(aClass.Equals(kJSRuntime_CID))
+        rv = factory->SetConstructor(Construct_nsJSRuntimeService);
     else
     {
         NS_ASSERTION(0, "incorrectly registered");
@@ -185,6 +211,9 @@ NSRegisterSelf(nsISupports* aServMgr, const char *aPath)
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
+    rv = compMgr->RegisterComponent(kJSRuntime_CID,
+                                    "JS Runtime Service", "nsJSRuntimeService",
+                                    aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
 
@@ -203,6 +232,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *aPath)
     rv = compMgr->UnregisterComponent(kXPConnect_CID, aPath);
     rv = compMgr->UnregisterComponent(kXPCThreadJSContextStack_CID, aPath);
     rv = compMgr->UnregisterComponent(kXPCException_CID, aPath);
+    rv = compMgr->UnregisterComponent(kJSRuntime_CID, aPath);
 
     return rv;
 }
