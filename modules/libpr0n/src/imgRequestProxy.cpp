@@ -72,7 +72,7 @@ imgRequestProxy::~imgRequestProxy()
          the last observer.  This allows the image to continue to download and
          be cached even if no one is using it currently.
        */
-      mOwner->RemoveProxy(this, NS_OK);
+      mOwner->RemoveProxy(this, NS_OK, PR_FALSE);
     }
 
     NS_RELEASE(mOwner);
@@ -110,7 +110,27 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 
   PR_Unlock(mLock);
 
-  request->AddProxy(this);
+  request->AddProxy(this, PR_FALSE); // Pass PR_FALSE here so that AddProxy doesn't send all the On* notifications immediatly
+
+  return NS_OK;
+}
+
+nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
+{
+  if (mCanceled)
+    return NS_OK;
+
+  PR_Lock(mLock);
+
+  mOwner->RemoveProxy(this, NS_OK, PR_FALSE);
+  NS_RELEASE(mOwner);
+
+  mOwner = aNewOwner;
+  NS_ADDREF(mOwner);
+
+  mOwner->AddProxy(this, PR_FALSE);
+
+  PR_Unlock(mLock);
 
   return NS_OK;
 }
@@ -164,7 +184,7 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 
   PR_Unlock(mLock);
 
-  mOwner->RemoveProxy(this, status);
+  mOwner->RemoveProxy(this, status, PR_FALSE);
 
   return NS_OK;
 }

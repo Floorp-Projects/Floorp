@@ -40,6 +40,8 @@
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
 
+class httpValidateChecker;
+
 class imgRequestProxy;
 
 enum {
@@ -63,10 +65,12 @@ public:
 
   nsresult Init(nsIChannel *aChannel,
                 nsICacheEntryDescriptor *aCacheEntry,
-                void *aCacheId);
+                void *aCacheId,
+                void *aLoadId);
 
-  nsresult AddProxy   (imgRequestProxy *proxy);
-  nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus);
+  nsresult AddProxy   (imgRequestProxy *proxy, PRBool aNotify);
+  nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify);
+  nsresult NotifyProxyListener(imgRequestProxy *proxy);
 
   void SniffMimeType(const char *buf, PRUint32 len);
 
@@ -77,7 +81,13 @@ public:
 
 private:
   friend class imgRequestProxy;
+  friend class imgLoader;
+  friend class httpValidateChecker;
 
+  inline void SetLoadId(void *aLoadId) {
+    mLoadId = aLoadId;
+    mLoadTime = PR_Now();
+  }
   inline PRUint32 GetImageStatus() const { return mImageStatus; }
   inline nsresult GetResultFromImageStatus(PRUint32 aStatus) const;
   void Cancel(nsresult aStatus);
@@ -102,8 +112,8 @@ private:
 
   nsVoidArray mObservers;
 
-  PRBool mLoading;
-  PRBool mProcessing;
+  PRPackedBool mLoading;
+  PRPackedBool mProcessing;
 
   PRUint32 mImageStatus;
   PRUint32 mState;
@@ -113,6 +123,11 @@ private:
   nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to this so long as we have observers */
 
   void *mCacheId;
+
+  void *mLoadId;
+  PRTime mLoadTime;
+
+  httpValidateChecker *mValidator;
 };
 
 #endif
