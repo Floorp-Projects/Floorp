@@ -484,7 +484,9 @@ endif
 # We need to know where to find the libraries we
 # put on the link line for binaries, and should
 # we link statically or dynamic?  Assuming dynamic for now.
+ifneq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
+endif
 
 # Default location of include files
 ifdef MODULE
@@ -598,7 +600,10 @@ endif
 
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
-ifneq (,$(filter-out WINNT, $(OS_ARCH)))
+ifeq (,$(filter-out WINNT, $(OS_ARCH)))
+NSINSTALL	= nsinstall
+INSTALL		= $(NSINSTALL)
+else
 NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
 
 ifeq ($(NSDISTMODE),copy)
@@ -613,7 +618,7 @@ else
 INSTALL		= $(NSINSTALL) -R
 endif
 endif
-endif
+endif # WINNT
 
 ######################################################################
 ### Java Stuff - see common.mk
