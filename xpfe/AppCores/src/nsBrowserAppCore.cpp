@@ -679,6 +679,25 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
      // Stop the throbber and set the urlbar string
     setAttribute( mWebShell, "urlbar", "value", spec );
     setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+
+     // Check with the content area webshell if back and forward
+     // buttons can be enabled
+    nsresult rv = mContentAreaWebShell->CanForward();
+    if (rv != NS_OK)
+	setAttribute(mWebShell, "forward-button", "disable", "true");
+    else
+    {
+	setAttribute(mWebShell, "forward-button", "disable", "");
+    }
+
+    rv = mContentAreaWebShell->CanBack();
+    if (rv != NS_OK)
+	setAttribute(mWebShell, "back-button", "disable", "true");
+    else
+    {
+        setAttribute(mWebShell, "back-button", "disable", "");
+    }
+
     printf("Document %s loaded successfully\n", spec);
    return NS_OK;
 }
