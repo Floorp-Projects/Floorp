@@ -234,7 +234,7 @@ print "<BR>";
 print %article->{'Newsgroups'} . "\n";
 print "<BR>";
 print "<SPAN CLASS=\"articlelink\">\n";
-print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=%lt;" . %article->{'Message-ID'} . "%gt;\">\n";
+print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . %article->{'Message-ID'} . "&gt;\">\n";
 print "</SPAN>\n";
 print "View Article</A> -\n";
 print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/thread/%3c" . %article->{'Message-ID'} ."%3e%231/1\">\n";
