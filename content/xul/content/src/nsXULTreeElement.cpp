@@ -18,11 +18,10 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsIRDFCompositeDataSource.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
-#include "nsRDFInterfaces.h"
 #include "nsXULTreeElement.h"
-#include "jsapi.h"
 
 NS_IMPL_ISUPPORTS_INHERITED(nsXULTreeElement, nsXULElement, nsIDOMXULTreeElement);
 
