@@ -1,7 +1,7 @@
-NS_DEPTH		= ../../..
+DEPTH	 = ../../../..
 UNIXDIRLIST	= liblber libldap
 
-include $(NS_DEPTH)/config/rules.mk
+include $(DEPTH)/config/rules.mk
 
 all export::	FORCE
 	@for i in $(UNIXDIRLIST); do \

@@ -1,5 +1,5 @@
-DEPTH		= ../../../..
-NS_DEPTH	= ../../../..
+DEPTH		= ../../../../..
+
 LDAPSRC		= ../..
 
 RM		= rm -f

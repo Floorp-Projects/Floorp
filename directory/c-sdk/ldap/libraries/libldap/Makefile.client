@@ -1,4 +1,4 @@
-DEPTH		= ../../../..
+DEPTH		= ../../../../..
 NS_DEPTH	= ../../../..
 LDAPSRC		= ../..
 
@@ -84,7 +84,7 @@ LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
 INCLUDES	+= -I$(HDIR) $(KRBINCLUDEFLAG)
 DEFINES		+= $(DEFS) -DFILTERFILE="\"$(RUNTIMEETCDIR)/ldapfilter.conf\"" \
 		   -DTEMPLATEFILE="\"$(RUNTIMEETCDIR)/ldaptemplates.conf\"" \
-		   -DNET_SSL
+		   -DNET_SSL -UMOZILLA_CLIENT
 
 # So we actually get the definition of hostent_data....
 ifeq ($(OS_ARCH),AIX)

@@ -1,8 +1,8 @@
-NS_DEPTH	= ../..
+DEPTH	= ../../..
 
 SRCDIRS	= build include libraries
 
-include $(NS_DEPTH)/config/rules.mk
+include $(DEPTH)/config/rules.mk
 
 all export::	FORCE
 	@for i in $(SRCDIRS); do \
