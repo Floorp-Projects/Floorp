@@ -28,14 +28,14 @@ include $(topsrcdir)/config/rules.mk
 
 INSTALL_DIR = $(DIST)/bin/chrome/messenger/locale/en-US
 
-EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/messengercompose.dtd \
+EXPORT_RESOURCE_FILES = \
+	$(srcdir)/imapMsgs_en-US.properties \
 	$(NULL)
 
-EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+EXPORT_RESOURCE_FILES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_FILES))
 
 install::
-	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(INSTALL_DIR)
+	$(INSTALL) $(EXPORT_RESOURCE_FILES) $(INSTALL_DIR)
 
 clobber::
-	$(RM) $(EXPORT_RESOURCE_SAMPLES_TO_REMOVE)
+	$(RM) $(EXPORT_RESOURCE_FILES_TO_REMOVE)
