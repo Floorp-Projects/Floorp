@@ -607,7 +607,10 @@ NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResour
 	} 
 
 	delete resourceString;
-	return result;
+	// Rather than returning an error when you pass in crap, return NS_OK
+	// Doing this to avoid throwing a JS exception becasue event bubbling is not working as of 7/26/99
+	//return result;
+	return NS_OK;
 }
 
 // COM
