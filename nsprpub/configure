@@ -5664,7 +5664,7 @@ pkg/Makefile
 pkg/linux/Makefile
 pkg/solaris/Makefile
 pkg/solaris/SUNWpr/Makefile
-pkg/solaris/SUNWprx/Makefile
+pkg/solaris/SUNWprd/Makefile
 pr/Makefile 
 pr/include/Makefile 
 pr/include/md/Makefile 
