@@ -1758,6 +1758,13 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
 static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
   DWORD fontType, LPARAM closure)
 {
+#ifdef MOZ_MATHML
+  // XXX need a better way to deal with non-TrueType fonts?
+  if (!(fontType & TRUETYPE_FONTTYPE)) {
+    //printf("rejecting %s\n", logFont->lfFaceName);
+    return 1;
+  }
+#endif
   // XXX ignore vertical fonts
   if (logFont->lfFaceName[0] == '@') {
     return 1;
