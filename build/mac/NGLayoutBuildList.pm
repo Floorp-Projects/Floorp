@@ -297,12 +297,14 @@ sub BuildDist()
 
 	#DOM
    InstallFromManifest(":mozilla:dom:public:MANIFEST",								"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:public:base:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",						"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:html:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
 
 	#HTMLPARSER
    InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
@@ -335,6 +337,9 @@ sub BuildDist()
 			InstallFromManifest(":ns:fullsoft:public:MANIFEST",							"$distdirectory");
 		}
 	}
+
+	# XPAPPS
+   InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",						"$distdirectory:xpfe:");
 
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
@@ -549,6 +554,8 @@ sub MakeResouceAliases()
 	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:src:", 							"$samples_dir");
+	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
+	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
 }
 
 
@@ -664,6 +671,8 @@ sub BuildXPAppProjects()
 	my($dist_dir) = _getDistDirectory();
 
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:xpfe:AppCores:macbuild:AppCores.mcp",				"AppCores$D.shlb", "AppCores.toc", 1, $main::ALIAS_SYM_FILES);
 
 	BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",			"apprunner$D", "apprunner.toc", 0, 0);
 
