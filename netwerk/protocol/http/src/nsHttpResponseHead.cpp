@@ -187,6 +187,13 @@ nsHttpResponseHead::ParseHeaderLine(char *line)
                 ++p;
             } while ((*p == ' ') || (*p == '\t'));
 
+            // trim trailing whitespace - bug 86608
+            p2 = p + PL_strlen(p);
+            do {
+                --p2;
+            } while (p2 >= p && ((*p2 == ' ') || (*p2 == '\t')));
+            *++p2 = 0;
+
             // assign response header
             mHeaders.SetHeader(atom, p);
 
