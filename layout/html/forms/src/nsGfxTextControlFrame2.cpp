@@ -3188,7 +3188,8 @@ nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** a
     formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
   }
 
-  if (! stateString.Equals(defaultStateString)) {
+  // XXX Removed comparison between current and default state to
+  // XXX temporarily fix bug 69365 (mail reply all looses addresses)
 
     // XXX Should use nsAutoString above but ConvertStringLineBreaks requires mOwnsBuffer!
     res = nsLinebreakConverter::ConvertStringLineBreaks(stateString,
@@ -3199,7 +3200,6 @@ nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** a
     res = NS_NewPresState(aState);
     NS_ENSURE_SUCCESS(res, res);
     res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
-  }
 
   return res;
 }
