@@ -143,6 +143,7 @@ struct XULBroadcastListener
 	nsIDOMElement* mListener;
 
 	XULBroadcastListener(const nsString& aAttribute, nsIDOMElement* aListener)
+	: mAttributeList(nsnull)
 	{
     mListener = aListener; // WEAK REFERENCE
     if (aAttribute != "*") {
