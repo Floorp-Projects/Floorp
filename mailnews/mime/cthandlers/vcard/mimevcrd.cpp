@@ -149,13 +149,13 @@ typedef struct
 MimeDefClass(MimeInlineTextVCard, MimeInlineTextVCardClass,
 			 mimeInlineTextVCardClass, NULL);
 
-PUBLIC char *
+extern "C" char *
 MIME_GetContentType(void)
 {
   return VCARD_CONTENT_TYPE;
 }
 
-PUBLIC MimeObjectClass *
+extern "C" MimeObjectClass *
 MIME_CreateContentTypeHandlerClass(const char *content_type, 
                                    contentTypeHandlerInitStruct *initStruct)
 {
