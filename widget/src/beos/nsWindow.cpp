@@ -3106,7 +3106,7 @@ void  nsWindowBeOS::WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace)
 	if(w && (t = w->GetToolkit()) != 0)
 	{
 		uint32	args[2];
-		args[0] = neworkspace;
+		args[0] = newworkspace;
 		args[1] = oldworkspace;
 		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONWORKSPACE, 2, args);
 		t->CallMethodAsync(info);
