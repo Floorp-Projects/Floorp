@@ -81,7 +81,6 @@ pull_all: pull_seamonkey
 
 pull_seamonkey:
 	cd $(MOZ_SRC)\.
-	$(CVSCO) $(MOZ_TOP)/nsprpub
 	$(CVSCO) SeaMonkeyAll
 
 ############################################################

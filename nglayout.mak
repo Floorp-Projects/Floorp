@@ -205,7 +205,7 @@ pull_editor
 
 pull_seamonkey:
 	cd $(MOZ_SRC)\.
-#	$(CVSCO_TAG) -r NSPRPUB_RELEASE_3_0 NSPR
+#	$(CVSCO_TAG) -A NSPR
 	$(CVSCO_LIZARD) SeaMonkeyEditor
 
 pull_lizard:
