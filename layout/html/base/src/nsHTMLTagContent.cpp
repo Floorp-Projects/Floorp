@@ -734,7 +734,6 @@ nsHTMLTagContent::MapImageBorderInto(nsIStyleContext* aContext,
       aContext->GetData(kStyleSpacingSID);
     nsStyleCoord coord;
     coord.SetCoordValue(twips);
-    spacing->InvalidateBorderPaddingCache();
     spacing->mBorder.SetTop(coord);
     spacing->mBorder.SetRight(coord);
     spacing->mBorder.SetBottom(coord);
