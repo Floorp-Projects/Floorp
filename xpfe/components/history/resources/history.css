@@ -26,12 +26,4 @@
 
 */
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
-}
-
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("resource:/res/rdf/bookmark-folder-open.gif");
-}
+@import url(chrome://global/skin/);

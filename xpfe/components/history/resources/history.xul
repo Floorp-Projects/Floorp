@@ -22,6 +22,7 @@
 
 -->
 
+<?xml-stylesheet href="chrome://history/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://bookmarks/skin/manage-bookmarks.css" type="text/css"?>
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
