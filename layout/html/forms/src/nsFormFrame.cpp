@@ -599,6 +599,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       if ((NS_OK == res) && (nsnull != walletservice)) {
         res = walletservice->WALLET_Prefill(nsnull, PR_FALSE);
         NS_RELEASE(walletservice);
+        return NS_OK;
       }
     }
     if (href == "internal-walletEditor-handler") {
@@ -610,6 +611,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       if ((NS_OK == res) && (nsnull != walletservice)) {
         res = walletservice->WALLET_PreEdit(nsnull);
         NS_RELEASE(walletservice);
+        return NS_OK;
       }
     }
 #endif
