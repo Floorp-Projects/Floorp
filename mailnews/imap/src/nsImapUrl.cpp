@@ -66,6 +66,7 @@ nsImapUrl::nsImapUrl()
 nsresult nsImapUrl::Initialize(const char * aUserName)
 {
 	nsresult rv = NS_OK;
+    PR_FREEIF(m_userName);
 	if (aUserName)
 		m_userName = PL_strdup(aUserName);
 	else
@@ -304,6 +305,7 @@ nsresult nsImapUrl::ParseUrl(const nsString& aSpec)
     
     if (cp) {
         // we have a username between cp0 and cp
+        PR_FREEIF(m_userName);
         m_userName = PL_strndup(cp0, (cp - cp0));
         cp0 = cp+1;
     }
@@ -545,7 +547,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 		m_imapAction   					 = nsImapMsgFetch;
 		ParseUidChoice();
 		ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		ParseListofMessageIds();
+		ParseListOfMessageIds();
 	}
 	else /* if (fInternal) no concept of internal - not sure there will be one */
 	{
@@ -554,21 +556,20 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapMsgHeader;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "deletemsg"))
 		{
 			m_imapAction   					 = nsImapDeleteMsg;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "uidexpunge"))
 		{
 			m_imapAction   					 = nsImapUidExpunge;
-			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "deleteallmsgs"))
 		{
@@ -580,7 +581,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapAddMsgFlags;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 			ParseMsgFlags();
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "subtractmsgflags"))
@@ -588,7 +589,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapSubtractMsgFlags;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 			ParseMsgFlags();
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "setmsgflags"))
@@ -596,7 +597,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapSetMsgFlags;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 			ParseMsgFlags();
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "onlinecopy"))
@@ -604,7 +605,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapOnlineCopy;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "onlinemove"))
@@ -612,7 +613,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapOnlineMove;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "onlinetoofflinecopy"))
@@ -620,7 +621,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapOnlineToOfflineCopy;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "onlinetoofflinemove"))
@@ -628,7 +629,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapOnlineToOfflineMove;
 			ParseUidChoice();
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "offlinetoonlinecopy"))
@@ -652,7 +653,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			m_imapAction   					 = nsImapSelectFolder;
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
 			if (m_tokenPlaceHolder && *m_tokenPlaceHolder)
-				ParseListofMessageIds();
+				ParseListOfMessageIds();
 			else
 				m_listOfMessageIds = PL_strdup("");
 		}
@@ -724,7 +725,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 		{
 			m_imapAction   					 = nsImapBiff;
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListofMessageIds();
+			ParseListOfMessageIds();
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "netscape"))
 		{
@@ -737,8 +738,13 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "appenddraftfromfile"))
 		{
-			m_imapAction					 = nsImapAppendMsgFromFile;
+			m_imapAction					 = nsImapAppendDraftFromFile;
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+            ParseUidChoice();
+            if (m_tokenPlaceHolder && *m_tokenPlaceHolder)
+                ParseListOfMessageIds();
+            else
+                m_listOfMessageIds = PL_strdup("");
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "subscribe"))
 		{
@@ -1002,6 +1008,7 @@ NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
 
 NS_IMETHODIMP nsImapUrl::SetCopyState(void* copyState)
 {
+    if (!copyState) return NS_ERROR_NULL_POINTER;
     NS_LOCK_INSTANCE();
     m_copyState = copyState;
     NS_UNLOCK_INSTANCE();
@@ -1016,6 +1023,30 @@ NS_IMETHODIMP nsImapUrl::GetCopyState(void** copyState)
     NS_UNLOCK_INSTANCE();
     if (*copyState) return NS_OK;
     return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsImapUrl::SetMsgFileSpec(nsIFileSpec* fileSpec)
+{
+    nsresult rv = NS_OK;
+    NS_LOCK_INSTANCE();
+    if (fileSpec)
+        m_fileSpec = do_QueryInterface(fileSpec, &rv);
+    else
+        m_fileSpec = null_nsCOMPtr();
+    NS_UNLOCK_INSTANCE();
+    return rv;
+}
+
+NS_IMETHODIMP
+nsImapUrl::GetMsgFileSpec(nsIFileSpec** fileSpec)
+{
+    if (!fileSpec) return NS_ERROR_NULL_POINTER;
+    NS_LOCK_INSTANCE();
+    *fileSpec = m_fileSpec;
+    NS_ADDREF(*fileSpec);
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::GetAllowContentChange(PRBool *result)
@@ -1119,7 +1150,7 @@ void nsImapUrl::ParseMsgFlags()
 		m_flags = 0;
 }
 
-void nsImapUrl::ParseListofMessageIds()
+void nsImapUrl::ParseListOfMessageIds()
 {
 	m_listOfMessageIds = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (!m_listOfMessageIds)

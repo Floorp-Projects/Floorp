@@ -142,6 +142,16 @@ public:
                                  nsIUrlListener* aUrlListener,
                                  nsIURI** aURL,
                                  void* copyState) = 0;
+    NS_IMETHOD AppendMessageFromFile(nsIEventQueue* aClientEventQ,
+                                     nsIFileSpec* aFileSpec,
+                                     nsIMsgFolder* aDstFolder,
+                                     const char* messageId, // to replace with
+                                     PRBool idsAreUids,
+                                     PRBool inSelectedState, // needs to be in
+                                     nsIUrlListener* aUrlListener,
+                                     nsIURI** aURL,
+                                     void* copyState) = 0;
+                                     
 };
 
 

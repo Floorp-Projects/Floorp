@@ -24,7 +24,7 @@
 #include "nsIMsgMailNewsUrl.h"
 
 #include "nsISupports.h"
-#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 
 /* include all of our event sink interfaces */
 #include "nsIImapLog.h"
@@ -79,7 +79,7 @@ public:
 		nsImapDiscoverLevelChildrenUrl			= 0x0000000C,
 		nsImapDiscoverAllBoxesUrl				= 0x0000000D,
 		nsImapDiscoverAllAndSubscribedBoxesUrl	= 0x0000000E,
-		nsImapAppendMsgFromFile					= 0x0000000F,
+		nsImapAppendMsgFromFile		   	        = 0x0000000F,
 		nsImapSubscribe							= 0x00000010,
 		nsImapUnsubscribe						= 0x00000011,
 		nsImapRefreshACL						= 0x00000012,
@@ -110,10 +110,12 @@ public:
 		nsImapOnlineMove						= 0x10000021,
 		nsImapOnlineToOfflineCopy				= 0x10000022,
 		nsImapOnlineToOfflineMove				= 0x10000023,
-		nsImapOfflineToOnlineMove				= 0x10000024,
-		nsImapBiff								= 0x10000025,
-		nsImapSelectNoopFolder					= 0x10000026,
-        nsImapUidExpunge                        = 0x10000027
+        nsImapOfflineToOnlineCopy               = 0x10000024,
+		nsImapOfflineToOnlineMove				= 0x10000025,
+		nsImapBiff								= 0x10000026,
+		nsImapSelectNoopFolder					= 0x10000027,
+        nsImapAppendDraftFromFile                 = 0x10000028,
+        nsImapUidExpunge                        = 0x10000029
 	} nsImapAction;
 
 	// Initialization method used to initialize the url...right now
@@ -172,6 +174,9 @@ public:
 
     NS_IMETHOD SetCopyState(void* copyState) = 0;
     NS_IMETHOD GetCopyState(void** copyState) = 0;
+
+    NS_IMETHOD SetMsgFileSpec(nsIFileSpec* aFileSpec) = 0;
+    NS_IMETHOD GetMsgFileSpec(nsIFileSpec** aFileSpec) = 0;
 
 };
 

@@ -80,6 +80,9 @@ public:
 
     NS_IMETHOD SetCopyState(void* copyState);
     NS_IMETHOD GetCopyState(void** copyState);
+    
+    NS_IMETHOD SetMsgFileSpec(nsIFileSpec* fileSpec);
+    NS_IMETHOD GetMsgFileSpec(nsIFileSpec** fileSpec);
 
 	// nsImapUrl
 	nsImapUrl();
@@ -100,7 +103,7 @@ protected:
 	void		ParseChildDiscoveryDepth();
 	void		ParseUidChoice();
 	void		ParseMsgFlags();
-	void		ParseListofMessageIds();
+	void		ParseListOfMessageIds();
 
     char        *m_sourceCanonicalFolderPathSubString;
     char        *m_destinationCanonicalFolderPathSubString;
@@ -131,6 +134,7 @@ protected:
   
     // online message copy support; i don't have a better solution yet
     void* m_copyState;
+    nsCOMPtr<nsIFileSpec> m_fileSpec;
 };
 
 #endif /* nsImapUrl_h___ */

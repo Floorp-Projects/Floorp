@@ -156,6 +156,9 @@ void nsImapServerResponseParser::InitializeState()
 void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentCommand)
 {
 
+    NS_ASSERTION(currentCommand && *currentCommand != '\r' && 
+                 *currentCommand != '\n' && *currentCommand != ' ', 
+                 "Invailid command string");
 	// Reinitialize the parser
 	SetConnected(PR_TRUE);
 	SetSyntaxError(PR_FALSE);

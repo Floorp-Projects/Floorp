@@ -59,6 +59,12 @@ public:
                                 nsMsgKeyArray* keyArray, 
                                 const char *msgIdString,
                                 void* copyState) = 0;
+  NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
+                             nsMsgKey newKey,
+                             void* copyState) = 0;
+  NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
+                          nsString2* messageId,
+                          void* copyState) = 0;
 };
 
 #endif

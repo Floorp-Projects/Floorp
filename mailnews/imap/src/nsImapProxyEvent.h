@@ -183,6 +183,12 @@ public:
                                   nsMsgKeyArray* aKeyArray,
                                   const char* msgIdString,
                                   void* copyState);
+    NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
+                               nsMsgKey aKey,
+                               void* copyState);
+    NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
+                            nsString2* messageId,
+                            void* copyState);
     
     nsIImapExtensionSink* m_realImapExtensionSink;
 };
@@ -587,6 +593,26 @@ struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent
     NS_IMETHOD HandleEvent();
     nsMsgKeyArray m_copyKeyArray;
     nsString2 m_msgIdString;
+    void* m_copyState;
+};
+
+struct SetAppendMsgUidProxyEvent : nsImapExtensionSinkProxyEvent
+{
+    SetAppendMsgUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
+                              nsMsgKey aKey, void* copyState);
+    virtual ~SetAppendMsgUidProxyEvent();
+    NS_IMETHOD HandleEvent();
+    nsMsgKey m_key;
+    void* m_copyState;
+};
+
+struct GetMessageIdProxyEvent : nsImapExtensionSinkProxyEvent
+{
+    GetMessageIdProxyEvent(nsImapExtensionSinkProxy* aProxy,
+                           nsString2* messageId, void* copyState);
+    virtual ~GetMessageIdProxyEvent();
+    NS_IMETHOD HandleEvent();
+    nsString2* m_messageId;
     void* m_copyState;
 };
 

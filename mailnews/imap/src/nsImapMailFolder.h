@@ -54,7 +54,8 @@ struct nsImapMailCopyState
     nsCOMPtr<nsISupportsArray> messages;
     nsCOMPtr<nsMsgTxn> undoMsgTxn;
     nsCOMPtr<nsIMessage> message;
-    nsCOMPtr<nsISupports> clientSupport;
+    nsCOMPtr<nsIMsgCopyServiceListener> listener;
+
     nsIMsgMessageService* msgService;
     PRBool isMoveOrDraft;
     PRUint32 curIndex;
@@ -129,12 +130,13 @@ public:
                               deleteStorage);
     NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, 
                             nsISupportsArray* messages,
-                            PRBool isMove, nsITransactionManager* txnMgr);
+                            PRBool isMove, nsITransactionManager* txnMgr,
+                            nsIMsgCopyServiceListener* listener);
     NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
                                nsIMessage* msgToReplace,
-                               PRBool isDraft,
-                               nsISupports* clientSupport,
-                               nsITransactionManager* txnMgr);
+                               PRBool isDraftOrTemplate,
+                               nsITransactionManager* txnMgr,
+                               nsIMsgCopyServiceListener* listener);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
                                          **message);
     NS_IMETHOD GetNewMessages();
@@ -231,6 +233,12 @@ public:
                                   nsMsgKeyArray* keyArray,
                                   const char* msgIdString,
                                   void* copyState);
+    NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
+                               nsMsgKey aKey,
+                               void* copyState);
+    NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
+                            nsString2* messageId,
+                            void* copyState);
     
     // nsIImapMiscellaneousSink methods
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
@@ -314,10 +322,12 @@ protected:
     nsresult CopyMessages2(nsIMsgFolder* srcFolder,
                            nsISupportsArray* messages,
                            PRBool isMove,
-                           nsITransactionManager* txnMgr);
+                           nsITransactionManager* txnMgr,
+                           nsIMsgCopyServiceListener* listener);
     nsresult InitCopyState(nsISupports* srcSupport, 
                            nsISupportsArray* messages,
-                           PRBool isMoveOrDraft);
+                           PRBool isMoveOrDraft,
+                           nsIMsgCopyServiceListener* listener);
     void ClearCopyState(nsresult exitCode);
     nsresult SetTransactionManager(nsITransactionManager* txnMgr);
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,

@@ -262,10 +262,16 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	delete[] uriStr;
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
-	if(name == "Inbox")
+	if(name == "Inbox" || name == "INBOX")
 		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
 	else if(name == "Trash")
 		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+    else if(name == "Sent")
+        folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
+    else if(name == "Drafts")
+        folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+    else if (name == "Templates")
+        folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 
 	nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
 	NS_ASSERTION(supports, "couldn't get isupports from imap folder");
@@ -992,7 +998,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         nsMsgKeyArray srcKeyArray;
         rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
         if (NS_FAILED(rv)) return rv;
-        rv = InitCopyState(srcSupport, messages, PR_TRUE);
+        rv = InitCopyState(srcSupport, messages, PR_TRUE, nsnull);
         NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
         if (NS_SUCCEEDED(rv) && imapService)
             rv = imapService->OnlineMessageCopy(m_eventQueue,
@@ -1017,10 +1023,6 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                 rv = undoMsgTxn->SetUndoString(&undoString);
                 rv = undoMsgTxn->SetRedoString(&redoString);
             }
-//            if (mDatabase)
-//            {
-//                mDatabase->DeleteMessages(&srcKeyArray, nsnull);
-//            }
         }
     }
     return rv;
@@ -2375,6 +2377,14 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     ClearCopyState(aExitCode);
                 }
                 break;
+            case nsIImapUrl::nsImapAppendMsgFromFile:
+            case nsIImapUrl::nsImapAppendDraftFromFile:
+                if (m_copyState)
+                {
+                    // for now
+                    ClearCopyState(aExitCode);
+                }
+                break;
             default:
                 break;
             }
@@ -2464,6 +2474,36 @@ nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
     
     return NS_OK;
 }    
+
+NS_IMETHODIMP
+nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
+                                  nsMsgKey aKey,
+                                  void* copyState)
+{
+    nsresult rv = NS_OK;
+    if (copyState)
+    {
+        nsImapMailCopyState* mailCopyState = (nsImapMailCopyState*) copyState;
+        if (mailCopyState->listener)
+            mailCopyState->listener->SetMessageKey(aKey);
+    }
+    return NS_OK;
+}    
+
+NS_IMETHODIMP
+nsImapMailFolder::GetMessageId(nsIImapProtocol* aProtocl,
+                               nsString2* messageId,
+                               void* copyState)
+{
+    nsresult rv = NS_OK;
+    if (copyState)
+    {
+        nsImapMailCopyState* mailCopyState = (nsImapMailCopyState*) copyState;
+        if (mailCopyState->listener)
+            rv = mailCopyState->listener->GetMessageId(messageId);
+    }
+    return rv;
+}
     // nsIImapMiscellaneousSink methods
 NS_IMETHODIMP
 nsImapMailFolder::AddSearchResult(nsIImapProtocol* aProtocol, 
@@ -2667,7 +2707,8 @@ nsresult
 nsImapMailFolder::CopyMessages2(nsIMsgFolder* srcFolder,
                                 nsISupportsArray* messages,
                                 PRBool isMove,
-                                nsITransactionManager* txnMsg)
+                                nsITransactionManager* txnMsg,
+                                nsIMsgCopyServiceListener* listener)
 {
     nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
     return rv;
@@ -2677,7 +2718,8 @@ NS_IMETHODIMP
 nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
                                nsISupportsArray* messages,
                                PRBool isMove,
-                               nsITransactionManager* txnMgr)
+                               nsITransactionManager* txnMgr,
+                               nsIMsgCopyServiceListener* listener)
 {
     nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
     char *uri = nsnull;
@@ -2698,7 +2740,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     if (NS_FAILED(rv)) goto done;
     if (!protocolType.EqualsIgnoreCase("imap"))
     {
-        rv = CopyMessages2(srcFolder, messages, isMove, txnMgr);
+        rv = CopyMessages2(srcFolder, messages, isMove, txnMgr, listener);
         goto done;
     }
     rv = srcFolder->GetHostname(&hostname1);
@@ -2712,7 +2754,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     if (PL_strcmp(hostname1, hostname2) || // *** different server or account
         PL_strcmp(username1, username2))   // do stream base copy
     {
-        rv = CopyMessages2(srcFolder, messages, isMove, txnMgr);
+        rv = CopyMessages2(srcFolder, messages, isMove, txnMgr, listener);
         goto done;
     }
 
@@ -2723,7 +2765,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     srcSupport = do_QueryInterface(srcFolder);
 	rv = QueryInterface(nsIUrlListener::GetIID(), getter_AddRefs(urlListener));
 
-    rv = InitCopyState(srcSupport, messages, isMove);
+    rv = InitCopyState(srcSupport, messages, isMove, listener);
     if (NS_FAILED(rv)) goto done;
 
     if (imapService)
@@ -2762,11 +2804,45 @@ nsImapMailFolder::SetTransactionManager(nsITransactionManager* txnMgr)
 NS_IMETHODIMP
 nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                   nsIMessage* msgToReplace,
-                                  PRBool isDraft,
-                                  nsISupports* aSupport,
-                                  nsITransactionManager* txnMgr)
+                                  PRBool isDraftOrTemplate,
+                                  nsITransactionManager* txnMgr,
+                                  nsIMsgCopyServiceListener* listener)
 {
-    nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsMsgKey key = 0xffffffff;
+    nsString2 messageId("", eOneByte);
+    nsCOMPtr<nsIUrlListener> urlListener;
+    nsCOMPtr<nsISupports> srcSupport;
+    nsCOMPtr<nsISupportsArray> messages;
+
+    if (!fileSpec) return rv;
+
+    srcSupport = do_QueryInterface(fileSpec, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewISupportsArray(getter_AddRefs(messages));
+    if (NS_FAILED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = QueryInterface(nsIUrlListener::GetIID(), getter_AddRefs(urlListener));
+
+    if (msgToReplace)
+    {
+        rv = msgToReplace->GetMessageKey(&key);
+        if (NS_SUCCEEDED(rv))
+            messageId.Append((PRInt32) key);
+    }
+
+    rv = InitCopyState(srcSupport, messages, isDraftOrTemplate, listener);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = imapService->AppendMessageFromFile(m_eventQueue, fileSpec, this,
+                                            messageId.GetBuffer(),
+                                            PR_TRUE, isDraftOrTemplate,
+                                            urlListener, nsnull,
+                                            (void*) m_copyState);
     return rv;
 }
 
@@ -2794,7 +2870,8 @@ nsImapMailCopyState::~nsImapMailCopyState()
 nsresult
 nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
                                 nsISupportsArray* messages,
-                                PRBool isMoveOrDraft)
+                                PRBool isMoveOrDraft,
+                                nsIMsgCopyServiceListener* listener)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
 
@@ -2814,6 +2891,9 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
             rv = messages->Count(&m_copyState->totalCount);
     }
     m_copyState->isMoveOrDraft = isMoveOrDraft;
+
+    if (listener)
+        m_copyState->listener = do_QueryInterface(listener, &rv);
         
     return rv;
 }

@@ -1138,6 +1138,61 @@ nsImapExtensionSinkProxy::SetCopyResponseUid(nsIImapProtocol* aProtocol,
     return res;
 }
 
+NS_IMETHODIMP
+nsImapExtensionSinkProxy::SetAppendMsgUid(nsIImapProtocol* aProtocol,
+                                          nsMsgKey aKey,
+                                          void* copyState)
+{
+    nsresult res = NS_OK;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        SetAppendMsgUidProxyEvent *ev =
+            new SetAppendMsgUidProxyEvent(this, aKey, copyState);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res = m_realImapExtensionSink->SetAppendMsgUid(aProtocol,
+                                                       aKey,
+                                                       copyState);
+    }
+    return res;
+}
+
+NS_IMETHODIMP
+nsImapExtensionSinkProxy::GetMessageId(nsIImapProtocol* aProtocol,
+                                       nsString2* messageId,
+                                       void* copyState)
+{
+    nsresult res = NS_OK;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        GetMessageIdProxyEvent *ev =
+            new GetMessageIdProxyEvent(this, messageId, copyState);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
+            ev->PostEvent(m_eventQueue);
+        }
+    }
+    else
+    {
+        res = m_realImapExtensionSink->GetMessageId(aProtocol,
+                                                    messageId,
+                                                    copyState);
+    }
+    return res;
+}
+
 nsImapMiscellaneousSinkProxy::nsImapMiscellaneousSinkProxy(
     nsIImapMiscellaneousSink* aImapMiscellaneousSink, 
     nsIImapProtocol* aProtocol,
@@ -2905,6 +2960,48 @@ SetCopyResponseUidProxyEvent::HandleEvent()
     nsresult res = m_proxy->m_realImapExtensionSink->SetCopyResponseUid(
         m_proxy->m_protocol, &m_copyKeyArray, m_msgIdString.GetBuffer(),
         m_copyState);
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+
+SetAppendMsgUidProxyEvent::SetAppendMsgUidProxyEvent(
+    nsImapExtensionSinkProxy* aProxy, nsMsgKey aKey, void* copyState) :
+    nsImapExtensionSinkProxyEvent(aProxy), m_key(aKey), 
+    m_copyState(copyState)
+{
+}
+
+SetAppendMsgUidProxyEvent::~SetAppendMsgUidProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+SetAppendMsgUidProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapExtensionSink->SetAppendMsgUid(
+        m_proxy->m_protocol, m_key, m_copyState);
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+
+GetMessageIdProxyEvent::GetMessageIdProxyEvent(
+    nsImapExtensionSinkProxy* aProxy, nsString2* messageId, void* copyState) :
+    nsImapExtensionSinkProxyEvent(aProxy), m_messageId(messageId), 
+    m_copyState(copyState)
+{
+}
+
+GetMessageIdProxyEvent::~GetMessageIdProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+GetMessageIdProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapExtensionSink->GetMessageId(
+        m_proxy->m_protocol, m_messageId, m_copyState);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

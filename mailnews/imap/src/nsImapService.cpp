@@ -1067,9 +1067,11 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
                                  urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
-        SetImapUrlSink(aSrcFolder, imapUrl);
         // **** fix me with real host hierarchy separator
         char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
+        SetImapUrlSink(aSrcFolder, imapUrl);
+        imapUrl->SetCopyState(copyState);
+
         if (isMove)
             urlSpec.Append("/onlinemove>");
         else
@@ -1092,8 +1094,6 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         GetFolderName(aDstFolder, folderName);
         urlSpec.Append(folderName);
 
-        imapUrl->SetCopyState(copyState);
-
 		nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
 		if (NS_SUCCEEDED(rv) && url)
 			rv = url->SetSpec(urlSpec.GetBuffer());
@@ -1106,6 +1106,67 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
     PR_FREEIF(srcUsername);
     PR_FREEIF(dstHostname);
     PR_FREEIF(dstUsername);
+    return rv;
+}
+
+/* append message from file url */
+/* imap://HOST>appendmsgfromfile>DESTINATIONMAILBOXPATH */
+/* imap://HOST>appenddraftfromfile>DESTINATIONMAILBOXPATH>UID>messageId */
+NS_IMETHODIMP
+nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
+                                     nsIFileSpec* aFileSpec,
+                                     nsIMsgFolder* aDstFolder,
+                                     const char* messageId, // te be replaced
+                                     PRBool idsAreUids,
+                                     PRBool inSelectedState, // needs to be in
+                                     nsIUrlListener* aListener,
+                                     nsIURI** aURL,
+                                     void* aCopyState)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!aClientEventQueue || !aFileSpec || !aDstFolder)
+        return rv;
+    nsIImapUrl* imapUrl = nsnull;
+    nsString2 urlSpec("", eOneByte);
+
+    rv = CreateStartOfImapUrl(imapUrl, aDstFolder, urlSpec);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        // **** fix me with real host hierarchy separator
+        char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
+        SetImapUrlSink(aDstFolder, imapUrl);
+        imapUrl->SetMsgFileSpec(aFileSpec);
+        imapUrl->SetCopyState(aCopyState);
+
+        if (inSelectedState)
+            urlSpec.Append("/appenddraftfromfile>");
+        else
+            urlSpec.Append("/appendmsgfromfile>");
+
+        urlSpec.Append(hierarchySeparator);
+        
+        nsString2 folderName("", eOneByte);
+        GetFolderName(aDstFolder, folderName);
+        urlSpec.Append(folderName);
+
+        if (inSelectedState)
+        {
+            urlSpec.Append('>');
+            if (idsAreUids)
+                urlSpec.Append(uidString);
+            else
+                urlSpec.Append(sequenceString);
+            urlSpec.Append('>');
+            if (messageId)
+                urlSpec.Append(messageId);
+        }
+        nsCOMPtr<nsIURI> url = do_QueryInterface(imapUrl, &rv);
+        if (NS_SUCCEEDED(rv))
+            rv = url->SetSpec(urlSpec.GetBuffer());
+        if (NS_SUCCEEDED(rv))
+            rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                             aListener, nsnull, aURL);
+    }
     return rv;
 }
 
@@ -1596,26 +1657,6 @@ char *CreateImapManageMailAccountUrl(const char *imapHost)
 	return returnString;
 }
 
-/* append message from file url */
-/* imap4://HOST>appendmsgfromfile>DESTINATIONMAILBOXPATH */
-char *CreateImapAppendMessageFromFileUrl(const char *imapHost,
-										 const char *destinationMailboxPath,
-										 const char hierarchySeparator,
-										 XP_Bool isDraft)
-{
-	const char *formatString = isDraft ? "appenddraftfromfile>%c%s" :
-		"appendmsgfromfile>%c%s";
-	char *returnString = 
-	  createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) +
-						   XP_STRLEN(destinationMailboxPath));
-
-	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, 
-				hierarchySeparator, destinationMailboxPath);
-   /* Reviewed 4.51 safe use of sprintf */
-
-	return returnString;
-}
 
 /* Subscribe to a mailbox on the given IMAP host */
 char *CreateIMAPSubscribeMailboxURL(const char *imapHost, const char *mailboxName, char delimiter)

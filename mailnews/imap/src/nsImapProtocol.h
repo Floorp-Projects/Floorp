@@ -109,7 +109,7 @@ public:
 
 	NS_IMETHOD GetDisplayStream (nsIWebShell **webShell);
     // Tell thread to die. This can only be called by imap service
-    NS_IMETHOD TellThreadToDie(PRBool isSafeToDie);
+    NS_IMETHOD TellThreadToDie(PRBool isSafeToClose);
     // Get last active time stamp
     NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp);
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -222,6 +222,7 @@ public:
                              imapMessageFlagsType flags,
                              PRBool addFlags);
 	void Expunge();
+    void UidExpunge(const char* messageSet);
 	void Close();
 	void Check();
 	void SelectMailbox(const char *mailboxName);
@@ -356,9 +357,15 @@ private:
 	void WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
 	void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString);
 	void HeaderFetchCompleted();
+    void UploadMessageFromFile(nsIFileSpec* fileSpec, const char* mailboxName,
+                               imapMessageFlagsType flags);
 
 	// mailbox name utilities.
 	char *CreateEscapedMailboxName(const char *rawName);
+    void SetupMessageFlagsString(nsString2& flagString,
+                                 imapMessageFlagsType flags,
+                                 PRUint16 userFlags);
+                                 
 
 	// header listing data
 	PRBool		m_fetchMsgListIsNew;
@@ -410,6 +417,7 @@ private:
 	void OnOfflineToOnlineMove();
 	void OnAppendMsgFromFile();
 	char * OnCreateServerSourceFolderPathString();
+    char * OnCreateServerDestinationFolderPathString();
 	void OnCreateFolder(const char * aSourceMailbox);
 	void OnSubscribe(const char * aSourceMailbox);
 	void OnUnsubscribe(const char * aSourceMailbox);
