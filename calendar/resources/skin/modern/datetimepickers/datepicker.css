@@ -1,0 +1,33 @@
+/*--------------------------------------------------------------------
+ *   Date field and button (modified from skin/eventDialog.css)
+ *-------------------------------------------------------------------*/
+
+.datepicker-box-class {
+}
+
+.datepicker-text-class {
+}
+
+.datepicker-button-class {
+  background-image  : url( "chrome://calendar/skin/datetimepickers/calendar_up.gif" );
+  background-repeat : no-repeat;
+  background-position : left center;
+}
+
+.datepicker-button-class[disabled="true"],
+.datepicker-button-class[disabled="true"]:hover,
+.datepicker-button-class[disabled="true"]:hover:active {
+  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_disabled.gif" );
+}
+
+.datepicker-button-class:hover {
+  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_hover.gif" );
+}
+
+.datepicker-button-class:hover:active {
+  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_down.gif" );
+}
+
+.menu-right {
+  visibility : hidden;
+}
