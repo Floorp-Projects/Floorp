@@ -7001,7 +7001,13 @@ nsTableFrame::PaintBCBorders(nsIRenderingContext& aRenderingContext,
     if (!iter.IsTopMost() && (isSegStart || iter.IsBottomMost() || afterRepeatedHeader || startRepeatedFooter)) {
       // paint the previous seg or the current one if iter.IsBottomMost()
       if (info.segHeight > 0) {
-        cornerSubWidth = (iter.bcData) ? iter.bcData->GetCorner(ownerSide, bevel) : 0;
+        if (iter.bcData) {
+          cornerSubWidth = iter.bcData->GetCorner(ownerSide, bevel);
+        } else {
+          cornerSubWidth = 0;
+          ownerSide = 0; // ???
+          bevel = PR_FALSE; // ???
+        }
         PRBool endBevel = (info.segWidth > 0) ? bevel : PR_FALSE; 
         nscoord bottomHorSegHeight = PR_MAX(prevHorSegHeight, horSegHeight); 
         nscoord endOffset = CalcVerCornerOffset(ownerSide, cornerSubWidth, bottomHorSegHeight, 

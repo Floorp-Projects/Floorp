@@ -349,7 +349,6 @@ nsPresContext::GetFontPreferences()
       case eDefaultFont_Monospace: font = &mDefaultMonospaceFont; break;
       case eDefaultFont_Cursive:   font = &mDefaultCursiveFont;   break;
       case eDefaultFont_Fantasy:   font = &mDefaultFantasyFont;   break;
-      default: NS_ERROR("not reached - bogus to silence some compilers"); break;
     }
 
     // set the default variable font (the other fonts are seen as 'generic' fonts
