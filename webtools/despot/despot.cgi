@@ -1003,7 +1003,7 @@ sub FileMatches {
     } elsif ($pattern =~ /\*$/) {
         $regexp =~ s:\*$:.*:;
     }
-    if ($name =~ /$pattern/) {
+    if ($name =~ /$regexp/) {
         return 1;
     }
     return 0;
