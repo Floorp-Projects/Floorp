@@ -13,7 +13,9 @@ objs = 	hash.o \
 	utilities.o \
 	world.o \
 	vmtypes.o \
-	debugger.o
+	debugger.o \
+    xmlparser.o \
+    icodeasm.o
 
 test_objs = hash.o \
 	icodeasm.o \
