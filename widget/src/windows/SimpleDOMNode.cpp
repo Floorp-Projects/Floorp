@@ -57,7 +57,7 @@
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-//#define DEBUG_LEAKS
+#define DEBUG_LEAKS 1
 
 #ifdef DEBUG_LEAKS
 static gSimpleDOMNodes = 0;
