@@ -88,3 +88,20 @@ PhDrawContext_t *nsToolkit::GetDefaultPhotonDrawContext()
 
   return nsToolkit::mDefaultPhotonDrawContext;
 }
+
+PhPoint_t nsToolkit::GetConsoleOffset()
+{
+  PhRect_t  console;
+  char        *p = NULL;
+  int            inp_grp = 0;
+  
+   p = getenv("PHIG");
+   if (p)
+   {
+      inp_grp = atoi(p);
+      if (PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, inp_grp, &console ) == 0)
+        return(PhPoint_t)  {console.ul.x, console.ul.y};
+   }
+
+   return(PhPoint_t)  {0,0};
+}
