@@ -708,6 +708,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	ptr = PL_strcasestr(m_responseText, "DSN");
 	if (ptr && nsCRT::ToUpper(*(ptr-1)) != 'X')
 	{
+		// temporary hack to disable return receipts until we have a preference to handle it...
 		SetFlag(SMTP_EHLO_DSN_ENABLED);
 		ClearFlag(SMTP_EHLO_DSN_ENABLED); 
 	}
