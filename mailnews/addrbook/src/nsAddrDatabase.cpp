@@ -172,7 +172,7 @@ nsAddrDatabase::~nsAddrDatabase()
         delete m_ChangeListeners;
     }
 
-	CleanupCache();
+	RemoveFromCache(this);
 
 	if (m_pAnonymousStrAttributes)
 		RemoveAnonymousList(m_pAnonymousStrAttributes);
@@ -558,7 +558,7 @@ NS_IMETHODIMP nsAddrDatabase::Open
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
-	pAddressBookDB->AddRef();
+	NS_ADDREF(pAddressBookDB);
 
 	err = pAddressBookDB->OpenMDB(pabName, create);
 	if (NS_SUCCEEDED(err)) 
@@ -567,7 +567,6 @@ NS_IMETHODIMP nsAddrDatabase::Open
 		*pAddrDB = pAddressBookDB;
 		if (pAddressBookDB)  
 			GetDBCache()->AppendElement(pAddressBookDB);
-		NS_IF_ADDREF(*pAddrDB);
 	}
 	else 
 	{
@@ -721,6 +720,11 @@ NS_IMETHODIMP nsAddrDatabase::CloseMDB(PRBool commit)
 {
 	if (commit)
 		Commit(kSessionCommit);
+	if (m_mdbStore)
+	{
+		m_mdbStore->CloseMdbObject(m_mdbEnv);
+		m_mdbStore = nsnull;
+	}
 	return NS_OK;
 }
 
@@ -765,11 +769,6 @@ NS_IMETHODIMP nsAddrDatabase::ForceClosed()
 	RemoveFromCache(this);
 
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
-	if (m_mdbStore)
-	{
-		m_mdbStore->CloseMdbObject(m_mdbEnv);
-		m_mdbStore = nsnull;
-	}
 	Release();
 	return err;
 }

@@ -45,8 +45,6 @@ nsAbCard::~nsAbCard(void)
 	{
 		nsIAddrDBListener* listener = this;
 		mCardDatabase->RemoveListener(listener);
-
-		mCardDatabase->Close(PR_TRUE);
 		mCardDatabase = null_nsCOMPtr();
 	}
 

@@ -163,10 +163,7 @@ nsAbCardProperty::~nsAbCardProperty(void)
 		RemoveAnonymousList(m_pAnonymousBoolValues);
 
 	if (mCardDatabase)
-	{
-		mCardDatabase->Close(PR_TRUE);
 		mCardDatabase = null_nsCOMPtr();
-	}
 }
 
 nsresult nsAbCardProperty::RemoveAnonymousList(nsVoidArray* pArray)
