@@ -3073,6 +3073,14 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     }
     else if (!DeathSignalReceived())
       GetServerStateParser().ResetFlagInfo(0);
+
+	if (!DeathSignalReceived())
+	{
+      nsImapAction imapAction; 
+      nsresult res = m_runningUrl->GetImapAction(&imapAction);
+	  if (NS_SUCCEEDED(res) && imapAction == nsIImapUrl::nsImapLiteSelectFolder)
+          return;
+	}
         
     nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec();
   if (new_spec && !DeathSignalReceived())
