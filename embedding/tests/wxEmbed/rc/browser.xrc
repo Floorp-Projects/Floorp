@@ -5,7 +5,7 @@
   <object class="wxFrame" name="browser_frame">
     <title>wxEmbed Browser</title>
     <size>300,300</size>
-    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxCLIP_CHILDREN</style>
+    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxMINIMIZE_BOX|wxMAXIMIZE_BOX|wxCLIP_CHILDREN</style>
     <pos>-1,-1</pos>
 
     <!-- Browser context menus -->
@@ -160,7 +160,7 @@
       <object class="sizeritem">
         <flag>wxGROW|wxALL</flag>
         <object class="wxPanel" name="gecko" subclass="GeckoWindow">
-          <style>wxCLIP_CHILDREN|wxSUNKEN_BORDER</style>
+          <style>wxCLIP_CHILDREN|wxSUNKEN_BORDER|wxTAB_TRAVERSAL</style>
           <size>500,280</size>
         </object>
       </object>

@@ -176,21 +176,40 @@ SOURCE=.\MailFrame.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Group "Image Files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\rc\aligncenter.gif
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\alignleft.gif
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\alignright.gif
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\anchor.gif
+# End Source File
 # Begin Source File
 
 SOURCE=.\rc\back.gif
 # End Source File
 # Begin Source File
 
-SOURCE=.\rc\browser.xrc
+SOURCE=.\rc\background.gif
 # End Source File
 # Begin Source File
 
-SOURCE=.\rc\chat.xrc
+SOURCE=.\rc\bold.gif
 # End Source File
 # Begin Source File
 
-SOURCE=.\rc\editor.xrc
+SOURCE=.\rc\decreasefont.gif
 # End Source File
 # Begin Source File
 
@@ -206,7 +225,23 @@ SOURCE=.\rc\home.gif
 # End Source File
 # Begin Source File
 
-SOURCE=.\rc\mail.xrc
+SOURCE=.\rc\increasefont.gif
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\indent.gif
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\italic.gif
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\outdent.gif
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\pen.gif
 # End Source File
 # Begin Source File
 
@@ -215,6 +250,27 @@ SOURCE=.\rc\reload.gif
 # Begin Source File
 
 SOURCE=.\rc\stop.gif
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\underline.gif
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\rc\browser.xrc
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\chat.xrc
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\editor.xrc
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\mail.xrc
 # End Source File
 # Begin Source File
 
@@ -232,10 +288,6 @@ SOURCE=.\resource.cpp
 # Begin Group "External Files"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE="..\wxWindows-2.4.0\docs\tech\tn0014.txt"
-# End Source File
 # End Group
 # Begin Source File
 

@@ -47,6 +47,9 @@ protected:
 public:
     GeckoFrame();
 
+    DECLARE_EVENT_TABLE()
+    void OnActivate(wxActivateEvent &event);
+
     // This method searches for a "gecko" wxWindow and sets it up with the frame
     // as the container UI. The results are stored in the mGeckoWnd and mWebBrowser
     // member variables.
@@ -54,6 +57,9 @@ public:
     // This method sets up the specified window with the specified container UI
     // and returns the nsIWebBrowser interface to it.
     bool SetupGeckoWindow(GeckoWindow *aGeckoWindow, GeckoContainerUI *aUI, nsIWebBrowser **aWebBrowser) const;
+
+    // GeckoContainerUI overrides
+    void SetFocus();
 };
 
 #endif

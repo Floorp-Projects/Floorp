@@ -32,6 +32,7 @@
 #include "global.h"
 
 #include "GeckoWindow.h"
+#include "nsIWebBrowserFocus.h"
 
 IMPLEMENT_DYNAMIC_CLASS(GeckoWindow, wxPanel)
 
@@ -56,7 +57,9 @@ void GeckoWindow::SetGeckoContainer(GeckoContainer *aGeckoContainer)
 }
 
 BEGIN_EVENT_TABLE(GeckoWindow, wxPanel)
-    EVT_SIZE(GeckoWindow::OnSize)
+    EVT_SIZE(      GeckoWindow::OnSize)
+    EVT_SET_FOCUS( GeckoWindow::OnSetFocus)
+    EVT_KILL_FOCUS(GeckoWindow::OnKillFocus)
 END_EVENT_TABLE()
 
 void GeckoWindow::OnSize(wxSizeEvent &event)
@@ -76,4 +79,12 @@ void GeckoWindow::OnSize(wxSizeEvent &event)
             0, 0, size.GetWidth(), size.GetHeight(), PR_TRUE);
         webBrowserAsWin->SetVisibility(PR_TRUE);
     }
+}
+
+void GeckoWindow::OnSetFocus(wxFocusEvent &event)
+{
+}
+
+void GeckoWindow::OnKillFocus(wxFocusEvent &event)
+{
 }

@@ -169,7 +169,7 @@ void EmbedApp::OnAbout(wxCommandEvent & WXUNUSED(event))
 void EmbedApp::OnMail(wxCommandEvent & WXUNUSED(event))
 {
     // Create the mail frame window
-    static MailFrame * frame = NULL;
+    MailFrame * frame = (MailFrame *) wxWindow::FindWindowByName("mail", NULL);;
     if (!frame)
         frame = new MailFrame(NULL);
     if (frame)
@@ -178,7 +178,7 @@ void EmbedApp::OnMail(wxCommandEvent & WXUNUSED(event))
 
 void EmbedApp::OnChat(wxCommandEvent & WXUNUSED(event))
 {
-    static ChatFrame * frame = NULL;
+    ChatFrame * frame = (ChatFrame *) wxWindow::FindWindowByName("chat", NULL);
     if (!frame)
         frame = new ChatFrame(NULL);
     if (frame)
@@ -187,7 +187,7 @@ void EmbedApp::OnChat(wxCommandEvent & WXUNUSED(event))
 
 void EmbedApp::OnEditor(wxCommandEvent & WXUNUSED(event))
 {
-    static EditorFrame * frame = NULL;
+    EditorFrame * frame = (EditorFrame *) wxWindow::FindWindowByName("editor", NULL);
     if (!frame)
         frame = new EditorFrame(NULL);
     if (frame)

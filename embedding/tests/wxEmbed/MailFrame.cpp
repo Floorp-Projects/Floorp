@@ -148,6 +148,8 @@ MailFrame::MailFrame(wxWindow* aParent)
 {
     wxXmlResource::Get()->LoadFrame(this, aParent, wxT("mail_frame"));
 
+    SetName("mail");
+
     SetIcon(wxICON(appicon));
 
     if (!gMailChannelCallbackRegistered)

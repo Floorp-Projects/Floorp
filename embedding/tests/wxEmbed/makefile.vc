@@ -45,6 +45,7 @@ MOZINC = \
   -I$(MOZSDK)\include\embed_base \
   -I$(MOZSDK)\include\windowwatcher \
   -I$(MOZSDK)\include\composer \
+  -I$(MOZSDK)\include\commandhandler \
   $(NULL)
 
 # This isn't much better either!

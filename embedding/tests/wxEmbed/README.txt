@@ -9,10 +9,11 @@ embedding functionality of Gecko not an end solution.
 
 To build wxEmbed you must:
 
-1. Get the latest 2.4 release from wxwindows.org
+1. Get the latest 2.4 (at least 2.4.1) release from wxwindows.org
 2. Build the debug/release static lib versions
 3. cd into wxWindows/control and build src/xrc and utils/wxrc
 4. Set your WXWIN environment variable to point to the wxWindows dir
 5. Build Mozilla
 6. Set MOZ_SRC environment variable to point to it.
+7. Call nmake /f makefile.vc
 
