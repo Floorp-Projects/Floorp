@@ -413,23 +413,23 @@ DES_Decrypt(DESContext *cx, unsigned char *output,
 	PORT_Assert(cx != NULL);
 	if (cx == NULL) {
 		PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		return SECFailure;
+		goto loser;
 	}
 	PORT_Assert((inputLen & (DES_BLOCK_SIZE - 1)) == 0);
 	if (inputLen & (DES_BLOCK_SIZE - 1)) {
 		PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		return SECFailure;
+		goto loser;
 	}
 	PORT_Assert(maxOutputLen >= inputLen);  /* check for enough room */
 	if (maxOutputLen < inputLen) {
 		PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		return SECFailure;
+		goto loser;
 	}
 
 	if ((status = B_DecryptInit(cx->algobj, cx->keyobj, cx->alg_chooser,
 	                            (A_SURRENDER_CTX *)NULL_PTR)) != 0) {
 		PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		return SECFailure;
+		goto loser;
 	}
 	if ((status = B_DecryptUpdate(cx->algobj, 
 	                              output, 
@@ -440,7 +440,7 @@ DES_Decrypt(DESContext *cx, unsigned char *output,
 	                              (B_ALGORITHM_OBJ)NULL_PTR,
 	                              (A_SURRENDER_CTX *)NULL_PTR)) != 0) {
 		PORT_SetError(SEC_ERROR_BAD_DATA);
-		return SECFailure;
+		goto loser;
 	}
 	if ((status = B_DecryptFinal(cx->algobj, 
 	                             output + outputLenUpdate, 
@@ -449,10 +449,19 @@ DES_Decrypt(DESContext *cx, unsigned char *output,
 	                             (B_ALGORITHM_OBJ)NULL_PTR,
 	                             (A_SURRENDER_CTX *)NULL_PTR)) != 0) {
 		PORT_SetError(SEC_ERROR_BAD_DATA);
-		return SECFailure;
+		goto loser;
 	}
 	*outputLen = outputLenUpdate + outputLenFinal;
+
+	if (cpybuffer)
+		PORT_ZFree(inp, inputLen);
 	return SECSuccess;
+
+loser:
+	if (cpybuffer)
+		PORT_ZFree(inp, inputLen);
+	return SECFailure;
+}
 }
 
 /*****************************************************************************
