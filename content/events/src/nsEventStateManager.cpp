@@ -4565,7 +4565,7 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
   // This is called when browse with caret changes on the fly
   // or when a document gets focused 
 
-  mBrowseWithCaret = *aBrowseWithCaret = PR_FALSE;
+  *aBrowseWithCaret = PR_FALSE;
 
   nsCOMPtr<nsISupports> pcContainer;
   mPresContext->GetContainer(getter_AddRefs(pcContainer));
@@ -4580,6 +4580,10 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
     return NS_OK;  // Never browse with caret in chrome
 
   mPrefService->GetBoolPref("accessibility.browsewithcaret", aBrowseWithCaret);
+
+  if (mBrowseWithCaret == *aBrowseWithCaret)
+    return NS_OK; // already set this way, don't change caret at all
+
   mBrowseWithCaret = *aBrowseWithCaret;
 
   nsCOMPtr<nsIPresShell> presShell;
