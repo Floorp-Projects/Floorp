@@ -116,7 +116,7 @@ nsButtonPrefListener.prototype =
         button.setAttribute("state", "transparent");
       }
       if (htmlEditor) {
-        htmlEditor.SetCSSEnabled(useCSS);
+        htmlEditor.isCSSEnabled = useCSS;
       }
     }
   }
@@ -1248,7 +1248,6 @@ function GetParentTableCell(element)
         Format menu. There should be code like this for the
         object-specific "Properties" item
 */
-
 // For property dialogs, we want the selected element,
 //  but will accept a parent link, list, or table cell if inside one
 function GetObjectForProperties()
