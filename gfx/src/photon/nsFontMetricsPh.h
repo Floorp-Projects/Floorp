@@ -64,7 +64,14 @@ public:
   NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
                    nsIDeviceContext* aContext);
 
-  NS_IMETHOD	GetLangGroup(nsIAtom** aLangGroup);
+	inline
+  NS_IMETHODIMP GetLangGroup(nsIAtom** aLangGroup)
+		{
+		if( !aLangGroup ) return NS_ERROR_NULL_POINTER;
+		*aLangGroup = mLangGroup;
+		NS_IF_ADDREF(*aLangGroup);
+		return NS_OK;
+		}
 
   NS_IMETHODIMP  Destroy()
 		{
@@ -206,7 +213,39 @@ class nsFontEnumeratorPh : public nsIFontEnumerator
 public:
   nsFontEnumeratorPh();
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIFONTENUMERATOR
+//  NS_DECL_NSIFONTENUMERATOR
+
+	inline NS_IMETHODIMP HaveFontFor(const char* aLangGroup, PRBool* aResult)
+		{
+		  NS_ENSURE_ARG_POINTER(aResult);
+		  *aResult = PR_TRUE; // always return true for now.
+		  return NS_OK;
+		}
+
+
+	inline NS_IMETHODIMP GetDefaultFont(const char *aLangGroup, const char *aGeneric, PRUnichar **aResult)
+		{
+		  // aLangGroup=null or ""  means any (i.e., don't care)
+		  // aGeneric=null or ""  means any (i.e, don't care)
+		  NS_ENSURE_ARG_POINTER(aResult);
+		  *aResult = nsnull;
+		  return NS_OK;
+		}
+
+	inline NS_IMETHODIMP UpdateFontList(PRBool *updateFontList)
+		{
+		  *updateFontList = PR_FALSE; // always return false for now
+		  return NS_OK;
+		}
+
+	inline NS_IMETHODIMP EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
+		{
+		  return EnumerateFonts( nsnull, nsnull, aCount, aResult );
+		}
+
+	NS_IMETHOD EnumerateFonts( const char* aLangGroup, const char* aGeneric,
+								PRUint32* aCount, PRUnichar*** aResult );
+
 };
 
 #endif

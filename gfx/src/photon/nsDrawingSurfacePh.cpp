@@ -94,7 +94,7 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh( )
 {
 	if(mDrawContext) {
 		mDrawContext->gc = NULL;
-		PhDCRelease( mDrawContext ); /* the mDrawContext->gc will be free by the upper classes */
+		PhDCRelease( mDrawContext ); /* the mDrawContext->gc will be freed by the upper classes */
 	}
 	
 	if( mLockDrawContext ) {
@@ -107,6 +107,8 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh( )
 		if (NS_SUCCEEDED(rv)) {
 			prefs->UnregisterCallback("browser.display.internaluse.graphics_changed", prefChanged, (void *)this);
 		}
+
+		if( mGC ) PgDestroyGC( mGC );
 	}
 }
 
@@ -207,32 +209,15 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Unlock( void ) {
 	return NS_OK;
 	}
 
-NS_IMETHODIMP nsDrawingSurfacePh :: GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight ) {
-  *aWidth = mWidth;
-  *aHeight = mHeight;
-  return NS_OK;
-	}
-
-NS_IMETHODIMP nsDrawingSurfacePh :: GetPixelFormat( nsPixelFormat *aFormat ) {
-  *aFormat = mPixFormat;
-  return NS_OK;
-	}
-
-
-NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t *aGC ) {
-	mGC = aGC;
-	mIsOffscreen = PR_FALSE;
-	mDrawContext = nsnull;
-	return NS_OK;
-	}
-
-NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t *aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags ) {
+NS_IMETHODIMP nsDrawingSurfacePh :: Init( PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags ) {
 	mWidth = aWidth;
 	mHeight = aHeight;
 	mFlags = aFlags;
 	
-	mGC = aGC;
 	mIsOffscreen = PR_TRUE;
+
+	/* an offscreen surface owns its own PhGC_t */
+	mGC = PgCreateGC( 0 );
 
 	mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, mWidth, mHeight, 0);
 	if( !mDrawContext ) return NS_ERROR_FAILURE;

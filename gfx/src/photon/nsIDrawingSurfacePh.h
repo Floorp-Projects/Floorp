@@ -75,7 +75,7 @@ public:
    *         surface created
    * @return error status
    **/
-  NS_IMETHOD Init( PhGC_t *aGC, PRUint32 aWidth, PRUint32 aHeight,
+  NS_IMETHOD Init( PRUint32 aWidth, PRUint32 aHeight,
                   PRUint32 aFlags) = 0;
 				  
 };

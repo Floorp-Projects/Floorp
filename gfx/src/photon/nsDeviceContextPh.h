@@ -62,9 +62,26 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aView,aContext));}
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aWidget,aContext));}
 
-  NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
+	inline
+  NS_IMETHODIMP SupportsNativeWidgets(PRBool &aSupportsWidgets)
+		{
+		/* REVISIT: These needs to return FALSE if we are printing! */
+	  if( nsnull == mDC ) aSupportsWidgets = PR_TRUE;
+	  else aSupportsWidgets = PR_FALSE;   /* while printing! */
+	  return NS_OK;
+		}
 
-  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
+	inline
+  NS_IMETHODIMP GetScrollBarDimensions(float &aWidth, float &aHeight) const
+		{
+		/* Revisit: the scroll bar sizes is a gross guess based on Phab */
+		float scale;
+		GetCanonicalPixelScale(scale);
+		aWidth = mScrollbarWidth * mPixelsToTwips * scale;
+		aHeight = mScrollbarHeight * mPixelsToTwips * scale;
+		return NS_OK;
+		}
+
   NS_IMETHOD  GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
 
   //get a low level drawing surface for rendering. the rendering context
@@ -72,9 +89,22 @@ public:
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
 
-  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
+	inline
+  NS_IMETHODIMP GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
+		{
+		nsRect aRect;
+		GetClientRect( aRect );
+		aContext.CreateDrawingSurface(aRect, 0, aSurface);
+		return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+		}
 
-  NS_IMETHOD  ConvertPixel(nscolor aColor, PRUint32 & aPixel);
+	inline
+  NS_IMETHODIMP ConvertPixel(nscolor aColor, PRUint32 & aPixel)
+		{
+		aPixel = NS_TO_PH_RGB(aColor);
+		return NS_OK;
+		}
+
   NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
 
   NS_IMETHOD  GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
@@ -91,7 +121,12 @@ public:
   NS_IMETHOD  BeginPage(void);
   NS_IMETHOD  EndPage(void);
 
-  NS_IMETHOD  GetDepth(PRUint32& aDepth);
+	inline
+  NS_IMETHODIMP GetDepth(PRUint32& aDepth)
+		{
+		aDepth = mDepth; // 24;
+		return NS_OK;
+		}
 
   static int prefChanged(const char *aPref, void *aClosure);
   nsresult    SetDPI(PRInt32 dpi);
@@ -124,6 +159,8 @@ protected:
 
 private:
 	nsCOMPtr<nsIScreenManager> mScreenManager;
+	int ReadSystemFonts( ) const;
+	void DefaultSystemFonts( ) const;
 };
 
 #define	NS_FONT_STYLE_ANTIALIAS				0xf0
