@@ -982,14 +982,14 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 	PRUint32 cnt = 0;
 	rv = childArray->Count(&cnt);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-	unsigned long numElements = cnt;
+	PRUint32 numElements = cnt;
 	if (numElements > 0)
 	{
 		nsIContent ** flatArray = new nsIContent*[numElements];
 		if (flatArray)
 		{
 			// flatten array of resources, sort them, then add as tree elements
-			unsigned long loop;
+			PRUint32	loop;
 		        for (loop=0; loop<numElements; loop++)
 		        {
 				flatArray[loop] = (nsIContent *)childArray->ElementAt(loop);
@@ -998,7 +998,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			/* smart sorting (sort within separators) on name column */
 			if (sortInfo->sortProperty == kNC_Name)
 			{
-				PRInt32			startIndex=0;
+				PRUint32	startIndex=0;
 				for (loop=0; loop<numElements; loop++)
 				{
 					nsAutoString	type;
