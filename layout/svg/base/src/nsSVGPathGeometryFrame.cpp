@@ -316,7 +316,8 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeOpacity(float *aStrokeOpacity)
 {
-  *aStrokeOpacity = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeOpacity;
+  *aStrokeOpacity =
+    GetStyleSVG()->mStrokeOpacity * GetStyleDisplay()->mOpacity;
   return NS_OK;
 }
 
@@ -385,7 +386,8 @@ nsSVGPathGeometryFrame::GetStrokeMiterlimit(float *aStrokeMiterlimit)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillOpacity(float *aFillOpacity)
 {
-  *aFillOpacity = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFillOpacity;
+  *aFillOpacity =
+    GetStyleSVG()->mFillOpacity * GetStyleDisplay()->mOpacity;
   return NS_OK;
 }
 

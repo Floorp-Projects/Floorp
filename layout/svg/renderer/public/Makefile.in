@@ -58,6 +58,7 @@ XPIDLSRCS =                                   \
 	nsISVGRendererPathBuilder.idl             \
 	nsISVGRendererPathGeometry.idl            \
 	nsISVGRendererRegion.idl                  \
+	nsISVGRendererSurface.idl                 \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -49,6 +49,7 @@
 #include "nsPresContext.h"
 #include "nsRect.h"
 #include "nsRenderingContextGTK.h"
+#include "nsISVGCairoSurface.h"
 #include <gdk/gdkx.h>
 #include <cairo.h>
 
@@ -82,6 +83,8 @@ private:
   nsCOMPtr<nsPresContext> mPresContext;
   cairo_t *mCR;
   PRUint32 mWidth, mHeight;
+
+  nsVoidArray mSurfaceStack;
 };
 
 
@@ -304,3 +307,115 @@ nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
 
   return NS_OK;
 }
+
+/** Implements pushSurface(in nsISVGRendereerSurface surface); */
+NS_IMETHODIMP
+nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
+{
+  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
+  if (!cairoSurface)
+    return NS_ERROR_FAILURE;
+
+  mSurfaceStack.AppendElement((void *)cairo_current_target_surface(mCR));
+
+  cairo_save(mCR);
+  cairo_default_matrix(mCR);
+  cairo_set_target_surface(mCR, cairoSurface->GetSurface());
+
+  return NS_OK;
+}
+
+/** Implements popSurface(); */
+NS_IMETHODIMP
+nsSVGCairoCanvas::PopSurface()
+{
+  PRUint32 count = mSurfaceStack.Count();
+  if (count != 0) {
+    cairo_set_target_surface(mCR, (cairo_surface_t *)mSurfaceStack[count - 1]);
+    mSurfaceStack.RemoveElementAt(count - 1);
+  }
+
+  cairo_restore(mCR);
+  return NS_OK;
+}
+
+/** Implements  void compositeSurface(in nsISVGRendererSurface surface,
+                                      in unsigned long x, in unsigned long y,
+                                      in float opacity); */
+NS_IMETHODIMP
+nsSVGCairoCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
+                                   PRUint32 aX, PRUint32 aY, float aOpacity)
+{
+  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
+  if (!cairoSurface)
+    return NS_ERROR_FAILURE;
+
+  cairo_save(mCR);
+  cairo_translate(mCR, aX, aY);
+  cairo_set_alpha(mCR, aOpacity);
+
+  PRUint32 width, height;
+  aSurface->GetWidth(&width);
+  aSurface->GetHeight(&height);
+
+  cairo_show_surface(mCR, cairoSurface->GetSurface(), width, height);
+  cairo_restore(mCR);
+
+  return NS_OK;
+}
+
+/** Implements  void compositeSurface(in nsISVGRendererSurface surface,
+                                      in nsIDOMSVGMatrix canvasTM,
+                                      in float opacity); */
+NS_IMETHODIMP
+nsSVGCairoCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
+                                         nsIDOMSVGMatrix *aCTM, float aOpacity)
+{
+  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
+  if (!cairoSurface)
+    return NS_ERROR_FAILURE;
+
+  cairo_save(mCR);
+
+  float m[6];
+  float val;
+  aCTM->GetA(&val);
+  m[0] = val;
+    
+  aCTM->GetB(&val);
+  m[1] = val;
+    
+  aCTM->GetC(&val);  
+  m[2] = val;  
+    
+  aCTM->GetD(&val);  
+  m[3] = val;  
+  
+  aCTM->GetE(&val);
+  m[4] = val;
+  
+  aCTM->GetF(&val);
+  m[5] = val;
+
+  cairo_matrix_t *matrix = cairo_matrix_create();
+  if (!matrix) {
+    cairo_restore(mCR);
+    return NS_ERROR_FAILURE;
+  }
+
+  cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
+  cairo_concat_matrix(mCR, matrix);
+  cairo_matrix_destroy(matrix);
+
+  PRUint32 width, height;
+  aSurface->GetWidth(&width);
+  aSurface->GetHeight(&height);
+
+  cairo_set_alpha(mCR, aOpacity);
+  cairo_show_surface(mCR, cairoSurface->GetSurface(), width, height);
+
+  cairo_restore(mCR);
+
+  return NS_OK;
+}
+

@@ -54,6 +54,7 @@ using namespace Gdiplus;
 #include "nsRect.h"
 #include "nsIRenderingContextWin.h"
 #include "nsIDOMSVGMatrix.h"
+#include "nsISVGGDIPlusSurface.h"
 
 /**
  * \addtogroup gdiplus_renderer GDI+ Rendering Engine
@@ -86,6 +87,7 @@ private:
   nsCOMPtr<nsPresContext> mPresContext;
   Graphics *mGraphics;
   nsVoidArray mClipStack;
+  nsVoidArray mSurfaceStack;
 
 #ifdef SVG_GDIPLUS_ENABLE_OFFSCREEN_BUFFER
   Bitmap *mOffscreenBitmap;
@@ -388,5 +390,104 @@ nsSVGGDIPlusCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
   clip.Transform(&matrix);
   mGraphics->SetClip(&clip, CombineModeIntersect);
 
+  return NS_OK;
+}
+
+/** Implements pushSurface(in nsISVGRendereerSurface surface); */
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::PushSurface(nsISVGRendererSurface *aSurface)
+{
+  nsCOMPtr<nsISVGGDIPlusSurface> gdiplusSurface = do_QueryInterface(aSurface);
+  if (!gdiplusSurface)
+    return NS_ERROR_FAILURE;
+
+  mSurfaceStack.AppendElement((void *)mGraphics);
+  mGraphics = new Graphics(gdiplusSurface->GetSurface());
+  if (!mGraphics) {
+    PopSurface();
+    return NS_ERROR_FAILURE;
+  }
+    
+  mGraphics->Clear(Color(0,0,0,0));
+  return NS_OK;
+}
+
+/** Implements popSurface(); */
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::PopSurface()
+{
+  PRUint32 count = mSurfaceStack.Count();
+  if (count != 0) {
+    delete mGraphics;
+    mGraphics = (Graphics *)mSurfaceStack[count - 1];
+    mSurfaceStack.RemoveElementAt(count - 1);
+  }
+
+  return NS_OK;
+}
+
+/** Implements  void compositeSurface(in nsISVGRendererSurface surface,
+                                      in unsigned long x, in unsigned long y,
+                                      in float opacity); */
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
+                                     PRUint32 aX, PRUint32 aY, float aOpacity)
+{
+  nsCOMPtr<nsISVGGDIPlusSurface> gdiplusSurface = do_QueryInterface(aSurface);
+  if (!gdiplusSurface)
+    return NS_ERROR_FAILURE;
+
+  ColorMatrix cxform;
+  memset(&cxform, 0, sizeof(ColorMatrix));
+  cxform.m[0][0] = cxform.m[1][1] = cxform.m[2][2] = cxform.m[4][4] = 1.0f;
+  cxform.m[3][3] = aOpacity;
+  ImageAttributes attrib;
+  attrib.SetColorMatrix(&cxform);
+
+  PRUint32 width, height;
+  aSurface->GetWidth(&width);
+  aSurface->GetHeight(&height);
+
+  Rect rect(aX, aY, width, height);
+
+  mGraphics->DrawImage(gdiplusSurface->GetSurface(),
+                       rect, 0, 0, width, height, UnitPixel, &attrib);
+
+  return NS_OK;
+}
+
+/** Implements  void compositeSurface(in nsISVGRendererSurface surface,
+                                      in nsIDOMSVGMatrix canvasTM,
+                                      in float opacity); */
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
+                                           nsIDOMSVGMatrix *aCTM, float aOpacity)
+{
+  float m[6];
+  float val;
+  aCTM->GetA(&val);
+  m[0] = val;
+    
+  aCTM->GetB(&val);
+  m[1] = val;
+    
+  aCTM->GetC(&val);  
+  m[2] = val;  
+    
+  aCTM->GetD(&val);  
+  m[3] = val;  
+  
+  aCTM->GetE(&val);
+  m[4] = val;
+  
+  aCTM->GetF(&val);
+  m[5] = val;
+
+  Matrix xform(m[0], m[1], m[2], m[3], m[4], m[5]), orig;
+
+  mGraphics->GetTransform(&orig);
+  mGraphics->MultiplyTransform(&xform);
+  CompositeSurface(aSurface, 0, 0, aOpacity);
+  mGraphics->SetTransform(&orig);
   return NS_OK;
 }

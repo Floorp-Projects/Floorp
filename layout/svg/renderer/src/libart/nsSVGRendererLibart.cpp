@@ -201,6 +201,15 @@ nsSVGRendererLibart::CreateRectRegion(float x, float y, float width, float heigh
   return NS_NewSVGLibartRectRegion(_retval, x, y, width, height);
 }
 
+/** Implements nsISVGRendererSurface createSurface(in float width, in float height); */
+NS_IMETHODIMP
+nsSVGRendererLibart::CreateSurface(PRUint32 width, PRUint32 height,
+                                   nsISVGRendererSurface **_retval)
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // module initialisation
