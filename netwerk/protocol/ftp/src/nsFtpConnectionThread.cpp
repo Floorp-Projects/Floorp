@@ -1382,7 +1382,7 @@ nsFtpConnectionThread::R_pasv() {
     if (NS_FAILED(rv) || !type) 
         typeStr = "bin";
     else
-        typeStr = type;
+        typeStr.Assign(type);
 
     PRInt32 textType = typeStr.Find("text");
     if (textType == 0)
@@ -1607,7 +1607,7 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     } else {
         if ((const char*)uname && *(const char*)uname) {
             mAnonymous = PR_FALSE;
-            mUsername = uname;
+            mUsername.Assign(uname);
         }
     }
 
@@ -1616,7 +1616,7 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     if (NS_FAILED(rv))
         return rv;
     else
-        mPassword = password;
+        mPassword.Assign(password);
     
     // setup the connection cache key
     nsXPIDLCString host;
