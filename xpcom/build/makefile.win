@@ -60,10 +60,6 @@ CPP_OBJS =                             \
         .\$(OBJDIR)\dlldeps.obj        \
         $(NULL)
 
-!ifndef BUILD_OPT
-#CPP_OBJS = $(CPP_OBJS) .\$(OBJDIR)\nsConstructorPattern.obj
-!endif
-
 LLIBS =                                \
         $(LIBNSPR)                     \
         $(DIST)\lib\xpcombase_s.lib    \
