@@ -20,10 +20,12 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsAboutProtocolHandler.h"
+#include "nsAboutBlank.h"
 #include "nscore.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kAboutProtocolHandlerCID,  NS_ABOUTPROTOCOLHANDLER_CID);
+static NS_DEFINE_CID(kAboutBlankModuleCID,      NS_ABOUT_BLANK_MODULE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +44,9 @@ NSGetFactory(nsISupports* aServMgr,
     nsIGenericFactory* fact;
     if (aClass.Equals(kAboutProtocolHandlerCID)) {
         rv = NS_NewGenericFactory(&fact, nsAboutProtocolHandler::Create);
+    }
+    else if (aClass.Equals(kAboutBlankModuleCID)) {
+        rv = NS_NewGenericFactory(&fact, nsAboutBlank::Create);
     }
     else {
         rv = NS_ERROR_FAILURE;
@@ -66,6 +71,12 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
+    rv = compMgr->RegisterComponent(kAboutBlankModuleCID,  
+                                    "about:blank",
+                                    NS_ABOUT_MODULE_PROGID_PREFIX "blank",
+                                    aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
     return rv;
 }
 
@@ -78,6 +89,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kAboutProtocolHandlerCID, aPath);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->UnregisterComponent(kAboutBlankModuleCID, aPath);
     if (NS_FAILED(rv)) return rv;
 
     return rv;

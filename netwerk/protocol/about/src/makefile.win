@@ -37,6 +37,7 @@ LLIBS= $(LLIBS)                 \
 CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsAboutProtocolHandler.obj \
 	.\$(OBJDIR)\nsAboutProtocolFactory.obj \
+	.\$(OBJDIR)\nsAboutBlank.obj           \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	

@@ -28,6 +28,7 @@
 #include "nsSimpleURI.h"
 #include "nsDnsService.h"
 #include "nsLoadGroup.h"
+#include "nsInputStreamChannel.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,       NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -38,6 +39,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kExternalModuleManagerCID,  NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kDNSServiceCID,             NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kLoadGroupCID,              NS_LOADGROUP_CID);
+static NS_DEFINE_CID(kInputStreamChannelCID,     NS_INPUTSTREAMCHANNEL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -81,6 +83,9 @@ NSGetFactory(nsISupports* aServMgr,
     }
     else if (aClass.Equals(kLoadGroupCID)) {
         rv = NS_NewGenericFactory(&fact, nsLoadGroup::Create);
+    }
+    else if (aClass.Equals(kInputStreamChannelCID)) {
+        rv = NS_NewGenericFactory(&fact, nsInputStreamChannel::Create);
     }
     else {
         rv = NS_ERROR_FAILURE;
@@ -139,6 +144,12 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     "External Module Manager",
                                     "component://netscape/network/net-extern-mod",
                                     aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->RegisterComponent(kInputStreamChannelCID,
+                                    "Input Stream Channel",
+                                    "component://netscape/network/input-stream-channel",
+                                    aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
 
@@ -169,6 +180,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) return rv;
     
     rv = compMgr->UnregisterComponent(kExternalModuleManagerCID, aPath);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = compMgr->UnregisterComponent(kInputStreamChannelCID, aPath);
     return rv;
 }
 

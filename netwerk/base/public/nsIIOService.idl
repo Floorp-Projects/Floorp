@@ -140,6 +140,16 @@ interface nsIIOService : nsISupports
      * a convenience for the caller. 
      */
     nsILoadGroup NewLoadGroup(in nsILoadGroup parent);
+
+    /**
+     * Returns a simple channel implementation that uses the given input
+     * stream and content type. A URI may also be supplied which will be returned
+     * by the channel's GetURI method. This routine is a convenience facililty
+     * for protocol writers.
+     */
+    nsIChannel NewInputStreamChannel(in nsIURI uri,
+                                     in string contentType, 
+                                     in nsIInputStream inStr);
 };
 
 %{C++
