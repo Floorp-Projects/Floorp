@@ -140,7 +140,7 @@ while($line = <fpInIt>)
   }
   else
   {
-    # For each line read, search and replace $InstallSizeSystem$ with the calulated size
+    # For each line read, search and replace $InstallSizeSystem$ with the calculated size
     $line =~ s/\$URLPath\$/$inURLPath/i;
     print fpOutIni $line;
   }
@@ -156,7 +156,7 @@ sub OutputInstallSize()
   my($inPath) = @_;
   my($installSize);
 
-  print "   calulating size for $inPath\n";
+  print "   calculating size for $inPath\n";
   $installSize    = `ds32.exe /L0 /A /S /C 32768 $inPath`;
   $installSize    = int($installSize / 1024);
   $installSize   += 1;
@@ -169,7 +169,7 @@ sub OutputInstallSizeArchive()
   my($installSizeArchive);
   my($dev, $ino, $mode, $nlink, $uid, $gui, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks);
 
-  print "   calulating size for $inPath\n";
+  print "   calculating size for $inPath\n";
   ($dev, $ino, $mode, $nlink, $uid, $gui, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat $inPath;
   $installSizeArchive    = int($size / 1024);
   $installSizeArchive   += 1;
@@ -192,13 +192,14 @@ sub OutputInstallSizeSystem()
       foreach(@commaSplit)
       {
         # calculate the size of component installed using ds32.exe in Kbytes
-        print "   calulating size for $inPath\\$_\n";
-        $installSizeSystem   += `ds32.exe /L0 /A /S /C 32768 $inPath\\$_`;
-        $installSizeSystem    = int($installSize / 1024);
-        $installSizeSystem   += 1;
+        print "   calculating size for $inPath\\$_";
+        $installSizeSystem += `ds32.exe /L0 /A /S /C 32768 $inPath\\$_`;
       }
     }
   }
+
+  $installSizeSystem  = int($installSizeSystem / 1024);
+  $installSizeSystem += 1;
   return($installSizeSystem);
 }
 
