@@ -9,6 +9,10 @@ require"core/sessionconfig.php";
 <?php
 include"$page_header";
 include"inc_sidebar.php";
+
+//List Page Preview Variables
+$preview_width = "200";
+$preview_height = "150";
 ?>
 <?php
 $id = escape_string($_GET["id"]);
@@ -50,7 +54,7 @@ $sql = "SELECT `PreviewURI` from `previews` WHERE `PreviewID`='$previewid' LIMIT
     $file = "$websitepath/$file";
     
     $imagesize = @getimagesize($file);
-if ($_POST["preview"]==$previewid AND $imagesize[0]<="180" AND $imagesize[1]<="75") {$preview="YES"; } else {$preview="NO";}
+if ($_POST["preview"]==$previewid AND $imagesize[0]<="$preview_width" AND $imagesize[1]<="$preview_height") {$preview="YES"; } else {$preview="NO";}
     
 if ($delete==$previewid) {
   if (file_exists($file)) {  unlink($file); }
@@ -117,9 +121,9 @@ if ($nopopup != "true") {echo"</a>";}
 echo"<br>\n";
 echo"<input name=\"previewid_$i\" type=\"hidden\" value=\"$previewid\">\n";
 echo"Edit Caption: <input name=\"caption_$i\" type=\"text\" value=\"$caption\" size=30>";
-if ($preview == "YES" OR ( $src_width<="175" AND $src_height <="80")) {
-echo"&nbsp;&nbsp;List Page Preview? <input name=\"preview\" type=\"radio\" value=\"$previewid\""; if ($preview=="YES") {echo" checked"; } echo"><br>\n";
-} else { echo"<br>\n"; }
+if ($preview == "YES" OR ( $src_width<="$preview_width" AND $src_height <="$preview_height")) {
+echo"&nbsp;&nbsp;<input name=\"preview\" type=\"radio\" value=\"$previewid\""; if ($preview=="YES") {echo" checked"; } echo">List Page Preview?<br>\n";
+} else { echo"<input name=\"preview_null\" type=\"radio\" value=\"\" disabled=\"true\"><span class=\"tooltip\" TITLE=\"Option Disabled. Max Size for Previews is $preview_width x $preview_height\">List Item Preview?</span><br>\n"; }
 echo"Delete File? <input name=\"delete_$i\" type=\"checkbox\" value=\"$previewid\"><br>\n";
 }
 ?>
@@ -156,8 +160,8 @@ $name = str_replace(" ","_",$name);
 $previewpath = strtolower("images/previews/$name-$i.jpg");
 
 if ($preview=="YES") {
-$width = "200";
-$height = "120";
+$width = "$preview_width";
+$height = "$preview_height";
 } else {
 $preview="NO";
 }
@@ -194,7 +198,7 @@ if ($type=="2" or $type=="3") {
 
 //Limit Max.
 if ($width > "690") {$width="690";}
-if ($width > "520") {$width="520";}
+if ($height > "520") {$height="520";}
 
 $dest_width="$width"; // Destination Width /$tn_size_width
 $dest_height_fixed="$height"; // Destination Height / $tn_size_height (Fixed)
@@ -250,10 +254,10 @@ echo"<span class=error>The image you uploaded has errors and could not be proces
 Only PNG or JPG images are supported for addition to the preview screenshots page for your item. Check the "List Page Preview" box
 if you'd like the image to be featured on the list and the top of the item details pages. To just have it added to your screenshots
 page, leave the box unchecked<br>
-<input name="file" SIZE=30 type="file"> List Page Preview? <input name="preview" type="checkbox" value="YES"><br>
+<input name="file" SIZE=30 type="file"> <input name="preview" type="checkbox" value="YES">List Page Preview?<br>
 
 Image Width:<input name="width" type="text" value="0" size=5> x Height: <input name="height" type="text" value="0" size=5><br>
-Leave Width and Height at 0 for full-size. This setting is ignored for preview images, which have strict size requirements.<br><br>
+Fill in the image width and height fields above to have the site resize your image for you. Otherwise, leave Width and Height as 0 (the default) for full-size (limited to 690x520, anything larger will be auto-resized). This setting is ignored for preview images, which have strict size requirements of $preview_width x $preview_height.<br><br>
 
 Image Caption: <input name="caption" type="text" size="30"><br>
 
