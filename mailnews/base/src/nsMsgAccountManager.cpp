@@ -433,9 +433,13 @@ nsMsgAccountManager::GetIdentity(const char* key,
                                  nsIMsgIdentity **_retval)
 {
   if (!_retval) return NS_ERROR_NULL_POINTER;
+  // null or empty key does not return an identity!
+  if (!key || !key[0]) {
+    *_retval = nsnull;
+    return NS_OK;
+  }
 
   nsresult rv;
-
   // check for the identity in the hash table
   nsStringKey hashKey(key);
   nsISupports *idsupports = (nsISupports*)m_identities.Get(&hashKey);
