@@ -839,14 +839,18 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 -(void)newTab
 {
+    PRInt32 newTabPage = 0;
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+    pref->GetIntPref("browser.tabs.startPage", &newTabPage);
+
     NSTabViewItem* newTab = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
     CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
-    
-    [newTab setLabel: @"Untitled"];
+
+    [newTab setLabel: (newTabPage ? @"Loading..." : @"Untitled")];
     [newTab setView: newView];
     [mTabBrowser addTabViewItem: newTab];
-    
-    [[newView getBrowserView] loadURI: @"about:blank" flags:NSLoadFlagsNone];
+
+    [[newView getBrowserView] loadURI: (newTabPage ? [[CHPreferenceManager sharedInstance] homePage: NO] : @"about:blank") flags:NSLoadFlagsNone];
 
     [mTabBrowser selectLastTabViewItem: self];
 
