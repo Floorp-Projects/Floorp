@@ -142,6 +142,8 @@ public:
   void                     SetIonic(PRBool isIonic);
   static Window            GetFocusWindow(void);
 
+  Cursor                   XlibCreateCursor(nsCursor aCursorType);
+
   PRBool DispatchWindowEvent(nsGUIEvent & aEvent);
 
 //   static nsresult         SetXlibWindowCallback(nsXlibWindowCallback *aCallback);
@@ -229,6 +231,7 @@ protected:
 protected:
   PRBool       mListenForResizes;     // If we're native we want to listen.
   static       nsHashtable *          gsWindowList;
+  static       Cursor                 gsXlibCursorCache[eCursor_count_up_down + 1];
 
   static       nsXlibWindowCallback   gsWindowCreateCallback;
   static       nsXlibWindowCallback   gsWindowDestroyCallback;

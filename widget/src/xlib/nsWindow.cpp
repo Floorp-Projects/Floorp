@@ -289,17 +289,18 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 // Function that does native grab.
 void nsWindow::NativeGrab(PRBool aGrab)
 {
-  Cursor newCursor = XCreateFontCursor(mDisplay, XC_right_ptr);
   mLastGrabFailed = PR_FALSE;
 
   if (aGrab)
   {
     int retval;
 
+    Cursor newCursor = XCreateFontCursor(mDisplay, XC_right_ptr);
     retval = XGrabPointer(mDisplay, mBaseWindow, PR_TRUE, (ButtonPressMask |
                           ButtonReleaseMask | EnterWindowMask | LeaveWindowMask 
                           | PointerMotionMask), GrabModeAsync, GrabModeAsync, 
                           (Window)0, newCursor, CurrentTime);
+    XFreeCursor(mDisplay, newCursor);
 
     if (retval != GrabSuccess)
       mLastGrabFailed = PR_TRUE;

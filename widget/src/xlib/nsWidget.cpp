@@ -25,7 +25,10 @@
  *   B.J. Rossiter <bj@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
  *   L. David Baron <dbaron@fas.harvard.edu>
+ *   Tim Copperfield <timecop@network.email.ne.jp>
  */
+
+#undef DEBUG_CURSORCACHE
 
 #include "nsWidget.h"
 
@@ -34,6 +37,7 @@
 #include "nsAppShell.h"
 
 #include <X11/cursorfont.h>
+#include "nsXlibCursors.h"
 
 #include "nsIEventListener.h"
 #include "nsIMenuListener.h"
@@ -52,6 +56,9 @@ PRLogModuleInfo *XlibScrollingLM = PR_NewLogModule("XlibScrolling");
 
 // set up our static members here.
 nsHashtable *nsWidget::gsWindowList = nsnull; // WEAK references to nsWidget*
+
+// cursors hash table
+Cursor nsWidget::gsXlibCursorCache[eCursor_count_up_down + 1];
 
 // this is a class for generating keys for
 // the list of windows managed by mozilla.
@@ -702,58 +709,9 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
   if (aCursor != mCursor) {
     Cursor newCursor = 0;
 
-    switch(aCursor) {
-      case eCursor_select:
-        newCursor = XCreateFontCursor(mDisplay, XC_xterm);
-        break;
+    newCursor = XlibCreateCursor(aCursor);
 
-      case eCursor_wait:
-        newCursor = XCreateFontCursor(mDisplay, XC_watch);
-        break;
-
-      case eCursor_hyperlink:
-        newCursor = XCreateFontCursor(mDisplay, XC_hand2);
-        break;
-
-      case eCursor_standard:
-        newCursor = XCreateFontCursor(mDisplay, XC_left_ptr);
-        break;
-
-      case eCursor_sizeWE:
-      case eCursor_sizeNS:
-        newCursor = XCreateFontCursor(mDisplay, XC_tcross);
-        break;
-
-      case eCursor_arrow_south:
-      case eCursor_arrow_south_plus:
-        newCursor = XCreateFontCursor(mDisplay, XC_bottom_side);
-        break;
-
-      case eCursor_arrow_north:
-      case eCursor_arrow_north_plus:
-        newCursor = XCreateFontCursor(mDisplay, XC_top_side);
-        break;
-
-      case eCursor_arrow_east:
-      case eCursor_arrow_east_plus:
-        newCursor = XCreateFontCursor(mDisplay, XC_right_side);
-        break;
-
-      case eCursor_arrow_west:
-      case eCursor_arrow_west_plus:
-        newCursor = XCreateFontCursor(mDisplay, XC_left_side);
-        break;
-
-      case eCursor_move:
-        newCursor = XCreateFontCursor(mDisplay, XC_dotbox);
-        break;
-
-      default:
-        newCursor = XCreateFontCursor(mDisplay, XC_left_ptr);
-        break;
-    }
-
-    if (nsnull != newCursor) {
+    if (None != newCursor) {
       mCursor = aCursor;
       XDefineCursor(mDisplay, mBaseWindow, newCursor);
     }
@@ -881,6 +839,14 @@ nsWidget::DeleteWindowCallback(Window aWindow)
   if (gsWindowList->Count() == 0) {
     delete gsWindowList;
     gsWindowList = nsnull;
+
+    /* clear out the cursor cache */
+#ifdef DEBUG_CURSORCACHE
+    printf("freeing cursor cache\n");
+#endif
+    for (int i = 0; i < eCursor_count_up_down; i++)
+      if (gsXlibCursorCache[i])
+        XFreeCursor(xlib_rgb_get_display(), gsXlibCursorCache[i]);
   }
 
   if (gsWindowDestroyCallback) 
@@ -1344,6 +1310,154 @@ void nsWidget::Unmap(void)
 void nsWidget::SetVisibility(int aState)
 {
   mVisibility = aState;
+}
+
+// create custom pixmap cursor from cursors in nsXlibCursors.h
+Cursor nsWidget::XlibCreateCursor(nsCursor aCursorType)
+{
+  Pixmap cursor = None;
+  Pixmap mask = None;
+  XColor fg, bg;
+  Cursor xcursor = None;
+  PRUint8 newType = 0xff;
+
+  fg.pixel = 0;
+  fg.red = 0;
+  fg.green = 0;
+  fg.blue = 0;
+  fg.flags = 0xf;
+
+  bg.pixel = 0xffffffff;
+  bg.red = 0xffff;
+  bg.green = 0xffff;
+  bg.blue = 0xffff;
+  bg.flags = 0xf;
+
+  /* lookup the cursor in cache */
+  if ((xcursor = gsXlibCursorCache[aCursorType])) {
+#ifdef DEBUG_CURSORCACHE
+    printf("cached cursor found: %lx\n", xcursor);
+#endif
+    return xcursor;
+  }
+
+  /* handle cursor type */
+  switch (aCursorType) {
+    case eCursor_select:
+      xcursor = XCreateFontCursor(mDisplay, XC_xterm);
+      break;
+    case eCursor_wait:
+      xcursor = XCreateFontCursor(mDisplay, XC_watch);
+      break;
+    case eCursor_hyperlink:
+      xcursor = XCreateFontCursor(mDisplay, XC_hand2);
+      break;
+    case eCursor_standard:
+      xcursor = XCreateFontCursor(mDisplay, XC_left_ptr);
+      break;
+    case eCursor_sizeWE:
+      xcursor = XCreateFontCursor(mDisplay, XC_sb_h_double_arrow);
+      break;
+    case eCursor_sizeNS:
+      xcursor = XCreateFontCursor(mDisplay, XC_sb_v_double_arrow);
+      break;
+    case eCursor_sizeNW:
+      xcursor = XCreateFontCursor(mDisplay, XC_top_left_corner);
+      break;
+    case eCursor_sizeSE:
+      xcursor = XCreateFontCursor(mDisplay, XC_bottom_right_corner);
+      break;
+    case eCursor_sizeNE:
+      xcursor = XCreateFontCursor(mDisplay, XC_top_right_corner);
+      break;
+    case eCursor_sizeSW:
+      xcursor = XCreateFontCursor(mDisplay, XC_bottom_left_corner);
+      break;
+    case eCursor_arrow_south:
+    case eCursor_arrow_south_plus:
+      xcursor = XCreateFontCursor(mDisplay, XC_bottom_side);
+      break;
+    case eCursor_arrow_north:
+    case eCursor_arrow_north_plus:
+      xcursor = XCreateFontCursor(mDisplay, XC_top_side);
+      break;
+    case eCursor_arrow_east:
+    case eCursor_arrow_east_plus:
+      xcursor = XCreateFontCursor(mDisplay, XC_right_side);
+      break;
+    case eCursor_arrow_west:
+    case eCursor_arrow_west_plus:
+      xcursor = XCreateFontCursor(mDisplay, XC_left_side);
+      break;
+    case eCursor_crosshair:
+      xcursor = XCreateFontCursor(mDisplay, XC_crosshair);
+      break;
+    case eCursor_move:
+      xcursor = XCreateFontCursor(mDisplay, XC_fleur);
+      break;
+    case eCursor_help:
+      newType = XLIB_QUESTION_ARROW;
+      break;
+    case eCursor_copy:
+      newType = XLIB_COPY;
+      break;
+    case eCursor_alias:
+      newType = XLIB_ALIAS;
+      break;
+    case eCursor_context_menu:
+      newType = XLIB_CONTEXT_MENU;
+      break;
+    case eCursor_cell:
+      xcursor = XCreateFontCursor(mDisplay, XC_plus);
+      break;
+    case eCursor_grab:
+      newType = XLIB_HAND_GRAB;
+      break;
+    case eCursor_grabbing:
+      newType = XLIB_HAND_GRABBING;
+      break;
+    case eCursor_spinning:
+      newType = XLIB_SPINNING;
+      break;
+    case eCursor_count_up:
+    case eCursor_count_down:
+    case eCursor_count_up_down:
+      // XXX: these CSS3 cursors need to be implemented
+      // I simply have no idea how they should look like
+      xcursor = XCreateFontCursor(mDisplay, XC_left_ptr);
+      break;
+    default:
+      break;
+  }
+
+  /* if by now we dont have a xcursor, this means we have to make a custom one */
+  if (!xcursor) {
+    NS_ASSERTION(newType != 0xff, "Unknown cursor type and no standard cursor");
+    
+    /* we can use mBaseWindow for the pixmaps because SetCursor checks this
+     * before calling here */
+    cursor = XCreatePixmapFromBitmapData(mDisplay, mBaseWindow,
+                        (char *)XlibCursors[newType].bits,
+                        32, 32, 0xffffffff, 0x0, 1);
+
+    mask = XCreatePixmapFromBitmapData(mDisplay, mBaseWindow,
+                        (char *)XlibCursors[newType].mask_bits,
+                        32, 32, 0xffffffff, 0x0, 1);
+
+    xcursor = XCreatePixmapCursor(mDisplay, cursor, mask, &fg, &bg,
+                                  XlibCursors[newType].hot_x,
+                                  XlibCursors[newType].hot_y);
+
+    XFreePixmap(mDisplay, mask);
+    XFreePixmap(mDisplay, cursor);
+  }
+
+#ifdef DEBUG_CURSORCACHE
+  printf("inserting cursor into the cache: %lx\n", xcursor);
+#endif
+  gsXlibCursorCache[aCursorType] = xcursor;
+  
+  return xcursor;
 }
 
 // nsresult
