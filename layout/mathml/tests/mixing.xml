@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="mathml.css" type="text/css"?>
+<!DOCTYPE document SYSTEM "mathml.dtd">
+
+<document
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+  xmlns:math="http://www.w3.org/Math/MathML"
+>
+
+<!-- 
+  *  The contents of this file are subject to the Mozilla Public
+  *  License Version 1.1 (the "License"); you may not use this file
+  *  except in compliance with the License. You may obtain a copy of
+  *  the License at http://www.mozilla.org/MPL/
+  *  
+  *  Software distributed under the License is distributed on an "AS
+  *  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  *  implied. See the License for the specific language governing
+  *  rights and limitations under the License.
+  *  
+  *  The Original Code is Mozilla MathML Project.
+  *  
+  *  The Initial Developer of the Original Code is The University of
+  *  Queensland.  Portions created by The University of Queensland are
+  *  Copyright (C) The University of Queensland.  All
+  *  Rights Reserved.
+  *  
+  *  Contributor(s):
+  *    Roger B. Sidje <rbs@maths.uq.edu.au>
+  -->
+
+<document>
+
+<math>
+   <math:ms>Mixing MathML markups and other markups to get special effects</math:ms>
+   <math:mfrac linethickness="3">
+      <math:mfrac>
+        <math:mn>a</math:mn>
+        <html:img src="resource:/res/toolbar/TB_Back.gif"/>
+      </math:mfrac>
+      <math:mfrac>
+        <math:mn>b</math:mn>
+        <html:img src="resource:/res/toolbar/TB_Forward.gif"/>
+      </math:mfrac>
+   </math:mfrac>
+</math>
+
+<p/>
+
+<math>
+   <mo>See the difference between math:mi over an html:i (which doesn't understand the sriptlevel)</mo>
+
+   <math:mfrac>
+      <math:mi>a</math:mi>
+      <html:i>a</html:i>
+   </math:mfrac>
+</math>
+
+<!--
+<p/>
+<xul:toolbox>
+   <xul:toolbar>
+        <html:span style="display: table-cell">
+        <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
+        <html:img  src="../images/raptor.jpg"/><html:br/>Back</html:button>
+        </html:span>
+        <html:span style="display: table-cell">
+                <html:input style="width:325px;"></html:input>   
+        </html:span>
+   </xul:toolbar>        
+</xul:toolbox>
+
+<p/>
+-->
+
+
+<!-- 
+Possibly crash on the code below !
+It seems that a table-cell only wants to be sole child or has only table-cell as siblings.
+Bug or feature ?
+-->
+
+<!--  
+
+<math>
+   <math:mfrac>
+      <math:mi>a</math:mi>
+      <html:span style="display: table-cell">
+          <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
+          <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back</html:button>
+      </html:span>
+   </math:mfrac>
+</math>
+
+<p/>
+
+<math>
+   <math:mfrac>
+      <html:span style="display: table-cell">
+          <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
+          <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back</html:button>
+      </html:span>
+      <math:mi>a</math:mi>
+   </math:mfrac>
+</math>
+
+<p/>
+
+-->
+
+</document>

@@ -24,54 +24,58 @@
 
 <math xmlns="http://www.w3.org/Math/MathML">
 
-  <mn>Testing stretchy parentheses - NOT YET IMPLEMENTED</mn>
+<mn>Testing stretchy parentheses - NOT YET IMPLEMENTED</mn>
 
-  <mrow>
-       <mi>x</mi>
-       <mo>+</mo>
-       <mrow>
-           <mo>(</mo>
-           <mfrac linethickness="20">
-               <mi>a</mi>
-               <mi>b</mi>
-           </mfrac>
-           <mo stretchy="false">)</mo>
-       </mrow>
-  </mrow>
+<mrow>
+    <mi>x</mi>
+    <mo>+</mo>
+    <mrow>
+        <mo>(</mo>
+        <mfrac linethickness="20">
+            <mi>a</mi>
+            <mi>b</mi>
+        </mfrac>
+        <mo stretchy="false">)</mo>
+    </mrow>
+</mrow>
 
-  <mn>in binomial formulas</mn>
+<mn>in binomial formulas</mn>
 
-  <mrow>
-       <mrow>
-          <mo>(</mo>
-          <mfrac linethickness="0">
-             <mi>n</mi>
-             <mi>p</mi>
-          </mfrac>
+<mrow>
+    <mo>(</mo>
+    <mfrac linethickness="0">
+       <mi>n</mi>
+       <mi>p</mi>
+    </mfrac>
+    <mo>)</mo>
+</mrow>
+
+<mo>=</mo>
+  
+<mrow>
+    <mrow>
+       <mo>(</mo>
+       <mfrac linethickness="0">
+           <mrow><mi>n</mi><mo>-</mo><mn>1</mn></mrow>
+           <mi>p</mi>
+       </mfrac>
        <mo>)</mo>
-  </mrow>
+    </mrow>
+    
+    <mo>+</mo>
+    
+    <mrow>
+       <mo>(</mo>
+       <mfrac linethickness="0">
+          <mrow><mi>n</mi><mo>-</mo><mn>1</mn></mrow>
+          <mrow><mi>p</mi><mo>-</mo><mn>1</mn></mrow>
+       </mfrac>
+       <mo>)</mo>
+    </mrow>
 
-  <mo>=</mo>
+    <mo>;</mo>
+</mrow>
 
-  <mrow>
-     <mo>(</mo>
-     <mfrac linethickness="0">
-         <mrow><mi>n</mi><mo>-</mo><mn>1</mn></mrow>
-         <mi>p</mi>
-     </mfrac>
-     <mo>)</mo>
-  </mrow>
-  <mo>+</mo>
-  <mrow>
-     <mo>(</mo>
-     <mfrac linethickness="0">
-        <mrow><mi>n</mi><mo>-</mo><mn>1</mn></mrow>
-        <mrow><mi>p</mi><mo>-</mo><mn>1</mn></mrow>
-     </mfrac><mo>)
-     </mo></mrow>
-  </mrow>
-
-<mo>;</mo>
 
 <mrow>
   <msup>

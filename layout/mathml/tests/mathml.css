@@ -26,7 +26,7 @@ display: block;
 
 math, math[mode="inline"] {
   display: inline;
-/*  font-family: Arial; */
+/*  font-family: Times; */
    font-style: normal;
 /*   font-weight: bold; */
    font-size: 14pt;
@@ -38,7 +38,7 @@ math[mode="display"] {
 /*  font-family: Arial; */
    font-style: normal;
 /*   font-weight: bold; */
-/*   font-size: 12pt; */
+   font-size: 14pt;
 }
 
 /*
@@ -82,7 +82,7 @@ mphantom {
 */
 
 mfrac {
-  background-color: blue;
+/*  background-color: blue; */
 /* font-size: smaller */
 /*  border: 1px solid black; */
 }
@@ -142,7 +142,7 @@ mtd {
   background-color: inherit;
   text-align: center;
 /* border-style: inset; */
-  border-color: #c0c0c0;
+/*  border-color: #c0c0c0; */
   display: table-cell;
 }
 
