@@ -55,7 +55,7 @@ DSO_LDOPTS += \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/classic \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/native_threads \
-      -ljvm  -lhpi -ljava\
+      -ljvm -lhpi -ljava -lawt\
       $(NULL)
 
 #DSO_LDOPTS += \

@@ -58,14 +58,14 @@ NS_IMETHODIMP bcJavaModule::RegisterSelf(nsIComponentManager *aCompMgr, nsIFile 
     nsresult result = NS_OK;
     printf("--JavaModule::RegisterSelf\n");
     ifstream in(location);
-    char cidStr[500], progid[1000], desc[1000];
+    char cidStr[500], contractid[1000], desc[1000];
     in.getline(cidStr,1000);
-    in.getline(progid,1000);
+    in.getline(contractid,1000);
     in.getline(desc,1000);
-    printf("%s %s %s", cidStr, progid, desc);
+    printf("%s %s %s", cidStr, contractid, desc);
     nsCID  cid;
     cid.Parse((const char *)cidStr);
-    aCompMgr->RegisterComponentWithType(cid, desc, progid, _location, registryLocation, PR_TRUE, PR_TRUE, componentType);
+    aCompMgr->RegisterComponentWithType(cid, desc, contractid, _location, registryLocation, PR_TRUE, PR_TRUE, componentType);
     return result;
 }
 

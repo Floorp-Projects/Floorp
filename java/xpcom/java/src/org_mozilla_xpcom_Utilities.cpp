@@ -107,9 +107,17 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_xpcom_Utilities_getInterfaceMeth
     for (int i = 0; i < num; i++) {
         interfaceInfo->GetMethodInfo(i, (const nsXPTMethodInfo **)&info);
         const char* name = info->GetName();
-        // first letter of the method name is in lowercase in java
-        sprintf(buf, "%c%s", tolower(*name), name + 1);
-        env->SetObjectArrayElement(names, i, env->NewStringUTF(buf));                
+
+        if (info->IsGetter()) {
+            sprintf(buf, "get%c%s", toupper(*name), name+1);
+        } else if (info->IsSetter()) {
+            sprintf(buf, "set%c%s", toupper(*name), name+1);
+        } else {
+            // first letter of the method name is in lowercase in java
+            sprintf(buf, "%c%s", tolower(*name), name + 1);
+        }
+        env->SetObjectArrayElement(names, i, env->NewStringUTF(buf));
     }
     return names;
 }
+

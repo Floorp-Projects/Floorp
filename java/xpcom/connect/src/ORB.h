@@ -24,7 +24,7 @@
 #define __ORB_h
 #include  "bcIORB.h"
 
-#define STUBS_COUNT (100)
+#define STUBS_COUNT (1000)
 class ORB : public bcIORB {
 public:
     ORB();
