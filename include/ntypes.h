@@ -128,9 +128,7 @@ typedef enum {
 } LO_LineStyle;
 
 
-/*#ifndef NO_TAB_NAVIGATION  */
 typedef struct LO_tabFocus_struct LO_TabFocusData;
-/* NO_TAB_NAVIGATION  */
 
 /*
 	XLation

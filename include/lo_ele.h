@@ -1178,8 +1178,12 @@ typedef struct LO_Span_struct {
   LO_Any lo_any;
 
   Bool is_end;
+#ifdef DOM
   /* should probably keep some stuff in here... perhaps
 	 the tag, so we can look up the inline style. */
+  void *name_rec;  /* Points to lo_NameList * on the named span list */
+#endif
+
 } LO_SpanStruct;
 
 typedef struct LO_Div_struct {

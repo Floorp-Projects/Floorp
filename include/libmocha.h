@@ -96,6 +96,10 @@ typedef struct MochaDecoder {
     JSObject	    *option_prototype;
     JSObject	    *rect_prototype;
     JSObject	    *url_prototype;
+#ifdef DOM
+	JSObject		*span_prototype;
+	JSObject		*transclusion_prototype;
+#endif
 
     /*
      * Window sub-objects.  These must also follow the CLEAR/HOLD/DROP
@@ -155,6 +159,10 @@ typedef enum {
 	LM_IMAGES,
 	LM_FORMELEMENTS,
 	LM_LAYERS
+#ifdef DOM
+	, LM_SPANS
+	, LM_TRANSCLUSIONS
+#endif
 } ReflectedObject;
 
 /*
@@ -370,6 +378,22 @@ LO_GetNamedAnchorByIndex(MWContext *context, int32 layer_id, uint index);
 extern uint
 LO_EnumerateNamedAnchors(MWContext *context, int32 layer_id);
 
+#ifdef DOM
+/*
+ * Layout helper function to find a span by its index in the
+ * document.spans[] array.
+ */
+extern struct lo_NameList_struct *
+LO_GetSpanByIndex(MWContext *context, int32 layer_id, uint index);
+
+extern uint
+LO_EnumerateSpans(MWContext *context, int32 layer_id);
+
+extern JSObject *
+LO_GetMochaObjectOfParentSpan( LO_Element *ele);
+
+#endif
+
 /*
  * Layout Mocha helper function to find an HREF Anchor by its index in the
  * document.links[] array.
@@ -480,6 +504,16 @@ LM_ReflectNamedAnchor(MWContext *context, struct lo_NameList_struct *name_rec,
 extern JSObject *
 LM_ReflectImage(MWContext *context, LO_ImageStruct *image_data, 
 			    PA_Tag * tag, int32 layer_id, uint index);
+
+#ifdef DOM
+/* Function prototype to make JS know about <SPAN> elements */
+extern JSObject *
+LM_ReflectSpan(MWContext *context, struct lo_NameList_struct *name_rec,
+	       PA_Tag *tag, int32 layer_id, uint index);
+
+extern JSObject *
+LM_ReflectTransclusion(MWContext *context, void *ele, int32 layer_id, uint index);
+#endif
 
 extern JSBool
 LM_CanDoJS(MWContext *context);
