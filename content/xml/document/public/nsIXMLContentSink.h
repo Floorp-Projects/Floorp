@@ -56,6 +56,9 @@ class nsIWebShell;
 
 class nsIXMLContentSink : public nsIContentSink {
 public:
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_SINK_IID)
+
   /**
    * This method is called by the parser when it encounters
    * the XML declaration for a document.
