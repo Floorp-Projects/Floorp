@@ -57,7 +57,6 @@
 #include "nsILoadGroup.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
