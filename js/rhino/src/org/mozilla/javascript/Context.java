@@ -2187,7 +2187,7 @@ public class Context {
 
     // for Objects, Arrays to tag themselves as being printed out,
     // so they don't print themselves out recursively.
-	// Use ObjToIntMap instead of java.util.HashSet for JDK 1.1 compatibility
+    // Use ObjToIntMap instead of java.util.HashSet for JDK 1.1 compatibility
     ObjToIntMap iterating;
 
     Object interpreterSecurityDomain;
