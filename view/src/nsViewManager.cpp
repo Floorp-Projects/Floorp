@@ -310,7 +310,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   trect.ScaleRoundOut(p2t);
 
   PRBool  result;
-  aView->Paint(*localcx, trect, 0, result);
+  // Paint the view. The clipping rect was set above set don't clip again.
+  aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
@@ -384,7 +385,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   localcx->SetClipRect(trect, nsClipCombine_kReplace);
 
   PRBool  result;
-  aView->Paint(*localcx, trect, 0, result);
+  // Paint the view. The clipping rect was set above set don't clip again.
+  aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
