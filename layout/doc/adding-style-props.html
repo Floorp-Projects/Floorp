@@ -15,11 +15,15 @@
       for 'inherit' and '-moz-initial' (didn't test with code, though),
       and explained what the final boolean in CheckPropertyData is for.
     </li>
+    <li>
+      11/09/2002: Christopher Aillon (caillon@returnzero.com): updated
+      nsCSSPropList.h macro description and added information about
+      nsIDOMCSS2Properties.idl.
+    </li>
   </ul>
     <p>
       <b>NOTE</b>:  This document is still missing a few pieces.  I need to
-      add information on adding to <code>nsIDOM[NS]CSS2Properties</code>
-      and <code>nsDOMCSSDeclaration</code>.
+      add information on adding to <code>nsComputedDOMStyle</code>.
     </p>
   </blockquote>
   <h2>Overview</h2>
@@ -68,22 +72,25 @@ names with '-moz-').</li>
 They are:
 </p>
   <ul>
-    <li>CSS Property Names and Hint Tables: the new property name must be
-made formally know to the system</li>
-    <li>CSS Declaration: the declaration must be able to hold the property
-and its value(s)</li>
-    <li>CSS Parser: the parser must be able to parse the property name, validate
-the values, and provide a declaration for the property and value</li>
-    <li>Style Context: the StyleContext must be able to hold the resolved
-value of the property, and provide a means to retrieve the property value.
-Additionally, the StyleContext has to know what kind of impact a change to
-this property causes.</li>
-    <li>Rule Nodes: the RuleNodes need to know how the property is inherited
-and how it is shared by other elements.</li>
-    <li>Layout: layout has to know what to do with the property, in other
-words, the meaning of the property.</li>
+    <li><a href="#CSSPropList">CSS Property Names and Hint Tables</a>: the new
+property name must be made formally know to the system</li>
+    <li><a href="#CSSDeclaration">CSS Declaration</a>: the declaration must be
+able to hold the property and its value(s)</li>
+    <li><a href="#Parser">CSS Parser</a>: the parser must be able to parse the
+property name, validate the values, and provide a declaration for the property
+and value</li>
+    <li><a href="#StyleContext">Style Context</a>: the StyleContext must be able
+to hold the resolved value of the property, and provide a means to retrieve the
+property value. Additionally, the StyleContext has to know what kind of impact a
+change to this property causes.</li>
+    <li><a href="#RuleNode">Rule Nodes</a>: the RuleNodes need to know how the
+property is inherited and how it is shared by other elements.</li>
+    <li><a href="#DOM">DOM</a>: Your style should be accessible from the DOM so
+users may dynamically set/get its property value.</li>
+    <li><a href="#Layout">Layout</a>: layout has to know what to do with the
+property, in other words, the meaning of the property.</li>
   </ul>
-  <h3>CSS Property Name / Constants / Hints</h3>
+  <h3><a name="CSSPropList">CSS Property Name / Constants / Hints</a></h3>
 
 <p>
 First, add the new name to the property list in <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsCSSPropList.h">
@@ -91,11 +98,12 @@ nsCSSPropList.h</a>
   Insert the property in the list alphabetically, using the existing
 property names as a template. The format of the entry you will create is:
 </p>
-  <pre>CSS_PROP(-moz-force-broken-image-iconst, force_broken_image_icons, NS_STYLE_HINT_FRAMECHANGE) // bug 58646</pre>
+  <pre>CSS_PROP(-moz-force-broken-image-icons, force_broken_image_icons, MozForceBrokenImageIcons, NS_STYLE_HINT_FRAMECHANGE) // bug 58646</pre>
 
 <p>The first value is the formal property name, in other words the property
 name as it is seen by the CSS parser.<br>
 The second value is the name of the property as it will appear internally.<br>
+The third value is the name of the DOM property used to access your style.<br>
 The last value indicates what must change when the value of the property
 changes. It should be an
 <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsChangeHint.h">nsChangeHint</a>.</p>
@@ -107,7 +115,7 @@ nsStyleConsts.h</a>
 nsCSSProps.cpp</a>
  (note: this cookbook does not do this since the new property does not require
 any new keywords for the property values).
-  <h3>CSS Declaration</h3>
+  <h3><a name="CSSDeclaration">CSS Declaration</a></h3>
 Changes will need to be made to the structs and classes defined in <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSDeclaration.h">
 nsCSSDeclaration.h </a>
 and <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSDeclaration.cpp">
@@ -239,7 +247,7 @@ the 'List' method to output the property value.<br>
 
 </pre>
  
-  <h3>CSS Parser</h3>
+  <h3><a name="Parser">CSS Parser</a></h3>
 Next, the CSSParser must be educated about this new property so that it can
 read in the formal declarations and build up the internal declarations that
 will be used to build the rules. If you are adding a simple property that
@@ -265,7 +273,7 @@ variant flag</a>
   <pre>    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);</pre>
 This will parse the value as a positive integer value, which is what we want.<br>
   <br>
-  <h3>Style Context</h3>
+  <h3><a name="StyleContext">Style Context</a></h3>
 Having implemented support for the new property in the CSS Parser and CSS
 Declaration classes in the content module, it is now time to provide support
 for the new property in layout. The Style Context must be given a new data
@@ -379,7 +387,7 @@ MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID&amp; aID, nsC
 
 }
 </pre>
-  <h3>Rule Node</h3>
+  <h3><a name="RuleNode">Rule Node</a></h3>
 Now we have to update the RuleNode code to know about the new property. First,
 locate the PropertyCheckData array for the data that you added the new property
 to. For this example, we add the following:<br>
@@ -439,7 +447,24 @@ to the style struct:<br>
   }
   ...
 </pre>
-  <h3>Layout</h3>
+  <h3><a name="DOM">DOM</a></h3>
+Users in scripts, or anywhere outside of layout/ or content/ may need to access
+the new property.  This is done using the CSS OM, specifically
+<code>nsIDOMCSSStyleDeclaration</code>, <code>nsIDOMCSS2Properties</code>, and
+<code>nsIDOMNSCSS2Properties</code>.  By the magic of C++ pre-processing, the
+CSS2Properties interfaces will be implemented automatically when you
+<a href="#CSSPropList">add your property</a> to <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsCSSPropList.h">
+nsCSSPropList.h</a>. Because of this, if you fail to add your property to the
+DOM interface, you will be rewarded with compiler errors.  All you have to do
+is modify <a href="http://lxr.mozilla.org/mozilla/source/dom/public/idl/css/nsIDOMCSS2Properties.idl">
+nsIDOMCSS2Properties.idl</a> and add the appropriate attribute to the
+<code>nsIDOMNSCSS2Properties</code> interface (lower in the file).
+For example:<br>
+  <pre>           attribute DOMString        MozForceBrokenImageIcon;
+                                        // raises(DOMException) on setting
+
+</pre>
+  <h3><a name="Layout">Layout</a></h3>
 OK, finally the style system is supporting the new property. It is time to
 actually make use of it now.<br>
   <br>
