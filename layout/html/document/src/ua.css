@@ -507,7 +507,7 @@ input {
 }
 input[type=hidden] {
   border: none;
-  visibility: hidden;
+  visibility: collapse;
 }
 
 /*------- Focus ------*/
@@ -921,7 +921,7 @@ label {
 
 /* Combo box style */
 select:-moz-dummy-option { 
-  visibility: hidden; 
+  visibility: collapse; 
   content: "X"; 
   /*display: block;*/
 }
@@ -1335,7 +1335,7 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 /* combobox dropdown list hidden */
 select:-moz-dropdown-list {
-  visibility:hidden;
+  visibility:collapse;
 }
 
 /* combobox dropdown list visible */
@@ -1475,5 +1475,5 @@ xul|scrollbar[align="vertical"] xul|scrollbarbutton[type="increment"][disabled="
 }
 
 xul|scrollbar[value="hidden"] {
-   visibility: hidden;
+   visibility: hidden; /* should be collapse but for box frame */
 }
