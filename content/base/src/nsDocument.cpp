@@ -873,14 +873,6 @@ nsDocument::GetPrincipal()
   return mPrincipal;
 }
 
-// nsIScriptObjectPrincipal version of GetPrincipal()
-NS_IMETHODIMP
-nsDocument::GetPrincipal(nsIPrincipal **aPrincipal)
-{
-  NS_IF_ADDREF(*aPrincipal = GetPrincipal());
-  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
-}
-
 void
 nsDocument::SetPrincipal(nsIPrincipal *aNewPrincipal)
 {

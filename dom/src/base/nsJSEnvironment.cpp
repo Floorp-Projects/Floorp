@@ -689,7 +689,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   // the entities who signed this script, or the fully-qualified-domain-name
   // or "codebase" from which it was loaded.
   JSPrincipals *jsprin;
-  nsCOMPtr<nsIPrincipal> principal = aPrincipal;
+  nsIPrincipal *principal = aPrincipal;
   if (aPrincipal) {
     aPrincipal->GetJSPrincipals(mContext, &jsprin);
   }
@@ -701,8 +701,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
       do_QueryInterface(global, &rv);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    rv = objPrincipal->GetPrincipal(getter_AddRefs(principal));
-    if (NS_FAILED(rv))
+    principal = objPrincipal->GetPrincipal();
+    if (!principal)
       return NS_ERROR_FAILURE;
     principal->GetJSPrincipals(mContext, &jsprin);
   }
@@ -870,7 +870,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // the entities who signed this script, or the fully-qualified-domain-name
   // or "codebase" from which it was loaded.
   JSPrincipals *jsprin;
-  nsCOMPtr<nsIPrincipal> principal = aPrincipal;
+  nsIPrincipal *principal = aPrincipal;
   if (aPrincipal) {
     aPrincipal->GetJSPrincipals(mContext, &jsprin);
   }
@@ -879,8 +879,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       do_QueryInterface(GetGlobalObject(), &rv);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    rv = objPrincipal->GetPrincipal(getter_AddRefs(principal));
-    if (NS_FAILED(rv))
+    principal = objPrincipal->GetPrincipal();
+    if (!principal)
       return NS_ERROR_FAILURE;
     principal->GetJSPrincipals(mContext, &jsprin);
   }
@@ -1222,8 +1222,8 @@ nsJSContext::CompileFunction(void* aTarget,
     // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
     nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
     if (globalData) {
-      nsCOMPtr<nsIPrincipal> prin;
-      if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(prin))))
+      nsIPrincipal *prin = globalData->GetPrincipal();
+      if (!prin)
         return NS_ERROR_FAILURE;
       prin->GetJSPrincipals(mContext, &jsprin);
     }

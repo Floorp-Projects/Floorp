@@ -485,7 +485,8 @@ public:
   NS_DECL_NSIDOM3EVENTTARGET
 
   // nsIScriptObjectPrincipal
-  NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
+  // virtual nsIPrincipal* GetPrincipal();
+  // Already declared in nsIDocument
 
   virtual nsresult Init();
 

@@ -1604,8 +1604,8 @@ nsHTMLDocument::GetDomainURI(nsIURI **aURI)
 {
   *aURI = nsnull;
 
-  nsCOMPtr<nsIPrincipal> principal;
-  if (NS_FAILED(GetPrincipal(getter_AddRefs(principal))))
+  nsIPrincipal *principal = GetPrincipal();
+  if (!principal)
     return;
 
   principal->GetDomain(aURI);

@@ -333,9 +333,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
   
-  NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal) {
-    NS_ADDREF(*aPrincipal = mPrincipal);
-    return NS_OK;
+  virtual nsIPrincipal* GetPrincipal() {
+    return mPrincipal;
   }
 
   BackstagePass(nsIPrincipal *prin) :
