@@ -75,17 +75,7 @@ endif
 #######################################################################
 
 
-CPORLN = ln -s
-ifeq ($(OS_ARCH),WINNT)
-CPORLN = cp
-endif
-
 DBM_SRCS = $(CSRCS)
-
-ALL_TRASH += $(DBM_SRCS)
-
-$(DBM_SRCS) : % : $(CORE_DEPTH)/../dbm/src/%
-	-$(CPORLN) $< .
 
 export:: $(DBM_SRCS)
 

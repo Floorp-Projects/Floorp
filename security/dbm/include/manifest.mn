@@ -34,6 +34,8 @@
 
 CORE_DEPTH = ../..
 
+VPATH  = $(CORE_DEPTH)/../dbm/include
+
 MODULE = dbm
 
 EXPORTS =	nsres.h   \

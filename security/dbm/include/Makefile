@@ -72,17 +72,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-CPORLN = ln -s
-ifeq ($(OS_ARCH),WINNT)
-CPORLN = cp
-endif
-
 DBM_SRCS = $(EXPORTS) $(PRIVATE_EXPORTS) watcomfx.h
-
-ALL_TRASH += $(DBM_SRCS)
-
-$(DBM_SRCS) : % : $(CORE_DEPTH)/../dbm/include/%
-	-$(CPORLN) $< .
 
 export:: $(DBM_SRCS)
 

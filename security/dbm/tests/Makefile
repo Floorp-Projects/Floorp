@@ -34,6 +34,8 @@
 DEPTH		= ../..
 CORE_DEPTH	= ../..
 
+VPATH		= $(CORE_DEPTH)/../dbm/tests
+
 MODULE		= dbm
 
 CSRCS		= lots.c
@@ -43,7 +45,7 @@ PROGRAM		= lots
 include $(DEPTH)/coreconf/config.mk
 
 ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DSTDARG
+DEFINES		+= -DSTDARG -DSTDC_HEADERS
 LIBDBM		= ../src/$(PLATFORM)/dbm$(STATIC_LIB_SUFFIX)
 else
 LIBDBM		= ../src/$(PLATFORM)/libdbm$(STATIC_LIB_SUFFIX)
@@ -94,6 +96,7 @@ CFLAGS		+= -DSTDARG
 endif
 
 INCLUDES	+= -I../include
+INCLUDES	+= -I$(CORE_DEPTH)/../dbm/include
 
 LDFLAGS		= $(LDOPTS) $(LIBDBM)
 
@@ -103,23 +106,14 @@ lots.pure: lots
 	purify $(CC) -o lots.pure $(CFLAGS) $(OBJS) $(MYLIBS)
 
 crash: crash.o $(MYLIBS)
-	$(CC) -o crash $(CFLAGS) crash.o $(MYLIBS)
+	$(CC) -o crash $(CFLAGS) $^
 
 crash.pure: crash.o $(MYLIBS)
-	purify $(CC) -o crash.pure $(CFLAGS) crash.o $(MYLIBS)
+	purify $(CC) -o crash.pure $(CFLAGS) $^
 
 
-CPORLN = ln -s
-ifeq ($(OS_ARCH),WINNT)
-CPORLN = cp
-endif
 
 DBM_SRCS = $(CSRCS)
-
-ALL_TRASH += $(DBM_SRCS)
-
-$(DBM_SRCS) : % : $(CORE_DEPTH)/../dbm/tests/%
-	-$(CPORLN) $< .
 
 export:: $(DBM_SRCS)
 
