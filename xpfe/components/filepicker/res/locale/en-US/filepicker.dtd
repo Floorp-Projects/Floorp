@@ -8,3 +8,6 @@
 <!ENTITY showHiddenFiles.label  "Show hidden files and directories">
 
 <!ENTITY noPermissionError.label "You do not have the permissions necessary to view this directory.">
+
+<!ENTITY folderUp.tooltiptext   "Go up a level">
+<!ENTITY folderHome.tooltiptext "Go to home"> 
