@@ -1398,7 +1398,11 @@ nsSocketTransport::OnSocketEvent(PRUint32 type, nsresult status, nsISupports *pa
         LOG(("  MSG_OUTPUT_PENDING\n"));
         OnMsgOutputPending();
         break;
-
+    case MSG_TIMEOUT_CHANGED:
+        LOG(("  MSG_TIMEOUT_CHANGED\n"));
+        mPollTimeout = mTimeouts[(mState == STATE_TRANSFERRING)
+          ? TIMEOUT_READ_WRITE : TIMEOUT_CONNECT];
+        break;
     default:
         LOG(("  unhandled event!\n"));
     }
@@ -1788,6 +1792,7 @@ nsSocketTransport::SetTimeout(PRUint32 type, PRUint32 value)
     NS_ENSURE_ARG_MAX(type, nsISocketTransport::TIMEOUT_READ_WRITE);
     // truncate overly large timeout values.
     mTimeouts[type] = (PRUint16) PR_MIN(value, PR_UINT16_MAX);
+    PostEvent(MSG_TIMEOUT_CHANGED);
     return NS_OK;
 }
 

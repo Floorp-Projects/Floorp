@@ -310,8 +310,11 @@ nsSocketTransportService::PollTimeout()
     PRUint32 minR = PR_UINT16_MAX;
     for (PRUint32 i=0; i<mActiveCount; ++i) {
         const SocketContext &s = mActiveList[i];
-        PRUint32 r = s.mHandler->mPollTimeout - s.mElapsedTime;
-        NS_ASSERTION(r <= s.mHandler->mPollTimeout, "oops");
+        // mPollTimeout could be less than mElapsedTime if setTimeout
+        // was called with a value smaller than mElapsedTime.
+        PRUint32 r = (s.mElapsedTime < s.mHandler->mPollTimeout)
+          ? s.mHandler->mPollTimeout - s.mElapsedTime
+          : 0;
         if (r < minR)
             minR = r;
     }
