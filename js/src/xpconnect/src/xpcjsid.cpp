@@ -347,10 +347,11 @@ nsJSIID::NewID(const char* str)
             nsIInterfaceInfoManager* iim;
             if(nsnull != (iim = nsXPConnect::GetInterfaceInfoManager()))
             {
-                nsIInterfaceInfo* iinfo;
+                nsCOMPtr<nsIInterfaceInfo> iinfo;
                 PRBool canScript;
                 nsID* pid;
-                if(NS_SUCCEEDED(iim->GetInfoForName(str, &iinfo)) &&
+                if(NS_SUCCEEDED(iim->GetInfoForName(str,
+                                                    getter_AddRefs(iinfo))) &&
                    NS_SUCCEEDED(iinfo->IsScriptable(&canScript)) && canScript &&
                    NS_SUCCEEDED(iinfo->GetIID(&pid)) && pid)
                 {
