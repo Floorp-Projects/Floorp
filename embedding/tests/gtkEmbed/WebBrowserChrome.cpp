@@ -36,8 +36,6 @@
 #include "gtkEmbed.h"
 #include "WebBrowserChrome.h"
 
-nsVoidArray WebBrowserChrome::sBrowserList;
-
 WebBrowserChrome::WebBrowserChrome()
 {
 	NS_INIT_REFCNT();

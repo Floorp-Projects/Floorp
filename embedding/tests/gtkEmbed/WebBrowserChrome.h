@@ -71,8 +71,6 @@ protected:
    nsCOMPtr<nsIWebBrowser> mWebBrowser;
    nsCOMPtr<nsIBaseWindow> mBaseWindow;
    nsCOMPtr<nsIWebBrowserChrome> mTopWindow;
-    
-   static nsVoidArray sBrowserList;
 };
 
 #endif /* __WebBrowserChrome__ */
