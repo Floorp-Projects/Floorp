@@ -20,6 +20,7 @@
 #define NS_IMPL_IDS
 #include "nsIAppShellService.h"
 #include "nsICmdLineService.h"
+#include "nsIDOMXPConnectFactory.h"
 #include "nsAppShellCIDs.h"
 
 #include "nsIEditor.h"
@@ -68,6 +69,8 @@ static NS_DEFINE_IID(kRDFCoreCID,          NS_RDFCORE_CID);
 // Class ID's
 static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
+
 ///static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
 //static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
@@ -95,6 +98,7 @@ NS_SetupRegistry_1()
 
   nsComponentManager::RegisterComponent(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
 //#if defined(XP_PC) || defined(XP_MAC)
   nsComponentManager::RegisterComponent(kAppCoresManagerCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
