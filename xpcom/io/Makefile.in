@@ -32,7 +32,6 @@ LIBRARY_NAME	= xpcomio_s
 REQUIRES	= uconv \
 		  string \
 		  necko \
-		  chrome \
 		  $(NULL)
 
 CPPSRCS		= \

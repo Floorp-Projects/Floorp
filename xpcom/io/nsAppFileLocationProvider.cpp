@@ -30,10 +30,6 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 
-#ifndef XPCOM_STANDALONE
-#include "nsIChromeRegistry.h"
-#endif
-
 #if defined(XP_MAC)
 #include <Folders.h>
 #include <Script.h>
@@ -97,9 +93,6 @@
 #define SEARCH_DIR_NAME             "searchplugins"
 #endif
 
-// default mailnews files parent folder
-#define MESSENGER_DIR_NAME          "messenger"
-
 //*****************************************************************************
 // nsAppFileLocationProvider::Constructor/Destructor
 //*****************************************************************************
@@ -112,11 +105,6 @@ nsAppFileLocationProvider::nsAppFileLocationProvider()
 nsAppFileLocationProvider::~nsAppFileLocationProvider()
 {
 }
-
-// Chrome reg service
-#ifndef XPCOM_STANDALONE
-static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
-#endif
 
 //*****************************************************************************
 // nsAppFileLocationProvider::nsISupports
@@ -200,18 +188,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(SEARCH_DIR_NAME);
     }
-    else if (nsCRT::strcmp(prop, NS_APP_MESSENGER_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativePath(DEFAULTS_DIR_NAME);
-            if (NS_SUCCEEDED(rv)) {
-                rv = localFile->AppendRelativePath(MESSENGER_DIR_NAME);
-                if (NS_SUCCEEDED(rv))
-                    rv = GetSelectedLocaleDataDir(localFile);
-            }
-        }  
-    }
+ 
 
     if (localFile && NS_SUCCEEDED(rv))
         return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
@@ -370,44 +347,3 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
    return rv;
 }
 
-//----------------------------------------------------------------------------------------
-// GetSelectedLocaleDataDir - If a locale is selected, appends the selected locale to the 
-//                            defaults data dir and returns that new defaults data dir
-//----------------------------------------------------------------------------------------
-NS_METHOD nsAppFileLocationProvider::GetSelectedLocaleDataDir(nsILocalFile *defaultsDataDir)
-{
-#ifndef XPCOM_STANDALONE
-    NS_ENSURE_ARG_POINTER(defaultsDataDir);
-
-    nsresult rv;
-    PRBool baseDirExists = PR_FALSE;
-    rv = defaultsDataDir->Exists(&baseDirExists);
-    NS_ENSURE_SUCCESS(rv,rv);
-    if (baseDirExists) {    
-        nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsXPIDLString localeName;
-            nsAutoString regionKey; regionKey.AssignWithConversion("global-region");
-            rv = chromeRegistry->GetSelectedLocale(regionKey.get(), getter_Copies(localeName));
-            if (NS_SUCCEEDED(rv) && +                localeName.get() && +                nsCRT::strlen(localeName.get())) {
-                PRBool localeDirExists = PR_FALSE;
-                nsCOMPtr<nsIFile> localeDataDir;
-                rv = defaultsDataDir->Clone(getter_AddRefs(localeDataDir));
-                NS_ENSURE_SUCCESS(rv,rv);
-                rv = localeDataDir->AppendUnicode(localeName);
-                NS_ENSURE_SUCCESS(rv,rv);
-                rv = localeDataDir->Exists(&localeDirExists);
-                NS_ENSURE_SUCCESS(rv,rv);
-                if (localeDirExists) {
-                    // use locale provider instead
-                    rv = defaultsDataDir->AppendUnicode(localeName);            
-                    NS_ENSURE_SUCCESS(rv,rv);
-                }
-            }
-        }
-    }
-    return NS_OK;
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
