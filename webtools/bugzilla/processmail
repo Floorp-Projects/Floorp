@@ -141,7 +141,7 @@ sub DescDependencies {
                 my ($bug_status, $resolution) = (FetchSQLData());
                 my $desc;
                 if ($bug_status eq "NEW" || $bug_status eq "ASSIGNED" ||
-                    $bug_status eq "REOPENED") {
+                    $bug_status eq "REOPENED" || $bug_status eq "UNCONFIRMED") {
                     $desc = "";
                 } else {
                     $desc = "[$resolution]";

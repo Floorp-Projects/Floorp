@@ -321,11 +321,8 @@ sub EmitDependList {
     my ($desc, $myfield, $targetfield) = (@_);
     print "<th align=right>$desc:</th><td>";
     my @list;
-    SendSQL("select dependencies.$targetfield
- from dependencies, bugs
- where dependencies.$myfield = $id
-   and bugs.bug_id = dependencies.$targetfield
- order by dependencies.$targetfield");
+    SendSQL("select $targetfield from dependencies where  
+             $myfield = $id order by $targetfield");
     while (MoreSQLData()) {
         my ($i) = (FetchSQLData());
         push(@list, $i);
