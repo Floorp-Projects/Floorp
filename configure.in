@@ -323,6 +323,7 @@ dnl ========================================================
 AR_FLAGS='cr $@'
 AR_LIST='$(AR) t'
 AR_EXTRACT='$(AR) x'
+AR_DELETE='$(AR) d'
 AS='$(CC)'
 AS_DASH_C_FLAG='-c'
 DLL_SUFFIX=so
@@ -627,6 +628,7 @@ case "$target" in
     AR_FLAGS='-M -a $@'
     AR_LIST='ar.elf t'
     AR_EXTRACT='ar.elf x'
+    AR_DELETE='ar.elf d'
     _DEFINES_CFLAGS='-Wp,-include,$(DEPTH)/config-defs.h -DMOZILLA_CLIENT'
     _DEFINES_CXXFLAGS='-Wp,-include,$(DEPTH)/config-defs.h -DMOZILLA_CLIENT'
     _PREPROCESSOR_PREFIX="-Wp,"
@@ -717,6 +719,7 @@ dnl the qsort routine under solaris is faulty
        DSO_LDOPTS='-G -h $@'
        AR_LIST="$AR t"
        AR_EXTRACT="$AR x"
+       AR_DELETE="$AR d"
        AR='$(CXX) -xar'
        AR_FLAGS='-o $@'
        AS='/usr/ccs/bin/as'
@@ -2763,6 +2766,7 @@ AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
 AC_SUBST(AR_LIST)
 AC_SUBST(AR_EXTRACT)
+AC_SUBST(AR_DELETE)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)

@@ -183,7 +183,7 @@ else
 ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
 			  $(NOSUCHFILE) $(JMC_STUBS) so_locations \
 			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*) \
-                          $(PROGOBJS)
+                          $(PROGOBJS) $(LIBRARY:%.a=.%.timestamp)
 endif
 
 ifdef JAVA_OR_NSJVM
@@ -554,6 +554,40 @@ endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
 endif
 
+ifndef SHARED_LIBRARY_LIBS
+
+# This rule overrides the builtin rule that tells make how to insert object
+# files into archive libraries.  A few notes about what is going on:
+# The whole point of doing this is to avoid having to store the .o files in
+# addition to the .a files, but not have regenerate all the .o files every time
+# we regenerate the .a file.  Make knows how to do this by itself.  However,
+# it wants to insert the .o files into the .a file 1 at a time which is both
+# slow and also breaks parallel builds.  These rules get make to build all
+# the .o files ahead of time and insert them all at once.  We use the
+# .timestamp file to make this work reliably.
+#
+# I have learned that $(shell) and $(wildcard) variables do not necessarily
+# get evaluated when they are used.  All the $(shell) variables for a rule
+# seem to get evaluated right before the rules commands are executed, not
+# as we proceed from command to the next.  This means that the "ar t" is
+# evaluating the library before we insert new objects.
+#
+$(LIBRARY)(%.o): %.o
+	@echo 'queueing $< for insertion into $(LIBRARY)'; \
+	touch $(LIBRARY:%.a=.%.timestamp)
+
+$(LIBRARY:%.a=.%.timestamp) :
+	@touch $@
+
+$(LIBRARY): $(LIBRARY)($(OBJS) $(LOBJS)) $(LIBRARY:%.a=.%.timestamp) Makefile.in Makefile
+	@touch $(LIBRARY:%.a=.%.timestamp)
+	$(AR) $(AR_FLAGS) $(filter $filter(%.o, $^), $(shell echo *.o))
+	$(AR_DELETE) $(LIBRARY) $(filter-out $(filter %.o, $^), \
+	$(shell [ -f $(LIBRARY) ] && $(AR_LIST) $(LIBRARY)))
+	@touch $@
+
+else
+
 $(LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
 	rm -f $@
 ifdef SHARED_LIBRARY_LIBS
@@ -563,6 +597,8 @@ endif
 	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
+
+endif
 else
 ifdef OS2_IMPLIB
 $(LIBRARY): $(OBJS) $(DEF_FILE)
