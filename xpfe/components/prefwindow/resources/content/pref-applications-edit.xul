@@ -99,7 +99,7 @@
       // Default to true in case the preference cannot be retrieved
       var forceAlwaysAsk = true;
       try {
-        var prefService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefService);
+        var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
         var prefBranch = prefService.getBranch("browser.helperApps.alwaysAsk.");
         forceAlwaysAsk = prefBranch.getBoolPref("force");
       } catch(e) {
