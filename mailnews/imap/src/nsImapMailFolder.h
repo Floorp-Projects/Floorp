@@ -97,7 +97,9 @@ public:
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
  	NS_IMETHOD DeleteMessage(nsIMessage *message);
-	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage **message);
+	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
+                                         **message);
+    NS_IMETHOD GetNewMessages();
 
     // nsIImapMailFolderSink methods
     // Tell mail master about a discovered imap mailbox

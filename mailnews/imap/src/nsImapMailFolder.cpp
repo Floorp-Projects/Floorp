@@ -511,7 +511,6 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 	return rv;
 }
 
-
 NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 {
 	nsresult rv = NS_OK;
@@ -848,6 +847,15 @@ nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
 NS_IMETHODIMP nsImapMailFolder::DeleteMessage(nsIMessage* message)
 {
     nsresult rv = NS_ERROR_FAILURE;
+    return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetNewMessages()
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
     return rv;
 }
 
