@@ -198,19 +198,6 @@ nsString::SetCapacity( PRUint32 aNewCapacity )
 
 
 /**
- * This method returns the internal unicode buffer. 
- * Now that we've factored the string class, this should never
- * be able to return a 1 byte string.
- *
- * @update  gess1/4/99
- * @return  ptr to internal (2-byte) buffer;
- */
-const PRUnichar* nsString::get() const {
-  const PRUnichar* result=(eOneByte==GetCharSize()) ? 0 : mUStr;
-  return result;
-}
-
-/**
  * set a char inside this string at given index
  * @param aChar is the char you want to write into this string
  * @param anIndex is the ofs where you want to write the given char
