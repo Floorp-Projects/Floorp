@@ -58,6 +58,7 @@ ImageSystemServicesImpl::~ImageSystemServicesImpl()
 
 NS_IMPL_ISUPPORTS(ImageSystemServicesImpl, kISystemServicesIID)
 
+static
 void
 timer_callback (nsITimer *aTimer, void *aClosure)
 {

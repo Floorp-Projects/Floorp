@@ -229,6 +229,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
 
 // XXX a hack until the reflow state does this correctly
 // XXX when it gets fixed, leave in the printf statements or add an assertion
+static
 void FieldSetHack(nsHTMLReflowState& aReflowState, char* aMessage, PRBool aUseMax)
 {
   if (aReflowState.computedWidth == 0) {
