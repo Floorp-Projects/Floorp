@@ -34,8 +34,8 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["nglayoutDebugWindow",
-                       "debugXULBoxes", "nglayoutDebugUseXBLForms", "nglayoutDebugDisableXULCache", "browserEnableCache",
-                       "browserEnableDiskCache", "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
+                       "debugXULBoxes", "nglayoutDebugUseXBLForms", 
+                       "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
                        "browserEnableTBDnD"];
   ]]>
   </script>
@@ -58,15 +58,6 @@
     <label value="&debugMiscellaneous.label;"/>
     <checkbox id="nglayoutDebugUseXBLForms" label="Use XBL-based form controls (takes effect after restart). Don't file bugs on these controls; they are still under construction."
               pref="true" preftype="bool" prefstring="nglayout.debug.enable_xbl_forms"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugDisableXULCache" label="&debugDisableXULCache.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
-              prefattribute="checked"/>
-    <checkbox id="browserEnableDiskCache" label="&debugEnableDiskCache.label;"
-              pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
-              prefattribute="checked"/>
-    <checkbox id="browserEnableCache" label="&debugEnableMemCache.label;"
-              pref="true" preftype="bool" prefstring="browser.enable.cache"
               prefattribute="checked"/>
     <checkbox id="browserEnableTBDnD" label="&debugEnableTBDnD.label;"
               pref="true" preftype="bool" prefstring="browser.enable.tb_dnd"
