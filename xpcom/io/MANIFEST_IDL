@@ -18,3 +18,4 @@ nsIScriptableInputStream.idl
 nsISeekableStream.idl
 nsIStorageStream.idl
 nsIStreamBufferAccess.idl
+nsIStringStream.idl
