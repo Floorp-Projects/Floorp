@@ -72,7 +72,7 @@ topsrcdir		= $(DEPTH)
 endif
 
 ifndef MOZILLA_DIR
-MOZILLA_DIR = $(DEPTH)
+MOZILLA_DIR = $(topsrcdir)
 endif
 
 ifndef INCLUDED_CONFIG_MK
@@ -1143,11 +1143,11 @@ _JAR_REGCHROME_JAR=0
 endif
 
 chrome:: $(CHROME_DEPS)
-	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/../mozilla/config/make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(MOZILLA_DIR)/config/make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 
 install:: chrome
 
-REGCHROME = $(PERL) $(topsrcdir)/../mozilla/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_JAR)
+REGCHROME = $(PERL) $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_JAR)
 
 ##############################################################################
 
