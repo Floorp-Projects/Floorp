@@ -64,7 +64,11 @@ NS_IMETHODIMP
 nsStubNotifier::ItemScheduled(const PRUnichar* message )
 {
     if (m_progress)
-        m_progress( nsCAutoString(message), 0, 0 );
+      {
+        nsCAutoString messageCStr;
+        messageCStr.AssignWithConversion(message);
+        m_progress( messageCStr, 0, 0 );
+      }
     return NS_OK;
 }
 
@@ -72,7 +76,11 @@ NS_IMETHODIMP
 nsStubNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
     if (m_progress)
-        m_progress( nsCAutoString(message), itemNum, totNum );
+      {
+        nsCAutoString messageCStr;
+        messageCStr.AssignWithConversion(message);
+        m_progress( messageCStr, itemNum, totNum );
+      }
     return NS_OK;
 }
 
