@@ -55,6 +55,7 @@ struct nsRegistry : public nsIRegistry {
     NS_IMETHOD OpenWellKnownRegistry( uint32 regid );
     NS_IMETHOD OpenDefault();
     NS_IMETHOD Close();
+    NS_IMETHOD IsOpen( PRBool *result );
 
     NS_IMETHOD GetString( Key baseKey, const char *path, char **result );
     NS_IMETHOD SetString( Key baseKey, const char *path, const char *value );
@@ -491,6 +492,15 @@ NS_IMETHODIMP nsRegistry::Close() {
     }
     return regerr2nsresult( err );
 }
+
+/*----------------------------- nsRegistry::IsOpen -----------------------------
+| Tests the mReg handle and returns whether the registry is open or not.       |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::IsOpen( PRBool *result ) {
+    *result = ( mReg != 0 );
+    return NS_OK;
+}
+
 
 /*--------------------------- nsRegistry::GetString ----------------------------
 | First, look for the entry using GetValueInfo.  If found, and it's a string,  |

@@ -168,6 +168,7 @@ struct nsIRegistry : public nsISupports {
     NS_IMETHOD OpenWellKnownRegistry( uint32 regid ) = 0;
     NS_IMETHOD OpenDefault() = 0;
     NS_IMETHOD Close() = 0;
+    NS_IMETHOD IsOpen( PRBool *result ) = 0;
 
     /*----------------------- Reading/Writing Values ---------------------------
     | These functions read/write the registry values at a given node.          |
