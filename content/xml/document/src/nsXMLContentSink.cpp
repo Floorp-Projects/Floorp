@@ -231,6 +231,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
 	NS_INTERFACE_MAP_ENTRY(nsIObserver)
 	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 	NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
 NS_INTERFACE_MAP_END
 
@@ -606,6 +607,8 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
     if (tagAtom.get() == nsHTMLAtoms::textarea) {
       mTextAreaElement = do_QueryInterface(htmlContent);
+    } else if (tagAtom.get() == nsHTMLAtoms::style) {
+      mStyleElement = htmlContent;
     }
   }
   else {
@@ -710,6 +713,11 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
         mTextAreaElement->SetDefaultValue(mTextareaText);
         mTextAreaElement = nsnull;
         mTextareaText.Truncate();
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::style) {
+      if (mStyleElement) {
+        result = ProcessSTYLETag(aNode);
+        mStyleElement=nsnull;
       }
     }
   }
@@ -845,6 +853,12 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
   const nsAReadableString& text = aNode.GetText();
   if (mInScript) {
     mScriptText.Append(text);
+  } else if (mInTitle) {
+    mTitleText.Append(text);
+  } else if (mTextAreaElement) {
+    mTextareaText.Append(text);
+  } else if (mStyleElement) {
+    mStyleText.Append(text);
   }
   result = NS_NewXMLCDATASection(&cdata);
   if (NS_OK == result) {
@@ -1061,6 +1075,131 @@ nsXMLContentSink::ProcessCSSStyleLink(nsIContent* aElement,
 }
 
 NS_IMETHODIMP
+nsXMLContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet, 
+                                  PRBool aDidNotify)
+{
+  return NS_OK;
+}
+
+nsresult
+nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
+{
+  nsresult rv = NS_OK;
+  
+  PRInt32 i, count;
+  mStyleElement->GetAttributeCount(count);
+
+  nsAutoString src;
+  nsAutoString title; 
+  nsAutoString type; 
+  nsAutoString media; 
+
+  for (i = 0; i < count; i++) {
+    PRInt32 namespaceID;
+    nsCOMPtr<nsIAtom> name, prefix;
+    mStyleElement->GetAttributeNameAt(i,namespaceID,*getter_AddRefs(name),*getter_AddRefs(prefix));
+    if (name.get() == nsHTMLAtoms::src) {
+      mStyleElement->GetAttribute(namespaceID,name,src);
+      src.StripWhitespace();
+    }
+    else if (name.get() == nsHTMLAtoms::title) {
+      mStyleElement->GetAttribute(namespaceID,name,title);
+      title.CompressWhitespace();
+    }
+    else if (name.get() == nsHTMLAtoms::type) {
+      mStyleElement->GetAttribute(namespaceID,name,type);
+      type.StripWhitespace();
+    }
+    else if (name.get() == nsHTMLAtoms::media) {
+      mStyleElement->GetAttribute(namespaceID,name,media);
+      media.ToLowerCase();
+    }
+  }
+
+  nsAutoString  mimeType;
+  nsAutoString  params;
+  SplitMimeType(type, mimeType, params);
+
+  PRBool blockParser = PR_FALSE;//kBlockByDefault;
+
+  if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) { 
+
+    if (0 < title.Length()) {  // possibly preferred sheet
+      if (0 == mPreferredStyle.Length()) {
+        mPreferredStyle = title;
+        mCSSLoader->SetPreferredSheet(title);
+        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
+      }
+    }
+
+    PRBool doneLoading = PR_FALSE;
+
+    nsIUnicharInputStream* uin = nsnull;
+    if (0 == src.Length()) {
+
+      // Create a text node holding the content
+      nsIContent* text;
+      rv = NS_NewTextNode(&text);
+      if (NS_OK == rv) {
+        nsIDOMText* tc;
+        rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&tc);
+        if (NS_OK == rv) {
+          tc->SetData(mStyleText);
+          NS_RELEASE(tc);
+        }
+        mStyleElement->AppendChildTo(text, PR_FALSE);
+        text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+        NS_RELEASE(text);
+      }
+
+      // Create a string to hold the data and wrap it up in a unicode
+      // input stream.
+      rv = NS_NewStringUnicharInputStream(&uin, new nsString(mStyleText));
+      if (NS_OK != rv) {
+        return rv;
+      }
+
+      // Now that we have a url and a unicode input stream, parse the
+      // style sheet.
+      rv = mCSSLoader->LoadInlineStyle(mStyleElement, uin, title, media, kNameSpaceID_HTML,
+                                       mStyleSheetCount++, 
+                                       ((blockParser) ? mParser : nsnull),
+                                       doneLoading, this);
+      NS_RELEASE(uin);
+    } 
+    else {
+#if 0
+      // This is non-standard. We support it for HTML for backwards compatibility,
+      // but maybe we should withdraw the support for XHTML.
+
+      // src with immediate style data doesn't add up
+      // XXX what does nav do?
+      // Use the SRC attribute value to load the URL
+      nsIURI* url = nsnull;
+      {
+        rv = NS_NewURI(&url, src, mDocumentBaseURL);
+      }
+      if (NS_OK != rv) {
+        return rv;
+      }
+
+      rv = mCSSLoader->LoadStyleLink(mStyleElement, url, title, media, kNameSpaceID_HTML,
+                                     mStyleSheetCount++, 
+                                     ((blockParser) ? mParser : nsnull), 
+                                     doneLoading, this);
+      NS_RELEASE(url);
+#endif
+    }
+    if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
+      rv = NS_ERROR_HTMLPARSER_BLOCK;
+    }
+  }//if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css"))
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
@@ -1245,6 +1384,8 @@ nsXMLContentSink::AddText(const nsAReadableString& aString)
     mTitleText.Append(aString);
   } else if (mTextAreaElement) {
     mTextareaText.Append(aString);
+  } else if (mStyleElement) {
+    mStyleText.Append(aString);
   }
 
   // Create buffer when we first need it
