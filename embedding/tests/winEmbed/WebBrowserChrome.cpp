@@ -194,12 +194,13 @@ NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow(void)
 }
 
 
-NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
+// IN: The desired browser client area dimensions.
+NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aWidth, PRInt32 aHeight)
 {
   /* This isn't exactly correct: we're setting the whole window to
      the size requested for the browser. At time of writing, though,
      it's fine and useful for winEmbed's purposes. */
-  WebBrowserChromeUI::SizeTo(this, aCX, aCY);
+  WebBrowserChromeUI::SizeTo(this, aWidth, aHeight);
   mSizeSet = PR_TRUE;
   return NS_OK;
 }

@@ -1302,11 +1302,21 @@ void WebBrowserChromeUI::ShowWindow(nsIWebBrowserChrome *aChrome, PRBool aShow)
 
 void WebBrowserChromeUI::SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PRInt32 aHeight)
 {
-  HWND win = GetBrowserDlgFromChrome(aChrome);
-  RECT winRect;
+  HWND hchrome = GetBrowserDlgFromChrome(aChrome);
+  HWND hbrowser = GetBrowserFromChrome(aChrome);
+  RECT chromeRect, browserRect;
 
-  ::GetWindowRect(win, &winRect);
-  ::MoveWindow(win, winRect.left, winRect.top, aWidth, aHeight, TRUE);
+  ::GetWindowRect(hchrome,  &chromeRect);
+  ::GetWindowRect(hbrowser, &browserRect);
+
+  PRInt32 decoration_x = (browserRect.left - chromeRect.left) + 
+                         (chromeRect.right - browserRect.right);
+  PRInt32 decoration_y = (browserRect.top - chromeRect.top) + 
+                         (chromeRect.bottom - browserRect.bottom);
+
+  ::MoveWindow(hchrome, chromeRect.left, chromeRect.top,
+      aWidth+decoration_x,
+      aHeight+decoration_y, TRUE);
 }
 
 //
