@@ -822,7 +822,7 @@ nsWindowMediator::GetWindowForResource( const PRUnichar* inResource,
     listEnd = mOldestWindow;
   }
 
-  delete resourceString;
+  nsMemory::Free(resourceString);
   // Rather than returning an error when you pass in crap, return NS_OK
   // Doing this to avoid throwing a JS exception becasue event bubbling is not working as of 7/26/99
   //return result;
