@@ -43,6 +43,7 @@ typedef char16 REchar;
 
 typedef unsigned int REuint32;
 typedef int REint32;
+typedef unsigned char REuint8;
 
 #ifdef STANDALONE
 typedef unsigned char REbool;
@@ -71,15 +72,27 @@ typedef enum REError {
 
 typedef struct RENode RENode;
 
+typedef struct CharSet {
+    REuint8 *bits;
+    REuint32 length;
+    REbool sense;
+} CharSet;
+
+
 typedef struct REParseState {
-    const REchar *src;          /* current parse position */
-    const REchar *srcEnd;       /* end of source text */
+    REchar *srcStart;           /* copy of source text */
+    REchar *src;                /* current parse position */
+    REchar *srcEnd;             /* end of source text */
     RENode *result;             /* head of result tree */
     REuint32 parenCount;        /* # capturing parens */
     REuint32 flags;             /* flags from regexp */
     REint32 lastIndex;          /* position from last match (for 'g' flag) */
-    REbool oldSyntax;
+    REbool oldSyntax;           /* backward compatibility for octal chars */
     REError error;              /* parse-time error */
+    REuint32 classCount;        /* number of contained []'s */
+    CharSet *classList;         /* data for []'s */
+    REint32 codeLength;         /* length of bytecode */
+    REuint8 *pc;                /* start of bytecode */
 } REParseState;
 
 typedef struct RECapture {
