@@ -543,6 +543,8 @@ private:
   void FolderRenamed(const char *oldName,
     const char *newName);
   
+  PRBool FolderIsSelected(const char *mailboxName);
+
   PRBool	MailboxIsNoSelectMailbox(const char *mailboxName);
   char * CreatePossibleTrashName(const char *prefix);
   const char * GetTrashFolderName();

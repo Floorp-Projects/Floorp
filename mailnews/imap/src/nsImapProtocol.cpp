@@ -3682,12 +3682,12 @@ void nsImapProtocol::PeriodicBiff()
   nsMsgBiffState startingState = m_currentBiffState;
   
   if (GetServerStateParser().GetIMAPstate() == nsImapServerResponseParser::kFolderSelected)
-    {
+  {
     Noop(); // check the latest number of messages
     PRInt32 numMessages = 0;
     m_flagState->GetNumberOfMessages(&numMessages);
-        if (GetServerStateParser().NumberOfMessages() != numMessages)
-        {
+    if (GetServerStateParser().NumberOfMessages() != numMessages)
+    {
       PRUint32 id = GetServerStateParser().HighestRecordedUID() + 1;
       nsCString fetchStr;           // only update flags
       PRUint32 added = 0, deleted = 0;
@@ -3696,25 +3696,25 @@ void nsImapProtocol::PeriodicBiff()
       added = numMessages;
       if (!added || (added == deleted)) // empty keys, get them all
         id = 1;
-
+      
       //sprintf(fetchStr, "%ld:%ld", id, id + GetServerStateParser().NumberOfMessages() - fFlagState->GetNumberOfMessages());
       fetchStr.AppendInt(id);
       fetchStr.Append(":*"); 
       FetchMessage(fetchStr.get(), kFlags, PR_TRUE);
-
+      
       if (((PRUint32) m_flagState->GetHighestNonDeletedUID() >= id) && m_flagState->IsLastMessageUnseen())
         m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NewMail;
       else
         m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NoMail;
-        }
-        else
-            m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NoMail;
     }
     else
-      m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
-    
-    if (startingState != m_currentBiffState)
-      SendSetBiffIndicatorEvent(m_currentBiffState);
+      m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NoMail;
+  }
+  else
+    m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
+  
+  if (startingState != m_currentBiffState)
+    SendSetBiffIndicatorEvent(m_currentBiffState);
 }
 
 void nsImapProtocol::SendSetBiffIndicatorEvent(nsMsgBiffState newState)
@@ -5210,9 +5210,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
           {
             // if the appended to folder isn't selected in the connection,
             // select it.
-            if (!GetServerStateParser().GetSelectedMailboxName() || 
-                  PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
-                            mailboxName))
+            if (!FolderIsSelected(mailboxName))
               SelectMailbox(mailboxName);
           
             if (GetServerStateParser().LastCommandSuccessful())
@@ -5522,15 +5520,15 @@ void nsImapProtocol::Logout()
 
 void nsImapProtocol::Noop()
 {
-    //ProgressUpdateEvent("noop...");
-    IncrementCommandTagNumber();
+  //ProgressUpdateEvent("noop...");
+  IncrementCommandTagNumber();
   nsCString command(GetServerCommandTag());
     
   command.Append(" noop" CRLF);
             
-    nsresult rv = SendData(command.get());
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail();
+  nsresult rv = SendData(command.get());
+  if (NS_SUCCEEDED(rv))
+      ParseIMAPandCheckForNewMail();
 }
 
 void nsImapProtocol::XServerInfo()
@@ -5624,23 +5622,39 @@ void nsImapProtocol::GetMyRightsForFolder(const char *mailboxName)
     ParseIMAPandCheckForNewMail();
 }
 
+PRBool nsImapProtocol::FolderIsSelected(const char *mailboxName)
+{
+  return (GetServerStateParser().GetIMAPstate() ==
+      nsImapServerResponseParser::kFolderSelected && GetServerStateParser().GetSelectedMailboxName() && 
+      PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
+                    mailboxName) == 0);
+}
+
 void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
 {
-  IncrementCommandTagNumber();
+  // don't run status on selected folder, just do a noop.
+  if (FolderIsSelected(mailboxName))
+  {
+    Noop();
+  }
+  else
+  {
+    IncrementCommandTagNumber();
 
-  nsCAutoString command(GetServerCommandTag());
-  char *escapedName = CreateEscapedMailboxName(mailboxName);
+    nsCAutoString command(GetServerCommandTag());
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
     
-  command.Append(" STATUS \"");
-  command.Append(escapedName);
-  command.Append("\" (UIDNEXT MESSAGES UNSEEN RECENT)" CRLF);
+    command.Append(" STATUS \"");
+    command.Append(escapedName);
+    command.Append("\" (UIDNEXT MESSAGES UNSEEN RECENT)" CRLF);
             
-  nsMemory::Free(escapedName);
+    nsMemory::Free(escapedName);
           
-  nsresult rv = SendData(command.get());
-  if (NS_SUCCEEDED(rv))
-      ParseIMAPandCheckForNewMail();
+    nsresult rv = SendData(command.get());
+    if (NS_SUCCEEDED(rv))
+        ParseIMAPandCheckForNewMail();
 
+  }
   if (GetServerStateParser().LastCommandSuccessful())
   {
     nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec(mailboxName);
@@ -6569,10 +6583,7 @@ void nsImapProtocol::DeleteMailbox(const char *mailboxName)
   // check if this connection currently has the folder to be deleted selected.
   // If so, we should close it because at least some UW servers don't like you deleting
   // a folder you have open.
-  if (GetServerStateParser().GetIMAPstate() ==
-      nsImapServerResponseParser::kFolderSelected && GetServerStateParser().GetSelectedMailboxName() && 
-      PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
-                    mailboxName) == 0)
+  if (FolderIsSelected(mailboxName))
     Close();
   
   
@@ -6596,10 +6607,7 @@ void nsImapProtocol::RenameMailbox(const char *existingName,
                                    const char *newName)
 {
   // just like DeleteMailbox; Some UW servers don't like it.
-  if (GetServerStateParser().GetIMAPstate() ==
-    nsImapServerResponseParser::kFolderSelected && GetServerStateParser().GetSelectedMailboxName() && 
-    PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
-                  existingName) == 0)
+  if (FolderIsSelected(existingName))
     Close();
 
   ProgressEventFunctionUsingIdWithString (IMAP_STATUS_RENAMING_MAILBOX, existingName);
