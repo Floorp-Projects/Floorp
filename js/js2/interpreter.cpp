@@ -47,6 +47,9 @@ namespace JavaScript {
 #define src2(i) op3(i)
 #define ofs(i)  (i->getOffset())
 
+    using namespace ICG;
+    using namespace JSTypes;
+    
     JSValue
     Context::interpret(ICodeModule* iCode, const JSValues& args)
     {

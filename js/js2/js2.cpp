@@ -26,6 +26,7 @@
 
 #include "world.h"
 #include "interpreter.h"
+#include "icodegenerator.h"
 
         
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
@@ -56,6 +57,10 @@ static void initConsole(StringPtr consoleName,
 
 namespace JavaScript {
 namespace Shell {
+    
+    using namespace ICG;
+    using namespace JSTypes;
+ //   using namespace VMTypes;
     
     // Interactively read a line from the input stream in and put it into
     // s Return false if reached the end of input before reading anything.
@@ -117,9 +122,7 @@ namespace Shell {
         }
         stdOut << '\n';
     }
-        
-#include "icodegenerator.h"
-        
+                
     static void testICG(World &world)
     {
         //
@@ -127,7 +130,7 @@ namespace Shell {
         //
         uint32 pos = 0;
         ICodeGenerator icg;
-            
+        
         // var i,j;
         // i is bound to var #0, j to var #1
         Register r_i = icg.allocateVariable(world.identifiers[widenCString("i")]);
@@ -136,19 +139,27 @@ namespace Shell {
         //  i = j + 2;
         icg.beginStatement(pos);
         Register r1 = icg.loadImmediate(2.0);
-        icg.move(r_i, icg.op(ADD, r_i, r_j));
-            
+        icg.move(r_i, icg.op(ADD, r1, r_j));
+        
         // j = a.b
         icg.beginStatement(pos);
         r1 = icg.loadName(world.identifiers[widenCString("a")]);
         r1 = icg.getProperty(r1, world.identifiers[widenCString("b")]);
         icg.move(r_j, r1);
     
-        // while (i) i = i + j;
+        // label1 : while (i) { while (i) { i = i + j; break label1; } }
+        icg.beginLabelStatement(pos, world.identifiers[widenCString("label1")]);            
         icg.beginWhileStatement(pos);
         icg.endWhileExpression(r_i);        
-        icg.move(r_i, icg.op(ADD, r_i, r_j));
+
+            icg.beginWhileStatement(pos);
+            icg.endWhileExpression(r_i);        
+            icg.move(r_i, icg.op(ADD, r_i, r_j));
+            icg.breakStatement(pos, world.identifiers[widenCString("label1")]);
+            icg.endWhileStatement();
+
         icg.endWhileStatement();
+        icg.endLabelStatement();
 
         // if (i) if (j) i = 3; else j = 4;
         icg.beginIfStatement(pos, r_i);
@@ -159,35 +170,35 @@ namespace Shell {
         icg.endIfStatement();
         icg.beginElseStatement(false);
         icg.endIfStatement();
-            
+        
 
         // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
         icg.beginSwitchStatement(pos, r_i);
         // case 3, note empty case statement (?necessary???)
         icg.endCaseCondition(icg.loadImmediate(3));
-        icg.beginCaseStatement();
+        icg.beginCaseStatement(pos);
         icg.endCaseStatement();
         // case 4
         icg.endCaseCondition(icg.loadImmediate(4));
-        icg.beginCaseStatement();
+        icg.beginCaseStatement(pos);
         icg.beginStatement(pos);
         icg.move(r_j, icg.loadImmediate(4));
-        icg.breakStatement();
+        icg.breakStatement(pos);
         icg.endCaseStatement();
         // case 5
         icg.endCaseCondition(icg.loadImmediate(5));
-        icg.beginCaseStatement();
+        icg.beginCaseStatement(pos);
         icg.beginStatement(pos);
         icg.move(r_j, icg.loadImmediate(5));
-        icg.breakStatement();
+        icg.breakStatement(pos);
         icg.endCaseStatement();
         // default
-        icg.beginDefaultStatement();
+        icg.beginDefaultStatement(pos);
         icg.beginStatement(pos);
         icg.move(r_j, icg.loadImmediate(6));
         icg.endDefaultStatement();
         icg.endSwitchStatement();
-            
+        
         // for ( ; i; i = i + 1 ) j = 99;
         icg.beginForStatement(pos);
         icg.forCondition(r_i);
@@ -389,14 +400,14 @@ int main(int /* argc */, char /* **argv */)
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
 #endif
-	JavaScript::World world;
+    JavaScript::World world;
 #if 1
     assert(JavaScript::Shell::testFactorial(world, 5) == 120);
     assert(JavaScript::Shell::testObjects(world, 5) == 5);
-    //    testICG(world);
+    //    JavaScript::Shell::testICG(world);
     assert(JavaScript::Shell::testFunctionCall(world, 5) == 5);
 #endif
-	JavaScript::Shell::readEvalPrint(stdin, world);
+    JavaScript::Shell::readEvalPrint(stdin, world);
     return 0;
     // return ProcessArgs(argv + 1, argc - 1);
 }
