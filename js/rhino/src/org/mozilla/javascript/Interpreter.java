@@ -76,7 +76,7 @@ public class Interpreter {
                           ClassNameHelper nameHelper)
     {
         version = cx.getLanguageVersion();
-        itsData = new InterpreterData(cx, securityDomain);
+        itsData = new InterpreterData(securityDomain);
         if (tree instanceof FunctionNode) {
             FunctionNode f = (FunctionNode) tree;
             itsData.itsFunctionType = f.getFunctionType();
@@ -148,7 +148,7 @@ public class Interpreter {
             FunctionNode def = (FunctionNode)functionList.get(i);
             Interpreter jsi = new Interpreter();
             jsi.itsSourceFile = itsSourceFile;
-            jsi.itsData = new InterpreterData(cx, itsData.securityDomain);
+            jsi.itsData = new InterpreterData(itsData.securityDomain);
             jsi.itsData.itsCheckThis = def.getCheckThis();
             jsi.itsData.itsFunctionType = def.getFunctionType();
             jsi.itsInFunctionFlag = true;
@@ -1516,6 +1516,9 @@ public class Interpreter {
         InterpretedFunction fn = new InterpretedFunction(cx, idata);
         fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
+        if (cx.hasCompileFunctionsWithDynamicScope()) {
+            fn.itsUseDynamicScope = true;
+        }
         String fnName = idata.itsName;
         if (fnName.length() != 0) {
             int type = idata.itsFunctionType;
@@ -1597,7 +1600,7 @@ public class Interpreter {
             InterpretedFunction f = (InterpretedFunction)fnOrScript;
             if (f.itsClosure != null) {
                 scope = f.itsClosure;
-            } else if (!idata.itsUseDynamicScope) {
+            } else if (!f.itsUseDynamicScope) {
                 scope = fnOrScript.getParentScope();
             }
 

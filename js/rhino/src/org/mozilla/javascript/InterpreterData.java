@@ -48,13 +48,12 @@ final class InterpreterData implements Serializable, DebuggableScript {
     static final int INITIAL_STRINGTABLE_SIZE = 64;
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
 
-    InterpreterData(Context cx, Object securityDomain) {
+    InterpreterData(Object securityDomain) {
         itsICodeTop = INITIAL_MAX_ICODE_LENGTH;
         itsICode = new byte[itsICodeTop];
 
         itsStringTable = new String[INITIAL_STRINGTABLE_SIZE];
 
-        itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
         this.securityDomain = securityDomain;
     }
 
@@ -63,7 +62,6 @@ final class InterpreterData implements Serializable, DebuggableScript {
     String itsSourceFile;
     boolean itsNeedsActivation;
     boolean itsFromEvalCode;
-    boolean itsUseDynamicScope;
     boolean itsCheckThis;
     int itsFunctionType;
 
