@@ -44,6 +44,8 @@ NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
+#define MAX_EXTENSION_LENGTH 10
+
 //-------------------------------------------------------------------------
 //
 // nsFilePicker constructor
@@ -147,6 +149,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     ofn.lStructSize = sizeof(ofn);
 
+    char extensionBuffer[MAX_EXTENSION_LENGTH+1] = "";
+    
     PRInt32 l = (mFilterList.Length()+2)*2;
     char *filterBuffer = (char*) nsMemory::Alloc(l);
     int len = WideCharToMultiByte(CP_ACP, 0,
@@ -160,7 +164,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     if (initialDir && *initialDir) {
       ofn.lpstrInitialDir = initialDir;
     }
-
+    
     ofn.lpstrTitle   = title;
     ofn.lpstrFilter  = filterBuffer;
     ofn.nFilterIndex = mSelectedType;
@@ -170,24 +174,38 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
-    // Get file extension from suggested filename
-    //  to detect if we are saving an html file
-    //XXX: nsIFile SHOULD HAVE A GetExtension() METHOD!
-    PRInt32 extIndex = mDefault.RFind(".");
-    if ( extIndex >= 0) {
-      nsAutoString ext;
-      mDefault.Right(ext, mDefault.Length() - extIndex);
-      // Should we test for ".cgi", ".asp", ".jsp" and other
-      // "generated" html pages?
+    if (!mDefaultExtension.IsEmpty()) {
+      // Someone was cool and told us what to do
+      char *convertedExt = ConvertToFileSystemCharset(mDefaultExtension.get());
+      if (!convertedExt) {
+        mDefaultExtension.ToCString(extensionBuffer, MAX_EXTENSION_LENGTH);
+      }
+      else {
+        PL_strncpyz(extensionBuffer, convertedExt, MAX_EXTENSION_LENGTH+1);
+        nsMemory::Free( convertedExt );
+      }
+      ofn.lpstrDefExt = extensionBuffer;
+    }
+    else {
+      // Get file extension from suggested filename
+      //  to detect if we are saving an html file
+      //XXX: nsIFile SHOULD HAVE A GetExtension() METHOD!
+      PRInt32 extIndex = mDefault.RFind(".");
+      if ( extIndex >= 0) {
+        nsAutoString ext;
+        mDefault.Right(ext, mDefault.Length() - extIndex);
+        // Should we test for ".cgi", ".asp", ".jsp" and other
+        // "generated" html pages?
 
-      if ( ext.EqualsIgnoreCase(".htm")  ||
-           ext.EqualsIgnoreCase(".html") ||
-           ext.EqualsIgnoreCase(".shtml") ) {
-        // This is supposed to append ".htm" if user doesn't supply an extension
-        //XXX Actually, behavior is sort of weird:
-        //    often appends ".html" even if you have an extension
-        //    It obeys your extension if you put quotes around name
-        ofn.lpstrDefExt = htmExt;
+        if ( ext.EqualsIgnoreCase(".htm")  ||
+             ext.EqualsIgnoreCase(".html") ||
+             ext.EqualsIgnoreCase(".shtml") ) {
+          // This is supposed to append ".htm" if user doesn't supply an extension
+          //XXX Actually, behavior is sort of weird:
+          //    often appends ".html" even if you have an extension
+          //    It obeys your extension if you put quotes around name
+          ofn.lpstrDefExt = htmExt;
+        }
       }
     }
 
@@ -353,6 +371,25 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
 NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 {
   return NS_ERROR_FAILURE;
+}
+
+//-------------------------------------------------------------------------
+//
+// The default extension to use for files
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetDefaultExtension(PRUnichar **aExtension)
+{
+  *aExtension = ToNewUnicode(mDefaultExtension);
+  if (!*aExtension)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const PRUnichar *aExtension)
+{
+  mDefaultExtension = aExtension;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

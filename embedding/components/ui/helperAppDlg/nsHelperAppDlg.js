@@ -126,6 +126,15 @@ nsHelperAppDialog.prototype = {
                         .getInterface( Components.interfaces.nsIDOMWindowInternal );
         picker.init( parent, windowTitle, nsIFilePicker.modeSave );
         picker.defaultString = aDefaultFile;
+        if (aSuggestedFileExtension) {
+            // aSuggestedFileExtension includes the period, so strip it
+            picker.defaultExtension = aSuggestedFileExtension.substring(1);
+        } else {
+            try {
+                picker.defaultExtension = this.mLauncher.MIMEInfo.primaryExtension;
+            } catch (ex) {
+            }
+        }
 
         var wildCardExtension = "*";
         if ( aSuggestedFileExtension ) {

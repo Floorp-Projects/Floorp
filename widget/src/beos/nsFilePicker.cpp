@@ -259,6 +259,22 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 
 //-------------------------------------------------------------------------
 //
+// The default extension to use for files
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetDefaultExtension(PRUnichar **aExtension)
+{
+  *aExtension = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const PRUnichar *aExtension)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Set the display directory
 //
 //-------------------------------------------------------------------------
