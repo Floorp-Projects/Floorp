@@ -2682,13 +2682,6 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
   res = LookInsideDivBQandList(arrayOfNodes);
   if (NS_FAILED(res)) return res;                                 
 
-  // Next we detect all the transitions in the array, where a transition
-  // means that adjacent nodes in the array don't have the same parent.
-  
-  nsVoidArray transitionList;
-  res = MakeTransitionList(arrayOfNodes, &transitionList);
-  if (NS_FAILED(res)) return res;                                 
-
   // Ok, now go through all the nodes and put then in the list, 
   // or whatever is approriate.  Wohoo!
 
@@ -2830,6 +2823,20 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
       continue;
     }
     
+    // if we hit a div clear our prevListItem, insert divs contents
+    // into our node array, and remove the div
+    if (nsHTMLEditUtils::IsDiv(curNode))
+    {
+      prevListItem = nsnull;
+      PRInt32 j=i+1;
+      res = GetInnerContent(curNode, arrayOfNodes, &j);
+      if (NS_FAILED(res)) return res;
+      res = mHTMLEditor->RemoveContainer(curNode);
+      if (NS_FAILED(res)) return res;
+      arrayOfNodes->Count(&listCount);
+      continue;
+    }
+      
     // need to make a list to put things in if we haven't already
     if (!curList)
     {
@@ -5401,8 +5408,7 @@ nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes,
     
     // scan for table elements and divs.  If we find table elements other than table,
     // replace it with a list of any editable non-table content.
-    if ( (nsHTMLEditUtils::IsTableElement(testNode) && !nsHTMLEditUtils::IsTable(testNode))
-         || nsHTMLEditUtils::IsDiv(testNode) )
+    if (nsHTMLEditUtils::IsTableElement(testNode) && !nsHTMLEditUtils::IsTable(testNode))
     {
       PRInt32 j=i;
       (*outArrayOfNodes)->RemoveElementAt(i);
