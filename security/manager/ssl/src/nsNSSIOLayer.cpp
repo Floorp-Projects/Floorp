@@ -1639,8 +1639,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 		org = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->subject)).ToNewUnicode();
 		issuer = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->issuer)).ToNewUnicode();
 
-		certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * caNames->nnames);
-		certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * caNames->nnames);
+		certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+		certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
 
                 nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
                 NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
@@ -1802,7 +1802,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
                   (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
                   nicknames->numnicknames, &selectedIndex, &canceled);
 
-                for (i = 0; i < caNames->nnames; ++i) {
+                for (i = 0; i < nicknames->numnicknames; ++i) {
                   nsMemory::Free(certNicknameList[i]);
                   nsMemory::Free(certDetailsList[i]);
                 }
