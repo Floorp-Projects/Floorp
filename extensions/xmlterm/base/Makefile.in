@@ -70,6 +70,7 @@ CPPSRCS = \
 
 MODULE = xmlterm
 LIBRARY_NAME = xmlterm_s
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  string \

@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = transformiix
 LIBRARY_NAME = txxml_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= string \
 		  xpcom \
 		  $(NULL)

@@ -45,6 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= walletviewers
 LIBRARY_NAME	= signonviewer_s
 XPIDL_MODULE	= signonviewer
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  wallet \

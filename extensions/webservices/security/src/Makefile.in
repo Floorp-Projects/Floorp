@@ -43,6 +43,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE         = websrvcs
 LIBRARY_NAME   = websrvcssecurity_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  caps \

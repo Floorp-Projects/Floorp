@@ -49,6 +49,7 @@ endif
 EXPORT_LIBRARY = 1
 IS_COMPONENT   = 1
 MODULE_NAME    = nsTridentProfile
+MOZILLA_INTERNAL_API = 1
 
 PACKAGE_FILE = tridentprofile.pkg
 

@@ -52,6 +52,7 @@ IS_COMPONENT    = 1
 MODULE_NAME     = nsWebDAVModules
 GRE_MODULE      = 1
 # PACKAGE_FILE    = webdav.pkg
+MOZILLA_INTERNAL_API = 1
 
 # XXX widget is because of a transitive inclusion from nsIDocument.h of
 # XXX nsEvent.h -- I mean, really!

@@ -50,6 +50,7 @@ MODULE_NAME = TransformiixModule
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= t8iix
 endif
+MOZILLA_INTERNAL_API = 1
 
 PACKAGE_FILE = transformiix.pkg
 

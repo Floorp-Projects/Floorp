@@ -47,6 +47,7 @@ ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = typahead
 endif
 GRE_MODULE	= 1
+MOZILLA_INTERNAL_API = 1
 
 PACKAGE_FILE = typeaheadfind.pkg
 

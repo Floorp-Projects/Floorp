@@ -42,6 +42,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MOZILLA_INTERNAL_API = 1
 SIMPLE_PROGRAMS = transformiix$(BIN_SUFFIX) testXalan$(BIN_SUFFIX) \
                   txTestExpr$(BIN_SUFFIX)
 ifdef MARK_INC

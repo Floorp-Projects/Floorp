@@ -50,6 +50,7 @@ FORCE_SHARED_LIB = 1
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = inspectr
 endif
+MOZILLA_INTERNAL_API = 1
 
 PACKAGE_FILE = inspector.pkg
 

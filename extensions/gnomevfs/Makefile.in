@@ -46,6 +46,8 @@ MODULE		= nkgnomevfs
 LIBRARY_NAME	= nkgnomevfs
 SHORT_LIBNAME	= nkgnomevfs
 IS_COMPONENT	= 1
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  necko \

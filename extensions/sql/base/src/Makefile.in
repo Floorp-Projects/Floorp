@@ -42,6 +42,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= sql
 LIBRARY_NAME	= sqlbase_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \

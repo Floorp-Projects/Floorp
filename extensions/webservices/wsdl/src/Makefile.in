@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = websrvcs
 LIBRARY_NAME	= websrvcswsdl_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \

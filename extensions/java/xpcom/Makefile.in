@@ -45,6 +45,7 @@ include $(topsrcdir)/config/config.mk
 
 MODULE		= javaxpcom
 LIBRARY_NAME	= javaxpcom
+MOZILLA_INTERNAL_API = 1
 
 # On Mac OS X, JNI libraries must end with a '.jnilib' extension
 ifeq ($(OS_ARCH),Darwin)

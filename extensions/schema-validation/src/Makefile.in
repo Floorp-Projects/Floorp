@@ -50,6 +50,8 @@ SHORT_LIBNAME	= schemval
 FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1
 GRE_MODULE      = 1
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \

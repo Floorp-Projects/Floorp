@@ -56,6 +56,7 @@ LIBRARY_NAME	= xmlterm
 EXPORT_LIBRARY  = 1
 SHORT_LIBNAME	= xmlterm
 IS_COMPONENT	= 1
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  string \

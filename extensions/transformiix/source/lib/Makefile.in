@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = tx
 FORCE_STATIC_LIB = 1
 CPP_PROG_LINK = 1
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES = string \
         xpcom \
