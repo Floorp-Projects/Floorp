@@ -515,7 +515,7 @@ inline
 PRBool
 basic_nsAReadableString<CharT>::Equals( const basic_nsAReadableString<CharT>& rhs ) const
   {
-    return Compare(rhs) == 0;
+    return Length() == rhs.Length() && Compare(rhs) == 0;
   }
 
 template <class CharT>
