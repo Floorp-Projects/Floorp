@@ -34,7 +34,7 @@
 
 
 tinderbox_usage() {
-  echo "Usage: tinderbox [depend|clobber] {start|stop|status|restart}"
+  echo "Usage: tinderbox [depend|clobber|multi] {start|stop|status|restart}"
   exit 1
 }
 
@@ -48,7 +48,8 @@ build_action="$2"
 
 # Depend or clobber build?
 if [ "$build_type" != "depend" -a \
-     "$build_type" != "clobber" ]; then
+     "$build_type" != "clobber" -a \
+     "$build_type" != "multi" ]; then
     echo "Unknown option: $1"
     tinderbox_usage
 fi
@@ -67,7 +68,9 @@ case "$build_action" in
 	  fi
 
 	  # Grab and use mozconfig if it exists.
-      if test -f mozconfig; then
+      if test "$build_type" = "multi"; then
+        nohup ./multi-tinderbox.pl &
+      elif test -f mozconfig; then
         echo "Found mozconfig..."
         nohup ./build-seamonkey.pl --$build_type --mozconfig mozconfig &
       elif test -f .mozconfig; then
