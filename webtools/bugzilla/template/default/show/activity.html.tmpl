@@ -62,10 +62,10 @@
           [% operation.when %]
         </td>
         [% FOREACH change = operation.changes %]
-          [% "<tr>" IF loop.index > 0 %]
+          [% "</tr><tr>" IF loop.index > 0 %]
             <td>
               [% IF change.attachid %]
-                <a href="attachment.cgi?id=[% change.attachid %]&action=view">
+                <a href="attachment.cgi?id=[% change.attachid %]&amp;action=view">
                 Attachment #[% change.attachid %]</a>         
               [% END %]
               [% change.field %]
@@ -84,7 +84,6 @@
                 &nbsp;
               [% END %]
             </td>
-          [% "</tr>" IF loop.index > 0 %]
         [% END %]
       </tr>
     [% END %]

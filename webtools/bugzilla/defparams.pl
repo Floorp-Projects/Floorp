@@ -347,7 +347,7 @@ DefParam("mostfreqthreshold",
 DefParam("mybugstemplate",
          "This is the URL to use to bring up a simple 'all of my bugs' list for a user.  %userid% will get replaced with the login name of a user.",
          "t",
-         "buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=%userid%&emailtype1=exact&emailassigned_to1=1&emailreporter1=1");
+         "buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;email1=%userid%&amp;emailtype1=exact&amp;emailassigned_to1=1&amp;emailreporter1=1");
     
 
 

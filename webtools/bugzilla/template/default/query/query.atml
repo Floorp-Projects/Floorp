@@ -348,10 +348,10 @@ function selectProduct(f) {
       </select>
     </td>
     <td>
-      <input name="short_desc" size="40" value="[% default.short_desc.0 FILTER html %]" />
+      <input name="short_desc" size="40" value="[% default.short_desc.0 FILTER html %]">
     </td>
     <td>
-      <input type="submit" value="Search" />
+      <input type="submit" value="Search">
     </td>
   </tr>  
 
@@ -424,7 +424,7 @@ function selectProduct(f) {
         </select>
       </td>
       <td><input name="[% field.name %]" size="40" value="
-        [% default.${field.name}.0 FILTER html %]" />
+        [% default.${field.name}.0 FILTER html %]">
       </td>
       <td></td>
     </tr>  
@@ -448,7 +448,7 @@ function selectProduct(f) {
         </select>
       </td>
       <td>
-        <input name="keywords" size="40" value="[% default.keywords.0 FILTER html %]" />
+        <input name="keywords" size="40" value="[% default.keywords.0 FILTER html %]">
       </td>
     </tr>
   [% END %]
@@ -509,7 +509,7 @@ function selectProduct(f) {
     <td>
       <input type="checkbox" name="emailassigned_to[% n %]" 
              id="emailassigned_to[% n %]" value="1"
-             [% " checked" IF default.emailassigned_to.$n %] />
+             [% " checked" IF default.emailassigned_to.$n %]>
       <label for="emailassigned_to[% n %]">
         bug owner
       </label>
@@ -519,7 +519,7 @@ function selectProduct(f) {
     <td>
       <input type="checkbox" name="emailreporter[% n %]" 
              id="emailreporter[% n %]" value="1"
-             [% " checked" IF default.emailreporter.$n %] />
+             [% " checked" IF default.emailreporter.$n %]>
       <label for="emailreporter[% n %]">
         reporter
       </label>
@@ -530,7 +530,7 @@ function selectProduct(f) {
     <td>
       <input type="checkbox" name="emailqa_contact[% n %]" 
              id="emailqa_contact[% n %]" value="1"
-             [% " checked" IF default.emailqa_contact.$n %] />
+             [% " checked" IF default.emailqa_contact.$n %]>
       <label for="emailqa_contact[% n %]">
         QA contact
       </label>
@@ -541,7 +541,7 @@ function selectProduct(f) {
     <td>
       <input type="checkbox" name="emailcc[% n %]" 
              id="emailcc[% n %]" value="1"
-             [% " checked" IF default.emailcc.$n %] />
+             [% " checked" IF default.emailcc.$n %]>
       <label for="emailcc[% n %]">
         CC list member
       </label>
@@ -551,7 +551,7 @@ function selectProduct(f) {
     <td>
         <input type="checkbox" name="emaillongdesc[% n %]" 
                id="emaillongdesc[% n %]" value="1"
-               [% " checked" IF default.emaillongdesc.$n %] />
+               [% " checked" IF default.emaillongdesc.$n %]>
       <label for="emaillongdesc[% n %]">
         commenter
       </label>
@@ -574,7 +574,7 @@ function selectProduct(f) {
   </tr>
   <tr>
     <td>
-      <input name="email[% n %]" size="20" value="[% default.email.$n FILTER html %]" />
+      <input name="email[% n %]" size="20" value="[% default.email.$n FILTER html %]">
     </td>
   </tr>
 </table>
@@ -595,7 +595,7 @@ function selectProduct(f) {
       bugs numbered: 
     </td>
     <td>
-      <input type="text" name="bug_id" value="[% default.bug_id.0 FILTER html %]" size="20" />
+      <input type="text" name="bug_id" value="[% default.bug_id.0 FILTER html %]" size="20">
     </td>
   </tr>
   <tr>
@@ -607,7 +607,7 @@ function selectProduct(f) {
       Only bugs with at least:
     </td>
     <td>
-      <input name="votes" size="3" value="[% default.votes.0 FILTER html %]" /> votes
+      <input name="votes" size="3" value="[% default.votes.0 FILTER html %]"> votes
     </td>
   </tr>
 </table>
@@ -625,7 +625,7 @@ function selectProduct(f) {
 
 <dl>
   <dt>Only bugs changed in the last </dt>
-  <dd><input name=changedin size=3 value="[% default.changedin.0 FILTER html %]" /> days</dd>
+  <dd><input name=changedin size=3 value="[% default.changedin.0 FILTER html %]"> days</dd>
 </dl>
 
 <dl>
@@ -642,13 +642,13 @@ function selectProduct(f) {
 
   <dt>were changed between</dt>
   <dd>
-    <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]" />
-    and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]" />
-    <br />(YYYY-MM-DD)
+    <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
+    and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
+    <br>(YYYY-MM-DD)
   </dd>
   <dt>to this value: (optional)</dt>
   <dd>
-    <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]" />
+    <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]">
   </dd>
 </dl>
 
@@ -663,18 +663,18 @@ function selectProduct(f) {
     <td colspan="2">
 
     [% IF NOT userid %]
-      <input type="hidden" name="cmdtype" value="doit" />
+      <input type="hidden" name="cmdtype" value="doit">
     [% ELSE %]
-      <br />
-      <input type="radio" name="cmdtype" value="doit" checked /> Run this query
-      <br />
+      <br>
+      <input type="radio" name="cmdtype" value="doit" checked> Run this query
+      <br>
 
       [% IF namedqueries.size > 0 %]
         <p>
         <table cellspacing="0" cellpadding="0">
           <tr>
            <td>
-             <input type="radio" name="cmdtype" value="editnamed" />
+             <input type="radio" name="cmdtype" value="editnamed">
              Load my remembered query:
            </td>
            <td rowspan="3">
@@ -687,13 +687,13 @@ function selectProduct(f) {
           </tr>  
           <tr>
             <td>
-              <input type="radio" name="cmdtype" value="runnamed" />
+              <input type="radio" name="cmdtype" value="runnamed">
               Run my remembered query:
             </td>
           </tr>
           <tr>
             <td>
-              <input type="radio" name="cmdtype" value="forgetnamed" />
+              <input type="radio" name="cmdtype" value="forgetnamed">
               Forget my remembered query:
             </td>
           </tr>
@@ -701,17 +701,17 @@ function selectProduct(f) {
         </p>
       [% END %]
 
-      <input type="radio" name="cmdtype" value="asdefault" />
+      <input type="radio" name="cmdtype" value="asdefault">
       Remember this as my default query
-      <br />
-      <input type="radio" name="cmdtype" value="asnamed" />
+      <br>
+      <input type="radio" name="cmdtype" value="asnamed">
       Remember this query, and name it:
       <input type="text" name="newqueryname">
-      <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="tofooter" value="1" />
+      <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="tofooter" value="1">
           and put it in my page footer
-      <br />
+      <br>
     [% END %]
-      <br />
+      <br>
       <div>
       Sort results by:
       <select name="order">
@@ -721,7 +721,7 @@ function selectProduct(f) {
       [% END %]
       </select>
 
-      <input type="submit" value="Search" />
+      <input type="submit" value="Search">
       [% IF userdefaultquery %]
          <p>
            <a href="query.cgi?nukedefaultquery=1">
@@ -794,7 +794,7 @@ function selectProduct(f) {
         </select>
 
         <input name="[% "value${chartnum}-${rownum}-${colnum}" %]" 
-               value="[% col.value FILTER html %]" /> 
+               value="[% col.value FILTER html %]"> 
       </td>
       
       [% IF NOT col == row.last %]
@@ -805,7 +805,7 @@ function selectProduct(f) {
         <td>
           [% newor = colnum + 1 %]
           <input type="submit" value="Or" 
-                 name="cmd-add[% "${chartnum}-${rownum}-${newor}" %]" [% $jsmagic %] />
+                 name="cmd-add[% "${chartnum}-${rownum}-${newor}" %]" [% $jsmagic %]>
         </td>
       [% END %]
       
@@ -821,10 +821,10 @@ function selectProduct(f) {
       <td>
         [% newand = rownum + 1; newchart = chartnum + 1 %]
         <input type="submit" value="And" 
-               name="cmd-add[% "${chartnum}-${newand}-0" %]"[% $jsmagic %] /> 
+               name="cmd-add[% "${chartnum}-${newand}-0" %]"[% $jsmagic %]> 
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <input type="submit" value="Add another boolean chart" 
-               name="cmd-add[% newchart %]-0-0" [% $jsmagic %] />
+               name="cmd-add[% newchart %]-0-0" [% $jsmagic %]>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       </td>
     </tr>   

@@ -31,7 +31,7 @@
 <table cellspacing="2" cellpadding="0" border="0">
 
   <tr>
-    <td><br /></td>
+    <td><br></td>
   </tr>
 
   <tr>
@@ -43,7 +43,7 @@
   </tr>
   
   <tr>
-    <td><br /></td>
+    <td><br></td>
   </tr>
 
   <tr>
@@ -171,7 +171,7 @@
     <td colspan="3">
       <textarea wrap="hard" name="comment" rows="10" cols="80">
         [% comment FILTER html %]</textarea>
-      <br />
+      <br>
     </td>
   </tr>
   
@@ -179,16 +179,16 @@
     <td></td>
     <td colspan="3">
     [% IF group.size %]
-      <br />
+      <br>
         <strong>
           Only users in the selected groups can view this bug:
         </strong>
-      <br />
+      <br>
       <font size="-1">
         (Leave all boxes unchecked to make this a public bug.)
       </font>
-      <br />
-      <br />
+      <br>
+      <br>
 
       <!-- Checkboxes -->
       [% FOREACH g = group %]
@@ -196,7 +196,7 @@
         <input type="checkbox" name="bit-[% g.bit %]" value="1"
           [% " checked=\"checked\"" IF g.checked %] />[% g.description %]<br />
       [% END %]
-      <br />
+      <br>
     [% END %]
     </td>
   </tr>
@@ -218,7 +218,7 @@
   <tr>
     <td></td>
     <td colspan="3">
-      <br />
+      <br>
       We've made a guess at your operating system and platform. 
       Please check them and, if we got it wrong, email 
       [% Param('maintainer') %].
@@ -227,7 +227,7 @@
 [% END %]
 
   </table>
-  <input type="hidden" name="form_name" value="enter_bug" />
+  <input type="hidden" name="form_name" value="enter_bug">
 </form>
 
 [% INCLUDE global/footer %]

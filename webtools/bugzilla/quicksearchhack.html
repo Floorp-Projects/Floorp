@@ -1,31 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   <title>Bugzilla QuickSearch (for Hackers)</title>
 </head>
 
 <body bgcolor="#ffffff">
 
-<script src="localconfig.js"></script>
-<script src="quicksearch.js"></script>
+<script src="localconfig.js" type="text/javascript"></script>
+<script src="quicksearch.js" type="text/javascript"></script>
 
 <h1>Bugzilla QuickSearch (for Hackers)</h1>
 
+<p>
 Type in one or more words (or word fragments) to search for:
+</p>
 
 <form name="f" action="show_bug.cgi" method="get"
       onsubmit="QuickSearch(f.id.value); return false;">
   <table>
     <tr>
-      <td><input type="text" size="40" name="id"/></td>
-      <td align=left><input type="submit" name="run"  value="Search"/></td>
-      <td align=left><input type="button" name="load" value="Load Query"
-                      onclick="LoadQuery(f.id.value);" />
+      <td><input type="text" size="40" name="id"></td>
+      <td align="left"><input type="submit" name="run"  value="Search"></td>
+      <td align="left"><input type="button" name="load" value="Load Query"
+                      onclick="LoadQuery(f.id.value);">
       </td>
     </tr>
   </table>
 </form>
 
-<script>
+<script type="text/javascript">
 <!--
 document.forms['f'].id.focus();
 //-->
@@ -37,6 +41,7 @@ words are separated by spaces.
 By default, the following fields are relevant: Summary, Keywords, 
 Product, Component, Status Whiteboard. If a word looks like a part of a
 URL, that field is included in the search, too.
+</p>
 <p>
 The generic format for a ``word'' is
 &nbsp;<tt>field1,...,fieldN:value1,...,valueM</tt>&nbsp;.
@@ -50,12 +55,13 @@ If only &nbsp;<tt>value1,...,valueM</tt>&nbsp; is given,
 the prefix (roughly) defaults to &nbsp;<tt>summary,keywords,product,component,statuswhiteboard:</tt>&nbsp; as noted above.
 You can use &nbsp;<tt>-<i>word</i></tt>&nbsp; to express the logical negation
 of &nbsp;<tt><i>word</i></tt>.&nbsp;
+</p>
 <p>
 Here is a complete listing of available fields (the Shortcut column is just 
 for access speed):
-<p>
+</p>
 
-<table border=1>
+<table border="1">
 <thead>
 <tr>
   <td><b>Searched by default</b></td>
@@ -70,7 +76,7 @@ for access speed):
 
 <tr>
   <td>&nbsp;</td>
-  <td rowspan=2><tt><nobr>UNCO,NEW,...,CLOS,</nobr><br><nobr>FIX,DUP,...</nobr> <i><nobr>(as first word)</nobr></i></tt></td>
+  <td rowspan="2"><tt>UNCO,NEW,...,CLOS,<br>FIX,DUP,...<i>(as first word)</i></tt></td>
   <td><tt>status</tt></td>
   <td>&nbsp;</td>
   <td><a href="bug_status.html">Status</a> 
@@ -148,7 +154,7 @@ for access speed):
 
 <tr>
   <td><i>yes</i></td>
-  <td rowspan=2><b>:</b><i>area</i></td>
+  <td rowspan="2"><b>:</b><i>area</i></td>
   <td><tt>product</tt></td>
   <td><tt>prod</tt></td>
   <td>Product (enum)</td>
@@ -241,8 +247,8 @@ for access speed):
 
 <p>
 Examples for some useful abbreviations:
-<p>
-<table border=1>
+</p>
+<table border="1">
 <thead>
 <tr>
   <td><b>Syntax</b></td>
@@ -292,7 +298,7 @@ Examples for some useful abbreviations:
 </tr>
 <tr>
   <td><tt>blo,cri,maj</tt></td>
-  <td><i>severe bugs</td>
+  <td><i>severe bugs</i></td>
 </tr>
 <tr>
   <td><tt>enh</tt></td>
@@ -303,12 +309,12 @@ Examples for some useful abbreviations:
   <td><b>priority:</b><i>level</i></td>
 </tr>
 <tr>
-  <td><tt>p1<tt></td>
+  <td><tt>p1</tt></td>
   <td><i>very high-priority bugs</i></td>
 </tr>
 <tr>
   <td><tt>p1-2</tt></td>
-  <td><i>high-priority bugs</td>
+  <td><i>high-priority bugs</i></td>
 </tr>
 <tr>
   <td><b>@</b><i>owner</i></td>
@@ -344,6 +350,7 @@ Examples for some useful abbreviations:
 More information can be found in the
 <a href="quicksearch.html#features">&quot;Features&quot;</a> section 
 on the <a href="quicksearch.html">introductory page</a>.
+</p>
 
 </body>
 </html>

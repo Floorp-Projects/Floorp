@@ -1051,7 +1051,7 @@ sub quoteUrls {
         my $num = $4;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
-        $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
+        $item = qq{<a href="attachment.cgi?id=$num&amp;action=view">$item</a>};
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
