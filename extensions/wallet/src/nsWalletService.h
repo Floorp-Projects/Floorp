@@ -50,6 +50,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
+#include "nsIAuthPromptWrapper.h"
 
 class nsWalletlibService : public nsIWalletService,
                            public nsIObserver,
@@ -90,12 +91,12 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsSingleSignOnPrompt : public nsISingleSignOnPrompt
+class nsSingleSignOnPrompt : public nsIAuthPromptWrapper
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTHPROMPT
-  NS_DECL_NSISINGLESIGNONPROMPT
+  NS_DECL_NSIAUTHPROMPTWRAPPER
 
   nsSingleSignOnPrompt() { NS_INIT_REFCNT(); }
   virtual ~nsSingleSignOnPrompt() {}

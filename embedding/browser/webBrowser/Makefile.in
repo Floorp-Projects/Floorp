@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  shistory \
 		  webshell \
 		  windowwatcher \
-		  wallet \
 		  appcomps \
 		  webbrowserpersist \
 		  unicharutil \
@@ -72,7 +71,6 @@ CPPSRCS		= \
 		nsDocShellTreeOwner.cpp		\
 		nsWebBrowser.cpp		\
 		nsCommandHandler.cpp		\
-		nsNonPersistAuthPrompt.cpp      \
                 nsWebBrowserContentPolicy.cpp   \
 		$(NULL)
 

@@ -93,11 +93,6 @@ interface nsIWalletService : nsISupports {
   wstring WALLET_Decrypt(in string crypt);
 };
 
-[scriptable, uuid(6228d644-17fe-11d4-8cee-0060b0fc14a3)]
-interface nsISingleSignOnPrompt : nsIAuthPrompt
-{
-  void setPromptDialogs(in nsIPrompt dialogs);
-};
 
 %{C++
 

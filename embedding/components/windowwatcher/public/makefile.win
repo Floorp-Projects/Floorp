@@ -28,6 +28,7 @@ XPIDLSRCS = \
     .\nsPIPromptService.idl \
     .\nsIWindowWatcher.idl \
     .\nsPIWindowWatcher.idl \
+    .\nsIAuthPromptWrapper.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -604,7 +604,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSingleSignOnProfileObserver, nsIObserver)
 PRBool nsSingleSignOnPrompt::mgRegisteredObserver = PR_FALSE;
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsSingleSignOnPrompt,
-                              nsISingleSignOnPrompt,
+                              nsIAuthPromptWrapper,
                               nsIAuthPrompt)
 
 nsresult

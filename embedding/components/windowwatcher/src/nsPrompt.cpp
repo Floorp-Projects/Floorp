@@ -37,11 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIServiceManager.h"
-#include "nsIWalletService.h"
+#include "nsIAuthPromptWrapper.h"
 #include "nsPrompt.h"
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_CID(kSingleSignOnPromptCID, NS_SINGLESIGNONPROMPT_CID);
 
 nsresult
 NS_NewPrompter(nsIPrompt **result, nsIDOMWindow *aParent)
@@ -83,8 +82,9 @@ NS_NewAuthPrompter(nsIAuthPrompt **result, nsIDOMWindow *aParent)
   }
 
   *result = prompter;
-  // wrap the base prompt in an nsISingleSignOnPrompt, if available
-  nsCOMPtr<nsISingleSignOnPrompt> siPrompt = do_CreateInstance(kSingleSignOnPromptCID);
+  // wrap the base prompt in an nsIAuthPromptWrapper, if available
+  // the impl used here persists prompt data and pre-fills the dialogs
+  nsCOMPtr<nsIAuthPromptWrapper> siPrompt = do_CreateInstance("@mozilla.org/wallet/single-sign-on-prompt;1");
   if (siPrompt) {
     // then single sign-on is installed
     rv = siPrompt->SetPromptDialogs(prompter);
