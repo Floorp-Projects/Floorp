@@ -768,7 +768,7 @@ sub DBNameToIdAndCheck {
     }
 
     ThrowUserError("invalid_username",
-                   { name => $name });
+                   { name => $name }, "abort");
 }
 
 
