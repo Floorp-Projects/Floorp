@@ -24,6 +24,8 @@
 #   Unused makefiles may be commented out with '#'.
 #   ('#' must be the first character on the line).
 
+MAKEFILES=""
+
 # add_makefiles - Shell function to add makefiles to MAKEFILES
 add_makefiles() {
   while read line; do
