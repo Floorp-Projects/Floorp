@@ -26,9 +26,6 @@ use strict;
 # defaults to stdin
 # output to stdout
 
-# on cygwin, line endings are screwed up.
-$/ = "\x0D\x0A" if $^O eq 'cygwin';
-
 my $stack = new stack;
 
 # command line arguments
@@ -74,6 +71,8 @@ sub include {
     local *FILE;
     open(FILE, $filename);
     while (<FILE>) {
+        # on cygwin, line endings are screwed up, so normalise them.
+        s/[\xDA\x0A]+$/\n/os if $^O eq 'cygwin';
         $stack->newline;
         if (/^\#([a-z]+)\n?$/os) { # argumentless processing instruction
             process($stack, $1);
