@@ -6,5 +6,5 @@ nsIDOMAppCores.h
 nsIDOMBaseAppCore.h
 nsIDOMMailCore.h
 nsIDOMToolbarCore.h
-nsIDOMBrowserApprCore.h
+nsIDOMBrowserAppCore.h
 nsAppCoresCIDs.h
