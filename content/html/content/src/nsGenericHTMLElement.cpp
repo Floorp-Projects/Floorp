@@ -2707,7 +2707,22 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
   if (frame) {
     nsIFormControlFrame* form_frame = nsnull;
     CallQueryInterface(frame, &form_frame);
-    return form_frame;
+    if (form_frame) {
+      return form_frame;
+    }
+
+    // If we have generated content, the primary frame will be a
+    // wrapper frame.. out real frame will be in its child list.
+    for (frame->FirstChild(frame->GetPresContext(), nsnull, &frame);
+         frame;
+         frame = frame->GetNextSibling()) {
+      CallQueryInterface(frame, &form_frame);
+      if (form_frame) {
+        return form_frame;
+      }
+    }
+        
+    NS_ERROR("Form control has a frame, but it's not a form frame");
   }
 
   return nsnull;
