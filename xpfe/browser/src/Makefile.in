@@ -34,6 +34,11 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/xul.css \
         $(srcdir)/navigator.css \
 	$(srcdir)/navigator.xul \
+        $(srcdir)/navigator-shiny.css \
+	$(srcdir)/navigator-mozillazine0.css \
+        $(srcdir)/navigator-goofy.css \
+        $(srcdir)/navigator-test1.xul \
+        $(srcdir)/raindrops_light.gif \
 	$(NULL)
 
 install:: 
