@@ -31,67 +31,117 @@ interface nsIWeakReference;
 /**
  * The nsIWebBrowser
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
-
 [scriptable, uuid(69E5DF00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIWebBrowser : nsISupports
 {
-	/* 
-    Registers a listener to receive callbacks.
+    /**
+     * Registers a listener of the type specified by the iid to receive
+     * callbacks. The browser stores a weak reference to the listener
+     * to avoid any circular dependencies.
+     * Typically this method will be called to register an object
+     * to receive <CODE>nsIWebProgressListener</CODE> or 
+     * <CODE>nsISHistoryListener</CODE> notifications in which case the
+     * the IID is that of the interface.
+     *
+     * @param aListener The listener to be added.
+     * @param aIID      The IID of the interface that will be called
+     *                  on the listener as appropriate.
+     * @return          <CODE>NS_OK</CODE> for successful registration;
+     *                  <CODE>NS_ERROR_INVALID_ARG</CODE> if aIID is not
+     *                  supposed to be registered using this method;
+     *                  <CODE>NS_ERROR_FAILURE</CODE> either aListener did not
+     *                  expose the interface specified by the IID, or some
+     *                  other internal error occurred.
+     *
+     * @see removeWebBrowserListener
+     * @see nsIWeakReference
+     * @see nsIWebProgressListener
+     * @see nsISHistoryListener
+     *
+     * @return <CODE>NS_OK</CODE>, listener was successfully added;
+     *         <CODE>NS_ERROR_INVALID_ARG</CODE>, one of the arguments was
+     *         invalid or the object did not implement the interface
+     *         specified by the IID.
+     */
+    void addWebBrowserListener(in nsIWeakReference aListener, in nsIIDRef aIID);
 
-    @param aListener - The listener interface pointer who's methods will be
-                       called as defined by the semantics of the listener 
-                       interface itself (specified by the IID).
+    /**
+     * Removes a previously registered listener.
+     *
+     * @param aListener The listener to be removed.
+     * @param aIID      The IID of the interface on the listener that will
+     *                  no longer be called.
+     *
+     * @return <CODE>NS_OK</CODE>, listener was successfully removed;
+     *         <CODE>NS_ERROR_INVALID_ARG</CODE> arguments was invalid or
+     *         the object did not implement the interface specified by the IID.
+     *
+     * @see addWebBrowserListener
+     * @see nsIWeakReference
+     */
+    void removeWebBrowserListener(in nsIWeakReference aListener, in nsIIDRef aIID);
 
-    @param aIID      - The IID that aListener will be registered as.
-    
-    @return          - NS_OK, successful registration.
-                       NS_ERROR_INVALID_ARG, aIID is not supposed to be 
-                         registered using this method.
-                       NS_ERROR_FAILURE, either aListener could not be QI'd
-                         for the specified IID, or some other internal error
-                         occurred.
-	*/
-	void addWebBrowserListener(in nsIWeakReference aListener, in nsIIDRef aIID);
+    /**
+     * The chrome object associated with the browser instance. The embedder
+     * must create one chrome object for <I>each</I> browser object
+     * that is instantiated. The embedder must associate the two by setting
+     * this property to point to the chrome object before creating the browser
+     * window via the browser's <CODE>nsIBaseWindow</CODE> interface. 
+     *
+     * The chrome object must also implement <CODE>nsIEmbeddingSiteWindow</CODE>.
+     *
+     * The chrome may optionally implement <CODE>nsIInterfaceRequestor</CODE>,
+     * <CODE>nsIWebBrowserChromeFocus</CODE>,
+     * <CODE>nsIContextMenuListener</CODE> and
+     * <CODE>nsITooltipListener</CODE> to receive additional notifications
+     * from the browser object.
+     *
+     * The chrome object may optionally implement <CODE>nsIWebProgressListener</CODE> 
+     * instead of explicitly calling <CODE>addWebBrowserListener</CODE> and
+     * <CODE>removeWebBrowserListener</CODE> to register a progress listener
+     * object. If the implementation does this, it must also implement
+     * <CODE>nsIWeakReference</CODE>.
+     * 
+     * @note The implementation should not refcount the supplied chrome
+     *       object; it should assume that a non <CODE>nsnull</CODE> value is
+     *       always valid. The embedder must explicitly set this value back
+     *       to nsnull if the chrome object is destroyed before the browser
+     *       object.
+     *
+     * @see nsIBaseWindow
+     * @see nsIWebBrowserChrome
+     * @see nsIEmbeddingSiteWindow
+     * @see nsIInterfaceRequestor
+     * @see nsIWebBrowserChromeFocus
+     * @see nsIContextMenuListener
+     * @see nsITooltipListener
+     * @see nsIWeakReference
+     * @see nsIWebProgressListener
+     */
+    attribute nsIWebBrowserChrome containerWindow;
 
-    /*
-    Removes a previously registered listener.
+    /**
+     * URI content listener parent. The embedder may set this property to
+     * their own implementation if they intend to override or prevent the
+     * how certain kinds of content are loaded.
+     *
+     * @note The implementation should not refcount this interface; it
+     *       should assume that a non nsnull value is always valid.
+     *       The embedder should explicitly set this value back to nsnull
+     *       if the parent content listener is destroyed before the
+     *       browser object.
+     *
+     * @see nsIURIContentListener
+     */
+    attribute nsIURIContentListener parentURIContentListener;
 
-    @param aListener - The listener interface pointer to be removed as a listener.
-
-    @param aIID      - The IID that aListener should be removed as a listener
-                       for.
-
-    @return          - NS_OK, successful removal
-                       NS_ERROR_INVALID_ARG, aIID is not supported for removal.
-                       NS_ERROR_FAILURE, either aListener could not be QI'd
-                         for the specified IID, or some other internal error
-                         occurred.
-    */
-	void removeWebBrowserListener(in nsIWeakReference aListener, in nsIIDRef aIID);
-
-	/*
-	This is the top level window embedding the browser.  The object passed in
-	will be QI'd and used for setting positioning, chrome elements, etc of the
-	containing window.  This interface is implemented by the embedding app.
-	The topLevelWindow object will be QId for nsIInterfaceRequestor, if it 
-	is found, it will be quiried first before querying the objects in the 
-	webBrowserListener list.  Implementations of this interface should
-	not refcount the topLevelWindow as it is considered the owner of the browser
-	window.  That therefore means that when the topLevelWindow goes away, it 
-	must set topLevelWindow to nsnull.
-	*/
-	attribute nsIWebBrowserChrome containerWindow;
-
-	/*
-	URI content listener parent.  This is not refcounted and is assumed to be
-	nulled out by the parent when the parent is going away.
-	*/
-	attribute nsIURIContentListener parentURIContentListener;
-
-   /*
-   The top-level DOM window (nsIDOMWindow)
-   */
-   readonly attribute nsIDOMWindow contentDOMWindow;
+    /**
+     * The top-level DOM window. The embedder may walk the entire
+     * DOM starting from this value.
+     *
+     * @see nsIDOMWindow
+     */
+    readonly attribute nsIDOMWindow contentDOMWindow;
 };
