@@ -437,3 +437,27 @@ char * NS_MsgSACat (char **destination, const char *source)
   return *destination;
 }
 
+nsresult NS_MsgEscapeEncodeURLPath(const PRUnichar *str, char **result)
+{
+  NS_ENSURE_ARG_POINTER(str);
+  NS_ENSURE_ARG_POINTER(result);
+
+  *result = nsEscape(NS_ConvertUCS2toUTF8(str).get(), url_Path);
+  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+nsresult NS_MsgDecodeUnescapeURLPath(const char *path, PRUnichar **result)
+{
+  NS_ENSURE_ARG_POINTER(path);
+  NS_ENSURE_ARG_POINTER(result);
+
+  char *unescapedName = nsCRT::strdup(path);
+  if (!unescapedName) return NS_ERROR_OUT_OF_MEMORY;
+  nsUnescape(unescapedName);
+  nsAutoString resultStr;
+  resultStr = NS_ConvertUTF8toUCS2(unescapedName);
+  *result = resultStr.ToNewUnicode();
+  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}

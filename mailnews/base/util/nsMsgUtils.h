@@ -58,5 +58,9 @@ NS_MSG_BASE char * NS_MsgSACopy(char **destination, const char *source);
 
 NS_MSG_BASE char * NS_MsgSACat(char **destination, const char *source);
 
+NS_MSG_BASE nsresult NS_MsgEscapeEncodeURLPath(const PRUnichar *str, char **result);
+
+NS_MSG_BASE nsresult NS_MsgDecodeUnescapeURLPath(const char *path, PRUnichar **result);
+
 #endif
 

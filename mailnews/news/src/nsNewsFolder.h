@@ -123,9 +123,9 @@ protected:
 	PRBool		mGettingNews;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
-	nsCAutoString mOptionLines;
-    nsCAutoString mUnsubscribedNewsgroupLines;
-  PRBool m_downloadMessageForOfflineUse;
+	nsCString mOptionLines;
+        nsCString mUnsubscribedNewsgroupLines;
+        PRBool m_downloadMessageForOfflineUse;
 	// cache this until we open the db.
 	char        *mCachedNewsrcLine;
 

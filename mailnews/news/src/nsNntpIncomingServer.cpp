@@ -36,6 +36,7 @@
 #include "nsNNTPProtocol.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsMsgUtils.h"
 
 #define INVALID_VERSION         0
 #define VALID_VERSION			1
@@ -743,8 +744,11 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	if (NS_FAILED(rv)) return rv;
 	if (!msgfolder) return NS_ERROR_FAILURE;
 
-	nsAutoString newsgroupName; newsgroupName.AssignWithConversion(name);
-	rv = msgfolder->CreateSubfolder(newsgroupName.GetUnicode(),nsnull);
+	nsXPIDLString newsgroupName;
+	rv = NS_MsgDecodeUnescapeURLPath(name, getter_Copies(newsgroupName));
+	NS_ENSURE_SUCCESS(rv,rv);
+
+	rv = msgfolder->CreateSubfolder(newsgroupName.get(), nsnull);
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
@@ -761,9 +765,19 @@ writeGroupToHostInfoFile(nsCString &aElement, void *aData)
         return PR_FALSE;
     }
 
-	// XXX todo ",,1,0,0" is a temporary hack, fix it
-	*stream << aElement.get() << ",,1,0,0" << MSG_LINEBREAK;
-	return PR_TRUE;
+    nsXPIDLString name;
+    nsresult rv = NS_MsgDecodeUnescapeURLPath(aElement.get(), getter_Copies(name)); 
+    if (NS_FAILED(rv)) {
+        // stop, something is bad.
+        return PR_FALSE;
+    }
+
+    nsCAutoString nameOnDisk;
+    nameOnDisk.AssignWithConversion(name.get());
+
+    // XXX todo ",,1,0,0" is a temporary hack, fix it
+    *stream << nameOnDisk.get() << ",,1,0,0" << MSG_LINEBREAK;
+    return PR_TRUE;
 }
 
 nsresult
@@ -772,8 +786,8 @@ nsNntpIncomingServer::WriteHostInfoFile()
     nsresult rv = NS_OK;
 
     if (!mHostInfoHasChanged) {
-    return NS_OK;
-}
+        return NS_OK;
+	}
 
 	PRInt32 firstnewdate;
 
@@ -1074,12 +1088,20 @@ nsNntpIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool ch
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
 
-	rv = AddGroupOnServer(aName);
+	nsAutoString newsgroupName;
+	newsgroupName.AssignWithConversion(aName);
+
+    char *escapedName = nsEscape(NS_ConvertUCS2toUTF8(newsgroupName.get()).get(), url_Path);
+    if (!escapedName) return NS_ERROR_OUT_OF_MEMORY;
+
+	rv = AddGroupOnServer(escapedName);
 	NS_ENSURE_SUCCESS(rv,rv);
  
-    rv = mInner->AddTo(aName,addAsSubscribed,changeIfExists);
+    rv = mInner->AddTo(escapedName,addAsSubscribed,changeIfExists);
 	NS_ENSURE_SUCCESS(rv,rv);
-    return rv;
+
+    PR_FREEIF(escapedName);
+	return rv;
 }
 
 NS_IMETHODIMP

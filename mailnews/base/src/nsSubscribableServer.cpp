@@ -38,6 +38,7 @@
 #include "nsIRDFLiteral.h"
 
 #include "nsMsgUtf7Utils.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -377,9 +378,6 @@ nsSubscribableServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToS
 
     mStopped = PR_FALSE;
 
-#ifdef DEBUG_seth
-    printf("XXX free subscribe tree\n");
-#endif
     rv = FreeSubtree(mTreeRoot);
     mTreeRoot = nsnull;
     NS_ENSURE_SUCCESS(rv,rv);
@@ -390,7 +388,7 @@ NS_IMETHODIMP
 nsSubscribableServer::StopPopulating(nsIMsgWindow *aMsgWindow)
 {
     mStopped = PR_TRUE;
-	return NS_OK;
+    return NS_OK;
 }
 
 
@@ -702,8 +700,14 @@ nsSubscribableServer::GetLeafName(const char *path, PRUnichar **aLeafName)
     NS_ASSERTION(node,"didn't find the node");
     if (!node) return NS_ERROR_FAILURE;
 
+    // XXX TODO FIXME
+    // I'm assuming that mShowFullName is true for NNTP, false for IMAP.
+    // for imap, the node name is in modified UTF7
+    // for news, the path is escaped UTF8
+    //
+    // when we switch to using the outliner, this hack will go away.
     if (mShowFullName) {
-        rv = CreateUnicodeStringFromUtf7(path, aLeafName);
+	rv = NS_MsgDecodeUnescapeURLPath(path, aLeafName);
     }
     else {
         rv = CreateUnicodeStringFromUtf7(node->name, aLeafName);

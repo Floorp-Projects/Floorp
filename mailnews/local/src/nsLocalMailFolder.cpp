@@ -250,13 +250,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 
   // URI should use UTF-8
   // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
-
-  char *escapedName = nsEscape(NS_ConvertUCS2toUTF8(*name).get(), url_Path);
-  if (escapedName)
-  {
-    uri.Append(escapedName);
-    PR_FREEIF(escapedName);
-  }
+  nsXPIDLCString escapedName;
+  rv = NS_MsgEscapeEncodeURLPath((*name).get(), getter_Copies(escapedName));
+  NS_ENSURE_SUCCESS(rv,rv);
+  uri.Append(escapedName.get());
 
 	nsCOMPtr<nsIRDFResource> res;
 	rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
