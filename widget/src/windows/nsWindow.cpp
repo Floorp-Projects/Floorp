@@ -4905,6 +4905,9 @@ void nsWindow::OnDestroy()
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 {            
+  mBounds.x = aX;
+  mBounds.y = aY;
+
   nsGUIEvent event;
   InitEvent(event, NS_MOVE);
   event.point.x = aX;
