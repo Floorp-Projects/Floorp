@@ -215,65 +215,286 @@ int DIGIT_MAP[256] = {
 /*
 * Dceclation of the Instruction types
 */
-char reg_name[8][4] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
+char reg_name[14][4] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi",
+        "cs", "ss", "ds", "es", "fs", "gs" };
 
 char instr_name[][8] = { "unknown", "push", "add", "sub", "cmp", "mov", "j", "lea",
-        "incr", "pop", "xor", "nop", "ret" };
+        "inc", "pop", "xor", "nop", "ret" };
 
 
 enum eRegister {
     kNoReg = -1,
-    keax = 0,
+    keax = 0, kecx, kedx, kebx, kesp, kebp, kesi, kedi,
+    kcs, kss, kds, kes, kfs, kgs
 };
 
 enum eInstruction {
     kunknown, kpush, kadd, ksub, kcmp, kmov, kjmp, klea,
-    kincr, kpop, kxor, knop, kret,
+    kinc, kpop, kxor, knop, kret,
 };
+
+const int kBaseFormatMask = (1<<5) -1;
+enum eFormat {
+    kfNone, kfreg, kfrm32, kfrm32_r32, kfr32_rm32, 
+    kfmImm8   = 1 << 5,
+    kfmImm32  = 1 << 6,
+};
+
+typedef unsigned char   uchar;
 
 
 struct CInstruction {
-    int             isize;  // size of the instruction in bytes
-    unsigned char   idata[8];
+    CInstruction();
 
-    eInstruction    instr;
-    eRegister       dest;
-    eRegister       src;
+    int             fSize;  // size of the instruction in bytes
 
-    long            destData;
-    long            srcData;
+    eInstruction    fInstr;
+    eFormat         fFormat;
+    eRegister       fReg1;
 
-    void            output( void );
-    void            hexdump( void );
+    eRegister       fReg2;
+    long            fDisp32;
+
+    eRegister       fReg3;
+    int             fScale;
+
+    long            fImm32;
+
+    virtual void    output_text( void );
+    virtual int     generate_opcode( uchar *buffer );
+
+    int             am_rm32( uchar *pCode, eFormat *format );
+    int             am_rm32_reg( uchar *pCode, eFormat *format );
 };
 
 
-void am_rm32( CInstruction *instr, unsigned char *theCode )
+CInstruction::CInstruction()
 {
-    unsigned char   reg = *theCode;
-    instr->isize = 2;
-    instr->src = (eRegister)((reg & 0x31) >> 3);
-    instr->dest = (eRegister)(reg & 0x07);
-// ek need to add and set the address mode
-// ek need to determine whether we are doing source/dest or dest/source
-    if ((reg & 0x07) == 0x04)  // check for SIB
-    {
-    }
-
-    if ((reg >= 0x80) && (reg < 0xC0)) // disp32
-    {
-        instr->destData = *(theCode +1);    // ek need to do a long here
-        instr->isize += 4;
-    }
-
-    if ((reg >= 0x40) && (reg < 0x80)) // disp8
-    {
-        instr->destData = *(theCode +1);
-        instr->isize++;
-    }
+    fSize   = 1;
+    fInstr   = kunknown;
+    fFormat  = kfNone;
+    fReg1    = kNoReg;
+    fReg2    = kNoReg;
+    fDisp32  = 0;
+    fReg3    = kNoReg;
+    fScale   = 1;
+    fImm32   = 0;
 }
 
 
+struct CPop:CInstruction {
+    CPop( eRegister reg )
+    {
+        fInstr = kpop;
+        fFormat = kfreg;
+        fReg1 = reg;
+    }
+
+    CPop( char imm8 )
+    {
+    }
+
+    CPop( long imm32 )
+    {
+    }
+
+    CPop( uchar *pCode, eFormat format )
+    {
+        fInstr = kpop;
+        fSize += am_rm32( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+struct CPush:CInstruction {
+    CPush( eRegister reg )
+    {
+        fInstr = kpush;
+        fFormat = kfreg;
+        fReg1 = reg;
+    }
+
+    CPush( char imm8 )
+    {
+    }
+
+    CPush( long imm32 )
+    {
+    }
+
+    CPush( uchar *pCode, eFormat format )
+    {
+        fInstr = kpush;
+        fSize += am_rm32( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+struct CInc:CInstruction {
+    CInc( uchar *pCode, eFormat format )
+    {
+        fInstr = kinc;
+        fSize += am_rm32( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+struct CMov:CInstruction {
+    CMov( uchar *pCode, eFormat format )
+    {
+        fInstr = kmov;
+        fSize += am_rm32_reg( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+struct CCmp:CInstruction {
+    CCmp( uchar *pCode, eFormat format )
+    {
+        fInstr = kcmp;
+        fSize += am_rm32_reg( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+struct CAdd:CInstruction {
+    CAdd( uchar *pCode, eFormat format )
+    {
+        fInstr = kadd;
+        fSize += am_rm32_reg( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+struct CSub:CInstruction {
+    CSub( uchar *pCode, eFormat format )
+    {
+        fInstr = ksub;
+        fSize += am_rm32_reg( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+struct CXor:CInstruction {
+    CXor( uchar *pCode, eFormat format )
+    {
+        fInstr = kxor;
+        fSize += am_rm32_reg( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+struct CJmp:CInstruction {
+    CJmp( uchar imm8 )
+    {
+        fInstr = kjmp;
+        fImm32 = imm8;
+        fSize = 2;
+    }
+
+    virtual void    output_text( void );
+};
+
+
+struct CNop:CInstruction {
+    CNop()
+    {
+        fInstr = knop;
+        fSize = 1;
+    }
+};
+
+
+struct CRet:CInstruction {
+    CRet()
+    {
+        fInstr = kret;
+        fSize = 1;
+    }
+};
+
+
+struct CLea:CInstruction {
+    CLea( uchar *pCode, eFormat format )
+    {
+        fInstr = klea;
+        fSize += am_rm32_reg( pCode, &format );
+        fFormat = format;
+    }
+};
+
+
+/*
+*   am_rm32 decodes the destination reg, and assumes that the src reg is a
+*   selector or was set outside of this function
+*/
+int CInstruction::am_rm32( uchar *pCode, eFormat *format )
+{
+    unsigned char   reg = *pCode++;
+    int             isize = 1;
+
+    fReg2 = (eRegister)(reg & 0x07);
+
+    if ( ((reg & 0x07) == 0x04) &&  // check for SIB
+         ((reg & 0xC0) != 0xC0) )
+    {
+        pCode++;
+        isize++;
+    }
+
+    if ((reg & 0xC0) == 0x80) // disp32
+    {
+        fDisp32 = *(long*)pCode;
+        pCode += 4;
+        isize += 4;
+    }
+    else if ((reg & 0xC0) == 0x40) // disp8
+    {
+        fDisp32 = *pCode;
+        pCode++;
+        isize++;
+    }
+    else if ((reg & 0xC0) == 0x00) // no disp
+    {
+    }
+    else // direct register
+    {
+    }
+
+    if (*format & kfmImm8)
+    {
+        fImm32 = *pCode;
+        pCode++;
+        isize++;
+    }
+
+    if (*format & kfmImm32)
+    {
+        fImm32 = *(long*)pCode;
+        pCode+=4;
+        isize+=4;
+    }
+
+    return isize;
+}
+
+
+int CInstruction::am_rm32_reg( uchar *pCode, eFormat *format )
+{
+    fReg1 = (eRegister)((*pCode & 0x38) >> 3);
+    return am_rm32( pCode, format );
+}
+
+
+#if 0
 /*
 *   theCode points to the first register field
 */
@@ -349,52 +570,80 @@ CInstruction *am_reg_rm32( eInstruction instr, unsigned char *theCode )
 // ek need to reverse the src and dest
 }
 
+#endif
 
-void CInstruction::output( void )
+
+/*
+*   returns the size of the generated opcode, which is in buffer
+*/
+int CInstruction::generate_opcode( uchar *buffer )
 {
-    bool commaNeeded = false;
+    buffer[0] = 0xFF;
+    return 1;
+}
 
-    cout << instr_name[instr] << "\t";
 
-    if (dest != kNoReg)
+void CInstruction::output_text( void )
+{
+    cout << instr_name[fInstr] << "\t";
+
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+    switch (format)
     {
-        cout << reg_name[dest];
-        commaNeeded = true;
+        case kfreg:
+            cout << reg_name[fReg1];
+            break;
+        case kfrm32:
+            cout << reg_name[fReg2];
+            break;
+        case kfrm32_r32:
+            cout << reg_name[fReg2] << ", ";
+            cout << reg_name[fReg1];
+            break;
+        case kfr32_rm32:
+            cout << reg_name[fReg1] << ", ";
+            cout << reg_name[fReg2];
+            break;
     }
-    if (src != kNoReg)
-    {
-        if (commaNeeded)    cout << ", ";
-        cout << reg_name[src];
-    }
+
+    if (fFormat & kfmImm8)  cout.form( ", #0x%02X", fImm32 );
+    if (fFormat & kfmImm32)  cout.form( ", #0x%08X", fImm32 );
 
     cout << "\n";
 }
 
 
-void CInstruction::hexdump( void )
+void CJmp::output_text( void )
 {
-    int instrSize = isize;
-    while (instrSize)
+    cout << "j\t";
+    cout.form( ".+0x%02X\n", fImm32 );
+}
+
+
+void hexdump( CInstruction *instr )
+{
+    uchar   buffer[16];
+    int     instrSize = instr->generate_opcode( buffer );
+    for (int i=0; i<instrSize; i++)
     {
-        cout.form("%02x ", idata[isize - instrSize]);
-        instrSize--;
+        cout.form("%02x ", buffer[i]);
     }
     cout << "\t";
 }
 
 
-CInstruction* get_next_instruction( unsigned char *theCode )
+CInstruction* get_next_instruction( uchar *pCode )
 {
-    CInstruction    *retInstr;
-    unsigned char   *reg = theCode+1;
+    CInstruction    *retInstr=NULL;
+    uchar           *reg = pCode+1;
 
-    switch (*theCode)
+    switch (*pCode)
     {
         case 0x01:
-            retInstr = am_rm32_reg( kadd, reg );
+            retInstr = new CAdd( reg, kfrm32_r32 );
             break;
         case 0x31:
-            retInstr = am_rm32_reg( kxor, reg );
+            retInstr = new CXor( reg, kfrm32_r32 );
             break;
         case 0x50:
         case 0x51:
@@ -404,7 +653,7 @@ CInstruction* get_next_instruction( unsigned char *theCode )
         case 0x55:
         case 0x56:
         case 0x57:
-            retInstr = am_non_reg( kpush, (eRegister)(*theCode & 0x07) );
+            retInstr = new CPush( (eRegister)(*pCode & 0x07) );
             break;
         case 0x58:
         case 0x59:
@@ -414,73 +663,75 @@ CInstruction* get_next_instruction( unsigned char *theCode )
         case 0x5d:
         case 0x5e:
         case 0x5f:
-            retInstr = am_non_reg( kpop, (eRegister)(*theCode & 0x07) );
+            retInstr = new CPop( (eRegister)(*pCode & 0x07) );
             break;
         case 0x83:
             switch (DIGIT_MAP[*reg])
             {
                 case 5:
-                    retInstr = am_rm32_imm8( ksub, reg );
+                    retInstr = new CSub( reg, (eFormat)(kfrm32 | kfmImm8) );
                     break;
                 case 7:
-                    retInstr = am_rm32_imm8( kcmp, reg );
+                    retInstr = new CCmp( reg, (eFormat)(kfrm32 | kfmImm8) );
                     break;
                 default:
-                    retInstr = am_rm32_imm8( kunknown, reg );
+//                    retInstr = am_rm32_imm8( kunknown, reg );
                     break;
             }
             break;
         case 0x89:
-            retInstr = am_rm32_reg( kmov, reg );
+            retInstr = new CMov( reg, kfrm32_r32 );
             break;
         case 0x88:
         case 0x8a:
-            retInstr = am_rm32_imm8( kunknown, reg );
             break;
         case 0x8b:
-            retInstr = am_reg_rm32( kmov, reg );
+            retInstr = new CMov( reg, kfr32_rm32 );
             break;
         case 0x8c:
         case 0x8e:
-            retInstr = am_rm32_imm8( kunknown, reg );
             break;
         case 0x8d:
-            retInstr = am_rm32_imm8( klea, reg );
-       //     retInstr->isize++;  // ek need to handle the 16/32 instead of 8/32 for lea
+            retInstr = new CLea( reg,  kfr32_rm32 );
             break;
         case 0x90:
-            retInstr = am_non_non( knop );
+            retInstr = new CNop();
             break;
         case 0xc3:
-            retInstr = am_non_non( kret );
+            retInstr = new CRet();
             break;
         case 0xc7:
-            retInstr = am_rm32_imm32( kmov, reg );
+            retInstr = new CMov( reg, (eFormat)(kfrm32 | kfmImm32) );
             break;
 
 
         case 0x7e:
         case 0xeb:
-            retInstr = am_imm8( kjmp, reg );
+            retInstr = new CJmp( *reg );
             break;
         case 0xff:
             switch (DIGIT_MAP[*reg])
             {
-                case 0:     // ek check this out, since I believe the book is wrong
-                    retInstr = am_reg_rm32( kincr, reg );
+                case 0:
+                    retInstr = new CInc( reg, kfrm32 );
+                    break;
+                case 6:
+                    retInstr = new CPush( reg, kfrm32 );
                     break;
                 default:
-                    retInstr = am_rm32_imm8( kunknown, reg );
+//                    retInstr = am_rm32_imm8( kunknown, reg );
                     break;
             } 
             break;
 
         default:
-            retInstr = am_rm32_imm8( kunknown, reg);
+//            retInstr = am_rm32_imm8( kunknown, reg);
             break;
     }
 
-    memcpy( retInstr->idata, theCode, retInstr->isize );
+// ek only until the table above is completed
+    if (retInstr == NULL)   retInstr = new CInstruction();
+
     return retInstr;
 }
 
@@ -491,20 +742,20 @@ CInstruction* get_next_instruction( unsigned char *theCode )
 *   returns the number of bytes smaller the new code is.
 */
 
-long process_function( unsigned char *theCode, long codeSize )
+long process_function( uchar *pCode, long codeSize )
 {
     long            saved=0;
 
     while (codeSize > 0)
     {
-        CInstruction    *instr = get_next_instruction( theCode );
-        int instrSize = instr->isize;
+        CInstruction    *instr = get_next_instruction( pCode );
+        int instrSize = instr->fSize;
 
-        theCode += instrSize;
+        pCode += instrSize;
         codeSize -= instrSize;
 
-        instr->hexdump();
-        instr->output();
+        hexdump( instr );
+        instr->output_text();
         delete instr;
     }
 
