@@ -28,6 +28,7 @@
 #include "nsIRefreshUrl.h"
 #include "nsString.h"
 #include "nsNetStream.h"
+#include "intl_csi.h"
 
 #ifdef NS_NET_FILE
 
