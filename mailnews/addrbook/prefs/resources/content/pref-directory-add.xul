@@ -20,6 +20,7 @@
    
    Contributor(s): 
      Srilatha Moturi <srilatha@netscape.com>, original implementor
+     Håkan Waara <hwaara@chello.se>
   -->
 
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
@@ -29,7 +30,7 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-directory-add.dtd">
 
 <window id="addDirectory"
-        class="dialog" style="width: 30em; -moz-user-focus: ignore;"
+        class="dialog" style="width: 30em"
         orient="vertical"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newDirectoryTitle.label;"
@@ -48,8 +49,37 @@
       </tabs>
 	   
       <tabpanels id="directoryTabPanels" flex="1">
-         <vbox index="general" flex="1">
-           <grid flex="1">
+             <grid flex="1">
+                 <columns>
+                     <column/>
+                     <column flex="1"/>
+                     <column/>
+                 </columns>
+
+                 <rows>
+                     <row>
+                         <label value="&directoryName.label;" accesskey="&directoryName.accesskey;" 
+                                control="description"/>
+                         <textbox id="description" flex="1"/>
+                         <spacer flex="1"/>
+                     </row>
+                     <row>
+                         <label value="&directoryHostname.label;" accesskey="&directoryHostname.accesskey;"
+                                control="hostname"/>
+                         <textbox id="hostname" flex="1"/>
+                         <spacer flex="1"/>
+                     </row>
+                     <row>
+                         <label value="&directoryBaseDN.label;" 
+                                accesskey="&directoryBaseDN.accesskey;"
+                                control="basedn"/>
+                         <textbox id="basedn"/>
+                         <button label="&findButton.label;" 
+                                 accesskey="&findButton.accesskey;" disabled="true"/>
+                     </row>
+                 </rows>
+             </grid>
+           <grid>
              <columns>
                <column/>
                <column flex="1"/>
@@ -57,73 +87,41 @@
       
              <rows>
                <row>
-                 <text class="label" value="&directoryName.label;" accesskey="&directoryName.accesskey;" 
-                       for="description"/>
-                 <textbox id="description" flex="1"/>
-               </row>
-               <row>
-                 <text class="label" value="&directoryHostname.label;" accesskey="&directoryHostname.accesskey;"
-                       for="hostname"/>
-                 <textbox id="hostname" flex="1"/>
-               </row>
-               <row>
-                 <text class="label" value="&directoryBaseDN.label;" 
-                       accesskey="&directoryBaseDN.accesskey;"
-                       for="basedn"/>
-                 <textbox id="basedn" flex="1"/>
-                 <button label="&findButton.label;" 
-                         accesskey="&findButton.accesskey;" disabled="true"/>
-               </row>
-             </rows>
-           </grid>
-         </vbox>
-         <vbox index="advanced" flex="1" style="width:100%">
-           <grid flex="1">
-             <columns>
-               <column/>
-               <column flex="1"/>
-             </columns>
-      
-             <rows>
-               <row>
-                 <text class="label" value="&portNumber.label;" 
-                       accesskey="&portNumber.accesskey;"
-                       for="port"/>
+                 <label value="&portNumber.label;" 
+                        accesskey="&portNumber.accesskey;"
+                        control="port"/>
                  <hbox>
-                   <textbox id="port" size="6"/>
+                   <textbox id="port" size="6"/> 
                  </hbox>
                </row>
                <row>
-                 <text class="label" value="&return.label;" 
+                 <label value="&return.label;" 
                        accesskey="&return.accesskey;"
-                       for="results"/>
-                 <hbox autostretch="never">
+                       control="results"/>
+                 <hbox>
                    <textbox id="results" size="6"/>
-                   <text class="label" value="&results.label;"/>
+                   <label value="&results.label;"/>
                  </hbox>
                </row>
                <row>
-                 <text class="label" value="&searchFilter.label;" 
+                 <label value="&scope.label;" control="scope"/>
+                 <radiogroup id="scope" orient="horizontal">
+                   <radio group="scope" id="one" value="1" label="&scopeOneLevel.label;"/>
+                   <radio group="scope" id="sub" value="2" label="&scopeSubtree.label;"/>                
+                 </radiogroup>
+               </row>
+               <row>
+                 <label value="&searchFilter.label;" 
                        accesskey="&searchFilter.accesskey;"
-                       for="search"/>
+                       control="search"/>
                  <textbox multiline="true" id="search" flex="1"/>
               </row>
             </rows>
           </grid>
-          <separator class="thin"/>
-          <hbox>
-            <html>&scope.label;</html>
-          </hbox>
-          <hbox class="indent">
-            <radiogroup id="scope" orient="horizontal" autostretch="never">
-              <radio group="scope" id="one" value="1" label="&scopeOneLevel.label;"/>
-              <radio group="scope" id="sub" value="2" label="&scopeSubtree.label;"/>                
-            </radiogroup>
-          </hbox>
-        </vbox>
       </tabpanels>
     </tabbox>
   </vbox>
+
   <hbox id="okCancelButtonsRight"/>
   
 </window>

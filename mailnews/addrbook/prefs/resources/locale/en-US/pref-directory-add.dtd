@@ -33,9 +33,9 @@ Rights Reserved.
 <!ENTITY Offline.tab                       "Offline">
 <!ENTITY Advanced.tab                      "Advanced">
 <!ENTITY advancedOptionsTitle.label        "Advanced Options">
-<!ENTITY portNumber.label                  "Port Number: ">
+<!ENTITY portNumber.label                  "Port number: ">
 <!ENTITY portNumber.accesskey              "p">
-<!ENTITY searchFilter.label                "Search Filter: ">
+<!ENTITY searchFilter.label                "Search filter: ">
 <!ENTITY searchFilter.accesskey            "f">
 <!ENTITY scope.label                       "Scope: ">
 <!ENTITY scope.accesskey                   "s">
