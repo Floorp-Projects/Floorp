@@ -55,6 +55,9 @@
 
 #include "pldhash.h"
 
+
+static nsIContentList *gCachedContentList;
+
 nsBaseContentList::nsBaseContentList()
 {
   NS_INIT_REFCNT();
@@ -134,6 +137,14 @@ nsBaseContentList::Reset()
 
   return NS_OK;
 }
+
+// static
+void
+nsBaseContentList::Shutdown()
+{
+  NS_IF_RELEASE(gCachedContentList);
+}
+
 
 // nsFormContentList
 
@@ -375,7 +386,19 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
 
   *aInstancePtrResult = list;
   NS_ADDREF(*aInstancePtrResult);
-                               
+
+  // Hold on to the last requested content list to avoid having it be
+  // removed from the cache immediately when it's released. Avoid
+  // bumping the refcount on the list if the requested list is the one
+  // that's already cached.
+
+  if (gCachedContentList != list) {
+    NS_IF_RELEASE(gCachedContentList);
+
+    gCachedContentList = list;
+    NS_ADDREF(gCachedContentList);
+  }
+
   return NS_OK;
 }
 

@@ -107,6 +107,7 @@
 #include "nsRuleNode.h"
 #include "nsWyciwygProtocolHandler.h"
 #include "nsContentAreaDragDrop.h"
+#include "nsContentList.h"
 
 
 class nsIDocumentLoaderFactory;
@@ -233,6 +234,7 @@ Shutdown(nsIModule* aSelf)
   nsGenericElement::Shutdown();
   nsGenericDOMDataNode::Shutdown();
   nsEventListenerManager::Shutdown();
+  nsContentList::Shutdown();
   nsComputedDOMStyle::Shutdown();
 
   // Release all of our atoms
