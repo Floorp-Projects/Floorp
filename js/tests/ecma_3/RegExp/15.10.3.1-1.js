@@ -83,7 +83,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  for (i  in patterns)
+  for (i in patterns)
   {
     s = patterns[i];
 
