@@ -3259,7 +3259,7 @@ AC_SUBST(MOZ_XFT_LIBS)
 dnl ========================================================
 dnl = disabling x11 core support, enabled by default
 dnl ========================================================
-MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS:-1}
+MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS-1}
 if test "$MOZ_ENABLE_COREXFONTS"
 then
     AC_DEFINE(MOZ_ENABLE_COREXFONTS)
