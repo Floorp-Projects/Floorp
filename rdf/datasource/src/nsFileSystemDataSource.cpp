@@ -591,13 +591,13 @@ GetVolumeList(nsVoidArray **array)
 
 #ifdef	XP_MAC
 	StrFileName     fname;
-	ParamBlockRec	pb;
+	HParamBlockRec	pb;
 	for (int16 volNum = 1; ; volNum++)
 	{
 		pb.volumeParam.ioCompletion = NULL;
 		pb.volumeParam.ioVolIndex = volNum;
 		pb.volumeParam.ioNamePtr = (StringPtr)fname;
-		if (PBGetVInfo(&pb,FALSE) != noErr)
+		if (PBHGetVInfo(&pb,FALSE) != noErr)
 			break;
 		nsFileSpec fss(pb.volumeParam.ioVRefNum, fsRtParID, fname);
 		if (NS_SUCCEEDED(gRDFService->GetResource(nsFileURL(fss).GetAsString(), (nsIRDFResource**)&vol)))
