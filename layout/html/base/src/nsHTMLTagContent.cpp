@@ -92,7 +92,9 @@ nsHTMLTagContent::SizeOf(nsISizeOfHandler* aHandler) const
 void
 nsHTMLTagContent::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 {
-  // XXX tag
+  if (!aHandler->HaveSeen(mTag)) {
+    mTag->SizeOf(aHandler);
+  }
   if (!aHandler->HaveSeen(mAttributes)) {
     mAttributes->SizeOf(aHandler);
   }

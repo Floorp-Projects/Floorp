@@ -79,7 +79,11 @@ void
 Area::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
-  // XXX mBase, mHREF, mTarget, mAltText
+  aHandler->Add((size_t) (- ((PRInt32)sizeof(nsString) * 4) ) );
+  mBase.SizeOf(aHandler);
+  mHREF.SizeOf(aHandler);
+  mTarget.SizeOf(aHandler);
+  mAltText.SizeOf(aHandler);
   aHandler->Add(mNumCoords * sizeof(nscoord));
 }
 
@@ -712,9 +716,17 @@ NS_IMETHODIMP
 ImageMapImpl::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
-  // XXX mName
-  // XXX mTag
-  // XXX mAreas array slots
+
+  aHandler->Add((size_t) (- ((PRInt32) sizeof(mName))));
+  mName.SizeOf(aHandler);
+
+  if (!aHandler->HaveSeen(mTag)) {
+    mTag->SizeOf(aHandler);
+  }
+
+  aHandler->Add((size_t) (- ((PRInt32) sizeof(mAreas))));
+  mAreas.SizeOf(aHandler);
+
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas[i];

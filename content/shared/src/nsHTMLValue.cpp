@@ -19,6 +19,7 @@
 #include "nsHTMLValue.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsISizeOfHandler.h"
 
 const nsHTMLValue nsHTMLValue::kNull;
 
@@ -291,3 +292,13 @@ void nsHTMLValue::ToString(nsString& aBuffer) const
   AppendToString(aBuffer);
 }
 
+void
+nsHTMLValue::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  if (eHTMLUnit_String == mUnit) {
+    if (!aHandler->HaveSeen(mValue.mString)) {
+      mValue.mString->SizeOf(aHandler);
+    }
+  }
+}
