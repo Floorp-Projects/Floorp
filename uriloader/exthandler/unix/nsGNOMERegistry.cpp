@@ -105,56 +105,61 @@ CleanUp()
   gnomeLib = gconfLib = vfsLib = nsnull;
 }
 
+static PRLibrary *
+LoadVersionedLibrary(const char* libName, const char* libVersion)
+{
+  char *platformLibName = PR_GetLibraryName(nsnull, libName);
+  nsCAutoString versionLibName(platformLibName);
+  versionLibName.Append(libVersion);
+  PR_Free(platformLibName);
+  return PR_LoadLibrary(versionLibName.get());
+}
+
 /* static */ void
 nsGNOMERegistry::Startup()
 {
+  #define ENSURE_LIB(lib) \
+    PR_BEGIN_MACRO \
+    if (!lib) { \
+      CleanUp(); \
+      return; \
+    } \
+    PR_END_MACRO
+
   #define GET_LIB_FUNCTION(lib, func) \
     PR_BEGIN_MACRO \
     _##func = (_##func##_fn) PR_FindFunctionSymbol(lib##Lib, #func); \
     if (!_##func) { \
-      PR_Free(libName); \
       CleanUp(); \
       return; \
     } \
     PR_END_MACRO
 
   // Attempt to open libgconf
-  char *libName = PR_GetLibraryName(nsnull, "gconf-2");
-  gconfLib = PR_LoadLibrary(libName);
+  gconfLib = LoadVersionedLibrary("gconf-2", ".4");
+  ENSURE_LIB(gconfLib);
 
-  if (gconfLib) {
-    GET_LIB_FUNCTION(gconf, gconf_client_get_default);
-    GET_LIB_FUNCTION(gconf, gconf_client_get_string);
-  }
-
-  PR_Free(libName);
+  GET_LIB_FUNCTION(gconf, gconf_client_get_default);
+  GET_LIB_FUNCTION(gconf, gconf_client_get_string);
 
   // Attempt to open libgnome
-  libName = PR_GetLibraryName(nsnull, "gnome-2");
-  gnomeLib = PR_LoadLibrary(libName);
+  gnomeLib = LoadVersionedLibrary("gnome-2", ".0");
+  ENSURE_LIB(gnomeLib);
 
-  if (gnomeLib) {
-    GET_LIB_FUNCTION(gnome, gnome_url_show);
-    GET_LIB_FUNCTION(gnome, gnome_program_init);
-    GET_LIB_FUNCTION(gnome, libgnome_module_info_get);
-  }
-
-  PR_Free(libName);
+  GET_LIB_FUNCTION(gnome, gnome_url_show);
+  GET_LIB_FUNCTION(gnome, gnome_program_init);
+  GET_LIB_FUNCTION(gnome, libgnome_module_info_get);
 
   // Attempt to open libgnomevfs
-  libName = PR_GetLibraryName(nsnull, "gnomevfs-2");
-  vfsLib = PR_LoadLibrary(libName);
+  vfsLib = LoadVersionedLibrary("gnomevfs-2", ".0");
+  ENSURE_LIB(vfsLib);
 
-  if (vfsLib) {
-    GET_LIB_FUNCTION(vfs, gnome_vfs_mime_type_from_name);
-    GET_LIB_FUNCTION(vfs, gnome_vfs_mime_get_extensions_list);
-    GET_LIB_FUNCTION(vfs, gnome_vfs_mime_extensions_list_free);
-    GET_LIB_FUNCTION(vfs, gnome_vfs_mime_get_description);
-    GET_LIB_FUNCTION(vfs, gnome_vfs_mime_get_default_application);
-    GET_LIB_FUNCTION(vfs, gnome_vfs_mime_application_free);
-  }
-
-  PR_Free(libName);
+  GET_LIB_FUNCTION(vfs, gnome_vfs_mime_type_from_name);
+  GET_LIB_FUNCTION(vfs, gnome_vfs_mime_get_extensions_list);
+  GET_LIB_FUNCTION(vfs, gnome_vfs_mime_extensions_list_free);
+  GET_LIB_FUNCTION(vfs, gnome_vfs_mime_get_description);
+  GET_LIB_FUNCTION(vfs, gnome_vfs_mime_get_default_application);
+  GET_LIB_FUNCTION(vfs, gnome_vfs_mime_application_free);
 
   // Initialize GNOME, if it's not already initialized.  It's not
   // necessary to tell GNOME about our actual command line arguments.
