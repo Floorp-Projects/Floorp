@@ -1011,8 +1011,10 @@ nsHTTPChannel::CheckCache()
     if (updateInProgress)
         return NS_OK;
 
-    PRUint32 contentLength;
-    mCacheEntry->GetStoredContentLength(&contentLength);
+    PRUint32 contentLength = 0;
+    if (NS_FAILED(mCacheEntry->GetStoredContentLength(&contentLength)))
+        // not found in cache.
+        return NS_OK;
     PRBool partialFlag;
     mCacheEntry->GetPartialFlag(&partialFlag);
 
@@ -1055,6 +1057,7 @@ nsHTTPChannel::CheckCache()
     if (!LL_IS_ZERO(expirationTime)) {
         PRTime now = PR_Now();
         if( LL_UCMP( now, >, expirationTime )) {
+            // -dp- This shouldn't happen.
             mCacheEntry->SetExpirationTime(LL_ZERO);
             mustRevalidate = PR_TRUE;
         }
@@ -1113,7 +1116,7 @@ nsHTTPChannel::CheckCache()
         if (LL_UCMP(sessionStartTime, > ,lastAccessTime))
             firstAccessThisSession = PR_TRUE;
         else
-            firstAccessThisSession = LL_UCMP(lastUpdateTime, >= ,lastAccessTime);
+            firstAccessThisSession = LL_UCMP(lastUpdateTime, >= ,lastAccessTime); //-dp- this should be > as == means that this is the second access for this session.
 
         // Check to see if we can use the cache data without revalidating 
         // it with the server.
@@ -1688,8 +1691,12 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     if (NS_FAILED(rv)) return rv;
   }
 
+  // Add in LOAD_REPLACE to loadattributes indicate that this is a redirect
+  nsLoadFlags loadFlags = mLoadAttributes;
+  loadFlags |= nsIChannel::LOAD_REPLACE;
+
   rv = NS_OpenURI(getter_AddRefs(channel), newURI, serv, mLoadGroup,
-                  mCallbacks, mLoadAttributes, 
+                  mCallbacks, loadFlags,
                   mBufferSegmentSize, mBufferMaxSize);
   if (NS_FAILED(rv)) return rv;
   rv = channel->SetOriginalURI(mOriginalURI);
