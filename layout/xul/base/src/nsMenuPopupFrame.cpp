@@ -616,6 +616,12 @@ nsMenuPopupFrame::GetParentPopup(nsIMenuParent** aMenuParent)
 NS_IMETHODIMP
 nsMenuPopupFrame::HideChain()
 {
+  // Stop capturing rollups
+  // (must do this during Hide, which happens before the menu item is executed,
+  // since this reinstates normal event handling.)
+  if (nsMenuFrame::mDismissalListener)
+    nsMenuFrame::mDismissalListener->Unregister();
+  
   nsIFrame* frame;
   GetParent(&frame);
   if (frame) {
