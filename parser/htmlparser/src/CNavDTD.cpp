@@ -628,7 +628,8 @@ PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
 
     default:
       if(eHTMLTag_unknown==aParent)
-        result=PRBool(eHTMLTag_html!=aChild);
+        result=PR_FALSE;
+//        result=PRBool(eHTMLTag_html!=aChild);
       break;
   } //switch
   return result;
@@ -686,7 +687,7 @@ PRInt32 CNavDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
       result=eHTMLTag_paragraph; break;
 
     case eHTMLTag_html:
-      result=(eHTMLTags)kNotFound; break;
+      result=eHTMLTag_unknown; break;
 
     case eHTMLTag_body:
     case eHTMLTag_head:
@@ -832,10 +833,10 @@ PRBool CNavDTD::BackwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 a
 //  aVector.Append((PRUnichar)aChildTag);
   do {
     theParentTag=(eHTMLTags)GetDefaultParentTagFor(theParentTag);
-    if(theParentTag!=kNotFound) {
+    if(theParentTag!=eHTMLTag_unknown) {
       aVector.Append((PRUnichar)theParentTag);
     }
-  } while((theParentTag!=kNotFound) && (theParentTag!=aParentTag));
+  } while((theParentTag!=eHTMLTag_unknown) && (theParentTag!=aParentTag));
   
   return PRBool(aParentTag==theParentTag);
 }
