@@ -28,6 +28,9 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
   var currTreeCol = treeHeadRow.firstChild;
   var currColNode = treeColGroup.firstChild;
   while (currTreeCol) {
+    if (currColNode.tagName == "splitter")
+      currColNode = currColNode.nextSibling;
+
     if (skipCell != currTreeCol) {
 		// Construct an entry for each cell in the row.
 		var columnName = currTreeCol.getAttribute("value");
