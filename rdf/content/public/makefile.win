@@ -32,6 +32,7 @@ EXPORTS	= \
 	nsIXULParentDocument.h		\
 	nsIXULChildDocument.h		\
 	nsIXULDocumentInfo.h		\
+	nsIStreamLoadableDocument.h  \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
