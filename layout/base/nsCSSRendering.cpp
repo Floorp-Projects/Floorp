@@ -1765,9 +1765,8 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
                                 nscoord aDX,
                                 nscoord aDY)
 {
-nsMargin      border;
-PRInt16       theRadius;
-nsStyleCoord  borderRadius;
+  PRInt16       theRadius;
+  nsStyleCoord  borderRadius;
 
 
   if (0 < aColor.mBackgroundImage.Length()) {
@@ -1873,7 +1872,6 @@ nsStyleCoord  borderRadius;
       scrollFrame = GetNearestScrollFrame(aForFrame);
       
       // Get the viewport size
-      nsSize  clipSize;
       clipView = GetClipView(scrollFrame);
       clipView->GetDimensions(&viewportArea.width, &viewportArea.height);
     }
