@@ -165,11 +165,16 @@ function viewSource(url)
 
   if (loadFromURL) {
     //
+    // We need to set up session history to give us a page descriptor.
+    //
+    var webNavigation = getBrowser().webNavigation;
+    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance();
+    //
     // Currently, an exception is thrown if the URL load fails...
     //
     var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
     var viewSrcUrl = "view-source:" + url;
-    getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
+    webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
   }
 
   //check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
