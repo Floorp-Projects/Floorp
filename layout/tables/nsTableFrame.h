@@ -199,7 +199,16 @@ public:
   /** return the value of the COLS attribute, adjusted for the 
     * actual number of columns in the table
     */
-          PRInt32 GetEffectiveCOLSAttribute();
+  PRInt32 GetEffectiveCOLSAttribute();
+
+  /** verify that there are at least aColIndex column frames created.
+    * if not, create the needed col frames
+    */
+  virtual void EnsureColumnFrameAt(PRInt32              aColIndex,
+                                   nsIPresContext*      aPresContext,
+                                   nsReflowMetrics&     aDesiredSize,
+                                   const nsReflowState& aReflowState,
+                                   nsReflowStatus&      aStatus);
 
 protected:
 
