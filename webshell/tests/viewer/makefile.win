@@ -56,6 +56,9 @@ LINCS=  \
 !if defined(NGPREFS)
   -I$(PUBLIC)\ngprefs \
 !endif
+ifdef MOZ_FULLCIRCLE
+  -I$(PUBLIC)\fullsoft \
+endif
   $(NULL)
 
 MYLIBS=                         \
@@ -76,6 +79,9 @@ MYLIBS=                         \
 !if defined(NGPREFS)
  ole32.lib                      \
 !endif
+ifdef MOZ_FULLCIRCLE
+ $(DIST)\lib\fullsoft.lib \
+endif
  $(NULL)
 
 LLIBS= $(MYLIBS)                \
