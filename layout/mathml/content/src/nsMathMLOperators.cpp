@@ -483,7 +483,7 @@ nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
   if (gOperatorTable) {
     // Lookup with form=0 will put all the variants in gOperatorFound[]
     float dummy;
-    nsOperatorFlags flags;
+    nsOperatorFlags flags = 0;
     LookupOperator(aOperator, 0, &flags, &dummy, &dummy);
     // if the operator was found, gOperatorFound contains all the variants
     // of the operator. check if there is one that meets the criteria
