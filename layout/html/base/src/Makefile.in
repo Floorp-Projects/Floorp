@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  java \
 		  exthandler \
 		  intl \
+		  uconv \
 		  $(NULL)
 
 # Sun's Complex Text Layout support
