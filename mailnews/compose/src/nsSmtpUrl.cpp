@@ -75,10 +75,12 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 			
 			switch (nsCRT::ToUpper(*token))
 			{
+/* DO NOT support attachment= in mailto urls. This poses a security fire hole!!! 
 				case 'A':
           if (!nsCRT::strcasecmp (token, "attachment"))
 					  m_attachmentPart = value;
 				  break;
+*/
 				case 'B':
 				  if (!nsCRT::strcasecmp (token, "bcc"))
 				  {
@@ -161,6 +163,8 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 							m_toPart = value;
 					}
 					break;
+        default:
+          break;
       } // end of switch statement...
 			
 			if (eq)
@@ -180,8 +184,6 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 		nsUnescape(NS_CONST_CAST(char*, m_newsgroupPart.get()));
 	if (!m_referencePart.IsEmpty())
 		nsUnescape(NS_CONST_CAST(char*, m_referencePart.get()));
-	if (!m_attachmentPart.IsEmpty())
-		nsUnescape(NS_CONST_CAST(char*, m_attachmentPart.get()));
 	if (!m_bodyPart.IsEmpty())
 		nsUnescape(NS_CONST_CAST(char*, m_bodyPart.get()));
 	if (!m_newsHostPart.IsEmpty())
@@ -204,7 +206,6 @@ nsresult nsMailtoUrl::CleanupMailtoState()
     m_newsgroupPart = "";
     m_newsHostPart = ""; 
     m_referencePart = "";
-    m_attachmentPart = "";
     m_bodyPart = "";
     m_bccPart = "";
     m_followUpToPart = "";
@@ -277,7 +278,7 @@ NS_IMETHODIMP nsMailtoUrl::GetMessageContents(char ** aToPart, char ** aCcPart, 
 	if (aReferencePart)
 		*aReferencePart = m_referencePart.ToNewCString();
 	if (aAttachmentPart)
-		*aAttachmentPart = m_attachmentPart.ToNewCString();
+		*aAttachmentPart = nsnull; // never pass out an attachment part as part of a mailto url
 	if (aPriorityPart)
 		*aPriorityPart = m_priorityPart.ToNewCString();
 	if (aNewsgroupPart)

@@ -58,7 +58,6 @@ protected:
 	nsCString	m_newsgroupPart;
 	nsCString	m_newsHostPart;
 	nsCString	m_referencePart;
-	nsCString	m_attachmentPart;
 	nsCString	m_bodyPart;
 	nsCString	m_bccPart;
 	nsCString	m_followUpToPart;
