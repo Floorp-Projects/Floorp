@@ -31,7 +31,7 @@ interface nsIDrawable;
  *
  * @author Tim Rowley <tor@cs.brown.edu>
  * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 1.1
+ * @version 1.2
  * @see "gfx2"
  */
 [scriptable, uuid(5e8405a4-1dd2-11b2-8385-bc8e3446cad3)]
@@ -83,6 +83,9 @@ interface nsIImage : nsISupports
 
   readonly attribute unsigned long bytesPerRow;
 
+  /**
+   * returns the number of bytes allocated for the image
+   */
   readonly attribute unsigned long bitsLength;
 
 
