@@ -81,7 +81,7 @@ import org.mozilla.javascript.debug.*;
  * @author Brendan Eich
  */
 
-public final class Context {
+public class Context {
     public static String languageVersionProperty = "language version";
     public static String errorReporterProperty   = "error reporter";
     
@@ -342,7 +342,7 @@ public final class Context {
      *         number, and date.
      */
      public String getImplementationVersion() {
-        return "JavaScript-Java 1.5 release 1 2000 03 15";
+        return "Rhino 1.5 release 2 2000 06 15";
      }
 
     /**
