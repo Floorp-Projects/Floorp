@@ -37,6 +37,19 @@ statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatu
 var messageView = Components.classes["component://netscape/messenger/messageview"].createInstance();
 messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
 
+// the folderListener object
+var folderListener = {
+    OnItemAdded: function(parentFolder, item) {},
+
+	OnItemRemoved: function(parentFolder, item){
+		dump('in OnItemRemoved\n');
+	},
+
+	OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
+
+	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {}
+}
+
 /* Functions related to startup */
 function OnLoadMessenger()
 {
@@ -63,11 +76,26 @@ function OnLoadMessenger()
 		{
 		}
 	}
+
+	var mailSession = Components.classes['component://netscape/messenger/services/session'].getService();
+	if(mailSession)
+	{
+		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
+		if(mailSession)
+			mailSession.AddFolderListener(folderListener);
+	}
 }
 
 function OnUnloadMessenger()
 {
 	dump("\nOnUnload from XUL\nClean up ...\n");
+	var mailSession = Components.classes['component://netscape/messenger/services/session'].getService();
+	if(mailSession)
+	{
+		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
+		if(mailSession)
+			mailSession.RemoveFolderListener(folderListener);
+	}
 	messenger.OnUnload();
 }
 
@@ -240,8 +268,19 @@ function RefreshThreadTreeView()
 	currentFolder.setAttribute('ref', currentFolderID);
 }
 
+function ClearThreadTreeSelection()
+{
+	var tree = GetThreadTree();
+	if(tree)
+		tree.clearItemSelection();
+
+}
+
 function ClearMessagePane()
 {
 	messenger.OpenURL("about:blank");	
 
 }
+
+
+

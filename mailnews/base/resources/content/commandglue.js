@@ -161,6 +161,7 @@ function ChangeFolderByURI(uri)
 
   var folder = GetThreadTreeFolder();
   var beforeTime = new Date();
+  ClearThreadTreeSelection();
   folder.setAttribute('ref', uri);
   var afterTime = new Date();
   var timeToLoad = (afterTime.getTime() - beforeTime.getTime())/1000;
@@ -411,4 +412,15 @@ function FolderTest5000()
 	var afterTime = new Date();
 	timeToLoad = (afterTime.getTime() - beforeTime.getTime())/1000;
 	dump("Time to load is " +  timeToLoad + " seconds\n");
+}
+
+function SelectNextMessage(messages)
+{
+	var count = messages.length;
+
+	
+	var nextMessage = GetNextMessage(messages[0], GoMessage, false)
+	var tree = GetThreadTree();
+	ChangeSelection(tree, nextMessage);
+
 }
