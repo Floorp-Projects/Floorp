@@ -98,10 +98,10 @@ DupString(char* *o_Dest, const char* i_Src)
     }
 }
 
-// Replace all /./ with a /
+// Replace all /./ with a / while resolving relative URLs
 // But only till #? 
 void 
-CoalesceDirs(char* io_Path)
+CoalesceDirsRel(char* io_Path)
 {
     /* Stolen from the old netlib's mkparse.c.
      *
@@ -152,6 +152,98 @@ CoalesceDirs(char* io_Path)
         }
         else
         {
+            // copy the url incrementaly 
+            *urlPtr++ = *fwdPtr;
+        }
+    }
+    // Copy remaining stuff past the #?;
+    for (; *fwdPtr != '\0'; ++fwdPtr)
+    {
+        *urlPtr++ = *fwdPtr;
+    }
+    *urlPtr = '\0';  // terminate the url 
+
+    /* 
+     *  Now lets remove trailing . case
+     *     /foo/foo1/.   ->  /foo/foo1/
+     */
+
+    if ((urlPtr > (io_Path+1)) && (*(urlPtr-1) == '.') && (*(urlPtr-2) == '/'))
+        *(urlPtr-1) = '\0';
+}
+
+// Replace all /./ with a / while resolving absolute URLs
+// But only till #? 
+void 
+CoalesceDirsAbs(char* io_Path)
+{
+    /* Stolen from the old netlib's mkparse.c.
+     *
+     * modifies a url of the form   /foo/../foo1  ->  /foo1
+     *                       and    /foo/./foo1   ->  /foo/foo1
+     *                       and    /foo/foo1/..  ->  /foo/
+     */
+    char *fwdPtr = io_Path;
+    char *urlPtr = io_Path;
+    PRUint32 traversal = 0;
+
+    for(; (*fwdPtr != '\0') && 
+            (*fwdPtr != '?') && 
+            (*fwdPtr != '#'); ++fwdPtr)
+    {
+
+#if defined(XP_WIN)
+        // At first, If this is DBCS character, it skips next character.
+        if (::IsDBCSLeadByte(*fwdPtr) && *(fwdPtr+1) != '\0') {
+            *urlPtr++ = *fwdPtr++;
+            *urlPtr++ = *fwdPtr;
+            continue;
+        }
+#endif
+
+        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/' )
+        {
+            // remove . followed by slash
+            ++fwdPtr;
+        }
+        else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
+                (*(fwdPtr+3) == '/' || 
+                    *(fwdPtr+3) == '\0' || // This will take care of 
+                    *(fwdPtr+3) == '?' ||  // something like foo/bar/..#sometag
+                    *(fwdPtr+3) == '#'))
+        {
+            // remove foo/.. 
+            // reverse the urlPtr to the previous slash if possible
+            if(traversal > 0 )
+            { 
+                if (urlPtr != io_Path)
+                    urlPtr--; // we must be going back at least by one 
+                for(;*urlPtr != '/' && urlPtr != io_Path; urlPtr--)
+                    ;  // null body 
+                --traversal; // count back
+                // forward the fwdPtr past the ../
+                fwdPtr += 2;
+                // special case if we have reached the end 
+                // to preserve the last /
+                if (*fwdPtr == '.' && *(fwdPtr+1) == '\0')
+                    ++urlPtr;
+            } else {
+                // there are to much /.. in this path, just copy them instead.
+                // forward the urlPtr past the /.. and copying it
+                *urlPtr++ = *fwdPtr;
+                ++fwdPtr;
+                *urlPtr++ = *fwdPtr;
+                ++fwdPtr;
+                *urlPtr++ = *fwdPtr;
+            }
+        }
+        else
+        {
+            if(*fwdPtr == '/' && *(fwdPtr+1) != '.')
+            {
+                // count the hierachie
+                traversal++;
+            }  
             // copy the url incrementaly 
             *urlPtr++ = *fwdPtr;
         }

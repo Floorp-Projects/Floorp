@@ -52,8 +52,11 @@ nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
 /* Duplicate string */
 nsresult DupString(char* *o_Dest, const char* i_Src);
 
-/* handle .. in dirs */
-void CoalesceDirs(char* io_Path);
+/* handle .. in dirs while resolving relative URLs */
+void CoalesceDirsRel(char* io_Path);
+
+/* handle .. in dirs while resolving absolute URLs */
+void CoalesceDirsAbs(char* io_Path);
 
 /* convert to lower case */
 void ToLowerCase(char* str, PRUint32 length);

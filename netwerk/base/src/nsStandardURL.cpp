@@ -225,7 +225,7 @@ nsStandardURL::FilterString(const char *str, nsCString &result)
 void
 nsStandardURL::CoalescePath(char *path)
 {
-    CoalesceDirs(path);
+    CoalesceDirsAbs(path);
     PRInt32 newLen = strlen(path);
     if (newLen < mPath.mLen) {
         PRInt32 diff = newLen - mPath.mLen;
@@ -1215,14 +1215,14 @@ nsStandardURL::Resolve(const char *relpath, char **result)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (resultPath)
-        CoalesceDirs(resultPath);
+        CoalesceDirsRel(resultPath);
     else {
         // locate result path
         resultPath = PL_strstr(*result, "://");
         if (resultPath) {
             resultPath = PL_strchr(resultPath + 3, '/');
             if (resultPath)
-                CoalesceDirs(resultPath);
+                CoalesceDirsRel(resultPath);
         }
     }
     return NS_OK;
