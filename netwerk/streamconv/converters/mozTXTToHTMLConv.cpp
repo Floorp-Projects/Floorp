@@ -893,6 +893,13 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     }
     i++;
   }
+  if (text0 == '\f')
+  {
+      aOutputString.Append(NS_LITERAL_STRING("<span class='moz-txt-formfeed'></span>"));
+      glyphTextLen = 1;
+      MOZ_TIMER_STOP(mGlyphHitTimer);
+      return PR_TRUE;
+  }
   if (text0 == '+' || text1 == '+')
   {
     if (ItMatchesDelimited(aInString, aInLength,
