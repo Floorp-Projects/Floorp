@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mptest-9.c,v 1.1 2000/07/14 00:44:47 nelsonb%netscape.com Exp $
+ *  $Id: mptest-9.c,v 1.2 2000/08/02 20:48:28 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -61,42 +61,42 @@ int main(int argc, char *argv[])
   }
 
   mp_init(&a); mp_init(&b); mp_init(&c);
-  mp_read_radix(&a, argv[1], 10);
-  mp_read_radix(&b, argv[2], 10);
+  mp_read_radix(&a, argv[1], 16);
+  mp_read_radix(&b, argv[2], 16);
 
-  printf("a = "); mp_print(&a, stdout); fputc('\n', stdout);
-  printf("b = "); mp_print(&b, stdout); fputc('\n', stdout);
+  printf("a       = "); mp_print(&a, stdout); fputc('\n', stdout);
+  printf("b       = "); mp_print(&b, stdout); fputc('\n', stdout);
 
   mpl_not(&a, &c);
-  printf("~a = "); mp_print(&c, stdout); fputc('\n', stdout);
+  printf("~a      = "); mp_print(&c, stdout); fputc('\n', stdout);
 
   mpl_and(&a, &b, &c);
-  printf("a & b = "); mp_print(&c, stdout); fputc('\n', stdout);
+  printf("a & b   = "); mp_print(&c, stdout); fputc('\n', stdout);
 
   mpl_or(&a, &b, &c);
-  printf("a | b = "); mp_print(&c, stdout); fputc('\n', stdout);
+  printf("a | b   = "); mp_print(&c, stdout); fputc('\n', stdout);
 
   mpl_xor(&a, &b, &c);
-  printf("a ^ b = "); mp_print(&c, stdout); fputc('\n', stdout);
+  printf("a ^ b   = "); mp_print(&c, stdout); fputc('\n', stdout);
 
   mpl_rsh(&a, &c, 1);
-  printf("a >> 1 = "); mp_print(&c, stdout); fputc('\n', stdout);
+  printf("a >>  1 = "); mp_print(&c, stdout); fputc('\n', stdout);
   mpl_rsh(&a, &c, 5);
-  printf("a >> 5 = "); mp_print(&c, stdout); fputc('\n', stdout);
+  printf("a >>  5 = "); mp_print(&c, stdout); fputc('\n', stdout);
   mpl_rsh(&a, &c, 16);
   printf("a >> 16 = "); mp_print(&c, stdout); fputc('\n', stdout);
 
   mpl_lsh(&a, &c, 1);
-  printf("a << 1 = "); mp_print(&c, stdout); fputc('\n', stdout);
+  printf("a <<  1 = "); mp_print(&c, stdout); fputc('\n', stdout);
   mpl_lsh(&a, &c, 5);
-  printf("a << 5 = "); mp_print(&c, stdout); fputc('\n', stdout);
+  printf("a <<  5 = "); mp_print(&c, stdout); fputc('\n', stdout);
   mpl_lsh(&a, &c, 16);
   printf("a << 16 = "); mp_print(&c, stdout); fputc('\n', stdout);
 
   mpl_num_set(&a, &pco);
-  printf("#1(a) = %d\n", pco);
+  printf("population(a) = %d\n", pco);
   mpl_num_set(&b, &pco);
-  printf("#1(b) = %d\n", pco);
+  printf("population(b) = %d\n", pco);
 
   res = mpl_parity(&a);
   if(res == MP_EVEN)
