@@ -1691,6 +1691,16 @@ nsMsgLocalMailFolder::ClearCopyState(PRBool moveCopySucceeded)
   {
     mDatabase->SetSummaryValid(PR_TRUE);
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+    nsresult rv;
+    nsCOMPtr<nsIMsgMailSession> session = 
+             do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+    if (NS_SUCCEEDED(rv) && session) // don't use NS_ENSURE_SUCCESS here - we need to release semaphore below
+    {
+      PRBool folderOpen;
+      session->IsFolderOpenInWindow(this, &folderOpen);
+      if (!folderOpen && ! (mFlags & (MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_INBOX)))
+        SetMsgDatabase(nsnull);
+    }
   }
 
   PRBool haveSemaphore;
@@ -1735,29 +1745,54 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 {
   if (!srcFolder || !messages)
     return NS_ERROR_NULL_POINTER;
-
+  
   PRBool isServer;
   nsresult rv = GetIsServer(&isServer);
   if (NS_SUCCEEDED(rv) && isServer)
   {
     NS_ASSERTION(0, "Destination is the root folder. Cannot move/copy here");
+    if (isMove)
+      srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
     return NS_OK;
   }
-
+  
+  nsXPIDLCString uri;
+  rv = srcFolder->GetURI(getter_Copies(uri));
+  nsCAutoString protocolType(uri);
+  protocolType.SetLength(protocolType.FindChar(':'));
+  
+  if (WeAreOffline() && (protocolType.EqualsIgnoreCase("imap") || protocolType.EqualsIgnoreCase("news")))
+  {
+    PRUint32 numMessages = 0;
+    messages->Count(&numMessages);
+    for (PRUint32 i = 0; i < numMessages; i++)
+    {
+      nsCOMPtr<nsIMsgDBHdr> message;
+      messages->QueryElementAt(i, NS_GET_IID(nsIMsgDBHdr),(void **)getter_AddRefs(message));
+      if(NS_SUCCEEDED(rv) && message)
+      {
+        nsMsgKey key;
+        PRBool hasMsgOffline = PR_FALSE;
+        message->GetMessageKey(&key);
+        srcFolder->HasMsgOffline(key, &hasMsgOffline);
+        if (!hasMsgOffline)
+        {
+          if (isMove)
+            srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
+          ThrowAlertMsg("cantMoveMsgWOBodyOffline", msgWindow);
+          return NS_OK; // I think we want to return ok here
+        }
+      }
+    }
+  }
   nsCOMPtr<nsISupports> srcSupport(do_QueryInterface(srcFolder, &rv));
   if (NS_FAILED(rv)) return rv;
-
+  
   // don't update the counts in the dest folder until it is all over
   EnableNotifications(allMessageCountNotifications, PR_FALSE);
-
+  
   rv = InitCopyState(srcSupport, messages, isMove, listener, msgWindow, isFolder, allowUndo);
   if (NS_FAILED(rv)) return rv;
-  char *uri = nsnull;
-  rv = srcFolder->GetURI(&uri);
-  nsCString protocolType(uri);
-  PR_FREEIF(uri);
-  protocolType.SetLength(protocolType.FindChar(':'));
-
   if (!protocolType.EqualsIgnoreCase("mailbox"))
   {
     mCopyState->m_dummyEnvelopeNeeded = PR_TRUE;
@@ -1771,62 +1806,69 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
         parseMsgState->SetMailDB(msgDb);
     }
   }
-
+  
   // undo stuff
   if (allowUndo)    //no undo for folder move/copy or or move/copy from search window
   {
-      nsLocalMoveCopyMsgTxn* msgTxn = nsnull;
-
-      msgTxn = new nsLocalMoveCopyMsgTxn(srcFolder, this, isMove);
-
-      if (msgTxn)
-         rv =
-              msgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn),
-                                     getter_AddRefs(mCopyState->m_undoMsgTxn));
+    nsLocalMoveCopyMsgTxn* msgTxn = nsnull;
+    
+    msgTxn = new nsLocalMoveCopyMsgTxn(srcFolder, this, isMove);
+    
+    if (msgTxn)
+      rv =
+      msgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn),
+      getter_AddRefs(mCopyState->m_undoMsgTxn));
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv))
+    {
+      ClearCopyState(PR_FALSE);
+    }
+    else
+    {
+      msgTxn->SetMsgWindow(msgWindow);
+      if (isMove)
+      {
+        if (mFlags & MSG_FOLDER_FLAG_TRASH)
+          msgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+        else
+          msgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+      }
       else
-         rv = NS_ERROR_OUT_OF_MEMORY;
-  
-      if (NS_FAILED(rv))
-	  {
-          ClearCopyState(PR_FALSE);
-	  }
-      else
-	  {
-         msgTxn->SetMsgWindow(msgWindow);
-         if (isMove)
-		 {
-            if (mFlags & MSG_FOLDER_FLAG_TRASH)
-                msgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
-            else
-                msgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
-		 }
-         else
-		 {
-            msgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
-		 }
-	  }
+      {
+        msgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+      }
+    }
   }
-	  PRUint32 numMsgs = 0;
-	  mCopyState->m_messages->Count(&numMsgs);
-	if (numMsgs > 1 && (protocolType.EqualsIgnoreCase("imap") || protocolType.EqualsIgnoreCase("mailbox")))
-	{
-		mCopyState->m_copyingMultipleMessages = PR_TRUE;
-		rv = CopyMessagesTo(mCopyState->m_messages, msgWindow, this, isMove);
-	}
-	else
-	{
-		nsCOMPtr<nsISupports> msgSupport;
-		msgSupport = getter_AddRefs(mCopyState->m_messages->ElementAt(0));
-		if (msgSupport)
-		{
-			rv = CopyMessageTo(msgSupport, this, msgWindow, isMove);
-		  if (NS_FAILED(rv))
+  PRUint32 numMsgs = 0;
+  mCopyState->m_messages->Count(&numMsgs);
+  if (numMsgs > 1 && ((protocolType.EqualsIgnoreCase("imap") && !WeAreOffline()) || protocolType.EqualsIgnoreCase("mailbox")))
+  {
+    mCopyState->m_copyingMultipleMessages = PR_TRUE;
+    rv = CopyMessagesTo(mCopyState->m_messages, msgWindow, this, isMove);
+  }
+  else
+  {
+    nsCOMPtr<nsISupports> msgSupport;
+    msgSupport = getter_AddRefs(mCopyState->m_messages->ElementAt(0));
+    if (msgSupport)
+    {
+      rv = CopyMessageTo(msgSupport, this, msgWindow, isMove);
+      if (NS_FAILED(rv))
       {
         NS_ASSERTION(PR_FALSE, "copy message failed");
-			  ClearCopyState(PR_FALSE);
+        ClearCopyState(PR_FALSE);
       }
-		}
-	}
+    }
+  }
+  // if this failed immediately, need to turn back on notifications and inform FE.
+  if (NS_FAILED(rv))
+  {
+    if (isMove)
+      srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
+    EnableNotifications(allMessageCountNotifications, PR_TRUE);
+  }
   return rv;
 }
 // for srcFolder that are on different server than the dstFolder. 
@@ -2571,6 +2613,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
   {
     //Notify that a completion finished.
     nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+    srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
     srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
 
     /*passing PR_TRUE because the messages that have been successfully copied have their corressponding
@@ -2597,6 +2640,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
       {
         // lets delete these all at once - much faster that way
         result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
+        srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
       
