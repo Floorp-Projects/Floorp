@@ -261,7 +261,7 @@ private:
   // alpha layer members
   PRUint8             *mAlphaBits;        // alpha layer if we made one
   PRInt8              mAlphaDepth;        // alpha layer depth
-  PRInt16             mARowBytes;         // number of bytes per row in the image for tha alpha
+  PRInt32             mARowBytes;         // number of bytes per row in the image for tha alpha
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   HBITMAP             mHBitmap;           // the GDI bitmaps
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
