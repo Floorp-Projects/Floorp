@@ -44,9 +44,45 @@ nsBulletFrame::~nsBulletFrame()
 NS_IMETHODIMP
 nsBulletFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  // Release image loader first so that its refcnt can go to zero
-  mImageLoader.DestroyLoader();
+  // Stop image loading first
+  mImageLoader.StopAllLoadImages(&aPresContext);
+
+  // Let base class do the rest
   return nsFrame::DeleteFrame(aPresContext);
+}
+
+NS_IMETHODIMP
+nsBulletFrame::Init(nsIPresContext&  aPresContext,
+                    nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIStyleContext* aContext,
+                    nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent,
+                               aContext, aPrevInFlow);
+
+  nsIURL* baseURL = nsnull;
+  nsIHTMLContent* htmlContent;
+  rv = mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+  if (NS_SUCCEEDED(rv)) {
+    htmlContent->GetBaseURL(baseURL);
+    NS_RELEASE(htmlContent);
+  }
+  else {
+    nsIDocument* doc;
+    rv = mContent->GetDocument(doc);
+    if (NS_SUCCEEDED(rv) && doc) {
+      doc->GetBaseURL(baseURL);
+      NS_RELEASE(doc);
+    }
+  }
+  const nsStyleList* myList = (const nsStyleList*)
+    mStyleContext->GetStyleData(eStyleStruct_List);
+  mImageLoader.Init(this, UpdateBulletCB, this,
+                    baseURL, myList->mListStyleImage);
+  NS_IF_RELEASE(baseURL);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -127,7 +163,7 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
       break;
 
     case NS_STYLE_LIST_STYLE_DECIMAL:
-	case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
+    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
@@ -136,11 +172,11 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
     case NS_STYLE_LIST_STYLE_HEBREW:
     case NS_STYLE_LIST_STYLE_ARMENIAN:
     case NS_STYLE_LIST_STYLE_GEORGIAN:
-	case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
+    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
     case NS_STYLE_LIST_STYLE_HIRAGANA:
-	case NS_STYLE_LIST_STYLE_KATAKANA:
+    case NS_STYLE_LIST_STYLE_KATAKANA:
     case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-	case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
+    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
       aCX.GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       GetListItemText(aCX, *myList, text);
       aRenderingContext.SetFont(fm);
@@ -285,7 +321,7 @@ static PRUnichar gKatakanaChars[KATAKANA_CHARS_SIZE] =
 0x30E4,         0x30E6,         0x30E8, // ya       yu        yo 
 0x30E9, 0x30EA, 0x30EB, 0x30EC, 0x30ED, // ra   ri  ru   re   ro
 0x30EF, 0x30F0,         0x30F1, 0x30F2, // wa (w)i     (w)e (w)o
-0x30F3     		                //  n
+0x30F3                                  //  n
 };
 
 #define HIRAGANA_CHARS_SIZE 48 
@@ -361,10 +397,10 @@ static void CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* c
     ordinal = 1;
   }
   do {
-		ordinal--; // a == 0
-		PRInt32 cur = ordinal % aBase;
-		buf[--idx] = chars[cur];
-		ordinal /= aBase ;
+    ordinal--; // a == 0
+    PRInt32 cur = ordinal % aBase;
+    buf[--idx] = chars[cur];
+    ordinal /= aBase ;
   } while ( ordinal > 0);
   result.Append(buf+idx,NUM_BUF_SIZE-idx);
 }
@@ -385,8 +421,9 @@ static PRUnichar gCJKIdeographic10KUnit[4] =
 };
 
 static void CJKIdeographicToText(PRInt32 ordinal, nsString& result, 
-						  const PRUnichar* digits, const PRUnichar *unit, 
-						  const PRUnichar* unit10k)
+                                 const PRUnichar* digits,
+                                 const PRUnichar *unit, 
+                                 const PRUnichar* unit10k)
 {
 // In theory, we need the following if condiction,
 // However, the limit, 10 ^ 16, is greater than the max of PRUint32
@@ -398,48 +435,48 @@ static void CJKIdeographicToText(PRInt32 ordinal, nsString& result,
 // } 
 // else 
 // {
-	PRUnichar c10kUnit = 0;
-	PRUnichar cUnit = 0;
-	PRUnichar cDigit = 0;
-	PRUint32 ud = 0;
-	PRUnichar buf[NUM_BUF_SIZE];
-	PRInt32 idx = NUM_BUF_SIZE;
-	PRBool bOutputZero = ( 0 == ordinal );
-	do {
-	   if(0 == (ud % 4)) {
-		  c10kUnit = unit10k[ud/4];
-	   }
-	   PRInt32 cur = ordinal % 10;
-	   cDigit = digits[cur];
-	   if( 0 == cur)
-	   {
-		  cUnit = 0;
-		  if(bOutputZero) {
-			 bOutputZero = PR_FALSE;
-			 if(0 != cDigit)
-				buf[--idx] = cDigit;
-		  }
-	   }
-	   else
-	   {
-		  bOutputZero = PR_TRUE;
-		  cUnit = unit[ud%4];
+  PRUnichar c10kUnit = 0;
+  PRUnichar cUnit = 0;
+  PRUnichar cDigit = 0;
+  PRUint32 ud = 0;
+  PRUnichar buf[NUM_BUF_SIZE];
+  PRInt32 idx = NUM_BUF_SIZE;
+  PRBool bOutputZero = ( 0 == ordinal );
+  do {
+    if(0 == (ud % 4)) {
+      c10kUnit = unit10k[ud/4];
+    }
+    PRInt32 cur = ordinal % 10;
+    cDigit = digits[cur];
+    if( 0 == cur)
+    {
+      cUnit = 0;
+      if(bOutputZero) {
+        bOutputZero = PR_FALSE;
+        if(0 != cDigit)
+          buf[--idx] = cDigit;
+      }
+    }
+    else
+    {
+      bOutputZero = PR_TRUE;
+      cUnit = unit[ud%4];
 
-		  if(0 != c10kUnit)
-			 buf[--idx] = c10kUnit;
-		  if(0 != cUnit)
-			 buf[--idx] = cUnit;
-		  if((0 != cDigit) && 
-                     ( (1 != cur) || (1 != (ud%4)) || ( ordinal > 10)) )
-			 buf[--idx] = cDigit;
+      if(0 != c10kUnit)
+        buf[--idx] = c10kUnit;
+      if(0 != cUnit)
+        buf[--idx] = cUnit;
+      if((0 != cDigit) && 
+         ( (1 != cur) || (1 != (ud%4)) || ( ordinal > 10)) )
+        buf[--idx] = cDigit;
 
-		  c10kUnit =  0;
-	   }
-	   ordinal /= 10;
-	   ud++;
+      c10kUnit =  0;
+    }
+    ordinal /= 10;
+    ud++;
 
-	} while( ordinal > 0);
-	result.Append(buf+idx,NUM_BUF_SIZE-idx);
+  } while( ordinal > 0);
+  result.Append(buf+idx,NUM_BUF_SIZE-idx);
 // }
 
 }
@@ -459,122 +496,122 @@ static PRUnichar gHebrewDigit[22] =
 
 static void HebrewToText(PRInt32 ordinal, nsString& result)
 {
-    PRBool outputSep = PR_FALSE;
-	PRUnichar buf[NUM_BUF_SIZE];
-	PRInt32 idx = NUM_BUF_SIZE;
-	PRUnichar digit;
-	do {
-		PRInt32 n3 = ordinal % 1000;
-		if(outputSep)
-			buf[--idx] = HEBREW_THROSAND_SEP;	// output thousand seperator
-		outputSep = ( n3 > 0); // request to output thousand seperator next time.
+  PRBool outputSep = PR_FALSE;
+  PRUnichar buf[NUM_BUF_SIZE];
+  PRInt32 idx = NUM_BUF_SIZE;
+  PRUnichar digit;
+  do {
+    PRInt32 n3 = ordinal % 1000;
+    if(outputSep)
+      buf[--idx] = HEBREW_THROSAND_SEP; // output thousand seperator
+    outputSep = ( n3 > 0); // request to output thousand seperator next time.
 
-		PRInt32 d = 0; // we need to keep track of digit got output per 3 digits,
-		               // so we can handle Gershayim and Gersh correctly
+    PRInt32 d = 0; // we need to keep track of digit got output per 3 digits,
+    // so we can handle Gershayim and Gersh correctly
 
-		// Process digit for 100 - 900
-		for(PRInt32 n1 = 400; n1 > 0; )
-		{
-			if( n3 >= n1)
-			{
-				n3 -= n1;
+    // Process digit for 100 - 900
+    for(PRInt32 n1 = 400; n1 > 0; )
+    {
+      if( n3 >= n1)
+      {
+        n3 -= n1;
 
-				digit = gHebrewDigit[(n1/100)-1+18];
-				if( n3 > 0)
-				{
-					buf[--idx] = digit;
-					d++;
-				} else { 
-					// if this is the last digit
-					if (d > 0)
-					{
-						buf[--idx] = HEBREW_GERSHAYIM;	
-						buf[--idx] = digit;
-					} else {
-						buf[--idx] = digit;				
-						buf[--idx] = HEBREW_GERESH;
-					} // if
-				} // if
-			} else {
-				n1 -= 100;
-			} // if
-		} // for
+        digit = gHebrewDigit[(n1/100)-1+18];
+        if( n3 > 0)
+        {
+          buf[--idx] = digit;
+          d++;
+        } else { 
+          // if this is the last digit
+          if (d > 0)
+          {
+            buf[--idx] = HEBREW_GERSHAYIM; 
+            buf[--idx] = digit;
+          } else {
+            buf[--idx] = digit;    
+            buf[--idx] = HEBREW_GERESH;
+          } // if
+        } // if
+      } else {
+        n1 -= 100;
+      } // if
+    } // for
 
-		// Process digit for 10 - 90
-		PRInt32 n2;
-		if( n3 >= 10 )
-		{
-			// Special process for 15 and 16
-			if(( 15 == n3 ) || (16 == n3)) {
-				// Special rule for religious reason...
-				// 15 is represented by 9 and 6, not 10 and 5
-				// 16 is represented by 9 and 7, not 10 and 6
-				n2 = 9;
-				digit = gHebrewDigit[ n2 - 1];    
-			} else {
-				n2 = n3 - (n3 % 10);
-				digit = gHebrewDigit[(n2/10)-1+9];
-			} // if
+    // Process digit for 10 - 90
+    PRInt32 n2;
+    if( n3 >= 10 )
+    {
+      // Special process for 15 and 16
+      if(( 15 == n3 ) || (16 == n3)) {
+        // Special rule for religious reason...
+        // 15 is represented by 9 and 6, not 10 and 5
+        // 16 is represented by 9 and 7, not 10 and 6
+        n2 = 9;
+        digit = gHebrewDigit[ n2 - 1];    
+      } else {
+        n2 = n3 - (n3 % 10);
+        digit = gHebrewDigit[(n2/10)-1+9];
+      } // if
 
-			n3 -= n2;
+      n3 -= n2;
 
-			if( n3  > 0) {
-				buf[--idx] = digit;
-				d++;
-			} else {
-				// if this is the last digit
-				if (d > 0)
-				{
-					buf[--idx] = HEBREW_GERSHAYIM;		
-					buf[--idx] = digit;
-				} else {
-					buf[--idx] = digit; 			
-					buf[--idx] = HEBREW_GERESH;
-				} // if
-			} // if
-		} // if
-		
-		// Process digit for 1 - 9 
-		if ( n3 > 0)
-		{
-			digit = gHebrewDigit[n3-1];
-			// must be the last digit
-			if (d > 0)
-			{
-				buf[--idx] = HEBREW_GERSHAYIM;	
-				buf[--idx] = digit;
-			} else {
-				buf[--idx] = digit;				
-				buf[--idx] = HEBREW_GERESH;
-			} // if
-		} // if
-		ordinal /= 1000;
-	} while (ordinal >= 1);
-	result.Append(buf+idx,NUM_BUF_SIZE-idx);
+      if( n3  > 0) {
+        buf[--idx] = digit;
+        d++;
+      } else {
+        // if this is the last digit
+        if (d > 0)
+        {
+          buf[--idx] = HEBREW_GERSHAYIM;  
+          buf[--idx] = digit;
+        } else {
+          buf[--idx] = digit;    
+          buf[--idx] = HEBREW_GERESH;
+        } // if
+      } // if
+    } // if
+  
+    // Process digit for 1 - 9 
+    if ( n3 > 0)
+    {
+      digit = gHebrewDigit[n3-1];
+      // must be the last digit
+      if (d > 0)
+      {
+        buf[--idx] = HEBREW_GERSHAYIM; 
+        buf[--idx] = digit;
+      } else {
+        buf[--idx] = digit;    
+        buf[--idx] = HEBREW_GERESH;
+      } // if
+    } // if
+    ordinal /= 1000;
+  } while (ordinal >= 1);
+  result.Append(buf+idx,NUM_BUF_SIZE-idx);
 }
 
 
 static void ArmenianToText(PRInt32 ordinal, nsString& result)
 {
-	if((0 == ordinal) || (ordinal > 9999)) { // zero or reach the limit of Armenain numbering system
-		DecimalToText(ordinal, result);
-		return;
-	} else {
-		PRUnichar buf[NUM_BUF_SIZE];
-		PRInt32 idx = NUM_BUF_SIZE;
-		PRInt32 d = 0;
-		do {
-			PRInt32 cur = ordinal % 10;
-			if( cur > 0)
-			{
-				PRUnichar u = 0x0530 + (d * 9) + cur;
-				buf[--idx] = u;
-			}
-			d++;
-			ordinal /= 10;
-		} while ( ordinal > 0);
-		result.Append(buf+idx,NUM_BUF_SIZE-idx);
-	}
+  if((0 == ordinal) || (ordinal > 9999)) { // zero or reach the limit of Armenain numbering system
+    DecimalToText(ordinal, result);
+    return;
+  } else {
+    PRUnichar buf[NUM_BUF_SIZE];
+    PRInt32 idx = NUM_BUF_SIZE;
+    PRInt32 d = 0;
+    do {
+      PRInt32 cur = ordinal % 10;
+      if( cur > 0)
+      {
+        PRUnichar u = 0x0530 + (d * 9) + cur;
+        buf[--idx] = u;
+      }
+      d++;
+      ordinal /= 10;
+    } while ( ordinal > 0);
+    result.Append(buf+idx,NUM_BUF_SIZE-idx);
+  }
 }
 
 
@@ -592,25 +629,25 @@ static PRUnichar gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
 };
 static void GeorgianToText(PRInt32 ordinal, nsString& result)
 {
-	if((0 == ordinal) || (ordinal > 19999)) { // zero or reach the limit of Armenain numbering system
-		DecimalToText(ordinal, result);
-		return;
-	} else {
-		PRUnichar buf[NUM_BUF_SIZE];
-		PRInt32 idx = NUM_BUF_SIZE;
-		PRInt32 d = 0;
-		do {
-			PRInt32 cur = ordinal % 10;
-			if( cur > 0)
-			{
-				PRUnichar u = gGeorgianValue[(d * 9 ) + ( cur - 1)];
-				buf[--idx] = u;
-			}
-			d++;
-			ordinal /= 10;
-		} while ( ordinal > 0);
-		result.Append(buf+idx,NUM_BUF_SIZE-idx);
-	}
+  if((0 == ordinal) || (ordinal > 19999)) { // zero or reach the limit of Armenain numbering system
+    DecimalToText(ordinal, result);
+    return;
+  } else {
+    PRUnichar buf[NUM_BUF_SIZE];
+    PRInt32 idx = NUM_BUF_SIZE;
+    PRInt32 d = 0;
+    do {
+      PRInt32 cur = ordinal % 10;
+      if( cur > 0)
+      {
+        PRUnichar u = gGeorgianValue[(d * 9 ) + ( cur - 1)];
+        buf[--idx] = u;
+      }
+      d++;
+      ordinal /= 10;
+    } while ( ordinal > 0);
+    result.Append(buf+idx,NUM_BUF_SIZE-idx);
+  }
 }
 
 void
@@ -620,67 +657,67 @@ nsBulletFrame::GetListItemText(nsIPresContext& aCX,
 {
   switch (aListStyle.mListStyleType) {
     case NS_STYLE_LIST_STYLE_DECIMAL:
- 	default: // CSS2 say "A users  agent that does not recognize a numbering system
-		     // should use 'decimal'
-		DecimalToText(mOrdinal, result);
-		break;
+    default: // CSS2 say "A users  agent that does not recognize a numbering system
+      // should use 'decimal'
+      DecimalToText(mOrdinal, result);
+      break;
 
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
- 		DecimalLeadingZeroToText(mOrdinal, result);
-		break;
+      DecimalLeadingZeroToText(mOrdinal, result);
+      break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-		RomanToText(mOrdinal, result, gLowerRomanCharsA, gLowerRomanCharsB);
-		break;
+      RomanToText(mOrdinal, result, gLowerRomanCharsA, gLowerRomanCharsB);
+      break;
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-		RomanToText(mOrdinal, result, gUpperRomanCharsA, gUpperRomanCharsB);
-		break;
+      RomanToText(mOrdinal, result, gUpperRomanCharsA, gUpperRomanCharsB);
+      break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
- 		CharListToText(mOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
- 		break;
+      CharListToText(mOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
+      break;
 
-	case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
- 		CharListToText(mOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
- 		break;
+    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+      CharListToText(mOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
+      break;
 
     case NS_STYLE_LIST_STYLE_KATAKANA:
- 		CharListToText(mOrdinal, result, gKatakanaChars, KATAKANA_CHARS_SIZE);
- 		break;
+      CharListToText(mOrdinal, result, gKatakanaChars, KATAKANA_CHARS_SIZE);
+      break;
 
     case NS_STYLE_LIST_STYLE_HIRAGANA:
- 		CharListToText(mOrdinal, result, gHiraganaChars, HIRAGANA_CHARS_SIZE);
- 		break;
+      CharListToText(mOrdinal, result, gHiraganaChars, HIRAGANA_CHARS_SIZE);
+      break;
     
-	case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-    	CharListToText(mOrdinal, result, gKatakanaIrohaChars, KATAKANA_IROHA_CHARS_SIZE);
- 		break;
-	
-	case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-    	CharListToText(mOrdinal, result, gHiraganaIrohaChars, HIRAGANA_IROHA_CHARS_SIZE);
- 		break;
+    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
+      CharListToText(mOrdinal, result, gKatakanaIrohaChars, KATAKANA_IROHA_CHARS_SIZE);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
+      CharListToText(mOrdinal, result, gHiraganaIrohaChars, HIRAGANA_IROHA_CHARS_SIZE);
+      break;
 
     case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-     	CharListToText(mOrdinal, result, gLowerGreekChars , LOWER_GREEK_CHARS_SIZE);
- 		break;
+      CharListToText(mOrdinal, result, gLowerGreekChars , LOWER_GREEK_CHARS_SIZE);
+      break;
 
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
-		// We may need to pass in different table for CJK-Ideographic-complex if it is
-		// supported in CSS3 or we may pass in different table for simplified Chinese
-		CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit, gCJKIdeographicUnit, gCJKIdeographic10KUnit);
-		break;
+      // We may need to pass in different table for CJK-Ideographic-complex if it is
+      // supported in CSS3 or we may pass in different table for simplified Chinese
+      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit, gCJKIdeographicUnit, gCJKIdeographic10KUnit);
+      break;
 
     case NS_STYLE_LIST_STYLE_HEBREW: 
- 		HebrewToText(mOrdinal, result);
-		break;
+      HebrewToText(mOrdinal, result);
+      break;
 
     case NS_STYLE_LIST_STYLE_ARMENIAN: 
- 		ArmenianToText(mOrdinal, result);
-		break;
+      ArmenianToText(mOrdinal, result);
+      break;
 
     case NS_STYLE_LIST_STYLE_GEORGIAN: 
-		GeorgianToText(mOrdinal, result);
-		break;
+      GeorgianToText(mOrdinal, result);
+      break;
  
   }
   result.Append(".");
@@ -688,15 +725,19 @@ nsBulletFrame::GetListItemText(nsIPresContext& aCX,
 
 #define MIN_BULLET_SIZE 5               // from laytext.c
 
-static nsresult
-UpdateBulletCB(nsIPresContext& aPresContext, nsIFrame* aFrame, PRIntn aStatus)
+nsresult
+nsBulletFrame::UpdateBulletCB(nsIPresContext* aPresContext,
+                              nsHTMLImageLoader* aLoader,
+                              nsIFrame* aFrame,
+                              void* aClosure,
+                              PRUint32 aStatus)
 {
   nsresult rv = NS_OK;
   if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     // Now that the size is available, trigger a reflow of the bullet
     // frame.
     nsCOMPtr<nsIPresShell> shell;
-    rv = aPresContext.GetShell(getter_AddRefs(shell));
+    rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell) {
       nsIReflowCommand* cmd;
       rv = NS_NewHTMLReflowCommand(&cmd, aFrame,
@@ -722,24 +763,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   nscoord ascent;
 
   if (myList->mListStyleImage.Length() > 0) {
-    mImageLoader.SetURLSpec(myList->mListStyleImage);
-    nsIURL* baseURL = nsnull;
-    nsIHTMLContent* htmlContent;
-    if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-      htmlContent->GetBaseURL(baseURL);
-      NS_RELEASE(htmlContent);
-    }
-    else {
-      nsIDocument* doc;
-      if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
-        doc->GetBaseURL(baseURL);
-        NS_RELEASE(doc);
-      }
-    }
-    mImageLoader.SetBaseURL(baseURL);
-    NS_IF_RELEASE(baseURL);
-    mImageLoader.GetDesiredSize(aCX, aReflowState, this, UpdateBulletCB,
-                                aMetrics);
+    mImageLoader.GetDesiredSize(aCX, &aReflowState, aMetrics);
     if (!mImageLoader.GetLoadImageFailed()) {
       nsHTMLContainerFrame::CreateViewForFrame(*aCX, this, mStyleContext,
                                                PR_FALSE);
