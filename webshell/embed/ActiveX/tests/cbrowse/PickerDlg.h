@@ -24,6 +24,7 @@ public:
 	CString	m_szTestCGI;
 	BOOL	m_bDebugging;
 	CString	m_sDebugFlags;
+	BOOL	m_bUseCustom;
 	//}}AFX_DATA
 
 	CLSID m_clsid;

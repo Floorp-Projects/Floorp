@@ -47,6 +47,7 @@ CPickerDlg::CPickerDlg(CWnd* pParent /*=NULL*/)
 	m_szTestCGI = _T("");
 	m_bDebugging = FALSE;
 	m_sDebugFlags = _T("");
+	m_bUseCustom = FALSE;
 	//}}AFX_DATA_INIT
 	m_clsid = CLSID_NULL;
 
@@ -65,6 +66,7 @@ void CPickerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_TESTCGI, m_szTestCGI);
 	DDX_Check(pDX, IDC_CHECK1, m_bDebugging);
 	DDX_Text(pDX, IDC_EDIT1, m_sDebugFlags);
+	DDX_Check(pDX, IDC_OVERRIDE, m_bUseCustom);
 	//}}AFX_DATA_MAP
 }
 

@@ -21,6 +21,8 @@ class CBrowseDlg : public CDialog
 public:
 	CBrowserCtlSiteInstance *m_pControlSite;
 	CLSID m_clsid;
+	BOOL m_bUseCustomPopupMenu;
+	BOOL m_bUseCustomDropTarget;
 
 	CBrowseDlg(CWnd* pParent = NULL);	// standard constructor
 

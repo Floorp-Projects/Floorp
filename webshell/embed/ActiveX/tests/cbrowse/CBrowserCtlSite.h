@@ -13,9 +13,7 @@ class ATL_NO_VTABLE CBrowserCtlSite :
 	public IDocHostShowUI
 {
 public:
-	CBrowserCtlSite()
-	{
-	}
+	CBrowserCtlSite();
 
 DECLARE_REGISTRY_RESOURCEID(IDR_CBROWSERCTLSITE)
 
@@ -26,6 +24,9 @@ BEGIN_COM_MAP(CBrowserCtlSite)
 	COM_INTERFACE_ENTRY(IDocHostUIHandler)
 	COM_INTERFACE_ENTRY(IDocHostShowUI)
 END_COM_MAP()
+
+	BOOL m_bUseCustomPopupMenu;
+	BOOL m_bUseCustomDropTarget;
 
 public:
 // IDocHostUIHandler
