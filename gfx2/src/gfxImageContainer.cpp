@@ -44,6 +44,9 @@ gfxImageContainer::~gfxImageContainer()
 {
   /* destructor code */
   mFrames.Clear();
+
+  if (mTimer)
+    mTimer->Cancel();
 }
 
 
@@ -101,12 +104,16 @@ NS_IMETHODIMP gfxImageContainer::GetNumFrames(PRUint32 *aNumFrames)
 /* gfxIImageFrame getFrameAt (in unsigned long index); */
 NS_IMETHODIMP gfxImageContainer::GetFrameAt(PRUint32 index, gfxIImageFrame **_retval)
 {
-  nsISupports *sup = mFrames.ElementAt(index);
+  nsISupports *sup = mFrames.ElementAt(index); // addrefs
   if (!sup)
     return NS_ERROR_FAILURE;
 
-  *_retval = NS_REINTERPRET_CAST(gfxIImageFrame *, sup);
-  return NS_OK;
+  nsresult rv;
+  rv = sup->QueryInterface(NS_GET_IID(gfxIImageFrame), (void**)_retval); // addrefs again
+
+  NS_RELEASE(sup);
+
+  return rv;
 }
 
 /* void appendFrame (in gfxIImageFrame item); */
@@ -117,8 +124,9 @@ NS_IMETHODIMP gfxImageContainer::AppendFrame(gfxIImageFrame *item)
   // frame.
   PRUint32 numFrames;
   this->GetNumFrames(&numFrames);
+
   if (!mTimer){
-    if (numFrames) {
+    if (numFrames > 0) {
       // Since we have more than one frame we need a timer
       mTimer = do_CreateInstance("@mozilla.org/timer;1");
       
@@ -130,15 +138,17 @@ NS_IMETHODIMP gfxImageContainer::AppendFrame(gfxIImageFrame *item)
          timeout >= 0) { // -1 means display this frame forever
         
         mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
-                     timeout, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT);
+                     //                     timeout, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT);
+                     timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
       }
     }
   }
-  
-  if (numFrames) mCurrentFrame++;
-  
+
+  if (numFrames > 0) mCurrentFrame++;
+
   mCurrentFrameIsFinishedDecoding = PR_FALSE;
-  return mFrames.AppendElement(NS_REINTERPRET_CAST(nsISupports*, item));
+
+  return mFrames.AppendElement(NS_STATIC_CAST(nsISupports*, item));
 }
 
 /* void removeFrame (in gfxIImageFrame item); */
@@ -190,7 +200,7 @@ NS_IMETHODIMP_(void) gfxImageContainer::Notify(nsITimer *timer)
   nsCOMPtr<gfxIImageFrame> nextFrame;
   PRInt32 timeout = 100;
       
-  printf("timer callback ");
+  printf("timer callback\n");
   
   // If we're done decoding the next frame, go ahead and display it now and reinit
   // the timer with the next frame's delay time.
@@ -241,7 +251,10 @@ NS_IMETHODIMP_(void) gfxImageContainer::Notify(nsITimer *timer)
   if (mObserver)
     mObserver->FrameChanged(this, nsnull, nextFrame, dirtyRect);
 
+#if 0
+  mTimer->Cancel();
 
   mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
-               timeout, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT);
+               timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
+#endif
 }
