@@ -68,31 +68,21 @@ pass_1(TreeState *state)
     return TRUE;
 }
 
-/*
- * We expect something of the form 'prefIFoo', which becomes 'PREF_FOO'.
- * Returns malloc()d string, please put little in its place.
- */
-static char *
-classname_to_iid_def(const char *className)
+static gboolean
+write_classname_iid_define(FILE *file, const char *className)
 {
-    char *def, *copy;
-    gboolean donePrefix = FALSE;
-    size_t len = strlen(className) + 2;
-
-    copy = def = malloc(len);
-    if (!def)
-        return NULL;
-    while (*className) {
-        if (*className == 'I' && !donePrefix) {
-            *copy = '_';
-            donePrefix = TRUE;
-        } else {
-            *copy = toupper(*className);
-        }
-        copy++, className++;
+    const char *iidName;
+    if (className[0] == 'n' && className[1] == 's') {
+        /* backcompat naming styles */
+        fputs("NS_", file);
+        iidName = className + 2;
+    } else {
+        iidName = className;
     }
-    *copy = '\0';
-    return def;
+    while (*iidName)
+        fputc(toupper(*iidName++), file);
+    fputs("_IID", file);
+    return TRUE;
 }
 
 static gboolean
@@ -100,13 +90,8 @@ interface(TreeState *state)
 {
     IDL_tree iface = state->tree, iter;
     char *className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
-    gboolean ok = FALSE;
     const char *iid;
     const char *name_space;
-    char *classDef = classname_to_iid_def(className);
-
-    if (!classDef)
-        return FALSE;
 
     fprintf(state->file,   "\n/* starting interface:    %s */\n",
             className);
@@ -125,19 +110,20 @@ interface(TreeState *state)
         /* XXX use nsID parsing routines to validate? */
         if (strlen(iid) != 36)
             /* XXX report error */
-            goto bad;
-        fprintf(state->file, "\n/* {%s} */\n"
-                "#define %s_IID_STR \"%s\"\n"
-                "#define %s_IID \\\n"
-                "  {0x%.8s, 0x%.4s, 0x%.4s, \\\n"
-                "    { 0x%.2s, 0x%.2s, 0x%.2s, 0x%.2s, "
+            return FALSE;
+        fprintf(state->file, "\n/* {%s} */\n#define ", iid);
+        if (!write_classname_iid_define(state->file, className))
+            return FALSE;
+        fprintf(state->file, "_STR \"%s\"\n#define ", iid);
+        if (!write_classname_iid_define(state->file, className))
+            return FALSE;
+        /* This is such a gross hack... */
+        fprintf(state->file, " \\\n  {0x%.8s, 0x%.4s, 0x%.4s, \\\n    "
+                "{ 0x%.2s, 0x%.2s, 0x%.2s, 0x%.2s, "
                 "0x%.2s, 0x%.2s, 0x%.2s, 0x%.2s }}\n\n",
-                iid, classDef, iid, classDef,
-                /* This is such a gross hack... */
                 iid, iid + 9, iid + 14, iid + 19, iid + 21, iid + 24,
                 iid + 26, iid + 28, iid + 30, iid + 32, iid + 34);
     }
-
     fprintf(state->file, "class %s", className);
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         fputs(" : ", state->file);
@@ -150,22 +136,21 @@ interface(TreeState *state)
     }
     fputs(" {\n"
           " public: \n", state->file);
-
-    if (iid)
-        fprintf(state->file, "  NS_DEFINE_STATIC_IID_ACCESSOR(%s_IID)\n",
-                classDef);
+    if (iid) {
+        fputs("  NS_DEFINE_STATIC_IID_ACCESSOR(", state->file);
+        if (!write_classname_iid_define(state->file, className))
+            return FALSE;
+        fputs(")\n", state->file);
+    }
 
     state->tree = IDL_INTERFACE(iface).body;
 
     if (state->tree && !xpidl_process_node(state))
-        goto bad;
+        return FALSE;
 
     fputs("};\n", state->file);
 
-    ok = TRUE;
- bad:
-    free(classDef);
-    return ok;
+    return TRUE;
 }
 
 static gboolean
