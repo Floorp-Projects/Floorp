@@ -46,11 +46,6 @@ public:
   NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
                    const char* aCommand,
                    nsISupports* aExtraInfo) = 0;
-
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
-                                      nsIChannel* channel,
-                                      const char *aContentType,
-                                      const char *aCommand ) = 0;
 };
 
 #endif /* nsIContentViewerContainer_h___ */
