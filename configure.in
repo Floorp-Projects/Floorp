@@ -3362,9 +3362,20 @@ dnl ========================================================
 SUNCTL=
 MOZ_ARG_ENABLE_BOOL(ctl,
 [  --enable-ctl            Enable Thai Complex Script support],
-    SUNCTL=1 )
+    SUNCTL=1,
+    SUNCTL= )
 if test "$SUNCTL"; then
-  AC_DEFINE(SUNCTL)
+    dnl older versions of glib do not seem to have gmodule which ctl needs
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $GLIB_CFLAGS"
+    AC_LANG_SAVE
+    AC_LANG_C
+    AC_TRY_COMPILE([#include <gmodule.h>],
+        [ int x = 1; x++; ],,
+        [AC_MSG_ERROR([Cannot build ctl without gmodule support in glib.])])
+    AC_LANG_RESTORE
+    CFLAGS=$_SAVE_CFLAGS
+    AC_DEFINE(SUNCTL)
 fi
 
 dnl ========================================================
