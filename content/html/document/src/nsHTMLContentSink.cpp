@@ -51,33 +51,22 @@ extern nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
 #include "nsICSSParser.h"
 
 #ifdef NS_DEBUG
+static PRLogModuleInfo* gSinkLogModuleInfo;
 
-static PRInt32 gLogLevel = 0;
+#define SINK_TRACE_CALLS        0x1
+#define SINK_TRACE_REFLOW       0x2
 
-#define NOISY_SINK_TRACE(_msg,_node)             \
-{                                                \
-  char buf[200];                                 \
-  (_node).GetText().ToCString(buf, sizeof(buf)); \
-  if (gLogLevel >= PR_LOG_WARNING) {             \
-    PR_LogPrint("%s; [%s]", _msg, buf);          \
-  }                                              \
-}
+#define SINK_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
-#define REALLY_NOISY_SINK_TRACE(_msg,_node)      \
-{                                                \
-  char buf[200];                                 \
-  (_node).GetText().ToCString(buf, sizeof(buf)); \
-  if (gLogLevel >= PR_LOG_DEBUG) {               \
-    PR_LogPrint("%s; [%s]", _msg, buf);          \
-  }                                              \
-}
-
-#else /* !NOISY_SINK */
-
-#define NOISY_SINK_TRACE(_a,_node)
-#define REALLY_NOISY_SINK_TRACE(_a,_node)
-
-#endif /* NOISY_SINK */
+#define SINK_TRACE(_bit,_args)                    \
+  PR_BEGIN_MACRO                                  \
+    if (SINK_LOG_TEST(gSinkLogModuleInfo,_bit)) { \
+      PR_LogPrint _args;                          \
+    }                                             \
+  PR_END_MACRO
+#else
+#define SINK_TRACE(_bit,_args)
+#endif
 
 //----------------------------------------------------------------------
 
@@ -232,11 +221,9 @@ protected:
 // Note: operator new zeros our memory
 HTMLContentSink::HTMLContentSink()
 {
-#if 0
-  if (nsnull == gSinkLog) {
-    gSinkLog = PR_NewLogModule("HTMLContentSink");
+  if (nsnull == gSinkLogModuleInfo) {
+    gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
   }
-#endif
 
   // Set the first update delta to be 50ms
   LL_I2L(mUpdateDelta, PR_USEC_PER_MSEC * 50);
@@ -291,7 +278,8 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("OpenHTML", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::OpenHTML"));
   NS_PRECONDITION(0 == mStackPos, "bad stack pos");
 
   mNodeStack[0] = (eHTMLTags)aNode.GetNodeType();
@@ -306,7 +294,8 @@ HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("CloseHTML", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::CloseHTML"));
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
@@ -321,7 +310,8 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("OpenHead", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::OpenHead"));
 
   if (nsnull == mHead) {
     nsIAtom* atom = NS_NewAtom("HEAD");
@@ -343,7 +333,8 @@ HTMLContentSink::CloseHead(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("CloseHead", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::CloseHead"));
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
@@ -388,7 +379,8 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("OpenBody", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::OpenBody"));
 
   PRBool startLayout = PR_FALSE;
   if (nsnull == mBody) {
@@ -417,6 +409,8 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     // XXX This has to be done now that the body is in because we
     // don't know how to handle a content-appended reflow if the
     // root has no children
+    SINK_TRACE(SINK_TRACE_REFLOW,
+               ("HTMLContentSink::OpenBody: start layout"));
     StartLayout();
   }
 
@@ -428,7 +422,8 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("CloseBody", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::CloseBody"));
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
@@ -445,7 +440,8 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("OpenForm", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::OpenForm"));
 
   // Close out previous form if it's there
   if (nsnull != mCurrentForm) {
@@ -521,7 +517,8 @@ HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("CloseForm", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::CloseForm"));
 
   if (nsnull != mCurrentForm) {
 	  NS_RELEASE(mCurrentForm);
@@ -535,7 +532,8 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("OpenFrameset", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::OpenFrameset"));
 
   mNodeStack[mStackPos++] = (eHTMLTags)aNode.GetNodeType();
   return 0;
@@ -546,7 +544,8 @@ HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("CloseFrameset", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::CloseFrameset"));
 
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
   return 0;
@@ -557,7 +556,8 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("OpenContainer", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::OpenContainer"));
 
   nsAutoString tmp(aNode.GetText());
   tmp.ToUpperCase();
@@ -660,7 +660,8 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   FlushText();
 
-  NOISY_SINK_TRACE("CloseContainer", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::CloseContainer"));
 
   switch (aNode.GetNodeType()) {
   case eHTMLTag_map:
@@ -703,7 +704,15 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
     container->Compact();
 
     if (nsnull != parent) {
-      parent->AppendChild(container, parent == mBody ? PR_TRUE : PR_FALSE);
+      PRBool allowReflow = parent == mBody;
+#ifdef NS_DEBUG
+      if (allowReflow) {
+        SINK_TRACE(SINK_TRACE_REFLOW,
+                   ("HTMLContentSink::CloseContainer: reflow after append"));
+      }
+#endif
+      
+      parent->AppendChild(container,  allowReflow);
 #if XXX
       if (parent == mBody) {
         // We just closed a child of the body off. Trigger a
@@ -739,9 +748,8 @@ PRBool HTMLContentSink::CloseTopmostContainer()
 void
 HTMLContentSink::WillBuildModel(void)
 {
-  PR_LogPrint("WillBuildModel");
   mDocument->BeginLoad();
-
+#if XXX
   // XXX temporary
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
@@ -752,7 +760,10 @@ HTMLContentSink::WillBuildModel(void)
     }
   }
 
+  SINK_TRACE(SINK_TRACE_REFLOW,
+             ("HTMLContentSink::WillBuildModel: start layout"));
   StartLayout();
+#endif
 }
 
 
@@ -764,8 +775,9 @@ HTMLContentSink::WillBuildModel(void)
  *         0=GOOD; 1=FAIR; 2=POOR;
  * @update 6/21/98 gess
  */     
-void HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel) {
-  PR_LogPrint("DidBuildModel");
+void
+HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
+{
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
@@ -780,6 +792,8 @@ void HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel) {
     }
   }
 
+  SINK_TRACE(SINK_TRACE_REFLOW,
+             ("HTMLContentSink::DidBuildModel: layout new content"));
   ReflowNewContent();
   mDocument->EndLoad();
 }
@@ -816,6 +830,10 @@ void HTMLContentSink::StartLayout()
     for (i = 0; i < ns; i++) {
       nsIPresShell* shell = mDocument->GetShellAt(i);
       if (nsnull != shell) {
+        // Make shell an observer for next time
+        shell->BeginObservingDocument();
+
+        // Resize-reflow this time
         nsIPresContext* cx = shell->GetPresContext();
         nsRect r;
         cx->GetVisibleArea(r);
@@ -876,7 +894,8 @@ nsIHTMLContent* HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
 
 PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
-  REALLY_NOISY_SINK_TRACE("AddLeaf", aNode)
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::AddLeaf"));
 
   // Check for nodes that require special handling
   switch (aNode.GetNodeType()) {
@@ -990,7 +1009,14 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   if (NS_OK == rv) {
     if (nsnull != leaf) {
       if (nsnull != parent) {
-        parent->AppendChild(leaf, parent == mBody ? PR_TRUE : PR_FALSE);
+        PRBool allowReflow = parent == mBody;
+#ifdef NS_DEBUG
+        if (allowReflow) {
+          SINK_TRACE(SINK_TRACE_REFLOW,
+                     ("HTMLContentSink::CloseContainer: reflow after append"));
+        }
+#endif
+        parent->AppendChild(leaf, allowReflow);
       } else {
         // XXX drop stuff on the floor that doesn't have a container!
         // Bad parser!
