@@ -2099,7 +2099,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
     if (!bmks)  return;
     nsresult            rv;
 
-    if (bmks->mBookmarksFile && bmks->mDirty)
+    if (bmks->mDirty)
     {
         bmks->Flush();
     }
@@ -2651,6 +2651,8 @@ nsBookmarksService::InsertResource(nsIRDFResource* aResource,
             rv = container->InsertElementAt(aResource, aIndex, PR_TRUE);
         else
             rv = container->AppendElement(aResource);
+
+        mDirty = PR_TRUE;
     }
     return rv;
 }
@@ -3579,6 +3581,8 @@ nsBookmarksService::RemoveBookmarkIcon(const char *aURL, const PRUnichar *aIconU
 
             if (hasThisIconURL) {
                 (void)mInner->Unassert(bookmark, kNC_Icon, iconLiteral);
+
+                mDirty = PR_TRUE;
             }
         }
     }
@@ -3680,7 +3684,7 @@ nsBookmarksService::UpdateLastVisitedDate(const char *aURL,
                     NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to Unassert changed status");
                 }
 
-//              mDirty = PR_TRUE;
+                mDirty = PR_TRUE;
             }
         }
     }
@@ -4166,6 +4170,8 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
             (void)mInner->Unassert(aSource, kNC_Icon, oldIconNode);
         }
         (void)mInner->Assert(aSource, kNC_Icon, iconLiteral, PR_TRUE);
+
+        mDirty = PR_TRUE;
     }
     else
     {
@@ -4762,7 +4768,6 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
         return rv;
 
     mDirty = PR_TRUE;
-    Flush();
 
     return NS_OK;
 }
@@ -5008,10 +5013,14 @@ nsBookmarksService::Flush()
 {
     nsresult    rv = NS_OK;
 
+    // Note: we cannot check mDirty here because consumers from script
+    // (e.g. the BookmarksTransaction code in bookmarks.js) rely on
+    // flushing us directly, as it has no way to set our mDirty flag.
     if (mBookmarksFile)
     {
         rv = WriteBookmarks(mBookmarksFile, mInner, kNC_BookmarksRoot);
     }
+
     return rv;
 }
 
