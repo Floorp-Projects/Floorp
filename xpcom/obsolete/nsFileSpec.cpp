@@ -49,7 +49,6 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsILocalFile.h"
-#include "nsIFileStream.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -910,11 +909,8 @@ void nsFileSpec::MakeUnique(const char* inSuggestedLeafName)
 void nsFileSpec::MakeUnique()
 //----------------------------------------------------------------------------------------
 {
-    nsCOMPtr<nsISupports> file;
-    nsresult rv = NS_NewIOFileStream(getter_AddRefs(file), *this, 
-                                     PR_WRONLY | PR_CREATE_FILE | PR_EXCL | PR_TRUNCATE, 0600);
-    if (NS_SUCCEEDED(rv))
-        return; // the stream will be closed automatically
+    if (!Exists())
+        return;
 
     char* leafName = GetLeafName();
     if (!leafName)
@@ -931,16 +927,12 @@ void nsFileSpec::MakeUnique()
         = nsFileSpecHelpers::kMaxCoreLeafNameLength - strlen(suffix) - 1;
     if ((int)strlen(leafName) > (int)kMaxRootLength)
         leafName[kMaxRootLength] = '\0';
-    for (short indx = 1; indx < 1000; indx++)
+    for (short indx = 1; indx < 1000 && Exists(); indx++)
     {
         // start with "Picture-1.jpg" after "Picture.jpg" exists
         char newName[nsFileSpecHelpers::kMaxFilenameLength + 1];
         sprintf(newName, "%s-%d%s", leafName, indx, suffix);
         SetLeafName(newName);
-        rv = NS_NewIOFileStream(getter_AddRefs(file), *this, 
-                                PR_WRONLY | PR_CREATE_FILE | PR_EXCL | PR_TRUNCATE, 0600);
-        if (NS_SUCCEEDED(rv))
-            break;
     }
     if (*suffix)
         nsCRT::free(suffix);
