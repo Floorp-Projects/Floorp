@@ -18,7 +18,7 @@
 #ifndef nsBodyFrame_h___
 #define nsBodyFrame_h___
 
-#include "nsHTMLContainerFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIAbsoluteItems.h"
 #include "nsISpaceManager.h"
 #include "nsVoidArray.h"
@@ -28,7 +28,7 @@ class nsSpaceManager;
 struct nsStyleDisplay;
 struct nsStylePosition;
 
-class nsBodyFrame : public nsHTMLContainerFrame,
+class nsBodyFrame : public nsBlockFrame,
                     public nsIAbsoluteItems
 {
 public:
@@ -37,34 +37,35 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+
+  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
+                                        nsIAtom*& aListName) const;
+
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+#ifdef NS_DEBUG
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
+#endif
 
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
+
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
 
-  NS_IMETHOD GetCursorAndContentAt(nsIPresContext& aPresContext,
-                         const nsPoint&  aPoint,
-                         nsIFrame**      aFrame,
-                         nsIContent**    aContent,
-                         PRInt32&        aCursor);
-
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  NS_METHOD  List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const;
   NS_IMETHOD ListTag(FILE* out) const;
 
   // nsIAbsoluteItems
@@ -75,6 +76,7 @@ public:
 
 protected:
   PRUint32  mFlags;
+  static nsIAtom* gAbsoluteAtom;
 
   void SetFlags(PRUint32 aFlags) {
     mFlags = aFlags;
@@ -83,15 +85,6 @@ protected:
   nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   ~nsBodyFrame();
-
-  void ComputeDesiredSize(nsIPresContext& aPresContext,
-                          const nsHTMLReflowState& aReflowState,
-                          const nsRect& aDesiredRect,
-                          const nsSize& aMaxSize,
-                          const nsMargin& aBorderPadding,
-                          nsHTMLReflowMetrics& aDesiredSize);
-
-  virtual PRIntn GetSkipSides() const;
 
   void ReflowAbsoluteItems(nsIPresContext& aPresContext,
                            const nsHTMLReflowState& aReflowState);
@@ -106,15 +99,13 @@ protected:
                                   nsRect&                  aRect) const;
 
   void AddAbsoluteFrame(nsIFrame* aFrame);
+  PRBool IsAbsoluteFrame(nsIFrame* aFrame);
 
 private:
   nsSpaceManager* mSpaceManager;
   nsVoidArray     mAbsoluteItems;
+  nsIFrame*       mAbsoluteFrames;  // additional named child list
   PRInt32         mChildCount;
-
-  nsSize GetColumnAvailSpace(nsIPresContext& aPresContext,
-                             const nsMargin& aBorderPadding,
-                             const nsHTMLReflowState& aReflowState);
 
 #ifdef NS_DEBUG
   struct BandData : public nsBandData {
