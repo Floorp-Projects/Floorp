@@ -29,13 +29,18 @@ function buildDialog()
 {
   var toolbar = window.opener.document.getElementById("nav-bar");
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
-
   var paletteBox = document.getElementById("palette-box");
+  var enclosure;
 
+  // Create a new toolbar that will model the one the user is trying to customize.
+  // We won't just cloneNode() because we want to wrap each element on the toolbar in a
+  // <toolbarpaletteitem/>, to prevent them from getting events (so they aren't styled on
+  // hover, etc.) and to allow us to style them in the new nsITheme world.
   var newToolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "toolbar");
   newToolbar.id = "cloneToolbar";
 
+  // Walk through and manually clone the children of the to-be-customized toolbar.
   // Make sure all buttons look enabled (and that textboxes are disabled).
   var toolbarItem = toolbar.firstChild;
   while (toolbarItem) {
@@ -53,11 +58,13 @@ function buildDialog()
         newItem.firstChild.removeAttribute("disabled");
     }
 
-    var paletteEnclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                    "toolbarpaletteitem");
-    paletteEnclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
-    paletteEnclosure.appendChild(newItem);
-    newToolbar.appendChild(paletteEnclosure);
+    enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                         "toolbarpaletteitem");
+    
+    // Set a draggesture handler to allow drag-rearrange within the clone toolbar.
+    enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+    enclosure.appendChild(newItem);
+    newToolbar.appendChild(enclosure);
     toolbarItem = toolbarItem.nextSibling;
   }
 
@@ -100,8 +107,8 @@ function buildDialog()
 
     rowSlot++;
     // Create an enclosure for the item.
-    var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                            "toolbarpaletteitem");
+    enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                         "toolbarpaletteitem");
     enclosure.setAttribute("align", "center");
     enclosure.setAttribute("pack", "center");
     enclosure.setAttribute("flex", "1");
@@ -148,6 +155,7 @@ var dropObserver = {
 
     var dropTargetWidth = aEvent.target.boxObject.width;
     var dropTargetX = aEvent.target.boxObject.x;
+
     if (aEvent.clientX > (dropTargetX + (dropTargetWidth / 2)))
       gCurrentDragOverItem = aEvent.target.nextSibling;
     else
@@ -161,7 +169,8 @@ var dropObserver = {
     var newButtonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
     var toolbar = document.getElementById("cloneToolbar");
     
-    // Don't allow duplicates.
+    // If dropping a button that's already on the toolbar, we want to move it to
+    // the new location, so remove it here and we'll add it in the correct spot further down.
     var toolbarItem = toolbar.firstChild;
     while (toolbarItem) {
       if (toolbarItem.firstChild.id == newButtonId) {
@@ -184,12 +193,12 @@ var dropObserver = {
 
     paletteItem = paletteItem.cloneNode(paletteItem);
 
-    var paletteEnclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                    "toolbarpaletteitem");
-    paletteEnclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
-    paletteEnclosure.appendChild(paletteItem);
+    var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                             "toolbarpaletteitem");
+    enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+    enclosure.appendChild(paletteItem);
 
-    toolbar.insertBefore(paletteEnclosure, gCurrentDragOverItem);
+    toolbar.insertBefore(enclosure, gCurrentDragOverItem);
     gCurrentDragOverItem.removeAttribute("dragactive");
     gCurrentDragOverItem = null;
   },
