@@ -6,17 +6,11 @@
 #define __gen_nsINNTPNewsgroupList_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-
 
 /* starting interface nsINNTPNewsgroupList */
 
@@ -43,10 +37,10 @@ class nsINNTPNewsgroupList : public nsISupports {
   NS_IMETHOD InitXOVER(PRInt32 first_message, PRInt32 last_message) = 0;
 
   /* void ProcessXOVER (in string line, out long status); */
-  NS_IMETHOD ProcessXOVER(char *line, PRInt32 *status) = 0;
+  NS_IMETHOD ProcessXOVER(const char *line, PRInt32 *status) = 0;
 
   /* void ProcessNonXOVER (in string line); */
-  NS_IMETHOD ProcessNonXOVER(char *line) = 0;
+  NS_IMETHOD ProcessNonXOVER(const char *line) = 0;
 
   /* void ResetXOVER (); */
   NS_IMETHOD ResetXOVER() = 0;

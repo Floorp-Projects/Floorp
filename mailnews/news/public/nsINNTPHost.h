@@ -7,18 +7,12 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
+#include "nsID.h" /* interface nsID */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-
 
 /* starting interface nsINNTPHost */
 
@@ -40,10 +34,10 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD SetSupportsExtensions(PRBool aSupportsExtensions) = 0;
 
   /* void AddExtension (in string extension); */
-  NS_IMETHOD AddExtension(char *extension) = 0;
+  NS_IMETHOD AddExtension(const char *extension) = 0;
 
   /* boolean QueryExtension (in string extension); */
-  NS_IMETHOD QueryExtension(char *extension, PRBool *_retval) = 0;
+  NS_IMETHOD QueryExtension(const char *extension, PRBool *_retval) = 0;
 
   /* attribute boolean postingAllowed; */
   NS_IMETHOD GetPostingAllowed(PRBool *aPostingAllowed) = 0;
@@ -58,43 +52,43 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD SetLastUpdatedTime(PRInt64 aLastUpdatedTime) = 0;
 
   /* nsINNTPNewsgroupList GetNewsgroupList (in string groupname); */
-  NS_IMETHOD GetNewsgroupList(char *groupname, nsINNTPNewsgroupList **_retval) = 0;
+  NS_IMETHOD GetNewsgroupList(const char *groupname, nsINNTPNewsgroupList **_retval) = 0;
 
   /* nsINNTPNewsgroup FindNewsgroup (in string groupname, in boolean create); */
-  NS_IMETHOD FindNewsgroup(char *groupname, PRBool create, nsINNTPNewsgroup **_retval) = 0;
+  NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create, nsINNTPNewsgroup **_retval) = 0;
 
   /* void AddPropertyForGet (in string name, in string value); */
-  NS_IMETHOD AddPropertyForGet(char *name, char *value) = 0;
+  NS_IMETHOD AddPropertyForGet(const char *name, const char *value) = 0;
 
   /* string QueryPropertyForGet (in string name); */
-  NS_IMETHOD QueryPropertyForGet(char *name, char **_retval) = 0;
+  NS_IMETHOD QueryPropertyForGet(const char *name, char **_retval) = 0;
 
   /* void AddSearchableGroup (in string groupname); */
-  NS_IMETHOD AddSearchableGroup(char *groupname) = 0;
+  NS_IMETHOD AddSearchableGroup(const char *groupname) = 0;
 
   /* boolean QuerySearchableGroup (in string groupname); */
-  NS_IMETHOD QuerySearchableGroup(char *groupname, PRBool *_retval) = 0;
+  NS_IMETHOD QuerySearchableGroup(const char *groupname, PRBool *_retval) = 0;
 
   /* void AddVirtualGroup (in string responseText); */
-  NS_IMETHOD AddVirtualGroup(char *responseText) = 0;
+  NS_IMETHOD AddVirtualGroup(const char *responseText) = 0;
 
   /* void SetIsVirtualGroup (in string groupname, in boolean isVirtual); */
-  NS_IMETHOD SetIsVirtualGroup(char *groupname, PRBool isVirtual) = 0;
+  NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual) = 0;
 
   /* boolean GetIsVirtualGroup (in string groupname); */
-  NS_IMETHOD GetIsVirtualGroup(char *groupname, PRBool *_retval) = 0;
+  NS_IMETHOD GetIsVirtualGroup(const char *groupname, PRBool *_retval) = 0;
 
   /* void AddSearchableHeader (in string headerName); */
-  NS_IMETHOD AddSearchableHeader(char *headerName) = 0;
+  NS_IMETHOD AddSearchableHeader(const char *headerName) = 0;
 
   /* boolean QuerySearchableHeader (in string headerName); */
-  NS_IMETHOD QuerySearchableHeader(char *headerName, PRBool *_retval) = 0;
+  NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval) = 0;
 
   /* void GroupNotFound (in string group, in boolean opening); */
-  NS_IMETHOD GroupNotFound(char *group, PRBool opening) = 0;
+  NS_IMETHOD GroupNotFound(const char *group, PRBool opening) = 0;
 
   /* void AddNewNewsgroup (in string groupname, in long first, in long last, in string flags, in boolean xactiveFlags); */
-  NS_IMETHOD AddNewNewsgroup(char *groupname, PRInt32 first, PRInt32 last, char *flags, PRBool xactiveFlags) = 0;
+  NS_IMETHOD AddNewNewsgroup(const char *groupname, PRInt32 first, PRInt32 last, const char *flags, PRBool xactiveFlags) = 0;
 
   /* long GetNumGroupsNeedingCounts (); */
   NS_IMETHOD GetNumGroupsNeedingCounts(PRInt32 *_retval) = 0;
@@ -103,19 +97,19 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD GetFirstGroupNeedingCounts(char **_retval) = 0;
 
   /* void DisplaySubscribedGroup (in string groupname, in long first_message, in long last_message, in long total_messages, in boolean visit_now); */
-  NS_IMETHOD DisplaySubscribedGroup(char *groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages, PRBool visit_now) = 0;
+  NS_IMETHOD DisplaySubscribedGroup(const char *groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages, PRBool visit_now) = 0;
 
   /* string GetFirstGroupNeedingExtraInfo (); */
   NS_IMETHOD GetFirstGroupNeedingExtraInfo(char **_retval) = 0;
 
   /* void SetGroupNeedsExtraInfo (in string groupname, in boolean needsExtraInfo); */
-  NS_IMETHOD SetGroupNeedsExtraInfo(char *groupname, PRBool needsExtraInfo) = 0;
+  NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool needsExtraInfo) = 0;
 
   /* void GetNewsgroupAndNumberOfID (in string message_id, out nsINNTPNewsgroup group, out unsigned long message_number); */
-  NS_IMETHOD GetNewsgroupAndNumberOfID(char *message_id, nsINNTPNewsgroup **group, PRUint32 *message_number) = 0;
+  NS_IMETHOD GetNewsgroupAndNumberOfID(const char *message_id, nsINNTPNewsgroup **group, PRUint32 *message_number) = 0;
 
   /* void SetPrettyName (in string groupName, in string prettyName); */
-  NS_IMETHOD SetPrettyName(char *groupName, char *prettyName) = 0;
+  NS_IMETHOD SetPrettyName(const char *groupName, const char *prettyName) = 0;
 
   /* void LoadNewsrc (); */
   NS_IMETHOD LoadNewsrc() = 0;
@@ -134,13 +128,13 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD SetNewsRCFilename(char * aNewsRCFilename) = 0;
 
   /* nsINNTPNewsgroup FindGroup (in string name); */
-  NS_IMETHOD FindGroup(char *name, nsINNTPNewsgroup **_retval) = 0;
+  NS_IMETHOD FindGroup(const char *name, nsINNTPNewsgroup **_retval) = 0;
 
   /* nsINNTPNewsgroup AddGroup (in string groupname); */
-  NS_IMETHOD AddGroup(char *groupname, nsINNTPNewsgroup **_retval) = 0;
+  NS_IMETHOD AddGroup(const char *groupname, nsINNTPNewsgroup **_retval) = 0;
 
   /* void RemoveGroupByName (in string groupName); */
-  NS_IMETHOD RemoveGroupByName(char *groupName) = 0;
+  NS_IMETHOD RemoveGroupByName(const char *groupName) = 0;
 
   /* void RemoveGroup (in nsINNTPNewsgroup group); */
   NS_IMETHOD RemoveGroup(nsINNTPNewsgroup *group) = 0;
