@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.239 $ ';
+$::UtilsVersion = '$Revision: 1.240 $ ';
 
 package TinderUtils;
 
@@ -1203,7 +1203,7 @@ sub fork_and_log {
         open STDERR, ">&STDOUT";
         select STDOUT; $| = 1;  # make STDOUT unbuffered
         select STDERR; $| = 1;  # make STDERR unbuffered
-        exec @$args;
+        exec { $args->[0] } @$args;
         die "Could not exec()";
     }
     return $pid;
