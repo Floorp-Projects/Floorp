@@ -82,12 +82,26 @@ pref("browser.fancy_ftp", true);
 pref("fortezza.toggle", 1);
 pref("fortezza.timeout", 30);
 
+pref("font.name.serif.he", "fixed");
+pref("font.name.sans-serif.he", "fixed");
+pref("font.name.monospace.he", "fixed");
+
+pref("font.name.serif.ja", "fixed");
+pref("font.name.sans-serif.ja", "fixed");
+pref("font.name.monospace.ja", "fixed");
+
+pref("font.name.serif.ko", "mincho");
+pref("font.name.sans-serif.ko", "gothic");
+pref("font.name.monospace.ko", "gothic");
+
 pref("font.name.serif.x-western", "times");
 pref("font.name.sans-serif.x-western", "helvetica");
 pref("font.name.monospace.x-western", "courier");
 
-pref("intl.font_charset", "");
-pref("intl.font_spec_list", "");
+pref("font.name.serif.zh-CN", "song ti");
+pref("font.name.sans-serif.zh-CN", "song ti");
+pref("font.name.monospace.zh-CN", "song ti");
+
 pref("mail.signature_date", 0);
 
 // Outliner column defaults
