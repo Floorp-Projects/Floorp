@@ -104,6 +104,7 @@ while (<>) {
                 # end with blank line
                 last;
             } else {
+        	JarIt($jarfile, $args);
                 goto start;
             }
         }
