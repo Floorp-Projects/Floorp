@@ -390,12 +390,15 @@ protected:
     PRBool mStoreLocAsHome;
     PRBool mDeleteDB;
     PRBool mImportingComm4x;
+    PRInt32 mLFCount;
+    PRInt32 mCRCount;
 
     nsresult ParseLDIFFile();
     void AddLdifRowToDatabase(PRBool bIsList);
     void AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList);
+    void ClearLdifRecordBuffer();
 
-    nsresult GetLdifStringRecord(char* buf, PRInt32 len, PRInt32* stopPos);
+    nsresult GetLdifStringRecord(char* buf, PRInt32 len, PRInt32& stopPos);
     nsresult str_parse_line(char *line, char    **type, char **value, int *vlen);
     char * str_getline( char **next );
 
@@ -418,6 +421,8 @@ AddressBookParser::AddressBookParser(nsIFileSpec * fileSpec, PRBool migrating, n
     mDeleteDB = PR_TRUE;
   mStoreLocAsHome = bStoreLocAsHome;
   mImportingComm4x = bImportingComm4x;
+  mLFCount = 0;                                                              
+  mCRCount = 0;
 }
 
 AddressBookParser::~AddressBookParser(void)
@@ -696,43 +701,41 @@ char * AddressBookParser::str_getline( char **next )
  * get one ldif record
  * 
  */
-nsresult AddressBookParser::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32* stopPos)
+nsresult AddressBookParser::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32& stopPos)
 {
-    PRInt32 LFCount = 0;
-    PRInt32 CRCount = 0;
-
-    for (; *stopPos < len; (*stopPos)++) 
+    for (; stopPos < len; stopPos++) 
     {
-        char c = buf[*stopPos];
+        char c = buf[stopPos];
 
         if (c == 0xA)
         {
-            LFCount++;
+            mLFCount++;
         }
         else if (c == 0xD)
         {
-            CRCount++;
+            mCRCount++;
         }
         else if ( c != 0xA && c != 0xD)
         {
-            if (LFCount == 0 && CRCount == 0)
+            if (mLFCount == 0 && mCRCount == 0)
                  mLine.Append(c);
-            else if (( LFCount > 1) || ( CRCount > 2 && LFCount ) ||
-                ( !LFCount && CRCount > 1 ))
+            else if (( mLFCount > 1) || ( mCRCount > 2 && mLFCount ) ||
+                ( !mLFCount && mCRCount > 1 ))
             {
                 return NS_OK;
             }
-            else if ((LFCount == 1 || CRCount == 1))
+            else if ((mLFCount == 1 || mCRCount == 1))
             {
                  mLine.Append('\n');
                  mLine.Append(c);
-                LFCount = 0;
-                CRCount = 0;
+                mLFCount = 0;
+                mCRCount = 0;
             }
         }
     }
-    if (*stopPos ==len && (LFCount > 1) || (CRCount > 2 && LFCount) ||
-        (!LFCount && CRCount > 1))
+
+    if ((stopPos == len) && (mLFCount > 1) || (mCRCount > 2 && mLFCount) ||
+        (!mLFCount && mCRCount > 1))
         return NS_OK;
     else
         return NS_ERROR_FAILURE;
@@ -745,7 +748,8 @@ nsresult AddressBookParser::ParseLDIFFile()
     PRInt32 startPos = 0;
     PRInt32 len = 0;
     PRBool bEof = PR_FALSE;
-    nsVoidArray listPosArray;
+    nsVoidArray listPosArray;   // where each list/group starts in ldif file
+    nsVoidArray listSizeArray;  // size of the list/group info
     PRInt32 savedStartPos = 0;
     PRInt32 filePos = 0;
 
@@ -755,7 +759,7 @@ nsresult AddressBookParser::ParseLDIFFile()
         {
             startPos = 0;
 
-            while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, &startPos)))
+            while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, startPos)))
             {
                 if (mLine.Find("groupOfNames") == kNotFound)
                     AddLdifRowToDatabase(PR_FALSE);
@@ -763,8 +767,8 @@ nsresult AddressBookParser::ParseLDIFFile()
                 {
                     //keep file position for mailing list
                     listPosArray.AppendElement((void*)savedStartPos);
-                    if (mLine.Length() > 0)
-                        mLine.Truncate();
+                    listSizeArray.AppendElement((void*)(filePos + startPos-savedStartPos));
+                    ClearLdifRecordBuffer();
                 }
                 savedStartPos = filePos + startPos;
             }
@@ -776,18 +780,26 @@ nsresult AddressBookParser::ParseLDIFFile()
         AddLdifRowToDatabase(PR_FALSE); 
 
     // mail Lists
-    PRInt32 i;
+    PRInt32 i, pos, size;
     PRInt32 listTotal = listPosArray.Count();
+    char *listBuf;
+    ClearLdifRecordBuffer();  // make sure the buffer is clean
     for (i = 0; i < listTotal; i++)
     {
-        PRInt32 pos = NS_PTR_TO_INT32(listPosArray.ElementAt(i));
+        pos  = NS_PTR_TO_INT32(listPosArray.ElementAt(i));
+        size = NS_PTR_TO_INT32(listSizeArray.ElementAt(i));
         if (NS_SUCCEEDED(mFileSpec->Seek(pos)))
         {
-            if (NS_SUCCEEDED(mFileSpec->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)
+
+            // Allocate enough space for the lists/groups as the size varies.
+            listBuf = (char *) PR_Malloc(size);
+            if (!listBuf)
+              continue;
+            if (NS_SUCCEEDED(mFileSpec->Read(&listBuf, size, &len)) && len > 0)
             {
                 startPos = 0;
 
-                while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, &startPos)))
+                while (NS_SUCCEEDED(GetLdifStringRecord(listBuf, len, startPos)))
                 {
                     if (mLine.Find("groupOfNames") != kNotFound)
                     {
@@ -797,6 +809,7 @@ nsresult AddressBookParser::ParseLDIFFile()
                     }
                 }
             }
+            PR_FREEIF(listBuf);
         }
     }
     return NS_OK;
@@ -804,6 +817,14 @@ nsresult AddressBookParser::ParseLDIFFile()
 
 void AddressBookParser::AddLdifRowToDatabase(PRBool bIsList)
 {
+    // If no data to process then reset CR/LF counters and return.
+    if (mLine.IsEmpty())
+    {
+      mLFCount = 0;
+      mCRCount = 0;
+      return;
+    }
+
     nsCOMPtr <nsIMdbRow> newRow;
     if (mDatabase)
     {
@@ -833,14 +854,24 @@ void AddressBookParser::AddLdifRowToDatabase(PRBool bIsList)
         else
             continue; // parse error: continue with next loop iteration
     }
-    delete [] saveCursor;
+    nsMemory::Free(saveCursor);
     mDatabase->AddCardRowToDB(newRow);    
 
     if (bIsList)
         mDatabase->AddListDirNode(newRow);
 
-    if (mLine.Length() > 0)
-        mLine.Truncate();
+    // Clear buffer for next record
+    ClearLdifRecordBuffer();
+}
+
+void AddressBookParser::ClearLdifRecordBuffer()
+{
+  if (mLine.Length() > 0)
+  {
+      mLine.Truncate();
+      mLFCount = 0;
+      mCRCount = 0;
+  }
 }
 
 // We have two copies of this function in the code, one here for import and 
