@@ -8,13 +8,10 @@ $development_branch_prefix = "SpiderMonkey140";
 
 # Space-separated list of CVS-controlled directories to tag/merge
 $merge_dirs =
-    "mozilla/js/src " .
-    "mozilla/js/src/macbuild " .
-    "mozilla/js/src/config " .
-    "mozilla/js/src/fdlibm";
+    "mozilla/js/src " ;
 
-# Don't recurse into subdirs
-$recurse_flag = '-l';
+# When line below uncommented, don't recurse into subdirs
+#$recurse_flag = '-l';
 
 #----------------------------------------------------------------------------
 
@@ -24,6 +21,9 @@ $recurse_flag = '-l';
 # the development branch is not quite as stable/buildable as was
 # thought.)  The contents of the merge branch will be copied to
 # the trunk when merging takes place.
+
+
+# The following tags are created automatically by this script:
 #
 # JS_STABLE_DROP
 #
