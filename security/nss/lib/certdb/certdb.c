@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.61 2004/01/22 22:04:54 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.62 2004/01/28 23:23:43 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1480,7 +1480,7 @@ cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
 	default:
 	    break;
 	}
-	current = cert_get_next_general_name(current);
+	current = CERT_GetNextGeneralName(current);
     } while (current != nameList);
 
     if ((!isIPaddr && !DNSextCount) || (isIPaddr && !IPextCount)) {
