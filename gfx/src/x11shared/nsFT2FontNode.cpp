@@ -68,8 +68,7 @@ nsIFontCatalogService* nsFT2FontNode::sFcs = nsnull;
 void
 nsFT2FontNode::FreeGlobals()
 {
-  nsServiceManager::ReleaseService("@mozilla.org/gfx/xfontcatalogservice;1", 
-                                   sFcs);
+  NS_IF_RELEASE(sFcs);
 
   if (mFreeTypeNodes) {
     mFreeTypeNodes->Reset(FreeNode, nsnull);
@@ -87,10 +86,10 @@ nsFT2FontNode::InitGlobals()
   
   sInited = PR_TRUE;
 
-  nsServiceManager::GetService("@mozilla.org/gfx/xfontcatalogservice;1",
-                               NS_GET_IID(nsIFontCatalogService),
-                               (nsISupports**) &sFcs);
-  if (!sFcs) {
+  nsresult rv = ::CallGetService("@mozilla.org/gfx/xfontcatalogservice;1",
+                                 &sFcs);
+
+  if (NS_FAILED(rv)) {
     NS_ERROR("Font Catalog Service init failed\n");
     return NS_ERROR_FAILURE;
   }
