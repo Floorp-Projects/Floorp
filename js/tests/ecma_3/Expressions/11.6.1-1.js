@@ -71,10 +71,27 @@ expect = '3px';
 addThis();
 
 status = inSection(4);
-actual = 1 + 1 + 'a' +  1 + 'b';
-expect = '2a1b';
+actual = 1 + 1 + 'a' + 1 + 1 + 'b';
+expect = '2a11b';
 addThis();
 
+/*
+ * The next sections test the + operator via eval()
+ */
+status = inSection(5);
+actual = plusThese(1, 1, 'a', 1, 1, 'b');
+expect = '2a11b';
+addThis();
+
+status = inSection(6);
+actual = plusThese(new Number(1), new Number(1), 'a');
+expect = '2a';
+addThis();
+
+status = inSection(7);
+actual = plusThese('a', new Number(1), new Number(1));
+expect = 'a11';
+addThis();
 
 
 
@@ -90,6 +107,52 @@ function addThis()
   actualvalues[UBound] = actual;
   expectedvalues[UBound] = expect;
   UBound++;
+}
+
+/*
+ * Applies the + operator to the provided arguments via eval().
+ *
+ * Form an eval string of the form 'arg1 + arg2 + arg3', but
+ * remember to add double-quotes inside the eval string around
+ * any argument that is of string type. For example, suppose the
+ * arguments were 11, 'a', 22. Then the eval string should be
+ *
+ *                   '11 + "a" + 22'
+ *
+ * If we didn't put double-quotes around the string argument,
+ * we'd get this for an eval string:
+ *
+ *                   '11 + a + 22'
+ *
+ * If we eval() the former, we get the right expression to test.
+ * If we eval() the latter: 'ReferenceError: a is not defined'.
+ */
+function plusThese()
+{
+  var sEval = '';
+  var arg;
+  var i;
+
+  var L = arguments.length;
+  for (i=0; i<L; i++)
+  {
+    arg = arguments[i];
+    if (typeof arg === 'string')
+      arg = quoteThis(arg);
+
+    if (i < L-1)
+      sEval += arg + ' + ';
+    else
+      sEval += arg;
+  }
+
+  return eval(sEval);
+}
+
+
+function quoteThis(x)
+{
+  return '"' + x + '"';
 }
 
 
