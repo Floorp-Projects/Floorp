@@ -153,9 +153,10 @@ txStandaloneXSLTProcessor::transform(nsACString& aXMLPath,
     if (!xmlDoc) {
         return NS_ERROR_FAILURE;
     }
+    txParsedURL path;
+    path.init(NS_ConvertASCIItoUCS2(aXSLPath));
     nsRefPtr<txStylesheet> style;
-    nsresult rv = TX_CompileStylesheetPath(NS_ConvertASCIItoUCS2(aXSLPath),
-                                           getter_AddRefs(style));
+    nsresult rv = TX_CompileStylesheetPath(path, getter_AddRefs(style));
     if (NS_FAILED(rv)) {
         delete xmlDoc;
         return rv;
@@ -182,11 +183,17 @@ txStandaloneXSLTProcessor::transform(Document* aXMLDoc, ostream& aOut,
     }
 
     // get stylesheet path
-    nsAutoString stylePath;
+    nsAutoString stylePath, basePath;
+    aXMLDoc->getBaseURI(basePath);
     getHrefFromStylesheetPI(*aXMLDoc, stylePath);
+    txParsedURL base, ref, resolved;
+    base.init(basePath);
+    ref.init(stylePath);
+    base.resolve(ref, resolved);
 
     nsRefPtr<txStylesheet> style;
-    nsresult rv = TX_CompileStylesheetPath(stylePath, getter_AddRefs(style));
+    nsresult rv = TX_CompileStylesheetPath(resolved, getter_AddRefs(style));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // transform
     rv = transform(aXMLDoc, style, aOut, aErr);
@@ -229,11 +236,11 @@ txStandaloneXSLTProcessor::transform(Document* aSource,
 }
 
 /**
- * Parses all XML Stylesheet PIs associated with the
- * given XML document. If any stylesheet PIs are found with
- * type="text/xsl" the href psuedo attribute value will be
- * added to the given href argument. If multiple text/xsl stylesheet PIs
- * are found, the one closest to the end of the document is used.
+ * Parses the XML Stylesheet PIs associated with the
+ * given XML document. If a stylesheet PIs is found with type="text/xsl"
+ * or type="text/xml" the href psuedo attribute value will be appended to
+ * the given href argument. If multiple text/xsl stylesheet PIs
+ * are found, the first one is used.
  */
 void txStandaloneXSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument,
                                                         nsAString& href)
@@ -251,11 +258,10 @@ void txStandaloneXSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument,
                 type.Truncate();
                 tmpHref.Truncate();
                 parseStylesheetPI(data, type, tmpHref);
-                if (type.Equals(NS_LITERAL_STRING("text/xsl"))) {
-                    href.Truncate();
-                    nsAutoString baseURI;
-                    node->getBaseURI(baseURI);
-                    URIUtils::resolveHref(tmpHref, baseURI, href);
+                if (type.Equals(NS_LITERAL_STRING("text/xsl")) ||
+                    type.Equals(NS_LITERAL_STRING("text/xml"))) {
+                    href = tmpHref;
+                    return;
                 }
             }
         }

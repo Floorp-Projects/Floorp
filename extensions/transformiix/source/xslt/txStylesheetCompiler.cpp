@@ -129,7 +129,7 @@ txStylesheetCompiler::startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
 nsresult
 txStylesheetCompiler::startElement(const PRUnichar *aName,
                                    const PRUnichar **aAttrs,
-                                   PRInt32 aAttrCount)
+                                   PRInt32 aAttrCount, PRInt32 aIDOffset)
 {
     if (NS_FAILED(mStatus)) {
         return mStatus;
@@ -206,8 +206,12 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
 
     NS_ENSURE_TRUE(namespaceID != kNameSpaceID_Unknown, NS_ERROR_FAILURE);
 
+    PRInt32 idOffset = aIDOffset;
+    if (idOffset > 0) {
+        idOffset /= 2;
+    }
     return startElementInternal(namespaceID, localname, prefix, atts,
-                                aAttrCount);
+                                aAttrCount, idOffset);
 }
 
 nsresult
@@ -215,7 +219,8 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
                                            nsIAtom* aLocalName,
                                            nsIAtom* aPrefix,
                                            txStylesheetAttr* aAttributes,
-                                           PRInt32 aAttrCount)
+                                           PRInt32 aAttrCount,
+                                           PRInt32 aIDOffset)
 {
     nsresult rv = NS_OK;
     PRInt32 i;
@@ -315,6 +320,14 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
         }
     }
 
+    if (mEmbedStatus == eNeedEmbed) {
+        // handle embedded stylesheets
+        if (aIDOffset >= 0 && aAttributes[aIDOffset].mValue.Equals(mTarget)) {
+            // We found the right ID, signal to compile the 
+            // embedded stylesheet.
+            mEmbedStatus = eInEmbed;
+        }
+    }
     txElementHandler* handler;
     do {
         handler = isInstruction ?
@@ -527,11 +540,13 @@ txStylesheetCompilerState::txStylesheetCompilerState(txACompileObserver* aObserv
       mDOE(PR_FALSE),
       mSearchingForFallback(PR_FALSE),
       mObserver(aObserver),
+      mEmbedStatus(eNoEmbed),
       mDoneWithThisStylesheet(PR_FALSE),
       mNextInstrPtr(nsnull),
       mToplevelIterator(nsnull)
 {
-    // XXX Embedded stylesheets have another handler. Probably
+    // Embedded stylesheets have another handler, which is set in
+    // txStylesheetCompiler::init if the baseURI has a fragment identifier.
     mHandlerTable = gTxRootHandler;
 
 }
@@ -546,6 +561,19 @@ txStylesheetCompilerState::init(const nsAString& aBaseURI,
 #ifdef PR_LOGGING
     mURI.AssignWithConversion(aBaseURI);
 #endif
+    // Check for fragment identifier of an embedded stylesheet.
+    PRInt32 fragment = aBaseURI.FindChar('#') + 1;
+    if (fragment > 0) {
+        PRInt32 fragmentLength = aBaseURI.Length() - fragment;
+        if (fragmentLength > 0) {
+            // This is really an embedded stylesheet, not just a
+            // "url#". We may want to unescape the fragment.
+            mTarget = Substring(aBaseURI, (PRUint32)fragment,
+                                fragmentLength);
+            mEmbedStatus = eNeedEmbed;
+            mHandlerTable = gTxEmbedHandler;
+        }
+    }
     nsresult rv = NS_OK;
     if (aStylesheet) {
         mStylesheet = aStylesheet;

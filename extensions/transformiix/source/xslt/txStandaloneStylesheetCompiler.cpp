@@ -72,14 +72,16 @@ class txDriver : public txACompileObserver
 };
 
 nsresult
-TX_CompileStylesheetPath(const nsAString& aHref, txStylesheet** aResult)
+TX_CompileStylesheetPath(const txParsedURL& aURL, txStylesheet** aResult)
 {
+    *aResult = nsnull;
+    nsAutoString errMsg, filePath;
+
+    filePath = aURL.getFile();
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("TX_CompileStylesheetPath: %s\n",
-            NS_LossyConvertUCS2toASCII(aHref).get()));
-    *aResult = nsnull;
-    nsAutoString errMsg;
-    istream* xslInput = URIUtils::getInputStream(aHref, errMsg);
+            NS_LossyConvertUCS2toASCII(filePath).get()));
+    istream* xslInput = URIUtils::getInputStream(filePath, errMsg);
     if (!xslInput) {
         return NS_ERROR_FAILURE;
     }
@@ -87,11 +89,16 @@ TX_CompileStylesheetPath(const nsAString& aHref, txStylesheet** aResult)
     if (!driver) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    driver->mCompiler =  new txStylesheetCompiler(aHref, driver);
+    nsAutoString spec = filePath;
+    if (!aURL.mRef.IsEmpty()) {
+        spec.Append(PRUnichar('#'));
+        spec.Append(aURL.mRef);
+    }
+    driver->mCompiler =  new txStylesheetCompiler(spec, driver);
     if (!driver->mCompiler) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    nsresult rv = driver->parse(*xslInput, aHref);
+    nsresult rv = driver->parse(*xslInput, filePath);
     if (NS_FAILED(rv)) {
         return rv;
     };
@@ -213,10 +220,11 @@ txDriver::StartElement(const XML_Char *aName, const XML_Char **aAtts)
         ++atts;
         ++attcount;
     }
+    PRInt32 idOffset = XML_GetIdAttributeIndex(mExpatParser);
     nsresult rv =
         mCompiler->startElement(NS_STATIC_CAST(const PRUnichar*, aName), 
                                 NS_STATIC_CAST(const PRUnichar**, aAtts),
-                                attcount/2);
+                                attcount/2, idOffset);
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
         return XML_ERROR_SYNTAX;
