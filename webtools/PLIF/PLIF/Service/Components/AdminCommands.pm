@@ -72,20 +72,20 @@ sub verifyInput {
 sub cmdSetup {
     my $self = shift;
     my($app) = @_;
-    my $result;
     # call all the setup handlers until one fails:
-    # the setupX methods can call $app->output->setupProgress('name of component');
+    # the setupX methods can call $app->output->setupProgress('component.subcomponent');
     $app->getPipingServiceList('setup.events.start')->setupStarting($app);
-    $result = $app->getSelectingServiceList('setup.configure')->setupConfigure($app);
-    if (not $result) {
-        $result = $app->getSelectingServiceList('setup.install')->setupInstall($app);
+    $app->output->setupProgress('setup');
+    my @result = $app->getSelectingServiceList('setup.configure')->setupConfigure($app);
+    if (not @result) {
+        @result = $app->getSelectingServiceList('setup.install')->setupInstall($app);
     }
     # report on the result
-    if (defined($result)) {
+    if (@result) {
         # if we failed, first report that then signal that
         # configuration has ended
-        $self->dump(9, "Failed to setup because argument '$result' was missing.");
-        $app->output->setupFailed($result);
+        $self->dump(9, "Failed to setup because argument '$result[0]' was missing.");
+        $app->output->setupFailed($result[0]);
         $app->getPipingServiceList('setup.events.end')->setupEnding($app);
     } else {
         # if it did not fail, then signal that configuration ended and
