@@ -273,9 +273,52 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 
 //NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
 //NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index)
-NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
 //NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
+
+#if 0
+NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
+#else
+NS_IMETHODIMP                                                      
+nsHTMLOptionElement::GetDisabled(PRBool* aDisabled)                             
+{                                                                  
+  nsHTMLValue val;                                                 
+  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::disabled, val);
+  *aDisabled = (NS_CONTENT_ATTR_NOT_THERE != rv);
+  return NS_OK;
+}         
+                                                         
+NS_IMETHODIMP                                                      
+nsHTMLOptionElement::SetDisabled(PRBool aDisabled)                       
+{                                                                  
+  nsresult rv = NS_OK;
+  nsHTMLValue empty(eHTMLUnit_Empty);
+  if (aDisabled) {
+    rv = mInner.SetHTMLAttribute(nsHTMLAtoms::disabled, empty, PR_TRUE);
+    if (NS_SUCCEEDED(rv)) {
+      nsIFormControlFrame* fcFrame = nsnull;
+      nsresult result = GetPrimaryFrame(fcFrame);
+      if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+        nsISelectControlFrame* selectFrame = nsnull;
+        result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
+        if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+          nsIContent * thisContent = nsnull;
+          if (NS_OK == this->QueryInterface(NS_GET_IID(nsIContent), (void**)&thisContent)) {
+            selectFrame->OptionDisabled(thisContent);
+          }
+          NS_RELEASE(thisContent);
+        }
+      }
+
+    }
+    return rv;
+  } else {
+    rv = mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
+  }
+
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP                                                      
 nsHTMLOptionElement::GetLabel(nsString& aValue)                             
