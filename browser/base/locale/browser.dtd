@@ -293,3 +293,6 @@
 <!ENTITY pageThemeNoTheme.accesskey "n">
 <!ENTITY pageThemePersistentOnly.label "Basic Theme">
 <!ENTITY pageThemePersistentOnly.accesskey "b">
+
+<!ENTITY pageThemeIcon.tooltip            "Switch to an alternate stylesheet">
+<!ENTITY pageReportIcon.tooltip            "Change popup blocking settings for this website">
