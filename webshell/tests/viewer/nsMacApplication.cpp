@@ -39,13 +39,6 @@ class nsMacViewer : public nsViewer {
     // From nsViewer
   public:
     virtual void AddMenu(nsIWidget* aMainWindow);
-    virtual void ShowConsole(WindowData* aWindata);
-    virtual void DoDebugRobot(WindowData* aWindata);
-    virtual void CopySelection(WindowData* aWindata);
-    virtual void Destroy(WindowData* wd);
-    virtual void CloseConsole();
-    virtual void Stop();
-    virtual void CrtSetDebug(PRUint32 aNewFlags);
 };
 
 void nsMacViewer::AddMenu(nsIWidget* aMainWindow)
@@ -53,57 +46,21 @@ void nsMacViewer::AddMenu(nsIWidget* aMainWindow)
 	PR_ASSERT(FALSE);
 }
 
-void nsMacViewer::ShowConsole(WindowData* aWindata)
-{
-	PR_ASSERT(FALSE);
-}
-
-void nsMacViewer::DoDebugRobot(WindowData* aWindata)
-{
-	PR_ASSERT(FALSE);
-}
-
-void nsMacViewer::CopySelection(WindowData* aWindata)
-{
-	PR_ASSERT(FALSE);
-}
-
-void nsMacViewer::Destroy(WindowData* wd)
-{
-	PR_ASSERT(FALSE);
-}
-
-void nsMacViewer::CloseConsole()
-{
-	PR_ASSERT(FALSE);
-}
-
-void nsMacViewer::Stop()
-{
-	PR_ASSERT(FALSE);
-}
-
-void nsMacViewer::CrtSetDebug(PRUint32 aNewFlags)
-{
-	PR_ASSERT(FALSE);
-}
-
-
 #pragma mark class nsMacApplication 
+
+// 
+// Prototype simple NGLayout application
+// 
 class	nsMacApplication : public LApplication {
 
-	nsMacViewer * fViewer;
+	nsMacViewer * mViewer;
 
 public:
-							nsMacApplication();		// constructor registers all PPobs
-		virtual				~nsMacApplication() {}		// stub destructor
-	
-		// this overriding function performs application functions
-		
+									 nsMacApplication();
+		virtual				~nsMacApplication();
+			
 		virtual Boolean		ObeyCommand(CommandT inCommand, void* ioParam);	
 	
-		// this overriding function returns the status of menu items
-		
 		virtual void		FindCommandStatus(CommandT inCommand,
 									Boolean &outEnabled, Boolean &outUsesMark,
 									Char16 &outMark, Str255 outName);
@@ -117,30 +74,32 @@ nsMacApplication::nsMacApplication()
 { 
 	// Register functions to create core PowerPlant classes
 	RegisterAllPPClasses();
-	fViewer = new nsMacViewer();
-	SetViewer(fViewer);
+	mViewer = new nsMacViewer();
+	SetViewer(mViewer);
 }
 
-void 
-nsMacApplication::StartUp()
+nsMacApplication::~nsMacApplication()
 {
+		delete mViewer;
+}
+
+void nsMacApplication::StartUp()
+{
+	nsIWidget *mainWindow = nsnull;
+ // nsDocLoader* dl = aViewer->SetupViewer(&mainWindow, 0, 0);
+
 	ObeyCommand(cmd_New, nil);		// EXAMPLE, create a new window
 }
 
-Boolean
-nsMacApplication::ObeyCommand(
-	CommandT	inCommand,
-	void		*ioParam)
+Boolean  nsMacApplication::ObeyCommand( CommandT	inCommand, void *ioParam)
 {
 	Boolean		cmdHandled = true;
 
 	switch (inCommand) {
-	
-		// Deal with command messages (defined in PP_Messages.h).
-		// Any that you don't handle will be passed to LApplication
- 			
+	 			
 		case cmd_New:
 										// EXAMPLE, create a new window
+
 			LWindow		*theWindow;
 			theWindow = LWindow::CreateWindow(window_Sample, this);	
 			theWindow->Show();
@@ -172,9 +131,6 @@ nsMacApplication::FindCommandStatus(
 {
 
 	switch (inCommand) {
-	
-		// Return menu item status according to command messages.
-		// Any that you don't handle will be passed to LApplication
 
 		case cmd_New:					// EXAMPLE
 			outEnabled = true;			// enable the New command
@@ -200,7 +156,6 @@ void main( void )
 	// Initialize standard Toolbox managers
 	UQDGlobals::InitializeToolbox( &qd );
 
-	// Initialize the memory manager
 	nsMacApplication * app = new nsMacApplication;
 	app->Run();
 	delete app;
