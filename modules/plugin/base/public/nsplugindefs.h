@@ -279,7 +279,7 @@ struct nsPluginEmbedPrint {
 };
 
 struct nsPluginPrint {
-    nsPluginMode      mode;     /* nsPluginMode_Full or nsPluginMode_Embedded */
+    PRUint16                  mode;         /* nsPluginMode_Full or nsPluginMode_Embedded */
     union
     {
         nsPluginFullPrint     fullPrint;	/* if mode is nsPluginMode_Full */
