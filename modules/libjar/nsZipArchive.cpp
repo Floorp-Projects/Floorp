@@ -431,7 +431,13 @@ PRInt32 nsZipArchive::BuildFileList()
   PRInt32  pos = 0L;
   while ( status == ZIP_OK )
   {
+#ifndef STANDALONE 
     if ( PR_Seek( mFd, pos, PR_SEEK_SET ) != (PRInt32)pos )
+#else
+    // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
+    // if successfull, otherwise a non-zero.
+    if ( PR_Seek( mFd, pos, PR_SEEK_SET ) != 0 )
+#endif
     {
       //-- couldn't seek to next position
       status = ZIP_ERR_CORRUPT;
