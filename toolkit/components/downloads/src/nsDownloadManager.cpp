@@ -1339,7 +1339,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
       gStoppingDownloads = PR_FALSE;
     }
   }
-  else if (nsCRT::strcmp(aTopic, "allertclickcallback") == 0)
+  else if (nsCRT::strcmp(aTopic, "alertclickcallback") == 0)
   {
     // Attempt to locate a browser window to parent the download manager to
     nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
