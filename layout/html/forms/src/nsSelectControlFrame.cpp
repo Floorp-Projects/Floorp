@@ -439,10 +439,12 @@ nsSelectControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 {
   if (mIsComboBox) {
     nsComboBoxInitData* initData = new nsComboBoxInitData();
-    initData->clipChildren = PR_TRUE;
-    float twipToPix;
-    aPresContext.GetTwipsToPixels(&twipToPix);
-    initData->mDropDownHeight = NSTwipsToIntPixels(mWidgetSize.height, twipToPix);
+    if (initData) {
+      initData->clipChildren = PR_TRUE;
+      float twipToPix;
+      aPresContext.GetTwipsToPixels(&twipToPix);
+      initData->mDropDownHeight = NSTwipsToIntPixels(mWidgetSize.height, twipToPix);
+    }
     return initData;
   } else {
     PRBool multiple;
