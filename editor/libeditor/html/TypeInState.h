@@ -76,13 +76,6 @@ protected:
 
 /* ----- inline method definitions ----- */
 inline
-TypeInState::TypeInState()
-{ 
-  NS_INIT_REFCNT();
-  Reset(); 
-};
-
-inline
 void TypeInState::Reset()
 {
   mBold = PR_FALSE;
@@ -93,6 +86,13 @@ void TypeInState::Reset()
   mIsSet = 0;
 };
 
+inline
+TypeInState::TypeInState()
+{
+  NS_INIT_REFCNT();
+  Reset();
+};
+ 
 inline 
 PRBool TypeInState::IsSet(PRUint32 aStyle)
 {
