@@ -88,8 +88,16 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMask
   ComputMetrics();
 
   mImageBits = (PRUint8*) new PRUint8[mSizeImage];
-  if (aMaskRequirements == nsMaskRequirements_kNeeds1Bit)
-    {
+
+  switch(aMaskRequirements)
+  {
+    case nsMaskRequirements_kNoMask:
+      mAlphaBits = nsnull;
+      mAlphaWidth = 0;
+      mAlphaHeight = 0;
+      break;
+
+    case nsMaskRequirements_kNeeds1Bit:
       mAlphaRowBytes = (aWidth + 7) / 8;
       mAlphaDepth = 1;
 
@@ -100,14 +108,16 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMask
       mAlphaWidth = aWidth;
       mAlphaHeight = aHeight;
       mAlphaPixmap = gdk_pixmap_new(nsnull, mWidth, mHeight, 1);
+      break;
 
-    }
-  else
-    {
+    case nsMaskRequirements_kNeeds8Bit:
       mAlphaBits = nsnull;
       mAlphaWidth = 0;
       mAlphaHeight = 0;
-    }
+      g_print("TODO: want an 8bit mask for an image..\n");
+      break;
+  }
+
   return NS_OK;
 }
 
@@ -125,7 +135,7 @@ void nsImageGTK::ComputMetrics()
 
 PRInt32  nsImageGTK::CalcBytesSpan(PRUint32  aWidth)
 {
-PRInt32 spanbytes;
+  PRInt32 spanbytes;
 
   spanbytes = (aWidth * mDepth) >> 5;
 

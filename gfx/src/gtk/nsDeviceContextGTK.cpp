@@ -33,8 +33,6 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-typedef unsigned char BYTE;
-
 nsDeviceContextGTK::nsDeviceContextGTK()
 {
   NS_INIT_REFCNT();
@@ -66,9 +64,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
   GdkVisual *vis;
 
-  for (PRInt32 cnt = 0; cnt < 256; cnt++)
-    mGammaTable[cnt] = cnt;
-  
   mWidget = aNativeWidget;
 
 // this is used for something odd.  who knows

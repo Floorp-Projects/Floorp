@@ -75,11 +75,3 @@ private:
 
 #endif /* nsDeviceContextGTK_h___ */
 
-
-
-
-
-
-
-
-
