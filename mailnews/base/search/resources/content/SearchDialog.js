@@ -23,6 +23,8 @@ var rdfServiceContractID    = "@mozilla.org/rdf/rdf-service;1";
 var searchSessionContractID = "@mozilla.org/messenger/searchSession;1";
 var folderDSContractID         = rdfDatasourcePrefix + "mailnewsfolders";
 var gSearchDatasource;
+var gSearchSession;
+var gCurrentFolder;
 
 var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
 var nsIMsgWindow = Components.interfaces.nsIMsgWindow;
@@ -144,7 +146,7 @@ function selectFolder(folder) {
             
     } else {
         // the URI of the folder is in the data attribute of the menuitem
-        folderResource =
+        var folderResource =
             folder.QueryInterface(Components.interfaces.nsIRDFResource);
         dump("Selecting " + folderResource.Value + "\n");
 
