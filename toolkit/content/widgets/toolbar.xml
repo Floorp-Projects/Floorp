@@ -147,9 +147,14 @@
         <setter>
           <![CDATA[
             // Remove all items after the last permanent child.
-            while (this.lastChild && this.lastChild != this.lastPermanentChild)
+            while (this.lastChild) {
+              if (this.lastChild == this.lastPermanentChild ||
+                  (this.lastChild.localName == "toolbarpaletteitem" &&
+                  this.lastChild.firstChild == this.lastPermanentChild))
+                break;
               this.removeChild(this.lastChild);
-            
+            }
+
             if (val == "__empty")
               return;
 
