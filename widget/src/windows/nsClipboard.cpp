@@ -38,8 +38,8 @@
 // interface definitions
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 
-static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
-static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
+//static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
+//static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
 NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
@@ -63,13 +63,11 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 }
 
 //-------------------------------------------------------------------------
-//
 // nsClipboard destructor
-//
 //-------------------------------------------------------------------------
 nsClipboard::~nsClipboard()
 {
-  NS_IF_RELEASE(mWindow);
+  //NS_IF_RELEASE(mWindow);
 
   //EmptyClipboard();
   if (nsnull != mDataObj) {
@@ -78,12 +76,11 @@ nsClipboard::~nsClipboard()
 
 }
 
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
+//-------------------------------------------------------------------------
+// * @param aIID The name of the class implementing the method
+// * @param _classiiddef The name of the #define symbol that defines the IID
+// * for the class (e.g. NS_ISUPPORTS_IID)
+//-------------------------------------------------------------------------
 nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
 
@@ -103,10 +100,7 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return rv;
 }
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 static UINT GetFormat(const nsString & aMimeStr)
 {
   UINT format = 0;
@@ -126,10 +120,7 @@ static UINT GetFormat(const nsString & aMimeStr)
   return format;
 }
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, IDataObject ** aDataObj)
 {
   if (nsnull == aTransferable) {
@@ -160,6 +151,8 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
       df->GetMimeType(mime);
       UINT format = GetFormat(mime);
 
+      // check here to see if we can the data back from global member
+      // XXX need IStream support, or file support
       FORMATETC fe;
       SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
 
@@ -178,9 +171,9 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
   // Get the transferable list of data flavors
   nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
   if (genericTrans) {
-    nsIFormatConverter * converter = nsnull;
-    genericTrans->GetConverter(&converter);
-    if (nsnull != converter) {
+    nsCOMPtr<nsIFormatConverter> converter;
+    genericTrans->GetConverter(getter_AddRefs(converter));
+    if (converter) {
       // Get list of output flavors
       converter->GetOutputDataFlavors(&dfList);
       if (nsnull != dfList) {
@@ -192,6 +185,8 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
             df->GetMimeType(mime);
             UINT format = GetFormat(mime);
 
+            // check here to see if we can the data back from global member
+            // XXX need IStream support, or file support
             FORMATETC fe;
             SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
 
@@ -204,7 +199,6 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
         }
         NS_RELEASE(dfList);
       }
-      NS_RELEASE(converter);
     }
   }
 
@@ -212,10 +206,7 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
   return NS_OK;
 }
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 {
   mIgnoreEmptyNotification = PR_TRUE;
@@ -249,12 +240,11 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 }
 
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen)
 {
+  // Allocate a new memory buffer and
+  // copy the data from global memory 
   nsresult  result = NS_ERROR_FAILURE;
   LPSTR     lpStr; 
   DWORD     dataSize;
@@ -275,6 +265,8 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLe
     *aData = data;
     result = NS_OK;
   } else {
+    // We really shouldn't ever get here
+    // but just in case
     *aData = nsnull;
     *aLen  = 0;
     LPVOID lpMsgBuf;
@@ -298,10 +290,8 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLe
 
   return result;
 }
-/**
-  * 
-  *
-  */
+
+//-------------------------------------------------------------------------
 nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aFormat, void ** aData, PRUint32 * aLen)
 {
   HGLOBAL   hglb; 
@@ -316,10 +306,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aForma
   return result;
 }
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aFormat, void ** aData, PRUint32 * aLen)
 {
   nsresult result = NS_ERROR_FAILURE;
@@ -328,9 +315,13 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
     return result;
   }
 
+  // XXX at the moment we only support global memory transfers
+  // It is here where we will add support for native images 
+  // and IStream
   FORMATETC fe;
   SET_FORMATETC(fe, aFormat, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
 
+  // Starting by querying for the data to see if we can get it as from global memory
   if (S_OK == aDataObject->QueryGetData(&fe)) {
     LPSTGMEDIUM stm;
     HRESULT hres = aDataObject->GetData(&fe, stm);
@@ -388,10 +379,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 }
 
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
                                             nsIWidget       * aWindow,
                                             nsITransferable * aTransferable)
@@ -402,7 +390,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
   if (nsnull == aTransferable) {
     return res;
   }
-  nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
+  nsCOMPtr<nsIGenericTransferable> genericTrans(do_QueryInterface(aTransferable));
   if (!genericTrans) {
     return res;
   }
@@ -444,10 +432,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 
 }
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 {
   // make sure we have a good transferable
@@ -457,10 +442,13 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferabl
 
   nsresult res;
 
+  // This makes sure we can use the OLE functionality for the clipboard
   IDataObject * dataObj;
   if (S_OK == ::OleGetClipboard(&dataObj)) {
+    // Use OLE IDataObject for clipboard operations
     res = GetDataFromDataObject(dataObj, nsnull, aTransferable);
   } else {
+    // do it the old manula way
     res = GetDataFromDataObject(nsnull, mWindow, aTransferable);
   }
   return res;
@@ -468,10 +456,7 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferabl
 }
 
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 static void PlaceDataOnClipboard(PRUint32 aFormat, char * aData, int aLength)
 {
   HGLOBAL     hGlobalMemory;
@@ -500,10 +485,7 @@ static void PlaceDataOnClipboard(PRUint32 aFormat, char * aData, int aLength)
   }  
 }
 
-/**
-  * 
-  *
-  */
+//-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 {
   // make sure we have a good transferable
@@ -519,7 +501,7 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
   nsISupportsArray * dfList;
   mTransferable->GetTransferDataFlavors(&dfList);
 
-  // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
+  // Walk through flavors and see which flavor is on the native clipboard,
   PRUint32 i;
   for (i=0;i<dfList->Count();i++) {
     nsIDataFlavor * df;
@@ -528,12 +510,16 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
       nsString mime;
       df->GetMimeType(mime);
 
+      // convert mime to native format identifier
       UINT format = GetFormat(mime);
 
       void   * data;
       PRUint32 dataLen;
 
+      // Get the data as a bunch-o-bytes from the clipboard
       mTransferable->GetTransferData(df, &data, &dataLen);
+
+      // now place it on the Clipboard
       if (nsnull != data) {
         PlaceDataOnClipboard(format, (char *)data, dataLen);
       }
