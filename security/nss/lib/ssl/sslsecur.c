@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.8 2001/03/16 23:26:05 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.9 2001/03/20 00:39:02 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -221,10 +221,10 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
 
     ss->firstHsDone = PR_FALSE;
     if ( asServer ) {
-	ss->securityHandshake = ssl2_BeginServerHandshake;
+	ss->handshake = ssl2_BeginServerHandshake;
 	ss->handshaking = sslHandshakingAsServer;
     } else {
-	ss->securityHandshake = ssl2_BeginClientHandshake;
+	ss->handshake = ssl2_BeginClientHandshake;
 	ss->handshaking = sslHandshakingAsClient;
     }
     ss->nextHandshake       = 0;
