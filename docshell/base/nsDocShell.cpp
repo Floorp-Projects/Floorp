@@ -3558,6 +3558,7 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
 
     // Determine if this type of load should update history   
     switch (mLoadType) {
+    case LOAD_RELOAD_CHARSET_CHANGE:  //don't perserve history in charset reload
     case LOAD_NORMAL_REPLACE:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
