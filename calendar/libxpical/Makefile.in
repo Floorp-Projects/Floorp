@@ -91,5 +91,9 @@ endif
 #DEFINES += -DICAL_DEBUG 
 #-DICAL_DEBUG_ALL
 
+#ifdef ENABLE_TESTS
+DIRS            += tests
+#endif
+
 include $(topsrcdir)/config/rules.mk
 
