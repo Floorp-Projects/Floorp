@@ -289,6 +289,7 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   ::SetTextColor(aNewDC, RGB(0, 0, 0));
   ::SetBkMode(aNewDC, TRANSPARENT);
   ::SetPolyFillMode(aNewDC, WINDING);
+  ::SetStretchBltMode(aNewDC, COLORONCOLOR);
 
   if (nsnull != aOldDC)
   {
