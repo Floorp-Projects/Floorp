@@ -638,6 +638,7 @@ void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext, nscolor aColor)
     else {
       mCachedOutlineWidth = CalcCoord(mOutlineWidth, borderWidths, 3);
     }
+    mHasCachedOutline = PR_TRUE;
   }
   else {
     mHasCachedOutline = PR_FALSE;
@@ -659,6 +660,12 @@ PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
         }
         return NS_STYLE_HINT_VISUAL;
       }
+    }
+    if ((mOutlineWidth != aOther.mOutlineWidth) ||
+        (mOutlineStyle != aOther.mOutlineStyle) ||
+        (mOutlineColor != aOther.mOutlineColor) ||
+        (mBorderRadius != aOther.mBorderRadius)) {
+      return NS_STYLE_HINT_VISUAL;
     }
     return NS_STYLE_HINT_NONE;
   }
