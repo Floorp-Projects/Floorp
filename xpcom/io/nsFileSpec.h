@@ -138,7 +138,7 @@
 
 #ifdef XP_MAC
 #include <Files.h>
-#elif defined(XP_UNIX) || defined (XP_OS2)
+#elif defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS)
 #include <dirent.h>
 #elif defined(XP_PC)
 #include "prio.h"
@@ -709,7 +709,7 @@ class NS_COM nsDirectoryIterator
 	    nsFileSpec              mCurrent;
 	    PRBool                  mExists;
 	      
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
         DIR*                    mDir;
 #elif defined(XP_PC)
         PRDir*                  mDir; // XXX why not use PRDir for Unix too?

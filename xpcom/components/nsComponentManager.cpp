@@ -33,6 +33,11 @@
 #include "prcmon.h"
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
 
+#ifdef XP_BEOS
+#include <FindDirectory.h>
+#include <Path.h>
+#endif
+
 // Logging of debug output
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #include "prlog.h"
@@ -255,7 +260,23 @@ nsComponentManagerImpl::PlatformInit(void)
         }
     }
 #endif /* XP_UNIX */
-    
+
+#ifdef XP_BEOS
+    BPath p;
+    const char *settings = "/boot/home/config/settings";
+    if(find_directory(B_USER_SETTINGS_DIRECTORY, &p) == B_OK)
+        settings = p.Path();
+    char settingsMozillaDir[1024];
+    PR_snprintf(settingsMozillaDir, sizeof(settingsMozillaDir),
+                "%s/" NS_MOZILLA_DIR_NAME, settings);
+    if (PR_Access(settingsMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS) {
+        PR_MkDir(settingsMozillaDir, NS_MOZILLA_DIR_PERMISSION);
+        printf("nsComponentManager: Creating Directory %s\n", settingsMozillaDir);
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("nsComponentManager: Creating Directory %s", settingsMozillaDir));
+    }
+#endif
+
     // Open the App Components registry. We will keep it open forever!
     rv = mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
     if (NS_FAILED(rv)) return rv;
@@ -1534,7 +1555,7 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
     if (old != NULL && old->dll != NULL)
     {
         if (old->dll->GetPersistentDescriptorString() != NULL &&
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
             PL_strcasecmp(old->dll->GetPersistentDescriptorString(), aLibrary)
 #else
             PL_strcmp(old->dll->GetPersistentDescriptorString(), aLibrary)

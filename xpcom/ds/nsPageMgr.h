@@ -25,9 +25,14 @@
 #include "nscore.h"
 #include "nsAutoLock.h"
 #include "prlog.h"
+
 #ifdef XP_MAC
 #include <Types.h>
 #include <Memory.h>
+#endif
+
+#if defined(XP_BEOS)
+#include <OS.h>
 #endif
 
 /*******************************************************************************
@@ -181,6 +186,10 @@ class nsPageMgr : public nsIPageManager, public nsIAllocator {
     PRUint8*            mSegMap;
     nsSegmentDesc*      mSegTable;
     PRWord              mSegTableCount;
+#endif
+
+#if defined(XP_BEOS)
+	area_id				mAid;
 #endif
 };
 

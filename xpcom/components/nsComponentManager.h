@@ -201,6 +201,11 @@ protected:
 #define NS_MOZILLA_DIR_PERMISSION	00700
 #endif /* XP_UNIX */
 
+#ifdef XP_BEOS
+#define NS_MOZILLA_DIR_NAME		"mozilla"
+#define NS_MOZILLA_DIR_PERMISSION	00700
+#endif /* XP_BEOS */
+
 /**
  * When using the registry we put a version number in it.
  * If the version number that is in the registry doesn't match

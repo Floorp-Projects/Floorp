@@ -641,7 +641,7 @@ POS_TYPE FILE_BUFFER_TYPE::seekpos(pos_type sp, IOS_BASE::openmode)
 {
     if (!mFileDesc || sp==pos_type(-1))
         return -1;
-#if defined(XP_PC) || defined(XP_UNIX)
+#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
     PRInt32 position = sp;
 #else
     PRInt32 position = sp.offset();
