@@ -205,7 +205,13 @@ void InitSequence(HINSTANCE hInstance)
 
 
   // Create the Font for Intro/End page headers.
+#ifdef MOZ_THUNDERBIRD
+  // The title text "Welcome to Mozilla Thunderbird" is too large to fit on the screen with a 14 pt
+  // font. For now, use a 12 pt font to prevent the text from getting clipped because it is too big.
+  sgInstallGui.welcomeTitleFont = MakeFont(TEXT("Trebuchet MS Bold"), 12, FW_BOLD);
+#else
   sgInstallGui.welcomeTitleFont = MakeFont(TEXT("Trebuchet MS Bold"), 14, FW_BOLD);
+#endif
 
   // Start the Wizard.
   PropertySheet(&psh);
