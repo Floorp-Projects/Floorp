@@ -3252,8 +3252,8 @@ public:
 
     void Indent();
     void IndentSelection(CEditSelection& selection);
-    void IndentContainer( CEditContainerElement *pContainer,
-            CEditListElement *pList );
+    // Returns the new list in pList if one was created
+    void IndentContainer( CEditContainerElement *pContainer, CEditListElement*& pList );
     XP_Bool Outdent(); /* Returns TRUE if Outdent succeeded */
     XP_Bool OutdentSelection(CEditSelection& selection);
     void OutdentContainer( CEditContainerElement *pContainer,

@@ -1673,6 +1673,16 @@ void CEditBuffer::SetInsertPoint( CEditLeafElement* pElement, int iOffset, XP_Bo
     SetCaret();
 }
 
+void CEditBuffer::SetInsertPoint(CEditInsertPoint& insertPoint) {
+    CEditSelection selection(insertPoint, insertPoint, FALSE);
+    SetSelection(selection);
+}
+
+void CEditBuffer::SetInsertPoint(CPersistentEditInsertPoint& insertPoint) {
+    CEditInsertPoint p = PersistentToEphemeral(insertPoint);
+    SetInsertPoint(p);
+}
+
 //
 // Returns true if the insert point doesn't really exist.
 //
@@ -3473,10 +3483,9 @@ void CEditBuffer::Indent()
     if( !pContainer )
         return;
 
+    // This will return the new list if one was created
     IndentContainer( pContainer, pList );
 
-    // Get the list elemement again - it might have changed
-    m_pCurrent->FindList( pContainer, pList );
     CEditElement *pStart = pContainer;
     CEditElement *pEnd = pContainer;
     XP_ASSERT(pContainer);
@@ -3491,8 +3500,7 @@ void CEditBuffer::Indent()
     Relayout( pStart, 0, pEnd->GetLastMostChild() );
 }
 
-void CEditBuffer::IndentContainer( CEditContainerElement *pContainer,
-        CEditListElement *pList )
+void CEditBuffer::IndentContainer( CEditContainerElement *pContainer, CEditListElement*& pList )
 {
     VALIDATE_TREE(this);
 
@@ -3663,7 +3671,8 @@ void CEditBuffer::IndentContainer( CEditContainerElement *pContainer,
         pEle->InsertAfter( pContainer );
         pContainer->Unlink();
         pContainer->InsertAsFirstChild( pEle );
-        return;
+        // Return the new list created
+        pList = (CEditListElement*)pEle;
     }
 }
 
@@ -4006,17 +4015,24 @@ void CEditBuffer::MorphContainer( TagType t )
                 pList = NULL;
             }
         }
+
         if( !pList && (t == P_LIST_ITEM || t == P_DESC_TITLE || t == P_DESC_TEXT ) )
         {
             // We are changing to a list item that must be in a list container,
             //  but we are not currently in a list, so indent to create appropriate list
             // First reset container type to requested, since TerminateList probably changed it
             pContainer->SetType( t );
-            IndentContainer(pContainer, NULL);   
+            IndentContainer(pContainer, pList);   
         }
 
         // Need to relayout from previous line.  Line break distance is wrong.
-        Relayout( pContainer, 0, 0 );
+        CEditElement *pStart;
+        if( pList ) 
+            pStart = pList;
+        else
+            pStart = pContainer;
+
+        Relayout( pStart, 0, 0 );
     }
 }
 
@@ -4035,22 +4051,32 @@ void CEditBuffer::MorphContainerSelection( TagType t, CEditSelection& selection 
 
     pCurrent = pBegin;
     XP_Bool bDone = FALSE;
+    CEditListElement *pList = NULL;
+    CEditListElement *pPrevList = NULL;
     do {
-        pContainer = pCurrent->FindContainer();
+        // Get the container and list  
+        pCurrent->FindList( pContainer, pList );
+        XP_ASSERT(pContainer);
         pContainer->SetType( t );
         // TODO: CHECK THE EFFECTS OF <BR> AFTER A LIST ITEM
-        if( pContainer->GetParent()->IsList() )
+        if( pList )
         {
-            // We are changing an item in a list to something other than
+            // If we are changing an item in a list to something other than
             //   a listitem - this means terminate the list
             if( t != P_LIST_ITEM )
                 TerminateList(pContainer);
+            else
+                pPrevList = pList;
         }
         else if( t == P_LIST_ITEM )
         {
             // We are changing to a list item but
-            //  we are not in a list, so create a default UNUM list
-            IndentContainer(pContainer, NULL);   
+            //  we are not in a list.
+            // If pPrevList is NULL, this creates a default UNUM list,
+            //   which is returned to us.
+            // If we created one before or previous container was already
+            //  in a list, this will insert the container into that list
+            IndentContainer(pContainer, pPrevList);
         }
         bDone = (pEnd == pCurrent );    // For most cases
         pCurrent = pCurrent->NextLeafAll();
@@ -8993,14 +9019,11 @@ void CEditBuffer::PrintDocumentHead( CPrintState *pPrintState ){
             // title is parsed. See RFC 2070.
             PrintMetaData( pPrintState );
 
-            // Only print the title if it exists and is not empty.
-
-            if ( m_pTitle && *m_pTitle ) {
-                pPrintState->m_pOut->Printf("   <TITLE>");
+            // Bug 105787: Print the TITLE tag even if it is not empty (HTML 4.0 requires it)
+            pPrintState->m_pOut->Printf("   <TITLE>");
+            if ( m_pTitle && *m_pTitle )
                 edt_PrintWithEscapes( pPrintState, m_pTitle, FALSE );
-                pPrintState->m_pOut->Printf(
-                              "</TITLE>\n");
-            }
+            pPrintState->m_pOut->Printf("</TITLE>\n");
         }
 
         // Print BASE TARGET if nescessary
@@ -11506,16 +11529,6 @@ void CEditBuffer::SetSelection(CEditSelection& selection)
             selection.m_end.m_pElement, selection.m_end.m_iPos,
             selection.m_bFromStart);
     }
-}
-
-void CEditBuffer::SetInsertPoint(CEditInsertPoint& insertPoint) {
-    CEditSelection selection(insertPoint, insertPoint, FALSE);
-    SetSelection(selection);
-}
-
-void CEditBuffer::SetInsertPoint(CPersistentEditInsertPoint& insertPoint) {
-    CEditInsertPoint p = PersistentToEphemeral(insertPoint);
-    SetInsertPoint(p);
 }
 
 // Use data from supplied selection, or get from current selection if supplied is empty

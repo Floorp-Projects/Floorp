@@ -224,9 +224,13 @@ void EDT_PerformEvent(MWContext *pContext, char* pEvent, char* pDocURL, XP_Bool 
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
 #ifdef EDITOR_JAVA
     if ( EditorPluginManager_PluginsExist() ) {
+        // We must force JavaScript on with this, else we fail to
+        //   get t_object because JS is normally OFF for editor
+        pContext->forceJSEnabled = TRUE;
         netscape_javascript_JSObject *t_object=LJ_GetMochaWindow(pContext);
         ((CEditorPluginInterface*) pEditBuffer->GetPlugins())->Perform(pEvent, pDocURL, bCanChangeDocument, bCanCancel,
             doneFunction, hook, t_object);
+        pContext->forceJSEnabled = FALSE;
         return;
     }
 #endif
