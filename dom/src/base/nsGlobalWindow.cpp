@@ -5616,6 +5616,15 @@ NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
   if (NS_FAILED(rv) || prefs == nsnull)
     return rv;
 
+#ifdef MOZ_PHOENIX
+  PRBool cookiesEnabled;
+  rv = prefs->GetBoolPref("network.cookie.enable", &cookiesEnabled);
+  
+  if (NS_FAILED(rv))
+    return rv;
+  
+  *aCookieEnabled = cookiesEnabled;
+#else
   PRInt32 cookieBehaviorPref;
   rv = prefs->GetIntPref("network.cookie.cookieBehavior", &cookieBehaviorPref);
 
@@ -5624,6 +5633,8 @@ NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
 
   const PRInt32 DONT_USE = 2;
   *aCookieEnabled = (cookieBehaviorPref != DONT_USE);
+#endif
+
   return rv;
 }
 
