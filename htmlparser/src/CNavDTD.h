@@ -617,6 +617,7 @@ protected:
 
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
+    PRBool              mHasOpenHead;
     nsDeque             mTokenDeque;
     nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
