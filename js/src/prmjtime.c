@@ -66,7 +66,7 @@
 #include <UTCUtils.h>
 #include <Power.h>
 #include <CodeFragments.h>
-#ifndef TARGET_CARBON
+#if !TARGET_CARBON
 #include <Traps.h>
 #endif
 #endif
@@ -158,7 +158,7 @@ static void MyReadLocation(MachineLocation * loc)
         ReadLocation(&storedLoc);
         /* install a sleep queue routine, so that when the machine wakes up, time can be recomputed. */
         if (&SleepQInstall != (void*)kUnresolvedCFragSymbolAddress
-#ifndef TARGET_CARBON
+#if !TARGET_CARBON
             && NGetTrapAddress(0xA28A, OSTrap) != NGetTrapAddress(_Unimplemented, ToolTrap)
 #endif
            ) {
