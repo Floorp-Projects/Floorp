@@ -25,7 +25,7 @@
 /*	You probably only want to use this for debugging. It's useful to see leaks
 	with ZoneRanger.
 */
- #define MALLOC_IS_NEWPTR		1	
+/* #define MALLOC_IS_NEWPTR		1	*/
 
 /*	Turn this on to check for block overwrites, heap corruption, bad frees, etc */ 
 #define	DEBUG_HEAP_INTEGRITY	DEBUG
