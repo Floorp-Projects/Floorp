@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -41,6 +41,7 @@
 #include "nsMsgCompCID.h"
 #include "nsIMsgComposeService.h"
 #include "nsIMsgCompose.h"
+#include "nsMsgI18N.h"
 
 //
 // Header strings...
@@ -59,6 +60,8 @@ int                 mime_decompose_file_init_fn ( void *stream_closure, MimeHead
 int                 mime_decompose_file_output_fn ( char *buf, PRInt32 size, void *stream_closure );
 int                 mime_decompose_file_close_fn ( void *stream_closure );
 extern int          MimeHeaders_build_heads_list(MimeHeaders *hdrs);
+
+static nsString& mime_decode_string(const char* str /*, PRBool toHtml*/);
 
 // CID's
 static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);       
@@ -285,6 +288,24 @@ mime_dump_attachments ( attachmentList );
   return rv;
 }
 
+static nsString& mime_decode_string(const char* str /*, 
+                                    PRBool toHtml = PR_FALSE */)
+{
+    static nsString decodedString;
+    nsString encodedCharset;
+    nsMsgI18NDecodeMimePartIIStr(nsString(str), encodedCharset,
+                                 decodedString);
+#if 0
+    if (toHtml)
+    {
+        nsString htmlString;
+        nsMsgI18NConvertToEntity(decodedString, &htmlString);
+        decodedString = htmlString;
+    }
+#endif
+    return decodedString;
+}
+
 nsIMsgCompFields * 
 CreateCompositionFields(const char        *from,
 									      const char        *reply_to,
@@ -315,21 +336,22 @@ CreateCompositionFields(const char        *from,
   NS_ADDREF(cFields);
 
   // Now set all of the passed in stuff...
-  cFields->SetFrom(nsString2(from).GetUnicode());
-  cFields->SetSubject(nsString2(subject).GetUnicode());
-  cFields->SetReplyTo(nsString2(reply_to).GetUnicode());
-  cFields->SetTo(nsString2(to).GetUnicode());
-  cFields->SetCc(nsString2(cc).GetUnicode());
-  cFields->SetBcc(nsString2(bcc).GetUnicode());
-  cFields->SetFcc(nsString2(fcc).GetUnicode());
-  cFields->SetNewsgroups(nsString2(newsgroups).GetUnicode());
-  cFields->SetFollowupTo(nsString2(followup_to).GetUnicode());
-  cFields->SetOrganization(nsString2(organization).GetUnicode());
-  cFields->SetReferences(nsString2(references).GetUnicode());
-  cFields->SetOtherRandomHeaders(nsString2(other_random_headers).GetUnicode());
-  cFields->SetPriority(nsString2(priority).GetUnicode());
-  cFields->SetAttachments(nsString2(attachment).GetUnicode());
-  cFields->SetNewspostUrl(nsString2(newspost_url).GetUnicode());
+  cFields->SetCharacterSet(nsString("UTF-8").GetUnicode());
+  cFields->SetFrom(mime_decode_string(from).GetUnicode());
+  cFields->SetSubject(mime_decode_string(subject).GetUnicode());
+  cFields->SetReplyTo(mime_decode_string(reply_to).GetUnicode());
+  cFields->SetTo(mime_decode_string(to).GetUnicode());
+  cFields->SetCc(mime_decode_string(cc).GetUnicode());
+  cFields->SetBcc(mime_decode_string(bcc).GetUnicode());
+  cFields->SetFcc(mime_decode_string(fcc).GetUnicode());
+  cFields->SetNewsgroups(mime_decode_string(newsgroups).GetUnicode());
+  cFields->SetFollowupTo(mime_decode_string(followup_to).GetUnicode());
+  cFields->SetOrganization(mime_decode_string(organization).GetUnicode());
+  cFields->SetReferences(mime_decode_string(references).GetUnicode());
+  cFields->SetOtherRandomHeaders(mime_decode_string(other_random_headers).GetUnicode());
+  cFields->SetPriority(mime_decode_string(priority).GetUnicode());
+  cFields->SetAttachments(mime_decode_string(attachment).GetUnicode());
+  cFields->SetNewspostUrl(mime_decode_string(newspost_url).GetUnicode());
 
   return cFields;
 }
@@ -1317,42 +1339,10 @@ mime_parse_stream_complete (nsMIMESession *stream)
         {
           mime_insert_forwarded_message_headers(&body, mdd->headers, editorType,
                                                 mdd->mailcharset);
-          bodyLen = nsCRT::strlen(body);
         }
-
-        //
-        // RICHIE - once again, we need to know what we should be converting
-        // to in order to do the right thing here!!!
-        //
-        // Now do conversion to UTF-8???
-        char      *newBody = NULL;
-        PRInt32   newBodyLen;
-        PRInt32 res = MIME_ConvertCharset(PR_TRUE, mdd->mailcharset, "UTF-8", body, 
-                                          nsCRT::strlen(body), &newBody, &newBodyLen, NULL);
-		    if ( (NS_SUCCEEDED(res)) && (newBody && newBody != body))
-		    {
-			    PR_FREEIF(body);
-          // RICHIE SHERRY
-          //
-          // Insert the META tag to tell Gecko it's UTF-8...
-          //
-          nsString      aNewBody("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">");
-          aNewBody.Append(newBody);
-
-          PR_FREEIF(newBody);
-
-          fields->SetCharacterSet(nsString("UTF-8").GetUnicode());
-          fields->SetBody(aNewBody.GetUnicode());
-          // RICHIE SHERRY
-          // RICHIE SHERRY OLD STUFF body = newBody;
-          // RICHIE SHERRY OLD STUFF bodyLen = newBodyLen;
-		    }
-        else
-        {
-          fields->SetCharacterSet(nsString(mdd->mailcharset).GetUnicode());
-          fields->SetBody(nsString(body).GetUnicode());
-        }
-
+        // setting the charset while we were creating the composition fields
+        // fields->SetCharacterSet(nsString("UTF-8").GetUnicode());
+        fields->SetBody(mime_decode_string(body).GetUnicode());
         PR_FREEIF(body);
       } // end if (messageBody)
   
