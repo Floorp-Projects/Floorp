@@ -1349,7 +1349,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 //printf("msg: %d\n", msg);
     switch (msg) {
 
-        case WM_INITMENU: {
+#if 0
+    case WM_INITMENU: {
           int x = 0;
           printf("WM_INITMENU\n");
           } break;
@@ -1431,7 +1432,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
           }
           } break;
-
+#endif
         case WM_COMMAND: {
           WORD wNotifyCode = HIWORD(wParam); // notification code 
           if (wNotifyCode == 0) { // Menu selection
