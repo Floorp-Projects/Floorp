@@ -51,7 +51,7 @@
   <button id="ok-button" label="&ok.label;"
      oncommand="doOK();" /> 
   <button id="help-button" label="&help.label;"
-    oncommand="openHelp('chrome://help/content/help.xul?exp_crl');" /> 
+    oncommand="openHelp('exp_crl');" /> 
   </hbox>
 </vbox>
 </window>
