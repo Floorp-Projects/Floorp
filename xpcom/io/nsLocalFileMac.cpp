@@ -1390,24 +1390,34 @@ nsLocalFile::GetPath(char **_retval)
 
 nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy )
 {
-		nsresult  rv = ResolveAndStat( PR_TRUE );
+	nsresult  rv = ResolveAndStat( PR_TRUE );
 	if ( NS_FAILED( rv ) )
 		return rv;
+
+	OSErr macErr;
+	FSSpec srcSpec = mResolvedSpec;
+	Str255 newPascalName;
+	
+	// If newParentDir == nsnull, it's a simple rename
+	if ( !newParentDir )
+	{
+	    NS_ENSURE_ARG( newName );
+	    myPLstrncpy( newPascalName, newName, 255 );
+	    macErr = ::FSpRename( &srcSpec, newPascalName );
+	    return MacErrorMapper( macErr );
+	}
+	
 	nsCOMPtr<nsILocalFileMac> destDir( do_QueryInterface( newParentDir ));
+	FSSpec destSpec;
 	
 	PRBool isDirectory;
 	rv = newParentDir->IsDirectory( &isDirectory );
 	if ( NS_FAILED( rv ) )
 		return rv;
-	FSSpec srcSpec;
-	FSSpec destSpec;
-	srcSpec = mResolvedSpec;
 	rv = destDir->GetResolvedFSSpec( &destSpec );
 	if ( NS_FAILED( rv ) )
 		return rv;		
 
-	OSErr macErr;
-	Str255 newPascalName;
 	if ( newName )
 		myPLstrncpy( newPascalName, newName, 255);
 	else
