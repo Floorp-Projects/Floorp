@@ -430,12 +430,21 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
     // Since we're automatically downloading, we don't get the file picker's 
     // logic to check for existing files, so we need to do that here.
     //
-    // Note - this code is identical to that in nsHelperAppDlg.js. 
+    // Note - this code is identical to that in
+    //   browser/components/downloads/content/nsHelperAppDlg.js.
     // If you are updating this code, update that code too! We can't share code
     // here since that code is called in a js component. 
     while (file.exists()) {
-      parts = /(-\d+)?(\.[^.]+)?$/.test(file.leafName);
-      file.leafName = RegExp.leftContext + (RegExp.$1 - 1) + RegExp.$2;
+      var parts = /.+-(\d+)(\..*)?$/.exec(file.leafName);
+      if (parts) {
+        file.leafName = file.leafName.replace(/((\d+)\.)|((\d+)$)/,
+                                              function (str, dot, dotNum, noDot, noDotNum, pos, s) {
+                                                return (parseInt(str) + 1) + (dot ? "." : "");
+                                              });
+      }
+      else {
+        file.leafName = file.leafName.replace(/\.|$/, "-1$&");
+      }
     }
 
   }
