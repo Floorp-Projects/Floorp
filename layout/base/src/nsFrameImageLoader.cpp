@@ -192,12 +192,13 @@ nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
   pfd->mClosure = aClosure;
   pfd->mNext = mFrames;
   mFrames = pfd;
-  if ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE |
-       NS_IMAGE_LOAD_STATUS_ERROR) & mImageLoadStatus) {
+  if (aCallBack &&
+      ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE |
+        NS_IMAGE_LOAD_STATUS_ERROR) & mImageLoadStatus)) {
     // Fire notification callback right away so that caller doesn't
     // miss it...
-    (*pfd->mCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
-                      mImageLoadStatus);
+    (*aCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
+                 mImageLoadStatus);
   }
   return NS_OK;
 }
