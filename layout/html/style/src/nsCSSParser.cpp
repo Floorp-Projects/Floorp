@@ -1585,11 +1585,12 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         if (0 == (dataMask & SEL_MASK_PELEM)) {
           dataMask |= SEL_MASK_PELEM;
           aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
+          NS_RELEASE(pseudo);
 
           // ensure selector ends here, must be followed by EOF, space, '{' or ','
           if (GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
             if ((eCSSToken_WhiteSpace == mToken.mType) || 
-                (mToken.IsSymbol('{') || mToken.IsSymbol(','))) {
+                (mToken.IsSymbol('\{') || mToken.IsSymbol(','))) {
               UngetToken();
               return PR_TRUE;
             }
