@@ -174,8 +174,6 @@ protected:
                          nsIFrame* aTargetFrame,
                          nsMouseScrollEvent* msEvent, PRInt32 numLines,
                          PRBool scrollPage, PRBool aUseTargetFrame);
-  nsresult DoTreeScroll(nsIPresContext* inPresContext, PRInt32 inNumLines,
-                         PRBool inScrollPage, nsITreeFrame* inTreeFrame);
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefService();
   nsresult ChangeTextSize(PRInt32 change);

@@ -684,9 +684,13 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult ret = NS_OK;
   nsIDOMEvent* domEvent = nsnull;
 
+  PRBool externalDOMEvent = PR_FALSE;
+    
   if (NS_EVENT_FLAG_INIT & aFlags) {
     if (!aDOMEvent) {
       aDOMEvent = &domEvent;
+    } else {
+      externalDOMEvent = PR_TRUE;
     }
     aEvent->flags = aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
@@ -723,7 +727,7 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event,
     // release here.
-    if (nsnull != *aDOMEvent) {
+    if (!externalDOMEvent && nsnull != *aDOMEvent) {
       if (0 != (*aDOMEvent)->Release()) {
         // Okay, so someone in the DOM loop (a listener, JS object)
         // still has a ref to the DOM Event but the internal data

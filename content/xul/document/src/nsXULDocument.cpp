@@ -2388,9 +2388,17 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 {
   nsresult ret = NS_OK;
   nsIDOMEvent* domEvent = nsnull;
+  PRBool externalDOMEvent = PR_FALSE;
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
-    aDOMEvent = &domEvent;
+    if (aDOMEvent) {
+      if (*aDOMEvent) {
+        externalDOMEvent = PR_TRUE;   
+      }
+    }
+    else {
+      aDOMEvent = &domEvent;
+    }
     aEvent->flags = aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
   }
@@ -2414,7 +2422,7 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
-    if (nsnull != *aDOMEvent) {
+    if (nsnull != *aDOMEvent && !externalDOMEvent) {
       nsrefcnt rc;
       NS_RELEASE2(*aDOMEvent, rc);
       if (0 != rc) {

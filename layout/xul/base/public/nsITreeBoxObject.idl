@@ -46,6 +46,7 @@ interface nsITreeBoxObject : nsISupports
 {
   void ensureIndexIsVisible(in long rowIndex);
   void scrollToIndex(in long rowIndex);
+  void scrollByLines(in long numLines);
 
   nsIDOMElement getNextItem(in nsIDOMElement startItem, in long delta);
   nsIDOMElement getPreviousItem(in nsIDOMElement startItem, in long delta);

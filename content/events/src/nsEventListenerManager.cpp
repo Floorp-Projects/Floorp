@@ -2342,7 +2342,7 @@ nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
   nsAutoString str(aEventType);
   if (!aEvent && !str.EqualsIgnoreCase("MouseEvents") && !str.EqualsIgnoreCase("KeyEvents") &&
       !str.EqualsIgnoreCase("HTMLEvents") && !str.EqualsIgnoreCase("MutationEvents") &&
-      !str.EqualsIgnoreCase("Events")) {
+      !str.EqualsIgnoreCase("MouseScrollEvents") && !str.EqualsIgnoreCase("Events")) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 

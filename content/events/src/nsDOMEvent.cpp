@@ -166,6 +166,10 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
       mEvent = PR_NEWZAP(nsMouseEvent);
       mEvent->eventStructType = NS_MOUSE_EVENT;
     }
+    else if (eventType.EqualsIgnoreCase("MouseScrollEvents")) {
+      mEvent = PR_NEWZAP(nsMouseScrollEvent);
+      mEvent->eventStructType = NS_MOUSE_SCROLL_EVENT;
+    }
     else if (eventType.EqualsIgnoreCase("KeyEvents")) {
       mEvent = PR_NEWZAP(nsKeyEvent);
       mEvent->eventStructType = NS_KEY_EVENT;
@@ -506,12 +510,19 @@ nsDOMEvent::GetDetail(PRInt32* aDetail)
       case NS_MOUSE_RIGHT_BUTTON_DOWN:
       case NS_MOUSE_RIGHT_CLICK:
       case NS_MOUSE_RIGHT_DOUBLECLICK:
+      case NS_USER_DEFINED_EVENT:
         *aDetail = ((nsMouseEvent*)mEvent)->clickCount;
         break;
       default:
         break;
       }
       return NS_OK;
+    }
+
+    case NS_MOUSE_SCROLL_EVENT:
+    {
+      *aDetail = ((nsMouseScrollEvent*)mEvent)->delta;
+      break;
     }
 
     default:
@@ -1212,7 +1223,7 @@ nsDOMEvent::InitUIEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg,
 
 NS_IMETHODIMP
 nsDOMEvent::InitMouseEvent(const nsAReadableString & aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
-                           nsIDOMAbstractView *aViewArg, PRUint16 aDetailArg, PRInt32 aScreenXArg, 
+                           nsIDOMAbstractView *aViewArg, PRInt32 aDetailArg, PRInt32 aScreenXArg, 
                            PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, 
                            PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, 
                            PRBool aMetaKeyArg, PRUint16 aButtonArg, nsIDOMEventTarget *aRelatedTargetArg)
@@ -1221,22 +1232,28 @@ nsDOMEvent::InitMouseEvent(const nsAReadableString & aTypeArg, PRBool aCanBubble
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
   mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
 
-  if (mEvent->eventStructType == NS_MOUSE_EVENT) {
-    nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, mEvent);
-    mouseEvent->isControl = aCtrlKeyArg;
-    mouseEvent->isAlt = aAltKeyArg;
-    mouseEvent->isShift = aShiftKeyArg;
-    mouseEvent->isMeta = aMetaKeyArg;
-    mouseEvent->point.x = aClientXArg;
-    mouseEvent->point.y = aClientYArg;
-    mouseEvent->refPoint.x = aScreenXArg;
-    mouseEvent->refPoint.y = aScreenYArg;
+  if (mEvent->eventStructType == NS_MOUSE_EVENT || mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
+    nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, mEvent);
+    inputEvent->isControl = aCtrlKeyArg;
+    inputEvent->isAlt = aAltKeyArg;
+    inputEvent->isShift = aShiftKeyArg;
+    inputEvent->isMeta = aMetaKeyArg;
+    inputEvent->point.x = aClientXArg;
+    inputEvent->point.y = aClientYArg;
+    inputEvent->refPoint.x = aScreenXArg;
+    inputEvent->refPoint.y = aScreenYArg;
     mScreenPoint.x = aScreenXArg;
     mScreenPoint.y = aScreenYArg;
     mClientPoint.x = aClientXArg;
     mClientPoint.y = aClientYArg;
     mButton = aButtonArg;
-    mouseEvent->clickCount = aDetailArg;
+    if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
+      nsMouseScrollEvent* scrollEvent = NS_STATIC_CAST(nsMouseScrollEvent*, mEvent);
+      scrollEvent->delta = aDetailArg;
+    } else {
+      nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, mEvent);
+      mouseEvent->clickCount = aDetailArg;
+    }
   }
   //include a way to set view once we have more than one
 

@@ -43,6 +43,9 @@
 [scriptable, uuid(a6cf90c4-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNSUIEvent : nsISupports
 {
+  const long SCROLL_PAGE_UP = -32768;
+  const long SCROLL_PAGE_DOWN = 32768;
+
   boolean                   getPreventDefault();
 
   readonly attribute long             layerX;

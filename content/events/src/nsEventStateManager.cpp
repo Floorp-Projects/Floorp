@@ -93,6 +93,12 @@
 #include "nsIOutlinerBoxObject.h"
 #include "nsIScrollableViewProvider.h"
 #include "nsIDOMDocumentRange.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMNSUIEvent.h"
 
 #include "nsIDOMRange.h"
 #include "nsICaret.h"
@@ -1200,63 +1206,6 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 
 
 //
-// DoTreeScroll
-//
-// Trees know best how to deal with scrolling, so use the tree scroll api's instead
-// of just blindly scrolling the view.
-//
-nsresult
-nsEventStateManager::DoTreeScroll(nsIPresContext* inPresContext, PRInt32 inNumLines,
-                                    PRBool inScrollPage, nsITreeFrame* inTreeFrame)
-{
-  PRInt32 scrollIndex, visibleRows;
-  inTreeFrame->GetIndexOfFirstVisibleRow(&scrollIndex);
-  inTreeFrame->GetNumberOfVisibleRows(&visibleRows);
-
-  if (inScrollPage)
-    scrollIndex += ((inNumLines > 0) ? visibleRows : -visibleRows);
-  else
-    scrollIndex += inNumLines;
-  
-  if (scrollIndex < 0)
-    scrollIndex = 0;
-  else {
-    PRInt32 numRows;
-    inTreeFrame->GetRowCount(&numRows);
-    PRInt32 lastPageTopRow = numRows - visibleRows;
-    if (scrollIndex > lastPageTopRow)
-      scrollIndex = lastPageTopRow;
-  }
-  
-  inTreeFrame->ScrollToIndex(scrollIndex);
-
-  // we have to do a sync update for mac because if we scroll too quickly
-  // w/out going back to the main event loop we can easily scroll the wrong
-  // bits and it looks like garbage (bug 63465).
-  nsIFrame* frame = nsnull;
-  if ( NS_SUCCEEDED(inTreeFrame->QueryInterface(NS_GET_IID(nsIFrame),
-                                                (void **)&frame)) ) {
-    nsIView* treeView = nsnull;
-    frame->GetView(inPresContext, &treeView);
-    if (!treeView) {
-      nsIFrame* frameWithView;
-      frame->GetParentWithView(inPresContext, &frameWithView);
-      if (frameWithView)
-        frameWithView->GetView(inPresContext, &treeView);
-      else
-        return NS_ERROR_FAILURE;
-    }
-    if (treeView)
-      ForceViewUpdate(treeView);
-  }
-  else
-    return NS_ERROR_FAILURE;
-     
-  return NS_OK;
-      
-} // DoTreeScroll
-
-
 nsresult
 nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
                                    nsIFrame* aTargetFrame,
@@ -1264,26 +1213,49 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
                                    PRInt32 numLines, PRBool scrollPage,
                                    PRBool aUseTargetFrame)
 {
+  nsCOMPtr<nsIContent> targetContent;
+  aTargetFrame->GetContent(getter_AddRefs(targetContent));
+
+  nsCOMPtr<nsIDocument> targetDoc;
+  targetContent->GetDocument(*getter_AddRefs(targetDoc));
+  if (!targetDoc) return NS_OK;
+  nsCOMPtr<nsIDOMDocumentEvent> targetDOMDoc(do_QueryInterface(targetDoc));
+
+  nsCOMPtr<nsIDOMEvent> event;
+  targetDOMDoc->CreateEvent(NS_LITERAL_STRING("MouseScrollEvents"), getter_AddRefs(event));
+  if (event) {
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(event));
+    nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(targetDoc);
+    if (!docView) return nsnull;
+    nsCOMPtr<nsIDOMAbstractView> view;
+    docView->GetDefaultView(getter_AddRefs(view));
+    
+    if (scrollPage)
+      numLines = numLines > 0 ? nsIDOMNSUIEvent::SCROLL_PAGE_DOWN : nsIDOMNSUIEvent::SCROLL_PAGE_UP;
+      
+    mouseEvent->InitMouseEvent(NS_LITERAL_STRING("DOMMouseScroll"), PR_TRUE, PR_TRUE, 
+                               view, numLines,
+                               msEvent->refPoint.x, msEvent->refPoint.y,
+                               msEvent->point.x, msEvent->point.y,
+                               msEvent->isControl, msEvent->isAlt, msEvent->isShift, msEvent->isMeta,
+                               0, nsnull);
+    PRBool allowDefault;
+    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(targetContent));
+    if (target) {
+      target->DispatchEvent(event, &allowDefault);
+      if (!allowDefault)
+        return NS_OK;
+    }
+  }
+
+  targetDOMDoc->CreateEvent(NS_LITERAL_STRING("MouseScrollEvents"), getter_AddRefs(event));
+  if (event) {
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(event));
+  }
+
   nsIView* focusView = nsnull;
   nsIScrollableView* sv = nsnull;
   nsIFrame* focusFrame = nsnull;
-  
-  // Special case for tree/list frames - they handle their own scrolling
-  nsITreeFrame* treeFrame = nsnull;
-  nsCOMPtr<nsIOutlinerBoxObject> outlinerBoxObject;
-  nsIFrame* curFrame = aTargetFrame;
-  
-  while (curFrame) {
-    if (NS_OK == curFrame->QueryInterface(NS_GET_IID(nsITreeFrame),
-                                          (void**) &treeFrame))
-      break;
-
-    outlinerBoxObject = do_QueryInterface(curFrame);
-    if (outlinerBoxObject)
-      break;
-
-    curFrame->GetParent(&curFrame);
-  }
   
   // Create a mouseout event that we fire to the content before
   // scrolling, to allow tooltips to disappear, etc.
@@ -1300,27 +1272,8 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   mouseOutEvent.isAlt = PR_FALSE;
   mouseOutEvent.isMeta = PR_FALSE;
 
-  nsCOMPtr<nsIContent> targetContent;
-  aTargetFrame->GetContent(getter_AddRefs(targetContent));
-
   nsEventStatus mouseoutStatus = nsEventStatus_eIgnore;
 
-  if (treeFrame) {
-    if (targetContent)
-      targetContent->HandleDOMEvent(aPresContext, &mouseOutEvent, nsnull,
-                                    NS_EVENT_FLAG_INIT, &mouseoutStatus);
-    return DoTreeScroll(aPresContext, numLines, scrollPage, treeFrame);
-  } else if (outlinerBoxObject) {
-    if (targetContent)
-      targetContent->HandleDOMEvent(aPresContext, &mouseOutEvent, nsnull,
-                                    NS_EVENT_FLAG_INIT, &mouseoutStatus);
-    if (scrollPage)
-      outlinerBoxObject->ScrollByPages((numLines > 0) ? 1 : -1);
-    else
-      outlinerBoxObject->ScrollByLines(numLines);
-    return NS_OK;
-  }
-  
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
 

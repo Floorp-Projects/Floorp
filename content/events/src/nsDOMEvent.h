@@ -161,7 +161,7 @@ public:
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
   NS_IMETHOD    InitMouseEvent(const nsAReadableString & aTypeArg, 
                                PRBool aCanBubbleArg, PRBool aCancelableArg, 
-                               nsIDOMAbstractView *aViewArg, PRUint16 aDetailArg, 
+                               nsIDOMAbstractView *aViewArg, PRInt32 aDetailArg, 
                                PRInt32 aScreenXArg, PRInt32 aDcreenYArg, 
                                PRInt32 aClientXArg, PRInt32 aClientYArg, 
                                PRBool aCtrlKeyArg, PRBool aAltKeyArg, 

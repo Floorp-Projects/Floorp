@@ -59,6 +59,7 @@ public:
   NS_IMETHOD GetNextItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult);
   NS_IMETHOD GetPreviousItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult);
   NS_IMETHOD ScrollToIndex(PRInt32 aRowIndex);
+  NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 aNumLines);
   NS_IMETHOD GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aResult);
   NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult);
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32 *aResult);
