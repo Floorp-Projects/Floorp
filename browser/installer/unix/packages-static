@@ -28,6 +28,10 @@ bin/defaults/profile/bookmarks.html
 bin/defaults/profile/localstore.rdf
 bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
+bin/defaults/profile/extensions/Extensions.rdf
+bin/defaults/profile/extensions/installed-extensions.txt
+bin/defaults/profile/extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
+bin/defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 
 [xpcom]
 bin/libmozjs.so
@@ -137,6 +141,7 @@ bin/components/satchel.xpt
 bin/components/search.xpt
 bin/components/shistory.xpt
 bin/components/sidebar.xpt
+bin/components/toolkitprofile.xpt
 bin/components/txtsvc.xpt
 bin/components/txmgr.xpt
 bin/components/typeaheadfind.xpt
@@ -178,6 +183,13 @@ bin/components/nsProxyAutoConfig.js
 bin/components/nsSidebar.js
 ; bin/components/nsUpdateNotifier.js not needed for firefox
 bin/components/nsXmlRpcClient.js
+bin/components/nsExtensionManager.js
+bin/components/nsBackgroundUpdateService.js
+bin/components/extensions.xpt
+bin/components/update.xpt
+
+; Kerberos NegotiateAuth
+bin/components/libnegotiateauth.so
 
 ; [Browser Chrome Files]
 bin/chrome/browser.jar
