@@ -1153,6 +1153,7 @@ NS_IMETHODIMP nsMsgIncomingServer::GetRetentionSettings(nsIMsgRetentionSettings 
   PRInt32 numHeadersToKeep = 0;
   PRBool keepUnreadMessagesOnly = PR_FALSE;
   PRInt32 daysToKeepBodies = 0;
+  PRBool cleanupBodiesByDays = PR_FALSE;
   nsresult rv = NS_OK;
   if (!m_retentionSettings)
   {
@@ -1164,11 +1165,13 @@ NS_IMETHODIMP nsMsgIncomingServer::GetRetentionSettings(nsIMsgRetentionSettings 
       rv = GetIntValue("numHdrsToKeep", &numHeadersToKeep);
       rv = GetIntValue("daysToKeepHdrs", &daysToKeepHdrs);
       rv = GetIntValue("daysToKeepBodies", &daysToKeepBodies);
+      rv = GetBoolValue("cleanupBodies", &cleanupBodiesByDays);
       m_retentionSettings->SetRetainByPreference(retainByPreference);
       m_retentionSettings->SetNumHeadersToKeep((PRUint32) numHeadersToKeep);
       m_retentionSettings->SetKeepUnreadMessagesOnly(keepUnreadMessagesOnly);
       m_retentionSettings->SetDaysToKeepBodies(daysToKeepBodies);
       m_retentionSettings->SetDaysToKeepHdrs(daysToKeepHdrs);
+      m_retentionSettings->SetCleanupBodiesByDays(cleanupBodiesByDays);
     }
     else
       rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1186,17 +1189,20 @@ NS_IMETHODIMP nsMsgIncomingServer::SetRetentionSettings(nsIMsgRetentionSettings 
   PRUint32 numHeadersToKeep = 0;
   PRBool keepUnreadMessagesOnly = PR_FALSE;
   PRUint32 daysToKeepBodies = 0;
+  PRBool cleanupBodiesByDays = PR_FALSE;
   m_retentionSettings = settings;
   m_retentionSettings->GetRetainByPreference(&retainByPreference);
   m_retentionSettings->GetNumHeadersToKeep(&numHeadersToKeep);
   m_retentionSettings->GetKeepUnreadMessagesOnly(&keepUnreadMessagesOnly);
   m_retentionSettings->GetDaysToKeepBodies(&daysToKeepBodies);
   m_retentionSettings->GetDaysToKeepHdrs(&daysToKeepHdrs);
+  m_retentionSettings->GetCleanupBodiesByDays(&cleanupBodiesByDays);
   nsresult rv = SetBoolValue("keepUnreadOnly", keepUnreadMessagesOnly);
   rv = SetIntValue("retainBy", retainByPreference);
   rv = SetIntValue("numHdrsToKeep", numHeadersToKeep);
   rv = SetIntValue("daysToKeepHdrs", daysToKeepHdrs);
   rv = SetIntValue("daysToKeepBodies", daysToKeepBodies);
+  rv = SetBoolValue("cleanupBodies", cleanupBodiesByDays);
   return rv;
 }
  

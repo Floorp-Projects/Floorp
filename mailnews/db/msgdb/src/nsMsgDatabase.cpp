@@ -3647,6 +3647,7 @@ NS_IMETHODIMP nsMsgDatabase::SetMsgRetentionSettings(nsIMsgRetentionSettings *re
     PRUint32 numHeadersToKeep;
     PRBool keepUnreadMessagesOnly;
     PRUint32 daysToKeepBodies;
+    PRBool cleanupBodiesByDays;
 
     rv = retentionSettings->GetRetainByPreference(&retainByPreference);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3658,12 +3659,14 @@ NS_IMETHODIMP nsMsgDatabase::SetMsgRetentionSettings(nsIMsgRetentionSettings *re
     NS_ENSURE_SUCCESS(rv, rv);
     rv = retentionSettings->GetDaysToKeepBodies(&daysToKeepBodies);
     NS_ENSURE_SUCCESS(rv, rv);
+    rv = retentionSettings->GetCleanupBodiesByDays(&cleanupBodiesByDays);
     // need to write this to the db. We'll just use the dbfolderinfo to write properties.
     m_dbFolderInfo->SetUint32Property("retainBy", retainByPreference);
     m_dbFolderInfo->SetUint32Property("daysToKeepHdrs", daysToKeepHdrs);
     m_dbFolderInfo->SetUint32Property("numHdrsToKeep", numHeadersToKeep);
     m_dbFolderInfo->SetUint32Property("daysToKeepBodies", daysToKeepBodies);
     m_dbFolderInfo->SetUint32Property("keepUnreadOnly", (keepUnreadMessagesOnly) ? 1 : 0);
+    m_dbFolderInfo->SetBooleanProperty("cleanupBodies", cleanupBodiesByDays);
   }
   return NS_OK;
 }
@@ -3686,6 +3689,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgRetentionSettings(nsIMsgRetentionSettings **r
       PRBool keepUnreadMessagesOnly = PR_FALSE;
       PRBool useServerDefaults;
       PRUint32 daysToKeepBodies = 0;
+      PRBool cleanupBodiesByDays = PR_FALSE;
 
       rv = m_dbFolderInfo->GetUint32Property("retainBy", &retainByPreference, nsIMsgRetentionSettings::nsMsgRetainAll);
       m_dbFolderInfo->GetUint32Property("daysToKeepHdrs", &daysToKeepHdrs, 0);
@@ -3693,6 +3697,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgRetentionSettings(nsIMsgRetentionSettings **r
       m_dbFolderInfo->GetUint32Property("daysToKeepBodies", &daysToKeepBodies, 0);
       m_dbFolderInfo->GetUint32Property("keepUnreadOnly", &keepUnreadMessagesProp, 0);
       m_dbFolderInfo->GetBooleanProperty("useServerDefaults", &useServerDefaults, PR_TRUE);
+      m_dbFolderInfo->GetBooleanProperty("cleanupBodies", &cleanupBodiesByDays, PR_FALSE);
       keepUnreadMessagesOnly = (keepUnreadMessagesProp == 1);
       m_retentionSettings->SetRetainByPreference(retainByPreference);
       m_retentionSettings->SetDaysToKeepHdrs(daysToKeepHdrs);
@@ -3700,6 +3705,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgRetentionSettings(nsIMsgRetentionSettings **r
       m_retentionSettings->SetKeepUnreadMessagesOnly(keepUnreadMessagesOnly);
       m_retentionSettings->SetDaysToKeepBodies(daysToKeepBodies);
       m_retentionSettings->SetUseServerDefaults(useServerDefaults);
+      m_retentionSettings->SetCleanupBodiesByDays(cleanupBodiesByDays);
     }
   }
   *retentionSettings = m_retentionSettings;
@@ -3985,6 +3991,20 @@ NS_IMETHODIMP nsMsgRetentionSettings::SetKeepUnreadMessagesOnly(PRBool aKeepUnre
   m_keepUnreadMessagesOnly = aKeepUnreadMessagesOnly;
   return NS_OK;
 }
+
+/* attribute boolean cleanupBodiesByDays; */
+NS_IMETHODIMP nsMsgRetentionSettings::GetCleanupBodiesByDays(PRBool *aCleanupBodiesByDays)
+{
+  NS_ENSURE_ARG_POINTER(aCleanupBodiesByDays);
+  *aCleanupBodiesByDays = m_cleanupBodiesByDays;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgRetentionSettings::SetCleanupBodiesByDays(PRBool aCleanupBodiesByDays)
+{
+  m_cleanupBodiesByDays = aCleanupBodiesByDays;
+  return NS_OK;
+}
+
 
 /* attribute long daysToKeepBodies; */
 NS_IMETHODIMP nsMsgRetentionSettings::GetDaysToKeepBodies(PRUint32 *aDaysToKeepBodies)

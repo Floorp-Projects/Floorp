@@ -59,6 +59,7 @@ interface nsIMsgRetentionSettings : nsISupports
   // messages less than NNN days old.
   attribute boolean keepUnreadMessagesOnly;
   // this is for keeping offline bodies.
+  attribute boolean cleanupBodiesByDays;
   attribute unsigned long daysToKeepBodies;
 }; 
 

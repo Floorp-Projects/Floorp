@@ -281,6 +281,7 @@ protected:
   PRUint32                m_keepUnreadMessagesProp;
   PRBool                  m_keepUnreadMessagesOnly;
   PRBool                  m_useServerDefaults;
+  PRBool                  m_cleanupBodiesByDays;
   PRUint32                m_daysToKeepBodies;
 };
 
