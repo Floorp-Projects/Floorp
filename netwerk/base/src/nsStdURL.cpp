@@ -261,7 +261,7 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
                                                  (void**)&other);
         if (NS_FAILED(rv)) {
             *o_Equals = eq;
-            return rv;
+            return NS_OK;
         }
         // Maybe the directorys are different
         if (nsCRT::strcasecmp(mDirectory, other->mDirectory)==0) {
