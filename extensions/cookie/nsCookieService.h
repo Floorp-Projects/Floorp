@@ -49,10 +49,18 @@
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
-#include "nsPermissions.h"
+#include "nsXPIDLString.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsCookiePrefObserver
+
+// enumerated type, used to specify default cookie behavior
+typedef enum {
+  PERMISSION_Accept,
+  PERMISSION_DontAcceptForeign,
+  PERMISSION_DontUse,
+  PERMISSION_P3P
+} PERMISSION_BehaviorEnum;
 
 class nsCookiePrefObserver : public nsIObserver
                            , public nsSupportsWeakReference

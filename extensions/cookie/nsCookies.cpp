@@ -40,7 +40,8 @@
 
 #include "nsCookies.h"
 #include "nsCookieService.h"
-#include "nsPermissions.h"
+#include "nsICookiePermission.h"
+#include "nsIPermissionManager.h"
 #include "nsIIOService.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
@@ -681,18 +682,27 @@ COOKIE_Remove(const nsACString &host,
     if (cookieInList->path.Equals(path) &&
         cookieInList->host.Equals(host) &&
         cookieInList->name.Equals(name)) {
-      // check if we need to add the host to the permissions blacklist
-      if (blocked && NS_SUCCEEDED(PERMISSION_Read())) {
-        // remove leading dot from host
-        // we need this trickery since Permission_AddHost wants an nsAFlatCString
-        // (and we want to avoid PromiseFlatCString()).
-        // we should push this portion into the UI, it shouldn't live here in the backend.
-        nsDependentCString hostWithoutDot(cookieInList->host.get(), cookieInList->host.Length());
-        if (!cookieInList->host.IsEmpty() && cookieInList->host.First() == '.') {
-          hostWithoutDot.Rebind(cookieInList->host.get() + 1, cookieInList->host.Length() - 1);
+      // check if we need to add the host to the permissions blacklist.
+      // we should push this portion into the UI, it shouldn't live here in the backend.
+      if (blocked) {
+        nsresult rv;
+        nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIURI> uri;
+          NS_NAMED_LITERAL_CSTRING(httpPrefix, "http://");
+          // remove leading dot from host
+          if (!cookieInList->host.IsEmpty() && cookieInList->host.First() == '.') {
+            rv = NS_NewURI(getter_AddRefs(uri), PromiseFlatCString(httpPrefix + Substring(cookieInList->host, 1, cookieInList->host.Length() - 1)));
+          } else {
+            rv = NS_NewURI(getter_AddRefs(uri), PromiseFlatCString(httpPrefix + cookieInList->host));
+          }
+
+          if (NS_SUCCEEDED(rv))
+            permissionManager->Add(uri,
+                                   nsIPermissionManager::COOKIE_TYPE,
+                                   nsIPermissionManager::DENY_ACTION);
         }
-         
-        Permission_AddHost(hostWithoutDot, PR_FALSE, COOKIEPERMISSION, PR_TRUE);
       }
 
       sCookieList->RemoveElementAt(i);
@@ -1653,18 +1663,21 @@ COOKIE_ChangeFormat(cookie_CookieStruct *aCookie)
 // to be processed
 PRIVATE PRBool
 cookie_SetCookieInternal(nsIURI             *aHostURI,
-                         nsIPrompt          *aPrompt,
                          nsDependentCString &aCookieHeader,
                          nsInt64            aServerTime,
                          nsCookieStatus     aStatus,
                          nsCookiePolicy     aPolicy)
 {
+  nsresult rv;
   // keep a |const char*| version of the unmodified aCookieHeader,
   // for logging purposes
   const char *cookieHeader = aCookieHeader.get();
 
   nsInt64 expiryTime, currentTime = nsTime() / PR_USEC_PER_SEC;
   PRBool isSession, foundCookie;
+
+  nsCOMPtr<nsICookie> thisCookie;
+  nsCOMPtr<nsICookiePermission> cookiePermission;
 
   // cookie stores all the attributes parsed from the cookie;
   // expires and maxage are separate, because we have to process them to find the expiry.
@@ -1723,23 +1736,29 @@ cookie_SetCookieInternal(nsIURI             *aHostURI,
     goto failure;
   }
 
+  // create a new nsICookie and copy the cookie data,
+  // for passing to the permission manager
+  thisCookie = COOKIE_ChangeFormat(cookie);
+
+  // we want to cache this ptr when we merge everything into nsCookieService
+  cookiePermission = do_GetService(NS_COOKIEPERMISSION_CONTRACTID, &rv);
   // check permissions from site permission list, or ask the user,
   // to determine if we can set the cookie
-  if (NS_SUCCEEDED(PERMISSION_Read())) {
-    // create a new nsICookie and copy the cookie data
-    nsCOMPtr<nsICookie> thisCookie = COOKIE_ChangeFormat(cookie);
-
-    if (!thisCookie ||
-        !Permission_Check(aPrompt, cookie->host.get(), COOKIEPERMISSION,
-                          gCookiePrefObserver->mCookiesAskPermission,
-                          thisCookie, countFromHost, foundCookie)) {
+  if (NS_SUCCEEDED(rv)) {
+    PRBool permission;
+    // we need to think about prompters/parent windows here - TestPermission
+    // needs one to prompt, so right now it has to fend for itself to get one
+    rv = cookiePermission->TestPermission(aHostURI, thisCookie, nsnull,
+                                          countFromHost, foundCookie,
+                                          gCookiePrefObserver->mCookiesAskPermission,
+                                          &permission);
+    if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookies are blocked for this site");
       goto failure;
     }
   }
 
   // add the cookie to the list
-  nsresult rv;
   rv = COOKIE_Add(cookie, nsTime() / PR_USEC_PER_SEC, aHostURI, cookieHeader);
   if (NS_FAILED(rv)) {
     // no need to log a failure here, Add() does it for us
@@ -1809,7 +1828,7 @@ COOKIE_SetCookie(nsIURI         *aHostURI,
 
   // switch to a nice string type now, and process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
-  while (cookie_SetCookieInternal(aHostURI, aPrompt,
+  while (cookie_SetCookieInternal(aHostURI,
                                   cookieHeader, serverTime,
                                   cookieStatus, cookiePolicy));
 }

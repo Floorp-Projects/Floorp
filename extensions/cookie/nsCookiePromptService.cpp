@@ -63,7 +63,7 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
                                     const nsACString &aHostname,
                                     PRInt32 aCookiesFromHost,
                                     PRBool aChangingCookie,
-                                    PRBool *aCheckValue,
+                                    PRBool *aRememberDecision,
                                     PRBool *aAccept)
 {
   nsresult rv;
@@ -74,7 +74,6 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
   // since we're setting PRInt32's here, we have to sanitize the PRBool's first.
   // (myBool != PR_FALSE) is guaranteed to return either 1 or 0.
   block->SetInt(nsICookieAcceptDialog::ACCEPT_COOKIE, 1);
-  block->SetInt(nsICookieAcceptDialog::REMEMBER_DECISION, *aCheckValue != PR_FALSE);
   block->SetString(nsICookieAcceptDialog::HOSTNAME, NS_ConvertUTF8toUCS2(aHostname).get());
   block->SetInt(nsICookieAcceptDialog::COOKIESFROMHOST, aCookiesFromHost);
   block->SetInt(nsICookieAcceptDialog::CHANGINGCOOKIE, aChangingCookie != PR_FALSE);
@@ -111,7 +110,7 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
   *aAccept = (tempValue == 1);
 
   block->GetInt(nsICookieAcceptDialog::REMEMBER_DECISION, &tempValue);
-  *aCheckValue = (tempValue == 1);
+  *aRememberDecision = (tempValue == 1);
 
   return rv;
 }

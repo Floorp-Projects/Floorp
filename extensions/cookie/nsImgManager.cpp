@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsImgManager.h"
-#include "nsImages.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
@@ -48,122 +47,295 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsCRT.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIObserverService.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+// Possible behavior pref values
+#define IMAGE_ACCEPT 0
+#define IMAGE_NOFOREIGN 1
+#define IMAGE_DENY 2
 
-////////////////////////////////////////////////////////////////////////////////
+static const char kImageBehaviorPrefName[] = "network.image.imageBehavior";
+static const char kImageWarningPrefName[] = "network.image.warnAboutImages";
+static const char kImageBlockerPrefName[] = "imageblocker.enabled";
+static const char kImageBlockImageInMailNewsPrefName[] = "mailnews.message_display.disable_remote_image";
 
+static const PRInt32 kImageBehaviorPrefDefault = IMAGE_ACCEPT;
+static const PRBool kImageWarningPrefDefault = PR_FALSE;
+static const PRBool kImageBlockerPrefDefault = PR_FALSE;
+static const PRBool kImageBlockImageInMailNewsPrefDefault = PR_FALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsImgManager Implementation
+////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS2(nsImgManager, 
+NS_IMPL_ISUPPORTS4(nsImgManager, 
                    nsIImgManager, 
-                   nsIContentPolicy);
+                   nsIContentPolicy,
+                   nsIObserver,
+                   nsSupportsWeakReference);
 
 nsImgManager::nsImgManager()
 {
 }
 
-nsImgManager::~nsImgManager(void)
+nsImgManager::~nsImgManager()
 {
 }
 
 nsresult nsImgManager::Init()
 {
-    IMAGE_RegisterPrefCallbacks();
-    nsresult rv;
-    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-    return rv;
+  nsresult rv;
+
+  // On error, just don't use the host based lookup anymore. We can do the
+  // other things, like mailnews blocking
+  mPermissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+
+  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+ 
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefInternal->AddObserver(kImageBehaviorPrefName, this, PR_TRUE);
+
+      // We don't do anything with it yet, but let it be. (bug 110112, 146513)
+      prefInternal->AddObserver(kImageWarningPrefName, this, PR_TRUE);
+
+      // What is this pref, and how do you set it?
+      prefInternal->AddObserver(kImageBlockerPrefName, this, PR_TRUE);
+      prefInternal->AddObserver(kImageBlockImageInMailNewsPrefName, this, PR_TRUE);
+    }
+  }
+
+  rv = ReadPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Error occured reading image preferences");
+
+  return NS_OK;
 }
-
-
-NS_IMETHODIMP nsImgManager::Block(nsIURI* imageURI)
-{
-    ::IMAGE_Block(imageURI);
-    return NS_OK;
-}
-
 
 // nsIContentPolicy Implementation
 NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType, 
                                        nsIURI *aContentLoc,
                                        nsISupports *aContext,
                                        nsIDOMWindow *aWindow,
-                                       PRBool *_retval)
+                                       PRBool *aShouldLoad)
 {
-    *_retval = PR_TRUE;
-    nsresult rv = NS_OK;
+  *aShouldLoad = PR_TRUE;
+  nsresult rv = NS_OK;
 
-    // we can't do anything w/ out these.
-    if (!aContentLoc || !aContext) return rv;
+  // we can't do anything w/ out these.
+  if (!aContentLoc || !aContext) return rv;
 
-    switch (aContentType) {
-        case nsIContentPolicy::IMAGE:   
-        {
-            // First, let be sure we are processing an HTTP or HTTPS images.
-            // We should not waste time with chrome url...
-            PRBool httpType;
-            rv = aContentLoc->SchemeIs("http", &httpType);
-            if (NS_FAILED(rv) || !httpType) {
-                // check HTTPS as well
-                rv = aContentLoc->SchemeIs("https", &httpType);
-                if (NS_FAILED(rv) || !httpType) return rv;
-            }
-
-            nsCOMPtr<nsIURI> baseURI;
-            nsCOMPtr<nsIDocument> doc;
-            nsCOMPtr<nsIContent> content(do_QueryInterface(aContext));
-            NS_ASSERTION(content, "no content avail");
-            if (content) {
-                rv = content->GetDocument(*getter_AddRefs(doc));
-                if (NS_FAILED(rv) || !doc) return rv;
-
-                rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
-                if (NS_FAILED(rv) || !baseURI) return rv;
-
-                // Let check if we are running a mail window, doesn't matter if mail images are allowed
-                if (IMAGE_BlockedInMail()) {
-                    nsCOMPtr<nsIDocShell> docshell;
-                    rv = GetRootDocShell(aWindow, getter_AddRefs(docshell));
-                    if (docshell) {
-                        PRUint32 appType;
-                        rv = docshell->GetAppType(&appType);
-                        if (NS_SUCCEEDED(rv) && appType == nsIDocShell::APP_TYPE_MAIL) {
-                            //we are dealing with an mail or newsgroup window, let's block the image
-                            *_retval = PR_FALSE;
-                            return NS_OK;
-                        }
-                    }
-                }
-
-                nsCAutoString baseHost;
-                rv = baseURI->GetAsciiHost(baseHost);
-                if (NS_FAILED(rv)) return rv;
-
-                nsCAutoString host;
-                rv = aContentLoc->GetAsciiHost(host);
-                if (NS_FAILED(rv)) return rv;
-
-                return ::IMAGE_CheckForPermission(host.get(), baseHost.get(),
-                                                  _retval);
-            }
-        }
-        break;
+  if (aContentType == nsIContentPolicy::IMAGE) {
+    // First, let be sure we are processing an HTTP or HTTPS images.
+    // We should not waste time with chrome url...
+    PRBool httpType;
+    rv = aContentLoc->SchemeIs("http", &httpType);
+    if (NS_FAILED(rv) || !httpType) {
+      // check HTTPS as well
+      rv = aContentLoc->SchemeIs("https", &httpType);
+      if (NS_FAILED(rv) || !httpType) return rv;
     }
-    return NS_OK;
+
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
+    NS_ASSERTION(content, "no content available");
+    if (content) {
+      rv = content->GetDocument(*getter_AddRefs(doc));
+      if (NS_FAILED(rv) || !doc) return rv;
+
+      rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
+      if (NS_FAILED(rv) || !baseURI) return rv;
+
+      // Let check if we are running a mail window, doesn't matter if mail images are allowed
+      if (mBlockInMailNewsPref) {
+        nsCOMPtr<nsIDocShell> docshell;
+        rv = GetRootDocShell(aWindow, getter_AddRefs(docshell));
+        if (docshell) {
+          PRUint32 appType;
+          rv = docshell->GetAppType(&appType);
+          if (NS_SUCCEEDED(rv) && appType == nsIDocShell::APP_TYPE_MAIL) {
+            //we are dealing with an mail or newsgroup window, let's block the image
+            *aShouldLoad = PR_FALSE;
+            return NS_OK;
+          }
+        }
+      }
+
+      rv =  TestPermission(aContentLoc, baseURI, aShouldLoad);
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImgManager::ShouldProcess(PRInt32 aContentType,
                                           nsIURI *aDocumentLoc,
                                           nsISupports *aContext,
                                           nsIDOMWindow *aWindow,
-                                          PRBool *_retval) {
+                                          PRBool *_retval)
+{
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsImgManager::GetRootDocShell(nsIDOMWindow *aWindow, nsIDocShell **result)
+NS_IMETHODIMP
+nsImgManager::TestPermission(nsIURI *aCurrentURI,
+                             nsIURI *aFirstURI,
+                             PRBool *aPermission)
+{
+  nsresult rv;
+  *aPermission = PR_TRUE;
+
+  // return if imageblocker is not enabled
+  // TODO: Why? Where is the pref set?
+  if (!mBlockerPref) {
+    *aPermission = (mBehaviorPref != IMAGE_DENY);
+    return NS_OK;
+  }
+
+  if (mBehaviorPref == IMAGE_DENY) {
+    *aPermission = PR_FALSE;
+    return NS_OK;
+  }
+
+  // Third party checking
+  if (mBehaviorPref == IMAGE_NOFOREIGN) {
+    // compare tails of names checking to see if they have a common domain
+    // we do this by comparing the tails of both names where each tail 
+    // includes at least one dot
+    
+    // A more generic method somewhere would be nice
+
+    nsCAutoString currentHost;
+    rv = aCurrentURI->GetAsciiHost(currentHost);
+    if (NS_FAILED(rv)) return rv;
+
+    // Search for two dots, starting at the end.
+    // If there are no two dots found, ++dot will turn to zero,
+    // that will return the entire string.
+    PRInt32 dot = currentHost.RFindChar('.');
+    dot = currentHost.RFindChar('.', dot-1);
+    ++dot;
+
+    // Get the domain, ie the last part of the host (www.domain.com -> domain.com)
+    // This will break on co.uk
+    const nsACString &tail = Substring(currentHost, dot, currentHost.Length() - dot);
+
+    nsCAutoString firstHost;
+    rv = aFirstURI->GetAsciiHost(firstHost);
+    if (NS_FAILED(rv)) return rv;
+    
+    // Get the last part of the firstUri with the same length as |tail|
+    const nsACString &firstTail = Substring(firstHost, dot, firstHost.Length() - dot);
+
+    // Check that both tails are the same, and that just before the tail in
+    // |firstUri| there is a dot. That means both url are in the same domain
+    if ((dot > 0 && firstHost.CharAt(dot-1) != '.') || !tail.Equals(firstTail)) {
+      *aPermission = PR_FALSE;
+      return NS_OK;
+    }
+  }
+  
+  if (mPermissionManager) {
+    PRUint32 temp;
+    mPermissionManager->TestPermission(aCurrentURI, nsIPermissionManager::IMAGE_TYPE, &temp);
+    // Blacklist for now
+    *aPermission = (temp != nsIPermissionManager::DENY_ACTION);
+  } else {
+    // no premission manager, return ok
+    *aPermission = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImgManager::Observe(nsISupports *aSubject,
+                      const char *aTopic,
+                      const PRUnichar *aData)
+{
+  nsresult rv;
+
+  // check the topic, and the cached prefservice
+  if (!mPrefBranch) {
+    NS_ERROR("No prefbranch");
+    return NS_ERROR_FAILURE;
+  }
+  
+  if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
+    // which pref changed?
+    NS_ConvertUCS2toUTF8 pref(aData);
+
+    if (pref.Equals(kImageBehaviorPrefName)) {
+      rv = mPrefBranch->GetIntPref(kImageBehaviorPrefName, &mBehaviorPref);
+      if (NS_FAILED(rv) || mBehaviorPref < 0 || mBehaviorPref > 2) {
+        mBehaviorPref = kImageBehaviorPrefDefault;
+      }
+    } else if (pref.Equals(kImageWarningPrefName)) {
+      rv = mPrefBranch->GetIntPref(kImageWarningPrefName, &mWarningPref);
+      if (NS_FAILED(rv)) {
+        mWarningPref = kImageWarningPrefDefault;
+      }
+    } else if (pref.Equals(kImageBlockerPrefName)) {
+      rv = mPrefBranch->GetIntPref(kImageBlockerPrefName, &mBlockerPref);
+      if (NS_FAILED(rv)) {
+        mBlockerPref = kImageBlockerPrefDefault;
+      }
+    } else if (pref.Equals(kImageBlockImageInMailNewsPrefName)) {
+      rv = mPrefBranch->GetIntPref(kImageBlockImageInMailNewsPrefName, &mBlockInMailNewsPref);
+      if (NS_FAILED(rv)) {
+        mBlockInMailNewsPref = kImageBlockImageInMailNewsPrefDefault;
+      }
+    }
+  }
+  
+  return NS_OK;
+}
+
+nsresult
+nsImgManager::ReadPrefs()
+{
+  nsresult rv, rv2 = NS_OK;
+
+  // check the prefservice is cached
+  if (!mPrefBranch) {
+    NS_ERROR("No prefbranch");
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = mPrefBranch->GetIntPref(kImageBehaviorPrefName, &mBehaviorPref);
+  if (NS_FAILED(rv) || mBehaviorPref < 0 || mBehaviorPref > 2) {
+    rv2 = rv;
+    mBehaviorPref = kImageBehaviorPrefDefault;
+  }
+
+  rv = mPrefBranch->GetBoolPref(kImageBlockerPrefName, &mBlockerPref);
+  if (NS_FAILED(rv)) {
+    rv2 = rv;
+    mBlockerPref = kImageWarningPrefDefault;
+  }
+
+  rv = mPrefBranch->GetBoolPref(kImageWarningPrefName, &mWarningPref);
+  if (NS_FAILED(rv)) {
+    rv2 = rv;
+    mWarningPref = kImageBlockerPrefDefault;
+  }
+
+  rv = mPrefBranch->GetBoolPref(kImageBlockImageInMailNewsPrefName, &mBlockInMailNewsPref);
+  if (NS_FAILED(rv)) {
+    rv2 = rv;
+    mBlockInMailNewsPref = kImageBlockImageInMailNewsPrefDefault;
+  }
+
+  return rv2;
+}
+
+NS_IMETHODIMP
+nsImgManager::GetRootDocShell(nsIDOMWindow *aWindow, nsIDocShell **result)
 {
   nsresult rv;
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,28 +36,81 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
-
-  This file contains an interface to the  Permission Manager.
-
+/**
+ * This file contains an interface to the Permission Manager,
+ * used for blocking objects (cookies, images etc) from
+ * used-defined sites
+ *
+ * This service broadcasts a PERM_CHANGE_NOTIFICATION notification
+ * when any permission changes. You can add yourself as an observer.
  */
 
 #include "nsISupports.idl"
 #include "nsISimpleEnumerator.idl"
 
+interface nsIURI;
+interface nsIObserver;
+
 [scriptable, uuid(4F6B5E00-0C36-11d5-A535-0010A401EB10)]
 interface nsIPermissionManager : nsISupports
 {
-  void add(in AUTF8String objectURL, in boolean permission, in PRInt32 type);
-  boolean testForBlocking(in AUTF8String objectURL, in PRInt32 type);
+  /**
+   * Allowed return values from the testPermission method
+   */
+  const PRUint32 UNKNOWN_ACTION = 0;
+  const PRUint32 ALLOW_ACTION = 1;
+  const PRUint32 DENY_ACTION = 2;
+
+  /**
+   * These values are the different types of permissions supported
+   */
+  const PRUint32 COOKIE_TYPE = 0;
+  const PRUint32 IMAGE_TYPE = 1;
+  const PRUint32 POPUP_TYPE = 2;
+
+  /**
+   * Add permission information for a given URI and permission type.
+   * @param uri is the website to add the permission for
+   * @param permission is one of the enumerated permission actions above
+   * @param type is one of the enumerated permission types above
+   */
+  void add(in nsIURI uri,
+           in PRUint32 type,
+           in PRUint32 permission);
+
+  /**
+   * Remove permission information for a given URI and permission type.
+   * Note that this method takes a host string, not an nsIURI.
+   * @param host is the host to remove the permission for
+   * @param type is one of the enumerated permission types above
+   */
+  void remove(in AUTF8String host,
+              in PRUint32 type);
+
+  /**
+   * Clear permission information for all websites.
+   */
   void removeAll();
+
+  /**
+   * Test whether a website has permission to perform the given action.
+   * @param  uri   the website to be tested
+   * @param  type  one of the enumerated types above
+   * @return       one of the enumerated permission actions above
+   */
+  PRUint32 testPermission(in nsIURI uri,
+                          in PRUint32 type);
+
+  /**
+   * Allows enumeration of all stored permissions
+   * @return an nsISimpleEnumerator interface that allows access to
+   *         nsIPermission objects
+   */
   readonly attribute nsISimpleEnumerator enumerator;
-  void remove(in AUTF8String host, in PRInt32 type);
 };
 
 %{ C++
-// {4F6B5E00-0C36-11d5-A535-0010A401EB10}
-#define NS_PERMISSIONMANAGER_CID \
-{ 0x4f6b5e00, 0xc36, 0x11d5, { 0xa5, 0x35, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
 #define NS_PERMISSIONMANAGER_CONTRACTID "@mozilla.org/permissionmanager;1"
+
+#define PERM_CHANGE_NOTIFICATION "perm-changed"
 %}

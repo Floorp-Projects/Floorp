@@ -34,6 +34,7 @@
 
     // both are necessary. popupmanager is just a special case
     // of permissionmanager but does extra work on add/remove
+    const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
     var permissionmanager;
     var popupmanager;
 
@@ -54,6 +55,7 @@
     // determine which items we need to hide or disable from the task menu
     function CheckForVisibility()
     {
+      var uri = getBrowser().currentURI;
 
       // obtain access to permissionmanager and popupmanager
       // (popup manager is a wrapper around permission that does extra work)
@@ -69,17 +71,17 @@
       }
 
       // determine current state (blocked or unblocked) and hide appropriate menu item
-      var blocked;
+      var blocked = nsIPermissionManager.UNKNOWN_ACTION;
       
       blocked = 
-        permissionmanager.testForBlocking(window._content.location, COOKIEPERMISSION);
-      enableElement("AllowCookies", blocked);
-      enableElement("BlockCookies", !blocked);
+        permissionmanager.testPermission(uri, nsIPermissionManager.COOKIE_TYPE);
+      enableElement("AllowCookies", blocked != nsIPermissionManager.ALLOW_ACTION);
+      enableElement("BlockCookies", blocked != nsIPermissionManager.DENY_ACTION);
 
       blocked =
-        permissionmanager.testForBlocking(window._content.location, IMAGEPERMISSION);
-      enableElement("AllowImages", blocked);
-      enableElement("BlockImages", !blocked);
+        permissionmanager.testPermission(uri, nsIPermissionManager.IMAGE_TYPE);
+      enableElement("AllowImages", blocked != nsIPermissionManager.ALLOW_ACTION);
+      enableElement("BlockImages", blocked != nsIPermissionManager.DENY_ACTION);
       
       SetPopupMenuEnabledState();
 
@@ -104,30 +106,13 @@
     }
 
     function SetPopupMenuEnabledState() {
-      var suitable = false;
-      var blocked = false;
+      var blocked = nsIPermissionManager.UNKNOWN_ACTION;
       var policy = pref.getBoolPref("dom.disable_open_during_load");
 
-      suitable = popupmanager.testSuitability(getBrowser().currentURI);
-      if (suitable) {
-        if (!policy) // blacklist, test if there is a permission set
-          blocked = (popupmanager.testPermission(getBrowser().currentURI) == Components.interfaces.nsIPopupWindowManager.DENY_POPUP);
-        else { // whitelist, check if it is on list
-          blocked = true;
-          var enumerator = popupmanager.getEnumerator();
-          while (enumerator.hasMoreElements()) {
-            var permission = enumerator.getNext()
-                                       .QueryInterface(Components.interfaces.nsIPermission);
-            if (permission.capability && getBrowser().currentURI.host == permission.host) {
-              blocked = false;
-              break;
-            }
-          }
-        }
-      }
+      blocked = permissionmanager.testPermission(getBrowser().currentURI, nsIPermissionManager.POPUP_TYPE);
 
-      enableElement("BlockPopups", suitable && !blocked);
-      enableElement("AllowPopups", suitable && blocked);
+      enableElement("BlockPopups", blocked != nsIPermissionManager.DENY_ACTION);
+      enableElement("AllowPopups", blocked != nsIPermissionManager.ALLOW_ACTION);
       enableElement("ManagePopups", true);
     }
 
@@ -147,24 +132,25 @@
         return;
       }
       var element;
+      var uri = getBrowser().currentURI;
       switch (action) {
         case "cookieAllow":
-          permissionmanager.add(window._content.location, true, COOKIEPERMISSION);
+          permissionmanager.add(uri, nsIPermissionManager.COOKIE_TYPE, nsIPermissionManager.ALLOW_ACTION);
           element = document.getElementById("AllowCookies");
           alert(element.getAttribute("msg"));
           break;
         case "cookieBlock":
-          permissionmanager.add(window._content.location, false, COOKIEPERMISSION);
+          permissionmanager.add(uri, nsIPermissionManager.COOKIE_TYPE, nsIPermissionManager.DENY_ACTION);
           element = document.getElementById("BlockCookies");
           alert(element.getAttribute("msg"));
           break;
         case "imageAllow":
-          permissionmanager.add(window._content.location, true, IMAGEPERMISSION);
+          permissionmanager.add(uri, nsIPermissionManager.IMAGE_TYPE, nsIPermissionManager.ALLOW_ACTION);
           element = document.getElementById("AllowImages");
           alert(element.getAttribute("msg"));
           break;
         case "imageBlock":
-          permissionmanager.add(window._content.location, false, IMAGEPERMISSION);
+          permissionmanager.add(uri, nsIPermissionManager.IMAGE_TYPE, nsIPermissionManager.DENY_ACTION);
           element = document.getElementById("BlockImages");
           alert(element.getAttribute("msg"));
           break;
@@ -178,18 +164,12 @@
 
       switch (action) {
         case "block":
-          if (!policy)
-            popupmanager.add(uri, policy);
-          else
-            popupmanager.remove(uri);
+          permissionmanager.add(uri, nsIPermissionManager.POPUP_TYPE, nsIPermissionManager.DENY_ACTION);
           break;
         case "allow":
           var browsers = getBrowser().browsers;
           var popupIcon = document.getElementById("popupIcon");
-          if (!policy)
-            popupmanager.remove(uri);
-          else 
-            popupmanager.add(uri, policy);
+          permissionmanager.add(uri, nsIPermissionManager.POPUP_TYPE, nsIPermissionManager.ALLOW_ACTION);
           for (var i = 0; i < browsers.length; i++) {
             if (browsers[i].popupDomain == uri.host) {
               browsers[i].popupDomain = null;

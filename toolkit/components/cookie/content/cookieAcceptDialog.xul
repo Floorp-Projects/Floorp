@@ -70,8 +70,9 @@
         </vbox>
 
         <hbox id="checkboxContainer">
-          <checkbox id="persistDomainAcceptance" oncommand="onChangePersitence();" 
-                    label="&dialog.remember.label;" accesskey="&dialog.remember.accesskey;"/>
+          <checkbox id="persistDomainAcceptance" oncommand="onChangePersistence();" 
+                    label="&dialog.remember.label;" accesskey="&dialog.remember.accesskey;"
+                    persist="checked"/>
         </hbox>
       </vbox>
 

@@ -126,7 +126,8 @@ function onload()
         messageParent.appendChild(descriptionNode);
       }
 
-      document.getElementById('persistDomainAcceptance').checked = params.GetInt(nsICookieAcceptDialog.REMEMBER_DECISION) > 0;
+      // Must we remember the decision?
+      params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
 
       if (cookie) {
         document.getElementById('ifl_name').setAttribute("value",cookie.name);
@@ -166,7 +167,7 @@ function showhideinfo()
   sizeToContent();
 }
 
-function onChangePersitence()
+function onChangePersistence()
 {
   params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
 }

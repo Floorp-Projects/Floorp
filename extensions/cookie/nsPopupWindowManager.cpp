@@ -39,8 +39,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsPermissions.h"
 #include "nsPermission.h"
+#include "nsIPermissionManager.h"
 
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
@@ -49,69 +49,11 @@
 #include "nsIServiceManagerUtils.h"
 #include "nsIURI.h"
 
-/*
- The Popup Window Manager maintains popup window permissions by website.
+/**
+ * The Popup Window Manager maintains popup window permissions by website.
  */
 
-#define POPUP_PREF  "dom.disable_open_during_load"
-static const char sPopupDisablePref[] = POPUP_PREF;
-static const char sPermissionChangeNotification[] = PPM_CHANGE_NOTIFICATION;
-static const char sXPCOMShutdownTopic[] = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
-static const char sPrefChangedTopic[] = NS_PREFBRANCH_PREFCHANGE_TOPIC_ID;
-
-class nsPopupEnumerator : public nsISimpleEnumerator
-{
-    public:
-
-        NS_DECL_ISUPPORTS
-
-        nsPopupEnumerator() : mHostCurrent(0), mTypeCurrent(0), mHostsFound(0)
-        {
-          mHostCount = PERMISSION_HostCountForType(WINDOWPERMISSION);
-        }
-
-        NS_IMETHOD HasMoreElements(PRBool *result) 
-        {
-          *result = mHostCount > mHostsFound;
-          return NS_OK;
-        }
-
-        NS_IMETHOD GetNext(nsISupports **result) 
-        {
-          char *host;
-          PRBool capability;
-          PRInt32 type;
-        
-          *result = nsnull;
-          
-          while (NS_SUCCEEDED(PERMISSION_Enumerate(mHostCurrent, mTypeCurrent++, &host, &type, &capability))) {
-            if ((mTypeCurrent == PERMISSION_TypeCount(mHostCurrent)) || (type == WINDOWPERMISSION)) {
-              mTypeCurrent = 0;
-              mHostCurrent++;
-            }
-            if (type == WINDOWPERMISSION) {
-              nsIPermission *permission = new nsPermission(host, type, capability);
-              *result = permission;
-              NS_ADDREF(*result);
-              mHostsFound++;
-              break;
-            }
-          }
-          return NS_OK;
-        }
-
-        virtual ~nsPopupEnumerator() 
-        {
-        }
-
-    protected:
-        PRInt32 mHostCurrent;
-        PRInt32 mTypeCurrent;
-        PRInt32 mHostCount;
-        PRInt32 mHostsFound;
-};
-
-NS_IMPL_ISUPPORTS1(nsPopupEnumerator, nsISimpleEnumerator);
+static const char kPopupDisablePref[] = "dom.disable_open_during_load";
 
 //*****************************************************************************
 //*** nsPopupWindowManager object management and nsISupports
@@ -124,31 +66,35 @@ nsPopupWindowManager::nsPopupWindowManager() :
 
 nsPopupWindowManager::~nsPopupWindowManager(void)
 {
-  StopObservingThings();
 }
 
-NS_IMPL_ISUPPORTS2(nsPopupWindowManager, 
+NS_IMPL_ISUPPORTS3(nsPopupWindowManager, 
                    nsIPopupWindowManager,
-                   nsIObserver);
+                   nsIObserver,
+                   nsSupportsWeakReference);
 
 nsresult
 nsPopupWindowManager::Init()
 {
-  mOS = do_GetService("@mozilla.org/observer-service;1");
-  // we bypass the permission manager API's but it still owns the underlying
-  // list--we need to let it do the initializing to avoid conflict.
-  mPermManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefs)
-    prefs->GetBranch("", getter_AddRefs(mPopupPrefBranch));
+  nsresult rv;
+  mPermissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
 
-  if (mOS && mPermManager && mPopupPrefBranch) {
-     // initialize our local copy of the pref
-    Observe(NS_STATIC_CAST(nsIPopupWindowManager *, this),
-            sPrefChangedTopic, NS_LITERAL_STRING(POPUP_PREF).get());
-    return ObserveThings();
-  }
-  return NS_ERROR_FAILURE;
+  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    PRBool permission;
+    rv = mPrefBranch->GetBoolPref(kPopupDisablePref, &permission);
+    if (NS_FAILED(rv)) {
+      permission = PR_FALSE;
+    }
+    mPolicy = permission ? DENY_POPUP : ALLOW_POPUP;
+
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefInternal->AddObserver(kPopupDisablePref, this, PR_TRUE);
+    }
+  } 
+
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -166,210 +112,56 @@ nsPopupWindowManager::GetDefaultPermission(PRUint32 *aDefaultPermission)
 NS_IMETHODIMP
 nsPopupWindowManager::SetDefaultPermission(PRUint32 aDefaultPermission)
 {
-  mPolicy = (aDefaultPermission == DENY_POPUP) ? DENY_POPUP : ALLOW_POPUP;
+  mPolicy = aDefaultPermission;
   return NS_OK;
 }
 
+
 NS_IMETHODIMP
-nsPopupWindowManager::Add(nsIURI *aURI, PRBool aPermit)
+nsPopupWindowManager::TestPermission(nsIURI *aURI, PRUint32 *aPermission)
 {
   NS_ENSURE_ARG_POINTER(aURI);
-  if (!mPermManager)
-    // if we couldn't initialize the permission manager Permission_AddHost()
-    // will create a new list that could stomp an existing cookperm.txt
-    return NS_ERROR_FAILURE;
-  
-  nsCAutoString uri;
-  aURI->GetHostPort(uri);
-  if (uri.IsEmpty())
-    return NS_ERROR_FAILURE;
-  
-  if (NS_SUCCEEDED(Permission_AddHost(uri, aPermit, WINDOWPERMISSION, PR_TRUE)))
-    return NotifyObservers(aURI);
-  
-  return NS_ERROR_FAILURE;
-}
+  NS_ENSURE_ARG_POINTER(aPermission);
 
-NS_IMETHODIMP
-nsPopupWindowManager::Remove(nsIURI *aURI)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-
-  nsCAutoString uri;
-  aURI->GetHostPort(uri);
-  if (uri.IsEmpty())
-    return NS_ERROR_FAILURE;
-
-  PERMISSION_Remove(uri, WINDOWPERMISSION);
-  return NotifyObservers(aURI);
-}
-
-NS_IMETHODIMP
-nsPopupWindowManager::RemoveAll()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* The underlying manager, nsPermissionManager, won't store permissions
-   for an url lacking a host. It's good to know these things up front.
-*/
-NS_IMETHODIMP
-nsPopupWindowManager::TestSuitability(nsIURI *aURI, PRBool *_retval)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsCAutoString hostPort;
-  aURI->GetHostPort(hostPort);
-  *_retval = hostPort.IsEmpty() ? PR_FALSE : PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPopupWindowManager::TestPermission(nsIURI *aURI, PRUint32 *_retval)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  *_retval = mPolicy;
-
-  nsCAutoString uri;
-  aURI->GetHostPort(uri);
-  if (uri.IsEmpty())
-    return NS_OK;
-
-  /* Look for the specific host, if not found check its domains */
   nsresult rv;
-  PRBool permission;
-  PRInt32 offset = 0;
-  const char* host = uri.get();
-  do {
-    rv = permission_CheckFromList(host+offset, permission, WINDOWPERMISSION);
-    if (NS_SUCCEEDED(rv)) {
-      /* found a value for the host/domain */
-      *_retval = permission ? ALLOW_POPUP : DENY_POPUP;
-      break;
+  PRUint32 permit;
+
+  if (mPermissionManager) {
+    rv = mPermissionManager->TestPermission(aURI,
+                                            nsIPermissionManager::POPUP_TYPE,
+                                            &permit);
+
+    // Share some constants between interfaces?
+    if (permit == nsIPermissionManager::ALLOW_ACTION) {
+      *aPermission = ALLOW_POPUP;
+    } else if (permit == nsIPermissionManager::DENY_ACTION) {
+      *aPermission = DENY_POPUP;
+    } else {
+      *aPermission = mPolicy;
     }
-
-    /* try the parent domain */
-    offset = uri.FindChar('.', offset) + 1;
-  } while (offset > 0 );
-
+  } else {
+    *aPermission = mPolicy;
+  }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPopupWindowManager::GetEnumerator(nsISimpleEnumerator **_retval)
-{
-  *_retval = nsnull;
-
-  nsPopupEnumerator* popupEnum = new nsPopupEnumerator();
-  if (popupEnum == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  NS_ADDREF(popupEnum);
-  *_retval = popupEnum;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPopupWindowManager::AddObserver(nsIObserver *aObserver)
-{
-  if (mOS)
-    return mOS->AddObserver(aObserver, sPermissionChangeNotification, PR_FALSE);
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPopupWindowManager::RemoveObserver(nsIObserver *aObserver)
-{
-  if (mOS)
-    return mOS->RemoveObserver(aObserver, sPermissionChangeNotification);
-  return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************
 //*** nsPopupWindowManager::nsIObserver
 //*****************************************************************************
 NS_IMETHODIMP
-nsPopupWindowManager::Observe(nsISupports *aSubject, const char *aTopic,
+nsPopupWindowManager::Observe(nsISupports *aSubject, 
+                              const char *aTopic,
                               const PRUnichar *aData)
 {
-  if (nsCRT::strcmp(aTopic, sPrefChangedTopic) == 0 &&
-      NS_LITERAL_STRING(POPUP_PREF).Equals(aData)) {
+  NS_ConvertUCS2toUTF8 pref(aData);
+  if (pref.Equals(kPopupDisablePref)) {
     // refresh our local copy of the "disable popups" pref
     PRBool permission = PR_FALSE;
 
-    if (mPopupPrefBranch) {
-      mPopupPrefBranch->GetBoolPref(sPopupDisablePref, &permission);
+    if (mPrefBranch) {
+      mPrefBranch->GetBoolPref(kPopupDisablePref, &permission);
     }
     mPolicy = permission ? DENY_POPUP : ALLOW_POPUP;
-  } else if (nsCRT::strcmp(aTopic, sXPCOMShutdownTopic) == 0) {
-    // unhook cyclical references
-    StopObservingThings();
-    DeInitialize();
   }
   return NS_OK;
 }
-
-//*****************************************************************************
-//*** nsPopupWindowManager private methods
-//*****************************************************************************
-
-/* Register for notifications of interest. That's a change in the pref
-   we're watching and XPCOM shutdown. */
-nsresult
-nsPopupWindowManager::ObserveThings()
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (mOS)
-    rv = mOS->AddObserver(this, sXPCOMShutdownTopic, PR_FALSE);
-
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPrefBranchInternal> ibranch(do_QueryInterface(mPopupPrefBranch));
-    if (ibranch) {
-      ibranch->AddObserver(sPopupDisablePref, this, PR_FALSE);
-    }
-  }
-
-  return rv;
-}
-
-// undo ObserveThings
-nsresult
-nsPopupWindowManager::StopObservingThings()
-{
-  nsCOMPtr<nsIPrefBranchInternal> ibranch(do_QueryInterface(mPopupPrefBranch));
-  if (ibranch) {
-    ibranch->RemoveObserver(sPopupDisablePref, this);
-  }
-
-  if (mOS)
-    mOS->RemoveObserver(this, sXPCOMShutdownTopic);
-
-  return NS_OK;
-}
-
-// broadcast a notification that a popup pref has changed
-nsresult
-nsPopupWindowManager::NotifyObservers(nsIURI *aURI)
-{
-  if (mOS) {
-    nsCAutoString uri;
-    aURI->GetSpec(uri);
-    return mOS->NotifyObservers(NS_STATIC_CAST(nsIPopupWindowManager *, this),
-                sPermissionChangeNotification, NS_ConvertUTF8toUCS2(uri).get());
-  }
-  return NS_ERROR_FAILURE;
-}
-
-// unhook cyclical references so we can be properly shut down
-void
-nsPopupWindowManager::DeInitialize()
-{
-  mOS = 0;
-  mPermManager = 0;
-  mPopupPrefBranch = 0;
-}
-

@@ -24,24 +24,30 @@
 [scriptable, uuid(28F16D80-157B-11d5-A542-0010A401EB10)]
 
 /**
-  This interface represents a "permission" object.
-*/
+ * This interface defines a "permission" object,
+ * used to specify allowed/blocked objects from
+ * user-specified sites (cookies, images etc).
+ */
 
-interface nsIPermission : nsISupports {
+interface nsIPermission : nsISupports
+{
+    /**
+     * The name of the host for which the permission is set
+     */
+    readonly attribute AUTF8String host;
 
-    /* the name of the host */
-    readonly attribute string host;
+    /**
+     * The type of permission (e.g., cookie, image, etc)
+     * (see nsIPermissionManager.idl for allowed values)
+     */
+    readonly attribute PRUint32 type;
 
-    /* the type of permission (e.g., cookie, image, etc) */
-    readonly attribute PRInt32 type;
-
-    /* the permission */
-    readonly attribute boolean capability;
+    /**
+     * The permission (see nsIPermissionManager.idl for allowed values)
+     */
+    readonly attribute PRUint32 capability;
 };
 
 %{ C++
-// {28F16D80-157B-11d5-A542-0010A401EB10}
-#define NS_PERMISSION_CID \
-{ 0x28f16d80, 0x157b, 0x11d5, { 0xa5, 0x42, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
 #define NS_PERMISSION_CONTRACTID "@mozilla.org/permission;1"
 %}
