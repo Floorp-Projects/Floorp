@@ -284,8 +284,8 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/global/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/messenger/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/navigator/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"help.jar"),"content/help/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf,"help.jar"),"locale/en-US/help/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","help.jar"),"content/help/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","help.jar"),"locale/en-US/help/");
 
     /* Log files that are created after the installer is done, so they can be uninstalled */
     logComment("Installing: "    + fProgram + "Xpcs Registry.dat");
