@@ -2696,7 +2696,7 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
       pos.mContentOffset = contentOffsetEnd;
       result = VisualSelectFrames(aPresContext, newFrame, pos);
       if (NS_FAILED(result))
-        result = HandleClick(newContent, startPos, contentOffsetEnd, PR_FALSE,
+        result = HandleClick(newContent, startPos, contentOffsetEnd, PR_TRUE,
 	                     PR_FALSE, beginOfContent);
       mHint = saveHint;
     }
