@@ -1217,7 +1217,8 @@ NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const
 {
   // Insert spaces to insure that words from controls aren't jammed together
   if (!textEquivalent.IsEmpty()) {
-    aFlatString->Append(NS_LITERAL_STRING(" "));
+    if (!aFlatString->IsEmpty())
+      aFlatString->Append(NS_LITERAL_STRING(" "));
     aFlatString->Append(textEquivalent);
     aFlatString->Append(NS_LITERAL_STRING(" "));
   }
@@ -1243,6 +1244,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
     elt->GetAttribute(NS_LITERAL_STRING("value"), textEquivalent); // Prefer value over tooltiptext
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("tooltiptext"), textEquivalent);
+    textEquivalent.CompressWhitespace();
     return AppendStringWithSpaces(aFlatString, textEquivalent);
   }
 
@@ -1272,16 +1274,18 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
             const nsStyleDisplay* display = (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
             if (display->IsBlockLevel() || display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
               isHTMLBlock = PR_TRUE;
-              aFlatString->Append(NS_LITERAL_STRING(" "));
+              if (!aFlatString->IsEmpty())
+                aFlatString->Append(NS_LITERAL_STRING(" "));
             }
           }
         }
       }
       nsAutoString text;
       textContent->CopyText(text);
+      text.CompressWhitespace();
       if (text.Length()>0)
         aFlatString->Append(text);
-      if (isHTMLBlock)
+      if (isHTMLBlock && !aFlatString->IsEmpty())
         aFlatString->Append(NS_LITERAL_STRING(" "));
     }
     return NS_OK;
@@ -1289,7 +1293,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
 
   nsCOMPtr<nsIDOMHTMLBRElement> brElement(do_QueryInterface(aContent));
   if (brElement) {   // If it's a line break, insert a space so that words aren't jammed together
-    aFlatString->Append(NS_LITERAL_STRING(" "));
+    aFlatString->Append(NS_LITERAL_STRING("\r\n"));
     return NS_OK;
   }
 
@@ -1307,10 +1311,18 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
     elt->GetAttribute(NS_LITERAL_STRING("alt"), textEquivalent);
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("title"), textEquivalent);
+    if (imageContent) {
+      nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+      nsCOMPtr<nsIDOMNode> imageNode(do_QueryInterface(aContent));
+      if (imageNode && presShell)
+        presShell->GetImageLocation(imageNode, textEquivalent);
+    }
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("src"), textEquivalent);
+
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("data"), textEquivalent); // for <object>s with images
+    textEquivalent.CompressWhitespace();
     return AppendStringWithSpaces(aFlatString, textEquivalent);
   }
 
@@ -1319,6 +1331,25 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
 
 
 NS_IMETHODIMP nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
+{
+  nsresult rv = AppendFlatStringFromSubtreeRecurse(aContent, aFlatString);
+  if (NS_SUCCEEDED(rv) && !aFlatString->IsEmpty()) {
+    nsAString::const_iterator start, end;
+    aFlatString->BeginReading(start);
+    aFlatString->EndReading(end);
+
+    PRInt32 spacesToTruncate = 0;
+    while (-- end != start && *end == ' ')
+      ++ spacesToTruncate;
+
+    if (spacesToTruncate > 0)
+      aFlatString->Truncate(aFlatString->Length() - spacesToTruncate);
+  }
+
+  return rv;
+}
+
+nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString)
 {
   // Depth first search for all text nodes that are decendants of content node.
   // Append all the text into one flat string

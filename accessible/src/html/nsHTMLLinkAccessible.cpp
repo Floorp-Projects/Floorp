@@ -63,20 +63,21 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetAccName(nsAString& _retval)
   if (!IsALink())  // Also initializes private data members
     return NS_ERROR_FAILURE;
 
-  nsAutoString name;
-  nsresult rv = AppendFlatStringFromSubtree(mLinkContent, &name);
-  if (NS_SUCCEEDED(rv)) {
-    // Temp var needed until CompressWhitespace built for nsAString
-    name.CompressWhitespace();
-    _retval.Assign(name);
-  }
-  return rv;
+  return AppendFlatStringFromSubtree(mLinkContent,&_retval);
 }
 
 /* unsigned long getAccRole (); */
 NS_IMETHODIMP nsHTMLLinkAccessible::GetAccRole(PRUint32 *_retval)
 {
   *_retval = ROLE_LINK;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLLinkAccessible::GetAccState(PRUint32 *_retval)
+{
+  nsLinkableAccessible::GetAccState(_retval);
+  *_retval &= ~(STATE_READONLY|STATE_SELECTABLE);
 
   return NS_OK;
 }

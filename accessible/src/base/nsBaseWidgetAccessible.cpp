@@ -274,9 +274,10 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
 NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAString& _retval)
 {
   if (IsALink()) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mLinkContent));
-    if (elt) 
-      return elt->GetAttribute(NS_LITERAL_STRING("href"), _retval);
+    nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mLinkContent));
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+    if (linkNode && presShell)
+      return presShell->GetLinkLocation(linkNode, _retval);
   }
   return NS_ERROR_NOT_IMPLEMENTED;
 }

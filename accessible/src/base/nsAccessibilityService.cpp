@@ -559,9 +559,9 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccess
       //There is a "use map"
       *_retval = new nsHTMLImageMapAccessible(node, weakShell);
     }
+    else
+      *_retval = new nsHTMLImageAccessible(node, weakShell);
   }
-  else
-    *_retval = new nsHTMLImageAccessible(node, weakShell);
 
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;

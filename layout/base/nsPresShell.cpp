@@ -1095,8 +1095,8 @@ public:
   NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const;
 
   NS_IMETHOD DoCopy();
-  NS_IMETHOD DoCopyLinkLocation(nsIDOMNode* aNode);
-  NS_IMETHOD DoCopyImageLocation(nsIDOMNode* aNode);
+  NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString);
+  NS_IMETHOD GetImageLocation(nsIDOMNode* aNode, nsAString& aLocationString);
   NS_IMETHOD DoCopyImageContents(nsIDOMNode* aNode);
 
   NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
@@ -4328,11 +4328,11 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   return rv;
 }
 
-// DoCopyLinkLocation: copy link location to clipboard
-NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
+// GetLinkLocation: copy link location to clipboard
+NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString)
 {
 #ifdef DEBUG_dr
-  printf("dr :: PresShell::DoCopyLinkLocation\n");
+  printf("dr :: PresShell::GetLinkLocation\n");
 #endif
 
   NS_ENSURE_ARG_POINTER(aNode);
@@ -4397,27 +4397,23 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
   }
 
   if (anchor || area || link || xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
-    // get the clipboard helper
-    nsCOMPtr<nsIClipboardHelper>
-      clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-     
     //Remove all the '\t', '\r' and '\n' from 'anchorText'
     anchorText.StripChars(strippedChars);
 
-    // copy the href onto the clipboard
-    return clipboard->CopyString(anchorText);
+    aLocationString = anchorText;
+
+    return NS_OK;
   }
 
   // if no link, fail.
   return NS_ERROR_FAILURE;
 }
 
-// DoCopyImageLocation: copy image location to clipboard
-NS_IMETHODIMP PresShell::DoCopyImageLocation(nsIDOMNode* aNode)
+// GetImageLocation: copy image location to clipboard
+NS_IMETHODIMP PresShell::GetImageLocation(nsIDOMNode* aNode, nsAString& aLocationString)
 {
 #ifdef DEBUG_dr
-  printf("dr :: PresShell::DoCopyImageLocation\n");
+  printf("dr :: PresShell::GetImageLocation\n");
 #endif
 
   NS_ENSURE_ARG_POINTER(aNode);
@@ -4426,24 +4422,7 @@ NS_IMETHODIMP PresShell::DoCopyImageLocation(nsIDOMNode* aNode)
   // are we an image?
   nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(aNode, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (img) {
-    // if so, get the src
-    nsAutoString srcText;
-    rv = img->GetSrc(srcText);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // get the clipboard helper
-    nsCOMPtr<nsIClipboardHelper>
-      clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(clipboard, NS_ERROR_FAILURE);
-
-    // copy the src onto the clipboard
-    return clipboard->CopyString(srcText);
-  }
-
-  // if no image, fail.
-  return NS_ERROR_FAILURE;
+  return img->GetSrc(aLocationString);
 }
 
 // DoCopyImageContents: copy image contents to clipboard

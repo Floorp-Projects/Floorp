@@ -109,6 +109,7 @@
 #include "nsIXULDocument.h"  // Temporary code for Bug 136185
 
 #include "nsIChromeRegistry.h"
+#include "nsIClipboardHelper.h"
 
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
@@ -5465,7 +5466,16 @@ NS_IMETHODIMP DocumentViewerImpl::CopyLinkLocation()
   // make noise if we're not in a link
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-  return mPresShell->DoCopyLinkLocation(node);
+
+  nsAutoString locationText;
+  rv = mPresShell->GetLinkLocation(node, locationText);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // copy the href onto the clipboard
+  return clipboard->CopyString(locationText);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::CopyImageLocation()
@@ -5476,7 +5486,16 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageLocation()
   // make noise if we're not in an image
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-  return mPresShell->DoCopyImageLocation(node);
+
+  nsAutoString locationText;
+  rv = mPresShell->GetImageLocation(node, locationText);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // copy the href onto the clipboard
+  return clipboard->CopyString(locationText);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::CopyImageContents()
