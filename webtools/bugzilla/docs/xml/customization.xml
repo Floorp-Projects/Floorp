@@ -295,7 +295,7 @@
       </para>
 
       <para>After untarring the localizations (or creating your own) in the 
-      <filename class="directory">$BUGZILLA_HOME/template</filename> directory,
+      <filename class="directory"><varname>BUGZILLA_ROOT</varname>/template</filename> directory,
       you must update the <option>languages</option> parameter to contain any
       localizations you'd like to permit. You may also wish to set the
       <option>defaultlanguage</option> parameter to something other than
@@ -309,73 +309,73 @@
     <title>Template Hooks</title>
         
     <para>
-      Template hooks are a way for customisers or Bugzilla extensions to insert
-      code into the standard Bugzilla templates without modifying them.  
-      The hooks mechanism defines an API for extending the
-      standard templates with a clean separation of code.
-      This makes the changes less tied to specific versions of
-      Bugzilla, and reduces merge conflicts, making 
-      upgrading a modified Bugzilla installation easier.
+      Template hooks are a way for extensions to Bugzilla to insert code
+      into the standard Bugzilla templates without modifying the template files
+      themselves.  The hooks mechanism defines a consistent API for extending
+      the standard templates in a way that cleanly separates standard code
+      from extension code.  Hooks reduce merge conflicts and make it easier
+      to write extensions that work across multiple versions of Bugzilla,
+      making upgrading a Bugzilla installation with installed extensions easier.
     </para>
 
     <para>
-      A template hook is just an named place in a standard template file. 
-      When Bugzilla reaches this position, it checks whether there are any
-      extension template files for that hook. If so, it processes them. Each
-      hook has a directory of its own in the Bugzilla template directory tree. 
-      Hooking a template file on to a specific hook is as
-      simple as putting the file into that hook's directory.  
+      A template hook is just a named place in a standard template file
+      where extension template files for that hook get processed.  Each hook
+      has a corresponding directory in the Bugzilla directory tree.  Hooking an
+      extension template to a hook is as simple as putting the extension file
+      into the hook's directory.  When Bugzilla processes the standard template
+      and reaches the hook, it will process all extension templates in the
+      hook's directory. The hooks themselves can be added into any standard
+      template upon request by extension authors.
     </para>
     
     <para>
-      To use hooks to extend a Bugzilla template, first make sure there is a
-      hook at the appropriate place within the template you want to extend. 
-      Hooks appear in the default Bugzilla templates as a single template 
-      directive in the format
-      <filename>[% Hook.process("&lt;name&gt;") %]</filename>, where 
-      &lt;name&gt;
-      is the unique (within that template) name of the hook.
+      To use hooks to extend a Bugzilla template, first make sure there is
+      a hook at the appropriate place within the template you want to extend. 
+      Hooks appear in the standard Bugzilla templates as a single directive
+      in the format
+      <literal role="code">[% Hook.process("<varname>name</varname>") %]</literal>,
+      where <varname>name</varname> is the unique (within that template)
+      name of the hook.
     </para>
 
     <para>
-      If you aren't sure which template you want to extend or just want to
-      browse the available hooks, either use your favorite multi-file search
-      tool (e.g. grep) to search the standard templates for occurrences of 
-      "Hook.process" or browse the directory tree in
-      <filename>$BUGZILLA_HOME/template/en/extension/hook/</filename>,
-      which contains a directory for each hook. Each hook's directory
-      is located as follows:
+      If you aren't sure which template you want to extend or just want
+      to browse the available hooks, either use your favorite multi-file search
+      tool (e.g. <command>grep</command>) to search the standard templates
+      for occurrences of <methodname>Hook.process</methodname> or browse
+      the directory tree in
+      <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/</filename>,
+      which contains a directory for each hook in the following location:
     </para>
 
     <para>
-      <filename>$BUGZILLA_HOME/template/en/extension/hook/&lt;path-to-standard-template&gt;/&lt;standard-template-name&gt;/&lt;hook-name&gt;/</filename>
+      <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/<varname>PATH_TO_STANDARD_TEMPLATE</varname>/<varname>STANDARD_TEMPLATE_NAME</varname>/<varname>HOOK_NAME</varname>/</filename>
     </para>
 
     <para>
-      If there is no hook in the appropriate place within the Bugzilla
-      template you want to extend,
-      <ulink url="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=User%20Interface">file 
+      If there is no hook at the appropriate place within the Bugzilla template
+      you want to extend,
+      <ulink href="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=User%20Interface">file
       a bug requesting one</ulink>, specifying:
     </para>
 
     <simplelist>
       <member>the template for which you are requesting a hook;</member>
-
       <member>
-        where in the template you would like the hook to be placed (line
-        number/position for latest version of template in CVS or description of
-        location);
+        where in the template you would like the hook to be placed
+        (line number/position for latest version of template in CVS
+        or description of location);
       </member>
       <member>the purpose of the hook;</member>
       <member>a link to information about your extension, if any.</member>
     </simplelist>
 
     <para>
-      The Bugzilla reviewers will promptly review each hook request, 
-      name the hook,
-      add it to the template and check the new version into CVS, and add the
-      corresponding directory to
-      <filename>$BUGZILLA_HOME/template/en/extension/hook/</filename>.
+      The Bugzilla reviewers will promptly review each hook request,
+      name the hook, add it to the template, check the new version
+      of the template into CVS, and create the corresponding directory in
+      <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/</filename>.
     </para>
 
     <para>
@@ -396,8 +396,8 @@
     </para>
     
     <para>
-      That's it!  Now, when the standard template containing the hook is
-      processed, your extension template will be processed at the point 
+      That's it!  Now, when the standard template containing the hook
+      is processed, your extension template will be processed at the point 
       where the hook appears.
     </para>
 
@@ -405,44 +405,44 @@
       For example, let's say you have an extension named Projman that adds
       project management capabilities to Bugzilla.  Projman has an
       administration interface <filename>edit-projects.cgi</filename>, 
-      and you want to 
-      add a link to it into the navigation bar at the bottom of every Bugzilla 
-      page for those users who are authorized to administer projects.
+      and you want to add a link to it into the navigation bar at the bottom
+      of every Bugzilla page for those users who are authorized
+      to administer projects.
     </para>
 
     <para>
       The navigation bar is generated by the template file
-      <filename>useful-links.html.tmpl</filename>, which is located in the
-      <filename>global/</filename> subdirectory on the standard Bugzilla 
+      <filename>useful-links.html.tmpl</filename>, which is located in
+      the <filename>global/</filename> subdirectory on the standard Bugzilla 
       template path
-      <filename>$BUGZILLA_HOME/template/en/default/</filename>.
-      Looking in <filename>useful-links.html.tmpl</filename>, you find the 
-      following 
-      hook at the end of the list of standard Bugzilla administration links:
+      <filename><varname>BUGZILLA_ROOT</varname>/template/en/default/</filename>.
+      Looking in <filename>useful-links.html.tmpl</filename>, you find
+      the following hook at the end of the list of standard Bugzilla
+      administration links:
     </para>
 
-    <programlisting>...
-    [% ', &lt;a href="editkeywords.cgi"&gt;keywords&lt;/a&gt;' 
+    <programlisting><![CDATA[...
+    [% ', <a href="editkeywords.cgi">keywords</a>' 
                                               IF user.groups.editkeywords %]
     [% Hook.process("edit") %]
-...</programlisting>
+...]]></programlisting>
 
     <para>
       The corresponding directory for this hook is
-      <filename>$BUGZILLA_HOME/template/en/extension/hook/global/useful-links.html.tmpl/edit/</filename>.
+      <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/global/useful-links.html.tmpl/edit/</filename>.
     </para>
 
     <para>
-      You put a template named 
+      You put a template named
       <filename>projman-edit-projects.html.tmpl</filename>
       into that directory with the following content:
     </para>
 
-    <programlisting>[% ', &lt;a href="edit-projects.cgi"&gt;projects&lt;/a&gt;' IF user.groups.projman_admins %]</programlisting>
+    <programlisting><![CDATA[...[% ', <a href="edit-projects.cgi">projects</a>' IF user.groups.projman_admins %]]]></programlisting>
 
     <para>
       Voila!  The link now appears after the other administration links in the
-      navigation bar for users in the <filename>projman_admins</filename> group.
+      navigation bar for users in the <literal>projman_admins</literal> group.
     </para>
 
     <para>
@@ -452,26 +452,24 @@
     <itemizedlist>
       <listitem>
         <para>
-          You may want to prefix your extension templates names with
-          the name of your extension, e.g. 
-          <filename>projman-foo.html.tmpl</filename>, 
-          so there is no chance of a conflict with the names of
-          templates installed by other extensions.
+          You may want to prefix your extension template names
+          with the name of your extension, e.g. 
+          <filename><literal>projman</literal>-foo.html.tmpl</filename>, 
+          so they do not conflict with the names of templates installed by
+          other extensions.
         </para>
       </listitem>
 
       <listitem>
         <para>
           If your extension includes entirely new templates in addition to
-          extensions of standard templates, it should install those new templates
-          into an extension-specific subdirectory of the
-          <filename>$BUGZILLA_HOME/template/en/extension/</filename> 
-          directory.
-          The <filename>extension/</filename> directory, like the 
-          <filename>default/</filename>
-          and <filename>custom/</filename> directories, is part of the template 
-          search path, so putting templates there enables them to be found by 
-          the template processor.
+          extensions of standard templates, it should install those new
+          templates into an extension-specific subdirectory of the
+          <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/</filename> 
+          directory.  The <filename>extension/</filename> directory, like the 
+          <filename>default/</filename> and <filename>custom/</filename>
+          directories, is part of the template search path, so putting templates
+          there enables them to be found by the template processor.
         </para>
 
         <para>
@@ -479,18 +477,36 @@
           <filename>custom/</filename> directory (i.e. templates added by the 
           specific installation), then in the <filename>extension/</filename> 
           directory (i.e. templates added by extensions), and finally in the
-          <filename>default/</filename> directory, for the standard Bugzilla 
-          templates.
-          Thus extension templates can override standard templates, but
-          installation-specific templates override both.
+          <filename>default/</filename> directory (i.e. the standard Bugzilla 
+          templates).  Thus extension templates can override standard templates,
+          but installation-specific templates override both.
         </para>
 
         <para>
-          Note that overriding standard templates gives you great power but 
-          also makes
-          upgrading an installation harder. As with custom templates, we
-          recommend using this functionality sparingly and only when absolutely
-          necessary.
+          Note that overriding standard templates with extension templates
+          gives you great power but also makes upgrading an installation harder.
+          As with custom templates,  we recommend using this functionality
+          sparingly and only when absolutely necessary.
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>
+          Installation customizers can also take advantage of hooks when adding
+          code to a Bugzilla template.  To do so, create directories in
+          <filename><varname>BUGZILLA_ROOT</varname>/template/en/custom/hook/</filename>
+          equivalent to the directories in
+          <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/</filename>          
+          for the hooks you want to use, then place your customization templates
+          into those directories.
+        </para>
+
+        <para>
+          Obviously this method of customizing Bugzilla only lets you add code
+          to the standard templates; you cannot change the existing code.
+          Nevertheless, for those customizations that only add code, this method
+          can reduce conflicts when merging changes, making upgrading
+          your customized Bugzilla installation easier.
         </para>
       </listitem>
     </itemizedlist>    
