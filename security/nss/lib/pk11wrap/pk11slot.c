@@ -154,9 +154,9 @@ int wrapMechanismCount = sizeof(wrapMechanismList)/sizeof(wrapMechanismList[0]);
 static struct PK11GlobalStruct {
    int transaction;
    PRBool inTransaction;
-   char *(*getPass)(PK11SlotInfo *,PRBool,void *);
-   PRBool (*verifyPass)(PK11SlotInfo *,void *);
-   PRBool (*isLoggedIn)(PK11SlotInfo *,void *);
+   char *(PR_CALLBACK *getPass)(PK11SlotInfo *,PRBool,void *);
+   PRBool (PR_CALLBACK *verifyPass)(PK11SlotInfo *,void *);
+   PRBool (PR_CALLBACK *isLoggedIn)(PK11SlotInfo *,void *);
 } PK11_Global = { 1, PR_FALSE, NULL, NULL, NULL };
  
 /************************************************************
