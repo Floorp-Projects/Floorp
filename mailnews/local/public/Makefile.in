@@ -28,6 +28,7 @@ EXPORTS= \
 	nsIPop3URL.h \
 	nsIMailboxUrl.h \
 	nsIMailboxService.h \
+	nsIPop3Service.h \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
