@@ -30,7 +30,6 @@ CPPSRCS=    nsMsgRFC822Parser.cpp  \
 			nsUInt32Array.cpp\
 			nsMsgKeyArray.cpp\
 			nsMsgFolder.cpp \
-			nsMsgPtrArray.cpp	\
 			nsMsgGroupRecord.cpp	\
 			nsMsgRDFFolder.cpp \
 			nsNewsSet.cpp \
@@ -41,7 +40,6 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj  \
 			.\$(OBJDIR)\nsUInt32Array.obj\
 			.\$(OBJDIR)\nsMsgKeyArray.obj\
 			.\$(OBJDIR)\nsMsgFolder.obj \
-			.\$(OBJDIR)\nsMsgPtrArray.obj		\
 			.\$(OBJDIR)\nsMsgGroupRecord.obj	\
 			.\$(OBJDIR)\nsMsgRDFFolder.obj \
 			.\$(OBJDIR)\nsNewsSet.obj \
@@ -54,7 +52,6 @@ EXPORTS=	nsMsgRFC822Parser.h \
 			nsMsgKeyArray.h	\
 			nsNewsSet.h	\
 			nsMsgGroupRecord.h  \
-			nsMsgPtrArray.h	 \
 			$(NULL)
 
 

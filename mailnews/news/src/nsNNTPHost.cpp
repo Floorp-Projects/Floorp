@@ -384,7 +384,7 @@ protected:
 	char* m_nameAndPort;
 	char* m_fullUIName;
 
-	MSG_FolderArray* m_groups;	// List of nsINNTPNewsgroup* objects.
+	nsISupportsArray* m_groups;	// List of nsINNTPNewsgroup* objects.
 #ifdef HAVE_MASTER
 	MSG_Master* m_master;
 #endif
@@ -428,15 +428,15 @@ protected:
 								// session, protect against server bustage
 								// where it says no group exists.
 
-	XPPtrArray m_supportedExtensions;
-	XPPtrArray m_searchableGroups;
-	XPPtrArray m_searchableHeaders;
+	nsVoidArray m_supportedExtensions;
+	nsVoidArray m_searchableGroups;
+	nsVoidArray m_searchableHeaders;
 	// ### mwelch Added to determine what charsets can be used
 	//            for each table.
 	XP_HashTable m_searchableGroupCharsets;
 
-	XPPtrArray m_propertiesForGet;
-	XPPtrArray m_valuesForGet;
+	nsVoidArray m_propertiesForGet;
+	nsVoidArray m_valuesForGet;
 
 	PRBool m_postingAllowed;
 	PRBool m_pushAuth; // PR_TRUE if we should volunteer authentication without a
@@ -539,7 +539,7 @@ nsNNTPHost::CleanUp() {
 	delete [] m_hostname;
 	PR_FREEIF(m_nameAndPort);
 	PR_FREEIF(m_fullUIName);
-	delete m_groups;
+	NS_IF_RELEASE(m_groups);
 	delete [] m_dbfilename;
 	delete m_groupTree;
 	if (m_block)
@@ -552,16 +552,16 @@ nsNNTPHost::CleanUp() {
 	if (M_FileOwner == this) M_FileOwner = NULL;
 	PR_FREEIF(m_hostinfofilename);
 	int i;
-	for (i = 0; i < m_supportedExtensions.GetSize(); i++)
-		PR_Free((char*) m_supportedExtensions.GetAt(i));
-	for (i = 0; i < m_searchableGroups.GetSize(); i++)
-		PR_Free((char*) m_searchableGroups.GetAt(i));
-	for (i = 0; i < m_searchableHeaders.GetSize(); i++)
-		PR_Free((char*) m_searchableHeaders.GetAt(i));
-	for (i = 0; i < m_propertiesForGet.GetSize(); i++)
-		PR_Free((char*) m_propertiesForGet.GetAt(i));
-	for (i = 0; i < m_valuesForGet.GetSize(); i++)
-		PR_Free((char*) m_valuesForGet.GetAt(i));
+	for (i = 0; i < m_supportedExtensions.Count(); i++)
+		PR_Free((char*) m_supportedExtensions[i]);
+	for (i = 0; i < m_searchableGroups.Count(); i++)
+		PR_Free((char*) m_searchableGroups[i]);
+	for (i = 0; i < m_searchableHeaders.Count(); i++)
+		PR_Free((char*) m_searchableHeaders[i]);
+	for (i = 0; i < m_propertiesForGet.Count(); i++)
+		PR_Free((char*) m_propertiesForGet[i]);
+	for (i = 0; i < m_valuesForGet.Count(); i++)
+		PR_Free((char*) m_valuesForGet[i]);
 	if (m_searchableGroupCharsets)
 	{
 		// We do NOT free the individual key/value pairs,
@@ -792,7 +792,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
         NS_RELEASE(category);
 	}
 
-	m_groups->Add(info);
+	m_groups->AppendElement(info);
 
 	// prime the folder info from the folder cache while it's still around.
 	// Except this might disable the update of new counts - check it out...
@@ -825,7 +825,7 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
 		buffer = new char[size];
 		if (!buffer) return MK_OUT_OF_MEMORY;
 
-		m_groups = new MSG_FolderArray();
+		m_groups = NS_NewISupportsArray();
 		if (!m_groups) {
 			delete [] buffer;
 			return MK_OUT_OF_MEMORY;
@@ -862,10 +862,10 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
 
 	// build up the category tree for each category container so that roll-up 
 	// of counts will work before category containers are opened.
-	for (PRInt32 i = 0; i < m_groups->GetSize(); i++) {
+	for (PRInt32 i = 0; i < m_groups->Count(); i++) {
         nsresult rv;
         
-		nsINNTPNewsgroup *newsgroup = (nsINNTPNewsgroup *) m_groups->GetAt(i);
+		nsINNTPNewsgroup *newsgroup = (nsINNTPNewsgroup *) (*m_groups)[i];
         
         nsINNTPCategoryContainer *catContainer;
         rv = newsgroup->QueryInterface(nsINNTPCategoryContainer::IID(),
@@ -952,7 +952,7 @@ nsNNTPHost::WriteNewsrc()
 		}
 	}
 
-	int n = m_groups->GetSize();
+	int n = m_groups->Count();
 	for (int i=0 ; i<n && status >= 0 ; i++) {
         nsresult rv;
 		nsINNTPNewsgroup* newsgroup = (nsINNTPNewsgroup*) ((*m_groups)[i]);
@@ -1629,7 +1629,7 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
     nsresult result = NS_ERROR_NOT_INITIALIZED;
     
 	if (m_groups == NULL) return result;
-	int n = m_groups->GetSize();
+	int n = m_groups->Count();
 	for (int i=0 ; i<n ; i++) {
         char *newsgroupName;
         nsresult rv;
@@ -1709,7 +1709,8 @@ nsNNTPHost::AddGroup(const char *groupName,
             nsIMsgFolder *newsFolder = getFolderFor(newsInfo);
             m_hostinfo->AddSubfolderIfUnique(newsFolder);
             /*
-			XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
+            nsISupportsArray* infolist;
+            nsresult rv = m_hostinfo->GetSubFolders(&infolist);
 			// don't add it if it's already in the list!
 			if (infolist->FindIndex(0, newsInfo) == -1)
 				infolist->Add(newsInfo);
@@ -1727,7 +1728,7 @@ nsNNTPHost::AddGroup(const char *groupName,
 		if (ProcessLine(groupLine, PL_strlen(groupLine)) == 0) {
 			// groups are added at end so look there first...
 			newsInfo = (nsINNTPNewsgroup *)
-				m_groups->GetAt(m_groups->GetSize() - 1);
+				(*m_groups)[m_groups->Count() - 1];
 
             char *newsgroupName;
             rv = newsInfo->GetName(&newsgroupName);
@@ -1827,7 +1828,7 @@ nsINNTPCategoryContainer *
 nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 {
     nsresult rv;
-	int groupIndex = m_groups->FindIndex(0, newsInfo);
+	int groupIndex = m_groups->IndexOf(newsInfo);
 	if (groupIndex != -1)
 	{
         // create a category container to hold this newsgroup
@@ -1837,7 +1838,7 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 
         
 		// slip the category container where the newsInfo was.
-		m_groups->SetAt(groupIndex, newCatCont);
+		m_groups->ReplaceElementAt(newCatCont, groupIndex);
 
         nsIMsgFolder *newsFolder = getFolderFor(newsInfo);
 
@@ -1853,7 +1854,8 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
         }
         
         /*
-		XPPtrArray* infoList = (XPPtrArray*) m_hostinfo->GetSubFolders();
+        nsISupportsArray* infolist;
+        nsresult rv = m_hostinfo->GetSubFolders(&infolist);
 		// replace in folder pane server list as well.
 		groupIndex = infoList->FindIndex(0, newsInfo);
 		if (groupIndex != -1)
@@ -1872,13 +1874,13 @@ nsNNTPHost::SwitchCategoryContainerToNews(nsINNTPCategoryContainer*
 {
 	nsINNTPNewsgroup *retInfo = NULL;
 
-	int groupIndex = m_groups->FindIndex(0, catContainerInfo);
+	int groupIndex = m_groups->IndexOf(catContainerInfo);
 	if (groupIndex != -1)
 	{
 		nsINNTPNewsgroup *rootCategory;
         catContainerInfo->GetRootCategory(&rootCategory);
 		// slip the root category container where the category container was.
-		m_groups->SetAt(groupIndex, rootCategory);
+		m_groups->ReplaceElementAt(rootCategory, groupIndex);
 
         nsIMsgFolder *catContFolder = getFolderFor(catContainerInfo);
         if (catContFolder) {
@@ -1890,7 +1892,8 @@ nsNNTPHost::SwitchCategoryContainerToNews(nsINNTPCategoryContainer*
             NS_RELEASE(catContFolder);
         }
         /*
-		XPPtrArray* infoList = (XPPtrArray*) m_hostinfo->GetSubFolders();
+        nsISupportsArray* infoList;
+        nsresult rv = m_hostinfo->GetSubFolders(&infoList);
 		// replace in folder pane server list as well.
 		groupIndex = infoList->FindIndex(0, catContainerInfo);
 		if (groupIndex != -1)
@@ -1920,7 +1923,8 @@ nsNNTPHost::RemoveGroup (const nsINNTPNewsgroup *newsInfo)
             NS_RELEASE(newsFolder);
         }
         /*
-		XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
+        nsISupportsArray* infolist;
+        nsresult rv = m_hostinfo->GetSubFolders(&infolist);
 		infolist->Remove(newsInfo);
         */
 	}
@@ -1996,7 +2000,7 @@ nsresult
 nsNNTPHost::GetNumGroupsNeedingCounts(PRInt32 *value)
 {
 	if (!m_groups) return NS_ERROR_NOT_INITIALIZED;
-	int num = m_groups->GetSize();
+	int num = m_groups->Count();
 	PRInt32 result = 0;
 	for (int i=0 ; i<num ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
@@ -2019,7 +2023,7 @@ nsresult
 nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
 {
 	if (!m_groups) return NS_ERROR_NULL_POINTER;
-	int num = m_groups->GetSize();
+	int num = m_groups->Count();
 	for (int i=0 ; i<num ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
         
@@ -2069,7 +2073,7 @@ void
 nsNNTPHost::SetWantNewTotals(PRBool value)
 {
 	if (!m_groups) return;
-	int n = m_groups->GetSize();
+	int n = m_groups->Count();
 	for (int i=0 ; i<n ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		info->SetWantNewTotals(value);
@@ -2094,7 +2098,7 @@ nsNNTPHost::AddExtension (const char *ext)
 	{
 		char *ourExt = PL_strdup (ext);
 		if (ourExt)
-			m_supportedExtensions.Add(ourExt);
+			m_supportedExtensions.AppendElement(ourExt);
 	}
     return NS_OK;
 }
@@ -2103,8 +2107,8 @@ nsresult
 nsNNTPHost::QueryExtension (const char *ext, PRBool *retval)
 {
     *retval = PR_FALSE;
-	for (int i = 0; i < m_supportedExtensions.GetSize(); i++)
-		if (!PL_strcmp(ext, (char*) m_supportedExtensions.GetAt(i))) {
+	for (int i = 0; i < m_supportedExtensions.Count(); i++)
+		if (!PL_strcmp(ext, (char*) m_supportedExtensions[i])) {
 			*retval=PR_TRUE;
             return NS_OK;
         }
@@ -2126,7 +2130,7 @@ nsNNTPHost::AddSearchableGroup (const char *group)
 			if (space)
 				*space = '\0';
 
-			m_searchableGroups.Add(ourGroup);
+			m_searchableGroups.AppendElement(ourGroup);
 
 			space++; // walk over to the start of the charsets
 			// Add the group -> charset association.
@@ -2140,9 +2144,9 @@ nsresult
 nsNNTPHost::QuerySearchableGroup (const char *group, PRBool *_retval)
 {
     *_retval = FALSE;
-	for (int i = 0; i < m_searchableGroups.GetSize(); i++)
+	for (int i = 0; i < m_searchableGroups.Count(); i++)
 	{
-		const char *searchableGroup = (const char*) m_searchableGroups.GetAt(i);
+		const char *searchableGroup = (const char*) m_searchableGroups[i];
 		char *starInSearchableGroup = NULL;
 
 		if (!PL_strcmp(searchableGroup, "*")) {
@@ -2174,9 +2178,9 @@ nsNNTPHost::QuerySearchableGroupCharsets(const char *group, char **result)
 	const char *searchableGroup = NULL;
     *result = NULL;
 
-	for (int i = 0; (i < m_searchableGroups.GetSize()) && (!gotGroup); i++)
+	for (int i = 0; (i < m_searchableGroups.Count()) && (!gotGroup); i++)
 	{
-		searchableGroup = (const char*) m_searchableGroups.GetAt(i);
+		searchableGroup = (const char*) m_searchableGroups[i];
 		char *starInSearchableGroup = NULL;
 
 		if (!PL_strcmp(searchableGroup, "*"))
@@ -2208,7 +2212,7 @@ nsNNTPHost::AddSearchableHeader (const char *header)
 	{
 		char *ourHeader = PL_strdup(header);
 		if (ourHeader)
-			m_searchableHeaders.Add(ourHeader);
+			m_searchableHeaders.AppendElement(ourHeader);
 	}
     return NS_OK;
 }
@@ -2217,8 +2221,8 @@ nsresult
 nsNNTPHost::QuerySearchableHeader(const char *header, PRBool *retval)
 {
     *retval=PR_FALSE;
-	for (int i = 0; i < m_searchableHeaders.GetSize(); i++)
-		if (!PL_strncasecmp(header, (char*) m_searchableHeaders.GetAt(i), PL_strlen(header))) {
+	for (int i = 0; i < m_searchableHeaders.Count(); i++)
+		if (!PL_strncasecmp(header, (char*) m_searchableHeaders[i], PL_strlen(header))) {
 			*retval = PR_TRUE;
             return NS_OK;
         }
@@ -2232,11 +2236,11 @@ nsNNTPHost::AddPropertyForGet (const char *property, const char *value)
 	
 	tmp = PL_strdup(property);
 	if (tmp)
-		m_propertiesForGet.Add (tmp);
+		m_propertiesForGet.AppendElement(tmp);
 
 	tmp = PL_strdup(value);
 	if (tmp)
-		m_valuesForGet.Add (tmp);
+		m_valuesForGet.AppendElement(tmp);
 
     // this is odd. do we need this return value?
     return NS_OK;
@@ -2246,9 +2250,9 @@ nsresult
 nsNNTPHost::QueryPropertyForGet (const char *property, char **retval)
 {
     *retval=NULL;
-	for (int i = 0; i < m_propertiesForGet.GetSize(); i++)
-		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet.GetAt(i))) {
-            *retval = (char *)m_valuesForGet.GetAt(i);
+	for (int i = 0; i < m_propertiesForGet.Count(); i++)
+		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet[i])) {
+            *retval = (char *)m_valuesForGet[i];
 			return NS_OK;
         }
     
@@ -2968,10 +2972,11 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 		{
             m_hostinfo->RemoveSubFolder(newsFolder);
             /*
-			XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
+            nsISupportsArray* infolist;
+            nsresult rv = m_hostinfo->GetSubFolders(&infolist);
 			infolist->Remove(newsInfo);
             */
-			m_groups->Remove(newsInfo);
+			m_groups->RemoveElement(newsInfo);
 			m_dirty = PR_TRUE;
             NS_RELEASE(newsInfo);
             NS_IF_RELEASE(newsFolder);
@@ -2993,7 +2998,7 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 	if (NS_SUCCEEDED(rv) && groupToMove && groupToMoveBefore && infoList)
 	{
         nsIMsgFolder *folderToMoveBefore = getFolderFor(groupToMoveBefore);
-		if (m_groups->Remove (groupToMove)) 
+		if (m_groups->RemoveElement(groupToMove)) 
 		{
 			// Not necessary to remove from infoList here because the folderPane does that (urk)
 
@@ -3003,9 +3008,9 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 			int idxInHostInfo = 0;
 			PRBool	foundIdxInHostInfo = PR_FALSE;
 
-			for (idxInData = 0, idxInView = -1; idxInData < m_groups->GetSize(); idxInData++)
+			for (idxInData = 0, idxInView = -1; idxInData < m_groups->Count(); idxInData++)
 			{
-				group = m_groups->GetAt (idxInData);
+				group = (nsIMsgFolder*)(*m_groups)[idxInData];
                 nsISupports *hostInfoSupports =
                     infoList->ElementAt(idxInHostInfo);
                 
@@ -3030,7 +3035,7 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 
 			if (idxInView != -1) 
 			{
-				m_groups->InsertAt (idxInData, groupToMove); // the index has to be the same, right?
+				m_groups->InsertElementAt(groupToMove, idxInData); // the index has to be the same, right?
                 nsISupports* groupSupports;
                 groupToMove->QueryInterface(nsISupports::IID(),
                                             (void **)&groupSupports);

@@ -23,6 +23,7 @@
 #include "nscore.h"
 #include "plstr.h"
 #include "prmem.h"
+#include "nsVoidArray.h"
 #include <stdio.h>
 
 #include "nsINNTPNewsgroup.h"
@@ -229,11 +230,11 @@ protected:
 								// session, protect against server bustage
 								// where it says no group exists.
 
-	XPPtrArray m_supportedExtensions;
-	XPPtrArray m_searchableGroups;
-	XPPtrArray m_searchableHeaders;
-	XPPtrArray m_propertiesForGet;
-	XPPtrArray m_valuesForGet;
+	nsVoidArray m_supportedExtensions;
+	nsVoidArray m_searchableGroups;
+	nsVoidArray m_searchableHeaders;
+	nsVoidArray m_propertiesForGet;
+	nsVoidArray m_valuesForGet;
 
 	PRBool m_postingAllowed;
 	PRBool m_pushAuth; // PR_TRUE if we should volunteer authentication without a
@@ -330,11 +331,11 @@ nsresult nsNNTPHostStub::AddPropertyForGet (const char *property, const char *va
 	
 	tmp = PL_strdup(property);
 	if (tmp)
-		m_propertiesForGet.Add (tmp);
+		m_propertiesForGet.AppendElement(tmp);
 
 	tmp = PL_strdup(value);
 	if (tmp)
-		m_valuesForGet.Add (tmp);
+		m_valuesForGet.AppendElement(tmp);
 	
 	printf("Adding property %s for value %s. \n", property, value);
 
@@ -345,9 +346,9 @@ nsresult nsNNTPHostStub::AddPropertyForGet (const char *property, const char *va
 nsresult nsNNTPHostStub::QueryPropertyForGet (const char *property, char **retval)
 {
     *retval=NULL;
-	for (int i = 0; i < m_propertiesForGet.GetSize(); i++)
-		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet.GetAt(i))) {
-            *retval = (char *)m_valuesForGet.GetAt(i);
+	for (int i = 0; i < m_propertiesForGet.Count(); i++)
+		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet[i])) {
+            *retval = (char *)m_valuesForGet[i];
 			printf("Retrieving property %s for get. \n", *retval);
 			return NS_OK;
         }
@@ -369,7 +370,7 @@ nsresult nsNNTPHostStub::AddSearchableGroup (const char *group)
 			if (space)
 				*space = '\0';
 
-			m_searchableGroups.Add(ourGroup);
+			m_searchableGroups.AppendElement(ourGroup);
 			printf("Adding %s to list of searchable groups. \n", ourGroup);
 
 			space++; // walk over to the start of the charsets
@@ -383,9 +384,9 @@ nsresult nsNNTPHostStub::AddSearchableGroup (const char *group)
 nsresult nsNNTPHostStub::QuerySearchableGroup (const char *group, PRBool *_retval)
 {
     *_retval = PR_FALSE;
-	for (int i = 0; i < m_searchableGroups.GetSize(); i++)
+	for (int i = 0; i < m_searchableGroups.Count(); i++)
 	{
-		const char *searchableGroup = (const char*) m_searchableGroups.GetAt(i);
+		const char *searchableGroup = (const char*) m_searchableGroups[i];
 		char *starInSearchableGroup = NULL;
 
 		if (!PL_strcmp(searchableGroup, "*")) {
@@ -426,7 +427,7 @@ nsresult nsNNTPHostStub::AddSearchableHeader (const char *header)
 	{
 		char *ourHeader = PL_strdup(header);
 		if (ourHeader)
-			m_searchableHeaders.Add(ourHeader);
+			m_searchableHeaders.AppendElement(ourHeader);
 
 		printf("Added %s as a searchable header. \n", ourHeader);
 	}
@@ -436,8 +437,8 @@ nsresult nsNNTPHostStub::AddSearchableHeader (const char *header)
 nsresult nsNNTPHostStub::QuerySearchableHeader(const char *header, PRBool *retval)
 {
     *retval=PR_FALSE;
-	for (int i = 0; i < m_searchableHeaders.GetSize(); i++)
-		if (!PL_strncasecmp(header, (char*) m_searchableHeaders.GetAt(i), PL_strlen(header))) {
+	for (int i = 0; i < m_searchableHeaders.Count(); i++)
+		if (!PL_strncasecmp(header, (char*) m_searchableHeaders[i], PL_strlen(header))) {
 			*retval = PR_TRUE;
             return NS_OK;
         }
