@@ -30,7 +30,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public res src stub cleanup
+DIRS		= public res src stub 
 
 ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
 DIRS		+= wizard/libxpnet
