@@ -1322,6 +1322,18 @@ js_Interpret(JSContext *cx, jsval *result)
             sp -= 2;
             break;
 
+          case JSOP_SWAP:
+            /*
+             * N.B. JSOP_SWAP doesn't swap the corresponding pc stack
+             * generating pcs, as they're not needed for the current use of
+             * preserving the top-of-stack return value when popping scopes
+             * while returning from catch blocks.
+             */
+            ltmp = sp[-1];
+            sp[-1] = sp[-2];
+            sp[-2] = ltmp;
+            break;
+
           case JSOP_POPV:
             *result = POP_OPND();
             break;
