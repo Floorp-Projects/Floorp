@@ -206,9 +206,11 @@ public:
   static void SetLastEventTime(guint32 aTime);
   static void GetLastEventTime(guint32 *aTime);
 
+  static void DropMotionTarget(void) { sButtonMotionTarget = nsnull; };
+
   // inform the widget code that we are about to do a drag - it must
   // release the sButtonMotionTarget if it is set.
-  static void DragStarted(void);
+  static void DragStarted(void) { DropMotionTarget(); };
 
 protected:
 

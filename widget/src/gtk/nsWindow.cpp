@@ -821,6 +821,7 @@ void nsWindow::NativeGrab(PRBool aGrab)
   if (aGrab) {
     GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
     
+    DropMotionTarget();
     gint retval;
     retval = gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
                                (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
@@ -853,6 +854,7 @@ void nsWindow::NativeGrab(PRBool aGrab)
     printf("nsWindow::NativeGrab %p ungrab\n", this);
 #endif
     gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+    DropMotionTarget();
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
   }
 }
@@ -2421,7 +2423,13 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 
   if (aCapture)
   {
+    if (!grabWidget) {
+      g_print("nsWindow::CaptureMouse on NULL grabWidget\n");
+      return NS_ERROR_FAILURE;
+    }
+
     GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
+    DropMotionTarget();
     gdk_pointer_grab (GTK_WIDGET(grabWidget)->window, PR_TRUE,(GdkEventMask)
                       (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                        GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
@@ -2432,8 +2440,9 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
   }
   else
   {
+    DropMotionTarget();
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
-    gtk_grab_remove(grabWidget);
+    if (grabWidget) gtk_grab_remove(grabWidget);
   }
 
   return NS_OK;
