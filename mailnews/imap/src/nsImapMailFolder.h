@@ -88,9 +88,7 @@ class nsImapMailFolder : public nsMsgDBFolder,
                          public nsIImapMiscellaneousSink,
                          public nsICopyMessageListener,
                          public nsIUrlListener
-#ifdef DOING_FILTERS
 						 ,public nsIMsgFilterHitNotify
-#endif
 {
 public:
 	nsImapMailFolder();

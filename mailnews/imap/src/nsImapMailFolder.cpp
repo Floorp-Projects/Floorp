@@ -103,9 +103,7 @@ nsImapMailFolder::nsImapMailFolder() :
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
                                             getter_AddRefs(m_eventQueue));
-#ifdef DOING_FILTERS
 	m_moveCoalescer = nsnull;
-#endif
 
 }
 
@@ -116,10 +114,8 @@ nsImapMailFolder::~nsImapMailFolder()
     if (m_appendMsgMonitor)
         PR_DestroyMonitor(m_appendMsgMonitor);
 
-#ifdef DOING_FILTERS
 	if (m_moveCoalescer)
 		delete m_moveCoalescer;
-#endif
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImapMailFolder, nsMsgDBFolder)
@@ -158,12 +154,10 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIUrlListener *, this);
 	}
-#ifdef DOING_FILTERS
 	else if (aIID.Equals(nsIMsgFilterHitNotify::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgFilterHitNotify *, this);
 	}
-#endif
 	if(*aInstancePtr)
 	{
 		AddRef();

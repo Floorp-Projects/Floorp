@@ -33,14 +33,8 @@
 #include "nsCOMPtr.h"
 
 
-#ifdef DEBUG_bienvenu
-//#define DOING_FILTERS
-#endif
-
-#ifdef DOING_FILTERS
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilterHitNotify.h"
-#endif
 
 class nsFileSpec;
 class nsByteArray;
@@ -217,16 +211,12 @@ private:
 };
 
 class nsParseNewMailState : public nsMsgMailboxParser 
-#ifdef DOING_FILTERS
 , public nsIMsgFilterHitNotify
-#endif
 {
 public:
 	nsParseNewMailState();
 	virtual ~nsParseNewMailState();
-#ifdef DOING_FILTERS
 	NS_DECL_ISUPPORTS_INHERITED
-#endif
     nsresult Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream);
 
 	virtual void	DoneParsingFolder();
@@ -243,17 +233,14 @@ public:
 										 nsIMsgFilter *filter,
 										 PRBool *pMoved);
 #endif
-#ifdef DOING_FILTERS
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
 
 	nsOutputFileStream *GetLogFile();
-#endif // DOING_FILTERS
 protected:
 	virtual PRInt32	PublishMsgHeader();
 	char				*m_tmpdbName;				// Temporary filename of new database
 	PRBool				m_usingTempDB;
-#ifdef DOING_FILTERS
 	virtual void	ApplyFilters(PRBool *pMoved);
 	virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
 	virtual nsresult	MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
@@ -267,7 +254,6 @@ protected:
 	nsOutputFileStream	*m_logFile;
 	nsIOFileStream		*m_inboxFileStream;
 	nsFileSpec			m_inboxFileSpec;
-#endif // DOING_FILTERS
 	PRBool				m_disableFilters;
 	PRBool				m_msgMovedByFilter;
 };

@@ -62,9 +62,8 @@
 
 #include "nsMsgStatusFeedback.h"
 
-#ifdef DOING_FILTERS
 #include "nsMsgFilterService.h"
-#endif
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -277,11 +276,9 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
   else if (mClassID.Equals(kMsgServerDataSourceCID)) {
     rv = NS_NewMsgServerDataSource(aIID, aResult);
   }
-#ifdef DOING_FILTERS
   else if (mClassID.Equals(kMsgFilterServiceCID)) {
     rv = NS_NewMsgFilterService(aIID, aResult);
   }
-#endif
   else if (mClassID.Equals(kMsgBiffManagerCID)){
     rv = NS_NewMsgBiffManager(aIID, aResult);
   }
@@ -480,14 +477,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-#ifdef DOING_FILTERS  
-  printf("register filter service\n");
   rv = compMgr->RegisterComponent(kMsgFilterServiceCID,
                                   "Message Filter Service",
                                   NS_MSGFILTERSERVICE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
-#endif   
   
   rv = compMgr->RegisterComponent(kMsgBiffManagerCID,
                                   "Messenger Biff Manager",
@@ -564,10 +558,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kMsgServerDataSourceCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
-#ifdef DOING_FILTERS
   rv = compMgr->UnregisterComponent(kMsgFilterServiceCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
-#endif
 
   //Biff
   rv = compMgr->UnregisterComponent(kMsgBiffManagerCID, path);

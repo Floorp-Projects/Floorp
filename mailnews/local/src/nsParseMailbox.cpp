@@ -38,11 +38,9 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsLocalStringBundle.h"
 
-#ifdef DOING_FILTERS
 #include "nsIMsgFilterService.h"
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilter.h"
-#endif
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
@@ -1370,15 +1368,11 @@ int nsParseMailMessageState::FinalizeHeaders()
 nsParseNewMailState::nsParseNewMailState()
     : m_tmpdbName(nsnull), m_usingTempDB(PR_FALSE), m_disableFilters(PR_FALSE)
 {
-#ifdef DOING_FILTERS
 	m_inboxFileStream = nsnull;
 	m_logFile = nsnull;
-#endif
 }
 
-#ifdef DOING_FILTERS
 NS_IMPL_ISUPPORTS_INHERITED(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
-#endif
 
 nsresult
 nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream)
@@ -1387,11 +1381,9 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	m_mailboxName = nsCRT::strdup(folder);
 
 	m_position = folder.GetFileSize();
-#ifdef DOING_FILTERS
 	m_rootFolder = rootFolder;
 	m_inboxFileSpec = folder;
 	m_inboxFileStream = inboxFileStream;
-#endif
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
 	nsCOMPtr<nsIMsgDatabase> mailDB;
@@ -1406,7 +1398,6 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
     if (NS_FAILED(rv)) 
 		return rv;
 
-#ifdef DOING_FILTERS
 	NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
 	if (NS_FAILED(rv)) 
 		return rv;
@@ -1434,7 +1425,6 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	}
 
 	m_logFile = nsnull;
-#endif
 #ifdef DOING_MDN
 	if (m_filterList)
 	{
@@ -1494,13 +1484,11 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 
 nsParseNewMailState::~nsParseNewMailState()
 {
-#ifdef DOING_FILTERS
 	if (m_logFile != nsnull)
 	{
 		m_logFile->close();
 		delete m_logFile;
 	}
-#endif
 	if (m_mailDB)
 		m_mailDB->Close(PR_TRUE);
 //	if (m_usingTempDB)
@@ -1551,12 +1539,10 @@ PRInt32 nsParseNewMailState::PublishMsgHeader()
 	if (m_newMsgHdr)
 	{
 		FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
-#ifdef DOING_FILTERS
 		if (!m_disableFilters)
 		{
 			ApplyFilters(&moved);
 		}
-#endif // DOING_FILTERS
 		if (!moved)
 		{
 			if (m_mailDB)
@@ -1584,7 +1570,6 @@ void	nsParseNewMailState::SetUsingTempDB(PRBool usingTempDB, char *tmpDBName)
 	m_tmpdbName = tmpDBName;
 }
 
-#ifdef DOING_FILTERS
 
 nsOutputFileStream * nsParseNewMailState::GetLogFile ()
 {
@@ -1954,7 +1939,6 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	return err;
 
 }
-#endif // DOING_FILTERS
 
 #ifdef IMAP_NEW_MAIL_HANDLED
 
