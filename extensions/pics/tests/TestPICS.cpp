@@ -1,12 +1,24 @@
 #define NS_IMPL_IDS
 #include "nsISupports.h"
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
 #include "nsIPICS.h"
+#include "nsIPref.h"
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsINetService.h"
+#include "nsIObserverService.h"
+#include "nsString.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nspics.h"
 
-
+#define PICS_DLL   "pics.dll"
 #define PREF_DLL   "xppref32.dll"
+#define BASE_DLL   "raptorbase.dll"
+#define RAPTORHTMLPARS_DLL "raptorhtmlpars.dll"
+#define NETLIB_DLL "netlib.dll"
+
 
 
 
@@ -16,15 +28,28 @@ static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
-int main(int argc, char *argv[])
+
+static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
+static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
+
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+
+PRInt32 main(PRInt32 argc, char *argv[])
 {
 
 	nsIPICS *pics = NULL;
 
+  nsresult res;
+
+  nsIObserverService* anObserverService;
+  nsString  aTopic("tagobserver");
+
 	
-	
-	nsresult res = nsRepository::CreateInstance(kPICSCID,
+	res = nsRepository::CreateInstance(kPICSCID,
 												NULL,
 												kIPICSIID,
 												(void **) &pics);
@@ -52,13 +77,28 @@ int main(int argc, char *argv[])
 	char fileBuf6[1000] = "(PICS-1.1 \"http://www.gcf.org/v2.5\"  l r (suds 0.5 density 0 color/hue 1) r (subject 2 density 1 color/hue 1))";
 
 	char fileBuf7[1000] = "(PICS-1.1 \"http://www.gcf.org/v2.5\" by \"John Doe\" labels on \"1994.11.05T08:15-0500\" until \"1995.12.31T23:59-0000\" for \"http://w3.org/PICS/Overview.html\" ratings (suds 0.5 density 0 color/hue 1) for \"http://w3.org/PICS/Underview.html\" by \"Jane Doe\" ratings (subject 2 density 1 color/hue 1))";
+    
+  char fileBuf8[1000] = "(PICS-1.1 \"\"http://www.rsac.org/ratingsv01.html\"\" l gen true r (n 0 s 0 v 0 l 0)";
+  char fileBuf9[1000] = "(PICS-1.1 \"http://www.rsac.org/ratingsv01.html\" l gen true r (n 0 s 0 v 0 l 0)";
+  char fileBuf10[1000] = "\"(PICS-1.1)";
 
+  char fileBuf11[1000] =   "(PICS-1.1 \"http://www.rsac.org/ratingsv01.html\" l gen true comment \"RSACi North America Server\" by \"philipd@w3.org\" for \"http://www.w3.org\" on \"1996.04.16T08:15-0500\" r (n 0 s 0 v 0 l 0))";
 	if (res == NS_OK) {
-        // Load preferences
-        nsComponentManager::RegisterComponent(kPrefCID, NULL, NULL, PREF_DLL, PR_FALSE, PR_FALSE);
-        pics->Init();
-	
-		pics->ProcessPICSLabel(fileBuf4);
+    // Load preferences
+    nsComponentManager::RegisterComponent(kPrefCID, NULL, NULL, PREF_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kObserverServiceCID, "ObserverService", NS_OBSERVERSERVICE_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kObserverCID, "Observer", NS_OBSERVER_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, RAPTORHTMLPARS_DLL, PR_FALSE, PR_FALSE);
+
+    res = nsServiceManager::GetService(kObserverServiceCID, 
+                                nsIObserverService::GetIID(), 
+                                (nsISupports **)&anObserverService);
+    
+
+
+
+    pics->ProcessPICSLabel(fileBuf11);
 	}
      
 	PR_Free(fileBuf2);
