@@ -108,6 +108,9 @@ typedef void * nsNativeDeviceContext;
 /* print: ending page */
 #define NS_ERROR_GFX_PRINTER_ENDPAGE          \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+17)
+/* print: print while in print preview */
+#define NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+18)
 
 /**
  * Conts need for Print Preview
