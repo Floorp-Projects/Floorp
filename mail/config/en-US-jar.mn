@@ -19,50 +19,51 @@ locale/en-US/messenger-smime,                             en-US/locale/en-US/mes
 # xpfe extensions (ldap, wallet, etc)
 #################################################################################################
 locale/en-US/mozldap,                                     en-US/locale/en-US/mozldap
-locale/en-US/wallet,					  en-US/locale/en-US/wallet
-locale/en-US/necko,					  en-US/locale/en-US/necko
+locale/en-US/wallet,                                      en-US/locale/en-US/wallet
+locale/en-US/necko,                                       en-US/locale/en-US/necko
 
-locale/en-US/navigator/contents.rdf,		  	  en-US/locale/en-US/navigator/contents.rdf
-locale/en-US/navigator/navigator.properties,		  en-US/locale/en-US/navigator/navigator.properties
-locale/en-US/navigator/viewSource.dtd,	          	  en-US/locale/en-US/navigator/viewSource.dtd
+locale/en-US/navigator/contents.rdf,                      en-US/locale/en-US/navigator/contents.rdf
+locale/en-US/navigator/navigator.properties,              en-US/locale/en-US/navigator/navigator.properties
+locale/en-US/navigator/viewSource.dtd,                    en-US/locale/en-US/navigator/viewSource.dtd
 
 #################################################################################################
 # global
 #################################################################################################
-locale/en-US/global,                                     en-US/locale/en-US/global
+locale/en-US/global,                                      en-US/locale/en-US/global
 
 #################################################################################################
 # communicator
 #################################################################################################
-locale/en-US/communicator/dom,                           en-US/locale/en-US/communicator/dom
-locale/en-US/communicator/downloadmanager,               en-US/locale/en-US/communicator/downloadmanager
-locale/en-US/communicator/profile,                       en-US/locale/en-US/communicator/profile
+locale/en-US/communicator/dom,                            en-US/locale/en-US/communicator/dom
+locale/en-US/communicator/downloadmanager,                en-US/locale/en-US/communicator/downloadmanager
+locale/en-US/communicator/profile,                        en-US/locale/en-US/communicator/profile
 
-#locale/en-US/communicator/layout,                       en-US/locale/en-US/communicator/layout
+#locale/en-US/communicator/layout,                        en-US/locale/en-US/communicator/layout
 
-locale/en-US/communicator/contentAreaCommands.dtd,       en-US/locale/en-US/communicator/contentAreaCommands.dtd
+locale/en-US/communicator/contentAreaCommands.dtd,        en-US/locale/en-US/communicator/contentAreaCommands.dtd
 locale/en-US/communicator/contentAreaCommands.properties, en-US/locale/en-US/communicator/contentAreaCommands.properties
-locale/en-US/communicator/contents.rdf,                  en-US/locale/en-US/communicator/contents.rdf
-locale/en-US/communicator/printPageSetup.dtd,            en-US/locale/en-US/communicator/printPageSetup.dtd
-locale/en-US/communicator/printPageSetup.properties,     en-US/locale/en-US/communicator/printPageSetup.properties
-locale/en-US/communicator/printPreview.dtd,              en-US/locale/en-US/communicator/printPreview.dtd
-locale/en-US/communicator/utilityOverlay.dtd,            en-US/locale/en-US/communicator/utilityOverlay.dtd
-locale/en-US/communicator/utilityOverlay.properties,     en-US/locale/en-US/communicator/utilityOverlay.properties
-locale/en-US/communicator/viewZoomOverlay.dtd,           en-US/locale/en-US/communicator/viewZoomOverlay.dtd
-locale/en-US/communicator/viewZoomOverlay.properties,    en-US/locale/en-US/communicator/viewZoomOverlay.properties
-locale/en-US/communicator/askViewZoom.dtd,               en-US/locale/en-US/communicator/askViewZoom.dtd
-locale/en-US/communicator/wallet/wallet.properties,      en-US/locale/en-US/communicator/wallet/wallet.properties
-locale/en-US/communicator/pref/pref-charset.dtd, 	 en-US/locale/en-US/communicator/pref/pref-charset.dtd
-locale/en-US/communicator/pref/pref-colors.dtd,  	 en-US/locale/en-US/communicator/pref/pref-colors.dtd
-locale/en-US/communicator/pref/pref-fonts.dtd,   	 en-US/locale/en-US/communicator/pref/pref-fonts.dtd
-locale/en-US/communicator/pref/pref-languages.dtd, 	 en-US/locale/en-US/communicator/pref/pref-languages.dtd
+locale/en-US/communicator/contents.rdf,                   en-US/locale/en-US/communicator/contents.rdf
+locale/en-US/communicator/printPageSetup.dtd,             en-US/locale/en-US/communicator/printPageSetup.dtd
+locale/en-US/communicator/printPageSetup.properties,      en-US/locale/en-US/communicator/printPageSetup.properties
+locale/en-US/communicator/printPreview.dtd,               en-US/locale/en-US/communicator/printPreview.dtd
+locale/en-US/communicator/utilityOverlay.dtd,             en-US/locale/en-US/communicator/utilityOverlay.dtd
+locale/en-US/communicator/utilityOverlay.properties,      en-US/locale/en-US/communicator/utilityOverlay.properties
+locale/en-US/communicator/viewZoomOverlay.dtd,            en-US/locale/en-US/communicator/viewZoomOverlay.dtd
+locale/en-US/communicator/viewZoomOverlay.properties,     en-US/locale/en-US/communicator/viewZoomOverlay.properties
+locale/en-US/communicator/askViewZoom.dtd,                en-US/locale/en-US/communicator/askViewZoom.dtd
+locale/en-US/communicator/wallet/wallet.properties,       en-US/locale/en-US/communicator/wallet/wallet.properties
+locale/en-US/communicator/pref/pref-charset.dtd,          en-US/locale/en-US/communicator/pref/pref-charset.dtd
+locale/en-US/communicator/pref/pref-colors.dtd,           en-US/locale/en-US/communicator/pref/pref-colors.dtd
+locale/en-US/communicator/pref/pref-fonts.dtd,            en-US/locale/en-US/communicator/pref/pref-fonts.dtd
+locale/en-US/communicator/pref/pref-languages.dtd,        en-US/locale/en-US/communicator/pref/pref-languages.dtd
 locale/en-US/communicator/pref/pref-languages.properties, en-US/locale/en-US/communicator/pref/pref-languages.properties
-locale/en-US/communicator/pref/pref-themes.dtd,  	 en-US/locale/en-US/communicator/pref/pref-themes.dtd
-locale/en-US/communicator/pref/pref.dtd,         	 en-US/locale/en-US/communicator/pref/pref.dtd
-locale/en-US/communicator/pref/preftree.dtd,     	 en-US/locale/en-US/communicator/pref/preftree.dtd
-locale/en-US/communicator/pref/prefutilities.properties, en-US/locale/en-US/communicator/pref/prefutilities.properties
+locale/en-US/communicator/pref/pref-themes.dtd,           en-US/locale/en-US/communicator/pref/pref-themes.dtd
+locale/en-US/communicator/pref/pref-extensions.dtd,       en-US/locale/en-US/communicator/pref/pref-extensions.dtd
+locale/en-US/communicator/pref/pref.dtd,                  en-US/locale/en-US/communicator/pref/pref.dtd
+locale/en-US/communicator/pref/preftree.dtd,              en-US/locale/en-US/communicator/pref/preftree.dtd
+locale/en-US/communicator/pref/prefutilities.properties,  en-US/locale/en-US/communicator/pref/prefutilities.properties
 locale/en-US/communicator/pref/pref-applications.properties, en-US/locale/en-US/communicator/pref/pref-applications.properties
-locale/en-US/communicator/pref/pref-applications.dtd,    en-US/locale/en-US/communicator/pref/pref-applications.dtd
+locale/en-US/communicator/pref/pref-applications.dtd,     en-US/locale/en-US/communicator/pref/pref-applications.dtd
 locale/en-US/communicator/pref/pref-applications-edit.dtd, en-US/locale/en-US/communicator/pref/pref-applications-edit.dtd
 
 locale/en-US/communicator/xpinstall,                      en-US/locale/en-US/communicator/xpinstall
@@ -101,5 +102,5 @@ locale/US/global-region,                                  US/locale/US/global-re
 #################################################################################################
 # crypto
 #################################################################################################
-locale/en-US/pippki,                                     en-US/locale/en-US/pippki
-locale/en-US/pipnss,                                     en-US/locale/en-US/pipnss
+locale/en-US/pippki,                                      en-US/locale/en-US/pippki
+locale/en-US/pipnss,                                      en-US/locale/en-US/pipnss
