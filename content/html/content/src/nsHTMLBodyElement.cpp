@@ -559,7 +559,11 @@ nsHTMLBodyElement::SetText(const nsAString& aTextColor)
 NS_IMETHODIMP 
 nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
 {
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor);
+  aBgColor.Truncate();
+
+  nsAutoString attr;
+  nscolor bgcolor;
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, attr);
 
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
@@ -589,10 +593,19 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
                                    (const nsStyleStruct*&)StyleBackground);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsHTMLValue value(StyleBackground->mBackgroundColor);
-        ColorToString(value, aBgColor);
+        bgcolor = StyleBackground->mBackgroundColor;
+        ColorToString(bgcolor, aBgColor);
       }
     }
+  }
+  else if (NS_ColorNameToRGB(attr, &bgcolor)) {
+    // If we have a color name which we can convert to an nscolor,
+    // then we should use the hex value instead of the color name.
+    ColorToString(bgcolor, aBgColor);
+  }
+  else {
+    // Otherwise, just assign whatever the attribute value is.
+    aBgColor.Assign(attr);
   }
 
   return NS_OK;
