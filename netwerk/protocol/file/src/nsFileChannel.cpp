@@ -38,7 +38,6 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsDirectoryIndexStream.h"
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
 #include "nsIEventQueueService.h"
