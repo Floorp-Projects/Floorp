@@ -339,7 +339,7 @@ nsListBoxBodyFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 
   // if we are scrolled and the row height changed
   // make sure we are scrolled to a correct index.
-  if (mAdjustScroll) 
+  if (mAdjustScroll)
      PostReflowCallback();
 
   return rv;
@@ -1382,7 +1382,8 @@ nsListBoxBodyFrame::OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aCh
   
     // if the row being removed is off-screen and above the top frame, we need to
     // adjust our top index and tell the scrollbar to shift up one row.
-    if (siblingIndex >= 0 && siblingIndex-1 <= mCurrentIndex) {
+    if (siblingIndex >= 0 && siblingIndex-1 < mCurrentIndex) {
+      NS_PRECONDITION(mCurrentIndex > 0, "mCurrentIndex > 0");
       --mCurrentIndex;
       mYPosition = mCurrentIndex*mRowHeight;
       VerticalScroll(mYPosition);
