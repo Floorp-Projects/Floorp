@@ -13,7 +13,7 @@ sub new {
 	bless $this, $class;
 
   my ($start_time, $end_time, $tree, $field_short_names, $field_processors,
-      $field_handlers,
+      $field_handlers, $patch_str,
       $machine_id, $machine_name, $os, $os_version, $compiler, $clobber) = @_;
 
   $this->{START_TIME} = $start_time;
@@ -28,6 +28,7 @@ sub new {
   $this->{OS_VERSION} = $os_version;
   $this->{COMPILER} = $compiler;
   $this->{CLOBBER} = $clobber;
+  $this->{PATCH_STR} = $patch_str;
 
   $this->{AT_START} = 1;
   $this->{STARTED_PRINTING} = 0;
@@ -275,7 +276,7 @@ EOM
 # Method to get a the TreeColumns objects for a tree
 #
 sub get_tree_column_queues {
-  my ($p, $dbh, $start_time, $end_time, $tree, $field_short_names, $field_processors, $field_handlers) = @_;
+  my ($p, $dbh, $start_time, $end_time, $tree, $field_short_names, $field_processors, $field_handlers, $patch_str) = @_;
   #
   # Get the list of machines
   #
@@ -284,7 +285,7 @@ sub get_tree_column_queues {
 
   my %columns;
   while (my $row = $sth->fetchrow_arrayref) {
-    $columns{$row->[0]} = new Tinderbox3::TreeColumns($start_time, $end_time, $tree, $field_short_names, $field_processors, $field_handlers, @{$row});
+    $columns{$row->[0]} = new Tinderbox3::TreeColumns($start_time, $end_time, $tree, $field_short_names, $field_processors, $field_handlers, $patch_str, @{$row});
   }
 
   if (!keys %columns) {
