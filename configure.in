@@ -730,6 +730,7 @@ case "$target" in
 	_OPENVMS_CROSS_COMPILE=1
 	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION"
     AC_DEFINE(NO_PW_GECOS)
+    AC_DEFINE(NO_UDSOCK)
     fi
     ;;
 
