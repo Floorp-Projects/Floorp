@@ -1542,17 +1542,17 @@ nsBrowserWindow::Close()
     NS_RELEASE(mWebShell);
   }
 
-//  NS_IF_RELEASE(mWindow);
-  if (nsnull != mWindow) {
-    nsIWidget* w = mWindow;
-    NS_RELEASE(w);
-  }
-
   NS_IF_RELEASE(mBack);
   NS_IF_RELEASE(mForward);
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mThrobber);
   NS_IF_RELEASE(mStatus);
+
+//  NS_IF_RELEASE(mWindow);
+  if (nsnull != mWindow) {
+    nsIWidget* w = mWindow;
+    NS_RELEASE(w);
+  }
 
   return NS_OK;
 }
