@@ -56,8 +56,6 @@ public final class Continuation extends IdScriptableObject implements Function
 
     public void initImplementation(Object implementation)
     {
-        if (implementation == null) throw new IllegalArgumentException();
-        if (this.implementation != null) throw new IllegalStateException();
         this.implementation = implementation;
     }
 
