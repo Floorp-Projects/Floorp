@@ -108,6 +108,10 @@ install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
 
+	$(MAKE_INSTALL) ..\xul\SignonWindow.js   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\CookieWindow.js   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\WalletWindow.js   $(DIST)\bin\res\samples
+
 	$(MAKE_INSTALL) ..\xul\resources\Mail_SendMsg.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\Mail_GetMsg.gif  $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\Mail_Reply.gif   $(DIST)\bin\res\toolbar
