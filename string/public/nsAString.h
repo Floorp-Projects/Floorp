@@ -598,7 +598,27 @@ nsAString::EndWriting( iterator& aResult )
     return aResult;
   }
 
-NS_COM int Compare( const nsAString& lhs, const nsAString& rhs );
+class NS_COM nsStringComparator
+  {
+    public:
+      virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const = 0;
+  };
+
+class NS_COM nsDefaultStringComparator
+    : public nsStringComparator
+  {
+    public:
+      virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const;
+  };
+
+class NS_COM nsCaseInsensitiveStringComparator
+    : public nsStringComparator
+  {
+    public:
+      virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const;
+  };
+
+NS_COM int Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& = nsDefaultStringComparator() );
 
 inline
 PRBool
@@ -706,7 +726,28 @@ nsACString::EndWriting( iterator& aResult )
     return aResult;
   }
 
-NS_COM int Compare( const nsACString& lhs, const nsACString& rhs );
+
+class NS_COM nsCStringComparator
+  {
+    public:
+      virtual int operator()( const char*, const char*, PRUint32 aLength ) const = 0;
+  };
+
+class NS_COM nsDefaultCStringComparator
+    : public nsCStringComparator
+  {
+    public:
+      virtual int operator()( const char*, const char*, PRUint32 aLength ) const;
+  };
+
+class NS_COM nsCaseInsensitiveCStringComparator
+    : public nsCStringComparator
+  {
+    public:
+      virtual int operator()( const char*, const char*, PRUint32 aLength ) const;
+  };
+
+NS_COM int Compare( const nsACString& lhs, const nsACString& rhs, const nsCStringComparator& = nsDefaultCStringComparator() );
 
 inline
 PRBool
