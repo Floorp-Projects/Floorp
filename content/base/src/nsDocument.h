@@ -111,6 +111,8 @@ public:
 
   // Observation hooks used by content nodes to propagate
   // notifications to document observers.
+  NS_IMETHOD BeginLoad();
+  NS_IMETHOD EndLoad();
   virtual void ContentChanged(nsIContent* aContent,
                               nsISupports* aSubContent);
 
