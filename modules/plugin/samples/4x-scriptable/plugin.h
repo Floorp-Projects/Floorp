@@ -36,7 +36,7 @@ private:
 #endif
 
   NPStream * m_pNPStream;
-  BOOL m_bInitialized;
+  NPBool m_bInitialized;
   nsI4xScriptablePlugin * m_pScriptablePeer;
 
 public:
@@ -46,9 +46,9 @@ public:
   CPlugin(NPP pNPInstance);
   ~CPlugin();
 
-  BOOL init(NPWindow* pNPWindow);
+  NPBool init(NPWindow* pNPWindow);
   void shut();
-  BOOL isInitialized();
+  NPBool isInitialized();
 
   void showVersion();
   void clear();
