@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.6 2001/02/04 05:52:42 wtc%netscape.com Exp $
+ * $Id: nss.h,v 1.7 2001/02/08 01:22:01 wtc%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -49,11 +49,11 @@ SEC_BEGIN_PROTOS
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>] [<Beta>]"
  */
-#define NSS_VERSION  "3.2 Beta"
+#define NSS_VERSION  "3.2"
 #define NSS_VMAJOR   3
 #define NSS_VMINOR   2
 #define NSS_VPATCH   0
-#define NSS_BETA     PR_TRUE
+#define NSS_BETA     PR_FALSE
 
 /*
  * Return a boolean that indicates whether the underlying library
