@@ -262,11 +262,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
             ::RegCloseKey(key);
 
-            PRInt32 errorCode;
-            nsString str(value);
-            PRInt32 submenuDelay = str.ToInteger(&errorCode);
-            if (errorCode == NS_OK) {
-              sSubmenuDelay = submenuDelay;
+            if (result == ERROR_SUCCESS) {
+              PRInt32 errorCode;
+              nsString str(value);
+              PRInt32 submenuDelay = str.ToInteger(&errorCode);
+              if (errorCode == NS_OK) {
+                sSubmenuDelay = submenuDelay;
+              }
             }
           }
         }
