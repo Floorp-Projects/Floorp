@@ -24,6 +24,8 @@ classic.jar:
 +   skin/classic/messenger/threadPane.css           (skin/threadPane.css)
 +   skin/classic/messenger/messageHeader.css        (skin/messageHeader.css)
 +   skin/classic/messenger/mailWindow1.css          (skin/mailWindow1.css)
++   skin/classic/messenger/icons/new-mail-alert.png (skin/icons/new-mail-alert.png)
++   skin/classic/communicator/alerts/alert.css      (skin/alert.css)
 
 comm.jar:
 +   content/navigator/viewSource.xul                (content/viewSource.xul)
