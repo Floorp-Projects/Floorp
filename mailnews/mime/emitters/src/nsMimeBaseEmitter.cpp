@@ -122,7 +122,7 @@ nsMimeBaseEmitter::Complete()
   // to flush it...if we try and fail, we should probably return
   // an error!
   PRUint32      written; 
-  if ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
+  while ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
     Write("", 0, &written);
 
   if (mOutListener)
