@@ -162,10 +162,10 @@ public:
     NS_IMETHOD AddComment(const nsIParserNode& aNode);
     NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
     NS_IMETHOD NotifyError(const nsParserError* aError);
+    NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
 
     // nsIXMLContentSink
-    NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);
-    NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+    NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);    
     NS_IMETHOD AddCharacterData(const nsIParserNode& aNode);
     NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode);
     NS_IMETHOD AddNotation(const nsIParserNode& aNode);
@@ -634,7 +634,7 @@ RDFContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
     // XXX We'll ignore it for now
     PR_LOG(gLog, PR_LOG_ALWAYS,

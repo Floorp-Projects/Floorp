@@ -173,7 +173,7 @@ public:
   NS_IMETHOD NotifyError(const nsParserError* aError);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
 
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
@@ -2181,7 +2181,7 @@ nsresult HTMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode) {
  */
 
 NS_IMETHODIMP
-HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
+HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
   return NS_OK;
 }
