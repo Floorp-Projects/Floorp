@@ -2022,6 +2022,7 @@ NS_IMETHODIMP nsProfile::GetCookie(nsString& aCookie)
   nsIURI	*aURL;
 
   nsresult rv = NS_NewURL(&aURL, PREG_URL);
+  if (NS_FAILED(rv)) return rv;
 
   nsresult res = nsServiceManager::GetService(kNetServiceCID,
                                           kINetServiceIID,
