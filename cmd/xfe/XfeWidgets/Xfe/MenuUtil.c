@@ -432,3 +432,136 @@ XfeDestroyMenuWidgetTree(WidgetList	children,
     }
 }
 /*----------------------------------------------------------------------*/
+/* extern */ Widget
+XfeMenuCreateCascadeItem(Widget			menu,
+						 Widget			pulldown,
+						 String			cascade_name,
+						 WidgetClass	cascade_widget_class,
+						 Boolean		manage_cascade,
+						 ArgList		cascade_av,
+						 Cardinal		cascade_ac)
+{
+	Widget			cascade = NULL;
+	Arg				av[5];
+	Cardinal		ac = 0;
+
+	ArgList			joined_av = NULL;
+	Cardinal		joined_ac = 0;
+
+	Boolean			free_joined_av = False;
+
+	assert( XfeIsAlive(menu) );
+	assert( XmIsRowColumn(menu) );
+
+	assert(	cascade_name != NULL );
+	assert(	cascade_widget_class != NULL );
+
+	ac = 0;
+
+	if (_XfeIsAlive(pulldown))
+	{
+		XtSetArg(av[ac],XmNsubMenuId,	pulldown);	ac++;
+	}
+
+	if (cascade_ac > 0)
+	{
+		assert( cascade_av != NULL );
+
+		if (ac > 0)
+		{
+			joined_av = XtMergeArgLists(cascade_av,cascade_ac,av,ac);
+			joined_ac = cascade_ac + ac;
+
+			free_joined_av = True;
+		}
+		else
+		{
+			joined_av = cascade_av;
+			joined_ac = cascade_ac;
+		}
+	}
+	else
+	{
+		joined_av = av;
+		joined_ac = ac;
+	}
+
+	/* Create the cascade button */
+	cascade = XtCreateWidget(cascade_name,
+							 cascade_widget_class,
+							 menu,
+							 joined_av,
+							 joined_ac);
+	
+	/* Manage it if needed */
+	if (manage_cascade)
+	{
+		XtManageChild(cascade);
+	}
+
+	/* Cleanup allocated memory if needed */
+	if (free_joined_av)
+	{
+		XtFree((char *) joined_av);
+	}
+
+	return cascade;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeMenuCreatePulldownPane(Widget		menu,
+						  Widget		visual_widget,
+						  String		cascade_name,
+						  String		pulldown_name,
+						  WidgetClass	cascade_widget_class,
+						  Boolean		manage_cascade,
+						  ArgList		cascade_av,
+						  Cardinal		cascade_ac,
+						  Widget *		cascade_out,
+						  Widget *		pulldown_out)
+{
+	Widget	cascade = NULL;
+	Widget	pulldown = NULL;
+
+	assert( XfeIsAlive(menu) );
+	assert( XfeIsAlive(visual_widget) );
+
+	assert( XmIsRowColumn(menu) );
+
+	assert( cascade_out != NULL );
+	assert( pulldown_out != NULL );
+
+	assert(	cascade_name != NULL );
+	assert( cascade_widget_class != NULL );
+
+	assert( XfeVisual(visual_widget) != NULL );
+	assert( XfeDepth(visual_widget) > 0 );
+	assert( XfeColormap(visual_widget) != None );
+
+
+	/* Create the pulldown only if a name is given for it */
+	if (pulldown_name != NULL)
+	{
+		Arg			av[5];
+		Cardinal	ac = 0;
+
+		XtSetArg(av[ac],XmNvisual,		XfeVisual(visual_widget));		ac++;
+		XtSetArg(av[ac],XmNdepth,		XfeDepth(visual_widget));		ac++;
+		XtSetArg(av[ac],XmNcolormap,	XfeColormap(visual_widget));	ac++;
+
+		pulldown = XmCreatePulldownMenu(menu,pulldown_name,av,ac);
+	}
+
+	/* Create the cascade button */
+	cascade = XfeMenuCreateCascadeItem(menu,
+									   pulldown,
+									   cascade_name,
+									   cascade_widget_class,
+									   manage_cascade,
+									   cascade_av,
+									   cascade_ac);
+
+	*cascade_out = cascade;
+	*pulldown_out = pulldown;
+}
+/*----------------------------------------------------------------------*/

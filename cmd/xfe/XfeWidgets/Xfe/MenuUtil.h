@@ -108,7 +108,34 @@ XfeDisplaySetUserGrabbed		(Widget				w,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Destruction															*/
+/* Creation of menu hierarchies											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern Widget
+XfeMenuCreateCascadeItem		(Widget			menu,
+								 Widget			pulldown,
+								 String			cascade_name,
+								 WidgetClass	cascade_widget_class,
+								 Boolean		manage_cascade,
+								 ArgList		cascade_av,
+								 Cardinal		cascade_ac);
+/*----------------------------------------------------------------------*/
+extern void
+XfeMenuCreatePulldownPane		(Widget			menu,
+								 Widget			visual_widget,
+								 String			cascade_name,
+								 String			pulldown_name,
+								 WidgetClass	cascade_widget_class,
+								 Boolean		manage_cascade,
+								 ArgList		cascade_av,
+								 Cardinal		cascade_ac,
+								 Widget *		cascade_out,
+								 Widget *		pulldown_out);
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Destruction of menu hierarchies										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
