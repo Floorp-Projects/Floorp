@@ -63,7 +63,7 @@
             </template>
           </menulist>
         </hbox> 
-        <checkbox id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
+        <checkbox class="indent" id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
       </vbox>
     </vbox>
  
