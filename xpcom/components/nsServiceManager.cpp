@@ -274,6 +274,7 @@ NS_IMETHODIMP
 nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
                                      nsIShutdownListener* shutdownListener)
 {
+    PRBool serviceFound = PR_FALSE;
     nsresult rv = NS_OK;
     PR_CEnterMonitor(this);
 
@@ -281,25 +282,30 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
     // Do entry lookup only if there is a shutdownlistener to be removed.
     //
     // For Debug builds, Consistency check for entry always. Releasing service
-    //  when the service is not with the servicemanager is mostly wrong.
+    // when the service is not with the servicemanager is mostly wrong.
     if (shutdownListener)
 #endif
     {
         nsIDKey key(aClass);
         nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
 
-        // During shutdown,  it is possible for the service to have been
-        // already removed.
-        if (mShuttingDown = PR_FALSE)
-            NS_ASSERTION(entry, "service not found");
-
         if (entry) {
             rv = entry->RemoveListener(shutdownListener);
+            serviceFound == PR_TRUE;
         }
     }
     
-    NS_RELEASE(service);
-    
+    nsrefcnt cnt;
+    NS_RELEASE2(service, cnt);
+
+    // Consistency check: Service ref count cannot go to zero because of the
+    // extra addref the service manager does, unless the service has been
+    // unregistered (ie) not found in the service managers hash table.
+    // 
+    NS_ASSERTION(cnt > 0 || !serviceFound,
+                 "*** Service in hash table but is being deleted. Dangling pointer\n"
+                 "*** in service manager hash table.");
+
     PR_CExitMonitor(this);
     return rv;
 }
