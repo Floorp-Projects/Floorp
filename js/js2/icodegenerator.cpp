@@ -113,6 +113,17 @@ ICodeModule *ICodeGenerator::complete()
         ASSERT((*i)->mOffset <= iCode->size());
     }
 #endif
+
+
+    if (iCode->size()) {
+        ICodeOp lastOp = (*iCode)[iCode->size() - 1]->op();
+        if ((lastOp != RETURN) && (lastOp != RETURN_VOID))
+            returnStmt();
+    }
+    else
+        returnStmt();
+     
+
     /*
     XXX FIXME
     I wanted to do the following rather than have to have the label set hanging around as well
@@ -397,10 +408,12 @@ GenericBranch *ICodeGenerator::branchFalse(Label *label, TypedRegister condition
 
 void ICodeGenerator::returnStmt(TypedRegister r)
 {
-    if (r.first == NotARegister)
-        iCode->push_back(new ReturnVoid());
-    else
-        iCode->push_back(new Return(r));
+    iCode->push_back(new Return(r));
+}
+
+void ICodeGenerator::returnStmt()
+{
+    iCode->push_back(new ReturnVoid());
 }
 
 
@@ -588,7 +601,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
 
             if (i->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(i->op);
-                ret = methodCall(genExpr(b->op1), loadString(static_cast<IdentifierExprNode *>(b->op2)->name), args);
+                TypedRegister base = genExpr(b->op1);                
+                ret = methodCall(base, loadString(static_cast<IdentifierExprNode *>(b->op2)->name), args);
             }
             else 
                 if (i->op->getKind() == ExprNode::identifier) {
