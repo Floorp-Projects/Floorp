@@ -109,6 +109,7 @@ TABLE {
   border-style: outset;
   border-color: #C0C0C0;
   cell-spacing: 4px;
+  cell-padding: 4px;
   margin-top: 0;
   margin-bottom: 0;
 }
