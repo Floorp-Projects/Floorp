@@ -822,7 +822,7 @@ nsWindow::OnDrawSignal(GdkRectangle * aArea)
 // Add an XATOM property to this window.
 // Assuming XA_STRING type.
 // Borrowed from xfe classic branch.
-void nsWindow::StoreProperty(char *property, const unsigned char *data)
+void nsWindow::StoreProperty(char *property, unsigned char *data)
 {
   
   // This needs to happen before properties start working.
