@@ -400,15 +400,6 @@ var toDoTreeView =
    setTree : function( tree ){this.tree = tree;},
    getCellText : function(row,column)
    {
-      var columnElement = document.getElementById(column);
-      var sortActive = columnElement.getAttribute("sortActive");
-      if (sortActive == "true")
-      {
-         this.selectedColumn = column;
-         this.sortDirection = columnElement.getAttribute("sortDirection");
-         gTaskArray.sort(sortTasks);
-      }
-   
       calendarToDo = gTaskArray[row];
       if( !calendarToDo )
          return;
@@ -511,6 +502,19 @@ function refreshToDoTree( taskArray )
 
    toDoTreeView.rowCount = gTaskArray.length;
    
+   var ArrayOfTreeCols = document.getElementById( UnifinderTreeName ).getElementsByTagName( "treecol" );
+   
+   for( var i = 0; i < ArrayOfTreeCols.length; i++ )
+   {
+      if( ArrayOfTreeCols[i].getAttribute( "sortActive" ) == "true" )
+      {
+         treeView.selectedColumn = ArrayOfTreeCols[i].getAttribute( "id" );
+         treeView.sortDirection = ArrayOfTreeCols[i].getAttribute("sortDirection");
+         gTaskArray.sort(sortTasks);
+         break;
+      }
+   }
+
    document.getElementById( ToDoUnifinderTreeName ).view = toDoTreeView;
 
    document.getElementById( ToDoUnifinderTreeName ).taskView = new calendarTaskView( gTaskArray );

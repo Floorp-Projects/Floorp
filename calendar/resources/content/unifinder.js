@@ -516,15 +516,6 @@ var treeView =
    setTree : function( tree ){this.tree = tree;},
    getCellText : function(row,column)
    {
-      var columnElement = document.getElementById(column);
-      var sortActive = columnElement.getAttribute("sortActive");
-      if (sortActive == "true")
-      {
-         this.selectedColumn = column;
-         this.sortDirection = columnElement.getAttribute("sortDirection");
-         gEventArray.sort(sortEvents);
-      }
-   
       calendarEvent = gEventArray[row];
       var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
       switch( column )
@@ -641,6 +632,18 @@ function refreshEventTree( eventArray )
 
    treeView.rowCount = gEventArray.length;
       
+   var ArrayOfTreeCols = document.getElementById( UnifinderTreeName ).getElementsByTagName( "treecol" );
+   for( var i = 0; i < ArrayOfTreeCols.length; i++ )
+   {
+      if( ArrayOfTreeCols[i].getAttribute( "sortActive" ) == "true" )
+      {
+         treeView.selectedColumn = ArrayOfTreeCols[i].getAttribute( "id" );
+         treeView.sortDirection = ArrayOfTreeCols[i].getAttribute("sortDirection");
+         gEventArray.sort(sortEvents);
+         break;
+      }
+   }
+
    document.getElementById( UnifinderTreeName ).view = treeView;
 
    document.getElementById( UnifinderTreeName ).eventView = new calendarEventView( eventArray );
