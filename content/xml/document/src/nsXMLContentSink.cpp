@@ -1224,6 +1224,12 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
   NS_ASSERTION(content, "failed to pop content");
 
   result = CloseElement(content, &appendContent);
+
+  // Make sure to pop the namespaces no matter whether CloseElement
+  // succeeded.
+  nsINameSpace* nameSpace = PopNameSpaces().get();
+  NS_IF_RELEASE(nameSpace);
+
   NS_ENSURE_SUCCESS(result, result);
 
   if (mDocElement == content) {
@@ -1235,9 +1241,6 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
 
     parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
   }
-
-  nsINameSpace* nameSpace = PopNameSpaces().get();
-  NS_IF_RELEASE(nameSpace);
 
   if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
     if (mParser) mParser->BlockParser();
