@@ -38,6 +38,7 @@
 #include "nsIPrefMigration.h"
 #include "nsVoidArray.h"
 
+#define SUCCESS    0
 #define RETRY      1
 #define CREATE_NEW 2
 #define CANCEL     3
