@@ -307,7 +307,7 @@ JSBool
 jsj_SetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
                       jclass java_obj, jsval js_val)
 {
-    JSBool is_static_field;
+    JSBool is_static_field, is_local_ref;
     int dummy_cost;
     jvalue java_value;
     JavaSignature *signature;
@@ -331,7 +331,8 @@ jsj_SetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
     PR_END_MACRO
 
     signature = field_spec->signature;
-    if (!jsj_ConvertJSValueToJavaValue(cx, jEnv, js_val, signature, &dummy_cost, &java_value))
+    if (!jsj_ConvertJSValueToJavaValue(cx, jEnv, js_val, signature, &dummy_cost,
+                                       &java_value, &is_local_ref))
         return JS_FALSE;
 
     field_type = signature->type;
@@ -371,6 +372,8 @@ jsj_SetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
     case JAVA_SIGNATURE_CLASS:
     case JAVA_SIGNATURE_ARRAY:
         SET_JAVA_FIELD(Object,l);
+        if (is_local_ref)                                                           \
+            (*jEnv)->DeleteLocalRef(jEnv, java_value.l);
         break;
 
 #undef SET_JAVA_FIELD

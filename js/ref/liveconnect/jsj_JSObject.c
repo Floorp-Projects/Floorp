@@ -146,6 +146,12 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
         java_wrapper_obj = NULL;
     }
     
+    /*
+     * Release local reference to wrapper object, since some JVMs seem reticent
+     * about collecting it otherwise.
+     */
+    (*jEnv)->DeleteLocalRef(jEnv, java_wrapper_obj);
+
 done:
 #ifdef JS_THREADSAFE
         PR_ExitMonitor(js_obj_reflections_monitor);
@@ -388,6 +394,15 @@ throw_any_pending_js_error_as_a_java_exception(JSJavaThreadState *jsj_env)
         jsj_LogError("Couldn't throw JSException\n");
         goto done;
     }
+
+    /*
+     * Release local references to Java objects, since some JVMs seem reticent
+     * about collecting them otherwise.
+     */
+    (*jEnv)->DeleteLocalRef(jEnv, message_jstr);
+    (*jEnv)->DeleteLocalRef(jEnv, filename_jstr);
+    (*jEnv)->DeleteLocalRef(jEnv, linebuf_jstr);
+    (*jEnv)->DeleteLocalRef(jEnv, java_exception);
 
     goto done;
 
@@ -639,6 +654,7 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv *jEnv,
     JSObject *js_obj;
     jsval js_val;
     int dummy_cost;
+    JSBool dummy_bool;
     const jchar *property_name_ucs2;
     jsize property_name_len;
     JSErrorReporter saved_reporter;
@@ -669,7 +685,7 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv *jEnv,
         goto done;
 
     jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, get_jlObject_descriptor(cx, jEnv),
-                                   &dummy_cost, &member);
+                                   &dummy_cost, &member, &dummy_bool);
 
 done:
     if (property_name_ucs2)
@@ -694,6 +710,7 @@ Java_netscape_javascript_JSObject_getSlot(JNIEnv *jEnv,
     JSObject *js_obj;
     jsval js_val;
     int dummy_cost;
+    JSBool dummy_bool;
     JSErrorReporter saved_reporter;
     jobject member;
     JSJavaThreadState *jsj_env;
@@ -706,7 +723,7 @@ Java_netscape_javascript_JSObject_getSlot(JNIEnv *jEnv,
     if (!JS_GetElement(cx, js_obj, slot, &js_val))
         goto done;
     if (!jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, get_jlObject_descriptor(cx, jEnv),
-                                        &dummy_cost, &member))
+                                        &dummy_cost, &member, &dummy_bool))
         goto done;
 
 done:
@@ -854,6 +871,7 @@ Java_netscape_javascript_JSObject_call(JNIEnv *jEnv, jobject java_wrapper_obj,
     JSObject *js_obj;
     jsval js_val, function_val;
     int dummy_cost;
+    JSBool dummy_bool;
     const jchar *function_name_ucs2;
     jsize function_name_len;
     JSErrorReporter saved_reporter;
@@ -908,7 +926,7 @@ Java_netscape_javascript_JSObject_call(JNIEnv *jEnv, jobject java_wrapper_obj,
         goto cleanup_argv;
 
     jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, get_jlObject_descriptor(cx, jEnv),
-                                   &dummy_cost, &result);
+                                   &dummy_cost, &result, &dummy_bool);
 
 cleanup_argv:
     if (argv) {
@@ -943,6 +961,7 @@ Java_netscape_javascript_JSObject_eval(JNIEnv *jEnv,
     JSObject *js_obj;
     jsval js_val;
     int dummy_cost;
+    JSBool dummy_bool;
     const jchar *eval_ucs2;
     jsize eval_len;
     JSErrorReporter saved_reporter;
@@ -984,7 +1003,7 @@ Java_netscape_javascript_JSObject_eval(JNIEnv *jEnv,
 
     /* Convert result to a subclass of java.lang.Object */
     jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, get_jlObject_descriptor(cx, jEnv),
-                                   &dummy_cost, &result);
+                                   &dummy_cost, &result, &dummy_bool);
 
 done:
     if (eval_ucs2)
@@ -1043,6 +1062,7 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv *jEnv,
     JSObject *js_obj;
     jsval js_val;
     int dummy_cost;
+    JSBool dummy_bool;
     JSErrorReporter saved_reporter;
     jobject java_obj;
     JSJavaThreadState *jsj_env;
@@ -1063,7 +1083,7 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv *jEnv,
     }
     js_val = OBJECT_TO_JSVAL(js_obj);
     jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, get_jlObject_descriptor(cx, jEnv),
-                                   &dummy_cost, &java_obj);
+                                   &dummy_cost, &java_obj, &dummy_bool);
 done:
     if (!exit_js(cx, jsj_env, saved_reporter))
         return NULL;

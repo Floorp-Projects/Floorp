@@ -112,9 +112,10 @@ jsj_SetJavaArrayElement(JSContext *cx, JNIEnv *jEnv, jarray java_array, jsize in
     int dummy_cost;
     jvalue java_value;
     JavaSignatureChar component_type;
+    JSBool is_local_ref;
 
     if (!jsj_ConvertJSValueToJavaValue(cx, jEnv, js_val, array_component_signature,
-                                       &dummy_cost, &java_value))
+                                       &dummy_cost, &java_value, &is_local_ref))
         return JS_FALSE;
 
 #define SET_ELEMENT_FROM_PRIMITIVE_JAVA_ARRAY(Type,member)                   \
@@ -163,6 +164,8 @@ jsj_SetJavaArrayElement(JSContext *cx, JNIEnv *jEnv, jarray java_array, jsize in
     case JAVA_SIGNATURE_CLASS:
     case JAVA_SIGNATURE_ARRAY:
         (*jEnv)->SetObjectArrayElement(jEnv, java_array, index, java_value.l);
+        if (is_local_ref)                                                           \
+            (*jEnv)->DeleteLocalRef(jEnv, java_value.l);
         if ((*jEnv)->ExceptionOccurred(jEnv)) {
             jsj_ReportJavaError(cx, jEnv, "Error assigning to Java object array");
             return JS_FALSE;

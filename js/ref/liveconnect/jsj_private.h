@@ -268,10 +268,10 @@ jsj_PurgeJavaMethodSignature(JSContext *cx, JNIEnv *jEnv, JavaMethodSignature *s
 
 extern JSBool
 jsj_ConvertJSValueToJavaValue(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignature *signature,
-			      int *cost, jvalue *java_value);
+			      int *cost, jvalue *java_value, JSBool *is_local_refp);
 extern JSBool
 jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignature *signature,
-			       int *cost, jobject *java_value);
+			       int *cost, jobject *java_value, JSBool *is_local_refp);
 extern jstring
 jsj_ConvertJSStringToJavaString(JSContext *cx, JNIEnv *jEnv, JSString *js_str);
 

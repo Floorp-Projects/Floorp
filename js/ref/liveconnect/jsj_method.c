@@ -548,13 +548,15 @@ method_signature_matches_JS_args(JSContext *cx, JNIEnv *jEnv, uintN argc, jsval 
 {
     uintN i;
     JavaSignature *arg_signature;
+    JSBool dummy_bool;
 
     if (argc != (uintN)method_signature->num_args)
         return JS_FALSE;
 
     for (i = 0; i < argc; i++) {
         arg_signature = method_signature->arg_signatures[i];
-        if (!jsj_ConvertJSValueToJavaValue(cx, jEnv, argv[i], arg_signature, cost, NULL))
+        if (!jsj_ConvertJSValueToJavaValue(cx, jEnv, argv[i], arg_signature, cost,
+                                           NULL, &dummy_bool))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -678,7 +680,7 @@ resolve_overloaded_method(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor *mem
         if (!method_signature_matches_JS_args(cx, jEnv, argc, argv, &method->signature, &cost))
             continue;
 
-#ifdef LIVECONNECT_IMPROVEMENTS
+#if 1
         if (cost < lowest_cost) {
             lowest_cost = cost;
             best_method_match = method;
@@ -708,10 +710,10 @@ resolve_overloaded_method(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor *mem
 
 static jvalue *
 convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
-			            JavaMethodSpec *method)
+			            JavaMethodSpec *method, JSBool **localvp)
 {
     jvalue *jargv;
-    JSBool ok;
+    JSBool ok, *localv;
     uintN i, argc;
     JavaSignature **arg_signatures;
     JavaMethodSignature *signature;
@@ -726,15 +728,28 @@ convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
     
     if (!jargv)
         return NULL;
+
+    /*
+     * Allocate an array that contains a flag for each argument, indicating whether
+     * or not the conversion from a JS value to a Java value resulted in a new
+     * JNI local reference.
+     */
+    localv = (JSBool *)JS_malloc(cx, sizeof(JSBool) * argc);
+    if (!localv) {
+        JS_free(cx, jargv);
+        return NULL;
+    }
+    *localvp = localv;
     
     for (i = 0; i < argc; i++) {
         int dummy_cost;
         
         ok = jsj_ConvertJSValueToJavaValue(cx, jEnv, argv[i], arg_signatures[i],
-                                           &dummy_cost, &jargv[i]);
+                                           &dummy_cost, &jargv[i], &localv[i]);
         if (!ok) {
             JS_ReportError(cx, "Internal error: can't convert JS value to Java value");
             JS_free(cx, jargv);
+            JS_free(cx, localv);
             return NULL;
         }
     }
@@ -752,7 +767,7 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
 {
     jvalue java_value;
     jvalue *jargv;
-    uintN argc;
+    uintN argc, i;
     jobject java_object;
     jclass java_class;
     jmethodID methodID;
@@ -760,6 +775,7 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
     JavaSignature *return_val_signature;
     JSContext *old_cx;
     JNIEnv *jEnv;
+    JSBool *localv;
 
     methodID = method->methodID;
     signature = &method->signature;
@@ -777,7 +793,7 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
 
     jargv = NULL;
     if (argc) {
-        jargv = convert_JS_method_args_to_java_argv(cx, jEnv, argv, method);
+        jargv = convert_JS_method_args_to_java_argv(cx, jEnv, argv, method, &localv);
         if (!jargv)
             return JS_FALSE;
     }
@@ -858,12 +874,22 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         return JS_FALSE;
     }
 
+    for (i = 0; i < argc; i++) {
+        if (localv[i])
+            (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
+    }
     if (jargv)
         JS_free(cx, jargv);
+
     JSJ_SetDefaultJSContextForJavaThread(old_cx, jsj_env);
 
     return jsj_ConvertJavaValueToJSValue(cx, jEnv, return_val_signature, &java_value, vp);
+
 error:
+    for (i = 0; i < argc; i++) {
+        if (localv[i])
+            (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
+    }
     if (jargv)
        JS_free(cx, jargv);
     JSJ_SetDefaultJSContextForJavaThread(old_cx, jsj_env);
@@ -987,12 +1013,13 @@ invoke_java_constructor(JSContext *cx,
 		        jsval *argv, jsval *vp)
 {
     jvalue *jargv;
-    uintN argc;
+    uintN argc, i;
     jobject java_object;
     jmethodID methodID;
     JavaMethodSignature *signature;
     JSContext *old_cx;
     JNIEnv *jEnv;
+    JSBool *localv;
     
     methodID = method->methodID;
     signature = &method->signature;
@@ -1002,7 +1029,7 @@ invoke_java_constructor(JSContext *cx,
 
     jargv = NULL;
     if (argc) {
-        jargv = convert_JS_method_args_to_java_argv(cx, jEnv, argv, method);
+        jargv = convert_JS_method_args_to_java_argv(cx, jEnv, argv, method, &localv);
         if (!jargv)
             return JS_FALSE;
     }
@@ -1013,6 +1040,7 @@ invoke_java_constructor(JSContext *cx,
                            "one JSContext ?");
     }
 
+    /* Call the constructor */
     java_object = (*jEnv)->NewObjectA(jEnv, java_class, methodID, jargv);
 
     JSJ_SetDefaultJSContextForJavaThread(old_cx, jsj_env);
@@ -1023,12 +1051,20 @@ invoke_java_constructor(JSContext *cx,
         goto error;
     }
 
+    for (i = 0; i < argc; i++) {
+        if (localv[i])
+            (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
+    }
     if (jargv)
         JS_free(cx, jargv);
 
     return jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_object, vp);
 
 error:
+    for (i = 0; i < argc; i++) {
+        if (localv[i])
+            (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
+    }
     if (jargv)
        JS_free(cx, jargv);
     return JS_FALSE;
