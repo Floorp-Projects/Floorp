@@ -23,6 +23,7 @@
 messenger.xul
 folderPane.xul
 threadPane.xul
+msgHdrViewAddresses.js
 msgHdrViewOverlay.js
 msgHdrViewOverlay.xul
 widgetglue.js
