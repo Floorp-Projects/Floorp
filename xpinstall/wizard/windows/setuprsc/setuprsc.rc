@@ -63,11 +63,7 @@ BEGIN
     LTEXT           "",IDC_STATIC0,101,11,202,37,NOT WS_GROUP
     LTEXT           "",IDC_STATIC1,102,53,201,37,NOT WS_GROUP
     LTEXT           "",IDC_STATIC2,102,96,201,37,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
@@ -100,11 +96,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_STATIC_MSG0,101,11,204,17,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
@@ -129,11 +121,7 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,101,140,204,33
     LTEXT           "",IDC_DOWNLOAD_SIZE,105,160,92,8,NOT WS_GROUP
     LTEXT           "",IDC_SPACE_AVAILABLE,206,160,94,8,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
@@ -161,11 +149,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,17,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_PICT0,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_PICT0,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC0,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
@@ -186,11 +170,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
@@ -227,19 +207,11 @@ BEGIN
     LTEXT           "",IDC_MESSAGE0,101,14,204,18,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE1,101,50,204,20,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE2,101,127,204,18,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
-    CONTROL
-#ifndef __MINGW32__
-                    115,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,102,76,20,20
+    CONTROL         115,IDC_STATIC,"Static",SS_BITMAP,102,76,20,20
 END
 
 DLG_BROWSE_DIR DIALOG DISCARDABLE  147, 23, 190, 143
@@ -294,11 +266,7 @@ BEGIN
     CONTROL         "",IDC_STATUS3,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
                     WS_GROUP,12,98,286,8
     CONTROL         "",IDC_GAUGE_FILE,"GaugeFile",0x0,12,110,286,11
-    CONTROL
-#ifndef __MINGW32__
-                    114,
-#endif
-                    IDB_BITMAP_BANNER,"Static",SS_BITMAP,0,0,312,34
+    CONTROL         114,IDB_BITMAP_BANNER,"Static",SS_BITMAP,0,0,312,34
 END
 
 DLG_ADVANCED_SETTINGS DIALOG DISCARDABLE  51, 56, 315, 205
@@ -318,11 +286,7 @@ BEGIN
                     9
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
@@ -353,11 +317,7 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,101,140,204,33
     LTEXT           "",IDC_DOWNLOAD_SIZE,105,160,92,8,NOT WS_GROUP
     LTEXT           "",IDC_SPACE_AVAILABLE,206,160,94,8,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
@@ -398,11 +358,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,100,20,204,33,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    -1,"Static",SS_BITMAP,11,11,83,162,WS_EX_CLIENTEDGE
+    CONTROL         108,-1,"Static",SS_BITMAP,11,11,83,162,WS_EX_CLIENTEDGE
     CONTROL         "",-1,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
 END
@@ -428,11 +384,7 @@ BEGIN
                     SS_NOPREFIX | WS_GROUP,49,72,253,8
     CONTROL         "",IDC_GAUGE_FILE,"GaugeFile",0x0,9,114,271,11
     LTEXT           "",IDC_PERCENTAGE,283,115,20,8,SS_NOPREFIX
-    CONTROL
-#ifndef __MINGW32__
-                    114,
-#endif
-                    IDB_BITMAP_BANNER,"Static",SS_BITMAP,0,0,312,34
+    CONTROL         114,IDB_BITMAP_BANNER,"Static",SS_BITMAP,0,0,312,34
     LTEXT           "",IDC_STATIC4,9,91,37,8,SS_NOPREFIX
     CONTROL         "",IDC_STATUS_TO,"Static",SS_LEFTNOWORDWRAP | 
                     SS_NOPREFIX | WS_GROUP,49,91,253,8
@@ -450,11 +402,7 @@ BEGIN
     EDITTEXT        IDC_CURRENT_SETTINGS,101,67,204,102,ES_MULTILINE | 
                     ES_OEMCONVERT | ES_READONLY | WS_VSCROLL | WS_HSCROLL
     LTEXT           "",IDC_MESSAGE0,101,11,204,52,NOT WS_GROUP
-    CONTROL
-#ifndef __MINGW32__
-                    108,
-#endif
-                    IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE

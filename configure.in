@@ -89,6 +89,8 @@ PERL_VERSION=5.004
 LIBART_VERSION=2.3.4
 GTK2_VERSION=1.3.7
 MAKE_VERSION=3.78
+WINDRES_VERSION=2.14.90
+W32API_VERSION=2.4
 
 dnl Set various checks
 dnl ========================================================
@@ -361,6 +363,41 @@ case "$target" in
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $ 3 }'`
         if test "$_MIDL_MAJOR_VERSION" != "5" -a "$_MIDL_FULL_VERSION" != "6.00.0347"; then
             AC_MSG_ERROR([Midl version $_MIDL_FULL_VERSION was found.  Midl version must be 5.x.x (VC6*) or 6.00.0347 (VC7).])
+        fi
+    else
+        # Check w32api version
+        _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
+        _W32API_MINOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $2 }'`
+        AC_MSG_CHECKING([for w32api version >= $W32API_VERSION])
+        AC_TRY_COMPILE([#include <w32api.h>],
+            #if (__W32API_MAJOR_VERSION < $_W32API_MAJOR_VERSION) || \
+                (__W32API_MAJOR_VERSION == $_W32API_MAJOR_VERSION && \
+                 __W32API_MINOR_VERSION < $_W32API_MINOR_VERSION)
+                #error "test failed."
+            #endif
+            , [ res=yes ], [ res=no ])
+        AC_MSG_RESULT([$res])
+        if test "$res" != "yes"; then
+            AC_MSG_ERROR([w32api version $W32API_VERSION or higher required.])
+        fi
+        # Check windres version
+        AC_MSG_CHECKING([for windres version >= $WINDRES_VERSION])
+        _WINDRES_VERSION=`${WINDRES} --version 2>&1 | grep -i windres 2>/dev/null | $AWK '{ print $3 }'`
+        AC_MSG_RESULT([$_WINDRES_VERSION])
+        _WINDRES_MAJOR_VERSION=`echo $_WINDRES_VERSION | $AWK -F\. '{ print $1 }'`
+        _WINDRES_MINOR_VERSION=`echo $_WINDRES_VERSION | $AWK -F\. '{ print $2 }'`
+        _WINDRES_RELEASE_VERSION=`echo $_WINDRES_VERSION | $AWK -F\. '{ print $3 }'`
+        WINDRES_MAJOR_VERSION=`echo $WINDRES_VERSION | $AWK -F\. '{ print $1 }'`
+        WINDRES_MINOR_VERSION=`echo $WINDRES_VERSION | $AWK -F\. '{ print $2 }'`
+        WINDRES_RELEASE_VERSION=`echo $WINDRES_VERSION | $AWK -F\. '{ print $3 }'`
+        if test "$_WINDRES_MAJOR_VERSION" -lt "$WINDRES_MAJOR_VERSION" -o \
+                "$_WINDRES_MAJOR_VERSION" -eq "$WINDRES_MAJOR_VERSION" -a \
+                "$_WINDRES_MINOR_VERSION" -lt "$WINDRES_MINOR_VERSION" -o \
+                "$_WINDRES_MAJOR_VERSION" -eq "$WINDRES_MAJOR_VERSION" -a \
+                "$_WINDRES_MINOR_VERSION" -eq "$WINDRES_MINOR_VERSION" -a \
+                "$_WINDRES_RELEASE_VERSION" -lt "$WINDRES_RELEASE_VERSION"
+        then
+            AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
     fi # !GNU_CC
     ;;
