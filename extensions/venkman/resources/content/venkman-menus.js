@@ -68,9 +68,12 @@ function initMenus()
 
     /* View menu */
     M("mainmenu", "view");
-     m("pprint", {type: "checkbox",
-                  checkedif: "console.sourceView.prettyPrint"});
      m("reload");
+     m("pprint",        {type: "checkbox",
+                         checkedif: "console.sourceView.prettyPrint"});
+     m("-");
+     m("toggle-chrome", {type: "checkbox",
+                         checkedif: "console.enableChromeFilter"});
      
     /* Debug menu */
     M("mainmenu", "debug");

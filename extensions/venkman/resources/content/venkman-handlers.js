@@ -127,7 +127,8 @@ function con_icline (e)
     console.lastHistoryReferenced = -1;
     console.incompleteLine = "";
     
-    dispatch (e.line, null, CMD_CONSOLE);
+    var ev = {isInteractive: true, initialEvent: e};
+    dispatch (e.line, ev, CMD_CONSOLE);
 }
 
 console.onSingleLineKeypress =

@@ -48,6 +48,7 @@ function initCommands(commandObject)
         [/* "real" commands */
          ["break",          cmdBreak,              CMD_CONSOLE],
          ["bp-props",       cmdBPProps,            0],
+         ["chrome-filter",  cmdChromeFilter,       CMD_CONSOLE],
          ["clear",          cmdClear,              CMD_CONSOLE],
          ["clear-all",      cmdClearAll,           CMD_CONSOLE],
          ["clear-script",   cmdClearScript,        0],
@@ -86,6 +87,7 @@ function initCommands(commandObject)
          
          /* aliases */
          ["this",          "props this",           CMD_CONSOLE],
+         ["toggle-chrome", "chrome-filter toggle", 0],
          ["toggle-ias",    "startup-init toggle",  0],
          ["em-cycle",      "emode cycle",          0],
          ["em-ignore",     "emode ignore",         0],
@@ -174,6 +176,7 @@ function getCommandContext (id, cx)
 
         case "mainmenu:debug-popup":            
         case "mainmenu:view-popup":
+        case "popup:console":
             cx = {
                 commandManager: console.commandManager,
                 contextSource: "default"
@@ -216,6 +219,7 @@ function formatCommandFlags (f)
 function cmdBreak (e)
 {    
     var i;
+    var bpr;
     
     if (!e.fileName)
     {  /* if no input data, just list the breakpoints */
@@ -230,9 +234,9 @@ function cmdBreak (e)
         display (getMsg(MSN_BP_HEADER, bplist.length));
         for (i = 0; i < bplist.length; ++i)
         {
-            var bpr = bplist[i];
-            display (getMsg(MSN_BP_LINE, [i, bpr.fileName, bpr.line,
-                                          bpr.scriptMatches]));
+            bpr = bplist[i];
+            feedback (e, getMsg(MSN_BP_LINE, [i, bpr.fileName, bpr.line,
+                                              bpr.scriptMatches]));
         }
         return true;
     }
@@ -240,12 +244,17 @@ function cmdBreak (e)
     var matchingFiles = matchFileName (e.fileName);
     if (matchingFiles.length == 0)
     {
-        display (getMsg(MSN_ERR_BP_NOSCRIPT, e.fileName), MT_ERROR);
+        feedback (e, getMsg(MSN_ERR_BP_NOSCRIPT, e.fileName), MT_ERROR);
         return false;
     }
     
     for (i in matchingFiles)
-        setBreakpoint (matchingFiles[i], e.lineNumber);
+    {
+        bpr = setBreakpoint (matchingFiles[i], e.lineNumber);
+        if (bpr)
+            feedback (getMsg(MSN_BP_CREATED, [bpr.fileName, bpr.lineNumber,
+                                              bpr.scriptMatches]));
+    }
     
     return true;
 }
@@ -255,9 +264,61 @@ function cmdBPProps (e)
     dd ("command bp-props");
 }
 
+function cmdChromeFilter (e)
+{
+    var currentState = console.prefs["enableChromeFilter"];
+    
+    if (e.toggle != null)
+    {
+        if (e.toggle == "toggle")
+            e.toggle = !currentState;
+
+        if (e.toggle != currentState)
+        {
+            if (e.toggle)
+                console.jsds.insertFilter (console.chromeFilter, null);
+            else
+                console.jsds.removeFilter (console.chromeFilter);
+        }
+        
+        console.scriptsView.freeze();
+        for (var container in console.scripts)
+        {
+            if (console.scripts[container].fileName.indexOf("chrome:") == 0)
+            {
+                var rec = console.scripts[container];
+                var scriptList = console.scriptsView.childData;
+                if (e.toggle)
+                {
+                    /* filter is on, remove chrome file from scripts view */
+                    if ("parentRecord" in rec)
+                        scriptList.removeChildAtIndex(rec.childIndex);
+                }
+                else
+                {
+                    /* filter is off, add chrome file to scripts view */
+                    if (!("parentRecord" in rec))
+                        scriptList.appendChild(rec);
+                }
+            }
+        }
+        console.scriptsView.thaw();
+
+        currentState = 
+            console.enableChromeFilter = 
+            console.prefs["enableChromeFilter"] = e.toggle;
+    }
+
+    feedback (e, getMsg(MSN_CHROME_FILTER,
+                        currentState ? MSG_VAL_ON : MSG_VAL_OFF));
+}
+
 function cmdClear (e)
 {
-    return clearBreakpointByNumber (e.breakpointIndex);
+    var bpr = clearBreakpointByNumber (e.breakpointIndex);
+    if (bpr)
+        feedback (getMsg(MSN_BP_CLEARED, [bpr.fileName, bpr.line,
+                                          bpr.scriptMatches]));
 }
 
 function cmdClearAll(e)

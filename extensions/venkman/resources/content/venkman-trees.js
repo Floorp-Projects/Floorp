@@ -291,8 +291,6 @@ function sv_lscroll (line)
 console.sourceView.getContext =
 function sv_getcx(cx)
 {
-    dd ("get source context...");
-    
     if (!cx)
         cx = new Object();
 
@@ -323,8 +321,6 @@ function sv_getcx(cx)
         cx.lineNumberList = new Array();
     }
     
-    dd ("rangeCount is " + rangeCount);
-    
     for (var range = 0; range < rangeCount; ++range)
     {
         var min = new Object();
@@ -333,7 +329,6 @@ function sv_getcx(cx)
         min = min.value;
         max = max.value;
 
-        dd ("range " + min + " ... " + max);
         for (row = min; row <= max; ++row)
         {
             cx.lineNumberList.push (row + 1);
@@ -656,6 +651,11 @@ function sr_guessname (sourceText)
 {
     var targetLine = this.script.baseLineNumber;
     var sourceLines = sourceText.lines;
+    if (targetLine > sourceLines)
+    {
+        dd ("not enough source to guess function at line " + targetLine);
+        return;
+    }
     
     if (this.functionName == MSG_VAL_TLSCRIPT)
     {
@@ -776,8 +776,6 @@ function scv_getcprops (index, colID, properties)
 console.scriptsView.getContext =
 function scv_getcx(cx)
 {
-    dd ("get scripts context...");
-    
     if (!cx)
         cx = new Object();
 
@@ -817,7 +815,6 @@ function scv_getcx(cx)
         cx.lineNumberList = new Array();
     }
     
-    dd ("rangeCount is " + rangeCount);
     if (rangeCount > 0)
     {
         cx.fileNameList   = new Array();
@@ -836,7 +833,6 @@ function scv_getcx(cx)
         min = min.value;
         max = max.value;
 
-        dd ("range " + min + " ... " + max);
         for (row = min; row <= max; ++row)
         {
             rec = this.childData.locateChildByVisualRow(row);
@@ -878,9 +874,7 @@ function FrameRecord (frame)
     {
         this.location = sourceRec.shortName + ":" + frame.line;
         var scriptRec = sourceRec.locateChildByScript(frame.script);
-        if (!scriptRec)
-            dd ("no scriptrec");
-        else if (fn == "anonymous")
+        if (fn == "anonymous")
             fn = scriptRec.functionName;
     }
     else
@@ -946,7 +940,6 @@ function vr_refresh ()
     {
         /* if we're not an object but we have child data, then we must have just
          * turned into something other than an object. */
-        dd ("we're not an object anymore!");
         delete this.childData;
         this.isContainerOpen = false;
         sizeDelta = 1 - this.visualFootprint;
@@ -1283,8 +1276,6 @@ function sv_save ()
 console.stackView.getContext =
 function sv_getcx(cx)
 {
-    dd ("get stack context...");
-    
     if (!cx)
         cx = new Object();
 
@@ -1312,8 +1303,6 @@ function sv_getcx(cx)
     if (!("frameIndex" in cx))
     {
         var parent = rec.parentRecord;
-        if (!parent)
-            dd ("no parent!");
         while (parent && !(parent instanceof FrameRecord))
                 parent = parent.parentRecord;
         
@@ -1421,8 +1410,6 @@ function pv_cellprops (index, colID, properties)
 console.projectView.getContext =
 function pv_getcx(cx)
 {
-    dd ("get project context...");
-    
     if (!cx)
         cx = new Object();
 

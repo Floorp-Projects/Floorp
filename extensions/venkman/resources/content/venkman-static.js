@@ -67,8 +67,6 @@ console.version = "0.6.1";
 
 /* |this|less functions */
 
-const jsdIFilter = Components.interfaces.jsdIFilter;
-
 function setStopState(state)
 {
     var tb = document.getElementById("maintoolbar-stop");
@@ -229,6 +227,12 @@ function dispatchCommand (command, e, flags)
              MT_ERROR);
 
     return null;    
+}
+
+function feedback(e, message, msgtype)
+{
+    if ("isInteractive" in e && e.isInteractive)
+        display (message, msgtype);
 }
 
 function display(message, msgtype)
@@ -748,7 +752,9 @@ function st_loadsrc (cb)
                 console.popStatus();                
                 return;
             }
-            
+            if (!ASSERT(data, "loadSource succeeded but got no data"))
+                data = "";
+                
             sourceText.isLoaded = true;
             var ary = data.split(/\r\n|\n|\r/m);
             for (var i = 0; i < ary.length; ++i)
@@ -780,16 +786,15 @@ function st_loadsrc (cb)
     try
     {
         src = loadURLNow(url);
+        observer.onComplete (src, url, Components.results.NS_OK);
+        this.invalidate();
+        delete this.isLoading;
     }
     catch (ex)
     {
         /* if we can't load it now, try to load it later */
         loadURLAsync (url, observer);
     }
-
-    observer.onComplete (src, url, Components.results.NS_OK);
-    this.invalidate();
-    delete this.isLoading;
 
 }
 

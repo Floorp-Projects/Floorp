@@ -42,6 +42,7 @@ const jsdIValue           = Components.interfaces.jsdIValue;
 const jsdIProperty        = Components.interfaces.jsdIProperty;
 const jsdIScript          = Components.interfaces.jsdIScript;
 const jsdIStackFrame      = Components.interfaces.jsdIStackFrame;
+const jsdIFilter          = Components.interfaces.jsdIFilter;
 
 const PCMAP_SOURCETEXT    = jsdIScript.PCMAP_SOURCETEXT;
 const PCMAP_PRETTYPRINT   = jsdIScript.PCMAP_PRETTYPRINT;
@@ -50,7 +51,9 @@ const FTYPE_STD     = 0;
 const FTYPE_SUMMARY = 1;
 const FTYPE_ARRAY   = 2;
 
-const FILTER_SYSTEM = 0x100; /* system filter, do not show in UI */
+const FILTER_ENABLED  = jsdIFilter.FLAG_ENABLED;
+const FILTER_DISABLED = ~jsdIFilter.FLAG_ENABLED;
+const FILTER_SYSTEM   = 0x100; /* system filter, do not show in UI */
 
 var $ = new Array(); /* array to store results from evals in debug frames */
 
@@ -176,24 +179,39 @@ function initDebugger()
     console.jsds.errorHook = console._errorHook;
     console.jsds.scriptHook = console._scriptHook;
 
+    console.chromeFilter = {
+        glob: null,
+        flags: FILTER_SYSTEM | FILTER_ENABLED,
+        urlPattern: "chrome:*",
+        startLine: 0,
+        endLine: 0
+    };
+    
+    if (console.prefs["enableChromeFilter"])
+    {
+        console.enableChromeFilter = true;
+        console.jsds.appendFilter(console.chromeFilter);
+    }
+    else
+        console.enableChromeFilter = false;
+
     var venkmanFilter1 = { /* glob based filter goes first, because it's the */
         glob: this,        /* easiest to match.                              */
-        flags: FILTER_SYSTEM | jsdIFilter.FLAG_ENABLED,
+        flags: FILTER_SYSTEM | FILTER_ENABLED,
         urlPattern: null,
         startLine: 0,
         endLine: 0
     };
     var venkmanFilter2 = { /* url based filter for XPCOM callbacks that may  */
         glob: null,        /* not happen under our glob.                     */
-        flags: FILTER_SYSTEM | jsdIFilter.FLAG_ENABLED,
+        flags: FILTER_SYSTEM | FILTER_ENABLED,
         urlPattern: "chrome://venkman/*",
         startLine: 0,
         endLine: 0
     };
-
     console.jsds.appendFilter (venkmanFilter1);
     console.jsds.appendFilter (venkmanFilter2);
-    
+
     console.throwMode = TMODE_IGNORE;
     console.errorMode = EMODE_IGNORE;
 
@@ -230,15 +248,17 @@ function detachDebugger()
 
 function realizeScript(script)
 {
-    var container
+    var container;
     if (script.fileName in console.scripts)
     {
         container = console.scripts[script.fileName];
         if (!("parentRecord" in container))
         {
-            /* source record exists but is not inserted in the source tree,
+            /* container record exists but is not inserted in the scripts view,
              * either we are reloading it, or the user added it manually */
-            console.scriptsView.childData.appendChild(container);
+            if (!console.enableChromeFilter ||
+                script.fileName.indexOf ("chrome:") != 0)
+                console.scriptsView.childData.appendChild(container);
         }
     }
     else
@@ -246,12 +266,13 @@ function realizeScript(script)
         container = console.scripts[script.fileName] =
             new ScriptContainerRecord (script.fileName);
         container.reserveChildren();
-        console.scriptsView.childData.appendChild(container);
+        if (!console.enableChromeFilter ||
+            script.fileName.indexOf ("chrome:") != 0)
+            console.scriptsView.childData.appendChild(container);
     }
     
     var scriptRec = new ScriptRecord (script);
     container.appendScriptRecord (scriptRec);
-
     /* check to see if this script contains a breakpoint */
     for (var i = 0; i < console.breakpoints.childData.length; ++i)
     {
@@ -271,7 +292,7 @@ function realizeScript(script)
                 setBreakpoint (scriptRec.script.fileName, bpr.line);
             }
         }
-    }    
+    }
 }
 
 function unrealizeScript(script)
@@ -761,14 +782,11 @@ function clearBreakpointByNumber (number)
     if (!bpr)
     {
         display (getMsg(MSN_ERR_BP_NOINDEX, number, MT_ERROR));
-        return 0;
+        return null;
     }
 
     bpr.enabled = false;
 
-    display (getMsg(MSN_BP_CLEARED, [bpr.fileName, bpr.line,
-                                     bpr.scriptMatches]));
-    
     var fileName = bpr.fileName;
     var line = bpr.line;
     var sourceRecord = console.scripts[fileName];
@@ -782,7 +800,7 @@ function clearBreakpointByNumber (number)
     }
 
     console.breakpoints.removeChildAtIndex(number);
-    return bpr.scriptMatches;
+    return bpr;
 }
     
 function setBreakpoint (fileName, line)
@@ -817,7 +835,7 @@ function setBreakpoint (fileName, line)
         }
     }
 
-    var matches = bpr.scriptMatches
+    var matches = bpr.scriptMatches;
     if (!matches)
     {
         display (getMsg(MSN_ERR_BP_NOLINE, [fileName, line]), MT_ERROR);
@@ -833,8 +851,6 @@ function setBreakpoint (fileName, line)
     }
     
     console.breakpoints.appendChild (bpr);
-    display (getMsg(MSN_BP_CREATED, [fileName, line, matches]));
-    
     return bpr;
 }
 

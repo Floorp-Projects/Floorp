@@ -331,13 +331,18 @@ TreeOViewRecord.prototype.isContainerOpen = false;
 TreeOViewRecord.prototype.findContainerTree =
 function tovr_gettree ()
 {
-    var parent = this.parentRecord
+    if (!("parentRecord" in this))
+        return null;
+    var parent = this.parentRecord;
     
     while (parent)
     {
         if ("_treeView" in parent)
             return parent._treeView;
-        parent = parent.parentRecord
+        if ("parentRecord" in parent)
+            parent = parent.parentRecord;
+        else
+            parent = null;
     }
 
     return null;
@@ -553,8 +558,13 @@ function tovr_appchild (child)
     {
         if (this.calculateVisualRow() >= 0)
         {
-            this.resort(true);  /* resort, don't invalidate.  we're going to do
-                                 * that in the onVisualFootprintChanged call. */
+            var tree = this.findContainerTree();
+            if (tree && tree.frozen)
+                this.needsResort = true;
+            else
+                this.resort(true);  /* resort, don't invalidate.  we're going  
+                                     * to do that in the 
+                                     * onVisualFootprintChanged call. */
         }
         this.onVisualFootprintChanged(child.calculateVisualRow(),
                                       child.visualFootprint);
@@ -627,7 +637,8 @@ function tovr_hide ()
     this.isHidden = true;
     /* go right to the parent so we don't muck with our own visualFoorptint
      * record, we'll need it to be correct if we're ever unHidden. */
-    this.parentRecord.onVisualFootprintChanged (row, -this.visualFootprint);
+    if ("parentRecord" in this)
+        this.parentRecord.onVisualFootprintChanged (row, -this.visualFootprint);
 }
 
 /*
@@ -999,7 +1010,10 @@ function torr_vfpchange (start, amount)
     }
     else
     {
-        this._treeView.changeAmount += amount;
+        if ("changeAmount"  in this._treeView)
+            this._treeView.changeAmount += amount;
+        else
+            this._treeView.changeAmount = amount;
         if ("changeStart" in this._treeView)
             this._treeView.changeStart = 
                 Math.min (start, this._treeView.changeStart);
@@ -1052,7 +1066,7 @@ function tov_thaw ()
         return;
     }
     
-    if (--this.frozen == 0)
+    if (--this.frozen == 0 && "changeStart" in this)
     {
         this.childData.onVisualFootprintChanged(this.changeStart,
                                                 this.changeAmount);

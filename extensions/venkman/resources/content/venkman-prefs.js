@@ -50,6 +50,7 @@ function initPrefs()
     console.prefs.prefNames = new Array();
     
     //    console.addPref ("input.commandchar", "/");    
+    console.addPref ("enableChromeFilter", false);
     console.addPref ("sourcetext.tab.width", 4);
     console.addPref ("input.history.max", 20);
     console.addPref ("input.dtab.time", 500);
@@ -70,44 +71,61 @@ function con_addpref (prefName, defaultValue)
     function prefGetter ()
     {
         var type = this.prefBranch.getPrefType (prefName);
-
-        switch (type)
-        {
-            case nsIPrefBranch.PREF_STRING:
-                return this.prefBranch.getCharPref (prefName);
+        try
+        {    
+            switch (type)
+            {
+                case nsIPrefBranch.PREF_STRING:
+                    return this.prefBranch.getCharPref (prefName);
+                    
+                case nsIPrefBranch.PREF_INT:
+                    return this.prefBranch.getIntPref (prefName);
                 
-            case nsIPrefBranch.PREF_INT:
-                return this.prefBranch.getIntPref (prefName);
+                case nsIPrefBranch.PREF_BOOL:
+                    return this.prefBranch.getBoolPref (prefName);
                 
-            case nsIPrefBranch.PREF_BOOL:
-                return this.prefBranch.getCharPref (prefName);
-                
-            default:
-                return defaultValue;
-        }
+                default:
+                    return defaultValue;
+            }
         
-        return null;
+            return null;
+        }
+        catch (ex)
+        {
+            dd ("caught exception reading pref ``" + prefName + "'' " + type +
+                "\n" + ex);
+            return defaultValue;
+        }
     }
     
     function prefSetter (value)
     {
-        switch (typeof value)
+        try
+        {    
+            switch (typeof value)
+            {
+                case "int":
+                    this.prefBranch.setIntPref (prefName, value);
+                    break;
+                    
+                case "boolean":
+                    this.prefBranch.setBoolPref (prefName, value);
+                    break;
+                    
+                default:
+                    this.prefBranch.setCharPref (prefName, value);
+                    break;       
+            }
+
+            this.prefService.savePrefFile(null);
+        }
+        catch (ex)
         {
-            case "int":
-                this.prefBranch.setIntPref (prefName, value);
-                break;
-
-            case "boolean":
-                this.prefBranch.setBoolPref (prefName, value);
-                break;
-
-            default:
-                this.prefBranch.setCharPref (prefName, value);
-                break;       
+            dd ("caught exception writing pref ``" + prefName + "''\n" + ex);
         }
 
-        this.prefService.savePrefFile(null);
         return value;
+
     }
 
     if (prefName in console.prefs)

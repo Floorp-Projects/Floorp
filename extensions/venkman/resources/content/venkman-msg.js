@@ -175,6 +175,7 @@ const MSG_DOC_DESCRIPTION  = getMsg("msg.doc.description");
 const MSG_HELP_TITLE       = getMsg("msg.help.title");
 
 /* message names for parameterized messages */
+const MSN_CHROME_FILTER    = "msg.chrome.filter";
 const MSN_ERR_NO_SCRIPT    = "msg.err.noscript";
 const MSN_IASMODE          = "msg.iasmode";
 const MSN_EXTRA_PARAMS     = "msg.extra.params";
