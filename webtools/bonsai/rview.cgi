@@ -88,7 +88,7 @@ foreach $path (split('/',$dir_head)) {
     $link_path .= '/';
 }
 chop ($output);
-$output .= " $s";
+$output .= " $dir_tail/ $s ";
 $output .= "</DIV>";
 
 PutsHeader("Repository Directory $toplevel/$dir $s", $output);
