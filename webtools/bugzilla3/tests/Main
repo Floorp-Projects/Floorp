@@ -64,6 +64,7 @@ sub registerServices {
                      PLIF::Service::Components::Login
                      PLIF::Service::Components::CosesEditor
                      PLIF::Service::ContactMethod::Email
+                     PLIF::Service::ContactMethod::AIM
                      Output
                      DataSource::ConsoleStrings
                      DataSource::HTTPStrings
