@@ -500,6 +500,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     jsval* sp = nsnull;
     uint8 i;
     uint8 argc=0;
+    uint8 stack_size;
     jsval result;
     uint8 paramCount=0;
     nsresult retval = NS_ERROR_FAILURE;
@@ -564,24 +565,53 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // but is a good optimization compared to calling JS_AddRoot for each item.
 
     // setup stack
-    if(nsnull == (stackbase = sp = js_AllocStack(cx, argc + 2, &mark)))
+
+    // if this isn't a function call then we don't need to push extra stuff
+    if(info->IsGetter() || info->IsSetter())
+    {
+        stack_size = argc;
+    }
+    else
+    {
+        // allocate extra space for function and 'this'
+        stack_size = argc + 2;
+        
+        // We get fval before allocating the stack to avoid gc badness that can 
+        // happen if the GetProperty call leaves our request and the gc runs 
+        // while the stack we allocate contains garbage.
+
+        // later we will check to see if fval might really be callable
+        if(!JS_GetProperty(cx, obj, name, &fval))
+        {
+            // XXX We really want to factor out the error reporting better and 
+            // specifically report the failure to find a function with this name.    
+            // This is what we do below if the property is found but is not a 
+            // function. We just need to factor better so we can get to that 
+            // reporting path from here.
+            goto pre_call_clean_up;
+        }
+    }
+
+    // if stack_size is zero then we won't be needing a stack
+    if(stack_size && !(stackbase = sp = js_AllocStack(cx, stack_size, &mark)))
     {
         retval = NS_ERROR_OUT_OF_MEMORY;
         goto pre_call_clean_up;
     }
 
-    // if this is a function call, then push function and 'this'
-    if(!info->IsGetter() && !info->IsSetter())
+    NS_ASSERTION(info->IsGetter() || sp, "Only a getter needs no stack.");
+
+    // this is a function call, so push function and 'this'
+    if(stack_size != argc)
     {
-        // later we will check if this might really be callable
-        if(!JS_GetProperty(cx, obj, name, &fval))
-            goto pre_call_clean_up;
         *sp++ = fval;
         *sp++ = OBJECT_TO_JSVAL(obj);
     }
-    else
+
+    // make certain we leave no garbage in the stack
+    for(i = 0; i < argc; i++)
     {
-        sp += 2;
+        sp[i] = JSVAL_VOID;    
     }
 
     // build the args
