@@ -57,6 +57,9 @@ public:
                        nsGenericHTMLElement* aDest,
                        PRBool aDeep);
 
+  // Implementation for nsIDOMNode
+  nsresult    GetNodeName(nsString& aNodeName);
+
   // Implementation for nsIDOMElement
   nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
   {
