@@ -39,6 +39,7 @@ ifndef MOZ_MONOLITHIC_TOOLKIT
 
 ifdef MOZ_ENABLE_GTK
 DIRS		+= gtksuperwin
+DIRS            += gtkxtbin
 DIRS		+= gtk
 endif
 
@@ -56,6 +57,7 @@ endif
 
 else
 ifdef MOZ_ENABLE_GTK
+DIRS            += gtkxtbin
 DIRS		+= gtksuperwin
 endif
 DIRS		+= $(MOZ_WIDGET_TOOLKIT)
