@@ -474,11 +474,11 @@ XFE_BookmarkView::commandToBMCmd(CommandType cmd)
                                              ? BM_Cmd_Sort_Address
                                              : BM_Cmd_Sort_Address_Asc))
     BM_CMDMAP(xfeCmdSortByDateLastVisited,  (m_sortDescending
-                                             ? BM_Cmd_Sort_AddDate
-                                             : BM_Cmd_Sort_AddDate_Asc))
-    BM_CMDMAP(xfeCmdSortByDateCreated,      (m_sortDescending
                                              ? BM_Cmd_Sort_LastVisit
                                              : BM_Cmd_Sort_LastVisit_Asc))
+    BM_CMDMAP(xfeCmdSortByDateCreated,      (m_sortDescending
+                                             ? BM_Cmd_Sort_AddDate
+                                             : BM_Cmd_Sort_AddDate_Asc))
   
 	BM_CMDMAP(xfeCmdSortBookmarks,      BM_Cmd_SortBookmarks) // Sort Bookmarks
 	BM_CMDMAP(xfeCmdSetNewBookmarkFolder, BM_Cmd_SetAddHeader)
