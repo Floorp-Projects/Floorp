@@ -820,20 +820,14 @@ XPCJSRuntime::GetXPCContext(JSContext* cx)
 
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
-KillDeadContextsCB(JSDHashTable *table, JSDHashEntryHdr *hdr,
+SweepContextsCB(JSDHashTable *table, JSDHashEntryHdr *hdr,
                    uint32 number, void *arg)
 {
-    JSRuntime* rt = (JSRuntime*) arg;
     XPCContext* xpcc = ((JSContext2XPCContextMap::Entry*)hdr)->value;
-    JSContext* cx = xpcc->GetJSContext();
-    JSContext* iter = nsnull;
-    JSContext* cur;
-
-    // if this XPCContext represents a live JSContext then fine.
-    while(nsnull != (cur = JS_ContextIterator(rt, &iter)))
+    if(xpcc->IsMarked())
     {
-        if(cur == cx)
-            return JS_DHASH_NEXT;
+        xpcc->Unmark();
+        return JS_DHASH_NEXT;
     }
 
     // this XPCContext represents a dead JSContext - delete it
@@ -847,9 +841,6 @@ XPCJSRuntime::SyncXPCContextList(JSContext* cx /* = nsnull */)
     // hold the map lock through this whole thing
     XPCAutoLock lock(GetMapLock());
 
-    // get rid of any XPCContexts that represent dead JSContexts
-    mContextMap->Enumerate(KillDeadContextsCB, mJSRuntime);
-
     XPCContext* found = nsnull;
 
     // add XPCContexts that represent any JSContexts we have not seen before
@@ -857,11 +848,16 @@ XPCJSRuntime::SyncXPCContextList(JSContext* cx /* = nsnull */)
     while(nsnull != (cur = JS_ContextIterator(mJSRuntime, &iter)))
     {
         XPCContext* xpcc = mContextMap->Find(cur);
+
         if(!xpcc)
         {
             xpcc = XPCContext::newXPCContext(this, cur);
             if(xpcc)
                 mContextMap->Add(xpcc);
+        }
+        if(xpcc)
+        {
+            xpcc->Mark();
         }
 
         // if it is our first context then we need to generate our string ids
@@ -871,6 +867,8 @@ XPCJSRuntime::SyncXPCContextList(JSContext* cx /* = nsnull */)
         if(cx && cx == cur)
             found = xpcc;
     }
+    // get rid of any XPCContexts that represent dead JSContexts
+    mContextMap->Enumerate(SweepContextsCB, 0);
 
     XPCPerThreadData* tls = XPCPerThreadData::GetData();
     if(tls)
