@@ -230,6 +230,11 @@ public:
                           sizeof(ClassPolicy), 16);
     }
 
+    ~DomainPolicy()
+    {
+        PL_DHashTableFinish(this);
+    }
+
     void Hold()
     {
         mRefCount++;
