@@ -223,13 +223,8 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
 // that call returns NS_OK and the pointer is to our singleton, then the
 // interface must be implemented by a nsProxy object. NOTE: the
 // 'ProxyEventClassIdentity' object is not a real XPCOM object and should not be
-// used for anything else (hence it is declared in this implementation file).
-
-/* eea90d45-b059-11d2-915e-c12b696c9333 */
-#define NS_PROXYEVENT_IDENTITY_CLASS_IID \
-{ 0xeea90d45, 0xb059, 0x11d2,                       \
-  { 0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33 } }
-
+// used for anything else 
+// NS_PROXYEVENT_IDENTITY_CLASS_IID defined in nsProxyEventPrivate.h
 class ProxyEventClassIdentity
 {
     // no instance methods...

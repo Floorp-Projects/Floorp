@@ -27,64 +27,12 @@
 #include "nspr.h"
 #include "prmon.h"
 
-
-//--
-
-/* {159E36D0-991E-11d2-AC3F-00C09300144B} */
-#define NS_ITESTXPCFOO_IID_STR "159E36D0-991E-11d2-AC3F-00C09300144B"
-#define NS_ITESTXPCFOO_IID \
-  {0x159E36D0, 0x991E, 0x11d2, \
-    { 0xAC, 0x3F, 0x00, 0xC0, 0x93, 0x00, 0x14, 0x4B }}
-
-class nsITestXPCFoo : public nsISupports {
- public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTXPCFOO_IID)
-
-  /* long Test (in long p1, in long p2); */
-  NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32 *_retval) = 0;
-
-  /* void Test2 (); */
-  NS_IMETHOD Test2() = 0;
-
-  enum { one = 1 };
-
-  enum { five = 5 };
-
-  enum { six = 6 };
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsITestXPCFoo *priv);
-#endif
-};
+#include "nsITestProxy.h"
 
 
-//
 
 #include "nsProxyObjectManager.h"
-
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
-/***************************************************************************/
-/* Setup nsIAllocator                                                      */
-/***************************************************************************/
-
-#include "nsIAllocator.h"
-
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-
-#ifdef XP_PC
-#define XPCOM_DLL  "xpcom.dll"
-#else
-#ifdef XP_MAC
-#define XPCOM_DLL  "XPCOM_DLL"
-#else
-#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
-#endif
-#endif
-
 
 /***************************************************************************/
 extern "C" void
@@ -99,13 +47,6 @@ NS_SetupRegistry()
   const char *componentsDir = sysdir.GetCString(); // native path
   if (componentsDir != NULL)
   {
-#ifdef XP_PC
-      /* The PC version of the directory from filePath is of the form
-       *    /y|/moz/mozilla/dist/bin/components
-       * We need to remove the initial / and change the | to :
-       * for all this to work with NSPR.      
-       */
-#endif /* XP_PC */
       printf("nsComponentManager: Using components dir: %s\n", componentsDir);
 
 #ifdef XP_MAC
@@ -116,25 +57,19 @@ NS_SetupRegistry()
       // XXX Look for user specific components
       // XXX UNIX: ~/.mozilla/components
   }
-
-
-    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL,
-                                    PR_FALSE, PR_FALSE);
-
-    nsComponentManager::RegisterComponent(kProxyObjectManagerCID, NULL, NULL, XPCOM_DLL,
-                                    PR_FALSE, PR_FALSE);
-
 }
 
 
 /***************************************************************************/
 /* nsTestXPCFoo                                                            */
 /***************************************************************************/
-class nsTestXPCFoo : public nsITestXPCFoo
+class nsTestXPCFoo : public nsITestProxy
 {
     NS_DECL_ISUPPORTS
     NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32* retval);
     NS_IMETHOD Test2();
+    NS_IMETHOD Test3(nsISupports *p1, nsISupports **p2);
+
     nsTestXPCFoo();
     virtual ~nsTestXPCFoo();
 
@@ -150,13 +85,13 @@ nsTestXPCFoo::~nsTestXPCFoo()
 {
 }
 
-static NS_DEFINE_IID(kITestXPCFooIID, NS_ITESTXPCFOO_IID);
+static NS_DEFINE_IID(kITestXPCFooIID, NS_ITESTPROXY_IID);
 NS_IMPL_ISUPPORTS(nsTestXPCFoo,kITestXPCFooIID)
 
 NS_IMETHODIMP nsTestXPCFoo::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
     printf("Thread (%ld) Test Called successfully! Party on...\n", p1);
-    *retval = 0;
+    *retval = p1+p2;
     return NS_OK;
 }
 
@@ -168,16 +103,35 @@ NS_IMETHODIMP nsTestXPCFoo::Test2()
     return NS_OK;
 }
 
+NS_IMETHODIMP nsTestXPCFoo::Test3(nsISupports *p1, nsISupports **p2)
+{
+    if (p1 != nsnull)
+    {
+        nsITestProxy *test;
 
+        p1->QueryInterface(nsITestProxy::GetIID(), (void**)&test);
+        
+        test->Test2();
+        PRInt32 a;
+        test->Test( 1, 2, &a);
+        printf("\n1+2=%d\n",a);
+    }
+
+
+    *p2 = new nsTestXPCFoo();
+    return NS_OK;
+}
 
 /***************************************************************************/
 /* nsTestXPCFoo2                                                           */
 /***************************************************************************/
-class nsTestXPCFoo2 : public nsITestXPCFoo
+class nsTestXPCFoo2 : public nsITestProxy
 {
     NS_DECL_ISUPPORTS
     NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32* retval);
     NS_IMETHOD Test2();
+    NS_IMETHOD Test3(nsISupports *p1, nsISupports **p2);
+
     nsTestXPCFoo2();
     virtual ~nsTestXPCFoo2();
 
@@ -211,7 +165,11 @@ NS_IMETHODIMP nsTestXPCFoo2::Test2()
 }
 
 
-
+NS_IMETHODIMP nsTestXPCFoo2::Test3(nsISupports *p1, nsISupports **p2)
+{
+    *p2 = nsnull;
+    return NS_OK;
+}
 
 
 
@@ -223,88 +181,79 @@ typedef struct _ArgsStruct
 
 
 
-
-
-
-
-
-
-
-
-
-
 // This will create two objects both descendants of a single IID.
 void TestCase_TwoClassesOneInterface(void *arg)
 {
-
     ArgsStruct *argsStruct = (ArgsStruct*) arg;
 
 
-    nsIProxyObjectManager*  proxyObjectFactory;
+    nsIProxyObjectManager*  manager;
     
-    nsComponentManager::CreateInstance(kProxyObjectManagerCID,   
-                                       nsnull,
-                                       nsIProxyObjectManager::GetIID(),
-                                       (void**)&proxyObjectFactory);
+    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                  kProxyObjectManagerIID,
+                                  (nsISupports **)&manager);
 
-    printf("ProxyObjectManager: %x ", proxyObjectFactory);
+    printf("ProxyObjectManager: %x \n", manager);
     
-    PR_ASSERT(proxyObjectFactory);
+    PR_ASSERT(manager);
 
-    nsITestXPCFoo         *proxyObject;
-    nsITestXPCFoo         *proxyObject2;
+    nsITestProxy         *proxyObject;
+    nsITestProxy         *proxyObject2;
 
     nsTestXPCFoo*        foo   = new nsTestXPCFoo();
     nsTestXPCFoo2*       foo2  = new nsTestXPCFoo2();
     
-    
     PR_ASSERT(foo);
     PR_ASSERT(foo2);
-
-    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
     
-    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo2, PROXY_SYNC, (void**)&proxyObject2);
+    
+    manager->GetProxyObject(argsStruct->queue, nsITestProxy::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
+    
+    manager->GetProxyObject(argsStruct->queue, nsITestProxy::GetIID(), foo2, PROXY_SYNC, (void**)&proxyObject2);
 
+    
+    
     if (proxyObject && proxyObject2)
     {
-    // release ownership of the real object.        
-        //printf("Deleting real Object (%ld)\n", threadNumber);
-        NS_RELEASE(foo);
-   
-        //printf("Deleting real Object 2 (%ld)\n", threadNumber);
-        NS_RELEASE(foo2);
-
-    
+    // release ownership of the real object. 
+        
         PRInt32 a;
         nsresult rv;
         PRInt32 threadNumber = argsStruct->threadNumber;
+        
+        printf("Deleting real Object (%ld)\n", threadNumber);
+        NS_RELEASE(foo);
+   
+        printf("Deleting real Object 2 (%ld)\n", threadNumber);
+        NS_RELEASE(foo2);
 
-        //printf("Thread (%ld) Prior to calling proxyObject->Test.\n", threadNumber);
+
+        printf("Thread (%ld) Prior to calling proxyObject->Test.\n", threadNumber);
         rv = proxyObject->Test(threadNumber, 0, &a);   
-        //printf("Thread (%ld) error: %ld.\n", threadNumber, rv);
+        printf("Thread (%ld) error: %ld.\n", threadNumber, rv);
 
 
-        //printf("Thread (%ld) Prior to calling proxyObject->Test2.\n", threadNumber);
+        printf("Thread (%ld) Prior to calling proxyObject->Test2.\n", threadNumber);
         rv = proxyObject->Test2();   
-        //printf("Thread (%ld) error: %ld.\n", threadNumber, rv);
+        printf("Thread (%ld) error: %ld.\n", threadNumber, rv);
 
 
-        //printf("Thread (%ld) Prior to calling proxyObject2->Test.\n", threadNumber);
+        printf("Thread (%ld) Prior to calling proxyObject2->Test.\n", threadNumber);
         rv = proxyObject2->Test(threadNumber, 0, &a);   
-        //printf("Thread (%ld) proxyObject2 error: %ld.\n", threadNumber, rv);
+        printf("Thread (%ld) proxyObject2 error: %ld.\n", threadNumber, rv);
 
-        //printf("Thread (%ld) Prior to calling proxyObject2->Test2.\n", threadNumber);
+        printf("Thread (%ld) Prior to calling proxyObject2->Test2.\n", threadNumber);
         rv = proxyObject2->Test2();   
-        //printf("Thread (%ld) proxyObject2 error: %ld.\n", threadNumber, rv);
+        printf("Thread (%ld) proxyObject2 error: %ld.\n", threadNumber, rv);
 
-        //printf("Deleting Proxy Object (%ld)\n", threadNumber );
+        printf("Deleting Proxy Object (%ld)\n", threadNumber );
         NS_RELEASE(proxyObject);
 
-        //printf("Deleting Proxy Object 2 (%ld)\n", threadNumber );
+        printf("Deleting Proxy Object 2 (%ld)\n", threadNumber );
         NS_RELEASE(proxyObject2);
     }    
 
-   // PR_Sleep( PR_MillisecondsToInterval(10000) );  // If your thread goes away, your stack goes away.  Only use ASYNC on calls that do not have out parameters
+    PR_Sleep( PR_MillisecondsToInterval(1000) );  // If your thread goes away, your stack goes away.  Only use ASYNC on calls that do not have out parameters
 }
 
 
@@ -317,31 +266,65 @@ void TestCase_2(void *arg)
 
     ArgsStruct *argsStruct = (ArgsStruct*) arg;
 
-    nsIProxyObjectManager*  proxyObjectFactory;
+    nsIProxyObjectManager*  manager;
     
-    nsComponentManager::CreateInstance(kProxyObjectManagerCID,   
-                                       nsnull,
-                                       nsIProxyObjectManager::GetIID(),
-                                       (void**)&proxyObjectFactory);
+    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                  kProxyObjectManagerIID,
+                                  (nsISupports **)&manager);
     
-    PR_ASSERT(proxyObjectFactory);
+    PR_ASSERT(manager);
 
-    nsITestXPCFoo         *proxyObject;
+    nsITestProxy         *proxyObject;
 
-    proxyObjectFactory->GetProxyObject(argsStruct->queue,
-                                       nsITestXPCFoo::GetIID(),  // should be a cid 
-                                       nsnull, 
-                                       nsITestXPCFoo::GetIID(), 
-                                       PROXY_SYNC, 
-                                       (void**)&proxyObject);
+    manager->GetProxyObject(argsStruct->queue,
+                            nsITestProxy::GetIID(),   // should be CID!
+                            nsnull, 
+                            nsITestProxy::GetIID(), 
+                            PROXY_SYNC, 
+                            (void**)&proxyObject);
     
     if (proxyObject != nsnull)
     {
-        nsISupports *a;
-        nsISupports *b;
-
         NS_RELEASE(proxyObject);
+    }
+}
+
+
+
+void TestCase_nsISupports(void *arg)
+{
+
+    ArgsStruct *argsStruct = (ArgsStruct*) arg;
+
+    nsIProxyObjectManager*  manager;
     
+    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                  kProxyObjectManagerIID,
+                                  (nsISupports **)&manager);
+    
+    PR_ASSERT(manager);
+
+    nsITestProxy         *proxyObject;
+    nsTestXPCFoo*         foo   = new nsTestXPCFoo();
+    
+    PR_ASSERT(foo);
+
+     manager->GetProxyObject(argsStruct->queue, nsITestProxy::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
+    
+    if (proxyObject != nsnull)
+    {   
+        nsISupports *bISupports = nsnull, *cISupports = nsnull;
+        
+        proxyObject->Test3(foo, &bISupports);
+        proxyObject->Test3(bISupports, &cISupports);
+        
+        nsITestProxy *test;
+        bISupports->QueryInterface(nsITestProxy::GetIID(), (void**)&test);
+        
+        test->Test2();
+
+        NS_RELEASE(foo);
+        NS_RELEASE(proxyObject);
     }
 }
 
@@ -355,17 +338,16 @@ void TestCase_2(void *arg)
 
 static void PR_CALLBACK ProxyTest( void *arg )
 {
-    TestCase_TwoClassesOneInterface(arg);
+   TestCase_TwoClassesOneInterface(arg);
    // TestCase_2(arg);
+   TestCase_nsISupports(arg);
 
     NS_RELEASE( ((ArgsStruct*) arg)->queue);
     free((void*) arg);
 }
 
-
 #include "nsIEventQueueService.h"
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
 
 nsIEventQueue *gEventQueue = nsnull;
 
@@ -434,7 +416,7 @@ main(int argc, char **argv)
                                      0 );
 
     
-    PR_Sleep(PR_MillisecondsToInterval(1000));
+    PR_Sleep(PR_MillisecondsToInterval(10000));
 
     NS_ASSERTION(gEventQueue, "no main event queue"); // BAD BAD BAD.  EVENT THREAD DID NOT CREATE QUEUE.  This may be a timing issue, set the 
                             // sleep about longer, and try again.
@@ -459,7 +441,7 @@ main(int argc, char **argv)
 
         printf("\tThread (%ld) spawned\n", spawn);
 
-        //PR_Sleep( PR_MillisecondsToInterval(250) );
+        PR_Sleep( PR_MillisecondsToInterval(250) );
     }
 
     printf("All Threads Spawned.\n\n");

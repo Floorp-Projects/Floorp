@@ -26,7 +26,7 @@
 #include "nsIEventQueue.h"
 #include "plevent.h"
 #include "xptcall.h"
-
+#include "xptinfo.h"
     
 typedef enum 
 {
@@ -76,23 +76,33 @@ class nsProxyObject : public nsISupports
         
         virtual             ~nsProxyObject();
 
-
-        nsresult            Post(  PRUint32        methodIndex,           /* which method to be called? */
-                                   PRUint32        paramCount,            /* number of params */
-                                   nsXPTCVariant   *params);
-
+        nsresult            Post(PRUint32 methodIndex, nsXPTMethodInfo *info, nsXPTCMiniVariant *params, nsIInterfaceInfo *interfaceInfo);
         
         nsISupports*        GetRealObject() const { return mRealObject; }
         nsIEventQueue*      GetQueue() const { return mDestQueue; }
         ProxyType           GetProxyType() const { return mProxyType; }
 
+        
+
+
     private:
         
-        nsIEventQueue   *mDestQueue;                 /* destination queue */
-        nsISupports     *mRealObject;                /* the non-proxy object that this event is referring to */
+        typedef enum
+        {
+            convertOutParameters = 1, 
+            convertInParameters,
+            convertAllParameters
+
+        } AutoProxyConvertTypes;
         
-        PRBool          mRealObjectOwned;
-        ProxyType       mProxyType;
+        void                AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
+                                                   nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType);
+
+        nsIEventQueue       *mDestQueue;                 /* destination queue */
+        nsISupports         *mRealObject;                /* the non-proxy object that this event is referring to */
+        PRBool              mRealObjectOwned;
+        ProxyType           mProxyType;
+
         
  };
 
@@ -126,21 +136,7 @@ private:
     nsXPTCVariant   *mParameterList;             /* marshalled in parameter buffer */
     PRUint32         mParameterCount;            /* number of params */
     PLEvent         *mEvent;                     /* the current plevent */       
-
 };
 
-#define NS_DECL_PROXY(_class, _interface) \
-public: \
-  _class(nsIEventQueue *, _interface *); \
-private: \
-  nsProxyObject mProxyObject;\
-public:
-
-
-#define NS_IMPL_PROXY(_class, _interface)\
-_class::_class(nsIEventQueue *eventQueue, _interface *realObject) \
-: mProxyObject(eventQueue, realObject) \
-{\
-}\
 
 #endif

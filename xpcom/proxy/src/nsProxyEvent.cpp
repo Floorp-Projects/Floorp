@@ -18,20 +18,27 @@
 
 
 #include "nsProxyEvent.h"
+#include "nsProxyEventPrivate.h"
+#include "nsProxyObjectManager.h"
+
 #include "prmem.h"          // for  PR_NEW
 #include "xptcall.h"
 
 #include "nsRepository.h"
-
+#include "nsIServiceManager.h"
+#include "nsIAllocator.h"
         
+static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
+static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
+
 static void* EventHandler(PLEvent *self);
 static void DestroyHandler(PLEvent *self);
 
 nsProxyObjectCallInfo::nsProxyObjectCallInfo(nsProxyObject* owner,
-                                             PRUint32 methodIndex, 
-                                             nsXPTCVariant* parameterList, 
-                                             PRUint32 parameterCount, 
-                                             PLEvent *event)
+                                              PRUint32 methodIndex, 
+                                              nsXPTCVariant* parameterList, 
+                                              PRUint32 parameterCount, 
+                                              PLEvent *event)
 {
     mOwner            = owner;
     mMethodIndex      = methodIndex;
@@ -76,6 +83,7 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, nsIS
 
     NS_ADDREF(mRealObject);
     NS_ADDREF(mDestQueue);
+
 }
 
 
@@ -106,7 +114,7 @@ nsProxyObject::~nsProxyObject()
 {
     if (mDestQueue)
         mDestQueue->EnterMonitor();
-        // Shit!   mDestQueue->RevokeEvents(this);
+        // FIX!   mDestQueue->RevokeEvents(this);
     	
     if(mRealObject != nsnull)
     {
@@ -124,17 +132,35 @@ nsProxyObject::~nsProxyObject()
 }
 
 nsresult
-nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to be called? */
-                      PRUint32        paramCount,            /* number of params */
-                      nsXPTCVariant   *params)
+nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, nsIInterfaceInfo *interfaceInfo)            
 {
-    
     if (mDestQueue == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (mRealObject == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
+  
+    ///////////////////////////////////////////////////////////////////////
+    // Auto-proxification
+    ///////////////////////////////////////////////////////////////////////
+    AutoProxyParameterList(methodInfo, params, interfaceInfo, convertInParameters);
+    ///////////////////////////////////////////////////////////////////////
+
+
+    // convert the nsXPTCMiniVariant to a nsXPTCVariant
+
+    uint8 paramCount = methodInfo->GetParamCount();
+
+    nsXPTCVariant   *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * paramCount);
+    
+    for (int index = 0; index < paramCount; index++)
+    {
+        fullParam[index].flags = 0;
+        fullParam[index].val   = params[index].val;
+    }
+    
+    
     mDestQueue->EnterMonitor();
     
     NS_ASSERTION(mRealObject, "no native object");
@@ -149,11 +175,11 @@ nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to 
         return NS_ERROR_OUT_OF_MEMORY;   
     }
 
-    nsProxyObjectCallInfo *info = new nsProxyObjectCallInfo(this, methodIndex, params, paramCount, event);
+    nsProxyObjectCallInfo *proxyInfo = new nsProxyObjectCallInfo(this, methodIndex, fullParam, paramCount, event);
     
 
     PL_InitEvent(event, 
-                 info,
+                 proxyInfo,
                  EventHandler,
                  DestroyHandler);
    
@@ -161,9 +187,15 @@ nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to 
     {
         mDestQueue->PostSynchronousEvent(event, nsnull);
         
-        nsresult rv = info->GetResult();
-        delete info;
+        nsresult rv = proxyInfo->GetResult();
+        delete proxyInfo;
 
+        ///////////////////////////////////////////////////////////////////////
+        // Auto-proxification
+        ///////////////////////////////////////////////////////////////////////
+        AutoProxyParameterList(methodInfo, params, interfaceInfo, convertOutParameters);
+        ///////////////////////////////////////////////////////////////////////
+        
         mDestQueue->ExitMonitor();
         return rv;
     }
@@ -179,6 +211,80 @@ nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to 
     
 }
 
+
+void
+nsProxyObject::AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
+                                      nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType)
+{
+    uint8 paramCount = methodInfo->GetParamCount();
+
+    for (PRUint32 i = 0; i < paramCount; i++)
+    {
+        nsXPTParamInfo paramInfo = methodInfo->GetParam(i);
+
+        if (paramInfo.GetType().TagPart() != nsXPTType::T_INTERFACE )
+            continue;
+
+        if ( (convertType == convertOutParameters && paramInfo.IsOut())  || 
+             (convertType == convertInParameters && paramInfo.IsIn())    || 
+             (convertType == convertAllParameters))
+        {
+            // We found an out parameter which is a interface, check for proxy
+            if (params[i].val.p == nsnull)
+                continue;
+            
+            nsISupports* anInterface = nsnull;
+
+            if (paramInfo.IsOut())
+                anInterface = *((nsISupports**)params[i].val.p);
+            else
+                anInterface = ((nsISupports*)params[i].val.p);
+
+
+            if (anInterface == nsnull)
+                continue;
+
+            nsISupports *aProxyObject;
+            nsresult rv = anInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aProxyObject);
+        
+            if (NS_FAILED(rv))
+            {
+                // create a proxy
+                nsIProxyObjectManager*  manager;
+
+                rv = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                                   kProxyObjectManagerIID,
+                                                   (nsISupports **)&manager);
+        
+                if (NS_SUCCEEDED(rv))
+                {
+                    nsIID* iid;
+
+                    interfaceInfo->GetIIDForParam(&paramInfo, &iid);
+
+                    manager->GetProxyObject( GetQueue(), 
+                                             *iid,
+                                             anInterface, 
+                                             GetProxyType(), 
+                                             (void**) &aProxyObject);
+
+                    nsAllocator::Free((void*)iid);
+                    
+                    if (paramInfo.IsOut())
+                        *((void**)params[i].val.p) = ((void*)aProxyObject);
+                    else
+                        (params[i].val.p)  = ((void*)aProxyObject);                    
+
+                    NS_RELEASE(manager);
+                }
+            } 
+            else
+            {
+                // It already is a proxy!
+            }
+        }
+    }
+}
 
 void DestroyHandler(PLEvent *self) 
 {
@@ -210,14 +316,14 @@ void* EventHandler(PLEvent *self)
 
        eventQ->EnterMonitor();
 
-        // invoke the magic of xptc...
+       // invoke the magic of xptc...
        nsresult rv = XPTC_InvokeByIndex( proxyObject->GetRealObject(), 
                                          info->GetMethodIndex(),
                                          info->GetParameterCount(), 
                                          info->GetParameterList());
     
        info->SetResult(rv);
-
+       
        eventQ->ExitMonitor();
     }
     return NULL;
