@@ -63,6 +63,8 @@ public:
 
   virtual PRInt32 GetWeight(void) const = 0;
   virtual void SetWeight(PRInt32 aWeight) = 0;
+
+  virtual nsIStyleRule* GetImportantRule(void) = 0;
 };
 
 extern NS_HTML nsresult

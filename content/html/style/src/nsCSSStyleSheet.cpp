@@ -525,6 +525,12 @@ void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
         data->mResults->AppendElement(iRule);
         data->mCount++;
         NS_RELEASE(iRule);
+        iRule = aRule->GetImportantRule();
+        if (nsnull != iRule) {
+          data->mResults->AppendElement(iRule);
+          data->mCount++;
+          NS_RELEASE(iRule);
+        }
       }
     }
   }
@@ -650,6 +656,12 @@ void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
         data->mResults->AppendElement(iRule);
         data->mCount++;
         NS_RELEASE(iRule);
+        iRule = aRule->GetImportantRule();
+        if (nsnull != iRule) {
+          data->mResults->AppendElement(iRule);
+          data->mCount++;
+          NS_RELEASE(iRule);
+        }
       }
     }
   }
