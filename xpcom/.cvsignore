@@ -1,1 +1,3 @@
 Makefile
+xpcom-config.h
+xpcom-private.h
