@@ -218,13 +218,15 @@ function calendarInit()
        var lightness = (max + min) / 2;
 
        // Consider all colors with less than 50% Lightness as dark colors
-       // and use white as the foreground color.
+       // and use white as the foreground color; otherwise use black.
        // Actually we use a treshold a bit below 50%, so colors like
        // #FF0000, #00FF00 and #0000FF still get black text which looked
        // better when we tested this.
-       if (lightness < 120)
+       if (lightness < 120) {
          gCalendarStyleSheet.insertRule("." + containerName + " { color:" + " white" + "!important;}", 1);
-
+       } else {
+         gCalendarStyleSheet.insertRule("." + containerName + " { color:" + " black" + "!important;}", 1);
+       }
        var calListItem = calListItems[i+1];
        if (calListItem && calListItem.childNodes[0]) {
          calListItem.childNodes[0].setAttribute("class", "calendar-list-item-class " + containerName);
