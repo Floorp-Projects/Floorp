@@ -1106,6 +1106,7 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
     *aForWindow = PR_FALSE;
     return NS_OK;
   }
+#if 0
   // Set aForWindow if either:
   //   * the message is for a descendent of the given window
   //   * the message is for another window, but is a message which
@@ -1142,6 +1143,9 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
  
   // set dispatch indicator
   *aForWindow = isInWindow || !isMouseEvent;
+#else
+  *aForWindow = PR_TRUE;
+#endif
 
   return NS_OK;
 }
