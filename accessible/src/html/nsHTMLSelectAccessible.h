@@ -127,9 +127,17 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetState(PRUint32 *_retval);
-  NS_IMETHOD GetFirstChild(nsIAccessible **aFirstChild);
-  NS_IMETHOD GetLastChild(nsIAccessible **aFirstChild);
-  NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount) ;
+  void CacheChildren(PRBool aWalkAnonContent);
+
+protected:
+  already_AddRefed<nsIAccessible>
+    AccessibleForOption(nsIAccessibilityService *aAccService,
+                        nsIContent *aContent,
+                        nsIAccessible *aLastGoodAccessible);
+  already_AddRefed<nsIAccessible>
+    CacheOptSiblings(nsIAccessibilityService *aAccService,
+                     nsIContent *aParentContent,
+                     nsIAccessible *aLastGoodAccessible);
 };
 
 /*
@@ -145,9 +153,7 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetParent(nsIAccessible **aParent);
