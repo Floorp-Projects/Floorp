@@ -51,16 +51,13 @@ HTML_PASSEDMSG=Passed
 RSH_FILE=$TMP/rsh.$$
 echo >$RSH_FILE
 TMPFILES="$TMPFILES $RSH_FILE $WARNING_FILE"
-RSH_WAIT_TIME=90 #maximum time allowed for the 2 rsh to finish...
+RSH_WAIT_TIME=30 #maximum time allowed for the 2 rsh to finish...
 TOTAL_TESTS=106
 
 Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
 Debug "TESTSCRIPTDIR $TESTSCRIPTDIR"
 Debug "RESULTDIR $RESULTDIR"
-
-BEFORE_CONTEXT_GREP=10
-AFTER_CONTEXT_GREP=3
 
 ############################### watch_rsh ##############################
 # local shell function, deals with a hanging rsh (kills it...)
@@ -199,9 +196,9 @@ qa_stat_init()
     rm $TMP_PLATFORMLIST_FILE 2>/dev/null
     TMP_PERF_FILE=${RFILE}.perf.$$
     HTML_FILE=${RFILE}.html
-    WARNING_FILE=${RFILE}.warning
-    BCMISS=${RFILE}.bcmissing
-    BCERR=${RFILE}.bcerrors
+    WARNING_FILE=${RFILE}.warning.$$
+    BCMISS=${RFILE}.bcmissing.$$
+    BCERR=${RFILE}.bcerrors.$$
     TMPFILES="$TMPFILES  $ERRORLIST $WARNING_FILE $TMP_PERF_FILE "
 
 #FIXME rm the rest too - add them to the TMPFILES
@@ -418,18 +415,33 @@ qa_errorlist()
         grep -v '0 cache hits; 1 cache misses, 0 cache not reusable' | 
         grep -v '0 cache hits; 0 cache misses, 0 cache not reusable' | 
         grep -v ' cache hits; 1 cache misses, 0 cache not reusable'
-    grep -i error */output.log |
-        grep -vi "write to SSL socket" |
+    #grep -i error */output.log | grep -vi "write to SSL socket" |
+        #grep -vi "HDX PR_Read returned error" | grep -vi "no error" |
+        #grep -vi "12285" 
+    #grep -i failed */output.log | grep -vi "write to SSL socket" | 
+        #grep -vi "peer cannot verify" | grep -vi "error" |grep -vi "fatal" |
+        #grep -vi "TCP connection reset" 
+    #grep -i fatal */output.log 
+    grep -vi "write to SSL socket" */output.log |
         grep -vi "HDX PR_Read returned error" |
         grep -vi "no error" |
-        grep -vi "12285" 
-    grep -i failed */output.log | 
-        grep -vi "write to SSL socket" | 
-        grep -vi "peer cannot verify" | 
+        grep -vi "12285" |
+        grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP error 
+    grep  -vi "write to SSL socket" */output.log |
+        grep -vi "peer cannot verify" |
         grep -vi "error" |
         grep -vi "fatal" |
-        grep -vi "TCP connection reset" 
-    grep -i fatal */output.log 
+        grep -vi "TCP connection reset" |
+        grep  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP  -i failed  
+    grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP -i  fatal  */output.log
+    grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP -i\
+        "PKCS12 decode not verified"   */output.log
+#BEFORE_CONTEXT_GREP=" --before-context=10"
+#AFTER_CONTEXT_GREP="--after-context=3"
+# linux:the gnu grep, on Linux can output 10 lines above and 3 lines below 
+#the errormessage
+
+
     find . -name core -print 2>/dev/null
 }
 
@@ -452,6 +464,7 @@ platformlist()
             html_line passed >>$HTML_FILE
         fi
     done 
+    echo '</table>' >>$HTML_FILE
 
 }
 
@@ -607,6 +620,9 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
                 sort -u > $ERRORLIST
 
   platformlist $ERRORLIST > $RFILE
+
+  cat $BCERR | sed -e 's/<[^>]*>//g' -e "s/^/<br>/" 
+
 }
 
 O_DEBUG=OFF
@@ -616,13 +632,11 @@ find_qa_systems 2>/dev/null
 qa_errorlist > $ERRORLIST
 platformlist $ERRORLIST > $RFILE
 check_platforms $RFILE 
-echo '</table>' >>$HTML_FILE
 echo '<a NAME="errorlist"></a>' >> $HTML_FILE
 cat $ERRORLIST  | sed -e "s/^/<br>/" >>$HTML_FILE
 cat $WARNING_FILE 2>/dev/null | sed -e "s/^/<br>/" >>$HTML_FILE 2>/dev/null
 rsaperf >>$HTML_FILE
 bc_test >>$HTML_FILE
 #cat $BCERR  | sed -e "s/^/<br>/" >>$HTML_FILE
-echo '</table>' >>$HTML_FILE
 
 qa_stat_cleanup
