@@ -1109,6 +1109,12 @@ si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
     }
   }
 
+  /* avoid malloc of zero */
+  if( user_count == 0 )
+  {
+    return NULL;
+  }
+  
   /* allocate lists for maximumum possible url and user names */
   list = (PRUnichar**)PR_Malloc(user_count*sizeof(PRUnichar*));
   users = (si_SignonUserStruct **) PR_Malloc(user_count*sizeof(si_SignonUserStruct*));
