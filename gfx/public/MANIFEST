@@ -27,3 +27,4 @@ nsDeviceContext.h
 nsIDeviceContextSpec.h
 nsIDeviceContextSpecFactory.h
 nsColorNameIDs.h
+nsIDrawingSurface.h

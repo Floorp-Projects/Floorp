@@ -42,20 +42,20 @@ public:
    */
   nsBlenderWin();
 
+  NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
+                   nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                   nsDrawingSurface aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
+                   nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0));
+
+protected:
   /**
    * Release and cleanup all the windows specific information for this blender
    * @update dc - 10/29/98
    */
   ~nsBlenderWin();
 
-  NS_IMETHOD Init(nsIDeviceContext *aDeviceCon);
-  NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
-                   nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
-                   nsDrawingSurface aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
-                   nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0));
-
  private:
-
+#if 0
   /** --------------------------------------------------------------------------
    * Calculate the metrics for the alpha layer before the blend
    * @update dc - 10/29/98
@@ -84,55 +84,19 @@ public:
                           PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
                           PRUint8 **aSecondSImage,
                           PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
-
-
-  /**
-   * Create a DIB header and bits for a bitmap
-   * @param aBHead  information header for the DIB
-   * @param aBits   a handle to the 8 bit pointer for the data bits
-   * @param aWidth  width of the bitmap to create
-   * @param aHeight Height of the bitmap to create
-   * @param aDepth  Bits per pixel of the bitmap to create
-   */
-  nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsPixelFormat *aPixFormat);
-
-  /**
-   * Delete the DIB header and bits created from BuildDIB
-   * @param aBHead  information header for the DIB
-   * @param aBits   a handle to the 8 bit pointer for the data bits
-   */
-  void DeleteDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits);
-
-
-#ifdef NGLAYOUT_DDRAW
-  /** --------------------------------------------------------------------------
-   * Lock a surface down for Direct draw
-   * @update mp - 10/01/98
-   * @param IDirectDrawSurface -- 
-   * @param DDSURFACEDESC -- 
-   * @param BITMAP -- 
-   * @param RECT -- 
-   * @param DWORD -- 
-   * @result PR_TRUE lock was succesful
-   */
-  PRBool LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags, nsPixelFormat *aPixFormat);
 #endif
-
-  private:
-  BITMAPINFOHEADER    *mDstbinfo, *mSrcbinfo, *mSecondSrcbinfo;
+private:
   PRUint8             *mSrcBytes;
   PRUint8             *mSecondSrcBytes;
-  PRUint8             *mDstBytes;
-  BITMAP              mSrcInfo, mDstInfo, mSecondSrcInfo;
+  PRUint8             *mDestBytes;
 
-  PRInt32             mSRowBytes;
-  PRInt32             mDRowBytes;
+  PRInt32             mSrcRowBytes;
+  PRInt32             mSecondSrcRowBytes;
+  PRInt32             mDestRowBytes;
 
-#ifdef NGLAYOUT_DDRAW
-  DDSURFACEDESC       mSrcSurf;
-  DDSURFACEDESC       mSecondSrcSurf;
-  DDSURFACEDESC       mDstSurf;
-#endif
+  PRInt32             mSrcSpan;
+  PRInt32             mSecondSrcSpan;
+  PRInt32             mDestSpan;
 };
 
 #endif

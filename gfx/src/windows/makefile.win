@@ -36,6 +36,7 @@ MISCDEP=                        \
  
 OBJS =                                  \
 	.\$(OBJDIR)\nsDeviceContextWin.obj   \
+	.\$(OBJDIR)\nsDrawingSurfaceWin.obj         \
 	.\$(OBJDIR)\nsRenderingContextWin.obj         \
 	.\$(OBJDIR)\nsFontMetricsWin.obj          \
 	.\$(OBJDIR)\nsImageWin.obj          \
@@ -46,7 +47,8 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	$(NULL)
 
-EXPORTS=nsIRenderingContextWin.h
+EXPORTS= nsIRenderingContextWin.h \
+		nsIDrawingSurfaceWin.h
 
 LINCS= \
 		-I..\

@@ -17,6 +17,7 @@
  */
 
 #include "nsBlender.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 
@@ -27,10 +28,12 @@ static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 nsBlender :: nsBlender()
 {
   NS_INIT_REFCNT();
+  mContext = nsnull;
 }
 
 nsBlender::~nsBlender() 
 {
+  NS_IF_RELEASE(mContext);
 }
 
 
@@ -39,8 +42,11 @@ NS_IMPL_ISUPPORTS(nsBlender, kIBlenderIID);
 //------------------------------------------------------------
 
 NS_IMETHODIMP
-nsBlender::Init(nsIDeviceContext *aTheDevCon)
+nsBlender::Init(nsIDeviceContext *aContext)
 {
+  mContext = aContext;
+  NS_IF_ADDREF(mContext);
+
   return NS_OK;
 }
 

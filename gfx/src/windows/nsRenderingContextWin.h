@@ -36,13 +36,10 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMRenderingContext.h"
 #include "nsIRenderingContextWin.h"
+#include "nsDrawingSurfaceWin.h"
 
 class GraphicsState;
 class nsDrawingSurfaceWin;
-
-#ifdef NGLAYOUT_DDRAW
-#include "ddraw.h"
-#endif
 
 class nsRenderingContextWin : public nsIRenderingContext,
                               nsIRenderingContextWin,
@@ -51,7 +48,6 @@ class nsRenderingContextWin : public nsIRenderingContext,
 {
 public:
   nsRenderingContextWin();
-  ~nsRenderingContextWin();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];
@@ -165,12 +161,9 @@ public:
   // nsIRenderingContextWin
   NS_IMETHOD CreateDrawingSurface(HDC aDC, nsDrawingSurface &aSurface);
 
-  // locals
-#ifdef NGLAYOUT_DDRAW
-  nsresult GetDDraw(IDirectDraw2 **aDDraw);
-#endif
-
 private:
+  ~nsRenderingContextWin();
+
   nsresult CommonInit(void);
   nsresult SetupDC(HDC aOldDC, HDC aNewDC);
   HBRUSH SetupSolidBrush(void);
@@ -180,10 +173,6 @@ private:
   HPEN SetupDottedPen(void);
   void SetupFontAndColor(void);
   void PushClipState(void);
-#ifdef NGLAYOUT_DDRAW
-  nsresult CreateDDraw(void);
-#endif
-  BITMAPINFO *CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth);
 
 protected:
   nscolor					  mCurrentColor;
@@ -226,42 +215,7 @@ protected:
   PRBool            mInitialized;
 #endif
 
-#ifdef NGLAYOUT_DDRAW
-  static IDirectDraw  *mDDraw;
-  static IDirectDraw2 *mDDraw2;
-  static nsresult     mDDrawResult;
-#endif
-
   void* mScriptObject;
-};
-
-class nsDrawingSurfaceWin : public nsISupports
-{
-public:
-  nsDrawingSurfaceWin();
-  ~nsDrawingSurfaceWin();
-
-  NS_DECL_ISUPPORTS
-
-  nsresult Init(HDC aDC, PRBool aDSOwnsDC);
-  nsresult Init(nsIWidget *aOwner);
-#ifdef NGLAYOUT_DDRAW
-  nsresult Init(LPDIRECTDRAWSURFACE aSurface);
-  nsresult GetDC();
-  nsresult ReleaseDC();
-#endif
-
-  nsIWidget           *mDCOwner;
-  HDC                 mDC;
-  HBITMAP             mOrigBitmap;
-  HBITMAP             mSelectedBitmap;
-  PRBool              mKillDC;
-  BITMAPINFO          *mBitmapInfo;
-  PRUint8             *mDIBits;
-
-#ifdef NGLAYOUT_DDRAW
-  IDirectDrawSurface  *mSurface;
-#endif
 };
 
 #endif /* nsRenderingContextWin_h___ */

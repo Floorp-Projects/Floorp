@@ -195,9 +195,11 @@ NS_IMETHODIMP nsRegionMac :: GetRects(nsRegionRectSet **aRects)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    rects->mNumRects = 0;
     rects->mRectsLen = 9;
   }
+
+  rects->mNumRects = 0;
+  rects->mArea = 0;
 
 /* This is a minor adaptation of code written by Hugh Fisher
    and published in the RegionToRectangles example in the InfoMac archives.
@@ -230,6 +232,7 @@ NS_IMETHODIMP nsRegionMac :: GetRects(nsRegionRectSet **aRects)
 		rects->mRects[0].height = (**region).bbox.bottom - (**region).bbox.top;
 
     rects->mNumRects = 1;
+    rects->mArea = rects->mRects[0].width * rects->mRects[0].height;
 
     *aRects = rects;
 
@@ -316,6 +319,7 @@ NS_IMETHODIMP nsRegionMac :: GetRects(nsRegionRectSet **aRects)
 
           if (rects->mNumRects != rects->mRectsLen)
           {
+            rects->mArea += box.width * box.height;
             rects->mRects[rects->mNumRects] = box;
             rects->mNumRects++;
           }
@@ -371,7 +375,7 @@ nsresult nsRegionMac :: SetNativeRegion(void *aRegion)
 {
   if (aRegion)
   {
-    mRegion = (RgnHandle)aRegion;
+    ::CopyRgn((RgnHandle)aRegion, mRegion);
     SetRegionType();
   }
   else
