@@ -147,9 +147,7 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
-  void GetDefaultLabel(nsString& aLabel);
-
-       // nsIFormControlFrame
+  // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);

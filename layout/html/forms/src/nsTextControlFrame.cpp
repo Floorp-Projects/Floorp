@@ -125,13 +125,18 @@
 #endif // IBMBIDI
 
 #define DEFAULT_COLUMN_WIDTH 20
-#define GUESS_INPUT_SIZE 150  // 10 pixels wide
+// (10 pixels)
+#define GUESS_INPUT_SIZE 150
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
+
+static const PRInt32 DEFAULT_COLS = 20;
+static const PRInt32 DEFAULT_ROWS = 1;
+static const PRInt32 DEFAULT_ROWS_TEXTAREA = 2;
 
 static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
 {
@@ -1496,100 +1501,95 @@ PRBool nsTextControlFrame::IsPasswordTextControl() const
 }
 
 
-nsresult 
-nsTextControlFrame::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
-                                         nsIAtom *     aColSizeAttr,
-                                         nsHTMLValue & aColSize,
-                                         nsresult &    aColStatus,
-                                         nsIAtom *     aRowSizeAttr,
-                                         nsHTMLValue & aRowSize,
-                                         nsresult &    aRowStatus)
+PRInt32
+nsTextControlFrame::GetCols()
 {
-  nsCOMPtr<nsIContent> iContent;
-  aFrame->GetFormContent(*getter_AddRefs(iContent));
+  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent);
+  NS_ASSERTION(content, "Content is not HTML content!");
 
-  nsCOMPtr<nsIHTMLContent> hContent(do_QueryInterface(iContent));
-
-  if (!hContent) {
-    return NS_ERROR_FAILURE;
+  if (IsTextArea()) {
+    nsHTMLValue attr;
+    nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::cols, attr);
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      PRInt32 cols = ((attr.GetUnit() == eHTMLUnit_Pixel)
+                     ? attr.GetPixelValue() : attr.GetIntValue());
+      // XXX why a default of 1 char, why hide it
+      return (cols <= 0) ? 1 : cols;
+    }
+  } else {
+    // Else we know (assume) it is an input with size attr
+    nsHTMLValue attr;
+    nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::size, attr);
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      PRInt32 cols = attr.GetIntValue();
+      if (cols > 0) {
+        return cols;
+      }
+    }
   }
 
-  aColStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (aColSizeAttr) {
-    aColStatus = hContent->GetHTMLAttribute(aColSizeAttr, aColSize);
-  }
-
-  aRowStatus= NS_CONTENT_ATTR_NOT_THERE;
-  if (aRowSizeAttr) {
-    aRowStatus = hContent->GetHTMLAttribute(aRowSizeAttr, aRowSize);
-  }
-
-  return NS_OK;
+  return DEFAULT_COLS;
 }
 
 
+PRInt32
+nsTextControlFrame::GetRows()
+{
+  if (IsTextArea()) {
+    nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent);
+    NS_ASSERTION(content, "Content is not HTML content!");
 
-NS_IMETHODIMP
+    nsHTMLValue attr;
+    nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::rows, attr);
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      PRInt32 rows = attr.GetIntValue();
+      return (rows <= 0) ? DEFAULT_ROWS_TEXTAREA : rows;
+    }
+    return DEFAULT_ROWS_TEXTAREA;
+  }
+
+  return DEFAULT_ROWS;
+}
+
+
+void
 nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
-                                       nsSize&                  aDesiredSize,
-                                       const nsHTMLReflowState& aReflowState,
-                                       nsReflowStatus&          aStatus,
-                                       nsMargin&                aBorder,
-                                       nsMargin&                aPadding)
+                                   nsSize&                  aDesiredSize,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsReflowStatus&          aStatus)
 {
   // get the css size and let the frame use or override it
   nsSize minSize;
-  
-  PRBool usingDefaultSize = PR_FALSE;
-  PRInt32 ignore;
-  PRInt32 type;
-  GetType(&type);
-  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-    PRInt32 width = 0;
-    if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
-      width = GetDefaultColumnWidth();
-      usingDefaultSize = PR_TRUE;
-    }
-    nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
-                                  nsnull, width, 
-                                  PR_FALSE, nsnull, 1);
-    CalculateSizeStandard(aPresContext, aReflowState.rendContext, this,
-                          textSpec, aDesiredSize, minSize, ignore, aBorder, aPadding, usingDefaultSize);
-  } else {
-    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
-                                  nsnull, GetDefaultColumnWidth(), 
-                                  PR_FALSE, nsHTMLAtoms::rows, 1);
-    CalculateSizeStandard(aPresContext, aReflowState.rendContext, this, 
-                          areaSpec, aDesiredSize, minSize, ignore, aBorder, aPadding, usingDefaultSize);
-  }
+  CalculateSizeStandard(aPresContext, aReflowState.rendContext, aDesiredSize,
+                        minSize);
 
-  // CalculateSize makes calls in the nsFormControlHelper that figures
-  // out the entire size of the control when in NavQuirks mode. For the
-  // textarea, this means the scrollbar sizes hav already been added to
-  // its overall size and do not need to be added here.
-  if (NS_FORM_TEXTAREA == type) {
-    float   p2t;
+  // Add in the size of the scrollbars for textarea
+  if (IsTextArea()) {
+    float p2t;
     aPresContext->GetPixelsToTwips(&p2t);
 
     nscoord scrollbarWidth  = 0;
     nscoord scrollbarHeight = 0;
-    float   scale;
     nsCOMPtr<nsIDeviceContext> dx;
     aPresContext->GetDeviceContext(getter_AddRefs(dx));
-    if (dx) { 
+    if (dx) {
+      float   scale;
+      dx->GetCanonicalPixelScale(scale);
+
       float sbWidth;
       float sbHeight;
-      dx->GetCanonicalPixelScale(scale);
       dx->GetScrollBarDimensions(sbWidth, sbHeight);
       scrollbarWidth  = PRInt32(sbWidth * scale);
       scrollbarHeight = PRInt32(sbHeight * scale);
     } else {
+      NS_WARNING("Dude!  No DeviceContext!  Not cool!");
       scrollbarWidth  = nsFormControlFrame::GetScrollbarWidth(p2t);
       scrollbarHeight = scrollbarWidth;
     }
 
     aDesiredSize.height += scrollbarHeight;
     minSize.height      += scrollbarHeight;
+
     aDesiredSize.width  += scrollbarWidth;
     minSize.width       += scrollbarWidth;
   }
@@ -1597,51 +1597,29 @@ nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
   aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
-
 }
 
 
 
-PRInt32
-nsTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext, 
-                                              nsIRenderingContext*  aRendContext,
-                                              nsIFormControlFrame*  aFrame,
-                                              nsInputDimensionSpec& aSpec, 
-                                              nsSize&               aDesiredSize, 
-                                              nsSize&               aMinSize, 
-                                              nscoord&              aRowHeight,
-                                              nsMargin&             aBorder,
-                                              nsMargin&             aPadding,
-                                              PRBool                aIsUsingDefSize) 
+void
+nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
+                                          nsIRenderingContext*  aRendContext,
+                                          nsSize&               aDesiredSize,
+                                          nsSize&               aMinSize)
 {
-  nscoord charWidth   = 0; 
   aDesiredSize.width  = CSS_NOTSET;
   aDesiredSize.height = CSS_NOTSET;
-
-  nsHTMLValue colAttr;
-  nsresult    colStatus;
-  nsHTMLValue rowAttr;
-  nsresult    rowStatus;
-  if (NS_ERROR_FAILURE == GetColRowSizeAttr(aFrame, 
-                                            aSpec.mColSizeAttr, colAttr, colStatus,
-                                            aSpec.mRowSizeAttr, rowAttr, rowStatus)) {
-    return 0;
-  }
-
-  float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
 
   nscoord fontHeight  = 0;
   // get leading
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-  if (NS_SUCCEEDED(res) && fontMet) {
+  nsresult rv = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+  if (NS_SUCCEEDED(rv) && fontMet) {
     aRendContext->SetFont(fontMet);
     fontMet->GetHeight(fontHeight);
-    aDesiredSize.height = fontHeight;
   } else {
-    aDesiredSize.height = GUESS_INPUT_SIZE; // punt
+    NS_WARNING("No font metrics found for textarea / input!  Something is fishy.");
+    fontHeight = GUESS_INPUT_SIZE;
   }
 
   // Internal padding is necessary for better matching IE's width
@@ -1654,12 +1632,18 @@ nsTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext,
   // nsIFontMetrics. The other need to have it implemeneted (Bug 50998)
   // and then this if def removed. We are too close to RTM to implement it in all 
   // the platforms and ports.
+
+  float p2t;
+  aPresContext->GetPixelsToTwips(&p2t);
+
+  nscoord charWidth   = 0;
+
 #if defined(_WIN32) || defined(XP_OS2)
   fontMet->GetAveCharWidth(charWidth);
 
   // Get frame font
   const nsFont * font = nsnull;
-  if (NS_SUCCEEDED(aFrame->GetFont(aPresContext, font))) {
+  if (NS_SUCCEEDED(this->GetFont(aPresContext, font))) {
     // To better match IE, take the size (in twips) and remove 4 pixels
     // add this on as additional padding
     internalPadding = PR_MAX(font->size - NSToCoordRound(4 * p2t), 0);
@@ -1682,59 +1666,21 @@ nsTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext,
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);  // get the rounding right
   charWidth = nscoord((float(charWidth) / float(onePixel)) + 0.5)*onePixel;
 #endif
-  aDesiredSize.width = charWidth;
 
-#ifdef DEBUG_rodsXXX
-  printf("Ave: %d  MA: %d  %d\n", charWidth, measAveWidth, charWidth-measAveWidth);
-  printf("Ave: %d  MA: %d  %d\n", charWidth/15, measAveWidth/15, (charWidth/15)-(measAveWidth/15));
-#endif
-
-  // set the default col size back
-  aMinSize.width  = aDesiredSize.width;
-  aMinSize.height = aDesiredSize.height;
-
-  // determine the width, char height, row height
-  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
-    PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-    col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-    aDesiredSize.width = col * charWidth;
-  } else {
-    aDesiredSize.width = aSpec.mColDefaultSize * charWidth;
-  }
-
-  // Now add the extra internal padding on
+  // Set the width equal to the width in characters
+  aDesiredSize.width = GetCols() * charWidth;
+  // Now add the extra padding on (so that small input sizes work well)
   aDesiredSize.width += internalPadding;
 
-  aRowHeight      = aDesiredSize.height;
+  // Set the height equal to total number of rows (times the height of each
+  // line, of course)
+  aDesiredSize.height = fontHeight * GetRows();
+
+  // Set minimum size equal to desired size.  We are form controls.  We are Gods
+  // among elements.  We do not yield for anybody, not even a table cell.  None
+  // shall pass.
+  aMinSize.width  = aDesiredSize.width;
   aMinSize.height = aDesiredSize.height;
-  PRInt32 numRows = 0;
-
-  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
-    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
-                            ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
-    numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
-    aDesiredSize.height = aDesiredSize.height * numRows;
-  } else {
-    aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
-  }
-
-  numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
-  if (numRows == 1) {
-    PRInt32 type;
-    GetType(&type);
-    if (NS_FORM_TEXTAREA == type) {
-      aDesiredSize.height += fontHeight;
-    }
-  }
-
-  // if we are not using the default size 
-  // then make the minimum size the size we want to be
-  if (!aIsUsingDefSize) {
-    aMinSize.width  = aDesiredSize.width;
-    aMinSize.height = aDesiredSize.height;
-  }
-
-  return numRows;
 }
 
 
@@ -2046,55 +1992,26 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     }
   }
 
+  // Initialize the plaintext editor
   nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryInterface(mEditor));
-  if (textEditor)
-  {
-    nsHTMLValue colAttr;
-    nsresult    colStatus;
-    nsHTMLValue rowAttr;
-    nsresult    rowStatus;
-    PRInt32 type;
-    GetType(&type);
-    nsInputDimensionSpec *spec;
-    if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-      PRInt32 width = 0;
-      if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
-        width = GetDefaultColumnWidth();
+  if (textEditor) {
+    // Set up wrapping
+    if (IsTextArea()) {
+      // wrap=off means -1 for wrap width no matter what cols is
+      nsFormControlHelper::nsHTMLTextWrap wrapProp;
+      nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+      if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off) {
+        // do not wrap when wrap=off
+        textEditor->SetWrapWidth(-1);
+      } else {
+        // Set wrapping normally otherwise
+        textEditor->SetWrapWidth(GetCols());
       }
-      spec = new nsInputDimensionSpec(nsnull, PR_FALSE, nsnull,
-                                    nsnull, width, 
-                                    PR_FALSE, nsnull, 1);
     } else {
-      spec = new nsInputDimensionSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
-                                    nsnull, GetDefaultColumnWidth(), 
-                                    PR_FALSE, nsHTMLAtoms::rows, 1);
+      // Never wrap non-textareas
+      textEditor->SetWrapWidth(-1);
     }
-    if (spec)
-    {
-      if (NS_FAILED(GetColRowSizeAttr(this, 
-                                              spec->mColSizeAttr, colAttr, colStatus,
-                                              spec->mRowSizeAttr, rowAttr, rowStatus)))
-        return NS_ERROR_FAILURE;
-      PRInt32 col =-1;
-      if (!(colAttr.GetUnit() == eHTMLUnit_Null))
-      {
-        col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-        col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-      }
-      if (type == NS_FORM_TEXTAREA)
-      {
-         nsFormControlHelper::nsHTMLTextWrap wrapProp;
-         nsresult rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
-         // do not wrap at the cols attribute when wrap=off
-         if ((rv != NS_CONTENT_ATTR_NOT_THERE) &&
-             (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off))
-         {
-           col = -1;
-         }
-      }
-      textEditor->SetWrapWidth(col);
-      delete spec;
-    }
+
 
     // Set max text field length
     PRInt32 maxLength;
@@ -2286,35 +2203,21 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (collapsed)
     return NS_OK;
 
-  nsIPresContext* aPresContext = aState.GetPresContext();
-  const nsHTMLReflowState* aReflowState = aState.GetReflowState();
+  nsIPresContext* presContext = aState.GetPresContext();
+  const nsHTMLReflowState* reflowState = aState.GetReflowState();
   nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
-  nsFormControlFrame::GetStyleSize(aPresContext, *aReflowState, styleSize);
+  nsFormControlFrame::GetStyleSize(presContext, *reflowState, styleSize);
 
-  if (!aReflowState)
+  if (!reflowState)
     return NS_OK;
 
   InitEditor();
 
   if (mState & NS_FRAME_FIRST_REFLOW)
-    mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
+    mNotifyOnInput = PR_TRUE; //its ok to notify now. all has been prepared.
 
-  nsReflowStatus aStatus;
-  nsMargin border;
-  border.SizeTo(0, 0, 0, 0);
-  nsMargin padding;
-  padding.SizeTo(0, 0, 0, 0);
-
-  // Get the CSS border
-  const nsStyleBorder* borderStyle;
-  const nsStylePadding* paddingStyle;
-  GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)borderStyle);
-  GetStyleData(eStyleStruct_Padding,  (const nsStyleStruct *&)paddingStyle);
-  borderStyle->CalcBorderFor(this, border);
-  paddingStyle->CalcPaddingFor(this, padding);
-
-  nsresult rv;
-  rv = ReflowStandard(aPresContext, aSize, *aReflowState, aStatus, border, padding);
+  nsReflowStatus status;
+  ReflowStandard(presContext, aSize, *reflowState, status);
   AddInset(aSize);
 
   mPrefSize = aSize;
@@ -2374,39 +2277,6 @@ NS_IMETHODIMP
 nsTextControlFrame::GetType(PRInt32* aType) const
 {
   return nsFormControlHelper::GetType(mContent, aType);
-}
-
-nsresult
-nsTextControlFrame::GetSizeFromContent(PRInt32* aSize) const
-{
-  *aSize = -1;
-  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
-
-  if (content) {
-    nsHTMLValue value;
-    result = content->GetHTMLAttribute(nsHTMLAtoms::size, value);
-    if (eHTMLUnit_Integer == value.GetUnit()) { 
-      *aSize = value.GetIntValue();
-    }
-  }
-  if (*aSize < 1) {
-    // This is part of bug 46224
-    // when we can get a PresContent (may be cache it) 
-    // then we can check the compatibility mode
-#ifdef FUTURE_ADDITIONAL_FIX_FOR_46224
-    nsCompatibility mode;
-    nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
-    if (eCompatibility_NavQuirks == mode) {
-      *aSize = 1;
-    } else {
-      *aSize = 20;
-    }
-#else
-      *aSize = 20; // use '1' to be compatable with Nav 4.x, Use '20' to be compatable with IE
-#endif
-  }
-  return result;
 }
 
 void    nsTextControlFrame::SetFocus(PRBool aOn , PRBool aRepaint){}
@@ -2973,9 +2843,7 @@ NS_IMETHODIMP
 nsTextControlFrame::GetText(nsString* aText)
 {
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
-  PRInt32 type;
-  GetType(&type);
-  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+  if (IsSingleLineTextControl()) {
     // If we're going to remove newlines anyway, ignore the wrap property
     GetValue(*aText, PR_TRUE);
     RemoveNewlines(*aText);

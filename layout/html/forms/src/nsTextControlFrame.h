@@ -66,9 +66,9 @@ class nsIAccessible;
 
 
 class nsTextControlFrame : public nsStackFrame,
-                               public nsIAnonymousContentCreator,
-                               public nsITextControlFrame,
-                               public nsIScrollableViewProvider
+                           public nsIAnonymousContentCreator,
+                           public nsITextControlFrame,
+                           public nsIScrollableViewProvider
 
 {
 public:
@@ -249,33 +249,27 @@ protected:
 
 //helper methods
   nsresult GetSizeFromContent(PRInt32* aSize) const;
-  PRInt32 GetDefaultColumnWidth() const { return (PRInt32)(20); } // this was DEFAULT_PIXEL_WIDTH
 
-  nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
-                             nsIAtom *     aColSizeAttr,
-                             nsHTMLValue & aColSize,
-                             nsresult &    aColStatus,
-                             nsIAtom *     aRowSizeAttr,
-                             nsHTMLValue & aRowSize,
-                             nsresult &    aRowStatus);
+  /**
+   * Get the cols attribute (if textarea) or a default
+   * @return the number of columns to use
+   */
+  PRInt32 GetCols();
+  /**
+   * Get the rows attribute (if textarea) or a default
+   * @return the number of rows to use
+   */
+  PRInt32 GetRows();
 
-  NS_IMETHOD ReflowStandard(nsIPresContext*          aPresContext,
-                            nsSize&                  aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus,
-                            nsMargin&                aBorder,
-                            nsMargin&                aPadding);
+  void ReflowStandard(nsIPresContext*          aPresContext,
+                      nsSize&                  aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus);
 
-  PRInt32 CalculateSizeStandard (nsIPresContext*       aPresContext, 
-                                  nsIRenderingContext*  aRendContext,
-                                  nsIFormControlFrame*  aFrame,
-                                  nsInputDimensionSpec& aSpec, 
-                                  nsSize&               aDesiredSize, 
-                                  nsSize&               aMinSize, 
-                                  nscoord&              aRowHeight,
-                                  nsMargin&             aBorder,
-                                  nsMargin&             aPadding,
-                                  PRBool                aIsUsingDefSize);
+  void CalculateSizeStandard(nsIPresContext*       aPresContext,
+                             nsIRenderingContext*  aRendContext,
+                             nsSize&               aDesiredSize,
+                             nsSize&               aMinSize);
 
   NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                                nsIContent *      aContent,

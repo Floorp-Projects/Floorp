@@ -78,12 +78,9 @@ static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
 
 // For figuring out the "WRAP" property
+// See GetWrapPropertyEnum for details
 #define kTextControl_Wrap_Soft "SOFT"
-#define kTextControl_Wrap_Virtual "VIRTUAL"   // "virtual" is a synonym for "soft"
 #define kTextControl_Wrap_Hard "HARD"
-#define kTextControl_Wrap_Physical "PHYSICAL" // "physical" should be a synonym
-                                              // for "hard" but NS 4.x and IE make
-                                              // it a synonym for "soft" 
 #define kTextControl_Wrap_Off  "OFF"
 
 
@@ -186,155 +183,27 @@ nsFormControlHelper::GetWrapProperty(nsIContent * aContent, nsString &aOutValue)
 nsresult 
 nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp)
 {
-  nsString wrap;
-  aWrapProp = eHTMLTextWrap_Off; // the default
+  // soft is the default; "physical" defaults to soft as well because all other
+  // browsers treat it that way and there is no real reason to maintain physical
+  // and virtual as separate entities if no one else does.  Only hard and off
+  // do anything different.
+  aWrapProp = eHTMLTextWrap_Soft; // the default
   
-  nsresult result = GetWrapProperty(aContent, wrap);
+  nsAutoString wrap;
+  nsresult rv = GetWrapProperty(aContent, wrap);
 
-  if (NS_CONTENT_ATTR_NOT_THERE != result) {
+  if (rv != NS_CONTENT_ATTR_NOT_THERE) {
 
     if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Hard)) {
       aWrapProp = eHTMLTextWrap_Hard;
-      return result;
-    }
-
-    if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Soft) ||
-        wrap.EqualsIgnoreCase(kTextControl_Wrap_Virtual) ||
-        wrap.EqualsIgnoreCase(kTextControl_Wrap_Physical)) {
-      aWrapProp = eHTMLTextWrap_Soft;
-      return result;
+    } else if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Off)) {
+      aWrapProp = eHTMLTextWrap_Off;
     }
   }
-  return result;
+  return rv;
 }
 
-nscoord 
-nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext*      aPresContext, 
-                                        nsIRenderingContext* aRendContext,
-                                        nsIFontMetrics*      aFontMet, 
-                                        nsIFormControlFrame* aFrame,
-                                        nsInputDimensionSpec& aSpec,
-                                        nsSize&              aSize)
-{
-  float p2t;
-  float t2p;
-  aPresContext->GetPixelsToTwips(&p2t);
-  aPresContext->GetTwipsToPixels(&t2p);
-
-  nscoord ascent;
-  nscoord descent;
-  nscoord maxCharWidth;
-  aFontMet->GetMaxAscent(ascent);
-  aFontMet->GetMaxDescent(descent);
-  aFontMet->GetMaxAdvance(maxCharWidth);
-
-  ascent       = NSToCoordRound(ascent * t2p);
-  descent      = NSToCoordRound(descent * t2p);
-  maxCharWidth = NSToCoordRound(maxCharWidth * t2p);
-
-  char char1, char2;
-  GetRepChars(char1, char2);
-
-  nscoord char1Width, char2Width;
-  aRendContext->GetWidth(char1, char1Width);
-  aRendContext->GetWidth(char2, char2Width);
-  char1Width = NSToCoordRound(char1Width * t2p);
-  char2Width = NSToCoordRound(char2Width * t2p);
-
-  // Nav Quirk Calculation for TextField
-  PRInt32 type;
-  aFrame->GetType(&type);
-  nscoord width;
-  nscoord hgt;
-  nscoord height;
-  nscoord average = 0;
-  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-    average = (char1Width + char2Width) / 2;
-    width   = maxCharWidth;
-    hgt     = ascent + descent;
-    height  = hgt + (hgt / 2);
-    width  += aSpec.mColDefaultSize * average;
-  } else if (NS_FORM_TEXTAREA == type) {
-    nscoord lines = 1;
-    nscoord scrollbarWidth  = 0;
-    nscoord scrollbarHeight = 0;
-    float   scale;
-    nsCOMPtr<nsIDeviceContext> dx;
-    aPresContext->GetDeviceContext(getter_AddRefs(dx));
-    if (dx) { 
-      float sbWidth;
-      float sbHeight;
-      dx->GetCanonicalPixelScale(scale);
-      dx->GetScrollBarDimensions(sbWidth, sbHeight);
-      scrollbarWidth  = PRInt32(sbWidth * scale);
-      scrollbarHeight = PRInt32(sbHeight * scale);
-      scrollbarWidth  = NSToCoordRound(scrollbarWidth * t2p);
-      scrollbarHeight  = NSToCoordRound(scrollbarHeight * t2p);
-    } else {
-      NS_ASSERTION(0, "Couldn't get the device context"); 
-      scrollbarWidth  = 16;
-      scrollbarHeight = 16;
-    }
-    nsIContent * content;
-    aFrame->GetFormContent(content);
-    nsCOMPtr<nsIHTMLContent> hContent(do_QueryInterface(content));
-
-    // determine the height
-    nsHTMLValue rowAttr;
-    nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
-    if (nsnull != aSpec.mRowSizeAttr) {
-      rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
-    }
-    if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
-      PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
-                              ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
-      lines = (rowAttrInt > 0) ? rowAttrInt : 1;
-    } else {
-      lines = aSpec.mRowDefaultSize;
-    }
-
-    average = (char1Width + char2Width) / 2;
-    width   = ((aSpec.mColDefaultSize + 1) * average) + scrollbarWidth;
-    hgt     = ascent + descent;
-    height  = (lines + 1) * hgt;
-
-    // then if not word wrapping
-    nsHTMLTextWrap wrapProp;
-    nsFormControlHelper::GetWrapPropertyEnum(content, wrapProp);
-    if (wrapProp == eHTMLTextWrap_Off) {
-      height += scrollbarHeight;
-    }
-    NS_RELEASE(content);
-  } else if (NS_FORM_INPUT_BUTTON == type ||
-             NS_FORM_INPUT_SUBMIT == type ||
-             NS_FORM_INPUT_RESET  == type) {
-    GetTextSize(aPresContext, aFrame, *aSpec.mColDefaultValue, aSize, aRendContext);
-    aSize.width  = NSToCoordRound(aSize.width * t2p);
-    aSize.height = NSToCoordRound(aSize.height * t2p);
-    width  = 3 * aSize.width / 2;
-    height = 3 * aSize.height / 2;
-  } else if (NS_FORM_INPUT_HIDDEN == type) {
-    width  = 0;
-    height = 0;
-  } else {
-    width  = 0;
-    height = 0;
-  }
-
-#ifdef DEBUG_rodsXXXX
-  printf("********* Nav Quirks: %d,%d  max:%d average:%d ascent:%d descent:%d\n", 
-          width, height, maxCharWidth, average, ascent, descent);
-#endif
-
-  aSize.width  = NSIntPixelsToTwips(width, p2t);
-  aSize.height = NSIntPixelsToTwips(height, p2t);
-  average      = NSIntPixelsToTwips(average, p2t);
-
-  return average;
-
-}
-
-nscoord 
+nscoord
 nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFrame* aFrame,
                                 const nsString& aString, nsSize& aSize,
                                 nsIRenderingContext *aRendContext)
@@ -379,138 +248,6 @@ nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFra
   return GetTextSize(aPresContext, aFrame, val, aSize, aRendContext);
 }
   
-PRInt32
-nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext, 
-                                    nsIRenderingContext*  aRendContext,
-                                    nsIFormControlFrame*  aFrame,
-                                    const nsSize&         aCSSSize, 
-                                    nsInputDimensionSpec& aSpec, 
-                                    nsSize&               aDesiredSize, 
-                                    nsSize&               aMinSize, 
-                                    PRBool&               aWidthExplicit, 
-                                    PRBool&               aHeightExplicit, 
-                                    nscoord&              aRowHeight) 
-{
-  nscoord charWidth   = 0; 
-  PRInt32 numRows     = ATTR_NOTSET;
-  aWidthExplicit      = PR_FALSE;
-  aHeightExplicit     = PR_FALSE;
-
-  aDesiredSize.width  = CSS_NOTSET;
-  aDesiredSize.height = CSS_NOTSET;
-
-  nsCOMPtr<nsIContent> iContent;
-  aFrame->GetFormContent(*getter_AddRefs(iContent));
-
-  nsCOMPtr<nsIHTMLContent> hContent(do_QueryInterface(iContent));
-
-  if (!hContent) {
-    return 0;
-  }
-
-  nsAutoString valAttr;
-  nsresult valStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mColValueAttr) {
-    valStatus = hContent->GetAttr(kNameSpaceID_None, aSpec.mColValueAttr,
-                                  valAttr);
-  }
-  nsHTMLValue colAttr;
-  nsresult colStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mColSizeAttr) {
-    colStatus = hContent->GetHTMLAttribute(aSpec.mColSizeAttr, colAttr);
-  }
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-
-#if 0
-  // determine if it is percentage based width, height
-  PRBool percentageWidth  = PR_FALSE;
-  PRBool percentageHeight = PR_FALSE;
-
-  const nsStylePosition* pos;
-  nsIFrame* iFrame = nsnull;
-  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&iFrame);
-  if ((NS_OK == rv) && (nsnull != iFrame)) { 
-    iFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
-    if (eStyleUnit_Percent == pos->mWidth.GetUnit()) {
-      percentageWidth = PR_TRUE;
-    }
-    if (eStyleUnit_Percent == pos->mWidth.GetUnit()) {
-      percentageHeight = PR_TRUE;
-    }
-  }
-#endif
-
-  // determine the width, char height, row height
-  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
-    PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-    if (aSpec.mColSizeAttrInPixels) {
-      // need to set charWidth and aDesiredSize.height
-      charWidth = GetTextSize(aPresContext, aFrame, 1, aDesiredSize, aRendContext);
-      col = (col <= 0) ? 15 : col; // XXX why a default of 15 pixels, why hide it
-                                   // XXX this conflicts with a default of 20 found in nsTextControlFrame.
-      aDesiredSize.width = NSIntPixelsToTwips(col, p2t);
-    } else {
-      col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-    }
-    if (aSpec.mColSizeAttrInPixels) {
-      aWidthExplicit = PR_TRUE;
-    }
-    aMinSize.width = aDesiredSize.width;
-  } else {
-    // set aDesiredSize for height calculation below. CSS may override width
-    if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
-      charWidth = GetTextSize(aPresContext, aFrame, valAttr, aDesiredSize, aRendContext);
-    } else if (aSpec.mColDefaultValue) {          // use default value
-      charWidth = GetTextSize(aPresContext, aFrame, *aSpec.mColDefaultValue, aDesiredSize, aRendContext);
-    } else if (aSpec.mColDefaultSizeInPixels) {   // use default width in pixels
-      charWidth = GetTextSize(aPresContext, aFrame, 1, aDesiredSize, aRendContext);
-      aDesiredSize.width = aSpec.mColDefaultSize;
-    } else  {                                     // use default width in num characters
-      charWidth = GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
-    }
-    aMinSize.width = aDesiredSize.width;
-    if (CSS_NOTSET != aCSSSize.width) {  // css provides width
-      NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
-      if (NS_INTRINSICSIZE != aCSSSize.width) {
-        aDesiredSize.width = PR_MAX(aDesiredSize.width,aCSSSize.width);
-        aWidthExplicit = PR_TRUE;
-      }
-    }
-  }
-  aRowHeight      = aDesiredSize.height;
-  aMinSize.height = aDesiredSize.height;
-
-  // determine the height
-  nsHTMLValue rowAttr;
-  nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mRowSizeAttr) {
-    rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
-  }
-  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
-    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
-                            ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
-    numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
-    aDesiredSize.height = aDesiredSize.height * numRows;
-  } else {
-    aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
-    if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-      NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
-      if (NS_INTRINSICSIZE != aCSSSize.height) {
-        aDesiredSize.height = PR_MAX(aDesiredSize.height,aCSSSize.height);
-        aHeightExplicit = PR_TRUE;
-      }
-    }
-  }
-
-  if (ATTR_NOTSET == numRows) {
-    numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
-  }
-
-  return numRows;
-}
-
-
 nsresult  
 nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
                              nsIPresContext*       aPresContext, 
