@@ -33,6 +33,7 @@
 #include "nsIRunaround.h"
 #include "nsIStyleContext.h"
 #include "nsIView.h"
+#include "nsIFontMetrics.h"
 
 #include "nsHTMLBase.h"// XXX rename to nsCSSBase?
 #include "nsHTMLParts.h"// XXX html reflow command???
@@ -1386,6 +1387,7 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
       (0 == aState.mY - aState.mBorderPadding.top)) {
     aDesiredRect.width = 0;
     aDesiredRect.height = 0;
+    aMetrics.posBottomMargin = 0;
   }
   else {
     aDesiredRect.width = aState.mKidXMost + aState.mBorderPadding.right;
@@ -1502,9 +1504,6 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
     lastCleanLine = firstDirtyLine;
     firstDirtyLine = firstDirtyLine->mNext;
   }
-
-// XXX add in code in ReflowBlockFrame to make zero height blocks
-// disappear (no margins)
 
   // Recover the starting Y coordinate and the previous bottom margin
   // value.
@@ -2007,10 +2006,31 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   // Compute the top margin to apply to the child block
   nscoord totalTopMargin = 0;
   nscoord topMargin = 0;
-  nscoord childTopMargin = childMargin.top;
-  if (childTopMargin < 0) childTopMargin = 0;
-  nscoord childBottomMargin = childMargin.bottom;
-  if (childBottomMargin < 0) childBottomMargin = 0;
+  nscoord childTopMargin = 0;
+  nscoord childBottomMargin = 0;
+  if (childSpacing->mMargin.GetTopUnit() <= eStyleUnit_Auto) {
+    // Provide an ebina style margin of 1 blank line before this block
+    // for most block elements.
+    // XXX need a complete list of the ones that he does this for
+    const nsStyleDisplay* childDisplay;
+    aFrame->GetStyleData(eStyleStruct_Display,
+                         (const nsStyleStruct*&)childDisplay);
+    if (NS_STYLE_DISPLAY_LIST_ITEM != childDisplay->mDisplay) {
+      if (IsPseudoFrame() && (aState.mY == aState.mBorderPadding.top)) {
+        childTopMargin = 0;
+      }
+      else {
+        const nsFont& defaultFont = aState.mPresContext->GetDefaultFont();
+        nsIFontMetrics* fm = aState.mPresContext->GetMetricsFor(defaultFont);
+        childTopMargin = fm->GetHeight();
+        NS_RELEASE(fm);
+      }
+    }
+  }
+  else {
+    childTopMargin = childMargin.top;
+    if (childTopMargin < 0) childTopMargin = 0;
+  }
   if (aState.mY == aState.mBorderPadding.top) {
     // Since this is our first child we need to collapse its top
     // margin with our top margin.
@@ -2039,6 +2059,10 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     else {
       totalTopMargin = aState.mPrevBottomMargin;
     }
+  }
+  if (childSpacing->mMargin.GetBottomUnit() > eStyleUnit_Auto) {
+    childBottomMargin = childMargin.bottom;
+    if (childBottomMargin < 0) childBottomMargin = 0;
   }
 
   nscoord x = aState.mX + childMargin.left;
@@ -2152,25 +2176,51 @@ NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
     aReflowResult = NS_FRAME_NOT_COMPLETE;
   }
 
-  // Collapse the childs bottom margin with the grandchilds bottom
-  // margin.
-  childBottomMargin -= metrics.posBottomMargin;
-  if (childBottomMargin < 0) childBottomMargin = 0;
-
-  // See if it fit
-  nscoord newY = y + metrics.height + childBottomMargin;
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
-     ("nsCSSBlockFrame::ReflowBlockFrame: metrics={%d,%d} newY=%d maxY=%d",
-      metrics.width, metrics.height, newY, aState.mBottomEdge));
-  if ((mLines != aLine) && (newY > aState.mBottomEdge)) {
-    // None of the block fit. Push aLine and any other lines that follow
-    PushLines(aState);
-    aReflowResult = NS_INLINE_LINE_BREAK_BEFORE(reflowStatus);
-    return PR_FALSE;
+  // If the block we just reflowed happens to end up being zero height
+  // then we do not let its margins take effect.
+  nscoord newY;
+  if (0 == metrics.height) {
+    // Leave aState.mPrevBottomMargin alone in this case so that it
+    // can carry forward to the next non-empty block.
+    newY = y = aState.mY;
+    aLine->mInnerBottomMargin = 0;
+    aLine->mOuterBottomMargin = 0;
   }
-  aState.mPrevBottomMargin = metrics.posBottomMargin + childBottomMargin;
-  aLine->mInnerBottomMargin = metrics.posBottomMargin;
-  aLine->mOuterBottomMargin = childBottomMargin;
+  else {
+    // Collapse the childs bottom margin with the grandchilds bottom
+    // margin.
+    if (childSpacing->mMargin.GetBottomUnit() <= eStyleUnit_Auto) {
+      // list-item's don't get bottom margins in ebina land
+      const nsStyleDisplay* childDisplay;
+      aFrame->GetStyleData(eStyleStruct_Display,
+                           (const nsStyleStruct*&)childDisplay);
+      if (NS_STYLE_DISPLAY_LIST_ITEM != childDisplay->mDisplay) {
+        const nsFont& defaultFont = aState.mPresContext->GetDefaultFont();
+        nsIFontMetrics* fm = aState.mPresContext->GetMetricsFor(defaultFont);
+        childBottomMargin = fm->GetHeight();
+        NS_RELEASE(fm);
+      }
+    }
+    else {
+      childBottomMargin -= metrics.posBottomMargin;
+      if (childBottomMargin < 0) childBottomMargin = 0;
+    }
+
+    // See if it fit
+    newY = y + metrics.height + childBottomMargin;
+    NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
+       ("nsCSSBlockFrame::ReflowBlockFrame: metrics={%d,%d} newY=%d maxY=%d",
+        metrics.width, metrics.height, newY, aState.mBottomEdge));
+    if ((mLines != aLine) && (newY > aState.mBottomEdge)) {
+      // None of the block fit. Push aLine and any other lines that follow
+      PushLines(aState);
+      aReflowResult = NS_INLINE_LINE_BREAK_BEFORE(reflowStatus);
+      return PR_FALSE;
+    }
+    aState.mPrevBottomMargin = metrics.posBottomMargin + childBottomMargin;
+    aLine->mInnerBottomMargin = metrics.posBottomMargin;
+    aLine->mOuterBottomMargin = childBottomMargin;
+  }
 
   // Update max-element-size
   if (aState.mComputeMaxElementSize) {
@@ -3202,13 +3252,9 @@ nsCSSBlockFrame::DidReflow(nsIPresContext& aPresContext,
       aStatus));
 
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsFrameState state;
     nsIFrame* kid = (nsnull == mLines) ? nsnull : mLines->mFirstChild;
     while (nsnull != kid) {
-      kid->GetFrameState(state);
-      if (0 != (state & NS_FRAME_IN_REFLOW)) {
-        kid->DidReflow(aPresContext, aStatus);
-      }
+      kid->DidReflow(aPresContext, aStatus);
       kid->GetNextSibling(kid);
     }
   }
