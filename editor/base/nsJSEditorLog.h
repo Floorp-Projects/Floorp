@@ -146,6 +146,7 @@ public:
   /* nsJSEditorLog public methods. */
   nsresult Write(const char *aBuffer);
   nsresult WriteInt(const char *aFormat, PRInt32 aInt);
+  nsresult Flush();
   nsresult PrintUnicode(const nsString &aString);
   nsresult PrintSelection();
   nsresult PrintNode(nsIDOMNode *aNode, PRInt32 aDepth=0);

@@ -92,6 +92,7 @@ nsJSTxnLog::WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction)
   Write("WillDo:   ");
   Write(GetString(aTransaction));
   Write("\n");
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -109,6 +110,7 @@ nsJSTxnLog::DidDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, n
   Write("(");
   WriteInt("%d", aDoResult);
   Write(")\n");
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -130,6 +132,8 @@ nsJSTxnLog::WillUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction
   }
   else
     Write("WillUndoBatch\n");
+
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -158,6 +162,8 @@ nsJSTxnLog::DidUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction,
     Write(")\n");
   }
 
+  Flush();
+
   UNLOCK_LOG(this);
 
   return NS_OK;
@@ -178,6 +184,8 @@ nsJSTxnLog::WillRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction
   }
   else
     Write("WillRedoBatch\n");
+
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -206,6 +214,8 @@ nsJSTxnLog::DidRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction,
     Write(")\n");
   }
 
+  Flush();
+
   UNLOCK_LOG(this);
 
   return NS_OK;
@@ -220,6 +230,7 @@ nsJSTxnLog::WillBeginBatch(nsITransactionManager *aTxMgr)
   Write("WillBeginBatch: ");
   WriteInt("%d", mBatchCount);
   Write("\n");
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -237,6 +248,7 @@ nsJSTxnLog::DidBeginBatch(nsITransactionManager *aTxMgr, nsresult aResult)
   Write(" (");
   WriteInt("%d", aResult);
   Write(")\n");
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -252,6 +264,7 @@ nsJSTxnLog::WillEndBatch(nsITransactionManager *aTxMgr)
   Write("WillEndBatch:   ");
   WriteInt("%d", --mBatchCount);
   Write("\n");
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -269,6 +282,7 @@ nsJSTxnLog::DidEndBatch(nsITransactionManager *aTxMgr, nsresult aResult)
   Write(" (");
   WriteInt("%d", aResult);
   Write(")\n");
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -286,6 +300,7 @@ nsJSTxnLog::WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransac
   Write(" <-- ");
   Write(GetString(aTransaction));
   Write("\n");
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -307,6 +322,7 @@ nsJSTxnLog::DidMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransact
   Write(", ");
   WriteInt("%d", aMergeResult);
   Write(")\n");
+  Flush();
 
   UNLOCK_LOG(this);
 
@@ -372,3 +388,19 @@ nsJSTxnLog::WriteInt(const char *aFormat, PRInt32 aInt)
   return NS_OK;
 }
 
+nsresult
+nsJSTxnLog::Flush()
+{
+  nsresult result = NS_OK;
+
+#ifdef SLOWS_THINGS_WAY_DOWN
+
+  if (mEditorLog)
+    result = mEditorLog->Flush();
+  else
+    fflush(stdout);
+
+#endif // SLOWS_THINGS_WAY_DOWN
+
+  return result;
+}
