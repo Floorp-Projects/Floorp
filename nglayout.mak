@@ -405,7 +405,12 @@ doc_nglayout:
 
 # Build tarball
 
-DATE_CMD=$(MOZ_TOOLS)\bin\unix_date
+!if exist($(MOZ_TOOLS)\bin\unix_date.exe)
+DATE_CMD=$(MOZ_TOOLS)\bin\unix_date.exe
+!else
+DATE_CMD=$(MOZ_TOOLS)\bin\date.exe
+!endif
+
 !if [$(DATE_CMD) +%Y%m%d > today.inc]
 !endif
 DATE=\
