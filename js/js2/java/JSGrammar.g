@@ -81,15 +81,15 @@ primary_expression[boolean initial] returns [ExpressionNode e]
 
 simple_expression returns [ExpressionNode e]
     { e = null; }
-	:	"null"      { e = new JSObject("null"); }
+	:	"null"      { e = new JSObject("null", null); }             // XXX
 	|	"true"      { e = JSBoolean.JSTrue; }
 	|	"false"     { e = JSBoolean.JSFalse; }
 	|	opN:NUMBER  { e = new JSDouble(opN.getText()); }
 	|	opS:STRING  { e = new JSString(opS.getText()); }
-	|	"this"      { e = new JSObject("this"); }
-	|	"super"     { e = new JSObject("super"); }
+	|	"this"      { e = new JSObject("this", null); }             // XXX
+	|	"super"     { e = new JSObject("super", null); }            // XXX
 	|	e = qualified_identifier_or_parenthesized_expression[true]
-	|	opR:REGEXP  { e = new JSObject(opR.getText()); }
+	|	opR:REGEXP  { e = new JSObject(opR.getText(), null); }      // XXX
 	|	e = array_literal
 	;
 

@@ -2,7 +2,7 @@ class NativeFunction extends JSObject {
     
     NativeFunction(ControlNode aBody)
     {
-        super("Function");
+        super("Function", null);
         body = aBody;
     }
     
@@ -13,7 +13,6 @@ class NativeFunction extends JSObject {
         
         return theEnv.resultValue;
     }
-    
     
     ControlNode body;
     
