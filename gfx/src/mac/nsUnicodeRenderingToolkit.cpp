@@ -990,11 +990,9 @@ void nsUnicodeRenderingToolkit :: DrawScriptText(
 	::MoveTo(x, y);
 	::DrawText(buf,0,aLen);
 	
-//	Point		penLoc;
-//	::GetPen(&penLoc);
-//	oWidth = penLoc.h - x;
- 	oWidth = ::TextWidth(buf, 0, aLen);
-//  NS_ASSERTION(oWidth == oWidth2, "width are different");
+	Point   penLoc;
+	::GetPen(&penLoc);
+	oWidth = penLoc.h - x;
 }
 //------------------------------------------------------------------------
 
