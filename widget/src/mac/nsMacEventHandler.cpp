@@ -253,7 +253,7 @@ printf("dispatching drop into Gecko\n");
 	// nsMouseEvent
 	geckoEvent.clickCount = 1;
 	
-	mTopLevelWidget->DispatchMouseEvent(geckoEvent);
+	widgetHit->DispatchMouseEvent(geckoEvent);
 	
 	return PR_TRUE;
 	
