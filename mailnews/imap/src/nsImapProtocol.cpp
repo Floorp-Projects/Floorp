@@ -1153,11 +1153,14 @@ nsImapProtocol::ImapThreadMainLoop()
     {
       //
       // NOTE: Though we cleared m_nextUrlReadyToRun above, it may have been
-      //       set by LoadUrl, which runs on the main thread.  Because of this,
+      //       set by LoadImapUrl, which runs on the main thread.  Because of this,
       //       we must not try to clear m_nextUrlReadyToRun here.
       //
       if (ProcessCurrentURL())
+      {
         m_nextUrlReadyToRun = PR_TRUE;
+        m_imapMailFolderSink = nsnull;
+      }
       else
       {
         // see if we want to go into idle mode. Might want to check a pref here too.
@@ -1167,6 +1170,8 @@ nsImapProtocol::ImapThreadMainLoop()
         {
           Idle(); // for now, lets just do it. We'll probably want to use a timer
         }
+        else // if not idle, don't need to remember folder sink
+          m_imapMailFolderSink = nsnull;
       }
     }
     else if (m_idle)
@@ -1292,7 +1297,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 #ifdef DEBUG_bienvenu   
   NS_ASSERTION(m_imapMiscellaneousSink, "null sink");
 #endif
-  if (!m_imapMiscellaneousSink)
+  if (!m_imapMiscellaneousSink || !m_imapMailFolderSink)
     SetupSinkProxy(); // try this again. Evil, but I'm desperate.
 
   // Reinitialize the parser
@@ -6729,6 +6734,7 @@ void nsImapProtocol::EndIdle()
     m_idle = PR_FALSE;
     ParseIMAPandCheckForNewMail();
   }
+  m_imapMailFolderSink = nsnull;
 }
 
 
