@@ -1198,6 +1198,13 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
   if ( NS_FAILED(rv) || !sib )
     return;
 
+  // XXX - egcs 1.1.2 & gcc 2.95.x -Oy builds, where y > 1, 
+  // are known to break if we declare nsCOMPtrs inside this loop.  
+  // Moving the declaration out of the loop works around this problem.
+  // http://bugzilla.mozilla.org/show_bug.cgi?id=80988
+
+  nsCOMPtr<nsIContent> content;
+
   do {
     if (NS_FAILED(sib->QueryInterface(NS_GET_IID(nsIMenuFrame),
                                       (void **)&sibMenu)))
@@ -1208,7 +1215,6 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
         (sibMenu->MenuIsChecked(sibChecked), sibChecked) &&
         (sibMenu->GetRadioGroupName(sibGroup), sibGroup == mGroupName)) {
       
-      nsCOMPtr<nsIContent> content;
       if (NS_FAILED(sib->GetContent(getter_AddRefs(content))))
         continue;             // break?
       
