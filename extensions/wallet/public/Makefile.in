@@ -21,8 +21,7 @@ srcdir          = @srcdir@
 VPATH           = @srcdir@
 
 EXPORTS =			\
-	singsign.h		\
-	wallet.h		\
+	nsIWalletService.h	\
 	$(NULL)			
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

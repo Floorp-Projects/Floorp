@@ -25,9 +25,10 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME=wallet
 
-
 CPPSRCS =				\
-	wallet.cpp	\
+	nsWalletFactory.cpp		\
+	nsWalletService.cpp		\
+	wallet.cpp			\
 	$(NULL)
 
 MODULE=wallet
@@ -35,15 +36,5 @@ REQUIRES=wallet
 
 EXPORTS= $(NULL)
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-INCLUDES += \
-    -I$(PUBLIC)\raptor	 \
-    -I$(PUBLIC)\xpcom	 \
-    -I$(PUBLIC)\dom	 \
-    -I$(PUBLIC)\js	 \
-    -I$(PUBLIC)\netlib	 \
-    -I$(PUBLIC)\security \
-    -I$(PUBLIC)\pref	 \
-    -I$(PUBLIC)\wallet
 
 include $(topsrcdir)/config/rules.mk

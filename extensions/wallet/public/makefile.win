@@ -20,8 +20,7 @@ IGNORE_MANIFEST=1
 DEPTH=..\..\..
 
 EXPORTS =			\
-	singsign.h		\
-	wallet.h		\
+	nsIWalletService.h	\
         $(NULL)			
 
 MODULE = wallet

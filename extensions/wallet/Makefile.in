@@ -21,7 +21,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 
-DIRS=public src module
+DIRS=public src
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk

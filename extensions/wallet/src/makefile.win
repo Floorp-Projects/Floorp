@@ -18,10 +18,15 @@
 DEPTH=..\..\..
 
 LIBRARY_NAME=wallet
-CPP_OBJS= .\$(OBJDIR)\wallet.obj
-CSRCS = wallet.cpp
+CPP_OBJS= .\$(OBJDIR)\wallet.obj		\
+	.\$(OBJDIR)\nsWalletFactory.obj		\
+	.\$(OBJDIR)\nsWalletService.obj
+	$(NULL)
 
-CPPSRCS =				\
+CPPSRCS = \
+	nsWalletFactory.cpp		\
+	nsWalletService.cpp		\
+	wallet.cpp			\
 	$(NULL)
 
 MODULE=wallet
