@@ -49,6 +49,7 @@
 #include "prprf.h"
 #include "xcDllStore.h"
 #include "prlog.h"
+#include "prerror.h"
 
 #include "nsVector.h"
 #include "prcmon.h"
@@ -805,6 +806,13 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                    ("nsComponentManager: Library load unsuccessful."));
+            
+            char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
+            if (PR_GetErrorTextLength() < sizeof(errorMsg))
+                PR_GetErrorText(errorMsg);
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                   ("nsComponentManager: Load(%s) FAILED with error:%s", aEntry->dll->GetFullPath(), errorMsg));
+
             return NS_ERROR_FAILURE;
         }
     }
@@ -1855,6 +1863,12 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
     if (dll->Load() == PR_FALSE)
     {
         // Cannot load. Probably not a dll.
+        char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
+        if (PR_GetErrorTextLength() < sizeof(errorMsg))
+            PR_GetErrorText(errorMsg);
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("nsComponentManager: SelfRegisterDll(%s) Load FAILED with error:%s", dll->GetFullPath(), errorMsg));
+
         return(NS_ERROR_FAILURE);
     }
 	
