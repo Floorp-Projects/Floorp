@@ -45,6 +45,8 @@ use vars %::versions,
 
 my $whoid = confirm_login();
 
+my $requiremilestone = 0;
+
 print "Content-type: text/html\n\n";
 
 PutHeader ("Bug processed");
@@ -404,6 +406,11 @@ SWITCH: for ($::FORM{'knob'}) {
     /^accept$/ && CheckonComment( "accept" ) && do {
         DoConfirm();
         ChangeStatus('ASSIGNED');
+        if (Param("musthavemilestoneonaccept")) {
+            if (Param("usetargetmilestone")) {
+                $requiremilestone = 1;
+            }
+        }
         last SWITCH;
     };
     /^clearresolution$/ && CheckonComment( "clearresolution" ) && do {
@@ -611,16 +618,32 @@ foreach my $id (@idlist) {
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ, attachments READ");
+            "keyworddefs READ, groups READ, attachments READ, products READ");
     my @oldvalues = SnapShotBug($id);
+    my %oldhash;
     my $i = 0;
     foreach my $col (@::log_columns) {
+        $oldhash{$col} = $oldvalues[$i];
         if (exists $::FORM{$col}) {
             CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col});
         }
         $i++;
     }
-
+    if ($requiremilestone) {
+        my $value = $::FORM{'target_milestone'};
+        if (!defined $value || $value eq $::dontchange) {
+            $value = $oldhash{'target_milestone'};
+        }
+        SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
+                SqlQuote($oldhash{'product'}));
+        if ($value eq FetchOneColumn()) {
+            SendSQL("UNLOCK TABLES");
+            PuntTryAgain("You must determine a target milestone for bug $id " .
+                         "if you are going to accept it.  (Part of " .
+                         "accepting a bug is giving an estimate of when it " .
+                         "will be fixed.)");
+        }
+    }   
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
         print "
 <H1>Mid-air collision detected!</H1>

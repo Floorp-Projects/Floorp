@@ -427,6 +427,11 @@ DefParam("curmilestone",
          1,
          \&check_numeric);
 
+DefParam("musthavemilestoneonaccept",
+         "If you are using Target Milestone, do you want to require that the milestone be set in order for a user to ACCEPT a bug?",
+         "b",
+         0);
+
 DefParam("useqacontact",
 	 "Do you wish to use the QA Contact field?",
 	 "b",
