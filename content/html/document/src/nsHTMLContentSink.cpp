@@ -231,6 +231,7 @@ public:
   NS_IMETHOD SetParser(nsIParser* aParser);
   virtual void FlushContent(PRBool aNotify);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
+  virtual nsISupports *GetTarget();
 
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
@@ -4407,6 +4408,12 @@ HTMLContentSink::SetDocumentCharset(nsACString& aCharset)
   }
 
   return NS_OK;
+}
+
+nsISupports *
+HTMLContentSink::GetTarget()
+{
+  return mDocument;
 }
 
 #ifdef DEBUG

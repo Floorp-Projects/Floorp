@@ -48,6 +48,7 @@
 #include "nsNetUtil.h"
 #include "nsUTF8Utils.h" // for LossyConvertEncoding
 #include "nsCRT.h"
+#include "nsParser.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -92,7 +93,9 @@ MOZ_DECL_CTOR_COUNTER(nsScanner)
  *  @param   aMode represents the parser mode (nav, other)
  *  @return  
  */
-nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset, PRInt32 aSource)
+nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset,
+                     PRInt32 aSource)
+  : mParser(nsnull)
 {
   MOZ_COUNT_CTOR(nsScanner);
 
@@ -118,8 +121,9 @@ nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset, 
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsACString& aCharset, PRInt32 aSource) : 
-    mFilename(aFilename)
+nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream,
+                     const nsACString& aCharset, PRInt32 aSource)
+  : mFilename(aFilename), mParser(nsnull)
 {
   MOZ_COUNT_CTOR(nsScanner);
 
@@ -162,8 +166,9 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsACString&
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(const nsAString& aFilename,nsIInputStream* aStream,const nsACString& aCharset, PRInt32 aSource) :
-    mFilename(aFilename)
+nsScanner::nsScanner(const nsAString& aFilename, nsIInputStream* aStream,
+                     const nsACString& aCharset, PRInt32 aSource)
+  : mFilename(aFilename), mParser(nsnull)
 {  
   MOZ_COUNT_CTOR(nsScanner);
 
@@ -1326,6 +1331,14 @@ void nsScanner::ReplaceCharacter(nsScannerIterator& aPosition,
 
 void nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf)
 {
+  if (nsParser::sParserDataListeners && mParser &&
+      NS_FAILED(mParser->DataAdded(Substring(aBuf->DataStart(),
+                                             aBuf->DataEnd())))) {
+    // Don't actually append on failure.
+
+    return;
+  }
+
   if (!mSlidingBuffer) {
     mSlidingBuffer = new nsScannerString(aBuf);
     mSlidingBuffer->BeginReading(mCurrentPosition);

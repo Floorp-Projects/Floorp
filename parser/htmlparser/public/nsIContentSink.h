@@ -54,8 +54,7 @@
 class nsIParser;
 
 #define NS_ICONTENT_SINK_IID \
-{ 0xa6cf9052, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
+{0x7f459e15, 0xd559, 0x4c50, {0x91, 0x30, 0x3a, 0xe7, 0x31, 0x46, 0x67, 0xa9}}
 // The base value for the content ID counter.
 // Values greater than or equal to this base value are used
 // by each of the content sinks to assign unique values
@@ -122,6 +121,13 @@ public:
    * document itself.
    */
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset)=0;
+
+  /**
+   * Returns the target object (often a document object) into which
+   * the content built by this content sink is being added, if any
+   * (IOW, may return null).
+   */
+  virtual nsISupports *GetTarget()=0;
 };
 
 #endif /* nsIContentSink_h___ */

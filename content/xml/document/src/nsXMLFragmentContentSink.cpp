@@ -77,6 +77,7 @@ public:
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel();
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
+  virtual nsISupports *GetTarget();
 
   // nsIXMLContentSink
 
@@ -205,6 +206,12 @@ nsXMLFragmentContentSink::SetDocumentCharset(nsACString& aCharset)
 {
   NS_NOTREACHED("fragments shouldn't set charset");
   return NS_OK;
+}
+
+nsISupports *
+nsXMLFragmentContentSink::GetTarget()
+{
+  return mTargetDocument;
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -116,7 +116,8 @@ Initialize(nsIModule* aSelf)
     CNewlineToken::AllocNewline();
     gInitialized = PR_TRUE;
   }
-  return NS_OK;
+
+  return nsParser::Init();
 }
 
 PR_STATIC_CALLBACK(void)
@@ -126,7 +127,7 @@ Shutdown(nsIModule* aSelf)
     nsHTMLTags::ReleaseTable();
     nsHTMLEntities::ReleaseTable();
     nsDTDContext::ReleaseGlobalObjects();
-    nsParser::FreeSharedObjects();
+    nsParser::Shutdown();
     DeleteElementTable();
     CNewlineToken::FreeNewline();
     gInitialized = PR_FALSE;
