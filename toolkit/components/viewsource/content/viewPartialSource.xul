@@ -112,7 +112,7 @@
   <toolbox id="viewSource-toolbox">
     <menubar id="viewSource-main-menubar">
 
-      <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
+      <menu id="file_menu" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup id="filemenu-popup">
           <menuitem key="key_savePage" command="cmd_savePage"
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
@@ -129,7 +129,7 @@
       </menu>
 
       <menu id="menu_edit">
-        <menupopup>
+        <menupopup id="editmenu-popup">
           <menuitem id="menu_undo"/>
           <menuitem id="menu_redo"/>
           <menuseparator/>
@@ -145,8 +145,8 @@
         </menupopup>
       </menu>
 
-      <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
-        <menupopup>
+      <menu id="menu_view" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
+        <menupopup id="viewmenu-popup">
           <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge"
                     label="&menu_textEnlarge.label;" accesskey="&menu_textEnlarge.accesskey;"
                     key="key_textZoomEnlarge"/>
