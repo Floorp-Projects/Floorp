@@ -147,8 +147,11 @@ sub ParseInstallerCfg
 
     while ($line = <fpInstallCfg>)
     {
-      chop $line if (substr($line, -1, 1) eq "\r");
-      ($prop, $value) = ($line =~ m/(\w*)\s+=\s+(.*)\r\n/);
+
+      if (substr($line, -2, 2) eq "\r\n") {
+        $line = substr($line, 0, length($line) - 2) . "\n";
+      }
+      ($prop, $value) = ($line =~ m/(\w*)\s+=\s+(.*)\n/);
 
       if ($prop eq "VersionLanguage") {
         $ENV{WIZ_versionLanguage} = $value;
