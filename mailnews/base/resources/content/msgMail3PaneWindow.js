@@ -20,40 +20,9 @@
 
 /* This is where functions related to the 3 pane window are kept */
 
-/* globals for a particular window */
-var messengerProgID        = "component://netscape/messenger";
-var statusFeedbackProgID   = "component://netscape/messenger/statusfeedback";
-var messageViewProgID      = "component://netscape/messenger/messageview";
-var mailSessionProgID      = "component://netscape/messenger/services/session";
 
-var prefProgID             = "component://netscape/preferences";
-var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
-
-var datasourceProgIDPrefix = "component://netscape/rdf/datasource?name=";
-var accountManagerDSProgID = datasourceProgIDPrefix + "msgaccountmanager";
-var folderDSProgID         = datasourceProgIDPrefix + "mailnewsfolders";
-var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
-
-var messenger;
-var accountManagerDataSource;
-var folderDataSource;
-var messageDataSource;
-var pref;
-var statusFeedback;
-var messageView;
-var msgWindow;
-
-var msgComposeService;
-var mailSession;
-var accountManager;
-var RDF;
 var showPerformance;
 var msgNavigationService;
-
-var msgComposeType;
-var msgComposeFormat;
-var Bundle;
-var BrandBundle;
 
 var gFolderTree;
 var gThreadTree;
@@ -209,7 +178,8 @@ function OnLoadMessenger()
 {
   var beforeLoadMessenger = new Date();
 
-  CreateGlobals();
+  CreateMailWindowGlobals();
+  Create3PaneGlobals();
   verifyAccounts();
     
   loadStartPage();
@@ -217,7 +187,7 @@ function OnLoadMessenger()
 
 	messenger.SetWindow(window, msgWindow);
 
-	AddDataSources();
+	InitializeDataSources();
 	InitPanes();
 
 
@@ -312,50 +282,12 @@ function OnUnloadMessenger()
 }
 
 
-function CreateGlobals()
+function Create3PaneGlobals()
 {
-	// get the messenger instance
-	messenger = Components.classes[messengerProgID].createInstance();
-	messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
-
-	//Create datasources
-	accountManagerDataSource = Components.classes[accountManagerDSProgID].createInstance();
-	folderDataSource         = Components.classes[folderDSProgID].createInstance();
-	messageDataSource        = Components.classes[messageDSProgID].createInstance();
-
-	pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
-
-	//Create windows status feedback
-	statusFeedback           = Components.classes[statusFeedbackProgID].createInstance();
-	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
-
-	//Create message view object
-	messageView = Components.classes[messageViewProgID].createInstance();
-	messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
-
-	//Create message window object
-	msgWindow = Components.classes[msgWindowProgID].createInstance();
-	msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
-
-	msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
-	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
-
-	mailSession = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession); 
-
-	accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
-
-	RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
-	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-
 	showPerformance = pref.GetBoolPref('mail.showMessengerPerformance');
 
 	msgNavigationService = Components.classes['component://netscape/messenger/msgviewnavigationservice'].getService();
 	msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
-
-	msgComposeType = Components.interfaces.nsIMsgCompType;
-	msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
-	Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
-    BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
 }
 
@@ -475,56 +407,6 @@ function AddToSession()
     }
 }
 
-function InitMsgWindow()
-{
-	msgWindow.statusFeedback = statusFeedback;
-	msgWindow.messageView = messageView;
-	msgWindow.msgHeaderSink = messageHeaderSink;
-  msgWindow.SetDOMWindow(window);
-}
-
-function AddDataSources()
-{
-
-	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	//to move menu item
-	SetupMoveCopyMenus('moveMenu', accountManagerDataSource, folderDataSource);
-
-	//to copy menu item
-	SetupMoveCopyMenus('copyMenu', accountManagerDataSource, folderDataSource);
-
-	//To threadpane move context menu
-	SetupMoveCopyMenus('threadPaneContext-moveMenu', accountManagerDataSource, folderDataSource);
-
-	//To threadpane copy content menu
-	SetupMoveCopyMenus('threadPaneContext-copyMenu', accountManagerDataSource, folderDataSource);
-
-	//To FileButton menu
-	SetupMoveCopyMenus('FileButtonMenu', accountManagerDataSource, folderDataSource);
-	//Add statusFeedback
-
-	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = msgWindow;
-
-	msgDS = messageDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = msgWindow;
-
-	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = msgWindow;
-
-}	
-
-function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
-{
-	var menu = document.getElementById(menuid);
-	if(menu)
-	{
-		menu.database.AddDataSource(accountManagerDataSource);
-		menu.database.AddDataSource(folderDataSource);
-		menu.setAttribute('ref', 'msgaccounts:/');
-	}
-}
 
 function InitPanes()
 {
@@ -537,6 +419,18 @@ function InitPanes()
 		OnLoadFolderPane(folderTree);
 		
 	SetupCommandUpdateHandlers();
+}
+
+function InitializeDataSources()
+{
+	//Setup common mailwindow stuff.
+	AddDataSources();
+
+	//To threadpane move context menu
+	SetupMoveCopyMenus('threadPaneContext-moveMenu', accountManagerDataSource, folderDataSource);
+
+	//To threadpane copy content menu
+	SetupMoveCopyMenus('threadPaneContext-copyMenu', accountManagerDataSource, folderDataSource);
 }
 
 function OnLoadFolderPane(folderTree)
@@ -695,6 +589,17 @@ function GetSelectedFolder()
 
 }
 
+function GetSelectedMessage()
+{
+	var tree = GetThreadTree();
+	var selection = tree.selectedItems;
+	if(selection.length > 0)
+		return selection[0];
+	else
+		return null;
+
+}
+
 function ThreadPaneOnClick(event)
 {
     var targetclass = event.target.getAttribute('class');
@@ -724,13 +629,23 @@ function ThreadPaneDoubleClick(treeitem)
 {
 	if(IsSpecialFolderSelected("Drafts"))
 	{
-		ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default);
+		var loadedFolder = GetLoadedMsgFolder();
+		var messageArray = GetSelectedMessages();
+
+		ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default, loadedFolder, messageArray);
 	}
 	else if(IsSpecialFolderSelected("Templates"))
 	{
-		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default);
+		var loadedFolder = GetLoadedMsgFolder();
+		var messageArray = GetSelectedMessages();
+		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
+	}
+	else
+	{
+		MsgOpenNewWindowForMessage();
 	}
 }
+
 
 function GetServer(uri)
 {
@@ -807,7 +722,7 @@ function FolderPaneDoubleClick(treeitem)
 	// don't open a new msg window if we are double clicking on a server.
 	// only do it for folders or newsgroups
 	if (!isServer) {
-		MsgOpenNewWindowForFolder(treeitem);
+		MsgOpenNewWindowForFolder(treeitem.getAttribute('id'));
 	}
 }
 
@@ -840,5 +755,468 @@ function ClearActiveThreadPaneSortColumn()
 		activeColumn.removeAttribute("sortActive");
 		activeColumn = "";
 	}
+
+}
+
+// Controller object for folder pane
+var FolderPaneController =
+{
+   supportsCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_delete":
+			case "button_delete":
+				return true;
+			
+			case "cmd_selectAll":
+			case "cmd_undo":
+			case "cmd_redo":
+			case "cmd_cut":
+			case "cmd_copy":
+			case "cmd_paste":
+				return true;
+				
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+        //		dump("FolderPaneController.IsCommandEnabled(" + command + ")\n");
+		switch ( command )
+		{
+			case "cmd_selectAll":
+			case "cmd_undo":
+			case "cmd_redo":
+			case "cmd_cut":
+			case "cmd_copy":
+			case "cmd_paste":
+				return false;
+				
+			case "cmd_delete":
+			case "button_delete":
+				if ( command == "cmd_delete" )
+					goSetMenuValue(command, 'valueFolder');
+				var folderTree = GetFolderTree();
+				if ( folderTree && folderTree.selectedItems &&
+                     folderTree.selectedItems.length > 0)
+                {
+					var specialFolder = null;
+					try {
+                    	specialFolder = folderTree.selectedItems[0].getAttribute('SpecialFolder');
+					}
+					catch (ex) {
+						//dump("specialFolder failure: " + ex + "\n");
+					}
+                    if (specialFolder == "Inbox" || specialFolder == "Trash")
+                       return false;
+                    else
+					   return true;
+                }
+				else
+					return false;
+			
+			default:
+				return false;
+		}
+	},
+
+	doCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_delete":
+			case "button_delete":
+				MsgDeleteFolder();
+				break;
+		}
+	},
+	
+	onEvent: function(event)
+	{
+		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+        {
+			goSetMenuValue('cmd_delete', 'valueDefault');
+            goSetMenuValue('cmd_undo', 'valueDefault');
+            goSetMenuValue('cmd_redo', 'valueDefault');
+        }
+	}
+};
+
+
+// Controller object for thread pane
+var ThreadPaneController =
+{
+   supportsCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_undo":
+			case "cmd_redo":
+			case "cmd_selectAll":
+				return true;
+
+			case "cmd_cut":
+			case "cmd_copy":
+			case "cmd_paste":
+				return true;
+				
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				return true;
+			
+			case "cmd_cut":
+			case "cmd_copy":
+			case "cmd_paste":
+				return false;
+				
+			case "cmd_undo":
+			case "cmd_redo":
+               return SetupUndoRedoCommand(command);
+
+			default:
+				return false;
+		}
+	},
+
+	doCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				var threadTree = GetThreadTree();
+				if ( threadTree )
+				{
+					threadTree.selectAll();
+					if ( threadTree.selectedItems && threadTree.selectedItems.length != 1 )
+						ClearMessagePane();
+				}
+				break;
+			
+			case "cmd_undo":
+				messenger.Undo(msgWindow);
+				break;
+			
+			case "cmd_redo":
+				messenger.Redo(msgWindow);
+				break;
+		}
+	},
+	
+	onEvent: function(event)
+	{
+		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+        {
+			goSetMenuValue('cmd_undo', 'valueDefault');
+			goSetMenuValue('cmd_redo', 'valueDefault');
+		}
+	}
+};
+
+// DefaultController object (handles commands when one of the trees does not have focus)
+var DefaultController =
+{
+   supportsCommand: function(command)
+	{
+
+		switch ( command )
+		{
+			case "cmd_delete":
+			case "button_delete":
+			case "cmd_shiftDelete":
+			case "cmd_nextUnreadMsg":
+			case "cmd_nextUnreadThread":
+				return true;
+            
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_delete":
+			case "button_delete":
+			case "cmd_shiftDelete":
+				var threadTree = GetThreadTree();
+				var numSelected = 0;
+				if ( threadTree && threadTree.selectedItems )
+					numSelected = threadTree.selectedItems.length;
+				if ( command == "cmd_delete")
+				{
+					if ( numSelected < 2 )
+						goSetMenuValue(command, 'valueMessage');
+					else
+						goSetMenuValue(command, 'valueMessages');
+				}
+				return ( numSelected > 0 );
+			case "cmd_nextUnreadMsg":
+			case "cmd_nextUnreadThread":
+			    //Input and TextAreas should get access to the keys that cause these commands.
+				//Currently if we don't do this then we will steal the key away and you can't type them
+				//in these controls. This is a bug that should be fixed and when it is we can get rid of
+				//this.
+				var focusedElement = top.document.commandDispatcher.focusedElement;
+				if(focusedElement)
+				{
+					var name = focusedElement.nodeName;
+					return ((name != "INPUT") && (name != "TEXTAREA"));
+				}
+				else
+				{
+					return true;
+				}
+			default:
+				return false;
+		}
+	},
+
+	doCommand: function(command)
+	{
+   		//dump("ThreadPaneController.doCommand(" + command + ")\n");
+
+		switch ( command )
+		{
+			case "cmd_delete":
+				MsgDeleteMessage(false, false);
+				break;
+			case "cmd_shiftDelete":
+				MsgDeleteMessage(true, false);
+				break;
+			case "button_delete":
+				MsgDeleteMessage(false, true);
+				break;
+			case "cmd_nextUnreadMsg":
+				MsgNextUnreadMessage();
+				break;
+			case "cmd_nextUnreadThread":
+				MsgNextUnreadThread();
+				break;
+		}
+	},
+	
+	onEvent: function(event)
+	{
+		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+        {
+			goSetMenuValue('cmd_delete', 'valueDefault');
+        }
+	}
+};
+
+
+function CommandUpdate_Mail()
+{
+	/*var messagePane = top.document.getElementById('messagePane');
+	var drawFocusBorder = messagePane.getAttribute('draw-focus-border');
+	
+	if ( MessagePaneHasFocus() )
+	{
+		if ( !drawFocusBorder )
+			messagePane.setAttribute('draw-focus-border', 'true');
+	}
+	else
+	{
+		if ( drawFocusBorder )
+			messagePane.removeAttribute('draw-focus-border');
+	}*/
+		
+	goUpdateCommand('cmd_delete');
+	goUpdateCommand('button_delete');
+	goUpdateCommand('cmd_shiftDelete');
+	goUpdateCommand('cmd_nextUnreadMsg');
+	goUpdateCommand('cmd_nextUnreadThread');
+}
+
+function SetupUndoRedoCommand(command)
+{
+    // dump ("--- SetupUndoRedoCommand: " + command + "\n");
+    var canUndoOrRedo = false;
+    var txnType = 0;
+
+    if (command == "cmd_undo")
+    {
+        canUndoOrRedo = messenger.CanUndo();
+        txnType = messenger.GetUndoTransactionType();
+    }
+    else
+    {
+        canUndoOrRedo = messenger.CanRedo();
+        txnType = messenger.GetRedoTransactionType();
+    }
+
+    if (canUndoOrRedo)
+    {
+        switch (txnType)
+        {
+        default:
+        case 0:
+            goSetMenuValue(command, 'valueDefault');
+            break;
+        case 1:
+            goSetMenuValue(command, 'valueDeleteMsg');
+            break;
+        case 2:
+            goSetMenuValue(command, 'valueMoveMsg');
+            break;
+        case 3:
+            goSetMenuValue(command, 'valueCopyMsg');
+            break;
+        }
+    }
+    return canUndoOrRedo;
+}
+
+
+function CommandUpdate_UndoRedo()
+{
+    ShowMenuItem("menu_undo", true);
+    EnableMenuItem("menu_undo", SetupUndoRedoCommand("cmd_undo"));
+    ShowMenuItem("menu_redo", true);
+    EnableMenuItem("menu_redo", SetupUndoRedoCommand("cmd_redo"));
+}
+
+/*function MessagePaneHasFocus()
+{
+	var focusedWindow = top.document.commandDispatcher.focusedWindow;
+	var messagePaneWindow = top.frames['messagepane'];
+	
+	if ( focusedWindow && messagePaneWindow && (focusedWindow != top) )
+	{
+		var hasFocus = IsSubWindowOf(focusedWindow, messagePaneWindow, false);
+		dump("...........Focus on MessagePane = " + hasFocus + "\n");
+		return hasFocus;
+	}
+	
+	return false;
+}
+
+function IsSubWindowOf(search, wind, found)
+{
+	//dump("IsSubWindowOf(" + search + ", " + wind + ", " + found + ")\n");
+	if ( found || (search == wind) )
+		return true;
+	
+	for ( index = 0; index < wind.frames.length; index++ )
+	{
+		if ( IsSubWindowOf(search, wind.frames[index], false) )
+			return true;
+	}
+	return false;
+}*/
+
+
+function SetupCommandUpdateHandlers()
+{
+	dump("SetupCommandUpdateHandlers\n");
+
+	var widget;
+	
+	// folder pane
+	widget = GetFolderTree();
+	if ( widget )
+		widget.controllers.appendController(FolderPaneController);
+	
+	// thread pane
+	widget = GetThreadTree();
+	if ( widget )
+		widget.controllers.appendController(ThreadPaneController);
+		
+	top.controllers.insertControllerAt(0, DefaultController);
+}
+
+function GetSelectedMsgFolders()
+{
+	var folderTree = GetFolderTree();
+	var selectedFolders = folderTree.selectedItems;
+	var numFolders = selectedFolders.length;
+
+	var folderArray = new Array(numFolders);
+
+	for(var i = 0; i < numFolders; i++)
+	{
+		var folder = selectedFolders[i];
+		var folderUri = folder.getAttribute("id");
+		var folderResource = RDF.GetResource(folderUri);
+		var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+		if(msgFolder)
+		{
+			folderArray[i] = msgFolder;	
+		}
+	}
+	return folderArray;
+}
+
+function GetSelectedMessages()
+{
+	var threadTree = GetThreadTree();
+	var selectedMessages = threadTree.selectedItems;
+	var numMessages = selectedMessages.length;
+
+	var messageArray = new Array(numMessages);
+
+	for(var i = 0; i < numMessages; i++)
+	{
+		var messageNode = selectedMessages[i];
+		var messageUri = messageNode.getAttribute("id");
+		var messageResource = RDF.GetResource(messageUri);
+		var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+		if(message)
+		{
+			messageArray[i] = message;	
+		}
+	}
+	return messageArray;
+}
+
+function GetLoadedMsgFolder()
+{
+	var loadedFolder = GetThreadTreeFolder();
+	var folderUri = loadedFolder.getAttribute("ref");
+	var folderResource = RDF.GetResource(folderUri);
+	if(folderResource)
+	{
+		var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+		return msgFolder;
+	}
+	return null;
+}
+
+function GetLoadedMessage()
+{
+	var messageResource = RDF.GetResource(gCurrentDisplayedMessage);
+	if(messageResource)
+	{
+		var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+		return message;
+	}
+	return null;
+
+}
+
+function GetCompositeDataSource(command)
+{
+	if(command == "GetNewMessages" || command == "Copy" || command == "NewFolder")
+	{
+		var folderTree = GetFolderTree();
+		return folderTree.database;
+	}
+
+	return null;
 
 }

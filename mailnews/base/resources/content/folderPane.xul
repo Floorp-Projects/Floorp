@@ -30,8 +30,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
-	<tree style="width:100px; height: 600px;" flex="100%"
-	      rdf:datasources="rdf:null"
+	<tree rdf:datasources="rdf:null"
 	      id="folderTree" class="mail-folders"
 	      rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
 		  onselect="top.FolderPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"

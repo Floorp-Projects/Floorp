@@ -303,9 +303,6 @@ Rights Reserved.
 </popupset>
 
 
-
-
-
     <menubar id="mailMenubar"/>
 
 
@@ -314,25 +311,21 @@ Rights Reserved.
 
 
 	<box align="horizontal" style="height:100px" flex="1">
-		<box id="sidebar-box">
-			<splitter class="sidebar-main-header" collapse="after" persist="state">
-				<html:div class="panel-bar">&mail-sidebar-header.label;</html:div>
-			</splitter>
-			<tree id="folderTree" style="width:100px; height: 600px;" flex="1" context="folderPaneContext"/>
-		</box>
+		<box id="sidebar-box"/>
+		<splitter id="sidebar-splitter" state="collapsed"/>
           
-		<splitter id="sidebar-splitter"/>
-
 		<box align="vertical" flex="1">
-     
-			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
-
+			<box align ="horizontal" flex="1">
+				<tree id="folderTree" flex="1" style="width:0px" context="folderPaneContext"/>
+				<splitter class="gray-horizontal-splitter" collapse="after"  persist="state"/>
+				<tree id="threadTree" flex="2" style="width:0px" context="threadPaneContext"/>
+			</box>
 			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePnae() -->
 			<splitter id="gray_horizontal_splitter" collapse="after" persist="state"
 			 onclick="OnClickThreadAndMessagePaneSplitter()"/>
 			
 			<!-- msg header view -->
-			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
+			<box id="messagepanebox" align="vertical" flex="4" persist="collapsed">
 				<toolbox id="msgHeaderView"/>
     
 				<!-- message view -->

@@ -46,8 +46,6 @@ interface nsIMessenger : nsISupports {
 
     readonly attribute nsITransactionManager transactionManager;
 
-    void GetNewMessages(in nsIRDFCompositeDataSource database,
-                        in nsIRDFResource folder);
     void SetWindow(in nsIDOMWindow ptr, in nsIMsgWindow msgWindow);
     void DoPrint();
     void DoPrintPreview();
@@ -83,10 +81,6 @@ interface nsIMessenger : nsISupports {
 	void markThreadRead(in nsIRDFCompositeDataSource database,
 						 in nsIMsgFolder folder,
 						 in nsIMsgThread thread);
-	void NewFolder(in nsIRDFCompositeDataSource database,
-                   in nsIRDFResource parentFolder,
-				   in wstring name);
-
     void RenameFolder(in nsIRDFCompositeDataSource db, 
                       in nsIRDFResource folder, in wstring name);
     void CompactFolder(in nsIRDFCompositeDataSource db,

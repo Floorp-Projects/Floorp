@@ -250,27 +250,6 @@ nsMessenger::~nsMessenger()
 
 NS_IMPL_ISUPPORTS(nsMessenger, NS_GET_IID(nsIMessenger))
 
-nsresult
-nsMessenger::GetNewMessages(nsIRDFCompositeDataSource *db,
-                            nsIRDFResource *folderResource)
-{
-	nsresult rv=NS_OK;
-	nsCOMPtr<nsISupportsArray> folderArray;
-
-	if(!folderResource || !db)
-		return NS_ERROR_NULL_POINTER;
-
-	if(NS_FAILED(NS_NewISupportsArray(getter_AddRefs(folderArray))))
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	folderArray->AppendElement(folderResource);
-
-	DoCommand(db, NC_RDF_GETNEWMESSAGES, folderArray, nsnull);
-
-	return rv;
-}
-
-
 NS_IMETHODIMP    
 nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 {
@@ -1179,40 +1158,7 @@ nsMessenger::MarkMessagesFlagged(nsIRDFCompositeDataSource *database,
 
 }
 
-NS_IMETHODIMP
-nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIRDFResource *parentFolderResource,
-						const PRUnichar *name)
-{
-	nsresult rv;
-	nsCOMPtr<nsISupportsArray> nameArray, folderArray;
 
-	if(!parentFolderResource || !name)
-		return NS_ERROR_NULL_POINTER;
-
-	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
-	if(NS_FAILED(rv))
-	{
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
-
-	rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
-	if(NS_FAILED(rv))
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	folderArray->AppendElement(parentFolderResource);
-
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-	if(NS_SUCCEEDED(rv))
-	{
-		nsAutoString nameStr = name;
-		nsCOMPtr<nsIRDFLiteral> nameLiteral;
-
-		rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
-		nameArray->AppendElement(nameLiteral);
-		rv = DoCommand(database, NC_RDF_NEWFOLDER, folderArray, nameArray);
-	}
-	return rv;
-}
 
 NS_IMETHODIMP
 nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
@@ -1601,11 +1547,6 @@ nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
   {
     m_fileSpec->Flush();
     m_fileSpec->CloseStream();
-    if (NS_FAILED(rv)) goto done;
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-    if (NS_FAILED(rv)) goto done;
-    nsCOMPtr<nsIRDFResource> res;
-    rv = rdf->GetResource(m_templateUri, getter_AddRefs(res));
     if (NS_FAILED(rv)) goto done;
     if (m_templateUri) { // ** save as template goes here
         NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);

@@ -1228,4 +1228,29 @@ nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer)
 	return NS_OK;
 }
 
-CMDLINEHANDLER_IMPL(nsNntpService,"-news","general.startup.news","chrome://messenger/content/","Start with news.",NS_NEWSSTARTUPHANDLER_PROGID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)
+CMDLINEHANDLER3_IMPL(nsNntpService,"-news","general.startup.news","Start with news.",NS_NEWSSTARTUPHANDLER_PROGID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)
+
+NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask) 
+{ 
+    if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefService, kCPrefServiceCID, &rv);
+	if (NS_SUCCEEDED(rv))
+	{
+		PRInt32 layout;
+		rv = prefService->GetIntPref("mail.pane_config", &layout);		
+		if(NS_SUCCEEDED(rv))
+		{
+			if(layout == 0)
+				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/");
+			else
+				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/mail3PaneWindowVertLayout.xul");
+
+			return NS_OK;
+
+		}	
+	}
+	*aChromeUrlForTask = PL_strdup("chrome://messenger/content/"); 
+    return NS_OK; 
+}
+

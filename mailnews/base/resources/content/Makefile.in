@@ -32,6 +32,12 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/default
 
 EXPORT_RESOURCE_SAMPLES = \
 		messenger.xul \
+		mail3PaneWindowVertLayout.xul \
+		mailWindowOverlay.xul \
+		mailWindowOverlay.js \
+		mailWindow.js \
+		messageWindow.xul \
+		messageWindow.js \
 		folderPane.xul \
 		threadPane.xul \
 		msgHdrViewOverlay.xul \
@@ -39,6 +45,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		msgHdrViewAddresses.js \
 		widgetglue.js \
 		commandglue.js \
+		mailCommands.js \
 		shareglue.js \
 		subscribe.js \
 		subscribe.xul \

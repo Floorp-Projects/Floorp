@@ -28,10 +28,12 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgFolderCache.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap);
 NS_IMPL_THREADSAFE_RELEASE(nsMessengerBootstrap);
@@ -73,4 +75,29 @@ nsMessengerBootstrap::Shutdown()
 }
 
 
-CMDLINEHANDLER_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","chrome://messenger/content/","Start with mail.",NS_MAILSTARTUPHANDLER_PROGID,"Mail Cmd Line Handler",PR_FALSE,"", PR_TRUE)
+CMDLINEHANDLER3_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","Start with mail.",NS_MAILSTARTUPHANDLER_PROGID,"Mail Cmd Line Handler",PR_FALSE,"", PR_TRUE)
+
+NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask) 
+{ 
+    if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+	if (NS_SUCCEEDED(rv))
+	{
+		PRInt32 layout;
+		rv = prefService->GetIntPref("mail.pane_config", &layout);		
+		if(NS_SUCCEEDED(rv))
+		{
+			if(layout == 0)
+				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/");
+			else
+				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/mail3PaneWindowVertLayout.xul");
+
+			return NS_OK;
+
+		}	
+	}
+	*aChromeUrlForTask = PL_strdup("chrome://messenger/content/"); 
+    return NS_OK; 
+}
+

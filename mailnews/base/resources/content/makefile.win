@@ -27,6 +27,12 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) messenger.xul			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) mail3PaneWindowVertLayout.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) mailWindowOverlay.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) mailWindowOverlay.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) mailWindow.js			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) messageWindow.xul			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) messageWindow.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) folderPane.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) threadPane.xul 			$(DIST)\bin\chrome\messenger\content\default
   $(MAKE_INSTALL) msgHdrViewOverlay.xul 	$(DIST)\bin\chrome\messenger\content\default
@@ -34,6 +40,7 @@ install::
   $(MAKE_INSTALL) msgHdrViewAddresses.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) widgetglue.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) commandglue.js			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) mailCommands.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) shareglue.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) subscribeDialog.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) subscribe.xul			$(DIST)\bin\chrome\messenger\content\default
@@ -54,6 +61,12 @@ install::
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\messenger.xul
+	rm -f $(DIST)\chrome\messenger\content\default\mail3PaneWindowVertLayout.xul
+	rm -f $(DIST)\chrome\messenger\content\default\mailWindowOverlay.xul
+	rm -f $(DIST)\chrome\messenger\content\default\mailWindowOverlay.js
+	rm -f $(DIST)\chrome\messenger\content\default\mailWindow.js
+	rm -f $(DIST)\chrome\messenger\content\default\messageWindow.xul
+	rm -f $(DIST)\chrome\messenger\content\default\messageWindow.js
   rm -f $(DIST)\chrome\messenger\content\default\msgHdrViewOverlay.xul
   rm -f $(DIST)\chrome\messenger\content\default\msgHdrViewOverlay.js
   rm -f	$(DIST)\chrome\messenger\content\default\msgHdrViewAddresses.js
@@ -61,6 +74,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\threadPane.xul
 	rm -f $(DIST)\chrome\messenger\content\default\widgetglue.js
 	rm -f $(DIST)\chrome\messenger\content\default\commandglue.js
+	rm -f $(DIST)\chrome\messenger\content\default\mailCommands.js
 	rm -f $(DIST)\chrome\messenger\content\default\shareglue.js
 	rm -f $(DIST)\chrome\messenger\content\default\subscribeDialog.xul
 	rm -f $(DIST)\chrome\messenger\content\default\subscribe.xul

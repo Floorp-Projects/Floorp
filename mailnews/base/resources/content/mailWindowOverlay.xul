@@ -1,0 +1,567 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+-->
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
+
+<overlay
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:nc="http://home.netscape.com/NC-rdf#"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script src="chrome://messenger/content/mailCommands.js"/>
+<html:script src="chrome://messenger/content/mailWindowOverlay.js"/>
+
+<broadcasterset id="broadcasterset">
+	<!-- File Menu -->
+	<broadcaster id="cmd_newNavigator"/>
+	<broadcaster id="cmd_newMessage"/>
+	<broadcaster id="cmd_close" oncommand="CloseMessenger()"/>
+ 	<broadcaster id="cmd_quit"/>
+	<!-- Edit Menu -->
+	<broadcaster id="cmd_undo"
+	             valueDeleteMsg="&undoDeleteMsgCmd.label;"
+				 valueMoveMsg="&undoMoveMsgCmd.label;"
+				 valueCopyMsg="&undoCopyMsgCmd.label;"
+				 valueDefault="&undoDefaultCmd.label;"/>
+	<broadcaster id="cmd_redo"
+	             valueDeleteMsg="&redoDeleteMsgCmd.label;"
+				 valueMoveMsg="&redoMoveMsgCmd.label;"
+				 valueCopyMsg="&redoCopyMsgCmd.label;"
+				 valueDefault="&redoDefaultCmd.label;"/>
+	<broadcaster id="cmd_cut"/>
+	<broadcaster id="cmd_copy"/>
+	<broadcaster id="cmd_paste"/>
+	<broadcaster id="cmd_delete"
+				 valueFolder="&deleteFolderCmd.label;"
+				 valueMessage="&deleteMsgCmd.label;"
+				 valueMessages="&deleteMsgsCmd.label;"/>
+	<broadcaster id="cmd_selectAll"/>
+	<broadcaster id="cmd_preferences"/>
+
+	<broadcaster id="Messenger:Throbber" busy="false"/>
+	<broadcaster id="Messenger:Status"/>
+	<broadcaster id="Messenger:LoadingProgress"/>
+	
+	<broadcaster id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
+	<broadcaster id="cmd_nextUnreadThread" oncommand="goDoCommand('cmd_nextUnreadThread')" disabled="true"/>
+</broadcasterset>
+
+<menubar id="mailMenubar">
+	<menu id="menu_File">
+		<menupopup id="menu_FilePopup">
+			<menuitem value="&newMessage.label;"
+			 accessKey="&newMessage.accesskey;"
+			 key="key_newMessage"
+			 observes="cmd_newMessage"/>
+			<menu id="menu_New">
+				<menupopup id="menu_NewPopup">
+					<menuitem value="&newFolderCmd.label;" oncommand="MsgNewFolder();"/>
+					<menuitem value="&newAccountCmd.label;" oncommand="MsgAccountWizard();"/>
+					<menuseparator/>
+					<menuitem id="menu_newNavigator"/>
+					<menuitem id="menu_newMessage"/>
+					<menuitem id="cmd_newCard"/>
+				</menupopup>
+			</menu>
+			<menuitem value="&openAttachmentCmd.label;" disabled="true" oncommand="MsgOpenAttachment();"/>
+			<menuseparator/>
+			<menuitem id="menu_close"/>
+			<menu value="&saveAsMenu.label;" accessKey="&saveAsMenu.accesskey;">
+				<menupopup>
+					<menuitem value="&saveAsFileCmd.label;"
+					 accessKey="&saveAsFileCmd.accesskey;"
+					 oncommand="MsgSaveAsFile();"/>
+					<menuitem value="&saveAsTemplateCmd.label;"
+					 accessKey="&saveAsTemplateCmd.accesskey;"
+					 oncommand="MsgSaveAsTemplate();"/>
+				</menupopup>
+			</menu>
+			<menuseparator/>
+			<menuitem value="&getNewMsgCmd.label;"
+			 accessKey="&getNewMsgCmd.accesskey;"
+			 oncommand="MsgGetMessage();"/>
+			<menuitem value="&sendUnsentCmd.label;"
+			 accessKey="&sendUnsentCmd.accesskey;"
+			 oncommand="MsgSendUnsentMsg();"/>
+			<menuitem value="&emptyTrashCmd.label;" oncommand="MsgEmptyTrash();"/>
+			<menuitem value="&subscribeCmd.label;"
+			 accessKey="&subscribeCmd.accesskey;"
+			 oncommand="MsgSubscribe();"/>
+			<menuseparator/>
+			<menuitem value="&renameFolder.label;" oncommand="MsgRenameFolder();"/>
+			<menuitem value="&compactFolder.label;" oncommand="MsgCompactFolder();"/>
+			<menuseparator/>
+			<menuitem value="&importCmd.label;" disabled="true" oncommand="MsgImport();"/>
+			<menuseparator/>
+			<menu value="&offlineMenu.label;" disabled="true">
+				<menupopup>
+					<menuitem value="&workOfflineCmd.label;" disabled="true" oncommand="MsgWorkOffline();"/>
+					<menuitem value="&syncCmd.label;" disabled="true" oncommand="MsgSynchronize();"/>
+					<menuitem value="&getSelectedCmd.label;" disabled="true" oncommand="MsgGetSelectedMsg();"/>
+					<menuitem value="&getFlaggedCmd.label;" disabled="true" oncommand="MsgGetFlaggedMsg();"/>
+				</menupopup>
+			</menu>
+			<menuseparator/>
+			<menuitem id="menu_pageSetup"/>
+			<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
+			<menuitem value="&printCmd.label;" oncommand="PrintEnginePrint();"/>
+			<menuseparator/>
+		</menupopup>
+	</menu>
+
+	<menu id="menu_Edit" onclick="CommandUpdate_UndoRedo();">
+		<menupopup>
+			<menuitem id="menu_undo" value="&undoDefaultCmd.label;" key="key_undo" oncommand="Undo()"/>
+			<menuitem id="menu_redo" value="&redoDefaultCmd.label;" key="key_redo" oncommand="Redo()"/>
+			<menuseparator/>
+			<menuitem id="menu_cut"/>
+			<menuitem id="menu_copy"/>
+			<menuitem id="menu_paste"/>
+			<menuseparator/>
+			<menuitem id="menu_delete"/>
+			<menuseparator/>
+			<menuitem id="menu_selectAll"/>
+			<menuitem value="&selectThreadCmd.label;" disabled="true" oncommand="MsgSelectThread();"/>
+			<menuitem value="&selectFlaggedCmd.label;" disabled="true" oncommand="MsgSelectFlaggedMsg();"/>
+			<menuseparator/>
+			<menuitem value="&spamFiltersCmd.label;" disabled="true"/>
+			<menuitem value="&filtersCmd.label;" disabled="true" oncommand="MsgFilters();"/>
+			<menuitem value="&folderPropsCmd.label;" disabled="true" oncommand="MsgFolderProperties();"/>
+			<menuseparator/>
+			<menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
+			<menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul')"/>
+		</menupopup>
+	</menu>
+
+	<menu id="menu_View">
+		<menupopup>
+			<menu id="menu_Toolbars">
+				<menupopup>
+					<menuitem id="menu_showMessengerToolbar"
+					 value="&showMessengerToolbarCmd.label;"
+					 accesskey="&showMessengerToolbarCmd.accesskey;"
+					 oncommand="goToggleToolbar('msgToolbar', 'menu_showMessengerToolbar')"
+					 checked="true"/>
+					<menuitem id="menu_showLocationToolbar"
+					 value="&showLocationToolbarCmd.label;"
+					 accesskey="&showLocationToolbarCmd.accesskey;"
+					 disabled="true"/>
+					<menuitem id="menu_showTaskbar"/>
+				</menupopup>
+			</menu>
+			<menuitem value="&showMessageCmd.label;" oncommand="MsgToggleMessagePane();"/>
+			<menuseparator/>
+			<menu value="&sortMenu.label;">
+				<menupopup>
+					<menuitem value="&sortByDateCmd.label;" oncommand="MsgSortByDate();"/>
+					<menuitem value="&sortByFlagCmd.label;" disabled="true" oncommand="MsgSortByFlag();"/>
+					<menuitem value="&sortByPriorityCmd.label;" oncommand="MsgSortByPriority();"/>
+					<menuitem value="&sortBySenderCmd.label;" oncommand="MsgSortBySender();"/>
+					<menuitem value="&sortBySizeCmd.label;" oncommand="MsgSortBySize();"/>
+					<menuitem value="&sortByStatusCmd.label;" oncommand="MsgSortByStatus();"/>
+					<menuitem value="&sortBySubjectCmd.label;" oncommand="MsgSortBySubject();"/>
+					<menuitem value="&sortByUnreadCmd.label;" disabled="true" oncommand="MsgSortByUnread();"/>
+					<menuitem value="&sortByOrderReceivedCmd.label;"  oncommand="MsgSortByOrderReceived();"/>
+					<menuseparator/>
+					<menuitem value="&sortAscendCmd.label;" disabled="true" oncommand="MsgSortAscending();"/>
+					<menuitem value="&sortDescendCmd.label;" disabled="true" oncommand="MsgSortDescending();"/>
+				</menupopup>
+			</menu>
+			<menu value="&msgsMenu.label;" disabled="true">
+				<menupopup>
+					<menuitem value="&threadsMsgsCmd.label;" disabled="true" oncommand="MsgViewAllThreadMsgs();"/>
+					<menuitem value="&allMsgsCmd.label;" disabled="true" oncommand="MsgViewAllMsgs();"/>
+					<menuitem value="&unreadMsgsCmd.label;" disabled="true" oncommand="MsgViewUnreadMsg();"/>
+					<menuitem value="&threadsWithUnreadMsgsCmd.label;" disabled="true" oncommand="MsgViewThreadsUnread();"/>
+					<menuitem value="&watchedThreadsMsgsCmd.label;" disabled="true" oncommand="MsgViewWatchedThreadsUnread();"/>
+					<menuseparator/>
+					<menuitem value="&ignoreThreadMsgsCmd.label;" disabled="true" oncommand="MsgViewIgnoreThread();"/>
+				</menupopup>
+			</menu>
+			<menu id="viewheadersmenu" value="&headersMenu.label;" disabled="true">
+				<menupopup>
+					<menuitem id="viewallheaders" type="radio" name="viewheadergroup" value="&headersAllCmd.label;" disabled="true" oncommand="MsgViewAllHeaders();"/>
+					<menuitem id="viewnormalheaders" type="radio" name="viewheadergroup" value="&headersNormalCmd.label;" disabled="true" oncommand="MsgViewNormalHeaders();"/>
+					<menuitem id="viewbriefheaders" type="radio" name="viewheadergroup" value="&headersBriefCmd.label;" disabled="true" oncommand="MsgViewBriefHeaders();"/>
+				</menupopup>
+			</menu>
+			<menuseparator/>
+			<menuitem value="&viewAttachmentsInlineCmd.label;" disabled="true" oncommand="MsgViewAttachInline();"/>
+			<menuitem value="&wrapLongLinesCmd.label;" disabled="true" oncommand="MsgWrapLongLines();"/>
+			<menuseparator/>
+			<menuitem value="&increaseFontCmd.label;" disabled="true" oncommand="MsgIncreaseFont();"/>
+			<menuitem value="&decreaseFontCmd.label;" disabled="true" oncommand="MsgDecreaseFont();"/>
+			<menuseparator/>
+			<menuitem value="&reloadCmd.label;" disabled="true" oncommand="MsgReload();"/>
+			<menuitem value="&showImagesCmd.label;" disabled="true" oncommand="MsgShowImages();"/>
+			<menuitem value="&stopCmd.label;" disabled="true" oncommand="MsgStop();"/>
+			<menuseparator/>
+			<menuitem value="&pageSourceCmd.label;" oncommand="MsgViewPageSource();"/>
+			<menuitem value="&pageInfoCmd.label;" disabled="true" oncommand="MsgViewPageInfo();"/>
+			<menuseparator/>
+			<menu value="&dcharMenu.label;">
+				<menupopup>
+					<menuitem value="&dcharIso1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-1');"/>
+					<menuitem value="&dcharIso15Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-15');"/>
+					<menuitem value="&dcharIso2Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-2');"/>
+					<menuitem value="&dcharIso3Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-3');"/>
+					<menuitem value="&dcharIso4Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-4');"/>
+					<menuitem value="&dcharIsoGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-7');"/>
+					<menuitem value="&dcharIso9Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-9');"/>
+					<menuitem value="&dcharIso10Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-10');"/>
+					<menuitem value="&dcharIso13Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-13');"/>
+					<menuitem value="&dcharIso14Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-14');"/>
+				</menupopup>
+			</menu>
+			<menu value="&dcharMenu1.label;">
+				<menupopup>
+					<menuitem value="&dcharJapanCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-2022-JP');"/>
+					<menuitem value="&dcharJapanShiftjsCmd.label;" oncommand="MessengerSetDefaultCharacterSet('Shift_JIS');"/>
+					<menuitem value="&dcharJapanEucCmd.label;" oncommand="MessengerSetDefaultCharacterSet('EUC-JP');"/>
+					<menuseparator />
+					<menuitem value="&dcharTradChiBigCmd.label;" oncommand="MessengerSetDefaultCharacterSet('Big5');"/>
+					<menuitem value="&dcharTriChiEucCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-euc-tw');"/>
+					<menuitem value="&dcharSimpChiGbCmd.label;" oncommand="MessengerSetDefaultCharacterSet('GB2312');"/>
+					<menuseparator />
+					<menuitem value="&dcharKoreanCmd.label;" oncommand="MessengerSetDefaultCharacterSet('EUC-KR');"/>
+					<menuseparator />
+					<menuitem value="&dcharUtf7Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('UTF-7');"/>
+					<menuitem value="&dcharUtf8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('UTF-8');"/>
+				</menupopup>
+			</menu>
+			<menu value="&dcharMenu2.label;">
+				<menupopup>
+					<menuitem value="&dcharRusCmd.label; " oncommand="MessengerSetDefaultCharacterSet('KOI8-R');"/>
+					<menuitem value="&dcharIsoCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-5');"/>
+					<menuitem value="&dcharWinCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1251');"/>
+					<menuitem value="&dcharEcmaCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-IR-111');"/>
+					<menuitem value="&dcharDosCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('IBM866');"/>
+					<menuitem value="&dcharMacCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-cyrillic');"/>
+					<menuitem value="&dcharUkrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('KOI8-U');"/>
+					<menuitem value="&dcharMacUkrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-ukrainian');"/>
+				</menupopup>
+			</menu>
+			<menu value="&dcharMenu3.label;">
+				<menupopup>
+					<menuitem value="&dcharWinVietCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1258');"/>
+					<menuitem value="&dcharVietTcnCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-viet-tcvn5712');"/>
+					<menuitem value="&dcharVietViCmd.label;" oncommand="MessengerSetDefaultCharacterSet('VISCII');"/>
+					<menuitem value="&dcharVieVpCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-viet-vps');"/>
+					<menuseparator />
+					<menuitem value="&dcharThaiCmd.label;" oncommand="MessengerSetDefaultCharacterSet('TIS-620');"/>
+					<menuseparator />
+					<menuitem value="&dcharArmCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ARMSCII-8');"/>
+					<!--
+					<menuseparator />
+					<menuitem value="&dcharIso6Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-6');"/>
+					<menuitem value="&dcharCp1256Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1256');"/>
+					<menuseparator />
+					<menuitem value="&dcharIso8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-8');"/>
+					<menuitem value="&dcharCp1255Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1255');"/>
+					-->
+				</menupopup>
+			</menu>
+			<menu value="&dcharMenu4.label;">
+				<menupopup>
+					<menuitem value="&dcharMacRomCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-roman');"/>
+					<menuitem value="&dcharMacCenEuroCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-ce');"/>
+					<menuitem value="&dcharMacTurCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-turkish');"/>
+					<menuitem value="&dcharMacCroaCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-croatian');"/>
+					<menuitem value="&dcharMacRomanianCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-romanian');"/>
+					<menuitem value="&dcharMacIceCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-icelandic');"/>
+					<menuitem value="&dcharMacGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-greek');"/>
+				</menupopup>
+			</menu>
+			<menu value="&dcharMenu5.label;">
+				<menupopup>
+					<menuitem value="&dcharWinLat1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1252');"/>
+					<menuitem value="&dcharWinLat2Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1250');"/>
+					<menuitem value="&dcharWinLat5Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1254');"/>
+					<menuitem value="&dcharWinBalRimCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1257');"/>
+					<menuitem value="&dcharWinGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1253');"/>
+				</menupopup>
+			</menu>
+		</menupopup>
+	</menu>
+	<menu value="&searchMenu.label;">
+		<menupopup>
+			<menuitem value="&findCmd.label;" oncommand="MsgFind();"/>
+			<menuitem value="&findAgainCmd.label;" oncommand="MsgFindAgain();"/>
+			<menuseparator/>
+			<!--
+			<menuitem value="&searchCurrentCmd.label;" disabled="true" oncommand="MsgSearchCurrent();"/>
+			<menuitem value="&searchParentCmd.label;" disabled="true" oncommand="MsgSearchParent();"/>
+			<menuitem value="&searchParentParentCmd.label;" disabled="true" oncommand="MsgSearchParentParent();"/>
+
+			<menuseparator/>
+			-->
+			<menuitem value="&searchInternetCmd.label;" disabled="true" oncommand="MsgSearchInternet();"/>
+			<menuitem value="&searchMailCmd.label;" disabled="true" oncommand="MsgSearchMessages();"/>
+			<menuitem value="&searchBookmarksCmd.label;" disabled="true" oncommand="MsgSearchBookmarks();"/>
+			<menuitem value="&searchPeopleCmd.label;" disabled="true" oncommand="MsgSearchPeople();"/>
+			<menuseparator/>
+			<menuitem value="&searchLocalCmd.label;" disabled="true" oncommand="MsgSearchLocal();"/>
+		</menupopup>
+	</menu>
+	<menu value="&goMenu.label;">
+		<menupopup>
+			<menuitem value="&firstUnreadMsgCmd.label;" disabled="true" oncommand="MsgFirstUnreadMessage();"/>
+			<menuitem value="&firstFlaggedMsgCmd.label;" disabled="true" oncommand="MsgFirstFlaggedMessage();"/>
+			<menuseparator/>
+			<menu value="&nextMenu.label;">
+				<menupopup>
+					<menuitem value="&nextMsgCmd.label;" oncommand="MsgNextMessage();"/>
+					<menuitem value="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" accesskey="&nextUnreadMsgCmd.key;" observes="cmd_nextUnreadMsg"/>
+					<menuitem value="&nextFlaggedMsgCmd.label;" oncommand="MsgNextFlaggedMessage();"/>
+					<menuseparator/>
+					<menuitem value="&nextUnreadThread.label;" observes="cmd_nextUnreadThread"/>
+				</menupopup>
+			</menu>
+			<menu value="&prevMenu.label;">
+				<menupopup>
+					<menuitem value="&prevMsgCmd.label;" oncommand="MsgPreviousMessage();"/>
+					<menuitem value="&prevUnreadMsgCmd.label;" oncommand="MsgPreviousUnreadMessage();"/>
+					<menuitem value="&prevFlaggedMsgCmd.label;" oncommand="MsgPreviousFlaggedMessage();"/>
+				</menupopup>
+			</menu>
+			<menuseparator/>
+			<menuitem value="&backCmd.label;" disabled="true" oncommand="MsgGoBack();"/>
+			<menuitem value="&forwardCmd.label;" disabled="true" oncommand="MsgGoForward();"/>
+		</menupopup>
+	</menu>
+<menu value="&msgMenu.label;">
+	<menupopup>
+		<menuitem value="&newMsgCmd.label;" oncommand="MsgNewMessage(event);"/>
+		<menuitem value="&replyMsgCmd.label;" oncommand="MsgReplyMessage(event);"/>
+		<menuitem value="&replyToAllMsgCmd.label;" oncommand="MsgReplyToAllMessage(event);"/>
+		<menuitem value="&forwardMsgCmd.label;" oncommand="MsgForwardMessage(event);"/>
+		<menu value="&forwardAsMenu.label;">
+			<menupopup>
+				<menuitem value="&forwardAsInline.label;" oncommand="MsgForwardAsInline(event);"/>
+				<menuitem value="&forwardAsAttachmentCmd.label;" oncommand="MsgForwardAsAttachment(event);"/>
+			</menupopup>
+		</menu>
+		<menuitem value="&editMsgAsNewCmd.label;" oncommand="MsgEditMessageAsNew();"/>
+		<menuseparator/>
+		<menu value="&moveMsgMenu.label;" id="moveMenu" datasources="rdf:null"
+		 rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			<menupopup/>
+			<template> 
+				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" 
+								 oncommand="MsgMoveMessage(event.target)"
+								 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+								 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+								 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+								 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
+					<!-- don't show nntp servers in the file and copies menus -->
+				</rule>
+				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+					<!-- note, there is no "file here" -->
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup/>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="true">
+					<menupopup>
+						<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+					</menupopup>
+				</rule>
+			</template>
+		</menu>
+		<menu value="&copyMsgMenu.label;" id="copyMenu" datasources="rdf:null"
+		 rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			<menupopup/>
+			<template>
+				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" 
+								 oncommand="MsgCopyMessage(event.target)"
+								 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+								 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+								 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+								 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
+					<!-- don't show nntp servers in the file and copies menus -->
+				</rule>
+				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+					<!-- note, there is no "file here" -->
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup/>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="true">
+					<menupopup>
+						<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+						 oncommand="MsgCopyMessage(event.target)" 
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+					</menupopup>
+				</rule>
+			</template>
+		</menu>
+		<menuseparator/>
+		<menuitem value="&addSenderToAddressBookCmd.label;" disabled="true" oncommand="MsgAddSenderToAddressBook();"/>
+		<menuitem value="&addAllToAddressBookCmd.label;" disabled="true" oncommand="MsgAddAllToAddressBook();"/>
+		<menuseparator/>
+		<menu value="&markMenu.label;">
+			<menupopup>
+				<menuitem value="&markAsReadCmd.label;" oncommand="MsgMarkMsgAsRead(true);"/>
+				<menuitem value="&markAsUnreadCmd.label;" oncommand="MsgMarkMsgAsRead(false);"/>
+				<menuitem value="&markThreadAsReadCmd.label;" oncommand="MsgMarkThreadAsRead();"/>
+				<menuitem value="&markByDateCmd.label;" disabled="true" oncommand="MsgMarkByDate();"/>
+				<menuitem value="&markAllReadCmd.label;" oncommand="MsgMarkAllRead();"/>
+				<menuseparator/>
+				<menuitem value="&markFlaggedCmd.label;" oncommand="MsgMarkAsFlagged(true);"/>
+				<menuitem value="&markUnflaggedCmd.label;" oncommand="MsgMarkAsFlagged(false);"/>
+			</menupopup>
+		</menu>
+		<menuseparator/>
+		<menuitem value="&ignoreThreadCmd.label;" disabled="true" oncommand="MsgIgnoreThread();"/>
+		<menuitem value="&watchThreadCmd.label;" disabled="true" oncommand="MsgWatchThread();"/>
+	</menupopup>
+</menu>
+
+<menu id="tasksMenu"/>
+<menu id="menu_Help"/>
+<spring flex="100%"/>
+</menubar>
+
+<toolbox id="mailToolbarToolbox">
+	<toolbar id="msgToolbar" class="standard" persist="collapsed">
+		<box id="toolbar_button_box">
+			<button class="key-toolbar left" orient="vertical" id="button_getmsg" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
+			<button class="key-toolbar left" orient="vertical" id="button_newmsg" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
+			<toolbarseparator/>
+			<button class="key-toolbar left" orient="vertical" id="button_reply" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
+			<button class="key-toolbar left" orient="vertical" id="button_replyall" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
+			<button class="key-toolbar left" orient="vertical" id="button_forward" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
+			<toolbarseparator/>
+			<menu id="FileButtonMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+				<button class="toolbar left" orient="vertical" id="button_file" value="&fileButton.label;"/>
+				<template> 
+					<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+						<menupopup>
+							<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+							 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+							 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+							 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+							 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+								<menupopup>
+									<menuitem uri="..." value="&fileHereMenu.label;" 
+									 oncommand="MsgMoveMessage(event.target)"
+									 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+									 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+									 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+									 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+									<menuseparator/>
+								</menupopup>
+							</menu>
+						</menupopup>
+					</rule>
+					<rule nc:CanFileMessages="false" nc:ServerType="nntp">
+					<!-- don't show nntp servers in the file and copies menus -->
+					</rule>
+					<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+					<!-- note, there is no "file here" -->
+						<menupopup>
+							<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+							 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+							 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+							 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+							 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+								<menupopup/>
+							</menu>
+						</menupopup>
+					</rule>
+					<rule nc:CanFileMessages="true">
+						<menupopup>
+							<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+							 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+							 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+							 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+							 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+						</menupopup>
+					</rule>
+				</template>
+				<menupopup/>
+			</menu>
+			<button class="toolbar left" orient="vertical" id="button_next" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
+			<button class="toolbar left" orient="vertical" id="button_delete" disabled="true" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
+			<button class="toolbar left" orient="vertical" id="button_print" value="&printButton.label;" onclick="PrintEnginePrint()"/>
+			<button class="toolbar left" orient="vertical" id="button_stop" value="&stopButton.label;" onclick="MsgStop();"/>
+			<spring flex="100%"/>
+		</box>
+		<box id="toolbar_throbber_box" align="vertical">
+			<titledbutton id="Throbber" onclick='goClickThrobber("messenger.throbber.url")'>
+				<observes element="Messenger:Throbber" attribute="busy"/>
+			</titledbutton>
+		</box>
+	</toolbar>
+</toolbox>
+
+</overlay>

@@ -1,0 +1,83 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+-->
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/platformMailnewsOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
+                     
+<window id="messengerWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+		title="&messengerWindow.title;"
+        titlemodifier="&titleModifier.label;"
+        titlemenuseparator="&titleSeperator.label;"
+		onload="OnLoadMessageWindow()"
+		onunload="OnUnloadMessageWindow()"
+		align="vertical"
+        width="750"
+        height="500"
+        persist="width height screenX screenY"
+		windowtype="mail:messageWindow">
+
+
+<html:script src="chrome://global/content/strres.js"/>
+<html:script src="chrome://messenger/content/commandglue.js"/>
+<html:script src="chrome://messenger/content/mailWindow.js"/>
+<html:script src="chrome://messenger/content/messageWindow.js"/>
+
+	<broadcasterset id="broadcasterset"/>
+
+    <menubar id="mailMenubar"/>
+
+	<toolbox id="mailToolbarToolbox"/>	
+	<!-- msg header view -->
+	<box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
+		<toolbox id="msgHeaderView"/>
+
+		<!-- message view -->
+		<html:iframe id="messagepane" style="height: 0px" flex="1" name="messagepane" type="content" src="about:blank"/>
+	</box>	
+
+
+	<box id="status-bar">
+		<box align="vertical" style="width:100px">
+			<spring flex="100%"/>
+			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
+				<observes element="Messenger:LoadingProgress" attribute="mode"/>
+				<observes element="Messenger:LoadingProgress" attribute="value"/>
+				<observes element="Messenger:Throbber" attribute="busy" onbroadcast="onProgress()"/>
+			</progressmeter>
+			<spring flex="100%"/>
+		</box>
+
+		<titledbutton id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;">
+			<observes element="Messenger:Status" attribute="value" onbroadcast="onStatus()"/>         
+		</titledbutton>
+	</box>
+	<toolbar id="taskbar"/>
+
+</window>
