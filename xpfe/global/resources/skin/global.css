@@ -1961,3 +1961,24 @@ html|select[size="1"]:-moz-display-comboboxcontrol-frame:focus {
     } 
 
 
+/* XUL <colorpicker> peices */
+spring.colorpickertile {
+  width: 20px;
+  height: 20px;
+  margin: 1px;
+  border: 2px inset grey;
+}
+
+spring.colorpickertile:hover {
+  width: 20px;
+  height: 20px;
+  margin: 1px;
+  border: 2px solid yellow;
+}
+
+spring.colorpickertile[selected="true"] {
+  width: 20px;
+  height: 20px;
+  margin: 1px;
+  border: 2px solid black;
+}
