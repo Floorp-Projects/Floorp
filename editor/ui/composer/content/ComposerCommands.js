@@ -2297,7 +2297,7 @@ var nsPrintSetupCommand =
   {
     // In editor.js
     FinishHTMLSource();
-    goPageSetup();
+    NSPrintSetup();
   }
 };
 

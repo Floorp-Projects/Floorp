@@ -477,8 +477,8 @@ var defaultController =
       case "cmd_sendNow"            : if (defaultController.isCommandEnabled(command)) SendMessage();          break;
       case "cmd_sendWithCheck"   : if (defaultController.isCommandEnabled(command)) SendMessageWithCheck();          break;
       case "cmd_sendLater"          : if (defaultController.isCommandEnabled(command)) SendMessageLater();     break;
-      case "cmd_printSetup"         : NSPrintSetup();                                                           break;
-      case "cmd_print"              : DoCommandPrint();                                                        break;
+      case "cmd_printSetup"         : NSPrintSetup(); break;
+      case "cmd_print"              : DoCommandPrint(); break;
 
       //Edit Menu
       case "cmd_delete"             : if (MessageHasSelectedAttachments()) RemoveSelectedAttachment();         break;
