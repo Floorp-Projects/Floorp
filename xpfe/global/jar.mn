@@ -25,7 +25,6 @@ toolkit.jar:
 	content/global/wizardOverlay.js             (resources/content/wizardOverlay.js) 
 	content/global/wizardOverlay.xul            (resources/content/wizardOverlay.xul) 
 	content/global/treePopups.js                (resources/content/treePopups.js) 
-	content/global/autocomplete.xml             (resources/content/autocomplete.xml)
 	content/global/xulBindings.xml              (resources/content/xulBindings.xml) 
 	content/global/htmlBindings.xml             (resources/content/htmlBindings.xml) 
 	content/global/menulistBindings.xml         (resources/content/menulistBindings.xml) 

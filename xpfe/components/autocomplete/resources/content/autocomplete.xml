@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!DOCTYPE window [
+<!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
+%textcontextDTD;
+]>
 
 <bindings   id="autocompleteBindings"
             xmlns="http://www.mozilla.org/xbl"
@@ -6,16 +10,38 @@
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <binding id="autocomplete" extends="chrome://global/content/xulBindings.xml#textfield">
-    <content>
+    <content context="_child">
         <xul:box class="textfield-internal-box" flex="1">
             <html:input class="textfield-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
-            <xul:popupset ignorekeys="true"
-				oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);"
-			>
+        <xul:popupset ignorekeys="true" oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);">
                 <xul:popup oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false';">
                 </xul:popup>
             </xul:popupset>
         </xul:box>
+      <xul:popupset>
+        <xul:popup oncreate="this.focus()">
+          <xul:menuitem value="&undoCmd.label;" accesskey="&undoCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
+            controller.doCommand('cmd_undo');"/>
+          <xul:menuseparator/>
+          <xul:menuitem value="&cutCmd.label;" accesskey="&cutCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+            controller.doCommand('cmd_cut');"/>
+          <xul:menuitem value="&copyCmd.label;" accesskey="&copyCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+            controller.doCommand('cmd_copy');"/>
+          <xul:menuitem value="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+            controller.doCommand('cmd_paste');"/>
+          <xul:menuitem value="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+            controller.doCommand('cmd_delete');"/>
+           <xul:menuseparator/>
+          <xul:menuitem value="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
+            controller.doCommand('cmd_selectAll');"/>
+        </xul:popup>
+      </xul:popupset>
     </content>
 
     <implementation>
@@ -185,18 +211,21 @@
             onMenuCommand: function(me, popupSetElem) {
                 var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                 var popupElem = popupSetElem.firstChild;
-
+				for (var i = 0; i < popupElem.childNodes.length; i ++)
+				{
+					var menuitem = popupElem.childNodes[i];
+					if (menuitem.getAttribute("menuactive") == "true")
+					{
                 me.ignoreInputEvent = true;
-
-                inputElement.value = popupElem.activeChild.getAttribute("value");
+						inputElement.value = menuitem.getAttribute("value");
+						inputElement = document.getAnonymousNodes(me)[0].firstChild;
                 inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
-
                 needToAutocomplete = false;
-                me.privatefunc.selectedItemIndex = popupElem.activeChild.getAttribute("data");
-
+						me.privatefunc.selectedItemIndex = i;
                 me.ignoreInputEvent = false;
-
                 return;
+					}
+				}
             },
 
 			callListener: function(me, action) {
