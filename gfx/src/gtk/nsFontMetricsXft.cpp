@@ -917,7 +917,7 @@ nsFontMetricsXft::FindFont(PRUnichar aChar)
 void
 nsFontMetricsXft::SetupFCPattern(void)
 {
-    printf("module level is %d\n", gXftFontLoad->level);
+    // printf("module level is %d\n", gXftFontLoad->level);
     if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
         printf("[%p] setting up pattern with the following specification:\n",
                (void *)this);
