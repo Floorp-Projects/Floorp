@@ -42,10 +42,18 @@ interface nsIWindowMediator: nsIRDFDataSource
 
 	/*
 		iterates over the windows of type inType in the order that they were created. if inType  is null
-		iterates over all windows
+		iterates over all windows.  This enumerator returns domWindows.
 	*/
 	
 	nsISimpleEnumerator GetEnumerator( in wstring inType );
+
+	/*
+		iterates over the XUL windows of type inType in the order that they were created.  If 
+		inType is null iterates over all windows.  This enumerator returns xulWindows.
+	*/
+
+	nsISimpleEnumerator GetXULWindowEnumerator( in wstring inType); 
+
 	/*
 		Returns the window of type inType ( if null return any window type ) which has the most recent
 		time stamp
