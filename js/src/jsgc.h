@@ -253,7 +253,7 @@ typedef struct JSGCStats {
     uint32  segslots;   /* total stack segment jsval slots scanned */
 } JSGCStats;
 
-extern void
+extern JS_FRIEND_API(void)
 js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* JS_GCMETER */
