@@ -84,7 +84,11 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Transitional DTD", NS_CTRANSITIONAL_DTD_CID, NULL,
     CTransitionalDTDConstructor },
   { "ViewSource DTD", NS_VIEWSOURCE_DTD_CID, NULL, CViewSourceHTMLConstructor },
-  { "ParserService", NS_PARSERSERVICE_CID, NULL, nsParserServiceConstructor }
+  { "ParserService",
+    NS_PARSERSERVICE_CID,
+    NS_PARSER_CONTRACTID_PREFIX "/parser-service;1",
+    nsParserServiceConstructor
+  }
 };
 
 static PRBool gInitialized = PR_FALSE;
