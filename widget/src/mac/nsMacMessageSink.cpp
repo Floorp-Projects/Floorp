@@ -38,7 +38,8 @@ NS_EXPORT PRBool nsMacMessageSink::DispatchOSEvent(
 	PRBool		eventHandled = PR_FALSE;
 	
 	nsMacWindow* raptorWindow = GetNSWindowFromMacWindow(aWindow);
-
+	// prevent the window being deleted while we're in its methods
+	nsCOMPtr<nsIWidget>   kungFuDeathGrip(NS_STATIC_CAST(nsIWidget*, raptorWindow));
 	if (raptorWindow)
 	{
 		eventHandled = raptorWindow->HandleOSEvent(anEvent);
@@ -61,6 +62,8 @@ NS_EXPORT PRBool nsMacMessageSink::DispatchMenuCommand(
 	PRBool		eventHandled = PR_FALSE;
 
 	nsMacWindow* raptorWindow = GetNSWindowFromMacWindow(aWindow);
+	// prevent the window being deleted while we're in its methods
+	nsCOMPtr<nsIWidget>   kungFuDeathGrip(NS_STATIC_CAST(nsIWidget*, raptorWindow));
 	if (raptorWindow)
 	{
 		eventHandled = raptorWindow->HandleMenuCommand(anEvent, menuResult);
