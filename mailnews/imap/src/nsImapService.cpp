@@ -568,6 +568,15 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
         PR_FREEIF(hostname);
         return rv;
     }
+    
+    PRInt32 port = IMAP_PORT;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = aImapMailFolder->GetServer(getter_AddRefs(server));
+    if (NS_SUCCEEDED(rv)) {
+        server->GetPort(&port);
+        if (port == -1) port = IMAP_PORT;
+    }
+    
 	// now we need to create an imap url to load into the connection. The url
     // needs to represent a select folder action. 
 	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
@@ -584,7 +593,8 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
       urlSpec.Append('@');
       urlSpec.Append(hostname);
 		  urlSpec.Append(':');
-		  urlSpec.Append("143"); // mscott -- i know this is bogus...i'm i a hurry =)
+          
+		  urlSpec.Append(port);
 
       // *** jefft - force to parse the urlSpec in order to search for
       // the correct incoming server
