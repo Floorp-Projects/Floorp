@@ -129,6 +129,7 @@
 #define IDS_REMOVE_MAILHOST_CONFIRM     134
 #define IDD_NETWORK                     135
 #define IDS_MAIL_SERVER                 135
+#define IDC_ARROW_RIGHT                 136
 #define IDD_USERPASS                    140
 #define IDS_HELP_BUTTON                 140
 #define IDD_MAILURL                     141

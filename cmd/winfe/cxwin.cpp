@@ -45,6 +45,13 @@
 #include "abdefn.h"
 #include "feimage.h"
 #include "edt.h"
+// For XP Strings
+extern "C" {
+#include "xpgetstr.h"
+#define WANT_ENUM_STRING_IDS
+#include "allxpstr.h"
+#undef WANT_ENUM_STRING_IDS
+}
 extern char * EDT_NEW_DOC_URL;
 extern char * EDT_NEW_DOC_NAME;
 #define ED_SIZE_FEEDBACK_BORDER   3
@@ -6213,46 +6220,66 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
         }
         if( iTableHit )
         {
-            bCursorSet = TRUE;
+            UINT nID_Status = 0;
             switch( iTableHit )
             {
                 case ED_HIT_SEL_TABLE:      // Upper left corner
                     SetCursor(theApp.LoadCursor(IDC_TABLE_SEL));
+                    nID_Status =  XP_EDT_SEL_TABLE;
                     break;
                 case ED_HIT_SEL_ALL_CELLS:  // Upper left corner with Ctrl pressed
                     SetCursor(theApp.LoadCursor(IDC_ALL_CELLS_SEL));
+                    nID_Status =  XP_EDT_SEL_ALL_CELLS;
                     break;
                 case ED_HIT_SEL_COL:        // Near Top table border
                     SetCursor(theApp.LoadCursor(IDC_COL_SEL));
+                    nID_Status =  XP_EDT_SEL_COL;
                     break;
                 case ED_HIT_SEL_ROW:        // Near left table border
                     SetCursor(theApp.LoadCursor(IDC_ROW_SEL));
+                    nID_Status =  XP_EDT_SEL_ROW;
                     break;
-                case ED_HIT_SEL_CELL:       // Not sure - remaining cell border not matching other regions
+                case ED_HIT_SEL_CELL:       // Remaining cell border not matching other regions
                     SetCursor(theApp.LoadCursor(IDC_CELL_SEL));
+                    nID_Status =  XP_EDT_SEL_CELL;
                     break;
                 case ED_HIT_SIZE_TABLE_WIDTH:     // Right edge of table
                     SetCursor(theApp.LoadCursor(IDC_TABLE_SIZE));
+                    nID_Status =  XP_EDT_SIZE_TABLE_WIDTH;
                     break;
                 case ED_HIT_SIZE_TABLE_HEIGHT:    // Bottom edge of table
                     SetCursor(theApp.LoadCursor(IDC_TABLE_VSIZE));
+                    nID_Status =  XP_EDT_SIZE_TABLE_HEIGHT;
                     break;
                 case ED_HIT_SIZE_COL:       // Right border of a cell
                     SetCursor(theApp.LoadCursor(IDC_COL_SIZE));
+                    nID_Status =  XP_EDT_SIZE_COL;
                     break;
                 case ED_HIT_SIZE_ROW:       // Right border of a cell
                     SetCursor(theApp.LoadCursor(IDC_ROW_SIZE));
+                    nID_Status =  XP_EDT_SIZE_ROW;
                     break;
                 case ED_HIT_ADD_ROWS:       // Lower left corner
                     SetCursor(theApp.LoadCursor(IDC_ADD_ROWS));
+                    nID_Status =  XP_EDT_ADD_ROWS;
                     break;
                 case ED_HIT_ADD_COLS:       // Lower right corner
                     SetCursor(theApp.LoadCursor(IDC_ADD_COLS));
+                    nID_Status =  XP_EDT_ADD_COLS;
                     break;
-                case ED_HIT_DRAG_TABLE: // Near bottom
-                    SetCursor(theApp.LoadCursor(IDC_ARROW_HAND));
+                case ED_HIT_DRAG_TABLE: // Inside a selected cell or table
+                    SetCursor(theApp.LoadCursor(IDC_IBEAM_HAND));
+                    nID_Status =  XP_EDT_DRAG_TABLE;
                     break;
+                
             }
+            // Give user text feedback for table cursors
+            if( nID_Status )
+            {
+                wfe_Progress(context, XP_GetString(nID_Status));
+                bTextSet = TRUE;
+            }
+            bCursorSet = TRUE;
             goto FINISH_MOUSE_OVER;
         }
     }
@@ -6459,6 +6486,18 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
 	        }
 		}
     }
+#ifdef EDITOR
+    // The IBeam cursor is normally displayed only when over text,
+    //  but if we arrive here and have not set cursor, use the IBeam, except
+    //  if we are in a location to select the entire line: use right-facing arrow
+    // Otherwise we get the default left-facing arrow, which is confusing
+    if( EDT_IS_EDITOR(context) && !bCursorSet )
+    {
+        SetCursor( theApp.LoadCursor(LO_CanSelectLine(context, pClose->xVal, pClose->yVal) ? 
+                                     IDC_ARROW_RIGHT : IDC_EDIT_IBEAM) );
+        bCursorSet = TRUE;
+    }
+#endif
 
 FINISH_MOUSE_OVER:
     // If nothing set yet blank it out and make sure we have the 

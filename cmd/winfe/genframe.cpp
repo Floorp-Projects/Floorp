@@ -3170,10 +3170,13 @@ BOOL CGenericFrame::OnCommand(UINT wParam,LONG lParam)
 		char* nodeURL = HT_GetNodeURL((HT_Resource)nLastSelectedData);
 
 #ifdef EDITOR        
-	// It is much safer to go through Composer's LoadUrl routine
-	    if(EDT_IS_EDITOR(GetMainContext()->GetContext()))
-	    FE_LoadUrl(nodeURL, TRUE);
-	else
+        // It is much safer to go through Composer's LoadUrl routine
+	    MWContext *pContext = GetMainContext()->GetContext();
+        // Don't load into a Composer frame if within mail
+        // TODO QUESTION: Should we even load into a Composer when within a Compose Frame?
+        if(EDT_IS_EDITOR(pContext) && !pContext->bIsComposeWindow)
+    	    FE_LoadUrl(nodeURL, TRUE);
+        else
 #endif
 		{
 			// Add HT_Launch support

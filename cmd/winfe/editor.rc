@@ -311,6 +311,7 @@ IDC_TABLE_COPY          CURSOR  DISCARDABLE     "res\\edtblcpy.cur"
 IDC_TABLE_MOVE          CURSOR  DISCARDABLE     "res\\edtblmov.cur"
 IDC_TABLE_VSIZE         CURSOR  DISCARDABLE     "res\\edtavsiz.cur"
 IDC_ROW_SIZE            CURSOR  DISCARDABLE     "res\\edrowsiz.cur"
+IDC_ARROW_RIGHT         CURSOR  DISCARDABLE     "res\\arrow_rt.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 //
