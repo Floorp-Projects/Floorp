@@ -442,17 +442,24 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
 
    if( calendarSubscribed === false )
    {
-      //not subscribed, prompt the user to do so.
-      var arrayForNames = CalendarURL.split( "/" );
-      var CalendarNameWithExtension = arrayForNames[ arrayForNames.length - 1 ];
-      var CalendarName = CalendarNameWithExtension.replace( ".ics", "" );
+      if( CalendarURL.indexOf( "imap://" ) != -1 )
+      {
+         //this is an imap email message, download it to a file and show it.
+         alert( "We don't yet support email messages" );
+      }
+      else
+      {
+         //not subscribed, prompt the user to do so.
+         var arrayForNames = CalendarURL.split( "/" );
+         var CalendarNameWithExtension = arrayForNames[ arrayForNames.length - 1 ];
+         var CalendarName = CalendarNameWithExtension.replace( ".ics", "" );
 
-      this.launchAddCalendarDialog( CalendarName, CalendarURL );  
+         this.launchAddCalendarDialog( CalendarName, CalendarURL );
+      }
    }
    else
    {
       //calendarSubscribed is the subscribed calendar object.
-
    }
    
 
