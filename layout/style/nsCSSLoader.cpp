@@ -1534,17 +1534,31 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
       return rv;
     }
 
-    nsCOMPtr<nsIUnicharInputStream> unicharStream;
-    // This forces UA sheets to be UTF8, but that's ok, right?
-    rv = NS_NewUTF8ConverterStream(getter_AddRefs(unicharStream), stream, 0);
+    nsCOMPtr<nsIConverterInputStream> converterStream = 
+      do_CreateInstance("@mozilla.org/intl/converter-input-stream;1", &rv);
+    
     if (NS_FAILED(rv)) {
-      LOG_ERROR(("  Failed to create UTF8 stream"));
+      LOG_ERROR(("  Failed to create converter stream"));
+      SheetComplete(aLoadData, PR_FALSE);
+      return rv;
+    }
+
+    // This forces UA sheets to be UTF-8.  We should really look for
+    // @charset rules here via ReadSegments on the raw stream...
+
+    // 8092 is a nice magic number that happens to be what a lot of
+    // other things use for buffer sizes.
+    rv = converterStream->Init(stream, NS_LITERAL_STRING("UTF-8").get(),
+                               8092, PR_TRUE);
+    
+    if (NS_FAILED(rv)) {
+      LOG_ERROR(("  Failed to initialize converter stream"));
       SheetComplete(aLoadData, PR_FALSE);
       return rv;
     }
 
     PRBool completed;
-    rv = ParseSheet(unicharStream, aLoadData, completed);
+    rv = ParseSheet(converterStream, aLoadData, completed);
     NS_ASSERTION(completed, "sync load did not complete");
     return rv;
   }
