@@ -210,6 +210,9 @@ public:
   NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
 
+  // Transparency query
+  NS_IMETHOD IsTransparent(PRBool& aTransparent) const;
+
   // Invalidate part of the frame by asking the view manager to repaint.
   // aDamageRect is in the frame's local coordinate space
   void        Invalidate(const nsRect& aDamageRect) const;

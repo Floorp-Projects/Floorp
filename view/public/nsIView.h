@@ -341,6 +341,13 @@ public:
   virtual PRBool HasTransparency() = 0;
 
   /**
+   * Used set the transparency status of the content in a view. see
+   * HasTransparency().
+   * @param aTransparent PR_TRUE if there are transparent areas, PR_FALSE otherwise.
+   */
+  virtual void SetContentTransparency(PRBool aTransparent) = 0;
+
+  /**
    * Set the view's link to the nsIFrame part of the universe.
    * @param aFrame frame to associate with view. nsnull to disassociate
    */

@@ -547,6 +547,12 @@ public:
   NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const = 0;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling) = 0;
 
+  /**
+   * Does this frame have content that is considered "transparent"?
+   * This is binary transparency as opposed to translucency. MMP
+   */
+  NS_IMETHOD IsTransparent(PRBool& aTransparent) const = 0;
+
   // Debugging
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const= 0;
   NS_IMETHOD  ListTag(FILE* out = stdout) const = 0;

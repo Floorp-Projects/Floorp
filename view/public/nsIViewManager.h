@@ -334,6 +334,21 @@ public:
   virtual PRBool GetViewClipAbsolute(nsIView *aView, nsRect *rect) = 0;
 
   /**
+   * Used set the transparency status of the content in a view. see
+   * nsIView.HasTransparency().
+   * @param aTransparent PR_TRUE if there are transparent areas, PR_FALSE otherwise.
+   */
+  virtual void SetViewContentTransparency(nsIView *aView, PRBool aTransparent) = 0;
+
+  /**
+   * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
+   * A value of 0.0 means completely transparent. A value of 1.0 means
+   * completely opaque.
+   * @param opacity new opacity value
+   */
+  virtual void SetViewOpacity(nsIView *aView, float aOpacity) = 0;
+
+  /**
    * Get the presentation context associated with this manager
    * @result presentation context
    */
