@@ -1305,7 +1305,7 @@ nsresult nsMsgDBFolder::WriteStartOfNewLocalMessage()
                              &writeCount);
   if (seekable)
   {
-    m_tempMessageStream->Flush();
+    seekable->Seek(PR_SEEK_CUR, 0); // seeking causes a flush, w/o syncing
     seekable->Tell(&curStorePos);
     m_offlineHeader->SetStatusOffset(curStorePos);
   }
@@ -1347,8 +1347,7 @@ nsresult nsMsgDBFolder::EndNewOfflineMessage()
   mDatabase->MarkOffline(messageKey, PR_TRUE, nsnull);
   if (seekable)
   {
-    m_tempMessageStream->Flush();
-
+    seekable->Seek(PR_SEEK_CUR, 0); // seeking causes a flush, w/o syncing
     seekable->Tell(&curStorePos);
     m_offlineHeader->GetMessageOffset(&messageOffset);
     m_offlineHeader->SetOfflineMessageSize(curStorePos - messageOffset);

@@ -94,7 +94,6 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 	/* get new headers for db */
 	void updateFolder(in nsIMsgWindow aWindow);
   
-  nsIEnumerator getVisibleSubFolders();
 	readonly attribute wstring prettiestName;
 
   /**

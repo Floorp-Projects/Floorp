@@ -1045,43 +1045,6 @@ NS_IMETHODIMP nsMsgFolder::GetPrettiestName(PRUnichar **name)
   return GetName(name);
 }
 
-static PRBool
-nsCanBeInFolderPane(nsISupports* element, void* data)
-{
-#ifdef HAVE_PANE
-  nsIMsgFolder* subFolder = NS_STATIC_CAST(nsIMsgFolder*, element);
-  return subFolder->CanBeInFolderPane();
-#else
-  return PR_TRUE;
-#endif
-}
-
-NS_IMETHODIMP
-nsMsgFolder::GetVisibleSubFolders(nsIEnumerator* *result)
-{
-  nsresult rv;
-  nsCOMPtr<nsISupportsArray> vFolders;
-  rv = nsFilterBy(mSubFolders, nsCanBeInFolderPane, nsnull, getter_AddRefs(vFolders));
-  if (NS_FAILED(rv)) return rv;
-  rv = vFolders->Enumerate(result);
-  return rv;
-}
-
-#ifdef HAVE_ADMINURL
-NS_IMETHODIMP nsMsgFolder::GetAdminUrl(MWContext *context, MSG_AdminURLType type)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolder::HaveAdminUrl(MSG_AdminURLType type, PRBool *haveAdminUrl)
-{
-  if (!haveAdminUrl)
-    return NS_ERROR_NULL_POINTER;
-
-  *haveAdminUrl = PR_FALSE;
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP nsMsgFolder::GetShowDeletedMessages(PRBool *showDeletedMessages)
 {
@@ -1249,10 +1212,6 @@ NS_IMETHODIMP nsMsgFolder::Rename(const PRUnichar *name, nsIMsgWindow *msgWindow
   status = SetName((PRUnichar *) unicharString.get());
   //After doing a SetName we need to make sure that broadcasting this message causes a
   //new sort to happen.
-#ifdef HAVE_MASTER
-  if (m_master)
-    m_master->BroadcastFolderChanged(this);
-#endif
   return status;
 
 }
@@ -1353,10 +1312,6 @@ NS_IMETHODIMP nsMsgFolder::UpdateSummaryTotals(PRBool /* force */)
 NS_IMETHODIMP nsMsgFolder::SummaryChanged()
 {
   UpdateSummaryTotals(PR_FALSE);
-#ifdef HAVE_MASTER
-    if (mMaster)
-        mMaster->BroadcastFolderChanged(this);
-#endif
   return NS_OK;
 }
 
@@ -1719,20 +1674,6 @@ NS_IMETHODIMP nsMsgFolder::GetExpansionArray(nsISupportsArray *expansionArray)
   return NS_OK;
 }
 
-#ifdef HAVE_PANE
-NS_IMETHODIMP nsMsgFolder::SetFlagInAllFolderPanes(PRUInt32 which)
-{
-
-}
-
-#endif
-
-#ifdef HAVE_NET
-NS_IMETHODIMP nsMsgFolder::EscapeMessageId(const char *messageId, const char **escapeMessageID)
-{
-
-}
-#endif
 
 NS_IMETHODIMP nsMsgFolder::GetExpungedBytes(PRUint32 *count)
 {
@@ -1810,9 +1751,6 @@ NS_IMETHODIMP nsMsgFolder::GetDisplayRecipients(PRBool *displayRecipients)
       // There's one FCC folder for sent mail, and one for sent news
       nsIMsgFolder *fccFolders[2];
       int numFccFolders = 0;
-#ifdef HAVE_MASTER
-      m_master->GetFolderTree()->GetFoldersWithFlag (MSG_FOLDER_FLAG_SENTMAIL, fccFolders, 2, &numFccFolders);
-#endif
       for (int i = 0; i < numFccFolders; i++)
       {
         PRBool isAncestor;
@@ -1869,13 +1807,6 @@ NS_IMETHODIMP nsMsgFolder::GetLocked(PRBool *isLocked)
   return  NS_OK;
 }
 
-#ifdef HAVE_PANE
-    MWContext *GetFolderPaneContext();
-#endif
-
-#ifdef HAVE_MASTER
-    MSG_Master  *GetMaster() {return m_master;}
-#endif
 
 NS_IMETHODIMP nsMsgFolder::GetRelativePathName(char **pathName)
 {
@@ -1903,29 +1834,6 @@ NS_IMETHODIMP nsMsgFolder::SetSizeOnDisk(PRUint32 aSizeOnDisk)
   return NS_OK;
 }
 
-#ifdef HAVE_NET
-NS_IMETHODIMP nsMsgFolder::ShouldPerformOperationOffline(PRBool *performOffline)
-{
-
-}
-#endif
-
-
-#ifdef DOES_FOLDEROPERATIONS
-NS_IMETHODIMP nsMsgFolder::DownloadToTempFileAndUpload(MessageCopyInfo *copyInfo,
-                                                       nsMsgKeyArray &keysToSave,
-                                                       MSG_FolderInfo *dstFolder,
-                                                       nsMsgDatabase *sourceDB)
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::UpdateMoveCopyStatus(MWContext *context, PRBool isMove, int32 curMsgCount, int32 totMessages)
-{
-
-}
-
-#endif
 
 NS_IMETHODIMP nsMsgFolder::RememberPassword(const char *password)
 {
