@@ -2728,7 +2728,7 @@ Wallet_SignonViewerReturn(const nsString& results)
     while (count2>0) {
       count2--;
       url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(count2));
-      if (url && SI_InSequence(gone, count)) {
+      if (url && SI_InSequence(gone, count2)) {
         url->item2.SetCharAt('n', NO_CAPTURE);
         if (url->item2.CharAt(NO_PREVIEW) == 'n') {
           wallet_FreeURL(url);
