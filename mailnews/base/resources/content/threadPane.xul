@@ -41,6 +41,7 @@ Rights Reserved.
 		<treeitem uri="..."
   		  Status="rdf:http://home.netscape.com/NC-rdf#Status"
   		  Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
+  		  Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
 		  currentView="currentView">
 	  		<treerow >
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
@@ -48,7 +49,7 @@ Rights Reserved.
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender"/>
 				<treecell treeallowevents="true" class="unreadcol" onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode.parentNode)"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Date"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#Priority"/>
+				<treecell class="prioritycol" value="rdf:http://home.netscape.com/NC-rdf#Priority"/>
 				<treecell treeallowevents="true" class="flagcol" onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode)" />
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Status"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size"/>
