@@ -47,7 +47,6 @@ public:
 
 protected:
   nsPageFrame();
-  ~nsPageFrame();
 };
 
 #endif /* nsPageFrame_h___ */
