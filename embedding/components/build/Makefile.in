@@ -50,6 +50,7 @@ else
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libwindowwatcher_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libappstartupnotifier_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libjsconsole.$(LIB_SUFFIX) \
 	$(DIST)/lib/libfind_s.$(LIB_SUFFIX) \
 	$(NULL)
 
