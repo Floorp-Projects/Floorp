@@ -45,6 +45,19 @@
 
 class nsPresContext;
 
+/**
+ * An nsStyleContext represents the computed style data for an element.
+ * The computed style data are stored in a set of structs (see
+ * nsStyleStruct.h) that are cached either on the style context or in
+ * the rule tree (see nsRuleNode.h for a description of this caching and
+ * how the cached structs are shared).
+ *
+ * Since the data in |nsIStyleRule|s and |nsRuleNode|s are immutable
+ * (with a few exceptions, like system color changes), the data in an
+ * nsStyleContext are also immutable.  When style data change,
+ * nsFrameManager::ReResolveStyleContext creates a new style context.
+ */
+
 class nsStyleContext
 {
 public:
@@ -167,6 +180,13 @@ protected:
   // atom.  Otherwise, null.
   nsCOMPtr<nsIAtom> mPseudoTag;
 
+  // The rule node is the node in the lexicographic tree of rule nodes
+  // (the "rule tree") that indicates which style rules are used to
+  // compute the style data, and in what cascading order.  The least
+  // specific rule matched is the one whose rule node is a child of the
+  // root of the rule tree, and the most specific rule matched is the
+  // |mRule| member of |mRuleNode|.
+  // XXXldb Should be |nsRuleNode *const|.
   nsRuleNode*             mRuleNode;
 
   // |mCachedStyleData| points to both structs that are owned by this

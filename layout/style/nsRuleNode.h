@@ -239,6 +239,46 @@ struct nsCachedStyleData
   ~nsCachedStyleData() {};
 };
 
+/**
+ * nsRuleNode is a node in a lexicographic tree (the "rule tree")
+ * indexed by style rules (implementations of nsIStyleRule).  The rule
+ * tree is owned by the nsStyleSet, is garbage-collected during the
+ * lifetime of the document (when dynamic changes cause the destruction
+ * of enough style contexts), and is destroyed when the document goes
+ * away.
+ *
+ * An nsStyleContext, which represents the computed style data for an
+ * element, points to an nsRuleNode.  The path from the root of the rule
+ * tree to the nsStyleContext's mRuleNode gives the list of the rules
+ * matched, from least important in the cascading order to most
+ * important in the cascading order.
+ *
+ * The reason for using a lexicographic tree is that it allows for
+ * sharing of style data, which saves both memory (for storing the
+ * computed style data) and time (for computing them).  This sharing
+ * depends on the computed style data being stored in structs (nsStyle*)
+ * that contain only properties that are inherited by default
+ * ("inherited structs") or structs that contain only properties that
+ * are not inherited by default ("reset structs").  The optimization
+ * depends on the normal case being that style rules specify relatively
+ * few properties and even that elements generally have relatively few
+ * properties specified.  This allows sharing in the following ways:
+ *   1. [reset structs] When a style data struct will contain the same
+ *      computed value for any elements that match the same set of rules
+ *      (common for reset structs), it can be stored on the nsRuleNode
+ *      instead of on the nsStyleContext.
+ *   2. [reset structs] When (1) occurs, and an nsRuleNode doesn't have
+ *      any rules that change the values in the struct, the nsRuleNode
+ *      can share that struct with its parent nsRuleNode.
+ *   3. [inherited structs] When an element doesn't match any rules that
+ *      change the value of a property, the nsStyleContext can use the
+ *      same nsStyle* struct as its parent nsStyleContext.
+ *
+ * Since the data represented by an nsIStyleRule are immutable, the data
+ * represented by an nsRuleNode are also immutable (with a few
+ * exceptions, like system color changes).
+ */
+
 class nsRuleNode {
 public:
     // for purposes of the RuleDetail (and related code),
