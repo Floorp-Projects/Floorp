@@ -55,7 +55,7 @@ my %map = (
   'imggif',             'modules/libpr0n/decoders/gif',
   'imgicon',            'modules/libpr0n/decoders/icon',
   'imgjpeg',            'modules/libpr0n/decoders/jpeg',
-  'imglib2',            'modules/libpr0n',
+  'imglib2',            'modules/libpr0n/public  modules/libpr0n/src',
   'imgmng',             'modules/libpr0n/decoders/mng',
   'imgpng',             'modules/libpr0n/decoders/png',
   'imgppm',             'modules/libpr0n/decoders/ppm',
