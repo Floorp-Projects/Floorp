@@ -130,8 +130,8 @@ int	PR_CALLBACK searchModePrefCallback(const char *pref, void *aClosure);
 // helper routine because we need to rewrite this to use string
 // iterators.. this replaces the old nsString::Find
 
-static PRInt32 nsString_Find(nsAString& aPattern,
-                             nsAString& aSource,
+static PRInt32 nsString_Find(const nsAString& aPattern,
+                             const nsAString& aSource,
                              PRBool aIgnoreCase = PR_FALSE,
                              PRInt32 aOffset = 0, PRInt32 aCount = -1)
 {
@@ -5220,10 +5220,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 		nsAutoString	browserResultTypeStr;
 		browserResultTypeStr.Assign(NS_LITERAL_STRING("result"));		// default to "result"
 
-		// use a CBufDescriptor so that "htmlPage" data isn't copied
-		CBufDescriptor	htmlPageDecriptor( htmlPage, PR_TRUE, htmlPageSize);
-		nsAutoString		htmlResults(htmlPageDecriptor);
-		PRUint32        startIndex = 0L, stopIndex = htmlPageSize;
+		// use a nsDependentString so that "htmlPage" data isn't copied
+		nsDependentString  htmlResults(htmlPage, htmlPageSize);
+		PRUint32           startIndex = 0L, stopIndex = htmlPageSize;
 
     if (!useAllHREFsFlag)
 		{
@@ -5271,7 +5270,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			{
 				startIndex = bannerStart;
 
-				PRInt32	bannerEnd = nsString_Find(bannerEndStr,htmlResults, PR_TRUE, bannerStart + bannerStartStr.Length());
+				PRInt32	bannerEnd = nsString_Find(bannerEndStr, htmlResults, PR_TRUE, bannerStart + bannerStartStr.Length());
 				if (bannerEnd > bannerStart)
 				{
 					stopIndex = bannerEnd - 1;
