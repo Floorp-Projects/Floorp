@@ -261,7 +261,7 @@ NS_IMETHODIMP nsProfile::Startup(char *filename)
 		NS_ADDREF(m_reg);
 
 		// Open it against the input file name.
-		rv = m_reg->Open();
+		rv = m_reg->OpenDefault();
     
 		if (NS_SUCCEEDED(rv))
 		{
@@ -320,7 +320,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
     if ( m_reg != nsnull ) 
 	{
         // Open the registry
-        rv = m_reg->Open();
+        rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -464,7 +464,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
     if ( m_reg != nsnull ) 
 	{
         // Open the registry
-        rv = m_reg->Open();
+        rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -587,7 +587,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
     if ( m_reg != nsnull ) 
 	{
         // Open the registry
-        rv = m_reg->Open();
+        rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -728,7 +728,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 	if ( m_reg != nsnull ) 
 	{
 		// Open the registry.
-		rv = m_reg->Open();
+		rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -863,7 +863,7 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
     if (m_reg != nsnull)
 	{
 		// Open the registry.
-		rv = m_reg->Open();
+		rv = m_reg->OpenDefault();
     
 		if (NS_SUCCEEDED(rv))
 		{
@@ -1248,7 +1248,7 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 	// If we renamed current profile, the new profile will be the current profile
 	if (renameCurrProfile)
 	{
-		rv = m_reg->Open();
+		rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -1274,7 +1274,7 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 	nsIEnumerator	 *enumKeys;
     nsIRegistry::Key sourceKey, destKey, profileRootKey;
     
-	nsresult rv = m_reg->Open();
+	nsresult rv = m_reg->OpenDefault();
 
 	// Need to add else statements to print the error stages.
 	if (NS_SUCCEEDED(rv))
@@ -1374,7 +1374,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
     if ( m_reg != nsnull ) 
 	{
         // Open the registry.
-        rv = m_reg->Open();
+        rv = m_reg->OpenDefault();
 
         if (NS_FAILED(rv))
         {
@@ -1478,7 +1478,7 @@ void nsProfile::GetAllProfiles()
     if ( m_reg != nsnull ) 
 	{
         // Open the registry.
-        rv = m_reg->Open();
+        rv = m_reg->OpenDefault();
 
         if (NS_SUCCEEDED(rv)) 
 		{
@@ -1624,7 +1624,7 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 	// So that FileLocation services grabs right directory when it needs to.
 	if (NS_SUCCEEDED(rv))
 	{
-		rv = m_reg->Open();
+		rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -1853,7 +1853,7 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 		if (m_reg != nsnull)
 		{
 			// Open the registry file.
-			rv = m_reg->Open();
+			rv = m_reg->OpenDefault();
     
 			if (NS_SUCCEEDED(rv))
 			{
@@ -2013,7 +2013,7 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 		if ( m_reg != nsnull ) 
 		{
 	        // Open the registry.
-		    rv = m_reg->Open();
+		    rv = m_reg->OpenDefault();
 
 			if (NS_SUCCEEDED(rv))
 			{
@@ -2204,7 +2204,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(char* data)
 			if (m_reg != nsnull)
 			{
 				// Open the registry.
-				rv = m_reg->Open();
+				rv = m_reg->OpenDefault();
     
 				if (NS_SUCCEEDED(rv))
 				{
@@ -2293,7 +2293,7 @@ NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
 	if (m_reg != nsnull)
 	{
 		// Open the registry.
-		rv = m_reg->Open();
+		rv = m_reg->OpenDefault();
     
 		if (NS_SUCCEEDED(rv))
 		{
@@ -2341,7 +2341,7 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
 	if (m_reg != nsnull)
 	{
 		// Open the registry.
-		rv = m_reg->Open();
+		rv = m_reg->OpenDefault();
     
 		if (NS_SUCCEEDED(rv))
 		{
@@ -2399,7 +2399,7 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
     if ( m_reg != nsnull ) 
 	{
         // Open the registry
-        rv = m_reg->Open();
+        rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
