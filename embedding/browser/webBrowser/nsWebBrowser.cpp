@@ -72,6 +72,8 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
 {
     NS_INIT_REFCNT();
     mInitInfo = new nsWebBrowserInitInfo();
+    mWWatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1");
+    NS_ASSERTION(mWWatch, "failed to get WindowWatcher");
 }
 
 nsWebBrowser::~nsWebBrowser()
@@ -1541,35 +1543,39 @@ NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMW
 /* void activate (); */
 NS_IMETHODIMP nsWebBrowser::Activate(void)
 {
-    // Make sure we can get the to a valid nsIPresShell
-    // Without this check we assert when the embeddor calls
-    // us and the presShell is not yet created
-    // For ex, under MSFT Windows embeddors can trap
-    // the WM_ACTIVATE message in response to which
-    // can call nsIWebBrowser->Activate(). During the initial
-    // window creation the presShell will not be created when
-    // the call to the initial Activate() is made
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  GetContentDOMWindow(getter_AddRefs(domWindow));
+  if (domWindow) {
+    // tell windowwatcher about the new active window
+    if (mWWatch)
+      mWWatch->SetActiveWindow(domWindow);
 
+    /* Activate the window itself. Do this only if the PresShell has
+       been created, since DOMWindow->Activate asserts otherwise.
+       (This method can be called during window creation before
+       the PresShell exists. For ex, Windows apps responding to
+       WM_ACTIVATE). */
     NS_ENSURE_STATE(mDocShell);
     nsCOMPtr<nsIPresShell> presShell;
     mDocShell->GetPresShell(getter_AddRefs(presShell));
-    if(!presShell)
-        return NS_OK;
-
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (domWindow) {
-        nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
-        if(privateDOMWindow)
-          privateDOMWindow->Activate();
+    if(presShell) {
+      nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+      if(privateDOMWindow)
+        privateDOMWindow->Activate();
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 /* void deactivate (); */
 NS_IMETHODIMP nsWebBrowser::Deactivate(void)
 {
+    /* At this time we don't clear mWWatch's ActiveWindow; we just allow
+       the presumed other newly active window to set it when it comes in.
+       This seems harmless and maybe safer, but we have no real evidence
+       either way just yet. */
+
     NS_ENSURE_STATE(mDocShell);
     nsCOMPtr<nsIPresShell> presShell;
     mDocShell->GetPresShell(getter_AddRefs(presShell));
