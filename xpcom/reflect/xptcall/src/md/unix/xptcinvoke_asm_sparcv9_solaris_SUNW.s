@@ -40,7 +40,7 @@ XPTC_InvokeByIndex:
         be      .invoke             ! no need to copy args to stack
 
         sub     %sp,%l0,%sp         ! create the additional stack space
-        add     %sp,0x7ff+144,%o0   ! step past the register window, the
+        add     %sp,0x7ff+136,%o0   ! step past the register window, the
                                     ! struct result pointer and the 'this' slot
         mov     %i2,%o1             ! paramCount
         call    invoke_copy_to_stack
