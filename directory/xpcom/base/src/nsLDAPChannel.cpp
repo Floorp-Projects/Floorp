@@ -110,7 +110,7 @@ nsLDAPChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsLDAPChannel::Cancel(nsresult status)
 {
-  // should assert if called after OnStop fired
+  // should assert if called after OnStop fired?
   //
   //NS_NOTYETIMPLEMENTED("nsLDAPChannel::Cancel");
   //return NS_ERROR_NOT_IMPLEMENTED;
@@ -616,9 +616,22 @@ nsLDAPChannel::Run(void)
   rv = lds(this, spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // close the pipe
+  //	
+  rv = mReadPipeOut->Close();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // all done
   //
   mAsyncListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
+
+#ifdef DEBUG
+    // gdb cannot handle threads exiting, so we sit around forever
+    //
+    while (1) {
+	PR_Sleep(20000);
+    }
+#endif	    
 
   return NS_OK;
 }
@@ -639,4 +652,3 @@ nsLDAPChannel::pipeWrite(char *str)
   mReadPipeOffset += bytesWritten;
   return NS_OK;
 }
-
