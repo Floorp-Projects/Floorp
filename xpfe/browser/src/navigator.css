@@ -65,7 +65,7 @@ toolbar#taskbar titledbutton[pseudoclass~="hover"] {
 }
 
 toolbar#taskbar {
-    display:block;
+    /* note: use display: block/none from toolbar rules in xul.css */
     background-color: #666699;
     border-bottom: solid #333366 1px;
     border-top: solid #9999AA 1px;
