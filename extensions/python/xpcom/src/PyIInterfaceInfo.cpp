@@ -293,7 +293,9 @@ static PyObject *PyGetIIDForParam(PyObject *self, PyObject *args)
 	nsresult n = pii->GetIIDForParam(mi, &param_info, &piid);
 	if (NS_FAILED(n) || piid==nsnull)
 		return PyXPCOM_BuildPyException(n);
-	return Py_nsIID::PyObjectFromIID(*piid);
+	PyObject *rc = Py_nsIID::PyObjectFromIID(*piid);
+	nsMemory::Free((void*)piid);
+	return rc;
 }
 
 static PyObject *PyGetTypeForParam(PyObject *self, PyObject *args)
