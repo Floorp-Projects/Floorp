@@ -50,6 +50,7 @@ cgiviewHTMLAttributeName(App *app, HTML *html, Input *input)
 static void
 cgiviewHTMLAttributeValue(App *app, HTML *html, Input *input)
 {
+	unsigned char	*referer;
 	URL		*url;
 	unsigned char	*urlstring;
 	View		*view;
@@ -60,8 +61,11 @@ cgiviewHTMLAttributeValue(App *app, HTML *html, Input *input)
 	{
 		url = urlRelative(html->base, html->currentAttribute->value);
 		urlstring = escapeHTML(url ? url->url : (unsigned char *) "");
-		fprintf(view->out, "<a href=\"%s%s\">", me, urlstring);
+		fprintf(view->out, "<a href=\"%s%s", me, urlstring);
 		free(urlstring);
+		referer = escapeHTML(html->url);
+		fprintf(view->out, "&referer=%s\">", referer);
+		free(referer);
 		urlFree(url);
 	}
 	viewHTMLAttributeValue(app, input);
@@ -123,7 +127,7 @@ cgiviewHTTPHeaderValue(App *app, Input *input, unsigned char *url)
 }
 
 unsigned char **
-getHTTPRequestHeaders(App *app, char *host, char *verbose)
+getHTTPRequestHeaders(App *app, char *host, char *referer, char *verbose)
 {
 	char		**e;
 	extern char	**environ;
@@ -142,7 +146,7 @@ getHTTPRequestHeaders(App *app, char *host, char *verbose)
 	{
 		e++;
 	}
-	ret = malloc((e - environ + 1) * sizeof(*e));
+	ret = malloc((e - environ + 2) * sizeof(*e));
 	if (!ret)
 	{
 		return NULL;
@@ -224,6 +228,17 @@ getHTTPRequestHeaders(App *app, char *host, char *verbose)
 		*r++ = str;
 		viewReport(app, str);
 	}
+	if (referer)
+	{
+		str = malloc(9 + strlen(referer) + 1);
+		if (str)
+		{
+			strcpy(str, "Referer: ");
+			strcat(str, referer);
+			*r++ = str;
+			viewReport(app, str);
+		}
+	}
 	viewReportHTML(app, "<hr>");
 	*r = NULL;
 
@@ -240,6 +255,7 @@ main(int argc, char *argv[])
 	unsigned char	*newURL;
 	char		*p;
 	char		*query;
+	unsigned char	*referer;
 	URL		*u;
 	unsigned char	*url;
 	char		*verbose;
@@ -254,6 +270,7 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
+	referer = NULL;
 	url = NULL;
 
 	verbose = "?url=";
@@ -290,7 +307,12 @@ main(int argc, char *argv[])
 			if (equals)
 			{
 				*equals = 0;
-				if (!strcmp(name, "url"))
+				if (!strcmp(name, "referer"))
+				{
+					referer = equals + 1;
+					urlDecode(referer);
+				}
+				else if (!strcmp(name, "url"))
 				{
 					url = equals + 1;
 					urlDecode(url);
@@ -381,7 +403,7 @@ main(int argc, char *argv[])
 		{
 			httpProcess(app, u,
 				getHTTPRequestHeaders(app, (char *) u->host,
-				verbose));
+				(char *) referer, verbose));
 		}
 		else
 		{
