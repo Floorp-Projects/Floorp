@@ -493,7 +493,7 @@ function onSearchInputBlur(event)
 
 function onSearchInput(returnKeyHit)
 {
-  if (gSearchInput.showingSearchCriteria)
+  if (gSearchInput.showingSearchCriteria && !(returnKeyHit && gSearchInput.value == ""))
     return;
 
   if (gSearchTimer) {
@@ -537,7 +537,7 @@ function ClearQSIfNecessary()
 
 function Search(str)
 {
-  if (gSearchInput.showingSearchCriteria)
+  if (gSearchInput.showingSearchCriteria && str != "")
     return;
 
   GetSearchInput();
