@@ -29,6 +29,7 @@ CPPSRCS =				\
 	nsBaseDLL.cpp			\
 	nsBTree.cpp			\
 	nsByteBuffer.cpp		\
+	nsByteBufferInputStream.cpp	\
 	nsCRT.cpp			\
 	nsDeque.cpp			\
 	nsProperties.cpp		\
@@ -55,6 +56,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsBaseDLL.obj		\
 	.\$(OBJDIR)\nsBTree.obj			\
 	.\$(OBJDIR)\nsByteBuffer.obj		\
+	.\$(OBJDIR)\nsByteBufferInputStream.obj \
 	.\$(OBJDIR)\nsCRT.obj			\
 	.\$(OBJDIR)\nsDeque.obj			\
 	.\$(OBJDIR)\nsProperties.obj		\

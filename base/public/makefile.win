@@ -33,6 +33,7 @@ EXPORTS =                       \
         nsIStringStream.h       \
         nsIThread.h             \
         nsSpecialSystemDirectory.h \
+        nsIByteBufferInputStream.h \
         $(NULL)
 
 MODULE = raptor 
