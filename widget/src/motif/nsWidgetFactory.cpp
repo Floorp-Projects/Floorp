@@ -200,6 +200,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
   if (res != NS_OK) {
     delete inst ;
   }
+  else {
+    NS_RELEASE(inst);
+  }
 
   return res;
 }  
