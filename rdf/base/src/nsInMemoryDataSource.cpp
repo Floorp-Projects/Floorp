@@ -135,19 +135,6 @@ rdf_HashPointer(const void* key)
     return (PLHashNumber) key;
 }
 
-static PRIntn
-rdf_CompareNodes(const void* v1, const void* v2)
-{
-    nsIRDFNode* a = (nsIRDFNode*)v1;
-    nsIRDFNode* b = (nsIRDFNode*)v2;
-
-    PRBool result;
-    if (NS_FAILED(a->EqualsNode(b, &result)))
-        return 0;
-
-    return (PRIntn) result;
-}
-
 ////////////////////////////////////////////////////////////////////////
 // InMemoryDataSource
 class InMemoryResourceEnumeratorImpl;
@@ -635,7 +622,7 @@ InMemoryDataSource::Init()
 
     mReverseArcs = PL_NewHashTable(kInitialTableSize,
                                    rdf_HashPointer,
-                                   rdf_CompareNodes,
+                                   PL_CompareValues,
                                    PL_CompareValues,
                                    nsnull,
                                    nsnull);
@@ -943,16 +930,11 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
 
     NS_AUTOLOCK(mLock);
 
-    nsresult rv;
     for (Assertion* as = GetForwardArcs(source); as != nsnull; as = as->mNext) {
-        PRBool eq;
         if (property != as->mProperty)
             continue;
 
-        if (NS_FAILED(rv = target->EqualsNode(as->mTarget, &eq)))
-            return rv;
-
-        if (! eq)
+        if (target != as->mTarget)
             continue;
 
         if (as->mTruthValue != tv)
@@ -1045,7 +1027,6 @@ InMemoryDataSource::SafeAssert(nsIRDFResource* source,
     LogOperation("ASSERT", source, property, target, tv);
 #endif
 
-    nsresult rv;
     Assertion* next = GetForwardArcs(source);
     Assertion* prev = next;
     Assertion* as = nsnull;
@@ -1054,11 +1035,7 @@ InMemoryDataSource::SafeAssert(nsIRDFResource* source,
     // XXX shouldn't we just keep a pointer to the end, or insert at the front???
     while (next) {
         if (property == next->mProperty) {
-            PRBool eq;
-            if (NS_FAILED(rv = target->EqualsNode(next->mTarget, &eq)))
-                return rv;
-
-            if (eq) {
+            if (target == next->mTarget) {
                 // Wow, we already had the assertion. Make sure that the
                 // truth values are correct and bail.
                 next->mTruthValue = tv;
@@ -1141,18 +1118,13 @@ InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
     LogOperation("UNASSERT", source, property, target);
 #endif
 
-    nsresult rv;
     Assertion* next = GetForwardArcs(source);
     Assertion* prev = next;
     Assertion* as = nsnull;
 
     while (next) {
         if (property == next->mProperty) {
-            PRBool eq;
-            if (NS_FAILED(rv = target->EqualsNode(next->mTarget, &eq)))
-                return rv;
-
-            if (eq) {
+            if (target == next->mTarget) {
                 if (prev == next) {
                     SetForwardArcs(source, next->mNext);
                 } else {
@@ -1433,16 +1405,11 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
 
     NS_AUTOLOCK(mLock);
 
-    nsresult rv;
     for (Assertion* as = GetForwardArcs(aSource); as != nsnull; as = as->mNext) {
-        PRBool eq;
         if (aProperty != as->mProperty)
             continue;
 
-        if (NS_FAILED(rv = aTarget->EqualsNode(as->mTarget, &eq)))
-            return rv;
-
-        if (! eq)
+        if (aTarget != as->mTarget)
             continue;
 
         if (as->mTruthValue != aTruthValue)
