@@ -26,9 +26,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: 
 	$(MAKE_INSTALL) messengercompose.xul $(DIST)\bin\chrome\messenger\content\messengercompose
 	$(MAKE_INSTALL) msgcomposecommands.js $(DIST)\bin\chrome\messenger\content\messengercompose
-	$(MAKE_INSTALL) addressAutoComplete.js $(DIST)\bin\chrome\messenger\content\messengercompose
-	$(MAKE_INSTALL) MsgAttachPage.js $(DIST)\bin\chrome\messenger\content\messengercompose
-	$(MAKE_INSTALL) MsgAttachPage.xul $(DIST)\bin\chrome\messenger\content\messengercompose
 	$(MAKE_INSTALL) addressingWidgetOverlay.js $(DIST)\bin\chrome\messenger\content\messengercompose
 	$(MAKE_INSTALL) addressingWidgetOverlay.xul $(DIST)\bin\chrome\messenger\content\messengercompose
 	$(MAKE_INSTALL) askSendFormat.js $(DIST)\bin\chrome\messenger\content\messengercompose
@@ -37,9 +34,6 @@ install::
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\content\messengercompose\messengercompose.xul
 	rm -f $(DIST)\bin\chrome\messenger\content\messengercompose\msgcomposecommands.js
-	rm -f $(DIST)\bin\chrome\messenger\content\messengercompose\addressAutoComplete.js
-	rm -f $(DIST)\bin\chrome\messenger\content\messengercompose\MsgAttachPage.js
-	rm -f $(DIST)\bin\chrome\messenger\content\messengercompose\MsgAttachPage.xul
 	rm -f $(DIST)\bin\chrome\messenger\content\messengercompose\addressingWidgetOverlay.js
 	rm -f $(DIST)\bin\chrome\messenger\content\messengercompose\addressingWidgetOverlay.xul
 	rm -f $(DIST)\bin\chrome\messenger\content\messengercompose\askSendFormat.js

@@ -27,14 +27,12 @@ include <$(DEPTH)\config\rules.mak>
 install:: 
 	$(MAKE_INSTALL) messengercompose.dtd $(DIST)\bin\chrome\messenger\locale\messengercompose
 	$(MAKE_INSTALL) addressingWidgetOverlay.dtd $(DIST)\bin\chrome\messenger\locale\messengercompose
-	$(MAKE_INSTALL) MsgAttachPage.dtd $(DIST)\bin\chrome\messenger\locale\messengercompose
 	$(MAKE_INSTALL) askSendFormat.dtd $(DIST)\bin\chrome\messenger\locale\messengercompose
 	$(MAKE_INSTALL) composeMsgs.properties $(DIST)\bin\chrome\messenger\locale\messengercompose
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\messengercompose\messengercompose.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\messengercompose\addressingWidgetOverlay.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\messengercompose\MsgAttachPage.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\messengercompose\askSendFormat.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\messengercompose\composeMsgs.properties
 

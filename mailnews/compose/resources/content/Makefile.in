@@ -31,9 +31,6 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/messengercompose
 EXPORT_RESOURCE_SAMPLES = \
 		messengercompose.xul \
 		MsgComposeCommands.js \
-		addressAutoComplete.js \
-		MsgAttachPage.xul \
-		MsgAttachPage.js \
 		addressingWidgetOverlay.js \
 		addressingWidgetOverlay.xul \
 		askSendFormat.js \
@@ -46,4 +43,3 @@ GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
 
 install::
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-
