@@ -333,7 +333,6 @@ ifeq ($(OS_TARGET), OpenVMS)
 	    create_opt_uni $(OBJS); \
 	fi
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OBJDIR)/VMSuni.opt
-	@echo "`translate $@`" > $(@:.$(DLL_SUFFIX)=.vms)
 else	# OpenVMS
 	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS)
 endif	# OpenVMS

@@ -201,10 +201,3 @@ ifdef SHARED_LIBRARY
 	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_libdir)
 endif
 endif
-ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(dist_libdir)
-ifdef SHARED_LIBRARY
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(dist_libdir)
-endif
-endif
-
