@@ -27,6 +27,7 @@
 
 #include "nsMsgDBFolder.h" /* include the interface we are going to support */
 #include "nsFileSpec.h"
+#include "nsIMessage.h"
 #include "nsICopyMessageListener.h"
 #include "nsFileStream.h"
 #include "nsIPop3IncomingServer.h"  // need this for an interface ID
