@@ -5080,42 +5080,44 @@ Drag this to create a link to this page
 *bookmarkQuickfile*fileBookmarksSubmenu.mnemonic:	        F
 
 !!
-!! *personalToolbarItem
+!! *toolBoxItem
 !!
-*personalToolbarItem.shadowType:				shadow_out
-*personalToolbarItem.shadowThickness:			1
-*personalToolbarItem.marginLeft:				1
-*personalToolbarItem.marginRight:				1
-*personalToolbarItem.marginTop:					1
-*personalToolbarItem.marginBottom:				1
+*toolBoxItem.shadowType:				shadow_out
+*toolBoxItem.shadowThickness:			1
+*toolBoxItem.marginLeft:				1
+*toolBoxItem.marginRight:				1
+*toolBoxItem.marginTop:					1
+*toolBoxItem.marginBottom:				1
 
-*personalToolbar.shadowThickness:				0
-*personalToolbar.marginLeft:					0
-*personalToolbar.marginRight:					0
-*personalToolbar.marginTop:						0
-*personalToolbar.marginBottom:					0
+*toolBoxItem*XfeToolBar.
 
-*personalToolbar.spacing:						1
-*personalToolbar.raiseBorderThickness:			2
-*personalToolbar.indicatorThreshold:			10
+*toolBoxItem*XfeToolBar.shadowThickness:				0
+*toolBoxItem*XfeToolBar.marginLeft:					0
+*toolBoxItem*XfeToolBar.marginRight:					0
+*toolBoxItem*XfeToolBar.marginTop:						0
+*toolBoxItem*XfeToolBar.marginBottom:					0
 
-*personalToolbar*XfeButton.marginBottom:		1
-*personalToolbar*XfeButton.marginLeft:			1
-*personalToolbar*XfeButton.marginRight:			1
-*personalToolbar*XfeButton.marginTop:			1
-*personalToolbar*XfeButton.shadowThickness:		1
+*toolBoxItem*XfeToolBar.spacing:						1
+*toolBoxItem*XfeToolBar.raiseBorderThickness:			2
+*toolBoxItem*XfeToolBar.indicatorThreshold:			10
 
-*personalToolbar*XfeCascade.marginBottom:		1
-*personalToolbar*XfeCascade.marginLeft:			1
-*personalToolbar*XfeCascade.marginRight:		1
-*personalToolbar*XfeCascade.marginTop:			1
-*personalToolbar*XfeCascade.shadowThickness:	1
-*personalToolbar*XfeCascade.mappingDelay:		0
+*toolBoxItem*XfeToolBar*XfeButton.marginBottom:		1
+*toolBoxItem*XfeToolBar*XfeButton.marginLeft:			1
+*toolBoxItem*XfeToolBar*XfeButton.marginRight:			1
+*toolBoxItem*XfeToolBar*XfeButton.marginTop:			1
+*toolBoxItem*XfeToolBar*XfeButton.shadowThickness:		1
 
-*personalToolbar*toolBarSeparator.shadowThickness:		0
-*personalToolbar*toolBarSeparator.width:				20
-*personalToolbar*toolBarSeparator.height:				2
-*personalToolbar*toolBarSeparator.orientation:			horizontal
+*toolBoxItem*XfeToolBar*XfeCascade.marginBottom:		1
+*toolBoxItem*XfeToolBar*XfeCascade.marginLeft:			1
+*toolBoxItem*XfeToolBar*XfeCascade.marginRight:		1
+*toolBoxItem*XfeToolBar*XfeCascade.marginTop:			1
+*toolBoxItem*XfeToolBar*XfeCascade.shadowThickness:	1
+*toolBoxItem*XfeToolBar*XfeCascade.mappingDelay:		0
+
+*toolBoxItem*XfeToolBar*toolBarSeparator.shadowThickness:		0
+*toolBoxItem*XfeToolBar*toolBarSeparator.width:				20
+*toolBoxItem*XfeToolBar*toolBarSeparator.height:				2
+*toolBoxItem*XfeToolBar*toolBarSeparator.orientation:			horizontal
 
 
 ! Navigator/Dashboard

@@ -44,14 +44,14 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
       XFE_RDFMenuToolbarBase(frame, FALSE /*only headers*/, TRUE /*fancy*/),
       _frame(frame)
 {
-	m_widget = XtVaCreateWidget(HT_GetViewName(view),
+	m_widget = XtVaCreateWidget("toolBoxItem",
                    xfeToolItemWidgetClass,
                    toolbox->getBaseWidget(),
                    XmNuserData, this,
                    NULL);
 
 	// Create the toolbar
-	_toolbar = XtVaCreateManagedWidget(TOOLBAR_NAME,
+	_toolbar = XtVaCreateManagedWidget(HT_GetViewName(view),
                    xfeToolBarWidgetClass,
                    m_widget,
                    XmNusePreferredWidth,         False,
