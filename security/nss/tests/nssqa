@@ -118,6 +118,8 @@ wait_for_build()
   else
       Wait ${OSDIR}/SVbuild.InProgress.1 0     
                      #Wait for the build to finish... Unix a few hours
+      qa_stat_get_sysinfo
+      Echo "UNIX-OS-LINE: $QA_OS"
   fi
   find_nt_masterbuild
 }
@@ -245,7 +247,8 @@ nssqa_main()
   
 TEST_LEVEL=0
 
-while [ $TEST_LEVEL -lt 2 ] ; do 
+while [ $TEST_LEVEL -lt 2 ] ; do # temporarily disable backward 
+                                 # compatibility testing
     export TEST_LEVEL
     unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
     unset USE_64;export USE_64;Debug "USE_64 $USE_64"
