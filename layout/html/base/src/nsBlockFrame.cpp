@@ -111,6 +111,8 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
   mBlock = aBlock;
   mSpaceManager = aSpaceManager;
   mBlockIsPseudo = aBlock->IsPseudoFrame();
+  mBlockIsListItem = PR_FALSE;
+  mListPositionOutside = PR_FALSE;
   mCurrentLine = nsnull;
   mPrevKidFrame = nsnull;
 
@@ -1023,6 +1025,19 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
   }
   NS_RELEASE(tag);
 
+  // Setup list flags in block reflow state if this block is a list
+  // item.
+  nsStyleDisplay* myDisplay = (nsStyleDisplay*)
+    mStyleContext->GetData(eStyleStruct_Display);
+  if (NS_STYLE_DISPLAY_LIST_ITEM == myDisplay->mDisplay) {
+    aState.mBlockIsListItem = PR_TRUE;
+    nsStyleList* myList = (nsStyleList*)
+      mStyleContext->GetData(eStyleStruct_List);
+    if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == myList->mListStylePosition) {
+      aState.mListPositionOutside = PR_TRUE;
+    }
+  }
+
   return rv;
 }
 
@@ -1217,6 +1232,17 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
 {
   nsBlockReflowState state;
   nsresult           rv = NS_OK;
+
+  if (eReflowReason_Initial == aReflowState.reason) {
+    NS_ASSERTION(0 != (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
+    rv = ProcessInitialReflow(aPresContext);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+  else {
+    NS_ASSERTION(0 == (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
+  }
 
   aStatus = NS_FRAME_COMPLETE;
   rv = InitializeState(aPresContext, aSpaceManager, aReflowState.maxSize,
