@@ -50,6 +50,8 @@ RESOURCES =	       \
 	close-over.gif \
 	$(NULL)
 
+RESOURCES := $(addprefix $(srcdir)/, $(RESOURCES))
+
 # Stuff to build the library used to wrap malloc
 LIBMALLOC_CPPSRCS = libmalloc.cpp
 LIBMALLOC_OBJECTS = $(LIBMALLOC_CPPSRCS:.cpp=.o)
