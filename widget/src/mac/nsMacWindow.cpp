@@ -283,7 +283,7 @@ nsMacWindow::~nsMacWindow()
 	{
 		if (mWindowMadeHere)
 			::DisposeWindow(mWindowPtr);
-		
+
 		// clean up DragManager stuff
 #if !TARGET_CARBON
 		::RemoveTrackingHandler ( sDragTrackingHandlerUPP, mWindowPtr );
@@ -508,15 +508,10 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   if ( bState )
   {
     if ( mAcceptsActivation )
-    {
       ::ShowWindow(mWindowPtr);
-      ::SelectWindow(mWindowPtr);
-    }
     else
-    {
-      ::BringToFront(mWindowPtr);
       ::ShowHide(mWindowPtr, true);
-    }
+    ComeToFront();
   }
   else
     ::HideWindow(mWindowPtr);
@@ -630,6 +625,24 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		mBounds.y = 0;
 	}
 	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Position the window behind the given window
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsMacWindow::PlaceBehind(nsIWidget *aWidget)
+{
+  if (aWidget) {
+    WindowPtr behind = (WindowPtr)aWidget->GetNativeData(NS_NATIVE_DISPLAY);
+    ::SendBehind(mWindowPtr, behind);
+    ::HiliteWindow(mWindowPtr, FALSE);
+  } else {
+    if (::FrontWindow() != mWindowPtr)
+      ::SelectWindow(mWindowPtr);
+  }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -801,6 +814,32 @@ PRBool nsMacWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt1
 		retVal = PR_FALSE;
 	return retVal;
 }
+
+//-------------------------------------------------------------------------
+//
+// Like ::BringToFront, but constrains the window to its z-level
+//
+//-------------------------------------------------------------------------
+void nsMacWindow::ComeToFront() {
+
+  nsZLevelEvent  event;
+
+  event.point.x = mBounds.x;
+  event.point.y = mBounds.y;
+  event.time = PR_IntervalNow();
+  event.widget = this;
+  event.nativeMsg = nsnull;
+  event.eventStructType = NS_ZLEVEL_EVENT;
+  event.message = NS_SETZLEVEL;
+
+  event.mPlacement = nsWindowZTop;
+  event.mReqBelow = 0;
+  event.mImmediate = PR_TRUE;
+  event.mAdjusted = PR_FALSE;
+
+  DispatchWindowEvent(event);
+}
+
 
 NS_IMETHODIMP nsMacWindow::ResetInputState()
 {

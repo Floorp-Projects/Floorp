@@ -51,6 +51,7 @@
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
 #include "nsGfxUtils.h"
+#include "nsMacWindow.h"
 
 #include <MacWindows.h>
 #include <ToolUtils.h>
@@ -389,7 +390,6 @@ void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 // DoMouseDown
 //
 //-------------------------------------------------------------------------
-
 void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 {
 		WindowPtr			whichWindow;
@@ -430,19 +430,25 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				::SetPortWindowPort(whichWindow);
 				if (IsWindowHilited(whichWindow))
 					DispatchOSEventToRaptor(anEvent, whichWindow);
-				else
-					::SelectWindow(whichWindow);
+				nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
+				if (mw)
+					mw->ComeToFront();
 				break;
 			}
 
 			case inDrag:
 			{
 				::SetPortWindowPort(whichWindow);
-				if (!(anEvent.modifiers & cmdKey))
-					::SelectWindow(whichWindow);
+
+				// grrr... DragWindow calls SelectWindow, no way to stop it. For now,
+				// we'll just let it come to the front and then push it back if necessary.
 				Rect screenRect;
 				::GetRegionBounds(::GetGrayRgn(), &screenRect);
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
+
+				nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
+				if (mw)
+					mw->ComeToFront();
 
 				// Dispatch the event because some windows may want to know that they have been moved.
 #if 0
@@ -776,14 +782,9 @@ void	nsMacMessagePump::DoActivate(EventRecord &anEvent)
 	WindowPtr whichWindow = (WindowPtr)anEvent.message;
 	::SetPortWindowPort(whichWindow);
 	if (anEvent.modifiers & activeFlag)
-	{
-		::BringToFront(whichWindow);
 		::HiliteWindow(whichWindow,TRUE);
-	}
 	else
-	{
 		::HiliteWindow(whichWindow,FALSE);
-	}
 
 	DispatchOSEventToRaptor(anEvent, whichWindow);
 }

@@ -77,6 +77,7 @@ public:
 
     NS_IMETHOD              Show(PRBool aState);
     NS_IMETHOD            	Move(PRInt32 aX, PRInt32 aY);
+    NS_IMETHOD              PlaceBehind(nsIWidget *aWidget);
     NS_IMETHOD            	Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
@@ -93,6 +94,8 @@ public:
 		// be notified that a some form of drag event needs to go into Gecko
 	virtual PRBool 			DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
 
+    void                    ComeToFront();
+
   	// nsIKBStateControl interface
   	NS_IMETHOD ResetInputState();
     NS_IMETHOD PasswordFieldInit();
@@ -108,8 +111,6 @@ protected:
 	static DragTrackingHandlerUPP sDragTrackingHandlerUPP;
 	static DragReceiveHandlerUPP sDragReceiveHandlerUPP;
 
-
-	
 	PRBool							mWindowMadeHere; // true if we created the window
 	PRBool							mIsDialog;       // true if the window is a dialog
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
