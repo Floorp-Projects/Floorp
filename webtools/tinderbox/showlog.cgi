@@ -83,7 +83,7 @@ else
   }
   else
   {
-    open (BRIEFFILE, ">$tree/$brief_filename");
+    open (BRIEFFILE, ">$tree/$brief_filename") if defined $form{cache};
 
     &print_summary;
     &print_log;
