@@ -61,6 +61,7 @@ LINCS=  \
   -I$(PUBLIC)\plugin \
   -I$(PUBLIC)\pref \
   -I$(PUBLIC)\editor \
+  -I$(PUBLIC)\uconv \
   -I$(PUBLIC)\rdf \
   -I$(PUBLIC)\silentdl \
 !if defined(NGPREFS)

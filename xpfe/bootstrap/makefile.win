@@ -43,6 +43,7 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\caps                  \
       -I$(PUBLIC)\plugin                \
       -I$(PUBLIC)\java                  \
+      -I$(PUBLIC)\uconv                 \
       -I$(PUBLIC)\oji                  
 #      -I..\browser
 
