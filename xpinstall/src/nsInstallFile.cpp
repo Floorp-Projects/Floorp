@@ -145,11 +145,11 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
         if (startsWith.Equals(regPackageName))
         {
-            mChildFile = true;
+            mChildFile = PR_TRUE;
         }
         else
         {
-            mChildFile = false;
+            mChildFile = PR_FALSE;
         }
     }
 }
