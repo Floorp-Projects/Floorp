@@ -77,6 +77,10 @@ $::defaultqueryname = "(Default query)";
 $::unconfirmedstate = "UNCONFIRMED";
 $::dbwritesallowed = 1;
 
+# Adding a global variable for the value of the superuser groupset.
+# Joe Robins, 7/5/00
+$::superusergroupset = "9223372036854775807";
+
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
     if (!defined $::db) {

@@ -746,27 +746,33 @@ if ($action eq 'update') {
         SendSQL("SELECT groupset FROM profiles WHERE login_name=" .
                 SqlQuote($userold));
         $groupsetold = FetchOneColumn();
-        SendSQL("UPDATE profiles
-		 SET groupset = 
+        # Updated, 5/7/00, Joe Robins
+        # We don't want to change the groupset of a superuser.
+        if($groupsetold eq $::superusergroupset) {
+          print "Cannot change permissions of superuser.\n";
+        } else {
+           SendSQL("UPDATE profiles
+                    SET groupset =
                          groupset - (groupset & $opblessgroupset) + $groupset
-		 WHERE login_name=" . SqlQuote($userold));
+                    WHERE login_name=" . SqlQuote($userold));
 
-        # I'm paranoid that someone who I give the ability to bless people
-        # will start misusing it.  Let's log who blesses who (even though
-        # nothing actually uses this log right now).
-        my $fieldid = GetFieldID("groupset");
-        SendSQL("SELECT userid, groupset FROM profiles WHERE login_name=" .
-                SqlQuote($userold));
-        my $u;
-        ($u, $groupset) = (FetchSQLData());
-        if ($groupset ne $groupsetold) {
-            SendSQL("INSERT INTO profiles_activity " .
-                    "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
-                    "VALUES " .
-                    "($u, $::userid, now(), $fieldid, " .
-                    " $groupsetold, $groupset)");
-        }
-	print "Updated permissions.\n";
+           # I'm paranoid that someone who I give the ability to bless people
+           # will start misusing it.  Let's log who blesses who (even though
+           # nothing actually uses this log right now).
+           my $fieldid = GetFieldID("groupset");
+           SendSQL("SELECT userid, groupset FROM profiles WHERE login_name=" .
+                   SqlQuote($userold));
+           my $u;
+           ($u, $groupset) = (FetchSQLData());
+           if ($groupset ne $groupsetold) {
+               SendSQL("INSERT INTO profiles_activity " .
+                       "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
+                       "VALUES " .
+                       "($u, $::userid, now(), $fieldid, " .
+                       " $groupsetold, $groupset)");
+           }
+	   print "Updated permissions.\n";
+       }
     }
 
     if ($editall && $blessgroupset ne $blessgroupsetold) {
