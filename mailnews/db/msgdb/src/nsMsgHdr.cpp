@@ -28,6 +28,9 @@ NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
+#define FLAGS_INITED 0x1
+#define CACHED_VALUES_INITED 0x2
+
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
     NS_INIT_REFCNT();
@@ -36,13 +39,12 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 		m_mdb->AddRef();
 	Init();
 	m_mdbRow = dbRow;
-	InitCachedValues();
 }
 
 
 void nsMsgHdr::Init()
 {
-	m_cachedValuesInitialized = PR_FALSE;
+	m_initedValues = 0;
 	m_statusOffset = 0xffffffff;
 	m_messageKey = nsMsgKey_None;
 	m_messageSize = 0;
@@ -62,14 +64,13 @@ nsresult nsMsgHdr::InitCachedValues()
 	if (!m_mdb || !m_mdbRow)
 	    return NS_ERROR_NULL_POINTER;
 
-	if (!m_cachedValuesInitialized)
+	if (!(m_initedValues & CACHED_VALUES_INITED))
 	{
 		PRUint32 uint32Value;
 		mdbOid outOid;
 		if (m_mdbRow->GetOid(m_mdb->GetEnv(), &outOid) == NS_OK)
 			m_messageKey = outOid.mOid_Id;
 
-		err = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
 		err = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &m_messageSize);
 
 	    err = GetUInt32Column(m_mdb->m_dateColumnToken, &uint32Value);
@@ -82,9 +83,29 @@ nsresult nsMsgHdr::InitCachedValues()
 			m_numReferences = (PRUint16) uint32Value;
 
 		if (NS_SUCCEEDED(err))
-			m_cachedValuesInitialized = PR_TRUE;
+			m_initedValues |= CACHED_VALUES_INITED;
 	}
 	return err;
+}
+
+nsresult nsMsgHdr::InitFlags()
+{
+
+	nsresult err = NS_OK;
+
+	if (!m_mdb)
+	    return NS_ERROR_NULL_POINTER;
+
+	if(!(m_initedValues & FLAGS_INITED))
+	{
+		err = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
+
+		if(NS_SUCCEEDED(err))
+			m_initedValues |= FLAGS_INITED;
+	}
+
+	return err;
+
 }
 
 nsMsgHdr::~nsMsgHdr()
@@ -114,6 +135,10 @@ NS_IMETHODIMP nsMsgHdr::GetMessageKey(nsMsgKey *result)
 
 NS_IMETHODIMP nsMsgHdr::GetThreadId(nsMsgKey *result)
 {
+
+	if (!(m_initedValues & CACHED_VALUES_INITED))
+		InitCachedValues();
+
 	if (result)
 	{
 		*result = m_threadId;
@@ -137,6 +162,8 @@ NS_IMETHODIMP nsMsgHdr::SetMessageKey(nsMsgKey value)
 
 NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
 {
+	if (!(m_initedValues & FLAGS_INITED))
+		InitFlags();
     *result = m_flags;
     return NS_OK;
 }
@@ -248,6 +275,9 @@ NS_IMETHODIMP nsMsgHdr::SetUint32Property(const char *propertyName, PRUint32 val
 
 NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 {
+	if (!(m_initedValues & CACHED_VALUES_INITED))
+		InitCachedValues();
+
     *result = m_numReferences;
 	return NS_OK;
 }
@@ -275,6 +305,9 @@ NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultRefe
 
 NS_IMETHODIMP nsMsgHdr::GetDate(PRTime *result) 
 {
+	if (!(m_initedValues & CACHED_VALUES_INITED))
+		InitCachedValues();
+
 	*result = m_date;
     return NS_OK;
 }

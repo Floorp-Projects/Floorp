@@ -99,6 +99,7 @@ public:
 
     void				Init();
 	virtual nsresult	InitCachedValues();
+	virtual nsresult	InitFlags();
 
     NS_DECL_ISUPPORTS
 
@@ -130,7 +131,7 @@ protected:
     // though I hope not.
     nsMsgDatabase	*m_mdb;
     nsIMdbRow		*m_mdbRow;
-	PRBool			m_cachedValuesInitialized;
+	PRUint32		m_initedValues;
 };
 
 #endif
