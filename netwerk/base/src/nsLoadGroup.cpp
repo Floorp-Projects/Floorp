@@ -388,8 +388,7 @@ nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
     // Inherit the group load flags from the default load request
     if (mDefaultLoadRequest)
         mDefaultLoadRequest->GetLoadFlags(&mLoadFlags);
-    else
-        mLoadFlags = LOAD_NORMAL;
+    // Else, do not change the group's load flags (see bug 95981)
     return NS_OK;
 }
 
