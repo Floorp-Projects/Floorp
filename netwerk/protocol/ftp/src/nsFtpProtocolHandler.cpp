@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nspr.h"
 #include "nsFTPChannel.h"
 #include "nsFtpProtocolHandler.h"
 #include "nsIURL.h"
@@ -24,6 +25,22 @@
 #include "nsIServiceManager.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIProgressEventSink.h"
+
+#if defined(PR_LOGGING)
+//
+// Log module for FTP Protocol logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsFTPProtocol:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
+PRLogModuleInfo* gFTPLog = nsnull;
+
+#endif /* PR_LOGGING */
 
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 
@@ -41,6 +58,17 @@ NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, nsCOMTypeInfo<nsIProtocolHandler>::GetII
 NS_METHOD
 nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 {
+
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for FTP Protocol logging 
+    // if necessary...
+    //
+    if (nsnull == gFTPLog) {
+        gFTPLog = PR_NewLogModule("nsFTPProtocol");
+    }
+#endif /* PR_LOGGING */
+
     nsFtpProtocolHandler* ph = new nsFtpProtocolHandler();
     if (ph == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -91,6 +119,7 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result)
 {
     nsresult rv;
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewURI(%s); ", aSpec));
 
     // Ftp URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
@@ -110,6 +139,7 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("FAILED\n"));
         return rv;
     }
 
@@ -118,10 +148,12 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     rv = url->SetPort(21);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("FAILED\n"));
         return rv;
     }
 
     *result = url;
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("SUCCEEDED\n"));
     return rv;
 }
 
@@ -139,6 +171,7 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = channel->Init(verb, url, eventSinkGetter);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));
         return rv;
     }
 

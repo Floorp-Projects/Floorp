@@ -225,6 +225,8 @@ private:
     PRBool              mKeepRunning;       // thread event loop boolean
 
     nsString2           mContentType;       // the content type of the data we're dealing w/.
+    char*               mURLSpec;
+
 };
 
 #define NS_FTP_THREAD_SEGMENT_SIZE      (4*1024)
