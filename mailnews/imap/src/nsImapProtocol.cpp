@@ -735,9 +735,7 @@ PRBool
 nsImapProtocol::ImapThreadIsRunning()
 {
     PRBool retValue = PR_FALSE;
-    PR_CEnterMonitor(this);
     retValue = m_imapThreadIsRunning;
-    PR_CExitMonitor(this);
     return retValue;
 }
 
