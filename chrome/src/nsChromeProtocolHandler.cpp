@@ -682,9 +682,11 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         if (NS_FAILED(rv)) return rv;
 
         NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-        serv->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
         if (NS_FAILED(rv)) return rv;
-
+        
+        rv = serv->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
+        if (NS_FAILED(rv)) return rv;
+        
         rv = serv->NewChannelFromURI(chromeURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
