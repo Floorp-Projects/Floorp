@@ -72,40 +72,41 @@ public:
     NS_IMETHOD Show(PRBool);
     NS_IMETHOD IsVisible(PRBool&);
 
-    NS_IMETHOD ConstrainPosition(int, PRInt32*, PRInt32*);
-    NS_IMETHOD Move(int, int);
-    NS_IMETHOD Resize(int, int, int);
-    NS_IMETHOD Resize(int, int, int, int, int);
-    NS_IMETHOD Enable(int);
+    NS_IMETHOD ConstrainPosition(PRBool, PRInt32*, PRInt32*);
+    NS_IMETHOD Move(PRInt32, PRInt32);
+    NS_IMETHOD Resize(PRInt32, PRInt32, PRBool);
+    NS_IMETHOD Resize(PRInt32, PRInt32, PRInt32, PRInt32, PRBool);
+    NS_IMETHOD Enable(PRBool);
     NS_IMETHOD IsEnabled(PRBool*);
-    NS_IMETHOD SetFocus(int);
+    NS_IMETHOD SetFocus(PRBool araise = PR_FALSE);
 
     virtual nsIFontMetrics* GetFont();
 
     NS_IMETHOD SetFont(const nsFont&);
-    NS_IMETHOD Invalidate(int);
+    NS_IMETHOD Invalidate(PRBool);
     NS_IMETHOD Invalidate(const nsRect&, int);
     NS_IMETHOD Update();
     NS_IMETHOD SetColorMap(nsColorMap*);
-    NS_IMETHOD Scroll(int, int, nsRect*);
+    NS_IMETHOD Scroll(PRInt32, PRInt32, nsRect*);
     NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
 
     NS_METHOD SetModal(PRBool aModal);
     NS_METHOD ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow);
 
-    virtual void* GetNativeData(unsigned int);
+    virtual void* GetNativeData(PRUint32);
 
     NS_IMETHOD SetTitle(const nsAString&);
     NS_IMETHOD SetMenuBar(nsIMenuBar*);
-    NS_IMETHOD ShowMenuBar(int);
+    NS_IMETHOD ShowMenuBar(PRBool);
+    NS_IMETHOD GetScreenBounds(nsRect &aRect);
     NS_IMETHOD WidgetToScreen(const nsRect&, nsRect&);
     NS_IMETHOD ScreenToWidget(const nsRect&, nsRect&);
     NS_IMETHOD BeginResizingChildren();
     NS_IMETHOD EndResizingChildren();
     NS_IMETHOD GetPreferredSize(PRInt32&, PRInt32&);
-    NS_IMETHOD SetPreferredSize(int, int);
+    NS_IMETHOD SetPreferredSize(PRInt32, PRInt32);
     NS_IMETHOD DispatchEvent(nsGUIEvent*, nsEventStatus&);
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener*, int, int);
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener*, PRBool, PRBool);
 
     // nsIWidget
     NS_IMETHOD         Create(nsIWidget        *aParent,
