@@ -821,7 +821,7 @@ static const nsModuleComponentInfo gComponents[] = {
 
   { "CSS parser",
     NS_CSSPARSER_CID,
-    nsnull,
+    "@mozilla.org/content/css-parser;1",
     CreateCSSParser },
 
   { "CSS loader",
@@ -865,7 +865,7 @@ static const nsModuleComponentInfo gComponents[] = {
 
   { "Dom selection",
     NS_DOMSELECTION_CID,
-    nsnull,
+    "@mozilla.org/content/dom-selection;1",
     CreateDOMSelection },
 
   { "Frame selection",
@@ -875,37 +875,37 @@ static const nsModuleComponentInfo gComponents[] = {
 
   { "Range",
     NS_RANGE_CID,
-    nsnull,
+    "@mozilla.org/content/range;1",
     CreateRange },
 
   { "Range Utils",
     NS_RANGEUTILS_CID,
-    nsnull,
+    "@mozilla.org/content/range-utils;1",
     CreateRangeUtils },
 
   { "Content iterator",
     NS_CONTENTITERATOR_CID,
-    nsnull,
+    "@mozilla.org/content/post-content-iterator;1",
     CreateContentIterator },
 
   { "Pre Content iterator",
     NS_PRECONTENTITERATOR_CID,
-    nsnull,
+    "@mozilla.org/content/pre-content-iterator;1",
     CreatePreContentIterator },
 
   { "Generated Content iterator",
     NS_GENERATEDCONTENTITERATOR_CID,
-    nsnull,
+    "@mozilla.org/content/generated-content-iterator;1",
     CreateGeneratedContentIterator },
 
   { "Generated Subtree iterator",
     NS_GENERATEDSUBTREEITERATOR_CID,
-    nsnull,
+    "@mozilla.org/content/generated-subtree-content-iterator;1",
     CreateGeneratedSubtreeIterator },
 
   { "Subtree iterator",
     NS_SUBTREEITERATOR_CID,
-    nsnull,
+    "@mozilla.org/content/subtree-content-iterator;1",
     CreateSubtreeIterator },
 
   { "CSS Object Model Factory",
