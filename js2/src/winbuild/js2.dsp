@@ -114,6 +114,10 @@ SOURCE=..\utilities.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\vmtypes.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\world.cpp
 # End Source File
 # End Group
@@ -146,6 +150,10 @@ SOURCE=..\JSScope.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\jstypes.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\numerics.h
 # End Source File
 # Begin Source File
@@ -159,6 +167,10 @@ SOURCE=..\systemtypes.h
 # Begin Source File
 
 SOURCE=..\utilities.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\vmtypes.h
 # End Source File
 # Begin Source File
 
