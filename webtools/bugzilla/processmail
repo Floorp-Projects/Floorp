@@ -123,15 +123,23 @@ sub DescDependencies {
         }
         if (@list) {
             my @verbose;
+            my $count = 0;
             foreach my $i (@list) {
-                SendSQL("select bug_status, resolution from bugs where bug_id = $i");
-                my ($bug_status, $resolution) = (FetchSQLData());
-                if ($resolution ne "") {
-                    $resolution = "/$resolution";
+                SendSQL("select bug_status from bugs where bug_id = $i");
+                my ($bug_status) = (FetchSQLData());
+                my $desc = "[Closed]";
+                if ($bug_status eq "OPEN" || $bug_status eq "NEW" ||
+                    $bug_status eq "REOPENED") {
+                    $desc = "";
                 }
-                push(@verbose, $i . "[$bug_status$resolution]");
+                push(@verbose, $i . "$desc");
+                $count++;
             }
-            $result .= "$title: " . join(', ', @verbose) . "\n";
+            if ($count > 5) {
+                $result .= "$title: Big list (more than 5) has been omitted\n";
+            } else {
+                $result .= "$title: " . join(', ', @verbose) . "\n";
+            }
         }
         my $tmp = $me;
         $me = $target;
@@ -314,13 +322,14 @@ sub ProcessOneBug {
             my $msg = PerformSubsts(Param("changedmail"), \%substs);
 
             if (!$regenerate) {
-		# Note: fixaddresses may result in a Cc: only.  This seems harmless.
+                # Note: fixaddresses may result in a Cc: only.  This seems
+                # harmless.
                 open(SENDMAIL, "|/usr/lib/sendmail -t") ||
                     die "Can't open sendmail";
                 print SENDMAIL $msg;
                 close SENDMAIL;
                 $logstr = "$logstr; mail sent to $tolist, $cclist";
-		print "<B>Email sent to:</B> $tolist $cclist\n";
+                print "<B>Email sent to:</B> $tolist $cclist\n";
                 if ($didexclude) {
                     print "<B>Excluding:</B> $nametoexclude (<a href=changepassword.cgi>change your preferences</a> if you wish not to be excluded)\n";
                 }
