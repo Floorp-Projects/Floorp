@@ -76,8 +76,6 @@ public:
 private:
   void FlushPendingReflows();
   
-  nsIFrame* GetContainingBlock(nsIFrame *aFrame);
-
   nsresult GetStyleData(nsStyleStructID aID,
                         const nsStyleStruct*& aStyleStruct,
                         nsIFrame* aFrame=0);

@@ -53,6 +53,7 @@
 #include "nsCSSKeywords.h"
 #include "nsDOMCSSRect.h"
 #include "nsLayoutAtoms.h"
+#include "nsHTMLReflowState.h"
 #include "nsThemeConstants.h"
 
 #include "nsPresContext.h"
@@ -1834,7 +1835,8 @@ nsComputedDOMStyle::GetTextIndent(nsIFrame *aFrame,
         break;
       case eStyleUnit_Percent:
         {
-          nsIFrame *container = GetContainingBlock(aFrame);
+          nsIFrame *container =
+            nsHTMLReflowState::GetContainingBlockFor(aFrame);
           if (container) {
             val->SetTwips(container->GetSize().width *
                           text->mTextIndent.GetPercentValue());
@@ -2694,7 +2696,7 @@ nsComputedDOMStyle::GetMaxHeight(nsIFrame *aFrame,
     nscoord minHeight = 0;
 
     if (positionData->mMinHeight.GetUnit() == eStyleUnit_Percent) {
-      container = GetContainingBlock(aFrame);
+      container = nsHTMLReflowState::GetContainingBlockFor(aFrame);
       if (container) {
         size = container->GetSize();
         minHeight = nscoord(size.height *
@@ -2711,7 +2713,7 @@ nsComputedDOMStyle::GetMaxHeight(nsIFrame *aFrame,
         break;
       case eStyleUnit_Percent:
         if (!container) {
-          container = GetContainingBlock(aFrame);
+          container = nsHTMLReflowState::GetContainingBlockFor(aFrame);
           if (container) {
             size = container->GetSize();
           } else {
@@ -2754,7 +2756,7 @@ nsComputedDOMStyle::GetMaxWidth(nsIFrame *aFrame,
     nscoord minWidth = 0;
 
     if (positionData->mMinWidth.GetUnit() == eStyleUnit_Percent) {
-      container = GetContainingBlock(aFrame);
+      container = nsHTMLReflowState::GetContainingBlockFor(aFrame);
       if (container) {
         size = container->GetSize();
         minWidth = nscoord(size.width *
@@ -2771,7 +2773,7 @@ nsComputedDOMStyle::GetMaxWidth(nsIFrame *aFrame,
         break;
       case eStyleUnit_Percent:
         if (!container) {
-          container = GetContainingBlock(aFrame);
+          container = nsHTMLReflowState::GetContainingBlockFor(aFrame);
           if (container) {
             size = container->GetSize();
           } else {
@@ -2815,7 +2817,7 @@ nsComputedDOMStyle::GetMinHeight(nsIFrame *aFrame,
         val->SetTwips(positionData->mMinHeight.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        container = GetContainingBlock(aFrame);
+        container = nsHTMLReflowState::GetContainingBlockFor(aFrame);
         if (container) {
           val->SetTwips(container->GetSize().height *
                         positionData->mMinHeight.GetPercentValue());
@@ -2855,7 +2857,7 @@ nsComputedDOMStyle::GetMinWidth(nsIFrame *aFrame,
         val->SetTwips(positionData->mMinWidth.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        container = GetContainingBlock(aFrame);
+        container = nsHTMLReflowState::GetContainingBlockFor(aFrame);
         if (container) {
           val->SetTwips(container->GetSize().width *
                         positionData->mMinWidth.GetPercentValue());
@@ -2949,7 +2951,7 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsIFrame* container = GetContainingBlock(aFrame);
+  nsIFrame* container = nsHTMLReflowState::GetContainingBlockFor(aFrame);
   if (container) {
     nscoord margin = GetMarginWidthCoordFor(aSide, aFrame);
     nscoord border = GetBorderWidthCoordFor(aSide, container);
@@ -3063,7 +3065,7 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
         val->SetTwips(sign * coord.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        container = GetContainingBlock(aFrame);
+        container = nsHTMLReflowState::GetContainingBlockFor(aFrame);
         if (container) {
           nsMargin border;
           nsMargin padding;
@@ -3162,25 +3164,6 @@ nsComputedDOMStyle::FlushPendingReflows()
   if (document) {
     document->FlushPendingNotifications(Flush_Layout);
   }
-}
-
-nsIFrame*
-nsComputedDOMStyle::GetContainingBlock(nsIFrame *aFrame)
-{
-  if (!aFrame) {
-    // Tell caller that they have no containing block, seeing as they
-    // are not being displayed
-
-    return nsnull;
-  }
-
-  nsIFrame* container = aFrame;
-  do {
-    container = container->GetParent();
-  } while (container && !container->IsContainingBlock());
-
-  NS_POSTCONDITION(container, "Frame has no containing block");
-  return container;
 }
 
 nsresult

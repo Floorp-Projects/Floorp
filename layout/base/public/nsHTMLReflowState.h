@@ -323,6 +323,13 @@ struct nsHTMLReflowState {
     GetContainingBlockContentWidth(const nsHTMLReflowState* aReflowState);
 
   /**
+   * Find the containing block of aFrame.  This may return null if
+   * there isn't one (but that should really only happen for root
+   * frames).
+   */
+  static const nsIFrame* GetContainingBlockFor(const nsIFrame* aFrame);
+
+  /**
    * Get the page box reflow state, starting from a frames
    * <B>parent</B> reflow state (the parent reflow state may or may not end
    * up being the containing block reflow state)

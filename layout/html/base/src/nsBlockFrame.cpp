@@ -5529,12 +5529,44 @@ nsBlockFrame::PaintTextDecorationLines(nsIRenderingContext& aRenderingContext,
                                        nscoord aSize) 
 {
   aRenderingContext.SetColor(aColor);
-  for (nsLineList::iterator line = begin_lines(), line_end = end_lines(); 
+  for (nsLineList::iterator line = begin_lines(), line_start = line,
+         line_end = end_lines(); 
        line != line_end; ++line) {
     if (!line->IsBlock()) {
-      aRenderingContext.FillRect(line->mBounds.x, 
-                                 line->mBounds.y + line->GetAscent() - aOffset, 
-                                 line->mBounds.width, aSize);
+      nscoord start = line->mBounds.x;
+      nscoord width = line->mBounds.width;
+
+      if (line == line_start) {
+        // Adjust for the text-indent.  See similar code in
+        // nsLineLayout::BeginLineReflow.
+        nscoord indent = 0;
+        const nsStyleText* styleText = GetStyleText();
+        nsStyleUnit unit = styleText->mTextIndent.GetUnit();
+        if (eStyleUnit_Coord == unit) {
+          indent = styleText->mTextIndent.GetCoordValue();
+        } else if (eStyleUnit_Percent == unit) {
+          // It's a percentage of the containing block width.
+          nsIFrame* containingBlock =
+            nsHTMLReflowState::GetContainingBlockFor(this);
+          NS_ASSERTION(containingBlock, "Must have containing block!");
+          indent = nscoord(styleText->mTextIndent.GetPercentValue() *
+                           containingBlock->GetRect().width);
+        }
+
+        // Adjust the start position and the width of the decoration by the
+        // value of the indent.  Note that indent can be negative; that's OK.
+        // It'll just increase the width (which can also happen to be
+        // negative!).
+        start += indent;
+        width -= indent;
+      }
+      
+      // Only paint if we have a positive width
+      if (width > 0) {
+        aRenderingContext.FillRect(start,
+                                   line->mBounds.y + line->GetAscent() - aOffset, 
+                                   width, aSize);
+      }
     }
   }
 }

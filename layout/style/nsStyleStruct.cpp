@@ -50,6 +50,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsHTMLReflowState.h"
 #include "prenv.h"
 
 #include "nsBidiUtils.h"
@@ -79,26 +80,23 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
     case eStyleUnit_Percent:
       {
         nscoord baseWidth = 0;
-        nsIFrame* frame = aFrame->GetParent();
-        while (frame) {
-          if (frame->IsContainingBlock()) {
-            baseWidth = frame->GetSize().width;
-            // subtract border of containing block
-            nsMargin border;
-            frame->GetStyleBorder()->CalcBorderFor(frame, border);
-            baseWidth -= (border.left + border.right);
-            // if aFrame is not absolutely positioned, subtract
-            // padding of containing block
-            const nsStyleDisplay* displayData = aFrame->GetStyleDisplay();
-            if (displayData->mPosition != NS_STYLE_POSITION_ABSOLUTE &&
-                displayData->mPosition != NS_STYLE_POSITION_FIXED) {
-              nsMargin padding;
-              frame->GetStylePadding()->CalcPaddingFor(frame, padding);
-              baseWidth -= (padding.left + padding.right);
-            }
-            break;
+        nsIFrame* frame =
+          nsHTMLReflowState::GetContainingBlockFor(aFrame);
+        if (frame) {
+          baseWidth = frame->GetSize().width;
+          // subtract border of containing block
+          nsMargin border;
+          frame->GetStyleBorder()->CalcBorderFor(frame, border);
+          baseWidth -= (border.left + border.right);
+          // if aFrame is not absolutely positioned, subtract
+          // padding of containing block
+          const nsStyleDisplay* displayData = aFrame->GetStyleDisplay();
+          if (displayData->mPosition != NS_STYLE_POSITION_ABSOLUTE &&
+              displayData->mPosition != NS_STYLE_POSITION_FIXED) {
+            nsMargin padding;
+            frame->GetStylePadding()->CalcPaddingFor(frame, padding);
+            baseWidth -= (padding.left + padding.right);
           }
-          frame = frame->GetParent();
         }
         result = (nscoord)((float)baseWidth * aCoord.GetPercentValue());
       }
