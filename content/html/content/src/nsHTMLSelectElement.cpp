@@ -975,7 +975,7 @@ NS_IMETHODIMP
 nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 {
   return SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
-                                   PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
+                                   PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
 }
 
 NS_IMETHODIMP
