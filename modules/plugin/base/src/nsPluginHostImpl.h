@@ -98,6 +98,9 @@ public:
           PRBool forceJSEnabled = PR_FALSE,
           PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
 
+  NS_IMETHOD
+  FindProxyForURL(const char* url, char* *result);
+
   //nsIPluginHost interface
 
   NS_IMETHOD

@@ -515,7 +515,13 @@ NS_IMETHODIMP nsPluginHostImpl :: PostURL(nsISupports* peer,
                                           PRBool forceJSEnabled,
                                           PRUint32 postHeadersLength, const char* postHeaders)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsPluginHostImpl :: Init(void)

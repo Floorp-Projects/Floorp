@@ -366,6 +366,9 @@ public:
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
 
+    NS_IMETHOD
+    FindProxyForURL(const char* url, char* *result);
+
     ////////////////////////////////////////////////////////////////////////////
     // nsPluginManager specific methods:
 
@@ -379,10 +382,10 @@ protected:
     virtual ~nsPluginManager(void);
 
     // aggregated interfaces:
-    nsIJVMManager* GetJVMMgr(const nsIID& aIID);
-
     nsISupports*        fJVMMgr;
     nsISupports*        fMalloc;
+    nsISupports*        fFileUtils;
+
     PRUint16            fWaiting;
     void*               fOldCursor;
     
@@ -416,6 +419,9 @@ public:
 
     NS_DECL_AGGREGATED
 
+    static NS_METHOD
+    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    
     void SetProgramPath(const char* path) { fProgramPath = path; }
 
 protected:

@@ -85,6 +85,9 @@ public:
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
 
+    NS_IMETHOD
+    FindProxyForURL(const char* url, char* *result);
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1006,6 +1009,11 @@ CPluginManager::PostURL(nsISupports* peer, const char* url, const char* target,
     return fromNPError[err];
 }
 
+NS_METHOD
+CPluginManager::FindProxyForURL(const char* url, char* *result)
+{
+    return NS_ERROR_FAILURE;
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 // UserAgent:
