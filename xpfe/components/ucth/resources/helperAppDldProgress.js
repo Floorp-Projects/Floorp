@@ -304,7 +304,7 @@ function replaceInsert( text, index, value ) {
 
 function onLoad() {
     // Set global variables.
-    helperAppLoader = window.arguments[0];
+    helperAppLoader = window.arguments[0].QueryInterface( Components.interfaces.nsIHelperAppLauncher );
 
     if ( !helperAppLoader ) {
         dump( "Invalid argument to downloadProgress.xul\n" );
@@ -337,7 +337,12 @@ function onLoad() {
 
     // set our web progress listener on the helper app launcher
     helperAppLoader.setWebProgressListener(progressListener);
-    moveToAlertPosition();
+
+    if ( window.opener ) {
+        moveToAlertPosition();
+    } else {
+        centerWindowOnScreen();
+    }
 }
 
 function onUnload()
