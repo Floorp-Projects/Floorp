@@ -78,7 +78,7 @@
     testcases[testcases.length] = new TestCase(
         SECTION,
         "var result=''; for ( aVar in this ) { " +
-        "if (aVar == 'aVar') result = 'FAILED!'; result",
+        "if (aVar == 'aVar') {return a failure}; result",
         "PASSED",
         result );
 
