@@ -22,81 +22,97 @@ static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsXlib::nsFontMetricsXlib()
 {
+  printf("nsFontMetricsXlib::nsFontMetricsXlib()\n");
   NS_INIT_REFCNT();
 }
 
 nsFontMetricsXlib::~nsFontMetricsXlib()
 {
+  printf("nsFontMetricsXlib::~nsFontMetricsXlib()\n");
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsXlib, kIFontMetricsIID)
 
 NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aContext)
 {
+  printf("nsFontMetricsXlib::Init()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::Destroy()
 {
+  printf("nsFontMetricsXlib::Destroy()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetXHeight(nscoord& aResult)
 {
+  printf("nsFontMetricsXlib::GetXHeight()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetSuperscriptOffset(nscoord& aResult)
 {
+  printf("nsFontMetricsXlib::GetSuperscriptOffset()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetSubscriptOffset(nscoord& aResult)
 {
+  printf("nsFontMetricsXlib::GetSubscriptOffset()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
+  printf("nsFontMetricsXlib::GetStrikeout()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
+  printf("nsFontMetricsXlib::GetUnderline()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetHeight(nscoord &aHeight)
 {
+  printf("nsFontMetricsXlib::GetHeight()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetLeading(nscoord &aLeading)
 {
+  printf("nsFontMetricsXlib::GetLeading()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetMaxAscent(nscoord &aAscent)
 {
+  printf("nsFontMetricsXlib::GetMaxAscent()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetMaxDescent(nscoord &aDescent)
 {
+  printf("nsFontMetricsXlib::GetMaxDescent()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetMaxAdvance(nscoord &aAdvance)
 {
+  printf("nsFontMetricsXlib::GetMaxAdvance()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetFont(const nsFont *&aFont)
 {
+  printf("nsFontMetricsXlib::GetFont()\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsXlib::GetFontHandle(nsFontHandle &aHandle)
 {
+  printf("nsFontMetricsXlib::GetFontHandle()\n");
   return NS_OK;
 }

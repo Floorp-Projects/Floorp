@@ -27,6 +27,18 @@ nsRenderingContextXlib::nsRenderingContextXlib()
 {
   printf("nsRenderingContextXlib::nsRenderingContextXlib()\n");
   NS_INIT_REFCNT();
+  mRenderingSurface = nsnull;
+  mTMatrix = nsnull;
+  mFontMetrics = nsnull;
+  mContext = nsnull;
+  mScriptObject = nsnull;
+}
+
+nsRenderingContextXlib::~nsRenderingContextXlib()
+{
+  printf("nsRenderingContextXlib::~nsRenderingContextXlib()\n");
+  NS_IF_RELEASE(mContext);
+  NS_IF_RELEASE(mFontMetrics);
 }
 
 nsresult
@@ -76,14 +88,34 @@ NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 {
   printf("nsRenderingContextXlib::Init()\n");
-  return NS_OK;
+  mContext = aContext;
+  NS_IF_ADDREF(mContext);
+
+  mRenderingSurface = (nsDrawingSurfaceXlib *)new nsDrawingSurfaceXlib();
+
+  return CommonInit();
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
 {
   printf("nsRenderingContxtXbli::Init()\n");
-  return NS_OK;
+
+  mContext = aContext;
+  NS_IF_ADDREF(mContext);
+
+  mRenderingSurface = (nsDrawingSurfaceXlib *)aSurface;
+
+  if (nsnull != mRenderingSurface) {
+    NS_ADDREF(mRenderingSurface);
+  }
+
+  return CommonInit();
+}
+
+nsresult nsRenderingContextXlib::CommonInit(void)
+{
+  // put common stuff in here.
 }
 
 NS_IMETHODIMP

@@ -43,6 +43,7 @@ class nsRenderingContextXlib : public nsIRenderingContext,
 {
  public:
   nsRenderingContextXlib();
+  ~nsRenderingContextXlib();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -155,10 +156,15 @@ class nsRenderingContextXlib : public nsIRenderingContext,
   // XXX uncomment this...
   NS_DECL_IDOMRENDERINGCONTEXT
 
-private:
-  nsDrawingSurfaceXlib   *mRenderingSurface;
+  // this is a common init function for both of the init functions.
+  nsresult CommonInit(void);
 
-  nsTransform2D         *mTMatrix;
+private:
+  nsDrawingSurfaceXlib    *mRenderingSurface;
+  nsTransform2D           *mTMatrix;
+  nsIFontMetrics          *mFontMetrics;
+  nsIDeviceContext        *mContext;
+  void                    *mScriptObject;
 };
 
 #endif
