@@ -839,6 +839,7 @@ nsresult nsAbView::AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32
   rv = mCards.InsertElementAt((void *)abcard, *index);
   NS_ENSURE_SUCCESS(rv,rv);
     
+  // this needs to happen after we insert the card, as RowCountChanged() will call GetRowCount()
   if (mOutliner)
     rv = mOutliner->RowCountChanged(*index, 1);
 
@@ -911,6 +912,7 @@ nsresult nsAbView::RemoveCardAndSelectNextCard(nsISupports *item)
       rv = RemoveCardAt(index);
       NS_ENSURE_SUCCESS(rv,rv);
 
+      // this needs to happen after we remove the card, as RowCountChanged() will call GetRowCount()
       if (mOutliner) {
         rv = mOutliner->RowCountChanged(index, -1);
       NS_ENSURE_SUCCESS(rv,rv);

@@ -218,17 +218,19 @@ function ResultsPaneSelectionChanged()
 
 function UpdateCardView()
 {
-  var card = GetSelectedCard();
+  var cards = GetSelectedAbCards();
 
   // display the selected card, if exactly one card is selected.
   // either no cards, or more than one card is selected, clear the pane.
-  OnClickedCard(card)
+  if (cards.length == 1)
+    OnClickedCard(cards[0])
+  else 
+    ClearCardViewPane();
 }
 
-// if card is null, OnClickedCard() must clear the card pane
 function OnClickedCard(card)
-{
-  if (card)
+{ 
+  if (card) 
     DisplayCardViewPane(card);
   else
     ClearCardViewPane();

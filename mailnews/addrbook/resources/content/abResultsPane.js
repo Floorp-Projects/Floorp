@@ -74,7 +74,7 @@ function AbResultsPaneOnClick(event)
          AbResultsPaneDoubleClick(gAbView.getCardFromRow(row.value));
        }
        else {
-         OnClickedCard(gAbView.getCardFromRow(row.value));
+         UpdateCardView();
        }
     }
 }
