@@ -43,7 +43,9 @@ var cookieBundle;
 var gDateService = null;
 
 var showDetails = "";
+var showDetailsAccessKey = "";
 var hideDetails = "";
+var hideDetailsAccessKey = "";
 
 function onload()
 {

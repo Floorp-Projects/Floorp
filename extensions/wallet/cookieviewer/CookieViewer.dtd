@@ -1,7 +1,7 @@
 <!ENTITY     tab.cookiesonsystem.label      "Stored Cookies">
 <!ENTITY     tab.bannedservers.label        "Cookie Sites">
 <!ENTITY     div.bannedservers.label        "Sites that can and cannot store cookies on your computer.">
-<!ENTITY     div.cookiesonsystem.label      "View and Remove Cookies that are stored on your computer.">
+<!ENTITY     div.cookiesonsystem.label      "View and remove cookies that are stored on your computer.">
 <!ENTITY     treehead.cookiename.label      "Cookie Name">
 <!ENTITY     treehead.cookiedomain.label    "Site"> 
 <!ENTITY     treehead.cookiestatus.label    "Status"> 
