@@ -1,6 +1,10 @@
 #include "stopwatch.h"
 #include <stdio.h>
 #include <time.h>
+#ifdef XP_UNIX
+#include <unistd.h>
+#include <sys/times.h>
+#endif
 #ifdef XP_WIN
 #include "windows.h"
 #endif
@@ -79,7 +83,7 @@ void Stopwatch::RestoreState() {
   state = (EState*) mSavedStates->Pop();
   if (state) {
     if (*state == kRunning && fState == kStopped)
-      Start(FALSE);
+      Start(PR_FALSE);
     else if (*state == kStopped && fState == kRunning)
       Stop();
     delete state;

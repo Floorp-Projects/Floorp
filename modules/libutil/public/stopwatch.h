@@ -5,10 +5,14 @@
 #include "prlog.h"
 #include "nsDeque.h"
 
-const double gTicks = 1.0e-7;
+static double gTicks = 1.0e-7;
 
 #ifdef XP_MAC
 #define R__MAC
+#endif
+
+#ifdef XP_UNIX
+#define R__UNIX
 #endif
 
 #ifdef MOZ_PERF_METRICS
@@ -94,8 +98,8 @@ public:
    void           RestoreState();   // restore last recored state of stopwatch
    double         RealTime();
    void           Reset() { ResetCpuTime(); ResetRealTime(); }
-   void           ResetCpuTime(double time = 0) { Stop();  fTotalCpuTime = time; }
-   void           ResetRealTime(double time = 0) { Stop(); fTotalRealTime = time; }
+   void           ResetCpuTime(double aTime = 0) { Stop();  fTotalCpuTime = aTime; }
+   void           ResetRealTime(double aTime = 0) { Stop(); fTotalRealTime = aTime; }
    double         CpuTime();
    void           Print(void);
    static double  GetRealTime();

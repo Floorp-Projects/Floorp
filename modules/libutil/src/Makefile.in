@@ -28,6 +28,7 @@ LIBRARY_NAME	= mozutil_s
 REQUIRES	= util
 
 CSRCS		= obs.c
+CPPSRCS		= stopwatch.cpp
 
 INHIBIT_STRIP_NOT_EXPORTED = 1
 
