@@ -2065,8 +2065,8 @@ _PR_MD_GETPEERNAME(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *len)
                 PR_SetError(PR_NOT_CONNECTED_ERROR, 0);
                 return PR_FAILURE;
             }
+            *len = PR_NETADDR_SIZE(&fd->secret->md.peer_addr);
             memcpy(addr, &fd->secret->md.peer_addr, *len);
-            *len = PR_NETADDR_SIZE(addr);
             return PR_SUCCESS;
         } else {
             _PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
