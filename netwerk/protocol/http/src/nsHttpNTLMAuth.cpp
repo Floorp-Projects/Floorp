@@ -196,6 +196,15 @@ CanUseSysNTLM(nsIHttpChannel *channel, PRBool isProxyAuth)
     return PR_FALSE;
 }
 
+// Dummy class for session state object.  This class doesn't hold any data.
+// Instead we use its existance as a flag.  See ChallengeReceived.
+class nsNTLMSessionState : public nsISupports 
+{
+public:
+    NS_DECL_ISUPPORTS
+};
+NS_IMPL_ISUPPORTS0(nsNTLMSessionState);
+
 #endif
 
 //-----------------------------------------------------------------------------
@@ -217,8 +226,14 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
     *identityInvalid = PR_FALSE;
     // start new auth sequence if challenge is exactly "NTLM"
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
-        nsCOMPtr<nsIAuthModule> module;
+        nsCOMPtr<nsISupports> module;
 #ifdef XP_WIN
+        //
+        // our session state is non-null to indicate that we've flagged
+        // this auth domain as not accepting the system's default login.
+        //
+        PRBool trySysNTLM = (*sessionState == nsnull);
+
         //
         // on windows, we may have access to the built-in SSPI library,
         // which could be used to authenticate the user without prompting.
@@ -229,13 +244,22 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
         // may send a weak LMv1 hash of the user's password, we cannot just
         // send it to any server.
         //
-        if (!*continuationState && CanUseSysNTLM(channel, isProxyAuth))
+        if (trySysNTLM && !*continuationState && CanUseSysNTLM(channel, isProxyAuth))
             module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm");
 
         // it's possible that there is no ntlm-sspi auth module...
-        if (!module)
-#endif
+        if (!module) {
+            if (!*sessionState) {
+                // remember the fact that we cannot use the "sys-ntlm" module,
+                // so we don't ever bother trying again for this auth domain.
+                *sessionState = new nsNTLMSessionState();
+                if (!*sessionState)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                NS_ADDREF(*sessionState);
+            }
+#else
         {
+#endif 
             module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
 
             // prompt user for domain, username, and password...
@@ -248,9 +272,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
 
         // non-null continuation state implies that we failed to authenticate.
         // blow away the old authentication state, and use the new one.
-        NS_IF_RELEASE(*continuationState);
-
-        NS_ADDREF(*continuationState = module);
+        module.swap(*continuationState);
     }
     return NS_OK;
 }

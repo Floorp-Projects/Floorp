@@ -2106,10 +2106,14 @@ nsHttpChannel::GetCredentials(const char *challenges,
                               PRBool proxyAuth,
                               nsAFlatCString &creds)
 {
-    nsCAutoString challenge, scheme;
     nsCOMPtr<nsIHttpAuthenticator> auth;
+    nsCAutoString challenge;
+
+    nsCString authType; // force heap allocation to enable string sharing since
+                        // we'll be assigning this value into mAuthType.
 
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
+    PRBool gotCreds = PR_FALSE;
     
     // figure out which challenge we can handle and which authenticator to use.
     for (const char *eol = challenges - 1; eol; ) {
@@ -2121,8 +2125,17 @@ nsHttpChannel::GetCredentials(const char *challenges,
         else
             challenge.Assign(p);
 
-        rv = ParseChallenge(challenge.get(), scheme, getter_AddRefs(auth));
+        rv = GetAuthenticator(challenge.get(), authType, getter_AddRefs(auth));
         if (NS_SUCCEEDED(rv)) {
+            //
+            // if we've already selected an auth type from a previous challenge
+            // received while processing this channel, then skip others until
+            // we find a challenge corresponding to the previously tried auth
+            // type.
+            //
+            if (!mAuthType.IsEmpty() && authType != mAuthType)
+                continue;
+
             //
             // we allow the routines to run all the way through before we
             // decide if they are valid.
@@ -2137,11 +2150,25 @@ nsHttpChannel::GetCredentials(const char *challenges,
             // if a particular auth method only knows 1 thing, like a
             // non-identity based authentication method)
             //
-            rv = GetCredentialsForChallenge(challenge.get(), scheme.get(),
+            rv = GetCredentialsForChallenge(challenge.get(), authType.get(),
                                             proxyAuth, auth, creds);
-            if (NS_SUCCEEDED(rv))
+            if (NS_SUCCEEDED(rv)) {
+                gotCreds = PR_TRUE;
+                mAuthType = authType;
                 break;
+            }
+
+            // reset the auth type and continuation state
+            mAuthType.Truncate();
+            NS_IF_RELEASE(mAuthContinuationState);
         }
+    }
+    if (!gotCreds && !mAuthType.IsEmpty()) {
+        // looks like we never found the auth type we were looking for.
+        // reset the auth type and continuation state, and try again.
+        mAuthType.Truncate();
+        NS_IF_RELEASE(mAuthContinuationState);
+        rv = GetCredentials(challenges, proxyAuth, creds);
     }
     return rv;
 }
@@ -2238,6 +2265,8 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
     sessionStateGrip.swap(sessionState);
     if (NS_FAILED(rv)) return rv;
 
+    LOG(("  identity invalid = %d\n", identityInvalid));
+
     if (identityInvalid) {
         if (entry) {
             if (ident->Equals(entry->Identity())) {
@@ -2317,11 +2346,11 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
 }
 
 nsresult
-nsHttpChannel::ParseChallenge(const char *challenge,
-                              nsCString &authType,
-                              nsIHttpAuthenticator **auth)
+nsHttpChannel::GetAuthenticator(const char *challenge,
+                                nsCString &authType,
+                                nsIHttpAuthenticator **auth)
 {
-    LOG(("nsHttpChannel::ParseChallenge [this=%x]\n", this));
+    LOG(("nsHttpChannel::GetAuthenticator [this=%x]\n", this));
 
     const char *p;
   
@@ -2614,7 +2643,6 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
                                       const char *path,
                                       nsHttpAuthIdentity &ident)
 {
-    nsCOMPtr<nsIHttpAuthenticator> auth;
     nsHttpAuthEntry *entry = nsnull;
     nsresult rv;
 
@@ -2650,8 +2678,9 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
         // credentials.  if the identity is from the URI, then we cannot use
         // the stored credentials.
         if ((!creds[0] || identFromURI) && challenge[0]) {
+            nsCOMPtr<nsIHttpAuthenticator> auth;
             nsCAutoString unused;
-            rv = ParseChallenge(challenge, unused, getter_AddRefs(auth));
+            rv = GetAuthenticator(challenge, unused, getter_AddRefs(auth));
             if (NS_SUCCEEDED(rv)) {
                 PRBool proxyAuth = (header == nsHttp::Proxy_Authorization);
                 rv = GenCredsAndSetEntry(auth, proxyAuth, scheme, host, port, path,
@@ -2659,6 +2688,9 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
                                          entry->mMetaData, getter_Copies(temp));
                 if (NS_SUCCEEDED(rv))
                     creds = temp.get();
+                // make sure the continuation state is null since we do not
+                // support mixing preemptive and 'multirequest' authentication.
+                NS_IF_RELEASE(mAuthContinuationState);
             }
         }
         if (creds[0]) {
