@@ -1500,6 +1500,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "Generating the form post temp file failed.\n");
   NS_IF_RELEASE(encoder);
+  NS_IF_RELEASE(platformencoder);
   return rv;
 }
 
