@@ -31,11 +31,17 @@ CSRCS= \
 CPPSRCS= \
          nsCharDetDll.cpp \
          nsMetaCharsetObserver.cpp \
+         nsXMLEncodingObserver.cpp \
+         nsObserverBase.cpp \
+         nsDetectionAdaptor.cpp \
 	$(NULL)
 
 CPP_OBJS= \
         .\$(OBJDIR)\nsCharDetDll.obj \
         .\$(OBJDIR)\nsMetaCharsetObserver.obj \
+        .\$(OBJDIR)\nsXMLEncodingObserver.obj \
+        .\$(OBJDIR)\nsObserverBase.obj \
+        .\$(OBJDIR)\nsDetectionAdaptor.obj \
 	$(NULL)
 
 MODULE=chardet

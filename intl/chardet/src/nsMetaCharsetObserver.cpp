@@ -15,12 +15,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#define NS_IMPL_IDS
 #include "nsICharsetAlias.h"
-#undef NS_IMPL_IDS
-
-//#define DONT_INFORM_WEBSHELL
-
 #include "nsMetaCharsetObserver.h"
 #include "nsIMetaCharsetService.h"
 #include "nsIElementObserver.h"
@@ -32,17 +27,10 @@
 #include "pratom.h"
 #include "nsCharDetDll.h"
 #include "nsIServiceManager.h"
-#include "nsIDocumentLoader.h"
-#include "nsIWebShellServices.h"
-#include "nsIContentViewerContainer.h"
+#include "nsObserverBase.h"
 
-static NS_DEFINE_IID(kIElementObserverIID, NS_IELEMENTOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
-static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
-static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
 //========================================================================== 
 //
 // Class declaration for the class 
@@ -50,6 +38,7 @@ static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
 //========================================================================== 
 class nsMetaCharsetObserver: public nsIElementObserver, 
                              public nsIObserver, 
+                             public nsObserverBase,
                              public nsIMetaCharsetService {
 
   NS_DECL_ISUPPORTS
@@ -75,6 +64,8 @@ public:
    */
   NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+  NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
+                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
   /* methode for nsIObserver */
   NS_DECL_IOBSERVER
@@ -84,10 +75,9 @@ public:
   NS_IMETHOD End();
 private:
 
-  NS_IMETHOD NotifyWebShell(PRUint32 aDocumentID, const char* charset, nsCharsetSource source);
+  NS_IMETHOD Notify(PRUint32 aDocumentID, PRUint32 numOfAttributes, 
+                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
-
-  nsIObserver* mHack;
 };
 
 //-------------------------------------------------------------------------
@@ -95,7 +85,6 @@ nsMetaCharsetObserver::nsMetaCharsetObserver()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(& g_InstanceCount);
-  mHack = this;
 }
 //-------------------------------------------------------------------------
 nsMetaCharsetObserver::~nsMetaCharsetObserver()
@@ -116,7 +105,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::QueryInterface(REFNSIID aIID, void** aInsta
   }
   *aInstancePtr = NULL;
 
-  if( aIID.Equals ( kIElementObserverIID )) {
+  if( aIID.Equals ( nsIElementObserver::GetIID() )) {
     *aInstancePtr = (void*) ((nsIElementObserver*) this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -127,14 +116,14 @@ NS_IMETHODIMP nsMetaCharsetObserver::QueryInterface(REFNSIID aIID, void** aInsta
     return NS_OK;
   }
 
-  if( aIID.Equals ( kIMetaCharsetServiceIID )) {
+  if( aIID.Equals ( nsIMetaCharsetService::GetIID() )) {
     *aInstancePtr = (void*) ((nsIMetaCharsetService*) this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
   if( aIID.Equals ( kISupportsIID )) {
-    *aInstancePtr = (void*) (this);
+    *aInstancePtr = (void*) ( this );
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -154,6 +143,19 @@ NS_IMETHODIMP_(const char*) nsMetaCharsetObserver::GetTagNameAt(PRUint32 aTagInd
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      PRUint32 aDocumentID, 
+                     const PRUnichar* aTag, 
+                     PRUint32 numOfAttributes, 
+                     const PRUnichar* nameArray[], 
+                     const PRUnichar* valueArray[])
+{
+    if(0 != nsCRT::strcasecmp(aTag, "META")) 
+        return NS_ERROR_ILLEGAL_VALUE;
+    else
+        return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMetaCharsetObserver::Notify(
+                     PRUint32 aDocumentID, 
                      eHTMLTags aTag, 
                      PRUint32 numOfAttributes, 
                      const PRUnichar* nameArray[], 
@@ -161,6 +163,16 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 {
     if(eHTMLTag_meta != aTag) 
         return NS_ERROR_ILLEGAL_VALUE;
+    else 
+        return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMetaCharsetObserver::Notify(
+                     PRUint32 aDocumentID, 
+                     PRUint32 numOfAttributes, 
+                     const PRUnichar* nameArray[], 
+                     const PRUnichar* valueArray[])
+{
 
     nsresult res = NS_OK;
     PRUint32 i;
@@ -180,6 +192,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                                 "Content-Type", 
                                 12)))
     {
+      PRBool bGotCharset = PR_FALSE;
+      PRBool bGotCharsetSource = PR_FALSE;
       nsAutoString currentCharset("unknown");
       nsAutoString charsetSourceStr("unknown");
 
@@ -187,16 +201,17 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       {
          if(0==nsCRT::strcmp(nameArray[i], "charset")) 
          {
+           bGotCharset = PR_TRUE;
            currentCharset = valueArray[i];
          } else if(0==nsCRT::strcmp(nameArray[i], "charsetSource")) {
+           bGotCharsetSource = PR_TRUE;
            charsetSourceStr = valueArray[i];
          }
       }
 
       // if we cannot find currentCharset or currentCharsetSource
       // return error.
-      if( currentCharset.Equals("unknown") ||
-          charsetSourceStr.Equals("unknown") )
+      if(! ( bGotCharsetSource && bGotCharset ))
       {
          return NS_ERROR_ILLEGAL_VALUE;
       }
@@ -240,7 +255,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                              nsICharsetAlias* calias = nsnull;
                              res = nsServiceManager::GetService(
                                             kCharsetAliasCID,
-                                            kICharsetAliasIID,
+                                            nsICharsetAlias::GetIID(),
                                             (nsISupports**) &calias);
                              if(NS_SUCCEEDED(res) && (nsnull != calias) ) 
                              {
@@ -274,51 +289,6 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
-  PRUint32 aDocumentID, const char* charset, nsCharsetSource source)
-{
-   nsresult res = NS_OK;
-   nsresult rv = NS_OK;
-   // shoudl docLoader a memeber to increase performance ???
-   nsIDocumentLoader * docLoader = nsnull;
-   nsIContentViewerContainer * cvc  = nsnull;
-   nsIWebShellServices* wss = nsnull;
-
-   if(NS_FAILED(rv =nsServiceManager::GetService(kDocLoaderServiceCID,
-                                                   kIDocumentLoaderIID,
-                                                   (nsISupports**)&docLoader)))
-     goto done;
-   
-   if(NS_FAILED(rv =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))
-     goto done;
-
-   if(NS_FAILED( rv = cvc->QueryInterface(kIWebShellServicesIID, (void**)&wss)))
-     goto done;
-
-#ifndef DONT_INFORM_WEBSHELL
-   // ask the webshellservice to load the URL
-   if(NS_FAILED( rv = wss->SetRendering(PR_FALSE) ))
-     goto done;
-
-   // XXX nisheeth, uncomment the following two line to see the reent problem
-
-   // if(NS_FAILED(rv = wss->StopDocumentLoad()))
-   //   goto done;
-
-   if(NS_FAILED(rv = wss->ReloadDocument(charset, source)))
-     goto done;
- 
-   res = NS_ERROR_HTMLPARSER_STOPPARSING;
-#endif
-done:
-   if(docLoader) {
-      nsServiceManager::ReleaseService(kDocLoaderServiceCID,docLoader);
-   }
-   NS_IF_RELEASE(cvc);
-   NS_IF_RELEASE(wss);
-   return res;
-}
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports*, const PRUnichar*, const PRUnichar*) 
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -336,7 +306,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->AddObserver(mHack, htmlTopic.GetUnicode());
+    res = anObserverService->AddObserver(this, htmlTopic.GetUnicode());
 
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
                                     anObserverService);
@@ -356,7 +326,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->RemoveObserver(mHack, htmlTopic.GetUnicode());
+    res = anObserverService->RemoveObserver(this, htmlTopic.GetUnicode());
 
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
                                     anObserverService);

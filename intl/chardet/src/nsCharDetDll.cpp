@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+#define NS_IMPL_IDS
+#include "nsICharsetAlias.h"
+#undef NS_IMPL_IDS
+
 #include "pratom.h"
 #include "nsCharDetDll.h"
 #include "nsISupports.h"
@@ -24,13 +28,19 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsMetaCharsetObserver.h"
+#include "nsXMLEncodingObserver.h"
+#include "nsDetectionAdaptor.h"
 
 #include "nsMetaCharsetCID.h"
+#include "nsXMLEncodingCID.h"
+#include "nsCharsetDetectionAdaptorCID.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
+NS_DEFINE_CID(kXMLEncodingCID, NS_XML_ENCODING_CID);
+NS_DEFINE_CID(kCharsetDetectionAdaptorCID, NS_CHARSET_DETECTION_ADAPTOR_CID);
 
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
@@ -46,8 +56,16 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     return NS_ERROR_NULL_POINTER;
   }
 
+  nsIFactory *factory = nsnull;
   if (aClass.Equals(kMetaCharsetCID)) {
-    nsIFactory *factory = NEW_META_CHARSET_OBSERVER_FACTORY();
+    factory = NEW_META_CHARSET_OBSERVER_FACTORY();
+  } else if (aClass.Equals(kXMLEncodingCID)) {
+    factory = NEW_XML_ENCODING_OBSERVER_FACTORY();
+  } else if (aClass.Equals(kCharsetDetectionAdaptorCID)) {
+    factory = NEW_DETECTION_ADAPTOR_FACTORY();
+  }
+
+  if(nsnull != factory) {
     nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
     if (NS_FAILED(res)) {
       *aFactory = NULL;
@@ -79,6 +97,16 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   NS_META_CHARSET_PROGID, 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kXMLEncodingCID, 
+                                  "XML Encoding", 
+                                  NS_XML_ENCODING_PROGID, 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kCharsetDetectionAdaptorCID, 
+                                  "Charset Detection Adaptor", 
+                                  NS_CHARSET_DETECTION_ADAPTOR_PROGID, 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -98,6 +126,8 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kMetaCharsetCID, path);
+  rv = compMgr->UnregisterComponent(kXMLEncodingCID, path);
+  rv = compMgr->UnregisterComponent(kCharsetDetectionAdaptorCID, path);
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
