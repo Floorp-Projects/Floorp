@@ -29,7 +29,6 @@
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsListControlFrame.h"
@@ -116,13 +115,6 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 //--------------------------------------------------------------
 nsComboboxControlFrame::~nsComboboxControlFrame()
 {
-  // get the reciever interface from the browser button's content node
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mButtonContent));
-  reciever->RemoveEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-
-  nsCOMPtr<nsIDOMEventReceiver> displayReciever(do_QueryInterface(mDisplayContent));
-  displayReciever->RemoveEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
@@ -148,9 +140,6 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(kIFormControlFrameIID)) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  } else if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
-    *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
-    return NS_OK;                                                        
   } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
     return NS_OK;   
@@ -538,6 +527,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext,
    // the display and button heights.
   nsresult rv = NS_OK;
   nsIFrame* dropdownFrame = GetDropdownFrame();
+
   nscoord dropdownYOffset = aHeight;
 // XXX: Enable this code to debug popping up above the display frame, rather than below it
   nsRect dropdownRect;
@@ -752,7 +742,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     PRBool saveMES = aDesiredSize.maxElementSize != nsnull;
     nsSize * maxElementSize = nsnull;
     if (saveMES) {
-      maxElementSize = new nsSize(*aDesiredSize.maxElementSize);
+      maxElementSize = new nsSize();
+      //maxElementSize = new nsSize(*aDesiredSize.maxElementSize);
     }
     nsHTMLReflowMetrics  dropdownDesiredSize(maxElementSize);
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);  
@@ -789,7 +780,6 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   } else {
     // A width has been specified for the select.
     // Make the display frame's width + button frame width = the width specified.
-   
     nsHTMLReflowMetrics  dropdownDesiredSize(aDesiredSize);
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE); 
      // Get unconstrained size of the dropdown list.
@@ -921,23 +911,6 @@ nsComboboxControlFrame::GetFrameName(nsString& aResult) const
 
 
 //----------------------------------------------------------------------
-// nsIDOMMouseListener
-//----------------------------------------------------------------------
-nsresult
-nsComboboxControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
-{
-  /*PRBool isDroppedDown;
-  IsDroppedDown(&isDroppedDown);
-  if (isDroppedDown) {
-    ShowDropDown(!isDroppedDown);
-    if (isDroppedDown) {
-      mListControlFrame->CaptureMouseEvents(PR_FALSE);
-    }
-  }*/
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
 // nsIComboboxControlFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
@@ -948,8 +921,19 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
   }
 
   if (!mDroppedDown && aDoDropDown) {
+    // XXX Temporary for Bug 19416
+    nsIFrame* dropdownFrame = GetDropdownFrame();
+    nsIView * lstView;
+    dropdownFrame->GetView(mPresContext, &lstView);
+    if (lstView) {
+      lstView->IgnoreSetPosition(PR_FALSE);
+    }
     if (mListControlFrame) {
       mListControlFrame->SyncViewWithFrame(mPresContext);
+    }
+    // XXX Temporary for Bug 19416
+    if (lstView) {
+      lstView->IgnoreSetPosition(PR_TRUE);
     }
     ToggleList(mPresContext);
     return NS_OK;
@@ -1260,22 +1244,6 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
 
   NS_RELEASE(tag);
 
-  // get the reciever interface from the browser button's content node
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mButtonContent));
-
-  // we shouldn't have to unregister this listener because when
-  // our frame goes away all these content node go away as well
-  // because our frame is the only one who references them.
-  reciever->AddEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-
-  // get the reciever interface from the browser button's content node
-  nsCOMPtr<nsIDOMEventReceiver> displayReciever(do_QueryInterface(mDisplayContent));
-
-  // we shouldn't have to unregister this listener because when
-  // our frame goes away all these content node go away as well
-  // because our frame is the only one who references them.
-  displayReciever->AddEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-
   return NS_OK;
 }
 
@@ -1351,13 +1319,6 @@ nsComboboxControlFrame::GetSkipSides() const
   return 0;
 }
 
-
-/*nsresult
-nsComboboxControlFrame::HandleEvent(nsIDOMEvent* aEvent)        
-{ 
-  ToggleList(mPresContext);  
-  return NS_OK; 
-}*/
 
 //----------------------------------------------------------------------
   //nsIRollupListener
