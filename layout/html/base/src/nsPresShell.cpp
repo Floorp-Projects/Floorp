@@ -378,6 +378,8 @@ public:
   NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD ScrollPage(PRBool aForward);
+  NS_IMETHOD ScrollLine(PRBool aForward);
+  NS_IMETHOD ScrollHorizontal(PRBool aLeft);
   NS_IMETHOD CompleteScroll(PRBool aForward);
   NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD SelectAll();
@@ -1351,8 +1353,8 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
   nsresult result = GetViewManager(getter_AddRefs(viewManager));
   if (NS_SUCCEEDED(result) && viewManager)
   {
-    nsCOMPtr<nsIScrollableView> scrollView;
-    result = viewManager->GetRootScrollableView(getter_AddRefs(scrollView));
+    nsIScrollableView *scrollView;
+    result = viewManager->GetRootScrollableView(&scrollView);
     if (NS_SUCCEEDED(result) && scrollView)
     {
       
@@ -1368,14 +1370,53 @@ PresShell::ScrollPage(PRBool aForward)
   nsresult result = GetViewManager(getter_AddRefs(viewManager));
   if (NS_SUCCEEDED(result) && viewManager)
   {
-    nsCOMPtr<nsIScrollableView> scrollView;
-    result = viewManager->GetRootScrollableView(getter_AddRefs(scrollView));
+    nsIScrollableView *scrollView;
+    result = viewManager->GetRootScrollableView(&scrollView);
     if (NS_SUCCEEDED(result) && scrollView)
     {
       scrollView->ScrollByPages(aForward ? 1 : -1);
     }
   }
   return result;
+}
+
+NS_IMETHODIMP
+PresShell::ScrollLine(PRBool aForward)
+{
+  nsCOMPtr<nsIViewManager> viewManager;
+  nsresult result = GetViewManager(getter_AddRefs(viewManager));
+  if (NS_SUCCEEDED(result) && viewManager)
+  {
+    nsIScrollableView *scrollView;
+    result = viewManager->GetRootScrollableView(&scrollView);
+    if (NS_SUCCEEDED(result) && scrollView)
+    {
+      scrollView->ScrollByLines(aForward ? 1 : -1);
+//NEW FOR LINES    
+      // force the update to happen now, otherwise multiple scrolls can
+      // occur before the update is processed. (bug #7354)
+
+    // I'd use Composite here, but it doesn't always work.
+      // vm->Composite();
+      nsIView* rootView = nsnull;
+      if (NS_OK == viewManager->GetRootView(rootView) && nsnull != rootView) 
+      {
+        nsCOMPtr<nsIWidget> rootWidget;
+        if (NS_OK == rootView->GetWidget(*getter_AddRefs(rootWidget)) && rootWidget!= nsnull) 
+        {
+          rootWidget->Update();
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+PresShell::ScrollHorizontal(PRBool aLeft)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

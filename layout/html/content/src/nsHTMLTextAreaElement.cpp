@@ -22,7 +22,7 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIControllers.h"
-#include "nsEditorController.h"
+#include "nsIEditorController.h"
 #include "nsRDFCID.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
@@ -572,13 +572,16 @@ nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
       NS_ERROR_FAILURE);
     if (!mControllers) { return NS_ERROR_NULL_POINTER; }
 
-    nsEditorController *controller = new nsEditorController();
+    nsCOMPtr<nsIController> controller;
+    NS_ENSURE_SUCCESS (
+      nsComponentManager::CreateInstance("component://netscape/editor/editorcontroller",
+                                         nsnull,
+                                         NS_GET_IID(nsIController),
+                                         getter_AddRefs(controller)),
+      NS_ERROR_FAILURE);
+
     if (!controller) { return NS_ERROR_NULL_POINTER; }
-    nsCOMPtr<nsIController> iController = do_QueryInterface(controller);
-    if (!iController) { return NS_ERROR_NULL_POINTER; }
-    NS_ADDREF(controller);
-    mControllers->AppendController(iController);
-    controller->SetContent(this);
+    mControllers->AppendController(controller);
   }
 
   *aResult = mControllers;

@@ -94,7 +94,6 @@ CPPSRCS=				\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
 	nsHTMLWBRElement.cpp		\
-	nsEditorController.cpp \
 	$(NULL)
 
 CPP_OBJS=						\

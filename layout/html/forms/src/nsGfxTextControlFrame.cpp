@@ -83,6 +83,14 @@
 #include "nsHTMLParts.h"
 #include "nsITextContent.h"
 
+//for editor controllers 
+#include "nsIEditorController.h"
+#include "nsIController.h"
+#include "nsIControllers.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
+
+
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
@@ -567,6 +575,38 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     {
       rv = CreateEditor();
       if (NS_FAILED(rv)) { return rv; }
+      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+      nsCOMPtr<nsIDOMNSHTMLInputElement>    inputElement = do_QueryInterface(mContent);
+      nsCOMPtr<nsIControllers> controllers;
+      if (textAreaElement)
+        textAreaElement->GetControllers(getter_AddRefs(controllers));
+      else if (inputElement)
+        inputElement->GetControllers(getter_AddRefs(controllers));
+      else
+        return rv = NS_ERROR_FAILURE;
+      if (NS_SUCCEEDED(rv))
+      {
+        PRUint32 count;
+        PRBool found = PR_FALSE;
+        rv = controllers->GetControllerCount(&count);
+        for (PRUint32 i = 0; i < count; i ++)
+        {
+          nsCOMPtr<nsIController> controller;
+          rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
+          if (NS_SUCCEEDED(rv) && controller)
+          {
+            nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
+            if (editController)
+            {
+              editController->SetEditor(mEditor);
+              found = PR_TRUE;
+            }
+          }
+        }
+        if (!found)
+          rv = NS_ERROR_FAILURE;
+      }
+
       NS_ASSERTION(mEditor, "null EDITOR after attempt to create.");
     }
 
