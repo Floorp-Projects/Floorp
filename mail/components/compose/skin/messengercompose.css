@@ -302,11 +302,11 @@ toolbar[iconsize="small"] #paste-button {
 }
 
 toolbar[iconsize="small"] #paste-button:hover {
-  -moz-image-region: rect(20px 160px 40px 180px);
+  -moz-image-region: rect(20px 200px 40px 180px);
 } 
 
 toolbar[iconsize="small"] #paste-button[disabled="true"] {
-  -moz-image-region: rect(40px 160px 60px 180px) !important;
+  -moz-image-region: rect(40px 200px 60px 180px) !important;
 }
 
 toolbar[iconsize="small"] .toolbarbutton-1 {
