@@ -338,6 +338,19 @@ ifeq ($(MOZ_CO_MODULE),)
 endif
 CVSCO_SEAMONKEY := $(CVSCO) $(CVS_CO_DATE_FLAGS) $(MOZ_CO_MODULE)
 
+####################################
+# CVS defines for Calendar (pulled and built if MOZ_CALENDAR is set)
+#
+CVSCO_CALENDAR := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/calendar
+
+ifdef MOZ_CALENDAR
+FASTUPDATE_CALENDAR := fast_update $(CVSCO_CALENDAR)
+CHECKOUT_CALENDAR := cvs_co $(CVSCO_CALENDAR)
+else
+CHECKOUT_CALENDAR := true
+FASTUPDATE_CALENDAR := true
+endif
+
 #######################################################################
 # Rules
 # 
@@ -401,6 +414,7 @@ real_checkout:
         cvs_co $(CVSCO_GFX2) && \
         cvs_co $(CVSCO_IMGLIB2) && \
 	cvs_co $(CVSCO_SEAMONKEY) && \
+	$(CHECKOUT_CALENDAR) && \
 	cvs_co $(CVSCO_NOSUBDIRS)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 #	@: Check the log for conflicts. ;
@@ -457,6 +471,7 @@ real_fast-update:
 	fast_update $(CVSCO_GFX2) && \
 	fast_update $(CVSCO_IMGLIB2) && \
 	fast_update $(CVSCO_SEAMONKEY) && \
+	$(FASTUPDATE_CALENDAR) && \
 	fast_update $(CVSCO_NOSUBDIRS)
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)
 #	@: Check the log for conflicts. ;
