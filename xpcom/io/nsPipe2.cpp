@@ -378,6 +378,8 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
         while (readBufferLen > 0) {
             PRUint32 writeCount;
             rv = writer(closure, readBuffer, *readCount, readBufferLen, &writeCount);
+            if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK)
+                goto done;
             if (writeCount == 0 || rv == NS_BASE_STREAM_WOULD_BLOCK) {
                 rv = pipe->mCondition;
                 if (*readCount > 0 || NS_FAILED(rv))
@@ -388,8 +390,6 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
                 // else we filled the pipe, so go around again
                 continue;
             }
-            if (NS_FAILED(rv)) 
-                goto done;
             NS_ASSERTION(writeCount <= readBufferLen, "writer returned bad writeCount");
             readBuffer += writeCount;
             readBufferLen -= writeCount;
