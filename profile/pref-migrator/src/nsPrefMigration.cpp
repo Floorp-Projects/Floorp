@@ -60,6 +60,11 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserChrome.h"
 
+#if defined(XP_MAC) && !defined(DEBUG)
+//lower silly optimization level which takes an age for this file.
+#pragma optimization_level 1
+#endif
+
 #ifdef DEBUG_seth
 #define DEBUG_UTF8_CONVERSION 1
 #endif 
