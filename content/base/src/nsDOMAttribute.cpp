@@ -386,8 +386,20 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP 
 nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+  if (nsnull != mContent) {
+    nsIDOMNode* node;
+    result = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    if (NS_SUCCEEDED(result)) {
+      result = node->GetOwnerDocument(aOwnerDocument);
+      NS_RELEASE(node);
+    }
+  }
+  else {
+    *aOwnerDocument = nsnull;
+  }
+
+  return result;
 }
 
 //----------------------------------------------------------------------
