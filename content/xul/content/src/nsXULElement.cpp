@@ -579,6 +579,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
 {
     if (! result)
         return NS_ERROR_NULL_POINTER;
+    *result = nsnull;
 
     nsresult rv;
 
@@ -628,8 +629,12 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
     }
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULPopupElement))) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             ((Tag() == kPopupAtom) || (Tag() == kMenuPopupAtom))) {
+             (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+      if ((tag.get() == kPopupAtom) || (tag.get() == kMenuPopupAtom)) {
         // We delegate XULPopupElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -640,11 +645,18 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULTreeElement)) ||
               iid.Equals(NS_GET_IID(nsIXULTreeContent))) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kTreeAtom)) {
+              (NameSpaceID() == kNameSpaceID_XUL)){
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+      if (tag.get() == kTreeAtom) {
         // We delegate XULTreeElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -655,10 +667,18 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULIFrameElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kIFrameAtom)) {
+             (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+
+      if (tag.get() == kIFrameAtom) {
         // We delegate XULIFrameElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -669,10 +689,17 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULBrowserElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kBrowserAtom)) {
+      (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+      if (tag.get() == kBrowserAtom) {
         // We delegate XULBrowserElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -683,10 +710,17 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULTitledButtonElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kTitledButtonAtom)) {
+             (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+      if (tag.get() == kTitledButtonAtom) {
         // We delegate XULTitledButtonElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -697,10 +731,18 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULCheckboxElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kCheckboxAtom)) {
+      (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+
+      if (tag.get() == kCheckboxAtom) {
         // We delegate XULCheckboxElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -711,10 +753,17 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kRadioAtom)) {
+      (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+      if (tag.get() == kRadioAtom) {
         // We delegate XULRadioElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -725,10 +774,18 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioGroupElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kRadioGroupAtom)) {
+      (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+      
+      if (tag.get() == kRadioGroupAtom) {
         // We delegate XULRadioElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -739,10 +796,18 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULMenuListElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kMenuListAtom)) {
+      (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+      
+      if (tag.get() == kMenuListAtom) {
         // We delegate XULMenuListElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -753,10 +818,18 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULEditorElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             (Tag() == kEditorAtom)) {
+      (NameSpaceID() == kNameSpaceID_XUL)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetBaseTag(getter_AddRefs(tag));
+      if (!tag)
+        tag = Tag();
+
+      if (tag.get() == kEditorAtom) {
         // We delegate XULEditorElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -767,6 +840,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         }
 
         return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
     }
     else {
         *result = nsnull;
@@ -1781,44 +1857,50 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         // tag...
         nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
 
+        nsCOMPtr<nsIAtom> tag;
+        GetBaseTag(getter_AddRefs(tag));
+
+        if (!tag)
+          tag = Tag();
+
         const char* rootname;
-        if (Tag() == kTreeAtom) {
+        if (tag.get() == kTreeAtom) {
             fn = NS_NewScriptXULTreeElement;
             rootname = "nsXULTreeElement::mScriptObject";
         }
-        else if (Tag() == kIFrameAtom) {
+        else if (tag.get() == kIFrameAtom) {
             fn = NS_NewScriptXULIFrameElement;
             rootname = "nsXULIFrameElement::mScriptObject";
         }
-        else if (Tag() == kBrowserAtom) {
+        else if (tag.get() == kBrowserAtom) {
             fn = NS_NewScriptXULBrowserElement;
             rootname = "nsXULBrowserElement::mScriptObject";
         }
-        else if (Tag() == kTitledButtonAtom) {
+        else if (tag.get() == kTitledButtonAtom) {
             fn = NS_NewScriptXULTitledButtonElement;
             rootname = "nsXULTitledButtonElement::mScriptObject";
         }
-        else if (Tag() == kCheckboxAtom) {
+        else if (tag.get() == kCheckboxAtom) {
             fn = NS_NewScriptXULCheckboxElement;
             rootname = "nsXULCheckboxElement::mScriptObject";
         }
-        else if (Tag() == kRadioAtom) {
+        else if (tag.get() == kRadioAtom) {
             fn = NS_NewScriptXULRadioElement;
             rootname = "nsXULRadioElement::mScriptObject";
         }
-        else if (Tag() == kRadioGroupAtom) {
+        else if (tag.get() == kRadioGroupAtom) {
             fn = NS_NewScriptXULRadioGroupElement;
             rootname = "nsXULRadioGroupElement::mScriptObject";
         }
-        else if (Tag() == kMenuListAtom) {
+        else if (tag.get() == kMenuListAtom) {
             fn = NS_NewScriptXULMenuListElement;
             rootname = "nsXULMenuListElement::mScriptObject";
         }
-        else if (Tag() == kEditorAtom) {
+        else if (tag.get() == kEditorAtom) {
             fn = NS_NewScriptXULEditorElement;
             rootname = "nsXULEditorElement::mScriptObject";
         }
-        else if ((Tag() == kMenuPopupAtom) || (Tag() == kPopupAtom)) {
+        else if ((tag.get() == kMenuPopupAtom) || (tag.get() == kPopupAtom)) {
             fn = NS_NewScriptXULPopupElement;
             rootname = "nsXULPopupElement::mScriptObject";
         }
@@ -3970,8 +4052,12 @@ nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
 PRBool
 nsXULElement::IsFocusableContent()
 {
-    return (Tag() == kTitledButtonAtom) || (Tag() == kTreeAtom) || (Tag() == kCheckboxAtom) || (Tag() == kRadioAtom) ||
-           (Tag() == kMenuListAtom) || (Tag() == kMenuButtonAtom);
+  nsCOMPtr<nsIAtom> tag;
+  GetBaseTag(getter_AddRefs(tag));
+  if (!tag)
+    tag = Tag();
+  return (tag.get() == kTitledButtonAtom) || (tag.get() == kTreeAtom) || (tag.get() == kCheckboxAtom) || (tag.get() == kRadioAtom) ||
+         (tag.get() == kMenuListAtom) || (tag.get() == kMenuButtonAtom);
 }
 
 // nsIBindableContent Interface
@@ -3990,6 +4076,15 @@ nsXULElement::GetBinding(nsIXBLBinding** aResult)
   *aResult = Binding();
   NS_IF_ADDREF(*aResult);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::GetBaseTag(nsIAtom** aResult)
+{
+  if (Binding())
+    return Binding()->GetBaseTag(aResult);
+  else
+    return NS_OK;
 }
 
 // nsIStyleRule interface

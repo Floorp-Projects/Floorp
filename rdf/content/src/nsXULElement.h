@@ -448,6 +448,7 @@ public:
     // nsIBindableContent interface
     NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
     NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
+    NS_IMETHOD GetBaseTag(nsIAtom** aResult);
 
     // nsIDOMNode (from nsIDOMElement)
     NS_DECL_IDOMNODE
