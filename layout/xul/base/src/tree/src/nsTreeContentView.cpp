@@ -49,6 +49,7 @@
 #include "nsTreeContentView.h"
 #include "nsChildIterator.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIEventStateManager.h"
 
@@ -534,6 +535,9 @@ nsTreeContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAString&
     nsCOMPtr<nsIDOMHTMLOptionElement> elem = do_QueryInterface(row->mContent);
     elem->GetText(_retval);
     return NS_OK;
+  } else if (rowTag == nsHTMLAtoms::optgroup) {
+    nsCOMPtr<nsIDOMHTMLOptGroupElement> elem = do_QueryInterface(row->mContent);
+    elem->GetLabel(_retval);
   } else if (rowTag == nsXULAtoms::treeitem) {
     nsCOMPtr<nsIContent> realRow;
     nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
@@ -591,10 +595,21 @@ nsTreeContentView::ToggleOpenState(PRInt32 aIndex)
   // We don't serialize content right here, since content might be generated
   // lazily.
   Row* row = (Row*)mRows[aIndex];
-  if (row->IsOpen())
-    row->mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
-  else
-    row->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
+  nsCOMPtr<nsIAtom> contentTag;
+  row->mContent->GetTag(*getter_AddRefs(contentTag));
+  if (contentTag == nsHTMLAtoms::optgroup) {
+    // we don't use an attribute for optgroup's open state
+    PRBool wasOpen = row->IsOpen();
+    if (wasOpen)
+      CloseContainer(aIndex);
+    else
+      OpenContainer(aIndex);
+  } else {
+    if (row->IsOpen())
+      row->mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
+    else
+      row->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -874,7 +889,8 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   aChild->GetTag(*getter_AddRefs(childTag));
 
   if (aChild->IsContentOfType(nsIContent::eHTML)) {
-    if (childTag != nsHTMLAtoms::option)
+    if (childTag != nsHTMLAtoms::option &&
+        childTag != nsHTMLAtoms::optgroup)
       return NS_OK;
   } else if (aChild->IsContentOfType(nsIContent::eXUL)) {
     if (childTag != nsXULAtoms::treeitem &&
@@ -938,6 +954,21 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
       mBoxObject->RowCountChanged(parentIndex + index + 1, count);
     }
   }
+  else if (childTag == nsHTMLAtoms::optgroup) {
+    PRInt32 parentIndex = -1;
+
+    nsCOMPtr<nsIAtom> containerTag;
+    aContainer->GetTag(*getter_AddRefs(containerTag));
+    if (containerTag != nsHTMLAtoms::select)
+      parentIndex = FindContent(aContainer);
+
+    PRInt32 index = 0;
+    GetIndexInSubtree(aContainer, aChild, &index);
+
+    PRInt32 count;
+    InsertRow(parentIndex, index, aChild, &count);
+    mBoxObject->RowCountChanged(parentIndex + index + 1, count);
+  }
   else if (childTag == nsHTMLAtoms::option) {
     PRInt32 count;
     PRInt32 parentIndex = FindContent(aContainer);
@@ -1000,7 +1031,8 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
   aChild->GetTag(*getter_AddRefs(tag));
 
   if (aChild->IsContentOfType(nsIContent::eHTML)) {
-    if (tag != nsHTMLAtoms::option)
+    if (tag != nsHTMLAtoms::option &&
+        tag != nsHTMLAtoms::optgroup)
       return NS_OK;
   } else if (aChild->IsContentOfType(nsIContent::eXUL)) {
     if (tag != nsXULAtoms::treeitem &&
@@ -1031,7 +1063,8 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
 
   if (tag == nsXULAtoms::treeitem ||
       tag == nsXULAtoms::treeseparator ||
-      tag == nsHTMLAtoms::option) {
+      tag == nsHTMLAtoms::option ||
+      tag == nsHTMLAtoms::optgroup) {
     PRInt32 index = FindContent(aChild);
     if (index >= 0) {
       PRInt32 count;
@@ -1156,6 +1189,8 @@ nsTreeContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32
     } else if (content->IsContentOfType(nsIContent::eHTML)) {
       if (tag == nsHTMLAtoms::option)
         SerializeOption(content, aParentIndex, aIndex, aRows);
+      else if (tag == nsHTMLAtoms::optgroup)
+        SerializeOptGroup(content, aParentIndex, aIndex, aRows);
     }
     *aIndex += aRows.Count() - count;
   }
@@ -1212,7 +1247,7 @@ nsTreeContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex
 
 void
 nsTreeContentView::SerializeOption(nsIContent* aContent, PRInt32 aParentIndex,
-                                       PRInt32* aIndex, nsVoidArray& aRows)
+                                   PRInt32* aIndex, nsVoidArray& aRows)
 {
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   aRows.AppendElement(row);
@@ -1228,11 +1263,36 @@ nsTreeContentView::SerializeOption(nsIContent* aContent, PRInt32 aParentIndex,
 }
 
 void
+nsTreeContentView::SerializeOptGroup(nsIContent* aContent, PRInt32 aParentIndex,
+                                     PRInt32* aIndex, nsVoidArray& aRows)
+{
+  Row* row = Row::Create(mAllocator, aContent, aParentIndex);
+  aRows.AppendElement(row);
+  row->SetContainer(PR_TRUE);
+  row->SetOpen(PR_TRUE);
+
+  nsCOMPtr<nsIContent> child;
+  nsTreeUtils::GetImmediateChild(aContent, nsHTMLAtoms::option, getter_AddRefs(child));
+  if (child) {
+    // Now, recursively serialize our child.
+    PRInt32 count = aRows.Count();
+    PRInt32 index = 0;
+    Serialize(aContent, aParentIndex + *aIndex + 1, &index, aRows);
+    row->mSubtreeSize += aRows.Count() - count;
+  }
+  else
+    row->SetEmpty(PR_TRUE);
+}
+
+void
 nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aIndex)
 {
-  ChildIterator iter, last;
-  for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
-    nsCOMPtr<nsIContent> content = *iter;
+  PRInt32 childCount;
+  aContainer->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> content;
+    aContainer->ChildAt(i, *getter_AddRefs(content));
+
     if (content == aContent)
       break;
 
@@ -1253,7 +1313,12 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aConten
         }
       }
     }
-    else if (tag == nsXULAtoms::treeseparator)
+    else if (tag == nsHTMLAtoms::optgroup) {
+      (*aIndex)++;
+      GetIndexInSubtree(content, aContent, aIndex);
+    }
+    else if (tag == nsXULAtoms::treeseparator ||
+             tag == nsHTMLAtoms::option)
       (*aIndex)++;
   }
 }
@@ -1262,11 +1327,18 @@ void
 nsTreeContentView::EnsureSubtree(PRInt32 aIndex, PRInt32* aCount)
 {
   Row* row = (Row*)mRows[aIndex];
+  nsCOMPtr<nsIAtom> contentTag;
+  row->mContent->GetTag(*getter_AddRefs(contentTag));
+
   nsCOMPtr<nsIContent> child;
-  nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treechildren, getter_AddRefs(child));
-  if (! child) {
-    *aCount = 0;
-    return;
+  if (contentTag == nsHTMLAtoms::optgroup)
+    child = row->mContent;
+  else {
+    nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treechildren, getter_AddRefs(child));
+    if (! child) {
+      *aCount = 0;
+      return;
+    }
   }
 
   nsAutoVoidArray rows;
@@ -1317,6 +1389,8 @@ nsTreeContentView::InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIContent* a
     SerializeSeparator(aContent, aParentIndex, &aIndex, rows);
   else if (tag == nsHTMLAtoms::option)
     SerializeOption(aContent, aParentIndex, &aIndex, rows);
+  else if (tag == nsHTMLAtoms::optgroup)
+    SerializeOptGroup(aContent, aParentIndex, &aIndex, rows);
   mRows.InsertElementsAt(rows, aParentIndex + aIndex + 1);
   PRInt32 count = rows.Count();
 

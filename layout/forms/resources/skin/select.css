@@ -97,3 +97,27 @@ xul|*.select-treebody:-moz-tree-cell-text(selected) {
 xul|*.select-treebody:-moz-tree-cell-text(selected, focus) {
   color: HighlightText;
 }
+
+
+/* ::::: twisty ::::: */
+
+xul|*.select-treebody[hasgroups="true"]:-moz-tree-twisty 
+{
+  padding-right: 2px;
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://forms/skin/twisty-clsd.gif");
+}
+
+xul|*.select-treebody[hasgroups="true"]:-moz-tree-twisty(open) {
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://forms/skin/twisty-open.gif");
+}
+
+xul|*.select-treebody[hasgroups="true"]:-moz-tree-indentation {
+  width: 16px;   
+}
+
+xul|*.select-treebody:-moz-tree-line {
+  visibility: hidden;
+}
+

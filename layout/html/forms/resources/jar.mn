@@ -18,6 +18,8 @@ forms.jar:
     skin/classic/forms/cbox-check.gif         (skin/cbox-check.gif)
     skin/classic/forms/radio-check-dis.gif    (skin/radio-check-dis.gif)
     skin/classic/forms/radio-check.gif        (skin/radio-check.gif)
+    skin/classic/forms/twisty-clsd.gif        (skin/twisty-clsd.gif)
+    skin/classic/forms/twisty-open.gif        (skin/twisty-open.gif)
 
 en-US.jar:
     locale/en-US/forms/contents.rdf           (locale/en-US/contents.rdf)

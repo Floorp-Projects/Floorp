@@ -444,6 +444,9 @@ protected:
   // Calculate if we're in the region in which we want to auto-scroll the tree.
   PRBool IsInDragScrollRegion (nsIDOMEvent* aEvent, PRBool* aScrollUp);
 
+  // Mark ourselves dirty if we're a select widget
+  void MarkDirtyIfSelect();
+
 protected: // Data Members
   // Our cached pres context.
   nsIPresContext* mPresContext;
