@@ -93,8 +93,15 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
                       nsIStyleContext* aContext,
                       nsIFrame*        aPrevInFlow)
 {
+  // Figure out if we allow events.
+  nsString attrValue;
+  nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, attrValue);
+  attrValue.ToLowerCase();
+  PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
+					    (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+  SetAllowEvents(allowEvents);
+
   // Determine if we're a column header or not.
-  
   // Get row group frame
   nsIFrame* rowGroupFrame = nsnull;
   aParent->GetParent(&rowGroupFrame);

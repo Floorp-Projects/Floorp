@@ -119,13 +119,15 @@ public:
                                  nsIContent*     aContent,
                                  nsIFrame**      aFrame);
 
-  NS_IMETHODIMP CreateTreeWidgetContent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                         nsIFrame*       aParentFrame,
                                         nsIFrame*       aPrevFrame,
                                         nsIContent*     aChild,
                                         nsIFrame**      aResult,
                                         PRBool          aIsAppend,
                                         PRBool          aIsScrollbar);
+  NS_IMETHOD RemoveMappingsForFrameSubtree(nsIPresContext* aParentFrame,
+                                           nsIFrame*       aRemovedFrame);
 
 protected:
 

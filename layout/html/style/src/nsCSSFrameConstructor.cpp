@@ -3019,16 +3019,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     {
       // We make a tree cell frame and process the children.
 	    // Find out what the attribute value for event allowance is.
-	    nsString attrValue;
-      nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, attrValue);
-      attrValue.ToLowerCase();
-      PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
-					        (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
       nsIFrame* ignore2;
       rv = ConstructTableCellFrame(aPresContext, aState, aContent, aParentFrame, aStyleContext, 
                                    newFrame, ignore, ignore2, treeCreator);
       aFrameItems.AddChild(newFrame);
-	    ((nsTreeCellFrame*)newFrame)->SetAllowEvents(allowEvents);
       return rv;
     }
     else if (aTag == nsXULAtoms::treeindentation)
@@ -4580,6 +4574,16 @@ DeletingFrameSubtree(nsIPresContext* aPresContext,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIPresContext* aPresContext,
+                              nsIFrame* aRemovedFrame)
+{
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  return DeletingFrameSubtree(aPresContext, presShell, aRemovedFrame,
+                              aRemovedFrame);
 }
 
 NS_IMETHODIMP
