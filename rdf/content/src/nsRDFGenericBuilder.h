@@ -66,7 +66,7 @@ public:
                              nsIRDFResource* aResource,
                              nsIContent** aResult);
 
-    NS_IMETHOD SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResource *res);
+    NS_IMETHOD SetAllAttributesOnElement(nsIContent *aParentNode, nsIContent *aNode, nsIRDFResource *res);
     NS_IMETHOD FindTemplateForResource(nsIRDFResource *aNode, nsIContent **theTemplate);
     NS_IMETHOD IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aRule, PRBool *matchingRuleFound);
     NS_IMETHOD PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIContent *aTemplate,
