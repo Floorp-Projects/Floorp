@@ -21,46 +21,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
 CPPSRCS		= StringBundleTest.cpp
 
-ifeq ($(OS_ARCH),BEOS)
 LIBS		=\
 	-lxpcom		\
 	$(ZLIB_LIBS)	\
 	$(NSPR_LIBS)	\
 	$(NULL)		
-else
-LIBS		= \
-	-lraptorgfx	\
-	-lgfx$(MOZ_TOOLKIT) \
-	-lgfxps \
-	-lnetlib \
-	-labouturl \
-	-lfileurl \
-	-lremoturl \
-	-lgophurl \
-	-lnetcnvts \
-	-lsockstuburl \
-	-lftpurl \
-	-lmimetype \
-	-lpwcac \
-	-lhttpurl \
-	-lnetwork \
-	-lnetcache \
-	$(TK_LIBS) \
-	-lpref \
-	-lsecfree \
-	-l$(MOZ_LIB_JS_PREFIX)js \
-	-limg \
-	-l$(MOZ_LIB_UTIL_PREFIX)util \
-	-lxp \
-	-lxpcom \
-	$(ZLIB_LIBS) \
-	$(NSPR_LIBS) \
-	$(NULL)
-endif
 
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
 
