@@ -192,6 +192,10 @@ function commonDialogOnLoad()
 	
 	// set the pressed button to cancel to handle the case where the close box is pressed
 	param.SetInt(0, 1 );
+
+	// resize the window to the content
+	window.sizeToContent();
+
 	// Move to the right location
 	moveToAlertPosition();
 }
@@ -245,3 +249,4 @@ function commonDialogOnButton3()
 	param.SetInt(0, 3 );
 	return true;
 }
+
