@@ -7,6 +7,20 @@
 
 	<!ENTITY selectAddressWindow.title "Select Addresses">
 
+<!-- Buttons -->
+	<!ENTITY toButton.label		"To:"> 
+	<!ENTITY ccButton.label		"Cc:"> 
+	<!ENTITY bccButton.label	"Bcc:"> 
+	<!ENTITY stopButton.label	".Stop"> 
+	<!ENTITY searchButton.label	".Search..."> 
+	<!ENTITY newButton.label	".New..."> 
+	<!ENTITY editButton.label	".Edit..."> 
+	<!ENTITY viewButton.label	".View"> 
+	<!ENTITY removeButton.label	".Remove"> 
+	<!ENTITY okButton.label		".OK"> 
+	<!ENTITY cancelButton.label	".Cancel"> 
+	<!ENTITY helpButton.label	".Help"> 
+
 <!-- Directory Pane -->
 	<!ENTITY directoryColumn.label   "Directory"> 
 
@@ -36,9 +50,9 @@
 		
 		<spring style="width: 1em;"/>
 		
-		<titledbutton id="stop" value="Stop" class="push" onclick="SelectAddressStopButton()"/>	
+		<titledbutton id="stop" value="&stopButton.label;" class="push" onclick="SelectAddressStopButton()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="search" value="Search..." class="push" onclick="SelectAddressSearchButton()"/>	
+		<titledbutton id="search" value="&searchButton.label;" class="push" onclick="SelectAddressSearchButton()"/>	
 	</box>
 
 	<!-- Main box, 3 pane and majority of buttons -->
@@ -81,11 +95,11 @@
 					<!-- Box that holds (to,cc,bcc buttons) -->
 					<box align="horizontal" style="padding: .3em">
 						<spring flex="50%"/>
-						<titledbutton id="toButton" value="To:" class="push" onclick="SelectAddressToButton()"/>	
+						<titledbutton id="toButton" value="&toButton.label;" class="push" onclick="SelectAddressToButton()"/>	
 						<spring style="width:10px"/>
-						<titledbutton id="ccButton" value="Cc:" class="push" onclick="SelectAddressCcButton()"/>	
+						<titledbutton id="ccButton" value="&ccButton.label;" class="push" onclick="SelectAddressCcButton()"/>	
 						<spring style="width:10px"/>
-						<titledbutton id="bccButton" value="Bcc:" class="push" onclick="SelectAddressBccButton()"/>	
+						<titledbutton id="bccButton" value="&bccButton.label;" class="push" onclick="SelectAddressBccButton()"/>	
 						<spring flex="50%"/>
 					</box>
 				</box>
@@ -95,18 +109,10 @@
 					<!-- Fake gripper box -->
 					<box align="vertical" style="height:6px; background-color:#9999CC; border-top:thin solid; border-bottom:thin solid"/>
 				
-					<box align="vertical" flex="100%" style="background-color:white">
-						<tree id="addressBucket" flex="100%">
-							<treecol style="width:100%"/>
-
-							<treebody id="bucketBody">
-								<treeitem><treecell>To: "Paul Hangas" hangas@netscape.com</treecell></treeitem>
-								<treeitem><treecell>To: "Pooh" winnie@netscape.com</treecell></treeitem>
-								<treeitem><treecell>Cc: "Winnie" pooh@netscape.com</treecell></treeitem>
-								<treeitem><treecell>The items in this bucket are closer to reality than they appear.</treecell></treeitem>
-							</treebody>
-						</tree>
-					</box>
+					<!-- The bucket -->
+					<html:iframe flex="100%" style="border:none; border-bottom:thin solid"
+								 name="browser.addressbucket"
+								 src="chrome://addressbook/content/addressbucket.xul"/>
 				</box>
 			</box>
 		</box>
@@ -115,16 +121,16 @@
 		<box align="vertical" style="padding: .5em; padding-right: 0px">
 			<box align="vertical" flex="50%">
 				<spring style="height:10px"/>
-				<titledbutton id="new" value="New..." class="push" onclick="SelectAddressNewButton()"/>	
+				<titledbutton id="new" value="&newButton.label;" class="push" onclick="SelectAddressNewButton()"/>	
 				<spring style="height:10px"/>
-				<titledbutton id="edit" value="Edit..." class="push" onclick="SelectAddressEditButton()"/>	
+				<titledbutton id="edit" value="&editButton.label;" class="push" onclick="SelectAddressEditButton()"/>	
 				<spring style="height:10px"/>
-				<titledbutton id="view" value="View" class="push" onclick="SelectAddressViewButton()"/>
+				<titledbutton id="view" value="&viewButton.label;" class="push" onclick="SelectAddressViewButton()"/>
 				<spring flex="100%"/>
 			</box>
 			<box align="vertical" flex="50%">
 				<spring flex="50%"/>
-				<titledbutton id="remove" value="Remove" class="push" onclick="SelectAddressRemoveButton()"/>	
+				<titledbutton id="remove" value="&removeButton.label;" class="push" onclick="RemoveSelectedFromBucket()"/>	
 				<spring flex="50%"/>
 			</box>
 		</box>
@@ -133,11 +139,11 @@
 	<!-- Bottom 3/4 inch box, OK, Cancel, Help buttons -->
 	<box align="horizontal" style="margin-top: 0.5em">
 		<spring flex="100%"/>
-		<titledbutton id="ok" value="OK" class="push" onclick="SelectAddressOKButton()"/>	
+		<titledbutton id="ok" value="&okButton.label;" class="push" onclick="SelectAddressOKButton()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="cancel" value="Cancel" class="push" onclick="SelectAddressCancelButton()"/>	
+		<titledbutton id="cancel" value="&cancelButton.label;" class="push" onclick="SelectAddressCancelButton()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="help" value="Help" class="push" onclick="SelectAddressHelpButton()"/>	
+		<titledbutton id="help" value="&helpButton.label;" class="push" onclick="SelectAddressHelpButton()"/>	
 		<spring style="width:10px"/>
 	</box>
 
