@@ -33,6 +33,10 @@
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+//
+#include "nsFileLocations.h"
+#include "nsIFileLocator.h"
+#include "nsIFileSpec.h"
 
 #define TEST_URL "resource:/res/strres.properties"
 
@@ -122,17 +126,39 @@ get_applocale(void)
 // end of locale stuff
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+nsresult NS_AutoregisterComponents()
+{
+  nsIFileSpec* spec = NS_LocateFileOrDirectory(
+  							nsSpecialFileSpec::App_ComponentsDirectory);
+  if (!spec)
+  	return NS_ERROR_FAILURE;
+
+  char *componentsDirPath;
+  nsresult rv = spec->GetNSPRPath(&componentsDirPath);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (componentsDirPath)
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDirPath);
+  NS_RELEASE(spec);
+  return rv;
+}
+
 int
 main(int argc, char *argv[])
 {
   nsresult ret;
 
+#if 1
+  NS_AutoregisterComponents();
+#else
   ret = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                          NULL /* default */);
   if (NS_FAILED(ret)) {
     printf("auto-registration failed\n");
     return 1;
   }
+#endif
 #ifndef NECKO
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL,
     PR_FALSE, PR_FALSE);
