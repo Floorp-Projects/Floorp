@@ -1801,10 +1801,6 @@ RDFDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     uri.Right(tag, count);
     uri.Cut(index + 1, count);
 
-    // XXX XUL atoms seem to all be in lower case. HTML atoms are in
-    // upper case. This sucks.
-    //tag.ToUpperCase();
- 
     nsresult rv;
     PRInt32 nameSpaceID;
     rv = mNameSpaceManager->GetNameSpaceID(uri, nameSpaceID);
@@ -1812,9 +1808,6 @@ RDFDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     // Did we find one?
     if (NS_SUCCEEDED(rv) && nameSpaceID != kNameSpaceID_Unknown) {
         *aNameSpaceID = nameSpaceID;
-
-        if (nameSpaceID == kNameSpaceID_HTML)
-            tag.ToUpperCase();
 
         *aTag = NS_NewAtom(tag);
         return NS_OK;
@@ -1828,10 +1821,6 @@ RDFDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
 
         if (NS_SUCCEEDED(rv) && nameSpaceID != kNameSpaceID_Unknown) {
             *aNameSpaceID = nameSpaceID;
-
-            if (nameSpaceID == kNameSpaceID_HTML)
-                tag.ToUpperCase();
-
             *aTag = NS_NewAtom(tag);
             return NS_OK;
         }

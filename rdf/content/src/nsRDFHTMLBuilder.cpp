@@ -95,7 +95,7 @@ RDFHTMLBuilderImpl::RDFHTMLBuilderImpl(void)
 	NS_INIT_REFCNT();
 
     if (nsnull == kIdAtom) {
-        kIdAtom = NS_NewAtom("ID");
+        kIdAtom = NS_NewAtom("id");
     }
     else {
         NS_ADDREF(kIdAtom);
@@ -261,7 +261,7 @@ RDFHTMLBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
         goto done;
 
     rv = NS_ERROR_OUT_OF_MEMORY;
-    if ((tag = NS_NewAtom("DOCUMENT")) == nsnull)
+    if ((tag = NS_NewAtom("document")) == nsnull)
         goto done;
 
     if (NS_FAILED(rv = NS_NewRDFGenericElement(&root, kNameSpaceID_None, tag)))
@@ -272,7 +272,7 @@ RDFHTMLBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
     NS_RELEASE(tag);
 
     rv = NS_ERROR_OUT_OF_MEMORY;
-    if ((tag = NS_NewAtom("BODY")) == nsnull)
+    if ((tag = NS_NewAtom("body")) == nsnull)
         goto done;
 
     // PR_TRUE indicates that children should be recursively generated on demand

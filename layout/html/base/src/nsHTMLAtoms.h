@@ -20,8 +20,8 @@
 
 #include "nsIAtom.h"
 
-#define NS_HTML_BASE_HREF   "_BASE_HREF"
-#define NS_HTML_BASE_TARGET "_BASE_TARGET"
+#define NS_HTML_BASE_HREF   "_base_href"
+#define NS_HTML_BASE_TARGET "_base_target"
 
 /**
  * This class wraps up the creation (and destruction) of the standard

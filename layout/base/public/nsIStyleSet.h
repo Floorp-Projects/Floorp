@@ -70,7 +70,7 @@ public:
                                            nsIStyleContext* aParentContext,
                                            PRBool aForceUnique = PR_FALSE) = 0;
 
-  // get a style context for a pseudo-frame (ie: tag = NS_NewAtom(":FIRST-LINE");
+  // get a style context for a pseudo-frame (ie: tag = NS_NewAtom(":first-line");
   virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
                                                  nsIContent* aParentContent,
                                                  nsIAtom* aPseudoTag,

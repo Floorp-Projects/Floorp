@@ -328,7 +328,7 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   } else {
 #ifdef NS_GFX_RENDER_FORM_ELEMENTS
 	nsCOMPtr<nsIStyleContext> outlineStyle(mStyleContext);
-	nsCOMPtr<nsIAtom> sbAtom (NS_NewAtom(":BUTTON-OUTLINE"));
+	nsCOMPtr<nsIAtom> sbAtom (NS_NewAtom(":button-outline"));
 	outlineStyle = aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
 	const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
  
@@ -432,11 +432,11 @@ nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
   //nsIStyleContext* kidSC;
 
   nsCOMPtr<nsIStyleContext> outlineStyle(mStyleContext);
-  nsCOMPtr<nsIAtom> outlineAtom (NS_NewAtom(":BUTTON-OUTLINE"));
+  nsCOMPtr<nsIAtom> outlineAtom (NS_NewAtom(":button-outline"));
   outlineStyle = aPresContext.ProbePseudoStyleContextFor(mContent, outlineAtom, mStyleContext);
 
   nsCOMPtr<nsIStyleContext> focusStyle(mStyleContext);
-  nsCOMPtr<nsIAtom> focusAtom (NS_NewAtom(":BUTTON-FOCUS"));
+  nsCOMPtr<nsIAtom> focusAtom (NS_NewAtom(":button-focus"));
   focusStyle = aPresContext.ProbePseudoStyleContextFor(mContent, focusAtom, mStyleContext);
 
   nsFormControlHelper::PaintRectangularButton(aPresContext,

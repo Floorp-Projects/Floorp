@@ -1807,7 +1807,7 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
 
     // XXX XUL atoms seem to all be in lower case. HTML atoms are in
     // upper case. This sucks.
-    //tag.ToUpperCase();
+    //tag.ToUpperCase();  // All XML is case sensitive even HTML in XML
  
     nsresult rv;
     PRInt32 nameSpaceID;
@@ -1816,9 +1816,6 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     // Did we find one?
     if (NS_SUCCEEDED(rv) && nameSpaceID != kNameSpaceID_Unknown) {
         *aNameSpaceID = nameSpaceID;
-
-        if (nameSpaceID == kNameSpaceID_HTML)
-            tag.ToUpperCase();
 
         *aTag = NS_NewAtom(tag);
         return NS_OK;
@@ -1832,9 +1829,6 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
 
         if (NS_SUCCEEDED(rv) && nameSpaceID != kNameSpaceID_Unknown) {
             *aNameSpaceID = nameSpaceID;
-
-            if (nameSpaceID == kNameSpaceID_HTML)
-                tag.ToUpperCase();
 
             *aTag = NS_NewAtom(tag);
             return NS_OK;

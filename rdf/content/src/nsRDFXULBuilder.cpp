@@ -232,7 +232,7 @@ static const char kRDFNameSpaceURI[]
         }
 
         kContentsGeneratedAtom = NS_NewAtom("contentsGenerated");
-        kIdAtom                = NS_NewAtom("ID");
+        kIdAtom                = NS_NewAtom("id");
         kDataSourcesAtom       = NS_NewAtom("datasources");
         kTreeAtom              = NS_NewAtom("tree");
 

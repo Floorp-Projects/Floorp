@@ -203,7 +203,7 @@ nsXMLContentSink::WillBuildModel(void)
   // hierarchy. In the future we might want to get rid of it
   // or at least make it invisible from the perspective of the
   // DOM.
-  nsIAtom *tagAtom = NS_NewAtom("XML");
+  nsIAtom *tagAtom = NS_NewAtom("xml");
   nsIXMLContent *content;
   result = NS_NewXMLElement(&content, tagAtom);
   NS_RELEASE(tagAtom);
@@ -427,9 +427,6 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
     const nsString& key = aNode.GetKeyAt(i);
     name.Truncate();
     name.Append(key);
-    if (aIsHTML) {
-      name.ToUpperCase();
-    }
 
     nsIAtom* nameSpacePrefix = CutNameSpacePrefix(name);
     nsIAtom* nameAtom = NS_NewAtom(name);
@@ -568,7 +565,6 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   isHTML = IsHTMLNameSpace(nameSpaceID);
 
   if (isHTML) {
-    tag.ToUpperCase();  // HTML is case-insensitive
     nsIAtom* tagAtom = NS_NewAtom(tag);
     if (nsHTMLAtoms::script == tagAtom) {
       result = ProcessStartSCRIPTTag(aNode);
@@ -649,7 +645,6 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   }
 
   if (isHTML) {
-    tag.ToUpperCase();
     nsIAtom* tagAtom = NS_NewAtom(tag);
     if (nsHTMLAtoms::script == tagAtom) {
       result = ProcessEndSCRIPTTag(aNode);
@@ -989,7 +984,6 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
     if (NS_OK != result) {
       return result;
     }
-    media.ToUpperCase();
 
     if (type.Equals(kCSSType)) {
       // Use the SRC attribute value to load the URL
@@ -1082,7 +1076,6 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
     if (NS_OK != result) {
       return result;
     }
-    media.ToUpperCase();
 
     // XXX At some point, we need to have a registry based mechanism
     // for dealing with loading stylesheets attached to XML documents

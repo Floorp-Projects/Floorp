@@ -167,7 +167,7 @@ void BasicTest::CreateCorrectContent(int aRows, int aCols)
   }
 
   nsIHTMLContent* body;
-  nsIAtom* atom = NS_NewAtom("BODY");
+  nsIAtom* atom = NS_NewAtom("body");
   rv = NS_NewBodyPart(&body, atom);
   if (NS_OK != rv) {
     fprintf(out, "NS_NewBodyPart failed\n");
@@ -179,23 +179,23 @@ void BasicTest::CreateCorrectContent(int aRows, int aCols)
   nsIHTMLContent* row;
   nsIHTMLContent* cell;
 
-  nsIAtom* tatom = NS_NewAtom("TABLE");
+  nsIAtom* tatom = NS_NewAtom("table");
   rv = NS_NewTablePart(&table, tatom);
   NS_RELEASE(tatom);
   if (NS_OK == rv) {
     PRInt32 rowIndex;
     for (rowIndex = 0; (NS_OK == rv) && (rowIndex < aRows); rowIndex++) {
-      nsIAtom* tratom = NS_NewAtom("TR");
+      nsIAtom* tratom = NS_NewAtom("tr");
       rv = NS_NewTableRowPart(&row, tratom);
       NS_RELEASE(tratom);
       if (NS_OK == rv) {
         PRInt32 colIndex;
         for (colIndex = 0; (NS_OK == rv) && (colIndex < aCols); colIndex++) {
-          nsIAtom* tdatom = NS_NewAtom("TD");
+          nsIAtom* tdatom = NS_NewAtom("td");
           rv = NS_NewTableCellPart(&cell, tdatom);
           NS_RELEASE(tdatom);
           if (NS_OK == rv) {
-            rv = AppendSimpleSpan (cell, "P", "test");   
+            rv = AppendSimpleSpan (cell, "p", "test");   
           }
           row->AppendChildTo(cell);
           NS_RELEASE(cell);
@@ -223,7 +223,7 @@ void BasicTest::CreateCorrectFullContent(int aRows, int aCols)
   }
 
   nsIHTMLContent* body;
-  nsIAtom* atom = NS_NewAtom("BODY");
+  nsIAtom* atom = NS_NewAtom("body");
   rv = NS_NewBodyPart(&body, atom);
   if (NS_OK != rv) {
     fprintf(out, "NS_NewBodyPart failed\n");
@@ -238,25 +238,25 @@ void BasicTest::CreateCorrectFullContent(int aRows, int aCols)
   nsIHTMLContent* row;
   nsIHTMLContent* cell;
 
-  nsIAtom* tatom = NS_NewAtom("TABLE");
+  nsIAtom* tatom = NS_NewAtom("table");
   rv = NS_NewTablePart(&table, tatom);
   NS_RELEASE(tatom);
   
   // add caption
-  nsIAtom* captionAtom = NS_NewAtom("CAPTION");
+  nsIAtom* captionAtom = NS_NewAtom("caption");
   rv = NS_NewTableCaptionPart(&caption, captionAtom);
   NS_RELEASE(captionAtom);
   table->AppendChildTo(caption);
   
   // add column group
   PRInt32 colIndex;
-  nsIAtom* colGroupAtom = NS_NewAtom("COLGROUP");
+  nsIAtom* colGroupAtom = NS_NewAtom("colgroup");
   rv = NS_NewTableColGroupPart(&colGroup, colGroupAtom);
   NS_RELEASE(colGroupAtom);
   table->AppendChildTo(colGroup);
 
   // add columns
-  nsIAtom* colAtom = NS_NewAtom("COL");
+  nsIAtom* colAtom = NS_NewAtom("col");
   for (colIndex = 0; (NS_OK == rv) && (colIndex < aCols); colIndex++) {
     rv = NS_NewTableColPart(&col, colAtom);
     colGroup->AppendChildTo(col);
@@ -267,12 +267,12 @@ void BasicTest::CreateCorrectFullContent(int aRows, int aCols)
   if (NS_OK == rv) {
     PRInt32 rowIndex;
     for (rowIndex = 0; (NS_OK == rv) && (rowIndex < aRows); rowIndex++) {
-      nsIAtom* tratom = NS_NewAtom("TR");
+      nsIAtom* tratom = NS_NewAtom("tr");
       rv = NS_NewTableRowPart(&row, tratom);
       NS_RELEASE(tratom);
       if (NS_OK == rv) {
         for (colIndex = 0; (NS_OK == rv) && (colIndex < aCols); colIndex++) {
-          nsIAtom* tdatom = NS_NewAtom("TD");
+          nsIAtom* tdatom = NS_NewAtom("td");
           rv = NS_NewTableCellPart(&cell, tdatom);
           NS_RELEASE(tdatom);
           if (NS_OK == rv) {
@@ -304,7 +304,7 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
   }
 
   nsIHTMLContent* body;
-  nsIAtom* atom = NS_NewAtom("BODY");
+  nsIAtom* atom = NS_NewAtom("body");
   rv = NS_NewBodyPart(&body, atom);
   if (NS_OK != rv) {
     fprintf(out, "NS_NewBodyPart failed\n");
@@ -319,7 +319,7 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
   nsIHTMLContent* row;
   nsIHTMLContent* cell;
 
-  nsIAtom* tatom = NS_NewAtom("TABLE");
+  nsIAtom* tatom = NS_NewAtom("table");
   rv = NS_NewTablePart(&table, tatom);
   NS_RELEASE(tatom);
   
@@ -327,16 +327,16 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
   if (NS_OK == rv) {
     PRInt32 rowIndex;
     for (rowIndex = 0; (NS_OK == rv) && (rowIndex < aRows); rowIndex++) {
-      nsIAtom* tratom = NS_NewAtom("TR");
+      nsIAtom* tratom = NS_NewAtom("tr");
       rv = NS_NewTableRowPart(&row, tratom);
       NS_RELEASE(tratom);
       if (NS_OK == rv) {
         for (PRInt32 colIndex = 0; (NS_OK == rv) && (colIndex < aCols); colIndex++) {
-          nsIAtom* tdatom = NS_NewAtom("TD");
+          nsIAtom* tdatom = NS_NewAtom("td");
           rv = NS_NewTableCellPart(&cell, tdatom);
           NS_RELEASE(tdatom);
           if (NS_OK == rv) {
-            rv = AppendSimpleSpan (cell, "P", "test");   
+            rv = AppendSimpleSpan (cell, "p", "test");   
           }
           row->AppendChildTo(cell);
           NS_RELEASE(cell);
@@ -344,7 +344,7 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
           {
             // add column after cell[1,0], force implicit column group to be built
             PRInt32 colIndex;
-            nsIAtom* colGroupAtom = NS_NewAtom("COLGROUP");
+            nsIAtom* colGroupAtom = NS_NewAtom("colgroup");
             rv = NS_NewTableColGroupPart(&colGroup, colGroupAtom);
             NS_RELEASE(colGroupAtom);
             table->AppendChildTo(colGroup);
@@ -360,13 +360,13 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
   root->AppendChildTo(body);
 
   // add caption in middle
-  nsIAtom* captionAtom = NS_NewAtom("CAPTION");
+  nsIAtom* captionAtom = NS_NewAtom("caption");
   rv = NS_NewTableCaptionPart(&caption, captionAtom);
   NS_RELEASE(captionAtom);
   table->AppendChildTo(caption);
 
   // add columns
-  nsIAtom* colAtom = NS_NewAtom("COL");
+  nsIAtom* colAtom = NS_NewAtom("col");
   for (PRInt32 colIndex = 0; (NS_OK == rv) && (colIndex < aCols); colIndex++) {
     rv = NS_NewTableColPart(&col, colAtom);
     colGroup->AppendChildTo(col);
@@ -374,7 +374,7 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
   NS_RELEASE(colAtom);
 
   // add caption at end
-  captionAtom = NS_NewAtom("CAPTION");
+  captionAtom = NS_NewAtom("caption");
   rv = NS_NewTableCaptionPart(&caption, captionAtom);
   NS_RELEASE(captionAtom);
   table->AppendChildTo(caption);

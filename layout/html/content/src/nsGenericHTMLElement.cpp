@@ -456,9 +456,9 @@ nsGenericHTMLElement::ParseAttributeString(const nsString& aStr,
                                            PRInt32& aNameSpaceID)
 {
   // XXX need to validate/strip namespace prefix
-  nsAutoString  upper;
-  aStr.ToUpperCase(upper);  
-  aName = NS_NewAtom(upper);
+  nsAutoString  lower;
+  aStr.ToLowerCase(lower);  
+  aName = NS_NewAtom(lower);
   aNameSpaceID = kNameSpaceID_HTML;
   
   return NS_OK;

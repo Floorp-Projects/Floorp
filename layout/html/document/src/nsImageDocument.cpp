@@ -271,7 +271,7 @@ nsImageDocument::CreateSyntheticDocument()
   body->SetDocument(this, PR_FALSE);
 
   nsIHTMLContent* center;
-  nsIAtom* centerAtom = NS_NewAtom("P");
+  nsIAtom* centerAtom = NS_NewAtom("p");
   rv = NS_NewHTMLParagraphElement(&center, centerAtom);
   NS_RELEASE(centerAtom);
   if (NS_OK != rv) {
@@ -280,7 +280,7 @@ nsImageDocument::CreateSyntheticDocument()
   center->SetDocument(this, PR_FALSE);
 
   nsIHTMLContent* image;
-  nsIAtom* imgAtom = NS_NewAtom("IMG");
+  nsIAtom* imgAtom = NS_NewAtom("img");
   rv = NS_NewHTMLImageElement(&image, imgAtom);
   NS_RELEASE(imgAtom);
   if (NS_OK != rv) {

@@ -1002,9 +1002,6 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
         const nsString& key = aNode.GetKeyAt(i);
         SplitQualifiedName(key, nameSpaceID, attr);
 
-        if (nameSpaceID == kNameSpaceID_HTML)
-            attr.ToUpperCase();
-
         // Don't add xmlns: declarations, these are really just
         // processing instructions.
         if (nameSpaceID == kNameSpaceID_XMLNS)
@@ -1051,10 +1048,6 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
     PRInt32 nameSpaceID;
 
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
-
-    // HTML tags all need to be upper-cased
-    if (nameSpaceID == kNameSpaceID_HTML)
-        tag.ToUpperCase();
 
     // Figure out the URI of this object, and create an RDF node for it.
     nsresult rv;
