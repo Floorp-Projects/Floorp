@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -173,6 +173,7 @@ if ($action eq 'changeform') {
     PutHeader("Change Group");
 
     my $gid = trim($::FORM{group} || '');
+    detaint_natural($gid);
     unless ($gid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
@@ -181,7 +182,7 @@ if ($action eq 'changeform') {
     }
 
     SendSQL("SELECT id, name, description, userregexp, isactive, isbuggroup
-             FROM groups WHERE id=" . SqlQuote($gid));
+             FROM groups WHERE id=$gid");
     my ($group_id, $name, $description, $rexp, $isactive, $isbuggroup) 
         = FetchSQLData();
 
@@ -329,7 +330,7 @@ if ($action eq 'new') {
     # convert an undefined value in the inactive field to zero
     # (this occurs when the inactive checkbox is not checked
     # and the browser does not send the field to the server)
-    my $isactive = $::FORM{isactive} || 0;
+    my $isactive = $::FORM{isactive} ? 1 : 0;
 
     unless ($name) {
         ShowError("You must enter a name for the new group.<BR>" .
@@ -345,14 +346,6 @@ if ($action eq 'new') {
     }
     if (TestGroup($name)) {
         ShowError("The group '" . $name . "' already exists.<BR>" .
-                  "Please click the <b>Back</b> button and try again.");
-        PutFooter();
-        exit;
-    }
-
-    if ($isactive != 0 && $isactive != 1) {
-        ShowError("The active flag was improperly set.  There may be " . 
-                  "a problem with Bugzilla or a bug in your browser.<br>" . 
                   "Please click the <b>Back</b> button and try again.");
         PutFooter();
         exit;
@@ -406,13 +399,14 @@ if ($action eq 'new') {
 if ($action eq 'del') {
     PutHeader("Delete group");
     my $gid = trim($::FORM{group} || '');
+    detaint_natural($gid);
     unless ($gid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
         PutFooter();
         exit;
     }
-    SendSQL("SELECT id FROM groups WHERE id=" . SqlQuote($gid));
+    SendSQL("SELECT id FROM groups WHERE id=$gid");
     if (!FetchOneColumn()) {
         ShowError("That group doesn't exist.<BR>" .
                   "Click the <b>Back</b> button and try again.");
@@ -421,7 +415,7 @@ if ($action eq 'del') {
     }
     SendSQL("SELECT name,description " .
             "FROM groups " .
-            "WHERE id = " . SqlQuote($gid));
+            "WHERE id=$gid");
 
     my ($name, $desc) = FetchSQLData();
     print "<table border=1>\n";
@@ -503,6 +497,7 @@ You cannot delete this group while it is tied to a product.</B><BR>
 if ($action eq 'delete') {
     PutHeader("Deleting group");
     my $gid = trim($::FORM{group} || '');
+    detaint_natural($gid);
     unless ($gid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
@@ -511,7 +506,7 @@ if ($action eq 'delete') {
     }
     SendSQL("SELECT name " .
             "FROM groups " .
-            "WHERE id = " . SqlQuote($gid));
+            "WHERE id = $gid");
     my ($name) = FetchSQLData();
 
     my $cantdelete = 0;
@@ -610,6 +605,7 @@ if (($action eq 'remove_all_regexp') || ($action eq 'remove_all')) {
     # or all of them period
     my $dbh = Bugzilla->dbh;
     my $gid = $::FORM{group};
+    detaint_natural($gid);
     my $sth = $dbh->prepare("SELECT name, userregexp FROM groups
                              WHERE id = ?");
     $sth->execute($gid);
@@ -713,6 +709,7 @@ sub confirmRemove {
 # Helper sub to handle the making of changes to a group
 sub doGroupChanges {
     my $gid = trim($::FORM{group} || '');
+    detaint_natural($gid);
     unless ($gid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
