@@ -475,61 +475,59 @@ nsBoxObject::GetParentBox(nsIDOMElement * *aParentBox)
 NS_IMETHODIMP 
 nsBoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
 {
-  if (!mContent) {
-    *aFirstVisibleChild = nsnull;
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  *aFirstVisibleChild = GetChildByOrdinalAt(0);
-  NS_IF_ADDREF(*aFirstVisibleChild);
+  *aFirstVisibleChild = nsnull;
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+  nsIFrame* firstFrame = frame->GetFirstChild(nsnull);
+  if (!firstFrame) return NS_OK;
+  // get the content for the box and query to a dom element
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(firstFrame->GetContent());
+  el.swap(*aFirstVisibleChild);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
 {
-  if (!mContent) {
-    *aLastVisibleChild = nsnull;
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PRUint32 count = mContent->GetChildCount();
-
-  if (count > 0) {
-    NS_IF_ADDREF(*aLastVisibleChild = GetChildByOrdinalAt(count-1));
-  } else {
-    *aLastVisibleChild = nsnull;
-  }
-
-  return NS_OK;
+  *aLastVisibleChild = nsnull;
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+  return GetPreviousSibling(frame, nsnull, aLastVisibleChild);
 }
 
 NS_IMETHODIMP
 nsBoxObject::GetNextSibling(nsIDOMElement **aNextOrdinalSibling)
 {
+  *aNextOrdinalSibling = nsnull;
   nsIFrame* frame = GetFrame();
   if (!frame) return NS_OK;
   nsIFrame* nextFrame = frame->GetNextSibling();
   if (!nextFrame) return NS_OK;
   // get the content for the box and query to a dom element
   nsCOMPtr<nsIDOMElement> el = do_QueryInterface(nextFrame->GetContent());
-  *aNextOrdinalSibling = el;
-  NS_IF_ADDREF(*aNextOrdinalSibling);
-
+  el.swap(*aNextOrdinalSibling);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
 {
+  *aPreviousOrdinalSibling = nsnull;
   nsIFrame* frame = GetFrame();
   if (!frame) return NS_OK;
   nsIFrame* parentFrame = frame->GetParent();
   if (!parentFrame) return NS_OK;
-  
-  nsIFrame* nextFrame = parentFrame->GetFirstChild(nsnull);
+  return GetPreviousSibling(parentFrame, frame, aPreviousOrdinalSibling);
+}
+
+nsresult
+nsBoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
+                                nsIDOMElement** aResult)
+{
+  nsIFrame* nextFrame = aParentFrame->GetFirstChild(nsnull);
   nsIFrame* prevFrame = nsnull;
   while (nextFrame) {
-    if (nextFrame == frame)
+    if (nextFrame == aFrame)
       break;
     prevFrame = nextFrame;
     nextFrame = nextFrame->GetNextSibling();
@@ -538,34 +536,8 @@ nsBoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
   if (!prevFrame) return NS_OK;
   // get the content for the box and query to a dom element
   nsCOMPtr<nsIDOMElement> el = do_QueryInterface(prevFrame->GetContent());
-  *aPreviousOrdinalSibling = el;
-  NS_IF_ADDREF(*aPreviousOrdinalSibling);
-
+  el.swap(*aResult);
   return NS_OK;
-}
-
-nsIDOMElement*
-nsBoxObject::GetChildByOrdinalAt(PRUint32 aIndex)
-{
-  // cast our way down to our nsContainerBox interface
-  nsIFrame* frame = GetFrame();
-  if (!frame) return nsnull;
-  
-  // get the first child box
-  nsIFrame* childFrame = frame->GetFirstChild(nsnull);
-  
-  PRUint32 i = 0;
-  while (childFrame && i < aIndex) {
-    childFrame = childFrame->GetNextSibling();
-    ++i;
-  }
-
-  if (!childFrame) return nsnull;
-
-  // get the content for the box and query to a dom element
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(childFrame->GetContent());
-  
-  return el;
 }
 
 nsresult
