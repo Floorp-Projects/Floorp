@@ -200,8 +200,6 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
                                    const char* inBuffer, const PRInt32 inLength,
                                    char** outBuffer, PRInt32* outLength)
 {
-  char *dstPtr = nsnull;
-  PRInt32 dstLength = 0;
   nsresult res;
 
   // invalid input

@@ -96,11 +96,9 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	  obj->options->write_html_p &&
 	  obj->options->output_fn)
 	{
-	  MimeDisplayOptions newopt = *obj->options;  /* copy it */
 	  char *id = 0;
 	  char *id_url = 0;
 	  char *id_imap = 0;
-	  PRBool all_headers_p = obj->options->headers == MimeHeadersAll;
 
 	  id = mime_part_address (obj);
 	  if (! id) return MIME_OUT_OF_MEMORY;

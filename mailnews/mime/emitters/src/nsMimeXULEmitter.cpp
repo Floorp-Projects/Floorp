@@ -1208,7 +1208,6 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
       return rv;
     
     nsCOMPtr<nsIRegistryNode> node;
-    nsIID nodeIID = NS_IREGISTRYNODE_IID;
     node = do_QueryInterface(base, &rv);
     if (NS_FAILED(rv)) 
       return rv;
