@@ -26,7 +26,8 @@
     </popup>
   </popupset>
 
-  <menupopup id="mppFile">
+  <menupopup id="menu_FilePopup">
+
     <menu 
       id="mnWindowsFile" label="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
       datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
@@ -42,11 +43,7 @@
     <menuitem label="&cmdShowOpenURLDialog.label;" accesskey="&cmdShowOpenURLDialog.accesskey;"
               observes="cmdShowOpenURLDialog"/>
     <menuseparator/>
-    <menuitem label="&cmdClose.label;" accesskey="&cmdClose.accesskey;" 
-              observes="cmdClose" key="key_close"/>
-    <menuseparator/>
-    <menuitem label="&cmdExit.label;" accesskey="&cmdExit.accesskey;" 
-              observes="cmd_quit" key="key_quit"/>
+    <menuitem id="menu_close"/>
   </menupopup>
 
   <menupopup id="mppEdit">

@@ -13,7 +13,7 @@
   <menubar id="mbrInspectorMain">
 
     <menu id="mnFile" label="&mnFile.label;" accesskey="&mnFile.accesskey;">
-      <menupopup id="mppFile"/>
+      <menupopup id="menu_FilePopup"/>
     </menu>
 
     <menu id="mnEdit" label="&mnEdit.label;" accesskey="&mnEdit.accesskey;">
