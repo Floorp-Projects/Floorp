@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.40 $ 
-# $Date: 2002/05/02 04:38:52 $ 
+# $Revision: 1.41 $ 
+# $Date: 2002/05/02 22:11:32 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -156,6 +156,13 @@ use Utils;
 $VERSION = '#tinder_version#';
 
 @ISA = qw(TinderDB::BasicTxtDB);
+
+# as part of the configuration for mozilla.org, they want most cells
+# which are empty to not have borders but the builds cells are
+# different. yeck!
+
+$EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL ||
+    "&nbsp;";
 
 
 # Find the name of each build and the proper order to display them.
@@ -1065,7 +1072,7 @@ sub status_table_row {
                      "-->\n".
 
                      "\t\t<td align=center $cell_options>".
-                     "$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+                     "$EMPTY_TABLE_CELL</td>\n");
       $NEXT_ROW{$tree}{$buildname} =  $row_index + $rowspan;
       next;
     }
