@@ -217,8 +217,8 @@ int main(int argc, char **argv)
 
   gsWindowService->GetEventDispatcher(&gsEventDispatcher);
 
-  rv = nsComponentManager::CreateInstance(kPrefCID, NULL, kIPrefIID,
-					  (void **) &sgPrefs);
+  rv = nsServiceManager::GetService(kPrefCID, kIPrefIID,
+                                    (nsISupports**)&sgPrefs);
 
   if (NS_OK != rv) {
     printf("failed to get prefs instance\n");
@@ -228,7 +228,6 @@ int main(int argc, char **argv)
   sgPrefs->StartUp();
   sgPrefs->ReadUserPrefs();
 
-  sgWebShell->SetPrefs(sgPrefs);
   nsIContentViewer *content_viewer;
   rv = sgWebShell->GetContentViewer(&content_viewer);
   if (NS_SUCCEEDED(rv) && content_viewer) {
