@@ -376,6 +376,11 @@ NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container, nsISupports *cx
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->FrameChanged(container, cx, newframe, dirtyRect);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(),
+                 "The observer list changed while being iterated over!");
   }
 
   return NS_OK;
@@ -394,6 +399,11 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->OnStartDecode(request, cx);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(), 
+                 "The observer list changed while being iterated over!");
   }
 
   /* In the case of streaming jpegs, it is possible to get multiple OnStartDecodes which
@@ -423,6 +433,12 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->OnStartContainer(request, cx, image);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(), 
+                 "The observer list changed while being iterated over!");
+
   }
 
   return NS_OK;
@@ -437,6 +453,11 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request, nsISupports *cx, gf
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->OnStartFrame(request, cx, frame);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(), 
+                 "The observer list changed while being iterated over!");
   }
 
   return NS_OK;
@@ -455,6 +476,11 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->OnDataAvailable(request, cx, frame, rect);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(), 
+                 "The observer list changed while being iterated over!");
   }
 
   return NS_OK;
@@ -486,6 +512,11 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->OnStopFrame(request, cx, frame);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(), 
+                 "The observer list changed while being iterated over!");
   }
 
   return NS_OK;
@@ -502,6 +533,11 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx,
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->OnStopContainer(request, cx, image);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(), 
+                 "The observer list changed while being iterated over!");
   }
 
   return NS_OK;
@@ -524,6 +560,11 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, 
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->OnStopDecode(aRequest, aCX, GetResultFromStatus(mStatus), aStatusArg);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(), 
+                 "The observer list changed while being iterated over!");
   }
 
   return NS_OK;
@@ -566,6 +607,11 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     if (proxy) proxy->OnStartRequest(aRequest, ctxt);
+
+    // If this assertion fires, it means that imgRequest notifications could
+    // be dropped!
+    NS_ASSERTION(count == mObservers.Count(), 
+                 "The observer list changed while being iterated over!");
   }
 
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
@@ -632,7 +678,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
   /* notify the kids */
   PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  for (PRInt32 i = count-1; i>=0; i--) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
     /* calling OnStopRequest may result in the death of |proxy| so don't use the
        pointer after this call.
