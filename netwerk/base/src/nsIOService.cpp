@@ -135,7 +135,6 @@ PRInt16 gBadPortList[] = {
   556,  // remotefs    
   587,  //
   601,  //       
-  1080, // SOCKS
   2049, // nfs
   4045, // lockd
   6000, // x11        
