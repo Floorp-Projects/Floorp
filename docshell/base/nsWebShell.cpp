@@ -126,7 +126,8 @@ public:
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
-                  PRBool aAllowPlugins = PR_TRUE);
+                  PRBool aAllowPlugins = PR_TRUE,
+                  PRBool aIsSunkenBorder = PR_TRUE);
   NS_IMETHOD Destroy(void);
   NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h);
   NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h);
@@ -562,7 +563,8 @@ NS_IMETHODIMP
 nsWebShell::Init(nsNativeWidget aNativeParent,
                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                  nsScrollPreference aScrolling,
-                 PRBool aAllowPlugins)
+                 PRBool aAllowPlugins,
+                 PRBool aIsSunkenBorder)
 {
   //XXX make sure plugins have started up. this really needs to
   //be associated with the nsIContentViewerContainer interfaces,
@@ -632,7 +634,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   }
 
   widgetInit.clipChildren = PR_FALSE;
-  widgetInit.mBorderStyle = eBorderStyle_3DChildWindow;
+  widgetInit.mBorderStyle = aIsSunkenBorder ? eBorderStyle_3DChildWindow : eBorderStyle_none;
   mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
                   mDeviceContext, nsnull, nsnull, &widgetInit);
 
