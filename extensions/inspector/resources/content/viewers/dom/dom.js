@@ -819,7 +819,16 @@ cmdEditDelete.prototype =
   nextSibling: null,
   parentNode: null,
   
-  doCommand: function()
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+  
+  doTransaction: function()
   {
     var node = this.node ? this.node : viewer.selectedNode;
     if (node) {
@@ -830,7 +839,7 @@ cmdEditDelete.prototype =
     }
   },
   
-  undoCommand: function()
+  undoTransaction: function()
   {
     if (this.node) {
       if (this.nextSibling)
@@ -846,20 +855,30 @@ cmdEditCut.prototype =
 {
   cmdCopy: null,
   cmdDelete: null,
-  doCommand: function()
+  
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+  
+  doTransaction: function() 
   {
     if (!this.cmdCopy) {
       this.cmdDelete = new cmdEditDelete();
       this.cmdCopy = new cmdEditCopy();
     }
-    this.cmdCopy.doCommand();
-    this.cmdDelete.doCommand();    
+    this.cmdCopy.doTransaction();
+    this.cmdDelete.doTransaction();    
   },
 
-  undoCommand: function()
+  undoTransaction: function()
   {
-    this.cmdDelete.undoCommand();    
-    this.cmdCopy.undoCommand();
+    this.cmdDelete.undoTransaction();    
+    this.cmdCopy.undoTransaction();
   }
 };
 
@@ -869,8 +888,17 @@ cmdEditCopy.prototype =
   copiedNode: null,
   previousData: null,
   previousFlavor: null,
-    
-  doCommand: function()
+  
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+
+  doTransaction: function()
   {
     var copiedNode = null;
     if (!this.copiedNode) {
@@ -886,7 +914,7 @@ cmdEditCopy.prototype =
     viewer.pane.panelset.setClipboardData(copiedNode, "inspector/dom-node");
   },
   
-  undoCommand: function()
+  undoTransaction: function()
   {
     viewer.pane.panelset.setClipboardData(this.previousData, this.previousFlavor);
   }
@@ -897,8 +925,17 @@ cmdEditPaste.prototype =
 {
   pastedNode: null,
   pastedBefore: null,
+
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
   
-  doCommand: function()
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+  
+  doTransaction: function()
   {
     var node = this.pastedNode ? this.pastedNode : viewer.pane.panelset.getClipboardData();
     var selected = this.pastedBefore ? this.pastedBefore : viewer.selectedNode;
@@ -914,7 +951,7 @@ cmdEditPaste.prototype =
     return true;
   },
   
-  undoCommand: function()
+  undoTransaction: function()
   {
     if (this.pastedNode)
       this.pastedNode.parentNode.removeChild(this.pastedNode);
