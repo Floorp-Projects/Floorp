@@ -116,6 +116,7 @@ nsXInstaller::RunWizard(int argc, char **argv)
     XI_VERIFY(gCtx);
 
     // create the dialog window
+    gtk_set_locale();
     gtk_init(&argc, &argv);
     gdk_rgb_init();
 
@@ -260,7 +261,7 @@ nsXInstaller::DrawNavButtons()
 
     gtk_table_attach(GTK_TABLE(navbtntable), gCtx->back, 4, 5, 0, 1, 
         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-		static_cast<GtkAttachOptions>( GTK_FILL | GTK_EXPAND),
+		static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
 		5, 5);
     gtk_table_attach(GTK_TABLE(navbtntable), gCtx->next, 5, 6, 0, 1,
         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
