@@ -45,6 +45,7 @@ CHROME_L10N = \
 	.\about.dtd \
 	.\languageNames.properties \
 	.\manifest.rdf \
+  .\regionNames.properties \
 	$(NULL)
   
 include <$(DEPTH)\config\rules.mak>
