@@ -633,6 +633,10 @@ NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const char *folderName)
 
 }
 
+NS_IMETHODIMP nsMsgFolder::Compact()
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgFolder::Rename(const char *name)
 {

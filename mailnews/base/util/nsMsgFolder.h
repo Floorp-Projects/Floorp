@@ -136,6 +136,8 @@ public:
 
   NS_IMETHOD CreateSubfolder(const char *folderName);
 
+  NS_IMETHOD Compact();
+
   NS_IMETHOD Rename(const char *name);
   NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32*);
 
