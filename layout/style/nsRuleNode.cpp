@@ -2722,22 +2722,27 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     // positioned, we can deal with it here.
 
     // 1) if float is not none, and display is not none, then we must
-    // set display to block
-    //    XXX - there are problems with following the spec here: what we
-    //          will do instead of following the letter of the spec is
-    //          to make sure that floated elements are some kind of
-    //          block, not strictly 'block' - see EnsureBlockDisplay
-    //          method
-    if (display->mFloats != NS_STYLE_FLOAT_NONE)
+    // set a block-level 'display' type per CSS2.1 section 9.7.
+    if (display->mFloats != NS_STYLE_FLOAT_NONE) {
       EnsureBlockDisplay(display->mDisplay);
-    else if (nsCSSPseudoElements::firstLetter == pseudoTag) 
+      
+      // We can't cache the data in the rule tree since if a more specific
+      // rule has 'float: none' we'll end up with the wrong 'display'
+      // property.
+      inherited = PR_TRUE;
+    } else if (nsCSSPseudoElements::firstLetter == pseudoTag) {
       // a non-floating first-letter must be inline
       // XXX this fix can go away once bug 103189 is fixed correctly
       display->mDisplay = NS_STYLE_DISPLAY_INLINE;
+      
+      // We can't cache the data in the rule tree since if a more specific
+      // rule has 'float: left' we'll end up with the wrong 'display'
+      // property.
+      inherited = PR_TRUE;
+    }
     
     // 2) if position is 'absolute' or 'fixed' then display must be
-    // 'block and float must be 'none'
-    //    XXX - see note for fixup 1) above...
+    // block-level and float must be 'none'
     if (display->IsAbsolutelyPositioned()) {
       // Backup original display value for calculation of a hypothetical
       // box (CSS2 10.6.4/10.6.5).
@@ -2745,6 +2750,11 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       display->mOriginalDisplay = display->mDisplay;
       EnsureBlockDisplay(display->mDisplay);
       display->mFloats = NS_STYLE_FLOAT_NONE;
+      
+      // We can't cache the data in the rule tree since if a more specific
+      // rule has 'position: static' we'll end up with problems with the
+      // 'display' and 'float' properties.
+      inherited = PR_TRUE;
     }
   }
 
