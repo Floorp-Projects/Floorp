@@ -32,12 +32,12 @@ my $opcode_maxlen = 0;
 #
 # template definitions for compare, arithmetic, and conditional branch ops
 #
-my $compare_op =
+my $binary_op =
   {
-   super  => "Compare",
+   super  => "Instruction_3",
    super_has_print => 1,
-   rem    => "dest, source",
-   params => [ ("Register", "Register") ]
+   rem    => "dest, source1, source2",
+   params => [ ("Register", "Register", "Register") ]
   };
 
 my $math_op =
@@ -180,16 +180,16 @@ $ops{"USHIFTRIGHT"}= $math_op;
 $ops{"AND"}        = $math_op;
 $ops{"OR"}         = $math_op;
 $ops{"XOR"}        = $math_op;
-$ops{"COMPARE_LT"} = $compare_op;
-$ops{"COMPARE_LE"} = $compare_op;
-$ops{"COMPARE_EQ"} = $compare_op;
-$ops{"COMPARE_NE"} = $compare_op;
-$ops{"COMPARE_GE"} = $compare_op;
-$ops{"COMPARE_GT"} = $compare_op;
-$ops{"COMPARE_IN"} = $compare_op;
-$ops{"STRICT_EQ"}  = $compare_op;
-$ops{"STRICT_NE"}  = $compare_op;
-$ops{"INSTANCEOF"} = $compare_op;
+$ops{"COMPARE_LT"} = $binary_op;
+$ops{"COMPARE_LE"} = $binary_op;
+$ops{"COMPARE_EQ"} = $binary_op;
+$ops{"COMPARE_NE"} = $binary_op;
+$ops{"COMPARE_GE"} = $binary_op;
+$ops{"COMPARE_GT"} = $binary_op;
+$ops{"COMPARE_IN"} = $binary_op;
+$ops{"STRICT_EQ"}  = $binary_op;
+$ops{"STRICT_NE"}  = $binary_op;
+$ops{"INSTANCEOF"} = $binary_op;
 $ops{"BITNOT"}     = $unary_op;
 $ops{"NOT"}        = $unary_op;
 $ops{"TEST"}       = $unary_op;
