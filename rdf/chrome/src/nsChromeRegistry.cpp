@@ -274,28 +274,28 @@ NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
   // XXX Now that we have a resource, we must examine all of its outgoing
   // arcs and use the literals at the ends of the arcs to set the fields
   // of the chrome entry.
-  nsAutoString name, text, author, version, siteURL, previewImageURL, archive;
+  nsAutoString name, path, author, version, siteURL, previewImageURL;
   nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
                                       nsChromeRegistry::kCHROME_name);
-  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
-                                      nsChromeRegistry::kCHROME_text);
-  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, path, resource, 
+                                      nsChromeRegistry::kCHROME_path);
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, author, resource, 
                                       nsChromeRegistry::kCHROME_author);
-  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, version, resource, 
                                       nsChromeRegistry::kCHROME_version);
-  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, siteURL, resource, 
                                       nsChromeRegistry::kCHROME_siteURL);
-  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, previewImageURL, resource, 
                                       nsChromeRegistry::kCHROME_previewImageURL);
-  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
-                                      nsChromeRegistry::kCHROME_archive);
   chromeEntry->SetName(name.GetUnicode());
-  chromeEntry->SetText(text.GetUnicode());
+  chromeEntry->SetPath(path.GetUnicode());
   chromeEntry->SetAuthor(author.GetUnicode());
   chromeEntry->SetVersion(version.GetUnicode());
   chromeEntry->SetSiteURL(siteURL.GetUnicode());
   chromeEntry->SetPreviewImageURL(previewImageURL.GetUnicode());
-  chromeEntry->SetArchive(archive.GetUnicode());
+  
+  // XXX Give a handle so that we can enumerate the
+  // components we affect
 
   nsCOMPtr<nsISupports> sup;
   sup = do_QueryInterface(chromeEntry, &rv);
@@ -321,8 +321,7 @@ nsIRDFResource* nsChromeRegistry::kCHROME_locale = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_base = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_main = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_name = nsnull;
-nsIRDFResource* nsChromeRegistry::kCHROME_archive = nsnull;
-nsIRDFResource* nsChromeRegistry::kCHROME_text = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_path = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_version = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_author = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_siteURL = nsnull;
@@ -365,10 +364,7 @@ nsChromeRegistry::nsChromeRegistry()
       rv = gRDFService->GetResource(kURICHROME_name, &kCHROME_name);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
 
-      rv = gRDFService->GetResource(kURICHROME_archive, &kCHROME_archive);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-
-      rv = gRDFService->GetResource(kURICHROME_text, &kCHROME_text);
+      rv = gRDFService->GetResource(kURICHROME_text, &kCHROME_path);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
 
       rv = gRDFService->GetResource(kURICHROME_version, &kCHROME_version);
@@ -398,8 +394,7 @@ nsChromeRegistry::~nsChromeRegistry()
         NS_IF_RELEASE(kCHROME_base);
         NS_IF_RELEASE(kCHROME_main);
         NS_IF_RELEASE(kCHROME_name);
-        NS_IF_RELEASE(kCHROME_archive);
-        NS_IF_RELEASE(kCHROME_text);
+        NS_IF_RELEASE(kCHROME_path);
         NS_IF_RELEASE(kCHROME_author);
         NS_IF_RELEASE(kCHROME_version);
         NS_IF_RELEASE(kCHROME_siteURL);
