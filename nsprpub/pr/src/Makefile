@@ -177,7 +177,9 @@ OBJS = \
     misc/$(OBJDIR)/prcountr.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prdtoa.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prenv.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prerr.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prerror.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prerrortable.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prinit.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prinrval.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prlog2.$(OBJ_SUFFIX) \

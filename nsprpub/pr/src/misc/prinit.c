@@ -150,6 +150,8 @@ static void _PR_InitStuff(void)
     _PR_InitDtoa();
     _PR_InitMW();
 
+    pr_init_error_table_nspr();
+
     _PR_MD_FINAL_INIT();
 }
 
