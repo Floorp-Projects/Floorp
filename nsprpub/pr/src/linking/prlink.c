@@ -40,6 +40,9 @@
 #ifdef USE_DLFCN
 #include <dlfcn.h>
 /* Define these on systems that don't have them. */
+#ifndef RTLD_NOW
+#define RTLD_NOW 0
+#endif
 #ifndef RTLD_LAZY
 #define RTLD_LAZY RTLD_NOW
 #endif
