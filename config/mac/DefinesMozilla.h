@@ -38,6 +38,10 @@
 // 98-07-29 pinnkerton -- defines to turn on feature. REMOVE WHEN THIS LANDS.
 #define PRIVACY_POLICIES 1
 
+// 98-08-10 joe -- temporary item to turn on ENDER (html textareas) before it fully lands
+#define ENDER 1
+
+
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	You typically will not need to change things below here
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
