@@ -1269,7 +1269,7 @@ void ScopeChain::collectNames(StmtNode *p)
                 ASSERT(PROPERTY_KIND(it) == ValuePointer);
                 bool makeAlias = true;
                 if (i->includeExclude) {
-                    makeAlias = !i->exclude;
+                    makeAlias = i->exclude;
                     IdentifierList *idList = i->includeExclude;
                     while (idList) {
                         if (idList->name.compare(PROPERTY_NAME(it)) == 0) {

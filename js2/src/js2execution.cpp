@@ -1234,6 +1234,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         else
                             pushValue(JSValue((JSFunction *)(new JSBoundFunction(result.function, obj))));
                     }
+                    if (useOnceNamespace) {
+                        NamespaceList *t = mNamespaceList->mNext;
+                        delete mNamespaceList;
+                        useOnceNamespace = false;
+                        mNamespaceList = t;
+                    }                        
                 }
                 break;
             case GetInvokePropertyOp:
@@ -1254,6 +1260,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     
                     const StringAtom &name = *mCurModule->getString(index);
                     obj->getProperty(this, name, mNamespaceList);
+                    if (useOnceNamespace) {
+                        NamespaceList *t = mNamespaceList->mNext;
+                        delete mNamespaceList;
+                        useOnceNamespace = false;
+                        mNamespaceList = t;
+                    }                        
                 }
                 break;
             case SetPropertyOp:
@@ -1274,6 +1286,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     const StringAtom &name = *mCurModule->getString(index);
                     obj->setProperty(this, name, mNamespaceList, v);
                     pushValue(v);
+                    if (useOnceNamespace) {
+                        NamespaceList *t = mNamespaceList->mNext;
+                        delete mNamespaceList;
+                        useOnceNamespace = false;
+                        mNamespaceList = t;
+                    }                        
                 }
                 break;
             case DoUnaryOp:

@@ -252,6 +252,10 @@ void PropertyReference::emitImplicitLoad(ByteCodeGen *bcg)
 
 void PropertyReference::emitCodeSequence(ByteCodeGen *bcg) 
 {
+    if (mNameSpace) {
+        bcg->addOp(UseOnceOp);
+        bcg->addStringRef(mNameSpace->mName);
+    }
     if (mAccess == Read)
         bcg->addOp(GetPropertyOp);
     else
@@ -261,6 +265,10 @@ void PropertyReference::emitCodeSequence(ByteCodeGen *bcg)
 
 void PropertyReference::emitInvokeSequence(ByteCodeGen *bcg) 
 {
+    if (mNameSpace) {
+        bcg->addOp(UseOnceOp);
+        bcg->addStringRef(mNameSpace->mName);
+    }
     bcg->addOp(GetInvokePropertyOp);
     bcg->addStringRef(mName); 
 }
@@ -1399,7 +1407,10 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
         {
             PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
 	    mScopeChain->addScope(ps->scope);
+            addOp(PushScopeOp);
+            addPointer(ps->scope);
             genCodeForStatement(ps->body, static_cg, finallyLabel);
+            addOp(PopScopeOp);
 	    mScopeChain->popScope();
         }
         break;
@@ -2475,6 +2486,7 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     case NewClosureOp:
     case JuxtaposeOp:
     case NamedArgOp:
+    case PopScopeOp:
         break;
 
     case DeleteElementOp:
