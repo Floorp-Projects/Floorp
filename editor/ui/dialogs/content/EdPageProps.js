@@ -58,8 +58,27 @@ function Startup()
     var lastmod = editorShell.editorDocument.lastModified;  // get string of last modified date
 
     // Convert modified string to date (0 = unknown date or January 1, 1970 GMT)
-    if (Date.parse(lastmod))
-      lastmodString = lastmod;
+    if(Date.parse(lastmod))
+    {
+      try {
+        const nsScriptableDateFormat_CONTRACTID = "@mozilla.org/intl/scriptabledateformat;1";
+        const nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
+        var dateService = Components.classes[nsScriptableDateFormat_CONTRACTID]
+         .getService(nsIScriptableDateFormat);
+
+        var lastModDate = new Date();
+        lastModDate.setTime(Date.parse(lastmod));
+        lastmodString =  dateService.FormatDateTime("", 
+                                      dateService.dateFormatLong,
+                                      dateService.timeFormatSeconds,
+                                      lastModDate.getFullYear(),
+                                      lastModDate.getMonth()+1,
+                                      lastModDate.getDate(),
+                                      lastModDate.getHours(),
+                                      lastModDate.getMinutes(),
+                                      lastModDate.getSeconds());
+      } catch (e) {}
+    }
   }
   document.getElementById("PageModDate").setAttribute("value", lastmodString);
 
