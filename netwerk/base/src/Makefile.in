@@ -36,6 +36,7 @@ CPPSRCS =                              \
 	nsNetModuleMgr.cpp             \
 	nsNetModRegEntry.cpp           \
 	nsLoadGroup.cpp                \
+	nsInputStreamChannel.cpp       \
         $(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -134,20 +134,24 @@ nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 {
     // about:what you ask?
     nsresult rv;
-    char* what;
-    rv = uri->GetPath(&what);
+    char* whatStr;
+    rv = uri->GetPath(&whatStr);
     if (NS_FAILED(rv)) return rv;
     
-    // look up a handler to deal with "what"
+    // look up a handler to deal with "whatStr"
     nsAutoString progID(NS_ABOUT_MODULE_PROGID_PREFIX);
-    nsAutoString whatStr(what);
-    nsCRT::free(what);
+    nsAutoString what(whatStr);
+    nsCRT::free(whatStr);
 
     // only take up to a question-mark if there is one:
-    PRInt32 amt = whatStr.Find("?");
+    PRInt32 amt = what.Find("?");
     progID.Append(what, amt);   // if amt == -1, take it all
     
-    NS_WITH_SERVICE(nsIAboutModule, aboutMod, progID.GetBuffer(), &rv);
+    char* progIDStr = progID.ToNewCString();
+    if (progIDStr == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_WITH_SERVICE(nsIAboutModule, aboutMod, progIDStr, &rv);
+    nsCRT::free(progIDStr);
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
         return aboutMod->NewChannel(verb, uri, eventSinkGetter, 

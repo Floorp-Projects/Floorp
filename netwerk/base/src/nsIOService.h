@@ -53,6 +53,7 @@ public:
     NS_IMETHOD NewSyncStreamListener(nsIInputStream **inStream, nsIBufferOutputStream **outStream, nsIStreamListener **_retval);
     NS_IMETHOD NewChannelFromNativePath(const char *nativePath, nsIFileChannel **_retval);
     NS_IMETHOD NewLoadGroup(nsILoadGroup* parent, nsILoadGroup **result);
+    NS_IMETHOD NewInputStreamChannel(nsIURI* uri, const char *contentType, nsIInputStream *inStr, nsIChannel **result);
 
     // nsIOService methods:
     nsIOService();

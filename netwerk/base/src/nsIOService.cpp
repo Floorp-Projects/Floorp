@@ -32,6 +32,7 @@
 #include "nsIFileProtocolHandler.h"     // for NewChannelFromNativePath
 #include "nsLoadGroup.h"
 #include "nsIFileChannel.h"
+#include "nsInputStreamChannel.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -336,6 +337,24 @@ nsIOService::NewLoadGroup(nsILoadGroup* parent, nsILoadGroup **result)
         return rv;
     }
     *result = group;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType,
+                                   nsIInputStream *inStr, nsIChannel **result)
+{
+    nsresult rv;
+    nsInputStreamChannel* channel;
+    rv = nsInputStreamChannel::Create(nsnull, nsCOMTypeInfo<nsIChannel>::GetIID(),
+                                      (void**)&channel);
+    if (NS_FAILED(rv)) return rv;
+    rv = channel->Init(uri, contentType, inStr);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(channel);
+        return rv;
+    }
+    *result = channel;
     return NS_OK;
 }
 
