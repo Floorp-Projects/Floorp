@@ -81,8 +81,14 @@ XCFLAGS		= @XCFLAGS@
 XLDFLAGS	= @XLDFLAGS@
 XLIBS		= @XLIBS@
 
-CC		= @CC@
-CXX		= @CXX@
+CC		    = @CC@
+
+# The right way to set these rtti and exceptions flags is probably using
+# CXXFLAGS.  But, CXXFLAGS is currently not used.  It scares me a lot 
+# set CXXFLAGS for the whole project without knowing what side effects
+# it could have in implicit make rules or even rules.mk
+CXX		    = @CXX@ @MOZ_RTTI_FLAGS@ @MOZ_EXCEPTIONS_FLAGS@
+
 GNU_CC		= @GNU_CC@
 GNU_CXX		= @GNU_CXX@
 
@@ -173,4 +179,3 @@ CM_BLDTYPE=dbg
 AWT_11=1 
 MOZ_BITS=32 
 OS_TARGET=@OS_TARGET@
-
