@@ -198,7 +198,6 @@ LINK_DLL	= $(LINK) $(OS_DLLFLAGS) $(DLLFLAGS)
 NFSPWD		= $(DEPTH)/config/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
-RANLIB		= /bin/true
 MOC		= moc
 XPIDL_COMPILE 	= $(DIST)/bin/xpidl
 XPIDL_LINK	= $(DIST)/bin/xpt_link
