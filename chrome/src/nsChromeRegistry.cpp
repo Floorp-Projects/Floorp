@@ -21,7 +21,7 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIChromeRegistry.h"
 #include "nsIChromeEntry.h"
