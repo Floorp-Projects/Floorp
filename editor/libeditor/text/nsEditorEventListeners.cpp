@@ -467,7 +467,7 @@ IsNodeInSelection(nsIDOMNode *aInNode, nsIDOMSelection *aInSelection, PRBool &aO
 
 
 nsresult
-nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
+nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   if (!aMouseEvent)
     return NS_OK;   // NS_OK means "we didn't process the event".  Go figure.
@@ -486,8 +486,6 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
    nsCOMPtr<nsIEditor> editor (do_QueryInterface(mEditor));
   if (!editor) { return NS_OK; }
-
-  
 
   PRUint16 button = 0;
   mouseEvent->GetButton(&button);
@@ -532,6 +530,11 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
         else
           editor->Paste(nsIClipboard::kSelectionClipboard);
 
+        // Prevent the event from bubbling up to be possibly handled
+        // again by the containing window:
+        mouseEvent->PreventBubble();
+        mouseEvent->PreventDefault();
+
         // We processed the event, whether paste succeeded or not:
         return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
       }
@@ -541,17 +544,16 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 }
 
 nsresult
-nsTextEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
+nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
 }
 
 nsresult
-nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
+nsTextEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
 }
-
 
 
 nsresult
