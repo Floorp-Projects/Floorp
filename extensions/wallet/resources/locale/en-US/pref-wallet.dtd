@@ -8,6 +8,6 @@
 <!ENTITY  walletEnabled.label         "Save form data from web pages when completing forms.">
 <!ENTITY  walletEnabled.accesskey     "f">
 <!ENTITY  viewWallet.label            "Manage Stored Form Data">
-<!ENTITY  viewWallet.accesskey        "m">
+<!ENTITY  viewWallet.accesskey        "M">
 <!ENTITY  viewWalletSites.label       "Manage Sites">
-<!ENTITY  viewWalletSites.accesskey   "s">
+<!ENTITY  viewWalletSites.accesskey   "S">
