@@ -96,13 +96,10 @@
 #include "nsMsgMimeCID.h"
 #include "nsIMimeConverter.h"
 
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
-static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
-static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_) || defined(DEBUG_jefft)
@@ -211,7 +208,7 @@ public:
 //
 // nsMessenger
 //
-nsMessenger::nsMessenger() : m_folderPath("")
+nsMessenger::nsMessenger() 
 {
 	NS_INIT_REFCNT();
 	mScriptObject = nsnull;
@@ -219,7 +216,7 @@ nsMessenger::nsMessenger() : m_folderPath("")
   mMsgWindow = nsnull;
   mCharsetInitialized = PR_FALSE;
 
-	InitializeFolderRoot();
+  //	InitializeFolderRoot();
 }
 
 nsMessenger::~nsMessenger()
@@ -315,40 +312,6 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 
   return NS_OK;
 }
-
-
-// this should really go through all the pop servers and initialize all
-// folder roots
-void nsMessenger::InitializeFolderRoot()
-{
-    nsresult rv;
-    
-	// get the current identity from the mail session....
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_PROGID, &rv)
-    if (NS_FAILED(rv)) return;
-
-    nsCOMPtr<nsIMsgAccount> account;
-    rv = accountManager->GetDefaultAccount(getter_AddRefs(account));
-    if (NS_FAILED(rv)) return;
-
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = account->GetIncomingServer(getter_AddRefs(server));
-    if (NS_FAILED(rv)) return;
-    
-    nsCOMPtr<nsIFileSpec> folderRoot;
-    if (NS_SUCCEEDED(rv) && server)
-        rv = server->GetLocalPath(getter_AddRefs(folderRoot));
-    
-    if (NS_SUCCEEDED(rv) && folderRoot) {
-        // everyone should have a inbox so let's
-        // tack that folder name on to the root path...
-        rv = folderRoot->GetFileSpec(&m_folderPath);
-        if (NS_SUCCEEDED(rv))
-          m_folderPath += "Inbox";
-    } // if we have a folder root for the current server
-}
-
 
 void
 nsMessenger::InitializeDisplayCharset()

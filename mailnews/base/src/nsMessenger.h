@@ -63,9 +63,6 @@ private:
   nsCOMPtr<nsIWebShell>     mWebShell;
 
   nsCOMPtr <nsIDocumentLoaderObserver> m_docLoaderObserver;
-  // mscott: temporary variable used to support running urls through the 'Demo' menu....
-  nsFileSpec m_folderPath; 
-  void InitializeFolderRoot();
 
   PRBool      mCharsetInitialized;
   void        InitializeDisplayCharset();
