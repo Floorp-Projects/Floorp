@@ -128,6 +128,7 @@ struct DirectoryTable DirectoryTable[] =
     {"app.local.store.file.5",       nsSpecialFileSpec::App_LocalStore50 },
     {"app.history.file.5",           nsSpecialFileSpec::App_History50 },
     {"app.user.panels.5",            nsSpecialFileSpec::App_UsersPanels50 },
+    {"app.user.mimeTypes.5",            nsSpecialFileSpec::App_UsersMimeTypes50},
 
 // MailNews:
 
@@ -642,6 +643,32 @@ void nsSpecialFileSpec::operator = (Type aType)
                 *this += "panacea.dat";
                 break;
             }
+            break;
+	case App_UsersMimeTypes50:
+        {
+        *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+        *this += "mimeTypes.rdf";
+
+        if (!(this->Exists())) {
+            // find the default mimeTypes.rdf file
+            // something like bin/defaults/profile/mimeTypes.rdf
+            nsFileSpec defaultMimeTypesFile;
+            GetProfileDefaultsFolder(defaultMimeTypesFile);
+            defaultMimeTypesFile += "mimeTypes.rdf";
+
+            // get the users profile directory
+            *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+            
+            // copy the default mimeTypes.rdf to <profile>/mimeTypes.rdf
+            nsresult rv = defaultMimeTypesFile.CopyToDir(*this);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy mimeTypes.rdf");
+            if (NS_SUCCEEDED(rv)) {
+                // set this to <profile>/mimeTypes.rdf
+                *this += "mimeTypes.rdf";
+            }
+        }
+        break;
+        }
             break;
     case App_UsersPanels50:
         {

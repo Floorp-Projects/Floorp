@@ -144,35 +144,19 @@ NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentTyp
 NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
-  // look up the content type and get a platform specific handle to the app we want to use for this 
-  // download...create a nsExternalAppHandler, bind the application token to it (as a nsIFile??) and return this
-  // as the stream listener to use...
-
-  // eventually when we start trying to hook up some UI we may need to insert code here to throw up a dialog
-  // and ask the user if they wish to use this app to open this content type...
-
-  // now bind the handler to the application we want to launch when we the handler is done
-  // receiving all the data...
-
-
-  printf("fix this hardcoding\n");
-
-  nsCAutoString fileExtension;
-  fileExtension = ".mp3";
-
-  // create an application that represents this app name...
-  nsExternalApplication * application = nsnull;
-  NS_NEWXPCOM(application, nsExternalApplication);
-
-  if (application)
-  	application->SetAppRegistryName("xmms");
-
-  nsCOMPtr<nsISupports> appSupports = do_QueryInterface(application);
-
-  // this code is incomplete and just here to get things started..
-  nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports, fileExtension);
-  handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
-
+   nsresult rv = NS_OK;
+  
+  // see if we have user specified information for handling this content type by giving the base class
+  // first crack at it...
+  
+  rv = nsExternalHelperAppService::DoContent(aMimeContentType, aURI, aWindowContext, aAbortProcess, aStreamListener);
+  
+  // this is important!! if do content for the base class returned any success code, then assume we are done
+  // and don't even play around with 
+  if (NS_SUCCEEDED(rv)) return NS_OK;
+  
+  // there is no registry on linux (like there is on win32)
+  *aStreamListener = nsnull;
   return NS_OK;
 }
 

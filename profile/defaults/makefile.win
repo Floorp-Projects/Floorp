@@ -28,7 +28,7 @@ FILES=\
         bookmarks.html			\
         panels.rdf                      \
         search.rdf			\
-		helperApps.rdf		\
+		mimeTypes.rdf		\
         $(NULL)
 
 install::
