@@ -142,7 +142,7 @@ nsCOMPtr<nsIDOMNode> nsBaseAppCore::FindNamedDOMNode(const nsString &aName, nsID
   while (node) {
     nsString name;
     node->GetNodeName(name);
-    //printf("FindNamedDOMNode[%s] %d == %d\n", nsAutoCString(name), aCount, aEndCount);
+    //printf("FindNamedDOMNode[%s] %d == %d\n", name.ToNewCString(), aCount, aEndCount);
     if (name.Equals(aName)) {
       aCount++;
       if (aCount == aEndCount)
