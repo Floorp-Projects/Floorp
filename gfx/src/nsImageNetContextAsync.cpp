@@ -44,6 +44,9 @@
 
 #include "nsNetUtil.h"
 
+#include "nsCURILoader.h"
+#include "nsIURIContentListener.h"
+
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 
@@ -96,7 +99,7 @@ public:
   void* mReconnectArg;
 };
 
-class ImageConsumer : public nsIStreamListener
+class ImageConsumer : public nsIStreamListener, public nsIURIContentListener, public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
@@ -106,6 +109,8 @@ public:
   // nsIStreamObserver methods:
   NS_DECL_NSISTREAMOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIURICONTENTLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   void SetKeepPumpingData(nsIChannel* channel, nsISupports* context) {
     NS_ADDREF(channel);
@@ -152,7 +157,64 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
   mUserContext = nsnull;
 }
 
-NS_IMPL_ISUPPORTS2(ImageConsumer, nsIStreamListener, nsIStreamObserver);
+NS_IMPL_ADDREF(ImageConsumer)
+NS_IMPL_RELEASE(ImageConsumer)
+
+NS_INTERFACE_MAP_BEGIN(ImageConsumer)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP ImageConsumer::GetInterface(const nsIID & aIID, void * *aInstancePtr)
+{
+   NS_ENSURE_ARG_POINTER(aInstancePtr);
+   return QueryInterface(aIID, aInstancePtr);
+}
+
+// nsIURIContentListener support
+NS_IMETHODIMP
+ImageConsumer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+{
+  *aProtocolHandler = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+ImageConsumer::CanHandleContent(const char * aContentType,
+                                nsURILoadCommand aCommand,
+                                const char * aWindowTarget,
+                                char ** aDesiredContentType,
+                                PRBool * aCanHandleContent)
+
+{
+  // if we had a webshell or doc shell around, we'd pass this call
+  // through to it...but we don't =(
+
+  if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
+    *aDesiredContentType = nsCRT::strdup("text/xul");
+  // since we explicilty loaded the url, we always want to handle it!
+  *aCanHandleContent = PR_TRUE;
+  return NS_OK;
+} 
+
+NS_IMETHODIMP 
+ImageConsumer::DoContent(const char * aContentType,
+                      nsURILoadCommand aCommand,
+                      const char * aWindowTarget,
+                      nsIChannel * aOpenedChannel,
+                      nsIStreamListener ** aContentHandler,
+                      PRBool * aAbortProcess)
+{
+  nsresult rv = NS_OK;
+  if (aAbortProcess)
+    *aAbortProcess = PR_FALSE;
+  QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
+  return rv;
+}
+
 
 NS_IMETHODIMP
 ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
@@ -548,16 +610,28 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
   // See if a reconnect is being done...(XXX: hack!)
   if (mReconnectCallback == nsnull
       || !(*mReconnectCallback)(mReconnectArg, ic)) {
-    nsCOMPtr<nsIChannel> channel;
+     
+    nsCOMPtr<nsISupports> openContext (do_QueryInterface(mLoadGroup));
+    nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
     nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
-    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, group);
-    if (NS_FAILED(rv)) goto error;
 
-    PRBool bIsBackground = aURL->GetBackgroundLoad();
-    if (bIsBackground) {
-      (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
+    // let's try uri dispatching...
+    NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) 
+    {
+      nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
+      PRBool bIsBackground = aURL->GetBackgroundLoad();
+      if (bIsBackground) {
+        loadCmd = nsIURILoader::viewNormalBackground;
+      }
+
+      rv = pURILoader->OpenURI(nsurl, loadCmd, nsnull /* window target */, 
+                               window,
+                               nsnull /* refferring URI */, 
+                               group, 
+                               getter_AddRefs(openContext));
     }
-    rv = channel->AsyncRead(0, -1, nsnull, ic);
+    // rv = channel->AsyncRead(0, -1, nsnull, ic);
     if (NS_FAILED(rv)) goto error;
   }
   return mRequests->AppendElement((void *)ic) ? 0 : -1;
