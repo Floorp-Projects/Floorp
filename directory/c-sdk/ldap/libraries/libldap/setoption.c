@@ -85,10 +85,6 @@ ldap_set_option( LDAP *ld, int option, const void *optdata )
 	 */
 	if ( ld == NULL ) {
 		ld = &nsldapi_ld_defaults;
-#ifdef LDAP_DEBUG
-		ldap_debug = 0;
-#endif
-
 	}
 
 	/*
