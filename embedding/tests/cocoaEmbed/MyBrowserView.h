@@ -6,6 +6,7 @@
     IBOutlet id urlbar;
     IBOutlet id status;
     IBOutlet id progress;
+    IBOutlet id progressSuper;
     NSBrowserView* browserView;
     NSString* defaultStatus;
     NSString* loadingStatus;
