@@ -2721,6 +2721,11 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
                             parentContext->GetStyleData(eStyleStruct_Display));
   PRBool inherited = aInherited;
 
+  nsCOMPtr<nsIAtom> pseudoTag;
+  aContext->GetPseudoType(*getter_AddRefs(pseudoTag));
+  PRBool generatedContent = (pseudoTag == nsCSSAtoms::beforePseudo || 
+                             pseudoTag == nsCSSAtoms::afterPseudo);
+
   // display: enum, none, inherit
   if (eCSSUnit_Enumerated == displayData.mDisplay.GetUnit()) {
     display->mDisplay = displayData.mDisplay.GetIntValue();
@@ -2760,14 +2765,6 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   // position: enum, inherit
   if (eCSSUnit_Enumerated == displayData.mPosition.GetUnit()) {
     display->mPosition = displayData.mPosition.GetIntValue();
-    if (display->mPosition != NS_STYLE_POSITION_NORMAL) {
-      // :before and :after elts cannot be positioned.  We need to check for this
-      // case.
-      nsCOMPtr<nsIAtom> tag;
-      aContext->GetPseudoType(*getter_AddRefs(tag));
-      if (tag && tag.get() == nsCSSAtoms::beforePseudo || tag.get() == nsCSSAtoms::afterPseudo)
-        display->mPosition = NS_STYLE_POSITION_NORMAL;
-    }
   }
   else if (eCSSUnit_Inherit == displayData.mPosition.GetUnit()) {
     inherited = PR_TRUE;
@@ -2889,12 +2886,20 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   }
 
   // CSS2 specified fixups:
+  // :before and :after elements must not be positioned or floated (CSS2 12.1).
+  if (generatedContent) {
+    if (display->mPosition != NS_STYLE_POSITION_STATIC)
+      display->mPosition = NS_STYLE_POSITION_STATIC;
+    if (display->mFloats != NS_STYLE_FLOAT_NONE)
+      display->mFloats = NS_STYLE_FLOAT_NONE;
+  }
+
   // 1) if float is not none, and display is not none, then we must set display to block
   //    XXX - there are problems with following the spec here: what we will do instead of
   //          following the letter of the spec is to make sure that floated elements are
   //          some kind of block, not strictly 'block' - see EnsureBlockDisplay method
   if (display->mDisplay != NS_STYLE_DISPLAY_NONE &&
-      display->mFloats != NS_STYLE_FLOAT_NONE )
+      display->mFloats != NS_STYLE_FLOAT_NONE)
     EnsureBlockDisplay(display->mDisplay);
   
   // 2) if position is 'absolute' or 'fixed' then display must be 'block and float must be 'none'
@@ -2907,9 +2912,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     display->mFloats = NS_STYLE_FLOAT_NONE;
   }
 
-  nsCOMPtr<nsIAtom> tag;
-  aContext->GetPseudoType(*getter_AddRefs(tag));
-  if (tag && tag.get() == nsCSSAtoms::beforePseudo || tag.get() == nsCSSAtoms::afterPseudo) {
+  if (generatedContent) {
     PRUint8 displayValue = display->mDisplay;
     if (parentDisplay->IsBlockLevel()) {
       // For block-level elements the only allowed 'display' values are:
