@@ -2611,7 +2611,11 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
           if (!measureText) {
             // We didn't measure any text so we don't know lastWordWidth.
             // We have to compute it now
-            if (ts.mSmallCaps) {
+            if (prevOffset == startingOffset) {
+              // There's only one word, so we don't have to measure after all
+              lastWordWidth = x;
+            }
+            else if (ts.mSmallCaps) {
               MeasureSmallCapsText(aReflowState, ts, tx.GetTextAt(prevOffset),
                                    lastWordLen, &lastWordWidth);
             }
