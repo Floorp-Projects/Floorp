@@ -72,6 +72,18 @@ public:
     NS_IMETHOD LoadNextQueuedUrl();
     NS_IMETHOD RemoveConnection(nsIImapProtocol* aImapConnection);
 
+	/* attribute string personal namespace; */
+	NS_IMETHOD GetPersonalNamespace(char * *aPersonalNamespace);
+	NS_IMETHOD SetPersonalNamespace(char * aPersonalNamespace);
+
+	/* attribute string public namespace; */
+	NS_IMETHOD GetPublicNamespace(char * *aPublicNamespace);
+	NS_IMETHOD SetPublicNamespace(char * aPublicNamespace);
+
+		/* attribute string personal namespace; */
+	NS_IMETHOD GetOtherUsersNamespace(char * *aOtherUsersNamespace);
+	NS_IMETHOD SetOtherUsersNamespace(char * aOtherUsersNamespace);
+
 private:
     nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
@@ -122,6 +134,36 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomi
     if (NS_FAILED(rv)) return rv;
 
 	hostSession->AddHostToList(hostName, userName);
+
+	char *personalNamespace = nsnull;
+	char *publicNamespace = nsnull;
+	char *otherUsersNamespace = nsnull;
+
+	rv = GetPersonalNamespace(&personalNamespace);
+	rv = GetPublicNamespace(&publicNamespace);
+	rv = GetOtherUsersNamespace(&otherUsersNamespace);
+
+	if (!personalNamespace && !publicNamespace && !otherUsersNamespace)
+		personalNamespace = PL_strdup("\"\"");
+
+	if (NS_SUCCEEDED(rv))
+	{
+		hostSession->SetNamespaceFromPrefForHost(hostName, userName, personalNamespace, kPersonalNamespace);
+		PR_FREEIF(personalNamespace);
+	}
+
+	if (NS_SUCCEEDED(rv))
+	{
+		hostSession->SetNamespaceFromPrefForHost(hostName, userName, publicNamespace, kPublicNamespace);
+		PR_FREEIF(publicNamespace);
+	}
+
+	if (NS_SUCCEEDED(rv))
+	{
+		hostSession->SetNamespaceFromPrefForHost(hostName, userName, otherUsersNamespace, kOtherUsersNamespace);
+		PR_FREEIF(otherUsersNamespace);
+	}
+
 	PR_FREEIF(userName);
 	PR_FREEIF(hostName);
 
@@ -151,6 +193,12 @@ NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, MaximumConnectionsNumber,
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, TimeOutLimits,
                        "timeout");
+
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PersonalNamespace, "namespace.personal");
+
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PublicNamespace, "namespace.public");
+
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, OtherUsersNamespace, "namespace.other_users");
 
 NS_IMETHODIMP
 nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*

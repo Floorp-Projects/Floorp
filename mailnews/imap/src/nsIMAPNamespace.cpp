@@ -82,6 +82,43 @@ int nsIMAPNamespaceList::GetNumberOfNamespaces()
 	return m_NamespaceList.Count();
 }
 
+
+nsresult nsIMAPNamespaceList::InitFromString(const char *nameSpaceString, EIMAPNamespaceType nstype)
+{
+	nsresult rv = NS_OK;
+	if (nameSpaceString)
+	{
+		int numNamespaces = UnserializeNamespaces(nameSpaceString, nsnull, 0);
+		char **prefixes = (char**) PR_CALLOC(numNamespaces * sizeof(char*));
+		if (prefixes)
+		{
+			int len = UnserializeNamespaces(nameSpaceString, prefixes, numNamespaces);
+			for (int i = 0; i < len; i++)
+			{
+				char *thisns = prefixes[i];
+				char delimiter = '/';	// a guess
+				if (PL_strlen(thisns) >= 1)
+					delimiter = thisns[PL_strlen(thisns)-1];
+				nsIMAPNamespace *ns = new nsIMAPNamespace(nstype, thisns, delimiter, PR_TRUE);
+				if (ns)
+					AddNewNamespace(ns);
+				PR_FREEIF(thisns);
+			}
+			PR_Free(prefixes);
+		}
+	}
+
+	return rv;
+}
+
+nsresult nsIMAPNamespaceList::OutputToString(nsString &string)
+{
+	nsresult rv = NS_OK;
+
+	return rv;
+}
+
+
 int nsIMAPNamespaceList::GetNumberOfNamespaces(EIMAPNamespaceType type)
 {
 	int nodeIndex = 0, count = 0;
@@ -203,7 +240,7 @@ nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceNumber(int nodeIndex, EIMAPNam
 				return nspace;
 		}
 	}
-	return NULL;
+	return nsnull;
 }
 
 nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceForMailbox(const char *boxname)
@@ -219,7 +256,7 @@ nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceForMailbox(const char *boxname
 
 	int lengthMatched = -1;
 	int currentMatchedLength = -1;
-	nsIMAPNamespace *rv = NULL;
+	nsIMAPNamespace *rv = nsnull;
 	int nodeIndex = 0;
 
 	if (!PL_strcasecmp(boxname, "INBOX"))
@@ -237,5 +274,109 @@ nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceForMailbox(const char *boxname
 	}
 
 	return rv;
+}
+
+#define SERIALIZER_SEPARATORS ","
+
+/* prefixes is an array of strings;  len is the length of that array.
+   If there is only one string, simply copy it and return it.
+   Otherwise, put them in quotes and comma-delimit them. 
+   Returns a newly allocated string. */
+nsresult nsIMAPNamespaceList::SerializeNamespaces(char **prefixes, int len, nsString2 &serializedNamespaces)
+{
+	nsresult rv = NS_OK;
+	if (len <= 0)
+		return rv;
+	if (len == 1)
+	{
+		serializedNamespaces = prefixes[0];
+		return rv;
+	}
+	else
+	{
+		for (int i = 0; i < len; i++)
+		{
+			char *temp = nsnull;
+			if (i == 0)
+			{
+				serializedNamespaces += "\"";
+
+				temp = PR_smprintf("\"%s\"",prefixes[i]);	/* quote the string */
+			}
+			else
+			{
+				serializedNamespaces += ',';
+			}
+			serializedNamespaces += prefixes[i];
+			serializedNamespaces += "\"";
+		}
+		return rv;
+	}
+}
+
+/* str is the string which needs to be unserialized.
+   If prefixes is NULL, simply returns the number of namespaces in str.  (len is ignored)
+   If prefixes is not NULL, it should be an array of length len which is to be filled in
+   with newly-allocated string.  Returns the number of strings filled in.
+*/
+int nsIMAPNamespaceList::UnserializeNamespaces(const char *str, char **prefixes, int len)
+{
+	if (!str)
+		return 0;
+	if (!prefixes)
+	{
+		if (str[0] != '"')
+			return 1;
+		else
+		{
+			int count = 0;
+			char *ourstr = PL_strdup(str);
+			char *origOurStr = ourstr;
+			if (ourstr)
+			{
+				char *token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
+				while (token != nsnull)
+				{
+					token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
+					count++;
+				}
+				PR_Free(origOurStr);
+			}
+			return count;
+		}
+	}
+	else
+	{
+		if ((str[0] != '"') && (len >= 1))
+		{
+			prefixes[0] = PL_strdup(str);
+			return 1;
+		}
+		else
+		{
+			int count = 0;
+			char *ourstr = PL_strdup(str);
+			char *origOurStr = ourstr;
+			if (ourstr)
+			{
+				char *token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
+				while ((count < len) && (token != nsnull))
+				{
+
+					char *current = PL_strdup(token), *where = current;
+					if (where[0] == '"')
+						where++;
+					if (where[PL_strlen(where)-1] == '"')
+						where[PL_strlen(where)-1] = 0;
+					prefixes[count] = PL_strdup(where);
+					PR_FREEIF(current);
+					token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
+					count++;
+				}
+				PR_Free(origOurStr);
+			}
+			return count;
+		}
+	}
 }
 

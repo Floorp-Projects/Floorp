@@ -94,6 +94,7 @@ public:
 
 	// Namespaces
 	 NS_IMETHOD		GetNamespaceForMailboxForHost(const char *hostname, const char *userName, const char *mailbox_name, nsIMAPNamespace * & result) = 0;
+	 NS_IMETHOD		SetNamespaceFromPrefForHost(const char *hostName, const char *userName, const char *namespacePref, EIMAPNamespaceType type) = 0;
 	 NS_IMETHOD		AddNewNamespaceForHost(const char *hostname, const char *userName, nsIMAPNamespace *ns) = 0;
 	 NS_IMETHOD		ClearServerAdvertisedNamespacesForHost(const char *hostName, const char *userName) = 0;
 	 NS_IMETHOD		ClearPrefsNamespacesForHost(const char *hostName, const char *userName) = 0;

@@ -438,6 +438,38 @@ NS_IMETHODIMP nsIMAPHostSessionList::AddNewNamespaceForHost(const char *hostName
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
+NS_IMETHODIMP nsIMAPHostSessionList::SetNamespaceFromPrefForHost(const char *hostName, const char *userName, 
+																 const char *namespacePref, EIMAPNamespaceType nstype)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+	{
+		if (namespacePref)
+		{
+			int numNamespaces = host->fNamespaceList->UnserializeNamespaces(namespacePref, nsnull, 0);
+			char **prefixes = (char**) PR_CALLOC(numNamespaces * sizeof(char*));
+			if (prefixes)
+			{
+				int len = host->fNamespaceList->UnserializeNamespaces(namespacePref, prefixes, numNamespaces);
+				for (int i = 0; i < len; i++)
+				{
+					char *thisns = prefixes[i];
+					char delimiter = '/';	// a guess
+					if (PL_strlen(thisns) >= 1)
+						delimiter = thisns[PL_strlen(thisns)-1];
+					nsIMAPNamespace *ns = new nsIMAPNamespace(nstype, thisns, delimiter, PR_TRUE);
+					if (ns)
+						host->fNamespaceList->AddNewNamespace(ns);
+					PR_FREEIF(thisns);
+				}
+				PR_Free(prefixes);
+			}
+		}
+	}
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
 
 NS_IMETHODIMP nsIMAPHostSessionList::GetNamespaceForMailboxForHost(const char *hostName, const char *userName, const char *mailbox_name, nsIMAPNamespace * &result)
 {
