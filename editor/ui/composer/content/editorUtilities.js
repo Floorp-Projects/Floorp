@@ -74,15 +74,13 @@ function ConfirmWithTitle(title, message, okButtonText, cancelButtonText)
 
   if (promptService)
   {
-    var result = {value:0};
     var okFlag = okButtonText ? promptService.BUTTON_TITLE_IS_STRING : promptService.BUTTON_TITLE_OK;
     var cancelFlag = cancelButtonText ? promptService.BUTTON_TITLE_IS_STRING : promptService.BUTTON_TITLE_CANCEL;
 
-    promptService.confirmEx(window, title, message,
+    return promptService.confirmEx(window, title, message,
                             (okFlag * promptService.BUTTON_POS_0) +
                             (cancelFlag * promptService.BUTTON_POS_1),
-                            okButtonText, cancelButtonText, null, null, {value:0}, result);
-    return (result.value == 0);      
+                            okButtonText, cancelButtonText, null, null, {value:0}) == 0;
   }
   return false;
 }

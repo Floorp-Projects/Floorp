@@ -100,7 +100,7 @@ interface nsIPromptService : nsISupports
    * @param button2Title      Used when button 2 uses TITLE_IS_STRING
    * @param checkMsg          null if no checkbox
    * @param checkValue    
-   * @param buttonPressed
+   * @return buttonPressed
    *
    * Buttons are numbered 0 - 2. The implementation can decide whether
    * the sequence goes from right to left or left to right.
@@ -132,7 +132,7 @@ interface nsIPromptService : nsISupports
   const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
 
-  void confirmEx(in nsIDOMWindow parent,
+  PRInt32 confirmEx(in nsIDOMWindow parent,
                  in wstring dialogTitle,
                  in wstring text,
                  in unsigned long buttonFlags,
@@ -140,8 +140,7 @@ interface nsIPromptService : nsISupports
                  in wstring button1Title,
                  in wstring button2Title,
                  in wstring checkMsg,
-                 inout boolean checkValue,
-                 out PRInt32 buttonPressed);
+                 inout boolean checkValue);
 
   /**
    * Puts up a dialog with an edit field and an optional checkbox.

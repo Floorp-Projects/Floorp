@@ -1102,18 +1102,18 @@ var gEditorOutputProgressListener =
     if (!promptServ)
       return;
 
-    promptServ.confirmEx(window, dlgTitle, text, nsIPromptService.STD_OK_CANCEL_BUTTONS,
-                         "", "", "", checkBoxLabel, checkObj, outButtonPressed);
+    outButtonPressed = promptServ.confirmEx(window, dlgTitle, text, nsIPromptService.STD_OK_CANCEL_BUTTONS,
+                         "", "", "", checkBoxLabel, checkObj);
   },
-  confirmEx : function(dlgTitle, text, btnFlags, btn0Title, btn1Title, btn2Title, checkBoxLabel, checkVal, outBtnPressed)
+  confirmEx : function(dlgTitle, text, btnFlags, btn0Title, btn1Title, btn2Title, checkBoxLabel, checkVal)
   {
     var promptServ = GetPromptService();
     if (!promptServ)
      return;
 
-    promptServ.confirmEx(window, dlgTitle, text, btnFlags,
+    return promptServ.confirmEx(window, dlgTitle, text, btnFlags,
                         btn0Title, btn1Title, btn2Title,
-                        checkBoxLabel, checkVal, outBtnPressed);
+                        checkBoxLabel, checkVal);
   },
   prompt : function(dlgTitle, text, inoutText, checkBoxLabel, checkObj)
   {
@@ -1773,10 +1773,10 @@ var nsRevertCommand =
 
       var msg = GetString("AbandonChanges").replace(/%title%/,title);
 
-      promptService.confirmEx(window, GetString("RevertCaption"), msg,
+      result = promptService.confirmEx(window, GetString("RevertCaption"), msg,
   						      (promptService.BUTTON_TITLE_REVERT * promptService.BUTTON_POS_0) +
   						      (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-  						      null, null, null, null, {value:0}, result);
+  						      null, null, null, null, {value:0});
 
       // Reload page if first button (Revert) was pressed
       if(result.value == 0)

@@ -85,15 +85,14 @@ interface nsIPrompt : nsISupports
     const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
 
-    void confirmEx(in wstring dialogTitle,
+    PRInt32 confirmEx(in wstring dialogTitle,
                    in wstring text,
                    in unsigned long buttonFlags,
                    in wstring button0Title,
                    in wstring button1Title,
                    in wstring button2Title,
                    in wstring checkMsg,
-                   inout boolean checkValue,
-                   out PRInt32 buttonPressed);
+                   inout boolean checkValue);
 
      boolean prompt(in wstring dialogTitle,
                     in wstring text,
