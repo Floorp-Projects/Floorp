@@ -35,8 +35,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.31 $ 
-# $Date: 2002/05/03 03:38:44 $ 
+# $Revision: 1.32 $ 
+# $Date: 2003/05/26 13:34:11 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_CVS.pm,v $ 
 # $Name:  $ 
@@ -139,7 +139,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.31 $ )[1];
+$VERSION = ( qw $Revision: 1.32 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -150,15 +150,23 @@ $CURRENT_YEAR = 1900 + (gmtime(time()))[5];
 # name of the version control system
 $VC_NAME = $TinderConfig::VC_NAME || "CVS";
 
-# how we recoginise bug number in the checkin comments.
+# How we recoginise bug number in the checkin comments.
+# Except of course we can not get the comments from the CVS log
+# command.  so this is not used.
+
 $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
-    "(\d\d\d+)";
+    '(\d\d\d+)';
+
+# We 'have a' notice so that we can put stars in our column.
+
+$NOTICE= TinderDB::Notice->new();
+$DEBUG = 1;
 
 
 
 sub parse_cvs_time { 
   # convert cvs times into unix times.
-  my ($date, $time) = @_;
+  my ($date_str, $time_str) = @_;
 
   # Can you believe that some CVS versions gives no information about
   # the YEAR?
@@ -174,14 +182,14 @@ sub parse_cvs_time {
   # others use:
   #        01/04
 
-  if ( $date =~ m/-/ ) {
-    ($year, $mon, $mday,) = split(/-/, $date);
+  if ( $date_str =~ m/-/ ) {
+    ($year, $mon, $mday,) = split(/-/, $date_str);
   } else {
     $year = $CURRENT_YEAR;
-    ($mon, $mday,) = split(/\//, $date);
+    ($mon, $mday,) = split(/\//, $date_str);
   }
 
-  ($hours, $min,) = split(/:/, $time);
+  ($hours, $min,) = split(/:/, $time_str);
   
   # The perl conventions for these variables is 0 origin while the
   # "display" convention for these variables is 1 origin.  
@@ -245,6 +253,121 @@ sub trim_db_history {
   return ;
 }
 
+
+# Print out the Database in a visually useful form.
+
+sub get_all_cvs_data {
+  my ($self, $tree) = (@_);
+
+  my $treestate = TinderHeader::gettree_header('TreeState', $tree);
+
+  # sort numerically descending
+  my (@times) = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
+
+  my $out;
+  $out .= "<HTML>\n";
+  $out .= "<HEAD>\n";
+  $out .= "\t<TITLE>CVS Checkin Data as gathered by Tinderbox</TITLE>\n";
+  $out .= "</HEAD>\n";
+  $out .= "<BODY>\n";
+  $out .= "<H3>CVS Checkin Data as gathered by Tinderbox</H3>\n";
+  $out .= "\n\n";
+  $out .= "<TABLE BORDER=1 BGCOLOR='#FFFFFF' CELLSPACING=1 CELLPADDING=1>\n";
+  $out .= "\t<TR>\n";
+  $out .= "\t\t<TH>Time</TH>\n";
+  $out .= "\t\t<TH>Tree State</TH>\n";
+  $out .= "\t\t<TH>Author</TH>\n";
+  $out .= "\t\t<TH>File</TH>\n";
+  $out .= "\t</TR>\n";
+
+  # we want to be able to make links into this page either with the
+  # times of checkins or of times which are round numbers.
+
+  my $rounded_increment = $main::SECONDS_PER_MINUTE * 5;
+  my $rounded_time = main::round_time($times[0]);
+
+  # Why are the names so confusing in this code?
+  # Netscape does not scroll to the middle of a large table if we
+  # put names between the rows, however it will scroll if we name
+  # the contents of a cell.
+  
+  foreach $time (@times) {
+
+      # Allow us to create links which point to times which may not
+      # appear in the data.  These links should correspond to the cell
+      # spacing in the status table.
+
+      my $names = '';
+      while ($rounded_time > $time) { 
+          my $comment = "<!-- ".localtime($rounded_time)." -->";
+          $names .= (
+                     "\t\t\t".
+                     HTMLPopUp::Link(
+                                     "name" => $rounded_time,
+                                     "linktxt" => $comment,
+                                     ).
+                     "\n");
+          $rounded_time -= $rounded_increment;
+      }
+
+      # Allow us to create links which point to any row.
+
+      my $localtime = localtime($time);
+      my $cell_time =
+          HTMLPopUp::Link(
+                          "name" => $time,
+                          "linktxt" => $localtime,
+                          );
+
+      ($names) &&
+          ($cell_time .= "\n".$names."\t\t");
+
+      if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+          my $localtime = localtime($time);
+          $treestate = $DATABASE{$tree}{$time}{'treestate'};
+
+          $out .= "\t<TR>\n";
+          $out .= "\t\t<TD>$cell_time</TD>\n";
+          $out .= "\t\t<TD ALIGN=center >$treestate</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t</TR>\n";
+      }
+
+      if ( defined($DATABASE{$tree}{$time}{'author'}) ) {
+          my ($recs) = $DATABASE{$tree}{$time}{'author'};
+          my $localtime = localtime($time);
+          my (@authors) = sort (keys %{ $recs });
+
+          foreach $author (@authors) {
+              my @files =  sort (keys %{ $recs->{$author} });
+              my $rowspan = scalar (@files);
+              my $cell_options = "ALIGN=center ROWSPAN=$rowspan";
+              $out .= "\t<TR>\n";
+              $out .= "\t\t<TD $cell_options>$cell_time</TD>\n";
+              $out .= "\t\t<TD $cell_options>$treestate</TD>\n";
+              $out .= "\t\t<TD $cell_options>$author</TD>\n";
+              my $num;
+              foreach $file (@files) {
+                  ($num) &&
+                      ($out .= "\t<TR>\n");
+                  $num ++;
+                  $out .= "\t\t<TD>$file</TD>\n";
+                  $out .= "\t</TR>\n";
+              } # $file
+          } # $author
+      }
+
+  } # $time
+  $out .= "</TABLE>\n";
+  $out .= "\n\n";
+  $out .= "This page was generated at: ";
+  $out .= localtime($main::TIME);
+  $out .= "\n\n";
+  $out .= "</BODY>\n";
+  $out .= "</HTML>\n";
+  return $out;
+}
 
 # Return the most recent times that we recieved treestate and checkin
 # data.
@@ -386,11 +509,28 @@ sub apply_db_updates {
       # others use:
       #        01/04
 
+      # Careful with this split, Some users put spaces in their
+      # filenames. Otherwise we would do this
 
-      my ($rectype, $date, $time, $tzone, $author, 
-          $revision, $file, $repository_dir, $eqeq, $dest_dir)
-        = split(/\s+/, $line);
-      
+      #  my ($rectype, $date, $time, $tzone, $author, 
+      #      $revision, $file, $repository_dir, $eqeq, $dest_dir)
+      #      = split(/\s+/, $line);
+
+      my (@line) = split(/\s+/, $line);
+
+      my ($rectype) = shift @line; 
+      my ($date) = shift @line; 
+      my ($time) = shift @line; 
+      my ($tzone) = shift @line; 
+      my ($author) = shift @line; 
+      my ($revision) = shift @line; 
+
+      my ($dest_dir) = pop @line; 
+      my ($eqeq) = pop @line; 
+      my ($repository_dir) = pop @line; 
+   
+      my ($file)= "@line";
+
       # Ignore directories which are not in our module.  Since we are not
       # CVS we can only guess what these might be based on patterns.
       
@@ -460,10 +600,21 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
      ) {
     $METADATA{$tree}{'updates_since_trim'}=0;
-    trim_db_history(@_);
+    $self->trim_db_history($tree);
   }
 
   $self->savetree_db($tree);
+
+  # VCDisplay needs to know the filename that we write to, so that the
+  # None.pm can reference this file.  However VC display is called by
+  # Build, Time as well as this VC column.  So all the VC
+  # implementations must store their data into a file with the same
+  # name.
+
+  my $all_vc_data = $self->get_all_cvs_data($tree);
+  my ($outfile) = (FileStructure::get_filename($tree, 'tree_HTML').
+                   "/all_vc.html");
+  main::overwrite_file($outfile, $all_vc_data);
 
   return $num_updates;
 }
@@ -484,7 +635,7 @@ sub status_table_legend {
     my ($cell_color) = TreeData::TreeState2color($state);
     my ($char) = TreeData::TreeState2char($state);
     my ($description) = TreeData::TreeStates2descriptions($state);
-    my $description = "$state: $description";
+    $description = "$state: $description";
     my $text_browser_color_string = 
       HTMLPopUp::text_browser_color_string($cell_color, $char);
 
@@ -505,6 +656,15 @@ sub status_table_legend {
 
 
   return ($out);  
+}
+
+
+
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+sub notice_association {
+    return $VC_NAME;
 }
 
 
@@ -558,7 +718,8 @@ sub status_table_row {
   # find all the authors who changed code at any point in this cell
   # find the tree state for this cell.
 
-  my (%authors) = ();
+  my (@authors) = ();
+  my $checkin_page_reference;
   
   while (1) {
    my ($time) = $DB_TIMES[$NEXT_DB];
@@ -572,20 +733,16 @@ sub status_table_row {
       $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
     }
 
-    # Now invert the data structure.
-   
-    # Inside each cell, we want all the posts by the same author to
-    # appear together.  The previous data structure allowed us to find
-    # out what data was in each cell.
    if (defined($DATABASE{$tree}{$time}{'author'})) {
-     foreach $author (keys %{ $DATABASE{$tree}{$time}{'author'} }) {
-       foreach $file (keys %{ $DATABASE{$tree}{$time}{'author'}{$author} }) {
-         $authors{$author}{$time}{$file} = 1;
+       push @authors,  (keys %{ $DATABASE{$tree}{$time}{'author'} });
+       if (!(defined($checkin_page_reference))) {
+           $checkin_page_reference = $time;
        }
-     }
    }
 
   } # while (1)
+
+  @authors = main::uniq(@authors);
 
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
@@ -616,8 +773,8 @@ sub status_table_row {
        if (
            ($cell_color !~ m/white/) &&
            (!($text_browser_color_string)) &&
-           (!($empty_cell_contents) &&
-            ) {
+           (!($empty_cell_contents)) &&
+            1) {
                $empty_cell_contents = "&nbsp;";
            }
   }
@@ -625,7 +782,7 @@ sub status_table_row {
   my ($query_links) = '';
   $query_links.=  "\t\t".$text_browser_color_string."\n";
 
-  if ( scalar(%authors) ) {
+  if ( scalar(@authors) ) {
     
     # find the times which bound the cell so that we can set up a
     # VC query.
@@ -655,102 +812,124 @@ sub status_table_row {
 
     $vc_info .= "branch: all <br>\n";
 
-    # define a table, to show what was checked in for each author
-
-    foreach $author (sort keys %authors) {
-      my ($table) = '';
-      my ($num_rows) = 0;
-      my ($max_length) = 0;
-      
-      $table .= (
-                 "Checkins by <b>$author</b> <br> for $vc_info \n".
-                 "<table border cellspacing=2>\n".
-                 "");
-      
-      # add table headers
-      $table .= (
-                 "\t<tr>".
-                 "<th>Time</th>".
-                 "<th>File</th>".
-                 "</tr>\n".
-                 "");
-      
-      # sort numerically descending
-      foreach $time ( sort {$b <=> $a} keys %{ $authors{$author} }) {
-        foreach $file (keys %{ $authors{$author}{$time}}) {
-          $num_rows++;
-          $max_length = main::max($max_length , length($file));
-          $table .= (
-                     "\t<tr>".
-                     "<td>".HTMLPopUp::timeHTML($time)."</td>".
-                     "<td>".$file."</td>".
-                     "</tr>\n".
-                     "");
-        }
-      }
-      $table .= "</table>";
-
-      # we display the list of names in 'teletype font' so that the
-      # names do not bunch together. It seems to make a difference if
-      # there is a <cr> between each link or not, but it does make a
-      # difference if we close the <tt> for each author or only for
-      # the group of links.
-
-      my (%popup_args) = (
-                          "linktxt" => "\t\t<tt>$author</tt>",
-                          
-                          "windowtxt" => $table,
-                          "windowtitle" => ("$VC_NAME Info ".
-                                            "Author: $author ".
-                                            "$time_interval_str "),
-
-                          "windowheight" => ($num_rows * 50) + 100,
-                          "windowwidth" => ($max_length * 10) + 100,
-                         );
-
-      # If you have a VCDisplay implementation you should make the
-      # link point to its query method otherwise you want a 'mailto:'
-      # link
-
-      my ($query_link) = "";
-      if ( 
-          ($TinderConfig::VCDisplayImpl) && 
-          ($TinderConfig::VCDisplayImpl =~ 'None') 
-         ) {
-
-        $query_link .= 
-          HTMLPopUp::Link(
-                          "href" => "mailto: $author",
-                          
-                          %popup_args,
-                         );
-      } else {
+    foreach $author (@authors) {
+            
+        # This is a Netscape.com/Mozilla.org specific CVS/Bonsai
+        # issue. Most users do not have '%' in their CVS names. Do
+        # not display the full mail address in the status column,
+        # it takes up too much space.
+        # Keep only the user name.
         
-        $query_link .= 
-          VCDisplay::query(
-                           'tree' => $tree,
-                           'mindate' => $mindate,
-                           'maxdate' => $maxdate,
-                           'who' => $author,
-                           
-                           %popup_args,
+        my $display_author=$author;
+        $display_author =~ s/\%.*//;
+        
+        my $mailto_author=$author;
+        $mailto_author = TreeData::VCName2MailAddress($author);
+        
+        # The Link Choices inside the popup.
+        
+        my $link_choices = "Checkins by <b>$author</b><br>";
+        $link_choices .= " for $vc_info \n<br>";
+        $link_choices .= 
+            VCDisplay::query(
+                             'tree' => $tree,
+                             'mindate' => $mindate,
+                             'maxdate' => $maxdate,
+                             'who' => $author,
+                             
+                             "linktxt" => "This check-in",
                              );
-      }
+        
+        $link_choices .= "<br>";
+#        $link_choices .= 
+#            VCDisplay::query(
+#                             'tree' => $tree,
+#                             'mindate' => $mindate - $main::SECONDS_PER_DAY,
+#                             'maxdate' => $maxdate,
+#                             'who' => $author,
+#                             
+#                             "linktxt" => "Check-ins within 24 hours",
+#                             );
+#        
+#        $link_choices .= "<br>";
+#        $link_choices .= 
+#              VCDisplay::query(
+#                               'tree' => $tree,
+#                               'mindate' => $mindate - $main::SECONDS_PER_WEEK,
+#                               'maxdate' => $maxdate,
+#                               'who' => $author,
+#                               
+#                               "linktxt" => "Check-ins within 7 days",
+#                               );
+#
+#        $link_choices .= "<br>";
 
-      # put each link on its own line and add good comments so we
-      # can debug the HTML.
+        $link_choices .= 
+            HTMLPopUp::Link(
+                            "href" => "mailto:$mailto_author",
+                            "linktxt" => "Send Mail to $author",
+                            );
+        
+        $link_choices .= "<br>";
 
-      my ($date_str) = localtime($mindate)."-".localtime($maxdate);
+        my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
+                      "/all_vc.html#$checkin_page_reference");
+        
+        $link_choices .= 
+            HTMLPopUp::Link(
+                            "href" => $href,
+                            "linktxt" => "Tinderbox Checkin Data",
+                            );
+        
+        $link_choices .= "<br>";
+        
+            my (%popup_args) = (
+                                "windowtxt" => $link_choices,
+                                "windowtitle" => ("$VC_NAME Info ".
+                                                  "Author: $author ".
+                                                  "$time_interval_str "),
+                                );
+        
+               my ($query_link) = "";
+            
+            $query_link .= 
+                  VCDisplay::query(
+                                   'tree' => $tree,
+                                   'mindate' => $mindate,
+                                   'maxdate' => $maxdate,
+                                   'who' => $author,
+                                   
+                                   "linktxt" => "\t\t<tt>$display_author</tt>",
+                                   %popup_args,
+                                   );
 
-      $query_links .= (
-                       "\t\t<!-- VC: ".("Author: $author, ".
-                                        "Time: '$date_str', ".
-                                        "Tree: $tree, ".
-                                       "").
-                       "  -->\n".
-                       "");
-
-      $query_links .= "\t\t".$query_link."\n";
+     # put each link on its own line and add good comments so we
+        # can debug the HTML.
+        
+        my ($date_str) = localtime($mindate)."-".localtime($maxdate);
+        
+            if ($DEBUG) {
+                $query_links .= (
+                                 "\t\t<!-- VC_CVS: ".
+                                 ("Author: $author, ".
+                                  "Time: '$date_str', ".
+                                  "Tree: $tree, ".
+                                  "").
+                                 "  -->\n".
+                                 "");
+            }
+        
+        $query_links .= "\t\t".$query_link."\n";
+        
+    } # foreach %author
+    
+    my $notice = $NOTICE->Notice_Link(
+                                      $maxdate,
+                                      $tree,
+                                      $VC_NAME,
+                                      );
+    if ($notice) {
+        $query_links.= "\t\t".$notice."\n";
     }
 
     $query_links.=  "\t\t".$text_browser_color_string."\n";
