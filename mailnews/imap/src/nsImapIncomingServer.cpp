@@ -891,6 +891,7 @@ nsImapIncomingServer::CloseCachedConnections()
 // nsIImapServerSink impl
 NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, PRUnichar hierarchyDelimiter, PRInt32 boxFlags)
 {
+  // folderPath is in canonical format, i.e., hierarchy separator has been replaced with '/'
 	nsresult rv;
     PRBool found = PR_FALSE;
 	PRBool haveParent = PR_FALSE;
@@ -923,7 +924,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
     uri.Assign(serverUri);
 
-    PRInt32 leafPos = folderName.RFindChar(hierarchyDelimiter);
+    PRInt32 leafPos = folderName.RFindChar('/');
 
     nsCAutoString parentName(folderName);
 	nsCAutoString parentUri(uri);
@@ -1014,7 +1015,10 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       imapFolder->SetBoxFlags(boxFlags);
       imapFolder->SetExplicitlyVerify(explicitlyVerify);
       imapFolder->GetOnlineName(getter_Copies(onlineName));
-			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
+      // online name needs to use the correct hierarchy delimiter (I think...)
+      // or the canonical path - one or the other, but be consistent.
+      dupFolderPath.ReplaceChar('/', hierarchyDelimiter);
+      if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
 				|| nsCRT::strcmp((const char *) onlineName, dupFolderPath))
 				imapFolder->SetOnlineName(dupFolderPath);
 			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName, getter_Copies(unicodeName))))

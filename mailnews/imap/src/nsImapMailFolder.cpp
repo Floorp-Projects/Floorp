@@ -570,7 +570,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     nsAutoString leafName; leafName.AssignWithConversion(folderName);
     nsAutoString folderNameStr;
     nsAutoString parentName = leafName;
-    PRInt32 folderStart = leafName.FindChar(hierarchyDelimiter);
+    PRInt32 folderStart = leafName.FindChar('/');
     if (folderStart > 0)
     {
         NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
