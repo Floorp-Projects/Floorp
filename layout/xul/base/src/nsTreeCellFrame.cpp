@@ -202,11 +202,9 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
   {
     // Perform an expand/collapse
 	// Iterate up the chain to the row and then to the item.
-	nsCOMPtr<nsIContent> pRowContent;
 	nsCOMPtr<nsIContent> pTreeItemContent;
-	mContent->GetParent(*getter_AddRefs(pRowContent));
-	pRowContent->GetParent(*getter_AddRefs(pTreeItemContent));
-
+	mContent->GetParent(*getter_AddRefs(pTreeItemContent));
+	
 	// Take the tree item content and toggle the value of its open attribute.
 	nsString attrValue;
     nsCOMPtr<nsIAtom> kOpenAtom ( dont_AddRef(NS_NewAtom("open")) );

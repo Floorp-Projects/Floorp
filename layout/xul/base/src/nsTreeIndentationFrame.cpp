@@ -80,7 +80,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 	  pContent->GetTag(*getter_AddRefs(pTag));
 	  if (pTag)
 	  {
-		  while (aFrame && pTag && pTag != nsXULAtoms::treerow)
+		  while (aFrame && pTag && pTag != nsXULAtoms::treeitem)
 		  {
 			  aFrame->GetParent(aFrame);
 			  
