@@ -18,21 +18,14 @@
 
     function goOpenNewMessage()
       {
-        try
+        // if there is a MsgNewMessage function in scope
+        // and we should use it, so that we choose the proper
+        // identity, based on the selected message or folder
+        // if not, bring up the compose window to the default identity
+        if ("MsgNewMessage" in window)
         {
-          var cwindowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-          var iwindowManager = Components.interfaces.nsIWindowMediator;
-          var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-          var mailWindow = windowManager.getMostRecentWindow('mail:3pane');
-          var folder = mailWindow.GetFirstSelectedMsgFolder();
-          var server = folder.server;
-          //if the account is a news account use default identity
-          if (server.type != "nntp"){
-            mailWindow.MsgNewMessage(null);
-            return;
-          }
-        }
-        catch(ex) {
+          MsgNewMessage(null);
+          return;
         }
 
         var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();

@@ -10,28 +10,6 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    function getCurrentIdentityKey()
-    {
-      try 
-      {
-        var cwindowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-        var iwindowManager = Components.interfaces.nsIWindowMediator;
-        var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-        var mailWindow = windowManager.getMostRecentWindow('mail:3pane');
-        var folder = mailWindow.GetFirstSelectedMsgFolder();
-        var server = folder.server;
-        if (server.type == "nntp")//if the account is a news account use default identity
-          return null;
-        else {
-          var identity = mailWindow.getIdentityForServer(server);
-          return identity;
-        }
-      }
-      catch(ex) {
-        return null;
-      }
-    }
-
     // attachment: 0 - link
     //             1 - page
     //             2 - image
@@ -58,10 +36,11 @@
               params.composeFields.addAttachment(attachmentData);
             }
           }
-          params.identity = getCurrentIdentityKey();
           var composeService = Components.classes["@mozilla.org/messengercompose;1"].getService(Components.interfaces.nsIMsgComposeService);
-          if (composeService)
+          if (composeService) {
+            params.identity = composeService.defaultIdentity;
             composeService.OpenComposeWindowWithParams(null, params);
+          }
         }                                                                         
       }                                                                         
     }   
