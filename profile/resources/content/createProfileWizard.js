@@ -181,6 +181,10 @@ function processCreateProfileData()
 	profile = profile.QueryInterface(Components.interfaces.nsIProfile);
 	try {
 		//dump("name,dir = " + profName + "," + profDir + "\n");
+		if (profName == "") {
+			alert("You need to enter a profile name.");
+			return;
+                }
 		profile.createNewProfile(profName, profDir);
 		profile.startCommunicator(profName);
 	}
