@@ -189,6 +189,7 @@ NS_INTERFACE_MAP_BEGIN(nsPasswordManager)
 NS_INTERFACE_MAP_END
 
 nsPasswordManager::nsPasswordManager()
+  : mAutoCompletingField(nsnull)
 {
 }
 
@@ -1158,6 +1159,13 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
 
     SignonHashEntry* hashEnt;
     if (mSignonTable.Get(realm, &hashEnt)) {
+      // Protect against a reentrant call to DecryptData.  For example, if
+      // DecryptData causes the Master Password dialog to appear, we don't
+      // want to respond to a blur on the input element by trying to prefill
+      // the password.
+
+      mAutoCompletingField = aElement;
+
       for (SignonDataEntry* e = hashEnt->head; e; e = e->next) {
 
         nsAutoString userValue;
@@ -1168,6 +1176,8 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
           result->mArray.AppendElement(ToNewUnicode(userValue));
         }
       }
+
+      mAutoCompletingField = nsnull;
     }
 
     if (result->mArray.Count()) {
@@ -1603,7 +1613,7 @@ nsPasswordManager::FillPassword(nsIDOMEvent* aEvent)
   aEvent->GetTarget(getter_AddRefs(target));
 
   nsCOMPtr<nsIDOMHTMLInputElement> userField = do_QueryInterface(target);
-  if (!userField)
+  if (!userField || userField == mAutoCompletingField)
     return NS_OK;
 
   nsCOMPtr<nsIContent> fieldContent = do_QueryInterface(userField);
