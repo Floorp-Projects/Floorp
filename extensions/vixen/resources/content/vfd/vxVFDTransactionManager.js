@@ -37,6 +37,8 @@ vxVFDTransactionManager.prototype =
   mTxnDS:     null,
   mTxnStack:  null,
 
+  mTransactionListeners: null,
+
   doTransaction: function (aTransaction) 
   {
     for (var i = 0; i < this.mTransactionListeners.length; i++) {
@@ -151,27 +153,21 @@ vxVFDTransactionManager.prototype =
    */
   addListener: function (aTransactionListener)
   {
-    if ("splice" in aTransactionListener) {
-      for (var i = 0; i < aTransactionListener.length; i++)
-        this.mTransactionListeners.push(aTransactionListener[i]);
-    }
-    else
-      this.mTransactionListeners.join(aTransactionListener);
-    _ddf("transaction listeners :: ", this.mTransactionListeners.length);
+    this.mTransactionListeners = this.mTransactionListeners.concat(aTransactionListener);
   },
   
-  removeListener: function (aTransactionListeners)
+  removeListener: function (aTransactionListener)
   {
-    var listeners = [].join(aTransactionListeners)
-    for (var i = 0; i < this.mTransactionListeners.length; i++) {
-      for (var k = 0; k < listeners.length; k++) {
+    var listeners = [].concat(aTransactionListener);
+    for (var i = 0; i < this.mTransactionListeners.length; ++i) {
+      for (var k = 0; k < listeners.length; ++k) {
         if (this.mTransactionListeners[i] == listeners[k]) {
           this.mTransactionListeners.splice(i, 1);
           break;
         }
       }
     }
-  }
+  },
 };
 
 /** 

@@ -68,6 +68,7 @@ vxChangeAttributeTxn.prototype = {
       return;
       
     for (var i = 0; i < this.mAttributes.length; i++) {
+      _ddf("changing attribute", this.mAttributes[i]);
       this.mUndoValues[i] = this.mElement.getAttribute(this.mAttributes[i]);
       if (!this.mRemoveFlags[i])
         this.mElement.setAttribute(this.mAttributes[i], this.mValues[i]);
@@ -112,13 +113,16 @@ vxChangeAttributeTxn.prototype = {
    */
   didDo: function (aTransactionManager, aTransaction, aInterrupt) 
   {
-    var createElementTxn = aTransaction.mTransactionList[this.mElementTxnID];
-    _ddf("the transaction ahead of us is", createElementTxn.commandString);
-    _ddf("and its element is", createElementTxn.mLocalName);
-    if (createElementTxn.commandString.indexOf("create-element") >= 0) {
-      this.mElement = createElementTxn.mElement;
-      this.mElementCreated = true;
-      this.doTransaction();
+    _ddf("aTransaction is a", aTransaction.commandString);
+    if (aTransaction.commandString.indexOf("aggregate-txn") >= 0) {
+      var createElementTxn = aTransaction.mTransactionList[this.mElementTxnID];
+      _ddf("the transaction ahead of us is", createElementTxn.commandString);
+      _ddf("and its element is", createElementTxn.mLocalName);
+      if (createElementTxn.commandString.indexOf("create-element") >= 0) {
+        this.mElement = createElementTxn.mElement;
+        this.mElementCreated = true;
+        this.doTransaction();
+      }
     }
   }
 };
