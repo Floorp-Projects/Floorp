@@ -7694,6 +7694,48 @@ ResDef(MK_IMAP_GETTING_MAILBOX_INFO, XP_MSG_BASE + 1410,
 ResDef(MK_IMAP_EMPTY_MIME_PART, XP_MSG_BASE + 1411,
 "This body part will be downloaded on demand.")
 
+ResDef(MK_ACCESS_COOKIES_WISHES0, (XP_MSG_BASE + 1415),
+"The server %1$s \nwishes to set a cookie.\n\n\
+Do you wish to allow the cookie to be set?")
+
+ResDef(MK_ACCESS_COOKIES_WISHES1, (XP_MSG_BASE + 1416),
+"The server %1$s \nwishes to set another cookie.\n\
+You currently have a cookie from this server.\n\n\
+Do you wish to allow the cookie to be set?")
+
+ResDef(MK_ACCESS_COOKIES_WISHESN, (XP_MSG_BASE + 1417),
+"The server %1$s \nwishes to set another cookie.\n\
+You currently have %2$d cookies from this server.\n\n\
+Do you wish to allow the cookie to be set?")
+
+ResDef(MK_ACCESS_COOKIES_REMEMBER, (XP_MSG_BASE + 1418),
+"Do you want to remember this decision?")
+
+ResDef(MK_ACCESS_COOKIES_ACCEPTED, (XP_MSG_BASE + 1419),
+"Cookies you have accepted")
+
+ResDef(MK_ACCESS_COOKIES_PERMISSION, (XP_MSG_BASE + 1420),
+"Hosts that may (+) or may not (-)<BR> set cookies")
+
+ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1425), \
+"generate")
+/*
+ * This must be eight-characters long in all translations.  Alternate
+ * words that it could translate into would be any word that conveys
+ * the idea that the user is asking for a random password to be generated
+ * for him, e.g., "random", "select", "chose-one-for-me", etc.  If none
+ * are the right length, use a shorter one and include fill characters
+ * such as "**pick**".
+ */
+
+ResDef(MK_SIGNON_PASSWORDS_REMEMBER, (XP_MSG_BASE + 1426), \
+"Remember this as a new pasword for %1$s at %2$s?")
+
+ResDef(MK_SIGNON_PASSWORDS_FETCH, (XP_MSG_BASE + 1427), \
+"Fetch old password for %1$s at %2$s?")
+
+ResDef(MK_SIGNON_YOUR_SIGNONS, (XP_MSG_BASE + 1428),
+"Your Signons")
 
 #define LI_MSG_BASE XP_MSG_BASE + 1500
 ResDef(LI_DOWN_CONFLICT_1, LI_MSG_BASE+1,  "\
