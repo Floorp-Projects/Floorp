@@ -885,8 +885,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
   nsVoidArray *spanList=nsnull;       // a list of the cells that span columns
   PRInt32 numRows = mTableFrame->GetRowCount();
   nscoord colInset = mTableFrame->GetCellSpacing();
+  PRInt32 colIndex;
 
-  for (PRInt32 colIndex = 0; colIndex<mNumCols; colIndex++)
+  for (colIndex = 0; colIndex<mNumCols; colIndex++)
   { 
     if (gsDebug==PR_TRUE) printf ("for col %d\n", colIndex);
     // Get column information
@@ -1032,11 +1033,16 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
           const nsStylePosition* cellPosition;
           cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
           if (eStyleUnit_Percent==cellPosition->mWidth.GetUnit()) 
-          { //QQQ what if table is auto width?
-            float percent = cellPosition->mWidth.GetPercentValue();
-            specifiedCellWidth = (PRInt32)(aTableSpecifiedWidth*percent);
-            if (gsDebug) printf("specified percent width %f of %d = %d\n", 
-                                percent, aTableSpecifiedWidth, specifiedCellWidth);
+          {
+            if (PR_FALSE==aTableIsAutoWidth) 
+            {
+              float percent = cellPosition->mWidth.GetPercentValue();
+              specifiedCellWidth = (PRInt32)(aTableSpecifiedWidth*percent);
+              if (gsDebug) printf("specified percent width %f of %d = %d\n", 
+                                  percent, aTableSpecifiedWidth, specifiedCellWidth);
+            }
+            // otherwise we need to post-process, set to max for now
+            // do we want to set specifiedCellWidth off of aAvailWidth? aMaxWidth?    XXX
           }
           if (-1!=specifiedCellWidth)
           {
@@ -1145,10 +1151,12 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
           printf ("  3 min: col %d set to min width = %d because style set proportionalWidth=0\n", 
                   colIndex, mTableFrame->GetColumnWidth(colIndex));
       }
-      else if (PR_TRUE==isAutoWidth)
+      else if ((PR_TRUE==isAutoWidth) || (PR_TRUE==aTableIsAutoWidth))
       {  // col width is determined by the cells' content,
          // so give each remaining column it's desired width (because we know we fit.)
          // if there is width left over, we'll factor that in after this loop is complete
+         // the OR clause is because we fix up percentage widths as a post-process 
+         // in auto-width tables
         mTableFrame->SetColumnWidth(colIndex, maxColWidth);
         if (gsDebug==PR_TRUE) 
           printf ("  3 auto: col %d with availWidth %d, set to width = %d\n", 
@@ -1220,7 +1228,170 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
   }
 
   /* --- post-process if necessary --- */
-  // first, assign a width to proportional-width columns
+
+  // XXX the following implementation does not account for borders, cell spacing, cell padding
+
+  // first, assign column widths in auto-width tables
+  PRInt32 numPercentColumns=0;
+  PRInt32 *percentColumns=nsnull;
+  mTableFrame->GetColumnsByType(eStyleUnit_Percent, numPercentColumns, percentColumns);
+  if ((PR_TRUE==aTableIsAutoWidth) && (0!=numPercentColumns))
+  {
+    // variables common to lots of code in this block
+    nscoord colWidth;
+    float percent;
+    const nsStylePosition* colPosition;
+    nsTableColFrame *colFrame;
+    if (numPercentColumns!=mNumCols)
+    {
+      if (PR_TRUE==gsDebug)
+        printf("assigning widths to percent colums in auto-width table\n");
+      nscoord widthOfPercentCells=0;  // the total width of those percent-width cells that have been given a width
+      nscoord widthOfOtherCells=0;    // the total width of those non-percent-width cells that have been given a width
+      float sumOfPercentColumns=0.0f; // the total of the percent widths
+      for (colIndex = 0; colIndex<mNumCols; colIndex++)
+      {
+        // every column contributes to either widthOfOtherCells or widthOfPercentCells, but not both
+        if (PR_TRUE==IsColumnInList(colIndex, percentColumns, numPercentColumns))
+        {
+          colFrame = mTableFrame->GetColFrame(colIndex); 
+          colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
+          percent = colPosition->mWidth.GetPercentValue(); // we know this will work
+          sumOfPercentColumns += percent;
+          if (sumOfPercentColumns>1.0f)
+            sumOfPercentColumns=1.0f;  // values greater than 100% are meaningless
+          widthOfPercentCells += mTableFrame->GetColumnWidth(colIndex);
+        }
+        else
+        {
+          widthOfOtherCells += mTableFrame->GetColumnWidth(colIndex);
+        }
+      }
+      if (0==widthOfOtherCells)
+        widthOfOtherCells=aMaxWidth;
+      if (PR_TRUE==gsDebug)
+        printf("  widthOfOtherCells=%d widthOfPercentCells = %d sumOfPercentColumns=%f\n", 
+               widthOfOtherCells, widthOfPercentCells, sumOfPercentColumns);
+      float remainingPercent = 1.0f - sumOfPercentColumns;
+      nscoord newTableWidth;  // the table width after all cells have been resized  
+      if (1.0f == sumOfPercentColumns)  // this definately seems like a QUIRK!
+        newTableWidth = aMaxWidth;
+      else 
+      { // the newTableWidth is the larger of the calculation from the percent cells and non-percent cells
+        nscoord percentWidth = (nscoord)((1.0f/sumOfPercentColumns)*((float)(widthOfPercentCells)));
+        nscoord otherWidth = (nscoord)((1.0f/remainingPercent)*((float)(widthOfOtherCells)));
+        if (PR_TRUE==gsDebug)
+          printf("    percentWidth=%d otherWidth=%d\n", percentWidth, otherWidth);
+        newTableWidth = PR_MAX(percentWidth, otherWidth);
+        newTableWidth = PR_MIN(newTableWidth, aMaxWidth);   // since this is an auto-width table, it can't normally be wider than it's parent
+      }
+      nscoord excess = newTableWidth-mFixedTableWidth;      // the amount of new space that needs to be 
+                                                            // accounted for in the non-fixed columns
+      if (PR_TRUE==gsDebug)
+        printf("  newTableWidth=%d \n", newTableWidth);
+      PRInt32 i;  // just a counter
+      for (i=0; i<numPercentColumns; i++)
+      {
+        colIndex = percentColumns[i];
+        colFrame = mTableFrame->GetColFrame(colIndex);
+        colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
+        percent = colPosition->mWidth.GetPercentValue(); // we know this will work
+        colWidth = (nscoord)((percent)*((float)newTableWidth));
+        nscoord minColWidth = colFrame->GetEffectiveMinColWidth();
+        colWidth = PR_MAX(colWidth, minColWidth);
+        mTableFrame->SetColumnWidth(colIndex, colWidth);
+        if (PR_TRUE==gsDebug)
+          printf("  col %d with percentwidth=%f set to %d\n", 
+                  colIndex, percent, colWidth);
+        excess -= colWidth;
+      }
+      if (0<excess)
+      {
+        PRInt32 numAutoColumns=0;
+        PRInt32 *autoColumns=nsnull;
+        mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
+        if (PR_TRUE==gsDebug)
+          printf("  excess=%d with %d autoColumns\n", excess, numAutoColumns);
+        if (0<numAutoColumns)
+        {
+          nscoord excessPerColumn = excess/numAutoColumns;
+          for (i=0; i<numAutoColumns; i++)
+          {
+            colIndex = autoColumns[i];
+            nscoord newWidth = PR_MAX(excessPerColumn, mTableFrame->GetColumnWidth(colIndex));
+            if (PR_TRUE==gsDebug)
+              printf("    col %d was %d set to \n", 
+                     colIndex, mTableFrame->GetColumnWidth(colIndex), newWidth);
+            mTableFrame->SetColumnWidth(colIndex, newWidth);
+            excess -= excessPerColumn;
+          }
+          // handle division underflow
+          if (0<excess)
+          {
+            if (PR_TRUE==gsDebug)
+              printf("    after first pass through auto-width columns, excess=%d\n", excess);
+            for (i=0; i<numAutoColumns; i++)
+            {
+              colIndex = autoColumns[i];
+              nscoord newWidth = 1 + mTableFrame->GetColumnWidth(colIndex);
+              mTableFrame->SetColumnWidth(colIndex, newWidth);
+            }
+          }
+        }
+      }
+    }
+    else
+    { // all columns have a percent width.  Each already has its desired width.
+      // find the smallest percentage and base the widths of the others off that
+      PRInt32 indexOfSmallest;
+      nscoord colWidthOfSmallest;
+      float smallestPercent=2.0f; // an illegal large number
+      for (colIndex = 0; colIndex<mNumCols; colIndex++)
+      {
+        colFrame = mTableFrame->GetColFrame(colIndex); 
+        colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
+        percent = colPosition->mWidth.GetPercentValue(); // we know this will work 
+        if (percent < smallestPercent)
+        {
+          smallestPercent=percent;
+          indexOfSmallest=colIndex;
+          colWidthOfSmallest = mTableFrame->GetColumnWidth(colIndex);
+        }
+        else if (percent==smallestPercent)
+        { // the largest desired size among equal-percent columns wins
+          nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
+          if (colWidth>colWidthOfSmallest)
+          {
+            indexOfSmallest = colIndex;
+            colWidthOfSmallest = colWidth;
+          }
+        }
+      }
+      // now that we know which column to base the other columns' widths off of, do it!
+      for (colIndex = 0; colIndex<mNumCols; colIndex++)
+      {
+        colFrame = mTableFrame->GetColFrame(colIndex); 
+        colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
+        percent = colPosition->mWidth.GetPercentValue(); // we know this will work 
+        if (percent==smallestPercent)
+        { // set col width to the max width of all columns that shared the smallest percent-width
+          mTableFrame->SetColumnWidth(colIndex, colWidthOfSmallest);  
+        }
+        else
+        {
+          colWidth = (nscoord)((percent/smallestPercent)*((float)colWidthOfSmallest));
+          nscoord minColWidth = colFrame->GetEffectiveMinColWidth();
+          colWidth = PR_MAX(colWidth, minColWidth);
+          mTableFrame->SetColumnWidth(colIndex, colWidth); 
+        }
+        if (PR_TRUE==gsDebug)
+          printf("  col %d with percentwidth=%f set to %d\n", 
+                  colIndex, percent, colWidth);
+      }
+    }
+  }
+
+  // second, assign column widths to proportional-width columns
   if (nsnull!=proportionalColumnsList)
   {
     // first, figure out the amount of space per slice
