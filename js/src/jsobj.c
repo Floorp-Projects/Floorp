@@ -415,29 +415,29 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
             if (!ok)
                 break;
-            if (prop) {
-                ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &attrs);
-                if (ok) {
-                    if (OBJ_IS_NATIVE(obj2) &&
-                        (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-                        val = JSVAL_NULL;
-                        if (attrs & JSPROP_GETTER)
-                            val = (jsval) ((JSScopeProperty*)prop)->getter;
-                        if (attrs & JSPROP_SETTER) {
-                            if (val != JSVAL_NULL) {
-                                /* Mark the getter, then set val to setter. */
-                                ok = (MarkSharpObjects(cx, JSVAL_TO_OBJECT(val),
-                                                       NULL)
-                                      != NULL);
-                            }
-                            val = (jsval) ((JSScopeProperty*)prop)->setter;
+            if (!prop)
+                continue;
+            ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &attrs);
+            if (ok) {
+                if (OBJ_IS_NATIVE(obj2) &&
+                    (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+                    val = JSVAL_NULL;
+                    if (attrs & JSPROP_GETTER)
+                        val = (jsval) ((JSScopeProperty*)prop)->getter;
+                    if (attrs & JSPROP_SETTER) {
+                        if (val != JSVAL_NULL) {
+                            /* Mark the getter, then set val to setter. */
+                            ok = (MarkSharpObjects(cx, JSVAL_TO_OBJECT(val),
+                                                   NULL)
+                                  != NULL);
                         }
-                    } else {
-                        ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
+                        val = (jsval) ((JSScopeProperty*)prop)->setter;
                     }
+                } else {
+                    ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
                 }
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
             }
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
 #else
             ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
 #endif
