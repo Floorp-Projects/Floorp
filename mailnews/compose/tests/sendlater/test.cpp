@@ -108,7 +108,7 @@ nsresult OnIdentityCheck()
 			printf("User Name: %s\n", value ? value : "");
 			incomingServer->GetHostName(&value);
 			printf("Pop Server: %s\n", value ? value : "");
-			incomingServer->GetPassword(PR_FALSE, &value);
+			incomingServer->GetPassword(&value);
 			printf("Pop Password: %s\n", value ? value : "");
 
 			NS_RELEASE(incomingServer);
