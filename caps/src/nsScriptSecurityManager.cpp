@@ -58,6 +58,8 @@
 #include "nsIZipReader.h"
 #include "nsIPluginInstance.h"
 #include "nsIXPConnect.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindowInternal.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
@@ -970,14 +972,32 @@ Localize(char *genericString, nsString &result)
 }
 
 static PRBool
-CheckConfirmDialog(const PRUnichar *szMessage, const PRUnichar *szCheckMessage,
+CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *szCheckMessage,
                    PRBool *checkValue) 
 {
-    nsresult res;  
-    NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-    if (NS_FAILED(res)) {
-        *checkValue = 0;
-        return PR_FALSE;
+    nsresult res;
+    //-- Get a prompter for the current window.
+    nsCOMPtr<nsIPrompt> prompter;
+    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+    if (scriptContext)
+    {
+        nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+        NS_ASSERTION(globalObject, "script context has no global object");
+        nsCOMPtr<nsIDOMWindowInternal> domWin = do_QueryInterface(globalObject);
+        if (domWin)
+            domWin->GetPrompter(getter_AddRefs(prompter));
+    }
+
+    if (!prompter)
+    {
+        //-- Couldn't get prompter from the current window, so get the propmt service.
+        NS_WITH_SERVICE(nsIPrompt, backupPrompter, kNetSupportDialogCID, &res);
+        if (NS_FAILED(res)) 
+        {
+            *checkValue = 0;
+            return PR_FALSE;
+        }
+        prompter = backupPrompter;
     }
     
     PRInt32 buttonPressed = 1; /* in case user exits dialog by clicking X */
@@ -989,7 +1009,7 @@ CheckConfirmDialog(const PRUnichar *szMessage, const PRUnichar *szCheckMessage,
     if (NS_FAILED(res = Localize("Titleline", titleline)))
         return PR_FALSE;
     
-    res = dialog->UniversalDialog(
+    res = prompter->UniversalDialog(
         nsnull, /* title message */
         titleline.GetUnicode(), /* title text in top line of window */
         szMessage, /* this is the main message */
@@ -1037,7 +1057,8 @@ nsScriptSecurityManager::RequestCapability(nsIPrincipal* aPrincipal,
             return NS_ERROR_FAILURE;
         PRUnichar *message = nsTextFormatter::smprintf(query.GetUnicode(), source);
         Recycle(source);
-        if (CheckConfirmDialog(message, check.GetUnicode(), &remember))
+        JSContext *cx = GetCurrentContextQuick();
+        if (CheckConfirmDialog(cx, message, check.GetUnicode(), &remember))
             *canEnable = nsIPrincipal::ENABLE_GRANTED;
         else
             *canEnable = nsIPrincipal::ENABLE_DENIED;
