@@ -22,7 +22,6 @@
 
 #include "FixedTableLayoutStrategy.h"
 #include "nsTableFrame.h"
-#include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
