@@ -195,15 +195,18 @@ enum {
 
 -(IBAction)cancel:(id)sender
 {
-  mUserCancelled = YES;
-  
-  if (mDownloader) { // we should always have one
-    mDownloader->CancelDownload();
+  // don't allow download to be cancelled twice or we get a nasty crash
+  if (!mUserCancelled) {
+    mUserCancelled = YES;
+    
+    if (mDownloader) { // we should always have one
+      mDownloader->CancelDownload();
+    }
+    
+    // note that we never want to delete downloaded files here,
+    // because the file does not have its final path yet.
+    // Necko will delete the evil temp file.
   }
-  
-  // note that we never want to delete downloaded files here,
-  // because the file does not have its final path yet.
-  // Necko will delete the evil temp file.
 }
 
 -(IBAction)reveal:(id)sender
