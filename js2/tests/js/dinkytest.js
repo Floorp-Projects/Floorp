@@ -79,14 +79,12 @@ if (s2.a != 2) print("failed #8");
 if (T.a != 3) print("failed #9");
 if (s2.x2() != 3) print("failed #10");
 
-
 // bind the instance to it's method for later invocation
 var m = s1.x1;
 m()
 if (s1.a != 3) print("failed #11");
 
 
-/*
 // make sure only one static var can be defined
 test = false;
 try {
@@ -99,7 +97,6 @@ catch (ex) {
     test = (ex.name == "Error");
 }
 if (!test) print("failed #12");
-*/
 
 // check the typeof some things
 
@@ -107,6 +104,18 @@ if (typeof t != "Function") print("failed #13");
 if (typeof s1 != "T") print("failed #14");
 if (typeof c != "C") print("failed #15");
 if (typeof test != "boolean") print("failed #16");
+
+// make sure eval uses correct scope
+function g() { eval("var j = 2"); if (j != 2) print("failed #17"); }
+test = false;
+try {
+    eval("j");
+} 
+catch (ex) {
+    test = (ex.name == "ReferenceError");
+}
+if (!test) print("failed #18");
+
 
 print("passed");
 
