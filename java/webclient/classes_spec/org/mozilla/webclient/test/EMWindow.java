@@ -51,7 +51,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.17 2000/08/17 19:54:43 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.18 2000/09/12 16:44:32 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -427,15 +427,7 @@ public void actionPerformed (ActionEvent evt)
 public void dialogDismissed(Dialog d) {
   if(findDialog.wasClosed()) {
     System.out.println("Find Dialog Closed");
-	try {
-	CurrentPage currentPage = (CurrentPage)
-	  browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
-	currentPage.resetFind();
-	}
-	catch (Exception e) {
-	System.out.println(e.getMessage());
-      }
-	}
+  }
   else {
     String searchString = findDialog.getTextField().getText();
     if(searchString == null) {
@@ -444,6 +436,14 @@ public void dialogDismissed(Dialog d) {
     }
     else if(searchString.equals("")) {
       System.out.println("Clear button selected");
+      try {
+          CurrentPage currentPage = (CurrentPage)
+              browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+          currentPage.resetFind();
+      }
+      catch (Exception e) {
+          System.out.println(e.getMessage());
+      }
     }
     else {
       System.out.println("Tring to Find String   -  " + searchString);
@@ -462,14 +462,6 @@ public void dialogDismissed(Dialog d) {
 
 public void dialogCancelled(Dialog d) {
   System.out.println("Find Dialog Closed");
-	try {
-	CurrentPage currentPage = (CurrentPage)
-	  browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
-	currentPage.resetFind();
-	}
-	catch (Exception e) {
-	System.out.println(e.getMessage());
-    }
 }
       
 
