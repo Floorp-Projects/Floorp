@@ -246,13 +246,12 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                  GDK_BUTTON_PRESS_MASK |
                  GDK_BUTTON_RELEASE_MASK |
                  GDK_ENTER_NOTIFY_MASK |
+                 GDK_LEAVE_NOTIFY_MASK |
                  GDK_EXPOSURE_MASK |
                  GDK_FOCUS_CHANGE_MASK |
                  GDK_KEY_PRESS_MASK |
                  GDK_KEY_RELEASE_MASK |
-                 GDK_LEAVE_NOTIFY_MASK |
                  GDK_POINTER_MOTION_MASK);
-
 
 
   if (mBorderStyle == GTK_WINDOW_POPUP)
@@ -337,6 +336,12 @@ void nsWindow::InitCallbacks(char * aName)
 
   InstallEnterNotifySignal(mWidget);
   InstallLeaveNotifySignal(mWidget);
+
+  // Drag & Drop events.
+  InstallDragBeginSignal(mWidget);
+  InstallDragMotionSignal(mWidget);
+  InstallDragDropSignal(mWidget);
+
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "draw",
