@@ -20,6 +20,8 @@
 #include "nsIAppShell.h"
 #include <stdlib.h>
 
+XtAppContext gAppContext;
+
 //-------------------------------------------------------------------------
 //
 // nsISupports implementation macro
@@ -44,6 +46,7 @@ void nsAppShell::Create(int* argc, char ** argv)
   XtSetLanguageProc(NULL, NULL, NULL);
   mTopLevel = XtVaAppInitialize(&mAppContext, "nsAppShell", NULL, 
                                 0, argc, argv, NULL, NULL);
+  gAppContext = mAppContext;
 }
 
 //-------------------------------------------------------------------------
