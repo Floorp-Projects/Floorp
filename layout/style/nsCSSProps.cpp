@@ -236,7 +236,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_menubar,                NS_THEME_MENUBAR,
   eCSSKeyword_menupopup,              NS_THEME_MENUPOPUP,
   eCSSKeyword_menuitem,               NS_THEME_MENUITEM,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 // Keyword id tables for variant/enum parsing
@@ -253,38 +253,38 @@ const PRInt32 nsCSSProps::kAzimuthKTable[] = {
   eCSSKeyword_behind,       NS_STYLE_AZIMUTH_BEHIND,
   eCSSKeyword_leftwards,    NS_STYLE_AZIMUTH_LEFTWARDS,
   eCSSKeyword_rightwards,   NS_STYLE_AZIMUTH_RIGHTWARDS,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundAttachmentKTable[] = {
   eCSSKeyword_fixed, NS_STYLE_BG_ATTACHMENT_FIXED,
   eCSSKeyword_scroll, NS_STYLE_BG_ATTACHMENT_SCROLL,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundColorKTable[] = {
   eCSSKeyword_transparent, NS_STYLE_BG_COLOR_TRANSPARENT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundClipKTable[] = {
   eCSSKeyword_border,     NS_STYLE_BG_CLIP_BORDER,
   eCSSKeyword_padding,    NS_STYLE_BG_CLIP_PADDING,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundInlinePolicyKTable[] = {
   eCSSKeyword_each_box,     NS_STYLE_BG_INLINE_POLICY_EACH_BOX,
   eCSSKeyword_continuous,   NS_STYLE_BG_INLINE_POLICY_CONTINUOUS,
   eCSSKeyword_bounding_box, NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundOriginKTable[] = {
   eCSSKeyword_border,     NS_STYLE_BG_ORIGIN_BORDER,
   eCSSKeyword_padding,    NS_STYLE_BG_ORIGIN_PADDING,
   eCSSKeyword_content,    NS_STYLE_BG_ORIGIN_CONTENT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundRepeatKTable[] = {
@@ -292,33 +292,33 @@ const PRInt32 nsCSSProps::kBackgroundRepeatKTable[] = {
   eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_XY,
   eCSSKeyword_repeat_x,   NS_STYLE_BG_REPEAT_X,
   eCSSKeyword_repeat_y,   NS_STYLE_BG_REPEAT_Y,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundXPositionKTable[] = {
   eCSSKeyword_left,   0,
   eCSSKeyword_center, 50,
   eCSSKeyword_right,  100,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundYPositionKTable[] = {
   eCSSKeyword_top,    0,
   eCSSKeyword_center, 50,
   eCSSKeyword_bottom, 100,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBorderCollapseKTable[] = {
   eCSSKeyword_collapse,  NS_STYLE_BORDER_COLLAPSE,
   eCSSKeyword_separate,  NS_STYLE_BORDER_SEPARATE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBorderColorKTable[] = {
   eCSSKeyword_transparent, NS_STYLE_COLOR_TRANSPARENT,
   eCSSKeyword__moz_use_text_color, NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
@@ -334,27 +334,27 @@ const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
   eCSSKeyword__moz_bg_inset,  NS_STYLE_BORDER_STYLE_BG_INSET,
   eCSSKeyword__moz_bg_outset, NS_STYLE_BORDER_STYLE_BG_OUTSET,
   eCSSKeyword__moz_bg_solid,  NS_STYLE_BORDER_STYLE_BG_SOLID,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBorderWidthKTable[] = {
   eCSSKeyword_thin, NS_STYLE_BORDER_WIDTH_THIN,
   eCSSKeyword_medium, NS_STYLE_BORDER_WIDTH_MEDIUM,
   eCSSKeyword_thick, NS_STYLE_BORDER_WIDTH_THICK,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBoxPropSourceKTable[] = {
   eCSSKeyword_physical,     NS_BOXPROP_SOURCE_PHYSICAL,
   eCSSKeyword_logical,      NS_BOXPROP_SOURCE_LOGICAL,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBoxSizingKTable[] = {
   eCSSKeyword_content_box,  NS_STYLE_BOX_SIZING_CONTENT,
   eCSSKeyword_border_box,   NS_STYLE_BOX_SIZING_BORDER,
   eCSSKeyword_padding_box,  NS_STYLE_BOX_SIZING_PADDING,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kCaptionSideKTable[] = {
@@ -362,14 +362,14 @@ const PRInt32 nsCSSProps::kCaptionSideKTable[] = {
   eCSSKeyword_right,  NS_SIDE_RIGHT,
   eCSSKeyword_bottom, NS_SIDE_BOTTOM,
   eCSSKeyword_left,   NS_SIDE_LEFT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kClearKTable[] = {
   eCSSKeyword_left, NS_STYLE_CLEAR_LEFT,
   eCSSKeyword_right, NS_STYLE_CLEAR_RIGHT,
   eCSSKeyword_both, NS_STYLE_CLEAR_LEFT_AND_RIGHT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kColorKTable[] = {
@@ -422,7 +422,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_mac_accentdarkshadow, nsILookAndFeel::eColor__moz_mac_accentdarkshadow,
   eCSSKeyword__moz_mac_accentdarkestshadow, nsILookAndFeel::eColor__moz_mac_accentdarkestshadow,
   eCSSKeyword__moz_visitedhyperlinktext, NS_COLOR_MOZ_VISITEDHYPERLINKTEXT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kContentKTable[] = {
@@ -430,7 +430,7 @@ const PRInt32 nsCSSProps::kContentKTable[] = {
   eCSSKeyword_close_quote, NS_STYLE_CONTENT_CLOSE_QUOTE,
   eCSSKeyword_no_open_quote, NS_STYLE_CONTENT_NO_OPEN_QUOTE,
   eCSSKeyword_no_close_quote, NS_STYLE_CONTENT_NO_CLOSE_QUOTE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kCursorKTable[] = {
@@ -478,13 +478,13 @@ const PRInt32 nsCSSProps::kCursorKTable[] = {
   eCSSKeyword__moz_spinning, NS_STYLE_CURSOR_SPINNING,
   eCSSKeyword__moz_zoom_in, NS_STYLE_CURSOR_MOZ_ZOOM_IN,
   eCSSKeyword__moz_zoom_out, NS_STYLE_CURSOR_MOZ_ZOOM_OUT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kDirectionKTable[] = {
   eCSSKeyword_ltr,      NS_STYLE_DIRECTION_LTR,
   eCSSKeyword_rtl,      NS_STYLE_DIRECTION_RTL,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kDisplayKTable[] = {
@@ -518,7 +518,7 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword__moz_popup,         NS_STYLE_DISPLAY_POPUP,
   eCSSKeyword__moz_groupbox,      NS_STYLE_DISPLAY_GROUPBOX,
   eCSSKeyword__moz_page_break,    NS_STYLE_DISPLAY_PAGE_BREAK,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kElevationKTable[] = {
@@ -527,20 +527,20 @@ const PRInt32 nsCSSProps::kElevationKTable[] = {
   eCSSKeyword_above,  NS_STYLE_ELEVATION_ABOVE,
   eCSSKeyword_higher, NS_STYLE_ELEVATION_HIGHER,
   eCSSKeyword_lower,  NS_STYLE_ELEVATION_LOWER,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kEmptyCellsKTable[] = {
   eCSSKeyword_show,                 NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
   eCSSKeyword_hide,                 NS_STYLE_TABLE_EMPTY_CELLS_HIDE,
   eCSSKeyword__moz_show_background, NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFloatKTable[] = {
   eCSSKeyword_left,  NS_STYLE_FLOAT_LEFT,
   eCSSKeyword_right, NS_STYLE_FLOAT_RIGHT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFloatEdgeKTable[] = {
@@ -548,7 +548,7 @@ const PRInt32 nsCSSProps::kFloatEdgeKTable[] = {
   eCSSKeyword_border_box,  NS_STYLE_FLOAT_EDGE_BORDER,
   eCSSKeyword_padding_box,  NS_STYLE_FLOAT_EDGE_PADDING,
   eCSSKeyword_margin_box,  NS_STYLE_FLOAT_EDGE_MARGIN,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFontKTable[] = {
@@ -571,7 +571,7 @@ const PRInt32 nsCSSProps::kFontKTable[] = {
   eCSSKeyword__moz_pull_down_menu, NS_STYLE_FONT_PULL_DOWN_MENU,
   eCSSKeyword__moz_list, NS_STYLE_FONT_LIST,
   eCSSKeyword__moz_field, NS_STYLE_FONT_FIELD,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFontSizeKTable[] = {
@@ -584,7 +584,7 @@ const PRInt32 nsCSSProps::kFontSizeKTable[] = {
   eCSSKeyword_xx_large, NS_STYLE_FONT_SIZE_XXLARGE,
   eCSSKeyword_larger, NS_STYLE_FONT_SIZE_LARGER,
   eCSSKeyword_smaller, NS_STYLE_FONT_SIZE_SMALLER,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFontStretchKTable[] = {
@@ -598,36 +598,36 @@ const PRInt32 nsCSSProps::kFontStretchKTable[] = {
   eCSSKeyword_expanded, NS_STYLE_FONT_STRETCH_EXPANDED,
   eCSSKeyword_extra_expanded, NS_STYLE_FONT_STRETCH_EXTRA_EXPANDED,
   eCSSKeyword_ultra_expanded, NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFontStyleKTable[] = {
   eCSSKeyword_italic, NS_STYLE_FONT_STYLE_ITALIC,
   eCSSKeyword_oblique, NS_STYLE_FONT_STYLE_OBLIQUE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFontVariantKTable[] = {
   eCSSKeyword_small_caps, NS_STYLE_FONT_VARIANT_SMALL_CAPS,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFontWeightKTable[] = {
   eCSSKeyword_bold, NS_STYLE_FONT_WEIGHT_BOLD,
   eCSSKeyword_bolder, NS_STYLE_FONT_WEIGHT_BOLDER,
   eCSSKeyword_lighter, NS_STYLE_FONT_WEIGHT_LIGHTER,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 // XXX What's the point?
 const PRInt32 nsCSSProps::kKeyEquivalentKTable[] = {
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kListStylePositionKTable[] = {
   eCSSKeyword_inside, NS_STYLE_LIST_STYLE_POSITION_INSIDE,
   eCSSKeyword_outside, NS_STYLE_LIST_STYLE_POSITION_OUTSIDE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kListStyleKTable[] = {
@@ -682,12 +682,12 @@ const PRInt32 nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword__moz_ethiopic_halehame_am, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM,
   eCSSKeyword__moz_ethiopic_halehame_ti_er, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER,
   eCSSKeyword__moz_ethiopic_halehame_ti_et, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kOutlineColorKTable[] = {
   eCSSKeyword_invert, NS_STYLE_COLOR_INVERT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kOverflowKTable[] = {
@@ -699,7 +699,7 @@ const PRInt32 nsCSSProps::kOverflowKTable[] = {
   eCSSKeyword__moz_scrollbars_horizontal, NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL,
   eCSSKeyword__moz_scrollbars_vertical, NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL,
   eCSSKeyword__moz_hidden_unscrollable, NS_STYLE_OVERFLOW_CLIP,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kOverflowSubKTable[] = {
@@ -708,7 +708,7 @@ const PRInt32 nsCSSProps::kOverflowSubKTable[] = {
   eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
   // Deprecated:
   eCSSKeyword__moz_hidden_unscrollable, NS_STYLE_OVERFLOW_CLIP,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kPageBreakKTable[] = {
@@ -716,24 +716,24 @@ const PRInt32 nsCSSProps::kPageBreakKTable[] = {
   eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID,
   eCSSKeyword_left, NS_STYLE_PAGE_BREAK_LEFT,
   eCSSKeyword_right, NS_STYLE_PAGE_BREAK_RIGHT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kPageBreakInsideKTable[] = {
   eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kPageMarksKTable[] = {
   eCSSKeyword_crop, NS_STYLE_PAGE_MARKS_CROP,
   eCSSKeyword_cross, NS_STYLE_PAGE_MARKS_REGISTER,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kPageSizeKTable[] = {
   eCSSKeyword_landscape, NS_STYLE_PAGE_SIZE_LANDSCAPE,
   eCSSKeyword_portrait, NS_STYLE_PAGE_SIZE_PORTRAIT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kPitchKTable[] = {
@@ -742,7 +742,7 @@ const PRInt32 nsCSSProps::kPitchKTable[] = {
   eCSSKeyword_medium, NS_STYLE_PITCH_MEDIUM,
   eCSSKeyword_high, NS_STYLE_PITCH_HIGH,
   eCSSKeyword_x_high, NS_STYLE_PITCH_X_HIGH,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kPositionKTable[] = {
@@ -750,29 +750,29 @@ const PRInt32 nsCSSProps::kPositionKTable[] = {
   eCSSKeyword_relative, NS_STYLE_POSITION_RELATIVE,
   eCSSKeyword_absolute, NS_STYLE_POSITION_ABSOLUTE,
   eCSSKeyword_fixed, NS_STYLE_POSITION_FIXED,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kSpeakKTable[] = {
   eCSSKeyword_spell_out, NS_STYLE_SPEAK_SPELL_OUT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kSpeakHeaderKTable[] = {
   eCSSKeyword_once, NS_STYLE_SPEAK_HEADER_ONCE,
   eCSSKeyword_always, NS_STYLE_SPEAK_HEADER_ALWAYS,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kSpeakNumeralKTable[] = {
   eCSSKeyword_digits, NS_STYLE_SPEAK_NUMERAL_DIGITS,
   eCSSKeyword_continuous, NS_STYLE_SPEAK_NUMERAL_CONTINUOUS,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kSpeakPunctuationKTable[] = {
   eCSSKeyword_code, NS_STYLE_SPEAK_PUNCTUATION_CODE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kSpeechRateKTable[] = {
@@ -783,12 +783,12 @@ const PRInt32 nsCSSProps::kSpeechRateKTable[] = {
   eCSSKeyword_x_fast, NS_STYLE_SPEECH_RATE_X_FAST,
   eCSSKeyword_faster, NS_STYLE_SPEECH_RATE_FASTER,
   eCSSKeyword_slower, NS_STYLE_SPEECH_RATE_SLOWER,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kTableLayoutKTable[] = {
   eCSSKeyword_fixed, NS_STYLE_TABLE_LAYOUT_FIXED,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kTextAlignKTable[] = {
@@ -799,7 +799,7 @@ const PRInt32 nsCSSProps::kTextAlignKTable[] = {
   eCSSKeyword__moz_center, NS_STYLE_TEXT_ALIGN_MOZ_CENTER,
   eCSSKeyword__moz_right, NS_STYLE_TEXT_ALIGN_MOZ_RIGHT,
   eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_DEFAULT,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
@@ -808,20 +808,20 @@ const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
   eCSSKeyword_line_through, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
   eCSSKeyword_blink, NS_STYLE_TEXT_DECORATION_BLINK,
   eCSSKeyword__moz_anchor_decoration, NS_STYLE_TEXT_DECORATION_PREF_ANCHORS,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kTextTransformKTable[] = {
   eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE,
   eCSSKeyword_lowercase, NS_STYLE_TEXT_TRANSFORM_LOWERCASE,
   eCSSKeyword_uppercase, NS_STYLE_TEXT_TRANSFORM_UPPERCASE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kUnicodeBidiKTable[] = {
   eCSSKeyword_embed, NS_STYLE_UNICODE_BIDI_EMBED,
   eCSSKeyword_bidi_override, NS_STYLE_UNICODE_BIDI_OVERRIDE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kUserFocusKTable[] = {
@@ -831,20 +831,20 @@ const PRInt32 nsCSSProps::kUserFocusKTable[] = {
   eCSSKeyword_select_after,   NS_STYLE_USER_FOCUS_SELECT_AFTER,
   eCSSKeyword_select_same,    NS_STYLE_USER_FOCUS_SELECT_SAME,
   eCSSKeyword_select_menu,    NS_STYLE_USER_FOCUS_SELECT_MENU,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kUserInputKTable[] = {
   eCSSKeyword_enabled,  NS_STYLE_USER_INPUT_ENABLED,
   eCSSKeyword_disabled, NS_STYLE_USER_INPUT_DISABLED,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kUserModifyKTable[] = {
   eCSSKeyword_read_only,  NS_STYLE_USER_MODIFY_READ_ONLY,
   eCSSKeyword_read_write, NS_STYLE_USER_MODIFY_READ_WRITE,
   eCSSKeyword_write_only, NS_STYLE_USER_MODIFY_WRITE_ONLY,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kUserSelectKTable[] = {
@@ -855,7 +855,7 @@ const PRInt32 nsCSSProps::kUserSelectKTable[] = {
   eCSSKeyword_toggle,     NS_STYLE_USER_SELECT_TOGGLE,
   eCSSKeyword_tri_state,  NS_STYLE_USER_SELECT_TRI_STATE,
   eCSSKeyword__moz_all,   NS_STYLE_USER_SELECT_MOZ_ALL,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kVerticalAlignKTable[] = {
@@ -867,14 +867,14 @@ const PRInt32 nsCSSProps::kVerticalAlignKTable[] = {
   eCSSKeyword_middle, NS_STYLE_VERTICAL_ALIGN_MIDDLE,
   eCSSKeyword_bottom, NS_STYLE_VERTICAL_ALIGN_BOTTOM,
   eCSSKeyword_text_bottom, NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kVisibilityKTable[] = {
   eCSSKeyword_visible, NS_STYLE_VISIBILITY_VISIBLE,
   eCSSKeyword_hidden, NS_STYLE_VISIBILITY_HIDDEN,
   eCSSKeyword_collapse, NS_STYLE_VISIBILITY_COLLAPSE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kVolumeKTable[] = {
@@ -884,14 +884,14 @@ const PRInt32 nsCSSProps::kVolumeKTable[] = {
   eCSSKeyword_medium, NS_STYLE_VOLUME_MEDIUM,
   eCSSKeyword_loud, NS_STYLE_VOLUME_LOUD,
   eCSSKeyword_x_loud, NS_STYLE_VOLUME_X_LOUD,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   eCSSKeyword_pre, NS_STYLE_WHITESPACE_PRE,
   eCSSKeyword_nowrap, NS_STYLE_WHITESPACE_NOWRAP,
   eCSSKeyword__moz_pre_wrap, NS_STYLE_WHITESPACE_MOZ_PRE_WRAP,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 // Specific keyword tables for XUL.properties
@@ -901,13 +901,13 @@ const PRInt32 nsCSSProps::kBoxAlignKTable[] = {
   eCSSKeyword_center, NS_STYLE_BOX_ALIGN_CENTER,
   eCSSKeyword_baseline, NS_STYLE_BOX_ALIGN_BASELINE, 
   eCSSKeyword_end, NS_STYLE_BOX_ALIGN_END, 
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBoxDirectionKTable[] = {
   eCSSKeyword_normal,  NS_STYLE_BOX_DIRECTION_NORMAL,
   eCSSKeyword_reverse,   NS_STYLE_BOX_DIRECTION_REVERSE,
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBoxOrientKTable[] = {
@@ -915,7 +915,7 @@ const PRInt32 nsCSSProps::kBoxOrientKTable[] = {
   eCSSKeyword_vertical,   NS_STYLE_BOX_ORIENT_VERTICAL,
   eCSSKeyword_inline_axis, NS_STYLE_BOX_ORIENT_HORIZONTAL,
   eCSSKeyword_block_axis, NS_STYLE_BOX_ORIENT_VERTICAL, 
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBoxPackKTable[] = {
@@ -923,7 +923,7 @@ const PRInt32 nsCSSProps::kBoxPackKTable[] = {
   eCSSKeyword_center,   NS_STYLE_BOX_PACK_CENTER,
   eCSSKeyword_end, NS_STYLE_BOX_PACK_END,
   eCSSKeyword_justify, NS_STYLE_BOX_PACK_JUSTIFY, 
-  -1,-1
+  eCSSKeyword_UNKNOWN,-1
 };
 
 #ifdef MOZ_SVG
@@ -941,13 +941,13 @@ const PRInt32 nsCSSProps::kDominantBaselineKTable[] = {
   eCSSKeyword_middle, NS_STYLE_DOMINANT_BASELINE_MIDDLE,
   eCSSKeyword_text_after_edge, NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE,
   eCSSKeyword_text_before_edge, NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE,
-  -1, -1
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const PRInt32 nsCSSProps::kFillRuleKTable[] = {
   eCSSKeyword_nonzero, NS_STYLE_FILL_RULE_NONZERO,
   eCSSKeyword_evenodd, NS_STYLE_FILL_RULE_EVENODD,
-  -1, -1
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
@@ -960,71 +960,85 @@ const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
   eCSSKeyword_stroke, NS_STYLE_POINTER_EVENTS_STROKE,
   eCSSKeyword_all, NS_STYLE_POINTER_EVENTS_ALL,
   eCSSKeyword_none, NS_STYLE_POINTER_EVENTS_NONE,
-  -1, -1
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const PRInt32 nsCSSProps::kShapeRenderingKTable[] = {
   eCSSKeyword_optimizespeed, NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_crispedges, NS_STYLE_SHAPE_RENDERING_CRISPEDGES,
   eCSSKeyword_geometricprecision, NS_STYLE_SHAPE_RENDERING_GEOMETRICPRECISION,
-  -1, -1
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const PRInt32 nsCSSProps::kStrokeLinecapKTable[] = {
   eCSSKeyword_butt, NS_STYLE_STROKE_LINECAP_BUTT,
   eCSSKeyword_round, NS_STYLE_STROKE_LINECAP_ROUND,
   eCSSKeyword_square, NS_STYLE_STROKE_LINECAP_SQUARE,
-  -1, -1
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const PRInt32 nsCSSProps::kStrokeLinejoinKTable[] = {
   eCSSKeyword_miter, NS_STYLE_STROKE_LINEJOIN_MITER,
   eCSSKeyword_round, NS_STYLE_STROKE_LINEJOIN_ROUND,
   eCSSKeyword_bevel, NS_STYLE_STROKE_LINEJOIN_BEVEL,
-  -1, -1
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const PRInt32 nsCSSProps::kTextAnchorKTable[] = {
   eCSSKeyword_start, NS_STYLE_TEXT_ANCHOR_START,
   eCSSKeyword_middle, NS_STYLE_TEXT_ANCHOR_MIDDLE,
   eCSSKeyword_end, NS_STYLE_TEXT_ANCHOR_END,
-  -1, -1
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const PRInt32 nsCSSProps::kTextRenderingKTable[] = {
   eCSSKeyword_optimizespeed, NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_optimizelegibility, NS_STYLE_TEXT_RENDERING_OPTIMIZELEGIBILITY,
   eCSSKeyword_geometricprecision, NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION,
-  -1, -1
+  eCSSKeyword_UNKNOWN, -1
 };
 
 #endif
 
-PRInt32 
-nsCSSProps::SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
+PRBool
+nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aResult)
+{
+  PRInt32 index = 0;
+  while (eCSSKeyword_UNKNOWN != nsCSSKeyword(aTable[index])) {
+    if (aKeyword == nsCSSKeyword(aTable[index])) {
+      aResult = aTable[index+1];
+      return PR_TRUE;
+    }
+    index += 2;
+  }
+  return PR_FALSE;
+}
+
+nsCSSKeyword
+nsCSSProps::ValueToKeywordEnum(PRInt32 aValue, const PRInt32 aTable[])
 {
   PRInt32 i = 1;
   for (;;) {
-    if (aTable[i] == -1 && aTable[i-1] == -1) {
+    if (aTable[i] == -1 && aTable[i-1] == eCSSKeyword_UNKNOWN) {
       break;
     }
     if (aValue == aTable[i]) {
-      return PRInt32(aTable[i-1]);
+      return nsCSSKeyword(aTable[i-1]);
     }
     i += 2;
   }
-  return -1;
+  return eCSSKeyword_UNKNOWN;
 }
 
 const nsAFlatCString&
-nsCSSProps::SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
+nsCSSProps::ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[])
 {
-  PRInt32 i = SearchKeywordTableInt(aValue, aTable);
-  if (i < 0) {
+  nsCSSKeyword keyword = ValueToKeywordEnum(aValue, aTable);
+  if (keyword == eCSSKeyword_UNKNOWN) {
     static nsDependentCString sNullStr("");
     return sNullStr;
   } else {
-    return nsCSSKeywords::GetStringValue(nsCSSKeyword(i));
+    return nsCSSKeywords::GetStringValue(keyword);
   }
 }
 
@@ -1045,7 +1059,7 @@ nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
     kwtable = kKeywordTableTable[aProp];
 
   if (kwtable)
-    return SearchKeywordTable(aValue, kwtable);
+    return ValueToKeyword(aValue, kwtable);
 
   static nsDependentCString sNullStr("");
   return sNullStr;
@@ -1054,18 +1068,17 @@ nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
 PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 {
   PRBool rv = PR_FALSE;
-  PRInt32 keyword = -1;
 
   // first get the keyword corresponding to the property Value from the color table
-  keyword = SearchKeywordTableInt(aPropValue, kColorKTable);
+  nsCSSKeyword keyword = ValueToKeywordEnum(aPropValue, kColorKTable);
 
   // next get the name as a string from the keywords table
-  if (keyword >= 0) {
+  if (keyword != eCSSKeyword_UNKNOWN) {
     nsCSSKeywords::AddRefTable();
-    aStr = nsCSSKeywords::GetStringValue((nsCSSKeyword)keyword);
+    aStr = nsCSSKeywords::GetStringValue(keyword);
     nsCSSKeywords::ReleaseTable();
     rv = PR_TRUE;
-  }  
+  }
   return rv;
 }
 

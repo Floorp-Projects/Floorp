@@ -41,6 +41,7 @@
 #include "nsChangeHint.h"
 #include "nsCSSProperty.h"
 #include "nsStyleStruct.h"
+#include "nsCSSKeywords.h"
 
 class nsCSSProps {
 public:
@@ -69,8 +70,14 @@ public:
   // Sets the aStr param to the name of the propertyID
   static PRBool GetColorName(PRInt32 aPropID, nsCString &aStr);
 
-  static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[]);
-  static const nsAFlatCString& SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[]);
+  // Find |aKeyword| in |aTable|, if found set |aValue| to its corresponding value.
+  // If not found, return PR_FALSE and do not set |aValue|.
+  static PRBool FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aValue);
+  // Return the first keyword in |aTable| that has the corresponding value |aValue|.
+  // Return |eCSSKeyword_UNKNOWN| if not found.
+  static nsCSSKeyword ValueToKeywordEnum(PRInt32 aValue, const PRInt32 aTable[]);
+  // Ditto but as a string, return "" when not found.
+  static const nsAFlatCString& ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[]);
 
   static const nsCSSType       kTypeTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];

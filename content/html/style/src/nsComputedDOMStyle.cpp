@@ -408,8 +408,8 @@ nsComputedDOMStyle::GetClear(nsIFrame *aFrame,
 
   if (display && display->mBreakType != NS_STYLE_CLEAR_NONE) {
     const nsAFlatCString& clear =
-      nsCSSProps::SearchKeywordTable(display->mBreakType,
-                                     nsCSSProps::kClearKTable);
+      nsCSSProps::ValueToKeyword(display->mBreakType,
+                                 nsCSSProps::kClearKTable);
     val->SetIdent(clear);
   } else {
     val->SetIdent(nsLayoutAtoms::none);
@@ -430,8 +430,8 @@ nsComputedDOMStyle::GetCssFloat(nsIFrame *aFrame,
 
   if (display && display->mFloats != NS_STYLE_FLOAT_NONE) {
     const nsAFlatCString& cssFloat =
-      nsCSSProps::SearchKeywordTable(display->mFloats,
-                                     nsCSSProps::kFloatKTable);
+      nsCSSProps::ValueToKeyword(display->mFloats,
+                                 nsCSSProps::kFloatKTable);
     val->SetIdent(cssFloat);
   } else {
     val->SetIdent(nsLayoutAtoms::none);
@@ -683,8 +683,8 @@ nsComputedDOMStyle::GetFontStyle(nsIFrame *aFrame,
 
   if (font && font->mFont.style != NS_STYLE_FONT_STYLE_NORMAL) {
     const nsAFlatCString& style=
-      nsCSSProps::SearchKeywordTable(font->mFont.style,
-                                     nsCSSProps::kFontStyleKTable);
+      nsCSSProps::ValueToKeyword(font->mFont.style,
+                                 nsCSSProps::kFontStyleKTable);
     val->SetIdent(style);
   } else {
     val->SetIdent(nsLayoutAtoms::normal);
@@ -705,8 +705,8 @@ nsComputedDOMStyle::GetFontWeight(nsIFrame *aFrame,
 
   if (font) {
     const nsAFlatCString& str_weight=
-      nsCSSProps::SearchKeywordTable(font->mFont.weight,
-                                     nsCSSProps::kFontWeightKTable);
+      nsCSSProps::ValueToKeyword(font->mFont.weight,
+                                 nsCSSProps::kFontWeightKTable);
     if (!str_weight.IsEmpty()) {
       val->SetIdent(str_weight);
     } else {
@@ -729,8 +729,8 @@ nsComputedDOMStyle::GetFontVariant(nsIFrame *aFrame,
 
   if (font && font->mFont.variant != NS_STYLE_FONT_VARIANT_NORMAL) {
     const nsAFlatCString& variant=
-      nsCSSProps::SearchKeywordTable(font->mFont.variant,
-                                     nsCSSProps::kFontVariantKTable);
+      nsCSSProps::ValueToKeyword(font->mFont.variant,
+                                 nsCSSProps::kFontVariantKTable);
     val->SetIdent(variant);
   } else {
     val->SetIdent(nsLayoutAtoms::normal);
@@ -752,8 +752,8 @@ nsComputedDOMStyle::GetBackgroundAttachment(nsIFrame *aFrame,
 
   if (background) {
     const nsAFlatCString& backgroundAttachment =
-      nsCSSProps::SearchKeywordTable(background->mBackgroundAttachment,
-                                     nsCSSProps::kBackgroundAttachmentKTable);
+      nsCSSProps::ValueToKeyword(background->mBackgroundAttachment,
+                                 nsCSSProps::kBackgroundAttachmentKTable);
     val->SetIdent(backgroundAttachment);
   }
 
@@ -776,8 +776,8 @@ nsComputedDOMStyle::GetBackgroundClip(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& backgroundClip =
-    nsCSSProps::SearchKeywordTable(clip,
-                                   nsCSSProps::kBackgroundClipKTable);
+    nsCSSProps::ValueToKeyword(clip,
+                               nsCSSProps::kBackgroundClipKTable);
 
   val->SetIdent(backgroundClip);
 
@@ -797,8 +797,8 @@ nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
   if (color) {
     if (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
       const nsAFlatCString& backgroundColor =
-        nsCSSProps::SearchKeywordTable(NS_STYLE_BG_COLOR_TRANSPARENT,
-                                       nsCSSProps::kBackgroundColorKTable);
+        nsCSSProps::ValueToKeyword(NS_STYLE_BG_COLOR_TRANSPARENT,
+                                   nsCSSProps::kBackgroundColorKTable);
       val->SetIdent(backgroundColor);
     } else {
       nsDOMCSSRGBColor *rgb = nsnull;
@@ -857,8 +857,8 @@ nsComputedDOMStyle::GetBackgroundInlinePolicy(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& backgroundPolicy =
-      nsCSSProps::SearchKeywordTable(policy,
-                                     nsCSSProps::kBackgroundInlinePolicyKTable);
+      nsCSSProps::ValueToKeyword(policy,
+                                 nsCSSProps::kBackgroundInlinePolicyKTable);
 
   val->SetIdent(backgroundPolicy);
 
@@ -881,8 +881,8 @@ nsComputedDOMStyle::GetBackgroundOrigin(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& backgroundOrigin =
-    nsCSSProps::SearchKeywordTable(origin,
-                                   nsCSSProps::kBackgroundOriginKTable);
+    nsCSSProps::ValueToKeyword(origin,
+                               nsCSSProps::kBackgroundOriginKTable);
 
   val->SetIdent(backgroundOrigin);
 
@@ -902,8 +902,8 @@ nsComputedDOMStyle::GetBackgroundRepeat(nsIFrame *aFrame,
 
   if (background) {
     const nsAFlatCString& backgroundRepeat =
-      nsCSSProps::SearchKeywordTable(background->mBackgroundRepeat,
-                                     nsCSSProps::kBackgroundRepeatKTable);
+      nsCSSProps::ValueToKeyword(background->mBackgroundRepeat,
+                                 nsCSSProps::kBackgroundRepeatKTable);
     val->SetIdent(backgroundRepeat);
   }
 
@@ -960,8 +960,8 @@ nsComputedDOMStyle::GetBorderCollapse(nsIFrame *aFrame,
 
   if (table) {
     const nsAFlatCString& ident=
-      nsCSSProps::SearchKeywordTable(table->mBorderCollapse,
-                                     nsCSSProps::kBorderCollapseKTable);
+      nsCSSProps::ValueToKeyword(table->mBorderCollapse,
+                                 nsCSSProps::kBorderCollapseKTable);
     val->SetIdent(ident);
   }
 
@@ -1021,8 +1021,8 @@ nsComputedDOMStyle::GetCaptionSide(nsIFrame *aFrame,
 
   if (table) {
     const nsAFlatCString& side =
-      nsCSSProps::SearchKeywordTable(table->mCaptionSide,
-                                     nsCSSProps::kCaptionSideKTable);
+      nsCSSProps::ValueToKeyword(table->mCaptionSide,
+                                 nsCSSProps::kCaptionSideKTable);
     val->SetIdent(side);
   }
 
@@ -1041,8 +1041,8 @@ nsComputedDOMStyle::GetEmptyCells(nsIFrame *aFrame,
 
   if (table) {
     const nsAFlatCString& emptyCells =
-      nsCSSProps::SearchKeywordTable(table->mEmptyCells,
-                                     nsCSSProps::kEmptyCellsKTable);
+      nsCSSProps::ValueToKeyword(table->mEmptyCells,
+                                 nsCSSProps::kEmptyCellsKTable);
     val->SetIdent(emptyCells);
   }
 
@@ -1061,8 +1061,8 @@ nsComputedDOMStyle::GetTableLayout(nsIFrame *aFrame,
 
   if (table && table->mLayoutStrategy != NS_STYLE_TABLE_LAYOUT_AUTO) {
     const nsAFlatCString& tableLayout =
-      nsCSSProps::SearchKeywordTable(table->mLayoutStrategy,
-                                     nsCSSProps::kTableLayoutKTable);
+      nsCSSProps::ValueToKeyword(table->mLayoutStrategy,
+                                 nsCSSProps::kTableLayoutKTable);
     val->SetIdent(tableLayout);
   } else {
     val->SetIdent(nsLayoutAtoms::autoAtom);
@@ -1332,8 +1332,8 @@ nsComputedDOMStyle::GetOutlineWidth(nsIFrame *aFrame,
       case eStyleUnit_Chars:
         {
           const nsAFlatCString& width=
-            nsCSSProps::SearchKeywordTable(outline->mOutlineWidth.GetIntValue(),
-                                           nsCSSProps::kBorderWidthKTable);
+            nsCSSProps::ValueToKeyword(outline->mOutlineWidth.GetIntValue(),
+                                       nsCSSProps::kBorderWidthKTable);
           val->SetIdent(width);
           break;
         }
@@ -1363,8 +1363,8 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
       val->SetIdent(nsLayoutAtoms::none);
     } else {
       const nsAFlatCString& style=
-        nsCSSProps::SearchKeywordTable(outlineStyle,
-                                       nsCSSProps::kBorderStyleKTable);
+        nsCSSProps::ValueToKeyword(outlineStyle,
+                                   nsCSSProps::kBorderStyleKTable);
       val->SetIdent(style);
     }
   }
@@ -1464,8 +1464,8 @@ nsComputedDOMStyle::GetListStylePosition(nsIFrame *aFrame,
 
   if (list) {
     const nsAFlatCString& style =
-      nsCSSProps::SearchKeywordTable(list->mListStylePosition,
-                                     nsCSSProps::kListStylePositionKTable);
+      nsCSSProps::ValueToKeyword(list->mListStylePosition,
+                                 nsCSSProps::kListStylePositionKTable);
     val->SetIdent(style);
   }
 
@@ -1487,8 +1487,8 @@ nsComputedDOMStyle::GetListStyleType(nsIFrame *aFrame,
       val->SetIdent(nsLayoutAtoms::none);
     } else {
       const nsAFlatCString& style =
-        nsCSSProps::SearchKeywordTable(list->mListStyleType,
-                                       nsCSSProps::kListStyleKTable);
+        nsCSSProps::ValueToKeyword(list->mListStyleType,
+                                   nsCSSProps::kListStyleKTable);
       val->SetIdent(style);
     }
   }
@@ -1605,8 +1605,8 @@ nsComputedDOMStyle::GetVerticalAlign(nsIFrame *aFrame,
       case eStyleUnit_Enumerated:
         {
           const nsAFlatCString& align =
-            nsCSSProps::SearchKeywordTable(text->mVerticalAlign.GetIntValue(),
-                                           nsCSSProps::kVerticalAlignKTable);
+            nsCSSProps::ValueToKeyword(text->mVerticalAlign.GetIntValue(),
+                                       nsCSSProps::kVerticalAlignKTable);
           val->SetIdent(align);
           break;
         }
@@ -1648,8 +1648,8 @@ nsComputedDOMStyle::GetTextAlign(nsIFrame *aFrame,
 
   if (text) {
     const nsAFlatCString& align=
-      nsCSSProps::SearchKeywordTable(text->mTextAlign,
-                                     nsCSSProps::kTextAlignKTable);
+      nsCSSProps::ValueToKeyword(text->mTextAlign,
+                                 nsCSSProps::kTextAlignKTable);
     val->SetIdent(align);
   }
 
@@ -1675,8 +1675,8 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
       nsAutoString decorationString;
       if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
         const nsAFlatCString& decoration=
-          nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                                         nsCSSProps::kTextDecorationKTable);
+          nsCSSProps::ValueToKeyword(NS_STYLE_TEXT_DECORATION_UNDERLINE,
+                                     nsCSSProps::kTextDecorationKTable);
         decorationString.AppendWithConversion(decoration.get());
       }
       if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_OVERLINE) {
@@ -1684,8 +1684,8 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
           decorationString.Append(PRUnichar(' '));
         }
         const nsAFlatCString& decoration=
-          nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_OVERLINE,
-                                         nsCSSProps::kTextDecorationKTable);
+          nsCSSProps::ValueToKeyword(NS_STYLE_TEXT_DECORATION_OVERLINE,
+                                     nsCSSProps::kTextDecorationKTable);
         decorationString.AppendWithConversion(decoration.get());
       }
       if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
@@ -1693,8 +1693,8 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
           decorationString.Append(PRUnichar(' '));
         }
         const nsAFlatCString& decoration=
-          nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
-                                         nsCSSProps::kTextDecorationKTable);
+          nsCSSProps::ValueToKeyword(NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+                                     nsCSSProps::kTextDecorationKTable);
         decorationString.AppendWithConversion(decoration.get());
       }
       if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK) {
@@ -1702,8 +1702,8 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
           decorationString.Append(PRUnichar(' '));
         }
         const nsAFlatCString& decoration=
-          nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_BLINK,
-                                         nsCSSProps::kTextDecorationKTable);
+          nsCSSProps::ValueToKeyword(NS_STYLE_TEXT_DECORATION_BLINK,
+                                     nsCSSProps::kTextDecorationKTable);
         decorationString.AppendWithConversion(decoration.get());
       }
       val->SetString(decorationString);
@@ -1763,8 +1763,8 @@ nsComputedDOMStyle::GetTextTransform(nsIFrame *aFrame,
 
   if (text && text->mTextTransform != NS_STYLE_TEXT_TRANSFORM_NONE) {
     const nsAFlatCString& textTransform =
-      nsCSSProps::SearchKeywordTable(text->mTextTransform,
-                                     nsCSSProps::kTextTransformKTable);
+      nsCSSProps::ValueToKeyword(text->mTextTransform,
+                                 nsCSSProps::kTextTransformKTable);
     val->SetIdent(textTransform);
   } else {
     val->SetIdent(nsLayoutAtoms::none);
@@ -1823,8 +1823,8 @@ nsComputedDOMStyle::GetWhiteSpace(nsIFrame *aFrame,
 
   if (text && text->mWhiteSpace != NS_STYLE_WHITESPACE_NORMAL) {
     const nsAFlatCString& whiteSpace =
-      nsCSSProps::SearchKeywordTable(text->mWhiteSpace,
-                                     nsCSSProps::kWhitespaceKTable);
+      nsCSSProps::ValueToKeyword(text->mWhiteSpace,
+                                 nsCSSProps::kWhitespaceKTable);
     val->SetIdent(whiteSpace);
   } else {
     val->SetIdent(nsLayoutAtoms::normal);
@@ -1846,8 +1846,8 @@ nsComputedDOMStyle::GetVisibility(nsIFrame *aFrame,
 
   if (visibility) {
     const nsAFlatCString& value=
-      nsCSSProps::SearchKeywordTable(visibility->mVisible,
-                                     nsCSSProps::kVisibilityKTable);
+      nsCSSProps::ValueToKeyword(visibility->mVisible,
+                                 nsCSSProps::kVisibilityKTable);
     val->SetIdent(value);
   }
 
@@ -1867,8 +1867,8 @@ nsComputedDOMStyle::GetDirection(nsIFrame *aFrame,
 
   if (visibility) {
     const nsAFlatCString & direction =
-      nsCSSProps::SearchKeywordTable(visibility->mDirection,
-                                     nsCSSProps::kDirectionKTable);
+      nsCSSProps::ValueToKeyword(visibility->mDirection,
+                                 nsCSSProps::kDirectionKTable);
     val->SetIdent(direction);
   }
 
@@ -1887,8 +1887,8 @@ nsComputedDOMStyle::GetUnicodeBidi(nsIFrame *aFrame,
 
   if (text && text->mUnicodeBidi != NS_STYLE_UNICODE_BIDI_NORMAL) {
     const nsAFlatCString& bidi =
-      nsCSSProps::SearchKeywordTable(text->mUnicodeBidi,
-                                     nsCSSProps::kUnicodeBidiKTable);
+      nsCSSProps::ValueToKeyword(text->mUnicodeBidi,
+                                 nsCSSProps::kUnicodeBidiKTable);
     val->SetIdent(bidi);
   } else {
     val->SetIdent(nsLayoutAtoms::normal);
@@ -1912,8 +1912,8 @@ nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
       val->SetIdent(nsLayoutAtoms::autoAtom);
     } else {
       const nsAFlatCString& cursor =
-        nsCSSProps::SearchKeywordTable(ui->mCursor,
-                                       nsCSSProps::kCursorKTable);
+        nsCSSProps::ValueToKeyword(ui->mCursor,
+                                   nsCSSProps::kCursorKTable);
       val->SetIdent(cursor);
     }
   }
@@ -1938,8 +1938,8 @@ nsComputedDOMStyle::GetAppearance(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& appearanceIdent =
-    nsCSSProps::SearchKeywordTable(appearance,
-                                   nsCSSProps::kAppearanceKTable);
+    nsCSSProps::ValueToKeyword(appearance,
+                               nsCSSProps::kAppearanceKTable);
   val->SetIdent(appearanceIdent);
 
   return CallQueryInterface(val, aValue);
@@ -1962,8 +1962,8 @@ nsComputedDOMStyle::GetBoxAlign(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& boxAlignIdent =
-    nsCSSProps::SearchKeywordTable(boxAlign,
-                                   nsCSSProps::kBoxAlignKTable);
+    nsCSSProps::ValueToKeyword(boxAlign,
+                               nsCSSProps::kBoxAlignKTable);
   val->SetIdent(boxAlignIdent);
 
   return CallQueryInterface(val, aValue);
@@ -1985,8 +1985,8 @@ nsComputedDOMStyle::GetBoxDirection(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& boxDirectionIdent =
-    nsCSSProps::SearchKeywordTable(boxDirection,
-                                   nsCSSProps::kBoxDirectionKTable);
+    nsCSSProps::ValueToKeyword(boxDirection,
+                               nsCSSProps::kBoxDirectionKTable);
   val->SetIdent(boxDirectionIdent);
 
   return CallQueryInterface(val, aValue);
@@ -2048,8 +2048,8 @@ nsComputedDOMStyle::GetBoxOrient(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& boxOrientIdent =
-    nsCSSProps::SearchKeywordTable(boxOrient,
-                                   nsCSSProps::kBoxOrientKTable);
+    nsCSSProps::ValueToKeyword(boxOrient,
+                               nsCSSProps::kBoxOrientKTable);
   val->SetIdent(boxOrientIdent);
 
   return CallQueryInterface(val, aValue);
@@ -2071,8 +2071,8 @@ nsComputedDOMStyle::GetBoxPack(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& boxPackIdent =
-    nsCSSProps::SearchKeywordTable(boxPack,
-                                   nsCSSProps::kBoxPackKTable);
+    nsCSSProps::ValueToKeyword(boxPack,
+                               nsCSSProps::kBoxPackKTable);
   val->SetIdent(boxPackIdent);
 
   return CallQueryInterface(val, aValue);
@@ -2095,8 +2095,8 @@ nsComputedDOMStyle::GetBoxSizing(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& boxSizingIdent =
-    nsCSSProps::SearchKeywordTable(boxSizing,
-                                   nsCSSProps::kBoxSizingKTable);
+    nsCSSProps::ValueToKeyword(boxSizing,
+                               nsCSSProps::kBoxSizingKTable);
   val->SetIdent(boxSizingIdent);
 
   return CallQueryInterface(val, aValue);
@@ -2118,8 +2118,8 @@ nsComputedDOMStyle::GetFloatEdge(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& floatEdgeIdent =
-    nsCSSProps::SearchKeywordTable(floatEdge,
-                                   nsCSSProps::kFloatEdgeKTable);
+    nsCSSProps::ValueToKeyword(floatEdge,
+                               nsCSSProps::kFloatEdgeKTable);
   val->SetIdent(floatEdgeIdent);
 
   return CallQueryInterface(val, aValue);
@@ -2144,8 +2144,8 @@ nsComputedDOMStyle::GetUserFocus(nsIFrame *aFrame,
       val->SetIdent(userFocusIdent);
     } else {
       const nsAFlatCString& userFocusIdent =
-        nsCSSProps::SearchKeywordTable(uiData->mUserFocus,
-                                       nsCSSProps::kUserFocusKTable);
+        nsCSSProps::ValueToKeyword(uiData->mUserFocus,
+                                   nsCSSProps::kUserFocusKTable);
       val->SetIdent(userFocusIdent);
     }
   } else {
@@ -2175,8 +2175,8 @@ nsComputedDOMStyle::GetUserInput(nsIFrame *aFrame,
       val->SetIdent(userInputIdent);
     } else {
       const nsAFlatCString& userInputIdent =
-        nsCSSProps::SearchKeywordTable(uiData->mUserInput,
-                                       nsCSSProps::kUserInputKTable);
+        nsCSSProps::ValueToKeyword(uiData->mUserInput,
+                                   nsCSSProps::kUserInputKTable);
       val->SetIdent(userInputIdent);
     }
   } else {
@@ -2205,8 +2205,8 @@ nsComputedDOMStyle::GetUserModify(nsIFrame *aFrame,
   }
 
   const nsAFlatCString& userModifyIdent =
-    nsCSSProps::SearchKeywordTable(userModify,
-                                   nsCSSProps::kUserModifyKTable);
+    nsCSSProps::ValueToKeyword(userModify,
+                               nsCSSProps::kUserModifyKTable);
   val->SetIdent(userModifyIdent);
 
   return CallQueryInterface(val, aValue);
@@ -2229,8 +2229,8 @@ nsComputedDOMStyle::GetUserSelect(nsIFrame *aFrame,
       val->SetIdent(userSelectIdent);
     } else {
       const nsAFlatCString& userSelectIdent =
-        nsCSSProps::SearchKeywordTable(uiData->mUserSelect,
-                                       nsCSSProps::kUserSelectKTable);
+        nsCSSProps::ValueToKeyword(uiData->mUserSelect,
+                                   nsCSSProps::kUserSelectKTable);
       val->SetIdent(userSelectIdent);
     }
   } else {
@@ -2258,8 +2258,8 @@ nsComputedDOMStyle::GetDisplay(nsIFrame *aFrame,
       val->SetIdent(nsLayoutAtoms::none);
     } else {
       const nsAFlatCString& display =
-        nsCSSProps::SearchKeywordTable(displayData->mDisplay,
-                                       nsCSSProps::kDisplayKTable);
+        nsCSSProps::ValueToKeyword(displayData->mDisplay,
+                                   nsCSSProps::kDisplayKTable);
       val->SetIdent(display);
     }
   }
@@ -2280,8 +2280,8 @@ nsComputedDOMStyle::GetPosition(nsIFrame *aFrame,
 
   if (display) {
     const nsAFlatCString& position =
-      nsCSSProps::SearchKeywordTable(display->mPosition,
-                                     nsCSSProps::kPositionKTable);
+      nsCSSProps::ValueToKeyword(display->mPosition,
+                                 nsCSSProps::kPositionKTable);
     val->SetIdent(position);
   }
 
@@ -2381,8 +2381,8 @@ nsComputedDOMStyle::GetOverflow(nsIFrame *aFrame,
   if (display && display->mOverflowX == display->mOverflowY) {
     if (display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
       const nsAFlatCString& overflow =
-        nsCSSProps::SearchKeywordTable(display->mOverflowX,
-                                       nsCSSProps::kOverflowKTable);
+        nsCSSProps::ValueToKeyword(display->mOverflowX,
+                                   nsCSSProps::kOverflowKTable);
       val->SetIdent(overflow);
     } else {
       val->SetIdent(nsLayoutAtoms::autoAtom);
@@ -2404,8 +2404,8 @@ nsComputedDOMStyle::GetOverflowX(nsIFrame *aFrame,
 
   if (display && display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
     const nsAFlatCString& overflow =
-      nsCSSProps::SearchKeywordTable(display->mOverflowX,
-                                     nsCSSProps::kOverflowSubKTable);
+      nsCSSProps::ValueToKeyword(display->mOverflowX,
+                                 nsCSSProps::kOverflowSubKTable);
     val->SetIdent(overflow);
   } else {
     val->SetIdent(nsLayoutAtoms::autoAtom);
@@ -2426,8 +2426,8 @@ nsComputedDOMStyle::GetOverflowY(nsIFrame *aFrame,
 
   if (display && display->mOverflowY != NS_STYLE_OVERFLOW_AUTO) {
     const nsAFlatCString& overflow =
-      nsCSSProps::SearchKeywordTable(display->mOverflowY,
-                                     nsCSSProps::kOverflowSubKTable);
+      nsCSSProps::ValueToKeyword(display->mOverflowY,
+                                 nsCSSProps::kOverflowSubKTable);
     val->SetIdent(overflow);
   } else {
     val->SetIdent(nsLayoutAtoms::autoAtom);
@@ -3387,8 +3387,8 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
       case eStyleUnit_Chars:
         {
           const nsAFlatCString& width=
-            nsCSSProps::SearchKeywordTable(coord.GetIntValue(),
-                                           nsCSSProps::kBorderWidthKTable);
+            nsCSSProps::ValueToKeyword(coord.GetIntValue(),
+                                       nsCSSProps::kBorderWidthKTable);
           val->SetIdent(width);
           break;
         }
@@ -3499,8 +3499,8 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide, nsIFrame *aFrame,
 
   if (borderStyle != NS_STYLE_BORDER_STYLE_NONE) {
     const nsAFlatCString& style=
-      nsCSSProps::SearchKeywordTable(borderStyle,
-                                     nsCSSProps::kBorderStyleKTable);
+      nsCSSProps::ValueToKeyword(borderStyle,
+                                 nsCSSProps::kBorderStyleKTable);
     val->SetIdent(style);
   } else {
     val->SetIdent(nsLayoutAtoms::none);
