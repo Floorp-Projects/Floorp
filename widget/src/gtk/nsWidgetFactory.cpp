@@ -101,12 +101,7 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIFACTORY
 
     nsWidgetFactory(const nsCID &aClass);   
     virtual ~nsWidgetFactory();   
@@ -119,39 +114,15 @@ private:
 
 nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
 {   
- NS_INIT_REFCNT();
- mClassID = aClass;
+    NS_INIT_ISUPPORTS();
+    mClassID = aClass;
 }   
 
 nsWidgetFactory::~nsWidgetFactory()   
 {   
 }   
 
-nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,   
-                                         void **aResult)   
-{   
-  if (NULL == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aResult = NULL;
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports *)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory *)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-  return NS_OK;
-}   
-
-NS_IMPL_ADDREF(nsWidgetFactory)
-NS_IMPL_RELEASE(nsWidgetFactory)
+NS_IMPL_ISUPPORTS(nsWidgetFactory, NS_GET_IID(nsIFactory))
 
 nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  
@@ -261,12 +232,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         return NS_ERROR_OUT_OF_MEMORY;  
     }  
 
+    NS_ADDREF(inst);
     nsresult res = inst->QueryInterface(aIID, aResult);
-
-    if (res != NS_OK) {  
-        // We didn't get the right interface, so clean up  
-        delete inst;  
-    }
+    NS_RELEASE(inst);
 
     return res;
 
