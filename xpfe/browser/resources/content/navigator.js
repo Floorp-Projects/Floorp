@@ -867,7 +867,7 @@ function OpenSearch(tabName, searchStr)
 {
 	dump("OpenSearch searchStr: '" + searchStr + "'\n\n");
 
-	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+	window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
 }
 
   function BrowserNewWindow()
