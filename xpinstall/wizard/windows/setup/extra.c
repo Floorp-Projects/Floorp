@@ -702,8 +702,10 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
 HRESULT LaunchApps()
 {
   DWORD     dwIndex0;
+  BOOL      bArchiveFound;
   siC       *siCObject = NULL;
-  char      szArchiveName[MAX_BUF];
+  char      szArchive[MAX_BUF];
+  char      szBuf[MAX_BUF];
   char      szMsg[MAX_BUF];
 
   if(NS_LoadString(hSetupRscInst, IDS_MSG_CONFIGURING, szMsg, MAX_BUF) != WIZ_OK)
@@ -716,15 +718,33 @@ HRESULT LaunchApps()
     /* launch 3rd party executable */
     if((siCObject->dwAttributes & SIC_SELECTED) && (siCObject->dwAttributes & SIC_LAUNCHAPP))
     {
-      lstrcpy(szArchiveName, szTempDir);
-      AppendBackSlash(szArchiveName, sizeof(szArchiveName));
-      lstrcat(szArchiveName, siCObject->szArchiveName);
-
-      if(FileExists(szArchiveName))
+      bArchiveFound = TRUE;
+      lstrcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
+      AppendBackSlash(szArchive, sizeof(szArchive));
+      lstrcat(szArchive, siCObject->szArchiveName);
+      if(!FileExists(szArchive))
       {
-        ShowMessage(szMsg, TRUE);
-        WinSpawn(szArchiveName, siCObject->szParameter, szTempDir, SW_SHOWNORMAL, TRUE);
-        ShowMessage(szMsg, FALSE);
+        lstrcpy(szArchive, szSetupDir);
+        AppendBackSlash(szArchive, sizeof(szArchive));
+        lstrcat(szArchive, siCObject->szArchiveName);
+        if(!FileExists(szArchive))
+        {
+          lstrcpy(szArchive, szTempDir);
+          AppendBackSlash(szArchive, sizeof(szArchive));
+          lstrcat(szArchive, siCObject->szArchiveName);
+          if(!FileExists(szArchive))
+          {
+            bArchiveFound = FALSE;
+          }
+        }
+      }
+
+      if(bArchiveFound)
+      {
+        wsprintf(szBuf, szMsg, siCObject->szArchiveName);
+        ShowMessage(szBuf, TRUE);
+        WinSpawn(szArchive, siCObject->szParameter, szTempDir, SW_SHOWNORMAL, TRUE);
+        ShowMessage(szBuf, FALSE);
       }
     }
     ++dwIndex0;
