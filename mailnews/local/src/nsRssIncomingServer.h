@@ -41,8 +41,6 @@
 #include "nsILocalMailIncomingServer.h"
 #include "nsMsgIncomingServer.h"
 
-#include "nsIXMLHttpRequest.h"
-#include "nsIDOMEventListener.h"
 
 class nsRssIncomingServer : public nsMsgIncomingServer,
                                  public nsIRssIncomingServer,
@@ -59,9 +57,6 @@ public:
     nsRssIncomingServer();
     virtual ~nsRssIncomingServer();
 
-private:
-    nsresult Load(const char *aURI);    
-    nsCOMPtr<nsIXMLHttpRequest> mXMLHttpRequest;
 };
 
 #endif /* __nsRssIncomingServer_h */

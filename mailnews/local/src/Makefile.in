@@ -64,8 +64,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  msgimap \
 		  nkcache \
-		  xmlextras \
-		  dom \
 		  $(NULL)
 
 CPPSRCS		= \
