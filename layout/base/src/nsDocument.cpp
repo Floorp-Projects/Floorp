@@ -1055,18 +1055,44 @@ nsISelection * nsDocument::GetSelection() {
   * Selects all the Content
  */
 void nsDocument::SelectAll() {
-  nsIContent * start = mRootContent;
-  nsIContent * end   = mRootContent;
+  nsIContent * start = nsnull;
+  nsIContent * end   = nsnull;
+
+  nsString bodyStr("BODY");
+  PRUint32 i;
+  for (i=0;i<mRootContent->ChildCount();i++) {
+    nsIContent * child = mRootContent->ChildAt(i);
+    PRBool isSynthetic;
+    child->IsSynthetic(isSynthetic);
+    if (!isSynthetic) {
+      nsIAtom * atom = child->GetTag();
+      if (bodyStr.EqualsIgnoreCase(atom)) {
+        start = child;
+        end   = child;
+        break;
+      }
+
+    }
+    NS_RELEASE(child);
+  }
+
+  if (start == nsnull) {
+    return;
+  }
 
   // Find Very first Piece of Content
   while (start->ChildCount() > 0) {
-    start = start->ChildAt(0);
+    nsIContent * child = start;
+    start = child->ChildAt(0);
+    NS_RELEASE(child);
   }
 
   // Last piece of Content
   PRInt32 count = end->ChildCount();
   while (count > 0) {
-    end = end->ChildAt(count-1);
+    nsIContent * child = end;
+    end   = child->ChildAt(count-1);
+    NS_RELEASE(child);
     count = end->ChildCount();
   }
   nsSelectionRange * range    = mSelection->GetRange();
@@ -1076,7 +1102,6 @@ void nsDocument::SelectAll() {
   endPnt->SetPoint(end, -1, PR_FALSE);
 
 }
-
 void nsDocument::TraverseTree(nsString   & aText,  
                               nsIContent * aContent, 
                               nsIContent * aStart, 
@@ -1139,7 +1164,11 @@ void nsDocument::GetSelectionText(nsString & aText) {
   nsSelectionPoint * endPnt   = range->GetEndPoint();
 
   PRBool inRange = PR_FALSE;
-  TraverseTree(aText, mRootContent, startPnt->GetContent(), endPnt->GetContent(), inRange);
+  nsIContent * startContent = startPnt->GetContent();
+  nsIContent * endContent   = endPnt->GetContent();
+  TraverseTree(aText, mRootContent, startContent, endContent, inRange);
+  NS_IF_RELEASE(startContent);
+  NS_IF_RELEASE(endContent);
 }
 
 
@@ -1267,10 +1296,16 @@ nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
   {
     nsIContent* child = aStartNode->ChildAt(index);
     nsIContent* content = FindContent(child,aTest1,aTest2);
-    if (content != nsnull)
+    if (content != nsnull) {
+      NS_IF_RELEASE(child);
       return content;
-    if (child == aTest1 || child == aTest2)
+    }
+    if (child == aTest1 || child == aTest2) {
+      NS_IF_RELEASE(content);
       return child;
+    }
+    NS_IF_RELEASE(child);
+    NS_IF_RELEASE(content);
   }
   return nsnull;
 }
@@ -1313,6 +1348,8 @@ PRBool nsDocument::IsInSelection(const nsIContent* aContent) const
       nsIContent* startContent = startPoint->GetContent();
       nsIContent* endContent = endPoint->GetContent();
       result = IsInRange(startContent, endContent, aContent);
+      NS_IF_RELEASE(startContent);
+      NS_IF_RELEASE(endContent);
     }
   }
   return result;
@@ -1330,6 +1367,7 @@ PRBool nsDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCu
     nsIContent* test = FindContent(mRootContent,aNewContent,aCurrentContent);
     if (test == aNewContent)
       result = PR_TRUE;
+    NS_RELEASE(test);
   }
   return result;
 }
@@ -1351,6 +1389,7 @@ nsIContent* nsDocument::GetPrevContent(const nsIContent *aContent) const
       else
         result = GetPrevContent(parent);
     }
+    NS_IF_RELEASE(parent);
   }
   return result;
 }
@@ -1371,12 +1410,15 @@ nsIContent* nsDocument::GetNextContent(const nsIContent *aContent) const
         result = parent->ChildAt(index+1);
         // Get first child down the tree
         while (result->ChildCount() > 0) {
-          result = result->ChildAt(0);
+          nsIContent * old = result;
+          result = old->ChildAt(0);
+          NS_RELEASE(old);
         }
       } else {
         result = GetNextContent(parent);
       }
     }
+    NS_IF_RELEASE(parent);
   }
   return result;
 }
