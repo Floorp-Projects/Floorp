@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -79,9 +79,20 @@ class nsAutoLock {
 private:
     PRLock* mLock;
 
-    // XXX not allowed
+    // Not meant to be implemented. This makes it a compiler error to
+    // construct or assign an nsAutoLock object incorrectly.
     nsAutoLock(void) {}
     nsAutoLock(nsAutoLock& aLock) {}
+    nsAutoLock& operator =(nsAutoLock& aLock) {
+        return *this;
+    }
+
+    // Not meant to be implemented. This makes it a compiler error to
+    // attempt to create an nsAutoLock object on the heap.
+    static void* operator new(size_t size) {
+        return nsnull;
+    }
+    static void operator delete(void* memory) {}
 
 public:
     nsAutoLock(PRLock* aLock) : mLock(aLock) {
