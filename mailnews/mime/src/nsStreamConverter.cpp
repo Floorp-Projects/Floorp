@@ -574,8 +574,9 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutListener, nsIChannel *aChannel)
 {
-  nsresult rv = NS_OK;
-  
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsresult rv = NS_OK; 
   mOutListener = aOutListener;
   CRTFREEIF(mDesiredOutputType);
   
