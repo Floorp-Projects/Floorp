@@ -1618,9 +1618,9 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   // get Last-Modified header for plugin info
   if (httpChannel) 
   {
-    char * lastModified = nsnull;    
+    char * lastModified = nsnull;
     if (NS_SUCCEEDED(httpChannel->GetResponseHeader("last-modified", &lastModified)) &&
-        lastModified) 
+        lastModified)
     {
       PRTime time64;
       PR_ParseTimeString(lastModified, PR_TRUE, &time64);  //convert string time to interger time
