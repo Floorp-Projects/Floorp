@@ -51,7 +51,7 @@ Rights Reserved.
   <toolbox>
      <menubar>
     <menu value="&fileMenu.label;">
-	  <menupopup id="fileMenu">
+	  <menupopup id="fileMenuPopup">
       <menu value="&newMenu.label;">
         <menupopup>
 		<menuitem value="&newNavCmd.label;" oncommand="NewBrowserWindow();"/>

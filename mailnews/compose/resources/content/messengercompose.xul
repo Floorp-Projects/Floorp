@@ -84,7 +84,7 @@ Rights Reserved.
 <toolbox>
   <menubar>
 	<menu value="&fileMenu.label;">
-	    <menupopup id="fileMenu">
+	    <menupopup id="fileMenuPopup">
 		<menuitem value="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
 		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
 		<menuitem value="&saveAsCmd.label;" oncommand="SaveAsDraft()"/>

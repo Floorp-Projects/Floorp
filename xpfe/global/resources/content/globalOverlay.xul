@@ -10,7 +10,7 @@
 <html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
 	<!-- File Menu (Exit) -->
-	<menupopup id="fileMenu">
+	<menupopup id="fileMenuPopup">
 		<menuitem value="&quitApplicationCmd.label;" oncommand="goQuitApplication()"/>
 	</menupopup>
 	
