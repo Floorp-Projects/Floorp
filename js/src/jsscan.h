@@ -182,7 +182,7 @@ struct JSTokenStream {
 #define TSF_ERROR       0x01            /* fatal error while compiling */
 #define TSF_EOF         0x02            /* hit end of file */
 #define TSF_NEWLINES    0x04            /* tokenize newlines */
-#define TSF_REGEXP      0x08            /* looking for a regular expression */
+#define TSF_OPERAND     0x08            /* looking for operand, not operator */
 #define TSF_NLFLAG      0x20            /* last linebuf ended with \n */
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
 #define TSF_DIRTYLINE   0x80            /* non-whitespace since start of line */

@@ -996,13 +996,13 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         return NULL;
     PN_INIT_LIST(pn);
 
-    ts->flags |= TSF_REGEXP;
+    ts->flags |= TSF_OPERAND;
     while ((tt = js_PeekToken(cx, ts)) > TOK_EOF && tt != TOK_RC) {
-        ts->flags &= ~TSF_REGEXP;
+        ts->flags &= ~TSF_OPERAND;
         pn2 = Statement(cx, ts, tc);
         if (!pn2)
             return NULL;
-        ts->flags |= TSF_REGEXP;
+        ts->flags |= TSF_OPERAND;
 
         /* If compiling top-level statements, emit as we go to save space. */
         if (!tc->topStmt && (tc->flags & TCF_COMPILING)) {
@@ -1037,7 +1037,7 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             PN_APPEND(pn, pn2);
         }
     }
-    ts->flags &= ~TSF_REGEXP;
+    ts->flags &= ~TSF_OPERAND;
     if (tt == TOK_ERROR)
         return NULL;
 
@@ -1136,9 +1136,9 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn->pn_slot = -1;
     pn->pn_attrs = 0;
 
-    ts->flags |= TSF_REGEXP;
+    ts->flags |= TSF_OPERAND;
     while ((tt = js_GetToken(cx, ts)) == TOK_DOT || tt == TOK_LB) {
-        ts->flags &= ~TSF_REGEXP;
+        ts->flags &= ~TSF_OPERAND;
         if (pn->pn_op == JSOP_IMPORTALL)
             goto bad_import;
 
@@ -1178,9 +1178,9 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         }
 
         pn = pn2;
-        ts->flags |= TSF_REGEXP;
+        ts->flags |= TSF_OPERAND;
     }
-    ts->flags &= ~TSF_REGEXP;
+    ts->flags &= ~TSF_OPERAND;
     if (tt == TOK_ERROR)
         return NULL;
     js_UngetToken(ts);
@@ -1215,9 +1215,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSStmtInfo stmtInfo, *stmt, *stmt2;
     JSAtom *label;
 
-    ts->flags |= TSF_REGEXP;
+    ts->flags |= TSF_OPERAND;
     tt = js_GetToken(cx, ts);
-    ts->flags &= ~TSF_REGEXP;
+    ts->flags &= ~TSF_OPERAND;
 
 #if JS_HAS_GETTER_SETTER
     if (tt == TOK_NAME) {
@@ -1457,9 +1457,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_PushStatement(tc, &stmtInfo, STMT_FOR_LOOP, -1);
 
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
-        ts->flags |= TSF_REGEXP;
+        ts->flags |= TSF_OPERAND;
         tt = js_PeekToken(cx, ts);
-        ts->flags &= ~TSF_REGEXP;
+        ts->flags &= ~TSF_OPERAND;
         if (tt == TOK_SEMI) {
             /* No initializer -- set first kid of left sub-node to null. */
             pn1 = NULL;
@@ -1536,9 +1536,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         } else {
             /* Parse the loop condition or null into pn2. */
             MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-            ts->flags |= TSF_REGEXP;
+            ts->flags |= TSF_OPERAND;
             tt = js_PeekToken(cx, ts);
-            ts->flags &= ~TSF_REGEXP;
+            ts->flags &= ~TSF_OPERAND;
             if (tt == TOK_SEMI) {
                 pn2 = NULL;
             } else {
@@ -1549,9 +1549,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
             /* Parse the update expression or null into pn3. */
             MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_COND);
-            ts->flags |= TSF_REGEXP;
+            ts->flags |= TSF_OPERAND;
             tt = js_PeekToken(cx, ts);
-            ts->flags &= ~TSF_REGEXP;
+            ts->flags &= ~TSF_OPERAND;
             if (tt == TOK_RP) {
                 pn3 = NULL;
             } else {
@@ -1851,9 +1851,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
 
         /* This is ugly, but we don't want to require a semicolon. */
-        ts->flags |= TSF_REGEXP;
+        ts->flags |= TSF_OPERAND;
         tt = js_PeekTokenSameLine(cx, ts);
-        ts->flags &= ~TSF_REGEXP;
+        ts->flags &= ~TSF_OPERAND;
         if (tt == TOK_ERROR)
             return NULL;
 
@@ -2569,9 +2569,9 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSTokenType tt;
     JSParseNode *pn, *pn2;
 
-    ts->flags |= TSF_REGEXP;
+    ts->flags |= TSF_OPERAND;
     tt = js_GetToken(cx, ts);
-    ts->flags &= ~TSF_REGEXP;
+    ts->flags &= ~TSF_OPERAND;
 
     switch (tt) {
       case TOK_UNARYOP:
@@ -2654,9 +2654,9 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 {
     JSBool matched;
 
-    ts->flags |= TSF_REGEXP;
+    ts->flags |= TSF_OPERAND;
     matched = js_MatchToken(cx, ts, TOK_RP);
-    ts->flags &= ~TSF_REGEXP;
+    ts->flags &= ~TSF_OPERAND;
     if (!matched) {
         do {
             JSParseNode *argNode = AssignExpr(cx, ts, tc);
@@ -2684,9 +2684,9 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     CHECK_RECURSION();
 
     /* Check for new expression first. */
-    ts->flags |= TSF_REGEXP;
+    ts->flags |= TSF_OPERAND;
     tt = js_PeekToken(cx, ts);
-    ts->flags &= ~TSF_REGEXP;
+    ts->flags &= ~TSF_OPERAND;
     if (tt == TOK_NEW) {
         (void) js_GetToken(cx, ts);
 
@@ -2812,9 +2812,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     CHECK_RECURSION();
 
-    ts->flags |= TSF_REGEXP;
+    ts->flags |= TSF_OPERAND;
     tt = js_GetToken(cx, ts);
-    ts->flags &= ~TSF_REGEXP;
+    ts->flags &= ~TSF_OPERAND;
 
 #if JS_HAS_GETTER_SETTER
     if (tt == TOK_NAME) {
@@ -2853,14 +2853,14 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
             PN_INIT_LIST(pn);
 
-        ts->flags |= TSF_REGEXP;
+        ts->flags |= TSF_OPERAND;
         matched = js_MatchToken(cx, ts, TOK_RB);
-        ts->flags &= ~TSF_REGEXP;
+        ts->flags &= ~TSF_OPERAND;
         if (!matched) {
             for (atomIndex = 0; atomIndex < ATOM_INDEX_LIMIT; atomIndex++) {
-                ts->flags |= TSF_REGEXP;
+                ts->flags |= TSF_OPERAND;
                 tt = js_PeekToken(cx, ts);
-                ts->flags &= ~TSF_REGEXP;
+                ts->flags &= ~TSF_OPERAND;
                 if (tt == TOK_RB) {
                     pn->pn_extra |= PNX_ENDCOMMA;
                     break;
