@@ -16,7 +16,7 @@
 <!ENTITY disableCookies.label           "Block cookies">
 <!ENTITY disableCookies.accesskey       "B">
 
-<!ENTITY cookieLifetimePolicy.label     "Cookie Lifetime Policy">
+<!ENTITY cookieRetentionPolicy.label    "Cookie Retention Policy">
 
 <!ENTITY acceptNormally.label           "Accept cookies normally">
 <!ENTITY acceptNormally.accesskey       "n">
@@ -38,6 +38,6 @@
 
 <!ENTITY viewCookies.label              "Cookie Manager">
 <!ENTITY viewCookies.accesskey          "M">
-<!ENTITY viewP3P.label                  "View">
+<!ENTITY viewP3P.label                  "View Privacy Settings">
 <!ENTITY viewP3P.accesskey              "V">
 

@@ -89,23 +89,21 @@
     var cookieLifetime = document.getElementById("networkCookieLifetime");
     var lifetimeDays = document.getElementById("lifetimeDays");
     var alwaysAcceptSession = document.getElementById("alwaysAcceptSession");
-    if (cookieLifetime.value == ask_before_accepting) {
-      lifetimeDays.disabled = true;
-      alwaysAcceptSession.disabled = false;
-    } else if (cookieLifetime.value == accept_for_n_days) {
-      lifetimeDays.disabled = false;
-      alwaysAcceptSession.disabled = true;      
-    } else {
-      lifetimeDays.disabled = true;
-      alwaysAcceptSession.disabled = true;
-    }
+
+    var cookiesDisabled = (cookieBehavior.value == cookies_disabled);
+    cookieLifetime.disabled = cookiesDisabled;
+    lifetimeDays.disabled = cookiesDisabled || (cookieLifetime.value != accept_for_n_days);
+    alwaysAcceptSession.disabled = cookiesDisabled || (cookieLifetime.value != ask_before_accepting);
 
     if (parent.hPrefWindow.getPrefIsLocked(alwaysAcceptSession.getAttribute("prefstring")) )
       alwaysAcceptSession.disabled = true;
-      
+
     if (parent.hPrefWindow.getPrefIsLocked(lifetimeDays.getAttribute("prefstring")) )
       lifetimeDays.disabled = true;
-    
+
+    if (parent.hPrefWindow.getPrefIsLocked(cookieLifetime.getAttribute("prefstring")) )
+      cookieLifetime.disabled = true;
+
     if (!lifetimeDays.disabled && setFocus)
       lifetimeDays.focus();
   }
@@ -132,7 +130,7 @@
     </radiogroup>
   </groupbox>
   <groupbox id="networkCookieLifetimePolicy">
-    <caption label="&cookieLifetimePolicy.label;"/>
+    <caption label="&cookieRetentionPolicy.label;"/>
     <radiogroup id="networkCookieLifetime"
                 prefstring="network.cookie.lifetimePolicy">
       <radio value="0" label="&acceptNormally.label;" accesskey="&acceptNormally.accesskey;" oncommand="setDisables(false);"/>
@@ -142,7 +140,7 @@
                oncommand="setDisables(true);"/>
         <textbox id="lifetimeDays" pref="true" size="4"
                  preftype="int" prefstring="network.cookie.lifetime.days"/>
-        <label value="&days.label;" for="lifetimeDays"/>
+        <label value="&days.label;" control="lifetimeDays"/>
       </hbox>
       <hbox>
         <radio value="1" label="&warnAboutCookies.label;" 
