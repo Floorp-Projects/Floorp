@@ -629,7 +629,7 @@ PRInt32 nsZipArchive::BuildFileList()
 //---------------------------------------------
 // nsZipArchive::GetFileItem
 //---------------------------------------------
-const nsZipItem*  nsZipArchive::GetFileItem( const char * aFilename )
+nsZipItem*  nsZipArchive::GetFileItem( const char * aFilename )
 {
   PR_ASSERT( aFilename != 0 );
 
