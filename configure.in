@@ -1903,6 +1903,43 @@ if test "$ac_cv_have_mbrtowc" = "yes"; then
 fi
 AC_LANG_C
 
+dnl Check for .hidden assembler directive and visibility attribute.
+dnl Borrowed from glibc configure.in
+dnl ===============================================================
+if test "$GNU_CC"; then
+  AC_CACHE_CHECK(for .hidden assembler directive,
+                 ac_cv_asm_hidden_directive, [dnl
+    cat > conftest.s <<EOF
+.hidden foo
+foo:
+EOF
+    if AC_TRY_COMMAND(${CC-cc} -c $CFLAGS conftest.s 1>&5); then
+      ac_cv_asm_hidden_directive=yes
+    else
+      ac_cv_asm_hidden_directive=no
+    fi
+    rm -f conftest*])
+
+  if test $ac_cv_asm_hidden_directive = yes; then
+    AC_CACHE_CHECK(whether __attribute__((visibility())) is supported,
+                 ac_cv_visibility_attribute,
+                 [cat > conftest.c <<EOF
+                  int foo __attribute__ ((visibility ("hidden"))) = 1;
+EOF
+                  ac_cv_visibility_attribute=no
+                  if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
+                    if grep '\.hidden.*foo' conftest.s >/dev/null; then
+                      ac_cv_visibility_attribute=yes
+                    fi
+                  fi
+                  rm -f conftest.[cs]
+                 ])
+    if test $ac_cv_visibility_attribute = yes; then
+      AC_DEFINE(HAVE_VISIBILITY_ATTRIBUTE)
+    fi
+  fi   # have hidden directive
+fi     # GNU_CC
+
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT

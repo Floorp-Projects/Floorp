@@ -31,6 +31,9 @@
 
 //class nsIPrintSettings;
 
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
+
 //*****************************************************************************
 //***    nsPrintOptions
 //*****************************************************************************
@@ -76,6 +79,7 @@ protected:
   static nsFont* sDefaultFont;
 };
 
-
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 #endif /* nsPrintOptions_h__ */

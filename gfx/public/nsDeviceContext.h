@@ -59,10 +59,10 @@ public:
   nsFontCache();
   virtual ~nsFontCache();
 
-  NS_IMETHOD Init(nsIDeviceContext* aContext);
-  NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext) const;
-  NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
-                           nsIFontMetrics *&aMetrics);
+  virtual nsresult Init(nsIDeviceContext* aContext);
+  virtual nsresult GetDeviceContext(nsIDeviceContext *&aContext) const;
+  virtual nsresult GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+                                 nsIFontMetrics *&aMetrics);
 
   nsresult   FontMetricsDeleted(const nsIFontMetrics* aFontMetrics);
   nsresult   Compact();
@@ -70,14 +70,17 @@ public:
   /* printer device context classes may create their own
    * subclasses of nsFontCache (and override this method) and override 
    * DeviceContextImpl::CreateFontCache (see bug 81311).
-   */           
-  NS_IMETHOD CreateFontMetricsInstance(nsIFontMetrics** fm);
+   */
+  virtual nsresult CreateFontMetricsInstance(nsIFontMetrics** fm);
   
 protected:
   nsVoidArray      mFontMetrics;
   nsIDeviceContext *mContext; // we do not addref this since
                               // ownership is implied. MMP.
 };
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
 
 class NS_GFX DeviceContextImpl : public nsIDeviceContext,
                                  public nsIObserver,
@@ -140,8 +143,6 @@ public:
   NS_IMETHOD SetAltDevice(nsIDeviceContext* aAltDC);
   NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC) { *aAltDC = mAltDC.get(); NS_IF_ADDREF(*aAltDC); return NS_OK;}
   NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn);
-#else 
-
 #endif
 
 private:
@@ -182,5 +183,8 @@ public:
   PRBool            mInitialized;
 #endif
 };
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 #endif /* nsDeviceContext_h___ */

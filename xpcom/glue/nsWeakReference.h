@@ -29,6 +29,9 @@
 
 class nsWeakReference;
 
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
+
 class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
   {
     public:
@@ -60,6 +63,9 @@ class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
 			inline void ClearWeakReferences();
 			PRBool HasWeakReferences() const {return mProxy != 0;}
   };
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 class NS_COM nsWeakReference : public nsIWeakReference
   {
