@@ -1079,14 +1079,9 @@ il_emit_row(
                           (img_color_space->pixmap_depth/8) * column_count);
         }
 
-        /* Duplicate the mask also. */
+        /* Duplicate the mask also. */  
         if (maskp) {
-            if (column_count == img_header->width) /* easy case */
-                XP_MEMCPY(mp, maskp, mask_header->widthBytes);
-            else
-                il_generate_scaled_transparency_mask(
-                    img_header->transparent_pixel, cbuf, (int)len,
-                    dcolumn_start, mp, column_count, draw_mode);
+               XP_MEMCPY(mp, maskp, mask_header->widthBytes);
         }
     }
 
