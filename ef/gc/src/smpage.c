@@ -39,6 +39,9 @@
 #include <Types.h>
 #include <Memory.h>
 #include <stdlib.h>
+#elif defined(XP_UNIX)
+#include <sys/mman.h>
+#include <sys/fcntl.h>
 #endif
 
 SMPageMgr sm_PageMgr;      /* _the_ global page manager */
@@ -316,7 +319,34 @@ sm_InitPages(SMPageMgr* pm, SMPageCount minPages, SMPageCount maxPages)
     return PR_FAILURE;
     
 #else
-#   error "write me"
+
+    SMPage* addr = NULL;
+    SMPageCount size = maxPages;
+    int zero_fd;
+
+    zero_fd = open("/dev/zero", O_RDWR);
+
+    while (addr == NULL) {
+        /* let the system place the heap */
+        addr = (SMPage*)mmap(0, size << SM_PAGE_BITS,
+                             PROT_READ | PROT_WRITE,
+                             MAP_PRIVATE,
+                             zero_fd, 0);
+        if (addr == (SMPage*)MAP_FAILED) {
+            addr = NULL;
+            size--;
+            if (size < minPages) {
+                return PR_FAILURE;
+            }
+        }
+    }
+    SM_ASSERT(SM_IS_ALIGNED(addr, SM_PAGE_BITS));
+    pm->memoryBase = addr;
+    pm->pageCount = size;
+    pm->boundary = addr;
+    pm->minPage = SM_PAGE_NUMBER(addr);
+
+    return PR_SUCCESS;
 #endif
 }
 
@@ -336,7 +366,7 @@ sm_FiniPages(SMPageMgr* pm)
 #elif defined(XP_MAC)
     
 #else
-#   error "write me"
+    munmap((caddr_t)pm->memoryBase, pm->pageCount << SM_PAGE_BITS);
 #endif
 }
 
