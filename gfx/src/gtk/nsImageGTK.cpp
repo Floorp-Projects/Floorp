@@ -1720,6 +1720,9 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
 
   gdk_gc_unref(gc);
 
+  if (!mIsSpacer || !mAlphaDepth)
+    dest->mIsSpacer = PR_FALSE;
+
   // need to copy the mImageBits in case we're rendered scaled
   PRUint8 *scaledImage = 0, *scaledAlpha = 0;
   PRUint8 *rgbPtr=0, *alphaPtr=0;

@@ -393,6 +393,11 @@ il_mng_refresh(mng_handle handle,
       *cptr++ = *row++;
       *cptr++ = *row++;
     }
+    if (container->alpha)
+      container->mFrame->SetAlphaData(container->alpha + 
+                          y*container->mByteWidthAlpha,
+                          container->mByteWidthAlpha,
+                          abpr*y);
     container->mFrame->SetImageData(buf, bpr, bpr*y);
 #else
     container->mFrame->SetImageData(container->image + 
@@ -400,12 +405,6 @@ il_mng_refresh(mng_handle handle,
 			 container->mByteWidth,
 			 bpr*y);
 #endif
-
-    if (container->alpha)
-      container->mFrame->SetAlphaData(container->alpha + 
-                          y*container->mByteWidthAlpha,
-                          container->mByteWidthAlpha,
-                          abpr*y);
   }
 #ifdef XP_MAC
   nsMemory::Free(buf);
