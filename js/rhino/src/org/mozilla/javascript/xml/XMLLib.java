@@ -91,6 +91,7 @@ public abstract class XMLLib
 
     /**
      * Escapes the reserved characters in a value of an attribute
+     * and surround it by "".
      *
      * @param value Unescaped text
      * @return The escaped text

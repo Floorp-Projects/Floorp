@@ -643,6 +643,7 @@ public final class XMLLibImpl extends XMLLib
 
     /**
      * Escapes the reserved characters in a value of an attribute
+     * and surround it by "".
      *
      * @param value Unescaped text
      * @return The escaped text
@@ -662,9 +663,9 @@ public final class XMLLibImpl extends XMLLib
         cursor.dispose();
 
         String elementText = xo.toString();
-        int begin = elementText.indexOf('"') + 1;
+        int begin = elementText.indexOf('"');
         int end = elementText.lastIndexOf('"');
-        return (begin < end) ? elementText.substring(begin, end) : "";
+        return elementText.substring(begin, end + 1);
     }
 
     /**

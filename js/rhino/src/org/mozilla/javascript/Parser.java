@@ -468,7 +468,7 @@ public class Parser
             // 2. Functions defined under the with statement also immune to
             // this setup, in which case dynamic scope is ignored in favor
             // of with object.
-            fnNode.setIgnoreDynamicScope();
+            fnNode.itsIgnoreDynamicScope = true;
         }
 
         int functionIndex = currentScriptOrFn.addFunction(fnNode);
@@ -1550,15 +1550,14 @@ public class Parser
                 } else {
                     pn = nf.createBinary(Token.ADD, pn, nf.createString(xml));
                 }
+                int nodeType;
                 if (ts.isXMLAttribute()) {
-                    pn = nf.createBinary(Token.ADD, pn, nf.createString("\""));
-                    expr = nf.createUnary(Token.ESCXMLATTR, expr);
-                    pn = nf.createBinary(Token.ADD, pn, expr);
-                    pn = nf.createBinary(Token.ADD, pn, nf.createString("\""));
+                    nodeType = Token.ESCXMLATTR;
                 } else {
-                    expr = nf.createUnary(Token.ESCXMLTEXT, expr);
-                    pn = nf.createBinary(Token.ADD, pn, expr);
+                    nodeType = Token.ESCXMLTEXT;
                 }
+                expr = nf.createUnary(nodeType, expr);
+                pn = nf.createBinary(Token.ADD, pn, expr);
                 break;
             case Token.XMLEND:
                 xml = ts.getString();
