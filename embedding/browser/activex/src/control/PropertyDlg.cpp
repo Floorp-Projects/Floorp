@@ -49,6 +49,7 @@ LRESULT CPropertyDlg::OnInitDialog(UINT uMsg, WPARAM wParam,  LPARAM lParam, BOO
         ::GetWindowRect(GetDlgItem(IDC_PPAGE_MARKER), &rc);
         ScreenToClient(&rc);
         mPPage->Create(m_hWnd, rc);
+        mPPage->SetWindowPos(HWND_TOP, &rc, SWP_SHOWWINDOW);
     }
     return 1;
 }
@@ -72,5 +73,17 @@ LRESULT CPropertyDlg::OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
         mPPage->DestroyWindow();
     }
     EndDialog(IDCLOSE);
+    return 1;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+LRESULT CPPageDlg::OnInitDialog(UINT uMsg, WPARAM wParam,  LPARAM lParam, BOOL& bHandled)
+{
+    SetDlgItemText(IDC_PROTOCOL, mProtocol);
+    SetDlgItemText(IDC_TYPE, mType);
+    SetDlgItemText(IDC_ADDRESS, mURL);
     return 1;
 }

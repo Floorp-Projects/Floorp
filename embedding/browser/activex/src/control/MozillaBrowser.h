@@ -56,7 +56,6 @@ extern GUID CGID_MSHTML_Moz;
 
 // A list of objects
 typedef CComPtr<IUnknown> CComUnkPtr;
-typedef std::vector<CComUnkPtr> ObjectList;
 
 class CWebBrowserContainer;
 
@@ -164,9 +163,14 @@ BEGIN_MSG_MAP(CMozillaBrowser)
 	COMMAND_ID_HANDLER(ID_SELECTALL, OnSelectAll)
     COMMAND_ID_HANDLER(ID_DOCUMENT_BACK, OnDocumentBack)
     COMMAND_ID_HANDLER(ID_DOCUMENT_FORWARD, OnDocumentForward)
+    COMMAND_ID_HANDLER(ID_DOCUMENT_SELECTALL, OnDocumentSelectAll)
     COMMAND_ID_HANDLER(ID_DOCUMENT_PRINT, OnDocumentPrint)
+    COMMAND_ID_HANDLER(ID_DOCUMENT_REFRESH, OnDocumentRefresh)
     COMMAND_ID_HANDLER(ID_DOCUMENT_PROPERTIES, OnDocumentProperties)
     COMMAND_ID_HANDLER(ID_LINK_OPEN, OnLinkOpen)
+    COMMAND_ID_HANDLER(ID_LINK_OPENINNEWWINDOW, OnLinkOpenInNewWindow)
+    COMMAND_ID_HANDLER(ID_LINK_COPYSHORTCUT, OnLinkCopyShortcut)
+    COMMAND_ID_HANDLER(ID_LINK_PROPERTIES, OnLinkProperties)
 END_MSG_MAP()
 
 	static HRESULT _stdcall EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
@@ -306,10 +310,15 @@ END_OLECOMMAND_TABLE()
 
 	LRESULT OnDocumentBack(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnDocumentForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnDocumentSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnDocumentPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnDocumentRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnDocumentProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	
     LRESULT OnLinkOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnLinkOpenInNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnLinkCopyShortcut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnLinkProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 // ISupportsErrorInfo
 	STDMETHOD(InterfaceSupportsErrorInfo)(REFIID riid);
@@ -333,6 +342,9 @@ protected:
 	// Mozilla interfaces
 	nsCOMPtr<nsIWebBrowser>	mWebBrowser;
 	nsCOMPtr<nsIBaseWindow> mWebBrowserAsWin;
+
+    // Context menu
+    nsCOMPtr<nsIDOMNode>    mContextNode;
     
 	nsIPref             *   mPrefs;
 	nsIEditor			*	mEditor;
@@ -356,7 +368,8 @@ protected:
 	// Ready status of control
 	READYSTATE				mBrowserReadyState;
 	// List of registered browser helper objects
-	ObjectList				mBrowserHelperList;
+	CComUnkPtr			   *mBrowserHelperList;
+    ULONG                   mBrowserHelperListCount;
 	// Post data from last navigate operation
 	CComVariant             mLastPostData;
 
@@ -377,7 +390,8 @@ protected:
 
     // User interface methods
     virtual int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = _T(""), UINT nType = MB_OK);
-    virtual void ShowContextMenu(PRUint32 aContextFlags);
+    virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
+    virtual void ShowURIPropertyDlg(const nsString &aURI);
 
 public:
 // IOleObjectImpl overrides
