@@ -340,7 +340,7 @@ function SetMenuItemAccessKey(id, accessKey)
 
 }
 
-function fillMessagePaneContextMenu(contextMenu)
+function fillMessagePaneContextMenu()
 {
   var message = GetLoadedMessage();
   var numSelected = (message) ? 1 : 0;
@@ -378,20 +378,20 @@ function fillMessagePaneContextMenu(contextMenu)
 
 function AreBrowserItemsShowing()
 {
-  return(IsMenuItemShowingWithStyle("context-openlink") ||
-    IsMenuItemShowingWithStyle("context-editlink") ||
-    IsMenuItemShowingWithStyle("context-viewimage") ||
-    IsMenuItemShowingWithStyle("context-copylink") ||
-    IsMenuItemShowingWithStyle("context-copyimage") ||
-    IsMenuItemShowingWithStyle("context-savelink") ||
-    IsMenuItemShowingWithStyle("context-saveimage") ||
-    IsMenuItemShowingWithStyle("context-bookmarklink"));
+  return(IsMenuItemShowing("context-openlink") ||
+    IsMenuItemShowing("context-editlink") ||
+    IsMenuItemShowing("context-viewimage") ||
+    IsMenuItemShowing("context-copylink") ||
+    IsMenuItemShowing("context-copyimage") ||
+    IsMenuItemShowing("context-savelink") ||
+    IsMenuItemShowing("context-saveimage") ||
+    IsMenuItemShowing("context-bookmarklink"));
 }
 
 function ShowMessagePaneOpenSeparator()
 {
-  return(IsMenuItemShowingWithStyle("context-selectall") ||
-    IsMenuItemShowingWithStyle("context-copy"));
+  return(IsMenuItemShowing("context-selectall") ||
+    IsMenuItemShowing("context-copy"));
 }
 
 function ShowMessagePaneReplySeparator()
@@ -415,19 +415,19 @@ function ShowMessagePaneEditSeparator()
 
 function ShowMessagePaneLinkSeparator()
 {
-  return (IsMenuItemShowingWithStyle("context-openlink") ||
-    IsMenuItemShowingWithStyle("context-editlink"));
+  return (IsMenuItemShowing("context-openlink") ||
+    IsMenuItemShowing("context-editlink"));
 }
 
 function ShowMessagePaneImageSeparator()
 {
-  return (IsMenuItemShowingWithStyle("context-viewimage"));
+  return (IsMenuItemShowing("context-viewimage"));
 }
 
 function ShowMessagePaneCopySeparator()
 {
-  return (IsMenuItemShowingWithStyle("context-copylink") ||
-    IsMenuItemShowingWithStyle("context-copyimage"));
+  return (IsMenuItemShowing("context-copylink") ||
+    IsMenuItemShowing("context-copyimage"));
 }
 
 function IsMenuItemShowing(menuID)
@@ -437,17 +437,6 @@ function IsMenuItemShowing(menuID)
   if(item)
   {
     return(item.getAttribute('hidden') !='true');
-  }
-  return false;
-}
-
-function IsMenuItemShowingWithStyle(menuID)
-{
-  var item = document.getElementById(menuID);
-  if(item)
-  {
-    var style = item.getAttribute( "style" );
-    return ( style.indexOf( "display:none;" ) == -1 )
   }
   return false;
 }
