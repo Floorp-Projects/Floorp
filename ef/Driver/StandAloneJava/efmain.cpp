@@ -154,7 +154,7 @@ struct Options {
     ~Options();
 
 	bool parse(int argc, const char **argv);
-	void printHelp() {}
+	void printHelp(const char *argv0);
 	
     private:
 	void setBreakPoints(Uint32 &nBreakPoints, Uint32 &nBreakSlots,
@@ -242,6 +242,56 @@ void Options::setBreakPoints(Uint32 &nBreakPoints, Uint32 &nBreakSlots,
 }
 #endif
 
+void Options::printHelp(const char *argv0)
+{
+  printf (
+"Usage: %s [Options]* <javaClass> [java args]*\n"
+"Options:\n"
+" -c, -classpath <canonical class-path>\n"
+" -a, -all Compile all methods.\n"
+" -m, -method <methodName> <sig> :\n"
+"      Go to method whose simple name is <methodName> and signature\n"
+"      is <sig>. The -s option specifies what to do with the method.\n"
+" -mn, -methodName <methodName> :\n"
+"      Go to method whose simple name is <methodName>, which must\n"
+"      not be overloaded. The -s option specifies what to do with\n"
+"      the method.\n"
+" -s, -stage <stage: r, p, g, o, i> default is to generate instructions\n"
+" -v, -verbose : verbose messages\n"
+" -n, -noinvoke : do not invoke compiled method. This is automatically true\n"
+"             if the compile stage is anything other than genInstructions.\n"
+" -l, -lib <libname> : canonical name of native library to load at init time\n"
+" -nosys, -nosystem : Don't initialize system class on start-up\n"
+" -ta, -traceAll: enable method tracing for all methods\n"
+" -t, -trace <className> <methodName> <signature>:\n"
+"      Enable tracing for a method with the given fully qualified\n"
+"      className, simple methodName and java signature.\n"
+" -bc, -breakCompile <className> <methodName> <signature>:\n"
+"      Set a debug breakpoint just before compiling the method with\n"
+"      the given fully qualified className, simple methodName and\n"
+"      java signature.\n"
+" -be, -breakExec <className> <methodName> <signature>:\n"
+"      Set a debug breakpoint just before executing the method with\n"
+"      the given fully qualified className, simple methodName and\n"
+"      java signature.\n"
+" -h, -help : Print this help message\n"
+" -log <module-name> <level> :\n"
+"      turn on logging for <module-name> at level <level>. By default,\n"
+"      logs are logged to stderr; use -logfile to direct them to a file.\n"
+" -lf, -logFile <filename> :\n"
+"      specify the file to put logs into. \"stderr\" is a valid filename\n"
+"      and indicates stderr. -lf can be used more than once on the\n"
+"      command-line; it over-rides the last value of -lf. This can be\n"
+"      used to log different modules to different files. For example,\n"
+"      '-lf foo -log FieldOrMethod 4 -log ClassCentral 3 -lf stderr -log\n"
+"      Codegen 5' logs modules FieldOrMethod and ClassCentral to the\n"
+"      file foo and the module Codegen to standard error.\n"
+" -ln, -logNames : print out a list of all log modules\n"
+" -debug : Enable debugging\n"
+" -ce, -catchHardwareExceptions :\n"
+"      Catch all hardware exceptions (used in the debug builds only)\n",
+argv0);
+}
 
 bool Options::parse(int argc, const char **argv)
 {
@@ -266,7 +316,8 @@ bool Options::parse(int argc, const char **argv)
         } else if (!PL_strcmp(argv[i], "-c") || !PL_strcmp(argv[i], "-classpath")) {
             classPath = argv[++i];
         } else if (!PL_strcmp(argv[i], "-h") || !PL_strcmp(argv[i], "-help")) {
-            printHelp();
+            printHelp(argv[0]);
+            return false;
         } else if (!PL_strcmp(argv[i], "-l") || !PL_strcmp(argv[i], "-lib")) {
             libNames[numLibs++] = argv[++i];
         } else if (!PL_strcmp(argv[i], "-m") || !PL_strcmp(argv[i], "-method")) {
@@ -299,21 +350,21 @@ bool Options::parse(int argc, const char **argv)
             traceAllMethods = true;
         } else if (!PL_strcmp(argv[i], "-log")) {
 #ifdef PR_LOGGING
-			/* Get the names of the log module, level and filename */
-			const char *logModuleName = argv[++i];
-			PRLogModuleLevel logLevel = (PRLogModuleLevel) atoi(argv[++i]);
-			
-			/* Identify this module */
+            /* Get the names of the log module, level and filename */
+            const char *logModuleName = argv[++i];
+            PRLogModuleLevel logLevel = (PRLogModuleLevel) atoi(argv[++i]);
+            
+            /* Identify this module */
             LogModuleObject *module = NULL;
             for (module = LogModuleObject::getAllLogModules(); module; module = module->getNext()) {
-				if (!PL_strcmp(logModuleName, module->getName())) {
-					module->setLogLevel(logLevel);
+                if (!PL_strcmp(logModuleName, module->getName())) {
+                    module->setLogLevel(logLevel);
 
-					if (logFileName)
-						module->setLogFile(logFileName);
+                    if (logFileName)
+                        module->setLogFile(logFileName);
 
-					break;
-				}
+                    break;
+                }
             }
             if (!module) {
                 fprintf(stderr, "Incorrect module name \"%s\" in -log option.\n", logModuleName);
@@ -321,7 +372,7 @@ bool Options::parse(int argc, const char **argv)
                 return false;
             }
 #else
-			i += 2;
+            i += 2;
 #endif
 		} else if (!PL_strcmp(argv[i], "-lf") || !PL_strcmp(argv[i], "-logFile")) {
 			if (!PL_strcmp(argv[++i], "stderr"))
