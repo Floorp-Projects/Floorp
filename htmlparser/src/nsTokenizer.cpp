@@ -96,6 +96,20 @@ PRBool CTokenizer::Append(nsString& aBuffer) {
   return PR_FALSE;
 }
 
+
+/**
+ *  
+ *  
+ *  @update  gess 5/21/98
+ *  @param   
+ *  @return  
+ */
+PRBool CTokenizer::Append(const char* aBuffer, PRInt32 aLen){
+  if(mScanner)
+    return mScanner->Append(aBuffer,aLen);
+  return PR_FALSE;
+}
+
 /**
  * Retrieve a reference to the internal token deque.
  *

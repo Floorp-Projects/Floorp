@@ -27,6 +27,7 @@
  */
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
   mOrdinalValue=0;
+  mAttrCount=0;
 }
  
 /**
@@ -71,7 +72,8 @@ void CToken::SetStringValue(const char* aValue) {
  */
 void CToken::DebugDumpToken(ostream& anOutputStream) {
   anOutputStream << "[" << GetClassName() << "] ";
-  for(int i=0;i<mTextValue.Length();i++){
+  int i=0;
+  for(i=0;i<mTextValue.Length();i++){
     anOutputStream << char(mTextValue[i]);
   }
   anOutputStream << ": " << mOrdinalValue << endl;
@@ -116,7 +118,7 @@ nsString& CToken::GetText(void) {
  *  @update gess 3/25/98
  *  @param  value -- new ordinal value for this token
  */
-void CToken::SetOrdinal(PRInt32 value) {
+void CToken::SetOrdinal(PRInt16 value) {
   mOrdinalValue=value;
 }
 
@@ -127,9 +129,30 @@ void CToken::SetOrdinal(PRInt32 value) {
  *  @update gess 3/25/98
  *  @return int containing ordinal value
  */
-PRInt32  CToken::GetOrdinal(void) {
+PRInt16 CToken::GetOrdinal(void) {
   return mOrdinalValue;
 }
+
+/**
+ *  Sets the attribute count for this token
+ *  
+ *  @update gess 3/25/98
+ *  @param  value -- new attr count
+ */
+void CToken::SetAttributeCount(PRInt16 value) {
+  mAttrCount=value;
+}
+
+/**
+ *  Retrieves copy of attr count for this token
+ *  
+ *  @update gess 3/25/98
+ *  @return int containing attribute count
+ */
+PRInt16  CToken::GetAttributeCount(void) {
+  return mAttrCount;
+}
+
 
 /**
  *  Retrieve type of token. This class returns -1, but 

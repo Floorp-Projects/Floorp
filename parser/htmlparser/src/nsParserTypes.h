@@ -42,6 +42,8 @@ enum  eParseMode {
 };
 
 const PRInt32   kEOF          = 1000000L;
+const PRInt32   kUnknownError = -1000;
+const PRInt32   kContextMismatch = -5;
 const PRInt32   kBadFilename  = -4;
 const PRInt32   kBadURL       = -3;
 const PRInt32   kInterrupted  = -2;

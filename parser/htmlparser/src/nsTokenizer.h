@@ -106,6 +106,13 @@ class  CTokenizer {
      */
     PRBool Append(nsString& aBuffer);
 
+    /**
+     *
+     * @update  gess 4/20/98
+     * @return  deque reference
+     */
+    PRBool Append(const char* aBuffer, PRInt32 aLen);
+
 
     /**
      *  

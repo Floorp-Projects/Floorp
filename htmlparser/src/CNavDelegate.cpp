@@ -136,18 +136,21 @@ PRInt32 CNavDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  *  @param   aScanner: see nsScanner.h
  *  @return  
  */
-PRInt32 CNavDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner) {
+PRInt32 CNavDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   PRBool done=PR_FALSE;
   PRInt32 result=kNoError;
   nsAutoString as("");
+  PRInt16 theAttrCount=0;
 
   while((!done) && (result==kNoError)) {
     CToken* theToken= new CAttributeToken(as);
     if(theToken){
       result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
       if(kNoError==result){
+        theAttrCount++;
         mTokenDeque.Push(theToken);
       }//if
+      else delete theToken; //we can't keep it...
     }//if
     
     if(kNoError==result){
@@ -158,6 +161,24 @@ PRInt32 CNavDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner) {
       }//if
     }//if
   }//while
+
+  //ok, this is a bit complicated, so follow closely.
+  //Since we're incremental (but pessimistic), it is possible that even though 
+  //we've eaten a few delicious attributes, we can't keep them because
+  //we couldn't eat all of them (up to an including the close > for this tag).
+  //Therefore, we need to remove the ones we just created from the tokendeque,
+  //and destroy them. (They'll get reconsumed on the next incremental pass).
+  //NOTE: This process can be enhanced later on by adding state to the delegate
+  //      telling us that we're in the attribute consumption phase.
+  //      Remember the mantra: Crawl, Walk, Run!
+  if(kNoError==result) {
+    aToken->SetAttributeCount(theAttrCount);
+  }
+  else {
+    while(theAttrCount--) {
+      delete mTokenDeque.PopBack();
+    }
+  }
   return result;
 }
 
@@ -200,7 +221,7 @@ PRInt32 CNavDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
     if(kNoError==result) {
       if(((CStartToken*)aToken)->IsAttributed()) {
-        result=ConsumeAttributes(aChar,aScanner);
+        result=ConsumeAttributes(aChar,aScanner,aToken);
       }
       //now that that's over with, we have one more problem to solve.
       //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
@@ -319,7 +340,7 @@ PRInt32 CNavDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,CTo
 
   PRInt32 result=kNoError;
   if(aToken=new CTextToken(aString)) {
-    PRUnichar ch;
+    PRUnichar ch=0;
     result=aToken->Consume(ch,aScanner);
   }
   return result;

@@ -154,6 +154,8 @@ void _PreCompressBuffer(nsString& aBuffer,PRInt32& anOffset,PRInt32& aMarkPos){
   //we should check mMarkPos. That represents the point at which
   //we've guaranteed the client we can back up to, so make sure
   //you don't lose any of the data beyond that point.
+
+/*
   if((anOffset!=aMarkPos) && (0<=aMarkPos)) {
     if(aMarkPos>0) {
       aBuffer.Cut(0,aMarkPos);
@@ -162,6 +164,16 @@ void _PreCompressBuffer(nsString& aBuffer,PRInt32& anOffset,PRInt32& aMarkPos){
     }
   }
   else aBuffer.Truncate();
+*/
+  PRInt32 len=aBuffer.Length();
+  if((aMarkPos<len) && (aMarkPos>=0)) {
+    aBuffer.Cut(0,aMarkPos);
+    anOffset-=aMarkPos;
+  }
+  else {
+    aBuffer.Truncate();
+    anOffset=0;
+  }
   aMarkPos=0;
 }
 
@@ -201,6 +213,19 @@ PRInt32 CScanner::IncrementalAppend(const char* aBuffer,PRInt32 aSize){
 PRBool CScanner::Append(nsString& aBuffer) {
   _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
   mBuffer.Append(aBuffer);
+  return PR_TRUE;
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 5/21/98
+ *  @param   
+ *  @return  
+ */
+PRBool CScanner::Append(const char* aBuffer, PRInt32 aLen){
+  _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
+  mBuffer.Append(aBuffer,aLen);
   return PR_TRUE;
 }
 

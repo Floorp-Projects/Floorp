@@ -87,33 +87,33 @@ class nsHTMLContentSink : public nsIHTMLContentSink {
             PRBool    SetTitle(const nsString& aValue);
 
                       // Called when Opening or closing the main HTML container
-            PRBool    OpenHTML(const nsIParserNode& aNode);
-            PRBool    CloseHTML(const nsIParserNode& aNode);
+            PRInt32    OpenHTML(const nsIParserNode& aNode);
+            PRInt32    CloseHTML(const nsIParserNode& aNode);
 
                       // Called when Opening or closing the main HEAD container
-            PRBool    OpenHead(const nsIParserNode& aNode);
-            PRBool    CloseHead(const nsIParserNode& aNode);
+            PRInt32    OpenHead(const nsIParserNode& aNode);
+            PRInt32    CloseHead(const nsIParserNode& aNode);
   
                       // Called when Opening or closing the main BODY container
-            PRBool    OpenBody(const nsIParserNode& aNode);
-            PRBool    CloseBody(const nsIParserNode& aNode);
+            PRInt32    OpenBody(const nsIParserNode& aNode);
+            PRInt32    CloseBody(const nsIParserNode& aNode);
 
                       // Called when Opening or closing FORM containers
-            PRBool    OpenForm(const nsIParserNode& aNode);
-            PRBool    CloseForm(const nsIParserNode& aNode);
+            PRInt32    OpenForm(const nsIParserNode& aNode);
+            PRInt32    CloseForm(const nsIParserNode& aNode);
         
                       // Called when Opening or closing the main FRAMESET container
-            PRBool    OpenFrameset(const nsIParserNode& aNode);
-            PRBool    CloseFrameset(const nsIParserNode& aNode);
+            PRInt32    OpenFrameset(const nsIParserNode& aNode);
+            PRInt32    CloseFrameset(const nsIParserNode& aNode);
         
                       // Called when Opening or closing a general container
                       // This includes: OL,UL,DIR,SPAN,TABLE,H[1..6],etc.
                       // Until proven otherwise, I also plan to toss STYLE, 
                       // FRAME, SCRIPT, etc. here too!
-    virtual PRBool    OpenContainer(const nsIParserNode& aNode);
-    virtual PRBool    CloseContainer(const nsIParserNode& aNode);
-    virtual PRBool    CloseTopmostContainer();
-    virtual PRBool    AddLeaf(const nsIParserNode& aNode);
+    virtual PRInt32    OpenContainer(const nsIParserNode& aNode);
+    virtual PRInt32    CloseContainer(const nsIParserNode& aNode);
+    virtual PRInt32    CloseTopmostContainer();
+    virtual PRInt32    AddLeaf(const nsIParserNode& aNode);
 
    /**
     * This method gets called when the parser begins the process

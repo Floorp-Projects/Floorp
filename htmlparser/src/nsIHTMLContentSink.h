@@ -92,7 +92,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool OpenHTML(const nsIParserNode& aNode)=0;
+    virtual PRInt32 OpenHTML(const nsIParserNode& aNode)=0;
 
    /**
     * This method is used to close the outer HTML container.
@@ -101,7 +101,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool CloseHTML(const nsIParserNode& aNode)=0;
+    virtual PRInt32 CloseHTML(const nsIParserNode& aNode)=0;
 
    /**
     * This method is used to open the only HEAD container.
@@ -110,7 +110,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool OpenHead(const nsIParserNode& aNode)=0;
+    virtual PRInt32 OpenHead(const nsIParserNode& aNode)=0;
 
    /**
     * This method is used to close the only HEAD container.
@@ -119,7 +119,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool CloseHead(const nsIParserNode& aNode)=0;
+    virtual PRInt32 CloseHead(const nsIParserNode& aNode)=0;
   
    /**
     * This method is used to open the main BODY container.
@@ -128,7 +128,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool OpenBody(const nsIParserNode& aNode)=0;
+    virtual PRInt32 OpenBody(const nsIParserNode& aNode)=0;
 
    /**
     * This method is used to close the main BODY container.
@@ -137,7 +137,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool CloseBody(const nsIParserNode& aNode)=0;
+    virtual PRInt32 CloseBody(const nsIParserNode& aNode)=0;
 
    /**
     * This method is used to open a new FORM container.
@@ -146,7 +146,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool OpenForm(const nsIParserNode& aNode)=0;
+    virtual PRInt32 OpenForm(const nsIParserNode& aNode)=0;
 
    /**
     * This method is used to close the outer FORM container.
@@ -155,7 +155,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool CloseForm(const nsIParserNode& aNode)=0;
+    virtual PRInt32 CloseForm(const nsIParserNode& aNode)=0;
         
    /**
     * This method is used to open the FRAMESET container.
@@ -164,7 +164,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool OpenFrameset(const nsIParserNode& aNode)=0;
+    virtual PRInt32 OpenFrameset(const nsIParserNode& aNode)=0;
 
    /**
     * This method is used to close the FRAMESET container.
@@ -173,7 +173,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool CloseFrameset(const nsIParserNode& aNode)=0;
+    virtual PRInt32 CloseFrameset(const nsIParserNode& aNode)=0;
         
    /**
     * This method is used to a general container. 
@@ -183,7 +183,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool OpenContainer(const nsIParserNode& aNode)=0;
+    virtual PRInt32 OpenContainer(const nsIParserNode& aNode)=0;
     
    /**
     * This method is used to close a generic container.
@@ -192,7 +192,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool CloseContainer(const nsIParserNode& aNode)=0;
+    virtual PRInt32 CloseContainer(const nsIParserNode& aNode)=0;
 
    /**
     * This method is used to close the topmost container, regardless
@@ -202,7 +202,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool CloseTopmostContainer()=0;
+    virtual PRInt32 CloseTopmostContainer()=0;
 
    /**
     * This method is used to add a leaf to the currently 
@@ -212,7 +212,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-    virtual PRBool AddLeaf(const nsIParserNode& aNode)=0;
+    virtual PRInt32 AddLeaf(const nsIParserNode& aNode)=0;
 
    /**
     * This method gets called when the parser begins the process
