@@ -308,7 +308,7 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			nsWindow*	focusedWidget = mTopLevelWidget;
 			toolkit->SetFocus(focusedWidget);
 			nsIMenuBar* menuBar = focusedWidget->GetMenuBar();
-			if(menuBar)
+			if (menuBar)
 			{
 			  void* menuHandle = nsnull;
 			  
@@ -330,10 +330,12 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			//¥TODO: save the focused widget for that window
 			toolkit->SetFocus(nsnull);
 	
-			Handle menuBar = ::GetMenuBar(); // Get a copy of the menu list
-			
 			nsIMenuBar* menuBarInterface = mTopLevelWidget->GetMenuBar();
-			menuBarInterface->SetNativeData((void*)menuBar);
+			if (menuBarInterface)
+			{
+				Handle menuBar = ::GetMenuBar(); // Get a copy of the menu list
+				menuBarInterface->SetNativeData((void*)menuBar);
+			}
 		}
 	}
 	return PR_TRUE;
