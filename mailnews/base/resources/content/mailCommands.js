@@ -474,6 +474,10 @@ function analyze(aMsgHdr, aNextFunction)
 function analyzeFolderForJunk()
 {
   var view = GetDBView();
+
+  // need to expand all threads, so we analyze everything
+  view.doCommand(nsMsgViewCommandType.expandAll);
+
   var treeView = view.QueryInterface(Components.interfaces.nsITreeView);
   var count = treeView.rowCount;
   if (!count)

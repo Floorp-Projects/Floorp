@@ -239,6 +239,7 @@ function IsCurrentLoadedFolder(folder)
 function OnLoadMessageWindow()
 {
 	HideMenus();
+  DisableMenus();
   AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
@@ -420,6 +421,15 @@ function HideMenus()
 	var trashSeparator = document.getElementById('trashMenuSeparator');
 	if (trashSeparator)
 		trashSeparator.setAttribute("hidden", "true");
+}
+
+function DisableMenus()
+{
+  var filtersApply = document.getElementById("filtersApply");
+  filtersApply.setAttribute("disabled","true");
+  
+  var runJunkControls = document.getElementById("runJunkControls");
+  runJunkControls.setAttribute("disabled","true");
 }
 
 function OnUnloadMessageWindow()

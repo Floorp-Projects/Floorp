@@ -1530,14 +1530,16 @@ Rights Reserved.
     <menuitem label="&filtersCmd.label;"
               accesskey="&filtersCmd.accesskey;"
               oncommand="MsgFilters(null);"/>
-    <menuitem label="&filtersApply.label;"
+    <menuitem id="filtersApply"
+              label="&filtersApply.label;"
               accesskey="&filtersApply.accesskey;"
               oncommand="MsgApplyFilters(null);"/>
     <menuseparator/>
     <menuitem label="&junkMailCmd.label;" 
               accesskey="&junkMailCmd.accesskey;" 
               oncommand="MsgJunkMail()"/>
-    <menuitem label="&runJunkControls.label;"
+    <menuitem id="runJunkControls"
+        label="&runJunkControls.label;"
 	      accesskey="&runJunkControls.accesskey;"
 	      oncommand="analyzeFolderForJunk();"/>
     <menuseparator/>
