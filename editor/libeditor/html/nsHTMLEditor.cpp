@@ -104,7 +104,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIParserService.h"
 #include "nsParserCIID.h"
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
@@ -161,6 +160,9 @@ static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 
+nsCOMPtr<nsIParserService> nsHTMLEditor::sParserService;
+PRInt32 nsHTMLEditor::sInstanceCount = 0;
+
 // some prototypes for rules creation shortcuts
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
 nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);
@@ -182,6 +184,7 @@ nsHTMLEditor::nsHTMLEditor()
   mUnderlineAtom = getter_AddRefs(NS_NewAtom("u"));
   mFontAtom = getter_AddRefs(NS_NewAtom("font"));
   mLinkAtom = getter_AddRefs(NS_NewAtom("a"));
+  ++sInstanceCount;
 } 
 
 nsHTMLEditor::~nsHTMLEditor()
@@ -207,6 +210,9 @@ nsHTMLEditor::~nsHTMLEditor()
   }
 
   NS_IF_RELEASE(mTypeInState);
+
+  if (--sInstanceCount == 0 && sParserService)
+    sParserService = 0;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditor, nsEditor)
@@ -475,13 +481,8 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
 {
   if (!aNode || !aIsBlock) { return NS_ERROR_NULL_POINTER; }
 
-//#define USE_PARSER_FOR_BLOCKNESS 1
+#define USE_PARSER_FOR_BLOCKNESS 1
 #ifdef USE_PARSER_FOR_BLOCKNESS
-  // We want to use the parser rather than keeping this info
-  // here in the editor, but the problem is that the ownership
-  // model for the parser service is unclear; we don't want to
-  // have to get it every time, but if we keep it statically
-  // here, it may show up as a leak.
   nsresult rv;
 
   nsCOMPtr<nsIDOMElement>element;
@@ -504,7 +505,6 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
   nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tagName));
   if (!tagAtom) return NS_ERROR_NULL_POINTER;
 
-  static nsCOMPtr<nsIParserService> sParserService;
   if (!sParserService) {
     sParserService = do_GetService(kParserServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -519,6 +519,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
       tagAtom==nsIEditProperty::tr         ||
       tagAtom==nsIEditProperty::th         ||
       tagAtom==nsIEditProperty::td         ||
+      tagAtom==nsIEditProperty::li         ||
       tagAtom==nsIEditProperty::pre)
   {
     *aIsBlock = PR_TRUE;

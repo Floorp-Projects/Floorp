@@ -61,6 +61,7 @@
 
 #include "nsIEditProperty.h"
 #include "nsHTMLCSSUtils.h"
+#include "nsIParserService.h"
 
 class nsIDOMKeyEvent;
 class nsITransferable;
@@ -776,6 +777,12 @@ protected:
 
   PRBool mCSSAware;
   nsHTMLCSSUtils *mHTMLCSSUtils;
+
+  // Maintain a static parser service ...
+  static nsCOMPtr<nsIParserService> sParserService;
+  // ... which means that we need an instance count to know when to delete it
+  static PRInt32 sInstanceCount;
+
 public:
 
 // friends
