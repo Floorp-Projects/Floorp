@@ -1154,8 +1154,12 @@ function EditorInitFormatMenu()
             break;
           case 'TABLE':
             objStr = editorShell.GetString("Table");
+//TEMP FOR BETA1: Disable item - dialog not working
+            propertiesMenu.setAttribute("disabled", "true")
             break;
           case 'TD':
+//TEMP FOR BETA1: Disable item - dialog not working
+            propertiesMenu.setAttribute("disabled", "true")
             objStr = editorShell.GetString("TableCell");
             break;
           case 'A':
@@ -1499,6 +1503,9 @@ function EditorInsertOrEditTable(insertAllowed)
 {
   var table = editorShell.GetElementOrParentByTagName("table", null);
   if (table) {
+//TEMP FOR BETA1: Disable item - dialog not working
+    dump("Function not implemented\n");
+    return;
     // Edit properties of existing table
     dump("Existing table found ... Editing its properties\n");
 
@@ -1511,6 +1518,9 @@ function EditorInsertOrEditTable(insertAllowed)
 
 function EditorTableCellProperties()
 {
+//TEMP FOR BETA1: Disable item - dialog not working
+  dump("Function not implemented\n");
+  return;
   var cell = editorShell.GetElementOrParentByTagName("td", null);
   if (cell) {
     // Start Table Properties dialog on the "Cell" panel
