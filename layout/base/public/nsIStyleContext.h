@@ -43,10 +43,6 @@ class nsISupportsArray;
 #define NS_STYLESPACING_SID   \
 {0x0ba04d20, 0xd89e, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
-// SID 0a7036d0-d89e-11d1-8031-006008159b5a
-#define NS_STYLEBORDER_SID   \
-{0x0a7036d0, 0xd89e, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
 // SID 4fb83b60-cf27-11d1-8031-006008159b5a
 #define NS_STYLELIST_SID   \
 {0x4fb83b60, 0xcf27, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
@@ -63,6 +59,11 @@ class nsISupportsArray;
 #define NS_STYLEDISPLAY_SID  \
 {0x3c29d621, 0xdaf5, 0x11d1, {0x93, 0x2b, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
+// SID 8a9d1f50-e094-11d1-8031-006008159b5a
+#define NS_STYLETABLE_SID  \
+{0x8a9d1f50, 0xe094, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
+
 // Indicies into border/padding/margin arrays
 #define NS_SIDE_TOP     0
 #define NS_SIDE_RIGHT   1
@@ -72,7 +73,6 @@ class nsISupportsArray;
 // The lifetime of these objects is managed by the nsIStyleContext.
 
 struct nsStyleStruct {
-  virtual const nsID& GetID(void) = 0;
 };
 
 struct nsStyleFont : public nsStyleStruct {
@@ -81,7 +81,7 @@ struct nsStyleFont : public nsStyleStruct {
 
 protected:
   nsStyleFont(const nsFont& aFont);
-  ~nsStyleFont();
+  ~nsStyleFont(void);
 };
 
 struct nsStyleColor : public nsStyleStruct {
@@ -100,28 +100,32 @@ struct nsStyleColor : public nsStyleStruct {
   nsString mCursorImage;         // url string
 
 protected:
-  nsStyleColor();
-  ~nsStyleColor();
+  nsStyleColor(void);
+  ~nsStyleColor(void);
 };
 
 struct nsStyleSpacing: public nsStyleStruct {
-  nsMargin  mMargin;
-  nsMargin  mPadding;
-  nsMargin  mBorder;                    // automatic computed value (DON'T SET)
-  nsMargin  mBorderPadding;             // automatic computed value (DON'T SET)
+  nsStyleSides  mMargin;          // length, percent, auto, inherit
+  nsStyleSides  mPadding;         // length, percent, inherit
+  nsStyleSides  mBorder;          // length, percent, See nsStyleConsts.h for enum
+  PRUint8       mBorderStyle[4];  // See nsStyleConsts.h
+  nscolor       mBorderColor[4];
+
+  void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
+  void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const;
+  void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
+  void CalcBorderPaddingFor(const nsIFrame* aFrame, nsMargin& aBorderPadding) const;
 
 protected:
   nsStyleSpacing(void);
-};
 
-struct nsStyleBorder: public nsStyleStruct {
-  PRUint8   mSizeFlag[4];               // See nsStyleConsts.h
-  PRUint8   mStyle[4];                  // See nsStyleConsts.h
-  nsMargin  mSize;
-  nscolor   mColor[4];
-
-protected:
-  nsStyleBorder(void);
+  PRBool    mHasCachedMargin;
+  PRBool    mHasCachedPadding;
+  PRBool    mHasCachedBorder;
+  nsMargin  mCachedMargin;
+  nsMargin  mCachedPadding;
+  nsMargin  mCachedBorder;
+  nsMargin  mCachedBorderPadding;
 };
 
 struct nsStyleList : public nsStyleStruct {
@@ -130,8 +134,8 @@ struct nsStyleList : public nsStyleStruct {
   nsString  mListStyleImage;            // absolute url string
 
 protected:
-  nsStyleList();
-  ~nsStyleList();
+  nsStyleList(void);
+  ~nsStyleList(void);
 };
 
 struct nsStylePosition : public nsStyleStruct {
@@ -148,7 +152,7 @@ struct nsStylePosition : public nsStyleStruct {
   nsMargin  mClip;                      // offsets from respective edge
 
 protected:
-  nsStylePosition();
+  nsStylePosition(void);
 };
 
 // XXX missing: length, inherit and percentage support
@@ -165,7 +169,7 @@ struct nsStyleText : public nsStyleStruct {
   nsStyleCoord  mVerticalAlign;         // see nsStyleConsts.h for enums
 
 protected:
-  nsStyleText();
+  nsStyleText(void);
 };
 
 struct nsStyleDisplay : public nsStyleStruct {
@@ -177,7 +181,17 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRPackedBool mBreakAfter;
 
 protected:
-  nsStyleDisplay();
+  nsStyleDisplay(void);
+};
+
+struct nsStyleTable: public nsStyleStruct {
+  PRUint8       mFrame;         // see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
+  PRUint8       mRules;         // see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
+  nsStyleCoord  mCellPadding;
+  nsStyleCoord  mCellSpacing;
+
+protected:
+  nsStyleTable(void);
 };
 
 //----------------------------------------------------------------------
@@ -198,7 +212,7 @@ public:
   virtual nsStyleStruct* GetData(const nsIID& aSID) = 0;
 
   // call if you change style data after creation
-  virtual void    RecalcAutomaticData(void) = 0;
+  virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;
 };
 
 // this is private to nsStyleSet, don't call it
