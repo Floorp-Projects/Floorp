@@ -210,10 +210,12 @@ NS_METHOD MRJPlugin::CreateInstance(nsISupports *aOuter, const nsIID& aIID, void
 	return NS_NOINTERFACE;
 }
 
+#define NS_APPLET_MIME_TYPE "application/x-java-applet"
+
 NS_METHOD MRJPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, const char* aPluginMIMEType, void **aResult)
 {
 	nsresult result = NS_NOINTERFACE;
-	if (::strcmp(aPluginMIMEType, NS_JVM_MIME_TYPE) == 0)
+	if (::strcmp(aPluginMIMEType, NS_JVM_MIME_TYPE) == 0 || ::strcmp(aPluginMIMEType, NS_APPLET_MIME_TYPE) == 0)
 		result = CreateInstance(aOuter, aIID, aResult);
 	else if (::strcmp(aPluginMIMEType, "application/x-java-frame") == 0) {
 		// create a special plugin instance that manages an embedded frame.
