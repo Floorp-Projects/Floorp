@@ -67,6 +67,11 @@ void
 nsXPCWrappedNative::JSObjectFinalized()
 {
     NS_PRECONDITION(1 == mRefCnt, "bad JSObject finalization");
+
+    nsIXPCScriptable* ds;
+    if(NULL != (ds = GetDynamicScriptable()))
+        ds->Finalize(GetClass()->GetXPCContext()->GetJSContext(), GetJSObject(),
+                     this, GetArbitraryScriptable());
     Release();
 }
 
@@ -191,26 +196,43 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
       mClass(aClass),
       mJSObj(NULL),
       mRoot(root ? root : this),
-      mNext(NULL)
+      mNext(NULL),
+      mDynamicScriptable(NULL)
 
 {
+    NS_PRECONDITION(mObj, "bad object to wrap");
+    NS_PRECONDITION(mClass, "bad class for wrapper");
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
     NS_ADDREF(aClass);
     NS_ADDREF(aObj);
+
+    if(mRoot == this)
+    {
+        nsIXPCScriptable* ds;
+        if(NS_SUCCEEDED(mObj->QueryInterface(nsIXPCScriptable::IID(), 
+                                             (void**)&ds)))
+            mDynamicScriptable = ds;
+    }
 
     mJSObj = aClass->NewInstanceJSObject(this);
     if(mJSObj)
     {
         // intentional second addref to be released when mJSObj is gc'd
         NS_ADDREF_THIS();
-    }
 
+        nsIXPCScriptable* ds;
+        if(NULL != (ds = GetDynamicScriptable()))
+            ds->Create(GetClass()->GetXPCContext()->GetJSContext(), 
+                       GetJSObject(), this, GetArbitraryScriptable());
+    }
 }
 
 nsXPCWrappedNative::~nsXPCWrappedNative()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
+    if(mDynamicScriptable)
+        NS_RELEASE(mDynamicScriptable);
     NS_RELEASE(mClass);
     NS_RELEASE(mObj);
     if(mNext)
@@ -234,3 +256,34 @@ nsXPCWrappedNative::Find(REFNSIID aIID)
     return NULL;
 }
 
+nsresult 
+nsXPCWrappedNative::GetArbitraryScriptable(nsIXPCScriptable** p)
+{
+    NS_PRECONDITION(p, "bad param");
+    nsIXPCScriptable* s = GetArbitraryScriptable();
+    if(s)
+    {
+        NS_ADDREF(s);
+        *p = s;
+        return NS_OK;
+    }
+    // else...
+    *p = NULL;
+    return NS_ERROR_NO_INTERFACE;        
+}        
+
+nsresult 
+nsXPCWrappedNative::GetDynamicScriptable(nsIXPCScriptable** p)
+{
+    NS_PRECONDITION(p, "bad param");
+    nsIXPCScriptable* s = GetDynamicScriptable();
+    if(s)
+    {
+        NS_ADDREF(s);
+        *p = s;
+        return NS_OK;
+    }
+    // else...
+    *p = NULL;
+    return NS_ERROR_NO_INTERFACE;        
+}        

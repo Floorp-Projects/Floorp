@@ -42,8 +42,10 @@ nsXPConnect::GetXPConnect()
     else
     {
         mSelf = new nsXPConnect();
-        if(mSelf && (!mSelf->mContextMap || !mSelf->mAllocator))
-            NS_RELEASE(mSelf);  // XXX two line macro (bug in nsISupports.h)
+        if(mSelf && (!mSelf->mContextMap || 
+                     !mSelf->mAllocator ||
+                     !mSelf->mArbitraryScriptable))
+            NS_RELEASE(mSelf);
     }
     return mSelf;
 }
@@ -53,6 +55,7 @@ nsXPConnect::nsXPConnect()
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
     mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
+    mArbitraryScriptable = new nsXPCArbitraryScriptable();
 
     nsServiceManager::GetService(kAllocatorCID,
                                  kIAllocatorIID,
@@ -63,9 +66,10 @@ nsXPConnect::~nsXPConnect()
 {
     if(mContextMap)
         delete mContextMap;
-
     if(mAllocator)
         nsServiceManager::ReleaseService(kAllocatorCID, mAllocator);
+    if(mArbitraryScriptable)
+        NS_RELEASE(mArbitraryScriptable);
 
     mSelf = NULL;
 }

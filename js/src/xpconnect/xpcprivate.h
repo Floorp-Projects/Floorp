@@ -28,6 +28,7 @@
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
 #include "nsIXPConnect.h"
+#include "nsIXPCScriptable.h"
 #include "jsapi.h"
 #include "jshash.h"
 #include "xpcforwards.h"
@@ -79,6 +80,7 @@ public:
 
     XPCContext*              GetContext(JSContext* cx);
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
+    nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
     nsIAllocator*            GetAllocator()
     {
         if(mAllocator)
@@ -95,6 +97,7 @@ private:
     static nsXPConnect* mSelf;
     JSContext2XPCContextMap* mContextMap;
     nsIAllocator* mAllocator;
+    nsIXPCScriptable* mArbitraryScriptable;
 };
 
 /***************************************************************************/
@@ -114,6 +117,7 @@ public:
 
     JSContext*      GetJSContext()      {return mJSContext;}
     JSObject*       GetGlobalObject()   {return mGlobalObj;}
+    nsXPConnect*    GetXPConnect()      {return mXPConnect;}
 
     JSObject2WrappedJSMap*     GetWrappedJSMap()          {return mWrappedJSMap;}
     Native2WrappedNativeMap*   GetWrappedNativeMap()      {return mWrappedNativeMap;}
@@ -130,6 +134,7 @@ private:
               int WrappedJSClassMapSize,
               int WrappedNativeClassMapSize);
 private:
+    nsXPConnect* mXPConnect;
     JSContext*  mJSContext;
     JSObject*   mGlobalObj;
     JSObject2WrappedJSMap* mWrappedJSMap;
@@ -279,6 +284,9 @@ public:
     const char* GetInterfaceName() const;
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
+    JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
+    nsIXPCScriptable* GetArbitraryScriptable()
+        {return GetXPCContext()->GetXPConnect()->GetArbitraryScriptable();}
 
     static JSBool InitForContext(XPCContext* xpcc);
     JSObject* NewInstanceJSObject(nsXPCWrappedNative* self);
@@ -319,6 +327,16 @@ public:
 
     JSObject* GetInvokeFunObj(const XPCNativeMemberDescriptor* desc);
 
+    JSBool DynamicEnumerate(nsXPCWrappedNative* wrapper,
+                            nsIXPCScriptable* ds,
+                            JSContext *cx, JSObject *obj,
+                            JSIterateOp enum_op,
+                            jsval *statep, jsid *idp);
+
+    JSBool StaticEnumerate(nsXPCWrappedNative* wrapper,
+                           JSIterateOp enum_op,
+                           jsval *statep, jsid *idp);
+
     ~nsXPCWrappedNativeClass();
 private:
     nsXPCWrappedNativeClass();   // not implemented
@@ -326,7 +344,6 @@ private:
                            nsIInterfaceInfo* aInfo);
 
     const char* GetMemberName(const XPCNativeMemberDescriptor* desc) const;
-    JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
 
     void ReportError(const XPCNativeMemberDescriptor* desc, const char* msg);
     JSBool BuildMemberDescriptors();
@@ -342,19 +359,38 @@ private:
 
 /*************************/
 
+class nsXPCArbitraryScriptable : public nsIXPCScriptable
+{
+public:
+    // all the interface method declarations...
+    NS_DECL_ISUPPORTS;
+    XPC_DECLARE_IXPCSCRIPTABLE;
+    nsXPCArbitraryScriptable() {NS_INIT_REFCNT();NS_ADDREF_THIS();}
+};
+
 class nsXPCWrappedNative : public nsIXPConnectWrappedNative
 {
     // all the interface method declarations...
     NS_DECL_ISUPPORTS;
 
+    NS_IMETHOD GetDynamicScriptable(nsIXPCScriptable** p);
+    NS_IMETHOD GetArbitraryScriptable(nsIXPCScriptable** p);
+
 public:
     static nsXPCWrappedNative* GetNewOrUsedWrapper(XPCContext* xpcc,
                                                   nsISupports* aObj,
                                                   REFNSIID aIID);
-    nsISupports* GetNative() {return mObj;}
-    JSObject* GetJSObject() {return mJSObj;}
-    nsXPCWrappedNativeClass* GetClass() {return mClass;}
-    REFNSIID GetIID() {return GetClass()->GetIID();}
+    nsISupports* GetNative() const {return mObj;}
+    JSObject* GetJSObject() const {return mJSObj;}
+    nsXPCWrappedNativeClass* GetClass() const {return mClass;}
+    REFNSIID GetIID() const {return GetClass()->GetIID();}
+
+    nsIXPCScriptable* GetDynamicScriptable()
+        {return mRoot->mDynamicScriptable;}
+
+    nsIXPCScriptable* GetArbitraryScriptable()
+        {return GetClass()->GetArbitraryScriptable();}
+
     void JSObjectFinalized();
 
     virtual ~nsXPCWrappedNative();
@@ -370,6 +406,7 @@ private:
     nsISupports* mObj;
     JSObject* mJSObj;
     nsXPCWrappedNativeClass* mClass;
+    nsIXPCScriptable* mDynamicScriptable;   // only set in root!
     nsXPCWrappedNative* mRoot;
     nsXPCWrappedNative* mNext;
 };
