@@ -2073,7 +2073,7 @@ net_NuCacheLoad (ActiveEntry * cur_entry)
         }
 
         cur_entry->protocol = NU_CACHE_TYPE_URL;
-        cur_entry->memory_file = TRUE; /* TODO */
+        cur_entry->memory_file = (CacheObject_GetModule(pObject) == 0); /* TODO replace 0 with the enum */
     
         /* CacheObject->SetReadLock(pObject); */
         cur_entry->local_file = TRUE; /* Check about this one- TODO */
@@ -2275,7 +2275,6 @@ net_InterruptNuCache (ActiveEntry * cur_entry)
         return cur_entry->status;
     }
     return -1;
- 
 }
 
 
