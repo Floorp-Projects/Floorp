@@ -22,8 +22,10 @@
 
 var data;
 var dialog;
+var bundle;
 
-function initData() {
+function initData() 
+{
     // Create data object and initialize.
     data = new Object;
     data.channel     = window.arguments[0];
@@ -33,22 +35,36 @@ function initData() {
     data.location = data.channel.URI.spec;
 }
 
-function initDialog() {
+function initDialog() 
+{
     // Create dialog object and initialize.
     dialog = new Object;
     dialog.contentType = document.getElementById("dialog.contentType");
     dialog.more        = document.getElementById("dialog.more");
-    dialog.pick        = document.getElementById("dialog.pick");
-    dialog.save        = document.getElementById("dialog.save");
-    dialog.cancel      = document.getElementById("dialog.cancel");
+    bundle = srGetStrBundle("chrome://global/locale/unknownContent.properties");
+
+    var pickApp = document.getElementById("Button2");
+    pickApp.setAttribute( "style", "display: inherit" );
+    pickApp.setAttribute( "value", bundle.GetStringFromName("pick") );
+    var save = document.getElementById("ok");
+    save.setAttribute( "value", bundle.GetStringFromName("save") );
+    doSetOKCancel( save, null, pick, null );
 }
 
-function loadDialog() {
-    // Set initial dialog field contents.
-    dialog.contentType.childNodes[0].nodeValue = " " + data.contentType;
+function loadDialog() 
+{
+  dump("data.contentType = " + data.contentType + "\n");
+  // Set initial dialog field contents.
+  dialog.contentType.setAttribute( "value", data.contentType );
 }
 
-function onLoad() {
+function onUnload() 
+{
+  // do nothing
+}
+
+function onLoad() 
+{
     // Init data.
     initData();
 
@@ -59,21 +75,22 @@ function onLoad() {
     loadDialog();
 }
 
-function onUnload() {
-}
 
-function more() {
+function more() 
+{
     // Have parent browser window go to appropriate web page.
     var moreInfo = "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi?";
     moreInfo += data.contentType;
     window.opener.content.location = moreInfo;
 }
 
-function pick() {
+function pick() 
+{
     alert( "PickApp not implemented yet!" );
 }
 
-function save() {
+function save() 
+{
     // Use stream xfer component to prompt for destination and save.
     var xfer = Components.classes[ "component://netscape/appshell/component/xfer" ].getService();
     xfer = xfer.QueryInterface( Components.interfaces.nsIStreamTransfer );
@@ -94,7 +111,8 @@ function save() {
     }
 }
 
-function cancel() {
+function cancel() 
+{
     // Close this dialog.
     window.close();
 }
