@@ -439,16 +439,13 @@ TableBackgroundRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresConte
       styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
     }
 
-// NOTE: Nav does not inherit the background image: this was over-zealous and mistaken
-#if 0
     if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE)) {
       styleColor->mBackgroundImage = parentStyleColor->mBackgroundImage;
       styleColor->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
     }
-#endif
+
     NS_RELEASE(parentContext);
   }
-
   return NS_OK;
 }
 
