@@ -18,8 +18,9 @@ browser.jar:
         content/browser/search.xml                    (content/search.xml)
         content/browser/printPreviewBindings.xml      (content/printPreviewBindings.xml)
 *       content/browser/contentAreaUtils.js           (content/contentAreaUtils.js)
-*       content/browser/pageInfo.js                   (content/pageInfo.js)
 *       content/browser/pageInfo.xul                  (content/pageInfo.xul)
+*       content/browser/pageInfo.js                   (content/pageInfo.js)
+        content/browser/pageInfo.css                  (content/pageInfo.css)
 
 classic.jar:
         skin/classic/browser/browser.css              (skin/browser.css)
@@ -50,7 +51,7 @@ en-US.jar:
         locale/en-US/browser/openLocation.properties  (locale/openLocation.properties)
         locale/en-US/browser/pageReport.dtd           (locale/pageReport.dtd)
         locale/en-US/browser/pageReportFirstTime.dtd  (locale/pageReportFirstTime.dtd)
-        locale/en-US/browser/pageInfo.dtd             (locale/pageInfo.dtd)
+*       locale/en-US/browser/pageInfo.dtd             (locale/pageInfo.dtd)
         locale/en-US/browser/pageInfo.properties      (locale/pageInfo.properties)
 
 US.jar:
