@@ -169,6 +169,7 @@ layout/html/content/Makefile
 layout/html/content/public/Makefile
 layout/html/content/src/Makefile
 layout/html/document/Makefile
+layout/html/document/public/Makefile
 layout/html/document/src/Makefile
 layout/html/forms/Makefile
 layout/html/forms/public/Makefile
