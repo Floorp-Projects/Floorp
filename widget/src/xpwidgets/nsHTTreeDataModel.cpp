@@ -225,25 +225,34 @@ void nsHTTreeDataModel::GetTitleBarText(nsString& text) const
 // Protected Helpers
 nsIImage* nsHTTreeDataModel::GetTitleBGImage() const
 {
+	// cast away const because we can't use mutable
+	nsHTTreeDataModel* self = const_cast<nsHTTreeDataModel*>(this);
+
 	nsString url("http://www.shadowland.org/images/ancient_glyphs.jpg");
 	if (mTitleBGRequest == nsnull)
-		mTitleBGRequest = RequestImage(url);
+		self->mTitleBGRequest = RequestImage(url);
 	return mTitleBGRequest->GetImage();
 }
 
 nsIImage* nsHTTreeDataModel::GetControlStripBGImage() const
 {
+	// cast away const because we can't use mutable
+	nsHTTreeDataModel* self = const_cast<nsHTTreeDataModel*>(this);
+
 	nsString url("http://www.shadowland.org/images/minute_bumps.jpg");
 	if (mControlStripBGRequest == nsnull)
-		mControlStripBGRequest = RequestImage(url);
+		self->mControlStripBGRequest = RequestImage(url);
 	return mControlStripBGRequest->GetImage();
 }
 
 nsIImage* nsHTTreeDataModel::GetColumnHeaderBGImage() const
 {
+	// cast away const because we can't use mutable
+	nsHTTreeDataModel* self = const_cast<nsHTTreeDataModel*>(this);
+
 	nsString url("http://www.shadowland.org/images/tapestry.jpg");
 	if (mColumnHeaderBGRequest == nsnull)
-		mColumnHeaderBGRequest = RequestImage(url);
+		self->mColumnHeaderBGRequest = RequestImage(url);
 	return mColumnHeaderBGRequest->GetImage();
 }
 

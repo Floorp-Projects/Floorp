@@ -103,9 +103,9 @@ private:
 
 	PRUint32 mVisibleColumnCount;
 	PRUint32 mTotalColumnCount;
-	mutable nsIImageRequest* mTitleBGRequest;		// The title bar background image
-	mutable nsIImageRequest* mControlStripBGRequest;// The control strip bg image
-	mutable nsIImageRequest* mColumnHeaderBGRequest;// The column header background image
+	nsIImageRequest* mTitleBGRequest;		// The title bar background image
+	nsIImageRequest* mControlStripBGRequest;// The control strip bg image
+	nsIImageRequest* mColumnHeaderBGRequest;// The column header background image
 
 };
 

@@ -68,7 +68,7 @@ nsresult nsHTTreeItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 // TreeItem Implementation ---------------------
 
-void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& styleInfo)
+void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& styleInfo) const
 {
 	styleInfo.foregroundColor = NS_RGB(0,0,0);
 	styleInfo.backgroundColor = NS_RGB(240,240,240);
@@ -85,53 +85,62 @@ void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& style
 	styleInfo.pBackgroundImage = GetBackgroundImage();
 }
 
-nsIImage* nsHTTreeItem::GetTriggerImage()
+nsIImage* nsHTTreeItem::GetTriggerImage() const
 {
+	// cast away const because we can't use mutable
+	nsHTTreeItem* self = const_cast<nsHTTreeItem*>(this);
+
 	// TODO: Really read in these properties
-	nsString openTriggerURL("file:///c|/Program%20Files/SL/CLIENT/IMAGES/overlay.gif");
-	nsString closedTriggerURL("file:///c|/Program%20Files/SL/CLIENT/IMAGES/overlay.gif");
+	nsString openTriggerURL("http://www.shadowland.org/client/images/overlay.gif");
+	nsString closedTriggerURL("http://www.shadowland.org/client/images/overlay.gif");
 	
 	if (IsExpanded())
 	{
 		if (mOpenTriggerRequest == nsnull)
 		{
 			// Request the image.
-			mOpenTriggerRequest = RequestImage(openTriggerURL);
+			self->mOpenTriggerRequest = RequestImage(openTriggerURL);
 		}
 		return mOpenTriggerRequest->GetImage();
 	}
 	else
 	{
 		if (mClosedTriggerRequest == nsnull)
-			mClosedTriggerRequest = RequestImage(closedTriggerURL);
+			self->mClosedTriggerRequest = RequestImage(closedTriggerURL);
 		return mClosedTriggerRequest->GetImage();
 	}
 }
 
-nsIImage* nsHTTreeItem::GetIconImage()
+nsIImage* nsHTTreeItem::GetIconImage() const
 {
-	nsString openIconURL("file:///c|/Program%20Files/SL/CLIENT/IMAGES/OpenRead.gif");
-	nsString closedIconURL("file:///c|/Program%20Files/SL/CLIENT/IMAGES/ClosedRead.gif");
+	// cast away const because we can't use mutable
+	nsHTTreeItem* self = const_cast<nsHTTreeItem*>(this);
+
+	nsString openIconURL("http://www.shadowland.org/CLIENT/IMAGES/OpenRead.gif");
+	nsString closedIconURL("http://www.shadowland.org/CLIENT/IMAGES/ClosedRead.gif");
 	
 	if (IsExpanded())
 	{
 		if (mOpenIconRequest == nsnull)
-			mOpenIconRequest = RequestImage(openIconURL);
+			self->mOpenIconRequest = RequestImage(openIconURL);
 		return mOpenIconRequest->GetImage();
 	}
 	else
 	{
 		if (mClosedIconRequest == nsnull)
-			mClosedIconRequest = RequestImage(closedIconURL);
+			self->mClosedIconRequest = RequestImage(closedIconURL);
 		return mClosedIconRequest->GetImage();
 	}
 }
 
-nsIImage* nsHTTreeItem::GetBackgroundImage()
+nsIImage* nsHTTreeItem::GetBackgroundImage() const
 {
+	// cast away const because we can't use mutable
+	nsHTTreeItem* self = const_cast<nsHTTreeItem*>(this);
+
 	nsString bgURL("http://www.shadowland.org/images/chalk.jpg");
 	if (mBackgroundRequest == nsnull)
-		mBackgroundRequest = RequestImage(bgURL);
+		self->mBackgroundRequest = RequestImage(bgURL);
 	return mBackgroundRequest->GetImage();
 }
 

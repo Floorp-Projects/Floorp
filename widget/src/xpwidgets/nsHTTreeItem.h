@@ -59,15 +59,15 @@ public:
 	// End of delegated functions
 
 	virtual void GetItemStyle(nsIDeviceContext* dc, 
-							  nsTreeItemStyleInfo& styleInfo);
+							  nsTreeItemStyleInfo& styleInfo) const;
 
 	virtual void GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) const;
 
 protected:
 	nsIImageRequest* RequestImage(nsString& reqUrl) const; // Helper to kick off the image load.
-	nsIImage* GetTriggerImage();
-	nsIImage* GetIconImage();
-	nsIImage* GetBackgroundImage();
+	nsIImage* GetTriggerImage() const;
+	nsIImage* GetIconImage() const;
+	nsIImage* GetBackgroundImage() const;
 	
 protected:
 	 nsIImageRequest* mClosedIconRequest;	// Closed image
