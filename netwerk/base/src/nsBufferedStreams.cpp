@@ -192,7 +192,7 @@ nsBufferedInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
     while (count > 0) {
         PRUint32 amt = PR_MIN(count, mFillPoint - mCursor);
         if (amt > 0) {
-            nsCRT::memcpy(buf, mBuffer + mCursor, amt);
+            nsCRT::memcpy(buf + read, mBuffer + mCursor, amt);
             read += amt;
             count -= amt;
             mCursor += amt;
