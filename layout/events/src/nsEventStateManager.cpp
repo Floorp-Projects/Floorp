@@ -884,7 +884,8 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(focusFrame);
   if (svp) {
     svp->GetScrollableView(&sv);
-    sv->QueryInterface(NS_GET_IID(nsIView), (void**) &focusView);
+    if (sv)
+      sv->QueryInterface(NS_GET_IID(nsIView), (void**) &focusView);
   } else {
     focusFrame->GetView(aPresContext, &focusView);
     if (!focusView) {
