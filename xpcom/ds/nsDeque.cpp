@@ -164,10 +164,10 @@ nsDeque& nsDeque::PushFront(void* anItem) {
     GrowCapacity();
   }
   if(0==mOrigin){  //case1: [xxx..]
-    mOrigin=mCapacity-mSize++;
+    mOrigin=mCapacity-1-mSize++;
     mData[mOrigin]=anItem;
   }
-  else if(mCapacity==(mOrigin+mSize-1)){ //case2: [..xxx] and case3: [.xxx.]
+  else {// if(mCapacity==(mOrigin+mSize-1)){ //case2: [..xxx] and case3: [.xxx.]
     mData[--mOrigin]=anItem;
     mSize++;
   }
