@@ -402,10 +402,16 @@ sub getExpectedStrings {
     if (defined($protocol)) {
         my $defaults = $app->getSelectingService('dataSource.strings.default');
         foreach my $string (keys(%$strings)) {
+            my $args = {
+                'app' => $app,
+                'protocol' => $protocol,
+                'name' => $string,
+            };
+            $defaults->getDefaultString($args);
             $strings->{$string} = {
-                                   'description' => $strings->{$string},
-                                   'default' => $defaults->getDefaultString($app, $protocol, $string),
-                                  };
+                'description' => $strings->{$string},
+                'default' => $args->{'string'},
+            };
         }
     }
     return $strings;
@@ -418,7 +424,13 @@ sub getDescribedVariants {
     if (defined($string)) {
         my $defaults = $app->getSelectingService('dataSource.strings.default');
         foreach my $variant (keys(%$variants)) {
-            push(@{$variants->{$variant}}, $defaults->getDefaultString($app, $variants->{$variant}->[1], $string));
+            my $args = {
+                'app' => $app,
+                'protocol' => $variants->{$variant}->[1],
+                'name' => $string,
+            };
+            $defaults->getDefaultString($args);
+            push(@{$variants->{$variant}}, $args->{'string'});
         }
     }
     return $variants;

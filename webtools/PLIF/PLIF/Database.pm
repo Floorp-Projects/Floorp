@@ -53,6 +53,6 @@ sub lastError {
 }
 
 
-package PLIF::Exception::Database; use vars qw(@ISA @EXPORT); @ISA = qw(PLIF::Exception);
-package PLIF::Exception::Database::Version; use vars qw(@ISA @EXPORT); @ISA = qw(PLIF::Exception::Database);
-package PLIF::Exception::Database::Duplicate; use vars qw(@ISA @EXPORT); @ISA = qw(PLIF::Exception::Database);
+package PLIF::Exception::Database; use vars qw(@ISA); @ISA = qw(PLIF::Exception);
+package PLIF::Exception::Database::Version; use vars qw(@ISA); @ISA = qw(PLIF::Exception::Database);
+package PLIF::Exception::Database::Duplicate; use vars qw(@ISA); @ISA = qw(PLIF::Exception::Database);

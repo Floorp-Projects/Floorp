@@ -134,14 +134,18 @@ sub output {
     }
     $self->dump(9, "outputting string '$string' on protocol '". ($self->{actualProtocol}) .'\'');
     $self->fillData($data);
-    # it's not that anyone would override dataSource.strings, it's just that
-    # people might call it without calling output(), so the right thing here
-    # is also to call it through getService():
-    $string = $self->{app}->getService('dataSource.strings')->getExpandedString($self->{app}, $session, $self->{actualProtocol}, $string, $data);
+    my $outputArgs = {
+        'app' => $self->{app},
+        'session' => $session,
+        'protocol' => $self->{actualProtocol},
+        'name' => $string,
+        'data' => $data,
+    };
+    $self->getExpandedString($outputArgs); # modifies $outputArgs in place (adds 'string')
     foreach my $filter ($self->{app}->getObjectList('output.filter')) {
-        $string = $filter->filterOutput($self->{app}, $session, $string);
+        $string = $filter->filterOutput($outputArgs);
     }
-    $self->{outputter}->output($self->{app}, $session, $string);
+    $self->{outputter}->output($outputArgs);
 }
 
 # output.generic service instance method
@@ -180,30 +184,33 @@ sub fillData {
 # dataSource.strings default implementation
 sub getString {
     my $self = shift;
-    my($app, $session, $protocol, $name) = @_;
-    my @string = $app->getSelectingServiceList('dataSource.strings.customised')->getCustomisedString($app, $session, $protocol, $name);
-    if (not @string) {
-        @string = $app->getSelectingServiceList('dataSource.strings.default')->getDefaultString($app, $protocol, $name);
-        $self->assert(scalar(@string), 1, "No suitable '$name' string available for the '$protocol' protocol");
+    my($args) = @_;
+    $args->{'app'}->getSelectingServiceList('dataSource.strings.customised')->getCustomisedString($args);
+    if (not defined $args->{'string'}) {
+        $args->{'app'}->getSelectingServiceList('dataSource.strings.default')->getDefaultString($args);
+        $self->assert(defined $args->{'string'}, 1, "No suitable '$args->{'name'}' string available for the '$args->{'protocol'}' protocol");
     }
-    return @string;
+    return 1 if (not defined $args->{'string'});
+    return;
 }
 
 # dataSource.strings default implementation
 sub expandString {
     my $self = shift;
-    my($app, $session, $protocol, $name, $type, $string, $data) = @_;
-    my $expander = $app->getService("string.expander.$type");
-    $self->assert($expander, 1, "Could not find a string expander for string '$name' of type '$type'");
-    return $expander->expand($app, $self, $session, $protocol, $string, $data, $type);
+    my($args) = @_;
+    my $expander = $args->{'app'}->getService("string.expander.$args->{'type'}");
+    $self->assert($expander, 1, "Could not find a string expander for string '$args->{'name'}' of type '$args->{'type'}'");
+    $expander->expand($args);
 }
 
 # dataSource.strings default implementation
 sub getExpandedString {
     my $self = shift;
-    my($app, $session, $protocol, $name, $data) = @_;
-    my($type, $version, $string) = $self->getString($app, $session, $protocol, $name);
-    return $self->expandString($app, $session, $protocol, $name, $type, $string, $data);
+    my($args) = @_;
+    $self->getString($args);
+    $self->expandString($args);
+    return 1 if (not defined $args->{'string'});
+    return;
 }
 
 # dispatcher.commands

@@ -43,15 +43,17 @@ __DATA__
 
 sub getDefaultString {
     my $self = shift;
-    my($app, $protocol, $string) = @_;
+    my($args) = @_;
     # this is protocol agnostic stuff :-)
-    if ($string eq 'debug.dumpVars') {
+    if ($args->{'name'} eq 'debug.dumpVars') {
         # the slashes in regexps below have to be escaped:
         #   once for the regexp
         #   both of those for the TemplateToolkit string
         #   all four of those for Perl's <<here document string.
         # So a single literal slash in a regexp requires eight backslashes.
-        return ('TemplateToolkit', '1', <<eof);
+        $args->{'type'} = 'TemplateToolkit';
+        $args->{'version'} = 1;
+        $args->{'string'} = <<eof;
 [%-
 
   MACRO debugDumpVarsEscape(key) BLOCK;
@@ -145,7 +147,7 @@ sub getDefaultString {
 
 -%]
 eof
-    } else {
-        return;
+        return 1;
     }
+    return;
 }

@@ -136,14 +136,20 @@ sub strings {
 # dataSource.strings.default
 sub getDefaultString {
     my $self = shift;
-    my($app, $protocol, $string) = @_;
-    if ($protocol eq 'stdout') {
-        if ($string eq 'setup') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(failed)" condition="=" rvalue="1">Can\'t continue: argument <text value="(result)"/> is missing.</if><else>Succeeded!</else><br/></text>');
+    my($args) = @_;
+    if ($args->{'protocol'} eq 'stdout') {
+        if ($args->{'name'} eq 'setup') {
+            $args->{'type'} = 'COSES';
+            $args->{'version'} = 1;
+            $args->{'string'} = '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(failed)" condition="=" rvalue="1">Can\'t continue: argument <text value="(result)"/> is missing.</if><else>Succeeded!</else><br/></text>';
+            return 1;
         } elsif ($string eq 'setup.progress') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Setup: <text value="(component)"/>...<br/></text>');
+            $args->{'type'} = 'COSES';
+            $args->{'version'} = 1;
+            $args->{'string'} = '<text xmlns="http://bugzilla.mozilla.org/coses">Setup: <text value="(component)"/>...<br/></text>';
+            return 1;
         }
     }
-    return; # nope, sorry
+    return;
 }
 

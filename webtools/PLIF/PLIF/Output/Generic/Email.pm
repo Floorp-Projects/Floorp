@@ -87,13 +87,13 @@ sub close {
 # output.generic.email
 sub output {
     my $self = shift;
-    my($app, $session, $string) = @_;
+    my($args) = @_;
     $self->assert(defined($self->{handle}), 1, 'No SMTP handle, can\'t send mail');
     try {
         local $SIG{ALRM} = sub { raise PLIF::Exception::Alarm };
         $self->assert($self->{handle}->mail($self->from), 1, 'Could not start sending mail');
-        $self->assert($self->{handle}->to($session->getAddress('email')), 1, 'Could not set mail recipient (was going to send to '.($session->getAddress('email')).')');
-        $self->assert($self->{handle}->data($string), 1, 'Could not send mail body');
+        $self->assert($self->{handle}->to($args->{'session'}->getAddress('email')), 1, 'Could not set mail recipient (was going to send to '.($args->{'session'}->getAddress('email')).')');
+        $self->assert($self->{handle}->data($args->{'string'}), 1, 'Could not send mail body');
         alarm(0);
     } catch PLIF::Exception::Alarm with {
         $self->error(1, 'Timed out while trying to send e-mail');
@@ -115,7 +115,6 @@ sub checkAddress {
 sub DESTROY {
     my $self = shift;
     $self->close();
-    $self->SUPER::DESTROY(@_);
 }
 
 # dataSource.configuration.client

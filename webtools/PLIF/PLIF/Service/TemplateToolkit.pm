@@ -28,9 +28,11 @@
 
 package PLIF::Service::TemplateToolkit;
 use strict;
-use vars qw(@ISA);
+use vars qw(@ISA %CACHE);
 use PLIF::Service;
+use PLIF::Exception;
 @ISA = qw(PLIF::Service);
+%CACHE = ();
 1;
 
 sub provides {
@@ -51,39 +53,59 @@ sub init {
     eval {
         package PLIF::Service::TemplateToolkit::Context;
         require Template::Context; import Template::Context; # DEPENDENCY
+        require POSIX; import POSIX qw(strftime); # DEPENDENCY
     };
+    local $Template::Config::STASH = 'Template::Stash::Context'; # Don't use Template::Stash::XS as we can't currently get a hash back out of it
+    $self->{template} = Template->new({
+        'CONTEXT' => PLIF::Service::TemplateToolkit::Context->new($app),
+    });
 }
 
 sub expand {
     my $self = shift;
-    my($app, $output, $session, $protocol, $string, $data, $type) = @_;
-    local $Template::Config::STASH = 'Template::Stash::Context'; # Don't use Template::Stash::XS as we can't currently get a hash back out of it
-    my $template = Template->new({
-        'CONTEXT' => PLIF::Service::TemplateToolkit::Context->new($app, $output, $session, $protocol),
-    });
+    my($args) = @_;
     my $document;
-    if ($type eq 'TemplateToolkitCompiled') {
-        # what we have here is a potential Template::Document
-        # let's try to evaluate it
-        $document = eval $string;
-        if ($@) {
-            $self->error(1, "Error loading compiled template: $@");
+    if (exists $CACHE{$args->{'name'}}) {
+        $document = $CACHE{$args->{'name'}};
+    } else {
+        if ($args->{'type'} eq 'TemplateToolkitCompiled') {
+            # what we have here is a potential Template::Document
+            # let's try to evaluate it
+            $document = eval $args->{'string'};
+            if ($@) {
+                $self->error(1, "Error loading compiled template: $@");
+            }
+            $CACHE{$args->{'name'}} = $document;
+        } else { # $type eq 'TemplateToolkit'
+            # what we have is a raw string
+            $document = \{$args->{'string'}};
         }
-    } else { # $type eq 'TemplateToolkit'
-        # what we have is a raw string
-        $document = \$string;
     }
+    # $self->{template}->context()->{'__PLIF__output'} = $args->{'output'}; # unused (it's a handle to the dataSource.strings service but we look one up instead of using it directly)
+    $self->{template}->context()->{'__PLIF__session'} = $args->{'session'};
+    $self->{template}->context()->{'__PLIF__protocol'} = $args->{'protocol'};
+    $self->{template}->context()->{'__PLIF__app'} = $args->{'app'};
+    $self->{template}->context()->{'__PLIF__app_refcount'}++;
     # ok, let's try to process it
-    my $result = '';
-    if (not $template->process($document, $data, \$result)) {
-        my $exception = $template->error();
+    my $output = '';
+    my $result = try {
+        $self->{template}->process($document, $args->{'data'}, \$output);
+    } finally {
+        # prevent circular dependency
+        if ($self->{template}->context()->{'__PLIF__app_refcount'}-- <= 0) {
+            $self->{template}->context()->{'__PLIF__app'} = undef;
+        }
+    };
+    # and now check for errors
+    if (not $result) {
+        my $exception = $self->{template}->error();
         if ($exception->isa('PLIF::Service::TemplateToolkit::Exception')) {
             $exception->PLIFException()->raise;
         } else {
             $self->error(1, "Error processing template: $exception");
         }
     }
-    return $result;
+    $args->{'string'} = $output;
 }
 
 
@@ -111,7 +133,7 @@ use vars qw(@ISA $URI_ESCAPES);
 # subclass the real Context so that we go through PLIF for everything
 sub new {
     my $class = shift;
-    my($app, $output, $session, $protocol) = @_;
+    my($app) = @_;
     my $self = $class->SUPER::new({
         'FILTERS' => {
             'htmlcomment' => \&html_comment_filter, # for use in an html comment
@@ -130,13 +152,6 @@ sub new {
             'indentlines' => [\&indent_lines_filter_factory, 1], # different indents on different lines
         }
     });
-    if (defined($self)) {
-        # don't worry, this doesn't cause any referential loops, because the Template object is short-lived
-        $self->{'__PLIF__app'} = $app;
-        $self->{'__PLIF__output'} = $output; # unused (it's a handle to the dataSource.strings service but we look one up instead of using it directly)
-        $self->{'__PLIF__session'} = $session;
-        $self->{'__PLIF__protocol'} = $protocol;
-    } # else failed
     return $self;
 }
 
@@ -212,7 +227,15 @@ sub process {
                 }
             }
             # ok, it's not a defined block, do our own thing with it
-            $result .= $dataSource->getExpandedString($app, $session, $protocol, $string, $self->{'STASH'});
+            my $args = {
+                'app' => $app,
+                'session' => $session,
+                'protocol' => $protocol,
+                'name' => $string,
+                'data' => $self->{'STASH'},
+            };
+            $dataSource->getExpandedString($args);
+            $result .= $args->{'string'};
         }
     }
 

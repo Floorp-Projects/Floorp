@@ -136,7 +136,7 @@ sub load {
 sub AUTOLOAD {
     my $self = shift;
     my $name = $AUTOLOAD;
-    syntaxError "Use of inherited AUTOLOAD for non-method $name is deprecated" if not defined($self);
+    syntaxError "Use of inherited AUTOLOAD for non-method $name is deprecated", 1 if not defined($self);
     $name =~ s/^.*://o; # strip fully-qualified portion
     my $method = $self->can('implyMethod'); # get a function pointer
     @_ = ($self, $name, @_); # set the arguments
@@ -160,7 +160,7 @@ sub propertyGet {
 sub implyMethod {
     my $self = shift;
     my($method) = @_;
-    syntaxError "Tried to access non-existent method '$method' in object '$self'";
+    syntaxError "Tried to access non-existent method '$method' in object '$self'", 1;
 }
 
 
@@ -234,7 +234,7 @@ sub getDebugLevel {
     return \$DEBUG;
 }
 
-sub DESTROY {
-    my $self = shift;
-    $self->dump(10, "Called destructor of object $self...");
-}
+sub DESTROY {}
+#    my $self = shift;
+#    $self->dump(10, "Called destructor of object $self...");
+#}

@@ -167,7 +167,7 @@ sub populateUserPrefsHashFieldCategory {
         $userData->{'fields'}->{$category} = {};
         if (defined($targetUser->fields->{$category})) {
             foreach my $field (values(%{$targetUser->fields->{$category}})) {
-                $userData->{'fields'}->{$category}->{$field->name} = $field->data;
+                $userData->{'fields'}->{$category}->{$field->{name}} = $field->data;
             }
         }
     }

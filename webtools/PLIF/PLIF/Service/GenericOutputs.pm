@@ -84,24 +84,23 @@ sub strings {
 # dataSource.strings.default
 sub getDefaultString {
     my $self = shift;
-    my($app, $protocol, $string) = @_;
-    if ($string eq 'error') {
+    my($args) = @_;
+    if ($args->{'name'} eq 'error') {
         $self->dump(9, 'Looks like an error occured, because the string \'error\' is being requested');
     }
-    if ($protocol eq 'stdout') {
-        if ($string eq 'acknowledge') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Acknowledged.<br/></text>');
-        } elsif ($string eq 'request') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(argument)"/>\'<if lvalue="(defaults.length)" condition=">" rvalue="0"> (default: \'<set variable="default" value="(defaults)" source="keys" order="default"><text value="(defaults.(default))"/><if lvalue="(default)" condition="!=" rvalue="0">\', \'</if></set>\')</if>? </text>');
-        } elsif ($string eq 'error') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(error)"/><br/></text>');
+    if ($args->{'protocol'} eq 'stdout') {
+        if ($args->{'name'} eq 'acknowledge') {
+            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Acknowledged.<br/></text>');
+        } elsif ($args->{'name'} eq 'request') {
+            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(argument)"/>\'<if lvalue="(defaults.length)" condition=">" rvalue="0"> (default: \'<set variable="default" value="(defaults)" source="keys" order="default"><text value="(defaults.(default))"/><if lvalue="(default)" condition="!=" rvalue="0">\', \'</if></set>\')</if>? </text>');
+        } elsif ($args->{'name'} eq 'error') {
+            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(error)"/><br/></text>');
         } 
-    } elsif ($protocol eq 'http') {
-        if ($string eq 'acknowledge') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 200 OK<br/>Content-Type: text/plain<br/><br/>Acknowledged.</text>');
-        } elsif ($string eq 'error') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(error)"/></text>');
+    } elsif ($args->{'protocol'} eq 'http') {
+        if ($args->{'name'} eq 'acknowledge') {
+            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 200 OK<br/>Content-Type: text/plain<br/><br/>Acknowledged.</text>');
+        } elsif ($args->{'name'} eq 'error') {
+            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(error)"/></text>');
         }
     }
-    return; # nope, sorry
 }

@@ -211,7 +211,7 @@ sub getAddress {
     my($protocol) = @_;
     my $field = $self->hasField('contact', $protocol);
     if (defined($field)) {
-        return $field->{address};
+        return $field->address;
     } else {
         return undef;
     }
@@ -237,7 +237,7 @@ sub performFieldChange {
         return 0;
     }
     # perform the change
-    $self->getFieldByID($fieldID)->data($newData);
+    $self->getFieldByID($fieldID)->data = $newData;
     # remove the change from the list of pending changes
     if ($type == 1) { # XXX HARDCODED CONSTANT ALERT
         # this is an override change
@@ -258,11 +258,11 @@ sub setting {
     my($variable, $setting) = @_;
     $self->assert(ref($variable) eq 'SCALAR', 1, 'Internal Error: User object was expecting a scalar ref for setting() but didn\'t get one');
     if (defined($$variable)) {
-        $self->getField('settings', $setting)->data($$variable);
+        $self->getField('settings', $setting)->data = $$variable;
     } else {
         my $field = $self->hasField('settings', $setting);
         if (defined($field)) {
-            $$variable = $field->{data};
+            $$variable = $field->data;
         }
     }
 }
@@ -355,7 +355,7 @@ sub insertField {
 sub invalidateRights {
     my $self = shift;
     my $rights = $self->{app}->getService('dataSource.user')->getRightsForGroups($self->{app}, keys(%{$self->{'groupsByID'}}));
-    $self->rights({ map {$_ => 1} @$rights }); # map a list of strings into a hash for easy access
+    $self->{rights} = { map {$_ => 1} @$rights }; # map a list of strings into a hash for easy access
     # don't set a dirty flag, because rights are merely a convenient
     # cached expansion of the rights data. Changing this externally
     # makes no sense -- what rights one has is dependent on what
@@ -400,6 +400,18 @@ sub propertyGet {
     }
 }
 
+sub implyMethod {
+    my $self = shift;
+    my($name, @data) = @_;
+    if (@data == 1) {
+        return $self->propertySet($name, @data);
+    } elsif (@data == 0) {
+        return $self->propertyGet($name);
+    } else {
+        return $self->SUPER::implyMethod(@_);
+    }
+}
+
 sub DESTROY {
     my $self = shift;
     if ($self->{'_DIRTY'}->{'properties'}) {
@@ -408,7 +420,6 @@ sub DESTROY {
     if ($self->{'_DIRTY'}->{'groups'}) {
         $self->writeGroups();
     }
-    $self->SUPER::DESTROY(@_);
 }
 
 sub writeProperties {

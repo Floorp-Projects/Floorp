@@ -57,8 +57,7 @@ __DATA__
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
-    require HTTP::Negotiate; import HTTP::Negotiate; # DEPENDENCY
-    require HTTP::Headers; import HTTP::Headers; # DEPENDENCY
+    $self->{loadedNegotiationEngine} = 0;
     $self->{variantsCache} = {};
     $self->{stringsCache} = {};
     $self->{enabled} = 1;
@@ -67,38 +66,40 @@ sub init {
 # returns ($type, $version, $string)
 sub getCustomisedString {
     my $self = shift;
-    my($app, $session, $protocol, $string) = @_;
+    my($args) = @_;
     # error handling makes code ugly :-)
     if ($self->{enabled}) {
         my $variant;
-        if (defined($session)) {
-            $variant = $session->selectVariant($protocol);
+        if (defined($args->{'session'})) {
+            $variant = $args->{'session'}->selectVariant($args->{'protocol'});
         }
         if (not defined($variant)) {
-            # default session or $session didn't care, get stuff from
-            # $app->input instead
-            $variant = $self->selectVariant($app, $protocol);
+            # default session or $args->{'session'} didn't care, get stuff from
+            # $args->{'app'}->input instead
+            $variant = $self->selectVariant($args->{'app'}, $args->{'protocol'});
         }
         if (not defined($self->{stringsCache}->{$variant})) {
             $self->{stringsCache}->{$variant} = {};
         }
-        if (not defined($self->{stringsCache}->{$variant}->{$string})) {
+        if (not defined($self->{stringsCache}->{$variant}->{$args->{'name'}})) {
             my @results;
             try {
-                @results = $self->getString($app, $variant, $string);
+                @results = $self->getString($args->{'app'}, $variant, $args->{'name'});
             } except {
                 # ok, so, er, it seems that didn't go to well
                 # XXX do we want to do an error here or something?
-                $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: @_");
+                $self->warn(4, "While I was looking for the string '$args->{'name'}' in protocol '$args->{'protocol'}' using variant '$variant', I failed with: @_");
             };
             if (@results) {
-                $self->{stringsCache}->{$variant}->{$string} = \@results;
-                return @results;
+                $self->{stringsCache}->{$variant}->{$args->{'name'}} = \@results;
+                ($args->{'type'}, $args->{'version'}, $args->{'string'}) = @results;
+                return 1;
             } else {
                 return;
             }
         } else {
-            return @{$self->{stringsCache}->{$variant}->{$string}};
+            ($args->{'type'}, $args->{'version'}, $args->{'string'}) = @{$self->{stringsCache}->{$variant}->{$args->{'name'}}};
+            return 1;
         }
     } else {
         $self->dump(9, "String datasource is disabled, skipping");
@@ -109,27 +110,32 @@ sub getCustomisedString {
 sub selectVariant {
     my $self = shift;
     my($app, $protocol) = @_;
+    my $choice;
     # Find list of options from DB.
     my $variants = $self->variants($app, $protocol);
-    # Initialize the fake header
-    my $request = new HTTP::Headers;
-    foreach my $header (['Accept', $self->acceptType($app, $protocol)],
-                        ['Accept-Encoding', $self->acceptEncoding($app, $protocol)],
-                        ['Accept-Charset', $self->acceptCharset($app, $protocol)],
-                        ['Accept-Language', $self->acceptLanguage($app, $protocol)]) {
-        # only add headers that exist -- HTTP::Negotiate isn't very bullet-proof :-)
-        if ($header->[1]) {
-            $request->header(@$header);
-        }
-    }
-    # Do Content Negotiation :-D
-    my $choice;
     if (scalar(@$variants) > 0) {
+        if (!$self->{loadedNegotiationEngine}) {
+            require HTTP::Negotiate; import HTTP::Negotiate; # DEPENDENCY
+            require HTTP::Headers; import HTTP::Headers; # DEPENDENCY
+            $self->{loadedNegotiationEngine} = 1;
+        }
+        # Initialize the fake header
+        my $request = new HTTP::Headers;
+        foreach my $header (['Accept', $self->acceptType($app, $protocol)],
+                            ['Accept-Encoding', $self->acceptEncoding($app, $protocol)],
+                            ['Accept-Charset', $self->acceptCharset($app, $protocol)],
+                            ['Accept-Language', $self->acceptLanguage($app, $protocol)]) {
+            # only add headers that exist -- HTTP::Negotiate isn't very bullet-proof :-)
+            if ($header->[1]) { # check if the header exists
+                $request->header(@$header); # if so, add it to the headers object
+            }
+        }
+        # Do Content Negotiation :-D
         # $HTTP::Negotiate::DEBUG = 1; # enable debugging
         $choice = choose($variants, $request);
     }
     if (not defined($choice)) {
-        $choice = 0; # XXX we could maybe not hard code the default variant some how... ;-)
+        $choice = 0; # XXX we could maybe not hard code the default variant some how...
     }
     return $choice;
 }
@@ -182,7 +188,11 @@ sub setupInstall {
     foreach my $string (@$strings) {
         # get version of default for $string->name in $string->protocol
         my($variantID, $variantName, $variantProtocol, $stringName, $stringVersion) = @$string;
-        my($defaultStringType, $defaultStringVersion, $defaultStringData) = $app->getSelectingService('dataSource.strings.default')->getDefaultString($app, $variantProtocol, $stringName);
+        my($defaultStringType, $defaultStringVersion, $defaultStringData) = $app->getSelectingService('dataSource.strings.default')->getDefaultString({
+            'app' => $app,
+            'protocol' => $variantProtocol,
+            'name' => $stringName,
+        });
         # if version < default string's version
         if ($stringVersion < $defaultStringVersion) {
             # XXX this is a numeric comparison because I am assuming
@@ -220,10 +230,13 @@ sub strings {
 # dataSource.strings.default
 sub getDefaultString {
     my $self = shift;
-    my($app, $protocol, $string) = @_;
-    if ($protocol eq 'stdout') {
-        if ($string eq 'setup.newStringsReport') {
-            return ('COSES', '1', '<text>Note: The following strings have had their defaults updated since you last customised them:<br/><set variable="string" value="(oldStrings)" source="values" order="lexical"><text value="string (string.3) in variant (string.1)"/> (<text value="protocol (string.2)"/>): yours=<text value="(string.4)"/>, new=<text value="(string.5)"/><br/></set></text>')
+    my($args) = @_;
+    if ($args->{'protocol'} eq 'stdout') {
+        if ($args->{'name'} eq 'setup.newStringsReport') {
+            $args->{'type'} = 'COSES';
+            $args->{'version'} = 1;
+            $args->{'string'} = '<text>Note: The following strings have had their defaults updated since you last customised them:<br/><set variable="string" value="(oldStrings)" source="values" order="lexical"><text value="string (string.3) in variant (string.1)"/> (<text value="protocol (string.2)"/>): yours=<text value="(string.4)"/>, new=<text value="(string.5)"/><br/></set></text>';
+            return 1;
         }
     }
     return; # nope, sorry

@@ -7,7 +7,7 @@ my @entries = ('output');
 while (@entries) {
     my $file = pop @entries;
     if (-d $file) {
-        print "$file: recursing...\n";
+        # print "$file: recursing...\n";
         my $dir = $file;
         $dir =~ s/^output/output-compiled/os;
         mkdir($dir);

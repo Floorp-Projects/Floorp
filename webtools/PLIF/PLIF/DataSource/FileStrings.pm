@@ -61,19 +61,19 @@ __DATA__
 
 sub getDefaultString {
     my $self = shift;
-    my($app, $protocol, $string) = @_;
+    my($args) = @_;
     my @filenames = ();
     # XXX THIS IS PLATFORM SPECIFIC CODE XXX
     if ($^O eq 'linux') {
-        foreach my $piece ($protocol, $string) {
+        foreach my $piece ($args->{'protocol'}, $args->{'name'}) {
             $piece =~ s/[^a-zA-Z\/0-9.]/_/gos;
         }
         # create a couple of paths relative to the application
-        push(@filenames, "output-compiled/$protocol/$string");
-        push(@filenames, "output/$protocol/$string");
+        push(@filenames, "output-compiled/$args->{'protocol'}/$args->{'name'}");
+        push(@filenames, "output/$args->{'protocol'}/$args->{'name'}");
         # and a couple relative to the PLIF library
-        push(@filenames, $DIR."/../../output-compiled/$protocol/$string");
-        push(@filenames, $DIR."/../../output/$protocol/$string");
+        push(@filenames, $DIR."/../../output-compiled/$args->{'protocol'}/$args->{'name'}");
+        push(@filenames, $DIR."/../../output/$args->{'protocol'}/$args->{'name'}");
     } else {
         $self->error(0, "Platform '$^O' not supported yet.");
     }
@@ -98,11 +98,12 @@ sub getDefaultString {
             # while we're at it, untaint it (it came from the file system, it's safe).
             local $/ = undef;
             <FILE> =~ m/^(.*)$/os;
-            push(@data, $1);
+            $args->{'type'} = $data[0];
+            $args->{'version'} = $data[1];
+            $args->{'string'} = $1;
             $self->assert(close(FILE), 3, "Could not close output template file '$filename': $!");
-            return @data;
+            return 1;
         }
-    }
-    # no file exists
-    return; # no can do, sir
+    } # else no file exists
+    return;
 }

@@ -309,5 +309,4 @@ sub setupConfigureDatabase {
 sub DESTROY {
     my $self = shift;
     $self->closeDB(@_);
-    $self->SUPER::DESTROY(@_);
 }

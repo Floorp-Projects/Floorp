@@ -45,9 +45,9 @@ __DATA__
 
 sub output {
     my $self = shift;
-    my($app, $session, $string) = @_;
+    my($args) = @_;
     $| = 1; # flush output even if no newline
-    print $string;
+    print $args->{'string'};
 }
 
 sub hash {

@@ -57,7 +57,14 @@ sub init {
 
 sub expand {
     my $self = shift;
-    my($app, $output, $session, $protocol, $string, $data, $stringType) = @_;
+    my($args) = @_;
+    $app = $args->{'app'};
+    $output  = $args->{'output'};
+    $session  = $args->{'session'};
+    $protocol  = $args->{'protocol'};
+    $string  = $args->{'string'};
+    $data  = $args->{'data'};
+    $stringType = $args->{'stringType'};
     my $xmlService = $app->getService('service.xml');
     my @index = (); my $index = 0;
     my @stack = (); my $stack = $xmlService->parseNS($string);
@@ -80,7 +87,8 @@ sub expand {
                 $scope = pop(@scope);
             } else {
                 # end of stack -- have a nice day!
-                return $result;
+                $data->{'string'} = $result;
+                return;
             }
         } else {
             # more data to deal with at this level
@@ -191,9 +199,13 @@ sub expand {
                         # insert it into the result.
                         # XXX the nested string will have a corrupted
                         # scope hash. XXX
-                        $result .= $self->escape($app, $app->getService('dataSource.strings')->getExpandedString($app, $session, $protocol,
-                                                                                                                 $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys), $scope),
-                                                 $scope);
+                        $result .= $self->escape($app, $app->getService('dataSource.strings')->getExpandedString({
+                            'app' => $app,
+                            'session' => $session,
+                            'protocol' => $protocol,
+                            'name' => $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys),
+                            'data' => $scope,
+                        }), $scope);
                     } elsif ($attributes->{'parse'} eq 'text') {
                         # raw text inclusion
                         my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys));
@@ -305,6 +317,7 @@ sub expand {
             }
         }
     }
+    # can't get here (in theory)
 }
 
 sub appendPendingText {
