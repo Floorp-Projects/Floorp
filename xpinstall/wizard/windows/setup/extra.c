@@ -2345,7 +2345,7 @@ void GetXpinstallPath(char *aPath, int aPathBufSize)
  */
 HRESULT ProcessXpinstallEngine()
 {
-  HRESULT rv = WIZ_ERROR_UNDEFINED;
+  HRESULT rv = WIZ_OK;
 
   if(*siCFXpcomFile.szMessage != '\0')
     ShowMessage(siCFXpcomFile.szMessage, TRUE);
