@@ -81,7 +81,9 @@ namespace VM {
         SET_PROP, /* object, name, source */
         SUBTRACT, /* dest, source1, source2 */
         THROW, /* exception value */
-        TRY /* catch target, finally target */
+        TRY, /* catch target, finally target */
+        WITHIN, /* within this object */
+        WITHOUT /* without this object */
     };
     
     /********************************************************************/
@@ -124,6 +126,8 @@ namespace VM {
         "SUBTRACT      ",
         "THROW         ",
         "TRY           ",
+        "WITHIN        ",
+        "WITHOUT       ",
     };
 
     /********************************************************************/
@@ -788,6 +792,37 @@ namespace VM {
             (TRY, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[TRY] << "\t" << "Offset " << mOp1->mOffset << ", " << "Offset " << mOp2->mOffset;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
+            return f;
+        }
+    };
+
+    class Within : public Instruction_1<Register> {
+    public:
+        /* within this object */
+        Within (Register aOp1) :
+            Instruction_1<Register>
+            (WITHIN, aOp1) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[WITHIN] << "\t" << "R" << mOp1;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1];
+            return f;
+        }
+    };
+
+    class Without : public Instruction {
+    public:
+        /* without this object */
+        Without () :
+            Instruction
+            (WITHOUT) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[WITHOUT];
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {

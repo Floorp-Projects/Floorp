@@ -199,6 +199,17 @@ $ops{"RTS"} =
    super => "Instruction",
    rem   => "Return to sender",
   };
+$ops{"WITHIN"} =
+  {
+   super  => "Instruction_1",
+   rem    => "within this object",
+   params => [ ("Register") ]
+  };
+$ops{"WITHOUT"} =
+  {
+   super  => "Instruction",
+   rem    => "without this object",
+  };
 
 #
 # nasty perl code, you probably don't need to muck around below this line
