@@ -70,7 +70,7 @@ Rights Reserved.
 <!ENTITY showSidebarMenu.label ".SideBar">
 <!ENTITY showMessengerToolbarCmd.label ".Messenger Toolbar">
 <!ENTITY showMessageCmd.label "Message">  
-<!ENTITY showFoldersCmd.label ".Folders">  
+<!ENTITY showFoldersCmd.label "Folders">  
 <!ENTITY sortMenu.label "Sort"> 
 <!ENTITY sortByDateCmd.label "by Date">  
 <!ENTITY sortByFlagCmd.label ".by Flag">  

@@ -586,16 +586,19 @@ function MsgToggleMessagePane()
     MsgToggleSplitter("messagePaneSplitter");
 }
 
-var gMessageSplitter;
+function MsgToggleFolderPane()
+{
+    MsgToggleSplitter("sidebarsplitter");
+}
+
 function MsgToggleSplitter(id)
 {
-    if (!gMessageSplitter)
-        gMessageSplitter = document.getElementById("messagePaneSplitter");
-    var state = gMessageSplitter.getAttribute("state");
+    var splitter = document.getElementById(id);
+    var state = splitter.getAttribute("state");
     if (state == "collapsed")
-        gMessageSplitter.setAttribute("state", null);
+        splitter.setAttribute("state", null);
     else
-        gMessageSplitter.setAttribute("state", "collapsed")
+        splitter.setAttribute("state", "collapsed")
 }
 
 function MsgShowFolders()
