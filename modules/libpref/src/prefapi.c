@@ -879,8 +879,9 @@ pref_saveLIPref(PLHashEntry *he, int i, void *arg)
 	    {
 			char *tmp_str = str_escape(pref->userPref.stringVal);
     
-            //Error checks to be sure length not too long.
-            //18 refers to the number of characters in the "user_pref..." string.
+            /* Error checks to be sure length not too long.
+               18 refers to the number of characters in the "user_pref..."
+               string. */
             if(((PL_strlen((char *) he->key)+PL_strlen(tmp_str))+18)>2048)
                 return PREF_BAD_PARAMETER;
 
@@ -955,8 +956,9 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 		{
 			char *tmp_str = str_escape(pref->userPref.stringVal);
 
-            //Error checks to be sure length not too long.
-            //18 refers to the number of characters in the "user_pref..." string.
+            /* Error checks to be sure length not too long.
+               18 refers to the number of characters in the "user_pref..."
+               string. */
             if(((PL_strlen((char *) he->key)+PL_strlen(tmp_str))+18)>2048)
                 return PREF_BAD_PARAMETER;
 
