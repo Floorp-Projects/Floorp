@@ -5063,7 +5063,10 @@ nsBookmarksService::WriteBookmarks(nsFileSpec* aBookmarksFile, nsIRDFDataSource*
   if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(parentArray))))
     return rv;
 
-  nsFileSpec tempFile(*aBookmarksFile);
+  nsFileSpec bookmarksFile(*aBookmarksFile);
+  PRBool ignored;
+  bookmarksFile.ResolveSymlink(ignored);
+  nsFileSpec tempFile(bookmarksFile);
   tempFile.MakeUnique();
 
   PRBool succeeded = PR_TRUE;
@@ -5096,11 +5099,11 @@ nsBookmarksService::WriteBookmarks(nsFileSpec* aBookmarksFile, nsIRDFDataSource*
   // then trash the old bookmarks file and rename the temp file so it takes
   // its place. 
   if (succeeded) {
-    char* bookmarksFileName = aBookmarksFile->GetLeafName();
+    char* bookmarksFileName = bookmarksFile.GetLeafName();
     char* tempBookmarksFileName = tempFile.GetLeafName();
     // If tempFile == aBookmarksFile, we must not delete/rename
     if (nsCRT::strcmp(bookmarksFileName, tempBookmarksFileName)) {
-      aBookmarksFile->Delete(PR_FALSE);
+      bookmarksFile.Delete(PR_FALSE);
       tempFile.Rename(bookmarksFileName);
     }
 
