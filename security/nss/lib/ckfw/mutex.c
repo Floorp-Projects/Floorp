@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.3 $ $Date: 2004/04/25 15:03:04 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.4 $ $Date: 2004/07/29 22:51:00 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -132,79 +132,39 @@ NSS_EXTERN NSSCKFWMutex *
 nssCKFWMutex_Create
 (
   CK_C_INITIALIZE_ARGS_PTR pInitArgs,
+  CryptokiLockingState LockingState,
   NSSArena *arena,
   CK_RV *pError
 )
 {
   NSSCKFWMutex *mutex;
-  CK_ULONG count = (CK_ULONG)0;
-  CK_BBOOL os_ok = CK_FALSE;
-
-  if( (CK_C_INITIALIZE_ARGS_PTR)NULL != pInitArgs ) {
-    if( (CK_CREATEMUTEX )NULL != pInitArgs->CreateMutex  ) count++;
-    if( (CK_DESTROYMUTEX)NULL != pInitArgs->DestroyMutex ) count++;
-    if( (CK_LOCKMUTEX   )NULL != pInitArgs->LockMutex    ) count++;
-    if( (CK_UNLOCKMUTEX )NULL != pInitArgs->UnlockMutex  ) count++;
-    os_ok = (pInitArgs->flags & CKF_OS_LOCKING_OK) ? CK_TRUE : CK_FALSE;
-
-    if( (0 != count) && (4 != count) ) {
-      *pError = CKR_ARGUMENTS_BAD;
-      return (NSSCKFWMutex *)NULL;
-    }
-  }
-
-  if( (0 == count) && (CK_TRUE == os_ok) ) {
-    /*
-     * This is case #2 in the description of C_Initialize:
-     * The library will be called in a multithreaded way, but
-     * no routines were specified: os locking calls should be
-     * used.  Unfortunately, this can be hard.. like, I think
-     * I may have to dynamically look up the entry points in
-     * the instance of NSPR already going in the application.
-     *
-     * I know that *we* always specify routines, so this only
-     * comes up if someone is using NSS to create their own
-     * PCKS#11 modules for other products.  Oh, heck, I'll 
-     * worry about this then.
-     */
-    *pError = CKR_CANT_LOCK;
-    return (NSSCKFWMutex *)NULL;
-  }
-
+  
   mutex = nss_ZNEW(arena, NSSCKFWMutex);
   if( (NSSCKFWMutex *)NULL == mutex ) {
     *pError = CKR_HOST_MEMORY;
     return (NSSCKFWMutex *)NULL;
   }
 
-  if( 0 == count ) {
-    /*
-     * With the above test out of the way, we know this is case
-     * #1 in the description of C_Initialize: this library will
-     * not be called in a multithreaded way.  I'll just return
-     * an object with noop calls.
-     */
+  switch (LockingState)
+  {
+      default:
+      case SingleThreaded:
+          mutex->Destroy = (CK_DESTROYMUTEX)mutex_noop;
+          mutex->Lock    = (CK_LOCKMUTEX   )mutex_noop;
+          mutex->Unlock  = (CK_UNLOCKMUTEX )mutex_noop;
+          break;
 
-    mutex->Destroy = (CK_DESTROYMUTEX)mutex_noop;
-    mutex->Lock    = (CK_LOCKMUTEX   )mutex_noop;
-    mutex->Unlock  = (CK_UNLOCKMUTEX )mutex_noop;
-  } else {
-    /*
-     * We know that we're in either case #3 or #4 in the description
-     * of C_Initialize.  Case #3 says we should use the specified
-     * functions, case #4 cays we can use either the specified ones
-     * or the OS ones.  I'll use the specified ones.
-     */
-
-    mutex->Destroy = pInitArgs->DestroyMutex;
-    mutex->Lock    = pInitArgs->LockMutex;
-    mutex->Unlock  = pInitArgs->UnlockMutex;
+      case MultiThreaded:
+          *pError = pInitArgs->CreateMutex(&mutex->etc);
+          mutex->Destroy = pInitArgs->DestroyMutex;
+          mutex->Lock    = pInitArgs->LockMutex;
+          mutex->Unlock  = pInitArgs->UnlockMutex;
+          break;
+  }
     
-    *pError = pInitArgs->CreateMutex(&mutex->etc);
-    if( CKR_OK != *pError ) {
-      (void)nss_ZFreeIf(mutex);
-      return (NSSCKFWMutex *)NULL;
-    }
+  if( CKR_OK != *pError ) {
+    (void)nss_ZFreeIf(mutex);
+    return (NSSCKFWMutex *)NULL;
   }
 
 #ifdef DEBUG
@@ -346,3 +306,4 @@ NSSCKFWMutex_Unlock
 
   return nssCKFWMutex_Unlock(mutex);
 }
+

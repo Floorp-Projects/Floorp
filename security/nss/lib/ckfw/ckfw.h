@@ -38,7 +38,7 @@
 #define CKFW_H
 
 #ifdef DEBUG
-static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.4 $ $Date: 2004/04/25 15:03:04 $ $Name:  $";
+static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.5 $ $Date: 2004/07/29 22:51:00 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -110,6 +110,7 @@ NSS_EXTERN NSSCKFWInstance *
 nssCKFWInstance_Create
 (
   CK_C_INITIALIZE_ARGS_PTR pInitArgs,
+  CryptokiLockingState LockingState,
   NSSCKMDInstance *mdInstance,
   CK_RV *pError
 );
@@ -1824,6 +1825,7 @@ NSS_EXTERN NSSCKFWMutex *
 nssCKFWMutex_Create
 (
   CK_C_INITIALIZE_ARGS_PTR pInitArgs,
+  CryptokiLockingState LockingState,
   NSSArena *arena,
   CK_RV *pError
 );
