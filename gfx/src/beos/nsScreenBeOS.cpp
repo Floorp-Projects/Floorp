@@ -94,6 +94,9 @@ nsScreenBeOS :: GetPixelDepth(PRInt32 *aPixelDepth)
 		case B_RGB15:
 			pixelDepth = 15;
 			break;
+		case B_RGB16:
+			pixelDepth = 16;
+			break;
 		default:
 			printf("FIXME:  Please add this screen depth to the code nsScreenBeOS.cpp\n");
 			pixelDepth = 32;
