@@ -22,21 +22,23 @@
  */
 
 
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
+const nsIX509Cert      = Components.interfaces.nsIX509Cert;
 
 var params;
 
 
 function onLoad()
 {
-  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);  
+  params = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
   var connectURL = params.GetString(1); 
-  var certURL    = params.GetString(2);
+  var isupport = params.getISupportAtIndex(1);
+  var cert     = isupport.QueryInterface(nsIX509Cert);
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
 
   var message1 = bundle.formatStringFromName("mismatchDomainMsg1", 
-                                             [ connectURL, certURL ],
+                                             [ connectURL, cert.commonName ],
                                              2);
   var message2 = bundle.formatStringFromName("mismatchDomainMsg2", 
                                              [ connectURL ],

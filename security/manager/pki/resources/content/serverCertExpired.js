@@ -22,14 +22,14 @@
  */
 
 
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
+const nsIX509Cert      = Components.interfaces.nsIX509Cert;
 
 var params;
 
-
 function onLoad()
 {
-  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+  params = window.arguments[0].QueryInterface(nsIPKIParamBlock);
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var message1 = params.GetString(1);
