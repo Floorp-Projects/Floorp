@@ -64,6 +64,8 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define MAX_HOST_NAME_LEN 64
 #endif
 
+#define image_behaviorPref "network.image.imageBehavior"
+#define image_warningPref "network.image.warnAboutImages"
 #define cookie_behaviorPref "network.cookie.cookieBehavior"
 #define cookie_warningPref "network.cookie.warnAboutCookies"
 #define cookie_strictDomainsPref "network.cookie.strictDomains"
@@ -99,10 +101,18 @@ typedef struct _cookie_CookieStruct {
   PRBool isDomain;   /* is it a domain instead of an absolute host? */
 } cookie_CookieStruct;
 
-typedef struct _cookie_PermissionStruct {
+#define COOKIEPERMISSION 0
+#define IMAGEPERMISSION 1
+#define NUMBER_OF_PERMISSIONS 2
+typedef struct _permission_HostStruct {
   char * host;
+  nsVoidArray * permissionList;
+} permission_HostStruct;
+
+typedef struct _permission_TypeStruct {
+  PRInt32 type;
   PRBool permission;
-} cookie_PermissionStruct;
+} permission_TypeStruct;
 
 typedef struct _cookie_DeferStruct {
   char * curURL;
@@ -116,9 +126,12 @@ typedef struct _cookie_DeferStruct {
 PRBool cookie_SetCookieStringInUse = PR_FALSE;
 PRIVATE PRBool cookie_cookiesChanged = PR_FALSE;
 PRIVATE PRBool cookie_permissionsChanged = PR_FALSE;
-PRIVATE PRBool cookie_rememberChecked = PR_FALSE;
+PRIVATE PRBool cookie_rememberChecked;
+PRIVATE PRBool image_rememberChecked;
 PRIVATE COOKIE_BehaviorEnum cookie_behavior = COOKIE_Accept;
 PRIVATE PRBool cookie_warning = PR_FALSE;
+PRIVATE COOKIE_BehaviorEnum image_behavior = COOKIE_Accept;
+PRIVATE PRBool image_warning = PR_FALSE;
 
 PRIVATE nsVoidArray * cookie_cookieList=0;
 PRIVATE nsVoidArray * cookie_permissionList=0;
@@ -374,6 +387,23 @@ cookie_Put(nsOutputFileStream strm, const nsString& aLine)
   return NS_OK;
 }
 
+/*
+ * Write an integer to a file
+ * return NS_OK if no error occurs
+ */
+nsresult
+cookie_PutInt(nsOutputFileStream strm, PRInt32 i)
+{
+  char c[2];
+  c[1] = '\0';
+  if (i == 0) {
+    return NS_OK;
+  }
+  cookie_PutInt (strm, i/10);
+  c[0] = '0' + i%10;
+  return cookie_Put(strm, nsString(c));
+}
+
 nsresult cookie_Get(nsInputFileStream strm, char& c) {
 #define BUFSIZE 128
   static char buffer[BUFSIZE];
@@ -425,7 +455,7 @@ cookie_GetLine(nsInputFileStream strm, nsAutoString& aLine) {
 
 
 PRIVATE void
-cookie_LockCookieList(void) {
+cookie_LockList(void) {
   if(!cookie_cookieLockMonitor) {
     cookie_cookieLockMonitor = PR_NewNamedMonitor("cookie-lock");
   }
@@ -447,7 +477,7 @@ cookie_LockCookieList(void) {
 }
 
 PRIVATE void
-cookie_UnlockCookieList(void) {
+cookie_UnlockList(void) {
    PR_EnterMonitor(cookie_cookieLockMonitor);
 
 #ifdef DEBUG
@@ -507,7 +537,7 @@ static PRThread  * cookie_permission_lock_owner = NULL;
 static int cookie_permission_lock_count = 0;
 
 PRIVATE void
-cookie_LockPermissionList(void) {
+permission_LockList(void) {
   if(!cookie_permission_lock_monitor)
   cookie_permission_lock_monitor = PR_NewNamedMonitor("cookie_permission-lock");
   PR_EnterMonitor(cookie_permission_lock_monitor);
@@ -528,7 +558,7 @@ cookie_LockPermissionList(void) {
 }
 
 PRIVATE void
-cookie_UnlockPermissionListst(void) {
+permission_UnlockList(void) {
   PR_EnterMonitor(cookie_permission_lock_monitor);
 
 #ifdef DEBUG
@@ -545,51 +575,106 @@ cookie_UnlockPermissionListst(void) {
 }
 
 PRIVATE void
-cookie_SavePermissions();
+permission_Save();
 PRIVATE void
-cookie_SaveCookies();
+cookie_Save();
 
 PRIVATE void
-cookie_FreePermission(cookie_PermissionStruct * cookie_permission, PRBool save) {
+permission_Free(PRInt32 hostNumber, PRInt32 type, PRBool save) {
   /*
    * This routine should only be called while holding the
    * cookie permission list lock
    */
-  if(!cookie_permission) {
+
+  /* get the indicated host in the list */
+  if (cookie_permissionList == nsnull) {
     return;
   }
-  if (cookie_permissionList == nsnull)
+
+  permission_HostStruct * hostStruct;
+  permission_TypeStruct * typeStruct;
+  PRInt32 actualHostNumber = -1;
+  PRInt32 typeIndex;
+
+  PRInt32 count = cookie_permissionList->Count();
+  for (PRInt32 j=0, k=0; j<count; j++) {
+    hostStruct = NS_STATIC_CAST
+      (permission_HostStruct*, cookie_permissionList->ElementAt(j));
+    if (!hostStruct) {
+      return;
+    }
+    PRBool present = PR_FALSE;
+    PRInt32 count2 = hostStruct->permissionList->Count();
+    for (typeIndex=0; typeIndex<count2; typeIndex++) {
+      typeStruct = NS_STATIC_CAST
+        (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
+      if (typeStruct->type == type) {
+        present = PR_TRUE;
+        break;
+      }
+    }
+    if (present) {
+      if (k == hostNumber) {
+        actualHostNumber = j;
+        break;
+      }
+      k++;
+    }
+  }
+
+  if (actualHostNumber == -1) {
+    /* host not found, something is wrong */
     return;
-  cookie_permissionList->RemoveElement(cookie_permission);
-  PR_FREEIF(cookie_permission->host);
-  PR_Free(cookie_permission);
+  }
+
+  /* remove the particular type */
+  hostStruct->permissionList->RemoveElementAt(typeIndex);
+
+  /* if no types are present, remove the entry */
+  PRInt32 count2 = hostStruct->permissionList->Count();
+  if (count2 == 0) {
+    PR_FREEIF(hostStruct->permissionList);
+    cookie_permissionList->RemoveElementAt(actualHostNumber);
+    PR_FREEIF(hostStruct->host);
+    PR_Free(hostStruct);
+  }
+
+  /* write the changes out to disk */
   if (save) {
     cookie_permissionsChanged = PR_TRUE;
-    cookie_SavePermissions();
+    permission_Save();
   }
 }
 
-/* blows away all cookie permissions currently in the list */
+/* blows away all permissions currently in the list */
 PRIVATE void
 cookie_RemoveAllPermissions() {
-  cookie_PermissionStruct * victim;
+  permission_HostStruct * hostStruct;
+  permission_TypeStruct * typeStruct;
  
   /* check for NULL or empty list */
-  cookie_LockPermissionList();
+  permission_LockList();
   if (cookie_permissionList == nsnull) {
-    cookie_UnlockPermissionListst();
+    permission_UnlockList();
     return;
   }
   PRInt32 count = cookie_permissionList->Count();
   for (PRInt32 i = count-1; i >=0; i--) {
-    victim = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
-    if (victim) {
-      cookie_FreePermission(victim, PR_FALSE);
+    hostStruct = NS_STATIC_CAST
+      (permission_HostStruct*, cookie_permissionList->ElementAt(i));
+    if (!hostStruct) {
+      return;
+    }
+    PRInt32 count2 = hostStruct->permissionList->Count();
+    for (PRInt32 typeIndex = count2-1; typeIndex >=0; typeIndex--) {
+      typeStruct = NS_STATIC_CAST
+        (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
+      permission_Free(i, typeStruct->type, PR_FALSE);
     }
   }
   delete cookie_permissionList;
   cookie_permissionList = NULL;
-  cookie_UnlockPermissionListst();
+  permission_UnlockList();
 }
 
 /* This should only get called while holding the cookie-lock */
@@ -618,9 +703,9 @@ cookie_RemoveAllCookies() {
   cookie_CookieStruct * victim;
 
   /* check for NULL or empty list */
-  cookie_LockCookieList();
+  cookie_LockList();
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockCookieList();
+    cookie_UnlockList();
     return;
   }
   PRInt32 count = cookie_cookieList->Count();
@@ -632,7 +717,7 @@ cookie_RemoveAllCookies() {
   }
   delete cookie_cookieList;
   cookie_cookieList = NULL;
-  cookie_UnlockCookieList();
+  cookie_UnlockList();
 }
 
 PUBLIC void
@@ -646,16 +731,16 @@ PRIVATE void
 cookie_RemoveOldestCookie(void) {
   cookie_CookieStruct * cookie_s;
   cookie_CookieStruct * oldest_cookie;
-  cookie_LockCookieList();
+  cookie_LockList();
 
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockCookieList();
+    cookie_UnlockList();
     return;
   }
    
   PRInt32 count = cookie_cookieList->Count();
   if (count == 0) {
-    cookie_UnlockCookieList();
+    cookie_UnlockList();
     return;
   }
   oldest_cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(0));
@@ -672,7 +757,7 @@ cookie_RemoveOldestCookie(void) {
     cookie_FreeCookie(oldest_cookie);
   }
 
-  cookie_UnlockCookieList();
+  cookie_UnlockList();
 }
 
 /* Remove any expired cookies from memory 
@@ -770,11 +855,6 @@ cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
 PRIVATE void
 cookie_SetBehaviorPref(COOKIE_BehaviorEnum x) {
   cookie_behavior = x;
-//HG83330 -- @@??
-  if(cookie_behavior == COOKIE_DontUse) {
-//  NET_XP_FileRemove("", xpHTTPCookie);
-//  NET_XP_FileRemove("", xpHTTPCookiePermission);
-  }
 }
 
 PRIVATE void
@@ -817,36 +897,201 @@ cookie_WarningPrefChanged(const char * newpref, void * data) {
   return PREF_NOERROR;
 }
 
+/* cookie utility functions */
+PRIVATE void
+image_SetBehaviorPref(COOKIE_BehaviorEnum x) {
+  image_behavior = x;
+}
+
+PRIVATE void
+image_SetWarningPref(PRBool x) {
+  image_warning = x;
+}
+
+PRIVATE COOKIE_BehaviorEnum
+image_GetBehaviorPref() {
+  return image_behavior;
+}
+
+PRIVATE PRBool
+image_GetWarningPref() {
+  return image_warning;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+image_BehaviorPrefChanged(const char * newpref, void * data) {
+  PRInt32 n;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
+    image_SetBehaviorPref(COOKIE_Accept);
+  } else {
+    image_SetBehaviorPref((COOKIE_BehaviorEnum)n);
+  }
+  return PREF_NOERROR;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+image_WarningPrefChanged(const char * newpref, void * data) {
+  PRBool x;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  if (NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
+    x = PR_FALSE;
+  }
+  image_SetWarningPref(x);
+  return PREF_NOERROR;
+}
+
 /*
  * search if permission already exists
  */
-PRIVATE cookie_PermissionStruct *
-cookie_CheckForPermission(char * hostname) {
-  cookie_PermissionStruct * cookie_s;
+nsresult
+permission_CheckFromList(char * hostname, PRBool &permission, PRInt32 type) {
+  permission_HostStruct * hostStruct;
+  permission_TypeStruct * typeStruct;
 
   /* ignore leading period in host name */
   while (hostname && (*hostname == '.')) {
     hostname++;
   }
 
-  cookie_LockPermissionList();
+  permission_LockList();
+
+  /* return if cookie_permission list does not exist */
   if (cookie_permissionList == nsnull) {
-    cookie_UnlockPermissionListst();
-    return(NULL);
+    permission_UnlockList();
+    return NS_ERROR_FAILURE;
   }
- 
+
+  /* find host name within list */
   PRInt32 count = cookie_permissionList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    cookie_s = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
-    if (cookie_s) {
-      if(hostname && cookie_s->host && !PL_strcasecmp(hostname, cookie_s->host)) {
-        cookie_UnlockPermissionListst();
-        return(cookie_s);
+    hostStruct = NS_STATIC_CAST(permission_HostStruct*, cookie_permissionList->ElementAt(i));
+    if (hostStruct) {
+      if(hostname && hostStruct->host && !PL_strcasecmp(hostname, hostStruct->host)) {
+
+        /* search for type in the permission list for this host */
+        PRInt32 count2 = hostStruct->permissionList->Count();
+        for (PRInt32 typeIndex=0; typeIndex<count2; typeIndex++) {
+          typeStruct = NS_STATIC_CAST
+            (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
+          if (typeStruct->type == type) {
+
+            /* type found.  Obtain the corresponding permission */
+            permission = typeStruct->permission;
+            permission_UnlockList();
+            return NS_OK;
+          }
+        }
+
+        /* type not found, return failure */
+        permission_UnlockList();
+        return NS_ERROR_FAILURE;
       }
     }
   }
-  cookie_UnlockPermissionListst();
-  return(NULL);
+
+  /* not found, return failure */
+  permission_UnlockList();
+  return NS_ERROR_FAILURE;
+}
+
+PRBool
+permission_GetRememberChecked(PRInt32 type) {
+  if (type == COOKIEPERMISSION) {
+    return cookie_rememberChecked;
+  } else if (type == IMAGEPERMISSION) {
+    return image_rememberChecked;
+  } else {
+    return PR_FALSE;
+  }
+}
+
+void
+permission_SetRememberChecked(PRInt32 type, PRBool value) {
+  if (type == COOKIEPERMISSION) {
+    cookie_rememberChecked = value;
+  } else if (type == IMAGEPERMISSION) {
+    image_rememberChecked = value;
+  }
+}
+
+nsresult
+permission_Add(char * host, PRBool permission, PRInt32 type, PRBool save);
+
+void
+permission_Check
+    (char * hostname,
+     PRBool &permission,
+     PRInt32 type,
+     PRBool warningPref,
+     PRUnichar * message) {
+
+  /* try to make decision based on saved permissions */
+  if (NS_SUCCEEDED(permission_CheckFromList(hostname, permission, type))) {
+    return;
+  }
+
+  /* see if we need to prompt */
+  if(!warningPref) {
+    permission = PR_TRUE;
+    return;
+  }
+
+  /* we need to prompt */
+  PRBool rememberChecked = permission_GetRememberChecked(type);
+  PRUnichar * remember_string = cookie_Localize("RememberThisDecision");
+  permission = cookie_CheckConfirmYN(message, remember_string, &rememberChecked);
+
+  /* see if we need to remember this decision */
+  if (rememberChecked) {
+    char * hostname2 = NULL;
+    permission_LockList();
+    /* ignore leading periods in host name */
+    while (hostname && (*hostname == '.')) {
+      hostname++;
+    }
+    StrAllocCopy(hostname2, hostname);
+    permission_Add(hostname2, permission, type, PR_TRUE);
+    permission_UnlockList();
+  }
+  if (rememberChecked != permission_GetRememberChecked(type)) {
+    permission_SetRememberChecked(type, rememberChecked);
+    cookie_permissionsChanged = PR_TRUE;
+    permission_Save();
+  }
+}
+
+PUBLIC nsresult
+Image_CheckForPermission(char * hostname, PRBool &permission) {
+
+  /* exit if imageblocker is not enabled */
+  nsresult rv;
+  PRBool prefvalue = PR_FALSE;
+  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  if (NS_FAILED(rv) || 
+      NS_FAILED(prefs->GetBoolPref("imageblocker.enabled", &prefvalue)) ||
+      !prefvalue) {
+    permission = PR_TRUE;
+    return NS_OK;
+  }
+
+  /* try to make a decision based on pref settings */
+  if ((image_GetBehaviorPref() == COOKIE_DontUse)  ||
+      (image_GetBehaviorPref() == COOKIE_DontAcceptForeign /* && foreign */)) { //???
+    permission = PR_FALSE;
+    return NS_OK;
+  }
+
+  /* use common routine to make decision */
+  PRUnichar * message = cookie_Localize("PermissionToAcceptImage");
+  PRUnichar * new_string = nsTextFormatter::smprintf(message, hostname ? hostname : "");
+  permission_Check
+    (hostname, permission, IMAGEPERMISSION, image_GetWarningPref(), new_string);
+  PR_FREEIF(new_string);
+  Recycle(message);
+  return NS_OK;
 }
 
 /* called from mkgeturl.c, NET_InitNetLib(). This sets the module local 
@@ -858,18 +1103,33 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
   PRBool x;
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     cookie_SetBehaviorPref(COOKIE_Accept);
   } else {
     cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   }
-  cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, NULL);
+
   if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
   }
   cookie_SetWarningPref(x);
   prefs->RegisterCallback(cookie_warningPref, cookie_WarningPrefChanged, NULL);
+
+  if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
+    image_SetBehaviorPref(COOKIE_Accept);
+  } else {
+    image_SetBehaviorPref((COOKIE_BehaviorEnum)n);
+  }
+  prefs->RegisterCallback(image_behaviorPref, image_BehaviorPrefChanged, NULL);
+
+  if (NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
+    x = PR_FALSE;
+  }
+  image_SetWarningPref(x);
+  prefs->RegisterCallback(image_warningPref, image_WarningPrefChanged, NULL);
+
 }
 
 
@@ -902,9 +1162,9 @@ COOKIE_GetCookie(char * address) {
   }
 
   /* search for all cookies */
-  cookie_LockCookieList();
+  cookie_LockList();
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockCookieList();
+    cookie_UnlockList();
     return NULL;
   }
   char *host = cookie_ParseURL(address, GET_HOST_PART);
@@ -988,7 +1248,7 @@ COOKIE_GetCookie(char * address) {
     }
   }
 
-  cookie_UnlockCookieList();
+  cookie_UnlockList();
   PR_FREEIF(name);
   PR_FREEIF(path);
   PR_FREEIF(host);
@@ -1098,53 +1358,83 @@ COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
   return COOKIE_GetCookie(address);
 }
 
-void
-cookie_AddPermission(cookie_PermissionStruct * cookie_permission, PRBool save ) {
+nsresult
+permission_Add(char * host, PRBool permission, PRInt32 type, PRBool save) {
   /*
    * This routine should only be called while holding the
    * cookie permission list lock
    */
-  if (cookie_permission) {
+
+  /* create permission list if it does not yet exist */
+  if(!cookie_permissionList) {
+    cookie_permissionList = new nsVoidArray();
     if(!cookie_permissionList) {
-      cookie_permissionList = new nsVoidArray();
-      if(!cookie_permissionList) {
-        PR_Free(cookie_permission->host);
-        PR_Free(cookie_permission);
-        return;
-      }
-    }
-
-#ifdef alphabetize
-    /* add it to the list in alphabetical order */
-    {
-      cookie_PermissionStruct * tmp_cookie_permission;
-      PRBool permissionAdded = PR_FALSE;
-      PRInt32 count = cookie_permissionList->Count();
-      for (PRInt32 i = 0; i < count; ++i) {
-        tmp_cookie_permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
-        if (tmp_cookie_permission) {
-          if (PL_strcasecmp(cookie_permission->host,tmp_cookie_permission->host)<0) {
-            cookie_permissionList->InsertElementAt(cookie_permission, i);
-            permissionAdded = PR_TRUE;
-            break;
-          }
-
-        }
-      }
-      if (!permissionAdded) {
-        cookie_permissionList->AppendElement(cookie_permission);
-      }
-    }
-#else
-    /* add it to the end of the list */
-    cookie_permissionList->AppendElement(cookie_permission);
-#endif
-
-    if (save) {
-      cookie_permissionsChanged = PR_TRUE;
-      cookie_SavePermissions();
+      Recycle(host);
+      return NS_ERROR_FAILURE;
     }
   }
+
+  /* find existing entry for host */
+  permission_HostStruct * hostStruct;
+  PRBool HostFound = PR_FALSE;
+  PRInt32 count = cookie_permissionList->Count();
+  PRInt32 i;
+  for (i = 0; i < count; ++i) {
+    hostStruct = NS_STATIC_CAST(permission_HostStruct*, cookie_permissionList->ElementAt(i));
+    if (hostStruct) {
+      if (PL_strcasecmp(host,hostStruct->host)==0) {
+
+        /* host found in list */
+        Recycle(host);
+        HostFound = PR_TRUE;
+        break;
+#ifdef alphabetize
+      } else if (PL_strcasecmp(host,hostStruct->host)<0) {
+
+        /* need to insert new entry here */
+        break;
+#endif
+      }
+    }
+  }
+
+  if (!HostFound) {
+
+    /* create a host structure for the host */
+    hostStruct = PR_NEW(permission_HostStruct);
+    if (!hostStruct) {
+      Recycle(host);
+      return NS_ERROR_FAILURE;
+    }
+    hostStruct->host = host;
+    hostStruct->permissionList = new nsVoidArray();
+    if(!hostStruct->permissionList) {
+      PR_Free(hostStruct);
+      Recycle(host);
+      return NS_ERROR_FAILURE;
+    }
+
+    /* insert host structure into the list */
+    if (i == cookie_permissionList->Count()) {
+      cookie_permissionList->AppendElement(hostStruct);
+    } else {
+      cookie_permissionList->InsertElementAt(hostStruct, i);
+    }
+  }
+
+  /* create a type structure and attach it to the host structure */
+  permission_TypeStruct * typeStruct;
+  typeStruct = PR_NEW(permission_TypeStruct);
+  typeStruct->type = type;
+  typeStruct->permission = permission;
+  hostStruct->permissionList->AppendElement(typeStruct);
+
+  /* write the changes out to a file */
+  if (save) {
+    cookie_permissionsChanged = PR_TRUE;
+    permission_Save();
+  }
+  return NS_OK;
 }
 
 MODULE_PRIVATE PRBool
@@ -1181,9 +1471,9 @@ PRIVATE int
 cookie_Count(char * host) {
   int count = 0;
   cookie_CookieStruct * cookie;
-  cookie_LockCookieList();
+  cookie_LockList();
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockCookieList();
+    cookie_UnlockList();
     return count;
   }
   PRInt32 cookie_count = cookie_cookieList->Count();
@@ -1195,7 +1485,7 @@ cookie_Count(char * host) {
       }
     }
   }
-  cookie_UnlockCookieList();
+  cookie_UnlockList();
   return count;
 }
 
@@ -1500,101 +1790,49 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     StrAllocCopy(name_from_header, "");
   }
 
-  cookie_PermissionStruct * cookie_permission;
-  cookie_permission = cookie_CheckForPermission(host_from_header);
-  if (cookie_permission != NULL) {
-    if (cookie_permission->permission == PR_FALSE) {
-      PR_FREEIF(path_from_header);
-      PR_FREEIF(host_from_header);
-      PR_FREEIF(name_from_header);
-      PR_FREEIF(cookie_from_header);
-      cookie_SetCookieStringInUse = PR_FALSE;
-      cookie_Undefer();
-      return;
-    } else {
-      acceptIt = PR_TRUE;
-    }
+  /* generate the message for the nag box */
+  PRUnichar * new_string=0;
+  int count = cookie_Count(host_from_header);
+  cookie_LockList();
+  prev_cookie = cookie_CheckForPrevCookie
+    (path_from_header, host_from_header, name_from_header);
+  cookie_UnlockList();
+  PRUnichar * message;
+  if (prev_cookie) {
+    message = cookie_Localize("PermissionToModifyCookie");
+    new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
+  } else if (count>1) {
+    message = cookie_Localize("PermissionToSetAnotherCookie");
+    new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "", count);
+  } else if (count==1){
+    message = cookie_Localize("PermissionToSetSecondCookie");
+    new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
+  } else {
+    message = cookie_Localize("PermissionToSetACookie");
+    new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
   }
-  if((cookie_GetWarningPref()) && !acceptIt) {
-    /* the user wants to know about cookies so let them know about every one that
-     * is set and give them the choice to accept it or not
-     */
-    PRUnichar * new_string=0;
-    int count;
-    PRUnichar * remember_string = cookie_Localize("RememberThisDecision");
+  Recycle(message);
 
-    /* find out how many cookies this host has already set */
-    count = cookie_Count(host_from_header);
-    cookie_LockCookieList();
-    prev_cookie = cookie_CheckForPrevCookie
-      (path_from_header, host_from_header, name_from_header);
-    cookie_UnlockCookieList();
-    PRUnichar * message;
-    if (prev_cookie) {
-      message = cookie_Localize("PermissionToModifyCookie");
-      new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
-    } else if (count>1) {
-      message = cookie_Localize("PermissionToSetAnotherCookie");
-      new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "", count);
-    } else if (count==1){
-      message = cookie_Localize("PermissionToSetSecondCookie");
-      new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
-    } else {
-      message = cookie_Localize("PermissionToSetACookie");
-      new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
-    }
-    Recycle(message);
-
-    /* 
-     * Who knows what thread we are on.  Only the mozilla thread
-     *   is allowed to post dialogs so, if need be, go over there
-     */
-
-    {
-      PRBool rememberChecked = cookie_rememberChecked;
-      PRBool userHasAccepted =
-        cookie_CheckConfirmYN(new_string, remember_string, &cookie_rememberChecked);
-      PR_FREEIF(new_string);
-      Recycle(remember_string);
-      if (cookie_rememberChecked) {
-        cookie_PermissionStruct * cookie_permission2;
-        cookie_permission2 = PR_NEW(cookie_PermissionStruct);
-        if (cookie_permission2) {
-          cookie_LockPermissionList();
-          StrAllocCopy(host_from_header2, host_from_header);
-          /* ignore leading periods in host name */
-          while (host_from_header2 && (*host_from_header2 == '.')) {
-            host_from_header2++;
-          }
-          cookie_permission2->host = host_from_header2; /* set host string */
-          cookie_permission2->permission = userHasAccepted;
-          cookie_AddPermission(cookie_permission2, PR_TRUE);
-          cookie_UnlockPermissionListst();
-        }
-      }
-      if (rememberChecked != cookie_rememberChecked) {
-        cookie_permissionsChanged = PR_TRUE;
-        cookie_SavePermissions();
-      }
-      if (!userHasAccepted) {
-        PR_FREEIF(path_from_header);
-        PR_FREEIF(host_from_header);
-        PR_FREEIF(name_from_header);
-        PR_FREEIF(cookie_from_header);
-        cookie_SetCookieStringInUse = PR_FALSE;
-        return;
-      }
-    }
+  /* use common code to determine if we can set the cookie */
+  PRBool permission;
+  permission_Check
+    (host_from_header, permission, COOKIEPERMISSION, cookie_GetWarningPref(), new_string);
+  PR_FREEIF(new_string);
+  if (!permission) {
+    PR_FREEIF(path_from_header);
+    PR_FREEIF(host_from_header);
+    PR_FREEIF(name_from_header);
+    PR_FREEIF(cookie_from_header);
+    cookie_SetCookieStringInUse = PR_FALSE;
+    cookie_Undefer();
+    return;
   }
-
-  //TRACEMSG(("mkaccess.c: Setting cookie: %s for host: %s for path: %s",
-  //          cookie_from_header, host_from_header, path_from_header));
 
   /* 
    * We have decided we are going to insert a cookie into the list
    *   Get the cookie lock so that we can munge on the list
    */
-  cookie_LockCookieList();
+  cookie_LockList();
 
   /* limit the number of cookies from a specific host or domain */
   cookie_CheckForMaxCookiesFromHo(host_from_header);
@@ -1629,7 +1867,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
       PR_FREEIF(host_from_header);
       PR_FREEIF(name_from_header);
       PR_FREEIF(cookie_from_header);
-      cookie_UnlockCookieList();
+      cookie_UnlockList();
       cookie_SetCookieStringInUse = PR_FALSE;
       cookie_Undefer();
       return;
@@ -1652,7 +1890,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
         PR_FREEIF(host_from_header);
         PR_FREEIF(cookie_from_header);
         PR_Free(prev_cookie);
-        cookie_UnlockCookieList();
+        cookie_UnlockList();
         cookie_SetCookieStringInUse = PR_FALSE;
         cookie_Undefer();
         return;
@@ -1681,8 +1919,8 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
 
   /* At this point we know a cookie has changed. Write the cookies to file. */
   cookie_cookiesChanged = PR_TRUE;
-  cookie_SaveCookies();
-  cookie_UnlockCookieList();
+  cookie_Save();
+  cookie_UnlockList();
   cookie_SetCookieStringInUse = PR_FALSE;
   cookie_Undefer();
   return;
@@ -1770,31 +2008,32 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, char * setCookieH
   cookie_SetCookieString(curURL, setCookieHeader, gmtCookieExpires);
 }
 
-
 /* saves the HTTP cookies permissions to disk */
 PRIVATE void
-cookie_SavePermissions() {
-  cookie_PermissionStruct * cookie_permission_s;
+permission_Save() {
+  permission_HostStruct * hostStruct;
+  permission_TypeStruct * typeStruct;
+
   if (COOKIE_GetBehaviorPref() == COOKIE_DontUse) {
     return;
   }
   if (!cookie_permissionsChanged) {
     return;
   }
-  cookie_LockPermissionList();
+  permission_LockList();
   if (cookie_permissionList == nsnull) {
-    cookie_UnlockPermissionListst();
+    permission_UnlockList();
     return;
   }
   nsFileSpec dirSpec;
   nsresult rval = cookie_ProfileDirectory(dirSpec);
   if (NS_FAILED(rval)) {
-    cookie_UnlockPermissionListst();
+    permission_UnlockList();
     return;
   }
   nsOutputFileStream strm(dirSpec + "cookperm.txt");
   if (!strm.is_open()) {
-    cookie_UnlockPermissionListst();
+    permission_UnlockList();
     return;
   }
   cookie_Put(strm, "# Netscape HTTP Cookie Permission File\n");
@@ -1802,39 +2041,55 @@ cookie_SavePermissions() {
   cookie_Put(strm, "# This is a generated file!  Do not edit.\n\n");
 
   /* format shall be:
-   * host \t permission
+   * host \t permission \t permission ... \n
    */
-   PRInt32 count = cookie_permissionList->Count();
-   for (PRInt32 i = 0; i < count; ++i) {
-     cookie_permission_s = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
-    if (cookie_permission_s) {
-      cookie_Put(strm, cookie_permission_s->host);
-      if (cookie_permission_s->permission) {
-        cookie_Put(strm, "\tTRUE\n");
-      } else {
-        cookie_Put(strm, "\tFALSE\n");
+
+  
+  PRInt32 count = cookie_permissionList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    hostStruct = NS_STATIC_CAST(permission_HostStruct*, cookie_permissionList->ElementAt(i));
+    if (hostStruct) {
+      cookie_Put(strm, hostStruct->host);
+
+      PRInt32 count2 = hostStruct->permissionList->Count();
+      for (PRInt32 typeIndex=0; typeIndex<count2; typeIndex++) {
+        typeStruct = NS_STATIC_CAST
+          (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
+        cookie_Put(strm, "\t");
+        cookie_PutInt(strm, typeStruct->type);
+        if (typeStruct->permission) {
+          cookie_Put(strm, "T");
+        } else {
+          cookie_Put(strm, "F");
+        }
       }
+      cookie_Put(strm, "\n");
     }
   }
 
-  /* save current state of cookie nag-box's checkmark */
-  if (cookie_rememberChecked) {
-    cookie_Put(strm, "@@@@\tTRUE\n");
-  } else {
-    cookie_Put(strm, "@@@@\tFALSE\n");
+  /* save current state of nag boxs' checkmarks */
+  cookie_Put(strm, "@@@@");
+  for (PRInt32 type = 0; type < NUMBER_OF_PERMISSIONS; type++) {
+    cookie_Put(strm, "\t");
+    cookie_PutInt(strm, type);
+    if (permission_GetRememberChecked(type)) {
+      cookie_Put(strm, "T");
+    } else {
+      cookie_Put(strm, "F");
+    }
   }
+  cookie_Put(strm, "\n");
 
   cookie_permissionsChanged = PR_FALSE;
   strm.flush();
   strm.close();
-  cookie_UnlockPermissionListst();
+  permission_UnlockList();
 }
 
 /* reads the HTTP cookies permission from disk */
 PRIVATE void
-cookie_LoadPermissions() {
+permission_Load() {
   nsAutoString buffer;
-  cookie_PermissionStruct * new_cookie_permission;
   nsFileSpec dirSpec;
   nsresult rv = cookie_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
@@ -1843,22 +2098,26 @@ cookie_LoadPermissions() {
   nsInputFileStream strm(dirSpec + "cookperm.txt");
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
+    for (PRInt32 type=0; type<NUMBER_OF_PERMISSIONS; type++) {
+      permission_SetRememberChecked(type, PR_FALSE);
+    }
     return;
   }
 
   /* format is:
-   * host \t permission
+   * host \t number permission \t number permission ... \n
    * if this format isn't respected we move onto the next line in the file.
    */
-  cookie_LockPermissionList();
+  permission_LockList();
   while(cookie_GetLine(strm,buffer) != -1) {
     if (buffer.CharAt(0) == '#' || buffer.CharAt(0) == CR ||
         buffer.CharAt(0) == LF || buffer.CharAt(0) == 0) {
       continue;
     }
-    int hostIndex, permissionIndex;
+    int hostIndex, permissionIndex, nextPermissionIndex;
     hostIndex = 0;
-    if ((permissionIndex=buffer.FindChar('\t', PR_FALSE,hostIndex)+1) == 0) {
+
+    if ((permissionIndex=buffer.FindChar('\t', PR_FALSE, hostIndex)+1) == 0) {
       continue;      
     }
 
@@ -1867,46 +2126,68 @@ cookie_LoadPermissions() {
       hostIndex++;
     }
 
-    nsString host, permission;
+    nsString host;
     buffer.Mid(host, hostIndex, permissionIndex-hostIndex-1);
-    buffer.Mid(permission, permissionIndex, buffer.Length()-permissionIndex);
 
-    /* create a new cookie_struct and fill it in */
-    new_cookie_permission = PR_NEW(cookie_PermissionStruct);
-    if (!new_cookie_permission) {
-      cookie_UnlockPermissionListst();
-      strm.close();
-      return;
-    }
+    nsString permissionString;
+    nextPermissionIndex = 0;
+    for (;;) {
+      if (nextPermissionIndex == buffer.Length()+1) {
+        break;
+      }
+      if ((nextPermissionIndex=buffer.FindChar('\t', PR_FALSE, permissionIndex)+1) == 0) {
+        nextPermissionIndex = buffer.Length()+1;
+      }
+      buffer.Mid(permissionString, permissionIndex, nextPermissionIndex-permissionIndex-1);
+      permissionIndex = nextPermissionIndex;
 
-    new_cookie_permission->host = host.ToNewCString();
-    if (permission == "TRUE") {
-      new_cookie_permission->permission = PR_TRUE;
-    } else {
-      new_cookie_permission->permission = PR_FALSE;
-    }
+      PRInt32 type = 0;
+      PRInt32 index = 0;
 
-    /*
-     * a host value of "@@@@" is a special code designating the
-     * state of the cookie nag-box's checkmark
-     */
-    if (host == "@@@@") {
-      cookie_rememberChecked = new_cookie_permission->permission;
-    } else {
-      /* add the permission entry */
-      cookie_AddPermission(new_cookie_permission, PR_FALSE );
+      if (permissionString.Length() == 0) {
+        continue; /* empty permission entry -- should never happen */
+      }
+      char c = (char)permissionString.CharAt(index);
+      while (index < permissionString.Length() && c >= '0' && c <= '9') {
+        type = 10*type + (c-'0');
+        c = (char)permissionString.CharAt(++index);
+      }
+      if (index >= permissionString.Length()) {
+        continue; /* bad format for this permission entry */
+      }
+      PRBool permission = (permissionString.CharAt(index) == 'T');
+
+      /*
+       * a host value of "@@@@" is a special code designating the
+       * state of the cookie nag-box's checkmark
+       */
+      if (host == "@@@@") {
+        if (permissionString != "") {
+          permission_SetRememberChecked(type, permission);
+        }
+      } else {
+        if (permissionString != "") {
+          nsresult rv =
+            permission_Add(host.ToNewCString(), permission, type, PR_FALSE);
+          if (NS_FAILED(rv)) {
+            permission_UnlockList();
+            strm.close();
+            return;
+          }
+        }
+      }
     }
   }
 
   strm.close();
-  cookie_UnlockPermissionListst();
+  permission_UnlockList();
   cookie_permissionsChanged = PR_FALSE;
   return;
 }
 
 /* saves out the HTTP cookies to disk */
 PRIVATE void
-cookie_SaveCookies() {
+cookie_Save() {
   cookie_CookieStruct * cookie_s;
   time_t cur_date = get_current_time();
   char date_string[36];
@@ -1916,21 +2197,21 @@ cookie_SaveCookies() {
   if (!cookie_cookiesChanged) {
     return;
   }
-  cookie_LockCookieList();
+  cookie_LockList();
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockCookieList();
+    cookie_UnlockList();
     return;
   }
   nsFileSpec dirSpec;
   nsresult rv = cookie_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
-    cookie_UnlockCookieList();
+    cookie_UnlockList();
     return;
   }
   nsOutputFileStream strm(dirSpec + "cookies.txt");
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
-    cookie_UnlockCookieList();
+    cookie_UnlockList();
     return;
   }
   cookie_Put(strm, "# Netscape HTTP Cookie File\n");
@@ -1983,12 +2264,12 @@ cookie_SaveCookies() {
   cookie_cookiesChanged = PR_FALSE;
   strm.flush();
   strm.close();
-  cookie_UnlockCookieList();
+  cookie_UnlockList();
 }
 
 /* reads HTTP cookies from disk */
 PRIVATE void
-cookie_LoadCookies() {
+cookie_Load() {
   cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
   size_t new_len;
   nsAutoString buffer;
@@ -2003,7 +2284,7 @@ cookie_LoadCookies() {
     /* file doesn't exist -- that's not an error */
     return;
   }
-  cookie_LockCookieList();
+  cookie_LockList();
 
   /* format is:
    *
@@ -2043,7 +2324,7 @@ cookie_LoadCookies() {
     /* create a new cookie_struct and fill it in */
     new_cookie = PR_NEW(cookie_CookieStruct);
     if (!new_cookie) {
-      cookie_UnlockCookieList();
+      cookie_UnlockList();
       strm.close();
       return;
     }
@@ -2070,7 +2351,7 @@ cookie_LoadCookies() {
     if (!cookie_cookieList) {
       cookie_cookieList = new nsVoidArray();
       if (!cookie_cookieList) {
-        cookie_UnlockCookieList();
+        cookie_UnlockList();
         strm.close();
         return;
       }
@@ -2097,7 +2378,7 @@ cookie_LoadCookies() {
   }
 
   strm.close();
-  cookie_UnlockCookieList();
+  cookie_UnlockList();
   cookie_cookiesChanged = PR_FALSE;
   return;
 }
@@ -2111,8 +2392,8 @@ COOKIE_ReadCookies()
   if (sReadCookies)
     NS_WARNING("We are reading the cookies more than once. Probably bad");
     
-  cookie_LoadCookies();
-  cookie_LoadPermissions();
+  cookie_Load();
+  permission_Load();
   sReadCookies = PR_TRUE;
   return 0;
 }
@@ -2269,12 +2550,11 @@ cookie_FindValueInArgs(nsAutoString results, char* name) {
 PUBLIC void
 COOKIE_CookieViewerReturn(nsAutoString results) {
   cookie_CookieStruct * cookie;
-  cookie_PermissionStruct * permission;
   PRInt32 count = 0;
 
   /* step through all cookies and delete those that are in the sequence */
   char * gone = cookie_FindValueInArgs(results, "|goneC|");
-  cookie_LockCookieList();
+  cookie_LockList();
   if (cookie_cookieList) {
     count = cookie_cookieList->Count();
     while (count>0) {
@@ -2286,27 +2566,35 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
       }
     }
   }
-  cookie_SaveCookies();
-  cookie_UnlockCookieList();
+  cookie_Save();
+  cookie_UnlockList();
   nsCRT::free(gone);
 
   /* step through all permissions and delete those that are in the sequence */
-  gone = cookie_FindValueInArgs(results, "|goneP|");
-  cookie_LockPermissionList();
-  if (cookie_permissionList) {
-    count = cookie_permissionList->Count();
-    while (count>0) {
-      count--;
-      permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(count));
-      if (permission && cookie_InSequence(gone, count)) {
-        cookie_FreePermission(permission, PR_FALSE);
-        cookie_permissionsChanged = PR_TRUE;
+  for (PRInt32 type = 0; type < NUMBER_OF_PERMISSIONS; type++) {
+    switch (type) {
+      case COOKIEPERMISSION:
+        gone = cookie_FindValueInArgs(results, "|goneP|");
+        break;
+      case IMAGEPERMISSION:
+        gone = cookie_FindValueInArgs(results, "|goneI|");
+        break;
+    }
+    permission_LockList();
+    if (cookie_permissionList) {
+      count = cookie_permissionList->Count();
+      while (count>0) {
+        count--;
+        if (cookie_InSequence(gone, count)) {
+          permission_Free(count, type, PR_FALSE);
+          cookie_permissionsChanged = PR_TRUE;
+        }
       }
     }
+    permission_Save();
+    permission_UnlockList();
+    nsCRT::free(gone);
   }
-  cookie_SavePermissions();
-  cookie_UnlockPermissionListst();
-  nsCRT::free(gone);
 }
 
 #define BUFLEN2 5000
@@ -2318,7 +2606,7 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
   int g, cookieNum;
   cookie_CookieStruct * cookie;
 
-  cookie_LockCookieList();
+  cookie_LockList();
 
   /* Get rid of any expired cookies now so user doesn't
    * think/see that we're keeping cookies in memory.
@@ -2363,42 +2651,63 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     aCookieList += buffer;
   }
   PR_FREEIF(buffer);
-  cookie_UnlockCookieList();
+  cookie_UnlockList();
 }
 
 PUBLIC void
-COOKIE_GetPermissionListForViewer(nsString& aPermissionList) {
+COOKIE_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type) {
   char *buffer = (char*)PR_Malloc(BUFLEN2);
   int g = 0, permissionNum;
-  cookie_PermissionStruct * permission;
+  permission_HostStruct * hostStruct;
+  permission_TypeStruct * typeStruct;
 
-  cookie_LockPermissionList();
+  permission_LockList();
   buffer[0] = '\0';
   permissionNum = 0;
 
   if (cookie_permissionList == nsnull) {
-    cookie_UnlockPermissionListst();
+    permission_UnlockList();
     return;
   }
 
   PRInt32 count = cookie_permissionList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
-    if (permission) {
-      g += PR_snprintf(buffer+g, BUFLEN2-g,
-        "%c%d%c%c%s",
-        BREAK,
-        permissionNum,
-        BREAK,
-        permission->permission ? '+' : '-',
-        permission->host
-      );
-      permissionNum++;
+    hostStruct = NS_STATIC_CAST(permission_HostStruct*, cookie_permissionList->ElementAt(i));
+    if (hostStruct) {
+      PRInt32 count2 = hostStruct->permissionList->Count();
+      for (PRInt32 typeIndex=0; typeIndex<count2; typeIndex++) {
+        typeStruct = NS_STATIC_CAST
+          (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
+        if (typeStruct->type == type) {
+          g += PR_snprintf(buffer+g, BUFLEN2-g,
+            "%c%d%c%c%s",
+            BREAK,
+            permissionNum,
+            BREAK,
+            (typeStruct->permission) ? '+' : '-',
+            hostStruct->host
+          );
+          permissionNum++;
+        }
+      }
     }
   }
   aPermissionList = buffer;
   PR_FREEIF(buffer);
-  cookie_UnlockPermissionListst();
+  permission_UnlockList();
+}
+
+PUBLIC void
+Image_Block(nsString imageURL) {
+  if (imageURL.Length() == 0) {
+    return;
+  }
+  char * imageURLCString = imageURL.ToNewCString();
+  char *host = cookie_ParseURL(imageURLCString, GET_HOST_PART);
+  Recycle(imageURLCString);
+  if (PL_strlen(host) != 0) {
+    permission_Add(host, PR_FALSE, IMAGEPERMISSION, PR_TRUE);
+  }
 }
 
 /* Hack - Neeti remove this */

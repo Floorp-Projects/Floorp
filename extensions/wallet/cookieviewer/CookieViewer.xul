@@ -44,6 +44,7 @@
     <tabbox>
       <tab selected="true">&tab.cookiesonsystem.label;</tab>
       <tab>&tab.bannedservers.label;</tab>
+      <tab id="imagesTab" style="display:none">&tab.bannedimages.label;</tab>
 	  <spring flex="1"/>
     </tabbox>
     <tabpanel align="horizontal" style="width: 400px;">
@@ -126,6 +127,30 @@
         </box>
         <spring style="height: 5px;"/>
       </box>
+
+      <box class="tabpanel" id="images" style="display:none" flex="100%" align="vertical">
+        <html:div>&div.bannedimages.label;</html:div>
+        <spring flex="5%"/>
+          <tree id="imagestree" class="inset" style="height: 280px; width: 380px;" align="vertical"
+                onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');"
+                onclick="ViewImageSelected();">
+            <treehead>
+              <treerow>
+                <treecell value="&treehead.sitename.label;"/>
+                <treecell value="&treehead.status.label;"/>
+              </treerow>          
+            </treehead>
+            <treechildren id="imageslist"/>
+          </tree>
+        <spring style="height: 5px;"/>
+        <box align="horizontal">
+          <titledbutton id="removeImages" class="dialog push" disabled="true" 
+                        value="&removeimage.label;" 
+                        onclick="DeleteImageSelected();"/>
+        </box>
+        <spring style="height: 5px;"/>
+      </box>
+
     </tabpanel>
   </tabcontrol>
   

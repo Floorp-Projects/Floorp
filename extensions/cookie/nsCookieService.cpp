@@ -149,10 +149,23 @@ NS_IMETHODIMP nsCookieService::Cookie_GetCookieListForViewer(nsString& aCookieLi
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookieService::Cookie_GetPermissionListForViewer(nsString& aPermissionList) {
-  ::COOKIE_GetPermissionListForViewer(aPermissionList);
+NS_IMETHODIMP nsCookieService::Cookie_GetPermissionListForViewer
+    (nsString& aPermissionList, PRInt32 type) {
+  ::COOKIE_GetPermissionListForViewer(aPermissionList, type);
   return NS_OK;
 }
+
+NS_IMETHODIMP nsCookieService::Image_Block(nsAutoString imageURL) {
+  printf("entered nsCookieService.cpp\n");
+  ::Image_Block(imageURL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCookieService::Image_CheckForPermission
+    (char * hostname, PRBool &permission) {
+  return ::Image_CheckForPermission(hostname, permission);
+}
+
 
 NS_IMETHODIMP nsCookieService::CookieEnabled(PRBool* aEnabled)
 {

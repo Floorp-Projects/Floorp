@@ -1,6 +1,8 @@
 <!ENTITY     tab.cookiesonsystem.label      "Stored Cookies">
-<!ENTITY     tab.bannedservers.label        "Website Setup">
+<!ENTITY     tab.bannedservers.label        "Blocked Cookies">
 <!ENTITY     div.bannedservers.label        "Select Internet websites that can and cannot store Cookies on your computer.">
+<!ENTITY     tab.bannedimages.label         "Blocked Images">
+<!ENTITY     div.bannedimages.label         "Select Internet websites from which images are not fetched.">
 <!ENTITY     div.cookiesonsystem.label      "View and Remove Cookies that are stored on your computer.">
 <!ENTITY     treehead.cookiename.label      "Cookie Name">
 <!ENTITY     treehead.cookiedomain.label    "Cookie Domain"> 
@@ -20,6 +22,9 @@
 
 <!ENTITY     addpermission.label            "New Site">
 <!ENTITY     removepermission.label         "Remove Site">
+<!ENTITY     removeimage.label              "Remove Site">
 
 <!ENTITY     canSet.label                   "can set cookies">
 <!ENTITY     cannotSet.label                "cannot set cookies">
+<!ENTITY     canLoad.label                  "can load images">
+<!ENTITY     cannotLoad.label               "cannot load images">

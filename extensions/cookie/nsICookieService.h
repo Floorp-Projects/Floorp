@@ -93,7 +93,9 @@ public:
    */
   NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results)=0;
   NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList)=0;
-  NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList)=0;
+  NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type)=0;
+  NS_IMETHOD Image_Block(nsAutoString imageURL)=0;
+  NS_IMETHOD Image_CheckForPermission(char * hostname, PRBool &permission)=0;
 
   /*
    * Specifies whether cookies will be accepted or not. 

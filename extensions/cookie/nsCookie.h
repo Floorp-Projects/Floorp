@@ -48,8 +48,9 @@ extern void COOKIE_RegisterCookiePrefCallbacks(void);
 extern void COOKIE_RemoveAllCookies(void);
 extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, char * set_cookie_header, char * server_date);
 extern void COOKIE_GetCookieListForViewer (nsString& aCookieList);
-extern void COOKIE_GetPermissionListForViewer (nsString& aPermissionList);
+extern void COOKIE_GetPermissionListForViewer (nsString& aPermissionList, PRInt32 type);
 extern void COOKIE_CookieViewerReturn(nsAutoString results);
 extern COOKIE_BehaviorEnum COOKIE_GetBehaviorPref();
-
+extern void Image_Block(nsString imageURL);
+extern nsresult Image_CheckForPermission(char * hostname, PRBool &permission);
 #endif /* COOKIES_H */

@@ -68,7 +68,7 @@ CookieViewerImpl::GetCookieValue(char** aValue)
 }
 
 NS_IMETHODIMP
-CookieViewerImpl::GetPermissionValue(char** aValue)
+CookieViewerImpl::GetPermissionValue(PRInt32 type, char** aValue)
 {
   NS_PRECONDITION(aValue != nsnull, "null ptr");
   if (!aValue) {
@@ -79,7 +79,7 @@ CookieViewerImpl::GetPermissionValue(char** aValue)
   NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
   if (NS_FAILED(res)) return res;
   nsAutoString PermissionList;
-  res = cookieservice->Cookie_GetPermissionListForViewer(PermissionList);
+  res = cookieservice->Cookie_GetPermissionListForViewer(PermissionList, type);
   if (NS_SUCCEEDED(res)) {
     *aValue = PermissionList.ToNewCString();
   }
@@ -99,5 +99,22 @@ CookieViewerImpl::SetValue(const char* aValue, nsIDOMWindow* win)
   if (NS_FAILED(res)) return res;
   nsAutoString netList = aValue;
   res = cookieservice->Cookie_CookieViewerReturn(netList);
+  return res;
+}
+
+NS_IMETHODIMP
+CookieViewerImpl::BlockImage(const char* imageURL)
+{
+  NS_PRECONDITION(imageURL != nsnull, "null ptr");
+  if (! imageURL) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsresult res;
+  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+  nsAutoString imageURLAutoString = imageURL;
+  res = cookieservice->Image_Block(imageURLAutoString);
   return res;
 }

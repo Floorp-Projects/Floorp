@@ -36,8 +36,10 @@
 interface nsICookieViewer : nsISupports
 {
     void SetValue(in string aValue, in nsIDOMWindow win);
+    void BlockImage(in string imageURL);
     string GetCookieValue();
-    string GetPermissionValue();
+    string GetPermissionValue(in PRInt32 type);
+
 };
 
 %{ C++

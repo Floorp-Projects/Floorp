@@ -220,6 +220,8 @@ pref("network.hosts.nntp_server",           "news.mozilla.org");
 pref("network.hosts.socks_server",          "");
 pref("network.hosts.socks_serverport",      1080);
 pref("network.hosts.socks_conf",            "");
+pref("network.image.imageBehavior",         0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
+pref("network.image.warnAboutImages",       false);
 pref("network.proxy.autoconfig_url",        "");
 pref("network.proxy.type",                  0);
 pref("network.proxy.ftp",                   "");

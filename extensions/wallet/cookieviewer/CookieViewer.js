@@ -43,11 +43,15 @@ var cookieList            = [];            // array of cookies (OLD STREAM)
 var cookies               = [];            // array of cookeis (NEW OBJECT)
 var permissionList        = [];            // array of permissions (OLD STREAM)
 var permissions           = [];            // array of permissions (NEW OBJECT)
+var imageList             = [];            // array of images (OLD STREAM)
+var images                = [];            // array of images (NEW OBJECT)
 var deleted_cookies       = [];
 var deleted_permissions   = [];
+var deleted_images        = [];
 // for dealing with the interface:
 var gone_c                = "";
 var gone_p                = "";
+var gone_i                = "";
 // string bundle
 var bundle                = null;
 // CHANGE THIS WHEN MOVING FILES - strings localization file!
@@ -62,9 +66,31 @@ function Startup()
   cookieviewer = cookieviewer.QueryInterface(Components.interfaces.nsICookieViewer);
   // intialise string bundle for 
   bundle = srGetStrBundle(JS_STRINGS_FILE);
-  
+
+  // install imageblocker tab if instructed to do so by the "imageblocker.enabled" pref
+  try {
+    pref = Components.classes['component://netscape/preferences'];
+    pref = pref.getService();
+    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+    try {
+      if (pref.GetBoolPref("imageblocker.enabled")) {
+        var element;
+        element = document.getElementById("imagesTab");
+        element.setAttribute("style","display: inline;" );
+        element = document.getElementById("images");
+        element.setAttribute("style","display: inline;" );
+      }
+    } catch(e) {
+    }
+  } catch (ex) {
+    dump("failed to get prefs service!\n");
+    pref = null;
+  }
+
+ 
   loadCookies();
   loadPermissions();
+  loadImages();
   doSetOKCancel(onOK, null);
   window.sizeToContent();
 }
@@ -250,7 +276,7 @@ function Permission(number,type,domain)
 function loadPermissions()
 {
   // get permissions into an array
-  list            = cookieviewer.GetPermissionValue();
+  list            = cookieviewer.GetPermissionValue(0);
   BREAK           = list[0];
   permissionList  = list.split(BREAK);
   CreatePermissionList();   // builds an object array from permissionstream
@@ -284,12 +310,76 @@ function DeletePermissionSelected()
   }
 }
 
+/*** =================== IMAGES CODE =================== ***/
+
+// function : <CookieViewer.js>::CreateImageList();
+// purpose  : creates an array of image objects from the image stream
+function CreateImageList()
+{
+  count = 0;
+  for(i = 1; i < imageList.length; i+=2)
+  {
+    images[count] = new Image();
+    images[count].number     = imageList[i];
+    imgStr                   = imageList[i+1];
+    images[count].type       = imgStr.substring(0,1);
+    images[count].domain     = imgStr.substring(1,imgStr.length);
+    count++;
+  }  
+}
+
+// function : <CookieViewer.js>::Image();
+// purpose  : an home-brewed object that represents a individual image in the stream
+function Image(number,type,domain)
+{
+  this.number       = (number) ? number : null;
+  this.type         = (type) ? type : null;
+  this.domain       = (domain) ? domain : null;
+}
+
+// function : <CookieViewer.js>::loadImages();
+// purpose  : loads the list of images into the image list treeview
+function loadImages()
+{
+  // get images into an array
+  list = cookieviewer.GetPermissionValue(1);
+  BREAK = list[0];
+  imageList = list.split(BREAK);
+  CreateImageList();   // builds an object array from imagestream
+  for(i = 0; i < images.length; i++)
+  {
+    var domain = images[i].domain;
+    if(images[i].type == "+")
+      contentStr = bundle.GetStringFromName("canImages");
+    else if(images[i].type == "-")
+      contentStr = bundle.GetStringFromName("cannotImages");    
+    AddItem("imageslist",[domain,contentStr],"imgtree_",images[i].number)
+  }
+}
+
+function ViewImageSelected()
+{
+  var imagetree = document.getElementById("imagestree");
+  if( imagetree.selectedItems.length )
+    document.getElementById("removeImages").removeAttribute("disabled","true");
+}
+
+function DeleteImageSelected()
+{
+  gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');
+  if( !document.getElementById("imagestree").selectedItems.length ) {
+    if( !document.getElementById("removeImages").disabled ) {
+      document.getElementById("removeImages").setAttribute("disabled", "true")
+    }
+  }
+}
+
 /*** =================== GENERAL CODE =================== ***/
 
 // function : <CookieViewer.js>::doOKButton();
 // purpose  : saves the changed settings and closes the dialog.
 function onOK(){
-  var result = "|goneC|" + gone_c + "|goneP|" + gone_p + "|";
+  var result = "|goneC|" + gone_c + "|goneP|" + gone_p  + "|goneI|" + gone_i+ "|";
   cookieviewer.SetValue(result, window);
   return true;
 }
