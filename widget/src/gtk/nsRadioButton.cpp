@@ -158,6 +158,7 @@ NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
     gtk_label_set(GTK_LABEL(mLabel), label);
   } else {
     mLabel = gtk_label_new(label);
+    gtk_misc_set_alignment (GTK_MISC (mLabel), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(mWidget), mLabel);
     gtk_widget_show(mLabel); /* XXX */
   }
