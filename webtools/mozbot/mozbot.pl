@@ -189,9 +189,50 @@ foreach my $i (keys %rdfcmds) {
 
 
 &debug ("connecting to $server $port as $nick on $channel");
-$irc->start;
 
 # and done.
+
+
+# Use this routine, always, instead of the standard "privmsg" routine.  This
+# one makes sure we don't send more than one message every two seconds or so,
+# which will make servers not whine about us flooding the channel.
+#
+# Actually, it seems that we can send two in a row just fine, but at that
+# point we should start throttling.
+
+my $lastsenttime = 0;
+my @msgqueue = ();
+sub sendmsg {
+    my ($who, $msg) = (@_);
+    my $now = time();
+    if ($now > $lastsenttime && 0 == @msgqueue) {
+        $bot->privmsg($who, $msg);
+        $lastsenttime = $now;
+    } else {
+        debug("queuing: $who $msg");
+        push(@msgqueue, [$who, $msg]);
+        if (1 == @msgqueue) {
+            $bot->schedule(0, \&drainmsgqueue);
+        }
+    }
+}
+
+sub drainmsgqueue {
+    debug("In drainmsgqueue");
+    if (0 < @msgqueue) {
+        my ($who, $msg) = (@{shift(@msgqueue)});
+        debug("-- drainmsgqueue: $who $msg");
+        $bot->privmsg($who, $msg);
+        $lastsenttime = time();
+        if (0 < @msgqueue) {
+            $bot->schedule(2, \&drainmsgqueue);
+        }
+    }
+}
+        
+
+
+
 
 ################################
 # Net::IRC handler subroutines #
@@ -274,15 +315,14 @@ sub bot_bless {
     my ($nick, $cmd, $rest) = (@_);
     my ($who, $where) = split(' ', $rest);
     if (! $who or ! $where) {
-        $bot->privmsg ($nick, "usage: bless [ user ] [ host ] " . 
-						"(example: bless marca netscape.com)");
+        sendmsg($nick, "usage: bless [ user ] [ host ] " . 
+                "(example: bless marca netscape.com)");
         return;
     }
     $admins{$who} = $where;
     &debug ("$nick blessed $who ($where)");
     &store_admin_conf (\%admins);
-    $bot->privmsg ($nick, 
-					"mozbot admins: " . join ' ', (sort keys %admins));
+    sendmsg($nick, "mozbot admins: " . join ' ', (sort keys %admins));
 }
 
 sub bot_unbless {
@@ -292,18 +332,17 @@ sub bot_unbless {
         delete $admins{$who};
         &debug ("$nick unblessed $who");
         &store_admin_conf (\%admins);
-        $bot->privmsg ($nick, 
-                        "mozbot admins: " . join ' ', (sort keys %admins));
+        sendmsg($nick, "mozbot admins: " . join ' ', (sort keys %admins));
         return;
     }
-    $bot->privmsg($nick, "Can only unbless one of: " .
-                   join(' ', (sort keys %admins)));
+    sendmsg($nick, "Can only unbless one of: " .
+            join(' ', (sort keys %admins)));
 }
 
 sub bot_shutdown {
     my ($nick, $cmd, $rest) = (@_);
     if ($rest ne "yes") {
-        $bot->privmsg ($nick, "usage: shutdown yes");
+        sendmsg($nick, "usage: shutdown yes");
         return;
     }
     &debug ("forced shutdown from $nick");
@@ -319,7 +358,7 @@ sub bot_say {
     if ($text =~ m@^/me (.*)@) {
         $bot->me($channel, $1);
     } else {
-        $bot->privmsg ($channel, $text);
+        sendmsg($channel, $text);
     }
 }
 
@@ -327,7 +366,7 @@ sub bot_say {
 sub bot_list {
     my ($nick, $cmd, $rest) = (@_);
     foreach (sort keys %admins) {
-        $bot->privmsg ($nick, "$_ $admins{$_}");
+        sendmsg($nick, "$_ $admins{$_}");
     }
 }
 
@@ -365,7 +404,7 @@ sub do_unknown {
         $::eliza = new Chatbot::Eliza;
     }
     my $result = $::eliza->transform("$cmd $rest");
-    $bot->privmsg($nick, $result);
+    sendmsg($nick, $result);
 }
 
 
@@ -382,14 +421,14 @@ sub saylongline {
                 $pos = $MAXPROTOCOLLENGTH - 1;
             }
         }
-        $bot->privmsg($nick, substr($str, 0, $pos));
+        sendmsg($nick, substr($str, 0, $pos));
         $str = substr($str, $pos);
         if (index($str, $spacer) == 0) {
             $str = substr($str, length($spacer));
         }
     }
     if ($str ne "") {
-        $bot->privmsg($nick, $str);
+        sendmsg($nick, $str);
     }
 }
 
@@ -475,7 +514,7 @@ sub bot_rdfchannel {
         do_headlines($nick, "Items in $rdf_title{$url} ($rdf_link{$url})",
                      $rdf_items{$url});
     } else {
-        $bot->privmsg($nick, "Nothing has been found yet at $url");
+        sendmsg($nick, "Nothing has been found yet at $url");
     }
 }
 
@@ -483,7 +522,7 @@ sub bot_rdfchannel {
 
 sub bot_hi {
     my ($nick, $cmd, $rest) = (@_);
-    $bot->privmsg($nick, $greetings[$greet++] . " $::speaker");
+    sendmsg($nick, $greetings[$greet++] . " $::speaker");
     $greet = 0 if ($greet > $#greetings);
 }
 
@@ -542,22 +581,23 @@ sub listcmds {
 
 sub bot_about {
     my ($nick, $cmd, $rest) = @_;
-    $bot->privmsg($::speaker,  "i am mozbot version $VERSION. hack on me! " .
+    sendmsg($::speaker,  "i am mozbot version $VERSION. hack on me! " .
         "harrison\@netscape.com 10/16/98. " .
         "connected to $server since " .
                   &logdate ($uptime) . " (" . &days ($uptime) . "). " .
 				"see http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla/webtools/mozbot/&date=week " .
                   "for a changelog.");
-    $bot->privmsg($::speaker, "Known commands are: " .
-                  listcmds(\%pubcmds));
-    $bot->privmsg($::speaker, "If you /msg me, I'll also respond to: " .
-                  listcmds(\%msgcmds));
+    sendmsg($::speaker, "Known commands are: " .
+            listcmds(\%pubcmds));
+    sendmsg($::speaker, "If you /msg me, I'll also respond to: " .
+            listcmds(\%msgcmds));
     if (exists $admins{$::speaker}) {
-        $bot->privmsg($::speaker, "And you're an admin, so you can also do: " .
-                      listcmds(\%admincmds));
+        sendmsg($::speaker, "And you're an admin, so you can also do: " .
+                listcmds(\%admincmds));
     }
     if ($nick eq $channel) {
-        $bot->privmsg($nick, "[ Directions on talking to me have been sent to $::speaker ]");
+        sendmsg($nick,
+                "[ Directions on talking to me have been sent to $::speaker ]");
     }
 
 }
@@ -577,7 +617,7 @@ sub get_moon_str
 
 sub bot_moon {
     my ($nick, $cmd, $rest) = @_;
-    $bot->privmsg($nick, get_moon_str());
+    sendmsg($nick, get_moon_str());
 }
 
 
@@ -585,7 +625,7 @@ sub bot_moon {
 
 sub bot_up {
     my ($nick, $cmd, $rest) = @_;
-    $bot->privmsg($nick,  &logdate ($uptime) . " (" . &days ($uptime) . ")");
+    sendmsg($nick,  &logdate ($uptime) . " (" . &days ($uptime) . ")");
 }
 
 # bot_urls: show last ten urls caught by mozbot
@@ -593,10 +633,10 @@ sub bot_up {
 sub bot_urls {
     my ($nick, $cmd, $rest) = @_;
     if ($#urls == -1) {
-        $bot->privmsg($nick, "- mozbot has seen no URLs yet -");
+        sendmsg($nick, "- mozbot has seen no URLs yet -");
     } else {
         foreach my $m (@urls) {
-            $bot->privmsg($nick, $m);
+            sendmsg($nick, $m);
         }
     }
 }
@@ -661,7 +701,7 @@ sub bot_tinderbox {
 
 
     foreach my $m (@buf) {
-         $bot->privmsg($nick, $m);
+         sendmsg($nick, $m);
     }
 
 }
@@ -854,8 +894,8 @@ sub tinderbox
 				{
 				if (defined $$newstatus{$s} && $$status{$s} ne $$newstatus{$s})
 					{
-					$bot->privmsg ($channel,
-						"$s changed state from $$status{$s} to $$newstatus{$s}");
+					sendmsg($channel,
+					  "$s changed state from $$status{$s} to $$newstatus{$s}");
 					}
 				}
 			}
@@ -864,10 +904,10 @@ sub tinderbox
         foreach my $t (@trees) {
             foreach my $e (sort keys %{$$newtrees{$t}}) {
                 if (!defined $$trees{$t}{$e}) {
-                    $bot->privmsg($channel, "$t: A new column '$e' has appeared ($$newtrees{$t}{$e})");
+                    sendmsg($channel, "$t: A new column '$e' has appeared ($$newtrees{$t}{$e})");
                 } else {
                     if ($$trees{$t}{$e} ne $$newtrees{$t}{$e}) {
-                        $bot->privmsg($channel, "$t: '$e' has changed state from $$trees{$t}{$e} to $$newtrees{$t}{$e}");
+                        sendmsg($channel, "$t: '$e' has changed state from $$trees{$t}{$e} to $$newtrees{$t}{$e}");
                     }
                 }
             }
@@ -881,9 +921,6 @@ sub tinderbox
 
 
 # See if someone has changed our source.
-
-$::ourdate = 0;
-$::tinderboxdate = 0;
 
 sub checksourcechange {
     my ($self) = @_;
@@ -1011,7 +1048,7 @@ sub ReportStock {
     my $ref = $stockvals{$name};
     my $a = FracStr($ref->[0], 0);
     my $b = FracStr($ref->[3], 1);
-    $bot->privmsg($nick, "$title$name at $a ($b)");
+    sendmsg($nick, "$title$name at $a ($b)");
 }
 
 sub bot_stocks {
@@ -1031,3 +1068,10 @@ sub trim {
     s/\s+$//g;
     return $_;
 }
+
+
+
+# Do this at the very end, so we can intersperse "my" initializations outside
+# of routines above and be assured that they will run.
+
+$irc->start;
