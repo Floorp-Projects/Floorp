@@ -76,8 +76,36 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"ISO-10646-UCS-4", "UCS4", CS_UCS4},
 			{"x-imap4-modified-utf7", "", CS_IMAP4_UTF7},
 			{"armscii-8", "", CS_ARMSCII8},
+			{"HZ-GB-2312", "", CS_HZ},
+			{"ISO-2022-CN", "", CS_ISO_2022_CN},
+			{"x-gb13000", "", CS_GB13000},
+			{"x-big5-plus", "", CS_BIG5_PLUS},
+			{"x-UHC", "", CS_UHC }, /* cp 949 */
+			{"x-cns11643-3", "", CS_CNS11643_3},
+			{"x-cns11643-4", "", CS_CNS11643_4},
+			{"x-cns11643-5", "", CS_CNS11643_5},
+			{"x-cns11643-6", "", CS_CNS11643_6},
+			{"x-cns11643-7", "", CS_CNS11643_7},
+			{"x-cns11643-8", "", CS_CNS11643_8},
+			{"x-cns11643-9", "", CS_CNS11643_9},
+			{"x-cns11643-10", "", CS_CNS11643_10},
+			{"x-cns11643-11", "", CS_CNS11643_11},
+			{"x-cns11643-12", "", CS_CNS11643_12},
+			{"x-cns11643-13", "", CS_CNS11643_13},
+			{"x-cns11643-14", "", CS_CNS11643_14},
+			{"x-cns11643-15", "", CS_CNS11643_15},
+			{"x-cns11643-16", "", CS_CNS11643_16},
+			{"VISCII", "", CS_VISCII},
+			{"VIQR", "", CS_VIQR},
+			{"KOI8-U", "", CS_KOI8_U},
+			{"iso-ir-111", "", CS_ISO_IR_111},
+			{"iso_8859-6-e", "", CS_8859_6_E},
+			{"iso_8859-6-i", "", CS_8859_6_I},
+			{"iso_8859-8-e", "", CS_8859_8_E},
+			{"iso_8859-8-i", "", CS_8859_8_I},
+			{"x-johab", "", CS_JOHAB}, /* CP 1361 */
+			{"x-johabfont", "", CS_JOHABFONT}, /* hangterm johab font */
 
-#ifdef XP_OS2
 	/* Additional OS/2 codepages. These are IANA primary names */
 			{"ibm850", "Cp850", CS_CP_850},         /* PC Latin 1 */
 			{"ibm852", "Cp852", CS_CP_852},         /* PC Latin 2 */
@@ -96,7 +124,6 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"cp862", "", CS_CP_862},               /* PC Hebrew */
 			{"cp864", "", CS_CP_864},               /* PC Arabic */
 			{"cp874", "", CS_CP_874},               /* PC Thai */
-#endif
 
 	/* aliases for us-ascii: */
 			{"ansi_x3.4-1968", "", CS_ASCII},
@@ -120,9 +147,7 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"cp819", "", CS_LATIN1},
 			{"ISO-8859-1-Windows-3.0-Latin-1", "", CS_LATIN1},
 			{"ISO-8859-1-Windows-3.1-Latin-1", "", CS_LATIN1},
-#ifdef XP_OS2
 			{"windows-1252", "Cp1252", CS_LATIN1},
-#endif            
 			
 	/* aliases for ISO_8859-2:	*/
 			{"latin2", "", CS_LATIN2},			
@@ -225,9 +250,7 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"windows-1254", "", CS_8859_9},  /* turkish */
 
 	/* aliases for UNICODE-1-1:	*/
-#ifdef XP_OS2
 			{"csUnicode", "", CS_UCS2},
-#endif      
 			{"csUnicode11", "", CS_UCS2},
 			{"ISO-10646-UCS-BASIC", "", CS_UCS2},
 			{"csUnicodeASCII", "", CS_UCS2},
@@ -249,6 +272,59 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"x-user-defined", "", CS_USRDEF2},											
 
 			{"RESERVED", "", CS_DEFAULT},			/* or unknown charset		*/
+
+	/* aliases for VISCII:	*/
+			{"csVISCII", "", CS_VISCII},
+
+	/* aliases for VIQR:	*/
+			{"csVIQR", "", CS_VIQR},
+
+	/* aliases for ISO-8859-4:	*/
+			{"ISO_8859-4:1988", "", CS_8859_4},
+			{"iso-ir-110", "", CS_8859_4},
+			{"ISO_8859-4", "", CS_8859_4},
+			{"latin4", "", CS_8859_4},
+			{"l4", "", CS_8859_4},
+			{"csISOLatin4", "", CS_8859_4},
+
+	/* aliases for ISO-8859-9:	*/
+			{"ISO_8859-9:1989", "", CS_8859_9},
+			{"iso-ir-148", "", CS_8859_9},
+			{"ISO_8859-9", "", CS_8859_9},
+			{"latin5", "", CS_8859_9},
+			{"l5", "", CS_8859_9},
+			{"csISOLatin5", "", CS_8859_9},
+
+	/* aliases for ISO-8859-6:	*/
+			{"ISO_8859-6:1987", "", CS_8859_6},
+			{"iso-ir-127", "", CS_8859_6},
+			{"ISO_8859-6", "", CS_8859_6},
+			{"ECMA-114", "", CS_8859_6},
+			{"ASMO-708", "", CS_8859_6},
+			{"arabic", "", CS_8859_6},
+			{"csISOLatinArabic", "", CS_8859_6},
+
+	/* aliases for ISO_8859-6-i:	*/
+			{"csISO88596I", "", CS_8859_6_I},
+
+	/* aliases for ISO_8859-6-e:	*/
+			{"csISO88596E", "", CS_8859_6_E},
+
+	/* aliases for ISO-8859-8:	*/
+			{"iso-ir-138", "", CS_8859_8},
+			{"ISO_8859-8", "", CS_8859_8},
+			{"hebrew", "", CS_8859_8},
+			{"csISOLatinHebrew", "", CS_8859_8},
+
+	/* aliases for ISO_8859-8-i:	*/
+			{"csISO88598I", "", CS_8859_8_I},
+
+	/* aliases for ISO_8859-8-e:	*/
+			{"csISO88598E", "", CS_8859_8_E},
+
+	/* aliases for ISO-IR-111:	*/
+			{"ECMA-cyrillic", "", CS_ISO_IR_111},
+			{"csISO111ECMACyrillic", "", CS_ISO_IR_111},
 
 			{"", 	"", CS_UNKNOWN}
 };
