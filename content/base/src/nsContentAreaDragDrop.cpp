@@ -1108,8 +1108,9 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
         // pass out the image source string
         mImageSourceString = mUrlString;
 
-        // also grab the image data
-        mImage = nsContentUtils::GetImageFromContent(image);
+        // also grab the image data, assuming the image extension in
+        // the image URI maps to a known image mimetype.
+        mImage = nsContentUtils::GetImageFromContent(image, PR_TRUE);
 
         if (parentLink)
         {
