@@ -2721,8 +2721,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
 
       nsIFrame* newScrollableFrame = nsnull;
-      nsIDocument* document;
-      aDocElement->GetDocument(document);
+      nsCOMPtr<nsIDocument> document;
+      aDocElement->GetDocument(*getter_AddRefs(document));
 
       BeginBuildingScrollFrame( aPresContext,
                                 state,
@@ -4356,8 +4356,8 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresContext*          aPresCon
                                                nsIStyleContext*&        aScrolledContentStyle)                                                                                                                                          
 {
     nsIFrame *scrollFrame;
-    nsIDocument* document;
-    aContent->GetDocument(document);
+    nsCOMPtr<nsIDocument> document;
+    aContent->GetDocument(*getter_AddRefs(document));
     nsCOMPtr<nsIStyleContext> scrolledContentStyle;
 
     
