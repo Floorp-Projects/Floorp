@@ -1160,7 +1160,8 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
                                          NS_ConvertASCIItoUTF16(url).get(), 
                                          keyword.get(), 
                                          keywordDesc.get(), 
-                                         NS_LITERAL_STRING("").get(), 
+                                         nsnull,
+                                         nsnull, 
                                          keywordsFolder, 
                                          -1, 
                                          getter_AddRefs(bookmark));

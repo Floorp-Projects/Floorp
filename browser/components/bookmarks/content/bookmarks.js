@@ -480,7 +480,7 @@ var BookmarksCommand = {
       items = data.substring(0, ix != -1 ? ix : data.length);
       name  = data.substring(ix);
       // XXX: we should infer the best charset
-      BookmarksUtils.createBookmark(null, items, null, name);
+      BookmarksUtils.createBookmark(null, items, null, name, null);
       items = [items];
       break;
     default: 
@@ -644,7 +644,7 @@ var BookmarksCommand = {
   createNewBookmark: function (aTarget)
   {
     var name     = BookmarksUtils.getLocaleString("ile_newbookmark");
-    var resource = BMSVC.createBookmark(name, "", "", "", "");
+    var resource = BMSVC.createBookmark(name, "", "", "", "", null);
     this.createNewResource(resource, aTarget, "newbookmark");
   },
 
@@ -1295,7 +1295,7 @@ var BookmarksUtils = {
         break;
       case "text/x-moz-url":
       case "text/unicode":
-        rSource = BookmarksUtils.createBookmark(null, uri, null, extra);
+        rSource = BookmarksUtils.createBookmark(null, uri, null, extra, null);
         parent = null;
         break;
       }
@@ -1347,7 +1347,7 @@ var BookmarksUtils = {
       if (fw)
         aCharSet = fw.document.characterSet;
     }
-    return BMSVC.createBookmark(aName, aURL, null, null, aCharSet);
+    return BMSVC.createBookmark(aName, aURL, null, null, aCharSet, null);
   },
 
   flushDataSource: function ()

@@ -78,6 +78,9 @@
  *                        visible.
  *   window.arguments[8]: Whether or not a keyword is required to add
  *                        the bookmark.
+ *   window.arguments[9]: PostData to be saved with this bookmark, 
+ *                        in the format a string of name=value pairs
+ *                        separated by CRLFs.
  */
 
 var gSelectedFolder;
@@ -91,6 +94,7 @@ var gGroup;
 var gKeywordRequired;
 var gSuggestedKeyword;
 var gRequiredFields = [];
+var gPostData;
 
 # on windows, sizeToContent is buggy (see bug 227951), we''ll use resizeTo
 # instead and cache the bookmarks tree view size.
@@ -121,6 +125,7 @@ function Startup()
   onFieldInput();
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));
+  gPostData = window.arguments[9];
 
 # read the persisted attribute. If it is not present, set a default height.
   WSucks = parseInt(gBookmarksTree.getAttribute("height"));
@@ -165,11 +170,11 @@ function onOK()
     for (var i = 0; i < groups.length; ++i) {
       url = getNormalizedURL(groups[i].url);
       BMDS.createBookmarkInContainer(groups[i].name, url, gKeyword.value, null,
-                                     groups[i].charset, rSource, -1);
+                                     groups[i].charset, gPostData, rSource, -1);
     }
   } else {
     url = getNormalizedURL(window.arguments[1]);
-    rSource = BMDS.createBookmark(gName.value, url, gKeyword.value, null, window.arguments[3]);
+    rSource = BMDS.createBookmark(gName.value, url, gKeyword.value, null, window.arguments[3], gPostData);
   }
 
   var selection = BookmarksUtils.getSelectionFromResource(rSource);

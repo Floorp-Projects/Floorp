@@ -1116,6 +1116,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
                                          NS_ConvertUTF8toUTF16(keyword).get(), 
                                          keywordDesc.get(), 
                                          nsnull, 
+                                         nsnull,
                                          keywordsFolder,
                                          -1, 
                                          getter_AddRefs(itemRes));

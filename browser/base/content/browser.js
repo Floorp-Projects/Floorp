@@ -244,7 +244,7 @@ function Startup()
  
   if (uriToLoad && !gIsLoadingBlank) {
     if ("arguments" in window && window.arguments.length >= 3)
-      loadURI(uriToLoad, window.arguments[2]);
+      loadURI(uriToLoad, window.arguments[2], null);
     else
       loadOneOrMoreURIs(uriToLoad);
   }
@@ -775,12 +775,12 @@ function loadOneOrMoreURIs(aURIString)
 {
   if (aURIString.indexOf("|") != -1) {
     var urls = aURIString.split("|");
-    loadURI(urls[0]);
+    loadURI(urls[0], null, null);
     for (var i = 1; i < urls.length; ++i)
       gBrowser.addTab(urls[i]);
   }
   else
-    loadURI(aURIString);
+    loadURI(aURIString, null, null);
 }
 
 function constructGoMenuItem(goMenu, beforeItem, url, title)
@@ -1023,15 +1023,17 @@ function BrowserCloseWindow()
   closeWindow(true);
 }
 
-function loadURI(uri, referrer)
+function loadURI(uri, referrer, postData)
 {
   try {
-    getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, referrer, null, null);
+    if (postData === undefined)
+      postData = null;
+    getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, referrer, postData, null);
   } catch (e) {
   }
 }
 
-function BrowserLoadURL(aTriggeringEvent)
+function BrowserLoadURL(aTriggeringEvent, aPostData)
 {
   var url = gURLBar.value;
   if (url.match(/^view-source:/)) {
@@ -1041,7 +1043,7 @@ function BrowserLoadURL(aTriggeringEvent)
         aTriggeringEvent && 'altKey' in aTriggeringEvent &&
         aTriggeringEvent.altKey) {
       _content.focus();
-      var t = gBrowser.addTab(url); // open link in new tab
+      var t = gBrowser.addTab(url, aPostData); // open link in new tab
       gBrowser.selectedTab = t;
       gURLBar.value = url;
       event.preventDefault();
@@ -1050,41 +1052,81 @@ function BrowserLoadURL(aTriggeringEvent)
       event.stopPropagation();
     }
     else  
-      loadURI(url);
+      loadURI(url, null, aPostData);
     _content.focus();
   }
 }
 
-function getShortcutOrURI(url)
+function getShortcutOrURI(aURL, aPostDataRef)
 {
   // rjc: added support for URL shortcuts (3/30/1999)
   try {
-    var shortcutURL = BMSVC.resolveKeyword(url);
+    var shortcutURL = BMSVC.resolveKeyword(aURL, aPostDataRef);
     if (!shortcutURL) {
       // rjc: add support for string substitution with shortcuts (4/4/2000)
       //      (see bug # 29871 for details)
-      var aOffset = url.indexOf(" ");
+      var aOffset = aURL.indexOf(" ");
       if (aOffset > 0) {
-        var cmd = url.substr(0, aOffset);
-        var text = url.substr(aOffset+1);
-        shortcutURL = BMSVC.resolveKeyword(cmd);
+        var cmd = aURL.substr(0, aOffset);
+        var text = aURL.substr(aOffset+1);
+        shortcutURL = BMSVC.resolveKeyword(cmd, aPostDataRef);
         if (shortcutURL && text) {
-          aOffset = shortcutURL.indexOf("%s");
-          if (aOffset >= 0)
-            shortcutURL = shortcutURL.substr(0, aOffset) + text + shortcutURL.substr(aOffset+2);
+          if (aPostDataRef && aPostDataRef.value) {
+            // XXXben - currently we only support "application/x-www-form-urlencoded"
+            //          enctypes.
+            aPostDataRef.value = unescape(aPostDataRef.value);
+            if (aPostDataRef.value.match(/%s/))
+              aPostDataRef.value = getPostDataStream(aPostDataRef.value, text, 
+                                                     "application/x-www-form-urlencoded");
+            else {
+              shortcutURL = null;
+              aPostDataRef.value = null;
+            }
+          }
           else
-            shortcutURL = null;
+            shortcutURL = shortcutURL.match(/%s/) ? shortcutURL.replace(/%s/, text) : null;
         }
       }
     }
 
     if (shortcutURL)
-      url = shortcutURL;
+      aURL = shortcutURL;
 
   } catch (ex) {
   }
-  return url;
+  return aURL;
 }
+
+#if 0
+// XXXben - this is only useful if we ever support text/plain encoded forms in
+// smart keywords. 
+function normalizePostData(aStringData)
+{
+  var parts = aStringData.split("&");
+  var result = "";
+  for (var i = 0; i < parts.length; ++i) {
+    var part = unescape(parts[i]);
+    if (part != "")
+      result += part + "\r\n";
+  }
+  return result;
+}
+#endif
+function getPostDataStream(aStringData, aKeyword, aType)
+{
+  var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
+                            .createInstance(Components.interfaces.nsIStringInputStream);
+  aStringData = aStringData.replace(/%s/, aKeyword);
+  dataStream.setData(aStringData, aStringData.length);
+
+  var mimeStream = Components.classes["@mozilla.org/network/mime-input-stream;1"]
+                              .createInstance(Components.interfaces.nsIMIMEInputStream);
+  mimeStream.addHeader("Content-Type", aType);
+  mimeStream.addContentLength = true;
+  mimeStream.setData(dataStream);
+  return mimeStream.QueryInterface(Components.interfaces.nsIInputStream);
+}
+
 
 function readFromClipboard()
 {
@@ -1293,7 +1335,8 @@ function handleURLBarRevert()
 
 function handleURLBarCommand(aTriggeringEvent)
 {
-  canonizeUrl(aTriggeringEvent);
+  var postData = { };
+  canonizeUrl(aTriggeringEvent, postData);
 
   try { 
     addToUrlbarHistory();
@@ -1302,10 +1345,10 @@ function handleURLBarCommand(aTriggeringEvent)
     // but don't let that interfere with the loading of the url.
   }
   
-  BrowserLoadURL(aTriggeringEvent); 
+  BrowserLoadURL(aTriggeringEvent, postData.value); 
 }
 
-function canonizeUrl(aTriggeringEvent)
+function canonizeUrl(aTriggeringEvent, aPostDataRef)
 {
   if (!gURLBar)
     return;
@@ -1329,7 +1372,7 @@ function canonizeUrl(aTriggeringEvent)
       url = "http://www." + url + ".net/";
   }
 
-  gURLBar.value = getShortcutOrURI(url);
+  gURLBar.value = getShortcutOrURI(url, aPostDataRef);
 }
 
 function UpdatePageProxyState()
@@ -1458,7 +1501,7 @@ function SearchBarPopupCommand(aEvent)
 
   if (aEvent.target.id == "miAddEngines") {
     var regionBundle = document.getElementById("bundle_browser_region");
-    loadURI(regionBundle.getString("searchEnginesURL"));
+    loadURI(regionBundle.getString("searchEnginesURL"), null, null);
     return;
   }
 
@@ -1746,7 +1789,7 @@ var goButtonObserver = {
       var xferData = aXferData.data.split("\n");
       var uri = xferData[0] ? xferData[0] : xferData[1];
       if (uri)
-        loadURI(uri);
+        loadURI(uri, null, null);
     },
   getSupportedFlavours: function ()
     {
@@ -1829,7 +1872,7 @@ function OpenSearch(tabName, searchStr, newTabFlag)
     //If it is a url go to URL.  A Url is "://" or "." as commented above
     //Otherwise search on entry
     if (forceAsURL) {
-       BrowserLoadURL()
+       BrowserLoadURL(null, null)
     } else {
       if (searchStr) {
         var escapedSearchStr = encodeURIComponent(searchStr);
@@ -1854,7 +1897,7 @@ function OpenSearch(tabName, searchStr, newTabFlag)
         }
 
         if (!newTabFlag) {
-          loadURI(defaultSearchURL);
+          loadURI(defaultSearchURL, null, null);
         }
         else {
           var newTab = getBrowser().addTab(defaultSearchURL);
@@ -3170,7 +3213,7 @@ nsContextMenu.prototype = {
     },
     // Open clicked-in frame in the same window
     showOnlyThisFrame : function () {
-        window.loadURI(this.target.ownerDocument.location.href);
+        window.loadURI(this.target.ownerDocument.location.href, null, null);
     },
     // View Partial Source
     viewPartialSource : function ( context ) {
@@ -3497,7 +3540,19 @@ nsContextMenu.prototype = {
       if (!form)
         return false;
       var method = form.method.toUpperCase();
-      return (method == "GET" || method == "") 
+      
+      // These are the following types of forms we can create keywords for:
+      //
+      // method   encoding type       can create keyword
+      // GET      *                                 YES
+      //          *                                 YES
+      // POST                                       YES
+      // POST     application/x-www-form-urlencoded YES
+      // POST     text/plain                        NO (a little tricky to do)
+      // POST     multipart/form-data               NO
+      return (method == "GET" || method == "") || 
+             (form.enctype == "application/x-www-form-urlencoded") || 
+             (form.enctype == "");
     },
     
     // Determines whether or not the separator with the specified ID should be 
@@ -3603,11 +3658,12 @@ function asyncOpenWebPanel(event)
        {
          if (!linkNode.href) return true;
          if (linkNode.getAttribute("onclick")) return true;
-         var url = getShortcutOrURI(linkNode.href);
+         var postData = { };
+         var url = getShortcutOrURI(linkNode.href, postData);
          if (!url)
            return true;
          markLinkVisited(linkNode.href, linkNode);
-         loadURI(url);
+         loadURI(url, null, postData.value);
          event.preventDefault();
          return false;
        }
@@ -3709,7 +3765,8 @@ function middleMousePaste(event)
   var url = readFromClipboard();
   if (!url)
     return false;
-  url = getShortcutOrURI(url);
+  var postData = { };
+  url = getShortcutOrURI(url, postData);
   if (!url)
     return false;
 
@@ -3723,7 +3780,7 @@ function middleMousePaste(event)
 
   if (!openNewTab) {
     // If ctrl wasn't down, then just load the url in the current win/tab.
-    loadURI(url);
+    loadURI(url, null, postData.value);
   } else {
     const nsIURIFixup = Components.interfaces.nsIURIFixup;
     if (!gURIFixup)
@@ -3732,7 +3789,7 @@ function middleMousePaste(event)
 
     url = gURIFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
 
-    openNewTabWith(url, null, event, true);
+    openNewTabWith(url, null, event, true, postData.value);
   }
 
   event.preventBubble();
@@ -3797,7 +3854,9 @@ var contentAreaDNDObserver = {
 
       switch (document.firstChild.getAttribute('windowtype')) {
         case "navigator:browser":
-          loadURI(getShortcutOrURI(url));
+          var postData = { };
+          var uri = getShortcutOrURI(url, postData);
+          loadURI(uri, null, postData.value);
           break;
         case "navigator:view-source":
           viewSource(url);
@@ -4455,18 +4514,39 @@ function AddKeywordForSearchField()
   var uri = Components.classes["@mozilla.org/network/standard-url;1"]
                       .getService(Components.interfaces.nsIURI);
   uri.spec = node.ownerDocument.URL;
+  
   var keywordURL = ioService.newURI(node.form.action, node.ownerDocument.characterSet, uri);
   var spec = keywordURL.spec;
-  spec += "?" + escape(node.name) + "=%s";
-  for (var i = 0; i < node.form.elements.length; ++i) {
-    var e = node.form.elements[i];
-    if (e.type.toLowerCase() == "text" || e.type.toLowerCase() == "hidden")
-      spec += "&" + escape(e.name) + "=" + escape(e.value);
+  var postData = "";
+  
+  if (node.form.method.toUpperCase() == "POST" && 
+      (node.form.enctype == "application/x-www-form-urlencoded" || node.form.enctype == "")) {
+    for (var i = 0; i < node.form.elements.length; ++i) {
+      var e = node.form.elements[i];
+      if (e.type.toLowerCase() == "text" || e.type.toLowerCase() == "hidden" || 
+          e.localName.toLowerCase() == "textarea") 
+        postData += escape(e.name + "=" + (e == node ? "%s" : e.value)) + "&";
+      else if (e.localName.toLowerCase() == "select")
+        postData += escape(e.name + "=" + e.options[e.selectedIndex].value) + "&";
+    }
   }
-  dump("*** SPEC = " + spec + "\n");
+  else {
+    spec += "?" + escape(node.name) + "=%s";
+    for (var i = 0; i < node.form.elements.length; ++i) {
+      var e = node.form.elements[i];
+      if (e == node) // avoid duplication of the target field value, which was populated above.
+        continue;
+        
+      if (e.type.toLowerCase() == "text" || e.type.toLowerCase() == "hidden" || 
+          e.localName.toLowerCase() == "textarea")
+        spec += "&" + escape(e.name) + "=" + escape(e.value);
+      else if (e.localName.toLowerCase() == "select")
+        spec += "&" + escape(e.name) + "=" + escape(e.options[e.selectedIndex].value);
+    }
+  }
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
              "centerscreen,chrome,dialog,resizable,dependent",
              "", spec, null, node.ownerDocument.characterSet, null, null, 
-             false, "", true);
+             false, "", true, postData);
 }
 

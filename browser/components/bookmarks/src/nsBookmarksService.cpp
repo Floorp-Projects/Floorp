@@ -107,6 +107,7 @@ nsIRDFResource      *kNC_BookmarksToolbarFolder;
 nsIRDFResource      *kNC_ShortcutURL;
 nsIRDFResource      *kNC_URL;
 nsIRDFResource      *kNC_WebPanel;
+nsIRDFResource      *kNC_PostData;
 nsIRDFResource      *kRDF_type;
 nsIRDFResource      *kRDF_nextVal;
 nsIRDFResource      *kWEB_LastModifiedDate;
@@ -232,6 +233,8 @@ bm_AddRefGlobals()
                           &kNC_URL);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "WebPanel"),
                           &kNC_WebPanel);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "PostData"),
+                          &kNC_PostData);
         gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
                           &kRDF_type);
         gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"),
@@ -329,6 +332,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_ShortcutURL);
         NS_IF_RELEASE(kNC_URL);
         NS_IF_RELEASE(kNC_WebPanel);
+        NS_IF_RELEASE(kNC_PostData);
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kRDF_nextVal);
         NS_IF_RELEASE(kWEB_LastModifiedDate);
@@ -549,6 +553,7 @@ static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
 static const char kShortcutURLEquals[]     = "SHORTCUTURL=\"";
 static const char kIconEquals[]            = "ICON=\"";
 static const char kWebPanelEquals[]        = "WEB_PANEL=\"";
+static const char kPostDataEquals[]        = "POST_DATA=\"";
 static const char kScheduleEquals[]        = "SCHEDULE=\"";
 static const char kLastPingEquals[]        = "LAST_PING=\"";
 static const char kPingETagEquals[]        = "PING_ETAG=\"";
@@ -1036,6 +1041,7 @@ BookmarkParser::gBookmarkFieldTable[] =
   { kShortcutURLEquals,     NC_NAMESPACE_URI  "ShortcutURL",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kIconEquals,            NC_NAMESPACE_URI  "Icon",              nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kWebPanelEquals,        NC_NAMESPACE_URI  "WebPanel",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  { kPostDataEquals,        NC_NAMESPACE_URI  "PostData",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kLastCharsetEquals,     WEB_NAMESPACE_URI "LastCharset",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kScheduleEquals,        WEB_NAMESPACE_URI "Schedule",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kLastPingEquals,        WEB_NAMESPACE_URI "LastPingDate",      nsnull,  BookmarkParser::ParseDate,      nsnull },
@@ -2519,6 +2525,7 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName,
                                    const PRUnichar* aShortcutURL,
                                    const PRUnichar* aDescription,
                                    const PRUnichar* aDocCharSet, 
+                                   const PRUnichar* aPostData,
                                    nsIRDFResource** aResult)
 {
     // Resource: Bookmark ID
@@ -2606,6 +2613,17 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName,
             return rv;
     }
 
+    // Literal: PostData associated with this bookmark (used for smart keywords)
+    if (aPostData && *aPostData) {
+        nsCOMPtr<nsIRDFLiteral> postDataLiteral;
+        rv = gRDF->GetLiteral(aPostData, getter_AddRefs(postDataLiteral));
+        if (NS_FAILED(rv)) 
+          return rv;
+        rv = mInner->Assert(bookmarkResource, kNC_PostData, postDataLiteral, PR_TRUE);
+        if (NS_FAILED(rv)) 
+          return rv;
+    }
+
     *aResult = bookmarkResource;
     NS_ADDREF(*aResult);
 
@@ -2618,11 +2636,12 @@ nsBookmarksService::CreateBookmarkInContainer(const PRUnichar* aName,
                                               const PRUnichar* aShortcutURL, 
                                               const PRUnichar* aDescription, 
                                               const PRUnichar* aDocCharSet, 
+                                              const PRUnichar* aPostData,
                                               nsIRDFResource* aParentFolder,
                                               PRInt32 aIndex,
                                               nsIRDFResource** aResult)
 {
-    nsresult rv = CreateBookmark(aName, aURL, aShortcutURL, aDescription, aDocCharSet, aResult);
+    nsresult rv = CreateBookmark(aName, aURL, aShortcutURL, aDescription, aDocCharSet, aPostData, aResult);
     if (NS_SUCCEEDED(rv))
         rv = InsertResource(*aResult, aParentFolder, aIndex);
     return rv;
@@ -3070,7 +3089,7 @@ nsBookmarksService::UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource)
 }
 
 NS_IMETHODIMP
-nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, char **aShortcutURL)
+nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, PRUnichar** aPostData, char **aShortcutURL)
 {
     NS_PRECONDITION(aUserInput != nsnull, "null ptr");
     if (! aUserInput)
@@ -3097,6 +3116,19 @@ nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, char **aShortcut
         return rv;
 
     if (source) {
+        // Get postData
+        nsCOMPtr<nsIRDFNode> node;
+        GetTarget(source, kNC_PostData, PR_TRUE, getter_AddRefs(node));
+        if (node) {
+            nsCOMPtr<nsIRDFLiteral> postData(do_QueryInterface(node));
+
+            const PRUnichar* postDataVal = nsnull;
+            postData->GetValueConst(&postDataVal);
+
+            nsDependentString postDataStr(postDataVal);
+            *aPostData = ToNewUnicode(postDataStr);
+        }
+
         nsAutoString url;
         rv = GetURLFromResource(source, url);
         if (NS_FAILED(rv))
@@ -4686,6 +4718,10 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     // output kNC_WebPanel
                     rv |= WriteBookmarkProperties(ds, strm, child, kNC_WebPanel,
                                                   kWebPanelEquals, PR_FALSE);
+
+                    // output kNC_PostData
+                    rv |= WriteBookmarkProperties(ds, strm, child, kNC_PostData,
+                                                  kPostDataEquals, PR_FALSE);
                     
                     // output SCHEDULE
                     rv |= WriteBookmarkProperties(ds, strm, child, kWEB_Schedule, kScheduleEquals, PR_FALSE);
@@ -4979,6 +5015,7 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
              (aProperty == kNC_ShortcutURL) ||
              (aProperty == kNC_URL) ||
              (aProperty == kNC_WebPanel) ||
+             (aProperty == kNC_PostData) ||
              (aProperty == kWEB_LastModifiedDate) ||
              (aProperty == kWEB_LastVisitDate) ||
              (aProperty == kNC_BookmarkAddDate) ||
