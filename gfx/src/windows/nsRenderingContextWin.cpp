@@ -151,6 +151,11 @@ GraphicsState :: ~GraphicsState()
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95 = NOT_SETUP;
 
+#ifdef IBMBIDI
+#define DONT_INIT 0
+static DWORD gBidiInfo = NOT_SETUP;
+#endif // IBMBIDI
+
 // A few of the stock objects are needed all the time, so we just get them
 // once
 static HFONT  gStockSystemFont = (HFONT)::GetStockObject(SYSTEM_FONT);
@@ -173,6 +178,24 @@ nsRenderingContextWin :: nsRenderingContextWin()
     }
     else {
       gIsWIN95 = PR_TRUE;
+
+#ifdef IBMBIDI
+      if ( (os.dwMajorVersion < 4)
+           || ( (os.dwMajorVersion == 4) && (os.dwMinorVersion == 0) ) ) {
+        // Windows 95 or earlier: assume it's not Bidi
+        gBidiInfo = DONT_INIT;
+      }
+      else if (os.dwMajorVersion >= 4) {
+        // Windows 98 or later
+        UINT cp = ::GetACP();
+        if (1256 == cp) {
+          gBidiInfo = GCP_REORDER | GCP_GLYPHSHAPE;
+        }
+        else if (1255 == cp) {
+          gBidiInfo = GCP_REORDER;
+        }
+      }
+#endif // IBMBIDI
     }
   }
 
@@ -197,6 +220,9 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mMainSurface = nsnull;
 
   mStateCache = new nsVoidArray();
+#ifdef IBMBIDI
+  mRightToLeftText = PR_FALSE;
+#endif
 
   //create an initial GraphicsState
 
@@ -597,6 +623,16 @@ nsRenderingContextWin :: GetHints(PRUint32& aResult)
   if (gIsWIN95)
     result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
 
+#ifdef IBMBIDI
+  if (NOT_SETUP == gBidiInfo) {
+    InitBidiInfo();
+  }
+  if (GCP_REORDER == (gBidiInfo & GCP_REORDER) )
+    result |= NS_RENDERING_HINT_BIDI_REORDERING;
+  if (GCP_GLYPHSHAPE == (gBidiInfo & GCP_GLYPHSHAPE) )
+    result |= NS_RENDERING_HINT_ARABIC_SHAPING;
+#endif // IBMBIDI
+  
   aResult = result;
 
   return NS_OK;
@@ -1501,6 +1537,16 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(PRUnichar ch, nscoord &aWidth, P
 {
   PRUnichar buf[1];
   buf[0] = ch;
+#ifdef IBMBIDI
+  WORD charType;
+  ::GetStringTypeW(CT_CTYPE3, &ch, 1, &charType);
+  if ((charType & C3_DIACRITIC) && !(charType & C3_ALPHA)) {
+//    aWidth = 0;
+    GetWidth(buf, 1, aWidth, aFontID);
+    aWidth *=-1;
+    return NS_OK;
+  }
+#endif
   return GetWidth(buf, 1, aWidth, aFontID);
 }
 
@@ -2149,6 +2195,13 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
     PRUint32 start = 0;
     for (PRUint32 i = 0; i < aLength; i++) {
       PRUnichar c = pstr[i];
+
+#ifdef IBMBIDI
+      if (mRightToLeftText) {
+        c = pstr[aLength - i - 1];
+      }
+#endif // IBMBIDI
+
       nsFontWin* currFont = nsnull;
       nsFontWin** font = metrics->mLoadedFonts;
       nsFontWin** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
@@ -2187,6 +2240,13 @@ FoundFont:
             }
           }
           else {
+#ifdef IBMBIDI
+            if (mRightToLeftText) {
+              prevFont->DrawString(mDC, x, y, &pstr[aLength - i], i - start);
+              x += prevFont->GetWidth(mDC, &pstr[aLength - i], i - start);
+            }
+            else
+#endif // IBMBIDI
             {
               prevFont->DrawString(mDC, x, y, &pstr[start], i - start);
               x += prevFont->GetWidth(mDC, &pstr[start], i - start);
@@ -2227,6 +2287,12 @@ FoundFont:
         }
       }
       else {
+#ifdef IBMBIDI
+          if (mRightToLeftText) {
+            prevFont->DrawString(mDC, x, y, &pstr[aLength - i], i - start);
+          }
+          else
+#endif // IBMBIDI
         {
           prevFont->DrawString(mDC, x, y, &pstr[start], i - start);
         }
@@ -3460,6 +3526,85 @@ nsRenderingContextWin::ConditionRect(nsRect& aSrcRect, RECT& aDestRect)
                       ? kBottomRightLimit
                       : (aSrcRect.x+aSrcRect.width);
 }
+
+#ifdef IBMBIDI
+/**
+ * Let the device context know whether we want text reordered with
+ * right-to-left base direction. The Windows implementation does this
+ * by setting the fuOptions parameter to ETO_RTLREADING in calls to
+ * ExtTextOut()
+ */
+NS_IMETHODIMP
+nsRenderingContextWin::SetRightToLeftText(PRBool aIsRTL)
+{
+  // Only call SetTextAlign if the new value is different from the
+  // current value
+  if (aIsRTL != mRightToLeftText) {
+    UINT flags = ::GetTextAlign(mDC);
+    if (aIsRTL) {
+      flags |= TA_RTLREADING;
+    }
+    else {
+      flags &= (~TA_RTLREADING);
+    }
+    ::SetTextAlign(mDC, flags);
+  }
+
+  mRightToLeftText = aIsRTL;
+  return NS_OK;
+}
+
+/**
+ * Init <code>gBidiInfo</code> with reordering and shaping 
+ * capabilities of the system
+ */
+void
+nsRenderingContextWin::InitBidiInfo()
+{
+  if (NOT_SETUP == gBidiInfo) {
+    gBidiInfo = DONT_INIT;
+
+    const PRUnichar araAin  = 0x0639;
+    const PRUnichar one     = 0x0031;
+
+    int distanceArray[2];
+    PRUnichar glyphArray[2];
+    PRUnichar outStr[] = {0, 0};
+
+    GCP_RESULTSW gcpResult;
+    gcpResult.lStructSize = sizeof(GCP_RESULTS);
+    gcpResult.lpOutString = outStr;     // Output string
+    gcpResult.lpOrder = nsnull;         // Ordering indices
+    gcpResult.lpDx = distanceArray;     // Distances between character cells
+    gcpResult.lpCaretPos = nsnull;      // Caret positions
+    gcpResult.lpClass = nsnull;         // Character classifications
+    gcpResult.lpGlyphs = glyphArray;    // Character glyphs
+    gcpResult.nGlyphs = 2;              // Array size
+
+    PRUnichar inStr[] = {araAin, one};
+
+    if (::GetCharacterPlacementW(mDC, inStr, 2, 0, &gcpResult, GCP_REORDER) 
+        && (inStr[0] == outStr[1]) ) {
+      gBidiInfo = GCP_REORDER | GCP_GLYPHSHAPE;
+#ifdef NS_DEBUG
+      printf("System has shaping\n");
+#endif
+    }
+    else {
+      const PRUnichar hebAlef = 0x05D0;
+      inStr[0] = hebAlef;
+      inStr[1] = one;
+      if (::GetCharacterPlacementW(mDC, inStr, 2, 0, &gcpResult, GCP_REORDER) 
+          && (inStr[0] == outStr[1]) ) {
+        gBidiInfo = GCP_REORDER;
+#ifdef NS_DEBUG
+        printf("System has Bidi\n");
+#endif
+      }
+    }
+  }
+}
+#endif // IBMBIDI
 
 
 

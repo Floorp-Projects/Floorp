@@ -199,6 +199,10 @@ public:
                      PRInt32*           aFontID);
 #endif
 
+#ifdef IBMBIDI
+  NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
+#endif // IBMBIDI
+
 protected:
   void SetupFontAndColor(void);
 
@@ -224,6 +228,9 @@ private:
   HPEN SetupDashedPen(void);
   HPEN SetupDottedPen(void);
   void PushClipState(void);
+#ifdef IBMBIDI
+  void InitBidiInfo(void);
+#endif // IBMBIDI
 
 protected:
   nscolor					  mCurrentColor;
@@ -260,6 +267,9 @@ protected:
 #ifdef NS_DEBUG
   PRBool            mInitialized;
 #endif
+#ifdef IBMBIDI
+  PRBool            mRightToLeftText;
+#endif // IBMBIDI
 };
 
 
