@@ -356,6 +356,12 @@ endif
 checkout:
 	cd $(topsrcdir); $(MAKE) -f client.mk checkout
 
+run_viewer: $(DIST)/bin/viewer
+	cd $(DIST)/bin; \
+	MOZILLA_HOME= ; \
+	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
+	viewer
+
 clean clobber::
 	rm -rf $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
@@ -966,7 +972,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean $(OBJDIR) $(DIRS)
+.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer $(OBJDIR) $(DIRS)
 
 envirocheck::
 	@echo -----------------------------------
