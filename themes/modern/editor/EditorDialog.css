@@ -288,7 +288,7 @@ tree.AttributesTree > treechildren > treeitem > treerow > treecell.value {
 /* Selection color for "name" column */
 treeitem.ae-selection[selected="true"] > treerow { 
   color : inherit;
-  background-color : #DDDDDD;
+  background-color :  #D0E7E7; 
 }
 
 .AttributesCell {
