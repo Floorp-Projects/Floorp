@@ -108,8 +108,9 @@ protected:
 	nsCOMPtr<nsIURI>            m_originalUrl;  // the original url
 	nsCOMPtr<nsIURI>            m_url;          // the running url
 	nsCOMPtr<nsIStreamListener> m_channelListener;
-	nsCOMPtr<nsISupports>		m_channelContext;
-	nsCOMPtr<nsILoadGroup>		m_loadGroup;
+	nsCOMPtr<nsISupports>	    	m_channelContext;
+	nsCOMPtr<nsILoadGroup>		  m_loadGroup;
+  nsLoadFlags                 mLoadAttributes;
 };
 
 #endif /* nsMsgProtocol_h__ */

@@ -103,9 +103,9 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSp
 		aURL->GetPath(getter_Copies(filePath));
 		char * urlSpec = PR_smprintf("file://%s", (const char *) filePath);
 
-		rv = netService->NewChannel("Load", urlSpec, 
+    rv = netService->NewChannel("Load", urlSpec, 
                                     nsnull,     // null base URI
-                                    nsnull,     // loadGroup
+                                    m_loadGroup,     // loadGroup
                                     nsnull,     // notificationCallbacks
                                     nsIChannel::LOAD_NORMAL, 
                                     nsnull,     // originalURI
@@ -192,10 +192,8 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *
 	if (NS_SUCCEEDED(rv) && aMsgUrl)
 	{
 		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
-		nsCOMPtr <nsILoadGroup> loadGroup;
-		aMsgUrl->GetLoadGroup(getter_AddRefs(loadGroup));
-		if (loadGroup)
-			loadGroup->AddChannel(aChannel, nsnull /* context isupports */);
+		if (m_loadGroup)
+			m_loadGroup->AddChannel(NS_STATIC_CAST(nsIChannel *, this), nsnull /* context isupports */);
 	}
 
 	// if we are set up as a channel, we should notify our channel listener that we are starting...
@@ -211,20 +209,21 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *
 NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(ctxt, &rv);
-	if (NS_SUCCEEDED(rv) && aMsgUrl)
-	{
-		rv = aMsgUrl->SetUrlState(PR_FALSE, aStatus);
-		nsCOMPtr <nsILoadGroup> loadGroup;
-		aMsgUrl->GetLoadGroup(getter_AddRefs(loadGroup));
-		if (loadGroup)
-			loadGroup->RemoveChannel(aChannel, nsnull, aStatus, nsnull);
-	}
+
 	// if we are set up as a channel, we should notify our channel listener that we are starting...
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
 	if (m_channelListener)
 		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus, aMsg);
+	
+  nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(ctxt, &rv);
+	if (NS_SUCCEEDED(rv) && aMsgUrl)
+	{
+		rv = aMsgUrl->SetUrlState(PR_FALSE, aStatus);
+		if (m_loadGroup)
+			m_loadGroup->RemoveChannel(NS_STATIC_CAST(nsIChannel *, this), nsnull, aStatus, nsnull);
+	}
+
 	
 	// !NS_BINDING_ABORTED because we don't want to see an alert if the user 
 	// cancelled the operation.  also, we'll get here because we call Cancel()
@@ -376,12 +375,14 @@ NS_IMETHODIMP nsMsgProtocol::AsyncWrite(nsIInputStream *fromStream, PRUint32 sta
 
 NS_IMETHODIMP nsMsgProtocol::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    *aLoadAttributes = mLoadAttributes;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgProtocol::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-	return NS_OK;       // don't fail when trying to set this
+  mLoadAttributes = aLoadAttributes;
+  return NS_OK;       // don't fail when trying to set this
 }
 
 NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
