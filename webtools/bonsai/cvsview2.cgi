@@ -112,7 +112,7 @@ my $line_buffer;
 sub get_token {
     # Erase all-whitespace lines.
     while ($line_buffer =~ /^$/) {
-        &die ('Unexpected EOF') if eof(RCSFILE);
+        die ('Unexpected EOF') if eof(RCSFILE);
         $line_buffer = <RCSFILE>;
         $line_buffer =~ s/^\s+//; # Erase leading whitespace
     }
@@ -130,7 +130,7 @@ sub get_token {
     # Detect single @ character used to close RCS-encoded string.
     while ($line_buffer !~ /^@[^@]*$/o) {
         $token .= $line_buffer;
-        &die ('Unexpected EOF') if eof(RCSFILE);
+        die ('Unexpected EOF') if eof(RCSFILE);
         $line_buffer = <RCSFILE>;
     }
     
@@ -149,7 +149,7 @@ sub match_token {
     my ($match) = @_;
 
     my ($token) = &get_token;
-    &die ("Unexpected parsing error in RCS file.\n",
+    die ("Unexpected parsing error in RCS file.\n",
           "Expected token: $match, but saw: $token\n")
             if ($token ne $match);
 }
@@ -219,7 +219,7 @@ sub parse_rcs_admin {
         }
     }
 
-    &die('Unexpected EOF');
+    die('Unexpected EOF');
 }
 
 # Construct associative arrays that represent the topology of the RCS tree
@@ -334,7 +334,7 @@ sub parse_rcs_tree {
 # Reads and parses complete RCS file from already-opened RCSFILE descriptor.
 sub parse_rcs_file {
     my ($file) = @_;
-    &die("Couldn't open $file\n") if !open(RCSFILE, "< $file");
+    die("Couldn't open $file\n") if !open(RCSFILE, "< $file");
     $line_buffer = '';
     print "Reading RCS admin...\n" if ($debug);
     &parse_rcs_admin();
@@ -380,7 +380,7 @@ while ($query_string =~ /(.*)\%([0-9a-fA-F][0-9a-fA-F])(.*)/) {
     $query_string = $1 . pack('c', hex($2)) . $3;
 }
 
-&die("REQUEST_METHOD 'GET' expected: got '$request_method'\n")
+die("REQUEST_METHOD 'GET' expected: got '$request_method'\n")
     if ($request_method ne 'GET');
 
 # Default option values
@@ -395,7 +395,7 @@ my $opt_subdir;
 # http://w3/cgi/cvsview.pl?subdir=foo&file=bar would assign
 #   $opt_subdir = foo and $opt_file = bar.
 foreach my $option (split(/&/, $query_string)) {
-    &die("command $opt_command: garbled option $option\n")
+    die("command $opt_command: garbled option $option\n")
         if ($option !~ /^([^=]+)=(.*)/);
     eval('$opt_' . $1 . '="' . $2 . '";');
 }
@@ -413,14 +413,14 @@ my $deletion_bg_color = 'LightGreen';
 my $diff_bg_color     = 'White';
 
 # Ensure that necessary arguments are present
-&die("command not defined in URL\n") if $opt_command eq '';
-&die("command $opt_command: subdir not defined\n") if $opt_subdir eq '';
+die("command not defined in URL\n") if $opt_command eq '';
+die("command $opt_command: subdir not defined\n") if $opt_subdir eq '';
 if ($opt_command eq 'DIFF'          ||
     $opt_command eq 'DIFF_FRAMESET' ||
     $opt_command eq 'DIFF_LINKS') {
-    &die("command $opt_command: file not defined in URL\n") if $opt_file eq '';
-    &die("command $opt_command: rev1 not defined in URL\n") if $opt_rev1 eq '';
-    &die("command $opt_command: rev2 not defined in URL\n") if $opt_rev2 eq '';
+    die("command $opt_command: file not defined in URL\n") if $opt_file eq '';
+    die("command $opt_command: rev1 not defined in URL\n") if $opt_rev1 eq '';
+    die("command $opt_command: rev2 not defined in URL\n") if $opt_rev2 eq '';
 
 }
 
@@ -713,7 +713,7 @@ sub do_directory {
         my $first_rev;
         if ($opt_branch) {
             $first_rev = &map_tag_to_revision($opt_branch);
-            &die("$0: error: -r: No such revision: $opt_branch\n")
+            die("$0: error: -r: No such revision: $opt_branch\n")
                 if ($first_rev eq '');
         } else {
             $first_rev = $::head_revision;
