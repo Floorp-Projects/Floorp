@@ -66,6 +66,9 @@ void _PR_InitIO(void)
     _pr_stdout = PR_AllocFileDesc(1, methods);
     _pr_stderr = PR_AllocFileDesc(2, methods);
 #endif
+    _PR_MD_INIT_FD_INHERITABLE(_pr_stdin, PR_TRUE);
+    _PR_MD_INIT_FD_INHERITABLE(_pr_stdout, PR_TRUE);
+    _PR_MD_INIT_FD_INHERITABLE(_pr_stderr, PR_TRUE);
 
     _PR_MD_INIT_IO();
 }

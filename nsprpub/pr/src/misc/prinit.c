@@ -595,7 +595,10 @@ PR_ProcessAttrSetInheritableFD(
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return PR_FAILURE;
     }
-    if (!fd->secret->inheritable) {
+    if (fd->secret->inheritable == _PR_TRI_UNKNOWN) {
+        _PR_MD_QUERY_FD_INHERITABLE(fd);
+    }
+    if (fd->secret->inheritable != _PR_TRI_TRUE) {
         PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, 0);
         return PR_FAILURE;
     }
@@ -692,7 +695,7 @@ PR_IMPLEMENT(PRFileDesc *) PR_GetInheritedFD(
                  * The child process needs to call PR_SetFDInheritable
                  * to make it non-inheritable if so desired.
                  */
-                fd->secret->inheritable = PR_TRUE;
+                fd->secret->inheritable = _PR_TRI_TRUE;
             }
             return fd;
         }

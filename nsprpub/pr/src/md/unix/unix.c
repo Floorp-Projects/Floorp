@@ -1314,6 +1314,22 @@ PRStatus _MD_set_fd_inheritable(PRFileDesc *fd, PRBool inheritable)
     return PR_SUCCESS;
 }
 
+void _MD_init_fd_inheritable(PRFileDesc *fd, PRBool imported)
+{
+    if (imported) {
+        fd->secret->inheritable = _PR_TRI_UNKNOWN;
+    } else {
+        /* By default, a Unix fd is not closed on exec. */
+#ifdef DEBUG
+        {
+            int flags = fcntl(fd->secret->md.osfd, F_GETFD, 0);
+            PR_ASSERT(0 == flags);
+        }
+#endif
+        fd->secret->inheritable = _PR_TRI_TRUE;
+    }
+}
+
 /************************************************************************/
 #if !defined(_PR_USE_POLL)
 
@@ -2157,26 +2173,6 @@ void _MD_UnblockClockInterrupts()
     sigprocmask(SIG_UNBLOCK, &timer_set, 0);
 }
 
-void _MD_InitFileDesc(PRFileDesc *fd)
-{
-    /* By default, a Unix fd is not closed on exec. */
-#ifdef DEBUG
-    {
-        int flags;
-
-        /*
-         * Ignore EBADF error on fd's 0, 1, 2 because they are
-         * not open in all processes.
-         */
-        flags = fcntl(fd->secret->md.osfd, F_GETFD, 0);
-        PR_ASSERT((0 == flags) || (-1 == flags
-            && (0 <= fd->secret->md.osfd && fd->secret->md.osfd <= 2)
-            && errno == EBADF));
-    }
-#endif
-    fd->secret->inheritable = PR_TRUE;
-}
-
 void _MD_MakeNonblock(PRFileDesc *fd)
 {
     PRInt32 osfd = fd->secret->md.osfd;
@@ -2276,6 +2272,17 @@ static void sigbushandler() {
 #endif /* SOLARIS, IRIX */
 
 #endif  /* !defined(_PR_PTHREADS) */
+
+void _MD_query_fd_inheritable(PRFileDesc *fd)
+{
+    int flags;
+
+    PR_ASSERT(_PR_TRI_UNKNOWN == fd->secret->inheritable);
+    flags = fcntl(fd->secret->md.osfd, F_GETFD, 0);
+    PR_ASSERT(-1 != flags);
+    fd->secret->inheritable = (flags & FD_CLOEXEC) ?
+        _PR_TRI_FALSE : _PR_TRI_TRUE;
+}
 
 PROffset32 _MD_lseek(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence)
 {

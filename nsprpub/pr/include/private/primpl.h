@@ -1234,6 +1234,21 @@ extern PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds,
                                                                                         PRIntervalTime timeout);
 #define    _PR_MD_PR_POLL _MD_PR_POLL
 
+/*
+ * Initialize fd->secret->inheritable for a newly created fd.
+ * If 'imported' is false, the osfd (i.e., fd->secret->md.osfd)
+ * was created by NSPR and hence has the OS-dependent default
+ * inheritable attribute.  If 'imported' is true, the osfd was
+ * not created by NSPR and hence a system call is required to
+ * query its inheritable attribute.  Since we may never need to
+ * know the inheritable attribute of a fd, a platform may choose
+ * to initialize fd->secret->inheritable of an imported fd to
+ * _PR_TRI_UNKNOWN and only pay the cost of the system call
+ * (in _PR_MD_QUERY_FD_INHERITABLE) when necessary.
+ */
+extern void _PR_MD_INIT_FD_INHERITABLE(PRFileDesc *fd, PRBool imported);
+#define    _PR_MD_INIT_FD_INHERITABLE _MD_INIT_FD_INHERITABLE
+
 extern PRStatus _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable);
 #define    _PR_MD_SET_FD_INHERITABLE _MD_SET_FD_INHERITABLE
 
@@ -1658,10 +1673,20 @@ struct PRFileMap {
 #define _PR_FILEDESC_CLOSED     0x55555555    /* 0101010... */
 #define _PR_FILEDESC_FREED      0x11111111
 
+/*
+** A boolean type with an additional "unknown" state
+*/
+
+typedef enum {
+    _PR_TRI_TRUE = 1,
+    _PR_TRI_FALSE = 0,
+    _PR_TRI_UNKNOWN = -1
+} _PRTriStateBool;
+
 struct PRFilePrivate {
     PRInt32 state;
     PRBool nonblocking;
-    PRBool inheritable;
+    _PRTriStateBool inheritable;
     PRFileDesc *next;
     PRIntn lockCount;
 #ifdef _PR_HAVE_PEEK_BUFFER
@@ -1976,6 +2001,16 @@ extern PRStatus _PR_MD_GETHOSTNAME(char *name, PRUint32 namelen);
 
 extern PRStatus _PR_MD_GETSYSINFO(PRSysInfo cmd, char *name, PRUint32 namelen);
 #define    _PR_MD_GETSYSINFO _MD_GETSYSINFO
+
+/* File descriptor inheritance */
+
+/*
+ * If fd->secret->inheritable is _PR_TRI_UNKNOWN and we need to
+ * know the inheritable attribute of the fd, call this function
+ * to find that out.  This typically requires a system call.
+ */
+extern void _PR_MD_QUERY_FD_INHERITABLE(PRFileDesc *fd);
+#define    _PR_MD_QUERY_FD_INHERITABLE _MD_QUERY_FD_INHERITABLE
 
 /* --- PR_GetRandomNoise() related things --- */
 

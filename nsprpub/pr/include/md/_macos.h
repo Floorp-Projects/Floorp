@@ -438,6 +438,8 @@ extern PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, c
 #define _MD_INIT_FILEDESC	_MD_initfiledesc
 #define _MD_FREE_FILEDESC	_MD_freefiledesc
 #define _MD_MAKE_NONBLOCK	_MD_makenonblock
+#define _MD_INIT_FD_INHERITABLE _MD_initfdinheritable
+#define _MD_QUERY_FD_INHERITABLE _MD_queryfdinheritable
 
 #define _MD_GET_SOCKET_ERROR() 		_PR_MD_CURRENT_THREAD()->md.osErrCode
 

@@ -165,7 +165,7 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 #endif
 
 static PRFileDesc *pt_SetMethods(
-    PRIntn osfd, PRDescType type, PRBool isAcceptedSocket);
+    PRIntn osfd, PRDescType type, PRBool isAcceptedSocket, PRBool imported);
 
 static PRLock *_pr_flock_lock;  /* For PR_LockFile() etc. */
 static PRLock *_pr_rename_lock;  /* For PR_Rename() */
@@ -967,9 +967,9 @@ void _PR_InitIO()
 
     _PR_InitFdCache();  /* do that */   
 
-    _pr_stdin = pt_SetMethods(0, PR_DESC_FILE, PR_FALSE);
-    _pr_stdout = pt_SetMethods(1, PR_DESC_FILE, PR_FALSE);
-    _pr_stderr = pt_SetMethods(2, PR_DESC_FILE, PR_FALSE);
+    _pr_stdin = pt_SetMethods(0, PR_DESC_FILE, PR_FALSE, PR_TRUE);
+    _pr_stdout = pt_SetMethods(1, PR_DESC_FILE, PR_FALSE, PR_TRUE);
+    _pr_stderr = pt_SetMethods(2, PR_DESC_FILE, PR_FALSE, PR_TRUE);
     PR_ASSERT(_pr_stdin && _pr_stdout && _pr_stderr);
 
 }  /* _PR_InitIO */
@@ -1452,7 +1452,7 @@ static PRFileDesc* pt_Accept(
 	if (addr && (AF_INET6 == addr->raw.family))
         addr->raw.family = PR_AF_INET6;
 #endif
-    newfd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP, PR_TRUE);
+    newfd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP, PR_TRUE, PR_FALSE);
     if (newfd == NULL) close(osfd);  /* $$$ whoops! this doesn't work $$$ */
     else
     {
@@ -2690,22 +2690,8 @@ static void pt_MakeSocketNonblock(PRIntn osfd)
 #define pt_MakeSocketNonblock pt_MakeFdNonblock
 #endif
 
-#ifdef DEBUG
-static void pt_AssertCloseOnExecIsCleared(PRIntn osfd)
-{
-    /*
-     * Ignore EBADF error on fd's 0, 1, 2 because they are
-     * not open in all processes.
-     */
-    PRIntn flags;
-    flags = fcntl(osfd, F_GETFD, 0);
-    PR_ASSERT((0 == flags) || (-1 == flags
-        && (0 <= osfd && osfd <= 2) && errno == EBADF));
-}
-#endif
-
 static PRFileDesc *pt_SetMethods(
-    PRIntn osfd, PRDescType type, PRBool isAcceptedSocket)
+    PRIntn osfd, PRDescType type, PRBool isAcceptedSocket, PRBool imported)
 {
     PRFileDesc *fd = _PR_Getfd();
     
@@ -2714,11 +2700,17 @@ static PRFileDesc *pt_SetMethods(
     {
         fd->secret->md.osfd = osfd;
         fd->secret->state = _PR_FILEDESC_OPEN;
-        /* By default, a Unix fd is not closed on exec. */
+        if (imported) fd->secret->inheritable = _PR_TRI_UNKNOWN;
+        else
+        {
+            /* By default, a Unix fd is not closed on exec. */
 #ifdef DEBUG
-        pt_AssertCloseOnExecIsCleared(osfd);
+            PRIntn flags;
+            flags = fcntl(osfd, F_GETFD, 0);
+            PR_ASSERT(0 == flags);
 #endif
-        fd->secret->inheritable = PR_TRUE;
+            fd->secret->inheritable = _PR_TRI_TRUE;
+        }
         switch (type)
         {
             case PR_DESC_FILE:
@@ -2794,11 +2786,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
         else pt_MakeFdNonblock(osfd);
     }
     fd->secret->state = _PR_FILEDESC_OPEN;
-    /* By default, a Unix fd is not closed on exec. */
-#ifdef DEBUG
-    pt_AssertCloseOnExecIsCleared(osfd);
-#endif
-    fd->secret->inheritable = PR_TRUE;
+    fd->secret->inheritable = _PR_TRI_UNKNOWN;
     return fd;
     
 failed:
@@ -2868,7 +2856,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
     if (osfd == -1) pt_MapError(_PR_MD_MAP_SOCKET_ERROR, errno);
     else
     {
-        fd = pt_SetMethods(osfd, ftype, PR_FALSE);
+        fd = pt_SetMethods(osfd, ftype, PR_FALSE, PR_FALSE);
         if (fd == NULL) close(osfd);
     }
 #if defined(_PR_INET6_PROBE) || !defined(_PR_INET6)
@@ -2941,7 +2929,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
         pt_MapError(_PR_MD_MAP_OPEN_ERROR, syserrno);
     else
     {
-        fd = pt_SetMethods(osfd, PR_DESC_FILE, PR_FALSE);
+        fd = pt_SetMethods(osfd, PR_DESC_FILE, PR_FALSE, PR_FALSE);
         if (fd == NULL) close(osfd);  /* $$$ whoops! this is bad $$$ */
     }
     return fd;
@@ -3717,13 +3705,13 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2])
     return PR_FAILURE;
     }
 
-    fds[0] = pt_SetMethods(osfd[0], PR_DESC_SOCKET_TCP, PR_FALSE);
+    fds[0] = pt_SetMethods(osfd[0], PR_DESC_SOCKET_TCP, PR_FALSE, PR_FALSE);
     if (fds[0] == NULL) {
         close(osfd[0]);
         close(osfd[1]);
         return PR_FAILURE;
     }
-    fds[1] = pt_SetMethods(osfd[1], PR_DESC_SOCKET_TCP, PR_FALSE);
+    fds[1] = pt_SetMethods(osfd[1], PR_DESC_SOCKET_TCP, PR_FALSE, PR_FALSE);
     if (fds[1] == NULL) {
         PR_Close(fds[0]);
         close(osfd[1]);
@@ -3747,14 +3735,14 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
         PR_SetError(PR_UNKNOWN_ERROR, errno);
         return PR_FAILURE;
     }
-    *readPipe = pt_SetMethods(pipefd[0], PR_DESC_PIPE, PR_FALSE);
+    *readPipe = pt_SetMethods(pipefd[0], PR_DESC_PIPE, PR_FALSE, PR_FALSE);
     if (NULL == *readPipe)
     {
         close(pipefd[0]);
         close(pipefd[1]);
         return PR_FAILURE;
     }
-    *writePipe = pt_SetMethods(pipefd[1], PR_DESC_PIPE, PR_FALSE);
+    *writePipe = pt_SetMethods(pipefd[1], PR_DESC_PIPE, PR_FALSE, PR_FALSE);
     if (NULL == *writePipe)
     {
         PR_Close(*readPipe);
@@ -3801,7 +3789,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportFile(PRInt32 osfd)
     PRFileDesc *fd;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
-    fd = pt_SetMethods(osfd, PR_DESC_FILE, PR_FALSE);
+    fd = pt_SetMethods(osfd, PR_DESC_FILE, PR_FALSE, PR_TRUE);
     if (NULL == fd) close(osfd);
     return fd;
 }  /* PR_ImportFile */
@@ -3811,7 +3799,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportPipe(PRInt32 osfd)
     PRFileDesc *fd;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
-    fd = pt_SetMethods(osfd, PR_DESC_PIPE, PR_FALSE);
+    fd = pt_SetMethods(osfd, PR_DESC_PIPE, PR_FALSE, PR_TRUE);
     if (NULL == fd) close(osfd);
     return fd;
 }  /* PR_ImportPipe */
@@ -3821,7 +3809,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportTCPSocket(PRInt32 osfd)
     PRFileDesc *fd;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
-    fd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP, PR_FALSE);
+    fd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP, PR_FALSE, PR_TRUE);
     if (NULL == fd) close(osfd);
     return fd;
 }  /* PR_ImportTCPSocket */
@@ -3831,7 +3819,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportUDPSocket(PRInt32 osfd)
     PRFileDesc *fd;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
-    fd = pt_SetMethods(osfd, PR_DESC_SOCKET_UDP, PR_FALSE);
+    fd = pt_SetMethods(osfd, PR_DESC_SOCKET_UDP, PR_FALSE, PR_TRUE);
     if (NULL != fd) close(osfd);
     return fd;
 }  /* PR_ImportUDPSocket */
@@ -3848,7 +3836,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_CreateSocketPollFd(PRInt32 osfd)
     else
     {
         fd->secret->md.osfd = osfd;
-        fd->secret->inheritable = PR_FALSE;
+        fd->secret->inheritable = _PR_TRI_FALSE;
     	fd->secret->state = _PR_FILEDESC_OPEN;
         fd->methods = PR_GetSocketPollFdMethods();
     }

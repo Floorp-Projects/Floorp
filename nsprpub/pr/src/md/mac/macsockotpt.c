@@ -1816,6 +1816,20 @@ void _MD_makenonblock(PRFileDesc *fd)
 }
 
 
+void _MD_initfdinheritable(PRFileDesc *fd, PRBool imported)
+{
+	/* XXX this function needs to be implemented */
+	fd->secret->inheritable = _PR_TRI_UNKNOWN;
+}
+
+
+void _MD_queryfdinheritable(PRFileDesc *fd)
+{
+	/* XXX this function needs to be implemented */
+	PR_ASSERT(0);
+}
+
+
 PR_IMPLEMENT(PRInt32) _MD_shutdown(PRFileDesc *fd, PRIntn how)
 {
 #pragma unused (fd, how)

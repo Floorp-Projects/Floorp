@@ -774,3 +774,25 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
     return PR_SUCCESS;
 }
 
+void
+_PR_MD_INIT_FD_INHERITABLE(PRFileDesc *fd, PRBool imported)
+{
+    /* XXX this function needs to be implemented */
+    fd->secret->inheritable = _PR_TRI_UNKNOWN;
+}
+
+void
+_PR_MD_QUERY_FD_INHERITABLE(PRFileDesc *fd)
+{
+    /* XXX this function needs to be reviewed */
+    ULONG flags;
+
+    PR_ASSERT(_PR_TRI_UNKNOWN == fd->secret->inheritable);
+    if (DosQueryFHState((HFILE)fd->secret->md.osfd, &flags) == 0) {
+        if (flags & OPEN_FLAGS_NOINHERIT) {
+            fd->secret->inheritable = _PR_TRI_FALSE;
+        } else {
+            fd->secret->inheritable = _PR_TRI_TRUE;
+        }
+    }
+}

@@ -183,9 +183,10 @@ PRFileDesc *fd;
 
 	if (!_pr_initialized) _PR_ImplicitInitialization();
 	fd = PR_AllocFileDesc(osfd, PR_GetTCPMethods());
-	if (fd != NULL)
+	if (fd != NULL) {
 		_PR_MD_MAKE_NONBLOCK(fd);
-	else
+		_PR_MD_INIT_FD_INHERITABLE(fd, PR_TRUE);
+	} else
 		_PR_MD_CLOSE_SOCKET(osfd);
 	return(fd);
 }
@@ -196,9 +197,10 @@ PRFileDesc *fd;
 
 	if (!_pr_initialized) _PR_ImplicitInitialization();
 	fd = PR_AllocFileDesc(osfd, PR_GetUDPMethods());
-	if (fd != NULL)
+	if (fd != NULL) {
 		_PR_MD_MAKE_NONBLOCK(fd);
-	else
+		_PR_MD_INIT_FD_INHERITABLE(fd, PR_TRUE);
+	} else
 		_PR_MD_CLOSE_SOCKET(osfd);
 	return(fd);
 }
@@ -218,7 +220,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_CreateSocketPollFd(PRInt32 osfd)
     else
     {
         fd->secret->md.osfd = osfd;
-        fd->secret->inheritable = PR_FALSE;
+        fd->secret->inheritable = _PR_TRI_FALSE;
     	fd->secret->state = _PR_FILEDESC_OPEN;
         fd->methods = PR_GetSocketPollFdMethods();
     }
@@ -420,6 +422,7 @@ PRIntervalTime timeout)
 	fd2->secret->nonblocking = fd->secret->nonblocking;
 	fd2->secret->inheritable = fd->secret->inheritable;
 #ifdef WINNT
+	PR_ASSERT(_PR_TRI_UNKNOWN != fd2->secret->inheritable);
 	if (!fd2->secret->nonblocking && !fd2->secret->inheritable) {
 		/*
 		 * The new socket has been associated with an I/O
@@ -1297,6 +1300,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 	 */
 	if (fd != NULL) {
 		_PR_MD_MAKE_NONBLOCK(fd);
+		_PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
 #if defined(_PR_INET6_PROBE) || !defined(_PR_INET6)
 		/*
 		 * For platforms with no support for IPv6 
@@ -1366,7 +1370,9 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
 		return PR_FAILURE;
 	}
 	_PR_MD_MAKE_NONBLOCK(f[0]);
+	_PR_MD_INIT_FD_INHERITABLE(f[0], PR_FALSE);
 	_PR_MD_MAKE_NONBLOCK(f[1]);
+	_PR_MD_INIT_FD_INHERITABLE(f[1], PR_FALSE);
 	return PR_SUCCESS;
 #elif defined(WINNT)
     /*
@@ -1445,6 +1451,8 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
         /* PR_AllocFileDesc() has invoked PR_SetError(). */
         return PR_FAILURE;
     }
+    _PR_MD_INIT_FD_INHERITABLE(f[0], PR_FALSE);
+    _PR_MD_INIT_FD_INHERITABLE(f[1], PR_FALSE);
     return PR_SUCCESS;
 
 failed:

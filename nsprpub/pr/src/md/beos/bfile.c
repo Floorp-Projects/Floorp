@@ -118,6 +118,20 @@ _MD_make_nonblock (PRFileDesc *fd)
 
 }
 
+void
+_MD_init_fd_inheritable (PRFileDesc *fd, PRBool imported)
+{
+	/* XXX this function needs to be implemented */
+	fd->secret->inheritable = _PR_TRI_UNKNOWN;
+}
+
+void
+_MD_query_fd_inheritable (PRFileDesc *fd)
+{
+	/* XXX this function needs to be implemented */
+	PR_ASSERT(0);
+}
+
 PRInt32
 _MD_open (const char *name, PRIntn flags, PRIntn mode)
 {

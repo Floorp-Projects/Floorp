@@ -267,6 +267,8 @@ extern PRInt32 _PR_MD_CLOSE(PRInt32 osfd, PRBool socket);
 
 #define _MD_INIT_FILEDESC(fd)
 #define _MD_MAKE_NONBLOCK             _PR_MD_MAKE_NONBLOCK
+#define _MD_INIT_FD_INHERITABLE       _PR_MD_INIT_FD_INHERITABLE
+#define _MD_QUERY_FD_INHERITABLE      _PR_MD_QUERY_FD_INHERITABLE
 #define _MD_SHUTDOWN                  _PR_MD_SHUTDOWN
 #define _MD_LISTEN                    _PR_MD_LISTEN
 #define _MD_CLOSE_SOCKET(s)           _PR_MD_CLOSE(s, PR_TRUE)
