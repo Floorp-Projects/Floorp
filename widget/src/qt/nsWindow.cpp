@@ -70,28 +70,28 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
     case eWindowType_invisible: {
         if (mWindowType == eWindowType_dialog) {
             flags |= Qt::WType_Dialog;
-            qDebug("\t\t#### dialog");
             mContainer = new MozQWidget(this, parent, "topLevelDialog", flags);
+            qDebug("\t\t#### dialog (%p)", (void*)mContainer);
             //SetDefaultIcon();
         }
         else if (mWindowType == eWindowType_popup) {
             flags |= Qt::WType_Popup;
             mContainer = new MozQWidget(this, parent, "topLevelPopup", flags);
-            qDebug("\t\t#### popup");
+            qDebug("\t\t#### popup (%p)", (void*)mContainer);
             mContainer->setFocusPolicy(QWidget::WheelFocus);
         }
         else { // must be eWindowType_toplevel
             flags |= Qt::WType_TopLevel;
-            qDebug("\t\t#### toplevel");
             mContainer = new MozQWidget(this, parent, "topLevelWindow", flags);
+            qDebug("\t\t#### toplevel (%p)", (void*)mContainer);
             //SetDefaultIcon();
         }
         mWidget = mContainer;
     }
         break;
     case eWindowType_child: {
-        qDebug("\t\t#### child");
         mWidget = new MozQWidget(this, parent, "paintArea", 0);
+        qDebug("\t\t#### child (%p)", (void*)mWidget);
     }
         break;
     default:

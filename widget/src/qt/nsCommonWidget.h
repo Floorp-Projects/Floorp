@@ -193,7 +193,6 @@ protected:
 protected:
     QWidget *mContainer;
     QWidget *mWidget;
-    nsQtEventDispatcher *mDispatcher;
     PRPackedBool   mListenForResizes;
     PRPackedBool   mNeedsResize;
     PRPackedBool   mNeedsShow;
