@@ -20,7 +20,8 @@
 #define NS_IMPL_IDS
 
 #include <stdio.h>
-#include "nsRepository.h"
+#include <string.h>
+#include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsICharsetConverterManager.h"
 
@@ -55,8 +56,8 @@
  *
  * - silent while all is OK.
  * 
- * - "ERROR at T11.easyConversion.Convert() code=0xfffd.\n"
- * - "ERROR at T11.easyConversion.ConvResLen expected=0x02 result=0x04.\n"
+ * - "ERROR at T001.easyConversion.Convert() code=0xfffd.\n"
+ * - "ERROR at T001.easyConversion.ConvResLen expected=0x02 result=0x04.\n"
  * 
  * - "Test Passed.\n" for a successful end.
  *
@@ -66,6 +67,8 @@
 
 //----------------------------------------------------------------------
 // Global variables and macros
+
+#define GENERAL_BUFFER 20000 // general purpose buffer; for Unicode divide by 2
 
 nsICharsetConverterManager * ccMan = NULL;
 
@@ -102,26 +105,23 @@ nsresult setupRegistry()
 
 nsresult testCharsetConverterManager()
 {
-  // XXX use the Service Manager to get the ccm 
-  printf("\n[T1] CharsetConverterManager\n");
+  printf("\n[T001] CharsetConverterManager\n");
 
-  nsresult res = nsRepository::CreateInstance(kCharsetConverterManagerCID,
-      NULL, kICharsetConverterManagerIID, (void **)&ccMan);
+  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID,
+      kICharsetConverterManagerIID, (nsISupports **)&ccMan);
   if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: Cannot instantiate.\n",res);
+    printf("ERROR at GetService() code=0x%x.\n",res);
     return res;
-  } else {
-    printf("Instantiated.\n");
   }
 
   nsString ** cs;
   PRInt32 ct;
 
-  res = ccMan->GetEncodableCharsets(&cs, &ct);
+  res = ccMan->GetDecodableCharsets(&cs, &ct);
   if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: GetEncodableCharsets()\n",res);
+    printf("ERROR at GetDecodableCharsets() code=0x%x.\n", res);
   } else {
-    printf("Unicode encoders (%d): ", ct);
+    printf("UDecoders (%d): ", ct);
     for (int i=0;i<ct;i++) {
       char * cstr = cs[i]->ToNewCString();
       printf("%s ",cstr);
@@ -131,11 +131,11 @@ nsresult testCharsetConverterManager()
   }
   delete [] cs;
 
-  res = ccMan->GetDecodableCharsets(&cs, &ct);
+  res = ccMan->GetEncodableCharsets(&cs, &ct);
   if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: GetDecodableCharsets()\n",res);
+    printf("ERROR at GetEncodableCharsets() code=0x%x.\n", res);
   } else {
-    printf("Unicode decoders (%d): ", ct);
+    printf("UEncoders (%d): ", ct);
     for (int i=0;i<ct;i++) {
       char * cstr = cs[i]->ToNewCString();
       printf("%s ",cstr);
@@ -150,6 +150,7 @@ nsresult testCharsetConverterManager()
 
 //----------------------------------------------------------------------
 // Old SHIT !!! Don't copy this crap, go to the new stuff down in the file.
+// XXX move it to the new & improved framework
 
 #define TABLE_SIZE1     5
 
@@ -376,66 +377,28 @@ U+FF11 U+FF12 U+FF13 U+FF21 U+FF22 U+FF23
   return NS_OK;
 }
 
-nsresult testAsciiEncoder()
-{
-  printf("\n[T5] HackyAsciiEncoder\n");
-
-  // create converter
-  nsIUnicodeEncoder * enc;
-  nsresult res = ccMan->GetUnicodeEncoder(NULL,&enc);
-  if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: Cannot instantiate.\n",res);
-    return res;
-  } else {
-    printf("Instantiated.\n");
-  }
-
-  //test converter
-
-  PRInt32 srcL = TABLE_SIZE1;
-  PRInt32 destL = TABLE_SIZE1;
-  PRUnichar src [TABLE_SIZE1] = {(PRUnichar)0,(PRUnichar)255,(PRUnichar)13,(PRUnichar)127,(PRUnichar)128};
-  unsigned char dest [TABLE_SIZE1];
-
-  res=enc->Convert(src, 0, &srcL, (char *)dest, 0, &destL);
-  if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: Convert().\n",res);
-  } else {
-    printf("Read %d, write %d.\n",srcL,destL);
-    printf("Converted:");
-
-    PRBool failed = PR_FALSE;
-    for (int i=0;i<TABLE_SIZE1;i++) {
-      printf(" %x->%d", src[i], dest[i]);
-      if (dest[i] != ((PRUint8)src[i])) failed = PR_TRUE;
-    }
-    printf("\n");
-
-    if (failed) {
-      printf("Test FAILED!!!\n");
-    } else {
-      printf("Test Passed.\n");
-    }
-  }
-
-  NS_RELEASE(enc);
-  return NS_OK;
-
-}
-
 //----------------------------------------------------------------------
 // Helper functions and macros for testing decoders and encoders
 
-#define CREATE_DECODER(_charset)                            \
-    nsIUnicodeDecoder * dec;                                \
-    nsAutoString str(_charset);                             \
-    nsresult res = ccMan->GetUnicodeDecoder(&str,&dec);     \
-    if (NS_FAILED(res)) {                                   \
-      printf("ERROR 0x%x: Cannot instantiate.\n",res);      \
-      return res;                                           \
+#define CREATE_DECODER(_charset)                                \
+    nsIUnicodeDecoder * dec;                                    \
+    nsAutoString str(_charset);                                 \
+    nsresult res = ccMan->GetUnicodeDecoder(&str,&dec);         \
+    if (NS_FAILED(res)) {                                       \
+      printf("ERROR at GetUnicodeDecoder() code=0x%x.\n",res);  \
+      return res;                                               \
     }
 
-#define ARRAY_SIZE(_array)                                  \
+#define CREATE_ENCODER(_charset)                                \
+    nsIUnicodeEncoder * enc;                                    \
+    nsAutoString str(_charset);                                 \
+    nsresult res = ccMan->GetUnicodeEncoder(&str,&enc);         \
+    if (NS_FAILED(res)) {                                       \
+      printf("ERROR at GetUnicodeEncoder() code=0x%x.\n",res);  \
+      return res;                                               \
+    }
+
+#define ARRAY_SIZE(_array)                                      \
      (sizeof(_array) / sizeof(_array[0]))
 
 /**
@@ -452,12 +415,12 @@ nsresult testDecoder(nsIUnicodeDecoder * aDec,
 
   // prepare for conversion
   PRInt32 srcLen = aSrcLength;
-  PRUnichar dest[1024];
-  PRInt32 destLen = 1024;
+  PRUnichar dest[GENERAL_BUFFER/2];
+  PRInt32 destLen = GENERAL_BUFFER/2;
 
   // conversion
   res = aDec->Convert(dest, 0, &destLen, aSrc, 0, &srcLen);
-  // we want perfect result here - the test data should be complete!
+  // we want a perfect result here - the test data should be complete!
   if (res != NS_OK) {
     printf("ERROR at %s.easy.Convert() code=0x%x.\n",aTestName,res);
     return NS_ERROR_UNEXPECTED;
@@ -579,6 +542,74 @@ nsresult resetDecoder(nsIUnicodeDecoder * aDec, const char * aTestName)
   return res;
 }
 
+nsresult loadBinaryFile(char * aFile, char * aBuff, PRInt32 * aBuffLen)
+{
+  FILE * f = fopen(aFile, "rb");
+  if (f == NULL) {
+    printf("ERROR at opening file: \"%s\".\n", aFile);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  PRInt32 n = fread(aBuff, 1, *aBuffLen, f);
+  if (n >= *aBuffLen) {
+    printf("ERROR at reading from file \"%s\": too much input data.\n", aFile);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *aBuffLen = n;
+  fclose(f);
+  return NS_OK;
+}
+
+nsresult loadUnicodeFile(char * aFile, PRUnichar * aBuff, PRInt32 * aBuffLen)
+{
+  PRInt32 buffLen = 2*(*aBuffLen);
+
+  nsresult res = loadBinaryFile(aFile, (char *)aBuff, &buffLen);
+  if (NS_FAILED(res)) return res;
+
+  *aBuffLen = buffLen/2;
+  return NS_OK;
+}
+
+nsresult testDecoderFromFiles(char * aCharset, char * aSrcFile, char * aResultFile)
+{
+  // create converter
+  CREATE_DECODER(aCharset);
+
+  PRInt32 srcLen = GENERAL_BUFFER;
+  char src[GENERAL_BUFFER];
+  PRInt32 expLen = GENERAL_BUFFER/2;
+  PRUnichar exp[GENERAL_BUFFER/2];
+
+  res = loadBinaryFile(aSrcFile, src, &srcLen);
+  if (NS_FAILED(res)) return res;
+
+  res = loadUnicodeFile(aResultFile, exp, &expLen);
+  if (NS_FAILED(res)) return res;
+
+  // test converter - easy test
+  res = testDecoder(dec, src, srcLen, exp, expLen, "dec");
+
+  // release converter
+  NS_RELEASE(dec);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+
+  return NS_OK;
+}
+
+nsresult testEncoderFromFiles(char * aCharset, char * aSrcFile, char * aResultFile)
+{
+  // XXX write me
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 // Decoders testing functions
 
@@ -587,7 +618,7 @@ nsresult resetDecoder(nsIUnicodeDecoder * aDec, const char * aTestName)
  */
 nsresult testLatin1Decoder()
 {
-  char * testName = "T2";
+  char * testName = "T101";
   printf("\n[%s] Latin1ToUnicode\n", testName);
 
   // create converter
@@ -623,16 +654,13 @@ nsresult testLatin1Decoder()
  */
 nsresult testISO2022JPDecoder()
 {
-  char * testName = "T4";
+  char * testName = "T102";
   printf("\n[%s] ISO2022JPToUnicode\n", testName);
 
   // create converter
   CREATE_DECODER("iso-2022-jp");
 
-
   // test data
-  // char src[] = {"\x00\x0d\x7f" "\x1b$B\x12\x34" "\x1b(J\xaa" "\x1b$@\xaa\xbb" "\x1b(J\x1b(B\xcc"};
-  // PRUnichar exp[] = {0x0000,0x000d,0x007f,0x1234,0x00aa,0xaabb,0x00cc};
   char src[] = {"\x0d\x7f\xdd" "\x1b(J\xaa\xdc\x41" "\x1b$B\x21\x21" "\x1b$@\x32\x37" "\x1b(J\x1b(B\xcc"};
   PRUnichar exp[] = {0x000d,0x007f,0xfffd, 0xff6a,0xFF9C,0x0041, 0x3000, 0x5378, 0xfffd};
 
@@ -660,10 +688,50 @@ nsresult testISO2022JPDecoder()
 //----------------------------------------------------------------------
 // Encoders testing functions
 
-//----------------------------------------------------------------------
-// Main program functions
+/**
+ * Test the Latin1 encoder.
+ */
+nsresult testLatin1Encoder()
+{
+  char * testName = "T201";
+  printf("\n[%s] UnicodeToLatin1\n", testName);
 
-nsresult run()
+  // create converter
+  CREATE_ENCODER("iso-8859-1");
+
+  // XXX finish me
+
+/*
+  // test data
+  char src[] = {"\x00\x0d\x7f\x80\xff"};
+  PRUnichar exp[] = {0x0000,0x000d,0x007F,0x0080,0x00FF};
+
+  // test converter - easy test
+  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+*/
+
+  // release converter
+  NS_RELEASE(enc);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
+//----------------------------------------------------------------------
+// Testing functions
+
+nsresult testAll()
 {
   nsresult res;
 
@@ -673,16 +741,44 @@ nsresult run()
 
   // test decoders
   testLatin1Decoder();
-  testSJISDecoder();
-  testISO88597Decoder();
   testISO2022JPDecoder();
 
   // test encoders
-  testAsciiEncoder();
+  testLatin1Encoder();
+
+  // older tests - XXX to be rewritten in new style
+  testSJISDecoder();
+  testISO88597Decoder();
 
   // return
   return NS_OK;
 }
+
+nsresult testFromArgs(int argc, char **argv)
+{
+  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID,
+      kICharsetConverterManagerIID, (nsISupports **)&ccMan);
+  if (NS_FAILED(res)) {
+    printf("ERROR at GetService() code=0x%x.\n",res);
+    return res;
+  }
+
+  if ((argc == 5) && (!strcmp(argv[1], "-tdec"))) {
+    res = testDecoderFromFiles(argv[2], argv[3], argv[4]);
+  } else if ((argc == 5) && (!strcmp(argv[1], "-tenc"))) {
+    res = testEncoderFromFiles(argv[2], argv[3], argv[4]);
+  } else {
+    printf("Usage:\n");
+    printf("  TestUConv.exe\n");
+    printf("  TestUConv.exe -tdec encoding inputEncodedFile expectedResultUnicodeFile\n");
+    printf("  TestUConv.exe -tenc encoding inputUnicodeFile expectedResultEncodedFile\n");
+  }
+
+  return res;
+}
+
+//----------------------------------------------------------------------
+// Main program functions
 
 nsresult init()
 {
@@ -690,7 +786,7 @@ nsresult init()
 
   res = setupRegistry();
   if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: setting up registry.\n",res);
+    printf("ERROR at setupRegistry() code=0x%x.\n", res);
     return res;
   }
 
@@ -699,7 +795,9 @@ nsresult init()
 
 nsresult done()
 {
-  if (ccMan != NULL) NS_RELEASE(ccMan);
+  if (ccMan != NULL) nsServiceManager::
+      ReleaseService(kCharsetConverterManagerCID, ccMan);
+
   return NS_OK;
 }
 
@@ -707,13 +805,19 @@ int main(int argc, char **argv)
 {
   nsresult res;
 
-  printf("*** Unicode Converters Test ***\n");
-
   res = init();
   if (NS_FAILED(res)) return -1;
-  run();
+
+  if (argc <= 1) {
+    printf("*** Unicode Converters Test ***\n");
+    res = testAll();
+    printf("\n***---------  Done  --------***\n");
+  } else {
+    res = testFromArgs(argc, argv);
+  }
+
   done();
 
-  printf("\n***---------  Done  --------***\n");
-  return 0;
+  if (NS_FAILED(res)) return -1;
+  else return 0;
 }
