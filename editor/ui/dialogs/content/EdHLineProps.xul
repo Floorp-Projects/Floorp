@@ -90,7 +90,10 @@
       </td>
     </tr>
   </table>
-  <hr width="100%"/>
+  <!--hr width="100%"/-->
+
+  <xul:spring flex="100%"/>    
+
   <xul:box>
     <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
     <xul:spring flex="100%"/>    

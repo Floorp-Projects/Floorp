@@ -17,7 +17,8 @@
   </script>
 
   <xul:broadcaster id="args" value=""/>
-  <hr width="100%"/>
+  <!--hr width="100%"/-->
+  <xul:spring flex="100%"/>
   <xul:box>
     <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvanced()" value="Advanced Edit..."/>
     <xul:spring flex="100%"/>    
