@@ -22,7 +22,7 @@
 DEPTH		= ..\..\..
 THEME_ROOT_DEPTH = ..
 
-DIRS= bookmarks directory profile regviewer related search sidebar wallet xpinstall
+DIRS= bookmarks directory profile regviewer related search sidebar xpinstall
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>

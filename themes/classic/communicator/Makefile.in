@@ -47,7 +47,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/search-hover.gif \
 		$(NULL)
 
-DIRS = bookmarks directory profile regviewer related search sidebar win wallet xpinstall
+DIRS = bookmarks directory profile regviewer related search sidebar win xpinstall
 
 include $(topsrcdir)/config/rules.mk
 

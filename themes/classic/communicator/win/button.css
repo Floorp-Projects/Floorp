@@ -18,6 +18,9 @@
       background-color    : none;
       behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
+<<<<<<< button.css
+      margin              : 0px 1px 0px 1px;
+=======
       margin              : 2px;
       border              : none;
       user-focus          : ignore;
@@ -50,6 +53,7 @@
       behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
       margin              : 0px;
+>>>>>>> 1.10
       border              : 1px solid transparent;
       user-focus          : ignore;
     }
