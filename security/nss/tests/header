@@ -760,23 +760,26 @@ bc()
       BC_ACTION=""
       DON_T_SET_PATHS="FALSE" #let init.sh override - FIXME - check if necessary
       ;;
-    1)
-      TESTDIR=${RESULTDIR}/bc_libs
-      BC_ACTION="backward compatibility shlibs in $BC_MASTER to new binaries"
-      LD_LIBRARY_PATH=${BCDIST}/${OBJDIR}/lib
-      if [ "$O_WIN" = "ON" ] ; then
-          if [ "$O_CYGNUS" = ON ] ; then
-              PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH:$LD_LIBRARY_PATH
-          else
-              PATH="$TESTSCRIPTDIR;$LOCALDIST_BIN;$BASEPATH;$LD_LIBRARY_PATH"
-          fi
-      else
-          PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH
-      fi
-      Debug "1st stage of backward compatibility test"
-      ;;
+#combination #1 is illegal, and should not be done. commenting this out for now
+    #1)
+      #TESTDIR=${RESULTDIR}/bc_libs
+      #BC_ACTION="backward compatibility shlibs in $BC_MASTER to new binaries"
+      #LD_LIBRARY_PATH=${BCDIST}/${OBJDIR}/lib
+      #if [ "$O_WIN" = "ON" ] ; then
+          #if [ "$O_CYGNUS" = ON ] ; then
+              #PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH:$LD_LIBRARY_PATH
+          #else
+              #PATH="$TESTSCRIPTDIR;$LOCALDIST_BIN;$BASEPATH;$LD_LIBRARY_PATH"
+          #fi
+      #else
+          #PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH
+      #fi
+      #Debug "1st stage of backward compatibility test"
+      #;;
     *)
-      TESTDIR=${RESULTDIR}/bc_bins
+      TESTSCRIPTDIR=${BCDIST}/../security/nss/tests
+      COMMON=${TESTSCRIPTDIR}/common
+      TESTDIR=${RESULTDIR}/bct
       BC_ACTION="backward compatibility of binaries in $BC_MASTER to new libs"
       BCDIST_BIN=${BCDIST}/${OBJDIR}/bin
       LD_LIBRARY_PATH=${LOCALDIST}/${OBJDIR}/lib
@@ -789,7 +792,7 @@ bc()
       else
           PATH=$TESTSCRIPTDIR:$BCDIST_BIN:$BASEPATH
       fi
-      Debug "2nd stage of backward compatibility test"
+      Debug "1st stage of backward compatibility test"
       ;;
   esac
   if [ -n "$TESTDIR" ] ; then
@@ -804,6 +807,7 @@ bc()
   Debug "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
   export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH
   export DON_T_SET_PATHS BC_ACTION
+  export TESTSCRIPTDIR COMMON
 }
 
 ########################### Ps #########################################
