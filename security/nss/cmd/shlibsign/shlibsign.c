@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.4 2003/02/05 00:29:35 relyea%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.5 2003/02/07 23:21:53 wtc%netscape.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -42,7 +42,7 @@
 #endif
 
 #include "nspr.h"
-#include "string.h"
+#include <stdio.h>
 #include "nss.h"
 #include "secutil.h"
 #include "cert.h"
@@ -55,11 +55,11 @@
 #include "pk11pqg.h"
 
 #ifdef USES_LINKS
-#include "libgen.h"
-#include "unistd.h"
-#include "sys/param.h"
-#include "sys/types.h"
-#include "sys/stat.h"
+#include <libgen.h>
+#include <unistd.h>
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #endif
 
 static void
