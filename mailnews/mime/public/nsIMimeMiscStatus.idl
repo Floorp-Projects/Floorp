@@ -77,7 +77,7 @@ interface nsIMsgHeaderSink : nsISupports {
 
     // onEndMsgDownload is triggered when layout says it is actually done rendering 
     // the message body in the UI. 
-    void onEndMsgDownload(in nsImsgMailNewsUrl url);
+    void onEndMsgDownload(in nsIMsgMailNewsUrl url);
 
 	attribute nsISupports securityInfo;
 
