@@ -281,6 +281,10 @@ var folderObserver = {
     {
     },
 
+    getImageSource: function(aItemIndex, aColumnID) 
+    {
+    },
+
     onCycleHeader: function(colID, elt)
     {
     },
