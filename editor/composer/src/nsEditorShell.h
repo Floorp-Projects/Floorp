@@ -57,6 +57,7 @@
 #include "nsIStringBundle.h"
 #include "nsICSSStyleSheet.h"
 #include "nsISupportsArray.h"
+#include "nsIPrintSettings.h"
 
 class nsIDOMDocument;
 class nsIDocShell;
@@ -268,6 +269,8 @@ class nsEditorShell :   public nsIEditorShell,
 
     nsStringArray       mDictionaryList;
     PRInt32             mDictionaryIndex;
+
+    nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
 
 #endif // nsEditorShell_h___

@@ -51,11 +51,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIChannel.h"
 
-// Print Options
-#include "nsIPrintOptions.h"
-#include "nsGfxCIID.h"
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
-
 /////////////////////////////////////////////////////////////////////////
 // nsMsgPrintEngine implementation
 /////////////////////////////////////////////////////////////////////////
@@ -148,12 +143,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
             {
               if (!mPrintSettings) 
               {
-                nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-                if (NS_SUCCEEDED(rv)) 
-                {
-                  printService->CreatePrintSettings(getter_AddRefs(mPrintSettings));
-                  NS_ASSERTION(mPrintSettings, "You can't PrintPreview without a PrintSettings!");
-                }
+                mWebBrowserPrint->GetNewPrintSettings(getter_AddRefs(mPrintSettings));
               }
               mPrintSettings->SetPrintSilent(mCurrentlyPrintingURI != 0);
               rv = mWebBrowserPrint->Print(mPrintSettings, (nsIWebProgressListener *)this);
