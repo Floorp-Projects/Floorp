@@ -22,6 +22,7 @@ MAKE_OBJ_TYPE	= DLL
 DEPTH=..\..
 
 LINCS = \
+	-I$(PUBLIC)\xpcom	\
 	-I$(PUBLIC)\libreg	\
 	$(NULL)
 
@@ -59,24 +60,6 @@ CPP_OBJS = \
 	.\$(OBJDIR)\nsSupportsArray.obj		\
 	.\$(OBJDIR)\nsTraceRefcnt.obj		\
 	$(NULL)
-
-EXPORTS = \
-	nsAgg.h			\
-	nsCom.h			\
-	nsDebug.h		\
-	nsError.h		\
-	nsHashtable.h		\
-	nsID.h			\
-	nsIFactory.h		\
-	nsISupports.h		\
-	nsIPtr.h		\
-	nsIServiceManager.h	\
-	nsISupportsArray.h	\
-	nsRepository.h		\
-	nsIEnumerator.h		\
-	nsTraceRefcnt.h		\
-	nsVector.h		\
-	$(NULL)			
 
 MODULE = xpcom 
 
