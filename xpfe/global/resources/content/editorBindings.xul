@@ -105,5 +105,6 @@
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_redo');
             controller.doCommand('cmd_redo');"/>
+	<key id="key_space" key=" " cancel="true"/>
   </keyset>
 </window>
