@@ -18,6 +18,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIFrameReflow.h"
 #include "nsTreeFrame.h"
@@ -62,12 +63,13 @@ NS_NewTreeRowGroupFrame (nsIFrame** aNewFrame)
 // Constructor
 nsTreeRowGroupFrame::nsTreeRowGroupFrame()
 :nsTableRowGroupFrame(), mScrollbar(nsnull), mFrameConstructor(nsnull),
- mTopFrame(nsnull), mBottomFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE)
+ mTopFrame(nsnull), mBottomFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE), mContentChain(nsnull)
 { }
 
 // Destructor
 nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 {
+  NS_IF_RELEASE(mContentChain);
 }
 
 NS_IMPL_ADDREF(nsTreeRowGroupFrame)
@@ -161,7 +163,7 @@ void
 nsTreeRowGroupFrame::ConstructContentChain(nsIContent* aRowContent)
 {
   // Create the content chain array.
-  NS_NewISupportsArray(getter_AddRefs(mContentChain));
+  NS_NewISupportsArray(&mContentChain);
 
   // Move up the chain until we hit our content node.
   nsCOMPtr<nsIContent> currContent = dont_QueryInterface(aRowContent);
@@ -174,9 +176,75 @@ nsTreeRowGroupFrame::ConstructContentChain(nsIContent* aRowContent)
 }
 
 void 
-nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32 aDelta, nsIContent* aHint, nsIContent** aResult)
+nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
+                                            nsIContent* aDownwardHint, nsIContent** aResult)
 {
+  // Init to nsnull.
+  *aResult = nsnull;
 
+  // It disappoints me that this function is completely tied to the content nodes,
+  // but I can't see any other way to handle this.  I don't have the frames, so I have nothing
+  // else to fall back on but the content nodes.
+  PRInt32 index = 0;
+  nsCOMPtr<nsIContent> parentContent;
+  if (aUpwardHint) {
+    aUpwardHint->GetParent(*getter_AddRefs(parentContent));
+    parentContent->IndexOf(aUpwardHint, index);
+  }
+  else if (aDownwardHint) {
+    parentContent = dont_QueryInterface(aDownwardHint);
+    parentContent->ChildCount(index);
+  }
+
+  for (PRInt32 i = index-1; i >= 0; i--) {
+    nsCOMPtr<nsIContent> childContent;
+    parentContent->ChildAt(i, *getter_AddRefs(childContent));
+    nsCOMPtr<nsIAtom> tag;
+    childContent->GetTag(*getter_AddRefs(tag));
+    if (tag == nsXULAtoms::treerow) {
+      aDelta--;
+      if (aDelta == 0) {
+        *aResult = childContent;
+        NS_IF_ADDREF(*aResult);
+        return;
+      }
+    }
+    else if (tag == nsXULAtoms::treeitem) {
+      // If it's open, descend into its treechildren node first.
+      nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
+      nsString isOpen;
+      childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
+      if (isOpen == "true") {
+        // Find the <treechildren> node.
+        PRInt32 childContentCount;
+        nsCOMPtr<nsIContent> grandChild;
+        childContent->ChildCount(childContentCount);
+        for (PRInt32 j = childContentCount-1; j >= 0; j--) {
+          
+          childContent->ChildAt(j, *getter_AddRefs(grandChild));
+          nsCOMPtr<nsIAtom> grandChildTag;
+          grandChild->GetTag(*getter_AddRefs(grandChildTag));
+          if (grandChildTag == nsXULAtoms::treechildren)
+            break;
+        }
+        if (j >= 0 && grandChild)
+          FindPreviousRowContent(aDelta, nsnull, grandChild, aResult);
+      
+        if (aDelta == 0)
+          return;
+      }
+
+      // Descend into this row group and try to find a previous row.
+      FindPreviousRowContent(aDelta, nsnull, childContent, aResult);
+      if (aDelta == 0)
+        return;
+    }
+  }
+
+  // We didn't find it here. We need to go up to our parent, using ourselves as a hint.
+  FindPreviousRowContent(aDelta, parentContent, nsnull, aResult);
+
+  // Bail. There's nothing else we can do.
 }
 
 NS_IMETHODIMP
@@ -218,7 +286,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
       // Now that we've lost some rows, we need to create a
       // content chain that provides a hint for moving forward.
       nsCOMPtr<nsIContent> topRowContent;
-      FindPreviousRowContent(delta, rowContent, getter_AddRefs(topRowContent));
+      FindPreviousRowContent(delta, rowContent, nsnull, getter_AddRefs(topRowContent));
       ConstructContentChain(topRowContent);
     }
   }
@@ -454,13 +522,17 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
 
   // We don't have a top frame instantiated. Let's
   // try to make one.
-  PRInt32 count;
-  mContent->ChildCount(count);
+
+  // If we have a content chain, use that content node to make our frame,
+  // and prepare a sub-content chain for the new child frame that we make.
+  
+  PRInt32 childCount;
+  mContent->ChildCount(childCount);
   nsCOMPtr<nsIContent> childContent;
-  for (PRInt32 i = 0; i < count; i++) {
-    mContent->ChildAt(i, *getter_AddRefs(childContent));
+  if (childCount > 0) {
+    mContent->ChildAt(0, *getter_AddRefs(childContent));
     mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, childContent,
-                                                 &mTopFrame);
+                                               &mTopFrame);
     printf("Created a frame\n");
     mBottomFrame = mTopFrame;
     const nsStyleDisplay *rowDisplay;
