@@ -165,13 +165,13 @@ public:
     NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
                                  const char* hostName);
     NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
-                                 TIMAPACLRightsInfo* aclRights);
+                                 nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
-                               TIMAPACLRightsInfo* aclRights);
+                               nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                   TIMAPACLRightsInfo* aclRights);
+                                   nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                         TIMAPACLRightsInfo* aclRights);
+                                         nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
                                  FolderQueryInfo* aInfo);
     
@@ -528,7 +528,7 @@ nsIMAP4TestDriver::SetMailAccountUrl(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::ClearFolderRights(nsIImapProtocol* aProtocol,
-                                 TIMAPACLRightsInfo* aclRights)
+                                 nsIMAPACLRightsInfo* aclRights)
 {
     printf("**** nsIMAP4TestDriver::ClearFolderRights\r\n");
     return NS_OK;
@@ -536,7 +536,7 @@ nsIMAP4TestDriver::ClearFolderRights(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::AddFolderRights(nsIImapProtocol* aProtocol,
-                               TIMAPACLRightsInfo* aclRights)
+                               nsIMAPACLRightsInfo* aclRights)
 {
     printf("**** nsIMAP4TestDriver::AddFolderRights\r\n");
     return NS_OK;
@@ -544,7 +544,7 @@ nsIMAP4TestDriver::AddFolderRights(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                   TIMAPACLRightsInfo* aclRights)
+                                   nsIMAPACLRightsInfo* aclRights)
 {
     printf("**** nsIMAP4TestDriver::RefreshFolderRights\r\n");
     return NS_OK;
@@ -552,7 +552,7 @@ nsIMAP4TestDriver::RefreshFolderRights(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                         TIMAPACLRightsInfo* aclRights)
+                                         nsIMAPACLRightsInfo* aclRights)
 {
     printf("**** nsIMAP4TestDriver::FolderNeedsACLInitialized\r\n");
     return NS_OK;
