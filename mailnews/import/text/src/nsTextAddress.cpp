@@ -999,6 +999,18 @@ void nsTextAddress::ClearLdifRecordBuffer()
   }
 }
 
+static void SplitCRLFAddressField(nsCString &inputAddress, nsCString &outputLine1, nsCString &outputLine2)
+{
+  PRInt32 crlfPos = inputAddress.Find("\r\n");
+  if (crlfPos != kNotFound)
+  {
+    inputAddress.Left(outputLine1, crlfPos);
+    inputAddress.Right(outputLine2, inputAddress.Length() - (crlfPos + 2));
+  }
+  else
+    outputLine1.Assign(inputAddress);
+}
+
 // We have two copies of this function in the code, one here for import and 
 // the other one in addrbook/src/nsAddressBook.cpp for migrating.  If ths 
 // function need modification, make sure change in both places until we resolve
@@ -1091,7 +1103,12 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
       if (colType.Equals("homephone") )
         m_database->AddHomePhone(newRow, column.get());
         else if (colType.Equals("homepostaladdress") )
-    m_database->AddHomeAddress(newRow, column.get());
+        {
+          nsCAutoString homeAddr1, homeAddr2;
+          SplitCRLFAddressField(column, homeAddr1, homeAddr2);
+          m_database->AddHomeAddress(newRow, homeAddr1.get());
+          m_database->AddHomeAddress2(newRow, homeAddr2.get());
+        }
       else if (colType.Equals("homeurl") )
         m_database->AddWebPage2(newRow, column.get());
       break; // 'h'
@@ -1145,12 +1162,13 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
       if (colType.Equals("postalcode") )
         m_database->AddWorkZipCode(newRow, column.get());
 
-      else if (colType.Equals("postofficebox") )  // is this right?
-        m_database->AddWorkAddress(newRow, column.get());
-
-    else if (colType.Equals("postaladdress") )
-        m_database->AddWorkAddress(newRow, column.get());
-
+      else if (colType.Equals("postofficebox") || colType.Equals("postaladdress")) 
+      { 
+          nsCAutoString workAddr1, workAddr2;
+          SplitCRLFAddressField(column, workAddr1, workAddr2);
+          m_database->AddWorkAddress(newRow, workAddr1.get());
+          m_database->AddWorkAddress2(newRow, workAddr2.get());
+      }
       else if (colType.Equals("pager") ||
         colType.Equals("pagerphone") )
         m_database->AddPagerNumber(newRow, column.get());
@@ -1168,8 +1186,12 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
         m_database->AddLastName(newRow, column.get());
 
       else if ( colType.Equals("streetaddress") )
-        m_database->AddWorkAddress(newRow, column.get());
-
+      {
+        nsCAutoString workAddr1, workAddr2;
+        SplitCRLFAddressField(column, workAddr1, workAddr2);
+        m_database->AddWorkAddress(newRow, workAddr1.get());
+        m_database->AddWorkAddress2(newRow, workAddr2.get());
+      }
       else if ( colType.Equals("st") )
         m_database->AddWorkState(newRow, column.get());
 
