@@ -723,43 +723,6 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       mIndent += gTabSize; // Check for some maximum value?
   }
 
-  else if (type == eHTMLTag_img)
-  {
-    /* Output (in decreasing order of preference)
-       alt, title or src (URI) attribute */
-    // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
-    nsAutoString desc, temp;
-    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "alt", desc)))
-    {
-      if (!desc.IsEmpty())
-      {
-        temp.AppendWithConversion(" ["); // Should we output chars at all here?
-        desc.StripChars("\"");
-        temp += desc;
-        temp.AppendWithConversion(" ]");
-      }
-      // If the alt attribute has an empty value (|alt=""|), output nothing
-    }
-    else if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "title", desc))
-             && !desc.IsEmpty())
-    {
-      temp.AppendWithConversion(" [");
-      desc.StripChars("\"");
-      temp += desc;
-      temp.AppendWithConversion("] ");
-    }
-    else if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "src", desc))
-             && !desc.IsEmpty())
-    {
-      temp.AppendWithConversion(" <");
-      desc.StripChars("\"");
-      temp += desc;
-      temp.AppendWithConversion("> ");
-    }
-    if (!temp.IsEmpty())
-      Write(temp);
-  }
-
   else if (type == eHTMLTag_a && !IsConverted(aNode))
   {
     nsAutoString url;
@@ -1025,7 +988,43 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
 
     EnsureVerticalSpace(0);
   }
-  
+  else if (type == eHTMLTag_img)
+  {
+    /* Output (in decreasing order of preference)
+       alt, title or src (URI) attribute */
+    // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
+    nsAutoString desc, temp;
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "alt", desc)))
+    {
+      if (!desc.IsEmpty())
+      {
+        temp.AppendWithConversion(" ["); // Should we output chars at all here?
+        desc.StripChars("\"");
+        temp += desc;
+        temp.AppendWithConversion("]");
+      }
+      // If the alt attribute has an empty value (|alt=""|), output nothing
+    }
+    else if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "title", desc))
+             && !desc.IsEmpty())
+    {
+      temp.AppendWithConversion(" [");
+      desc.StripChars("\"");
+      temp += desc;
+      temp.AppendWithConversion("] ");
+    }
+    else if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "src", desc))
+             && !desc.IsEmpty())
+    {
+      temp.AppendWithConversion(" <");
+      desc.StripChars("\"");
+      temp += desc;
+      temp.AppendWithConversion("> ");
+    }
+    if (!temp.IsEmpty())
+      Write(temp);
+  }
+
   return NS_OK;
 }
 
