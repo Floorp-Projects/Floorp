@@ -10,6 +10,7 @@ const SECONDS_TO_MILLISECONDS = 1000;
 const MINUTES_TO_MILLISECONDS = MINUTES_TO_SECONDS * SECONDS_TO_MILLISECONDS;
 const HOURS_TO_MILLISECONDS = HOURS_TO_MINUTES * MINUTES_TO_MILLISECONDS;
 
+const MSG_FLAG_NEW      = 0x10000;
 
 function FeedItem() {
   // XXX Convert date to a consistent representation in a setter.
@@ -361,6 +362,7 @@ FeedItem.prototype.writeToFolder = function() {
   header.lineCount = this.content.match(/\r?\n?/g).length;
   header.messageOffset = key;
   header.statusOffset = openingLine.length;
+  header.flags = MSG_FLAG_NEW;
 
   db.AddNewHdrToDB(header, true);
 }

@@ -1,7 +1,8 @@
 <?xml-stylesheet href="edittree.css" type="text/css"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger-newsblog/locale/newsblog.dtd">
 
 <window id="subscriptionsDialog"
-        title="News &amp; Blog Feeds"
+        title="newsBlogSubscriptions.label"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="400"
         height="400"

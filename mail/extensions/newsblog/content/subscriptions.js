@@ -181,8 +181,13 @@ function doRemove() {
             // for other purposes?
             var server = getIncomingServer();
             var openerResource = server.rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-            var folderResource = server.rootMsgFolder.getChildNamed(title.Value).QueryInterface(Components.interfaces.nsIRDFResource);
-            var foo = window.opener.messenger.DeleteFolders(window.opener.GetFolderDatasource(), openerResource, folderResource);
+            var titleValue = title ? title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
+            var url = ds.GetTarget(resource, DC_IDENTIFIER, true);
+            var feed = new Feed(url, null, titleValue);
+            try {
+              var folderResource = server.rootMsgFolder.getChildNamed(feed.name).QueryInterface(Components.interfaces.nsIRDFResource);
+              var foo = window.opener.messenger.DeleteFolders(window.opener.GetFolderDatasource(), openerResource, folderResource);
+            } catch (e) {}
             try {
                 // If the folder still exists, then it wasn't deleted,
                 // which means the user answered "no" to the question of whether

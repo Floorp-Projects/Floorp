@@ -1,18 +1,20 @@
 <?xml version="1.0"?>
+<!DOCTYPE overlay SYSTEM "chrome://messenger-newsblog/locale/newsblog.dtd">
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
 
 <script type="application/x-javascript">
   function openSubscriptionsDialog() {
     window.openDialog("chrome://messenger-newsblog/content/subscriptions.xul",
-                      "News &amp; Blogs",
+                      "",
                       "centerscreen,resizable=yes");
   }
 </script>
 
 <menupopup id="taskPopup">
   <menuitem id="newsAndBlogsCmd"
-            label="News &amp; Blogs Settings..."
+            label="&newsBlogMenu.label;"
             insertbefore="menu_preferences"
             accesskey="e"
             oncommand="openSubscriptionsDialog();"/>

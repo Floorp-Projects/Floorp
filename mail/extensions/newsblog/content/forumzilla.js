@@ -68,11 +68,7 @@ function onLoad() {
 
   getAccount();
   ensureDatabasesAreReady();
-  // Wait a few seconds to give the message databases time to populate themselves.
-  // I'm sure there's a better way to determine when the databases are populated
-  // than this hacky approach, but I don't know what it is.
-  //downloadFeeds();
-  window.setTimeout(downloadFeeds, ENSURANCE_DELAY);
+  downloadFeeds();
 }
 
 // Wait a few seconds before starting Forumzilla so we don't grab the UI thread
@@ -83,12 +79,7 @@ window.setTimeout(onLoad, gFzStartupDelay * 1000);
 
 function downloadFeeds() {
   // Reload subscriptions every 30 minutes (XXX make this configurable via a pref).
-  // XXX We call onLoad() instead of downloadFeeds() directly because onLoad calls
-  // ensureDatabasesAreReady() and then delays calling downloadFeeds() for a few
-  // seconds to make sure the header database is ready before we download feeds
-  // and messages, which works around our duplicate message problem.
-  //window.setTimeout(downloadFeeds, 30 * 60 * 1000);
-  window.setTimeout(onLoad, 30 * 60 * 1000);
+  window.setTimeout(downloadFeeds, 30 * 60 * 1000);
 
   var ds = getSubscriptionsDS();
   var feeds = getSubscriptionsList().GetElements();

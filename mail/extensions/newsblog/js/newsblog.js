@@ -34,6 +34,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const kDebug               = true;
+const MSG_FLAG_NEW      = 0x10000;
 
 var nsNewsBlogFeedDownloader =
 {
@@ -682,18 +683,18 @@ FeedItem.prototype.isStored = function() {
     }
     else {
       debug(this.identity + " not stored? let's check all headers");
-      var foo = db.EnumerateMessages();
-      var i=0;
-      while (foo.hasMoreElements()) {
-        ++i;
-        var bar = foo.getNext();
-        bar = bar.QueryInterface(Components.interfaces.nsIMsgDBHdr);
-        if (this.messageID == bar.messageId) {
-          debug(this.identity + " stored (found it while checking all headers)");
-          return true;
-        }
-      }
-      debug(this.identity + " not stored (checked " + i + " headers but couldn't find it)");
+//      var foo = db.EnumerateMessages();
+//      var i=0;
+//      while (foo.hasMoreElements()) {
+//        ++i;
+//        var bar = foo.getNext();
+//        bar = bar.QueryInterface(Components.interfaces.nsIMsgDBHdr);
+//        if (this.messageID == bar.messageId) {
+//          debug(this.identity + " stored (found it while checking all headers)");
+//          return true;
+//        }
+//      }
+//      debug(this.identity + " not stored (checked " + i + " headers but couldn't find it)");
       return false;
     }
   }
@@ -834,6 +835,7 @@ FeedItem.prototype.writeToFolder = function() {
   header.author = this.toUtf8(this.author);
   header.subject = this.toUtf8(this.title);
   header.messageId = this.messageID;
+  header.flags = MSG_FLAG_NEW;
   header.messageSize = length;
   // Count the number of line break characters to determine the line count.
   header.lineCount = this.content.match(/\r?\n?/g).length;
