@@ -77,6 +77,7 @@ nsImapUrl::nsImapUrl()
 	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
+	m_onlineSubDirSeparator = '\0'; 
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
 									   (void **) getter_AddRefs(m_urlListeners));
 }
