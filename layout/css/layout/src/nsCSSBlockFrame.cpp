@@ -181,7 +181,11 @@ protected:
 
   PRBool IsPseudoFrame() const;
 
+  nsresult InitialReflow(nsCSSBlockReflowState& aState);
+
   nsresult FrameAppendedReflow(nsCSSBlockReflowState& aState);
+
+  nsresult CreateNewFrames(nsIPresContext* aPresContext);
 
   nsresult FindTextRuns(nsCSSBlockReflowState& aState);
 
@@ -220,7 +224,7 @@ protected:
 
   PRBool PullFrame(nsCSSBlockReflowState& aState,
                    LineData*              aToLine,
-                   LineData*              aFromLine,
+                   LineData**             aFromList,
                    PRBool                 aUpdateGeometricParent,
                    nsInlineReflowStatus&  aResult);
 
@@ -338,12 +342,12 @@ LineData::~LineData()
 }
 
 static void
-ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
+ListFloaters(FILE* out, nsVoidArray* aFloaters)
 {
   PRInt32 i, n = aFloaters->Count();
   for (i = 0; i < n; i++) {
     nsIFrame* frame = (nsIFrame*) aFloaters->ElementAt(i);
-    frame->List(out, aIndent);
+    frame->ListTag(out);
   }
 }
 
@@ -361,7 +365,7 @@ LineData::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  fprintf(out, "%p: count=%d state=%x {%d,%d,%d,%d} <\n",
+  fprintf(out, "line %p: count=%d state=%x {%d,%d,%d,%d} <\n",
           this, mChildCount, GetState(),
           mBounds.x, mBounds.y, mBounds.width, mBounds.height);
 
@@ -375,9 +379,8 @@ LineData::List(FILE* out, PRInt32 aIndent) const
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
 
   if (nsnull != mFloaters) {
-    fputs("> bcl-floaters=<\n", out);
-    ListFloaters(out, aIndent + 1, mFloaters);
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fputs("> bcl-floaters=<", out);
+    ListFloaters(out, mFloaters);
   }
   fputs(">\n", out);
 }
@@ -846,8 +849,7 @@ nsCSSBlockFrame::CreateContinuingFrame(nsIPresContext*  aCX,
   PrepareContinuingFrame(aCX, aParent, aStyleContext, cf);
   aContinuingFrame = cf;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("nsCSSBlockFrame::CreateContinuingFrame: prev-in-flow=%p newFrame=%p",
-      this, cf));
+     ("nsCSSBlockFrame::CreateContinuingFrame: newFrame=%p", cf));
   return NS_OK;
 }
 
@@ -907,8 +909,8 @@ nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Dump run-in floaters
   if (nsnull != mRunInFloaters) {
-    fputs(" run-in-floaters=<\n", out);
-    ListFloaters(out, aIndent + 1, mRunInFloaters);
+    fputs(" run-in-floaters=<", out);
+    ListFloaters(out, mRunInFloaters);
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
     fputs(">", out);
   }
@@ -934,6 +936,8 @@ nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != mTextRuns) {
     fputs(" text-runs=<\n", out);
     ListTextRuns(out, aIndent + 1, mTextRuns);
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fputs(">", out);
   }
   fputs("\n", out);
 
@@ -1111,10 +1115,6 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
   // that needs generating.
   if (eReflowReason_Initial == aReflowState.reason) {
     NS_ASSERTION(0 != (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
-    nsresult rv = ProcessInitialReflow(aPresContext);
-    if (NS_OK != rv) {
-      return rv;
-    }
   }
   else {
     NS_ASSERTION(0 == (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
@@ -1131,7 +1131,7 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
   if (eReflowReason_Initial == state.reason) {
     DrainOverflowLines();
     state.GetAvailableSpace();
-    rv = FrameAppendedReflow(state);
+    rv = InitialReflow(state);
     mState &= ~NS_FRAME_FIRST_REFLOW;
   }
   else if (eReflowReason_Incremental == state.reason) {
@@ -1183,7 +1183,12 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
     mLastContentIsComplete = line->GetLastContentIsComplete();
   }
   if (state.mBlockIsPseudo) {
-    PropagateContentOffsets();
+    // Tell our parent to update it's offsets because our offsets have
+    // changed.
+    nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
+    parent->PropagateContentOffsets(this, mFirstContentOffset,
+                                    mLastContentOffset,
+                                    mLastContentIsComplete);
   }
 #endif
 
@@ -1359,6 +1364,33 @@ IsBlock(PRUint8 aDisplay)
   return PR_FALSE;
 }
 
+nsresult
+nsCSSBlockFrame::InitialReflow(nsCSSBlockReflowState& aState)
+{
+  // Create synthetic content (XXX a hack)
+  nsresult rv = ProcessInitialReflow(aState.mPresContext);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  // Create new frames
+  if (nsnull == mNextInFlow) {
+    rv = CreateNewFrames(aState.mPresContext);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  // Generate text-run information
+  rv = FindTextRuns(aState);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  // Reflow everything
+  return ResizeReflow(aState);
+}
+
 // XXX this is not incremental; yuck. it's because of
 // DrainOverflowLines; we don't know how to reflow the overflow lines
 // and incrementally handle the new lines....time for dirty bits!
@@ -1366,40 +1398,57 @@ IsBlock(PRUint8 aDisplay)
 nsresult
 nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
 {
-  // Determine the starting kidContentIndex and the childPrevInFlow if
-  // the last child is not yet complete.
-  PRInt32 kidContentIndex = 0;
-  nsIFrame* childPrevInFlow = nsnull;
-  nsIFrame* lastFrame = nsnull;
-  LineData* lastLine = nsnull;
-  if ((nsnull == mLines) && (nsnull != mPrevInFlow)) {
-    nsCSSBlockFrame* prev = (nsCSSBlockFrame*)mPrevInFlow;
-    lastLine = LastLine(prev->mLines);
-    if (nsnull != lastLine) {
-      lastFrame = lastLine->LastChild();
-      lastFrame->GetContentIndex(kidContentIndex);
-      if (lastLine->GetLastContentIsComplete()) {
-        kidContentIndex++;
-      }
-      else {
-        childPrevInFlow = lastFrame;
-      }
+  nsresult rv = CreateNewFrames(aState.mPresContext);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  // Generate text-run information
+  rv = FindTextRuns(aState);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  // XXX temporary: Reflow everything
+  return ResizeReflow(aState);
+}
+
+nsresult
+nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
+{
+  NS_ASSERTION((nsnull == mOverflowLines) && (nsnull == mNextInFlow),
+               "bad call to CreateNewFrames");
+
+  // Get our last line and then get its last child. Use that
+  // information to determine our kidContentIndex.
+  LineData* lastLine = LastLine(mLines);
+  nsIFrame* lastFrame;
+  PRInt32 kidContentIndex;
+  if (nsnull != lastLine) {
+    lastFrame = lastLine->LastChild();
+    lastFrame->GetContentIndex(kidContentIndex);
+    if (lastLine->GetLastContentIsComplete()) {
+      kidContentIndex++;
     }
-    lastLine = nsnull;
-    lastFrame = nsnull;
+    else {
+#ifdef NS_DEBUG
+      // Because we always create continuations as we find them (XXX
+      // sigh) instead of when we need them, we can assert that if the
+      // last child is not complete then it already has a continuation.
+      nsIFrame* kidNextInFlow;
+      lastFrame->GetNextInFlow(kidNextInFlow);
+      NS_ASSERTION(nsnull != kidNextInFlow, "whoops");
+    }
+#endif
   }
   else {
-    lastLine = LastLine(mLines);
-    if (nsnull != lastLine) {
-      lastFrame = lastLine->LastChild();
-      lastFrame->GetContentIndex(kidContentIndex);
-      if (lastLine->GetLastContentIsComplete()) {
-        kidContentIndex++;
-      }
-      else {
-        childPrevInFlow = lastFrame;
-      }
-    }
+    // We can't have an empty line list and have a prev-in-flow. If we
+    // have a prev-in-flow then we are its continuation which means it
+    // must have pushed some lines into its overflow list; therefore
+    // we must have some lines.
+    NS_ASSERTION(nsnull == mPrevInFlow, "prev-in-flow without overflow lines");
+    lastFrame = nsnull;
+    kidContentIndex = 0;
   }
 
   // Make sure that new inlines go onto the end of the lastLine when
@@ -1415,6 +1464,9 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
   nsresult rv;
   PRInt32 lastContentIndex;
   lastContentIndex = mContent->ChildCount();
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("enter nsCSSBlockFrame::CreateNewFrames: kidContentIndex=%d lastContentIndex=%d",
+      kidContentIndex, lastContentIndex));
   for (; kidContentIndex < lastContentIndex; kidContentIndex++) {
     nsIContent* kid;
     kid = mContent->ChildAt(kidContentIndex);
@@ -1424,8 +1476,7 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
 
     // Create frame for our new child and add it to the sibling list
     nsIFrame* frame;
-    rv = nsHTMLBase::CreateFrame(aState.mPresContext, this, kid,
-                                 childPrevInFlow, frame);
+    rv = nsHTMLBase::CreateFrame(aPresContext, this, kid, nsnull, frame);
     NS_RELEASE(kid);
     if (NS_OK != rv) {
       return rv;
@@ -1434,7 +1485,9 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
       lastFrame->SetNextSibling(frame);
     }
     lastFrame = frame;
-    childPrevInFlow = nsnull;
+//XXX    childPrevInFlow = nsnull;
+    NS_FRAME_TRACE(NS_FRAME_TRACE_NEW_FRAMES,
+       ("nsCSSBlockFrame::CreateNewFrames: new-frame=%p", frame));
 
     // See if the child is a block or non-block
     const nsStyleDisplay* kidDisplay;
@@ -1499,15 +1552,9 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
     lastLine->SetLastContentIsComplete();
   }
 
-  // Generate text-run information
-  rv = FindTextRuns(aState);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // XXX temporary; use dirty bits instead so we can skip over all of
-  // the lines that weren't changed.
-  return ResizeReflow(aState);
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("exit nsCSSBlockFrame::CreateNewFrames"));
+  return NS_OK;
 }
 
 nsresult
@@ -1528,7 +1575,8 @@ nsCSSBlockFrame::FindTextRuns(nsCSSBlockReflowState& aState)
         nsIInlineReflow* inlineReflow;
         if (NS_OK == frame->QueryInterface(kIInlineReflowIID,
                                            (void**)&inlineReflow)) {
-          nsresult rv = inlineReflow->FindTextRuns(aState.mLineLayout);
+          nsresult rv = inlineReflow->FindTextRuns(aState.mLineLayout,
+                                                   aState.reflowCommand);
           if (NS_OK != rv) {
             return rv;
           }
@@ -1768,13 +1816,9 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
 
   // Pull frames from the next line until we can't
   while (nsnull != aLine->mNext) {
-    LineData* line = aLine->mNext;
-    keepGoing = PullFrame(aState, aLine, line, PR_FALSE, aReflowResult);
-    if (0 == line->mChildCount) {
-      aLine->mNext = line->mNext;
-      line->mNext = aState.mFreeList;           // put on freelist
-      aState.mFreeList = line;
-    }
+    LineData** linep = &aLine->mNext;
+    keepGoing = PullFrame(aState, aLine, &aLine->mNext,
+                          PR_FALSE, aReflowResult);
     if (!keepGoing) {
       goto done;
     }
@@ -1789,12 +1833,8 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
       aState.mNextInFlow = nextInFlow;
       continue;
     }
-    keepGoing = PullFrame(aState, aLine, line, PR_TRUE, aReflowResult);
-    if (0 == line->mChildCount) {
-      nextInFlow->mLines = line->mNext;
-      line->mNext = aState.mFreeList;           // put on freelist
-      aState.mFreeList = line;
-    }
+    keepGoing = PullFrame(aState, aLine, &nextInFlow->mLines,
+                          PR_TRUE, aReflowResult);
     if (!keepGoing) {
       goto done;
     }
@@ -2012,19 +2052,23 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     }
     if (nsnull != nextInFlow) {
       // We made a next-in-flow for the block child frame. Create a
-      // line to map that block childs next-in-flow and then push that
-      // line to our next-in-flow.
+      // line to map the block childs next-in-flow.
       LineData* line = new LineData(nextInFlow, 1);
       if (nsnull == line) {
         aReflowResult = nsInlineReflowStatus(NS_ERROR_OUT_OF_MEMORY);
         return PR_FALSE;
       }
+      line->SetLastContentIsComplete();
       line->SetIsBlock();
       line->mNext = aLine->mNext;
       aLine->mNext = line;
+    }
 
-      // Push the new line to the next-in-flow
-      aState.mPrevLine = aLine;
+    // Advance mPrevLine because we are keeping aLine (since some of
+    // the child block frame fit). Then push any remaining lines to
+    // our next-in-flow
+    aState.mPrevLine = aLine;
+    if (nsnull != aLine->mNext) {
       PushLines(aState);
     }
     aReflowResult = NS_INLINE_LINE_BREAK_AFTER(reflowStatus);
@@ -2182,27 +2226,34 @@ nsCSSBlockFrame::SplitLine(nsCSSBlockReflowState& aState,
 PRBool
 nsCSSBlockFrame::PullFrame(nsCSSBlockReflowState& aState,
                            LineData*              aLine,
-                           LineData*              aFromLine,
+                           LineData**             aFromList,
                            PRBool                 aUpdateGeometricParent,
                            nsInlineReflowStatus&  aReflowResult)
 {
-  if (0 == aFromLine->mChildCount) {
-    NS_ASSERTION(nsnull == aFromLine->mFirstChild, "bad line");
+  LineData* fromLine = *aFromList;
+  NS_ASSERTION(nsnull != fromLine, "bad line to pull from");
+  if (0 == fromLine->mChildCount) {
+    // Discard empty lines immediately. Empty lines can happen here
+    // because of DeleteChildsNextInFlow not being able to delete
+    // lines.
+    *aFromList = fromLine->mNext;
+    fromLine->mNext = aState.mFreeList;
+    aState.mFreeList = fromLine;
     return PR_TRUE;
   }
 
   // If our line is not empty and the child in aFromLine is a block
   // then we cannot pull up the frame into this line.
-  if ((0 != aLine->mChildCount) && aFromLine->IsBlock()) {
+  if ((0 != aLine->mChildCount) && fromLine->IsBlock()) {
     aReflowResult = NS_INLINE_LINE_BREAK_BEFORE(0);
     return PR_FALSE;
   }
 
-  // Take frame from aFromLine
-  nsIFrame* frame = aFromLine->mFirstChild;
+  // Take frame from fromLine
+  nsIFrame* frame = fromLine->mFirstChild;
   if (0 == aLine->mChildCount++) {
     aLine->mFirstChild = frame;
-    aLine->SetIsBlock(aFromLine->IsBlock());
+    aLine->SetIsBlock(fromLine->IsBlock());
 #ifdef NS_DEBUG
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display,
@@ -2211,11 +2262,15 @@ nsCSSBlockFrame::PullFrame(nsCSSBlockReflowState& aState,
     NS_ASSERTION(isBlock == aLine->IsBlock(), "bad line isBlock");
 #endif
   }
-  if (0 != --aFromLine->mChildCount) {
-    frame->GetNextSibling(aFromLine->mFirstChild);
+  if (0 != --fromLine->mChildCount) {
+    frame->GetNextSibling(fromLine->mFirstChild);
   }
   else {
-    aFromLine->mFirstChild = nsnull;
+    // Free up the fromLine now that it's empty
+    *aFromList = fromLine->mNext;
+    fromLine->mFirstChild = nsnull;
+    fromLine->mNext = aState.mFreeList;
+    aState.mFreeList = fromLine;
   }
 
   // Change geometric parents
@@ -2346,28 +2401,6 @@ nsCSSBlockFrame::PushLines(nsCSSBlockReflowState& aState)
   LineData* lastLine = aState.mPrevLine;
   LineData* nextLine = lastLine->mNext;
 
-#if XXX
-  // Strip out empty lines
-  LineData** lp = &nextLine;
-  for (;;) {
-    LineData* line = *lp;
-    if (nsnull == line) {
-      break;
-    }
-    if (0 == line->mChildCount) {
-      NS_ASSERTION(nsnull == line->mFirstChild, "bad line");
-      *lp = line->mNext;
-      line->mNext = aState.mFreeList;
-      aState.mFreeList = line;
-      continue;
-    }
-    lp = &line->mNext;
-  }
-  if (nsnull == nextLine) {
-    // Nothing to push: they were all empty
-    return;
-  }
-#endif
   lastLine->mNext = nsnull;
   mOverflowLines = nextLine;
 
@@ -2428,6 +2461,9 @@ nsCSSBlockFrame::DrainOverflowLines()
         lastLine->mNext = mLines;
         mLines = line;
       }
+
+      // Update our first-content-index now that we have a new first child
+      mLines->mFirstChild->GetContentIndex(mFirstContentOffset);
     }
   }
 
@@ -2442,11 +2478,17 @@ nsCSSBlockFrame::DrainOverflowLines()
     LineData* lastLine = LastLine(mLines);
     if (nsnull == lastLine) {
       mLines = mOverflowLines;
+      // Update our first-content-index now that we have a new first child
+      mLines->mFirstChild->GetContentIndex(mFirstContentOffset);
     }
     else {
       lastLine->mNext = mOverflowLines;
       nsIFrame* lastFrame = lastLine->LastChild();
       lastFrame->SetNextSibling(mOverflowLines->mFirstChild);
+
+      // Update our last-content-index now that we have a new last child
+      lastLine = LastLine(mOverflowLines);
+      lastLine->LastChild()->GetContentIndex(mLastContentOffset);
     }
     mOverflowLines = nsnull;
   }
@@ -2459,6 +2501,7 @@ nsCSSBlockFrame::DrainOverflowLines()
   return NS_OK;
 }
 
+// XXX a copy of nsHTMLContainerFrame's
 NS_IMETHODIMP
 nsCSSBlockFrame::ContentAppended(nsIPresShell*   aShell,
                                  nsIPresContext* aPresContext,
