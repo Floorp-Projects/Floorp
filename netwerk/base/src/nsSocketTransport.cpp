@@ -27,6 +27,7 @@
 #include "nsIStreamListener.h"
 #include "nsSocketTransport.h"
 #include "nsSocketTransportService.h"
+#include "nsSocketTransportStreams.h"
 
 //
 // This is the State table which maps current state to next state
@@ -92,8 +93,6 @@ static PRIntervalTime gConnectTimeout = -1;
 // This is the global buffer used by all nsSocketTransport instances when
 // reading from or writing to the network.
 //
-#define MAX_IO_BUFFER_SIZE   8192
-
 static char gIOBuffer[MAX_IO_BUFFER_SIZE];
 
 #if defined(PR_LOGGING)
@@ -108,7 +107,7 @@ static char gIOBuffer[MAX_IO_BUFFER_SIZE];
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
 //
-static PRLogModuleInfo* gSocketLog = nsnull;
+PRLogModuleInfo* gSocketLog = nsnull;
 
 #endif /* PR_LOGGING */
 
@@ -296,6 +295,9 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
       case eSocketState_Error:
       case eSocketState_DoneRead:
       case eSocketState_DoneWrite:
+        PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+               ("Transport [this=%x] is in done state %d.\n", this, mCurrentState));
+
         // Fire a notification that the read has finished...
         if (eSocketState_DoneWrite != mCurrentState) {
           if (mReadListener) {
@@ -303,24 +305,23 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             NS_RELEASE(mReadListener);
             NS_IF_RELEASE(mReadContext);
           }
+          NS_IF_RELEASE(mReadStream);
         }
 
         // Fire a notification that the write has finished...
         if (eSocketState_DoneRead != mCurrentState) {
-          if (mWriteStream) {
-            if (mWriteObserver) {
-              mWriteObserver->OnStopBinding(mWriteContext, rv, nsnull);
-              NS_RELEASE(mWriteObserver);
-            }
-            NS_RELEASE(mWriteStream);
+          if (mWriteObserver) {
+            mWriteObserver->OnStopBinding(mWriteContext, rv, nsnull);
+            NS_RELEASE(mWriteObserver);
             NS_IF_RELEASE(mWriteContext);
           }
+          NS_IF_RELEASE(mWriteStream);
         }
 
         //
         // Set up the connection for the next operation...
         //
-        if (mReadListener || mWriteStream) {
+        if (mReadStream || mWriteStream) {
           mCurrentState = eSocketState_WaitReadWrite;
         } else {
           mCurrentState = gStateTable[mOperation][mCurrentState];
@@ -338,7 +339,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         break;
 
       case eSocketState_WaitReadWrite:
-        if (mReadListener) {
+        if (mReadStream) {
           rv = doRead(aSelectFlags);
           if (NS_OK == rv) {
             mCurrentState = eSocketState_DoneRead;
@@ -681,14 +682,18 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
       }
     } 
     //
-    // There is no room in the input stream for more data...  Give the 
-    // consumer more time to empty the stream...
+    // There is no room in the input stream for more data...  
+    // 
+    // Remove this entry from the select list until the consumer has read 
+    // some data...  Since we are already holding the transport lock, just
+    // increment the suspend count...
     //
-    // XXX: Until there is a mechanism to remove this entry from the 
-    //      select list until the consumer has read some data, this will
-    //      cause the transport thread to spin !!
+    // When the consumer makes some room in the stream, the transport will be
+    // resumed...
     //
     else {
+      mSuspendCount += 1;
+      mReadStream->BlockTransport();
       rv = NS_BASE_STREAM_WOULD_BLOCK;
     }
   }
@@ -697,7 +702,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   // Fire a single OnDataAvaliable(...) notification once as much data has
   // been filled into the stream as possible...
   //
-  if (totalBytesWritten) {
+  if (totalBytesWritten && mReadListener) {
     mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, totalBytesWritten);
     mSourceOffset += totalBytesWritten;
   }
@@ -947,10 +952,15 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
     rv = NS_ERROR_IN_PROGRESS;
   }
 
-  // Create a new input stream for reading data into...
+  // Create a new non-blocking input stream for reading data into...
   if (NS_SUCCEEDED(rv) && !mReadStream) {
-    rv = NS_NewByteBufferInputStream(&mReadStream, PR_FALSE, 
-                                     MAX_IO_BUFFER_SIZE);
+    mReadStream = new nsSocketTransportStream();
+    if (mReadStream) {
+      NS_ADDREF(mReadStream);
+      rv = mReadStream->Init(this, PR_FALSE);
+    } else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1047,24 +1057,18 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
     rv = NS_ERROR_IN_PROGRESS;
   }
 
-///  if (NS_SUCCEEDED(rv) && !mReadStream) {
-///    rv = NS_NewByteBufferInputStream(&mReadStream, PR_FALSE, 
-///                                     MAX_IO_BUFFER_SIZE);
-///  }
-
+  // Create a new blocking input stream for reading data into...
   if (NS_SUCCEEDED(rv)) {
-    nsIInputStream *stream;
-
     NS_IF_RELEASE(mReadStream);
     NS_IF_RELEASE(mReadContext);
 
-    rv = NS_NewSyncStreamListener(&mReadListener, &stream);
-    // XXX:  This is sorta nasty...
-    if (NS_SUCCEEDED(rv)) {
-      rv = stream->QueryInterface(nsIByteBufferInputStream::GetIID(), 
-                                  (void**)&mReadStream);
+    mReadStream = new nsSocketTransportStream();
+    if (mReadStream) {
+      NS_ADDREF(mReadStream);
+      rv = mReadStream->Init(this, PR_TRUE);
+    } else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
     }
-    *result = mReadStream;
   }
 
   if (NS_SUCCEEDED(rv)) {
