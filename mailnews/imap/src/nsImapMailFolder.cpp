@@ -1123,9 +1123,9 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 					originalInfo->TransferFolderInfo(mDatabase->m_dbFolderInfo);
 					delete originalInfo;
 				}
+#endif
 				SummaryChanged();
                 mDatabase->AddListener(this);
-#endif
 				rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
 			}
 			// store the new UIDVALIDITY value
