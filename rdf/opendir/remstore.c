@@ -81,7 +81,7 @@ remoteStoreAdd (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
     newAs->invNext  = iu->rarg2;
     iu->rarg2       = newAs;
   }
- if (type == RDF_STRING_TYPE)   RDFGS_AddSearchIndex(mcf, (char*) v, s, u);
+  /*  if (type == RDF_STRING_TYPE)   RDFGS_AddSearchIndex(mcf, (char*) v, s, u); */
   
   return newAs;
 }

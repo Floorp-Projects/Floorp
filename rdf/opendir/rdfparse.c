@@ -266,17 +266,20 @@ parseNextRDFXMLBlobInt(RDFT f, char* blob, int size) {
       if ((c == '<') || (c == '>')) {
         last = n;
         if (c == '<') {
-			f->holdOver[0] = '<'; 
-			f->holdOver[1] = '\0';
+          f->holdOver[0] = '<'; 
+          f->holdOver[1] = '\0';
 		}
         if (somethingseenp == 1) {
-         parseNextRDFToken(f, f->line);
-         }
+          parseNextRDFToken(f, f->line);
+        }
       } else if (size > last) {
         memcpy(f->holdOver, f->line, m);
-        f->holdOver[m+1] = '\0';
+        f->holdOver[m] = '\0';
       }
-    } else if (c == '<') f->holdOver[0] = '<';
+    } else if (c == '<') {
+      f->holdOver[0] = '<';
+      f->holdOver[1] = '\0';
+    }
   }
   return(1);
 }
@@ -287,7 +290,10 @@ getAttributeValue (char** attlist, char* elName)
   size_t n = 0;
   if (!attlist) return NULL;
   while ((n < 2*MAX_ATTRIBUTES) && (*(attlist + n) != NULL)) {
-    if (strcmp(*(attlist + n), elName) == 0) return *(attlist + n + 1);
+    char* attname = *(attlist + n);
+    char* base = strchr(attname, ':');
+    if (base) attname = base + 1;
+    if (strcmp(attname, elName) == 0) return *(attlist + n + 1);
     n = n + 2;
   }
   return NULL;
@@ -320,9 +326,10 @@ addElementProps (char** attlist, char* elementName, RDFT f, RDF_Resource obj)
   while (count < 2*MAX_ATTRIBUTES) {
     char* attName = attlist[count++];
     char* attValue = attlist[count++];
-    char* baseName = strchr(attName, ':');
+    char* baseName;
     if ((attName == NULL) || (attValue == NULL)) break;
-    if baseName attName = baseName + 1;
+    baseName  = strchr(attName, ':');
+    if (baseName) attName = baseName + 1;
     if (startsWith("xmlns", attName)) {
       /* addNameSpace(attName, attValue, f); */
     } else if (!stringEquals(attName, "resource") && 
@@ -368,7 +375,7 @@ parseNextRDFToken (RDFT f, char* token)
     f->status = (f->status == EXPECTING_OBJECT ? EXPECTING_PROPERTY : EXPECTING_OBJECT);
     return 1;
   } else if ((f->status == 0) && (startsWith("<RDF:RDF", token) || 
-                                  startsWith("<RDF>", token))) {
+                                  startsWith("<RDF", token))) {
     f->status = EXPECTING_OBJECT;
     return 1;
   } else {
@@ -414,6 +421,8 @@ parseNextRDFToken (RDFT f, char* token)
         obj =  getResource(url, 1);        
         addElementProps (attlist, elementName, f, obj) ;     
         remoteStoreAdd(f, f->stack[f->depth-1], eln, obj, RDF_RESOURCE_TYPE,  1);
+        /* printf("%s %s %s\n", RDF_ResourceID(f->stack[f->depth-1]), 
+               RDF_ResourceID(eln), url); */
       } 
       if (!emptyElementp) {
         f->stack[f->depth++] = getResource(elementName, 1);
@@ -442,8 +451,6 @@ tokenizeElement (char* attr, char** attlist, char** elementName)
     c = attr[n++];
   }
   *elementName = &attr[n-1];
-  base = strchr(*elementName, ':');
-  if (base) *elementName = base+1;
   while (n < s) {
     if (wsCharp(c)) break;
     c = attr[n++];
@@ -480,5 +487,7 @@ tokenizeElement (char* attr, char** attlist, char** elementName)
     }
     inAttrNamep = (inAttrNamep ? 0 : 1);
   }
+  base = strchr(*elementName, ':');
+  if (base) *elementName = base+1;
   return 1;
 }
