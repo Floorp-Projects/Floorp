@@ -24,8 +24,8 @@
 # vairiables substituted.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2001/07/27 20:39:18 $ 
+# $Revision: 1.2 $ 
+# $Date: 2001/08/30 18:54:25 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
@@ -72,6 +72,41 @@ use TreeData;
 
 
 
+# given a time return a human readable string suitable for using as
+# part of a CVS checkout.
+
+sub cvs_time_str {
+    my ($time) = @_;
+
+    my ($sec,$min,$hour,$mday,$mon,$year,
+	$wday,$yday,$isdst) = localtime($time);
+    
+    $mon++;
+    $year += 1900;
+
+    my $str = sprintf "%04d-%02d-%02d %02d:%02d", $year,$mon,$mday,$hour,$min;
+    return $str;
+}
+
+
+# given a time return a human readable string suitable for using as
+# part of a file name but similar to the CVS checkout string for the
+# same time (no space).
+
+sub filename_time_str {
+    my ($time) = @_;
+
+    my ($sec,$min,$hour,$mday,$mon,$year,
+	$wday,$yday,$isdst) = localtime($time);
+    
+    $mon++;
+    $year += 1900;
+
+    my $str = sprintf "%04d-%02d-%02d.%02d:%02d", $year,$mon,$mday,$hour,$min;
+    return $str;
+}
+
+
 
 # The environmental variables for building at mozilla/netscape are
 # quite complicated, your needs may be much simpler. Putting all
@@ -104,21 +139,57 @@ sub build_scripts {
     my ($argv) = "@ARGV";
     
     
-    $BUILD_DIR = "/tmp/tinderbox_build";
+    my $build_dir = (
+                     "/var/tmp/tinderbox_build".
+                     "/".
+                     $args{'buildtype'}.
+                     "/".
+                     $tree_name.
+                     "");
     
-    $DEST_DIR="$BUILD_DIR/dest";
-    
-    if ($DEST_DIR) {
-        $make_flags .= " DESTDIR=$DEST_DIR ";
-    }
-    
-    my $tree = tree_name();
-    my $branch = $TreeData::VC_TREE{$tree}{'branch'};
-    my $module = $TreeData::VC_TREE{$tree}{'module'};
-    
-    if ($branch) {
-        $cvs_checkout_flags .= " -r $branch ";
-    }
+    # pick a time earlier then the current time. Check out the sources
+    # as of that time and use that time as the name of the tar
+    # file. Now anyone who wants to recreate the sources of the binary
+    # tar can use the tarfile name to checkout the souces as if we had
+    # tagged them.  We use a few minutes ago as the checkout time to
+    # ensure that the CVS server has time to settle down from any
+    # large checkins which may be in progress.
+
+    my $checkout_time = time() - 5*60;
+    my $filename_time_str = filename_time_str($checkout_time);
+    my $cvs_time_str = cvs_time_str($checkout_time);
+
+    my $dest_dir="$build_dir/dest";
+    chomp $time_stamp;
+    my $tar_file = (
+                    "/var/spool/builds/".
+                    $tree_name.
+                    "/".
+                    "reef-aprt.".
+                    $tree_name.
+                    ".".
+                    $filename_time_str.
+                    ".tar.gz"
+                    );
+        
+  if ($dest_dir) {
+      $make_flags .= " DESTDIR=$dest_dir RELEASEDIR= ";
+   }
+
+  my $branch = $TreeData::VC_TREE{$tree_name}{'branch'};
+  my $module = $TreeData::VC_TREE{$tree_name}{'module'};
+
+  if ($branch) {
+      $cvs_checkout_flags .= " -r $branch ";
+  }
+
+    # pass these variables to the Makefile.orig so that the
+    # buildid can contain this information.
+
+    $ENV{'BUILD_CVS_D_TIME'} = $filename_time_str;
+    $ENV{'BUILD_BRANCH'} = $branch;
+    $ENV{'BUILD_MODULE'} = $module;
+
 
 # builds discribe a sequence of steps needed to perform a "build".
 # Each build either succeeds or fails.  Builds can be used for running
@@ -163,6 +234,8 @@ $BUILDS = {
 			    'script' => [
 					 "show_env",
 					 "rpm -qa",
+                                         "rm -rf $build_dir",
+                                         "mkdir -p $build_dir",
 					],
 			   },
 			   {
@@ -170,7 +243,7 @@ $BUILDS = {
 			    'error_status' => "build_failed",
 			    'dir' => "$BUILD_DIR",
 			    'script' => [
-					 "cvs checkout $cvs_checkout_flags $module",
+					 "cvs checkout $cvs_checkout_flags  -D '$cvs_time_str' $module",
 					],
 			   },
 			    {
@@ -178,9 +251,19 @@ $BUILDS = {
 			     'error_status' => "build_failed",
 			     'dir' => "$BUILD_DIR/reef",
 			     'script' => [
-					 ". ./setupenv; ./configure",
-					 ". ./setupenv; make $make_flags distclean",
-					 ". ./setupenv; make $make_flags install",
+                                          ". ./setupenv; ./configure",
+                                          ". ./setupenv; make $make_flags install",
+
+                                          # If a tarfile name contains
+                                          # a colon then everything
+                                          # before the colon is
+                                          # interpreted as a hostname.
+                                          # We do not want this
+                                          # behavor so we use stdout
+                                          # to get arround this.
+
+                                          "tar zc \./reef/aprt >$tar_file",
+                                          ". ./setupenv; make $make_flags distclean",
 					 ],
 			    },
 			  ],  # end construct
@@ -266,16 +349,17 @@ sub build_name {
 
   my ($argv) = "@ARGV";
 
-    $OS = `uname -s`;
-    $OSVer = `uname -r`;
+    $os = `uname -s`;
+    $osver = `uname -r`;
     
-    chomp $OS;
-    chomp $OSVer;
+    chomp $os;
+    chomp $osver;
   
 
   my ($build_name) = join('-', 
 			  $args{'hostname'},
-			  $OS, $OSVer, 
+                          $args{'buildtype'},
+                          $os, $osver, 
 			  );
   $build_name =~ s/\.\.+/\./g;
 
