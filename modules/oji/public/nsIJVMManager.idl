@@ -27,19 +27,20 @@
 #include "jni.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-// Java VM Plugin Manager
-// This interface defines additional entry points that are available
-// to JVM plugins for browsers that support JVM plugins.
-
-
-      //#define NS_IJVMMANAGER_IID                           \
-      //{ /* a1e5ed50-aa4a-11d1-85b2-00805f0e4dfe */         \
-//    0xa1e5ed50,                                      \
-//    0xaa4a,                                          \
-//    0x11d1,                                          \
-//    {0x85, 0xb2, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
-//}
+/*
+ Java VM Plugin Manager
+ This interface defines additional entry points that are available
+ to JVM plugins for browsers that support JVM plugins.
+*/
+/*
+#define NS_IJVMMANAGER_IID                           \
+{ / * a1e5ed50-aa4a-11d1-85b2-00805f0e4dfe * /       \
+    0xa1e5ed50,                                      \
+    0xaa4a,                                          \
+    0x11d1,                                          \
+    {0x85, 0xb2, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
+}
+*/
 
 #define NS_JVMMANAGER_CID                            \
 { /* 38e7ef10-58df-11d2-8164-006008119d7a */         \
