@@ -164,7 +164,6 @@ nsresult nsCollation::NormalizeString(const nsAString& stringIn, nsAString& stri
 {
   if (!mCaseConversion) {
     stringOut = stringIn;
-    ToLowerCase(stringOut); // XXXjag Can this ever happen in a normal situation?
   }
   else {
     PRInt32 aLength = stringIn.Length();
