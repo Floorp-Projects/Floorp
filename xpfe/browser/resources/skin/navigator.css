@@ -123,6 +123,10 @@ toolbox#main-toolbox {
    min-width: 10px;
 }
 
+toolbox#taskbox {
+   min-width: 10px;
+}
+
 toolbar.main-bar {
 }
 

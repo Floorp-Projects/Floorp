@@ -58,6 +58,9 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+
+  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+
   NS_IMETHOD  Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
@@ -115,7 +118,13 @@ protected:
   virtual ~nsToolboxFrame();
 
   virtual void UpdateStyles(nsIPresContext* aPresContext);
+  virtual void CalculateGrippies(nsIPresContext& aPresContext);
+  virtual nsresult ReflowGrippies(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
+ 
   void RefreshStyleContext(nsIPresContext* aPresContext,
                             nsIAtom *         aNewContentPseudo,
                             nsCOMPtr<nsIStyleContext>* aCurrentStyle,

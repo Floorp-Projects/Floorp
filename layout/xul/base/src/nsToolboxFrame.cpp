@@ -116,10 +116,9 @@ NS_NewToolboxFrame ( nsIFrame** aNewFrame )
 // Init, if necessary
 //
 nsToolboxFrame :: nsToolboxFrame ( )
-  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted),
+  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted), mDragListenerDelegate(nsnull),
       kCollapsedAtom(dont_AddRef( NS_NewAtom("collapsed"))), 
-      kHiddenAtom(dont_AddRef( NS_NewAtom("hidden"))),
-      mDragListenerDelegate(nsnull)
+      kHiddenAtom(dont_AddRef( NS_NewAtom("hidden")))
 {
   // we start off vertical
   mHorizontal = PR_FALSE;
@@ -309,13 +308,98 @@ nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContex
 
 } // DrawGrippy
 
+NS_IMETHODIMP
+nsToolboxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+{
+  CalculateGrippies(aPresContext);
+  return nsBoxFrame::GetBoxInfo(aPresContext, aReflowState, aSize);
+}
+
 NS_IMETHODIMP 
 nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
 {
-  // compute amount (in twips) each toolbar will be offset from the right because of 
+  nsresult errCode = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  errCode = ReflowGrippies(aPresContext, aDesiredSize, aReflowState, aStatus);
+  return errCode;
+
+} // Reflow
+
+// After we have been flowed this should be flowed to place the grippies at there
+// physical locations.
+nsresult
+nsToolboxFrame::ReflowGrippies(nsIPresContext&          aPresContext,
+                         nsHTMLReflowMetrics&     aDesiredSize,
+                         const nsHTMLReflowState& aReflowState,
+                         nsReflowStatus&          aStatus)
+{
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord grippyWidth = kGrippyWidthInPixels * onePixel;   // remember to leave room for the grippy on the right
+  nscoord collapsedGrippyHeight = kCollapsedGrippyHeightInPixels * onePixel;
+  nscoord collapsedGrippyWidth  = kCollapsedGrippyWidthInPixels  * onePixel;
+  nsresult errCode = NS_OK;
+
+  const PRBool isHorz = IsHorizontal();
+
+  // iterate over all visible toolbar frames, moving the associated grippy
+  // next to the toolbar
+  mNumToolbars = 0;
+  nsIFrame* childFrame = mFrames.FirstChild(); 
+  while ( childFrame ) {    
+    // get the childs rect and figure out the grippy size
+    nsCOMPtr<nsIContent> childContent;
+    childFrame->GetContent(getter_AddRefs(childContent));
+
+    nsRect grippyRect;
+    childFrame->GetRect(grippyRect);
+
+    if ( isHorz ) {
+      grippyRect.y = 0;
+      grippyRect.height = grippyWidth;
+    } else {
+      grippyRect.x = 0;
+      grippyRect.width = grippyWidth;
+    }
+
+    TabInfo *grippyInfo = FindGrippyForToolbar(mGrippies, childContent);
+    NS_ASSERTION(grippyInfo != 0, "Grippy Info Struct dissapeared!");
+    NS_ASSERTION(grippyInfo->mCollapsed == 0, "Collapsed toolbar has frame!");
+
+    // Set the location of the grippy to the left...
+    grippyInfo->SetBounds(grippyRect);
+
+    errCode = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(errCode == NS_OK, "failed to get next child");
+    mNumToolbars++;
+  }
+
+  // now move collapsed grippies to the bottom
+  for ( PRInt32 i = 0; i < mGrippies.Count(); ++i ) {
+    TabInfo* currGrippy = NS_STATIC_CAST(TabInfo*, mGrippies[i]);
+    if (currGrippy->mCollapsed) {
+      // remember we are just inverting the coord system here so in a
+      // horzontal toolbox our height is our width. Thats why we just use
+      // height here on both x and y coords.
+      if ( isHorz )
+        currGrippy->mBoundingRect.x = aDesiredSize.width - collapsedGrippyHeight;
+      else
+        currGrippy->mBoundingRect.y = aDesiredSize.height - collapsedGrippyHeight;
+    }
+  }
+
+  return errCode;
+}
+
+// called to figure out how big our grippies are and how many we have
+// this will be called by boxes reflow method.
+void
+nsToolboxFrame::CalculateGrippies(nsIPresContext& aPresContext)
+{
+   // compute amount (in twips) each toolbar will be offset from the right because of 
   // the grippy
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
@@ -401,13 +485,15 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       }
 
       ++numCollapsedGrippies;
-    } else                // The bar is NOT collapsed!!
+    } else {           // The bar is NOT collapsed!!
       mGrippies.AppendElement( new TabInfo(childContent, PR_FALSE) );
-    
+    }
+
     // next!
     ++contentCounter;
     errCode = mContent->ChildAt(contentCounter, *getter_AddRefs(childContent));
     NS_ASSERTION(errCode == NS_OK,"failed to get next child");    
+    
   }
 
   // if there are any collapsed bars, we need to leave room at the bottom of
@@ -420,66 +506,10 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   }
   
   
-  // ===== Reflow things =====
-  errCode = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  NS_ASSERTION(errCode == NS_OK,"box reflow failed");
-
-
-  // -----set all the grippy locations-----
-
-  
-  // iterate over all visible toolbar frames, moving the associated grippy
-  // next to the toolbar
-  mNumToolbars = 0;
-  nsIFrame* childFrame = mFrames.FirstChild(); 
-  while ( childFrame ) {    
-    // get the childs rect and figure out the grippy size
-    nsCOMPtr<nsIContent> childContent;
-    childFrame->GetContent(getter_AddRefs(childContent));
-
-    nsRect grippyRect;
-    childFrame->GetRect(grippyRect);
-
-    if ( isHorz ) {
-      grippyRect.y = 0;
-      grippyRect.height = grippyWidth;
-    } else {
-      grippyRect.x = 0;
-      grippyRect.width = grippyWidth;
-    }
-
-    TabInfo *grippyInfo = FindGrippyForToolbar(mGrippies, childContent);
-    NS_ASSERTION(grippyInfo != 0, "Grippy Info Struct dissapeared!");
-    NS_ASSERTION(grippyInfo->mCollapsed == 0, "Collapsed toolbar has frame!");
-
-    // Set the location of the grippy to the left...
-    grippyInfo->SetBounds(grippyRect);
-
-    errCode = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(errCode == NS_OK, "failed to get next child");
-    mNumToolbars++;
-  }
-
-  // now move collapsed grippies to the bottom
-  for ( PRInt32 i = 0; i < mGrippies.Count(); ++i ) {
-    TabInfo* currGrippy = NS_STATIC_CAST(TabInfo*, mGrippies[i]);
-    if (currGrippy->mCollapsed) {
-      // remember we are just inverting the coord system here so in a
-      // horzontal toolbox our height is our width. Thats why we just use
-      // height here on both x and y coords.
-      if ( isHorz )
-        currGrippy->mBoundingRect.x = aDesiredSize.width - collapsedGrippyHeight;
-      else
-        currGrippy->mBoundingRect.y = aDesiredSize.height - collapsedGrippyHeight;
-    }
-  }
-  
   // make sure we now dispose of the old grippies since we have allocated
   // new ones.
   ClearGrippyList ( oldGrippies );
-
-  return errCode;
-} // Reflow
+}
 
 
 //
@@ -785,6 +815,7 @@ nsToolboxFrame::DragOver(nsIDOMEvent* aDragEvent)
                                               (nsISupports **)&dragService);
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+
     if ( dragSession ) {
       PRBool flavorSupported = PR_FALSE;
       dragSession->IsDataFlavorSupported(TOOLBAR_MIME, &flavorSupported);

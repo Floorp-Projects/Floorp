@@ -21,6 +21,7 @@
 #include "nsIStyleFrameConstruction.h"
 #include "nslayout.h"
 #include "nsIPresContext.h"
+#include "nsCOMPtr.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -455,10 +456,23 @@ protected:
   nsresult CreateAnonymousFrames(nsIPresContext*          aPresContext,
                                              nsIAtom*                 aTag,
                                              nsFrameConstructorState& aState,
-                                             nsIContent*              aContent,
+                                             nsIContent*              aParent,
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems);
 
+  nsresult CreateAnonymousFrames(nsIPresContext*          aPresContext,
+                                             nsFrameConstructorState& aState,
+                                             nsIContent*              aParent,
+                                             nsIDocument*             aDocument,
+                                             nsIFrame*                aNewFrame,
+                                             nsFrameItems&            aChildItems);
+
+  nsresult CreateAnonymousTreeCellFrames(nsIPresContext*          aPresContext,
+                                             nsIAtom*                 aTag,
+                                             nsFrameConstructorState& aState,
+                                             nsIContent*              aParent,
+                                             nsIFrame*                aNewFrame,
+                                             nsFrameItems&            aChildItems);
 
 #ifdef INCLUDE_XUL
   nsresult ConstructXULFrame(nsIPresContext*          aPresContext,
@@ -575,7 +589,7 @@ InitializeScrollFrame(nsIPresContext*          aPresContext,
                                              PRBool                   aIsFixedPositioned,
                                              PRBool                   aCreateBlock);
 
-  PRBool IsGfxMode(nsIPresContext* aPresContext);
+  PRBool HasGfxScrollbars(nsIPresContext* aPresContext);
 
 
   nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
@@ -658,6 +672,7 @@ protected:
   nsIFrame*           mInitialContainingBlock;
   nsIFrame*           mFixedContainingBlock;
   nsIFrame*           mDocElementContainingBlock;
+  nsIFrame*           mGfxScrollFrame;
 };
 
 #endif /* nsCSSFrameConstructor_h___ */

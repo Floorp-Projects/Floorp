@@ -406,7 +406,8 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(void)
     mDocument(nsnull),
     mInitialContainingBlock(nsnull),
     mFixedContainingBlock(nsnull),
-    mDocElementContainingBlock(nsnull)
+    mDocElementContainingBlock(nsnull),
+    mGfxScrollFrame(nsnull)
 {
   NS_INIT_REFCNT();
 #ifdef INCLUDE_XUL
@@ -867,7 +868,6 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresContext  *aPresContext,
       rv = ConstructButtonControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("image")) {
-      //rv = NS_NewGfxImageControlFrame(&aFrame);
       rv = NS_NewImageControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("password")) {
@@ -1354,12 +1354,14 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
                        : aTableCreator.CreateTableColGroupFrame(&aNewTopFrame);
     if (NS_FAILED(rv)) return rv;
     aNewTopFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
-                       nsnull);
+                    nsnull);
+
     aNewGroupFrame = aNewTopFrame;
   }
 
   if (aProcessChildren) {
     nsFrameItems childItems;
+
     if (aIsRowGroup) {
       
       // Create some anonymous extras within the tree body.
@@ -1390,8 +1392,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
       ProcessChildren(aPresContext, aState, aContent, aNewGroupFrame, PR_FALSE, childItems);
     }
     aNewGroupFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-  }
-
+  } 
+  
   return rv;
 }
 
@@ -1677,8 +1679,10 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
     // if there are any anonymous children create frames for them
     nsCOMPtr<nsIAtom> tagName;
     aContent->GetTag(*getter_AddRefs(tagName));
-    CreateAnonymousFrames(aPresContext, tagName, aState, aContent, aNewCellBodyFrame,
-                          childItems);
+    if (tagName && tagName.get() == nsXULAtoms::treecell) {
+      CreateAnonymousTreeCellFrames(aPresContext, tagName, aState, aContent, aNewCellBodyFrame,
+                            childItems);
+    }
 
     aNewCellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
     if (aState.mFloatedItems.childList) {
@@ -1984,6 +1988,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
                                                 nsIStyleContext*         aParentStyleContext,
                                                 nsIFrame*&               aNewFrame)
 {
+  nsIFrame* topFrame = nsnull;
+
   // Resolve the style context for the document element
   nsCOMPtr<nsIStyleContext>  styleContext;
   aPresContext->ResolveStyleContextFor(aDocElement, aParentStyleContext,
@@ -1994,6 +2000,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
 
   PRBool docElemIsTable = IsTableRelated(display->mDisplay);
+  nsIFrame* areaFrame = nsnull;
 
   // See if we're paginated
   PRBool isPaginated;
@@ -2008,7 +2015,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     }
 
     // Create an area frame for the document element
-    nsIFrame* areaFrame;
     PRInt32 nameSpaceID;
     if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
         nameSpaceID == nsXULAtoms::nameSpaceID) {
@@ -2057,10 +2063,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     nsIFrame* scrollFrame = nsnull;
 
     if (IsScrollable(aPresContext, display)) {
-      NS_NewScrollFrame(&scrollFrame);
-      scrollFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext,
-                        nsnull);
-    
+
       // The scrolled frame gets a pseudo element style context
       nsCOMPtr<nsIStyleContext>  scrolledPseudoStyle;
       aPresContext->ResolvePseudoStyleContextFor(nsnull,
@@ -2068,10 +2071,45 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
                                                  styleContext,
                                                  PR_FALSE,
                                                  getter_AddRefs(scrolledPseudoStyle));
+
+      if (HasGfxScrollbars(aPresContext))  {
+         nsIFrame* gfxScrollFrame;
+         NS_NewGfxScrollFrame(&gfxScrollFrame);
+         gfxScrollFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext,
+                              nsnull);
+         NS_NewScrollPortFrame(&scrollFrame);
+
+         scrollFrame->Init(*aPresContext, nsnull, gfxScrollFrame, scrolledPseudoStyle,
+                  nsnull);
+
+         nsFrameItems children;
+
+         children.AddChild(scrollFrame);
+
+        // if there are any anonymous children for the nsScrollFrame create frames for them.
+        nsIDocument* doc = nsnull;
+        nsresult rv = aDocElement->GetDocument(doc);
+        if (NS_FAILED(rv) || !doc)
+          return rv;
+
+         CreateAnonymousFrames(aPresContext, aState, nsnull, doc, gfxScrollFrame,
+                               children);
+
+         gfxScrollFrame->SetInitialChildList(*aPresContext, nsnull, children.childList);
+         aParentFrame = scrollFrame;
+         topFrame = gfxScrollFrame;
+      } else {
+         NS_NewScrollFrame(&scrollFrame);
+         scrollFrame->Init(*aPresContext, nsnull, aParentFrame, styleContext,
+                            nsnull);
+         aParentFrame = scrollFrame;
+         topFrame = scrollFrame;
+      }
+    
       styleContext = scrolledPseudoStyle;
     }
-    nsIFrame* parFrame = scrollFrame ? scrollFrame : aParentFrame;
-    nsIFrame* areaFrame;
+
+    nsIFrame* parFrame = aParentFrame;
 
     if (docElemIsTable) {
       nsIFrame* tableFrame;
@@ -2162,11 +2200,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
     }
 
-    aNewFrame = scrollFrame ? scrollFrame : areaFrame;
+    aNewFrame = topFrame ? topFrame : areaFrame;
   }
 
+  aState.mFrameManager->SetPrimaryFrameFor(aDocElement, areaFrame);
+
   // Add a mapping from content object to frame
-  aState.mFrameManager->SetPrimaryFrameFor(aDocElement, aNewFrame);
   return NS_OK;
 }
 
@@ -2471,7 +2510,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
     nsIFrame* parent = nsnull;
 
-    if (IsGfxMode(aPresContext))  {
+    if (HasGfxScrollbars(aPresContext))  {
        NS_NewGfxScrollFrame(&gfxScrollFrame);
        gfxScrollFrame->Init(*aPresContext, aDocElement, viewportFrame, viewportPseudoStyle,
                             nsnull);
@@ -2544,7 +2583,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     if (isScrollable) {
         scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
 
-        if (IsGfxMode(aPresContext)) {
+        if (HasGfxScrollbars(aPresContext)) {
         nsFrameConstructorState state(aPresContext,
                                       nsnull,
                                       nsnull,
@@ -2554,15 +2593,18 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
         children.AddChild(scrollFrame);
 
         // if there are any anonymous children for the nsScrollFrame create frames for them.
-        // for now make say its tag is "input". This is a hack to make sure we check for the anonymous interface
-        CreateAnonymousFrames(aPresContext, nsHTMLAtoms::input, state, aDocElement, gfxScrollFrame,
+        nsIDocument* doc = nsnull;
+        nsresult rv = aDocElement->GetDocument(doc);
+        if (NS_FAILED(rv) || !doc)
+          return rv;
+
+        CreateAnonymousFrames(aPresContext, state, nsnull, doc, gfxScrollFrame,
                               children);
 
-         //viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+         mGfxScrollFrame = gfxScrollFrame;
 
          viewportFrame->SetInitialChildList(*aPresContext, nsnull, gfxScrollFrame);
          gfxScrollFrame->SetInitialChildList(*aPresContext, nsnull, children.childList);
-
       } else
          viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
     } else {
@@ -2598,7 +2640,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     if (isScrollable) {
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
 
-      if (IsGfxMode(aPresContext)) {
+      if (HasGfxScrollbars(aPresContext)) {
         
         nsFrameConstructorState state(aPresContext,
                                       nsnull,
@@ -2610,11 +2652,16 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
         children.AddChild(scrollFrame);
 
         // if there are any anonymous children for the nsScrollFrame create frames for them.
-        // for now make say its tag is "input". This is a hack to make sure we check for the anonymous interface
-        CreateAnonymousFrames(aPresContext, nsHTMLAtoms::input, state, aDocElement, gfxScrollFrame,
+        nsIDocument* doc = nsnull;
+        nsresult rv = aDocElement->GetDocument(doc);
+        if (NS_FAILED(rv) || !doc)
+          return rv;
+
+ 
+        CreateAnonymousFrames(aPresContext, state, nsnull, doc, gfxScrollFrame,
                               children);
 
-      //   viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+        mGfxScrollFrame = gfxScrollFrame;
 
         viewportFrame->SetInitialChildList(*aPresContext, nsnull, gfxScrollFrame);
         gfxScrollFrame->SetInitialChildList(*aPresContext, nsnull, children.childList);
@@ -2848,15 +2895,15 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresContext*          aPresC
 }
 
 PRBool
-nsCSSFrameConstructor::IsGfxMode(nsIPresContext* aPresContext)
+nsCSSFrameConstructor::HasGfxScrollbars(nsIPresContext* aPresContext)
 {
   return PR_FALSE;
- 
+
   /*
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
-  return (eWidgetRendering_Gfx == mode);
- */
+  return (eWidgetRendering_Native != mode);
+  */
 }
 
 nsresult
@@ -3251,12 +3298,11 @@ nsresult
 nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresContext,
                                              nsIAtom*                 aTag,
                                              nsFrameConstructorState& aState,
-                                             nsIContent*              aContent,
+                                             nsIContent*              aParent,
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems)
 {
-
-  // only these tags types can have anonymous content. We do this check for performance
+   // only these tags types can have anonymous content. We do this check for performance
   // reasons. If we did a query interface on every tag it would be very inefficient.
   if (aTag !=  nsHTMLAtoms::input &&
       aTag !=  nsHTMLAtoms::combobox &&
@@ -3264,112 +3310,42 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
       aTag !=  nsXULAtoms::splitter &&
       aTag !=  nsXULAtoms::scrollbar &&
       aTag !=  nsXULAtoms::menu &&
-      aTag !=  nsXULAtoms::menuitem &&
-      aTag !=  nsXULAtoms::treecell
+      aTag !=  nsXULAtoms::menuitem
      ) {
      return NS_OK;
 
   }
-
+  
   // get the document
   nsIDocument* doc = nsnull;
-  nsresult rv = aContent->GetDocument(doc);
+  nsresult rv = aParent->GetDocument(doc);
   if (NS_FAILED(rv) || !doc)
     return rv;
-  
-  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aNewFrame));
 
-  if (!creator && aTag != nsXULAtoms::treecell)
+  return CreateAnonymousFrames(aPresContext, aState, aParent, doc, aNewFrame, aChildItems);
+}
+
+// after the node has been constructed and initialized create any
+// anonymous content a node needs.
+nsresult
+nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresContext,
+                                             nsFrameConstructorState& aState,
+                                             nsIContent*              aParent,
+                                             nsIDocument*             aDocument,
+                                             nsIFrame*                aNewFrame,
+                                             nsFrameItems&            aChildItems)
+{
+
+  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aNewFrame));
+  
+  if (!creator)
      return NS_OK;
 
-  // see if the frame implements anonymous content
   nsCOMPtr<nsISupportsArray> anonymousItems;
   NS_NewISupportsArray(getter_AddRefs(anonymousItems));
 
-  if (aTag == nsXULAtoms::treecell) {
 
-    PRInt32 childCount;
-    aContent->ChildCount(childCount);
-    if (childCount == 0) {
-      // Have to do it right here, since the inner cell frame isn't mine, 
-      // and i can't have it creating anonymous content.
-      nsCOMPtr<nsIDOMNSDocument> nsDocument(do_QueryInterface(doc));
-      nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(doc));
-
-      nsString xulNamespace = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-      nsString htmlNamespace = "http://www.w3.org/TR/REC-html40";  
-      nsCOMPtr<nsIAtom> classAtom = dont_AddRef(NS_NewAtom("class"));
-    
-      nsCOMPtr<nsIDOMElement> node;
-      nsCOMPtr<nsIContent> content;
-
-      nsAutoString indent;
-      nsCOMPtr<nsIDOMElement> parentNode = do_QueryInterface(aContent);
-      parentNode->GetAttribute("indent", indent);
-      
-      nsCOMPtr<nsIDOMElement> boxElement;
-      nsCOMPtr<nsIDOMNode> dummy;
-      if (indent == "true") {
-        // We have to make a box to hold everything.
-        nsDocument->CreateElementWithNameSpace("box", xulNamespace, getter_AddRefs(node));
-        content = do_QueryInterface(node);
-        anonymousItems->AppendElement(content);
-        content->SetAttribute(kNameSpaceID_None, classAtom, "tree-icon", PR_FALSE);
-        boxElement = do_QueryInterface(content);
-
-        // Make the indentation.
-        nsDocument->CreateElementWithNameSpace("treeindentation", xulNamespace, getter_AddRefs(node));
-        boxElement->AppendChild(node, getter_AddRefs(dummy));
-        
-        nsCOMPtr<nsIDOMNode> treeRow;
-        nsCOMPtr<nsIDOMNode> treeItem;
-        parentNode->GetParentNode(getter_AddRefs(treeRow));
-        treeRow->GetParentNode(getter_AddRefs(treeItem));
-      
-        nsAutoString container;
-        nsCOMPtr<nsIDOMElement> treeItemNode = do_QueryInterface(treeItem);
-        treeItemNode->GetAttribute("container", container);
-          
-        // Always make a twisty but disable it for non-containers.
-        nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
-        content = do_QueryInterface(node);
-        content->SetAttribute(kNameSpaceID_None, classAtom, "twisty", PR_FALSE);
-        if (container != "true")
-          content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, "true", PR_FALSE);
-        else content->SetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, "true", PR_FALSE);
-
-        boxElement->AppendChild(node, getter_AddRefs(dummy));
-      }
-
-      nsString classDesc = "tree-button";
-      
-      nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
-      content = do_QueryInterface(node);
-      content->SetAttribute(kNameSpaceID_None, classAtom, classDesc, PR_FALSE);
-      nsAutoString value;
-
-      parentNode->GetAttribute("value", value);
-      if (value != "")
-        content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
-    
-      nsAutoString crop;
-      parentNode->GetAttribute("crop", crop);
-      if (crop == "") crop = "right";
-      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
-
-      nsAutoString align;
-      parentNode->GetAttribute("align", align);
-      if (align == "") align = "left";
-      content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align, PR_FALSE);
-
-      if (boxElement) {
-        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
-        boxElement->AppendChild(node, getter_AddRefs(dummy));
-      }
-      else anonymousItems->AppendElement(content);
-    }
-  }
-  else creator->CreateAnonymousContent(*anonymousItems);
+  creator->CreateAnonymousContent(*anonymousItems);
   
   PRUint32 count = 0;
   anonymousItems->Count(&count);
@@ -3381,9 +3357,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
     anonymousItems->GetElementAt(i,getter_AddRefs(node));
 
     nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    content->SetParent(aContent);
-
-    content->SetDocument(doc, PR_TRUE);
+    content->SetParent(aParent);
+    content->SetDocument(aDocument, PR_TRUE);
 
     // create the frame and attach it to our frame
     ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
@@ -3392,6 +3367,125 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
   return NS_OK;
 }
 
+// after the node has been constructed and initialized create any
+// anonymous content a node needs.
+nsresult
+nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresContext,
+                                             nsIAtom*                 aTag,
+                                             nsFrameConstructorState& aState,
+                                             nsIContent*              aParent,
+                                             nsIFrame*                aNewFrame,
+                                             nsFrameItems&            aChildItems)
+{
+  // see if the frame implements anonymous content
+  nsCOMPtr<nsISupportsArray> anonymousItems;
+  NS_NewISupportsArray(getter_AddRefs(anonymousItems));
+
+  nsIDocument* doc = nsnull;
+  nsresult rv = aParent->GetDocument(doc);
+  if (NS_FAILED(rv) || !doc)
+    return rv;
+
+  PRInt32 childCount;
+  aParent->ChildCount(childCount);
+  if (childCount == 0) {
+    // Have to do it right here, since the inner cell frame isn't mine, 
+    // and i can't have it creating anonymous content.
+    nsCOMPtr<nsIDOMNSDocument> nsDocument(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(doc));
+
+    nsString xulNamespace = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    nsString htmlNamespace = "http://www.w3.org/TR/REC-html40";  
+    nsCOMPtr<nsIAtom> classAtom = dont_AddRef(NS_NewAtom("class"));
+  
+    nsCOMPtr<nsIDOMElement> node;
+    nsCOMPtr<nsIContent> content;
+
+    nsAutoString indent;
+    nsCOMPtr<nsIDOMElement> parentNode = do_QueryInterface(aParent);
+    parentNode->GetAttribute("indent", indent);
+    
+    nsCOMPtr<nsIDOMElement> boxElement;
+    nsCOMPtr<nsIDOMNode> dummy;
+    if (indent == "true") {
+      // We have to make a box to hold everything.
+      nsDocument->CreateElementWithNameSpace("box", xulNamespace, getter_AddRefs(node));
+      content = do_QueryInterface(node);
+      anonymousItems->AppendElement(content);
+      content->SetAttribute(kNameSpaceID_None, classAtom, "tree-icon", PR_FALSE);
+      boxElement = do_QueryInterface(content);
+
+      // Make the indentation.
+      nsDocument->CreateElementWithNameSpace("treeindentation", xulNamespace, getter_AddRefs(node));
+      boxElement->AppendChild(node, getter_AddRefs(dummy));
+      
+      nsCOMPtr<nsIDOMNode> treeRow;
+      nsCOMPtr<nsIDOMNode> treeItem;
+      parentNode->GetParentNode(getter_AddRefs(treeRow));
+      treeRow->GetParentNode(getter_AddRefs(treeItem));
+    
+      nsAutoString container;
+      nsCOMPtr<nsIDOMElement> treeItemNode = do_QueryInterface(treeItem);
+      treeItemNode->GetAttribute("container", container);
+        
+      // Always make a twisty but disable it for non-containers.
+      nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
+      content = do_QueryInterface(node);
+      content->SetAttribute(kNameSpaceID_None, classAtom, "twisty", PR_FALSE);
+      if (container != "true")
+        content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, "true", PR_FALSE);
+      else content->SetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, "true", PR_FALSE);
+
+      boxElement->AppendChild(node, getter_AddRefs(dummy));
+    }
+
+    nsString classDesc = "tree-button";
+    
+    nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
+    content = do_QueryInterface(node);
+    content->SetAttribute(kNameSpaceID_None, classAtom, classDesc, PR_FALSE);
+    nsAutoString value;
+
+    parentNode->GetAttribute("value", value);
+    if (value != "")
+      content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
+  
+    nsAutoString crop;
+    parentNode->GetAttribute("crop", crop);
+    if (crop == "") crop = "right";
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
+
+    nsAutoString align;
+    parentNode->GetAttribute("align", align);
+    if (align == "") align = "left";
+    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align, PR_FALSE);
+
+    if (boxElement) {
+      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
+      boxElement->AppendChild(node, getter_AddRefs(dummy));
+    }
+    else anonymousItems->AppendElement(content);
+  }
+
+  PRUint32 count = 0;
+  anonymousItems->Count(&count);
+
+  for (PRUint32 i=0; i < count; i++)
+  {
+    // get our child's content and set its parent to our content
+    nsCOMPtr<nsISupports> node;
+    anonymousItems->GetElementAt(i,getter_AddRefs(node));
+
+    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+    content->SetParent(aParent);
+    content->SetDocument(doc, PR_TRUE);
+
+    // create the frame and attach it to our frame
+    ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
+  }
+
+  return NS_OK;
+}
 
 #ifdef INCLUDE_XUL
 nsresult
@@ -3531,10 +3625,49 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::toolbox) {
       processChildren = PR_TRUE;
       rv = NS_NewToolboxFrame(&newFrame);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      if (IsScrollable(aPresContext, display)) {
+
+        // See if it's absolute positioned or fixed positioned
+        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+          isAbsolutelyPositioned = PR_TRUE;
+        } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+          isFixedPositioned = PR_TRUE;
+        }
+ 
+        rv = BuildScrollFrame(aPresContext, aState, aContent, newFrame, aParentFrame,
+                              aStyleContext, newFrame, PR_TRUE, isAbsolutelyPositioned, isFixedPositioned,
+                              PR_FALSE);
+        frameHasBeenInitialized = PR_TRUE;
+
+      }
     }
     else if (aTag == nsXULAtoms::toolbar) {
+
       processChildren = PR_TRUE;
       rv = NS_NewToolbarFrame(&newFrame);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
+
+       if (IsScrollable(aPresContext, display)) {
+
+        // See if it's absolute positioned or fixed positioned
+        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+          isAbsolutelyPositioned = PR_TRUE;
+        } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+          isFixedPositioned = PR_TRUE;
+        }
+ 
+        rv = BuildScrollFrame(aPresContext, aState, aContent, newFrame, aParentFrame,
+                              aStyleContext, newFrame, PR_TRUE, isAbsolutelyPositioned, isFixedPositioned,
+                              PR_FALSE);
+        frameHasBeenInitialized = PR_TRUE;
+
+      }
     }
     else if (aTag == nsXULAtoms::toolbaritem) {
       processChildren = PR_TRUE;
@@ -3602,12 +3735,16 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
         } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
           isFixedPositioned = PR_TRUE;
         }
+      
 
+        rv = BuildScrollFrame(aPresContext, aState, aContent, newFrame, aParentFrame,
+                      aStyleContext, newFrame, PR_TRUE, isAbsolutelyPositioned, isFixedPositioned,
+                      PR_FALSE);
 
         // Build it
-        BuildBoxScrollFrame(aPresContext, aState, aContent, aParentFrame,
-                              aStyleContext, newFrame, PR_TRUE, isAbsolutelyPositioned, isFixedPositioned,
-                              PR_FALSE);
+        //BuildBoxScrollFrame(aPresContext, aState, aContent, aParentFrame,
+         //                     aStyleContext, newFrame, PR_FALSE, isAbsolutelyPositioned, isFixedPositioned,
+              //                PR_FALSE);
 
         frameHasBeenInitialized = PR_TRUE;
       }
@@ -3812,6 +3949,45 @@ nsCSSFrameConstructor::BuildBoxScrollFrame      (nsIPresContext*          aPresC
   return rv;
 }
 
+/*
+nsresult
+nsCSSFrameConstructor::BuildScrollFrame      (nsIPresContext*          aPresContext,
+                                               nsFrameConstructorState& aState,
+                                               nsIContent*              aContent,
+                                               nsIFrame*                aParentFrame,
+                                               nsIStyleContext*         aStyleContext,
+                                               nsIFrame*&               aNewFrame,                                                                                             
+                                               nsIFrame*&               aScrollFrame,                                                                                             
+                                               PRBool                   aIsAbsolutelyPositioned,
+                                               PRBool                   aIsFixedPositioned,
+                                               PRBool                   aCreateBlock)
+{
+  nsFrameItems anonymousItems;
+
+  if (HasGfxScrollbars(aPresContext)) {
+    // if gfx we need to make a special scrollframe
+
+    // create the frames
+    nsresult rv = BuildGfxScrollFrame(aPresContext, aState, aContent, aParentFrame,
+                                       aStyleContext, gfxScrollFrame, anonymousItems);
+
+    // get the scrollframe from the anonymous list
+    aScrollFrame = anonymousItems.childList;
+
+    aNewFrame = gfxScrollFrame;
+    aNewFrame->SetInitialChildList(*aPresContext, nsnull, anonymousItems.childList);
+  } else {
+    NS_NewScrollFrame(&scrollFrame);
+    aNewFrame = scrollFrame;
+    aScrollFrame = scrollFrame;
+  }
+
+  aNewFrame->SetInitialChildList(*aPresContext, nsnull, anonymousItems.childList);
+
+  return rv;
+}
+*/
+
 /**
  * Create a new scroll frame. Populate it and return it.
  */
@@ -3833,7 +4009,7 @@ nsCSSFrameConstructor::BuildScrollFrame      (nsIPresContext*          aPresCont
   nsIFrame* gfxScrollFrame = nsnull;
   nsFrameItems anonymousItems;
 
-  if (IsGfxMode(aPresContext)) {
+  if (HasGfxScrollbars(aPresContext)) {
     // if gfx we need to make a special scrollframe
 
     // create the frames
@@ -3855,7 +4031,7 @@ nsCSSFrameConstructor::BuildScrollFrame      (nsIPresContext*          aPresCont
                                       aStyleContext, aProcessChildren, aIsAbsolutelyPositioned, aIsFixedPositioned,
                                       aCreateBlock);
 
-  if (IsGfxMode(aPresContext))
+  if (HasGfxScrollbars(aPresContext))
      gfxScrollFrame->SetInitialChildList(*aPresContext, nsnull, anonymousItems.childList);
 
   return rv;
@@ -3882,8 +4058,12 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresContext*          aPresContex
   aAnonymousFrames.AddChild(scrollbox);
 
   // if there are any anonymous children for the nsScrollFrame create frames for them.
-  // for now make say its tag is "input". This is a hack to make sure we check for the anonymous interface
-  CreateAnonymousFrames(aPresContext, nsHTMLAtoms::input, aState, aContent, aNewFrame,
+  nsIDocument* doc = nsnull;
+  nsresult rv = aContent->GetDocument(doc);
+  if (NS_FAILED(rv) || !doc)
+    return rv;
+
+  CreateAnonymousFrames(aPresContext, aState, aContent, doc, aNewFrame,
                         aAnonymousFrames);
 
   return NS_OK;
@@ -3920,7 +4100,7 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
                                           aStyleContext, PR_FALSE,
                                           getter_AddRefs(scrolledPseudoStyle));
 
-  if (IsGfxMode(aPresContext)) {
+  if (HasGfxScrollbars(aPresContext)) {
     scrollFrame->Init(*aPresContext, aContent, geometricParent, scrolledPseudoStyle,
                         nsnull);
   } else {
@@ -3930,63 +4110,69 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
   // Initialize the frame and force it to have a view
   scrolledFrame->Init(*aPresContext, aContent, scrollFrame,
                       scrolledPseudoStyle, nsnull);
+
+  aState.mFrameManager->SetPrimaryFrameFor(aContent, scrolledFrame);
+
   nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
                                            scrolledPseudoStyle, PR_TRUE);
 
-  // The area frame is a floater container
-  nsFrameConstructorSaveState floaterSaveState;
-  aState.PushFloaterContainingBlock(scrolledFrame, floaterSaveState);
-  
-  // Process children
-  nsFrameConstructorSaveState absoluteSaveState;
-  nsFrameItems                childItems;
-  PRBool                      isPositionedContainingBlock = aIsAbsolutelyPositioned ||
-                                                            aIsFixedPositioned;
+  if (aProcessChildren) {
 
-  if (isPositionedContainingBlock) {
-    // The area frame becomes a container for child frames that are
-    // absolutely positioned
-    aState.PushAbsoluteContainingBlock(scrolledFrame, absoluteSaveState);
-  }
-     
-  ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
-                  childItems);
+    // The area frame is a floater container
+    nsFrameConstructorSaveState floaterSaveState;
+    aState.PushFloaterContainingBlock(scrolledFrame, floaterSaveState);
 
-  // if a select is being created with zero options we need to create
-  // a special pseudo frame so it can be sized as best it can
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-  nsresult result = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
-                                               (void**)getter_AddRefs(selectElement));
-  if (NS_SUCCEEDED(result) && selectElement) {
-    PRUint32 numOptions = 0;
-    result = selectElement->GetLength(&numOptions);
-    if (NS_SUCCEEDED(result) && 0 == numOptions) { 
-      nsIStyleContext*  styleContext   = nsnull; 
-      nsIFrame*         generatedFrame = nsnull; 
-      scrolledFrame->GetStyleContext(&styleContext); 
-      if (CreateGeneratedContentFrame(aPresContext, aState, scrolledFrame, aContent, 
-                                      styleContext, nsLayoutAtoms::dummyOptionPseudo, 
-                                      PR_FALSE, PR_FALSE, &generatedFrame)) { 
-        // Add the generated frame to the child list 
-        childItems.AddChild(generatedFrame); 
-      } 
+    // Process children
+    nsFrameConstructorSaveState absoluteSaveState;
+    nsFrameItems                childItems;
+    PRBool                      isPositionedContainingBlock = aIsAbsolutelyPositioned ||
+                                                              aIsFixedPositioned;
+
+    if (isPositionedContainingBlock) {
+      // The area frame becomes a container for child frames that are
+      // absolutely positioned
+      aState.PushAbsoluteContainingBlock(scrolledFrame, absoluteSaveState);
     }
-  } 
-  //////////////////////////////////////////////////
-  //////////////////////////////////////////////////
-    
-  // Set the scrolled frame's initial child lists
-  scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-  if (isPositionedContainingBlock && aState.mAbsoluteItems.childList) {
-    scrolledFrame->SetInitialChildList(*aPresContext,
-                                       nsLayoutAtoms::absoluteList,
-                                       aState.mAbsoluteItems.childList);
-  }
+     
+    ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
+                    childItems);
 
-  if (aState.mFloatedItems.childList) {
-    scrolledFrame->SetInitialChildList(*aPresContext,
-                                       nsLayoutAtoms::floaterList,
-                                       aState.mFloatedItems.childList);
+    // if a select is being created with zero options we need to create
+    // a special pseudo frame so it can be sized as best it can
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
+    nsresult result = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+                                                 (void**)getter_AddRefs(selectElement));
+    if (NS_SUCCEEDED(result) && selectElement) {
+      PRUint32 numOptions = 0;
+      result = selectElement->GetLength(&numOptions);
+      if (NS_SUCCEEDED(result) && 0 == numOptions) { 
+        nsIStyleContext*  styleContext   = nsnull; 
+        nsIFrame*         generatedFrame = nsnull; 
+        scrolledFrame->GetStyleContext(&styleContext); 
+        if (CreateGeneratedContentFrame(aPresContext, aState, scrolledFrame, aContent, 
+                                        styleContext, nsLayoutAtoms::dummyOptionPseudo, 
+                                        PR_FALSE, PR_FALSE, &generatedFrame)) { 
+          // Add the generated frame to the child list 
+          childItems.AddChild(generatedFrame); 
+        } 
+      }
+    } 
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    
+    // Set the scrolled frame's initial child lists
+    scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+    if (isPositionedContainingBlock && aState.mAbsoluteItems.childList) {
+      scrolledFrame->SetInitialChildList(*aPresContext,
+                                         nsLayoutAtoms::absoluteList,
+                                         aState.mAbsoluteItems.childList);
+    }
+
+    if (aState.mFloatedItems.childList) {
+      scrolledFrame->SetInitialChildList(*aPresContext,
+                                         nsLayoutAtoms::floaterList,
+                                         aState.mFloatedItems.childList);
+    }
   }
 
   // Set the scroll frame's initial child list

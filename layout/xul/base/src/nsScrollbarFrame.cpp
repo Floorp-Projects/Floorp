@@ -144,6 +144,9 @@ AnonymousElement::GetID(nsIAtom*& aResult) const
 
   aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
   */
+
+  aResult = nsnull;
+
   return NS_OK;
 }
     
@@ -156,7 +159,7 @@ AnonymousElement::GetClasses(nsVoidArray& aArray) const
 NS_IMETHODIMP 
 AnonymousElement::HasClass(nsIAtom* aClass) const
 {
-	return NS_OK;
+	return NS_COMFALSE;
 }
 
 NS_IMETHODIMP

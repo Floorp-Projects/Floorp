@@ -69,6 +69,7 @@ void nsRepeatService::Stop()
   if (mRepeatTimer) {
      mRepeatTimer->Cancel();
      mRepeatTimer = nsnull;
+     mCallback = nsnull;
   }
 }
 
