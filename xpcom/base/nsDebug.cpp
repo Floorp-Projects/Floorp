@@ -57,6 +57,8 @@
 	   }
    #endif // TEMP_MAC_HACK
    //------------------------
+#elif defined(XP_UNIX)
+#include<stdlib.h>
 #endif
 
 

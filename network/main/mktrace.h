@@ -36,10 +36,10 @@ extern PRLogModuleInfo* NETLIB;
 
 PR_BEGIN_EXTERN_C
 extern void NET_NTrace(char *msg, int32 length);
-extern void _MK_TraceMsg(char *fmt, ...);
+extern void ns_MK_TraceMsg(char *fmt, ...);
 PR_END_EXTERN_C
 
-#define TRACEMSG(msg)  _MK_TraceMsg msg
+#define TRACEMSG(msg)  ns_MK_TraceMsg msg
 #else
 #define TRACEMSG(msg)  
 #endif /* DEBUG || NETLIB_TRACE_ON */
