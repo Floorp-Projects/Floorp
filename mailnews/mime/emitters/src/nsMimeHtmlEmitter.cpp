@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 /*
  * nsMimeHtmlEmitter definitions....
  */
-nsMimeHtmlDisplayEmitter::nsMimeHtmlDisplayEmitter()
+nsMimeHtmlDisplayEmitter::nsMimeHtmlDisplayEmitter() : nsMimeBaseEmitter()
 {
   mFirst = PR_TRUE;
   mSkipAttachment = PR_FALSE; 
@@ -130,21 +130,8 @@ nsMimeHtmlDisplayEmitter::GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink)
   return rv;
 }
 
-nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
+NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 {
-  if (mDocHeader)
-  {
-    UtilityWriteCRLF("<html>");
-    UtilityWriteCRLF("<head>");
-
-    // mscott --> we should refer to the style sheet used in msg display...this one is wrong i think.
-    // Stylesheet info!
-    UtilityWriteCRLF("<link rel=\"important stylesheet\" href=\"chrome://messenger/skin/mailheader.css\">");
-
-    UtilityWriteCRLF("</head>");
-    UtilityWriteCRLF("<body>");
-  }
-
   // if we aren't broadcasting headers OR printing...just do whatever
   // our base class does...
   if (mFormat == nsMimeOutput::nsMimeMessagePrintOutput)
@@ -295,6 +282,19 @@ nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, P
 nsresult
 nsMimeHtmlDisplayEmitter::EndHeader()
 {
+  if (mDocHeader)
+  {
+    UtilityWriteCRLF("<html>");
+    UtilityWriteCRLF("<head>");
+
+    // mscott --> we should refer to the style sheet used in msg display...this one is wrong i think.
+    // Stylesheet info!
+    UtilityWriteCRLF("<link rel=\"important stylesheet\" href=\"chrome://messenger/skin/mailheader.css\">");
+
+    UtilityWriteCRLF("</head>");
+    UtilityWriteCRLF("<body>");
+  }
+
   WriteHTMLHeaders();
   return NS_OK;
 }

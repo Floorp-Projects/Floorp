@@ -50,6 +50,8 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIMsgWindow.h"
 #include "nsStreamConverter.h"
+#include "nsICategoryManager.h"
+#include "nsIInterfaceRequestor.h"
 
 #define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
 #define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
@@ -640,20 +642,25 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   if ( (newType != nsMimeOutput::nsMimeMessageDraftOrTemplate) && 
     (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
   {
-    nsCAutoString contractID("@mozilla.org/messenger/mimeemitter;1?type=");
+    nsCAutoString categoryName ("@mozilla.org/messenger/mimeemitter;1?type=");
     if (mOverrideFormat)
-      contractID += mOverrideFormat;
+      categoryName += mOverrideFormat;
     else
-      contractID += mOutputFormat;
+      categoryName += mOutputFormat;
     
-    rv = nsComponentManager::CreateInstance(contractID, nsnull,
-      NS_GET_IID(nsIMimeEmitter),
-      (void **) getter_AddRefs(mEmitter));
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+      nsXPIDLCString contractID;
+      catman->GetCategoryEntry("mime-emitter", categoryName.get(), getter_Copies(contractID));
+      if (!contractID.IsEmpty())
+        categoryName = contractID;
+    }
+
+    rv = nsComponentManager::CreateInstance(categoryName, nsnull, NS_GET_IID(nsIMimeEmitter), (void **) getter_AddRefs(mEmitter));
+
     if ((NS_FAILED(rv)) || (!mEmitter))
     {
-#ifdef DEBUG_rhp
-      printf("Unable to create the correct converter!\n");
-#endif
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -666,10 +673,10 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIInputStreamObserver> inObs = do_QueryInterface(mEmitter, &rv);
+    nsCOMPtr<nsIInputStreamObserver> inObs = do_GetInterface(mEmitter, &rv);
     if (NS_SUCCEEDED(rv))
       mInputStream->SetObserver(inObs);
-    nsCOMPtr<nsIOutputStreamObserver> outObs = do_QueryInterface(mEmitter, &rv);
+    nsCOMPtr<nsIOutputStreamObserver> outObs = do_GetInterface(mEmitter, &rv);
     if (NS_SUCCEEDED(rv))
       mOutputStream->SetObserver(outObs);
   }

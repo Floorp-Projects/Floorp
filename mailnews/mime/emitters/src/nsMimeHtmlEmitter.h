@@ -50,16 +50,16 @@ public:
                                   PRBool aNotDownloaded);
     NS_IMETHOD    AddAttachmentField(const char *field, const char *value);
     NS_IMETHOD    EndAttachment();
-	NS_IMETHOD	  EndAllAttachments();
+	  NS_IMETHOD	  EndAllAttachments();
 
     // Body handling routines
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
     NS_IMETHOD    EndBody();
+    NS_IMETHOD WriteHTMLHeaders();
 
     virtual nsresult            WriteHeaderFieldHTMLPrefix();
     virtual nsresult            WriteHeaderFieldHTML(const char *field, const char *value);
     virtual nsresult            WriteHeaderFieldHTMLPostfix();
-    virtual nsresult            WriteHTMLHeaders();
 
 protected:
     PRBool        mFirst;  // Attachment flag...

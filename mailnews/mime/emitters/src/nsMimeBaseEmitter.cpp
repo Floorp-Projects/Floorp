@@ -54,10 +54,11 @@ static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static    NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static    NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
-NS_IMPL_ISUPPORTS3(nsMimeBaseEmitter, 
+NS_IMPL_ISUPPORTS4(nsMimeBaseEmitter, 
                    nsIMimeEmitter, 
                    nsIInputStreamObserver, 
-                   nsIOutputStreamObserver)
+                   nsIOutputStreamObserver,
+                   nsIInterfaceRequestor)
 
 nsMimeBaseEmitter::nsMimeBaseEmitter()
 {
@@ -154,6 +155,12 @@ nsMimeBaseEmitter::~nsMimeBaseEmitter(void)
 
   CleanupHeaderArray(mEmbeddedHeaderArray);
   mEmbeddedHeaderArray = nsnull;
+}
+
+NS_IMETHODIMP nsMimeBaseEmitter::GetInterface(const nsIID & aIID, void * *aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  return QueryInterface(aIID, aInstancePtr);
 }
 
 void
@@ -707,7 +714,7 @@ nsMimeBaseEmitter::WriteHeaderFieldHTMLPostfix()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMimeBaseEmitter::WriteHTMLHeaders()
 {
   WriteHeaderFieldHTMLPrefix();

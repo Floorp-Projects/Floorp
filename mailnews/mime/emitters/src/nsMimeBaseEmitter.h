@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsIMimeConverter.h"
+#include "nsIInterfaceRequestor.h"
 
 //
 // The base emitter will serve as the place to do all of the caching,
@@ -68,6 +69,7 @@ typedef struct {
 } headerInfoType;
 
 class nsMimeBaseEmitter : public nsIMimeEmitter, 
+                          public nsIInterfaceRequestor,
                           public nsIInputStreamObserver,
                           public nsIOutputStreamObserver
 {
@@ -81,6 +83,7 @@ public:
   NS_DECL_NSIMIMEEMITTER
   NS_DECL_NSIINPUTSTREAMOBSERVER
   NS_DECL_NSIOUTPUTSTREAMOBSERVER
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   // Utility output functions...
   NS_IMETHOD          UtilityWriteCRLF(const char *buf);
@@ -90,14 +93,12 @@ public:
   char                *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
 
   // For header processing...
-  char                *GetHeaderValue(const char  *aHeaderName,
-                                      nsVoidArray *aArray);
+  char                *GetHeaderValue(const char  *aHeaderName, nsVoidArray *aArray);
 
   // To write out a stored header array as HTML
   virtual nsresult            WriteHeaderFieldHTMLPrefix();
   virtual nsresult            WriteHeaderFieldHTML(const char *field, const char *value);
   virtual nsresult            WriteHeaderFieldHTMLPostfix();
-  virtual nsresult            WriteHTMLHeaders();
 
 protected:
   // Internal methods...

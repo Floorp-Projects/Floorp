@@ -59,6 +59,7 @@ interface nsIMimeEmitter : nsISupports{
     void    StartHeader(in PRBool rootMailHeader, in PRBool headerOnly, 
                         [const] in string msgID, [const] in string outCharset);
     void    AddHeaderField([const] in string field, [const] in string value);
+	void    WriteHTMLHeaders(); // book case this with a EndHeader call.
     void    EndHeader();
     void    UpdateCharacterSet([const] in string aCharset);
 

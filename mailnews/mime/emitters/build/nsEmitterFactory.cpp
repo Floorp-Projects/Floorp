@@ -28,6 +28,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
+#include "nsICategoryManager.h"
 
 /* Include all of the interfaces our factory can generate components for */
 #include "nsMimeEmitterCID.h"
@@ -42,24 +43,58 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXULEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMimeHtmlDisplayEmitter, Init);
 
+
+static NS_METHOD RegisterMimeEmitter(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, 
+                                       const char *componentType, const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsXPIDLCString previous;
+  
+  return catman->AddCategoryEntry("mime-emitter", info->mContractID, info->mContractID,
+                                  PR_TRUE, PR_FALSE, getter_Copies(previous));
+}
+
+static NS_METHOD UnRegisterMimeEmitter(nsIComponentManager *aCompMgr,
+                                            nsIFile *aPath,
+                                            const char *registryLocation,
+                                            const nsModuleComponentInfo *info)
+{
+  // do we need to unregister our category entries??
+  return NS_OK;
+}
+
 static nsModuleComponentInfo components[] =
 {
   { "HTML MIME Emitter",
     NS_HTML_MIME_EMITTER_CID,
     NS_HTML_MIME_EMITTER_CONTRACTID,
-    nsMimeHtmlDisplayEmitterConstructor },
+    nsMimeHtmlDisplayEmitterConstructor,
+    RegisterMimeEmitter,
+    UnRegisterMimeEmitter
+  },
   { "XML MIME Emitter",
     NS_XML_MIME_EMITTER_CID,
     NS_XML_MIME_EMITTER_CONTRACTID,
-    nsMimeXmlEmitterConstructor },
+    nsMimeXmlEmitterConstructor,
+    RegisterMimeEmitter,
+    UnRegisterMimeEmitter
+  },
   { "RAW MIME Emitter",
     NS_RAW_MIME_EMITTER_CID,
     NS_RAW_MIME_EMITTER_CONTRACTID,
-    nsMimeRawEmitterConstructor },
+    nsMimeRawEmitterConstructor,
+    RegisterMimeEmitter,
+    UnRegisterMimeEmitter
+  },
   { "XUL MIME Emitter",
     NS_XUL_MIME_EMITTER_CID,
     NS_XUL_MIME_EMITTER_CONTRACTID,
-    nsMimeXULEmitterConstructor }
+    nsMimeXULEmitterConstructor,
+    RegisterMimeEmitter,
+    UnRegisterMimeEmitter
+  }
 };
 
 NS_IMPL_NSGETMODULE(nsMimeEmitterModule, components)
