@@ -28,6 +28,11 @@
 #include "prlog.h"
 #include "prthread.h"
 
+#include "ns_globals.h"
+
+#include "nsIEventTarget.h"
+#include "nsStreamUtils.h"
+
 static const PRInt32 buffer_increment = 1024;
 static const PRInt32 do_close_code = -524;
 
@@ -36,7 +41,8 @@ InputStreamShim::InputStreamShim(jobject yourJavaStreamRef,
     mJavaStream(yourJavaStreamRef), mContentLength(yourContentLength),
     mBuffer(nsnull), mBufferLength(0), mCountFromJava(0), 
     mCountFromMozilla(0), mAvailable(0), mAvailableForMozilla(0), mNumRead(0),
-    mDoClose(PR_FALSE), mDidClose(PR_FALSE), mLock(nsnull) 
+    mDoClose(PR_FALSE), mDidClose(PR_FALSE), mLock(nsnull), 
+    mCloseStatus(NS_OK), mCallback(nsnull), mCallbackFlags(0)
 { 
     NS_INIT_ISUPPORTS();
     mLock = PR_NewLock();
@@ -99,6 +105,9 @@ nsresult InputStreamShim::doReadFromJava()
     nsresult rv = NS_ERROR_FAILURE;
     PR_ASSERT(mLock);
 
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("InputStreamShim::doReadFromJava: entering\n"));
+
     PR_Lock(mLock);
 
     // first, see how much data is available
@@ -122,6 +131,18 @@ nsresult InputStreamShim::doReadFromJava()
     }
     rv = NS_OK;
 
+    // if we have bytes available for mozilla, and they it has requested
+    // a callback when bytes are available.
+    if (mCallback && 0 < mAvailableForMozilla 
+        && !(mCallbackFlags & WAIT_CLOSURE_ONLY)) {
+        rv = mCallback->OnInputStreamReady(this);
+        mCallback = nsnull;
+        mCallbackFlags = nsnull;
+        if (NS_FAILED(rv)) {
+            goto DRFJ_CLEANUP;
+        }
+    }
+
     // finally, do another check for available bytes
     if (NS_FAILED(doAvailable())) {
         rv = NS_ERROR_FAILURE;
@@ -139,6 +160,9 @@ nsresult InputStreamShim::doReadFromJava()
  DRFJ_CLEANUP:
     
     PR_Unlock(mLock);
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("InputStreamShim::doReadFromJava: exiting\n"));
     return rv;
 }
 
@@ -186,6 +210,9 @@ InputStreamShim::doRead(void)
         doClose();
         return NS_ERROR_NOT_AVAILABLE;
     }
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("InputStreamShim::doRead: entering\n"));
 
     PR_ASSERT(0 != mAvailable);
 
@@ -271,6 +298,10 @@ InputStreamShim::doRead(void)
     }
     rv = NS_OK;
 #endif
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("InputStreamShim::doRead: exiting\n"));
+
     return rv;
 }
 
@@ -303,6 +334,13 @@ InputStreamShim::doClose(void)
     }
     rv = NS_OK;
 #endif
+    if (mCallback && mAvailableForMozilla && 
+        !(mCallbackFlags & WAIT_CLOSURE_ONLY)) {
+        rv = mCallback->OnInputStreamReady(this);
+        mCallback = nsnull;
+        mCallbackFlags = nsnull;
+    }
+
     mDidClose = PR_TRUE;
     return rv;
 }
@@ -317,6 +355,9 @@ InputStreamShim::Available(PRUint32* aResult)
     nsresult rv = NS_ERROR_FAILURE;
     if (!aResult) {
         return NS_ERROR_NULL_POINTER;
+    }
+    if (mDoClose) {
+        return mCloseStatus;
     }
     PR_ASSERT(mLock);
     PR_Lock(mLock);
@@ -334,6 +375,7 @@ InputStreamShim::Close()
     PR_ASSERT(mLock);
     PR_Lock(mLock);
     mDoClose = PR_TRUE;
+    mCloseStatus = NS_BASE_STREAM_CLOSED;
     rv = NS_OK;
     PR_Unlock(mLock);
 
@@ -347,23 +389,18 @@ InputStreamShim::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
     if (!aBuffer || !aNumRead) {
         return NS_ERROR_NULL_POINTER;
     }
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("InputStreamShim::Read: entering\n"));
+    if (mDoClose) {
+	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+	       ("InputStreamShim::Read: exiting, already closed\n"));
+        return mCloseStatus;
+    }
     *aNumRead = 0;
     PR_ASSERT(mLock);
     PR_ASSERT(mCountFromMozilla <= mCountFromJava);
 
     PR_Lock(mLock);
-
-    // wait for java to load the buffer with some data
-    do {
-        if (mAvailableForMozilla == 0) {
-            PR_Unlock(mLock);
-            PR_Sleep(PR_INTERVAL_MIN);
-            PR_Lock(mLock);
-        }
-        else {
-            break;
-        }
-    } while ((!mDidClose) && (-1 != mNumRead));
 
     if (mAvailableForMozilla) {
         if (aCount <= (mCountFromJava - mCountFromMozilla)) {
@@ -381,10 +418,17 @@ InputStreamShim::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
             mCountFromMozilla += (mCountFromJava - mCountFromMozilla);
         }
         mAvailableForMozilla -= *aNumRead;
+        rv = NS_OK;
+    }
+    else {
+        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+               ("InputStreamShim::Read: exiting, would block\n"));
+        rv = NS_BASE_STREAM_WOULD_BLOCK;
     }
     
-    rv = NS_OK;
     PR_Unlock(mLock);
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("InputStreamShim::Read: exiting\n"));
 
     return rv;
 }
@@ -399,9 +443,47 @@ InputStreamShim::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32
 NS_IMETHODIMP 
 InputStreamShim::IsNonBlocking(PRBool *_retval)
 {
-//    NS_NOTREACHED("IsNonBlocking");
-//    return NS_ERROR_NOT_IMPLEMENTED;
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
 
-    *_retval = PR_FALSE;
+NS_IMETHODIMP
+InputStreamShim::CloseWithStatus(nsresult astatus) 
+{
+    this->Close();
+    mCloseStatus = astatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InputStreamShim::AsyncWait(nsIInputStreamCallback *aCallback, 
+                           PRUint32 aFlags, PRUint32 aRequestedCount, 
+                           nsIEventTarget *aEventTarget)
+{
+    PR_Lock(mLock);
+    
+    mCallback = nsnull;
+    mCallbackFlags = nsnull;
+    
+    nsCOMPtr<nsIInputStreamCallback> proxy;
+    if (aEventTarget) {
+        nsresult rv = NS_NewInputStreamReadyEvent(getter_AddRefs(proxy),
+                                                  aCallback, aEventTarget);
+        if (NS_FAILED(rv)) return rv;
+        aCallback = proxy;
+    }
+    if (NS_FAILED(mCloseStatus) ||
+        (mAvailableForMozilla && !(aFlags & WAIT_CLOSURE_ONLY))) {
+        // stream is already closed or readable; post event.
+        aCallback->OnInputStreamReady(this);
+    }
+    else {
+        // queue up callback object to be notified when data becomes available
+        mCallback = aCallback;
+        mCallbackFlags = aFlags;
+    }
+    
+    PR_Unlock(mLock);
+    
     return NS_OK;
 }

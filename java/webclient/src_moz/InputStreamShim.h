@@ -22,14 +22,17 @@
 #ifndef InputStreamShim_h
 #define InputStreamShim_h
 
-#include "nsIInputStream.h"
+#include "nsIAsyncInputStream.h"
+#include "nsCOMPtr.h"
 
 #include <jni.h>
+
+
 
 class InputStreamShimActionEvent;
 struct PRLock; 
 
-class InputStreamShim : public nsIInputStream
+class InputStreamShim : public nsIAsyncInputStream
 {
 public:
     InputStreamShim(jobject yourJavaStreamRef,
@@ -76,7 +79,9 @@ private:
 
     // nsIInputStream methods
     NS_DECL_NSIINPUTSTREAM
-
+    
+    // nsIAsyncInputStream
+    NS_DECL_NSIASYNCINPUTSTREAM
 protected:
 
     /**
@@ -174,6 +179,12 @@ protected:
      */
 
     PRLock *mLock;
+
+    nsresult mCloseStatus;
+
+    nsCOMPtr<nsIInputStreamCallback> mCallback;
+
+    PRUint32 mCallbackFlags;
 };
 
 #endif // InputStreamShim_h
