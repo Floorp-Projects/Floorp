@@ -1697,8 +1697,9 @@ nsEventStateManager::GetFocusedEventTarget(nsIFrame **aFrame)
 NS_IMETHODIMP
 nsEventStateManager::GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent)
 {
-  if (aEvent->message == NS_FOCUS_CONTENT ||
-      aEvent->message == NS_BLUR_CONTENT) {
+  if (aEvent &&
+      (aEvent->message == NS_FOCUS_CONTENT ||
+       aEvent->message == NS_BLUR_CONTENT)) {
     *aContent = mCurrentFocus;
     NS_IF_ADDREF(*aContent);
     return NS_OK;
