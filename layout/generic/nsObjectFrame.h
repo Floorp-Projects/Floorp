@@ -91,6 +91,10 @@ public:
                             nsISupports*    aSubContent);
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
 
+  //i18n helper
+  nsresult MakeAbsoluteURL(nsIURI* *aFullURI, 
+                          nsString aSrc,
+                          nsIURI* aBaseURI);
   //local methods
   nsresult CreateWidget(nsIPresContext* aPresContext,
                         nscoord aWidth,
