@@ -39,6 +39,22 @@
 namespace JavaScript {
 namespace ICodeASM {
 
+    int cmp_nocase (const string& s1, string::const_iterator s2_begin,
+                    string::const_iterator s2_end)
+    {
+        string::const_iterator p1 = s1.begin();
+        string::const_iterator p2 = s2_begin;
+        uint s2_size = s2_end - s2_begin;
+
+        while (p1 != s1.end() && p2 != s2_end) {
+            if (toupper(*p1) != toupper(*p2))
+                return (toupper(*p1) < toupper(*p2)) ? -1 : 1;
+            ++p1; ++p2;
+        }
+
+        return (s1.size() == s2_size) ? 0 : (s1.size() < s2_size) ? -1 : 1;
+    }
+        
     void
     ICodeParser::ParseSourceFromString (string source)
     {
@@ -115,36 +131,65 @@ namespace ICodeASM {
     }
 
     iter
-    ICodeParser::ParseUInt32 (iter begin, iter end, uint32 *rval)
+    ICodeParser::ParseAlpha (iter begin, iter end, string *rval)
     {
-        uint32 position = 0;
         iter curpos;
+        string *str = new string();
         
-      scan_loop:
         for (curpos = begin; curpos < end; ++curpos) {
             switch (*curpos)
             {
+                case 'a'...'z':
+                case 'A'...'Z':
                 case '0'...'9':
-                    position++;
+                case '_':
+                    *str += *curpos;
                     break;
 
                 default:
-                    break scan_loop;
+                    goto scan_done;
             }
         }
+      scan_done:
 
-        curpos = begin;
-        for (; position >= 0; --position)
-            *rval += (*curpos++ - '0') * pow (10, position);
-
+        rval = str;
         return curpos;
     }
 
     iter
+    ICodeParser::ParseBool (iter begin, iter end, bool *rval)
+    {
+        iter curpos = begin;
+        string *str = new string();
+        
+        if ((curpos != end) && (*curpos == "T" || *curpos == "t")) {
+            if ((++curpos != end) && (*curpos == "R" || *curpos == "r"))
+                if ((++curpos != end) && (*curpos == "U" || *curpos == "u"))
+                    if ((++curpos != end) &&
+                        (*curpos == "E" || *curpos == "e")) {
+                        *rval = true;
+                        return ++curpos;
+                    }
+        } else if ((curpos != end) && (*curpos == "F" || *curpos == "f")) {
+            if ((++curpos != end) && (*curpos == "A" || *curpos == "a"))
+                if ((++curpos != end) && (*curpos == "L" || *curpos == "l"))
+                    if ((++curpos != end) && (*curpos == "S" || *curpos == "s"))
+                        if ((++curpos != end) && 
+                            (*curpos == "E" || *curpos == "e")) {
+                            *rval = false;
+                            return ++curpos;
+                        }
+        }
+
+        throw new ICodeParseException ("Expected boolean value.");
+    }
+    
+    iter
     ICodeParser::ParseDouble (iter begin, iter end, double *rval)
     {
-        uint32 integer
-        iter curpos = ParseUInt32 (begin, end, *integer);
+        /* XXX add overflow checking */
+        uint32 integer;
+        iter curpos = ParseUInt32 (begin, end, &integer);
         *rval = static_cast<double>(integer);
         if (*curpos != '.')
             return curpos;
@@ -152,7 +197,6 @@ namespace ICodeASM {
         ++curpos;
         uint32 position = 0;
         
-      scan_loop:
         for (curpos = begin; curpos < end; ++curpos) {
             switch (*curpos)
             {
@@ -161,56 +205,35 @@ namespace ICodeASM {
                     break;
                     
                 default:
-                    break scan_loop;
+                    goto scan_done;
             }
         }
+      scan_done:
 
         return curpos;
     }
         
-    iter
-    ICodeParser::ParseAlpha (iter begin, iter end, string *rval)
-    {
-        string str = new string();
-        
-      scan_loop:
-        for (curpos = begin; curpos < end; ++curpos) {
-            switch (*curpos)
-            {
-                case 'a'...'z':
-                case 'A'...'Z':
-                case '0'...'9':
-                case '_':
-                    str += *curpos;
-                    break;
-
-                default:
-                    break scan_loop;
-            }
-        }
-
-        rval = str;
-        return curpos;
-    }
-    
     iter
     ICodeParser::ParseString (iter begin, iter end, string *rval)
     {
         char delim = *begin;
         bool isTerminated = false;
+        /* XXX not exactly exception safe, string may never get deleted */
         string *str = new string();
         
-        if (delim != '\'' && delim != '"')
+        if (delim != '\'' && delim != '"') {
             ASSERT ("|begin| does not point at a string");
+            return 0;
+        }
 
-      scan_loop:
-        for (bool isEscaped = false, iter curpos = ++tl.begin; curpos < end;
-             ++curpos) {
+        iter curpos = 0;
+        bool isEscaped = false;
+        for (curpos = ++begin; curpos < end; ++curpos) {
 
             switch (*curpos) {
                 case '\\':
                     if (isEscaped) {
-                        str += '\\';
+                        *str += '\\';
                         isEscaped = false;
                     } else {
                         isEscaped = true;
@@ -219,57 +242,61 @@ namespace ICodeASM {
                     
                 case 't':
                     if (isEscaped) {
-                        str += '\t';
+                        *str += '\t';
                         isEscaped = false;
                     } else {
-                        str += 't';
+                        *str += 't';
                     }
                     break;
                     
                 case 'n':
                     if (isEscaped) {
-                        str += '\n';
+                        *str += '\n';
                         isEscaped = false;
                     } else {
-                        str += 'n';
+                        *str += 'n';
                     }
                     break;
 
                 case 'r':
                     if (isEscaped) {
-                        str += '\r';
+                        *str += '\r';
                         isEscaped = false;
                     } else {
-                        str += 'r';
+                        *str += 'r';
                     }
                     break;
 
                 case '\n':
                     if (isEscaped) {
-                        str += '\r';
+                        *str += '\n';
                         isEscaped = false;
                     } else {
                         /* unescaped newline == unterminated string */
-                        break scan_loop;
+                        goto scan_done;
                     }
                     break;
                     
-                case delim:
-                    if (isEscaped) {
-                        str += delim;
-                        isEscaped = false;
-                    } else {
-                        ++curpos;
-                        isTerminated = true;
-                        break scan_loop;
+                case '\'':
+                case '"':
+                    if (*curpos == delim) {
+                        if (isEscaped) {
+                            *str += delim;
+                            isEscaped = false;
+                        } else {
+                            ++curpos;
+                            isTerminated = true;
+                            goto scan_done;
+                        }
+                        break;
                     }
-                    break;
 
                 default:
                     isEscaped = false;
-                    str += *curpos;
+                    *str += *curpos;
             }
         }
+      scan_done:
 
         if (!isTerminated)
         {
@@ -282,51 +309,31 @@ namespace ICodeASM {
     }
     
     iter
-    ICodeParser::ParseStatement (iter begin, iter end)
+    ICodeParser::ParseUInt32 (iter begin, iter end, uint32 *rval)
     {
-        TokenLocation tl = SeekTokenStart (begin, end);
-
-        if (tl.estimate != teAlpha)
-            throw new ICodeParseException ("Expected an alphanumeric token (like maybe an instruction or an opcode.)");
-
-    scan_loop:
-        for (iter curpos = tl.begin; curpos < end; ++curpos) {
+        /* XXX add overflow checking */
+        uint32 position = 0;
+        iter curpos;
+        
+        for (curpos = begin; curpos < end; ++curpos) {
             switch (*curpos)
             {
-                case ':':
-                    tl.type = ttLabel;
-                    tl.end = ++curpos;
-                    break scan_loop;
-
-                case 'a'...'z':
-                case 'A'...'Z':
                 case '0'...'9':
-                case '_':
+                    position++;
                     break;
 
                 default:
-                    tl.type = ttInstruction;
-                    tl.end = curpos;
-                    break scan_loop;
+                    goto scan_done;
+
             }
         }
+    scan_done:
 
-        if (tl.type = ttUndetermined) {
-            tl.type = ttInstruction;
-            tl.end = end;
-        }
-        
-        if (tl.type == ttLabel) {
-            string label_str(tl.begin, tl.end - 1); /* ignore the trailing : */
-            mLabels[label_str] = mStatementNodes.end();
-            return tl.end;
-        } else if (tl.type == ttInstruction) {
-            string icode_str(tl.begin, tl.end);
-            for (uint i = 0; i < icodemap_size; ++i)
-                if (icode_str.compare(icodemap[i]) == 0)
-                    return ParseInstruction (i, tl.end, end);
-            throw ("Unknown ICode " + icode_str);
-        }
+        curpos = begin;
+        for (; position >= 0; --position)
+            *rval += (*curpos++ - '0') * static_cast<uint32>(pow (10, position));
+
+        return curpos;
     }
 
     iter ICodeParser::ParseInstruction (uint icodeID, iter start, iter end)
@@ -370,16 +377,63 @@ namespace ICodeASM {
     }
 
     iter
-    ICodeParser::ParseArgumentListOperand (iter begin, iter end,
-                                           AnyOperand *rval)
+    ICodeParser::ParseStatement (iter begin, iter end)
+    {
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teAlpha)
+            throw new ICodeParseException ("Expected an alphanumeric token (like maybe an instruction or a label.)");
+
+        for (iter curpos = tl.begin; curpos < end; ++curpos) {
+            switch (*curpos)
+            {
+                case ':':
+                    tl.type = ttLabel;
+                    tl.end = ++curpos;
+                    goto scan_done;
+
+                case 'a'...'z':
+                case 'A'...'Z':
+                case '0'...'9':
+                case '_':
+                    break;
+
+                default:
+                    tl.type = ttInstruction;
+                    tl.end = curpos;
+                    goto scan_done;
+            }
+        }
+    scan_done:
+
+        if (tl.type = ttUndetermined) {
+            tl.type = ttInstruction;
+            tl.end = end;
+        }
+        
+        if (tl.type == ttLabel) {
+            string label_str(tl.begin, tl.end - 1); /* ignore the trailing : */
+            mLabels[label_str] = mStatementNodes.end();
+            return tl.end;
+        } else if (tl.type == ttInstruction) {
+            string icode_str(tl.begin, tl.end);
+            for (uint i = 0; i < icodemap_size; ++i)
+                if (cmp_nocase(icode_str, &icodemap[i].name[0],
+                               &icodemap[i].name[0] + strlen(icodemap[i].name) + 1))
+                    return ParseInstruction (i, tl.end, end);
+            throw ("Unknown ICode " + icode_str);
+        }
+    }
+
+    iter
+    ICodeParser::ParseArgumentListOperand (iter begin, iter end, AnyOperand *o)
     {
         /* XXX this is hard, lets go shopping */
         ASSERT ("Not Implemented.");
     }
 
     iter
-    ICodeParser::ParseBinaryOpOperand (iter begin, iter end,
-                                       AnyOperand *rval)
+    ICodeParser::ParseBinaryOpOperand (iter begin, iter end, AnyOperand *o)
     {
         TokenLocation tl = SeekTokenStart (begin, end);
 
@@ -387,9 +441,35 @@ namespace ICodeASM {
             throw new ICodeParseException ("Expected BinaryOp as a quoted string.");
         string *str;
         end = ParseString (tl.begin, end, str);
-        rval->asString = str;
+        o->asString = str;
         return end;
     }
+
+    iter
+    ParseBoolOperand (iter begin, iter end, AnyOperand *o)
+    {
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teAlpha)
+            throw new ICodeParseException ("Expected boolean value.");
+
+        return ParseBool (tl.begin, end, &o->asBoolean);
+    }
+
+    iter
+    ParseICodeModuleOperand (iter begin, iter end, AnyOperand *o)
+    {
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teString)
+            throw new ICodeParseException ("Expected ICode Module as a quoted string.");
+
+        string *str;
+        end = ParseString (tl.begin, end, str);
+        o->asString = str;
+        return end;
+    }
+    
     
 }
 }

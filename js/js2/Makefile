@@ -32,6 +32,9 @@ gc.a:
 gctest: gc_allocator.o
 	$(CC) -o $@ -ggdb $^ $(libs)
 
+ica_test:
+	$(CC) $(CFLAGS) -o ica_test ica_test.cpp icodeasm.cpp $(LIBS)
+
 clean:
 	rm -f $(objs)
 
