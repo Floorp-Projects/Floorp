@@ -348,6 +348,12 @@ SendOperationListener::SetSendLaterObject(nsMsgSendLater *obj)
 }
 
 nsresult
+SendOperationListener::OnGetDraftFolderURI(const char *aFolderURI)
+{
+  return NS_OK;
+}
+  
+nsresult
 SendOperationListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
 {
 #ifdef NS_DEBUG

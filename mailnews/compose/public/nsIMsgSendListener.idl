@@ -63,5 +63,10 @@ interface nsIMsgSendListener : nsISupports {
     void OnStopSending(in string aMsgID, in nsresult aStatus, in wstring aMsg, 
 					             in nsIFileSpec returnFileSpec);
 
+    /**
+     * Notify the observer with the folder uri before the draft is copied.
+     */
+    void OnGetDraftFolderURI(in string aFolderURI);
+
 };
 

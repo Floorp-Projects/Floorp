@@ -4180,8 +4180,6 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
                                                nsMsgDeliverMode   mode,
                                                char          	  *dest_uri)
 {
-  nsCAutoString uri;
-
   mCopyObj = new nsMsgCopy();
   if (!mCopyObj)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -4193,11 +4191,17 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   nsresult    rv;
 
   if (dest_uri && *dest_uri)
-  	uri = dest_uri;
+  	m_folderName = dest_uri;
   else
-  	uri = GetFolderURIFromUserPrefs(mode, mUserIdentity);
+  	m_folderName = GetFolderURIFromUserPrefs(mode, mUserIdentity);
+
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnGetDraftFolderURI(m_folderName.get());
+
   rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
-                                    this, uri, mMsgToReplace);
+                                    this, m_folderName, mMsgToReplace);
   return rv;
 }
 

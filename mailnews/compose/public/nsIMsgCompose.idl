@@ -85,7 +85,8 @@ interface nsIMsgComposeStateListener : nsISupports
 {
 	/* ... */
 	void        NotifyComposeFieldsReady();
-	void        SendAndSaveProcessDone();
+	void        ComposeProcessDone();
+  void        SaveInFolderDone(in string folderName);
 };
 
 [scriptable, uuid(4E606270-B588-11D2-8289-00805F2A0107)]

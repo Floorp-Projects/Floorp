@@ -63,6 +63,9 @@ public:
   /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
   NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                            nsIFileSpec *returnFileSpec);
+
+  /* void OnGetDraftFolderURI (); */
+  NS_IMETHOD OnGetDraftFolderURI(const char *aFolderURI);
   
   NS_IMETHOD SetSendLaterObject(nsMsgSendLater *obj);
 private:

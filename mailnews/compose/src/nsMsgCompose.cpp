@@ -618,7 +618,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
                     nsnull,             					// const struct nsMsgAttachedFile    *preloaded_attachments,
                     nsnull,             					// nsMsgSendPart                     *relatedPart,
                     tArray, listeners);           // listener array
-      
+
       // Cleanup converted body...
       if (newBody)
         PR_FREEIF(bodyString);
@@ -641,9 +641,8 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       ShowWindow(PR_FALSE);
   }
   else
-    NotifyStateListeners(eSaveAndSendProcessDone);
-
-		
+    NotifyStateListeners(eComposeProcessDone);
+	
   return rv;
 }
 
@@ -1668,14 +1667,14 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
         {
 			    if (nsCRT::strcasecmp(fieldsFCC, "nocopy://") == 0)
 			    {
-			      mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
+			      mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
             mComposeObj->CloseWindow();
           }
         }
       }
       else
       {
-			  mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
+			  mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
         mComposeObj->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
                                      // windows hanging around to prevent the app from exiting.
       }
@@ -1687,7 +1686,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: the message send operation failed!\n");
 #endif
-			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
+			mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);
 
       // Need to relelase the mComposeObj...
@@ -1697,6 +1696,15 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 
   return rv;
 }
+
+nsresult
+nsMsgComposeSendListener::OnGetDraftFolderURI(const char *aFolderURI)
+{
+	if (mComposeObj)
+    mComposeObj->m_folderName = (const char*)aFolderURI;
+  return NS_OK;
+}
+
 
 nsresult
 nsMsgComposeSendListener::OnStartCopy()
@@ -1732,19 +1740,22 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: Success on the message copy operation!\n");
 #endif
-			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
+			mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
       // We should only close the window if we are done. Things like templates
       // and drafts aren't done so their windows should stay open
       if ( (mDeliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
            (mDeliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
         mComposeObj->CloseWindow();
+      else
+        mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveInFolderDone);
+
 		}
 		else
 		{
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: the message copy operation failed!\n");
 #endif
-			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
+			mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);
 		}
 	}
@@ -2170,10 +2181,14 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
           thisListener->NotifyComposeFieldsReady();
           break;
         
-        case eSaveAndSendProcessDone:
-          thisListener->SendAndSaveProcessDone();
+        case eComposeProcessDone:
+          thisListener->ComposeProcessDone();
           break;
         
+        case eSaveInFolderDone:
+          thisListener->SaveInFolderDone(m_folderName.get());
+          break;
+
         default:
           NS_NOTREACHED("Unknown notification");
           break;

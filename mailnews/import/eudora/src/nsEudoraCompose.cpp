@@ -120,6 +120,9 @@ public:
 		return NS_OK;
 	}
 
+  /* void OnGetDraftFolderURI (); */
+  NS_IMETHOD OnGetDraftFolderURI(const char *aFolderURI) {return NS_OK;}
+
 	static nsresult CreateSendListener( nsIMsgSendListener **ppListener);
 
 	void Reset() { m_done = PR_FALSE; NS_IF_RELEASE( m_location); m_location = nsnull;}

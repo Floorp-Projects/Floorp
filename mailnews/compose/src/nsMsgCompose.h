@@ -89,6 +89,8 @@ class nsMsgCompose : public nsIMsgCompose
                                   *aIdentity = m_identity;
                                   return NS_OK;
                                 }
+  //m_folderName to store the value of the saved drafts folder.
+  nsCString                     m_folderName;
 
   // when we've successfully sent a message, the message send listener will call back into the compose
   // object telling it to set any reply flags on the original message's folder.
@@ -107,8 +109,9 @@ class nsMsgCompose : public nsIMsgCompose
   PRBool mConvertStructs;  // for TagConvertible
 
 	typedef enum {
-    	eComposeFieldsReady,
-    	eSaveAndSendProcessDone
+       eComposeFieldsReady,
+       eComposeProcessDone,
+       eSaveInFolderDone
 	} TStateListenerNotification;
   
 	// tell the doc state listeners that the doc state has changed
@@ -196,6 +199,9 @@ public:
   /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
   NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                            nsIFileSpec *returnFileSpec);
+
+  /* void OnGetDraftFolderURI (); */
+  NS_IMETHOD OnGetDraftFolderURI(const char *aFolderURI);
 
   // For the nsIMsgCopySerivceListener!
   NS_IMETHOD OnStartCopy();

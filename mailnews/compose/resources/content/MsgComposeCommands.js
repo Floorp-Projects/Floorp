@@ -80,11 +80,15 @@ var stateListener = {
 		documentLoaded = true;
 	},
 
-	SendAndSaveProcessDone: function() {
-		dump("\n RECEIVE SaveAndSendProcessDone\n\n");
+	ComposeProcessDone: function() {
+		dump("\n RECEIVE ComposeProcessDone\n\n");
 		windowLocked = false;
 	  CommandUpdate_MsgCompose();
-	}
+	},
+
+  SaveInFolderDone: function(folderURI) {
+    DisplaySaveFolderDlg(folderURI);
+  }
 };
 
 // i18n globals
@@ -1865,3 +1869,57 @@ var attachmentBucketObserver = {
       return flavourSet;
     }  
 };
+
+function GetMsgFolderFromUri(uri)
+{
+	try {
+  	var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
+  	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+    var resource = RDF.GetResource(uri);
+		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+		return msgfolder;
+	}//try
+	catch (ex) { }//catch
+	return null;
+}
+
+function DisplaySaveFolderDlg(folderURI)
+{
+  const kPrefContractID = "@mozilla.org/preferences;1";
+  const kPrefIID = Components.interfaces.nsIPref;
+  const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
+  var showDialog = true;
+  
+  try {
+    showDialog = kPrefSvc.GetBoolPref("mail.compose.show_save_folder_dlg");
+  }//try
+  catch (e) {
+    return;
+  }//catch
+
+  if (showDialog){
+    var msgfolder = GetMsgFolderFromUri(folderURI);
+    if (!msgfolder)
+      return;
+		var checkbox = {value:0};
+    var SaveDlgTitle = gComposeMsgsBundle.getString("SaveDialogTitle");
+    var DlgMsg = gComposeMsgsBundle.getString("SaveDialogMsg");
+    var CheckMsg = gComposeMsgsBundle.getString("CheckMsg");
+
+    var newMessage = DlgMsg.replace(/@FolderName@/, msgfolder.name);
+    var SaveDlgMsg = newMessage.replace(/@HostName@/, msgfolder.hostname);
+
+    if (commonDialogsService)
+      commonDialogsService.AlertCheck(window, SaveDlgTitle, SaveDlgMsg, CheckMsg, checkbox);
+    else
+      window.alert(SaveDlgMsg);
+    try {
+          kPrefSvc.SetBoolPref("mail.compose.show_save_folder_dlg", !checkbox.value);
+    }//try
+    catch (e) { 
+    return;
+    }//catch
+
+  }//if
+  return;
+}

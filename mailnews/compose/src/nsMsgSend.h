@@ -331,6 +331,8 @@ public:
   // File where we stored our HTML so that we could make the plaintext form.
   nsFileSpec                *mHTMLFileSpec;
 
+  // Variable for storing the draft name;
+  nsCString                  m_folderName;
   //
   // These variables are needed for message Copy operations!
   //
