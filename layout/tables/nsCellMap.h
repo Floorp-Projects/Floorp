@@ -53,14 +53,6 @@ protected:
   /** a cache of the column frames, by col index */
   nsVoidArray * mColFrames;
 
-  // an array of booleans where the ith element indicates if the ith row is collapsed
-  PRBool* mIsCollapsedRows;
-  PRInt32 mNumCollapsedRows;
-
-  // an array of booleans where the ith element indicates if the ith col is collapsed
-  PRBool* mIsCollapsedCols;
-  PRInt32 mNumCollapsedCols;
-
   /** the number of rows.  mRows[0] - mRows[mRowCount-1] are non-null. */
   PRInt32 mRowCount;
 
@@ -69,6 +61,14 @@ protected:
 
   /** the number of columns (the max of all row lengths) */
   PRInt32 mColCount;
+
+  // an array of booleans where the ith element indicates if the ith row is collapsed
+  PRBool* mIsCollapsedRows;
+  PRInt32 mNumCollapsedRows;
+
+  // an array of booleans where the ith element indicates if the ith col is collapsed
+  PRBool* mIsCollapsedCols;
+  PRInt32 mNumCollapsedCols;
 
 public:
   /** constructor 

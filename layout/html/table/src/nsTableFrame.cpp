@@ -3877,10 +3877,10 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         nsHTMLReflowState kidReflowState(aPresContext,
                                          aReflowState.reflowState, kidFrame,
                                          nsSize(0,0), eReflowReason_Resize);
-        nsHTMLReflowMetrics desiredSize(nsnull);
+        nsHTMLReflowMetrics unusedDesiredSize(nsnull);
         if (PR_TRUE==gsDebug) printf("\nTIF : Reflow Pass 2 of unknown frame %p of type %d with reason=%d\n", 
                                        kidFrame, childDisplay->mDisplay, eReflowReason_Resize);
-        ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+        ReflowChild(kidFrame, aPresContext, unusedDesiredSize, kidReflowState, aStatus);
     }
 
     // Get the next child
@@ -4313,7 +4313,6 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
                                            nscoord aDefaultHeight) 
 {
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
-  nsresult rv = NS_OK;
   nscoord result = aDefaultHeight;
   const nsStylePosition* tablePosition;
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)tablePosition);
@@ -4352,7 +4351,6 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
         rowGroupFrame->GetNextSibling(&rowGroupFrame);
       }
       rowGroupFrame=mFrames.FirstChild();
-      nscoord y=0;
       nscoord rowGroupYPos = 0;
       while (nsnull!=rowGroupFrame)
       {

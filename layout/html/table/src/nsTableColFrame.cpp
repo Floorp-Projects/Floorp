@@ -27,10 +27,8 @@
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
-static PRBool gsNoisyRefs = PR_FALSE;
 #else
 static const PRBool gsDebug = PR_FALSE;
-static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
 nsTableColFrame::nsTableColFrame()

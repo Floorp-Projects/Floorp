@@ -107,19 +107,19 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
   {
     // if aTransaction isa InsertTextTxn, and if the selection hasn't changed, 
     // then absorb it
-    InsertTextTxn *otherTxn = nsnull;
-    aTransaction->QueryInterface(kInsertTextTxnIID, (void **)&otherTxn);
-    if (otherTxn)
+    InsertTextTxn *otherInsTxn = nsnull;
+    aTransaction->QueryInterface(kInsertTextTxnIID, (void **)&otherInsTxn);
+    if (otherInsTxn)
     {
-      if (PR_TRUE==IsSequentialInsert(otherTxn))
+      if (PR_TRUE==IsSequentialInsert(otherInsTxn))
       {
         nsAutoString otherData;
-        otherTxn->GetData(otherData);
+        otherInsTxn->GetData(otherData);
         mStringToInsert += otherData;
         *aDidMerge = PR_TRUE;
         if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
       }
-      NS_RELEASE(otherTxn);
+      NS_RELEASE(otherInsTxn);
     }
     else
     { // the next InsertTextTxn might be inside an aggregate that we have special knowledge of
@@ -217,8 +217,8 @@ PRBool InsertTextTxn::IsSequentialInsert(InsertTextTxn *aOtherTxn)
     if (aOtherTxn->mElement == mElement)
     {
       // here, we need to compare offsets.
-      PRInt32 strlen = mStringToInsert.Length();
-      if (aOtherTxn->mOffset==(mOffset+strlen))
+      PRInt32 length = mStringToInsert.Length();
+      if (aOtherTxn->mOffset==(mOffset+length))
       {
         result = PR_TRUE;
       }

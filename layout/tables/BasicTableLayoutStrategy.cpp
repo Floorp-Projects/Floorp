@@ -645,7 +645,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
     PRInt32* autoColumns=nsnull;
     mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
     // for every column, handle spanning cells that impact that column
-    for (PRInt32 colIndex=0; colIndex<mNumCols; colIndex++) {
+    for (colIndex=0; colIndex<mNumCols; colIndex++) {
       TDBG_SD("handling span for %d\n", colIndex);
       PRInt32 spanCount = spanList->Count();
       // go through the list backwards so we can delete easily
@@ -893,7 +893,6 @@ void BasicTableLayoutStrategy::SetMinAndMaxTableWidths()
 // and distribute it proportionately (based on desired width)
 void BasicTableLayoutStrategy::DistributeFixedSpace(nsVoidArray *aColSpanList)
 {
-  nscoord excess = 0;
   TDBG_S("** DistributeFixedSpace:\n");
   // for all fixed-width columns, determine the amount of the specified width each column spanned recieves
   PRInt32 numSpanningCells = aColSpanList->Count();
@@ -995,7 +994,6 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableDoesNotFit()
     minColWidthArray = new PRInt32[mNumCols];
   }
 
-  PRInt32 numRows = mTableFrame->GetRowCount();
   for (PRInt32 colIndex = 0; colIndex < mNumCols; colIndex++) { 
     nscoord minAdjustedColWidth = 0;
     TDBG_SD("  for col %d\n", colIndex);
@@ -1242,7 +1240,6 @@ PRBool BasicTableLayoutStrategy::
           // otherwise it's already been factored in.
           // now, if this column holds the cell, create a spanInfo struct for the cell
           // so subsequent columns can take a proportion of this cell's space into account
-          PRInt32 cellColIndex;
           cellFrame->GetColIndex(cellColIndex);
           if (cellColIndex == colIndex) { 
             // add this cell to span list iff we are currently processing the column the cell starts in
@@ -1272,7 +1269,6 @@ PRBool BasicTableLayoutStrategy::
       // Get column width if it has one
       nscoord specifiedProportionColumnWidth = -1;
       float specifiedPercentageColWidth = -1.0f;
-      nscoord specifiedFixedColumnWidth = -1;
       PRBool isAutoWidth = PR_FALSE;
       switch (colPosition->mWidth.GetUnit()) {
         case eStyleUnit_Percent:
@@ -1480,7 +1476,7 @@ PRBool BasicTableLayoutStrategy::
         }
         else if (percent==smallestPercent) { 
           // the largest desired size among equal-percent columns wins
-          nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
+          colWidth = mTableFrame->GetColumnWidth(colIndex);
           if (colWidth > colWidthOfSmallest) {
             indexOfSmallest = colIndex;
             colWidthOfSmallest = colWidth;
@@ -1875,7 +1871,6 @@ PRBool BasicTableLayoutStrategy::
           // otherwise it's already been factored in.
           // now, if this column holds the cell, create a spanInfo struct for the cell
           // so subsequent columns can take a proportion of this cell's space into account
-          PRInt32 cellColIndex;
           cellFrame->GetColIndex(cellColIndex);
           if (cellColIndex == colIndex) {
             // add this cell to span list iff we are currently processing the column the cell starts in
