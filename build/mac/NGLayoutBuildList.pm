@@ -266,9 +266,9 @@ sub BuildDist()
 
 	#XPCOM
 	InstallFromManifest(":mozilla:xpcom:idl:MANIFEST",								"$distdirectory:idl:");
-	EmptyTree("$distdirectory:xpcom:");#// XXX temporary - needed during changeover only.
+	#EmptyTree("$distdirectory:xpcom:");#// XXX temporary - needed during changeover only.
     InstallFromManifest(":mozilla:xpcom:public:MANIFEST",							"$distdirectory:xpcom:");
-    !$main::USE_XPIDL && InstallFromManifest(":mozilla:xpcom:public:MANIFEST_TEMP","$distdirectory:xpcom:"); #// XXX remove
+    #!$main::USE_XPIDL && InstallFromManifest(":mozilla:xpcom:public:MANIFEST_TEMP","$distdirectory:xpcom:"); #// XXX remove
 	InstallFromManifest(":mozilla:xpcom:src:MANIFEST",								"$distdirectory:xpcom:");
 	InstallFromManifest(":mozilla:xpcom:libxpt:public:MANIFEST",					"$distdirectory:xpcom:");
 	InstallFromManifest(":mozilla:xpcom:libxpt:xptinfo:public:MANIFEST",			"$distdirectory:xpcom:");
@@ -301,6 +301,8 @@ sub BuildDist()
 	
 	#XPCONNECT
 	InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
+	InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",					"$distdirectory:idl:");
+	BuildOneProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"headers", "", 0, 0, 0);
 	
 	#CAPS
 	InstallFromManifest(":mozilla:caps:public:MANIFEST",							"$distdirectory:caps:");
@@ -417,9 +419,9 @@ sub BuildDist()
 
     #RDF
     InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
-	EmptyTree("$distdirectory:rdf:");#// XXX temporary - needed during changeover only.
+	#EmptyTree("$distdirectory:rdf:");#// XXX temporary - needed during changeover only.
     InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
-    !$main::USE_XPIDL && InstallFromManifest(":mozilla:rdf:base:public:MANIFEST_TEMP","$distdirectory:rdf:"); #// XXX remove
+    #!$main::USE_XPIDL && InstallFromManifest(":mozilla:rdf:base:public:MANIFEST_TEMP","$distdirectory:rdf:"); #// XXX remove
     InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
@@ -651,6 +653,7 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:xpcom:libxpt:macbuild:libxpt.mcp",				"libxpt$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:js:macbuild:XPConnect.mcp",						"XPConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 					"xpconnect.xpt", "", 1, 0, 1);
 
 	BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",			"libutil$D.shlb", "libutil.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
