@@ -357,11 +357,11 @@ void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
 XPGetDocStatus XpuWaitForPrintFileChild( void *handle )
 {
   MyPrintFileData *mpfd   = (MyPrintFileData *)handle;
-  siginfo_t        res;
+  int              res;
   XPGetDocStatus   status = XPGetDocError; /* used when read() from pipe fails */
   
-  if( XPU_TRACE(waitid(P_PID, mpfd->pid, &res, WEXITED)) == -1 )
-    perror("XpuWaitForPrintFileChild: waitid failure");
+  if( XPU_TRACE(waitpid(mpfd->pid, &res, 0)) == -1 )
+    perror("XpuWaitForPrintFileChild: waitpid failure");
 
   /* read the status from the child */ 
   if( read(mpfd->pipe[0], &status, sizeof(XPGetDocStatus)) != sizeof(XPGetDocStatus) )
