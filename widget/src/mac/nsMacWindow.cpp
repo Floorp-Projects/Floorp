@@ -91,9 +91,9 @@ SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers
 	nsCOMPtr<nsIDragSession> dragSession;
 	inDragService->GetCurrentSession ( getter_AddRefs(dragSession) );
 	if ( dragSession ) {
-		PRUint32 action = nsIDragService::DRAGDROP_ACTION_NONE;
+		PRUint32 action = nsIDragService::DRAGDROP_ACTION_MOVE;
 		
-		// force copy = option, alias = cmd-option
+		// force copy = option, alias = cmd-option, default is move
 		if ( inModifiers & optionKey ) {
 			if ( inModifiers & cmdKey )
 				action = nsIDragService::DRAGDROP_ACTION_LINK;
