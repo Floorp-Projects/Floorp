@@ -515,7 +515,9 @@ NS_IMETHODIMP nsURILoader::GetTarget(const char * aWindowTarget,
   nsCOMPtr<nsIDocShellTreeItem>  treeItem;
   *aRetargetedWindowContext = nsnull;
 
-  if(!name.Length() || name.EqualsIgnoreCase("_self") || name.EqualsIgnoreCase("_blank"))
+  if(!name.Length() || name.EqualsIgnoreCase("_self") || 
+    name.EqualsIgnoreCase("_blank") || 
+    name.EqualsIgnoreCase("_new"))
   {
      *aRetargetedWindowContext = aWindowContext;
   }
