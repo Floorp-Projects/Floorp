@@ -48,6 +48,8 @@ if (!UserInGroup("tweakparams")) {
 
 PutHeader("Saving new parameters");
 
+my $howto = "";
+
 foreach my $i (GetParamList()) {
     my $name = $i->{'name'};
     my $value = $::FORM{$name};
@@ -97,6 +99,12 @@ foreach my $i (GetParamList()) {
         }
         print "Changed " . html_quote($name) . ".<br>\n";
         SetParam($name, $value);
+        if (($name eq "shutdownhtml") && ($value ne "")) {
+            # The system is down, inform the user how to restore it
+            $howto = "<p>Bugzilla has now been shut down, to re-enable ".
+                    "the system, please return to ".
+                    "<a href=\"editparams.cgi\">editparams.cgi</a>.</p>";
+        }
     }
 }
 
@@ -105,7 +113,8 @@ WriteParams();
 
 unlink "data/versioncache";
 
-print "OK, done.<p>\n";
+print "<p>OK, done.</p>\n";
+print $howto;
 print "<a href=\"editparams.cgi\">Edit the params some more.</a><p>\n";
 print "<a href=\"query.cgi\">Go back to the query page.</a>\n";
     
