@@ -720,7 +720,7 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
       // get its name
       nsCAutoString packageName;
       rv = nsChromeRegistry::FollowArc(mChromeDataSource, packageName, package, mName);
-      if (NS_FAILED(rv)) return rv;
+      if (NS_FAILED(rv)) continue;	// don't fail if package has not yet been installed
 
       // select provider assuming it comes from the install directory.
       // XXX we really should be keeping track of whether it's from there,
@@ -739,7 +739,7 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
       }
     }
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, 
