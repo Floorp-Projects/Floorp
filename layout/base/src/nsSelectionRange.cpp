@@ -59,19 +59,27 @@ void nsSelectionRange::SetRange(nsSelectionRange * aRange) {
 }
 
 void nsSelectionRange::SetStartPoint(nsSelectionPoint * aPoint) {
-  mStart->SetPoint(aPoint->GetContent(), aPoint->GetOffset(), aPoint->IsAnchor());
+  nsIContent * content = aPoint->GetContent();
+  mStart->SetPoint(content, aPoint->GetOffset(), aPoint->IsAnchor());
+  NS_IF_RELEASE(content);
 }
 
 void nsSelectionRange::SetEndPoint(nsSelectionPoint * aPoint) {
-  mEnd->SetPoint(aPoint->GetContent(), aPoint->GetOffset(), aPoint->IsAnchor());
+  nsIContent * content = aPoint->GetContent();
+  mEnd->SetPoint(content, aPoint->GetOffset(), aPoint->IsAnchor());
+  NS_IF_RELEASE(content);
 }
 
 void nsSelectionRange::GetStartPoint(nsSelectionPoint * aPoint) {
-  aPoint->SetPoint(mStart->GetContent(), mStart->GetOffset(), mStart->IsAnchor());
+  nsIContent * content = mStart->GetContent();
+  aPoint->SetPoint(content, mStart->GetOffset(), mStart->IsAnchor());
+  NS_IF_RELEASE(content);
 }
 
 void nsSelectionRange::GetEndPoint(nsSelectionPoint * aPoint) {
-  aPoint->SetPoint(mEnd->GetContent(), mEnd->GetOffset(), mEnd->IsAnchor());
+  nsIContent * content = mEnd->GetContent();
+  aPoint->SetPoint(content, mEnd->GetOffset(), mEnd->IsAnchor());
+  NS_IF_RELEASE(content);
 }
 
 void nsSelectionRange::GetRange(nsSelectionRange * aRange) {
