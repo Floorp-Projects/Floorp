@@ -467,7 +467,7 @@ nsresult nsPrefsCore::FinalizeOneWidget(
                 nsresult rv = inElement->GetChecked(&boolVal);
                 if (NS_FAILED(rv) || !boolVal)
     	            return rv;
-                mPrefs->SetBoolPref(tempPrefName, inPrefOrdinal);
+                mPrefs->SetIntPref(tempPrefName, inPrefOrdinal);
             }
     	    break;
     	}
