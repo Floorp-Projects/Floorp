@@ -105,12 +105,12 @@
          loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell><treeindentation/><separator class="groove" flex="1" align="center"/></treecell>
-           <treecell><separator flex="1" align="center" class="groove" /></treecell>
-           <treecell><separator flex="1" align="center" class="groove" /></treecell>
-           <treecell><separator flex="1" align="center" class="groove" /></treecell>
-           <treecell><separator flex="1" align="center" class="groove" /></treecell>
-           <treecell><separator flex="1" align="center" class="groove" /></treecell>
-           <treecell><separator flex="1" align="center" class="groove" /></treecell>
+           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
+           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
+           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
+           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
+           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
+           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
          </treerow>
        </treeitem>  		
       </treechildren>
