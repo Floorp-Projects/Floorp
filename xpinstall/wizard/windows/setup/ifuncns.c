@@ -681,8 +681,11 @@ void UpdateInstallLog(LPSTR szKey, LPSTR szDir)
   char szBuf[MAX_BUF];
   char szFileInstallLog[MAX_BUF];
 
-  lstrcpy(szFileInstallLog, szSetupDir);
+  lstrcpy(szFileInstallLog, sgProduct.szPath);
   AppendBackSlash(szFileInstallLog, sizeof(szFileInstallLog));
+  lstrcat(szFileInstallLog, sgProduct.szSubPath);
+  AppendBackSlash(szFileInstallLog, sizeof(szFileInstallLog));
+  CreateDirectoriesAll(szFileInstallLog, FALSE);
   lstrcat(szFileInstallLog, FILE_INSTALL_LOG);
 
   if((fInstallLog = fopen(szFileInstallLog, "a+t")) != NULL)
