@@ -153,6 +153,9 @@ var contentAreaDNDObserver = {
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
+      if (aEvent.getPreventDefault())
+        return;
+        
       // if the drag originated w/in this content area, bail early. This avoids loading
       // a URL dragged from the content area into the very same content area (which is
       // almost never the desired action). This code is a bit too simplistic and may
