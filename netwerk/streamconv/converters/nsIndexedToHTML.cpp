@@ -123,9 +123,10 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = mParser->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString baseUri;
+    nsCAutoString baseUri,titleUri;
     rv = uri->GetAsciiSpec(baseUri);
     if (NS_FAILED(rv)) return rv;
+    titleUri = baseUri;
 
     nsCString parentStr;
 
@@ -140,6 +141,26 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // ftp urls don't always end in a /
     PRBool isScheme = PR_FALSE;
     if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)) && isScheme) {
+        // strip out the password here, so it doesn't show in the page title
+        // This is done by the 300: line generation in ftp, but we don't use
+        // that - see above
+        
+        // if there was a password, strip it out
+        nsCAutoString pw;
+        rv = uri->GetPassword(pw);
+        if (NS_FAILED(rv)) return rv;
+        if (!pw.IsEmpty()) {
+             nsCOMPtr<nsIURI> newUri;
+             rv = uri->Clone(getter_AddRefs(newUri));
+             if (NS_FAILED(rv)) return rv;
+             rv = newUri->SetPassword(NS_LITERAL_CSTRING(""));
+             if (NS_FAILED(rv)) return rv;
+             rv = newUri->GetAsciiSpec(titleUri);
+             if (NS_FAILED(rv)) return rv;
+             if (titleUri.Last() != '/')
+                 titleUri.Append('/');
+        }
+
         if (baseUri.Last() != '/')
             baseUri.Append('/');
 
@@ -194,7 +215,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile
 
-    char* spec = nsCRT::strdup(baseUri.get());
+    char* spec = nsCRT::strdup(titleUri.get());
     nsUnescape(spec);
 
     buffer.Append(NS_LITERAL_STRING("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>"));
