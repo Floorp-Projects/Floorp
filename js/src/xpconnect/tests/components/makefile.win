@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  string \
 		  xpconnect \
 		  js \
-		  timer \
 		  $(NULL)
 
 DEFINES=-DWIN32_LEAN_AND_MEAN

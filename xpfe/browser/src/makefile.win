@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  appshell \
 		  dom \
-		  timer \
 		  uriloader \
 		  pref \
 		  editor \

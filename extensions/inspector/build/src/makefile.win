@@ -34,7 +34,6 @@ REQUIRES        = xpcom \
                   rdfutil \
                   locale \
                   gfx2 \
-                  timer \
                   necko \
                   imglib2 \
                   $(NULL)

@@ -37,7 +37,6 @@ REQUIRES	= xpcom \
 		  rdf \
 		  pref \
 		  xpconnect \
-		  timer \
 		  intl \
 		  windowwatcher \
 		  caps \

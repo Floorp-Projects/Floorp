@@ -27,7 +27,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  view \
 		  locale \
-		  timer \
 		  htmlparser \
 		  webshell \
 		  necko \

@@ -32,7 +32,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  uriloader \
 		  shistory \
-		  timer \
 		  windowwatcher \
 		  gfx \
 		  content \

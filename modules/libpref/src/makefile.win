@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  caps \
 		  intl \
-		  timer \
 		  necko \
 		  profile \
 		  $(NULL)

@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  view \
 		  locale \
-		  timer \
 		  htmlparser \
 		  js \
 		  webshell \

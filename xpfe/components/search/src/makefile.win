@@ -25,7 +25,6 @@ REQUIRES	= xpcom \
 		  string \
 		  rdf \
 		  necko \
-		  timer \
 		  pref \
 		  uconv \
 		  intl \

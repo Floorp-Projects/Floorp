@@ -28,7 +28,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  uriloader \
 		  intl \
-		  timer \
 		  gfx \
 		  appstartup \
 		  $(NULL)

@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  uriloader \
 		  sidebar \
-		  timer \
 		  webshell \
 		  view \
 		  uconv \

@@ -28,7 +28,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  necko \
 		  intl \
-		  timer \
 		  appcomps \
 		  $(NULL)
 

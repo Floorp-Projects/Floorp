@@ -27,7 +27,6 @@ REQUIRES	= xpcom \
 		  string \
 		  js \
 		  xpconnect \
-		  timer \
 		  caps \
 		  widget \
 		  dom \

@@ -27,7 +27,6 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  widget \
-		  timer \
 		  locale \
 		  view \
 		  necko \

@@ -32,7 +32,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  widget \
 		  view \
-		  timer \
 		  docshell \
 		  necko \
 		  editor \
