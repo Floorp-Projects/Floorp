@@ -465,7 +465,7 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortRes
 				return rv;
 			if (tag.get() == kTreeColAtom)
 			{
-				nsString	colResource;
+				nsAutoString	colResource;
 
 				if (NS_SUCCEEDED(rv= child->GetAttribute(kNameSpaceID_RDF, kResourceAtom, colResource))
 					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
@@ -482,7 +482,7 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortRes
 					}
 					if (setFlag == PR_TRUE)
 					{
-						nsString	trueStr("true");
+						nsAutoString	trueStr("true");
 						child->SetAttribute(kNameSpaceID_None, kSortAtom, trueStr, PR_TRUE);
 						child->SetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection, PR_TRUE);
 
@@ -525,7 +525,7 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, 
 				return rv;
 			if (tag.get() == kTreeColAtom)
 			{
-				nsString	value;
+				nsAutoString	value;
 				if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kSortAtom, value))
 					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 				{
@@ -1186,7 +1186,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 			nsIRDFResource **flatArray, PRInt32 numElements, PRInt32 elementSize)
 {
 	nsresult	rv;
-	nsString	sortResource, sortDirection;
+	nsAutoString	sortResource, sortDirection;
 	_sortStruct	sortInfo;
 
 	// get sorting info (property to sort on, direction to sort, etc)
@@ -1234,7 +1234,7 @@ NS_IMETHODIMP
 XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
-	nsString	sortResource, sortDirection;
+	nsAutoString	sortResource, sortDirection;
 	_sortStruct	sortInfo;
 
 	// get sorting info (property to sort on, direction to sort, etc)
@@ -1267,13 +1267,8 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node,
 	sortInfo.sortProperty = nsnull;
 	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection)))
 	{
-		char *uri = sortResource.ToNewCString();
-		if (uri)
-		{
-			rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
-			delete [] uri;
-			if (NS_FAILED(rv))	return(rv);
-		}
+		rv = gRDFService->GetResource(nsCAutoString(sortResource), &sortInfo.sortProperty);
+		if (NS_FAILED(rv))	return(rv);
 	}
 
 	// set up sort order info
@@ -1283,7 +1278,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node,
 	{
 		sortInfo.descendingSort = PR_TRUE;
 	}
-	else if (!sortDirection.EqualsIgnoreCase("asscending"))
+	else if (!sortDirection.EqualsIgnoreCase("ascending"))
 	{
 		sortInfo.naturalOrderSort = PR_TRUE;
 	}
@@ -1296,26 +1291,30 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node,
 		// parent container to determine if its a RDF_Seq
 		nsCOMPtr<nsIContent>		parent = do_QueryInterface(container, &rv);
 		nsCOMPtr<nsIContent>		aContent;
+
+		nsCOMPtr<nsIDocument> doc;
+		if (NS_SUCCEEDED(rv) && parent) {
+			rv = parent->GetDocument(*getter_AddRefs(doc));
+
+			if (! doc)
+				parent = nsnull;
+		}
+
 		while(NS_SUCCEEDED(rv) && parent)
 		{
-			nsAutoString	uriStr;
-			if (NS_SUCCEEDED(rv = parent->GetAttribute(kNameSpaceID_None, kIdAtom, uriStr))
+			nsAutoString id;
+			if (NS_SUCCEEDED(rv = parent->GetAttribute(kNameSpaceID_None, kIdAtom, id))
 				&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 			{
-				char	*uri= uriStr.ToNewCString();
-				if (uri)
-				{
-					nsCOMPtr<nsIRDFResource>	containerRes;
-					if (NS_SUCCEEDED(rv = gRDFService->GetResource(uri, getter_AddRefs(containerRes)))
-						&& (rv != NS_RDF_NO_VALUE) && (containerRes))
-					{
-						if (NS_FAILED(rv = sortInfo.db->HasAssertion( containerRes, kRDF_instanceOf,
-							kRDF_Seq, PR_TRUE, &isContainerRDFSeq)) || (rv == NS_RDF_NO_VALUE))
-						{
-							isContainerRDFSeq = PR_FALSE;
-						}
-					}
-					delete [] uri;
+				nsCOMPtr<nsIRDFResource>	containerRes;
+				rv = nsRDFContentUtils::MakeElementResource(doc, id, getter_AddRefs(containerRes));
+
+				if (NS_SUCCEEDED(rv)) {
+					rv = sortInfo.db->HasAssertion(containerRes,
+								       kRDF_instanceOf,
+								       kRDF_Seq,
+								       PR_TRUE,
+								       &isContainerRDFSeq);
 				}
 				break;
 			}
