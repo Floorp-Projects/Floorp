@@ -1667,9 +1667,7 @@ nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
   if (NS_FAILED(rv))
     return rv;
 
-  aSigData = "<pre>";
   aSigData.Append(origBuf);
-  aSigData.Append("</pre>");
   return NS_OK;
 }
 
@@ -1788,17 +1786,24 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   if (sigData != "")
   {
     if (m_composeHTML)
+    {
       aMsgBody->Append(htmlBreak);
+      if (!htmlSig)
+        aMsgBody->Append("<pre>");
+    }
     else
       aMsgBody->Append(CRLF);
     
     aMsgBody->Append(dashes);
+
     if (m_composeHTML)
       aMsgBody->Append(htmlBreak);
     else
       aMsgBody->Append(CRLF);
     
     aMsgBody->Append(sigData);
+    if ( (m_composeHTML) && (!htmlSig) )
+      aMsgBody->Append("</pre>");
   }
 
   return NS_OK;
