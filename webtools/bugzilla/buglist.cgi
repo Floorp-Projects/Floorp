@@ -626,6 +626,11 @@ $query .= " ORDER BY $db_order " if ($order);
 # Query Execution
 ################################################################################
 
+if ($::FORM{'debug'}) {
+    $vars->{'debug'} = 1;
+    $vars->{'query'} = $query;
+}
+
 # Time to use server push to display an interim message to the user until
 # the query completes and we can display the bug list.
 if ($serverpush) {
@@ -761,11 +766,6 @@ if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {
     map(s/$/$suffix/, @bugowners) if $suffix;
     my $bugowners = join(",", @bugowners);
     $vars->{'bugowners'} = $bugowners;
-}
-
-if ($::FORM{'debug'}) {
-    $vars->{'debug'} = 1;
-    $vars->{'query'} = $query;
 }
 
 # Whether or not to split the column titles across two rows to make
