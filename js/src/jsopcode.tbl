@@ -204,7 +204,7 @@ OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  1,  1,  0,  JOF_CONST|
 OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  2,  4,  0,  JOF_BYTE |JOF_ELEM)
 OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
 
-/* ECMA-complaint assignment ops. */
+/* ECMA-compliant assignment ops. */
 OPDEF(JSOP_BINDNAME,  108,"bindname",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME)
 OPDEF(JSOP_SETNAME,   109,"setname",    NULL,         3,  2,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET)
 
@@ -297,3 +297,10 @@ OPDEF(JSOP_SWAP,        135,"swap",       NULL,       1,  2,  2,  0,  JOF_BYTE)
  */
 OPDEF(JSOP_ARGSUB,      136,"argsub",     NULL,       3,  0,  1, 12,  JOF_QARG |JOF_NAME)
 OPDEF(JSOP_ARGCNT,      137,"argcnt",     NULL,       1,  0,  1, 12,  JOF_BYTE)
+
+/*
+ * Define a local function object as a local variable.
+ * The local variable's slot number is the first immediate two-byte operand.
+ * The function object's atom index is the second immediate operand.
+ */
+OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_DEFLOCALVAR)

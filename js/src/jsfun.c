@@ -170,8 +170,6 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
      * elements of argsobj.
      */
     argsobj = fp->argsobj;
-    if (!argsobj)
-        return JS_TRUE;
     ok = args_enumerate(cx, argsobj);
 
     /*
@@ -380,10 +378,12 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     /*
      * Get the arguments object to snapshot fp's actual argument values.
      */
-    argsid = (jsid) cx->runtime->atomState.argumentsAtom;
-    ok &= js_GetProperty(cx, callobj, argsid, &aval);
-    ok &= js_SetProperty(cx, callobj, argsid, &aval);
-    ok &= js_PutArgsObject(cx, fp);
+    if (fp->argsobj) {
+        argsid = (jsid) cx->runtime->atomState.argumentsAtom;
+        ok &= js_GetProperty(cx, callobj, argsid, &aval);
+        ok &= js_SetProperty(cx, callobj, argsid, &aval);
+        ok &= js_PutArgsObject(cx, fp);
+    }
 
     /*
      * Clear the private pointer to fp, which is about to go away (js_Invoke).

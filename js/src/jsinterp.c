@@ -3109,7 +3109,14 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /*
              * We must be at top-level (default "box", either function body or
-             * global) scope, not inside a with or other compound statement.
+             * global) scope, not inside a with or other compound statement in
+             * the same compilation unit (ECMA Program).
+             *
+             * However, we could be in a Program being eval'd from inside a
+             * with statement, so we need to distinguish variables object from
+             * scope chain head.  Hence the two assignments to parent below.
+             * First we make sure the function object we're defining has the
+             * right scope chain.  Then we define its name in fp->varobj.
              *
              * If static link is not current scope, clone fun's object to link
              * to the current scope via parent.  This clause exists to enable
@@ -3129,7 +3136,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * promote compile-cost sharing and amortizing, and because Script
              * is not and will not be standardized.
              */
-            parent = fp->varobj;
+            parent = fp->scopeChain;
             if (OBJ_GET_PARENT(cx, obj) != parent) {
                 obj = js_CloneFunctionObject(cx, obj, parent);
                 if (!obj) {
@@ -3148,6 +3155,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * here at runtime as well as at compile-time, to handle eval
              * as well as multiple HTML script tags.
              */
+            parent = fp->varobj;
             ok = js_CheckRedeclaration(cx, parent, id, attrs, &cond);
             if (!ok)
                 goto out;
@@ -3168,13 +3176,39 @@ js_Interpret(JSContext *cx, jsval *result)
           }
 
 #if JS_HAS_LEXICAL_CLOSURE
+          case JSOP_DEFLOCALFUN:
+            /*
+             * Define a local function (i.e., one nested at the top level of
+             * another function), parented by the current scope chain, and
+             * stored in a local variable slot that the compiler allocated.
+             * This is an optimization over JSOP_DEFFUN that avoids requiring
+             * a call object for the outer function's activation.
+             */
+            pc2 = pc;
+            slot = GET_VARNO(pc2);
+            pc2 += VARNO_LEN;
+            atom = GET_ATOM(cx, script, pc2);
+            obj = ATOM_TO_OBJECT(atom);
+            fun = (JSFunction *) JS_GetPrivate(cx, obj);
+
+            parent = fp->scopeChain;
+            if (OBJ_GET_PARENT(cx, obj) != parent) {
+                obj = js_CloneFunctionObject(cx, obj, parent);
+                if (!obj) {
+                    ok = JS_FALSE;
+                    goto out;
+                }
+            }
+            fp->vars[slot] = OBJECT_TO_JSVAL(obj);
+            break;
+
           case JSOP_ANONFUNOBJ:
             /* Push the specified function object literal. */
             atom = GET_ATOM(cx, script, pc);
             obj = ATOM_TO_OBJECT(atom);
 
             /* If re-parenting, push a clone of the function object. */
-            parent = fp->varobj;
+            parent = fp->scopeChain;
             if (OBJ_GET_PARENT(cx, obj) != parent) {
                 obj = js_CloneFunctionObject(cx, obj, parent);
                 if (!obj) {
@@ -3253,41 +3287,15 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_CLOSURE:
             /*
              * ECMA ed. 3 extension: a named function expression in a compound
-             * statement (not at top-level or "box" scope, either global code
-             * or in a function body).
+             * statement (not at the top statement level of global code, or at
+             * the top level of a function body).
              *
-             * Name the closure in the object at the head of the scope chain,
-             * referenced by parent.  Even if it's a With object?  Not for the
-             * current version (1.5), which uses the object named by the with
-             * statement's head.
-             */
-            parent = fp->varobj;
-            if (fp->scopeChain != parent) {
-                parent = fp->scopeChain;
-                JS_ASSERT(OBJ_GET_CLASS(cx, parent) == &js_WithClass);
-#if JS_BUG_WITH_CLOSURE
-                /*
-                 * If in a with statement, set parent to the With object's
-                 * prototype, i.e., the object specified in the head of
-                 * the with statement.
-                 */
-                while (OBJ_GET_CLASS(cx, parent) == &js_WithClass) {
-                    proto = OBJ_GET_PROTO(cx, parent);
-                    if (!proto)
-                        break;
-                    parent = proto;
-                }
-#endif
-            }
-
-            /*
              * Get immediate operand atom, which is a function object literal.
              * From it, get the function to close.
              */
             atom = GET_ATOM(cx, script, pc);
             JS_ASSERT(JSVAL_IS_FUNCTION(cx, ATOM_KEY(atom)));
             obj = ATOM_TO_OBJECT(atom);
-            fun = (JSFunction *) JS_GetPrivate(cx, obj);
 
             /*
              * Clone the function object with the current scope chain as the
@@ -3296,6 +3304,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * have seen the right parent already and created a sufficiently
              * well-scoped function object.
              */
+            parent = fp->scopeChain;
             if (OBJ_GET_PARENT(cx, obj) != parent) {
                 obj = js_CloneFunctionObject(cx, obj, parent);
                 if (!obj) {
@@ -3305,12 +3314,13 @@ js_Interpret(JSContext *cx, jsval *result)
             }
 
             /*
-             * Define a property in parent with id fun->atom and value obj,
-             * unless fun is a getter or setter (in which case, obj is cast
-             * to a JSPropertyOp and passed accordingly).
+             * Make a property in fp->varobj with id fun->atom and value obj,
+             * unless fun is a getter or setter (in which case, obj is cast to
+             * a JSPropertyOp and passed accordingly).
              */
+            fun = (JSFunction *) JS_GetPrivate(cx, obj);
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
+            ok = OBJ_DEFINE_PROPERTY(cx, fp->varobj, (jsid)fun->atom,
                                      attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
                                      (attrs & JSFUN_GETTER)
                                      ? (JSPropertyOp) obj

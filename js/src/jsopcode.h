@@ -65,6 +65,7 @@ typedef enum JSOp {
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
 #define JOF_QARG          6       /* quickened get/set function argument ops */
 #define JOF_QVAR          7       /* quickened get/set local variable ops */
+#define JOF_DEFLOCALVAR   8       /* define local var with initial value */
 #define JOF_TYPEMASK      0x000f  /* mask for above immediate types */
 #define JOF_NAME          0x0010  /* name operation */
 #define JOF_PROP          0x0020  /* obj.prop operation */
@@ -109,8 +110,10 @@ typedef enum JSOp {
 /* Synonyms for quick JOF_QARG and JOF_QVAR bytecodes. */
 #define GET_ARGNO(pc)           GET_ARGC(pc)
 #define SET_ARGNO(pc,argno)     SET_JUMP_OFFSET(pc,argno)
+#define ARGNO_LEN               JUMP_OFFSET_LEN
 #define GET_VARNO(pc)           GET_ARGC(pc)
 #define SET_VARNO(pc,varno)     SET_JUMP_OFFSET(pc,varno)
+#define VARNO_LEN               JUMP_OFFSET_LEN
 
 struct JSCodeSpec {
     const char          *name;          /* JS bytecode name */

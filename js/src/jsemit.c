@@ -499,10 +499,11 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
         return JS_TRUE;
 
     /*
-     * We can't optimize if var and function collide.
+     * We can't optimize if var and closure (a local function not in a larger
+     * expression and not at top-level within another's body) collide.
      * XXX suboptimal: keep track of colliding names and deoptimize only those
      */
-    if (tc->flags & TCF_FUN_VS_VAR)
+    if (tc->flags & TCF_FUN_CLOSURE_VS_VAR)
         return JS_TRUE;
 
     /*
@@ -586,6 +587,11 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
             pn->pn_attrs = sprop->attrs;
         }
         OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+    }
+
+    if (pn->pn_slot < 0) {
+        /* We couldn't optimize it, so it's not an arg or local var name. */
+        tc->flags |= TCF_FUN_USES_NONLOCALS;
     }
     return JS_TRUE;
 }
@@ -912,11 +918,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                   cg->principals)) {
             return JS_FALSE;
         }
-        cg2.treeContext.flags = pn->pn_flags;
+        cg2.treeContext.flags = pn->pn_flags | TCF_IN_FUNCTION;
         cg2.treeContext.tryCount = pn->pn_tryCount;
         fun = pn->pn_fun;
         if (!js_EmitFunctionBody(cx, &cg2, pn2, fun))
             return JS_FALSE;
+
+        /* We need an activation object if an inner peeks out. */
+        if (cg2.treeContext.flags & TCF_FUN_USES_NONLOCALS)
+            cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
         js_FinishCodeGenerator(cx, &cg2);
 
         /* Make the function object a literal in the outer script's pool. */
@@ -943,10 +953,40 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         }
 
-        /* Top-levels also need a prolog op to predefine their names. */
+        /*
+         * Top-levels also need a prolog op to predefine their names in the
+         * variable object, or if local, to fill their stack slots.
+         */
         CG_SWITCH_TO_PROLOG(cg);
-        EMIT_ATOM_INDEX_OP(JSOP_DEFFUN, atomIndex);
+#if JS_HAS_LEXICAL_CLOSURE
+        if (cg->treeContext.flags & TCF_IN_FUNCTION) {
+            JSObject *obj, *pobj;
+            JSScopeProperty *sprop;
+            uintN slot;
+            jsbytecode *pc;
+
+            obj = OBJ_GET_PARENT(cx, pn->pn_fun->object);
+            if (!js_LookupProperty(cx, obj, (jsid)fun->atom, &pobj,
+                                   (JSProperty **)&sprop)) {
+                return JS_FALSE;
+            }
+            JS_ASSERT(sprop && pobj == obj);
+            slot = (uintN) JSVAL_TO_INT(sprop->id);
+            OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+
+            /* Emit [JSOP_DEFLOCALFUN, local variable slot, atomIndex]. */
+            off = js_EmitN(cx, cg, JSOP_DEFLOCALFUN, VARNO_LEN+ATOM_INDEX_LEN);
+            if (off < 0)
+                return JS_FALSE;
+            pc = CG_CODE(cg, off);
+            SET_VARNO(pc, slot);
+            pc += VARNO_LEN;
+            SET_ATOM_INDEX(pc, atomIndex);
+        } else
+#endif
+            EMIT_ATOM_INDEX_OP(JSOP_DEFFUN, atomIndex);
         CG_SWITCH_TO_MAIN(cg);
+
         break;
       }
 

@@ -91,14 +91,15 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSParseNode     *nodeList;      /* list of recyclable parse-node structs */
 };
 
-#define TCF_COMPILING       0x01    /* generating bytecode; this tc is a cg */
-#define TCF_IN_FUNCTION     0x02    /* parsing inside function body */
-#define TCF_RETURN_EXPR     0x04    /* function has 'return expr;' */
-#define TCF_RETURN_VOID     0x08    /* function has 'return;' */
-#define TCF_IN_FOR_INIT     0x10    /* parsing init expr of for; exclude 'in' */
-#define TCF_FUN_VS_VAR      0x20    /* function and var with same name */
-#define TCF_FUN_HEAVYWEIGHT 0x40    /* function needs Call object per call */
-#define TCF_FUN_FLAGS       0x60    /* flags to propagate from FunctionBody */
+#define TCF_COMPILING          0x01 /* generating bytecode; this tc is a cg */
+#define TCF_IN_FUNCTION        0x02 /* parsing inside function body */
+#define TCF_RETURN_EXPR        0x04 /* function has 'return expr;' */
+#define TCF_RETURN_VOID        0x08 /* function has 'return;' */
+#define TCF_IN_FOR_INIT        0x10 /* parsing init expr of for; exclude 'in' */
+#define TCF_FUN_CLOSURE_VS_VAR 0x20 /* function and var with same name */
+#define TCF_FUN_USES_NONLOCALS 0x40 /* function refers to non-local names */
+#define TCF_FUN_HEAVYWEIGHT    0x80 /* function needs Call object per call */
+#define TCF_FUN_FLAGS          0xE0 /* flags to propagate from FunctionBody */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = 0, (tc)->tryCount = 0, (tc)->topStmt = NULL,               \

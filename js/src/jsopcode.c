@@ -208,7 +208,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
       {
 	jsbytecode *pc2 = pc;
 	jsint npairs;
-	jsval key;
 
 	off = GET_JUMP_OFFSET(pc2);
 	pc2 += JUMP_OFFSET_LEN;
@@ -221,8 +220,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 	    off = GET_JUMP_OFFSET(pc2);
 	    pc2 += JUMP_OFFSET_LEN;
 
-	    key = ATOM_KEY(atom);
-	    str = js_ValueToSource(cx, key);
+	    str = js_ValueToSource(cx, ATOM_KEY(atom));
 	    if (!str)
 		return 0;
 	    cstr = js_DeflateString(cx, str->chars, str->length);
@@ -244,6 +242,22 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
       case JOF_QVAR:
 	fprintf(fp, " %u", GET_VARNO(pc));
 	break;
+
+#if JS_HAS_LEXICAL_CLOSURE
+      case JOF_DEFLOCALVAR:
+        fprintf(fp, " %u", GET_VARNO(pc));
+        pc += VARNO_LEN;
+        atom = GET_ATOM(cx, script, pc);
+        str = js_ValueToSource(cx, ATOM_KEY(atom));
+        if (!str)
+            return 0;
+        cstr = js_DeflateString(cx, str->chars, str->length);
+        if (!cstr)
+            return 0;
+        fprintf(fp, " %s", cstr);
+        JS_free(cx, cstr);
+        break;
+#endif
 
       default: {
 	char numBuf[12];
