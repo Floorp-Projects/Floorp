@@ -72,6 +72,7 @@ static TPPrDlg          gPrtJobDialog;                 // pointer to job dialog
 static long             prFirstItem;                  // our first item in the extended dialog
 static PItemUPP         prPItemProc;                  // store the old item handler here
 static PRBool           gPrintSelection;
+static PItemUPP			gPrtJobDialogItemProc;
 static UserItemUPP      gDrawListUPP = nsnull;
 static nsIPrintSettings	*gPrintSettings=nsnull;
 
@@ -308,7 +309,7 @@ static pascal TPPrDlg MyJobDlgInit(THPrint aHPrint)
   
   // attach our handler
   prPItemProc = gPrtJobDialog->pItemProc;
-  gPrtJobDialog->pItemProc = NewPItemUPP(MyJobItems);
+  gPrtJobDialog->pItemProc = gPrtJobDialogItemProc = NewPItemUPP(MyJobItems);
 
 
   // attach a draw routine
@@ -416,8 +417,8 @@ NS_IMETHODIMP nsDeviceContextSpecMac::Init(nsIPrintSettings* aPS, PRBool aQuiet)
   }
   
   // clean up our dialog routines
-  DisposePItemUPP(gPrtJobDialog->pItemProc);
-  gPrtJobDialog->pItemProc = prPItemProc;        // put back the old just in case
+  DisposePItemUPP(gPrtJobDialogItemProc);
+  gPrtJobDialogItemProc = nsnull;
   
   DisposePItemUPP(theInitProcPtr);
   DisposePItemUPP(gDrawListUPP);
