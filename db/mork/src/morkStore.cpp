@@ -189,6 +189,9 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
      nsIMdbHeap* ioPortHeap  // the heap to hold all content in the port
      )
 : morkObject(ev, inUsage, ioNodeHeap, morkColor_kNone, (morkHandle*) 0)
+, mPort_Env( ev )
+, mPort_Factory( 0 )
+, mPort_Heap( 0 )
 , mStore_OidAtomSpace( 0 )
 , mStore_GroundAtomSpace( 0 )
 , mStore_GroundColumnSpace( 0 )
@@ -207,9 +210,6 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
 
 , mStore_FirstCommitGroupPos( 0 )
 , mStore_SecondCommitGroupPos( 0 )
-, mPort_Env( ev )
-, mPort_Factory( 0 )
-, mPort_Heap( 0 )
 
 // disable auto-assignment of atom IDs until someone knows it is okay:
 , mStore_CanAutoAssignAtomIdentity( morkBool_kFalse )
