@@ -57,9 +57,6 @@ pref("general.startup.editor",              false);
 pref("general.startup.compose",             false);
 pref("general.startup.addressbook",         false);
 
-pref("general.open_location.last_url",      "");
-pref("general.open_location.last_window_choice", 0);
-
 pref("backups.number_of_prefs_copies", 1);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
@@ -110,14 +107,6 @@ pref("browser.chrome.favicons", false);
 
 pref("browser.chrome.toolbar_tips",         true);
 pref("browser.chrome.toolbar_style",        2);
-
-pref("browser.toolbars.showbutton.bookmarks", true);
-pref("browser.toolbars.showbutton.go",      false);
-pref("browser.toolbars.showbutton.home",    true);
-pref("browser.toolbars.showbutton.mynetscape", true);
-pref("browser.toolbars.showbutton.net2phone", true);
-pref("browser.toolbars.showbutton.print",   true);
-pref("browser.toolbars.showbutton.search",  true);
 
 pref("browser.turbo.enabled", false);
 
@@ -357,7 +346,7 @@ pref("browser.block.target_new_window",     false);
 pref("dom.disable_cookie_get",              false);
 pref("dom.disable_cookie_set",              false);
 pref("dom.disable_image_src_set",           false);
-pref("dom.disable_open_during_load",        false);
+pref("dom.disable_open_during_load",        true);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
 pref("dom.disable_window_status_change",    false);
