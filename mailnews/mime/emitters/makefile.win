@@ -17,6 +17,6 @@
 
 DEPTH=..\..\..
 
-DIRS= src html xml raw resources
+DIRS= src build resources
 
 include <$(DEPTH)\config\rules.mak>
