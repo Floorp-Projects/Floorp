@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE	= calendar
-DIRS = libxpical resources
+DIRS = libxpical resources base providers
 
 include $(topsrcdir)/config/rules.mk
 
