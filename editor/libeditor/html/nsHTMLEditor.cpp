@@ -3070,6 +3070,60 @@ nsHTMLEditor::GetFontFaceState(PRBool &aMixed, nsString &outFace)
 }
 
 NS_IMETHODIMP 
+nsHTMLEditor::GetFontColorState(PRBool &aMixed, nsString &outColor)
+{
+  aMixed = PR_TRUE;
+  outColor.AssignWithConversion("");
+  
+  nsresult res;
+  nsAutoString colorStr; colorStr.AssignWithConversion("color");
+  PRBool first, any, all;
+  
+  res = GetInlinePropertyWithAttrValue(nsIEditProperty::font, &colorStr, nsnull, first, any, all, &outColor);
+  if (NS_FAILED(res)) return res;
+  if (any && !all) return res; // mixed
+  if (all)
+  {
+    aMixed = PR_FALSE;
+    return res;
+  }
+  
+  if (!any)
+  {
+    // there was no font color attrs of any kind..
+    outColor.AssignWithConversion("");
+    aMixed = PR_FALSE;
+  }
+  return res;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetBackgroundColorState(PRBool &aMixed, nsString &outColor)
+{
+  //TODO: We don't handle "mixed" correctly!
+  aMixed = PR_FALSE;
+  outColor.AssignWithConversion("");
+  
+  nsCOMPtr<nsIDOMElement> element;
+  PRInt32 selectedCount;
+  nsAutoString tagName;
+  nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
+  if (NS_FAILED(res)) return res;
+
+  // If not table or cell found, get page body
+  if (!element)
+  {
+    res = nsEditor::GetRootElement(getter_AddRefs(element));
+    if (NS_FAILED(res)) return res;
+  }
+
+  if (!element) return NS_ERROR_NULL_POINTER;
+
+  nsAutoString styleName; styleName.AssignWithConversion("bgcolor");
+  return element->GetAttribute(styleName, outColor);
+}
+
+NS_IMETHODIMP 
 nsHTMLEditor::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }

@@ -28,15 +28,20 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    persist="screenX screenY"
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EdDictionary.js"/>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
-
+  
   <broadcaster id="args" value=""/>
+  <spring id="location" offsetX="10" offsetY="10" persist="offsetX offsetY"/>
+  <keyset id="keys">
+    <key keycode="VK_ENTER"  oncommand="Close()"/>
+    <key keycode="VK_RETURN" oncommand="Close()"/>
+    <key keycode="VK_ESCAPE" oncommand="Close()"/>
+  </keyset>
+
   <grid>
     <columns><column style="width: 15em" flex="1"/><column flex="1"/></columns>
     <rows>
@@ -62,8 +67,7 @@
           <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" value="&RemoveButton.label;"/>
           <spring class="spacer"/>
           <spring flex="1"/>
-          <button class="exit-dialog" id="ok" value="&CloseButton.label;" default="true" onclick="doOKButton()"/>	
-<!--          <button class="exit-dialog" id="ok" value="&CloseButton.label;" onclick="Close()"/> -->
+          <button class="exit-dialog" id="close" value="&CloseButton.label;" default="true" onclick="Close()"/>	
         </box>
       </row>
     </rows>

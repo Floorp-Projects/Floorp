@@ -34,7 +34,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   // Get the selected horizontal line
   hLineElement = editorShell.GetSelectedElement(tagName);
@@ -66,6 +66,8 @@ function Startup()
 
   // Resize window
   window.sizeToContent();
+
+  SetWindowLocation();
 }
 
 // Set dialog widgets with attribute data
@@ -208,6 +210,7 @@ function onOK()
   {
     // Copy attributes from the globalElement to the document element
     editorShell.CloneAttributes(hLineElement, globalElement);
+    SaveWindowLocation();
     return true;
   }
   return false;

@@ -44,6 +44,7 @@
   <script language="JavaScript" src="chrome://editor/content/EdInsertTable.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
 
+  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />

@@ -753,6 +753,93 @@ nsFontFaceStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newStat
 #pragma mark -
 #endif
 
+nsFontColorStateCommand::nsFontColorStateCommand()
+: nsMultiStateCommand()
+{
+}
+
+nsresult
+nsFontColorStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+  return htmlEditor->GetFontColorState(outMixed, outStateString);
+}
+
+
+nsresult
+nsFontColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newState)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+  
+  nsresult rv;
+  
+  NS_ConvertASCIItoUCS2 emptyString("");
+  NS_ConvertASCIItoUCS2 fontString("font");
+  NS_ConvertASCIItoUCS2 colorString("color");
+  
+  nsCOMPtr<nsIAtom> fontAtom = getter_AddRefs(NS_NewAtom("font"));
+
+  if (newState == emptyString || newState.EqualsWithConversion("normal")) {
+    rv = htmlEditor->RemoveInlineProperty(fontAtom, &colorString);
+  } else {
+    rv = htmlEditor->SetInlineProperty(fontAtom, &colorString, &newState);
+  }
+  
+  return rv;
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsBackgroundColorStateCommand::nsBackgroundColorStateCommand()
+: nsMultiStateCommand()
+{
+}
+
+nsresult
+nsBackgroundColorStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+
+  return htmlEditor->GetBackgroundColorState(outMixed, outStateString);
+}
+
+
+nsresult
+nsBackgroundColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newState)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+  return htmlEditor->SetBackgroundColor(newState);
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 NS_IMETHODIMP
 nsAlignCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
 {

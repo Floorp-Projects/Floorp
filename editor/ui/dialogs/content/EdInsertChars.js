@@ -41,19 +41,33 @@ function Startup()
 
   StartupLatin();
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, Cancel);
 
+
+  // Dialog is non-modal:
+  // Change "Ok" to "Insert, change "Cancel" to "Close"
   var okButton = document.getElementById("ok");
   if (okButton)
-    okButton.setAttribute("value",GetString("Insert"));
+    okButton.setAttribute("value", GetString("Insert"));
 
+  var cancelButton = document.getElementById("cancel");
+  if (cancelButton)
+    cancelButton.setAttribute("value", GetString("Close"));
+
+  // Set a variable on the opener window so we
+  //  always close this window with it
+  window.opener.InsertCharWindow = window;
   window.sizeToContent();
+
+  SetWindowLocation();
 }
  
 function onOK()
 {
   // Insert the character
-  editorShell.InsertSource(LatinChar);
+  // Note: Assiated parent window and editorShell
+  //  will be changed to whatever editor window has the focus
+  window.editorShell.InsertSource(LatinChar);
 
   // Set persistent attributes to save 
   //  which category, letter, and character modifier was used
@@ -61,7 +75,15 @@ function onOK()
   CategoryGroup.setAttribute("letter_index", indexL);
   CategoryGroup.setAttribute("char_index", indexM);
 
-  return true;
+  // Return true only for modal window
+  //return true;
+}
+
+function Cancel()
+{
+  window.opener.InsertCharWindow = null;
+  SaveWindowLocation();
+  window.close();
 }
 
 //------------------------------------------------------------------
@@ -275,7 +297,7 @@ function UpdateCharacter()
   switch(category)
   {
     case "AccentUpper": // Uppercase Diacritical
-      String.fromCharCode(upper[indexL][indexM]);
+      LatinChar = String.fromCharCode(upper[indexL][indexM]);
       indexM_AU = indexM;
       break;
     case "AccentLower": // Lowercase Diacritical

@@ -59,7 +59,7 @@ function Startup()
     return;
 
   // initialise the ok and cancel buttons
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   // load string bundle
   bundle = srGetStrBundle("chrome://editor/locale/editor.properties");
@@ -95,6 +95,8 @@ function Startup()
  
   // size the dialog properly
   window.sizeToContent();
+
+  SetWindowLocation();
 }
 
 /**
@@ -109,6 +111,9 @@ function onOK()
   UpdateObject(); // call UpdateObject fn to update element in document
   window.opener.AdvancedEditOK = true;
   window.opener.globalElement = element;
+
+  SaveWindowLocation();
+
   return true; // do close the window
 }
 

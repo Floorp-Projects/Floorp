@@ -28,7 +28,7 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
   var okButton = document.getElementById("ok");
   if (okButton)
   {
@@ -46,6 +46,7 @@ function Startup()
   // Set initial focus
   srcInput.focus;
   // Note: We can't set the caret location in a multiline textfield
+  SetWindowLocation();
 }
 
 function onOK()
@@ -56,6 +57,7 @@ function onOK()
     dump("Null value -- not inserting\n");
     return false;
   }
+  SaveWindowLocation();
   
   return true;
 }

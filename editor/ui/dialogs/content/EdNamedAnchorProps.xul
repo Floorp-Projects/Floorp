@@ -36,7 +36,6 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    persist="screenX screenY"
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -44,6 +43,7 @@
   <script language="JavaScript" src="chrome://editor/content/EdNamedAnchorProps.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
+  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />
 

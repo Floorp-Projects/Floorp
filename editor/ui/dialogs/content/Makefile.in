@@ -39,6 +39,8 @@ CHROME_CONTENT = \
 		EdPageProps.js \
 		EdColorProps.xul \
 		EdColorProps.js \
+		EdColorPicker.xul \
+		EdColorPicker.js \
 		EdImageProps.xul \
 		EdImageProps.js \
 		EdInsSrc.xul \

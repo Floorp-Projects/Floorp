@@ -39,7 +39,8 @@ CHROME_L10N = \
 		EditorListProperties.dtd \
 		EditorPageProperties.dtd \
 		EditorColorProperties.dtd \
-		EditorPersonalDictionary.dtd \
+		EdColorPicker.dtd \
+    EditorPersonalDictionary.dtd \
 		EditorSpellCheck.dtd \
 		EditorTableProperties.dtd \
 		EdNamedAnchorProperties.dtd \

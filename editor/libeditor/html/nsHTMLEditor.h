@@ -136,6 +136,8 @@ public:
 
   NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFormat);
   NS_IMETHOD GetFontFaceState(PRBool &aMixed, nsString &outFace);
+  NS_IMETHOD GetFontColorState(PRBool &aMixed, nsString &outColor);
+  NS_IMETHOD GetBackgroundColorState(PRBool &aMixed, nsString &outColor);
   NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL);
   NS_IMETHOD GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD);
   NS_IMETHOD GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign);

@@ -99,7 +99,7 @@ function Startup()
   // Set element we will edit
   globalElement = BodyElement.cloneNode(false);
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   // Initialize default colors from browser prefs
   var prefs = GetPrefs();
@@ -143,6 +143,8 @@ function Startup()
     dialog.DefaultColorsRadio.focus();
   else
     dialog.CustomColorsRadio.focus();
+
+  SetWindowLocation();
 }
 
 function InitDialog()
@@ -346,6 +348,8 @@ function onOK()
 
     // Copy attributes to element we are changing
     editorShell.CloneAttributes(BodyElement, globalElement);
+
+    SaveWindowLocation();
     return true; // do close the window
   }
   return false;

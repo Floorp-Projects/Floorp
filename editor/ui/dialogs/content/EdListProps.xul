@@ -32,7 +32,6 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    persist="screenX screenY"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -42,6 +41,7 @@
 
   <keyset id="keyset"/>
   <broadcaster id="args" value=""/>
+  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
 
   <text class="label" value="&ListType.label;"/>
   <menulist flex="1" id="ListType" oncommand="SelectListType()">

@@ -66,8 +66,10 @@ var gIsWindows;
 var gIsMac;
 var gIsUNIX;
 var gIsHTMLEditor = false;
-
+var gColorObj;
 var gPrefs;
+var gDefaultTextColor = "";
+var gDefaultBackgroundColor = "";
 // These must be kept in synch with the XUL <options> lists
 var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
 
@@ -168,7 +170,7 @@ function EditorStartup(editorType, editorElement)
 //  editorShell = editorElement.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).editorShell;
   
   editorShell.Init();
-  editorShell.SetEditorType(editorType);
+  editorShell.editorType = editorType;
 
   editorShell.webShellWindow = window;
   editorShell.contentWindow = window._content;
@@ -179,8 +181,10 @@ function EditorStartup(editorType, editorElement)
   // Startup also used by other editor users, such as Message Composer 
   EditorSharedStartup();
 
-  // HTML Source editor is not shared with Mail, IM
-  SetupHTMLSourceController();
+  // Commands specific to the Composer Application window,
+  //  (i.e., not embeded editors) 
+  //  such as file-related commands, HTML Source editing, Edit Modes...
+  SetupComposerWindowCommands();
 
   // set up our global prefs object
   GetPrefsService();
@@ -194,17 +198,17 @@ function EditorStartup(editorType, editorElement)
 // This is the only method also called by Message Composer
 function EditorSharedStartup()
 {
-  // set up JS-implemented commands
-  SetupControllerCommands();
+  // set up JS-implemented commands for HTML editing
+  SetupHTMLEditorCommands();
 
   // Just for convenience
   gContentWindow = window._content;
 
-  gIsWin = navigator.appVersion.indexOf("Win") != -1;
+  gIsWindows = navigator.appVersion.indexOf("Win") != -1;
   gIsUNIX = (navigator.appVersion.indexOf("X11") || 
              navigator.appVersion.indexOf("nux")) != -1;
-  gIsMac = !gIsWin && !gIsUNIX;
-  //dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
+  gIsMac = !gIsWindows && !gIsUNIX;
+  //dump("IsWin="+gIsWindows+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
 
   // Set platform-specific hints for how to select cells
   // Mac uses "Cmd", all others use "Ctrl"
@@ -300,11 +304,13 @@ function editorSendPage()
     window.openDialog("chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
                         "chrome,all,dialog=no", "attachment='" + pageUrl + "',body='" + pageUrl +
                         "',subject='" + pageTitle + "',bodyislink=true");
-  } else {
-    sendPageMustSave();
-  }
+  } 
+  else if (CheckAndSaveDocument(GetString("SendPageReason")))
+    editorSendPage();
 }
 
+/*
+// This is redundant -- use CheckAndSaveDocument instead
 function sendPageMustSave()
 {
   var result = {value:0};
@@ -337,6 +343,7 @@ function sendPageMustSave()
       editorSendPage(); // They saved the page, now we can send page :)
   }
 }
+*/
 
 function CheckAndSaveDocument(reasonToSave)
 {
@@ -416,7 +423,16 @@ function EditorCanClose()
   // Returns FALSE only if user cancels save action
   dump("Calling EditorCanClose\n");
 
-  return CheckAndSaveDocument(GetString("BeforeClosing"));
+  var canClose = CheckAndSaveDocument(GetString("BeforeClosing"));
+
+  // This is our only hook into closing via the "X" in the caption
+  //   or "Quit" (or other paths?)
+  //   so we must shift association to another
+  //   editor or close any non-modal windows now
+  if (canClose && window.InsertCharWindow)
+    SwitchInsertCharToAnotherEditorOrClose();
+
+  return canClose;
 }
 
 // --------------------------- View menu ---------------------------
@@ -528,17 +544,6 @@ function doStatefulCommand(commandID, newState)
   goDoCommand(commandID);
 }
 
-function onChangeColor(colorWell, commandID)
-{
-  // Get the color from the command node state
-  var commandNode = document.getElementById(commandID);
-  var color = commandNode.getAttribute("state");
-  //dump("onChangeColor -- Color is: "+color+"\n");
-
-  // Use setAttribute so colorwell can be a XUL element, such as titledbutton
-  colorWell.setAttribute("style", "background-color: " + color); 
-}
-
 function onFontFaceChange(fontFaceMenuList, commandID)
 {
   var commandNode = document.getElementById(commandID);
@@ -639,98 +644,196 @@ function EditorSetFontSize(size)
   gContentWindow.focus();
 }
 
-function EditorSelectTextColor(ColorPickerID, ColorWellID)
+function onFontColorChange()
 {
-  var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
-  //dump("EditorSelectTextColor: "+color+"\n");
-
-  // Close appropriate menupopup  
-  var menupopup;
-  if (ColorPickerID == "menuTextCP")
-    menupopup = document.getElementById("formatMenuPopup");
-  else if (ColorPickerID == "TextColorPicker")
-    menupopup = document.getElementById("TextColorPopup");
-
-  if (menupopup) menupopup.closePopup();
-
-  EditorSetFontColor(color);
-  gContentWindow.focus();
+  var commandNode = document.getElementById("cmd_fontColor");
+  SetTextColorButton(commandNode.getAttribute("state"));
 }
 
-function EditorRemoveTextColor(ColorWellID)
+function onBackgroundColorChange()
 {
-  if (ColorWellID)
+  var commandNode = document.getElementById("cmd_backgroundColor");
+  SetBackgroundColorButton(commandNode.getAttribute("state"));
+}
+
+function SetTextColorButton(color)
+{
+  var button = document.getElementById("TextColorButton");
+  if (button)
   {
-    var menupopup = document.getElementById("TextColorPopup");
-    if (menupopup) menupopup.closePopup();
+    // No color set - get color set on page or other defaults
+    if (!color || color.length == 0)
+      color = gDefaultTextColor;
+
+    button.setAttribute("style", "background-color:"+color); 
   }
-
-  //TODO: Set colorwell to browser's default color
-  editorShell.SetTextProperty("font", "color", "");
-  gContentWindow.focus();
 }
 
-function EditorSelectBackColor(ColorPickerID, ColorWellID)
+function SetBackgroundColorButton(color)
 {
-  var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
-  //dump("EditorSelectBackColor: "+color+"\n");
-
-  // Close appropriate menupopup  
-  var menupopup;
-  if (ColorPickerID == "menuBackCP")
-    menupopup = document.getElementById("formatMenuPopup");
-  else if (ColorPickerID == "BackColorPicker")
-    menupopup = document.getElementById("BackColorPopup");
-
-  if (menupopup) menupopup.closePopup();
-
-  EditorSetBackgroundColor(color);
-  window._content.focus();
-}
-
-function EditorRemoveBackColor(ColorWellID)
-{
-  if (ColorWellID)
+  var button = document.getElementById("BackgroundColorButton");
+  if (button)
   {
-    var menupopup = document.getElementById("BackColorPopup");
-    if (menupopup) menupopup.closePopup();
+    if (!color || color.length == 0)
+      color = gDefaultBackgroundColor;
+
+    button.setAttribute("style", "background-color:"+color); 
   }
-  //TODO: Set colorwell to browser's default color
-  editorShell.SetBackgroundColor("");
+}
+
+function GetBackgroundElementWithColor()
+{
+  if (!gColorObj)
+   gColorObj = new Object;
+
+  gColorObj.Type = "";
+  gColorObj.PageColor = "";
+  gColorObj.TableColor = "";
+  gColorObj.CellColor = "";
+  gColorObj.BackgroundColor = "";
+
+  var tagNameObj = new Object;
+  var countObj = new Object;
+  var element = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
+  if (element && tagNameObj && tagNameObj.value)
+  {
+    gColorObj.BackgroundColor = element.getAttribute("bgcolor");
+    if (tagNameObj.value.toLowerCase() == "td")
+    {
+      gColorObj.Type = "Cell";
+      gColorObj.CellColor = gColorObj.BackgroundColor;
+      
+      // Get any color that might be on parent table
+      var table = GetParentTable(element);
+      gColorObj.TableColor = table.getAttribute("bgcolor");
+    }
+    else
+    {
+      gColorObj.Type = "Table";
+      gColorObj.TableColor = gColorObj.BackgroundColor;
+    }
+  }
+  else
+  {
+    element = GetBodyElement();
+    if (element)
+    {
+      gColorObj.Type = "Page";
+      gColorObj.BackgroundColor = element.getAttribute("bgcolor");
+      gColorObj.PageColor = gColorObj.BackgroundColor;
+    }
+  }
+  return element;
+}
+
+function EditorSelectColor(colorType)
+{
+  if (!gColorObj)
+   gColorObj = new Object;
+
+  var element;
+  var table;
+  var currentColor = "";
+
+  if (!colorType)
+    colorType = "";
+
+  if (colorType == "Text")
+  {
+    gColorObj.Type = colorType;
+
+    // Get color from command node state
+    var commandNode = document.getElementById("cmd_fontColor");
+    currentColor = commandNode.getAttribute("state");
+    gColorObj.TextColor = currentColor;
+  }
+  else
+  {
+    element = GetBackgroundElementWithColor();
+    if (!element)
+      return;
+
+    // Get the table if we found a cell
+    if (gColorObj.Type == "Table")
+      table = element;
+    else if (gColorObj.Type == "Cell")
+      table = GetParentTable(element);
+
+    // Save to avoid resetting if not necessary
+    currentColor = gColorObj.BackgroundColor;
+
+    if (colorType == "TableOrCell" || colorType == "Cell")
+    {
+      if (gColorObj.Type == "Cell")
+        gColorObj.Type = colorType;
+      else if (gColorObj.Type != "Table")
+        return;
+    }
+    else if (colorType == "Table" && gColorObj.Type == "Page")
+      return;
+    
+    if (colorType == "" && gColorObj.Type == "Cell")
+    {
+      // Using empty string for requested type means
+      //  we can let user select cell or table
+      gColorObj.Type = "TableOrCell";
+    }
+  }
+  // Save the type we are really requesting
+  colorType = gColorObj.Type;
+
+  // Launch the ColorPicker dialog
+  // TODO: Figure out how to position this under the color buttons on the toolbar
+  window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", gColorObj);
+  
+  if (colorType == "Text")
+  {
+    if (currentColor != gColorObj.TextColor)
+      window.editorShell.SetTextProperty("font", "color", gColorObj.TextColor);
+  
+    // Trying to force updating of "state" in command node
+    //  so next caret move updates color button, but not working!
+    //goUpdateCommand("cmd_fontColor");
+    SetTextColorButton(gColorObj.TextColor);
+  }
+  else if (element)
+  {
+    if (gColorObj.Type == "Table")
+    {
+      // Set background on a table
+      // Note that we shouldn't trust "currentColor" because of "TableOrCell" behavior
+      if (table)
+      {
+        var bgcolor = table.getAttribute("bgcolor");
+        if (bgcolor != gColorObj.BackgroundColor)
+        {
+          if (gColorObj.BackgroundColor.length > 0)
+            window.editorShell.SetAttribute(table, "bgcolor", gColorObj.BackgroundColor);
+          else
+            window.editorShell.RemoveAttribute(table, "bgcolor");
+        }
+      }
+    } 
+    else if (currentColor != gColorObj.BackgroundColor)
+      window.editorShell.SetBackgroundColor(gColorObj.BackgroundColor);
+  
+//    goUpdateCommand("cmd_backgroundColor");
+    SetBackgroundColorButton(gColorObj.BackgroundColor);
+  }
   window._content.focus();
 }
 
-
-function SetManualTextColor()
+function GetParentTable(element)
 {
-}
+  var node = element;
+  while (node)
+  {
+    if (node.tagName.toLowerCase() == "table")
+      return node;
 
-function SetManualTextColor()
-{
-}
-
-function EditorSetFontColor(color)
-{
-  editorShell.SetTextProperty("font", "color", color);
-  window._content.focus();
-}
-
-function EditorSetBackgroundColor(color)
-{
-  editorShell.SetBackgroundColor(color);
-  window._content.focus();
-}
-
-function EditorApplyStyle(tagName)
-{
-  editorShell.SetTextProperty(tagName, "", "");
-  window._content.focus();
-}
-
-function EditorRemoveLinks()
-{
-  editorShell.RemoveTextProperty("href", "");
-  window._content.focus();
+    node = node.parentNode;
+  }
+  return node;
 }
 
 /*TODO: We need an oncreate hook to do enabling/disabling for the 
@@ -809,7 +912,6 @@ function SetEditMode(mode)
 
 function CancelHTMLSource()
 {
-dump("*** CancelHTMLSource ***\n");
   // Don't convert source text back into the DOM document
   gSourceContentWindow.value = "";
   SetDisplayMode(PreviousNonSourceDisplayMode);
@@ -818,7 +920,6 @@ dump("*** CancelHTMLSource ***\n");
 
 function FinishHTMLSource()
 {
-dump("*** FinishHTMLSource ***\n");
   // Switch edit modes -- converts source back into DOM document
   SetEditMode(PreviousNonSourceDisplayMode);
 }
@@ -1159,10 +1260,15 @@ function  getUnicharPref(aPrefName, aDefVal)
 
 function EditorInitFormatMenu()
 {
+  InitObjectPropertiesMenuitem("objectProperties");
+}
+
+function InitObjectPropertiesMenuitem(id)
+{
   // Set strings and enable for the [Object] Properties item
   // Note that we directly do the enabling instead of
   //  using goSetCommandEnabled since we already have the menuitem
-  var menuItem = document.getElementById("objectProperties");
+  var menuItem = document.getElementById(id);
   if (menuItem)
   {
     var element = GetSelectedElementOrParentCellOrLink();
@@ -1204,34 +1310,9 @@ function EditorInitFormatMenu()
 
     }
     menuItem.setAttribute("value", menuStr);
+    menuItem.setAttribute("accesskey",GetString("ObjectPropertiesAccessKey"));
+//dump("**** Accesskey for Properties menuitem="+menuItem.getAttribute("accesskey"));
   }
-}
-
-function SetBackColorString(xulElementID, allowPageBackground)
-{
-  var xulElement = document.getElementById(xulElementID);
-  if (xulElement)
-  {
-    var textVal;
-    var selectedCountObj = new Object();
-    var tagNameObj = new Object();
-    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
-
-    if (tagNameObj.value == "table")
-      textVal = GetString("TableBackColor");
-    else if (tagNameObj.value == "td")
-      textVal = GetString("CellBackColor");
-    else if (allowPageBackground)
-      textVal = GetString("PageBackColor");
-
-    if (textVal)
-      xulElement.setAttribute("value",textVal);
-  }
-}
-
-function InitBackColorPopup(allowPageBackground)
-{
-  SetBackColorString("BackColorCaption", allowPageBackground);
 }
 
 function InitParagraphMenu()
@@ -1239,36 +1320,17 @@ function InitParagraphMenu()
   var mixedObj = new Object();
   var state = editorShell.GetParagraphState(mixedObj);
   //dump("InitParagraphMenu: state="+state+"\n");
-  var IDSuffix = "normal";
+  var IDSuffix;
 
   // PROBLEM: When we get blockquote, it masks other styles contained by it
   // We need a separate method to get blockquote state  
-  if (state.length > 0)
-  {
-    if (state.charAt(0) == "h")
-    {
-      // We have a heading style - remove any checkmark in this submenu
-      //  by first setting the first item, then removing the check
-      document.getElementById("menu_normal").setAttribute("checked", "true");
-      document.getElementById("menu_normal").removeAttribute("checked");
-      return;
-    }
+
+  // We use "x" as uninitialized paragraph state
+  if (state.length == 0 || state == "x")
+    IDSuffix = "bodyText" // No paragraph container
+  else
     IDSuffix = state;
-  }
-
-  document.getElementById("menu_"+IDSuffix).setAttribute("checked", "true");
-}
-
-function InitHeadingMenu()
-{
-  var mixedObj = new Object();
-  var state = editorShell.GetParagraphState(mixedObj);
-  //dump("InitHeadingMenu: state="+state+"\n");
-  var IDSuffix = "noHeading";
-
-  if (state.length > 0 && state.charAt(0) == "h")
-    IDSuffix = state;
-
+  
   document.getElementById("menu_"+IDSuffix).setAttribute("checked", "true");
 }
 
@@ -1413,44 +1475,87 @@ function EditorSetDefaultPrefs()
     dump("problem getting use_custom_colors as bool, hmmm, still confused about its identity?!\n");
   }
 
+  // We store these for access by toolbar color swatches
+  gDefaultTextColor = gDefaultBackgroundColor = "";
+
   if ( use_custom_colors )
   {
     // find body node
-    var bodyelement = null;
-    var bodynodelist = null;
-    try {
-      bodynodelist = domdoc.getElementsByTagName("body");
-      bodyelement = bodynodelist.item(0);
-    }
-    catch (ex) {
-      dump("no body tag found?!\n");
-      //  better have one, how can we blow things up here?
-    }
+    var bodyelement = GetBodyElement();
 
     // try to get the default color values.  ignore them if we don't have them.
-    var text_color = link_color = active_link_color = followed_link_color = background_color = "";
-
-    try { text_color = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
+    var link_color = active_link_color = followed_link_color = "";
+    
+    try { gDefaultTextColor = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
     try { link_color = gPrefs.CopyCharPref("editor.link_color"); } catch (e) {}
     try { active_link_color = gPrefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
     try { followed_link_color = gPrefs.CopyCharPref("editor.followed_link_color"); } catch (e) {}
-    try { background_color = gPrefs.CopyCharPref("editor.background_color"); } catch(e) {}
+    try { gDefaultBackgroundColor = gPrefs.CopyCharPref("editor.background_color"); } catch(e) {}
 
     // add the color attributes to the body tag.
     // FIXME:  use the check boxes for each color somehow..
-    if (text_color != "")
-      AddAttrToElem(domdoc, "text", text_color, bodyelement);
+    if (gDefaultTextColor != "")
+      AddAttrToElem(domdoc, "text", gDefaultTextColor, bodyelement);
     if (link_color != "")
       AddAttrToElem(domdoc, "link", link_color, bodyelement);
     if (active_link_color != "") 
       AddAttrToElem(domdoc, "alink", active_link_color, bodyelement);
     if (followed_link_color != "")
       AddAttrToElem(domdoc, "vlink", followed_link_color, bodyelement);
-    if (background_color != "")
-      AddAttrToElem(domdoc, "bgcolor", background_color, bodyelement);
+    if (gDefaultBackgroundColor != "")
+      AddAttrToElem(domdoc, "bgcolor", gDefaultBackgroundColor, bodyelement);
+  }
+
+dump("* gDefaultTextColor="+gDefaultTextColor+", gDefaultBackgroundColor="+gDefaultBackgroundColor+", IsWindows="+gIsWindows+"\n");
+
+  // If not found above, set text and background colors from browser prefs
+  if (gDefaultTextColor == "" || gDefaultBackgroundColor == "")
+  {
+    var useWinColors = false;
+    if (gIsWindows)
+    {
+      // What a pain! In Windows, there's a pref to use system colors
+      //   instead of pref colors
+      try { useWinColors = gPrefs.GetBoolPref("browser.display.wfe.use_windows_colors"); } catch (e) {}
+dump("Using Windows colors = "+useWinColors+"\n");
+    }
+
+    if (useWinColors)
+    {
+      // TODO: Get system text and windows colors HOW!
+      // Alternative: Can we get the actual text and background colors used by layout?
+    }
+    else
+    {
+      if (gDefaultTextColor == "")
+        try { gDefaultTextColor = gPrefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
+
+      if (gDefaultBackgroundColor == "")
+        try { gDefaultBackgroundColor = gPrefs.CopyCharPref("browser.display.background_color"); } catch (e) {}
+    }
+
+    // Last resort is to assume black for text, white for background
+    if (gDefaultTextColor == "")
+      gDefaultTextColor = "#000000";
+    if (gDefaultBackgroundColor == "")
+      gDefaultBackgroundColor = "#FFFFFF";
   }
 
   // auto-save???
+}
+
+function GetBodyElement()
+{
+  try {
+    var bodyNodelist = window.editorShell.editorDocument.getElementsByTagName("body");
+    if (bodyNodelist)
+      return bodyNodelist.item(0);
+  }
+  catch (ex) {
+    dump("no body tag found?!\n");
+    //  better have one, how can we blow things up here?
+  }
+  return null;
 }
 
 function AddAttrToElem(dom, attr_name, attr_value, elem)
@@ -1778,10 +1883,6 @@ function EditorInitTableMenu()
   document.getElementById("menu_JoinTableCells").setAttribute("value",menuText);
   document.getElementById("menu_JoinTableCells").setAttribute("accesskey","j");
 
-  // Change text on background item to "Table..." or "Cell..."
-  // "false" means don't allow "Page Background..." string
-  SetBackColorString("menu_TableOrCellColor", false);
-
   // Set enable states for all table commands
   goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
 }
@@ -1883,7 +1984,6 @@ function EditorInsertOrEditTable(insertAllowed)
 
 function EditorInsertTable()
 {
-dump("EditorInsertTable\n");
   // Insert a new table
   window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
   window._content.focus();
@@ -1896,5 +1996,109 @@ function EditorTableCellProperties()
     // Start Table Properties dialog on the "Cell" panel
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
     window._content.focus();
+  }
+}
+
+function EditorOnFocus()
+{
+  if (window.InsertCharWindow) return;
+
+  // Find window with an InsertCharsWindow and switch association to this one
+  var windowWithDialog = FindEditorWithInsertCharDialog();
+  if (windowWithDialog)
+  {
+    // Switch the dialog to current window
+    // this sets focus to dialog, so bring focus back to editor window
+    if (SwitchInsertCharToThisWindow(windowWithDialog))
+      window.focus();
+  }
+}
+
+function SwitchInsertCharToThisWindow(windowWithDialog)
+{
+  if (windowWithDialog && windowWithDialog.InsertCharWindow)
+  {
+	  // Move dialog association to the current window
+    window.InsertCharWindow = windowWithDialog.InsertCharWindow;
+    windowWithDialog.InsertCharWindow = null;
+
+    // Switch the dialog's editorShell and opener to current window's
+    window.InsertCharWindow.editorShell = window.editorShell;
+    window.InsertCharWindow.opener = window;
+
+    // Bring dialog to the forground
+    window.InsertCharWindow.focus();
+    return true;
+  }
+  return false;
+}
+
+function FindEditorWithInsertCharDialog()
+{
+  // Find window with an InsertCharsWindow and switch association to this one
+	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+	var enumerator = windowManagerInterface.getEnumerator( null );
+
+	while ( enumerator.hasMoreElements()  )
+	{
+		var  tempWindow = enumerator.getNext();
+		if (tempWindow != window && tempWindow.InsertCharWindow)
+		{
+      return tempWindow;
+		}
+	}
+}
+
+function EditorFindOrCreateInsertCharWindow()
+{
+  if (window.InsertCharWindow)
+    window.InsertCharWindow.focus();
+  else
+  {
+    // Since we switch the dialog during EditorOnFocus(),
+    //   this should really never be found, but it's good to be sure
+    var windowWithDialog = FindEditorWithInsertCharDialog();
+    if (windowWithDialog)
+    {
+      SwitchInsertCharToThisWindow(windowWithDialog);
+    }
+    else
+    {
+      // The dialog will set window.InsertCharWindow to itself
+      window.openDialog("chrome://editor/content/EdInsertChars.xul", "_blank", "chrome,close,titlebar", "");
+    }
+  }
+}
+
+// Find another HTML editor window to associate with the InsertChar dialog
+//   or close it if none found  (May be a mail composer)
+function SwitchInsertCharToAnotherEditorOrClose()
+{
+	if (window.InsertCharWindow)
+  {
+    var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	  var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+	  var enumerator = windowManagerInterface.getEnumerator( null );
+
+    // TODO: Fix this to search for command controllers and look for "cmd_InsertChars"
+    // For now, detect just Web Composer and HTML Mail Composer
+	  while ( enumerator.hasMoreElements()  )
+	  {
+		  var  tempWindow = enumerator.getNext();
+		  if (tempWindow != window && tempWindow.editorShell &&
+          tempWindow.gIsHTMLEditor || tempWindow.editorShell.editorType == "htmlmail")
+//          tempWindow.editorShell.editorDocument.commandDispatcher.getControllerForCommand("cmd_InsertChars"))
+		  {
+        tempWindow.InsertCharWindow = window.InsertCharWindow;
+        window.InsertCharWindow = null;
+
+        tempWindow.InsertCharWindow.editorShell = tempWindow.editorShell;
+        tempWindow.InsertCharWindow.opener = tempWindow;
+        return;
+		  }
+	  }
+    // Didn't find another editor - close the dialog
+    window.InsertCharWindow.close();
   }
 }

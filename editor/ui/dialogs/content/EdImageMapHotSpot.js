@@ -29,7 +29,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null); // Map OK/Cancel to relevant functions
+  doSetOKCancel(onOK, onCancel); // Map OK/Cancel to relevant functions
   
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -57,6 +57,8 @@ function Startup()
   }
 
   SetTextfieldFocus(dialog.urlInput);
+
+  SetWindowLocation();
 }
 
 function onOK()
@@ -65,6 +67,9 @@ function onOK()
   window.arguments[0].setAttribute("hsHref", dialog.urlInput.value);
   window.arguments[0].setAttribute("hsAlt", dialog.altInput.value);
   window.arguments[0].setAttribute("hsTarget", dialog.targetInput.value);
+
+  SaveWindowLocation();
+
   window.close();
 }
 

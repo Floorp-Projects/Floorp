@@ -603,7 +603,7 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
   
   PRBool bMixed = PR_FALSE;
   nsAutoString formatStr; 
-  // using "x" as anuninitialized value, since "" is meaningful
+  // using "x" as an uninitialized value, since "" is meaningful
   formatStr.AssignWithConversion("x");
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;

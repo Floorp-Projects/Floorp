@@ -25,93 +25,140 @@
 /* Implementations of nsIControllerCommand for composer commands */
 
 
-var gComposerCommandManager = null;
+var gHTMLEditorCommandManager = null;
+var gComposerWindowCommandManager = null;
 var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
 commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
 //-----------------------------------------------------------------------------------
-function SetupControllerCommands()
+function SetupHTMLEditorCommands()
 {
-  gComposerCommandManager = GetComposerController();
-  if (!gComposerCommandManager)
+  gHTMLEditorCommandManager = GetHTMLEditorController();
+  if (!gHTMLEditorCommandManager)
     return;
   
   dump("Registering commands\n");
   
-  gComposerCommandManager.registerCommand("cmd_newEditor",     nsNewEditorCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_find",       nsFindCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
 
-  gComposerCommandManager.registerCommand("cmd_open",          nsOpenCommand);
-  gComposerCommandManager.registerCommand("cmd_save",          nsSaveCommand);
-  gComposerCommandManager.registerCommand("cmd_saveAs",        nsSaveAsCommand);
-  gComposerCommandManager.registerCommand("cmd_saveAsCharset", nsSaveAsCharsetCommand);
-  gComposerCommandManager.registerCommand("cmd_revert",        nsRevertCommand);
-  gComposerCommandManager.registerCommand("cmd_openRemote",    nsOpenRemoteCommand);
-  gComposerCommandManager.registerCommand("cmd_preview",       nsPreviewCommand);
-  gComposerCommandManager.registerCommand("cmd_quit",          nsQuitCommand);
-  gComposerCommandManager.registerCommand("cmd_close",         nsCloseCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_preferences", nsPreferencesCommand);
+
+  gHTMLEditorCommandManager.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
   
-  gComposerCommandManager.registerCommand("cmd_find",       nsFindCommand);
-  gComposerCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
-  gComposerCommandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_image",         nsImageCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_hline",         nsHLineCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_link",          nsLinkCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_anchor",        nsAnchorCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
 
-  gComposerCommandManager.registerCommand("cmd_NormalMode",     nsNormalModeCommand);
-  gComposerCommandManager.registerCommand("cmd_AllTagsMode",    nsAllTagsModeCommand);
-  gComposerCommandManager.registerCommand("cmd_HTMLSourceMode", nsHTMLSourceModeCommand);
-  gComposerCommandManager.registerCommand("cmd_PreviewMode",    nsPreviewModeCommand);
-
-  gComposerCommandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
-  gComposerCommandManager.registerCommand("cmd_preferences", nsPreferencesCommand);
-
-  gComposerCommandManager.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
-  gComposerCommandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
-  gComposerCommandManager.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
-  gComposerCommandManager.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
-  gComposerCommandManager.registerCommand("cmd_objectProperties", nsObjectPropertiesCommand);
-  
-  gComposerCommandManager.registerCommand("cmd_image",         nsImageCommand);
-  gComposerCommandManager.registerCommand("cmd_hline",         nsHLineCommand);
-  gComposerCommandManager.registerCommand("cmd_link",          nsLinkCommand);
-  gComposerCommandManager.registerCommand("cmd_anchor",        nsAnchorCommand);
-  gComposerCommandManager.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
-  gComposerCommandManager.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
-  gComposerCommandManager.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
-
-  gComposerCommandManager.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
-  gComposerCommandManager.registerCommand("cmd_editTable",          nsEditTableCommand);
-  gComposerCommandManager.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
-  gComposerCommandManager.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
-  gComposerCommandManager.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
-  gComposerCommandManager.registerCommand("cmd_SelectCell",         nsSelectTableCellCommand);
-  gComposerCommandManager.registerCommand("cmd_SelectAllCells",     nsSelectAllTableCellsCommand);
-  gComposerCommandManager.registerCommand("cmd_InsertTable",        nsInsertTableCommand);
-  gComposerCommandManager.registerCommand("cmd_InsertRowAbove",     nsInsertTableRowAboveCommand);
-  gComposerCommandManager.registerCommand("cmd_InsertRowBelow",     nsInsertTableRowBelowCommand);
-  gComposerCommandManager.registerCommand("cmd_InsertColumnBefore", nsInsertTableColumnBeforeCommand);
-  gComposerCommandManager.registerCommand("cmd_InsertColumnAfter",  nsInsertTableColumnAfterCommand);
-  gComposerCommandManager.registerCommand("cmd_InsertCellBefore",   nsInsertTableCellBeforeCommand);
-  gComposerCommandManager.registerCommand("cmd_InsertCellAfter",    nsInsertTableCellAfterCommand);
-  gComposerCommandManager.registerCommand("cmd_DeleteTable",        nsDeleteTableCommand);
-  gComposerCommandManager.registerCommand("cmd_DeleteRow",          nsDeleteTableRowCommand);
-  gComposerCommandManager.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
-  gComposerCommandManager.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
-  gComposerCommandManager.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
-  gComposerCommandManager.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
-  gComposerCommandManager.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
-  gComposerCommandManager.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
-  gComposerCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
-  gComposerCommandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
-  gComposerCommandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
+  gHTMLEditorCommandManager.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_editTable",          nsEditTableCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_SelectCell",         nsSelectTableCellCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_SelectAllCells",     nsSelectAllTableCellsCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_InsertTable",        nsInsertTableCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_InsertRowAbove",     nsInsertTableRowAboveCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_InsertRowBelow",     nsInsertTableRowBelowCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_InsertColumnBefore", nsInsertTableColumnBeforeCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_InsertColumnAfter",  nsInsertTableColumnAfterCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_InsertCellBefore",   nsInsertTableCellBeforeCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_InsertCellAfter",    nsInsertTableCellAfterCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_DeleteTable",        nsDeleteTableCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_DeleteRow",          nsDeleteTableRowCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
+  gHTMLEditorCommandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
 }
 
-function SetupHTMLSourceController()
+function SetupComposerWindowCommands()
 {
-  // TODO: Need to write this and register commands
-  //       that we support while in HTML Source mode
-  return;
+  // Create a command controller and register commands
+  //   specific to Web Composer window (file-related commands, HTML Source...)
+  // IMPORTANT: For each of these commands, the doCommand method 
+  //            must first call FinishHTMLSource() 
+  //            to go from HTML Source mode to any other edit mode
+
+  var gComposerWindowCommandManager = window.controllers;
+
+  if (!gComposerWindowCommandManager) return;
+
+  var composerController = Components.classes["component://netscape/editor/composercontroller"].createInstance();
+  if (!composerController)
+  {
+    dump("Failed to create composerController\n");
+    return;
+  }
+
+  var editorController = composerController.QueryInterface(Components.interfaces.nsIEditorController);
+  if (!editorController)
+  {
+    dump("Failed to get interface for nsIEditorController\n");
+    return;
+  }
+
+  // Note: We init with the editorShell for the main composer window, not the HTML Source textfield?
+  editorController.Init(window.editorShell);
+
+  var interfaceRequestor = composerController.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  if (!interfaceRequestor)
+  {
+    dump("Failed to get iterfaceRequestor for composerController\n");
+    return;
+  }
+    
+
+  // Get the nsIControllerCommandManager interface we need to register more commands
+  var commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
+  if (!commandManager)
+  {
+    dump("Failed to get interface for nsIControllerCommandManager\n");
+    return;
+  }
+
+  // File-related commands
+  commandManager.registerCommand("cmd_newEditor",     nsNewEditorCommand);
+  commandManager.registerCommand("cmd_open",          nsOpenCommand);
+  commandManager.registerCommand("cmd_save",          nsSaveCommand);
+  commandManager.registerCommand("cmd_saveAs",        nsSaveAsCommand);
+  commandManager.registerCommand("cmd_saveAsCharset", nsSaveAsCharsetCommand);
+  commandManager.registerCommand("cmd_revert",        nsRevertCommand);
+  commandManager.registerCommand("cmd_openRemote",    nsOpenRemoteCommand);
+  commandManager.registerCommand("cmd_preview",       nsPreviewCommand);
+  commandManager.registerCommand("cmd_quit",          nsQuitCommand);
+  commandManager.registerCommand("cmd_close",         nsCloseCommand);
+
+  // Edit Mode commands
+  commandManager.registerCommand("cmd_NormalMode",         nsNormalModeCommand);
+  commandManager.registerCommand("cmd_AllTagsMode",        nsAllTagsModeCommand);
+  commandManager.registerCommand("cmd_HTMLSourceMode",     nsHTMLSourceModeCommand);
+  commandManager.registerCommand("cmd_PreviewMode",        nsPreviewModeCommand);
+  commandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
+  commandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
+
+
+  gComposerWindowCommandManager.insertControllerAt(0, editorController);
 }
 
 //-----------------------------------------------------------------------------------
-function GetComposerController()
+function GetHTMLEditorController()
 {
   var numControllers = window._content.controllers.getControllerCount();
   
@@ -260,9 +307,8 @@ var nsSaveAsCharsetCommand =
   },
   doCommand: function(aCommand)
   {    
-    window.ok = false;
-    // In editor.js
     FinishHTMLSource();
+    window.ok = false;
     if (window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal"))
     {
       if( window.ok ) 
@@ -318,9 +364,12 @@ var nsRevertCommand =
         result
         );
 
-      // Reload page if first button (Rever) was pressed
+      // Reload page if first button (Revert) was pressed
       if(result.value == 0)
+      {
+        FinishHTMLSource();
         window.editorShell.LoadUrl(editorShell.editorDocument.location);
+      }
     }
   }
 };
@@ -341,10 +390,15 @@ var nsCloseCommand =
 
 function CloseWindow()
 {
+  FinishHTMLSource();
+
   // Close window; check to make sure document is saved
   var result = CheckAndSaveDocument(window.editorShell.GetString("BeforeClosing"));
   if (result == true) // If they saved the document, or it is unchanged, exit
   {
+    if (window.InsertCharWindow)
+      SwitchInsertCharToAnotherEditorOrClose();
+
     window.editorShell.CloseWindowWithoutSaving();
   }
 }
@@ -650,9 +704,7 @@ var nsInsertCharsCommand =
   },
   doCommand: function(aCommand)
   {
-    // Problems using this non-modal. Use modal for now
-    //window.openDialog("chrome://editor/content/EdInsertChars.xul", "_blank", "chrome,close,titlebar", "");
-    window.openDialog("chrome://editor/content/EdInsertChars.xul", "_blank", "chrome,close,titlebar,modal", "");
+    EditorFindOrCreateInsertCharWindow();
   }
 };
 
@@ -717,14 +769,8 @@ var nsObjectPropertiesCommand =
     if (window.editorShell && window.editorShell.documentEditable)
     {
       // Launch Object properties for appropriate selected element 
-      var element = GetSelectedElementOrParentCellOrLink();
-      //dump("nsObjectProperties, isCommandEnabled: element="+element+",TagName="+element.nodeName+"\n");
-      return (element && 
-              (element.nodeName == "img"   ||
-               element.nodeName == "hr"    ||
-               element.nodeName == "table" ||
-               element.nodeName == "td"    ||
-               element.nodeName == "a"))
+      return (GetSelectedElementOrParentCellOrLink() != null ||
+              window.editorShell.GetSelectedElement("href") != null);
     }
     return false;
   },
@@ -759,6 +805,9 @@ var nsObjectPropertiesCommand =
             goDoCommand("cmd_link");
           }
           break;
+        default:
+          doAdvancedProperties(element);
+          break;
       }
     } else {
       // We get a partially-selected link if asked for specifically
@@ -770,7 +819,12 @@ var nsObjectPropertiesCommand =
   }
 };
 
-//-----------------------------------------------------------------------------------
+function doAdvancedProperties(element)
+{
+  if (element)
+    window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal,resizable=yes", "", element);
+}
+
 var nsAdvancedPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -781,8 +835,7 @@ var nsAdvancedPropertiesCommand =
   {
     // Launch AdvancedEdit dialog for the selected element
     var element = window.editorShell.GetSelectedElement("");
-    if (element)
-      window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal,resizable=yes", "", element);
+    doAdvancedProperties(element);
   }
 };
 
@@ -796,6 +849,21 @@ var nsColorPropertiesCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", "");
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsRemoveLinksCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    // We could see if there's any link in selection, but it doesn't seem worth the work!
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+  doCommand: function(aCommand)
+  {
+    window.editorShell.RemoveTextProperty("href", "");
+    window._content.focus();
   }
 };
 
@@ -848,6 +916,7 @@ var nsPreviewModeCommand =
   },
   doCommand: function(aCommand)
   {
+    FinishHTMLSource();
     if (gEditorDisplayMode != DisplayModePreview)
       SetEditMode(DisplayModePreview);
   }
@@ -1205,8 +1274,7 @@ var nsTableOrCellColorCommand =
   },
   doCommand: function(aCommand)
   {
-    window.editorShell.SetBackgroundColor();   
-    window._content.focus();
+    EditorSelectColor("TableOrCell");
   }
 };
 

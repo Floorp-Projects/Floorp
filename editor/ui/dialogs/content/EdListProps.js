@@ -42,7 +42,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   ListTypeList = document.getElementById("ListType");
   BulletStyleList = document.getElementById("BulletStyle");
@@ -78,6 +78,8 @@ function Startup()
   originalListType = ListType;
 
   ListTypeList.focus();
+
+  SetWindowLocation();
 }
 
 function InitDialog()
@@ -272,6 +274,8 @@ function onOK()
       editorShell.CloneAttributes(ListElement, globalElement);
 
     editorShell.EndBatchChanges();
+    
+    SaveWindowLocation();
     return true;
   }
   return false;

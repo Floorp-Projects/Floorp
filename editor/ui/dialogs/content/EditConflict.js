@@ -27,6 +27,7 @@ function Startup()
     return;
   
   //doSetOkCancel(null,PreventCancel);
+  SetWindowLocation();
 }
 
 function KeepCurrentPage()
@@ -34,6 +35,7 @@ function KeepCurrentPage()
 dump("KeepCurrentPage\n");
   // Simple close dialog and don't change current page
   //TODO: Should we force saving of the current page?
+  SaveWindowLocation();
   window.close();
 }
 
@@ -43,11 +45,14 @@ dump("UseOtherPage\n");
   // Reload the URL -- that will get other editor's contents
   //editorShell.LoadUrl(editorShell.editorDocument.location);
   setTimeout("editorShell.LoadUrl(editorShell.editorDocument.location)", 10);
+  SaveWindowLocation();
   window.close();
 }
 
 function PreventCancel()
 {
+  SaveWindowLocation();
+
   // Don't let Esc key close the dialog!
   return false;
 }

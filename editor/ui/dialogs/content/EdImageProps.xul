@@ -41,7 +41,6 @@
     onload = "Startup()"
     orient="vertical"
     id="imagedialog"
-    persist="screenX screenY"
     >
   
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -49,6 +48,7 @@
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
   <script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
+  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />

@@ -39,7 +39,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -133,6 +133,8 @@ function Startup()
   
   onMoreFewerImage();  // this call will initialize all widgets if entire dialog is visible
   SetTextfieldFocus(dialog.srcInput);
+
+  SetWindowLocation();
 }
 
 // Set dialog widgets with attribute data
@@ -680,6 +682,8 @@ function onOK()
     testArea.setAttribute("href", "test");
     test.appendChild(testArea);
     editorShell.InsertElementAtSelection(test, false);*/
+
+    SaveWindowLocation();
 
     return true;
   }

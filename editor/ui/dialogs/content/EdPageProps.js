@@ -48,7 +48,7 @@ function Startup()
   dialog.TitleInput       = document.getElementById("TitleInput");
   dialog.AuthorInput      = document.getElementById("AuthorInput");
   dialog.DescriptionInput = document.getElementById("DescriptionInput");
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
   
   // Default string for new page is set from DTD string in XUL,
   //   so set only if not new doc URL
@@ -90,6 +90,8 @@ function Startup()
   InitDialog();
 
   SetTextfieldFocus(dialog.TitleInput);
+
+  SetWindowLocation();
 }
 
 function InitDialog()
@@ -147,6 +149,7 @@ function onOK()
     if (descWasEdited)
       SetMetaElementContent(descriptionElement, description, insertNewDescription);
 
+    SaveWindowLocation();
     return true; // do close the window
   }
   return false;

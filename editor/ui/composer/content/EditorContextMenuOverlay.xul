@@ -48,7 +48,7 @@
     
     <menuitem id="menu_preview_cm" observes="cmd_preview" value="&previewCmd.label;"/>
     <menuitem id="removeLinksMenuitem_cm" value="&removeLinksCmd.label;" 
-              accesskey="&formatremovelinks.accesskey;" oncommand="EditorRemoveLinks()"/>
+              accesskey="&formatremovelinks.accesskey;" observes="cmd_RemoveLinks"/>
 		<menuseparator id="menu_link-separator"/>
  <!--  
     <menuitem id="menu_openURL_cm" value="open url in Composer"/>

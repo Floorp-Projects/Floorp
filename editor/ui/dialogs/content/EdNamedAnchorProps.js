@@ -31,7 +31,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   nameInput = document.getElementById("nameInput");
 
@@ -78,6 +78,7 @@ function Startup()
   InitDialog();
   
   SetTextfieldFocus(nameInput);
+  SetWindowLocation();
 }
 
 function InitDialog()
@@ -150,6 +151,7 @@ function onOK()
         dump("Exception occured in InsertElementAtSelection\n");
       }
     }
+    SaveWindowLocation();
     return true;
   }
   return false;

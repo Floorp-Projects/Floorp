@@ -47,6 +47,12 @@ a:link img, a:visited img, a:active, {
   user-input: none;
 }
 
+a:visited, a:active, a:out-of-date {
+  cursor: text;
+  color : inherit;
+  user-input: none;
+}
+
 input, select, textarea {
   user-select: _moz_all !important;
   user-select: all !important;
