@@ -720,7 +720,7 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
     	
     nsRegistryKey progIDKey;
     rv = mRegistry->GetSubtreeRaw(mClassesKey, aProgID, &progIDKey);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return NS_ERROR_FACTORY_NOT_REGISTERED;
 
     char *cidString;
     rv = mRegistry->GetString(progIDKey, classIDValueName, &cidString);
@@ -731,7 +731,7 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
     }
 
     PR_FREEIF(cidString);
-    return NS_OK;
+    return rv;
 }
 
 nsresult
