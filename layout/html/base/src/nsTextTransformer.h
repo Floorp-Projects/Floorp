@@ -162,6 +162,7 @@ public:
   nsresult Init(nsIFrame* aFrame,
                 nsIContent* aContent,
                 PRInt32 aStartingOffset,
+                PRBool aForceArabicShaping = PR_FALSE,
                 PRBool aLeaveAsAscii = PR_FALSE);
 
   PRInt32 GetContentLength() const {

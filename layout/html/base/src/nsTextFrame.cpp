@@ -667,7 +667,8 @@ public:
   PRIntn PrepareUnicodeText(nsTextTransformer& aTransformer,
                             nsAutoIndexBuffer* aIndexBuffer,
                             nsAutoTextBuffer* aTextBuffer,
-                            PRInt32* aTextLen);
+                            PRInt32* aTextLen,
+                            PRBool aForceArabicShaping = PR_FALSE);
   void ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
                                         TextStyle& aTextStyle,
                                         PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumSpaces);
@@ -1523,13 +1524,14 @@ PRIntn
 nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
                                 nsAutoIndexBuffer* aIndexBuffer,
                                 nsAutoTextBuffer* aTextBuffer,
-                                PRInt32* aTextLen)
+                                PRInt32* aTextLen,
+                                PRBool aForceArabicShaping)
 {
   PRIntn numSpaces = 0;
 
   // Setup transform to operate starting in the content at our content
   // offset
-  aTX.Init(this, mContent, mContentOffset);
+  aTX.Init(this, mContent, mContentOffset, aForceArabicShaping);
 
   PRInt32 strInx = mContentOffset;
   PRInt32* indexp = aIndexBuffer ? aIndexBuffer->mBuffer : nsnull;
@@ -2559,16 +2561,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   PRInt32 textLength;
   PRInt32 numSpaces;
 
-#ifdef IBMBIDI
-  // Simulate a non-Bidi system for char by char measuring
-  PRBool isBidiSystem = PR_FALSE;
-  aPresContext->GetIsBidiSystem(isBidiSystem);
-  aPresContext->SetIsBidiSystem(PR_FALSE);
-#endif
-  numSpaces = PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
-#ifdef IBMBIDI
-  aPresContext->SetIsBidiSystem(isBidiSystem);
-#endif
+  numSpaces = PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength, PR_TRUE);
   if (textLength <= 0) {
     // If we've already assigned aNewContent, make sure to 0 it out here.
     // aNewContent is undefined in the case that we return a failure,
@@ -3000,17 +2993,8 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   nsTextTransformer tx(lb, nsnull, aPresContext);
   PRInt32 numSpaces;
   
-#ifdef IBMBIDI
-  // Simulate a non-Bidi system for char by char painting
-  PRBool isBidiSystem = PR_FALSE;
-  aPresContext->GetIsBidiSystem(isBidiSystem);
-  aPresContext->SetIsBidiSystem(PR_FALSE);
-#endif
   numSpaces = PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
-                                 &paintBuffer, &textLength);
-#ifdef IBMBIDI
-  aPresContext->SetIsBidiSystem(isBidiSystem);
-#endif
+                                 &paintBuffer, &textLength, PR_TRUE);
 
   PRInt32* ip = indexBuffer.mBuffer;
   PRUnichar* text = paintBuffer.mBuffer;
@@ -5341,31 +5325,24 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;
   TextStyle ts(aPresContext, *aReflowState.rendContext, mStyleContext);
 
-#ifdef IBMBIDI
   if ( (mContentLength > 0) && (mState & NS_FRAME_IS_BIDI) ) {
     startingOffset = mContentOffset;
   }
-  if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)
-        || ts.mJustifying) {
-      // simulate a non-Bidi system for char-by-char measuring and
-      // rendering
-      aPresContext->SetIsBidiSystem(PR_FALSE);
-  }
-  else {
-    PRBool bidiEnabled;
-    aPresContext->GetBidiEnabled(&bidiEnabled);
-    if (bidiEnabled) {
-      nsCharType charType = eCharType_LeftToRight;
-      PRUint32 hints = 0;
-      aReflowState.rendContext->GetHints(hints);
-      GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**)&charType, sizeof(charType));
-      PRBool isBidiSystem = (eCharType_RightToLeftArabic == charType) ?
-                            (hints & NS_RENDERING_HINT_ARABIC_SHAPING) :
-                            (hints & NS_RENDERING_HINT_BIDI_REORDERING);
-      aPresContext->SetIsBidiSystem(isBidiSystem);
+
+  PRBool bidiEnabled;
+  aPresContext->GetBidiEnabled(&bidiEnabled);
+  if (bidiEnabled) {
+    nsCharType charType = eCharType_LeftToRight;
+    PRUint32 hints = 0;
+    aReflowState.rendContext->GetHints(hints);
+    GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**)&charType, sizeof(charType));
+    if ((eCharType_RightToLeftArabic == charType &&
+        (hints & NS_RENDERING_HINT_ARABIC_SHAPING) == NS_RENDERING_HINT_ARABIC_SHAPING) ||
+        (eCharType_RightToLeft == charType &&
+        (hints & NS_RENDERING_HINT_BIDI_REORDERING) == NS_RENDERING_HINT_BIDI_REORDERING)) {
+      aPresContext->SetIsBidiSystem(PR_TRUE);
     }
   }
-#endif //IBMBIDI
 
   // Clear out the reflow state flags in mState (without destroying
   // the TEXT_BLINK_ON bit).
@@ -5406,11 +5383,15 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   }
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
+  PRBool forceArabicShaping = (ts.mSmallCaps ||
+                               (0 != ts.mWordSpacing) ||
+                               (0 != ts.mLetterSpacing) ||
+                               ts.mJustifying);
   nsTextTransformer tx(lb, nsnull, aPresContext);
   // Keep the text in ascii if possible. Note that if we're measuring small
   // caps text then transform to Unicode because the helper function only
   // accepts Unicode text
-  nsresult rv = tx.Init(this, mContent, startingOffset, !ts.mSmallCaps);
+  nsresult rv = tx.Init(this, mContent, startingOffset, forceArabicShaping, !ts.mSmallCaps);
   if (NS_OK != rv) {
     return rv;
   }
@@ -5536,7 +5517,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
     // there because of the need to repair counts when wrapped words are backed out.
     // So I do it via PrepareUnicodeText ... a little slower perhaps, but a lot saner,
     // and it localizes the counting logic to one place.
-    numSpaces = PrepareUnicodeText(tx, nsnull, nsnull, &textLength);
+    numSpaces = PrepareUnicodeText(tx, nsnull, nsnull, &textLength, PR_TRUE);
     lineLayout.SetTextJustificationWeights(numSpaces, textLength - numSpaces);
   }
 
