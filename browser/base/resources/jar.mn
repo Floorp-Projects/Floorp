@@ -21,9 +21,6 @@ classic.jar:
         skin/classic/browser/browser.css             (skin/browser.css)
         skin/classic/browser/buttons.gif             (skin/buttons.gif)
         skin/classic/browser/contents.rdf            (skin/contents.rdf)
-        skin/classic/browser/home.gif                (skin/home.gif)
-        skin/classic/browser/home-active.gif         (skin/home-active.gif)
-        skin/classic/browser/home-hover.gif          (skin/home-hover.gif)
 en-US.jar:
         locale/en-US/browser/contents.rdf            (locale/contents.rdf)
         locale/en-US/browser/viewSource.dtd          (locale/viewSource.dtd)

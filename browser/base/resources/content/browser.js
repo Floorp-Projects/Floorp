@@ -493,7 +493,6 @@ function Startup()
   appCore.setWebShellWindow(window);
 
   // Add a capturing event listener to the content area
-  // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
   //  so we'll be notified when onloads complete.
   var contentArea = document.getElementById("appcontent");
   contentArea.addEventListener("load", loadEventHandlers, true);
