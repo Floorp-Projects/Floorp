@@ -22,8 +22,11 @@
 #include "nsIPluginInstancePeer.h"
 #include "nsIPluginTagInfo.h"
 #include "nsIPluginInstanceOwner.h"
+#include "nsIJVMPluginTagInfo.h"
 
-class nsPluginInstancePeerImpl : public nsIPluginInstancePeer, public nsIPluginTagInfo
+class nsPluginInstancePeerImpl : public nsIPluginInstancePeer,
+                                 public nsIPluginTagInfo2,
+                                 public nsIJVMPluginTagInfo
 {
 public:
   nsPluginInstancePeerImpl();
@@ -58,6 +61,61 @@ public:
 
   NS_IMETHOD
   GetAttribute(const char* name, const char* *result);
+
+  //nsIPluginTagInfo2 interface
+
+  NS_IMETHOD
+  GetTagType(nsPluginTagType *result);
+
+  NS_IMETHOD
+  GetTagText(const char* *result);
+
+  NS_IMETHOD
+  GetParameters(PRUint16& n, const char*const*& names, const char*const*& values);
+
+  NS_IMETHOD
+  GetParameter(const char* name, const char* *result);
+  
+  NS_IMETHOD
+  GetDocumentBase(const char* *result);
+  
+  NS_IMETHOD
+  GetDocumentEncoding(const char* *result);
+  
+  NS_IMETHOD
+  GetAlignment(const char* *result);
+  
+  NS_IMETHOD
+  GetWidth(PRUint32 *result);
+  
+  NS_IMETHOD
+  GetHeight(PRUint32 *result);
+  
+  NS_IMETHOD
+  GetBorderVertSpace(PRUint32 *result);
+  
+  NS_IMETHOD
+  GetBorderHorizSpace(PRUint32 *result);
+
+  NS_IMETHOD
+  GetUniqueID(PRUint32 *result);
+
+  //nsIJVMPluginTagInfo interface
+
+  NS_IMETHOD
+  GetCode(const char* *result);
+
+  NS_IMETHOD
+  GetCodeBase(const char* *result);
+
+  NS_IMETHOD
+  GetArchive(const char* *result);
+
+  NS_IMETHOD
+  GetName(const char* *result);
+
+  NS_IMETHOD
+  GetMayScript(PRBool *result);
 
   //locals
 
