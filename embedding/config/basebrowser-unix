@@ -189,6 +189,7 @@ components/xpcom_xpti.xpt
 chrome/toolkit/content/global/*
 chrome/classic/skin/classic/global/*
 chrome/en-US/locale/en-US/global/*
+chrome/en-US/locale/en-US/necko/*
 ; 
 ; res:
 ; 
