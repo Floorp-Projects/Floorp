@@ -643,6 +643,11 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
   NS_ADDREF(parent);
   nsIWidget* tmp;
   while (rootWidget != parent && nsnull != parent) {
+    nsWindowType windowType;
+    parent->GetWindowType(windowType);
+    if (windowType == eWindowType_popup)
+      break;
+
     parent->GetBounds(bounds);
     offset.x += bounds.x;
     tmp = parent;
@@ -689,6 +694,11 @@ NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
   NS_ADDREF(parent);
   nsIWidget* tmp;
   while (rootWidget != parent && nsnull != parent) {
+    nsWindowType windowType;
+    parent->GetWindowType(windowType);
+    if (windowType == eWindowType_popup)
+      break;
+
     parent->GetBounds(bounds);
     offset.y += bounds.y;
     tmp = parent;
