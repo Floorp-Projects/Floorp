@@ -120,10 +120,19 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
             env->DeleteLocalRef(classJSObject);
             
             netscape_javascript_JSObject_JSObject = env->GetMethodID(netscape_javascript_JSObject, "<init>", "(I)V");
+            if (env->ExceptionCheck()) {
+                env->ExceptionClear();
+                result = NS_ERROR_FAILURE;
+            }
+
             netscape_javascript_JSObject_internal = env->GetFieldID(netscape_javascript_JSObject, "internal", "I");
+            if (env->ExceptionCheck()) {
+                env->ExceptionClear();
+                result = NS_ERROR_FAILURE;
+            }
 
             env->RegisterNatives(netscape_javascript_JSObject, nativeMethods, sizeof(nativeMethods) / sizeof(JNINativeMethod));
-            if (env->ExceptionOccurred()) {
+            if (env->ExceptionCheck()) {
                 env->ExceptionClear();
                 result = NS_ERROR_FAILURE;
             }
