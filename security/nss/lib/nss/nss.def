@@ -574,7 +574,7 @@ CERT_CopyName;
 CERT_CreateSubjectCertList;
 CERT_DecodeAVAValue;
 ;+#CERT_DecodeCertFromPackage;
-cert_DecodeGeneralName;
+CERT_DecodeGeneralName;
 CERT_DecodeTrustString;
 CERT_DerNameToAscii;
 CERT_EncodeGeneralName;

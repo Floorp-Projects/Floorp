@@ -350,7 +350,7 @@ loser:
 }
 
 CERTGeneralName *
-cert_DecodeGeneralName(PRArenaPool      *arena,
+CERT_DecodeGeneralName(PRArenaPool      *arena,
 		       SECItem          *encodedName,
 		       CERTGeneralName  *genName)
 {
@@ -423,7 +423,7 @@ cert_DecodeGeneralNames (PRArenaPool  *arena,
 	goto loser;
     }
     while (*encodedGenName != NULL) {
-	currentName = cert_DecodeGeneralName(arena, *encodedGenName, NULL);
+	currentName = CERT_DecodeGeneralName(arena, *encodedGenName, NULL);
 	if (currentName == NULL) {
 	    goto loser;
 	}
@@ -578,7 +578,7 @@ cert_DecodeNameConstraint(PRArenaPool       *arena,
     if (rv != SECSuccess) {
 	goto loser;
     }
-    temp = cert_DecodeGeneralName(arena, &(constraint->DERName), &(constraint->name));
+    temp = CERT_DecodeGeneralName(arena, &(constraint->DERName), &(constraint->name));
     if (temp != &(constraint->name)) {
 	goto loser;
     }

@@ -60,7 +60,7 @@ extern SECItem **
 cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names);
 
 extern CERTGeneralName *
-cert_DecodeGeneralName(PRArenaPool *arena, SECItem *encodedName,
+CERT_DecodeGeneralName(PRArenaPool *arena, SECItem *encodedName,
 		       CERTGeneralName  *genName);
 
 extern CERTGeneralName *
