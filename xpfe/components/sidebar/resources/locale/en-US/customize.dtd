@@ -24,11 +24,11 @@
 <!-- LOCALIZATION NOTE  sidebar.customize.title.label: Do NOT localize the term "Sidebar"  -->
 <!ENTITY sidebar.customize.title.label          "Customize Sidebar">
 <!-- LOCALIZATION NOTE  sidebar.customize.current.label: Do NOT localize the term "Sidebar"  -->
-<!ENTITY sidebar.customize.current.label        "My Sidebar">
+<!ENTITY sidebar.customize.current.label        "My Sidebar:">
 <!ENTITY sidebar.customize.reorder.label        "Reorder">
 <!ENTITY sidebar.customize.customize.label      "Customize Panel...">
 <!ENTITY sidebar.customize.remove.label         "Remove">
 <!-- LOCALIZATION NOTE  sidebar.customize.additional.label: Do NOT localize the term "Sidebar"  -->
-<!ENTITY sidebar.customize.additional.label     "Available Panels">
+<!ENTITY sidebar.customize.additional.label     "Available Tabs:">
 <!ENTITY sidebar.customize.add.label            "Add">
 <!ENTITY sidebar.customize.preview.label        "Preview...">
