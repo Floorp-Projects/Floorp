@@ -91,6 +91,8 @@ ActiveScriptSite.cpp: ../control/ActiveScriptSite.cpp
 npwin.cpp: $(MOZ_PLUGINSDK)/common/npwin.cpp
 	-cp -f $(MOZ_PLUGINSDK)/common/npwin.cpp .
 
+MozActiveX.res: MozActiveX.rc resource.h
+
 MozActiveX.cpp: StdAfx.h
 
 LegacyPlugin.cpp \
