@@ -29,7 +29,9 @@ CPPSRCS=				\
 	nsAbsoluteFrame.cpp		\
 	nsBRFrame.cpp			\
 	nsBlockFrame.cpp		\
+	nsBlockReflowContext.cpp	\
 	nsBodyFrame.cpp			\
+	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
 	nsFrameReflowState.cpp		\
@@ -45,12 +47,13 @@ CPPSRCS=				\
 	nsInlineFrame.cpp		\
 	nsInlineReflow.cpp		\
 	nsLeafFrame.cpp			\
+	nsLineBox.cpp			\
 	nsLineLayout.cpp		\
 	nsObjectFrame.cpp		\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
 	nsPresShell.cpp			\
-	nsSimplePageSequence.cpp \
+	nsSimplePageSequence.cpp	\
 	nsScrollFrame.cpp		\
 	nsSpacerFrame.cpp		\
 	nsSplittableFrame.cpp		\
@@ -61,7 +64,7 @@ CPPSRCS=				\
 
 EXPORTS =				\
 	nsGlobalVariables.h		\
-	nsIHTMLContent.h	\
+	nsIHTMLContent.h		\
 	$(NULL)
 
 EXPORTS :=  $(addprefix $(srcdir)/, $(EXPORTS))
