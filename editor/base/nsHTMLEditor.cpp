@@ -2138,7 +2138,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
 
     // Insert the default nbsp into the cell
     nsCOMPtr<nsIDOMText>newTextNode;
-    nsresult result = mDoc->CreateTextNode("text", getter_AddRefs(newTextNode));
+    nsresult result = mDoc->CreateTextNode("x", getter_AddRefs(newTextNode));
     if (NS_SUCCEEDED(result) && newTextNode)
     {
       nsCOMPtr<nsIDOMNode>resultNode;

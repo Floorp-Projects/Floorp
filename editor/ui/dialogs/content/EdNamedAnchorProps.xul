@@ -24,18 +24,16 @@
         <input type="text" id="name" size="30"/>
       </td>
     </tr>
+  </table>
+  <hr width="100%"/>
+  <table width="100%">
     <tr>
-      <!-- THIS SHOULD BE A XUL FRAGMENT -->
-      <td  align = "right">
-        <hr width="100%"/>
-        <!-- This box doesn't work inside a table cell,
-             but putting outside the table is real wacked -->
-        <xul:box align="horizontal" width="100%">
-          <button class="spaced" id="Advanced" onclick="onAdvanced()">More Attributes...</button>
-		      <xul:spring flex="100%"/>
-          <button class="spaced" id="OK" onclick="onOK()">OK</button>  
-          <button class="spaced" id="Cancel" onclick="onCancel()">Cancel</button>
-        </xul:box>
+      <td>
+        <button class="spaced" id="Advanced" onclick="onAdvanced()">More Attributes...</button>
+      </td>
+      <td align="right">
+        <button class="spaced" id="OK" onclick="onOK()">OK</button>  
+        <button class="spaced" id="Cancel" onclick="onCancel()">Cancel</button>
       </td>
     </tr>
   </table>

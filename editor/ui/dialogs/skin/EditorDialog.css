@@ -70,8 +70,9 @@ p, br, td {
 p.smallmargin { margin-bottom: 2px } /* should deprecate in favor of labels */
 
 fieldset {
-  border-width: 2px;
-  border-style: groove;
+  /* override XUL.css margin */
+  margin: 0px;
+	border: 2px groove white;
   padding: 5px;
 /* BUG: If this is set, border is chopped off at the right */
 /*  margin: 5px; */
@@ -79,9 +80,9 @@ fieldset {
 }
 
 legend {
-  font-family: Sans-Serif;
-  font-size: 10pt;
-  border-width: 0;
+  border: none:
+  margin-left: 3px;
+  margin-right: 3px;
   text-align: left;
 }
 
@@ -148,6 +149,6 @@ titledbutton.PixelOrPercent {
 }
 
 
-hr.DividerLine {
+hr {
   height: 2px;
 }

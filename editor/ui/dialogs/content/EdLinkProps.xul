@@ -28,17 +28,31 @@
     <tr>
       <td>
         <fieldset><legend align="left">Link to </legend>
-          <p class="smallmargin">Enter a web page location or local file: 
-          <button class="ChooseFile" id="ChooseFile" onclick="ChooseFile()">Choose File...</button></p>
+          <p class="spacedtext">Enter a web page location or local file: </p>
           <input type="text" size="25" length="25" id="hrefInput"></input>
+          <button class="ChooseFile" id="ChooseFile" onclick="ChooseFile()">Choose File...</button>
         </fieldset>
       </td>
     </tr>
+  </table>
+  <table width="100%">
     <tr>
-      <td  align = "right">
-        <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
-        <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
+      <td>
+        <button class="spaced" id="Advanced" onclick="onAdvanced()">More Attributes...</button>
+      </td>
+      <td align="right">
+        <button class="spaced" id="OK" onclick="onOK()">OK</button>  
+        <button class="spaced" id="Cancel" onclick="onCancel()">Cancel</button>
       </td>
     </tr>
   </table>
+<!-- This "doesn't" work the same as a table -- can't make the Ok, Cancel right justified
+  <xul:box align="horizontal" flex="100%">
+    <button class="spaced" id="Advanced" onclick="onAdvanced()">More Attributes...</button>
+    <xul:spring flex="100%"/>    
+    <button class="spaced" id="OK" onclick="onOK()">OK</button>  
+    <button class="spaced" id="Cancel" onclick="onCancel()">Cancel</button>
+  </xul:box>
+-->
+
 </xul:window>

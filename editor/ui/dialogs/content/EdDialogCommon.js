@@ -226,5 +226,6 @@ function SetPixelOrPercentByID(elementID, percentString)
 // All dialogs share this simple method
 function onCancel()
 {
+  dump("Cancel button clicked: closing window\n");
   window.close();
 }
