@@ -53,14 +53,7 @@ OS_CFLAGS = -W3 -nologo -GF -Gy
 
 ifdef BUILD_OPT
 OS_CFLAGS += -MD
-# The -O2 optimization of MSVC 6.0 SP3 appears to generate
-# code that is unsafe for our use of fibers and static thread
-# local storage.  We temporarily work around this problem by
-# turning off global optimizations (-Og).
 OPTIMIZER = -O2
-ifeq ($(OS_TARGET),WINNT)
-OPTIMIZER += -Og-
-endif
 DEFINES = -UDEBUG -U_DEBUG -DNDEBUG
 DLLFLAGS = -OUT:"$@"
 OBJDIR_TAG = _OPT
