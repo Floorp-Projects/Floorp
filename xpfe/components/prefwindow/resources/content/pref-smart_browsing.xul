@@ -21,8 +21,6 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smart_browsing.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -31,43 +29,69 @@
 
 <html:script language="javascript" src="PrefsWindow.js"/>
 <html:div flex="100%">
-<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&smartHeader.label;</html:SPAN>
-</html:DIV>
 
+<box id="header" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/><spring style="width:60px"/>
+		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
+	</box>
 
-<html:table>
-    <html:tr><html:td>
-			<html:input name="related" type="checkbox" id="pref:0:bool:browser.related.enabled" checked="true" />&enableRelatedRadio.label;
-		</html:td></html:tr>
-    <html:tr><html:td>
+<html:form>
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+			<html:div>&lHeader;</html:div> 
+			</html:legend>
+						<html:div>
+				<html:input name="related" type="checkbox" id="pref:0:bool:browser.related.enabled"/>
+				<html:label for="pref:0:bool:browser.related.enabled" accesskey="n" tabindex="0">
+				&enableRelatedRadio.label;
+				</html:label>
+			</html:div>		
 			&autoDecp.label;
-		</html:td></html:tr>
-	  <html:tr><html:td><html:input name="autorelated" type="radio" id="pref:0:int:browser.related.autoload" />
-			&neverRadio;
-		</html:td></html:tr>
-		<html:tr><html:td><html:input name="autorelated" type="radio" id="pref:1:int:browser.related.autoload" checked="true" />
-			&afterAutoloadFirstRadio;
-		</html:td></html:tr>
-		<html:tr><html:td>
-		<html:input name="autorelated" type="radio" id="pref:2:int:browser.related.autoload" />
-			&afterAutoloadAlwaysRadio;
-		</html:td></html:tr>
-			
-		<html:tr><html:td>&doNotDecp.label;
-		</html:td></html:tr>
-		<html:tr><html:td>
-			 <html:textarea name="textstyle" ROWS="2" COLS="30" id="pref:string:browser.related.disabledForDomains">
+			<html:div>
+				<html:input name="related" type="radio" id="pref:0:int:browser.related.autoload" />
+				<html:label for="pref:0:int:browser.related.autoload" accesskey="n" tabindex="0">
+				&enableRelatedRadio.label;
+				</html:label>
+			</html:div>
+		    <html:div>
+				<html:input name="related" type="radio" id="pref:1:int:browser.related.autoload" />
+				<html:label for="pref:1:int:browser.related.autoload" accesskey="n" tabindex="0">
+				&afterAutoloadFirstRadio;
+				</html:label>
+			</html:div>
+			<html:div>
+				<html:input name="related" type="radio" id="pref:2:int:browser.related.autoload" />
+				<html:label for="pref:2:int:browser.related.autoload" accesskey="n" tabindex="0">
+				&afterAutoloadAlwaysRadio;
+				</html:label>
+			</html:div>
+           <html:div>
+			&doNotDecp.label;
+			</html:div>
+		<html:div>
+         <html:textarea name="textstyle" ROWS="2" COLS="30" id="pref:string:browser.related.disabledForDomains">
 	     </html:textarea>
-		</html:td></html:tr>
-</html:table>
+		</html:div>
+		</html:fieldset>
+	</box>
+</html:form>
 
 
-<html:table>
-   <html:tr><html:td>&internetKeywordsHeader.label;</html:td></html:tr>
-		<html:tr><html:td><html:input name="keyword" type="checkbox" id="pref:0:bool:browser.goBrowsing.enabled" checked="true" />
-			&enableKeyCheck.label;</html:td></html:tr>
-	
-</html:table>
-</html:div>
-</window>
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+			<html:div>&internetKeywordsHeader.label;</html:div> 
+			</html:legend>
+						<html:div>
+				<html:input name="keyword" type="checkbox" id="pref:0:bool:browser.goBrowsing.enabled" />
+				<html:label for="pref:0:bool:browser.goBrowsing.enabled" accesskey="n" tabindex="0">
+				&enableKeyCheck.label;
+				</html:label>
+			</html:div>
+	</html:fieldset>
+	</box>
