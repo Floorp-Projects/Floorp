@@ -41,6 +41,7 @@ public:
 
   // new methods
   virtual void DoFind(nsIXPBaseWindow * aWindow);
+  virtual void DoClose(nsIXPBaseWindow * aWindow);
 
 protected:
   PRBool IsChecked(nsIDOMElement * aNode);

@@ -53,10 +53,36 @@ enum nsXPBaseWindowType {
 
 
 /**
- * API to a "XP window"
+ * BaseWindow for HTML Dialog Boxes and Windows. The desciption of the dialog box
+ * or window is encoded in a HTML File. The Contents of the HTML file and the current
+ * settings for form elements are accessed through the W3C DOM interfaces. 
+ * Access to the nsIDOM classes is done through C++ rather than JavaScript. However,
+ * JavaScript event handlers can be used with the HTML File as well.
+ * The BaseWindow contains methods for:
+ *
+ * 1) loading a HTML file 
+ * 2) Initializing the default values for form elements.
+ * 3) attaching an event listener to process click events.
+ * 4) Getting a handle to the HTMLDocumentElement to access nsIDOMElements.
  */
+
 class nsIXPBaseWindow : public nsISupports {
 public:
+
+ /**
+  * Initialize the window or dialog box.
+  * @param aType see nsXPBaseWindowType's above
+  * @param aAppShell application shell
+  * @param aPref     Preferences
+  * @param aDialogURL URL of HTML file describing the dialog or window
+  * @param aTitle    Title of the dialog box or window
+  * @param aBounds   x, y, width, and height of the window or dialog box
+  * XXX: aChrome is probably not needed for dialog boxes and windows, this is a holdover
+  * from the nsBrowserWindow.
+  * @param aChrome   Chrome mask for toolbars and statusbars. 
+  * @param aAllowPlugins  if TRUE then plugins can be referenced in the HTML file.          
+  */
+
   NS_IMETHOD Init(nsXPBaseWindowType aType,
                   nsIAppShell*       aAppShell,
                   nsIPref*           aPrefs,
@@ -65,8 +91,22 @@ public:
                   const nsRect&      aBounds,
                   PRUint32           aChromeMask,
                   PRBool             aAllowPlugins = PR_TRUE) = 0;
+  
+ /**
+  * Set the location the window or dialog box on the screen
+  * @param aX   horizontal location of the upper left 
+  *             corner of the window in pixels from the screen.
+  * @param aY   vertical location of the upper left 
+  *             corner of the window in pixels from the screen.        
+  */
 
   NS_IMETHOD SetLocation(PRInt32 aX, PRInt32 aY) = 0;
+
+ /**
+  * Set the width and height of the window or dialog box in pixels
+  * @param aWidth width of the window or dialog box in pixels.
+  * @param aHeight height of the window or dialog box in pixels. 
+  */
 
   NS_IMETHOD SetDimensions(PRInt32 aWidth, PRInt32 aHeight) = 0;
 
@@ -89,8 +129,11 @@ public:
   NS_IMETHOD GetPresShell(nsIPresShell*& aPresShell) = 0;
 
   NS_IMETHOD GetDocument(nsIDOMHTMLDocument *& aDocument) = 0;
+
   NS_IMETHOD AddEventListener(nsIDOMNode * aNode) = 0;
+
   NS_IMETHOD RemoveEventListener(nsIDOMNode * aNode) = 0;
+
   NS_IMETHOD AddWindowListener(nsWindowListener * aWindowListener) = 0;
 
   // XXX minimize, maximize

@@ -51,7 +51,7 @@ void nsFindDialog::Initialize(nsIXPBaseWindow * aWindow)
   if (nsnull != doc) {
     doc->GetElementById("find",       &mFindBtn);
     doc->GetElementById("cancel",     &mCancelBtn);
-    doc->GetElementById("searchup",     &mUpRB);
+    doc->GetElementById("searchup",   &mUpRB);
     doc->GetElementById("searchdown", &mDwnRB);
     doc->GetElementById("matchcase",  &mMatchCaseCB);
 
@@ -62,8 +62,6 @@ void nsFindDialog::Initialize(nsIXPBaseWindow * aWindow)
     aWindow->AddEventListener(mUpRB);
     aWindow->AddEventListener(mDwnRB);
 
-    SetChecked(mUpRB, PR_FALSE);
-    SetChecked(mDwnRB, PR_TRUE);
     SetChecked(mMatchCaseCB, PR_FALSE);
     NS_RELEASE(doc);
   }
@@ -72,22 +70,19 @@ void nsFindDialog::Initialize(nsIXPBaseWindow * aWindow)
 //-----------------------------------------------------------------
 void nsFindDialog::MouseClick(nsIDOMEvent* aMouseEvent, nsIXPBaseWindow * aWindow)
 {
+   // Event Dispatch. This method should not contain
+   // anything but calls to methods. This idea is that this dispatch
+   // mechanism may be replaced by JavaScript EventHandlers which call the idl'ed
+   // interfaces to perform the same operation that is currently being handled by
+   // this C++ code.
+
   nsIDOMNode * node;
   aMouseEvent->GetTarget(&node);
   if (node == mFindBtn) {
     DoFind(aWindow);
 
   } else if (node == mCancelBtn) {
-    aWindow->SetVisible(PR_FALSE);
-
-  } else if (node == mUpRB) {
-    PRBool checked = !IsChecked(mUpRB); // We get the event before the widget get to change the value
-    SetChecked(mDwnRB, !checked);
-
-  } else if (node == mDwnRB) {
-    PRBool checked = !IsChecked(mDwnRB);// We get the event before the widget get to change the value
-    SetChecked(mUpRB, !checked);
-
+    DoClose(aWindow);
   }
   NS_RELEASE(node);
 }
@@ -135,6 +130,13 @@ nsFindDialog::DoFind(nsIXPBaseWindow * aWindow)
     NS_RELEASE(doc);
   }
 }
+
+void
+nsFindDialog::DoClose(nsIXPBaseWindow * aWindow)
+{
+  aWindow->SetVisible(PR_FALSE);
+}
+
 
 //---------------------------------------------------------------
 PRBool 

@@ -296,6 +296,7 @@ NS_IMETHODIMP nsXPBaseWindow::SetLocation(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
+
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::SetDimensions(PRInt32 aWidth, PRInt32 aHeight)
 {
