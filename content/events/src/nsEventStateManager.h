@@ -47,8 +47,8 @@
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
 #include "nsITimer.h"
+#include "nsIDocument.h"
 
-class nsIDocument;
 class nsIScrollableView;
 class nsIPresShell;
 class nsIFrameSelection;
@@ -154,6 +154,8 @@ public:
 
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
+  void DispatchMouseEvent(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage, nsIContent* aTargetContent, nsIFrame* aTargetFrame, nsIContent* aRelatedContent);
+  void MaybeDispatchMouseEventToIframe(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   nsresult SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
@@ -228,10 +230,10 @@ protected:
 
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
-  nsIContent* mCurrentTargetContent;
-  nsIContent* mCurrentRelatedContent;
+  nsCOMPtr<nsIContent> mCurrentTargetContent;
+  nsCOMPtr<nsIContent> mCurrentRelatedContent;
   nsIFrame* mLastMouseOverFrame;
-  nsCOMPtr<nsIContent> mLastMouseOverContent;
+  nsCOMPtr<nsIContent> mLastMouseOverElement;
   nsIFrame* mLastDragOverFrame;
 
   // member variables for the d&d gesture state machine
@@ -239,17 +241,16 @@ protected:
   nsPoint mGestureDownPoint;
   nsIFrame* mGestureDownFrame;
 
-  nsIContent* mLastLeftMouseDownContent;
-  nsIContent* mLastMiddleMouseDownContent;
-  nsIContent* mLastRightMouseDownContent;
+  nsCOMPtr<nsIContent> mLastLeftMouseDownContent;
+  nsCOMPtr<nsIContent> mLastMiddleMouseDownContent;
+  nsCOMPtr<nsIContent> mLastRightMouseDownContent;
 
-  nsIContent* mActiveContent;
-  nsIContent* mHoverContent;
-  nsIContent* mDragOverContent;
-  nsIContent* mCurrentFocus;
+  nsCOMPtr<nsIContent> mActiveContent;
+  nsCOMPtr<nsIContent> mHoverContent;
+  nsCOMPtr<nsIContent> mDragOverContent;
+  nsCOMPtr<nsIContent> mCurrentFocus;
   PRInt32 mLastFocusedWith;
   PRInt32 mCurrentTabIndex;
-  nsIWidget * mLastWindowToHaveFocus; // last native window to get focus via the evs
   PRBool      mConsumeFocusEvents;
   PRInt32     mLockCursor;
 
@@ -257,13 +258,14 @@ protected:
   nsCOMPtr<nsIContent> mLastContentFocus;
 
   //Anti-recursive stack controls
-  nsIContent* mFirstBlurEvent;
-  nsIContent* mFirstFocusEvent;
-  nsCOMPtr<nsIContent> mFirstMouseOverEventContent;
-  nsCOMPtr<nsIContent> mFirstMouseOutEventContent;
+  nsCOMPtr<nsIContent> mFirstBlurEvent;
+  nsCOMPtr<nsIContent> mFirstFocusEvent;
+  nsCOMPtr<nsIContent> mFirstMouseOverEventElement;
+  nsCOMPtr<nsIContent> mFirstMouseOutEventElement;
 
   nsIPresContext* mPresContext;      // Not refcnted
-  nsIDocument* mDocument;            // [OWNER], but doesn't need to be.
+  nsCOMPtr<nsIDocument> mDocument;   // Doesn't necessarily need to be owner
+
   //Pref for dispatching middle and right clicks to content
   PRBool mLeftClickOnly;
 
@@ -306,8 +308,8 @@ protected:
     // isn't guaranteed to be there later. We don't want to hold strong refs to
     // things because we're alerted to when they are going away in ClearFrameRefs().
   nsPoint mEventPoint, mEventRefPoint;
-  nsIWidget* mEventDownWidget;
-  nsIPresContext* mEventPresContext;
+  nsIWidget* mEventDownWidget; // [WEAK]
+  nsIPresContext* mEventPresContext; // [WEAK]
   nsCOMPtr<nsITimer> mClickHoldTimer;
 #endif
 
