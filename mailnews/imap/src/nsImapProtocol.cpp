@@ -2564,7 +2564,7 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
 	PRUint32 msgsDownloaded = 0;
 	do 
 	{
-		nsString2 idString;
+		nsString2 idString(eOneByte);
 
 		PRUint32 msgsToDownload = (msgCountLeft > 200) ? 200 : msgCountLeft;
    		AllocateImapUidString(msgUids + msgsDownloaded, msgsToDownload, idString);	// 20 * 200
@@ -3096,6 +3096,9 @@ char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataB
 				nsCRT::memcpy(aDataBuffer, endOfLine, PL_strlen(endOfLine)); 
 				aDataBuffer[PL_strlen(endOfLine)] = '\0';
 			}
+#ifdef DEBUG_bienvenu
+			printf("read next line: %s\n", newLine);
+#endif
 			return newLine;
 		}
 		else // we were unable to extract the next line and we now need to wait for data!
