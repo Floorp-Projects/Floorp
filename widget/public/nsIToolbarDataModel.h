@@ -21,6 +21,7 @@
 
 #include "prthread.h"
 #include "nsString.h"
+#include "nsIDataModel.h"
 
 class nsIToolbarItem;
 
@@ -28,7 +29,7 @@ class nsIToolbarItem;
 #define NS_ITOOLBARDATAMODEL_IID \
 { 0x2aab8d81, 0x7956, 0x11d2, { 0xbf, 0x86, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-class nsIToolbarDataModel : public nsISupports
+class nsIToolbarDataModel : public nsIDataModel
 {
 
 public:
