@@ -128,4 +128,17 @@ public final class JSObject {
      * JavaScript object.
      */
     protected native void	finalize();
+
+    /**
+     * Override java.lang.Object.equals() because identity is not preserved
+     * with instances of JSObject.
+     */
+    public boolean equals(Object obj) {
+        JSObject jsobj;
+
+        if (!(obj instanceof JSObject))
+            return false;
+        jsobj = (JSObject)obj;
+	return (internal == jsobj.internal);
+    }
 }
