@@ -18,6 +18,8 @@
 
 #include "nsIPref.h"
 
+#include "nsIFileSpec.h"
+
 #include "pratom.h"
 #include "prefapi.h"
 #include "nsIFactory.h"
@@ -29,7 +31,6 @@
 #include "nsIServiceManager.h"
 #include "nsIFileLocator.h"
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h"
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
 #include "nsIProfile.h"
@@ -85,23 +86,24 @@ public:
 #endif
     // Initialize/shutdown
     NS_IMETHOD StartUp();
-    NS_IMETHOD StartUpWith(nsFileSpec* inSpec);
+    NS_IMETHOD ReadUserPrefs();
+    NS_IMETHOD ReadUserPrefsFrom(nsIFileSpec* inSpec);
     NS_IMETHOD ShutDown();
 
     // Config file input
-    NS_IMETHOD ReadUserJSFile(nsFileSpec* inSpec);
-    NS_IMETHOD ReadLIJSFile(nsFileSpec* inSpec);
+    NS_IMETHOD ReadUserJSFile(nsIFileSpec* inSpec);
+    NS_IMETHOD ReadLIJSFile(nsIFileSpec* inSpec);
 
     NS_IMETHOD EvaluateConfigScript(const char * js_buffer, PRUint32 length,
                     PRBool bGlobalContext, 
                     PRBool bCallbacks);
     NS_IMETHOD EvaluateConfigScriptFile(const char * js_buffer, PRUint32 length,
-                    nsFileSpec* inSpec, 
+                    nsIFileSpec* inSpec, 
                     PRBool bGlobalContext, 
                     PRBool bCallbacks);
 
-    NS_IMETHOD SavePrefFileAs(nsFileSpec* inSpec);
-    NS_IMETHOD SaveLIPrefFile(nsFileSpec* inSpec);
+    NS_IMETHOD SavePrefFileAs(nsIFileSpec* inSpec);
+    NS_IMETHOD SaveLIPrefFile(nsIFileSpec* inSpec);
 
     // JS stuff
     NS_IMETHOD GetConfigContext(JSContext **js_context);
@@ -168,8 +170,8 @@ public:
     NS_IMETHOD CopyDefaultBinaryPref(const char *pref, 
                      int * size, void ** return_val);
 
-    NS_IMETHOD GetFilePref(const char* pref, nsFileSpec** value);
-    NS_IMETHOD SetFilePref(const char* pref, nsFileSpec* value, PRBool setDefault);
+    NS_IMETHOD GetFilePref(const char* pref, nsIFileSpec** value);
+    NS_IMETHOD SetFilePref(const char* pref, nsIFileSpec* value, PRBool setDefault);
      
     // Pref info
     NS_IMETHOD PrefIsLocked(const char *pref, PRBool *res);
@@ -195,11 +197,11 @@ protected:
     nsPref();
     virtual ~nsPref();
 
-    void useDefaultPrefFile();
+    nsresult useDefaultPrefFile();
     static nsPref *gInstance;
     
-    nsFileSpec                    mFileSpec;
-    nsFileSpec                    mLIFileSpec;
+    nsIFileSpec*                    mFileSpec;
+    nsIFileSpec*                    mLIFileSpec;
 }; // class nsPref
 
 nsPref* nsPref::gInstance = NULL;
@@ -208,7 +210,7 @@ static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
 
 static PrefResult pref_OpenFileSpec(
-    const nsFileSpec& fileSpec,
+    nsIFileSpec* fileSpec,
     PRBool is_error_fatal,
     PRBool verifyHash,
     PRBool bGlobalContext,
@@ -237,6 +239,8 @@ static nsresult _convertRes(int res)
 //----------------------------------------------------------------------------------------
 nsPref::nsPref()
 //----------------------------------------------------------------------------------------
+	:	mFileSpec(nsnull)
+	,   mLIFileSpec(nsnull)
 {
     PR_AtomicIncrement(&g_InstanceCount);
     NS_INIT_REFCNT();
@@ -246,104 +250,104 @@ nsPref::nsPref()
 nsPref::~nsPref()
 //----------------------------------------------------------------------------------------
 {
+    NS_IF_RELEASE(mFileSpec);
+    NS_IF_RELEASE(mLIFileSpec);
     ShutDown();
     PR_AtomicDecrement(&g_InstanceCount);
     gInstance = NULL;
 }
 
 //----------------------------------------------------------------------------------------
-void nsPref::useDefaultPrefFile()
+nsresult nsPref::useDefaultPrefFile()
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec prefsFile("default_prefs.js"); // in default working directory.
+    nsIFileSpec* prefsFile = NS_LocateFileOrDirectory(nsSpecialFileSpec::App_PreferencesFile50);
     nsresult rv;
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_SUCCEEDED(rv) && locator)
+    if (!prefsFile)
     {
-	    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &prefsFile);
-	    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: File locator cannot locate prefs file.");
+	    // locator couldn't find where to put it. So put it in the cwd (NB, viewer comes here.)
+	    prefsFile = NS_CreateFileSpec();
+	    if (!prefsFile)
+	    	return rv;
+	    prefsFile->SetUnixStyleFilePath("default_prefs.js"); // in default working directory.
     }
-    if (prefsFile.Exists())
-    {
-        rv = StartUpWith(&prefsFile);
-    }
-    else
-    {
-      // no prefs file.  make a stub of one
-      nsOutputFileStream stream(prefsFile);
-      if (stream.is_open())
-      {
-        stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
-        stream.close();
-      }
-      
-      if (prefsFile.Exists())
-      {
-        rv = StartUpWith(&prefsFile);
+    if (Exists(prefsFile))
+        return ReadUserPrefsFrom(prefsFile);
 
-        // sspitzer:  eventually this code should be moved into the profile manager
-        // that code should be setting up the prefs based on the what the user enters.
-        NS_WITH_SERVICE(nsIProfile, profileService, kProfileCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-          char* currProfileName = nsnull;
-          rv = profileService->GetCurrentProfile(&currProfileName);
-          if (NS_SUCCEEDED(rv)) {
-            char *imapDirStr;
-            char *newsDirStr;
-            char *emailStr;
-            
-            emailStr = PR_smprintf("%s@netscape.com",currProfileName);
+	// no prefs file.  make a stub of one. This is temporary, and must be removed.
+  nsOutputFileStream stream(prefsFile);
+  if (stream.is_open())
+  {
+    stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
+    stream.close();
+  }
+  
+  if (Exists(prefsFile))
+  {
+    rv = ReadUserPrefsFrom(prefsFile);
+
+    // sspitzer:  eventually this code should be moved into the profile manager
+    // that code should be setting up the prefs based on the what the user enters.
+    NS_WITH_SERVICE(nsIProfile, profileService, kProfileCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      char* currProfileName = nsnull;
+      rv = profileService->GetCurrentProfile(&currProfileName);
+      if (NS_SUCCEEDED(rv)) {
+        char *imapDirStr;
+        char *newsDirStr;
+        char *emailStr;
+        
+        emailStr = PR_smprintf("%s@netscape.com",currProfileName);
 #ifdef XP_UNIX
-            imapDirStr = PR_smprintf("/u/%s/ImapMail", currProfileName);
-            newsDirStr = PR_smprintf("/u/%s", currProfileName);
+        imapDirStr = PR_smprintf("/u/%s/ImapMail", currProfileName);
+        newsDirStr = PR_smprintf("/u/%s", currProfileName);
 #else
 #ifdef XP_MAC
-            imapDirStr = PR_smprintf("HD:System Folder:Preferences:Netscape Users:%s:ImapMail", currProfileName);
-            newsDirStr = PR_smprintf("HD:System Folder:Preferences:Netscape Users:%s:News", currProfileName);
+        imapDirStr = PR_smprintf("HD:System Folder:Preferences:Netscape Users:%s:ImapMail", currProfileName);
+        newsDirStr = PR_smprintf("HD:System Folder:Preferences:Netscape Users:%s:News", currProfileName);
 #else
 #ifdef XP_WIN
-            imapDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\ImapMail",currProfileName);
-            newsDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\News",currProfileName);
+        imapDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\ImapMail",currProfileName);
+        newsDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\News",currProfileName);
 #else
 #error you_need_to_edit_this_file_for_your_freak_os
 #endif /* XP_WIN */
 #endif /* XP_MAC */
 #endif /* XP_UNIX */
-            SetCharPref("browser.startup.homepage", "http://www.mozilla.org");
-            SetCharPref("mail.accountmanager.accounts", "account0,account1");
-            SetCharPref("mail.account.account0.identities", "id1");
-            SetCharPref("mail.account.account0.server", "server0");
-            SetCharPref("mail.account.account1.identities", "id1");
-            SetCharPref("mail.account.account1.server", "server1");
-            SetCharPref("mail.identity.id1.fullName", currProfileName);
-            SetCharPref("mail.identity.id1.organization", "mozilla.org");
-            SetCharPref("mail.identity.id1.smtp_name", currProfileName);
-            SetCharPref("mail.identity.id1.smtp_server", "nsmail-2");
-            SetCharPref("mail.identity.id1.useremail", emailStr);
-            SetBoolPref("mail.identity.id1.send_html", PR_TRUE);
-            SetIntPref("mail.identity.id1.wrap_column", 72);
-            SetCharPref("mail.server.server0.directory", imapDirStr);
-            SetCharPref("mail.server.server0.hostname", "nsmail-2");
-            SetCharPref("mail.server.server0.password", "clear text password");
-            SetCharPref("mail.server.server0.type", "imap");
-            SetCharPref("mail.server.server0.userName", currProfileName);
-            SetCharPref("mail.server.server1.directory", newsDirStr);
-            SetCharPref("mail.server.server1.hostname", "news.mozilla.org");
-            SetCharPref("mail.server.server1.type", "nntp");
-            SetIntPref("news.max_articles",50);
-            SetBoolPref("news.mark_old_read",PR_FALSE);
-            PR_FREEIF(imapDirStr);
-            PR_FREEIF(newsDirStr);
-            PR_FREEIF(emailStr);
-            
-            // need to save the prefs now
-            SavePrefFile();
-          }
-          if (currProfileName) PR_DELETE(currProfileName);
-        }
+        SetCharPref("browser.startup.homepage", "http://www.mozilla.org");
+        SetCharPref("mail.accountmanager.accounts", "account0,account1");
+        SetCharPref("mail.account.account0.identities", "id1");
+        SetCharPref("mail.account.account0.server", "server0");
+        SetCharPref("mail.account.account1.identities", "id1");
+        SetCharPref("mail.account.account1.server", "server1");
+        SetCharPref("mail.identity.id1.fullName", currProfileName);
+        SetCharPref("mail.identity.id1.organization", "mozilla.org");
+        SetCharPref("mail.identity.id1.smtp_name", currProfileName);
+        SetCharPref("mail.identity.id1.smtp_server", "nsmail-2");
+        SetCharPref("mail.identity.id1.useremail", emailStr);
+        SetBoolPref("mail.identity.id1.send_html", PR_TRUE);
+        SetIntPref("mail.identity.id1.wrap_column", 72);
+        SetCharPref("mail.server.server0.directory", imapDirStr);
+        SetCharPref("mail.server.server0.hostname", "nsmail-2");
+        SetCharPref("mail.server.server0.password", "clear text password");
+        SetCharPref("mail.server.server0.type", "imap");
+        SetCharPref("mail.server.server0.userName", currProfileName);
+        SetCharPref("mail.server.server1.directory", newsDirStr);
+        SetCharPref("mail.server.server1.hostname", "news.mozilla.org");
+        SetCharPref("mail.server.server1.type", "nntp");
+        SetIntPref("news.max_articles",50);
+        SetBoolPref("news.mark_old_read",PR_FALSE);
+        PR_FREEIF(imapDirStr);
+        PR_FREEIF(newsDirStr);
+        PR_FREEIF(emailStr);
+        
+        // need to save the prefs now
+        SavePrefFile();
       }
+      if (currProfileName) PR_DELETE(currProfileName);
     }
-    return;
+  }
+    return rv;
 } // nsPref::useDefaultPrefFile
 
 //----------------------------------------------------------------------------------------
@@ -369,29 +373,17 @@ NS_IMPL_ISUPPORTS(nsPref, kIPrefIID);
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::StartUp()
+// It must be safe to call this multiple times.
 //----------------------------------------------------------------------------------------
 {
-    useDefaultPrefFile();
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::StartUpWith(nsFileSpec* inFile)
-//----------------------------------------------------------------------------------------
-{
-    if (mFileSpec == *inFile)
-        return NS_OK;
-
-    PRBool ok = PR_TRUE;
-
+    nsresult rv = NS_OK;
+    
     /* --ML hash test */
     if (!gHashTable)
         gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
                          PR_CompareValues, &pref_HashAllocOps, NULL);
     if (!gHashTable)
-        return PR_FALSE;
-
-    mFileSpec = *inFile;
+        return NS_ERROR_FAILURE;
 
     if (!gMochaTaskState)
         gMochaTaskState = JS_Init((PRUint32) 0xffffffffL);
@@ -400,7 +392,7 @@ NS_IMETHODIMP nsPref::StartUpWith(nsFileSpec* inFile)
     {
         gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
         if (!gMochaContext)
-            return PR_FALSE;
+            return NS_ERROR_FAILURE;
 
         JS_BeginRequest(gMochaContext);
 
@@ -408,7 +400,7 @@ NS_IMETHODIMP nsPref::StartUpWith(nsFileSpec* inFile)
         if (!gGlobalConfigObject)
         {
             JS_EndRequest(gMochaContext);
-            return PR_FALSE;
+            return NS_ERROR_FAILURE;
         }
 
         /* MLM - need a global object for set version call now. */
@@ -420,7 +412,7 @@ NS_IMETHODIMP nsPref::StartUpWith(nsFileSpec* inFile)
                         gGlobalConfigObject))
         {
             JS_EndRequest(gMochaContext);
-            return PR_FALSE;
+            return NS_ERROR_FAILURE;
         }
 
         JS_SetBranchCallback(gMochaContext, pref_BranchCallback);
@@ -440,29 +432,61 @@ NS_IMETHODIMP nsPref::StartUpWith(nsFileSpec* inFile)
                          autoconf_props))
             {
                 JS_EndRequest(gMochaContext);
-                return PR_FALSE;
+                return NS_ERROR_FAILURE;
             }
             if (!JS_DefineFunctions(gMochaContext,
                         gMochaPrefObject,
                         autoconf_methods))
             {
                 JS_EndRequest(gMochaContext);
-                return PR_FALSE;
+                return NS_ERROR_FAILURE;
             }
         }
 
-        ok = pref_InitInitialObjects();
+        if (!pref_InitInitialObjects())
+        	rv = NS_ERROR_FAILURE;
+		JS_EndRequest(gMochaContext);
     }
-    else 
-        JS_BeginRequest(gMochaContext);
+	return rv;
+} // nsPref::StartUp
 
-    if (ok && mFileSpec.Exists())
-        ok = (JSBool) (pref_OpenFileSpec(mFileSpec, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE) == PREF_NOERROR);
-    else if (!ok)
-        gErrorOpeningUserPrefs = PR_TRUE;
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsPref::ReadUserPrefs()
+//----------------------------------------------------------------------------------------
+{
+    nsresult rv = StartUp(); // just to be sure
+	if (NS_SUCCEEDED(rv))
+		rv = useDefaultPrefFile();  // really should return a value...
+    return rv;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsPref::ReadUserPrefsFrom(nsIFileSpec* inFile)
+//----------------------------------------------------------------------------------------
+{
+    if (mFileSpec == inFile)
+        return NS_OK;
+
+    NS_IF_RELEASE(mFileSpec);
+    mFileSpec = inFile;
+    NS_ADDREF(mFileSpec);
+    
+    gErrorOpeningUserPrefs = PR_TRUE;
+
+    if (NS_FAILED(StartUp()))
+    	return NS_ERROR_FAILURE;
+
+	nsresult rv = NS_OK;
+	JS_BeginRequest(gMochaContext);
+    PRBool exists;
+    if ((NS_SUCCEEDED(mFileSpec->exists(&exists)) && exists)
+      || pref_OpenFileSpec(mFileSpec, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE)
+        								!= PREF_NOERROR)
+      rv = NS_ERROR_FAILURE;
     JS_EndRequest(gMochaContext);
-    return ok;
-} // nsPref::StartUpWith
+    gErrorOpeningUserPrefs = NS_FAILED(rv);
+    return rv;
+} // nsPref::ReadUserPrefsFrom
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::ShutDown()
@@ -538,18 +562,20 @@ NS_IMETHODIMP nsPref::SetPathPref(const char *pref_name, const char *path, PRBoo
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::ReadUserJSFile(nsFileSpec* fileSpec)
+NS_IMETHODIMP nsPref::ReadUserJSFile(nsIFileSpec* fileSpec)
 //----------------------------------------------------------------------------------------
 {
-    return pref_OpenFileSpec(*fileSpec, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
+    return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::ReadLIJSFile(nsFileSpec* fileSpec)
+NS_IMETHODIMP nsPref::ReadLIJSFile(nsIFileSpec* fileSpec)
 //----------------------------------------------------------------------------------------
 {
-    mLIFileSpec = *fileSpec;
-    return pref_OpenFileSpec(*fileSpec, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+    NS_IF_RELEASE(mLIFileSpec);
+    mLIFileSpec = fileSpec;
+    NS_IF_ADDREF(mLIFileSpec);
+    return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 //----------------------------------------------------------------------------------------
@@ -570,34 +596,36 @@ NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScriptFile(const char * js_buffer,
                          PRUint32 length,
-                         nsFileSpec* fileSpec, 
+                         nsIFileSpec* fileSpec, 
                          PRBool bGlobalContext, 
                          PRBool bCallbacks)
 //----------------------------------------------------------------------------------------
 {
+    char* path; // GRR COM again.
+    fileSpec->GetNativePath(&path);
     return _convertRes(PREF_EvaluateConfigScript(js_buffer,
                                  length,
-                                 fileSpec->GetCString(), // bad, but not used for parsing.
+                                 path, // bad, but not used for parsing.
                                  bGlobalContext,
                                  bCallbacks,
                                  PR_TRUE));
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::SavePrefFileAs(nsFileSpec* fileSpec)
+NS_IMETHODIMP nsPref::SavePrefFileAs(nsIFileSpec* fileSpec)
 //----------------------------------------------------------------------------------------
 {
-    return _convertRes(PREF_SavePrefFileSpecWith(*fileSpec, (PLHashEnumerator)pref_savePref));
+    return _convertRes(PREF_SavePrefFileSpecWith(fileSpec, (PLHashEnumerator)pref_savePref));
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::SaveLIPrefFile(nsFileSpec* fileSpec)
+NS_IMETHODIMP nsPref::SaveLIPrefFile(nsIFileSpec* fileSpec)
 //----------------------------------------------------------------------------------------
 {
     if (!gHashTable)
         return PREF_NOT_INITIALIZED;
     PREF_SetSpecialPrefsLocal();
-    return _convertRes(PREF_SavePrefFileSpecWith(*fileSpec, (PLHashEnumerator)pref_saveLIPref));
+    return _convertRes(PREF_SavePrefFileSpecWith(fileSpec, (PLHashEnumerator)pref_saveLIPref));
 }
 
 //----------------------------------------------------------------------------------------
@@ -850,45 +878,53 @@ NS_IMETHODIMP nsPref::SetPathPref(const char *pref,
 #endif
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsFileSpec** value)
+NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsIFileSpec** value)
 //----------------------------------------------------------------------------------------
 {
     if (!value)
         return NS_ERROR_NULL_POINTER;        
+
+    *value = NS_CreateFileSpec();
+    if (!*value)
+      return NS_ERROR_FAILURE;
+
     char *encodedString = nsnull;
     PrefResult result = PREF_CopyCharPref(pref_name, &encodedString);
     if (result != PREF_NOERROR)
         return _convertRes(result);
 
-    nsInputStringStream stream(encodedString);
-    nsPersistentFileDescriptor descriptor;
-    stream >> descriptor;
+    (*value)->SetPersistentDescriptorString(encodedString);
     PR_Free(encodedString); // Allocated by PREF_CopyCharPref
-    *value = new nsFileSpec(descriptor);
-    if (!value)
-      return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name, 
-                    nsFileSpec* value, PRBool set_default)
+                    nsIFileSpec* value, PRBool set_default)
 //----------------------------------------------------------------------------------------
 {
     if (!value)
         return NS_ERROR_NULL_POINTER;        
     nsresult rv = NS_OK;
-    if (!value->Exists())
+    if (!Exists(value))
     {
         // nsPersistentFileDescriptor requires an existing
-        // object. Make it first.
-        nsFileSpec tmp(*value);
-        tmp.CreateDir();
+        // object. Make it first. COM makes this difficult, of course...
+	    nsIFileSpec* tmp;
+	    nsresult rv = nsComponentManager::CreateInstance(
+	    	"component://netscape/filespec",
+	    	(nsISupports*)nsnull,
+	    	nsIFileSpec::GetIID(),
+	    	&tmp);
+	    if (NS_FAILED(rv))
+	    	return rv;
+	    if (!tmp)
+	      return NS_ERROR_OUT_OF_MEMORY;
+        tmp->createDir();
+        NS_RELEASE(tmp);
     }
-    nsPersistentFileDescriptor descriptor(*value);
     char* encodedString = nsnull;
-    nsOutputStringStream stream(encodedString);
-    stream << descriptor;
+    value->GetPersistentDescriptorString(&encodedString);
     if (encodedString && *encodedString)
     {
         if (set_default)
@@ -896,7 +932,7 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
         else
             rv = PREF_SetCharPref(pref_name, encodedString);
     }
-    delete [] encodedString; // Allocated by nsOutputStringStream
+    PR_FREEIF(encodedString); // Allocated by nsOutputStringStream
     return _convertRes(rv);
 }
 
@@ -1201,7 +1237,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 
 //----------------------------------------------------------------------------------------
 PrefResult pref_OpenFileSpec(
-    const nsFileSpec& fileSpec,
+    nsIFileSpec* fileSpec,
     PRBool is_error_fatal,
     PRBool verifyHash,
     PRBool bGlobalContext,
@@ -1210,37 +1246,19 @@ PrefResult pref_OpenFileSpec(
 {
     PrefResult result = PREF_NOERROR;
 
-    if (!fileSpec.Exists())
+    if (!Exists(fileSpec))
         return PREF_ERROR;
 
-    PRUint32 fileLength = fileSpec.GetFileSize();
-    if (fileLength == 0)
-        return PREF_ERROR;
-        
-    nsInputFileStream stream(fileSpec);
-    if (!stream.is_open())
-        result =  PREF_ERROR;
-    
-    char* readBuf = nsnull;
-    if (result == PREF_NOERROR)
-    {
-        readBuf = (char*)PR_MALLOC(fileLength * sizeof(char));
-        if (!readBuf)
-            result = PREF_OUT_OF_MEMORY;
-    }
-    
-    if (result == PREF_NOERROR)
-    {
-        PRUint32 bytesRead = stream.read(readBuf, fileLength);
-        if (bytesRead < fileLength)
-            result = PREF_ERROR;
-        else if (verifyHash && !pref_VerifyLockFile(readBuf, fileLength))
-            result = PREF_BAD_LOCKFILE;
-        else if (PREF_EvaluateConfigScript(readBuf, fileLength,
-                fileSpec.GetCString(), bGlobalContext, PR_FALSE, skipFirstLine))
-            result = PREF_NOERROR;
-        PR_Free(readBuf);
-    }
+    char* readBuf;
+    if (NS_FAILED(fileSpec->GetFileContents(&readBuf)))
+    	return PREF_ERROR;
+    long fileLength = strlen(readBuf);
+    if (verifyHash && !pref_VerifyLockFile(readBuf, fileLength))
+        result = PREF_BAD_LOCKFILE;
+    if (!PREF_EvaluateConfigScript(readBuf, fileLength,
+            nsnull, bGlobalContext, PR_FALSE, skipFirstLine))
+        result = PREF_ERROR;
+    PR_Free(readBuf);
 
     // If the user prefs file exists but generates an error,
     //   don't clobber the file when we try to save it
@@ -1257,7 +1275,7 @@ PrefResult pref_OpenFileSpec(
 
 //----------------------------------------------------------------------------------------
 PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
-    const nsFileSpec& fileSpec,
+    nsIFileSpec* fileSpec,
     PLHashEnumerator heSaveProc)
 //----------------------------------------------------------------------------------------
 {
@@ -1302,11 +1320,12 @@ extern "C" JSBool pref_InitInitialObjects()
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
 {
+    JSBool funcResult;
     nsresult rv;
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv))
     	return JS_TRUE;
-    nsFileSpec componentsDir;
+    nsIFileSpec* componentsDir;
     rv = locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &componentsDir);
     if (NS_FAILED(rv))
     	return JS_TRUE;
@@ -1320,17 +1339,45 @@ extern "C" JSBool pref_InitInitialObjects()
 	,	"unix.js"
 #endif
 	};
+    // Parse all the random files that happen to be in the components directory.
+    nsIDirectoryIterator* i;
+    rv = nsComponentManager::CreateInstance(
+    	"component://netscape/directoryiterator",
+    	(nsISupports*)nsnull,
+    	nsIDirectoryIterator::GetIID(),
+    	&i);
+    if (NS_FAILED(i->Init(componentsDir)))
+    	return JS_FALSE;
+
+	// Get any old child of the components directory.
+	nsIFileSpec* specialChild;
+	if NS_FAILED(i->GetCurrentSpec(&specialChild))
+    	return JS_FALSE;
+	
+	if (NS_FAILED(specialChild->SetLeafName((char*)specialFiles[0])))
+	{
+		funcResult = JS_FALSE;
+		goto done;
+	}
     JSBool worked = (JSBool)(pref_OpenFileSpec(
-    	componentsDir + specialFiles[0],
+    	specialChild,
     	PR_FALSE,
     	PR_FALSE,
     	PR_FALSE,
     	PR_FALSE) == PREF_NOERROR);
 	NS_ASSERTION(worked, "initpref.js not parsed successfully");
-    // Parse all the random files that happen to be in the components directory.
-	for (nsDirectoryIterator i(componentsDir); i.Exists(); i++)
+	// Keep this child
+
+	for (; Exists(i); i->next())
 	{
-		const char* leafName = i.Spec().GetLeafName();
+		nsIFileSpec* child;
+		if NS_FAILED(i->GetCurrentSpec(&child))
+			continue;
+		char* leafName;
+		rv = child->GetLeafName(&leafName);
+		NS_RELEASE(child);
+		if NS_FAILED(rv)
+			continue;
 		PRBool shouldParse = PR_TRUE;
 		// Skip non-js files
 		if (strstr(leafName, ".js") + strlen(".js") != leafName + strlen(leafName))
@@ -1346,7 +1393,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		if (shouldParse)
 		{
 		    worked = (JSBool)(pref_OpenFileSpec(
-		    	i.Spec(),
+		    	child,
 		    	PR_FALSE,
 		    	PR_FALSE,
 		    	PR_FALSE,
@@ -1357,13 +1404,17 @@ extern "C" JSBool pref_InitInitialObjects()
 	// Finally, parse any other special files (platform-specific ones).
 	for (int k = 1; k < sizeof(specialFiles) / sizeof(char*); k++)
 	{
+	    if (NS_FAILED(specialChild->SetLeafName((char*)specialFiles[k])))
+	    	continue;
 	    worked = (JSBool)(pref_OpenFileSpec(
-    		componentsDir + specialFiles[k],
+    		specialChild,
 	    	PR_FALSE,
 	    	PR_FALSE,
 	    	PR_FALSE,
 	    	PR_FALSE) == PREF_NOERROR);
 		NS_ASSERTION(worked, "<platform>.js was not parsed successfully");
 	}
+done:
+	NS_RELEASE(specialChild);
     return JS_TRUE;
 }
