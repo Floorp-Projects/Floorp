@@ -41,7 +41,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 
 sub new {
@@ -74,6 +74,11 @@ sub savetree_db {
 
 
 sub trim_db_history {
+  return ;
+}
+
+
+sub event_times_vec {
   return ;
 }
 
