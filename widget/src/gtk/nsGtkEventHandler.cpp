@@ -334,6 +334,7 @@ idle_resize_cb(gpointer data)
   //          info->widget);
   info->widget->OnResize(*info->rect);
   NS_RELEASE(info->widget);
+  // FIXME free info->rect
   g_free(info);
   // this will return 0 if the list is
   // empty.  that will remove this idle timeout.

@@ -113,9 +113,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         {
 	  GtkRequisition req;
 	  GtkWidget *text = gtk_entry_new();
+	  // needed to avoid memory leak
+	  gtk_widget_ref(text);
+	  gtk_object_sink(GTK_OBJECT(text));
 	  gtk_widget_size_request(text,&req);
 	  aMetric = req.height;
 	  gtk_widget_destroy(text);
+	  gtk_widget_unref(text);
 	}
         break;
     case eMetric_TextVerticalInsidePadding:
