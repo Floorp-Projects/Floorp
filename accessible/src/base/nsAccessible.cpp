@@ -130,12 +130,23 @@ nsAccessible::~nsAccessible()
 {
 }
 
-NS_IMETHODIMP nsAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsAccessible::GetName(nsAString& aName)
 {
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) 
-    return elt->GetAttribute(NS_LITERAL_STRING("title"), _retval);
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node shut down
+  }
+
+  if (mRoleMapEntry && mRoleMapEntry->nameRule == eAggregateSubtree) {
+    // DHTML accessible name method for focusable items such as menuitem, treeitem, gridcell, etc.
+    nsresult rv = AppendFlatStringFromSubtree(content, &aName);
+    if (NS_SUCCEEDED(rv) && !aName.IsEmpty()) {
+      return rv;
+    }
+  }
+
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
@@ -987,8 +998,8 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
       nsCOMPtr<nsIContent> appendedSubtreeStart(do_QueryInterface(mDOMNode));
       if (parentContent && parentContent != appendedSubtreeStart) {
         nsIFrame *frame;
-        nsresult rv = shell->GetPrimaryFrameFor(parentContent, &frame);
-        if (NS_SUCCEEDED(rv)) {
+        shell->GetPrimaryFrameFor(parentContent, &frame);
+        if (frame) {
           // If this text is inside a block level frame (as opposed to span level), we need to add spaces around that 
           // block's text, so we don't get words jammed together in final name
           // Extra spaces will be trimmed out later
@@ -1302,28 +1313,31 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   // Using RDF will also allow for role extensibility.
   // XXX Should we store attribute names in this table as atoms instead of strings?
   // Definition of nsRoleMapEntry and nsStateMapEntry contains comments explaining this table.
-  {"button", ROLE_PUSHBUTTON, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"checkbox", ROLE_CHECKBUTTON, 0, {"checked", "true", STATE_CHECKED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
-  {"checkbox-tristate", ROLE_CHECKBUTTON, 0, {"checked", "true", STATE_CHECKED}, {"checked", "mixed", STATE_MIXED}, {"readonly", 0, STATE_READONLY}},
-  {"icon", ROLE_ICON, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menu", ROLE_MENUPOPUP, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menubar", ROLE_MENUBAR, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menuitem", ROLE_MENUITEM, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menuitem-checkbox", ROLE_MENUITEM, 0, {"checked", "true", STATE_CHECKED}, {0, 0, 0}, {0, 0, 0}},
-  {"progress-meter", ROLE_PROGRESSBAR, STATE_READONLY, {"valuenow", "unknown", STATE_MIXED}, {0, 0, 0}, {0, 0, 0}},
-  {"grid", ROLE_TABLE, 0, {"readonly", 0, STATE_READONLY}, {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
-  {"gridcell", ROLE_CELL, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
-  {"option", ROLE_LISTITEM, 0, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
-  {"secret-text", ROLE_PASSWORD_TEXT, STATE_PROTECTED, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
-  {"select", ROLE_LIST, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
-  {"slider", ROLE_SLIDER, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}},
-  {"submit", ROLE_PUSHBUTTON, STATE_DEFAULT, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"textarea", ROLE_TEXT, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_MULTI_LINE
-  {"textfield", ROLE_TEXT, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
-  {"toolbar-icon", ROLE_PUSHBUTTON, 0, {"checked", "true", STATE_PRESSED}, {0, 0, 0}, {0, 0, 0}},
-  {"tree", ROLE_OUTLINE, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
-  {"treeitem", ROLE_OUTLINEITEM, 0, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
-  {nsnull, ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"button", ROLE_PUSHBUTTON, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"checkbox", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
+  {"checkbox-tristate", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"checked", "mixed", STATE_MIXED}, {"readonly", 0, STATE_READONLY}},
+  {"columnheader", ROLE_COLUMNHEADER, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"icon", ROLE_ICON, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menu", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menupopup", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menubar", ROLE_MENUBAR, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menuitem", ROLE_MENUITEM, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menuitem-checkbox", ROLE_MENUITEM, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {0, 0, 0}, {0, 0, 0}},
+  {"grid", ROLE_TABLE, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
+  {"gridcell", ROLE_CELL, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"option", ROLE_LISTITEM, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"progress-meter", ROLE_PROGRESSBAR, eTitleOnly, STATE_READONLY, {"valuenow", "unknown", STATE_MIXED}, {0, 0, 0}, {0, 0, 0}},
+  {"rowheader", ROLE_ROWHEADER, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"secret-text", ROLE_PASSWORD_TEXT, eTitleOnly, STATE_PROTECTED, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
+  {"select", ROLE_LIST, eTitleOnly, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
+  {"slider", ROLE_SLIDER, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}},
+  {"submit", ROLE_PUSHBUTTON, eAggregateSubtree, STATE_DEFAULT, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"textarea", ROLE_TEXT, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_MULTI_LINE
+  {"textfield", ROLE_TEXT, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
+  {"toolbar-icon", ROLE_PUSHBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_PRESSED}, {0, 0, 0}, {0, 0, 0}},
+  {"tree", ROLE_OUTLINE, eTitleOnly, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
+  {"treeitem", ROLE_OUTLINEITEM, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {nsnull, ROLE_NOTHING, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
 };
 
 // XHTML 2 roles

@@ -88,6 +88,7 @@ ACCESSIBILITY_ATOM(_for, "for")
 ACCESSIBILITY_ATOM(id, "id")
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(tabindex, "tabindex")
+ACCESSIBILITY_ATOM(title, "title")
 
   // DHTML accessibility attributes
 ACCESSIBILITY_ATOM(valuenow, "valuenow")    // For DHTML widget values

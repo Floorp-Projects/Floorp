@@ -63,10 +63,16 @@ struct nsStateMapEntry
   PRUint32 state;       // OR state with this
 };
 
+enum ENameRule {
+  eAggregateSubtree,  // Collect name from text & img descendents; use title if resulting name is "".
+  eTitleOnly          // Use the title attribute for a name
+};
+
 struct nsRoleMapEntry
 {
   const char *roleString; // such as "button"
   PRUint32 role;   // use this role
+  ENameRule nameRule;  // how to compute name
   PRUint32 state;  // always OR state with this
   // For this role with a DOM attribute/value match definined in
   // nsStateMapEntry.attributeName && .attributeValue, OR accessible state with
