@@ -45,12 +45,15 @@
 #include <gdk/gdk.h>
 #include "nsRegion.h"
 
+class nsDrawingSurfaceGTK;
+
 class nsImageGTK : public nsIImage
 {
 public:
   nsImageGTK();
   virtual ~nsImageGTK();
 
+  static void Startup();
   static void Shutdown();
 
   NS_DECL_ISUPPORTS
@@ -173,6 +176,9 @@ private:
                          const nsRect &destRect, const nsRect &clipRect, PRBool useClip);
   inline void CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight);
   inline void SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY);
+
+  void SlowTile(nsDrawingSurfaceGTK *aSurface, const nsRect &aTileRect,
+                PRInt32 aSXOffset, PRInt32 aSYOffset);
 
   PRUint8      *mImageBits;
   GdkPixmap    *mImagePixmap;
