@@ -52,7 +52,7 @@
 #ifndef XP_MAC
 #include "_jri/java_lang_Integer.c"
 #else
-#include "java_lang_Integer.c"
+/* #include "java_lang_Integer.c" */
 #endif
 
 #include "xp_mcom.h"
@@ -70,7 +70,9 @@ void SU_Reg_Initialize(JRIEnv* env)
    use_netscape_softupdate_RegKeyEnumerator(env);
    use_netscape_softupdate_RegEntryEnumerator(env);
    use_netscape_softupdate_RegistryException(env);
+#ifndef XP_MAC
    use_java_lang_Integer(env);
+#endif
 }
 
 /* ------------------------------------------------------------------
@@ -364,6 +366,7 @@ native_netscape_softupdate_VersionRegistry_getRefCount(
    struct java_lang_Class*    clazz,
    struct java_lang_String*   component )
 {
+#ifndef XP_MAC
     REGERR status;
     int cRefCount;
 
@@ -378,7 +381,7 @@ native_netscape_softupdate_VersionRegistry_getRefCount(
 
         }
     }
-
+#endif /* XP_MAC */
     return NULL;
 }
 
