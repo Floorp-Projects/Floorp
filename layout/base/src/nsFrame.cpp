@@ -387,7 +387,9 @@ NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
     nsIView* parentWithView;
     nsPoint origin;
     GetOffsetFromView(origin, parentWithView);
-    mView->SetPosition(origin.x, origin.y);
+    nsIViewManager  *vm = mView->GetViewManager();
+    vm->MoveViewTo(mView, origin.x, origin.y);
+    NS_RELEASE(vm);
     NS_IF_RELEASE(parentWithView);
   }
 
@@ -401,7 +403,9 @@ NS_METHOD nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 
   // Let the view know
   if ((nsnull != mView) && (0 == (mState & NS_FRAME_IN_REFLOW))) {
-    mView->SetDimensions(aWidth, aHeight);
+    nsIViewManager  *vm = mView->GetViewManager();
+    vm->ResizeView(mView, aWidth, aHeight);
+    NS_RELEASE(vm);
   }
   return NS_OK;
 }
@@ -1012,8 +1016,10 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       nsIView* parentWithView;
       nsPoint origin;
       GetOffsetFromView(origin, parentWithView);
-      nsRect  bounds(origin.x, origin.y, mRect.width, mRect.height);
-      mView->SetBounds(bounds);
+      nsIViewManager  *vm = mView->GetViewManager();
+      vm->ResizeView(mView, mRect.width, mRect.height);
+      vm->MoveViewTo(mView, origin.x, origin.y);
+      NS_RELEASE(vm);
       NS_IF_RELEASE(parentWithView);
     }
   }
