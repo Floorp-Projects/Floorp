@@ -1218,6 +1218,14 @@ NS_METHOD nsWindow::Destroy()
     nsBaseWidget::Destroy();
   }
 
+  // just to be safe. If we're going away and for some reason we're still
+  // the rollup widget, rollup and turn off capture.
+  if ( this == gRollupWidget ) {
+    if ( gRollupListener )
+      gRollupListener->Rollup();
+    CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
+  }
+  
   EnableDragDrop(PR_FALSE);
 
   // destroy the HWND
