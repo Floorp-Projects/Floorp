@@ -41,11 +41,7 @@ install::
 	$(MAKE_INSTALL) .\reload.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) .\search.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) .\stop.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\navbar-bg-begincap.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\navbar-bg.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\navbar-endcap.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) .\n-box-persbar.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\n-box-navbar.gif $(DISTBROWSER)
 
 
 clobber::
@@ -63,8 +59,4 @@ clobber::
   rm -f $(DISTBROWSER)\reload.gif
   rm -f $(DISTBROWSER)\search.gif
   rm -f $(DISTBROWSER)\stop.gif
-  rm -f $(DISTBROWSER)\navbar-bg-begincap.gif
-  rm -f $(DISTBROWSER)\navbar-bg.gif
-  rm -f $(DISTBROWSER)\navbar-endcap.gif
   rm -f $(DISTBROWSER)\n-box-persbar.gif
-  rm -f $(DISTBROWSER)\n-box-navbar.gif
