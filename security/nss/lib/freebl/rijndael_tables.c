@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael_tables.c,v 1.1 2000/12/19 23:43:12 mcgreer%netscape.com Exp $
+ * $Id: rijndael_tables.c,v 1.2 2001/10/08 16:11:52 ian.mcgreer%sun.com Exp $
  */
 
 #include "stdio.h"
@@ -178,15 +178,14 @@ int main()
     PRUint32 tmp;
     FILE *optfile;
     optfile = fopen("rijndael32.tab", "w");
-    /* No need to output S, it is stored within the T tables */
-    /*
+    /* output S, if there are no T tables */
+    fprintf(optfile, "#ifndef RIJNDAEL_INCLUDE_TABLES\n");
     fprintf(optfile, "static const PRUint8 _S[256] = \n{\n");
     for (i=0; i<256; i++) {
 	fprintf(optfile, "%3d%c%c", __S[i],(i==255)?' ':',', 
 	                            (i%16==15)?'\n':' ');
     }
-    fprintf(optfile, "};\n\n");
-    */
+    fprintf(optfile, "};\n#endif /* not RIJNDAEL_INCLUDE_TABLES */\n\n");
     /* output S**-1 */
     fprintf(optfile, "static const PRUint8 _SInv[256] = \n{\n");
     for (i=0; i<256; i++) {
@@ -194,6 +193,7 @@ int main()
 	                            (i%16==15)?'\n':' ');
     }
     fprintf(optfile, "};\n\n");
+    fprintf(optfile, "#ifdef RIJNDAEL_INCLUDE_TABLES\n");
     /* The 32-bit word tables for optimized implementation */
     /* T0 = [ S[a] * 02, S[a], S[a], S[a] * 03 ] */
     make_T_Table("0", __S, optfile, 0x02, 0x01, 0x01, 0x03);
@@ -216,6 +216,7 @@ int main()
     make_InvMixCol_Table(1, optfile, 0x0b, 0x0E, 0x09, 0x0d);
     make_InvMixCol_Table(2, optfile, 0x0d, 0x0b, 0x0e, 0x09);
     make_InvMixCol_Table(3, optfile, 0x09, 0x0d, 0x0b, 0x0e);
+    fprintf(optfile, "#endif /* RIJNDAEL_INCLUDE_TABLES */\n\n");
     /* round constants for key expansion */
     fprintf(optfile, "#ifdef IS_LITTLE_ENDIAN\n");
     fprintf(optfile, "static const PRUint32 Rcon[30] = {\n");
