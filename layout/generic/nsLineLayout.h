@@ -142,13 +142,11 @@ public:
 
   nsIFrame* FindNextText(nsIFrame* aFrame);
 
-  PRBool LineIsEmpty() const {
-    return 0 == mTotalPlacedFrames;
-  }
+  PRBool CanPlaceFloaterNow() const;
 
-  PRBool LineIsBreakable() const {
-    return (0 != mTotalPlacedFrames) || mImpactedByFloaters;
-  }
+  PRBool LineIsEmpty() const;
+
+  PRBool LineIsBreakable() const;
 
   //----------------------------------------
 
@@ -231,6 +229,7 @@ protected:
   PRBool mIsTopOfPage;
   PRBool mUpdatedBand;
   PRBool mImpactedByFloaters;
+  PRBool mCanPlaceFloater;
   PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mWordFrames;
@@ -277,7 +276,7 @@ protected:
     // Other state we use
     PRUint8 mVerticalAlign;
   };
-  PerFrameData mFrameDataBuf[20];
+  PerFrameData mFrameDataBuf[10];
   PerFrameData* mFrameFreeList;
 
   struct PerSpanData {
@@ -311,7 +310,7 @@ protected:
       mLastFrame = pfd;
     }
   };
-  PerSpanData mSpanDataBuf[20];
+  PerSpanData mSpanDataBuf[4];
   PerSpanData* mSpanFreeList;
   PerSpanData* mRootSpan;
   PerSpanData* mLastSpan;
