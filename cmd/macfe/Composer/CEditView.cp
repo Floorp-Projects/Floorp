@@ -63,7 +63,7 @@
 
 #include <LGAPopup.h>
 
-//#define PROFILE	// clu
+//#define PROFILE	 1
 #ifdef PROFILE
 #include <profiler.h>
 extern void ProfileStart();
@@ -490,6 +490,7 @@ Bool CEditView::SaveDocumentAs()
 					if ( pagedata->pTitle )
 					{
 						EDT_SetPageData( *GetContext(), pagedata );
+						CEditDialog::Start( EDITDLG_PAGE_TITLE, *GetContext() );
 						/* set to NULL since we didn't malloc this data & don't want it freed in EDT_FreePageData */
 						pagedata->pTitle = NULL;	 
 					}
@@ -1198,7 +1199,7 @@ Boolean CEditView::HandleKeyPress( const EventRecord& inKeyEvent )
 
 					while ( ::EventAvail( everyEvent, &currEvent ) )
 					{
-						if ( currEvent.what == autoKey || ( (currEvent.what == keyDown) 	// its a backspace-keydown
+						if ( currEvent.what == autoKey || ( currEvent.what == keyDown 	// its a backspace-keydown
 						&& !((cmdKey | optionKey | controlKey) & currEvent.modifiers) // with no modKeys except maybe shift
 						&& ( (static_cast<Uchar>(currEvent.message & charCodeMask)) == char_Backspace ) ) )
 							++count;
@@ -4144,8 +4145,10 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 	}
 	else if (inCommand >= ENCODING_BASE && inCommand < ENCODING_CEILING)	// FindCommandStatus for encoding is handled in the parent class - CHTMLView
 	{
+		FLUSH_JAPANESE_TEXT
 		int16 csid = CPrefs::CmdNumToDocCsid( inCommand );
-		EDT_SetEncoding ( *GetContext(), csid );
+		if ( !EDT_SetEncoding ( *GetContext(), csid ) ) return true;	
+			// if EDT_SetEncoding returns false, we are done - don't go to the switch statement
 	} 
 
 	switch ( inCommand )
