@@ -436,28 +436,6 @@ PRBool CWellFormedDTD::IsContainer(PRInt32 aTag) const{
   return result;
 }
 
-/**
- *  Helper method that filters out the PI from a given string. 
- *  
- *  
- *  @update  harishd 06/27/99
- *  @param   aPIString -- string that contains the PI.
- *  @param   aPI -- PI that's filtered out from aPIString.
- *  @return  
- */
-
-void GetProcessingInstruction(const nsString& aPIString, char* a_PI) 
-{
-  static nsAutoString theWS2("\b\t\n ");
-
-  if(aPIString.Length() > 0) {
-    nsString temp;
-    PRInt32 theOffset = aPIString.FindCharInSet(theWS2,1);
-    aPIString.Mid(temp,1,theOffset);
-    temp.ToCString(a_PI,30);
-  }
-  return;
-}
 
 /**
  *  
@@ -574,22 +552,6 @@ nsresult CWellFormedDTD::HandleProcessingInstructionToken(CToken* aToken) {
   nsresult result=NS_OK;
   
   nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
-  char thePI[30]={0};
-  nsString& thePIString = aToken->GetStringValueXXX();
-  
-  GetProcessingInstruction(thePIString,thePI);
-  
-  // XXX - HACK - The current observer dictionary is tag based. Converting it to be string based
-  // might cause some overhead.  Until we figure out a better solution, in handling PIs and tags, I'm hardcoding
-  // a specific PI observer-list to be notified.
-  eHTMLTags theTag  = (nsCRT::strcasecmp(thePI,"?xml") == 0)? eHTMLTag_unknown:eHTMLTag_userdefined;
-  nsDeque*  theDeque= (mParser)? (mParser->GetObserverDictionary()).GetObserversForTag(theTag):nsnull;
-  if(theDeque) {
-    CParserContext* pc=mParser->PeekContext();
-    void* theDocID=(pc) ? pc-> mKey : 0; 
-    nsObserverNotifier theNotifier(thePIString.GetUnicode(),(PRUint32)theDocID); 
-    theDeque->FirstThat(theNotifier);
-  }
   result=(mSink)? mSink->AddProcessingInstruction(theNode):NS_OK; 
   return result;
 }

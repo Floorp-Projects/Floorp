@@ -1079,90 +1079,58 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     result=CollectSkippedContent(aNode,theAttrCount); 
   } 
 
- /********************************************************** 
-     THIS WILL ULTIMATELY BECOME THE REAL OBSERVER API... 
-   **********************************************************/ 
-  nsDeque*  theDeque= (mParser && aTag != eHTMLTag_unknown)?  (mParser->GetObserverDictionary()).GetObserversForTag(aTag):nsnull;
-  if(theDeque){ 
-    PRUint32 theDequeSize=theDeque->GetSize(); 
-    if(0<theDequeSize){
-      PRInt32 index = 0; 
-      const PRUnichar* theKeys[50]  = {0,0,0,0,0}; // XXX -  should be dynamic
-      const PRUnichar* theValues[50]= {0,0,0,0,0}; // XXX -  should be dynamic
-      for(index=0; index<theAttrCount && index < 50; index++) {
-        theKeys[index]   = aNode.GetKeyAt(index).GetUnicode(); 
-        theValues[index] = aNode.GetValueAt(index).GetUnicode(); 
-      } 
-      nsAutoString charsetValue;
-      nsCharsetSource charsetSource;
-      nsAutoString theCharsetKey("charset"); 
-      nsAutoString theSourceKey("charsetSource"); 
-      nsAutoString intValue;
-      mParser->GetDocumentCharset(charsetValue, charsetSource);
-      // Add pseudo attribute in the end
-      if(index < 50) {
-        theKeys[index]=theCharsetKey.GetUnicode(); 
-        theValues[index] = charsetValue.GetUnicode();
-        index++;
-      }
-      if(index < 50) {
-        theKeys[index]=theSourceKey.GetUnicode(); 
-        PRInt32 sourceInt = charsetSource;
-        intValue.Append(sourceInt,10);
-        theValues[index] = intValue.GetUnicode();
-	  	  index++;
-      }
-      nsAutoString theTagStr(nsHTMLTags::GetStringValue(aTag));
-      CParserContext* pc=mParser->PeekContext(); 
-      void* theDocID=(pc) ? pc-> mKey : 0; 
-      nsObserverNotifier theNotifier(theTagStr.GetUnicode(),(PRUint32)theDocID,index,theKeys,theValues);
-      theDeque->FirstThat(theNotifier); 
-      result=theNotifier.mResult; 
-     }//if 
-  } 
-
-
-  if(eHTMLTag_meta==aTag) { 
-    PRInt32 theCount=aNode.GetAttributeCount(); 
-    if(1<theCount){ 
-  
-      const nsString& theKey=aNode.GetKeyAt(0); 
-      if(theKey.EqualsIgnoreCase("NAME")) { 
-        const nsString& theValue1=aNode.GetValueAt(0); 
-        if(theValue1.EqualsIgnoreCase("\"CRC\"")) { 
-          const nsString& theKey2=aNode.GetKeyAt(1); 
-          if(theKey2.EqualsIgnoreCase("CONTENT")) { 
-            const nsString& theValue2=aNode.GetValueAt(1); 
-            PRInt32 err=0; 
-            mExpectedCRC32=theValue2.ToInteger(&err); 
-          } //if 
-        } //if 
-      } //else 
-
-    } //if 
-  }//if 
-
-  if(NS_OK==result) {
-    result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
+  if(mParser) {
+    nsAutoString charsetValue;
+    nsCharsetSource charsetSource;
+    mParser->GetDocumentCharset(charsetValue,charsetSource);
+    CParserContext* pc=mParser->PeekContext(); 
+    void* theDocID=(pc) ? pc->mKey : 0; 
+    result=(mParser->GetObserverService()).Notify(aTag,aNode,(PRUint32)theDocID,this,charsetValue,charsetSource);
   }
 
-  PRBool isHeadChild=gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag);
 
-    //this code is here to make sure the head is closed before we deal 
-    //with any tags that don't belong in the head.
-  if(NS_OK==result) {
-    if(mHasOpenHead){
-      static eHTMLTags skip2[]={eHTMLTag_newline,eHTMLTag_whitespace};
-      if(!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))){
-        if(!isHeadChild){      
-          CEndToken     theToken(eHTMLTag_head);
-          nsCParserNode theNode(&theToken,mLineNumber);
-          result=CloseHead(theNode);
+  if(NS_SUCCEEDED(result)) {
+    if(eHTMLTag_meta==aTag) { 
+      PRInt32 theCount=aNode.GetAttributeCount(); 
+      if(1<theCount){ 
+  
+        const nsString& theKey=aNode.GetKeyAt(0); 
+        if(theKey.EqualsIgnoreCase("NAME")) { 
+          const nsString& theValue1=aNode.GetValueAt(0); 
+          if(theValue1.EqualsIgnoreCase("\"CRC\"")) { 
+            const nsString& theKey2=aNode.GetKeyAt(1); 
+            if(theKey2.EqualsIgnoreCase("CONTENT")) { 
+              const nsString& theValue2=aNode.GetValueAt(1); 
+              PRInt32 err=0; 
+              mExpectedCRC32=theValue2.ToInteger(&err); 
+            } //if 
+          } //if 
+        } //else 
+
+      } //if 
+    }//if 
+
+    if(NS_OK==result) {
+      result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
+    }
+
+    PRBool isHeadChild=gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag);
+
+      //this code is here to make sure the head is closed before we deal 
+      //with any tags that don't belong in the head.
+    if(NS_OK==result) {
+      if(mHasOpenHead){
+        static eHTMLTags skip2[]={eHTMLTag_newline,eHTMLTag_whitespace};
+        if(!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))){
+          if(!isHeadChild){      
+            CEndToken     theToken(eHTMLTag_head);
+            nsCParserNode theNode(&theToken,mLineNumber);
+            result=CloseHead(theNode);
+          }
         }
       }
     }
   }
-
   return result;
 }
 
@@ -1300,6 +1268,11 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         case eHTMLTag_area:
           if (mHasOpenMap && mSink)
             result=mSink->AddLeaf(*theNode);
+          break;
+
+        case eHTMLTag_image:
+          aToken->SetTypeID(theChildTag=eHTMLTag_img);
+          result=HandleDefaultStartToken(aToken,theChildTag,*theNode);
           break;
 
         case eHTMLTag_userdefined:

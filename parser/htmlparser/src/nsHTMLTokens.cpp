@@ -223,10 +223,6 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   nsresult result=aScanner.ReadWhile(mTextValue,GetIdentChars(),PR_TRUE,PR_FALSE);
   mTypeID = nsHTMLTags::LookupTag(mTextValue);
 
-  if(eHTMLTag_image==mTypeID){
-    mTypeID=eHTMLTag_img;
-  }
-
    //Good. Now, let's skip whitespace after the identifier,
    //and see if the next char is ">". If so, we have a complete
    //tag without attributes.
@@ -507,7 +503,6 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
  //target endtag, or the start of another comment. 
 
   static nsAutoString theWhitespace2("\b\t ");
-  static nsAutoString theTerminals("\"\'<");
 
   PRInt32 termStrLen=aTerminalString.Length();
   while((!done) && (NS_OK==result)) { 
@@ -523,9 +518,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         result=theComment.Consume(aChar,aScanner); 
         if(NS_OK==result) { 
           //result=aScanner.SkipWhitespace();
-          //temp.Append("<!");
           mTextValue.Append(theComment.GetStringValueXXX()); 
-          //temp.Append(">");
         } 
       } else { 
         //read a tag... 
@@ -534,15 +527,6 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE); 
       } 
     } 
-    else if((NS_OK==result) && ((kQuote==aChar) || kApostrophe==aChar)) {
-      static nsAutoString theEndings("\n\"\'");
-      mTextValue += aChar;
-      result=aScanner.ReadUntil(mTextValue,theEndings,PR_TRUE,PR_FALSE);
-      if(result==NS_OK) {
-        result=aScanner.GetChar(aChar);
-        if(result==NS_OK) mTextValue += aChar; // consume the character that stopped the scan
-      }
-    }
     else if(0<=theWhitespace2.BinarySearch(aChar)) { 
       static CWhitespaceToken theWS; 
       result=theWS.Consume(aChar,aScanner); 
@@ -552,7 +536,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     } 
     else { 
       mTextValue+=aChar; 
-      result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE); 
+      result=aScanner.ReadUntil(mTextValue,kLessThan,PR_FALSE); 
     } 
     mTextValue.Right(theRight,termStrLen+10); //first, get a wad of chars from the temp string
     rpos=theRight.RFindChar('<');   //now scan for the '<'
@@ -560,8 +544,8 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       rpos=theRight.RFind(aTerminalString,PR_TRUE);
     done=PRBool(-1<rpos); 
   }  //while
-  int len=mTextValue.Length();
   if(NS_SUCCEEDED(result)) {
+    int len=mTextValue.Length();
     mTextValue.Truncate(len-(theRight.Length()-rpos)); 
    
     // Make aTerminalString contain the name of the end tag ** as seen in **

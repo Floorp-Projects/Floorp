@@ -287,7 +287,7 @@ friend class CTokenHandler;
      * @param   
      * @return  
      */
-    CObserverDictionary& GetObserverDictionary(void) { return mObserverDictionary; }
+    CObserverService& GetObserverService(void) { return mObserverService; }
 
 protected:
 
@@ -379,7 +379,7 @@ protected:
     nsString            mCharset;
     nsCharsetSource     mCharsetSource;
     nsresult            mInternalState;
-    CObserverDictionary mObserverDictionary;
+    CObserverService    mObserverService;
 };
 
 
