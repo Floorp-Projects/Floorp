@@ -55,7 +55,7 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 const  int            gTabSize=2;
 
-static const NS_NAMED_LITERAL_STRING(gMozDirty, "_moz_dirty");
+#define gMozDirty NS_LITERAL_STRING("_moz_dirty")
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -412,7 +412,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       // 
       // Filter out special case of _moz_dirty
       // Not needed if we're filtering out all _moz* tags.
-      //if (key.Equals(gMozDirty))
+      //if (key == gMozDirty)
       //  continue;
 
       // 
@@ -587,7 +587,7 @@ PRBool nsHTMLContentSinkStream::IsDirty(const nsIParserNode& aNode)
     for(int i=0; i < theCount; i++)
     {
       const nsAReadableString& key = (nsString&)aNode.GetKeyAt(i);
-      if (key.Equals(gMozDirty))
+      if (key == gMozDirty)
         return PR_TRUE;
     }
   }

@@ -52,7 +52,6 @@ enum eAutoDetectResult {
 enum nsDTDMode {
   eDTDMode_unknown=0,
   eDTDMode_quirks,        //pre 4.0 versions
-  eDTDMode_transitional,  
   eDTDMode_strict,
   eDTDMode_autodetect
 };
