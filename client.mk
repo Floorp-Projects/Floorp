@@ -55,6 +55,7 @@
 #MOZ_CO_TAG = <tag>
 NSPR_CO_TAG = NSPRPUB_CLIENT_BRANCH
 PSM_CO_TAG = SeaMonkey_M14_BRANCH
+BUILD_MODULES = all
 
 #######################################################################
 # Defines
@@ -109,14 +110,16 @@ endif
 # for how to set up mozconfig.
 MOZCONFIG_LOADER := mozilla/build/autoconf/mozconfig2client-mk
 MOZCONFIG_FINDER := mozilla/build/autoconf/mozconfig-find 
+MOZCONFIG_MODULES := mozilla/build/unix/modules.mk
 run_for_side_effects := \
   $(shell cd $(ROOTDIR); \
      if test "$(_IS_FIRST_CHECKOUT)"; then \
-        $(CVSCO) $(MOZCONFIG_FINDER) $(MOZCONFIG_LOADER); \
+        $(CVSCO) $(MOZCONFIG_FINDER) $(MOZCONFIG_LOADER) $(MOZCONFIG_MODULES); \
      else true; \
      fi; \
      $(MOZCONFIG_LOADER) $(TOPSRCDIR) mozilla/.mozconfig.mk > mozilla/.mozconfig.out)
 include $(TOPSRCDIR)/.mozconfig.mk
+include $(TOPSRCDIR)/build/unix/modules.mk
 
 ####################################
 # Options that may come from mozconfig
@@ -165,14 +168,6 @@ else
 endif
 
 ####################################
-# CVS defines for SeaMonkey
-#
-ifndef MOZ_CO_MODULE
-  MOZ_CO_MODULE := SeaMonkeyAll
-endif
-CVSCO_SEAMONKEY := $(CVSCO) $(CVS_CO_DATE_FLAGS) $(MOZ_CO_MODULE)
-
-####################################
 # CVS defines for PSM
 #
 PSM_CO_MODULE= mozilla/security
@@ -192,6 +187,29 @@ ifdef NSPR_CO_TAG
 endif
 CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSPR_CO_MODULE)
 
+####################################
+# CVS defines for standalone modules
+#
+ifneq ($(BUILD_MODULES),all)
+  MOZ_CO_MODULE := $(filter-out $(NSPRPUB_DIR) security, $(BUILD_MODULE_DIRS))
+  MOZ_CO_MODULE += allmakefiles.sh client.mk aclocal.m4 configure configure.in
+  MOZ_CO_MODULE += Makefile.in
+  MOZ_CO_MODULE := $(addprefix mozilla/, $(MOZ_CO_MODULE))
+ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_DIRS)))
+  CVSCO_NSPR :=
+endif
+ifeq (,$(filter security, $(BUILD_MODULE_DIRS)))
+  CVSCO_PSM :=
+endif
+endif
+
+####################################
+# CVS defines for SeaMonkey
+#
+ifeq ($(MOZ_CO_MODULE),)
+  MOZ_CO_MODULE := SeaMonkeyAll
+endif
+CVSCO_SEAMONKEY := $(CVSCO) $(CVS_CO_DATE_FLAGS) $(MOZ_CO_MODULE)
 
 #######################################################################
 # Rules
