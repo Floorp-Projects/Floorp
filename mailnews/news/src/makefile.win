@@ -31,12 +31,14 @@ CPPSRCS=    nsNNTPProtocol.cpp				\
 			nsNNTPArticleSet.cpp			\
 			nsNNTPArticleList.cpp			\
 			nsNNTPNewsgroupList.cpp			\
-   			$(NULL)
+			nsNNTPHost.cpp					\
+			$(NULL)
 
 CPP_OBJS=   nsNNTPProtocol.obj				\
 			nsNNTPArticleSet.obj			\
 			nsNNTPArticleList.obj			\
 			nsNNTPNewsgroupList.obj			\
+			nsNNTPHost.obj					\
 			$(NULL)
 
 
