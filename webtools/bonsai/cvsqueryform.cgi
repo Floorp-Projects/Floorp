@@ -223,7 +223,7 @@ print "
 <TD VALIGN=TOP ALIGN=RIGHT NOWRAP>
 Between <input type=text name=mindate value='$::FORM{mindate}' size=25></td>
 <td valign=top rowspan=2>You can use the form
-<B><TT><NOBR>mm/dd/yy hh:mm:ss</NOBR></TT></B> or a Unix <TT>time_t</TT>
+<B><TT><NOBR>mm/dd/yyyy hh:mm:ss</NOBR></TT></B> or a Unix <TT>time_t</TT>
 (seconds since the Epoch.)
 </td>
 </tr>

@@ -78,7 +78,7 @@ if (Param('readonly')) {
 Be aware that you are looking at an old hook!</font></h2>\n";
 }
 
-print "<tt>" . time2str("%D %T %Z", time()) .
+print "<tt>" . time2str("%m/%d/%Y %T %Z", time()) .
       "</tt>: The tree is currently $openword<br>\n";
 unless ($::TreeOpen) {
     print "The tree has been closed since <tt>" .
@@ -86,7 +86,7 @@ unless ($::TreeOpen) {
 }
 
 print "The last known good tree had a timestamp of <tt>";
-print time2str("%D %T %Z", $::LastGoodTimeStamp) . "</tt>.<br>";
+print time2str("%m/%d/%Y %T %Z", $::LastGoodTimeStamp) . "</tt>.<br>";
 print "<hr><pre variable>$::MOTD</pre><hr>";
 print "<br clear=all>";
 

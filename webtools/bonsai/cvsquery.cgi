@@ -326,7 +326,7 @@ sub print_ci {
     local($log);
 
     ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $ci->[$CI_DATE] );
-    $t = sprintf("%02d/%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$year,$hour,$minute);
+    $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
 
     $log = &html_log($ci->[$CI_LOG]);
     $rev = $ci->[$CI_REV];
@@ -597,14 +597,14 @@ sub query_to_english {
         if( $::FORM{'mindate'} ne "" ){
             $dd = &parse_date($::FORM{'mindate'});
             ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
-            $t = sprintf("%02d/%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$year,$hour,$minute);
+            $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
             $english .= "$w1 <i>$t</i> ";
         }
 
         if( $::FORM{'maxdate'} ne "" ){
             $dd = &parse_date($::FORM{'maxdate'});
             ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
-            $t = sprintf("%02d/%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$year,$hour,$minute);
+            $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
             $english .= "$w2 <i>$t</i> ";
         }
     }
