@@ -29,6 +29,7 @@
 #include "nsIRDFDocument.h"
 #include "nsIRDFService.h"
 #include "nsIRDFXMLDataSource.h"
+#include "nsIXULContentSink.h"
 #include "nsISupports.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
@@ -174,7 +175,7 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
 			return rv;
 	}
 	else if (mClassID.Equals(kXULContentSinkCID)) {
-        if (NS_FAILED(rv = NS_NewXULContentSink((nsIRDFContentSink**) &inst)))
+        if (NS_FAILED(rv = NS_NewXULContentSink((nsIXULContentSink**) &inst)))
             return rv;
     }
     else {

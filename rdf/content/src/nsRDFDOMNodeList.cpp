@@ -28,80 +28,278 @@
 
 */
 
-#include "nsIContent.h"
+#include "nsDOMCID.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
-
-static NS_DEFINE_IID(kIDOMNodeIID,            NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID,        NS_IDOMNODELIST_IID);
-
-
-class RDFDOMNodeListImpl : public nsIDOMNodeList {
-private:
-    nsIContent* mElement;
-
-public:
-    RDFDOMNodeListImpl(nsIContent* element) : mElement(element) {
-        NS_IF_ADDREF(mElement);
-    }
-
-    virtual ~RDFDOMNodeListImpl(void) {
-        NS_IF_RELEASE(mElement);
-    }
-
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_IDOMNODELIST
-};
-
-NS_IMPL_ISUPPORTS(RDFDOMNodeListImpl, kIDOMNodeListIID);
-
-NS_IMETHODIMP
-RDFDOMNodeListImpl::GetLength(PRUint32* aLength)
-{
-    PRInt32 count;
-    nsresult rv;
-    if (NS_FAILED(rv = mElement->ChildCount(count)))
-        return rv;
-    *aLength = count;
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-RDFDOMNodeListImpl::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-    // XXX naive. probably breaks when there are pseudo elements or something.
-    nsresult rv;
-    nsIContent* contentChild;
-    if (NS_FAILED(rv = mElement->ChildAt(aIndex, contentChild)))
-        return rv;
-
-    rv = contentChild->QueryInterface(kIDOMNodeIID, (void**) aReturn);
-    NS_RELEASE(contentChild);
-
-    return rv;
-}
+#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMScriptObjectFactory.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIServiceManager.h"
+#include "nsISupportsArray.h"
+#include "nsRDFDOMNodeList.h"
 
 ////////////////////////////////////////////////////////////////////////
+// GUID definitions
 
-nsresult
-NS_NewRDFDOMNodeList(nsIDOMNodeList** aResult, nsIContent* aElement)
+static NS_DEFINE_IID(kIDOMNodeIID,                NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMNodeListIID,            NS_IDOMNODELIST_IID);
+static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
+
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+
+////////////////////////////////////////////////////////////////////////
+//
+
+class RDFHTMLCollectionImpl : public nsIDOMHTMLCollection
+{
+private:
+    nsRDFDOMNodeList* mOuter;
+
+public:
+    RDFHTMLCollectionImpl(nsRDFDOMNodeList* aOuter);
+    virtual ~RDFHTMLCollectionImpl();
+
+    // nsISupports interface
+    NS_IMETHOD_(nsrefcnt) AddRef(void);
+    NS_IMETHOD_(nsrefcnt) Release(void);
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult);
+    
+    // nsIDOMHTMLCollection interface
+    NS_DECL_IDOMHTMLCOLLECTION
+};
+
+
+RDFHTMLCollectionImpl::RDFHTMLCollectionImpl(nsRDFDOMNodeList* aOuter)
+    : mOuter(aOuter)
+{
+}
+
+RDFHTMLCollectionImpl::~RDFHTMLCollectionImpl(void)
+{
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+RDFHTMLCollectionImpl::AddRef(void)
+{
+    return mOuter->AddRef();
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+RDFHTMLCollectionImpl::Release(void)
+{
+    return mOuter->Release();
+}
+
+NS_IMETHODIMP
+RDFHTMLCollectionImpl::QueryInterface(REFNSIID aIID, void** aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
+    if (aIID.Equals(nsIDOMHTMLCollection::IID())) {
+        *aResult = NS_STATIC_CAST(nsIDOMHTMLCollection*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
+    else {
+        return mOuter->QueryInterface(aIID, aResult);
+    }
+}
+
+
+NS_IMETHODIMP
+RDFHTMLCollectionImpl::GetLength(PRUint32* aLength)
+{
+    return mOuter->GetLength(aLength);
+}
+
+
+NS_IMETHODIMP
+RDFHTMLCollectionImpl::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+    return mOuter->Item(aIndex, aReturn);
+}
+
+
+NS_IMETHODIMP
+RDFHTMLCollectionImpl::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// ctors & dtors
+
+nsRDFDOMNodeList::nsRDFDOMNodeList(void)
+    : mInner(nsnull),
+      mElements(nsnull),
+      mScriptObject(nsnull)
+{
+    NS_INIT_REFCNT();
+}
+
+nsRDFDOMNodeList::~nsRDFDOMNodeList(void)
+{
+    NS_IF_RELEASE(mElements);
+    delete mInner;
+}
+
+nsresult
+nsRDFDOMNodeList::Create(nsRDFDOMNodeList** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    RDFDOMNodeListImpl* list = new RDFDOMNodeListImpl(aElement);
+    nsRDFDOMNodeList* list = new nsRDFDOMNodeList();
     if (! list)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    if (NS_FAILED(rv = list->Init())) {
+        delete list;
+        return rv;
+    }
 
     NS_ADDREF(list);
     *aResult = list;
     return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// nsISupports interface
+
+NS_IMPL_ADDREF(nsRDFDOMNodeList);
+NS_IMPL_RELEASE(nsRDFDOMNodeList);
+
+nsresult
+nsRDFDOMNodeList::QueryInterface(REFNSIID aIID, void** aResult)
+{
+static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (aIID.Equals(nsIDOMNodeList::IID()) ||
+        aIID.Equals(kISupportsIID)) {
+        *aResult = NS_STATIC_CAST(nsIDOMNodeList*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
+    else if (aIID.Equals(kIScriptObjectOwnerIID)) {
+        *aResult = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
+    else if (aIID.Equals(nsIDOMHTMLCollection::IID())) {
+        // Aggregate this interface
+        if (! mInner) {
+            if (! (mInner = new RDFHTMLCollectionImpl(this)))
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return mInner->QueryInterface(aIID, aResult);
+    }
+    return NS_NOINTERFACE;
+}
+
+////////////////////////////////////////////////////////////////////////
+// nsIDOMNodeList interface
+
+NS_IMETHODIMP
+nsRDFDOMNodeList::GetLength(PRUint32* aLength)
+{
+    NS_ASSERTION(aLength != nsnull, "null ptr");
+    if (! aLength)
+        return NS_ERROR_NULL_POINTER;
+
+    *aLength = mElements->Count();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRDFDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+    NS_PRECONDITION(aReturn != nsnull, "null ptr");
+    if (! aReturn)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aIndex < (PRUint32) mElements->Count(), "invalid arg");
+    if (aIndex >= (PRUint32) mElements->Count())
+        return NS_ERROR_INVALID_ARG;
+
+    // Cast is okay because we're in a closed system.
+    *aReturn = (nsIDOMNode*) mElements->ElementAt(aIndex);
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIScriptObjectOwner interface
+
+NS_IMETHODIMP
+nsRDFDOMNodeList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+    nsresult rv = NS_OK;
+    nsIScriptGlobalObject* global = aContext->GetGlobalObject();
+
+    if (nsnull == mScriptObject) {
+        nsIDOMScriptObjectFactory *factory;
+    
+        if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
+                                                           kIDOMScriptObjectFactoryIID,
+                                                           (nsISupports **)&factory))) {
+            rv = factory->NewScriptHTMLCollection(aContext, 
+                                                  (nsISupports*)(nsIDOMNodeList*)this, 
+                                                  global, 
+                                                  (void**)&mScriptObject);
+
+            nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
+        }
+    }
+    *aScriptObject = mScriptObject;
+
+    NS_RELEASE(global);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsRDFDOMNodeList::SetScriptObject(void* aScriptObject)
+{
+    mScriptObject = aScriptObject;
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation methods
+
+nsresult
+nsRDFDOMNodeList::Init(void)
+{
+    nsresult rv;
+    if (NS_FAILED(rv = NS_NewISupportsArray(&mElements))) {
+        NS_ERROR("unable to create elements array");
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+nsRDFDOMNodeList::AppendNode(nsIDOMNode* aNode)
+{
+    NS_PRECONDITION(aNode != nsnull, "null ptr");
+    if (! aNode)
+        return NS_ERROR_NULL_POINTER;
+
+    return mElements->AppendElement(aNode);
 }

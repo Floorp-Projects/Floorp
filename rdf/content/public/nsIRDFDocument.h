@@ -52,11 +52,6 @@ public:
   static const nsIID& IID() { static nsIID iid = NS_IRDFDOCUMENT_IID; return iid; }
 
   /**
-   * Set the content type (to either text/rdf or text/xul)
-   */
-  NS_IMETHOD SetContentType(const char* aContentType) = 0;
-
-  /**
    * Set the document's "root" resource.
    */
   NS_IMETHOD SetRootResource(nsIRDFResource* aResource) = 0;

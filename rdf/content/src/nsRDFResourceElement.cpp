@@ -49,6 +49,7 @@
 //#define CREATE_PROPERTIES_AS_ATTRIBUTES
 
 #include "nsCOMPtr.h"
+#include "nsDOMCID.h"
 #include "nsDOMEvent.h"
 #include "nsGenericAttribute.h"
 #include "nsHashtable.h"
@@ -57,6 +58,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMNodeObserver.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
@@ -76,6 +78,7 @@
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
+#include "nsRDFDOMNodeList.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +118,7 @@ public:
                            PRInt32 aNameSpaceID,
                            nsIAtom* aTag);
 
-    ~RDFResourceElementImpl(void);
+    virtual ~RDFResourceElementImpl(void);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -383,22 +386,22 @@ RDFResourceElementImpl::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetNodeName(nsString& aNodeName)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mTag->ToString(aNodeName);
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 RDFResourceElementImpl::GetNodeValue(nsString& aNodeValue)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFResourceElementImpl::SetNodeValue(const nsString& aNodeValue)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -406,7 +409,7 @@ RDFResourceElementImpl::SetNodeValue(const nsString& aNodeValue)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetNodeType(PRUint16* aNodeType)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -414,6 +417,7 @@ RDFResourceElementImpl::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetParentNode(nsIDOMNode** aParentNode)
 {
+    NS_PRECONDITION(mParent != nsnull, "not initialized");
     if (!mParent)
         return NS_ERROR_NOT_INITIALIZED;
 
@@ -424,14 +428,46 @@ RDFResourceElementImpl::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-    return NS_NewRDFDOMNodeList(aChildNodes, this);
+    nsresult rv;
+
+    nsRDFDOMNodeList* children;
+    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&children))) {
+        NS_ERROR("unable to create DOM node list");
+        return rv;
+    }
+
+    PRInt32 count;
+    if (NS_SUCCEEDED(rv = ChildCount(count))) {
+        for (PRInt32 index = 0; index < count; ++index) {
+            nsCOMPtr<nsIContent> child;
+            if (NS_FAILED(rv = ChildAt(index, *getter_AddRefs(child)))) {
+                NS_ERROR("unable to get child");
+                break;
+            }
+
+            nsCOMPtr<nsIDOMNode> domNode;
+            if (NS_FAILED(rv = child->QueryInterface(kIDOMNodeIID, (void**) getter_AddRefs(domNode)))) {
+                NS_WARNING("child content doesn't support nsIDOMNode");
+                continue;
+            }
+
+            if (NS_FAILED(rv = children->AppendNode(domNode))) {
+                NS_ERROR("unable to append node to list");
+                break;
+            }
+        }
+    }
+
+    *aChildNodes = children;
+    NS_ADDREF(*aChildNodes);
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 RDFResourceElementImpl::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -439,7 +475,7 @@ RDFResourceElementImpl::GetFirstChild(nsIDOMNode** aFirstChild)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetLastChild(nsIDOMNode** aLastChild)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -447,7 +483,7 @@ RDFResourceElementImpl::GetLastChild(nsIDOMNode** aLastChild)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -455,7 +491,7 @@ RDFResourceElementImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -463,7 +499,7 @@ RDFResourceElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -471,7 +507,7 @@ RDFResourceElementImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -479,15 +515,25 @@ RDFResourceElementImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP
 RDFResourceElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aReturn != nsnull, "null ptr");
+    if (! aReturn)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIDOMNodeObserver* obs;
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+        obs->OnInsertBefore(this, aNewChild, aRefChild);
+        NS_RELEASE(obs);
+    }
+    NS_ADDREF(aNewChild);
+    *aReturn = aNewChild;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 RDFResourceElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -495,15 +541,25 @@ RDFResourceElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChil
 NS_IMETHODIMP
 RDFResourceElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aReturn != nsnull, "null ptr");
+    if (! aReturn)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIDOMNodeObserver* obs;
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+        obs->OnRemoveChild(this, aOldChild);
+        NS_RELEASE(obs);
+    }
+    NS_ADDREF(aOldChild);
+    *aReturn = aOldChild;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 RDFResourceElementImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -511,7 +567,7 @@ RDFResourceElementImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 RDFResourceElementImpl::HasChildNodes(PRBool* aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -519,7 +575,7 @@ RDFResourceElementImpl::HasChildNodes(PRBool* aReturn)
 NS_IMETHODIMP
 RDFResourceElementImpl::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 
 #if 0
@@ -538,7 +594,7 @@ RDFResourceElementImpl::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetTagName(nsString& aTagName)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -567,7 +623,7 @@ RDFResourceElementImpl::GetNameSpacePrefix(PRInt32 aNameSpaceID,
 NS_IMETHODIMP
 RDFResourceElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -575,7 +631,7 @@ RDFResourceElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 NS_IMETHODIMP
 RDFResourceElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -583,7 +639,7 @@ RDFResourceElementImpl::SetAttribute(const nsString& aName, const nsString& aVal
 NS_IMETHODIMP
 RDFResourceElementImpl::RemoveAttribute(const nsString& aName)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -591,7 +647,7 @@ RDFResourceElementImpl::RemoveAttribute(const nsString& aName)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -599,7 +655,7 @@ RDFResourceElementImpl::GetAttributeNode(const nsString& aName, nsIDOMAttr** aRe
 NS_IMETHODIMP
 RDFResourceElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -607,7 +663,7 @@ RDFResourceElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aRet
 NS_IMETHODIMP
 RDFResourceElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -615,7 +671,7 @@ RDFResourceElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** a
 NS_IMETHODIMP
 RDFResourceElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -623,7 +679,7 @@ RDFResourceElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeLi
 NS_IMETHODIMP
 RDFResourceElementImpl::Normalize()
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -691,15 +747,44 @@ RDFResourceElementImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
 NS_IMETHODIMP 
 RDFResourceElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+
+    if (! mScriptObject) {
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
+        
+        nsIDOMScriptObjectFactory* factory;
+        rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
+                                          kIDOMScriptObjectFactoryIID,
+                                          (nsISupports **) &factory);
+
+        if (NS_FAILED(rv)) {
+            NS_ERROR("unable to get script object factory");
+            return rv;
+        }
+
+        nsAutoString tag;
+        mTag->ToString(tag);
+
+        rv = factory->NewScriptXMLElement(tag,
+                                          aContext,
+                                          NS_STATIC_CAST(nsIContent*, this),
+                                          mParent,
+                                          (void**)&mScriptObject);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new script element");
+        nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
+    }
+
+    *aScriptObject = mScriptObject;
+    return rv;
 }
 
 NS_IMETHODIMP 
 RDFResourceElementImpl::SetScriptObject(void *aScriptObject)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mScriptObject = aScriptObject;
+    return NS_OK;
 }
 
 
@@ -709,30 +794,34 @@ RDFResourceElementImpl::SetScriptObject(void *aScriptObject)
 PRBool
 RDFResourceElementImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
 RDFResourceElementImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
 RDFResourceElementImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 PRBool
 RDFResourceElementImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
 RDFResourceElementImpl::EnumerateProperty(JSContext *aContext)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
@@ -740,13 +829,14 @@ RDFResourceElementImpl::EnumerateProperty(JSContext *aContext)
 PRBool
 RDFResourceElementImpl::Resolve(JSContext *aContext, jsval aID)
 {
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 
 PRBool
 RDFResourceElementImpl::Convert(JSContext *aContext, jsval aID)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
@@ -754,6 +844,7 @@ RDFResourceElementImpl::Convert(JSContext *aContext, jsval aID)
 void
 RDFResourceElementImpl::Finalize(JSContext *aContext)
 {
+    NS_NOTYETIMPLEMENTED("write me");
 }
 
 
@@ -1015,7 +1106,7 @@ RDFResourceElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 NS_IMETHODIMP
 RDFResourceElementImpl::IsSynthetic(PRBool& aResult)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1271,7 +1362,7 @@ NS_IMETHODIMP
 RDFResourceElementImpl::GetAttributeCount(PRInt32& aResult) const
 {
 #if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
-    PR_ASSERT(0);     // XXX need to write this...
+    NS_NOTYETIMPLEMENTED("write me!");     // XXX need to write this...
 #endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
 
     nsresult rv = NS_OK;
@@ -1365,28 +1456,28 @@ RDFResourceElementImpl::List(FILE* out, PRInt32 aIndent) const
 NS_IMETHODIMP
 RDFResourceElementImpl::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFResourceElementImpl::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFResourceElementImpl::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFResourceElementImpl::SizeOf(nsISizeOfHandler* aHandler) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -1,0 +1,10 @@
+interface NodeObserver {
+/* IID: { 0x3e969070, 0xc301, 0x11d2, \
+        { 0xa6, 0xae, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } } */
+
+        void onSetNodeValue(in Node node, in DOMString value);
+        void onInsertBefore(in Node parent, in Node newChild, in Node refChild);
+        void onReplaceChild(in Node parent, in Node newChild, in Node oldChild);
+        void onRemoveChild(in Node parent, in Node oldChild);
+        void onAppendChild(in Node parent, in Node newChild);
+};

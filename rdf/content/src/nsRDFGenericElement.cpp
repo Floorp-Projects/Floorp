@@ -26,6 +26,8 @@
  */
 
 
+#include "nsCOMPtr.h"
+#include "nsDOMCID.h"
 #include "nsDOMEvent.h"
 #include "nsGenericAttribute.h"
 #include "nsHashtable.h"
@@ -41,9 +43,10 @@
 #include "nsIJSScriptObject.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFContentUtils.h"
-#include "nsCOMPtr.h"
+#include "nsRDFDOMNodeList.h"
 #include "nsString.h"
 #include "prlog.h"
 
@@ -84,7 +87,7 @@ class RDFGenericElementImpl : public nsIDOMXULNode,
 {
 public:
     RDFGenericElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag);
-    ~RDFGenericElementImpl(void);
+    virtual ~RDFGenericElementImpl(void);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -299,22 +302,22 @@ RDFGenericElementImpl::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetNodeName(nsString& aNodeName)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mTag->ToString(aNodeName);
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 RDFGenericElementImpl::GetNodeValue(nsString& aNodeValue)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFGenericElementImpl::SetNodeValue(const nsString& aNodeValue)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -322,7 +325,7 @@ RDFGenericElementImpl::SetNodeValue(const nsString& aNodeValue)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetNodeType(PRUint16* aNodeType)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -330,6 +333,7 @@ RDFGenericElementImpl::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetParentNode(nsIDOMNode** aParentNode)
 {
+    NS_PRECONDITION(mParent != nsnull, "not initialized");
     if (!mParent)
         return NS_ERROR_NOT_INITIALIZED;
 
@@ -340,14 +344,46 @@ RDFGenericElementImpl::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-    return NS_NewRDFDOMNodeList(aChildNodes, this);
+    nsresult rv;
+
+    nsRDFDOMNodeList* children;
+    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&children))) {
+        NS_ERROR("unable to create DOM node list");
+        return rv;
+    }
+
+    PRInt32 count;
+    if (NS_SUCCEEDED(rv = ChildCount(count))) {
+        for (PRInt32 index = 0; index < count; ++index) {
+            nsCOMPtr<nsIContent> child;
+            if (NS_FAILED(rv = ChildAt(index, *getter_AddRefs(child)))) {
+                NS_ERROR("unable to get child");
+                break;
+            }
+
+            nsCOMPtr<nsIDOMNode> domNode;
+            if (NS_FAILED(rv = child->QueryInterface(kIDOMNodeIID, (void**) getter_AddRefs(domNode)))) {
+                NS_WARNING("child content doesn't support nsIDOMNode");
+                continue;
+            }
+
+            if (NS_FAILED(rv = children->AppendNode(domNode))) {
+                NS_ERROR("unable to append node to list");
+                break;
+            }
+        }
+    }
+
+    *aChildNodes = children;
+    NS_ADDREF(*aChildNodes);
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 RDFGenericElementImpl::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -355,7 +391,7 @@ RDFGenericElementImpl::GetFirstChild(nsIDOMNode** aFirstChild)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetLastChild(nsIDOMNode** aLastChild)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -363,7 +399,7 @@ RDFGenericElementImpl::GetLastChild(nsIDOMNode** aLastChild)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -371,7 +407,7 @@ RDFGenericElementImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -379,7 +415,7 @@ RDFGenericElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -387,7 +423,7 @@ RDFGenericElementImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -395,7 +431,7 @@ RDFGenericElementImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP
 RDFGenericElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -403,7 +439,7 @@ RDFGenericElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild
 NS_IMETHODIMP
 RDFGenericElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -411,7 +447,7 @@ RDFGenericElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild
 NS_IMETHODIMP
 RDFGenericElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -419,7 +455,7 @@ RDFGenericElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 RDFGenericElementImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -427,7 +463,7 @@ RDFGenericElementImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 RDFGenericElementImpl::HasChildNodes(PRBool* aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -435,7 +471,7 @@ RDFGenericElementImpl::HasChildNodes(PRBool* aReturn)
 NS_IMETHODIMP
 RDFGenericElementImpl::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 
 #if 0
@@ -454,7 +490,7 @@ RDFGenericElementImpl::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetTagName(nsString& aTagName)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -462,7 +498,7 @@ RDFGenericElementImpl::GetTagName(nsString& aTagName)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -470,7 +506,7 @@ RDFGenericElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 NS_IMETHODIMP
 RDFGenericElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -478,7 +514,7 @@ RDFGenericElementImpl::SetAttribute(const nsString& aName, const nsString& aValu
 NS_IMETHODIMP
 RDFGenericElementImpl::RemoveAttribute(const nsString& aName)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -486,7 +522,7 @@ RDFGenericElementImpl::RemoveAttribute(const nsString& aName)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -494,7 +530,7 @@ RDFGenericElementImpl::GetAttributeNode(const nsString& aName, nsIDOMAttr** aRet
 NS_IMETHODIMP
 RDFGenericElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -502,7 +538,7 @@ RDFGenericElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aRetu
 NS_IMETHODIMP
 RDFGenericElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -510,7 +546,7 @@ RDFGenericElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aR
 NS_IMETHODIMP
 RDFGenericElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -518,7 +554,7 @@ RDFGenericElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeLis
 NS_IMETHODIMP
 RDFGenericElementImpl::Normalize()
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -530,28 +566,28 @@ RDFGenericElementImpl::Normalize()
 NS_IMETHODIMP
 RDFGenericElementImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFGenericElementImpl::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFGenericElementImpl::GetListenerManager(nsIEventListenerManager** aInstancePtrResult)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFGenericElementImpl::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -563,15 +599,44 @@ RDFGenericElementImpl::GetNewListenerManager(nsIEventListenerManager **aInstance
 NS_IMETHODIMP 
 RDFGenericElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+
+    if (! mScriptObject) {
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
+        
+        nsIDOMScriptObjectFactory* factory;
+        rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
+                                          kIDOMScriptObjectFactoryIID,
+                                          (nsISupports **) &factory);
+
+        if (NS_FAILED(rv)) {
+            NS_ERROR("unable to get script object factory");
+            return rv;
+        }
+
+        nsAutoString tag;
+        mTag->ToString(tag);
+
+        rv = factory->NewScriptXMLElement(tag,
+                                          aContext,
+                                          NS_STATIC_CAST(nsIContent*, this),
+                                          mParent,
+                                          (void**)&mScriptObject);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new script element");
+        nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
+    }
+
+    *aScriptObject = mScriptObject;
+    return rv;
 }
 
 NS_IMETHODIMP 
 RDFGenericElementImpl::SetScriptObject(void *aScriptObject)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mScriptObject = aScriptObject;
+    return NS_OK;
 }
 
 
@@ -581,30 +646,34 @@ RDFGenericElementImpl::SetScriptObject(void *aScriptObject)
 PRBool
 RDFGenericElementImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
 RDFGenericElementImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
 RDFGenericElementImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 PRBool
 RDFGenericElementImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
 RDFGenericElementImpl::EnumerateProperty(JSContext *aContext)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
@@ -612,13 +681,14 @@ RDFGenericElementImpl::EnumerateProperty(JSContext *aContext)
 PRBool
 RDFGenericElementImpl::Resolve(JSContext *aContext, jsval aID)
 {
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 
 PRBool
 RDFGenericElementImpl::Convert(JSContext *aContext, jsval aID)
 {
+    NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
@@ -626,6 +696,7 @@ RDFGenericElementImpl::Convert(JSContext *aContext, jsval aID)
 void
 RDFGenericElementImpl::Finalize(JSContext *aContext)
 {
+    NS_NOTYETIMPLEMENTED("write me");
 }
 
 
@@ -849,7 +920,7 @@ RDFGenericElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 NS_IMETHODIMP
 RDFGenericElementImpl::IsSynthetic(PRBool& aResult)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1156,28 +1227,28 @@ RDFGenericElementImpl::List(FILE* out, PRInt32 aIndent) const
 NS_IMETHODIMP
 RDFGenericElementImpl::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFGenericElementImpl::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFGenericElementImpl::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 RDFGenericElementImpl::SizeOf(nsISizeOfHandler* aHandler) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -21,6 +21,7 @@ MODULE=rdf
 DEPTH=..\..\..
 
 EXPORTS	= \
+        nsIDOMNodeObserver.h            \
         nsIDOMXULNode.h                 \
         nsIRDFContent.h                 \
         nsIRDFContentModelBuilder.h     \

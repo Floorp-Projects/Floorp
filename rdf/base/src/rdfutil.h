@@ -44,6 +44,18 @@ class nsString;
 PR_EXTERN(PRBool)
 rdf_IsOrdinalProperty(const nsIRDFResource* property);
 
+/**
+ * Converts an ordinal property to an index
+ */
+PR_EXTERN(nsresult)
+rdf_OrdinalResourceToIndex(nsIRDFResource* aOrdinal, PRInt32* aIndex);
+
+/**
+ * Converts an index to an ordinal property
+ */
+PR_EXTERN(nsresult)
+rdf_IndexToOrdinalResource(PRInt32 aIndex, nsIRDFResource** aOrdinal);
+
 
 /**
  * Returns PR_TRUE if the resource is a container resource; e.g., an
@@ -154,12 +166,41 @@ rdf_MakeAlt(nsIRDFDataSource* ds,
 
 
 /**
- * Add an element to the container.
+ * Add an element to the end of container.
  */
 PR_EXTERN(nsresult)
-rdf_ContainerAddElement(nsIRDFDataSource* ds,
-                        nsIRDFResource* container,
-                        nsIRDFNode* element);
+rdf_ContainerAppendElement(nsIRDFDataSource* ds,
+                           nsIRDFResource* container,
+                           nsIRDFNode* element);
+
+
+/**
+ * Remove an element from a container
+ */
+PR_EXTERN(nsresult)
+rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
+                           nsIRDFResource* aContainer,
+                           nsIRDFNode* aElement);
+
+
+/**
+ * Insert an element into a container at the specified index.
+ */
+PR_EXTERN(nsresult)
+rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
+                             nsIRDFResource* aContainer,
+                             nsIRDFNode* aElement,
+                             PRInt32 aIndex);
+
+/**
+ * Determine the index of an element in a container.
+ */
+PR_EXTERN(nsresult)
+rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
+                     nsIRDFResource* aContainer,
+                     nsIRDFNode* aElement,
+                     PRInt32* aIndex);
+
 
 /**
  * Create a cursor on a container that enumerates its contents in

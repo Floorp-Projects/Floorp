@@ -883,9 +883,9 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 
                 nsIRDFLiteral* literal;
                 if (NS_SUCCEEDED(rv = mRDFService->GetLiteral(value, &literal))) {
-                    rv = rdf_ContainerAddElement(mDataSource,
-                                                 GetContextElement(1),
-                                                 literal);
+                    rv = rdf_ContainerAppendElement(mDataSource,
+                                                    GetContextElement(1),
+                                                    literal);
                     NS_RELEASE(literal);
                 }
             } break;
@@ -1118,7 +1118,7 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
     // member/property.
     switch (mState) {
     case eRDFContentSinkState_InMemberElement: {
-        rdf_ContainerAddElement(mDataSource, GetContextElement(1), rdfResource);
+        rdf_ContainerAppendElement(mDataSource, GetContextElement(1), rdfResource);
     } break;
 
     case eRDFContentSinkState_InPropertyElement: {
@@ -1274,7 +1274,7 @@ RDFContentSinkImpl::OpenMember(const nsIParserNode& aNode)
     if (NS_SUCCEEDED(rv = GetResourceAttribute(aNode, &resource))) {
         // Okay, this node has an RDF:resource="..." attribute. That
         // means that it's a "referenced item," as covered in [6.29].
-        rv = rdf_ContainerAddElement(mDataSource, container, resource);
+        rv = rdf_ContainerAppendElement(mDataSource, container, resource);
 
         // XXX Technically, we should _not_ fall through here and push
         // the element onto the stack: this is supposed to be a closed
@@ -1285,7 +1285,7 @@ RDFContentSinkImpl::OpenMember(const nsIParserNode& aNode)
 
     // Change state. Pushing a null context element is a bit weird,
     // but the idea is that there really is _no_ context "property".
-    // The contained element will use rdf_ContainerAddElement() to add
+    // The contained element will use rdf_ContainerAppendElement() to add
     // the element to the container, which requires only the container
     // and the element to be added.
     PushContext(nsnull, mState);

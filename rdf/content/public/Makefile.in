@@ -25,10 +25,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = rdf
 
 EXPORTS =				\
+	nsIDOMNodeObserver.h		\
+	nsIDOMXULNode.h			\
 	nsIRDFContent.h			\
 	nsIRDFContentModelBuilder.h	\
 	nsIRDFDocument.h		\
-	nsIDOMXULNode.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

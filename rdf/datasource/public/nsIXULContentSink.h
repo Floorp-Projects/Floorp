@@ -18,41 +18,32 @@
  */
 
 
-/*
+#ifndef nsIXULContentSink_h__
+#define nsIXULContentSink_h__
 
-  Some useful parsing routines.
+#include "nsIXMLContentSink.h"
 
- */
+class nsIDocument;
+class nsIRDFDataSource;
+class nsIWebShell;
 
-#ifndef nsRDFParserUtils_h__
-#define nsRDFParserUtils_h__
+// {E49AA620-C16C-11d2-A6AA-00104BDE6048}
+#define NS_IXULCONTENTSINK_IID \
+{ 0xe49aa620, 0xc16c, 0x11d2, { 0xa6, 0xaa, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
-#include "nscore.h"
-class nsIURL;
-class nsString;
 
-class nsRDFParserUtils {
+class nsIXULContentSink : public nsIXMLContentSink
+{
 public:
-    static PRUnichar
-    EntityToUnicode(const char* buf);
+    static const nsIID& IID() { static nsIID iid = NS_IXULCONTENTSINK_IID; return iid; }
 
-    static void
-    StripAndConvert(nsString& aResult);
-
-    static nsresult
-    GetQuotedAttributeValue(const nsString& aSource, 
-                            const nsString& aAttribute,
-                            nsString& aValue);
-
-
-    static void
-    FullyQualifyURI(const nsIURL* base, nsString& spec);
-
-    static PRBool
-    IsJavaScriptLanguage(const nsString& aName);
-
+    NS_IMETHOD Init(nsIDocument* aDocument,
+                    nsIWebShell* aWebShell,
+                    nsIRDFDataSource* aDataSource) = 0;
 };
 
 
-#endif // nsRDFPasrserUtils_h__
+nsresult
+NS_NewXULContentSink(nsIXULContentSink** aResult);
 
+#endif // nsIXULContentSink_h__

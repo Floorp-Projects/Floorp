@@ -234,3 +234,27 @@ nsRDFParserUtils::FullyQualifyURI(const nsIURL* base, nsString& spec)
     }
 }
 
+PRBool
+nsRDFParserUtils::IsJavaScriptLanguage(const nsString& aName)
+{
+  if (aName.EqualsIgnoreCase("JavaScript") || 
+      aName.EqualsIgnoreCase("LiveScript") || 
+      aName.EqualsIgnoreCase("Mocha")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.1")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.2")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.3")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.4")) { 
+    return PR_TRUE;
+  } 
+  else { 
+    return PR_FALSE;
+  } 
+}
