@@ -37,6 +37,7 @@
 #include "nsIDocShell.h"         
 #include "nsIBaseWindow.h"       
 #include "nsIAppShellService.h"
+#include "rdf.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -49,6 +50,22 @@
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
+
+static HWND hwndForDOMWindow( nsISupports * );
+
+static
+nsresult
+GetMostRecentWindow(const PRUnichar* aType, nsIDOMWindowInternal** aWindow) {
+    nsresult rv;
+    nsCOMPtr<nsIWindowMediator> med( do_GetService( NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator", &rv ) );
+    if ( NS_FAILED( rv ) )
+        return rv;
+
+    if ( med )
+        return med->GetMostRecentWindow( aType, aWindow );
+
+    return NS_ERROR_FAILURE;
+}
 
 // Define this macro to 1 to get DDE debugging output.
 #define MOZ_DEBUG_DDE 0
@@ -105,7 +122,6 @@ public:
     static nsSplashScreenWin* GetPointer( HWND dlg );
 
     static BOOL CALLBACK DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
-    static BOOL CALLBACK PhantomDialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
     static DWORD WINAPI ThreadProc( LPVOID );
 
     HWND mDlg;
@@ -314,30 +330,6 @@ nsSplashScreenWin::~nsSplashScreenWin() {
 
 NS_IMETHODIMP
 nsSplashScreenWin::Show() {
-    /*
-     * A hack for http://bugzilla.mozilla.org/show_bug.cgi?id=26581
-     *
-     * Windows NT seems to think that the first thread to show a window must 
-     * therefore be our main UI thread. It then seems to want to put the first 
-     * window that shows up on other threads in our application behind the main 
-     * windows of other applications. Since we want to show our splash screen 
-     * on a 'non-main' thread, our browser windows start showing up later on a 
-     * thread that Windows thinks is not our main UI thread. So, (I believe) it 
-     * pushes the first one of our browser windows to the back until the user 
-     * pulls it forward. That is not what we want!
-     * 
-     * This hack attempts to trick Windows by very briefly showing an 
-     * offscreen window on the main thread. This happens before the splash 
-     * screen thread creates its window (which it sets as topmost). So when our
-     * browser windows start showing up on the main thread Windows will see that 
-     * they are on the "first thread with a window" and it will (hopefully!) not
-     * push them to the back.
-     */
-    DialogBox( GetModuleHandle( 0 ),
-               MAKEINTRESOURCE( IDD_SPLASH ),
-               HWND_DESKTOP,
-               (DLGPROC)PhantomDialogProc );
-
     // Spawn new thread to display real splash screen.
     DWORD threadID = 0;
     HANDLE handle = CreateThread( 0, 0, (LPTHREAD_START_ROUTINE)ThreadProc, this, 0, &threadID );
@@ -349,27 +341,27 @@ nsSplashScreenWin::Show() {
 NS_IMETHODIMP
 nsSplashScreenWin::Hide() {
     if ( mDlg ) {
+        // Fix for bugs:
+        //  http://bugzilla.mozilla.org/show_bug.cgi?id=26581
+        //  http://bugzilla.mozilla.org/show_bug.cgi?id=65974
+        //  http://bugzilla.mozilla.org/show_bug.cgi?id=29172
+        //  http://bugzilla.mozilla.org/show_bug.cgi?id=45805
+        // As the splash-screen is in a seperate thread, Windows considers
+        // this the "foreground" thread.  When our main windows on the main
+        // thread are activated, they are treated like windows from a different
+        // application, so Windows 2000 and 98 both leave the window in the background.
+        // Therefore, we post a message to the splash-screen thread that includes
+        // the hwnd of the window we want moved to the foreground.  This thread
+        // can then successfully bring the top-level window to the foreground.
+        nsCOMPtr<nsIDOMWindowInternal> topLevel;
+        GetMostRecentWindow(nsnull, getter_AddRefs( topLevel ) );
+        HWND hWndTopLevel = topLevel ? hwndForDOMWindow(topLevel) : 0;
         // Dismiss the dialog.
-        EndDialog( mDlg, 0 );
-        // Release custom bitmap (if there is one).
-        if ( mBitmap ) {
-            BOOL ok = DeleteObject( mBitmap );
-        }
+        ::PostMessage(mDlg, WM_CLOSE, (WPARAM)mBitmap, (LPARAM)hWndTopLevel);
         mBitmap = 0;
         mDlg = 0;
     }
     return NS_OK;
-}
-
-BOOL CALLBACK
-nsSplashScreenWin::PhantomDialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
-    if ( msg == WM_INITDIALOG ) {
-        // Show window for an instant to make this the active thread.
-        ShowWindow( dlg, SW_SHOW );
-        EndDialog( dlg, 0 );
-        return 1;
-    } 
-    return 0;
 }
 
 void
@@ -445,6 +437,19 @@ nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
             }
         }
         return 1;
+    } else if (msg == WM_CLOSE) {
+        // Before killing ourself, set the top-level current.
+        // See comments in nsSplashScreenWin::Hide() above.
+        HWND topLevel = (HWND)lp;
+        if (topLevel)
+            ::SetForegroundWindow(topLevel);
+        // Destroy the dialog
+        ::EndDialog(dlg, 0);
+        // Release custom bitmap (if there is one).
+        HBITMAP bitmap = (HBITMAP)wp;
+        if ( bitmap ) {
+            ::DeleteObject( bitmap );
+        }
     }
     return 0;
 }
@@ -1062,33 +1067,24 @@ nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
     return result;
 }
 
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-
-static HWND hwndForDOMWindow( nsISupports * );
-
 void nsNativeAppSupportWin::ActivateLastWindow() {
-    nsCOMPtr<nsIWindowMediator> med( do_GetService( kWindowMediatorCID ) );
-    if ( med ) {
-        // Get most recently used Nav window.
-        nsCOMPtr<nsIDOMWindowInternal> navWin;
-
-        med->GetMostRecentWindow( NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs( navWin ) );
-        if ( navWin ) {
-            // Activate that window.
-            HWND hwnd = hwndForDOMWindow( navWin );
-            if ( hwnd ) {
-                // Restore the window in case it is minimized.
-                ::ShowWindow( hwnd, SW_RESTORE );
-                // Use the OS call, if possible.
-                ::SetForegroundWindow( hwnd );
-            } else {
-                // Use internal method.
-                navWin->Focus();
-            }
+    nsCOMPtr<nsIDOMWindowInternal> navWin;
+    GetMostRecentWindow( NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs( navWin ) );
+    if ( navWin ) {
+        // Activate that window.
+        HWND hwnd = hwndForDOMWindow( navWin );
+        if ( hwnd ) {
+            // Restore the window in case it is minimized.
+            ::ShowWindow( hwnd, SW_RESTORE );
+            // Use the OS call, if possible.
+            ::SetForegroundWindow( hwnd );
         } else {
-            // Need to create a Navigator window, then.
-            OpenBrowserWindow( "about:blank" );
+            // Use internal method.
+            navWin->Focus();
         }
+    } else {
+        // Need to create a Navigator window, then.
+        OpenBrowserWindow( "about:blank" );
     }
 }
 
@@ -1495,34 +1491,31 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args ) {
     nsresult rv = NS_OK;
     // Open the argument URL in the most recently used Navigator window.
     // If there is no Nav window, open a new one.
-    nsCOMPtr<nsIWindowMediator>    med( do_GetService( kWindowMediatorCID ) );
+    
+    // Get most recently used Nav window.
     nsCOMPtr<nsIDOMWindowInternal> navWin;
-    nsCOMPtr<nsIDOMWindow>         content;
-    nsCOMPtr<nsIDOMWindowInternal> internalContent;
-    nsCOMPtr<nsIDOMLocation>       location;
+    GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(), getter_AddRefs( navWin ) );
+
     // This isn't really a loop.  We just use "break" statements to fall
     // out to the OpenWindow call when things go awry.
     do {
-        if ( !med ) {
-            break;
-        }
-        // Get most recently used Nav window.
-        med->GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(), getter_AddRefs( navWin ) );
         if ( !navWin ) {
             // Have to open a new one.
             break;
         }
         // Get content window.
+        nsCOMPtr<nsIDOMWindow> content;
         navWin->GetContent( getter_AddRefs( content ) );
         if ( !content ) {
             break;
         }
         // Convert that to internal interface.
-        internalContent = do_QueryInterface( content );
+        nsCOMPtr<nsIDOMWindowInternal> internalContent( do_QueryInterface( content ) );
         if ( !internalContent ) {
             break;
         }
         // Get location.
+        nsCOMPtr<nsIDOMLocation> location;
         internalContent->GetLocation( getter_AddRefs( location ) );
         if ( !location ) {
             break;
