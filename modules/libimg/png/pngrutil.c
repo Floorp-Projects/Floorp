@@ -1070,6 +1070,12 @@ png_handle_iCCP(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
                                     slength, prefix_length, &data_length);
 
    profile_length = data_length - prefix_length;
+   if (profile_length < 4)
+   {
+      png_free(png_ptr, chunkdata);
+      png_warning(png_ptr, "Profile length missing in iCCP chunk");
+      return;
+   }
 
    /* Check the profile_size recorded in the first 32 bits of the ICC profile */
    profile_size = ((*(chunkdata+prefix_length))<<24) |
@@ -1082,6 +1088,7 @@ png_handle_iCCP(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 
    if(profile_size > profile_length)
    {
+      png_free(png_ptr, chunkdata);
       png_warning(png_ptr, "Ignoring truncated iCCP profile.\n");
       return;
    }
