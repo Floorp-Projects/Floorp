@@ -2726,7 +2726,6 @@ void XFE_PrefsPageGeneralPrivacy::create()
   fep->prompt_dialog = getPrefsDialog()->getDialogChrome();
   
   // Form
-
   ac = 0;
   XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
   XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
@@ -2736,8 +2735,67 @@ void XFE_PrefsPageGeneralPrivacy::create()
   XtManageChild(form);
   m_wPage = fep->page = form;
   
+
+  // Privacy
   ac = 0;
   XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+  XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+  Widget privacyFrame = 
+    XmCreateFrame (form, "privacyFrame", av, ac);
+
+  ac = 0;
+  XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+  Widget privacyLabel = 
+    XmCreateLabelGadget (privacyFrame, "privacyLabel", av, ac);
+
+  ac = 0;
+  XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+  Widget privacyForm = 
+    XmCreateForm (privacyFrame, "privacyForm", av, ac);
+
+  // kids
+  i = 0;
+  kids[i++] = fep->save_logins_and_passwords =
+    XmCreateToggleButtonGadget(privacyForm, "saveLoginsAndPasswords", NULL, 0);
+
+  kids[i++] = fep->warn_no_privacy =
+    XmCreateToggleButtonGadget(privacyForm, "warnNoPrivacy", NULL, 0);
+
+  XtVaSetValues(fep->save_logins_and_passwords,
+                XmNindicatorType, XmN_OF_MANY,
+                XmNalignment, XmALIGNMENT_BEGINNING,
+                XmNtopAttachment, XmATTACH_FORM,
+                XmNbottomAttachment, XmATTACH_NONE,
+                XmNleftAttachment, XmATTACH_FORM,
+                XmNrightAttachment, XmATTACH_NONE,
+                0);
+
+  XtVaSetValues(fep->warn_no_privacy,
+                XmNindicatorType, XmN_OF_MANY,
+                XmNalignment, XmALIGNMENT_BEGINNING,
+                XmNtopAttachment, XmATTACH_WIDGET,
+                XmNtopWidget, fep->save_logins_and_passwords,
+                XmNbottomAttachment, XmATTACH_NONE,
+                XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+                XmNleftWidget, fep->save_logins_and_passwords,
+                XmNrightAttachment, XmATTACH_NONE,
+                0);
+
+  XtManageChildren (kids, i);
+  XtManageChild (privacyLabel);
+  XtManageChild (privacyForm);
+  XtManageChild (privacyFrame);
+
+
+  // Cookies
+  ac = 0;
+  XtSetArg (av [ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
+  XtSetArg (av [ac], XmNtopWidget, privacyFrame); ac++;
   XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
   XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
   XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
@@ -2837,6 +2895,23 @@ void XFE_PrefsPageGeneralPrivacy::init()
   PrefsDataGeneralPrivacy *fep = m_prefsDataGeneralPrivacy;
   XFE_GlobalPrefs          *prefs = &fe_globalPrefs;
   Boolean                  sensitive;
+  XP_Bool                  initialValue;
+
+  // Privacy
+  sensitive = !PREF_PrefIsLocked("network.signon.rememberSignons");
+  PREF_GetBoolPref("network.signon.rememberSignons", &initialValue);
+  XtVaSetValues(fep->save_logins_and_passwords, 
+                XmNset, initialValue,
+                XmNsensitive, sensitive,
+                NULL);
+
+  sensitive = !PREF_PrefIsLocked("privacy.warn_no_policy");
+  PREF_GetBoolPref("privacy.warn_no_policy", &initialValue);
+  XtVaSetValues(fep->warn_no_privacy, 
+                XmNset, initialValue,
+                XmNsensitive, sensitive,
+                NULL);
+ 
 
   // Cookies
   sensitive = !PREF_PrefIsLocked("network.cookie.cookieBehavior");
@@ -2883,8 +2958,15 @@ void XFE_PrefsPageGeneralPrivacy::save()
   
   XP_ASSERT(fep);
 
-  // Cookies
+  // Privacy
+  XtVaGetValues(fep->save_logins_and_passwords, XmNset, &b, 0);
+  PREF_SetBoolPref("network.signon.rememberSignons", (XP_Bool)b);
   
+  XtVaGetValues(fep->warn_no_privacy, XmNset, &b, 0);
+  PREF_SetBoolPref("privacy.warn_no_policy", (XP_Bool)b);
+  
+
+  // Cookies
   XtVaGetValues(fep->always_accept_cookie_toggle, XmNset, &b, 0);
   if (b) { 
     fe_globalPrefs.accept_cookie = NET_Accept;
