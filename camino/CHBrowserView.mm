@@ -833,12 +833,13 @@ void nsHeaderSniffer::PerformSave()
             return;
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
         mimeService->GetFromMIMEType(mContentType.get(), getter_AddRefs(mimeInfo));
-        
-        PRUint32 extCount;
-        char** extList;
-        mimeInfo->GetFileExtensions(&extCount, &extList);
-        
-        if (extCount > 0) {
+        if (!mimeInfo)
+          return;
+
+        PRUint32 extCount = 0;
+        char** extList = nsnull;
+        mimeInfo->GetFileExtensions(&extCount, &extList);        
+        if (extCount > 0 && extList) {
             defaultFileName += ".";
             defaultFileName += extList[0];
         }
