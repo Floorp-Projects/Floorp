@@ -145,6 +145,13 @@ RES_SRC = nsMacWidget.r
 export:: $(GFX_CPPSRCS) $(MAC_CPP_CSRCS) $(srcdir)/../mac/$(RES_SRC)
 	$(INSTALL) $^ .
 
+# for objdir builds, symlink the cursors dir
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
+ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
+export::
+	ln -fs $(srcdir)/cursors
+endif
+
 $(RES_DEST): $(RES_SRC)
 	/Developer/Tools/Rez -i /Developer/Headers/FlatCarbon -useDF $(RES_SRC) -o $(RES_DEST)
 
