@@ -73,26 +73,4 @@ IS_COMPONENT = 1
 MODULE_NAME	= JavaScript_Debugger
 endif
 
-ifndef MOZ_JSD
-CSRCS		+= jsdstubs.c jsd_java.c
-
-JDK_GEN		= \
-		  netscape.jsdebug.Script \
-		  netscape.jsdebug.DebugController \
-		  netscape.jsdebug.JSThreadState \
-		  netscape.jsdebug.JSStackFrameInfo \
-		  netscape.jsdebug.JSPC \
-		  netscape.jsdebug.JSSourceTextProvider \
-		  netscape.jsdebug.JSErrorReporter \
-		  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-$(OBJDIR)\jsdstubs.o: \
-	$(JDK_STUB_DIR)\netscape_jsdebug_Script.c \
-	$(JDK_STUB_DIR)\netscape_jsdebug_DebugController.c \
-	$(JDK_STUB_DIR)\netscape_jsdebug_JSThreadState.c \
-	$(JDK_STUB_DIR)\netscape_jsdebug_JSStackFrameInfo.c \
-	$(JDK_STUB_DIR)\netscape_jsdebug_JSPC.c \
-	$(JDK_STUB_DIR)\netscape_jsdebug_JSSourceTextProvider.c	
