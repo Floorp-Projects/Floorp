@@ -105,7 +105,7 @@ nsPolygonFrame::Init(nsIPresContext*  aPresContext,
 
 
   nsAutoString type;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
+  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
   if (type.EqualsIgnoreCase(NS_ConvertASCIItoUCS2("swatch")) || type.IsEmpty())
   {
@@ -155,14 +155,14 @@ nsPolygonFrame::Reflow(nsIPresContext*          aPresContext,
   }  
   
   nsAutoString coordStr;
-  nsresult res = mContent->GetAttribute(kNameSpaceID_None, nsSVGAtoms::x, coordStr);
+  nsresult res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::x, coordStr);
   if (NS_SUCCEEDED(res)) {
     char * s = coordStr.ToNewCString();
     mX = NSIntPixelsToTwips(atoi(s), p2t*scale);
     delete [] s;
   }
 
-  res = mContent->GetAttribute(kNameSpaceID_None, nsSVGAtoms::y, coordStr);
+  res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::y, coordStr);
   if (NS_SUCCEEDED(res)) {
     char * s = coordStr.ToNewCString();
     mY = NSIntPixelsToTwips(atoi(s), p2t*scale);
@@ -235,7 +235,7 @@ nsPolygonFrame::GetPoints()
   }
 
   nsAutoString pointsStr;
-  nsresult res = mContent->GetAttribute(kNameSpaceID_None, nsSVGAtoms::points, pointsStr);
+  nsresult res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::points, pointsStr);
 
   char * ps = pointsStr.ToNewCString();
   char seps[]   = " ";
@@ -316,7 +316,7 @@ NS_METHOD nsPolygonFrame::RenderPoints(nsIRenderingContext& aRenderingContext,
                                        const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   //nsAutoString fillStr;
-  //nsresult res = mContent->GetAttribute(kNameSpaceID_None, nsSVGAtoms::fill, fillStr);
+  //nsresult res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::fill, fillStr);
   //if (NS_SUCCEEDED(res)) {
     aRenderingContext.FillPolygon(aPoints, aNumPoints);
   //} else {

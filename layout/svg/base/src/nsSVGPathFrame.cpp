@@ -93,7 +93,7 @@ nsSVGPathFrame::Init(nsIPresContext*  aPresContext,
 
 
   nsAutoString type;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
+  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
   if (type.EqualsIgnoreCase(NS_ConvertASCIItoUCS2("swatch")) || type.IsEmpty())
   {
@@ -143,14 +143,14 @@ nsSVGPathFrame::Reflow(nsIPresContext*          aPresContext,
   }  
   
   nsAutoString coordStr;
-  nsresult res = mContent->GetAttribute(kNameSpaceID_None, nsSVGAtoms::x, coordStr);
+  nsresult res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::x, coordStr);
   if (NS_SUCCEEDED(res)) {
     char * s = coordStr.ToNewCString();
     mX = NSIntPixelsToTwips(atoi(s), p2t*scale);
     delete [] s;
   }
 
-  res = mContent->GetAttribute(kNameSpaceID_None, nsSVGAtoms::y, coordStr);
+  res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::y, coordStr);
   if (NS_SUCCEEDED(res)) {
     char * s = coordStr.ToNewCString();
     mY = NSIntPixelsToTwips(atoi(s), p2t*scale);
@@ -158,7 +158,7 @@ nsSVGPathFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   nsAutoString pathStr;
-  res = mContent->GetAttribute(kNameSpaceID_None, nsSVGAtoms::d, pathStr);
+  res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::d, pathStr);
   if (NS_SUCCEEDED(res)) {
     char * s = pathStr.ToNewCString();
     // parse path commands here
