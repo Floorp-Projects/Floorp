@@ -103,7 +103,7 @@ pref("browser.urlbar.showSearch", true);
 pref("browser.urlbar.matchOnlyTyped", false);
 
 pref("browser.chrome.site_icons", true);
-pref("browser.chrome.favicons", false);
+pref("browser.chrome.favicons", true);
 
 pref("browser.chrome.toolbar_tips",         true);
 pref("browser.chrome.toolbar_style",        2);
