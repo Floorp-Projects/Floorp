@@ -650,8 +650,14 @@ mime_image_make_image_html(void *image_closure)
   const char *suffix = "\"></CENTER><P>";
   const char *url;
   char *buf;
+
+  static PRInt32  makeUniqueHackID = 1;
+  char            makeUniqueHackString[128] = "";
+  
   PR_ASSERT(mid);
   if (!mid) return 0;
+
+  PR_snprintf(makeUniqueHackString, sizeof(makeUniqueHackString), "&hackID=%d", makeUniqueHackID++);
 
   /* Internal-external-reconnect only works when going to the screen. */
   if (!mid->istream)
@@ -668,13 +674,14 @@ mime_image_make_image_html(void *image_closure)
   else
     url = mid->url;
 
-  buf = (char *) PR_MALLOC (PL_strlen (prefix) + PL_strlen (suffix) +
-                           PL_strlen (url) + 20);
+  buf = (char *) PR_MALLOC (PL_strlen(prefix) + PL_strlen(suffix) +
+                           PL_strlen(url) + PL_strlen(makeUniqueHackString) + 20) ;
   if (!buf) return 0;
   *buf = 0;
 
   PL_strcat (buf, prefix);
   PL_strcat (buf, url);
+  PL_strcat (buf, makeUniqueHackString);
   PL_strcat (buf, suffix);
   return buf;
 }

@@ -22,6 +22,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prlog.h"
+#include "prprf.h"
 
 typedef enum mime_encoding {
   mime_Base64, mime_QuotedPrintable, mime_uuencode
@@ -692,7 +693,7 @@ mime_uuencode_buffer(MimeEncoderData *data,
 	if (!(data->uue_wrote_begin))
 	{
 		char firstLine[256];
-		sprintf(firstLine, "begin 644 %s\015\012", data->filename ? data->filename : "");
+		PR_snprintf(firstLine, sizeof(firstLine), "begin 644 %s\015\012", data->filename ? data->filename : "");
 		data->write_buffer(firstLine, PL_strlen(firstLine), data->closure);
 		data->uue_wrote_begin = PR_TRUE;
 		data->current_column = 1; /* initialization unique to uuencode */
