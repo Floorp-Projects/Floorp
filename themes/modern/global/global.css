@@ -161,6 +161,13 @@ statusbarpanel {
   margin: 0px !important;
 }
 
+resizer[dir="bottomright"] {
+  background-image: url("chrome://global/skin/icons/resizer.png");
+  cursor: se-resize;
+  width: 15px;
+  height: 15px;
+}
+
 /* ::::: miscellaneous ::::: */
 
 .toolbar-focustarget {

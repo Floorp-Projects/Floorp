@@ -204,6 +204,7 @@ modern.jar:
   skin/modern/global/icons/tab-new-hov.gif                         (global/icons/tab-new-hov.gif)
   skin/modern/global/icons/tab-new-act.gif                         (global/icons/tab-new-act.gif)
   skin/modern/global/icons/closebox.gif                            (global/icons/closebox.gif)
+  skin/modern/global/icons/resizer.png                             (global/icons/resizer.png)
   skin/modern/global/menu/menu-arrow-dis.gif                       (global/menu/menu-arrow-dis.gif)
   skin/modern/global/menu/menu-arrow-hov.gif                       (global/menu/menu-arrow-hov.gif)
   skin/modern/global/menu/menu-arrow.gif                           (global/menu/menu-arrow.gif)
