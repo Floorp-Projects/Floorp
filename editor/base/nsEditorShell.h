@@ -154,7 +154,7 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsISupportsArray> mDocStateListeners;		// contents are nsISupports
 
     // Get a string from the string bundle file
-    nsString   GetString(const nsString& name);
+    void   GetBundleString(const nsString& name, nsString &outString);
     
     // Get the text of the <title> tag
     NS_IMETHOD GetDocumentTitleString(nsString& title);

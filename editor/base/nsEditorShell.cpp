@@ -1258,7 +1258,6 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
 {
   *_retval = PR_FALSE;
 
-  nsAutoString ReasonToSave(reasonToSave);
   nsCOMPtr<nsIDOMDocument> theDoc;
   nsresult rv = GetEditorDocument(getter_AddRefs(theDoc));
   if (NS_SUCCEEDED(rv) && theDoc)
@@ -1275,18 +1274,22 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
       if (modCount > 0)
       {
         // Ask user if they want to save current changes
-        nsAutoString tmp1 = GetString("Save");
-        nsAutoString tmp2 = GetString("DontSave");
-        nsAutoString title;
+        nsAutoString reasonToSaveStr(reasonToSave);
+        nsAutoString tmp1, tmp2, title;
+        GetBundleString("Save", tmp1);
+        GetBundleString("DontSave", tmp2);
         GetDocumentTitleString(title);
         // If title is empty, use "untitled"
         if (title.Length() == 0)
-          title = GetString("untitled");
+          GetBundleString("untitled", title);
 
-        nsAutoString saveMsg = ((GetString("SaveFilePrompt")).ReplaceSubstring("%title%",title)).ReplaceSubstring("%reason%",ReasonToSave);
+        nsAutoString saveMsg;
+        GetBundleString("SaveFilePrompt", saveMsg);
+        saveMsg.ReplaceSubstring("%title%", title).ReplaceSubstring("%reason%", reasonToSaveStr);
 
-        EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), saveMsg,
-                                                  &tmp1, &tmp2);
+        nsAutoString saveDocString;
+        GetBundleString("SaveDocument", saveDocString);
+        EConfirmResult result = ConfirmWithCancel(saveDocString, saveMsg, &tmp1, &tmp2);
         if (result == eCancel)
         {
           *_retval = PR_FALSE;
@@ -1351,10 +1354,13 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               if (NS_SUCCEEDED(res)) 
               { 
                 PRUnichar *titleUnicode;
-                nsAutoString caption = GetString("DocumentTitle");
-                nsAutoString msg = GetString("NeedDocTitle"); 
+                nsAutoString captionStr, msgStr;
+                
+                GetBundleString("DocumentTitle", captionStr);
+                GetBundleString("NeedDocTitle", msgStr); 
+                
                 PRBool retVal = PR_FALSE;
-                res = dialog->Prompt(mContentWindow, caption.GetUnicode(), msg.GetUnicode(),
+                res = dialog->Prompt(mContentWindow, captionStr.GetUnicode(), msgStr.GetUnicode(),
                                      title.GetUnicode(), &titleUnicode, &retVal); 
                 
                 if( retVal == PR_FALSE)
@@ -1375,7 +1381,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, NS_GET_IID(nsIFileWidget), getter_AddRefs(fileWidget));
             if (NS_SUCCEEDED(res) && fileWidget)
             {
-              nsAutoString  promptString = GetString("SaveDocumentAs");
+              nsAutoString  promptString;
+              GetBundleString("SaveDocumentAs", promptString);
 
               nsString* titles = nsnull;
               nsString* filters = nsnull;
@@ -1388,31 +1395,32 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
 
               titles = new nsString[3];
               if (!titles)
-              {
-                res = NS_ERROR_OUT_OF_MEMORY;
-                goto SkipFilters;
-              }
+                return NS_ERROR_OUT_OF_MEMORY;
+
               filters = new nsString[3];
               if (!filters)
               {
-                res = NS_ERROR_OUT_OF_MEMORY;
-                goto SkipFilters;
+                delete [] titles;
+                return NS_ERROR_OUT_OF_MEMORY;
               }
               nextTitle = titles;
               nextFilter = filters;
               // The names of the file types are localizable
-              HTMLFiles = GetString("HTMLFiles");
-              TextFiles = GetString("TextFiles");
-              if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
-                goto SkipFilters;
+              GetBundleString("HTMLFiles", HTMLFiles);
+              GetBundleString("TextFiles", TextFiles);
+              if (! (HTMLFiles.Length() == 0 || TextFiles.Length() == 0))
+              {
+                nsAutoString allFilesStr;
+                GetBundleString("AllFiles", allFilesStr);
                 
               *nextTitle++ = HTMLFiles;
               *nextFilter++ = "*.htm; *.html; *.shtml";
               *nextTitle++ = TextFiles;
               *nextFilter++ = "*.txt";
-              *nextTitle++ = GetString("AllFiles");
+              *nextTitle++ = allFilesStr;
               *nextFilter++ = "*.*";
               fileWidget->SetFilterList(3, titles, filters);
+              }
               
               if (noFileSpec)
               {
@@ -1458,7 +1466,9 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                   title = title.ReplaceChar(colon, underscore);
                   fileName = title + nsString(".html");
                 }
-              } else {
+              } 
+              else
+              {
                 char *leafName = docFileSpec.GetLeafName();
                 if (leafName)
                 {
@@ -1469,10 +1479,10 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
 
                 // TODO: CHANGE TO THE DIRECTORY OF THE PARENT PATH?
               }
+              
               if (fileName.Length() > 0)
                 fileWidget->SetDefaultString(fileName);
-// Why is SkipFilters here?  Shouldn't it be before if (noFileSpec)???
-SkipFilters:
+
               nsFileDlgResults dialogResult;
               // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
               dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
@@ -1516,7 +1526,10 @@ SkipFilters:
         res = editor->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML);
         if (NS_FAILED(res))
         {
-          Alert(GetString("SaveDocument"), GetString("SaveFileFailed"));
+          nsAutoString saveDocStr, failedStr;
+          GetBundleString("SaveDocument", saveDocStr);
+          GetBundleString("SaveFileFailed", failedStr);
+          Alert(saveDocStr, failedStr);
         } else {
           // File was saved successfully
           *_retval = PR_TRUE;
@@ -1533,9 +1546,10 @@ SkipFilters:
 NS_IMETHODIMP    
 nsEditorShell::CloseWindow( PRBool *_retval )
 {
-  nsresult rv = NS_OK;
+  nsAutoString beforeClosingStr;
+  GetBundleString("BeforeClosing", beforeClosingStr);
   
-  rv = CheckAndSaveDocument(GetString("BeforeClosing").GetUnicode(),_retval);
+  nsresult rv = CheckAndSaveDocument(beforeClosingStr.GetUnicode(), _retval);
  
   // Don't close the window if there was an error saving file or 
   //   user canceled an action along the way
@@ -1579,7 +1593,8 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 
 
   nsCOMPtr<nsIFileWidget>  fileWidget;
-  nsAutoString HTMLTitle = GetString("OpenHTMLFile");
+  nsAutoString HTMLTitle;
+  GetBundleString("OpenHTMLFile", HTMLTitle);
 
   // An empty string should just result in "Open" for the dialog
   nsAutoString title;
@@ -1587,7 +1602,8 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
   {
     title = HTMLTitle;
   } else {
-    nsAutoString ImageTitle = GetString("SelectImageFile");
+    nsAutoString ImageTitle;
+    GetBundleString("SelectImageFile", ImageTitle);
 
     if (ImageTitle.Length() > 0 && imgFilter)
       title = ImageTitle;
@@ -1609,16 +1625,21 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
     nsString* nextTitle;
     nsString* nextFilter;
 
+    nsAutoString tempStr;
+
     if (htmlFilter)
     {
       titles = new nsString[3];
       filters = new nsString[3];
       if (!titles || ! filters)
         return NS_ERROR_OUT_OF_MEMORY;
+
       nextTitle = titles;
       nextFilter = filters;
-      *nextTitle++ = GetString("HTMLFiles");
-      *nextTitle++ = GetString("TextFiles");
+      GetBundleString("HTMLFiles", tempStr);
+      *nextTitle++ = tempStr;
+      GetBundleString("TextFiles", tempStr);
+      *nextTitle++ = tempStr;
       *nextFilter++ = "*.htm; *.html; *.shtml";
       *nextFilter++ = "*.txt";
       fileWidget->SetFilterList(3, titles, filters);
@@ -1629,11 +1650,13 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
         return NS_ERROR_OUT_OF_MEMORY;
       nextTitle = titles;
       nextFilter = filters;
-      *nextTitle++ = GetString("IMGFiles");
+      GetBundleString("IMGFiles", tempStr);
+      *nextTitle++ = tempStr;
       *nextFilter++ = "*.gif; *.jpg; *.jpeg; *.png", "*.*";
       fileWidget->SetFilterList(2, titles, filters);
     }
-    *nextTitle++ = GetString("AllFiles");
+    GetBundleString("AllFiles", tempStr);
+    *nextTitle++ = tempStr;
     *nextFilter++ = "*.*";
     // First param should be Parent window, but type is nsIWidget*
     // Bug is filed to change this to a more suitable window type
@@ -1676,7 +1699,7 @@ nsEditorShell::UpdateWindowTitle()
   res = GetDocumentTitleString(windowCaption);
   // If title is empty, use "untitled"
   if (windowCaption.Length() == 0)
-    windowCaption = GetString("untitled");
+    GetBundleString("untitled", windowCaption);
 
   // Append just the 'leaf' filename to the Doc. Title for the window caption
   if (NS_SUCCEEDED(res))
@@ -2371,27 +2394,24 @@ nsEditorShell::GetString(const PRUnichar *name, PRUnichar **_retval)
   }
 }
 
-static nsAutoString *ptmpString = 0;
 
 // Use this version within the shell:
-nsString
-nsEditorShell::GetString(const nsString& name)
+void nsEditorShell::GetBundleString(const nsString& name, nsString &outString)
 {
-  // Initialize upon first use to avoid static constructor
-  if (!ptmpString)
-    ptmpString = new nsAutoString();
-
-  // Don't fail, just return an empty string    
-  *ptmpString = "";
-  if (mStringBundle && (name != ""))
+  if (mStringBundle && name.Length() > 0)
   {
-    const PRUnichar *ptrtmp = name.GetUnicode();
     PRUnichar *ptrv = nsnull;
-    nsresult res = mStringBundle->GetStringFromName(ptrtmp, &ptrv);
-    if (NS_SUCCEEDED(res))
-      *ptmpString = ptrv;
+    if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.GetUnicode(), &ptrv)))
+      outString = ptrv;
+    else
+      outString = "";
+    
+    nsAllocator::Free(ptrv);
   }
-  return *ptmpString;
+  else
+  {
+    outString = "";
+  }
 }
 
 // Utility to bring up a Yes/No/Cancel dialog.
@@ -2413,14 +2433,25 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     nsAutoString url( "chrome://global/skin/question-icon.gif"  ); 
     block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
 
-    nsAutoString yes = aYesString ? *aYesString : GetString("Yes");
-    nsAutoString no = aNoString ? *aNoString : GetString("No");
-    nsAutoString cancel = GetString("Cancel");
+    nsAutoString yesStr, noStr;
+    if (aYesString)
+      yesStr = *aYesString;
+    else
+      GetBundleString("Yes", yesStr);
+
+    if (aNoString)
+      noStr = *aNoString;
+    else
+      GetBundleString("No", noStr);
+
+    nsAutoString cancelStr;
+    GetBundleString("Cancel", cancelStr);
+
     block->SetString( nsICommonDialogs::eDialogTitle, aTitle.GetUnicode() );
     //Note: "button0" is always Ok or Yes action, "button1" is Cancel
-    block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() ); 
-    block->SetString( nsICommonDialogs::eButton1Text, cancel.GetUnicode() ); 
-    block->SetString( nsICommonDialogs::eButton2Text, no.GetUnicode() ); 
+    block->SetString( nsICommonDialogs::eButton0Text, yesStr.GetUnicode() ); 
+    block->SetString( nsICommonDialogs::eButton1Text, cancelStr.GetUnicode() ); 
+    block->SetString( nsICommonDialogs::eButton2Text, noStr.GetUnicode() ); 
 
     NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
     if ( NS_SUCCEEDED( rv ) ) 
