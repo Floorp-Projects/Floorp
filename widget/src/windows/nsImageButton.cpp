@@ -114,6 +114,9 @@ nsImageButton::nsImageButton() : ChildWindow(), nsIImageButton(),
   mTextGap          = 2;
   mCommand          = 0;
 
+  mLabel.SetLength(0);
+  mLabel.Append("Default");
+
   mNumListeners = 0;
 }
 
@@ -136,7 +139,7 @@ NS_METHOD nsImageButton::Create(nsIWidget *aParent,
                                 nsIToolkit *aToolkit,
                                 nsWidgetInitData *aInitData)
 {
-  return nsWindow::Create(aParent, aRect,
+  return ChildWindow::Create(aParent, aRect,
      nsnull != aHandleEventFunction ? aHandleEventFunction:HandleImageButtonEvent,
      aContext, aAppShell, aToolkit, aInitData);
 }
@@ -208,7 +211,6 @@ nsEventStatus nsImageButton::OnPaint(nsIRenderingContext& aRenderingContext,
                                      const nsRect       & aDirtyRect)
 {
   PushState(aRenderingContext);
-
   nsRect   bounds;
   nsString label;
 
@@ -561,6 +563,9 @@ nsEventStatus nsImageButton::HandleEvent(nsGUIEvent *aEvent)
           rect.x = 0;
           rect.y = 0;
           ds = ctx->CreateDrawingSurface(&rect);
+          if (ds == nsnull) {
+            return nsEventStatus_eConsumeNoDefault;
+          }
           ctx->SelectOffScreenDrawingSurface(ds);
 
           es = OnPaint((*((nsPaintEvent*)aEvent)->renderingContext),(*((nsPaintEvent*)aEvent)->rect));
@@ -653,8 +658,15 @@ void nsImageButton::Notify(nsIImageRequest *aImageRequest,
                           PRInt32 aParam1, PRInt32 aParam2,
                           void *aParam3)
 {
-  if (aNotificationType == nsImageNotification_kImageComplete)
+  if (aNotificationType == nsImageNotification_kImageComplete) {
+    PRUint32 w,h;
+    aImageRequest->GetNaturalDimensions(&w, &h);
+    if (w > 0 && h > 0) {
+      aImageRequest->GetNaturalDimensions(&mImageWidth, &mImageHeight);
+    }
+
     Invalidate(PR_FALSE);
+  }
   return ;
 }
 
@@ -807,7 +819,6 @@ NS_METHOD nsImageButton::RemoveListener(nsIImageButtonListener * aListener)
 //-------------------------------------------------------------------------
 NS_METHOD nsImageButton::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
-
   if (mPreferredWidth != 0  || mPreferredHeight != 0) {
     aWidth  = mPreferredWidth;
     aHeight = mPreferredHeight;
@@ -819,33 +830,10 @@ NS_METHOD nsImageButton::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
  
     GetBounds(rect);
     PerformAlignment(rect, mUpImageRequest, imgRect, mLabel, txtRect, which, aWidth, aHeight);
-
     aWidth  += (mBorderWidth*2)+(mBorderOffset*2);
     aHeight += (mBorderWidth*2)+(mBorderOffset*2);
   }
 
-/*  if (mPreferredWidth != 0) {
-    aWidth = mPreferredWidth;
-  } else {
-    if (!mShowImage) {
-      aWidth = string_width + (mBorderWidth*2) + (mBorderOffset*2);
-    } else {
-      aWidth = mPreferredWidth;
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  if (mPreferredHeight != 0) {
-    aHeight = mPreferredHeight;
-  } else {
-    if (!mShowImage) {
-      aHeight = string_height+(mBorderWidth*2)+(mBorderOffset*2);
-    } else {
-      aWidth = mPreferredWidth;
-      return NS_ERROR_FAILURE;
-    }
-  }
-*/
   return NS_OK;
 }
 
@@ -884,25 +872,26 @@ void nsImageButton::PerformAlignment(const nsRect & aRect,
   aImgRect.SetRect(0, 0, 0, 0); 
   aTxtRect.SetRect(0, 0, 0, 0); 
 
+  aMaxWidth  = 0;
+  aMaxHeight = 0;
   PRInt32 offset = mBorderWidth + mBorderOffset;
-
-  if (aText.Equals("Back")) {
-    int x = 0;
-  }
-
 
   // set up initial text size
   if (mShowText) { 
-    nsIFontMetrics* metrics; 
-    mContext->GetMetricsFor(mFont, metrics); 
     nsIRenderingContext *cx;
-    mContext->CreateRenderingContext(this, cx);
+    if (NS_OK != mContext->CreateRenderingContext(this, cx)) {
+      return;
+    }
+    nsIFontMetrics* metrics; 
+    if (NS_OK != mContext->GetMetricsFor(mFont, metrics)) {
+      NS_RELEASE(cx);
+      return;
+    }
     cx->SetFont(metrics);
     metrics->GetHeight(string_height); 
     cx->GetWidth(aText, string_width); 
-    NS_RELEASE(cx);
     NS_RELEASE(metrics); 
-
+    NS_RELEASE(cx);
 
     aTxtRect.SetRect(offset,offset, string_width, string_height); // Align left 
     if (!mShowImage || anImage == nsnull) {
