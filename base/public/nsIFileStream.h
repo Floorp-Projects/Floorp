@@ -47,6 +47,10 @@ public:
     NS_IMETHOD                         Seek(PRSeekWhence whence, PRInt32 offset) = 0;
     NS_IMETHOD                         GetIsOpen(PRBool* outOpen) = 0;
     NS_IMETHOD                         Tell(PRIntn* outWhere) = 0;
+
+/* "PROTECTED" */
+    NS_IMETHOD                         GetAtEOF(PRBool* outAtEOF) = 0;
+    NS_IMETHOD                         SetAtEOF(PRBool inAtEOF) = 0;
 }; // class nsIFile
 
 /* a6cf90e6-15b3-11d2-932e-00805f8add32 */
@@ -86,7 +90,7 @@ public:
 }; // class nsIFileOutputStream
 
 //----------------------------------------------------------------------------------------
-NS_BASE nsresult NS_NewTypicalInputFileStream(
+extern "C" NS_BASE nsresult NS_NewTypicalInputFileStream(
     nsISupports** aStreamResult,
     const nsFileSpec& inFile
     /*Default nsprMode == PR_RDONLY*/

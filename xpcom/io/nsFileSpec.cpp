@@ -287,6 +287,23 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
 } // nsFileURL::nsFileURL
 #endif
 
+#ifndef XP_MAC
+//----------------------------------------------------------------------------------------
+nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
+//----------------------------------------------------------------------------------------
+:    mURL(nsnull)
+{
+    const nsAutoCString aString(inString);
+    char* aCString = (const char*) aString;
+    if (!inString)
+    	return;
+    NS_ASSERTION(strstr(aCString, kFileURLPrefix) == inString, "Not a URL!");
+    // Make canonical and absolute.
+	nsFilePath path(aCString + kFileURLPrefixLength, inCreateDirs);
+	*this = path;
+} // nsFileURL::nsFileURL
+#endif
+
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
@@ -407,6 +424,26 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
 }
 #endif
 
+#ifndef XP_MAC
+//----------------------------------------------------------------------------------------
+nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
+//----------------------------------------------------------------------------------------
+:    mPath(inString.ToNewCString())
+{
+    NS_ASSERTION(strstr(mPath, kFileURLPrefix) != inString, "URL passed as path");
+
+#ifdef XP_PC
+    nsFileSpecHelpers::UnixToNative(mPath);
+#endif
+    // Make canonical and absolute.
+    nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
+#ifdef XP_PC
+    NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
+    nsFileSpecHelpers::NativeToUnix(mPath);
+#endif
+}
+#endif
+
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
@@ -451,6 +488,7 @@ void nsFilePath::operator = (const char* inString)
     mFileSpec = inString;
 	nsFileSpecHelpers::StringAssign(mPath, (const char*)nsFilePath(mFileSpec));
 #else
+	nsFileSpecHelpers::StringAssign(mPath, inString);
 #ifdef XP_PC
 	nsFileSpecHelpers::UnixToNative(mPath);
 #endif
@@ -640,6 +678,18 @@ nsFileSpec::nsFileSpec(const char* inString, PRBool inCreateDirs)
 }
 #endif //XP_UNIX,PC
 
+#if defined(XP_UNIX) || defined(XP_PC)
+//----------------------------------------------------------------------------------------
+nsFileSpec::nsFileSpec(const nsString& inString, PRBool inCreateDirs)
+//----------------------------------------------------------------------------------------
+:    mPath(inString.ToNewCString())
+,    mError(NS_OK)
+{
+    // Make canonical and absolute.
+    nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
+}
+#endif //XP_UNIX,PC
+
 //----------------------------------------------------------------------------------------
 nsFileSpec::~nsFileSpec()
 //----------------------------------------------------------------------------------------
@@ -672,6 +722,18 @@ void nsFileSpec::operator = (const char* inString)
 }
 #endif //XP_UNIX
 
+#if defined(XP_UNIX) || defined(XP_PC)
+//----------------------------------------------------------------------------------------
+void nsFileSpec::operator = (const nsString& inString)
+//----------------------------------------------------------------------------------------
+{
+    delete [] mPath;
+    mPath = inString.ToNewCString();
+    // Make canonical and absolute.
+    nsFileSpecHelpers::Canonify(mPath, PR_TRUE /* XXX? */);
+    mError = NS_OK;
+}
+#endif //XP_UNIX
 
 #if (defined(XP_UNIX) || defined(XP_PC))
 //----------------------------------------------------------------------------------------
@@ -775,6 +837,22 @@ void nsPersistentFileDescriptor::SetData(const void* inData, PRInt32 inSize)
 #define MAX_PERSISTENT_DATA_SIZE 1000
 
 //----------------------------------------------------------------------------------------
+nsresult nsPersistentFileDescriptor::Read(nsIInputStream* aStream)
+//----------------------------------------------------------------------------------------
+{
+    nsInputStream(aStream) >> *this;
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+nsresult nsPersistentFileDescriptor::Write(nsIOutputStream* aStream)
+//----------------------------------------------------------------------------------------
+{
+    nsOutputStream(aStream) << *this;
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
 nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
 // reads the data from a file
 //----------------------------------------------------------------------------------------
@@ -792,7 +870,7 @@ nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
 	// Now we know how many bytes to read, do it.
 	s.read(bigBuffer, bytesRead);
 	d.SetData(bigBuffer, bytesRead);
-	return (nsInputFileStream&)s;
+	return s;
 }
 
 //----------------------------------------------------------------------------------------
@@ -810,4 +888,15 @@ nsOutputStream& operator << (nsOutputStream& s, const nsPersistentFileDescriptor
 	// Now write the data itself
 	s << d.mDescriptorString;
 	return s;
+}
+
+//========================================================================================
+//	class nsAutoCString
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsAutoCString::~nsAutoCString()
+//----------------------------------------------------------------------------------------
+{
+	delete [] mCString;
 }

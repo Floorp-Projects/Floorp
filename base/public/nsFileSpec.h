@@ -24,7 +24,8 @@
 //
 //  Classes defined:
 //
-//      nsFilePath, nsFileURL, nsFileSpec, nsPersistentFileDescriptor.
+//      nsFilePath, nsFileURL, nsFileSpec, nsPersistentFileDescriptor
+//      nsDirectoryIterator. Oh, and a convenience class nsAutoCString.
 //
 //  Q.  How should I represent files at run time?
 //  A.  Use nsFileSpec.  Using char* will lose information on some platforms.
@@ -113,6 +114,7 @@
 
 #include "nscore.h"
 #include "nsError.h"
+#include "nsString.h"
 
 //========================================================================================
 //                          Compiler-specific macros, as needed
@@ -159,8 +161,11 @@ class nsPersistentFileDescriptor; // Used for storage across program launches.
 
 class nsOutputStream;
 class nsInputStream;
+class nsIOutputStream;
+class nsIInputStream;
 class nsOutputFileStream;
 class nsInputFileStream;
+class nsString;
 
 //========================================================================================
 // Conversion of native file errors to nsresult values. These are really only for use
@@ -174,6 +179,33 @@ nsresult ns_file_convert_result(PRInt32 nativeErr);
 #define NS_FILE_FAILURE NS_FILE_RESULT(-1)
 
 //========================================================================================
+class NS_BASE nsAutoCString
+//
+// This should be in nsString.h, but the owner would not reply to my proposal.  After four
+// weeks, I decided to put it in here.
+//
+// This is a quiet little class that acts as a sort of autoptr for
+// a const char*.  If you used to call nsString::ToNewCString(), just
+// to pass the result a parameter list, it was a nuisance having to
+// call delete [] on the result after the call.  Now you can say
+//     nsString myStr;
+//     ...
+//     f(nsAutoCString(myStr));
+// where f is declared as void f(const char*);  This call will
+// make a temporary char* pointer on the stack and delete[] it
+// when the function returns.
+//========================================================================================
+{
+public:
+    NS_EXPLICIT                  nsAutoCString(const nsString& other) : mCString(other.ToNewCString()) {}
+    virtual                      ~nsAutoCString();    
+                                 operator const char*() const { return mCString; }
+                                 operator const char*() { return mCString; }
+protected:
+                                 const char* mCString;
+}; // class nsAutoCString
+
+//========================================================================================
 class NS_BASE nsFileSpec
 //    This is whatever each platform really prefers to describe files as.  Declared first
 //  because the other two types have an embeded nsFileSpec object.
@@ -182,6 +214,7 @@ class NS_BASE nsFileSpec
     public:
                                 nsFileSpec();
         NS_EXPLICIT             nsFileSpec(const char* inString, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFileSpec(const nsString& inString, PRBool inCreateDirs = PR_FALSE);
         NS_EXPLICIT             nsFileSpec(const nsFilePath& inPath);
         NS_EXPLICIT             nsFileSpec(const nsFileURL& inURL);
         NS_EXPLICIT             nsFileSpec(const nsPersistentFileDescriptor& inURL);
@@ -189,6 +222,10 @@ class NS_BASE nsFileSpec
         virtual                 ~nsFileSpec();
 
         void                    operator = (const char* inPath);
+        void                    operator = (const nsString& inPath)
+                                {
+                                    *this = nsAutoCString(inPath);
+                                }
         void                    operator = (const nsFilePath& inPath);
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const nsFileSpec& inOther);
@@ -245,7 +282,10 @@ class NS_BASE nsFileSpec
         void                    SetLeafName(const char* inLeafName);
                                     // inLeafName can be a relative path, so this allows
                                     // one kind of concatenation of "paths".
-
+        void                    SetLeafName(const nsString& inLeafName)
+                                {
+                                    SetLeafName(nsAutoCString(inLeafName));
+                                }
         void                    GetParent(nsFileSpec& outSpec) const;
                                     // Return the filespec of the parent directory. Used
                                     // in conjunction with GetLeafName(), this lets you
@@ -255,6 +295,10 @@ class NS_BASE nsFileSpec
                                     // names.  Perhaps could be used for an operator --() ?
 
         nsFileSpec              operator + (const char* inRelativePath) const;
+        nsFileSpec              operator + (const nsString& inRelativePath) const
+                                {
+                                    return *this + nsAutoCString(inRelativePath);
+                                }
         void			        operator += (const char* inRelativePath);
                                     // Concatenate the relative path to this directory.
                                     // Used for constructing the filespec of a descendant.
@@ -264,9 +308,17 @@ class NS_BASE nsFileSpec
                                     // away its leaf information, whereas this one assumes
                                     // this is a directory, and the relative path starts
                                     // "below" this.
+        void			        operator += (const nsString& inRelativePath)
+                                {
+                                    *this += nsAutoCString(inRelativePath);
+                                }
 
         void                    MakeUnique();
         void                    MakeUnique(const char* inSuggestedLeafName);
+        void                    MakeUnique(const nsString& inSuggestedLeafName)
+                                {
+                                    MakeUnique(nsAutoCString(inSuggestedLeafName));
+                                }
     
         PRBool                  IsDirectory() const;
                                     // More stringent than Exists()
@@ -279,12 +331,20 @@ class NS_BASE nsFileSpec
         //--------------------------------------------------
 
         void                    CreateDirectory(int mode = 0700 /* for unix */);
-        void                    Delete(PRBool inRecursive);
+        void                    Delete(PRBool inRecursive) const;
         
         nsresult                Rename(const char* inNewName); // not const: gets updated
+        nsresult                Rename(const nsString& inNewName)
+                                {
+                                    return Rename(nsAutoCString(inNewName));
+                                }
         nsresult                Copy(const nsFileSpec& inNewParentDirectory) const;
         nsresult                Move(const nsFileSpec& inNewParentDirectory) const;
         nsresult                Execute(const char* args) const;
+        nsresult                Execute(const nsString& args) const
+                                {
+                                    return Execute(nsAutoCString(args));
+                                }
 
         //--------------------------------------------------
         // Data
@@ -314,6 +374,7 @@ class NS_BASE nsFileURL
     public:
                                 nsFileURL(const nsFileURL& inURL);
         NS_EXPLICIT             nsFileURL(const char* inString, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFileURL(const nsString& inString, PRBool inCreateDirs = PR_FALSE);
         NS_EXPLICIT             nsFileURL(const nsFilePath& inPath);
         NS_EXPLICIT             nsFileURL(const nsFileSpec& inPath);
         virtual                 ~nsFileURL();
@@ -324,6 +385,10 @@ class NS_BASE nsFileURL
 
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const char* inString);
+        void                    operator = (const nsString& inString)
+                                {
+                                    *this = nsAutoCString(inString);
+                                }
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsFileSpec& inOther);
 
@@ -357,6 +422,7 @@ class NS_BASE nsFilePath
     public:
                                 nsFilePath(const nsFilePath& inPath);
         NS_EXPLICIT             nsFilePath(const char* inString, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFilePath(const nsString& inString, PRBool inCreateDirs = PR_FALSE);
         NS_EXPLICIT             nsFilePath(const nsFileURL& inURL);
         NS_EXPLICIT             nsFilePath(const nsFileSpec& inPath);
         virtual                 ~nsFilePath();
@@ -373,6 +439,10 @@ class NS_BASE nsFilePath
 
         void                    operator = (const nsFilePath& inPath);
         void                    operator = (const char* inString);
+        void                    operator = (const nsString& inString)
+                                {
+                                    *this = nsAutoCString(inString);
+                                }
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const nsFileSpec& inOther);
 
@@ -407,6 +477,9 @@ class NS_BASE nsPersistentFileDescriptor
                                 nsPersistentFileDescriptor(const nsFileSpec& inPath);
         void					operator = (const nsFileSpec& inPath);
         
+    	nsresult                Read(nsIInputStream* aStream);
+    	nsresult                Write(nsIOutputStream* aStream);
+    	    // writes the data to a file
     	friend NS_BASE nsInputStream& operator >> (nsInputStream&, nsPersistentFileDescriptor&);
     		// reads the data from a file
     	friend NS_BASE nsOutputStream& operator << (nsOutputStream&, const nsPersistentFileDescriptor&);
@@ -462,7 +535,7 @@ class NS_BASE nsDirectoryIterator
 	                            operator nsFileSpec&() { return mCurrent; }
 	private:
 	    nsFileSpec              mCurrent;
-	    PRBool                  mExists; // MUST be bool.
+	    PRBool                  mExists;
 	      
 #if defined(XP_UNIX)
         DIR*                    mDir;

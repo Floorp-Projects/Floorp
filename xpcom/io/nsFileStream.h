@@ -174,8 +174,12 @@ public:
                                       {
                                           return mInputStream;
                                       }
-    char                              eof() const { return mEOF; }
+    char                              eof() const { return get_at_eof(); }
     char                              get();
+    void                              close()
+                                      {
+                                          mInputStream->Close();
+                                      }
     PRInt32                           read(void* s, PRInt32 n)
                                       {
                                           if (!mInputStream)
@@ -183,7 +187,7 @@ public:
                                           PRInt32 result = 0;
                                           mInputStream->Read((char*)s, 0, n, (PRUint32*)&result);
                                           if (result < n)
-                                              mEOF = PR_TRUE;
+                                              set_at_eof(PR_TRUE);
                                           return result;
                                       }
 
@@ -195,6 +199,19 @@ public:
     nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
                                       {
                                            return pf(*this);
+                                      }
+
+protected:
+
+   // These certainly need to be overridden, they give the best shot we can at detecting
+   // eof in a simple nsIInputStream.
+   virtual void                       set_at_eof(PRBool atEnd)
+                                      {
+                                         mEOF = atEnd;
+                                      }
+   virtual PRBool                     get_at_eof()
+                                      {
+                                          return mEOF;
                                       }
 private:
 
@@ -219,7 +236,7 @@ class NS_BASE nsOutputStream
 public:
                                       nsOutputStream() {}
                                       nsOutputStream(nsIOutputStream* inStream)
-                                      :    mOutputStream(do_QueryInterface(inStream))
+                                      :   mOutputStream(do_QueryInterface(inStream))
                                           {}
 
     virtual                          ~nsOutputStream();
@@ -227,6 +244,10 @@ public:
     nsCOMPtr<nsIOutputStream>         GetIStream() const
                                       {
                                           return mOutputStream;
+                                      }
+    void                              close()
+                                      {
+                                          mOutputStream->Close();
                                       }
     void                              put(char c);
     PRInt32                           write(const void* s, PRInt32 n)
@@ -309,6 +330,7 @@ public:
 
     void                              seek(PRSeekWhence whence, PRInt32 offset)
                                       {
+                                          set_at_eof(PR_FALSE);
                                           if (mFile)
                                               mResult = mFile->Seek(whence, offset);
                                       }
@@ -319,7 +341,22 @@ public:
                                               mResult = mFile->Tell(&result);
                                           return result;
                                       }
-                                      
+protected:
+
+   virtual PRBool                     get_at_eof()
+                                      {
+                                          PRBool result;
+                                          if (mFile)
+                                              mFile->GetAtEOF(&result);
+                                          return result;
+                                      }
+
+   virtual void                       set_at_eof(PRBool atEnd)
+                                      {
+                                          if (mFile)
+                                              mFile->SetAtEOF(atEnd);
+                                      }
+
 // DATA
 protected:
     nsCOMPtr<nsIFile>                 mFile;
@@ -354,6 +391,7 @@ public:
                                           mFile = nsQueryInterface(stream);
                                           mInputStream = nsQueryInterface(stream);
                                           mFileInputStream = nsQueryInterface(stream);
+                                          NS_RELEASE(stream);
                                       }
 
     PRBool                            readline(char* s,  PRInt32 n);
@@ -376,6 +414,19 @@ public:
                                          { return nsInputStream::operator >>(ch); }
     nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
                                          { return nsInputStream::operator >>(pf); }
+
+protected:
+
+   virtual PRBool                     get_at_eof()
+                                      {
+                                          return nsFileClient::get_at_eof();
+                                      }
+
+   virtual void                       set_at_eof(PRBool atEnd)
+                                      {
+                                          nsFileClient::set_at_eof(atEnd);
+                                      }
+
 
 // DATA
 protected:
@@ -413,6 +464,7 @@ public:
                                           mFile = nsQueryInterface(stream);
                                           mOutputStream = nsQueryInterface(stream);
                                           mFileOutputStream = nsQueryInterface(stream);
+                                          NS_RELEASE(stream);
                                       }
  
     virtual void                      flush();
@@ -432,6 +484,18 @@ public:
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
+
+protected:
+
+   virtual PRBool                     get_at_eof()
+                                      {
+                                          return nsFileClient::get_at_eof();
+                                      }
+
+   virtual void                       set_at_eof(PRBool atEnd)
+                                      {
+                                          nsFileClient::set_at_eof(atEnd);
+                                      }
 
 // DATA
 protected:
@@ -454,6 +518,7 @@ public:
                                           mFile = nsQueryInterface(stream);
                                           mOutputStream = nsQueryInterface(stream);
                                           mFileOutputStream = nsQueryInterface(stream);
+                                          NS_RELEASE(stream);
                                       }
 
     // Output streamers.  Unfortunately, they don't inherit!
@@ -509,8 +574,16 @@ public:
                                           mOutputStream = nsQueryInterface(stream);
                                           mFileInputStream = nsQueryInterface(stream);
                                           mFileOutputStream = nsQueryInterface(stream);
+                                          NS_RELEASE(stream);
                                       }
  
+    virtual void                      close()
+                                      {
+                                          // Doesn't matter which of the two we close:
+                                          // they're hooked up to the same file.
+                                          nsInputFileStream::close();
+                                      }
+
      // Output streamers.  Unfortunately, they don't inherit!
     nsOutputStream&                   operator << (const char* buf)
                                         { return nsOutputStream::operator << (buf); }
@@ -532,6 +605,7 @@ public:
                                          { return nsInputStream::operator >>(ch); }
     nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
                                          { return nsInputStream::operator >>(pf); }
+
     // DATA
 protected:
     nsCOMPtr<nsIFileOutputStream>     mFileOutputStream;
