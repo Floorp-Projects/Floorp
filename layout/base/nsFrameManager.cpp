@@ -1293,7 +1293,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
           // only do frames that are in flow
           nsCOMPtr<nsIAtom> frameType;
           child->GetFrameType(getter_AddRefs(frameType));
-          if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
+          if (nsLayoutAtoms::placeholderFrame == frameType.get()) { // placeholder
             // get out of flow frame and recurse there
             nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
             NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
