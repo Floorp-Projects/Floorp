@@ -34,6 +34,10 @@ CPPSRCS		= \
 		xcDll.cpp \
 		$(NULL)
 
+XPIDLSRCS	= \
+		nsIComponent.idl	\
+		$(NULL)
+
 EXPORTS		= \
 		nsIComponentManager.h \
 		nsIFactory.h \
