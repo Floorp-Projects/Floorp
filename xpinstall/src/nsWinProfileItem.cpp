@@ -36,7 +36,6 @@ nsWinProfileItem::nsWinProfileItem(nsWinProfile* profileObj,
 
 nsWinProfileItem::~nsWinProfileItem()
 {
-  delete mProfile;  // <--  is this the correct thing to do here?? FIX
   if (mSection) delete mSection;
   if (mKey)     delete mKey;
   if (mValue)   delete mValue;
@@ -50,11 +49,6 @@ PRInt32 nsWinProfileItem::Complete()
     return NS_OK;
 }
   
-float nsWinProfileItem::GetInstallOrder()
-{
-	return 4;  // <--- what is this magic number??  FIX
-}
-
 PRUnichar* nsWinProfileItem::toString()
 {
   PRUnichar*     resultCString;

@@ -58,9 +58,6 @@ public:
   
   void Abort();
   
-  float GetInstallOrder();
-  
-  
 /* should these be protected? */
   PRBool CanUninstall();
   PRBool RegisterPackageNode();
