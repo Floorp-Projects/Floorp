@@ -60,7 +60,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 /*   NS_ASSERTION( hwndP == HWND_DESKTOP && aParent == nsnull,
                  "Attempt to create non-top-level frame");   */
 
-#if DEBUG
+#if DEBUG_sobotka
    printf("\nIn nsFrameWindow::RealDoCreate:\n");
    printf("   hwndP = %lu\n", hwndP);
    printf("   aParent = 0x%lx\n", &aParent);

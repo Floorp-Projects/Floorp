@@ -78,7 +78,7 @@ void nsCanvas::RealDoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
       nsWindow::RealDoCreate( hwndP, aParent, aRect, aHandleEventFunction,
                               aContext, aAppShell, aInitData, hwndO);
    }
-#if DEBUG
+#if DEBUG_sobotka
    printf("\nIn nsCanvas::RealDoCreate aParent = 0x%lx\n", &aParent);
    printf("   hwndP = %lu\n", hwndP);
    printf("   hwnd0 = %lu\n", hwndO);

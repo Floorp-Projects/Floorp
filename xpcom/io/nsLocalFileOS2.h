@@ -57,7 +57,7 @@
 inline nsresult
 nsresultForErrno(int err)
 {
-#ifdef DEBUG
+#ifdef DEBUG_sobotka
     if (err)
         fprintf(stderr, "errno %d\n", err);
 #endif
@@ -114,7 +114,7 @@ private:
 
     nsresult    LoadStatCache() {
         if (stat((const char*)mPath, &mStatCache) == -1) {
-#ifdef DEBUG
+#ifdef DEBUG_sobotka
             fprintf(stderr, "stat(%s) failed; errno: %d\n", (const char *)mPath, errno);
 #endif
             return NS_ERROR_FAILURE;
