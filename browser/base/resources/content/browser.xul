@@ -24,11 +24,10 @@ Contributor(s): ______________________________________. -->
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
 <?xul-overlay href="chrome://browser/content/navigatorOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/navExtraOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/bookmarks/bookmarksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 
 
 <!DOCTYPE window [
@@ -75,7 +74,6 @@ Contributor(s): ______________________________________. -->
   <!-- Navigator -->
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-2.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/navigator.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
 
@@ -93,22 +91,17 @@ Contributor(s): ______________________________________. -->
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
     <commandset id="clipboardEditMenuItems"/>
-    <!-- <command id="cmd_pageSetup"/> -->
-    <command id="toggleSidebar"/>
   </commandset>
     
   <!-- broadcasters are appended from the overlay -->
   <broadcasterset id="navBroadcasters"/>
    
   <!-- keys are appended from the overlay -->
-  <keyset id="navKeys">
-    <key id="showHideSidebar"/>
-  </keyset>
+  <keyset id="navKeys"/>
   
   <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
-  <popup id="sidebarPopup"/>
 
   <popupset id="bookmarksPopupset"/>
  
@@ -399,25 +392,20 @@ Contributor(s): ______________________________________. -->
     </toolbar>
 
   </toolbox>
-    
-  <hbox flex="1">
-    <vbox id="sidebar-box" class="chromeclass-extrachrome"/>
-    <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
-  
-    <!-- we only need to handle |ondragdrop| because everything else is
-          taken care of by the builtin behavior inside the tabbrowser -->
-    <vbox id="appcontent" flex="1"
-         ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+     
+  <!-- we only need to handle |ondragdrop| because everything else is
+        taken care of by the builtin behavior inside the tabbrowser -->
+  <vbox id="appcontent" flex="1"
+       ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
-      <!-- this box is temporary, pending XBLified <browser> -->
-      <hbox id="browser" flex="1">
-        <tabbrowser id="content"
-                 flex="1" contenttooltip="aHTMLTooltip"
-                 contentcontextmenu="contentAreaContextMenu"
-                 onclick="return contentAreaClick(event);"/>
-      </hbox>
-    </vbox>  
-  </hbox>
+    <!-- this box is temporary, pending XBLified <browser> -->
+    <hbox id="browser" flex="1">
+      <tabbrowser id="content"
+               flex="1" contenttooltip="aHTMLTooltip"
+               contentcontextmenu="contentAreaContextMenu"
+               onclick="return contentAreaClick(event);"/>
+    </hbox>
+  </vbox>  
 
   <statusbar id="status-bar" class="chromeclass-status"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">

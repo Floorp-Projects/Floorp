@@ -15,7 +15,7 @@
 
 <!ENTITY browserCmd.label	"New Navigator Window">
 <!ENTITY browserCmd.accesskey	"N">
-<!ENTITY tabCmd.label "Navigator Tab">
+<!ENTITY tabCmd.label "New Navigator Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
 <!ENTITY openCmd.label "Open Web Location...">
@@ -24,13 +24,6 @@
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY openFileCmd.accesskey "o">
 <!ENTITY openFileCmd.commandkey "o">
-<!ENTITY editPageCmd.label "Edit Page">
-<!ENTITY editPageCmd.accesskey "d">
-<!ENTITY editPageCmd.commandkey "e">
-<!ENTITY editFrameCmd.label "Edit Frame">
-<!ENTITY editFrameCmd.accesskey "m">
-<!ENTITY editFrameSetCmd.label "Edit Frameset">
-<!ENTITY editFrameSetCmd.accesskey "t">
 
 <!ENTITY printSetupCmd.label "Page Setup...">
 <!ENTITY printSetupCmd.accesskey "u">
@@ -98,48 +91,18 @@
 <!ENTITY doccharactersetBidiCmd.label "Use the document specified character set">
 <!ENTITY defaultcharactersetBidiCmd.label "Use my default character set, overriding the document-specified character set">
 
-<!ENTITY webContentMenu.label "Languages and Web Content">
-<!ENTITY webContentMenu.accesskey "l">
-<!ENTITY downloadMore.label "Download More">
-<!ENTITY downloadMore.accesskey "D">
 <!ENTITY applyTheme.label	"Apply Theme"> 
 <!ENTITY applyTheme.accesskey	"A"> 
 <!ENTITY themePreferencesCmd.label "Theme Preferences..."> 
 <!ENTITY themePreferencesCmd.accesskey "T"> 
 <!ENTITY getNewThemesCmd.label "Get New Themes">
 <!ENTITY getNewThemesCmd.accesskey "G">
-<!ENTITY searchMenu.label "Search">
-<!ENTITY searchMenu.accesskey "s">
 <!ENTITY findOnCmd.label "Find in This Page...">
 <!ENTITY findOnCmd.accesskey "f">
 <!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
-<!-- XXX - boy there's a lot of crap here. -->
-<!ENTITY searchInternetCmd.label "Search the Web">
-<!ENTITY searchInternetCmd.accesskey "w">
-<!ENTITY searchAllMailCmd.label "Search Mail">
-<!ENTITY searchAllMailCmd.accesskey "m">
-<!ENTITY searchAddressbookCmd.label "Search Addressbook">
-<!ENTITY searchAddressbookCmd.accesskey "a">
-<!ENTITY searchComputerCmd.label "Search on this Computer...">
-<!ENTITY searchBusinessMenu.label "Business">
-<!ENTITY searchBusinessMenu.accesskey "u">
-<!ENTITY searchYellowPages.label "Yellow Pages">
-<!ENTITY searchYellowPages.accesskey "y">
-<!ENTITY searchStockQuote.label "Stock Quote Lookup">
-<!ENTITY searchStockQuote.accesskey "s">
-<!ENTITY searchMaps.label "Maps and Directions">
-<!ENTITY searchMaps.accesskey "d">
-<!ENTITY searchPeople.label "People Finder">
-<!ENTITY searchPeople.accesskey "p">
-<!ENTITY searchReferenceDesk.label "Reference Desk">
-<!ENTITY searchReferenceDesk.accesskey "r">
-<!ENTITY searchShopping.label "Shopping Search">
-<!ENTITY searchShopping.accesskey "s">
-<!ENTITY searchInternetKeywords.label "Internet Keywords">
-<!ENTITY searchInternetKeywords.accesskey "k">
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goHomeCmd.label "Home">
