@@ -225,15 +225,29 @@ function HideImage() {
 
 function HideEncryptOrObscure() {
   var elementOn, elementOff;
-  if (this.pref.GetBoolPref("wallet.crypto")) {
-    elementOn = document.getElementById("obscure");
-    elementOff = document.getElementById("encrypt");
-  } else {
-    elementOn = document.getElementById("encrypt");
-    elementOff = document.getElementById("obscure");
+  try {
+    if (this.pref.GetBoolPref("wallet.crypto")) {
+	  elementOn = document.getElementById("obscure");
+	  elementOff = document.getElementById("encrypt");
+	} else {
+	  elementOn = document.getElementById("encrypt");
+	  elementOff = document.getElementById("obscure");
+	}
+    elementOn.setAttribute("disabled","false");
+    elementOff.setAttribute("disabled","true");
+
   }
-  elementOn.setAttribute("disabled","false");
-  elementOff.setAttribute("disabled","true");
+  catch(e) {
+    var encrypt = document.getElementById("encrypt");
+	if(encrypt)
+		encrypt.setAttribute("disabled", "true");
+
+	var obscure = document.getElementById("obscure");
+	if(obscure)
+		obscure.setAttribute("disabled", "true");
+    dump("wallet.crypto pref is missing from all.js\n");
+  }
+
 }
 
 function CheckForWalletAndImage()
@@ -265,6 +279,7 @@ function CheckForWalletAndImage()
       HideImage();
     }
   } catch(e) {
+	HideImage();
     dump("imageblocker.enabled pref is missing from all.js\n");
   }
 
