@@ -19,6 +19,7 @@
 // Force references to all of the symbols that we want exported from
 // the dll that are located in the .lib files we link with
 
+#include "nscore.h"
 #include <gtk/gtk.h>
 
 GtkWidget *gAppContext;

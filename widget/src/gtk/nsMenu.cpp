@@ -58,15 +58,15 @@ nsMenu::~nsMenu()
 //-------------------------------------------------------------------------
 GtkWidget *nsMenu::GetNativeParent()
 {
-  void * voidData; 
+  GtkWidget * voidData; 
   if (nsnull != mMenuParent) {
     mMenuParent->GetNativeData(voidData);
   } else if (nsnull != mMenuBarParent) {
     mMenuBarParent->GetNativeData(voidData);
   } else {
-    return NULL;
+    return nsnull;
   }
-  return static_cast<GtkWidget*>(voidData);
+  return (GtkWidget*)voidData;
 }
 
 
@@ -154,7 +154,7 @@ NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
   nsString Label;
-  GtkWidget *item=NULL, *parentmenu=NULL, *newmenu=NULL;
+  GtkWidget *item=nsnull, *parentmenu=nsnull, *newmenu=nsnull;
   char *labelStr;
   void *voidData=NULL;
   

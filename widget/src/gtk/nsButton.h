@@ -34,7 +34,7 @@ public:
   virtual ~nsButton();
 
   // nsISupports
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 
   // nsIButton part
   NS_IMETHOD     SetLabel(const nsString& aText);

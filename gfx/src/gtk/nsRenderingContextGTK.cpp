@@ -567,7 +567,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
   g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
-	for (PRInt32 i = 0; i < aNumPoints; i++)
+	for (i = 0; i < aNumPoints; i++)
   {
     nsPoint p = aPoints[i];
     mTMatrix->TransformCoord(&p.x,&p.y);
@@ -1121,7 +1121,7 @@ nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
   if (::gdk_region_empty(mRegion) == True) {
 
     bEmpty = PR_TRUE;
-    ::gdk_gc_set_clip_region(mRenderingSurface->gc, NULL);
+    ::gdk_gc_set_clip_region(mRenderingSurface->gc, nsnull);
 
   } else {
 

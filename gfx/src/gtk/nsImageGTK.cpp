@@ -99,7 +99,7 @@ nsresult nsImageGTK :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
       mAlphaBits = new unsigned char[mAlphaRowBytes * aHeight];
       mAlphaWidth = aWidth;
       mAlphaHeight = aHeight;
-      mAlphaPixmap = gdk_pixmap_new(NULL, mWidth, mHeight, 1);
+      mAlphaPixmap = gdk_pixmap_new(nsnull, mWidth, mHeight, 1);
 
     }
   else
@@ -247,7 +247,7 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
                                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  g_return_val_if_fail ((aSurface != NULL), NS_ERROR_FAILURE);
+  g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
@@ -269,14 +269,14 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext,
                                   PRInt32 aX, PRInt32 aY,
                                   PRInt32 aWidth, PRInt32 aHeight)
 {
-  g_return_val_if_fail ((aSurface != NULL), NS_ERROR_FAILURE);
+  g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*) aSurface;
 
-  XImage *x_image = NULL;
+  XImage *x_image = nsnull;
   Pixmap pixmap = 0;
-  Display *dpy = NULL;
-  Visual *visual = NULL;
+  Display *dpy = nsnull;
+  Visual *visual = nsnull;
   GC      gc;
   XGCValues gcv;
 
@@ -332,7 +332,7 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext,
   if (mAlphaBits != nsnull)
     {
       gdk_gc_set_clip_origin(drawing->gc, 0, 0);
-      gdk_gc_set_clip_mask(drawing->gc, NULL);
+      gdk_gc_set_clip_mask(drawing->gc, nsnull);
       x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
       XDestroyImage(x_image);
     }
