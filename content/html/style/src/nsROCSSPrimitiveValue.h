@@ -64,43 +64,74 @@ public:
   nsROCSSPrimitiveValue(nsISupports *aOwner, float aP2T);
   virtual ~nsROCSSPrimitiveValue();
 
+  void SetNumber(float aValue)
+  {
+    Reset();
+    mValue.mFloat = aValue;
+    mType = CSS_NUMBER;
+  }
+  
   void SetPercent(float aValue)
   {
-    mFloat = aValue;
+    Reset();
+    mValue.mFloat = aValue;
     mType = CSS_PERCENTAGE;
   }
 
   void SetTwips(nscoord aValue)
   {
-    mTwips = aValue;
+    Reset();
+    mValue.mTwips = aValue;
+    mType = CSS_PX;
   }
 
   void SetString(const nsACString& aString)
   {
-    CopyASCIItoUCS2(aString, mString);
+    Reset();
+    mValue.mString = ToNewUnicode(aString);
     mType = CSS_STRING;
   }
 
   void SetString(const nsAString& aString)
   {
-    mString.Assign(aString);
+    Reset();
+    mValue.mString = ToNewUnicode(aString);
     mType = CSS_STRING;
   }
 
   void SetRect(nsIDOMRect* aRect)
   {
-    mRect = aRect;
+    NS_PRECONDITION(aRect, "Null rect being set!");
+    Reset();
+    mValue.mRect = aRect;
+    NS_ADDREF(mValue.mRect);
     mType = CSS_RECT;
+  }
+
+  void Reset(void)
+  {
+    if (mType == CSS_STRING) {
+      NS_ASSERTION(mValue.mString, "Null string should never happen");
+      nsMemory::Free(mValue.mString);
+      mValue.mString = nsnull;
+    } 
+    else if (mType == CSS_RECT) {
+      NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
+      NS_RELEASE(mValue.mRect);
+      mValue.mRect = nsnull;
+    }
   }
 
 private:
   PRUint16 mType;
 
-  nscoord mTwips;
-  nsCOMPtr<nsIDOMRect> mRect;
-  nsString mString;
-  float mFloat;
-
+  union {
+    nscoord mTwips;
+    float mFloat;
+    nsIDOMRect* mRect;
+    PRUnichar* mString;
+  } mValue;
+  
   nsISupports *mOwner;
 
   float mT2P;
