@@ -33,7 +33,7 @@
           src="chrome://communicator/content/pref/pref-fonts.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["selectLangs", "sendDefaultCharsetList", "viewDefaultCharsetList", "forceCharsetOverride"];
+    var _elementIDs = ["selectLangs", "sendDefaultCharsetList", "viewDefaultCharsetList", "forceCharsetOverride", "replyInDefaultCharset"];
 
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.notifyObservers(null, "charsetmenu-selected", "mailedit");
@@ -313,6 +313,9 @@
     <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
               prefstring="mailnews.force_charset_override"
               accesskey="&forceCharsetOverride.accesskey;"/>
+    <checkbox id="replyInDefaultCharset" label="&replyInDefaultCharset.label;"
+              prefstring="mailnews.reply_in_default_charset"
+              accesskey="&replyInDefaultCharset.accesskey;"/>
   </groupbox> 
  
 </page>

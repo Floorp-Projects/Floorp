@@ -16,7 +16,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["forwardMessageMode", "spellCheckBeforeSend", "strictlyMime", 
-                       "wrapLength", "sendDefaultCharsetList", "mailWarnOnSendAccelKey",
+                       "wrapLength", "sendDefaultCharsetList", "replyInDefaultCharset", "mailWarnOnSendAccelKey",
                        "FontSelect", "fontSizeSelect", "textColor", "backgroundColor"];
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.notifyObservers(null, "charsetmenu-selected", "mailedit");
@@ -116,6 +116,9 @@
       </template>
     </menulist>       
     </hbox> 
+    <checkbox id="replyInDefaultCharset" label="&replyInDefaultCharset.label;"
+              prefstring="mailnews.reply_in_default_charset"
+              accesskey="&replyInDefaultCharset.accesskey;"/>
   </groupbox>
   
   <groupbox align="start">

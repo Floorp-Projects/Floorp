@@ -42,6 +42,8 @@ Rights Reserved.
 
 <!ENTITY sendDefaultCharset.label             "Character Encoding:">
 <!ENTITY sendDefaultCharset.accesskey         "r">
+<!ENTITY replyInDefaultCharset.label          "Always use this default character encoding in replies. (When unchecked, only new messages use this default.)">
+<!ENTITY replyInDefaultCharset.accesskey      "r">
 <!ENTITY languagesTitle.label                 "Languages">
 
 <!ENTITY defaultMessagesHeader.label          "Defaults for HTML Messages">

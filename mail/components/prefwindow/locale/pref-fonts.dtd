@@ -93,3 +93,5 @@
 <!ENTITY viewDefaultCharsetList.accesskey	  "I">
 <!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character encoding specified by MIME header)">
 <!ENTITY forceCharsetOverride.accesskey   "d">
+<!ENTITY replyInDefaultCharset.label      "Always use the default character encoding in replies. (When unchecked, only new messages use the default.)">
+<!ENTITY replyInDefaultCharset.accesskey   "r">
