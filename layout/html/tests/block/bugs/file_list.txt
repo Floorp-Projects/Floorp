@@ -151,3 +151,4 @@ file:///s:/mozilla/layout/html/tests/block/bugs/56265.html
 file:///s:/mozilla/layout/html/tests/block/bugs/56563_1.html
 file:///s:/mozilla/layout/html/tests/block/bugs/57554.html
 file:///s:/mozilla/layout/html/tests/block/bugs/54005.html
+file:///s:/mozilla/layout/html/tests/block/bugs/63785.html
