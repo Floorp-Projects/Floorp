@@ -408,6 +408,19 @@ real_checkout:
 	fi
 
 fast-update:
+#	@: Backup the last checkout log.
+	@if test -f $(CVSCO_LOGFILE) ; then \
+	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
+	else true; \
+	fi
+	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
+	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
+        cd $(ROOTDIR); \
+	$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk && \
+        cd mozilla; \
+	$(MAKE) -f client.mk real_fast-update
+
+real_fast-update:
 #	@: Start the update. Split the output to the tty and a log file. \
 #	 : If it fails, touch an error file because "tee" hides the error.
 	@failed=.fast_update-failed.tmp; rm -f $$failed*; \
@@ -432,7 +445,6 @@ fast-update:
 	  false; \
 	else true; \
 	fi
-
 
 ####################################
 # Web configure
