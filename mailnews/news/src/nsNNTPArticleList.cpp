@@ -172,10 +172,21 @@ NS_NewArticleList(nsINNTPArticleList **articleList,
                   nsINNTPHost* newsHost,
                   nsINNTPNewsgroup* newsgroup)
 {
+    nsresult rv = NS_OK;
+
     nsNNTPArticleList* aArticleList =
         new nsNNTPArticleList(newsHost, newsgroup);
-    return aArticleList->QueryInterface(nsINNTPArticleList::GetIID(),
-                                        (void **)articleList);
+
+    if (aArticleList) 
+        rv = aArticleList->QueryInterface(nsINNTPArticleList::GetIID(),
+                                          (void **)articleList);
+    else 
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && aArticleList)  
+      delete aArticleList;
+
+    return rv;
 }
 
 NS_END_EXTERN_C

@@ -74,7 +74,9 @@ nsresult nsNNTPCategoryContainerStub::SetRootCategory(nsINNTPNewsgroup * aRootCa
 	{
 		char * name = nsnull;
 		aRootCategory->GetName(&name);
+#ifdef DEBUG_sspitzer
 		printf("Setting root category for container to %s", name ? name : "unspecified");
+#endif
 		m_newsgroup = aRootCategory;
 		NS_IF_ADDREF(m_newsgroup);
 	}
@@ -91,8 +93,17 @@ nsresult NS_NewCategoryContainerFromNewsgroup(nsINNTPCategoryContainer ** aInsta
 	if (aInstancePtr)
 	{
 		stub = new nsNNTPCategoryContainerStub();
-		stub->SetRootCategory(group);
-		rv = stub->QueryInterface(nsINNTPCategoryContainer::GetIID(), (void **) aInstancePtr);
+        if (stub) {
+            stub->SetRootCategory(group);
+            rv = stub->QueryInterface(nsINNTPCategoryContainer::GetIID(), (void **) aInstancePtr);
+        }
+        else {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (NS_FAILED(rv) && stub) {
+            delete stub;
+        }
 	}
 
 	return rv;
