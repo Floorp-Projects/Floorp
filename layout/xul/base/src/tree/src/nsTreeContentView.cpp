@@ -1563,8 +1563,9 @@ nsTreeContentView::UpdateParentIndexes(PRInt32 aIndex, PRInt32 aSkip, PRInt32 aC
 nsresult
 nsTreeContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID, nsIContent** aResult)
 {
-  PRInt32 colIndex;
-  mBoxObject->GetColumnIndex(aColID, &colIndex);
+  PRInt32 colIndex = -1;
+  if (mBoxObject)
+    mBoxObject->GetColumnIndex(aColID, &colIndex);
 
   // Traverse through cells, try to find the cell by "ref" attribute or by cell
   // index in a row. "ref" attribute has higher priority.
