@@ -166,6 +166,7 @@ BEGIN
             MENUITEM "OpenUri()",                   ID_TESTS_ADDURICONTENTLISTENER_OPENURI
 
         END
+        MENUITEM "NS_NewChannel",               ID_TESTS_NSNEWCHANNEL
     END
     POPUP "&Interfaces"
     BEGIN

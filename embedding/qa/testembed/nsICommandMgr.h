@@ -106,6 +106,8 @@ struct CommandTest
 	char	   *mCStringValue;
 };
 
+extern CommandTest CommandTable[];
+
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}
