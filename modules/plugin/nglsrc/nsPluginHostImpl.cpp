@@ -153,7 +153,7 @@ class nsPluginStreamInfo : public nsIPluginStreamInfo
 public:
 
 	nsPluginStreamInfo();
-	~nsPluginStreamInfo();
+	virtual ~nsPluginStreamInfo();
  
 	NS_DECL_ISUPPORTS
 
@@ -337,7 +337,7 @@ class nsPluginStreamListenerPeer : public nsIStreamListener
 {
 public:
   nsPluginStreamListenerPeer();
-  ~nsPluginStreamListenerPeer();
+  virtual ~nsPluginStreamListenerPeer();
 
   NS_DECL_ISUPPORTS
 
@@ -408,7 +408,7 @@ class nsPluginCacheListener : public nsIStreamListener
 {
 public:
   nsPluginCacheListener(nsPluginStreamListenerPeer* aListener);
-  ~nsPluginCacheListener();
+  virtual ~nsPluginCacheListener();
 
   NS_DECL_ISUPPORTS
 
@@ -646,13 +646,6 @@ nsPluginStreamListenerPeer :: nsPluginStreamListenerPeer()
   mOnStopBinding = PR_FALSE;
   mCacheDone = PR_FALSE;
   mStatus = NS_OK;
-
-#ifdef USE_CACHE
-  mCachedFile = nsnull;
-#else
-  mStreamFile = nsnull;
-  mFileName = nsnull;
-#endif
 }
 
 nsPluginStreamListenerPeer :: ~nsPluginStreamListenerPeer()
@@ -671,24 +664,6 @@ nsPluginStreamListenerPeer :: ~nsPluginStreamListenerPeer()
   NS_IF_RELEASE(mInstance);
   NS_IF_RELEASE(mPStreamListener);
   NS_IF_RELEASE(mHost);
-
-#ifdef USE_CACHE
-  if (nsnull != mCachedFile)
-  {
-	delete mCachedFile;
-	mCachedFile = nsnull;
-  }
-#else // USE_CACHE
-  if(nsnull != mStreamFile)
-  {
-	  fclose(mStreamFile);
-	  mStreamFile = nsnull;
-  }
-
-  if(nsnull != mFileName)
-	  PL_strfree(mFileName);
-
-#endif // USE_CACHE
 }
 
 NS_IMPL_ADDREF(nsPluginStreamListenerPeer);
@@ -882,8 +857,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnDataAvailable(nsIURL* aURL, nsIInp
 {
   nsresult rv = NS_OK;
   const char* url;
-  char* buffer;
-  PRUint32 readlen;
 
   if(!mPStreamListener)
 	  return NS_ERROR_FAILURE;
@@ -891,25 +864,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnDataAvailable(nsIURL* aURL, nsIInp
   const char* urlString;
   aURL->GetSpec(&urlString);
   mPluginStreamInfo->SetURL(urlString);
-
-#if 0
-  // determine if we need to write the data to the cache
-  if((mStreamType == nsPluginStreamType_AsFile) || (mStreamType == nsPluginStreamType_AsFileOnly))
-	{
-	buffer = (char*) PR_Malloc(aLength);
-	if(buffer)
-      aIStream->Read(buffer, aLength, &readlen);
-
-#ifdef USE_CACHE
-	if(nsnull != mCachedFile)
-	  mCachedFile->Write((char*)buffer, aLength);
-#else
-	if(nsnull != mStreamFile)
-		fwrite(buffer, sizeof(char), aLength, mStreamFile);
-#endif // USE_CACHE
-	PR_Free(buffer);
-	}
-#endif
 
   // if the plugin has requested an AsFileOnly stream, then don't call OnDataAvailable
   if(mStreamType != nsPluginStreamType_AsFileOnly)
@@ -935,44 +889,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnStopBinding(nsIURL* aURL, nsresult
 	aURL->GetSpec(&urlString);
 	mPluginStreamInfo->SetURL(urlString);
 
-#if 0
-	// see if we need to close out the cache
-    if ((mStreamType == nsPluginStreamType_AsFile) ||
-        (mStreamType == nsPluginStreamType_AsFileOnly))
-	{
-#ifdef USE_CACHE
-		if (nsnull != mCachedFile)
-			{
-			PRInt32 len;
-			nsCachePref* cachePref = nsCachePref::GetInstance();
-
-			const char* cachePath = cachePref->DiskCacheFolder();
-			const char* filename = mCachedFile->Filename();
-
-			// we need to pass the whole path and filename to the plugin
-			len = PL_strlen(cachePath) + PL_strlen(filename) + 1;
-			char* pathAndFilename = (char*)PR_Malloc(len * sizeof(char));
-			pathAndFilename = PL_strcpy(pathAndFilename, cachePath);
-			pathAndFilename = PL_strcat(pathAndFilename, filename);
-
-			const char* urlString;
-			aURL->GetSpec(&urlString);
-			if (mPStreamListener)
-			  mPStreamListener->OnFileAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, pathAndFilename);
-			}
-#else // USE_CACHE
-		if(nsnull != mStreamFile)
-			{
-			fclose(mStreamFile);
-			mStreamFile = nsnull;
-
-			if (mPStreamListener)
-			  mPStreamListener->OnFileAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, mFileName);
-			}
-#endif // USE_CACHE
-	}
-#endif
-
 	// tell the plugin that the stream has ended only if the cache is done
 	if(mCacheDone)
 		mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
@@ -988,68 +904,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnStopBinding(nsIURL* aURL, nsresult
 
 nsresult nsPluginStreamListenerPeer::SetUpCache(nsIURL* aURL)
 {
-#if 0
-#ifdef USE_CACHE
-	nsString urlString;
-	char* cString;
-	char* fileName;
-
-	aURL->ToString(urlString);
-	cString = urlString.ToNewCString();
-	mCachedFile = new nsCacheObject(cString);
-	delete [] cString;
-	
-	if(mCachedFile == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	// use the actual filename of the net-based file as the cache filename
-	aURL->GetFile(fileName);
-	mCachedFile->Filename(fileName);
-
-	nsCacheManager* cacheManager = nsCacheManager::GetInstance();
-	nsDiskModule* diskCache = cacheManager->GetDiskModule();
-	diskCache->AddObject(mCachedFile);
-#else // USE_CACHE
-
-	char buf[400], tpath[300];
-#ifdef XP_PC
-	::GetTempPath(sizeof(tpath), tpath);
-	PRInt32 len = PL_strlen(tpath);
-
-	if((len > 0) && (tpath[len-1] != '\\'))
-	{
-		tpath[len] = '\\';
-		tpath[len+1] = 0;
-	}
-#elif defined (XP_UNIX)
-	PL_strcpy(tpath, "/tmp/");
-#else
-	tpath[0] = 0;
-#endif // XP_PC
-	const char* pathName;
-	char* fileName;
-	aURL->GetFile(&pathName);
-
-	// since GetFile actually returns us the full path, move to the last \ and skip it
-	fileName = PL_strrchr(pathName, '/');
-	if(fileName)
-		++fileName;
-
-	// if we don't get a filename for some reason, just make one up using the address of this
-	// object to ensure uniqueness of the filename per stream
-	if(!fileName)
-		PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, this);
-	else
-		PR_snprintf(buf, sizeof(buf), "%s%s", tpath, fileName);
-
-	mStreamFile = fopen(buf, "wb");
-	//setbuf(mStreamFile, NULL);
-
-	mFileName = PL_strdup(buf);
-#endif // USE_CACHE
-	return NS_OK;
-#endif
-
 	nsPluginCacheListener* cacheListener = new nsPluginCacheListener(this);
 	return NS_OpenURL(aURL, cacheListener);
 }
@@ -1095,12 +949,17 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURL* aURL)
 nsresult
 nsPluginStreamListenerPeer::OnFileAvailable(const char* aFilename)
 {
-	nsresult rv = NS_ERROR_FAILURE;
-	if (mPStreamListener)
-		rv = mPStreamListener->OnFileAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aFilename);
+	nsresult rv;
+	if (!mPStreamListener)
+		return NS_ERROR_FAILURE;
+	
+	if((rv = mPStreamListener->OnFileAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aFilename)) != NS_OK)
+		return rv;
 
+	// if OnStopBinding has already been called, we need to make sure the plugin gets notified
+	// we do this here because OnStopBinding must always be called after OnFileAvailable
 	if(mOnStopBinding)
-		mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, mStatus);
+		rv = mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, mStatus);
 
 	mCacheDone = PR_TRUE;
 	return rv;
@@ -1458,6 +1317,11 @@ NS_IMETHODIMP nsPluginHostImpl :: InstantiateEmbededPlugin(const char *aMimeType
   if(rv == NS_OK)
 	rv = aOwner->GetInstance(instance);
 
+  // if we have a failure error, it means we found a plugin for the mimetype,
+  // but we had a problem with the entry point
+  if(rv == NS_ERROR_FAILURE)
+	  return rv;
+
   if(rv != NS_OK)
   {
 	// we have not been able to load a plugin because we have not determined the mimetype
@@ -1740,6 +1604,8 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
           NS_RELEASE(instance);
         }
       }
+	  else
+		  return NS_ERROR_FAILURE;
     }
     else
       return NS_ERROR_UNEXPECTED; // LoadPluginLibrary failure
@@ -1758,6 +1624,77 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 }
 
 #endif /* !XP_MAC */
+
+NS_IMETHODIMP
+nsPluginHostImpl::IsPluginAvailableForType(const char* aMimeType)
+{
+  nsPluginTag *plugins = nsnull;
+  PRInt32     variants, cnt;
+
+  if (PR_FALSE == mPluginsLoaded)
+    LoadPlugins();
+
+  // if we have a mimetype passed in, search the mPlugins linked list for a match
+  if (nsnull != aMimeType)
+  {
+    plugins = mPlugins;
+
+    while (nsnull != plugins)
+    {
+      variants = plugins->mVariants;
+
+      for (cnt = 0; cnt < variants; cnt++)
+      {
+        if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))
+          return NS_OK;
+      }
+
+      if (cnt < variants)
+        break;
+
+      plugins = plugins->mNext;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPluginHostImpl::IsPluginAvailableForExtension(const char* aExtension, const char* &aMimeType)
+{
+  nsPluginTag *plugins = nsnull;
+  PRInt32     variants, cnt;
+
+  if (PR_FALSE == mPluginsLoaded)
+    LoadPlugins();
+
+  // if we have a mimetype passed in, search the mPlugins linked list for a match
+  if (nsnull != aExtension)
+  {
+    plugins = mPlugins;
+
+    while (nsnull != plugins)
+    {
+      variants = plugins->mVariants;
+
+      for (cnt = 0; cnt < variants; cnt++)
+      {
+        if (0 == strcmp(plugins->mExtensionsArray[cnt], aExtension))
+		{
+			aMimeType = plugins->mMimeTypeArray[cnt];
+			return NS_OK;
+		}
+	  }	
+
+      if (cnt < variants)
+        break;
+
+      plugins = plugins->mNext;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
 {
@@ -2236,7 +2173,7 @@ PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const nsFileSpec &pluginSpec)
 PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const char* pluginPath, const char* path)
 {
 #ifdef XP_PC
-	/*BOOL restoreOrigDir = FALSE;
+	BOOL restoreOrigDir = FALSE;
 	char aOrigDir[MAX_PATH + 1];
 	DWORD dwCheck = ::GetCurrentDirectory(sizeof(aOrigDir), aOrigDir);
 	PR_ASSERT(dwCheck <= MAX_PATH + 1);
@@ -2245,15 +2182,15 @@ PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const char* pluginPath, const cha
 		{
 		restoreOrigDir = ::SetCurrentDirectory(pluginPath);
 		PR_ASSERT(restoreOrigDir);
-		}*/
+		}
 
 	PRLibrary* plugin = PR_LoadLibrary(path);
 
-	/*if (restoreOrigDir)
+	if (restoreOrigDir)
 		{
 		BOOL bCheck = ::SetCurrentDirectory(aOrigDir);
 		PR_ASSERT(bCheck);
-		}*/
+		}
 
 	return plugin;
 #else

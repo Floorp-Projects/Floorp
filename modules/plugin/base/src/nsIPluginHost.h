@@ -59,6 +59,12 @@ public:
   NS_IMETHOD
   SetUpPluginInstance(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner) = 0;
 
+  NS_IMETHOD
+  IsPluginAvailableForType(const char* aMimeType) = 0;
+
+  NS_IMETHOD
+  IsPluginAvailableForExtension(const char* aExtension, const char* &aMimeType) = 0;
+
 };
 
 #endif // nsIPluginHost_h___

@@ -63,7 +63,7 @@ class nsPluginHostImpl : public nsIPluginManager2,
 {
 public:
   nsPluginHostImpl(nsIServiceManager *serviceMgr);
-  ~nsPluginHostImpl();
+  virtual ~nsPluginHostImpl();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -125,6 +125,12 @@ public:
 
   NS_IMETHOD
   SetUpPluginInstance(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner);
+
+  NS_IMETHOD
+  IsPluginAvailableForType(const char* aMimeType);
+
+  NS_IMETHOD
+  IsPluginAvailableForExtension(const char* aExtension, const char* &aMimeType);
 
   //nsIPluginManager2 interface - secondary methods that nsIPlugin communicates to
 

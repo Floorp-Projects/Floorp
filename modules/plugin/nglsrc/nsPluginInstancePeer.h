@@ -34,7 +34,7 @@ class nsPluginInstancePeerImpl : public nsIPluginInstancePeer,
 {
 public:
   nsPluginInstancePeerImpl();
-  ~nsPluginInstancePeerImpl();
+  virtual ~nsPluginInstancePeerImpl();
 
   NS_DECL_ISUPPORTS
 

@@ -56,7 +56,7 @@ class ns4xPlugin : public nsIPlugin
 public:
 
   ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr);
-  ~ns4xPlugin(void);
+  virtual ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
 
