@@ -101,6 +101,9 @@ NETLIBS=\
 		$(DIST)\lib\gophurl.lib     \
 		$(DIST)\lib\httpurl.lib     \
 		$(DIST)\lib\remoturl.lib    \
+!ifdef NU_CACHE
+		$(DIST)\lib\cache.lib       \
+!endif
 		$(DIST)\lib\netcache.lib    \
 		$(DIST)\lib\netcnvts.lib    \
 		$(DIST)\lib\mimetype.lib    \
@@ -128,6 +131,9 @@ LINCS=$(LINCS)  -I.                         \
                 -I$(PUBLIC)\js              \
                 -I$(PUBLIC)\xpcom           \
 		-I$(PUBLIC)\httpurl         \
+!ifdef NU_CACHE
+		-I$(PUBLIC)\cache           \
+!endif
 		-I$(PUBLIC)\netcache        \
 		-I$(PUBLIC)\network         \
 		-I$(PUBLIC)\netcnvts        \
