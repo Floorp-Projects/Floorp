@@ -55,7 +55,7 @@ Contributor(s): ______________________________________. -->
       
       <!-- The following DEBUG MENU ITEMS can be removed -->
       <menuseparator/>
-      <menu value="Debug">
+      <menu label="Debug">
         <menupopup>
           <menuitem id="command-handler" label="CommandHandler::Exec" oncommand="CHExecTest()"/>
           <menuitem id="command-handler" label="CommandHandler::Query" oncommand="CHQueryTest()"/>
@@ -93,7 +93,7 @@ Contributor(s): ______________________________________. -->
         <!-- type attribute is used by frame construction to locate iframes
              intended to hold (html) content -->
         <browser context="context" type="content-primary" id="content"
-          src="about:blank" flex="1"/>
+                 src="about:blank" flex="1"/>
       </box>
     </box>
   </box>

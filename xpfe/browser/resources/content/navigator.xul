@@ -64,6 +64,7 @@ Contributor(s): ______________________________________. -->
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
 <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
+<script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
 <script type="application/x-javascript" src="tooltip.js"/>
 <script type="application/x-javascript" src="navigatorDD.js"/>
 <!-- UI services -->
@@ -145,12 +146,12 @@ Contributor(s): ______________________________________. -->
       <hbox id="nav-bar-inner" flex="1">
         <hbox id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
           <hbox autostretch="never" valign="middle" flex="1" id="urlbar-container">
-    	      <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
-	          <textbox autocomplete="true" timeout="300" class="plain" 
-	                   searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
+            <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/>
+            <textbox autocomplete="true" timeout="300" class="plain" 
+                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                      onclick="if (event.button == 0) URLBarLeftClickHandler(event);"
                      onblur="URLBarBlurHandler(event);"
-                     onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
+                     onkeypress="if (event.keyCode == 13) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>
           </hbox>
           <menubutton class="menubutton-icon" id="ubhist">
             <menupopup id="ubhist-popup" popupalign="topright" popupanchor="bottomright"

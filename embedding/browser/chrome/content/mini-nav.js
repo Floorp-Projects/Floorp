@@ -22,8 +22,6 @@
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
-var appCore = null;
-var locationFld = null;
 var commandHandler = null;
 var gURLBar = null;
 
@@ -53,77 +51,73 @@ nsCommandHandler.prototype =
 
 //
 
-function nsXULBrowserWindow()
+function nsBrowserStatusHandler()
 {
+  this.init();
 }
 
-nsXULBrowserWindow.prototype = 
+nsBrowserStatusHandler.prototype = 
 {
-  QueryInterface : function(iid)
-    {
-    if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
+  QueryInterface : function(aIID)
+  {
+    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+        aIID.equals(Components.interfaces.nsISupportsWeakReference))
       return this;
     throw Components.results.NS_NOINTERFACE;
-    },
-  setJSStatus : function(status)
-    {
-    },
-  setJSDefaultStatus : function(status)
-    {
-    },
-  setDefaultStatus : function(status)
-    {
-    },
-  setOverLink : function(link)
-    {
-    },
-  onProgress : function (channel, current, max)
-    {
-    },
-  onStateChange : function (progress, request, state, status)
-    {
-    },
-  onStatus : function(url, message)
-    {
-    },
-  onLocationChange : function(location)
-    {
-      if(!locationFld)
-        locationFld = document.getElementById("urlbar");
+  },
 
-      // We should probably not do this if the value has changed since the user 
-      // searched
-      locationFld.setAttribute("value", location);
-    }
+  init : function()
+  {
+    this.urlBar = document.getElementById("urlbar");
+  },
+
+  destroy : function()
+  {
+    this.urlBar = null;
+  },
+
+  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+  {
+  },
+
+  onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
+  {
+  },
+
+  onLocationChange : function(aWebProgress, aRequest, aLocation)
+  {
+    this.urlBar.value = aLocation.spec;
+  },
+
+  onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+  {
+  },
+
+  onSecurityChange : function(aWebProgress, aRequest, aState)
+  {
+  }
 }
 
-
+var gBrowserStatusHandler;
 function MiniNavStartup()
 {
   dump("*** MiniNavStartup\n");
-  window.XULBrowserWindow = new nsXULBrowserWindow();
 
-  var succeeded = false;
-  var webNavigation = getWebNavigation();
   try {
-    // Create the browser instance component.
-    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
-                        .createInstance(Components.interfaces.nsIBrowserInstance);
-
+    gBrowserStatusHandler = new nsBrowserStatusHandler();
+    var webNavigation = getWebNavigation();
     webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
                                              .createInstance(Components.interfaces.nsISHistory);
-    succeeded = true;
-  } catch (e) {
-  }
 
-  if (!succeeded) {
-    // Give up.
-    dump("Error creating browser instance\n");
+    var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
+    webProgress.addProgressListener(gBrowserStatusHandler);
+  } catch (e) {
+    alert("Error opening a mini-nav window"); 
+    dump(e+"\n");
     window.close();
+    return;
   }
-  // Initialize browser instance..
-  appCore.setWebShellWindow(window);
-  _content.appCore = appCore;
 
   // create the embedding command handler
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -142,9 +136,8 @@ function MiniNavStartup()
 function MiniNavShutdown()
 {
   dump("*** MiniNavShutdown\n");
-  // Close the app core.
-  if ( appCore )
-    appCore.close();
+  if (gBrowserStatusHandler)
+    gBrowserStatusHandler.destroy();
 }
 
 function getBrowser()
