@@ -221,6 +221,13 @@ static FrameCtorDebugFlags gFlags[] = {
 #include "nsPopupSetFrame.h"
 #include "nsOutlinerColFrame.h"
 
+// To kill #define index(a,b) strchr(a,b) macro in Toolkit types.h
+#ifdef XP_OS2_VACPP
+#ifdef index
+#undef index
+#endif
+#endif
+
 //------------------------------------------------------------------
 
 nsresult
