@@ -208,6 +208,7 @@ void GlobalWindowImpl::CleanUp()
   mOpener = nsnull;             // Forces Release
   mControllers = nsnull;        // Forces Release
   mContext = nsnull;            // Forces Release
+  mChromeEventHandler = nsnull; // Forces Release
 }
 
 //*****************************************************************************
@@ -438,6 +439,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
 
     mContext = nsnull;          // force release now
     mControllers = nsnull;      // force release now
+    mChromeEventHandler = nsnull; // force release now
   }
   mDocShell = aDocShell;        // Weak Reference
 
