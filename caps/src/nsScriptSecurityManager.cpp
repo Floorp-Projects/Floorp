@@ -1442,6 +1442,7 @@ static char *domPropNames[NS_DOM_PROP_MAX] = {
     "htmlinputelement.blur", 
     "htmlinputelement.checked", 
     "htmlinputelement.click", 
+    "htmlinputelement.controllers",
     "htmlinputelement.defaultchecked", 
     "htmlinputelement.defaultvalue", 
     "htmlinputelement.disabled", 

@@ -36,6 +36,8 @@
 #include "nsString.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIControllers.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -43,9 +45,13 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kINSHTMLInputElementIID, NS_IDOMNSHTMLINPUTELEMENT_IID);
+static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
 NS_DEF_PTR(nsIDOMHTMLInputElement);
 NS_DEF_PTR(nsIDOMHTMLFormElement);
+NS_DEF_PTR(nsIDOMNSHTMLInputElement);
+NS_DEF_PTR(nsIControllers);
 
 //
 // HTMLInputElement property ids
@@ -69,7 +75,8 @@ enum HTMLInputElement_slots {
   HTMLINPUTELEMENT_TYPE = -16,
   HTMLINPUTELEMENT_USEMAP = -17,
   HTMLINPUTELEMENT_VALUE = -18,
-  HTMLINPUTELEMENT_AUTOCOMPLETE = -19
+  HTMLINPUTELEMENT_AUTOCOMPLETE = -19,
+  NSHTMLINPUTELEMENT_CONTROLLERS = -20
 };
 
 /***********************************************************************/
@@ -436,6 +443,33 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NSHTMLINPUTELEMENT_CONTROLLERS:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLINPUTELEMENT_CONTROLLERS, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIControllers* prop;
+        nsIDOMNSHTMLInputElement* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLInputElementIID, (void **)&b)) {
+          nsresult result = NS_OK;
+          result = b->GetControllers(&prop);
+          if(NS_SUCCEEDED(result)) {
+          // get the js object; n.b., this will do a release on 'prop'
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIControllers::GetIID(), cx, vp);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return nsJSUtils::nsReportError(cx, result);
+          }
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -786,7 +820,7 @@ HTMLInputElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLINPUTELEMENT_BLUR,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLINPUTELEMENT_BLUR, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -829,7 +863,7 @@ HTMLInputElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLINPUTELEMENT_FOCUS,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLINPUTELEMENT_FOCUS, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -872,7 +906,7 @@ HTMLInputElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLINPUTELEMENT_SELECT,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLINPUTELEMENT_SELECT, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -915,7 +949,7 @@ HTMLInputElementClick(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLINPUTELEMENT_CLICK,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLINPUTELEMENT_CLICK, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -982,6 +1016,7 @@ static JSPropertySpec HTMLInputElementProperties[] =
   {"useMap",    HTMLINPUTELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"value",    HTMLINPUTELEMENT_VALUE,    JSPROP_ENUMERATE},
   {"autocomplete",    HTMLINPUTELEMENT_AUTOCOMPLETE,    JSPROP_ENUMERATE},
+  {"controllers",    NSHTMLINPUTELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

@@ -45,6 +45,7 @@
 
 #include "nsIDOMXULElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIControllers.h"
 
 #include "nsIPresContext.h"
@@ -366,6 +367,8 @@ XULCommandDispatcherImpl::UpdateCommands(const nsString& aEventName)
 NS_IMETHODIMP
 XULCommandDispatcherImpl::GetControllers(nsIControllers** aResult)
 {
+  //XXX: we should fix this so there's a generic interface that describes controllers, 
+  //     so this code would have no special knowledge of what object might have controllers.
   if (mCurrentNode) {
     nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mCurrentNode);
     if (xulElement)
@@ -375,6 +378,9 @@ XULCommandDispatcherImpl::GetControllers(nsIControllers** aResult)
     if (htmlTextArea)
       return htmlTextArea->GetControllers(aResult);
 
+    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement = do_QueryInterface(mCurrentNode);
+    if (htmlInputElement)
+      return htmlInputElement->GetControllers(aResult);
 
     nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(mCurrentNode);
     if (domWindow)
