@@ -200,6 +200,8 @@ private:
     
     PRUint32 getCapabilities (const char *host, PRInt32 port, PRUint32 cap);
     void     setCapabilities (nsIChannel* i_pTrans, PRUint32 aCapabilities);
+    nsresult CategoryCreateService(const char *category);
+    
     PRBool  mProxySSLConnectAllowed;
 };
 
