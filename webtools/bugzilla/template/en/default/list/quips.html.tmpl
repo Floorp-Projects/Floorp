@@ -59,7 +59,7 @@
   </h2>
   <ul>
     [% FOREACH quip = quips %]
-      <li>[% quip %]</li>
+      <li>[% quip FILTER html %]</li>
     [% END %]
   </ul>
 [% ELSE %]
