@@ -1164,10 +1164,12 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
                                         ATOM_BYTES((JSAtom *)id));
 }
 
+#ifndef MAX_INTERP_LEVEL
 #if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
 #define MAX_INTERP_LEVEL 1000
 #else
 #define MAX_INTERP_LEVEL 30
+#endif
 #endif
 
 #define MAX_INLINE_CALL_COUNT 1000
