@@ -84,9 +84,10 @@
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
 #endif /* XP_UNIX */
 
-// hack for copying panels.rdf and localstore.rdf into migrated profile dir
+// hack for copying panels.rdf, localstore.rdf & mimeTypes.rdf into migrated profile dir
 #define PANELS_RDF_FILE                "panels.rdf"
 #define LOCALSTORE_RDF_FILE                "localstore.rdf"
+#define MIMETYPES_RDF_FILE                "mimeTypes.rdf"
 
 // A default profile name, in case automigration 4x profile fails
 #define DEFAULT_PROFILE_NAME           "default"
@@ -1600,13 +1601,15 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profDefaultsDir));
     if (NS_FAILED(rv)) return rv;
 
-    // Copy panels.rdf & localstore.rdf files
+    // Copy panels.rdf, localstore.rdf & mimeTypes.rdf files
     // This is a hack. Once the localFileSpec implementation
     // is complete, this will be removed.
 	rv = CopyDefaultFile(profDefaultsDir, newProfDir, LOCALSTORE_RDF_FILE);
 	if (NS_FAILED(rv)) return rv;
 	rv = CopyDefaultFile(profDefaultsDir, newProfDir, PANELS_RDF_FILE);
 	if (NS_FAILED(rv)) return rv;
+	rv = CopyDefaultFile(profDefaultsDir, newProfDir, MIMETYPES_RDF_FILE);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy default mimeTypes.rdf file");
     // hack finish.
 	
     rv = SetProfileDir(profileName, newProfDir);
