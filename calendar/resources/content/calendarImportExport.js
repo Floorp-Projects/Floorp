@@ -67,6 +67,9 @@ const extensionCsv      = ".csv";
 const filterRdf         = "iCalendar RDF";
 const extensionRdf      = ".rdf";
 
+if( opener.gICalLib )
+   gICalLib = opener.gICalLib;
+
 // convert to and from Unicode for file i/o
 function convertFromUnicode( aCharset, aSrc )
 {
