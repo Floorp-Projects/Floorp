@@ -166,8 +166,8 @@ NS_COM
 void
 LossyCopyUTF16toASCII( const PRUnichar* aSource, nsACString& aDest )
   {
+    aDest.Truncate();
     if (aSource) {
-      aDest.Truncate();
       LossyAppendUTF16toASCII(nsDependentString(aSource), aDest);
     }
   }
@@ -176,8 +176,8 @@ NS_COM
 void
 CopyASCIItoUTF16( const char* aSource, nsAString& aDest )
   {
+    aDest.Truncate();
     if (aSource) {
-      aDest.Truncate();
       AppendASCIItoUTF16(nsDependentCString(aSource), aDest);
     }
   }
