@@ -12,6 +12,10 @@
 	  <!-- Messenger Flashes -->	 
       <RDF:Description about="rdf:msgnotifications" />
     </RDF:li>
+    <RDF:li>
+      <!-- XPInstall Flashes -->
+      <RDF:Description about="rdf:xpinstall-update-notifier" />
+    </RDF:li> 
   </RDF:Bag>
 
   <RDF:Bag about="NC:FlashStyleSheets">
