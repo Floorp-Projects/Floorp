@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.2 2000/04/19 10:41:13 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.h,v 1.3 2000/06/11 16:00:01 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -50,7 +50,7 @@
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/19 10:41:13 $
+ * @version $Revision: 1.3 $ $Date: 2000/06/11 16:00:01 $
 **/
 class ProcessorState : public ContextState
 {
@@ -120,6 +120,10 @@ public:
     **/
     NodeSet* getAttributeSet(const String& name);
 
+    /**
+     * Gets the default Namespace URI stack.
+    **/ 
+    Stack* getDefaultNSURIStack();
 
     /**
      * Returns the document base for resolving relative URIs
@@ -143,6 +147,11 @@ public:
      * null if not template is found
     **/
     Element* getNamedTemplate(String& name);
+
+    /**
+     * Returns the namespace URI for the given name
+    **/ 
+    void getNameSpaceURI(String& name, String& nameSpaceURI);
 
     /**
      * Returns the NodeStack which keeps track of where we are in the
@@ -201,9 +210,20 @@ public:
     void preserveSpace(String& names);
 
     /**
+     * Sets a new default Namespace URI.
+    **/ 
+    void setDefaultNameSpaceURI(const String& nsURI);
+
+    /**
      * Sets the document base for including and importing stylesheets
     **/
     void setDocumentBase(const String& documentBase);
+
+    /**
+     * Sets the output method. Valid output method options are,
+     * "xml", "html", or "text".
+    **/ 
+    void setOutputMethod(const String& method);
 
     /**
      * Adds the set of names to the Whitespace stripping element set
@@ -273,10 +293,10 @@ private:
     enum XMLSpaceMode {STRIP = 0, DEFAULT, PRESERVE};
 
 
-	/**
+    /**
      * Allows us to overcome some DOM deficiencies
-	**/
-	DOMHelper domHelper;
+    **/
+    DOMHelper domHelper;
 
     /**
      * The list of ErrorObservers registered with this ProcessorState
@@ -340,6 +360,8 @@ private:
     ExprParser     exprParser;
     String         xsltNameSpace;
     NamedMap       nameSpaceMap;
+    HashTable      nameSpaceURITable;
+    Stack          defaultNameSpaceURIStack;
 
     //-- default templates
     Element*      dfWildCardTemplate;
@@ -356,6 +378,10 @@ private:
      * Initializes the ProcessorState
     **/
     void initialize();
+
+public:
+
+    void initialize(Element* element);
 
 }; //-- ProcessorState
 
