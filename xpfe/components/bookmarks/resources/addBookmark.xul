@@ -27,6 +27,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css"?>
+<?xml-stylesheet href="chrome://communicator/content/bookmarks/bookmarks.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -85,32 +86,7 @@
     <hbox flex="1">
       <label id="createinlabel" value="&createin.label;"/>
       <hbox flex="1">
-        <tree id="folders" flex="1" style="height: 12em; width: 0px"
-              ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
-              template="file-bookmarks-template"
-              onselect="onTreeSelect();" onkeypress="event.preventBubble();">
-          <treecolgroup>
-            <treecol flex="1"/>
-          </treecolgroup>
-    
-          <template id="file-bookmarks-template">
-            <rule iscontainer="true">
-              <treechildren>
-                <treeitem uri="rdf:*" persist="open" class="bookmark-item"
-                          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-                  <treerow>
-                    <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
-                              class="treecell-indent treecell-editable" editable="true"
-                              src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                              loading="rdf:http://home.netscape.com/NC-rdf#loading"/>
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </rule>
-          </template>
-          <treechildren id="folderKids" flex="1"/>
-        </tree>
+        <bookmarks-outliner id="bookmarks-view" flex="1" class="folders" outlinerclass="inset"/>
         <vbox>
           <button label="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
                   oncommand="createNewFolder();"/>

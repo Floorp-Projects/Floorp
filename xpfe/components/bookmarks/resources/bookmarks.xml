@@ -1295,8 +1295,7 @@
         <body><![CDATA[
           var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
           var args = [];
-          this.doBookmarksCommand(selectedURI,
-                                            this.NC_NS_CMD + "setpersonaltoolbarfolder", args);
+          this.doBookmarksCommand(selectedURI, this.NC_NS_CMD + "setpersonaltoolbarfolder", args);
 
         ]]></body>
       </method>
@@ -1304,16 +1303,14 @@
         <body><![CDATA[
           var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
           var args = [];
-          this.doBookmarksCommand(selectedURI,
-                                            this.NC_NS_CMD + "setnewsearchfolder", args);
+          this.doBookmarksCommand(selectedURI, this.NC_NS_CMD + "setnewsearchfolder", args);
         ]]></body>
       </method>
       <method name="setAsNewBookmarkFolder">
         <body><![CDATA[
           var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
           var args = [];
-          this.doBookmarksCommand(selectedURI,
-                                  this.NC_NS_CMD + "setnewbookmarkfolder", args);
+          this.doBookmarksCommand(selectedURI, this.NC_NS_CMD + "setnewbookmarkfolder", args);
         ]]></body>
       </method>
       <method name="addBookmark">
@@ -1472,7 +1469,7 @@
           args = [{ property: this.NC_NS + "parent", 
                     resource: parentValue }];
           this.doBookmarksCommand(this.outlinerBuilder.getResourceAtIndex(currIndex).Value, 
-                                            this.NC_NS_CMD + "newseparator", args);
+                                  this.NC_NS_CMD + "newseparator", args);
         ]]></body>
       </method>
       <method name="createNewFolder">
@@ -1489,7 +1486,7 @@
           var parentRes;
           var isParent = false;
           if (kPromptSvc.prompt(window, dialogTitle, dialogMsg, stringValue, null, { value: 0 })) {
-            if (currentIndex < this.outlinerBoxObject.view.rowCount) {
+            if (currentIndex != -1 && currentIndex < this.outlinerBoxObject.view.rowCount) {
               // If it's an open container, the relative index should be that of the last child. 
               if (this.outlinerBoxObject.view.isContainerOpen(currentIndex)) {
                 isParent = true;
@@ -1500,7 +1497,7 @@
                   relativeIndex = index - 1;
               }
               if (isParent) {
-                parentRes = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.view.getParentIndex(relativeIndex));
+                parentRes = this.outlinerBuilder.getResourceAtIndex(currentIndex);
               } else {
                 parentRes = this.parentRes;
               }
@@ -1518,7 +1515,7 @@
             if (relativeIndex != -1)
               relativeRes = this.outlinerBuilder.getResourceAtIndex(relativeIndex).Value;
             else
-              relativeRes = this.rdf.GetResource("NC:BookmarksRoot");;
+              relativeRes = this.rdf.GetResource("NC:BookmarksRoot").Value;
    
             this.doBookmarksCommand(relativeRes, this.NC_NS_CMD + "newfolder", args);
             this.bookmarksDS.RemoveObserver(this.newFolderRDFObserver);
@@ -1630,6 +1627,25 @@
               <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
             </rule>
             <rule>
+              <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                <outlinercell ref="Name" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+              </outlinerrow>
+            </rule>
+          </template>
+        </outlinerbody>
+        <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="width hidden sortActive sortDirection" sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                     sortActive="true" sortDirection="descending"/>
+      </outliner>
+    </xbl:content>
+  </binding>
+  <!-- Outliner with folders only -->
+  <binding id="bookmarks-outliner-folders" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
+      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" inherits="class=outlinerclass">
+        <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
+                      onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
+          <template>
+            <rule iscontainer="true">
               <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
                 <outlinercell ref="Name" label="rdf:http://home.netscape.com/NC-rdf#Name" />
               </outlinerrow>

@@ -102,12 +102,12 @@ function Startup()
 {
   gFld_Name = document.getElementById("name");
   gFld_URL = document.getElementById("url");
-  gFolderTree = document.getElementById("folders");
-  
+  var bookmarkView = document.getElementById("bookmarks-view");
+
   var shouldSetOKButton = true;
   var dialogElement = document.documentElement;
   if ("arguments" in window) {
-    var folderItem;
+    var folderItem = null;
     var arg;
     if (window.arguments.length < 5)
       arg = null;
@@ -122,9 +122,12 @@ function Startup()
       sizeToContent();
       dialogElement.setAttribute("title", dialogElement.getAttribute("title-selectFolder"));
       shouldSetOKButton = false;
-      folderItem = document.getElementById(window.arguments[2]);
-      if (folderItem)
-        gFolderTree.selectItem(folderItem);
+      if (window.arguments[2])
+        folderItem = bookmarkView.rdf.GetResource(window.arguments[2]);
+      if (folderItem) {
+        var ind = bookmarkView.outlinerBuilder.getIndexOfResource(folderItem);
+        bookmarkView.outlinerBoxObject.selection.select(ind);
+      }
       break;
     case "newBookmark":
       setupFields();
@@ -142,17 +145,26 @@ function Startup()
       setupFields();
       if (window.arguments[2]) {
         gCreateInFolder = window.arguments[2];
-        folderItem = document.getElementById(gCreateInFolder);
-        if (folderItem)
-          gFolderTree.selectItem(folderItem);
+        folderItem = bookmarkView.rdf.GetResource(gCreateInFolder);
+        if (folderItem) {
+          var ind = bookmarkView.outlinerBuilder.getIndexOfResource(folderItem);
+          bookmarkView.outlinerBoxObject.selection.select(ind);
+        }
       }
     }
   }
   
   if (shouldSetOKButton)
     onFieldInput();
-  gFld_Name.select();
-  gFld_Name.focus();
+  if (document.getElementById("bookmarknamegrid").hasAttribute("hidden")) {
+    bookmarkView.outliner.focus();
+    if (bookmarkView.currentIndex == -1)
+      bookmarkView.outlinerBoxObject.selection.select(0);
+  }
+  else {
+    gFld_Name.select();
+    gFld_Name.focus();
+  }
 } 
 
 function setupFields()
@@ -174,6 +186,12 @@ function onFieldInput()
 
 function onOK()
 {
+  if (!document.getElementById("folderbox").hasAttribute("hidden")) {
+    var bookmarkView = document.getElementById("bookmarks-view");
+    var currentIndex = bookmarkView.currentIndex;
+    if (currentIndex != -1)
+      gCreateInFolder = bookmarkView.outlinerBuilder.getResourceAtIndex(currentIndex).Value;
+  }
   // In Select Folder Mode, do nothing but tell our caller what
   // folder was selected. 
   if (window.arguments[4] == "selectFolder")
@@ -217,39 +235,28 @@ function onOK()
   }
 }
 
-function onTreeSelect ()
-{
-  if (gFolderTree.selectedItems.length < 1) 
-    gCreateInFolder = "NC:NewBookmarkFolder";
-  else {
-    var selectedItem = gFolderTree.selectedItems[0];
-    gCreateInFolder = selectedItem.id;
-  }
-}
-
 var gBookmarksShell = null;
 function createNewFolder ()
 {
-  // ick. 
-  gBookmarksShell = new BookmarksTree("folders");
-  var item = null;
-  var folderKids = document.getElementById("folderKids");
-  if (gFolderTree.selectedItems.length < 1)
-    item = folderKids.firstChild;
-  item = gFolderTree.selectedItems.length < 1 ? folderKids.firstChild : gFolderTree.selectedItems[0];
-  gBookmarksShell.commands.createBookmarkItem("folder", item);
+  var bookmarksView = document.getElementById("bookmarks-view");
+  bookmarksView.createNewFolder();
 }
 
 function useDefaultFolder ()
 {
   const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
-  var newBookmarkFolder = document.getElementById("NC:NewBookmarkFolder");
-  if (newBookmarkFolder) {
-    gFolderTree.selectItem(newBookmarkFolder);
+  var bookmarkView = document.getElementById("bookmarks-view");
+  // XXX Only the personal toolbar folder has a special folder URI
+  // This needs to look for the resource with the NC_NC + "FolderType" of "NC:NewBookmarkFolder"
+  var newBookmarkFolder = bookmarkView.rdf.GetResource("NC:NewBookmarkFolder");
+  var ind = bookmarkView.outlinerBuilder.getIndexOfResource(newBookmarkFolder);
+  if (ind != -1) {
+    bookmarkView.outliner.focus();
+    bookmarkView.outlinerBoxObject.selection.select(ind);
     gCreateInFolder = "NC:NewBookmarkFolder";
   }
   else {
-    gFolderTree.clearItemSelection();
+    bookmarkView.outlinerBoxObject.selection.clearSelection();
     gCreateInFolder = "NC:BookmarksRoot";
   }
 }
