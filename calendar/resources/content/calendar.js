@@ -206,9 +206,11 @@ function calendarInit()
      if (calendarColor != null)
      {
        gCalendarStyleSheet.insertRule("." + containerName + " { background-color:" + calendarColor + "!important;}", 1);
-       calListItems[i+1].childNodes[0].setAttribute("class", "calendar-list-item-class " + containerName);
+       var calListItem = calListItems[i+1];
+       if (calListItem && calListItem.childNodes[0]) {
+         calListItem.childNodes[0].setAttribute("class", "calendar-list-item-class " + containerName);
+       }
      }
-
    }
    // CofC Calendar Coloring Change
    if( ("arguments" in window) &&
