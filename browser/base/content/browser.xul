@@ -953,7 +953,8 @@
                  ontextreverted="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event, this);"
                  onmousedown="URLBarMouseDownHandler(event, this);"
-                 onclick="URLBarClickHandler(event, this);">
+                 onclick="URLBarClickHandler(event, this);"
+		 ondblclick="URLBarDblClickHandler(event, this);">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
                     ondraggesture="PageProxyDragGesture(event);"
@@ -980,6 +981,7 @@
                  onfocus="URLBarFocusHandler(event, this);"
                  onmousedown="URLBarMouseDownHandler(event, this);"
                  onclick="URLBarClickHandler(event, this);"
+		 ondblclick="URLBarDblClickHandler(event, this);"
                  ontextentered="return handleSearchBarCommand(param);"
                  persist="searchmode,autocompletesearchparam">
           <image id="search-proxy-button" popup="SearchBarPopup"/>

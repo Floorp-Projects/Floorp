@@ -1283,6 +1283,12 @@ function URLBarMouseDownHandler(aEvent, aElt)
   }
 }
 
+function URLBarDblClickHandler(aEvent, aElt)
+{
+  if (gClickSelectsAll)
+    aElt.select();
+}
+
 function URLBarClickHandler(aEvent, aElt)
 {
   if (!gIgnoreClick && gClickSelectsAll && aElt.selectionStart == aElt.selectionEnd)
