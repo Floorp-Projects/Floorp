@@ -40,7 +40,7 @@
 #include "mpprime.h"
 #include <stdlib.h>
 
-#define SMALL_TABLE  /* determines size of hard-wired prime table */
+#define SMALL_TABLE 0 /* determines size of hard-wired prime table */
 
 #define RANDOM() rand()
 
@@ -51,7 +51,7 @@
    is returned; otherwise, MP_YES is returned and 'which' is set to
    the index of the integer in the vector which divided a.
  */
-mp_err    s_mpp_divp(mp_int *a, mp_digit *vec, int size, int *which);
+mp_err    s_mpp_divp(mp_int *a, const mp_digit *vec, int size, int *which);
 
 extern mp_err s_mp_pad(mp_int *mp, mp_size min); /* left pad with zeroes  */
 
@@ -178,7 +178,7 @@ mp_err  mpp_random_size(mp_int *a, mp_size prec)
   if it is; returns MP_NO if it is not.
  */
 
-mp_err  mpp_divis_vector(mp_int *a, mp_digit *vec, int size, int *which)
+mp_err  mpp_divis_vector(mp_int *a, const mp_digit *vec, int size, int *which)
 {
   ARGCHK(a != NULL && vec != NULL && size > 0, MP_BADARG);
   
@@ -380,7 +380,7 @@ X:
    first digit against which a is divisible.
  */
 
-mp_err    s_mpp_divp(mp_int *a, mp_digit *vec, int size, int *which)
+mp_err    s_mpp_divp(mp_int *a, const mp_digit *vec, int size, int *which)
 {
   mp_err    res;
   mp_digit  rem;

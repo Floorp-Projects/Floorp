@@ -42,7 +42,8 @@
 
 #include "mpi.h"
 
-extern int prime_tab_size;   /* number of primes available */
+extern const int prime_tab_size;   /* number of primes available */
+extern const mp_digit prime_tab[];
 
 /* Tests for divisibility    */
 mp_err  mpp_divis(mp_int *a, mp_int *b);
@@ -53,7 +54,7 @@ mp_err  mpp_random(mp_int *a);
 mp_err  mpp_random_size(mp_int *a, mp_size prec);
 
 /* Pseudo-primality testing  */
-mp_err  mpp_divis_vector(mp_int *a, mp_digit *vec, int size, int *which);
+mp_err  mpp_divis_vector(mp_int *a, const mp_digit *vec, int size, int *which);
 mp_err  mpp_divis_primes(mp_int *a, mp_digit *np);
 mp_err  mpp_fermat(mp_int *a, mp_digit w);
 mp_err  mpp_pprime(mp_int *a, int nt);
