@@ -412,7 +412,7 @@ static SECStatus secmod_EncodeData(DBT *data, SECMODModule * module) {
 					module->slotInfo[i].defaultFlags);
 	    SECMOD_PUTLONG(slot[i].timeout,module->slotInfo[i].timeout);
 	    slot[i].askpw = module->slotInfo[i].askpw;
-	    slot[i].hasRootCerts = module->slots[i]->hasRootCerts;
+	    slot[i].hasRootCerts = module->slotsInfo[i]->hasRootCerts;
 	    PORT_Memset(slot[i].reserved, 0, sizeof(slot[i].reserved));
 	}
     }
