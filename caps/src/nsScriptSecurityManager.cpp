@@ -2264,11 +2264,6 @@ nsScriptSecurityManager::GetScriptSecurityManager()
 
             NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                              "failed to install xpconnect security manager!");
-
-#ifdef DEBUG_jband
-            else
-                printf("!!!!! xpc security manager registered\n");
-#endif
         }
         else
             NS_WARNING("can't get xpconnect to install security manager!");
