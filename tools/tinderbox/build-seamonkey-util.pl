@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.68 $ ';
+$::UtilsVersion = '$Revision: 1.69 $ ';
 
 package TinderUtils;
 
@@ -574,8 +574,8 @@ sub BuildIt {
         }
         $start_time = time();
 
-		# Set this each time, since post-mozilla.pl can reset this.
-		$ENV{MOZILLA_FIVE_HOME} = "$build_dir/${Settings::ObjDir}/mozilla/dist/bin";
+        # Set this each time, since post-mozilla.pl can reset this.
+        $ENV{MOZILLA_FIVE_HOME} = "$binary_dir";
         
         my $cvsco = '';
 		# Tack on pull by date if requested.  Don't pull by date on a branch,
