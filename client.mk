@@ -140,7 +140,10 @@ endif
 
 CONFIG_NSPR_FLAG = --with-nspr=$(NSPR_INSTALL_DIR)
 
-CONFIG_FLAGS = $(CONFIG_TOOLKIT_FLAG) $(CONFIG_NSPR_FLAG)
+# Enable editor ...  might want to do this conditionally
+CONFIG_EDITOR_FLAG = --enable-editor
+
+CONFIG_FLAGS = $(CONFIG_TOOLKIT_FLAG) $(CONFIG_NSPR_FLAG) $(CONFIG_EDITOR_FLAG)
 
 #
 # rules
@@ -155,7 +158,7 @@ all: checkout
 #
 checkout:
 # Build the client.
-	$(CVSCO) SeaMonkeyBrowser
+	$(CVSCO) SeaMonkeyEditor
 
 #
 # build it
