@@ -143,9 +143,12 @@ sub InstallDefaultsFiles()
     mkdir($default_pref_dir, 0);
     InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",                       "$default_pref_dir", 0);
     InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",                    "$default_pref_dir", 0);
+    if ($main::DEBUG) {
+        InstallResources(":mozilla:modules:libpref:src:MANIFEST_DEBUG_PREFS",          "$default_pref_dir", 0);
+    }
     InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",                     "$default_pref_dir", 0);
     InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",                      "$default_pref_dir", 0);
-    InstallResources(":mozilla:netwerk:base:public:MANIFEST_PREFS",                      "$default_pref_dir", 0);
+    InstallResources(":mozilla:netwerk:base:public:MANIFEST_PREFS",                    "$default_pref_dir", 0);
 
     if ($main::options{inspector})
     {
