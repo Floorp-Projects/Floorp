@@ -52,6 +52,9 @@
 #include "nsISVGCairoSurface.h"
 #include <gdk/gdkx.h>
 #include <cairo.h>
+extern "C" {
+#include <cairo-xlib.h>
+}
 
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
