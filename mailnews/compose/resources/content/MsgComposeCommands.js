@@ -175,9 +175,7 @@ var gComposeRecyclingListener = {
     ClearIdentityListPopup(document.getElementById("msgIdentityPopup"));
  
     //Clear the subject
-    var element = document.getElementById("msgSubject");
-    if (element)
-      element.value = "";
+    document.getElementById("msgSubject").value = "";
 
     SetContentAndBodyAsUnmodified();
     disableEditableFields()
@@ -188,6 +186,13 @@ var gComposeRecyclingListener = {
     document.getElementById("appcontent").removeAttribute("height");
     document.getElementById("addresses-box").removeAttribute("width");
     document.getElementById("attachments-box").removeAttribute("width");
+
+    //Reset menu options
+    document.getElementById("format_auto").setAttribute("checked", "true");
+    document.getElementById("priority_normal").setAttribute("checked", "true");
+
+    //Reset editor attributes
+    EditorResetFontAndColorAttributes();
 
     //Release the nsIMsgComposeParams object
     if (window.arguments && window.arguments[0])
@@ -1699,9 +1704,9 @@ function SaveAsFile(saveAs)
 {
   dump("SaveAsFile from XUL\n");
   if (gMsgCompose.bodyConvertible() == nsIMsgCompConvertible.Plain)
-    editorShell.saveDocument(saveAs, false, "text/plain");
+    SaveDocument(saveAs, false, "text/plain");
   else
-    editorShell.saveDocument(saveAs, false, "text/html");
+    SaveDocument(saveAs, false, "text/html");
   defaultSaveOperation = "file";
 }
 
@@ -1749,12 +1754,18 @@ function MessageFcc(menuItem)
 
 function PriorityMenuSelect(target)
 {
-  dump("Set Message Priority to " + target.getAttribute('id') + "\n");
   if (gMsgCompose)
   {
     var msgCompFields = gMsgCompose.compFields;
     if (msgCompFields)
-      msgCompFields.priority = target.getAttribute('id');
+      switch (target.getAttribute('id'))
+      {
+        case "priority_lowest":  msgCompFields.priority = "lowest";   break;
+        case "priority_low":     msgCompFields.priority = "low";      break;
+        case "priority_normal":  msgCompFields.priority = "normal";   break;
+        case "priority_high":    msgCompFields.priority = "high";     break;
+        case "priotity_highest": msgCompFields.priority = "highest";  break;
+      }
   }
 }
 
@@ -1779,21 +1790,17 @@ function ReturnReceiptMenuSelect()
 
 function OutputFormatMenuSelect(target)
 {
-  dump("Set Message Format to " + target.getAttribute('id') + "\n");
   if (gMsgCompose)
   {
     var msgCompFields = gMsgCompose.compFields;
-
-        if (msgCompFields)
-        {
-            switch (target.getAttribute('id'))
-          {
-            case "1": gSendFormat = nsIMsgCompSendFormat.AskUser;     break;
-            case "2": gSendFormat = nsIMsgCompSendFormat.PlainText;   break;
-            case "3": gSendFormat = nsIMsgCompSendFormat.HTML;        break;
-            case "4": gSendFormat = nsIMsgCompSendFormat.Both;        break;
-          }
-        }
+    if (msgCompFields)
+      switch (target.getAttribute('id'))
+      {
+        case "format_auto":  gSendFormat = nsIMsgCompSendFormat.AskUser;     break;
+        case "format_plain": gSendFormat = nsIMsgCompSendFormat.PlainText;   break;
+        case "format_html":  gSendFormat = nsIMsgCompSendFormat.HTML;        break;
+        case "format_both":  gSendFormat = nsIMsgCompSendFormat.Both;        break;
+      }
   }
 }
 
