@@ -335,6 +335,21 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             catch (IllegalAccessException e) {
                 // Just abandon conversion from JSObject
             }
+        } else {
+            // Wrapper support
+            for (int i=0; i < args.length; i++) {
+                Object arg = args[i];
+                if (arg instanceof Wrapper) {
+                    arg = ((Wrapper)arg).unwrap();
+                    if (!(arg instanceof Number)) {
+                        // Since numbers are internally represented as 
+                        // java.lang.Double, etc. then java.lang.Doubles are 
+                        // distinquished by being wrapped. Thus don't unwrap
+                        // here or we'll get overloading wrong.
+                        args[i] = arg;
+                    }
+                }
+            }
         }
 
         Member  bestFit = null;
