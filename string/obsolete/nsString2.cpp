@@ -573,11 +573,21 @@ char* nsString::ToNewCString() const {
  * @return  ptr to new ascii string
  */
 PRUnichar* nsString::ToNewUnicode() const {
-  nsString temp(mUStr);
-  temp.SetCapacity(8);
-  PRUnichar* result=temp.mUStr;
-  temp.mStr=0;
-  temp.mOwnsBuffer=PR_FALSE;
+  PRUnichar* result=0;
+  if(eOneByte==mCharSize) {
+    nsString temp(mStr);
+    temp.SetCapacity(8);
+    result=temp.mUStr;
+    temp.mStr=0;
+    temp.mOwnsBuffer=PR_FALSE;
+  }
+  else{
+    nsString temp(mUStr);
+    temp.SetCapacity(8);
+    result=temp.mUStr;
+    temp.mStr=0;
+    temp.mOwnsBuffer=PR_FALSE;
+  }
   return result;
 }
 
