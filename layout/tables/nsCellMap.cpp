@@ -336,7 +336,8 @@ PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex)
   */
 PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex)
 {
-  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
+  PRInt32 colCount = GetColCount();
+  NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
   PRBool result = PR_FALSE;
   PRInt32 rowCount = GetRowCount();
   for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
@@ -373,10 +374,9 @@ PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex)
   */
 PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex)
 {
-  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
   PRBool result = PR_FALSE;
   const PRInt32 colCount = GetColCount();
-  if (aColIndex!=colCount-1)
+  if (aColIndex<colCount-1)
   { // aColIndex is not the last col, so we check the next col after aColIndex for spanners
     const PRInt32 rowCount = GetRowCount();
     for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
