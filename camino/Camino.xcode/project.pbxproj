@@ -5,6 +5,36 @@
 	};
 	objectVersion = 39;
 	objects = {
+		0382B4D907303CCA00A0228A = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = dl_manager.tif;
+			path = resources/images/toolbar/dl_manager.tif;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0382B4DA07303CCA00A0228A = {
+			fileRef = 0382B4D907303CCA00A0228A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0382B4DB07303CCA00A0228A = {
+			fileRef = 0382B4D907303CCA00A0228A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//030
+//031
+//032
+//033
+//034
+//080
+//081
+//082
+//083
+//084
 		080E96DDFE201D6D7F000001 = {
 			children = (
 				F512F53302D17A2601072C9F,
@@ -226,8 +256,7 @@
 			sourceTree = "<group>";
 		};
 		1058C7A1FEA54F0111CA2CBB = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Cocoa.framework;
 			path = /System/Library/Frameworks/Cocoa.framework;
@@ -401,8 +430,7 @@
 			sourceTree = "<group>";
 		};
 		29B97324FDCFA39411CA2CEA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = AppKit.framework;
 			path = /System/Library/Frameworks/AppKit.framework;
@@ -410,8 +438,7 @@
 			sourceTree = "<absolute>";
 		};
 		29B97325FDCFA39411CA2CEA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Foundation.framework;
 			path = /System/Library/Frameworks/Foundation.framework;
@@ -595,7 +622,7 @@
 		3003B8AC044514E300B85BF3 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			name = English;
 			path = resources/localized/English.lproj/SearchURLList.plist;
 			refType = 4;
@@ -627,7 +654,7 @@
 		};
 		3F22CC1303DF42A200026DCE = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			name = Charset.dict;
 			path = resources/application/Charset.dict;
 			refType = 4;
@@ -1707,6 +1734,7 @@
 				E010866E06BCA2E500BD5DE0,
 				E010866F06BCA2E500BD5DE0,
 				3FF71AE00710A6800081B5D7,
+				0382B4DA07303CCA00A0228A,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3955,7 +3983,7 @@
 		};
 		3F44AD8705BDFB9F00CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-Camino__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4134,7 +4162,7 @@
 		};
 		3F44AD9E05BDFB9F00CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-AppearancePrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4299,7 +4327,7 @@
 		};
 		3F44ADB205BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-NavigationPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4314,7 +4342,7 @@
 		};
 		3F44ADC105BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-PersonalPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4500,7 +4528,7 @@
 		};
 		3F44ADD905BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-PrivacyPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4688,7 +4716,7 @@
 		};
 		3F44ADF005BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-SecurityPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4876,7 +4904,7 @@
 		};
 		3F44AE0705BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-WebFeaturesPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -5642,6 +5670,7 @@
 				E010867506BCA2E500BD5DE0,
 				E010867606BCA2E500BD5DE0,
 				3FF71AE10710A6800081B5D7,
+				0382B4DB07303CCA00A0228A,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7922,7 +7951,7 @@
 		};
 		3F44AFC505BDFBA100CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-CaminoStatic__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -8029,7 +8058,7 @@
 		};
 		3F44AFD305BDFBA100CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = "Info-AddressBookManager__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -8259,8 +8288,7 @@
 			};
 		};
 		3F558E950552122E006156FD = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = IOKit.framework;
 			path = /System/Library/Frameworks/IOKit.framework;
@@ -8393,7 +8421,7 @@
 		3FAA54C70587778700BBF630 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			name = bookmarks.plist;
 			path = resources/application/bookmarks.plist;
 			refType = 2;
@@ -8690,8 +8718,7 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		3FB2BAE30545EB52002B9691 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = AddressBook.framework;
 			path = /System/Library/Frameworks/AddressBook.framework;
@@ -9264,8 +9291,6 @@
 //4A3
 //4A4
 		4A9504CCFFE6A4B311CA0CBA = {
-			buildRules = (
-			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				DEBUGGING_SYMBOLS = YES;
@@ -9283,8 +9308,6 @@
 			name = Development;
 		};
 		4A9504CDFFE6A4B311CA0CBA = {
-			buildRules = (
-			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
@@ -9305,8 +9328,7 @@
 //793
 //794
 		7919FCF0044631350000010E = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXBundleReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.cfbundle;
 			name = PrintPDE.plugin;
 			path = ../dist/package/PrintPDE.plugin;
@@ -10555,7 +10577,7 @@
 		};
 		F51B70B4026EC8A601A80166 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			name = Camino.scriptSuite;
 			path = resources/application/Camino.scriptSuite;
 			refType = 2;
@@ -10789,6 +10811,7 @@
 				3FC0FB8505A0D2F4002F47DE,
 				3FC0FB8605A0D2F4002F47DE,
 				3FC0FB8705A0D2F4002F47DE,
+				0382B4D907303CCA00A0228A,
 				F5555C8202022F070164C72B,
 				F5555C8302022F070164C72B,
 				F5555C8402022F070164C72B,
@@ -10947,8 +10970,7 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		F52D5CDB027D412A01A80166 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Carbon.framework;
 			path = /System/Library/Frameworks/Carbon.framework;
@@ -10956,8 +10978,7 @@
 			sourceTree = "<absolute>";
 		};
 		F52D5CDC027D412A01A80166 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = CoreFoundation.framework;
 			path = /System/Library/Frameworks/CoreFoundation.framework;
@@ -10965,8 +10986,7 @@
 			sourceTree = "<absolute>";
 		};
 		F52D5CDD027D412A01A80166 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = SystemConfiguration.framework;
 			path = /System/Library/Frameworks/SystemConfiguration.framework;
@@ -11441,8 +11461,7 @@
 			sourceTree = "<group>";
 		};
 		F557193A022B4102010001CA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = PreferencePanes.framework;
 			path = /System/Library/Frameworks/PreferencePanes.framework;
@@ -11547,8 +11566,7 @@
 			sourceTree = "<group>";
 		};
 		F55A4DED0380705A01A80166 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = SharedMenusCocoa.framework;
 			path = /Library/Frameworks/SharedMenusCocoa.framework;
@@ -11661,9 +11679,8 @@
 			sourceTree = "<group>";
 		};
 		F56610BC0394775201A9666E = {
-			fallbackIsa = PBXFileReference;
 			includeInIndex = 1;
-			isa = PBXFolderReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.cfbundle;
 			name = "Default Plugin.plugin";
 			path = "../modules/plugin/samples/default/mac/build/Default Plugin.plugin";
@@ -12202,8 +12219,6 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		F593CA5E034EB88E01A967F3 = {
-			buildRules = (
-			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				DEBUGGING_SYMBOLS = YES;
@@ -12225,7 +12240,7 @@
 		F5949A47030D58A1014E8430 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			path = xhtml11.dtd;
 			refType = 4;
 			sourceTree = "<group>";
@@ -12701,7 +12716,7 @@
 		};
 		F5CA1A1A02D3956F01F34900 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			name = English;
 			path = resources/localized/English.lproj/Camino.scriptTerminology;
 			refType = 2;
@@ -12867,8 +12882,7 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		F5F0BDC803C0A76F01202892 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXBundleReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.cfbundle;
 			name = PrintPDE.plugin;
 			path = ../dist/package/PrintPDE.plugin;
@@ -13057,8 +13071,7 @@
 			sourceTree = "<group>";
 		};
 		F5FEDBCB02AD8DD101A967F3 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = QuickTime.framework;
 			path = /System/Library/Frameworks/QuickTime.framework;
@@ -13825,7 +13838,7 @@
 		F6BD64D501B3172601A962F7 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
+			lastKnownFileType = text.xml;
 			name = platformHTMLBindings.xml;
 			path = ../dist/Embed/res/builtin/platformHTMLBindings.xml;
 			refType = 2;

@@ -43,6 +43,7 @@
 #import "BookmarkToolbar.h"
 #import "BookmarkViewController.h"
 #import "BookmarkManager.h"
+#import "ProgressDlgController.h"
 
 #import "BrowserContentViews.h"
 #import "BrowserWrapper.h"
@@ -118,6 +119,7 @@ static NSString *TextSmallerToolbarItemIdentifier = @"Text Smaller Toolbar Item"
 static NSString *NewTabToolbarItemIdentifier = @"New Tab Toolbar Item";
 static NSString *CloseTabToolbarItemIdentifier = @"Close Tab Toolbar Item";
 static NSString *SendURLToolbarItemIdentifier = @"Send URL Toolbar Item";
+static NSString *DLManagerToolbarItemIdentifier = @"Download Manager Toolbar Item";
 
 
 static NSString *NavigatorWindowFrameSaveName = @"NavigatorWindow";
@@ -933,6 +935,7 @@ enum BWCOpenDest {
                                         NSToolbarFlexibleSpaceItemIdentifier,
                                         NSToolbarSpaceItemIdentifier,
                                         NSToolbarSeparatorItemIdentifier,
+                                        DLManagerToolbarItemIdentifier,
                                         nil];
 }
 
@@ -1209,6 +1212,15 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(sendURL:)];
   }
+  else if ( [itemIdent isEqual:DLManagerToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Downloads", @"Downloads")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Downloads", @"Downloads")];
+    [toolbarItem setToolTip:NSLocalizedString(@"DownloadsToolTip", @"Show the download manager")];
+    [toolbarItem setImage:[NSImage imageNamed:@"dl_manager.tif"]];
+    [toolbarItem setTarget:[ProgressDlgController sharedDownloadController]];
+    [toolbarItem setAction:@selector(showWindow:)];
+  }
   else
   {
     toolbarItem = nil;
@@ -1222,7 +1234,7 @@ enum BWCOpenDest {
 {
   // Check the action and see if it matches.
   SEL action = [theItem action];
-//  NSLog(@"Validating toolbar item %@ with selector %s", [theItem label], action);
+  // NSLog(@"Validating toolbar item %@ with selector %s", [theItem label], action);
   if (action == @selector(back:)) {
     // if the bookmark manager is showing, we enable the back button so that
     // they can click back to return to the webpage they were viewing.

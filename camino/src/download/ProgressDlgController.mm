@@ -580,6 +580,11 @@ static id gSharedProgressController = nil;
 {
   SEL action = [theItem action];
   
+  // return true if the action is validating showWindow:
+  // you can always do that from the toolbar
+  if (action == @selector(showWindow:))
+    return YES;
+  
   // validate items not dependent on the current selection
   if (action == @selector(cleanUpDownloads:)) {
     unsigned pcControllersCount = [mProgressViewControllers count];
