@@ -43,8 +43,8 @@ public:
   virtual ~nsClipboard();
 
   // nsIClipboard  
-  NS_IMETHOD ForceDataToClipboard();
-  NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRBool *_retval); 
+  NS_IMETHOD ForceDataToClipboard ( PRInt32 aWhichClipboard );
+  NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard, PRBool *_retval); 
 
   // Internal Native Routines
   static nsresult CreateNativeDataObject(nsITransferable * aTransferable, 
@@ -67,8 +67,8 @@ public:
 
 
 protected:
-  NS_IMETHOD SetNativeClipboardData();
-  NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
+  NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard );
+  NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard );
 
   nsIWidget         * mWindow;
   IDataObject       * mDataObj;
