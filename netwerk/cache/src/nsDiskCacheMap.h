@@ -38,7 +38,7 @@
  
  
 class nsDiskCacheBinding;
-class nsDiskCacheEntry;
+struct nsDiskCacheEntry;
 
 /******************************************************************************
  *  nsDiskCacheRecord
