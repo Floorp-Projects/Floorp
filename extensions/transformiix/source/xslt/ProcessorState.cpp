@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.14 2001/01/19 21:24:44 axel%pike.org Exp $
+ * $Id: ProcessorState.cpp,v 1.15 2001/01/22 09:39:54 kvisco%ziplink.net Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.14 $ $Date: 2001/01/19 21:24:44 $
+ * @version $Revision: 1.15 $ $Date: 2001/01/22 09:39:54 $
 **/
 
 #include "ProcessorState.h"
@@ -49,6 +49,7 @@ const String ProcessorState::wrapperNS        = "http://www.mitre.org/TransforMi
 ProcessorState::ProcessorState() {
     this->xslDocument = NULL;
     this->resultDocument = NULL;
+    currentAction = 0;
     initialize();
 } //-- ProcessorState
 
@@ -59,6 +60,7 @@ ProcessorState::ProcessorState() {
 ProcessorState::ProcessorState(Document& xslDocument, Document& resultDocument) {
     this->xslDocument = &xslDocument;
     this->resultDocument = &resultDocument;
+    currentAction = 0;
     initialize();
 } //-- ProcessorState
 
@@ -89,6 +91,14 @@ ProcessorState::~ProcessorState() {
   delete iter;
   delete keys;
 
+  //-- clean up XSLT actions stack
+  while (currentAction) {
+      XSLTAction* item = currentAction;
+      item->node = 0;
+      currentAction = item->prev;
+      item->prev = 0;
+      delete item;
+  }
 } //-- ~ProcessorState
 
 
@@ -418,8 +428,11 @@ Element* ProcessorState::getNamedTemplate(String& name) {
     return 0;
 } //-- getNamedTemplate
 
+
+
 /**
- * Returns the namespace URI for the given name
+ * Returns the namespace URI for the given name, this method should only be
+ * called for determining a namespace declared within the context (ie. the stylesheet)
 **/
 void ProcessorState::getNameSpaceURI(const String& name, String& nameSpaceURI) {
     String prefix;
@@ -429,21 +442,23 @@ void ProcessorState::getNameSpaceURI(const String& name, String& nameSpaceURI) {
 } //-- getNameSpaceURI
 
 /**
- * Returns the namespace URI for the given namespace prefix
+ * Returns the namespace URI for the given namespace prefix, this method should
+ * only be called for determining a namespace declared within the context
+ * (ie. the stylesheet)
 **/
 void ProcessorState::getNameSpaceURIFromPrefix(const String& prefix, String& nameSpaceURI) {
 
-    if (prefix.length() == 0) {
-        nameSpaceURI.clear();
-        nameSpaceURI.append(*(String*)defaultNameSpaceURIStack.peek());
-    }
-    else {
-        String* result = (String*)nameSpaceMap.get(prefix);
-        if (result) {
-            nameSpaceURI.clear();
-            nameSpaceURI.append(*result);
+    XSLTAction* action = currentAction;
+
+    while (action) {
+        Node* node = action->node;
+        if (( node ) && (node->getNodeType() == Node::ELEMENT_NODE)) {
+            if (XMLDOMUtils::getNameSpace(prefix, (Element*) node, nameSpaceURI))
+                break;
         }
+        action = action->prev;
     }
+
 } //-- getNameSpaceURI
 
 /**
@@ -479,6 +494,27 @@ Document* ProcessorState::getResultDocument() {
     return resultDocument;
 } //-- getResultDocument
 
+/**
+ * Returns the namespace URI for the given name, this method should only be
+ * called for returning a namespace declared within in the result document.
+**/
+void ProcessorState::getResultNameSpaceURI(const String& name, String& nameSpaceURI) {
+    String prefix;
+    XMLUtils::getNameSpace(name, prefix);
+    if (prefix.length() == 0) {
+        nameSpaceURI.clear();
+        nameSpaceURI.append(*(String*)defaultNameSpaceURIStack.peek());
+    }
+    else {
+        String* result = (String*)nameSpaceMap.get(prefix);
+        if (result) {
+            nameSpaceURI.clear();
+            nameSpaceURI.append(*result);
+        }
+    }
+
+} //-- getResultNameSpaceURI
+
 NodeSet* ProcessorState::getTemplates() {
    return &templates;
 } //-- getTemplates
@@ -503,6 +539,38 @@ MBool ProcessorState::isXSLStripSpaceAllowed(Node* node) {
 } //--isXSLStripSpaceAllowed
 
 /**
+ * Removes the current XSLT action from the top of the stack.
+ * @returns the XSLT action after removing from the top of the stack
+**/
+Node* ProcessorState::popAction() {
+    Node* xsltAction = 0;
+    if (currentAction) {
+        xsltAction = currentAction->node;
+        XSLTAction* item = currentAction;
+        currentAction = currentAction->prev;
+        item->node = 0;
+        delete item;
+    }
+    return xsltAction;
+} //-- popAction
+
+/**
+ * Adds the given XSLT action to the top of the action stack
+**/
+void ProcessorState::pushAction(Node* xsltAction) {
+   if (currentAction) {
+       XSLTAction* newAction = new XSLTAction;
+       newAction->prev = currentAction;
+       currentAction = newAction;
+   }
+   else {
+       currentAction = new XSLTAction;
+       currentAction->prev = 0;
+   }
+   currentAction->node = xsltAction;
+} //-- pushAction
+
+/**
  * Adds the set of names to the Whitespace preserving element set
 **/
 void ProcessorState::preserveSpace(String& names) {
@@ -521,7 +589,7 @@ void ProcessorState::preserveSpace(String& names) {
 /**
  * Sets a new default Namespace URI.
 **/ 
-void ProcessorState::setDefaultNameSpaceURI(const String& nsURI) {
+void ProcessorState::setDefaultNameSpaceURIForResult(const String& nsURI) {
     String* nsTempURIPointer = 0;
     String* nsURIPointer = 0;
     StringListIterator theIterator(&nameSpaceURIList);
@@ -554,7 +622,7 @@ void ProcessorState::setDocumentBase(const String& documentBase) {
 void ProcessorState::setOutputMethod(const String& method) {
     format.setMethod(method);
     if ( method.indexOf(HTML) == 0 ) {
-        setDefaultNameSpaceURI(HTML_NS);
+        setDefaultNameSpaceURIForResult(HTML_NS);
     }
 }
 
@@ -825,13 +893,17 @@ void ProcessorState::initialize() {
     nodeStack = new NodeStack();
     nodeStack->push(this->resultDocument);
 
-    setDefaultNameSpaceURI("");
+    setDefaultNameSpaceURIForResult("");
 
     //-- determine xsl properties
     Element* element = NULL;
-    if (xslDocument)
+    if (xslDocument) {
         element = xslDocument->getDocumentElement();
+    }
     if ( element ) {
+
+        pushAction(element);
+
 	    //-- process namespace nodes
 	    NamedNodeMap* atts = element->getAttributes();
 	    if ( atts ) {
@@ -844,7 +916,8 @@ void ProcessorState::initialize() {
 	                XMLUtils::getLocalPart(attName, ns);
 	                // default namespace
 	                if ( attName.isEqual(XMLUtils::XMLNS) ) {
-	                    setDefaultNameSpaceURI(attValue);
+	                    //-- Is this correct?
+	                    setDefaultNameSpaceURIForResult(attValue);
 	                }
 	                // namespace declaration
 	                else {
@@ -906,11 +979,13 @@ void ProcessorState::initialize() {
 	    dfTextTemplate->appendChild(value_of);
 	    templates.add(dfTextTemplate);
 
+        String wild("*");
 	    //-- add PatternExpr hash for default templates
-	    patternExprHash.put("*",      new WildCardExpr());
+	    patternExprHash.put("*",      new ElementExpr(wild));
 	    patternExprHash.put("/",      new RootExpr());
 	    patternExprHash.put("text()", new TextExpr());
 
 	    //cout << "XSLT namespace: " << xsltNameSpace << endl;
 	}
 }
+
