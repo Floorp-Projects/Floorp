@@ -796,9 +796,15 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 	}
 	else if(peq(kNC_Child, property))
 	{
-		nsCOMPtr<nsIMsgFolder> childFolder(do_QueryInterface(target, &rv));
+		nsCOMPtr<nsIFolder> childFolder(do_QueryInterface(target, &rv));
 		if(NS_SUCCEEDED(rv))
-			rv = folder->IsParentOf(childFolder, PR_FALSE, hasAssertion);
+		{
+			nsCOMPtr<nsIFolder> folderasFolder(do_QueryInterface(folder));
+			nsCOMPtr<nsIFolder> childsParent;
+			rv = childFolder->GetParent(getter_AddRefs(childsParent));
+			*hasAssertion = (NS_SUCCEEDED(rv) && childsParent && folderasFolder
+							&& (childsParent.get() == folderasFolder.get()));
+		}
 	}
 	else if(peq(kNC_MessageChild, property))
 	{
