@@ -75,7 +75,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorSpellCheck)
 // Here we are creating the same object with two different contract IDs
 // and then initializing it different.
 // Basically, we need to tell the filter whether it is doing mail or not
-static nsresult
+static NS_METHOD
 nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
                                  void **aResult, PRBool aIsForMail)
 {
@@ -97,7 +97,7 @@ nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
     return rv;
 }
 
-static nsresult
+static NS_METHOD
 nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter, 
                                             REFNSIID aIID,
                                             void **aResult)
@@ -105,7 +105,7 @@ nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter,
     return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_FALSE);
 }
 
-static nsresult
+static NS_METHOD
 nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter, 
                                         REFNSIID aIID,
                                         void **aResult)
@@ -148,7 +148,7 @@ CreateControllerWithSingletonCommandTable(const nsCID& inCommandTableCID, nsICon
 
 // Here we make an instance of the controller that holds doc state commands.
 // We set it up with a singleton command table.
-static nsresult
+static NS_METHOD
 nsHTMLEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
                                               void **aResult)
 {
@@ -161,7 +161,7 @@ nsHTMLEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
 
 // Tere we make an instance of the controller that holds composer commands.
 // We set it up with a singleton command table.
-static nsresult
+static NS_METHOD
 nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsCOMPtr<nsIController> controller;
@@ -172,7 +172,7 @@ nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aRe
 }
 
 // Constructor for a command table that is pref-filled with HTML editor commands
-static nsresult
+static NS_METHOD
 nsHTMLEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID, 
                                               void **aResult)
 {
@@ -192,7 +192,7 @@ nsHTMLEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
 
 
 // Constructor for a command table that is pref-filled with HTML editor doc state commands
-static nsresult
+static NS_METHOD
 nsHTMLEditorDocStateCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID, 
                                               void **aResult)
 {
