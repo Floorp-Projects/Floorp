@@ -84,6 +84,7 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                   nsHTMLReflowMetrics& aDesiredLayoutSize,
                                   nsSize& aDesiredWidgetSize)
 {
+#ifndef NS_GFX_RENDER_FORM_ELEMENTS
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
   aDesiredWidgetSize.width  = NSIntPixelsToTwips(NS_DESIRED_RADIOBOX_SIZE, p2t);
@@ -92,6 +93,10 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
+#else
+  nsFormControlFrame::GetDesiredSize(aPresContext,aReflowState,aDesiredLayoutSize,
+                                  aDesiredWidgetSize);
+#endif
 }
 
 void 
@@ -303,11 +308,6 @@ nsRadioControlFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("RadioControl", aResult);
 }
 
-//
-// XXX: The following paint code is TEMPORARY. It is being used to get printing working
-// under windows. Later it may be used to GFX-render the controls to the display. 
-// Expect this code to repackaged and moved to a new location in the future.
-//
 
 void
 nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
@@ -316,9 +316,17 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
 {
   aRenderingContext.PushState();
 
+  const nsStyleColor* color = (const nsStyleColor*)
+     mStyleContext->GetStyleData(eStyleStruct_Color); 
+
+  //XXX: This is backwards for now. The PaintCircular border code actually draws pie slices.
+
   nsFormControlHelper::PaintCircularBorder(aPresContext,aRenderingContext,
                          aDirtyRect, mStyleContext, PR_FALSE, this, mRect.width, mRect.height);
+  nsFormControlHelper::PaintCircularBackground(aPresContext,aRenderingContext,
+                         aDirtyRect, mStyleContext, PR_FALSE, this, mRect.width, mRect.height);
 
+ 
   PRBool checked = PR_TRUE;
   GetCurrentCheckState(&checked); // Get check state from the content model
   if (PR_TRUE == checked) {
@@ -329,14 +337,16 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
 
     nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
     nscoord twelvePixels = NSIntPixelsToTwips(12, p2t);
-    nsRect outside(0, 0, twelvePixels, twelvePixels);
-    
+
+    nsRect outside;
+    nsFormControlHelper::GetCircularRect(mRect.width, mRect.height, outside);
+  
     outside.Deflate(onePixel, onePixel);
     outside.Deflate(onePixel, onePixel);
     outside.Deflate(onePixel, onePixel);
     outside.Deflate(onePixel, onePixel);
     
-    aRenderingContext.SetColor(NS_RGB(0,0,0));
+    aRenderingContext.SetColor(color->mColor);
     aRenderingContext.FillArc(outside, 0, 180);
     aRenderingContext.FillArc(outside, 180, 360);
   }
