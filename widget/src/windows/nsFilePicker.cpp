@@ -82,6 +82,14 @@ nsFilePicker::~nsFilePicker()
   NS_IF_RELEASE(mUnicodeDecoder);
 }
 
+// we used to use MAX_PATH
+// which works great for one file
+// but for multiple files, the format is
+// dirpath\0\file1\0file2\0...filen\0\0
+// and that can quickly be more than MAX_PATH (260)
+// see bug #172001 for more details
+#define FILE_BUFFER_SIZE 4096 
+
 //-------------------------------------------------------------------------
 //
 // Show - Display the file dialog
@@ -98,8 +106,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   }
 
   PRBool result = PR_FALSE;
-  PRUnichar fileBuffer[MAX_PATH+1];
-  wcsncpy(fileBuffer,  mDefault.get(), MAX_PATH);
+  PRUnichar fileBuffer[FILE_BUFFER_SIZE+1];
+  wcsncpy(fileBuffer,  mDefault.get(), FILE_BUFFER_SIZE);
 
   nsAutoString htmExt(NS_LITERAL_STRING("html"));
   PRUnichar *title = ToNewUnicode(mTitle);
@@ -165,7 +173,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     ofn.hwndOwner    = (HWND)
       (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
     ofn.lpstrFile    = fileBuffer;
-    ofn.nMaxFile     = MAX_PATH;
+    ofn.nMaxFile     = FILE_BUFFER_SIZE;
 
     ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
 
