@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>  
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
+
+<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/askSendFormat.dtd">
+
+<window title="&windowTitle.label;"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="Startup()"
+    align="vertical"
+    class="dialog"
+    > 
+
+<html:script language="JavaScript" src="chrome://messengercompose/content/askSendFormat.js"/> 
+
+	<keyset id="keyset"/>
+
+    <spring style="height:0.5em"/>
+    <box align="horizontal">
+        <spring style="width:10px"/>
+        <box align="vertical">
+            <html:div style="width:40em"> &question.label; </html:div>
+            
+            <spring style="height:1em"/>
+        	<html:div>
+        		<html:input id="SendPlainTextAndHtml" class="indent" name="sendFormat" type="radio"/>
+        		<html:label for="SendPlainTextAndHtml">&plainTextAndHtml.label;</html:label>
+        	</html:div>
+
+        	<html:div>
+        		<html:input id="SendPlainTextOnly" class="indent" name="sendFormat" type="radio"/>
+        		<html:label for="SendPlainTextOnly">&plainTextOnly.label;</html:label>
+        	</html:div>
+
+        	<html:div>
+        		<html:input id="SendHtmlOnly" class="indent" name="sendFormat" type="radio"/>
+        		<html:label for="SendHtmlOnly">&htmlOnly.label;</html:label>
+        	</html:div>
+        </box>
+        <spring style="width:10px"/>
+    </box>
+	    
+    <spring style="height:1em"/>
+	<box id="okCancelButtons"
+        button1Label="&send.label;"
+        button2Label="&dontSend.label;"
+	    button3Label="&recipients.label;"
+	    button4Label="&help.label;"
+	/>
+    <spring style="height:0.5em" />
+</window>
