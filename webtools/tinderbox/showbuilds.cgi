@@ -999,8 +999,6 @@ sub do_vxml {
   print "Content-type: text/vxml\n\n";
   print '<?xml version="1.0"?><!DOCTYPE vxml PUBLIC "-//Tellme Networks//Voice Markup Language 1.0//EN" "http://resources.tellme.com/toolbox/vxml-tellme.dtd">';
 
-  %state_symbols = (success=>'green',busted=>'red',testfailed=>'test failed');
-
   print '<vxml><form id="tinderbox"><block>';
   print "\n\n";
   print '<audio src="http://www.boulderdesign.com/sounds/wargames.wav">Welcome</audio>';
@@ -1008,9 +1006,10 @@ sub do_vxml {
   print '<pause>500</pause>';
   print "\n";
 
+  %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.');
+
   if (is_tree_state_available()) {
-    print "<audio>$::tree is " .
-      (is_tree_open() ? 'open' : 'closed') . "</audio>";
+    print "<audio>$::tree is " .  (is_tree_open() ? 'open.' : 'closed.') . "</audio>";
   }
   my (%build, %times);
   tb_loadquickparseinfo($::tree, \%build, \%times);
@@ -1020,13 +1019,12 @@ sub do_vxml {
 
   print "\n";
   foreach my $buildname (sort keys %build) {
-    if ($state_symbols{$build{buildname}} == 'red') {
+    if ($build{$buildname} eq 'busted') {
       $flames = 1;
-    } elsif ($state_symbols{$build{buildname}} == 'test failed') {
+  } elsif ($build{$buildname} eq 'testfailed') {
       $testFailed = 1;
-    }
   }
-
+  }
   print '<pause>500</pause>';
 
   if ($testFailed == 1 || $flames == 1) {
@@ -1040,8 +1038,8 @@ sub do_vxml {
       foreach my $buildname (sort keys %build) {
         print "<pause>500</pause>";
         print "\n";
-        if ($state_symbols{$build{$buildname}} == 'red' ||
-            $state_symbols{$build{$buildname}} == 'test failed') {
+        if ($build{$buildname} eq 'busted' ||
+            $build{$buildname} eq 'testfailed') {
             print '<audio src="http://www.boulderdesign.com/sounds/getfixed.wav">bustage</audio>';
             print "\n";
         }
@@ -1052,7 +1050,7 @@ sub do_vxml {
         print "\n";
       }
   } else {
-      print '<audio>All clear, move along</audio>';
+      print '<audio>All clear, move along.</audio>';
       print "\n";
   }
 
