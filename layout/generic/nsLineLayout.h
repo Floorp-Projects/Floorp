@@ -60,9 +60,32 @@ struct nsLineData {
  * Transient state used during line reflow.
  */
 
-struct nsLineLayoutReflowData {
+// State used during line layout that may need to be rewound because
+// of an inconvenient word break.
+struct nsLineLayoutState {
+  // The next x coordinate to place the child frame
   nscoord mX;
-  nscoord mAvailWidth;
+
+  // This is true if the next frame to reflow should skip over leading
+  // whitespace.
+  PRBool mSkipLeadingWhiteSpace;
+
+  // The column number when pre-formatting (for tab spacing)
+  PRInt32 mColumn;
+
+  // The child frame being considered for reflow
+  nsIFrame* mKidFrame;
+
+  // The previous child frame just reflowed
+  nsIFrame* mPrevKidFrame;
+
+  // The child frame's content index-in-parent
+  PRInt32 mKidIndex;
+
+  // The child frame number within this line
+  PRInt32 mKidFrameNum;
+
+  // Current line values values
   nsSize mMaxElementSize;
   nscoord mMaxAscent;
   nscoord mMaxDescent;
@@ -81,6 +104,35 @@ struct nsLineLayout {
   nsresult IncrementalReflowFromChild(nsReflowCommand* aReflowCommand,
                                       nsIFrame*        aChildFrame);
                                       
+  void AtSpace();
+
+  void AtWordStart(nsIFrame* aFrame, nscoord aX);
+
+  PRBool SkipLeadingWhiteSpace() {
+    return mState.mSkipLeadingWhiteSpace;
+  }
+
+  void SetSkipLeadingWhiteSpace(PRBool aSkip) {
+    mState.mSkipLeadingWhiteSpace = aSkip;
+  }
+
+  PRIntn GetColumn() {
+    return mState.mColumn;
+  }
+
+  void SetColumn(PRIntn aNewColumn) {
+    mState.mColumn = aNewColumn;
+  }
+
+  void LineBreak() {
+    mPendingLineBreak = PR_TRUE;
+  }
+
+  // A value set by line-layout cognizant frames. Frames that are not
+  // aware of line layout leave the value unchanged and can thus be
+  // detected by the line-layout algorithm.
+  PRInt32 mReflowResult;
+
   // The presentation context
   nsIPresContext* mPresContext;
 
@@ -89,7 +141,6 @@ struct nsLineLayout {
   nsBlockReflowState& mBlockReflowState;
   nsISpaceManager* mSpaceManager;
   nsIContent* mBlockContent;
-  PRInt32 mKidIndex;
 
   // The line we are reflowing
   nsLineData* mLine;
@@ -100,68 +151,39 @@ struct nsLineLayout {
   PRIntn mFramesReflowed;
   PRIntn mOldChildCount;
 
-  // Current reflow data indicating where we are in the line, how much
-  // width remains and the maximum element size so far.
-  nsLineLayoutReflowData mReflowData;
+  nsLineLayoutState mState;
+  nsLineLayoutState mSavedState;
 
+  // The current breakable point in the line. If a line-break is
+  // requested then this is where the line will break at.
+  nsIFrame* mBreakFrame;
+  nscoord mBreakX;
+  PRBool mPendingLineBreak;
+
+  // XXX ick
   // This is set by the block code when it updates the available
   // reflow area when a floater is placed.
   PRBool mReflowDataChanged;
-
   PRPackedBool mMustReflowMappedChildren;
+
   PRPackedBool mUnconstrainedWidth;
   PRPackedBool mUnconstrainedHeight;
   PRPackedBool mMarginApplied;
+
   nscoord mY;
   nscoord mLineHeight;
   nscoord mMaxWidth;
   nscoord mMaxHeight;
   nsSize* mMaxElementSizePointer;
-  nscoord mX0;
-  nscoord mNewRightEdge;
+  nscoord mLeftEdge;
+  nscoord mRightEdge;
 
   nscoord* mAscents;
   nscoord mAscentBuf[20];
   nscoord mMaxAscents;
-  nscoord mAscentNum;
-
-  // The current type of reflow in progress. Normally, this value is
-  // set to NS_LINE_LAYOUT_NORMAL_REFLOW. However, in the special case
-  // of needing to chop off some frames because of a soft-line-break
-  // that was triggered by a word-wrap, the value will be set to
-  // NS_LINE_LAYOUT_WORD_WRAP_REFLOW. nsInlineFrame's and text know
-  // about this flag and respond to it appropriately.
-  PRInt32 mReflowType;
-
-  // A value set by line-layout cognizant frames. Frames that are not
-  // aware of line layout leave the value unchanged and can thus be
-  // detected by the line-layout algorithm.
-  PRInt32 mReflowResult;
-
-  // The current child frame being reflowed
-  nsIFrame* mKidFrame;
-
-  // The previous child frame that was just reflowed
-  nsIFrame* mPrevKidFrame;
-
-  // When a span of text ends in non-whitespace then we need to track
-  // the start of the word in case we need to word break at that word.
-  // Note that mWordStart may not be a direct child; instead it may be
-  // several levels down in inline frames. It may or may not be the
-  // first child of a contained inline.
-  nsIFrame* mWordStart;
-  nsIFrame* mWordStartParent;
-  PRInt32 mWordStartOffset;
-  nsLineLayoutReflowData mWordStartReflowData;
-
-  PRBool mSkipLeadingWhiteSpace;
-  PRInt32 mColumn;
 
 protected:
-
-  nsresult AddAscent(nscoord aAscent);
-
-  nsresult WordBreakReflow();
+  nsresult SetAscent(nscoord aAscent);
 
   nsresult ReflowMappedChild();
 
@@ -175,7 +197,7 @@ protected:
 
   nsresult ReflowMapped();
 
-  nsresult SplitLine(PRInt32 aChildReflowStatus, PRInt32 aRemainingKids);
+  nsresult SplitLine(PRInt32 aChildReflowStatus);
 
   nsresult PushChildren();
 
@@ -189,12 +211,8 @@ protected:
 
   void AlignChildren();
 
-  nsIFrame* GetWordStartParent();
+  PRBool CanBreak();
 };
-
-// Value's for nsLineLayout.mReflowType
-#define NS_LINE_LAYOUT_REFLOW_TYPE_NORMAL    0
-#define NS_LINE_LAYOUT_REFLOW_TYPE_WORD_WRAP 1
 
 // Value's for nsLineLayout.mReflowResult
 #define NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE   0
