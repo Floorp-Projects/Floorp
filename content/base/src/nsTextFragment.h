@@ -221,12 +221,6 @@ public:
 protected:
   void ReleaseText();
 
-  struct FragmentBits {
-    PRBool mInHeap : 1;
-    PRBool mIs2b : 1;
-    PRUint32 mLength : 30;
-  };
-
   union {
     const PRUnichar *m2b;
     const unsigned char *m1b;
@@ -234,7 +228,11 @@ protected:
 
   union {
     PRUint32 mAllBits;
-    FragmentBits mState;
+    struct {
+      PRBool mInHeap : 1;
+      PRBool mIs2b : 1;
+      PRUint32 mLength : 30;
+    } mState;
   };
 };
 
