@@ -989,7 +989,7 @@ fi
 
 if [ "$MOZ_STATIC_COMPONENTS" ]; then
     MAKEFILES_static_components="$MAKEFILES_static_components
-	modules/staticmod
+	modules/staticmod/Makefile
 "
 fi
 
@@ -1096,6 +1096,7 @@ $MAKEFILES_plugin
 $MAKEFILES_netwerk
 $MAKEFILES_profile
 $MAKEFILES_rdf
+$MAKEFILES_static_components
 $MAKEFILES_sun_java
 $MAKEFILES_themes
 $MAKEFILES_uriloader
