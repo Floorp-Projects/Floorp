@@ -143,145 +143,137 @@ sub BuildDist()
 
 	my($distdirectory) = ":mozilla:dist";
 
-	my($distlist) = [
-
 	#MAC_COMMON
-	[":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:"],
-	[":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:"],
-	[":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",	"$distdirectory:mac:common:"],
-	[":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:"],
-	[":mozilla:lib:mac:MoreFiles:MANIFEST",						"$distdirectory:mac:common:morefiles:"],
+	InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
+	InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
+	InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",	"$distdirectory:mac:common:");
+	InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
+	InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",						"$distdirectory:mac:common:morefiles:");
 
 	#INCLUDE
-	[":mozilla:config:mac:MANIFEST",							"$distdirectory:config:"],
-	[":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:"],
-	[":mozilla:include:MANIFEST",								"$distdirectory:include:"],		
-	[":mozilla:cmd:macfe:pch:MANIFEST",							"$distdirectory:include:"],
-	[":mozilla:cmd:macfe:utility:MANIFEST",						"$distdirectory:include:"],
+	InstallFromManifest(":mozilla:config:mac:MANIFEST",							"$distdirectory:config:");
+	InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:");
+	InstallFromManifest(":mozilla:include:MANIFEST",								"$distdirectory:include:");		
+	InstallFromManifest(":mozilla:cmd:macfe:pch:MANIFEST",							"$distdirectory:include:");
+	InstallFromManifest(":mozilla:cmd:macfe:utility:MANIFEST",						"$distdirectory:include:");
 
 	#NSPR	
-    [":mozilla:nsprpub:pr:include:MANIFEST",					"$distdirectory:nspr:"],		
-    [":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:"],		
-    [":mozilla:nsprpub:lib:ds:MANIFEST",						"$distdirectory:nspr:"],		
-    [":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:"],		
-    [":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:"],
+    InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",					"$distdirectory:nspr:");		
+    InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
+    InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",						"$distdirectory:nspr:");		
+    InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
+    InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
 
 	#JPEG
-    [":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:"],
+    InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
 
 	#LIBREG
-    [":mozilla:modules:libreg:include:MANIFEST",				"$distdirectory:libreg:"],
+    InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",				"$distdirectory:libreg:");
 
 	#XPCOM
-    [":mozilla:xpcom:public:MANIFEST",								"$distdirectory:xpcom:"],
+    InstallFromManifest(":mozilla:xpcom:public:MANIFEST",								"$distdirectory:xpcom:");
 
 	#ZLIB
-    [":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:"],
+    InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
 
 	#LIBUTIL
-    [":mozilla:modules:libutil:public:MANIFEST",				"$distdirectory:libutil:"],
+    InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",				"$distdirectory:libutil:");
 
 	#SUN_JAVA
-    [":mozilla:sun-java:stubs:include:MANIFEST",				"$distdirectory:sun-java:"],
-    [":mozilla:sun-java:stubs:macjri:MANIFEST",					"$distdirectory:sun-java:"],
+    InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",				"$distdirectory:sun-java:");
+    InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",					"$distdirectory:sun-java:");
 
 	#NAV_JAVA
-    [":mozilla:nav-java:stubs:include:MANIFEST",				"$distdirectory:nav-java:"],
-    [":mozilla:nav-java:stubs:macjri:MANIFEST",					"$distdirectory:nav-java:"],
+    InstallFromManifest(":mozilla:nav-java:stubs:include:MANIFEST",				"$distdirectory:nav-java:");
+    InstallFromManifest(":mozilla:nav-java:stubs:macjri:MANIFEST",					"$distdirectory:nav-java:");
 
 	#JS
-    [":mozilla:js:src:MANIFEST",								"$distdirectory:js:"],
+    InstallFromManifest(":mozilla:js:src:MANIFEST",								"$distdirectory:js:");
 
 	#SECURITY_freenav
-    [":mozilla:modules:security:freenav:MANIFEST",				"$distdirectory:security:"],
+    InstallFromManifest(":mozilla:modules:security:freenav:MANIFEST",				"$distdirectory:security:");
 
 	#LIBPREF
-    [":mozilla:modules:libpref:public:MANIFEST",				"$distdirectory:libpref:"],
+    InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",				"$distdirectory:libpref:");
 
 	#LIBIMAGE
-    [":mozilla:modules:libimg:png:MANIFEST",					"$distdirectory:libimg:"],
-    [":mozilla:modules:libimg:src:MANIFEST",					"$distdirectory:libimg:"],
-    [":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:"],
+    InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",					"$distdirectory:libimg:");
+    InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",					"$distdirectory:libimg:");
+    InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:");
 
 	#PLUGIN
-    [":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:"],
-    [":mozilla:modules:plugin:public:MANIFEST",					"$distdirectory:plugin:"],
-    [":mozilla:modules:plugin:src:MANIFEST",					"$distdirectory:plugin:"],
-    [":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:"],
-    [":mozilla:modules:oji:public:MANIFEST",					"$distdirectory:oji:"],
+    InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
+    InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",					"$distdirectory:plugin:");
+    InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",					"$distdirectory:plugin:");
+    InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
+    InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",					"$distdirectory:oji:");
 
 	#LAYERS (IS THIS STILL NEEDED)
-	[":mozilla:lib:liblayer:include:MANIFEST",					"$distdirectory:layers:"],
+	InstallFromManifest(":mozilla:lib:liblayer:include:MANIFEST",					"$distdirectory:layers:");
 
 	#NETWORK
-    [":mozilla:network:cache:MANIFEST",							"$distdirectory:network:"],
-    [":mozilla:network:client:MANIFEST",						"$distdirectory:network:"],
-    [":mozilla:network:cnvts:MANIFEST",							"$distdirectory:network:"],
-    [":mozilla:network:cstream:MANIFEST",						"$distdirectory:network:"],
-    [":mozilla:network:main:MANIFEST",							"$distdirectory:network:"],
-    [":mozilla:network:mimetype:MANIFEST",						"$distdirectory:network:"],
-    [":mozilla:network:util:MANIFEST",							"$distdirectory:network:"],
-    [":mozilla:network:protocol:about:MANIFEST",				"$distdirectory:network:"],
-    [":mozilla:network:protocol:certld:MANIFEST",				"$distdirectory:network:"],
-    [":mozilla:network:protocol:dataurl:MANIFEST",				"$distdirectory:network:"],
-    [":mozilla:network:protocol:file:MANIFEST",					"$distdirectory:network:"],
-    [":mozilla:network:protocol:ftp:MANIFEST",					"$distdirectory:network:"],
-    [":mozilla:network:protocol:gopher:MANIFEST",				"$distdirectory:network:"],
-    [":mozilla:network:protocol:http:MANIFEST",					"$distdirectory:network:"],
-    [":mozilla:network:protocol:js:MANIFEST",					"$distdirectory:network:"],
-    [":mozilla:network:protocol:mailbox:MANIFEST",				"$distdirectory:network:"],
-    [":mozilla:network:protocol:marimba:MANIFEST",				"$distdirectory:network:"],
-    [":mozilla:network:protocol:nntp:MANIFEST",					"$distdirectory:network:"],
-    [":mozilla:network:protocol:pop3:MANIFEST",					"$distdirectory:network:"],
-    [":mozilla:network:protocol:remote:MANIFEST",				"$distdirectory:network:"],
-    [":mozilla:network:protocol:smtp:MANIFEST",					"$distdirectory:network:"],
-    [":mozilla:network:module:MANIFEST",						"$distdirectory:network:module"],
+    InstallFromManifest(":mozilla:network:cache:MANIFEST",							"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:client:MANIFEST",						"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:cnvts:MANIFEST",							"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:cstream:MANIFEST",						"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:main:MANIFEST",							"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:mimetype:MANIFEST",						"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:util:MANIFEST",							"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:about:MANIFEST",				"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:certld:MANIFEST",				"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:dataurl:MANIFEST",				"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:file:MANIFEST",					"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:ftp:MANIFEST",					"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:gopher:MANIFEST",				"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:http:MANIFEST",					"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:js:MANIFEST",					"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:mailbox:MANIFEST",				"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:marimba:MANIFEST",				"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:nntp:MANIFEST",					"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:pop3:MANIFEST",					"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:remote:MANIFEST",				"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:smtp:MANIFEST",					"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:module:MANIFEST",						"$distdirectory:network:module");
 
 	#BASE
-    [":mozilla:base:src:MANIFEST",								"$distdirectory:base:"],
-    [":mozilla:base:public:MANIFEST",							"$distdirectory:base:"],
+    InstallFromManifest(":mozilla:base:src:MANIFEST",								"$distdirectory:base:");
+    InstallFromManifest(":mozilla:base:public:MANIFEST",							"$distdirectory:base:");
 
 	#WEBSHELL
-    [":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:"],
+    InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
 
 	#LAYOUT
-    [":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:"],
-    [":mozilla:layout:base:public:MANIFEST",					"$distdirectory:layout:"],
-    [":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:"],
-    [":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:"],
-    [":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:"],
-	[":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:"],
-	[":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:"],
+    InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
+    InstallFromManifest(":mozilla:layout:base:public:MANIFEST",					"$distdirectory:layout:");
+    InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:");
+    InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:");
+    InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
+	InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
+	InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
 
 	#WIDGET
-    [":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:"],
-    [":mozilla:widget:src:mac:MANIFEST",						"$distdirectory:widget:"],
+    InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
+    InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",						"$distdirectory:widget:");
 
 	#GFX
-    [":mozilla:gfx:src:MANIFEST",										"$distdirectory:gfx:"],
-    [":mozilla:gfx:public:MANIFEST",								"$distdirectory:gfx:"],
+    InstallFromManifest(":mozilla:gfx:src:MANIFEST",										"$distdirectory:gfx:");
+    InstallFromManifest(":mozilla:gfx:public:MANIFEST",								"$distdirectory:gfx:");
 
 	#VIEW
-    [":mozilla:view:public:MANIFEST",							"$distdirectory:view:"],
+    InstallFromManifest(":mozilla:view:public:MANIFEST",							"$distdirectory:view:");
 
 	#DOM
-   [":mozilla:dom:public:MANIFEST",								"$distdirectory:dom:"],
-   [":mozilla:dom:public:coreDom:MANIFEST",						"$distdirectory:dom:"],
-   [":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:"],
-   [":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:"],
-   [":mozilla:dom:public:html:MANIFEST",						"$distdirectory:dom:"],
-   [":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:"],
-   [":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:"],
+   InstallFromManifest(":mozilla:dom:public:MANIFEST",								"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",						"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:public:html:MANIFEST",						"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
 
 	#HTMLPARSER
-   [":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:"],
+   InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
 
-	];
-	foreach $a (@$distlist)
-	{
-		InstallFromManifest( $a->[0], $a->[1]);
-	}
-	
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
 }
