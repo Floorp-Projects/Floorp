@@ -147,6 +147,11 @@ protected:
                                      nsIAtom*         aPseudoElement,
                                      nsIFrame**       aResult);
 
+  nsresult AppendFrames(nsIPresContext* aPresContext,
+                        nsIPresShell*   aPresShell,
+                        nsIFrame*       aParentFrame,
+                        nsIFrame*       aFrameList);
+
   // BEGIN TABLE SECTION
   nsresult ConstructTableFrame(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,

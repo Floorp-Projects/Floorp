@@ -551,6 +551,12 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
         }
         containerFrame->Init(*aPresContext, aContent, aFrame, pseudoStyleContext, nsnull);
 
+        // Mark the frame as being associated with generated content
+        nsFrameState  frameState;
+        containerFrame->GetFrameState(&frameState);
+        frameState |= NS_FRAME_GENERATED_CONTENT;
+        containerFrame->SetFrameState(frameState);
+
         // Create another pseudo style context to use for all the generated child
         // frames
         nsIStyleContext*  textStyleContext;
@@ -3520,6 +3526,39 @@ nsCSSFrameConstructor::GetFloaterContainingBlock(nsIPresContext* aPresContext,
   return containingBlock;
 }
 
+// This function is called by ContentAppended() and ContentInserted() when
+// appending flowed frames to a parent's principal child list. It handles the
+// case where the parent frame has :after pseudo-element generated content
+nsresult
+nsCSSFrameConstructor::AppendFrames(nsIPresContext* aPresContext,
+                                    nsIPresShell*   aPresShell,
+                                    nsIFrame*       aParentFrame,
+                                    nsIFrame*       aFrameList)
+{
+  nsIFrame* firstChild;
+  aParentFrame->FirstChild(nsnull, &firstChild);
+  nsFrameList frames(firstChild);
+  nsIFrame* lastChild = frames.LastChild();
+
+  // See if the parent has an :after pseudo-element
+  PRBool    lastIsGenerated = PR_FALSE;
+  if (lastChild) {
+    nsFrameState  state;
+
+    lastChild->GetFrameState(&state);
+    if (state & NS_FRAME_GENERATED_CONTENT) {
+      // Insert the frames before the :after pseudo-element
+      return aParentFrame->InsertFrames(*aPresContext, *aPresShell,
+                                        nsnull, frames.GetPrevSiblingFor(lastChild),
+                                        aFrameList);
+    }
+  }
+
+  // Append the frames to the end of the parent's child list
+  return aParentFrame->AppendFrames(*aPresContext, *aPresShell,
+                                    nsnull, aFrameList);
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
@@ -3585,29 +3624,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
     // Notify the parent frame passing it the list of new frames
     if (NS_SUCCEEDED(result)) {
-      nsIFrame* firstChild;
-      adjustedParentFrame->FirstChild(nsnull, &firstChild);
-      nsFrameList frames(firstChild);
-
-      // See if the parent has a :after pseudo-element
-      nsIFrame* lastChild = frames.LastChild();
-      PRBool    lastIsGenerated = PR_FALSE;
-      if (lastChild) {
-        nsFrameState  state;
-
-        lastChild->GetFrameState(&state);
-        if (state & NS_FRAME_GENERATED_CONTENT) {
-          lastIsGenerated = PR_TRUE;
-        }
-      }
-
-      if (lastIsGenerated) {
-        result = adjustedParentFrame->InsertFrames(*aPresContext, *shell,
-                                                   nsnull, lastChild, firstAppendedFrame);
-      } else {
-        result = adjustedParentFrame->AppendFrames(*aPresContext, *shell,
-                                                   nsnull, firstAppendedFrame);
-      }
+      // Append the flowed frames to the principal child list
+      AppendFrames(aPresContext, shell, adjustedParentFrame, firstAppendedFrame);
 
       // If there are new absolutely positioned child frames, then notify
       // the parent
@@ -3831,8 +3849,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 #endif // INCLUDE_XUL
 
       // No previous or next sibling so treat this like an appended frame.
-      // XXX This won't always be true if there's auto-generated before/after
-      // content
       isAppend = PR_TRUE;
       shell->GetPrimaryFrameFor(aContainer, &parentFrame);
 #ifdef INCLUDE_XUL
@@ -3869,9 +3885,24 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
         // Notify the parent frame
         if (isAppend) {
-          rv = parentFrame->AppendFrames(*aPresContext, *shell,
-                                         nsnull, newFrame);
+          rv = AppendFrames(aPresContext, shell, parentFrame, newFrame);
         } else {
+          if (!prevSibling) {
+            // We're inserting the new frame as the first child. See if the
+            // parent has a :before pseudo-element
+            nsIFrame* firstChild;
+            parentFrame->FirstChild(nsnull, &firstChild);
+
+            if (firstChild) {
+              nsFrameState  state;
+
+              firstChild->GetFrameState(&state);
+              if (state & NS_FRAME_GENERATED_CONTENT) {
+                // Insert the new frames after the :before pseudo-element
+                prevSibling = firstChild;
+              }
+            }
+          }
           rv = parentFrame->InsertFrames(*aPresContext, *shell, nsnull,
                                          prevSibling, newFrame);
         }
