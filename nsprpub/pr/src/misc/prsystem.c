@@ -180,7 +180,7 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
         numCpus = -1; /* set to -1 for return value on error */
         PR_SetError( PR_UNKNOWN_ERROR, _MD_ERRNO());
     }
-#elif defined(IRIX) || defined(RELIANTUNIX)
+#elif defined(IRIX)
     numCpus = sysconf( _SC_NPROC_ONLN );
 #elif defined(XP_UNIX)
     numCpus = sysconf( _SC_NPROCESSORS_ONLN );
