@@ -60,7 +60,7 @@ public:
           NS_DECL_ISUPPORTS
 
   virtual nsresult          WillTokenize(PRBool aIsFinalChunk);
-  virtual nsresult          ConsumeToken(nsScanner& aScanner);
+  virtual nsresult          ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult          DidTokenize(PRBool aIsFinalChunk);
   virtual nsITokenRecycler* GetTokenRecycler(void);
 
@@ -77,8 +77,8 @@ public:
 protected:
 
   virtual nsresult ConsumeScriptContent(nsScanner& aScanner,CToken*& aToken);
-  virtual nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  virtual nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
+  virtual nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner);
   virtual nsresult ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);

@@ -233,6 +233,22 @@ PRUint32 nsScanner::Mark(PRInt32 anIndex){
  
 
 /** 
+ * Insert data to our underlying input buffer as
+ * if it were read from an input stream.
+ *
+ * @update  harishd 01/12/99
+ * @return  error code 
+ */
+PRBool nsScanner::Insert(const nsString& aBuffer) {
+
+  PRInt32 theLen=aBuffer.Length();
+
+  mBuffer.Insert(aBuffer,mOffset,theLen);
+  mTotalRead+=theLen;
+  return PR_TRUE;
+}
+
+/** 
  * Append data to our underlying input buffer as
  * if it were read from an input stream.
  *

@@ -601,6 +601,9 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
  */
 void nsParser::PushContext(CParserContext& aContext) {
   aContext.mPrevContext=mParserContext;  
+  if (mParserContext) { 
+     aContext.mParserEnabled = mParserContext->mParserEnabled; 
+  } 
   mParserContext=&aContext;
 }
 
@@ -968,41 +971,67 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
     if(mParserContext->mDTD) {
       mParserContext->mDTD->WillResumeParse();
       if(NS_OK==result) {     
+        nsresult   theTokenizerResult=NS_OK;
+       
+        while(result==NS_OK) {
 
-        result=Tokenize(aIsFinalChunk);
-        result=BuildModel();
-        
-        if(result==NS_ERROR_HTMLPARSER_STOPPARSING) mInternalState=result;
-
-        if((!mParserContext->mMultipart) || (mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING) || 
-          ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
-
-          DidBuildModel(mStreamStatus);          
-
-          MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
-          MOZ_TIMER_STOP(mParseTime);
-
-          MOZ_TIMER_LOG(("Parse Time (this=%p): ", this));
-          MOZ_TIMER_PRINT(mParseTime);
-
-          MOZ_TIMER_LOG(("DTD Time: "));
-          MOZ_TIMER_PRINT(mDTDTime);
-
-          MOZ_TIMER_LOG(("Tokenize Time: "));
-          MOZ_TIMER_PRINT(mTokenizeTime);
-
-          return mInternalState;
-        }
-        else {
-          mParserContext->mDTD->WillInterruptParse();
-        // If we're told to block the parser, we disable
-        // all further parsing (and cache any data coming
-        // in) until the parser is enabled.
-          //PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
-          if(NS_ERROR_HTMLPARSER_BLOCK==result) {
-            result=EnableParser(PR_FALSE);
+          if(mUnusedInput.Length()>0) {
+            if(mParserContext->mScanner) {
+              // -- Ref: Bug# 22485 --
+              // Insert the unused input into the source buffer 
+              // as if it was read from the input stream. 
+              // Adding Insert() per vidur!!
+              mParserContext->mScanner->Insert(mUnusedInput);
+              mUnusedInput.Truncate(0);
+            }
           }
-        }//if
+
+          result=Tokenize(aIsFinalChunk);
+
+          if(result!=NS_OK) theTokenizerResult=result; 
+
+          result=BuildModel();
+        
+          if(result==NS_ERROR_HTMLPARSER_STOPPARSING) mInternalState=result;
+
+          // Make sure not to stop parsing too early. Therefore, before shutting down the 
+          // parser, it's important to check whether the input buffer has been scanned to 
+          // completion ( theTokenizerResult should be kEOF ). kEOF -> End of buffer.
+          if((!mParserContext->mMultipart) || (mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING) || 
+            ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result) && (theTokenizerResult==kEOF))){
+
+            DidBuildModel(mStreamStatus);          
+
+            MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
+            MOZ_TIMER_STOP(mParseTime);
+
+            MOZ_TIMER_LOG(("Parse Time (this=%p): ", this));
+            MOZ_TIMER_PRINT(mParseTime);
+
+            MOZ_TIMER_LOG(("DTD Time: "));
+            MOZ_TIMER_PRINT(mDTDTime);
+
+            MOZ_TIMER_LOG(("Tokenize Time: "));
+            MOZ_TIMER_PRINT(mTokenizeTime);
+              
+            return mInternalState;
+          }
+          // If we're told to block the parser, we disable
+          // all further parsing (and cache any data coming
+          // in) until the parser is enabled.
+          //PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
+          else if(NS_ERROR_HTMLPARSER_BLOCK==result) {
+             mParserContext->mDTD->WillInterruptParse();
+             result=EnableParser(PR_FALSE);
+             break;
+          }
+          // If we're at the end of the current scanner buffer,
+          // we interrupt parsing and wait for the next one
+          else if (theTokenizerResult==kEOF) { 
+            mParserContext->mDTD->WillInterruptParse();
+            break;
+          }
+        }//while
       }//if
     }//if
     else {
@@ -1438,6 +1467,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
   nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
 
   if(theTokenizer){    
+    PRBool flushTokens=PR_FALSE;
 
     MOZ_TIMER_START(mTokenizeTime);
 
@@ -1445,22 +1475,26 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
     while(NS_SUCCEEDED(result)) {
       mParserContext->mScanner->Mark();
       ++mMinorIteration;
-      result=theTokenizer->ConsumeToken(*mParserContext->mScanner);
-      if(!NS_SUCCEEDED(result)) {
+      result=theTokenizer->ConsumeToken(*mParserContext->mScanner,flushTokens);
+      if(NS_FAILED(result)) {
         mParserContext->mScanner->RewindToMark();
         if(kEOF==result){
-          result=NS_OK;
           break;
         }
         else if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
           return Terminate();
       }
+      else if(flushTokens) {
+        // Flush tokens on seeing </SCRIPT> -- Ref: Bug# 22485 --
+        // Also remember to update the marked position.
+        mParserContext->mScanner->Mark();
+        break; 
+      }
     } 
     DidTokenize(aIsFinalChunk);
 
     MOZ_TIMER_STOP(mTokenizeTime);
-
-  } 
+  }  
   else{
     result=mInternalState=NS_ERROR_HTMLPARSER_BADTOKENIZER;
   }

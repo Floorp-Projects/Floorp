@@ -49,7 +49,7 @@ TagList  gInTR={1,{eHTMLTag_tr}};
 TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
 TagList  gInFrameset={1,{eHTMLTag_frameset}};
 TagList  gInNoframes={1,{eHTMLTag_noframes}};
-TagList  gInP={4,{eHTMLTag_address,eHTMLTag_span,eHTMLTag_table,eHTMLTag_form}};
+TagList  gInP={4,{eHTMLTag_address,eHTMLTag_span,eHTMLTag_table,eHTMLTag_form}}; // P containing TABLE - Ref: Bug# 11229
 TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
 TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
 TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
@@ -1283,10 +1283,10 @@ void InitializeElementTable(void) {
     Initialize( 
       /*tag*/                             eHTMLTag_userdefined,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_frameset,
-	    /*rootnodes,endrootnodes*/          &gInHTML,&gInHTML,	
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kHTMLContent, (kFlowEntity|kSelf), kNone,	
-      /*special props, prop-range*/       kOmitEndTag|kLegalOpen, kBodyPropRange,
+      /*parent,incl,exclgroups*/          kFlowEntity, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       kLegalOpen, kBodyPropRange,
       /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown);
   }//if
 };

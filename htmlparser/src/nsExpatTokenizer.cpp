@@ -338,7 +338,7 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength,
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult nsExpatTokenizer::ConsumeToken(nsScanner& aScanner) {
+nsresult nsExpatTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) {
   
   // return nsHTMLTokenizer::ConsumeToken(aScanner);
 

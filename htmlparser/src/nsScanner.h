@@ -244,6 +244,15 @@ class nsScanner {
       /**
        *  
        *  
+       *  @update  harishd 01/12/99
+       *  @param   
+       *  @return  
+       */
+      PRBool Insert(const nsString& aBuffer);
+
+      /**
+       *  
+       *  
        *  @update  gess 5/13/98
        *  @param   
        *  @return  

@@ -67,7 +67,7 @@ public:
           NS_DECL_ISUPPORTS
 
   /* nsITokenizer methods */  
-  virtual nsresult ConsumeToken(nsScanner& aScanner);  
+  virtual nsresult ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);  
   virtual nsresult DidTokenize(PRBool aIsFinalChunk);
 
   virtual void    FrontloadMisplacedContent(nsDeque& aDeque);
