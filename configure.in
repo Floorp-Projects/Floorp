@@ -3104,11 +3104,6 @@ if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` 
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
 fi
 
-if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c ctl` -ne 0; then
-    AC_MSG_WARN([Cannot build ctl without glib. Removing ctl from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|ctl||'`
-fi
-
 dnl ========================================================
 dnl experimental ldap features
 dnl ========================================================
