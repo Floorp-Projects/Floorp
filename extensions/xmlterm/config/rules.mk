@@ -86,6 +86,7 @@ all: export libs progs
 
 export: $(EXPORTS)
 ifneq (,$(EXPORTS))
+	mkdir -p $(topsrcdir)/dist/include
 	+for x in $^; do                                                 \
             rm $(topsrcdir)/dist/include/$$x;                            \
             echo ln -s `pwd`/$$x $(topsrcdir)/dist/include/$$x;      \
@@ -95,9 +96,11 @@ endif
 	+$(LOOP_OVER_DIRS)
 
 libs: $(LIBRARY)
+	mkdir -p  $(topsrcdir)/dist/lib $(topsrcdir)/base/lib
 	+$(LOOP_OVER_DIRS)
 
 progs: $(SIMPLE_PROGRAMS)
+	mkdir -p  $(topsrcdir)/tests/lib $(topsrcdir)/linetest/lib
 	+$(LOOP_OVER_DIRS)
 
 clean:

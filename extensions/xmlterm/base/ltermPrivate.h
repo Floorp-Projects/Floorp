@@ -437,8 +437,8 @@ struct LtermOutput {
   int modifiedCol[MAXROW];     /* first modified column in each row;
                                   -1 if no column has been modified */
 
-  UNICHAR  *screenChar;        /* Screen character array (screenSize long) */
-  UNISTYLE *screenStyle;       /* Screen style array (screenSize long) */
+  UNICHAR  *screenChar;        /* Screen character array (nRows*nCols long) */
+  UNISTYLE *screenStyle;       /* Screen style array (nRows*nCols long) */
 };
 
 /* LTERM process structure: managed by lterm_create, lterm_close */
@@ -503,8 +503,6 @@ struct lterms {
 
   int nRows;                       /* Number of rows */
   int nCols;                       /* Number of columns */
-  long screenSize;                 /* Screen size, in characters
-                                      = nRows*nCols */
 
   UNICHAR promptRegexp[MAXPROMPT]; /* prompt regular expression
                                       JUST A LIST OF DELIMITERS AT PRESENT */

@@ -45,15 +45,6 @@ public:
   NS_DECL_ISUPPORTS
 
   // mozILineTerm interface
-  NS_IMETHOD GetCursorRow(PRInt32 *aCursorRow);
-  NS_IMETHOD SetCursorRow(PRInt32 aCursorRow);
-
-  NS_IMETHOD GetCursorColumn(PRInt32 *aCursorColumn);
-  NS_IMETHOD SetCursorColumn(PRInt32 aCursorColumn);
-
-  NS_IMETHOD GetEchoFlag(PRBool *aEchoFlag);
-  NS_IMETHOD SetEchoFlag(PRBool aEchoFlag);
-
   NS_IMETHOD Open(const PRUnichar *command,
                   const PRUnichar *promptRegexp,
                   PRInt32 options, PRInt32 processType,
@@ -70,6 +61,7 @@ public:
 
   // mozILineTermAux interface add ons
   // (not scriptable, no authentication cookie required)
+
   NS_IMETHOD OpenAux(const PRUnichar *command,
                      const PRUnichar *promptRegexp,
                      PRInt32 options, PRInt32 processType,
@@ -83,9 +75,23 @@ public:
 
   NS_IMETHOD CloseAllAux(void);
 
+  NS_IMETHOD ResizeAux(PRInt32 nRows, PRInt32 nCols);
+
   NS_IMETHOD ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
                      PRInt32 *buf_row, PRInt32 *buf_col,
                      PRUnichar **_retval, PRUnichar **retstyle);
+
+  NS_IMETHOD GetCookie(nsString& aCookie);
+
+  NS_IMETHOD GetCursorRow(PRInt32 *aCursorRow);
+  NS_IMETHOD SetCursorRow(PRInt32 aCursorRow);
+
+  NS_IMETHOD GetCursorColumn(PRInt32 *aCursorColumn);
+  NS_IMETHOD SetCursorColumn(PRInt32 aCursorColumn);
+
+  NS_IMETHOD GetEchoFlag(PRBool *aEchoFlag);
+  NS_IMETHOD SetEchoFlag(PRBool aEchoFlag);
+
   // others
 
   /** GTK event callback function

@@ -572,18 +572,20 @@ void *output_handler(void *arg)
           topScrollRow = opvals;
           botScrollRow = buf_row;
 
-        } else if (n_read > 0) {
+        } else if (opcodes & LTERM_OUTPUT_CODE) {
           /* Data available for display */
           move(ymax-1-buf_row, buf_col);
           clrtoeol();
 
-          if (style[0] != LTERM_STDOUT_STYLE)
-            attr_on(A_REVERSE, NULL);
+          if (n_read > 0) {
+            if (style[0] != LTERM_STDOUT_STYLE)
+              attr_on(A_REVERSE, NULL);
 
-          writeUnicode(-1, buf, n_read);
+            writeUnicode(-1, buf, n_read);
 
-          if (style[0] != LTERM_STDOUT_STYLE)
-            attr_off(A_REVERSE, NULL);
+            if (style[0] != LTERM_STDOUT_STYLE)
+              attr_off(A_REVERSE, NULL);
+          }
         }
 
         /* Position cursor */
@@ -620,18 +622,20 @@ void *output_handler(void *arg)
           sprintf(esc_seq, "\033[%d;%dr", ymax-opvals, ymax-buf_row);
           write(1, esc_seq, strlen(esc_seq));
 
-        } else if (n_read > 0) {
+        } else if (opcodes & LTERM_OUTPUT_CODE) {
           /* Data available for display */
           sprintf(esc_seq, "\033[%d;%dH", ymax-buf_row, buf_col+1);
           write(1, esc_seq, strlen(esc_seq));
 
-          if (style[0] != LTERM_STDOUT_STYLE)
-            write(1, "\033[7m", 4);
+          if (n_read > 0) {
+            if (style[0] != LTERM_STDOUT_STYLE)
+              write(1, "\033[7m", 4);
 
-          writeUnicode(1, buf, n_read);
+            writeUnicode(1, buf, n_read);
 
-          if (style[0] != LTERM_STDOUT_STYLE)
-            write(1, "\033[27m", 5);
+            if (style[0] != LTERM_STDOUT_STYLE)
+              write(1, "\033[27m", 5);
+          }
         }
 
         sprintf(esc_seq, "\033[%d;%dH", ymax-cursor_row, cursor_col+1);
@@ -652,7 +656,8 @@ void *output_handler(void *arg)
         /* Move cursor to bottom of screen, clear line and display line */
         move(ymax-1,0);
         clrtoeol();
-        writeUnicode(-1, buf, n_read);
+        if (n_read > 0)
+          writeUnicode(-1, buf, n_read);
         move(ymax-1,cursor_col);
 
         if (opcodes & LTERM_NEWLINE_CODE) {
@@ -674,7 +679,8 @@ void *output_handler(void *arg)
         if (opcodes & LTERM_META_CODE)
           write(1, "META", 4);
 
-        writeUnicode(1, buf, n_read);
+        if (n_read > 0)
+          writeUnicode(1, buf, n_read);
 
         for (j=0; j< (n_read-cursor_col); j++)
           write(1, "\033[D", 3);

@@ -467,6 +467,19 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
 
   LTERM_LOG(ltermRead,20,("start outputMode=%d\n", lto->outputMode));
 
+  if (lto->outputMode == LTERM1_SCREEN_MODE) {
+    char modifiedRows[81];
+    int showRows = (lts->nRows < 80) ? lts->nRows : 80;
+    for (j=0; j<showRows; j++) {
+      if (lto->modifiedCol[j] > -1)
+        modifiedRows[j] = 'M';
+      else
+        modifiedRows[j] = '.';
+    }
+    modifiedRows[showRows] = '\0';
+    LTERM_LOG(ltermRead,28,("modifiedRows=%s\n", modifiedRows));
+  }
+
   waitTime = timeout;
 
   if (lts->inputBufRecord) {
@@ -492,7 +505,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
         break;
       }
 
-    if (waitTime == 0) {
+    if (j<lts->nRows) {
       LTERM_LOG(ltermRead,21,("j=%d, modifiedCol[j] = %d\n",
                     j, lto->modifiedCol[j]));
     }
@@ -816,7 +829,7 @@ static int ltermReturnStreamData(struct lterms *lts, struct LtermRead *ltr)
     lto->decodedOutput[lto->decodedChars] = U_NUL;
 
     /* There should be no NULs in decoded output */
-    assert(ucslen(lto->decodedOutput) == lto->decodedChars);
+    assert((int)ucslen(lto->decodedOutput) == lto->decodedChars);
 
     /* Search for stream terminator string in decoded output */
     locTerminator = ucsucs(lto->decodedOutput, lto->streamTerminator);

@@ -32,10 +32,6 @@ class nsIDOMDocument;
 
 interface mozILineTerm : nsISupports
 {
-  attribute long cursorRow;
-  attribute long cursorColumn;
-  attribute boolean echoFlag;
-
   /** Opens LineTerm, a line-oriented terminal interface (without graphics)
    * @param command name of command to be executed; usually a shell,
    *        e.g., "/bin/sh"; if set to null string, the command name is

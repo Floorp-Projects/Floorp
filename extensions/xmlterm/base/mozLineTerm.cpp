@@ -479,6 +479,25 @@ NS_IMETHODIMP mozLineTerm::CloseAllAux(void)
 }
 
 
+/** Resizes XMLterm to match a resized window.
+ * @param nRows number of rows
+ * @param nCols number of columns
+ */
+NS_IMETHODIMP mozLineTerm::ResizeAux(PRInt32 nRows, PRInt32 nCols)
+{
+  int retCode;
+
+  XMLT_LOG(mozLineTerm::ResizeAux,30,("nRows=%d, nCols=%d\n", nRows, nCols));
+
+  // Resize LTERM
+  retCode = lterm_resize(mLTerm, (int) nRows, (int) nCols);
+  if (retCode < 0)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+
 /** Writes a string to LTERM
  */
 NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
@@ -618,6 +637,13 @@ NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
 }
 
 
+NS_IMETHODIMP mozLineTerm::GetCookie(nsString& aCookie)
+{
+  aCookie = mCookie;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP mozLineTerm::GetCursorRow(PRInt32 *aCursorRow)
 {
   *aCursorRow = mCursorRow;
@@ -627,13 +653,19 @@ NS_IMETHODIMP mozLineTerm::GetCursorRow(PRInt32 *aCursorRow)
 
 NS_IMETHODIMP mozLineTerm::SetCursorRow(PRInt32 aCursorRow)
 {
+  int retCode;
+
   if (mSuspended) {
     XMLT_ERROR("mozLineTerm::SetCursorRow: Error - LineTerm %d is suspended\n",
                mLTerm);
     return NS_ERROR_FAILURE;
   }
 
-  return NS_OK; // Do nothing for the moment
+  retCode = lterm_setcursor(mLTerm, aCursorRow, mCursorColumn);
+  if (retCode < 0)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 
@@ -646,13 +678,19 @@ NS_IMETHODIMP mozLineTerm::GetCursorColumn(PRInt32 *aCursorColumn)
 
 NS_IMETHODIMP mozLineTerm::SetCursorColumn(PRInt32 aCursorColumn)
 {
+  int retCode;
+
   if (mSuspended) {
     XMLT_ERROR("mozLineTerm::SetCursorColumn: Error - LineTerm %d is suspended\n",
                mLTerm);
     return NS_ERROR_FAILURE;
   }
 
-  return NS_OK; // Do nothing for the moment
+  retCode = lterm_setcursor(mLTerm, mCursorRow, aCursorColumn);
+  if (retCode < 0)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 

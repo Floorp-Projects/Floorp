@@ -47,24 +47,27 @@ class mozXMLTermShell : public mozIXMLTermShell {
     
   NS_IMETHOD GetCurrentEntryNumber(PRInt32 *aNumber);
 
-  NS_IMETHOD GetHistory(PRInt32 *aHistory);
-  NS_IMETHOD SetHistory(PRInt32 aHistory);
-  NS_IMETHOD GetPrompt(PRUnichar **aPrompt);
-  NS_IMETHOD SetPrompt(const PRUnichar* aPrompt);
+  NS_IMETHOD SetHistory(PRInt32 aHistory, const PRUnichar* aCookie);
+
+  NS_IMETHOD SetPrompt(const PRUnichar* aPrompt, const PRUnichar* aCookie);
 
   NS_IMETHOD Init(nsIDOMWindow* aContentWin,
                   const PRUnichar* URL,
                   const PRUnichar* args);
 
-  NS_IMETHOD Finalize(void);
+  NS_IMETHOD Close(const PRUnichar* aCookie);
+
   NS_IMETHOD Poll(void);
 
-  NS_IMETHOD SendText(const PRUnichar* buf, const PRUnichar* cookie);
+  NS_IMETHOD Resize(void);
+
+  NS_IMETHOD SendText(const PRUnichar* aString, const PRUnichar* aCookie);
 
   NS_IMETHOD NewXMLTermWindow(const PRUnichar* args);
 
   NS_IMETHOD Exit(void);
 
+  NS_IMETHOD Finalize(void);
 protected:
 
   /** object initialization flag */

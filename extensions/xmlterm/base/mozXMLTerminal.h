@@ -61,7 +61,6 @@ class mozXMLTerminal : public mozIXMLTerminal,
   NS_IMETHOD Poll(void);
 
   NS_IMETHOD GetCurrentEntryNumber(PRInt32 *aNumber);
-
   NS_IMETHOD GetHistory(PRInt32 *aHistory);
   NS_IMETHOD SetHistory(PRInt32 aHistory);
   NS_IMETHOD GetPrompt(PRUnichar **aPrompt);
@@ -77,6 +76,10 @@ class mozXMLTerminal : public mozIXMLTerminal,
   NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
 
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell);
+
+  NS_IMETHOD MatchesCookie(const PRUnichar* aCookie, PRBool *_retval);
+
+  NS_IMETHOD Resize(void);
 
   // nsIDocumentLoaderObserver interface
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
@@ -106,6 +109,10 @@ class mozXMLTerminal : public mozIXMLTerminal,
                      const PRUnichar *someData);
 
   // Others
+
+  /** Activates XMLterm and instantiates LineTerm;
+   * called at the the end of Init page loading.
+   */
   NS_IMETHOD Activate(void);
 
   protected:

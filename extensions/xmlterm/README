@@ -17,13 +17,24 @@ document.
 XMLterm is an open source project in its early stages. Comments and
 contributions are welcome!
 
-R. Saravanan <svn@xmlterm.org>
-28 Nov 1999
+R. Saravanan   <svn@xmlterm.org>
+26 Dec 1999    <http://xmlterm.org>
 ===========
+
+QUICK SET-UP INSTRUCTIONS (Linux/Solaris)
+-----------------------------------------
+
+a) (Build Mozilla from the source tarball)
+b) cd mozilla/extensions/xmlterm
+c) ./makemake -r
+d) make all
+e) cd ../../dist/bin
+f) ./mozilla chrome://xmlterm/content/xmlterm.html
+g) ./run-mozilla.sh xmlterm
 
 NOTES:
 
- 1. See the INSTALL file for configuration/installation instructions.
+ 1. See the INSTALL file for detailed configuration/installation instructions.
 
  2. See the file doc/INSTALL.xmlterm for binary installation instructions.
 

@@ -61,6 +61,11 @@ class mozXMLTermSession
    */
   NS_IMETHOD Finalize(void);
 
+  /** Resizes XMLterm to match a resized window.
+   * @param lineTermAux LineTermAux object to be resized (may be null)
+   */
+  NS_IMETHOD Resize(mozILineTermAux* lineTermAux);
+
   /** Preprocesses user input before it is transmitted to LineTerm
    * @param aString (inout) input data to be preprocessed
    * @param consumed (output) true if input data has been consumed
@@ -163,6 +168,7 @@ protected:
   /** type of currently active meta command */
   enum MetaCommandType {
     NO_META_COMMAND    = 0,
+    SCREEN_META_COMMAND,
     STREAM_META_COMMAND,
     HTTP_META_COMMAND,
     JS_META_COMMAND,
@@ -288,7 +294,7 @@ protected:
   NS_IMETHOD FlushOutput(FlushActionType flushAction);
 
   /** Scrolls document to align bottom and left margin with screen */
-  NS_IMETHOD ScrollBottomLeft(void);
+  NS_IMETHOD ScrollToBottomLeft(void);
 
   /** Create a DIV element with attributes NAME="preface", CLASS="preface",
    * and ID="preface0", containing an empty text node, and append it as a
@@ -307,6 +313,38 @@ protected:
    * @param aPrompt prompt string to be inserted into prompt element
    */
   NS_IMETHOD NewEntry(const nsString& aPrompt);
+
+  /** Create a DIV element with attributes NAME="screen" and CLASS="screen",
+   * containing an empty text node, and append it as a
+   * child of the main BODY element. Also make it the current display element.
+   */
+  NS_IMETHOD NewScreen(PRBool resize);
+
+  /** Returns DOM PRE node corresponding to specified screen row
+   */
+  NS_IMETHOD GetRow(PRInt32 aRow, nsIDOMNode** aRowNode);
+
+  /** Returns DOM text node and offset corresponding to screen row/col position
+   */
+  NS_IMETHOD GetScreenText(PRInt32 aRow, PRInt32 aCol,
+                           nsIDOMNode** aTextNode,
+                           PRInt32 *aOffset);
+
+  /** Create a PRE element with attributes NAME="row", CLASS="row",
+   * containing an empty text node, and insert it as a
+   * child of the SCREEN element before beforeRowNode, or at the
+   * end if beforeRowNode is null.
+   */
+  NS_IMETHOD NewRow(nsIDOMNode* beforeRowNode);
+
+  /** Displays screen output string with specified style
+   * @param aString string to be processed
+   * @param aStyle style values for string (see lineterm.h)
+   *               (if it is a null string, STDOUT style is assumed)
+   * @param aRow row in which to insert string
+   */
+  NS_IMETHOD DisplayRow(const nsString& aString, const nsString& aStyle,
+                        PRInt32 aRow);
 
   /** Append a BR element as the next child of specified parent.
    * @param parentNode parent node for BR element
@@ -555,6 +593,22 @@ protected:
 
   /** copy of PRE text already displayed */
   nsString             mPreTextDisplayed;
+
+
+  /** Screen element */
+  nsCOMPtr<nsIDOMNode> mScreenNode;
+
+  /** Number of rows in screen */
+  PRInt32 mScreenRows;
+
+  /** Number of columns in screen */
+  PRInt32 mScreenCols;
+
+  /** Top scrolling row */
+  PRInt32 mTopScrollRow;
+
+  /** Bottom scrolling row */
+  PRInt32 mBotScrollRow;
 
 
   /** restore input echo flag */

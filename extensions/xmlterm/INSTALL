@@ -5,12 +5,26 @@ INSTALL: Installation instructions for XMLterm source code
 
 *NOTE* Check the XMLterm web site <http://xmlterm.org> for updates.
 
-7 Dec 1999
+26 Dec 1999
+
+QUICK INSTALLATION INSTRUCTIONS (Linux/Solaris)
+-----------------------------------------------
+
+a) (Build mozilla from the source tarball)
+b) cd mozilla/extensions/xmlterm
+c) ./makemake -r
+d) make all
+e) cd ../../dist/bin
+f) ./mozilla chrome://xmlterm/content/xmlterm.html
+g) ./run-mozilla.sh xmlterm
+
+
+DETAILED INSTALLATION INSTRUCTIONS
+----------------------------------
 
 In the following discussion, file and directory names are relative
 to the main ("mozilla/extensions/xmlterm") directory. See the end of the
 README file for a brief description of the subdirectories.
-
 
 1. Source tree (skip this step if XMLterm is already in the source tree)
 ------------------------------------------------------------------------
@@ -117,8 +131,12 @@ executable path to use it.
 
 Step 3 also creates an executable called "xmlterm" in the "mozilla/dist/bin"
 directory. This is a lightweight program implementing XMLterm using the Gecko
-layout engine only, without the added baggage of the full browser. Executing
-"xmlterm" will create an XMLterm window. Click on this window to give it focus
+layout engine only, without the added baggage of the full browser. To use it,
+type the following command in the "mozilla/dist/bin" directory:
+
+./run-mozilla.sh xmlterm
+
+This will create an XMLterm window. Click on this window to give it focus
 before typing Unix commands.
 
 Note: At present, the "xmlterm" executable works only with the GTK front end.

@@ -46,7 +46,13 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNSRange.h"
 
+#include "nsIViewManager.h"
+#include "nsIScrollableView.h"
+
 #include "nsIHTMLContent.h"
+
+#include "nsFont.h"
+#include "nsIFontMetrics.h"
 
 #include "mozXMLT.h"
 #include "mozILineTermAux.h"
@@ -142,6 +148,12 @@ mozXMLTermSession::mozXMLTermSession() :
   mPreTextIncomplete(""),
   mPreTextBuffered(""),
   mPreTextDisplayed(""),
+
+  mScreenNode(nsnull),
+  mScreenRows(24),
+  mScreenCols(80),
+  mTopScrollRow(23),
+  mBotScrollRow(0),
 
   mRestoreInputEcho(false),
 
@@ -247,6 +259,8 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
 NS_IMETHODIMP mozXMLTermSession::Finalize(void)
 {
 
+  mScreenNode = nsnull;
+
   mOutputBlockNode = nsnull;
   mOutputDisplayNode = nsnull;
   mOutputTextNode = nsnull;
@@ -269,6 +283,83 @@ NS_IMETHODIMP mozXMLTermSession::Finalize(void)
   mDOMDocument = nsnull;
 
   mInitialized = PR_FALSE;
+
+  return NS_OK;
+}
+
+
+/** Resizes XMLterm to match a resized window.
+ * @param lineTermAux LineTermAux object to be resized (may be null)
+ */
+NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
+{
+  nsresult result;
+
+  // Get presentation context
+  nsCOMPtr<nsIPresContext> presContext;
+  result = mPresShell->GetPresContext( getter_AddRefs(presContext) );
+  if (NS_FAILED(result))
+    return result;
+
+  // Get the default fixed pitch font
+  nsFont defaultFixedFont("dummyfont", NS_FONT_STYLE_NORMAL,
+                          NS_FONT_VARIANT_NORMAL,
+                          NS_FONT_WEIGHT_NORMAL,
+                          NS_FONT_DECORATION_NONE, 16);
+
+  result = presContext->GetDefaultFixedFont(defaultFixedFont);
+  if (NS_FAILED(result))
+    return result;
+
+  // Get metrics for fixed font
+  nsCOMPtr<nsIFontMetrics> fontMetrics;
+  result = presContext->GetMetricsFor(defaultFixedFont,
+                                      getter_AddRefs(fontMetrics));
+  if (NS_FAILED(result) || !fontMetrics)
+    return result;
+
+  // Get font height (includes leading?)
+  nscoord fontHeight, fontWidth;
+  result = fontMetrics->GetHeight(fontHeight);
+  result = fontMetrics->GetMaxAdvance(fontWidth);
+
+  // Determine docshell size in twips
+  nsRect shellArea;
+  result = presContext->GetVisibleArea(shellArea);
+  if (NS_FAILED(result))
+    return result;
+
+  // Determine twips to pixels conversion factor
+  float pixelScale, frameHeight, frameWidth, xdel, ydel;
+  presContext->GetTwipsToPixels(&pixelScale);
+
+  // Convert dimensions to pixels
+  frameHeight = pixelScale * shellArea.height;
+  frameWidth = pixelScale * shellArea.width;
+
+  xdel = pixelScale * fontWidth;
+  ydel = pixelScale * fontHeight + 2;
+
+  // Determine number of rows/columns
+  mScreenRows = (int) ((frameHeight-44) / ydel);
+  mScreenCols = (int) (frameWidth / xdel);
+
+  if (mScreenRows < 1) mScreenRows = 1;
+  if (mScreenCols < 1) mScreenCols = 1;
+
+  mTopScrollRow = mScreenRows - 1;
+  mBotScrollRow = 0;
+
+  XMLT_LOG(mozXMLTermSession::Resize,0,
+       ("Resizing XMLterm, xdel=%e, ydel=%e, rows=%d, cols=%d\n",
+        xdel, ydel, mScreenRows, mScreenCols));
+
+  if (!lineTermAux) {
+    // Resize associated LineTerm
+    result = lineTermAux->ResizeAux(mScreenRows, mScreenCols);
+    if (NS_FAILED(result))
+      return result;
+  }
 
   return NS_OK;
 }
@@ -353,7 +444,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 {
   PRInt32 opcodes, opvals, buf_row, buf_col;
   PRUnichar *buf_str, *buf_style;
-  PRBool newline, streamData;
+  PRBool newline, streamData, screenData;
   nsAutoString bufString, bufStyle;
 
   XMLT_LOG(mozXMLTermSession::ReadAll,60,("\n"));
@@ -377,15 +468,16 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       break;
 
     XMLT_LOG(mozXMLTermSession::ReadAll,62,
-           ("opcodes=0x%x, mMetaCommandType=%d, mEntryHasOutput=%d\n",
+           ("opcodes=0x%x,mMetaCommandType=%d,mEntryHasOutput=%d\n",
             opcodes, mMetaCommandType, mEntryHasOutput));
 
     if (opcodes == 0) break;
 
     processedData = true;
 
+    screenData = (opcodes & LTERM_SCREENDATA_CODE);
     streamData = (opcodes & LTERM_STREAMDATA_CODE);
-    newline = (opcodes & LTERM_NEWLINE_CODE);
+    newline =    (opcodes & LTERM_NEWLINE_CODE);
 
     // Copy character/style strings
     bufString = buf_str;
@@ -394,6 +486,48 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     // De-allocate buf_str, buf_style using nsAllocator::Free
     nsAllocator::Free(buf_str);
     nsAllocator::Free(buf_style);
+
+    char* temCString = bufString.ToNewCString();
+    XMLT_LOG(mozXMLTermSession::ReadAll,68,("bufString=%s\n", temCString));
+    nsCRT::free(temCString);
+
+    if (screenData && (mMetaCommandType != SCREEN_META_COMMAND)) {
+      // Initiate screen mode
+
+      // Break stream output display
+      result = BreakOutput();
+      if (NS_FAILED(result))
+        return result;
+
+      // Create screen element (resize)
+      result = NewScreen(true);
+      if (NS_FAILED(result))
+        return result;
+
+      mMetaCommandType = SCREEN_META_COMMAND;
+
+      // Disable input echo
+      lineTermAux->SetEchoFlag(false);
+      mRestoreInputEcho = true;
+    }
+
+    if (!screenData && (mMetaCommandType == SCREEN_META_COMMAND)) {
+      // Terminate screen mode
+      mMetaCommandType = NO_META_COMMAND;
+
+      XMLT_LOG(mozXMLTermSession::ReadAll,0,
+               ("Terminating screen mode\n"));
+
+      // Delete screen element
+      nsCOMPtr<nsIDOMNode> resultNode;
+      mSessionNode->RemoveChild(mScreenNode, getter_AddRefs(resultNode));
+      mScreenNode = nsnull;
+
+      if (mRestoreInputEcho) {
+        lineTermAux->SetEchoFlag(true);
+        mRestoreInputEcho = false;
+      }
+    }
 
     if (streamData) {
       // Process stream data
@@ -466,14 +600,156 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         flushOutput = true;
       }
 
+    } else if (screenData) {
+      // Process screen data
+
+      if (opcodes & LTERM_CLEAR_CODE) {
+        // Clear screen
+        XMLT_LOG(mozXMLTermSession::ReadAll,62,
+                 ("Clear screen, opvals=%d, buf_row=%d\n",
+                  opvals, buf_row));
+
+        nsCOMPtr<nsIDOMNode> resultNode;
+        result = mSessionNode->RemoveChild(mScreenNode,
+                                           getter_AddRefs(resultNode));
+        if (NS_FAILED(result))
+          return NS_ERROR_FAILURE;
+
+        mScreenNode = nsnull;
+
+        // Create new screen element (no resize)
+        result = NewScreen(false);
+        if (NS_FAILED(result))
+          return result;
+
+      } else if (opcodes & LTERM_INSERT_CODE) {
+        // Insert rows
+        PRInt32 row;
+        nsCOMPtr<nsIDOMNode> rowNode, resultNode;
+
+        XMLT_LOG(mozXMLTermSession::ReadAll,62,
+                 ("Insert rows, opvals=%d, buf_row=%d\n",
+                  opvals, buf_row));
+
+        if (opvals > 0) {
+          // Delete row elements below
+          for (row=0; row < opvals; row++) {
+            result = GetRow(mBotScrollRow+opvals-1, getter_AddRefs(rowNode));
+            if (NS_FAILED(result) || !rowNode)
+              return NS_ERROR_FAILURE;
+
+            result = mScreenNode->RemoveChild(rowNode,
+                                              getter_AddRefs(resultNode));
+            if (NS_FAILED(result))
+              return NS_ERROR_FAILURE;
+          }
+
+          // Insert individual row elements above
+          if (buf_row < opvals) {
+            rowNode = nsnull;
+          } else {
+            result = GetRow(buf_row, getter_AddRefs(rowNode));
+            if (NS_FAILED(result))
+              return NS_ERROR_FAILURE;
+          }
+
+          for (row=0; row < opvals; row++)
+            NewRow(rowNode);
+        }
+
+      } else if (opcodes & LTERM_DELETE_CODE) {
+        // Delete rows
+        PRInt32 row;
+        nsCOMPtr<nsIDOMNode> rowNode, resultNode;
+
+        XMLT_LOG(mozXMLTermSession::ReadAll,62,
+                 ("Delete rows, opvals=%d, buf_row=%d\n",
+                  opvals, buf_row));
+
+        if (opvals > 0) {
+          // Delete row elements below
+          for (row=0; row < opvals; row++) {
+            result = GetRow(buf_row, getter_AddRefs(rowNode));
+            if (NS_FAILED(result) || !rowNode)
+              return NS_ERROR_FAILURE;
+
+            result = mScreenNode->RemoveChild(rowNode,
+                                              getter_AddRefs(resultNode));
+            if (NS_FAILED(result))
+              return NS_ERROR_FAILURE;
+          }
+
+          // Insert individual row elements above
+          if (mBotScrollRow == 0) {
+            rowNode = nsnull;
+          } else {
+            result = GetRow(mBotScrollRow+opvals-1, getter_AddRefs(rowNode));
+            if (NS_FAILED(result))
+              return NS_ERROR_FAILURE;
+          }
+
+          for (row=0; row < opvals; row++)
+            NewRow(rowNode);
+        }
+
+      } else if (opcodes & LTERM_SCROLL_CODE) {
+        // Set scrolling region
+        XMLT_LOG(mozXMLTermSession::ReadAll,62,
+                 ("Set scrolling region, opvals=%d, buf_row=%d\n",
+                  opvals, buf_row));
+
+        mTopScrollRow = opvals;
+        mBotScrollRow = buf_row;
+
+      } else if (opcodes & LTERM_OUTPUT_CODE) {
+        // Display row
+        XMLT_LOG(mozXMLTermSession::ReadAll,62,
+                 ("Display buf_row=%d\n",
+                  buf_row));
+
+        result = DisplayRow(bufString, bufStyle, buf_row);
+        if (NS_FAILED(result))
+          return result;
+      }
+
+      // Determine cursor position
+      PRInt32 cursorRow = 0;
+      PRInt32 cursorCol = 0;
+      result = lineTermAux->GetCursorRow(&cursorRow);
+      result = lineTermAux->GetCursorColumn(&cursorCol);
+
+      // Get selection
+      nsCOMPtr<nsIDOMSelection> selection;
+
+      result = mPresShell->GetSelection(SELECTION_NORMAL,
+                                        getter_AddRefs(selection));
+      if (NS_SUCCEEDED(result) && selection) {
+        // Collapse selection to cursor position
+        nsCOMPtr<nsIDOMNode> cursTextNode;
+        PRInt32 offset;
+
+        result = GetScreenText(cursorRow, cursorCol,
+                               getter_AddRefs(cursTextNode), &offset);
+
+        if (NS_FAILED(result) || !cursTextNode)
+          return result;
+
+        result = selection->Collapse(cursTextNode, offset);
+        if (NS_FAILED(result))
+          return result;
+      }
+
+      // Scroll to end of page
+      ScrollToBottomLeft();
+
     } else {
-      // Process non-stream data
+      // Process line data
       PRBool promptLine, inputLine, metaCommand, completionRequested;
 
       flushOutput = true;
 
-      inputLine = (opcodes & LTERM_INPUT_CODE);
-      promptLine = (opcodes & LTERM_PROMPT_CODE);
+      inputLine =   (opcodes & LTERM_INPUT_CODE);
+      promptLine =  (opcodes & LTERM_PROMPT_CODE);
       metaCommand = (opcodes & LTERM_META_CODE);
       completionRequested = (opcodes & LTERM_COMPLETION_CODE);
 
@@ -545,7 +821,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         int delimOffset = metaLine.FindChar((PRUnichar) ':');
         PR_ASSERT(delimOffset >= 0);
 
-        XMLT_LOG(mozXMLTermSession::ReadAll,62, ("delimOffset=%d\n", delimOffset));
+        XMLT_LOG(mozXMLTermSession::ReadAll,62,
+                 ("delimOffset=%d\n", delimOffset));
 
         if (delimOffset == 0) {
           // Default to HTTP protocol
@@ -768,10 +1045,11 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     }
   }
 
-  XMLT_LOG(mozXMLTermSession::ReadAll,62,(" result=%d\n", result));
-
   if (NS_FAILED(result)) {
     // Close LineTerm
+    XMLT_LOG(mozXMLTermSession::ReadAll,62,
+             ("Closing LineTerm, result=%d\n", result));
+
     lineTermAux->CloseAux();
     return NS_ERROR_FAILURE;
   }
@@ -785,7 +1063,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                                                  SELECTION_FOCUS_REGION);
 
     // Scroll frame (ignore result)
-    //    result = ScrollBottomLeft();
+    // ScrollToBottomLeft();
   }
 
   return NS_OK;
@@ -1026,7 +1304,8 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
                                   url.GetBuffer(),
                                   contentType.GetBuffer(), 800);
     if (NS_FAILED(result)) {
-      fprintf(stderr, "mozXMLTerminal::Activate: Failed to open stream\n");
+      fprintf(stderr,
+              "mozXMLTermSession::InitStream: Failed to open stream\n");
       return result;
     }
 
@@ -1939,33 +2218,45 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
 
 
 /** Scrolls document to align bottom and left margin with screen */
-NS_IMETHODIMP mozXMLTermSession::ScrollBottomLeft(void)
+NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
 {
   nsresult result;
 
-  XMLT_LOG(mozXMLTermSession::ScrollBottomLeft,70,("\n"));
+  XMLT_LOG(mozXMLTermSession::ScrollToBottomLeft,70,("\n"));
 
-  if (!mCurrentEntryNode)
-    return NS_ERROR_FAILURE;
-
+#if 0
   // Scroll primary frame to bottom of view
-  nsCOMPtr<nsIContent> blockContent (do_QueryInterface(mCurrentEntryNode));
+  nsCOMPtr<nsIContent> blockContent (do_QueryInterface(mSessionNode));
   if (!blockContent)
     return NS_ERROR_FAILURE;
 
   nsIFrame* primaryFrame;
 
   result = mPresShell->GetPrimaryFrameFor(blockContent, &primaryFrame);
-  if (NS_FAILED(result)) {
-    return NS_ERROR_FAILURE;
-  }
+  if (NS_FAILED(result))
+    return result;
 
   result = mPresShell->ScrollFrameIntoView(primaryFrame,
                                            NS_PRESSHELL_SCROLL_BOTTOM,
                                            NS_PRESSHELL_SCROLL_LEFT);
-  if (NS_FAILED(result)) {
+  if (NS_FAILED(result))
+    return result;
+
+#else
+  // Root scrollable view for presShell.
+  nsCOMPtr<nsIViewManager> viewManager;
+  result = mPresShell->GetViewManager(getter_AddRefs(viewManager));
+  if (NS_FAILED(result) || !viewManager)
     return NS_ERROR_FAILURE;
-  }
+
+  nsCOMPtr<nsIScrollableView> scrollableView;
+  result = viewManager->GetRootScrollableView(getter_AddRefs(scrollableView));
+  if (NS_FAILED(result) || !scrollableView)
+    return NS_ERROR_FAILURE;
+
+  // Scroll to bottom of view
+  scrollableView->ScrollByWhole(false);
+#endif
 
   return NS_OK;
 }
@@ -2244,6 +2535,203 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
   // No command output processed yet
   mEntryHasOutput = false;
 
+  return NS_OK;
+}
+
+
+/** Create a DIV element with attributes NAME="screen" and CLASS="screen",
+ * containing an empty text node, and append it as a
+ * child of the main BODY element. Also make it the current display element.
+ */
+NS_IMETHODIMP mozXMLTermSession::NewScreen(PRBool resize)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTermSession::NewScreen,0,("\n"));
+
+  // Create screen element and append as child of session element
+  nsCOMPtr<nsIDOMNode> divNode;
+  nsAutoString tagName = "div";
+  nsAutoString name = "screen";
+  result = NewElement(tagName, name, 0,
+                      mSessionNode, divNode);
+
+  if (NS_FAILED(result) || !divNode)
+    return NS_ERROR_FAILURE;
+
+  mScreenNode = divNode;
+
+  if (resize) {
+    // Resize XMLTerm
+    mXMLTerminal->Resize();
+  }
+
+  // Create individual row elements
+  PRInt32 row;
+  for (row=0; row < mScreenRows; row++) {
+    NewRow(nsnull);
+  }
+
+  return NS_OK;
+}
+
+
+/** Returns DOM PRE node corresponding to specified screen row
+ */
+NS_IMETHODIMP mozXMLTermSession::GetRow(PRInt32 aRow, nsIDOMNode** aRowNode)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTermSession::GetRow,60,("row=%d\n", aRow));
+
+  if (!aRowNode)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNodeList> childNodes;
+  result = mScreenNode->GetChildNodes(getter_AddRefs(childNodes));
+  if (NS_FAILED(result) || !childNodes)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 nChildren = 0;
+  childNodes->GetLength(&nChildren);
+
+  PRInt32 rowIndex = mScreenRows - aRow - 1;
+  if ((rowIndex < 0) || (rowIndex >= (PRInt32)nChildren))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> childNode;
+  result = childNodes->Item(rowIndex, getter_AddRefs(childNode));
+
+  if (NS_FAILED(result) || !childNode)
+    return NS_ERROR_FAILURE;
+
+  *aRowNode = childNode.get();
+  NS_ADDREF(*aRowNode);
+
+  XMLT_LOG(mozXMLTermSession::GetRow,61,("returning\n"));
+
+  return NS_OK;
+}
+
+
+/** Returns DOM text node and offset corresponding to screen row/col position
+ */
+NS_IMETHODIMP mozXMLTermSession::GetScreenText(PRInt32 aRow, PRInt32 aCol,
+                                               nsIDOMNode** aTextNode,
+                                               PRInt32 *aOffset)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTermSession::GetScreenText,60,("row=%d, col=%d\n",aRow,aCol));
+
+  if (!aTextNode || !aOffset)
+    return NS_ERROR_NULL_POINTER;
+
+  // Get row node
+  nsCOMPtr<nsIDOMNode> rowNode;
+  result = GetRow(aRow, getter_AddRefs(rowNode));
+  if (NS_FAILED(result) || !rowNode)
+    return NS_ERROR_FAILURE;
+
+  // Get text node
+  nsCOMPtr<nsIDOMNode> textNode;
+  result = rowNode->GetFirstChild(getter_AddRefs(textNode));
+  if (NS_FAILED(result) || !textNode)
+    return result;
+
+  PRUint16 nodeType;
+  result = textNode->GetNodeType(&nodeType);
+  if (NS_FAILED(result))
+    return result;
+
+  if (nodeType == nsIDOMNode::TEXT_NODE) {
+    /* Text node */
+    *aTextNode = textNode.get();
+    NS_ADDREF(*aTextNode);
+    *aOffset = aCol;
+
+  } else {
+    /* Not a text node */
+    *aTextNode = nsnull;
+    *aOffset = 0;
+  }
+
+  return NS_OK;
+}
+
+
+/** Create a PRE element with attributes NAME="row", CLASS="row",
+ * containing an empty text node, and insert it as a
+ * child of the SCREEN element before beforeRowNode, or at the
+ * end if beforeRowNode is null.
+ */
+NS_IMETHODIMP mozXMLTermSession::NewRow(nsIDOMNode* beforeRowNode)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTermSession::NewRow,60,("\n"));
+
+  // Create PRE display node
+  nsCOMPtr<nsIDOMNode> preNode, textNode;
+  nsAutoString tagName = "pre";
+  nsAutoString elementName = "row";
+
+  result = NewElementWithText(tagName, elementName, -1,
+                              mScreenNode, preNode, textNode);
+
+  if (NS_FAILED(result) || !preNode || !textNode)
+    return NS_ERROR_FAILURE;
+
+  // Set PRE element attributes
+  nsCOMPtr<nsIDOMElement> preElement = do_QueryInterface(preNode);
+  nsAutoString att("cols");
+  nsAutoString val("");
+  val.Append(mScreenCols,10);
+  preElement->SetAttribute(att, val);
+
+  att = "rows";
+  val = "1";
+  preElement->SetAttribute(att, val);
+
+  nsCOMPtr<nsIDOMNode> resultNode;
+
+  if (beforeRowNode) {
+    // Insert row node
+    result = mScreenNode->InsertBefore(preNode, beforeRowNode,
+                                       getter_AddRefs(resultNode));
+  } else {
+    // Append row node
+    result = mScreenNode->AppendChild(preNode,
+                                      getter_AddRefs(resultNode));
+  }
+
+  return NS_OK;
+}
+
+
+/** Displays screen output string with specified style
+ * @param aString string to be processed
+ * @param aStyle style values for string (see lineterm.h)
+ *               (if it is a null string, STDOUT style is assumed)
+ * @param aRow row in which to insert string
+ */
+NS_IMETHODIMP mozXMLTermSession::DisplayRow(const nsString& aString,
+                                            const nsString& aStyle,
+                                            PRInt32 aRow)
+{
+  nsresult result;
+  PRInt32 offset;
+
+  XMLT_LOG(mozXMLTermSession::DisplayRow,70,("aRow=%d\n", aRow));
+
+  nsCOMPtr<nsIDOMNode> rowTextNode;
+  result = GetScreenText(aRow, 0, getter_AddRefs(rowTextNode), &offset);
+  if (NS_FAILED(result) || !rowTextNode)
+    return result;
+
+  result = SetDOMText(rowTextNode, aString);
+  if (NS_FAILED(result))
+    return result;
   return NS_OK;
 }
 
