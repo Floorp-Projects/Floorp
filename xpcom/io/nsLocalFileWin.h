@@ -68,7 +68,6 @@ public:
 public:
     static void GlobalInit();
     static void GlobalShutdown();
-    static PRBool FSCharsetIsUTF8() { return mFSCharsetIsUTF8; }
 
 private:
 
@@ -88,12 +87,6 @@ private:
 
     static PRBool mFSCharsetIsUTF8;
 
-    NS_DECL_NSLOCALFILE_UNICODE_METHODS
-
-    // XXX impl
-    PRBool PathIsASCII() { return PR_FALSE; }
-    PRBool LeafIsASCII() { return PR_FALSE; }
-    
     void MakeDirty();
     nsresult ResolveAndStat(PRBool resolveTerminal);
     nsresult ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath);

@@ -63,7 +63,7 @@ interface nsILocalFile : nsIFile
      *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  This
      *       path must in native.
      */
-    void initWithPath(in AUTF8String filePath);
+    void initWithPath(in AString filePath);
     [noscript] void initWithNativePath(in ACString filePath);
     
     /**
@@ -110,15 +110,15 @@ interface nsILocalFile : nsIFile
      *       this cannot contain .. or cannot start with a directory separator
      *       XXXbe  Why not?  Bogus!
      */
-    void appendRelativePath(in AUTF8String relativeFilePath);
+    void appendRelativePath(in AString relativeFilePath);
     [noscript] void appendRelativeNativePath(in ACString relativeFilePath);
     
     /**
      *  Accessor to a null terminated string which will specify
      *  the file in a persistent manner for disk storage.
      *
-     *  The character set of this attribute is undefined.  Do not try to
-     *  interpret it as human readable text.
+     *  The character set of this attribute is undefined.  DO NOT TRY TO
+     *  INTERPRET IT AS HUMAN READABLE TEXT!
      */
     attribute ACString persistentDescriptor;
 
@@ -143,13 +143,16 @@ interface nsILocalFile : nsIFile
     /**
      *  getRelativeDescriptor
      *
-     *  Returns a UTF-8 encoded relative file path in an XP format.
-     *  It is therefore not a native path.
+     *  Returns a relative file path in an opaque, XP format. It is therefore
+     *  not a native path.
+     *
+     *  The character set of the string returned from this function is
+     *  undefined.  DO NOT TRY TO INTERPRET IT AS HUMAN READABLE TEXT!
      *
      *   @param fromFile
      *       the file from which the descriptor is relative
      */
-    AUTF8String getRelativeDescriptor(in nsILocalFile fromFile);
+    ACString getRelativeDescriptor(in nsILocalFile fromFile);
 
     /**
      *  setRelativeDescriptor
@@ -160,7 +163,7 @@ interface nsILocalFile : nsIFile
      *   @param fromFile
      *       the file to which the descriptor is relative
      */
-    void setRelativeDescriptor(in nsILocalFile fromFile, in AUTF8String relativeDesc);    
+    void setRelativeDescriptor(in nsILocalFile fromFile, in ACString relativeDesc);    
 };
 
 %{C++
@@ -168,7 +171,7 @@ interface nsILocalFile : nsIFile
 #define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
 
 extern "C" NS_EXPORT nsresult
-NS_NewLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
+NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
 extern "C" NS_EXPORT nsresult
 NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
 %}

@@ -52,7 +52,7 @@ nsSafeSaveFile::nsSafeSaveFile(nsIFile *aTargetFile, PRInt32 aNumBackupCopies)
     nsresult      rv;
 
     // determine the actual filename (less the extension)
-    rv = aTargetFile->GetLeafName(mTargetFileName);
+    rv = aTargetFile->GetNativeLeafName(mTargetFileName);
     if (NS_FAILED(rv)) // yikes! out of memory
         return;
 
@@ -66,7 +66,7 @@ nsSafeSaveFile::nsSafeSaveFile(nsIFile *aTargetFile, PRInt32 aNumBackupCopies)
     tempFileName = Substring(mTargetFileName, 0, mTargetNameLen) + NS_LITERAL_CSTRING(".tmp");
     rv = aTargetFile->Clone(getter_AddRefs(mTempFile));
     if (NS_SUCCEEDED(rv))
-        mTempFile->SetLeafName(tempFileName);
+        mTempFile->SetNativeLeafName(tempFileName);
 }
 
 void nsSafeSaveFile::CleanupFailedSave(void)
@@ -106,10 +106,10 @@ nsresult nsSafeSaveFile::PostProcessSave(void)
         fileName = Substring(mTargetFileName, 0, mTargetNameLen) + BACKUP_FILE_EXTENSION;
         if (mBackupCount > 1)
             fileName.AppendInt(mBackupCount - 1);
-        backupFile->SetLeafName(fileName);
+        backupFile->SetNativeLeafName(fileName);
     } else {
         // no backups desired, delete the previous save
-        backupFile->SetLeafName(mTargetFileName);
+        backupFile->SetNativeLeafName(mTargetFileName);
     }
 
     // remove the file as determined by the logic above
@@ -123,27 +123,27 @@ nsresult nsSafeSaveFile::PostProcessSave(void)
             // bump all of the redundant backups up one (i.e. bak -> bak1, bak1 -> bak2, etc.)
             if (backupCount > 1)
                 fileName.AppendInt(backupCount - 1);
-            backupFile->SetLeafName(fileName);
+            backupFile->SetNativeLeafName(fileName);
             backupFile->Exists(&bExists);
             if (bExists) {
                 fileName.Truncate(mTargetNameLen + (sizeof(BACKUP_FILE_EXTENSION) - 1));
                 fileName.AppendInt(backupCount);
                 // fail silently because it's not important enough to bail on the save for
-                backupFile->MoveTo(0, fileName);
+                backupFile->MoveToNative(0, fileName);
             }
             fileName.Truncate(mTargetNameLen + (sizeof(BACKUP_FILE_EXTENSION) - 1));
         };
 
         // rename the previous save to .bak (i.e. <filename.js> to <filename.bak>)
-        backupFile->SetLeafName(mTargetFileName);
-        rv = backupFile->MoveTo(0, fileName);
+        backupFile->SetNativeLeafName(mTargetFileName);
+        rv = backupFile->MoveToNative(0, fileName);
         // it's only an error if the file exists
         if ((NS_FAILED(rv)) && (rv != NS_ERROR_FILE_NOT_FOUND))
             return rv;
     }
 
     // finally rename the temp file to the original name (i.e. <filename.tmp> to <filename.js>)
-    rv = mTempFile->MoveTo(0, mTargetFileName);
+    rv = mTempFile->MoveToNative(0, mTargetFileName);
     return rv;
 }
 
@@ -168,7 +168,7 @@ nsresult nsSafeSaveFile::PurgeOldestBackup(void)
     while (--backupCount >= 0) {
         if (backupCount)
             fileName.AppendInt(backupCount);
-        backupFile->SetLeafName(fileName);
+        backupFile->SetNativeLeafName(fileName);
         rv = backupFile->Remove(PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
             return NS_OK;

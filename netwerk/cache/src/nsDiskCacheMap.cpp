@@ -149,7 +149,7 @@ nsDiskCacheMap::Open(nsILocalFile *  cacheDirectory)
     rv = cacheDirectory->Clone(getter_AddRefs(file));
     nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file, &rv));
     if (NS_FAILED(rv))  return rv;
-    rv = localFile->Append(NS_LITERAL_CSTRING("_CACHE_MAP_"));
+    rv = localFile->AppendNative(NS_LITERAL_CSTRING("_CACHE_MAP_"));
     if (NS_FAILED(rv))  return rv;
     
     // open the file

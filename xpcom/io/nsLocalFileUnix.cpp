@@ -41,6 +41,7 @@
 #include <utime.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <locale.h>
 #ifdef XP_BEOS
     #include <Path.h>
     #include <Entry.h>
@@ -58,7 +59,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsLocalFileUnix.h"
-#include "nsLocalFileUnicode.h"
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
 #include "prproces.h"
@@ -210,9 +210,7 @@ nsDirEnumeratorUnix::GetNextEntry()
 }
 
 nsLocalFile::nsLocalFile() :
-    mHaveCachedStat(PR_FALSE),
-    mPathIsASCII(-1),
-    mLeafIsASCII(-1)
+    mHaveCachedStat(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -670,11 +668,11 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
             rv = newParent->Clone(getter_AddRefs(destClone));
             if (NS_SUCCEEDED(rv)) {
                 nsCOMPtr<nsILocalFile> newDir(do_QueryInterface(destClone));
-                if (NS_FAILED(rv = entry->CopyTo(newDir, nsCString()))) {
+                if (NS_FAILED(rv = entry->CopyToNative(newDir, nsCString()))) {
 #ifdef DEBUG
                     nsresult rv2;
                     nsCAutoString pathName;
-                    if (NS_FAILED(rv2 = entry->GetPath(pathName)))
+                    if (NS_FAILED(rv2 = entry->GetNativePath(pathName)))
                         return rv2;
                     printf("Operation not supported: %s\n", pathName.get());
 #endif
@@ -684,11 +682,11 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
                 }
             }
         } else {
-            if (NS_FAILED(rv = entry->CopyTo(newParent, nsCString()))) {
+            if (NS_FAILED(rv = entry->CopyToNative(newParent, nsCString()))) {
 #ifdef DEBUG
                 nsresult rv2;
                 nsCAutoString pathName;
-                if (NS_FAILED(rv2 = entry->GetPath(pathName)))
+                if (NS_FAILED(rv2 = entry->GetNativePath(pathName)))
                     return rv2;
                 printf("Operation not supported: %s\n", pathName.get());
 #endif
@@ -1552,61 +1550,73 @@ NS_NewNativeLocalFile(const nsACString &path, PRBool followSymlinks, nsILocalFil
 #define TOLERATE_UCONV_FAILURE 1
 
 static int
-convert_ucs2_to_native(const PRUnichar *input, char *result, unsigned resultLen)
+convert_ucs2_to_native(const nsAString &input, char *result, unsigned resultLen)
 {
     // this function assumes that |result| is big enough
     NS_ASSERTION(resultLen == PATH_MAX, "unexpected resultLen");
 #ifdef HAVE_WCRTOMB
     mbstate_t ps = {0};
 #endif
-    char buf[16], *cursor = result;
+    char *cursor = result;
     int i = 0;
-    const PRUnichar *p = input;
 
-    NS_ASSERTION(MB_CUR_MAX <= sizeof(buf), "must increase sizeof(buf)");
+    nsAString::const_iterator start, end;
+    input.BeginReading(start);
+    input.EndReading(end);
+    PRUint32 size;
 
-    // perform conversion
-    p = input;
-    while (*p) {
+    for ( ; start != end; start.advance(size)) {
+        size = start.size_forward();
+
+        const PRUnichar *p = start.get();
+
+        for (PRUint32 j = 0; j < size; ++j, ++p) {
 #ifdef HAVE_WCRTOMB
-        i = (int) wcrtomb(cursor, (wchar_t) *p, &ps);
+            i = (int) wcrtomb(cursor, (wchar_t) *p, &ps);
 #else
-        // XXX is this thread-safe?
-        i = (int) wctomb(cursor, (wchar_t) *p);
+            // XXX is this thread-safe?
+            i = (int) wctomb(cursor, (wchar_t) *p);
 #endif
-        if (i < 0) {
-            NS_WARNING("wctomb failed: possible charset mismatch");
+            if (i < 0) {
+                NS_WARNING("wctomb failed: possible charset mismatch");
 #ifdef TOLERATE_UCONV_FAILURE
-            *cursor = (unsigned char) *p; // truncate
-            i = 1;
+                *cursor = (unsigned char) *p; // truncate
+                i = 1;
 #else
-            return -1;
+                return -1;
 #endif
+            }
+            // most likely we're dead anyways if this assertion should fire
+            NS_ASSERTION(cursor + i <= result + resultLen, "wrote beyond end of string");
+            cursor += i;
+            if (cursor >= result + resultLen - 1) {
+                cursor  = result + resultLen - 1; // fixup cursor
+                break;
+            }
         }
-        // most likely we're dead anyways if this assertion should fire
-        NS_ASSERTION(cursor + i <= result + resultLen, "wrote beyond end of string");
-        cursor += i;
-        if (cursor >= result + resultLen - 1) {
-            cursor  = result + resultLen - 1; // fixup cursor
-            break;
-        }
-        p++;
     }
     *cursor = '\0';
     return cursor - result;
 }
 
 static int
-convert_native_to_ucs2(const char *input, unsigned inputLen, PRUnichar **result)
+convert_native_to_ucs2(const char *input, unsigned inputLen, nsAString &result)
 {
 #ifdef HAVE_MBRTOWC
     mbstate_t ps = {0};
 #endif
     PRUnichar *p;
-    int i;
+    int i, resultLen = 0;
+
+    result.Truncate();
 
     // allocate space for largest possible result
-    p = *result = (PRUnichar *) nsMemory::Alloc((inputLen + 1) * sizeof(PRUnichar));
+    result.SetCapacity(inputLen + 1);
+
+    nsAString::iterator start;
+    result.BeginWriting(start);
+
+    p = start.get();
     if (!p) {
         NS_ERROR("memory allocation failed");
         return -1;
@@ -1625,6 +1635,7 @@ convert_native_to_ucs2(const char *input, unsigned inputLen, PRUnichar **result)
         if (i < 0) {
             NS_WARNING("mbtowc failed: possible charset mismatch");
 #ifdef TOLERATE_UCONV_FAILURE
+            // truncate and hope for the best
             tmp = (unsigned char) *input;
             i = 1;
 #else
@@ -1637,9 +1648,10 @@ convert_native_to_ucs2(const char *input, unsigned inputLen, PRUnichar **result)
         input += i;
         inputLen -= i;
         p++;
+        resultLen++;
     }
-    *p = '\0';
-    return p - *result;
+    result.SetLength(resultLen);
+    return 0;
 }
 
 #define SET_UCS(func, ucsArg) \
@@ -1673,60 +1685,60 @@ convert_native_to_ucs2(const char *input, unsigned inputLen, PRUnichar **result)
 
 // Unicode interface Wrapper
 nsresult  
-nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
+nsLocalFile::InitWithPath(const nsAString &filePath)
 {
-   SET_UCS(InitWithNativePath, filePath);
+    SET_UCS(InitWithNativePath, filePath);
 }
 nsresult  
-nsLocalFile::AppendUnicode(const PRUnichar *node)
+nsLocalFile::Append(const nsAString &node)
 {
-   SET_UCS( AppendNative , node);
+    SET_UCS(AppendNative, node);
 }
 nsresult  
-nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
+nsLocalFile::AppendRelativePath(const nsAString &node)
 {
-   SET_UCS( AppendRelativeNativePath , node);
+    SET_UCS(AppendRelativeNativePath, node);
 }
 nsresult  
-nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
+nsLocalFile::GetLeafName(nsAString &aLeafName)
 {
-   GET_UCS(GetNativeLeafName, aLeafName);
+    GET_UCS(GetNativeLeafName, aLeafName);
 }
 nsresult  
-nsLocalFile::SetUnicodeLeafName(const PRUnichar * aLeafName)
+nsLocalFile::SetLeafName(const nsAString &aLeafName)
 {
-   SET_UCS( SetNativeLeafName , aLeafName);
+    SET_UCS(SetNativeLeafName, aLeafName);
 }
 nsresult  
-nsLocalFile::GetUnicodePath(PRUnichar **_retval)
+nsLocalFile::GetPath(nsAString &_retval)
 {
-   int i = convert_native_to_ucs2(mPath.get(), mPath.Length(), _retval);
-   if (i == -1)
-       return NS_ERROR_FAILURE;
-   return NS_OK;
+    int i = convert_native_to_ucs2(mPath.get(), mPath.Length(), _retval);
+    if (i == -1)
+        return NS_ERROR_FAILURE;
+    return NS_OK;
 }
 nsresult  
-nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
-   SET_UCS_2ARGS_2( CopyToNative , newParentDir, newName);
+    SET_UCS_2ARGS_2(CopyToNative , newParentDir, newName);
 }
 nsresult  
-nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
-   SET_UCS_2ARGS_2( CopyToFollowingLinksNative , newParentDir, newName);
+    SET_UCS_2ARGS_2(CopyToFollowingLinksNative , newParentDir, newName);
 }
 nsresult  
-nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
-   SET_UCS_2ARGS_2( MoveToNative , newParentDir, newName);
+    SET_UCS_2ARGS_2(MoveToNative, newParentDir, newName);
 }
 nsresult
-nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
+nsLocalFile::GetTarget(nsAString &_retval)
 {   
-   GET_UCS(GetNativeTarget, _retval);
+    GET_UCS(GetNativeTarget, _retval);
 }
 nsresult 
-NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result)
+NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result)
 {
     char buf[PATH_MAX];
     int i = convert_ucs2_to_native(path, buf, PATH_MAX);
@@ -1739,25 +1751,11 @@ NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* 
 // global init/shutdown
 //-----------------------------------------------------------------------------
 
-PRBool
-nsLocalFile::FSCharsetIsUTF8()
-{
-#if HAVE_NL_LANGINFO && defined(CODESET)
-    // this result may vary, so we must query nl_langinfo each time.
-    // fortunately, this amounts to little more than an array lookup (at
-    // least that's how it's implemented in glibc).
-    const char *codeset = nl_langinfo(CODESET);
-    if (!codeset) {
-        NS_WARNING("cannot get nl_langinfo(CODESET)");
-        return PR_FALSE;
-    }
-    return (strcmp(codeset, "UTF-8") == 0);
-#endif
-}
-
 void
 nsLocalFile::GlobalInit()
 {
+    // need to initialize the locale or else charset conversion will fail.
+    setlocale(LC_CTYPE, "");
 }
 
 void

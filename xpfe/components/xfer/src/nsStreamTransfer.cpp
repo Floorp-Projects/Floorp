@@ -331,10 +331,7 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
         NS_UnescapeURL(suggestedFileName);
         if ( NS_SUCCEEDED( NS_NewNativeLocalFile( suggestedFileName, PR_FALSE, getter_AddRefs( localFile ) ) ) ) {
             // We want base part of name only.
-            nsCAutoString baseName;
-            if ( NS_SUCCEEDED( localFile->GetLeafName( baseName ) ) ) {
-                result = NS_ConvertUTF8toUCS2(baseName);
-            }
+            localFile->GetLeafName(result);
         }
     } else if ( aChannel ) {
         // Get URI from channel and spec from URI.
@@ -349,11 +346,8 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
               rv = fileurl->GetFile(getter_AddRefs(localeFile));
               if ( NS_SUCCEEDED( rv ) && localeFile)
               {
-                nsCAutoString baseName;
-                if ( NS_SUCCEEDED( localeFile->GetLeafName( baseName ) ) ) {
-                  result = NS_ConvertUTF8toUCS2(baseName);
+                if ( NS_SUCCEEDED( localeFile->GetLeafName( result ) ) )
                   return result;
-                }
               }
             }
 

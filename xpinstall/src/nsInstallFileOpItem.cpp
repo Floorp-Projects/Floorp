@@ -668,7 +668,7 @@ nsInstallFileOpItem::NativeFileOpFileRenamePrepare()
 
       mSrc->GetParent(&target);
       nsresult rv =
-          target->Append(NS_ConvertUCS2toUTF8(*mStrTarget));
+          target->Append(*mStrTarget);
       //90% of the failures during Append will be because the target wasn't in string form
       // which it must be.
       if (NS_FAILED(rv)) return nsInstall::INVALID_ARGUMENTS;
@@ -708,7 +708,7 @@ nsInstallFileOpItem::NativeFileOpFileRenameComplete()
 
             if (target)
             {
-                target->Append(NS_ConvertUCS2toUTF8(*mStrTarget));
+                target->Append(*mStrTarget);
             }
             else
                 return nsInstall::UNEXPECTED_ERROR;
@@ -716,8 +716,7 @@ nsInstallFileOpItem::NativeFileOpFileRenameComplete()
             target->Exists(&flagExists);
             if(!flagExists)
             {
-                mSrc->MoveTo(parent,
-                             NS_ConvertUCS2toUTF8(*mStrTarget));
+                mSrc->MoveTo(parent, *mStrTarget);
             }
             else
                 return nsInstall::ALREADY_EXISTS;
@@ -739,7 +738,7 @@ nsInstallFileOpItem::NativeFileOpFileRenameAbort()
 {
   PRInt32   ret  = nsInstall::SUCCESS;
   PRBool    flagExists;
-  nsCAutoString leafName;
+  nsAutoString leafName;
   nsCOMPtr<nsIFile>  newFilename;
   nsCOMPtr<nsIFile>  parent;
 
@@ -752,7 +751,7 @@ nsInstallFileOpItem::NativeFileOpFileRenameAbort()
       mSrc->GetParent(getter_AddRefs(parent));
       if(parent)
       {
-        newFilename->Append(NS_ConvertUCS2toUTF8(*mStrTarget));
+        newFilename->Append(*mStrTarget);
     
         mSrc->GetLeafName(leafName);
 
@@ -772,7 +771,7 @@ PRInt32
 nsInstallFileOpItem::NativeFileOpFileCopyPrepare()
 {
   PRBool flagExists, flagIsFile, flagIsWritable;
-  nsCAutoString leafName;
+  nsAutoString leafName;
   nsresult rv;
   nsCOMPtr<nsIFile> tempVar;
   nsCOMPtr<nsIFile> targetParent;
@@ -839,7 +838,7 @@ nsInstallFileOpItem::NativeFileOpFileCopyComplete()
 {
   PRInt32 rv = NS_OK;
   PRBool flagIsFile, flagExists;
-  nsCAutoString leafName;
+  nsAutoString leafName;
   nsCOMPtr<nsIFile> parent;
   nsCOMPtr<nsIFile> tempTarget;
 
@@ -898,7 +897,7 @@ nsInstallFileOpItem::NativeFileOpFileCopyAbort()
   mTarget->Clone(getter_AddRefs(fullTarget));
   if(nsInstallFileOpItem::ACTION_SUCCESS == mAction)
   {
-    nsCAutoString leafName;
+    nsAutoString leafName;
     mSrc->GetLeafName(leafName);
     fullTarget->Append(leafName);
     fullTarget->Remove(PR_FALSE);
@@ -1050,7 +1049,7 @@ nsInstallFileOpItem::NativeFileOpFileMovePrepare()
       else
       {
         nsCOMPtr<nsIFile> tempVar;
-        nsCAutoString leaf;
+        nsAutoString leaf;
 
         mTarget->Clone(getter_AddRefs(tempVar));
         mSrc->GetLeafName(leaf);
@@ -1164,7 +1163,7 @@ nsInstallFileOpItem::NativeFileOpDirRenamePrepare()
       nsCOMPtr<nsIFile> target;
 
       mSrc->GetParent(getter_AddRefs(target));
-      target->Append(NS_ConvertUCS2toUTF8(*mStrTarget));
+      target->Append(*mStrTarget);
 
       target->Exists(&flagExists);
       if(flagExists)
@@ -1194,15 +1193,14 @@ nsInstallFileOpItem::NativeFileOpDirRenameComplete()
       nsCOMPtr<nsIFile> target;
 
       mSrc->GetParent(getter_AddRefs(target));
-      target->Append(NS_ConvertUCS2toUTF8(*mStrTarget));
+      target->Append(*mStrTarget);
 
       target->Exists(&flagExists);
       if(!flagExists)
       {
         nsCOMPtr<nsIFile> parent;
         mSrc->GetParent(getter_AddRefs(parent));
-        ret = mSrc->MoveTo(parent,
-                           NS_ConvertUCS2toUTF8(*mStrTarget));
+        ret = mSrc->MoveTo(parent, *mStrTarget);
       }
       else
         return nsInstall::ALREADY_EXISTS;
@@ -1221,7 +1219,7 @@ nsInstallFileOpItem::NativeFileOpDirRenameAbort()
 {
   PRBool     flagExists;
   PRInt32    ret = nsInstall::SUCCESS;
-  nsCAutoString leafName;
+  nsAutoString leafName;
   nsCOMPtr<nsIFile> newDirName;
   nsCOMPtr<nsIFile> parent;
 
@@ -1229,7 +1227,7 @@ nsInstallFileOpItem::NativeFileOpDirRenameAbort()
   if(!flagExists)
   {
     mSrc->GetParent(getter_AddRefs(newDirName));
-    newDirName->Append(NS_ConvertUCS2toUTF8(*mStrTarget));
+    newDirName->Append(*mStrTarget);
     mSrc->GetLeafName(leafName);
     mSrc->GetParent(getter_AddRefs(parent));
     ret = newDirName->MoveTo(parent, leafName);
@@ -1260,7 +1258,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutPrepare()
     }
     else
     {
-      tempVar->Append(NS_LITERAL_CSTRING("NSTestDir"));
+      tempVar->AppendNative(NS_LITERAL_CSTRING("NSTestDir"));
       tempVar->Create(1, 0755);
       tempVar->Exists(&flagExists);
       if(!flagExists)
@@ -1341,7 +1339,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
     shortcutDescription = *mDescription;
     shortcutDescription.Append(NS_LITERAL_STRING(".lnk"));
     mShortcutPath->Clone(getter_AddRefs(shortcutTarget));
-    shortcutTarget->Append(NS_ConvertUCS2toUTF8(shortcutDescription));
+    shortcutTarget->Append(shortcutDescription);
 
     NativeFileOpFileDeleteComplete(shortcutTarget);
   }

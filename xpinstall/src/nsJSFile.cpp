@@ -1163,15 +1163,15 @@ InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval
 
 
     ConvertJSValToStr(b0, cx, argv[0]);
-    NS_NewLocalFile(NS_ConvertUCS2toUTF8(b0), PR_TRUE, getter_AddRefs(nsfsB0));
+    NS_NewLocalFile(b0, PR_TRUE, getter_AddRefs(nsfsB0));
     ConvertJSValToStr(b1, cx, argv[1]);
-    NS_NewLocalFile(NS_ConvertUCS2toUTF8(b1), PR_TRUE, getter_AddRefs(nsfsB1));
+    NS_NewLocalFile(b1, PR_TRUE, getter_AddRefs(nsfsB1));
     ConvertJSValToStr(b2, cx, argv[2]);
     ConvertJSValToStr(b3, cx, argv[3]);
-    NS_NewLocalFile(NS_ConvertUCS2toUTF8(b3), PR_TRUE, getter_AddRefs(nsfsB3));
+    NS_NewLocalFile(b3, PR_TRUE, getter_AddRefs(nsfsB3));
     ConvertJSValToStr(b4, cx, argv[4]);
     ConvertJSValToStr(b5, cx, argv[5]);
-    NS_NewLocalFile(NS_ConvertUCS2toUTF8(b5), PR_TRUE, getter_AddRefs(nsfsB5));
+    NS_NewLocalFile(b5, PR_TRUE, getter_AddRefs(nsfsB5));
 
     if(JSVAL_IS_NULL(argv[6]))
     {
@@ -1273,7 +1273,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     
     ConvertJSValToStr(sourceLeaf, cx, argv[1]);
-    rv1 = iFileSource->Append(NS_ConvertUCS2toUTF8(sourceLeaf));
+    rv1 = iFileSource->Append(sourceLeaf);
         
     // public int FileMacAlias( InstallFolder aSourceFolder,
     //                          String        aSourceFileName,
@@ -1298,7 +1298,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         aliasLeaf.Append(NS_LITERAL_STRING(" alias"));   // XXX use GetResourcedString(id)
     }
     
-    rv2 = iFileAlias->Append(NS_ConvertUCS2toUTF8(aliasLeaf));
+    rv2 = iFileAlias->Append(aliasLeaf);
 	if (NS_FAILED(rv1) || NS_FAILED(rv2))
 	{
 		*rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);

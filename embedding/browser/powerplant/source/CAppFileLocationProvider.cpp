@@ -96,9 +96,9 @@ CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile 
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativePath(GetResCString(str_DefaultsDirName, strBuf));
+            rv = localFile->AppendRelativeNativePath(GetResCString(str_DefaultsDirName, strBuf));
             if (NS_SUCCEEDED(rv))
-                rv = localFile->AppendRelativePath(GetResCString(str_PrefDefaultsDirName, strBuf));
+                rv = localFile->AppendRelativeNativePath(GetResCString(str_PrefDefaultsDirName, strBuf));
         }
     }
     else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0 ||
@@ -106,9 +106,9 @@ CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile 
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativePath(GetResCString(str_DefaultsDirName, strBuf));
+            rv = localFile->AppendRelativeNativePath(GetResCString(str_DefaultsDirName, strBuf));
             if (NS_SUCCEEDED(rv))
-                rv = localFile->AppendRelativePath(GetResCString(str_ProfileDefaultsDirName, strBuf));
+                rv = localFile->AppendRelativeNativePath(GetResCString(str_ProfileDefaultsDirName, strBuf));
         }
     }
     else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
@@ -119,25 +119,25 @@ CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile 
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(GetResCString(str_ResDirName, strBuf));
+            rv = localFile->AppendRelativeNativePath(GetResCString(str_ResDirName, strBuf));
     }
     else if (nsCRT::strcmp(prop, NS_APP_CHROME_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(GetResCString(str_ChromeDirName, strBuf));
+            rv = localFile->AppendRelativeNativePath(GetResCString(str_ChromeDirName, strBuf));
     }
     else if (nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(GetResCString(str_PlugInsDirName, strBuf));
+            rv = localFile->AppendRelativeNativePath(GetResCString(str_PlugInsDirName, strBuf));
     }
     else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(GetResCString(str_SearchPlugInsDirName, strBuf));
+            rv = localFile->AppendRelativeNativePath(GetResCString(str_SearchPlugInsDirName, strBuf));
     }
     
 	if (localFile && NS_SUCCEEDED(rv))
@@ -242,7 +242,7 @@ NS_METHOD CAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLo
     rv = GetProductDirectory(getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
 
-    rv = localDir->AppendRelativePath(GetResCString(str_ProfilesRootDirName, strBuf));
+    rv = localDir->AppendRelativeNativePath(GetResCString(str_ProfilesRootDirName, strBuf));
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)

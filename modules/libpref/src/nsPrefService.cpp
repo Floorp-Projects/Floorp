@@ -314,7 +314,7 @@ nsresult nsPrefService::UseDefaultPrefFile()
     // knows about NS_APP_PREFS_50_FILE. Put the file in NS_XPCOM_CURRENT_PROCESS_DIR.
     rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
-    rv = aFile->Append(NS_LITERAL_CSTRING("default_prefs.js"));
+    rv = aFile->AppendNative(NS_LITERAL_CSTRING("default_prefs.js"));
     if (NS_FAILED(rv)) return rv;
   } 
 
@@ -336,7 +336,7 @@ nsresult nsPrefService::UseUserPrefFile()
 
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aFile));
   if (NS_SUCCEEDED(rv) && aFile) {
-    rv = aFile->Append(NS_LITERAL_CSTRING("user.js"));
+    rv = aFile->AppendNative(NS_LITERAL_CSTRING("user.js"));
     if (NS_SUCCEEDED(rv)) {
       rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
     }
@@ -585,7 +585,7 @@ JSBool pref_InitInitialObjects()
     // because SetLeafName will not work here.
     rv = defaultPrefDir->Clone(getter_AddRefs(aFile));
     if (NS_SUCCEEDED(rv)) {
-      rv = aFile->Append(nsDependentCString(specialFiles[k]));
+      rv = aFile->AppendNative(nsDependentCString(specialFiles[k]));
       if (NS_SUCCEEDED(rv)) {
         rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "<platform>.js was not parsed successfully");

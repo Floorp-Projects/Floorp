@@ -193,7 +193,7 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(PREFS_FILE_50_NAME);
+            rv = localFile->AppendNative(PREFS_FILE_50_NAME);
     }
     else if (inAtom == sApp_UserProfileDirectory50)
     {
@@ -203,19 +203,19 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(USER_CHROME_DIR_50_NAME);
+            rv = localFile->AppendNative(USER_CHROME_DIR_50_NAME);
     }
     else if (inAtom == sApp_LocalStore50)
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(LOCAL_STORE_FILE_50_NAME);
+            rv = localFile->AppendNative(LOCAL_STORE_FILE_50_NAME);
     }
     else if (inAtom == sApp_History50)
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(HISTORY_FILE_50_NAME);
+            rv = localFile->AppendNative(HISTORY_FILE_50_NAME);
     }
     else if (inAtom == sApp_UsersPanels50)
     {
@@ -226,7 +226,7 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
         
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(PANELS_FILE_50_NAME);
+            rv = localFile->AppendNative(PANELS_FILE_50_NAME);
     }
     else if (inAtom == sApp_UsersMimeTypes50)
     {
@@ -237,19 +237,19 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
         
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(MIME_TYPES_FILE_50_NAME);
+            rv = localFile->AppendNative(MIME_TYPES_FILE_50_NAME);
     }
     else if (inAtom == sApp_BookmarksFile50)
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(BOOKMARKS_FILE_50_NAME);
+            rv = localFile->AppendNative(BOOKMARKS_FILE_50_NAME);
     }
     else if (inAtom == sApp_DownloadsFile50)
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(DOWNLOADS_FILE_50_NAME);
+            rv = localFile->AppendNative(DOWNLOADS_FILE_50_NAME);
     }
     else if (inAtom == sApp_SearchFile50)
     {
@@ -260,31 +260,31 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
         
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(SEARCH_FILE_50_NAME);
+            rv = localFile->AppendNative(SEARCH_FILE_50_NAME);
     }
     else if (inAtom == sApp_MailDirectory50)
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(MAIL_DIR_50_NAME);
+            rv = localFile->AppendNative(MAIL_DIR_50_NAME);
     }
     else if (inAtom == sApp_ImapMailDirectory50)
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(IMAP_MAIL_DIR_50_NAME);
+            rv = localFile->AppendNative(IMAP_MAIL_DIR_50_NAME);
     }
     else if (inAtom == sApp_NewsDirectory50)
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(NEWS_DIR_50_NAME);
+            rv = localFile->AppendNative(NEWS_DIR_50_NAME);
     }
     else if (inAtom == sApp_MessengerFolderCache50)
     {
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(MSG_FOLDER_CACHE_DIR_50_NAME);
+            rv = localFile->AppendNative(MSG_FOLDER_CACHE_DIR_50_NAME);
     }
 
     NS_RELEASE(inAtom);
@@ -342,13 +342,13 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
                           {
                               nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
                               nsCAutoString leafName;
-                              dirEntry->GetLeafName(leafName);
-                              newChild->AppendRelativePath(leafName);
+                              dirEntry->GetNativeLeafName(leafName);
+                              newChild->AppendRelativeNativePath(leafName);
                               rv = RecursiveCopy(dirEntry, newChild);
                           }
                       }
                       else
-                          rv = dirEntry->CopyTo(destDir, nsCString());
+                          rv = dirEntry->CopyToNative(destDir, nsCString());
                   }
               
               }

@@ -567,7 +567,7 @@ nsXULPrototypeCache::AbortFastLoads()
     // Now rename or remove the file.
     if (file) {
 #ifdef DEBUG
-        file->MoveTo(nsnull, NS_LITERAL_CSTRING("Aborted.mfasl"));
+        file->MoveToNative(nsnull, NS_LITERAL_CSTRING("Aborted.mfasl"));
 #else
         file->Remove(PR_FALSE);
 #endif
@@ -877,7 +877,7 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
     if (NS_FAILED(rv))
         return rv;
     nsCAutoString chromePath;
-    rv = chromeDir->GetPath(chromePath);
+    rv = chromeDir->GetNativePath(chromePath);
     if (NS_FAILED(rv))
         return rv;
 
@@ -965,7 +965,7 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
             xio->mInputStream = nsnull;
 
 #ifdef DEBUG
-            file->MoveTo(nsnull, NS_LITERAL_CSTRING("Invalid.mfasl"));
+            file->MoveToNative(nsnull, NS_LITERAL_CSTRING("Invalid.mfasl"));
 #else
             file->Remove(PR_FALSE);
 #endif

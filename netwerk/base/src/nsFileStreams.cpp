@@ -386,7 +386,12 @@ nsFileIO::GetName(nsACString &aName)
     if (mFile == nsnull)
         return NS_ERROR_NOT_INITIALIZED;
 
-    return mFile->GetPath(aName);
+    nsAutoString path;
+    nsresult rv = mFile->GetPath(path);
+    if (NS_FAILED(rv)) return rv;
+
+    aName = NS_ConvertUCS2toUTF8(path);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -138,7 +138,7 @@ nsresult GetRegFilePath(nsACString &regFilePath)
             return nsnull;
 
 #if defined (XP_MAC)
-        tmp->Append(ESSENTIAL_FILES);
+        tmp->AppendNative(ESSENTIAL_FILES);
 #endif
         iFileUtilityPath = do_QueryInterface(tmp);
     }
@@ -151,7 +151,7 @@ nsresult GetRegFilePath(nsACString &regFilePath)
     if (NS_FAILED(rv) || !iFileUtilityPath) 
         return nsnull;
 
-    iFileUtilityPath->Append(CLEANUP_REGISTRY);
+    iFileUtilityPath->AppendNative(CLEANUP_REGISTRY);
 
     //Yes, we know using GetPath is buggy on the Mac.
     //When libreg is fixed to accept nsIFiles we'll change this to match.

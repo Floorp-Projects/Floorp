@@ -28,7 +28,6 @@
 #include "nsMemory.h"
 
 #include "nsLocalFileOS2.h"
-#include "nsLocalFileUnicode.h"
 
 #include <uconv.h>
 
@@ -2272,16 +2271,13 @@ FStoUCS2(const char* aBuffer, PRUnichar **aResult)
 }
 
 NS_IMETHODIMP
-nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
+nsLocalFile::InitWithPath(const nsAString &filePath)
 {
-
-    NS_ENSURE_ARG(filePath);
-
-    if (nsCRT::strlen(filePath) == 0)
-        return NS_ERROR_INVALID_ARG;
+    if (filePath.IsEmpty())
+        return InitWithNativePath(nsCString());
 
     nsXPIDLCString tmp;
-    nsresult rv = UCS2toFS(filePath, getter_Copies(tmp));
+    nsresult rv = UCS2toFS(PromiseFlatString(filePath).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
         return InitWithNativePath(tmp);
@@ -2290,15 +2286,13 @@ nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
 }
 
 NS_IMETHODIMP
-nsLocalFile::AppendUnicode(const PRUnichar *node)
+nsLocalFile::Append(const nsAString &node)
 {
-    NS_ENSURE_ARG(node);
-
-    if (nsCRT::strlen(node) == 0)
+    if (node.IsEmpty())
         return NS_OK;
 
     nsXPIDLCString tmp;
-    nsresult rv = UCS2toFS(node, getter_Copies(tmp));
+    nsresult rv = UCS2toFS(PromiseFlatString(node).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
         return AppendNative(tmp);
@@ -2307,11 +2301,9 @@ nsLocalFile::AppendUnicode(const PRUnichar *node)
 }
 
 NS_IMETHODIMP
-nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
+nsLocalFile::AppendRelativePath(const nsAString &node)
 {
-    NS_ENSURE_ARG(node);
-
-    if (nsCRT::strlen(node) == 0)
+    if (node.IsEmpty())
         return NS_OK;
 
     nsXPIDLCString tmp;
@@ -2319,7 +2311,7 @@ nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
     if (tmp.IsEmpty())
         return NS_OK;
 
-    nsresult rv = UCS2toFS(node, getter_Copies(tmp));
+    nsresult rv = UCS2toFS(PromiseFlatString(node).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
         return AppendRelativeNativePath(tmp);
@@ -2328,28 +2320,29 @@ nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
+nsLocalFile::GetLeafName(nsAString &aLeafName)
 {
-    NS_ENSURE_ARG_POINTER(aLeafName);
     nsCAutoString tmp;
     nsresult rv = GetNativeLeafName(tmp);
 
-    if (NS_SUCCEEDED(rv))
-        return FStoUCS2(tmp.get(), aLeafName);
+    if (NS_SUCCEEDED(rv)) {
+        nsXPIDLString ucsBuf;
+        rv = FStoUCS2(tmp.get(), getter_Copies(ucsBuf));
+        if (NS_SUCCEEDED(rv))
+            aLeafName = ucsBuf;
+    }
 
     return rv;
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetUnicodeLeafName(const PRUnichar *aLeafName)
+nsLocalFile::SetLeafName(const nsAString &aLeafName)
 {
-    NS_ENSURE_ARG(aLeafName);
-
-    if (nsCRT::strlen(aLeafName) == 0)
-        return NS_OK;
+    if (aLeafName.IsEmpty())
+        return SetNativeLeafName(nsCString());
 
     nsXPIDLCString tmp;
-    nsresult rv = UCS2toFS(aLeafName, getter_Copies(tmp));
+    nsresult rv = UCS2toFS(PromiseFlatString(aLeafName).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
         return SetNativeLeafName(tmp);
@@ -2358,21 +2351,23 @@ nsLocalFile::SetUnicodeLeafName(const PRUnichar *aLeafName)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetUnicodePath(PRUnichar **_retval)
+nsLocalFile::GetPath(nsAString &_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
-
-    return FStoUCS2(mWorkingPath.get(), _retval);
+    nsXPIDLString ucsBuf;
+    nsresult rv = FStoUCS2(mWorkingPath.get(), getter_Copies(ucsBuf));
+    if (NS_SUCCEEDED(rv))
+        _retval = ucsBuf;
+    return rv;
 }
 
 NS_IMETHODIMP
-nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
-    if (!newName || nsCRT::strlen(newName) == 0)
+    if (newName.IsEmpty())
         return CopyToNative(newParentDir, nsCString());
 
     nsXPIDLCString tmp;
-    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+    nsresult rv = UCS2toFS(PromiseFlatString(newName).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
         return CopyToNative(newParentDir, tmp);
@@ -2381,13 +2376,13 @@ nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
 }
 
 NS_IMETHODIMP
-nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
-    if (!newName || nsCRT::strlen(newName) == 0)
+    if (newName.IsEmpty())
         return CopyToFollowingLinksNative(newParentDir, nsCString());
 
     nsXPIDLCString tmp;
-    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+    nsresult rv = UCS2toFS(PromiseFlatString(newName).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
         return CopyToFollowingLinksNative(newParentDir, tmp);
@@ -2396,13 +2391,13 @@ nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar 
 }
 
 NS_IMETHODIMP
-nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
-    if (!newName || nsCRT::strlen(newName) == 0)
+    if (newName.IsEmpty())
         return MoveToNative(newParentDir, nsCString());
 
     nsXPIDLCString tmp;
-    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+    nsresult rv = UCS2toFS(PromiseFlatString(newName).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
         return MoveToNative(newParentDir, tmp);
@@ -2411,26 +2406,29 @@ nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
+nsLocalFile::GetTarget(nsAString &_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
     nsCAutoString tmp;
     nsresult rv = GetNativeTarget(tmp);
 
-    if (NS_SUCCEEDED(rv))
-        return FStoUCS2(tmp.get(), _retval);
+    if (NS_SUCCEEDED(rv)) {
+        nsXPIDLString ucsBuf;
+        rv = FStoUCS2(tmp.get(), getter_Copies(ucsBuf));
+        if (NS_SUCCEEDED(rv))
+            _retval = ucsBuf;
+    }
 
     return rv;
 }
 
 nsresult
-NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result)
+NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result)
 {
-    if (!path || nsCRT::strlen(path) == 0)
-        return NS_ERROR_INVALID_ARG;
+    if (path.IsEmpty())
+        return NS_NewNativeLocalFile(nsCString(), followLinks, result);
 
     nsXPIDLCString tmp;
-    nsresult rv = UCS2toFS(path, getter_Copies(tmp));
+    nsresult rv = UCS2toFS(PromiseFlatString(path).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
         return NS_NewNativeLocalFile(tmp, followLinks, result);
@@ -2442,14 +2440,10 @@ NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* 
 // global init/shutdown
 //----------------------------------------------------------------------------
 
-PRBool nsLocalFile::mFSCharsetIsUTF8 = PR_FALSE;
-
 void
 nsLocalFile::GlobalInit()
 {
     NS_CreateUnicodeConverters();
-
-    // XXX set mFSCharsetIsUTF8
 }
 
 void

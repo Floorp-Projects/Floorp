@@ -138,21 +138,21 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(APP_REGISTRY_NAME);
+            rv = localFile->AppendNative(APP_REGISTRY_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_APP_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(DEFAULTS_DIR_NAME);
+            rv = localFile->AppendRelativeNativePath(DEFAULTS_DIR_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativePath(DEFAULTS_DIR_NAME);
+            rv = localFile->AppendRelativeNativePath(DEFAULTS_DIR_NAME);
             if (NS_SUCCEEDED(rv))
-                rv = localFile->AppendRelativePath(DEFAULTS_PREF_DIR_NAME);
+                rv = localFile->AppendRelativeNativePath(DEFAULTS_PREF_DIR_NAME);
         }
     }
     else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0 ||
@@ -160,9 +160,9 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativePath(DEFAULTS_DIR_NAME);
+            rv = localFile->AppendRelativeNativePath(DEFAULTS_DIR_NAME);
             if (NS_SUCCEEDED(rv))
-                rv = localFile->AppendRelativePath(DEFAULTS_PROFILE_DIR_NAME);
+                rv = localFile->AppendRelativeNativePath(DEFAULTS_PROFILE_DIR_NAME);
         }
     }
     else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
@@ -173,19 +173,19 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(RES_DIR_NAME);
+            rv = localFile->AppendRelativeNativePath(RES_DIR_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_APP_CHROME_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(CHROME_DIR_NAME);
+            rv = localFile->AppendRelativeNativePath(CHROME_DIR_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(PLUGINS_DIR_NAME);
+            rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_ENV_PLUGINS_DIR) == 0)
     {
@@ -197,13 +197,13 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(PLUGINS_DIR_NAME);
+            rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(SEARCH_DIR_NAME);
+            rv = localFile->AppendRelativeNativePath(SEARCH_DIR_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_APP_INSTALL_CLEANUP_DIR) == 0)
     {   
@@ -212,7 +212,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
 #ifdef XP_MAC
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(ESSENTIAL_FILES);
+            rv = localFile->AppendNative(ESSENTIAL_FILES);
 #endif
 
     } 
@@ -325,7 +325,7 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
 #error dont_know_how_to_get_product_dir_on_your_platform
 #endif
 
-    rv = localDir->AppendRelativePath(DEFAULT_PRODUCT_DIR);
+    rv = localDir->AppendRelativeNativePath(DEFAULT_PRODUCT_DIR);
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
@@ -358,7 +358,7 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
 
 #if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_PC)
     // These 3 platforms share this part of the path - do them as one
-    rv = localDir->AppendRelativePath(NS_LITERAL_CSTRING("Profiles"));
+    rv = localDir->AppendRelativeNativePath(NS_LITERAL_CSTRING("Profiles"));
     if (NS_FAILED(rv)) return rv;
 
     PRBool exists;

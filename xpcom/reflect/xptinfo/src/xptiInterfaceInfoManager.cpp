@@ -332,7 +332,7 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray* aSearchPath,
             }
      
             nsCAutoString name;
-            if(NS_FAILED(file->GetLeafName(name)))
+            if(NS_FAILED(file->GetNativeLeafName(name)))
                 return PR_FALSE;
 
             if(xptiFileType::IsUnknown(name.get()))
@@ -431,7 +431,7 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
                                     getter_AddRefs(file))) || !file)
         return PR_FALSE;
 
-    if(NS_FAILED(file->Append(nsDependentCString(fileRecord->GetName()))))
+    if(NS_FAILED(file->AppendNative(nsDependentCString(fileRecord->GetName()))))
         return PR_FALSE;
 
     XPTHeader* header;
@@ -628,12 +628,12 @@ xptiSortFileList(const void * p1, const void *p2, void * closure)
     nsCAutoString name1;
     nsCAutoString name2;
         
-    if(NS_FAILED(pFile1->GetLeafName(name1)))
+    if(NS_FAILED(pFile1->GetNativeLeafName(name1)))
     {
         NS_ERROR("way bad, with no happy out!");
         return 0;    
     }    
-    if(NS_FAILED(pFile2->GetLeafName(name2)))
+    if(NS_FAILED(pFile2->GetNativeLeafName(name2)))
     {
         NS_ERROR("way bad, with no happy out!");
         return 0;    
@@ -792,7 +792,7 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aSearchPath
 
             if(NS_FAILED(file->GetFileSize(&size)) ||
                NS_FAILED(file->GetLastModifiedTime(&date)) ||
-               NS_FAILED(file->GetLeafName(name)) ||
+               NS_FAILED(file->GetNativeLeafName(name)) ||
                !aWorkingSet->FindDirectoryOfFile(file, &directory))
             {
                 NS_ERROR("unexpected!");
@@ -841,7 +841,7 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aSearchPath
                 PRInt64 date;
                 if(NS_FAILED(file->GetFileSize(&size)) ||
                    NS_FAILED(file->GetLastModifiedTime(&date)) ||
-                   NS_FAILED(file->GetLeafName(name)))
+                   NS_FAILED(file->GetNativeLeafName(name)))
                 {
                     NS_ERROR("unexpected!");
                     return FULL_VALIDATION_REQUIRED;
@@ -909,7 +909,7 @@ xptiInterfaceInfoManager::AddOnlyNewFilesFromFileList(nsISupportsArray* aSearchP
         PRUint32 dir;
         if(NS_FAILED(file->GetFileSize(&size)) ||
            NS_FAILED(file->GetLastModifiedTime(&date)) ||
-           NS_FAILED(file->GetLeafName(name)) ||
+           NS_FAILED(file->GetNativeLeafName(name)) ||
            !aWorkingSet->FindDirectoryOfFile(file, &dir))
         {
             return PR_FALSE;
@@ -1059,7 +1059,7 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aS
         PRUint32 dir;
         if(NS_FAILED(file->GetFileSize(&size)) ||
            NS_FAILED(file->GetLastModifiedTime(&date)) ||
-           NS_FAILED(file->GetLeafName(name)) ||
+           NS_FAILED(file->GetNativeLeafName(name)) ||
            !aWorkingSet->FindDirectoryOfFile(file, &dir))
         {
             return PR_FALSE;
@@ -1545,7 +1545,7 @@ xptiInterfaceInfoManager::DEBUG_DumpFileList(nsISupportsArray* aFileList)
             return PR_FALSE;
 
         nsCAutoString name;
-        if(NS_FAILED(file->GetLeafName(name)))
+        if(NS_FAILED(file->GetNativeLeafName(name)))
             return PR_FALSE;
 
         printf("* found %s\n", name.get());
@@ -1575,7 +1575,7 @@ xptiInterfaceInfoManager::DEBUG_DumpFileArray(nsILocalFile** aFileArray,
         nsILocalFile* file = aFileArray[i];
     
         nsCAutoString name;
-        if(NS_FAILED(file->GetLeafName(name)))
+        if(NS_FAILED(file->GetNativeLeafName(name)))
             return PR_FALSE;
 
         printf("found file: %s\n", name.get());

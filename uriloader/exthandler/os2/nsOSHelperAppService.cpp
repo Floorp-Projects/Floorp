@@ -227,7 +227,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   if (localFile)
   {
     if (localFile)
-      localFile->InitWithPath(NS_ConvertUCS2toUTF8(platformAppPath));
+      localFile->InitWithPath(nsDependentString(platformAppPath));
     *aFile = localFile;
     NS_IF_ADDREF(*aFile);
   }

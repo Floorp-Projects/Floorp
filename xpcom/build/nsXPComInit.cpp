@@ -370,7 +370,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
             //Since people are still using the nsSpecialSystemDirectory, we should init it.
             nsCAutoString path;
-            binDirectory->GetPath(path);
+            binDirectory->GetNativePath(path);
             nsFileSpec spec(path.get());
 
             nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory, &spec);

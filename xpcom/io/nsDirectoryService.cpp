@@ -804,13 +804,13 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
         if (localFile)
-    		localFile->Append(COMPONENT_REGISTRY_NAME);           
+    		localFile->AppendNative(COMPONENT_REGISTRY_NAME);           
     }
     else if (inAtom == nsDirectoryService::sComponentDirectory)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
         if (localFile)
-		    localFile->Append(COMPONENT_DIRECTORY);           
+		    localFile->AppendNative(COMPONENT_DIRECTORY);           
     }
     else if (inAtom == nsDirectoryService::sOS_DriveDirectory)
     {

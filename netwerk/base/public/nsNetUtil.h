@@ -290,7 +290,7 @@ NS_NewPostDataStream(nsIInputStream **result,
         nsCOMPtr<nsILocalFile> file;
         nsCOMPtr<nsIInputStream> fileStream;
 
-        rv = NS_NewLocalFile(data, PR_FALSE, getter_AddRefs(file));
+        rv = NS_NewNativeLocalFile(data, PR_FALSE, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
 
         rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);

@@ -62,10 +62,10 @@ nsLocalFile::InitWithFile(nsILocalFile *aFile)
     NS_ENSURE_ARG(aFile);
     
     nsCAutoString path;
-    aFile->GetPath(path);
+    aFile->GetNativePath(path);
     if (path.IsEmpty())
         return NS_ERROR_FAILURE;
-    return InitWithPath(path); 
+    return InitWithNativePath(path); 
 }
 #endif
 
@@ -120,11 +120,11 @@ nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
 }
 
 #if defined(XP_MAC)
-static const char kPathSeparatorChar       = ':';
+static const PRUnichar kPathSeparatorChar       = ':';
 #elif defined(XP_WIN) || defined(XP_OS2)
-static const char kPathSeparatorChar       = '\\';
+static const PRUnichar kPathSeparatorChar       = '\\';
 #elif defined(XP_UNIX) || defined(XP_BEOS)
-static const char kPathSeparatorChar       = '/';
+static const PRUnichar kPathSeparatorChar       = '/';
 #else
 #error Need to define file path separator for your platform
 #endif
@@ -134,17 +134,17 @@ static const char kSlashStr[] = "/";
 static const char kESCSlashStr[] = "%2F";
 #endif
 
-static PRInt32 SplitPath(char *path, char **nodeArray, PRInt32 arrayLen)
+static PRInt32 SplitPath(PRUnichar *path, PRUnichar **nodeArray, PRInt32 arrayLen)
 {
     if (*path == 0)
       return 0;
 
-    char **nodePtr = nodeArray;
+    PRUnichar **nodePtr = nodeArray;
     if (*path == kPathSeparatorChar)
       path++;    
     *nodePtr++ = path;
     
-    for (char *cp = path; *cp != 0; cp++) {
+    for (PRUnichar *cp = path; *cp != 0; cp++) {
       if (*cp == kPathSeparatorChar) {
         *cp++ = 0;
         if (*cp != 0) {
@@ -162,12 +162,16 @@ NS_IMETHODIMP
 nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
 {
     const PRInt32 kMaxNodesInPath = 32;
+
+    //
+    // _retval will be UTF-8 encoded
+    // 
         
     nsresult rv;
     _retval.Truncate(0);
 
-    nsCAutoString thisPath, fromPath;
-    char *thisNodes[kMaxNodesInPath], *fromNodes[kMaxNodesInPath];
+    nsAutoString thisPath, fromPath;
+    PRUnichar *thisNodes[kMaxNodesInPath], *fromNodes[kMaxNodesInPath];
     PRInt32  thisNodeCnt, fromNodeCnt, nodeIndex;
     
     rv = GetPath(thisPath);
@@ -177,13 +181,13 @@ nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
     if (NS_FAILED(rv))
         return rv;
     
-    thisNodeCnt = SplitPath((char *)thisPath.get(), thisNodes, kMaxNodesInPath);
-    fromNodeCnt = SplitPath((char *)fromPath.get(), fromNodes, kMaxNodesInPath);
+    thisNodeCnt = SplitPath((PRUnichar *)thisPath.get(), thisNodes, kMaxNodesInPath);
+    fromNodeCnt = SplitPath((PRUnichar *)fromPath.get(), fromNodes, kMaxNodesInPath);
     if (thisNodeCnt < 0 || fromNodeCnt < 0)
       return NS_ERROR_FAILURE;
     
     for (nodeIndex = 0; nodeIndex < thisNodeCnt && nodeIndex < fromNodeCnt; nodeIndex++) {
-      if (!strcmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
+      if (!nsCRT::strcmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
         break;
     }
     
@@ -191,11 +195,9 @@ nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
     for (nodeIndex = branchIndex; nodeIndex < fromNodeCnt; nodeIndex++) 
       _retval.Append(NS_LITERAL_CSTRING("../"));
     for (nodeIndex = branchIndex; nodeIndex < thisNodeCnt; nodeIndex++) {
+      NS_ConvertUCS2toUTF8 nodeStr(thisNodes[nodeIndex]);
 #ifdef XP_MAC
-      nsCAutoString nodeStr(thisNodes[nodeIndex]);
       nodeStr.ReplaceSubstring(kSlashStr, kESCSlashStr);
-#else
-      nsDependentCString nodeStr(thisNodes[nodeIndex]);
 #endif
       _retval.Append(nodeStr);
       if (nodeIndex + 1 < thisNodeCnt)
@@ -214,6 +216,10 @@ nsLocalFile::SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString& rel
     nsresult rv = fromFile->Clone(getter_AddRefs(targetFile));
     if (NS_FAILED(rv))
         return rv;
+
+    //
+    // relativeDesc is UTF-8 encoded
+    // 
 
     nsCString::const_iterator strBegin, strEnd;
     relativeDesc.BeginReading(strBegin);
@@ -240,9 +246,9 @@ nsLocalFile::SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString& rel
 #ifdef XP_MAC
       nsCAutoString nodeString(Substring(nodeBegin, nodeEnd));      
       nodeString.ReplaceSubstring(kESCSlashStr, kSlashStr);
-      targetFile->Append(nodeString);
+      targetFile->Append(NS_ConvertUTF8toUCS2(nodeString));
 #else
-      targetFile->Append(Substring(nodeBegin, nodeEnd));
+      targetFile->Append(NS_ConvertUTF8toUCS2(Substring(nodeBegin, nodeEnd)));
 #endif
       if (nodeEnd != strEnd) // If there's more left in the string, inc over the '/' nodeEnd is on.
         ++nodeEnd;
@@ -251,117 +257,4 @@ nsLocalFile::SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString& rel
 
     nsCOMPtr<nsILocalFile> targetLocalFile(do_QueryInterface(targetFile));
     return InitWithFile(targetLocalFile);
-}
-  
-#define GET_UTF8(func, result)              \
-    PR_BEGIN_MACRO                          \
-        PRUnichar *buf = nsnull;            \
-        nsresult rv = (func)(&buf);         \
-        if (NS_FAILED(rv)) return rv;       \
-        result = NS_ConvertUCS2toUTF8(buf); \
-        nsMemory::Free(buf);                \
-    PR_END_MACRO
-
-NS_IMETHODIMP
-nsLocalFile::Append(const nsACString &aNode)
-{
-    if (aNode.IsEmpty() || FSCharsetIsUTF8() || IsASCII(aNode))
-        return AppendNative(aNode);
-
-    return AppendUnicode(NS_ConvertUTF8toUCS2(aNode).get());
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetLeafName(nsACString &aLeafName)
-{
-    if (FSCharsetIsUTF8() || LeafIsASCII())
-        return GetNativeLeafName(aLeafName);
-
-    GET_UTF8(GetUnicodeLeafName, aLeafName);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::SetLeafName(const nsACString &aLeafName)
-{
-    if (aLeafName.IsEmpty() || FSCharsetIsUTF8() || IsASCII(aLeafName))
-        return SetNativeLeafName(aLeafName);
-
-    return SetUnicodeLeafName(NS_ConvertUTF8toUCS2(aLeafName).get());
-}
-
-NS_IMETHODIMP
-nsLocalFile::CopyTo(nsIFile *aNewParentDir, const nsACString &aNewName)
-{
-    if (aNewName.IsEmpty() || FSCharsetIsUTF8() || IsASCII(aNewName))
-        return CopyToNative(aNewParentDir, aNewName);
-
-    return CopyToUnicode(aNewParentDir, NS_ConvertUTF8toUCS2(aNewName).get());
-}
-
-NS_IMETHODIMP
-nsLocalFile::CopyToFollowingLinks(nsIFile *aNewParentDir, const nsACString &aNewName)
-{
-    if (aNewName.IsEmpty() || FSCharsetIsUTF8() || IsASCII(aNewName))
-        return CopyToFollowingLinksNative(aNewParentDir, aNewName);
-
-    return CopyToFollowingLinksUnicode(aNewParentDir, NS_ConvertUTF8toUCS2(aNewName).get());
-}
-
-NS_IMETHODIMP
-nsLocalFile::MoveTo(nsIFile *aNewParentDir, const nsACString &aNewName)
-{
-    if (aNewName.IsEmpty() || FSCharsetIsUTF8() || IsASCII(aNewName))
-        return MoveToNative(aNewParentDir, aNewName);
-
-    return MoveToUnicode(aNewParentDir, NS_ConvertUTF8toUCS2(aNewName).get());
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetTarget(nsACString &aTarget)
-{
-    if (FSCharsetIsUTF8())
-        return GetNativeTarget(aTarget);
-
-    // XXX unfortunately, there is no way to know if the target will contain
-    // non-ASCII characters until after we resolve it.
-    GET_UTF8(GetUnicodeTarget, aTarget);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetPath(nsACString &aPath)
-{
-    if (FSCharsetIsUTF8() || PathIsASCII())
-        return GetNativePath(aPath);
-
-    GET_UTF8(GetUnicodePath, aPath);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::InitWithPath(const nsACString &aPath)
-{
-    if (aPath.IsEmpty() || FSCharsetIsUTF8() || IsASCII(aPath))
-        return InitWithNativePath(aPath);
-
-    return InitWithUnicodePath(NS_ConvertUTF8toUCS2(aPath).get());
-}
-
-NS_IMETHODIMP
-nsLocalFile::AppendRelativePath(const nsACString &aRelativePath)
-{
-    if (aRelativePath.IsEmpty() || FSCharsetIsUTF8() || IsASCII(aRelativePath))
-        return AppendRelativeNativePath(aRelativePath);
-
-    return AppendRelativeUnicodePath(NS_ConvertUTF8toUCS2(aRelativePath).get());
-}
-
-nsresult
-NS_NewLocalFile(const nsACString &aPath, PRBool aFollowLinks, nsILocalFile **aResult)
-{
-    if (aPath.IsEmpty() || nsLocalFile::FSCharsetIsUTF8() || IsASCII(aPath))
-        return NS_NewNativeLocalFile(aPath, aFollowLinks, aResult);
-
-    return NS_NewUnicodeLocalFile(NS_ConvertUTF8toUCS2(aPath).get(), aFollowLinks, aResult);
 }

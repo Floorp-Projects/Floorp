@@ -304,12 +304,12 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 
   nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("@mozilla.org/file/local;1");
   if (currentFile && !defaultName.IsEmpty()) {
-    result = currentFile->InitWithPath(NS_ConvertUCS2toUTF8(defaultName));
+    result = currentFile->InitWithPath(defaultName);
     if (NS_SUCCEEDED(result)) {
-      nsCAutoString leafName;
+      nsAutoString leafName;
       currentFile->GetLeafName(leafName);
       if (!leafName.IsEmpty()) {
-        filePicker->SetDefaultString(NS_ConvertUTF8toUCS2(leafName).get());
+        filePicker->SetDefaultString(leafName.get());
       }
 
       // set directory
@@ -335,11 +335,10 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsILocalFile> localFile;
   result = filePicker->GetFile(getter_AddRefs(localFile));
   if (localFile) {
-    nsCAutoString unicodePath;
+    nsAutoString unicodePath;
     result = localFile->GetPath(unicodePath);
     if (!unicodePath.IsEmpty()) {
-      NS_ConvertUTF8toUCS2 pathName(unicodePath);
-      mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, pathName);
+      mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, unicodePath);
       return NS_OK;
     }
   }

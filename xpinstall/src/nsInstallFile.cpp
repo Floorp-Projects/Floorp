@@ -140,7 +140,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         else
         {
             nsresult rv = inPartialPath.Mid(subString, offset, nodeLength);
-            mFinalFile->Append(NS_ConvertUCS2toUTF8(subString));
+            mFinalFile->Append(subString);
             offset += nodeLength + 1;
             if (!finished)
                 location = inPartialPath.FindChar('/', offset);
@@ -200,16 +200,13 @@ void nsInstallFile::CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath
     inFolderPath->Exists(&flagExists);
     if(!flagExists)
     {
-        nsCAutoString szPath;
-
         inFolderPath->GetParent(getter_AddRefs(nsfsFolderPath));
         CreateAllFolders(inInstall, nsfsFolderPath, error);
 
         inFolderPath->Create(nsIFile::DIRECTORY_TYPE, 0755); //nsIFileXXX: What kind of permissions are required here?
         ++mFolderCreateCount;
 
-        inFolderPath->GetPath(szPath);
-        nsStrFolder.Assign(NS_ConvertUTF8toUCS2(szPath));
+        inFolderPath->GetPath(nsStrFolder);
         ilc = new nsInstallLogComment(inInstall, NS_LITERAL_STRING("CreateFolder"), nsStrFolder, error);
         if(ilc == nsnull)
             *error = nsInstall::OUT_OF_MEMORY;

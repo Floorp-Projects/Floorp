@@ -615,13 +615,13 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(systemTempDir));
   if (NS_FAILED(rv)) return rv;
 
-  systemTempDir->Append(NS_LITERAL_CSTRING("migrate"));
+  systemTempDir->AppendNative(NS_LITERAL_CSTRING("migrate"));
   
   //Create a unique directory in the system temp dir based on the name of the 4.x prefs file
   rv = systemTempDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700); 
   if (NS_FAILED(rv)) return rv;
 
-  rv = PrefsFile4xAsIFile->CopyTo(systemTempDir, NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
+  rv = PrefsFile4xAsIFile->CopyToNative(systemTempDir, NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIFile> cloneFile;
@@ -631,7 +631,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   m_prefsFile = do_QueryInterface(cloneFile, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = m_prefsFile->Append(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
+  rv = m_prefsFile->AppendNative(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
   if (NS_FAILED(rv)) return rv;
 
   //Clear the prefs in case a previous set was read in.
@@ -1113,7 +1113,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   newProfilePath->GetNativePath(getter_Copies(path));
   NS_NewNativeLocalFile(path, PR_TRUE, getter_AddRefs(newPrefsFile));
 
-  rv = newPrefsFile->Append(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_5x));
+  rv = newPrefsFile->AppendNative(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_5x));
   if (NS_FAILED(rv)) return rv;
 
   rv=m_prefs->SavePrefFile(newPrefsFile);
@@ -2005,7 +2005,7 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
 	rv = bundle->GetStringFromName(entityName.get(), getter_Copies(localizedDirName));
 	if (NS_FAILED(rv)) return rv;
 
-	rv = oldLocalFile->AppendRelativePath(NS_ConvertUCS2toUTF8(localizedDirName));
+	rv = oldLocalFile->AppendRelativePath(localizedDirName);
 	if (NS_FAILED(rv)) return rv;
 
 	PRBool exists = PR_FALSE;

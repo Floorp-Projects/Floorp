@@ -54,7 +54,7 @@ class nsSafeSaveFile {
 
     private:
         nsCOMPtr<nsIFile> mTempFile;
-        nsCString         mTargetFileName; // UTF-8
+        nsCString         mTargetFileName; // native charset
         PRInt32           mTargetNameLen;
         PRInt32           mBackupCount;
 };

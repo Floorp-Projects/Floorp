@@ -234,13 +234,13 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
 		            {
 		                nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
 		                nsCAutoString leafName;
-		                dirEntry->GetLeafName(leafName);
-		                newChild->AppendRelativePath(leafName);
+		                dirEntry->GetNativeLeafName(leafName);
+		                newChild->AppendRelativeNativePath(leafName);
 		                rv = RecursiveCopy(dirEntry, newChild);
 		            }
 		        }
 		        else
-		            rv = dirEntry->CopyTo(destDir, nsCString());
+		            rv = dirEntry->CopyToNative(destDir, nsCString());
 		    }
 		
 		}
@@ -855,7 +855,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
             if (!currProfileDirString.IsEmpty()) {
-                rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(currProfileDirString), PR_TRUE, getter_AddRefs(currProfileDir));
+                rv = NS_NewLocalFile(currProfileDirString, PR_TRUE, getter_AddRefs(currProfileDir));
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
             }
             else {
@@ -867,9 +867,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 if (NS_FAILED(rv)) return rv;
             }
 
-            nsCAutoString currProfilePath;
+            nsAutoString currProfilePath;
             currProfileDir->GetPath(currProfilePath);
-            rv = CreateNewProfile(currProfileName.get(), NS_ConvertUTF8toUCS2(currProfilePath).get(), nsnull, PR_TRUE);
+            rv = CreateNewProfile(currProfileName.get(), currProfilePath.get(), nsnull, PR_TRUE);
             if (NS_SUCCEEDED(rv)) {
                 *profileDirSet = PR_TRUE;
                 mCurrentProfileAvailable = PR_TRUE;
@@ -1043,11 +1043,11 @@ NS_IMETHODIMP nsProfile::GetProfilePath(const PRUnichar *profileName, PRUnichar 
         if (NS_SUCCEEDED(rv))
             prettyDir = parentDir;
     }
-    nsCAutoString path;
+    nsAutoString path;
     rv = prettyDir->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    *_retval = ToNewUnicode(NS_ConvertUTF8toUCS2(path));
+    *_retval = ToNewUnicode(path);
     return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -1088,7 +1088,7 @@ NS_IMETHODIMP nsProfile::GetProfileLastModTime(const PRUnichar *profileName, PRI
     rv = GetProfileDir(profileName, getter_AddRefs(profileDir));
     if (NS_FAILED(rv))
         return rv;
-    rv = profileDir->Append(NS_LITERAL_CSTRING("prefs.js"));
+    rv = profileDir->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
     if (NS_FAILED(rv))
         return rv;
     return profileDir->GetLastModifiedTime(_retval);
@@ -1333,7 +1333,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   rv = aDir->Clone(getter_AddRefs(prefFile));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = prefFile->Append(NS_LITERAL_CSTRING("prefs.js"));
+  rv = prefFile->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = prefFile->Exists(&exists);
@@ -1545,16 +1545,16 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             profileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
 
         // append profile name
-        profileDir->Append(NS_ConvertUCS2toUTF8(profileName));
+        profileDir->Append(nsDependentString(profileName));
     }
     else {
     
-        rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(nativeProfileDir), PR_TRUE, (nsILocalFile **)((nsIFile **)getter_AddRefs(profileDir)));
+        rv = NS_NewLocalFile(nsDependentString(nativeProfileDir), PR_TRUE, (nsILocalFile **)((nsIFile **)getter_AddRefs(profileDir)));
 
         // this prevents people from choosing there profile directory
         // or another directory, and remove it when they delete the profile.
         // append profile name
-        profileDir->Append(NS_ConvertUCS2toUTF8(profileName));
+        profileDir->Append(nsDependentString(profileName));
     }
 
 
@@ -1662,7 +1662,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             rv = profDefaultsDir->Clone(getter_AddRefs(locProfDefaultsDir));
             if (NS_FAILED(rv)) return rv;
         
-            locProfDefaultsDir->Append(NS_ConvertUCS2toUTF8(contentLocale));
+            locProfDefaultsDir->Append(nsDependentString(contentLocale));
             rv = locProfDefaultsDir->Exists(&exists);
             if (NS_SUCCEEDED(rv) && exists) {
                 profDefaultsDir = locProfDefaultsDir; // transfers ownership
@@ -2102,7 +2102,7 @@ nsProfile::DefineLocaleDefaultsDir()
             nsXPIDLString localeName;
             rv = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
             if (NS_SUCCEEDED(rv))
-                rv = localeDefaults->Append(NS_ConvertUCS2toUTF8(localeName));
+                rv = localeDefaults->Append(localeName);
         }
         (void) directoryService->Undefine(NS_APP_PROFILE_DEFAULTS_50_DIR);
         rv = directoryService->Define(NS_APP_PROFILE_DEFAULTS_50_DIR, localeDefaults);
@@ -2265,7 +2265,7 @@ nsProfile::MigrateProfile(const PRUnichar* profileName)
     if (NS_FAILED(rv)) 
       return rv;
 
-    rv = newProfDir->Append(NS_ConvertUCS2toUTF8(profileName));
+    rv = newProfDir->Append(nsDependentString(profileName));
     if (NS_FAILED(rv)) 
       return rv;
     
@@ -2308,7 +2308,7 @@ nsProfile::RemigrateProfile(const PRUnichar* profileName)
     // leave <xxxxxxxx>.slt alone, 
     // and remigrate the 4.x profile into <xxxxxxxx>.slt-new
     nsCAutoString newDirLeafName(origDirLeafName + NS_LITERAL_CSTRING("-new"));
-    rv = newProfileDir->SetLeafName(newDirLeafName);
+    rv = newProfileDir->SetNativeLeafName(newDirLeafName);
     NS_ENSURE_SUCCESS(rv,rv);
     
     // Create a new directory for the remigrated profile
@@ -2414,7 +2414,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsILocalFile> destDir(do_QueryInterface(aFile, &rv));
         if (NS_FAILED(rv)) return rv;
-        destDir->AppendRelativePath(NS_ConvertUCS2toUTF8(newProfile));
+        destDir->AppendRelativePath(nsDependentString(newProfile));
 
         // Find a unique name in the dest dir
         rv = destDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0775);
@@ -2452,11 +2452,11 @@ nsProfile::CreateDefaultProfile(void)
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(profileRootDir));
     if (NS_FAILED(rv)) return rv;
     
-    nsCAutoString profilePath;
+    nsAutoString profilePath;
     rv = profileRootDir->GetPath(profilePath);
     if (NS_FAILED(rv)) return rv;
 
-    rv = CreateNewProfile(DEFAULT_PROFILE_NAME, NS_ConvertUTF8toUCS2(profilePath).get(), nsnull, PR_TRUE);
+    rv = CreateNewProfile(DEFAULT_PROFILE_NAME, profilePath.get(), nsnull, PR_TRUE);
 
     return rv;
 }
@@ -2554,7 +2554,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     {
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(PREFS_FILE_50_NAME); // AppendRelativePath
+            rv = localFile->AppendNative(PREFS_FILE_50_NAME); // AppendRelativePath
     }
     else if (inAtom == sApp_UserProfileDirectory50)
     {
@@ -2564,7 +2564,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     {
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(USER_CHROME_DIR_50_NAME);
+            rv = localFile->AppendNative(USER_CHROME_DIR_50_NAME);
     }
     else if (inAtom == sApp_LocalStore50)
     {
@@ -2574,7 +2574,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
         {
-            rv = localFile->Append(LOCAL_STORE_FILE_50_NAME);
+            rv = localFile->AppendNative(LOCAL_STORE_FILE_50_NAME);
             if (NS_SUCCEEDED(rv))
                 rv = EnsureProfileFileExists(localFile);
         }
@@ -2583,7 +2583,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     {
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(HISTORY_FILE_50_NAME);
+            rv = localFile->AppendNative(HISTORY_FILE_50_NAME);
     }
     else if (inAtom == sApp_UsersPanels50)
     {
@@ -2594,7 +2594,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
         {
-            rv = localFile->Append(PANELS_FILE_50_NAME);
+            rv = localFile->AppendNative(PANELS_FILE_50_NAME);
             if (NS_SUCCEEDED(rv))
                 rv = EnsureProfileFileExists(localFile);
         }
@@ -2607,7 +2607,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
         {
-            rv = localFile->Append(MIME_TYPES_FILE_50_NAME);
+            rv = localFile->AppendNative(MIME_TYPES_FILE_50_NAME);
             if (NS_SUCCEEDED(rv))
                 rv = EnsureProfileFileExists(localFile);
         }
@@ -2620,7 +2620,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
         {
-            rv = localFile->Append(BOOKMARKS_FILE_50_NAME);
+            rv = localFile->AppendNative(BOOKMARKS_FILE_50_NAME);
             if (NS_SUCCEEDED(rv))
                 rv = EnsureProfileFileExists(localFile);
         }
@@ -2629,7 +2629,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     {
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(DOWNLOADS_FILE_50_NAME);
+            rv = localFile->AppendNative(DOWNLOADS_FILE_50_NAME);
     }
     else if (inAtom == sApp_SearchFile50)
     {
@@ -2640,7 +2640,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
         {
-            rv = localFile->Append(SEARCH_FILE_50_NAME);
+            rv = localFile->AppendNative(SEARCH_FILE_50_NAME);
             if (NS_SUCCEEDED(rv))
                 rv = EnsureProfileFileExists(localFile);
         }
@@ -2649,25 +2649,25 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     {
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(MAIL_DIR_50_NAME);
+            rv = localFile->AppendNative(MAIL_DIR_50_NAME);
     }
     else if (inAtom == sApp_ImapMailDirectory50)
     {
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(IMAP_MAIL_DIR_50_NAME);
+            rv = localFile->AppendNative(IMAP_MAIL_DIR_50_NAME);
     }
     else if (inAtom == sApp_NewsDirectory50)
     {
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(NEWS_DIR_50_NAME);
+            rv = localFile->AppendNative(NEWS_DIR_50_NAME);
     }
     else if (inAtom == sApp_MessengerFolderCache50)
     {
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(MSG_FOLDER_CACHE_DIR_50_NAME);
+            rv = localFile->AppendNative(MSG_FOLDER_CACHE_DIR_50_NAME);
     }
 
     NS_RELEASE(inAtom);

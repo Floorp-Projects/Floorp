@@ -858,9 +858,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
             nsCOMPtr<nsIFile> dllSpec;
             if (NS_SUCCEEDED(dll->GetDllSpec(getter_AddRefs(dllSpec))) && dllSpec)
             {
-              nsCAutoString dllLeafName;
-              dllSpec->GetLeafName(dllLeafName); // XXX
-              fileName.Assign(NS_ConvertUTF8toUCS2(dllLeafName));
+              dllSpec->GetLeafName(fileName);
             }
             
             // this string can't come from a string bundle, because we
