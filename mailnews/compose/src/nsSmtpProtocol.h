@@ -73,7 +73,7 @@ SMTP_AUTH_LOGIN_RESPONSE,                           // 18
 SMTP_TLS_RESPONSE,                                  // 19
 SMTP_AUTH_EXTERNAL_RESPONSE,                        // 20
 SMTP_AUTH_PROCESS_STATE,                            // 21
-SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE,							// 22
+SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE               // 22
 } SmtpState;
 
 // State Flags (Note, I use the word state in terms of storing 
@@ -102,6 +102,8 @@ SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE,							// 22
 #define SMTP_USE_LOGIN_REDIRECTION  0x00000100
 #define SMTP_ESMTP_SERVER           0x00000200
 #define SMTP_AUTH_CRAM_MD5_ENABLED  0x00000400
+#define SMTP_AUTH_DIGEST_MD5_ENABLED  0x00000800
+#define SMTP_AUTH_ANY_ENABLED  0x00000C1C
 
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,
@@ -244,6 +246,10 @@ private:
   nsresult GetPassword(char **aPassword);
   nsresult GetUsernamePassword(char **aUsername, char **aPassword);
   nsresult PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar *aPromptValue, char **aPassword);
+
+    void BackupFlags();
+    void RestoreFlags();
+    PRInt32 m_backupFlags;
 };
 
 #endif  // nsSmtpProtocol_h___

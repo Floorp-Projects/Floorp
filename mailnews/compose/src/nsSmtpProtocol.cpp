@@ -242,6 +242,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     nsresult rv = NS_OK;
 
     m_flags = 0;
+    m_backupFlags = 0;
     m_prefAuthMethod = PREF_AUTH_NONE;
     m_usernamePrompted = PR_FALSE;
     m_prefTrySSL = PREF_SSL_TRY;
@@ -696,9 +697,10 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
             if (m_responseText.Find("LOGIN", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_LOGIN_ENABLED);
 
-            if (m_responseText.Find("EXTERNAL", PR_TRUE, 5) >= 0)  
+            if (m_responseText.Find("EXTERNAL", PR_TRUE, 8) >= 0)  
                 SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
-            if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
+
+            if (m_responseText.Find("CRAM-MD5", PR_TRUE, 8) >= 0)
             {
                 nsresult rv;
                 nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
@@ -707,6 +709,8 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
                   SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
             }
 
+            // for use after mechs disabled fallbacks when login failed
+            BackupFlags();
         }
         startPos = endPos + 1;
     } while (endPos >= 0);
@@ -783,6 +787,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
             m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
             return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
         }
+
         if ((TestFlag(SMTP_AUTH_PLAIN_ENABLED) ||
             TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) ||
              TestFlag(SMTP_AUTH_LOGIN_ENABLED)) &&
@@ -790,9 +795,10 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
         {
             m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
             m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
-            return NS_OK;
         }
-        m_nextState = SMTP_SEND_HELO_RESPONSE;
+        else
+            m_nextState = SMTP_SEND_HELO_RESPONSE;
+
         return NS_OK;
     }
     else // TLS enabled
@@ -807,21 +813,32 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
             SetFlag(SMTP_PAUSE_FOR_READ);
             return NS_OK;
         }
-        else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED) ||
-                TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) ||
-                 TestFlag(SMTP_AUTH_PLAIN_ENABLED))
+        else if ((TestFlag(SMTP_AUTH_LOGIN_ENABLED) ||
+                 TestFlag(SMTP_AUTH_PLAIN_ENABLED) ||
+                 TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED)) &&
+                 m_prefAuthMethod == PREF_AUTH_ANY)
         {
             m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
             m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
-            return NS_OK;
         }
         else
-        {
             m_nextState = SMTP_SEND_HELO_RESPONSE;
-            return NS_OK;
-        }
+
+        return NS_OK;
     }
 }
+
+
+void nsSmtpProtocol::BackupFlags()
+{
+  m_backupFlags = m_flags&SMTP_AUTH_ANY_ENABLED;
+}
+
+void nsSmtpProtocol::RestoreFlags()
+{
+  m_flags |= m_backupFlags&SMTP_AUTH_CRAM_MD5_ENABLED;
+}
+
 
 PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 length)
 {
@@ -833,7 +850,7 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   {
   case 2:
       m_nextState = SMTP_SEND_HELO_RESPONSE;
-	break;
+      break;
   case 3:
       m_nextState = SMTP_SEND_AUTH_LOGIN_PASSWORD;
       break;
@@ -841,22 +858,41 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   default:
       if (smtpServer)
       {
-        // only forget the password if we didn't get here from the redirection
-        // and it wasn't CRAM_MD5 that failed. If CRAM_MD5 fails, we're going
-        // to fall back on a less secure login method.
-          if (!TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) && mLogonCookie.IsEmpty()) {
-              smtpServer->ForgetPassword();
-              if (m_usernamePrompted)
-                  smtpServer->SetUsername("");
-          }
-          m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
-          // if CRAM_MD5_ENABLED, clear it if it failed. 
-          ClearFlag(SMTP_AUTH_CRAM_MD5_ENABLED); 
+        // If one authentication failed, we're going to
+        // fall back on a less secure login method.
+        if(TestFlag(SMTP_AUTH_DIGEST_MD5_ENABLED))
+          // if DIGEST-MD5 enabled, clear it if we failed.
+          ClearFlag(SMTP_AUTH_DIGEST_MD5_ENABLED);
+        else
+        if(TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
+          // if CRAM-MD5 enabled, clear it if we failed. 
+          ClearFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+        else
+        if(TestFlag(SMTP_AUTH_PLAIN_ENABLED))
+          // if PLAIN enabled, clear it if we failed. 
+          ClearFlag(SMTP_AUTH_PLAIN_ENABLED);
+        else
+        if(TestFlag(SMTP_AUTH_LOGIN_ENABLED))
+          // if LOGIN enabled, clear it if we failed. 
+          ClearFlag(SMTP_AUTH_LOGIN_ENABLED);
+
+        // Only forget the password if we didn't get here from the redirection
+        // and if we've no mechanism left.
+        if (!TestFlag(SMTP_AUTH_ANY_ENABLED) && mLogonCookie.IsEmpty())
+        {
+            smtpServer->ForgetPassword();
+            if (m_usernamePrompted)
+                smtpServer->SetUsername("");
+
+            // Let's restore our backup from SendEhloResponse so we can
+            // try them again with new password and username
+            RestoreFlags();
+        }
+
+        m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
       }
       else
-      {
           status = NS_ERROR_SMTP_PASSWORD_UNDEFINED;
-      }
       break;
   }
   
