@@ -52,15 +52,23 @@ var MigrationWizard = {
       if (!migrator.sourceExists)
         group.childNodes[i].disabled = true;
     }
+    
+    var firstNonDisabled = null;
+    for (var i = 0; i < group.childNodes.length; ++i) {
+      if (!group.childNodes[i].disabled) {
+        firstNonDisabled = group.childNodes[i];
+        break;
+      }
+    }
 
-    group.selectedItem = this._source == "" ? group.firstChild : document.getElementById(this._source);
+    group.selectedItem = this._source == "" ? firstNonDisabled : document.getElementById(this._source);
   },
   
   onImportSourcePageAdvanced: function ()
   {
     var newSource = document.getElementById("importSourceGroup").selectedItem.id;
     
-    if (!this._migrator || newSource != this._source) {
+    if (!this._migrator || (!this._autoMigrate && newSource != this._source)) {
       // Create the migrator for the selected source.
       var contractID = kProfileMigratorContractIDPrefix + newSource;
       this._migrator = Components.classes[contractID].createInstance(kIMig);
@@ -70,12 +78,12 @@ var MigrationWizard = {
     }
     if (!this._autoMigrate)
       this._source = newSource;
-
+      
     // check for more than one source profile
     if (this._migrator.sourceHasMultipleProfiles)
       this._wiz.currentPage.next = "selectProfile";
     else {
-      this._wiz.currentPage.next = "importItems";
+      this._wiz.currentPage.next = this._autoMigrate ? "migrating" : "importItems";
       var sourceProfiles = this._migrator.sourceProfiles;
       if (sourceProfiles && sourceProfiles.Count() == 1) {
         var profileName = sourceProfiles.QueryElementAt(0, Components.interfaces.nsISupportsString);
