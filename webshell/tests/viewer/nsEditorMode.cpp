@@ -78,6 +78,8 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   }
 
   result = gEditor->Init(aDOMDocument, aPresShell, 0);
+  if (NS_SUCCEEDED(result))
+    result = gEditor->PostCreate();
   return result;
 }
 
