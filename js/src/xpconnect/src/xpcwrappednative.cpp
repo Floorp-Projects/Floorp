@@ -82,6 +82,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
 {
     Native2WrappedNativeMap* map;
     nsISupports* rootObj = NULL;
+    nsISupports* realObj = NULL;
     nsXPCWrappedNative* root;
     nsXPCWrappedNative* wrapper = NULL;
     nsXPCWrappedNativeClass* clazz = NULL;
@@ -97,13 +98,16 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     }
 
     // always find the native root
+
     if(NS_FAILED(aObj->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&rootObj)))
-        return NULL;
+        goto return_wrapper;
 
     // look for the root wrapper
+
     root = map->Find(rootObj);
     if(root)
     {
+        // if we already have a wrapper for this interface then we're done.
         wrapper = root->Find(aIID);
         if(wrapper)
         {
@@ -112,13 +116,19 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
         }
     }
 
+    // do a QI to make sure the object passed in really supports the 
+    // interface it is claiming to support.
+
+    if(NS_FAILED(aObj->QueryInterface(aIID, (void**)&realObj)))
+        goto return_wrapper;
+
     // do the security check if necessary
 
     nsIXPCSecurityManager* sm;
     if(NULL != (sm = xpcc->GetSecurityManager()) &&
        (xpcc->GetSecurityManagerFlags() & 
         nsIXPCSecurityManager::HOOK_CREATE_WRAPPER) &&
-       NS_OK != sm->CanCreateWrapper(xpcc->GetJSContext(), aIID, aObj))
+       NS_OK != sm->CanCreateWrapper(xpcc->GetJSContext(), aIID, realObj))
     {
         // the security manager vetoed. It should have set an exception.
         goto return_wrapper;
@@ -134,10 +144,10 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
 
     if(!root)
     {
-        if(rootObj == aObj)
+        if(rootObj == realObj)
         {
             // the root will do double duty as the interface wrapper
-            wrapper = root = new nsXPCWrappedNative(aObj, clazz, NULL);
+            wrapper = root = new nsXPCWrappedNative(realObj, clazz, NULL);
             if(!wrapper)
                 goto return_wrapper;
             if(!wrapper->mJSObj)
@@ -178,7 +188,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
 
     if(!wrapper)
     {
-        wrapper = new nsXPCWrappedNative(aObj, clazz, root);
+        wrapper = new nsXPCWrappedNative(realObj, clazz, root);
         if(!wrapper)
             goto return_wrapper;
         if(!wrapper->mJSObj)
@@ -188,12 +198,19 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
         }
     }
 
+    // The logic above requires this. If not so then someone hacked it!
+    NS_ASSERTION(wrapper && wrapper != root ,"bad wrapper");
+
+    // splice into the wrapper chain
+
     wrapper->mNext = root->mNext;
     root->mNext = wrapper;
 
 return_wrapper:
     if(rootObj)
         NS_RELEASE(rootObj);
+    if(realObj)
+        NS_RELEASE(realObj);
     if(clazz)
         NS_RELEASE(clazz);
     return wrapper;
