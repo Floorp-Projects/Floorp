@@ -568,6 +568,18 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
   [mSidebarBookmarksDataSource addBookmark: self useSelection: useSel isFolder: aIsFolder];
 }
 
+
+- (IBAction)bookmarkPage: (id)aSender
+{
+  [self addBookmarkExtended:YES isFolder:NO];
+}
+
+
+- (IBAction)bookmarkLink: (id)aSender
+{
+  NSLog(@"Bookmark Link not yet implemented");
+}
+
 - (IBAction)back:(id)aSender
 {
   [[mBrowserView getBrowserView] goBack];
@@ -981,6 +993,13 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
                                                                           length:nsCRT::strlen(text.get())]];
   }
 }
+
+- (IBAction)copyLinkLocation:(id)aSender
+{
+  NSLog(@"Copy Link Location not yet implemented");
+}
+
+
 
 - (IBAction)viewOnlyThisImage:(id)aSender
 {

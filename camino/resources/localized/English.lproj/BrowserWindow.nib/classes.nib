@@ -18,7 +18,10 @@
         {
             ACTIONS = {
                 back = id; 
+                bookmarkLink = id; 
+                bookmarkPage = id; 
                 cancelAddBookmarkSheet = id; 
+                copyLinkLocation = id; 
                 endAddBookmarkSheet = id; 
                 endLocationSheet = id; 
                 forward = id; 
@@ -52,16 +55,16 @@
                 mLocationSheetURLField = id; 
                 mLocationSheetWindow = id; 
                 mLocationToolbarView = id; 
-                mLock = id; 
+                mLock = NSImageView; 
                 mPageMenu = id; 
                 mPersonalToolbar = CHBookmarksToolbar; 
-                mProgress = id; 
+                mProgress = NSProgressIndicator; 
                 mSidebarBookmarksDataSource = id; 
                 mSidebarBrowserView = id; 
                 mSidebarDrawer = NSDrawer; 
                 mSidebarSourceTabView = id; 
                 mSidebarTabView = id; 
-                mStatus = id; 
+                mStatus = NSTextField; 
                 mTabBrowser = id; 
                 mURLBar = NSTextField; 
             }; 

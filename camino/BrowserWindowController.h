@@ -185,6 +185,11 @@ class nsIDOMNode;
 - (IBAction)saveLinkAs:(id)aSender;
 - (IBAction)saveImageAs:(id)aSender;
 
+- (IBAction)bookmarkPage: (id)aSender;
+- (IBAction)bookmarkLink: (id)aSender;
+
+- (IBAction)copyLinkLocation:(id)aSender;
+
 - (IBAction)viewOnlyThisImage:(id)aSender;
 
 - (NSView*) bookmarksToolbar;
