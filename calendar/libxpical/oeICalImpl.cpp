@@ -1661,7 +1661,7 @@ oeICalImpl::RemoveTodoObserver(oeIICalTodoObserver *observer)
         PRUint32 observercount;
         m_todoobserverlist->Count( &observercount );
         for( unsigned int i=0; i<observercount; i++ ) {
-            nsCOMPtr<oeIICalObserver>tmpobserver;
+            nsCOMPtr<oeIICalTodoObserver>tmpobserver;
             m_todoobserverlist->QueryElementAt( i, NS_GET_IID(oeIICalTodoObserver), getter_AddRefs(tmpobserver));
             if( observer == tmpobserver ) {
                 m_todoobserverlist->RemoveElementAt( i );
