@@ -110,14 +110,19 @@ public:
     /**
      * Construct a new, uninitialized wrapper for a Unicode string.
      */
-    nsXPIDLString();
+    nsXPIDLString() : mBuf(0), mBufOwner(PR_FALSE) {}
 
     virtual ~nsXPIDLString();
 
     /**
      * Return a reference to the immutable Unicode string.
      */
-    operator const PRUnichar*() const;
+    operator const PRUnichar*() const { return get(); }
+
+    /**
+     * Return a reference to the immutable Unicode string.
+     */
+    const PRUnichar* get() const { return mBuf; }
 
     /**
      * Make a copy of the Unicode string. Use this function in the
@@ -168,7 +173,7 @@ public:
 private:
     // not to be implemented
     nsXPIDLString(nsXPIDLString& /* aXPIDLString */) {}
-    nsXPIDLString& operator =(nsXPIDLString& /* aXPIDLString */) { return *this; }
+    void operator=(nsXPIDLString& /* aXPIDLString */) {}
 };
 
 
@@ -248,19 +253,25 @@ public:
     /**
      * Construct a new, uninitialized wrapper for a single-byte string.
      */
-    nsXPIDLCString();
+    nsXPIDLCString() : mBuf(0), mBufOwner(PR_FALSE) {}
 
     virtual ~nsXPIDLCString();
 
     /**
-     * Assign a single-byte string to this wrapper. Copies and owns the result.
+     * Assign a single-byte string to this wrapper. Copies
+     * and owns the result.
      */
-    nsXPIDLCString& operator =(const char* aString);
+    nsXPIDLCString& operator=(const char* aString);
 
     /**
      * Return a reference to the immutable single-byte string.
      */
-    operator const char*() const;
+    operator const char*() const { return get(); }
+
+    /**
+     * Return a reference to the immutable single-byte string.
+     */
+    const char* get() const { return mBuf; }
 
     /**
      * Make a copy of the single-byte string. Use this function in the
@@ -311,7 +322,7 @@ public:
 private:
     // not to be implemented
     nsXPIDLCString(nsXPIDLCString& /* aXPIDLString */) {}
-    nsXPIDLCString& operator =(nsXPIDLCString& /* aXPIDLCString */) { return *this; }
+    void operator=(nsXPIDLCString& /* aXPIDLCString */) {}
 };
 
 /**
