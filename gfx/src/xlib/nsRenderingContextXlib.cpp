@@ -861,7 +861,6 @@ nsRenderingContextXlib :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nsc
                    h);
   
   // Back to normal copy drawing mode
-  // Set XOR drawing mode
   ::XSetFunction(mDisplay,
                  mRenderingSurface->GetGC(),
                  GXcopy);  
