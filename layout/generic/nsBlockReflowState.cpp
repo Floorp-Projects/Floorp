@@ -296,6 +296,7 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // Adjacent vertical margins between block-level elements are collapsed.
 nscoord nsBlockFrame::GetTopMarginFor(nsIPresContext*    aCX,
                                       nsBlockReflowState& aState,
+                                      nsIFrame* aKidFrame,
                                       nsStyleMolecule*   aKidMol,
                                       PRBool aIsInline)
 {
@@ -303,17 +304,26 @@ nscoord nsBlockFrame::GetTopMarginFor(nsIPresContext*    aCX,
     // Just use whatever the previous bottom margin was
     return aState.prevMaxPosBottomMargin - aState.prevMaxNegBottomMargin;
   } else {
-    nscoord maxNegTopMargin = 0;
-    nscoord maxPosTopMargin = 0;
-    if (aKidMol->margin.top < 0) {
-      maxNegTopMargin = -aKidMol->margin.top;
+    // Does the frame have a prev-in-flow?
+    nsIFrame* kidPrevInFlow;
+
+    aKidFrame->GetPrevInFlow(kidPrevInFlow);
+
+    if (nsnull == kidPrevInFlow) {
+      nscoord maxNegTopMargin = 0;
+      nscoord maxPosTopMargin = 0;
+      if (aKidMol->margin.top < 0) {
+        maxNegTopMargin = -aKidMol->margin.top;
+      } else {
+        maxPosTopMargin = aKidMol->margin.top;
+      }
+    
+      nscoord maxPos = PR_MAX(aState.prevMaxPosBottomMargin, maxPosTopMargin);
+      nscoord maxNeg = PR_MAX(aState.prevMaxNegBottomMargin, maxNegTopMargin);
+      return maxPos - maxNeg;
     } else {
-      maxPosTopMargin = aKidMol->margin.top;
+      return 0;
     }
-  
-    nscoord maxPos = PR_MAX(aState.prevMaxPosBottomMargin, maxPosTopMargin);
-    nscoord maxNeg = PR_MAX(aState.prevMaxNegBottomMargin, maxNegTopMargin);
-    return maxPos - maxNeg;
   }
 }
 
@@ -817,7 +827,7 @@ getBand:
 PRIntn
 nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
                                   nsBlockReflowState& aState,
-                                  nsIFrame* kidFrame,
+                                  nsIFrame* aKidFrame,
                                   nsStyleMolecule* aKidMol)
 {
   nsSize kidMaxElementSize;
@@ -827,7 +837,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
   // Get line start setup if we are at the start of a new line
   if (nsnull == aState.lineStart) {
     NS_ASSERTION(0 == aState.lineLength, "bad line length");
-    aState.lineStart = kidFrame;
+    aState.lineStart = aKidFrame;
   }
 
   // Get kid and its style
@@ -835,15 +845,15 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
   nsIContent* kid;
   nsIStyleContext* kidSC;
    
-  kidFrame->GetContent(kid);
-  kidFrame->GetStyleContext(aCX, kidSC);
+  aKidFrame->GetContent(kid);
+  aKidFrame->GetStyleContext(aCX, kidSC);
   nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
   NS_RELEASE(kid);
 
   // Figure out if kid is a block element or not
   PRBool isInline = PR_TRUE;
   PRIntn display = kidMol->display;
-  if (aState.firstChildIsInsideBullet && (mFirstChild == kidFrame)) {
+  if (aState.firstChildIsInsideBullet && (mFirstChild == aKidFrame)) {
     // XXX Special hack for properly reflowing bullets that have the
     // inside value for list-style-position.
     display = NS_STYLE_DISPLAY_INLINE;
@@ -860,7 +870,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
 
   // Handle forced break first
   if (aState.breakAfterChild) {
-    NS_ASSERTION(aState.lineStart != kidFrame, "bad line");
+    NS_ASSERTION(aState.lineStart != aKidFrame, "bad line");
 
     // Get the last child in the current line
     nsIFrame* lastFrame = aState.lineStart;
@@ -873,7 +883,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
       // The previous line didn't fit.
       return 0;
     }
-    aState.lineStart = kidFrame;
+    aState.lineStart = aKidFrame;
 
     // Get the style for the last child, and see if it wanted to clear floaters.
     // This handles the BR tag, which is the only inline element for which clear
@@ -894,9 +904,9 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
 
   // If we're at the beginning of a line then compute the top margin that we
   // should use
-  if (aState.lineStart == kidFrame) {
+  if (aState.lineStart == aKidFrame) {
     // Compute the top margin to use for this line
-    aState.topMargin = GetTopMarginFor(aCX, aState, kidMol, aState.isInline);
+    aState.topMargin = GetTopMarginFor(aCX, aState, aKidFrame, kidMol, aState.isInline);
 
     // If it's an inline element then get a band of available space
     //
@@ -922,7 +932,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     nsReflowMetrics kidSize;
 
     // Inline elements are never passed the space manager
-    status = ReflowChild(kidFrame, aCX, kidSize, kidAvailSize,
+    status = ReflowChild(aKidFrame, aCX, kidSize, kidAvailSize,
                          pKidMaxElementSize);
 
     // For first children, we skip all the fit checks because we must
@@ -930,7 +940,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     if ((aState.currentLineNumber > 0) || (aState.lineLength > 0)) {
       NS_ASSERTION(nsnull != aState.lineStart, "bad line start");
 
-      if (kidFrame == aState.lineStart) {
+      if (aKidFrame == aState.lineStart) {
         // Width always fits when we are at the logical left margin.
         // Just check the height.
         //
@@ -946,19 +956,19 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
         // XXX Why aren't we doing this check BEFORE we resize reflow the child?
         if (aState.breakBeforeChild) {
           aState.breakBeforeChild = PR_FALSE;
-          if (kidFrame != aState.lineStart) {
+          if (aKidFrame != aState.lineStart) {
             if (!AdvanceToNextLine(aCX, aState)) {
               // Flushing out the line failed.
               return PLACE_FLOWED;
             }
-            aState.lineStart = kidFrame;
+            aState.lineStart = aKidFrame;
 
             // Get a band of available space
             GetAvailableSpaceBand(aState, aState.y + aState.topMargin);
 
             // Reflow child now that it has the line to itself
             GetAvailSize(kidAvailSize, aState, kidMol, PR_TRUE);
-            status = ReflowChild(kidFrame, aCX, kidSize, kidAvailSize,
+            status = ReflowChild(aKidFrame, aCX, kidSize, kidAvailSize,
                                  pKidMaxElementSize);
           }
         }
@@ -972,7 +982,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
             // Flushing out the line failed.
             return PLACE_FLOWED;
           }
-          aState.lineStart = kidFrame;
+          aState.lineStart = aKidFrame;
 
           // Get a band of available space
           GetAvailableSpaceBand(aState, aState.y + aState.topMargin);
@@ -980,19 +990,19 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
           // Reflow splittable children
           SplittableType  isSplittable;
 
-          kidFrame->IsSplittable(isSplittable);
+          aKidFrame->IsSplittable(isSplittable);
           if (isSplittable != frNotSplittable) {
             // Update size info now that we are on the next line. Then
             // reflow the child into the new available space.
             GetAvailSize(kidAvailSize, aState, kidMol, PR_TRUE);
-            status = ReflowChild(kidFrame, aCX, kidSize, kidAvailSize,
+            status = ReflowChild(aKidFrame, aCX, kidSize, kidAvailSize,
                                  pKidMaxElementSize);
 
             // If we just reflowed our last child then update the
             // mLastContentIsComplete state.
             nsIFrame* nextSibling;
 
-            kidFrame->GetNextSibling(nextSibling);
+            aKidFrame->GetNextSibling(nextSibling);
             if (nsnull == nextSibling) {
               // Use state from the reflow we just did
               mLastContentIsComplete = PRBool(status == frComplete);
@@ -1011,7 +1021,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     }
 
     // Add child to the line
-    AddInlineChildToLine(aCX, aState, kidFrame, kidSize, pKidMaxElementSize, kidMol);
+    AddInlineChildToLine(aCX, aState, aKidFrame, kidSize, pKidMaxElementSize, kidMol);
   
   } else {
     nsRect  kidRect;
@@ -1040,7 +1050,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
 
     // Give the block-level element the opportunity to use the space manager
     aState.spaceManager->Translate(tx, ty);
-    status = ReflowChild(kidFrame, aCX, aState.spaceManager, kidAvailSize,
+    status = ReflowChild(aKidFrame, aCX, aState.spaceManager, kidAvailSize,
                          kidRect, pKidMaxElementSize);
     aState.spaceManager->Translate(-tx, -ty);
 
@@ -1061,14 +1071,14 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     // calls AdvaneceToNextLine(). We need to restructure the flow of control,
     // and use a state machine...
     aState.lastContentIsComplete = PRBool(status == frComplete);
-    AddBlockChild(aCX, aState, kidFrame, kidRect, pKidMaxElementSize, kidMol);
+    AddBlockChild(aCX, aState, aKidFrame, kidRect, pKidMaxElementSize, kidMol);
   }
 
   // If we just reflowed our last child then update the
   // mLastContentIsComplete state.
   nsIFrame* nextSibling;
 
-  kidFrame->GetNextSibling(nextSibling);
+  aKidFrame->GetNextSibling(nextSibling);
   if (nsnull == nextSibling) {
     // Use state from the reflow we just did
     mLastContentIsComplete = PRBool(status == frComplete);

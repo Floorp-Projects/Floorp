@@ -115,22 +115,32 @@ nsresult ColumnFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // Collapse child's top margin with previous bottom margin
 nscoord ColumnFrame::GetTopMarginFor(nsIPresContext*    aCX,
                                      ColumnReflowState& aState,
+                                     nsIFrame*          aKidFrame,
                                      nsStyleMolecule*   aKidMol)
 {
-  nscoord margin;
-  nscoord maxNegTopMargin = 0;
-  nscoord maxPosTopMargin = 0;
-  if ((margin = aKidMol->margin.top) < 0) {
-    maxNegTopMargin = -margin;
+  // Does the frame have a prev-in-flow?
+  nsIFrame* kidPrevInFlow;
+
+  aKidFrame->GetPrevInFlow(kidPrevInFlow);
+
+  if (nsnull == kidPrevInFlow) {
+    nscoord margin;
+    nscoord maxNegTopMargin = 0;
+    nscoord maxPosTopMargin = 0;
+    if ((margin = aKidMol->margin.top) < 0) {
+      maxNegTopMargin = -margin;
+    } else {
+      maxPosTopMargin = margin;
+    }
+  
+    nscoord maxPos = PR_MAX(aState.prevMaxPosBottomMargin, maxPosTopMargin);
+    nscoord maxNeg = PR_MAX(aState.prevMaxNegBottomMargin, maxNegTopMargin);
+    margin = maxPos - maxNeg;
+  
+    return margin;
   } else {
-    maxPosTopMargin = margin;
+    return 0;
   }
-
-  nscoord maxPos = PR_MAX(aState.prevMaxPosBottomMargin, maxPosTopMargin);
-  nscoord maxNeg = PR_MAX(aState.prevMaxNegBottomMargin, maxNegTopMargin);
-  margin = maxPos - maxNeg;
-
-  return margin;
 }
 
 // Position and size aKidFrame and update our reflow state. The origin of
@@ -230,7 +240,7 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
 
     kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidFrame, kidMol);
     nscoord bottomMargin = kidMol->margin.bottom;
     NS_RELEASE(kidSC);
 
@@ -432,7 +442,7 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
      
     kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidFrame, kidMol);
     nscoord bottomMargin = kidMol->margin.bottom;
 
     // Figure out the amount of available size for the child (subtract
@@ -657,8 +667,6 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
       aPresContext->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol =
       (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
-    nscoord bottomMargin = kidMol->margin.bottom;
 
     nsBlockFrame*   pseudoFrame = nsnull;
     nsIFrame*       kidFrame;
@@ -702,6 +710,10 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
         pseudoFrame = (nsBlockFrame*) kidFrame;
       }
     }
+
+    // Get the child's margins
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidFrame, kidMol);
+    nscoord bottomMargin = kidMol->margin.bottom;
 
     // Link the child frame into the list of children and update the
     // child count

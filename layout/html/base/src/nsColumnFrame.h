@@ -61,9 +61,10 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  nscoord GetTopMarginFor(nsIPresContext* aCX,
+  nscoord GetTopMarginFor(nsIPresContext*    aCX,
                           ColumnReflowState& aState,
-                          nsStyleMolecule* aKidMol);
+                          nsIFrame*          aKidFrame,
+                          nsStyleMolecule*   aKidMol);
 
   void PlaceChild(nsIPresContext*    aPresContext,
                   ColumnReflowState& aState,
