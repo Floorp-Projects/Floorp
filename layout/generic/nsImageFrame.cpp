@@ -833,8 +833,13 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
           docURL = doc->GetDocumentURL();
           NS_RELEASE(doc);
         }
-        PRBool inside = map->IsInside(x, y, docURL, absURL, target, altText,
-                                      &suppress);
+
+        NS_ASSERTION(nsnull != docURL, "nsIDocument->GetDocumentURL() returning nsnull");
+        PRBool inside = PR_FALSE;
+        if (nsnull != docURL) {
+           inside = map->IsInside(x, y, docURL, absURL, target, altText,
+                                        &suppress);
+        }
         NS_IF_RELEASE(docURL);
         if (inside) {
           // We hit a clickable area. Time to go somewhere...
