@@ -734,6 +734,36 @@ void CWizardMachineApp::ExecuteAction(char action)
 	}
 }
 
+CString CWizardMachineApp::replaceVars(char *str)
+{
+	char buf[MIN_SIZE];
+	char *b = buf;
+	while (*str)
+	{
+		if (*str == '%')
+		{
+			char *n = ++str;
+			while (*str && *str != '%')
+				str++;
+			if (*str == '%')
+			{
+				*str = '\0';
+				WIDGET *w = findWidget(n);
+				strcpy(b, w->value);
+				b += strlen(w->value);
+			}
+			else
+				exit(12);
+			str++;
+		}
+		else
+			*b++ = *str++;
+	}
+	*b = '\0';
+
+	return CString(buf);
+}
+
 void CWizardMachineApp::GoToNextNode()
 {
 	//check if it is a container node
@@ -745,8 +775,18 @@ void CWizardMachineApp::GoToNextNode()
 	//----------------------------------------------------------------------------------------------
 	if (CurrentNode->navControls->onNextAction)
 	{
-		if (strncmp(CurrentNode->navControls->onNextAction, "Reload", 6) == 0)
+		char buf[MIN_SIZE];
+		strcpy(buf, (char *)(LPCTSTR) CurrentNode->navControls->onNextAction);
+		char *pcmd = strtok(buf, "(");
+		if (pcmd)
 		{
+			char *parms = strtok(NULL, ")");
+			if (strcmp(pcmd, "Reload") == 0)
+			{
+				CString newDir = replaceVars(parms);
+				CachePath = Path + newDir + "\\" + CacheFile;
+				FillGlobalWidgetArray(CachePath);
+			}
 		}
 	}
 

@@ -160,6 +160,7 @@ public:
 	char* GetBufferElement(const char *buffer, int index);
 	char* GetSectionBuffer(CString iniFile, CString section);
 	void ExecuteAction(char action);
+	CString replaceVars(char *str);
 	void GoToNextNode();
 	void GoToPrevNode();
 	void ExitApp();
