@@ -46,8 +46,6 @@ PRBool nsUInt32Array::SetSize(PRUint32 nSize,
                               PRBool adjustGrowth,
                               PRUint32 nGrowBy)
 {
-	PR_ASSERT(nSize >= 0);
-
 	if (adjustGrowth)
 		m_nGrowBy = nGrowBy;
 
@@ -120,13 +118,13 @@ PRBool nsUInt32Array::SetSize(PRUint32 nSize,
 
 PRUint32 &nsUInt32Array::ElementAt(PRUint32 nIndex)
 {
-	PR_ASSERT(nIndex >= 0 && nIndex < m_nSize);
+	PR_ASSERT(nIndex < m_nSize);
 	return m_pData[nIndex];
 }
 
 PRUint32 nsUInt32Array::GetAt(PRUint32 nIndex) const
 {
-	PR_ASSERT(nIndex >= 0 && nIndex < m_nSize);
+	PR_ASSERT(nIndex < m_nSize);
 	return m_pData[nIndex];
 }
 
@@ -137,7 +135,7 @@ PRUint32 *nsUInt32Array::GetData()
 
 void nsUInt32Array::SetAt(PRUint32 nIndex, PRUint32 newElement)
 {
-	PR_ASSERT(nIndex >= 0 && nIndex < m_nSize);
+	PR_ASSERT(nIndex < m_nSize);
 	m_pData[nIndex] = newElement;
 }
 
@@ -175,7 +173,6 @@ PRUint32 *nsUInt32Array::CloneData()
 
 void nsUInt32Array::InsertAt(PRUint32 nIndex, PRUint32 newElement, PRUint32 nCount)
 {
-	PR_ASSERT(nIndex >= 0);
 	PR_ASSERT(nCount > 0);
 
 	if (nIndex >= m_nSize)
@@ -202,7 +199,6 @@ void nsUInt32Array::InsertAt(PRUint32 nIndex, PRUint32 newElement, PRUint32 nCou
 
 void nsUInt32Array::InsertAt(PRUint32 nStartIndex, const nsUInt32Array *pNewArray)
 {
-	PR_ASSERT(nStartIndex >= 0);
 	PR_ASSERT(pNewArray != NULL);
 
 	if (pNewArray->GetSize() > 0)
@@ -220,7 +216,6 @@ void nsUInt32Array::RemoveAll()
 
 void nsUInt32Array::RemoveAt(PRUint32 nIndex, PRUint32 nCount)
 {
-	PR_ASSERT(nIndex >= 0);
 	PR_ASSERT(nIndex + nCount <= m_nSize);
 
 	if (nCount > 0)
@@ -237,8 +232,6 @@ void nsUInt32Array::RemoveAt(PRUint32 nIndex, PRUint32 nCount)
 
 void nsUInt32Array::SetAtGrow(PRUint32 nIndex, PRUint32 newElement)
 {
-	PR_ASSERT(nIndex >= 0);
-
 	if (nIndex >= m_nSize)
 		SetSize(nIndex+1);
 	m_pData[nIndex] = newElement;
