@@ -351,7 +351,11 @@ void CHTMLView::SetContext(
 	if (mContext != NULL)
 		{
 		mContext->RemoveListener(this);
-		mContext->SetCompositor(NULL);
+		// mContext->SetCompositor(NULL);
+				// ^^^^^^^^Do NOT do this.  If you do, layout will not be able
+				// to clean up properly.  This is very bad.
+				// The compositor needs to stick around till the context is deleted.
+				// So the context shares the CSharableCompositor
 		mContext->RemoveUser(this);
 		// set pointer to this view in MWContext to NULL
 		mContext->ClearMWContextViewPtr(); // MUST BE LAST, AFTER POSSIBLE DELETION!
