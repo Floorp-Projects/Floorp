@@ -52,7 +52,7 @@ NS_IMPL_ADDREF(CWebBrowserContainer)
 NS_IMPL_RELEASE(CWebBrowserContainer)
 
 NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
-	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
