@@ -84,8 +84,6 @@ class JSSSignatureSpi extends java.security.SignatureSpi {
         CryptoToken token;
         PrivateKey privk;
 
-        System.out.println("In the brand-spanking-new getSigContext");
-
         if( ! (privateKey instanceof PrivateKey) ) {
             throw new InvalidKeyException();
         }
