@@ -46,6 +46,7 @@ dnl ========================================================
 GTK_MAJ_VER=1
 GTK_MIN_VER=1
 GTK_REL_VER=0
+GTK_VERSION=${GTK_MAJ_VER}.${GTK_MIN_VER}.${GTK_REL_VER}
 
 dnl Set various checks
 dnl ========================================================
@@ -535,15 +536,15 @@ if [ test $res != 0 ]; then
     _GTK_MIN_VER=`echo $_GTK_VERSION | $AWK -F\. '{ print $2 }'`
     _GTK_REL_VER=`echo $_GTK_VERSION | $AWK -F\. '{ print $3 }'`
     if test "$_GTK_MAJ_VER" -lt "$GTK_MAJ_VER"; then
-	AC_MSG_ERROR("Must use gtk version >= $GTK_VERSION");
+	AC_MSG_ERROR(Must use gtk version >= $GTK_VERSION);
     else if test "$_GTK_MIN_VER" -lt "$GTK_MIN_VER"; then
-	AC_MSG_ERROR("Must use gtk version >= $GTK_VERSION");
+	AC_MSG_ERROR(Must use gtk version >= $GTK_VERSION);
     else if test "$_GTK_REL_VER" -lt "$GTK_REL_VER"; then
-	AC_MSG_ERROR("Must use gtk version >= $GTK_VERSION");
+	AC_MSG_ERROR(Must use gtk version >= $GTK_VERSION);
     fi
     fi
     fi
-    unset GTK_VERSION
+    unset _GTK_VERSION
     unset _GTK_MAJ_VER
     unset _GTK_MIN_VER
     unset _GTK_REL_VER
