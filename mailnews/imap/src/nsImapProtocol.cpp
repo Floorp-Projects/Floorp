@@ -3168,6 +3168,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
   if (GetServerStateParser().GetDownloadingHeaders())
   {
     m_curHdrInfo->CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
+    PR_Free( localMessageLine);
     return;
   }
   // if this line is for a different message, or the incoming line is too big
@@ -3207,7 +3208,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
   else
     m_downloadLineCache.CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
   
-  PR_FREEIF( localMessageLine);
+  PR_Free( localMessageLine);
 }
 
 
