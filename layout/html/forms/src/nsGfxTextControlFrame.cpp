@@ -99,6 +99,7 @@ static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 #define EMPTY_DOCUMENT "about:blank"
+#define PASSWORD_REPLACEMENT_CHAR '*'
 
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
@@ -1589,9 +1590,33 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
         if (!mDisplayContent) {return NS_ERROR_NO_INTERFACE; }
         nsAutoString value;
         GetText(&value, PR_FALSE);  // get the text value, either from input element attribute or cached state
-        const PRUnichar *initialText = value.GetUnicode();
         PRInt32 len = value.Length();
-        mDisplayContent->SetText(initialText, len, PR_TRUE);
+        if (0<len)
+        {
+          // for password fields, set the display text to '*', one per character
+          // XXX: the replacement character should be controllable via CSS
+          // for normal text fields, set the display text normally
+          PRInt32 type;
+          GetType(&type);
+          if (NS_FORM_INPUT_PASSWORD == type) 
+          {
+            PRUnichar *initialPasswordText;
+            initialPasswordText = new PRUnichar[len+1];
+            if (!initialPasswordText) { return NS_ERROR_NULL_POINTER; }
+            PRInt32 i=0;
+            for (; i<len; i++) {
+              initialPasswordText[i] = PASSWORD_REPLACEMENT_CHAR;
+            }
+            mDisplayContent->SetText(initialPasswordText, len, PR_TRUE);
+            delete [] initialPasswordText;
+          }
+          else
+          {
+            const PRUnichar *initialText;
+            initialText = value.GetUnicode();
+            mDisplayContent->SetText(initialText, len, PR_TRUE);
+          }
+        }        
 
         // create the pseudo frame for the anonymous content
         rv = NS_NewBlockFrame((nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
