@@ -250,8 +250,6 @@ fi
 
 dnl System overrides of the defaults
 dnl ========================================================
-dnl the qsort routine under solaris is faulty
-dnl Linux Alpha needs -mieee for FPU to work correctly
 case "$target" in
 *-aix*)
     if test ! "$GNU_CC"; then
@@ -311,6 +309,7 @@ case "$target" in
     fi
     ;;
 
+dnl Linux Alpha needs -mieee for FPU to work correctly
 alpha*-*-linux*)
     CFLAGS="$CFLAGS -mieee"
     CXXFLAGS="$CXXFLAGS -mieee"
@@ -363,6 +362,7 @@ alpha*-*-osf*)
     fi
     ;;
 
+dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
     if test ! "$GNU_CC"; then
@@ -378,10 +378,10 @@ alpha*-*-osf*)
        NS_USE_NATIVE=1
        case `uname -m` in
          sun4u)
-           ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0'
+           ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
            ;;
          *)
-           ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0'
+           ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0 -K PIC'
            ;;
        esac
     else
