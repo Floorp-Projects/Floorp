@@ -29,11 +29,7 @@
 #include "nsrootidl.idl"
 
 /*! @verbatim */
-/* see bug 57094 */
 %{C++
-#ifndef NS_NO_VTABLE
-#define NS_NO_VTABLE
-#endif
 #include "gfxcompat.h"
 %}
 /*! @endverbatim */

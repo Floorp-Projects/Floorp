@@ -143,7 +143,7 @@ NS_IMETHODIMP nsImage::GetBits(PRUint8 *aBits)
   if (!mBits)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBits = mBits;
+  aBits = mBits;
   return NS_OK;
 }
 
