@@ -300,12 +300,11 @@ oeICalContainerImpl::AddCalendar( const char *server, const char *type ) {
     }
 
     nsCAutoString contractid;
-    contractid.AssignLiteral("@mozilla.org/ical;1");
+    contractid.Assign(NS_LITERAL_CSTRING("@mozilla.org/ical;1"));
     if (type && strlen(type)) {
-      contractid.AppendLiteral("?type=");
+      contractid.Append(NS_LITERAL_CSTRING("?type="));
       contractid.Append(type);
     }
-    printf("\nContractID: %s\n\n",contractid.get());
     calendar = do_CreateInstance(contractid.get(), &rv);
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
@@ -1046,23 +1045,25 @@ oeICalContainerImpl::GetAllTodos(nsISimpleEnumerator **resultList )
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetAllTodos()\n" );
 #endif
-    oeEventEnumerator* eventEnum = new oeEventEnumerator();
-    
-    if (!eventEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
-
     PRUint32 num;
     unsigned int i;
+    nsCOMArray<nsISimpleEnumerator> listOfEnums;
 
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> calendar;
         m_calendarArray->GetElementAt( i, getter_AddRefs( calendar ) );
-        calendar->GetAllTodos( (nsISimpleEnumerator **)&eventEnum );
+        nsCOMPtr<nsISimpleEnumerator> eventEnum;
+        calendar->GetAllTodos( getter_AddRefs(eventEnum) );
+        listOfEnums.AppendObject(eventEnum);
     }
+    
+    *resultList = new oeCollectedEventEnumerator(listOfEnums);
+    if (!*resultList)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*resultList);
     return NS_OK;
 }
 
