@@ -617,7 +617,7 @@ nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 }
 
 
-PRIVATE
+static
 void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 {
   nsIURL* baseURL = nsnull;
