@@ -262,7 +262,7 @@ Contributor(s): ______________________________________. -->
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999070317">
+<!ENTITY  buildId.label "Build ID: 1999070614">
 <!ENTITY  security-button.label "Secure Conn">
 
 <!-- taskbar -->
@@ -285,7 +285,7 @@ Contributor(s): ______________________________________. -->
         onunload="if (appCore) appCore.close()"
         title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
         titleseperator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:browser"
-		align="vertical"> 
+		align="vertical" width="640" height="480"> 
 
   <html:script language="javascript" src="navigator.js">
   </html:script>
