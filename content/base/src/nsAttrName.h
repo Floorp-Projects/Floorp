@@ -41,6 +41,7 @@
 
 #include "nsINodeInfo.h"
 #include "nsIAtom.h"
+#include "nsDOMString.h"
 
 typedef unsigned long PtrBits;
 

@@ -65,6 +65,7 @@
 #include "nsIDOMEventGroup.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsDOMString.h"
 
 #include "nsRange.h"
 #include "nsIDOMText.h"

@@ -48,7 +48,7 @@
 #include "nsDOMError.h"
 #include "nsIDOM3Node.h"
 #include "nsLayoutAtoms.h"
-
+#include "nsDOMString.h"
 
 class nsDocumentFragment : public nsGenericElement,
                            public nsIDocumentFragment,

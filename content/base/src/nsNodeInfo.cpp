@@ -42,7 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIAtom.h"
-#include "domstubs.h" // for SetDOMStringToNull();
+#include "nsDOMString.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"

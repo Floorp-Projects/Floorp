@@ -53,6 +53,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMText.h"
 #include "nsCOMPtr.h"
+#include "nsDOMString.h"
 
 #include "pldhash.h"
 #include "prprf.h"

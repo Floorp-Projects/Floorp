@@ -59,7 +59,7 @@
 #include "nsISupports.h"
 #include "nsIAtom.h"
 #include "nsAString.h"
-#include "domstubs.h"
+#include "nsDOMString.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"

@@ -42,6 +42,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsDOMString.h"
 #include "nsIDOM3Node.h"
 
 nsresult

@@ -65,6 +65,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsDOMString.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsIIOService.h"

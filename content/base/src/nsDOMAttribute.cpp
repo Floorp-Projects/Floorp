@@ -44,7 +44,7 @@
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
-
+#include "nsDOMString.h"
 
 //----------------------------------------------------------------------
 

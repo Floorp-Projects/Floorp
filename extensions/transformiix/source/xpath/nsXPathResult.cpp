@@ -46,6 +46,7 @@
 #include "nsIDOMNode.h"
 #include "nsXPathException.h"
 #include "nsIDOMDocument.h"
+#include "nsDOMString.h"
 
 nsXPathResult::nsXPathResult() : mNumberValue(0),
                                  mDocument(0),
