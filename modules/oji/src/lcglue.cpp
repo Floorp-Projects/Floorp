@@ -82,7 +82,7 @@ static void PR_CALLBACK detach_JVMContext(void* storage)
 		context->proxyEnv = NULL;
 	}
 	
-	delete storage;
+	delete context;
 }
 
 JVMContext* GetJVMContext()
