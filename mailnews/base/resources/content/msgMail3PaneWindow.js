@@ -82,6 +82,7 @@ function verifyAccounts() {
         if (accounts.Count() > 0) return;
 
         try {
+            dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
             am.UpgradePrefs();
         }
         catch (ex) {
