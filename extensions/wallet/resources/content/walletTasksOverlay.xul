@@ -88,9 +88,12 @@
           }
           break;
         case "clear":
-          if (window.confirm(strings.getAttribute("AllDataWillBeCleared"))) {
-            wallet.WALLET_DeleteAll();
-          }
+
+          var pipNSSBundle = document.getElementById("bundle_pipnss");
+          var tokenName = pipNSSBundle.getString("InternalToken");
+          window.open("chrome://pippki/content/resetpassword.xul",
+                      tokenName,
+                      "centerscreen,chrome,resizable=1,modal=1,dialog=1");
           break;
         case "encrypt":
           if (pref) {
@@ -219,4 +222,11 @@
       </menupopup>
     </menu>
   </menupopup>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_pipnss"
+                  src="chrome://pipnss/locale/pipnss.properties"/>
+  </stringbundleset>
+
+
 </overlay>

@@ -26,7 +26,7 @@
 <!ENTITY walletEncryptCmd.accesskey "e">
 <!ENTITY walletObscureCmd.label "Obscure Sensitive Information">
 <!ENTITY walletObscureCmd.accesskey "o">
-<!ENTITY walletClearCmd.label "Clear Sensitive Information">
+<!ENTITY walletClearCmd.label "Reset Master Password">
 <!ENTITY walletClearCmd.accesskey "r">
 
 <!ENTITY PasswordNotChanged "Unable to change the password that protects your sensitive information.">
