@@ -32,8 +32,9 @@ function SetSecurityButton()
     securityUI = ui.QueryInterface(Components.interfaces.nsSecureBrowserUI);
 
     var button  = document.getElementById('security-button');
+    var certAuth = document.getElementById('certificate-authority');
 	if (button && window._content)
-		securityUI.init(window._content, button);
+		securityUI.init(window._content, button, certAuth);
 }
 
 function displayPageInfo()
