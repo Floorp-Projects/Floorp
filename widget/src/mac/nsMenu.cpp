@@ -153,10 +153,11 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
 NS_METHOD nsMenu::SetLabel(const nsString &aText)
 {
   mLabel = aText;
-   
-  mMacMenuHandle = nsnull;
 
-  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, c2pstr(mLabel.ToNewCString()));
+  char* menuLabel = mLabel.ToNewCString();
+  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, c2pstr(menuLabel));
+  delete[] menuLabel;
+
   mMacMenuID = mMacMenuIDCount;
   mMacMenuIDCount++;
 
@@ -200,8 +201,11 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
   
   nsString label;
   aMenuItem->GetLabel(label);
+  char* menuLabel = label.ToNewCString();
   mNumMenuItems++;
-  ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mNumMenuItems );
+  ::InsertMenuItem(mMacMenuHandle, c2pstr(menuLabel), mNumMenuItems);
+  delete[] menuLabel;
+
   return NS_OK;
 }
 
@@ -215,8 +219,10 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   // We have to add it as a menu item and then associate it with the item
   nsString label;
   aMenu->GetLabel(label);
+  char* menuLabel = label.ToNewCString();
   mNumMenuItems++;
-  ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mNumMenuItems);
+  ::InsertMenuItem(mMacMenuHandle, c2pstr(menuLabel), mNumMenuItems);
+  delete[] menuLabel;
   
   MenuHandle menuHandle;
   aMenu->GetNativeData((void**)&menuHandle);

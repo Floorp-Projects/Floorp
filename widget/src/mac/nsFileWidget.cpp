@@ -164,7 +164,7 @@ PRBool nsFileWidget::Show()
     NS_ASSERTION(0, "Only load and save are supported modes"); 
   }
    // Clean up filter buffers
-  delete filterBuffer;
+  delete[] filterBuffer;
 
 	if (!reply.sfGood) return PR_FALSE;
 
