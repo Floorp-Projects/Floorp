@@ -795,10 +795,8 @@ nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
       // If this assertion fires, the caller is probably lying about the length of
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
-#if 0
-      PRInt32 len=nsCRT::strlen(aString);
-      NS_WARN_IF_FALSE(len>=aCount,"possible embedded null in Assign(PRUnichar*)");
-#endif
+      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0);
+      NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in Assign(PRUnichar*)");
 #endif
 
     }
@@ -905,10 +903,8 @@ nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
       //   the passed-in string.  File a bug on the caller.
 
 #ifdef NS_DEBUG
-#if 0
-      PRInt32 len=strlen(aCString);
-      NS_WARN_IF_FALSE(len>=aCount,"possible embedded null in append(char*)");
-#endif
+      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0);
+      NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in append(char*)");
 #endif
     }
     else aCount=temp.mLength=nsCRT::strlen(aCString);
@@ -1094,10 +1090,8 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
       // If this assertion fires, the caller is probably lying about the length of
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
-#if 0
-      PRInt32 len=strlen(aCString);
-      NS_WARN_IF_FALSE(len>=aCount,"possible embedded null in Insert(char*)");
-#endif
+      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0);
+      NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in Insert(char*)");
 #endif
 
     }
