@@ -1,6 +1,8 @@
 <!-- Entities for AccountWizard -->
 
 <!ENTITY windowTitle.label "Account Wizard">
+<!ENTITY accountWizard.width "500">
+<!ENTITY accountWizard.height "380">
 
 <!-- Entities for Account Type page -->
 

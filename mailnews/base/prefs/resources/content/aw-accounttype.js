@@ -36,14 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function acctTypePageUnload() {
-
-    setAccountTypeData();
-    initializeIspData();
-    
-    return true;
-}
-
 function setAccountTypeData() 
 {
   var rg = document.getElementById("acctyperadio");
@@ -53,6 +45,22 @@ function setAccountTypeData()
     setMailAccountTypeData();
   else if (selectedItemId == "newsaccount")
     setNewsAccountTypeData();
+}
+
+function acctTypePageUnload() {
+    gCurrentAccountData = null;
+    setAccountTypeData();
+    initializeIspData();
+    
+    if (gCurrentAccountData && gCurrentAccountData.useOverlayPanels) {
+      if ("testingIspServices" in this) {
+        if ("SetPageMappings" in this && testingIspServices()) {
+          SetPageMappings(document.documentElement.currentPage.id, "done");
+        }
+      }
+    }
+
+    return true;
 }
 
 function initializeIspData()

@@ -27,6 +27,7 @@ Rights Reserved.
         onwizardcancel="return onCancel();"
         onwizardfinish="return FinishAccount();"
         onload="onAccountWizardLoad();"
+        width="&accountWizard.width;" height="&accountWizard.height;"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -248,5 +249,17 @@ Rights Reserved.
       <description>&clickFinish.label;</description>
     </vbox>
   </wizardpage>
+
+  <wizardpage id="ispPage1"/>
+  <wizardpage id="ispPage2"/>
+  <wizardpage id="ispPage3"/>
+  <wizardpage id="ispPage4"/>
+  <wizardpage id="ispPage5"/>
+  <wizardpage id="ispPage6"/>
+  <wizardpage id="ispPage7"/>
+  <wizardpage id="ispPage8"/>
+  <wizardpage id="ispPage9"/>
+  <wizardpage id="ispPage10"/>
+  <wizardpage id="ispPage11"/>
 
 </wizard>

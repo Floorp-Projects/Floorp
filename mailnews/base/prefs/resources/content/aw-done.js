@@ -21,15 +21,35 @@
 var gPrefsBundle;
 
 function donePageInit() {
-    gPrefsBundle = document.getElementById("bundle_prefs");
     var pageData = parent.GetPageData();
+    var currentAccountData = gCurrentAccountData;
+
+    if ("testingIspServices" in this) {
+      if (testingIspServices()) {
+        if ("setOtherServices" in this) {
+          setOtherISPServices();
+        }
+
+        if (currentAccountData && currentAccountData.useOverlayPanels && currentAccountData.createNewAccount) {
+          var backButton = document.documentElement.getButton("back");
+          backButton.setAttribute("disabled", true);
+
+          var cancelButton = document.documentElement.getButton("cancel");
+          cancelButton.setAttribute("disabled", true);
+
+          setPageData(pageData, "identity", "email", gEmailAddress);
+          setPageData(pageData, "identity", "fullName", gUserFullName);
+          setPageData(pageData, "login", "username", gScreenName);
+        }
+      }
+    }
+   
+    gPrefsBundle = document.getElementById("bundle_prefs");
     var showMailServerDetails = true; 
 
-    var currentAccountData = parent.gCurrentAccountData;
     if (currentAccountData) {
         // find out if we need to hide server details
         showMailServerDetails = currentAccountData.showServerDetailsOnWizardSummary; 
-  
         // Change the username field description to email field label in aw-identity
         setUserNameDescField(currentAccountData.emailIDFieldTitle);
     }

@@ -58,12 +58,11 @@ var okCallback = null;
 var contentWindow;
 
 var gPageData;
-var smtpService;
-var am;
-var accountm = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+var smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
+var am = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 var gMailSession = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession);
-var accounts = accountm.accounts;
+var accounts = am.accounts;
 
 //accountCount indicates presence or absense of accounts
 var accountCount = accounts.Count();
@@ -92,6 +91,12 @@ function onAccountWizardLoad() {
     gPrefsBundle = document.getElementById("bundle_prefs");
     gMessengerBundle = document.getElementById("bundle_messenger");
 
+    if ("testingIspServices" in this) {
+      if ("SetCustomizedWizardDimensions" in this && testingIspServices()) {
+        SetCustomizedWizardDimensions();
+      }
+    }
+
     /* We are checking here for the callback argument */
     if (window.arguments && window.arguments[0]) {
         if(window.arguments[0].okCallback ) 
@@ -99,12 +104,6 @@ function onAccountWizardLoad() {
             //dump("There is okCallback");
             top.okCallback = window.arguments[0].okCallback;
         }
-    }
-
-    // load up the SMTP service for later
-    if (!smtpService) {
-        smtpService =
-            Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
     }
 
     checkForInvalidAccounts();
@@ -115,7 +114,7 @@ function onAccountWizardLoad() {
     }
 
     try {
-        gDefaultAccount = accountm.defaultAccount;
+        gDefaultAccount = am.defaultAccount;
     }
     catch (ex) {
         // no default account, this is expected the first time you launch mail
@@ -176,6 +175,7 @@ function onCancel()
 }
 
 function FinishAccount() {
+  try {
     var pageData = GetPageData();
 
     var accountData= gCurrentAccountData;
@@ -218,6 +218,9 @@ function FinishAccount() {
         //dump("finish callback");
         top.okCallback(state);
     }
+}
+  catch(ex) { 
+  }
 }
 
 
@@ -840,7 +843,7 @@ function EnableCheckMailAtStartUpIfNeeded(newAccount)
     // a default account. If no such account, make this one as the default account 
     // and turn on the new mail check at startup for the current account   
     if (!(gDefaultAccount && gDefaultAccount.incomingServer.canBeDefaultServer)) { 
-        accountm.defaultAccount = newAccount;
+        am.defaultAccount = newAccount;
         newAccount.incomingServer.loginAtStartUp = true;
     }
 }
@@ -859,3 +862,4 @@ function setNextPage(currentPageId, nextPageId) {
     var currentPage = document.getElementById(currentPageId);
     currentPage.next = nextPageId;
 }
+
