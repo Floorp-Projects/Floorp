@@ -146,9 +146,9 @@ function displaySelected() {
   var certDumpVal = document.getElementById('certDumpVal');
   if (items.currentIndex != -1) {
     var value = asn1Outliner.getDisplayData(items.currentIndex);
-    certDumpVal.setAttribute("value", value); 
+    certDumpVal.value = value;
   } else {
-    certDumpVal.setAttribute("value","");
+    certDumpVal.value ="";
   }
 }
 
