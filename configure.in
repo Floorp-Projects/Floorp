@@ -1144,7 +1144,7 @@ fi
 AC_MSG_CHECKING(for ostreams)
 AC_CACHE_VAL(ac_cv_ostream,
   [AC_TRY_LINK([#include <iostream.h>],
-               [ostream *foo=new ostream();],
+               [streambuf *xxx; ostream *foo=new ostream(xxx);],
                [ac_cv_ostream=true],
                [ac_cv_ostream=false])])
 if test "$ac_cv_ostream" = true ; then
