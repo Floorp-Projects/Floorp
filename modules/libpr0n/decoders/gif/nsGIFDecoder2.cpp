@@ -39,20 +39,16 @@
 NS_IMPL_ISUPPORTS1(nsGIFDecoder2, imgIDecoder);
 
 nsGIFDecoder2::nsGIFDecoder2()
+  : mCurrentRow(-1)
+  , mLastFlushedRow(-1)
+  , mGIFStruct(nsnull)
+  , mAlphaLine(nsnull)
+  , mRGBLine(nsnull)
+  , mBackgroundRGBIndex(0)
+  , mCurrentPass(0)
+  , mLastFlushedPass(0)
+  , mGIFOpen(PR_FALSE)
 {
-  mImageFrame = nsnull;
-  
-  mGIFStruct = nsnull;
-
-  mAlphaLine = nsnull;
-  mRGBLine = nsnull;
-  mBackgroundRGBIndex = 0;
-
-  mCurrentRow = -1;
-  mLastFlushedRow = -1;
-
-  mCurrentPass = 0;
-  mLastFlushedPass = 0;
 }
 
 nsGIFDecoder2::~nsGIFDecoder2(void)
@@ -108,6 +104,12 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
 NS_IMETHODIMP nsGIFDecoder2::Close()
 {
   if (mGIFStruct) {
+    nsGIFDecoder2 *decoder = NS_STATIC_CAST(nsGIFDecoder2*, mGIFStruct->clientptr);
+    if (decoder->mImageFrame)
+      EndImageFrame(mGIFStruct->clientptr, mGIFStruct->images_decoded + 1, 
+                    mGIFStruct->delay_time);
+    if (decoder->mGIFOpen)
+      EndGIF(mGIFStruct->clientptr, mGIFStruct->loop_count);
     gif_destroy(mGIFStruct);
     mGIFStruct = nsnull;
   }
@@ -243,6 +245,7 @@ int nsGIFDecoder2::BeginGIF(
   if (decoder->mObserver)
     decoder->mObserver->OnStartContainer(nsnull, decoder->mImageContainer);
 
+  decoder->mGIFOpen = PR_TRUE;
   return 0;
 }
 
@@ -259,6 +262,8 @@ int nsGIFDecoder2::EndGIF(
   
   decoder->mImageContainer->SetLoopCount(aAnimationLoopCount);
   decoder->mImageContainer->DecodingComplete();
+
+  decoder->mGIFOpen = PR_FALSE;
   return 0;
 }
 
