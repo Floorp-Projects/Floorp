@@ -31,6 +31,9 @@ XPIDLSRCS =										\
             .\nsILanguageAtom.idl				\
             .\nsILanguageAtomService.idl			\
 			.\nsIScriptableDateFormat.idl		\
+			.\nsIFontPackageHandler.idl		\
+			.\nsIFontPackageService.idl		\
+			.\nsIFontPackageProxy.idl		\
             $(NULL)
 
 
