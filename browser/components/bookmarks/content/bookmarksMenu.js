@@ -144,8 +144,9 @@ var BookmarksMenu = {
   // Clean up after closing the context menu popup
   destroyContextMenu: function (aEvent)
   {
-    if (content) 
-      content.focus()
+#   let''s focus the content (needed) when the user escape it
+    if (content)
+      content.focus();
     BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode); // needed on cancel
     aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
     // XXXpch: see bug 210910, it should be done properly in the backend
@@ -399,6 +400,12 @@ var BookmarksMenuController = {
 
   doCommand: function (aCommand)
   {
+#   we needed to focus the element that has the bm command controller
+#   to get here. Now, let''s focus the content before performing the command:
+#   if a modal dialog is called from now, the content will be focused again
+#   automatically after dismissing the dialog
+    if (content)
+      content.focus();
     BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
     var selection = BookmarksMenu._selection;
     var target    = BookmarksMenu._target;
@@ -602,14 +609,14 @@ var BookmarksMenuDNDObserver = {
       return null;
     var node = aNode;
     var observer;
-    do {
+    while (node) {
       for (var i=0; i < this.mObservers.length; i++) {
         observer = this.mObservers[i];
         if (observer == node)
           return observer;
       }
       node = node.parentNode;
-    } while (node != document)
+    }
     return null;
   },
 
