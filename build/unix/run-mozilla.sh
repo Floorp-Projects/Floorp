@@ -223,13 +223,26 @@ moz_debug_program()
 	else
 		debugger=`moz_get_debugger`
 	fi
-	if [ -x "$debugger" ]
-	then
-		echo "$debugger $prog ${1+"$@"}"
-		$debugger $prog ${1+"$@"}
-	else
-		echo "Could not find a debugger on your system."
-	fi
+    if [ -x "$debugger" ] 
+    then
+        echo "set args ${1+"$@"}" > /tmp/mozargs$$ 
+# If you are not using ddd, gdb and know of a way to convey the arguments 
+# over to the prog then add that here- Gagan Saksena 03/15/00
+        case `basename $debugger` in
+            gdb) echo "$debugger $prog -x /tmp/mozargs$$"
+                $debugger $prog -x /tmp/mozargs$$
+                ;;
+            ddd) echo "$debugger --debugger \"gdb -x /tmp/mozargs$$\" $prog"
+                $debugger --debugger "gdb -x /tmp/mozargs$$" $prog
+                ;;
+            *) echo "$debugger $prog ${1+"$@"}"
+                $debugger $prog ${1+"$@"}
+                ;;
+        esac
+        /bin/rm ./mozargs$$
+    else
+        echo "Could not find a debugger on your system." 
+    fi
 }
 ##########################################################################
 ##
@@ -368,7 +381,7 @@ echo "     moz_debugger=$moz_debugger"
 export MOZILLA_FIVE_HOME LD_LIBRARY_PATH
 export SHLIB_PATH LIBPATH
 
-if [ "$moz_debug" = "1" ]
+if [ $moz_debug -eq 1 ]
 then
 	moz_debug_program ${1+"$@"}
 else
