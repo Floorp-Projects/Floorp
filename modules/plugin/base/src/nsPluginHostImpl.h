@@ -51,6 +51,7 @@
 #include "nsPluginsDir.h"
 #include "nsVoidArray.h"  // array for holding "active" streams
 #include "nsIDirectoryService.h"
+#include "nsWeakPtr.h"
 
 class ns4xPlugin;
 class nsFileSpec;
@@ -390,6 +391,9 @@ public:
   StopPluginInstance(nsIPluginInstance* aInstance);
 
 private:
+  NS_IMETHOD
+  TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
+
   nsresult
   LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFile* aPath);
 
@@ -477,6 +481,7 @@ private:
   nsUnusedLibrary *mUnusedLibraries;
 
   nsCOMPtr<nsIDirectoryServiceProvider> mPrivateDirServiceProvider;  
+  nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
 };
 
 #endif
