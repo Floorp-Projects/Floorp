@@ -561,7 +561,7 @@ nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContex
   for (;;) {
     // Get the next content object
     nsIContentPtr kid = mContent->ChildAt(kidIndex);
-    if (nsnull == kid) {
+    if (kid.IsNull()) {
       result = NS_FRAME_COMPLETE;
       break;
     }
