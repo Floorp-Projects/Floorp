@@ -227,6 +227,8 @@ pref("mailnews.sort_by_date_received",      false);
 pref("mailnews.send_default_charset",       "ISO-8859-1");
 pref("mailnews.view_default_charset",       "ISO-8859-1");
 
+pref("mailnews.language_sensitive_font",    true);
+
 pref("offline.startup_mode",                0);     // 0 online work, 1 offline work, 2 ask me
 pref("offline.download.size_limit",         50);    // K
 pref("offline.news.download.unread_only",   true);
