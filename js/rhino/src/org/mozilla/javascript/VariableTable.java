@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Roger Lawrence
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -58,19 +59,15 @@ public class VariableTable {
     }
 
     public LocalVariable getVariable(String name) {
-        Integer vIndex = (Integer)(itsVariableNames.get(name));
-        if (vIndex != null)
-            return (LocalVariable)(itsVariables.elementAt(vIndex.intValue()));
+        int vIndex = itsVariableNames.get(name, -1);
+        if (vIndex != -1)
+            return (LocalVariable)(itsVariables.elementAt(vIndex));
         else
             return null;
     }
 
     public int getOrdinal(String name) {
-        Integer vIndex = (Integer)(itsVariableNames.get(name));
-        if (vIndex != null)
-            return vIndex.intValue();
-        else
-            return -1;
+        return itsVariableNames.get(name, -1);
     }
 
     public String getName(int index) {
@@ -97,53 +94,48 @@ public class VariableTable {
     }
 
     public void addParameter(String pName) {
-        Integer pIndex = (Integer)(itsVariableNames.get(pName));
-        if (pIndex != null) {
-            LocalVariable p = (LocalVariable)
-                                (itsVariables.elementAt(pIndex.intValue()));
+        int pIndex = itsVariableNames.get(pName, -1);
+        if (pIndex != -1) {
+            LocalVariable p = (LocalVariable)(itsVariables.elementAt(pIndex));
             if (p.isParameter()) {
                 String message = Context.getMessage1("msg.dup.parms", pName);
                 Context.reportWarning(message, null, 0, null, 0);
             }
             else {  // there's a local variable with this name, blow it off
-                itsVariables.removeElementAt(pIndex.intValue());
+                itsVariables.removeElementAt(pIndex);
             }
         }
         int curIndex = varStart++;
         LocalVariable lVar = createLocalVariable(pName, true);
         itsVariables.insertElementAt(lVar, curIndex);
-        itsVariableNames.put(pName, new Integer(curIndex));
+        itsVariableNames.put(pName, curIndex);
     }
 
     public void addLocal(String vName) {
-        Integer vIndex = (Integer)(itsVariableNames.get(vName));
-        if (vIndex != null) {
+        int vIndex = itsVariableNames.get(vName, -1);
+        if (vIndex != -1) {
             // There's already a variable or parameter with this name.
             return;
         }
         int index = itsVariables.size();
         LocalVariable lVar = createLocalVariable(vName, false);
         itsVariables.addElement(lVar);
-        itsVariableNames.put(vName, new Integer(index));
+        itsVariableNames.put(vName, index);
     }
 
     // This should only be called very early in compilation
     public void removeLocal(String name) {
-        Integer i = (Integer) itsVariableNames.get(name);
-        if (i != null) {
-            itsVariables.removeElementAt(i.intValue());
+        int i = itsVariableNames.get(name, -1);
+        if (i != -1) {
+            itsVariables.removeElementAt(i);
             itsVariableNames.remove(name);
-            Hashtable ht = new Hashtable(11);
-            Enumeration e = itsVariableNames.keys();
-            while (e.hasMoreElements()) {
-                Object k = e.nextElement();
-                Integer v = (Integer) itsVariableNames.get(k);
-                int v2 = v.intValue();
-                if (v2 > i.intValue())
-                    v = new Integer(v2 - 1);
-                ht.put(k, v);
+            ObjToIntMap.Iterator iter = itsVariableNames.newIterator();
+            for (iter.start(); !iter.done(); iter.next()) {
+                int v = iter.getValue();
+                if (v > i) {
+                    iter.setValue(v - 1);
+                }
             }
-            itsVariableNames = ht;
         }
     }
 
@@ -151,7 +143,7 @@ public class VariableTable {
     protected Vector itsVariables = new Vector();
 
     // mapping from name to index in list
-    protected Hashtable itsVariableNames = new Hashtable(11);
+    private ObjToIntMap itsVariableNames = new ObjToIntMap(11);
 
     protected int varStart;               // index in list of first variable
 
