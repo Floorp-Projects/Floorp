@@ -22,34 +22,79 @@
   --> 
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="txTools.css" type="text/css"?> 
+<?xml-stylesheet href="buster.css" type="text/css"?>
 <window id="XalanBuster"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="loaderstuff()"
+        onload="onLoad()" onunload="onUnload()"
+        title="Xalan testcase harnish"
         orient="vertical">
-<script type="application/x-javascript" src="DiffDOM.js" />
-<script type="application/x-javascript" src="txTools.js" />
-<script type="application/x-javascript" src="xulTxTools.js" />
+<script type="application/x-javascript" src="buster-statics.js" />
+<script type="application/x-javascript" src="buster-test.js" />
+<script type="application/x-javascript" src="buster-view.js" />
+<script type="application/x-javascript" src="buster-handlers.js" />
+<script type="application/x-javascript" src="result-view.js" />
+<script type="application/x-javascript" src="buster-files.js" />
 <script type="application/x-javascript" src="DumpDOM.js" />
+<script type="application/x-javascript" src="DiffDOM.js" />
+
+<commands id="busterKing">
+  <commandset id="buster_file_cmds">
+    <command id="cmd_fl_save" oncommand="goDoCommand('cmd_fl_save')" />
+    <command id="cmd_fl_import" oncommand="goDoCommand('cmd_fl_import')"/>
+  </commandset>
+  <commandset id="buster_test_cmds">
+    <command id="cmd_tst_run" oncommand="goDoCommand('cmd_tst_run')" />
+    <command id="cmd_tst_runall" oncommand="goDoCommand('cmd_tst_runall')" />
+  </commandset>
+</commands>
+
+<broadcasterset>
+  <broadcaster id="obs_orig_success" hidden="true"/>
+  <broadcaster id="not_yet" disabled="true"/>
+</broadcasterset>
+
+
+<menubar>
+  <menu id="busterFile" label="File" accesskey="f">
+    <menupopup id="file-popup">
+      <menuitem label="Save results ..." accesskey="s"
+                observes="cmd_fl_save"/>
+      <menuitem label="Import results ..." accesskey="i"
+                observes="cmd_fl_import"/>
+    </menupopup>
+  </menu>
+  <menu id="busterTests" label="Tests" accesskey="t">
+    <menupopup id="tests-popup">
+      <menuitem label="run a test" accesskey="r"
+                observes="cmd_tst_run"/>
+      <menuitem label="run all tests" accesskey="a"
+                observes="cmd_tst_runall"/>
+    </menupopup>
+  </menu>
+</menubar>
+
+<popupset>
+  <popup id="itemcontext">
+    <menuitem label="View Test" oncommand="onNewResultView(event)"/>
+  </popup>
+</popupset>
+
 <hbox>
-  <button label="load tests" oncommand="refresh_xalan()" />
-  <button label="check all" oncommand="check(true)" />
-  <button label="uncheck all" oncommand="check(false)" />
-  <button label="invert checks" oncommand="invert_check()" />
-  <button label="hide checked" oncommand="hide_checked(true)" />
-  <button label="hide unchecked" oncommand="hide_checked(false)" />
-  <button label="run checked tests" oncommand="dump_checked()" />
+  <button label="check all" oncommand="check(true)" observes="not_yet"/>
+  <button label="uncheck all" oncommand="check(false)" observes="not_yet"/>
+  <button label="reset success" oncommand="view.prune_ds()" />
+  <button label="run checked tests" oncommand="view.onRun()" />
 </hbox>
 <hbox>
-  <text value="Xalan base directory: " class="head" />
-  <textbox id="xalan_base" persist="value"/>
-  <button label="browse..." oncommand="browse_base_dir()" />
+  <label value="Xalan index: " class="head"/>
+  <textbox id="xalan_rdf" persist="url" crop="end" size="40"/>
+  <button label="browse..." oncommand="view.browseForRDF()" />
 </hbox>
 <hbox>
 <groupbox orient="horizontal"><caption label="search" />
-  <button label="Search for " oncommand="select()"/>
-  <textbox style="width: 10em;" id="search-name" persist="value" /><text value=" in " />
-  <menulist id="search-field" persist="data">
+  <button label="Search for " oncommand="select()" observes="not_yet"/>
+  <textbox style="width: 10em;" id="search-name" persist="value" /><label value=" in " />
+  <menulist id="search-field" persist="data" observes="not_yet">
     <menupopup>
       <menuitem value="1" label="Name" />
       <menuitem value="2" label="Purpose" />
@@ -58,27 +103,99 @@
   </menulist>
 </groupbox>
 <groupbox orient="horizontal"><caption label="select" />
-  <button label="Select from " oncommand="selectRange()"/>
+  <button label="Select from " oncommand="selectRange()" observes="not_yet"/>
   <textbox style="width: 10em;" id="start-field" persist="value" />
-  <text value=" to " />
+  <label value=" to " />
   <textbox style="width: 10em;" id="end-field" persist="value" />
 </groupbox>
 <spacer flex="1" /></hbox>
 <hbox><groupbox orient="horizontal"><caption label="stats" />
-  <text value="tests run: "/><text id="tests_run" value="0" />
-  <text value="  tests passed: "/><text id="tests_passed" value="0"/>
-  <text value="  tests failed: "/><text id="tests_failed" value="0"/>
-  <text value="  tests selected: "/><text id="tests_selected" value="0"/>
+  <label value="tests run: "/><label id="tests_run" value="0" />
+  <label value="  tests passed: "/><label id="tests_passed" value="0"/>
+  <label value="  tests failed: "/><label id="tests_failed" value="0"/>
+  <label value="  tests selected: "/><label id="tests_selected" value="0"/>
 </groupbox>  
 <spacer flex="1" /></hbox>
 
-<tree id="out" flex="1" onselect="sel_change()">
+<tree id="out" flex="1" flags="dont-build-content"
+          datasources="rdf:null" ref="urn:root"
+          context="itemcontext">
   <treecols>
-    <treecol id="name" label="Name" flex="1"/>
-    <treecol id="purp" label="Purpose" flex="2"/>
-    <treecol id="comm" label="Comment" flex="1"/>
+    <treecol id="NameColumn" flex="1" label="Name" sort="?name"
+                 primary="true" />
+    <splitter />
+    <treecol id="PurpsColumn" flex="2" label="Purpose" sort="?purp" />
+    <splitter />
+    <treecol id="SuccessColumn" flex="0" label="Success"  />
+    <splitter observes="obs_orig_success" />
+    <treecol id="OrigSuccessColumn" flex="0" label="Previously" 
+             observes="obs_orig_success" />
   </treecols>
-  <treechildren/>
-</tree>
+  <template>
+    <rule>
+      <conditions>
+        <treeitem uri="?uri" />
+        <member container="?uri" child="?subheading" />
+        <triple subject="?subheading"
+                predicate="http://home.netscape.com/NC-rdf#purp"
+                object="?purp" />
+      </conditions>
 
+      <bindings>
+        <binding subject="?subheading"
+                 predicate="http://home.netscape.com/NC-rdf#name"
+                 object="?name" />
+        <binding subject="?subheading"
+                 predicate="http://home.netscape.com/NC-rdf#succ"
+                 object="?succ" />
+        <binding subject="?subheading"
+                 predicate="http://home.netscape.com/NC-rdf#orig_succ"
+                 object="?orig_succ" />
+      </bindings>
+
+      <action>
+        <treechildren>
+          <treeitem uri="?subheading" >
+            <treerow>
+              <treecell ref="NameColumn"    label="?name" />
+              <treecell ref="PurpsColumn"   label="?purp" />
+              <treecell ref="SuccessColumn" label="?succ"
+                        properties="success ?succ"/>
+              <treecell ref="OrigSuccessColumn" label="?orig_succ"
+                        properties="success ?orig_succ"
+                        />
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </action>
+    </rule>
+    <rule>
+      <conditions>
+        <treeitem uri="?uri" />
+        <member container="?uri" child="?subheading" />
+      </conditions>
+
+      <bindings>
+        <binding subject="?subheading"
+                 predicate="http://home.netscape.com/NC-rdf#dir"
+                 object="?dir" />
+        <binding subject="?subheading"
+                 predicate="http://home.netscape.com/NC-rdf#succ"
+                 object="?succ" />
+      </bindings>
+
+      <action>
+        <treechildren>
+          <treeitem uri="?subheading" >
+            <treerow>
+              <treecell ref="NameColumn"    label="?dir" />
+              <treecell ref="SuccessColumn" label="?succ" />
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </action>
+    </rule>
+  </template>
+</tree>
+<iframe style="visibility:hidden; height:0px;" id="hiddenHtml" />
 </window>
