@@ -184,7 +184,7 @@
 
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
-       multiple="true"
+       multiple="true" flags="dont-test-empty"
        onselect="bookmarkSelect();"
        ondragover="return DragOverTree(event);"
        ondraggesture="return BeginDragTree(event);"
