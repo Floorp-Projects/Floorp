@@ -1199,8 +1199,9 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
     rv = DeleteProfile(oldName, PR_FALSE /* don't delete files */);
     if (NS_FAILED(rv)) return rv;
      
-	/* note, we do not rename the dir on disk to the new name
-	 * we don't rename the directory on purpose.
+	/* note, we do not rename the directory on disk to the new name
+	 * this is on purpose.
+     *
 	 * we don't require the directory name to match the profile name, 
 	 * but it usually does.  
 	 * (the pairing of values occurs in the profile registry)
@@ -1209,11 +1210,9 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
 	 * 1) user creates a profile "foo" and the directory gets named "foo".
  	 * 2) user creates a profile "bar" and the directory gets named "bar"
 	 * 3) user deletes the profile "foo", but chooses not to delete the files on disk.  (they are given this option when deleting a profile)
-	 * 4) user renames "bar" profile to "foo"
-	 * 
-	 * things would not work correctly if we renamed the folder on disk.
-	 * for completeness:
-	 *  if the user now creates another new profile named "foo", the folder on disk will have a unique name on disk, probably "foo-1".
+	 * 4) user renames "bar" profile to "foo", but still uses the directory named "bar" on disk
+	 *
+	 * bad things would happen if we tried to rename the directory
 	 */
     
     /* profile is just replaced. But Keep up the count */
