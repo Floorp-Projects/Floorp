@@ -215,7 +215,9 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
     nsAutoString theSubstr;
     result=aScanner.GetIdentifier(theSubstr,PR_TRUE);
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
-    if(eHTMLTag_userdefined==mTypeID) {
+    // Save the original tag string if this is user-defined or if we
+    // are viewing source
+    if(eHTMLTag_userdefined==mTypeID || (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
       mTextValue=theSubstr;
     }
   }
@@ -328,7 +330,9 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
     NS_ENSURE_SUCCESS(result, result);
     
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
-    if(eHTMLTag_userdefined==mTypeID) {
+    // Save the original tag string if this is user-defined or if we
+    // are viewing source
+    if(eHTMLTag_userdefined==mTypeID || (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
       mTextValue=theSubstr;
     }
   }
