@@ -2780,13 +2780,17 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	symKey = pk11_HandUnwrap(slot, wrappingKey, &mechanism, wrappedKey, 
 	                         target, keyTemplate, templateCount, keySize, 
 				 wincx);
-	if (symKey) return symKey;
+	if (symKey) {
+	    if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
+	    return symKey;
+	}
 	/* fall through, maybe they incorrectly set CKF_DECRYPT */
     }
 
     /* get our key Structure */
     symKey = PK11_CreateSymKey(slot,target,wincx);
     if (symKey == NULL) {
+	if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
 	return NULL;
     }
 
