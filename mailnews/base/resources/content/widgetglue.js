@@ -230,5 +230,40 @@ function MsgToggleSplitter(id)
 }
 
 
+function NotifyQuitApplication()
+{
+	var ObserverService = Components.classes["component://netscape/observer-service"].getService();
+	ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
+	if (ObserverService)
+	{
+		try 
+		{
+			ObserverService.Notify(null, "quit-application", null);
+		} 
+		catch (ex) 
+		{
+			// dump("no observer found \n");
+		}
+	}
+}
+
+function LastToClose()
+{
+	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+	var enumerator = windowManagerInterface.getEnumerator( null );
+    var count = 0;
+
+	while ( enumerator.hasMoreElements() && count < 2 )
+	{
+		var  windowToClose = enumerator.getNext();
+        count++;
+    }
+    if (count == 1)
+        return true;
+    else
+        return false;
+}
+
 
 

@@ -39,10 +39,14 @@
 #include "nsIURL.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgCompUtils.h"
+#include "prcmon.h"
+#include "nsIMsgImapMailFolder.h"
+#include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////
 // This is the listener class for the copy operation. We have to create this class 
@@ -59,6 +63,8 @@ NS_INTERFACE_MAP_END_THREADSAFE
 CopyListener::CopyListener(void) 
 { 
   mComposeAndSend = nsnull;
+  mCopyObject = nsnull;
+  mCopyInProgress = PR_FALSE;
   NS_INIT_REFCNT(); 
 }
 
@@ -123,6 +129,13 @@ CopyListener::OnStopCopy(nsresult aStatus)
 #endif
   }
 
+  if (mCopyObject)
+  {
+      PR_CEnterMonitor(mCopyObject);
+      PR_CNotifyAll(mCopyObject);
+      mCopyInProgress = PR_FALSE;
+      PR_CExitMonitor(mCopyObject);
+  }
   if (mComposeAndSend)
     mComposeAndSend->NotifyListenersOnStopCopy(aStatus);
 
@@ -246,8 +259,47 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
       return NS_ERROR_OUT_OF_MEMORY;
 
     mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
+    nsCOMPtr<nsIEventQueue> eventQueue;
+
+    if (aIsDraft)
+    {
+        nsCOMPtr<nsIMsgImapMailFolder> imapFolder =
+            do_QueryInterface(dstFolder);
+        NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                        NS_MSGACCOUNTMANAGER_PROGID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        PRBool shutdownInProgress = PR_FALSE;
+        rv = accountManager->GetShutdownInProgress(&shutdownInProgress);
+        
+        if (NS_SUCCEEDED(rv) && shutdownInProgress && imapFolder)
+        { 
+          // set the following only when we were in the middle of shutdown
+          // process
+            mCopyListener->mCopyObject = do_QueryInterface(tPtr);
+            mCopyListener->mCopyInProgress = PR_TRUE;
+            NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
+                            kEventQueueServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
+            pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                                getter_AddRefs(eventQueue)); 
+        }
+    }
+    // ** make sure we have a valid copy listener while waiting for copy
+    // server to finish
+    nsCOMPtr<CopyListener> aCopyListener = do_QueryInterface(tPtr);
+
     rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace,
                                       aIsDraft, mCopyListener, msgWindow);
+    // aCopyListener->mCopyInProgress can only be set when we are in the
+    // middle of the shutdown process
+    while (aCopyListener->mCopyInProgress)
+    {
+        PR_CEnterMonitor(aCopyListener);
+        PR_CWait(aCopyListener, 1000UL);
+        PR_CExitMonitor(aCopyListener);
+        if (eventQueue)
+            eventQueue->ProcessPendingEvents();
+    }
 	}
 
 	return rv;

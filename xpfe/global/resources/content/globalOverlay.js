@@ -1,9 +1,23 @@
 function goQuitApplication()
 {
+	var ObserverService = Components.classes["component://netscape/observer-service"].getService();
+	ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
+	if (ObserverService)
+	{
+		try 
+		{
+			ObserverService.Notify(null, "quit-application", null);
+		} 
+		catch (ex) 
+		{
+			// dump("no observer found \n");
+		}
+	}
+	
 	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	var enumerator = windowManagerInterface.getEnumerator( null );
-	
+
 	while ( enumerator.hasMoreElements()  )
 	{
 		var  windowToClose = enumerator.getNext();

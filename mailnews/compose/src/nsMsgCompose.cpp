@@ -1138,15 +1138,12 @@ m_compFields->SetCc(recipStrCStr);
 ////////////////////////////////////////////////////////////////////////////////////
 QuotingOutputStreamListener::~QuotingOutputStreamListener() 
 {
-  if (mComposeObj)
-    NS_RELEASE(mComposeObj);
 }
 
 QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * originalMsgURI,
                                                          PRBool quoteHeaders,
                                                          nsIMsgIdentity *identity) 
 { 
-  mComposeObj = nsnull;
   mQuoteHeaders = quoteHeaders;
   mIdentity = identity;
 
@@ -1450,7 +1447,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
     }
   }
   
-  NS_IF_RELEASE(mComposeObj);	//We are done with it, therefore release it.
+  mComposeObj = null_nsCOMPtr();	//We are done with it, therefore release it.
   return rv;
 }
 
@@ -1624,7 +1621,6 @@ NS_IMPL_QUERY_INTERFACE2(nsMsgComposeSendListener,
 
 nsMsgComposeSendListener::nsMsgComposeSendListener(void) 
 { 
-  mComposeObj = nsnull;
 	mDeliverMode = 0;
 
   NS_INIT_REFCNT(); 
@@ -1801,7 +1797,6 @@ NS_IMPL_ISUPPORTS(nsMsgDocumentStateListener, NS_GET_IID(nsIDocumentStateListene
 nsMsgDocumentStateListener::nsMsgDocumentStateListener(void)
 {
   NS_INIT_REFCNT();
-  mComposeObj = nsnull;
 }
 
 nsMsgDocumentStateListener::~nsMsgDocumentStateListener(void)

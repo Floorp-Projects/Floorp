@@ -63,6 +63,9 @@ public:
   NS_IMETHOD OnStopCopy(nsresult aStatus);
 
   NS_IMETHOD SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj);
+  
+  nsCOMPtr<nsISupports> mCopyObject;
+  PRBool                          mCopyInProgress;
 
 private:
   nsCOMPtr<nsMsgComposeAndSend>       mComposeAndSend;

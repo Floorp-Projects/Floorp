@@ -92,6 +92,10 @@ interface nsIMsgAccountManager : nsISupports {
 
   /* summary of summary files folder cache */
   readonly attribute nsIMsgFolderCache folderCache;
+
+  /* are we shutting down */
+  readonly attribute boolean shutdownInProgress;
+
   /*
    * search for the server with the given username, hostname, and type
    * the type is the same as is specified in the preferences,

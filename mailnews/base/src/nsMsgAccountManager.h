@@ -77,6 +77,7 @@ private:
   nsCAutoString mAccountKeyList;
   
   PRBool m_haveShutdown;
+  PRBool m_shutdownInProgress;
 
 
   /* internal creation routines - updates m_identities and m_incomingServers */

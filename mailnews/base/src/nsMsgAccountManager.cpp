@@ -128,6 +128,7 @@ nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
   m_defaultAccount(null_nsCOMPtr()),
   m_haveShutdown(PR_FALSE),
+  m_shutdownInProgress(PR_FALSE),
   m_emptyTrashInProgress(PR_FALSE),
   m_prefs(0)
 {
@@ -170,6 +171,8 @@ nsresult nsMsgAccountManager::Init()
   {    
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     observerService->AddObserver(this, topic.GetUnicode());
+    topic.AssignWithConversion("quit-application");
+    observerService->AddObserver(this, topic.GetUnicode());
   }
 
   return NS_OK;
@@ -191,14 +194,29 @@ nsresult nsMsgAccountManager::Shutdown()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgAccountManager::GetShutdownInProgress(PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = m_shutdownInProgress;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
   nsAutoString topicString(aTopic);
-  nsAutoString shutdownString; shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  nsAutoString shutdownString;
+  shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  nsAutoString quitApplicationString;
+  quitApplicationString.AssignWithConversion("quit-application");
 
   if(topicString == shutdownString)
   {
     Shutdown();
+  }
+  else if (topicString == quitApplicationString)
+  {
+    m_shutdownInProgress = PR_TRUE;
   }
 	
  return NS_OK;

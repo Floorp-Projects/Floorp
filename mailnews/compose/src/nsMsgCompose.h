@@ -151,7 +151,7 @@ public:
 	  NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
 
 private:
-    nsMsgCompose              *mComposeObj;
+    nsCOMPtr<nsMsgCompose>    mComposeObj;
     nsString       				    mMsgBody;
     nsString       				    mCitePrefix;
     nsString       				    mSignature;
@@ -202,7 +202,7 @@ public:
 
 private:
 
-  nsMsgCompose    *mComposeObj;
+  nsCOMPtr<nsMsgCompose> mComposeObj;
 	MSG_DeliverMode mDeliverMode;
 };
 

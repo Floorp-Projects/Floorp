@@ -962,6 +962,8 @@ function ComposeCanClose()
 				switch (result.value)
 				{
 					case 0: //Save
+                        if (LastToClose())
+                            NotifyQuitApplication();
 						SaveAsDraft();
 						break;
 					case 1:	//Cancel
