@@ -869,7 +869,7 @@ static PRBool ApplyClipRect(const nsView* aView, nsRect* aRect, PRBool aFollowPl
   nsPoint offset(0, 0);
   PRBool lastViewIsFloating = aView->GetFloating();
   PRBool foundPlaceholders = PR_FALSE;
-  while (aView != aStopAtView) {
+  while (NS_STATIC_CAST(nsIView*, aView) != aStopAtView) {
     const nsView* parentView = aView->GetParent();
     nsPoint offsetFromParent = aView->GetPosition();
 
