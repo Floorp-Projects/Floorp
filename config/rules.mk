@@ -841,11 +841,6 @@ ifdef BEOS_PROGRAM_RESOURCE
 	mimeset $@
 endif
 endif # BeOS
-ifeq ($(OS_ARCH),OS2)
-ifdef RESFILE
-	$(RC) $(RCFLAGS) $(RESFILE) $@
-endif
-endif
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -1015,11 +1010,6 @@ endif # NO_LD_ARCHIVE_FLAGS
 else # os2 vacpp
 	$(MKSHLIB) /O:$@ /DLL /INC:_dllentry $(LDFLAGS) $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 endif # !os2 vacpp
-ifeq ($(OS_ARCH),OS2)
-ifdef RESFILE
-	$(RC) $(RCFLAGS) $(RESFILE) $@
-endif
-endif # OS2
 	chmod +x $@
 ifndef NO_COMPONENT_LINK_MAP
 ifndef MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS
@@ -1143,7 +1133,7 @@ $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 %.res: %.rc
 	@echo Creating Resource file: $@
 ifeq ($(OS_ARCH),OS2)
-	$(RC) $(RCFLAGS) -i $(subst /,\,$(srcdir)) -r $< $@
+	$(RC) $(RCFLAGS:-D%=-d %) -i $(subst /,\,$(srcdir)) -r $< $@
 else
 ifdef GNU_CC
 	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) $(OUTOPTION)$@ $(_VPATH_SRCS)
