@@ -38,12 +38,6 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
-#
-# Rhapsody is using a more-portable way of specifying
-# the link line, Linux and other OS's probably want
-# to follow suit. -mcafee
-#
-ifeq ($(OS_TARGET),Rhapsody)
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/lib	\
 	-lraptorhtmldoc_s	\
@@ -67,32 +61,5 @@ EXTRA_DSO_LDOPTS = \
 	-lplds21	\
 	-lplc21		\
 	$(NULL)
-else
-# These must be maintained in the proper order for Linux.
-EXTRA_DSO_LDOPTS = \
-	$(LD_ALL)					\
-	$(DIST)/lib/libraptorhtmldoc_s.a		\
-	$(DIST)/lib/libnglhtmlcon_s.a			\
-	$(DIST)/lib/libraptorhtmldoc_s.a		\
-	$(DIST)/lib/libraptorhtmlbase_s.a		\
-	$(DIST)/lib/libraptorhtmlstyle_s.a		\
-	$(DIST)/lib/libraptorhtmlforms_s.a		\
-	$(DIST)/lib/libraptorhtmltable_s.a		\
-	$(DIST)/lib/libraptorlayout_s.a		        \
-	$(DIST)/lib/libraptorevents_s.a			\
-	$(LD_NONE)					\
-	$(DIST)/bin/libraptorhtmlpars.so		\
-	$(DIST)/bin/libraptorgfx.so			\
-	$(DIST)/bin/libraptorbase.so			\
-	$(DIST)/bin/libgmbaseunix.so			\
-	$(DIST)/bin/libjsdom.so				\
-	$(DIST)/bin/libjs.so				\
-	$(DIST)/bin/libnetlib.so			\
-	$(DIST)/bin/libxpcom.so				\
-	$(DIST)/bin/libnspr21.so			\
-	$(DIST)/bin/libplds21.so			\
-	$(DIST)/bin/libplc21.so				\
-	-lm
-endif
 
 include $(DEPTH)/config/rules.mk
