@@ -26,7 +26,8 @@ enum nsStyleStructID {
   eStyleStruct_Position = 5,
   eStyleStruct_Text     = 6,
   eStyleStruct_Display  = 7,
-  eStyleStruct_Table    = 8
+  eStyleStruct_Table    = 8,
+  eStyleStruct_Content  = 9
 };
 
 

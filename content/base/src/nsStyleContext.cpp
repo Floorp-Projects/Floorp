@@ -30,6 +30,7 @@
 
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
+#define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nsnull; }
 
 // --------------------
 // nsStyleFont
@@ -892,14 +893,25 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
   mCols  = NS_STYLE_TABLE_COLS_NONE;
   mFrame = NS_STYLE_TABLE_FRAME_NONE;
   mRules = NS_STYLE_TABLE_RULES_NONE;
-  mBorderCollapse = NS_STYLE_BORDER_SEPARATE;                   //XXX: should inherit
-  mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_HIDE;                //XXX: should inherit
-  mCaptionSide = NS_SIDE_TOP;                                   //XXX: should inherit
   mCellPadding.Reset();
-  mBorderSpacingX.Reset();    //XXX: should inherit
-  mBorderSpacingY.Reset();    //XXX: should inherit  
-  mSpanWidth.Reset();         //XXX: should inherit
-  mSpan=1;
+  mSpan = 1;
+
+  if (aParent) {  // handle inherited properties
+    mBorderCollapse = aParent->mBorderCollapse;
+    mEmptyCells     = aParent->mEmptyCells;
+    mCaptionSide    = aParent->mCaptionSide;
+    mBorderSpacingX = aParent->mBorderSpacingX;
+    mBorderSpacingY = aParent->mBorderSpacingY;
+    mSpanWidth      = aParent->mSpanWidth;
+  }
+  else {
+    mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
+    mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_HIDE;
+    mCaptionSide = NS_SIDE_TOP;
+    mBorderSpacingX.Reset();
+    mBorderSpacingY.Reset();
+    mSpanWidth.Reset();
+  }
 }
 
 PRInt32 StyleTableImpl::CalcDifference(const StyleTableImpl& aOther) const
@@ -921,6 +933,271 @@ PRInt32 StyleTableImpl::CalcDifference(const StyleTableImpl& aOther) const
     return NS_STYLE_HINT_VISUAL;
   }
   return NS_STYLE_HINT_REFLOW;
+}
+
+
+//-----------------------
+// nsStyleContent
+//
+
+nsStyleContent::nsStyleContent(void)
+  : mMarkerOffset(),
+    mContentCount(0),
+    mContents(nsnull),
+    mIncrementCount(0),
+    mIncrements(nsnull),
+    mResetCount(0),
+    mResets(nsnull),
+    mQuotesCount(0),
+    mQuotes(nsnull)
+{
+}
+
+nsStyleContent::~nsStyleContent(void)
+{
+  DELETE_ARRAY_IF(mContents);
+  DELETE_ARRAY_IF(mIncrements);
+  DELETE_ARRAY_IF(mResets);
+  DELETE_ARRAY_IF(mQuotes);
+}
+
+nsresult 
+nsStyleContent::GetContentAt(PRUint32 aIndex, nsStyleContentType& aType, nsString& aContent) const
+{
+  if (aIndex < mContentCount) {
+    aType = mContents[aIndex].mType;
+    aContent = mContents[aIndex].mContent;
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+nsresult 
+nsStyleContent::AllocateContents(PRUint32 aCount)
+{
+  if (aCount != mContentCount) {
+    DELETE_ARRAY_IF(mContents);
+    if (aCount) {
+      mContents = new nsStyleContentData[aCount];
+      if (! mContents) {
+        mContentCount = 0;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    mContentCount = aCount;
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsStyleContent::SetContentAt(PRUint32 aIndex, nsStyleContentType aType, const nsString& aContent)
+{
+  if (aIndex < mContentCount) {
+    mContents[aIndex].mType = aType;
+    if (aType < eStyleContentType_OpenQuote) {
+      mContents[aIndex].mContent = aContent;
+    }
+    else {
+      mContents[aIndex].mContent.Truncate();
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+nsresult 
+nsStyleContent::GetCounterIncrementAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aIncrement) const
+{
+  if (aIndex < mIncrementCount) {
+    aCounter = mIncrements[aIndex].mCounter;
+    aIncrement = mIncrements[aIndex].mValue;
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+nsresult 
+nsStyleContent::AllocateCounterIncrements(PRUint32 aCount)
+{
+  if (aCount != mIncrementCount) {
+    DELETE_ARRAY_IF(mIncrements);
+    if (aCount) {
+      mIncrements = new nsStyleCounterData[aCount];
+      if (! mIncrements) {
+        mIncrementCount = 0;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    mIncrementCount = aCount;
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsStyleContent::SetCounterIncrementAt(PRUint32 aIndex, const nsString& aCounter, PRInt32 aIncrement)
+{
+  if (aIndex < mIncrementCount) {
+    mIncrements[aIndex].mCounter = aCounter;
+    mIncrements[aIndex].mValue = aIncrement;
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+nsresult 
+nsStyleContent::GetCounterResetAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aValue) const
+{
+  if (aIndex < mResetCount) {
+    aCounter = mResets[aIndex].mCounter;
+    aValue = mResets[aIndex].mValue;
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+nsresult 
+nsStyleContent::AllocateCounterResets(PRUint32 aCount)
+{
+  if (aCount != mResetCount) {
+    DELETE_ARRAY_IF(mResets);
+    if (aCount) {
+      mResets = new nsStyleCounterData[aCount];
+      if (! mResets) {
+        mResetCount = 0;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    mResetCount = aCount;
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsStyleContent::SetCounterResetAt(PRUint32 aIndex, const nsString& aCounter, PRInt32 aValue)
+{
+  if (aIndex < mResetCount) {
+    mResets[aIndex].mCounter = aCounter;
+    mResets[aIndex].mValue = aValue;
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+nsresult 
+nsStyleContent::GetQuotesAt(PRUint32 aIndex, nsString& aOpen, nsString& aClose) const
+{
+  if (aIndex < mQuotesCount) {
+    aIndex *= 2;
+    aOpen = mQuotes[aIndex];
+    aClose = mQuotes[++aIndex];
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+nsresult 
+nsStyleContent::AllocateQuotes(PRUint32 aCount)
+{
+  if (aCount != mQuotesCount) {
+    DELETE_ARRAY_IF(mQuotes);
+    if (aCount) {
+      mQuotes = new nsString[aCount * 2];
+      if (! mQuotes) {
+        mQuotesCount = 0;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    mQuotesCount = aCount;
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsStyleContent::SetQuotesAt(PRUint32 aIndex, const nsString& aOpen, const nsString& aClose)
+{
+  if (aIndex < mQuotesCount) {
+    aIndex *= 2;
+    mQuotes[aIndex] = aOpen;
+    mQuotes[++aIndex] = aClose;
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+struct StyleContentImpl: public nsStyleContent {
+  StyleContentImpl(void) : nsStyleContent() { };
+
+  void ResetFrom(const StyleContentImpl* aParent, nsIPresContext* aPresContext);
+  PRInt32 CalcDifference(const StyleContentImpl& aOther) const;
+};
+
+void
+StyleContentImpl::ResetFrom(const StyleContentImpl* aParent, nsIPresContext* aPresContext)
+{
+  // reset data
+  mMarkerOffset.Reset();
+  mContentCount = 0;
+  DELETE_ARRAY_IF(mContents);
+  mIncrementCount = 0;
+  DELETE_ARRAY_IF(mIncrements);
+  mResetCount = 0;
+  DELETE_ARRAY_IF(mResets);
+
+  // inherited data
+  if (aParent) {
+    if (NS_SUCCEEDED(AllocateQuotes(aParent->mQuotesCount))) {
+      PRUint32 index = (mQuotesCount * 2);
+      while (0 < index--) {
+        mQuotes[index] = aParent->mQuotes[index];
+      }
+    }
+  }
+  else {
+    mQuotesCount = 0;
+    DELETE_ARRAY_IF(mQuotes);
+  }
+}
+
+PRInt32 
+StyleContentImpl::CalcDifference(const StyleContentImpl& aOther) const
+{
+  if (mContentCount == aOther.mContentCount) {
+    if ((mMarkerOffset == aOther.mMarkerOffset) &&
+        (mIncrementCount == aOther.mIncrementCount) && 
+        (mResetCount == aOther.mResetCount) &&
+        (mQuotesCount == aOther.mQuotesCount)) {
+      PRUint32 index = mContentCount;
+      while (0 < index--) {
+        if ((mContents[index].mType != aOther.mContents[index].mType) || 
+            (mContents[index].mContent != aOther.mContents[index].mContent)) {
+          return NS_STYLE_HINT_REFLOW;
+        }
+      }
+      index = mIncrementCount;
+      while (0 < index--) {
+        if ((mIncrements[index].mValue != aOther.mIncrements[index].mValue) || 
+            (mIncrements[index].mCounter != aOther.mIncrements[index].mCounter)) {
+          return NS_STYLE_HINT_REFLOW;
+        }
+      }
+      index = mResetCount;
+      while (0 < index--) {
+        if ((mResets[index].mValue != aOther.mResets[index].mValue) || 
+            (mResets[index].mCounter != aOther.mResets[index].mCounter)) {
+          return NS_STYLE_HINT_REFLOW;
+        }
+      }
+      index = (mQuotesCount * 2);
+      while (0 < index--) {
+        if (mQuotes[index] != aOther.mQuotes[index]) {
+          return NS_STYLE_HINT_REFLOW;
+        }
+      }
+      return NS_STYLE_HINT_NONE;
+    }
+    return NS_STYLE_HINT_REFLOW;
+  }
+  return NS_STYLE_HINT_FRAMECHANGE;
 }
 
 //----------------------------------------------------------------------
@@ -983,6 +1260,7 @@ protected:
   StyleTextImpl     mText;
   StyleDisplayImpl  mDisplay;
   StyleTableImpl*   mTable;
+  StyleContentImpl* mContent;
 
 #ifdef DEBUG_REFS
   PRInt32 mInstance;
@@ -1019,7 +1297,8 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mPosition(),
     mText(),
     mDisplay(),
-    mTable(nsnull)
+    mTable(nsnull),
+    mContent(nsnull)
 {
   NS_INIT_REFCNT();
   NS_IF_ADDREF(mPseudoTag);
@@ -1049,7 +1328,7 @@ StyleContextImpl::~StyleContextImpl()
 {
   NS_ASSERTION((nsnull == mChild) && (nsnull == mEmptyChild), "destructing context with children");
 
-  if (nsnull != mParent) {
+  if (mParent) {
     mParent->RemoveChild(this);
     NS_RELEASE(mParent);
   }
@@ -1058,9 +1337,14 @@ StyleContextImpl::~StyleContextImpl()
 
   NS_IF_RELEASE(mRules);
 
-  if (nsnull != mTable) {
+  if (mTable) {
     delete mTable;
     mTable = nsnull;
+  }
+
+  if (mContent) {
+    delete mContent;
+    mContent = nsnull;
   }
 
 #ifdef DEBUG_REFS
@@ -1303,13 +1587,40 @@ const nsStyleStruct* StyleContextImpl::GetStyleData(nsStyleStructID aSID)
     case eStyleStruct_Table:  // this one gets created lazily
       if (nsnull == mTable) {
         mTable = new StyleTableImpl();
-        if (nsnull != mParent) {
-          if (nsnull != mParent->mTable) {
-            mTable->ResetFrom(mParent->mTable, nsnull);
+        StyleContextImpl* parent = mParent;
+        while (parent) {  // find first parent that has table data so we can inherit from it
+          if (parent->mTable) {
+            break;
           }
+          parent = parent->mParent;
+        }
+        if (parent) {
+          mTable->ResetFrom(parent->mTable, nsnull);
+        }
+        else {
+          mTable->ResetFrom(nsnull, nsnull);
         }
       }
       result = mTable;
+      break;
+    case eStyleStruct_Content:  // lazy creation
+      if (nsnull == mContent) {
+        mContent = new StyleContentImpl();
+        StyleContextImpl* parent = mParent;
+        while (parent) {  // find first parent that has content data so we can inherit from it
+          if (parent->mContent) {
+            break;
+          }
+          parent = parent->mParent;
+        }
+        if (parent) {
+          mContent->ResetFrom(parent->mContent, nsnull);
+        }
+        else {
+          mContent->ResetFrom(nsnull, nsnull);
+        }
+      }
+      result = mContent;
       break;
     default:
       NS_ERROR("Invalid style struct id");
@@ -1347,13 +1658,40 @@ nsStyleStruct* StyleContextImpl::GetMutableStyleData(nsStyleStructID aSID)
     case eStyleStruct_Table:  // this one gets created lazily
       if (nsnull == mTable) {
         mTable = new StyleTableImpl();
-        if (nsnull != mParent) {
-          if (nsnull != mParent->mTable) {
-            mTable->ResetFrom(mParent->mTable, nsnull);
+        StyleContextImpl* parent = mParent;
+        while (parent) {  // find first parent that has table data so we can inherit from it
+          if (parent->mTable) {
+            break;
           }
+          parent = parent->mParent;
+        }
+        if (parent) {
+          mTable->ResetFrom(parent->mTable, nsnull);
+        }
+        else {
+          mTable->ResetFrom(nsnull, nsnull);
         }
       }
       result = mTable;
+      break;
+    case eStyleStruct_Content:  // this one gets created lazily
+      if (nsnull == mContent) {
+        mContent = new StyleContentImpl();
+        StyleContextImpl* parent = mParent;
+        while (parent) {  // find first parent that has table data so we can inherit from it
+          if (parent->mContent) {
+            break;
+          }
+          parent = parent->mParent;
+        }
+        if (parent) {
+          mContent->ResetFrom(parent->mContent, nsnull);
+        }
+        else {
+          mContent->ResetFrom(nsnull, nsnull);
+        }
+      }
+      result = mContent;
       break;
     default:
       NS_ERROR("Invalid style struct id");
@@ -1537,6 +1875,37 @@ StyleContextImpl::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) c
       else {
         if (other->mTable) {
           hint = NS_STYLE_HINT_REFLOW;
+        }
+        else {
+          hint = NS_STYLE_HINT_NONE;
+        }
+      }
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+    if (aHint < NS_STYLE_HINT_MAX) {
+      if (mContent) {
+        if (other->mContent) {
+          hint = mContent->CalcDifference(*(other->mContent));
+        }
+        else {
+          if (mContent->ContentCount()) {
+            hint = NS_STYLE_HINT_FRAMECHANGE;
+          }
+          else {
+            hint = NS_STYLE_HINT_REFLOW;
+          }
+        }
+      }
+      else {
+        if (other->mContent) {
+          if (other->mContent->ContentCount()) {
+            hint = NS_STYLE_HINT_FRAMECHANGE;
+          }
+          else {
+            hint = NS_STYLE_HINT_REFLOW;
+          }
         }
         else {
           hint = NS_STYLE_HINT_NONE;

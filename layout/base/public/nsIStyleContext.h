@@ -200,12 +200,12 @@ struct nsStyleTable: public nsStyleStruct {
   PRUint8       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
   PRUint8       mRules;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
-  PRUint8       mBorderCollapse;// [inherited]    XXX: inherit not implemented
-  nsStyleCoord  mBorderSpacingX;// [inherited]    XXX: inherit not implemented
-  nsStyleCoord  mBorderSpacingY;// [inherited]    XXX: inherit not implemented
+  PRUint8       mBorderCollapse;// [inherited]
+  nsStyleCoord  mBorderSpacingX;// [inherited]
+  nsStyleCoord  mBorderSpacingY;// [inherited]
   nsStyleCoord  mCellPadding;   // [reset] 
-  PRUint8       mCaptionSide;   // [inherited]    XXX: inherit not implemented
-  PRUint8       mEmptyCells;    // [inherited]    XXX: inherit not implemented
+  PRUint8       mCaptionSide;   // [inherited]
+  PRUint8       mEmptyCells;    // [inherited]
   PRInt32       mCols;          // [reset] an integer if set, or see nsStyleConsts.h NS_STYLE_TABLE_COLS_*
   PRInt32       mSpan;          // [reset] the number of columns spanned by a colgroup or col
   nsStyleCoord  mSpanWidth;     // [reset] the amount of width this col gets from a spanning cell, if any
@@ -214,15 +214,67 @@ protected:
   nsStyleTable(void);
 };
 
-#if 0 // not ready for prime time
+enum nsStyleContentType {
+  eStyleContentType_String        = 1,
+  eStyleContentType_URL           = 10,
+  eStyleContentType_Attr          = 20,
+  eStyleContentType_Counter       = 30,
+  eStyleContentType_Counters      = 31,
+  eStyleContentType_OpenQuote     = 40,
+  eStyleContentType_CloseQuote    = 41,
+  eStyleContentType_NoOpenQuote   = 42,
+  eStyleContentType_NoCloseQuote  = 43
+};
+
+struct nsStyleContentData {
+  nsStyleContentType  mType;
+  nsString            mContent;
+};
+
+struct nsStyleCounterData {
+  nsString  mCounter;
+  PRInt32   mValue;
+};
+
 struct nsStyleContent: public nsStyleStruct {
-  PRUint32  ContentCount(void) const;
-  PRBool    GetContentAt(PRUint32 aIndex, nsStyleXXX& aContent);
+  PRUint32  ContentCount(void) const  { return mContentCount; } // [reset]
+  nsresult  GetContentAt(PRUint32 aIndex, nsStyleContentType& aType, nsString& aContent) const;
+  nsresult  AllocateContents(PRUint32 aCount);
+  nsresult  SetContentAt(PRUint32 aIndex, nsStyleContentType aType, const nsString& aContent);
+
+  PRUint32  CounterIncrementCount(void) const { return mIncrementCount; }  // [reset]
+  nsresult  GetCounterIncrementAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aIncrement) const;
+  nsresult  AllocateCounterIncrements(PRUint32 aCount);
+  nsresult  SetCounterIncrementAt(PRUint32 aIndex, const nsString& aCounter, PRInt32 aIncrement);
+
+  PRUint32  CounterResetCount(void) const { return mResetCount; }  // [reset]
+  nsresult  GetCounterResetAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aValue) const;
+  nsresult  AllocateCounterResets(PRUint32 aCount);
+  nsresult  SetCounterResetAt(PRUint32 aIndex, const nsString& aCounter, PRInt32 aValue);
+
+  nsStyleCoord  mMarkerOffset;  // [reset]
+
+  PRUint32  QuotesCount(void) const { return mQuotesCount; } // [inherited]
+  nsresult  GetQuotesAt(PRUint32 aIndex, nsString& aOpen, nsString& aClose) const;
+  nsresult  AllocateQuotes(PRUint32 aCount);
+  nsresult  SetQuotesAt(PRUint32 aIndex, const nsString& aOpen, const nsString& aClose);
 
 protected:
   nsStyleContent(void);
+  ~nsStyleContent(void);
+
+  PRUint32            mContentCount;
+  nsStyleContentData* mContents;
+
+  PRUint32            mIncrementCount;
+  nsStyleCounterData* mIncrements;
+
+  PRUint32            mResetCount;
+  nsStyleCounterData* mResets;
+
+  PRUint32            mQuotesCount;
+  nsString*           mQuotes;
 };
-#endif
 
 #define BORDER_PRECEDENT_EQUAL  0
 #define BORDER_PRECEDENT_LOWER  1
