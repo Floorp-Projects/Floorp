@@ -86,7 +86,7 @@
               </row>
               <row>
                 <text class="label" value="&bookmarks.description.label;" for="description"/>
-          			<textbox multiline="true" wrap="hard" rows="40" cols="20" id="description"/>
+                <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
               </row>
             </rows>
           </grid>
