@@ -299,7 +299,8 @@ Contributor(s): ______________________________________. -->
       <menubutton class="button-toolbar bookmarkfolder" id="PersonalMenu"
         datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
         ref="NC:BookmarksRoot" container="true" value="&bookmarksButton.label;"
-        tooltip="aTooltip" tooltiptext="&bookmarksButton.tooltip;">
+        tooltip="aTooltip" tooltiptext="&bookmarksButton.tooltip;"
+        flags="dont-test-empty">
         <template>
           <rule iscontainer="true">
             <menupopup>
@@ -334,7 +335,7 @@ Contributor(s): ______________________________________. -->
 
       <!-- Personal toolbar items -->
       <box id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
-        datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
+        datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder" flags="dont-test-empty">
     
         <template>
           <rule parent="box" iscontainer="true">
