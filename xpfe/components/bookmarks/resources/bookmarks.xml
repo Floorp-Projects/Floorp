@@ -1073,9 +1073,22 @@
             }
             // If the node is a folder, then we need to create a new anonymous 
             // resource and copy all the arcs over.
-            if (rType && rType.Value == "http://home.netscape.com/NC-rdf#Folder")
-              rCurrent = BookmarksUtils.cloneFolder(rCurrent, parentRes, currentRes);
-      
+            if (rType && rType.Value == "http://home.netscape.com/NC-rdf#Folder") {
+             // but wait, copying a folder into its child or itself may cause recursive
+             // folder, so need a check before the cloning.
+              var checkIndex = this.currentIndex;
+              var checkRes;
+              while (checkIndex != -1) {
+                checkRes = this.treeBuilder.getResourceAtIndex(checkIndex);
+                if (checkRes.EqualsNode(rCurrent))
+                  break;
+                checkIndex = this.treeBoxObject.view.getParentIndex(checkIndex);
+              }
+              if (checkIndex == -1)
+                rCurrent = BookmarksUtils.cloneFolder(rCurrent, parentRes, currentRes);
+              else
+                continue;
+            }
             // If this item already exists in this container, don't paste, as 
             // this will result in the creation of multiple copies in the datasource
             // but will not result in an update of the UI. (In Short: we don't
@@ -1084,7 +1097,7 @@
             ix = ksRDFC.IndexOf(rCurrent);
             if (ix != -1)
               continue;
-      
+
             ix = ksRDFC.IndexOf(currentRes);
             if (ix != -1)
               ksRDFC.InsertElementAt(rCurrent, ix+1, true);
