@@ -91,12 +91,17 @@ nsresult nsMsgDBModule::Initialize()
         return NS_OK;
 
     mInitialized = PR_TRUE;
+
+    nsDBFolderInfo::AddPrefObserver();
+
     return NS_OK;
 }
 
 // Shutdown this module, releasing all of the module resources
 void nsMsgDBModule::Shutdown()
 {
+    nsDBFolderInfo::RemovePrefObserver();
+
 	nsMsgDatabase::CleanupCache();
     // Release the factory objects
     mMailDBFactory = null_nsCOMPtr();
