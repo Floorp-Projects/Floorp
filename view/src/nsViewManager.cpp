@@ -2063,9 +2063,9 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
           obs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
         }
       } else {
-        nsIViewObserver* vobs = nsnull;
-        vVM->GetViewObserver(vobs);
-        if (nsnull != vobs) {
+        nsCOMPtr<nsIViewObserver> vobs;
+        vVM->GetViewObserver(*getter_AddRefs(vobs));
+        if (vobs) {
           vobs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
         }
       }
