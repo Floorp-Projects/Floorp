@@ -2470,7 +2470,7 @@ static void
 ListRules(nsISupportsArray* aRules, FILE* aOut, PRInt32 aIndent)
 {
   PRUint32 count;
-  PRUint32 index;
+  PRInt32 index;
   if (aRules) {
     aRules->Count(&count);
     for (index = count - 1; index >= 0; --index) {
