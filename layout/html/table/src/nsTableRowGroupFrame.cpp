@@ -959,7 +959,8 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
       if (rowSpan > 1)
       { // found a cell with rowspan > 1, determine it's height
         nscoord heightOfRowsSpanned = 0;
-        for (PRInt32 i = 0; i < rowSpan; i++)
+        PRInt32 i;
+        for ( i = 0; i < rowSpan; i++)
           heightOfRowsSpanned += rowHeights[rowIndex + i];
         
         heightOfRowsSpanned -= topInnerMargin + bottomInnerMargin;
