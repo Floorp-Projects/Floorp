@@ -120,7 +120,7 @@
     <command id="cmd_isindex"          oncommand="goDoCommand('cmd_isindex')"/>
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"    label="&insertCharsCmd.label;"/>
-    <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"     label="&insertHTMLCmd.label;"/>
+    <command id="cmd_insertHTMLWithDialog" oncommand="goDoCommand('cmd_insertHTMLDlg')"  label="&insertHTMLCmd.label;"/>
 
     <command id="cmd_insertBreak"      oncommand="goDoCommand('cmd_insertBreak')"/>
     <command id="cmd_insertBreakAll"   oncommand="goDoCommand('cmd_insertBreakAll')"/>
@@ -190,7 +190,7 @@
     <command id="cmd_italic"        state="false"     oncommand="doStyleUICommand('cmd_italic')"/>
     <command id="cmd_underline"     state="false"     oncommand="doStyleUICommand('cmd_underline')"/>
     <command id="cmd_tt"            state="false"     oncommand="doStyleUICommand('cmd_tt')"/>
-    <command id="cmd_smiley"        state=""  />
+    <command id="cmd_smiley"/>
 
     <command id="cmd_strikethrough" state="false"     oncommand="doStyleUICommand('cmd_strikethrough');"/>
     <command id="cmd_superscript"   state="false"     oncommand="doStyleUICommand('cmd_superscript');"/>
@@ -221,7 +221,7 @@
     <command id="cmd_backgroundColor" state=""/>
     <command id="cmd_highlight"       state="transparent"  oncommand="EditorSelectColor('Highlight', event);"/>
 
-    <command id="cmd_fontSize"        state=""         oncommand="goDoCommand('cmd_fontSize')"/>
+    <command id="cmd_fontSize"                         oncommand="goDoCommand('cmd_fontSize')"/>
     <command id="cmd_align"           state=""/>
     
     <command id="cmd_advancedProperties"              oncommand="goDoCommand('cmd_advancedProperties')"/>
@@ -312,7 +312,8 @@
       </menu>
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" label="&openFileCmd.label;"/>
-      <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" label="&fileRecentMenu.label;" onpopupshowing="BuildRecentMenu()">
+      <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" label="&fileRecentMenu.label;"
+            onpopupshowing="BuildRecentMenu()">
         <menupopup id="menupopup_RecentFiles" oncommand="editPage(event.target.getAttribute('value'), window, false);"/>
           <!-- menuitems appended at runtime -->
       </menu>
@@ -402,7 +403,7 @@
       <menuitem accesskey="&insertlink.accesskey;"       observes="cmd_link"        label="&insertLinkCmd.label;"   key="insertlinkkb"/>
       <menuitem accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      label="&insertAnchorCmd.label;"/>
       <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       label="&insertHLineCmd.label;"/>
-      <menuitem accesskey="&HTMLSourceMode.accesskey;"   observes="cmd_insertHTML"  key="inserthtmlkb"/>
+      <menuitem accesskey="&HTMLSourceMode.accesskey;"   observes="cmd_insertHTMLWithDialog"  key="inserthtmlkb"/>
       <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" id="insertChars"/>
       <menu label="&tocMenu.label;" accesskey="&tocMenu.accesskey;">
         <menupopup onpopupshowing="InitTOCMenu()">
@@ -738,7 +739,8 @@
                  tooltiptext="&anchorToolbarCmd.tooltip;"/>
 
   <!-- Formatting toolbar items. "value" are HTML tagnames, don't translate -->
-  <menulist class="toolbar-focustarget" id="ParagraphSelect" tooltiptext="&ParagraphSelect.tooltip;" crop="right">
+  <menulist class="toolbar-focustarget" id="ParagraphSelect" 
+    tooltiptext="&ParagraphSelect.tooltip;" crop="right">
     <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange(this.parentNode, 'cmd_paragraphState')"/>
     <menupopup id="ParagraphPopup" oncommand="doStatefulCommand('cmd_paragraphState', event.target.value)">
       <menuitem label="&bodyTextCmd.label;"            value=""/>
