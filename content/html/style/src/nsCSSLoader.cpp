@@ -1024,8 +1024,11 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
 #ifdef NS_DEBUG
         mSyncCallback = PR_TRUE;
 #endif
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+
         result = NS_NewUnicharStreamLoader(&loader, urlClone, 
-                                           nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
+                                           loadGroup,
                                            DoneLoadingStyle, aData);
 #ifdef NS_DEBUG
         mSyncCallback = PR_FALSE;

@@ -961,10 +961,12 @@ nsDocument::GetContentType(nsString& aContentType) const
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsILoadGroup* nsDocument::GetDocumentLoadGroup() const
+NS_IMETHODIMP
+nsDocument::GetDocumentLoadGroup(nsILoadGroup **aGroup) const
 {
+  *aGroup = mDocumentLoadGroup;
   NS_IF_ADDREF(mDocumentLoadGroup);
-  return mDocumentLoadGroup;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

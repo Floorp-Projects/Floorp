@@ -3351,10 +3351,13 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       // onto it as opaque data.
       NS_ADDREF(this);
 
+      nsCOMPtr<nsILoadGroup> loadGroup;
       nsIUnicharStreamLoader* loader;
+
+      mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
       rv = NS_NewUnicharStreamLoader(&loader,
                                      url, 
-                                     nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
+                                     loadGroup,
                                      (nsStreamCompleteFunc)nsDoneLoadingScript, 
                                      (void *)this);
       NS_RELEASE(url);

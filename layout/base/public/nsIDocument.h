@@ -117,7 +117,7 @@ public:
   /**
    * Return the LoadGroup for the document. May return null.
    */
-  virtual nsILoadGroup* GetDocumentLoadGroup() const = 0;
+  NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup** aGroup) const = 0;
 
   /**
    * Return the base URL for realtive URLs in the document. May return null (or the document URL).
