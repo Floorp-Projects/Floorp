@@ -1205,10 +1205,10 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
     nsCOMPtr<nsIFile> tmpFile;
     dirService->Get("TmpD", NS_GET_IID(nsIFile), getter_AddRefs(tmpFile));
     static short unsigned int tmpRandom = 0;
-    nsCAutoString tmpNo; tmpNo.AppendInt(tmpRandom++);
-    nsCAutoString saveFile("-sav");
+    nsAutoString tmpNo; tmpNo.AppendInt(tmpRandom++);
+    nsAutoString saveFile(NS_LITERAL_STRING("-sav"));
     saveFile += tmpNo;
-    saveFile += "tmp";
+    saveFile += NS_LITERAL_STRING("tmp");
     tmpFile->Append(saveFile); 
     
     // Get the post data if we're an HTML doc.

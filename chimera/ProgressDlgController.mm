@@ -68,7 +68,12 @@ public:
         mURL = do_QueryInterface(aSource);
         if (!mURL)
             mDocument = do_QueryInterface(aSource);
-        nsCAutoString dstStr = [aDestination cString];
+        PRUint32 dstLen = [aDestination length];
+        PRUnichar* tmp = new PRUnichar[dstLen + sizeof(PRUnichar)];
+        tmp[dstLen] = (PRUnichar)'\0';
+        [aDestination getCharacters:tmp];
+        nsAutoString dstStr ( tmp );
+        delete tmp;
         NS_NewLocalFile(dstStr, PR_FALSE, getter_AddRefs(mDestination));
         mContentType = aContentType;
         mPostData = aPostData;
@@ -174,17 +179,17 @@ nsDownloadListener::BeginDownload()
                 // Create a local directory in the same dir as our file.  It
                 // will hold our associated files.
                 filesFolder = do_CreateInstance("@mozilla.org/file/local;1");
-                nsCAutoString unicodePath;
+                nsAutoString unicodePath;
                 mDestination->GetPath(unicodePath);
                 filesFolder->InitWithPath(unicodePath);
                 
-                nsCAutoString leafName;
+                nsAutoString leafName;
                 filesFolder->GetLeafName(leafName);
-                nsCAutoString nameMinusExt(leafName);
+                nsAutoString nameMinusExt(leafName);
                 PRInt32 index = nameMinusExt.RFind(".");
                 if (index >= 0)
                     nameMinusExt.Left(nameMinusExt, index);
-                nameMinusExt += " Files"; // XXXdwh needs to be localizable!
+                nameMinusExt += NS_LITERAL_STRING(" Files"); // XXXdwh needs to be localizable!
                 filesFolder->SetLeafName(nameMinusExt);
                 PRBool exists = PR_FALSE;
                 filesFolder->Exists(&exists);
@@ -214,17 +219,17 @@ nsDownloadListener::InitDialog()
         if (mURL) {
             nsCAutoString spec;
             mURL->GetSpec(spec);
-            [mController setSourceURL: spec.get()];
+            nsAutoString spec2; spec2.AssignWithConversion(spec.get());
+            [mController setSourceURL: spec2.get()];
         }
         else {
             nsAutoString spec;
             mDocument->GetURL(spec);
-            nsCAutoString spec2; spec2.AssignWithConversion(spec);
-            [mController setSourceURL: spec2.get()];
+            [mController setSourceURL: spec.get()];
         }
     }
 
-    nsCAutoString pathStr;
+    nsAutoString pathStr;
     mDestination->GetPath(pathStr);
     [mController setDestination: pathStr.get()];
     
@@ -261,14 +266,14 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
     return mProgressBar;
 }
 
--(void) setSourceURL: (const char*)aSource
+-(void) setSourceURL: (const PRUnichar*)aSource
 {
-    [mFromField setStringValue: [NSString stringWithCString: aSource]];
+    [mFromField setStringValue: [NSString stringWithCharacters:aSource length:nsCRT::strlen(aSource)]];
 }
 
--(void) setDestination: (const char*)aDestination
+-(void) setDestination: (const PRUnichar*)aDestination
 {
-    [mToField setStringValue: [NSString stringWithCString: aDestination]];
+    [mToField setStringValue: [NSString stringWithCharacters:aDestination length:nsCRT::strlen(aDestination)]];
 }
 
 - (void)windowDidLoad
