@@ -17,6 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Chris Waterson <waterson@netscape.com>
+ *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
@@ -297,83 +300,11 @@ public:
   // nsIGlobalHistory
   NS_DECL_NSIGLOBALHISTORY
 
+  // nsIRDFDataSource
+  NS_DECL_NSIRDFDATASOURCE
+
   // nsIRDFRemoteDataSource
   NS_DECL_NSIRDFREMOTEDATASOURCE
-
-  // nsIRDFDataSource
-  NS_IMETHOD GetURI(char* *aURI);
-
-  NS_IMETHOD GetSource(nsIRDFResource* aProperty,
-                       nsIRDFNode* aTarget,
-                       PRBool aTruthValue,
-                       nsIRDFResource** aSource);
-
-  NS_IMETHOD GetSources(nsIRDFResource* aProperty,
-                        nsIRDFNode* aTarget,
-                        PRBool aTruthValue,
-                        nsISimpleEnumerator** aSources);
-
-  NS_IMETHOD GetTarget(nsIRDFResource* aSource,
-                       nsIRDFResource* aProperty,
-                       PRBool aTruthValue,
-                       nsIRDFNode** aTarget);
-
-  NS_IMETHOD GetTargets(nsIRDFResource* aSource,
-                        nsIRDFResource* aProperty,
-                        PRBool aTruthValue,
-                        nsISimpleEnumerator** aTargets);
-
-  NS_IMETHOD Assert(nsIRDFResource* aSource, 
-                    nsIRDFResource* aProperty, 
-                    nsIRDFNode* aTarget,
-                    PRBool aTruthValue);
-
-  NS_IMETHOD Unassert(nsIRDFResource* aSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aTarget);
-
-  NS_IMETHOD Change(nsIRDFResource* aSource,
-                    nsIRDFResource* aProperty,
-                    nsIRDFNode* aOldTarget,
-                    nsIRDFNode* aNewTarget);
-
-  NS_IMETHOD Move(nsIRDFResource* aOldSource,
-                  nsIRDFResource* aNewSource,
-                  nsIRDFResource* aProperty,
-                  nsIRDFNode* aTarget);
-
-  NS_IMETHOD HasAssertion(nsIRDFResource* aSource,
-                          nsIRDFResource* aProperty,
-                          nsIRDFNode* aTarget,
-                          PRBool aTruthValue,
-                          PRBool* aHasAssertion);
-
-  NS_IMETHOD AddObserver(nsIRDFObserver* aObserver);
-
-  NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver);
-
-  NS_IMETHOD ArcLabelsIn(nsIRDFNode* aNode,
-                         nsISimpleEnumerator** aLabels);
-
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource* aSource,
-                          nsISimpleEnumerator** aLabels);
-
-  NS_IMETHOD GetAllCommands(nsIRDFResource* aSource,
-                            nsIEnumerator/*<nsIRDFResource>*/** aCommands);
-
-  NS_IMETHOD GetAllCmds(nsIRDFResource* aSource,
-                            nsISimpleEnumerator/*<nsIRDFResource>*/** aCommands);
-
-  NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-                              nsIRDFResource*   aCommand,
-                              nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                              PRBool* aResult);
-
-  NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-                       nsIRDFResource*   aCommand,
-                       nsISupportsArray/*<nsIRDFResource>*/* aArguments);
-
-  NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult);
 
 protected:
   nsGlobalHistory(void);
@@ -806,6 +737,10 @@ nsGlobalHistory::RemovePage(const char *aURL)
 NS_IMETHODIMP
 nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
 {
+  NS_PRECONDITION(aURL != nsnull, "null ptr");
+  if (! aURL)
+    return NS_ERROR_NULL_POINTER;
+
   nsresult rv;
   mdb_err err;
 

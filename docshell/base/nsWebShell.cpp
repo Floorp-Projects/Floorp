@@ -274,7 +274,7 @@ public:
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec);
-  NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState);
+  NS_IMETHOD GetLinkState(nsIURI* aLinkURI, nsLinkState& aState);
 
   // nsIProgressEventSink
   NS_DECL_NSIPROGRESSEVENTSINK
@@ -1781,8 +1781,12 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsWebShell::GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
+nsWebShell::GetLinkState(nsIURI* aLinkURI, nsLinkState& aState)
 {
+  NS_PRECONDITION(aLinkURI != nsnull, "null ptr");
+  if (! aLinkURI)
+    return NS_ERROR_NULL_POINTER;
+
   aState = eLinkState_Unvisited;
 
   nsresult rv;
@@ -1800,31 +1804,11 @@ nsWebShell::GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 
   if (mHistoryService) {
     // XXX aURLSpec should really be a char*, not a PRUnichar*.
-    nsAutoString urlStr(aURLSpec);
-
-    char buf[256];
-    char* url = buf;
-
-    if (urlStr.Length() >= PRInt32(sizeof buf)) {
-      url = new char[urlStr.Length() + 1];
-    }
+    nsXPIDLCString url;
+    aLinkURI->GetSpec(getter_Copies(url));
 
     PRInt64 lastVisitDate;
-
-    if (url) {
-      urlStr.ToCString(url, urlStr.Length() + 1);
-
-      rv = mHistoryService->GetLastVisitDate(url, &lastVisitDate);
-
-      if (url != buf)
-        delete[] url;
-    }
-    else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-
-  //XXX: Moved to destructor  nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
-
+    rv = mHistoryService->GetLastVisitDate(url, &lastVisitDate);
     if (NS_FAILED(rv)) return rv;
 
     // a last-visit-date of zero means we've never seen it before; so

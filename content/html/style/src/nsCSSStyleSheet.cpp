@@ -2726,33 +2726,26 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                 aPresContext->GetLinkHandler(&linkHandler);
                 if (linkHandler) {
                   if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-                    nsIURI* docURL = nsnull;
-                    nsIHTMLContent* htmlContent;
-                    if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-                      htmlContent->GetBaseURL(docURL);
-                      NS_RELEASE(htmlContent);
+                    nsCOMPtr<nsIURI> baseURI = nsnull;
+                    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
+                    if (htmlContent) {
+                      // XXX why do this? will nsIHTMLContent's
+                      // GetBaseURL() may return something different
+                      // than the URL of the document it lives in?
+                      htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
                     }
                     else {
-                      nsIDocument* doc = nsnull;
-                      aContent->GetDocument(doc);
-                      if (nsnull != doc) {
-                        doc->GetBaseURL(docURL);
-                        NS_RELEASE(doc);
+                      nsCOMPtr<nsIDocument> doc;
+                      aContent->GetDocument(*getter_AddRefs(doc));
+                      if (doc) {
+                        doc->GetBaseURL(*getter_AddRefs(baseURI));
                       }
                     }
 
-                    nsAutoString absURLSpec;
-                    nsresult rv;
-                    nsIURI *baseUri = nsnull;
-                    rv = docURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
-                    if (NS_FAILED(rv)) return PR_FALSE;
+                    nsCOMPtr<nsIURI> linkURI;
+                    (void) NS_NewURI(getter_AddRefs(linkURI), href, baseURI, CSSStyleSheetInner::gIOService);
 
-                    (void)NS_MakeAbsoluteURI(absURLSpec, href, baseUri, CSSStyleSheetInner::gIOService);
-                    // XXX what about failure of NS_MakeAbsoluteURI here?
-                    NS_RELEASE(baseUri);
-                    NS_IF_RELEASE(docURL);
-
-                    linkHandler->GetLinkState(absURLSpec.GetUnicode(), linkState);
+                    linkHandler->GetLinkState(linkURI, linkState);
                   }
                 }
                 else {
