@@ -54,8 +54,6 @@ static char kNameSpaceSeparator[] = ":";
 static char kNameSpaceDef[] = "xmlns";
 static char kStyleSheetPI[] = "<?xml-stylesheet";
 static char kCSSType[] = "text/css";
-static char kQuote = '\"';
-static char kApostrophe = '\'';
 
 #ifdef XSL
 static char kXSLType[] = "text/xsl";
