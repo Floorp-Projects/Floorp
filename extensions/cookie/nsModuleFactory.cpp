@@ -30,6 +30,8 @@
 #include "nsImgManager.h"
 #include "nsPermissionManager.h"
 #include "nsCookieHTTPNotify.h"
+#include "nsICategoryManager.h"
+#include "nsXPIDLString.h"
 
 // Define the constructor function for the objects
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookie)
@@ -39,6 +41,38 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsImgManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPermissionManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieHTTPNotify, Init)
+
+static NS_METHOD
+RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                      const char *registryLocation, const char *componentType,
+                      const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString previous;
+    return catman->AddCategoryEntry("content-policy",
+                                    NS_IMGMANAGER_CONTRACTID,
+                                    NS_IMGMANAGER_CONTRACTID,
+                                    PR_TRUE, PR_TRUE, getter_Copies(previous));
+}
+
+static NS_METHOD
+UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                        const char *registryLocation,
+                        const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return catman->DeleteCategoryEntry("content-policy",
+                                       NS_IMGMANAGER_CONTRACTID,
+                                       PR_TRUE);
+}
+
 
 // The list of components we register
 static nsModuleComponentInfo components[] = {
@@ -65,7 +99,8 @@ static nsModuleComponentInfo components[] = {
     { "ImgManager",
       NS_IMGMANAGER_CID,
       NS_IMGMANAGER_CONTRACTID,
-      nsImgManagerConstructor
+      nsImgManagerConstructor,
+      RegisterContentPolicy, UnregisterContentPolicy
     },
     { "PermissionManager",
       NS_PERMISSIONMANAGER_CID,

@@ -1813,7 +1813,10 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
         return PR_TRUE;
     }
     PRBool permission;
-    rv = imgmanager->CheckForPermission(host, firstHost, &permission);
+    // commenting this out per pavlov's suggestion. he says this file is
+    // going away soon. CheckForPermission() no longer exists.
+    // nsIContentPolicy is used to block images now.
+    //rv = imgmanager->CheckForPermission(host, firstHost, &permission);
     Recycle(host);
     Recycle(firstHost);
     if (NS_FAILED(rv)) {
