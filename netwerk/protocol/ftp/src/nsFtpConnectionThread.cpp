@@ -1318,13 +1318,9 @@ nsFtpState::S_size() {
 FTP_STATE
 nsFtpState::R_size() {
     if (mResponseCode/100 == 2) {
-        PRInt32 conversionError;
-        PRInt32 length = mResponseMsg.ToInteger(&conversionError);
-        if (NS_FAILED(mChannel->SetContentLength(length))) return FTP_ERROR;
+        mFileSize = atoi(mResponseMsg.get()+4);
+        if (NS_FAILED(mChannel->SetContentLength(mFileSize))) return FTP_ERROR;
     }
-
-    if (mResponseCode == 213)
-        mFileSize = atoi(mResponseMsg.get());
 
     // We may want to be able to resume this
     return FTP_S_MDTM;
@@ -1344,6 +1340,7 @@ nsFtpState::S_mdtm() {
 FTP_STATE
 nsFtpState::R_mdtm() {
     if (mResponseCode == 213) {
+        mResponseMsg.Cut(0,4);
         mResponseMsg.Trim(" \t\r\n");
         // yyyymmddhhmmss
         if (mResponseMsg.Length() != 14) {
