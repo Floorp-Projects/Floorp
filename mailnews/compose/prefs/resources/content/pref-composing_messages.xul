@@ -65,8 +65,8 @@
                 pref="true" preftype="int" prefstring="mail.forward_message_mode"
                 prefattribute="value">
         <menupopup>
-          <menuitem value="0" label="&asAttachment.label;" accesskey="&asAttachment.accesskey;"/>
           <menuitem value="2" label="&inline.label;" accesskey="&inline.accesskey;"/>
+          <menuitem value="0" label="&asAttachment.label;" accesskey="&asAttachment.accesskey;"/>
         </menupopup>
       </menulist>
     </box>

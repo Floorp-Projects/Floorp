@@ -285,7 +285,7 @@ pref("mail.display_glyph", true);   // see <http://www.bucksch.org/1/projects/mo
 pref("mail.display_struct", true);  // ditto
 pref("mail.send_struct", false);   // ditto
 
-pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as inline with attachments, (obsolete)1=forward as quoted
+pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as inline with attachments, (obsolete 4.x value)1=forward as quoted (mapped to 2 in mozilla)
 
 pref("mail.startup.enabledMailCheckOnce", false);
 

@@ -525,6 +525,9 @@ function MsgForwardMessage(event)
       forwardType = pref.GetIntPref("mail.forward_message_mode");
   } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
 
+  // mail.forward_message_mode could be 1, if the user migrated from 4.x
+  // 1 (forward as quoted) is obsolete, so we treat is as forward inline
+  // since that is more like forward as quoted then forward as attachment
   if (forwardType == 0)
       MsgForwardAsAttachment(event);
   else
