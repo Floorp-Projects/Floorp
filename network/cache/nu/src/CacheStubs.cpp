@@ -91,6 +91,16 @@ CacheObject_Create(const char* i_url)
     return new nsCacheObject(i_url);
 }
 
+void
+CacheObject_Destroy(void* pThis)
+{
+    if (pThis)
+    {
+        ((nsCacheObject*)pThis)->~nsCacheObject();
+        pThis = 0;
+    }
+}
+
 const char*
 CacheObject_GetAddress(const void* pThis)
 {
@@ -138,7 +148,13 @@ CacheObject_GetFilename(const void* pThis)
 {
     return pThis ? ((nsCacheObject*)pThis)->Filename() : 0;
 }
-    
+
+PRBool
+CacheObject_GetIsCompleted(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->IsCompleted() : PR_TRUE;
+}
+
 PRIntervalTime
 CacheObject_GetLastAccessed(const void* pThis)
 {
@@ -262,6 +278,13 @@ CacheObject_SetFilename(void* pThis, const char* i_Filename)
 }
 
 void
+CacheObject_SetIsCompleted(void* pThis, PRBool bCompleted)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->IsCompleted(bCompleted);
+}
+
+void
 CacheObject_SetLastModified(void* pThis, const PRIntervalTime i_Time)
 {
     if (pThis)
@@ -311,17 +334,12 @@ CacheObject_Synch(void* pThis)
 PRUint32
 CacheObject_Write(void* pThis, const char* i_buffer, const PRUint32 i_length)
 {
-    return i_length;
-}
-
-void
-CacheObject_Destroy(void* pThis)
-{
     if (pThis)
     {
-        ((nsCacheObject*)pThis)->~nsCacheObject();
-        pThis = 0;
+        nsCacheObject* pObj = (nsCacheObject*) pThis;
+        return pObj->Write(i_buffer, i_length);
     }
+    return 0;
 }
 
 /* CachePref functions */

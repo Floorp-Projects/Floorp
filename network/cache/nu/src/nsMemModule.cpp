@@ -23,6 +23,7 @@
 #include "nsMemModule.h"
 #include "nsMemCacheObject.h"
 #include "nsCacheManager.h"
+#include "nsMemStream.h"
 
 /* 
  * nsMemModule
@@ -62,6 +63,7 @@ PRBool nsMemModule::AddObject(nsCacheObject* io_pObject)
     if (io_pObject)
     {
         MonitorLocker ml(this);
+        PR_ASSERT(io_pObject->Stream()); // A valid stream does exist for this 
         if (m_pFirstObject) 
         {
             LastObject()->Next(new nsMemCacheObject(io_pObject)); 
@@ -168,6 +170,17 @@ nsCacheObject* nsMemModule::GetObject(const char* i_url) const
 nsStream* nsMemModule::GetStreamFor(const nsCacheObject* i_pObject)
 {
     MonitorLocker ml(this);
+    if (i_pObject)
+    {
+        if (Contains((nsCacheObject*)i_pObject))
+        {
+            nsStream* pStream = i_pObject->Stream();
+            if (pStream)
+                return pStream;
+        }
+        // Set up a new stream for this object
+        return new nsMemStream();
+    }
     return 0;
 }
 

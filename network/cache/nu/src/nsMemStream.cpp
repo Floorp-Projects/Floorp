@@ -18,13 +18,18 @@
  */
 
 #include "nsMemStream.h"
+#include "prmem.h"
+#include "prlog.h" /* Assert */
+#include "memory.h"
 
-nsMemStream::nsMemStream()
+static const PRUint32 kPageSize = 1024;//4096;
+nsMemStream::nsMemStream():m_AllocSize(0),m_Size(0),m_pStart(0),m_ReadOffset(0),m_WriteOffset(0)
 {
 }
 
 nsMemStream::~nsMemStream()
 {
+    PR_FREEIF(m_pStart);
 }
 /*
 nsrefcnt nsMemStream::AddRef(void)
@@ -50,10 +55,59 @@ nsresult nsMemStream::QueryInterface(const nsIID& aIID,
 
 PRInt32 nsMemStream::Read(void* o_Buffer, PRUint32 i_Len)
 {
+    if (m_Size > 0)
+    {
+        PR_ASSERT(m_pStart); //This has to be there if m_Size > 0
+
+        char* pCurrentRead = (char*) m_pStart + m_ReadOffset;
+
+        unsigned int validLen = m_Size - m_ReadOffset;
+    
+        if (0 == validLen)
+            return 0;
+
+        if (validLen > i_Len)
+            validLen = i_Len;
+
+        memcpy(o_Buffer, pCurrentRead, validLen);
+        m_ReadOffset += validLen;
+        return validLen;
+    }
     return 0;
 }
 
 PRInt32 nsMemStream::Write(const void* i_Buffer, PRUint32 i_Len)
 {
-    return 0;
+    if (!m_pStart)
+    {
+        m_pStart = PR_Calloc(1, kPageSize); 
+        if (!m_pStart)
+        {
+            PR_Free(m_pStart);
+            return 0;
+        }
+        m_WriteOffset = 0;
+        m_AllocSize = kPageSize;
+    }
+    unsigned int validLen = m_AllocSize - m_Size;
+    while (validLen < i_Len)
+    {
+        //Alloc some more
+        m_pStart = PR_Realloc(m_pStart, m_AllocSize+kPageSize);
+        if (!m_pStart)
+        {
+            PR_Free(m_pStart);
+            m_AllocSize = 0;
+            m_WriteOffset = 0;
+            m_Size = 0;
+            return 0;
+        }
+        m_AllocSize += kPageSize;
+        validLen += kPageSize;
+    }
+    char* pCurrentWrite = (char*)m_pStart + m_WriteOffset;
+    memcpy(pCurrentWrite, i_Buffer, i_Len);
+    m_WriteOffset += i_Len;
+    m_Size += i_Len;
+    return i_Len;
 }

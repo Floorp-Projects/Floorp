@@ -24,6 +24,7 @@
  */
 #include "prtypes.h"
 #include "nsMemCacheObject.h"
+#include "nsMemStream.h"
 
 nsMemCacheObject::~nsMemCacheObject()
 {
@@ -35,10 +36,8 @@ nsMemCacheObject::~nsMemCacheObject()
 
     if (m_pObject)
     {
+        delete (nsMemStream*)m_pObject->Stream();
         delete m_pObject;
         m_pObject = 0;
     }
-
-    // Free the void* if allocated - TODO
-
 }
