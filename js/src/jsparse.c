@@ -121,6 +121,16 @@ static JSParser PrimaryExpr;
         }                                                                     \
     JS_END_MACRO
 
+#define CHECK_RECURSION()                                                     \
+    JS_BEGIN_MACRO                                                            \
+        int stackDummy;                                                       \
+        if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {                           \
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,         \
+                                        JSMSG_OVER_RECURSED);                 \
+            return NULL;                                                      \
+        }                                                                     \
+    JS_END_MACRO
+
 #ifdef METER_PARSENODES
 static uint32 parsenodes = 0;
 static uint32 maxparsenodes = 0;
@@ -957,6 +967,8 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn2;
     JSTokenType tt;
+
+    CHECK_RECURSION();
 
     pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
     if (!pn)
@@ -2207,6 +2219,8 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSTokenType tt;
     JSOp op;
 
+    CHECK_RECURSION();
+
     pn = CondExpr(cx, ts, tc);
     if (!pn)
         return NULL;
@@ -2645,6 +2659,8 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSParseNode *pn, *pn2, *pn3;
     JSTokenType tt;
 
+    CHECK_RECURSION();
+
     /* Check for new expression first. */
     ts->flags |= TSF_REGEXP;
     tt = js_PeekToken(cx, ts);
@@ -2771,6 +2787,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * should set notsharp.
      */
 #endif
+
+    CHECK_RECURSION();
 
     ts->flags |= TSF_REGEXP;
     tt = js_GetToken(cx, ts);
@@ -3261,6 +3279,12 @@ JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 {
     JSParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
+    int stackDummy;
+
+    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        return JS_FALSE;
+    }
 
     switch (pn->pn_arity) {
       case PN_FUNC:

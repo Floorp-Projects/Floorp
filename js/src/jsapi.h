@@ -684,6 +684,14 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type);
 extern JS_PUBLIC_API(intN)
 JS_GetExternalStringGCType(JSRuntime *rt, JSString *str);
 
+/*
+ * Sets maximum amount of stack space for the current context that the engine
+ * can use during execution.  To disable stack size checking, pass (jsuword)0
+ * for stackSizeLimit.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetStackSizeLimit(JSContext *cx, jsuword stackSizeLimit);
+
 /************************************************************************/
 
 /*

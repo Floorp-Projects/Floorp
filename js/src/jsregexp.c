@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -490,6 +490,13 @@ ParseRegExp(CompilerState *state)
 {
     RENode *ren, *kid, *ren1, *ren2;
     const jschar *cp;
+    int stackDummy;
+
+    if (!JS_CHECK_STACK_SIZE(state->context, stackDummy)) {
+        js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                    NULL, JSREPORT_ERROR, JSMSG_OVER_RECURSED);
+        return NULL;
+    }
 
     ren = ParseAltern(state);
     if (!ren)
@@ -743,7 +750,7 @@ loop:
             goto parseMinimalFlag;
 
           case '*':
-	    cp++; 
+	    cp++;
 	    ren = NewRENode(state, REOP_STAR, ren);
     parseMinimalFlag :
             if (*cp == '?') {
@@ -919,7 +926,7 @@ ParseAtom(CompilerState *state)
                 cp++;
         } while (JS_TRUE);
         ren->u.kid2 = (void *)(cp - 1);
-        
+
         ren->u.ucclass.bitmap = NULL;
 
         /* Since we rule out [] and [^], we can set the non-empty flag. */
@@ -1138,7 +1145,7 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         cp = state.cpbegin;
         ren = NULL;
         do {
-            ren2 = NewRENode(&state, 
+            ren2 = NewRENode(&state,
                              (len == 1) ? REOP_FLAT1 : REOP_FLAT,
                              (void *)cp);
 	    if (!ren2)
@@ -1153,7 +1160,7 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
                     cp += len;
                     len = 0;
                 }
-	        ren2->u.kid2 = (void *)cp;                
+	        ren2->u.kid2 = (void *)cp;
 	    } else {
 	        ren2->flags |= RENODE_SINGLE;
 	        ren2->u.chr = *cp;
@@ -1197,7 +1204,7 @@ out:
 }
 
 JSRegExp *
-js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts, 
+js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
                 JSString *str, JSString *opt, JSBool flat)
 {
     uintN flags;
@@ -1335,13 +1342,13 @@ static const jschar *greedyRecurse(GreedyState *grState, const jschar *cp, const
 #endif
 
 /*
-*    When the kid match fails, we reset the parencount and run any 
+*    When the kid match fails, we reset the parencount and run any
 *    previously succesful kid in order to restablish it's paren
 *    contents.
 */
 
     kidMatch = matchRENodes(grState->state, grState->kid, grState->next, cp);
-    if (kidMatch == NULL) {        
+    if (kidMatch == NULL) {
         match = matchRENodes(grState->state, grState->next, grState->stop, cp);
         if (match) {
             grState->state->parenCount = num;
@@ -1389,7 +1396,7 @@ static const jschar *matchGreedyKid(MatchState *state, RENode *ren, RENode *stop
     */
     grState.stop = NULL;
     match = greedyRecurse(&grState, cp, previousKid);
-    if (match || !stop) 
+    if (match || !stop)
         return match;
     grState.kidCount = kidCount;
     grState.stop = stop;
@@ -1431,9 +1438,9 @@ static void calcBMSize(MatchState *state, RENode *ren)
                       + JS7_UNHEX(cp[3])) << 4)
                     + JS7_UNHEX(cp[4]);
                 cp += 5;
-            } 
+            }
             else {
-                /* 
+                /*
                  * For the not whitespace, not word or not digit cases
                  * we widen the range to the complete unicode range.
                  */
@@ -1464,7 +1471,7 @@ static void calcBMSize(MatchState *state, RENode *ren)
         if (c > maxc)
             maxc = c;
     }
-    ren->u.ucclass.bmsize = (uint16)((size_t)(maxc + JS_BITS_PER_BYTE) 
+    ren->u.ucclass.bmsize = (uint16)((size_t)(maxc + JS_BITS_PER_BYTE)
                                                     / JS_BITS_PER_BYTE);
 }
 
@@ -1479,7 +1486,7 @@ static JSBool buildBitmap(MatchState *state, RENode *ren)
     const jschar *ocp;
 
     calcBMSize(state, ren);
-    ren->u.ucclass.bitmap = bitmap = (uint8*) JS_malloc(state->context, 
+    ren->u.ucclass.bitmap = bitmap = (uint8*) JS_malloc(state->context,
                                             ren->u.ucclass.bmsize);
     if (!bitmap) {
 	JS_ReportOutOfMemory(state->context);
@@ -2629,7 +2636,7 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             obj2 = JSVAL_TO_OBJECT(argv[0]);
             if (obj2 && OBJ_GET_CLASS(cx, obj2) == &js_RegExpClass) {
                 if (argc >= 2 && !JSVAL_IS_VOID(argv[1])) { /* 'flags' passed */
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_NEWREGEXP_FLAGGED);
                     return JS_FALSE;
                 }
