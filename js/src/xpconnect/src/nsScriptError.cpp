@@ -44,7 +44,7 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError)
 
 nsScriptError::nsScriptError()
     :  mMessage(nsnull),
@@ -57,7 +57,7 @@ nsScriptError::nsScriptError()
 {
 }
 
-nsScriptError::~nsScriptError() {};
+nsScriptError::~nsScriptError() {}
 
 // nsIConsoleMessage methods
 NS_IMETHODIMP

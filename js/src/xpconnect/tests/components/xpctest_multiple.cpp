@@ -46,12 +46,12 @@ private:
     const char *name;
 };
 
-NS_IMPL_ISUPPORTS1(xpcTestParentOne, nsIXPCTestParentOne);
+NS_IMPL_ISUPPORTS1(xpcTestParentOne, nsIXPCTestParentOne)
 
 xpcTestParentOne :: xpcTestParentOne() 
 {
     NS_ADDREF_THIS();
-};
+}
 
 NS_IMETHODIMP xpcTestParentOne :: GetParentOneAttribute(char * *_retval) 
 {                                                             
@@ -59,13 +59,13 @@ NS_IMETHODIMP xpcTestParentOne :: GetParentOneAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                                            
+}                                                            
 
 NS_IMETHODIMP xpcTestParentOne :: SetParentOneAttribute(const char * aParentOneAttribute) 
 {                                                             
     name = aParentOneAttribute;                               
     return NS_OK;                                             
-};                                                                  
+}                                                                  
 
 NS_IMETHODIMP                                                 
 xpcTestParentOne :: ParentOneMethod(char * *_retval)                   
@@ -74,7 +74,7 @@ xpcTestParentOne :: ParentOneMethod(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                                                   
+}                                                                   
 NS_IMETHODIMP
 xpctest::ConstructXPCTestParentOne(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -95,7 +95,7 @@ xpctest::ConstructXPCTestParentOne(nsISupports *aOuter, REFNSIID aIID, void **aR
     }
 
     return rv;
-};                                                                
+}                                                                
 
 
 /*****************************************************************************/
@@ -109,12 +109,12 @@ private:
     const char *name;
 };
 
-NS_IMPL_ISUPPORTS1(xpcTestParentTwo, nsIXPCTestParentTwo);
+NS_IMPL_ISUPPORTS1(xpcTestParentTwo, nsIXPCTestParentTwo)
 
 xpcTestParentTwo :: xpcTestParentTwo()
 {
     NS_ADDREF_THIS();
-};
+}
 
 NS_IMETHODIMP                                                 
 xpcTestParentTwo :: GetParentTwoAttribute(char * *_retval)             
@@ -123,14 +123,14 @@ xpcTestParentTwo :: GetParentTwoAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                                        
+}                                                        
 
 NS_IMETHODIMP                                                 
 xpcTestParentTwo :: SetParentTwoAttribute(const char * aParentTwoAttribute)  
 {                                                             
     name = aParentTwoAttribute;                               
     return NS_OK;                                             
-};                                                                   
+}                                                                   
 
 NS_IMETHODIMP                                                 
 xpcTestParentTwo :: ParentTwoMethod(char **_retval) 
@@ -139,7 +139,7 @@ xpcTestParentTwo :: ParentTwoMethod(char **_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
   
 NS_IMETHODIMP
 xpctest::ConstructXPCTestParentTwo(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -161,7 +161,7 @@ xpctest::ConstructXPCTestParentTwo(nsISupports *aOuter, REFNSIID aIID, void **aR
     }
 
     return rv;
-};                                                                
+}                                                                
 /*****************************************************************************/
 
 /**
@@ -179,12 +179,12 @@ private:
     const char *name;
 };
 
-NS_IMPL_ISUPPORTS3_CI(xpcTestChild2,nsIXPCTestChild2,nsIXPCTestParentOne,nsIXPCTestParentTwo);
+NS_IMPL_ISUPPORTS3_CI(xpcTestChild2,nsIXPCTestChild2,nsIXPCTestParentOne,nsIXPCTestParentTwo)
 
 xpcTestChild2 :: xpcTestChild2() 
 {
     NS_ADDREF_THIS();
-};
+}
 
 NS_IMETHODIMP 
 xpcTestChild2:: GetChildAttribute(char * *_retval) 
@@ -193,14 +193,14 @@ xpcTestChild2:: GetChildAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
 
 NS_IMETHODIMP 
 xpcTestChild2:: SetChildAttribute(const char * aChildAttribute) 
 {
     name = aChildAttribute;
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP
 xpcTestChild2 ::ChildMethod(char **_retval) 
@@ -209,7 +209,7 @@ xpcTestChild2 ::ChildMethod(char **_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
 
 
 NS_IMETHODIMP                                                 
@@ -219,14 +219,14 @@ xpcTestChild2 :: GetParentOneAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                                            
+}                                                            
 
 NS_IMETHODIMP                                                 
 xpcTestChild2:: SetParentOneAttribute(const char * aParentOneAttribute) 
 {                                                             
     name = aParentOneAttribute;                               
     return NS_OK;                                             
-};                                                                  
+}                                                                  
 
 NS_IMETHODIMP                                                 
 xpcTestChild2 :: ParentOneMethod(char * *_retval)                   
@@ -235,7 +235,7 @@ xpcTestChild2 :: ParentOneMethod(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                  
+}                                  
 
 NS_IMETHODIMP                                                 
 xpcTestChild2 :: GetParentTwoAttribute(char * *_retval)             
@@ -244,14 +244,14 @@ xpcTestChild2 :: GetParentTwoAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                                            
+}                                                            
 
 NS_IMETHODIMP                                                 
 xpcTestChild2 :: SetParentTwoAttribute(const char * aParentTwoAttribute)  
 {                                                             
     name = aParentTwoAttribute;                               
     return NS_OK;                                             
-};                                                                  
+}                                                                  
 
 NS_IMETHODIMP                                                 
 xpcTestChild2 :: ParentTwoMethod(char **_retval) {                  
@@ -259,7 +259,7 @@ xpcTestChild2 :: ParentTwoMethod(char **_retval) {
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                 
+}                                 
 
 NS_IMETHODIMP
 xpctest::ConstructXPCTestChild2(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -281,7 +281,7 @@ xpctest::ConstructXPCTestChild2(nsISupports *aOuter, REFNSIID aIID, void **aResu
     }
 
     return rv;
-};
+}
 
 /*****************************************************************************/
 
@@ -300,13 +300,13 @@ private:
     const char *name;
 };
 
-NS_IMPL_ISUPPORTS2(xpcTestChild3,nsIXPCTestChild3,nsIXPCTestParentOne);
+NS_IMPL_ISUPPORTS2(xpcTestChild3,nsIXPCTestChild3,nsIXPCTestParentOne)
 
 xpcTestChild3 :: xpcTestChild3() 
 {
     NS_ADDREF_THIS();
 
-};
+}
 
 NS_IMETHODIMP 
 xpcTestChild3:: GetChildAttribute(char * *_retval) 
@@ -315,14 +315,14 @@ xpcTestChild3:: GetChildAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
 
 NS_IMETHODIMP 
 xpcTestChild3 :: SetChildAttribute(const char * aChildAttribute) 
 {
     name = aChildAttribute;
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP
 xpcTestChild3 ::ChildMethod(char **_retval) 
@@ -331,7 +331,7 @@ xpcTestChild3 ::ChildMethod(char **_retval)
     *_retval = (char*) nsMemory::Clone((const char *)aString,
                 sizeof(char)*(strlen((const char *)aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
 
 
 NS_IMETHODIMP                                                 
@@ -341,14 +341,14 @@ xpcTestChild3 :: GetParentOneAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                                            
+}                                                            
 
 NS_IMETHODIMP                                                 
 xpcTestChild3:: SetParentOneAttribute(const char * aParentOneAttribute) 
 {                                                             
     name = aParentOneAttribute;                               
     return NS_OK;                                             
-};                                                                  
+}                                                                  
 
 NS_IMETHODIMP                                                 
 xpcTestChild3 :: ParentOneMethod(char * *_retval)                   
@@ -357,7 +357,7 @@ xpcTestChild3 :: ParentOneMethod(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                  
+}                                  
 
 NS_IMETHODIMP
 xpctest::ConstructXPCTestChild3(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -379,7 +379,7 @@ xpctest::ConstructXPCTestChild3(nsISupports *aOuter, REFNSIID aIID, void **aResu
     }
 
     return rv;
-};
+}
 
 /*****************************************************************************/
 
@@ -397,12 +397,12 @@ private:
     const char *name;
 };
 
-NS_IMPL_ISUPPORTS3(xpcTestChild4,nsIXPCTestChild4,nsIXPCTestParentOne,nsIXPCTestParentTwo);
+NS_IMPL_ISUPPORTS3(xpcTestChild4,nsIXPCTestChild4,nsIXPCTestParentOne,nsIXPCTestParentTwo)
 
 xpcTestChild4 :: xpcTestChild4() 
 {
     NS_ADDREF_THIS();
-};
+}
 
 NS_IMETHODIMP 
 xpcTestChild4:: GetChildAttribute(char * *_retval) 
@@ -411,14 +411,14 @@ xpcTestChild4:: GetChildAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
 
 NS_IMETHODIMP 
 xpcTestChild4:: SetChildAttribute(const char * aChildAttribute) 
 {
     name = aChildAttribute;
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP
 xpcTestChild4 ::ChildMethod(char **_retval) 
@@ -427,7 +427,7 @@ xpcTestChild4 ::ChildMethod(char **_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
 
 NS_IMETHODIMP
 xpctest::ConstructXPCTestChild4(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -449,7 +449,7 @@ xpctest::ConstructXPCTestChild4(nsISupports *aOuter, REFNSIID aIID, void **aResu
     }
 
     return rv;
-};
+}
 
 /*****************************************************************************/
 /**
@@ -467,12 +467,12 @@ private:
     const char *name;
 };
 
-NS_IMPL_ISUPPORTS3(xpcTestChild5,nsIXPCTestChild5,nsIXPCTestParentOne,nsIXPCTestParentTwo);
+NS_IMPL_ISUPPORTS3(xpcTestChild5,nsIXPCTestChild5,nsIXPCTestParentOne,nsIXPCTestParentTwo)
 
 xpcTestChild5 :: xpcTestChild5() 
 {
     NS_ADDREF_THIS();
-};
+}
 
 NS_IMETHODIMP 
 xpcTestChild5:: GetChildAttribute(char * *_retval) 
@@ -481,14 +481,14 @@ xpcTestChild5:: GetChildAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
 
 NS_IMETHODIMP 
 xpcTestChild5:: SetChildAttribute(const char * aChildAttribute) 
 {
     name = aChildAttribute;
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP
 xpcTestChild5 ::ChildMethod(char **_retval) 
@@ -497,7 +497,7 @@ xpcTestChild5 ::ChildMethod(char **_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};
+}
 
 
 NS_IMETHODIMP                                                 
@@ -507,14 +507,14 @@ xpcTestChild5 :: GetParentOneAttribute(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                                            
+}                                                            
 
 NS_IMETHODIMP                                                 
 xpcTestChild5:: SetParentOneAttribute(const char * aParentOneAttribute) 
 {                                                             
     name = aParentOneAttribute;                               
     return NS_OK;                                             
-};                                                                  
+}                                                                  
 
 NS_IMETHODIMP                                                 
 xpcTestChild5 :: ParentOneMethod(char * *_retval)                   
@@ -523,7 +523,7 @@ xpcTestChild5 :: ParentOneMethod(char * *_retval)
     *_retval = (char*) nsMemory::Clone(aString,            
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
-};                                  
+}                                  
 
 NS_IMETHODIMP
 xpctest::ConstructXPCTestChild5(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -545,4 +545,4 @@ xpctest::ConstructXPCTestChild5(nsISupports *aOuter, REFNSIID aIID, void **aResu
     }
 
     return rv;
-};
+}

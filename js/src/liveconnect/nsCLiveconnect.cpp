@@ -243,7 +243,7 @@ AutoPushJSContext::~AutoPushJSContext()
 
 // Thes macro expands to the aggregated query interface scheme.
 
-NS_IMPL_AGGREGATED(nsCLiveconnect);
+NS_IMPL_AGGREGATED(nsCLiveconnect)
 
 NS_METHOD
 nsCLiveconnect::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)

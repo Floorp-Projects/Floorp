@@ -1317,7 +1317,7 @@ nsCSSFrameConstructor::~nsCSSFrameConstructor(void)
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsCSSFrameConstructor, nsIStyleFrameConstruction,nsICSSFrameConstructor);
+NS_IMPL_ISUPPORTS2(nsCSSFrameConstructor, nsIStyleFrameConstruction,nsICSSFrameConstructor)
 
 NS_IMETHODIMP 
 nsCSSFrameConstructor::Init(nsIDocument* aDocument)

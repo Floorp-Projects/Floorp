@@ -65,9 +65,9 @@ private:
 /***************************************************************************/
 
 #ifdef IMPLEMENT_TIMER_STUFF
-NS_IMPL_ISUPPORTS2(xpctestEcho, nsIEcho, nsITimerCallback);
+NS_IMPL_ISUPPORTS2(xpctestEcho, nsIEcho, nsITimerCallback)
 #else
-NS_IMPL_ISUPPORTS1(xpctestEcho, nsIEcho);
+NS_IMPL_ISUPPORTS1(xpctestEcho, nsIEcho)
 #endif // IMPLEMENT_TIMER_STUFF
 
 xpctestEcho::xpctestEcho()

@@ -60,7 +60,7 @@ xpcarraytest::~xpcarraytest()
     NS_IF_RELEASE(mReceiver);
 }
 
-NS_IMPL_ISUPPORTS1(xpcarraytest, nsIXPCTestArray);
+NS_IMPL_ISUPPORTS1(xpcarraytest, nsIXPCTestArray)
 
 NS_IMETHODIMP xpcarraytest::SetReceiver(nsIXPCTestArray* aReceiver)
 {

@@ -110,7 +110,7 @@ xpcoverloaded::~xpcoverloaded()
     // empty
 }
 
-NS_IMPL_ISUPPORTS2(xpcoverloaded, nsIXPCTestOverloaded, nsIXPCScriptable);
+NS_IMPL_ISUPPORTS2(xpcoverloaded, nsIXPCTestOverloaded, nsIXPCScriptable)
 
 /* void Foo1 (in PRInt32 p1); */
 NS_IMETHODIMP

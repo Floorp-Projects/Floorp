@@ -286,8 +286,8 @@ nsGridLayout2::GetRowCount(PRInt32& aRowCount)
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsGridLayout2, nsStackLayout);
-NS_IMPL_RELEASE_INHERITED(nsGridLayout2, nsStackLayout);
+NS_IMPL_ADDREF_INHERITED(nsGridLayout2, nsStackLayout)
+NS_IMPL_RELEASE_INHERITED(nsGridLayout2, nsStackLayout)
 
 NS_INTERFACE_MAP_BEGIN(nsGridLayout2)
   NS_INTERFACE_MAP_ENTRY(nsIGridPart)

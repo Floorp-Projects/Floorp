@@ -149,7 +149,7 @@ nsContentDLF::~nsContentDLF()
 
 NS_IMPL_ISUPPORTS2(nsContentDLF,
                    nsIDocumentLoaderFactory,
-                   nsIDocStreamLoaderFactory);
+                   nsIDocStreamLoaderFactory)
 
 NS_IMETHODIMP
 nsContentDLF::CreateInstance(const char* aCommand,

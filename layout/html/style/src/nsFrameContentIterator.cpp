@@ -60,7 +60,7 @@ nsFrameContentIterator::nsFrameContentIterator(nsIPresContext* aPresContext,
   First();
 }
 
-NS_IMPL_ISUPPORTS1(nsFrameContentIterator, nsIContentIterator);
+NS_IMPL_ISUPPORTS1(nsFrameContentIterator, nsIContentIterator)
 
 nsFrameContentIterator::~nsFrameContentIterator()
 {

@@ -62,7 +62,7 @@ public:
     xpctestChild();
 };
 
-NS_IMPL_ISUPPORTS1(xpctestOther, nsIXPCTestOther);
+NS_IMPL_ISUPPORTS1(xpctestOther, nsIXPCTestOther)
 
 xpctestOther::xpctestOther()
 {
@@ -146,8 +146,8 @@ public:
     xpctestChild();
 };
 
-NS_IMPL_ADDREF(xpctestChild);
-NS_IMPL_RELEASE(xpctestChild);
+NS_IMPL_ADDREF(xpctestChild)
+NS_IMPL_RELEASE(xpctestChild)
 
 NS_IMETHODIMP
 xpctestChild::QueryInterface(REFNSIID iid, void** result)

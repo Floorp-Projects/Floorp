@@ -1244,6 +1244,6 @@ NS_INTERFACE_MAP_BEGIN(nsSliderMediator)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsSliderMediator);
-NS_IMPL_RELEASE(nsSliderMediator);
+NS_IMPL_ADDREF(nsSliderMediator)
+NS_IMPL_RELEASE(nsSliderMediator)
 

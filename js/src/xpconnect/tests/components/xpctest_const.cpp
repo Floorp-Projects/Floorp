@@ -44,11 +44,11 @@ public:
   xpcTestConst();
 };
 
-NS_IMPL_ISUPPORTS1(xpcTestConst, nsIXPCTestConst);
+NS_IMPL_ISUPPORTS1(xpcTestConst, nsIXPCTestConst)
 
 xpcTestConst :: xpcTestConst() {
     NS_ADDREF_THIS();
-};
+}
 
 NS_IMETHODIMP
 xpctest::ConstructXPCTestConst(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -68,4 +68,4 @@ xpctest::ConstructXPCTestConst(nsISupports *aOuter, REFNSIID aIID, void **aResul
         rv = NS_ERROR_OUT_OF_MEMORY;
     }
     return rv;
-};
+}

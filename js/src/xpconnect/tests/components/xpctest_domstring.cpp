@@ -48,7 +48,7 @@ private:
     const nsSharedBufferHandle<PRUnichar> *mHandle;
 };
 
-NS_IMPL_ISUPPORTS1(xpcTestDOMString, nsIXPCTestDOMString);
+NS_IMPL_ISUPPORTS1(xpcTestDOMString, nsIXPCTestDOMString)
 
 xpcTestDOMString::xpcTestDOMString()
     : mHandle(0)
