@@ -403,6 +403,13 @@ nsXFormsModelElement::DoneAddingChildren()
 }
 
 NS_IMETHODIMP
+nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
+{
+  *aHandled = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |

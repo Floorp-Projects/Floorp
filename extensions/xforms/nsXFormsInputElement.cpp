@@ -132,10 +132,32 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   return NS_OK;
 }
 
+// nsIXTFVisual
+
 NS_IMETHODIMP
 nsXFormsInputElement::GetVisualContent(nsIDOMElement **aElement)
 {
   NS_ADDREF(*aElement = mInput);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputElement::GetInsertionPoint(nsIDOMElement **aElement)
+{
+  *aElement = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputElement::GetApplyDocumentStyleSheets(PRBool *aApply)
+{
+  *aApply = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputElement::DidLayout()
+{
   return NS_OK;
 }
 
@@ -278,6 +300,13 @@ nsXFormsInputElement::AttributeRemoved(nsIAtom *aName)
 NS_IMETHODIMP
 nsXFormsInputElement::DoneAddingChildren()
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
+{
+  *aHandled = PR_FALSE;
   return NS_OK;
 }
 

@@ -170,6 +170,13 @@ nsXFormsStubElement::DoneAddingChildren()
 }
 
 NS_IMETHODIMP
+nsXFormsStubElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
+{
+  *aHandled = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsStubElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
   return NS_OK;

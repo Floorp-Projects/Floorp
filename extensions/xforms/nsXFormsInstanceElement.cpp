@@ -224,6 +224,13 @@ nsXFormsInstanceElement::DoneAddingChildren()
 }
 
 NS_IMETHODIMP
+nsXFormsInstanceElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
+{
+  *aHandled = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask (nsIXTFElement::NOTIFY_PARENT_CHANGED |

@@ -363,6 +363,13 @@ nsXFormsSubmissionElement::DoneAddingChildren()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsSubmissionElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
+{
+  *aHandled = PR_FALSE;
+  return NS_OK;
+}
+
 // nsIXTFGenericElement
 
 NS_IMETHODIMP
