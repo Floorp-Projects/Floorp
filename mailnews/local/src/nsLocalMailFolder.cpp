@@ -1299,12 +1299,12 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
   else
   {
-    nsCOMPtr<nsISupports> aSupport;
-    aSupport = getter_AddRefs(messages->ElementAt(0));
-    if (aSupport)
+    nsCOMPtr<nsISupports> msgSupport;
+    msgSupport = getter_AddRefs(messages->ElementAt(0));
+    if (msgSupport)
     {
       nsCOMPtr<nsIMessage> aMessage;
-      aMessage = do_QueryInterface(aSupport, &rv);
+      aMessage = do_QueryInterface(msgSupport, &rv);
       if(NS_SUCCEEDED(rv))
         rv = CopyMessageTo(aMessage, this, isMove);
       else
