@@ -1,41 +1,3 @@
-# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
-# ***** BEGIN LICENSE BLOCK *****
-# Version: NPL 1.1/GPL 2.0/LGPL 2.1
-# 
-# The contents of this file are subject to the Netscape Public License
-# Version 1.1 (the "License"); you may not use this file except in
-# compliance with the License. You may obtain a copy of the License at
-# http://www.mozilla.org/NPL/
-# 
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-# 
-# The Original Code is mozilla.org code.
-# 
-# The Initial Developer of the Original Code is 
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
-# the Initial Developer. All Rights Reserved.
-# 
-# Contributor(s):
-#   Ben Goodger <ben@netscape.com> (Save File)
-# 
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or 
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the NPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the NPL, the GPL or the LGPL.
-# 
-# ***** END LICENSE BLOCK *****
-
 /**
  * Determine whether or not a given focused DOMWindow is in the content
  * area.
@@ -165,6 +127,9 @@ function getReferrer(doc)
   }
 }
 
+const kSaveAsType_Complete = 0;   // Save document with attached objects
+const kSaveAsType_URL = 1;        // Save document or URL by itself
+const kSaveAsType_Text = 2;       // Save document, converting to plain text. 
 
 // Clientelle: (Make sure you don't break any of these)
 //  - File    ->  Save Page/Frame As...
@@ -247,7 +212,87 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     // right.
     contentType = contentEncodingType;
   }
+  
+  var file = null;
+  var saveAsType = kSaveAsType_URL;
+  try {
+    file = aData.fileName.QueryInterface(Components.interfaces.nsILocalFile);
+  }
+  catch (e) {
+    var saveAsTypeResult = { rv: 0 };
+    file = getTargetFile(aData, aSniffer, contentType, isDocument, aSkipPrompt, saveAsTypeResult);
+    saveAsType = saveAsTypeResult.rv;
+  }
 
+  // If we're saving a document, and are saving either in complete mode or 
+  // as converted text, pass the document to the web browser persist component.
+  // If we're just saving the HTML (second option in the list), send only the URI.
+  var source = (isDocument && saveAsType != kSaveAsType_URL) ? aData.document : aSniffer.uri;
+  var persistArgs = {
+    source      : source,
+    contentType : (isDocument && saveAsType == kSaveAsType_Text) ? "text/plain" : contentType,
+    target      : file,
+    postData    : aData.document ? getPostData() : null,
+    bypassCache : aData.bypassCache
+  };
+  
+  var persist = makeWebBrowserPersist();
+
+  // Calculate persist flags.
+  const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
+  const flags = nsIWBP.PERSIST_FLAGS_NO_CONVERSION | nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+  if (aData.bypassCache)
+    persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_BYPASS_CACHE;
+  else 
+    persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_FROM_CACHE;
+
+  if (shouldDecode)
+    persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
+    
+  // Create download and initiate it (below)
+  var dl = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsIDownload);
+
+  if (isDocument && saveAsType != kSaveAsType_URL) {
+    // Saving a Document, not a URI:
+    var filesFolder = null;
+    if (persistArgs.contentType != "text/plain") {
+      // Create the local directory into which to save associated files. 
+      const nsILocalFile = Components.interfaces.nsILocalFile;
+      const lfContractID = "@mozilla.org/file/local;1";
+      filesFolder = Components.classes[lfContractID].createInstance(nsILocalFile);
+      filesFolder.initWithPath(persistArgs.target.path);
+      
+      var nameWithoutExtension = filesFolder.leafName;
+      nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));
+      var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
+                                                                       [nameWithoutExtension],
+                                                                       1);
+
+      filesFolder.leafName = filesFolderLeafName;
+    }
+      
+    var encodingFlags = 0;
+    if (persistArgs.contentType == "text/plain") {
+      encodingFlags |= nsIWBP.ENCODE_FLAGS_FORMATTED;
+      encodingFlags |= nsIWBP.ENCODE_FLAGS_ABSOLUTE_LINKS;
+      encodingFlags |= nsIWBP.ENCODE_FLAGS_NOFRAMES_CONTENT;        
+    }
+    
+    const kWrapColumn = 80;
+    dl.init(aSniffer.uri, persistArgs.target, null, null, null, persist);
+    persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder, 
+                         persistArgs.contentType, encodingFlags, kWrapColumn);
+  } else {
+    dump("*** src = " + source + ", tgt = " + persistArgs.target + ", persist = " + persist + "\n");
+    dl.init(source, persistArgs.target, null, null, null, persist);
+    persist.saveURI(source, null, null, persistArgs.postData, null, persistArgs.target);
+  }
+}
+
+function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, aSaveAsTypeResult)
+{
+  aSaveAsTypeResult.rv = kSaveAsType_Complete;                                           
+  
   // Determine what the 'default' string to display in the File Picker dialog 
   // should be. 
   var defaultFileName = getDefaultFileName(aData.fileName, 
@@ -255,7 +300,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
                                            aSniffer.uri,
                                            aData.document);
 
-  var defaultExtension = getDefaultExtension(defaultFileName, aSniffer.uri, contentType);
+  var defaultExtension = getDefaultExtension(defaultFileName, aSniffer.uri, aContentType);
   var defaultString = getNormalizedLeafName(defaultFileName, defaultExtension);
 
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
@@ -263,7 +308,6 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
   var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download.");
 
   const nsILocalFile = Components.interfaces.nsILocalFile;
-  const lfContractID = "@mozilla.org/file/local;1";
 
   // ben 07/31/2003:
   // |browser.download.defaultFolder| holds the default download folder for 
@@ -280,7 +324,6 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
   }
   catch (e) { }
   
-  var filterIndex = 0;
   var file;
   if (!aSkipPrompt || !dir) {
     // If we're asking the user where to save the file, root the Save As...
@@ -313,13 +356,13 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     fp.init(window, bundle.GetStringFromName(titleKey), 
             Components.interfaces.nsIFilePicker.modeSave);
     
-    appendFiltersForContentType(fp, contentType,
-                                isDocument ? MODE_COMPLETE : MODE_FILEONLY);  
+    appendFiltersForContentType(fp, aContentType,
+                                aIsDocument ? MODE_COMPLETE : MODE_FILEONLY);  
   
     if (dir)
       fp.displayDirectory = dir;
     
-    if (isDocument) {
+    if (aIsDocument) {
       try {
         fp.filterIndex = prefs.getIntPref("save_converter_index");
       }
@@ -344,8 +387,11 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     prefs.setComplexValue("lastDir", nsILocalFile, directory);
 
     fp.file.leafName = validateFileName(fp.file.leafName);
-    filterIndex = fp.filterIndex;
+    aSaveAsTypeResult.rv = fp.filterIndex;
     file = fp.file;
+
+    if (aIsDocument) 
+      prefs.setIntPref("save_converter_index", aSaveAsTypeResult.rv);
   }
   else {
     // ben 07/31/2003: 
@@ -377,69 +423,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     
   }
 
-  if (isDocument) 
-    prefs.setIntPref("save_converter_index", filterIndex);
-
-  // If we're saving a document, and are saving either in complete mode or 
-  // as converted text, pass the document to the web browser persist component.
-  // If we're just saving the HTML (second option in the list), send only the URI.
-  var source = (isDocument && filterIndex != 1) ? aData.document : aSniffer.uri;
-  var persistArgs = {
-    source      : source,
-    contentType : (isDocument && filterIndex == 2) ? "text/plain" : contentType,
-    target      : file,
-    postData    : aData.document ? getPostData() : null,
-    bypassCache : aData.bypassCache
-  };
-  
-  var persist = makeWebBrowserPersist();
-
-  // Calculate persist flags.
-  const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
-  const flags = nsIWBP.PERSIST_FLAGS_NO_CONVERSION | nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-  if (aData.bypassCache)
-    persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_BYPASS_CACHE;
-  else 
-    persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_FROM_CACHE;
-
-  if (shouldDecode)
-    persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
-    
-  // Create download and initiate it (below)
-  var dl = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsIDownload);
-
-  if (isDocument && filterIndex != 1) {
-    // Saving a Document, not a URI:
-    var filesFolder = null;
-    if (persistArgs.contentType != "text/plain") {
-      // Create the local directory into which to save associated files. 
-      filesFolder = Components.classes[lfContractID].createInstance(nsILocalFile);
-      filesFolder.initWithPath(persistArgs.target.path);
-      
-      var nameWithoutExtension = filesFolder.leafName;
-      nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));
-      var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
-                                                                       [nameWithoutExtension],
-                                                                       1);
-
-      filesFolder.leafName = filesFolderLeafName;
-    }
-      
-    var encodingFlags = 0;
-    if (persistArgs.contentType == "text/plain") {
-      encodingFlags |= nsIWBP.ENCODE_FLAGS_FORMATTED;
-      encodingFlags |= nsIWBP.ENCODE_FLAGS_ABSOLUTE_LINKS;
-      encodingFlags |= nsIWBP.ENCODE_FLAGS_NOFRAMES_CONTENT;        
-    }
-    
-    const kWrapColumn = 80;
-    dl.init(aSniffer.uri, persistArgs.target, null, null, null, persist);
-    persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder, 
-                         persistArgs.contentType, encodingFlags, kWrapColumn);
-  } else {
-    dl.init(source, persistArgs.target, null, null, null, persist);
-    persist.saveURI(source, null, null, persistArgs.postData, null, persistArgs.target);
-  }
+  return file;    
 }
 
 function nsHeaderSniffer(aURL, aCallback, aData, aSkipPrompt)
@@ -901,3 +885,42 @@ function getCharsetforSave(aDocument)
   return  window._content.document.characterSet;
   return false;
 }
+
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+# ***** BEGIN LICENSE BLOCK *****
+# Version: NPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Netscape Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/NPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is mozilla.org code.
+# 
+# The Initial Developer of the Original Code is 
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Ben Goodger <ben@netscape.com> (Save File)
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or 
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the NPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the NPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+

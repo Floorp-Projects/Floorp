@@ -296,7 +296,9 @@ function onDownloadRetry(aEvent)
   var download = aEvent.target;
   if (download.localName == "download") {
     var src = getRDFProperty(download.id, "URL");
-    saveURL(src, download.getAttribute("target"), null, true, true);
+    var f = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+    f.initWithPath(aEvent.target.id);
+    saveURL(src, f, null, true, true);
   }
   
   gDownloadViewController.onCommandUpdate();
