@@ -28,6 +28,9 @@ class nsTextControlFrame : public nsNativeFormControlFrame
 {
 /* ---------- methods implemented by base class ---------- */
 public:
+  nsTextControlFrame();
+  virtual ~nsTextControlFrame();
+
   virtual const nsIID& GetCID();
   virtual const nsIID& GetIID();
 
@@ -44,6 +47,7 @@ public:
   virtual PRInt32 GetMaxNumValues();
 
   NS_IMETHOD GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRInt32& aCursor);
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 protected:
 

@@ -56,6 +56,17 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
+const nscoord kSuggestedNotSet = -1;
+nsTextControlFrame::nsTextControlFrame() 
+{
+  mSuggestedWidth  = kSuggestedNotSet;
+  mSuggestedHeight = kSuggestedNotSet;
+}
+
+nsTextControlFrame::~nsTextControlFrame() 
+{
+}
+
 nscoord 
 nsTextControlFrame::GetVerticalBorderWidth(float aPixToTwip) const
 {
@@ -294,4 +305,14 @@ NS_IMETHODIMP
 nsTextControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TextControl", aResult);
+}
+
+//---------------------------------------------------------
+NS_IMETHODIMP 
+nsTextControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+{
+  mSuggestedWidth  = aWidth;
+  mSuggestedHeight = aHeight;
+
+  return NS_OK;
 }
