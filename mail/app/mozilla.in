@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.1 2003/04/05 20:52:38 mscott%netscape.com Exp $
+## $Id: mozilla.in,v 1.2 2004/02/20 18:13:45 pkw%us.ibm.com Exp $
 ## 
 ## Usage:
 ##
@@ -29,60 +29,95 @@
 ## the mozilla-bin binary to work.
 ##
 
+moz_pis_startstop_scripts()
+{
+  MOZ_USER_DIR="%MOZ_USER_DIR%"
+  # MOZ_PIS_ is the name space for "Mozilla Plugable Init Scripts"
+  # These variables and there meaning are specified in
+  # mozilla/xpfe/bootstrap/init.d/README
+  MOZ_PIS_API=2
+  MOZ_PIS_MOZBINDIR="${dist_bin}"
+  MOZ_PIS_SESSION_PID="$$"
+  MOZ_PIS_USER_DIR="${MOZ_USER_DIR}"
+  export MOZ_PIS_API MOZ_PIS_MOZBINDIR MOZ_PIS_SESSION_PID MOZ_PIS_USER_DIR
+  
+  case "${1}" in
+    "start")
+      for curr_pis in "${dist_bin}/init.d"/S* "${HOME}/${MOZ_USER_DIR}/init.d"/S* ; do
+        if [ -x "${curr_pis}" ] ; then
+          case "${curr_pis}" in
+            *.sh) .  "${curr_pis}"         ;;
+            *)       "${curr_pis}" "start" ;;
+          esac
+        fi
+      done
+      ;;
+    "stop")
+      for curr_pis in "${HOME}/${MOZ_USER_DIR}/init.d"/K* "${dist_bin}/init.d"/K* ; do
+        if [ -x "${curr_pis}" ] ; then
+          case "${curr_pis}" in
+            *.sh) . "${curr_pis}"        ;;
+            *)      "${curr_pis}" "stop" ;;
+          esac
+        fi
+      done
+      ;;
+    *)
+      echo 1>&2 "$0: Internal error in moz_pis_startstop_scripts."
+      exit 1
+      ;;
+  esac
+}
+
 #uncomment for debugging
 #set -x
 
 moz_libdir=%MOZAPPDIR%
 MRE_HOME=%MREDIR%
 
-# honor MOZILLA_FIVE_HOME if it's there
-if [ -n "$MOZILLA_FIVE_HOME" ] ; then
-  dist_bin="$MOZILLA_FIVE_HOME"
+# Use run-mozilla.sh in the current dir if it exists
+# If not, then start resolving symlinks until we find run-mozilla.sh
+found=0
+progname=$0
+curdir=`dirname "$progname"`
+run_moz="$curdir/run-mozilla.sh"
+if test -x "$run_moz"; then
+  dist_bin=$curdir
+  found=1
 else
-  # Use run-mozilla.sh in the current dir if it exists
-  # If not, then start resolving symlinks until we find run-mozilla.sh
-  found=0
-  progname=$0
-  curdir=`dirname "$progname"`
-  run_moz="$curdir/run-mozilla.sh"
-  if test -x "$run_moz"; then
-    dist_bin=$curdir
-    found=1
-  else
-    here=`/bin/pwd`
-    while [ -h "$progname" ]; do
-      bn=`basename "$progname"`
-      cd `dirname "$progname"`
-      progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
-      if [ ! -x "$progname" ]; then
-        break
-      fi
-      curdir=`dirname "$progname"`
-      run_moz="$curdir/run-mozilla.sh"
-      if [ -x "$run_moz" ]; then
-        cd "$curdir"
-        dist_bin=`pwd`
-        found=1
-        break
-      fi
-    done
-    cd "$here"
-  fi
-  if [ $found = 0 ]; then
-    # Check default compile-time libdir
-    if [ -x "$moz_libdir/run-mozilla.sh" ]; then
-      dist_bin=$moz_libdir
-    else 
-      echo "Cannot find mozilla runtime directory. Exiting."
-      exit 1
+  here=`/bin/pwd`
+  while [ -h "$progname" ]; do
+    bn=`basename "$progname"`
+    cd `dirname "$progname"`
+    progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
+    if [ ! -x "$progname" ]; then
+      break
     fi
+    curdir=`dirname "$progname"`
+    run_moz="$curdir/run-mozilla.sh"
+    if [ -x "$run_moz" ]; then
+      cd "$curdir"
+      dist_bin=`pwd`
+      found=1
+      break
+    fi
+  done
+  cd "$here"
+fi
+if [ $found = 0 ]; then
+  # Check default compile-time libdir
+  if [ -x "$moz_libdir/run-mozilla.sh" ]; then
+    dist_bin=$moz_libdir
+  else 
+    echo "Cannot find mozilla runtime directory. Exiting."
+    exit 1
   fi
 fi
 
 script_args=""
 moreargs=""
 debugging=0
-MOZILLA_BIN="mozilla-bin"
+MOZILLA_BIN="%MOZILLA-BIN%"
 
 if [ "$OSTYPE" = "beos" ]; then
   mimeset -F $MOZILLA_BIN
@@ -92,7 +127,7 @@ while [ $# -gt 0 ]
 do
   case "$1" in
     -p | -pure)
-      MOZILLA_BIN="mozilla-bin.pure"
+      MOZILLA_BIN="%MOZILLA-BIN%.pure"
       shift
       ;;
     -g | --debug)
@@ -113,8 +148,19 @@ done
 
 export MRE_HOME
 eval "set -- $moreargs"
+
+## Start addon scripts
+moz_pis_startstop_scripts "start"
+
 if [ $debugging = 1 ]
 then
   echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
 fi
-exec "$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
+"$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
+exitcode=$?
+
+## Stop addon scripts
+moz_pis_startstop_scripts "stop"
+
+exit $exitcode
+# EOF.
