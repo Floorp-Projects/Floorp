@@ -59,6 +59,8 @@
 #include "nsIElementFactory.h"
 #include "nsIHTMLContent.h"
 #include "nsIEditorIMESupport.h"
+#include "nsIPhonetic.h"
+#include "nsIEditorObserver.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
@@ -1118,6 +1120,10 @@ nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
     *aInstancePtr = (void*)(nsIScrollableViewProvider*) this;
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIPhonetic))) {
+    *aInstancePtr = (void*)(nsIPhonetic*) this;
     return NS_OK;
   }
 
@@ -2684,6 +2690,20 @@ nsTextControlFrame::GetText(nsString* aText)
 }
 
 
+NS_IMETHODIMP
+nsTextControlFrame::GetPhonetic(nsAString& aPhonetic)
+{
+  aPhonetic.Truncate(0); 
+  if (!mEditor)
+    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
+  if (imeSupport) {
+    nsCOMPtr<nsIPhonetic> phonetic = do_QueryInterface(imeSupport);
+    if (phonetic)
+      phonetic->GetPhonetic(aPhonetic);
+  }
+  return NS_OK;
+}
 
 ///END NSIFRAME OVERLOADS
 /////BEGIN PROTECTED METHODS
