@@ -861,7 +861,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
 {   
     ASSERT(b->getKind() == ExprNode::dot);
 
-    LValueKind lValueKind;
+    LValueKind lValueKind = Property;
 
     if (b->op2->getKind() != ExprNode::identifier) {
         NOT_REACHED("Implement me");    // turns into a getProperty (but not via any overloaded [] )
@@ -876,7 +876,6 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
             const StringAtom &baseName = (static_cast<IdentifierExprNode *>(b->op1))->name;
             resolveIdentifier(baseName, base, slotIndex);
             
-            lValueKind = Property;
             //
             // handle <class name>.<static field>
             //

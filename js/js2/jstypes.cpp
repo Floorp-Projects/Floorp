@@ -41,14 +41,33 @@ namespace JSTypes {
 
 using namespace JSClasses;
 
-//    using JavaScript::StringAtom;
 
-// the canonical undefined value, etc.
-const JSValue kUndefinedValue;
-const JSValue kNaNValue = JSValue(nan);
-const JSValue kTrueValue = JSValue(true);
-const JSValue kFalseValue = JSValue(false);
-const JSValue kNullValue = JSValue((JSObject*)NULL);
+JSValue object_toString(Context *cx, const JSValues& argv)
+{
+    if (argv.size() > 0) {
+        JSString *s = new JSString("[object ");
+        JSValue theThis = argv[0];
+        ASSERT(theThis.isObject());
+        s->append(theThis.object->getClass());
+        s->append("]");
+        return JSValue(s);
+    }
+    return kUndefinedValue;
+}
+
+
+JSObject *JSObject::objectPrototypeObject = JSObject::initJSObject();
+JSString *JSObject::ObjectString = new JSString("Object");
+
+JSObject *JSObject::initJSObject()
+{
+    JSObject *result = new JSObject();
+    result->setProperty(widenCString("toString"), JSValue(new JSNativeFunction(object_toString) ) );
+    return result;
+}
+
+
+
 
 JSType Any_Type = JSType(widenCString("any"), NULL);
 JSType Integer_Type = JSType(widenCString("Integer"), &Any_Type);
@@ -89,6 +108,18 @@ JSType None_Type = JSType(widenCString("none"), &Any_Type);
 
 #define JSDOUBLE_IS_NEGZERO(d)  (JSDOUBLE_HI32(d) == JSDOUBLE_HI32_SIGNBIT && \
 				 JSDOUBLE_LO32(d) == 0)
+
+
+// the canonical undefined value, etc.
+const JSValue kUndefinedValue;
+const JSValue kNaNValue = JSValue(nan);
+const JSValue kTrueValue = JSValue(true);
+const JSValue kFalseValue = JSValue(false);
+const JSValue kNullValue = JSValue((JSObject*)NULL);
+const JSValue kNegativeZero = JSValue(-0.0);
+const JSValue kPositiveZero = JSValue(0.0);
+const JSValue kNegativeInfinity = JSValue(negativeInfinity);
+const JSValue kPositiveInfinity = JSValue(positiveInfinity);
 
 
 const JSType *JSValue::getType() const
@@ -141,6 +172,71 @@ bool JSValue::isNaN() const
     case integer_tag:
     case f64_tag:
         return JSDOUBLE_IS_NaN(f64);
+    default:
+        NOT_REACHED("Broken compiler?");
+        return true;
+    }
+}
+              
+bool JSValue::isNegativeInfinity() const
+{
+    ASSERT(isNumber());
+    switch (tag) {
+    case i32_tag:
+    case u32_tag:
+        return false;
+    case integer_tag:
+    case f64_tag:
+        return (f64 < 0) && JSDOUBLE_IS_INFINITE(f64);
+    default:
+        NOT_REACHED("Broken compiler?");
+        return true;
+    }
+}
+              
+bool JSValue::isPositiveInfinity() const
+{
+    ASSERT(isNumber());
+    switch (tag) {
+    case i32_tag:
+    case u32_tag:
+        return false;
+    case integer_tag:
+    case f64_tag:
+        return (f64 > 0) && JSDOUBLE_IS_INFINITE(f64);
+    default:
+        NOT_REACHED("Broken compiler?");
+        return true;
+    }
+}
+              
+bool JSValue::isNegativeZero() const
+{
+    ASSERT(isNumber());
+    switch (tag) {
+    case i32_tag:
+    case u32_tag:
+        return false;
+    case integer_tag:
+    case f64_tag:
+        return JSDOUBLE_IS_NEGZERO(f64);
+    default:
+        NOT_REACHED("Broken compiler?");
+        return true;
+    }
+}
+              
+bool JSValue::isPositiveZero() const
+{
+    ASSERT(isNumber());
+    switch (tag) {
+    case i32_tag:
+        return (i32 == 0);
+    case u32_tag:
+        return (u32 == 0);
+    case integer_tag:
+    case f64_tag:
+        return (f64 == 0.0) && !JSDOUBLE_IS_NEGZERO(f64);
     default:
         NOT_REACHED("Broken compiler?");
         return true;
@@ -522,6 +618,21 @@ JSString::JSString(const char* str)
     std::transform(str, str + n, begin(), JavaScript::widen);
 }
 
+void JSString::append(const char* str)
+{
+    size_t n = ::strlen(str);
+    size_t oldSize = size();
+    resize(oldSize + n);
+    std::transform(str, str + n, begin() + oldSize, JavaScript::widen);
+}
+
+void JSString::append(const JSStringBase* str)
+{
+    size_t n = str->size();
+    size_t oldSize = size();
+    resize(oldSize + n);
+    traits_type::copy(begin() + oldSize, str->begin(), n);
+}
 
 JSString::operator String()
 {
