@@ -392,15 +392,9 @@ public class Codegen extends Interpreter {
         version = cx.getLanguageVersion();
         optLevel = cx.getOptimizationLevel();
         inFunction = tree.getType() == TokenStream.FUNCTION;
-        if (debugLevel >= 3) {
-            superClassName = inFunction
-                             ? debugFunctionSuperClassName
-                             : debugScriptSuperClassName;
-        } else {
-            superClassName = inFunction
-                             ? normalFunctionSuperClassName
-                             : normalScriptSuperClassName;
-        }
+        superClassName = inFunction
+                         ? normalFunctionSuperClassName
+                         : normalScriptSuperClassName;
         superClassSlashName = superClassName.replace('.', '/');
 
         Node codegenBase;
@@ -521,10 +515,6 @@ public class Codegen extends Interpreter {
         finishMethod(cx, debugVars);
 
         emitConstantDudeInitializers();
-
-        // this needs to be done after the primary code generation is done
-        if (debugLevel >= 1)
-            generateDebugInit(cx, tree);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream(512);
         try {
@@ -1066,31 +1056,18 @@ public class Codegen extends Interpreter {
                           "V");
         }
 
-        if (debugLevel >= 3) {
-            addByteCode(ByteCode.ALOAD_1); // load 'cx'
-            addByteCode(ByteCode.ALOAD_0); // load 'this'
-            addByteCode(ByteCode.ALOAD_2); // load 'scope'
-            addStaticInvoke("org/mozilla/javascript/debug/NativeDelegate",
-                          "executeDebug",
-                          "(Lorg/mozilla/javascript/Context;" +
-                           "Lorg/mozilla/javascript/NativeFunction;" +
-                           "Lorg/mozilla/javascript/Scriptable;)",
-                          "Ljava/lang/Object;");
-        }
-        else {
-            addByteCode(ByteCode.ALOAD_0); // load 'this'
-            addByteCode(ByteCode.ALOAD_1); // load 'cx'
-            addByteCode(ByteCode.ALOAD_2); // load 'scope'
-            addByteCode(ByteCode.DUP);
-            addByteCode(ByteCode.ACONST_NULL);
-            addVirtualInvoke(slashName,
-                          "call",
-                          "(Lorg/mozilla/javascript/Context;" +
-                           "Lorg/mozilla/javascript/Scriptable;" +
-                           "Lorg/mozilla/javascript/Scriptable;" +
-                           "[Ljava/lang/Object;)",
-                          "Ljava/lang/Object;");
-        }
+        addByteCode(ByteCode.ALOAD_0); // load 'this'
+        addByteCode(ByteCode.ALOAD_1); // load 'cx'
+        addByteCode(ByteCode.ALOAD_2); // load 'scope'
+        addByteCode(ByteCode.DUP);
+        addByteCode(ByteCode.ACONST_NULL);
+        addVirtualInvoke(slashName,
+                      "call",
+                      "(Lorg/mozilla/javascript/Context;" +
+                       "Lorg/mozilla/javascript/Scriptable;" +
+                       "Lorg/mozilla/javascript/Scriptable;" +
+                       "[Ljava/lang/Object;)",
+                      "Ljava/lang/Object;");
 
         addByteCode(ByteCode.ARETURN);
         finishMethod(cx, null);
@@ -1266,91 +1243,10 @@ public class Codegen extends Interpreter {
             }
         }
 
-        // debug stuff ... (should be last thing in method)
-
-        if (debugLevel >= 1) {
-            // save debugLevel 
-            setNonTrivialInit(methodName);
-            addByteCode(ByteCode.ALOAD_0); // 'this'
-            push(debugLevel);
-            classFile.add(ByteCode.PUTFIELD,
-                         "org/mozilla/javascript/NativeFunction",
-                          "debug_level", "I");
-
-            // generate call to "debugInit()"
-            String slashName = this.name.replace('.', '/');
-            addByteCode(ByteCode.ALOAD_0); // load 'this'
-            addVirtualInvoke(slashName,
-                          "debugInit","()", "V");
-        }
-
         if (!trivialInit) {
             addByteCode(ByteCode.RETURN);
             finishMethod(cx, null);
         }
-    }
-
-    // this is only called if (debugLevel >= 1)
-    private void generateDebugInit(Context cx, Node tree) {
-        if (debugLevel == 0)
-            return;
-        startNewMethod("debugInit", "()V", 0, false, true);
-
-        // save source name
-        String srcName = (String) tree.getProp(Node.SOURCENAME_PROP);
-        addByteCode(ByteCode.ALOAD_0); // 'this'
-        if (srcName != null)
-            push(srcName);
-        else
-            addByteCode(ByteCode.ACONST_NULL);
-        classFile.add(ByteCode.PUTFIELD,
-                     "org/mozilla/javascript/NativeFunction",
-                     "debug_srcName", "Ljava/lang/String;");
-
-        if (debugLevel >= 3) {
-            // at this debug level we know that our superclass
-            // is debug specific. Generate more debug info into it.
-
-            // save the base and end line numbers
-            Integer prop;
-
-            prop = (Integer) tree.getProp(Node.BASE_LINENO_PROP);
-            if (null != prop) {
-                addByteCode(ByteCode.ALOAD_0); // 'this'
-                push(prop.intValue());
-
-                classFile.add(ByteCode.PUTFIELD,
-                              superClassSlashName,
-                              "debug_baseLineno", "I");
-            }
-
-            prop = (Integer) tree.getProp(Node.END_LINENO_PROP);
-            if (null != prop) {
-                addByteCode(ByteCode.ALOAD_0); // 'this'
-                push(prop.intValue());
-
-                classFile.add(ByteCode.PUTFIELD,
-                              superClassSlashName,
-                              "debug_endLineno", "I");
-            }
-
-            // trap support
-            if (debugLevel >= 6) {
-                writeDebugPCEntries();
-                buildDebugTrapMap();
-            }
-
-            // generate call to script loading hook
-            // *always do this last*
-
-            addByteCode(ByteCode.ALOAD_0); //'this'
-            addVirtualInvoke(superClassSlashName,
-                          "callLoadingScriptHook",
-                           "()", "V");
-        }
-
-        addByteCode(ByteCode.RETURN);
-        finishMethod(cx, null);
     }
 
     private void generateRegExpLiterals(Vector regexps, boolean inCtor) {
@@ -1674,24 +1570,13 @@ public class Codegen extends Interpreter {
                 astore(itsOneArgArray);
             }
         }
-        
-        if (debugLevel > 0) {   // XXX is 0 correct?
-            // setup the local for 'pc' with a default value
-            debug_pcLocal = getNewWordLocal();
-            addByteCode(ByteCode.ICONST_0);
-            istore(debug_pcLocal);
-            if (debugLevel >= 6) {
-                debugStopSubLabel = acquireLabel();
-                generateDebugStopSubroutine();
-            }
-        }
     }
     
     private void generateEpilogue() {
         if (epilogueLabel != -1) {
             classFile.markLabel(epilogueLabel);
         }
-        if (!hasVarsInRegs || !inFunction || debugLevel > 0) {
+        if (!hasVarsInRegs || !inFunction) {
             // restore caller's activation
             aload(contextLocal);
             addScriptRuntimeInvoke("popActivation",
@@ -1699,237 +1584,6 @@ public class Codegen extends Interpreter {
                                    "V");
         }
         addByteCode(ByteCode.ARETURN);
-    }
-
-    private void generateDebugStopSubroutine() {
-        if (debugLevel == 0)
-            return;
-        // local to store our subroutine return address
-//        int stackTop = classFile.getStackTop();
-        debugStopSubRetLocal = getNewWordLocal();
-
-        // generate the code to jump over this subroutine
-        // (needed if generated anyplace other than after the last return)
-        int labelSkip = acquireLabel();
-        addByteCode(ByteCode.GOTO, labelSkip);
-
-        //
-        // the actual subroutine starts here
-        //
-        classFile.adjustStackTop(1);
-        markLabel(debugStopSubLabel);
-        astore(debugStopSubRetLocal);
-//        System.out.println(1+" " +stackTop+" "+classFile.getStackTop());
-        int labelRetPop0 = acquireLabel();
-        int labelRetPop1 = acquireLabel();
-        int labelRetPop2 = acquireLabel();
-        int labelCheckForStopPoint = acquireLabel();
-        int labelHandleHookAnswer  = acquireLabel();
-        int labelNotThrow  = acquireLabel();
-
-        // parse the flag to see what should be done
-        addByteCode(ByteCode.ALOAD_0); // 'this'
-        classFile.add(ByteCode.GETFIELD,
-                    superClassSlashName,
-                     "debug_stopFlags", "I");
-        addByteCode(ByteCode.DUP);
-        addByteCode(ByteCode.ICONST_1);
-        addByteCode(ByteCode.IAND);
-        addByteCode(ByteCode.IFEQ, labelCheckForStopPoint);
-        addByteCode(ByteCode.POP);
-
-        // if here then an immediate interrupt was requested. (stack empty)
-//        System.out.println(2+" " +stackTop+" "+classFile.getStackTop());
-
-        // call our "hook caller" helper in Debug superclass
-        addByteCode(ByteCode.ALOAD_0); // 'this'
-        aload(contextLocal);
-        addByteCode(ByteCode.ICONST_1); // retVal[1] array
-        addByteCode(ByteCode.ANEWARRAY, "java/lang/Object");
-        addByteCode(ByteCode.DUP_X2); //retVal will be on stack after call
-        iload(debug_pcLocal);
-        aload(variableObjectLocal);
-
-        addVirtualInvoke(superClassSlashName,
-                      "callInterruptHook",
-                      "(Lorg/mozilla/javascript/Context;[Ljava/lang/Object;" +
-                       "ILorg/mozilla/javascript/Scriptable;)",
-                      "I");
-        // jump to labelHandleHookAnswer (same code for both hooks)
-        addByteCode(ByteCode.GOTO, labelHandleHookAnswer);
-
-        /********************************************************/
-
-        // if here, check to see if this is our stoppoint
-        // the stack has 'debug_stopFlags'
-        classFile.adjustStackTop(-1);
-        markLabel(labelCheckForStopPoint);
-
-        // sanity check that breakpoint flag is really set
-        addByteCode(ByteCode.ICONST_2);
-        addByteCode(ByteCode.IAND);
-        addByteCode(ByteCode.IFEQ, labelRetPop0);
-
-        // check to see if we are at a pc with a breakpoint (stack empty)
-//        System.out.println(3+" " +stackTop+" "+classFile.getStackTop());
-
-        // We have an array of 32bit ints. We use the pc to index bits in
-        // that array. If the bit is set then we trap, otherwise continue.
-        // To figure out which bit the pc represents we do bitwise work to
-        // calc an index and mask. Similar work is done in Java in the class
-        // org.mozilla.javascript.debug.NativeDelegate to set and clear these
-        // bits.
-
-        // get current pc
-        iload(debug_pcLocal);
-        addByteCode(ByteCode.DUP);
-
-        // calc the index into trapMap
-        addByteCode(ByteCode.ICONST_5);
-        addByteCode(ByteCode.ISHR);
-        addByteCode(ByteCode.SWAP);
-
-        // calc the mask
-        push(0x1f);
-        addByteCode(ByteCode.IAND);
-        addByteCode(ByteCode.ICONST_1);
-        addByteCode(ByteCode.SWAP);
-        addByteCode(ByteCode.ISHL);
-        addByteCode(ByteCode.SWAP);
-
-        // stack has mask, index
-
-        // get refernce to trapMap
-        addByteCode(ByteCode.ALOAD_0); // 'this'
-        classFile.add(ByteCode.GETFIELD,
-                     superClassSlashName,
-                     "debug_trapMap", "[I");
-
-        // get our entry
-        addByteCode(ByteCode.SWAP);
-        addByteCode(ByteCode.IALOAD);
-
-        // 'and' against the map
-        addByteCode(ByteCode.IAND);
-        addByteCode(ByteCode.IFEQ, labelRetPop0);
-
-        // here if we've hit a trap (stack empty)
-//        System.out.println(4+" " +stackTop+" "+classFile.getStackTop());
-
-        // call our "hook caller" helper in Debug superclass
-        addByteCode(ByteCode.ALOAD_0); // 'this'
-        aload(contextLocal);
-        addByteCode(ByteCode.ICONST_1); // retVal[1] array
-        addByteCode(ByteCode.ANEWARRAY, "java/lang/Object");
-        addByteCode(ByteCode.DUP_X2); //retVal will be on stack after call
-        iload(debug_pcLocal);
-        aload(variableObjectLocal);
-
-        addVirtualInvoke(superClassSlashName,
-                      "callTrappedHook",
-                      "(Lorg/mozilla/javascript/Context;[Ljava/lang/Object;" +
-                       "ILorg/mozilla/javascript/Scriptable;)",
-                      "I");
-        // fall through to labelHandleHookAnswer (same code for both hooks)
-
-        // Deal with Hook Answer, stack has retval object, action code int
-        markLabel(labelHandleHookAnswer);
-
-        // available actions...
-        // org.mozilla.javascript.DeepBytecodeHook.CONTINUE     = 0;
-        // org.mozilla.javascript.DeepBytecodeHook.THROW        = 1;
-        // org.mozilla.javascript.DeepBytecodeHook.RETURN_VALUE = 2;
-
-        // is it just 'continue'?
-        addByteCode(ByteCode.DUP);
-        addByteCode(ByteCode.IFEQ, labelRetPop2);
-
-        // either a throw or return value -- get the value (Object[0])
-        addByteCode(ByteCode.SWAP);
-        addByteCode(ByteCode.ICONST_0);
-        addByteCode(ByteCode.AALOAD);
-        addByteCode(ByteCode.SWAP);
-
-        addByteCode(ByteCode.DUP);
-        addByteCode(ByteCode.ICONST_1);
-        addByteCode(ByteCode.IF_ICMPNE, labelNotThrow);
-        addByteCode(ByteCode.POP);    // get the object to the top
-        addByteCode(ByteCode.CHECKCAST, "java/lang/Throwable");
-        addByteCode(ByteCode.ATHROW);
-
-        classFile.adjustStackTop(2);
-        markLabel(labelNotThrow);
-        // sanity check
-        addByteCode(ByteCode.ICONST_2);
-        addByteCode(ByteCode.IF_ICMPNE, labelRetPop1);
-        addByteCode(ByteCode.ARETURN);
-
-        classFile.adjustStackTop(2);
-        markLabel(labelRetPop2);
-        addByteCode(ByteCode.POP);
-        markLabel(labelRetPop1);
-        addByteCode(ByteCode.POP);
-        markLabel(labelRetPop0);
-        addByteCode(ByteCode.RET, debugStopSubRetLocal);
-
-        // target for jumping over the subroutine
-        markLabel(labelSkip);
-        addByteCode(ByteCode.NOP);
-//        System.out.println(5+" " +stackTop+" "+classFile.getStackTop());
-    }
-
-    private short addDebugPCEntry(short lineno) {
-        if (debugLevel == 0)
-            return -1;
-        if (0 == debugLineEntryCount) {
-            debugLineMap = new short[DEBUG_LINE_MAP_INITIAL_SIZE];
-        }
-        if (debugLineMap.length == debugLineEntryCount+1) {
-            short[] newMap =
-                new short[debugLineMap.length+DEBUG_LINE_MAP_RESIZE_INCREMENT];
-            for (short i = 0; i < debugLineMap.length; i++)
-                newMap[i] = debugLineMap[i];
-            debugLineMap = newMap;
-        }
-        debugLineMap[++debugLineEntryCount] = lineno;
-        return debugLineEntryCount;
-    }
-    private void writeDebugPCEntries() {
-        if (debugLevel == 0)
-            return;
-        String s = null;
-        if (null != debugLineMap && 0 != debugLineEntryCount) {
-            // I have a short[]. I want a char[]. Java won't let me cast.
-            char[] ca = new char[debugLineEntryCount+1];
-            for (short i = 0; i < debugLineEntryCount+1; i++)
-                ca[i] = (char) debugLineMap[i];
-            s = new String(ca);
-        }
-
-        addByteCode(ByteCode.ALOAD_0); // 'this'
-        if (s == null)
-            addByteCode(ByteCode.ACONST_NULL);
-        else
-            push(s);
-        classFile.add(ByteCode.PUTFIELD,
-                superClassSlashName,
-                "debug_linenoMap", "Ljava/lang/String;");
-    }
-    private void buildDebugTrapMap() {
-        if (debugLevel == 0)
-            return;
-        if (null != debugLineMap && 0 != debugLineEntryCount) {
-            short count = (short)((debugLineEntryCount+1)/32);
-            if (0 != (debugLineEntryCount+1)%32)
-                count++;
-
-            addByteCode(ByteCode.ALOAD_0); // 'this'
-            push(count);
-            addByteCode(ByteCode.NEWARRAY, 10); // array of int
-            classFile.add(ByteCode.PUTFIELD,
-                          superClassSlashName,
-                          "debug_trapMap", "[I");
-        }
     }
 
     private void visitFunction(Node fn, boolean setName) {
@@ -2322,7 +1976,7 @@ if (true) {
         String simpleCallName = null;
         if (type != TokenStream.NEW) {
             simpleCallName = getSimpleCallName(node);
-            if (simpleCallName != null && !isSpecialCall && debugLevel < 3) {
+            if (simpleCallName != null && !isSpecialCall) {
                 isSimpleCall = true;
                 push(simpleCallName);
                 aload(variableObjectLocal);
@@ -2386,17 +2040,6 @@ if (true) {
             child = child.getNextSibling();
         }
 
-        // set our pc into the top frame
-        if (debugLevel >= 1) {
-            aload(contextLocal);
-            aload(variableObjectLocal);
-            iload(debug_pcLocal);            
-            addStaticInvoke("org/mozilla/javascript/debug/NativeDelegate",
-                "setPC",
-                "(Lorg/mozilla/javascript/Context;Lorg/mozilla/javascript/Scriptable;I)",
-                "V");
-        }
-
         String className;
         String methodNameNewObj;
         String methodNameCall;
@@ -2453,20 +2096,6 @@ if (true) {
             }
         }
         
-        /* NOTE: we assure above !(isSimpleCall && debugLevel >= 3). So
-         * we don't need to worry about the SimpleCall case in debug code.
-         */
-        if (debugLevel >= 3) {
-            className     = "org/mozilla/javascript/debug/NativeDelegate";
-            if (isSpecialCall) {
-                methodNameNewObj = "newObjectSpecialDebug";
-                methodNameCall   = "callSpecialDebug";
-            } else  {
-                methodNameNewObj = "newObjectDebug";
-                methodNameCall   = "callDebug";
-            }
-        }        
-
         if (type == TokenStream.NEW) {
             addStaticInvoke(className,
                 methodNameNewObj,
@@ -2488,32 +2117,6 @@ if (true) {
         if (itsLineNumber == -1)
             return;
         classFile.addLineNumberEntry((short)itsLineNumber);
-
-        if (debugLevel >= 1) {
-            if (debugLevel >= 6) {
-                int pc = addDebugPCEntry((short)itsLineNumber);
-                push(pc);
-                istore(debug_pcLocal);
-
-                // see if a stop is requested anywhere in this function.
-                // if the flag is non-zero, then let the subroutine decide
-                // what to do.
-
-                addByteCode(ByteCode.ALOAD_0); // load 'this'
-                classFile.add(ByteCode.GETFIELD,
-                             superClassSlashName,
-                             "debug_stopFlags", "I");
-                int label = acquireLabel();
-                addByteCode(ByteCode.IFEQ, label);
-                addByteCode(ByteCode.JSR, debugStopSubLabel);
-                classFile.adjustStackTop(-1);
-                markLabel(label);
-            }
-            else {
-                push(itsLineNumber);
-                istore(debug_pcLocal);
-            }
-        }
     }
 
 
@@ -4178,17 +3781,6 @@ if (true) {
     private OptVariableTable debugVars;
     private int epilogueLabel;
     private int optLevel;
-    
-    // Debugging is currently *not* supported. We'll leave in the 
-    // support code, just make it unreachable, in case we get the
-    // time to get it working again.
-    private static final int debugLevel = 0;
-    private int debugStopSubLabel;
-
-    private short[] debugLineMap;
-    private short debugLineEntryCount;
-    private static final int DEBUG_LINE_MAP_INITIAL_SIZE = 100;
-    private static final int DEBUG_LINE_MAP_RESIZE_INCREMENT = 100;
 }
 
 class ConstantList {
