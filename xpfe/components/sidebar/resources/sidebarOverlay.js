@@ -99,7 +99,6 @@ function sidebar_overlay_init() {
   sidebarObj.master_datasources += " chrome://communicator/content/sidebar/local-panels.rdf";
   sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
   sidebarObj.component = document.firstChild.getAttribute('windowtype');
-  sidebar.loading_iframe = null;
   debug("sidebarObj.component is " + sidebarObj.component);
 
   // Initialize the display
@@ -310,7 +309,6 @@ function is_excluded(item) {
 function panel_loader() {
   debug("---------- panel_loader");
   dump_tree(this);
-  sidebar.loading_iframe = null;
   this.removeEventListener("load", panel_loader, true);
   this.removeAttribute('collapsed');
   this.parentNode.firstChild.setAttribute('hidden','true');
@@ -375,11 +373,7 @@ function update_panels() {
           // Pick sandboxed, or unsandboxed iframe
           var iframe = get_iframe(content);
           iframe.removeAttribute('hidden');
-
-          // Use a timeout to set the onload handler.
-          // Otherwise, this fires too early and javascript dies. Bug 37428.
-          sidebar.loading_iframe = iframe;
-          setTimeout("sidebar.loading_iframe.addEventListener('load', panel_loader, true);", 1);
+          iframe.addEventListener('load', panel_loader, true);
         }
       } else { 
         debug("item("+ii+") unselected");
