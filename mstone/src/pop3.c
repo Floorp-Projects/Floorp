@@ -80,7 +80,7 @@ Pop3ParseStart (pmail_command_t cmd,
     cmd->data = pish;
 
     cmd->numLoops = 9999;		/* default 9999 downloads */
-    pish->portNum = POP3_PORT;		/* default port */
+    pish->hostInfo.portNum = POP3_PORT;	/* default port */
 
     D_PRINTF(stderr, "Pop3 Assign defaults\n");
     /* Fill in defaults first, ignore defaults we dont use */
@@ -122,7 +122,7 @@ Pop3ParseEnd (pmail_command_t cmd,
     }
 
     /* check for some of the required command attrs */
-    if (!pish->mailServer) {
+    if (!pish->hostInfo.hostName) {
 	D_PRINTF(stderr,"missing server for command");
 	return returnerr(stderr,"missing server for command\n");
     }
@@ -138,13 +138,13 @@ Pop3ParseEnd (pmail_command_t cmd,
     }
 
     /* see if we can resolve the mailserver addr */
-    if (resolve_addrs(pish->mailServer, "tcp",
+    if (resolve_addrs(pish->hostInfo.hostName, "tcp",
 		      &(pish->hostInfo.host_phe),
 		      &(pish->hostInfo.host_ppe),
 		      &(pish->hostInfo.host_addr),
 		      &(pish->hostInfo.host_type))) {
 	return returnerr (stderr, "Error resolving hostname '%s'\n",
-			  pish->mailServer);
+			  pish->hostInfo.hostName);
     } else {
 	pish->hostInfo.resolved = 1;	/* mark the hostInfo resolved */
     }
@@ -241,7 +241,6 @@ doPop3Start(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
     int		rc;
     int		numBytes;
     char	command[MAX_COMMAND_LEN];
-    NETPORT		port;
     pish_stats_t	*stats = (pish_stats_t *)ptimer->data;
     pish_command_t	*pish = (pish_command_t *)cmd->data;
 
@@ -250,16 +249,15 @@ doPop3Start(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
     me->numMsgs = 0;
     me->totalMsgLength = 0;
     me->msgCounter = 0;
-    port = pish->portNum;
   
     event_start(ptcx, &stats->connect);
-    ptcx->sock = connectsock(ptcx, pish->mailServer, &pish->hostInfo, port, "tcp");
+    ptcx->sock = connectSocket(ptcx, &pish->hostInfo, "tcp");
     event_stop(ptcx, &stats->connect);
     if (BADSOCKET(ptcx->sock)) {
 	if (gf_timeexpired < EXIT_FAST) {
 	    stats->connect.errs++;
 	    returnerr(debugfile, "POP3 Couldn't connect to %s: %s\n",
-		      pish->mailServer, neterrstr());
+		      pish->hostInfo.hostName, neterrstr());
 	}
 	myfree (me);
 	return NULL;

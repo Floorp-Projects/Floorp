@@ -35,7 +35,7 @@
 /* http.c: HTTP protocol test */
 
 #include "bench.h"
-#include "pish.h"
+#include "http-util.h"
 
 #define MAX_HTTP_RESPONSE_LEN (2*1024)	/* size of sliding buffer */
 
@@ -44,24 +44,36 @@
   There is one of these for every command in every thread.
 */
 typedef struct http_stats {
-    event_timer_t	connect;
+    event_timer_t	connect;	/* initial connections */
+    event_timer_t	reconnect;	/* re-connections */
     event_timer_t	msgread;	/* AKA retrieve */
     event_timer_t	logout;		/* AKA dis-connect */
 					/* no local storage */
 } http_stats_t;
 
+/* These are common to POP, IMAP, SMTP, HTTP */
+typedef struct http_command {
+    resolved_addr_t 	hostInfo;	/* Host, port, and IP cache */
+
+    char *	httpCommand;		/* Old: single HTTP command */
+
+#if 0
+    string_list_t getFirstCmds;		/* GET commands after connect */
+    string_list_t getLoopCmds;		/* GET commands, each loop */
+    string_list_t getLastCmds;		/* GET commands before disconnect */
+#endif
+
+} http_command_t;
+
 /*
   State during command execution.
 */
 typedef struct _doHTTP_state {
-    int		numMsgs;		/* messages in folder */
-    int		totalMsgLength;		/* total msg length */
-    int		msgCounter;		/* count in download */
+    int		nothingHere;
 } doHTTP_state_t;
 
 static void doHttpExit (ptcx_t ptcx, doHTTP_state_t *me);
-static int readHttpResponse(ptcx_t ptcx, SOCKET sock, char *buffer, int buflen);
-static int doHttpCommandResponse(ptcx_t ptcx, SOCKET sock, char *command, char *response, int resplen);
+static int HttpParseNameValue (pmail_command_t cmd, char *name, char *tok);
 
 /*
   Set defaults in command structure
@@ -72,17 +84,17 @@ HttpParseStart (pmail_command_t cmd,
 		param_list_t *defparm)
 {
     param_list_t	*pp;
-    pish_command_t	*pish = (pish_command_t *)mycalloc
-	(sizeof (pish_command_t));
-    cmd->data = pish;
+    http_command_t	*mycmd = (http_command_t *)mycalloc
+	(sizeof (http_command_t));
+    cmd->data = mycmd;
 
     cmd->numLoops = 1;		/* default 1 downloads */
-    pish->portNum = HTTP_PORT;	/* get default port */
+    mycmd->hostInfo.portNum = HTTP_PORT;	/* get default port */
 
     D_PRINTF(stderr, "Http Assign defaults\n");
     /* Fill in defaults first, ignore defaults we dont use */
     for (pp = defparm; pp; pp = pp->next) {
-	(void)pishParseNameValue (cmd, pp->name, pp->value);
+	(void)HttpParseNameValue (cmd, pp->name, pp->value);
     }
 
     return 1;
@@ -96,7 +108,7 @@ HttpParseEnd (pmail_command_t cmd,
 		string_list_t *section,
 		param_list_t *defparm)
 {
-    pish_command_t	*pish = (pish_command_t *)cmd->data;
+    http_command_t	*mycmd = (http_command_t *)cmd->data;
     string_list_t	*sp;
 
     /* Now parse section lines */
@@ -111,7 +123,7 @@ HttpParseEnd (pmail_command_t cmd,
 	string_tolower(name);
 	tok = string_unquote(tok);
 
-	if (pishParseNameValue (cmd, name, tok) < 0) {
+	if (HttpParseNameValue (cmd, name, tok) < 0) {
 	    /* not a known attr */
 	    D_PRINTF(stderr,"unknown attribute '%s' '%s'\n", name, tok);
 	    returnerr(stderr,"unknown attribute '%s' '%s'\n", name, tok);
@@ -119,29 +131,56 @@ HttpParseEnd (pmail_command_t cmd,
     }
 
     /* check for some of the required command attrs */
-    if (!pish->mailServer) {
+    if (!mycmd->hostInfo.hostName) {
 	D_PRINTF(stderr,"missing server for command");
 	return returnerr(stderr,"missing server for command\n");
     }
 
-    if (!pish->httpCommand) {
+    if (!mycmd->httpCommand) {
 	D_PRINTF(stderr,"missing httpcommand for HTTP");
 	return returnerr(stderr,"missing httpcommand for HTTP\n");
     }
 
     /* see if we can resolve the mailserver addr */
-    if (resolve_addrs(pish->mailServer, "tcp",
-		      &(pish->hostInfo.host_phe),
-		      &(pish->hostInfo.host_ppe),
-		      &(pish->hostInfo.host_addr),
-		      &(pish->hostInfo.host_type))) {
+    if (resolve_addrs(mycmd->hostInfo.hostName, "tcp",
+		      &(mycmd->hostInfo.host_phe),
+		      &(mycmd->hostInfo.host_ppe),
+		      &(mycmd->hostInfo.host_addr),
+		      &(mycmd->hostInfo.host_type))) {
 	return returnerr (stderr, "Error resolving hostname '%s'\n",
-			  pish->mailServer);
+			  mycmd->hostInfo.hostName);
     } else {
-	pish->hostInfo.resolved = 1;	/* mark the hostInfo resolved */
+	mycmd->hostInfo.resolved = 1;	/* mark the hostInfo resolved */
     }
 
     return 1;
+}
+
+/*
+  Parse arguments for http command
+ */
+static int
+HttpParseNameValue (pmail_command_t cmd,
+		    char *name,
+		    char *tok)
+{
+    http_command_t	*mycmd = (http_command_t *)cmd->data;
+    D_PRINTF (stderr, "HttpParseNameValue(name='%s' value='%s')\n", name, tok);
+
+    /* find a home for the attr/value */
+    if (cmdParseNameValue(cmd, name, tok))
+	;				/* done */
+    else if (strcmp(name, "server") == 0)
+	mycmd->hostInfo.hostName = mystrdup (tok);
+    else if (strcmp(name, "portnum") == 0)
+	mycmd->hostInfo.portNum = atoi(tok);
+    else if (strcmp(name, "httpcommand") == 0)
+	mycmd->httpCommand = mystrdup (tok);
+    /*stringListAdd(&mycmd->getFirstCmds, tok);*/
+    else {
+	return -1;
+    }
+    return 0;
 }
 
 /* PROTOCOL specific */
@@ -157,7 +196,7 @@ HttpStatsInit(mail_command_t *cmd, cmd_stats_t *p, int procNum, int threadNum)
     }
 
     if (cmd) {				/* do sub-range calulations */
-	/*pish_command_t	*pish = (pish_command_t *)cmd->data;
+	/*http_command_t	*mycmd = (http_command_t *)cmd->data;
 	  http_stats_t	*stats = (http_stats_t *)p->data;*/
     }
 }
@@ -258,149 +297,17 @@ HttpStatsFormat (protocol_t *pp,
     strcat (cp, "</FORMAT>\n");
 }    
 
-static int
-readHttpResponse(ptcx_t ptcx, SOCKET sock, char *buffer, int buflen)
-{    
-    /* read the server response and do nothing with it */
-    int totalbytesread = 0;
-    int bytesread;
-
-    memset (buffer, 0, buflen);
-    while (totalbytesread < buflen)
-    {
-	if (gf_timeexpired >= EXIT_FAST) {
-	    D_PRINTF(debugfile,"readHttpResponse() Time expired.\n");
-	    break;
-	}
-	bytesread = retryRead(ptcx, sock, buffer, buflen-1);
-	if (bytesread == 0)		/* just read until we hit emtpy */
-	    break;
-	if (bytesread < 0) {		/* IO error */
-	    strcat (ptcx->errMsg, "<ReadHttpResponse");
-	    return -1;
-	}
-        totalbytesread += bytesread;
-	buffer[bytesread] = 0;		/* terminate for later searches */
-	ptcx->bytesread += bytesread;
-	T_PRINTF(ptcx->logfile, buffer, bytesread, "HTTP ReadResponse");
-    }
-    D_PRINTF(debugfile, "Read %d from server [%.99s]\n", totalbytesread, buffer);
-
-    if (0 == totalbytesread) {
-	strcpy (ptcx->errMsg, "ReadHttpResponse: Read 0 bytes");
-	return -1;
-    }
-	
-
-    return totalbytesread;
-}
-
-/* expects pointers to buffers of these sizes */
-/* char command[MAX_COMMAND_LEN] */
-/* char response[resplen] */
-
-static int
-doHttpCommandResponse(ptcx_t ptcx, SOCKET sock, char *command, char *response, int resplen)
-{
-    int ret;
-
-    if (response == NULL)
-	return -1;
-    memset(response, 0, resplen);
-
-    T_PRINTF(ptcx->logfile, command, strlen (command), "HTTP SendCommand");
-    /* send the command already formatted */
-    if ((ret = sendCommand(ptcx, sock, command)) == -1) {
-	if (gf_timeexpired < EXIT_FAST) {
-	    returnerr(debugfile, "Error sending [%s] command to server: %s\n",
-		      command, neterrstr());
-	}
-	return -1;
-    }
-
-    /* read server response */
-    if ((ret = readHttpResponse(ptcx, sock, response, resplen)) <= 0) {
-	if (gf_timeexpired < EXIT_FAST) {
-	    trimEndWhite (command);
-	    returnerr(debugfile, "Error reading [%s] response: %s\n",
-		      command, neterrstr());
-	}
-	return -1;
-    }
-    return ret;
-}
-
-#if 0
-int
-httpLogin(ptcx_t ptcx, mail_command_t *cmd, SOCKET sock)
-{
-  char	command[MAX_COMMAND_LEN];
-  char	respBuffer[MAX_RESPONSE_LEN];
-  char	mailUser[MAX_MAILADDR_LEN];
-  char	userPasswd[MAX_MAILADDR_LEN];
-  unsigned long loginNum;
-
-  /* generate a random username (with a mailbox on the server) */
-  loginNum = (RANDOM() % pish->numLogins);
-  /* add the the base user */
-  loginNum += pish->firstLogin;
-
-  sprintf(mailUser, pish->loginFormat, loginNum);
-  D_PRINTF(debugfile,"mailUser=%s\n", mailUser);
-  sprintf(command, "USER %s%s", mailUser, CRLF);
-
-  if (doHttpCommandResponse(ptcx, sock, command, respBuffer) == -1) {
-      return -1;
-  }
-
-  /* send Password */
-  sprintf(userPasswd, pish->passwdFormat, loginNum);
-  sprintf(command, "PASS %s%s", userPasswd, CRLF);
-  if (doHttpCommandResponse(ptcx, sock, command, respBuffer) == -1) {
-      if (gf_timeexpired < EXIT_FAST) {
-	  returnerr(debugfile,"HTTP cannot login user=%s pass=%s\n",
-		    mailUser, userPasswd);
-      }
-      return -1;
-  }
-  return 0;
-}
-#endif
-
 void *
 doHttpStart(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
 {
     doHTTP_state_t	*me = (doHTTP_state_t *)mycalloc (sizeof (doHTTP_state_t));
     http_stats_t	*stats = (http_stats_t *)ptimer->data;
-    pish_command_t	*pish = (pish_command_t *)cmd->data;
-    NETPORT		port;
+    http_command_t	*mycmd = (http_command_t *)cmd->data;
 
     if (!me) return NULL;
 
-    me->numMsgs = 0;
-    me->totalMsgLength = 0;
-    me->msgCounter = 0;
-    port = pish->portNum;
-  
-    event_start(ptcx, &stats->connect);
-    ptcx->sock = connectsock(ptcx, pish->mailServer, &pish->hostInfo, port, "tcp");
-    event_stop(ptcx, &stats->connect);
-    if (BADSOCKET(ptcx->sock)) {
-	if (gf_timeexpired < EXIT_FAST) {
-	    stats->connect.errs++;
-	    returnerr(debugfile,
-		      "%s<wmapConnect: HTTP Couldn't connect to %s: %s\n",
-		      ptcx->errMsg, pish->mailServer, neterrstr());
-	}
-	myfree (me);
+    if (HttpConnect(ptcx, &mycmd->hostInfo, &stats->connect) == -1) {
 	return NULL;
-    }
-
-    if (gf_abortive_close) {
-	if (set_abortive_close(ptcx->sock) != 0) {
-	    returnerr (debugfile,
-		       "HTTP: WARNING: Could not set abortive close\n");
-	}
     }
 
     /* there is no banner or login state for HTTP */
@@ -409,31 +316,37 @@ doHttpStart(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
 }
 
 int
-doHttpLoop(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, void *mystate)
+doHttpLoop (
+    ptcx_t		ptcx,
+    mail_command_t	*cmd,
+    cmd_stats_t		*ptimer,
+    void		*mystate)
 {
     doHTTP_state_t	*me = (doHTTP_state_t *)mystate;
     char	command[MAX_COMMAND_LEN];
     char	respBuffer[MAX_HTTP_RESPONSE_LEN];
     int		rc;
     http_stats_t	*stats = (http_stats_t *)ptimer->data;
-    pish_command_t	*pish = (pish_command_t *)cmd->data;
+    http_command_t	*mycmd = (http_command_t *)cmd->data;
 
-#if 0
-    if (me->msgCounter >= me->numMsgs)
-       return -1; /* done, close */
-#endif
+    if (BADSOCKET(ptcx->sock)) {	/* re-connect if needed */
+	rc = HttpConnect(ptcx, &mycmd->hostInfo, &stats->connect);
+	if (rc == -1) {
+	    return -1;
+	}
+    }
 
     /* send the HTTP command */
 
-    /* will have to deal with encoding URLs before too long... */
-    sprintf(command, pish->httpCommand, me->msgCounter);
-    strcat(command, " HTTP/1.0\r\n");
+    strcpy (command, mycmd->httpCommand);
+    strcat (command, " HTTP/1.0\r\n");
     /* other headers go here... */
     strcat(command, "\r\n");
-    event_start(ptcx, &stats->msgread);
-    rc = doHttpCommandResponse(ptcx, ptcx->sock,
-			       command, respBuffer, sizeof(respBuffer));
-    event_stop(ptcx, &stats->msgread);
+    rc = HttpCommandResponse(ptcx, cmd, mystate,
+			     &mycmd->hostInfo, &stats->connect,
+			     &stats->msgread,
+			     command, respBuffer,
+			     sizeof(respBuffer), NULL);
     if (rc == 0) {
 	doHttpExit (ptcx, me);
 	return -1;

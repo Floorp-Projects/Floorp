@@ -35,14 +35,7 @@
 /* wmap.c -- Test Netscape Messaging WebMail 4.x (know as Web-IMAP or WMAP) */
 
 #include "bench.h"
-
-#define HTTP_HEADER_BREAK	"\r\n\r\n"
-#define HTTP_CONTENT_TYPE_POST	"Content-type: application/x-www-form-urlencoded"
-#define HTTP_CONTENT_LENGTH	"Content-length:"
-#define HTTP_LOCATION	    	"Location:"
-#define HTTP_PROTOCOL		"http://"
-
-#define HTTP_MAX_RECONNECTS	5	/* max to reconnect/retry a command */
+#include "http-util.h"
 
 /*
   these are protocol dependent timers
@@ -70,9 +63,7 @@ typedef struct wmap_stats {
 
 /* Command information */
 typedef struct wmap_command {
-    char  *	mailServer;
     resolved_addr_t 	hostInfo;	/* should be a read only cache */
-    NETPORT  	portNum;
 
     /* These are common to SMTP, POP, IMAP, WMAP */
     char *	loginFormat;
@@ -135,21 +126,7 @@ typedef struct _doWMAP_state {
     int	*	msgList;		/* array[numMsgs] of message IDs */
     char	response_buffer[RESPONSE_BUFFER_SIZE];
 } doWMAP_state_t;
-
-/* Callback type for parsing messages on the fly */
-typedef int (*parseMsgPtr_t)(
-    ptcx_t, pmail_command_t, void *me,
-    char *buffer, int bytesInBuffer, char **searchStr, const char **findStr);
-
-static int readWmapResponse(
-    ptcx_t ptcx, mail_command_t *, void *, char *, int, parseMsgPtr_t );
-
-static int doWmapCommandResponse(
-    ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t *me,
-    event_timer_t *timer, char *command, char *response, int buflen, parseMsgPtr_t);
 static int WmapParseNameValue(pmail_command_t cmd, char *name, char *tok);
-
-static int wmapConnect(ptcx_t ptcx, mail_command_t *cmd, doWMAP_state_t *me, event_timer_t *timer);
 
 static int wmapBanner(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t *me);
 static int wmapLogin(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t *me);
@@ -169,7 +146,7 @@ WmapParseStart(pmail_command_t cmd, char *line, param_list_t *defparm)
     cmd->data = wmap;
 
     cmd->numLoops = 1;		/* default 1 downloads */
-    wmap->portNum = WMAP_PORT;	/* get default port */
+    wmap->hostInfo.portNum = WMAP_PORT;	/* get default port */
 
     D_PRINTF(stderr, "Wmap Assign defaults\n");
     /* Fill in defaults first, ignore defaults we dont use */
@@ -209,7 +186,7 @@ WmapParseEnd(pmail_command_t cmd, string_list_t *section, param_list_t *defparm)
     }
 
     /* check for some of the required command attrs */
-    if (!wmap->mailServer) {
+    if (!wmap->hostInfo.hostName) {
 	D_PRINTF(stderr,"missing server for command");
 	return returnerr(stderr,"missing server for command\n");
     }
@@ -250,13 +227,13 @@ WmapParseEnd(pmail_command_t cmd, string_list_t *section, param_list_t *defparm)
     }
 
     /* see if we can resolve the mailserver addr */
-    if (resolve_addrs(wmap->mailServer, "tcp",
+    if (resolve_addrs(wmap->hostInfo.hostName, "tcp",
 		      &(wmap->hostInfo.host_phe),
 		      &(wmap->hostInfo.host_ppe),
 		      &(wmap->hostInfo.host_addr),
 		      &(wmap->hostInfo.host_type))) {
 	return returnerr (stderr, "Error resolving hostname '%s'\n",
-			  wmap->mailServer);
+			  wmap->hostInfo.hostName);
     } else {
 	wmap->hostInfo.resolved = 1;	/* mark the hostInfo resolved */
     }
@@ -283,7 +260,7 @@ WmapParseNameValue(pmail_command_t cmd, char *name, char *tok)
     if (cmdParseNameValue(cmd, name, tok))/* generic stuff */
 	;				/* done */
     else if (strcmp(name, "server") == 0)
-	wmap->mailServer = mystrdup(tok);
+	wmap->hostInfo.hostName = mystrdup(tok);
     else if (strcmp(name, "loginformat") == 0)
 	wmap->loginFormat = mystrdup(tok);
     else if (strcmp(name, "firstlogin") == 0)
@@ -315,7 +292,7 @@ WmapParseNameValue(pmail_command_t cmd, char *name, char *tok)
     else if (strcmp(name, "numrecipients") == 0)
 	wmap->numRecipients = atoi(tok);
     else if (strcmp(name, "portnum") == 0)
-	wmap->portNum = atoi(tok);
+	wmap->hostInfo.portNum = atoi(tok);
     else if (strcmp(name, "passwdformat") == 0)
 	wmap->passwdFormat = mystrdup(tok);
     else if (strcmp(name, "leavemailonserver") == 0)
@@ -499,390 +476,6 @@ WmapStatsFormat(protocol_t *pp,
 }    
 
 /*
-  Establish (or re-establish) connection to server.
-  No data is exchanged.
-*/
-static int
-wmapConnect (
-    ptcx_t ptcx,
-    mail_command_t	*cmd,
-    doWMAP_state_t	*me,
-    event_timer_t	*timer)
-{
-    wmap_command_t	*wmap = (wmap_command_t *)cmd->data;
-    int		rc=0;
-    NETPORT		port;
-    port = wmap->portNum;
-
-    D_PRINTF(stderr, "wmapConnect()\n");
-
-    event_start(ptcx, timer);
-    ptcx->sock = connectsock(ptcx, wmap->mailServer, &wmap->hostInfo,
-			     port, "tcp");
-    event_stop(ptcx, timer);
-    if (BADSOCKET(ptcx->sock)) {
-	if (gf_timeexpired < EXIT_FAST) {
-	    timer->errs++;
-	    returnerr(debugfile,
-		      "%s<wmapConnect: WMAP Couldn't connect to %s: %s\n",
-		      ptcx->errMsg, wmap->mailServer, neterrstr());
-	}
-	return -1;
-    }
-
-    if (gf_abortive_close) {
-	if (set_abortive_close(ptcx->sock) != 0) {
-	    returnerr(debugfile,
-		      "%s<wmapConnect: WMAP: WARNING: Could not set abortive close\n",
-		      ptcx->errMsg, neterrstr());
-	}
-    }
-
-    return rc;
-}
-
-/*
-  readWmapResponse handles the details of reading a HTTP response It
-  takes and interactive parsing function and a response buffer.  The
-  response buffer will hold at least the last 1/2 buffer of the data
-  stream.  This allows errors to be handled by the calling routine.
-  Long responses should be parsed on the fly by the parsing callback.
-
-  readWmapResponse handles find the content-length and header break.
-  Once the break is called, it will call the parsing callback so that it can
-  set findStr (which is NULL).  
-
-  The findStr search is case insensitive if the first character of findStr
-  has distinct upper and lower cases (see toupper and tolower).
-
-  The callback is called with the buffer, the bytes in the buffer,
-  a pointer just past the findStr match, and a pointer to findStr.
-  The callback should then update findStr and searchStr; and return -2
-  for an error (abort message), 0 for success, and 1 for need more data.
-
-  findStr is expected to be a constant or static storage.
-  Before exit, the parsing callback is called one last time (with NULL 
-  findStr and searchStr), so that it can do any cleanup.
-
-  Management of the buffer is done automatically by the movement of searchStr.
-
-  readWmapResponse returns bytesInBuffer on success, -1 for IO error,
-  -2 for error returned by the parser.
-*/
-static int
-readWmapResponse(
-    ptcx_t ptcx,
-    mail_command_t *cmd,		/* command info for msgParse */
-    void *me,				/* connection state for msgParse */
-    char *buffer,
-    int buflen,
-    parseMsgPtr_t	msgParse
-    )
-{    
-    /* read the server response and do nothing with it */
-    /* Will need to look for HTTP headers and Content-Length/Keep-Alive */
-    int gotheader = 0;
-    int totalbytesread = 0;
-    int bytesread;
-    int bytesInBuffer = 0;
-    const char *findStr;		/* string we are watching for */
-    const char *oldFindStr = NULL;
-    char findStrSpn[3];			/* case insensitive search start */
-    int	findLen=0;			/* length of string */
-    char *foundStr;			/* what we found */
-    char *searchStart;			/* where next to look for findStr */
-    int contentlength = 0;		/* HTTP content length */
-    int bytestoread = buflen-1;		/* start by reading lots */
-    int getBytes = 0;			/* need more input */
-
-    D_PRINTF(stderr, "readWmapResponse()\n");
-
-    findStr = HTTP_CONTENT_LENGTH;
-    searchStart = buffer;
-    memset(buffer, 0, buflen);		/* DEBUG */
-    while (1)
-    {
-	if (gf_timeexpired >= EXIT_FAST) {
-	    D_PRINTF(stderr,"readWmapResponse() Time expired.\n");
-	    break;
-	}
-	if (findStr != oldFindStr) {	/* findStr changed */
-	    if (NULL == findStr) {
-		findLen = 0;
-		findStrSpn[0] = 0;
-	    } else {
-		char upperC, lowerC;	/* upper and lower of findStr[0] */
-		findLen = strlen (findStr);
-		upperC = toupper (findStr[0]);
-		lowerC = tolower (findStr[0]);
-		if (lowerC != upperC) {
-		    /*D_PRINTF (stderr, "New findStr [%s] upper %c lower %c\n",
-		      findStr, upperC, lowerC);*/
-		    findStrSpn[0] = upperC;
-		    findStrSpn[1] = lowerC;
-		    findStrSpn[2] = 0;
-		} else {
-		    /*D_PRINTF (stderr, "New findStr [%s] NOT case sensitive\n",
-		      findStr);*/
-		    findStrSpn[0] = 0;
-		}
-	    }
-	    oldFindStr = findStr;
-	}
-	/* See if we should read more */
-	if ((getBytes > 0)
-	    || (0 == findLen)
-	    || ((bytesInBuffer - (searchStart - buffer)) < findLen)) {
-	    int count;
-
-	    if (totalbytesread >= bytestoread) { /* done reading */
-		break;
-	    }
-
-	    /* Make room for more data */
-	    /* need to be careful to save data for response. shift by half */
-	    if ((searchStart - buffer) > buflen/2) {
-		/* This is the only place we reduce searchStart or bytesInBuffer */
-		int toSkip = buflen/2;
-		int toSave = bytesInBuffer - toSkip;
-		/*D_PRINTF (stderr, "Shifting %d of %d bytes\n",
-		  toSave, bytesInBuffer);*/
-		memcpy (buffer, buffer+toSkip, toSave); /* shift data down */
-		bytesInBuffer = toSave;
-		buffer[bytesInBuffer] = 0; /* re-terminate??? */
-		searchStart -= toSkip;
-		assert (searchStart >= buffer);
-	    }
-	    count = MIN (bytestoread-totalbytesread,
-			     buflen-bytesInBuffer-1);
-	    /*D_PRINTF(stderr, "retryRead() size=%d %d/%d inBuffer=%d\n",
-	      count, totalbytesread, bytestoread, bytesInBuffer);*/
-	    bytesread = retryRead(ptcx, ptcx->sock, buffer+bytesInBuffer, count);
-
-	    if (0 == bytesread) {		/* most likely an error */
-		strcpy (ptcx->errMsg, "readWmapResponse:got 0 bytes");
-		break;
-	    }
-	    if (bytesread < 0) {		/* ERROR */
-		strcat (ptcx->errMsg, "<readWmapResponse");
-		return -1;
-	    }
-	    T_PRINTF(ptcx->logfile, buffer+bytesInBuffer, bytesread,
-		     "WMAP ReadResponse"); /* telemetry log */
-	    totalbytesread += bytesread;
-	    bytesInBuffer += bytesread;
-	    buffer[bytesInBuffer] = 0;	/* terminate for string searches */
-	    ptcx->bytesread += bytesread; /* log statistics */
-	    getBytes = 0;
-	} else {
-	    /*D_PRINTF (stderr,
-		      "Not reading, have %d only need %d. %d/%d\n",
-		      bytesInBuffer- (searchStart - buffer), findLen,
-		      bytestoread, totalbytesread);*/
-	}
-
-	if (NULL == findStr) {		/* nothing to search for */
-	    searchStart = buffer+bytesInBuffer;	/* discard buffer */
-	    continue;
-	}
-
-	/* otherwise search for findStr */
-	if (findStrSpn[0]) {		/* do case insensitive version */
-	    char *cp;
-	    foundStr = NULL;
-	    for (cp = searchStart; (cp - buffer) < bytesInBuffer; ++cp) {
-		cp = strpbrk (cp, findStrSpn); /* look for first char match */
-		if (NULL == cp) {
-		    break;
-		}
-		if (!strnicmp(cp, findStr, findLen)) { /* check whole match */
-		    foundStr = cp;
-		    break;
-		}
-	    }
-	} else {			/* non case sensitive version */
-	    foundStr = strstr(searchStart, findStr);
-	}
-
-	if (NULL == foundStr) {		/* found nothing, shift and continue */
-	    /* jump to findLen-1 from end */
-	    if (bytesInBuffer < findLen)
-		continue;		/* nothing to shift */
-	    
-	    searchStart = buffer + bytesInBuffer - findLen + 1;
-	    continue;		/* get more input */
-	}
-
-	/* Found search string */
-	/*D_PRINTF (stderr, "Found [%s] after %d bytes\n",
-	  findStr, totalbytesread);*/
-	searchStart = foundStr + findLen; /* found this much */
-
-	if (0 == gotheader) {	/* found length */
-	    contentlength = atoi(searchStart); /* save contentlength */
-	    searchStart = strchr (searchStart, '\n'); /* jump to EOL */
-	    if (NULL == searchStart) {	/* missing line end, get more */
-		searchStart = buffer;
-	    } else {			/* got complete contentlength line */
-		gotheader++;
-		findStr = HTTP_HEADER_BREAK; /* now look for break */
-	    }
-	    continue;
-	}
-	else if (1 == gotheader) {	/* found header break */
-	    gotheader++;
-	    /* now compute bytetoread */
-	    bytestoread = contentlength
-		+ ((searchStart - buffer) /* position in buffer */
-		   + (totalbytesread - bytesInBuffer)); /* buffer offset */
-	    D_PRINTF(stderr, "contentlength=%d, bytestoread=%d\n",
-		     contentlength, bytestoread);
-
-	    findStr = NULL;		/* should chain into extra searches */
-
-	    if (msgParse) {		/* initialize callback */
-		int rc;
-		/* having findStr == NULL signal initial callback */
-		rc = (*(msgParse)) (ptcx, cmd, me,
-				    buffer, bytesInBuffer, &searchStart, &findStr);
-		if (rc < 0) {		/* parser signaled error */
-		    return rc;
-		}
-		if (NULL == searchStart) {
-		    searchStart = buffer+bytesInBuffer; /* discard buffer */
-		}
-	    }
-	}
-	else {
-	    if (msgParse) {		/* call extra searches */
-		int rc;
-		rc = (*(msgParse)) (ptcx, cmd, me,
-				    buffer, bytesInBuffer, &searchStart, &findStr);
-		if (rc < 0) {		/* protocol error */
-		    return rc;
-		}
-		if (rc > 0) {		/* need more data */
-		    getBytes = rc;
-		    searchStart = foundStr; /* back up search string */
-		    continue;
-		}
-		if (searchStart < buffer) { /* or NULL */
-		    searchStart = buffer+bytesInBuffer; /* discard buffer */
-		}
-	    } else {
-		searchStart = buffer+bytesInBuffer; /* discard buffer */
-	    }
-	}
-    }
-    D_PRINTF(stderr, "readWmapResponse: Read %d/%d saved %d\n",
-	     totalbytesread, bytestoread, bytesInBuffer);
-    if (msgParse) {		/* call extra searches */
-	findStr = NULL;			/* signal final callback */
-	searchStart = NULL;
-	(void)(*(msgParse)) (ptcx, cmd, me,
-			     buffer, bytesInBuffer, &searchStart, &findStr);
-    }
-
-    return bytesInBuffer;
-}
-
-/* 
-   Handle a command-response transaction.  Connects/retries as needed.
-   Expects pointers to buffers of these sizes:
-   char command[MAX_COMMAND_LEN]
-   char response[resplen]
-*/
-static int
-doWmapCommandResponse (
-    ptcx_t ptcx,			/* thread state */
-    mail_command_t *cmd,		/* command info for exit,connect */
-    cmd_stats_t *ptimer,		/* all timers for connect */
-    doWMAP_state_t *me,			/* connection state */
-    event_timer_t *timer,		/* timer for this command */
-    char *command,			/* command to send */
-    char *response,
-    int	resplen,
-    parseMsgPtr_t	msgParse)	/* response handler */
-{
-    wmap_stats_t	*stats = (wmap_stats_t *)ptimer->data;
-    int retries = 0;
-    int ret;
-
-    if (response == NULL)
-	return -1;
-
-    response[0] = 0;			/* make sure it makes sense on error */
-
-    D_PRINTF(stderr, "WmapCommandResponse() command=[%.99s]\n", command);
-
-    while (retries++ < HTTP_MAX_RECONNECTS) {
-	if (BADSOCKET(ptcx->sock)) {
-	    ret = wmapConnect(ptcx, cmd, me, &stats->reconnect);
-	    if (ret == -1) {
-		return -1;
-	    }
-	}
-	/* send the command already formatted */
-	T_PRINTF(ptcx->logfile, command, strlen (command), "WMAP SendCommand");
-	event_start(ptcx, timer);
-	ret = sendCommand(ptcx, ptcx->sock, command);
-	if (ret == -1) {
-	    event_stop(ptcx, timer);
-	    stats->reconnect.errs++;
-	    /* this can only mean an IO error.  Probably EPIPE */
-	    NETCLOSE(ptcx->sock);
-	    ptcx->sock = BADSOCKET_VALUE;
-	    strcat (ptcx->errMsg, "<WmapCommandResponse");
-	    D_PRINTF (stderr, "%s Aborting connection %s\n",
-		      ptcx->errMsg, neterrstr());
-	    continue;
-	}
-
-	/* read server response */
-	ret = readWmapResponse(ptcx, cmd, me, response, resplen, msgParse);
-	event_stop(ptcx, timer);
-	if (ret == 0) {			/* got nothing */
-	    /* Probably an IO error.  It will be definate if re-tried. */
-	    MS_usleep (5000);		/* time for bytes to show up */
-	    continue;			/* just re-try it */
-	} else if (ret == -1) {		/* IO error */
-	    stats->reconnect.errs++;
-	    NETCLOSE(ptcx->sock);
-	    ptcx->sock = BADSOCKET_VALUE;
-	    strcat (ptcx->errMsg, "<WmapCommandResponse");
-	    D_PRINTF (stderr, "%s Aborting connection %s\n",
-		      ptcx->errMsg, neterrstr());
-	    continue;
-	} else if (ret < -1) {		/* some other error */
-	    timer->errs++;
-					/* this is overkill */
-	    NETCLOSE(ptcx->sock);
-	    ptcx->sock = BADSOCKET_VALUE;
-	    strcat (ptcx->errMsg, "<WmapCommandResponse: protocol ERROR");
-	    return -1;
-	}
-	/*D_PRINTF (stderr, "WmapCommandResponse saved %d bytes response=[%s]\n",
-	  ret, response);*/
-	/* You get parent.timeoutCB on any kind of error (like bad sid) */
-	if (strstr (response, "parent.timeoutCB()")) {
-	    timer->errs++;
-	    NETCLOSE(ptcx->sock);
-	    ptcx->sock = BADSOCKET_VALUE;
-	    strcpy (ptcx->errMsg, "WmapCommandResponse: got WMAP error msg");
-	    return -1;
-	}
-	    
-	return ret;
-    }
-    
-    stats->reconnect.errs++;
-    NETCLOSE(ptcx->sock);
-    ptcx->sock = BADSOCKET_VALUE;
-    strcat (ptcx->errMsg, "<WmapCommandResponse: Too many connection retries");
-    return -1;
-}
-
-/*
   Get the initial screen
 */
 static int
@@ -896,7 +489,7 @@ wmapBanner(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t
     int		rc = 0;
 
     if (BADSOCKET(ptcx->sock)) {	/* should always be true */
-	rc = wmapConnect(ptcx, cmd, me, &stats->connect);
+	rc = HttpConnect(ptcx, &wmap->hostInfo, &stats->connect);
 	if (rc == -1) {
 	    return -1;
 	}
@@ -908,11 +501,13 @@ wmapBanner(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t
 
 	D_PRINTF(stderr, "wmapBanner() cmd=[%s]\n", pl->value);
 
-	sprintf(header, wmap->wmapClientHeader, wmap->mailServer, wmap->mailServer);
+	sprintf(header, wmap->wmapClientHeader, wmap->hostInfo.hostName, wmap->hostInfo.hostName);
 	sprintf(command, "%s\r\n%s\r\n", pl->value, header);
 	assert (strlen(command) < MAX_COMMAND_LEN);
 
-	rc = doWmapCommandResponse(ptcx, cmd, ptimer, me, &stats->banner,
+	rc = HttpCommandResponse(ptcx, cmd, me,
+				   &wmap->hostInfo, &stats->reconnect,
+				   &stats->banner,
 				   command, me->response_buffer,
 				   sizeof(me->response_buffer), NULL);
 	if (rc == -1) {
@@ -953,7 +548,7 @@ wmapLogin(
     char	*cp;
 
     if (BADSOCKET(ptcx->sock)) {
-	rc = wmapConnect(ptcx, cmd, me, &stats->reconnect);
+	rc = HttpConnect(ptcx, &wmap->hostInfo, &stats->reconnect);
 	if (rc == -1) {
 	    return -1;
 	}
@@ -974,16 +569,18 @@ wmapLogin(
 
     /* send wmapLoginCmd, read response into wmapRedirectURL */
     sprintf(content, wmap->wmapLoginData, mailUser, userPasswd);
-    sprintf(header, wmap->wmapClientHeader, wmap->mailServer, wmap->mailServer);
+    sprintf(header, wmap->wmapClientHeader, wmap->hostInfo.hostName, wmap->hostInfo.hostName);
     sprintf(command, "%s\r\n%s"
 	    HTTP_CONTENT_TYPE_POST "\r\n"
 	    HTTP_CONTENT_LENGTH " %d\r\n\r\n%s\r\n",
 	    wmap->wmapLoginCmd, header, strlen(content), content);
     assert (strlen(command) < MAX_COMMAND_LEN);
 
-    rc = doWmapCommandResponse(ptcx, cmd, ptimer, me, &stats->login,
+    rc = HttpCommandResponse(ptcx, cmd, me,
+			       &wmap->hostInfo, &stats->reconnect,
+			       &stats->banner,
 			       command, me->response_buffer,
-				   sizeof(me->response_buffer), NULL);
+			       sizeof(me->response_buffer), NULL);
     if (rc == -1) {
 	if (gf_timeexpired < EXIT_FAST) {
 	    NETCLOSE(ptcx->sock); ptcx->sock = BADSOCKET_VALUE;
@@ -1067,9 +664,11 @@ wmapInbox(
     /* First grab the redirect URL */
     sprintf(command, "GET %s HTTP/1.0\r\n%s" HTTP_CONTENT_LENGTH " 0\r\n\r\n",
 	    me->redirectURL, header);
-    rc = doWmapCommandResponse(ptcx, cmd, ptimer, me, &stats->cmd,
+    rc = HttpCommandResponse(ptcx, cmd,  me,
+			       &wmap->hostInfo, &stats->reconnect,
+			       &stats->banner,
 			       command, me->response_buffer,
-				   sizeof(me->response_buffer), NULL);
+			       sizeof(me->response_buffer), NULL);
     if (rc == -1) {			/* most common disconnect point */
 	if (gf_timeexpired < EXIT_FAST) {
 	    returnerr(debugfile,"%s WMAP cannot get inbox %s\n",
@@ -1085,14 +684,16 @@ wmapInbox(
 
     /* send wmapInboxCmd, read response into wmapRedirectURL */
 	sprintf(header, wmap->wmapClientHeader,
-		wmap->mailServer, wmap->mailServer);
+		wmap->hostInfo.hostName, wmap->hostInfo.hostName);
 	sprintf(getcmd, pl->value,
 		me->sessionID);
 	sprintf(command, "%s\r\n%s" HTTP_CONTENT_LENGTH " 0\r\n\r\n",
 		getcmd, header);
 	assert (strlen(command) < MAX_COMMAND_LEN);
 
-	rc = doWmapCommandResponse(ptcx, cmd, ptimer, me, &stats->cmd,
+	rc = HttpCommandResponse(ptcx, cmd,  me,
+				   &wmap->hostInfo, &stats->reconnect,
+				   &stats->banner,
 				   command, me->response_buffer,
 				   sizeof(me->response_buffer), NULL);
 	if (rc == -1) {			/* most common disconnect point */
@@ -1119,7 +720,7 @@ wmapLogout(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t
     int		rc = 0;
 
     if (BADSOCKET(ptcx->sock)) {
-	rc = wmapConnect(ptcx, cmd, me, &stats->reconnect);
+	rc = HttpConnect(ptcx, &wmap->hostInfo, &stats->reconnect);
 	if (rc == -1) {
 	    return -1;
 	}
@@ -1131,12 +732,14 @@ wmapLogout(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t
 
 	D_PRINTF(stderr, "wmapLogout() cmd=[%s]\n", pl->value);
 
-	sprintf(header, wmap->wmapClientHeader, wmap->mailServer, wmap->mailServer);
+	sprintf(header, wmap->wmapClientHeader, wmap->hostInfo.hostName, wmap->hostInfo.hostName);
 	sprintf(getcmd, pl->value, me->sessionID);
 	sprintf(command, "%s\r\n%s" HTTP_CONTENT_LENGTH " 0\r\n\r\n", getcmd, header);
 
 	assert (strlen(command) < MAX_COMMAND_LEN);
-	rc = doWmapCommandResponse(ptcx, cmd, ptimer, me, &stats->logout,
+	rc = HttpCommandResponse(ptcx, cmd,  me,
+				   &wmap->hostInfo, &stats->reconnect,
+				   &stats->banner,
 				   command, me->response_buffer,
 				   sizeof(me->response_buffer), NULL);
 	if (rc == -1) {
@@ -1284,12 +887,14 @@ doWmapLoop(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, void *mystate)
 	sprintf(getcmd, pl->value,
 		me->sessionID);
 	sprintf(header, wmap->wmapClientHeader,
-		wmap->mailServer, wmap->mailServer);
+		wmap->hostInfo.hostName, wmap->hostInfo.hostName);
 	sprintf(command, "%s\r\n%s" HTTP_CONTENT_LENGTH " 0\r\n\r\n",
 		getcmd, header);
 	assert (strlen(command) < MAX_COMMAND_LEN);
 
-	rc = doWmapCommandResponse(ptcx, cmd, ptimer, me, &stats->headers,
+	rc = HttpCommandResponse(ptcx, cmd,  me,
+				   &wmap->hostInfo, &stats->reconnect,
+				   &stats->banner,
 				   command, me->response_buffer,
 				   sizeof(me->response_buffer), &GetMessageNumbers);
 	if (rc == -1) {			/* un-recoverable error */
@@ -1317,12 +922,14 @@ doWmapLoop(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, void *mystate)
 	    sprintf(getcmd, pl->value,	/* fill out command string */
 		    me->sessionID, me->msgList[seq]);
 	    sprintf(header, wmap->wmapClientHeader, /* fill out header */
-		    wmap->mailServer, wmap->mailServer);
+		    wmap->hostInfo.hostName, wmap->hostInfo.hostName);
 	    sprintf(command, "%s\r\n%s" HTTP_CONTENT_LENGTH " 0\r\n\r\n",
 		    getcmd, header);
 	    assert (strlen(command) < MAX_COMMAND_LEN);
 
-	    rc = doWmapCommandResponse(ptcx, cmd, ptimer, me, &stats->msgread,
+	    rc = HttpCommandResponse(ptcx, cmd,  me,
+				       &wmap->hostInfo, &stats->reconnect,
+				       &stats->banner,
 				       command, me->response_buffer,
 				       sizeof(me->response_buffer), NULL);
 	    if (rc == -1) {			/* un-recoverable error */

@@ -265,7 +265,7 @@ safe_inet_ntoa(struct in_addr ina, char *psz)
 }
 
 /* look up the host name and protocol
- * called from each protocol (via connectsock)
+ * called from each protocol (via connectSocket)
  */
 
 int
@@ -344,10 +344,8 @@ resolve_addrs(char *host,
 
 /* connect to a socket given the hostname and protocol */
 SOCKET
-connectsock(ptcx_t ptcx,
-	    char *host,
+connectSocket(ptcx_t ptcx,
 	    resolved_addr_t *hostInfo,
-	    NETPORT portnum,
 	    char *protocol)
 {
     struct sockaddr_in sin;  	/* an Internet endpoint address */
@@ -357,15 +355,15 @@ connectsock(ptcx_t ptcx,
     int 		returnval;	/* temporary return value */
     char		ntoa_buf[SIZEOF_NTOABUF];
  
-    D_PRINTF(debugfile, "Beginning connectsock; host=%s port=%d proto=%s\n",
-	     host, portnum, protocol );
+    D_PRINTF(debugfile, "Beginning connectSocket; host=%s port=%d proto=%s\n",
+	     hostInfo->hostName, hostInfo->portNum, protocol );
 
     sin.sin_family = AF_INET;
     memset((char *)&sin, 0, sizeof(sin));
     D_PRINTF(debugfile, "Zeroed address structure\n" );
 
-    sin.sin_port = htons(portnum);
-    D_PRINTF(debugfile, "Set port number %d\n", portnum );
+    sin.sin_port = htons(hostInfo->portNum);
+    D_PRINTF(debugfile, "Set port number %d\n", hostInfo->portNum);
 
     /* check if we've resolved this already */
     if ((hostInfo) && (hostInfo->resolved)) {
@@ -379,10 +377,10 @@ connectsock(ptcx_t ptcx,
 	unsigned long	host_addr;
 	short 		host_type;       /* socket type */
 
-	if (resolve_addrs(host, "tcp",
+	if (resolve_addrs(hostInfo->hostName, "tcp",
 			  &host_phe, &host_ppe, &host_addr, &host_type)) {
 	    return returnerr(debugfile,"Can't resolve hostname %s in get()\n",
-			     host);
+			     hostInfo->hostName);
 	}
 	sin.sin_addr.S_ADDR = host_addr;
 	sin.sin_family = PF_INET;
@@ -419,10 +417,10 @@ connectsock(ptcx_t ptcx,
     }
 
     /* all done, returning socket descriptor */
-    D_PRINTF(debugfile, "Returning %d from connectsock call\n", s );
+    D_PRINTF(debugfile, "Returning %d from connectSocket call\n", s );
     return(s);
 
-} /* END connectsock() */
+} /* END connectSocket() */
 
 int
 set_abortive_close(SOCKET sock)
