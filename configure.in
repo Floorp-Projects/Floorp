@@ -3230,7 +3230,8 @@ dnl = Enable Lea malloc in xpcom. OFF by default.
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(xpcom-lea,
 [  --enable-xpcom-lea      Enable Lea malloc in xpcom ],
-[ XPCOM_USE_LEA=1 AC_DEFINE(XPCOM_USE_LEA) ])
+[   XPCOM_USE_LEA=1
+    AC_DEFINE(XPCOM_USE_LEA)])
 
 dnl ========================================================
 dnl = Enable Ultrasparc specific optimizations for JS
