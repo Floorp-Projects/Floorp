@@ -92,7 +92,6 @@ void abnormal_exit_handler(int signum)
        || (signum == SIGABRT)
      )
   {
-    PR_GetCurrentThread();
     printf("prog = %s\npid = %d\nsignal = %s\n", 
            _progname, getpid(), strsignal(signum));
 
@@ -117,7 +116,6 @@ void abnormal_exit_handler(int signum)
 void
 ah_crap_handler(int signum)
 {
-  PR_GetCurrentThread();
 
   printf("\nProgram %s (pid = %d) received signal %d.\n",
          _progname,

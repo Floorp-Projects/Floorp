@@ -144,7 +144,6 @@ void abnormal_exit_handler(int signum)
 	   || (signum == SIGABRT)
 	 )
   {
-    PR_GetCurrentThread();
     printf("prog = viewer\npid = %d\nsignal = %s\n", getpid(), strsignal(signum));
 
 #if 0
