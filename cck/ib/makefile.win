@@ -27,9 +27,12 @@ LIBRARY_NAME=ibengine
 
 MODULE=ib 
 REQUIRES=
+MAPFILE=$(MODULE).map
+RESFILE=ib.res
 IS_COMPONENT = 1
 
 OBJS=					\
+	.\$(OBJDIR)\NewDialog.obj \
 	.\$(OBJDIR)\wizshell.obj \
 	.\$(OBJDIR)\ib.obj		\
 	.\$(OBJDIR)\comp.obj	\

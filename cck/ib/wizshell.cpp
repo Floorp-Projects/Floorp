@@ -38,7 +38,7 @@ void CreateRshell (void)
 	ofstream rshell(Rsh);
 	CString fvalue1=GetGlobal("ShellTitleText");
 	CString fvalue2=GetGlobal("ShellBgBitmap");
-	char *fvalue3=GetGlobal("ShellBelowTitleText");
+	CString fvalue3=GetGlobal("ShellBelowTitleText");
 	CString fvalue4=GetGlobal("ShellInstallTextFile");
 	char jsprefname[200];
 

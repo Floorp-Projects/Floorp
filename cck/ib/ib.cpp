@@ -5,7 +5,8 @@
 #include "comp.h"
 #include "ib.h"
 #include <afxtempl.h>
-
+#include "resource.h"
+#include "NewDialog.h"
 #define MAX_SIZE 1024
 
 int interpret(char *cmd);
@@ -397,11 +398,6 @@ int StartIB(CString parms, WIDGET *curWidget)
 	char *fgetsrv;
 	int rv = TRUE;
 	char	olddir[1024];
-//	CRect tmpRect = CRect(100,100,200,200);
-//	CProgressCtrl progressBar;
-//	CWnd* wndhandle = AfxGetMainWnd();
-//	progressBar.Create( PBS_SMOOTH, tmpRect, wndhandle, 3456 );
-
 
 	rootPath	= GetGlobal("Root");
 	configName	= GetGlobal("CustomizationList");
@@ -421,6 +417,10 @@ int StartIB(CString parms, WIDGET *curWidget)
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
 
 	init_components();
+	
+	CNewDialog newprog;
+	newprog.Create(IDD_NEW_DIALOG,NULL );
+	newprog.ShowWindow(SW_SHOW);
 
 	_mkdir((char *)(LPCTSTR) cdPath);
 	_mkdir((char *)(LPCTSTR) tempPath);
@@ -526,6 +526,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	ReplaceINIFile();
 
 	SetCurrentDirectory(olddir);
+	newprog.DestroyWindow();
 
 	return rv;
 
