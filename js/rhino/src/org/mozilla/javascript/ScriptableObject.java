@@ -680,9 +680,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     protected String toSource(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
-        StringBuffer result = new StringBuffer(256);
-        result.append("({");
-
         boolean toplevel, iterating;
         if (cx.iterating == null) {
             toplevel = true;
@@ -692,6 +689,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             toplevel = false;
             iterating = cx.iterating.has(this);
         }
+
+        StringBuffer result = new StringBuffer(128);
+        if (toplevel) {
+            result.append("(");
+        }
+        result.append('{');
 
         // Make sure cx.iterating is set to null when done
         // so we don't leak memory
@@ -717,7 +720,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
         }
 
-        result.append("})");
+        result.append('}');
+        if (toplevel) {
+            result.append(')');
+        }
         return result.toString();
     }
 
