@@ -74,11 +74,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-/* Arrgh.  Why isn't this in a reasonable header file somewhere???  ###tw */
-// RICHIE SHERRYextern char * NET_ExplainErrorDetails (int code, ...);
-
 extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
-
 
 /* Interface between netlib and the top-level message/rfc822 parser:
    MIME_MessageConverter()
@@ -87,6 +83,9 @@ static MimeHeadersState MIME_HeaderType;
 static PRBool MIME_NoInlineAttachments;
 static PRBool MIME_WrapLongLines;
 static PRBool MIME_VariableWidthPlaintext;
+
+// For string bundle access routines...
+nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Attachment handling routines
@@ -1208,82 +1207,9 @@ mime_bridge_create_display_stream(
   return stream;
 }
 
-/* This is the next generation string retrieval call */
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-char *MIME_URL = "resource:/res/mailnews/messenger/mime.properties";
-
-extern "C" 
-char *
-MimeGetStringByID(PRInt32 stringID)
-{
-  nsresult    res = NS_OK;
-  char*       propertyURL;
-
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
-  if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->CopyCharPref("mail.strings.mime", &propertyURL);
-
-  if (!NS_SUCCEEDED(res) || !prefs)
-    propertyURL = MIME_URL;
-
-  nsCOMPtr<nsIURI> pURI;
-  NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
-  if (NS_FAILED(res)) 
-  {
-    if (propertyURL != MIME_URL)
-      PR_FREEIF(propertyURL);
-    return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
-  }
-
-  res = pService->NewURI(propertyURL, nsnull, getter_AddRefs(pURI));
-
-  NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
-  if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-  {
-    nsILocale   *locale = nsnull;
-    nsIStringBundle* sBundle = nsnull;
-    res = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
-
-    if (NS_FAILED(res)) 
-    {
-      return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
-    }
-
-    nsAutoString v("");
-    PRUnichar *ptrv = nsnull;
-    res = sBundle->GetStringFromID(stringID, &ptrv);
-    v = ptrv;
-
-	  NS_RELEASE(sBundle);
-    if (NS_FAILED(res)) 
-    {
-      char    buf[128];
-
-      PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
-      return nsCRT::strdup(buf);
-    }
-
-    // Here we need to return a new copy of the string
-    // This returns a UTF-8 string so the caller needs to perform a conversion 
-    // if this is used as UCS-2 (e.g. cannot do nsString(utfStr);
-    //
-    char      *returnBuffer = v.ToNewUTF8String();
-    if (returnBuffer)
-    {
-      return returnBuffer;
-    }
-    else
-    {
-      return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
-    }
-  }
-
-  return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
-}
-
-// To support 2 types of emitters...we need these routines :-(
+//
+// Emitter Wrapper Routines!
+//
 nsIMimeEmitter *
 GetMimeEmitter(MimeDisplayOptions *opt)
 {
@@ -1498,7 +1424,52 @@ mimeSetNewURL(nsMIMESession *stream, char *url)
   return NS_OK;
 }
 
+/* This is the next generation string retrieval call */
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
+#define     MIME_URL "chrome://messenger/locale/mime.properties"
 
+extern "C" 
+char *
+MimeGetStringByID(PRInt32 stringID)
+{
+  char          *tempString = nsnull;
+	char          *resultString = "???";
+	nsresult      res = NS_OK;
 
+	if (!stringBundle)
+	{
+		char*       propertyURL = NULL;
 
+		propertyURL = MIME_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(stringBundle));
+		}
+	}
+
+	if (stringBundle)
+	{
+		PRUnichar *ptrv = nsnull;
+		res = stringBundle->GetStringFromID(stringID, &ptrv);
+
+		if (NS_FAILED(res)) 
+      return resultString;
+		else
+    {
+      nsAutoString v("");
+      v = ptrv;
+			tempString = v.ToNewUTF8String();
+    }
+	}
+
+  if (!tempString)
+    return resultString;
+  else
+    return tempString;
+}
