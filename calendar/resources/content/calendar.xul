@@ -205,7 +205,7 @@
                class="unifinder-tree-class" flex="1" ondragover="return( false );"/>
          </vbox>
        
-   		<splitter collapse="before" persist="state hidden collapsed"
+   		<splitter id="calendar-splitter" collapse="before" persist="state hidden collapsed"
           class="chromeclass-extrachrome sidebar-splitter" orient="horizontal">
             <grippy class="sidebar-splitter-grippy"/>
          </splitter>
