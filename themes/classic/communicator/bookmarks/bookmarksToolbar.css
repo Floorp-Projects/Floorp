@@ -8,6 +8,11 @@ toolbarbutton.bookmark-item {
   max-width           : 13em;
 }
 
+toolbarbutton.bookmark-item:not([container="true"]) {
+  border-right        : 2px solid transparent !important;
+  border-left         : 2px solid transparent !important;
+}
+
 toolbarbutton.bookmark-item[container="true"] {
   cursor              : default;
 }
