@@ -19,8 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
+ *
+ * Contributor(s):
+ *  Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -46,6 +48,8 @@
 #include "nsIDragSession.h"
 #include "nsIWidget.h"
 #include "nsHashtable.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 
 #ifdef USE_IMG2
 #include "imgIDecoderObserver.h"
@@ -219,7 +223,7 @@ private:
 
 // The actual frame that paints the cells and rows.
 class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject, public nsICSSPseudoComparator,
-                            public nsIScrollbarMediator
+                            public nsIScrollbarMediator, public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -317,6 +321,9 @@ public:
   // the column cache needs to be rebuilt.
   void InvalidateColumnCache();
                                   
+  // nsITimerCallback interface
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
+
   friend nsresult NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame);
 
@@ -332,6 +339,10 @@ protected:
   // A helper used when hit testing.
   nsresult GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, PRInt32 aRowIndex,
                                nsOutlinerColumn* aColumn, PRUnichar** aChildElt);
+
+  // timer for opening spring-loaded folders
+  nsCOMPtr<nsITimer> mOpenTimer;
+  PRInt32 mOpenTimerRow;
 
 #ifdef USE_IMG2
   // Fetch an image from the image cache.

@@ -24,6 +24,7 @@
  *  Ben Goodger <ben@netscape.com>
  *  Joe Hewitt <hewitt@netscape.com>
  *  Jan Varga <varga@utcru.sk>
+ *  Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -260,6 +261,7 @@ NS_INTERFACE_MAP_BEGIN(nsOutlinerBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsIOutlinerBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
 
 
@@ -269,7 +271,7 @@ nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mOutlinerBoxObject(nsnull), mFocused(PR_FALSE), mImageCache(nsnull),
  mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0),
  mDropRow(kIllegalRow), mDropOrient(kNoOrientation), mDropAllowed(PR_FALSE), mIsSortRectDrawn(PR_FALSE),
- mAlreadyUndrewDueToScroll(PR_FALSE)
+ mAlreadyUndrewDueToScroll(PR_FALSE), mOpenTimer(nsnull), mOpenTimerRow(-1)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
   mColumnsDirty = PR_TRUE;
@@ -2599,6 +2601,13 @@ nsOutlinerBodyFrame :: OnDragExit ( nsIDOMEvent* inEvent )
    
   mDragSession = nsnull;
   mRenderingContext = nsnull;
+
+  if (mOpenTimer) {
+    mOpenTimer->Cancel();
+    mOpenTimer = nsnull;
+    mOpenTimerRow = -1;
+  }
+
   return NS_OK;
 
 } // OnDragExit
@@ -2649,6 +2658,30 @@ nsOutlinerBodyFrame :: OnDragOver ( nsIDOMEvent* inEvent )
     }
     else
       mAlreadyUndrewDueToScroll = PR_FALSE;
+
+    if (mOpenTimer && newRow != mOpenTimerRow) {
+      // timer is active but for a different row than the current one - kill it
+      mOpenTimer->Cancel();
+      mOpenTimer = nsnull;
+      mOpenTimerRow = -1;
+    }
+
+    if (!mOpenTimer) {
+      // either there wasn't a timer running or it was just killed above.
+      // if over a folder, start up a timer to open the folder.
+      PRBool isContainer = PR_FALSE;
+      mView->IsContainer(newRow, &isContainer);
+      if (isContainer) {
+        PRBool isOpen = PR_FALSE;
+        mView->IsContainerOpen(newRow, &isOpen);
+        if (!isOpen) {
+          // this node isn't expanded - set a timer to expand it
+          mOpenTimerRow = newRow;
+          mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
+          mOpenTimer->Init(this, 1000, NS_PRIORITY_HIGHEST);
+        }
+      }
+    }
 
     // cache the new row and orientation regardless so we can check if it changed
     // for next time.
@@ -2982,3 +3015,16 @@ nsOutlinerImageListener::Invalidate()
 }
 #endif
 
+NS_IMETHODIMP_(void)
+nsOutlinerBodyFrame::Notify(nsITimer* aTimer)
+{
+  if (aTimer == mOpenTimer.get()) {
+    // open the node
+    mOpenTimer->Cancel();
+    mOpenTimer = nsnull;
+    if (mOpenTimerRow >= 0) {
+      mView->ToggleOpenState(mOpenTimerRow);
+      mOpenTimerRow = 0;
+    }
+  }
+}
