@@ -262,6 +262,8 @@ pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload 
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
 pref("browser.download.useDownloadDir", false);
 pref("browser.download.folderList", 0);
+pref("browser.download.autoDownload", false);
+pref("browser.download.lastLocation", false);
 
 // various default search settings
 pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");

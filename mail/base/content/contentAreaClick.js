@@ -166,3 +166,27 @@
 
     return ioService.newURI(baseURI.resolve(url), null, null).spec;
   }
+
+  function findParentNode(node, parentNode)
+  {
+    if (node && node.nodeType == Node.TEXT_NODE) {
+      node = node.parentNode;
+    }
+    
+    while (node) {
+      var nodeName = node.localName;
+      if (!nodeName)
+        return null;
+      nodeName = nodeName.toLowerCase();
+      if (nodeName == "body" || nodeName == "html" ||
+          nodeName == "#document") {
+        return null;
+      }
+      if (nodeName == parentNode)
+        return node;
+      node = node.parentNode;
+    }
+    
+    return null;
+  }
+
