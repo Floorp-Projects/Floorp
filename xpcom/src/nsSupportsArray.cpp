@@ -56,7 +56,7 @@ nsISupportsArray::operator=(const nsISupportsArray& other)
 NS_IMETHODIMP_(nsISupportsArray&) 
 nsSupportsArray::operator=(const nsISupportsArray& aOther)
 {
-  PRUint32 otherCount = aOther.Count();
+  PRUint32 otherCount = ((nsISupportsArray&)aOther).Count();
 
   if (otherCount > mArraySize) {
     DeleteArray();

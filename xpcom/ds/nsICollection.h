@@ -48,7 +48,7 @@ public:
 
   /** Return the count of elements in the collection.
    */
-  NS_IMETHOD_(PRUint32) Count(void) const = 0;
+  NS_IMETHOD_(PRUint32) Count(void);
 
   /**
    * AppendElement will take an ISupports and keep track of it 

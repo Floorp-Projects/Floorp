@@ -1510,7 +1510,8 @@ StyleContextImpl::FindChildWithRules(const nsIAtom* aPseudoTag,
 
   if ((nsnull != mChild) || (nsnull != mEmptyChild)) {
     StyleContextImpl* child;
-    PRInt32 ruleCount = ((nsnull != aRules) ? aRules->Count() : 0);
+    // cast away const-ness
+    PRInt32 ruleCount = ((nsnull != aRules) ? ((nsISupportsArray*)aRules)->Count() : 0);
     if (0 == ruleCount) {
       if (nsnull != mEmptyChild) {
         child = mEmptyChild;
