@@ -41,15 +41,19 @@ nsTimerQt::~nsTimerQt()
 {
     //debug("nsTimerQt::~nsTimerQt called for %p", this);
     Cancel();
+
     NS_IF_RELEASE(mCallback);
+
     if (mEventHandler);
     {
-        delete mEventHandler;
+	  delete mEventHandler;
+	  mEventHandler = nsnull;
     }
 
     if (mTimer)
     {
       delete mTimer;
+	  mTimer = nsnull;
     }
 }
 
@@ -101,20 +105,23 @@ nsTimerQt::Init(PRUint32 aDelay)
 
     mEventHandler = new nsTimerEventHandler(this, mFunc, mClosure, mCallback);
 
+//     NS_ADDREF(this);
+
     mTimer = new QTimer();
     
     if (!mTimer) 
     {
         return NS_ERROR_NOT_INITIALIZED;
     }
+
     QObject::connect((QTimer *)mTimer, 
                      SIGNAL(timeout()), 
                      mEventHandler, 
                      SLOT(FireTimeout()));
+
     mTimer->start(aDelay);
 
     mDelay = aDelay;
-    NS_ADDREF(this);
 
     return NS_OK;
 }
