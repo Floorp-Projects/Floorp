@@ -500,8 +500,8 @@ Fail If Exists=FALSE
 ;Copy File SequentialX sections
 [Copy File Sequential0]
 Timing=post launchapp
-Filename=install.log
-Source=[SETUP STARTUP PATH]
+Filename=install_wizard.log
+Source=[SETUP PATH]
 Destination=[SETUP PATH]\Uninstall
 
 
@@ -518,7 +518,7 @@ Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
 
 [Delete File1]
 Timing=post launchapp
-Destination=[SETUP STARTUP PATH]\install.log
+Destination=[SETUP PATH]\install_wizard.log
 
 
 ;Remove DirectoryX sections
