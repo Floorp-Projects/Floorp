@@ -66,7 +66,7 @@
  
     <separator/>
   
-    <label id="allowScripts" value="&allowScripts.label;"/>
+    <label id="allowScripts" control="AllowList" value="&allowScripts.label;"/>
 
     <listbox id="AllowList" flex="1">
       <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"

@@ -56,8 +56,8 @@
     <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
 
     <!-- File types -->
-    <label value="&files.text;"/>
-    <listbox class="indent" style="width: 0px; height: 0px;" flex="2">
+    <label class="indent" value="&files.text;" control="fileTypes"/>
+    <listbox class="indent" id="fileTypes" style="width: 0px; height: 0px;" flex="2">
       <listitem type="checkbox" id="isHandlingHTML" label="&html.label;"/>
       <listitem type="checkbox" id="isHandlingJPEG" label="&jpeg.label;"/>
       <listitem type="checkbox" id="isHandlingGIF"  label="&gif.label;"/>
@@ -74,8 +74,8 @@
     <separator/>
 
     <!-- Internet Shortcuts -->
-    <label value="&shortcuts.text;"/>
-    <listbox class="indent" style="width: 0px; height: 0px;" flex="2">
+    <label class="indent" control="protocols" value="&shortcuts.text;"/>
+    <listbox class="indent" id="protocols" tyle="width: 0px; height: 0px;" flex="2">
       <listitem type="checkbox" id="isHandlingHTTP"   label="&http.label;"/>
       <listitem type="checkbox" id="isHandlingHTTPS"  label="&https.label;"/>
       <listitem type="checkbox" id="isHandlingFTP"    label="&ftp.label;"/>
