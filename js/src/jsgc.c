@@ -186,8 +186,8 @@ retry:
 	METER(rt->gcStats.freelen--);
 	METER(rt->gcStats.recycle++);
     } else {
-	if (rt->gcBytes < rt->gcMaxBytes && 
-            (tried_gc || rt->gcMallocBytes < rt->gcMaxBytes)) 
+	if (rt->gcBytes < rt->gcMaxBytes &&
+            (tried_gc || rt->gcMallocBytes < rt->gcMaxBytes))
         {
 	    JS_ARENA_ALLOCATE(thing, &rt->gcArenaPool, sizeof(JSGCThing));
 	    JS_ARENA_ALLOCATE(flagp, &rt->gcFlagsPool, sizeof(uint8));
@@ -580,19 +580,19 @@ gc_hash_root(const void *key)
 JS_STATIC_DLL_CALLBACK(intN)
 gc_root_marker(JSHashEntry *he, intN i, void *arg)
 {
-    jsval *rp = (jsval*)he->key;
+    jsval *rp = (jsval *)he->key;
     jsval v = *rp;
 
     /* Ignore null object and scalar values. */
-    if (v && JSVAL_IS_GCTHING(v)) {
-        
+    if (!JSVAL_IS_NULL(v) && JSVAL_IS_GCTHING(v)) {
+        JSRuntime *rt = (JSRuntime *)arg;
 #ifdef DEBUG
         JSArena *a;
-        JSRuntime *rt = (JSRuntime *)arg;
         JSBool root_points_to_gcArenaPool = JS_FALSE;
-        
+	void *thing = JSVAL_TO_GCTHING(v);
+
         for (a = rt->gcArenaPool.first.next; a; a = a->next) {
-            if (JSVAL_TO_GCTHING(v) >= (void*)a->base && JSVAL_TO_GCTHING(v) <= (void*)a->avail) {
+	    if (JS_UPTRDIFF(thing, a->base) < a->avail - a->base) {
                 root_points_to_gcArenaPool = JS_TRUE;
                 break;
             }
@@ -600,7 +600,7 @@ gc_root_marker(JSHashEntry *he, intN i, void *arg)
         JS_ASSERT(root_points_to_gcArenaPool);
 #endif
 
-        GC_MARK(arg, JSVAL_TO_GCTHING(v), he->value ? he->value : "root", NULL);
+        GC_MARK(rt, JSVAL_TO_GCTHING(v), he->value ? he->value : "root", NULL);
     }
     return HT_ENUMERATE_NEXT;
 }
