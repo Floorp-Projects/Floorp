@@ -120,7 +120,7 @@ pull_imglib:
 
 pull_plugin:
 	cd $(MOZ_SRC)/.; \
-	$(CVSCO_LIZARD) mozilla/modules/oji
+	$(CVSCO_LIZARD) mozilla/modules/oji; \
 	$(CVSCO_PLUGIN) mozilla/modules/plugin
 
 pull_netlib:
