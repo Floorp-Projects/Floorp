@@ -62,6 +62,10 @@ endif
 
 LIBS		= $(XP_LIBS)
 
+ifdef GC_LEAK_DETECTOR
+LIBS += -lboehm
+endif
+
 EXTRA_DEPS	= \
 		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
 		$(XP_NS_UNDERBAR_CRAP) \
