@@ -435,7 +435,6 @@ sub Checkout()
     my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
     my($nss_tab) = "NSS_30_BRANCH";
     my($psm_tag) = "SECURITY_MAC_BRANCH";
-    my($secbase_tag) = "SECURITY_CLIENT_BRANCH";
     my($ldapsdk_tag) = "LDAPCSDK_40_BRANCH";
     
     #//
@@ -446,7 +445,6 @@ sub Checkout()
         $session->checkout("mozilla/nsprpub", $nsprpub_tag)            || print "checkout of nsprpub failed\n";        
         $session->checkout("mozilla/security/nss", $nss_tab)           || print "checkout of security/nss failed\n";
         $session->checkout("mozilla/security/psm", $psm_tag)           || print "checkout of security/psm failed\n";
-        $session->checkout("mozilla/security/base", $secbase_tag)      || print "checkout of security/base failed\n";               
         $session->checkout("DirectorySDKSourceC", $ldapsdk_tag)        || print "checkout of LDAP C SDK failed\n";
 
         # we need this jar.mn file on the jar branch
@@ -1024,10 +1022,6 @@ sub InstallChromeFiles()
     # autocomplete
     _InstallResources(":mozilla:xpfe:components:autocomplete:resources:content:MANIFEST",   "$globalContent", 0);
 
-    # security
-    _InstallResources(":mozilla:security:base:res:content:MANIFEST",                    "$communicatorContent");
-    _InstallResources(":mozilla:security:base:res:locale:en-us:MANIFEST",               "$communicatorLocale");
-
     # widget-toolkit
     _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",                "$globalContent");
     _InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",            "$globalContent");
@@ -1073,7 +1067,7 @@ sub InstallChromeFiles()
     _InstallResources(":mozilla:netwerk:resources:content:MANIFEST",                    "$necko_content_chrome_dir");
     _InstallResources(":mozilla:netwerk:resources:locale:en-US:MANIFEST",               "$necko_locale_chrome_dir", 0);
     }
-    
+
     # layout locale hack
     {
     my($layout_locale_hack_dir) = "$communicatorLocale"."layout:";
@@ -1333,7 +1327,6 @@ sub ProcessJarManifests()
     MozJar::CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:rdf:tests:domds:resources:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:security:base:res:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:blue:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:mac:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:search:mac:jar.mn", $chrome_dir, \%jars);
@@ -1611,8 +1604,6 @@ sub BuildClientDist()
     #SECURITY
     _InstallFromManifest(":mozilla:extensions:psm-glue:public:MANIFEST",            "$distdirectory:idl:");
     _InstallFromManifest(":mozilla:extensions:psm-glue:src:MANIFEST",               "$distdirectory:include:");
-
-    _InstallFromManifest(":mozilla:security:base:public:MANIFEST",                  "$distdirectory:idl:");
 
     _InstallFromManifest(":mozilla:security:psm:lib:client:MANIFEST",               "$distdirectory:security:");
     _InstallFromManifest(":mozilla:security:psm:lib:protocol:MANIFEST",             "$distdirectory:security:");
@@ -1978,9 +1969,6 @@ sub BuildIDLProjects()
     }
 
     BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",                         "xpcom");
-
-    # security base
-    BuildIDLProject(":mozilla:security:base:macbuild:securityBaseIDL.mcp",          "securityBase");
 
     # necko
     BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");

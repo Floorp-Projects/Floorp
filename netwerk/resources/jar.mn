@@ -1,6 +1,12 @@
 comm.jar:
         content/necko/redirect_loop.xul  (content/redirect_loop.xul)
+        content/communicator/securityOverlay.xul  (content/securityOverlay.xul)
+        content/communicator/securityUI.js  (content/securityUI.js)
+        content/communicator/PSMTaskMenu.xul  (content/PSMTaskMenu.xul)
 
 en-US.jar:
         locale/en-US/necko/necko.properties   (locale/en-US/necko.properties)
         locale/en-US/necko/redirect_loop.dtd  (locale/en-US/redirect_loop.dtd)
+        locale/en-US/communicator/PSMTaskMenu.dtd  (locale/en-US/PSMTaskMenu.dtd)
+        locale/en-US/communicator/security.properties  (locale/en-US/security.properties)
+        locale/en-US/communicator/securityOverlay.dtd  (locale/en-US/securityOverlay.dtd)

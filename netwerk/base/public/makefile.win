@@ -62,6 +62,9 @@ XPIDLSRCS =                             \
         .\nsIURLParser.idl              \
         .\nsIWebFilters.idl             \
         .\nsISecurityEventSink.idl      \
+	.\nsISecretDecoderRing.idl	\
+	.\nsISecureBrowserUI.idl	\
+	.\nsISecurityManagerComponent.idl	\
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
@@ -70,3 +73,5 @@ $(DEPTH)\netwerk\dist\include:
         -mkdir $(DEPTH)\netwerk\dist
         -mkdir $(DEPTH)\netwerk\dist\include
 
+install::
+    $(MAKE_INSTALL) .\security-prefs.js $(DIST)\bin\defaults\pref

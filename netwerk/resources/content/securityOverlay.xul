@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/securityOverlay.css" type="text/css"?> 
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/securityOverlay.dtd">
+
+<overlay id="NavSecurityOverlay"
+         xmlns:html="http://www.w3.org/1999/xhtml"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="JavaScript" src="chrome://communicator/content/securityUI.js" />
+
+  <statusbarpanel id="security-button" onclick="displayPageInfo()" tooltip="aTooltip" tooltiptext="&lockIcon.label;"/>    
+      
+</overlay>
