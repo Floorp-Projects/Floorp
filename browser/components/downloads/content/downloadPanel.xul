@@ -69,7 +69,7 @@
       </sidebarheader>
       <listbox id="downloadHistoryView" flex="1" class="plain" seltype="multiple"
                 datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"
-                ondblclick="if (event.button == 0) goDoCommand('cmd_openfile');"
+                ondblclick="if (isValidLeftClick(event,'listitem')) goDoCommand('cmd_openfile');"
                 onselect="onSelect(event);" context="downloadHistoryPopup">
         <listcols>
           <listcol id="Name" primary="true"

@@ -124,6 +124,11 @@ function goOnEvent(node, event)
   }
 }
 
+function isValidLeftClick(aEvent, aName)
+{
+  return (aEvent.button == 0 && aEvent.originalTarget.localName == aName);
+}
+
 function setTooltipText(aID, aTooltipText)
 {
   var element = document.getElementById(aID);

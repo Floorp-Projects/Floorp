@@ -115,7 +115,7 @@
             hidecolumnpicker="true"
             ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
             onclick="if (event.button == 1) OpenURL(2, event);" 
-            ondblclick="if (event.button == 0) onDoubleClick(event);">
+            ondblclick="if (isValidLeftClick(event,'treechildren')) onDoubleClick(event);">
     <template>
       <rule>
         <treechildren>
