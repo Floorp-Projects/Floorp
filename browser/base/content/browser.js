@@ -52,12 +52,10 @@ var gProxyDeck = null;
 var gSearchService = null;
 var gNavigatorBundle;
 var gBrandBundle;
-var gNavigatorRegionBundle;
-var gBrandRegionBundle;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
-var gClickSelectsAll = false;
+var gClickSelectsAll = true;
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
 
@@ -153,8 +151,10 @@ function getHomePage()
   }
 
   // use this if we can't find the pref
-  if (!url && gNavigatorRegionBundle)
-    url = gNavigatorRegionBundle.getString("homePageDefault");
+  if (!url) {
+    var navigatorRegionBundle = document.getElementById("bundle_browser_region");
+    url = navigatorRegionBundle.getString("homePageDefault");
+  }
 
   return url;
 }
@@ -208,8 +208,6 @@ function Startup()
   // init globals
   gNavigatorBundle = document.getElementById("bundle_browser");
   gBrandBundle = document.getElementById("bundle_brand");
-  gNavigatorRegionBundle = document.getElementById("bundle_browser_region");
-  gBrandRegionBundle = document.getElementById("bundle_brand_region");
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
   
@@ -248,8 +246,7 @@ function Startup()
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
 
-  var contentArea = document.getElementById("content");
-  contentArea.addEventListener("load", loadEventHandlers, false);
+  gBrowser.addEventListener("load", loadEventHandlers, false);
 
   // set default character set if provided
   if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
@@ -341,7 +338,8 @@ function Startup()
   addEventListener("fullscreen", onFullScreen, false);
 
   // does clicking on the urlbar select its contents?
-  gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
+  if (navigator.platform.indexOf("Win") == -1)
+    gClickSelectsAll = false;
 
   // set home button tooltip text
   var homeButton = document.getElementById("home-button");
