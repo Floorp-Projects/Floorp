@@ -36,7 +36,7 @@ public:
     
     // nsNetModuleMgr
     nsNetModuleMgr();
-    ~nsNetModuleMgr();
+    virtual ~nsNetModuleMgr();
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
