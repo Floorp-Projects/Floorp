@@ -283,6 +283,8 @@ GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
   nsIWebShell *mParentWebShell;
   mWebShell->GetParent(mParentWebShell);
 
+  *aParent = nsnull;
+  
   if (nsnull != mParentWebShell) {
     nsIScriptContextOwner *mParentContextOwner;
     if (NS_OK == mParentWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mParentContextOwner)) {
@@ -294,7 +296,12 @@ GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
       NS_RELEASE(mParentContextOwner);
     }
     NS_RELEASE(mParentWebShell);
+  } 
+  else {
+    *aParent = this;
+    NS_ADDREF(this);
   }
+
   return ret;
 }
 
@@ -318,6 +325,8 @@ GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
   nsresult ret = NS_OK;
   nsIWebShell *mRootWebShell;
   mWebShell->GetRootWebShell(mRootWebShell);
+
+  *aTop = nsnull;
 
   if (nsnull != mRootWebShell) {
     nsIScriptContextOwner *mRootContextOwner;
