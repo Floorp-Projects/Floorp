@@ -717,18 +717,6 @@ nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetName(PRUnichar **name)
-{
-  if(!name)
-    return NS_ERROR_NULL_POINTER;
-
-	nsAutoString folderName;
-	nsNewsURI2Name(kNewsRootURI, mURI, folderName);
-	*name = folderName.ToNewUnicode();
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(PRUnichar ** prettyName)
 {
   nsresult rv = NS_OK;
