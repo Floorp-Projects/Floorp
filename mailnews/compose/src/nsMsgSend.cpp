@@ -1392,7 +1392,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
       PR_FREEIF(outCString);
       rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, aCharset, bodyText, &outCString);
 
-      if (NS_ERROR_UENC_NOMAPPING == rv && nsIMsgSend::nsMsgDeliverNow == m_deliver_mode) {
+      if (NS_ERROR_UENC_NOMAPPING == rv) {
         PRBool proceedTheSend;
         nsCOMPtr<nsIPrompt> prompt;
         GetDefaultPrompt(getter_AddRefs(prompt));
@@ -1401,7 +1401,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
           PR_FREEIF(attachment1_body);
           PR_FREEIF(outCString);
           Recycle(bodyText);
-          return NS_ERROR_BUT_DONT_SHOW_ALERT;
+          return NS_ERROR_ABORT;
         }
       }
     }

@@ -255,23 +255,53 @@ mime_generate_headers (nsMsgCompFields *fields,
 	const char* pReference;
 	const char* pOtherHdr;
 
+  nsCAutoString headerBuf;    // accumulate header strings for charset conversion check
+  headerBuf.Truncate(0);
+
 	NS_ASSERTION (fields, "null fields");
 	if (!fields)
 		return nsnull;
 
-	/* Multiply by 3 here to make enough room for MimePartII conversion */
-	pFrom = fields->GetFrom(); if (pFrom)						size += 3 * PL_strlen (pFrom);
-	pReplyTo =fields->GetReplyTo(); if (pReplyTo)				size += 3 * PL_strlen (pReplyTo);
-	pTo = fields->GetTo(); if (pTo)								size += 3 * PL_strlen (pTo);
-	pCc = fields->GetCc(); if (pCc)								size += 3 * PL_strlen (pCc);
+  pFrom = fields->GetFrom(); 
+  if (pFrom)
+    headerBuf.Append(pFrom);
+  pReplyTo =fields->GetReplyTo(); 
+  if (pReplyTo)
+    headerBuf.Append(pReplyTo);
+  pTo = fields->GetTo();
+  if (pTo)
+    headerBuf.Append(pTo);
+  pCc = fields->GetCc(); 
+  if (pCc)
+    headerBuf.Append(pCc);
 	pNewsGrp = fields->GetNewsgroups(); if (pNewsGrp)			size += 3 * PL_strlen (pNewsGrp);
 	pFollow= fields->GetFollowupTo(); if (pFollow)				size += 3 * PL_strlen (pFollow);
-	pSubject = fields->GetSubject(); if (pSubject)				size += 3 * PL_strlen (pSubject);
-	pReference = fields->GetReferences(); if (pReference)		size += 3 * PL_strlen (pReference);
-	pOrg= fields->GetOrganization(); if (pOrg)					size += 3 * PL_strlen (pOrg);
+  pSubject = fields->GetSubject(); 
+  if (pSubject)
+    headerBuf.Append(pSubject);
+  pReference = fields->GetReferences(); if (pReference)		size += 3 * PL_strlen (pReference);
+  pOrg= fields->GetOrganization(); 
+  if (pOrg)
+    headerBuf.Append(pOrg);
 	pOtherHdr= fields->GetOtherRandomHeaders(); if (pOtherHdr)	size += 3 * PL_strlen (pOtherHdr);
 	pPriority = fields->GetPriority();  if (pPriority)			size += 3 * PL_strlen (pPriority);
 	pMessageID = fields->GetMessageId(); if (pMessageID)		size += PL_strlen (pMessageID);
+
+  /* Multiply by 3 here to make enough room for MimePartII conversion */
+  size += 3 * headerBuf.Length();
+
+  const char *pBcc = fields->GetBcc();
+  if (pBcc)
+    headerBuf.Append(pBcc);
+  // alert the user if headers contain characters out of charset range (e.g. multilingual data)
+  if (!nsMsgI18Ncheck_data_in_charset_range(charset, NS_ConvertUTF8toUCS2(headerBuf.get()).get())) {
+    PRBool proceedTheSend;
+    rv = nsMsgAskBooleanQuestionByID(aPrompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+    if (!proceedTheSend) {
+      *status = NS_ERROR_ABORT;
+      return nsnull;
+    }
+  }
 
 	/* Add a bunch of slop for the static parts of the headers. */
 	/* size += 2048; */
@@ -643,18 +673,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 	if (pSubject && *pSubject) {
-    // alert the user if the subject contains characters out of charset range (e.g. multilingual data)
-    nsAutoString u; // need to convert from UTF-8 to UCS2
-    if (NS_OK == nsMsgI18NConvertToUnicode(nsCAutoString(msgCompHeaderInternalCharset()), nsCAutoString(pSubject), u) &&
-        !nsMsgI18Ncheck_data_in_charset_range(charset, u) &&
-        nsIMsgSend::nsMsgDeliverNow == deliver_mode) {
-      PRBool proceedTheSend;
-      rv = nsMsgAskBooleanQuestionByID(aPrompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
-      if (!proceedTheSend) {
-        *status = NS_ERROR_BUT_DONT_SHOW_ALERT;
-        return nsnull;
-      }
-    }
 
 		char *convbuf;
 		PUSH_STRING ("Subject: ");

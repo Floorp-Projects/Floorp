@@ -61,6 +61,7 @@ var contentChanged = false;
 var gCurrentIdentity = null;
 var defaultSaveOperation = "draft";
 var sendOrSaveOperationInProgress = false;
+var gCloseWindowAfterSave = false;
 var isOffline = false;
 var sessionAdded = false;
 var currentAutocompleteDirectory = null;
@@ -112,7 +113,12 @@ var stateListener = {
     {
       contentChanged = false;
       msgCompose.bodyModified = false;
+     
+      if (gCloseWindowAfterSave)
+        msgCompose.CloseWindow();
     }
+   
+    gCloseWindowAfterSave = false;
 	},
 
   SaveInFolderDone: function(folderURI) {
@@ -1843,8 +1849,9 @@ function ComposeCanClose()
 					case 0: //Save
                         if (LastToClose())
                             NotifyQuitApplication();
+            gCloseWindowAfterSave = true;
 						SaveAsDraft();
-						break;
+            return false;
 					case 1:	//Cancel
 						return false;
 					case 2:	//Don't Save

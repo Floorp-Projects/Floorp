@@ -522,8 +522,11 @@ PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const 
   return result;
 }
 
-PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const nsString& inString)
+PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar* inString)
 {
+  if (!charset || !*charset || !inString || !*inString)
+    return PR_TRUE;
+
   nsAutoString aCharset; aCharset.AssignWithConversion(charset);
   nsresult res;
   PRBool result = PR_TRUE;
@@ -536,15 +539,15 @@ PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const nsString&
     // get an unicode converter
     res = ccm->GetUnicodeEncoder(&aCharset, getter_AddRefs(encoder));
     if(NS_SUCCEEDED(res)) {
-      const PRUnichar *originalPtr = inString.get();
-      PRInt32 originalLen = inString.Length();
+      const PRUnichar *originalPtr = inString;
+      PRInt32 originalLen = nsCRT::strlen(inString);
       PRUnichar *currentSrcPtr = NS_CONST_CAST(PRUnichar *, originalPtr);
       char localBuff[512];
       PRInt32 consumedLen = 0;
       PRInt32 srcLen;
       PRInt32 dstLength;
 
-      // convert to unicode
+      // convert from unicode
       while (consumedLen < originalLen) {
         srcLen = originalLen - consumedLen;
         dstLength = 512;

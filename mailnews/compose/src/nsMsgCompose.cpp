@@ -888,12 +888,12 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	    if (NS_SUCCEEDED(rv) && nsnull != outCString) 
 	    {
         // body contains multilingual data, confirm send to the user
-        if (NS_ERROR_UENC_NOMAPPING == rv && nsIMsgSend::nsMsgDeliverNow == deliverMode) {
+        if (NS_ERROR_UENC_NOMAPPING == rv) {
           PRBool proceedTheSend;
           rv = nsMsgAskBooleanQuestionByID(prompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
           if (!proceedTheSend) {
             PR_FREEIF(outCString);
-            return NS_ERROR_BUT_DONT_SHOW_ALERT;
+            return NS_ERROR_ABORT;
           }
         }
 		    m_compFields->SetBody(outCString);

@@ -91,7 +91,7 @@ NS_MSG_BASE PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *s
  * @return            True if the string can be converted within the charset range.
  *                    False if one or more characters cannot be converted to the target charset.
  */
-NS_MSG_BASE PRBool    nsMsgI18Ncheck_data_in_charset_range(const char *charset, const nsString& inString);
+NS_MSG_BASE PRBool    nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar* inString);
 
 /**
  * Return accept language.
