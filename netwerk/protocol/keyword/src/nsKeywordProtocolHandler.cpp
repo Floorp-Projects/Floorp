@@ -97,23 +97,31 @@ nsKeywordProtocolHandler::GetDefaultPort(PRInt32 *result) {
 // digests a spec _without_ the preceeding "keyword:" scheme.
 static char *
 MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
+    char * unescaped = nsCRT::strdup(aSpec);
+    if(unescaped == nsnull) 
+       return nsnull;
+
+    nsUnescape(unescaped);
+
     // build up a request to the keyword server.
     nsCAutoString query;
 
     // pull out the "go" action word, or '?', if any
-    char one = aSpec[0], two = aSpec[1];
+    char one = unescaped[0], two = unescaped[1];
     if (one == '?') {                            // "?blah"
-        query = aSpec+1;
+        query = unescaped+1;
     } else if ( (one == 'g' || one == 'G')       //
                             &&                   //
                 (two == 'o' || two == 'O')       // "g[G]o[O] blah"
                             &&                   //
-                     (aSpec[12] == ' ') ) {      //
+                     (unescaped[12] == ' ') ) {      //
 
-        query = aSpec+3;
+        query = unescaped+3;
     } else {
-        query = aSpec;
+        query = unescaped;
     }
+
+    nsAllocator::Free(unescaped);
 
     query.Trim(" "); // pull leading/trailing spaces.
 
