@@ -38,6 +38,8 @@ MAPFILE=$(DLLNAME).map
 EXPORTS=zipfile.h nsIJAR.h nsIZip.h nsJARIIDs.h
 
 OBJS=.\$(OBJDIR)\nsZipArchive.obj \
+     .\$(OBJDIR)\nsJAR.obj \
+     .\$(OBJDIr)\nsJARFactory.obj
 
 LINCS=                         \
     -I$(XPDIST)\public\nspr    \
