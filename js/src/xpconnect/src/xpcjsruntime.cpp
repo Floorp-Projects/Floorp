@@ -61,11 +61,21 @@ hash_root(const void *key)
 JS_STATIC_DLL_CALLBACK(intN)
 DEBUG_WrapperChecker(JSHashEntry *he, intN i, void *arg)
 {
-    NS_ASSERTION(!((nsXPCWrappedNative*)he->value)->IsValid(), "found a 'valid' wrappper!");
+    NS_ASSERTION(!((nsXPCWrappedNative*)he->value)->IsValid(), "found a 'valid' wrapper!");
     ++ *((int*)arg);
     return HT_ENUMERATE_NEXT;
 }
 #endif
+
+JS_STATIC_DLL_CALLBACK(intN)
+WrappedJSShutdownMarker(JSHashEntry *he, intN i, void *arg)
+{
+    nsXPCWrappedJS* wrapper = (nsXPCWrappedJS*)he->value;
+    NS_ASSERTION(wrapper, "found a null JS wrapper!");
+    NS_ASSERTION(wrapper->IsValid(), "found an invalid JS wrapper!");
+    wrapper->SystemIsBeingShutDown();
+    return HT_ENUMERATE_NEXT;
+}
 
 XPCJSRuntime::~XPCJSRuntime()
 {
@@ -96,6 +106,7 @@ XPCJSRuntime::~XPCJSRuntime()
         if(count)
             printf("deleting XPCJSRuntime with %d live wrapped JSObject\n", (int)count);        
 #endif
+        mWrappedJSMap->Enumerate(WrappedJSShutdownMarker, nsnull); 
         delete mWrappedJSMap;
     }
 

@@ -420,7 +420,7 @@ nsXPCWrappedNative::Find(REFNSIID aIID)
 void 
 nsXPCWrappedNative::SystemIsBeingShutDown()
 {
-    // XXX It turns out that it is better to leak here then to do any Release's 
+    // XXX It turns out that it is better to leak here then to do any Releases 
     // and have them propagate into all sorts of mischief as the system is being
     // shutdown. This was learned the hard way :(    
     
