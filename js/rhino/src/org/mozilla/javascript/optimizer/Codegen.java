@@ -1203,35 +1203,18 @@ public class Codegen extends Interpreter {
         if (tree instanceof OptFunctionNode) {
 
             OptFunctionNode fnNode = (OptFunctionNode)tree;
-            ObjArray directCallTargets
-                        = ((OptFunctionNode)tree).getDirectCallTargets();
-            if (directCallTargets != null) {
-                setNonTrivialInit(methodName);
-                classFile.addField("EmptyArray",
-                              "[Ljava/lang/Object;",
-                              (short)ClassFileWriter.ACC_PRIVATE);
-                addByteCode(ByteCode.ALOAD_0);
-                push(0);
-                addByteCode(ByteCode.ANEWARRAY, "java/lang/Object");
-                classFile.add(ByteCode.PUTFIELD,
-                              classFile.fullyQualifiedForm(this.name),
-                              "EmptyArray",
-                              "[Ljava/lang/Object;");
-            }
             if (fnNode.isTargetOfDirectCall()) {
                 setNonTrivialInit(methodName);
-                String className
-                     = classFile.fullyQualifiedForm(fnNode.getClassName());
-                String fieldName = className.replace('/', '_');
-                classFile.addField(fieldName,
-                                       "L" + className + ";",
-                   (short)(ClassFileWriter.ACC_PUBLIC
-                            + ClassFileWriter.ACC_STATIC));
+                String className = fnNode.getClassName();
+                String fieldName = className.replace('.', '_');
+                String fieldType = 'L'+classFile.fullyQualifiedForm(className)
+                                   +';';
+                classFile.addField(fieldName, fieldType,
+                                   (short)(ClassFileWriter.ACC_PUBLIC
+                                           | ClassFileWriter.ACC_STATIC));
                 addByteCode(ByteCode.ALOAD_0);
-                classFile.add(ByteCode.PUTSTATIC,
-                            className,
-                            fieldName,
-                            "L" + className + ";");
+                classFile.add(ByteCode.PUTSTATIC, className,
+                              fieldName, fieldType);
             }
         }
 
@@ -1831,11 +1814,9 @@ public class Codegen extends Interpreter {
                 child = child.getNext();
             }
 
-            addByteCode(ByteCode.ALOAD_0);
-            classFile.add(ByteCode.GETFIELD,
-                                classFile.fullyQualifiedForm(this.name),
-                                "EmptyArray",
-                                "[Ljava/lang/Object;");
+            classFile.add(ByteCode.GETSTATIC,
+                    "org/mozilla/javascript/ScriptRuntime",
+                    "emptyArgs", "[Ljava/lang/Object;");
 
             if (type == TokenStream.NEW)
                 addVirtualInvoke(target.getClassName(),
