@@ -28,12 +28,13 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIWebNavigation.h"
 
 //
 //  History class implementation 
 //
-HistoryImpl::HistoryImpl(nsIDocShell* aDocShell) : mScriptObject(nsnull), 
-   mDocShell(aDocShell) 
+HistoryImpl::HistoryImpl(nsIDocShell* aDocShell) : mDocShell(aDocShell),
+   mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -138,23 +139,23 @@ HistoryImpl::GetNext(nsString& aNext)
 NS_IMETHODIMP
 HistoryImpl::Back()
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  if (webShell && NS_OK == webShell->CanBack()) {
-    webShell->Back();
-  }
-  
-  return NS_OK;
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+   if(!webNav)
+      return NS_OK;
+
+   webNav->GoBack();
+   return NS_OK;
 }
 
 NS_IMETHODIMP
 HistoryImpl::Forward()
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  if (webShell && NS_OK == webShell->CanForward()) {
-    webShell->Forward();
-  }
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+   if(!webNav)
+      return NS_OK;
 
-  return NS_OK;
+   webNav->GoForward();
+   return NS_OK;
 }
 
 NS_IMETHODIMP    
