@@ -33,7 +33,7 @@
 /*
 ** applefile definitions used 
 */
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
   #pragma options align=mac68k
 #endif
 
@@ -78,7 +78,7 @@ typedef struct ap_dates
 
 } ap_dates;
 
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
   #pragma options align=reset
 #endif
 

@@ -751,7 +751,8 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         // so that 3rd party shared libraries will be noticed!
         validExtension = ((type == 'shlb') || (type == 'NSPL'));
       }
-      
+
+#if !TARGET_CARBON      
       if (validExtension)
       {
       	// This call to SystemTask is here to give the OS time to grow it's
@@ -760,6 +761,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
       	// story.
       	::SystemTask();
       }
+#endif
     }
 
 #else

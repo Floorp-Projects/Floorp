@@ -380,7 +380,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 				break;
 
 			case eWindowType_dialog:
-#if !TARGET_CARBON
         if (aInitData)
         {
           switch (aInitData->mBorderStyle)
@@ -426,7 +425,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         hOffset = kDialogMarginWidth;
         vOffset = kDialogTitleBarHeight;
 				break;
-#endif
 
 			case eWindowType_toplevel:
 				if (aInitData &&
@@ -581,7 +579,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate, unless we don't want activation (popups). (pinkerton).
-  if ( bState ) {
+  if ( bState && !mBounds.IsEmpty() ) {
     if ( mAcceptsActivation )
       ::ShowWindow(mWindowPtr);
     else {

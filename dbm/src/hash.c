@@ -51,12 +51,13 @@ static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 #include <sys/stat.h>
 #endif
 
-#include <errno.h>
-#ifdef macintosh
+#if defined(macintosh)
 #include <unix.h>
-#else
-#include <fcntl.h>
+#include <unistd.h>
 #endif
+
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

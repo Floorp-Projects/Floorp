@@ -24,6 +24,7 @@
 #include "nsDeviceContextMac.h"
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextSpecMac.h"
+#include "nsIPrintingContext.h"
 #include "nsString.h"
 #include "nsHashtable.h"
 #include "nsFont.h"
@@ -671,10 +672,9 @@ NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
 
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext)
 {
-GrafPtr							curPort;	
-THPrint							thePrintRecord;			// handle to print record
-double							pix_Inch;
-nsDeviceContextMac	*macDC;
+    GrafPtr curPort;	
+    double pix_Inch;
+    nsDeviceContextMac *macDC;
 
 	aContext = new nsDeviceContextMac();
 	macDC = (nsDeviceContextMac*)aContext;
@@ -682,22 +682,35 @@ nsDeviceContextMac	*macDC;
 	NS_ADDREF(aDevice);
 	
 	::GetPort(&curPort);
-	
-	thePrintRecord = ((nsDeviceContextSpecMac*)aDevice)->mPrtRec;
+
+#if !TARGET_CARBON
+	THPrint thePrintRecord = ((nsDeviceContextSpecMac*)aDevice)->mPrtRec;
 	pix_Inch = (**thePrintRecord).prInfo.iHRes;
-	
+	macDC->mPageRect = (**thePrintRecord).prInfo.rPage;	
+#else
+    nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(aDevice);
+    if (printingContext) {
+        if (NS_FAILED(printingContext->GetPrinterResolution(&pix_Inch)))
+            pix_Inch = 72.0;
+        double top, left, bottom, right;
+        printingContext->GetPageRect(&top, &left, &bottom, &right);
+        Rect& pageRect = macDC->mPageRect;
+        pageRect.top = top, pageRect.left = left;
+        pageRect.bottom = bottom, pageRect.right = right;
+    }
+#endif
+
 	((nsDeviceContextMac*)aContext)->Init(curPort);
 
-	macDC->mPageRect = (**thePrintRecord).prInfo.rPage;	
 	macDC->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(72);
 	macDC->mPixelsToTwips = 1.0f/macDC->mTwipsToPixels;
-  macDC->mAppUnitsToDevUnits = macDC->mTwipsToPixels;
-  macDC->mDevUnitsToAppUnits = 1.0f / macDC->mAppUnitsToDevUnits;
+    macDC->mAppUnitsToDevUnits = macDC->mTwipsToPixels;
+    macDC->mDevUnitsToAppUnits = 1.0f / macDC->mAppUnitsToDevUnits;
   
-  macDC->mCPixelScale = macDC->mTwipsToPixels / mTwipsToPixels;
+    macDC->mCPixelScale = macDC->mTwipsToPixels / mTwipsToPixels;
 
 	//((nsDeviceContextMac*)aContext)->Init(this);
-  return NS_OK;
+    return NS_OK;
 }
 
 
@@ -717,8 +730,14 @@ GrafPtr	thePort;
   	SetDrawingSurface(((nsDeviceContextSpecMac*)(this->mSpec))->mPrtRec);
   	SetPort(thePort);
   }
-#endif
   return NS_OK;
+#else
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
+    if (printingContext)
+        rv = printingContext->BeginDocument();
+    return rv;
+#endif
 }
 
 
@@ -728,13 +747,19 @@ GrafPtr	thePort;
  */
 NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 {
+#if !TARGET_CARBON
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen){
  		::SetPort(mOldPort);
-#if !TARGET_CARBON
 		::PrCloseDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
-#endif
 	}
-  return NS_OK;
+    return NS_OK;
+#else
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
+    if (printingContext)
+        rv = printingContext->EndDocument();
+    return rv;
+#endif
 }
 
 
@@ -747,8 +772,14 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 #if !TARGET_CARBON
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
 		::PrOpenPage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort,nsnull);
-#endif
   return NS_OK;
+#else
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
+    if (printingContext)
+        rv = printingContext->BeginPage();
+    return rv;
+#endif
 }
 
 
@@ -763,8 +794,14 @@ NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
  		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort));
 		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
 	}
+    return NS_OK;
+#else
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
+    if (printingContext)
+        rv = printingContext->EndPage();
+    return rv;
 #endif
-  return NS_OK;
 }
 
 

@@ -32,6 +32,9 @@
 #include "nsScriptableRegion.h"
 #include "nsIImageManager.h"
 #include "nsDeviceContextSpecMac.h"
+#if TARGET_CARBON
+#include "nsDeviceContextSpecX.h"
+#endif
 #include "nsDeviceContextSpecFactoryM.h"
 #include "nsScreenManagerMac.h"
 #include "nsBlender.h"
@@ -124,7 +127,13 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
 		}
 	}
 	else if (mClassID.Equals(kCDeviceContextSpec)) {
-		NS_NEWXPCOM(inst, nsDeviceContextSpecMac);
+	    nsCOMPtr<nsIDeviceContextSpec> dcSpec;
+#if TARGET_CARBON
+	    NS_NEWXPCOM(dcSpec, nsDeviceContextSpecX);
+#else
+	    NS_NEWXPCOM(dcSpec, nsDeviceContextSpecMac);
+#endif
+        inst = dcSpec;
 	}
   	else if (mClassID.Equals(kCPrintOptions)) {
     	NS_NEWXPCOM(inst, nsPrintOptionsMac);

@@ -46,6 +46,7 @@ mailextras      1
 xptlink         0
 psm             0
 embedding_test  1
+carbon          0
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"

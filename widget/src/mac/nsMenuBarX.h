@@ -27,6 +27,7 @@
 #include "nsIMenuListener.h"
 #include "nsIDocumentObserver.h"
 #include "nsIChangeManager.h"
+#include "nsIPresContext.h"
 #include "nsSupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"

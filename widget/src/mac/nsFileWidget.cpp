@@ -235,7 +235,7 @@ nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outS
  	PRBool retVal = PR_FALSE;
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
-	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+	NavEventUPP eventProc = NewNavEventUPP(myProc);  // doesn't really matter if this fails
 	OSType				typeToSave = 'TEXT';
 	OSType				creatorToSave = 'MOZZ';
 
@@ -313,7 +313,7 @@ nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
  	PRBool retVal = PR_FALSE;
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
-	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+	NavEventUPP eventProc = NewNavEventUPP(myProc);  // doesn't really matter if this fails
 
 	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
 	if (anErr == noErr)	{	
@@ -383,7 +383,7 @@ nsFileWidget :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
  	PRBool retVal = PR_FALSE;
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
-	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+	NavEventUPP eventProc = NewNavEventUPP(myProc);  // doesn't really matter if this fails
 
 	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
 	if (anErr == noErr)	{	

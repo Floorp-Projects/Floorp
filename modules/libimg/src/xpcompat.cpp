@@ -33,6 +33,7 @@
 # include <time.h>
 #endif
 #include <stdlib.h>
+#include <time.h>
 #include "prlog.h"
 #include "prmem.h"
 #include "plstr.h"

@@ -365,7 +365,7 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	mIMEIsComposing = PR_FALSE;
 	mIMECompositionStr=nsnull;
 
-  mControlActionProc = NewControlActionProc(ScrollActionProc);
+    mControlActionProc = NewControlActionUPP(ScrollActionProc);
 }
 
 

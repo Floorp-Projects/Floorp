@@ -23,8 +23,6 @@
 #ifndef DefinesMozilla_h_
 #define DefinesMozilla_h_
 
-#include "DefinesOptions.h"		// written at build time
-
 // *** Security
 //#define NADA_VERSION
 //#define EXPORT_VERSION

@@ -36,9 +36,22 @@
 #include "nsFilePicker.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsScrollbar.h"
+
+#if TARGET_CARBON
+#include "nsMenuBarX.h"
+#include "nsMenuX.h"
+#include "nsMenuItemX.h"
+
+#define nsMenuBar nsMenuBarX
+#define nsMenu nsMenuX
+#define nsMenuItem nsMenuItemX
+
+#else
 #include "nsMenuBar.h"
 #include "nsMenu.h"
 #include "nsMenuItem.h"
+#endif
+
 #include "nsFileWidget.h"
 
 #include "nsClipboard.h"

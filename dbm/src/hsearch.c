@@ -42,9 +42,9 @@ static char sccsid[] = "@(#)hsearch.c	8.4 (Berkeley) 7/21/94";
 
 #ifndef macintosh
 #include <sys/types.h>
+#endif
 
 #include <fcntl.h>
-#endif
 #include <string.h>
 
 #include "mcom_db.h"

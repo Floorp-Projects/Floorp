@@ -49,14 +49,14 @@ nsMacTSMMessagePump::nsMacTSMMessagePump()
 {
 	OSErr	err;
 
-	mPos2OffsetUPP = NewAEEventHandlerProc(nsMacTSMMessagePump::PositionToOffsetHandler);
-	NS_ASSERTION(mPos2OffsetUPP!=NULL,"nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerProc[Pos2Pffset] failed");
+	mPos2OffsetUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::PositionToOffsetHandler);
+	NS_ASSERTION(mPos2OffsetUPP!=NULL,"nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[Pos2Pffset] failed");
 
-	mOffset2PosUPP = NewAEEventHandlerProc(nsMacTSMMessagePump::OffsetToPositionHandler);
-	NS_ASSERTION(mPos2OffsetUPP!=NULL,"nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerProc[Pos2Pffset] failed");
+	mOffset2PosUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::OffsetToPositionHandler);
+	NS_ASSERTION(mPos2OffsetUPP!=NULL,"nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[Pos2Pffset] failed");
 
-	mUpdateUPP = NewAEEventHandlerProc(nsMacTSMMessagePump::UpdateHandler);
-	NS_ASSERTION(mPos2OffsetUPP!=NULL,"nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerProc[Pos2Pffset] failed");
+	mUpdateUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UpdateHandler);
+	NS_ASSERTION(mPos2OffsetUPP!=NULL,"nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[Pos2Pffset] failed");
 
 	err = AEInstallEventHandler(kTextServiceClass,kPos2Offset,mPos2OffsetUPP,(long)this,false);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandlers[Pos2Offset] failed");
@@ -114,7 +114,7 @@ void nsMacTSMMessagePump::Shutdown()
 //
 //-------------------------------------------------------------------------
 
-pascal OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
+pascal OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon)
 {
 	OSErr 				err;
 	DescType			returnedType;
@@ -163,7 +163,7 @@ pascal OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theA
 
 	return noErr;
 }
-pascal OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
+pascal OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon)
 {
 	OSErr 				err;
 	DescType			returnedType;
@@ -209,7 +209,7 @@ pascal OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theA
 	
 	return noErr;
 }
-pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
+pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon)
 {
 	OSErr 					err;
 	DescType				returnedType;

@@ -42,7 +42,7 @@ extern CWPluginContext gPluginContext;
  * global data. Just be careful out there!
  */
 
-const bool kTemporaryAllocation = false;
+const Boolean kTemporaryAllocation = false;
 
 void* operator new(size_t size)
 {

@@ -99,6 +99,14 @@
 #endif
 #endif
 
+#if defined(XP_MAC) && TARGET_CARBON
+#include "nsIClassicPluginFactory.h"
+#endif
+
+#if defined(XP_MAC) && TARGET_CARBON
+#include "nsIClassicPluginFactory.h"
+#endif
+
 // We need this hackery so that we can dynamically register doc
 // loaders for the 4.x plugins that we discover.
 #if defined(XP_PC)
@@ -3109,10 +3117,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 		nsIPlugin* plugin = pluginTag->mEntryPoint;
 		if(plugin == NULL)
 		{
-      // No, this is not a leak. GetGlobalServiceManager() doesn't
-      // addref the pointer on the way out. It probably should.
-      nsIServiceManager* serviceManager;
-      nsServiceManager::GetGlobalServiceManager(&serviceManager);
+            // No, this is not a leak. GetGlobalServiceManager() doesn't
+            // addref the pointer on the way out. It probably should.
+            nsIServiceManager* serviceManager;
+            nsServiceManager::GetGlobalServiceManager(&serviceManager);
 
 			// need to get the plugin factory from this plugin.
 			nsFactoryProc nsGetFactory = nsnull;
@@ -3127,11 +3135,19 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 			}
 			else
 			{
+#if defined(XP_MAC) && TARGET_CARBON
+                // should we also look for a 'carb' resource?
+                if (PR_FindSymbol(pluginTag->mLibrary, "mainRD") != NULL) {
+                    NS_WITH_SERVICE(nsIClassicPluginFactory, factory, NS_CLASSIC_PLUGIN_FACTORY_CONTRACTID, &rv);
+                    if (NS_SUCCEEDED(rv)) rv = factory->CreatePlugin(serviceManager, pluginTag->mFileName,
+                                                                     pluginTag->mLibrary, &pluginTag->mEntryPoint);
+                } else
+#endif
 				rv = ns4xPlugin::CreatePlugin(serviceManager,
                                       pluginTag->mFileName,
                                       pluginTag->mLibrary,
                                       &pluginTag->mEntryPoint);
-
+                
 				plugin = pluginTag->mEntryPoint;
                 pluginTag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
 
@@ -3139,7 +3155,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 			}
 		}
 
-		if(plugin != nsnull)
+		if (plugin != nsnull)
 		{
 			*aPlugin = plugin;
 			plugin->AddRef();

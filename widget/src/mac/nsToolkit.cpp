@@ -320,7 +320,10 @@ OSErr nsMacMemoryCushion::Init(Size bufferSize, Size reserveSize)
   // make this purgable
   ::HPurge(mBufferHandle);
 
+#if !TARGET_CARBON
 	::SetGrowZone(NewGrowZoneProc(GrowZoneProc));
+#endif
+
 	return noErr;
 }
 
