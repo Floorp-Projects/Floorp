@@ -17,7 +17,6 @@
  */
 #include "nsCOMPtr.h" 
 #include "nsSimplePageSequence.h"
-#include "nsPageFrame.h"
 #include "nsIPresContext.h"
 #include "nsIReflowCommand.h"
 #include "nsIRenderingContext.h"
