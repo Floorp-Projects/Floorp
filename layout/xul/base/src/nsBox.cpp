@@ -665,28 +665,30 @@ nsBox::GetBorder(nsMargin& aMargin)
   if (disp->mAppearance && gTheme) {
     // Go to the theme for the border.
     nsSize size;
-    nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
-    content->GetDocument(*getter_AddRefs(doc));
-    nsCOMPtr<nsIPresShell> shell;
-    if (doc) {
-      doc->GetShellAt(0, getter_AddRefs(shell));
-      nsCOMPtr<nsIPresContext> context;
-      shell->GetPresContext(getter_AddRefs(context));
-      if (gTheme->ThemeSupportsWidget(context, disp->mAppearance)) {
-        nsCOMPtr<nsIDeviceContext> dc;
-        context->GetDeviceContext(getter_AddRefs(dc));
-        nsMargin margin(0,0,0,0);
-        gTheme->GetWidgetBorder(dc, frame, 
-                                disp->mAppearance, &margin);
-        float p2t;
-        context->GetScaledPixelsToTwips(&p2t);
-        aMargin.top = NSIntPixelsToTwips(margin.top, p2t);
-        aMargin.right = NSIntPixelsToTwips(margin.right, p2t);
-        aMargin.bottom = NSIntPixelsToTwips(margin.bottom, p2t);
-        aMargin.left = NSIntPixelsToTwips(margin.left, p2t);
-        return NS_OK;
+    if (content) {
+      nsCOMPtr<nsIDocument> doc;
+      content->GetDocument(*getter_AddRefs(doc));    
+      if (doc) {
+        nsCOMPtr<nsIPresShell> shell;
+        doc->GetShellAt(0, getter_AddRefs(shell));
+        nsCOMPtr<nsIPresContext> context;
+        shell->GetPresContext(getter_AddRefs(context));
+        if (gTheme->ThemeSupportsWidget(context, disp->mAppearance)) {
+          nsCOMPtr<nsIDeviceContext> dc;
+          context->GetDeviceContext(getter_AddRefs(dc));
+          nsMargin margin(0,0,0,0);
+          gTheme->GetWidgetBorder(dc, frame, 
+                                  disp->mAppearance, &margin);
+          float p2t;
+          context->GetScaledPixelsToTwips(&p2t);
+          aMargin.top = NSIntPixelsToTwips(margin.top, p2t);
+          aMargin.right = NSIntPixelsToTwips(margin.right, p2t);
+          aMargin.bottom = NSIntPixelsToTwips(margin.bottom, p2t);
+          aMargin.left = NSIntPixelsToTwips(margin.left, p2t);
+          return NS_OK;
+        }
       }
     }
   }
