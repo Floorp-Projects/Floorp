@@ -252,7 +252,6 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *pref
 	char *  urlstr=nsnull;
 	nsString withArgs;
 	nsresult rv;
-	PRBool forceLaunchMail = PR_FALSE;
 	
 	PRInt32 height  = NS_SIZETOCONTENT;
 	PRInt32 width  = NS_SIZETOCONTENT;
@@ -286,6 +285,7 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *pref
     }
   }
 
+  return rv;
 }
 
 static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
@@ -464,8 +464,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
           }  
           
           rv = cmdLineArgs->GetCmdLineValue((const char *)commandLineArg, &cmdResult);
-          if (NS_SUCCEEDED(rv)) {
-            if (cmdResult && (PL_strcmp("1",cmdResult)==0))
+          if (forceLaunchTask || (NS_SUCCEEDED(rv) && cmdResult && (PL_strcmp("1",cmdResult)==0))) {
               OpenChromURL((const char *)chromeUrlForTask,height, width);
           }
         }
