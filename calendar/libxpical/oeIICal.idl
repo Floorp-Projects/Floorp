@@ -90,6 +90,7 @@ interface oeIICalEvent : nsISupports
     attribute short recurWeekNumber;
     attribute PRTime lastAlarmAck;
     boolean getNextRecurrence( in PRTime begin, out PRTime result);
+    boolean getPreviousOccurrence( in PRTime beforethis, out PRTime result);
     string getIcalString();
     boolean parseIcalString(in string icalstr);
     void addException( in PRTime exdate );
