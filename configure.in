@@ -1122,7 +1122,18 @@ then
     AC_CHECK_HEADER(X11/extensions/XIElib.h)
 
     if test "$MOZ_XIE_LIBS"; then
-        HAVE_XIE=1
+	dnl ====================================================
+	dnl =
+	dnl = If XIE is present and is desired, turn it on
+	dnl =
+	dnl ====================================================
+	case $target in
+	    *-hpux*)
+		;;
+	    *)
+		HAVE_XIE=1
+		;;
+	esac
     fi
 
 	LDFLAGS="$_SAVE_LDFLAGS"
