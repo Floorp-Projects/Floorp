@@ -48,6 +48,7 @@
 #include "nsLocaleCID.h"
 #include "nsReadableUtils.h"
 #include "nsPlatformCharset.h"
+#include "nsEncoderDecoderUtils.h"
 
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt = 0;
