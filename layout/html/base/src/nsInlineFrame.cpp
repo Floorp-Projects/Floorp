@@ -42,10 +42,9 @@ struct nsInlineReflowState : nsFrameReflowState {
 nsInlineReflowState::nsInlineReflowState(nsIPresContext& aPresContext,
                                          const nsHTMLReflowState& aReflowState,
                                          const nsHTMLReflowMetrics& aMetrics)
-  : nsFrameReflowState(aPresContext, aReflowState, aMetrics)
+  : nsFrameReflowState(aPresContext, aReflowState, aMetrics),
+    mLastChild(nsnull)
 {
-
-  mLastChild = nsnull;
 }
 
 nsInlineReflowState::~nsInlineReflowState()
@@ -78,6 +77,9 @@ public:
   NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
+  NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
+                                nsISpaceManager* aSpaceManager,
+                                nscoord aDeltaX, nscoord aDeltaY);
 
   virtual PRIntn GetSkipSides() const;
 
@@ -442,6 +444,22 @@ nsInlineFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInlineFrame::MoveInSpaceManager(nsIPresContext& aPresContext,
+                                  nsISpaceManager* aSpaceManager,
+                                  nscoord aDeltaX, nscoord aDeltaY)
+{
+  nsIFrame* kid = mFirstChild;
+  while (nsnull != kid) {
+    nsIHTMLReflow* ihr;
+    if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&ihr)) {
+      ihr->MoveInSpaceManager(aPresContext, aSpaceManager, aDeltaX, aDeltaY);
+    }
+    kid->GetNextSibling(kid);
+  }
+  return NS_OK;
+}
+
 nsresult
 nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
                               nsIFrame*       aNewFrame,
@@ -670,7 +688,7 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
   nsRect bounds;
   nscoord maxAscent, maxDescent;
   aInlineReflow.VerticalAlignFrames(bounds, maxAscent, maxDescent);
-  aInlineReflow.RelativePositionFrames();
+  aInlineReflow.RelativePositionFrames(aMetrics.mCombinedArea);
 
   // Make sure that we collapse into nothingness if our content is
   // zero sized
@@ -745,6 +763,21 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
       aState.mBorderPadding.right;
     aMetrics.maxElementSize->height += aState.mBorderPadding.top +
       aState.mBorderPadding.bottom;
+  }
+
+  // See if the combined area of our children exceeds the bounds of
+  // our frame. If it does, then set the NS_FRAME_OUTSIDE_CHILDREN
+  // flag.
+
+  // XXX take into account the overflow->clip property!
+  nsRect& combinedArea = aMetrics.mCombinedArea;
+  if ((combinedArea.x < 0) || (combinedArea.y < 0) ||
+      (combinedArea.XMost() > aMetrics.width) ||
+      (combinedArea.YMost() > aMetrics.height)) {
+    mState |= NS_FRAME_OUTSIDE_CHILDREN;
+  }
+  else {
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
   }
 }
 
