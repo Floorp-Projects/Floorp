@@ -28,6 +28,7 @@ var gFolderOutliner;
 var gMessagePane;
 var gMessagePaneFrame;
 var gThreadOutliner;
+var gSearchInput;
 
 var gThreadAndMessagePaneSplitter = null;
 var gUnreadCount = null;
