@@ -30,7 +30,11 @@
 #include "nsXPIDLString.h"
 
 
-NS_IMPL_ISUPPORTS(nsSystemPrincipal, NS_GET_IID(nsIPrincipal));
+NS_IMPL_QUERY_INTERFACE1(nsSystemPrincipal, nsIPrincipal)
+
+NSBASEPRINCIPALS_ADDREF(nsSystemPrincipal);
+NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal);
+
 
 ////////////////////////////////////
 // Methods implementing nsIPrincipal
