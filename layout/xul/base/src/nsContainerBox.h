@@ -74,6 +74,8 @@ protected:
   virtual nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
   //virtual nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect, PRUint32 aFlags);
 
+  virtual void GetBoxName(nsAutoString& aName);
+
   nsIBox* mFirstChild;
   nsIBox* mLastChild;
   PRInt32 mChildCount;

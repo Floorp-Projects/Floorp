@@ -70,6 +70,24 @@ public:
                   const nsRect& aDirtyRect,
                   nsFramePaintLayer aWhichLayer);
 
+  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
+  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aPrevFrame,
+                           nsIFrame*       aFrameList);
+  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame);
+  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aOldFrame,
+                           nsIFrame*       aNewFrame);
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("FieldSet", aResult);
@@ -552,4 +570,58 @@ nsFieldSetFrame::GetSkipSides() const
 {
   return 0;
 }
+
+NS_IMETHODIMP
+nsFieldSetFrame::AppendFrames(nsIPresContext* aPresContext,
+                      nsIPresShell&   aPresShell,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aFrameList)
+{
+  return mContentFrame->AppendFrames(aPresContext,
+                                     aPresShell,
+                                     aListName,
+                                     aFrameList);
+}
+
+NS_IMETHODIMP
+nsFieldSetFrame::InsertFrames(nsIPresContext* aPresContext,
+                      nsIPresShell&   aPresShell,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aPrevFrame,
+                      nsIFrame*       aFrameList)
+{
+  return mContentFrame->InsertFrames(aPresContext,
+                                     aPresShell,
+                                     aListName,
+                                     aPrevFrame,
+                                     aFrameList);
+}
+
+NS_IMETHODIMP
+nsFieldSetFrame::RemoveFrame(nsIPresContext* aPresContext,
+                     nsIPresShell&   aPresShell,
+                     nsIAtom*        aListName,
+                     nsIFrame*       aOldFrame)
+{
+  return mContentFrame->RemoveFrame (aPresContext,
+                                     aPresShell,
+                                     aListName,
+                                     aOldFrame);
+}
+
+
+NS_IMETHODIMP
+nsFieldSetFrame::ReplaceFrame(nsIPresContext* aPresContext,
+                     nsIPresShell&   aPresShell,
+                     nsIAtom*        aListName,
+                     nsIFrame*       aOldFrame,
+                     nsIFrame*       aNewFrame)
+{
+  return mContentFrame->ReplaceFrame (aPresContext,
+                                     aPresShell,
+                                     aListName,
+                                     aOldFrame,
+                                     aNewFrame);
+}
+
 

@@ -156,12 +156,12 @@ menuitem.menuitem-non-iconic
   
 menupopup 
   {
-    /*behavior: url("resource:/chrome/xulBindings.xml#popups");*/
+    behavior: url("resource:/chrome/xulBindings.xml#popups");
     display               : none;
   }
 
 popup {
-  /*behavior: url("resource:/chrome/xulBindings.xml#popups");*/
+  behavior: url("resource:/chrome/xulBindings.xml#popups");
   display: none;
 }
 
@@ -174,16 +174,7 @@ popup[menugenerated="true"] {
 }
 
 menupopup, popup {
-  visibility: hidden;
   z-index: 2147483647; 
-}
-
-menupopup[menuactive="true"] {
-  visibility: visible;
-}
-
-popup[menuactive="true"] {
-  visibility: visible;
 }
 
 /******** Titled buttons **********/
@@ -305,9 +296,10 @@ button.bottom {
   behavior: url(resource:/chrome/xulBindings.xml#buttonbottom);
 }
 
-separator {
+menuseparator, separator {
   behavior: url(resource:/chrome/xulBindings.xml#separator);
 }
+
 
 /* appending to end so we don't make hyatt cry */
 progressmeter {

@@ -363,6 +363,23 @@ nsScrollPortFrame::Layout(nsBoxLayoutState& aState)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScrollPortFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+{
+  aAscent = 0;
+  nsIBox* child = nsnull;
+  GetChildBox(&child);
+  nsresult rv = child->GetAscent(aState, aAscent);
+  nsMargin m(0,0,0,0);
+  GetBorderAndPadding(m);
+  aAscent += m.top;
+  GetMargin(m);
+  aAscent += m.top;
+  GetInset(m);
+  aAscent += m.top;
+
+  return rv;
+}
 
 NS_IMETHODIMP
 nsScrollPortFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)

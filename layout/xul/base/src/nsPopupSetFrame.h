@@ -73,7 +73,7 @@ public:
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   // Reflow methods
-  void LayoutFinished(nsBoxLayoutState& aState);
+  virtual void RePositionPopup(nsBoxLayoutState& aState);
 
   NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
@@ -132,7 +132,7 @@ protected:
   PRInt32 mYPos;                // Active child's y position
   nsAutoString mPopupType;
   PRBool mCreateHandlerSucceeded;  // Did the create handler succeed?
-
+  nsSize mLastPref;
 }; // class nsPopupSetFrame
 
 #endif

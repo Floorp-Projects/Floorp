@@ -79,6 +79,12 @@ public:
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+                     nsIPresShell&   aPresShell,
+                     nsIAtom*        aListName,
+                     nsIFrame*       aOldFrame,
+                     nsIFrame*       aNewFrame);
+
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   // This function returns NS_ERROR_NOT_IMPLEMENTED
@@ -113,6 +119,8 @@ public:
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+
   NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetPadding(nsMargin& aPadding);
 
@@ -122,12 +130,23 @@ public:
   NS_IMETHOD  GetScrollbarVisibility(nsIPresContext* aPresContext,
                                      PRBool *aVerticalVisible,
                                      PRBool *aHorizontalVisible) const;
+
+  NS_IMETHOD GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const;
+  NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+
   NS_IMETHOD SetScrollbarVisibility(nsIPresContext* aPresContext,
                                     PRBool aVerticalVisible,
                                     PRBool aHorizontalVisible);
   NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
                          nscoord *aWidth, 
                          nscoord *aHeight) const;
+
+  NS_IMETHOD  GetScrollPreference(nsScrollPref* aScrollPreference) const;
+
+  NS_IMETHOD GetScrollbarSizes(nsIPresContext* aPresContext, 
+                               nscoord *aVbarWidth, 
+                               nscoord *aHbarHeight) const;
+
   /**
    * Get the "type" of the frame
    *

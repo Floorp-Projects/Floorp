@@ -50,7 +50,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
-
+#include "nsBoxLayoutState.h"
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
@@ -188,7 +188,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
 void
 nsMenuPopupFrame::GetLayoutFlags(PRUint32& aFlags)
 {
-  aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS;
+  aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW /*| NS_FRAME_NO_MOVE_CHILD_VIEWS*/ ;
 }
 
 PRBool
@@ -723,7 +723,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 
   // finally move and resize it
   viewManager->MoveViewTo(view, xpos, ypos); 
-  viewManager->ResizeView(view, mRect.width, mRect.height);
+  //viewManager->ResizeView(view, mRect.width, mRect.height);
   
   nsAutoString shouldDisplay, menuActive;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);

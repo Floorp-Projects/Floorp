@@ -75,11 +75,8 @@
 #include "nsIBoxLayout.h"
 #include "nsSprocketLayout.h"
 
-#undef DEBUG_evaughan
-
-#define CONSTANT 0
-//#define DEBUG_REFLOW
 //define DEBUG_REDRAW
+
 #define DEBUG_SPRING_SIZE 8
 #define DEBUG_BORDER_SIZE 2
 #define COIL_SIZE 8
@@ -131,11 +128,13 @@ public:
 
     void GetDebugPref(nsIPresContext* aPresContext);
 
+    /*
     nsresult PaintDebug(nsIBox* aBox, 
                         nsIPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect,
                         nsFramePaintLayer aWhichLayer);
+*/
 
     nsresult DisplayDebugInfoFor(nsIBox* aBox, 
                                  nsIPresContext* aPresContext,
@@ -160,8 +159,8 @@ public:
     nsBoxFrame::Halignment GetHAlign();
     nsBoxFrame::Valignment GetVAlign();
 
+    // instance variables.
     nsBoxFrame* mOuter;
-    nscoord mInnerSize;
 
     nsBoxFrame::Valignment mValign;
     nsBoxFrame::Halignment mHalign;
@@ -176,21 +175,10 @@ public:
     static PRBool gDebug;
     static nsIBox* mDebugChild;
 
-#ifdef DEBUG_REFLOW
-    PRInt32 reflowCount;
-#endif
-
 };
 
 PRBool nsBoxFrameInner::gDebug = PR_FALSE;
 nsIBox* nsBoxFrameInner::mDebugChild = nsnull;
-
-#ifdef DEBUG_REFLOW
-
-PRInt32 gIndent = 0;
-PRInt32 gReflows = 0;
-
-#endif
 
 nsresult
 NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
@@ -227,14 +215,8 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* a
 
   mInner->mValign = nsBoxFrame::vAlign_Top;
   mInner->mHalign = nsBoxFrame::hAlign_Left;
-  mInner->mInnerSize = 0;
 
   NeedsRecalc();
-
-
-#ifdef DEBUG_REFLOW
-  mInner->reflowCount = 100;
-#endif
 
   // if no layout manager specified us the static sprocket layout
   nsCOMPtr<nsIBoxLayout> layout = aLayoutManager;
@@ -246,10 +228,6 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* a
   SetLayoutManager(layout);
 
   NeedsRecalc();
-
-#ifdef DEBUG_REFLOW
-  mInner->reflowCount = 100;
-#endif
 }
 
 nsBoxFrame::~nsBoxFrame()
@@ -613,9 +591,6 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsBoxFrame", aReflowState.reason);
-  #ifdef DEBUG_REFLOW
-      gIndent++;
-  #endif
 
   NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
 
@@ -817,21 +792,14 @@ nsBoxFrame::PropagateDebug(nsBoxLayoutState& aState)
 NS_IMETHODIMP
 nsBoxFrame::Layout(nsBoxLayoutState& aState)
 {
+  // mark ourselves as dirty so no child under us 
+  // can post an incremental layout.
+  mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
   PropagateDebug(aState);
-  return nsContainerBox::Layout(aState);
-}
+  nsresult rv = nsContainerBox::Layout(aState);
 
-
-#ifdef DEBUG_REFLOW
-void
-nsBoxFrameInner::AddIndents()
-{
-    for(PRInt32 i=0; i < gIndent; i++)
-    {
-        printf(" ");
-    }
+  return rv;
 }
-#endif
 
 nsBoxFrame::Valignment
 nsBoxFrameInner::GetVAlign()
@@ -1086,7 +1054,7 @@ nsBoxFrame::GetInset(nsMargin& margin)
   return NS_OK;
 }
 
-#ifdef DEBUG_evaughan
+#ifdef DEBUG_COELESCED
 static PRInt32 StyleCoelesced = 0;
 #endif
 
@@ -1099,8 +1067,10 @@ nsBoxFrame::HasStyleChange()
 void
 nsBoxFrame::SetStyleChangeFlag(PRBool aDirty)
 {
+  nsBox::SetStyleChangeFlag(aDirty);
+
   if (aDirty)
-     mState |= (NS_STATE_STYLE_CHANGE | NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
+     mState |= (NS_STATE_STYLE_CHANGE);
   else 
      mState &= ~NS_STATE_STYLE_CHANGE;
 }
@@ -1123,10 +1093,7 @@ nsBoxFrame :: Paint ( nsIPresContext* aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
   mStyleContext->GetStyleData(eStyleStruct_Display);
 
-  // if we aren't visible then we are done.
-  if (!disp->IsVisibleOrCollapsed()) 
-	   return NS_OK;  
-
+  // if collapsed nothing is drawn
   if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
    return NS_OK;
 
@@ -1240,6 +1207,24 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
         r.y = r.y + r.height - debugBorder.bottom;
         r.height = debugBorder.bottom;
         aRenderingContext.FillRect(r);
+
+        
+        // if we have dirty children or we are dirty 
+        // place a green border around us.
+        PRBool dirty = PR_FALSE;
+        IsDirty(dirty);
+        PRBool dirtyc = PR_FALSE;
+        HasDirtyChildren(dirtyc);
+
+        if (dirty || dirtyc) {
+           IsDirty(dirty);
+           HasDirtyChildren(dirty);
+
+           nsRect dirtyr(inner);
+           aRenderingContext.SetColor(NS_RGB(0,255,0));
+           aRenderingContext.DrawRect(dirtyr);
+           aRenderingContext.SetColor(color);
+        }
   }
 
 
@@ -1400,20 +1385,16 @@ nsBoxFrame::GetFrame(nsIFrame** aFrame)
   return NS_OK;
 }
 
+void
+nsBoxFrame::GetBoxName(nsAutoString& aName)
+{
+   GetFrameName(aName);
+}
+
 NS_IMETHODIMP
 nsBoxFrame::GetFrameName(nsString& aResult) const
 {
-    nsCOMPtr<nsIContent> content;
-    nsBoxFrame* box = (nsBoxFrame*)this;
-    box->GetContentOf(getter_AddRefs(content));
-    nsAutoString id;
-
-    if (content)
-       content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-
-    aResult.AssignWithConversion("Box[id=");
-    aResult.Append(id);
-    aResult.AppendWithConversion("]");
+    aResult.AssignWithConversion("Box");
     return NS_OK;
 }
 
@@ -1430,7 +1411,16 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                              nsFramePaintLayer aWhichLayer,    
                              nsIFrame**     aFrame)
 {   
+
+  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
+    return NS_ERROR_FAILURE;
+
   if (!mRect.Contains(aPoint))
+    return NS_ERROR_FAILURE;
+
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+  mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
     return NS_ERROR_FAILURE;
 
   nsIView* view = nsnull;
@@ -1491,8 +1481,6 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   }
 
   // if no kids were hit then select us
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
   if (disp->IsVisible()) {
       *aFrame = this;
       return NS_OK;
@@ -1670,7 +1658,7 @@ nsBoxFrameInner::operator delete(void* aPtr, size_t sz)
     nsBoxLayoutState::Free(aPtr, sz);
 }
 
-
+/*
 
 nsresult
 nsBoxFrameInner::PaintDebug(nsIBox* aBox, 
@@ -1737,6 +1725,19 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
         r.height = debugBorder.bottom;
         aRenderingContext.FillRect(r);
 
+        // if we have dirty children or we are dirty 
+        // place a green border around us.
+        PRBool dirty = PR_FALSE;
+        mOuter->IsDirty(dirty);
+        PRBool dirtyc = PR_FALSE;
+        mOuter->HasDirtyChildren(dirty);
+
+        if (dirty || dirtyc) {
+           nsRect dirtyr(inner);
+           aRenderingContext.SetColor(NS_RGB(0,255,0));
+           aRenderingContext.DrawRect(dirtyr);
+        }
+
         // paint the springs.
         nscoord x, y, borderSize, springSize;
         
@@ -1771,17 +1772,7 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
                 else 
                     borderSize = size.height;
 
-                /*
-                if (mDebugChild == info->frame) 
-                {
-                    aRenderingContext.SetColor(NS_RGB(0,255,0));
-                    if (mOuter->mInner->mHorizontal) 
-                        aRenderingContext.FillRect(x, inner.y, size.width, debugBorder.top);
-                    else
-                        aRenderingContext.FillRect(inner.x, x, size.height, debugBorder.left);
-                    aRenderingContext.SetColor(debugColor->mColor);
-                }
-                */
+             
 
                 nscoord flex = 0;
                 box->GetFlex(state, flex);
@@ -1794,7 +1785,7 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
 
         return NS_OK;
 }
-
+*/
 
 void
 nsBoxFrameInner::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)

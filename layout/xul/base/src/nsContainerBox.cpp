@@ -75,6 +75,12 @@ nsContainerBox::nsContainerBox(nsIPresShell* aShell):nsBox(aShell)
   mInsertionPoint = nsnull;
 }
 
+void
+nsContainerBox::GetBoxName(nsAutoString& aName)
+{
+  aName.AssignWithConversion("ContainerBox");
+}
+
 NS_IMETHODIMP 
 nsContainerBox::GetChildBox(nsIBox** aBox)
 {
@@ -514,17 +520,22 @@ nsContainerBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 NS_IMETHODIMP
 nsContainerBox::Layout(nsBoxLayoutState& aState)
 {
+  EnterLayout(aState);
+
   nsresult rv = NS_OK;
 
   PRUint32 oldFlags = 0;
   aState.GetLayoutFlags(oldFlags);
+  aState.SetLayoutFlags(0);
 
   if (mLayoutManager)
     rv = mLayoutManager->Layout(this, aState);
 
   aState.SetLayoutFlags(oldFlags);
 
-  nsBox::Layout(aState);
+  SyncLayout(aState);
+
+  ExitLayout(aState);
 
   return rv;
 }

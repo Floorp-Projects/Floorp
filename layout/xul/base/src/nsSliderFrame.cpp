@@ -356,6 +356,8 @@ nsSliderFrame::Layout(nsBoxLayoutState& aState)
   else
     thumbRect.y += pos;
 
+  nsRect oldThumbRect;
+  thumbBox->GetBounds(oldThumbRect);
   LayoutChildAt(aState, thumbBox, thumbRect);
 
   SyncLayout(aState);
@@ -366,6 +368,10 @@ nsSliderFrame::Layout(nsBoxLayoutState& aState)
      printf("Current=%d, max=%d\n",c,m);
   }
   
+  // redraw only if thumb changed size.
+  if (oldThumbRect != thumbRect)
+    Redraw(aState);
+
   return NS_OK;
 }
 
@@ -626,6 +632,9 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              nsFramePaintLayer aWhichLayer,
                                              nsIFrame**     aFrame)
 { 
+  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
+    return NS_ERROR_FAILURE;
+
   if (isDraggingThumb(aPresContext))
   {
     // XXX I assume it's better not to test for visibility here.

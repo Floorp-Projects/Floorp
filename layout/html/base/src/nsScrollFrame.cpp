@@ -137,6 +137,51 @@ nsScrollFrame::GetClipSize(   nsIPresContext* aPresContext,
    return NS_OK;
 }
 
+/**
+ * Query whether scroll bars should be displayed all the time, never or
+ * only when necessary.
+ * @return current scrollbar selection
+ */
+NS_IMETHODIMP
+nsScrollFrame::GetScrollPreference(nsScrollPref* aScrollPreference) const
+{
+  return NS_OK;
+}
+
+/**
+* Gets the size of the area that lies inside the scrollbars but clips the scrolled frame
+*/
+NS_IMETHODIMP
+nsScrollFrame::GetScrollbarSizes(nsIPresContext* aPresContext, 
+                             nscoord *aVbarWidth, 
+                             nscoord *aHbarHeight) const
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScrollFrame::GetScrollPosition(nsIPresContext* aPresContext, nscoord &aX, nscoord& aY) const
+{
+    nsIScrollableView* scrollingView;
+    nsIView*           view;
+    GetView(aPresContext, &view);
+    NS_ASSERTION(NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView)), "No scrolling view");
+    return scrollingView->GetScrollPosition(aX, aY); 
+}
+
+NS_IMETHODIMP
+nsScrollFrame::ScrollTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags)
+{
+    nsIScrollableView* scrollingView;
+    nsIView*           view;
+    GetView(aPresContext, &view);
+
+    NS_ASSERTION(NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView)), "No scrolling view");
+    return scrollingView->ScrollTo(aX, aY, aFlags); 
+
+}
+
+
 
 /**
 * Get information about whether the vertical and horizontal scrollbars

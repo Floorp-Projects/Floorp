@@ -165,6 +165,10 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              nsFramePaintLayer aWhichLayer,    
                                              nsIFrame**     aFrame)
 {
+
+  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
+    return NS_ERROR_FAILURE;
+
   // if it is not inside us fail
   if (!mRect.Contains(aPoint)) {
       return NS_ERROR_FAILURE;
