@@ -214,6 +214,14 @@ nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kClassIID, kIFrameIID);
+
+#ifdef DEBUG
+  if (aIID.Equals(nsIFrameDebug::GetIID())) {
+    *aInstancePtr = (void*)(nsIFrameDebug*)this;
+    return NS_OK;
+  }
+#endif
+
   if (aIID.Equals(kClassIID) || aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)this;
     return NS_OK;
