@@ -287,22 +287,15 @@ NS_METHOD MRJPlugin::Initialize()
 
 NS_METHOD MRJPlugin::Shutdown()
 {
+    // shutdown LiveConnect.
+    ShutdownLiveConnectSupport();
+
     // release our reference to the plugin manager(s).
-    if (thePluginManager2 != NULL) {
-        thePluginManager2->Release();
-        thePluginManager2 = NULL;
-    }
-    
-    if (thePluginManager != NULL) {
-        thePluginManager->Release();
-        thePluginManager = NULL;
-    }
+    NS_IF_RELEASE(thePluginManager2);
+    NS_IF_RELEASE(thePluginManager);
 
     // release our reference to the service manager.
-    if (theServiceManager != NULL) {
-        theServiceManager->Release();
-        theServiceManager = NULL;
-    }
+    NS_IF_RELEASE(theServiceManager);
     
     return NS_OK;
 }
