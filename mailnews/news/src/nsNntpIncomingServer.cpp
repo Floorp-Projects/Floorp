@@ -194,7 +194,7 @@ nsNntpIncomingServer::WriteNewsrcFile()
         rv = newsrcFile->GetFileSpec(&newsrcFileSpec);
         if (NS_FAILED(rv)) return rv;
 
-        nsIOFileStream  newsrcStream(newsrcFileSpec /*, PR_CREATE_FILE */ );
+        nsIOFileStream newsrcStream(newsrcFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
 
         nsCOMPtr<nsIEnumerator> subFolders;
         nsCOMPtr<nsIFolder> rootFolder;
