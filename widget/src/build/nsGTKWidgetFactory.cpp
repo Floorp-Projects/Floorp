@@ -89,6 +89,7 @@ static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 
 // Sound services (just Beep for now)
 static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
+static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
 
 
 class nsWidgetFactory : public nsIFactory
@@ -242,19 +243,14 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCClipboard)) {
         inst = (nsISupports*)new nsClipboard();
     }
-    else if (mClassID.Equals(kCXIFFormatConverter)) {
+    else if (mClassID.Equals(kCXIFFormatConverter))
         inst = (nsISupports*)new nsXIFFormatConverter();
-    }
-    else if (mClassID.Equals(kCFontRetrieverService)) {
+    else if (mClassID.Equals(kCFontRetrieverService))
         inst = (nsISupports*)(nsIFontRetrieverService *) new nsFontRetrieverService();
-    }
-    else if (mClassID.Equals(kCDragService)) {
+    else if (mClassID.Equals(kCDragService))
         inst = (nsISupports*) (nsIDragService *) new nsDragService();
-    }
-    else if (mClassID.Equals(nsIFileSpecWithUI::GetIID()))
-    {
+    else if (mClassID.Equals(kCFileSpecWithUI))
     	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
-    }
     else {
         printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
     }
