@@ -306,11 +306,6 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aF
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextPh :: GetDrawingSurface( nsIRenderingContext &aContext, nsDrawingSurface &aSurface ) {
-  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
-  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-	}
-
 NS_IMETHODIMP nsDeviceContextPh :: GetClientRect( nsRect &aRect ) {
 	nsresult rv = NS_OK;
 	if( mIsPrinting ) { //( mSpec )

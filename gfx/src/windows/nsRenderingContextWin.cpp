@@ -1038,7 +1038,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetCurrentTransform(nsTransform2D *&aTran
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
   nsDrawingSurfaceWin *surf = new nsDrawingSurfaceWin();
 
@@ -1046,10 +1046,7 @@ NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, PRU
   {
     NS_ADDREF(surf);
 
-    if (nsnull != aBounds)
-      surf->Init(mMainDC, aBounds->width, aBounds->height, aSurfFlags);
-    else
-      surf->Init(mMainDC, 0, 0, aSurfFlags);
+    surf->Init(mMainDC, aBounds.width, aBounds.height, aSurfFlags);
   }
 
   aSurface = (nsDrawingSurface)surf;

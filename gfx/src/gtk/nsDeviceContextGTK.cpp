@@ -438,13 +438,6 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemFont(nsSystemFontID aID, nsFont *aFon
   return status;
 }
 
-NS_IMETHODIMP nsDeviceContextGTK::GetDrawingSurface(nsIRenderingContext &aContext, 
-                                                    nsDrawingSurface &aSurface)
-{
-  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
-  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;  
-}
-
 NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor, 
                                                PRUint32 & aPixel)
 {

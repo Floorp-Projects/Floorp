@@ -146,7 +146,7 @@ nsRenderingContextXp::GetDrawingSurface(nsDrawingSurface *aSurface)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXp::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+nsRenderingContextXp::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CreateDrawingSurface()\n"));
   aSurface = nsnull;

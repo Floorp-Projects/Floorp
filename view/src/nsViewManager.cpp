@@ -1368,7 +1368,7 @@ nsresult nsViewManager::CreateBlendingBuffers(nsIRenderingContext &aRC)
       aRC.DestroyDrawingSurface(gOffScreen);
       gOffScreen = nsnull;
     }
-    rv = aRC.CreateDrawingSurface(&offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
+    rv = aRC.CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1376,7 +1376,7 @@ nsresult nsViewManager::CreateBlendingBuffers(nsIRenderingContext &aRC)
       aRC.DestroyDrawingSurface(gBlack);
       gBlack = nsnull;
     }
-    rv = aRC.CreateDrawingSurface(&offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlack);
+    rv = aRC.CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlack);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1384,7 +1384,7 @@ nsresult nsViewManager::CreateBlendingBuffers(nsIRenderingContext &aRC)
       aRC.DestroyDrawingSurface(gWhite);
       gWhite = nsnull;
     }
-    rv = aRC.CreateDrawingSurface(&offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gWhite);
+    rv = aRC.CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gWhite);
     if (NS_FAILED(rv))
       return rv;
 

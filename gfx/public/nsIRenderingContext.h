@@ -333,7 +333,7 @@ public:
    * @param aSurfFlags see bottom of nsIRenderingContext.h
    * @return A nsDrawingSurface
    */
-  NS_IMETHOD CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface) = 0;
+  NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface) = 0;
 
   /**
    * Destroy a drawing surface created by CreateDrawingSurface()

@@ -385,12 +385,6 @@ public:
   NS_IMETHOD  SetTextZoom(float aTextZoom) = 0;
   NS_IMETHOD  GetTextZoom(float &aTextZoom) const = 0;
 
-  //get a low level drawing surface for rendering. the rendering context
-  //that is passed in is used to create the drawing surface if there isn't
-  //already one in the device context. the drawing surface is then cached
-  //in the device context for re-use.
-  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface) = 0;
-
   /**
    * Check to see if a particular named font exists.
    * @param aFontName character string of font face name

@@ -613,7 +613,7 @@ nsRenderingContextQT::GetCurrentTransform(nsTransform2D *&aTransform)
 }
 
 NS_IMETHODIMP
-nsRenderingContextQT::CreateDrawingSurface(nsRect *aBounds,
+nsRenderingContextQT::CreateDrawingSurface(const nsRect& aBounds,
                                            PRUint32 aSurfFlags,
                                            nsDrawingSurface &aSurface)
 {
@@ -621,7 +621,7 @@ nsRenderingContextQT::CreateDrawingSurface(nsRect *aBounds,
     aSurface = nsnull;
     return NS_ERROR_FAILURE;
   }
-  if (aBounds == NULL || aBounds->width <= 0 || aBounds->height <= 0)
+  if (aBounds.width <= 0 || aBounds.height <= 0)
     return NS_ERROR_FAILURE;
 
   nsDrawingSurfaceQT *surface = new nsDrawingSurfaceQT();
@@ -629,7 +629,7 @@ nsRenderingContextQT::CreateDrawingSurface(nsRect *aBounds,
   if (surface) {
     QPainter *gc = new QPainter();
     NS_ADDREF(surface);
-    surface->Init(gc,aBounds->width,aBounds->height,aSurfFlags);
+    surface->Init(gc,aBounds.width,aBounds.height,aSurfFlags);
   }
   else {
     aSurface = nsnull;

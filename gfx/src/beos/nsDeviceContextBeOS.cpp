@@ -269,13 +269,6 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetSystemFont(nsSystemFontID aID, nsFont *aFo
   return status;
 }
 
-NS_IMETHODIMP nsDeviceContextBeOS::GetDrawingSurface(nsIRenderingContext &aContext, 
-                                                    nsDrawingSurface &aSurface)
-{
-  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
-  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;  
-}
-
 NS_IMETHODIMP nsDeviceContextBeOS::ConvertPixel(nscolor aColor, 
                                                PRUint32 & aPixel)
 {

@@ -566,16 +566,6 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetSystemFont(nsSystemFontID aID, nsFont *aF
   return status;
 }
 
-nsresult nsDeviceContextOS2::GetDrawingSurface( nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
-{
-  if (NULL == mSurface) {
-    aContext.CreateDrawingSurface(nsnull, 0, mSurface);
-  }
-
-  aSurface = mSurface;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName)
 {
   HPS     hps = NULL;
