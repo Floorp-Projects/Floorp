@@ -696,11 +696,13 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // if mLoads[0].mIntrinsicSize.width and height are 0, then we should check to see
   // if the size is already known by the image container.
   if (mLoads[0].mIntrinsicSize.width == 0 && mLoads[0].mIntrinsicSize.height == 0) {
-    nsCOMPtr<imgIContainer> con;
-    mLoads[0].mRequest->GetImage(getter_AddRefs(con));
-    if (con) {
-      con->GetWidth(&mLoads[0].mIntrinsicSize.width);
-      con->GetHeight(&mLoads[0].mIntrinsicSize.height);
+    if (mLoads[0].mRequest) {
+      nsCOMPtr<imgIContainer> con;
+      mLoads[0].mRequest->GetImage(getter_AddRefs(con));
+      if (con) {
+        con->GetWidth(&mLoads[0].mIntrinsicSize.width);
+        con->GetHeight(&mLoads[0].mIntrinsicSize.height);
+      }
     }
   }
   mIntrinsicSize = mLoads[0].mIntrinsicSize;
