@@ -46,7 +46,7 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_IID(kISimpleEnumberatorIID, NS_ISIMPLEENUMERATOR_IID);
-
+static NS_DEFINE_CID(kRDFContainerCID,                    NS_RDFCONTAINER_CID);
 static const char kURINC_WindowMediatorRoot[] = "NC:WindowMediatorRoot";
 
 
@@ -59,8 +59,9 @@ nsresult NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
                    nsIRDFContainer** aResult)
 {
     nsresult rv;
+  
     rv = nsComponentManager::CreateInstance( 
-                                         NS_RDF_PROGID "/container", NULL, nsIRDFContainer::GetIID(), aResult );
+                                        kRDFContainerCID, NULL, nsIRDFContainer::GetIID(),  (void**)aResult );
     if (NS_FAILED(rv))
     	return rv;
 
@@ -729,7 +730,7 @@ NS_IMETHODIMP nsWindowEnumerator::HasMoreElements(PRBool *retval)
 	if ( !retval )
 		return NS_ERROR_INVALID_ARG;
 		
-	retval = PR_FALSE;
+	*retval = PR_FALSE;
 	if ( FindNext() != -1 )
 		*retval = PR_TRUE;
 	return NS_OK;
