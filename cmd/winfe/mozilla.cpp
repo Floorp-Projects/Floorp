@@ -1032,9 +1032,7 @@ BOOL CNetscapeApp::InitInstance()
     SECNAV_Init();
 
 	GH_InitGlobalHistory();
-
-	NET_RemoveAllCookies();
-	NET_ReadCookies("");
+    NET_FinishInitNetLib();
 
 	PREF_GetIntPref("network.tcpbufsize",&prefInt);
     int nTCPBuff = CASTINT(prefInt);
