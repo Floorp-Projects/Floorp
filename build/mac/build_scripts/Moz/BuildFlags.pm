@@ -218,6 +218,8 @@ sub SetOptionDefines($)
   # These should remain unchanged
   $optiondefines->{"mathml"}{"MOZ_MATHML"}    = 1;
   $optiondefines->{"svg"}{"MOZ_SVG"}          = 1;
+  $optiondefines->{"carbon"}{"TARGET_CARBON"} = 1;
+  
 }
 
 
