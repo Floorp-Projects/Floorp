@@ -244,7 +244,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
          newTextNode.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          newTextNode.setAttribute( "onclick", "dayEventItemClick( this, event )" );
          newTextNode.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
-         newTextNode.setAttribute( "tooltip", "savetip" );
+         newTextNode.setAttribute( "tooltip", "eventTooltip" );
          newTextNode.setAttribute( "AllDayText", "true" );
          
          newImage = document.createElement("image");
@@ -253,7 +253,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
          newImage.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          newImage.setAttribute( "onclick", "dayEventItemClick( this, event )" );
          newImage.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
-         newImage.setAttribute( "tooltip", "savetip" );
+         newImage.setAttribute( "tooltip", "eventTooltip" );
          //newImage.setAttribute( "AllDayText", "true" );
          
          AllDayBox.appendChild( newImage );
@@ -324,7 +324,7 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );
 
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-   eventBox.setAttribute( "tooltip", "savetip" );
+   eventBox.setAttribute( "tooltip", "eventTooltip" );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
    if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
    {

@@ -283,7 +283,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
          eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-         eventBox.setAttribute( "tooltip", "savetip" );
+         eventBox.setAttribute( "tooltip", "eventTooltip" );
          eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
          // add a property to the event box that holds the calendarEvent that the
          // box represents
@@ -356,7 +356,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
             eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
             eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
    
-            eventBox.setAttribute( "tooltip", "savetip" );
+            eventBox.setAttribute( "tooltip", "eventTooltip" );
    
             //add the dot to the extra box.
             eventDotBox.appendChild( eventBox );

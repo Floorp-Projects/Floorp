@@ -292,7 +292,7 @@ WeekView.prototype.refreshEvents = function( )
             newHTMLNode.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             newHTMLNode.setAttribute( "onclick", "weekEventItemClick( this, event )" );
             newHTMLNode.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
-            newHTMLNode.setAttribute( "tooltip", "savetip" );
+            newHTMLNode.setAttribute( "tooltip", "eventTooltip" );
          
             newImage = document.createElement("image");
 				newImage.setAttribute( "class", "all-day-event-class" );
@@ -301,7 +301,7 @@ WeekView.prototype.refreshEvents = function( )
             newImage.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             newImage.setAttribute( "onclick", "weekEventItemClick( this, event )" );
             newImage.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
-            newImage.setAttribute( "tooltip", "savetip" );
+            newImage.setAttribute( "tooltip", "eventTooltip" );
             
             ThisDayAllDayBox.appendChild( newImage );
             ThisDayAllDayBox.appendChild( newHTMLNode );
@@ -375,7 +375,7 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventBox.setAttribute( "id", "week-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "name", "week-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-   eventBox.setAttribute( "tooltip", "savetip" );
+   eventBox.setAttribute( "tooltip", "eventTooltip" );
    if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
    {
       eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
