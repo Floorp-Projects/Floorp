@@ -77,10 +77,10 @@ const SEC_ASN1Template SECKEY_DSAPublicKeyTemplate[] = {
 };
 
 const SEC_ASN1Template SECKEY_PQGParamsTemplate[] = {
-    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(PQGParams) },
-    { SEC_ASN1_INTEGER, offsetof(PQGParams,prime) },
-    { SEC_ASN1_INTEGER, offsetof(PQGParams,subPrime) },
-    { SEC_ASN1_INTEGER, offsetof(PQGParams,base) },
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SECKEYPQGParams) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,prime) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,subPrime) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,base) },
     { 0, }
 };
 
@@ -99,32 +99,32 @@ const SEC_ASN1Template SECKEY_DHParamKeyTemplate[] = {
 };
 
 const SEC_ASN1Template SECKEY_FortezzaParameterTemplate[] = {
-    { SEC_ASN1_SEQUENCE,  0, NULL, sizeof(PQGParams) },
-    { SEC_ASN1_OCTET_STRING, offsetof(PQGParams,prime), },
-    { SEC_ASN1_OCTET_STRING, offsetof(PQGParams,subPrime), },
-    { SEC_ASN1_OCTET_STRING, offsetof(PQGParams,base), },
+    { SEC_ASN1_SEQUENCE,  0, NULL, sizeof(SECKEYPQGParams) },
+    { SEC_ASN1_OCTET_STRING, offsetof(SECKEYPQGParams,prime), },
+    { SEC_ASN1_OCTET_STRING, offsetof(SECKEYPQGParams,subPrime), },
+    { SEC_ASN1_OCTET_STRING, offsetof(SECKEYPQGParams,base), },
     { 0 },
 };
  
 const SEC_ASN1Template SECKEY_FortezzaDiffParameterTemplate[] = {
-    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(DiffPQGParams) },
-    { SEC_ASN1_INLINE, offsetof(DiffPQGParams,DiffKEAParams), 
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SECKEYDiffPQGParams) },
+    { SEC_ASN1_INLINE, offsetof(SECKEYDiffPQGParams,DiffKEAParams), 
                        SECKEY_FortezzaParameterTemplate},
-    { SEC_ASN1_INLINE, offsetof(DiffPQGParams,DiffDSAParams), 
+    { SEC_ASN1_INLINE, offsetof(SECKEYDiffPQGParams,DiffDSAParams), 
                        SECKEY_FortezzaParameterTemplate},
     { 0 },
 };
 
 const SEC_ASN1Template SECKEY_FortezzaPreParamTemplate[] = {
     { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED |
-      SEC_ASN1_CONTEXT_SPECIFIC | 1, offsetof(PQGDualParams,CommParams),
+      SEC_ASN1_CONTEXT_SPECIFIC | 1, offsetof(SECKEYPQGDualParams,CommParams),
                 SECKEY_FortezzaParameterTemplate},
     { 0, }
 };
 
 const SEC_ASN1Template SECKEY_FortezzaAltPreParamTemplate[] = {
     { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED |
-      SEC_ASN1_CONTEXT_SPECIFIC | 0, offsetof(PQGDualParams,DiffParams),
+      SEC_ASN1_CONTEXT_SPECIFIC | 0, offsetof(SECKEYPQGDualParams,DiffParams),
                 SECKEY_FortezzaDiffParameterTemplate},
     { 0, }
 };
@@ -138,6 +138,10 @@ const SEC_ASN1Template SECKEY_KEAParamsTemplate[] = {
     { SEC_ASN1_OCTET_STRING, offsetof(SECKEYPublicKey,u.kea.params.hash), }, 
     { 0, }
 };
+
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_DSAPublicKeyTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_RSAPublicKeyTemplate)
+
 
 /* Create an RSA key pair is any slot able to do so.
 ** The created keys are "session" (temporary), not "token" (permanent), 
@@ -167,7 +171,7 @@ SECKEY_CreateRSAPrivateKey(int keySizeInBits,SECKEYPublicKey **pubk, void *cx)
 ** creating a "sensitive" key if necessary.
 */
 SECKEYPrivateKey *
-SECKEY_CreateDHPrivateKey(DHParams *param, SECKEYPublicKey **pubk, void *cx)
+SECKEY_CreateDHPrivateKey(SECKEYDHParams *param, SECKEYPublicKey **pubk, void *cx)
 {
     SECKEYPrivateKey *privk;
     PK11SlotInfo *slot = PK11_GetBestSlot(CKM_DH_PKCS_KEY_PAIR_GEN,cx);
@@ -228,7 +232,7 @@ SECKEY_CopySubjectPublicKeyInfo(PRArenaPool *arena,
 }
 
 SECStatus
-SECKEY_KEASetParams(KEAParams * params, SECKEYPublicKey * pubKey) {
+SECKEY_KEASetParams(SECKEYKEAParams * params, SECKEYPublicKey * pubKey) {
 
     if (pubKey->keyType == fortezzaKey) {
         /* the key is a fortezza V1 public key  */
@@ -259,16 +263,12 @@ SECKEY_KEAParamCompare(CERTCertificate *cert1,CERTCertificate *cert2)
 {
 
     SECStatus rv;
-    SECOidData *oid=NULL;
-    CERTSubjectPublicKeyInfo * subjectSpki=NULL;
-    CERTSubjectPublicKeyInfo * issuerSpki=NULL;
-    CERTCertificate *issuerCert = NULL;
 
     SECKEYPublicKey *pubKey1 = 0;
     SECKEYPublicKey *pubKey2 = 0;
 
-    KEAParams params1;
-    KEAParams params2;
+    SECKEYKEAParams params1;
+    SECKEYKEAParams params2;
 
 
     rv = SECFailure;
@@ -486,7 +486,7 @@ SECStatus
 SECKEY_FortezzaDecodePQGtoOld(PRArenaPool *arena, SECKEYPublicKey *pubk,
                               SECItem *params) {
         SECStatus rv;
-	PQGDualParams dual_params;
+	SECKEYPQGDualParams dual_params;
 
     if (params == NULL) return SECFailure; 
     
@@ -607,7 +607,7 @@ SECKEY_FortezzaDecodePQGtoOld(PRArenaPool *arena, SECKEYPublicKey *pubk,
 SECStatus
 SECKEY_DSADecodePQG(PRArenaPool *arena, SECKEYPublicKey *pubk, SECItem *params) {
         SECStatus rv;
-	PQGDualParams dual_params;
+	SECKEYPQGDualParams dual_params;
 
     if (params == NULL) return SECFailure; 
     

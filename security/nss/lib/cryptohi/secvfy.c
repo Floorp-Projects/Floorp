@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secvfy.c,v 1.5 2001/05/01 23:59:27 relyea%netscape.com Exp $
+ * $Id: secvfy.c,v 1.6 2001/09/20 21:30:48 relyea%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -195,9 +195,9 @@ decodeSigAlg(SECOidTag alg, SECOidTag *hashalg)
       /* we don't implement MD4 hashes */
       case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
       default:
-        return SECFailure;
+        break;
     }
-    PR_ASSERT(PR_FALSE); /* shouldn't get here */
+    return SECFailure;
 }
 
 VFYContext *
@@ -322,7 +322,6 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
     unsigned char final[32];
     unsigned part;
     SECItem hash,dsasig;
-    unsigned char *digest;
     SECStatus rv;
 
     if ((cx->hasSignature == PR_FALSE) && (sig == NULL)) {

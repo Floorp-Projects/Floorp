@@ -33,12 +33,128 @@
 #ifndef _KEYTHI_H_
 #define _KEYTHI_H_ 1
 
-#include "keytlow.h"
-#include "keytboth.h"
 #include "plarena.h"
 #include "pkcs11t.h"
 #include "secmodt.h"
 #include "prclist.h"
+
+typedef enum { 
+    nullKey = 0, 
+    rsaKey = 1, 
+    dsaKey = 2, 
+    fortezzaKey = 3,
+    dhKey = 4, 
+    keaKey = 5
+} KeyType;
+
+/*
+** Template Definitions
+**/
+extern const SEC_ASN1Template SECKEY_RSAPublicKeyTemplate[];
+extern const SEC_ASN1Template SECKEY_DSAPublicKeyTemplate[];
+extern const SEC_ASN1Template SECKEY_DHPublicKeyTemplate[];
+extern const SEC_ASN1Template SECKEY_DHParamKeyTemplate[];
+extern const SEC_ASN1Template SECKEY_PQGParamsTemplate[];
+extern const SEC_ASN1Template SECKEY_DSAPrivateKeyExportTemplate[];
+
+/* Windows DLL accessor functions */
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_DSAPublicKeyTemplate;
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_RSAPublicKeyTemplate;
+
+
+/*
+** RSA Public Key structures
+** member names from PKCS#1, section 7.1 
+*/
+
+struct SECKEYRSAPublicKeyStr {
+    PRArenaPool * arena;
+    SECItem modulus;
+    SECItem publicExponent;
+};
+typedef struct SECKEYRSAPublicKeyStr SECKEYRSAPublicKey;
+
+
+/*
+** DSA Public Key and related structures
+*/
+
+struct SECKEYPQGParamsStr {
+    PRArenaPool *arena;
+    SECItem prime;    /* p */
+    SECItem subPrime; /* q */
+    SECItem base;     /* g */
+    /* XXX chrisk: this needs to be expanded to hold j and validationParms (RFC2459 7.3.2) */
+};
+typedef struct SECKEYPQGParamsStr SECKEYPQGParams;
+
+struct SECKEYDSAPublicKeyStr {
+    SECKEYPQGParams params;
+    SECItem publicValue;
+};
+typedef struct SECKEYDSAPublicKeyStr SECKEYDSAPublicKey;
+
+
+/*
+** Diffie-Hellman Public Key structure
+** Structure member names suggested by PKCS#3.
+*/
+struct SECKEYDHParamsStr {
+    PRArenaPool * arena;
+    SECItem prime; /* p */
+    SECItem base; /* g */
+};
+typedef struct SECKEYDHParamsStr SECKEYDHParams;
+
+struct SECKEYDHPublicKeyStr {
+    PRArenaPool * arena;
+    SECItem prime;
+    SECItem base;
+    SECItem publicValue;
+};
+typedef struct SECKEYDHPublicKeyStr SECKEYDHPublicKey;
+
+
+/*
+** FORTEZZA Public Key structures
+*/
+struct SECKEYFortezzaPublicKeyStr {
+    int      KEAversion;
+    int      DSSversion;
+    unsigned char    KMID[8];
+    SECItem clearance;
+    SECItem KEApriviledge;
+    SECItem DSSpriviledge;
+    SECItem KEAKey;
+    SECItem DSSKey;
+    SECKEYPQGParams params;
+    SECKEYPQGParams keaParams;
+};
+typedef struct SECKEYFortezzaPublicKeyStr SECKEYFortezzaPublicKey;
+
+struct SECKEYDiffPQGParamsStr {
+    SECKEYPQGParams DiffKEAParams;
+    SECKEYPQGParams DiffDSAParams;
+};
+typedef struct SECKEYDiffPQGParamsStr SECKEYDiffPQGParams;
+
+struct SECKEYPQGDualParamsStr {
+    SECKEYPQGParams CommParams;
+    SECKEYDiffPQGParams DiffParams;
+};
+typedef struct SECKEYPQGDualParamsStr SECKEYPQGDualParams;
+
+struct SECKEYKEAParamsStr {
+    PLArenaPool *arena;
+    SECItem hash;
+};
+typedef struct SECKEYKEAParamsStr SECKEYKEAParams;
+ 
+struct SECKEYKEAPublicKeyStr {
+    SECKEYKEAParams params;
+    SECItem publicValue;
+};
+typedef struct SECKEYKEAPublicKeyStr SECKEYKEAPublicKey;
 
 /*
 ** A Generic  public key object.
@@ -49,11 +165,11 @@ struct SECKEYPublicKeyStr {
     PK11SlotInfo *pkcs11Slot;
     CK_OBJECT_HANDLE pkcs11ID;
     union {
-        RSAPublicKey rsa;
-	DSAPublicKey dsa;
-	DHPublicKey  dh;
-        KEAPublicKey kea;
-        FortezzaPublicKey fortezza;
+        SECKEYRSAPublicKey rsa;
+	SECKEYDSAPublicKey dsa;
+	SECKEYDHPublicKey  dh;
+        SECKEYKEAPublicKey kea;
+        SECKEYFortezzaPublicKey fortezza;
     } u;
 };
 typedef struct SECKEYPublicKeyStr SECKEYPublicKey;
@@ -92,3 +208,4 @@ typedef struct {
 } SECKEYPrivateKeyList;
 
 #endif /* _KEYTHI_H_ */
+
