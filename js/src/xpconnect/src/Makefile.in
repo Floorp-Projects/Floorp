@@ -71,6 +71,13 @@ IS_COMPONENT	= 1
 endif
 endif
 
+# Linux/sparc
+ifeq ($(OS_ARCH),Linux)
+ifeq ($(OS_TEST),sparc)
+IS_COMPONENT    = 1
+endif
+endif
+
 # NetBSD/m68k
 ifeq ($(OS_ARCH),NetBSD)
 ifneq (,$(filter amiga atari hp300 mac68k mvme68k next68k sun3 sun3x x68k,$(OS_TEST)))
