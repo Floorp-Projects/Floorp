@@ -91,8 +91,23 @@ Process(JSContext *cx, JSObject *obj, char *filename)
     if (!filename)
 	ts->filename = "typein";
 #endif
-    if (isatty(fileno(ts->file)))
+    if (isatty(fileno(ts->file))) {
 	ts->flags |= TSF_INTERACTIVE;
+    } else {
+        /* Support the UNIX #! shell hack; gobble the first line if it starts
+         * with '#'.  TODO - this isn't quite compatible with sharp variables,
+         * as a legal js program (using sharp variables) might start with '#'.
+         * But that would require multi-character lookahead.
+         */
+        char ch = fgetc(ts->file);
+        if (ch == '#') {
+            while((ch = fgetc(ts->file)) != EOF) {
+                if(ch == '\n' || ch == '\r')
+                    break;
+            } 
+        }
+        ungetc(ch, ts->file);
+    }
 
     do {
 	js_InitCodeGenerator(cx, &cg, ts->filename, ts->lineno, ts->principals);
