@@ -128,7 +128,7 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32
     mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
-    dsti->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
+    dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
 
     
     mBaseWindow = do_QueryInterface(mWebBrowser);
