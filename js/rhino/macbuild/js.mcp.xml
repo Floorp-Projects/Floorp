@@ -607,7 +607,7 @@
                     <SETTING><VALUE></VALUE></SETTING>
                     <SETTING><VALUE>≥</VALUE></SETTING>
                     <SETTING><VALUE>Ú/x</VALUE></SETTING>
-                    <SETTING><VALUE>Ä±ê</VALUE></SETTING>
+                    <SETTING><VALUE>Ä±†</VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
@@ -1641,6 +1641,15 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::</ACCESSPATH>
+                    <PATH>:org:mozilla:javascript:tools:jsc:Main.java</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -2371,6 +2380,13 @@
                     <PATH>:org:mozilla:javascript:optimizer:TypeEvent.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::</ACCESSPATH>
+                    <PATH>:org:mozilla:javascript:tools:jsc:Main.java</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
             </LINKORDER>
         </TARGET>
     </TARGETLIST>
@@ -2602,6 +2618,16 @@
                     <PATH>:org:mozilla:javascript:tools:ToolErrorReporter.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
+                <GROUP><NAME>jsc</NAME>
+                    <FILEREF>
+                        <TARGETNAME>js.jar</TARGETNAME>
+                        <PATHTYPE>PathRelative</PATHTYPE>
+                        <PATHROOT>Project</PATHROOT>
+                        <ACCESSPATH>::</ACCESSPATH>
+                        <PATH>:org:mozilla:javascript:tools:jsc:Main.java</PATH>
+                        <PATHFORMAT>MacOS</PATHFORMAT>
+                    </FILEREF>
+                </GROUP>
                 <GROUP><NAME>shell</NAME>
                     <FILEREF>
                         <TARGETNAME>js.jar</TARGETNAME>
