@@ -236,7 +236,9 @@ public class ScriptRuntime {
             double d = ((Number) val).doubleValue();
             return (d == d && d != 0.0);
         }
-        throw Kit.badTypeJS(val);
+
+        warnAboutNonJSObject(val);
+        return true;
     }
 
     public static boolean toBoolean(Object[] args, int index) {
@@ -265,7 +267,9 @@ public class ScriptRuntime {
             return toNumber((String) val);
         if (val instanceof Boolean)
             return ((Boolean) val).booleanValue() ? 1 : +0.0;
-        throw Kit.badTypeJS(val);
+
+        warnAboutNonJSObject(val);
+        return NaN;
     }
 
     public static double toNumber(Object[] args, int index) {
@@ -727,7 +731,8 @@ public class ScriptRuntime {
             }
             return toString(value);
         }
-        throw Kit.badTypeJS(value);
+        warnAboutNonJSObject(value);
+        return value.toString();
     }
 
     static String defaultObjectToSource(Context cx, Scriptable scope,
@@ -2533,7 +2538,8 @@ public class ScriptRuntime {
             }
             return false;
         } else {
-            throw Kit.badTypeJS(x);
+            warnAboutNonJSObject(x);
+            return x == y;
         }
     }
 
@@ -2559,7 +2565,8 @@ public class ScriptRuntime {
                 }
                 y = toPrimitive(y);
             } else {
-                throw Kit.badTypeJS(y);
+                warnAboutNonJSObject(y);
+                return false;
             }
         }
     }
@@ -2586,7 +2593,8 @@ public class ScriptRuntime {
                 y = toPrimitive(y);
                 continue;
             } else {
-                throw Kit.badTypeJS(y);
+                warnAboutNonJSObject(y);
+                return false;
             }
         }
     }
@@ -2620,7 +2628,8 @@ public class ScriptRuntime {
                 return ((Wrapper)x).unwrap() == ((Wrapper)y).unwrap();
             }
         } else {
-            throw Kit.badTypeJS(x);
+            warnAboutNonJSObject(x);
+            return x == y;
         }
         return false;
     }
@@ -3156,6 +3165,16 @@ public class ScriptRuntime {
         String msg = (messageHelper == null)
                      ? "null" : messageHelper.toString();
         return typeError1("msg.isnt.function", msg);
+    }
+
+    private static void warnAboutNonJSObject(Object nonJSObject)
+    {
+        String message =
+"RHINO USAGE WARNING: Missed Context.javaToJS() conversion:\n"
++"Rhino runtime detected object "+nonJSObject+" of class "+nonJSObject.getClass().getName()+" where it expected String, Number, Boolean or Scriptable instance. Please check your code for missig Context.javaToJS() call.";
+        Context.reportWarning(message);
+        // Just to be sure that it would be noticed
+        System.err.println(message);
     }
 
     public static RegExpProxy getRegExpProxy(Context cx)
