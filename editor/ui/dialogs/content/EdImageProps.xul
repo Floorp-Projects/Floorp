@@ -277,7 +277,11 @@
 	        </table>
         </fieldset>
 
-        <button id="AdvancedButton" onclick="onAdvanced()"> &AdvancedEditButton.label; </button>  
+        <button id="AdvancedButton" 
+            class="disabled" 
+            onclick="onAdvanced()">
+          &AdvancedEditButton.label;
+        </button>  
 
      </td>
       <td>
@@ -398,8 +402,17 @@
 <table>
     <tr align="right">
       <td align="right">
-        <button id="OK" onclick="onOK()"> &OKButton.label; </button>  
-        <button id="Cancel" onclick="onCancel()"> &CancelButton.label; </button>
+        <button id="OK" 
+            class="disabled"
+            onclick="onOK()"> 
+          &OKButton.label;
+        </button>  
+
+        <button id="Cancel" 
+            onclick="onCancel()">
+          &CancelButton.label;
+        </button>
+
       </td>
     </tr>
   </table>
@@ -452,35 +465,35 @@
          value="&topPopup.value;"  
          style="min-width: 40px" 
          src="&topIcon.url;" 
-         align="right"
+         align="left"
          onclick="opener.SetImageAlignment('top'); window.close();" />
 
      <titledbutton class="PopupButton" 
          value="&centerPopup.value;"
          style="min-width: 40px"
          src="&centerIcon.url;"
-         align="right"
+         align="left"
          onclick="opener.SetImageAlignment('middle'); window.close();" />
 
      <titledbutton class="PopupButton" 
          value="&bottomPopup.value;"
          style="min-width: 40px"
          src="&bottomIcon.url;"
-         align="right"
+         align="left"
          onclick="opener.SetImageAlignment('bottom'); window.close();" />
 
      <titledbutton class="PopupButton"
          value="&wrapRightPopup.value;"
          style="min-width: 40px"
          src="&wrapRightIcon.url;"
-         align="right"
+         align="left"
          onclick="opener.SetImageAlignment('left'); window.close();" />
 
      <titledbutton class="PopupButton"
          value="&wrapLeftPopup.value;"
          style="min-width: 40px"
          src="&wrapLeftIcon.url;"
-         align="right"
+         align="left"
          onclick="opener.SetImageAlignment('right'); window.close();" />
 
    </window>
