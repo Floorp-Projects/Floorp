@@ -16,7 +16,7 @@
   button-plain > .button-internal-box > .button-icon, 
   button.plain > .button-internal-box > .button.icon:hover:active
     {
-      border              : 0px ! important;
+      border              : 0px !important;
       margin              : 0px;
       padding             : 0px;
       color				  : #000000;
@@ -27,10 +27,11 @@
 
 button, .exit-dialog {
 	behavior			: url(chrome://global/skin/buttonBindings.xml#exit-button);
-	border				: 0px ! important;
+	border				: 0px;
 	user-focus			: ignore;
 	min-width			: 60px;
 	color				: #000000;
+	background-color	: transparent !important;  /* Greatly increases responsiveness and 'feel' */
 }
 
 button {

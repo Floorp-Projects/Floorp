@@ -43,11 +43,12 @@ menupopup > menuitem, popup > menuitem
   }
 
 /* Don't display grayed items in the contextual popup menus */
+/* BUGGY: DON'T UNCOMMENT UNTIL BUG #46005 IS RESOLVED (7/20/00)
 popup > menuitem[disabled="true"], popup > menu[disabled="true"] 
   {
   	display				  : none;
   }
-
+*/
 
 menuseparator 
   {

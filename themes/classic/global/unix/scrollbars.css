@@ -39,6 +39,12 @@ thumb
     border-bottom         : 1px solid threedshadow;
   }
   
+.thumb-spring
+  {
+  	min-width			  : 4px;
+  	min-height			  : 4px;
+  }
+  
 /**
  * Scrollbar button
  **/  

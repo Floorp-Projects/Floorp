@@ -70,10 +70,14 @@ Rights Reserved.
 	margin: 0px;
 }
 
-html|a[class="CardViewText"] {
-	padding-left: 20px;
+html|a {
+	padding-left: 0px;
 	padding-right: 2px;
-	min-width: 30px;
+	border: none !important;
+}
+
+html|p {
+    border: none !important;
 }
 
 

@@ -38,18 +38,18 @@
  **/ 
   .button-toolbar > .menubutton-internal-box
     {
-      border                : none;
+      border				: none;
       padding               : 1px 3px 1px 3px;
     }
  
  .button-toolbar[open="true"] > .menubutton-internal-box,
  .button-toolbar:hover:active > .menubutton-internal-box
     {
-      border                : none;
+      border				: none;
       padding               : 1px 3px 1px 3px;
     }
  
- .button-toolbar[open="true"]
+ .button-toolbar[open="true"], .button-toolbar-4[open="true"]
    {
      border                 : 1px solid #000000;
    }
@@ -61,9 +61,10 @@
     border                  : 1px solid #DDDDDD;
   }
   
-menubutton.button-toolbar:hover,menubutton.button-toolbar-4:hover
+menubutton.button-toolbar:hover, menubutton.button-toolbar-4:hover
   {
-    border                  : 1px solid black;
+    border                  : 1px solid #000000;
+    text-decoration			: none;
   }
   
 .menubutton-toolbar-single-internal-box
@@ -74,8 +75,8 @@ menubutton.button-toolbar:hover,menubutton.button-toolbar-4:hover
   
 menubutton.button-toolbar:hover > .menubutton-toolbar-single-internal-box, menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
   {
-    border-left             : 1px solid white;
-    border-top              : 1px solid white;
+    border-left             : 1px solid #FFFFFF;
+    border-top              : 1px solid #FFFFFF;
     border-right            : 1px solid #9D9D9D;
     border-bottom           : 1px solid #9D9D9D;
   }  
@@ -87,8 +88,8 @@ menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-b
   {
     border-left             : 1px solid #9D9D9D;
     border-top              : 1px solid #9D9D9D;
-    border-right            : 1px solid white;
-    border-bottom           : 1px solid white;
+    border-right            : 1px solid #FFFFFF;
+    border-bottom           : 1px solid #FFFFFF;
     padding                 : 2px 3px 0px 5px;
   }  
   

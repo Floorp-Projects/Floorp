@@ -39,13 +39,15 @@
   
 .menubutton-dual[open="true"] > .classic-dropmarker-box
   {
-    border-left           : 1px solid #9D9D9D;
-    border-top            : 1px solid #9D9D9D;
-    border-right          : 1px solid #FFFFFF;
-    border-bottom         : 1px solid #FFFFFF;
+    border-left           : 1px solid #444444;
+    border-top            : 1px solid #444444;
+    border-right          : 1px solid #AAAAAA;
+    border-bottom         : 1px solid #AAAAAA;
+    background-color	  : #666666;
   }
 
 .classic-simplebutton,
+.classic-simplebutton[disabled="true"],
 .classic-simplebutton[disabled="true"]:hover,
 .classic-simplebutton[disabled="true"]:hover:active,
 .menubutton-dual[disabled="true"]:hover > .classic-simplebutton,
@@ -58,8 +60,14 @@
     min-width             : 0px;
     padding               : 2px 8px 2px 7px;
     text-align            : center;
+    color				  : #777777;
   }
-  
+
+.classic-simplebutton
+  {
+  	color: #000000;
+  }
+
 
 .classic-simplebutton:hover,
 .menubutton-dual:hover > .classic-simplebutton,
@@ -73,12 +81,13 @@
   
 .classic-simplebutton:hover:active
   {
-    border-left           : 1px solid #9D9D9D !important;
-    border-top            : 1px solid #9D9D9D !important;
-    border-right          : 1px solid #FFFFFF !important;
-    border-bottom         : 1px solid #FFFFFF !important;
+    border-left           : 1px solid #444444 !important;
+    border-top            : 1px solid #444444 !important;
+    border-right          : 1px solid #AAAAAA !important;
+    border-bottom         : 1px solid #AAAAAA !important;
     padding               : 3px 7px 1px 8px;
-    color				  : #000000;
+    color				  : #FFFFFF;
+    background-color	  : #666666 !important;
   }  
   
 .classic-dropmarker

@@ -155,7 +155,6 @@
       min-width           : 100px;
       margin              : 0px 4px 0px 4px;
       border              : 1px inset #CCCCCC;
-      max-height          : 1.5em;
     }
 
   progressmeter > .progressmeter-internal-box 
@@ -173,6 +172,11 @@
   .progress-remainder 
     {
 	    background-color    : #999999;
+    }
+
+  .progress-text 
+    {
+      max-height          : 1.5em;
     }
 
 /** XUL <scrollbar> element **/

@@ -100,5 +100,5 @@
     border-bottom         : 1px solid #9D9D9D;
 /*  border-top            : 1px solid #FFFFFF;      DO NOT UNCOMMENT!!!  THERE IS A BUG WHERE, 
 													FOR SOME REASON, BORDER-TOP CAUSES CERTAIN APPS 
-													(E.G. MAIL) TO CRASH!!! Related to Bug #45336*/
+													(E.G. MAIL) TO CRASH!!! Related to Bug #45336, #45925 (7/21/00) */
   }  

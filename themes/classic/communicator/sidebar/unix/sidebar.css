@@ -96,7 +96,9 @@
 .iframe-panel
   {
     border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
     border-right          : 1px solid threedshadow;
     border-bottom         : 1px solid threedshadow;
+/*  border-top            : 1px solid threedhighlight;      DO NOT UNCOMMENT!!!  THERE IS A BUG WHERE, 
+															FOR SOME REASON, BORDER-TOP CAUSES CERTAIN APPS 
+															(E.G. MAIL) TO CRASH!!! Related to Bugs #45336, #45925 (7/21/00) */
   }  

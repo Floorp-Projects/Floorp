@@ -57,7 +57,7 @@
   <binding id="thumb" extends="xul:button">
     <content>
       <xul:box class="thumb-box" autostretch="never" orient="vertical" flex="1">
-        <xul:spring flex="1"/>
+        <xul:spring class="thumb-spring" flex="1"/>
       </xul:box>
     </content>
   </binding>
