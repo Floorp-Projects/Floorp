@@ -204,7 +204,6 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   GetDesiredSize(aPresContext, aReflowState, aDesiredLayoutSize, widgetSize);
 }
 
-#define DEFAULT_PIXEL_WIDTH 20
 void 
 nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
@@ -228,7 +227,7 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
     PRInt32 width;
     if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
-      width = DEFAULT_PIXEL_WIDTH;
+      width = GetDefaultColumnWidth();
     }
     //if (eCompatibility_NavQuirks == mode) {
     //  width += 1;
@@ -238,7 +237,7 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     nsFormControlHelper::CalculateSize(aPresContext, aReflowState.rendContext, this, styleSize, 
                                        textSpec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);
   } else {
-    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, nsnull, DEFAULT_PIXEL_WIDTH, 
+    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, nsnull, GetDefaultColumnWidth(), 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
     nsFormControlHelper::CalculateSize(aPresContext, aReflowState.rendContext, this, styleSize, 
                                        areaSpec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);
