@@ -297,14 +297,7 @@ nsHTMLOptionElement::GetValue(nsAString& aValue)
   // If the value attr is there, that is *exactly* what we use.  If it is
   // not, we compress whitespace .text.
   if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    // XXX When an equivalent of CompressWhitespace exists for nsAString,
-    // somebody please clean this up.  The only reason I can think that we're
-    // we're doing it anyway is because GetText() leaves whitespace around if
-    // the text is all whitespace we apparently want to compress even that.
-    nsAutoString getVal;
-    GetText(getVal);
-    getVal.CompressWhitespace();
-    aValue = getVal;
+    GetText(aValue);
   }
 
   return NS_OK;
@@ -554,14 +547,10 @@ nsHTMLOptionElement::GetText(nsAString& aText)
     }
   }
 
-  // the option could be all spaces, so compress the white space
-  // then make sure it's not empty, if the option is all
-  // whitespace then we return the whitespace
+  // XXX No CompressWhitespace for nsAString.  Sad.
   text = aText;
   text.CompressWhitespace(PR_TRUE, PR_TRUE);
-  if (!text.IsEmpty()) {
-    aText = text;
-  }
+  aText = text;
 
   return NS_OK;
 }
