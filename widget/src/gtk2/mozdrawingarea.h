@@ -78,6 +78,8 @@ void            moz_drawingarea_move_resize    (MozDrawingarea *drawingarea,
 						gint width, gint height);
 void            moz_drawingarea_set_visibility (MozDrawingarea *drawingarea,
 						gboolean visibility);
+void            moz_drawingarea_scroll         (MozDrawingarea *drawingarea,
+						gint x, gint y);
 
 #ifdef __cplusplus
 }
