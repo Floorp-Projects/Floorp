@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.22 $
+ *  Version: $Revision: 1.23 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.22 2002/02/12 23:57:12 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.23 2002/03/09 17:13:11 samuel%sieb.net Exp $
  */
 
 /*
@@ -735,7 +735,7 @@ nsXmlRpcClient.prototype = {
 /* The XMLWriter class constructor */
 function XMLWriter() {
     // We assume for now that all data is already in ISO-8859-1.
-    this.data = '<?xml version="1.0" encoding="ISO-8859-1"?>\n';
+    this.data = '<?xml version="1.0" encoding="ISO-8859-1"?>';
 }
 
 /* The XMLWriter class def */
