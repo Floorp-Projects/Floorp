@@ -59,7 +59,7 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
   { "ui.listVerticalInsidePadding", eMetric_ListVerticalInsidePadding,
     PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.caretBlinkTime", eMetric_CaretBlinkTime, PR_FALSE, nsLookAndFeelTypeInt, 0 },
-  { "ui.caretWidthTwips", eMetric_CaretWidthTwips, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.caretWidthTwips", eMetric_SingleLineCaretWidth, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.submenuDelay", eMetric_SubmenuDelay, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.menusCanOverlapOSBar", eMetric_MenusCanOverlapOSBar,
     PR_FALSE, nsLookAndFeelTypeInt, 0 },

@@ -110,7 +110,15 @@ interface nsISelectionController : nsISupports
    * @param aEnable PR_TRUE to enable caret.  PR_FALSE to disable.
    * @return always NS_OK
    */
+
     void setCaretEnabled(in boolean enabled);
+   /**
+   * Set the carets width
+   * Can be called any time.
+   * @param pixels, the width of the caret in pixels
+   * @return always NS_OK if successful, NS_ERROR_FAILURE if not.
+   */
+    void setCaretWidth(in short pixels);
 
    /**
    * Set the caret readonly or not. An readonly caret will

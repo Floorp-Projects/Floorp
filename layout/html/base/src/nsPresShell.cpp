@@ -722,6 +722,7 @@ public:
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **aOutCaret);
   NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
+  NS_IMETHOD SetCaretWidth(PRInt16 twips);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
 
@@ -2016,6 +2017,10 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
   return result;
 }
 
+NS_IMETHODIMP PresShell::SetCaretWidth(PRInt16 pixels)
+{
+  return mCaret->SetCaretWidth(pixels);
+}
 
 NS_IMETHODIMP PresShell::SetCaretReadOnly(PRBool aReadOnly)
 {

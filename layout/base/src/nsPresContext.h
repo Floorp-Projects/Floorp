@@ -49,6 +49,7 @@
 #include "nsIURL.h"
 #include "nsIEventStateManager.h"
 #include "nsIObserver.h"
+#include "nsILookAndFeel.h"
 
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext, public nsIObserver {
@@ -167,7 +168,7 @@ protected:
   nsCOMPtr<nsIImageGroup> mImageGroup;
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsISupports*          mContainer;     // [WEAK]
-  nsILookAndFeel*       mLookAndFeel;
+  nsCOMPtr<nsILookAndFeel> mLookAndFeel;
   nsFont                mDefaultFont;
   nsFont                mDefaultFixedFont;
   PRInt32               mFontScaler;

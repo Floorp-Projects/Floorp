@@ -44,7 +44,8 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIPref.h"
-
+#include "nsILookAndFeel.h"
+#include "nsIPresContext.h"
 // for repainting hack only
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -64,11 +65,11 @@
 #include "nsLayoutCID.h"
 
 // Drag & Drop, Clipboard Support
-static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kContentIteratorCID,      NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
-
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
+static NS_DEFINE_CID(kContentIteratorCID,      NS_CONTENTITERATOR_CID);
+static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_CID(kLookAndFeelCID,          NS_LOOKANDFEEL_CID);
+static NS_DEFINE_CID(kPrefServiceCID,          NS_PREF_CID);
 
 //#define DEBUG_IME
 
@@ -182,8 +183,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   }
   else
     return NS_ERROR_FAILURE;  // Editor unable to handle this.
-
-
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
   if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
 
@@ -971,9 +970,23 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         {
           if (! (flags & nsIHTMLEditor::eEditorReadonlyMask))
           { // only enable caret if the editor is not readonly
-            selCon->SetCaretEnabled(PR_TRUE);
-          }
+            PRInt32 pixelWidth;
+            nsresult result;
 
+            NS_WITH_SERVICE(nsILookAndFeel, look, kLookAndFeelCID, &result);
+
+            if (NS_SUCCEEDED(result) && look)
+            {
+              if(flags & nsIHTMLEditor::eEditorSingleLineMask)
+                look->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, pixelWidth);
+              else
+                look->GetMetric(nsILookAndFeel::eMetric_MultiLineCaretWidth, pixelWidth);
+            }
+
+            selCon->SetCaretWidth(pixelWidth);
+            selCon->SetCaretEnabled(PR_TRUE);
+
+          }
           selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 #ifdef USE_HACK_REPAINT
   // begin hack repaint

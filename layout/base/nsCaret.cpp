@@ -56,7 +56,8 @@ static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 nsCaret::nsCaret()
 :	mPresShell(nsnull)
 ,	mBlinkRate(500)
-, mCaretWidth(20)
+, mCaretTwipsWidth(-1)
+, mCaretPixelsWidth(1)
 ,	mVisible(PR_FALSE)
 ,	mReadOnly(PR_TRUE)
 ,	mDrawn(PR_FALSE)
@@ -86,8 +87,8 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   {
     PRInt32	tempInt;
     
-    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_CaretWidthTwips, tempInt)))
-      mCaretWidth = (nscoord)tempInt;
+    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, tempInt)))
+      mCaretTwipsWidth = (nscoord)tempInt;
     if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_CaretBlinkTime, tempInt)))
       mBlinkRate = (PRUint32)tempInt;
     
@@ -657,8 +658,11 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 
 		
 		//printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
-		
-		caretRect.width = mCaretWidth;
+		if(mCaretTwipsWidth < 0)
+    {// need to re-compute the pixel width
+      mCaretTwipsWidth  = 15 * mCaretPixelsWidth;//uhhhh...
+    }
+		caretRect.width = mCaretTwipsWidth;
 
 		// Avoid view redraw problems by making sure the
 		// caret doesn't hang outside the right edge of
@@ -763,3 +767,14 @@ nsresult NS_NewCaret(nsICaret** aInstancePtrResult)
   return caret->QueryInterface(NS_GET_IID(nsICaret), (void**) aInstancePtrResult);
 }
 
+NS_IMETHODIMP nsCaret::SetCaretWidth(nscoord aPixels)
+{
+  if(!aPixels)
+    return NS_ERROR_FAILURE;
+  else
+  { //no need to optimize this, but if it gets too slow, we can check for case aPixels==mCaretPixelsWidth
+    mCaretPixelsWidth = aPixels;
+    mCaretTwipsWidth = -1;
+  }
+  return NS_OK;
+}

@@ -81,6 +81,11 @@ public:
    */
   NS_IMETHOD EraseCaret() = 0;
 
+  /** Set Caret Width
+   *  this will set the caret width to the passed in value.
+   */
+  NS_IMETHOD SetCaretWidth(nscoord aPixels) = 0;
+
 };
 
 extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);

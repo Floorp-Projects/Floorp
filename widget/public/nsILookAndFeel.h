@@ -109,7 +109,8 @@ public:
     eMetric_ListVerticalInsidePadding,                    // needed only because of GTK
 
     eMetric_CaretBlinkTime,                               // default, may be overriden by OS
-    eMetric_CaretWidthTwips,
+    eMetric_SingleLineCaretWidth,                         // pixel width of caret in a single line field
+    eMetric_MultiLineCaretWidth,                          // pixel width of caret in a multi-line field
     eMetric_SubmenuDelay,
     eMetric_MenusCanOverlapOSBar                          // can popups overlap menu/task bar?
   } nsMetricID;
