@@ -342,41 +342,11 @@ int CNavTitleBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CNavTitleBar::OnLButtonDown (UINT nFlags, CPoint point )
 {
-	// Called when the user clicks on us.  Start a drag, switch modes, or close the view.
-	
-	if (cachedCloseRect.PtInRect(point))
-	{
-		// Destroy the window.
-		CFrameWnd* pFrameWnd = GetParentFrame();
-		if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
-			((CNSNavFrame*)pFrameWnd)->DeleteNavCenter();
-	}
-	else if (cachedModeRect.PtInRect(point))
-	{
-		CRDFOutliner* pOutliner = (CRDFOutliner*)HT_GetViewFEData(m_View);
-		//HT_ToggleTreeMode(m_View);
-	}
-	else if (cachedAddRect.PtInRect(point))
-	{
-		CGenericFrame* pFrame = (CGenericFrame*)FEU_GetLastActiveFrame(MWContextBrowser);
-		if (pFrame)
-		{
-			CAbstractCX* pAbstract = pFrame->GetMainContext();
-			MWContext* mwContext = pAbstract->GetContext();
-			History_entry *pHistEnt = SHIST_GetCurrent( &(mwContext->hist) );
-			if (pHistEnt)
-			{
-				HT_AddToContainer( HT_TopNode(m_View), pHistEnt->address, mwContext->title );
-			}
-		}
-	}
-	else
-	{
-		m_PointHit = point;
-		CFrameWnd* pFrameWnd = GetParentFrame();
-		if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
-			SetCapture();
-	}
+	// Called when the user clicks on us.
+	m_PointHit = point;
+	CFrameWnd* pFrameWnd = GetParentFrame();
+	if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
+		SetCapture();
 }
 
 
@@ -439,6 +409,45 @@ void CNavTitleBar::OnLButtonUp(UINT nFlags, CPoint point)
 	if (GetCapture() == this) 
 	{
 		ReleaseCapture();
+	}
+	
+	if (cachedCloseRect.PtInRect(point))
+	{
+		// Destroy the window.
+		CFrameWnd* pFrameWnd = GetParentFrame();
+		if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
+			((CNSNavFrame*)pFrameWnd)->DeleteNavCenter();
+	}
+	else if (cachedModeRect.PtInRect(point))
+	{
+		//CRDFOutliner* pOutliner = (CRDFOutliner*)HT_GetViewFEData(m_View);
+		//HT_ToggleTreeMode(m_View);
+
+		CFrameWnd* pFrameWnd = GetParentFrame();
+		if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
+		{
+			CNSNavFrame* pNavFrame = (CNSNavFrame*)pFrameWnd;
+			
+			CRDFOutliner* pOutliner = (CRDFOutliner*)
+					(pNavFrame->GetContentView()->GetOutlinerParent()->GetOutliner());
+			pOutliner->SetIsPopup(FALSE);
+			pNavFrame->UnhookFromButton();
+			pNavFrame->ForceFloat(TRUE);
+		}
+	}
+	else if (cachedAddRect.PtInRect(point))
+	{
+		CGenericFrame* pFrame = (CGenericFrame*)FEU_GetLastActiveFrame(MWContextBrowser);
+		if (pFrame)
+		{
+			CAbstractCX* pAbstract = pFrame->GetMainContext();
+			MWContext* mwContext = pAbstract->GetContext();
+			History_entry *pHistEnt = SHIST_GetCurrent( &(mwContext->hist) );
+			if (pHistEnt)
+			{
+				HT_AddToContainer( HT_TopNode(m_View), pHistEnt->address, mwContext->title );
+			}
+		}
 	}
 }
 

@@ -905,7 +905,7 @@ void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 
 	if (pOldButton != NULL)
 	{
-		pOldButton->GetTreeView()->DeleteNavCenter();
+		pOldButton->GetTreeView()->DeleteNavCenter(); // Just do a deletion
 	}
 	
 	pHolder->SetCurrentButton(NULL, state);
@@ -913,7 +913,7 @@ void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 	if (!m_bDepressed && pOldButton != this)
 	{
 		CPoint point = RequestMenuPlacement();
-		m_pTreeView = CNSNavFrame::CreateFramedRDFViewFromResource(NULL, point.x, point.y, 300, 500, m_Node);
+		m_pTreeView = CNSNavFrame::CreateFramedRDFViewFromResource(NULL, point.x, point.y-2, 300, 500, m_Node);
 		CRDFOutliner* pOutliner = (CRDFOutliner*)(m_pTreeView->GetContentView()->GetOutlinerParent()->GetOutliner());
 		if (pOutliner->IsPopup() || XP_IsNavCenterDocked(m_pTreeView->GetHTPane()))
 		{

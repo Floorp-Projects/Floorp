@@ -512,20 +512,20 @@ void CNSNavFrame::CalcClientArea(RECT* lpRectClient, CNSGenFrame * pParentFrame)
 //------------------------------------------------------------------------------
 void CNSNavFrame::ForceFloat(BOOL show)
 {
+
 	// Notify HT of our new state. Reset to the popup state.
 	HT_SetTreeStateForButton(HT_TopNode(HT_GetSelectedView(GetHTPane())), HT_POPUP_WINDOW);
 	HT_SetWindowType(GetHTPane(), HT_STANDALONE_WINDOW);
 
-	CFrameWnd *pLayout = GetParentFrame();
-	
-	nsModifyStyle( GetSafeHwnd(), GWL_STYLE, WS_CHILD, WS_OVERLAPPEDWINDOW);
+	nsModifyStyle( GetSafeHwnd(), GWL_STYLE, WS_POPUP, 0 );
+	nsModifyStyle( GetSafeHwnd(), GWL_STYLE, WS_CHILD, WS_OVERLAPPEDWINDOW | WS_CAPTION);
 	nsModifyStyle( GetSafeHwnd(), GWL_EXSTYLE, 0, WS_EX_CLIENTEDGE);
 	
 	if (show)
-	{	
-		MoveWindow( m_rectDrag);
-	}
-	else ShowWindow(SW_HIDE);
+		SetWindowPos(&wndNoTopMost, m_rectDrag.left, m_rectDrag.top, m_rectDrag.Width(),
+					m_rectDrag.Height(), SWP_FRAMECHANGED);
+	else SetWindowPos(&wndNoTopMost, 0, 0, 0, 0, SWP_FRAMECHANGED
+						| SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSIZE | SWP_HIDEWINDOW);
 
 	SetParent(NULL);
 
@@ -541,10 +541,11 @@ void CNSNavFrame::ForceFloat(BOOL show)
 		ShowWindow(SW_SHOW);
 	else ShowWindow(SW_HIDE);
 
-    //  Tell XP NavCenter layer that we are no longer docked.
+	//  Tell XP NavCenter layer that we are no longer docked.
     XP_UndockNavCenter(GetHTPane());
-    
-    // Tell ParentFrame that we are not docked anymore.
+
+	// Tell ParentFrame that we are not docked anymore.
+	CFrameWnd *pLayout = GetParentFrame();
     if (pLayout)
 		pLayout->RecalcLayout();
 
