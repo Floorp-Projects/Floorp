@@ -360,8 +360,8 @@ nsHTMLImageElement::GetXY(PRInt32* aX, PRInt32* aY)
   }
 
   nsPoint origin(0, 0);
-  nsCOMPtr<nsIView> parentView;
-  nsresult rv = frame->GetOffsetFromView(context, origin, getter_AddRefs(parentView));
+  nsIView* parentView;
+  nsresult rv = frame->GetOffsetFromView(context, origin, &parentView);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the scale from that Presentation Context
