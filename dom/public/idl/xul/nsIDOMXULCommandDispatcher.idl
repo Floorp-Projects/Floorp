@@ -65,4 +65,5 @@ interface nsIDOMXULCommandDispatcher : nsISupports
   void advanceFocus();
   void rewindFocus();
   void advanceFocusIntoSubtree(in nsIDOMElement elt);
+  attribute boolean suppressFocusScroll;
 };
