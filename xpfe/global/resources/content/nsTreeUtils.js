@@ -223,7 +223,7 @@ function enable_sort_menuitems() {
     var skip_column = document.getElementById('popupCell');
     var menuitem = document.getElementById('fill_after_this_node');
     menuitem = menuitem.nextSibling
-    while (column_node) {
+    while (column_node && menuitem) {
         if (skip_column != tree_column) {
             if ("true" == column_node.getAttribute("hidden")) {
                 menuitem.setAttribute("disabled", "true");
