@@ -512,7 +512,7 @@ function AbNewList(abListItem)
 
   window.openDialog("chrome://messenger/content/addressbook/abMailListDialog.xul",
                     "",
-                    "chrome,titlebar,centerscreen,resizeable=no",
+                    "chrome,titlebar,centerscreen,resizable=no",
                     {selectedAB:selectedAB});
 }
 
@@ -537,7 +537,7 @@ function goEditListDialog(abURI, listURI)
 {
   window.openDialog("chrome://messenger/content/addressbook/abEditListDialog.xul",
                     "",
-                    "chrome,titlebar,resizeable=no",
+                    "chrome,titlebar,resizable=no",
                     {abURI:abURI, listURI:listURI});
 }
 
@@ -545,7 +545,7 @@ function goNewCardDialog(selectedAB)
 {
   window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
                     "",
-                    "chrome,resizeable=no,titlebar,modal,centerscreen",
+                    "chrome,resizable=no,titlebar,modal,centerscreen",
                     {selectedAB:selectedAB});
 }
 
@@ -553,6 +553,6 @@ function goEditCardDialog(abURI, card, okCallback, abCardURI)
 {
   window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
 					  "",
-					  "chrome,resizeable=no,modal,titlebar,centerscreen",
+					  "chrome,resizable=no,modal,titlebar,centerscreen",
 					  {abURI:abURI, card:card, okCallback:okCallback, abCardURI:abCardURI});
 }

@@ -10,7 +10,7 @@
       {
         window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
                           "",
-                          "chrome,resizeable=no,titlebar,modal",
+                          "chrome,resizable=no,titlebar,modal",
                           {selectedAB:selectedAB});
       }
 
