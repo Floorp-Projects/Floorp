@@ -125,6 +125,8 @@ install::
 	$(MAKE_INSTALL) seltab-rightedge.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) tab-leftedge.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) tab-rightedge.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) sortAscending.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) sortDescending.gif $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*

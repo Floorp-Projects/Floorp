@@ -120,6 +120,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/seltab-rightedge.gif \
 		$(srcdir)/tab-leftedge.gif \
 		$(srcdir)/tab-rightedge.gif \
+		$(srcdir)/sortAscending.gif \
+		$(srcdir)/sortDescending.gif \
 		$(NULL)
 
 EXPORT_CHROME	= $(srcdir)/xul.css \
