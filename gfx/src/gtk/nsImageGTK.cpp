@@ -28,6 +28,10 @@
 
 #undef CHEAP_PERFORMANCE_MEASUREMENT
 
+// Defining this will trace the allocation of images.  This includes
+// ctor, dtor and update.
+#undef TRACE_IMAGE_ALLOCATION
+
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 //------------------------------------------------------------
@@ -41,6 +45,12 @@ nsImageGTK::nsImageGTK()
   mDepth = 0;
   mAlphaBits = nsnull;
   mAlphaPixmap = nsnull;
+  mImagePixmap = nsnull;
+
+#ifdef TRACE_IMAGE_ALLOCATION
+  printf("nsImageGTK::nsImageGTK(this=%p)\n",
+         this);
+#endif
 }
 
 //------------------------------------------------------------
@@ -59,6 +69,15 @@ nsImageGTK::~nsImageGTK()
       gdk_pixmap_unref(mAlphaPixmap);
     }
   }
+
+  if (nsnull != mImagePixmap) {
+      gdk_pixmap_unref(mImagePixmap);
+    }
+
+#ifdef TRACE_IMAGE_ALLOCATION
+  printf("nsImageGTK::~nsImageGTK(this=%p)\n",
+         this);
+#endif
 }
 
 NS_IMPL_ISUPPORTS(nsImageGTK, kIImageIID);
@@ -85,6 +104,14 @@ nsresult
     }
   }
 
+  // mImagePixmap gets created once per unique image bits in Draw()
+  // ImageUpdated(nsImageUpdateFlags_kBitsChanged) can cause the
+  // image bits to change and mImagePixmap will be unrefed and nulled.
+  if (nsnull != mImagePixmap) {
+    gdk_pixmap_unref(mImagePixmap);
+    mImagePixmap = nsnull;
+  }
+
   if (24 == aDepth) {
     mNumBytesPixel = 3;
   } else {
@@ -95,6 +122,15 @@ nsresult
   mWidth = aWidth;
   mHeight = aHeight;
   mDepth = aDepth;
+
+#ifdef TRACE_IMAGE_ALLOCATION
+  printf("nsImageGTK::Init(this=%p,%d,%d,%d,%d)\n",
+         this,
+         aWidth,
+         aHeight,
+         aDepth,
+         aMaskRequirements);
+#endif
 
   // create the memory for the image
   ComputMetrics();
@@ -257,178 +293,31 @@ nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
                          PRUint8 aFlags,
                          nsRect *aUpdateRect)
 {
+#ifdef TRACE_IMAGE_ALLOCATION
+  printf("nsImageGTK::ImageUpdated(this=%p,%d)\n",
+         this,
+         aFlags);
+#endif
 
   if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, aFlags)){
     if (nsnull != mAlphaPixmap) {
       gdk_pixmap_unref(mAlphaPixmap);
       mAlphaPixmap = nsnull;
     }
+
+    // mImagePixmap gets created once per unique image bits in Draw()
+    // ImageUpdated(nsImageUpdateFlags_kBitsChanged) can cause the
+    // image bits to change and mImagePixmap will be unrefed and nulled.
+    if (nsnull != mImagePixmap) {
+      gdk_pixmap_unref(mImagePixmap);
+      mImagePixmap = nsnull;
+    }
   }
 }
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define HAIRY_CONVERT_888
-#endif
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT
 static PRTime gConvertTime, gStartTime, gPixmapTime, gEndTime;
 #endif
-
-#ifdef HAIRY_CONVERT_888
-#include "prtime.h"
-
-// This is really ugly. Mozilla uses BGR image data, while
-// gdk_rgb uses RGB data. So before we draw an image
-// we copy it to a temp buffer and swap R and B.
-//
-// The code here comes from gdk_rgb_convert_888_lsb.
-//
-static void
-moz_gdk_draw_bgr_image (GdkDrawable *drawable,
-                        GdkGC *gc,
-                        gint x,
-                        gint y,
-                        gint width,
-                        gint height,
-                        GdkRgbDither dith,
-                        guchar *rgb_buf,
-                        gint rowstride)
-{
-  int tx, ty;
-
-  guchar *tmp_buf;
-  guchar *obuf, *obptr;
-  gint bpl;
-  guchar *bptr, *bp2;
-  int r, g, b;
-
-
-  bpl = (width * 3 + 3) & ~0x3;
-  tmp_buf = (guchar *)g_malloc (bpl * height);
-
-  bptr = rgb_buf;
-  obuf = tmp_buf;
-  for (ty = 0; ty < height; ty++)
-    {
-      bp2 = bptr;
-      obptr = obuf;
-      if (((unsigned long)obuf | (unsigned long) bp2) & 3)
-        {
-          for (tx = 0; tx < width; tx++)
-            {
-              r = bp2[0];
-              g = bp2[1];
-              b = bp2[2];
-              *obptr++ = b;
-              *obptr++ = g;
-              *obptr++ = r;
-              bp2 += 3;
-            }
-        }
-      else
-        {
-          for (tx = 0; tx < width - 3; tx += 4)
-            {
-              guint32 r1b0g0r0;
-              guint32 g2r2b1g1;
-              guint32 b3g3r3b2;
-
-              r1b0g0r0 = ((guint32 *)bp2)[0];
-              g2r2b1g1 = ((guint32 *)bp2)[1];
-              b3g3r3b2 = ((guint32 *)bp2)[2];
-              ((guint32 *)obptr)[0] =
-                (r1b0g0r0 & 0xff00) |
-                ((r1b0g0r0 & 0xff0000) >> 16) |
-                (((g2r2b1g1 & 0xff00) | (r1b0g0r0 & 0xff)) << 16);
-              ((guint32 *)obptr)[1] =
-                (g2r2b1g1 & 0xff0000ff) |
-                ((r1b0g0r0 & 0xff000000) >> 16) |
-                ((b3g3r3b2 & 0xff) << 16);
-              ((guint32 *)obptr)[2] =
-                (((g2r2b1g1 & 0xff0000) | (b3g3r3b2 & 0xff000000)) >> 16) |
-                ((b3g3r3b2 & 0xff00) << 16) |
-                ((b3g3r3b2 & 0xff0000));
-              bp2 += 12;
-              obptr += 12;
-            }
-          for (; tx < width; tx++)
-            {
-              r = bp2[0];
-              g = bp2[1];
-              b = bp2[2];
-              *obptr++ = b;
-              *obptr++ = g;
-              *obptr++ = r;
-              bp2 += 3;
-            }
-        }
-      bptr += rowstride;
-      obuf += bpl;
-    }
-
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT
-  gConvertTime = PR_Now();
-#endif
-
-  gdk_draw_rgb_image (drawable, gc, x, y, width, height,
-                      dith, tmp_buf, bpl);
-
-  g_free (tmp_buf);
-}
-
-#else
-
-static void
-moz_gdk_draw_bgr_image (GdkDrawable *drawable,
-                    GdkGC *gc,
-                    gint x,
-                    gint y,
-                    gint width,
-                    gint height,
-                    GdkRgbDither dith,
-                    guchar *rgb_buf,
-                    gint rowstride)
-{ 
-  int tx, ty;
-  guchar *tmp_buf;
-  guchar *obuf;
-  gint bpl;
-  guchar *bptr, *bp2;
-  int r, g, b;
-  
-  bpl = (width * 3 + 3) & ~0x3;
-  tmp_buf = (guchar *)g_malloc (bpl * height);
-
-  bptr = rgb_buf;
-  obuf = tmp_buf;
-
-  for (ty = 0; ty < height; ty++)
-    { 
-      bp2 = bptr; 
-      for (tx = 0; tx < width; tx++)
-        { 
-          r = bp2[0];
-          g = bp2[1];
-          b = bp2[2];
-          obuf[tx * 3] = b;
-          obuf[tx * 3 + 1] = g;
-          obuf[tx * 3 + 2] = r;
-          bp2 += 3;
-        }
-      bptr += rowstride;
-      obuf += bpl;
-    }
-
-  gdk_draw_rgb_image (drawable, gc, x, y, width, height,
-                      dith, tmp_buf, bpl);
-
-  g_free (tmp_buf);
-}
-
-#endif
-
-
-//------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP
@@ -438,14 +327,16 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
+  abort();
+
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
-  moz_gdk_draw_bgr_image (drawing->GetDrawable(),
-                          drawing->GetGC(),
-                          aDX, aDY, aDWidth, aDHeight,
-                          GDK_RGB_DITHER_MAX,
-                          mImageBits + mRowBytes * aSY + 3 * aDX,
-                          mRowBytes);
+  gdk_draw_rgb_image (drawing->GetDrawable(),
+                      drawing->GetGC(),
+                      aDX, aDY, aDWidth, aDHeight,
+                      GDK_RGB_DITHER_MAX,
+                      mImageBits + mRowBytes * aSY + 3 * aDX,
+                      mRowBytes);
 
   return NS_OK;
 }
@@ -461,12 +352,22 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
+
   // XXX kipp: this is temporary code until we eliminate the
   // width/height arguments from the draw method.
   if ((aWidth != mWidth) || (aHeight != mHeight)) {
     aWidth = mWidth;
     aHeight = mHeight;
   }
+
+#ifdef TRACE_IMAGE_ALLOCATION
+  printf("nsImageGTK::Draw(this=%p,x=%d,y=%d,width=%d,height=%d)\n",
+         this,
+         aX,
+         aY,
+         aWidth,
+         aHeight);
+#endif
 
   nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
 
@@ -542,6 +443,39 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 #endif
   }
 
+  // Render unique image bits onto an off screen pixmap only once
+  // The image bits can change as a result of ImageUpdated() - for
+  // example: animated GIFs.
+  if (nsnull == mImagePixmap)
+  {
+#ifdef TRACE_IMAGE_ALLOCATION
+    printf("nsImageGTK::Draw(this=%p) gdk_pixmap_new(nsnull,width=%d,height=%d,depth=%d)\n",
+           this,
+           aWidth,
+           aHeight,
+           mDepth);
+#endif
+
+    GdkVisual * rgb_visual = gdk_rgb_get_visual();
+    gint rgb_depth = rgb_visual->depth;
+
+    // Create an off screen pixmap to hold the image bits.
+    mImagePixmap = gdk_pixmap_new(nsnull, aWidth, aHeight, rgb_depth);
+
+    // Make sure the clip region is clear, since we are rendering the 
+    // image bits to an off screen pixmap and this always happens at the
+    // origin.
+    gdk_gc_set_clip_origin(drawing->GetGC(), 0, 0);
+    gdk_gc_set_clip_mask(drawing->GetGC(), nsnull);
+
+    // Render the image bits into an off screen pixmap
+    gdk_draw_rgb_image (mImagePixmap,
+                        drawing->GetGC(),
+                        0, 0, aWidth, aHeight,
+                        GDK_RGB_DITHER_MAX,
+                        mImageBits, mRowBytes);
+  }
+
   if (nsnull != mAlphaPixmap)
   {
     // Setup gc to use the given alpha-pixmap for clipping
@@ -549,11 +483,25 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     gdk_gc_set_clip_origin(drawing->GetGC(), aX, aY);
   }
 
-  moz_gdk_draw_bgr_image (drawing->GetDrawable(),
-                          drawing->GetGC(),
-                          aX, aY, aWidth, aHeight,
-                          GDK_RGB_DITHER_MAX,
-                          mImageBits, mRowBytes);
+#ifdef TRACE_IMAGE_ALLOCATION
+  printf("nsImageGTK::Draw(this=%p) gdk_draw_pixmap(x=%d,y=%d,width=%d,height=%d)\n",
+         this,
+         aX,
+         aY,
+         aWidth,
+         aHeight);
+#endif
+
+  // Draw the image pixmap onto the drawing surface
+  gdk_draw_pixmap(drawing->GetDrawable(),           // drawable
+                  drawing->GetGC(),                 // gc
+                  mImagePixmap,                     // src
+                  0,                                // xsrc
+                  0,                                // ysrc
+                  aX,                               // xdest
+                  aY,                               // ydest
+                  aWidth,                           // width
+                  aHeight);                         // height
 
   if (mAlphaPixmap != nsnull)
   {
@@ -564,7 +512,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT
   gEndTime = PR_Now();
-  printf("nsImageGTK: for %d,%d image, total=%lld pixmap=%lld, cvt=%lld\n",
+
+  printf("nsImageGTK::Draw(this=%p,w=%d,h=%d) total=%lld pixmap=%lld, cvt=%lld\n",
+         this,
          aWidth, aHeight,
          gEndTime - gStartTime,
          gPixmapTime - gStartTime,
