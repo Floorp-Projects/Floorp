@@ -80,4 +80,9 @@ function initializeDialog(filter)
     filterName.value = filter.filterName;
 
     setScope(getScope(filter));
+
+    // now test by initializing the psuedo <searchterm>
+    var searchTerm = document.getElementById("searchTerm");
+    dump("initializing " + searchTerm + "\n");
+    searchTerm.initialize(filter, 0);
 }
