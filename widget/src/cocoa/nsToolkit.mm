@@ -130,7 +130,7 @@ printf("shutting down event queue\n");
 // Called periodically to process PLEvents from the queue on the current thread
 //
 
-#define LOOP_THRESHOLD 10
+#define LOOP_THRESHOLD 20
 
 - (void)eventTimer:(NSTimer *)theTimer
 {
@@ -140,6 +140,10 @@ printf("shutting down event queue\n");
     if (queue) {
       nsresult rv = NS_OK;
       for (PRInt32 i = 0; i < LOOP_THRESHOLD; i++) {
+        PRBool pendingEvents = PR_FALSE;
+        queue->PendingEvents(&pendingEvents);
+        if (!pendingEvents)
+          break;
         queue->ProcessPendingEvents();
         NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
       }
