@@ -1187,7 +1187,7 @@ nsString& Unquote(nsString& aString)
   PRUnichar end = aString.Last();
 
   if ((start == end) && 
-      ((start == PRUnichar('"')) || 
+      ((start == PRUnichar('\"')) || 
        (start == PRUnichar('\'')))) {
     PRInt32 length = aString.Length();
     aString.Truncate(length - 1);
