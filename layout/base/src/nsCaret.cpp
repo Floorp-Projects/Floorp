@@ -202,11 +202,11 @@ void nsCaret::DrawCaret()
 
 	// first get a rendering context for the root frame. We draw relative to the root frame.
 	nsIFrame	*rootFrame;		// frames are not refcounted
-	if (NS_FAILED(mPresShell->GetRootFrame(rootFrame)) || !rootFrame)
+	if (NS_FAILED(mPresShell->GetRootFrame(&rootFrame)) || !rootFrame)
 		return;
 	
 	nsCOMPtr<nsIRenderingContext>		aContext;
-	if (NS_FAILED(mPresShell->CreateRenderingContext(rootFrame, *getter_AddRefs(aContext))))
+	if (NS_FAILED(mPresShell->CreateRenderingContext(rootFrame, getter_AddRefs(aContext))))
 		return;
 
 	// the strategy here is this. If we are not drawn, we figure out the caret rect
@@ -244,13 +244,14 @@ void nsCaret::DrawCaret()
 					{
 						nsIFrame*	theFrame = nsnull;
 						
-						if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, theFrame)) &&
+						if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, &theFrame)) &&
 							 theFrame && NS_SUCCEEDED(theFrame->GetChildFrameContainingOffset(focusOffset, &focusOffset, &theFrame)))
 						{
 							nsRect		frameRect;
 							theFrame->GetRect(frameRect);
 
-							nsCOMPtr<nsIPresContext> presContext(dont_AddRef(mPresShell->GetPresContext()));
+							nsCOMPtr<nsIPresContext> presContext;
+							mPresShell->GetPresContext(getter_AddRefs(presContext));
 							
 							nsIView * view = nsnull;
 							nsPoint   offset;
