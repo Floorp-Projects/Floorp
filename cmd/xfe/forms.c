@@ -2322,6 +2322,8 @@ textarea_reset(FEFormData *fed,
   int16 charset = text_attr->charset;
   unsigned char *loc;
 
+  if (!default_text) default_text = "";
+
   fe_forms_clean_text (fed->context, charset, default_text, False);
 
   XtVaSetValues (ta_fed->text_widget, XmNcursorPosition, 0, 0);
