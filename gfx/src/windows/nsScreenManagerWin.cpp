@@ -67,7 +67,7 @@ nsScreenManagerWin :: CreateNewScreenObject ( HDC inScreen )
 // The coordinates are in pixels (not twips) and in screen coordinates.
 //
 NS_IMETHODIMP
-nsScreenManagerWin :: ScreenForRect ( PRInt32 inTop, PRInt32 inLeft, PRInt32 inWidth, PRInt32 inHeight,
+nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inWidth, PRInt32 inHeight,
                                         nsIScreen **outScreen )
 {
   if ( !(inWidth || inHeight) ) {
@@ -107,4 +107,18 @@ nsScreenManagerWin :: GetPrimaryScreen(nsIScreen** aPrimaryScreen)
   return NS_OK;
   
 } // GetPrimaryScreen
+
+
+//
+// GetNumberOfScreens
+//
+// Returns how many physical screens are available.
+//
+NS_IMETHODIMP
+nsScreenManagerWin :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
+{
+  *aNumberOfScreens = 1;
+  return NS_OK;
+  
+} // GetNumberOfScreens
 
