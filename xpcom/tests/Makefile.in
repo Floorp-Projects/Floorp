@@ -23,7 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= dynamic
 
-CPPSRCS		= RegFactory.cpp TestFactory.cpp
+CPPSRCS		= RegFactory.cpp TestFactory.cpp TestCOMPtr.cpp
 
 include $(topsrcdir)/config/rules.mk
 
