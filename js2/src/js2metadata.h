@@ -159,6 +159,20 @@ enum Plurality { Singular, Plural };
 
 enum Hint { NoHint, NumberHint, StringHint };
 
+typedef enum JS2Version {
+    JS2VERSION_1_0     = 100,
+    JS2VERSION_1_1     = 110,
+    JS2VERSION_1_2     = 120,
+    JS2VERSION_1_3     = 130,
+    JS2VERSION_1_4     = 140,
+    JS2VERSION_1_5     = 150,
+    JS2VERSION_DEFAULT = 0,
+    JS2VERSION_UNKNOWN = -1
+} JS2Version;
+
+
+
+
 class PondScum {
 public:    
 
@@ -1598,6 +1612,7 @@ public:
 
     enum Flag { JS1, JS2 };
     Flag flags;
+	int version;
 
     TargetList targetList;          // stack of potential break/continue targets
 

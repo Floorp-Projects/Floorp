@@ -3763,7 +3763,14 @@ static const uint8 urlCharType[256] =
 
     static js2val GlobalObject_version(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
     {
-        return meta->engine->allocNumber(1.5);
+		if (argc > 0 && JS2VAL_IS_INT(argv[0])) {
+			int32 v = JS2VAL_TO_INT(argv[0]);
+			int32 oldV = meta->version;
+			meta->version = v;
+			return INT_TO_JS2VAL(oldV);
+		}
+		else
+			return INT_TO_JS2VAL(meta->version);
     }
 
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
@@ -3854,6 +3861,7 @@ static const uint8 urlCharType[256] =
         glob(new Package(widenCString("global"), new Namespace(&world.identifiers["internal"]))),
         env(new Environment(new MetaData::SystemFrame(), glob)),
         flags(JS1),
+		version(JS2VERSION_DEFAULT),
         showTrees(false),
         referenceArena(NULL)
     {

@@ -137,10 +137,17 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
     uint32 length = getLength(meta, arrInst);
 
     if (length == 0)
-        return STRING_TO_JS2VAL(meta->engine->allocString(meta->engine->Empty_StringAtom));
+		if (meta->version == JS2VERSION_1_2)
+	        return STRING_TO_JS2VAL(meta->engine->allocString("[]"));
+		else
+		    return STRING_TO_JS2VAL(meta->engine->allocString(meta->engine->Empty_StringAtom));
     else {
         js2val result;
-        String *s = new String();
+        String *s;
+		if (meta->version == JS2VERSION_1_2)
+			 s = new String(widenCString("["));
+		else
+			s = new String();
         for (uint32 i = 0; i < length; i++) {
             if (meta->arrayClass->ReadPublic(meta, &thatValue, meta->engine->numberToString(i), RunPhase, &result)
                     && !JS2VAL_IS_UNDEFINED(result)
@@ -149,6 +156,8 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
             if (i < (length - 1))
                 s->append(widenCString(","));
         }
+		if (meta->version == JS2VERSION_1_2)
+			s->append(widenCString("]"));
         result = meta->engine->allocString(s);
         delete s;
         return result;
