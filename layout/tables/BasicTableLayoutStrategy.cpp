@@ -321,8 +321,9 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   // allocate the rest to auto columns, with some exceptions
   if ( (tableIsAutoWidth && (perAdjTableWidth - totalAllocated > 0)) ||
        (!tableIsAutoWidth && (totalAllocated < maxWidth)) ) {
-    PRBool excludePct  = (totalCounts[PCT] != numCols);
-    PRBool excludeFix  = (totalCounts[PCT] + totalCounts[FIX] < numCols);
+	PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
+    PRBool excludePct  = (totalCounts[PCT] != numEffCols);
+    PRBool excludeFix  = (totalCounts[PCT] + totalCounts[FIX] < numEffCols);
     PRBool excludePro  = (totalCounts[DES_CON] > 0);
     PRBool exclude0Pro = (totalCounts[MIN_PRO] != num0Proportional);
     if (tableIsAutoWidth) {
@@ -1099,6 +1100,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
   mTableFrame->SetHasCellSpanningPctCol(PR_FALSE); // this gets refigured below
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount(); // consider cols at end without orig cells 
+  PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
   nscoord spacingX = mTableFrame->GetCellSpacingX();
   PRInt32 colX, rowX; 
 
@@ -1119,7 +1121,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
     if (!rawPctValues) return NS_ERROR_OUT_OF_MEMORY;
     //XXX not sure if this really sets each element to 0.0f
     //memset(rawPctValues, 0.0f, numCols * sizeof(float));
-    for (colX = 0; colX < numCols; colX++) {
+    for (colX = 0; colX < numEffCols; colX++) {
       rawPctValues[colX] = 0.0f;
     }
 
@@ -1178,7 +1180,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
     nscoord fixDesTotal      = 0;    // total of fix or des widths of cols 
     nscoord fixDesTotalNoPct = 0;    // total of fix or des widths of cols without pct
 
-    for (colX = 0; colX < numCols; colX++) {
+    for (colX = 0; colX < numEffCols; colX++) {
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
       nscoord fixWidth = colFrame->GetFixWidth();
       nscoord fixDesWidth = (fixWidth > 0) ? fixWidth : colFrame->GetDesWidth();
@@ -1309,7 +1311,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
 
   // For each col, consider the cells originating in it with colspans > 1.
   // Adjust the cols that each cell spans if necessary.
-  for (colX = 0; colX < numCols; colX++) { 
+  for (colX = 0; colX < numEffCols; colX++) { 
     for (rowX = 0; rowX < numRows; rowX++) {
       PRBool originates;
       PRInt32 colSpan;
@@ -1317,7 +1319,8 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
       if (!originates || (1 == colSpan)) {
         continue;
       }
-      nscoord cellPctWidth = WIDTH_NOT_SET;
+      colSpan = PR_MIN(colSpan,numEffCols-colX);
+	  nscoord cellPctWidth = WIDTH_NOT_SET;
       // see if the cell has a style percentage width specified
       const nsStylePosition* cellPosition;
       cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
