@@ -9,35 +9,10 @@
 <h1 align="center">
 Change Log for Significant Rhino Changes</h1>
 
-This is a log of significant changes since the release of Rhino 1.5 Release 3.
+This is a log of significant changes since the release candidate 1 of Rhino 1.5 Release 4.
 
-<h3>Rhino debug API changes</h3>
+<h3>Nothing significant yet!</h3>
 
-A new, incompatible Rhino debug API gives an option to monitor
-entering/leaving of script functions while decreasing the amount of code to
-implement the API in the Rhino core. Details are available <a href="rhino15R4-debugger.html">here</a>.
-
-<h3>WrapFactory introduced, WrapHandler deprecated</h3>
-A design flaw in the WrapHandler interface (a call to a Java contructor from
-JavaScript would result in a call to wrap the result, which would then be
-cast to a Scriptable) inspired the deprecation of that interface and the
-introduction of a new class, WrapFactory, that contains a new method called
-on the result of a constructor call and can be customized by application if necessary.
-<p>
-In addition, WrapFactory has the new <tt>setJavaPrimitiveWrap</tt> method to control if instances of Java <tt>String</tt> and <tt>Number</tt> class should be wrapped to special script objects as any other Java objects so a script can access any method <tt>String</tt> and <tt>Number</tt>, or they should be converted to JavaScript primitive strings and numbers.
-
-<h3>New security interfaces</h3>
-<p>
-SecuritySupport is replaced by ClassShutter and SecurityController, where ClassShutter controls which classes are visible to scripts via LiveConnect and 
-SecurityController provides permission management. For compatibility SecuritySupport is still available as a deprecated interface but only its visibleToScripts method is used as an alias for ClassShutter.visibleToScripts. See API documentation for new classes for details.
-<p>
-New SecurityController allows integration of script security with Java2 security model and its implementation that uses java policy settings to restrict script permissions based on its URL is available with Rhino shell. See the <a href="http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/shell/JavaPolicySecurity.java">JavaPolicySecurity</a> source for details. To activate it, set the <tt>rhino.use_java_policy_security</tt> system property to true when invoking Rhino shell together with installing a security manager.
-
-<h3>Serialization chages</h3>
-Due to changes in Rhino implementation and bug fixes in serialization support runtime data serialized in Rhino 1.5 Release 3 can not be read back in the Release 4.
-
-<h3>Regular expressions improvements</h3>
-<a href="mailto:rogerl@netscape.com">rogerl@netscape.com</a> committed new regular expressions implementation which fully confirms to EcmaScript 262 standard and faster.
 
 <hr width="100%"><br>
 <a href="index.html">back to top</a></h3>
