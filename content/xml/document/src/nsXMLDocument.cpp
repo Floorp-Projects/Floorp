@@ -38,7 +38,6 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsExpatDTD.h"
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -300,11 +299,8 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
 
         nsIDTD* theDTD=0;
         // XXX For now, we'll use the HTML DTD
-#ifndef EXPAT
         NS_NewWellFormed_DTD(&theDTD);
-#else
-        NS_New_Expat_DTD(&theDTD);
-#endif
+
         /* Commenting out the call to RegisterDTD() as per rickg's instructions.
            XML and HTML DTD's are going to be pre-registered withing nsParser. */
         // mParser->RegisterDTD(theDTD);
