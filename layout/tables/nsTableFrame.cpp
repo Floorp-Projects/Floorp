@@ -2071,13 +2071,15 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aDesiredSize.mMaximumWidth = GetPreferredWidth();
   }
+  // make sure the table overflow area does include the table rect.
+  nsRect tableRect(0, 0, aDesiredSize.width, aDesiredSize.height) ;
+  
   if (!aReflowState.mStyleDisplay->IsTableClip()) {
     // collapsed border may leak out
     nsMargin bcMargin = GetBCMargin(aPresContext);
-    nsRect tableRect(0, 0, aDesiredSize.width, aDesiredSize.height) ;
     tableRect.Inflate(bcMargin);
-    aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, tableRect);
   }
+  aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, tableRect);
   
   if (aReflowState.mFlags.mSpecialHeightReflow) {
     SetNeedSpecialReflow(PR_FALSE);
