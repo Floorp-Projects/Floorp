@@ -4558,6 +4558,27 @@ nsXULElement::SetCollapsed(PRBool aAttr)
 }
 
 nsresult
+nsXULElement::GetAllowevents(PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+  nsAutoString val;
+  GetAttribute(NS_LITERAL_STRING("allowevents"), val);
+  if (val.EqualsIgnoreCase("true"))
+    *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetAllowevents(PRBool aAttr)
+{
+ if (aAttr)
+    SetAttribute(NS_LITERAL_STRING("allowevents"), NS_LITERAL_STRING("true"));
+  else
+    RemoveAttribute(NS_LITERAL_STRING("allowevents"));
+  return NS_OK;
+}
+
+nsresult
 nsXULElement::GetObserves(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("observes"), aAttr);

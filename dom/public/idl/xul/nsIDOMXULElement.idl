@@ -70,6 +70,8 @@ interface nsIDOMXULElement : nsIDOMElement
   attribute DOMString tooltiptext;
   attribute DOMString statustext;
   
+  attribute boolean allowevents;
+
   // XXX: This doesn't belong here, nsIDOMLinkStyle has this...
   readonly attribute nsIDOMCSSStyleDeclaration style;
 
