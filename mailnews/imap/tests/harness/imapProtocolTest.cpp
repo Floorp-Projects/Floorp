@@ -341,7 +341,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::PossibleImapMailbox(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec)
 {
-    printf("**** nsIMAP4TestDriver::PossibleImapMailbox\r\n");
+	printf("We found folder on host %s with name %s.\n", aSpec->hostName ? aSpec->hostName : "", aSpec->allocatedPathName ? aSpec->allocatedPathName : "");
     return NS_OK;
 }
 
