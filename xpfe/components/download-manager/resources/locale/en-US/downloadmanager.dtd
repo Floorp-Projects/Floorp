@@ -17,6 +17,8 @@
 <!ENTITY cmd.pause.accesskey              "P">
 <!ENTITY cmd.remove.label                 "Remove from List">
 <!ENTITY cmd.remove.accesskey             "R">
+<!ENTITY cmd.copyurl.label                "Copy URL">
+<!ENTITY cmd.copyurl.accesskey            "U">
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "C">
 <!ENTITY cmd.openfile.label               "Launch File">

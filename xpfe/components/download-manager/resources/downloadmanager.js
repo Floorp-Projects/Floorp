@@ -154,6 +154,7 @@ var downloadViewController = {
     case "cmd_pause":
     case "cmd_cancel":
     case "cmd_remove":
+    case "cmd_copyurl":
     case "cmd_openfile":
     case "cmd_showinshell":
     case "cmd_selectAll":
@@ -190,6 +191,8 @@ var downloadViewController = {
       // XXX ensure selection isn't still in progress
       //     and how to handle multiple selection?
       return selectionCount > 0 && !isDownloading;
+    case "cmd_copyurl":
+      return selectionCount > 0;
     case "cmd_selectAll":
       return gDownloadView.view.rowCount != selectionCount;
     default:
@@ -311,6 +314,12 @@ var downloadViewController = {
     case "cmd_selectAll":
       gDownloadView.view.selection.selectAll();
       break;
+    case "cmd_copyurl":
+      selectedItems = getSelectedItems();
+      if (selectedItems.length > 0) {
+        gStatusBar.label = copyToClipboard(selectedItems);
+      }
+      break;
     default:
     }
   },  
@@ -326,7 +335,7 @@ var downloadViewController = {
   onCommandUpdate: function dVC_onCommandUpdate ()
   {
     var cmds = ["cmd_properties", "cmd_pause", "cmd_cancel", "cmd_remove",
-                "cmd_openfile", "cmd_showinshell"];
+                "cmd_copyurl", "cmd_openfile", "cmd_showinshell"];
     for (var command in cmds)
       goUpdateCommand(cmds[command]);
   }
@@ -425,4 +434,18 @@ function doSort(node)
   }
   catch(ex) {
   }
+}
+
+function copyToClipboard(selectedItems)
+{
+  var urlArray = new Array(selectedItems.length);
+  for (var i = 0; i < selectedItems.length; ++i) {
+    urlArray[i] = selectedItems[i].firstChild.lastChild.getAttribute("label");
+  }
+
+  var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                                  .getService(Components.interfaces.nsIClipboardHelper);
+  clipboardHelper.copyString(urlArray.join("\n"));
+
+  return urlArray.join(" "); // for status text
 }
