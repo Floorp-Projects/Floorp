@@ -66,7 +66,7 @@ Rights Reserved.
                  oninput="gContentChanged=true; setupAutocomplete();" disableonsend="true"
                  onkeypress="awRecipientKeyPress(event, this)"
                  onkeydown="awRecipientKeyDown(event, this)">
-          <image class="person-icon"/>
+          <image class="person-icon" onclick="this.parentNode.select();"/>
         </textbox>
       </listcell>
     </listitem>
