@@ -16,6 +16,7 @@
  * Copyright (C) 1999-2000 Sun Microsystems Inc.  All Rights Reserved.
  * 
  * Contributor(s):
+ *	Netscape Communications Corporation
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -29,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: montmulf.h,v 1.1 2000/10/13 00:28:08 nelsonb%netscape.com Exp $
+ *  $Id: montmulf.h,v 1.2 2000/11/17 20:15:28 nelsonb%netscape.com Exp $
  */
 
 /*  The functions that are to be called from outside of the .s file have the
@@ -86,11 +87,12 @@ void mont_mulf_noconv(unsigned int *result,
  *  Note that m1 and m2 should both be of length nlen, so they should be
  *  padded with 0's if necessary before the conversion. The result comes in 
  *  this form (int representation, padded with 0's).
+ *  dn0 is the value of the 16 least significant bits of n0'.
  *  The function does not allocate memory for any of the arrays, so the 
  *  pointers should point to arrays with the following minimal sizes:
  *  result - nlen+1
  *  dm1    - nlen
- *  dm2    - 2*nlen+1 /* the +1 is necessary for technical reasons */
+ *  dm2    - 2*nlen+1  ( the +1 is necessary for technical reasons )
  *  dt     - 4*nlen+2
  *  dn     - nlen
  *  nint   - nlen

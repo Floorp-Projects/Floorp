@@ -16,6 +16,7 @@
  * Copyright (C) 1999-2000 Sun Microsystems Inc.  All Rights Reserved.
  * 
  * Contributor(s):
+ *	Netscape Communications Corporation
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -29,22 +30,30 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: montmulf.c,v 1.1 2000/10/13 00:27:04 nelsonb%netscape.com Exp $
+ *  $Id: montmulf.c,v 1.2 2000/11/17 20:15:28 nelsonb%netscape.com Exp $
  */
 
 #define RF_INLINE_MACROS
 
-static double TwoTo16=65536.0;
-static double TwoToMinus16=1.0/65536.0;
-static double Zero=0.0;
-static double TwoTo32=65536.0*65536.0;
-static double TwoToMinus32=1.0/(65536.0*65536.0);
+static const double TwoTo16=65536.0;
+static const double TwoToMinus16=1.0/65536.0;
+static const double Zero=0.0;
+static const double TwoTo32=65536.0*65536.0;
+static const double TwoToMinus32=1.0/(65536.0*65536.0);
 
 #ifdef RF_INLINE_MACROS
 
 double upper32(double);
 double lower32(double, double);
 double mod(double, double, double);
+
+void i16_to_d16_and_d32x4(const double * /*1/(2^16)*/, 
+			  const double * /* 2^16*/,
+			  const double * /* 0 */,
+			  double *       /*result16*/, 
+			  double *       /* result32 */,
+			  float *  /*source - should be unsigned int*
+		          	       converted to float* */);
 
 #else
 
@@ -66,7 +75,7 @@ static double mod(double x, double oneoverm, double m)
 #endif
 
 
-void cleanup(double *dt, int from, int tlen)
+static void cleanup(double *dt, int from, int tlen)
 {
  int i;
  double tmp,tmp1,x,x1;
@@ -149,30 +158,24 @@ unsigned int a;
 }
 
 
-void i16_to_d16_and_d32x4(double * /*1/(2^16)*/, double * /* 2^16*/,
-			  double * /* 0 */,
-			  double * /*result16*/, double * /* result32 */,
-			  float *  /*source - should be unsigned int*
-		          	       converted to float* */);
-
-
-
 void conv_i32_to_d32_and_d16(double *d32, double *d16, 
 			     unsigned int *i32, int len)
 {
-int i;
+int i = 0;
 unsigned int a;
 
 #pragma pipeloop(0)
- for(i=0;i<len-3;i+=4)
+#ifdef RF_INLINE_MACROS
+ for(;i<len-3;i+=4)
    {
      i16_to_d16_and_d32x4(&TwoToMinus16, &TwoTo16, &Zero,
 			  &(d16[2*i]), &(d32[i]), (float *)(&(i32[i])));
    }
+#endif
  for(;i<len;i++)
    {
      a=i32[i];
-     d32[i]=(double)(i32[i]);
+     d32[i]=(double)(a);
      d16[2*i]=(double)(a&0xffff);
      d16[2*i+1]=(double)(a>>16);
    }
@@ -206,7 +209,6 @@ int i;
 
 
 
-void cleanup(double *dt, int from, int tlen);
 
 /*
 ** the lengths of the input arrays should be at least the following:

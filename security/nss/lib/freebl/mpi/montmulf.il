@@ -29,7 +29,7 @@
 !  may use your version of this file under either the MPL or the
 !  GPL.
 !  
-!   $Id: montmulf.il,v 1.1 2000/10/13 00:28:48 nelsonb%netscape.com Exp $
+!   $Id: montmulf.il,v 1.2 2000/11/17 20:15:29 nelsonb%netscape.com Exp $
 !  
 
 !
@@ -75,58 +75,6 @@
 	fsubd	%f2,%f4,%f0
         .end
 
-
-!
-! void separate16(double * /*1/(2^16)*/, double * /* 2^16*/,
-!		double * /*result*/
-!		float *  /*source - should be unsigned int*
-!		                converted to float* */);
-!
-        .inline separate16,20
-        ldd     [%o0],%f2  ! 1/(2^16)
-        ldd     [%o1],%f4  ! 2^16
-
-	ld	[%o3],%f7
-	fmovs	%f5,%f6
-	ld	[%o3+4],%f11
-	fmovs	%f5,%f10
-	ld	[%o3+8],%f15
-	fmovs	%f5,%f14
-	ld	[%o3+12],%f19
-	fmovs	%f5,%f18
-	fxtod	%f6,%f6
-	fxtod	%f10,%f10
-	fxtod	%f14,%f14
-	fxtod	%f18,%f18
-	fmuld	%f2,%f6,%f8
-	fmuld	%f2,%f10,%f12
-	fmuld	%f2,%f14,%f16
-	fmuld	%f2,%f18,%f20
-	fdtox	%f8,%f8
-	fdtox	%f12,%f12
-	fdtox	%f16,%f16
-	fdtox	%f20,%f20
-	fxtod	%f8,%f8
-	std	%f8,[%o2+8]
-	fxtod	%f12,%f12
-	std	%f12,[%o2+24]
-	fxtod	%f16,%f16
-	std	%f16,[%o2+40]
-	fxtod	%f20,%f20
-	std	%f20,[%o2+56]
-	fmuld	%f8,%f4,%f8
-	fmuld	%f12,%f4,%f12
-	fmuld	%f16,%f4,%f16
-	fmuld	%f20,%f4,%f20
-	fsubd	%f6,%f8,%f8
-	std	%f8,[%o2]
-	fsubd	%f10,%f12,%f12
-	std	%f12,[%o2+16]
-	fsubd	%f14,%f16,%f16
-	std	%f16,[%o2+32]
-	fsubd	%f18,%f20,%f20
-	std	%f20,[%o2+48]
-        .end
 
 !
 ! void i16_to_d16_and_d32x4(double * /*1/(2^16)*/, double * /* 2^16*/,
@@ -187,9 +135,3 @@
         .end
 
 
-!
-! unsigned long long tick();
-!
-        .inline tick,0
-	rd	%tick,%o0
-        .end
