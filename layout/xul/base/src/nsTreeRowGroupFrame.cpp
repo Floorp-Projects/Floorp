@@ -127,7 +127,8 @@ void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext&
         ((nsTreeRowGroupFrame*)childFrame)->DestroyRows(aTableFrame, aPresContext, rowsToLose);
         return;
       }
-      else rowsToLose -= rowGroupCount;
+      else 
+        ((nsTreeRowGroupFrame*)childFrame)->DestroyRows(aTableFrame, aPresContext, rowsToLose);
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
@@ -165,7 +166,8 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresC
         ((nsTreeRowGroupFrame*)childFrame)->ReverseDestroyRows(aTableFrame, aPresContext, rowsToLose);
         return;
       }
-      else rowsToLose -= rowGroupCount;
+      else
+        ((nsTreeRowGroupFrame*)childFrame)->ReverseDestroyRows(aTableFrame, aPresContext, rowsToLose);
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
