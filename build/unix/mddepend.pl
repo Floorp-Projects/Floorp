@@ -32,6 +32,7 @@
 #$debug = 1;
 
 $outfile = shift @ARGV;
+my $silent = $ENV{MAKEFLAGS} =~ /^\w*s|\s-s/;
 
 @alldeps=();
 # Parse dependency files
@@ -96,7 +97,7 @@ if (@objs) {
   # Only write out the dependencies if they are different.
   if ($new_output ne $old_output) {
     open(OUT, ">$outfile") and binmode(OUT) and print OUT "$new_output";
-    print "Updating dependencies file, $outfile\n";
+    print "Updating dependencies file, $outfile\n" unless $silent;
     if ($debug) {
       print "new: $new_output\n";
       print "was: $old_output\n" if $old_output ne '';
@@ -104,7 +105,7 @@ if (@objs) {
   }
 } elsif (-s $outfile) {
   # Remove the old dependencies because all objects are up to date.
-  print "Removing old dependencies file, $outfile\n";
+  print "Removing old dependencies file, $outfile\n" unless $silent;
 
   if ($debug) {
     open(OLD, "<$outfile")
