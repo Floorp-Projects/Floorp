@@ -3,10 +3,10 @@
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://chrome.mozilla.org/rdf#"> 
 
-	<chrome ID="chrome://global/">
+	<chrome about="chrome://global/">
 	
     <skin> 
-      <RDF:Description ID="chrome://global/skin/">
+      <RDF:Description about="chrome://global/skin/">
 	    <base>resource:/res/samples/</base>
         <main>xul.css</main> 
       </RDF:Description> 
@@ -15,17 +15,17 @@
 	</chrome>
 	
 
-  <chrome ID="chrome://navigator/"> 
+  <chrome about="chrome://navigator/"> 
 
     <skin> 
-      <RDF:Description ID="chrome://navigator/skin/">
+      <RDF:Description about="chrome://navigator/skin/">
 	    <base>resource:/res/samples/</base>
         <main>navigator.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
-      <RDF:Description ID="chrome://navigator/content/">
+      <RDF:Description about="chrome://navigator/content/">
 	    <base>resource:/res/samples/</base>
         <main>navigator.xul</main> 
       </RDF:Description> 
@@ -33,17 +33,17 @@
 
   </chrome> 
 
-  <chrome ID="chrome://messenger/"> 
+  <chrome about="chrome://messenger/"> 
 
     <skin> 
-      <RDF:Description ID="chrome://messenger/skin/">
+      <RDF:Description about="chrome://messenger/skin/">
 	    <base>resource:/chrome/messenger/skin/default/</base>
         <main>messenger.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
-      <RDF:Description ID="chrome://messenger/content/">
+      <RDF:Description about="chrome://messenger/content/">
 	    <base>resource:/chrome/messenger/content/default/</base>
         <main>messenger.xul</main> 
       </RDF:Description> 
@@ -51,17 +51,17 @@
 
   </chrome> 
 
-  <chrome ID="chrome://messengercompose/"> 
+  <chrome about="chrome://messengercompose/"> 
 
     <skin> 
-      <RDF:Description ID="chrome://messengercompose/skin/">
+      <RDF:Description about="chrome://messengercompose/skin/">
 	    <base>resource:/chrome/messengercompose/skin/default/</base>
         <main>messengercompose.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
-      <RDF:Description ID="chrome://messengercompose/content/">
+      <RDF:Description about="chrome://messengercompose/content/">
 	    <base>resource:/chrome/messengercompose/content/default/</base>
         <main>messengercompose.xul</main> 
       </RDF:Description> 
@@ -69,17 +69,17 @@
 
   </chrome>  
   
-  <chrome ID="chrome://editor/">
+  <chrome about="chrome://editor/">
   
     <content> 
-      <RDF:Description ID="chrome://editor/content/">
+      <RDF:Description about="chrome://editor/content/">
 	    <base>resource:/chrome/editor/composer/content/default/</base>
         <main>EditorAppShell.xul</main> 
       </RDF:Description> 
     </content> 
   
     <skin> 
-      <RDF:Description ID="chrome://editor/skin/">
+      <RDF:Description about="chrome://editor/skin/">
 	    <base>resource:/chrome/editor/composer/skin/default/</base>
         <main>Editor.css</main> 
       </RDF:Description> 
@@ -87,32 +87,32 @@
 
   </chrome>
   
-  <chrome ID="chrome://editordlgs/">
+  <chrome about="chrome://editordlgs/">
     <skin> 
-      <RDF:Description ID="chrome://editordlgs/skin/">
+      <RDF:Description about="chrome://editordlgs/skin/">
 	    <base>resource:/chrome/editor/dialogs/skin/default/</base>
         <main>EditorDialog.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
-      <RDF:Description ID="chrome://editordlgs/content/">
+      <RDF:Description about="chrome://editordlgs/content/">
 	    <base>resource:/chrome/editor/dialogs/content/default/</base>
       </RDF:Description>
     </content> 
   </chrome>
  
-  <chrome ID="chrome://addressbook/"> 
+  <chrome about="chrome://addressbook/"> 
 
     <skin> 
-      <RDF:Description ID="chrome://addressbook/skin/">
+      <RDF:Description about="chrome://addressbook/skin/">
 	    <base>resource:/chrome/addressbook/skin/default/</base>
         <main>addressbook.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
-      <RDF:Description ID="chrome://addressbook/content/">
+      <RDF:Description about="chrome://addressbook/content/">
 	    <base>resource:/chrome/addressbook/content/default/</base>
         <main>addressbook.xul</main> 
       </RDF:Description> 
