@@ -2089,3 +2089,12 @@ js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds)
 			      msFromTime(local));
     *date = UTC(local);
 }
+
+extern JS_FRIEND_API(jsdouble)
+js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
+{
+    jsdouble *date = date_getProlog(cx, obj, NULL);
+    if (!date || JSDOUBLE_IS_NaN(*date))
+        return 0;
+    return (*date);
+}

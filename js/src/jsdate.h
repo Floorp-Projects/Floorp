@@ -105,6 +105,8 @@ js_DateSetMinutes(JSContext *cx, JSObject *obj, int minutes);
 extern JS_FRIEND_API(void)
 js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds);
 
+extern JS_FRIEND_API(jsdouble)
+js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj);
 
 JS_END_EXTERN_C
 
