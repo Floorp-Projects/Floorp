@@ -3964,16 +3964,26 @@ js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
     return v;
 }
 
-void
+JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
+    JSScope *scope;
     uint32 nslots, rlimit, i;
     JSClass *clasp;
     jsval *newslots;
 
     JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
     nslots = (uint32) obj->slots[-1];
     if (slot >= nslots) {
+        if (scope->object != obj) {
+            scope = js_GetMutableScope(cx, obj);
+            if (!scope) {
+                JS_UNLOCK_OBJ(cx, obj);
+                return JS_FALSE;
+            }
+        }
+
         clasp = LOCKED_OBJ_GET_CLASS(obj);
         rlimit = JSSLOT_START(clasp) + JSCLASS_RESERVED_SLOTS(clasp);
         if (clasp->reserveSlots)
@@ -3986,18 +3996,20 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
             JS_realloc(cx, obj->slots - 1, (nslots + 1) * sizeof(jsval));
         if (!newslots) {
             JS_UNLOCK_OBJ(cx, obj);
-            return;
+            return JS_FALSE;
         }
         for (i = 1 + newslots[0]; i <= rlimit; i++)
             newslots[i] = JSVAL_VOID;
-        newslots[0] = nslots;
-        if (OBJ_SCOPE(obj)->object == obj)
-            obj->map->nslots = nslots;
+        newslots[0] = scope->map.nslots = nslots;
         obj->slots = newslots + 1;
+
+        if (slot >= scope->map.freeslot)
+            scope->map.freeslot = slot + 1;
     }
 
     obj->slots[slot] = v;
-    JS_UNLOCK_OBJ(cx, obj);
+    JS_UNLOCK_SCOPE(cx, scope);
+    return JS_TRUE;
 }
 
 #ifdef DEBUG
