@@ -253,7 +253,7 @@ class DToA {
             // ALERT: should it distinguish -0.0 from +0.0 ?
             return "0";
         }
-        
+
         boolean negative;
         if (d >= 0.0) {
             negative = false;
@@ -264,7 +264,7 @@ class DToA {
 
         /* Get the integer part of d including '-' sign. */
         String intDigits;
-        
+
         double dfloor = Math.floor(d);
         long lfloor = (long)dfloor;
         if (lfloor == dfloor) {
@@ -292,7 +292,7 @@ class DToA {
             }
             intDigits = x.toString(base);
         }
-        
+
         if (d == dfloor) {
             // No fraction part
             return intDigits;
@@ -305,7 +305,7 @@ class DToA {
             int digit;
             double df;           /* The fractional part of d */
             BigInteger b;
-            
+
             buffer = new char[DTOBASESTR_BUFFER_SIZE];
             p = 0;
             df = d - dfloor;
@@ -389,7 +389,7 @@ class DToA {
 //                JS_ASSERT(digit < (uint32)base);
                 buffer[p++] = BASEDIGIT(digit);
             } while (!done);
-            
+
             StringBuffer sb = new StringBuffer(intDigits.length() + 1 + p);
             sb.append(intDigits);
             sb.append('.');
