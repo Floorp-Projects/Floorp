@@ -58,9 +58,13 @@ function initDialog() {
   imageElement = appCore.getSelectedElement(tagName);
 
   if (imageElement) {
+    dump("Found existing image\n");
     // We found an element and don't need to insert one
     insertNew = false;
-    dump("Found existing image\n");
+
+    // Set the controls to the image's attributes
+    dialog.Src.value = imageElement.getAttribute("src");
+    dialog.AltText.value = imageElement.getAttribute("alt");
   } else {
     insertNew = true;
     // We don't have an element selected, 

@@ -13,6 +13,9 @@
   </script>
   <script language="JavaScript" src="chrome://editordlgs/content/Ed?????.js">
   </script>
+
+  <xul:broadcaster id="args" value=""/>
+
   <table>
     <tr>
       <td>

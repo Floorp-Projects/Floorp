@@ -21,19 +21,23 @@ function Startup()
   }
 
   // NEVER create an appcore here - we must find parent editor's
-  appCore = XPAppCoresManager.Find("EditorAppCoreHTML");  
+  
+  // temporary while this window is opend with ShowWindowWithArgs
+  dump("Getting parent appcore\n");
+  var editorName = document.getElementById("args").getAttribute("value");
+  dump("Got editorAppCore called " + editorName + "\n");
+  appCore = XPAppCoresManager.Find(editorName);  
   if(!appCore || !toolkitCore) {
     dump("EditorAppCore not found!!!\n");
     toolkitCore.CloseWindow(window);
+    return;  
   }
-  dump("EditorAppCore found for Image Properties dialog\n");
+  dump("EditorAppCore found for ???????? dialog\n");
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
   // GET EACH CONTROL -- E.G.:
   //dialog.editBox = document.getElementById("editBox");
-  // Can we get at just the edit field?
-  dialog.AltText = document.getElementById("image.AltText");
 
   initDialog();
   
@@ -42,10 +46,10 @@ function Startup()
 }
 
 function initDialog() {
-  // Get a single selected anchor element
-  imageElement = appCore.getSelectedElement(tagName);
+  // Get a single selected element of the desired type
+  element = appCore.getSelectedElement(tagName);
 
-  if (imageElement) {
+  if (element) {
     // We found an element and don't need to insert one
     insertNew = false;
     dump("Found existing image\n");
@@ -54,10 +58,10 @@ function initDialog() {
     // We don't have an element selected, 
     //  so create one with default attributes
     dump("Element not selected - calling createElementWithDefaults\n");
-    imageElement = appCore.createElementWithDefaults(tagName);
+    element = appCore.createElementWithDefaults(tagName);
   }
 
-  if(!imageElement)
+  if(!element)
   {
     dump("Failed to get selected element or create a new one!\n");
     //toolkitCore.CloseWindow(window);
@@ -66,12 +70,10 @@ function initDialog() {
 
 function applyChanges()
 {
-  // TODO: BE SURE Src AND AltText are completed!
-  imageElement.setAttribute("src",dialog.Src.value);
-  // We must convert to "file:///" format else image doesn't load!
-  imageElement.setAttribute("alt",dialog.AltText.value);  
+// Set all attributes from the dialog values, for example:
+  element.setAttribute("src",dialog.Src.value);
+
   if (insertNew) {
-    dump("Src="+imageElement.getAttribute("src")+" Alt="+imageElement.getAttribute("alt")+"\n");
-    appCore.insertElement(imageElement, true)
-    
+    appCore.insertElement(element, true)
   }
+}
