@@ -77,8 +77,8 @@ sub setup_vars {
         shift @$argv;
         my $dist_dir = shift @$argv or usage("did not provide dist_dir");
 
-        $ENV{CLASSPATH} .= "$dist_dir/../classes$dbg_suffix";
-        $ENV{$ld_lib_path} .= "$dist_dir/lib";
+        $ENV{CLASSPATH} .= "$pathsep$dist_dir/../classes$dbg_suffix";
+        $ENV{$ld_lib_path} .= "$pathsep$dist_dir/lib";
         $nss_lib_dir = "$dist_dir/lib"
     } elsif( $$argv[0] eq "release" ) {
         shift @$argv;

@@ -232,6 +232,7 @@ Java_org_mozilla_jss_pkcs11_PK11Signature_engineSignNative
 
     PR_ASSERT(env!=NULL && this!=NULL);
 
+    signature.data = NULL;
 
     /*
      * Extract the signature context from the Java wrapper
@@ -264,12 +265,13 @@ Java_org_mozilla_jss_pkcs11_PK11Signature_engineSignNative
         goto finish;
     }
     memcpy(sigBytes, signature.data, signature.len);
-    (*env)->ReleaseByteArrayElements(env, sigArray, sigBytes, 0);
-    sigBytes=NULL;
     
 finish:
     if(sigBytes != NULL) {
         (*env)->ReleaseByteArrayElements(env, sigArray, sigBytes, 0);
+    }
+    if( signature.data != NULL ) {
+        PR_Free(signature.data);
     }
     return sigArray;
 }

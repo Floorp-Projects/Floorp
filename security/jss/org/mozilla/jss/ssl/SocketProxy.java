@@ -42,7 +42,6 @@ class SocketProxy extends org.mozilla.jss.util.NativeProxy {
     protected native void releaseNativeResources();
 
     protected void finalize() throws Throwable {
-//        System.out.println("In SocketProxy.finalize");
         super.finalize();
     }
 }

@@ -250,3 +250,9 @@ Java_org_mozilla_jss_ssl_SocketProxy_releaseNativeResources;
 ;+    local:
 ;+       *;
 ;+};
+;+JSS_3.2.1 {       # JSS 3.2.1 release
+;+    global:
+Java_org_mozilla_jss_ssl_SSLSocket_getImplementedCipherSuites;
+;+    local:
+;+       *;
+;+};

@@ -145,6 +145,7 @@ public class PKIStatusInfo implements ASN1Value {
             bytes[1] = (byte) ((failInfo & 0x00ff0000) >>> 16);
             int padCount = 7; // 7 unused bits
             BIT_STRING bs = new BIT_STRING(bytes, padCount);
+            bs.setRemoveTrailingZeroes(true);
             seq.addElement( bs );
         }
 

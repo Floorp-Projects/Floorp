@@ -846,3 +846,34 @@ Java_org_mozilla_jss_ssl_SSLSocket_setCipherPolicyNative(
 finish:
     return;
 }
+
+JNIEXPORT jintArray JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_getImplementedCipherSuites
+    (JNIEnv *env, jclass clazz)
+{
+    jintArray ciphArray = NULL;
+    jint* arrayRegion = NULL;
+    int i;
+
+    ciphArray = (*env)->NewIntArray(env, SSL_NumImplementedCiphers);
+    if( ciphArray == NULL ) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    arrayRegion = (*env)->GetIntArrayElements(env, ciphArray, NULL/*isCopy*/);
+    if( arrayRegion == NULL ) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    for( i=0; i < SSL_NumImplementedCiphers; ++i) {
+        arrayRegion[i] = SSL_ImplementedCiphers[i];
+    }
+
+finish:
+    if( arrayRegion != NULL ) {
+        (*env)->ReleaseIntArrayElements(env, ciphArray, arrayRegion, 0);
+    }
+    return ciphArray;
+}

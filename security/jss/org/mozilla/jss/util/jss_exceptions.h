@@ -72,6 +72,8 @@ PR_BEGIN_EXTERN_C
 
 #define INCORRECT_PASSWORD_EXCEPTION "org/mozilla/jss/util/IncorrectPasswordException"
 
+#define INTERRUPTED_IO_EXCEPTION "java/io/InterruptedIOException"
+
 #define INVALID_KEY_FORMAT_EXCEPTION "org/mozilla/jss/crypto/InvalidKeyFormatException"
 
 #define INVALID_PARAMETER_EXCEPTION "java/security/InvalidParameterException"

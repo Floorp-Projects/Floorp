@@ -115,7 +115,6 @@ public class CertBag implements ASN1Value {
             throw new IllegalArgumentException("certType or cert is null");
         }
         this.certType = certType;
-        System.out.println("CertBag has type "+certType.toString());
         if( cert instanceof ANY ) {
             this.cert = (ANY) cert;
         } else {

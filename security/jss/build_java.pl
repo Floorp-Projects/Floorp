@@ -118,7 +118,6 @@ sub setup_vars {
     $javadoc = "$ENV{JAVA_HOME}/bin/javadoc";
 
     $dist_dir = $cmdline_vars{SOURCE_PREFIX};
-    $ENV{JCE_JAR} or die "Must specify JCE_JAR environment variable";
     $jce_jar = $ENV{JCE_JAR};
 
     $class_release_dir = $cmdline_vars{SOURCE_RELEASE_PREFIX};
@@ -135,7 +134,9 @@ sub setup_vars {
     }
     $jni_header_dir = "$dist_dir/private/jss/_jni";
 
-    $classpath = "$jce_jar";
+    if( $jce_jar ) {
+        $classpath = "-classpath $jce_jar";
+    }
 }
 
 sub clean {
@@ -188,7 +189,7 @@ sub build {
     if( scalar(@source_list) > 0 ) {
         ensure_dir_exists($class_dir);
         print_do("$javac $javac_opt_flag -sourcepath . -d $class_dir " .
-            "-classpath $classpath " . join(" ",@source_list));
+            "$classpath " . join(" ",@source_list));
     }
 
     #

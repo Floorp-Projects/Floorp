@@ -245,7 +245,6 @@ public class AuthenticatedSafes implements ASN1Value {
         // get the key gen parameters
         AlgorithmIdentifier algid = eci.getContentEncryptionAlgorithm();
         KeyGenAlgorithm kgAlg = KeyGenAlgorithm.fromOID( algid.getOID() );
-        System.out.println("ContentEncryptionAlg: "+kgAlg);
         ASN1Value params = algid.getParameters();
         if( params == null ) {
             throw new InvalidAlgorithmParameterException(
@@ -277,7 +276,6 @@ public class AuthenticatedSafes implements ASN1Value {
 
         // perform the decryption
         Cipher cipher = token.getCipherContext( encAlg );
-        System.out.println("EncryptionAlg: "+encAlg);
         cipher.initDecrypt(key,  algParams );
         return cipher.doFinal( encryptedContent.toByteArray() );
     }

@@ -51,6 +51,7 @@ public class BIT_STRING implements ASN1Value {
 
     private byte[] bits;
     private int padCount;
+    private boolean removeTrailingZeroes = false;
 
     /**
      * @param bits The bits packed into an array of bytes, with padding
@@ -94,14 +95,37 @@ public class BIT_STRING implements ASN1Value {
         }
         // allocate enough bytes to hold all the bits
         bits = new byte[(numBits+7) / 8];
-        padCount = bits.length - numBits;
-        Assert._assert( padCount >= 0 );
+        padCount = (bits.length * 8) - numBits;
+        Assert._assert( padCount >= 0 && padCount <= 7);
 
         for(int i=0; i < numBits; i++) {
             if( bs.get(i) ) {
                 bits[i/8] |= 0x80 >>> (i%8);
             }
         }
+    }
+
+    /**
+     * Determines whether the DER-encoding of this bitstring will have
+     * its trailing zeroes removed. Generally, DER requires that trailing
+     * zeroes be removed when the bitstring is used to hold flags, but
+     * not when it is used to hold binary data (such as a public key).
+     * The default is <tt>false</tt>.
+     */
+    public boolean getRemoveTrailingZeroes() {
+        return this.removeTrailingZeroes;
+    }
+
+    /**
+     * Determines whether the DER-encoding of this bitstring will have
+     * its trailing zeroes removed. Generally, DER requires that trailing
+     * zeroes be removed when the bitstring is used to hold flags, but
+     * not when it is used to hold binary data (such as a public key).
+     * The default is <tt>false</tt>. If this bit string is used to hold
+     * flags, you should set this to <tt>true</tt>.
+     */
+    public void setRemoveTrailingZeroes(boolean removeTrailingZeroes) {
+        this.removeTrailingZeroes = removeTrailingZeroes;
     }
 
     /**
@@ -172,12 +196,47 @@ public class BIT_STRING implements ASN1Value {
     public void encode(Tag implicitTag, OutputStream ostream)
         throws IOException
     {
-        ASN1Header head = new ASN1Header(implicitTag, FORM, bits.length+1 );
+        // force all unused bits to be zero, in support of DER standard.
+        if( bits.length > 0 ) {
+            bits[bits.length-1] &= (0xff << padCount);
+        }
+        int padBits;
+        int numBytes;
+
+        if( removeTrailingZeroes ) {
+            // first pare off empty bytes
+            numBytes = bits.length;
+            for( ; numBytes > 0; --numBytes) {
+                if( bits[numBytes-1] != 0 ) {
+                    break;
+                }
+            }
+
+            // Now compute the number of unused bits. This includes any
+            // trailing zeroes, whether they are significant or not.
+            if( numBytes == 0 ) {
+                padBits = 0;
+            } else {
+                for( padBits=0; padBits < 8; ++padBits ) {
+                    if( (bits[numBytes-1] & (1 << padBits)) != 0 ) {
+                        break;
+                    }
+                }
+                Assert._assert(padBits >=0 && padBits <= 7);
+            }
+        } else {
+            // Don't remove trailing zeroes. Just write the bits out as-is.
+            padBits = padCount;
+            numBytes = bits.length;
+
+        }
+
+        ASN1Header head = new ASN1Header(implicitTag, FORM, numBytes+1);
 
         head.encode(ostream);
 
-        ostream.write(padCount);
-        ostream.write(bits);
+        ostream.write(padBits);
+        ostream.write(bits, 0, numBytes);
     }
 
     private static final Template templateInstance = new Template();

@@ -151,7 +151,11 @@ public class GetCRL implements ASN1Value {
         sequence.addElement(cRLName);
         this.time = time;
         sequence.addElement(time);
+
+        // Remove trailing zeroes in this bit string because it contains
+        // flags.
         this.reasons = reasons;
+        reasons.setRemoveTrailingZeroes(true);
         sequence.addElement(reasons);
     }
 

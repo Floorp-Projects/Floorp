@@ -350,6 +350,7 @@ public class SSLSocket extends java.net.Socket {
 
     /**
      * Sets the SO_TIMEOUT socket option.
+     * @param timeout The timeout time in milliseconds.
      */
     public void setSoTimeout(int timeout) throws SocketException {
         base.setTimeout(timeout);
@@ -357,6 +358,7 @@ public class SSLSocket extends java.net.Socket {
 
     /**
      * Returns the current value of the SO_TIMEOUT socket option.
+     * @return The timeout time in milliseconds.
      */
     public int getSoTimeout() throws SocketException {
         return base.getTimeout();
@@ -707,44 +709,52 @@ public class SSLSocket extends java.net.Socket {
         return buf.toString();
     }
 
+    /**
+     * Returns a list of cipher suites that are implemented by NSS.
+     * Each element in the array will be one of the cipher suite constants
+     * defined in this class (for example,
+     * <tt>TLS_RSA_WITH_AES_128_CBC_SHA</tt>).
+     */
+    public static native int[] getImplementedCipherSuites();
+
     public final static int SSL2_RC4_128_WITH_MD5                  = 0xFF01;
     public final static int SSL2_RC4_128_EXPORT40_WITH_MD5         = 0xFF02;
     public final static int SSL2_RC2_128_CBC_WITH_MD5              = 0xFF03;
     public final static int SSL2_RC2_128_CBC_EXPORT40_WITH_MD5     = 0xFF04;
-//  public final static int SSL2_IDEA_128_CBC_WITH_MD5             = 0xFF05;
+    public final static int SSL2_IDEA_128_CBC_WITH_MD5             = 0xFF05;
     public final static int SSL2_DES_64_CBC_WITH_MD5               = 0xFF06;
     public final static int SSL2_DES_192_EDE3_CBC_WITH_MD5         = 0xFF07;
 
     public final static int SSL3_RSA_WITH_NULL_MD5                 = 0x0001;
-//  public final static int SSL3_RSA_WITH_NULL_SHA                 = 0x0002;
+    public final static int SSL3_RSA_WITH_NULL_SHA                 = 0x0002;
     public final static int SSL3_RSA_EXPORT_WITH_RC4_40_MD5        = 0x0003;
     public final static int SSL3_RSA_WITH_RC4_128_MD5              = 0x0004;
     public final static int SSL3_RSA_WITH_RC4_128_SHA              = 0x0005;
     public final static int SSL3_RSA_EXPORT_WITH_RC2_CBC_40_MD5    = 0x0006;
-//  public final static int SSL3_RSA_WITH_IDEA_CBC_SHA             = 0x0007;
-//  public final static int SSL3_RSA_EXPORT_WITH_DES40_CBC_SHA     = 0x0008;
+    public final static int SSL3_RSA_WITH_IDEA_CBC_SHA             = 0x0007;
+    public final static int SSL3_RSA_EXPORT_WITH_DES40_CBC_SHA     = 0x0008;
     public final static int SSL3_RSA_WITH_DES_CBC_SHA              = 0x0009;
     public final static int SSL3_RSA_WITH_3DES_EDE_CBC_SHA         = 0x000a;
 
-//  public final static int SSL3_DH_DSS_EXPORT_WITH_DES40_CBC_SHA  = 0x000b;
-//  public final static int SSL3_DH_DSS_WITH_DES_CBC_SHA           = 0x000c;
-//  public final static int SSL3_DH_DSS_WITH_3DES_EDE_CBC_SHA      = 0x000d;
-//  public final static int SSL3_DH_RSA_EXPORT_WITH_DES40_CBC_SHA  = 0x000e;
-//  public final static int SSL3_DH_RSA_WITH_DES_CBC_SHA           = 0x000f;
-//  public final static int SSL3_DH_RSA_WITH_3DES_EDE_CBC_SHA      = 0x0010;
+    public final static int SSL3_DH_DSS_EXPORT_WITH_DES40_CBC_SHA  = 0x000b;
+    public final static int SSL3_DH_DSS_WITH_DES_CBC_SHA           = 0x000c;
+    public final static int SSL3_DH_DSS_WITH_3DES_EDE_CBC_SHA      = 0x000d;
+    public final static int SSL3_DH_RSA_EXPORT_WITH_DES40_CBC_SHA  = 0x000e;
+    public final static int SSL3_DH_RSA_WITH_DES_CBC_SHA           = 0x000f;
+    public final static int SSL3_DH_RSA_WITH_3DES_EDE_CBC_SHA      = 0x0010;
 
-//  public final static int SSL3_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA = 0x0011;
-//  public final static int SSL3_DHE_DSS_WITH_DES_CBC_SHA          = 0x0012;
-//  public final static int SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA     = 0x0013;
-//  public final static int SSL3_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA = 0x0014;
-//  public final static int SSL3_DHE_RSA_WITH_DES_CBC_SHA          = 0x0015;
-//  public final static int SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA     = 0x0016;
+    public final static int SSL3_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA = 0x0011;
+    public final static int SSL3_DHE_DSS_WITH_DES_CBC_SHA          = 0x0012;
+    public final static int SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA     = 0x0013;
+    public final static int SSL3_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA = 0x0014;
+    public final static int SSL3_DHE_RSA_WITH_DES_CBC_SHA          = 0x0015;
+    public final static int SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA     = 0x0016;
 
-//  public final static int SSL3_DH_ANON_EXPORT_WITH_RC4_40_MD5    = 0x0017;
-//  public final static int SSL3_DH_ANON_WITH_RC4_128_MD5          = 0x0018;
-//  public final static int SSL3_DH_ANON_EXPORT_WITH_DES40_CBC_SHA = 0x0019;
-//  public final static int SSL3_DH_ANON_WITH_DES_CBC_SHA          = 0x001a;
-//  public final static int SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA     = 0x001b;
+    public final static int SSL3_DH_ANON_EXPORT_WITH_RC4_40_MD5    = 0x0017;
+    public final static int SSL3_DH_ANON_WITH_RC4_128_MD5          = 0x0018;
+    public final static int SSL3_DH_ANON_EXPORT_WITH_DES40_CBC_SHA = 0x0019;
+    public final static int SSL3_DH_ANON_WITH_DES_CBC_SHA          = 0x001a;
+    public final static int SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA     = 0x001b;
 
     public final static int SSL3_FORTEZZA_DMS_WITH_NULL_SHA        = 0x001c;
     public final static int SSL3_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA= 0x001d;

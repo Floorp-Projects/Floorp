@@ -163,6 +163,7 @@ public class SSLServerSocket extends java.net.ServerSocket {
 
     /**
      * Sets the SO_TIMEOUT socket option.
+     * @param timeout The timeout time in milliseconds.
      */
     public void setSoTimeout(int timeout) {
         base.setTimeout(timeout);
@@ -170,6 +171,7 @@ public class SSLServerSocket extends java.net.ServerSocket {
 
     /**
      * Returns the current value of the SO_TIMEOUT socket option.
+     * @return The timeout time in milliseconds.
      */
     public int getSoTimeout() {
         return base.getTimeout();
