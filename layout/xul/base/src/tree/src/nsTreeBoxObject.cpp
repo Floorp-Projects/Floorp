@@ -381,6 +381,14 @@ NS_IMETHODIMP nsTreeBoxObject::InvalidateScrollbar()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTreeBoxObject::GetRowAt(PRInt32 x, PRInt32 y, PRInt32 *_retval)
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->GetRowAt(x, y, _retval);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsTreeBoxObject::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row, PRUnichar **colID,
                                              PRUnichar** childElt)
 {
