@@ -254,10 +254,9 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
                                 NS_XPCOMPROXY_PROGID,
                                 nsProxyObjectManager::Create);
 
-#if 0
     // Prepopulate registry for performance
+    // Ignore return value. It is ok if this fails.
     nsComponentManagerImpl::gComponentManager->PlatformPrePopulateRegistry();
-#endif
 
     return rv;
 }
