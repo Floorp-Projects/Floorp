@@ -47,7 +47,9 @@
 // Now we need a content listener to register 
 //--------------------------------------------
 
-class CertContentListener : public nsIURIContentListener {
+class CertContentListener : public nsIURIContentListener,
+                            public nsSupportsWeakReference
+{
 public:
   CertContentListener();
   virtual ~CertContentListener();
