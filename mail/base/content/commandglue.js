@@ -481,6 +481,9 @@ function ConvertColumnIDToSortType(columnID)
     case "scoreCol":
       sortKey = nsMsgViewSortType.byScore;
       break;
+    case "idCol":
+      sortKey = nsMsgViewSortType.byId;
+      break;
     default:
       dump("unsupported sort column: " + columnID + "\n");
       sortKey = 0;
