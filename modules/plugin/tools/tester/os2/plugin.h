@@ -58,7 +58,8 @@ typedef enum
   gp_tofile,
   gp_toframe,
   gp_flush,
-  gp_rememberlast
+  gp_rememberlast,
+  gp_standalone
 }GUIPrefs;
 
 class CPlugin : public CPluginBase
