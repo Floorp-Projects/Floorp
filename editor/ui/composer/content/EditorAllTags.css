@@ -29,7 +29,7 @@
 */
 
 *[\_moz-userdefined] {
-  display: inline:
+  display: inline;
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
   background-image: url(chrome://editor/content/images/tag-userdefined.gif);
