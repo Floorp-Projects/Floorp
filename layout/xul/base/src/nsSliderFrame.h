@@ -30,20 +30,27 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsITimerCallback.h"
 
 class nsString;
 class nsIScrollbarListener;
 class nsISupportsArray;
+class nsITimer;
+
+#define INITAL_REPEAT_DELAY 500
+#define REPEAT_DELAY        50
 
 nsresult NS_NewSliderFrame(nsIFrame** aResult) ;
 
 
 class nsSliderFrame : public nsHTMLContainerFrame, 
                              nsIDOMMouseListener, 
-                             nsIAnonymousContentCreator
+                             nsIAnonymousContentCreator,
+                             nsITimerCallback
 {
 public:
   nsSliderFrame();
+  virtual ~nsSliderFrame();
 
     // nsIFrame overrides
   NS_IMETHOD GetFrameName(nsString& aResult) const {
@@ -75,10 +82,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-   NS_IMETHOD HandleDrag(nsIPresContext& aPresContext, 
-                              nsGUIEvent*     aEvent,
-                              nsEventStatus&  aEventStatus);
-
      NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
@@ -106,7 +109,7 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-        /**
+ /**
   * Processes a mouse down event
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
@@ -165,6 +168,25 @@ public:
 
   void SetScrollbarListener(nsIScrollbarListener* aListener);
 
+
+  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus)  { return NS_OK; }
+
+  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+                        nsGUIEvent *    aEvent,
+                        nsEventStatus&  aEventStatus)  { return NS_OK; }
+
+  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+                           nsGUIEvent *    aEvent,
+                           nsEventStatus&  aEventStatus);
+
+  virtual void Notify(nsITimer *timer);
+
 protected:
 
   virtual void ReflowThumb(nsIPresContext&   aPresContext,
@@ -177,15 +199,16 @@ protected:
 
   virtual PRIntn GetSkipSides() const { return 0; }
 
+ 
 private:
 
   nsIContent* GetScrollBar();
-  void PageUpDown(nsIPresContext& aPresContext, nsIFrame* aThumbFrame, nscoord change);
-  void SetCurrentPosition(nsIPresContext& aPresContext, nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos);
-  NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
+  void PageUpDown(nsIFrame* aThumbFrame, nscoord change);
+  void SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos);
+  NS_IMETHOD DragThumb(PRBool aGrabMouseEvents);
   void AddListener();
   void RemoveListener();
-  PRBool isCapturingEvents();
+  PRBool isDraggingThumb();
 
   float mRatio;
 
@@ -196,6 +219,7 @@ private:
 
   nsIScrollbarListener* mScrollbarListener;
 
+  static nscoord gChange;
 }; // class nsSliderFrame
 
 #endif

@@ -29,12 +29,208 @@
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsISupportsArray.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
-#include "nsDocument.h"
+#include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
+#include "nsIXMLContent.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIDOMElement.h"
+#include "nsXMLElement.h"
+#include "nsIStyledContent.h"
+#include "nsGenericElement.h"
+#include "nsIStyleRule.h"
+#include "nsHTMLValue.h"
+#include "nsIAnonymousContent.h"
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
+static NS_DEFINE_IID(kIStyledContentIID,               NS_ISTYLEDCONTENT_IID);
+static NS_DEFINE_IID(kIAnonymousContentIID,            NS_IANONYMOUS_CONTENT_IID);
+
+class AnonymousElement : public nsXMLElement, nsIStyledContent, nsIAnonymousContent
+{
+public:
+  AnonymousElement(nsIAtom *aTag):nsXMLElement(aTag) {}
+
+  // nsIStyledContent
+  NS_IMETHOD GetID(nsIAtom*& aResult) const;
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
+  NS_IMETHOD HasClass(nsIAtom* aClass) const;
+
+  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
+
+  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
+
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, 
+                                           PRInt32& aHint) const;
+
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
+
+  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+
+  // NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
+
+};
+
+/*
+NS_IMETHODIMP 
+AnonymousElement::GetTag(nsIAtom*& aResult) const
+{
+   return mInner.GetTag(aResult);
+}
+
+
+NS_IMETHODIMP
+AnonymousElement::List(FILE* out, PRInt32 aIndent) const
+{
+  
+  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
+
+  PRInt32 indx;
+  for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
+
+  fprintf(out, "Comment refcount=%d<", mRefCnt);
+
+  nsAutoString tmp;
+  mInner.ToCString(tmp, 0, mInner.mText.GetLength());
+  fputs(tmp, out);
+
+  fputs(">\n", out);
+ 
+  return mInner.List(out, aIndent);
+}
+*/
+
+NS_IMETHODIMP
+AnonymousElement::HandleDOMEvent(nsIPresContext& aPresContext,
+                              nsEvent* aEvent,
+                              nsIDOMEvent** aDOMEvent,
+                              PRUint32 aFlags,
+                              nsEventStatus& aEventStatus)
+{
+  // if our parent is not anonymous then we don't want to bubble the event
+  // so lets set our parent in nsnull to prevent it. Then we will set it
+  // back.
+  nsIContent* parent = nsnull;
+  GetParent(parent);
+
+  nsCOMPtr<nsIAnonymousContent> anonymousParent(do_QueryInterface(parent));
+
+
+  if (!anonymousParent) 
+    SetParent(nsnull);
+
+  nsresult rv = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                               aFlags, aEventStatus);
+
+  if (!anonymousParent)
+    SetParent(parent);
+
+  return rv;
+}
+
+
+// nsIStyledContent Implementation
+NS_IMETHODIMP
+AnonymousElement::GetID(nsIAtom*& aResult) const
+{
+  /*
+  nsAutoString value;
+  GetAttribute(kNameSpaceID_None, kIdAtom, value);
+
+  aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
+  */
+  return NS_OK;
+}
+    
+NS_IMETHODIMP
+AnonymousElement::GetClasses(nsVoidArray& aArray) const
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP 
+AnonymousElement::HasClass(nsIAtom* aClass) const
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+AnonymousElement::GetContentStyleRules(nsISupportsArray* aRules)
+{
+  return NS_OK;
+}
+    
+NS_IMETHODIMP
+AnonymousElement::GetInlineStyleRules(nsISupportsArray* aRules)
+{
+  // we don't currently support the style attribute
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AnonymousElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, 
+                                         PRInt32& aHint) const
+{
+  aHint = NS_STYLE_HINT_CONTENT;  // we never map attribtes to style
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+AnonymousElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{         
+  if (aIID.Equals(kIStyledContentIID)) {
+    nsIStyledContent* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    return NS_OK;
+  } else if (aIID.Equals(kIAnonymousContentIID)) {
+    nsIAnonymousContent* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    return NS_OK;
+  }
+
+  return nsXMLElement::QueryInterface(aIID, aInstancePtr);                                                                                                                                                       
+}
+
+
+nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode)
+{
+
+    // get the document
+    nsIDocument* document = nsnull;
+    aParent->GetDocument(document);
+    
+    // create the xml element
+    nsCOMPtr<nsIXMLContent> content;
+    //NS_NewXMLElement(getter_AddRefs(content), aTag);
+    content = new AnonymousElement(aTag);
+
+    content->SetNameSpaceID(aNameSpaceId);
+    
+    // set the document
+    content->SetDocument(document, PR_TRUE);
+    
+    aNewNode = content;
+
+  /*
+    nsCOMPtr<nsIDocument> document;
+    aParent->GetDocument(*getter_AddRefs(document));
+
+    nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
+    nsCOMPtr<nsIDOMElement> element;
+    nsString name;
+    aTag->ToString(name);
+    domDocument->CreateElement(name, getter_AddRefs(element));
+    aNewNode = do_QueryInterface(element);
+*/
+
+    return NS_OK;
+}
+
 
 //
 // NS_NewToolbarFrame
@@ -68,36 +264,26 @@ nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   mContent->ChildCount(count); 
 
   if (count == 0) {
-    // get the document
-    nsCOMPtr<nsIDocument> idocument;
-    mContent->GetDocument(*getter_AddRefs(idocument));
-
-    nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
-
-    // create a decrement button
-    nsCOMPtr<nsIDOMElement> node;
-    document->CreateElement("scrollbarbutton",getter_AddRefs(node));
+ 
     nsCOMPtr<nsIContent> content;
-
-    content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, "decrement", PR_TRUE);
+    NS_CreateAnonymousNode(mContent, nsXULAtoms::scrollbarbutton, nsXULAtoms::nameSpaceID, content);
+    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, "decrement", PR_FALSE);
     aAnonymousChildren.AppendElement(content);
 
-    // a slider
-    document->CreateElement("slider",getter_AddRefs(node));
-    content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_TRUE);
+    NS_CreateAnonymousNode(mContent, nsXULAtoms::slider, nsXULAtoms::nameSpaceID, content);
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_FALSE);
     aAnonymousChildren.AppendElement(content);
 
-    // and increment button
-    document->CreateElement("scrollbarbutton",getter_AddRefs(node));
-    content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, "increment", PR_TRUE);
+    NS_CreateAnonymousNode(mContent, nsXULAtoms::scrollbarbutton, nsXULAtoms::nameSpaceID, content);
+    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, "increment", PR_FALSE);
     aAnonymousChildren.AppendElement(content);
   }
 
+
   return NS_OK;
 }
+
+
 
 NS_IMETHODIMP
 nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
@@ -108,7 +294,10 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
                                               aAttribute, aHint);
   // if the current position changes
-  if (aAttribute == nsXULAtoms::curpos) {
+  if (       aAttribute == nsXULAtoms::curpos || 
+             aAttribute == nsXULAtoms::maxpos || 
+             aAttribute == nsXULAtoms::pageincrement ||
+             aAttribute == nsXULAtoms::increment) {
      // tell the slider its attribute changed so it can 
      // update itself
      nsIFrame* slider;
@@ -135,6 +324,44 @@ nsScrollbarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;                                                        
   }
 
+  if (aIID.Equals(kIStyledContentIID)) {                                         
+    *aInstancePtr = (void*)(nsIStyledContent*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+
   return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
+}
+
+NS_IMETHODIMP
+nsScrollbarFrame::HandlePress(nsIPresContext& aPresContext, 
+                     nsGUIEvent*     aEvent,
+                     nsEventStatus&  aEventStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScrollbarFrame::HandleMultiplePress(nsIPresContext& aPresContext, 
+                     nsGUIEvent*     aEvent,
+                     nsEventStatus&  aEventStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsScrollbarFrame::HandleDrag(nsIPresContext& aPresContext, 
+                              nsGUIEvent*     aEvent,
+                              nsEventStatus&  aEventStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsScrollbarFrame::HandleRelease(nsIPresContext& aPresContext, 
+                                 nsGUIEvent*     aEvent,
+                                 nsEventStatus&  aEventStatus)
+{
+  return NS_OK;
 }
 

@@ -42,3 +42,4 @@ nsIStyleSheet.h
 nsIStyleSheetLinkingElement.h
 nsITextContent.h
 nsTextFragment.h
+nsIAnonymousContent.h

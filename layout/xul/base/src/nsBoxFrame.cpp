@@ -357,6 +357,12 @@ printf("\n");
   //------------------------- Add our border and insets in ----------------------------
   //-----------------------------------------------------------------------------------
 
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE && rect.width < aReflowState.mComputedWidth)
+    rect.width = aReflowState.mComputedWidth;
+ 
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE && rect.height < aReflowState.mComputedHeight)
+    rect.height = aReflowState.mComputedHeight;
+ 
   // the rect might have gotten bigger so recalc ourSize
   rect.Inflate(inset);
   rect.Inflate(aReflowState.mComputedBorderPadding);

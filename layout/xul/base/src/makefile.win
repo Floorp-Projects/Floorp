@@ -24,6 +24,7 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsRepeatService.cpp        \
         nsToolbarDragListener.cpp        \
         nsToolbarItemFrame.cpp        \
         nsSplitterFrame.cpp        \
@@ -54,6 +55,7 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+        .\$(OBJDIR)\nsRepeatService.obj    \
         .\$(OBJDIR)\nsToolbarDragListener.obj    \
         .\$(OBJDIR)\nsToolbarItemFrame.obj    \
         .\$(OBJDIR)\nsGrippyFrame.obj    \
@@ -93,7 +95,9 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
    -I..\..\..\html\table\src \
    -I..\..\content\src \
    -I..\..\..\html\forms\src \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
+  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
+  -I..\..\..\xml\content\src \
+  -I..\..\..\base\public
 
 LCFLAGS = \
         $(LCFLAGS) \

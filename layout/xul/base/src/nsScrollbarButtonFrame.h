@@ -28,10 +28,12 @@
 #define nsScrollbarButtonFrame_h___
 
 #include "nsTitledButtonFrame.h"
+#include "nsITimerCallback.h"
 
 class nsSliderFrame;
 
-class nsScrollbarButtonFrame : public nsTitledButtonFrame
+class nsScrollbarButtonFrame : public nsTitledButtonFrame, 
+                                      nsITimerCallback
 {
 public:
 
@@ -45,8 +47,32 @@ public:
   static nsresult GetChildWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
   static nsresult GetParentWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
 
+   NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus)  { return NS_OK; }
+
+  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+                        nsGUIEvent *    aEvent,
+                        nsEventStatus&  aEventStatus) { return NS_OK; }
+
+  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+                           nsGUIEvent *    aEvent,
+                           nsEventStatus&  aEventStatus);
+
+  virtual void Notify(nsITimer *timer);
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
+
+
 protected:
   virtual void MouseClicked(nsIPresContext& aPresContext);
+  virtual void MouseClicked();
 
   
 }; // class nsTabFrame
