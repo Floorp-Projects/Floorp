@@ -10,17 +10,32 @@
 
 @interface OrgMozillaChimeraPreferenceAppearance : PreferencePaneBase 
 {
-  IBOutlet NSButton 	*checkboxUnderlineLinks;
-  IBOutlet NSButton 	*checkboxUseMyColors;
-  IBOutlet NSColorWell *colorwellBackgroundColor;
-  IBOutlet NSColorWell *colorwellTextColor;
-  IBOutlet NSColorWell *colorwellUnvisitedLinks;
-  IBOutlet NSColorWell *colorwellVisitedLinks;  
+  IBOutlet NSTabView 		*tabView;
+
+  IBOutlet NSButton 		*checkboxUnderlineLinks;
+  IBOutlet NSButton 		*checkboxUseMyColors;
+  IBOutlet NSColorWell 	*colorwellBackgroundColor;
+  IBOutlet NSColorWell 	*colorwellTextColor;
+  IBOutlet NSColorWell 	*colorwellUnvisitedLinks;
+  IBOutlet NSColorWell 	*colorwellVisitedLinks;  
+
+  IBOutlet NSMatrix		 	*matrixChooseFont;
+  IBOutlet NSTableView 	*tableViewFontRegion;
+
+  IBOutlet NSTextField	*fontSampleSerif;
+  IBOutlet NSTextField	*fontSampleSansSerif;
+  IBOutlet NSTextField	*fontSampleMonospace;
+
+  NSArray								*regionMappingTable;
 }
 
 - (void) mainViewDidLoad;
 
 - (IBAction)buttonClicked:(id)sender; 
 - (IBAction)colorChanged:(id)sender;
+
+- (IBAction)fontChoiceButtonClicked:(id)sender;
+- (IBAction)fontRegionListClicked:(id)sender;
+
 
 @end

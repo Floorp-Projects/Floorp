@@ -1,0 +1,62 @@
+(
+  {
+    region 	= "Western";
+    code 		= "x-western";
+  },
+  {
+    region 	= "Central European";
+    code 		= "x-central-euro";
+  },
+  {
+    region 	= "Japanese";
+    code 		= "ja";
+  },
+  {
+    region 	= "Traditional Chinese";
+    code 		= "zh-TW";
+  },
+  {
+    region 	= "Simplified Chinese";
+    code 		= "zh-CN";
+  },
+  {
+    region 	= "Korean";
+    code 		= "ko";
+  },
+  {
+    region 	= "Cyrillic";
+    code 		= "x-cyrillic";
+  },
+  {
+    region 	= "Baltic";
+    code 		= "x-baltic";
+  },
+  {
+    region 	= "Greek";
+    code 		= "el";
+  },
+  {
+    region 	= "Turkish";
+    code 		= "tr";
+  },
+  {
+    region 	= "Unicode";
+    code 		= "x-unicode";
+  },
+  {
+    region 	= "User-Defined";
+    code 		= "x-user-def";
+  },
+  {
+    region 	= "Thai";
+    code 		= "th";
+  },
+  {
+    region 	= "Hebrew";
+    code 		= "he";
+  },
+  {
+    region 	= "Arabic";
+    code 		= "ar";
+  }
+)
