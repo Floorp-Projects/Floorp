@@ -211,7 +211,10 @@ ifeq ($(OS_ARCH), QNX)
 DASH_R		=
 endif
 ifeq ($(OS_ARCH), SunOS)
-LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
+ifneq ($(OS_RELEASE),4.1)
+LDFLAGS		+= -lposix4
+endif
+LDFLAGS		+= -ldl -lnsl -lsocket
 endif
 
 # special rule for jsmath.o since we want to incrementally link
