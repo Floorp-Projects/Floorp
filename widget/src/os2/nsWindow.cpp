@@ -2419,7 +2419,10 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
                      (SHORT2FROMMP(mp2) == VK_F10)) ||
                 // Let Mozilla handle standalone Alt, not the OS
                     ((SHORT1FROMMP(mp1) & KC_KEYUP) && (SHORT1FROMMP(mp1) & KC_LONEKEY) &&
-                     (SHORT2FROMMP(mp2) == VK_ALT)) 
+                     (SHORT2FROMMP(mp2) == VK_ALT)) ||
+                // Let Mozilla handle Alt+Enter, not the OS
+                    ((SHORT1FROMMP(mp1) & (KC_VIRTUALKEY | KC_ALT)) &&
+                     (SHORT2FROMMP(mp2) == VK_NEWLINE)) 
                    )
                 {
                   return(PR_TRUE);
