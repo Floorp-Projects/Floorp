@@ -63,6 +63,5 @@ install:: $(DLL)
         $(MAKE_INSTALL) CookieViewer.xul $(DIST)\bin\chrome\communicator\content\wallet
         $(MAKE_INSTALL) CookieViewer.js $(DIST)\bin\chrome\communicator\content\wallet
         $(MAKE_INSTALL) CookieViewer.css $(DIST)\bin\chrome\communicator\skin\wallet
-        $(MAKE_INSTALL) wallet.css $(DIST)\bin\chrome\communicator\skin\wallet
         $(MAKE_INSTALL) CookieViewer.properties $(DIST)\bin\chrome\communicator\locale\wallet
         $(MAKE_INSTALL) CookieViewer.dtd $(DIST)\bin\chrome\communicator\locale\wallet
