@@ -11,17 +11,27 @@
 # TinderHeader interface.
 
 # This data used to be configurable via the treeadmin interface but we
-# can not longer support that as the format of this data depends on
-# the version control system in use and abstraction prevents
-# treeadmin.cgi from knowing those details.  It is safer to have this
-# data stored in VC in its own file, in case of problems. So many
-# modules need to know if a tree name is valid it would be hard for a
-# CGI script to pass that data back to all the modules.
+# do not support that. The format of this data depends on the version
+# control system in use and abstraction prevents treeadmin.cgi from
+# knowing those details.  I may code a TreeData specific admin-CGI
+# script in the future but I do not have time now and the benifits are
+# not so clear.  For bonsai users it would be best if the DB stored
+# the tree data.  The tinderbox server could download the data from a
+# central place when it first starts up, and this download could
+# trigger a registration for email updates of changes to any trees
+# which this tinderbox server is monitoring. As long as the data is
+# stored in a file, it is safer to have this data stored in VC in its
+# own file, in case of problems.  The data tends to be technical
+# enough that this file is managed by a Jr Sysadmin and they prefer a
+# text editor with CVS to a CGI script and no records.  Also the
+# client side build script needs to know how to checkout a tree and
+# map tree names to what was checked out, so there is a communication
+# issue to work out.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:59 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:35:25 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TreeData.pm,v $ 
 # $Name:  $ 
 
@@ -100,23 +110,23 @@ $VERSION = '#tinder_version#';
 #			 },
 
 	    # these are dummy trees for testing.	    
-            
+ 
 	    'Project_A' =>  {
-                   root => '/devel/java_repository',
+                   root => ':pserver:kestes@cvs-mirror.mozilla.org:/cvsroot',
                    module => 'SeaMonkeyAll',
                    branch => 'main',
                   },
 	    'Project_B' =>  {
-                   root => '/devel/java_repository',
-                   module => 'SeaMonkeyAll',
+                   root => ':pserver:kestes@cvs-mirror.mozilla.org:/cvsroot',
+                   module => 'Grendel',
                    branch => 'main',
                   },
-            
 	    'Project_C' =>  {
-                   root => '/devel/java_repository',
-                   module => 'SeaMonkeyAll',
+                   root => ':pserver:kestes@cvs-mirror.mozilla.org:/cvsroot',
+                   module => 'NSPR',
                    branch => 'main',
                   },
+
 	   );
 
 
