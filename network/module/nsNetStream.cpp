@@ -44,6 +44,7 @@ nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
 {
     NS_INIT_REFCNT();
 
+    mStatus    = nsConnectionActive;
     pURL       = aURL;
     pNetStream = aStream;
     pConsumer  = aNotify;

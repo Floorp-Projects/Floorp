@@ -29,6 +29,16 @@
 /* Forward declaration... */
 class nsNetlibStream;
 
+/* Enumeration of the various connection states... */
+typedef enum {
+  nsConnectionActive = 0,
+  nsConnectionSucceeded,
+  nsConnectionAborted,
+  nsConnectionFailed,
+  nsConnectionMax
+} nsConnectionStatus;
+
+
 class nsConnectionInfo : public nsIConnectionInfo 
 {
 public:
@@ -50,6 +60,7 @@ public:
     nsIURL                *pURL;
     nsNetlibStream        *pNetStream;
     nsIStreamListener     *pConsumer;
+    nsConnectionStatus    mStatus;
 };
 
 
