@@ -439,95 +439,12 @@ public class ScriptRuntime {
         if (base != 10) {
             return DToA.JS_dtobasestr(base, d);
         }
-        else {
-            // Okay, this is gross. But Java doesn't seem to have any number
-            // formatting routines exposed.
-            // So we let Java format it and then selectively reformat it using
-            // string operations to get the appropriate bounds on exponential
-            // representation as well as little things like case of 'e' and
-            // always including the sign of the exponent.
-            // OPT: format from the floating point number directly.
-
-            final int MIN_NO_EXP = -6;
-            final int MAX_NO_EXP = 20;
-
-            String s = Double.toString(d);
-            char[] chars = s.toCharArray();
-            int decimal = -1;
-            int e = -1;
-            boolean negative = false;
-            boolean negativeExponent = false;
-            for (int i=0; i < chars.length; i++) {
-                switch (chars[i]) {
-
-                  case '-':
-                    if (e == -1)
-                        negative = true;
-                    else
-                        negativeExponent = true;
-                    break;
-
-                  case '.':
-                    decimal = i;
-                    break;
-
-                  case 'E':
-                    e = i;
-                    break;
-                }
-            }
-
-            if (e == -1) {
-                if (decimal == chars.length - 2 && chars[chars.length-1] == '0') {
-                    // Format 1.0 as "1", not "1.0"
-                    return new String(chars, 0, chars.length - 2);
-                }
-                return s;
-            }
-            int exponent = Integer.parseInt(new String(chars, e+1,
-                                                       chars.length - e - 1));
-            StringBuffer sb = new StringBuffer();
-            boolean singleDigit = decimal + 2 == e && chars[decimal+1] == '0';
-            if (exponent < MIN_NO_EXP || exponent > MAX_NO_EXP) {
-                int len = singleDigit ? 1 : e;
-                if (negative) {
-                    sb.append('-');
-                    sb.append(chars, 1, len);
-                } else {
-                    sb.append(chars, 0, len);
-                }
-                sb.append('e');
-                sb.append(exponent < 0 ? '-' : '+');
-                int expStart = e + (exponent < 0 ? 2 : 1);
-                sb.append(chars, expStart, chars.length - expStart);
-                return sb.toString();
-            }
-            if (negative)
-                sb.append('-');
-            if (exponent < 0) {
-                sb.append("0.");
-                for (int i=exponent+1; i < 0; i++)
-                    sb.append('0');
-            }
-            sb.append(chars[decimal - 1]);
-            int fractionalLength = 0;
-            if (!singleDigit) {
-                fractionalLength = e - decimal - 1;
-                if (exponent > 0 && exponent < fractionalLength) {
-                    sb.append(chars, decimal + 1, exponent);
-                    sb.append('.');
-                    sb.append(chars, decimal + exponent + 1,
-                              fractionalLength - exponent);
-                } else {
-                    sb.append(chars, decimal + 1, fractionalLength);
-                }
-            }
-            if (exponent > 0) {
-                for (int i = fractionalLength; i < exponent; i++)
-                    sb.append('0');
-            }
-            return sb.toString();
-        }
+		else {
+			StringBuffer result = new StringBuffer();
+			DToA.JS_dtostr(result, DToA.DTOSTR_STANDARD, 0, d);
+			return result.toString();
+		}
+	
     }
 
     /**
