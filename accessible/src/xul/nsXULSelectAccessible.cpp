@@ -86,38 +86,35 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULSelectableAccessible, nsAccessible, nsIAccessi
 
 NS_IMETHODIMP nsXULSelectableAccessible::ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState)
 {
+  nsCOMPtr<nsIAccessible> childAcc;
+  GetChildAt(aIndex, getter_AddRefs(childAcc));
+  nsCOMPtr<nsIAccessNode> accNode = do_QueryInterface(childAcc);
+  NS_ENSURE_TRUE(accNode, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMNode> childNode;
+  accNode->GetDOMNode(getter_AddRefs(childNode));
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item(do_QueryInterface(childNode));
+  NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
+
   *aSelState = PR_FALSE;
 
-  nsCOMPtr<nsIDOMXULMultiSelectControlElement> xulMultiSelect(do_QueryInterface(mDOMNode));
-  if (xulMultiSelect) {
-    nsCOMPtr<nsIDOMNodeList> nodeList;
-    xulMultiSelect->GetChildNodes(getter_AddRefs(nodeList));
-    if (nodeList) {
-      nsCOMPtr<nsIDOMNode> node;
-      nodeList->Item(aIndex, getter_AddRefs(node));
-      nsCOMPtr<nsIDOMXULSelectControlItemElement> item(do_QueryInterface(node));
-      item->GetSelected(aSelState);
-      if (eSelection_Add == aMethod && !(*aSelState))
-        xulMultiSelect->AddItemToSelection(item);
-      else if (eSelection_Remove == aMethod && (*aSelState))
-        xulMultiSelect->RemoveItemFromSelection(item);
-    }
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIDOMXULSelectControlElement> xulSelect(do_QueryInterface(mDOMNode));
-  if (xulSelect) {
-    nsresult rv = NS_OK;
-    PRInt32 selIndex;
-    xulSelect->GetSelectedIndex(&selIndex);
-    if (selIndex == aIndex)
-      *aSelState = PR_TRUE;
-    if (eSelection_Add == aMethod && !(*aSelState))
-      rv = xulSelect->SetSelectedIndex(aIndex);
-    else if (eSelection_Remove == aMethod && (*aSelState)) {
-      rv = xulSelect->SetSelectedIndex(-1);
-    }
-    return rv;
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> xulMultiSelect(do_QueryInterface(mDOMNode));
+
+  if (xulSelect || xulMultiSelect) {
+      item->GetSelected(aSelState);
+      if (eSelection_Add == aMethod && !(*aSelState)) {
+        if (xulMultiSelect)
+          return xulMultiSelect->AddItemToSelection(item);
+        else if (xulSelect)
+          return xulSelect->SetSelectedItem(item);
+      }
+      else if (eSelection_Remove == aMethod && (*aSelState)) {
+        if (xulMultiSelect)
+          return xulMultiSelect->RemoveItemFromSelection(item);
+        else if (xulSelect)
+          return xulSelect->SetSelectedIndex(-1);
+      }
   }
 
   return NS_ERROR_FAILURE;
