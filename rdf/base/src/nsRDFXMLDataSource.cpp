@@ -100,7 +100,6 @@
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIDTDIID,               NS_IDTD_IID);
-static NS_DEFINE_IID(kIInputStreamIID,       NS_IINPUTSTREAM_IID);
 static NS_DEFINE_IID(kIParserIID,            NS_IPARSER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,    NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
@@ -194,7 +193,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS(ProxyStream, kIInputStreamIID);
+NS_IMPL_ISUPPORTS1(ProxyStream, nsIInputStream);
 
 //----------------------------------------------------------------------
 //

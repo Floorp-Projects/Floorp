@@ -24,8 +24,6 @@
 #include "nsIDeviceContext.h"
 #include "il_util.h"
 
-static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
-
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h
  *	@update 2/25/00 dwc
@@ -59,7 +57,7 @@ nsBlender::~nsBlender()
 }
 
 
-NS_IMPL_ISUPPORTS(nsBlender, kIBlenderIID);
+NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender);
 
 //------------------------------------------------------------
 

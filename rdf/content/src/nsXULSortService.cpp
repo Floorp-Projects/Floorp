@@ -485,7 +485,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 
 
 
-NS_IMPL_ISUPPORTS(XULSortServiceImpl, NS_GET_IID(nsIXULSortService));
+NS_IMPL_ISUPPORTS1(XULSortServiceImpl, nsIXULSortService)
 
 
 

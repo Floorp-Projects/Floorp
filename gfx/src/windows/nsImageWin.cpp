@@ -30,8 +30,6 @@
 #define MAX_BUFFER_HEIGHT       128
 
 
-static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
-
 static nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8  *aNumBitPix);
 
 
@@ -83,7 +81,7 @@ nsImageWin :: ~nsImageWin()
 
 }
 
-NS_IMPL_ISUPPORTS(nsImageWin, kIImageIID);
+NS_IMPL_ISUPPORTS1(nsImageWin, nsIImage);
 
 /** ---------------------------------------------------
  *  See documentation in nsIImageWin.h  

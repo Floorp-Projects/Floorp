@@ -95,7 +95,7 @@ nsScreenManagerWin :: ~nsScreenManagerWin()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenManagerWin, NS_GET_IID(nsIScreenManager))
+NS_IMPL_ISUPPORTS1(nsScreenManagerWin, nsIScreenManager)
 
 
 //

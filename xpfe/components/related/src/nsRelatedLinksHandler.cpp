@@ -230,7 +230,7 @@ RelatedLinksStreamListener::Init()
 
 
 // nsISupports interface
-NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, NS_GET_IID(nsIStreamListener));
+NS_IMPL_ISUPPORTS1(RelatedLinksStreamListener, nsIStreamListener)
 
 
 

@@ -357,7 +357,7 @@ NS_NewXULContentUtils(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 //------------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS(nsXULContentUtils, NS_GET_IID(nsIXULContentUtils));
+NS_IMPL_ISUPPORTS1(nsXULContentUtils, nsIXULContentUtils)
 
 //------------------------------------------------------------------------
 // nsIXULContentUtils methods

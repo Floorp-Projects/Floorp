@@ -38,7 +38,6 @@
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
 
-static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
@@ -89,7 +88,7 @@ ImageNetContextSyncImpl::~ImageNetContextSyncImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS(ImageNetContextSyncImpl, kIImageNetContextIID)
+NS_IMPL_ISUPPORTS1(ImageNetContextSyncImpl, ilINetContext)
 
 ilINetContext* 
 ImageNetContextSyncImpl::Clone()
@@ -312,5 +311,5 @@ nsresult NS_NewImageNetContextSync(ilINetContext **aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return cx->QueryInterface(kIImageNetContextIID, (void **) aInstancePtrResult);
+  return cx->QueryInterface(NS_GET_IID(ilINetContext), (void **) aInstancePtrResult);
 }

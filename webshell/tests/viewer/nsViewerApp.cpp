@@ -118,7 +118,6 @@ static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
 static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 static NS_DEFINE_CID(kFormProcessorCID,   NS_FORMPROCESSOR_CID);
-static NS_DEFINE_IID(kFormProcessorIID,   NS_IFORMPROCESSOR_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 
 #define DEFAULT_WIDTH 620
@@ -220,9 +219,7 @@ public:
 
 
 
-NS_IMPL_ADDREF(nsTestFormProcessor);
-NS_IMPL_RELEASE(nsTestFormProcessor);
-NS_IMPL_QUERY_INTERFACE(nsTestFormProcessor, kFormProcessorIID);
+NS_IMPL_ISUPPORTS1(nsTestFormProcessor, nsIFormProcessor);
 
 nsTestFormProcessor::nsTestFormProcessor()
 {

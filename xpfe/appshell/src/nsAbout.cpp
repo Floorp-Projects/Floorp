@@ -28,7 +28,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsAbout, NS_GET_IID(nsIAboutModule));
+NS_IMPL_ISUPPORTS1(nsAbout, nsIAboutModule)
 
 static const char kURI[] = "chrome://global/locale/about.html";
 

@@ -134,7 +134,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, NS_GET_IID(nsIOutputStream));
+NS_IMPL_ISUPPORTS1(ConsoleOutputStreamImpl, nsIOutputStream)
 
 
 ////////////////////////////////////////////////////////////////////////

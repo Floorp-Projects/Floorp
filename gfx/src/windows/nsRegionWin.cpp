@@ -23,8 +23,6 @@
 #include "nsRegionWin.h"
 #include "prmem.h"
 
-static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
-
 nsRegionWin :: nsRegionWin()
 {
   NS_INIT_REFCNT();
@@ -52,9 +50,7 @@ nsRegionWin :: ~nsRegionWin()
   }
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionWin, kRegionIID)
-NS_IMPL_ADDREF(nsRegionWin)
-NS_IMPL_RELEASE(nsRegionWin)
+NS_IMPL_ISUPPORTS1(nsRegionWin, nsIRegion)
 
 nsresult nsRegionWin :: Init(void)
 {

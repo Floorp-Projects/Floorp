@@ -45,8 +45,6 @@
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
-
 static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChildWindowIID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
@@ -88,7 +86,7 @@ MyObserver::~MyObserver()
 {
 }
 
-NS_IMPL_ISUPPORTS(MyObserver, kIImageObserverIID)
+NS_IMPL_ISUPPORTS1(MyObserver, nsIImageRequestObserver)
 
 void  
 MyObserver::Notify(nsIImageRequest *aImageRequest,

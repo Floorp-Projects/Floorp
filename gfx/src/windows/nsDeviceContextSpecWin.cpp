@@ -54,11 +54,7 @@ nsDeviceContextSpecWin :: ~nsDeviceContextSpecWin()
   }
 }
 
-static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecWin, kDeviceContextSpecIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecWin)
-NS_IMPL_RELEASE(nsDeviceContextSpecWin)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecWin, nsIDeviceContextSpec)
 
 NS_IMETHODIMP nsDeviceContextSpecWin :: Init(char *aDriverName, char *aDeviceName, HGLOBAL aDEVMODE)
 {

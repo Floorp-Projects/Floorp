@@ -30,7 +30,7 @@
 #include "aimm.h"
 #endif
 
-NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
+NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 //
 // Static thread local storage index of the Toolkit 

@@ -136,7 +136,7 @@ LocalSearchDataSource::Init()
 
 
 
-NS_IMPL_ISUPPORTS(LocalSearchDataSource, NS_GET_IID(nsIRDFDataSource));
+NS_IMPL_ISUPPORTS1(LocalSearchDataSource, nsIRDFDataSource)
 
 
 

@@ -418,7 +418,7 @@ InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
     NS_IF_RELEASE(mValue);
 }
 
-NS_IMPL_ISUPPORTS(InMemoryAssertionEnumeratorImpl, NS_GET_IID(nsISimpleEnumerator));
+NS_IMPL_ISUPPORTS1(InMemoryAssertionEnumeratorImpl, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 InMemoryAssertionEnumeratorImpl::HasMoreElements(PRBool* aResult)
@@ -574,7 +574,7 @@ InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
     }
 }
 
-NS_IMPL_ISUPPORTS(InMemoryArcsEnumeratorImpl, NS_GET_IID(nsISimpleEnumerator));
+NS_IMPL_ISUPPORTS1(InMemoryArcsEnumeratorImpl, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 InMemoryArcsEnumeratorImpl::HasMoreElements(PRBool* aResult)

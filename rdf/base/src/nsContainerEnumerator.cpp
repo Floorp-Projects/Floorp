@@ -126,7 +126,7 @@ ContainerEnumeratorImpl::~ContainerEnumeratorImpl(void)
     }
 }
 
-NS_IMPL_ISUPPORTS(ContainerEnumeratorImpl, NS_GET_IID(nsISimpleEnumerator));
+NS_IMPL_ISUPPORTS1(ContainerEnumeratorImpl, nsISimpleEnumerator)
 
 
 NS_IMETHODIMP

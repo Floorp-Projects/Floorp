@@ -360,7 +360,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
 
 
 
-NS_IMPL_ISUPPORTS(FileSystemDataSource, NS_GET_IID(nsIRDFDataSource));
+NS_IMPL_ISUPPORTS1(FileSystemDataSource, nsIRDFDataSource)
 
 
 
