@@ -11,7 +11,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org build system.
+# The Original Code is the Mozilla Browser code.
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
@@ -19,8 +19,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Pierre Chanial <chanial@noos.fr>
+#  Ben Goodger <ben@bengoodger.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,45 +35,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ..
+DEPTH   = ../../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
-VPATH     = @srcdir@
+VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= xre components mozapps
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# XXXben this is temporary, until Thunderbird is converted to Pinstripe on MacOS X. For now, 
-#        continue to use Qute. 
-ifdef MOZ_THUNDERBIRD
-DIRS    += skin/win skin/mac/obsolete
-else
-# Use Pinstripe on MacOS X
-DIRS	+= skin/mac
-endif
-else
-# Use Qute on Windows and Linux
-DIRS    += skin/win 
-endif
-
-CHROME_DEPS	= locale/build.dtd content/buildconfig.html
-
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE	+= locale/build.dtd
-
-locale/build.dtd: locale/build.dtd.in $(DEPTH)/config/build_number
-	@$(RM) -f $@
-	@if test ! -d locale; then mkdir locale; fi
-	$(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number $(srcdir)/locale/build.dtd.in
-
-distclean::
-	$(RM) -f content/buildconfig.html
-
-# skin/unix contains css rules that more closely match gtk widgets
-### killing this for now until we know how qute looks on linux
-# ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-# DIRS	+= skin/unix
-# endif
