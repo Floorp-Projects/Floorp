@@ -348,7 +348,9 @@ PRUint32    i = gNumSubstituteMap;
   // no matches in the substitution table -- default to times
   if(i == gNumSubstituteMap){
 
+#ifdef DEBUG
     printf(" NO FONT WAS FOUND Name[%s]\n", NS_LossyConvertUCS2toASCII(aFontName.name).get());
+#endif
     if(aFontName.style == NS_FONT_STYLE_NORMAL){
       ourfont = NS_IS_BOLD(aFontName.weight) ? 1 : 0;
     } else {
