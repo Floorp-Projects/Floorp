@@ -18,7 +18,7 @@
 
 /* Platform specific code to invoke XPCOM methods on native objects */
 
-        .global DoInvoke
+        .global XPTC_InvokeByIndex
 /*
     XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params);
