@@ -90,7 +90,7 @@ class jsScriptable_##C : public jsIScriptable {\
 	char** names;\
     Method(C)* meths;\
 public:\
-    NS_DECL_ISUPPORTS;\
+    NS_DECL_ISUPPORTS\
 	jsScriptable_##C(int _sz=0) : _ref(0), sz(_sz), obj(NULL) {\
 		names = new char*[sz];\
 		meths = new Method(C)[sz];\
