@@ -145,15 +145,6 @@ NS_IMETHODIMP nsMessage::SetMessageId(const char *messageId)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::SetInReplyTo(const char *inReplyTo)
-{
-	if(mMsgHdr)
-		return mMsgHdr->SetInReplyTo(inReplyTo);
-	else
-		return NS_ERROR_FAILURE;
-}
-
-
 NS_IMETHODIMP nsMessage::SetReferences(const char *references)
 {
 	if(mMsgHdr)
@@ -271,14 +262,6 @@ NS_IMETHODIMP nsMessage::GetMessageId(char **resultMessageId)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetMessageId(resultMessageId);
-	else
-		return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsMessage::GetInReplyTo(char **resultInReplyTo)
-{
-	if(mMsgHdr)
-		return mMsgHdr->GetInReplyTo(resultInReplyTo);
 	else
 		return NS_ERROR_FAILURE;
 }

@@ -356,13 +356,6 @@ NS_IMETHODIMP nsMsgHdr::SetMessageId(const char *messageId)
 	return SetStringColumn(messageId, m_mdb->m_messageIdColumnToken);
 }
 
-NS_IMETHODIMP nsMsgHdr::SetInReplyTo(const char *inReplyTo)
-{
-  // not sure how to implement this - it doesn't need to be persistent,
-  // but we don't need to take up extra space for this header either.
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsMsgHdr::SetSubject(const char *subject)
 {
 	return SetStringColumn(subject, m_mdb->m_subjectColumnToken);
@@ -590,14 +583,6 @@ NS_IMETHODIMP nsMsgHdr::GetMessageId(char * *resultMessageId)
 {
 	return m_mdb->RowCellColumnToCharPtr(GetMDBRow(), m_mdb->m_messageIdColumnToken, resultMessageId);
 }
-
-NS_IMETHODIMP nsMsgHdr::GetInReplyTo(char * *resultInReplyTo)
-{
-  // not sure how to implement this yet.
-  return NS_ERROR_NOT_IMPLEMENTED;
-//	return m_mdb->RowCellColumnToCharPtr(GetMDBRow(), m_mdb->m_messageIdColumnToken, resultMessageId);
-}
-
 
 NS_IMETHODIMP nsMsgHdr::GetMime2DecodedAuthor(PRUnichar* *resultAuthor)
 {
