@@ -54,12 +54,12 @@ nsCOMPtr_base::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid
   }
 
 void
-nsCOMPtr_base::assign_with_QueryReference( nsIWeakReference* weakPtr, const nsIID& iid, nsresult* result )
+nsCOMPtr_base::assign_with_QueryReferent( nsIWeakReference* weakPtr, const nsIID& iid, nsresult* result )
   {
     nsresult status = NS_ERROR_NULL_POINTER;
 
     nsISupports* rawPtr;
-    if ( !weakPtr || !NS_SUCCEEDED( status = weakPtr->QueryReference(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
+    if ( !weakPtr || !NS_SUCCEEDED( status = weakPtr->QueryReferent(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
       rawPtr = 0;
 
     if ( mRawPtr )

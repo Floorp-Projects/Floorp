@@ -5,7 +5,7 @@
 [scriptable, uuid(9188bc85-f92e-11d2-81ef-0060083a0bcf)]
 interface nsIWeakReference : nsISupports
 	{
-		void QueryReference( in nsIIDRef uuid, [iid_is(uuid), retval] out nsQIResult result );
+		void QueryReferent( in nsIIDRef uuid, [iid_is(uuid), retval] out nsQIResult result );
 	};
 
 [scriptable, uuid(9188bc86-f92e-11d2-81ef-0060083a0bcf)]
@@ -26,12 +26,12 @@ NS_GetWeakReference( nsISupports* , nsresult* aResult = 0);
 template <class T>
 inline
 nsresult
-CallQueryReference( nsIWeakReference* aSource, T** aDestination )
+CallQueryReferent( nsIWeakReference* aSource, T** aDestination )
 	{
 		NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
 
-		return aSource->QueryReference(nsCOMTypeInfo<T>::GetIID(), (void**)aDestination);
+		return aSource->QueryReferent(nsCOMTypeInfo<T>::GetIID(), (void**)aDestination);
 	}
 
 %}

@@ -81,7 +81,7 @@ nsWeakReference::QueryInterface( const nsIID& aIID, void** aInstancePtr )
 	}
 
 NS_IMETHODIMP
-nsWeakReference::QueryReference( const nsIID& aIID, void** aInstancePtr )
+nsWeakReference::QueryReferent( const nsIID& aIID, void** aInstancePtr )
 	{
 		return mReferent ? mReferent->QueryInterface(aIID, aInstancePtr) : NS_ERROR_NULL_POINTER;
 	}
