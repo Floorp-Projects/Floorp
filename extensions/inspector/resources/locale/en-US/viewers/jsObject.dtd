@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -35,30 +34,13 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE page [
-  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
-  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
-  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/computedStyle.dtd"> %dtd3;
-]>
+<!ENTITY jsCopyValue.label "Copy Value">
+<!ENTITY jsEval.label "Evaluate Javascript...">
 
-<?xml-stylesheet href="chrome://inspector/skin/"?>
+<!ENTITY jsProperty.label "Property">
+<!ENTITY jsValue.label "Value">
 
-<page id="winComputedStyle"
-      orient="vertical"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/viewers/computedStyle/computedStyle.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
-  
-  <tree id="olStyles" flex="1"  onselect="viewer.onItemSelected()" class="plain">
-    <treecols>
-      <treecol id="olcStyleName" label="&propertyName.label;" flex="1"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="olcStyleValue" label="&propertyValue.label;" flex="1"/>
-    </treecols>
-    <treechildren id="olbStyles"/>
-  </tree>
-</page>
+<!ENTITY jsEval.desc "Enter a javascript expression.  The variable &quot;target&quot; is the object that is currently selected.  Any value that you return will be displayed in the Javascript Object Viewer.">
+
+<!ENTITY jsExecute.label "Execute">
+<!ENTITY jsCancel.label "Cancel">

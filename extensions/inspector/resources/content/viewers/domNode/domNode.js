@@ -45,9 +45,12 @@
 
 var viewer;
 
+var gPromptService;
+
 //////////// global constants ////////////////////
 
 const kDOMViewCID          = "@mozilla.org/inspector/dom-view;1";
+const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
 
 //////////////////////////////////////////////////
 
@@ -304,13 +307,24 @@ cmdEditInsert.prototype =
   
   promptFor: function()
   {
-    var name = prompt("Enter the attribute name:", "");
-    if (name) {
-      var value = prompt("Enter the attribute value:", "");
-      if (value) {
+    if (!gPromptService) {
+      gPromptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
+    }
+
+    var attrName = { value: "" };
+    var attrValue = { value: "" };
+    var dummy = { value: false };
+
+    var bundle = this.mPanel.panelset.stringBundle;
+    var msg = bundle.getString("enterAttrName.message");
+    var title = bundle.getString("newAttribute.title");
+
+    if (gPromptService.prompt(window, title, msg, attrName, null, dummy)) {
+      msg = bundle.getString("enterAttrValue.message");
+      if (gPromptService.prompt(window, title, msg, attrValue, null, dummy)) {
         this.subject = viewer.subject;
-        this.subject.setAttribute(name, value);
-        this.attr = this.subject.getAttributeNode(name);
+        this.subject.setAttribute(attrName.value, attrValue.value);
+        this.attr = this.subject.getAttributeNode(attrName.value);
         return false;
       }
     }
@@ -368,12 +382,22 @@ cmdEditEdit.prototype =
   {
     var attr = viewer.selectedAttribute;
     if (attr) {
-      var value = prompt("Enter the attribute value:", attr.nodeValue);
-      if (value) {
+      if (!gPromptService) {
+        gPromptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
+      }
+
+      var attrValue = { value: attr.nodeValue };
+      var dummy = { value: false };
+
+      var bundle = this.mPanel.panelset.stringBundle;
+      var msg = bundle.getString("enterAttrName.message");
+      var title = bundle.getString("editAttribute.title");
+
+      if (gPromptService.prompt(window, title, msg, attrValue, null, dummy)) {
         this.subject = viewer.subject;
-        this.newValue = value;
+        this.newValue = attrValue.value;
         this.previousValue = attr.nodeValue;
-        this.subject.setAttribute(attr.nodeName, value);
+        this.subject.setAttribute(attr.nodeName, attrValue.value);
         this.attr = this.subject.getAttributeNode(attr.nodeName);
         return false;
       }

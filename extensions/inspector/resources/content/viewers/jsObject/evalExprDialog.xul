@@ -3,6 +3,7 @@
 <!DOCTYPE window [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/jsObject.dtd"> %dtd3;
 ]>
 
 <?xml-stylesheet href="chrome://communicator/skin"?>
@@ -25,17 +26,16 @@
   </keyset>
 
   <vbox style="width: 350px;">
-    <description>Enter a javascript expression.  The variable "target" is the object that is currently selected.  Any value that you return will be displayed in the Javascript Object Viewer.</description>
+    <description>&jsEval.desc;</description>
     
     <textbox id="txfExprInput" value=""/>
     
-    <checkbox id="cbxNewView" label="Inspect in new window"/>
+    <checkbox id="cbxNewView" label="&inspectNewWindow.label;"/>
   </vbox>
     
   <hbox>
-    <button label="Execute" observes="cmdExec" default="true"/>
-    <button label="Cancel" observes="cmdCancel"/>
+    <button label="&jsExecute.label;" observes="cmdExec" default="true"/>
+    <button label="&jsCancel.label;" observes="cmdCancel"/>
   </hbox>
 
 </window>
-        

@@ -49,11 +49,13 @@
 //////////// global variables /////////////////////
 
 var viewer;
+var gPromptService;
 
 //////////// global constants ////////////////////
 
 var kCSSRuleDataSourceIID = "@mozilla.org/rdf/datasource;1?name=Inspector_CSSRules";
 var kCSSDecDataSourceIID  = "@mozilla.org/rdf/datasource;1?name=Inspector_CSSDec";
+var kPromptServiceCID     = "@mozilla.org/embedcomp/prompt-service;1";
 
 var nsEventStateUnspecificed = 0;
 var nsEventStateActive = 1;
@@ -69,6 +71,8 @@ function StyleRulesViewer_initialize()
 {
   viewer = new StyleRulesViewer();
   viewer.initialize(parent.FrameExchange.receiveData(window));
+
+  gPromptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -94,12 +98,13 @@ StyleRulesViewer.prototype =
   mRuleDS: null,
   mDecDS: null,
   mSubject: null,
+  mPanel: null,
 
   ////////////////////////////////////////////////////////////////////////////
   //// interface inIViewer
 
   get uid() { return "styleRules" },
-  get pane() { return this.mPane },
+  get pane() { return this.mPanel },
   
   get selection() { return null },
   
@@ -119,7 +124,7 @@ StyleRulesViewer.prototype =
 
   initialize: function(aPane)
   {
-    this.mPane = aPane;
+    this.mPanel = aPane;
     aPane.notifyViewerReady(this);
   },
 
@@ -207,13 +212,25 @@ StyleRulesViewer.prototype =
   
   cmdNewProperty: function()
   {
-    var propname = prompt("Enter the property name:", "");
-    if (!propname) return;
-    var propval = prompt("Enter the property value:", "");
-    if (!propval) return;
-    
+    var bundle = this.mPanel.panelset.stringBundle;
+    var msg = bundle.getString("styleRulePropertyName.message");
+    var title = bundle.getString("styleRuleNewProperty.title");
+
+    var propName = { value: "" };
+    var propValue = { value: "" };
+    var dummy = { value: false };
+
+    if (!gPromptService.prompt(window, title, msg, propName, false, dummy)) {
+      return;
+    }
+
+    msg = bundle.getString("styleRulePropertyValue.message");
+    if (!gPromptService.prompt(window, title, msg, propValue, false, dummy)) {
+      return;
+    }
+
     var style = this.getSelectedRule().style;
-    style.setProperty(propname, propval, "");
+    style.setProperty(propName.value, propValue.value, "");
     this.mPropsBoxObject.invalidate();
   },
   
@@ -224,11 +241,19 @@ StyleRulesViewer.prototype =
     var propval = style.getPropertyValue(propname);
     var priority = style.getPropertyPriority(propname);
 
-    propval = prompt("Enter the property value:", propval);
-    if (!propval) return;
+    var bundle = this.mPanel.panelset.stringBundle;
+    var msg = bundle.getString("styleRulePropertyValue.message");
+    var title = bundle.getString("styleRuleEditProperty.title");
+
+    var propValue = { value: propval };
+    var dummy = { value: false };
+
+    if (!gPromptService.prompt(window, title, msg, propValue, false, dummy)) {
+      return;
+    }
 
     style.removeProperty(propname);
-    style.setProperty(propname, propval, priority);
+    style.setProperty(propname, propValue.value, priority);
     this.mPropsBoxObject.invalidate();
   },
 

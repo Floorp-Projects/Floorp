@@ -51,6 +51,7 @@ const kSearchRegURL        = "resource:///res/inspector/search-registry.rdf";
 
 const kWindowDataSourceCID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
+const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
 const nsIWebNavigation     = Components.interfaces.nsIWebNavigation;
 
 //////////////////////////////////////////////////
@@ -84,6 +85,7 @@ InspectorApp.prototype =
   mSearchService: null,
   mShowBrowser: false,
   mClipboardHelper: null,
+  mPromptService: null,
   
   get document() { return this.mDocPanel.viewer.subject },
   get searchRegistry() { return this.mSearchService },
@@ -102,6 +104,7 @@ InspectorApp.prototype =
     //this.setSearch(false, true);
 
     this.mClipboardHelper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
+    this.mPromptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
 
     this.mPanelSet = document.getElementById("bxPanelSet");
     this.mPanelSet.addObserver("panelsetready", this, false);
@@ -158,9 +161,14 @@ InspectorApp.prototype =
   
   showOpenURLDialog: function()
   {
-    var url = prompt("Enter a URL:", "http://");
-    if (url) {
-      this.gotoURL(url);
+    var bundle = this.mPanelSet.stringBundle;
+    var msg = bundle.getString("inspectURL.message");
+    var title = bundle.getString("inspectURL.title");
+    var url = { value: "http://" };
+    var dummy = { value: false };
+    var go = this.mPromptService.prompt(window, title, msg, url, null, dummy);
+    if (go) {
+      this.gotoURL(url.value);
     }
   },
 
@@ -169,20 +177,6 @@ InspectorApp.prototype =
     goPreferences("advancedItem", "chrome://inspector/content/prefs/pref-inspector.xul", "inspector");
   },
   
-  runSearch: function()
-  {
-    var path = null; // TODO: should persist last path chosen in a pref
-    var file = FilePickerUtils.pickFile("Find Search File", path, ["filterXML"], "Open");
-    if (file) {
-      var ioService = XPCU.getService("@mozilla.org/network/io-service;1","nsIIOService");
-      var fileHandler = XPCU.QI(ioService.getProtocolHandler("file"), "nsIFileProtocolHandler");
-
-      var url = fileHandler.getURLSpecFromFile(file);
-
-      this.startSearchModule(url);
-    }
-  },
-
   toggleBrowser: function(aToggleSplitter)
   {
     this.setBrowser(!this.mShowBrowser, aToggleSplitter)
@@ -221,6 +215,26 @@ InspectorApp.prototype =
   },
 
 /*
+  XXXcaa
+  The following code needs to evaluated.  What does it do?  Why does nobody
+  call it?  If deemed necessary, turn it back on with the right callers,
+  and localize it.
+ */
+/*
+  runSearch: function()
+  {
+    var path = null; // TODO: should persist last path chosen in a pref
+    var file = FilePickerUtils.pickFile("Find Search File", path, ["filterXML"], "Open");
+    if (file) {
+      var ioService = XPCU.getService("@mozilla.org/network/io-service;1","nsIIOService");
+      var fileHandler = XPCU.QI(ioService.getProtocolHandler("file"), "nsIFileProtocolHandler");
+
+      var url = fileHandler.getURLSpecFromFile(file);
+
+      this.startSearchModule(url);
+    }
+  },
+
   viewSearchItem: function()
   {
     if (this.mCurrentSearch.canViewItems)
@@ -246,7 +260,7 @@ InspectorApp.prototype =
       this.viewSearchItem();
     }
   },
-*/
+
   copySearchItemLine: function()
   {
     var mod = this.mSearchService.currentModule;
@@ -285,6 +299,7 @@ InspectorApp.prototype =
 
     return text;
   },
+*/
 
   exit: function()
   {
@@ -327,8 +342,12 @@ InspectorApp.prototype =
     if (win) {
       this.setTargetWindow(win);
       this.setBrowser(false, true);
-    } else
-      alert("Unable to switch to window.");
+    } else {
+      var bundle = this.mPanelSet.stringBundle;
+      var msg = bundle.getString("inspectWindow.error.message");
+      var title = bundle.getString("inspectWindow.error.title");
+      this.mPromptService.alert(window, title, msg);
+    }
   },
 
   setTargetWindow: function(aWindow)
@@ -359,13 +378,17 @@ InspectorApp.prototype =
   get progress() { return document.getElementById("pmStatus").value; },
   set progress(aPct) { document.getElementById("pmStatus").value = aPct; },
 
+/*
+  XXXcaa -- What is this?
+
+
   get searchTitle(aTitle) { return document.getElementById("splSearch").label; },
   set searchTitle(aTitle)
   {
     var splitter = document.getElementById("splSearch");
     splitter.setAttribute("label", "Search" + (aTitle ? " - " + aTitle : ""));
   },
-
+*/
   ////////////////////////////////////////////////////////////////////////////
   //// Document Loading 
 
@@ -388,7 +411,7 @@ InspectorApp.prototype =
 
   ////////////////////////////////////////////////////////////////////////////
   //// Search 
-  
+/*
   initSearch: function()
   {
     var ss = new inSearchService();
@@ -443,6 +466,8 @@ InspectorApp.prototype =
   {
     alert("Unable to complete this search due to the following error:\n" + aMessage);
   },
+
+*/
 
   ////////////////////////////////////////////////////////////////////////////
   //// History 

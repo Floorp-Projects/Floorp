@@ -44,7 +44,7 @@
 
     <splitter id="splBrowser" class="titled-splitter" 
         onopen="inspector.onSplitterOpen(this)"
-        label="Browser" closebutton="true" collapse="after"/>
+        label="&browserPanel.label;" closebutton="true" collapse="after"/>
         
     <hbox id="bxBrowser" flex="1">
       <browser id="ifBrowser" type="content-primary"

@@ -55,3 +55,7 @@
 <!ENTITY cmdSaveSearchItemText.label "Save...">
 <!ENTITY cmdClearSearch.label "Clear">
 <!ENTITY cmdHideSearchItems.label "Hide">
+
+<!ENTITY browserPanel.label "Browser">
+
+<!ENTITY inspectNewWindow.label "Inspect in New Window">

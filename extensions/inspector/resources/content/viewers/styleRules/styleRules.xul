@@ -25,19 +25,19 @@
 
   <popupset id="psPopups">
     <popup id="ppStyleRuleContext" onpopupshowing="return viewer.onpopupshowingRulePopup()">
-      <menuitem label="New" oncommand="viewer.cmdNewRule()"/>
-      <menuitem label="Delete" oncommand="viewer.cmdDeleteSelectedRule()"/>
-      <menuitem label="Disable" oncommand="viewer.cmdToggleSelectedRule()"/>
+      <menuitem label="&newRules.label;" oncommand="viewer.cmdNewRule()"/>
+      <menuitem label="&deleteSelectedRules.label;" oncommand="viewer.cmdDeleteSelectedRule()"/>
+      <menuitem label="&disableSelectedRules.label;" oncommand="viewer.cmdToggleSelectedRule()"/>
       <menuseparator/>
-      <menuitem label="Open File in Editor" oncommand="viewer.cmdOpenSelectedFileInEditor()"/>
+      <menuitem label="&openSelectedFileInEditor.label;" oncommand="viewer.cmdOpenSelectedFileInEditor()"/>
     </popup>
 
     <popup id="ppStylePropsContext">
-      <menuitem label="New Property" oncommand="viewer.cmdNewProperty()"/>
-      <menuitem label="Edit" oncommand="viewer.cmdEditSelectedProperty()"/>
-      <menuitem label="Delete" oncommand="viewer.cmdDeleteSelectedProperty()"/>
+      <menuitem label="&newProperty.label;" oncommand="viewer.cmdNewProperty()"/>
+      <menuitem label="&editSelectedProperty.label;" oncommand="viewer.cmdEditSelectedProperty()"/>
+      <menuitem label="&deleteSelectedProperty.label;" oncommand="viewer.cmdDeleteSelectedProperty()"/>
       <menuseparator/>
-      <menuitem label="Toggle !important" oncommand="viewer.cmdToggleSelectedImportant()"/>
+      <menuitem label="&toggleSelectedImportant.label;" oncommand="viewer.cmdToggleSelectedImportant()"/>
     </popup>
   </popupset>
 
@@ -46,13 +46,13 @@
   <tree id="olStyleRules" class="plain" flex="1" persist="height"
             onselect="viewer.onRuleSelect()">
     <treecols>
-      <treecol id="olcRule" label="Rule" flex="1"/>
+      <treecol id="olcRule" label="&styleRule.label;" flex="1"/>
       <splitter class="tree-splitter"/>
-      <treecol id="olcFileURL" label="File" flex="1"/>
+      <treecol id="olcFileURL" label="&styleRuleURI.label;" flex="1"/>
       <splitter class="tree-splitter"/>
-      <treecol id="olcWeight" label="Weight"/>
+      <treecol id="olcWeight" label="&styleRuleWeight.label;"/>
       <splitter class="tree-splitter"/>
-      <treecol id="olcLine" label="Line"/>
+      <treecol id="olcLine" label="&styleRuleLineNumber.label;"/>
     </treecols>
     <treechildren id="olbStyleRules"/>
   </tree>
@@ -64,11 +64,11 @@
   <tree id="olStyleProps" class="plain" flex="1" persist="height"
             context="ppStylePropsContext">
     <treecols>
-      <treecol id="olcPropPriority" label="Priority" class="treecol-image"/>
+      <treecol id="olcPropPriority" label="&styleRulePropPriority.label;" class="treecol-image"/>
       <splitter class="tree-splitter"/>
-      <treecol id="olcPropName" label="Style" flex="1"/>
+      <treecol id="olcPropName" label="&styleRulePropName.label;" flex="1"/>
       <splitter class="tree-splitter"/>
-      <treecol id="olcPropValue" label="Value" flex="1"/>
+      <treecol id="olcPropValue" label="&styleRulePropValue.label;" flex="1"/>
     </treecols>
     <treechildren id="olbStyleProps"/>
   </tree>
