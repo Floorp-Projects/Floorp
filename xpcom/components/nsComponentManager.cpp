@@ -639,7 +639,7 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
 }
 
 nsresult
-nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
+nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsDll **aDll)
 {
     PR_ASSERT(mRegistry!=NULL);
 
@@ -674,10 +674,8 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 
     nsDll *dll = CreateCachedDll(library, lastModTime, fileSize);
     if (dll == NULL) return NS_ERROR_OUT_OF_MEMORY;
-    nsFactoryEntry *res = new nsFactoryEntry(aCID, dll);
-    if (res == NULL) return NS_ERROR_OUT_OF_MEMORY;
 
-    *result = res;
+    *aDll = dll;
     return NS_OK;
 }
 
@@ -1147,14 +1145,16 @@ nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, PRBool checkRegistr
 #ifdef USE_REGISTRY
         if (checkRegistry)
         {
+            nsDll *dll = NULL;
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("\t\tnot found in factory cache. Looking in registry"));
 
-            nsresult rv = PlatformFind(aClass, &entry);
-
-            // If we got one, cache it in our hashtable
-            if (NS_SUCCEEDED(rv))
+            nsresult rv = PlatformFind(aClass, &dll);
+            if (NS_FAILED(rv)) return NULL;
+            entry = new nsFactoryEntry(aClass, dll);
+            if (entry != NULL)
             {
+                // If we got one, cache it in our hashtable
                 PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                        ("\t\tfound in registry."));
                 mFactories->Put(&key, entry);
