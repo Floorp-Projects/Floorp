@@ -370,7 +370,10 @@ nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
         
         
 nsresult
-nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, nsXPTCVariant **fullParam, uint8 *outParamCount)
+nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, 
+                                           nsXPTCMiniVariant * params, 
+                                           nsXPTCVariant **fullParam, 
+                                           uint8 *outParamCount)
 {
     uint8 paramCount = methodInfo->GetParamCount();
     *outParamCount = paramCount;
@@ -386,6 +389,11 @@ nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, nsXPTCMi
     for (int i = 0; i < paramCount; i++)
     {
         const nsXPTParamInfo& paramInfo = methodInfo->GetParam(i);
+        if ((mProxyType & PROXY_ASYNC) && paramInfo.IsDipper())
+        {
+            NS_WARNING("Async proxying of out parameters is not supported"); 
+            return NS_ERROR_PROXY_INVALID_OUT_PARAMETER;
+        }
         uint8 flags = paramInfo.IsOut() ? nsXPTCVariant::PTR_IS_DATA : 0;
         (*fullParam)[i].Init(params[i], paramInfo.GetType(), flags);
     }
@@ -394,7 +402,10 @@ nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, nsXPTCMi
 }
         
 nsresult
-nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, nsIInterfaceInfo *interfaceInfo)            
+nsProxyObject::Post( PRUint32 methodIndex, 
+                     nsXPTMethodInfo *methodInfo, 
+                     nsXPTCMiniVariant * params, 
+                     nsIInterfaceInfo *interfaceInfo)            
 {
     nsresult rv = NS_OK; 
 
