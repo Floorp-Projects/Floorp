@@ -310,6 +310,15 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 		OutputString(_T("Sucessfully subscribed to events"));
 	}
 
+	CComPtr<IUnknown> spUnkBrowser;
+	m_pControlSite->GetControlUnknown(&spUnkBrowser);
+
+	CIPtr(IWebBrowser2) spWebBrowser = spUnkBrowser;
+	if (spWebBrowser)
+	{
+		spWebBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
+	}
+
 	return S_OK;
 }
 
