@@ -341,6 +341,5 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
 PRBool
 nsSVGGraphicElement::IsEventName(nsIAtom* aName)
 {
-  return IsGraphicElementEventName(aName) ||
-    aName == nsSVGAtoms::onload;
+  return IsGraphicElementEventName(aName);
 }
