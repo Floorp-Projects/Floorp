@@ -99,7 +99,7 @@ nsSlidingSubstring::nsSlidingSubstring( nsSlidingSharedBufferList* aBufferList )
 typedef const nsSharedBufferList::Buffer* Buffer_ptr;
 
 static nsSharedBufferList::Buffer*
-AllocateContiguousHandleWithData( Buffer_ptr aDummyHandlePtr, const nsAReadableString& aDataSource )
+AllocateContiguousHandleWithData( Buffer_ptr aDummyHandlePtr, const nsAString& aDataSource )
   {
     typedef const PRUnichar* PRUnichar_ptr;
 
@@ -131,7 +131,7 @@ AllocateContiguousHandleWithData( Buffer_ptr aDummyHandlePtr, const nsAReadableS
     return result;
   }
 
-nsSlidingSubstring::nsSlidingSubstring( const nsAReadableString& aSourceString )
+nsSlidingSubstring::nsSlidingSubstring( const nsAString& aSourceString )
     : mBufferList(new nsSlidingSharedBufferList(AllocateContiguousHandleWithData(Buffer_ptr(0), aSourceString)))
   {
     init_range_from_buffer_list();
@@ -189,7 +189,7 @@ nsSlidingSubstring::Rebind( const nsSlidingString& aString, const nsReadingItera
   }
 
 void
-nsSlidingSubstring::Rebind( const nsAReadableString& aSourceString )
+nsSlidingSubstring::Rebind( const nsAString& aSourceString )
   {
     release_ownership_of_buffer_list();
     mBufferList = new nsSlidingSharedBufferList(AllocateContiguousHandleWithData(Buffer_ptr(0), aSourceString));
@@ -291,7 +291,7 @@ nsSlidingString::AppendBuffer( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PR
   }
 
 void
-nsSlidingString::InsertReadable( const nsAReadableString& aReadable, const nsReadingIterator<PRUnichar>& aInsertPoint )
+nsSlidingString::InsertReadable( const nsAString& aReadable, const nsReadingIterator<PRUnichar>& aInsertPoint )
     /*
      * Warning: this routine manipulates the shared buffer list in an unexpected way.
      *  The original design did not really allow for insertions, but this call promises

@@ -21,15 +21,29 @@
 #
  
 
+nsAFlatString.h
 nsAlgorithm.h
+nsAPromiseString.h
 nsAReadableString.h
+nsAString.h
 nsAWritableString.h
 nsBufferHandle.h
 nsBufferHandleUtils.h
 nsCharTraits.h
+nsCommonString.h
 nsFragmentedString.h
+nsLiteralString.h
+nsLocalString.h
 nsPrintfCString.h
 nsPrivateSharableString.h
+nsPromiseConcatenation.h
+nsPromiseFlatString.h
+nsPromiseSubstring.h
 nsReadableUtils.h
 nsSharedBufferList.h
 nsSlidingString.h
+nsStringFragment.h
+nsStringFwd.h
+nsStringIterator.h
+nsStringIteratorUtils.h
+nsStringTraits.h

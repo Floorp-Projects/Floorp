@@ -31,16 +31,16 @@
    * According to our conventions, they should be |NS_xxx|.
    */
 
-#ifndef nsAWritableString_h___
-#include "nsAWritableString.h"
+#ifndef nsAString_h___
+#include "nsAString.h"
 #endif
 
 NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
 NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
 
 
-NS_COM void CopyUCS2toASCII( const nsAReadableString& aSource, nsAWritableCString& aDest );
-NS_COM void CopyASCIItoUCS2( const nsAReadableCString& aSource, nsAWritableString& aDest );
+NS_COM void CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest );
+NS_COM void CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest );
 
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
@@ -53,7 +53,7 @@ NS_COM void CopyASCIItoUCS2( const nsAReadableCString& aSource, nsAWritableStrin
    * @param aSource a 16-bit wide string
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
-NS_COM char* ToNewCString( const nsAReadableString& aSource );
+NS_COM char* ToNewCString( const nsAString& aSource );
 
 
   /**
@@ -65,7 +65,7 @@ NS_COM char* ToNewCString( const nsAReadableString& aSource );
    * @param aSource an 8-bit wide string
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
-NS_COM char* ToNewCString( const nsAReadableCString& aSource );
+NS_COM char* ToNewCString( const nsACString& aSource );
 
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
@@ -78,7 +78,7 @@ NS_COM char* ToNewCString( const nsAReadableCString& aSource );
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
 
-NS_COM char* ToNewUTF8String( const nsAReadableString& aSource );
+NS_COM char* ToNewUTF8String( const nsAString& aSource );
 
 
   /**
@@ -90,7 +90,7 @@ NS_COM char* ToNewUTF8String( const nsAReadableString& aSource );
    * @param aSource a 16-bit wide string
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    */
-NS_COM PRUnichar* ToNewUnicode( const nsAReadableString& aSource );
+NS_COM PRUnichar* ToNewUnicode( const nsAString& aSource );
 
 
   /**
@@ -104,7 +104,7 @@ NS_COM PRUnichar* ToNewUnicode( const nsAReadableString& aSource );
    * @param aSource an 8-bit wide string
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    */
-NS_COM PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
+NS_COM PRUnichar* ToNewUnicode( const nsACString& aSource );
 
   /**
    * Copies |aLength| 16-bit characters from the start of |aSource| to the
@@ -118,7 +118,7 @@ NS_COM PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
    * @param aLength the number of 16-bit characters to copy
    * @return pointer to destination buffer - identical to |aDest|
    */
-NS_COM PRUnichar* CopyUnicodeTo( const nsAReadableString& aSource,
+NS_COM PRUnichar* CopyUnicodeTo( const nsAString& aSource,
                                  PRUint32 aSrcOffset,
                                  PRUnichar* aDest,
                                  PRUint32 aLength );
@@ -137,7 +137,7 @@ NS_COM PRUnichar* CopyUnicodeTo( const nsAReadableString& aSource,
    */
 NS_COM void CopyUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
                            const nsReadingIterator<PRUnichar>& aSrcEnd,
-                           nsAWritableString& aDest );
+                           nsAString& aDest );
 
   /**
    * Appends 16-bit characters between iterators |aSrcStart| and
@@ -151,25 +151,25 @@ NS_COM void CopyUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
    */
 NS_COM void AppendUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
                              const nsReadingIterator<PRUnichar>& aSrcEnd,
-                             nsAWritableString& aDest );
+                             nsAString& aDest );
 
   /**
    * Returns |PR_TRUE| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
    *
    * @param aString a 16-bit wide string to scan
    */
-NS_COM PRBool IsASCII( const nsAReadableString& aString );
+NS_COM PRBool IsASCII( const nsAString& aString );
 
 
 
   /**
    * Converts case in place in the argument string.
    */
-NS_COM void ToUpperCase( nsAWritableString& );
-NS_COM void ToUpperCase( nsAWritableCString& );
+NS_COM void ToUpperCase( nsAString& );
+NS_COM void ToUpperCase( nsACString& );
 
-NS_COM void ToLowerCase( nsAWritableString& );
-NS_COM void ToLowerCase( nsAWritableCString& );
+NS_COM void ToLowerCase( nsAString& );
+NS_COM void ToLowerCase( nsACString& );
 
   /**
    * Finds the leftmost occurance of |aPattern|, if any in the range |aSearchStart|..|aSearchEnd|.
@@ -180,8 +180,8 @@ NS_COM void ToLowerCase( nsAWritableCString& );
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
    * If we need something faster; we can implement that later.
    */
-NS_COM PRBool FindInReadable( const nsAReadableString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
-NS_COM PRBool FindInReadable( const nsAReadableCString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
+NS_COM PRBool FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
+NS_COM PRBool FindInReadable( const nsACString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
 
 
   /**
@@ -192,8 +192,8 @@ NS_COM PRBool FindInReadable( const nsAReadableCString& aPattern, nsReadingItera
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
    * If we need something faster; we can implement that later.
    */
-NS_COM PRBool RFindInReadable( const nsAReadableString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
-NS_COM PRBool RFindInReadable( const nsAReadableCString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
+NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
+NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
 
    /**
    * Finds the leftmost occurance of |aChar|, if any in the range 
@@ -209,9 +209,9 @@ NS_COM PRBool FindCharInReadable( char aChar, nsReadingIterator<char>& aSearchSt
     /**
     * Finds the number of occurences of |aChar| in the string |aStr|
     */
-NS_COM PRUint32 CountCharInReadable( const nsAReadableString& aStr,
+NS_COM PRUint32 CountCharInReadable( const nsAString& aStr,
                                      PRUnichar aChar );
-NS_COM PRUint32 CountCharInReadable( const nsAReadableCString& aStr,
+NS_COM PRUint32 CountCharInReadable( const nsACString& aStr,
                                      char aChar );
 
 #endif // !defined(nsReadableUtils_h___)

@@ -169,7 +169,7 @@ NS_COM nsIAtom* NS_NewAtom( const nsAReadableString& aString )
                                      (PLHashComparator)CompareKeys,
                                      (PLHashComparator)0, 0, 0);
 
-  nsPromiseFlatString flat(aString);
+  const nsPromiseFlatString& flat = PromiseFlatString(aString);
   const PRUnichar *str = flat.get();
 
   PRUint32 hashCode = HashKey(str);

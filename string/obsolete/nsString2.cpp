@@ -39,6 +39,13 @@ static const char* kPossibleNull = "Error: possible unintended null in string";
 static const char* kNullPointerError = "Error: unexpected null ptr";
 static const char* kWhitespace="\b\t\r\n ";
 
+const nsBufferHandle<PRUnichar>*
+nsString::GetFlatBufferHandle() const
+  {
+    return NS_REINTERPRET_CAST(const nsBufferHandle<PRUnichar>*, 1);
+  }
+
+
 
 static void Subsume(nsStr& aDest,nsStr& aSource){
   if(aSource.mStr && aSource.mLength) {
@@ -165,7 +172,7 @@ nsString::do_AppendFromElement( PRUnichar inChar )
   }
 
 
-nsString::nsString( const nsAReadableString& aReadable ) {
+nsString::nsString( const nsAString& aReadable ) {
   Initialize(*this,eTwoByte);
   Assign(aReadable);
 }
@@ -1647,7 +1654,7 @@ nsAutoString::nsAutoString( const nsString& aString )
   Append(aString);
 }
 
-nsAutoString::nsAutoString( const nsAReadableString& aString )
+nsAutoString::nsAutoString( const nsAString& aString )
   : nsString()
 {
   Initialize(*this, mBuffer, (sizeof(mBuffer)>>eTwoByte)-1, 0, eTwoByte, PR_FALSE);

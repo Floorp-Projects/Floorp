@@ -152,7 +152,7 @@ nsElementMap::Add(const nsAReadableString& aID, nsIContent* aContent)
     if (! mMap)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsPromiseFlatString flatID(aID);
+    const nsPromiseFlatString& flatID = PromiseFlatString(aID);
     const PRUnichar *id = flatID.get();
 
     ContentListItem* head =
@@ -251,7 +251,7 @@ nsElementMap::Remove(const nsAReadableString& aID, nsIContent* aContent)
     if (! mMap)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsPromiseFlatString flatID(aID);
+    const nsPromiseFlatString& flatID = PromiseFlatString(aID);
     const PRUnichar *id = flatID.get();
 
 #ifdef PR_LOGGING
@@ -331,7 +331,7 @@ nsElementMap::Find(const nsAReadableString& aID, nsISupportsArray* aResults)
 
     aResults->Clear();
     ContentListItem* item =
-        NS_REINTERPRET_CAST(ContentListItem*, PL_HashTableLookup(mMap, (const PRUnichar *)nsPromiseFlatString(aID).get()));
+        NS_REINTERPRET_CAST(ContentListItem*, PL_HashTableLookup(mMap, (const PRUnichar *)PromiseFlatString(aID).get()));
 
     while (item) {
         aResults->AppendElement(item->mContent);
@@ -349,7 +349,7 @@ nsElementMap::FindFirst(const nsAReadableString& aID, nsIContent** aResult)
         return NS_ERROR_NOT_INITIALIZED;
 
     ContentListItem* item =
-        NS_REINTERPRET_CAST(ContentListItem*, PL_HashTableLookup(mMap, (const PRUnichar *)nsPromiseFlatString(aID).get()));
+        NS_REINTERPRET_CAST(ContentListItem*, PL_HashTableLookup(mMap, (const PRUnichar *)PromiseFlatString(aID).get()));
 
     if (item) {
         *aResult = item->mContent;

@@ -18,6 +18,7 @@
 # 
 # Contributor(s):
 #   Johnny Stenback <jst@netscape.com> (original author)
+#   Scott Collins <scc@mozilla.org>
 #
 
 DEPTH		= ../..
@@ -30,18 +31,32 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= string
 
 EXPORTS		=				\
+		nsAFlatString.h			\
 		nsAlgorithm.h			\
-		nsBufferHandle.h		\
-		nsBufferHandleUtils.h		\
-		nsPrivateSharableString.h	\
+		nsAPromiseString.h			\
+		nsAReadableString.h			\
+		nsAString.h			\
+		nsAWritableString.h			\
+		nsBufferHandle.h			\
+		nsBufferHandleUtils.h			\
 		nsCharTraits.h			\
-		nsAReadableString.h		\
-		nsAWritableString.h		\
-		nsReadableUtils.h		\
-		nsSharedBufferList.h		\
-		nsSlidingString.h		\
-		nsFragmentedString.h		\
-		nsPrintfCString.h		\
+		nsCommonString.h			\
+		nsFragmentedString.h			\
+		nsLiteralString.h			\
+		nsLocalString.h			\
+		nsPrintfCString.h			\
+		nsPrivateSharableString.h			\
+		nsPromiseConcatenation.h			\
+		nsPromiseFlatString.h			\
+		nsPromiseSubstring.h			\
+		nsReadableUtils.h			\
+		nsSharedBufferList.h			\
+		nsSlidingString.h			\
+		nsStringFragment.h			\
+		nsStringFwd.h			\
+		nsStringIterator.h			\
+		nsStringIteratorUtils.h			\
+		nsStringTraits.h			\
 		$(NULL)			
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

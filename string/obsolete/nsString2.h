@@ -52,11 +52,12 @@
 #include "nsStr.h"
 #include "nsCRT.h"
 
-#include "nsAWritableString.h"
+#ifndef nsAFlatString_h___
+#include "nsAFlatString.h"
+#endif
 
 #ifdef STANDALONE_MI_STRING_TESTS
-  class nsAReadableString { public: virtual ~nsAReadableString() { } };
-  class nsAWritableString : public nsAReadableString { public: virtual ~nsAWritableString() { } };
+  class nsAFlatString { public: virtual ~nsAString() { } };
 #endif
 
 class nsISizeOfHandler;
@@ -68,11 +69,11 @@ class nsISizeOfHandler;
 class NS_COM nsSubsumeStr;
 
 class NS_COM nsString :
-  public nsAWritableString,
+  public nsAFlatString,
   public nsStr {
 
 protected:
-  virtual const void* Implementation() const { return "nsString"; }
+  virtual const nsBufferHandle<PRUnichar>* GetFlatBufferHandle() const;
   virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
   virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
 
@@ -91,7 +92,7 @@ public:
    */
   nsString(const nsString& aString);   
 
-  explicit nsString(const nsAReadableString&);
+  explicit nsString(const nsAString&);
 
   explicit nsString(const PRUnichar*);
   nsString(const PRUnichar*, PRInt32);
@@ -342,8 +343,8 @@ public:
    */
 
   nsString& operator=( const nsString& aString )                              { Assign(aString); return *this; }
-  nsString& operator=( const nsAReadableString& aReadable )                   { Assign(aReadable); return *this; }
-  nsString& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
+  nsString& operator=( const nsAString& aReadable )                           { Assign(aReadable); return *this; }
+//nsString& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
   nsString& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
   nsString& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
 
@@ -526,7 +527,7 @@ private:
 };
 
 // NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
-NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsString, PRUnichar)
+// NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsString, PRUnichar)
 
 extern NS_COM int fputs(const nsString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsString& aString);
@@ -544,7 +545,7 @@ public:
     virtual ~nsAutoString();
     nsAutoString();
     nsAutoString(const nsAutoString& aString);
-    explicit nsAutoString(const nsAReadableString& aString);
+    explicit nsAutoString(const nsAString& aString);
     explicit nsAutoString(const nsString& aString);
     explicit nsAutoString(const PRUnichar* aString);
     nsAutoString(const PRUnichar* aString,PRInt32 aLength);
@@ -562,8 +563,8 @@ public:
   private:
     void operator=( char ); // NOT TO BE IMPLEMENTED
   public:
-    nsAutoString& operator=( const nsAReadableString& aReadable )                   { Assign(aReadable); return *this; }
-    nsAutoString& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
+    nsAutoString& operator=( const nsAString& aReadable )                           { Assign(aReadable); return *this; }
+//  nsAutoString& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
     nsAutoString& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
     nsAutoString& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
 
@@ -576,7 +577,7 @@ public:
     char mBuffer[kDefaultStringSize<<eTwoByte];
 };
 
-NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)
+// NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)
 
 class NS_COM NS_ConvertASCIItoUCS2
       : public nsAutoString
@@ -589,10 +590,12 @@ class NS_COM NS_ConvertASCIItoUCS2
       NS_ConvertASCIItoUCS2( const char*, PRUint32 );
       explicit NS_ConvertASCIItoUCS2( char );
 
-      operator const nsLiteralString() const
+#if 0
+      operator const nsLocalString() const
         {
-          return nsLiteralString(mUStr, mLength);
+          return nsLocalString(mUStr, mLength);
         }
+#endif
 
     private:
         // NOT TO BE IMPLEMENTED
@@ -649,8 +652,8 @@ public:
   int Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 
   nsSubsumeStr& operator=( const nsSubsumeStr& aReadable )                        { Assign(aReadable); return *this; }
-  nsSubsumeStr& operator=( const nsAReadableString& aReadable )                   { Assign(aReadable); return *this; }
-  nsSubsumeStr& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
+  nsSubsumeStr& operator=( const nsAString& aReadable )                           { Assign(aReadable); return *this; }
+//nsSubsumeStr& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
   nsSubsumeStr& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
   nsSubsumeStr& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
 private:

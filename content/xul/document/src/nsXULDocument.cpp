@@ -815,7 +815,7 @@ nsXULDocument::SetDocumentCharacterSet(const nsAReadableString& aCharSetID)
     for (PRInt32 i = 0; i < n; i++) {
       nsIObserver* observer = (nsIObserver*) mCharSetObservers.ElementAt(i);
       observer->Observe((nsIDocument*) this, NS_LITERAL_STRING("charset").get(),
-                        nsPromiseFlatString(aCharSetID).get());
+                        PromiseFlatString(aCharSetID).get());
     }
   }
   return NS_OK;

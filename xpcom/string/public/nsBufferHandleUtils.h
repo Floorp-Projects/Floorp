@@ -25,14 +25,82 @@
 #ifndef nsBufferHandleUtils_h___
 #define nsBufferHandleUtils_h___
 
-#ifndef nsAReadableString_h___
-#include "nsAReadableString.h"
-  // for |basic_nsAReadableString|...
+#ifndef nsAString_h___
+#include "nsAString.h"
+#endif
+
+#ifndef nsStringTraits_h___
+#include "nsStringTraits.h"
 #endif
 
 #include <new.h>
   // for placement |new|
 
+
+template <class CharT>
+class nsAutoBufferHandle
+  {
+    public:
+      nsAutoBufferHandle() : mHandle(0) { }
+
+      nsAutoBufferHandle( const nsAutoBufferHandle<CharT>& aOther )
+          : mHandle(aOther.get())
+        {
+          if ( mHandle)
+            mHandle->AcquireReference();
+        }
+
+      explicit
+      nsAutoBufferHandle( const nsSharedBufferHandle<CharT>* aHandle )
+          : mHandle(aHandle)
+        {
+          if ( mHandle)
+            mHandle->AcquireReference();
+        }
+
+     ~nsAutoBufferHandle()
+        {
+          if ( mHandle )
+            mHandle->ReleaseReference();
+        }
+
+      nsAutoBufferHandle<CharT>&
+      operator=( const nsSharedBufferHandle<CharT>* rhs )
+        {
+          nsSharedBufferHandle<CharT>* old_handle = mHandle;
+          if ( (mHandle = NS_CONST_CAST(nsSharedBufferHandle<CharT>*, rhs)) )
+            mHandle->AcquireReference();
+          if ( old_handle )
+            old_handle->ReleaseReference();
+          return *this;
+        }
+
+      nsAutoBufferHandle<CharT>&
+      operator=( const nsAutoBufferHandle<CharT>& rhs )
+        {
+          return operator=(rhs.get());
+        }
+
+      nsSharedBufferHandle<CharT>*
+      get() const
+        {
+          return mHandle;
+        }
+
+      operator nsSharedBufferHandle<CharT>*() const
+        {
+          return get();
+        }
+
+      nsSharedBufferHandle<CharT>*
+      operator->() const
+        {
+          return get();
+        }
+
+    private:
+      nsSharedBufferHandle<CharT>*  mHandle;
+  };
 
 
 template <class HandleT, class CharT>
@@ -62,21 +130,22 @@ NS_DataAfterHandle( HandleT* aHandlePtr, const CharT* aDummyCharTPtr )
     return CharT_ptr(NS_STATIC_CAST(unsigned char*, aHandlePtr) + NS_AlignedHandleSize(aHandlePtr, aDummyCharTPtr));
   }
 
-template <class HandleT, class CharT>
+template <class HandleT, class StringT>
 HandleT*
-NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const basic_nsAReadableString<CharT>& aDataSource, PRUint32 aAdditionalCapacity )
+NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const StringT& aDataSource, PRUint32 aAdditionalCapacity )
   {
-    typedef CharT* CharT_ptr;
+    typedef typename StringT::char_type char_type;
+    typedef char_type*                  char_ptr;
 
       // figure out the number of bytes needed the |HandleT| part, including padding to correctly align the data part
-    size_t handle_size    = NS_AlignedHandleSize(aDummyHandlePtr, CharT_ptr(0));
+    size_t handle_size    = NS_AlignedHandleSize(aDummyHandlePtr, char_ptr(0));
 
-      // figure out how many |CharT|s wee need to fit in the data part
+      // figure out how many |char_type|s wee need to fit in the data part
     size_t data_length    = aDataSource.Length();
     size_t buffer_length  = data_length + aAdditionalCapacity;
 
       // how many bytes is that (including a zero-terminator so we can claim to be flat)?
-    size_t buffer_size    = buffer_length * sizeof(CharT);
+    size_t buffer_size    = buffer_length * sizeof(char_type);
 
 
     HandleT* result = 0;
@@ -84,17 +153,17 @@ NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const basic
 
     if ( handle_ptr )
       {
-        CharT* data_start_ptr = CharT_ptr(NS_STATIC_CAST(unsigned char*, handle_ptr) + handle_size);
-        CharT* data_end_ptr   = data_start_ptr + data_length;
-        CharT* buffer_end_ptr = data_start_ptr + buffer_length;
+        char_ptr data_start_ptr = char_ptr(NS_STATIC_CAST(unsigned char*, handle_ptr) + handle_size);
+        char_ptr data_end_ptr   = data_start_ptr + data_length;
+        char_ptr buffer_end_ptr = data_start_ptr + buffer_length;
 
-        nsReadingIterator<CharT> fromBegin, fromEnd;
-        CharT* toBegin = data_start_ptr;
+        typename StringT::const_iterator fromBegin, fromEnd;
+        char_ptr toBegin = data_start_ptr;
         copy_string(aDataSource.BeginReading(fromBegin), aDataSource.EndReading(fromEnd), toBegin);
 
           // and if the caller bothered asking for a buffer bigger than their string, we'll zero-terminate
         if ( aAdditionalCapacity > 0 )
-          *toBegin = CharT(0);
+          *toBegin = char_type(0);
 
         result = new (handle_ptr) HandleT(data_start_ptr, data_end_ptr, data_start_ptr, buffer_end_ptr, PR_TRUE);
       }

@@ -265,7 +265,7 @@ nsFocusController::GetParentWindowFromDocument(nsIDOMDocument* aDocument, nsIDOM
 NS_IMETHODIMP
 nsFocusController::GetControllerForCommand(const nsAReadableString& aCommand, nsIController** _retval)
 {
-  nsPromiseFlatString flatCommand(aCommand);
+  const nsPromiseFlatString& flatCommand = PromiseFlatString(aCommand);
   const PRUnichar *command = flatCommand.get();
   *_retval = nsnull;
 

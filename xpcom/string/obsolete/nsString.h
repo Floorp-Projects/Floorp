@@ -50,17 +50,27 @@
 #include "nsStr.h"
 #include "nsIAtom.h"
 
+#include "nsAString.h"
+
+/* this file will one day be _only_ a compatibility header for clients using the names
+     |ns[C]String| et al ... which we probably want to support forever.
+   In the mean time, people are used to getting the names |nsAReadable[C]String| and friends
+     from here as well; so we must continue to include the other compatibility headers
+     even though we don't use them ourself.
+ */
+
 #include "nsAWritableString.h"
+  // for compatibility
 
 
 class NS_COM nsSubsumeCStr;
 
 class NS_COM nsCString :
-  public nsAWritableCString,
+  public nsAFlatCString,
   public nsStr {
 
 protected:
-  virtual const void* Implementation() const { return "nsCString"; }
+  virtual const nsBufferHandle<char>* GetFlatBufferHandle() const;
   virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
   virtual char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 );
 
@@ -79,7 +89,7 @@ public:
    */
   nsCString(const nsCString& aString);   
 
-  explicit nsCString( const nsAReadableCString& );
+  explicit nsCString( const nsACString& );
 
   explicit nsCString(const char*);
   nsCString(const char*, PRInt32);
@@ -298,14 +308,14 @@ public:
    */
 
   nsCString& operator=( const nsCString& aString )                  { Assign(aString); return *this; }
-  nsCString& operator=( const nsAReadableCString& aReadable )       { Assign(aReadable); return *this; }
-  nsCString& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
+  nsCString& operator=( const nsACString& aReadable )               { Assign(aReadable); return *this; }
+//nsCString& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
   nsCString& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
   nsCString& operator=( char aChar )                                { Assign(aChar); return *this; }
 
   void AssignWithConversion(const PRUnichar*,PRInt32=-1);
   void AssignWithConversion( const nsString& aString );
-  void AssignWithConversion( const nsAReadableString& aString );
+  void AssignWithConversion( const nsAString& aString );
   void AssignWithConversion(PRUnichar);
 
   /*
@@ -320,18 +330,20 @@ public:
 
   void AppendWithConversion(const nsString&, PRInt32=-1);
   void AppendWithConversion(PRUnichar aChar);
-  void AppendWithConversion( const nsAReadableString& aString );
+  void AppendWithConversion( const nsAString& aString );
   void AppendWithConversion(const PRUnichar*, PRInt32=-1);
   // Why no |AppendWithConversion(const PRUnichar*, PRInt32)|? --- now I know, because implicit construction hid the need for this routine
   void AppendInt(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
   void AppendFloat( double aFloat );
 
-  virtual void do_AppendFromReadable( const nsAReadableCString& );
 
   void InsertWithConversion(PRUnichar aChar,PRUint32 anOffset);
   // Why no |InsertWithConversion(PRUnichar*)|?
 
-  virtual void do_InsertFromReadable( const nsAReadableCString&, PRUint32 );
+#if 0
+  virtual void do_AppendFromReadable( const nsACString& );
+  virtual void do_InsertFromReadable( const nsACString&, PRUint32 );
+#endif
 
 
   /**********************************************************************
@@ -446,7 +458,7 @@ private:
 };
 
 // NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
-NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCString, char)
+// NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCString, char)
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsCString& aString);
@@ -466,7 +478,7 @@ public:
 
     nsCAutoString();
     explicit nsCAutoString(const nsCString& );
-    explicit nsCAutoString(const nsAReadableCString& aString);
+    explicit nsCAutoString(const nsACString& aString);
     explicit nsCAutoString(const char* aString);
     nsCAutoString(const char* aString,PRInt32 aLength);
     explicit nsCAutoString(const CBufDescriptor& aBuffer);
@@ -482,8 +494,8 @@ public:
   private:
     void operator=( PRUnichar ); // NOT TO BE IMPLEMENTED
   public:
-    nsCAutoString& operator=( const nsAReadableCString& aReadable )       { Assign(aReadable); return *this; }
-    nsCAutoString& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
+    nsCAutoString& operator=( const nsACString& aReadable )       { Assign(aReadable); return *this; }
+//  nsCAutoString& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
     nsCAutoString& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
     nsCAutoString& operator=( char aChar )                                { Assign(aChar); return *this; }
 
@@ -496,7 +508,7 @@ public:
     char mBuffer[kDefaultStringSize];
 };
 
-NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCAutoString, char)
+// NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCAutoString, char)
 
 /**
  * A helper class that converts a UCS2 string to UTF8
@@ -525,7 +537,7 @@ class NS_COM NS_ConvertUCS2toUTF8
           Append( &aChar, 1 );
         }
 
-      explicit NS_ConvertUCS2toUTF8( const nsAReadableString& aString );
+      explicit NS_ConvertUCS2toUTF8( const nsAString& aString );
 
     protected:
       void Append( const PRUnichar* aString, PRUint32 aLength );
@@ -533,7 +545,7 @@ class NS_COM NS_ConvertUCS2toUTF8
     private:
         // NOT TO BE IMPLEMENTED
       NS_ConvertUCS2toUTF8( char );
-      operator const char*() const; // use |get()|
+      operator const char*() const;  // use |get()|
   };
 
 
@@ -557,8 +569,8 @@ public:
   nsSubsumeCStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 
   nsSubsumeCStr& operator=( const nsSubsumeCStr& aString )              { Assign(aString); return *this; }
-  nsSubsumeCStr& operator=( const nsAReadableCString& aReadable )       { Assign(aReadable); return *this; }
-  nsSubsumeCStr& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
+  nsSubsumeCStr& operator=( const nsACString& aReadable )       { Assign(aReadable); return *this; }
+//nsSubsumeCStr& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
   nsSubsumeCStr& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
   nsSubsumeCStr& operator=( char aChar )                                { Assign(aChar); return *this; }
 private:

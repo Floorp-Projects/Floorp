@@ -19,6 +19,7 @@
 # 
 # Contributor(s): 
 #   Johnny Stenback <jst@netscape.com> (original author)
+#   Scott Collins <scc@mozilla.org>
 #
 
 DEPTH=..\..
@@ -28,8 +29,16 @@ LIBRARY_NAME=string_s
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                                      \
+        .\$(OBJDIR)\nsAFlatString.obj           \
+        .\$(OBJDIR)\nsAString.obj               \
+        .\$(OBJDIR)\nsCommonString.obj          \
         .\$(OBJDIR)\nsFragmentedString.obj      \
+        .\$(OBJDIR)\nsLocalString.obj           \
         .\$(OBJDIR)\nsPrintfCString.obj         \
+        .\$(OBJDIR)\nsPrivateSharableString.obj \
+        .\$(OBJDIR)\nsPromiseConcatenation.obj  \
+        .\$(OBJDIR)\nsPromiseFlatString.obj     \
+        .\$(OBJDIR)\nsPromiseSubstring.obj      \
         .\$(OBJDIR)\nsReadableUtils.obj         \
         .\$(OBJDIR)\nsSharedBufferList.obj      \
         .\$(OBJDIR)\nsSlidingString.obj         \

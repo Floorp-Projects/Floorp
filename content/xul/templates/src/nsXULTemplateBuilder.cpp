@@ -1140,7 +1140,7 @@ nsXULTemplateBuilder::SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis,
     if (aVariable == NS_LITERAL_STRING("rdf:*"))
         var = c->match.mRule->GetMemberVariable();
     else
-        var = aThis->mRules.LookupSymbol(nsPromiseFlatString(aVariable).get());
+        var = aThis->mRules.LookupSymbol(PromiseFlatString(aVariable).get());
 
     // No variable; treat as a variable with no substitution. (This
     // shouldn't ever happen, really...)
@@ -1204,7 +1204,7 @@ nsXULTemplateBuilder::IsVarInSet(nsXULTemplateBuilder* aThis,
     IsVarInSetClosure* c = NS_STATIC_CAST(IsVarInSetClosure*, aClosure);
 
     PRInt32 var =
-        aThis->mRules.LookupSymbol(nsPromiseFlatString(aVariable).get());
+        aThis->mRules.LookupSymbol(PromiseFlatString(aVariable).get());
 
     // No variable; treat as a variable with no substitution. (This
     // shouldn't ever happen, really...)
@@ -2354,7 +2354,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
     nsTemplateRule* rule = NS_STATIC_CAST(nsTemplateRule*, aClosure);
 
     // Lookup the variable symbol
-    PRInt32 var = aThis->mRules.LookupSymbol(nsPromiseFlatString(aVariable).get(), PR_TRUE);
+    PRInt32 var = aThis->mRules.LookupSymbol(PromiseFlatString(aVariable).get(), PR_TRUE);
 
     // Strip it down to the raw RDF property by clobbering the "rdf:"
     // prefix

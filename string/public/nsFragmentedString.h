@@ -27,8 +27,8 @@
 
   // WORK IN PROGRESS
 
-#ifndef nsAWritableString_h___
-#include "nsAWritableString.h"
+#ifndef nsAString_h___
+#include "nsAString.h"
 #endif
 
 #ifndef nsSharedBufferList_h___
@@ -37,7 +37,7 @@
 
 
 class nsFragmentedString
-      : public basic_nsAWritableString<PRUnichar>
+      : public nsAString
     /*
       ...
     */
@@ -57,10 +57,10 @@ class nsFragmentedString
       // virtual void Cut( PRUint32 cutStart, PRUint32 cutLength );
 
     protected:
-      // virtual void do_AssignFromReadable( const basic_nsAReadableString<PRUnichar>& );
-      // virtual void do_AppendFromReadable( const basic_nsAReadableString<PRUnichar>& );
-      // virtual void do_InsertFromReadable( const basic_nsAReadableString<PRUnichar>&, PRUint32 );
-      // virtual void do_ReplaceFromReadable( PRUint32, PRUint32, const basic_nsAReadableString<PRUnichar>& );
+      // virtual void do_AssignFromReadable( const nsAString& );
+      // virtual void do_AppendFromReadable( const nsAString& );
+      // virtual void do_InsertFromReadable( const nsAString&, PRUint32 );
+      // virtual void do_ReplaceFromReadable( PRUint32, PRUint32, const nsAString& );
 
     private:
       nsSharedBufferList  mBufferList;

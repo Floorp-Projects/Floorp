@@ -143,7 +143,7 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
         root->ChildAt(i, *getter_AddRefs(child));
         nsAutoString id;
         child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-        if (id.EqualsWithConversion(nsPromiseFlatCString(aRef).get())) {
+        if (id.EqualsWithConversion(PromiseFlatCString(aRef).get())) {
           NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
           aInfo->SetPrototypeBinding(aRef, binding);
           break;

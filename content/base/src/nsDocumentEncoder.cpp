@@ -383,7 +383,7 @@ ConvertAndWrite(nsAReadableString& aString,
   NS_ENSURE_ARG_POINTER(aEncoder);
   nsresult rv;
   PRInt32 charLength, startCharLength;
-  nsPromiseFlatString flat(aString);
+  const nsPromiseFlatString& flat = PromiseFlatString(aString);
   const PRUnichar* unicodeBuf = flat.get();
   PRInt32 unicodeLength = aString.Length();
   PRInt32 startLength = unicodeLength;

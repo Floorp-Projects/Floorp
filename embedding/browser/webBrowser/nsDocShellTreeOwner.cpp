@@ -1058,7 +1058,7 @@ ChromeTooltipListener :: ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, con
   // do the work to call the client
   nsCOMPtr<nsITooltipListener> tooltipListener ( do_QueryInterface(mWebBrowserChrome) );
   if ( tooltipListener ) {
-    rv = tooltipListener->OnShowTooltip ( inXCoords, inYCoords, nsPromiseFlatString(inTipText).get() ); 
+    rv = tooltipListener->OnShowTooltip ( inXCoords, inYCoords, PromiseFlatString(inTipText).get() ); 
     if ( NS_SUCCEEDED(rv) )
       mShowingTooltip = PR_TRUE;
   }

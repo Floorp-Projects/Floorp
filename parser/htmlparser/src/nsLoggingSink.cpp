@@ -711,7 +711,7 @@ nsLoggingSink::QuoteText(const nsAReadableString& aValue, nsString& aResult) {
     /*
       if you're stepping through the string anyway, why not use iterators instead of forcing the string to copy?
      */
-  nsPromiseFlatString flat(aValue);
+  const nsPromiseFlatString& flat = PromiseFlatString(aValue);
   const PRUnichar* cp = flat.get();
   const PRUnichar* end = cp + aValue.Length();
   while (cp < end) {

@@ -42,6 +42,11 @@ static const char* kPossibleNull = "Error: possible unintended null in string";
 static const char* kNullPointerError = "Error: unexpected null ptr";
 static const char* kWhitespace="\b\t\r\n ";
 
+const nsBufferHandle<char>*
+nsCString::GetFlatBufferHandle() const
+  {
+    return NS_REINTERPRET_CAST(const nsBufferHandle<char>*, 1);
+  }
 
 static void CSubsume(nsStr& aDest,nsStr& aSource){
   if(aSource.mStr && aSource.mLength) {
@@ -165,7 +170,7 @@ char* nsCString::GetWritableFragment( nsWritableFragment<char>& aFragment, nsFra
   }
 }
 
-nsCString::nsCString( const nsAReadableCString& aReadable ) {
+nsCString::nsCString( const nsACString& aReadable ) {
   Initialize(*this,eOneByte);
   Assign(aReadable);
 }
@@ -774,7 +779,7 @@ void nsCString::AssignWithConversion( const nsString& aString ) {
   AssignWithConversion(aString.GetUnicode(), aString.Length());
 }
 
-void nsCString::AssignWithConversion( const nsAReadableString& aString ) {
+void nsCString::AssignWithConversion( const nsAString& aString ) {
   nsStr::StrTruncate(*this,0);
   PRInt32 count = aString.Length();
 
@@ -792,13 +797,13 @@ void nsCString::AssignWithConversion( const nsAReadableString& aString ) {
       temp.mLength=fraglen;
 
       StrAppend(*this,temp,0,fraglen);
-      
-      start += fraglen;
+
+      start.advance(fraglen);
     }
   }
 }
 
-void nsCString::AppendWithConversion( const nsAReadableString& aString ) {
+void nsCString::AppendWithConversion( const nsAString& aString ) {
   PRInt32 count = aString.Length();
 
   if(count){   
@@ -816,7 +821,7 @@ void nsCString::AppendWithConversion( const nsAReadableString& aString ) {
 
       StrAppend(*this,temp,0,fraglen);
       
-      start += fraglen;
+      start.advance(fraglen);
     }
   }
 }
@@ -831,14 +836,6 @@ void nsCString::AssignWithConversion(PRUnichar aChar) {
   nsStr::StrTruncate(*this,0);
   AppendWithConversion(aChar);
 }
-
-void nsCString::do_AppendFromReadable( const nsAReadableCString& aReadable )
-  {
-    if ( SameImplementation( NS_STATIC_CAST(const nsAReadableCString&, *this), aReadable) )
-      StrAppend(*this, NS_STATIC_CAST(const nsCString&, aReadable), 0, aReadable.Length());
-    else
-      nsAWritableCString::do_AppendFromReadable(aReadable);
-  }
 
 
 /**
@@ -961,14 +958,6 @@ void nsCString::InsertWithConversion(PRUnichar aChar,PRUint32 anOffset){
   temp.mLength=1;
   StrInsert(*this,anOffset,temp,0,1);
 }
-
-void nsCString::do_InsertFromReadable( const nsAReadableCString& aReadable, PRUint32 atPosition )
-  {
-    if ( SameImplementation( NS_STATIC_CAST(const nsAReadableCString&, *this), aReadable) )
-      StrInsert(*this, atPosition, NS_STATIC_CAST(const nsCString&, aReadable), 0, aReadable.Length());
-    else
-      nsAWritableCString::do_InsertFromReadable(aReadable, atPosition);
-  }
 
 
 
@@ -1382,7 +1371,7 @@ void nsCString::DebugDump(void) const {
        
 //----------------------------------------------------------------------
 
-NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAReadableString& aString )
+NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAString& aString )
   {
     nsReadingIterator<PRUnichar> start; aString.BeginReading(start);
     nsReadingIterator<PRUnichar> end;   aString.EndReading(end);
@@ -1390,7 +1379,7 @@ NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAReadableString& aString )
     while (start != end) {
       nsReadableFragment<PRUnichar> frag(start.fragment());
       Append(frag.mStart, frag.mEnd - frag.mStart);
-      start += start.size_forward();
+      start.advance(start.size_forward());
     }
   }
 
@@ -1511,7 +1500,7 @@ nsCAutoString::nsCAutoString( const nsCString& aString ) : nsCString(){
   Append(aString);
 }
 
-nsCAutoString::nsCAutoString( const nsAReadableCString& aString ) : nsCString(){
+nsCAutoString::nsCAutoString( const nsACString& aString ) : nsCString(){
   Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
