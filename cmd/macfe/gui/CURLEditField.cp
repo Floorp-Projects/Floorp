@@ -67,7 +67,7 @@ Boolean CURLEditField::HandleKeyPress(const EventRecord& inKeyEvent)
 		Int32	blockSize = 1024;				// 1024 is max len of field in PPob
 		char	*urlBlock = (char *)XP_ALLOC(blockSize);
 		ThrowIfNil_(urlBlock);
-		GetDescriptor(urlBlock, blockSize);
+		GetDescriptorLen(urlBlock, blockSize);
 		BroadcastMessage(msg_UserSubmittedURL, urlBlock);
 		XP_FREE(urlBlock);
 		handled = true;
@@ -123,22 +123,10 @@ void CURLEditField::ClickSelf(const SMouseDownEvent& inMouseDown)
 }
 
 
-// need these here to keep the C++ compiler happy with the overloads
-// below.
-void CURLEditField::SetDescriptor(ConstStr255Param inDescriptor)
-{
-	Inherited::SetDescriptor(inDescriptor);
-}
-
-void CURLEditField::GetDescriptor(Str255 outDescriptor)
-{
-	Inherited::GetDescriptor(outDescriptor);
-}
-
 
 // Needed for strings > 255 chars long
 // inDescriptorStorage must have been allocated. It's length is given in ioLength
-void CURLEditField::GetDescriptor(char *inDescriptorStorage, Int32 &ioLength)
+void CURLEditField::GetDescriptorLen(char *inDescriptorStorage, Int32 &ioLength) const
 {
 	Int32		curLength;
 	
@@ -152,11 +140,13 @@ void CURLEditField::GetDescriptor(char *inDescriptorStorage, Int32 &ioLength)
 	::BlockMoveData(*textHandle, inDescriptorStorage, curLength);
 	inDescriptorStorage[curLength] = '\0';
 	ioLength = curLength;	// excludes the terminator, i.e. same as strlen
+	
+	return ;
 }
 
 
 // Needed for strings > 255 chars long
-void CURLEditField::SetDescriptor(const char *inDescriptor, Int32 inLength)
+void CURLEditField::SetDescriptorLen(const char *inDescriptor, Int32 inLength)
 {
 	Assert_(inLength < mMaxChars);
 
@@ -186,7 +176,7 @@ void CURLEditField::ListenToMessage(MessageT inMessage, void* ioParam)
 				const char *urlOffset = LM_StripWysiwygURLPrefix(theURL->address);
 				if (DisplayURL(urlOffset))
 				{
-					SetDescriptor(urlOffset, XP_STRLEN(urlOffset));
+					SetDescriptorLen(urlOffset, XP_STRLEN(urlOffset));
 					mURLStringInSync = true;
 				}
 		}
