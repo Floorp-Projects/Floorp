@@ -254,6 +254,7 @@ public:
   static nsIAtom* thead;
   static nsIAtom* text;
   static nsIAtom* textarea;
+  static nsIAtom* textPseudo;
   static nsIAtom* th;
   static nsIAtom* title;
   static nsIAtom* top;

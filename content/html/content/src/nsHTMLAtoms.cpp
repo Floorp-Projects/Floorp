@@ -219,6 +219,7 @@ nsIAtom* nsHTMLAtoms::tfoot;
 nsIAtom* nsHTMLAtoms::thead;
 nsIAtom* nsHTMLAtoms::text;
 nsIAtom* nsHTMLAtoms::textarea;
+nsIAtom* nsHTMLAtoms::textPseudo;
 nsIAtom* nsHTMLAtoms::th;
 nsIAtom* nsHTMLAtoms::title;
 nsIAtom* nsHTMLAtoms::top;
@@ -448,6 +449,7 @@ void nsHTMLAtoms::AddrefAtoms()
     thead = NS_NewAtom("THEAD");
     text = NS_NewAtom("TEXT");
     textarea = NS_NewAtom("TEXTAREA");
+    textPseudo = NS_NewAtom(":TEXT");
     th = NS_NewAtom("TH");
     title = NS_NewAtom("TITLE");
     top = NS_NewAtom("TOP");
@@ -669,6 +671,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(thead);
     NS_RELEASE(text);
     NS_RELEASE(textarea);
+    NS_RELEASE(textPseudo);
     NS_RELEASE(th);
     NS_RELEASE(top);
     NS_RELEASE(toppadding);
