@@ -26,20 +26,21 @@ function srGetStrBundle(path)
 function selectLocale(event)
 {
   try {
-    var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
-    if ( chromeRegistry ) {
-      chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
-    }
     var node = event.target;
     var langcode = node.getAttribute('value');
-    var prefUtilBundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
-    var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
-    var alertText = prefUtilBundle.GetStringFromName("languageAlert");
-    var titleText = prefUtilBundle.GetStringFromName("languageTitle");
-    alertText = alertText.replace(/%brand%/g, brandBundle.GetStringFromName("brandShortName"));
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService)
-    promptService.alert(window, titleText, alertText);
+    if (langcode)
+    {
+      var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
+      chromeRegistry.selectLocale(langcode, true);
+      var prefUtilBundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
+      var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+      var alertText = prefUtilBundle.GetStringFromName("languageAlert");
+      var titleText = prefUtilBundle.GetStringFromName("languageTitle");
+      alertText = alertText.replace(/%brand%/g, brandBundle.GetStringFromName("brandShortName"));
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+      promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService)
+      promptService.alert(window, titleText, alertText);
+    }
   }
   catch(e) {
     return false;
