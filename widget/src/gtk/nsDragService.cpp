@@ -127,8 +127,6 @@ void nsDragService::SetTopLevelWidget(GtkWidget* w)
 		      GTK_SIGNAL_FUNC (nsDragService::DragDataReceived), dragService);
 #endif
 
-  // We're done with our reference to the dragService.
-  //NS_IF_RELEASE(dragService);
 }
 
 //-------------------------------------------------------------------------
