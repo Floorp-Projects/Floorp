@@ -124,6 +124,8 @@ public:
   // Method for moving the focus forward/back.
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
 
+  // Return the location of the caret
+  NS_IMETHOD  GetDocSelectionLocation(nsIContent **startContent, nsIContent **endContent, nsIFrame **startFrame, PRUint32 *startOffset) = 0;
 };
 
 #define NS_EVENT_STATE_UNSPECIFIED  0x0000

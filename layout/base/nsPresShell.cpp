@@ -1357,8 +1357,11 @@ protected:
   
   friend struct ReflowEvent;
 
-    // utility to determine if we're in the middle of a drag
+  // Utility to determine if we're in the middle of a drag.
   PRBool IsDragInProgress ( ) const ;
+
+  // Utility to find which view to scroll.
+  nsIScrollableView* GetViewToScroll();
 
   PRBool mCaretEnabled;
 #ifdef IBMBIDI
@@ -3228,92 +3231,68 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::ScrollPage(PRBool aForward)
 {
-  nsIViewManager* viewManager = GetViewManager();
-  nsresult result = NS_OK;
-  if (viewManager)
-  {
-    nsIScrollableView *scrollView;
-    result = viewManager->GetRootScrollableView(&scrollView);
-    if (NS_SUCCEEDED(result) && scrollView)
-    {
-      scrollView->ScrollByPages(0, aForward ? 1 : -1);
-    }
+  nsIScrollableView* scrollView = GetViewToScroll();
+  if (scrollView) {
+    scrollView->ScrollByPages(0, aForward ? 1 : -1);
   }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::ScrollLine(PRBool aForward)
 {
-  nsIViewManager* viewManager = GetViewManager();
-  nsresult result = NS_OK;
-  if (viewManager)
-  {
-    nsIScrollableView *scrollView;
-    result = viewManager->GetRootScrollableView(&scrollView);
-    if (NS_SUCCEEDED(result) && scrollView)
-    {
+  nsIScrollableView* scrollView = GetViewToScroll();
+  if (scrollView) {
 #ifdef MOZ_WIDGET_COCOA
-      // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
-      // rather than 1.  This vastly improves scrolling speed.
-      scrollView->ScrollByLines(0, aForward ? 2 : -2);
+    // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
+    // rather than 1.  This vastly improves scrolling speed.
+    scrollView->ScrollByLines(0, aForward ? 2 : -2);
 #else
-      scrollView->ScrollByLines(0, aForward ? 1 : -1);
+    scrollView->ScrollByLines(0, aForward ? 1 : -1);
 #endif
       
 //NEW FOR LINES    
-      // force the update to happen now, otherwise multiple scrolls can
-      // occur before the update is processed. (bug #7354)
+    // force the update to happen now, otherwise multiple scrolls can
+    // occur before the update is processed. (bug #7354)
 
-    // I'd use Composite here, but it doesn't always work.
-      // vm->Composite();
+  // I'd use Composite here, but it doesn't always work.
+    // vm->Composite();
+    nsIViewManager* viewManager = GetViewManager();
+    if (viewManager) {
       viewManager->ForceUpdate();
     }
   }
-
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::ScrollHorizontal(PRBool aLeft)
 {
-  nsIViewManager* viewManager = GetViewManager();
-  nsresult result = NS_OK;
-  if (viewManager)
-  {
-    nsIScrollableView *scrollView;
-    result = viewManager->GetRootScrollableView(&scrollView);
-    if (NS_SUCCEEDED(result) && scrollView)
-    {
-      scrollView->ScrollByLines(aLeft ? -1 : 1, 0);
+  nsIScrollableView* scrollView = GetViewToScroll();
+  if (scrollView) {
+    scrollView->ScrollByLines(aLeft ? -1 : 1, 0);
 //NEW FOR LINES    
-      // force the update to happen now, otherwise multiple scrolls can
-      // occur before the update is processed. (bug #7354)
+    // force the update to happen now, otherwise multiple scrolls can
+    // occur before the update is processed. (bug #7354)
 
-    // I'd use Composite here, but it doesn't always work.
-      // vm->Composite();
+  // I'd use Composite here, but it doesn't always work.
+    // vm->Composite();
+    nsIViewManager* viewManager = GetViewManager();
+    if (viewManager) {
       viewManager->ForceUpdate();
     }
   }
-
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::CompleteScroll(PRBool aForward)
 {
-  nsIViewManager* viewManager = GetViewManager();
-  nsresult result = NS_OK;
-  if (viewManager)
-  {
-    nsIScrollableView *scrollView;
-    result = viewManager->GetRootScrollableView(&scrollView);
-    if (NS_SUCCEEDED(result) && scrollView)
-    {
-      scrollView->ScrollByWhole(!aForward);//TRUE = top, aForward TRUE=bottom
-    }
+  nsIScrollableView* scrollView = GetViewToScroll();
+  if (scrollView) {
+    scrollView->ScrollByWhole(!aForward);//TRUE = top, aForward TRUE=bottom
   }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3774,6 +3753,36 @@ PresShell :: IsDragInProgress ( ) const
 
 } // IsDragInProgress
 
+nsIScrollableView*
+PresShell::GetViewToScroll()
+{
+  nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
+  nsIFrame* selectionFrame = nsnull;
+  nsIScrollableView* scrollView = nsnull;
+  nsCOMPtr<nsIContent> selectionContent, endSelectionContent;  // NOT USED
+  PRUint32 selectionOffset; // NOT USED
+  esm->GetDocSelectionLocation(getter_AddRefs(selectionContent),
+                               getter_AddRefs(endSelectionContent),
+                               &selectionFrame,
+                               &selectionOffset);
+  if (selectionFrame) {
+    nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(selectionFrame);
+    if (svp) {
+      svp->GetScrollableView(mPresContext, &scrollView);
+    } else {
+      nsIView* selectionView = selectionFrame->GetClosestView();
+      if (selectionView)
+        scrollView = nsLayoutUtils::GetNearestScrollingView(selectionView);
+    }
+  }
+  if (!scrollView) {
+    nsIViewManager* viewManager = GetViewManager();
+    if (viewManager) {
+      viewManager->GetRootScrollableView(&scrollView);
+    }
+  }
+  return scrollView;
+}
 
 NS_IMETHODIMP
 PresShell::CancelReflowCommandInternal(nsIFrame*     aTargetFrame, 

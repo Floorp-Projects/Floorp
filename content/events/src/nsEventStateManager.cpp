@@ -114,6 +114,7 @@
 #include "nsIFrameTraversal.h"
 #include "nsLayoutAtoms.h"
 #include "nsLayoutCID.h"
+#include "nsLayoutUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
@@ -1723,7 +1724,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     if (!focusView)
       return NS_ERROR_FAILURE;
 
-    sv = GetNearestScrollingView(focusView);
+    sv = nsLayoutUtils::GetNearestScrollingView(focusView);
   }
 
   PRBool passToParent;
@@ -2132,7 +2133,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           case NS_VK_PAGE_DOWN:
           case NS_VK_PAGE_UP:
             if (!mCurrentFocus) {
-              nsIScrollableView* sv = GetNearestScrollingView(aView);
+              nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
                 sv->ScrollByPages(0, (keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1);
@@ -2142,7 +2143,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           case NS_VK_HOME:
           case NS_VK_END:
             if (!mCurrentFocus) {
-              nsIScrollableView* sv = GetNearestScrollingView(aView);
+              nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
                 sv->ScrollByWhole((keyEvent->keyCode != NS_VK_HOME) ? PR_FALSE : PR_TRUE);
@@ -2152,7 +2153,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           case NS_VK_DOWN:
           case NS_VK_UP:
             if (!mCurrentFocus) {
-              nsIScrollableView* sv = GetNearestScrollingView(aView);
+              nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
                 sv->ScrollByLines(0, (keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
@@ -2171,7 +2172,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           case NS_VK_LEFT:
           case NS_VK_RIGHT:
             if (!mCurrentFocus) {
-              nsIScrollableView* sv = GetNearestScrollingView(aView);
+              nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
                 sv->ScrollByLines((keyEvent->keyCode == NS_VK_RIGHT) ? 1 : -1, 0);
@@ -2193,7 +2194,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
             if (keyEvent->charCode == 0x20) {
               if (!mCurrentFocus) {
-                nsIScrollableView* sv = GetNearestScrollingView(aView);
+                nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView);
                 if (sv) {
                   sv->ScrollByPages(0, 1);
                 }
@@ -2325,24 +2326,6 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
 
 
   return NS_OK;
-}
-
-nsIScrollableView*
-nsEventStateManager::GetNearestScrollingView(nsIView* aView)
-{
-  nsIScrollableView* sv = nsnull;
-  CallQueryInterface(aView, &sv);
-  if (sv) {
-    return sv;
-  }
-
-  nsIView* parent = aView->GetParent();
-
-  if (parent) {
-    return GetNearestScrollingView(parent);
-  }
-
-  return nsnull;
 }
 
 PRBool

@@ -207,7 +207,6 @@ protected:
                        nsIDocShellTreeItem** aResult);
 
   // These functions are for mousewheel scrolling
-  nsIScrollableView* GetNearestScrollingView(nsIView* aView);
   nsresult GetParentScrollingView(nsInputEvent* aEvent,
                                   nsPresContext* aPresContext,
                                   nsIFrame* &targetOuterFrame,
