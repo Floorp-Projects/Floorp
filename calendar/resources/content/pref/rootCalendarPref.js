@@ -59,14 +59,19 @@ calendarPrefObserver.prototype =
             case "calendar.event.defaultendhour":
             case "calendar.weeks.inview":
             case "calendar.previousweeks.inview":
+                this.CalendarPreferences.calendarWindow.currentView.refresh();
+                break;
+
             case "calendar.week.start":
                 this.CalendarPreferences.calendarWindow.currentView.refresh();
+                this.CalendarPreferences.calendarWindow.miniMonth.refreshDisplay(true);
                 break;
 
             case "calendar.date.format" :
                 this.CalendarPreferences.calendarWindow.currentView.refresh();
                 refreshEventTree( getAndSetEventTable() );
                 toDoUnifinderRefresh();
+                break;
 
             case "calendar.alarms.showmissed":
                 if( subject.getBoolPref( prefName ) ) {

@@ -104,9 +104,10 @@
 		</constructor>
 
         <method name="refreshDisplay">
+           <parameter name="aReinitialize" />
            <body>
            <![CDATA[
-            if (!this.mInitialized) {
+            if (!this.mInitialized || aReinitialize) {
               this.mInitialized = true;
     
                 // Find out which should be the first day of the week
