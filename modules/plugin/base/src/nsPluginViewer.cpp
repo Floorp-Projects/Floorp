@@ -255,9 +255,8 @@ PluginViewerImpl::~PluginViewerImpl()
 
   if(mOwner) {
     nsIPluginInstance * inst;
-    mOwner->GetInstance(inst);
 
-    if(inst) {
+    if(NS_SUCCEEDED(mOwner->GetInstance(inst)) && inst) {
       nsCOMPtr<nsIPluginHost> host = do_GetService(kCPluginManagerCID);
       if(host)
         host->StopPluginInstance(inst);
