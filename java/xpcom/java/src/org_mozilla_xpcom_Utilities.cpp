@@ -32,6 +32,9 @@
 #include "ctype.h"
 #include "bcJavaGlobal.h"
 
+
+static jclass XPCOMExceptionClass = NULL;
+static jmethodID XPCOMExceptionInitMID = NULL;
 /*
  * Class:     org_mozilla_xpcom_Utilities
  * Method:    callMethodByIndex
@@ -68,8 +71,29 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_Utilities_callMethodByIndex
     mt->Marshal(m);
     orb->SendReceive(call);
     bcIUnMarshaler * um = call->GetUnMarshaler();
+    nsresult result;
     jobject retval;
-    mt->UnMarshal(um, &retval);
+    um->ReadSimple(&result, bc_T_U32);
+    if (NS_SUCCEEDED(result)) {
+        mt->UnMarshal(um, &retval);
+    } else {
+        if (XPCOMExceptionClass == NULL) {
+            XPCOMExceptionClass = (jclass) env->FindClass("org/mozilla/xpcom/XPCOMException");
+            if (!env->ExceptionOccurred()) { // if there is an exception it will be catched in java
+                XPCOMExceptionClass = (jclass)env->NewGlobalRef(XPCOMExceptionClass);
+                if (!env->ExceptionOccurred()) {
+                    XPCOMExceptionInitMID = env->GetMethodID(XPCOMExceptionClass,"<init>","(I)V");
+                    if (env->ExceptionOccurred()) {
+                        XPCOMExceptionClass = NULL;
+                    }
+                }
+            }
+        }
+        if (!env->ExceptionOccurred()) {
+            jthrowable exception = (jthrowable) env->NewObject(XPCOMExceptionClass, XPCOMExceptionInitMID,(jint)result);
+            env->Throw(exception);
+        }
+    }
     delete call; delete m; delete um; delete mt;
     
     return retval;

@@ -85,11 +85,17 @@ void bcJavaStub::Dispatch(bcICall *call) {
     bcIUnMarshaler * um = call->GetUnMarshaler();
     mt->UnMarshal(um);
     jobject jiid = bcIIDJava::GetObject(&iid);
-    jobject retval = bcJavaGlobal::GetJNIEnv()->CallStaticObjectMethod(utilitiesClass, callMethodByIndexMID, object, jiid, (jint)mid, args);
-    //nb return value; excepion handling
+    jobject retval = env->CallStaticObjectMethod(utilitiesClass, callMethodByIndexMID, object, jiid, (jint)mid, args);
+    nsresult result = NS_OK;
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        result = NS_ERROR_FAILURE;
+    }
     bcIMarshaler * m = call->GetMarshaler(); 
-    mt->Marshal(m, retval);
-    //nb memory deallocation
+    m->WriteSimple(&result, bc_T_U32); 
+    if (NS_SUCCEEDED(result)) {
+        mt->Marshal(m, retval);
+    }
     delete m; delete um; delete mt;
     return;
 }

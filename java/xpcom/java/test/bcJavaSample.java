@@ -116,10 +116,10 @@ public class bcJavaSample implements bcIJavaSample {
             nsISupportsString strObj;
             while (true) {
                 obj = enumerator.currentItem();
-                if (obj == null 
-                    || counter > 300) {
-                    break;
-                }
+                //                if (obj == null 
+                //  || counter > 300) {
+                //  break;
+                //}
                 strObj = (nsISupportsString) obj.queryInterface(nsISupportsString.IID);
                 str = strObj.getData();
                 System.out.println("--[java] bcJavaSample.Test5 string "+str);
