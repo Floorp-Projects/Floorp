@@ -594,6 +594,36 @@ void nsCSSRect::List(FILE* out, PRInt32 aPropID, PRInt32 aIndent) const
   fputs(buffer, out);
 }
 
+void nsCSSRect::List(FILE* out, PRInt32 aIndent, PRIntn aTRBL[]) const
+{
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  if (eCSSUnit_Null != mTop.GetUnit()) {
+    buffer.Append(nsCSSProps::kNameTable[aTRBL[0]].name);
+    buffer.Append(": ");
+    mTop.AppendToString(buffer);
+  }
+  if (eCSSUnit_Null != mRight.GetUnit()) {
+    buffer.Append(nsCSSProps::kNameTable[aTRBL[1]].name);
+    buffer.Append(": ");
+    mRight.AppendToString(buffer);
+  }
+  if (eCSSUnit_Null != mBottom.GetUnit()) {
+    buffer.Append(nsCSSProps::kNameTable[aTRBL[2]].name);
+    buffer.Append(": ");
+    mBottom.AppendToString(buffer); 
+  }
+  if (eCSSUnit_Null != mLeft.GetUnit()) {
+    buffer.Append(nsCSSProps::kNameTable[aTRBL[3]].name);
+    buffer.Append(": ");
+    mLeft.AppendToString(buffer);
+  }
+
+  fputs(buffer, out);
+}
+
 nsCSSDisplay::nsCSSDisplay(void)
   : mClip(nsnull)
 {
@@ -666,13 +696,31 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   if (nsnull != mMargin) {
-    mMargin->List(out, PROP_MARGIN, aIndent);
+    static PRIntn trbl[] = {
+      PROP_MARGIN_TOP,
+      PROP_MARGIN_RIGHT,
+      PROP_MARGIN_BOTTOM,
+      PROP_MARGIN_LEFT
+    };
+    mMargin->List(out, aIndent, trbl);
   }
   if (nsnull != mPadding) {
-    mPadding->List(out, PROP_PADDING, aIndent);
+    static PRIntn trbl[] = {
+      PROP_PADDING_TOP,
+      PROP_PADDING_RIGHT,
+      PROP_PADDING_BOTTOM,
+      PROP_PADDING_LEFT
+    };
+    mPadding->List(out, aIndent, trbl);
   }
   if (nsnull != mBorder) {
-    mBorder->List(out, PROP_BORDER_WIDTH, aIndent);
+    static PRIntn trbl[] = {
+      PROP_BORDER_TOP_WIDTH,
+      PROP_BORDER_RIGHT_WIDTH,
+      PROP_BORDER_BOTTOM_WIDTH,
+      PROP_BORDER_LEFT_WIDTH
+    };
+    mBorder->List(out, aIndent, trbl);
   }
   if (nsnull != mColor) {
     mColor->List(out, PROP_BORDER_COLOR, aIndent);
