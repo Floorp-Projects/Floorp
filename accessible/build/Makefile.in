@@ -45,6 +45,7 @@ SHARED_LIBRARY_LIBS = \
 EXTRA_DSO_LDOPTS =           \
     $(MOZ_COMPONENT_LIBS)    \
     -lgkgfx                  \
+    -lgkconshared_s          \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
