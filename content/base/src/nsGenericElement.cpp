@@ -938,14 +938,9 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
       if (globalObject) {
         nsCOMPtr<nsIScriptContext> context;
         if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
-          nsAutoString tag;
-          char tagBuf[50];
-          
-          mTag->ToString(tag);
-          tag.ToCString(tagBuf, sizeof(tagBuf));
           context->AddNamedReference((void *)&mDOMSlots->mScriptObject,
                                      mDOMSlots->mScriptObject,
-                                     tagBuf);
+                                     "nsGenericElement::mScriptObject");
         }
       }
     }
