@@ -348,6 +348,10 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowStat
     nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
 
+    NS_ASSERTION(rv == NS_OK,"failed to get spacing");
+    if (NS_FAILED(rv))
+         return rv;
+
     nsMargin margin(0,0,0,0);;
     spacing->GetMargin(margin);
     nsMargin border(0,0,0,0);
@@ -2064,7 +2068,6 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
         nsIFrame* childFrame = mOuter->mFrames.FirstChild(); 
         while (nsnull != childFrame) 
         {    
-            nsRect r(0,0,0,0);
             childFrame->GetRect(r);
 
             // if we are not in the child. But in the spring above the child.

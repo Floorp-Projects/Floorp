@@ -1685,7 +1685,7 @@ nsGfxScrollFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& increm
            mInner->mScrollAreaNeedsReflow = PR_TRUE;
  
         nsIBox* ibox = nsnull;
-        nsresult rv = childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
+        rv = childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
         NS_ASSERTION(NS_SUCCEEDED(rv),"We have a child that is not a box!!!!");
         if (NS_FAILED(rv))
             return rv;
