@@ -833,7 +833,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     }
 
     // If an IID was passed in then use it
-    // XXX should it be JS error to pass something that is *not* and JSID?
+    // XXX should it be JS error to pass something that is *not* a JSID?
     const nsID* piid = nsnull;
     if(argc)
     {

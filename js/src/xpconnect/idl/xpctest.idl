@@ -146,6 +146,9 @@ interface nsIXPCTestOverloaded : nsISupports {
 
 [scriptable, uuid(3d2e64b0-6552-11d3-989e-006008962422)]
 interface nsIXPCTestArray : nsISupports {
+
+    void SetReceiver(in nsIXPCTestArray aReceiver);
+
     void PrintIntegerArray(in PRUint32 count, 
                            [array, size_is(count)] in PRInt32 valueArray);
     void PrintStringArray(in PRUint32 count, 
@@ -158,5 +161,14 @@ interface nsIXPCTestArray : nsISupports {
                            in PRInt32 val, 
                            inout PRUint32 count, 
                            [array, size_is(count)] inout PRInt32 valueArray);
+
+    void CallEchoMethodOnEachInArray(inout nsIIDPtr uuid, 
+                                     inout PRUint32 count, 
+       [array, size_is(count), iid_is(uuid)] inout nsQIResult result);
+
+    void DoubleStringArray(inout PRUint32 count, 
+                           [array, size_is(count)] inout string valueArray);
+    void ReverseStringArray(in PRUint32 count, 
+                            [array, size_is(count)] inout string valueArray);
 };
 

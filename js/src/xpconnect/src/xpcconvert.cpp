@@ -40,7 +40,7 @@
         ((uint8)((np_no) | ((p_no) << 1) | ((np_o) << 2) | ((p_o) << 3)))
 
 /***********************************************************/
-#define XPC_FLAG_COUNT nsXPTType::T_ARRAY_WITH_LENGTH+1
+#define XPC_FLAG_COUNT nsXPTType::T_PWSTRING_SIZE_IS+1
 
 /* '1' means 'reflectable'. '0' means 'not reflectable'.        */
 static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
@@ -67,7 +67,8 @@ static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE_IS      */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_ARRAY             */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 )  /* T_ARRAY_WITH_LENGTH */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_PSTRING_SIZE_IS   */ //XXX disabled
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 )  /* T_PWSTRING_SIZE_IS  */ //XXX disabled
     };
 /***********************************************************/
 
@@ -808,8 +809,8 @@ XPCConvert::JSValToXPCException(JSContext* cx,
             if(JSVAL_TO_DOUBLE(s))
             {
                 number = *(JSVAL_TO_DOUBLE(s));
-                if(number > 0.0 && 
-                   number < (double)0xffffffff && 
+                if(number > 0.0 &&
+                   number < (double)0xffffffff &&
                    0.0 == fmod(number,1))
                 {
                     rv = (nsresult) number;
@@ -823,7 +824,7 @@ XPCConvert::JSValToXPCException(JSContext* cx,
             return ConstructException(rv, nsnull, ifaceName, methodName, nsnull);
         else
         {
-            nsISupportsDouble* data; 
+            nsISupportsDouble* data;
             nsIComponentManager* cm;
             if(NS_FAILED(NS_GetGlobalComponentManager(&cm)) || !cm ||
                NS_FAILED(cm->CreateInstanceByProgID(
@@ -833,7 +834,7 @@ XPCConvert::JSValToXPCException(JSContext* cx,
                                 (void**)&data)))
                 return nsnull;
             data->SetData(number);
-            nsIXPCException* e = 
+            nsIXPCException* e =
                         ConstructException(NS_ERROR_XPC_JS_THREW_NUMBER,
                                            nsnull,
                                            ifaceName, methodName, data);
@@ -933,43 +934,6 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
 
 /***************************************************************************/
 
-XPCArrayDataScavenger::XPCArrayDataScavenger(XPCArrayDataScavenger* aNext)
-    :   mCleanupMode(NO_ACTION),
-        mInitedCount(0),
-        mData(nsnull),
-        mNext(aNext)
-{
-    // nada
-}
-
-XPCArrayDataScavenger::~XPCArrayDataScavenger()
-{
-    if(mData)
-    {
-        if(mCleanupMode == DO_FREE)
-        {
-            for(PRUint32 i = 0; i < mInitedCount; i++)
-            {
-                void* p = mData[i];
-                if(p) nsAllocator::Free(p);
-            }
-        }
-        else if(mCleanupMode == DO_RELEASE)
-        {
-            for(PRUint32 i = 0; i < mInitedCount; i++)
-            {
-                nsISupports* p = NS_REINTERPRET_CAST(nsISupports*, mData[i]);
-                NS_IF_RELEASE(p);
-            }
-        }
-    }
-
-    if(mNext)
-        delete mNext;
-}
-
-/***************************************************************************/
-
 // array fun...
 
 #ifdef POPULATE
@@ -1056,14 +1020,17 @@ failure:
 JSBool
 XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
                            JSUint32 count, JSUint32 capacity,
-                           XPCArrayDataScavenger* scavenger,
                            const nsXPTType& type,
                            JSBool useAllocator, const nsID* iid,
                            uintN* pErr)
 {
     NS_PRECONDITION(d, "bad param");
-    NS_PRECONDITION(scavenger, "bad param");
 
+    enum CleanupMode {na, fr, re};
+    CleanupMode cleanupMode;
+    void* array = nsnull;
+    JSUint32 initedCount;
+    jsval current;
 
     // XXX add support for getting chars from strings
 
@@ -1091,7 +1058,7 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
     }
 
     jsuint len;
-    if(!JS_GetArrayLength(cx, jsarray, &len) || len < count)
+    if(!JS_GetArrayLength(cx, jsarray, &len) || len < count || capacity < count)
     {
         if(pErr)
             *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
@@ -1101,36 +1068,24 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    void* array = nsnull;
-    JSUint32 i;
-    jsval current;
-
 #define POPULATE(_mode, _t)                                                  \
     PR_BEGIN_MACRO                                                           \
+        cleanupMode = _mode;                                                 \
         if(nsnull == (array = nsAllocator::Alloc(capacity * sizeof(_t))))    \
         {                                                                    \
             if(pErr)                                                         \
                 *pErr = NS_ERROR_OUT_OF_MEMORY;                              \
             goto failure;                                                    \
         }                                                                    \
-        scavenger->SetDataPtr((void**)array);                                \
-        scavenger->SetCleanupMode(_mode);                                    \
-        for(i = 0; i < count; i++)                                           \
+        for(initedCount = 0; initedCount < count; initedCount++)             \
         {                                                                    \
-            if(!JS_GetElement(cx, jsarray, i, &current) ||                   \
-               !JSData2Native(cx, ((_t*)array)+i, current, type,             \
+            if(!JS_GetElement(cx, jsarray, initedCount, &current) ||         \
+               !JSData2Native(cx, ((_t*)array)+initedCount, current, type,   \
                               useAllocator, iid, pErr))                      \
                 goto failure;                                                \
-            scavenger->IncrementInitedCount();                               \
         }                                                                    \
     PR_END_MACRO
 
-    static const XPCArrayDataScavenger::CleanupMode 
-        na = XPCArrayDataScavenger::NO_ACTION,
-        fr = useAllocator ? 
-                XPCArrayDataScavenger::DO_FREE : 
-                XPCArrayDataScavenger::NO_ACTION,
-        re = XPCArrayDataScavenger::DO_RELEASE;
 
     // XXX check IsPtr - esp. to handle array of nsID (as opposed to nsID*)
 
@@ -1167,6 +1122,30 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
     return JS_TRUE;
 
 failure:
+    // we may need to cleanup the partially filled array of converted stuff
+    if(array)
+    {
+        if(cleanupMode == re)
+        {
+            nsISupports** a = (nsISupports**) array;
+            for(PRUint32 i = 0; i < initedCount; i++)
+            {
+                nsISupports* p = a[i];
+                NS_IF_RELEASE(p);
+            }
+        }
+        else if(cleanupMode == fr && useAllocator)
+        {
+            void** a = (void**) array;
+            for(PRUint32 i = 0; i < initedCount; i++)
+            {
+                void* p = a[i];
+                if(p) nsAllocator::Free(p);
+            }
+        }
+        nsAllocator::Free(array);
+    }
+
     return JS_FALSE;
 
 #undef POPULATE

@@ -27,6 +27,7 @@ public:
     NS_DECL_NSIECHO
 
     xpctestEcho();
+    virtual ~xpctestEcho();
 private:
     nsIEcho* mReceiver;
 };
@@ -43,13 +44,16 @@ xpctestEcho::xpctestEcho()
     NS_ADDREF_THIS();
 }
 
+xpctestEcho::~xpctestEcho()
+{
+    NS_IF_RELEASE(mReceiver);
+}
+
 NS_IMETHODIMP xpctestEcho::SetReceiver(nsIEcho* aReceiver)
 {
-    if(mReceiver)
-        NS_RELEASE(mReceiver);
+    NS_IF_ADDREF(aReceiver);
+    NS_IF_RELEASE(mReceiver);
     mReceiver = aReceiver;
-    if(mReceiver)
-        NS_ADDREF(mReceiver);
     return NS_OK;
 }
 

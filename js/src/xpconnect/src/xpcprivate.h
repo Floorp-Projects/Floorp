@@ -202,6 +202,7 @@ public:
         IDX_TO_STRING       ,
         IDX_LAST_RESULT     ,
         IDX_RETURN_CODE     ,
+        IDX_VAL_STRING      ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -376,6 +377,33 @@ private:
     void SetReflectable(uint16 i, JSBool b)
     {if(b) mDescriptors[i/32] |= (1 << (i%32));
      else mDescriptors[i/32] &= ~(1 << (i%32));}
+
+    enum SizeMode {GET_SIZE, GET_LENGTH};
+
+    JSBool GetArraySizeFromParam(JSContext* cx,
+                                 const nsXPTMethodInfo* method,
+                                 const nsXPTParamInfo& param,
+                                 uint16 methodIndex,
+                                 uint8 paramIndex,
+                                 SizeMode mode,
+                                 nsXPTCMiniVariant* params,
+                                 JSUint32* result);
+
+    JSBool GetInterfaceTypeFromParam(JSContext* cx,
+                                     const nsXPTMethodInfo* method,
+                                     const nsXPTParamInfo& param,
+                                     uint16 methodIndex,
+                                     const nsXPTType& type,
+                                     nsXPTCMiniVariant* params,
+                                     JSBool* iidIsOwned,
+                                     nsID** result);
+
+    void CleanupPointerArray(const nsXPTType& datum_type,
+                             JSUint32 array_count,
+                             void** arrayp);
+
+    void CleanupPointerTypeObject(const nsXPTType& type, 
+                                  void** pp);
 
 private:
     XPCContext* mXPCContext;
@@ -629,8 +657,18 @@ private:
                                  uint8 vtblIndex,
                                  uint8 paramIndex,
                                  SizeMode mode,
-                                 jsval *argv,
+                                 nsXPTCVariant* dispatchParams,
                                  JSUint32* result);
+
+    JSBool GetInterfaceTypeFromParam(JSContext* cx, 
+                                     const nsXPTMethodInfo* method,
+                                     const XPCNativeMemberDescriptor* desc,
+                                     const nsXPTParamInfo& param,
+                                     uint8 vtblIndex,
+                                     uint8 paramIndex,
+                                     const nsXPTType& datum_type,
+                                     nsXPTCVariant* dispatchParams,
+                                     nsID** result);
 
 private:
     XPCContext* mXPCContext;
@@ -716,32 +754,6 @@ public:
 /***************************************************************************/
 // data convertion
 
-class XPCArrayDataScavenger
-{
-public:
-    enum CleanupMode {NO_ACTION, DO_FREE, DO_RELEASE};
-
-    void SetDataPtr(void** aData) 
-            {NS_ASSERTION(!mData,"must set data only once"); mData = aData;}
-    void SetCleanupMode(CleanupMode aCleanupMode)
-            {mCleanupMode = aCleanupMode;}
-    void IncrementInitedCount() 
-            {NS_ASSERTION(mData,"must set data first"); mInitedCount++;}
-
-    XPCArrayDataScavenger(XPCArrayDataScavenger* aNext);
-
-    ~XPCArrayDataScavenger();
-
-private:
-    XPCArrayDataScavenger(); // no implementation
-
-private:
-    CleanupMode            mCleanupMode;
-    PRUint32               mInitedCount;        
-    void**                 mData;
-    XPCArrayDataScavenger* mNext;        
-};
-
 // class here just for static methods
 class XPCConvert
 {
@@ -765,7 +777,6 @@ public:
 
     static JSBool JSArray2Native(JSContext* cx, void** d, jsval s,
                                  JSUint32 count, JSUint32 capacity,
-                                 XPCArrayDataScavenger* scavenger,
                                  const nsXPTType& type,
                                  JSBool useAllocator, const nsID* iid,
                                  uintN* pErr);
