@@ -65,6 +65,20 @@ Atom nsGtkMozRemoteHelper::sMozUserAtom     = 0;
 Atom nsGtkMozRemoteHelper::sMozProfileAtom  = 0;
 Atom nsGtkMozRemoteHelper::sMozProgramAtom  = 0;
 
+#define ARRAY_LENGTH(array_) (sizeof(array_)/sizeof(array_[0]))
+
+// Minimize the roundtrips to the X-server
+static char *XAtomNames[] = {
+  MOZILLA_VERSION_PROP,
+  MOZILLA_LOCK_PROP,
+  MOZILLA_COMMAND_PROP,
+  MOZILLA_RESPONSE_PROP,
+  MOZILLA_USER_PROP,
+  MOZILLA_PROFILE_PROP,
+  MOZILLA_PROGRAM_PROP
+};
+static Atom XAtoms[ARRAY_LENGTH(XAtomNames)];
+
 // XXX get this dynamically
 static const char sRemoteVersion[]   = "5.0";
 
@@ -203,23 +217,22 @@ nsGtkMozRemoteHelper::HandlePropertyChange(GtkWidget *aWidget,
 void
 nsGtkMozRemoteHelper::EnsureAtoms(void)
 {
- // init our atoms if we need to
-  if (!sMozVersionAtom)
-    sMozVersionAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_VERSION_PROP, False);
-  if (!sMozLockAtom)
-    sMozLockAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_LOCK_PROP, False);
-  if (!sMozCommandAtom)
-    sMozCommandAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_COMMAND_PROP, False);
-  if (!sMozResponseAtom)
-    sMozResponseAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_RESPONSE_PROP,
-				   False);
-  if (!sMozUserAtom)
-    sMozUserAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_USER_PROP, False);
-  if (!sMozProfileAtom)
-    sMozProfileAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_PROFILE_PROP, False);
-  if (!sMozProgramAtom)
-    sMozProgramAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_PROGRAM_PROP, False);
+  // init our atoms if we need to
+  static PRBool initialized;
+  if (!initialized) {
+    XInternAtoms(GDK_DISPLAY(), XAtomNames, ARRAY_LENGTH(XAtomNames), False, XAtoms);
 
+    int i = 0;
+    sMozVersionAtom  = XAtoms[i++];
+    sMozLockAtom     = XAtoms[i++];
+    sMozCommandAtom  = XAtoms[i++];
+    sMozResponseAtom = XAtoms[i++];
+    sMozUserAtom     = XAtoms[i++];
+    sMozProfileAtom  = XAtoms[i++];
+    sMozProgramAtom  = XAtoms[i++];
+
+    initialized = PR_TRUE;
+  }
 }
 
 

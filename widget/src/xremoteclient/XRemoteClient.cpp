@@ -64,6 +64,8 @@
 #define MOZILLA_PROFILE_PROP   "_MOZILLA_PROFILE"
 #define MOZILLA_PROGRAM_PROP   "_MOZILLA_PROGRAM"
 
+#define ARRAY_LENGTH(array_) (sizeof(array_)/sizeof(array_[0]))
+
 static PRLogModuleInfo *sRemoteLm = NULL;
 
 XRemoteClient::XRemoteClient()
@@ -93,6 +95,19 @@ XRemoteClient::~XRemoteClient()
 NS_IMPL_ISUPPORTS1(XRemoteClient, nsIXRemoteClient)
 #endif
 
+// Minimize the roundtrips to the X-server
+static char *XAtomNames[] = {
+  MOZILLA_VERSION_PROP,
+  MOZILLA_LOCK_PROP,
+  MOZILLA_COMMAND_PROP,
+  MOZILLA_RESPONSE_PROP,
+  "WM_STATE",
+  MOZILLA_USER_PROP,
+  MOZILLA_PROFILE_PROP,
+  MOZILLA_PROGRAM_PROP
+};
+static Atom XAtoms[ARRAY_LENGTH(XAtomNames)];
+
 NS_IMETHODIMP
 XRemoteClient::Init (void)
 {
@@ -106,14 +121,17 @@ XRemoteClient::Init (void)
     return NS_ERROR_FAILURE;
 
   // get our atoms
-  mMozVersionAtom  = XInternAtom(mDisplay, MOZILLA_VERSION_PROP, False);
-  mMozLockAtom     = XInternAtom(mDisplay, MOZILLA_LOCK_PROP, False);
-  mMozCommandAtom  = XInternAtom(mDisplay, MOZILLA_COMMAND_PROP, False);
-  mMozResponseAtom = XInternAtom(mDisplay, MOZILLA_RESPONSE_PROP, False);
-  mMozWMStateAtom  = XInternAtom(mDisplay, "WM_STATE", False);
-  mMozUserAtom     = XInternAtom(mDisplay, MOZILLA_USER_PROP, False);
-  mMozProfileAtom  = XInternAtom(mDisplay, MOZILLA_PROFILE_PROP, False);
-  mMozProgramAtom  = XInternAtom(mDisplay, MOZILLA_PROGRAM_PROP, False);
+  XInternAtoms(mDisplay, XAtomNames, ARRAY_LENGTH(XAtomNames), False, XAtoms);
+
+  int i = 0;
+  mMozVersionAtom  = XAtoms[i++];
+  mMozLockAtom     = XAtoms[i++];
+  mMozCommandAtom  = XAtoms[i++];
+  mMozResponseAtom = XAtoms[i++];
+  mMozWMStateAtom  = XAtoms[i++];
+  mMozUserAtom     = XAtoms[i++];
+  mMozProfileAtom  = XAtoms[i++];
+  mMozProgramAtom  = XAtoms[i++];
 
   mInitialized = PR_TRUE;
 
