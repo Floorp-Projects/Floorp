@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_LOGGING
-// sorry, this has to be before the pre-compiled header
+// this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #endif
 #include <mapidefs.h>
@@ -240,6 +240,9 @@ STDMETHODIMP CMapiImp::SendMail( unsigned long aSession, lpnsMapiMessage aMessag
     // recieved here from MS COM. These are used in BlindSendMail and ShowCompWin fns 
     aMessage->lpRecips = aRecips ;
     aMessage->lpFiles = aFiles ;
+
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::SendMail flags=%x subject: %s sender: %s\n", 
+      aFlags, (char *) aMessage->lpszSubject, aMessage->lpOriginator->lpszAddress) );
 
     /** create nsIMsgCompFields obj and populate it **/
     nsCOMPtr<nsIMsgCompFields> pCompFields = do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv) ;
@@ -799,8 +802,10 @@ char *MsgMapiListContext::ConvertBodyToMapiFormat (nsIMsgDBHdr *hdr)
       curLine.Append(CRLF);
       // make sure we have room left
       if (bytesCopied + curLine.Length() < msgSize)
+      {
         strcpy(body + bytesCopied, curLine.get());
-      bytesCopied += curLine.Length();
+        bytesCopied += curLine.Length();
+      }
     }
     PR_LOG(MAPI, PR_LOG_DEBUG, ("ConvertBodyToMapiFormat size=%x allocated size %x body = %100.100s\n", 
         bytesCopied, msgSize + 1, (char *) body) );

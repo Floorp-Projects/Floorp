@@ -41,6 +41,10 @@
 
 #define MAPI_STARTUP_ARG       "/MAPIStartUp"
 
+#ifdef MOZ_LOGGING
+// this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
 #include <mapidefs.h>
 #include <mapi.h>
 #include <tchar.h>
@@ -82,6 +86,9 @@
 #include "msgMapiSupport.h"
 #include "msgMapiMain.h"
 #include "nsNetUtil.h"
+
+extern PRLogModuleInfo *MAPI;
+
 
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
@@ -469,6 +476,7 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
         }
     }
 
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("to: %s cc: %s bcc: %s \n", NS_ConvertUCS2toUTF8(To).get(), NS_ConvertUCS2toUTF8(Cc).get(), NS_ConvertUCS2toUTF8(Bcc).get()));
     // set To, Cc, Bcc
     aCompFields->SetTo (To) ;
     aCompFields->SetCc (Cc) ;
@@ -703,6 +711,8 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
     aCompFields->SetTo (To) ;
     aCompFields->SetCc (Cc) ;
     aCompFields->SetBcc (Bcc) ;
+
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("to: %s cc: %s bcc: %s \n", NS_ConvertUCS2toUTF8(To).get(), NS_ConvertUCS2toUTF8(Cc).get(), NS_ConvertUCS2toUTF8(Bcc).get()));
 
     nsCAutoString platformCharSet;
     // set subject
