@@ -81,19 +81,18 @@ protected:
     
     nsCOMPtr<nsIURI>                    mCurrentURI;
 
-	PRBool					mIsSecureDocument;  // is https loaded
-	PRBool					mIsDocumentBroken;  // 
 	PRBool					mMixContentAlertShown;
     
-    PRBool                  mInitByLocationChange;
+  //    PRBool                  mInitByLocationChange;
 
     char*                   mLastPSMStatus;
+    PRInt32                 mSecurityState;
     
 
     void GetBundleString(const nsString& name, nsString &outString);
     
-    nsresult CheckProtocolContextSwitch( nsISecurityEventSink* sink, nsIRequest* request, nsIURI* newURI, nsIURI* oldURI);
-    nsresult CheckMixedContext( nsISecurityEventSink* sink, nsIRequest* request, nsIURI* nextURI);
+    nsresult CheckProtocolContextSwitch( nsISecurityEventSink* sink, nsIRequest* request, nsIChannel* aChannel);
+    nsresult CheckMixedContext( nsISecurityEventSink* sink, nsIRequest* request, nsIChannel* aChannel);
     nsresult CheckPost(nsIURI *actionURL, PRBool *okayToPost);
     nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
     nsresult IsURLfromPSM(nsIURI* aURL, PRBool *value);

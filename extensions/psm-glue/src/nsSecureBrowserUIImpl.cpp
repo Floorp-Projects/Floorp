@@ -82,11 +82,11 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #if defined(PR_LOGGING)
 //
-// Log module for nsSecureBroswerUI logging...
+// Log module for nsSecureBrowserUI logging...
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsSecureBroswerUI:5
+//    set NSPR_LOG_MODULES=nsSecureBrowserUI:5
 //    set NSPR_LOG_FILE=nspr.log
 //
 // this enables PR_LOG_DEBUG level information and places all output in
@@ -131,12 +131,13 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
     
 #if defined(PR_LOGGING)
     if (nsnull == gSecureDocLog) {
-        gSecureDocLog = PR_NewLogModule("nsSecureBroswerUI");
+        gSecureDocLog = PR_NewLogModule("nsSecureBrowserUI");
     }
 #endif /* PR_LOGGING */
 
 
-    mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
+    mMixContentAlertShown = PR_FALSE;
+    mSecurityState = STATE_IS_INSECURE;
     mLastPSMStatus    = nsnull;
     mCurrentURI       = nsnull;
     mSecurityButton   = nsnull;
@@ -197,7 +198,8 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window, nsIDOMElement *button)
 
     wp->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
 
-    mInitByLocationChange = PR_TRUE;
+    //    mInitByLocationChange = PR_TRUE;
+    mSecurityState = STATE_IS_INSECURE;
 
     return NS_OK;
 }
@@ -246,6 +248,41 @@ static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child, PR
     return NS_OK;
 }
 
+static PRInt16 GetSecurityStateFromChannel(nsIChannel* aChannel,
+                                            char* *aPSMStatus = nsnull,
+                                            CMT_CONTROL **aControl = nsnull)
+{
+    nsresult res;
+    PRInt32 securityState;
+
+    // qi for the psm information about this channel load.
+    nsCOMPtr<nsISupports> info;
+    aChannel->GetSecurityInfo(getter_AddRefs(info));
+    nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info);
+    if (!psmInfo) {
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - no nsIPSMSocketInfo for %p\n", aChannel, (nsISupports *)info));
+        return nsIWebProgressListener::STATE_IS_INSECURE;
+    }
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - info is %p\n", aChannel, (nsISupports *)info));
+
+    if (aPSMStatus) {
+        PR_FREEIF(*aPSMStatus);
+        res = psmInfo->GetPickledStatus(aPSMStatus);
+    }
+    
+    if (aControl) {
+        psmInfo->GetControlPtr(aControl);
+    }
+
+    res = psmInfo->GetSecurityState(&securityState);
+    if (!NS_SUCCEEDED(res)) {
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - GetSecurityState failed: %d\n", aChannel, res));
+        securityState = nsIWebProgressListener::STATE_IS_BROKEN;
+    }
+
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - Returning %d\n", aChannel, securityState));
+    return securityState;
+}
 
 NS_IMETHODIMP 
 nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit)
@@ -315,11 +352,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     if (requestor)
        eventSink = do_GetInterface(requestor);
     
+#if defined(DEBUG)
     nsCOMPtr<nsIURI> loadingURI;
     res = channel->GetURI(getter_AddRefs(loadingURI));
     NS_ASSERTION(NS_SUCCEEDED(res),"GetURI failed");
-
-#if defined(DEBUG)
 	if (loadingURI) {
       nsXPIDLCString temp;
       loadingURI->GetSpec(getter_Copies(temp));
@@ -328,42 +364,34 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 #endif
 
     // A Document is starting to load...
-    if ((aProgressStateFlags & STATE_START) && 
-        (aProgressStateFlags & STATE_IS_NETWORK))
+    if ((aProgressStateFlags & (STATE_TRANSFERRING|STATE_REDIRECTING)) && 
+        (aProgressStateFlags & STATE_IS_DOCUMENT))
     {
         // starting to load a webpage
         PR_FREEIF(mLastPSMStatus); mLastPSMStatus = nsnull;
 
-        mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
-        if (mSecurityButton)
-            mSecurityButton->RemoveAttribute( NS_ConvertASCIItoUCS2("level") );
-        if (eventSink)
-            eventSink->OnSecurityChange(aRequest, (STATE_IS_INSECURE) );
-        
-                    
-        res = CheckProtocolContextSwitch(eventSink, aRequest, loadingURI, mCurrentURI);    
+        mMixContentAlertShown = PR_FALSE;
+
+        res = CheckProtocolContextSwitch(eventSink, aRequest, channel);    
         return res;
     } 
 
     // A document has finished loading    
     if ((aProgressStateFlags & STATE_STOP) &&
-        (aProgressStateFlags & STATE_IS_NETWORK) &&
-        mIsSecureDocument)
+        (aProgressStateFlags & STATE_IS_DOCUMENT) &&
+        (mSecurityState == STATE_IS_SECURE ||
+         mSecurityState == STATE_IS_BROKEN))
     {
-        if (!mIsDocumentBroken) // and status is okay  FIX
+        if (mSecurityState == STATE_IS_SECURE)
         {
-            // qi for the psm information about this channel load.
-            nsCOMPtr<nsISupports> info;
-            channel->GetSecurityInfo(getter_AddRefs(info));
-            nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info);
-            if (psmInfo)
-            {
-                // Everything looks okay.  Lets stash the picked status.
-                PR_FREEIF(mLastPSMStatus);
-                res = psmInfo->GetPickledStatus(&mLastPSMStatus);
+            CMT_CONTROL *control;
+            // XXX Shouldn't we do this even if the state is broken?
+            // XXX Shouldn't we grab the pickled status at STATE_NET_TRANSFERRING?
 
-                if (NS_SUCCEEDED(res))
-                {
+            PR_FREEIF(mLastPSMStatus);
+            if (GetSecurityStateFromChannel(channel, &mLastPSMStatus, &control) ==
+                STATE_IS_SECURE) {
+                // Everything looks okay.
                     PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
                     
                     if (mSecurityButton)
@@ -378,7 +406,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                     // Do we really need to look at res here? What happens if there's an error?
                     // We should still set the certificate authority display.
                     CMTItem caName;
-                    CMT_CONTROL *control;
                     CMTItem pickledResource = {0, NULL, 0};
                     CMUint32 socketStatus = 0;
 
@@ -389,7 +416,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                     
                     memcpy(pickledResource.data, mLastPSMStatus+sizeof(int), pickledResource.len);
                     
-                    psmInfo->GetControlPtr(&control);
                     if (CMT_UnpickleResource( control, 
                           SSM_RESTYPE_SSL_SOCKET_STATUS,
                           pickledResource, 
@@ -421,54 +447,27 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                     }
                     nsMemory::Free(pickledResource.data);
                     return res;
-                }
             }
+            mSecurityState = STATE_IS_BROKEN;
         }
 
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to broken\n", this));
-        mIsDocumentBroken = PR_TRUE;
         SetBrokenLockIcon(eventSink, aRequest);
         
         return res;
     }
     
-    ///    if (aProgressStateFlags == nsIWebProgress::flag_net_redirecting)
-    ///    {
-    ///        // need to implmentent.
-    ///    }
-
     // don't need to do anything more if the page is broken or not secure...
 
-    if (!mIsSecureDocument || mIsDocumentBroken)
+    if (mSecurityState != STATE_IS_SECURE)
         return NS_OK;
 
     // A URL is starting to load...
-    if ((aProgressStateFlags & STATE_START) &&
-        (aProgressStateFlags & STATE_IS_NETWORK))
+    if ((aProgressStateFlags & (STATE_TRANSFERRING|STATE_REDIRECTING)) &&
+        (aProgressStateFlags & STATE_IS_REQUEST))
     {   // check to see if we are going to mix content.
-        return CheckMixedContext(eventSink, aRequest, loadingURI);
+        return CheckMixedContext(eventSink, aRequest, channel);
     }
-
-    // A URL has finished loading...    
-    if ((aProgressStateFlags & STATE_STOP) &&
-        (aProgressStateFlags & STATE_IS_NETWORK))
-    {
-        if (1)  // FIX status from the flag...
-        {
-            nsCOMPtr<nsISupports> info;
-            channel->GetSecurityInfo(getter_AddRefs(info));
-            nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info, &res);
-
-                    // qi for the psm information about this channel load.
-            if (psmInfo) {
-                return NS_OK;    
-            }
-        }
-
-        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange - Icon set to broken\n", this));
-        SetBrokenLockIcon(eventSink, aRequest);
-        mIsDocumentBroken = PR_TRUE;
-    }    
 
     return res;
 }
@@ -481,11 +480,11 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 {
     mCurrentURI = aLocation;
     
-    if (mInitByLocationChange)
-    {
-        IsURLHTTPS(mCurrentURI, &mIsSecureDocument);
-        mInitByLocationChange = PR_FALSE;
-    }
+    //    if (mInitByLocationChange)
+    //    {
+    //        IsURLHTTPS(mCurrentURI, &mIsSecureDocument);
+    //        mInitByLocationChange = PR_FALSE;
+    //    }
 
     return NS_OK;
 }
@@ -609,23 +608,21 @@ void nsSecureBrowserUIImpl::GetBundleString(const nsString& name, nsString &outS
 }
 
 nsresult 
-nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsISecurityEventSink* eventSink, nsIRequest* aRequest, nsIURI* newURI, nsIURI* oldURI)
+nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsISecurityEventSink* eventSink, nsIRequest* aRequest, nsIChannel *aChannel)
 {
     nsresult res;
-    PRBool isNewSchemeSecure, isOldSchemeSecure, boolpref;
+    PRInt32 newSecurityState, oldSecurityState = mSecurityState;
+    PRBool boolpref;
 
-    res = IsURLHTTPS(oldURI, &isOldSchemeSecure);
-    if (NS_FAILED(res)) 
-        return res;
-    res = IsURLHTTPS(newURI, &isNewSchemeSecure);
-    if (NS_FAILED(res)) 
-        return res;
-
+    newSecurityState = GetSecurityStateFromChannel(aChannel);
+    
     // Check to see if we are going from a secure page to and insecure page
-    if ( !isNewSchemeSecure && isOldSchemeSecure)
-    {
+	if (newSecurityState == STATE_IS_INSECURE &&
+      (oldSecurityState == STATE_IS_SECURE ||
+       oldSecurityState == STATE_IS_BROKEN))
+	{
         SetBrokenLockIcon(eventSink, aRequest, PR_TRUE);        
-        
+
         if ((mPref->GetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
             boolpref = PR_TRUE;
         
@@ -660,7 +657,9 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsISecurityEventSink* eventSi
         }
     }
     // check to see if we are going from an insecure page to a secure one.
-    else if (isNewSchemeSecure && !isOldSchemeSecure)
+	else if ((newSecurityState == STATE_IS_SECURE ||
+            newSecurityState == STATE_IS_BROKEN) &&
+           oldSecurityState == STATE_IS_INSECURE)
     {
         if ((mPref->GetBoolPref(ENTER_SITE_PREF, &boolpref) != 0))
             boolpref = PR_TRUE;
@@ -696,25 +695,40 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsISecurityEventSink* eventSi
         }
     }
 
-    mIsSecureDocument = isNewSchemeSecure;
+    mSecurityState = newSecurityState;
     return NS_OK;
 }
 
 
 nsresult
-nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink, nsIRequest* aRequest, nsIURI* nextURI)
+nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink, nsIRequest* aRequest, nsIChannel* aChannel)
 {
-    PRBool secure;
+    PRInt16 newSecurityState;
+    nsresult rv;
 
-    nsresult rv = IsURLHTTPS(nextURI, &secure);
-    if (NS_FAILED(rv))
-        return rv;
+    newSecurityState = GetSecurityStateFromChannel(aChannel);
 
-    if (!secure  && mIsSecureDocument)
+    if ((newSecurityState == STATE_IS_INSECURE ||
+         newSecurityState == STATE_IS_BROKEN) &&
+        mSecurityState == STATE_IS_SECURE)
     {
-        mIsDocumentBroken = PR_TRUE;
+        {
+            // workaround bug48515
+            nsCOMPtr<nsIURI> aURI;
+            aChannel->GetURI(getter_AddRefs(aURI));
+
+            nsXPIDLCString temp;
+            aURI->GetSpec(getter_Copies(temp));
+            
+            if (!strncmp((const char *)temp, "file:", 5) ||
+                !strcmp((const char*)temp, "about:layout-dummy-request")) {
+                return NS_OK;
+            }
+        }
+
+        mSecurityState = STATE_IS_BROKEN;
         SetBrokenLockIcon(eventSink, aRequest);
-        
+
         if (!mPref) return NS_ERROR_NULL_POINTER;
 
         PRBool boolpref;
@@ -770,7 +784,9 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         return rv;
     
     // if we are posting to a secure link from a secure page, all is okay.
-    if (secure  && mIsSecureDocument) {
+    if (secure  && 
+        (mSecurityState == STATE_IS_SECURE ||
+         mSecurityState == STATE_IS_BROKEN)) {
         return NS_OK;
     }
 
@@ -801,7 +817,7 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
         // posting to insecure webpage from a secure webpage.
-        if (!secure  && mIsSecureDocument && !mIsDocumentBroken) {
+        if (!secure  && mSecurityState == STATE_IS_SECURE) {
             GetBundleString(NS_ConvertASCIItoUCS2("PostToInsecure"), message);
         } else { // anything else, post generic warning
             GetBundleString(NS_ConvertASCIItoUCS2("PostToInsecureFromInsecure"), message);
