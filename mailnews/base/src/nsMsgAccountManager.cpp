@@ -598,7 +598,7 @@ nsMsgAccountManager::upgradePrefs()
 
       rv = m_prefs->CopyCharPref("mail.pop_name", &oldstr);
       if (NS_SUCCEEDED(rv)) {
-        server->SetUserName(oldstr);
+        server->SetUsername(oldstr);
         PR_Free(oldstr);
       }
 
