@@ -39,6 +39,7 @@ CSRCS = \
 	prerrortable.c  \
 	prinit.c   \
 	prinrval.c \
+	pripc.c \
 	prlog2.c   \
 	prlong.c   \
 	prnetdb.c  \
@@ -48,6 +49,12 @@ CSRCS = \
 	prthinfo.c \
 	prtrace.c  \
 	$(NULL)
+
+ifndef USE_PTHREADS
+CSRCS += \
+	pripcsem.c \
+	$(NULL)
+endif
 
 TARGETS	= $(OBJS)
 

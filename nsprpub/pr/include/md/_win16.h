@@ -302,7 +302,6 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 #define _MD_ATOMIC_SET(x,y)           (*x, y)
 
 #define _MD_INIT_IO                   _PR_MD_INIT_IO
-#define _MD_TRANSMITFILE              _PR_MD_TRANSMITFILE
 
 /* win95 doesn't have async IO */
 #define _MD_SOCKET                    _PR_MD_SOCKET

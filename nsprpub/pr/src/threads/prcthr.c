@@ -18,6 +18,17 @@
 
 #include "primpl.h"
 
+#if defined(WIN95)
+/*
+** Some local variables report warnings on Win95 because the code paths 
+** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
+** The pragma suppresses the warning.
+** 
+*/
+#pragma warning(disable : 4101)
+#endif
+
+
 extern PRLock *_pr_sleeplock;  /* allocated and initialized in prinit */
 /* 
 ** Routines common to both native and user threads.
@@ -269,17 +280,7 @@ PR_IMPLEMENT(void) SetExecutionEnvironment(PRThread *thread, void *env)
 PR_IMPLEMENT(PRInt32) PR_GetThreadAffinityMask(PRThread *thread, PRUint32 *mask)
 {
 #ifdef HAVE_THREAD_AFFINITY
-/*
- * Irix ignores the thread argument
- */
-#ifndef IRIX
-    if (_PR_IS_NATIVE_THREAD(thread)) 
-        return _PR_MD_GETTHREADAFFINITYMASK(thread, mask);
-    else
-        return 0;
-#else
-        return _PR_MD_GETTHREADAFFINITYMASK(thread, mask);
-#endif        /* !IRIX */
+    return _PR_MD_GETTHREADAFFINITYMASK(thread, mask);
 #else
 
 #if defined(XP_MAC)

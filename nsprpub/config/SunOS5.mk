@@ -79,6 +79,18 @@ endif
 endif
 endif
 
+ifeq ($(USE_64),1)
+ifndef INTERNAL_TOOLS
+ifndef NS_USE_GCC
+CC			+= -xarch=v9
+CCC			+= -xarch=v9
+endif
+endif
+COMPILER_TAG		= _64
+else
+COMPILER_TAG		= _32
+endif
+
 RANLIB			= echo
 
 OS_DEFINES		= -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS
@@ -132,7 +144,7 @@ MKSHLIB			= $(LD) $(DSO_LDOPTS)
 # ld options:
 # -G: produce a shared object
 # -z defs: no unresolved symbols allowed
-DSO_LDOPTS		= -G
+DSO_LDOPTS		= -G -h $(notdir $@)
 
 # -KPIC generates position independent code for use in shared libraries.
 # (Similarly for -fPIC in case of gcc.)
@@ -141,8 +153,6 @@ DSO_CFLAGS		= -fPIC
 else
 DSO_CFLAGS		= -KPIC
 endif
-
-HAVE_PURIFY		= 1
 
 NOSUCHFILE		= /no-such-file
 

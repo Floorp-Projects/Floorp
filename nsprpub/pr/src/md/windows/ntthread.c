@@ -159,6 +159,13 @@ _PR_MD_INIT_THREAD(PRThread *thread)
         if (thread->md.blocked_sema == NULL) {
             return PR_FAILURE;
         }
+		if (_native_threads_only) {
+			/* Create the blocking IO semaphore */
+			thread->md.thr_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+			if (thread->md.thr_event == NULL) {
+				return PR_FAILURE;
+			}
+		}
     }
 
     return PR_SUCCESS;
@@ -278,6 +285,13 @@ _PR_MD_CLEAN_THREAD(PRThread *thread)
         PR_ASSERT(rv);
         thread->md.blocked_sema = 0;
     }
+	if (_native_threads_only) {
+		if (thread->md.thr_event) {
+			rv = CloseHandle(thread->md.thr_event);
+			PR_ASSERT(rv);
+			thread->md.thr_event = 0;
+		}
+	}
 
     if (thread->md.handle) {
         rv = CloseHandle(thread->md.handle);
@@ -316,6 +330,14 @@ _PR_MD_EXIT_THREAD(PRThread *thread)
         PR_ASSERT(rv);
         thread->md.blocked_sema = 0;
     }
+
+	if (_native_threads_only) {
+		if (thread->md.thr_event) {
+			rv = CloseHandle(thread->md.thr_event);
+			PR_ASSERT(rv);
+			thread->md.thr_event = 0;
+		}
+	}
 
     if (thread->md.handle) {
         rv = CloseHandle(thread->md.handle);
@@ -368,7 +390,6 @@ _PR_MD_CREATE_PRIMORDIAL_USER_THREAD(PRThread *thread)
 {
     thread->md.fiber_id = ConvertThreadToFiber(NULL);
     PR_ASSERT(thread->md.fiber_id);
-    thread->flags &= (~_PR_GLOBAL_SCOPE);
     _MD_SET_CURRENT_THREAD(thread);
     _MD_SET_LAST_THREAD(thread);
     thread->no_sched = 1;

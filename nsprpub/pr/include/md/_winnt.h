@@ -51,6 +51,7 @@
 #define HAVE_SOCKET_KEEPALIVE
 #define _PR_HAVE_ATOMIC_OPS
 #define _PR_HAVE_ATOMIC_CAS
+#define PR_HAVE_WIN32_NAMED_SHARED_MEMORY
 
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 
@@ -85,7 +86,6 @@ typedef struct _MDOverlapped {
     enum _MDIOModel ioModel;            /* The I/O model to implement
                                          * using overlapped I/O.
                                          */
-
     union {
         struct _MDThread *mdThread;     /* For blocking I/O, this structure
                                          * is embedded in the _MDThread
@@ -120,6 +120,10 @@ struct _MDThread {
     void            *sp;                /* only valid when suspended */
     PRUint32         magic;             /* for debugging */
     PR_CONTEXT_TYPE  gcContext;         /* Thread context for GC */
+	struct _PRCPU    *thr_bound_cpu;		/* thread bound to cpu */
+	PRBool   		 interrupt_disabled;/* thread cannot be interrupted */
+	HANDLE 			 thr_event;			/* For native-threads-only support,
+											thread blocks on this event		*/
 
     /* The following are used only if this is a fiber */
     void            *fiber_id;          /* flag whether or not this is a fiber*/
@@ -193,6 +197,7 @@ struct _MDProcess {
     HANDLE handle;
     DWORD id;
 };
+
 
 /* --- Misc stuff --- */
 #define _MD_GET_SP(thread)            (thread)->md.gcContext[6]
@@ -275,7 +280,7 @@ extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
 #define _MD_BIND                      _PR_MD_BIND
 #define _MD_RECV                      _PR_MD_RECV
 #define _MD_SEND                      _PR_MD_SEND
-#define _MD_TRANSMITFILE              _PR_MD_TRANSMITFILE
+#define _MD_SENDFILE              	  _PR_MD_SENDFILE
 #define _MD_PR_POLL                   _PR_MD_PR_POLL
 
 /* --- Scheduler stuff --- */
@@ -327,7 +332,7 @@ extern void _PR_Unblock_IO_Wait(PRThread *thr);
 #define _MD_FREE_LOCK(lock)           DeleteCriticalSection(&((lock)->mutex))
 #ifndef PROFILE_LOCKS
 #define _MD_LOCK(lock)                EnterCriticalSection(&((lock)->mutex))
-#define _MD_TEST_AND_LOCK(lock)       0  /* XXXMB */
+#define _MD_TEST_AND_LOCK(lock)       (TryEnterCriticalSection(&((lock)->mutex))== FALSE)
 #define _MD_UNLOCK(lock)              LeaveCriticalSection(&((lock)->mutex))
 #else
 #define _MD_LOCK(lock)                 \
@@ -504,5 +509,13 @@ extern PRStatus _MD_MemUnmap(void *addr, PRUint32 size);
 
 extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 #define _MD_CLOSE_FILE_MAP _MD_CloseFileMap
+
+/* --- Named semaphores stuff --- */
+#define _PR_HAVE_NAMED_SEMAPHORES
+#define _MD_OPEN_SEMAPHORE            _PR_MD_OPEN_SEMAPHORE
+#define _MD_WAIT_SEMAPHORE            _PR_MD_WAIT_SEMAPHORE
+#define _MD_POST_SEMAPHORE            _PR_MD_POST_SEMAPHORE
+#define _MD_CLOSE_SEMAPHORE           _PR_MD_CLOSE_SEMAPHORE
+#define _MD_DELETE_SEMAPHORE(name)    PR_SUCCESS  /* no op */
 
 #endif /* nspr_win32_defs_h___ */

@@ -22,7 +22,7 @@
 #endif
 #include <errno.h>
 
-static void _MD_unix_map_default_error(int err)
+void _MD_unix_map_default_error(int err)
 {
     PRErrorCode prError;
 

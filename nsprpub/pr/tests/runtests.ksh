@@ -68,7 +68,9 @@ LOGFILE=${NSPR_TEST_LOGFILE:-"/dev/null"}
 TESTS="
 acceptread
 accept
+affinity
 alarm
+anonfm
 atomic
 attach
 bigfile
@@ -84,6 +86,7 @@ exit
 fileio
 foreign
 fsync
+gethost
 getproto
 i2l
 initclk
@@ -105,6 +108,7 @@ lockfile
 logger
 many_cv
 multiwait
+nameshm1
 nblayer
 nonblock
 op_2long
@@ -127,6 +131,9 @@ sel_spd
 selct_er
 selct_nm
 selct_to
+sema
+semaerr
+semaping
 server_test
 servr_kk
 servr_uk
@@ -163,11 +170,13 @@ echo "Test\t\t\tResult\n"
 for prog in $TESTS
 do
 echo "$prog\c"
+echo "\nBEGIN TEST: $prog\n" >> ${LOGFILE} 2>&1
 ./$prog >> ${LOGFILE} 2>&1
 if [ 0 = $? ] ; then
 	echo "\t\t\tPassed";
 else
 	echo "\t\t\tFAILED";
 fi;
+echo "\nEND TEST: $prog\n" >> ${LOGFILE} 2>&1
 done
 echo "END\t\t\t`date`"

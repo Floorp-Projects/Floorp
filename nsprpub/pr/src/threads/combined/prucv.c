@@ -21,6 +21,16 @@
 #include "prinrval.h"
 #include "prtypes.h"
 
+#if defined(WIN95)
+/*
+** Some local variables report warnings on Win95 because the code paths 
+** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
+** The pragma suppresses the warning.
+** 
+*/
+#pragma warning(disable : 4101)
+#endif
+
 
 /*
 ** Notify one thread that it has finished waiting on a condition variable
@@ -332,6 +342,7 @@ void _PR_ClockInterrupt(void)
         }
 
         thread = _PR_THREAD_PTR(_PR_SLEEPQ(cpu).next);
+        PR_ASSERT(thread->cpu == cpu);
 
         if (elapsed < thread->sleep) {
             thread->sleep -= elapsed;
@@ -344,6 +355,17 @@ void _PR_ClockInterrupt(void)
         PR_ASSERT(!_PR_IS_NATIVE_THREAD(thread));
 
         _PR_THREAD_LOCK(thread);
+
+        if (thread->cpu != cpu) {
+            /*
+            ** The thread was switched to another CPU
+            ** between the time we unlocked the sleep
+            ** queue and the time we acquired the thread
+            ** lock, so it is none of our business now.
+            */
+            _PR_THREAD_UNLOCK(thread);
+            continue;
+        }
 
         /*
         ** Consume this sleeper's amount of elapsed time from the elapsed
@@ -405,6 +427,13 @@ void _PR_ClockInterrupt(void)
                 int pri = thread->priority;
 
                 thread->io_suspended = PR_TRUE;
+#ifdef WINNT
+				/*
+				 * For NT, record the cpu on which I/O was issued
+				 * I/O cancellation is done on the same cpu
+				 */
+                thread->md.thr_bound_cpu = cpu;
+#endif
 
 				PR_ASSERT(!(thread->flags & _PR_IDLE_THREAD));
                 PR_ASSERT(thread->cpu == cpu);

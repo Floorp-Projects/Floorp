@@ -111,7 +111,7 @@ PRThread* create_new_thread(PRThreadType type,
 PRInt32 native_thread = 0;
 
 	PR_ASSERT(state == PR_UNJOINABLE_THREAD);
-#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WINNT) || defined(WIN95)
+#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WIN32)
 	switch(index %  4) {
 		case 0:
 			scope = (PR_LOCAL_THREAD);
@@ -138,15 +138,15 @@ PRInt32 native_thread = 0;
 			return (NULL);
 #else
 		HANDLE thandle;
+		unsigned tid;
 		
-		printf("creating Windows thread\n");
 		thandle = (HANDLE) _beginthreadex(
 						NULL,
 						stackSize,
 						(unsigned (__stdcall *)(void *))start,
 						arg,
 						0,
-						NULL);		
+						&tid);		
 		return((PRThread *) thandle);
 #endif
 	} else {
@@ -950,11 +950,11 @@ int main(int argc, char **argv)
 	}
 #ifdef WIN32
 	len = GetTempPath(TMPDIR_LEN, testdir);
-	if ((len > 0) && (len < (TMPDIR_LEN - 7))) {
+	if ((len > 0) && (len < (TMPDIR_LEN - 6))) {
 		/*
-		 * enough space for \prdir
+		 * enough space for prdir
 		 */
-		strcpy((testdir + len),"\prdir");
+		strcpy((testdir + len),"prdir");
 		TEST_DIR = testdir;
 		printf("TEST_DIR = %s\n",TEST_DIR);
 	}

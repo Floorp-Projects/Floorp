@@ -130,7 +130,7 @@ endif
 MDIST = /m/dist
 ifeq ($(OS_ARCH),WINNT)
 MDIST = //helium/dist
-MDIST_DOS = \\\\helium\\dist
+MDIST_DOS = $(subst /,\\,$(MDIST))
 endif
 
 # RELEASE_DIR is ns/dist/<module name>

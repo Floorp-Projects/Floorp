@@ -856,49 +856,17 @@ static PRInt32 PR_CALLBACK SocketTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
 const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
 PRIntervalTime timeout)
 {
-	PRInt32 rv;
-	PRThread *me = _PR_MD_CURRENT_THREAD();
+	PRSendFileData sfd;
 
-	if (_PR_PENDING_INTERRUPT(me)) {
-		me->flags &= ~_PR_INTERRUPT;
-		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
-		return -1;
-	}
-	if (_PR_IO_PENDING(me)) {
-		PR_SetError(PR_IO_PENDING_ERROR, 0);
-		return -1;
-	}
-	/* The socket must be in blocking mode. */
-	if (sd->secret->nonblocking) {
-		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-		return -1;
-	}
-#if defined(WINNT)
-	rv = _PR_MD_TRANSMITFILE(
-		sd, fd,
-		headers, hlen, flags, timeout);
-	if ((rv >= 0) && (flags == PR_TRANSMITFILE_CLOSE_SOCKET)) {
-		/*
-		 * This should be kept the same as SocketClose, except
-		 * that _PR_MD_CLOSE_SOCKET(sd->secret->md.osfd) should
-		 * not be called because the socket will be recycled.
-		 */
-		PR_FreeFileDesc(sd);
-	}
-#else
-#if defined(XP_UNIX)
-	/*
-	 * On HPUX11, we could call _PR_HPUXTransmitFile(), but that
-	 * would require that we not override the malloc() functions.
-	 */
-	rv = _PR_UnixTransmitFile(sd, fd, headers, hlen, flags, timeout);
-#else	/* XP_UNIX */
-	rv = _PR_EmulateTransmitFile(sd, fd, headers, hlen, flags,
-	    timeout);
-#endif	/* XP_UNIX */
-#endif	/* WINNT */
+	sfd.fd = fd;
+	sfd.file_offset = 0;
+	sfd.file_nbytes = 0;
+	sfd.header = headers;
+	sfd.hlen = hlen;
+	sfd.trailer = NULL;
+	sfd.tlen = 0;
 
-	return rv;
+	return(PR_SendFile(sd, &sfd, flags, timeout));
 }
 
 static PRStatus PR_CALLBACK SocketGetName(PRFileDesc *fd, PRNetAddr *addr)
@@ -1245,6 +1213,16 @@ PR_IMPLEMENT(PRFileDesc*) PR_NewUDPSocket(void)
 	return PR_Socket(domain, SOCK_DGRAM, 0);
 }
 
+PR_IMPLEMENT(PRFileDesc *) PR_OpenTCPSocket(PRIntn af)
+{
+	return PR_Socket(af, SOCK_STREAM, 0);
+}
+
+PR_IMPLEMENT(PRFileDesc*) PR_OpenUDPSocket(PRIntn af)
+{
+	return PR_Socket(af, SOCK_DGRAM, 0);
+}
+
 PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
 {
 #ifdef XP_UNIX
@@ -1452,10 +1430,11 @@ PR_ChangeFileDescNativeHandle(PRFileDesc *fd, PRInt32 handle)
 }
 
 /*
- * _PR_EmulateTransmitFile
+ * _PR_EmulateSendFile
  *
- *	Send file fd across socket sd. If headers is non-NULL, 'hlen'
- *	bytes of headers is sent before sending the file.
+ *	Send file sfd->fd across socket sd. The header and trailer buffers
+ *	specified in the 'sfd' argument are sent before and after the file,
+ *	respectively.
  *
  *	PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
  *	
@@ -1463,15 +1442,18 @@ PR_ChangeFileDescNativeHandle(PRFileDesc *fd, PRInt32 handle)
  *
  */
 
-PRInt32 _PR_EmulateTransmitFile(PRFileDesc *sd, PRFileDesc *fd, 
-const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
-PRIntervalTime timeout)
+PRInt32 _PR_EmulateSendFile(PRFileDesc *sd, PRSendFileData *sfd, 
+PRTransmitFileFlags flags, PRIntervalTime timeout)
 {
 	PRInt32 rv, count = 0;
 	PRInt32 rlen;
+	const void *buffer;
+	PRInt32 buflen;
+	PRInt32 sendbytes, readbytes;
 	PRThread *me = _PR_MD_CURRENT_THREAD();
 	char *buf = NULL;
-#define _TRANSMITFILE_BUFSIZE	(16 * 1024)
+
+#define _SENDFILE_BUFSIZE	(16 * 1024)
 
 	if (_PR_PENDING_INTERRUPT(me)) {
 		me->flags &= ~_PR_INTERRUPT;
@@ -1479,62 +1461,120 @@ PRIntervalTime timeout)
 		return -1;
 	}
 
-	buf = (char*)PR_MALLOC(_TRANSMITFILE_BUFSIZE);
+	buf = (char*)PR_MALLOC(_SENDFILE_BUFSIZE);
 	if (buf == NULL) {
 		PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
 		return -1;
 	}
 
 	/*
-	 * send headers, first
+	 * send header, first
 	 */
-	while (hlen) {
-		rv =  PR_Send(sd, headers, hlen, 0, timeout);
+	buflen = sfd->hlen;
+	buffer = sfd->header;
+	while (buflen) {
+		rv =  PR_Send(sd, buffer, buflen, 0, timeout);
 		if (rv < 0) {
 			/* PR_Send() has invoked PR_SetError(). */
 			rv = -1;
 			goto done;
 		} else {
 			count += rv;
-			headers = (const void*) ((const char*)headers + rv);
-			hlen -= rv;
+			buffer = (const void*) ((const char*)buffer + rv);
+			buflen -= rv;
 		}
 	}
 	/*
 	 * send file, next
 	 */
-	while ((rlen = PR_Read(fd, buf, _TRANSMITFILE_BUFSIZE)) > 0) {
-		while (rlen) {
-			char *bufptr = buf;
 
-			rv =  PR_Send(sd, bufptr, rlen,0,PR_INTERVAL_NO_TIMEOUT);
-			if (rv < 0) {
-				/* PR_Send() has invoked PR_SetError(). */
-				rv = -1;
-				goto done;
-			} else {
-				count += rv;
-				bufptr = ((char*)bufptr + rv);
-				rlen -= rv;
+	if (PR_Seek(sfd->fd, sfd->file_offset, PR_SEEK_SET) < 0) {
+		rv = -1;
+		goto done;
+	}
+	sendbytes = sfd->file_nbytes;
+	if (sendbytes == 0) {
+		/* send entire file */
+		while ((rlen = PR_Read(sfd->fd, buf, _SENDFILE_BUFSIZE)) > 0) {
+			while (rlen) {
+				char *bufptr = buf;
+
+				rv =  PR_Send(sd, bufptr, rlen, 0, timeout);
+				if (rv < 0) {
+					/* PR_Send() has invoked PR_SetError(). */
+					rv = -1;
+					goto done;
+				} else {
+					count += rv;
+					bufptr = ((char*)bufptr + rv);
+					rlen -= rv;
+				}
 			}
 		}
-	}
-	if (rlen == 0) {
-		/*
-		 * end-of-file
-		 */
-		if (flags & PR_TRANSMITFILE_CLOSE_SOCKET)
-			PR_Close(sd);
-		rv = count;
+		if (rlen < 0) {
+			/* PR_Read() has invoked PR_SetError(). */
+			rv = -1;
+			goto done;
+		}
 	} else {
-		PR_ASSERT(rlen < 0);
-		/* PR_Read() has invoked PR_SetError(). */
-		rv = -1;
+		readbytes = sendbytes > _SENDFILE_BUFSIZE ? _SENDFILE_BUFSIZE :
+											sendbytes;
+		while (readbytes && ((rlen = PR_Read(sfd->fd, buf, readbytes)) > 0)) {
+			while (rlen) {
+				char *bufptr = buf;
+
+				rv =  PR_Send(sd, bufptr, rlen, 0, timeout);
+				if (rv < 0) {
+					/* PR_Send() has invoked PR_SetError(). */
+					rv = -1;
+					goto done;
+				} else {
+					count += rv;
+					sendbytes -= rv;
+					bufptr = ((char*)bufptr + rv);
+					rlen -= rv;
+				}
+			}
+			readbytes = sendbytes > _SENDFILE_BUFSIZE ?
+						_SENDFILE_BUFSIZE : sendbytes;
+		}
+		if (rlen < 0) {
+			/* PR_Read() has invoked PR_SetError(). */
+			rv = -1;
+			goto done;
+		} else if (sendbytes != 0) {
+			/*
+			 * there are fewer bytes in file to send than specified
+			 */
+        	PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+			rv = -1;
+			goto done;
+		}
 	}
+	/*
+	 * send trailer, last
+	 */
+	buflen = sfd->tlen;
+	buffer = sfd->trailer;
+	while (buflen) {
+		rv =  PR_Send(sd, buffer, buflen, 0, timeout);
+		if (rv < 0) {
+			/* PR_Send() has invoked PR_SetError(). */
+			rv = -1;
+			goto done;
+		} else {
+			count += rv;
+			buffer = (const void*) ((const char*)buffer + rv);
+			buflen -= rv;
+		}
+	}
+	rv = count;
 
 done:
 	if (buf)
 		PR_DELETE(buf);
+    if ((rv >= 0) && (flags & PR_TRANSMITFILE_CLOSE_SOCKET))
+        PR_Close(sd);
 	return rv;
 }
 
@@ -1829,4 +1869,46 @@ out_of_memory:
 
 #endif /* !defined(NEED_SELECT) */
     
+}
+
+PR_IMPLEMENT(PRInt32) PR_SendFile(
+    PRFileDesc *sd, PRSendFileData *sfd,
+    PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+	PRInt32 rv;
+	PRThread *me = _PR_MD_CURRENT_THREAD();
+
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+		return -1;
+	}
+	if (_PR_IO_PENDING(me)) {
+		PR_SetError(PR_IO_PENDING_ERROR, 0);
+		return -1;
+	}
+	/* The socket must be in blocking mode. */
+	if (sd->secret->nonblocking) {
+		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+		return -1;
+	}
+#if defined(WINNT)
+	rv = _PR_MD_SENDFILE(sd, sfd, flags, timeout);
+	if ((rv >= 0) && (flags == PR_TRANSMITFILE_CLOSE_SOCKET)) {
+		/*
+		 * This should be kept the same as SocketClose, except
+		 * that _PR_MD_CLOSE_SOCKET(sd->secret->md.osfd) should
+		 * not be called because the socket will be recycled.
+		 */
+		PR_FreeFileDesc(sd);
+	}
+#else
+#if defined(XP_UNIX)
+	rv = _PR_UnixSendFile(sd, sfd, flags, timeout);
+#else	/* XP_UNIX */
+	rv = _PR_EmulateSendFile(sd, sfd, flags, timeout);
+#endif	/* XP_UNIX */
+#endif	/* WINNT */
+
+	return rv;
 }

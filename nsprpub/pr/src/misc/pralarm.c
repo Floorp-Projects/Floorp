@@ -71,7 +71,7 @@ static PRAlarmID *pr_getNextAlarm(PRAlarm *alarm, PRAlarmID *id)
         if (id != NULL)  /* have to put this id back in */
         {        
             PRIntervalTime idDelta = now - id->nextNotify;
-            timer = &alarm->timers;
+            timer = alarm->timers.next;
             do
             {
                 result = (PRAlarmID*)timer;
@@ -81,7 +81,7 @@ static PRAlarmID *pr_getNextAlarm(PRAlarm *alarm, PRAlarmID *id)
                     break;
                 }
                 timer = timer->next;
-            } while (timer != alarm->timers.next);
+            } while (timer != &alarm->timers);
         }
         result = (PRAlarmID*)(timer = PR_LIST_HEAD(&alarm->timers));
         PR_REMOVE_LINK(timer);  /* remove it from the list */

@@ -33,12 +33,12 @@
 #include <stdlib.h>
 
 /*
- * This release (3.1) is backward compatible with all
+ * This release (3.5) is backward compatible with all
  * the previous releases.  It, of course, is compatible
  * with itself.
  */
 static char *compatible_version[] = {
-    "2.1 19980529", "3.0", "3.0.1", PR_VERSION
+    "2.1 19980529", "3.0", "3.0.1", "3.1", "3.1.1", "3.1.2", PR_VERSION
 };
 
 /*
@@ -46,8 +46,7 @@ static char *compatible_version[] = {
  * patches.
  */
 static char *incompatible_version[] = {
-    "3.1.2",
-    "3.5", "3.5.1",
+    "3.5.1",
     "4.0", "4.0.3",
     "10.0", "11.1", "12.14.20"
 };

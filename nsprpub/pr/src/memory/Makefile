@@ -28,7 +28,7 @@ OPTIMIZER =
 endif
 endif
 
-CSRCS = prseg.c
+CSRCS = prseg.c prshm.c prshma.c
 
 TARGETS	= $(OBJS)
 

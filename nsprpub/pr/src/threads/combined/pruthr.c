@@ -19,6 +19,15 @@
 #include "primpl.h"
 #include <signal.h>
 #include <string.h>
+#if defined(WIN95)                                                                         
+/*
+** Some local variables report warnings on Win95 because the code paths
+** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
+** The pragma suppresses the warning.
+**
+*/
+#pragma warning(disable : 4101)
+#endif          
 
 /* _pr_activeLock protects the following global variables */
 PRLock *_pr_activeLock;
@@ -120,6 +129,9 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
 #else
     thread->flags |= _PR_PRIMORDIAL;
 #endif
+
+	if (_native_threads_only)
+		thread->flags |= _PR_GLOBAL_SCOPE;
 
     /*
      * Needs _PR_PRIMORDIAL flag set before calling
@@ -1095,6 +1107,9 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
     	scope = PR_GLOBAL_THREAD;
 #endif
 
+	if (_native_threads_only)
+		scope = PR_GLOBAL_THREAD;
+
     native = (((scope == PR_GLOBAL_THREAD)|| (scope == PR_GLOBAL_BOUND_THREAD))
 							&& _PR_IS_NATIVE_THREAD_SUPPORTED());
 
@@ -1319,7 +1334,7 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
      */
         PR_Unlock(_pr_activeLock);
 
-        if ( (thread->flags & _PR_IDLE_THREAD) || _PR_IS_NATIVE_THREAD(me) )
+        if ((! (thread->flags & _PR_IDLE_THREAD)) && _PR_IS_NATIVE_THREAD(me) )
             thread->cpu = _PR_GetPrimordialCPU();
         else
             thread->cpu = _PR_MD_CURRENT_CPU();
@@ -1805,8 +1820,13 @@ _PR_AddThreadToRunQ(
      * "post" the awakened thread to the IO completion port
      * for the next idle CPU to execute (this is done in
      * _PR_MD_WAKEUP_WAITER).
+	 * Threads with a suspended I/O operation remain bound to
+	 * the same cpu until I/O is cancelled
      */
-    if (!_PR_IS_NATIVE_THREAD(me) && (cpu == me->cpu)) {
+    if (!_PR_IS_NATIVE_THREAD(me) && ((cpu == me->cpu) ||
+					(thread->io_suspended))) {
+		PR_ASSERT(!thread->io_suspended ||
+							(thread->md.thr_bound_cpu == cpu));
         _PR_RUNQ_LOCK(cpu);
         _PR_ADD_RUNQ(thread, cpu, pri);
         _PR_RUNQ_UNLOCK(cpu);

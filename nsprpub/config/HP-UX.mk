@@ -120,10 +120,10 @@ ifeq ($(OS_RELEASE),B.11.00)
 	ifndef NS_USE_GCC
 		CCC			        = /opt/aCC/bin/aCC -ext
 		ifeq ($(USE_64), 1)
-			OS_CFLAGS       += +DA2.0W +DChpux
+			OS_CFLAGS       += +DA2.0W +DS2.0
 			COMPILER_TAG    = _64
 		else
-			OS_CFLAGS       += +DAportable +DS1.1
+			OS_CFLAGS       += +DAportable +DS2.0
 			COMPILER_TAG    = _32
 		endif
 	endif
@@ -176,7 +176,7 @@ endif
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
-DSO_LDOPTS		= -b
+DSO_LDOPTS		= -b +h $(notdir $@)
 DSO_LDFLAGS		=
 
 # -fPIC or +Z generates position independent code for use in shared
@@ -186,5 +186,3 @@ DSO_CFLAGS		= -fPIC
 else
 DSO_CFLAGS		= +Z
 endif
-
-HAVE_PURIFY		= 1

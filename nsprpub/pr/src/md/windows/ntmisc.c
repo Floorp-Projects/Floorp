@@ -563,6 +563,9 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
 {
     DWORD dwHi, dwLo;
     DWORD flProtect;
+    PRUint32    osfd;
+
+    osfd = ( fmap->fd == (PRFileDesc*)-1 )?  -1 : fmap->fd->secret->md.osfd;
 
     dwLo = (DWORD) (size & 0xffffffff);
     dwHi = (DWORD) (((PRUint64) size >> 32) & 0xffffffff);
@@ -580,7 +583,7 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
     }
 
     fmap->md.hFileMap = CreateFileMapping(
-        (HANDLE) fmap->fd->secret->md.osfd,
+        (HANDLE) osfd,
         NULL,
         flProtect,
         dwHi,
@@ -593,7 +596,8 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
     }
     return PR_SUCCESS;
 }
-
+#include "prlog.h"
+extern PRLogModuleInfo *_pr_shma_lm;
 void * _MD_MemMap(
     PRFileMap *fmap,
     PRInt64 offset,
@@ -606,6 +610,20 @@ void * _MD_MemMap(
     dwHi = (DWORD) (((PRUint64) offset >> 32) & 0xffffffff);
     if ((addr = MapViewOfFile(fmap->md.hFileMap, fmap->md.dwAccess,
             dwHi, dwLo, len)) == NULL) {
+        {
+            LPVOID lpMsgBuf; 
+            
+            FormatMessage( 
+                FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                NULL,
+                GetLastError(),
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+                (LPTSTR) &lpMsgBuf,
+                0,
+                NULL 
+            );
+            PR_LOG( _pr_shma_lm, PR_LOG_DEBUG, ("md_memmap(): %s", lpMsgBuf ));
+        }
         PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
     }
     return addr;

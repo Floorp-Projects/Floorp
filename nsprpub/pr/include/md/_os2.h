@@ -261,7 +261,6 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_ATOMIC_SET(x,y)           _PR_MD_ATOMIC_SET(x, y)
 
 #define _MD_INIT_IO                   (_PR_MD_INIT_IO)
-#define _MD_TRANSMITFILE              (_PR_MD_TRANSMITFILE)
 #define _MD_PR_POLL                   (_PR_MD_PR_POLL)
 
 /* win95 doesn't have async IO */

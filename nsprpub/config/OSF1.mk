@@ -93,5 +93,5 @@ OS_CFLAGS		+= -pthread
 endif
 
 # The command to build a shared library on OSF1.
-MKSHLIB = ld -shared -all -expect_unresolved "*"
+MKSHLIB = ld -shared -all -expect_unresolved "*" -soname $(notdir $@)
 DSO_LDOPTS		= -shared

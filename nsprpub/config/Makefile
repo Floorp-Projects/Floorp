@@ -84,11 +84,9 @@ PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)
 TARGETS = $(PROGS) $(PLSRCS:.pl=)
 endif
 
-OUTOPTION = -o
-ifeq ($(OS_ARCH), WINNT)
-ifeq ($(CPU_ARCH),ALPHA)
-OUTOPTION = /link /out:
-endif
+OUTOPTION = -o # end of the line
+ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
+OUTOPTION = /Fe
 endif
 
 # Redefine MAKE_OBJDIR for just this directory

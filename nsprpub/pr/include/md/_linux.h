@@ -70,6 +70,8 @@
 #else
 #define _PR_NO_LARGE_FILES
 #endif
+#define _PR_HAVE_SYSV_SEMAPHORES
+#define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
 
 #ifdef _PR_PTHREADS
 

@@ -29,6 +29,8 @@ PRLogModuleInfo *_pr_linker_lm;
 PRLogModuleInfo *_pr_sched_lm;
 PRLogModuleInfo *_pr_thread_lm;
 PRLogModuleInfo *_pr_gc_lm;
+PRLogModuleInfo *_pr_shm_lm;
+PRLogModuleInfo *_pr_shma_lm;
 
 PRFileDesc *_pr_stdin;
 PRFileDesc *_pr_stdout;
@@ -106,13 +108,14 @@ PR_IMPLEMENT(PRBool) PR_VersionCheck(const char *importedVersion)
 
     if (vmajor > PR_VMAJOR) {
         return PR_FALSE;
-    } else if (vmajor == PR_VMAJOR && vminor > PR_VMINOR) {
-        return PR_FALSE;
-    } else if (vminor == PR_VMINOR && vpatch > PR_VPATCH) {
-        return PR_FALSE;
-    } else {
-        return PR_TRUE;
     }
+    if (vmajor == PR_VMAJOR && vminor > PR_VMINOR) {
+        return PR_FALSE;
+    }
+    if (vmajor == PR_VMAJOR && vminor == PR_VMINOR && vpatch > PR_VPATCH) {
+        return PR_FALSE;
+    }
+    return PR_TRUE;
 }  /* PR_VersionCheck */
 
 
@@ -120,11 +123,24 @@ PR_IMPLEMENT(PRBool) PR_Initialized(void)
 {
     return _pr_initialized;
 }
+PRInt32 _native_threads_only = 0;
+
 
 static void _PR_InitStuff(void)
 {
+#ifdef WINNT
+	char *envp;
+#endif
+
     if (_pr_initialized) return;
     _pr_initialized = PR_TRUE;
+#ifdef WINNT
+    if (envp = getenv("NSPR_NATIVE_THREADS_ONLY")) {
+        if (atoi(envp) == 1)
+            _native_threads_only = 1;
+    }
+#endif
+
 
     (void) PR_GetPageSize();
 
@@ -137,6 +153,8 @@ static void _PR_InitStuff(void)
 	_pr_sched_lm = PR_NewLogModule("sched");
 	_pr_thread_lm = PR_NewLogModule("thread");
 	_pr_gc_lm = PR_NewLogModule("gc");
+	_pr_shm_lm = PR_NewLogModule("shm");
+	_pr_shma_lm = PR_NewLogModule("shma");
       
     /* NOTE: These init's cannot depend on _PR_MD_CURRENT_THREAD() */ 
     _PR_MD_EARLY_INIT();
@@ -163,7 +181,7 @@ static void _PR_InitStuff(void)
 #endif    
 
 #ifndef _PR_GLOBAL_THREADS_ONLY
-    _PR_InitCPUs();
+	_PR_InitCPUs();
 #endif
 
 /*

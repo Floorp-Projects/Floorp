@@ -32,6 +32,7 @@ CSRCS =          \
 	uxproces.c \
 	uxwrap.c \
 	uxpoll.c \
+	uxshm.c \
 	$(NULL)
 
 PTH_USER_CSRCS =          \
@@ -225,6 +226,9 @@ ifeq ($(OS_ARCH),SunOS)
 	ifneq ($(OS_RELEASE),4.1.3_U1)
 	ifneq ($(LOCAL_THREADS_ONLY),1)
 		ASFILES = os_$(OS_ARCH).s
+		ifneq ($(USE_64),1)
+		ASFILES += os_$(OS_ARCH)_32.s
+		endif
 	endif
 	endif
     endif
@@ -288,7 +292,14 @@ $(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
 
 $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
+ifeq ($(USE_64),1)
+	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v9 $<
+else
 	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $<
+endif
+
+clean::
+	rm -rf $(ULTRASPARC_ASOBJS)
 endif
 endif
 endif

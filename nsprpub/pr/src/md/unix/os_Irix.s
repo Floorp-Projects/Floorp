@@ -47,6 +47,34 @@ retry_push:
 		sw		v0,0(a1)
 		sync
 		sw		t0,0(a0)
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
 		jr		ra
 		nop
 
@@ -68,11 +96,13 @@ retry_pop:
 		lw		v0,0(a0)
 		li		t1,1
 		beq		v0,0,done
+		nop	
 		beq		v0,t1,retry_pop
 		nop	
 
         ll      v0,0(a0)
 		beq		v0,0,done
+		nop
 		beq		v0,t1,retry_pop
 		nop
 		sc		t1,0(a0)	
@@ -81,6 +111,34 @@ retry_pop:
 		lw		t0,0(v0)
 		sw		t0,0(a0)
 done:
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
 		jr		ra
 		nop
 

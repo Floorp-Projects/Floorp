@@ -48,7 +48,9 @@ CSRCS =          \
 	w95cv.c \
 	w95sock.c \
 	win32_errors.c \
+    w32ipcsem.c \
     w32poll.c \
+    w32shm.c \
     w95dllmain.c \
     $(NULL)
 else
@@ -61,7 +63,9 @@ CSRCS =          \
     ntthread.c \
     ntio.c    \
 	win32_errors.c \
+    w32ipcsem.c \
     w32poll.c \
+    w32shm.c \
     $(NULL)
 endif
 endif

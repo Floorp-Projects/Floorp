@@ -235,6 +235,13 @@ PR_EXTERN(void) PR_NTFast_UpdateAcceptContext(PRFileDesc *acceptSock,
 */
 PR_EXTERN(void) PR_NT_UseNonblock();
 
+/* FUNCTION: PR_NT_CancelIo
+** DESCRIPTION:
+**    Cancel IO operations on fd.
+*/
+PR_EXTERN(PRStatus) PR_NT_CancelIo(PRFileDesc *fd);
+
+
 #endif /* WIN32 */
 
 PR_END_EXTERN_C

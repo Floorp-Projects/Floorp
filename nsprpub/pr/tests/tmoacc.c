@@ -174,6 +174,7 @@ static void Accept(void *arg)
 PRIntn Tmoacc(PRIntn argc, char **argv)
 {
     PRStatus rv;
+    PRIntn exitStatus;
     PRIntn index;
 	Shared *shared;
 	PLOptStatus os;
@@ -190,7 +191,7 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
     PR_SetIPv6Enable(PR_TRUE);
 #endif
 
-    shared = PR_NEWZAP(Shared);  /* this is leaked */
+    shared = PR_NEWZAP(Shared);
 
     shared->debug = NULL;
     shared->passed = PR_TRUE;
@@ -232,6 +233,7 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
     if (0 == timeout) timeout = DEFAULT_TIMEOUT;
     
     PR_STDIO_INIT();
+    memset(&listenAddr, 0, sizeof(listenAddr));
     rv = PR_InitializeNetAddr(PR_IpAddrAny, BASE_PORT, &listenAddr);
     PR_ASSERT(PR_SUCCESS == rv);
 
@@ -297,7 +299,9 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
         PR_GetSpecialFD(PR_StandardError), "%s\n",
         ((shared->passed) ? "PASSED" : "FAILED"));
 
-    return (shared->passed) ? 0 : 1;
+    exitStatus = (shared->passed) ? 0 : 1;
+    PR_DELETE(shared);
+    return exitStatus;
 }
 
 int main(int argc, char **argv)

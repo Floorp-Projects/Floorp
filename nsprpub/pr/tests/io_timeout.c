@@ -160,6 +160,8 @@ dead:
 
 	if (debug_mode)
     	printf("thread %d is dead\n", info->id);
+
+    PR_Free(info);
 }
 
 void
@@ -213,6 +215,9 @@ thread_test(PRThreadScope scope, PRInt32 num_threads)
         PR_WaitCondVar(dead_cv, PR_INTERVAL_NO_TIMEOUT);
     }
     PR_Unlock(dead_lock);
+
+    PR_DestroyCondVar(dead_cv);
+    PR_DestroyLock(dead_lock);
 }
 
 int main(int argc, char **argv)

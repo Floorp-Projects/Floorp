@@ -101,7 +101,7 @@ endif
 # Linux 2.x has shared libraries.
 #
 
-MKSHLIB			= $(LD) $(DSO_LDOPTS) -soname $(@:$(OBJDIR)/%.so=%.so)
+MKSHLIB			= $(LD) $(DSO_LDOPTS) -soname $(notdir $@)
 ifdef BUILD_OPT
 OPTIMIZER		= -O2
 endif

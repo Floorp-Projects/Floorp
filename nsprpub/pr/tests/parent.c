@@ -96,6 +96,8 @@ PRIntn main (PRIntn argc, char **argv)
         child->name, child->argv, NULL, child->attr);
     t_elapsed = (PRIntervalTime) (PR_IntervalNow() - t_start);
 
+    PR_DestroyProcessAttr(child->attr);
+
     test_status = (NULL == child->process) ? 1 : 0;
     if (NULL != debug)
     {
@@ -126,6 +128,7 @@ PRIntn main (PRIntn argc, char **argv)
                 PR_fprintf(debug, "PR_WaitProcess failed\n");
         }
     }
+    PR_DELETE(child);
     PR_Cleanup();
     return test_status;
     

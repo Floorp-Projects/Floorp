@@ -176,6 +176,7 @@ static PRStatus TimerInit(void)
     {
         goto failed;
     }
+    PR_INIT_CLIST(&tm_vars.timer_queue);
     tm_vars.manager_thread = PR_CreateThread(
         PR_SYSTEM_THREAD, TimerManager, NULL, PR_PRIORITY_NORMAL,
         PR_LOCAL_THREAD, PR_UNJOINABLE_THREAD, 0);
@@ -183,7 +184,6 @@ static PRStatus TimerInit(void)
     {
         goto failed;
     }
-    PR_INIT_CLIST(&tm_vars.timer_queue);
     return PR_SUCCESS;
 
 failed:

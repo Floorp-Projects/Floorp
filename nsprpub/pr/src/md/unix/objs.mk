@@ -22,6 +22,7 @@ CSRCS =          \
 	unix.c    \
 	unix_errors.c \
 	uxproces.c \
+	uxshm.c \
 	uxwrap.c \
 	uxpoll.c \
 	$(NULL)
@@ -217,6 +218,9 @@ ifeq ($(OS_ARCH),SunOS)
 	ifneq ($(OS_RELEASE),4.1.3_U1)
 	ifneq ($(LOCAL_THREADS_ONLY),1)
             ASFILES = os_$(OS_ARCH).s
+            ifneq ($(USE_64),1)
+            ASFILES += os_$(OS_ARCH)_32.s
+            endif
 	endif
 	endif
     endif

@@ -89,6 +89,4 @@ OS_CFLAGS		= $(NOMD_OS_CFLAGS)
 OS_LIBS			= -lsocket -lnsl -lresolv -ldl -lc
 NOSUCHFILE		= /no-such-file
 
-HAVE_PURIFY		= 0
-
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY

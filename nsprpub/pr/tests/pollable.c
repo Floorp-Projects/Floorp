@@ -267,6 +267,7 @@ int main(int argc, char **argv)
         PR_DestroyPollableEvent(data[i].event);
     }
     PR_DELETE(block);
+	PR_DestroyPollableEvent(selfData.event);
 
     PR_fprintf(PR_STDOUT, "PASSED\n");
     return 0;
