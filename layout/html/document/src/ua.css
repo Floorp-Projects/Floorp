@@ -664,6 +664,7 @@ select {
   color:black;
 }
 option {
+  display:block;
 }
 
 option.selected {
@@ -673,8 +674,8 @@ option.selected {
 }
 
 option[-moz-option-selected] {
-  color:blue;
-  background-color:green;
+  color:white;
+  background-color: rgb(0,0,128);
 }
 
 option.selectedfocus {

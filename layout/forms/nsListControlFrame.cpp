@@ -48,21 +48,21 @@
 #include "nsIFormControl.h"
 #include "nsStyleUtil.h"
 #include "nsINameSpaceManager.h"
-#include "nsIDeviceContext.h" //rods
-#include "nsIHTMLContent.h" //rods
-#include "nsIDOMHTMLCollection.h" //rods
-#include "nsIDOMHTMLSelectElement.h" //rods
-//#include "nsIDOMHTMLOListElement.h" //rods
-#include "nsIDOMHTMLOptionElement.h" //rods
-#include "nsIDOMNode.h" //rods
-#include "nsHTMLAtoms.h" //rods
-#include "nsIAtom.h" //rods
+#include "nsIDeviceContext.h" 
+#include "nsIHTMLContent.h"
+#include "nsIDOMHTMLCollection.h" 
+#include "nsIDOMHTMLSelectElement.h" 
+#include "nsIDOMHTMLOptionElement.h" 
+#include "nsIDOMNode.h" 
+#include "nsHTMLAtoms.h" 
+#include "nsIAtom.h" 
 #include "nsIDOMEventReceiver.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsComboboxControlFrame.h" // for the static helper function
 #include "nsIListControlFrame.h"
 #include "nsIViewManager.h"
 #include "nsFormFrame.h"
+#include "nsIScrollableView.h"
 
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
@@ -71,22 +71,16 @@
 const char * kNormal        = "";
 const char * kSelected      = "SELECTED";
 const char * kSelectedFocus = "SELECTEDFOCUS";
-
 const char * kMozSelected = "-moz-option-selected";
 
-
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
-
-#ifdef PLUGGABLE_EVENTS
-static NS_DEFINE_IID(kIPluggableEventListenerIID, NS_IPLUGGABLEEVENTLISTENER_IID);
-#endif
-static NS_DEFINE_IID(kIListControlFrameIID, NS_ILISTCONTROLFRAME_IID);
-
-static NS_DEFINE_IID(kIDOMHTMLSelectElementIID,   NS_IDOMHTMLSELECTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLOptionElementIID,   NS_IDOMHTMLOPTIONELEMENT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIContentIID,              NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIFormControlFrameIID,     NS_IFORMCONTROLFRAME_IID);
+static NS_DEFINE_IID(kIScrollableViewIID,       NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIListControlFrameIID,     NS_ILISTCONTROLFRAME_IID);
+static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
+static NS_DEFINE_IID(kIDOMNodeIID,              NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMElementIID,           NS_IDOMELEMENT_IID);
 
 //----------------------------------------------------------------------
 
@@ -110,17 +104,10 @@ nsListControlFrame::nsListControlFrame()
   mSelectedContent  = nsnull;
   mSelectedIndex    = -1;
   mNumRows          = 0;
-  mMaxNumSelections = 64; 
   mIsInitializedFromContent = PR_FALSE;
-
-  PRInt32 i;
-  for (i=0;i<mMaxNumSelections;i++) {
-    mIsFrameSelected[i] = PR_FALSE;
-  }
   mNumSelections  = 0;
   mInDropDownMode = PR_FALSE;
   mComboboxFrame  = nsnull;
-
 }
 
 //----------------------------------------------------------------------
@@ -150,13 +137,7 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void *)((nsIListControlFrame*)this);
     return NS_OK;
   }
-#ifdef PLUGGABLE_EVENTS
-  if (aIID.Equals(kIPluggableEventListenerIID)) {
-    NS_ADDREF_THIS(); // Increase reference count for caller
-    *aInstancePtr = (void *)((nsIPluggableEventListener*)this);
-    return NS_OK;
-  }
-#endif
+
   return nsScrollFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -165,8 +146,11 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsListControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 {
-  //nsresult rv = nsScrollFrame::GetFrameForPoint(aPoint, aFrame);
-  nsresult rv = GetFrameForPointUsing(aPoint, nsnull, aFrame);
+  nsresult rv;
+  
+  nsIFrame *childFrame;
+  FirstChild(nsnull, &childFrame);
+  rv = GetFrameForPointUsing(aPoint, nsnull, aFrame);
   if (NS_OK == rv) {
     if (*aFrame != this) {
       mHitFrame = *aFrame;
@@ -176,6 +160,7 @@ nsListControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
   }
   *aFrame = this;
   return NS_ERROR_FAILURE;
+
 }
 
 //----------------------------------------------------------------------
@@ -184,16 +169,52 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
                                         nsIAtom*       aList,
                                         nsIFrame**     aFrame)
 {
-  nsIFrame* kid;
+  nsIFrame* kid = nsnull;
   nsRect kidRect;
   nsPoint tmp;
+  nsRect offset(0, 0, 0, 0); 
+  nsPoint absPoint = aPoint;
   *aFrame = nsnull;
-
+  nsIFrame* firstKid = nsnull;
+  
+   
+    // XXX:Hack. This should not be necessary. 
+    // Get the scrolled offset from the view.
+    //
+    // This is needed because:
+    // The scrolled view is below the nsListControlFrame's ScrollingView in 
+    // the view hierarchy. This presents a problem for event translation when the events 
+    // are re-directed with the  nsView::SetVFlags(NS_DONT_CHECK_CHILDREN). Since 
+    // the handling of the view event is short-circuited at the nsListControlFrame's 
+    // scrolling view level mouse click events do not have the scolled offset added to them. 
+    // The view containing the offset is below the nsListControlFrame's scrolling 
+    // view, so the short-circuiting of the event processing provided by nsView:SetVFlags(NS_DONT_CHECK_CHILDREN) 
+    // prevents the scrolled view's offset from ever being added to the event's offset.
+    // When nsListControlFrame::GetFrameForPoint is invoked the nsPoint passed in does not include the scrolled view offset, 
+    // so the frame returned will always be wrong when the listbox is scrolled.
+    // As a hack we adjust for missing view offset by adding code to the nsListControlFrame::GetFrameForPoint which first 
+    // gets the ScrollableView associated with the nsListControlFrame and asks for it's GetScrollPosition offsets. These are 
+    // added to the point that is passed in so the correct frame is returned from nsListControlFrame::GetFrameForPoint.
+ 
+   nsIView *view = nsnull;
+   GetView(&view);
+   if (nsnull != view) {
+     nscoord offsetx;
+     nscoord offsety;
+     nsIScrollableView* scrollableView;
+     if (NS_SUCCEEDED(view->QueryInterface(kIScrollableViewIID, (void **)&scrollableView))) {
+       scrollableView->GetScrollPosition(offsetx, offsety);
+       absPoint.x += offsetx;
+       absPoint.y += offsety;  
+        // Note: scrollableView is not ref counted so it's interface is not NS_RELEASE'd 
+     }
+   }
+    
   mContentFrame->FirstChild(aList, &kid);
   while (nsnull != kid) {
     kid->GetRect(kidRect);
-    if (kidRect.Contains(aPoint)) {
-      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+    if (kidRect.Contains(absPoint)) {
+      tmp.MoveTo(absPoint.x - kidRect.x, absPoint.y - kidRect.y);
 
       nsIContent * content;
       kid->GetContent(&content);
@@ -218,7 +239,7 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
     kid->GetFrameState(&state);
     if (NS_FRAME_OUTSIDE_CHILDREN & state) {
       kid->GetRect(kidRect);
-      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+      tmp.MoveTo(absPoint.x - kidRect.x, absPoint.y - kidRect.y);
       if (NS_OK == kid->GetFrameForPoint(tmp, aFrame)) {
         return NS_OK;
       }
@@ -229,120 +250,130 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   return NS_ERROR_FAILURE;
 }
 
-//----------------------------------------------------------------------
-void
-nsListControlFrame::PaintChildren(nsIPresContext&      aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect,
-                            nsFramePaintLayer    aWhichLayer)
-{
-
-  nsScrollFrame::PaintChildren(aPresContext,
-                              aRenderingContext,
-                              aDirtyRect, aWhichLayer);
-}
 
 //----------------------------------------------------------------------
-// XXX this needs to properly deal with max element size. percentage based unconstrained widths cannot
-// be allowed to return large max element sizes or tables will get too large.
+// Reflow is overriden to constrain the listbox height to the number of rows and columns
+// specified. 
+//
 NS_IMETHODIMP 
-nsListControlFrame::Reflow(nsIPresContext&          aPresContext, 
+nsListControlFrame::Reflow(nsIPresContext&   aPresContext, 
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState, 
                     nsReflowStatus&          aStatus)
 {
+   // Strategy: Let the inherited reflow happen as though the width and height of the
+   // ScrollFrame are big enough to allow the listbox to
+   // shrink to fit the longest option element line in the list.
+   // The desired width and height returned by the inherited reflow is returned, 
+   // unless one of the following has been specified.
+   // 1. A css width has been specified.
+   // 2. The size has been specified.
+   // 3. The css height has been specified, but the number of rows has not.
+   //  The size attribute overrides the height setting but the height setting
+   // should be honored if there isn't a size specified.
+
+    // Determine the desired width + height for the listbox + 
+  aDesiredSize.width  = 0;
+  aDesiredSize.height = 0;
+
+  // Initialize the current selected and not selected state's for
+   // the listbox items from the content
   if (!mIsInitializedFromContent) {
     mIsInitializedFromContent = PR_TRUE;
     InitializeFromContent(PR_TRUE);
   }
+ 
+  nsIFrame* childFrame = nsnull;
+  mContentFrame->FirstChild(nsnull, &childFrame);
+  PRInt32 numChildren = LengthOf(childFrame); 
+  PRBool needsVerticalScrollbar = (numChildren > mNumRows);
+ 
+  //--Calculate a width just big enough for the scrollframe to shrink around the
+  //longest element in the list
+  //XXX: This is usually dangerous to do this type of coercion. Should it set the
+  //State back to the original when done???
+  nsHTMLReflowState& tempReflowState = (nsHTMLReflowState&)aReflowState;
 
-  nsIFrame* childFrame;
-
-  nscoord scrollbarWidth  = 0;
-  nscoord scrollbarHeight = 0;
-  GetScrollBarDimensions(aPresContext, scrollbarWidth, scrollbarHeight);
-
-  nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
-  GetFont(&aPresContext, font);
-
-  nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-  nsHTMLReflowMetrics desiredSize = aDesiredSize;
-  aDesiredSize.width  = 0;
-  aDesiredSize.height = 0;
-
-  // Calculate the amount of space needed for borders
-  const nsStyleSpacing*  spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin border;
-  if (!spacing->GetBorder(border)) {
-    border.SizeTo(0, 0, 0, 0);
-  }
-
+ // Get the size of option elements inside the listbox
   nsSize desiredLineSize;
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, desiredLineSize);
+  nsHTMLReflowMetrics desiredSize = aDesiredSize;
+   // Save original values which will be modified for the reflow state.
+   // They are set back to their original values at the end of reflow.
+  nscoord saveComputedWidth = tempReflowState.computedWidth;
+  nscoord saveAvailableWidth = tempReflowState.availableWidth;
 
-  float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
-  nscoord lineEndPadding = NSIntPixelsToTwips(10, p2t);//GetHorizontalInsidePadding(aPresContext, p2t, 0, 0);
-  aDesiredSize.width += lineEndPadding;
+   // Compute the width based on the longest line in the listbox.
+   // XXX: This should be changed to do the inherited reflow unconstrained for 
+   // the width to get the real desired width. GetDesiredSize is limited to
+   // text strings.
+  
+  GetDesiredSize(&aPresContext, aReflowState, desiredSize, desiredLineSize);
+   // Only set to the desired width if it hasn't been explicitly defined through CSS.
+   // GetDesiredSize must still be done above to calculate the desired height.
+  if (NS_UNCONSTRAINEDSIZE == tempReflowState.computedWidth) {
+    tempReflowState.computedWidth = desiredLineSize.width;
+  }
+ 
+   // Retrieve the scrollbar's width and height
+  float sbWidth = 0.0;
+  float sbHeight = 0.0;;
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext.GetDeviceContext(getter_AddRefs(dc));
+  dc->GetScrollBarDimensions(sbWidth, sbHeight);
+   // Convert to nscoord's by rounding
+  nscoord scrollbarWidth = NSToCoordRound(sbWidth);
+  nscoord scrollbarHeight = NSToCoordRound(sbHeight);
 
-  desiredSize = aDesiredSize;
-  nsIFrame * firstChild = mFrames.FirstChild();
+  // Add vertical scrollbar, Always add it in,
+  // even though the vertical scrollbar is not needed all the time
+  // the inherited Reflow: allways leave space for the scrollbar by
+  // shrinking the scroll area by the scrollbar width
 
-  nsHTMLReflowState   reflowState(aPresContext, aReflowState, firstChild, maxSize);
-  nsIHTMLReflow*      htmlReflow;
-  if (NS_OK == firstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    htmlReflow->WillReflow(aPresContext);
-    htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+   tempReflowState.computedWidth += scrollbarWidth;
+
+  // Now that we have calculated the width required to just shrink around the longest line. 
+  // Go ahead and reflow
+
+  // Do the inherited Reflow. This reflow uses the computed widths which
+  // are setup above.
+
+  // Don't set the height. Let the height be unconstrained
+ 
+  nsScrollFrame::Reflow(aPresContext, 
+                    aDesiredSize,
+                    tempReflowState, 
+                    aStatus);
+
+  // Now that we have reflowed, we may need to adjust the width and height returned
+  // for the listbox. 
+
+  // Set the desired height to the computed height above only if it has not
+  // been explicitly set by CSS.
+  if (NS_UNCONSTRAINEDSIZE == tempReflowState.computedHeight) {
+    aDesiredSize.height = desiredSize.height;
   }
 
-  mContentFrame->FirstChild(nsnull, &childFrame);
-  PRInt32 numChildren = LengthOf(childFrame);
-
-  aDesiredSize.width  += border.left+border.right;
-  aDesiredSize.height += border.top+border.bottom;
-
-  nscoord insideWidth = aDesiredSize.width-border.left-border.right-1;
-  if (mInDropDownMode) {
+  //Need to addback the scrollbar because the inherited reflow
+  //subtracts the scrollbar width when computing the desired size.
+  //We don't subtract when there isn't a vertical scrollbar. This may
+  //seem odd, becuase above we always add in the scrollbar width before calling
+  //reflow. The reason is that inherited reflow always leaves blank space for
+  //the scrollbar, but we don't whant that behavior for the listbox'es scrollbars.
+  if (needsVerticalScrollbar) {
     aDesiredSize.width += scrollbarWidth;
-    insideWidth        += scrollbarWidth;
-  } else {
-    if (mNumRows < numChildren) {
-      aDesiredSize.width += scrollbarWidth;
-    }
-  }
-
-  nsRect rect(0,0, insideWidth, desiredLineSize.height*numChildren);
-  mContentFrame->SetRect(rect);
-
-
-  mContentFrame->FirstChild(nsnull, &childFrame);
-  nsPoint offset(0,0);
-  while (nsnull != childFrame) {  // reflow, place, size the children
-    nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, maxSize);
-    nsIHTMLReflow*      htmlReflow;
-
-    if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(aPresContext);
-      htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-      //??nsRect rect(offset.x, offset.y, desiredLineSize.width+lineEndPadding, desiredLineSize.height);
-      nsRect rect(offset.x, offset.y, insideWidth, desiredLineSize.height);
-      childFrame->SetRect(rect);
-      childFrame->GetNextSibling(&childFrame);
-      offset.x = 0;
-      offset.y += desiredLineSize.height;
-    }
-  }
-
+  } 
+    // Set the max element size to be the same as the desired element size.
   if (nsnull != aDesiredSize.maxElementSize) {
-    //XXX    aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
 	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
-  aStatus = NS_FRAME_COMPLETE;
+    //XXX: Set the min element size here to the desired element size here??
+   // Restore to original reflow state.
+  tempReflowState.computedWidth = saveComputedWidth;
+  tempReflowState.availableWidth = saveAvailableWidth;
 
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
@@ -406,21 +437,29 @@ nsListControlFrame::GetFont(nsIPresContext*        aPresContext,
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsListControlFrame::PluggableEventHandler(nsIPresContext& aPresContext, 
-                                                 nsGUIEvent*     aEvent,
-                                                 nsEventStatus&  aEventStatus)
+
+// XXX: Here we introduce a new -moz-option-selected attribute so a attribute
+// selecitor n the ua.css can change the style when the option is selected.
+
+void nsListControlFrame::DisplaySelected(nsIContent* aContent) 
 {
-  HandleEvent(aPresContext, aEvent, aEventStatus);
-  //aEventStatus = nsEventStatus_eConsumeNoDefault;
-  return NS_OK;
+  nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)));
+  aContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
 }
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsListControlFrame::PluggableGetFrameForPoint(const nsPoint& aPoint, 
-                                                     nsIFrame**     aFrame)
+void nsListControlFrame::DisplayDeselected(nsIContent* aContent) 
 {
-  return GetFrameForPoint(aPoint, aFrame);
+  nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)));
+  aContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_TRUE);
+}
+
+void nsListControlFrame::UpdateItem(nsIContent* aContent, PRBool aSelected)
+{
+  if (aSelected) {
+    DisplaySelected(aContent);
+  } else {
+    DisplayDeselected(aContent);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -437,8 +476,7 @@ PRInt32 nsListControlFrame::SetContentSelected(nsIFrame *    aHitFrame,
       nsIContent* content;
       kid->GetContent(&content);
       aHitContent = content;
-      nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)) );
-      aHitContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
+ //XXX:     DisplaySelected(aHitContent);
       return index;
     }
     kid->GetNextSibling(&kid);
@@ -456,10 +494,10 @@ void nsListControlFrame::ClearSelection()
   while (nsnull != kid) {
     nsIContent * content;
     kid->GetContent(&content);
-    if (mIsFrameSelected[i]) {
+    if (IsFrameSelected(i)) {
       if (i != mSelectedIndex) {
-        content->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
-        mIsFrameSelected[i] = PR_FALSE;
+        DisplayDeselected(content);
+        SetFrameSelected(i, PR_FALSE);
       }
     }
     NS_RELEASE(content);
@@ -494,12 +532,12 @@ void nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndInde
     }
     if (startInverting && ((i != mStartExtendedIndex && aDoInvert) || !aDoInvert)) {
       if (aDoInvert) {
-        mIsFrameSelected[i] = !mIsFrameSelected[i];
+        SetFrameSelected(i, !IsFrameSelected(i));
       } else {
-        mIsFrameSelected[i] = aSetValue;
+        SetFrameSelected(i, aSetValue);
       }
       if (i != mSelectedIndex) {
-        content->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (mIsFrameSelected[i]?kSelected:kNormal), PR_TRUE);
+        UpdateItem(content, IsFrameSelected(i));
       }
     }
     if (i == endInx) {
@@ -518,9 +556,12 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresConte
 {
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     PRInt32 oldSelectedIndex = mSelectedIndex;
+
     mSelectedIndex = (PRInt32)SetContentSelected(mHitFrame, mHitContent, PR_TRUE);
     if (-1 < mSelectedIndex) {
-      PRBool selected = mIsFrameSelected[mSelectedIndex];
+      PRBool wasSelected = IsFrameSelected(mSelectedIndex);
+      SetFrameSelected(mSelectedIndex, PR_TRUE);
+      PRBool selected = wasSelected; 
       if (mMultipleSelections) {
 
         if (((nsMouseEvent *)aEvent)->isShift) {
@@ -556,10 +597,11 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresConte
         } else if (((nsMouseEvent *)aEvent)->isControl) {
           selected = !selected;
           if (nsnull != mSelectedContent) {
-            if (mHitContent != mSelectedContent) {
-              mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (mIsFrameSelected[oldSelectedIndex]?kSelected:kNormal), PR_TRUE);
+              if (mHitContent != mSelectedContent) {
+                 // Toggle the selection
+                UpdateItem(mHitContent, !wasSelected);  
             } else {
-              mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
+    //XXX: Fix this    mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
             }
           }
         } else {
@@ -570,13 +612,11 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresConte
         }
       } else {
         if (nsnull != mSelectedContent) {
-        nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)) );
-        mSelectedContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_TRUE);
- //XXX: This needs to a set a psuedo attribute instead         mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
+          DisplayDeselected(mSelectedContent);
           NS_RELEASE(mSelectedContent);
         }
       }
-      mIsFrameSelected[mSelectedIndex] = selected;
+ //XXX: Remove     SetFrameSelected(mSelectedIndex, selected);
       //XXX mHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
       mSelectedContent = mHitContent;
       mSelectedFrame   = mHitFrame;
@@ -603,7 +643,7 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
     // If the DropDown is currently has a selected item 
     // then clear the selected item
     if (nsnull != mSelectedContent) {
-      mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
+      DisplayDeselected(mSelectedContent);
       NS_RELEASE(mSelectedContent);
     }
 
@@ -613,7 +653,7 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
 
       // Since the new frame is different then clear the selection on the old frame (the current frame)
       if (nsnull != mCurrentHitContent) {
-        mCurrentHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
+        DisplayDeselected(mCurrentHitContent);
         NS_RELEASE(mCurrentHitContent);
       }
 
@@ -645,15 +685,15 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
 
         // Clean up frames before disappearing
         if (nsnull != mSelectedContent) {
-          mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
+          DisplayDeselected(mSelectedContent);
           NS_RELEASE(mSelectedContent);
         }
         if (nsnull != mHitContent) {
-          mHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
+          DisplayDeselected(mHitContent);
           NS_RELEASE(mHitContent);
         }
         if (nsnull != mCurrentHitContent) {
-          mCurrentHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
+          DisplayDeselected(mCurrentHitContent);
           NS_RELEASE(mCurrentHitContent);
         }
         NS_RELEASE(option);
@@ -727,13 +767,10 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIFrame*       aChildList)
 {
   mContentFrame = aChildList;
-#ifdef PLUGGABLE_EVENTS
-  mContentFrame->SetPluggableEventListener(this);
-#endif
+
   if (!mInDropDownMode) {
     nsFormFrame::AddFormControlFrame(aPresContext, *this);
   }
-  //aChildList->FirstChild(nsnull, mContentFrame);
 
   if (!mIsInitializedFromContent) {
     InitializeFromContent();
@@ -742,33 +779,6 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   return nsScrollFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
 }
-//----------------------------------------------------------------------
-/*nsresult
-nsListControlFrame::AppendNewFrames(nsIPresContext& aPresContext,
-                               nsIFrame* aNewFrame)
-{
-  return nsScrollFrame::AppendNewFrames(aPresContext, aNewFrame);
-}
-
-//----------------------------------------------------------------------
-nsresult
-nsListControlFrame::InsertNewFrame(nsIPresContext& aPresContext,
-                              nsBaseIBFrame*   aParentFrame,
-                              nsIFrame*       aNewFrame,
-                              nsIFrame*       aPrevSibling)
-{
-  return nsScrollFrame::InsertNewFrame(aPresContext, aParentFrame, aNewFrame, aPrevSibling);
-}
-
-//----------------------------------------------------------------------
-nsresult
-nsListControlFrame::DoRemoveFrame(nsBlockReflowState& aState,
-                             nsBaseIBFrame* aParentFrame,
-                             nsIFrame* aDeletedFrame,
-                             nsIFrame* aPrevSibling)
-{
-  return nsScrollFrame::DoRemoveFrame(aState, aParentFrame, aDeletedFrame, aPrevSibling);
-}*/
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP  
@@ -780,13 +790,6 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult result = nsScrollFrame::Init(aPresContext, aContent, aParent, aContext,
                                         aPrevInFlow);
-  /*if (NS_OK == result) {
-    nsIDOMNode* node;
-    if (mContent && (NS_OK == mContent->QueryInterface(kIDOMNodeIID, (void**) &node))) {
-      AddEventListener(node);
-      NS_RELEASE(node);
-    }
-  }*/
   if (NS_OK == result) {
     nsIDOMHTMLSelectElement* select;
     if (mContent && (NS_OK == mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**) &select))) {
@@ -798,7 +801,6 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
   }
   
   return result;
-
 }
 
 //----------------------------------------------------------------------
@@ -838,31 +840,6 @@ nsListControlFrame::GetSizeFromContent(PRInt32* aSize) const
   }
   return result;
 }
-//----------------------------------------------------------------------
-void 
-nsListControlFrame::GetScrollBarDimensions(nsIPresContext& aPresContext,
-                                    nscoord &aWidth, nscoord &aHeight)
-{
-
-  aWidth  = 0;
-  aHeight = 0;
-  float   scale;
-  nsCOMPtr<nsIDeviceContext> dx;
-  aPresContext.GetDeviceContext(getter_AddRefs(dx));
-  if (dx) { 
-    float sbWidth;
-    float sbHeight;
-    dx->GetCanonicalPixelScale(scale);
-    dx->GetScrollBarDimensions(sbWidth, sbHeight);
-    aWidth  = PRInt32(sbWidth * scale);
-    aHeight = PRInt32(sbHeight * scale);
-  } //else {
-    //aWidth  = 19 * sp2t;
-    //aHeight = scrollbarWidth;
-  //}
-
-  
-}
 
 //----------------------------------------------------------------------
 nscoord 
@@ -883,7 +860,7 @@ nscoord
 nsListControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
                                       nscoord aInnerHeight) const
 {
-   return NSIntPixelsToTwips(0, aPixToTwip); // XXX this is really 
+   return NSIntPixelsToTwips(0, aPixToTwip); 
 }
 
 //----------------------------------------------------------------------
@@ -923,6 +900,8 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRInt32  maxWidth = 1;
   PRUint32 numOptions;
   options->GetLength(&numOptions);
+
+
   for (PRUint32 i = 0; i < numOptions; i++) {
     nsIDOMHTMLOptionElement* option = GetOption(*options, i);
     if (option) {
@@ -1059,7 +1038,7 @@ nsListControlFrame::AboutToDropDown()
     if (i == mSelectedIndex) {
       mSelectedContent = content;
       mSelectedFrame   = kid;
-      mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kSelected, PR_TRUE);
+      DisplaySelected(mSelectedContent);
       return NS_OK;
     }
     NS_RELEASE(content);
@@ -1069,14 +1048,63 @@ nsListControlFrame::AboutToDropDown()
   return NS_OK;
 }
 
+
+nsIContent* 
+nsListControlFrame::GetOptionContent(PRUint32 aIndex) 
+{
+  nsresult result = NS_OK;
+  nsIDOMHTMLCollection* options = GetOptions(mContent);
+  nsIDOMHTMLOptionElement* optionElement = GetOption(*options, aIndex);
+
+  nsIContent *content = nsnull;
+  result = optionElement->QueryInterface(kIContentIID, (void**) &content);
+
+  NS_RELEASE(optionElement);
+  NS_RELEASE(options);
+
+  if (NS_SUCCEEDED(result)) {
+    return(content);
+  } else {
+    return(nsnull);
+  }
+}
+
+PRBool 
+nsListControlFrame::IsFrameSelected(PRUint32 aIndex) 
+{
+  nsIContent* content = GetOptionContent(aIndex);
+  NS_ASSERTION(nsnull != content, "Failed to retrieve option content");
+  nsString value; 
+  nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)));
+  nsresult result = content->GetAttribute(kNameSpaceID_None, selectedAtom, value);
+  NS_IF_RELEASE(content);
+ 
+  if (NS_CONTENT_ATTR_NOT_THERE == result) {
+    return(PR_FALSE);
+  }
+  else {
+    return(PR_TRUE);
+  }
+}
+
+void 
+nsListControlFrame::SetFrameSelected(PRUint32 aIndex, PRBool aSelected)
+{
+  nsIContent* content = GetOptionContent(aIndex);
+  NS_ASSERTION(nsnull != content, "Failed to retrieve option content");
+  if (aSelected) {
+    DisplaySelected(content);
+  } else {
+    DisplayDeselected(content);
+  }
+  NS_IF_RELEASE(content);
+}
+
 //----------------------------------------------------------------------
 void 
 nsListControlFrame::InitializeFromContent(PRBool aDoDisplay)
 {
   PRInt32 i;
-  for (i=0;i<mMaxNumSelections;i++) {
-    mIsFrameSelected[i] = PR_FALSE;
-  }
 
   i = 0;
   nsIFrame* kid;
@@ -1090,8 +1118,7 @@ nsListControlFrame::InitializeFromContent(PRBool aDoDisplay)
     if (result == NS_OK) {
       PRBool selected;
       option->GetDefaultSelected(&selected);
- //XXX: Remove, why is selected queried twice here?  option->GetSelected(&selected);
-      mIsFrameSelected[i] = selected;
+      SetFrameSelected(i, selected);
 
       if (mInDropDownMode) {
         if (selected) {
@@ -1106,11 +1133,10 @@ nsListControlFrame::InitializeFromContent(PRBool aDoDisplay)
           return;
         }
       } else {
-        if (selected && aDoDisplay) {
-           // XXX: Here we introduce a new -moz-option-selected attribute so a attribute
-           // selecitor n the ua.css can change the style when the option is selected.
-          nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)));
-          content->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
+        if (selected && aDoDisplay) {      
+          DisplaySelected(content);
+          mSelectedContent = content;
+          NS_ADDREF(content);
         }
       }
       NS_RELEASE(option);
@@ -1186,203 +1212,14 @@ nsListControlFrame::Deselect()
 {
   PRInt32 i;
   for (i=0;i<mMaxNumSelections;i++) {
-    mIsFrameSelected[i] = PR_FALSE;
+    SetFrameSelected(i, PR_FALSE);
     // update visual here
   }
   mNumSelections = 0;
   return NS_OK;
 }
 
-#if 0
-//------------------------------------------------------------------
-nscoord 
-nsListControlFrame::GetTextSize(nsIPresContext& aPresContext, nsListControlFrame* aFrame,
-                         const nsString& aString, nsSize& aSize,
-                         nsIRenderingContext *aRendContext)
-{
-  nsFont font(aPresContext.GetDefaultFixedFont());
-  aFrame->GetFont(&aPresContext, font);
-  nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
 
-  nsIFontMetrics* fontMet;
-  deviceContext->GetMetricsFor(font, fontMet);
-  aRendContext->SetFont(fontMet);
-  aRendContext->GetWidth(aString, aSize.width);
-  fontMet->GetHeight(aSize.height);
-
-  char char1, char2;
-  nsCompatibility mode = nsFormControlHelper::GetRepChars(aPresContext, char1, char2);
-  nscoord char1Width, char2Width;
-  aRendContext->GetWidth(char1, char1Width);
-  aRendContext->GetWidth(char2, char2Width);
-
-  NS_RELEASE(fontMet);
-  NS_RELEASE(deviceContext);
-
-  if (eCompatibility_Standard == mode) {
-    return ((char1Width + char2Width) / 2) + 1;
-  } else {
-    return char1Width;
-  }
-}  
-  
-//------------------------------------------------------------------
-nscoord
-nsListControlFrame::GetTextSize(nsIPresContext& aPresContext, nsListControlFrame* aFrame,
-                                PRInt32 aNumChars, nsSize& aSize,
-                                nsIRenderingContext *aRendContext)
-{
-  nsAutoString val;
-  char char1, char2;
-  nsFormControlHelper::GetRepChars(aPresContext, char1, char2);
-  int i;
-  for (i = 0; i < aNumChars; i+=2) {
-    val += char1;  
-  }
-  for (i = 1; i < aNumChars; i+=2) {
-    val += char2;  
-  }
-  return GetTextSize(aPresContext, aFrame, val, aSize, aRendContext);
-}
-  
-//------------------------------------------------------------------
-PRInt32
-nsListControlFrame::CalculateSize (nsIPresContext* aPresContext, nsListControlFrame* aFrame,
-                            const nsSize& aCSSSize, nsInputDimensionSpec& aSpec, 
-                            nsSize& aBounds, PRBool& aWidthExplicit, 
-                            PRBool& aHeightExplicit, nscoord& aRowHeight,
-                            nsIRenderingContext *aRendContext) 
-{
-  nscoord charWidth   = 0;
-  PRInt32 numRows     = ATTR_NOTSET;
-  aWidthExplicit      = PR_FALSE;
-  aHeightExplicit     = PR_FALSE;
-
-  aBounds.width  = CSS_NOTSET;
-  aBounds.height = CSS_NOTSET;
-  nsSize textSize(0,0);
-
-  nsIContent* iContent = nsnull;
-  aFrame->GetContent((nsIContent*&) iContent);
-  if (!iContent) {
-    return 0;
-  }
-  nsIHTMLContent* hContent = nsnull;
-  nsresult result = iContent->QueryInterface(kIHTMLContentIID, (void**)&hContent);
-  if ((NS_OK != result) || !hContent) {
-    NS_RELEASE(iContent);
-    return 0;
-  }
-  nsAutoString valAttr;
-  nsresult valStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mColValueAttr) {
-    valStatus = hContent->GetAttribute(kNameSpaceID_HTML, aSpec.mColValueAttr, valAttr);
-  }
-  nsHTMLValue colAttr;
-  nsresult colStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mColSizeAttr) {
-    colStatus = hContent->GetHTMLAttribute(aSpec.mColSizeAttr, colAttr);
-  }
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
-
-  // determine the width
-  nscoord adjSize;
-  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
-    PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-    if (aSpec.mColSizeAttrInPixels) {
-      col = (col <= 0) ? 15 : col; 
-      aBounds.width = NSIntPixelsToTwips(col, p2t);
-    }
-    else {
-      col = (col <= 0) ? 1 : col;
-      charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds, aRendContext);
-      aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
-    }
-    if (aSpec.mColSizeAttrInPixels) {
-      aWidthExplicit = PR_TRUE;
-    }
-  }
-  else {
-    if (CSS_NOTSET != aCSSSize.width) {  // css provides width
-      aBounds.width = (aCSSSize.width > 0) ? aCSSSize.width : 1;
-      aWidthExplicit = PR_TRUE;
-    } 
-    else {                       
-      if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
-        charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aBounds, aRendContext);
-      }
-      else if (aSpec.mColDefaultValue) { // use default value
-        charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aBounds, aRendContext);
-      }
-      else if (aSpec.mColDefaultSizeInPixels) {    // use default width in pixels
-        charWidth = GetTextSize(*aPresContext, aFrame, 1, aBounds, aRendContext);
-        aBounds.width = aSpec.mColDefaultSize;
-      }
-      else  {                                    // use default width in num characters
-        charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aBounds, aRendContext); 
-      }
-      aRowHeight = aBounds.height; // XXX aBounds.height has CSS_NOTSET
-    }
-  }
-
-  // determine the height
-  nsHTMLValue rowAttr;
-  nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mRowSizeAttr) {
-    rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
-  }
-  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
-    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
-    adjSize = (rowAttrInt > 0) ? rowAttrInt : 1;
-    if (0 == charWidth) {
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-      aBounds.height = textSize.height * adjSize;
-      aRowHeight = textSize.height;
-      numRows = adjSize;
-    }
-    else {
-      aBounds.height = aBounds.height * adjSize;
-    }
-  }
-  else if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-    aBounds.height = (aCSSSize.height > 0) ? aCSSSize.height : 1;
-    aHeightExplicit = PR_TRUE;
-  } 
-  else {         // use default height in num lines
-    if (0 == charWidth) {  
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-      aBounds.height = textSize.height * aSpec.mRowDefaultSize;
-      aRowHeight = textSize.height;
-    } 
-    else {
-      aBounds.height = aBounds.height * aSpec.mRowDefaultSize;
-    }
-  }
-
-  if ((0 == charWidth) || (0 == textSize.width)) {
-    charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-    aRowHeight = textSize.height;
-  }
-
-  // add inside padding if necessary
-  if (!aWidthExplicit) {
-    aBounds.width += (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aBounds.width, charWidth));
-  }
-  if (!aHeightExplicit) {
-    aBounds.height += (2 * aFrame->GetVerticalInsidePadding(p2t, textSize.height)); 
-  }
-
-  NS_RELEASE(hContent);
-  if (ATTR_NOTSET == numRows) {
-    numRows = aBounds.height / aRowHeight;
-  }
-
-  NS_RELEASE(iContent);
-  return numRows;
-}
-
-#endif
 
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -1407,17 +1244,6 @@ nsListControlFrame::GetSkipSides() const
 NS_IMETHODIMP
 nsListControlFrame::GetType(PRInt32* aType) const
 {
-  /*nsresult result = NS_FORM_NOTOK;
-  if (mContent) {
-    nsIFormControl* formControl = nsnull;
-    result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      result = formControl->GetType(aType);
-      NS_RELEASE(formControl);
-    }
-  }
-  return result;
-  */
   *aType = NS_FORM_SELECT;
   return NS_OK;
 }
@@ -1440,15 +1266,8 @@ nsListControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 void 
 nsListControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  /*nsIRadioButton* radioWidget;
-  if (mWidget && (NS_OK == mWidget->QueryInterface(kIRadioIID, (void**)&radioWidget))) {
-	  radioWidget->SetState(PR_TRUE);
-    NS_RELEASE(radioWidget);
-    if (mFormFrame) {
-      mFormFrame->OnRadioChecked(*this);
-    } 
-  }*/
 }
+
 //----------------------------------------------------------------------
 PRInt32 
 nsListControlFrame::GetMaxNumValues()
@@ -1488,7 +1307,7 @@ nsListControlFrame::Reset()
       PRBool selected = PR_FALSE;
       option->GetSelected(&selected);
       if (selected) {
-        mIsFrameSelected[i] = PR_TRUE;
+        SetFrameSelected(i, PR_TRUE);
       }
       NS_RELEASE(option);
     }
@@ -1518,16 +1337,6 @@ nsListControlFrame::GetName(nsString* aResult)
   }
   return result;
 }
-
-
-//----------------------------------------------------------------------
-/*PRBool
-nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, 
-                                   nsString* aValues, nsString* aNames)
-{
-  aNumValues = 0;
-  return PR_FALSE;
-}*/
  
 //----------------------------------------------------------------------
 PRBool
@@ -1554,7 +1363,7 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     PRInt32 i = 0;
     PRInt32 inx;
     for (inx=0;i<mNumSelections;i++) {
-      if (mIsFrameSelected[inx]) {
+      if (IsFrameSelected(inx)) {
         selections[i++] = inx;
       }
     }
@@ -1574,6 +1383,7 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 
   return status;
 }
+
 
 
 //----------------------------------------------------------------------
@@ -1627,62 +1437,3 @@ nsresult nsListControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 }
 
 
-
-
-#if 0
-//----------------------------------------------------------------------
-NS_IMETHODIMP  
-nsListControlFrame::DeleteFrame(nsIPresContext& aPresContext)
-{
-  nsIDOMNode* node;
-  if (mContent && (NS_OK == mContent->QueryInterface(kIDOMNodeIID, (void**) &node))) {
-    RemoveEventListener(node);
-    NS_RELEASE(node);
-  }
-  return nsScrollFrame::DeleteFrame(aPresContext);
-
-}
-//-----------------------------------------------------------------
-nsresult nsListControlFrame::Focus(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsListControlFrame::Blur(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsListControlFrame::ProcessEvent(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-NS_IMETHODIMP nsListControlFrame::AddEventListener(nsIDOMNode * aNode)
-{
-  nsIDOMEventReceiver * receiver;
-
-  if (NS_OK == aNode->QueryInterface(kIDOMEventReceiverIID, (void**) &receiver)) {
-    receiver->AddEventListener((nsIDOMFocusListener*)this, kIDOMFocusListenerIID);
-    NS_RELEASE(receiver);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-//-----------------------------------------------------------------
-NS_IMETHODIMP nsListControlFrame::RemoveEventListener(nsIDOMNode * aNode)
-{
-  nsIDOMEventReceiver * receiver;
-
-  if (NS_OK == aNode->QueryInterface(kIDOMEventReceiverIID, (void**) &receiver)) {
-    receiver->RemoveEventListener(this, kIDOMFocusListenerIID);
-    NS_RELEASE(receiver);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-#endif
