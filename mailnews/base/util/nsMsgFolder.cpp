@@ -1410,9 +1410,21 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 #include "prprf.h"
 #include "prsystem.h"
 
-static const char kMsgRootFolderPref[] = "mail.rootFolder";
+/* sspitzer:  this is all temporary, don't panic */
+static char *gMailboxRoot = "/tmp/mozillanews";
+static char *gNewsRoot = nsnull;
 
-static char *gMailboxRoot = nsnull;
+nsresult
+nsGetNewsRoot(nsFileSpec &result)
+{
+  nsresult rv = NS_OK;
+    
+  printf("gMailboxRoot = %s\n", gMailboxRoot);
+
+  result = gNewsRoot;
+
+  return rv;
+}
 
 nsresult
 nsGetMailboxRoot(nsFileSpec &result)
@@ -1511,9 +1523,18 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
 
-  rv = nsGetMailboxRoot(pathResult);
-  if (NS_FAILED(rv)) return rv;
-  
+  if (strcmp(rootURI, kNewsMessageRootURI)) {
+    rv = nsGetNewsRoot(pathResult);
+  }
+  else {
+    rv = nsGetMailboxRoot(pathResult);
+  }
+
+  if (NS_FAILED(rv)) {
+    pathResult = nsnull;
+    return rv;
+  }
+ 
   nsAutoString path="";
   uri.Cut(0, nsCRT::strlen(rootURI));
 
@@ -1639,7 +1660,8 @@ nsURI2Name(const char* rootURI, char* uriStr, nsString& name)
   return uri.Right(name, count);
 }
 
-nsresult nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *key)
+/* parses LocalMessageURI and NewsMessageURI */
+nsresult nsParseMessageURI(const char* uri, nsString& folderURI, PRUint32 *key)
 {
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
@@ -1670,7 +1692,26 @@ nsresult nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri
 
 	char *folderURI;
 
-	nsPath2URI(kMessageRootURI, path, &folderURI);
+	nsPath2URI(kMailboxMessageRootURI, path, &folderURI);
+
+	*uri = PR_smprintf("%s#%d", folderURI, key);
+
+	delete[] folderURI;
+
+	return NS_OK;
+
+
+}
+
+nsresult nsBuildNewsMessageURI(const nsFileSpec& path, PRUint32 key, char** uri)
+{
+	
+	if(!uri)
+		return NS_ERROR_NULL_POINTER;
+
+	char *folderURI;
+
+	nsPath2URI(kNewsMessageRootURI, path, &folderURI);
 
 	*uri = PR_smprintf("%s#%d", folderURI, key);
 
@@ -1692,9 +1733,9 @@ nsresult nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder)
 		resource->GetValue( getter_Copies(uri) );
 		nsString messageFolderURIStr;
 		nsMsgKey key;
-		nsParseLocalMessageURI(uri, messageFolderURIStr, &key);
+		nsParseMessageURI(uri, messageFolderURIStr, &key);
 		nsString folderOnly, folderURIStr;
-		messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kMessageRootURI));
+		messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kMailboxMessageRootURI));
 		folderURIStr = kMailboxRootURI;
 		folderURIStr+= folderOnly;
 

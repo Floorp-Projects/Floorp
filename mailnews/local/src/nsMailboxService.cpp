@@ -103,9 +103,9 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI, nsIStreamLis
 			nsFileSpec folderPath ("");
 			nsMsgKey msgKey;
 			
-			nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
+			nsParseMessageURI(aSrcMailboxURI, folderURI, &msgKey);
 			char *rootURI = folderURI.ToNewCString();
-			nsURI2Path(kMessageRootURI, rootURI, folderPath);
+			nsURI2Path(kMailboxMessageRootURI, rootURI, folderPath);
 
 			nsFilePath filePath(folderPath); // convert to file url representation...
 			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
@@ -163,8 +163,8 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI, nsISupports *
 			nsFileSpec folderSpec;
 			nsMsgKey msgIndex;
 
-			nsParseLocalMessageURI(aMessageURI, folderURI, &msgIndex);
-			nsURI2Path(kMessageRootURI, nsAutoCString(folderURI), folderSpec);
+			nsParseMessageURI(aMessageURI, folderURI, &msgIndex);
+			nsURI2Path(kMailboxMessageRootURI, nsAutoCString(folderURI), folderSpec);
 
 			nsFilePath filePath(folderSpec); // convert to file url representation...
 			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgIndex);

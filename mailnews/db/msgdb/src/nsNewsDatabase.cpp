@@ -18,54 +18,136 @@
 
 #include "msgCore.h"
 #include "nsNewsDatabase.h"
+#include "nsRDFCID.h"
+
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsNewsDatabase::nsNewsDatabase()
 {
+  // do nothing
 }
 
 nsNewsDatabase::~nsNewsDatabase()
 {
+  // do nothing
 }
 
 nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
 {
-	return 0;
+  return NS_OK;
+}
+
+nsresult nsNewsDatabase::PrePopulate()
+{
+  nsIMessage       *msg;
+  nsMsgHdr	       *newHdr = NULL;
+  PRTime           resultTime, intermediateResult, microSecondsPerSecond;
+  time_t           resDate;
+
+  resultTime = PR_Now();
+
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
+  LL_L2I(resDate, intermediateResult);
+  
+  nsresult rv = CreateNewHdr(1, &msg);
+  if (NS_FAILED(rv)) return rv;
+  newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
+  newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
+  newHdr->SetSubject("Why the Lakers suck");
+  newHdr->SetDate(resDate);
+  newHdr->SetRecipients("riley@heat.com (Pat Riley)", PR_FALSE);
+  AddNewHdrToDB (newHdr, PR_TRUE);
+  printf("added header\n");
+  newHdr->Release();
+  
+  rv = CreateNewHdr(2, &msg);
+  if (NS_FAILED(rv)) return rv;
+  newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
+  newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
+  newHdr->SetSubject("Anyone here know how to shoot free throws?");
+  newHdr->SetDate(resDate);
+  AddNewHdrToDB (newHdr, PR_TRUE);
+  printf("added header\n");
+  newHdr->Release();
+  
+  rv = CreateNewHdr(3, &msg);
+  if (NS_FAILED(rv)) return rv;
+  newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
+  newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
+  newHdr->SetSubject("Has anyone seen my jump shot?");
+  newHdr->SetDate(resDate);
+  AddNewHdrToDB (newHdr, PR_TRUE);
+  printf("added header\n");
+  newHdr->Release();
+  
+  rv = CreateNewHdr(4, &msg);
+  if (NS_FAILED(rv)) return rv;
+  newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
+  newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
+  newHdr->SetSubject("Tips for fighting 7' 4\" guys");
+  newHdr->SetDate(resDate);
+  AddNewHdrToDB (newHdr, PR_TRUE);
+  printf("added header\n");
+  newHdr->Release();
+  return NS_OK;
 }
 
 /* static */ 
-nsresult	nsNewsDatabase::Open(nsFileSpec &newsgroupName,  PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+nsresult nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
-#ifdef DEBUG
   printf("in nsNewsDatabase::Open()\n");
-#endif
-  return 0;
+  nsNewsDatabase	*newsDB;
+  nsresult          err = NS_OK;
+
+  newsDB = new nsNewsDatabase();
+  
+  if (!newsDB) {
+    printf("NS_ERROR_OUT_OF_MEMORY\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  newsDB->m_newsgroupSpec = new nsFileSpec(newsgroupName);
+  newsDB->AddRef();
+
+  /* sspitzer:  temporary work, don't panic */
+  err = newsDB->OpenMDB("/tmp/mozillamaildb", create);
+  if (NS_SUCCEEDED(err)) {
+    printf("newsDB->OpenMDB succeeded!\n");
+    newsDB->PrePopulate();
+  }
+  else {
+    printf("newsDB->OpenMDB failed!\n");
+  }
+
+  return err;
 }
-nsresult		nsNewsDatabase::Close(PRBool forceCommit)
+nsresult nsNewsDatabase::Close(PRBool forceCommit)
 {
-	return nsMsgDatabase::Close(forceCommit);
+  return nsMsgDatabase::Close(forceCommit);
 }
 
-nsresult		nsNewsDatabase::ForceClosed()
+nsresult nsNewsDatabase::ForceClosed()
 {
-	return nsMsgDatabase::ForceClosed();
+  return nsMsgDatabase::ForceClosed();
 }
 
-nsresult		nsNewsDatabase::Commit(nsMsgDBCommitType commitType)
+nsresult nsNewsDatabase::Commit(nsMsgDBCommitType commitType)
 {
-	return nsMsgDatabase::Commit(commitType);
+  return nsMsgDatabase::Commit(commitType);
 }
 
 
-PRUint32		nsNewsDatabase::GetCurVersion()
+PRUint32 nsNewsDatabase::GetCurVersion()
 {
-	return 1;
+  return 1;
 }
 
 // methods to get and set docsets for ids.
 NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
 								nsIDBChangeListener *instigator)
 {
-	nsresult		err = NS_OK;
+    nsresult		err = NS_OK;
 #if 0
 	nsMsgKey messageKey = msgHdr->GetMessageKey();
 
@@ -197,7 +279,55 @@ char *nsNewsDatabase::GetGroupNameFromURL(const char *url)
 
 // should we thread messages with common subjects that don't start with Re: together?
 // I imagine we might have separate preferences for mail and news, so this is a virtual method.
-PRBool	nsNewsDatabase::ThreadBySubjectWithoutRe()
+PRBool	
+nsNewsDatabase::ThreadBySubjectWithoutRe()
 {
-	return PR_TRUE;
+  return PR_TRUE;
+}
+
+nsresult
+nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
+							PRBool getKeyFromHeader)
+{
+  nsresult rv;
+
+  printf("nsNewsDatabase::CreateMsgHdr()\n");
+
+  nsIRDFService *rdf;
+  rv = nsServiceManager::GetService(kRDFServiceCID, 
+                                    nsIRDFService::GetIID(), 
+                                    (nsISupports**)&rdf);
+  
+  if (NS_FAILED(rv)) return rv;
+  
+  char* msgURI;
+  
+  //Need to remove ".msf".
+  nsFileSpec folderPath = path;
+  char* leafName = folderPath.GetLeafName();
+  nsString folderName(leafName);
+  PL_strfree(leafName);
+  if(folderName.Find(".msf") != -1)
+	{
+      nsString realFolderName;
+      folderName.Left(realFolderName, folderName.Length() - 4);
+      folderPath.SetLeafName((const nsString)realFolderName);
+	}
+  
+  rv = nsBuildNewsMessageURI(folderPath, key, &msgURI);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsIRDFResource* res;
+  rv = rdf->GetResource(msgURI, &res);
+  PR_smprintf_free(msgURI);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsMsgHdr* msgHdr = (nsMsgHdr*)res;
+  msgHdr->Init(this, hdrRow);
+  msgHdr->SetMessageKey(key);
+  *result = msgHdr;
+  
+  nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+  
+  return rv;
 }

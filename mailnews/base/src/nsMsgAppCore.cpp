@@ -575,7 +575,7 @@ nsMsgAppCore::OpenURL(const char * url)
 				nsServiceManager::ReleaseService(kCNntpServiceCID, nntpService);
 			}
 		}
-		if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMessageRootURI, PL_strlen(kMessageRootURI)) == 0)
+		if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMailboxMessageRootURI, PL_strlen(kMailboxMessageRootURI)) == 0)
 		{
 			PRUint32 msgIndex=0;
 			nsFileSpec folderPath; 

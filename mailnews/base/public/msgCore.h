@@ -126,7 +126,10 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 // URI Utilities for RDF
 
 static const char kMailboxRootURI[] = "mailbox:/";
-static const char kMessageRootURI[] = "mailbox_message:/";
+static const char kMailboxMessageRootURI[] = "mailbox_message:/";
+
+static const char kNewsRootURI[] = "news:/";
+static const char kNewsMessageRootURI[] = "news_message:/";
 
 extern nsresult
 nsGetMailboxRoot(nsFileSpec &result);
@@ -144,10 +147,13 @@ extern nsresult
 nsURI2Name(const char* rootURI, char* uriStr, nsString& name);
 
 extern nsresult
-nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
+nsParseMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
 
 extern nsresult
 nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri);
+
+extern nsresult 
+nsBuildNewsMessageURI(const nsFileSpec& path, PRUint32 key, char **uri);
 
 extern nsresult 
 nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder);
