@@ -23,6 +23,8 @@
 #define nsIHTMLDocument_h___
 
 #include "nsISupports.h"
+#include "nsIDTD.h"
+
 class nsIImageMap;
 class nsString;
 class nsIDOMHTMLCollection;
@@ -36,15 +38,6 @@ class nsICSSLoader;
 #define NS_IHTMLDOCUMENT_IID \
 {0xb2a848b0, 0xd0a9, 0x11d1, {0x89, 0xb1, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81}}
 
-enum nsDTDMode {
-
-  eDTDMode_Unknown    =0,
-  eDTDMode_Nav        =1, //5.0 version of nav. and greater
-  eDTDMode_NoQuirks   =2, //pre 5.0 versions
-  eDTDMode_Other      =4, //pre 5.0 without quirks (as best as we can...)
-  eDTDMode_Autodetect =5
-
-};
 
 /**
  * HTML document extensions to nsIDocument.

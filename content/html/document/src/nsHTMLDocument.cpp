@@ -62,7 +62,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
-#include "CNavDTD.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
@@ -71,6 +70,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
 #include "nsDOMPropEnums.h"
+#include "CNavDTD.h"
 
 #include "nsIIOService.h"
 #include "nsICookieService.h"
@@ -200,7 +200,7 @@ nsHTMLDocument::nsHTMLDocument()
   mLayers = nsnull;
   mNamedItems = nsnull;
   mParser = nsnull;
-  mDTDMode = eDTDMode_Nav;
+  mDTDMode = eDTDMode_quirks;  
   mCSSLoader = nsnull;
 
   // Find/Search Init
@@ -381,7 +381,7 @@ nsHTMLDocument::CreateShell(nsIPresContext* aContext,
                                                   aInstancePtrResult);
 
   if (NS_SUCCEEDED(result)) {
-    aContext->SetCompatibilityMode(((eDTDMode_NoQuirks == mDTDMode) ? 
+    aContext->SetCompatibilityMode(((eDTDMode_strict== mDTDMode) ? 
                                     eCompatibility_Standard : 
                                     eCompatibility_NavQuirks));
   }
@@ -1018,7 +1018,7 @@ nsHTMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
   }
   if (mCSSLoader) {
     mCSSLoader->SetCaseSensitive(PR_FALSE);
-    mCSSLoader->SetQuirkMode(PRBool(eDTDMode_NoQuirks != mDTDMode));
+    mCSSLoader->SetQuirkMode(PRBool(eDTDMode_strict!= mDTDMode));
   }
   aLoader = mCSSLoader;
   NS_IF_ADDREF(aLoader);
@@ -1038,7 +1038,7 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
 {
   mDTDMode = aMode;
   if (mCSSLoader) {
-    mCSSLoader->SetQuirkMode(PRBool(eDTDMode_NoQuirks != mDTDMode));
+    mCSSLoader->SetQuirkMode(PRBool(eDTDMode_strict!= mDTDMode));
   }
 
   nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
@@ -1046,7 +1046,7 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
     nsCOMPtr<nsIPresContext> pc;
     shell->GetPresContext(getter_AddRefs(pc));
      if (pc) {
-        pc->SetCompatibilityMode(((eDTDMode_NoQuirks == mDTDMode) ? 
+        pc->SetCompatibilityMode(((eDTDMode_strict== mDTDMode) ? 
                                     eCompatibility_Standard : 
                                     eCompatibility_NavQuirks));
      }
