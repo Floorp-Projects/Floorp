@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../..
+DEPTH = ../../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
@@ -36,7 +36,6 @@ CPPSRCS = \
 	nsMailDatabase.cpp\
 	$(NULL)
 
-DIRS = public src tests
 
 include $(topsrcdir)/config/config.mk
 
