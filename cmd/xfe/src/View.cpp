@@ -125,6 +125,25 @@ XFE_View::addView(XFE_View *new_view)
   m_subviews[ m_numsubviews ++ ] = new_view;
 }
 
+void
+XFE_View::removeView(XFE_View *view)
+{
+  XP_Bool found = FALSE;
+  int i, vindex;
+
+  for (vindex = 0; vindex < m_numsubviews; vindex++)
+  {
+       if (m_subviews[vindex] == view)
+		   break;
+  }
+
+  for (i = vindex + 1; i < m_numsubviews; i++)
+       m_subviews[i - 1] = m_subviews[i];
+
+  if (vindex < m_numsubviews)
+      --m_numsubviews;
+}
+
 Boolean
 XFE_View::hasSubViews() 
 {
@@ -150,6 +169,11 @@ Boolean
 XFE_View::isCommandEnabled(CommandType cmd,
 						   void *calldata, XFE_CommandInfo* info)
 {
+  XFE_Command* handler = getCommand(cmd);
+
+  if (handler != NULL)
+      return handler->isEnabled(this, info);
+
   if ( cmd == xfeCmdStopLoading
        && m_contextData )
     {
@@ -177,7 +201,12 @@ XFE_View::isCommandEnabled(CommandType cmd,
 void
 XFE_View::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 {
-  if ( cmd == xfeCmdStopLoading
+  XFE_Command* handler = getCommand(cmd);
+  if (handler != NULL)
+	{
+      handler->doCommand(this, info);
+	}
+  else if ( cmd == xfeCmdStopLoading
        && m_contextData )
     {
       XP_InterruptContext(m_contextData);
@@ -217,6 +246,11 @@ Boolean
 XFE_View::handlesCommand(CommandType cmd,
 						 void *calldata, XFE_CommandInfo* info)
 {
+  XFE_Command* handler = getCommand(cmd);
+
+  if (handler != NULL)
+      return True;
+
   if (cmd == xfeCmdStopLoading)
     {
       return True;

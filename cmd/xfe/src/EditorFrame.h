@@ -118,6 +118,6 @@ protected:
 };
 
 MenuSpec* fe_EditorInstanciateMenu(XFE_Frame* frame, MenuSpec* spec);
-XFE_PopupMenu* fe_EditorNewPopupMenu(XFE_Frame*, Widget);
+XFE_PopupMenu* fe_EditorNewPopupMenu(XFE_Frame*, Widget, MWContext*);
 
 #endif /* _xfe_editorframe_h */

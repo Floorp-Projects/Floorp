@@ -2696,14 +2696,21 @@ EditorPopupCommand::reallyDoCommand(XFE_View* v_view, XFE_CommandInfo* info)
 		unsigned long x;
 		unsigned long y;
 		XFE_PopupMenu* popup;
+		XFE_Frame *frame;
 		
 		fe_EventLOCoords(context, info->event, &x, &y);
 		
 		if (!fe_editor_selection_contains_point(context, x, y))
 			EDT_SelectObject(context, x, y);
 		
-		popup = fe_EditorNewPopupMenu((XFE_Frame*)view->getToplevel(),
-									  info->widget);
+		frame = (XFE_Frame*)view->getToplevel();
+
+#ifdef ENDER
+		if (! EDITOR_CONTEXT_DATA(context)->embedded)
+#endif /* ENDER */
+		context = frame->getContext();
+
+		popup = fe_EditorNewPopupMenu(frame, info->widget, context);
 
 		view->setPopupMenu(popup);
 		popup = view->getPopupMenu();

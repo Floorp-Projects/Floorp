@@ -23,6 +23,11 @@
 
 #include "rosetta.h"
 #include "Frame.h"
+
+#ifdef ENDER
+#include "View.h"
+#endif /* ENDER */
+
 #include "MozillaApp.h"
 #include "ViewGlue.h"
 #include "Dashboard.h"
@@ -899,6 +904,34 @@ xfeDoCommandAction(Widget w, XEvent *event,
 	XFE_CommandInfo info(cmd_type, w, event,
 						 p_params, num_cmd_params);
 
+#ifdef ENDER
+
+	XFE_View *v = f->widgetToView(w);
+
+	if (v && v->handlesCommand(cmd, NULL, &info))
+	{
+		if (v->isCommandEnabled(cmd, NULL, &info))
+		{
+			XFE_Command *handler = v->getCommand(cmd);
+
+			if (handler)
+			{
+				printf("handler->doCommand(0x%.8x): %s\n", handler, cmd);
+				fflush(stdout);
+				handler->doCommand(v, &info);
+			}
+			else
+			{
+				printf("v->doCommand(0x%.8x): %s\n", v, cmd);
+				fflush(stdout);
+				v->doCommand(cmd, NULL, &info);
+			}
+			return;
+		}
+	}
+
+#endif /* ENDER */
+
 	/* if the frame doesn't handle the command, bomb out early */
 	if (!f->handlesCommand(cmd, NULL, &info))
 	  {
@@ -998,7 +1031,7 @@ xfeDoClickAction(Widget widget, XEvent *event, String *av, Cardinal *ac)
 
     time = fe_GetTimeFromEvent(event);
 	
-	int delta = (time - fe_click_action_last);
+	unsigned int delta = (time - fe_click_action_last);
 
     if (delta <	XtGetMultiClickTime(XtDisplay(widget)))
 		n_clicks = 2;

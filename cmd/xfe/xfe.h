@@ -876,6 +876,10 @@ typedef struct fe_EditorContextData {
     Widget toolbar_center;
     Widget toolbar_right;
 
+#ifdef ENDER
+    XP_Bool embedded;
+#endif /* ENDER */
+
 } fe_EditorContextData;
 
 /*

@@ -849,6 +849,8 @@ xfe2_EditorInit(MWContext* context)
 #endif
 
 	if (context->type == MWContextEditor) {
+		Widget w;
+
 		/*
 		 * NOTE:  the MWContextMessageComposition has it's own ev handler...
 		 *
@@ -856,7 +858,14 @@ xfe2_EditorInit(MWContext* context)
 #ifdef DEBUG_rhess
 		fprintf(stderr, "tag1::[ %p ]\n", CONTEXT_WIDGET(context));
 #endif
-		XtAddEventHandler(CONTEXT_WIDGET(context), FocusChangeMask,
+#ifdef ENDER
+		if (EDITOR_CONTEXT_DATA(context)->embedded)
+			w = CONTEXT_DATA(context)->drawing_area;
+		else
+#endif /* ENDER */
+			w = CONTEXT_WIDGET(context);
+
+		XtAddEventHandler(w, FocusChangeMask,
 						  FALSE, (XtEventHandler)fe_change_focus_eh,
 						  context);
 	}
@@ -944,7 +953,10 @@ fe_EditorCleanup(MWContext* context)
 	 *    for a new doc, as that'll mean dialogs, and .....
 	 */
 	if (context->type != MWContextMessageComposition &&
-            !EDT_IS_NEW_DOCUMENT(context) &&
+        !EDT_IS_NEW_DOCUMENT(context) &&
+#ifdef ENDER
+		!EDITOR_CONTEXT_DATA(context)->embedded &&
+#endif /* ENDER */
 		(!EDT_IsBlocked(context) && EDT_DirtyFlag(context))) {
 		fe_EditorPreferencesGetAutoSave(context, &as_enabled, &as_time);
 		if (as_enabled)
@@ -2602,8 +2614,11 @@ fe_EditorGetUrlExitRoutine(MWContext* context, URL_Struct* url, int status)
 			/*
 			 *    Then request a dissapearing act.
 			 */
-			XtAppAddTimeOut(fe_XtAppContext, 0, fe_editor_exit_timeout,
-							(XtPointer)context);
+#ifdef ENDER
+			if (! EDITOR_CONTEXT_DATA(context)->embedded)
+#endif /* ENDER */
+				XtAppAddTimeOut(fe_XtAppContext, 0, fe_editor_exit_timeout,
+								(XtPointer)context);
 		}
     }
 }
@@ -2664,8 +2679,13 @@ FE_EditorDocumentLoaded(MWContext* context)
     /*
      *    Set autosave period.
      */
-    fe_EditorPreferencesGetAutoSave(context, &as_enable, &as_time);
-    EDT_SetAutoSavePeriod(context, as_time);
+#ifdef ENDER
+	if (! EDITOR_CONTEXT_DATA(context)->embedded)
+#endif /* ENDER */
+	{
+    	fe_EditorPreferencesGetAutoSave(context, &as_enable, &as_time);
+    	EDT_SetAutoSavePeriod(context, as_time);
+	}
 	
     fe_HackEditorNotifyToolbarUpdated(context);
 }

@@ -29,6 +29,10 @@
 #include "xpform.h"
 #include "layers.h"
 
+#ifdef ENDER
+#include "edt.h"
+#endif /* ENDER */
+
 #include <plevent.h>		/* for mocha */
 #include <prtypes.h>
 #include <libevent.h>
@@ -130,6 +134,15 @@ typedef struct {
   Widget text_widget; /* form_data.widget is the scrolled window. */
 } FETextAreaFormData;
 
+#ifdef ENDER
+
+typedef struct {
+  FEFormData form_data;
+  MWContext *editor_context;
+} FEHTMLAreaFormData;
+
+#endif /* ENDER */
+
 typedef struct {
   FEFormData form_data;
 
@@ -172,6 +185,19 @@ static void textarea_display(FEFormData *, LO_FormElementStruct *);
 static void textarea_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
 static void textarea_reset(FEFormData *, LO_FormElementStruct *);
 static void textarea_lost_focus(FEFormData *);
+
+#ifdef ENDER
+
+static void htmlarea_create_widget(FEFormData *, LO_FormElementStruct *);
+static void htmlarea_get_size(FEFormData *, LO_FormElementStruct *);
+static void htmlarea_display(FEFormData *, LO_FormElementStruct *);
+static void htmlarea_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
+static void htmlarea_reset(FEFormData *, LO_FormElementStruct *);
+static void htmlarea_text_focus(FEFormData *, LO_FormElementStruct *);
+static void htmlarea_lost_focus(FEFormData *);
+static void htmlarea_element_free(FEFormData *, LO_FormElementStruct *);
+
+#endif /* ENDER */
 
 static void form_element_display(FEFormData *, LO_FormElementStruct *);
 static void form_element_get_size(FEFormData *, LO_FormElementStruct *);
@@ -279,6 +305,24 @@ static FEFormVtable textarea_form_vtable = {
   text_focus,
   textarea_lost_focus
 };
+
+#ifdef ENDER
+
+static FEFormVtable htmlarea_form_vtable = {
+  htmlarea_create_widget,
+  htmlarea_get_size,
+  NULL,
+  htmlarea_display,
+  htmlarea_get_value,
+  htmlarea_element_free,
+  htmlarea_reset,
+  NULL /* text_select */,
+  NULL /* text_change */,
+  htmlarea_text_focus,
+  htmlarea_lost_focus
+};
+
+#endif /* ENDER */
 
 /*
 ** Why are these next two functions in this file?
@@ -2376,6 +2420,173 @@ textarea_lost_focus(FEFormData *fed)
 	  }
 }
 
+#ifdef ENDER
+
+static void
+htmlarea_focus_cb(Widget w, XtPointer closure, XEvent *event, Boolean *cont)
+{
+  *cont = TRUE;
+
+  if (event->type == FocusIn)
+	fe_got_focus_cb(w, closure, (XtPointer)0);
+  else
+	fe_lost_focus_cb(w, closure, (XtPointer)0);
+}
+
+static void
+htmlarea_create_widget(FEFormData *fed, LO_FormElementStruct *form)
+{
+  extern Widget XFE_CreateEmbeddedEditor(Widget, int32, int32, const char *, MWContext *);
+  extern MWContext *XFE_GetEmbeddedEditorContext(Widget, MWContext *);
+
+  FEHTMLAreaFormData	*ha_fed    = (FEHTMLAreaFormData *)fed;
+  LO_FormElementData	*form_data = XP_GetFormElementData(form);
+  MWContext				*context   = ha_fed->form_data.context;
+  Widget				parent     = CONTEXT_DATA(context)->drawing_area;
+  char 					*default_text = (char*)XP_FormGetDefaultText(form_data);
+  LO_TextAttr 			*text_attr = XP_GetFormTextAttr(form);
+  int32 				wid, ht;
+
+
+  /* XXX: For now, we are using the textarea's rows/cols attribute to specify
+   *      the composer widget's dimensions.
+   */
+  XP_FormTextAreaGetDimensions(form_data, &ht, &wid);
+
+  ha_fed->form_data.widget =
+				XFE_CreateEmbeddedEditor(parent, wid, ht, NULL, context);
+
+  ha_fed->editor_context =
+				XFE_GetEmbeddedEditorContext(ha_fed->form_data.widget,
+												context);
+
+  /* Can't register a XmNfocusCallback or XmNlosingFocusCallback on
+   * a DrawingArea so we register an event handler.
+   */
+  XtAddEventHandler(CONTEXT_DATA(ha_fed->editor_context)->drawing_area,
+					FocusChangeMask, FALSE, htmlarea_focus_cb, fed);
+
+  if (default_text)
+  {
+    fe_forms_clean_text(fed->context, text_attr->charset, default_text, False);
+    EDT_SetDefaultText(ha_fed->editor_context, default_text);
+  }
+}
+
+static void
+htmlarea_get_size(FEFormData *fed, LO_FormElementStruct *form)
+{
+#if 1
+  LO_FormElementData *form_data;
+  int32 wid, ht;
+
+  form_data = XP_GetFormElementData(form);
+
+  /* XXX: For now, we are using the textarea's rows/cols attribute to specify
+   *      the composer widget's dimensions.
+   */
+  XP_FormTextAreaGetDimensions(form_data, &ht, &wid);
+
+  form->width  = wid;
+  form->height = ht;
+#else
+  form_element_get_size(fed, form);
+#endif
+}
+
+static void
+htmlarea_display(FEFormData *fed, LO_FormElementStruct *form)
+{
+  form_element_display(fed, form);
+}
+
+static void
+htmlarea_get_value(FEFormData *fed, LO_FormElementStruct *form, XP_Bool delete_p)
+{
+  MWContext *context = fed->context;
+  LO_FormElementData *form_data = XP_GetFormElementData(form);
+  FEHTMLAreaFormData *ha_fed = (FEHTMLAreaFormData*)fed;
+  int32 cols;
+  PA_Block current_text;
+  PA_Block default_text;
+
+  XP_HUGE_CHAR_PTR text = 0;
+
+  XP_FormTextAreaGetDimensions(form_data, NULL, &cols);
+
+  EDT_SaveToBuffer(ha_fed->editor_context, &text);
+
+  if (! text) return;
+
+  current_text = XP_FormGetCurrentText(form_data);
+  default_text = XP_FormGetDefaultText(form_data);
+
+  if (current_text && current_text != default_text)
+    free (current_text);
+
+  XP_FormSetCurrentText(form_data, (char *)text);
+
+  if (delete_p)
+  {
+    extern Widget XFE_DestroyEmbeddedEditor(Widget, MWContext *);
+    XFE_DestroyEmbeddedEditor(ha_fed->form_data.widget, context);
+    ha_fed->form_data.widget = 0;
+  }
+}
+
+static void
+htmlarea_reset(FEFormData *fed, LO_FormElementStruct *form)
+{
+#ifdef NOT_YET_KIN
+  LO_FormElementData *form_data = XP_GetFormElementData(form);
+  FEHTMLAreaFormData *ha_fed = (FEHTMLAreaFormData*)fed;
+  char *default_text = (char*)XP_FormGetDefaultText(form_data);
+  LO_TextAttr *text_attr = XP_GetFormTextAttr(form);
+  int16 charset = text_attr->charset;
+
+  if (default_text)
+  {
+    fe_forms_clean_text(fed->context, charset, default_text, False);
+    EDT_SetDefaultText(ha_fed->editor_context, default_text);
+  }
+#endif /* NOT_YET_KIN */
+}
+
+static void
+htmlarea_text_focus(FEFormData *fed, LO_FormElementStruct *form)
+{
+  text_focus(fed, form);
+}
+
+static void
+htmlarea_lost_focus(FEFormData *fed)
+{
+  //
+  // TODO: Do stuff like in ...
+  //
+  // text_lost_focus(fed);
+  //
+}
+
+static void
+htmlarea_element_free(FEFormData *fed, LO_FormElementStruct *form)
+{
+  extern Widget XFE_DestroyEmbeddedEditor(Widget, MWContext *);
+
+  if (fed->widget)
+  {
+    FEHTMLAreaFormData		*ha_fed    = (FEHTMLAreaFormData *)fed;
+    MWContext				*context   = ha_fed->form_data.context;
+
+    XFE_DestroyEmbeddedEditor(ha_fed->form_data.widget, context);
+    ha_fed->form_data.widget = 0;
+  }
+
+  XP_FREE(fed);
+}
+
+#endif /* ENDER */
+
 static FEFormData *
 alloc_form_data(int32 form_type)
 {
@@ -2417,6 +2628,15 @@ alloc_form_data(int32 form_type)
 	  data = (FEFormData*)XP_NEW_ZAP(FETextAreaFormData);
 	  data->vtbl = textarea_form_vtable;
 	  return data;
+
+#ifdef ENDER
+
+	case FORM_TYPE_HTMLAREA:
+	  data = (FEFormData*)XP_NEW_ZAP(FEHTMLAreaFormData);
+	  data->vtbl = htmlarea_form_vtable;
+	  return data;
+
+#endif /* ENDER */
 
 	case FORM_TYPE_SELECT_MULT:
 	  data = (FEFormData*)XP_NEW_ZAP(FESelectMultFormData);

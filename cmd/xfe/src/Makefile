@@ -190,6 +190,7 @@ CPPSRCS		+= \
 		  EditorView.cpp \
 		  EditRecentMenu.cpp \
 		  EditTableDialog.cpp \
+		  EmbeddedEditorView.cpp \
 		  $(NULL)
 endif
 

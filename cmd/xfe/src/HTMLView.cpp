@@ -1118,7 +1118,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
     }
   else
     {
-      XFE_View::doCommand(cmd);
+      XFE_View::doCommand(cmd, callData, info);
     }
 #undef IS_CMD
 }

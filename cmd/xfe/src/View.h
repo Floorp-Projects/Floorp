@@ -118,7 +118,12 @@ public:
 
 protected:
   MWContext *m_contextData; // the MWContext *
+
+public:
   virtual void addView(XFE_View *new_view);
+  virtual void removeView(XFE_View *view);
+
+protected:
   virtual Boolean hasSubViews();
 
    // list of children

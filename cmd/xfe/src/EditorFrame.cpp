@@ -579,9 +579,8 @@ static MenuSpec fe_editor_show_options_popups[] =
 };
 
 XFE_PopupMenu*
-fe_EditorNewPopupMenu(XFE_Frame* frame, Widget parent)
+fe_EditorNewPopupMenu(XFE_Frame* frame, Widget parent, MWContext *context)
 {
-	MWContext*     context = frame->getContext();
 	XFE_PopupMenu* popup;
     ED_ElementType e_type;
     MenuSpec*      list;
