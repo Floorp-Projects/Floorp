@@ -196,7 +196,7 @@ private:
 
   // Display properties
   nsresult GetBehavior(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
-  nsresult GetFloat(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetCssFloat(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetDisplay(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
@@ -428,7 +428,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
     case eCSSProperty_display :
       rv = GetDisplay(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_float :
-      rv = GetFloat(frame, *getter_AddRefs(val)); break;
+      rv = GetCssFloat(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_width :
       rv = GetWidth(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_height :
@@ -668,7 +668,7 @@ nsComputedDOMStyle::GetBehavior(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetFloat(nsIFrame *aFrame,
+nsComputedDOMStyle::GetCssFloat(nsIFrame *aFrame,
                                       nsIDOMCSSPrimitiveValue*& aValue)
 {
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
@@ -1527,7 +1527,7 @@ nsComputedDOMStyle::GetCounterReset(nsAWritableString& aCounterReset)
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFloat(nsAWritableString& aFloat)
+nsComputedDOMStyle::GetCssFloat(nsAWritableString& aFloat)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
