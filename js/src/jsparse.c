@@ -309,33 +309,6 @@ NewBinary(JSContext *cx, JSTokenType tt,
     return pn;
 }
 
-static JSBool
-WellTerminated(JSContext *cx, JSTokenStream *ts, JSTokenType lastExprType)
-{
-    JSTokenType tt;
-
-    tt = js_PeekTokenSameLine(cx, ts);
-    if (tt == TOK_ERROR)
-        return JS_FALSE;
-    if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
-#if JS_HAS_LEXICAL_CLOSURE
-        if ((tt == TOK_FUNCTION || lastExprType == TOK_FUNCTION) &&
-            cx->version < JSVERSION_1_2) {
-            /*
-             * Checking against version < 1.2 and version >= 1.0
-             * in the above line breaks old javascript, so we keep it
-             * this way for now... XXX warning needed?
-             */
-            return JS_TRUE;
-        }
-#endif
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                    JSMSG_SEMI_BEFORE_STMNT);
-        return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
 #if JS_HAS_GETTER_SETTER
 static JSTokenType
 CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
@@ -1106,8 +1079,6 @@ MatchLabel(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
     label = NULL;
 #endif
     pn->pn_atom = label;
-    if (ON_CURRENT_LINE(ts, pn->pn_pos))
-        return WellTerminated(cx, ts, TOK_ERROR);
     return JS_TRUE;
 }
 
@@ -1202,7 +1173,7 @@ extern const char js_with_statement_str[];
 static JSParseNode *
 Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
-    JSTokenType tt, lastExprType;
+    JSTokenType tt;
     JSParseNode *pn, *pn1, *pn2, *pn3, *pn4;
     JSStmtInfo stmtInfo, *stmt, *stmt2;
     JSAtom *label;
@@ -1246,10 +1217,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             } while (js_MatchToken(cx, ts, TOK_COMMA));
         }
         pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
-            !WellTerminated(cx, ts, TOK_ERROR)) {
-            return NULL;
-        }
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
         break;
 
@@ -1265,23 +1232,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             PN_APPEND(pn, pn2);
         } while (js_MatchToken(cx, ts, TOK_COMMA));
         pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
-            !WellTerminated(cx, ts, TOK_ERROR)) {
-            return NULL;
-        }
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
         break;
 #endif /* JS_HAS_EXPORT_IMPORT */
 
       case TOK_FUNCTION:
-        pn = FunctionStmt(cx, ts, tc);
-        if (!pn)
-            return NULL;
-        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
-            !WellTerminated(cx, ts, TOK_FUNCTION)) {
-            return NULL;
-        }
-        break;
+        return FunctionStmt(cx, ts, tc);
 
       case TOK_IF:
         /* An IF node has three kids: condition, then, and optional else. */
@@ -1693,10 +1649,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (!pn2)
             return NULL;
         pn->pn_pos.end = pn2->pn_pos.end;
-        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
-            !WellTerminated(cx, ts, TOK_ERROR)) {
-            return NULL;
-        }
         pn->pn_op = JSOP_THROW;
         pn->pn_kid = pn2;
         break;
@@ -1825,10 +1777,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn = Variables(cx, ts, tc);
         if (!pn)
             return NULL;
-        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
-            !WellTerminated(cx, ts, TOK_ERROR)) {
-            return NULL;
-        }
+
         /* Tell js_EmitTree to generate a final POP. */
         pn->pn_extra = JS_TRUE;
         break;
@@ -1854,10 +1803,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn2 = Expr(cx, ts, tc);
             if (!pn2)
                 return NULL;
-            if (ON_CURRENT_LINE(ts, pn2->pn_pos) &&
-                !WellTerminated(cx, ts, TOK_ERROR)) {
-                return NULL;
-            }
             tc->flags |= TCF_RETURN_EXPR;
             pn->pn_pos.end = pn2->pn_pos.end;
             pn->pn_kid = pn2;
@@ -1898,21 +1843,18 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
 #if JS_HAS_DEBUGGER_KEYWORD
       case TOK_DEBUGGER:
-        if (!WellTerminated(cx, ts, TOK_ERROR))
-            return NULL;
         pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
         if (!pn)
             return NULL;
         pn->pn_type = TOK_DEBUGGER;
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
-        return pn;
+        break;
 #endif /* JS_HAS_DEBUGGER_KEYWORD */
 
       case TOK_ERROR:
         return NULL;
 
       default:
-        lastExprType = CURRENT_TOKEN(ts).type;
         js_UngetToken(ts);
         pn2 = Expr(cx, ts, tc);
         if (!pn2)
@@ -1949,12 +1891,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return pn2;
         }
 
-        /* Check termination of (possibly multi-line) function expression. */
-        if (ON_CURRENT_LINE(ts, pn2->pn_pos) &&
-            !WellTerminated(cx, ts, lastExprType)) {
-            return NULL;
-        }
-
         pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
@@ -1962,6 +1898,18 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_pos = pn2->pn_pos;
         pn->pn_kid = pn2;
         break;
+    }
+
+    /* Check termination of this primitive statement. */
+    if (ON_CURRENT_LINE(ts, pn->pn_pos)) {
+        tt = js_PeekTokenSameLine(cx, ts);
+        if (tt == TOK_ERROR)
+            return NULL;
+        if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                        JSMSG_SEMI_BEFORE_STMNT);
+            return NULL;
+        }
     }
 
     (void) js_MatchToken(cx, ts, TOK_SEMI);
@@ -2408,9 +2356,8 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSTokenType tt;
     JSOp op;
 #if JS_HAS_IN_OPERATOR
-    uintN inForInitFlag;
+    uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
 
-    inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
     /*
      * Uses of the in operator in ShiftExprs are always unambiguous,
      * so unset the flag that prohibits recognizing it.
