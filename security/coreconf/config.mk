@@ -56,7 +56,7 @@ include $(CORE_DEPTH)/coreconf/command.mk
 #       each OS release.                                              #
 #######################################################################
 
-ifeq (,$(filter-out FreeBSD BSD_OS NetBSD OpenUNIX OS2 QNX,$(OS_TARGET)))
+ifeq (,$(filter-out FreeBSD BSD_OS NetBSD OpenUNIX OS2 QNX Darwin,$(OS_TARGET)))
 include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
 else
 include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
