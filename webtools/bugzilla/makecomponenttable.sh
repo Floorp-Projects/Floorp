@@ -99,7 +99,7 @@ insert into components (value, program, initialowner) values ("Layout", "Mozilla
 insert into components (value, program, initialowner) values ("LibMocha", "Mozilla", "mlm@netscape.com");
 insert into components (value, program, initialowner) values ("MIMELib", "Mozilla", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("NetLib", "Mozilla", "gagan@netscape.com");
-insert into components (value, program, initialowner) values ("NSPR", "Mozilla", "wtc@netscape.com");
+insert into components (value, program, initialowner) values ("NSPR", "Mozilla", "srinivas@netscape.com");
 insert into components (value, program, initialowner) values ("Password Cache", "Mozilla", "montulli@netscape.com");
 insert into components (value, program, initialowner) values ("PICS", "Mozilla", "montulli@netscape.com");
 insert into components (value, program, initialowner) values ("Plugins", "Mozilla", "amusil@netscape.com");
