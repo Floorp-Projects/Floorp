@@ -675,8 +675,8 @@ JS_malloc(JSContext *cx, size_t nbytes)
 {
     void *p;
 
-#ifdef XP_OS2
-    if (nbytes == 0) /*DSR072897 - Windows allows this, OS/2 doesn't*/
+#if defined(XP_OS2) || defined(XP_MAC)
+    if (nbytes == 0) /*DSR072897 - Windows allows this, OS/2 & Mac don't*/
 	nbytes = 1;
 #endif
     p = malloc(nbytes);
