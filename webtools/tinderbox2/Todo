@@ -6,18 +6,18 @@ them.
 I have not coded the Image (fortune) system but I have left coding
 hints as to how it would work.
 
-I did not code a warnings system with all the warning pages.
+I did not code a warnings system with all the warning pages (see
+tinderbox1).
 
 I did not code shownote.cgi to allow people who deploy the notice
 board but do not have popup windows to see the notices.
 
 I have not updated the client build scripts to work with the new system.
 
-I need to make the Persistance module more generic (add loading to
-Persistance instead of 'use' everywhere in the code) so that we can
-replace Data::Dumper with Stoarable easily.  This will lower the CPU
-time of the process at the expense of not being able to read/edit the
-database files.
+I need a Javascript expect to look over the current versions of CVS
+Blame and Tinderbox1 and ensure that I have the best features of these
+javascript programs in tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm.
+Please keep the code neat and nicely indented.
 
 I need to allow the VC system to have a daemon gather the VC
 information and pass it to tinderbox via the same update methods wich
@@ -31,3 +31,13 @@ which was IO bound and one which was CPU bound.
 It would be really nice if could mail tinderbox the updates which
 apply to the branches of interest, then tinderbox would not have to
 pool and it would get the branch information which it needs.
+
+I would like to show the set of bugs which have been closed during
+each time period.  The CVS checkins are often being done to close bugs
+it would be helpful to see what the bug numbers are and to have a
+popup which shows the bug summary, who closed it, and other details.
+It would also be handy to see which bugs have been reopened as these
+indicate a problem with the development process.  There is no need to
+display bugs which have been opened for the first time.  New bugs are
+not related to development activities.
+
