@@ -189,6 +189,7 @@ messenger.jar:
     content/messenger/markByDate.js                                            (base/resources/content/markByDate.js)
     content/messenger/markByDate.xul                                           (base/resources/content/markByDate.xul)
     content/messenger/dateFormat.js                                            (base/resources/content/dateFormat.js)
+    content/messenger/start.xhtml                                              (base/resources/content/start.xhtml)
 
 en-US.jar:
 *   locale/en-US/messenger/contents.rdf                                (base/resources/locale/en-US/contents.rdf)
@@ -224,7 +225,7 @@ en-US.jar:
     locale/en-US/messenger/msgSynchronize.dtd                           (base/resources/locale/en-US/msgSynchronize.dtd)
     locale/en-US/messenger/offline.properties                           (base/resources/locale/en-US/offline.properties)
     locale/en-US/messenger/junkMail.dtd                                 (base/resources/locale/en-US/junkMail.dtd)
-    locale/en-US/messenger/start.html                                   (base/resources/locale/en-US/start.html)  
+    locale/en-US/messenger/start.dtd                                    (base/resources/locale/en-US/start.dtd)
     locale/en-US/messenger/junkMailInfo.dtd                             (base/resources/locale/en-US/junkMailInfo.dtd)
     locale/en-US/messenger/SearchDialog.dtd                             (base/search/resources/locale/en-US/SearchDialog.dtd)
     locale/en-US/messenger/viewLog.dtd                                  (base/search/resources/locale/en-US/viewLog.dtd)

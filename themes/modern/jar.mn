@@ -305,6 +305,7 @@ modern.jar:
   skin/modern/messenger/mailWindow1.css                            (messenger/mailWindow1.css)
   skin/modern/messenger/threadPane.css                             (messenger/threadPane.css)
   skin/modern/messenger/primaryToolbar.css                         (messenger/primaryToolbar.css)
+  skin/modern/messenger/start.css                                  (messenger/start.css)
   skin/modern/messenger/addressbook/abResultsPane.css              (messenger/addressbook/abResultsPane.css)
   skin/modern/messenger/addressbook/addressPanes.css               (messenger/addressbook/addressPanes.css)
   skin/modern/messenger/addressbook/cardDialog.css                 (messenger/addressbook/cardDialog.css)
