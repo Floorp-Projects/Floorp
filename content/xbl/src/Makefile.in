@@ -29,31 +29,30 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 LIBRARY_NAME	= gkconxbl_s
 REQUIRES	= xpcom \
-      string \
-      js \
-      dom \
-      gfx \
-      layout \
-      layout_xul \
-      xultmpl \
-      widget \
-      view \
-      caps \
-      htmlparser \
-      necko \
-      xpconnect \
-      pref \
-      docshell \
-      webshell \
-      chrome \
-      lwbrk \
-      xul \
-      xuldoc \
-      gfx2 \
-      rdf \
-      imglib2 \
-      unicharutil \
-      $(NULL)
+		  string \
+		  js \
+		  dom \
+		  gfx \
+		  layout \
+		  xultmpl \
+		  widget \
+		  view \
+		  caps \
+		  htmlparser \
+		  necko \
+		  xpconnect \
+		  pref \
+		  docshell \
+		  webshell \
+		  chrome \
+		  lwbrk \
+		  xul \
+		  xuldoc \
+		  gfx2 \
+		  rdf \
+		  imglib2 \
+		  unicharutil \
+		  $(NULL)
 
 CPPSRCS		= \
     nsXBLBinding.cpp \

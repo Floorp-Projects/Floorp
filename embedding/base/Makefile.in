@@ -34,11 +34,9 @@ REQUIRES	= xpcom \
 		  widget \
 		  view \
 		  dom \
-		  necko \
 		  uriloader \
 		  gfx \
 		  intl \
-		  chrome \
 		  embedcomponents \
 		  $(NULL)
 

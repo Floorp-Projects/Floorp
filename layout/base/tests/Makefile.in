@@ -25,7 +25,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 REQUIRES	= xpcom \
-		  layout \
 		  gfx \
 		  $(NULL)
 

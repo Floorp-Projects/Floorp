@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  shistory \
 		  timer \
 		  windowwatcher \
-		  mimetype \
 		  webbrowserpersist \
 		  $(NULL)
 

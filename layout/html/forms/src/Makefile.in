@@ -44,8 +44,6 @@ REQUIRES	= xpcom \
 		  editor \
 		  intl \
 		  uconv \
-		  exthandler \
-		  mimetype \
 		  txmgr \
 		  xuldoc \
 		  gfx2 \

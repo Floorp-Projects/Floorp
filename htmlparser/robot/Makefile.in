@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  necko \
 		  docshell \
-		  dom \
 		  uriloader \
 		  $(NULL)
 

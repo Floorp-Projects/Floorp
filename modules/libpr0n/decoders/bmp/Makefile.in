@@ -34,12 +34,11 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsBMPModule
 
 REQUIRES	= xpcom \
-                  necko \
-                  gfx \
-                  gfx2 \
-                  imglib2 \
-                  string \
-                  $(NULL)
+		  gfx \
+		  gfx2 \
+		  imglib2 \
+		  string \
+		  $(NULL)
 
 CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp nsBMPModule.cpp
 

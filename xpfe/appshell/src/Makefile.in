@@ -54,7 +54,6 @@ REQUIRES	= xpcom \
 		  xul \
 		  windowwatcher \
 		  browser \
-		  mozcomps \
 		  caps \
 		  profile \
 		  $(NULL)

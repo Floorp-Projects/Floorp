@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  pref \
 		  uconv \
-		  unicharutil \
 		  $(NULL)
 
 SHARED_LIBRARY_LIBS = ../libnslocale_s.a

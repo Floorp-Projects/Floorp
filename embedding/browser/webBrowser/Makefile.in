@@ -39,8 +39,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  shistory \
 		  webshell \
-		  mimetype \
-		  exthandler \
 		  timer \
 		  windowwatcher \
 		  wallet \

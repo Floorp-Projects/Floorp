@@ -31,11 +31,8 @@ LIBRARY_NAME=inspector_s
 REQUIRES	= xpcom \
 		  string \
 		  dom \
-		  rdf \
-		  rdfutil \
 		  gfx \
 		  layout \
-    layout_xul \
 		  content \
 		  widget \
 		  locale \

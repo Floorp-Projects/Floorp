@@ -34,12 +34,9 @@ REQUIRES	= xpcom \
 		  string \
 		  gfx \
 		  layout \
-    layout_xul \
 		  content \
 		  dom \
 		  widget \
-		  rdf \
-		  rdfutil \
 		  locale \
 		  gfx2 \
 		  timer \
