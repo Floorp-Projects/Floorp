@@ -83,6 +83,21 @@ interface nsIScriptSecurityManager : nsISupports
 	 */
     void CheckLoadURIFromScript(in JSContextPtr cx, in nsIURI uri);
 
+    /** 
+     * Default CheckLoadURI permissions
+     */
+    const unsigned long STANDARD = 0;
+
+    /** 
+     * If the source is mail, disallow the load
+     */
+    const unsigned long DISALLOW_FROM_MAIL = 1 << 0;
+
+    /** 
+     * Allow the loading of chrome URLs by non-chrome URLs
+     */
+    const unsigned long ALLOW_CHROME = 1 << 1;
+
 	/**
 	 * Check that content from "from" can load "uri".
 	 *
@@ -95,7 +110,7 @@ interface nsIScriptSecurityManager : nsISupports
 	 *                         is a URI associated with mail or news
 	 */
     void CheckLoadURI(in nsIURI from, in nsIURI uri, 
-	                  in boolean disallowFromMail);
+	                  in unsigned long flags);
 
   /**
    * Check that the function 'funObj' is allowed to run on 'targetObj'

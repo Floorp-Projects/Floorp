@@ -1757,7 +1757,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                   NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = securityManager->CheckLoadURI(mOriginalURI ? mOriginalURI : mURI, newURI, PR_TRUE);
+    rv = securityManager->CheckLoadURI(mOriginalURI ? mOriginalURI : mURI, newURI, nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
     if (NS_FAILED(rv)) return rv;
   }
 

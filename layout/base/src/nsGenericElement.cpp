@@ -2410,7 +2410,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv)) 
       rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, aBaseURL);
     if (NS_SUCCEEDED(rv)) 
-      proceed = securityManager->CheckLoadURI(aBaseURL, absURI, PR_FALSE);
+      proceed = securityManager->CheckLoadURI(aBaseURL, absURI, nsIScriptSecurityManager::STANDARD);
 
     // Only pass off the click event if the script security manager
     // says it's ok.

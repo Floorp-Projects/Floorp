@@ -189,9 +189,19 @@ pref("capability.policy.default.history.next.read", "UniversalBrowserRead");
 pref("capability.policy.default.history.previous.read", "UniversalBrowserRead");
 pref("capability.policy.default.history.item.read", "UniversalBrowserRead");
 
+pref("capability.policy.default.location.hash.write", "allAccess");
+pref("capability.policy.default.location.host.write", "allAccess");
+pref("capability.policy.default.location.hostname.write", "allAccess");
+pref("capability.policy.default.location.href.write", "allAccess");
+pref("capability.policy.default.location.pathname.write", "allAccess");
+pref("capability.policy.default.location.port.write", "allAccess");
+pref("capability.policy.default.location.protocol.write", "allAccess");
+pref("capability.policy.default.location.search.write", "allAccess");
+
 pref("capability.policy.default.navigator.preference.read", "UniversalPreferencesRead");
 pref("capability.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
 pref("capability.policy.default.windowinternal.location.write", "allAccess");
+pref("capability.policy.default.windowinternal.opendialog", "noAccess");
 
 
 localDefPref("ghist.expires.pos",          4);

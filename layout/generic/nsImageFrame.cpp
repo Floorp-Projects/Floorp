@@ -769,7 +769,7 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
         rv = NS_NewURI(getter_AddRefs(absURI), aURLSpec, baseURI);
       
       if (NS_SUCCEEDED(rv)) 
-        proceed = securityManager->CheckLoadURI(baseURI, absURI, PR_FALSE);
+        proceed = securityManager->CheckLoadURI(baseURI, absURI, nsIScriptSecurityManager::STANDARD);
 
       // Only pass off the click event if the script security manager
       // says it's ok.

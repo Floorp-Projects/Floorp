@@ -1330,7 +1330,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   nsIURI* docURI;
   rv = mDocument->GetBaseURL(docURI);
   if (NS_FAILED(rv) || !docURI) return NS_ERROR_FAILURE;
-  rv = secMan->CheckLoadURI(docURI, aURL, PR_FALSE);
+  rv = secMan->CheckLoadURI(docURI, aURL, nsIScriptSecurityManager::ALLOW_CHROME);
   NS_IF_RELEASE(docURI);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
