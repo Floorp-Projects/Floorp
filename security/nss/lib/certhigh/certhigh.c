@@ -381,7 +381,7 @@ typedef struct stringNode {
     char *string;
 } stringNode;
     
-static SECStatus
+static PRStatus
 CollectNicknames( NSSCertificate *c, void *data)
 {
     CERTCertNicknames *names;
@@ -407,7 +407,7 @@ CollectNicknames( NSSCertificate *c, void *data)
 	  else {
 	    td = NSSCertificate_GetTrustDomain(c);
 	    if (!td) {
-		return SECSuccess;
+		return PR_SUCCESS;
 	    }
 	    trust = nssTrustDomain_FindTrustForCertificate(td,c);
 	
@@ -448,7 +448,7 @@ CollectNicknames( NSSCertificate *c, void *data)
 	/* nickname can only be NULL here if we are having memory 
 	 * alloc problems */
 	if (nickname == NULL) {
-	    return SECFailure;
+	    return PR_FAILURE;
 	}
 	node = (stringNode *)names->head;
 	while ( node != NULL ) {
@@ -466,7 +466,7 @@ CollectNicknames( NSSCertificate *c, void *data)
 	/* allocate the node */
 	node = (stringNode*)PORT_ArenaAlloc(names->arena, sizeof(stringNode));
 	if ( node == NULL ) {
-	    return(SECFailure);
+	    return(PR_FAILURE);
 	}
 
 	/* copy the string */
@@ -474,7 +474,7 @@ CollectNicknames( NSSCertificate *c, void *data)
 	node->string = (char*)PORT_ArenaAlloc(names->arena, len);
 	if ( node->string == NULL ) {
 	    if (nickname) PORT_Free(nickname);
-	    return(SECFailure);
+	    return(PR_FAILURE);
 	}
 	PORT_Memcpy(node->string, nickname, len);
 
@@ -487,7 +487,7 @@ CollectNicknames( NSSCertificate *c, void *data)
     }
     
     if (nickname) PORT_Free(nickname);
-    return(SECSuccess);
+    return(PR_SUCCESS);
 }
 
 CERTCertNicknames *
