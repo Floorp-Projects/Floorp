@@ -218,13 +218,13 @@
 <!ENTITY calendar.events.filter.today.label "Cites d'avui">
 <!ENTITY calendar.events.filter.week.label "Cites d'aquesta setmana">
 <!ENTITY calendar.events.filter.2weeks.label "Cites de les properes 2 setmanes">
-<!ENTITY calendar.events.filter.month.label "Cites del següent mes">
+<!ENTITY calendar.events.filter.month.label "Cites del proper mes">
 <!ENTITY calendar.events.filter.future.label "Totes les cites futures">
 <!ENTITY calendar.events.filter.current.label "Dia seleccionat actualment">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Cites en els propers 7 dies">
+<!ENTITY calendar.events.filter.next14Days.label "Cites en els propers 14 dies">
+<!ENTITY calendar.events.filter.next31Days.label "Cites en els propers 31 dies">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Cites en aquest mes del calendari">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Fet">
 <!ENTITY calendar.unifinder.tree.priority.label      "Prioritat">
@@ -242,10 +242,10 @@
 <!ENTITY calendar.gototoday.button.tooltip        "Vés a avui" >
 <!ENTITY calendar.choosedate.button.tooltip       "Trieu una data per anar-hi" >
 
-<!ENTITY calendar.dayview.button.tooltip          "Commuta a vista diària" >
-<!ENTITY calendar.weekview.button.tooltip         "Commuta a vista setmanal" >
-<!ENTITY calendar.monthview.button.tooltip        "Commuta a vista mensual" >
-<!ENTITY calendar.multiweekview.button.tooltip        "Commuta a vista multisetmana" >
+<!ENTITY calendar.dayview.button.tooltip          "Canvia a vista diària" >
+<!ENTITY calendar.weekview.button.tooltip         "Canvia a vista setmanal" >
+<!ENTITY calendar.monthview.button.tooltip        "Canvia a vista mensual" >
+<!ENTITY calendar.multiweekview.button.tooltip        "Canvia a vista multisetmana" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Següent dia" >
 <!ENTITY calendar.prevday.button.tooltip        "Dia anterior" >
@@ -281,10 +281,10 @@
 <!ENTITY calendar.subscribe.button.label           "Subscriu" >
 <!ENTITY calendar.publish.button.label             "Publica" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Actualització local" >
+<!ENTITY calendar.localreload.button.tooltip  "Actualitza tots els calendaris locals" >
+<!ENTITY calendar.remotereload.button.label   "Actualització" >
+<!ENTITY calendar.remotereload.button.tooltip   "Actualitza tots els calendaris remots" >
 
 <!ENTITY calendar.dayview.button.label          "Vista diària" >
 <!ENTITY calendar.weekview.button.label         "Vista setmanal" >
@@ -361,13 +361,13 @@
 <!ENTITY calendar.context.selectall.accesskey         "a">
 <!ENTITY calendar.context.gototoday.label             "Vés a avui">
 <!ENTITY calendar.context.gototoday.accesskey         "u">
-<!ENTITY calendar.context.dayview.label               "Commuta a vista diària">
+<!ENTITY calendar.context.dayview.label               "Canvia a vista diària">
 <!ENTITY calendar.context.dayview.accesskey           "d">
-<!ENTITY calendar.context.weekview.label              "Commuta a vista setmanal">
+<!ENTITY calendar.context.weekview.label              "Canvia a vista setmanal">
 <!ENTITY calendar.context.weekview.accesskey          "s">
-<!ENTITY calendar.context.monthview.label             "Commuta a vista mensual">
+<!ENTITY calendar.context.monthview.label             "Canvia a vista mensual">
 <!ENTITY calendar.context.monthview.accesskey         "m">
-<!ENTITY calendar.context.multiweekview.label        "Commuta a vista multisetmana">
+<!ENTITY calendar.context.multiweekview.label        "Canvia a vista multisetmana">
 <!ENTITY calendar.context.multiweekview.accesskey    "i">
 <!ENTITY calendar.context.reload.label                "Actualitza">
 <!ENTITY calendar.context.reload.accesskey            "l">
@@ -417,9 +417,9 @@
 
 
 <!-- Calendar Alarm Dialog -->
-<!ENTITY calendar.alarm.acknowledge.label           "Reconeix" >
+<!ENTITY calendar.alarm.acknowledge.label           "Accepta" >
 <!ENTITY calendar.alarm.editevent.label             "Edita la cita" >
-<!ENTITY calendar.alarm.acknowledgeall.label        "Reconeix totes les alarmes" >
+<!ENTITY calendar.alarm.acknowledgeall.label        "Accepta totes les alarmes" >
 <!ENTITY calendar.alarm.snooze.label                "Silencia" >
 
 

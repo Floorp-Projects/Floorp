@@ -53,7 +53,7 @@
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label               "Open Calendar File…">
+<!ENTITY calendar.open.file.label               "Obre un fitxer de calendari…">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
@@ -89,12 +89,12 @@
 <!ENTITY calendar.wizard.accesskey              "u">
 
 <!ENTITY calendar.export.label                  "Exporta les cites seleccionades...">
-<!ENTITY calendar.export.accesskey              "E">
+<!ENTITY calendar.export.accesskey              "x">
 
 <!ENTITY calendar.subscribe.label               "Subscriu-te a un calendari remot...">
 <!ENTITY calendar.subscribe.accesskey           "r">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "Actualitza els calendaris remots">
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 
@@ -180,8 +180,8 @@
 <!ENTITY aboutCmd.accesskey                     "Q">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY windowMenu.label                       "Finestra">
+<!ENTITY minimizeWindow.label                   "Minimitza">
 <!ENTITY zoomWindow.label                       "Zoom">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Porta-ho tot a davant">
