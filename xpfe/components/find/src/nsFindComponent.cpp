@@ -716,5 +716,3 @@ static nsModuleComponentInfo components[] = {
 };
 
 NS_IMPL_NSGETMODULE("nsFindComponent", components)
-
-NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_CONTRACTID, 0 )
