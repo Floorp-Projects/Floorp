@@ -129,8 +129,8 @@ public:
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto);
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
-  NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
-  NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult);
+  NS_IMETHOD SetContainer(nsISupports* aContainer);
+  NS_IMETHOD GetContainer(nsISupports** aContainerResult);
   NS_IMETHOD Stop(void);
   NS_IMETHOD GetBounds(nsRect& aResult);
   NS_IMETHOD SetBounds(const nsRect& aBounds);
@@ -257,20 +257,21 @@ PluginViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
 }
 
 NS_IMETHODIMP
-PluginViewerImpl::SetContainer(nsIContentViewerContainer* aContainer)
+PluginViewerImpl::SetContainer(nsISupports* aContainer)
 {
   mContainer = aContainer;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PluginViewerImpl::GetContainer(nsIContentViewerContainer*& aResult)
+PluginViewerImpl::GetContainer(nsISupports** aResult)
 {
-   if(mContainer)
-      return mContainer->QueryInterface( nsIContentViewerContainer::GetIID(), (void**)&aResult );
-   else
-      aResult = nsnull;
-  return NS_OK;
+   NS_ENSURE_ARG_POINTER(aResult);
+
+   *aResult = mContainer;
+   NS_IF_ADDREF(*aResult);
+
+   return NS_OK;
 }
 
 
@@ -687,27 +688,24 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
 
   if (nsnull != mViewer)
   {
-    nsIContentViewerContainer *cont;
+    nsCOMPtr<nsISupports> cont;
 
-    rv = mViewer->GetContainer(cont);
+    rv = mViewer->GetContainer(getter_AddRefs(cont));
 
     if (NS_OK == rv)
     {
-      nsILinkHandler  *lh;
+      nsCOMPtr<nsILinkHandler> lh(do_QueryInterface(cont));
 
-      rv = cont->QueryInterface(kILinkHandlerIID, (void **)&lh);
-
-      if (NS_OK == rv)
+      if (lh)
       {
-        nsIURI  *uri;
-        rv = mViewer->GetURI(&uri);
+        nsCOMPtr<nsIURI> uri;
+        rv = mViewer->GetURI(getter_AddRefs(uri));
 
         if (NS_OK == rv)
         {
           // Create an absolute URL
           char* absURIStr;
           rv = NS_MakeAbsoluteURI(aURL, uri, &absURIStr);
-          NS_RELEASE(uri);
           nsAutoString fullurl(absURIStr);
           nsCRT::free(absURIStr);
 
@@ -716,11 +714,7 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
             rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
           }
         }
-
-        NS_RELEASE(lh);
       }
-
-      NS_RELEASE(cont);
     }
   }
   else
@@ -735,50 +729,39 @@ NS_IMETHODIMP pluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
 
   if (nsnull != mViewer)
   {
-    nsIContentViewerContainer *cont;
+    nsCOMPtr<nsISupports> cont;
 
-    rv = mViewer->GetContainer(cont);
+    rv = mViewer->GetContainer(getter_AddRefs(cont));
 
     if ((NS_OK == rv) && (nsnull != cont))
     {
-      nsIWebShell *ws;
-
-      rv = cont->QueryInterface(kIWebShellIID, (void **)&ws);
+      nsCOMPtr<nsIWebShell> ws(do_QueryInterface(cont));
 
       if (NS_OK == rv)
       {
-        nsIWebShell *rootWebShell;
+        nsCOMPtr<nsIWebShell> rootWebShell;
 
-        ws->GetRootWebShell(rootWebShell);
+        ws->GetRootWebShell(*getter_AddRefs(rootWebShell));
 
         if (nsnull != rootWebShell)
         {
-          nsIWebShellContainer *rootContainer;
+          nsCOMPtr<nsIWebShellContainer> rootContainer;
 
-          rv = rootWebShell->GetContainer(rootContainer);
+          rv = rootWebShell->GetContainer(*getter_AddRefs(rootContainer));
 
           if (nsnull != rootContainer)
           {
-            nsIBrowserWindow *browserWindow;
+            nsCOMPtr<nsIBrowserWindow> browserWindow(do_QueryInterface(rootContainer));
 
-            if (NS_OK == rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow))
+            if (browserWindow)
             {
               nsAutoString  msg = nsAutoString(aStatusMsg);
 
               rv = browserWindow->SetStatus(msg.GetUnicode());
-              NS_RELEASE(browserWindow);
             }
-
-            NS_RELEASE(rootContainer);
           }
-
-          NS_RELEASE(rootWebShell);
         }
-
-        NS_RELEASE(ws);
       }
-
-      NS_RELEASE(cont);
     }
   }
 
