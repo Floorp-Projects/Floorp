@@ -47,6 +47,11 @@
 #include <ctype.h>
 #include <string.h>
 
+/*
+** Ugh, MSVC6's qsort is too slow...
+*/
+#include "nsQuickSort.h"
+
 #if defined(HAVE_BOUTELL_GD)
 /*
 ** See http://www.boutell.com/gd for the GD graphics library.
@@ -590,9 +595,9 @@ PRBool printNodeProcessor(void* clientData, STCategoryNode* node)
 {
     STCategoryNode* root = (STCategoryNode*) clientData;
     if (node->nchildren)
-        fprintf(stderr, "%-20s [%d children]\n", node->categoryName, node->nchildren);
+        fprintf(stderr, "%-25s [%d children]\n", node->categoryName, node->nchildren);
     else
-        fprintf(stderr, "%-20s [ %7d allocations, %7d size, %4.1f%% ]\n", node->categoryName,
+        fprintf(stderr, "%-25s [ %7d allocations, %7d size, %4.1f%% ]\n", node->categoryName,
                 node->run ? node->run->mStats.mCompositeCount:0,
                 node->run ? node->run->mStats.mSize:0,
                 node->run ? ((double)node->run->mStats.mSize / root->run->mStats.mSize * 100):0
@@ -601,6 +606,54 @@ PRBool printNodeProcessor(void* clientData, STCategoryNode* node)
 }
 
 #endif
+
+/*
+** compareNode
+**
+** qsort callback.
+** Compare the nodes as specified by the options.
+*/
+int compareNode(const void* aNode1, const void* aNode2, void* aContext)
+{
+    int retval = 0;
+    STCategoryNode* node1, * node2;
+    PRUint32 a, b;
+
+    if (!aNode1 || !aNode2)
+        return 0;
+
+    node1 = *((STCategoryNode **) aNode1);
+    node2 = *((STCategoryNode **) aNode2);
+
+    if (node1 && node2)
+    {
+        if (globals.mOptions.mOrderBy == ST_COUNT)
+        {
+            a = (node1->run) ? node1->run->mStats.mCompositeCount : 0;
+            b = (node2->run) ? node2->run->mStats.mCompositeCount : 0;
+        }
+        else
+        {
+            /* Default is by size */
+            a = (node1->run) ? node1->run->mStats.mSize : 0;
+            b = (node2->run) ? node2->run->mStats.mSize : 0;
+        }
+        if (a < b)
+            retval = __LINE__;
+        else
+            retval = - __LINE__;
+    }
+    return retval;
+}
+
+PRBool sortNodeProcessor(void* clientData, STCategoryNode* node)
+{
+    if (node->nchildren)
+        NS_QuickSort(node->children, node->nchildren, sizeof(STCategoryNode *), compareNode, NULL);
+
+    return PR_TRUE;
+}
+
 
 /*
 ** walkTree
@@ -748,12 +801,20 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     g->mCategoryRoot.categoryName = ST_ROOT_CATEGORY_NAME;
 
 #if defined(DEBUG_dp)
-    walkTree(&g->mCategoryRoot, printNodeProcessor, &g->mCategoryRoot, 0);
     fprintf(stderr, "DEBUG: categorizing ends: %dms [%d rules, %d allocations]\n",
             PR_IntervalToMilliseconds(PR_IntervalNow() - start), g->mNRules, aRun->mAllocationCount);
     fprintf(stderr, "DEBUG: match : %dms [%d calls, %d rule-compares]\n",
             PR_IntervalToMilliseconds(_gMatchTime),
             _gMatchCount, _gMatchRules);
+#endif
+
+    /*
+    ** sort the tree based on our sort criterion
+    */
+    walkTree(&g->mCategoryRoot, sortNodeProcessor, NULL, 0);
+
+#if defined(DEBUG_dp)
+    walkTree(&g->mCategoryRoot, printNodeProcessor, &g->mCategoryRoot, 0);
 #endif
 
     return 0;
