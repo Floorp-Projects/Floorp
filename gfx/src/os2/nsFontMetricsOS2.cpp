@@ -699,7 +699,13 @@ nsFontMetricsOS2::LoadFont( HPS aPS, const char* fontname )
   while( i < gGlobalFonts->Count() )
   {
     nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(i);
-    if( PL_strcasecmp( font->metrics.szFamilyname, fontname ) == 0 )
+    char* metricsfontname = NULL;
+    if( font->metrics.fsType & FM_TYPE_DBCS )
+      metricsfontname = (char*)&(font->metrics.szFacename);
+    else
+      metricsfontname = (char*)&(font->metrics.szFamilyname);
+    
+    if( PL_strcasecmp( metricsfontname, fontname ) == 0 )
     {
       fh = new nsFontOS2();
       FATTRS* fattrs = &(fh->fattrs);
@@ -1774,9 +1780,9 @@ CompareFontFamilyNames(const void* aArg1, const void* aArg2, void* aClosure)
   PRInt32 weight1 = 0, weight2 = 0;
 
    // put vertical fonts last
-  if( fm1->szFamilyname[0] == '@' )
+  if( fm1->szFacename[0] == '@' )
     weight1 |= 0x100;
-  if( fm2->szFamilyname[0] == '@' )
+  if( fm2->szFacename[0] == '@' )
     weight2 |= 0x100;
 
   if( weight1 == weight2 )
