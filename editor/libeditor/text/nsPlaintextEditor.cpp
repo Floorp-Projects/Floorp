@@ -1452,7 +1452,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAReadableString& aFormatType,
 
   nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
   formatType.AppendWithConversion(aFormatType);
-  nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType, &rv));
+  nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc;

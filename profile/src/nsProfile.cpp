@@ -1306,10 +1306,10 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   }
   saltStr.Append(kSaltExtensionCString);
 #ifdef DEBUG_profile_verbose
-  printf("directory name: %s\n",(const char *)saltStr);
+  printf("directory name: %s\n",saltStr.get());
 #endif
 
-  rv = aDir->Append((const char *)saltStr);
+  rv = aDir->Append(saltStr.get());
   NS_ENSURE_SUCCESS(rv,rv);
 
   exists = PR_FALSE;
@@ -1428,13 +1428,10 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
     {
       printf("ProfileManager : CreateNewProfileWithLocales\n");
 
-      nsCAutoString temp1; temp1.AssignWithConversion(profileName);
-      printf("Profile Name: %s\n", NS_STATIC_CAST(const char*, temp1));
+      printf("Profile Name: %s\n", NS_LossyConvertUCS2toASCII(profileName).get());
 
-      if (nativeProfileDir) {
-      nsCAutoString temp2; temp2.AssignWithConversion(nativeProfileDir);
-      printf("Profile Dir: %s\n", NS_STATIC_CAST(const char*, temp2));
-    }
+      if (nativeProfileDir)
+        printf("Profile Dir: %s\n", NS_LossyConvertUCS2toASCII(nativeProfileDir).get());
     }
 #endif
 
@@ -1639,10 +1636,10 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
       printf("ProfileManager : Renaming profile\n");
 
       nsCAutoString temp1; temp1.AssignWithConversion(oldName);
-      printf("Old name:  %s\n", NS_STATIC_CAST(const char*, temp1));
+      printf("Old name:  %s\n", NS_LossyConvertUCS2toASCII(oldName).get());
 
       nsCAutoString temp2; temp2.AssignWithConversion(newName);
-      printf("New name:  %s\n", NS_STATIC_CAST(const char*, temp2));
+      printf("New name:  %s\n", NS_LossyConvertUCS2toASCII(newName).get());
     }
 #endif
 
@@ -1824,8 +1821,7 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
     {
       printf("ProfileManager : StartApprunner\n");
 
-      nsCAutoString temp; temp.AssignWithConversion(profileName);
-      printf("profileName passed in: %s\n", NS_STATIC_CAST(const char*, temp));
+      printf("profileName passed in: %s\n", NS_LossyConvertUCS2toASCII(profileName).get());
     }
 #endif
 
@@ -2227,7 +2223,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
 
         // Find a unique name in the dest dir
         nsCAutoString suggestedName; suggestedName.AssignWithConversion(newProfile);
-        rv = destDir->CreateUnique(suggestedName, nsIFile::DIRECTORY_TYPE, 0775);
+        rv = destDir->CreateUnique(suggestedName.get(), nsIFile::DIRECTORY_TYPE, 0775);
         if (NS_FAILED(rv)) return rv;
         
         rv = RecursiveCopy(currProfileDir, destDir);

@@ -1017,7 +1017,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     EEditorType editorType  = eHTMLTextEditorType;
     
     // if the MIME type of the docment we are editing is text/plain, make a text editor
-    if (IsSupportedTextType(mContentMIMEType))
+    if (IsSupportedTextType(mContentMIMEType.get()))
     {
       editorFlags = nsIPlaintextEditor::eEditorPlaintextMask;
       editorType  = ePlainTextEditorType;
@@ -1842,7 +1842,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
   if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
   nsCAutoString mimeTypeCStr; mimeTypeCStr.AssignWithConversion(aMimeType);
-  PRBool saveAsText = IsSupportedTextType(mimeTypeCStr);
+  PRBool saveAsText = IsSupportedTextType(mimeTypeCStr.get());
 
   // Currently, we only understand plain text and html
   if (!mimeTypeCStr.Equals("text/html") && !saveAsText)
@@ -2018,7 +2018,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
               nsCAutoString fileExt(saveAsText ? "txt" : "html");
               GetExtensionForMIMEType(mimeTypeCStr.get(), fileExt);
               fileName.Append(PRUnichar('.'));
-              fileName.AppendWithConversion(fileExt);
+              fileName.AppendWithConversion(fileExt.get());
             } 
             else  // have a file spec
             {
@@ -2042,7 +2042,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
 
                   // Truncate after "." and append "txt" extension
                   fileName.SetLength(index+1);
-                  fileName.AppendWithConversion(fileExt);
+                  fileName.AppendWithConversion(fileExt.get());
                 }
               }
 
@@ -5161,7 +5161,7 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
     }
   }    
     
-  if ( !mContentMIMEType.Equals("text/html") && !IsSupportedTextType(mContentMIMEType) )
+  if ( !mContentMIMEType.Equals("text/html") && !IsSupportedTextType(mContentMIMEType.get()) )
   {
       mCloseWindowWhenLoaded = PR_TRUE;
       mCantEditReason = eCantEditMimeType;
