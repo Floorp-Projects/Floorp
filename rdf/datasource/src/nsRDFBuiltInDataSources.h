@@ -52,12 +52,6 @@ nsresult NS_NewRDFFTPDataSource(nsIRDFDataSource** result);
 // in nsRelatedLinksDataSource.cpp
 nsresult NS_NewRDFRelatedLinksDataSource(nsIRDFDataSource **result);
 
-// in nsMemoryDataSource.cpp
-nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
-
-// in nsStreamDataSource.cpp
-nsresult NS_NewRDFStreamDataSource(nsIRDFDataSource** result);
-
 #endif // nsBuiltinDataSources_h__
 
 
