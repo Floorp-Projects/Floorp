@@ -1125,9 +1125,7 @@ NS_IMETHODIMP nsMsgFolder::DeleteSubFolders(nsISupportsArray *folders,
 NS_IMETHODIMP nsMsgFolder::CreateStorageIfMissing(nsIUrlListener* /* urlListener */)
 {
   NS_ASSERTION(PR_FALSE, "needs to be overridden");
-  nsresult status = NS_OK;
-
-  return status;
+  return NS_OK;
 }
 
 
@@ -1491,9 +1489,7 @@ void nsMsgFolder::ChangeNumPendingTotalMessages(PRInt32 delta)
       folderInfo->SetImapTotalPendingMessages(mNumPendingTotalMessages);
     NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, newTotalMessages);
   }
-
 }
-
 
 NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
 {
@@ -1501,9 +1497,9 @@ NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
   // discovery. GetResource() may return a node which is not in the folder
   // tree hierarchy but in the rdf cache in case of the non-existing default
   // Sent, Drafts, and Templates folders. The resouce will be eventually
-  // released when rdf service shutting downs. When we create the defaul
-  // folders later on on the imap server, the subsequent GetResouce() of the
-  // same uri will get us the cached rdf resouce which should have the folder
+  // released when the rdf service shuts down. When we create the default
+  // folders later on in the imap server, the subsequent GetResouce() of the
+  // same uri will get us the cached rdf resource which should have the folder
   // flag set appropriately.
   nsresult rv;
   nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
