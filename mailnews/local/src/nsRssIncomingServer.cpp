@@ -118,6 +118,7 @@ NS_IMETHODIMP nsRssIncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
     if (rssFolder)
     {
       urlListener = do_QueryInterface(rssFolder);
+      // WARNING: Never call GetNewMail with the root folder or you will trigger an infinite loop...
       GetNewMail(aMsgWindow, urlListener, rssFolder, nsnull);
     }
     more = folderEnumerator->Next();
@@ -129,6 +130,13 @@ NS_IMETHODIMP nsRssIncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP nsRssIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *aFolder, nsIURI **_retval)
 {
   NS_ENSURE_ARG_POINTER(aFolder);
+
+  // before we even try to get New Mail, check to see if the passed in folder was the root folder.
+  // If it was, then call PerformBiff which will properly walk through each RSS folder, asking it to check for new Mail.
+  nsCOMPtr<nsIMsgFolder> rootRSSFolder;
+  GetRootMsgFolder(getter_AddRefs(rootRSSFolder));
+  if (rootRSSFolder == aFolder) // pointing to the same folder?
+    return PerformBiff(aMsgWindow);
   
   PRBool valid = PR_FALSE;
   nsCOMPtr <nsIMsgDatabase> db;
