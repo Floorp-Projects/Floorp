@@ -567,34 +567,67 @@ sub GenerateSQL {
              $f = "$table.$field";
          },
          "^attachstatusdefs.name," => sub {
+             # The below has Fun with the names for attachment statuses. This
+             # isn't needed for changed* queries, so exclude those - the
+             # generic stuff will cope
+             return if ($t =~ m/^changed/);
+
+             # Searching for "status != 'bar'" wants us to look for an
+             # attachment without the 'bar' status, not for an attachment with
+             # a status not equal to 'bar' (Which would pick up an attachment
+             # with more than one status). We do this by LEFT JOINS, after
+             # grabbing the matching attachment status ids.
+             # Note that this still won't find bugs with no attachments, since
+             # that isn't really what people would expect.
+
+             # First, get the attachment status ids, using the other funcs
+             # to match the WHERE term.
+             # Note that we need to reverse the negated bits for this to work
+             # This somewhat abuses the definitions of the various terms -
+             # eg, does 'contains all' mean that the status has to contain all
+             # those words, or that all those words must be exact matches to
+             # statuses, which must all be on a single attachment, or should
+             # the match on the status descriptions be a contains match, too?
+
+             my $inverted = 0;
+             if ($t =~ m/not(.*)/) {
+                 $t = $1;
+                 $inverted = 1;
+             }
+
+             $ref = $funcsbykey{",$t"};
+             &$ref;
+             SendSQL("SELECT id FROM attachstatusdefs WHERE $term");
+
+             my @as_ids;
+             while (MoreSQLData()) {
+                 push @as_ids, FetchOneColumn();
+             }
+
              # When searching for multiple statuses within a single boolean chart,
              # we want to match each status record separately.  In other words,
              # "status = 'foo' AND status = 'bar'" should match attachments with
              # one status record equal to "foo" and another one equal to "bar",
              # not attachments where the same status record equals both "foo" and
              # "bar" (which is nonsensical).  In order to do this we must add an
-             # additional counter to the end of the "attachstatuses" and 
-             # "attachstatusdefs" table references.
+             # additional counter to the end of the "attachstatuses" table
+             # reference.
              ++$statusid;
 
              my $attachtable = "attachments_$chartid";
              my $statustable = "attachstatuses_${chartid}_$statusid";
-             my $statusdefstable = "attachstatusdefs_${chartid}_$statusid";
+             
              push(@supptables, "attachments $attachtable");
-             push(@supptables, "attachstatuses $statustable");
-             push(@supptables, "attachstatusdefs $statusdefstable");
+             my $join = "LEFT JOIN attachstatuses $statustable ON ".
+               "($attachtable.attach_id = $statustable.attach_id AND " .
+                "$statustable.statusid IN (" . join(",", @as_ids) . "))";
+             push(@supptables, $join);
              push(@wherepart, "bugs.bug_id = $attachtable.bug_id");
-             push(@wherepart, "$attachtable.attach_id = $statustable.attach_id");
-             push(@wherepart, "$statustable.statusid = $statusdefstable.id");
-
-             # When the operator is changedbefore, changedafter, changedto, 
-             # or changedby, $f appears in the query as "fielddefs.name = '$f'",
-             # so it must be the exact name of the table/field as they appear
-             # in the fielddefs table (i.e. attachstatusdefs.name).  For all 
-             # other operators, $f appears in the query as "$f = value", so it
-             # should be the name of the table/field with the correct table
-             # alias for this chart entry (f.e. attachstatusdefs_0.name).
-             $f = ($t =~ /^changed/) ? "attachstatusdefs.name" : "$statusdefstable.name";
+             if ($inverted) {
+                 $term = "$statustable.statusid IS NULL";
+             } else {
+                 $term = "$statustable.statusid IS NOT NULL";
+             }
          },
          "^changedin," => sub {
              $f = "(to_days(now()) - to_days(bugs.delta_ts))";
