@@ -89,6 +89,40 @@ typedef struct {
     PRBool reverse;             /* If true, then return biggest results
                                    first.  Otherwise, the smallest
                                    stuff comes first. */
+    PRInt16 keyorder[3];        /* Specify which keys to sort in.  If you use
+                                   this, then each of the three entries must
+                                   be a unique number between 0 and 2.  For
+                                   example, if:
+                                   	keyorder[0] == 1
+                                        keyorder[1] == 2
+                                        keyorder[2] == 0
+                                   then results will be returned sorted
+                                   primarily by the middle value of each
+                                   triple, with a secondary sort by the
+                                   third value and a tertiary sort by
+                                   the first value.
+
+                                   You are not guaranteed to get things in
+                                   this order; it is only a request.  In
+                                   particular, in the current implementation,
+                                   if keyorder[2] == 1, your request will
+                                   be ignored.
+
+                                   If the values of keyorder[] are not
+                                   legitimately specified, then a default
+                                   order will be selected (the system will
+                                   pick the order it can do most
+                                   efficiently.)
+
+                                   Practically speaking, the only reason to
+                                   ever set the keyorder is if your request
+                                   only gives values for one of the ranges,
+                                   and you want to specify which order the
+                                   other fields should be sorted in.  And
+                                   keyorder[0] had better specify which
+                                   entry is the non-NULL one, or things will
+                                   be very slow.
+                                */
 } TDBSortSpecification;
 
 
