@@ -38,6 +38,7 @@ OBJS =                              \
     .\$(OBJDIR)\ns4xPluginInstance.obj  \
     .\$(OBJDIR)\ns4xPluginStream.obj  \
     .\$(OBJDIR)\nsPluginInstancePeer.obj  \
+    .\$(OBJDIR)\nsPluginStreamPeer.obj  \
     $(NULL)
 
 LINCS= \

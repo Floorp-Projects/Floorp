@@ -23,6 +23,7 @@
 #include "ns4xPlugin.h"
 #include "nsMalloc.h"     //this is evil...
 #include "nsPluginInstancePeer.h"
+#include "nsPluginStreamPeer.h"
 
 #ifdef XP_PC
 #include "windows.h"
@@ -108,7 +109,9 @@ nsPluginTag :: ~nsPluginTag()
 
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+static NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
 static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID);
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsPluginHostImpl :: nsPluginHostImpl()
@@ -154,6 +157,13 @@ nsresult nsPluginHostImpl :: QueryInterface(const nsIID& aIID,
   if (aIID.Equals(kIPluginHostIID))
   {
     *aInstancePtrResult = (void *)((nsIPluginHost *)this);
+    AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIFactoryIID))
+  {
+    *aInstancePtrResult = (void *)((nsIFactory *)this);
     AddRef();
     return NS_OK;
   }
@@ -630,3 +640,34 @@ printf("unable to find plugin to handle %s\n", aMimeType);
     return NS_ERROR_FAILURE;
   }
 }
+
+nsresult nsPluginHostImpl :: CreateInstance(nsISupports *aOuter,  
+                                            const nsIID &aIID,  
+                                            void **aResult)  
+{  
+  if (aResult == NULL)
+    return NS_ERROR_NULL_POINTER;  
+
+  nsISupports *inst = nsnull;
+
+  if (aIID.Equals(kIPluginStreamPeerIID))
+    inst = (nsISupports *)(nsIPluginStreamPeer *)new nsPluginStreamPeer();
+  
+  if (inst == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;  
+
+  nsresult res = inst->QueryInterface(aIID, aResult);
+
+  if (res != NS_OK) {  
+    // We didn't get the right interface, so clean up  
+    delete inst;  
+  }  
+
+  return res;  
+}  
+
+nsresult nsPluginHostImpl :: LockFactory(PRBool aLock)  
+{  
+  // Not implemented in simplest case.  
+  return NS_OK;
+}  

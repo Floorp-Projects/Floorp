@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,29 +16,39 @@
  * Reserved.
  */
 
-#ifndef nsIPluginHost_h___
-#define nsIPluginHost_h___
+#ifndef nsPluginStreamPeer_h___
+#define nsPluginStreamPeer_h___
 
-#include "xp_core.h"
-#include "nsplugindefs.h"
-#include "nsIFactory.h"
+#include "nsIPluginStreamPeer.h"
 
-#define NS_IPLUGINHOST_IID \
-{ 0x264c0640, 0x1c31, 0x11d2, \
-{ 0xa8, 0x2e, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
-
-struct nsIPluginHost : public nsIFactory
+class nsPluginStreamPeer : public nsIPluginStreamPeer
 {
 public:
+  nsPluginStreamPeer();
+  ~nsPluginStreamPeer();
+
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD
-  Init(void) = 0;
+  GetURL(const char* *result);
 
   NS_IMETHOD
-  LoadPlugins(void) = 0;
+  GetEnd(PRUint32 *result);
 
   NS_IMETHOD
-  InstantiatePlugin(char *aMimeType, nsIPluginInstance ** aPluginInst) = 0;
+  GetLastModified(PRUint32 *result);
+
+  NS_IMETHOD
+  GetNotifyData(void* *result);
+
+  NS_IMETHOD
+  GetReason(nsPluginReason *result);
+
+  NS_IMETHOD
+  GetMIMEType(nsMIMEType *result);
+
+  NS_IMETHOD
+  Initialize(void);
 };
 
 #endif

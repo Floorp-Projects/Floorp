@@ -109,6 +109,14 @@ public:
   NS_IMETHOD
   InstantiatePlugin(char *aMimeType, nsIPluginInstance ** aPluginInst);
 
+  //nsIFactory interface
+
+  NS_IMETHOD CreateInstance(nsISupports *aOuter,
+                            REFNSIID aIID,
+                            void **aResult);
+
+  NS_IMETHOD LockFactory(PRBool aLock);
+
 private:
   char        *mPluginPath;
   nsPluginTag *mPlugins;
