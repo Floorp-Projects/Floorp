@@ -114,6 +114,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         break;
     case eColor_highlight: // CSS2 color
     case eColor_TextSelectBackground:
+        // XXX can probably just always use GetMacBrushColor here
+#ifdef MOZ_WIDGET_COCOA
+        res = GetMacBrushColor(kThemeBrushPrimaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
+#else
         RGBColor macColor;
         CGrafPtr thePort;
         ::GetPort((GrafPtr*)&thePort);
@@ -124,6 +128,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
        	}
        	else
         	aColor = NS_RGB(0x00,0x00,0x00);
+#endif
         break;
     case eColor_highlighttext:  // CSS2 color
     case eColor_TextSelectForeground:

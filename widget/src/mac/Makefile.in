@@ -30,91 +30,91 @@ MODULE_NAME	= nsWidgetMacModule
 XPIDL_MODULE	= widget_mac
 GRE_MODULE	= 1
 
-REQUIRES  = xpcom \
-          gfx \
-          string \
-          uconv \
-          dom \
-          webshell \
-          docshell \
-          plugin \
-          content \
-          layout \
-          view \
-          xul \
-          necko \
-          nkcache \
-          locale \
-          pref \
-          appshell \
-          intl \
-          mimetype \
-          unicharutil \
-          exthandler \
-          $(NULL)
+REQUIRES = xpcom \
+		  gfx \
+		  string \
+		  uconv \
+		  dom \
+		  webshell \
+		  docshell \
+		  plugin \
+		  content \
+		  layout \
+		  view \
+		  xul \
+		  necko \
+		  nkcache \
+		  locale \
+		  pref \
+		  appshell \
+		  intl \
+		  mimetype \
+		  unicharutil \
+		  exthandler \
+		  $(NULL)
 
 ifdef ACCESSIBILITY
 REQUIRES	+= accessibility
 endif
 
 GFX_LCPPSRCS = \
-        nsRepeater.cpp \
-        nsRegionMac.cpp \
-        nsWatchTask.cpp \
-        $(NULL)
+		nsRepeater.cpp \
+		nsRegionMac.cpp \
+		nsWatchTask.cpp \
+		$(NULL)
 
-CPPSRCS         = nsAppShell.cpp \
-        nsBidiKeyboard.cpp \
-        nsButton.cpp \
-        nsChildWindow.cpp \
-        nsClipboard.cpp \
-        nsDeleteObserver.cpp \
-        nsDragHelperService.cpp \
-        nsDragService.cpp \
-        nsFilePicker.cpp \
-        nsLabel.cpp \
-        nsLookAndFeel.cpp \
-        nsMacControl.cpp \
-        nsMacEventHandler.cpp \
-        nsMacMessagePump.cpp \
-        nsMacResources.cpp \
-        nsMacTSMMessagePump.cpp \
-        nsMacWindow.cpp \
-        nsMenuX.cpp \
-        nsMenuBarX.cpp \
-        nsMenuItemX.cpp \
-        nsMimeMapper.cpp \
-        nsScrollbar.cpp \
-        nsNativeScrollbar.cpp \
-        nsSound.cpp \
-        nsTextWidget.cpp \
-        nsTSMStrategy.cpp \
-        nsToolkit.cpp \
-        nsWidgetFactory.cpp \
-        nsWidgetSupport.cpp \
-        nsWindow.cpp \
-        nsMacNativeUnicodeConverter.cpp \
-        nsStylClipboardUtils.cpp \
-        $(GFX_LCPPSRCS) \
-        $(NULL)
+CPPSRCS			= nsAppShell.cpp \
+		nsBidiKeyboard.cpp \
+		nsButton.cpp \
+		nsChildWindow.cpp \
+		nsClipboard.cpp \
+		nsDeleteObserver.cpp \
+		nsDragService.cpp \
+		nsDragHelperService.cpp \
+		nsFilePicker.cpp \
+		nsLabel.cpp \
+		nsLookAndFeel.cpp \
+		nsMacControl.cpp \
+		nsMacEventHandler.cpp \
+		nsMacMessagePump.cpp \
+		nsMacResources.cpp \
+		nsMacTSMMessagePump.cpp \
+		nsMacWindow.cpp \
+		nsMenuX.cpp \
+		nsMenuBarX.cpp \
+		nsMenuItemX.cpp \
+		nsMimeMapper.cpp \
+		nsScrollbar.cpp \
+		nsNativeScrollbar.cpp \
+		nsSound.cpp \
+		nsTextWidget.cpp \
+		nsTSMStrategy.cpp \
+		nsToolkit.cpp \
+		nsWidgetFactory.cpp \
+		nsWidgetSupport.cpp \
+		nsWindow.cpp \
+		nsMacNativeUnicodeConverter.cpp \
+		nsStylClipboardUtils.cpp \
+		$(GFX_LCPPSRCS) \
+		$(NULL)
 
 XPIDLSRCS  += \
-        nsIChangeManager.idl \
-        nsIMacTextInputEventSink.idl \
-        nsIMenuCommandDispatcher.idl \
-        nsPIWidgetMac.idl \
-        nsPIEventSinkStandalone.idl \
-        nsIDragHelperService.idl \
-        $(NULL)
+		nsIChangeManager.idl \
+		nsIMacTextInputEventSink.idl \
+		nsIMenuCommandDispatcher.idl \
+		nsPIWidgetMac.idl \
+		nsPIEventSinkStandalone.idl \
+		nsIDragHelperService.idl \
+		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS) \
-                $(TK_LIBS) \
-                $(MOZ_COMPONENT_LIBS) \
-                -lgkgfx \
-                $(NULL)
+		$(TK_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		-lgkgfx \
+		$(NULL)
 
 GARBAGE		+= $(GFX_LCPPSRCS)
 

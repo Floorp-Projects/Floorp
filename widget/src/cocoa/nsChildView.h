@@ -42,7 +42,6 @@
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
 #include "nsIPluginWidget.h"
-#include "nsDeleteObserver.h"
 #include "nsIEventSink.h"
 #include "nsIScrollableView.h"
 
@@ -112,7 +111,6 @@ class nsChildView;
 //-------------------------------------------------------------------------
 
 class nsChildView : public nsBaseWidget,
-                    public nsDeleteObserved,
                     public nsIPluginWidget,
                     public nsIKBStateControl,
                     public nsIEventSink
