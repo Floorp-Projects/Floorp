@@ -660,7 +660,8 @@ nsresult nsCharsetMenu::AddFromStringToMenu(char * aCharsetList,
     nsAutoString str(p);
 
     // if this charset is not on accepted list of charsets, ignore it
-    for (PRInt32 i = 0; i < aCount; i++) {
+    PRInt32 i;
+    for (i = 0; i < aCount; i++) {
       if ((aDecs[i] != NULL) && str.Equals(*aDecs[i])) break;
     }
 
