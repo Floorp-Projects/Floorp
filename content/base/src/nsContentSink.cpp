@@ -246,7 +246,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
       //     script load, assuming that that error code means that the user
       //     stopped the load through some action (like clicking a link). See
       //     http://bugzilla.mozilla.org/show_bug.cgi?id=243392.
-      mParser->ContinueParsing();
+      mParser->ContinueInterruptedParsing();
     }
   }
 
@@ -277,7 +277,7 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
   }
 
   if (mParser && mParser->IsParserEnabled() && aWasPending) {
-    mParser->ContinueParsing();
+    mParser->ContinueInterruptedParsing();
   }
 
   return NS_OK;

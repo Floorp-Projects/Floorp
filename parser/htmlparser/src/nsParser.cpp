@@ -480,8 +480,9 @@ nsParser::PostContinueEvent()
         NS_ERROR("failed to post parser continuation event");
         PL_DestroyEvent(ev);
     }
-    else
+    else {
         mFlags |= NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
+    }
   }
   return NS_OK;
 }
@@ -1412,14 +1413,28 @@ NS_IMETHODIMP nsParser::Terminate(void)
  */
 NS_IMETHODIMP nsParser::ContinueParsing()
 {    
+  NS_ASSERTION(!(mFlags & NS_PARSER_FLAG_PARSER_ENABLED),
+               "Trying to continue parsing on a unblocked parser.");
+  if (mFlags & NS_PARSER_FLAG_PARSER_ENABLED) {
+    return NS_OK;
+  }
+
+  mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
+
+  return ContinueInterruptedParsing();
+}
+
+NS_IMETHODIMP nsParser::ContinueInterruptedParsing()
+{
   // If the stream has already finished, there's a good chance
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
   // the reenabling process, hold a reference to ourselves.
   nsresult result=NS_OK;
-  nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
+  nsCOMPtr<nsIParser> kungFuDeathGrip(this);
 
-  mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
+  NS_ASSERTION(mFlags & NS_PARSER_FLAG_PARSER_ENABLED,
+               "Don't call ContinueInterruptedParsing on a blocked parser.");
 
   PRBool isFinalChunk=(mParserContext && mParserContext->mStreamListenerState==eOnStop)? PR_TRUE:PR_FALSE;
   
@@ -1456,9 +1471,13 @@ NS_IMETHODIMP_(void) nsParser::BlockParser()
  */
 NS_IMETHODIMP_(void) nsParser::UnblockParser()
 {
-  mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::UnblockParser(), this=%p\n", this));
-  MOZ_TIMER_START(mParseTime);
+  NS_ASSERTION(!(mFlags & NS_PARSER_FLAG_PARSER_ENABLED),
+               "Trying to unblock an unblocked parser.");
+  if (!(mFlags & NS_PARSER_FLAG_PARSER_ENABLED)) {
+    mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::UnblockParser(), this=%p\n", this));
+    MOZ_TIMER_START(mParseTime);
+  }
 }
 
 /**
@@ -1486,7 +1505,7 @@ NS_IMETHODIMP_(PRBool) nsParser::IsComplete()
 
 void nsParser::HandleParserContinueEvent() {
   mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
-  ContinueParsing();
+  ContinueInterruptedParsing();
 }
 
 nsresult nsParser::DataAdded(const nsSubstring& aData, nsIRequest *aRequest)
