@@ -21,19 +21,27 @@ LIBRARY_NAME = nglhtmlcon_s
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
+	nsHTMLAnchor.cpp		\
 	nsHTMLApplet.cpp		\
+	nsHTMLArea.cpp			\
+	nsHTMLBase.cpp			\
+	nsHTMLBaseFont.cpp		\
+	nsHTMLBR.cpp			\
 	nsHTMLComment.cpp		\
 	nsHTMLEmbed.cpp			\
+	nsHTMLGenericContent.cpp	\
 	nsHTMLHead.cpp			\
+	nsHTMLHR.cpp			\
+	nsHTMLInput.cpp			\
+	nsHTMLLayer.cpp			\
+	nsHTMLLink.cpp			\
 	nsHTMLMeta.cpp			\
 	nsHTMLObject.cpp		\
+	nsHTMLParam.cpp			\
+	nsHTMLScript.cpp		\
+	nsHTMLStyle.cpp			\
 	nsHTMLTitle.cpp			\
 	nsObjectContent.cpp		\
-	nsHTMLLayer.cpp			\
-	nsHTMLGenericContent.cpp	\
-	nsHTMLAnchor.cpp		\
-	nsHTMLBR.cpp			\
-	nsHTMLHR.cpp			\
 	$(NULL)
 
 MODULE = raptor
