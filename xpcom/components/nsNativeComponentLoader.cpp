@@ -168,6 +168,11 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
 
  out:
     if (NS_FAILED(rv)) {
+        // remove the dll from the hashtable so future lookups don't
+        // return the deleted object.
+        nsStringKey key(aLocation);
+        mDllStore->Remove(&key);
+        PR_ASSERT(NULL == mDllStore->Get(&key));
         rv = NS_ERROR_FACTORY_NOT_LOADED;
         delete dll;
     }
