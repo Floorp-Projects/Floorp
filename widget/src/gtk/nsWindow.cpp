@@ -1355,6 +1355,79 @@ nsWindow::OnToplevelDragMotion     (GtkWidget      *aWidget,
 }
 
 void
+nsWindow::OnToplevelDragDrop       (GtkWidget      *aWidget,
+                                    GdkDragContext *aDragContext,
+                                    gint            x,
+                                    gint            y,
+                                    guint           aTime)
+{
+
+  g_print("OnToplevelDragDrop\n");
+#ifdef DEBUG_DND_XLATE
+  DumpWindowTree();
+#endif
+  nscoord retx = 0;
+  nscoord rety = 0;
+
+  Window thisWindow = GDK_WINDOW_XWINDOW(aWidget->window);
+  Window returnWindow = None;
+  returnWindow = GetInnerMostWindow(thisWindow, thisWindow, x, y, &retx, &rety, 0);
+
+  nsWindow *innerMostWidget = NULL;
+  innerMostWidget = GetnsWindowFromXWindow(returnWindow);
+
+  if (!innerMostWidget)
+    innerMostWidget = this;
+
+#ifdef DEBUG_DND_XLATE
+  g_print("innerMostWidget is %p\n", innerMostWidget);
+#endif
+
+  // check to see if there was a drag motion window already in place
+  if (mLastDragMotionWindow) {
+    // if it wasn't this
+    if (mLastDragMotionWindow != innerMostWidget) {
+      // send a drag event to the last window that got a motion event
+      mLastDragMotionWindow->OnDragLeaveSignal(aDragContext, aTime);
+    }
+  }
+
+  // set the last window to this 
+  mLastDragMotionWindow = innerMostWidget;
+
+  if (!innerMostWidget->mIsDragDest)
+  {
+    // this will happen on the first motion event, so we will generate an ENTER event
+    innerMostWidget->OnDragEnterSignal(aDragContext, x, y, aTime);
+  }
+
+  UpdateDragContext(aWidget, aDragContext, aTime);
+
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_DROP;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+
+  event.widget = innerMostWidget;
+
+  event.point.x = retx;
+  event.point.y = rety;
+
+  innerMostWidget->AddRef();
+
+  innerMostWidget->DispatchMouseEvent(event);
+
+  innerMostWidget->Release();
+
+  // after a drop takes place we need to make sure that the drag
+  // service doesn't think that it still has a context.  if the other
+  // way ( besides the drop ) to end a drag event is during the leave
+  // event and and that case is handled in that handler.
+  UpdateDragContext(NULL, NULL, 0);
+
+}
+
+void
 nsWindow::InstallToplevelDragDropSignal(void)
 {
   NS_ASSERTION( nsnull != mShell, "mShell is null");
@@ -1373,11 +1446,13 @@ nsWindow::ToplevelDragDropSignal(GtkWidget *      aWidget,
                                  guint            aTime,
                                  void             *aData)
 {
-  if (mLastLeaveWindow) {
-    mLastLeaveWindow->OnDragDropSignal(aWidget, aDragContext, x, y, aTime);
-    mLastLeaveWindow = NULL;
-  }
-  return PR_FALSE;
+  nsWindow *widget = (nsWindow *)aData;
+
+  NS_ASSERTION(nsnull != widget, "instance pointer is null");
+
+  widget->OnToplevelDragDrop(aWidget, aDragContext, x, y, aTime);
+
+  return PR_TRUE;
 }
 
 void

@@ -145,6 +145,12 @@ public:
                                                  gint            y,
                                                  guint           aTime);
 
+  void                 OnToplevelDragDrop       (GtkWidget      *aWidget,
+                                                 GdkDragContext *aDragContext,
+                                                 gint            x,
+                                                 gint            y,
+                                                 guint           aTime);
+
   gint                 ConvertBorderStyles(nsBorderStyle bs);
 
   // Add an XATOM property to this window.
