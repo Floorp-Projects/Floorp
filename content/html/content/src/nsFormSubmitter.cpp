@@ -54,7 +54,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIPlatformCharset.h"
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 #include "nsICharsetConverterManager.h"
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID,
+                     NS_ICHARSETCONVERTERMANAGER_CID);
 #include "xp_file.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
@@ -92,7 +93,7 @@ nsFormSubmitter::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
   nsCOMPtr<nsIDOMNode> aParent;
   PRInt32 aIndex;
   rv = a->GetParentNode(getter_AddRefs(aParent));
-  if(NS_FAILED(rv)) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
   {
@@ -101,7 +102,7 @@ nsFormSubmitter::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
     nsCOMPtr<nsIContent> aParentContent(do_QueryInterface(aParent));
     nsCOMPtr<nsIContent> aContent(do_QueryInterface(a));
     rv = aParentContent->IndexOf(aContent, aIndex);
-    if(NS_FAILED(rv)) {
+    if (NS_FAILED(rv)) {
       return rv;
     }
   }
@@ -109,7 +110,7 @@ nsFormSubmitter::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
   nsCOMPtr<nsIDOMNode> bParent;
   PRInt32 bIndex;
   rv = b->GetParentNode(getter_AddRefs(bParent));
-  if(NS_FAILED(rv)) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
   {
@@ -118,7 +119,7 @@ nsFormSubmitter::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
     nsCOMPtr<nsIContent> bParentContent(do_QueryInterface(bParent));
     nsCOMPtr<nsIContent> bContent(do_QueryInterface(b));
     rv = bParentContent->IndexOf(bContent, bIndex);
-    if(NS_FAILED(rv)) {
+    if (NS_FAILED(rv)) {
       return rv;
     }
   }
@@ -128,19 +129,30 @@ nsFormSubmitter::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
 }
 
 nsresult
-nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIContent* aSubmitElement)
+nsFormSubmitter::OnSubmit(nsIForm* form,
+                          nsIPresContext* aPresContext,
+                          nsIContent* aSubmitElement)
 {
-  // If the submitElement is input type=image, find out where in the control array it should
-  // have gone so we can submit it there.
+#ifdef IBMBIDI
+//ahmed
+  PRUint32 bidiOptions;
+  aPresContext->GetBidi(&bidiOptions);
+  PRUint8 ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
+  PRUint8 textDirAtSubmit  = GET_BIDI_OPTION_DIRECTION(bidiOptions);
+//ahmed end
+#endif
+
+  // If the submitElement is input type=image, find out where in the control
+  // array it should have gone so we can submit it there.
   PRInt32 submitPosition = -1;
   {
     nsCOMPtr<nsIFormControl> submitControl(do_QueryInterface(aSubmitElement));
-    if(submitControl) {
+    if (submitControl) {
       PRInt32 type;
       submitControl->GetType(&type);
       if (type == NS_FORM_INPUT_IMAGE) {
         nsCOMPtr<nsIDOMNode> submitNode(do_QueryInterface(aSubmitElement));
-        if(submitNode) {
+        if (submitNode) {
           // Loop through the control array and see where the image should go
           PRUint32 numElements;
           PRUint32 elementX;
@@ -149,10 +161,10 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
             nsCOMPtr<nsIFormControl> curControl;
             form->GetElementAt(elementX, getter_AddRefs(curControl));
             nsCOMPtr<nsIDOMNode> curNode(do_QueryInterface(curControl));
-            if(curNode) {
+            if (curNode) {
               PRInt32 comparison;
               nsresult rv = CompareNodes(submitNode, curNode, &comparison);
-              if(NS_SUCCEEDED(rv) && comparison < 0) {
+              if (NS_SUCCEEDED(rv) && comparison < 0) {
                 submitPosition = elementX;
                 break;
               }
@@ -160,19 +172,19 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
           }
 
           // If it was larger than everything, we put it at the end
-          if(submitPosition == -1) {
+          if (submitPosition == -1) {
             submitPosition = numElements;
           }
-	}
+        }
       }
     }
   }
 
    // Get a service to process the value part of the form data
    // If one doesn't exist, that fine. It's not required.
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIFormProcessor> formProcessor = 
-           do_GetService(kFormProcessorCID, &result);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFormProcessor> formProcessor =
+           do_GetService(kFormProcessorCID, &rv);
 
   PRInt32 method, enctype;
   form->FullyGetMethod(method);
@@ -182,21 +194,27 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
 
   // for enctype=multipart/form-data, force it to be post
   // if method is "" (not specified) use "get" as default
-  PRBool isPost = (NS_FORM_METHOD_POST == method) || !isURLEncoded; 
+  PRBool isPost = (NS_FORM_METHOD_POST == method) || !isURLEncoded;
 
   nsString data; // this could be more efficient, by allocating a larger buffer
   nsIFileSpec* multipartDataFile = nsnull;
   if (isURLEncoded) {
-    result = ProcessAsURLEncoded(form, aPresContext, formProcessor, isPost, data, aSubmitElement, submitPosition);
+    rv = ProcessAsURLEncoded(form, aPresContext, formProcessor,
+                                 isPost, data,
+                                 aSubmitElement, submitPosition,
+                                 ctrlsModAtSubmit, textDirAtSubmit);
   }
   else {
-    result = ProcessAsMultipart(form, aPresContext, formProcessor, multipartDataFile, aSubmitElement, submitPosition);
+    rv = ProcessAsMultipart(form, aPresContext, formProcessor,
+                                multipartDataFile,
+                                aSubmitElement, submitPosition,
+                                ctrlsModAtSubmit, textDirAtSubmit);
   }
 
   // Don't bother submitting form if we failed to generate a valid submission
-  if (NS_FAILED(result)) {
+  if (NS_FAILED(rv)) {
     NS_IF_RELEASE(multipartDataFile);
-    return result;
+    return rv;
   }
 
   // make the url string
@@ -207,9 +225,10 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
 
     // Get the document.
     // We'll need it now to form the URL we're submitting to.
-    // We'll also need it later to get the DOM window when notifying form submit observers (bug 33203)
+    // We'll also need it later to get the DOM window when notifying form submit
+    // observers (bug 33203)
     nsCOMPtr<nsGenericElement> formElement = do_QueryInterface(form);
-    if(!formElement) return NS_OK; // same as !document
+    if (!formElement) return NS_OK; // same as !document
     nsCOMPtr<nsIDocument> document;
     formElement->GetDocument(*getter_AddRefs(document));
     if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
@@ -220,7 +239,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
     NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
     if (!docURL) return NS_OK; // No base URL -> exit early, see Bug 30721
 
-      // If an action is not specified and we are inside 
+      // If an action is not specified and we are inside
       // a HTML document then reload the URL. This makes us
       // compatible with 4.x browsers.
       // If we are in some other type of document such as XML or
@@ -229,12 +248,12 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
 
     if (href.IsEmpty()) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc;
-      if (PR_FALSE == NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIHTMLDocument),
-                                             getter_AddRefs(htmlDoc)))) {   
+      if (!NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIHTMLDocument),
+                                             getter_AddRefs(htmlDoc)))) {
         // Must be a XML, XUL or other non-HTML document type
         // so do nothing.
         return NS_OK;
-      } 
+      }
 
       // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
       // passed a zero length rel path.
@@ -245,34 +264,36 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
         href.AppendWithConversion(relPath);
 
       } else {
-        result = NS_ERROR_OUT_OF_MEMORY;
+        rv = NS_ERROR_OUT_OF_MEMORY;
       }
     } else {
       // Get security manager, check to see if access to action URI is allowed.
-      nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-               do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
+      nsCOMPtr<nsIScriptSecurityManager> securityManager =
+               do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
       nsCOMPtr<nsIURI> actionURL;
-      if (NS_FAILED(result)) return result;
+      if (NS_FAILED(rv)) return rv;
 
-      result = NS_NewURI(getter_AddRefs(actionURL), href, docURL);
-      if (NS_SUCCEEDED(result)) {
-        result = securityManager->CheckLoadURI(docURL, actionURL, nsIScriptSecurityManager::STANDARD);
-        if (NS_FAILED(result)) return result;
+      rv = NS_NewURI(getter_AddRefs(actionURL), href, docURL);
+      if (NS_SUCCEEDED(rv)) {
+        rv = securityManager->CheckLoadURI(docURL, actionURL,
+                                    nsIScriptSecurityManager::STANDARD);
+        if (NS_FAILED(rv)) return rv;
       }
 
       nsXPIDLCString scheme;
       PRBool isMailto = PR_FALSE;
-      if (actionURL && NS_FAILED(result = actionURL->SchemeIs("mailto",
-                      &isMailto)))
-        return result;
+      if (actionURL
+          && NS_FAILED(rv = actionURL->SchemeIs("mailto", &isMailto)))
+        return rv;
       if (isMailto) {
         PRBool enabled;
-        if (NS_FAILED(result = securityManager->IsCapabilityEnabled("UniversalSendMail", &enabled)))
-        {
-          return result;
+        rv = securityManager->IsCapabilityEnabled("UniversalSendMail",
+                                                      &enabled);
+        if (NS_FAILED(rv)) {
+          return rv;
         }
         if (!enabled) {
-          // Form submit to a mailto: URI requires the UniversalSendMail privilege
+          // Form submit to a mailto: URI requires UniversalSendMail privilege
           return NS_ERROR_DOM_SECURITY_ERR;
         }
       }
@@ -285,13 +306,15 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
     // Get the scheme of the URI.
     nsCOMPtr<nsIURI> actionURL;
     nsXPIDLCString scheme;
-    if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL))) {
-      result = actionURL->GetScheme(getter_Copies(scheme));
+    rv = NS_NewURI(getter_AddRefs(actionURL), href, docURL);
+    if (NS_SUCCEEDED(rv)) {
+      rv = actionURL->GetScheme(getter_Copies(scheme));
     }
-    nsAutoString theScheme; theScheme.AssignWithConversion( NS_STATIC_CAST(const char*, scheme) );
+    NS_ConvertASCIItoUCS2 theScheme(scheme);
     // Append the URI encoded variable/value pairs for GET's
     if (!isPost) {
-      if (!theScheme.EqualsIgnoreCase("javascript")) { // Not for JS URIs, see bug 26917
+      // Not for JS URIs, see bug 26917
+      if (!theScheme.EqualsIgnoreCase("javascript")) {
 
         // Bug 42616: Trim off named anchor and save it to add later
         PRInt32 namedAnchorPos = href.FindChar('#', PR_FALSE, 0);
@@ -308,7 +331,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
           href.Truncate(queryStart);
         }
 
-        href.Append(PRUnichar('?'));        
+        href.Append(PRUnichar('?'));
         href.Append(data);
 
         // Bug 42616: Add named anchor to end after query string
@@ -319,35 +342,40 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
     }
 
     nsAutoString absURLSpec;
-    result = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
-    if (NS_FAILED(result)) return result;
+    rv = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
+    if (NS_FAILED(rv)) return rv;
 
     // Notify observers that the form is being submitted.
-    result = NS_OK;
-    nsCOMPtr<nsIObserverService> service = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &result);
-    if (NS_FAILED(result)) return result;
+    rv = NS_OK;
+    nsCOMPtr<nsIObserverService> service =
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
+    nsAutoString  theTopic = NS_ConvertASCIItoUCS2(NS_FORMSUBMIT_SUBJECT);
     nsCOMPtr<nsIEnumerator> theEnum;
-    result = service->EnumerateObserverList(theTopic.get(), getter_AddRefs(theEnum));
-    if (NS_SUCCEEDED(result) && theEnum){
+    rv = service->EnumerateObserverList(theTopic.get(),
+                                            getter_AddRefs(theEnum));
+    if (NS_SUCCEEDED(rv) && theEnum) {
       nsCOMPtr<nsISupports> inst;
       PRBool cancelSubmit = PR_FALSE;
 
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      document->GetScriptGlobalObject(getter_AddRefs(globalObject));  
+      document->GetScriptGlobalObject(getter_AddRefs(globalObject));
       nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(globalObject);
 
       for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
         nsresult gotObserver = NS_OK;
         gotObserver = theEnum->CurrentItem(getter_AddRefs(inst));
         if (NS_SUCCEEDED(gotObserver) && inst) {
-          nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver = do_QueryInterface(inst, &result);
-          if (NS_SUCCEEDED(result) && formSubmitObserver) {
+          nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver(
+                          do_QueryInterface(inst, &rv));
+          if (NS_SUCCEEDED(rv) && formSubmitObserver) {
             nsCOMPtr<nsGenericElement> formElement = do_QueryInterface(form);
-            if(formElement) {
-              nsresult notifyStatus = formSubmitObserver->Notify(formElement, window, actionURL, &cancelSubmit);
+            if (formElement) {
+              nsresult notifyStatus = formSubmitObserver->Notify(formElement,
+                                                                 window,
+                                                                 actionURL,
+                                                                 &cancelSubmit);
               if (NS_FAILED(notifyStatus)) { // assert/warn if we get here?
                 return notifyStatus;
               }
@@ -380,7 +408,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
           }
         }
       }
-    }    
+    }
     if (handler) {
 #if defined(DEBUG_rods) || defined(DEBUG_pollmann)
       {
@@ -407,27 +435,39 @@ nsFormSubmitter::OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIConten
 // We need to delete the data file somewhere...
 //    if (!isURLEncoded) {
 //      nsFileSpec mdf = nsnull;
-//      result = multipartDataFile->GetFileSpec(&mdf);
-//      if (NS_SUCCEEDED(result) && mdf) {
+//      rv = multipartDataFile->GetFileSpec(&mdf);
+//      if (NS_SUCCEEDED(rv) && mdf) {
 //        mdf.Delete(PR_FALSE);
 //      }
 //    }
   }
-  return result;
+  return rv;
 }
 
 // JBK moved from nsFormFrame - bug 34297
 // Process form stuff without worrying about FILE elements
-#define CRLF "\015\012"   
+#define CRLF "\015\012"
 nsresult
-nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form, nsIPresContext* aPresContext, nsIFormProcessor* aFormProcessor, PRBool isPost, nsString& aData, nsIContent* aSubmitElement, PRInt32 aSubmitPosition)
+nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form,
+                                     nsIPresContext* aPresContext,
+                                     nsIFormProcessor* aFormProcessor,
+                                     PRBool isPost,
+                                     nsAString& aData,
+                                     nsIContent* aSubmitElement,
+                                     PRInt32 aSubmitPosition,
+                                     PRUint8 aCtrlsModAtSubmit,
+                                     PRUint8 aTextDirAtSubmit)
 {
   nsresult rv = NS_OK;
   nsString buf;
   PRBool firstTime = PR_TRUE;
 
+  nsAutoString charset;
+  GetSubmitCharset(form, charset, aPresContext, aCtrlsModAtSubmit);
+
   nsCOMPtr<nsIUnicodeEncoder> encoder;
-  GetEncoder(form, aPresContext, getter_AddRefs(encoder));
+  GetEncoder(form, aPresContext, getter_AddRefs(encoder),
+             aCtrlsModAtSubmit, charset);
   // Non-fatal error if fail, so encoder could be NULL
 
   // collect and encode the data from the children controls
@@ -438,7 +478,8 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form, nsIPresContext* aPresContext
   PRBool mustSubmitElement = (aSubmitPosition > -1);
   for (elementX = 0; elementX < numElements || mustSubmitElement; elementX++) {
     nsCOMPtr<nsIFormControl> controlNode;
-    if((aSubmitPosition == (PRInt32)elementX || elementX >= numElements) && mustSubmitElement) {
+    if ((aSubmitPosition == (PRInt32)elementX || elementX >= numElements)
+       && mustSubmitElement) {
       controlNode = do_QueryInterface(aSubmitElement);
       elementX--;
       mustSubmitElement = PR_FALSE;
@@ -466,14 +507,20 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form, nsIPresContext* aPresContext
           if (!values) {
             rv = NS_ERROR_OUT_OF_MEMORY;
           } else {
-            if (NS_SUCCEEDED(controlNode->GetNamesValues(maxNumValues, numValues, values, names))) {
-              for (int valueX = 0; valueX < numValues; valueX++){
+            rv = controlNode->GetNamesValues(maxNumValues, numValues,
+                                             values, names);
+            if (NS_SUCCEEDED(rv)) {
+              for (int valueX = 0; valueX < numValues; valueX++) {
                 if (PR_TRUE == firstTime) {
                   firstTime = PR_FALSE;
                 } else {
                   buf.AppendWithConversion("&");
                 }
-                nsString* convName = URLEncode(names[valueX], encoder);
+                nsString* convName = URLEncode(names[valueX],
+                                               encoder,
+                                               aCtrlsModAtSubmit,
+                                               aTextDirAtSubmit,
+                                               charset);
                 buf += *convName;
                 delete convName;
                 buf.AppendWithConversion("=");
@@ -481,11 +528,19 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form, nsIPresContext* aPresContext
                 newValue.Append(values[valueX]);
                 if (aFormProcessor) {
                   // No need for ProcessValue
-                  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(controlNode);
-                  rv = aFormProcessor->ProcessValue(htmlElement, names[valueX], newValue);
-                  NS_ASSERTION(NS_SUCCEEDED(rv), "unable Notify form process observer");
+                  nsCOMPtr<nsIDOMHTMLElement> htmlElement(
+                                              do_QueryInterface(controlNode));
+                  rv = aFormProcessor->ProcessValue(htmlElement,
+                                                    names[valueX],
+                                                    newValue);
+                  NS_ASSERTION(NS_SUCCEEDED(rv),
+                               "unable to Notify form process observer");
                 }
-                nsString* convValue = URLEncode(newValue, encoder);
+                nsString* convValue = URLEncode(newValue,
+                                                encoder,
+                                                aCtrlsModAtSubmit,
+                                                aTextDirAtSubmit,
+                                                charset);
                 buf += *convValue;
                 delete convValue;
               }
@@ -501,25 +556,31 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form, nsIPresContext* aPresContext
   if (isPost) {
     char size[16];
     sprintf(size, "%d", buf.Length());
-    aData.AssignWithConversion("Content-type: application/x-www-form-urlencoded");
+    aData = NS_LITERAL_STRING(
+              "Content-type: application/x-www-form-urlencoded");
 #ifdef SPECIFY_CHARSET_IN_CONTENT_TYPE
-    nsString charset;
-    GetSubmitCharset(charset, aPresContext);
     aData += "; charset=";
     aData += charset;
 #endif
-    aData.AppendWithConversion(CRLF);
-    aData.AppendWithConversion("Content-Length: ");
-    aData.AppendWithConversion(size);
-    aData.AppendWithConversion(CRLF);
-    aData.AppendWithConversion(CRLF);
-  } 
+    aData.Append(NS_LITERAL_STRING(CRLF));
+    aData.Append(NS_LITERAL_STRING("Content-Length: "));
+    aData.Append(NS_ConvertASCIItoUCS2(size));
+    aData.Append(NS_LITERAL_STRING(CRLF));
+    aData.Append(NS_LITERAL_STRING(CRLF));
+  }
   aData += buf;
   return rv;
 }
 
 nsresult
-nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext, nsIFormProcessor* aFormProcessor,nsIFileSpec*& aMultipartDataFile, nsIContent* aSubmitElement, PRInt32 aSubmitPosition)
+nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
+                                    nsIPresContext* aPresContext,
+                                    nsIFormProcessor* aFormProcessor,
+                                    nsIFileSpec*& aMultipartDataFile,
+                                    nsIContent* aSubmitElement,
+                                    PRInt32 aSubmitPosition,
+                                    PRUint8 aCtrlsModAtSubmit,
+                                    PRUint8 aTextDirAtSubmit)
 {
   PRBool compatibleSubmit = PR_TRUE;
   nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
@@ -530,7 +591,8 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
   char buffer[BUFSIZE];
 
   // Create a temporary file to write the form post data to
-  nsSpecialSystemDirectory tempDir(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  nsSpecialSystemDirectory tempDir(
+                             nsSpecialSystemDirectory::OS_TemporaryDirectory);
   tempDir += "formpost";
   tempDir.MakeUnique();
   nsIFileSpec* postDataFile = nsnull;
@@ -540,19 +602,25 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
 
   // write the content-type, boundary to the tmp file
   char boundary[80];
-  sprintf(boundary, "---------------------------%d%d%d", 
+  sprintf(boundary, "---------------------------%d%d%d",
           rand(), rand(), rand());
   sprintf(buffer, "Content-type: %s; boundary=%s" CRLF, MULTIPART, boundary);
   PRInt32 wantbytes = 0, gotbytes = 0;
   rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
   if (NS_FAILED(rv) || (wantbytes != gotbytes)) return rv;
 
+  nsAutoString charset;
+  GetSubmitCharset(form, charset, aPresContext, aCtrlsModAtSubmit);
+
   nsCOMPtr<nsIUnicodeEncoder> encoder;
-  if(NS_FAILED( GetEncoder(form, aPresContext, getter_AddRefs(encoder))))  // Non-fatal error
+  // Non-fatal error
+  if (NS_FAILED(GetEncoder(form, aPresContext, getter_AddRefs(encoder),
+                          aCtrlsModAtSubmit, charset)))
      encoder = nsnull;
 
   nsCOMPtr<nsIUnicodeEncoder> platformencoder;
-  if(NS_FAILED(GetPlatformEncoder(getter_AddRefs(platformencoder))))  // Non-fatal error
+  // Non-fatal error
+  if (NS_FAILED(GetPlatformEncoder(getter_AddRefs(platformencoder))))
      platformencoder = nsnull;
 
 
@@ -570,9 +638,12 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
   PRUint32 numElements;
   form->GetElementCount(&numElements);
   PRBool mustSubmitElement = (aSubmitPosition > -1);
-  for (PRUint32 elementX = 0; elementX < numElements || mustSubmitElement; elementX++) {
+  for (PRUint32 elementX = 0;
+       elementX < numElements || mustSubmitElement;
+       elementX++) {
     nsCOMPtr<nsIFormControl> controlNode;
-    if((aSubmitPosition == (PRInt32)elementX || elementX >= numElements) && mustSubmitElement) {
+    if ((aSubmitPosition == (PRInt32)elementX || elementX >= numElements)
+       && mustSubmitElement) {
       controlNode = do_QueryInterface(aSubmitElement);
       elementX--;
       mustSubmitElement = PR_FALSE;
@@ -594,7 +665,8 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
         }
         nsString* names  = new nsString[maxNumValues];
         nsString* values = new nsString[maxNumValues];
-        if (NS_FAILED(controlNode->GetNamesValues(maxNumValues, numValues, values, names))) {
+        if (NS_FAILED(controlNode->GetNamesValues(maxNumValues, numValues,
+                                                  values, names))) {
           continue;
         }
         for (int valueX = 0; valueX < numValues; valueX++) {
@@ -605,56 +677,78 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
           nsString valueStr = values[valueX];
           if (aFormProcessor) {
             // No need for ProcessValue
-            nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(controlNode);
-            rv = aFormProcessor->ProcessValue(htmlElement, names[valueX], valueStr);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable Notify form process observer");
+            nsCOMPtr<nsIDOMHTMLElement> htmlElement(
+                                          do_QueryInterface(controlNode));
+            rv = aFormProcessor->ProcessValue(htmlElement,
+                                              names[valueX], valueStr);
+            NS_ASSERTION(NS_SUCCEEDED(rv),
+                         "unable to Notify form process observer");
           }
-          if(encoder) {
-              name  = UnicodeToNewBytes(names[valueX].get(), names[valueX].Length(), encoder);
+          if (encoder) {
+              name  = UnicodeToNewBytes(names[valueX].get(),
+                                        names[valueX].Length(),
+                                        encoder,
+                                        aCtrlsModAtSubmit,
+                                        aTextDirAtSubmit,
+                                        charset);
           }
 
-          //use the platformencoder only for values containing file names 
+          //use the platformencoder only for values containing file names
           PRUint32 fileNameStart = 0;
-          if (NS_FORM_INPUT_FILE == type) { 
+          if (NS_FORM_INPUT_FILE == type) {
             fileNameStart = GetFileNameWithinPath(valueStr);
-            if(platformencoder) {
-              value  = UnicodeToNewBytes(valueStr.get(), valueStr.Length(), platformencoder);
+            if (platformencoder) {
+              value  = UnicodeToNewBytes(valueStr.get(),
+                                         valueStr.Length(),
+                                         platformencoder,
+                                         aCtrlsModAtSubmit,
+                                         aTextDirAtSubmit,
+                                         charset);
 
               // filename with the leading dirs stripped
               fname = UnicodeToNewBytes(valueStr.get() + fileNameStart,
                                         valueStr.Length() - fileNameStart,
-                                        platformencoder);
+                                        platformencoder,
+                                        aCtrlsModAtSubmit,
+                                        aTextDirAtSubmit,
+                                        charset);
             }
           } else {
-            if(encoder) {
-              value  = UnicodeToNewBytes(valueStr.get(), valueStr.Length(), encoder);
+            if (encoder) {
+              value  = UnicodeToNewBytes(valueStr.get(),
+                                         valueStr.Length(),
+                                         encoder,
+                                         aCtrlsModAtSubmit,
+                                         aTextDirAtSubmit,
+                                         charset);
             }
-          } 
+          }
 
-          if(nsnull == name)
+          if (!name)
             name  = ToNewCString(names[valueX]);
-          if(nsnull == value)
+          if (!value)
             value = ToNewCString(valueStr);
 
-          if (0 == names[valueX].Length()) {
+          if (names[valueX].IsEmpty()) {
             continue;
           }
 
           // convert value to CRLF line breaks
           char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
-                           nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
+                           nsLinebreakConverter::eLinebreakAny,
+                           nsLinebreakConverter::eLinebreakNet);
           if (value)
             nsMemory::Free(value);
           value = newValue;
-          
+
           // Add boundary line
           contentLen += sepLen + boundaryLen + crlfLen;
 
           // File inputs should include Content-Transfer-Encoding
           if (NS_FORM_INPUT_FILE == type && !compatibleSubmit) {
             contentLen += PL_strlen(CONTENT_TRANSFER);
-            // XXX is there any way to tell when "8bit" or "7bit" etc may be more appropriate than
-            // always using "binary"?
+            // XXX is there any way to tell when "8bit" or "7bit" etc may be
+            // more appropriate than always using "binary"?
             contentLen += PL_strlen(BINARY_CONTENT);
             contentLen += crlfLen;
           }
@@ -665,7 +759,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
           contentLen += PL_strlen(name);
 
           // File inputs also list filename on Content-Disp line
-          if (NS_FORM_INPUT_FILE == type) { 
+          if (NS_FORM_INPUT_FILE == type) {
             contentLen += PL_strlen(FILENAME);
             contentLen += PL_strlen(fname);
           }
@@ -681,7 +775,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
             contentLen += PL_strlen(contentType) + crlfLen;
             nsCRT::free(contentType);
           }
-	  
+
           // Blank line before value
           contentLen += crlfLen;
 
@@ -689,12 +783,13 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
           if (NS_FORM_INPUT_FILE == type &&
               PL_strlen(value)) { // Don't bother if no file specified
             do {
-              // Because we have a native path to the file we can't use PR_GetFileInfo
-              // on the Mac as it expects a Unix style path.  Instead we'll use our
-              // spiffy new nsILocalFile
+              // Because we have a native path to the file we can't use
+              // PR_GetFileInfo on the Mac as it expects a Unix style path.
+              // Instead we'll use our spiffy new nsILocalFile
               nsILocalFile* tempFile = nsnull;
               rv = NS_NewLocalFile(value, PR_TRUE, &tempFile);
-              NS_ASSERTION(tempFile, "Couldn't create nsIFileSpec to get file size!");
+              NS_ASSERTION(tempFile,
+                           "Couldn't create nsIFileSpec to get file size!");
               if (NS_FAILED(rv) || !tempFile)
                 break; // NS_ERROR_OUT_OF_MEMORY
               PRUint32 fileSize32 = 0;
@@ -733,7 +828,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
   // Add the post file boundary line
   contentLen += sepLen + boundaryLen + sepLen + crlfLen;
 
-  // write the content 
+  // write the content
   ////////////////////
 
   sprintf(buffer, "Content-Length: %d" CRLF CRLF, contentLen);
@@ -742,17 +837,20 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
 
     // write the content passing through all of the form controls a 2nd time
     PRBool mustSubmitElement = (aSubmitPosition > -1);
-    for (PRUint32 elementX = 0; elementX < numElements || mustSubmitElement; elementX++) {
+    for (PRUint32 elementX = 0;
+         elementX < numElements || mustSubmitElement;
+         elementX++) {
       nsCOMPtr<nsIFormControl> controlNode;
-      if((aSubmitPosition == (PRInt32)elementX || elementX >= numElements) && mustSubmitElement) {
+      if ((aSubmitPosition == (PRInt32)elementX || elementX >= numElements)
+         && mustSubmitElement) {
         controlNode = do_QueryInterface(aSubmitElement);
         elementX--;
-	mustSubmitElement = PR_FALSE;
+        mustSubmitElement = PR_FALSE;
       } else {
         form->GetElementAt(elementX, getter_AddRefs(controlNode));
       }
 
-      if(controlNode) {
+      if (controlNode) {
         PRInt32 type;
         PRBool successful;
         controlNode->GetType(&type);
@@ -766,7 +864,8 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
           }
           nsString* names  = new nsString[maxNumValues];
           nsString* values = new nsString[maxNumValues];
-          if (NS_FAILED(controlNode->GetNamesValues(maxNumValues, numValues, values, names))) {
+          if (NS_FAILED(controlNode->GetNamesValues(maxNumValues, numValues,
+                                                    values, names))) {
             continue;
           }
           for (int valueX = 0; valueX < numValues; valueX++) {
@@ -776,80 +875,109 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
 
             nsString valueStr = values[valueX];
 
-            if(encoder) {
-              name  = UnicodeToNewBytes(names[valueX].get(), names[valueX].Length(), encoder);
+            if (encoder) {
+              name  = UnicodeToNewBytes(names[valueX].get(),
+                                        names[valueX].Length(),
+                                        encoder,
+                                        aCtrlsModAtSubmit,
+                                        aTextDirAtSubmit,
+                                        charset);
             }
 
-            //use the platformencoder only for values containing file names 
+            //use the platformencoder only for values containing file names
             PRUint32 fileNameStart = 0;
-            if (NS_FORM_INPUT_FILE == type) { 
+            if (NS_FORM_INPUT_FILE == type) {
               fileNameStart = GetFileNameWithinPath(valueStr);
-              if(platformencoder) {
-                value = UnicodeToNewBytes(valueStr.get(), valueStr.Length(), platformencoder);
+              if (platformencoder) {
+                value = UnicodeToNewBytes(valueStr.get(),
+                                          valueStr.Length(),
+                                          platformencoder,
+                                          aCtrlsModAtSubmit,
+                                          aTextDirAtSubmit,
+                                          charset);
 
                 // filename with the leading dirs stripped
                 fname = UnicodeToNewBytes(valueStr.get() + fileNameStart,
-                                          valueStr.Length() - fileNameStart, platformencoder);
+                                          valueStr.Length() - fileNameStart,
+                                          platformencoder,
+                                          aCtrlsModAtSubmit,
+                                          aTextDirAtSubmit,
+                                          charset);
               }
-            } else { 
-              if(encoder) {
-                  value = UnicodeToNewBytes(valueStr.get(), valueStr.Length(), encoder);
+            } else {
+              if (encoder) {
+                  value = UnicodeToNewBytes(valueStr.get(),
+                                            valueStr.Length(),
+                                            encoder,
+                                            aCtrlsModAtSubmit,
+                                            aTextDirAtSubmit,
+                                            charset);
               }
             }
 
-            if(nsnull == name)
+            if (!name)
               name  = ToNewCString(names[valueX]);
-            if(nsnull == value)
+            if (!value)
               value = ToNewCString(valueStr);
 
-            if (0 == names[valueX].Length()) {
+            if (names[valueX].IsEmpty()) {
               continue;
             }
 
             // convert value to CRLF line breaks
             char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
-                             nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
+                             nsLinebreakConverter::eLinebreakAny,
+                             nsLinebreakConverter::eLinebreakNet);
             if (value)
               nsMemory::Free(value);
             value = newValue;
 
             // Print boundary line
             sprintf(buffer, SEP "%s" CRLF, boundary);
-            rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
+            wantbytes = PL_strlen(buffer);
+            rv = postDataFile->Write(buffer, wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
-            // File inputs should include Content-Transfer-Encoding to prep server side
-            // MIME decoders
+            // File inputs should include Content-Transfer-Encoding to prep
+            // server side MIME decoders
             if (NS_FORM_INPUT_FILE == type && !compatibleSubmit) {
-              rv = postDataFile->Write(CONTENT_TRANSFER, wantbytes = PL_strlen(CONTENT_TRANSFER), &gotbytes);
+              wantbytes = PL_strlen(CONTENT_TRANSFER);
+              rv = postDataFile->Write(CONTENT_TRANSFER, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
-              // XXX is there any way to tell when "8bit" or "7bit" etc may be more appropriate than
-              // always using "binary"?
+              // XXX is there any way to tell when "8bit" or "7bit" etc may be
+              // more appropriate than always using "binary"?
 
-              rv = postDataFile->Write(BINARY_CONTENT, wantbytes = PL_strlen(BINARY_CONTENT), &gotbytes);
+              wantbytes = PL_strlen(BINARY_CONTENT);
+              rv = postDataFile->Write(BINARY_CONTENT, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
-              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              wantbytes = PL_strlen(CRLF);
+              rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
             // Print Content-Disp line
-            rv = postDataFile->Write(CONTENT_DISP, wantbytes = contDispLen, &gotbytes);
-            if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;	  
-            rv = postDataFile->Write(name, wantbytes = PL_strlen(name), &gotbytes);
+            wantbytes = contDispLen;
+            rv = postDataFile->Write(CONTENT_DISP, wantbytes, &gotbytes);
+            if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+            wantbytes = PL_strlen(name);
+            rv = postDataFile->Write(name, wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs also list filename on Content-Disp line
             if (NS_FORM_INPUT_FILE == type) {
-              rv = postDataFile->Write(FILENAME, wantbytes = PL_strlen(FILENAME), &gotbytes);
+              wantbytes = PL_strlen(FILENAME);
+              rv = postDataFile->Write(FILENAME, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-              rv = postDataFile->Write(fname, wantbytes = PL_strlen(fname), &gotbytes);
+              wantbytes = PL_strlen(fname);
+              rv = postDataFile->Write(fname, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
             // End Content Disp
-            rv = postDataFile->Write("\"" CRLF , wantbytes = PL_strlen("\"" CRLF), &gotbytes);
+            wantbytes = PL_strlen("\"" CRLF);
+            rv = postDataFile->Write("\"" CRLF , wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs write Content-Type line
@@ -857,28 +985,35 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
               char* contentType = nsnull;
               rv = GetContentType(value, &contentType);
               if (NS_FAILED(rv)) break;
-              rv = postDataFile->Write(CONTENT_TYPE, wantbytes = PL_strlen(CONTENT_TYPE), &gotbytes);
+              wantbytes = PL_strlen(CONTENT_TYPE);
+              rv = postDataFile->Write(CONTENT_TYPE, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-              rv = postDataFile->Write(contentType, wantbytes = PL_strlen(contentType), &gotbytes);
+              wantbytes = PL_strlen(contentType);
+              rv = postDataFile->Write(contentType, wantbytes, &gotbytes);
               nsCRT::free(contentType);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              wantbytes = PL_strlen(CRLF);
+              rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               // end content-type header
             }
 
             // Blank line before value
-            rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+            wantbytes = PL_strlen(CRLF);
+            rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs print file contents next
             if (NS_FORM_INPUT_FILE == type) {
               nsIFileSpec* contentFile = nsnull;
               rv = NS_NewFileSpec(&contentFile);
-              NS_ASSERTION(contentFile, "Post content file couldn't be created!");
-              if (NS_FAILED(rv) || !contentFile) break; // NS_ERROR_OUT_OF_MEMORY
+              NS_ASSERTION(contentFile,
+                           "Post content file couldn't be created!");
+              // NS_ERROR_OUT_OF_MEMORY
+              if (NS_FAILED(rv) || !contentFile) break;
               rv = contentFile->SetNativePath(value);
-              NS_ASSERTION(contentFile, "Post content file path couldn't be set!");
+              NS_ASSERTION(contentFile,
+                           "Post content file path couldn't be set!");
               if (NS_FAILED(rv)) {
                 NS_RELEASE(contentFile);
                 break;
@@ -889,20 +1024,24 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
                 char* readbuffer = nsnull;
                 rv = contentFile->Read(&readbuffer, BUFSIZE, &size);
                 if (NS_FAILED(rv) || 0 >= size) break;
-                rv = postDataFile->Write(readbuffer, wantbytes = size, &gotbytes);
+                wantbytes = size;
+                rv = postDataFile->Write(readbuffer, wantbytes, &gotbytes);
                 if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               }
               NS_RELEASE(contentFile);
               // Print CRLF after file
-              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              wantbytes = PL_strlen(CRLF);
+              rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
             // Non-file inputs print value line
             else {
-              rv = postDataFile->Write(value, wantbytes = PL_strlen(value), &gotbytes);
+              wantbytes = PL_strlen(value);
+              rv = postDataFile->Write(value, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              wantbytes = PL_strlen(CRLF);
+              rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
             if (name)
@@ -921,34 +1060,36 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext,
 
   if (NS_SUCCEEDED(rv)) {
     sprintf(buffer, SEP "%s" SEP CRLF, boundary);
-    rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
+    wantbytes = PL_strlen(buffer);
+    rv = postDataFile->Write(buffer, wantbytes, &gotbytes);
     if (NS_SUCCEEDED(rv) && (wantbytes == gotbytes)) {
       rv = postDataFile->CloseStream();
     }
   }
 
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Generating the form post temp file failed.\n");
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+               "Generating the form post temp file failed.\n");
   return rv;
 }
 
 
 
 // JBK moved from nsFormFrame - bug 34297
-// Get the Action, with proper defaults (for submit/reset)
 void
-nsFormSubmitter::GetSubmitCharset(nsIForm* form, nsString& oCharset, nsIPresContext* aPresContext)
+nsFormSubmitter::GetSubmitCharset(nsIForm* form,
+                                  nsAString& oCharset,
+                                  nsIPresContext* aPresContext,
+                                  PRUint8 aCtrlsModAtSubmit)
 {
-  oCharset.AssignWithConversion("UTF-8"); // default to utf-8
-  nsresult rv;
-  // XXX
-  // We may want to get it from the HTML 4 Accept-Charset attribute first
+  oCharset = NS_LITERAL_STRING("UTF-8"); // default to utf-8
+  // XXX We may want to get it from the HTML 4 Accept-Charset attribute first
   // see 17.3 The FORM element in HTML 4 for details
-  nsresult result = NS_OK;
+  nsresult rv = NS_OK;
   nsAutoString acceptCharsetValue;
   nsCOMPtr<nsIHTMLContent> formContent = do_QueryInterface(form);
   nsHTMLValue value;
-  result = formContent->GetHTMLAttribute(nsHTMLAtoms::acceptcharset, value);
-  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+  rv = formContent->GetHTMLAttribute(nsHTMLAtoms::acceptcharset, value);
+  if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
     if (eHTMLUnit_String == value.GetUnit()) {
       value.GetStringValue(acceptCharsetValue);
     }
@@ -958,60 +1099,61 @@ nsFormSubmitter::GetSubmitCharset(nsIForm* form, nsString& oCharset, nsIPresCont
   printf("accept-charset = %s\n", acceptCharsetValue.ToNewUTF8String());
 #endif
   PRInt32 l = acceptCharsetValue.Length();
-  if(l > 0 ) {
+  if (l > 0 ) {
     PRInt32 offset=0;
     PRInt32 spPos=0;
     // get charset from charsets one by one
     nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
-    if(NS_SUCCEEDED(rv) && (nsnull != calias)) {
+    if (NS_SUCCEEDED(rv) && calias) {
       do {
         spPos = acceptCharsetValue.FindChar(PRUnichar(' '),PR_TRUE, offset);
         PRInt32 cnt = ((-1==spPos)?(l-offset):(spPos-offset));
-        if(cnt > 0) {
+        if (cnt > 0) {
           nsAutoString charset;
           acceptCharsetValue.Mid(charset, offset, cnt);
 #ifdef DEBUG_ftang
           printf("charset[i] = %s\n",charset.ToNewUTF8String());
 #endif
-          if(NS_SUCCEEDED(calias->GetPreferred(charset,oCharset)))
+          if (NS_SUCCEEDED(calias->GetPreferred(charset, oCharset)))
             return;
         }
         offset = spPos + 1;
-      } while(spPos != -1);
+      } while (spPos != -1);
     }
   }
   // if there are no accept-charset or all the charset are not supported
   // Get the charset from document
   nsCOMPtr<nsGenericElement> formElement = do_QueryInterface(form);
-  if(formElement) {
+  if (formElement) {
     nsIDocument* doc = nsnull;
     formElement->GetDocument(doc);
-    if( doc ) {
+    if ( doc ) {
       rv = doc->GetDocumentCharacterSet(oCharset);
       NS_RELEASE(doc);
     }
   }
 
 #ifdef IBMBIDI
-// JBK moved from main submit to here since this is the only place these values
-// are used; also removed member variables and any unused stuff.
-//ahmed
-  PRUint32 bidiOptions;
-  aPresContext->GetBidi(&bidiOptions);
-  PRUint8 mCtrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
-//ahmed end
-  if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( oCharset.EqualsIgnoreCase("windows-1256") ) ) {
+  if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
+     && Compare(oCharset, NS_LITERAL_STRING("windows-1256"),
+                 nsCaseInsensitiveStringComparator()) == 0)  {
 //Mohamed
-    oCharset.AssignWithConversion("IBM864");
+    oCharset = NS_LITERAL_STRING("IBM864");
   }
-  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL )&&( oCharset.EqualsIgnoreCase("IBM864") ) ) {
-    oCharset.AssignWithConversion("IBM864i");
+  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL
+          && Compare(oCharset, NS_LITERAL_STRING("IBM864"),
+                     nsCaseInsensitiveStringComparator()) == 0) {
+    oCharset = NS_LITERAL_STRING("IBM864i");
   }
-  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( oCharset.EqualsIgnoreCase("ISO-8859-6") ) )  {
-    oCharset.AssignWithConversion("IBM864");
+  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
+          && Compare(oCharset, NS_LITERAL_STRING("ISO-8859-6"),
+                     nsCaseInsensitiveStringComparator()) == 0) {
+    oCharset = NS_LITERAL_STRING("IBM864");
   }
-  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( oCharset.EqualsIgnoreCase("UTF-8") ) ) {
-    oCharset.AssignWithConversion("IBM864");
+  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
+          && Compare(oCharset, NS_LITERAL_STRING("UTF-8"),
+                     nsCaseInsensitiveStringComparator()) == 0) {
+    oCharset = NS_LITERAL_STRING("IBM864");
   }
 
 #endif
@@ -1019,29 +1161,35 @@ nsFormSubmitter::GetSubmitCharset(nsIForm* form, nsString& oCharset, nsIPresCont
 
 // JBK moved from nsFormFrame - bug 34297
 nsresult
-nsFormSubmitter::GetEncoder(nsIForm* form, nsIPresContext* aPresContext, nsIUnicodeEncoder** encoder)
+nsFormSubmitter::GetEncoder(nsIForm* form,
+                            nsIPresContext* aPresContext,
+                            nsIUnicodeEncoder** encoder,
+                            PRUint8 aCtrlsModAtSubmit,
+                            const nsAString& aCharset)
 {
   *encoder = nsnull;
-  nsAutoString charset;
   nsresult rv = NS_OK;
-  GetSubmitCharset(form, charset, aPresContext);
 #ifdef DEBUG_ftang
   printf("charset=%s\n", ToNewCString(charset));
 #endif
-  
+
   // Get Charset, get the encoder.
   nsICharsetConverterManager * ccm = nsnull;
   rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
                                     NS_GET_IID(nsICharsetConverterManager),
                                     (nsISupports**)&ccm);
-  if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
+  if (NS_SUCCEEDED(rv) && ccm) {
+     nsString charset(aCharset);
      rv = ccm->GetUnicodeEncoder(&charset, encoder);
      nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
-     if (nsnull == encoder) {
+     if (encoder) {
        rv = NS_ERROR_FAILURE;
      }
      if (NS_SUCCEEDED(rv)) {
-       rv = (*encoder)->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
+       rv = (*encoder)->SetOutputErrorBehavior(
+                          nsIUnicodeEncoder::kOnError_Replace,
+                          nsnull,
+                          (PRUnichar)'?');
      }
   }
   return NS_OK;
@@ -1049,20 +1197,35 @@ nsFormSubmitter::GetEncoder(nsIForm* form, nsIPresContext* aPresContext, nsIUnic
 
 // XXX i18n helper routines
 nsString*
-nsFormSubmitter::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder) 
+nsFormSubmitter::URLEncode(const nsAString& aString,
+                           nsIUnicodeEncoder* encoder,
+                           PRUint8 aCtrlsModAtSubmit,
+                           PRUint8 aTextDirAtSubmit,
+                           const nsAString& aCharset)
 {
   char* inBuf = nsnull;
-  if(encoder)
-    inBuf  = UnicodeToNewBytes(aString.get(), aString.Length(), encoder);
+  if (encoder) {
+    // XXX This is inefficient.  When nsAString gets a get() equivalent,
+    // use that.
+    PRUnichar* strUnicode = ToNewUnicode(aString);
+    inBuf  = UnicodeToNewBytes(strUnicode,
+                               aString.Length(),
+                               encoder,
+                               aCtrlsModAtSubmit,
+                               aTextDirAtSubmit,
+                               aCharset);
+    delete strUnicode;
+  }
 
-  if(nsnull == inBuf)
+  if (!inBuf)
     inBuf  = ToNewCString(aString);
 
   // convert to CRLF breaks
   char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,
-                           nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
+                           nsLinebreakConverter::eLinebreakAny,
+                           nsLinebreakConverter::eLinebreakNet);
   delete [] inBuf;
-  
+
   char* outBuf = nsEscape(convertedBuf, url_XPAlphas);
   nsString* result = new nsString;
   result->AssignWithConversion(outBuf);
@@ -1073,46 +1236,62 @@ nsFormSubmitter::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder)
 
 // XXX i18n helper routines
 char*
-nsFormSubmitter::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder)
+nsFormSubmitter::UnicodeToNewBytes(const PRUnichar* aSrc,
+                                   PRUint32 aLen,
+                                   nsIUnicodeEncoder* encoder,
+                                   PRUint8 aCtrlsModAtSubmit,
+                                   PRUint8 aTextDirAtSubmit,
+                                   const nsAString& aCharset)
 {
-#ifdef IBMBIDI_0 // Until we finalize the conversion routine
+#ifdef IBMBIDI
   //ahmed 15-1
-  nsString temp;
-  nsresult rv = NS_OK;
-  nsIUBidiUtils* bidiUtils = do_getService("@mozilla.org/intl/unicharbidiutil;1");
-  nsString newBuffer;
+  nsAutoString temp;
+  nsCOMPtr<nsIUBidiUtils> bidiUtils(
+                  do_GetService("@mozilla.org/intl/unicharbidiutil;1"));
+  nsAutoString newBuffer;
   //This condition handle the RTL,LTR for a logical file
-  if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( mCharset.EqualsIgnoreCase("windows-1256") ) ){
-    bidiUtils->Conv_06_FE_WithReverse(nsString(aSrc), newBuffer,mTextDir);
+  if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
+     && Compare(aCharset, NS_LITERAL_STRING("windows-1256"),
+                nsCaseInsensitiveStringComparator()) == 0 ) {
+    bidiUtils->Conv_06_FE_WithReverse(nsString(aSrc),
+                                      newBuffer,
+                                      aTextDirAtSubmit);
     aSrc = (PRUnichar *)newBuffer.get();
     aLen=newBuffer.Length();
   }
-  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL )&&( mCharset.EqualsIgnoreCase("IBM864") ) ){
+  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL
+          && Compare(aCharset, NS_LITERAL_STRING("IBM864"),
+                     nsCaseInsensitiveStringComparator()) == 0) {
     //For 864 file, When it is logical, if LTR then only convert
     //If RTL will mak a reverse for the buffer
     bidiUtils->Conv_FE_06(nsString(aSrc), newBuffer);
     aSrc = (PRUnichar *)newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
-    if (mTextDir == 2) { //RTL
-    //Now we need to reverse the Buffer, it is by searshing the buffer
+    if (aTextDirAtSubmit == 2) { //RTL
+    //Now we need to reverse the Buffer, it is by searching the buffer
       PRUint32 loop = aLen;
-      for (int z=0; z<=aLen; z++){
+      PRUint32 z;
+      for (z=0; z<=aLen; z++) {
         temp.SetCharAt((PRUnichar)aSrc[loop], z);
         loop--;
       }
     }
     aSrc = (PRUnichar *)temp.get();
   }
-  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( mCharset.EqualsIgnoreCase("IBM864"))&& (mTextDir == IBMBIDI_TEXTDIRECTION_RTL) ){
+  else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
+          && Compare(aCharset, NS_LITERAL_STRING("IBM864"),
+                     nsCaseInsensitiveStringComparator()) == 0
+                  && aTextDirAtSubmit == IBMBIDI_TEXTDIRECTION_RTL) {
 
     bidiUtils->Conv_FE_06(nsString(aSrc), newBuffer);
     aSrc = (PRUnichar *)newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
-    //Now we need to reverse the Buffer, it is by searshing the buffer
+    //Now we need to reverse the Buffer, it is by searching the buffer
     PRUint32 loop = aLen;
-    for (int z=0; z<=aLen; z++){
+    PRUint32 z;
+    for (z=0; z<=aLen; z++) {
       temp.SetCharAt((PRUnichar)aSrc[loop], z);
       loop--;
     }
@@ -1120,14 +1299,13 @@ nsFormSubmitter::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnic
   }
 #endif
    char* res = nsnull;
-   if(NS_SUCCEEDED(encoder->Reset()))
-   {
+   nsresult rv = encoder->Reset();
+   if (NS_SUCCEEDED(rv)) {
       PRInt32 maxByteLen = 0;
-      if(NS_SUCCEEDED(encoder->GetMaxLength(aSrc, (PRInt32) aLen, &maxByteLen))) 
-      {
+      rv = encoder->GetMaxLength(aSrc, (PRInt32) aLen, &maxByteLen);
+      if (NS_SUCCEEDED(rv)) {
           res = new char[maxByteLen+1];
-          if(nsnull != res) 
-          {
+          if (res) {
              PRInt32 reslen = maxByteLen;
              PRInt32 reslen2 ;
              PRInt32 srclen = aLen;
@@ -1149,19 +1327,21 @@ nsFormSubmitter::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
   *encoder = nsnull;
   nsAutoString localeCharset;
   nsresult rv = NS_OK;
-  
+
   // Get Charset, get the encoder.
   nsICharsetConverterManager * ccm = nsnull;
   rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
                                     NS_GET_IID(nsICharsetConverterManager),
                                     (nsISupports**)&ccm);
 
-  if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
+  if (NS_SUCCEEDED(rv) && ccm) {
 
-     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
+     nsCOMPtr<nsIPlatformCharset> platformCharset(
+         do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
 
      if (NS_SUCCEEDED(rv)) {
-        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, localeCharset);
+       rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName,
+                                        localeCharset);
      }
 
      if (NS_FAILED(rv)) {
@@ -1171,13 +1351,13 @@ nsFormSubmitter::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
      }
 
      // get unicode converter mgr
-     //nsCOMPtr<nsICharsetConverterManager> ccm = 
-     //         do_GetService(kCharsetConverterManagerCID, &rv); 
+     //nsCOMPtr<nsICharsetConverterManager> ccm =
+     //         do_GetService(kCharsetConverterManagerCID, &rv);
 
      if (NS_SUCCEEDED(rv)) {
        rv = ccm->GetUnicodeEncoder(&localeCharset, encoder);
      }
-   } 
+   }
 
   return NS_OK;
 }
@@ -1185,7 +1365,7 @@ nsFormSubmitter::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
 
 // return the filename without the leading directories (Unix basename)
 PRUint32
-nsFormSubmitter::GetFileNameWithinPath(nsString aPathName)
+nsFormSubmitter::GetFileNameWithinPath(nsString& aPathName)
 {
   // We need to operator on Unicode strings and not on nsCStrings
   // because Shift_JIS and Big5 encoded filenames can have
