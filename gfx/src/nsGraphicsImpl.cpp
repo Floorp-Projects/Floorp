@@ -152,7 +152,7 @@ NS_IMETHODIMP nsGraphicsImpl::SetFont(const PRUnichar *name, nscoord size)
 	size = NS_STATIC_CAST(nscoord, size * mDev2App);
 	nsAutoString nameString(name);
 	nsFont font(nameString, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, size);
-	return mRenderer->SetFont(font);
+	return mRenderer->SetFont(font, nsnull);
 }
 
 NS_IMETHODIMP nsGraphicsImpl::Gsave(void)
