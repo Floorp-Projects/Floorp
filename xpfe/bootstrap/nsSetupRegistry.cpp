@@ -71,7 +71,6 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 // Class IDs
 static NS_DEFINE_CID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_CID(kFileLocatorCID,     NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
@@ -113,7 +112,9 @@ NS_SetupRegistry_1()
   NS_SetupRegistry();
 
   // APPSHELL_DLL
-  nsComponentManager::RegisterComponentLib(kFileLocatorCID,      NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+
+  // FileLocator registration moved to viewer/nsSetupRegistry.cpp, as
+  // prefs (which viewer uses) needs it.
   nsComponentManager::RegisterComponentLib(kCAppShellServiceCID, NULL, "component://netscape/appshell/appShellService", APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
