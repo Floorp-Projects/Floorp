@@ -1288,7 +1288,7 @@ CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
   }
 
   if (PR_TRUE == isImportant) {
-    aDeclaration->SetValueImportant(propertyName);
+    aDeclaration->SetValueImportant(propID);
   }
 
   // Make sure valid property declaration is terminated with either a
