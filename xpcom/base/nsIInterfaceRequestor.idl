@@ -50,7 +50,6 @@ interface nsIInterfaceRequestor : nsISupports
 
 %{C++
 
-#if 0
 #ifndef nsCOMPtr_h___
 #include "nsCOMPtr.h"
 #endif
@@ -78,6 +77,5 @@ do_GetInterface( nsISupports* aSource, nsresult* error = 0 )
   {
     return nsGetInterface(aSource, error);
   }
-#endif
 
 %}
