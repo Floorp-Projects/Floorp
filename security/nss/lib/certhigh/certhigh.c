@@ -44,6 +44,7 @@
 #define NSS_3_4_CODE
 #endif
 #include "nsspki.h"
+#include "pki.h"
 #include "pkit.h"
 #include "pkitm.h"
 #include "pki3hack.h"
@@ -384,50 +385,59 @@ typedef struct stringNode {
 } stringNode;
     
 static SECStatus
-CollectNicknames( CERTCertificate *cert, SECItem *k, void *data)
+CollectNicknames( NSSCertificate *c, void *data)
 {
     CERTCertNicknames *names;
     PRBool saveit = PR_FALSE;
-    CERTCertTrust *trust;
     stringNode *node;
     int len;
+    NSSTrustDomain *td;
+    NSSTrust *trust;
+    char *nickname;
     
     names = (CERTCertNicknames *)data;
+
+    nickname = nssCertificate_GetNickname(c,NULL);
     
-    if ( cert->nickname ) {
-	trust = cert->trust;
-	
-	switch(names->what) {
-	  case SEC_CERT_NICKNAMES_ALL:
-	    if ( ( trust->sslFlags & (CERTDB_VALID_CA|CERTDB_VALID_PEER) ) ||
-	      ( trust->emailFlags & (CERTDB_VALID_CA|CERTDB_VALID_PEER) ) ||
-	      ( trust->objectSigningFlags & (CERTDB_VALID_CA|CERTDB_VALID_PEER) ) ) {
-		saveit = PR_TRUE;
-	    }
-	    
-	    break;
-	  case SEC_CERT_NICKNAMES_USER:
-	    if ( ( trust->sslFlags & CERTDB_USER ) ||
-		( trust->emailFlags & CERTDB_USER ) ||
-		( trust->objectSigningFlags & CERTDB_USER ) ) {
-		saveit = PR_TRUE;
-	    }
-	    
-	    break;
-	  case SEC_CERT_NICKNAMES_SERVER:
-	    if ( trust->sslFlags & CERTDB_VALID_PEER ) {
-		saveit = PR_TRUE;
-	    }
-	    
-	    break;
-	  case SEC_CERT_NICKNAMES_CA:
-	    if ( ( ( trust->sslFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) ||
-		( ( trust->emailFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) ||
-		( ( trust->objectSigningFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) ) {
-		saveit = PR_TRUE;
-	    }
-	    break;
+    if ( nickname ) {
+	if (names->what == SEC_CERT_NICKNAMES_USER) {
+	    saveit = NSSCertificate_IsPrivateKeyAvailable(c, NULL, NULL);
 	}
+#ifdef notdef
+	  else {
+	    td = NSSCertificate_GetTrustDomain(c);
+	    if (!td) {
+		return SECSuccess;
+	    }
+	    trust = nssTrustDomain_FindTrustForCertificate(td,c);
+	
+	    switch(names->what) {
+	     case SEC_CERT_NICKNAMES_ALL:
+		if ((trust->sslFlags & (CERTDB_VALID_CA|CERTDB_VALID_PEER) ) ||
+		 (trust->emailFlags & (CERTDB_VALID_CA|CERTDB_VALID_PEER) ) ||
+		 (trust->objectSigningFlags & 
+					(CERTDB_VALID_CA|CERTDB_VALID_PEER))) {
+		    saveit = PR_TRUE;
+		}
+	    
+		break;
+	     case SEC_CERT_NICKNAMES_SERVER:
+		if ( trust->sslFlags & CERTDB_VALID_PEER ) {
+		    saveit = PR_TRUE;
+		}
+	    
+		break;
+	     case SEC_CERT_NICKNAMES_CA:
+		if (((trust->sslFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA)||
+		 ((trust->emailFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA) ||
+		 ((trust->objectSigningFlags & CERTDB_VALID_CA ) 
+							== CERTDB_VALID_CA)) {
+		    saveit = PR_TRUE;
+		}
+		break;
+	    }
+	}
+#endif
     }
 
     /* traverse the list of collected nicknames and make sure we don't make
@@ -436,7 +446,7 @@ CollectNicknames( CERTCertificate *cert, SECItem *k, void *data)
     if ( saveit ) {
 	node = (stringNode *)names->head;
 	while ( node != NULL ) {
-	    if ( PORT_Strcmp(cert->nickname, node->string) == 0 ) { 
+	    if ( PORT_Strcmp(nickname, node->string) == 0 ) { 
 		/* if the string matches, then don't save this one */
 		saveit = PR_FALSE;
 		break;
@@ -454,12 +464,12 @@ CollectNicknames( CERTCertificate *cert, SECItem *k, void *data)
 	}
 
 	/* copy the string */
-	len = PORT_Strlen(cert->nickname) + 1;
+	len = PORT_Strlen(nickname) + 1;
 	node->string = (char*)PORT_ArenaAlloc(names->arena, len);
 	if ( node->string == NULL ) {
 	    return(SECFailure);
 	}
-	PORT_Memcpy(node->string, cert->nickname, len);
+	PORT_Memcpy(node->string, nickname, len);
 
 	/* link it into the list */
 	node->next = (stringNode *)names->head;
@@ -498,12 +508,12 @@ CERT_GetCertNicknames(CERTCertDBHandle *handle, int what, void *wincx)
     names->nicknames = NULL;
     names->what = what;
     names->totallen = 0;
-    
-    rv = PK11_TraverseSlotCerts(CollectNicknames, (void *)names, wincx);
-    if ( rv ) {
-	goto loser;
-    }
 
+    /* make sure we are logged in */
+    (void) pk11_TraverseAllSlots(NULL, NULL, wincx);
+   
+    NSSTrustDomain_TraverseCertificates(handle,
+					    CollectNicknames, (void *)names);
     if ( names->numnicknames ) {
 	names->nicknames = (char**)PORT_ArenaAlloc(arena,
 					 names->numnicknames * sizeof(char *));

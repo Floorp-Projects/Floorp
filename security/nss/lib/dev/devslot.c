@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.9 $ $Date: 2002/06/13 21:40:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.10 $ $Date: 2002/06/24 22:36:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -48,7 +48,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.9 $ $Dat
 #endif /* CKHELPER_H */
 
 /* measured in seconds */
-#define NSSSLOT_TOKEN_DELAY_TIME 10
+#define NSSSLOT_TOKEN_DELAY_TIME 1
 
 /* this should track global and per-transaction login information */
 

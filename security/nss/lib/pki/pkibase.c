@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.8 $ $Date: 2002/05/20 23:21:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.9 $ $Date: 2002/06/24 22:36:59 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1026,10 +1026,10 @@ cert_createObject(nssPKIObject *o)
     NSSCertificate *cert;
     cert = nssCertificate_Create(o);
 #ifdef NSS_3_4_CODE
-    if (STAN_GetCERTCertificate(cert) == NULL) {
+/*    if (STAN_GetCERTCertificate(cert) == NULL) {
 	nssCertificate_Destroy(cert);
 	return (nssPKIObject *)NULL;
-    }
+    } */
     /* In 3.4, have to maintain uniqueness of cert pointers by caching all
      * certs.  Cache the cert here, before returning.  If it is already
      * cached, take the cached entry.
