@@ -48,7 +48,7 @@
   <!-- Recent files menu -->
   <titledbox orient="vertical">
     <label value="&recentFiles.title;"/>
-    <box align="horizontal" valign="middle">
+    <box align="horizontal" autostretch="never" valign="middle">
       <text value="&documentsInMenu;"/>
       <textbox
         id="recentFiles"
