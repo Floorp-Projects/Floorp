@@ -310,11 +310,14 @@ NS_NewHTMLInputFile(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   inputFile->AppendChild(child, PR_FALSE);
+  NS_RELEASE(child);
+
   status = NS_NewHTMLInputBrowse(&child, aTag, aManager);
   if (NS_OK != status) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   inputFile->AppendChild(child, PR_FALSE);
+  NS_RELEASE(child);
 
   return inputFile->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
