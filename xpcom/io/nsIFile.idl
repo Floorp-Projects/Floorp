@@ -44,62 +44,6 @@ interface nsIFile : nsISupports
     
      
     /**
-      * initWithKey
-      *
-      * This function will initialize the nsIFile object to the
-      * location of a well known place.  The location is specified
-      * by a string which will be looked up in the registry.  If
-      * the string is not found, NS_ERROR_FILE_UNRECONGNIZED_PATH
-      * will be returned         
-      * 
-      *   @param fileKey
-      *          A string which represents a special system directory
-      *          or a directory which has been registered.
-      *
-      */
-       
-       void initWithKey( [const] in string fileKey);
-
-
-    /**
-      * initWithFile
-      *
-      * This function will initialize the nsIFile object to the
-      * exact location of the passed nsIFile.             // what errors can this return?
-      * 
-      *   @param file
-      *          A nsIFile which this object will be initialize
-      *          with.
-      *
-      */
-       
-       void initWithFile(in nsIFile file);
-
-    /**
-      * initWithPath
-      *
-      * This function will initialize the nsIFile object.  Any
-      * internal state information will be reset.  Non-terminal
-      * nodes will be resolved. An error will be returned if a
-      * non-terminal is a file (NS_ERROR_FILE_INVALID_PATH)
-      * 
-      *
-      *  NOTE:  This function has a known bug on the macintosh and
-      *         other OSes which do not represent file locations 
-      *         as pathes.  If you do use this function, be very
-      *         aware of this problem as bugs.
-      *
-      *   @param filePath       
-      *          A string which specifies a full file path to a 
-      *          location.  Relative paths will be treated as an
-      *          error (NS_ERROR_FILE_UNRECONGNIZED_PATH).  This
-      *          path must in native.
-      */
-      
-       void initWithPath([const] in string filePath );
-
-    
-    /**
      *  appendPath
      *
      *  This function is used for constructing a descendat of the
@@ -276,8 +220,6 @@ interface nsIFile : nsISupports
        readonly attribute string target;
        readonly attribute string path;
     
-
-       readonly attribute PRInt64 diskSpaceAvailable;  // maybe we should put this somewhere else.
 
     /**
      * Parent will be nsnull when this is at the top of the volume.
