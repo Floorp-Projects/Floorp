@@ -285,6 +285,30 @@ NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
 	return rv;
 }
 
+// helper function that gets the cache element that corresponds to the passed in file spec.
+// This could be static, or could live in another class - it's not specific to the current
+// nsMsgDBFolder. If it lived at a higher level, we could cache the account manager and folder cache.
+nsresult nsMsgDBFolder::GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement)
+{
+	nsresult result;
+	if (!fileSpec || !cacheElement)
+		return NS_ERROR_NULL_POINTER;
+	nsCOMPtr <nsIMsgFolderCache> folderCache;
+
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountMgr, kMsgAccountManagerCID, &result); 
+	if(NS_SUCCEEDED(result))
+	{
+		result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
+		if (NS_SUCCEEDED(result) && folderCache)
+		{
+			nsXPIDLCString persistentPath;
+			fileSpec->GetPersistentDescriptorString(getter_Copies(persistentPath));
+			result = folderCache->GetCacheElement(persistentPath, PR_FALSE, cacheElement);
+		}
+	}
+	return result;
+}
+
 nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 {
 	// Since it turns out to be pretty expensive to open and close
@@ -297,29 +321,16 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 	// and, we might get stale info, so don't do it.
 	if (!(mPrefFlags & MSG_FOLDER_PREF_CACHED))
 	{
-		nsCOMPtr <nsIMsgFolderCache> folderCache;
+		nsCOMPtr <nsIFileSpec> path;
+		GetPath(getter_AddRefs(path));
 
-		NS_WITH_SERVICE(nsIMsgAccountManager, accountMgr, kMsgAccountManagerCID, &result); 
-		if(NS_SUCCEEDED(result))
+		if (path)
 		{
-			result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
-			if (NS_SUCCEEDED(result) && folderCache)
+			nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+			result = GetFolderCacheElemFromFileSpec(path, getter_AddRefs(cacheElement));
+			if (NS_SUCCEEDED(result) && cacheElement)
 			{
-				nsCOMPtr <nsIFileSpec> path;
-				GetPath(getter_AddRefs(path));
-				nsXPIDLCString persistentPath;
-
-				if (NS_SUCCEEDED(result) && path)
-				{
-					path->GetPersistentDescriptorString(getter_Copies(persistentPath));
-					nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
-					result = folderCache->GetCacheElement(persistentPath, PR_FALSE, getter_AddRefs(cacheElement));
-					if (NS_SUCCEEDED(result) && cacheElement)
-					{
-						result = ReadFromFolderCacheElem(cacheElement);
-					}
-				}
-
+				result = ReadFromFolderCacheElem(cacheElement);
 			}
 		}
 	}

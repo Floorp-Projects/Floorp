@@ -33,6 +33,7 @@
 #include "nsIUrlListener.h"
 
 class nsIMsgFolderCacheElement;
+
  /* 
   * nsMsgDBFolder
   * class derived from nsMsgFolder for those folders that use an nsIMsgDatabase
@@ -82,6 +83,7 @@ protected:
                         nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
 	nsresult CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &baseDir, char **resultName);
 
+	nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;  
 	nsString mCharset;
