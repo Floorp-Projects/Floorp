@@ -1251,7 +1251,7 @@ net_build_http_request (URL_Struct * URL_s,
         calls to it return false until another mode change occurs).  For this
         reason it must appear first in the if-statement below to make sure it
         gets called even if sendReferHeader is false */
-      if(!NET_SupressRefererForAnonymity() && sendRefererHeader)
+      if(!NET_SupressRefererForAnonymity(window_id) && sendRefererHeader)
       {
         int url_type = NET_URL_Type(URL_s->referer);
         char *newReferer=NULL;
