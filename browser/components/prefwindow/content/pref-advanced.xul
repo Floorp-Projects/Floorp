@@ -30,7 +30,9 @@
       onload="parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');"
       headertitle="&lHeader;">
 
-  <description>All your favorite geeky, advanced prefs will be making a comeback in the near future.</description>  
+  <spacer flex="1"/>
+  <description>All your favorite prefs will be making a comeback in the near future.</description>  
+  <spacer flex="1"/>
 </page>
 
 
