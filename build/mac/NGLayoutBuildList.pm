@@ -332,6 +332,8 @@ sub MakeResourceAliases()
 	_MakeAlias(":mozilla:intl:uconv:src:charsetData.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:charsetTitles.properties",						"$resource_dir");
 
+	_InstallResources(":mozilla:gfx:src:MANIFEST",										"$resource_dir"."gfx:");
+
 	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST",						"$resource_dir");
 	my($entitytab_dir) = "$resource_dir" . "entityTables";
 	_InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",						"$entitytab_dir");
