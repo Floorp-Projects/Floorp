@@ -1417,12 +1417,12 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 				deleteImmediatelyNoTrash = PR_TRUE;
 		}
 	}
-    if (NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash)
+    if ((NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash) || deleteModel == nsMsgImapDeleteModels::IMAPDelete )
     {
         rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
     if (NS_SUCCEEDED(rv))
     {
-            if (mDatabase) 
+            if (mDatabase && deleteModel != nsMsgImapDeleteModels::IMAPDelete) 
       {
                 mDatabase->DeleteMessages(&srcKeyArray,NULL);
 //        if(!isMove)
