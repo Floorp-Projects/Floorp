@@ -73,7 +73,7 @@
                     s.length,
                     s,
                     s.lastIndexOf("0"),
-                    null );
+                    ["02134", "02134"] );
 
     re.lastIndex = s.lastIndexOf("0");
 
@@ -90,8 +90,8 @@
                     "re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex = " +
                     s.lastIndexOf("0") +1,
                     s,
-                    0,
-                    null);
+                    s.lastIndexOf("0"),
+                    ["02134", "02134"]);
 
     test();
 
