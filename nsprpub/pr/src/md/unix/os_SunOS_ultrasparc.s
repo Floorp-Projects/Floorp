@@ -49,7 +49,7 @@
 !     %o3  [local]   - work register
 !  -----------------------
 
-        ENTRY(_pr_md_ultrasparc_inc)    ! standard assembler/ELF prologue
+        ENTRY(PR_AtomicIncrement)       ! standard assembler/ELF prologue
 
 retryAI:
         ld      [%o0], %o2              ! set o2 to the current value
@@ -62,7 +62,7 @@ retryAI:
         retl                            ! return back to the caller
         mov     %o1, %o0                ! set the return code to the new value
 
-        SET_SIZE(_pr_md_ultrasparc_inc) ! standard assembler/ELF epilogue
+        SET_SIZE(PR_AtomicIncrement)    ! standard assembler/ELF epilogue
 
 !
 !  end
@@ -93,7 +93,7 @@ retryAI:
 !     %o3  [local]   - work register
 !  -----------------------
 
-        ENTRY(_pr_md_ultrasparc_dec)       ! standard assembler/ELF prologue
+        ENTRY(PR_AtomicDecrement)       ! standard assembler/ELF prologue
 
 retryAD:
         ld      [%o0], %o2              ! set o2 to the current value
@@ -106,7 +106,7 @@ retryAD:
         retl                            ! return back to the caller
         mov     %o1, %o0                ! set the return code to the new value
 
-        SET_SIZE(_pr_md_ultrasparc_dec)    ! standard assembler/ELF epilogue
+        SET_SIZE(PR_AtomicDecrement)    ! standard assembler/ELF epilogue
 
 !
 !  end
@@ -136,7 +136,7 @@ retryAD:
 !     %o3  [local]   - work register
 !  -----------------------
 
-        ENTRY(_pr_md_ultrasparc_set)	! standard assembler/ELF prologue
+        ENTRY(PR_AtomicSet)             ! standard assembler/ELF prologue
 
 retryAS:
         ld      [%o0], %o2              ! set o2 to the current value
@@ -148,7 +148,7 @@ retryAS:
         retl                            ! return back to the caller
         mov     %o3, %o0                ! set the return code to the prev value
 
-        SET_SIZE(_pr_md_ultrasparc_set) ! standard assembler/ELF epilogue
+        SET_SIZE(PR_AtomicSet)          ! standard assembler/ELF epilogue
 
 !
 !  end
@@ -164,7 +164,7 @@ retryAS:
 !  usage : newval = PR_AtomicAdd(address, val)
 !  return: the value after addition
 !
-        ENTRY(_pr_md_ultrasparc_add)       ! standard assembler/ELF prologue
+        ENTRY(PR_AtomicAdd)       ! standard assembler/ELF prologue
 
 retryAA:
         ld      [%o0], %o2              ! set o2 to the current value
@@ -177,7 +177,7 @@ retryAA:
         retl                            ! return back to the caller
         mov     %o4, %o0                ! set the return code to the new value
 
-        SET_SIZE(_pr_md_ultrasparc_add)	! standard assembler/ELF epilogue
+        SET_SIZE(PR_AtomicAdd)    		! standard assembler/ELF epilogue
 
 !
 !  end
