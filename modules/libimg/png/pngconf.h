@@ -643,6 +643,10 @@ typedef z_stream FAR *  png_zstreamp;
 #   define PNG_EXPORT(type,symbol) type _export symbol
 #endif
 
+#if defined(MOZ_STRIP_NOT_EXPORTED)
+#   define PNG_EXPORT(type,symbol) type __attribute__ ((dllexport))  symbol
+#endif
+
 /* allow for compilation as shared lib under BeOS */
 #ifdef __BEOSDLL__
 #define PNG_EXPORT(type,symbol) __declspec(export) type symbol

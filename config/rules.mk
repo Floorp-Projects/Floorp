@@ -595,6 +595,11 @@ ifneq ($(OS_ARCH),OS2)
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS)
 	rm -f $@
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
+ifdef MOZ_STRIP_NOT_EXPORTED
+ifdef INHIBIT_STRIP_NOT_EXPORTED
+	objcopy -R ".exports" $@
+endif
+endif
 	chmod +x $@
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
 else

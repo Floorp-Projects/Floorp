@@ -92,7 +92,11 @@ static const char* kURI##prefix##_##name = ns #name
 #ifdef XP_PC
 #define NS_RDF _declspec(dllexport)
 #else  /* !XP_PC */
+#ifdef MOZ_STRIP_NOT_EXPORTED
+#define NS_RDF __attribute__ ((dllexport))
+#else
 #define NS_RDF
+#endif /* !MOZ_STRIP_NOT_EXPORTED */
 #endif /* !XP_PC */
 #else  /* !_IMPL_NS_RDF */
 #ifdef XP_PC

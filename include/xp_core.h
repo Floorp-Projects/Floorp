@@ -243,6 +243,13 @@ typedef int (*FARPROC)();
 #define PUBLIC
 #define MODULE_PRIVATE
 
+#if defined(XP_UNIX) && defined(MOZ_STRIP_NOT_EXPORTED)
+#undef PUBLIC
+#define PUBLIC __attribute__ ((dllexport))
+#undef MODULE_PRIVATE
+#define MODULE_PRIVATE __attribute__ ((dllexport))
+#endif
+
 #if defined(XP_UNIX) && defined(PRIVATE)
 #undef PRIVATE
 #endif

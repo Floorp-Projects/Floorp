@@ -64,6 +64,8 @@
  *      so we can increase the stack size
  */
 #define ResDef(name,id,msg)	int __far name = (id);
+#elif defined(MOZ_STRIP_NOT_EXPORTED)
+#define ResDef(name,id,msg)	__attribute__ ((dllexport)) int name = (id);
 #else
 #define ResDef(name,id,msg)	int name = (id);
 #endif

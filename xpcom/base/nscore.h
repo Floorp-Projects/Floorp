@@ -72,6 +72,14 @@ typedef PRUint16 PRUnichar;
 #define NS_EXPORT __declspec(export)
 #define NS_EXPORT_(type) __declspec(export) type
 
+#elif defined(MOZ_STRIP_NOT_EXPORTED)
+
+#define NS_IMPORT
+#define NS_IMPORT_(type) type
+
+#define NS_EXPORT __attribute__ ((dllexport))
+#define NS_EXPORT_(type) __attribute__ ((dllexport)) type
+
 #else
 /* XXX do something useful? */
 #define NS_IMPORT
