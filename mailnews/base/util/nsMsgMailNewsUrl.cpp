@@ -89,6 +89,15 @@ nsresult nsMsgMailNewsUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr
 		return NS_OK;
 	}
  
+#if defined(NS_DEBUG)
+    /*
+     * Check for the debug-only interface indicating thread-safety
+     */
+    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+    if (aIID.Equals(kIsThreadsafeIID)) {
+        return NS_OK;
+    }
+#endif
     return NS_NOINTERFACE;
 }
 
