@@ -52,10 +52,11 @@
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
 NS_IMETHODIMP
-nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
+nsHTMLContainerFrame::Paint(nsIPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nsFramePaintLayer aWhichLayer)
+                            const nsRect&        aDirtyRect,
+                            nsFramePaintLayer    aWhichLayer,
+                            PRUint32             aFlags)
 {
   if (NS_FRAME_IS_UNFLOWABLE & mState) {
     return NS_OK;
@@ -93,8 +94,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
       //  an image to represent this "hidden" element.
       if (!mFrames.FirstChild())
       {
-        nsFrame::Paint(aPresContext,
-                       aRenderingContext, aDirtyRect, aWhichLayer);
+        nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
       }
     }
   }
@@ -117,7 +117,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
   // override the visibility property and display even if their parent is
   // hidden
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
 
   return NS_OK;
 }

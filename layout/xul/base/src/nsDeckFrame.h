@@ -50,10 +50,11 @@ public:
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
 
  
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,

@@ -66,7 +66,8 @@ public:
   Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
-        nsFramePaintLayer    aWhichLayer);
+        nsFramePaintLayer    aWhichLayer,
+        PRUint32             aFlags = 0);
 
   NS_IMETHOD
   Place(nsIPresContext*      aPresContext,

@@ -699,7 +699,8 @@ NS_IMETHODIMP
 nsFrame::Paint(nsIPresContext*      aPresContext,
                nsIRenderingContext& aRenderingContext,
                const nsRect&        aDirtyRect,
-               nsFramePaintLayer    aWhichLayer)
+               nsFramePaintLayer    aWhichLayer,
+               PRUint32             aFlags)
 {
   if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)
     return NS_OK;

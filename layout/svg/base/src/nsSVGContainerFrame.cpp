@@ -391,10 +391,11 @@ nsSVGContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsSVGContainerFrame::Paint ( nsIPresContext* aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect& aDirtyRect,
-                      nsFramePaintLayer aWhichLayer)
+nsSVGContainerFrame::Paint (nsIPresContext* aPresContext,
+                      nsIRenderingContext&  aRenderingContext,
+                      const nsRect&         aDirtyRect,
+                      nsFramePaintLayer     aWhichLayer,
+                      PRUint32              aFlags)
 {
   const nsStyleVisibility* visib = (const nsStyleVisibility*)
   mStyleContext->GetStyleData(eStyleStruct_Visibility);
@@ -413,11 +414,12 @@ nsSVGContainerFrame::Paint ( nsIPresContext* aPresContext,
 
 // Paint one child frame
 void
-nsSVGContainerFrame::PaintChild(nsIPresContext*      aPresContext,
+nsSVGContainerFrame::PaintChild(nsIPresContext*   aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsIFrame*            aFrame,
-                             nsFramePaintLayer    aWhichLayer)
+                             nsFramePaintLayer    aWhichLayer,
+                             PRUint32             aFlags)
 {
       const nsStyleVisibility* visib;
       aFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)visib));
@@ -430,10 +432,11 @@ nsSVGContainerFrame::PaintChild(nsIPresContext*      aPresContext,
 }
 
 void
-nsSVGContainerFrame::PaintChildren(nsIPresContext*      aPresContext,
+nsSVGContainerFrame::PaintChildren(nsIPresContext*   aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect&        aDirtyRect,
-                                nsFramePaintLayer    aWhichLayer)
+                                nsFramePaintLayer    aWhichLayer,
+                                PRUint32             aFlags)
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);

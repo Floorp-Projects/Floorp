@@ -458,10 +458,11 @@ nsListControlFrame::Destroy(nsIPresContext *aPresContext)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::Paint(nsIPresContext* aPresContext,
+nsListControlFrame::Paint(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect,
-                          nsFramePaintLayer aWhichLayer)
+                          const nsRect&        aDirtyRect,
+                          nsFramePaintLayer    aWhichLayer,
+                          PRUint32             aFlags)
 {
   nsIStyleContext* sc = mStyleContext;
   const nsStyleVisibility* vis = 

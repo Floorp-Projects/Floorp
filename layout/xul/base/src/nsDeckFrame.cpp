@@ -293,10 +293,11 @@ nsDeckFrame::GetSelectedBox()
 
 
 NS_IMETHODIMP
-nsDeckFrame::Paint(nsIPresContext* aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect& aDirtyRect,
-                                nsFramePaintLayer aWhichLayer)
+nsDeckFrame::Paint(nsIPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags)
 {
   // if a tab is hidden all its children are too.
  	const nsStyleVisibility* vis = 

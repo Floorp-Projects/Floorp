@@ -45,10 +45,11 @@ struct nsStylePosition;
 // functionality.
 class nsHTMLContainerFrame : public nsContainerFrame {
 public:
-  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer,
+                    PRUint32             aFlags = 0);
 
   /**
    * Helper method to create next-in-flows if necessary. If aFrame

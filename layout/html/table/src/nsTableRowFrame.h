@@ -33,6 +33,8 @@ class nsReflowTimer;
 #endif
 
 #define NS_TABLE_MAX_ROW_INDEX  (1<<19)
+#define NS_ROW_FRAME_PAINT_SKIP_ROW   0x00000001
+#define NS_ROW_FRAME_PAINT_SKIP_CELLS 0x00000002
 
 /**
  * nsTableRowFrame is the frame that maps table rows 
@@ -83,7 +85,8 @@ public:
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
 
 
   /** ask all children to paint themselves, without clipping (for cells with rowspan>1)
@@ -92,7 +95,8 @@ public:
   virtual void PaintChildren(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer);
+                             nsFramePaintLayer    aWhichLayer,
+                             PRUint32             aFlags = 0);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext*   aPresContext,
                               const nsPoint&    aPoint, 

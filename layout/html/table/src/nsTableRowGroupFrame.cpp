@@ -190,33 +190,29 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsIPresContext*       aPresContext,
 NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect,
-                                      nsFramePaintLayer    aWhichLayer)
+                                      nsFramePaintLayer    aWhichLayer,
+                                      PRUint32             aFlags)
 {
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  nsresult rv;
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
-    if (eCompatibility_Standard == mode) {
-      const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-      if (vis->IsVisibleOrCollapsed()) {
-        const nsStyleBorder* border =
-          (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-        const nsStyleBackground* color =
-          (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
-        nsTableFrame* tableFrame = nsnull;
-        rv = nsTableFrame::GetTableFrame(this, tableFrame);
-        if (NS_FAILED(rv) || (nsnull == tableFrame)) {
-          return rv;
-        }
-        nsRect rect(0,0,mRect.width, mRect.height);
-        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *border, 0, 0);
-      }
+
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(&mode);
+
+  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&  
+      (eCompatibility_Standard == mode)) {
+    const nsStyleVisibility* vis = 
+    (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis->IsVisibleOrCollapsed()) {
+      const nsStyleBorder* border =
+        (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStyleBackground* color =
+        (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
+      nsRect rect(0,0,mRect.width, mRect.height);
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *color, *border, 0, 0);
     }
   }
 
@@ -228,7 +224,24 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
   }
 #endif
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&  
+      (eCompatibility_Standard == mode)) {
+    // paint the backgrouds of the rows, skipping the cells
+    nsIFrame* kid = mFrames.FirstChild();
+    while (kid) {
+      PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer, NS_ROW_FRAME_PAINT_SKIP_CELLS);
+      kid->GetNextSibling(&kid);
+    }
+    // paint the backgrounds of the cells and their descendants, skipping the rows
+    kid = mFrames.FirstChild();
+    while (kid) {
+      PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer, NS_ROW_FRAME_PAINT_SKIP_ROW);
+      kid->GetNextSibling(&kid);
+    }
+  }
+  else {
+    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  }
   return NS_OK;
   /*nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);*/
 
@@ -255,7 +268,8 @@ nsTableRowGroupFrame::GetSkipSides() const
 void nsTableRowGroupFrame::PaintChildren(nsIPresContext*      aPresContext,
                                          nsIRenderingContext& aRenderingContext,
                                          const nsRect&        aDirtyRect,
-                                         nsFramePaintLayer    aWhichLayer)
+                                         nsFramePaintLayer    aWhichLayer,
+                                         PRUint32             aFlags)
 {
   nsIFrame* kid = GetFirstFrame();
   while (nsnull != kid) {

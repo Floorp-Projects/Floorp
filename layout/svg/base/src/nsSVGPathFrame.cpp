@@ -231,10 +231,11 @@ nsSVGPathFrame::AttributeChanged(nsIPresContext* aPresContext,
 //
 //
 NS_METHOD 
-nsSVGPathFrame::Paint(nsIPresContext* aPresContext,
+nsSVGPathFrame::Paint(nsIPresContext*          aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect,
-                          nsFramePaintLayer aWhichLayer)
+                          const nsRect&        aDirtyRect,
+                          nsFramePaintLayer    aWhichLayer,
+                          PRUint32             aFlags)
 {
   const nsStyleVisibility* visib = NS_STATIC_CAST(const nsStyleVisibility*,
     mStyleContext->GetStyleData(eStyleStruct_Visibility));

@@ -74,7 +74,8 @@ public:
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
 
   /**
    * Get the "type" of the frame

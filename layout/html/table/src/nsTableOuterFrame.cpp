@@ -315,10 +315,12 @@ nsTableOuterFrame::RemoveFrame(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
-                                   nsIRenderingContext& aRenderingContext,
-                                   const nsRect&        aDirtyRect,
-                                   nsFramePaintLayer    aWhichLayer)
+NS_METHOD 
+nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect&        aDirtyRect,
+                         nsFramePaintLayer    aWhichLayer,
+                         PRUint32             aFlags)
 {
 #ifdef DEBUG
   // for debug...

@@ -74,10 +74,11 @@ nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsPlaceholderFrame::Paint(nsIPresContext* aPresContext,
+nsPlaceholderFrame::Paint(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect,
-                          nsFramePaintLayer aWhichLayer)
+                          const nsRect&        aDirtyRect,
+                          nsFramePaintLayer    aWhichLayer,
+                          PRUint32             aFlags)
 {
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     float p2t;

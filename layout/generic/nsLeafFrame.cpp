@@ -34,10 +34,11 @@ nsLeafFrame::~nsLeafFrame()
 }
 
 NS_IMETHODIMP
-nsLeafFrame::Paint(nsIPresContext* aPresContext,
+nsLeafFrame::Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer)
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     PRBool isVisible;

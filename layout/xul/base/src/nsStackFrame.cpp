@@ -178,9 +178,10 @@ nsStackFrame::GetStackedFrameForPoint(nsIPresContext* aPresContext,
 
 void
 nsStackFrame::PaintChildren(nsIPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect&        aDirtyRect,
-                                nsFramePaintLayer    aWhichLayer)
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect&        aDirtyRect,
+                            nsFramePaintLayer    aWhichLayer,
+                            PRUint32             aFlags)
 {
   // we need to make sure we paint background then foreground of each child because they
   // are stacked. Otherwise the foreground of the first child could be on the top of the
@@ -194,10 +195,11 @@ nsStackFrame::PaintChildren(nsIPresContext*      aPresContext,
 // Paint one child frame
 void
 nsStackFrame::PaintChild(nsIPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsIFrame*            aFrame,
-                             nsFramePaintLayer    aWhichLayer)
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect&        aDirtyRect,
+                         nsIFrame*            aFrame,
+                         nsFramePaintLayer    aWhichLayer,
+                         PRUint32             aFlags)
 {
   // we need to make sure we paint background then foreground of each child because they
   // are stacked. Otherwise the foreground of the first child could be on the top of the

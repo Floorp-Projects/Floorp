@@ -47,10 +47,11 @@ public:
   nsIsIndexFrame();
   virtual ~nsIsIndexFrame();
 
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
 
   // XXX Hack so we can squirrel away the pres context pointer for the KeyPress method
   NS_IMETHOD Init(nsIPresContext*  aPresContext,

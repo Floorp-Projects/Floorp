@@ -63,10 +63,11 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
                                
-  NS_METHOD Paint(nsIPresContext* aPresContext,
+  NS_METHOD Paint(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect,
-                  nsFramePaintLayer aWhichLayer);
+                  const nsRect&        aDirtyRect,
+                  nsFramePaintLayer    aWhichLayer,
+                  PRUint32             aFlags);
 
   NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
@@ -149,10 +150,11 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
 // this is identical to nsHTMLContainerFrame::Paint except for the background and border. 
 NS_IMETHODIMP
-nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
+nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
-                       const nsRect& aDirtyRect,
-                       nsFramePaintLayer aWhichLayer)
+                       const nsRect&        aDirtyRect,
+                       nsFramePaintLayer    aWhichLayer,
+                       PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Paint our background and border

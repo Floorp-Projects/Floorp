@@ -756,7 +756,7 @@ nsXULTreeGroupFrame::AttributeChanged(nsIPresContext* aPresContext, nsIContent* 
 //
 NS_IMETHODIMP
 nsXULTreeGroupFrame :: Paint ( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
-                                const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer)
+                                const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer, PRUint32 aFlags)
 {
   nsresult res = NS_OK;
   res = nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );

@@ -141,10 +141,11 @@ public:
 
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -206,10 +207,11 @@ public:
   /**
     * @see nsIFrame::Paint
     */
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags);
 
   /**
     * @see nsIFrame::Reflow
@@ -410,10 +412,11 @@ PRBool nsHTMLFrameOuterFrame::IsInline()
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::Paint(nsIPresContext* aPresContext,
+nsHTMLFrameOuterFrame::Paint(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect,
-                             nsFramePaintLayer aWhichLayer)
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer,
+                             PRUint32             aFlags)
 {
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
@@ -905,7 +908,8 @@ NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer)
+                             nsFramePaintLayer    aWhichLayer,
+                             PRUint32             aFlags)
 {
   //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   // if there is not web shell paint based on our background color, 

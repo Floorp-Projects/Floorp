@@ -381,10 +381,11 @@ nsGfxCheckboxControlFrame::PaintMixedMark ( nsIRenderingContext& aRenderingConte
 
 //------------------------------------------------------------
 NS_METHOD 
-nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
+nsGfxCheckboxControlFrame::Paint(nsIPresContext*   aPresContext,
                               nsIRenderingContext& aRenderingContext,
-                              const nsRect& aDirtyRect,
-                              nsFramePaintLayer aWhichLayer)
+                              const nsRect&        aDirtyRect,
+                              nsFramePaintLayer    aWhichLayer,
+                              PRUint32             aFlags)
 {
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {

@@ -78,10 +78,11 @@ public:
   // Expect this code to repackaged and moved to a new location in the future.
   //
 
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
 
   virtual void PaintRadioButton(nsIPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,

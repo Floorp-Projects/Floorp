@@ -62,7 +62,7 @@ public:
   NS_IMETHOD Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
                       nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow) ;
   NS_IMETHOD Paint(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer);
+                    const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer, PRUint32 aFlags = 0);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType, PRInt32 aHint) ;
 

@@ -1432,10 +1432,12 @@ nsTableFrame::GetAdditionalChildListName(PRInt32   aIndex,
 }
 
 /* SEC: TODO: adjust the rect for captions */
-NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              const nsRect& aDirtyRect,
-                              nsFramePaintLayer aWhichLayer)
+NS_METHOD 
+nsTableFrame::Paint(nsIPresContext*      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer,
+                    PRUint32             aFlags)
 {
   // table paint code is concerned primarily with borders and bg color
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {

@@ -1463,7 +1463,8 @@ nsRect nsOutlinerBodyFrame::GetInnerBox()
 NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
                                          nsIRenderingContext& aRenderingContext,
                                          const nsRect&        aDirtyRect,
-                                         nsFramePaintLayer    aWhichLayer)
+                                         nsFramePaintLayer    aWhichLayer,
+                                         PRUint32             aFlags)
 {
   // XXX This trap handles an odd bogus 1 pixel invalidation that we keep getting 
   // when scrolling.
