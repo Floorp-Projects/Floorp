@@ -50,6 +50,8 @@
 #include "nsIInputStream.h"
 #include "nsIPref.h"
 
+#include "nsAutoLock.h"
+
 #include "plstr.h"
 #include "prprf.h"
 #include "prio.h"
@@ -444,7 +446,7 @@ public:
     virtual ~xptiInterfaceInfo();
 
     // We use mName[-1] (cast as a xptiInfoFlags) to hold the two bit state
-    // below and alos the bit flags that follow. If the states ever grow beyond 
+    // below and also the bit flags that follow. If the states ever grow beyond 
     // 2 bits then these flags need to be adjusted along with STATE_MASK in
     // xptiInfoFlags.
 
@@ -482,8 +484,8 @@ public:
     const nsID* GetTheIID() const {return &mIID;}
     const char* GetTheName() const {return mName;}
 
-    PRBool PartiallyResolve(XPTInterfaceDescriptor*  aDescriptor,
-                            xptiWorkingSet*          aWorkingSet);
+    PRBool PartiallyResolveLocked(XPTInterfaceDescriptor*  aDescriptor,
+                                  xptiWorkingSet*          aWorkingSet);
 
     void Invalidate()
         { 
@@ -506,10 +508,17 @@ private:
         {NS_ASSERTION(IsValid(),"bad state");
          GetFlags().SetState(uint8(state));}
 
-    PRBool Resolve(xptiWorkingSet* aWorkingSet = nsnull);
-
     PRBool EnsureResolved(xptiWorkingSet* aWorkingSet = nsnull)
         {return IsFullyResolved() ? PR_TRUE : Resolve(aWorkingSet);}
+    PRBool Resolve(xptiWorkingSet* aWorkingSet = nsnull);
+
+    // We only call these "*Locked" varients after locking. This is done to 
+    // allow reentrace as files are loaded and various interfaces resolved 
+    // without having to worry about the locked state.
+
+    PRBool EnsureResolvedLocked(xptiWorkingSet* aWorkingSet = nsnull)
+        {return IsFullyResolved() ? PR_TRUE : ResolveLocked(aWorkingSet);}
+    PRBool ResolveLocked(xptiWorkingSet* aWorkingSet = nsnull);
 
     PRBool ScriptableFlagIsValid() const
         {int s = (int) GetResolveState(); 
@@ -644,7 +653,7 @@ class xptiInterfaceInfoManager
 
 public:
     virtual ~xptiInterfaceInfoManager();
-    static xptiInterfaceInfoManager* GetInterfaceInfoManager();
+    static xptiInterfaceInfoManager* GetInterfaceInfoManagerNoAddRef();
     static void FreeInterfaceInfoManager();
 
     xptiWorkingSet*  GetWorkingSet() {return &mWorkingSet;}
@@ -656,6 +665,16 @@ public:
                     xptiWorkingSet* aWorkingSet = nsnull);
 
     PRBool GetComponentsDir(nsILocalFile** aDir);
+    
+    static PRLock* GetResolveLock(xptiInterfaceInfoManager* self = nsnull) 
+        {if(!self && !(self = GetInterfaceInfoManagerNoAddRef())) 
+            return nsnull;
+         return self->mResolveLock;}
+
+    static PRLock* GetAutoRegLock(xptiInterfaceInfoManager* self = nsnull) 
+        {if(!self && !(self = GetInterfaceInfoManagerNoAddRef())) 
+            return nsnull;
+         return self->mAutoRegLock;}
 
     static void WriteToLog(const char *fmt, ...);
 
@@ -667,6 +686,8 @@ private:
         FILES_ADDED_ONLY,
         FULL_VALIDATION_REQUIRED
     };
+
+    PRBool IsValid();
 
     PRBool BuildFileList(nsISupportsArray** aFileList);
 
@@ -703,6 +724,8 @@ private:
     nsCOMPtr<nsILocalFile>  mStatsLogFile;
     nsCOMPtr<nsILocalFile>  mAutoRegLogFile;
     PRFileDesc*             mOpenLogFile;
+    PRLock*                 mResolveLock;
+    PRLock*                 mAutoRegLock;
 };
 
 #endif /* xptiprivate_h___ */
