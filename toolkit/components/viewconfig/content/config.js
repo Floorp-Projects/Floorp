@@ -352,6 +352,8 @@ function onConfigLoad()
   gPrefBranch.addObserver("", gPrefListener, false);
 
   document.getElementById("configTree").view = view;
+  
+  document.getElementById("textbox").focus();
 }
 
 function onConfigUnload()
