@@ -1701,16 +1701,15 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   res = commonAncestor->GetFirstChild(getter_AddRefs(firstChild));
   if (NS_FAILED(res)) return res;
 
+  nsCOMPtr<nsIDOMNode>clonedNode = do_QueryInterface(clonedFrag);
+
   while(firstChild)
   {
     res = firstChild->GetNextSibling(getter_AddRefs(nextSibling));
     if (NS_FAILED(res)) return res;
-
-    nsCOMPtr<nsIDOMNode>clonedNode = do_QueryInterface(clonedFrag);
+ 
     res = CopyContents(firstChild, clonedNode, this);
     if (NS_FAILED(res)) return res;
-    clonedFrag = do_QueryInterface(clonedNode);
-    *aReturn = clonedFrag;
     firstChild = nextSibling;
   }
   *aReturn = clonedFrag;
