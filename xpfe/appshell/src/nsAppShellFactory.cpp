@@ -18,16 +18,40 @@
  */
 #include "nsIFactory.h"
 #include "nscore.h"
+#include "nsIComponentManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsICmdLineService.h"
 
 /* extern the factory entry points... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
-
+#if 0
+nsresult NS_NewDefaultProtocolHelperFactory(nsIFactory** aResult);
+#endif
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID,         NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kCmdLineServiceCID,  NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 
+
+
+extern "C" NS_EXPORT nsresult
+NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+{
+    nsComponentManager::RegisterComponent(kAppShellServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kCmdLineServiceCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kProtocolHelperCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
+    return NS_OK;
+}
+
+extern "C" NS_EXPORT nsresult
+NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+{
+    nsComponentManager::UnregisterFactory(kAppShellServiceCID, path);
+    nsComponentManager::UnregisterFactory(kCmdLineServiceCID,  path);
+    nsComponentManager::UnregisterFactory(kProtocolHelperCID,  path);
+    
+    return NS_OK;
+}
 
 #if defined(XP_MAC) && defined(MAC_STATIC)
 extern "C" NS_APPSHELL nsresult 
@@ -57,6 +81,12 @@ NSGetFactory(nsISupports* serviceMgr,
   else if (aClass.Equals(kCmdLineServiceCID)) {
     rv = NS_NewCmdLineServiceFactory(aFactory);
   }
+#if 0
+  else if (aClass.Equals(kProtocolHelperCID)) {
+    rv = NS_NewDefaultProtocolHelperFactory(aFactory);
+  }
+#endif
+
 
   return rv;
 }
