@@ -346,16 +346,12 @@ NS_IMETHODIMP nsWebBrowserChrome::OnProgressChange(nsIChannel* aChannel,
    PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
    PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-   //XXXTAB Implement
-   NS_ERROR("NotYetImplemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::OnChildProgressChange(nsIChannel* aChannel,
    PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
 {
-   //XXXTAB Implement
-   NS_ERROR("NotYetImplemented");
    return NS_OK;
 } 
 
