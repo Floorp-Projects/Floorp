@@ -767,6 +767,13 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   rv = view->CreateWidget(kCChildCID);
   SetView(view);
 
+  // if the visibility is hidden, reflect that in the view
+  const nsStyleDisplay* display;
+  GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+    view->SetVisibility(nsViewVisibility_kHide);
+  }
+
   nsIWidget* widget;
   view->GetWidget(widget);
   nsRect webBounds(0, 0, NSToCoordRound(aSize.width * t2p), 
