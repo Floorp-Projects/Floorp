@@ -15,6 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+/*
+ * An NNTP view of a newshost. Contains everything needed to maintain state
+ * information about an NNTP host. Similar to the old MSG_NewsHost but
+ * is only for protocol-state maintenance.
+ */
+
 #include "nsISupports.idl"
 #include "nsIMsgNewsgroup.idl"
 

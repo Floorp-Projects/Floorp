@@ -16,6 +16,14 @@
  * Reserved.
  */
 
+/*
+ * network-oriented interface to newsgroups.
+ * This is similar to the old MSG_NewsFolderInfo but is an interface
+ * only NNTP uses for talking to the news server and maintaining state.
+ *
+ */
+
+
 #include "nsISupports.idl"
 
 [object, uuid(E628ED10-9452-11d2-B7EA-00805F05FFA5)]

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+ * XOVER results parser - data pushed into this interface from the NNTP
+ * protocol interface
+ */
 #include "nsISupports.idl"
 
 

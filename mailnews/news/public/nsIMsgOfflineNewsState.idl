@@ -16,17 +16,24 @@
  * Reserved.
  */
 
+/*
+ * offline news message state. Interface for old MSG_OfflineNewsArtState
+ */
+
 #include "nsISupports.idl"
+#include "nsIMsgNewsgroup.idl"
 
 [object, uuid(921AC210-96B5-11d2-B7EB-00805F05FFA5)]
 interface nsIMsgOfflineNewsState : nsISupports {
 
+  attribute nsIMsgNewsgroup newsgroup;
     /* outputBuffer is actually
      * a buffer to dump data into, but we normally pass it NET_Socket_Buffer,
      * which is constant. The implementation should only allocate a new
      * buffer if *outputBuffer is NULL.
      */
-    long Process(out string outputBuffer, in long bufferSize);
-    long Interrupt();
+
+  long Process(out string outputBuffer, in long bufferSize);
+  long Interrupt();
 };
 
