@@ -35,6 +35,7 @@
 #include "nsIThread.h"
 #include "nsIAppShellService.h"
 #include "nsIAppShellComponent.h"
+#include "nsIObserverService.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
 #include "nsCRT.h"
@@ -744,6 +745,18 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   fpsetmask(0);
 #endif
 
+  // Setup an autoreg obserer, so that we can update a progress
+  // string in the splash screen
+  nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_PROGID);
+  if (obsService)
+  {
+    nsCOMPtr<nsIObserver> splashScreenObserver = do_QueryInterface(nativeApp);
+    if (splashScreenObserver)
+    {
+      obsService->AddObserver(splashScreenObserver, NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode());
+    }
+  }
+  
   //----------------------------------------------------------------
   // XPInstall needs to clean up after any updates that couldn't
   // be completed because components were in use. This must be done 
@@ -774,6 +787,16 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1( needAutoreg );
+
+  // remove the nativeApp as an XPCOM autoreg observer
+  if (obsService)
+  {
+    nsCOMPtr<nsIObserver> splashScreenObserver = do_QueryInterface(nativeApp);
+    if (splashScreenObserver)
+    {
+      obsService->RemoveObserver(splashScreenObserver, NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode());
+    }
+  }
 
   // Start up the core services:
 
@@ -811,6 +834,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
             splashScreen->Hide();
         }
     }
+    
     // Release argument object.
     NS_IF_RELEASE( nativeApp );
     return rv;
