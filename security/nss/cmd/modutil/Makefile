@@ -73,10 +73,13 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 include ../platrules.mk
 
 ifeq ($(OS_ARCH), WINNT)
-installparse.c:  installparse.y
+installparse.c:  installparse.y FORCE
 	yacc -d installparse.y
 	mv ytab.c installparse.c
 	mv ytab.h installparse.h
+
+FORCE:
+
 else
 installparse.c:  installparse.y
 	yacc -d installparse.y
