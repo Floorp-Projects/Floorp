@@ -243,10 +243,6 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     // Reflow the frame
     nsIHTMLReflow* htmlReflow;
     if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      // XXX Temporary hack until the block/inline code changes. It expects
-      // the available width to be the space minus any margins...
-      kidReflowState.availableWidth -= kidReflowState.computedMargin.left +
-        kidReflowState.computedMargin.right;
       ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                   aStatus);
 
