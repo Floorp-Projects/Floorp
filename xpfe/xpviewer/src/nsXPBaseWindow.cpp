@@ -486,7 +486,7 @@ nsIDOMNode * nsXPBaseWindow::SearchTree(nsIDOMNode *aNode, const nsString &aId)
   PRUint16 nodeType = 0;
 
   aNode->GetNodeType(&nodeType);
-  if (nodeType == nsIDOMNode.ELEMENT_NODE) {
+  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
     nsIDOMElement* nodeElement;
     nsresult result = aNode->QueryInterface(kIDOMElementIID, (void**) &nodeElement);
     if (NS_OK == result) {
