@@ -359,7 +359,7 @@ var messageHeaderSink = {
           else {  
             // use the index to create a unique header name like:
             // received5, received6, etc
-            currentHeaderData[lowerCaseHeaderName + index] = header;
+            currentHeaderData[lowerCaseHeaderName + index++] = header;
           }
         }
         else
