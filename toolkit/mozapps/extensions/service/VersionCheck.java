@@ -56,12 +56,12 @@ public class VersionCheck
   }
 */
 
-  public Extension[] getExtensionsToUpdate(Extension[] aExtensions, String aTargetApp, String aTargetAppVersion)
+  public ExtensionItem[] getExtensionsToUpdate(ExtensionItem[] aExtensions, String aTargetApp, String aTargetAppVersion)
   {
     Vector results = new Vector();
     for (int i = 0; i < aExtensions.length; ++i) 
     {
-      Extension e = aExtensions[i];
+      ExtensionItem e = aExtensions[i];
       int row = getNewestExtension(e.getId(), e.getVersion(), aTargetApp, aTargetAppVersion);
       if (row != -1) 
       {
@@ -74,16 +74,16 @@ public class VersionCheck
       }
     }
 
-    return (Extension[])results.toArray();
+    return (ExtensionItem[])results.toArray();
   }
 
   // This method is a temporary workaround until Mozilla's Web Services implementation 
   // supports passing Arrays of complex types.
-  public Extension getNewestExtension(Extension aExtension, 
-                                      String aTargetApp, 
-                                      String aTargetAppVersion)
+  public ExtensionItem getNewestExtension(ExtensionItem aExtension, 
+                                          String aTargetApp, 
+                                          String aTargetAppVersion)
   {
-    Extension e = new Extension();
+    ExtensionItem e = new ExtensionItem();
 
     int row = getNewestExtension(aExtension.getId(), aExtension.getVersion(), 
                                  aTargetApp, aTargetAppVersion);

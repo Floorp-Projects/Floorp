@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is The Update Service.
+# 
+# The Initial Developer of the Original Code is Ben Goodger. 
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Ben Goodger <ben@bengoodger.com>
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<!DOCTYPE wizard [
+<!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/update/update.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%updateDTD;
+%brandDTD;
+]>
+
+<wizard id="migrationWizard"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&updateWizard.title;"
+        onload="gUpdateWizard.init()"
+        onunload="gUpdateWizard.uninit()"
+        style="width: 40em;"
+        buttons="accept,cancel">
+
+  <script type="application/x-javascript" src="chrome://mozapps/content/update/update.js"/>
+  
+  <stringbundleset id="updateSet">
+    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+  </stringbundleset>
+
+  <wizardpage id="mismatch" pageid="mismatch" next="checkingForUpdates"
+              label="&mismatch.title;"
+              onpageadvanced="gMismatchPage.onPageAdvanced();">
+
+    <label>&mismatch.intro1.label;</label>
+    
+    <separator class="thin"/>
+    
+    <listbox id="mismatch.incompatible" flex="1"/>
+    
+    <separator class="thin"/>
+    
+    <label style="font-weight: bold;">&mismatch.intro2.label;</label>
+    <separator class="thin"/>
+    
+    <label>&mismatch.intro3.label;</label>
+
+  </wizardpage>
+  
+  <wizardpage id="checkingForUpdates" pageid="checkingForUpdates" next="updatesNotFound"
+              label="&checking.title;"
+              onpageshow="gUpdatePage.onPageShow();">
+
+    <label>&checking.intro.label;</label>
+    
+    <progressmeter id="progress"/>
+    
+  </wizardpage>
+    
+  <wizardpage id="updatesNotFound" pageid="updatesNotFound" next="finished"
+              label="&updatesNotFound.title;"
+              onpageshow="UpdateWizard.onUpdatesNotFoundPageShow();"
+              onpageadvanced="UpdateWizard.onUpdatesNotFoundPageAdvanced();">
+  </wizardpage>
+
+  <wizardpage id="updatesFound" pageid="updatesFound" next="finished"
+              label="&updatesFound.title;"
+              onpageshow="UpdateWizard.onUpdatesFoundPageShow();"
+              onpageadvanced="UpdateWizard.onUpdatesFoundPageAdvanced();">
+  </wizardpage>
+
+  <wizardpage id="installing" pageid="installing"
+              label="&installing.title;"
+              onpageshow="UpdateWizard.onFinishedPageShow();"
+              onpageadvanced="UpdateWizard.onFinishedPageAdvanced();">
+  </wizardpage>
+  
+  <wizardpage id="finished" pageid="finished"
+              label="&finished.title;"
+              onpageshow="UpdateWizard.onFinishedPageShow();"
+              onpageadvanced="UpdateWizard.onFinishedPageAdvanced();">
+  </wizardpage>
+  
+</wizard>
+
+  

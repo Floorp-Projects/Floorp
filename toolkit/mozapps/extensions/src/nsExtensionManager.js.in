@@ -44,14 +44,44 @@ const PREF_UPDATE_EXTENSIONS    = "update.extensions.enabled";
 const PREF_UPDATE_AUTOUPDATE    = "update.extensions.autoUpdate";
 const PREF_UPDATE_APP           = "update.app.enabled";
 
-function Extension (aID, aVersion, aName, aRow, aXPIURL)
+function ExtensionItem ()
 {
-  this.id = aID;
-  this.version = aVersion;
-  this.name = aName;
-  this.row = aRow;
-  this.xpiURL = aXPIURL;
 }
+
+ExtensionItem.prototype = {
+  init: function (aID, aVersion, aName, aRow, aXPIURL, aType)
+  {
+    this._id = aID;
+    this._version = aVersion;
+    this._name = aName;
+    this._row = aRow;
+    this._xpiURL = aXPIURL;
+    this._type = aType;
+  },
+  
+  get id()      { return this._id;      },
+  get version() { return this._version; },
+  get name()    { return this._name;    },
+  get row()     { return this._row;     },
+  get xpiURL()  { return this._xpiURL;  },
+  get type()    { return this._type;    },
+
+  toObject: function ()
+  {
+    return { id: this._id, version: this._version, name: this._name, 
+             row: this._row, xpiURL: this._xpiURL, type: this._type };
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function (aIID) 
+  {
+    if (!aIID.equals(Components.interfaces.nsIExtensionItem) &&
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
 
 function VersionChecker(aExtensionResource, aAppID, aAppVersion, aDataSource)
 {
@@ -157,23 +187,20 @@ nsExtensionManager.prototype = {
         // doesn't happen all that often.
         this._ensureDS();
         var currAppID = pref.getCharPref(PREF_EM_APP_ID);
-        var extensions = this._ds.getIncompatibleExtensionList(currAppID, currAppVersion);
+        var items = this._ds.getIncompatibleItemList(currAppID, currAppVersion);
 
-        if (extensions.length > 0) {
+        if (items.length > 0) {
           var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                              .getService(Components.interfaces.nsIWindowWatcher);
           var ary = Components.classes["@mozilla.org/supports-array;1"]
                               .createInstance(Components.interfaces.nsISupportsArray);
-          for (var i = 0; i < extensions.length; ++i) {
-            var str = Components.classes["@mozilla.org/supports-string;1"]
-                                .createInstance(Components.interfaces.nsISupportsString);
-            str.data = extensions[i].toSource();
-            ary.AppendElement(str);
+          for (var i = 0; i < items.length; ++i) {
+            ary.AppendElement(items[i]);
             
             // Now disable the extension so it won't hurt anything. 
-            this.disableExtension(extensions[i].id);
+            this.disableExtension(items[i].id);
           }
-          ww.openWindow(null, "chrome://mozapps/content/extensions/mismatch.xul", 
+          ww.openWindow(null, "chrome://mozapps/content/update/update.xul", 
                         "", "chrome,centerscreen,modal", ary);
           // 
         }
@@ -181,7 +208,7 @@ nsExtensionManager.prototype = {
       
       // Now update the last app version so we don't do this checking 
       // again.
-      pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+      // pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
     }
   },
   
@@ -224,20 +251,16 @@ nsExtensionManager.prototype = {
     this._ds.disableExtension(aExtensionID);
   },
   
-  updateExtension: function (aExtensionID)
+  update: function (aItems, aItemCount, aShowUI)
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
 
-    var extensions = this._ds.getExtensionList(aExtensionID);
-    // var updater = new nsExtensionUpdater2(extensions, appID, appVersion);
-    // updater.loadSchema();
-
-    var updater = new nsExtensionUpdater(extensions, appID, appVersion);
+    var updater = new nsItemUpdater(aItems, appID, appVersion);
     updater.checkForUpdates();
-  },  
+  },
   
   // Themes
   installTheme: function (aThemeID)
@@ -250,11 +273,6 @@ nsExtensionManager.prototype = {
   
   },
 
-  updateTheme: function (aThemeID)
-  {
-  
-  },
-  
   get datasource()
   {
     this._ensureDS();
@@ -288,11 +306,10 @@ nsExtensionManager.prototype = {
   }
 };
 
-function nsExtensionUpdater(aExtensions, 
-                            aTargetAppID, aTargetAppVersion) 
+function nsItemUpdater(aItems, aTargetAppID, aTargetAppVersion) 
 {
-  this._extensions = aExtensions;
-  this._count = aExtensions.length;
+  this._items = aItems;
+  this._count = aItems.length;
   this._appID = aTargetAppID;
   this._appVersion = aTargetAppVersion;
 
@@ -300,7 +317,7 @@ function nsExtensionUpdater(aExtensions,
                        .getService(Components.interfaces.nsIObserverService);
 }
 
-nsExtensionUpdater.prototype = {
+nsItemUpdater.prototype = {
   /////////////////////////////////////////////////////////////////////////////
   // 
   checkForUpdates: function () 
@@ -316,8 +333,8 @@ nsExtensionUpdater.prototype = {
   
   _checkForUpdates: function ()
   {
-    for (var i = 0; i < this._extensions.length; ++i) {
-      var e = this._extensions[i];
+    for (var i = 0; i < this._items.length; ++i) {
+      var e = this._items[i];
       this._os.notifyObservers(null, "update-item-started", e.name + " " + e.version);
       this._proxy.getNewestExtension(e, this._appID, this._appVersion);
     }
@@ -339,12 +356,12 @@ nsExtensionUpdater.prototype = {
   
   getNewestExtensionCallback: function (aResult)
   {
-    var extension = aResult;
+    var item = aResult;
     try {
-      extension.name.toString(); // XXXben This is a lame hack to cause an exception to be
-                                 // thrown for null values when there is no newer extension
-                                 // or something else bad happens on the server that we 
-                                 // don't recognize.
+      item.name.toString(); // XXXben This is a lame hack to cause an exception to be
+                            // thrown for null values when there is no newer extension
+                            // or something else bad happens on the server that we 
+                            // don't recognize.
       this._os.notifyObservers(aResult, "update-item-ended", "goat");
     }
     catch (e) {
@@ -385,36 +402,9 @@ nsExtensionsDataSource.prototype = {
     return aResourceURI.substr("urn:mozilla:extension:".length, aResourceURI.length);
   },
 
-  getExtensionList: function (aExtensionID)
+  getIncompatibleItemList: function (aAppID, aAppVersion)
   {
-    var extensions = [];
-    if (aExtensionID) {
-      extensions.push(new Extension(aExtensionID, 
-                                    this.getExtensionProperty(aExtensionID, "version"),
-                                    this.getExtensionProperty(aExtensionID, "name"),
-                                    -1, ""));
-    }
-    else {
-      var ctr = Components.classes["@mozilla.org/rdf/container;1"]
-                          .createInstance(Components.interfaces.nsIRDFContainer);
-      ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
-      
-      var elements = ctr.GetElements();
-      while (elements.hasMoreElements()) {
-        var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        var id = this._stripPrefix(e.Value);
-        extensions.push(new Extension(id, 
-                                      this.getExtensionProperty(id, "version"),
-                                      this.getExtensionProperty(id, "name"),
-                                      -1, ""));
-      }
-    }
-    return extensions;
-  },
-  
-  getIncompatibleExtensionList: function (aAppID, aAppVersion)
-  {
-    var extensions = [];
+    var items = [];
     
     var ctr = Components.classes["@mozilla.org/rdf/container;1"]
                         .createInstance(Components.interfaces.nsIRDFContainer);
@@ -426,13 +416,15 @@ nsExtensionsDataSource.prototype = {
       var checker = new VersionChecker(e, aAppID, aAppVersion, this);
       if (!checker.isCompatible) {
         var id = this._stripPrefix(e.Value);
-        extensions.push(new Extension(id, 
-                                      this.getExtensionProperty(id, "version"),
-                                      this.getExtensionProperty(id, "name"),
-                                      -1, ""));
+        var item = Components.classes["@mozilla.org/extensions/item;1"]
+                             .createInstance(Components.interfaces.nsIExtensionItem);
+        item.init(id, this.getExtensionProperty(id, "version"),
+                  this.getExtensionProperty(id, "name"),
+                  -1, "", Components.interfaces.nsIExtensionItem.TYPE_EXTENSION);
+        items.push(item);
       }
     }
-    return extensions;
+    return items;
   },
   
   _setProperty: function (aDS, aSource, aProperty, aNewValue)
@@ -486,69 +478,6 @@ nsExtensionsDataSource.prototype = {
     ctr.RemoveElement(extension, true);
     
     this._setExtensionProperty(aExtensionID, this._emR("toBeUninstalled"), this._emL("true"));
-  },
-  
-  getUpdateURLs: function (aExtensionID)
-  {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var appID = pref.getCharPref(PREF_EM_APP_ID);
-  
-    var urls = [];
-    if (aExtensionID) {
-      var updateURL = this._getUpdateURLInternal(aExtensionID);
-      updateURL = updateURL.replace(/%APP%/g, escape(appID));
-      updateURL = updateURL.replace(/%ITEM%/g, escape(aExtensionID));
-      urls.push(updateURL);
-    }
-    else {
-      var ctr = Components.classes["@mozilla.org/rdf/container;1"]
-                          .createInstance(Components.interfaces.nsIRDFContainer);
-      ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
-      
-      var urlHash = { };
-      
-      var e = ctr.GetElements();
-      while (e.hasMoreElements()) {
-        var r = e.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        var extensionID = r.Value.substr("urn:mozilla:extension:".length, r.Value.length);
-        var updateURL = this._getUpdateURLInternal(extensionID);
-        if (!(updateURL in urlHash))
-          urlHash[updateURL] = [];
-          
-        urlHash[updateURL].push(extensionID);
-      }
-      
-      for (var url in urlHash) {
-        var guidString = "";
-        var urlCount = urlHash[url].length;
-        for (var i = 0; i < urlCount; ++i)
-          guidString += escape(urlHash[url][i] + (i < urlCount - 1 ? "," : ""));
-        url = url.replace(/%APP%/g, appID);
-        url = url.replace(/%ITEM%/g, guidString);
-        urls.push(url);
-      }
-    }
-    return urls;
-  },
-  
-  _getUpdateURLInternal: function (aExtensionID)
-  {
-    var updateURL;
-    var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
-   
-    if (this.hasArcOut(extension, this._emR("updateURL"))) {
-      updateURL = this.GetTarget(extension, this._emR("updateURL"), true);
-      if (updateURL) 
-        updateURL = updateURL.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-    }
-    
-    if (!updateURL) {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
-      updateURL = pref.getCharPref(PREF_EM_DEFAULTUPDATEURL);
-    }
-    return updateURL;
   },
   
   loadExtensions: function (aProfile)
@@ -787,47 +716,64 @@ var gModule = {
     }
     aComponentManager = aComponentManager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     
-    aComponentManager.registerFactoryLocation(this._cid, 
-                                              "Extension Manager",
-                                              this._contractId,
-                                              aFileSpec,
-                                              aLocation,
-                                              aType);
+    for (var key in this._objects) {
+      var obj = this._objects[key];
+      aComponentManager.registerFactoryLocation(obj.CID, obj.className, obj.contractID,
+                                                aFileSpec, aLocation, aType);
+    }
     
     // Make the Extension Manager a startup observer
     var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
                                     .getService(Components.interfaces.nsICategoryManager);
-    categoryManager.addCategoryEntry("app-startup", "Extension Manager", 
-                                     "service," + this._contractId, true, true, null);
+    categoryManager.addCategoryEntry("app-startup", this._objects.manager.className,
+                                     "service," + this._objects.manager.contractID, 
+                                     true, true, null);
   },
   
   getClassObject: function (aComponentManager, aCID, aIID) 
   {
-    if (!aCID.equals(this._cid))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-      
     if (!aIID.equals(Components.interfaces.nsIFactory))
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    
-    return this._factory;
-  },
 
-  _cid: Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}"),
-
-  _contractId: "@mozilla.org/extension-manager;1",
-  
-  _factory: {
-    createInstance: function (aOuter, aIID) 
-    {
-      if (aOuter != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-      
-      if (!gExtensionManager)
-        gExtensionManager = new nsExtensionManager();
-        
-      return gExtensionManager.QueryInterface(aIID);
+    for (var key in this._objects) {
+      if (aCID.equals(this._objects[key].CID))
+        return this._objects[key].factory;
     }
+    
+    throw Components.results.NS_ERROR_NO_INTERFACE;
   },
+  
+  _objects: {
+    manager: { CID: Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}"),
+               contractID: "@mozilla.org/extensions/manager;1",
+               className: "Extension Manager",
+               factory: {
+                          createInstance: function (aOuter, aIID) 
+                          {
+                            if (aOuter != null)
+                              throw Components.results.NS_ERROR_NO_AGGREGATION;
+                            
+                            if (!gExtensionManager)
+                              gExtensionManager = new nsExtensionManager();
+                              
+                            return gExtensionManager.QueryInterface(aIID);
+                          }
+                        }
+             },
+    item:    { CID: Components.ID("{F3294B1C-89F4-46F8-98A0-44E1EAE92518}"),
+               contractID: "@mozilla.org/extensions/item;1",
+               className: "Extension Item",
+               factory: {
+                          createInstance: function (aOuter, aIID) 
+                          {
+                            if (aOuter != null)
+                              throw Components.results.NS_ERROR_NO_AGGREGATION;
+                            
+                            return new ExtensionItem().QueryInterface(aIID);
+                          }
+                        } 
+             }  
+   },
   
   canUnload: function (aComponentManager) 
   {
