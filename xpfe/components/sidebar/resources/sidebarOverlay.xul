@@ -59,7 +59,7 @@
       persist='last-selected-panel height collapsed hidden' flex="1*">
       <template id="sidebar-template">
         <rule>
-          <box uri="rdf:*" class="texttab texttab-sidebar" align="left" 
+          <box uri="rdf:*" class="box-texttab texttab-sidebar" align="left" 
             value="rdf:http://home.netscape.com/NC-rdf#title"
             onclick="SidebarSelectPanel(this)"
             exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
