@@ -360,8 +360,9 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRI
 
   NS_ENSURE_TRUE(mPSObj && mPSObj->mPrintSetup, NS_ERROR_NULL_POINTER);
 
-  aWidth  = NSToIntRound(mPSObj->mPrintSetup->width  * mDevUnitsToAppUnits); 
-  aHeight = NSToIntRound(mPSObj->mPrintSetup->height * mDevUnitsToAppUnits); 
+  // Height and width are already in twips
+  aWidth  = mPSObj->mPrintSetup->width;
+  aHeight = mPSObj->mPrintSetup->height;
 
   return NS_OK;
 }

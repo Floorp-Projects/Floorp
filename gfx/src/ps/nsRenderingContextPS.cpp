@@ -181,8 +181,6 @@ nsRenderingContextPS::~nsRenderingContextPS()
 NS_IMETHODIMP
 nsRenderingContextPS::Init(nsIDeviceContext* aContext)
 {
-  float app2dev;
-
   NS_ENSURE_TRUE(nsnull != aContext, NS_ERROR_NULL_POINTER);
 
   mContext = aContext;
@@ -191,9 +189,9 @@ nsRenderingContextPS::Init(nsIDeviceContext* aContext)
 
   NS_ENSURE_TRUE(nsnull != mPSObj, NS_ERROR_NULL_POINTER);
 
-  // initialize the matrix
-  mContext->GetAppUnitsToDevUnits(app2dev);
-  mTranMatrix->AddScale(app2dev, app2dev);
+  // Set the transformation matrix to identity. Baseline coordinate
+  // conversions are performed by the PS interpreter.
+  mTranMatrix->SetToIdentity();
   mContext->GetDevUnitsToAppUnits(mP2T);
   return NS_OK;
 }
@@ -368,38 +366,29 @@ PRInt32     cliptype;
 
   mStates->mLocalClip = aRect;
 
-	mTranMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
+  mTranMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
   mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
 
   if (aCombine == nsClipCombine_kIntersect){
     mPSObj->newpath();
-    mPSObj->moveto( NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
-    mPSObj->box(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
-    mPSObj->closepath();
-    mPSObj->clip();
+    mPSObj->box(trect.x, trect.y, trect.width, trect.height);
   } else if (aCombine == nsClipCombine_kUnion){
     mPSObj->newpath();
-    mPSObj->moveto( NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
-    mPSObj->box(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
-    mPSObj->closepath();
-    mPSObj->clip();
+    mPSObj->box(trect.x, trect.y, trect.width, trect.height);
   }else if (aCombine == nsClipCombine_kSubtract){
     mPSObj->newpath();
     mPSObj->clippath();   // get the current path
-    mPSObj->moveto(NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
-    mPSObj->box_subtract(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
-    mPSObj->closepath();
-    mPSObj->clip();
+    mPSObj->box_subtract(trect.x, trect.y, trect.width, trect.height);
   }else if (aCombine == nsClipCombine_kReplace){
     mPSObj->initclip();
     mPSObj->newpath();
-    mPSObj->moveto(NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
-    mPSObj->box(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
-    mPSObj->closepath();
-    mPSObj->clip();
+    mPSObj->box(trect.x, trect.y, trect.width, trect.height);
   }else{
     NS_ASSERTION(PR_FALSE, "illegal clip combination");
+    return NS_ERROR_INVALID_ARG;
   }
+  mPSObj->clip();
+  mPSObj->newpath();
 
 #ifdef XP_WIN
   if (cliptype == NULLREGION)
@@ -611,14 +600,30 @@ nsRenderingContextPS :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
   if (nsLineStyle_kNone == mCurrLineStyle)
     return NS_OK;
 
-	mTranMatrix->TransformCoord(&aX0,&aY0);
-	mTranMatrix->TransformCoord(&aX1,&aY1);
+  // Layout expects lines to be one scaled pixel wide.
+  float scale;
+  NS_REINTERPRET_CAST(DeviceContextImpl *, mContext.get())->GetCanonicalPixelScale(scale);
+  int width = NSToCoordRound(TWIPS_PER_POINT_FLOAT * scale);
 
-  // this has the moveto,lineto and the stroke
-  mPSObj->line(NS_PIXELS_TO_POINTS(aX0),NS_PIXELS_TO_POINTS(aY0),
-          NS_PIXELS_TO_POINTS(aX1),NS_PIXELS_TO_POINTS(aY1),1);
-
-  return NS_OK;
+  // If this line is vertical (horizontal), the geometric line defined
+  // by our start and end points is actually the left edge (top edge)
+  // of the line that should appear on the page.
+  if (aX0 == aX1) {
+    // Vertical. For better control we draw this as a filled
+    // rectangle instead of a stroked line.
+    return FillRect(aX0, aY0, width, aY1 - aY0);
+  }
+  else if (aY0 == aY1) {
+    // Horizontal.
+    return FillRect(aX0, aY0, aX1 - aX0, width);
+  }
+  else {
+    // Angled line. Just stroke it.
+    mTranMatrix->TransformCoord(&aX0,&aY0);
+    mTranMatrix->TransformCoord(&aX1,&aY1);
+    mPSObj->line(aX0, aY0, aX1, aY1, width);
+    return NS_OK;
+  }
 }
 
 /** ---------------------------------------------------
@@ -638,16 +643,16 @@ nsPoint         pp;
 
   pp.x = np->x;
   pp.y = np->y;
-  mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-  mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  mTranMatrix->TransformCoord(&pp.x, &pp.y);
+  mPSObj->moveto(pp.x, pp.y);
   np++;
 
   // we are ignoring the linestyle
 	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
 		pp.x = np->x;
 		pp.y = np->y;
-		mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-    mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+                mTranMatrix->TransformCoord(&pp.x, &pp.y);
+                mPSObj->lineto(pp.x, pp.y);
 	}
 
   // we dont close the path, this will give us a polyline
@@ -663,18 +668,7 @@ nsPoint         pp;
 NS_IMETHODIMP 
 nsRenderingContextPS :: DrawRect(const nsRect& aRect)
 {
-nsRect	tr;
-
-	tr = aRect;
-	mTranMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-
-  mPSObj->newpath();
-  mPSObj->moveto(NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
-  mPSObj->box(NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
-  mPSObj->closepath();
-  mPSObj->stroke();
-
-  return NS_OK;
+  return DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 /** ---------------------------------------------------
@@ -687,9 +681,7 @@ nsRenderingContextPS :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 
 	mTranMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
   mPSObj->newpath();
-  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
-  mPSObj->box(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
-  mPSObj->closepath();
+  mPSObj->box(aX, aY, aWidth, aHeight);
   mPSObj->stroke();
   return NS_OK;
 }
@@ -701,17 +693,7 @@ nsRenderingContextPS :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 NS_IMETHODIMP 
 nsRenderingContextPS :: FillRect(const nsRect& aRect)
 {
-nsRect	tr;
-
-	tr = aRect;
-	mTranMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-
-  mPSObj->newpath();
-  mPSObj->moveto(NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
-  mPSObj->box(NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
-  mPSObj->closepath();
-  mPSObj->fill();
-  return NS_OK;
+  return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 /** ---------------------------------------------------
@@ -724,9 +706,7 @@ nsRenderingContextPS :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 
 	mTranMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
   mPSObj->newpath();
-  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
-  mPSObj->box(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
-  mPSObj->closepath();
+  mPSObj->box(aX, aY, aWidth, aHeight);
   mPSObj->fill();
   return NS_OK;
 }
@@ -765,16 +745,16 @@ nsPoint         pp;
   // do the initial moveto
 	pp.x = np->x;
 	pp.y = np->y;
-  mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-  mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  mTranMatrix->TransformCoord(&pp.x, &pp.y);
+  mPSObj->moveto(pp.x, pp.y);
   np++;
 
   // add all the points to the path
 	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
 		pp.x = np->x;
 		pp.y = np->y;
-		mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-    mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+                mTranMatrix->TransformCoord(&pp.x, &pp.y);
+                mPSObj->lineto(pp.x, pp.y);
 	}
 
   mPSObj->closepath();
@@ -801,16 +781,16 @@ nsPoint         pp;
   // do the initial moveto
 	pp.x = np->x;
 	pp.y = np->y;
-  mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-  mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  mTranMatrix->TransformCoord(&pp.x, &pp.y);
+  mPSObj->moveto(pp.x, pp.y);
   np++;
 
   // add all the points to the path
 	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
 		pp.x = np->x;
 		pp.y = np->y;
-		mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-    mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+                mTranMatrix->TransformCoord(&pp.x, &pp.y);
+                mPSObj->lineto(pp.x, pp.y);
 	}
 
   mPSObj->closepath();
@@ -842,10 +822,10 @@ nsRenderingContextPS :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
   //SetupPen();
   mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  mPSObj->comment("arc");
+  mPSObj->comment("ellipse");
   mPSObj->newpath();
-  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
-  mPSObj->ellipse(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
+  mPSObj->moveto(aX, aY);
+  mPSObj->ellipse(aWidth, aHeight);
   mPSObj->closepath();
   mPSObj->stroke();
 
@@ -866,10 +846,10 @@ NS_IMETHODIMP nsRenderingContextPS :: FillEllipse(nscoord aX, nscoord aY, nscoor
 {
   mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  mPSObj->comment("arc");
+  mPSObj->comment("ellipse");
   mPSObj->newpath();
-  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
-  mPSObj->ellipse(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
+  mPSObj->moveto(aX, aY);
+  mPSObj->ellipse(aWidth, aHeight);
   mPSObj->closepath();
   mPSObj->fill();
 
@@ -903,8 +883,8 @@ nsRenderingContextPS :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
 
   mPSObj->comment("arc");
   mPSObj->newpath();
-  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
-  mPSObj->arc(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight),aStartAngle,aEndAngle);
+  mPSObj->moveto(aX, aY);
+  mPSObj->arc(aWidth, aHeight, aStartAngle, aEndAngle);
   mPSObj->closepath();
   mPSObj->stroke();
 
@@ -938,8 +918,8 @@ nsRenderingContextPS :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
 
   mPSObj->comment("arc");
   mPSObj->newpath();
-  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
-  mPSObj->arc(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight),aStartAngle,aEndAngle);
+  mPSObj->moveto(aX, aY);
+  mPSObj->arc(aWidth, aHeight, aStartAngle, aEndAngle);
   mPSObj->closepath();
   mPSObj->fill();
 
@@ -1209,7 +1189,7 @@ nsRenderingContextPS::DrawString(const char *aString, PRUint32 aLength,
   }
 
   mTranMatrix->TransformCoord(&x, &y);
-  width = aFontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, aLength);
+  width = aFontPS->DrawString(this, x, y, aString, aLength);
 
   if ((aSpacing) && (dx0 != dxMem)) {
     delete [] dx0;
@@ -1235,14 +1215,14 @@ nsRenderingContextPS::DrawString(const PRUnichar *aString, PRUint32 aLength,
       x = aX;
       y = aY;
       mTranMatrix->TransformCoord(&x, &y);
-      aFontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, 1);
+      aFontPS->DrawString(this, x, y, aString, 1);
       aX += *aSpacing++;
       aString++;
     }
     width = aX;
   } else {
     mTranMatrix->TransformCoord(&x, &y);
-    width = aFontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, aLength);
+    width = aFontPS->DrawString(this, x, y, aString, aLength);
   }
 
   return width;
@@ -1260,58 +1240,31 @@ nsRenderingContextPS :: DrawString(const nsString& aString,nscoord aX, nscoord a
 }
 
 /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
-NS_IMETHODIMP nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
+NS_IMETHODIMP
+nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
 {
-  nsPoint pt;
-  nsRect sr;
-
-  pt = *aDestPoint;
-  mTranMatrix->TransformCoord(&pt.x, &pt.y);
-
-  sr = *aSrcRect;
-  // We need to transform the whole source rect, since it has
-  // dimensions in twips and we want pixels
-  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
-
-  sr.x = aSrcRect->x;
-  sr.y = aSrcRect->y;
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
-
-  nsCOMPtr<gfxIImageFrame> iframe;
-  aImage->GetCurrentFrame(getter_AddRefs(iframe));
-  if (!iframe) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
-  if (!img) return NS_ERROR_FAILURE;
-
-  // doesn't it seem like we should use more of the params here?  see comments in bug 76993
-  // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
-  //           pt.x + sr.x, pt.y + sr.y, sr.width, sr.height);
-  mPSObj->colorimage(img,
-                     sr.x, sr.y, sr.width, sr.height,
-                     NS_PIXELS_TO_POINTS(pt.x),
-                     NS_PIXELS_TO_POINTS(pt.y), 
-                     NS_PIXELS_TO_POINTS(sr.width),
-                     NS_PIXELS_TO_POINTS(sr.height));
-
-  return NS_OK;
+  nsRect dr(aDestPoint->x, aDestPoint->y, aSrcRect->width, aSrcRect->height);
+  return DrawScaledImage(aImage, aSrcRect, &dr);
 }
 
 /* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
-NS_IMETHODIMP nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
+NS_IMETHODIMP
+nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
 {
   nsRect dr;
   nsRect sr;
 
+  // Transform the destination rectangle.
   dr = *aDestRect;
   mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
+  // Transform the source rectangle. We don't use the matrix for this;
+  // just convert the twips back into points.
   sr = *aSrcRect;
-  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
-
-  sr.x = aSrcRect->x;
-  sr.y = aSrcRect->y;
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
+  sr.x /= TWIPS_PER_POINT_INT;
+  sr.y /= TWIPS_PER_POINT_INT;
+  sr.width /= TWIPS_PER_POINT_INT;
+  sr.height /= TWIPS_PER_POINT_INT;
 
   nsCOMPtr<gfxIImageFrame> iframe;
   aImage->GetCurrentFrame(getter_AddRefs(iframe));
@@ -1320,15 +1273,7 @@ NS_IMETHODIMP nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const
   nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
   if (!img) return NS_ERROR_FAILURE;
 
-  // doesn't it seem like we should use more of the params here?  see comments in bug 76993
-  // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
-  mPSObj->colorimage(img,
-                     sr.x, sr.y, sr.width, sr.height,
-                     NS_PIXELS_TO_POINTS(dr.x),
-                     NS_PIXELS_TO_POINTS(dr.y), 
-                     NS_PIXELS_TO_POINTS(dr.width),
-                     NS_PIXELS_TO_POINTS(dr.height));
-
+  mPSObj->colorimage(img, sr, dr);
   return NS_OK;
 }
 
@@ -1377,55 +1322,23 @@ NS_IMETHODIMP nsRenderingContextPS::RetrieveCurrentNativeGraphicData(PRUint32 * 
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsRenderingContextPS.h
- *	@update 3/24/2000 yueheng.xu@intel.com
+ *  Output postscript supplied by the caller to the print job. The
+ *  caller should have already called PushState() (and preferably
+ *  SetClipRect()).
+ *    @update  9/31/2003 kherron
+ *    @param   aData    Buffer containing postscript to be output
+ *             aDataLen Number of characters in aData
+ *    @return  NS_OK
  */
-void 
-nsRenderingContextPS :: PostscriptTextOut(const char *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, PRInt32 aFontID,
-                                    const nscoord* aSpacing, PRBool aIsUnicode)
-{
-nscoord         fontHeight = 0;
-const nsFont    *font;
-
-  mFontMetrics->GetHeight(fontHeight);
-  mFontMetrics->GetFont(font);
-
-  mPSObj->moveto(aX, aY);
-  if (PR_TRUE != aIsUnicode) {
-	  mPSObj->show(aString, aLength, "");	
-  }
-}
-
-
-/** ---------------------------------------------------
- *  See documentation in nsRenderingContextPS.h
- *	@update 3/24/2000 yueheng.xu@intel.com
- */
-void 
-nsRenderingContextPS :: PostscriptTextOut(const PRUnichar *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, PRInt32 aFontID,
-                                    const nscoord* aSpacing, PRBool aIsUnicode)
-{
-nscoord         fontHeight = 0;
-const nsFont    *font;
-
-  mFontMetrics->GetHeight(fontHeight);
-  mFontMetrics->GetFont(font);
-
-  mPSObj->moveto(aX, aY);
-  if (PR_TRUE == aIsUnicode) {  
-    mPSObj->show(aString, aLength, "", 0);
-  }
-}
-
 NS_IMETHODIMP nsRenderingContextPS::RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen)
 {
-  nsPostScriptObj *postscriptobj = GetPostScriptObj();
+  NS_ASSERTION(mPSObj != NULL, "No nsPostScriptObj");
 
-  fprintf(postscriptobj->mPrintSetup->tmpBody, "1 -1 scale\n");
-  fprintf(postscriptobj->mPrintSetup->tmpBody, "0 %d translate\n", -(postscriptobj->mPrintSetup->height));
-  fwrite(aData, aDatalen, 1, postscriptobj->mPrintSetup->tmpBody);
+  // Reset the coordinate system to point-sized. The origin and Y axis
+  // orientation are already correct.
+  fprintf(mPSObj->mPrintSetup->tmpBody, "%g %g scale\n",
+    TWIPS_PER_POINT_FLOAT, TWIPS_PER_POINT_FLOAT);
+  fwrite(aData, aDatalen, 1, mPSObj->mPrintSetup->tmpBody);
 
   return NS_OK;
 }

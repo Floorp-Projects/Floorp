@@ -243,13 +243,12 @@ public:
  virtual ~nsAFMObject();
 
   /** ---------------------------------------------------
-   * Initialize an AFMObject
-   * @update 2/26/99 dwc
-   * @param aFontName - A "C" string name of the font this object will get initialized to
-   * @param aFontHeight -- The initial font size, this can be changed with the SetFontSize method
-   * @return VOID
+   *  Initialize an AFM object.
+   *      @update 9/30/2003 kherron
+   *      @param aFontHeight  Font height in twips
+   *      @return VOID
    */
-  void    Init(PRInt32  aFontHeight);
+  void    Init(nscoord  aFontHeight);
 
 
   /** ---------------------------------------------------
@@ -279,11 +278,11 @@ public:
 
   /** ---------------------------------------------------
    * Set the font size, which is used to calculate the distances for the font
-   * @update 3/05/99 dwc
-   * @param aFontSize - The size of the font for the calculation
+   * @update 9/30/2003 kherron
+   * @param aFontHeight - The height of the font, in twips.
    * @return VOID
    */
-  void    SetFontSize(PRInt32  aFontHeight) { mFontHeight = aFontHeight; }
+  void    SetFontSize(nscoord  aFontHeight) { mFontHeight = aFontHeight; }
 
 
   /** ---------------------------------------------------
@@ -403,7 +402,7 @@ public:
 protected:
   FILE                *mAFMFile;          // this is the AFM file we are parsing.
   char                mToken[256];        // Temporary storage for reading and parsing the file
-  nscoord             mFontHeight;        // font height in points that we are supporting.
+  nscoord             mFontHeight;        // font height in twips that we are supporting.
                                           // XXX  This should be passed into the GetStringWidth
                                           // so we can have one font family support many sizes
 

@@ -228,11 +228,12 @@ nsAFMObject :: ~nsAFMObject()
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsAFMParser.h
- *	@update 2/25/99 dwc
+ *  Initialize an AFM object.
+ *	@update 9/30/2003 kherron
+ *	@param aFontHeight  Font height in twips
  */
 void
-nsAFMObject :: Init(PRInt32 aFontHeight)
+nsAFMObject :: Init(nscoord aFontHeight)
 {
   // read the file asked for
   mFontHeight = aFontHeight;
@@ -821,8 +822,11 @@ char    *thestring;
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsAFMParser.h
- *	@update 2/01/99 dwc
+ *  Calculate the width of the string.
+ *	@update 9/30/2003 kherron
+ *	@param aString   The source string
+ *	       aWidth    Container for the resulting width
+ *	       aLength   Number of characters in aString
  */
 void
 nsAFMObject :: GetStringWidth(const char *aString,nscoord& aWidth,nscoord aLength)
@@ -840,17 +844,18 @@ float   totallen=0.0f;
     totallen += fwidth;
   }
 
-  // total length is in points, so convert to twips, divide by the 1000 scaling of the
-  // afm measurements, and round the result.
-  totallen = NSFloatPointsToTwips(totallen * mFontHeight)/1000.0f;
-
-  aWidth = NSToIntRound(totallen);
+  // totallen is in 1/1000's of a point for a one-point-high version of the
+  // font. Scale by the desired font height (which is in twips).
+  aWidth = NSToCoordRound((totallen * mFontHeight)/1000.0f);
 }
 
 
 /** ---------------------------------------------------
- *  See documentation in nsAFMParser.h
- *	@update 2/01/99 dwc
+ *  Calculate the width of the string.
+ *	@update 9/30/2003 kherron
+ *	@param aString   The source string
+ *	       aWidth    Container for the resulting width
+ *	       aLength   Number of characters in aString
  */
 void
 nsAFMObject :: GetStringWidth(const PRUnichar *aString,nscoord& aWidth,nscoord aLength)
@@ -886,8 +891,9 @@ float     totallen=0.0f;
     totallen += fwidth;
   }
 
-  totallen = NSFloatPointsToTwips(totallen * mFontHeight)/1000.0f;
-  aWidth = NSToIntRound(totallen);
+  // totallen is in 1/1000ths of a point for a one-point-high version of the
+  // font. Scale by the desired font height (which is in twips).
+  aWidth = NSToCoordRound((totallen * mFontHeight)/1000.0f);
 }
 
 

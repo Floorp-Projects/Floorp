@@ -519,7 +519,7 @@ nsFontPSAFM::FindFont(const nsFont& aFont, nsFontMetricsPS* aFontMetrics)
 {
   nsAFMObject* afmInfo = new nsAFMObject();
   if (!afmInfo) return nsnull;
-  afmInfo->Init((PRInt32)(aFont.size / TWIPS_PER_POINT_FLOAT));
+  afmInfo->Init(aFont.size);
 
   PRInt16 fontIndex = afmInfo->CheckBasicFonts(aFont, PR_TRUE);
   if (fontIndex < 0) {
