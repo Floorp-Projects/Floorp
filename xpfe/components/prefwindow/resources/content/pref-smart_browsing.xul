@@ -151,10 +151,8 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
-	  <title><text value="&lHeader;"/></title>
+	  <title><text value="&whatsRelated.label;"/></title>
 		
-    <html>&whatsRelatedDescription.label;</html>
-    
     <html id="doNotAcceptText">&doNotDecp.label;</html>
     
     <grid flex="1">
