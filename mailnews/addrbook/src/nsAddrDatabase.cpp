@@ -2476,8 +2476,14 @@ NS_IMETHODIMP nsAddrDatabase::ContainsCard(nsIAbCard *card, PRBool *hasCard)
 	nsresult err = NS_OK;
 	mdb_bool hasOid;
 	mdbOid rowOid;
+	PRBool bIsMailList;
 
-	rowOid.mOid_Scope = m_CardRowScopeToken;
+	card->GetIsMailList(&bIsMailList);
+
+	if (bIsMailList)
+		rowOid.mOid_Scope = m_ListRowScopeToken;
+	else
+		rowOid.mOid_Scope = m_CardRowScopeToken;
 	card->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
 	err = m_mdbPabTable->HasOid(GetEnv(), &rowOid, &hasOid);
 	if (NS_SUCCEEDED(err))
