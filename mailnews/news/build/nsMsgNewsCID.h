@@ -41,6 +41,9 @@
  {0x87, 0xca, 0x00, 0x40, 0x05, 0x26, 0x30, 0x78} 	\
 }
 
+#define NS_NNTPPROTOCOLINFO_PROGID		\
+  NS_MSGPROTOCOLINFO_PROGID_PREFIX "nntp"
+
 #define NS_NNTPSERVICE_CID                              \
 { /* 4C9F90E1-E19B-11d2-806E-006008128C4E */  		\
  0x4c9f90e1, 0xe19b, 0x11d2,                            \

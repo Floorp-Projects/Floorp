@@ -307,6 +307,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									"component://netscape/messenger/nntpservice", 
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
+  
+	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP Service", 
+                                  NS_NNTPPROTOCOLINFO_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP News Service", 
                                   "component://netscape/messenger/messageservice;type=news", 
