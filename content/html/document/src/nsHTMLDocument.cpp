@@ -3277,9 +3277,25 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   // Now we know we _might_ have items.  Before looking at
   // entry->mContentList, make sure to flush out content (see
   // bug 69826).
-
   // This is a perf killer while the document is loading!
+
+  // Make sure to stash away the current generation so we can check whether the
+  // table changes when we flush.
+  PRUint32 generation = mIdAndNameHashTable.generation;
+  
   FlushPendingNotifications(PR_FALSE);
+
+  if (generation != mIdAndNameHashTable.generation) {
+    // Table changed, so the entry pointer is no longer valid; look up the
+    // entry again, adding if necessary (the adding may be necessary in case
+    // the flush actually deleted entries).
+    entry =
+      NS_STATIC_CAST(IdAndNameMapEntry *,
+                     PL_DHashTableOperate(&mIdAndNameHashTable, &aName,
+                                          PL_DHASH_ADD));
+    NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+  }
+    
 
   nsBaseContentList *list = entry->mContentList;
 
