@@ -966,6 +966,9 @@ nsImapUrl::GetURI(char** aURI)
         fullFolderPath += hostName;
         fullFolderPath += '/';
         fullFolderPath += theFile;
+
+		PR_FREEIF(hostName);
+
         return nsBuildImapMessageURI(fullFolderPath, key, aURI);
 #endif 
     }

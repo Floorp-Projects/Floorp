@@ -329,6 +329,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 nsImapProtocol::~nsImapProtocol()
 {
 	PR_FREEIF(m_userName);
+	PR_FREEIF(m_serverKey);
 
 	nsCRT::free(m_hostName);
 
