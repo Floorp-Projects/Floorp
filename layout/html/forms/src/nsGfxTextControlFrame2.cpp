@@ -736,7 +736,8 @@ nsTextInputSelectionImpl::SetSelectionFlags(PRInt16 aToggle)
 NS_IMETHODIMP
 nsTextInputSelectionImpl::GetSelectionFlags(PRInt16 *aOutEnable)
 {
-  return NS_OK;//stub this out. not used in input
+  *aOutEnable = nsISelectionDisplay::DISPLAY_TEXT;
+  return NS_OK; 
 }
 
 NS_IMETHODIMP
