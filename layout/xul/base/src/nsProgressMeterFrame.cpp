@@ -728,6 +728,40 @@ nsProgressMeterFrame::Redraw(nsIPresContext* aPresContext)
     Invalidate(rect, PR_TRUE);
 }
 
+
+NS_IMETHODIMP
+nsProgressMeterFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
+                                                nsIStyleContext** aStyleContext) const
+{
+  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aStyleContext = nsnull;
+  switch (aIndex) {
+  case NS_PROGRESS_METER_STRIPE_CONTEXT_INDEX:
+    *aStyleContext = mBarStyle;
+    NS_ADDREF(*aStyleContext);
+    break;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProgressMeterFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
+                                                nsIStyleContext* aStyleContext)
+{
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  switch (aIndex) {
+  case NS_PROGRESS_METER_STRIPE_CONTEXT_INDEX:
+    mBarStyle = aStyleContext;
+    break;
+  }
+  return NS_OK;
+}
+
 //
 // RefreshStyleContext
 //

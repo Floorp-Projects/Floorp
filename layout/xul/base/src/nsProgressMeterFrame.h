@@ -51,6 +51,8 @@
 class nsIPresContext;
 class nsIStyleContext;
 
+#define NS_PROGRESS_METER_STRIPE_CONTEXT_INDEX 1
+
 class nsProgressMeterFrame : public nsLeafFrame
 {
 public:
@@ -77,6 +79,10 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
+  NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
+                                        nsIStyleContext** aStyleContext) const;
+  NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
+                                        nsIStyleContext* aStyleContext);
   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
                                       nsIStyleContext* aParentContext,
                                       PRInt32 aParentChange,
