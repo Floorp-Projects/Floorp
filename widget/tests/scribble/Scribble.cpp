@@ -38,7 +38,9 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
+#ifdef XP_MAC
 #include <quickdraw.h>
+#endif
 
 ScribbleApp scribbleData;
 
