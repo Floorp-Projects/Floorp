@@ -23,6 +23,7 @@
 #include "nsIURL.h"
 
 #include "nsISupports.h"
+#include "nsFileSpec.h"
 
 /* include all of our event sink interfaces */
 #include "nsIStreamListener.h"
@@ -52,6 +53,8 @@ public:
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer) = 0;
 
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer) = 0;
+
+	// 
 	
 	// mscott: this interface really belongs in nsIURL and I will move it there after talking
 	// it over with core netlib. This error message replaces the err_msg which was in the 
@@ -61,6 +64,11 @@ public:
 	NS_IMETHOD SetErrorMessage (char * errorMessage) = 0;
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const = 0;
+
+	/////////////////////////////////////////////////////////////////////////////// 
+	// Getters and Setters for the mailbox url state
+	///////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath) = 0;
 };
 
 #endif /* nsIMailboxUrl_h___ */
