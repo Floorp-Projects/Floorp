@@ -638,7 +638,26 @@ JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
 
     return jsd_EvaluateUCScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
                                             bytes, length, filename, lineno,
-                                            rval);
+                                             JS_TRUE, rval);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_AttemptUCScriptInStackFrame(JSDContext* jsdc,
+                                JSDThreadState* jsdthreadstate,
+                                JSDStackFrameInfo* jsdframe,
+                                const jschar *bytes, uintN length,
+                                const char *filename, uintN lineno,
+                                jsval *rval)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    JS_ASSERT(bytes);
+    JS_ASSERT(length);
+    JS_ASSERT(filename);
+    JS_ASSERT(rval);
+
+    return jsd_EvaluateUCScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
+                                            bytes, length, filename, lineno,
+                                            JS_FALSE, rval);
 }
 
 JSD_PUBLIC_API(JSBool)
@@ -656,7 +675,25 @@ JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
 
     return jsd_EvaluateScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
                                           bytes, length,
-                                          filename, lineno, rval);
+                                          filename, lineno, JS_TRUE, rval);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_AttemptScriptInStackFrame(JSDContext* jsdc,
+                              JSDThreadState* jsdthreadstate,
+                              JSDStackFrameInfo* jsdframe,
+                              const char *bytes, uintN length,
+                              const char *filename, uintN lineno, jsval *rval)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    JS_ASSERT(bytes);
+    JS_ASSERT(length);
+    JS_ASSERT(filename);
+    JS_ASSERT(rval);
+
+    return jsd_EvaluateScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
+                                          bytes, length,
+                                          filename, lineno, JS_FALSE, rval);
 }
 
 JSD_PUBLIC_API(JSString*)

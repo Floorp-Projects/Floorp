@@ -569,12 +569,9 @@ interface jsdIStackFrame : jsdIEphemeral
      * @param line     Starting line number for this script.  One based.
      * @retval         Result of evaluating the script.
      */
-    jsdIValue eval (in AString bytes, in string fileName,
-                    in unsigned long line);
-    /*
     boolean eval (in AString bytes, in string fileName,
-                  in unsigned long line, out result);
-    */
+                  in unsigned long line, out jsdIValue result);
+    
 };
 
 /**

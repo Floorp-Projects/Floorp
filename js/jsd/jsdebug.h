@@ -806,6 +806,17 @@ JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  const char *filename, uintN lineno,
                                  jsval *rval);
 
+/*
+* Same as above, but does not eat exceptions.
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_AttemptUCScriptInStackFrame(JSDContext* jsdc,
+                                JSDThreadState* jsdthreadstate,
+                                JSDStackFrameInfo* jsdframe,
+                                const jschar *bytes, uintN length,
+                                const char *filename, uintN lineno,
+                                jsval *rval);
+
 /* single byte character version of JSD_EvaluateUCScriptInStackFrame */
 extern JSD_PUBLIC_API(JSBool)
 JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
@@ -813,6 +824,16 @@ JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDStackFrameInfo* jsdframe,
                                const char *bytes, uintN length,
                                const char *filename, uintN lineno, jsval *rval);
+
+/*
+* Same as above, but does not eat exceptions.
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_AttemptScriptInStackFrame(JSDContext* jsdc,
+                              JSDThreadState* jsdthreadstate,
+                              JSDStackFrameInfo* jsdframe,
+                              const char *bytes, uintN length,
+                              const char *filename, uintN lineno, jsval *rval);
 
 /*
 * Convert the given jsval to a string

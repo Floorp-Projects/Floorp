@@ -1387,26 +1387,42 @@ jsdStackFrame::GetThisValue(jsdIValue **_rval)
 
 NS_IMETHODIMP
 jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
-                     PRUint32 line, jsdIValue **_rval)
+                     PRUint32 line, jsdIValue **result, PRBool *_rval)
 {
     ASSERT_VALID_FRAME;
-    jsval jv;
-
     const nsSharedBufferHandle<PRUnichar> *h = bytes.GetSharedBufferHandle();
     const jschar *char_bytes = NS_REINTERPRET_CAST(const jschar *,
                                                    h->DataStart());
+    JSExceptionState *estate = 0;
+    jsval jv;
 
-    if (!JSD_EvaluateUCScriptInStackFrame (mCx, mThreadState, mStackFrameInfo,
-                                           char_bytes, bytes.Length(), fileName,
-                                           line, &jv))
-        return NS_ERROR_FAILURE;
+    JSContext *cx = JSD_GetJSContext (mCx, mThreadState);
+    estate = JS_SaveExceptionState (cx);
+    JS_ClearPendingException (cx);
+
+    *_rval = JSD_AttemptUCScriptInStackFrame (mCx, mThreadState,
+                                              mStackFrameInfo,
+                                              char_bytes, bytes.Length(),
+                                              fileName, line, &jv);
+    if (!*_rval) {
+        if (JS_IsExceptionPending(cx))
+            JS_GetPendingException (cx, &jv);
+        else
+            jv = 0;
+    }
+
+    JS_RestoreExceptionState (cx, estate);
+    if (jv) {
+        JSDValue *jsdv = JSD_NewValue (mCx, jv);
+        if (!jsdv)
+            return NS_ERROR_FAILURE;
+        *result = jsdValue::FromPtr (mCx, jsdv);
+        if (!*result)
+            return NS_ERROR_FAILURE;
+    } else {
+        *result = 0;
+    }
     
-    JSDValue *jsdv = JSD_NewValue (mCx, jv);
-    if (!jsdv)
-        return NS_ERROR_FAILURE;    
-    *_rval = jsdValue::FromPtr (mCx, jsdv);
-    if (!*_rval)
-        return NS_ERROR_FAILURE;    
     return NS_OK;
 }        
 
