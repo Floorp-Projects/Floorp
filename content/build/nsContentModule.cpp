@@ -137,7 +137,7 @@ ContentShutdownObserver::Observe(nsISupports *aSubject,
 static PRBool gInitialized = PR_FALSE;
 
 // Perform our one-time intialization for this module
-static nsresult
+PR_STATIC_CALLBACK(nsresult)
 Initialize(nsIModule* aSelf)
 {
   // XXXwaterson turns out we initialize the module twice, because
@@ -180,7 +180,7 @@ Initialize(nsIModule* aSelf)
 }
 
 // Shutdown this module, releasing all of the module resources
-static void
+PR_STATIC_CALLBACK(void)
 Shutdown(nsIModule* aSelf)
 {
   NS_PRECONDITION(gInitialized, "module not initialized");
