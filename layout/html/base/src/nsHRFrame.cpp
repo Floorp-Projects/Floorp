@@ -32,6 +32,7 @@
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLHRElement.h"
 #include "nsIDeviceContext.h"
+#include "nsStyleUtil.h"
 
 static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 
@@ -146,55 +147,32 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   // printing (which we already have) and the "Black Lines" setting in
   // the page setup dialog
 
-  PRBool blackLines = nsGlobalVariables::Instance()->GetBlackLines();
-  nscolor colors[2];
-  // Get the background color that applies to this HR
-  if (printing && blackLines)
-  {
-    colors[0] = NS_RGB(0,0,0);
-    colors[1] = colors[0];
-  }
-  else
-  {
-    // Get correct color by finding the first parent that actually
-    // specifies a color.
-    nsIStyleContext* styleContext = mStyleContext;
-    NS_ADDREF(styleContext);
-    while (nsnull != styleContext) {
-      const nsStyleColor* color;
-      color = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
-                                    
-      if (nsnull != color) {
-        if (0 == (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags)) {
-          NS_Get3DColors(colors, color->mBackgroundColor);
-          break;
-        }
-      }
-      // Try parent style context
-      nsIStyleContext*  lastStyleContext = styleContext;
-      styleContext = styleContext->GetParent();
-      NS_RELEASE(lastStyleContext);
-    }
-    NS_IF_RELEASE(styleContext);
-  }
-
+  const nsStyleColor* color;
   // Draw a "shadowed" box around the rule area
   if (!noShadeAttribute && ((printing && bevel) || !printing)) {
-    // Lines render inclusively on the both the starting and ending
-    // coordinate, so reduce the end coordinates by one pixel.
-    nscoord x1 = nscoord(x0 + width - NSIntPixelsToTwips(1, p2t));
-    nscoord y1 = nscoord(y0 + height - NSIntPixelsToTwips(1, p2t));
+    nsRect rect(x0, y0, width, height);
 
-    // Draw bottom and right lines
-    aRenderingContext.SetColor (colors[1]);
-    aRenderingContext.DrawLine (x1, y0, x1, y1);
-    aRenderingContext.DrawLine (x1, y1, x0, y1);
-
-    // Draw top and left lines
-    aRenderingContext.SetColor (colors[0]);
-    aRenderingContext.DrawLine (x0, y1, x0, y0);
-    aRenderingContext.DrawLine (x0, y0, x1, y0);
+    const nsStyleSpacing* spacing = 
+      (nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    color = (nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
+                                    this,aDirtyRect, rect, *color, 
+                                    *spacing, 0, 0);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext,
+                                this,aDirtyRect, rect, *spacing,
+                                mStyleContext, 0);
   } else {
+    nscolor colors[2]; 
+    PRBool blackLines = nsGlobalVariables::Instance()->GetBlackLines(); 
+    if (printing && blackLines) { 
+      colors[0] = NS_RGB(0,0,0); 
+    } 
+    else { 
+      // Get the background color that applies to this HR 
+      color = nsStyleUtil::FindNonTransparentBackground(mStyleContext); 
+      NS_Get3DColors(colors, color->mBackgroundColor); 
+    } 
     // When a rule is not shaded, then we use a uniform color and
     // draw half-circles on the end points.
     aRenderingContext.SetColor (colors[0]);
