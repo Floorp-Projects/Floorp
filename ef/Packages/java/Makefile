@@ -17,7 +17,7 @@
 
 DEPTH = ../..
 
-DIRS = lang io security
+DIRS = lang io #security
 
 include $(DEPTH)/config/config.mk
 
