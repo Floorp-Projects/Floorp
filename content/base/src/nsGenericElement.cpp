@@ -2808,7 +2808,8 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     nsCOMPtr<nsIURI> absURI;
     if (NS_SUCCEEDED(rv)) {
       nsAutoString docCharset;
-      if (NS_SUCCEEDED(mDocument->GetDocumentCharacterSet(docCharset)))
+      if (mDocument &&
+          NS_SUCCEEDED(mDocument->GetDocumentCharacterSet(docCharset)))
         rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, NS_LossyConvertUCS2toASCII(docCharset).get(), aBaseURL);
       else
         rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, nsnull, aBaseURL);
