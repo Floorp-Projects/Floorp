@@ -158,15 +158,9 @@ LoadJSDModuleAndCallbacks(void)
     if( ! g_JSDModule )
         return 0;
 
-#ifndef NSPR20
-    g_SetUserCallbacks = (SetUserCallbacksProc) PR_FindSymbol( "JSD_SetUserCallbacks" , g_JSDModule);
-    g_NewSourceText    = (NewSourceTextProc   ) PR_FindSymbol( "JSD_NewSourceText"    , g_JSDModule);
-    g_AppendSourceText = (AppendSourceTextProc) PR_FindSymbol( "JSD_AppendSourceText" , g_JSDModule);
-#else
     g_SetUserCallbacks = (SetUserCallbacksProc) PR_FindSymbol( g_JSDModule, "JSD_SetUserCallbacks");
     g_NewSourceText    = (NewSourceTextProc   ) PR_FindSymbol( g_JSDModule, "JSD_NewSourceText");
     g_AppendSourceText = (AppendSourceTextProc) PR_FindSymbol( g_JSDModule, "JSD_AppendSourceText");
-#endif
 
     if( ! g_SetUserCallbacks    ||
         ! g_NewSourceText       ||
