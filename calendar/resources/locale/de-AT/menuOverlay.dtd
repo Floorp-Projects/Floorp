@@ -11,16 +11,15 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   - The Original Code is mozilla.org code.
    -
    - The Initial Developer of the Original Code is
-   - OEone Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Mozilla Organization.
+   - Portions created by the Initial Developer are Copyright (C) 1998-2002
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Garth Smedley <garths@oeone.com> 
-   -                 Mike Potter <mikep@oeone.com>
-   -                 Chris Charabaruk <coldacid@meldstar.com>
+   - Contributor(s):
+   -   Robert Kaiser <KaiRo@KaiRo.at>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,81 +35,86 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- Event Menu -->                                      
+<!-- Event Menu -->
 <!ENTITY event.menu.title   "Ereignis">
-<!ENTITY eventMenuCmd.accesskey     "e">
+<!ENTITY eventMenuCmd.accesskey     "r">
 
-<!ENTITY event.new.event		"Neues Ereignis">
-<!ENTITY event.new.event.accesskey "e">
+<!ENTITY event.new.event           "Neues Ereignis">
+<!ENTITY event.new.event.accesskey "N">
 
-<!ENTITY event.new.todo		"Neue Aufgabe">
-<!ENTITY event.new.todo.accesskey "a">
+<!ENTITY event.new.todo     "Neue Aufgabe">
+<!ENTITY event.new.todo.accesskey "f">
 
 <!ENTITY calendar.new.server.label "Neuer Kalender">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event	"Bearbeiten">
-<!ENTITY event.edit.event.accesskey	"B">
+<!ENTITY event.edit.event   "Bearbeiten">
+<!ENTITY event.edit.event.accesskey "e">
 
-<!ENTITY event.delete.event	"Löschen">
-<!ENTITY event.delete.event.accesskey	"L">
+<!ENTITY event.delete.event "Gewählte(s) Ereignis löschen">
+<!ENTITY event.delete.event.accesskey   "L">
 
-<!ENTITY event.delete.tasks	"Delete Selected Task(s)">
-<!ENTITY event.delete.tasks.accesskey	"t">
+<!ENTITY event.delete.tasks "Gewählte Aufgabe(n) löschen">
+<!ENTITY event.delete.tasks.accesskey   "A">
 
-<!ENTITY event.mail.event	"Ereignis/Ereignisse senden">
-<!ENTITY event.mail.event.accesskey	"s">
+<!ENTITY event.mail.event   "Ausgewählte(s) Ereignis(se) per E-Mail senden">
+<!ENTITY event.mail.event.accesskey "M">
 
-<!ENTITY calendar.print.label	"Ereignis drucken...">
-<!ENTITY calendar.print.accesskey	"d">
+<!ENTITY calendar.print.label   "Aktive Kalender drucken...">
+<!ENTITY calendar.print.accesskey   "D">
 
-<!ENTITY calendar.printpreview.label	"Druckvorschau">
-<!ENTITY calendar.printpreview.accesskey	"v">
+<!ENTITY calendar.printpreview.label    "Druckvorschau">
+<!ENTITY calendar.printpreview.accesskey    "v">
 
-<!ENTITY calendar.pagesetup.label	"Seite einrichten...">
-<!ENTITY calendar.pagesetup.accesskey	"e">
+<!ENTITY calendar.pagesetup.label   "Seite einrichten...">
+<!ENTITY calendar.pagesetup.accesskey   "i">
 
-<!ENTITY calendar.import.label	"Aus Datei importieren...">
-<!ENTITY calendar.import.accesskey	"i">
+<!ENTITY calendar.import.label  "Aus Datei importieren...">
+<!ENTITY calendar.import.accesskey  "I">
 
-<!ENTITY calendar.wizard.label	"Launch Wizard">
-<!ENTITY calendar.wizard.accesskey	"w">
+<!ENTITY calendar.wizard.label  "Assistenten starten">
+<!ENTITY calendar.wizard.accesskey  "A">
 
-<!ENTITY calendar.export.label	"Ereignisse exportieren...">
-<!ENTITY calendar.export.accesskey	"x">
+<!ENTITY calendar.export.label  "Ausgewählte Ereignisse exportieren...">
+<!ENTITY calendar.export.accesskey  "E">
 
-<!ENTITY calendar.subscribe.label "Entfernten Kalender abbonieren...">
+<!ENTITY calendar.subscribe.label "Entfernten Kalender abonnieren...">
 <!ENTITY calendar.subscribe.accesskey "b">
 
-<!ENTITY calendar.publish.label "Ereignisse veröffentlichen...">
-<!ENTITY calendar.publish.accesskey "v">
+<!ENTITY calendar.publish.label "Gewählte Ereignisse publizieren...">
+<!ENTITY calendar.publish.accesskey "p">
 
-<!ENTITY calendar.about.label	"Über Kalender">
-<!ENTITY calendar.about.accesskey	"a">
+<!ENTITY calendar.about.label   "Über Kalender">
+<!ENTITY calendar.about.accesskey   "b">
 
-<!ENTITY calendar.cut.label	"Ausschneiden">
-<!ENTITY calendar.cut.accesskey	"A">
+<!ENTITY calendar.cut.label "Ausschneiden">
+<!ENTITY calendar.cut.accesskey "A">
 
-<!ENTITY calendar.copy.label	"Kopieren">
-<!ENTITY calendar.copy.accesskey	"K">
+<!ENTITY calendar.copy.label    "Kopieren">
+<!ENTITY calendar.copy.accesskey    "k">
 
-<!ENTITY calendar.paste.label	"Einfügen">
-<!ENTITY calendar.paste.accesskey	"E">
+<!ENTITY calendar.paste.label   "Einfügen">
+<!ENTITY calendar.paste.accesskey   "E">
 
-<!ENTITY calendar.selectall.label	"Alles auswählen">
-<!ENTITY calendar.selectall.accesskey	"u">
+<!ENTITY calendar.selectall.label   "Alles Auswählen">
+<!ENTITY calendar.selectall.accesskey   "u">
 
-<!ENTITY calendar.preferences.label	"Einstellungen...">
-<!ENTITY calendar.preferences.accesskey	"n">
+<!ENTITY calendar.preferences.label "Einstellungen...">
+<!ENTITY calendar.preferences.accesskey "n">
 
 <!ENTITY goMenu.label                   "Gehe">
 <!ENTITY goMenu.accesskey               "G">
 
-<!ENTITY goTodayCmd.label               "Zu Heute wechseln">
+<!ENTITY goTodayCmd.label               "Zu Heute gehen">
 <!ENTITY goTodayCmd.accesskey           "H">
 
-<!ENTITY goPreviousCmd.label            "Vorherige">
+<!ENTITY goPreviousCmd.label            "Vorheriges">
 <!ENTITY goPreviousCmd.accesskey        "V">
 
-<!ENTITY goNextCmd.label                "Nächste">
+<!ENTITY goNextCmd.label                "Nächstes">
 <!ENTITY goNextCmd.accesskey            "N">
+
+<!ENTITY taskMenu.label                "Tools">
+<!ENTITY taskMenu.accesskey            "T">
+
+<!ENTITY helpMenu.accesskey            "H">

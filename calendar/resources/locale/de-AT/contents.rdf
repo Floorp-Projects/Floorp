@@ -12,14 +12,15 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   - The Original Code is mozilla.org code.
    -
    - The Initial Developer of the Original Code is
-   - OEone Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Mozilla Organization.
+   - Portions created by the Initial Developer are Copyright (C) 1998-2002
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Colin Phillips <colinp@oeone.com> 
+   - Contributor(s):
+   -   Robert Kaiser <KaiRo@KaiRo.at>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,7 +36,6 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
 
@@ -45,11 +45,14 @@
   </RDF:Seq>
 
   <!-- locale information -->
-  <RDF:Description about="urn:mozilla:de-AT">
+<RDF:Description about="urn:mozilla:locale:de-AT"
+      chrome:displayName="Deutsch"
+       chrome:name="de-AT">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:de-AT:packages">
         <RDF:li resource="urn:mozilla:locale:de-AT:calendar"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+<RDF:Description about="urn:mozilla:locale:de-AT:calendar" chrome:localeVersion="1.5"/>
 </RDF:RDF>
