@@ -1618,6 +1618,15 @@ NS_METHOD nsWindow::Destroy()
     if (gAttentionTimerMonitor)
       gAttentionTimerMonitor->KillTimer(mWnd);
 
+    HICON icon;
+    icon = (HICON) nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM) 0);
+    if (icon)
+      ::DestroyIcon(icon);
+
+    icon = (HICON) nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM) 0);
+    if (icon)
+      ::DestroyIcon(icon);
+
     VERIFY(::DestroyWindow(mWnd));
 
     mWnd = NULL;
@@ -5494,7 +5503,7 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
   nsCOMPtr<nsIFile> chromeDir;
   if ( NS_FAILED( NS_GetSpecialDirectory( NS_APP_CHROME_DIR,
                                           getter_AddRefs( chromeDir ) ) ) ) {
-      return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
   // Get native file name of that directory.
   nsAutoString iconPath;
@@ -5532,31 +5541,32 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
 
   // See if unicode API not implemented and if not, try ascii version
   if ( ::GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) {
-      nsCOMPtr<nsILocalFile> pathConverter;
-      if ( NS_SUCCEEDED( NS_NewLocalFile( iconPath,
-                                          PR_FALSE,
-                                          getter_AddRefs( pathConverter ) ) ) ) {
-          // Now try the char* path.
-          nsCAutoString aPath;
-          pathConverter->GetNativePath( aPath );
-          bigIcon = (HICON)::LoadImage( NULL,
-                                        aPath.get(),
-                                        IMAGE_ICON,
-                                        ::GetSystemMetrics(SM_CXICON),
-                                        ::GetSystemMetrics(SM_CYICON),
-                                        LR_LOADFROMFILE | LR_SHARED );
-          smallIcon = (HICON)::LoadImage( NULL,
-                                          aPath.get(),
-                                          IMAGE_ICON,
-                                          ::GetSystemMetrics(SM_CXSMICON),
-                                          ::GetSystemMetrics(SM_CYSMICON),
-                                          LR_LOADFROMFILE | LR_SHARED );
-      }
+    nsCOMPtr<nsILocalFile> pathConverter;
+    if ( NS_SUCCEEDED( NS_NewLocalFile( iconPath,
+                                        PR_FALSE,
+                                        getter_AddRefs( pathConverter ) ) ) ) {
+      // Now try the char* path.
+      nsCAutoString aPath;
+      pathConverter->GetNativePath( aPath );
+      bigIcon = (HICON)::LoadImage( NULL,
+                                    aPath.get(),
+                                    IMAGE_ICON,
+                                    ::GetSystemMetrics(SM_CXICON),
+                                    ::GetSystemMetrics(SM_CYICON),
+                                    LR_LOADFROMFILE );
+      smallIcon = (HICON)::LoadImage( NULL,
+                                      aPath.get(),
+                                      IMAGE_ICON,
+                                      ::GetSystemMetrics(SM_CXSMICON),
+                                      ::GetSystemMetrics(SM_CYSMICON),
+                                      LR_LOADFROMFILE );
+    }
   }
 
   if ( bigIcon ) {
-      LRESULT rv = 0;
-      rv = nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM)bigIcon);
+    HICON icon = (HICON) nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM)bigIcon);
+    if (icon)
+      ::DestroyIcon(icon);
   }
 #ifdef DEBUG_law
   else {
@@ -5565,8 +5575,9 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
   }
 #endif
   if ( smallIcon ) {
-      LRESULT rv = 0;
-      rv = nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM)smallIcon);
+    HICON icon = (HICON) nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM)smallIcon);
+    if (icon)
+      ::DestroyIcon(icon);
   }
 #ifdef DEBUG_law
   else {
