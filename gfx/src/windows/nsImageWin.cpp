@@ -127,9 +127,14 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
  
     // Need to clear the entire buffer so an incrementally loaded image
     // will not have garbage rendered for the unloaded bits.
+/* XXX: Since there is a performance hit for doing the clear we need
+   a different solution. For now, we will let garbage be drawn for
+   incrementally loaded images. Need a solution where only the portion
+   of the image that has been loaded is asked to draw.
     if (mImageBits != nsnull) {
       memset(mImageBits, 128, mSizeImage);
     }
+*/
 
     if (256 == mNumPaletteColors) {
       // Initialize the array of indexes into the logical palette
