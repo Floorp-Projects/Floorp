@@ -52,6 +52,8 @@ nsFilePicker::nsFilePicker()
   mNumberOfFilters = 0;
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
+  mDisplayDirectory = do_CreateInstance("component://mozilla/file/local");
+
 }
 
 //-------------------------------------------------------------------------
@@ -98,7 +100,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   char *initialDir;
   mDisplayDirectory->GetPath(&initialDir);
   if (initialDir && *initialDir) {
-     ofn.lpstrInitialDir = initialDir;
+    ofn.lpstrInitialDir = initialDir;
   }
 
   ofn.lpstrTitle   = title;
