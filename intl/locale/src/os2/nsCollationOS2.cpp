@@ -39,6 +39,7 @@
 #include "nsIOS2Locale.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 NS_IMPL_ISUPPORTS1(nsCollationOS2, nsICollation)
 
