@@ -23,6 +23,7 @@ LIBRARY_NAME=ender
 CPPSRCS =				\
       nsEditor.cpp			     \
       nsTextEditor.cpp       \
+      nsTextEditRules.cpp    \
       nsEditorEventListeners.cpp   \
       nsEditProperty.cpp      \
       nsEditFactory.cpp      \
@@ -56,6 +57,7 @@ CPPSRCS =				\
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsEditor.obj		        \
   .\$(OBJDIR)\nsTextEditor.obj        \
+  .\$(OBJDIR)\nsTextEditRules.obj     \
   .\$(OBJDIR)\nsEditorEventListeners.obj		\
 	.\$(OBJDIR)\nsEditProperty.obj	    \
   .\$(OBJDIR)\nsEditFactory.obj		    \
