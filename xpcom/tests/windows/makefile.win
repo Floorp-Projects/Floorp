@@ -26,7 +26,8 @@ MAKE_OBJ_TYPE	= EXE
 
 PROG1 = .\$(OBJDIR)\TestCOM.exe
 PROG2 = .\$(OBJDIR)\TestHelloXPLoop.exe
-PROGRAMS = $(PROG1) $(PROG2)
+PROG3 = .\$(OBJDIR)\nsStringTest.exe
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
 
 LINCS=-I$(PUBLIC)\xpcom
 
@@ -46,3 +47,5 @@ clobber::
 
 $(PROG1): $(OBJDIR) TestCOM.cpp
 $(PROG2): $(OBJDIR) TestHelloXPLoop.cpp
+$(PROG2): $(OBJDIR) nsStringTest.cpp
+
