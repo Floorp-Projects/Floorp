@@ -90,7 +90,6 @@ function Startup()
   gName.select();
   gName.focus();
   onFieldInput();
-  setTimeout(fillSelectFolderMenupopup, 0);
 } 
 
 function onFieldInput()
@@ -182,24 +181,4 @@ function setFolderTreeHeight()
   var isCollapsed = gBookmarkTree.collapsed;
   if (!isCollapsed)
     gBookmarkTree.setAttribute("height", gBookmarkTree.boxObject.height);
-}
-
-function fillSelectFolderMenupopup()
-{
-
-  var popup = document.getElementById("select-folder");
-  // clearing the old menupopup
-  while (popup.hasChildNodes()) 
-    popup.removeChild(popup.firstChild);
-
-  var arcs=BMSVC.GetTargets(RDF.GetResource("NC:LastModifiedFoldersRoot"), RDF.GetResource(NC_NS+"child"), true);
-  while (arcs.hasMoreElements()) {
-    var arc = arcs.getNext().QueryInterface(kRDFRSCIID);
-    var element = document.createElementNS(XUL_NS, "menuitem");
-    element.setAttribute("id", arc.Value);
-    element.setAttribute("label", BookmarksUtils.getProperty(arc, NC_NS+"Name"));
-    popup.appendChild(element);
-  }
-  gMenulist.selectedIndex = 0;
-  gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
 }

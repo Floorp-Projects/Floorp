@@ -55,19 +55,16 @@
       </row>
       <row align="center">
         <label id="createinlabel" value="&createin.label;"/>
-        <menulist id="select-menu"
-                  oncommand="selectMenulistFolder(event);">
-                  <menupopup id="select-folder"/>
+        <menulist id="select-menu" oncommand="selectMenulistFolder(event);"
+                  datasources="rdf:bookmarks" ref="NC:LastModifiedFoldersRoot">
+          <template>
+            <rule parent="menulist">
+              <menupopup>
+                <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              </menupopup>
+            </rule>
+          </template>
         </menulist>
-
-#        <menulist id="select-menu" oncommand="selectMenulistFolder(event);"
-#                  datasources="rdf:bookmarks" ref="NC:LastModifiedFoldersRoot">
-#          <template>
-#            <menupopup>
-#              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-#            </menupopup>
-#          </template>
-#        </menulist>
 
       </row>
     </rows>
