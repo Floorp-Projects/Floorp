@@ -650,17 +650,34 @@ MODULE_PRIVATE int PR_CALLBACK NET_PrefChangedFunc(const char *pref, void *data)
 PUBLIC void 
 NET_FinishInitNetLib()
 {
-
 #ifdef MOZILLA_CLIENT
-    NET_ReadCacheFAT("", TRUE);
-
-	NET_ReadCookies("");
-
+    NET_CacheInit();
+    NET_ReadCookies("");
 #endif /* MOZILLA_CLIENT */
 
 	NET_RegisterEnableUrlMatchCallback();
-
 	NET_SetupPrefs(NULL);  /* setup initial proxy, socks, dnsExpiration and cache preference info */
+
+    PREF_RegisterCallback("network.proxy",NET_PrefChangedFunc,NULL);
+	PREF_RegisterCallback("browser.cache",NET_PrefChangedFunc,NULL);
+	PREF_RegisterCallback("network.hosts.socks_server",NET_PrefChangedFunc,NULL);
+	PREF_RegisterCallback("network.hosts.socks_serverport",NET_PrefChangedFunc,NULL);
+	PREF_RegisterCallback("network.dnsCacheExpiration",NET_DNSExpirationPrefChanged,NULL);
+	NET_RegisterCookiePrefCallbacks(); /* simply inits cookie info in mkaccess.c */
+									   /* and registers the callbacks */
+	/* inits the proxy autodiscovery vars and registers their callbacks. */
+	NET_RegisterPadPrefCallbacks();
+	PREF_RegisterCallback("mail.allow_at_sign_in_user_name", NET_PrefChangedFunc, NULL);
+
+#ifdef XP_UNIX
+	{
+		char *ac_url = getenv("AUTOCONF_URL");
+		if (ac_url) {
+			NET_SetProxyServer(PROXY_AUTOCONF_URL, ac_url);
+			NET_SelectProxyStyle(PROXY_STYLE_AUTOMATIC);
+		}
+	}
+#endif
 
 }
 
@@ -700,43 +717,12 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 
     net_EntryList = XP_ListNew();
 
-#ifdef XP_MAC
-#ifdef MOZILLA_CLIENT
-    NET_CacheInit();
-
-	NET_ReadCookies("");
-
-	
-#endif /* MOZILLA_CLIENT */
-#endif /* XP_MAC */
-
-	NET_TotalNumberOfProcessingURLs=0; /* reset */
-
-#ifdef XP_UNIX
-	{
-		char *ac_url = getenv("AUTOCONF_URL");
-		if (ac_url) {
-			NET_SetProxyServer(PROXY_AUTOCONF_URL, ac_url);
-			NET_SelectProxyStyle(PROXY_STYLE_AUTOMATIC);
-		}
-	}
-#endif
+    NET_TotalNumberOfProcessingURLs=0; /* reset */
 
 #ifdef JAVA
     libnet_asyncIO = PR_NewNamedMonitor("libnet");
 #endif
-	NET_SetupPrefs(NULL);
-	PREF_RegisterCallback("network.proxy",NET_PrefChangedFunc,NULL);
-	PREF_RegisterCallback("browser.cache",NET_PrefChangedFunc,NULL);
-	PREF_RegisterCallback("network.hosts.socks_server",NET_PrefChangedFunc,NULL);
-	PREF_RegisterCallback("network.hosts.socks_serverport",NET_PrefChangedFunc,NULL);
-	PREF_RegisterCallback("network.dnsCacheExpiration",NET_DNSExpirationPrefChanged,NULL);
-	NET_RegisterCookiePrefCallbacks(); /* simply inits cookie info in mkaccess.c */
-									   /* and registers the callbacks */
-	/* inits the proxy autodiscovery vars and registers their callbacks. */
-	NET_RegisterPadPrefCallbacks();
-	PREF_RegisterCallback("mail.allow_at_sign_in_user_name", NET_PrefChangedFunc, NULL);
-
+ 
 	/* initialize protocol modules 
 	 *
 	 * eventually this should be done dynamically,
