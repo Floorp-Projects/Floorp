@@ -342,6 +342,8 @@ xpfe/AppCores/idl/Makefile
 xpfe/browser/Makefile
 xpfe/browser/public/Makefile
 xpfe/browser/src/Makefile
+xpfe/browser/samples/Makefile
+xpfe/browser/samples/sampleimages/Makefile
 # xpfe/xpviewer/Makefile
 # xpfe/xpviewer/src/Makefile
 # xpfe/xpviewer/public/Makefile
