@@ -112,8 +112,24 @@ SOURCE=..\..\ControlSite.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\ControlSiteIPFrame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PickerDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\PropertyBag.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
+# End Source File
+# Begin Source File
+
+SOURCE=.\Tests.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -133,11 +149,23 @@ SOURCE=..\..\ControlSite.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\ControlSiteIPFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PickerDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Resource.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Tests.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -150,6 +178,30 @@ SOURCE=.\res\cbrowse.ico
 # Begin Source File
 
 SOURCE=.\res\cbrowse.rc2
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\closedfolder.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\openfold.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\openfolder.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\test.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\testfailed.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\testpassed.ico
 # End Source File
 # End Group
 # Begin Source File

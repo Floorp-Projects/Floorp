@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "cbrowse.h"
 #include "CBrowseDlg.h"
+#include "PickerDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -61,9 +62,21 @@ BOOL CBrowseApp::InitInstance()
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
 
+	int nResponse;
+
+	CPickerDlg pickerDlg;
+	nResponse = pickerDlg.DoModal();
+	if (nResponse != IDOK)
+	{
+		return FALSE;
+	}
+
 	CBrowseDlg dlg;
+
+	dlg.m_clsid = pickerDlg.m_clsid;
+
 	m_pMainWnd = &dlg;
-	int nResponse = dlg.DoModal();
+	nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{
 		// TODO: Place code here to handle when the dialog is

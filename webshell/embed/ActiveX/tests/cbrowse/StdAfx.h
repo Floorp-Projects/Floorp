@@ -28,8 +28,22 @@ extern CComModule _Module;
 #include <atlctl.h>
 
 #include <exdisp.h>
+#include <mshtml.h>
 
+#include <string>
+#include <vector>
+#include <list>
+
+// Define some string classes
+typedef std::basic_string<TCHAR> tstring;
+
+#include "..\..\BrowserDiagnostics.h"
+#include "..\..\PropertyList.h"
+#include "..\..\PropertyBag.h"
+#include "..\..\ControlSiteIPFrame.h"
 #include "..\..\ControlSite.h"
+
+#include "Tests.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.
