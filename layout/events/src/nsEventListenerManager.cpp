@@ -671,6 +671,11 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     aFlags |= (NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE);
   }
 
+  /* Without this addref, certain events, notably ones bound to
+     keys which cause window deletion, can destroy this object
+     before we're ready. */
+  nsCOMPtr<nsIEventListenerManager> kungFuDeathGrip(this);
+
   switch(aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
     case NS_MOUSE_MIDDLE_BUTTON_DOWN:
