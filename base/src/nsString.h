@@ -133,7 +133,9 @@ class NS_BASE nsString {
                                               PRBool aEliminateTrailing=PR_TRUE);
     static  PRBool        IsSpace(PRUnichar ch);
     static  PRBool        IsAlpha(PRUnichar ch);
-  //@}
+    static  PRBool        IsDigit(PRUnichar ch);
+
+    //@}
 
   ///searching methods...
   //@{
