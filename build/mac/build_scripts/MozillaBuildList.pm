@@ -1073,7 +1073,8 @@ sub BuildIDLProjects()
 	
     if ($main::options{psm}) {
     	BuildIDLProject(":mozilla:security:manager:ssl:macbuild:pipnssIDL.mcp",         "pipnss");
-    	BuildIDLProject(":mozilla:security:manager:pki:macbuild:pippkiIDL.mcp",         "pippki");    	
+    	BuildIDLProject(":mozilla:security:manager:pki:macbuild:pippkiIDL.mcp",         "pippki");
+    	BuildIDLProject(":mozilla:security:manager:boot:macbuild:pipbootIDL.mcp",		"pipboot");
     }
     
     BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",             "libpref");
@@ -1500,8 +1501,9 @@ sub BuildSecurityProjects()
     StartBuildModule("security");
 
     BuildProject(":mozilla:security:nss:macbuild:NSS.mcp","NSS$D.o");
-    BuildOneProject(":mozilla:security:manager:ssl:macbuild:PIPNSS.mcp", "PIPNSS$D.$S",  1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:security:manager:pki:macbuild:PIPPKI.mcp", "PIPPKI$D.$S",  1, $main::ALIAS_SYM_FILES, 1); 
+    BuildOneProject(":mozilla:security:manager:boot:macbuild:pipboot.mcp", "pipboot$D.$S",  1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:security:manager:ssl:macbuild:PIPNSS.mcp",   "PIPNSS$D.$S",  1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:security:manager:pki:macbuild:PIPPKI.mcp",   "PIPPKI$D.$S",  1, $main::ALIAS_SYM_FILES, 1); 
     
 	if ($main::options{static_build}) {
 		BuildOneProject(":mozilla:modules:staticmod:macbuild:cryptoComponent.mcp",    "MetaCrypto$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
