@@ -107,7 +107,7 @@ nsresult nsMsgLocalFactory::QueryInterface(const nsIID &aIID, void **aResult)
 NS_IMPL_ADDREF(nsMsgLocalFactory)
 NS_IMPL_RELEASE(nsMsgLocalFactory)
 
-nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
+nsresult nsMsgLocalFactory::CreateInstance(nsISupports * /* aOuter */, const nsIID &aIID, void **aResult)  
 {  
 	nsresult rv = NS_OK;
 
@@ -217,7 +217,7 @@ nsresult nsMsgLocalFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* /* aServMgr */,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -236,7 +236,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 		return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* /* aServMgr */) 
 {
     return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
