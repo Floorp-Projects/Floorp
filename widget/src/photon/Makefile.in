@@ -39,7 +39,7 @@ INCLUDES += $(TK_CFLAGS)
 
 #	nsWidgetFactory.cpp \
 #	nsWidgetSupport.cpp \
-	
+
 CPPSRCS=  \
 	PtRawDrawContainer.cpp \
 	nsAppShell.cpp \
@@ -47,7 +47,6 @@ CPPSRCS=  \
 	nsLabel.cpp \
 	nsCheckButton.cpp \
 	nsRadioButton.cpp \
-	nsDialog.cpp   \
 	nsLookAndFeel.cpp \
 	nsToolkit.cpp \
 	nsMenuBar.cpp \

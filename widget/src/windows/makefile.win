@@ -52,7 +52,6 @@ CPPSRCS =              \
 	nsTooltipWidget.cpp  \
 	nsAppShell.cpp       \
 	nsLookAndFeel.cpp    \
-	nsDialog.cpp         \
 	nsLabel.cpp          \
 	nsToolkit.cpp        \
 	$(NULL)
@@ -89,7 +88,6 @@ OBJS =                             \
 	.\$(OBJDIR)\nsTooltipWidget.obj  \
 	.\$(OBJDIR)\nsAppShell.obj       \
 	.\$(OBJDIR)\nsLookAndFeel.obj    \
-	.\$(OBJDIR)\nsDialog.obj    \
 	.\$(OBJDIR)\nsLabel.obj    \
 	.\$(OBJDIR)\nsToolkit.obj        \
 	$(NULL)
