@@ -14,7 +14,7 @@
 
 <h1>Python XPCOM Package</h1>
 
-<p>Mozilla CVS Version - Last updated May 2001</p>
+<p>Mozilla CVS Version - Last updated May 2002</p>
 <p>This is the readme for the Python interface to <b>XPCOM</b>.</p>
 <p><b>XPCOM </b>is an acronym for &quot;Cross Platform COM&quot;.&nbsp; It has
 come out of the <a href="http://www.mozilla.org">Mozilla</a>  project, which
@@ -37,7 +37,7 @@ is, then none of this probably interests you at all!</p>
 </ul>
 <p>Note: <b>This package requires Python 1.6 or later</b>; we recommend using
 the latest
-official Python version (currently 2.1).&nbsp; This package works
+official Python version.&nbsp; This package works
 very well with the latest <a href="http://www.ActiveState.com/Products/ActivePython">ActivePython</a>,
 and does not require any external modules or packages beyond what is provided in
 the core Python release for each platform.</p>
@@ -54,18 +54,6 @@ contributors. </p>
 &quot;components&quot; directory.&nbsp; This is because we may decide on some
 smart scheme for recursion (similar to Python packages), and don't want people
 to rely on simple recursive searches.</li>
-  <li>No management of the PythonPath is done by the package.&nbsp; You must
-arrange for the Python <i>xpcom</i> package to be on your PythonPath.&nbsp;
-Significantly, the XPCOM <i> components</i> directory is not on the PythonPath and
-generally cannot be, as Python will often find other DLLs in this directory and
-attempt to use them as Python modules.&nbsp; This means that Python module
-files will not be found in the <i> components</i> directory, even when referenced by
-another component - thus, a component can&nbsp; not import another component
-source file as a regular module!&nbsp; It is thought that when we know what to
-do with sub-directories of the <i> components</i> directory (as described above), some
-automated PythonPath support will be provided, so Python components and regular
-Python modules the component depends on can exist in the same directory
-structure.</li>
   <li>No unregistration support at all.&nbsp;The main Python Component Loader supports
     unregistration, but the actual Python objects themselves do not support unregistration.&nbsp;It is unclear if the Component Loader
     unregistration process needs to manually remove each component it is responsible
@@ -90,6 +78,11 @@ documented here just in case!</li>
 <p>Implement interface flattening.&nbsp; You should (almost) never need to use <i>QueryInterface()</i>!&nbsp;
 We are still 100% backwards compatible, so usage of QI still works - just is
 generally not necessary.</p>
+
+<h3>Version 0.93 - May 2002</h3>
+
+<p>Implement <i>nsIVariant</i> and all new string types.&nbsp; Complete move to
+autoconf build system.</p>
 
 </body>
 

@@ -25,6 +25,15 @@ service, use <i>xpcom.components.services</i> just like the JavaScript
 counterpart.&nbsp; There is nothing special about implementing a service in
 Python; see the standard XPCOM documentation on services for more information.</p>
 
+<h2>nsIVariant</h2>
+
+<p>There is (almost) full support for <i>nsIVariant</i>.&nbsp; Any <i>nsIVariant</i>
+parameters will automatically be translated to and from regular Python objects
+giving, in effect, a multi-type parameter.&nbsp; This should be automatic, so
+there is not much else to say!&nbsp; Note that if you really want, you can
+create and pass your own <i>nsIVariant</i> object instead of a regular Python
+object, thereby allowing explicit control over the type of variant created.</p>
+
 <h2>nsISupports Primitives.</h2>
 
 <p>There is a set of interfaces described in <i>nsISupportsPrimitives.idl</i>, which I
