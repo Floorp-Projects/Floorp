@@ -48,13 +48,13 @@
 
 #undef NS_NET
 #ifdef _IMPL_NS_NET
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #define NS_NET _declspec(dllexport)
 #else  /* !XP_PC */
 #define NS_NET
 #endif /* !XP_PC */
 #else  /* !_IMPL_NS_NET */
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #define NS_NET _declspec(dllimport)
 #else  /* !XP_PC */
 #define NS_NET
