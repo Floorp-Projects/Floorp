@@ -19,6 +19,7 @@ MODULE = xpfc
 
 CPPSRCS = \
     nsSMTPService.cpp \
+    nsMIMEService.cpp \
 	$(NULL)
 
 REQUIRES = xpcom raptor netlib msgsdk
