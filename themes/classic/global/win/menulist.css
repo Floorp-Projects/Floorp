@@ -26,7 +26,7 @@
       border-top          : 1px solid threeddarkshadow;
       border-right        : 1px solid threedface;
       border-bottom       : 1px solid threedface;
-      -moz-user-focus     : none;
+      -moz-user-focus     : ignore;
     }  
 
   .menulist-display-box,
@@ -130,7 +130,7 @@
   .menulist-compact
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulist-compact");
-      -moz-user-focus     : none;  /* we don't take focus */
+      -moz-user-focus     : ignore;  /* we don't take focus */
       border-left         : 1px solid threedhighlight;
       border-top          : 1px solid threedhighlight;
       border-right        : 1px solid threeddarkshadow;

@@ -96,5 +96,5 @@ toolbarseparator
   
 .toolbar-focustarget
   {
-    -moz-user-focus       : none !important;
+    -moz-user-focus       : ignore !important;
   }   

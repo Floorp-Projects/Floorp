@@ -204,7 +204,7 @@
     min-width             : 47px;
     margin                : 0px;
     border                : 1px solid transparent;
-    -moz-user-focus       : none;
+    -moz-user-focus       : ignore;
     padding               : 2px 3px 2px 3px;
     text-align            : center;
   }  

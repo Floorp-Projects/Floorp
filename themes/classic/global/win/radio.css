@@ -84,5 +84,5 @@
     
   .radio-internal-box
     {
-      -moz-user-focus     : none;
+      -moz-user-focus     : ignore;
     }    
