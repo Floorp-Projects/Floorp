@@ -202,10 +202,10 @@ endif
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
-ifeq ($(SUNWSPRO5_VTABLE),1)
-ASFILES		:= xptcinvoke_asm_sparc_solaris_SUNW.s xptcstubs_asm_sparc_solaris.s
-else
+ifeq ($(GNU_CC),1)
 ASFILES		:= xptcinvoke_asm_sparc_solaris_GCC.s xptcstubs_asm_sparc_solaris.s
+else
+ASFILES		:= xptcinvoke_asm_sparc_solaris_SUNW.s xptcstubs_asm_sparc_solaris.s
 endif
 endif
 endif

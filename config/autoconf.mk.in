@@ -300,9 +300,6 @@ MOZ_NETCAST	=
 MOZ_LDAP	=
 SMART_MAIL	=
 
-# Style of vtable used on Solaris
-SUNWSPRO5_VTABLE = @SUNWSPRO5_VTABLE@
-
 # XXX - these need to be cleaned up and have real checks added -cls
 CM_BLDTYPE=dbg 
 AWT_11=1 
