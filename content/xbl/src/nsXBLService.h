@@ -95,6 +95,9 @@ class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupports
   NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventReceiver* aElement);
   NS_IMETHOD AttachGlobalDragHandler(nsIDOMEventReceiver* aElement);
 
+  // Helper method for loading an XML doc.
+  NS_IMETHOD FetchSyncXMLDocument(nsIURI* aURI, nsIDocument** aResult);
+  
   NS_DECL_NSIOBSERVER
 
 public:
