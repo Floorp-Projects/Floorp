@@ -230,7 +230,7 @@ struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent
     NS_IMETHOD HandleEvent();
     nsMsgKeyArray m_copyKeyArray;
     nsCString m_msgIdString;
-    nsCOMPtr<nsIImapUrl> m_Url;;
+    nsCOMPtr<nsIImapUrl> m_Url;
 };
 
 struct SetAppendMsgUidProxyEvent : nsImapExtensionSinkProxyEvent
