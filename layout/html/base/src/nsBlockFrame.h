@@ -223,10 +223,14 @@ protected:
                             nsLineBox* aLine,
                             PRBool* aKeepGoing);
 
+  nsresult ReflowInlineFrames(nsBlockReflowState& aState,
+                              nsLineBox* aLine,
+                              PRBool* aKeepLineGoing);
+
   nsresult ReflowInlineFrame(nsBlockReflowState& aState,
                              nsLineBox* aLine,
                              nsIFrame* aFrame,
-                             PRBool* aKeepLineGoing);
+                             PRUint8* aLineReflowStatus);
 
   void ReflowFloater(nsIPresContext& aPresContext,
                      nsBlockReflowState& aState,
