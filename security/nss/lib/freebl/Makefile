@@ -104,7 +104,8 @@ primes.c : mpi/primes.c
 
 .PRECIOUS : $(MPI_SRCS) $(MPI_HDRS)
 
-ALL_TRASH += $(MPI_SRCS) $(MPI_HDRS)
+ALL_TRASH += $(MPI_SRCS) $(MPI_HDRS) primes.c
+
 DEFINES += -DMP_API_COMPATIBLE
 
 MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
