@@ -41,7 +41,7 @@ static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 #else
 #ifdef XP_MAC
 #define EDITOR_DLL "ENDER_DLL"
-#else // XP_UNIX
+#else // XP_UNIX || XP_BEOS
 #define EDITOR_DLL "libender"MOZ_DLL_SUFFIX
 #endif
 #endif
