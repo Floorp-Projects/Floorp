@@ -53,8 +53,7 @@ nsFileTransportService::Init()
 
 nsFileTransportService::~nsFileTransportService()
 {
-    // this will wait for all outstanding requests to be processed, then
-    // join with the worker threads, and finally free the pool:
+    mPool->Shutdown();
     NS_IF_RELEASE(mPool);
     NS_IF_RELEASE(mSuspended);
 }
