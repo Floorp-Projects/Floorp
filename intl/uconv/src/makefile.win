@@ -100,6 +100,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\wincharset.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) charsetTitles.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) charsetData.properties $(DIST)\bin\res
+    $(MAKE_INSTALL) .\acceptlanguage.properties $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\bin\components\$(DLLNAME).dll
@@ -108,3 +109,5 @@ clobber::
 	rm -f $(DIST)\bin\res\wincharset.properties
 	rm -f $(DIST)\bin\res\charsetTitles.properties
 	rm -f $(DIST)\bin\res\charsetData.properties
+    rm -f $(DIST)\bin\res\acceptlanguage.properties
+    
