@@ -113,7 +113,7 @@ public:
 
   void GetFontName(nsString& aFontName)
   {
-    aFontName.Assign(mFontName);
+    aFontName.AssignWithConversion(mFontName);
   }
 
   nsGlyphTable* GetNextTable(void)
