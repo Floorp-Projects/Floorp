@@ -68,6 +68,7 @@ public:
                                             PRUint16 methodIndex,
                                             PRUint8 paramIndex,
                                             nsXPTCMiniVariant *dispatchParams,
+                                            PRBool isFullVariantArray,
                                             nsID &result);
 
   NS_HIDDEN_(nsresult) StoreInstance(DConnectInstance *);

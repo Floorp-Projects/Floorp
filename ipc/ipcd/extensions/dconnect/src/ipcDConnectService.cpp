@@ -1078,7 +1078,7 @@ DConnectStub::CallMethod(PRUint16 aMethodIndex,
       {
         nsID iid;
         rv = gDConnect->GetIIDForMethodParam(mIInfo, aInfo, paramInfo, type,
-                                             aMethodIndex, i, aParams, iid);
+                                             aMethodIndex, i, aParams, PR_FALSE, iid);
         if (NS_SUCCEEDED(rv))
           rv = SerializeInterfaceParam(writer, mPeerID, iid, type, aParams[i], wrappers);
       }
@@ -1154,7 +1154,7 @@ DConnectStub::CallMethod(PRUint16 aMethodIndex,
 
             nsID iid;
             rv = gDConnect->GetIIDForMethodParam(mIInfo, aInfo, paramInfo, type,
-                                                 aMethodIndex, i, aParams, iid);
+                                                 aMethodIndex, i, aParams, PR_FALSE, iid);
             if (NS_SUCCEEDED(rv))
             {
               DConnectStub *stub;
@@ -1323,6 +1323,7 @@ ipcDConnectService::GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                                          PRUint16 methodIndex,
                                          PRUint8 paramIndex,
                                          nsXPTCMiniVariant *dispatchParams,
+                                         PRBool isFullVariantArray,
                                          nsID &result)
 {
   PRUint8 argnum, tag = type.TagPart();
@@ -1345,7 +1346,11 @@ ipcDConnectService::GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
     if (!arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_IID)
       return NS_ERROR_UNEXPECTED;
 
-    nsID *p = (nsID *) dispatchParams[argnum].val.p;
+    nsID *p;
+    if (isFullVariantArray)
+      p = (nsID *) ((nsXPTCVariant *) dispatchParams)[argnum].val.p;
+    else
+      p = (nsID *) dispatchParams[argnum].val.p;
     if (!p)
       return NS_ERROR_UNEXPECTED;
 
@@ -1672,7 +1677,7 @@ ipcDConnectService::OnInvoke(PRUint32 peer, const DConnectInvoke *invoke, PRUint
 
         nsID iid;
         rv = GetIIDForMethodParam(iinfo, methodInfo, paramInfo, type,
-                                  invoke->method_index, i, params, iid);
+                                  invoke->method_index, i, params, PR_TRUE, iid);
         if (NS_SUCCEEDED(rv))
         {
           DConnectStub *stub;
@@ -1730,7 +1735,7 @@ end:
         {
           nsID iid;
           rv = GetIIDForMethodParam(iinfo, methodInfo, paramInfo, type,
-                                    invoke->method_index, i, params, iid);
+                                    invoke->method_index, i, params, PR_TRUE, iid);
           if (NS_SUCCEEDED(rv))
             rv = SerializeInterfaceParam(writer, peer, iid, type, params[i], wrappers);
         }
