@@ -425,6 +425,9 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
     nsIAtom* nameSpacePrefix = CutNameSpacePrefix(name);
     nsIAtom* nameAtom = NS_NewAtom(name);
     PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+    if ((kNameSpaceID_None == nameSpaceID) && aIsHTML) {
+      nameSpaceID = kNameSpaceID_HTML;
+    }
 
     nsAutoString value;
     if (NS_CONTENT_ATTR_NOT_THERE == 
@@ -549,7 +552,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   isHTML = IsHTMLNameSpace(nameSpaceID);
 
   if (isHTML) {
-    tag.ToUpperCase();  // HTML is case-insensative
+    tag.ToUpperCase();  // HTML is case-insensitive
     nsIAtom* tagAtom = NS_NewAtom(tag);
     if (nsHTMLAtoms::script == tagAtom) {
       result = ProcessStartSCRIPTTag(aNode);
@@ -754,7 +757,7 @@ nsXMLContentSink::LoadStyleSheet(nsIURL* aURL,
     nsICSSStyleSheet* sheet = nsnull;
     // XXX note: we are ignoring rv until the error code stuff in the
     // input routines is converted to use nsresult's
-    parser->SetCaseSensative(PR_TRUE);
+    parser->SetCaseSensitive(PR_TRUE);
     parser->Parse(aUIN, aURL, sheet);
     if (nsnull != sheet) {
       sheet->SetTitle(aTitle);
