@@ -1147,6 +1147,7 @@ public:
      * Assign a symbol to a variable
      */
     void PutSymbol(const PRUnichar* aSymbol, PRInt32 aVariable) {
+        if (!mSymtab.ops) return;
         NS_PRECONDITION(LookupSymbol(aSymbol) == 0, "symbol already defined");
 
         SymtabEntry* entry =
@@ -1164,6 +1165,7 @@ public:
      * Lookup the variable associated with the symbol
      */
     PRInt32 LookupSymbol(const PRUnichar* aSymbol, PRBool aCreate = PR_FALSE) {
+        if (!mSymtab.ops) return 0;
         SymtabEntry* entry =
             NS_REINTERPRET_CAST(SymtabEntry*,
                                 PL_DHashTableOperate(&mSymtab,
