@@ -34,11 +34,11 @@ CPPSRCS		= \
 
 EXPORTS		= nsIUnixToolkitService.h
 
+EXTRA_DSO_LDOPTS = $(TOOLKIT_TK_LIBS)
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_TIMER
 CXXFLAGS	+= $(TK_CFLAGS)
 INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/.. -I$(srcdir)/../../xpwidgets
-
-EXTRA_DSO_LDOPTS += $(TOOLKIT_TK_LIBS)
 

@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,73 +13,73 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH=../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES += -D_IMPL_NS_UI
+MODULE		= raptor
+XPIDL_MODULE	= widget
 
-EXPORTS = \
-	nsIFontSizeIterator.h \
-	nsIFontNameIterator.h \
-	nsIFontRetrieverService.h \
-	nsIMenuBar.h	\
-	nsIMenu.h		\
-	nsIMenuItem.h	\
-	nsIPopUpMenu.h		\
-	nsIFileWidget.h            \
-	nsStringUtil.h	\
-	nsui.h			\
-	nsIWidget.h     \
-	nsIButton.h     \
-	nsICheckButton.h\
-	nsIListWidget.h \
-	nsIComboBox.h   \
-	nsITextWidget.h \
-	nsITextAreaWidget.h \
-	nsIComboBox.h   \
-	nsIListBox.h    \
-	nsIScrollbar.h  \
-	nsGUIEvent.h    \
-	nsIRadioButton.h\
-	nsIMouseListener.h \
-	nsIEventListener.h \
-	nsIMenuListener.h \
-	nsIToolkit.h \
-	nsWidgetsCID.h \
-	nsIAppShell.h \
-	nsILookAndFeel.h \
-	nsILabel.h \
-	nsIMenuBar.h \
-	nsIMenu.h \
-	nsIMenuItem.h \
-	nsIPopUpMenu.h \
-	nsIFontNameIterator.h \
-	nsIFontSizeIterator.h \
-	nsIFontRetrieverService.h \
-	nsIContextMenu.h \
-	$(NULL)
+EXPORTS		= \
+		nsIFontSizeIterator.h \
+		nsIFontNameIterator.h \
+		nsIFontRetrieverService.h \
+		nsIMenuBar.h \
+		nsIMenu.h \
+		nsIMenuItem.h \
+		nsIPopUpMenu.h \
+		nsIFileWidget.h \
+		nsStringUtil.h \
+		nsui.h \
+		nsIWidget.h \
+		nsIButton.h \
+		nsICheckButton.h \
+		nsIListWidget.h \
+		nsIComboBox.h \
+		nsITextWidget.h \
+		nsITextAreaWidget.h \
+		nsIComboBox.h \
+		nsIListBox.h \
+		nsIScrollbar.h \
+		nsGUIEvent.h \
+		nsIRadioButton.h \
+		nsIMouseListener.h \
+		nsIEventListener.h \
+		nsIMenuListener.h \
+		nsIToolkit.h \
+		nsWidgetsCID.h \
+		nsIAppShell.h \
+		nsILookAndFeel.h \
+		nsILabel.h \
+		nsIMenuBar.h \
+		nsIMenu.h \
+		nsIMenuItem.h \
+		nsIPopUpMenu.h \
+		nsIFontNameIterator.h \
+		nsIFontSizeIterator.h \
+		nsIFontRetrieverService.h \
+		nsIContextMenu.h \
+		$(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+XPIDLSRCS	= \
+		nsIFileSpecWithUI.idl \
+		nsISound.idl \
+		nsITransferable.idl \
+		nsIDragSession.idl \
+		nsIDragService.idl \
+		nsIFormatConverter.idl \
+		nsIClipboard.idl \
+		nsIClipboardOwner.idl \
+		$(NULL)
 
-MODULE = raptor
-XPIDL_MODULE = widget
-
-XPIDLSRCS =				\
-	nsIFileSpecWithUI.idl		\
-	nsISound.idl			\
-	nsITransferable.idl			\
-	nsIDragSession.idl			\
-	nsIDragService.idl			\
-	nsIFormatConverter.idl			\
-	nsIClipboard.idl			\
-	nsIClipboardOwner.idl			\
-	$(NULL)
-
-include $(topsrcdir)/config/config.mk
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D_IMPL_NS_UI
+

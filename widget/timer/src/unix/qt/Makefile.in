@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,47 +13,42 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
+REQUIRES	= xpcom
 
-LIBRARY_NAME	= timer_qt
-IS_COMPONENT	= 1
-REQUIRES		= xpcom
-INCLUDES		+= $(MOZ_QT_CFLAGS) -I$(srcdir)/..
-
-CPPSRCS			= \
-				moc_nsTimerEventHandler.cpp \
-				nsTimerEventHandler.cpp \
-				nsTimerQt.cpp \
-				nsTimerQtFactory.cpp \
-				$(NULL)
-
-EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
-
-else
-
-LIBRARY_NAME = timer_s
-REQUIRES = xpcom
-CXXFLAGS += $(TK_CFLAGS)
-INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
-CPPSRCS =\
+CPPSRCS		= \
 		moc_nsTimerEventHandler.cpp \
 		nsTimerEventHandler.cpp \
 		nsTimerQt.cpp \
 		$(NULL)
-MKSHLIB =
+
+ifndef MOZ_MONOLITHIC_TOOLKIT
+
+TIMER_SUFFIX	= qt
+IS_COMPONENT	= 1
+CPPSRCS		+= nsTimerQtFactory.cpp
+INCLUDES	+= $(MOZ_QT_CFLAGS) -I$(srcdir)/..
+EXTRA_DSO_LDOPTS = $(MOZ_QT_LDFLAGS)
+
+else
+
+TIMER_SUFFIX	= s
+CXXFLAGS	+= $(TK_CFLAGS)
+INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
-endif # !MOZ_MONOLITHIC_TOOLKIT
+endif
 
 include $(topsrcdir)/config/rules.mk
+

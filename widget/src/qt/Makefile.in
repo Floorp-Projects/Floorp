@@ -26,49 +26,49 @@ LIBRARY_NAME	= widget_qt
 
 REQUIRES	= util img xpcom raptor netlib
 
-MOCSRCS = \
-	moc_nsQApplication.cpp \
-	moc_nsComboBox.cpp \
-	moc_nsLabel.cpp \
-	moc_nsScrollbar.cpp \
-	moc_nsButton.cpp \
-	moc_nsListBox.cpp \
-	moc_nsTextAreaWidget.cpp \
-	moc_nsCheckButton.cpp \
-	moc_nsTextWidget.cpp \
-	moc_nsQEventHandler.cpp \
-	moc_nsRadioButton.cpp \
-	moc_nsWindow.cpp \
-	$(NULL)
-
 CPPSRCS		= \
-	$(MOCSRCS) \
-	nsQApplication.cpp \
-	nsAppShell.cpp \
-	nsComboBox.cpp \
-	nsLabel.cpp \
-	nsScrollbar.cpp \
-	nsButton.cpp \
-	nsListBox.cpp \
-	nsLookAndFeel.cpp \
-	nsTextAreaWidget.cpp \
-	nsCheckButton.cpp \
-	nsMenu.cpp \
-	nsTextHelper.cpp \
-	nsMenuBar.cpp \
-	nsTextWidget.cpp \
-	nsFileWidget.cpp \
-	nsMenuItem.cpp \
-	nsToolkit.cpp \
-	nsQEventHandler.cpp \
-	nsRadioButton.cpp \
-	nsPopUpMenu.cpp \
-	nsWidget.cpp \
-	nsWindow.cpp \
-	nsDragService.cpp \
-	nsClipboard.cpp \
-	nsWidgetFactory.cpp \
-	$(NULL)
+		$(MOCSRCS) \
+		nsQApplication.cpp \
+		nsAppShell.cpp \
+		nsComboBox.cpp \
+		nsLabel.cpp \
+		nsScrollbar.cpp \
+		nsButton.cpp \
+		nsListBox.cpp \
+		nsLookAndFeel.cpp \
+		nsTextAreaWidget.cpp \
+		nsCheckButton.cpp \
+		nsMenu.cpp \
+		nsTextHelper.cpp \
+		nsMenuBar.cpp \
+		nsTextWidget.cpp \
+		nsFileWidget.cpp \
+		nsMenuItem.cpp \
+		nsToolkit.cpp \
+		nsQEventHandler.cpp \
+		nsRadioButton.cpp \
+		nsPopUpMenu.cpp \
+		nsWidget.cpp \
+		nsWindow.cpp \
+		nsDragService.cpp \
+		nsClipboard.cpp \
+		nsWidgetFactory.cpp \
+		$(NULL)
+
+MOCSRCS		= \
+		moc_nsQApplication.cpp \
+		moc_nsComboBox.cpp \
+		moc_nsLabel.cpp \
+		moc_nsScrollbar.cpp \
+		moc_nsButton.cpp \
+		moc_nsListBox.cpp \
+		moc_nsTextAreaWidget.cpp \
+		moc_nsCheckButton.cpp \
+		moc_nsTextWidget.cpp \
+		moc_nsQEventHandler.cpp \
+		moc_nsRadioButton.cpp \
+		moc_nsWindow.cpp \
+		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
 
@@ -88,16 +88,14 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
-CXXFLAGS += $(MOZ_QT_CFLAGS)
+CXXFLAGS	+= $(MOZ_QT_CFLAGS)
 else
-CXXFLAGS += $(TK_CFLAGS)
+CXXFLAGS	+= $(TK_CFLAGS)
 endif
 
 DEFINES		+= -D_IMPL_NS_WIDGET
 
-INCLUDES	+= \
-		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/. \
-		$(NULL)
+INCLUDES	+= -I$(srcdir)/../xpwidgets -I$(srcdir)
 
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+
