@@ -41,13 +41,11 @@
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
-#include "nsICommonDialogs.h"
 #include "nsPIXPIManagerCallbacks.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 
-static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 
 nsInstallProgressDialog::nsInstallProgressDialog(nsPIXPIManagerCallbacks *aManager)
