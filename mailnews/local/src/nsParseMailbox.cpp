@@ -43,9 +43,7 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 /* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsMsgMailboxParser)
-NS_IMPL_RELEASE(nsMsgMailboxParser)
-NS_IMPL_QUERY_INTERFACE(nsMsgMailboxParser, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ISUPPORTS_INHERITED(nsMsgMailboxParser, nsParseMailMessageState, nsIStreamListener);
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
@@ -356,8 +354,20 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 
 }
 
+nsresult NS_NewParseMailMessageState(const nsIID& iid,
+                                  void **result)
+{
+    if (!result) return NS_ERROR_NULL_POINTER;
+	nsParseMailMessageState *parser = nsnull;
+	parser = new nsParseMailMessageState();
+    return parser->QueryInterface(iid, result);
+}
+
+NS_IMPL_ISUPPORTS(nsParseMailMessageState, nsIMsgParseMailMsgState::GetIID());
+
 nsParseMailMessageState::nsParseMailMessageState()
 {
+	NS_INIT_REFCNT();
 	m_position = 0;
 	m_IgnoreXMozillaStatus = FALSE;
 	m_state = MBOX_PARSE_BODY;
@@ -384,7 +394,7 @@ void nsParseMailMessageState::Init(PRUint32 fileposition)
 	m_newMsgHdr = null_nsCOMPtr();
 }
 
-void nsParseMailMessageState::Clear()
+NS_IMETHODIMP nsParseMailMessageState::Clear()
 {
 	m_message_id.length = 0;
 	m_references.length = 0;
@@ -409,6 +419,35 @@ void nsParseMailMessageState::Clear()
 	ClearAggregateHeader (m_ccList);
 	m_headers.ResetWritePos();
 	m_envelope.ResetWritePos();
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsParseMailMessageState::SetState(MBOX_PARSE_STATE aState)
+{
+	m_state = aState;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsParseMailMessageState::SetEnvelopePos(PRUint32 aEnvelopePos)
+{
+	m_envelope_pos = aEnvelopePos;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsParseMailMessageState::GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader)
+{
+	if (aMsgHeader)
+	{
+		*aMsgHeader = m_newMsgHdr;
+		NS_IF_ADDREF(*aMsgHeader);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsParseMailMessageState::ParseAFolderLine(const char *line, PRUint32 lineLength)
+{
+	ParseFolderLine(line, lineLength);
+	return NS_OK;
 }
 
 PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 lineLength)
@@ -449,9 +488,10 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 	return 0;
 }
 
-void nsParseMailMessageState::SetMailDB(nsIMsgDatabase *mailDB)
+NS_IMETHODIMP nsParseMailMessageState::SetMailDB(nsIMsgDatabase *mailDB)
 {
 	m_mailDB = dont_QueryInterface(mailDB);
+	return NS_OK;
 }
 
 /* #define STRICT_ENVELOPE */
@@ -553,15 +593,16 @@ nsParseMailMessageState::IsEnvelopeLine(const char *buf, PRInt32 buf_size)
 
 
 // We've found the start of the next message, so finish this one off.
-void nsParseMailMessageState::FinishHeader()
+NS_IMETHODIMP nsParseMailMessageState::FinishHeader()
 {
-
 	if (m_newMsgHdr)
 	{
 		  m_newMsgHdr->SetMessageKey(m_envelope_pos);
 		  m_newMsgHdr->SetMessageSize(m_position - m_envelope_pos);	// dmb - no longer number of lines.
 		  m_newMsgHdr->SetLineCount(m_body_lines);
 	}
+
+	return NS_OK;
 }
 
 struct message_header *nsParseMailMessageState::GetNextHeaderInAggregate (nsVoidArray &list)

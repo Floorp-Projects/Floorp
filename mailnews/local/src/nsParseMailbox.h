@@ -19,6 +19,7 @@
 #ifndef nsParseMailbox_H
 #define nsParseMailbox_H
 
+#include "nsIMsgParseMailMsgState.h"
 #include "nsMsgKeyArray.h"
 #include "nsVoidArray.h"
 #include "nsIStreamListener.h"
@@ -44,6 +45,11 @@ class MSG_FolderInfoMail;
 class nsIMsgFilterList;
 class nsIFolder;
 
+NS_BEGIN_EXTERN_C
+
+nsresult NS_NewParseMailMessageState(const nsIID& iid, void **result);
+
+NS_END_EXTERN_C
 
 /* Used for the various things that parse RFC822 headers...
  */
@@ -53,25 +59,24 @@ typedef struct message_header
   PRInt32 length;      /* The length of the data (it is not NULL-terminated.) */
 } message_header;
 
-
-typedef enum
-{
-  MBOX_PARSE_ENVELOPE,
-  MBOX_PARSE_HEADERS,
-  MBOX_PARSE_BODY
-} MBOX_PARSE_STATE;
-
-
-
 // This object maintains the parse state for a single mail message.
-class nsParseMailMessageState
+class nsParseMailMessageState : public nsIMsgParseMailMsgState
 {
 public:
+	NS_DECL_ISUPPORTS
 					nsParseMailMessageState();
-					virtual ~nsParseMailMessageState();
+	virtual			~nsParseMailMessageState();
+	
+	// nsIMsgParseMailMsgState support
+	NS_IMETHOD SetMailDB(nsIMsgDatabase * aDatabase);
+	NS_IMETHOD Clear();
+	NS_IMETHOD SetState(MBOX_PARSE_STATE aState);
+	NS_IMETHOD SetEnvelopePos(PRUint32 aEnvelopePos);
+	NS_IMETHOD ParseAFolderLine(const char *line, PRUint32 lineLength);
+	NS_IMETHOD GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader);
+	NS_IMETHOD FinishHeader();
+
 	void			Init(PRUint32 fileposition);
-	virtual void	Clear();
-	virtual void	FinishHeader();
 	virtual PRInt32	ParseFolderLine(const char *line, PRUint32 lineLength);
 	virtual int		StartNewEnvelope(const char *line, PRUint32 lineLength);
 	int				ParseHeaders();
@@ -80,7 +85,6 @@ public:
 	int				InternSubject (struct message_header *header);
 	nsresult		InternRfc822 (struct message_header *header, 
 								char **ret_name);
-	void			SetMailDB(nsIMsgDatabase *mailDB);
 
 	static PRBool	IsEnvelopeLine(const char *buf, PRInt32 buf_size);
 	static PRBool	msg_StripRE(const char **stringP, PRUint32 *lengthP);
@@ -154,7 +158,7 @@ public:
 	virtual ~nsMsgMailboxParser();
 
 	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
-	NS_DECL_ISUPPORTS
+	NS_DECL_ISUPPORTS_INHERITED
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
