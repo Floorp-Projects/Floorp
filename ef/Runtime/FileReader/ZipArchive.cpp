@@ -169,10 +169,32 @@ ZipArchive::~ZipArchive()
 bool ZipArchive::get(const DirectoryEntry *dp, char *&buf, Int32 &len)
 {
   char *xbuf;
+  int32 offset;
+  External_LocalFileHeader ext_fhdr;
+  Internal_LocalFileHeader int_fhdr;
 
-  // Seek to the beginning of the entry's data.
-
+  // Seek to the start of the local file header
   if (PR_Seek (fp, dp->off, PR_SEEK_SET) != dp->off)
+    return false;
+
+  // Read the local file header into memory
+  if (!readFully(&ext_fhdr, sizeof(External_LocalFileHeader)))
+    return false;
+
+  // Swap endianness, if needed
+  import(&int_fhdr, ext_fhdr);
+
+  // Verify local file header signature, in case of corruption or confusion
+  if (int_fhdr.signature[0] != 0x50 || int_fhdr.signature[1] != 0x4b ||
+      int_fhdr.signature[2] != 0x03 || int_fhdr.signature[3] != 0x04)
+    return false;
+
+  // Compute offset within archive to start of file data
+  offset = dp->off + sizeof(External_LocalFileHeader) + 
+        int_fhdr.filename_length + int_fhdr.extra_field_length;
+
+  // Seek to start of file data
+  if (PR_Seek (fp, offset, PR_SEEK_SET) != offset)
     return false;
 
   len = dp->len;
@@ -281,15 +303,7 @@ bool ZipArchive::initReader()
     edir[i].size = int_chdr.compressed_size;
     edir[i].method = int_chdr.compression_method;
     edir[i].mod = 0; // FIXME
-    edir[i].off = (int_chdr.relative_offset_local_header 
-                   + sizeof(External_LocalFileHeader)
-                   + int_chdr.filename_length
-                   + int_chdr.file_comment_length
-                   + int_chdr.extra_field_length);
-
-    // ??? Why is this extra 4 needed?  infozip source is less than readable.
-    if (int_chdr.extra_field_length)
-      edir[i].off += 4;
+    edir[i].off = int_chdr.relative_offset_local_header;
 
     cd_ptr += sizeof(External_CentralDirectoryHeader);
     edir[i].fn = cd_ptr;
