@@ -725,8 +725,6 @@ extensions/transformiix/source/Makefile
 extensions/transformiix/Makefile
 "
 
-MAKEFILES_themes=`cat ${srcdir}/themes/makefiles`
-
 if [ "$MOZ_MAIL_NEWS" ]; then
     MAKEFILES_mailnews=`cat ${srcdir}/mailnews/makefiles`
 fi
@@ -899,6 +897,9 @@ done
 # Translate from BUILD_MODULES into the proper makefiles list
 #
 if [ "$BUILD_MODULES" = "all" ]; then
+
+MAKEFILES_themes=`cat ${srcdir}/themes/makefiles`
+
 add_makefiles "
 $MAKEFILES_caps
 $MAKEFILES_db
