@@ -114,6 +114,21 @@ nsresult createNode(PRUint32 value, nsIRDFNode **node)
 	return rv;
 }
 
+nsresult createDateNode(PRTime time, nsIRDFNode **node)
+{
+	*node = nsnull;
+	nsresult rv; 
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
+	if (NS_FAILED(rv)) return rv;  
+	nsCOMPtr<nsIRDFDate> date;
+	rv = rdf->GetDateLiteral(time, getter_AddRefs(date));
+	if(NS_SUCCEEDED(rv)) {
+		*node = date;
+		NS_IF_ADDREF(*node);
+	}
+	return rv;
+}
+
 nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* folderResource,
 							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion)
 {

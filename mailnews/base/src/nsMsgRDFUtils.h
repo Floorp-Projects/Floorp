@@ -75,6 +75,9 @@ nsresult createNode(nsString& str, nsIRDFNode **node);
 //Given a PRUint32, create an nsiIRDFNode.
 nsresult createNode(PRUint32 value, nsIRDFNode **node);
 
+//Given a PRTime create an nsIRDFNode that is really a date literal.
+nsresult createDateNode(PRTime time, nsIRDFNode **node);
+
 //Has Assertion for a datasource that will just call GetTarget on property.  When all of our 
 //datasource derive from our datasource baseclass, this should be moved there and the first
 //parameter will no longer be needed.

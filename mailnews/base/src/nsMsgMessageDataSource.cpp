@@ -114,24 +114,6 @@ nsresult nsMsgMessageDataSource::Init()
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsILocaleFactory *localeFactory; 
-	rv = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
-
-	if(NS_SUCCEEDED(rv) && localeFactory)
-	{
-		rv = localeFactory->GetApplicationLocale(getter_AddRefs(mApplicationLocale));
-		NS_IF_RELEASE(localeFactory);
-	}
-
-	if(NS_FAILED(rv))
-		return rv;
-
-	rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-		nsCOMTypeInfo<nsIDateTimeFormat>::GetIID(), getter_AddRefs(mDateTimeFormat));				
-		
-	if(NS_FAILED(rv))
-		return rv;
-
 	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
@@ -590,31 +572,9 @@ nsMsgMessageDataSource::createMessageDateNode(nsIMessage *message,
   LL_UI2L(intermediateResult, aLong);
   LL_MUL(aTime, intermediateResult, microSecondsPerSecond);
   
-  PRExplodedTime explode;
-  PR_ExplodeTime(aTime, PR_LocalTimeParameters, &explode);
-
-  nsString dateString;
   
-  
-/* ducarroz: FormatTMTime doesn't seems to work correctly on Mac and doen't work with PRExplodedTime!
-             I will use PR_FormatTime until FormatTMTime is fixed.
-  if(mDateTimeFormat)
-	  rv = mDateTimeFormat->FormatTMTime(mApplicationLocale, kDateFormatShort, kTimeFormatNoSeconds, 
-		                (tm*)&explode, dateString); 
-  //Ensure that we always have some string for the date.
-  if(!mDateTimeFormat || NS_FAILED(rv))
-  {
-	  dateString ="";
-	  rv = NS_OK;
-  }
-  if(NS_SUCCEEDED(rv))
-*/
-	char buffer[128];
-	PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
-	dateString = buffer;
-
-	  rv = createNode(dateString, target);
-  return rv;
+	rv = createDateNode(aTime, target);
+	return rv;
 }
 
 nsresult

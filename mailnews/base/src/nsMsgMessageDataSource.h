@@ -37,8 +37,6 @@ private:
   
 	nsIRDFService* mRDFService;
 	nsIMsgHeaderParser *mHeaderParser;
-	nsCOMPtr<nsILocale> mApplicationLocale;
-	nsCOMPtr<nsIDateTimeFormat> mDateTimeFormat;
   
 public:
   
