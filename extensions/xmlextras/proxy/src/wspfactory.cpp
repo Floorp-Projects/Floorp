@@ -96,7 +96,8 @@ WSPFactory::C2XML(const nsAReadableCString& aCIdentifier,
       // Grab the next 4 characters that make up the
       // escape sequence
       char buf[5];
-      for (PRUint16 i = 0; (i < 4) && (current != end); i++) {
+      PRUint16 i;
+      for (i = 0; (i < 4) && (current != end); i++) {
         buf[i] = *current++;
       }
       // If we didn't get through the entire escape sequence, then

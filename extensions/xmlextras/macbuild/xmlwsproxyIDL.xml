@@ -705,28 +705,14 @@
                 <SETTING><NAME>MWProject_X86_minsize</NAME><VALUE>4</VALUE></SETTING>
                 <SETTING><NAME>MWProject_X86_importlib</NAME><VALUE></VALUE></SETTING>
                 <PANELDATA><NAME>xpidl Settings</NAME><VALUE>
-                    0001000101010C7773646C2E6865616465727365727372730000000000000000
+                    0001000101010F777370726F78792E6865616465727372730000000000000000
                     0000000000000000
                 </VALUE></PANELDATA>
             </SETTINGLIST>
             <FILELIST>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDL.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDLLoader.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDLSOAPBinding.idl</PATH>
+                    <PATH>nsIWebServiceProxy.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -735,23 +721,13 @@
             <LINKORDER>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDL.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDLLoader.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDLSOAPBinding.idl</PATH>
+                    <PATH>nsIWebServiceProxy.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
         </TARGET>
         <TARGET>
-            <NAME>wsdl.xpt</NAME>
+            <NAME>wsproxy.xpt</NAME>
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
@@ -810,7 +786,7 @@
                 <SETTING><NAME>Linker</NAME><VALUE>xpt Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>Targetname</NAME><VALUE>wsdl.xpt</VALUE></SETTING>
+                <SETTING><NAME>Targetname</NAME><VALUE>wsproxy.xpt</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
                     <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
@@ -1402,28 +1378,14 @@
                 <SETTING><NAME>MWProject_X86_minsize</NAME><VALUE>4</VALUE></SETTING>
                 <SETTING><NAME>MWProject_X86_importlib</NAME><VALUE></VALUE></SETTING>
                 <PANELDATA><NAME>xpidl Settings</NAME><VALUE>
-                    000100030101087773646C2E7870747870747074000000000000000000000000
+                    0001000301010B777370726F78792E7870747074000000000000000000000000
                     0000000000000000
                 </VALUE></PANELDATA>
             </SETTINGLIST>
             <FILELIST>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDL.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDLLoader.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDLSOAPBinding.idl</PATH>
+                    <PATH>nsIWebServiceProxy.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -1432,17 +1394,7 @@
             <LINKORDER>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDL.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDLLoader.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIWSDLSOAPBinding.idl</PATH>
+                    <PATH>nsIWebServiceProxy.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1451,26 +1403,14 @@
 
     <TARGETORDER>
         <ORDEREDTARGET><NAME>headers</NAME></ORDEREDTARGET>
-        <ORDEREDTARGET><NAME>wsdl.xpt</NAME></ORDEREDTARGET>
+        <ORDEREDTARGET><NAME>wsproxy.xpt</NAME></ORDEREDTARGET>
     </TARGETORDER>
 
     <GROUPLIST>
         <FILEREF>
             <TARGETNAME>headers</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIWSDL.idl</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
-        <FILEREF>
-            <TARGETNAME>headers</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIWSDLLoader.idl</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
-        <FILEREF>
-            <TARGETNAME>headers</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIWSDLSOAPBinding.idl</PATH>
+            <PATH>nsIWebServiceProxy.idl</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
     </GROUPLIST>

@@ -544,7 +544,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0&lt;s&#144;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1094,6 +1094,48 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsSOAPTypes.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspcallcontext.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspcomplextypewrapper.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspfactory.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wsppropertybagwrapper.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspproxy.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -1199,6 +1241,36 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsSOAPBlock.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsSOAPTypes.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspcallcontext.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspcomplextypewrapper.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspfactory.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wsppropertybagwrapper.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspproxy.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1694,7 +1766,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0&lt;s&#144;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -2244,6 +2316,48 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsSOAPTypes.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspcallcontext.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspcomplextypewrapper.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspfactory.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wsppropertybagwrapper.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspproxy.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -2349,6 +2463,36 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsSOAPBlock.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsSOAPTypes.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspcallcontext.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspcomplextypewrapper.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspfactory.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wsppropertybagwrapper.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>wspproxy.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -2844,7 +2988,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0&lt;s&#144;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -3742,7 +3886,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0&lt;s&#144;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -4159,6 +4303,38 @@
     </TARGETORDER>
 
     <GROUPLIST>
+        <GROUP><NAME>proxy</NAME>
+            <FILEREF>
+                <TARGETNAME>xmlsoapDebug.o</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>wspcallcontext.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>xmlsoapDebug.o</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>wspcomplextypewrapper.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>xmlsoapDebug.o</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>wspfactory.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>xmlsoapDebug.o</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>wsppropertybagwrapper.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>xmlsoapDebug.o</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>wspproxy.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+        </GROUP>
         <GROUP><NAME>schema</NAME>
             <FILEREF>
                 <TARGETNAME>xmlsoapDebug.o</TARGETNAME>
@@ -4200,6 +4376,12 @@
                 <TARGETNAME>xmlsoapDebug.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsSchemaSimpleTypes.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>xmlsoapDebug.o</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsSOAPTypes.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
