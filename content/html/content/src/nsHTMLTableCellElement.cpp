@@ -263,7 +263,8 @@ static const nsHTMLValue::EnumTable kCellScopeTable[] = {
   { 0 }
 };
 
-#define MAX_COLROWSPAN 8190 // celldata.h can not handle more
+#define MAX_ROWSPAN 8190 // celldata.h can not handle more
+#define MAX_COLSPAN 1000 // limit as IE and opera do
 
 PRBool
 nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
@@ -277,9 +278,20 @@ nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
     /* attributes that resolve to integers with a min of 0 */
     return aResult.ParseIntWithBounds(aValue, 0);
   }
-  else if ((aAttribute == nsHTMLAtoms::colspan) ||
-           (aAttribute == nsHTMLAtoms::rowspan)) {
-    PRBool res = aResult.ParseIntWithBounds(aValue, -1, MAX_COLROWSPAN);
+  if (aAttribute == nsHTMLAtoms::colspan) {
+    PRBool res = aResult.ParseIntWithBounds(aValue, -1);
+    if (res) {
+      PRInt32 val = aResult.GetIntegerValue();
+      // reset large colspan values as IE and opera do
+      // quirks mode does not honor the special html 4 value of 0
+      if (val > MAX_COLSPAN || val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
+        aResult.SetTo(1, nsAttrValue::eInteger);
+      }
+    }
+    return res;
+  }
+  if (aAttribute == nsHTMLAtoms::rowspan) {
+    PRBool res = aResult.ParseIntWithBounds(aValue, -1, MAX_ROWSPAN);
     if (res) {
       PRInt32 val = aResult.GetIntegerValue();
       // quirks mode does not honor the special html 4 value of 0
