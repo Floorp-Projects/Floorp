@@ -142,9 +142,25 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 			// 'STR#', 128, 2 => extensions.
 			info.fExtensions = GetPluginString(128, 2);
 
-			info.fVariantCount = 0;
-			info.fMimeTypeArray = NULL;
-			info.fMimeDescriptionArray = NULL;
+			// Determine how many  'STR#' resource for all MIME types/extensions.
+			Handle typeList = ::Get1Resource('STR#', 128);
+			if (typeList != NULL) {
+				short stringCount = **(short**)typeList;
+				info.fVariantCount = stringCount / 2;
+				::ReleaseResource(typeList);
+			}
+
+			int variantCount = info.fVariantCount;
+			info.fMimeTypeArray = new char*[variantCount];
+			info.fMimeDescriptionArray = new char*[variantCount];
+			info.fExtensionArray = new char*[variantCount];
+			
+			short mimeIndex = 1, descriptionIndex = 1;
+			for (int i = 0; i < variantCount; i++) {
+				info.fMimeTypeArray[i] = GetPluginString(128, mimeIndex++);
+				info.fExtensionArray[i] = GetPluginString(128, mimeIndex++);
+				info.fMimeDescriptionArray[i] = GetPluginString(127, descriptionIndex++);
+			}
 		}
 		
 		::CloseResFile(refNum);
