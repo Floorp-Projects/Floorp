@@ -499,7 +499,7 @@ nsComponentManagerImpl::nsComponentManagerImpl()
     NS_INIT_REFCNT();
 }
 
-static PRBool
+PR_STATIC_CALLBACK(PRBool)
 nsFactoryEntry_mFactoryDestroy(nsHashKey *aKey, void *aData, void* closure)
 {
     nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
@@ -507,7 +507,7 @@ nsFactoryEntry_mFactoryDestroy(nsHashKey *aKey, void *aData, void* closure)
     return PR_TRUE;
 }
 
-static PRBool
+PR_STATIC_CALLBACK(PRBool)
 nsFactoryEntry_mContractIDsDestory(nsHashKey *aKey, void *aData, void* closure)
 {
     nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
@@ -1608,7 +1608,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
 
 // Service Manager Impl
 
-static PRBool FreeServiceEntry(nsHashKey *aKey, void *aData, void* aClosure)
+PR_STATIC_CALLBACK(PRBool) FreeServiceEntry(nsHashKey *aKey, void *aData, void* aClosure)
 {
     nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
     
