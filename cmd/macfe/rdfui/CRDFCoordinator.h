@@ -193,6 +193,8 @@ private:
 
 	virtual	void	HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event, void *token, uint32 tokenType);
 
+	void SetAdSpaceToCorrectSize ( HT_View inView ) ;
+	void ShowAdSpace ( ) ;
 
 	CShelf* 		mNavCenter;
 	CShelf*			mAdSpace;

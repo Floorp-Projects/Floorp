@@ -726,6 +726,11 @@ CDockedRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
 } // ListenToMessage
 
 
+//
+// HandleNotification
+//
+// Override to understand events about the html area appearing and disappearing.
+//
 void
 CDockedRDFCoordinator :: HandleNotification ( HT_Notification notifyStruct, HT_Resource node, 
 												HT_Event event, void *token, uint32 tokenType )
@@ -733,17 +738,7 @@ CDockedRDFCoordinator :: HandleNotification ( HT_Notification notifyStruct, HT_R
 	switch ( event ) {
 	
 		case HT_EVENT_VIEW_HTML_ADD:
-		{
-			AdSpaceShelf().SetShelfState ( true );	// make sure people can see the html area
-			
-			//еее get the html area size property, convert it from % to pixel value and
-			//еее set the size of the pane accordingly.
-			
-			string url;
-			XP_GetURLForView ( HT_GetSelectedView(HTPane()), url.begin() );
-			URL_Struct* theURL = NET_CreateURLStruct(url.c_str(), NET_DONT_RELOAD);
-			mAdSpaceView->GetContext()->SwitchLoadURL( theURL, NET_DONT_RELOAD );
-		}
+			ShowAdSpace();
 			break;
 			
 		case HT_EVENT_VIEW_HTML_REMOVE:
@@ -756,6 +751,7 @@ CDockedRDFCoordinator :: HandleNotification ( HT_Notification notifyStruct, HT_R
 	}
 
 } // HandleNotification
+
 
 //
 // BuildHTPane
@@ -790,14 +786,64 @@ CDockedRDFCoordinator :: BuildHTPane ( HT_Resource inNode, MWContext* inContext 
 		HT_View currView = HT_GetSelectedView(mHTPane);
 		SelectView ( currView );
 		
+		// show or hide the shelf containing the HTML pane. We want to do this 
+		// before we register to show the content so that we don't cause the html
+		// to have to resize.
+		if ( HT_HasHTMLPane(currView) )
+			ShowAdSpace();
+		else
+			AdSpaceShelf().SetShelfState(false);
+			
 		// register us for sitemaps and the html area notifications
 		RegisterNavCenter ( inContext );
 		if ( mAdSpaceView )
 			XP_RegisterViewHTMLPane ( currView, *(mAdSpaceView->GetContext()) ); 
-	}
 	
+	} // if valid pane
 
 } // BuildHTPane
+
+
+//
+// ShowAdSpace
+//
+// Handles opening and sizing the HTML AdSpace.
+//
+void
+CDockedRDFCoordinator :: ShowAdSpace ( )
+{
+	HT_View currView = HT_GetSelectedView(HTPane());
+	AdSpaceShelf().SetShelfState ( true );		// unnecessary, except to set the pref (if we still care)
+
+	SetAdSpaceToCorrectSize(currView);	
+
+} // ShowAdSpace
+
+
+//
+// SetAdSpaceToCorrectSize
+//
+// Sets the shelf to the appropriate size
+//
+void
+CDockedRDFCoordinator :: SetAdSpaceToCorrectSize ( HT_View inView )
+{
+	const kDefaultHeight = 200;
+	
+	//еее get the html area size property, convert it from % to pixel value and
+	//еее set the size of the pane accordingly.
+	const char* height = HT_HTMLPaneHeight(inView);
+	Uint32 adSpaceHeight = kDefaultHeight;			//еее use |height|
+	
+	SDimension16 size;
+	GetFrameSize(size);
+	Uint32 desiredPosition = size.height - adSpaceHeight;
+	
+	LDividedView* divView = AdSpaceShelf().GetShelf();
+	Int32 delta = desiredPosition - divView->GetDividerPosition();
+	divView->ChangeDividerPosition(delta);
+
+} // SetAdSpaceToCorrectSize
 
 
 #pragma mark -
