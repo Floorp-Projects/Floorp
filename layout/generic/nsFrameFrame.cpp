@@ -980,6 +980,8 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
       referrer = baseURI;
     }
 
+    loadInfo->SetReferrer(referrer);
+
     // Check if we are allowed to load absURL
     nsCOMPtr<nsIURI> newURI;
     rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);
