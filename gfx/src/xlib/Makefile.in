@@ -44,7 +44,7 @@ CPPSRCS = nsFontMetricsXlib.cpp \
 	nsDeviceContextSpecXlib.cpp \
 	nsGfxFactoryXlib.cpp
 
-CSRCS = 
+CSRCS = xlibrgb.c
 
 include $(topsrcdir)/config/rules.mk
 
