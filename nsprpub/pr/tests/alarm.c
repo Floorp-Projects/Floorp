@@ -208,7 +208,8 @@ static PRBool AlarmFn1(PRAlarmID *id, void *clientData, PRUint32 late)
           
     PR_Unlock(ad->ml);
 
-    if (rv != PR_SUCCESS) {
+    if (rv != PR_SUCCESS)
+    {
 		if (!debug_mode) failed_already=1;
 		else
 		 printf("AlarmFn: notify status: FAIL\n");
@@ -344,10 +345,12 @@ static PRIntervalTime Alarms2(PRUint32 loops)
 
     rv = PR_DestroyAlarm(alarm);
     if (rv != PR_SUCCESS)
+    {
 		if (!debug_mode)
 			failed_already=1;
 		else	
 			printf("***Destroying alarm status: FAIL\n");
+    }
 		
 
     PR_DestroyCondVar(cv);
@@ -413,7 +416,8 @@ static PRIntervalTime Alarms3(PRUint32 loops)
         ad[0].timein, ad[1].timein, ad[2].timein);
     
     rv = PR_DestroyAlarm(alarm);
-    if (rv != PR_SUCCESS) {
+    if (rv != PR_SUCCESS)
+    {
 		if (!debug_mode)		
 			failed_already=1;
 		else	
