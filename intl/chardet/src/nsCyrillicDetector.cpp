@@ -83,6 +83,7 @@ public:
          mCharsets = aCharsets;
          for(PRUint8 i=0;i<mItems;i++)
             mProb[i] = mLastCls[i] =0;
+         mDone = PR_FALSE;
      };
    virtual ~nsCyrillicDetector() {};
    virtual void HandleData(const char* aBuf, PRUint32 aLen);
@@ -96,6 +97,7 @@ private:
    const char** mCharsets;
    PRUint32 mProb[NUM_CYR_CHARSET];
    PRUint8 mLastCls[NUM_CYR_CHARSET];
+   PRBool  mDone;
 };
 
 //---------------------------------------------------------------------
@@ -104,6 +106,8 @@ void nsCyrillicDetector::HandleData(const char* aBuf, PRUint32 aLen)
    PRUint8 cls;
    const char* b;
    PRUint32 i;
+   if(mDone) 
+      return;
    for(i=0, b=aBuf;i<aLen;i++,b++)
    {
      for(PRUint8 j=0;j<mItems;j++)
@@ -117,13 +121,18 @@ void nsCyrillicDetector::HandleData(const char* aBuf, PRUint32 aLen)
         mLastCls[j] = cls;
      } 
    }
+   // We now only based on the first block we receive
+   DataEnd();
 }
 //---------------------------------------------------------------------
+#define THRESHOLD_RATIO 1.5f
 void nsCyrillicDetector::DataEnd()
 {
    PRUint32 max=0;
    PRUint8  maxIdx=0;
    PRUint8 j;
+   if(mDone) 
+      return;
    for(j=1;j<mItems;j++) {
       if(mProb[j] > max)
       {
@@ -136,6 +145,7 @@ void nsCyrillicDetector::DataEnd()
       printf("Charset %s->\t%d\n", mCharsets[j], mProb[j]);
 #endif
    this->Report(mCharsets[maxIdx]);
+   mDone = PR_TRUE;
 }
 //=====================================================================
 class nsCyrXPCOMDetector :  

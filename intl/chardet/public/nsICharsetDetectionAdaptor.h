@@ -25,6 +25,8 @@
 
 class nsICharsetDetector;
 class nsIWebShellServices;
+class nsIDocument;
+class nsIParser;
 
 // {12BB8F13-2389-11d3-B3BF-00805F8A6670}
 #define NS_ICHARSETDETECTIONADAPTOR_IID \
@@ -45,6 +47,8 @@ public:
      Initialize it by setup the nsICharsetDetector and the 
      nsIWebShell
    */
-  NS_IMETHOD Init(nsIWebShellServices* aWebShell, nsICharsetDetector *aDetector, const char* aCommand=nsnull) = 0;
+  NS_IMETHOD Init(nsIWebShellServices* aWebShell, nsICharsetDetector *aDetector, 
+                  nsIDocument* aDocument, nsIParser* aParser, 
+                  const PRUnichar* aCharset, const char* aCommand=nsnull) = 0;
 };
 #endif /* nsICDETAdaptor_h__ */
