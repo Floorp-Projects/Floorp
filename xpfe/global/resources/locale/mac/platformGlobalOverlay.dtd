@@ -1,9 +1,12 @@
 <!-- mac -->
 
 <!ENTITY closeCmd.label						"Close">  
+<!-- LOCALIZATION NOTE closeCmd.key: DONT_TRANSLATE -->  
 <!ENTITY closeCmd.key						"W">  
 <!ENTITY quitApplicationCmd.label			"Quit"> 
+<!-- LOCALIZATION NOTE quitApplicationCmd.key: DONT_TRANSLATE --> 
 <!ENTITY quitApplicationCmd.key				"Q"> 
 
 <!ENTITY redoCmd.label						"Redo">  
+<!-- LOCALIZATION NOTE redoCmd.key: DONT_TRANSLATE -->  
 <!ENTITY redoCmd.key						"Z">  

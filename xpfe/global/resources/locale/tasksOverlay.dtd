@@ -1,9 +1,13 @@
 <!-- extracted from tasksOverlay.xul -->
 <!ENTITY tasksMenu.label				"Tasks">
+<!-- LOCALIZATION NOTE navigatorCmd.label: DONT_TRANSLATE -->  
 <!ENTITY navigatorCmd.label					"Navigator">  
+<!-- LOCALIZATION NOTE messengerCmd.label: DONT_TRANSLATE -->
 <!ENTITY messengerCmd.label					"Mail">
+<!-- LOCALIZATION NOTE editorCmd.label: DONT_TRANSLATE -->
 <!ENTITY editorCmd.label					  "Composer">
 <!ENTITY addressBookCmd.label				"Address Book">  
+
 <!ENTITY newsgroupsCmd.label				"Newsgroups">  
 <!ENTITY toolsMenu.label					"Tools"> 
 <!ENTITY historyCmd.label						"History">  
@@ -13,8 +17,9 @@
 <!ENTITY javaConsoleCmd.label					"Java Console">
 
 <!-- taskbar -->
-<!-- LOCALIZATION NOTE  mozillaButton.label: Do NOT localize "Mozilla" -->
+<!-- LOCALIZATION NOTE  mozillaButton.label: DONT_TRANSLATE -->
 <!ENTITY  mozillaButton.label "Mozilla">
+<!-- LOCALIZATION NOTE  shoppingButton.label: DONT_TRANSLATE -->
 <!ENTITY  shoppingButton.label "Shopping">
 <!ENTITY  entertainment.label "Entertainment">
 <!ENTITY  openWinButton.label "Open Windows">
