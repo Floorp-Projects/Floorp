@@ -628,7 +628,7 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 	if (tmp) {
 	    /* delete the NSSCertificate */
 	    NSSCertificate_Destroy(tmp);
-	} else {
+	} else if (cert->arena) {
 	    PORT_FreeArena(cert->arena, PR_FALSE);
 	}
     }
