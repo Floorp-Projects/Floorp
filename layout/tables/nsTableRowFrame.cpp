@@ -552,9 +552,13 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       // then just use the previous desired size and max element size.
       // if we need the max-element-size we don't need to reflow.
       // we just grab it from the cell frame which remembers it (see the else clause below).
-      // Note: we can't do that optimization if our height is constrained
+      // Note: we can't do that optimization if our height is constrained or the
+      // cell frame has a next-in-flow
+      nsIFrame* kidNextInFlow;
+      kidFrame->GetNextInFlow(kidNextInFlow);
       if ((aReflowState.reflowState.maxSize.height != NS_UNCONSTRAINEDSIZE) ||
-          (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth()))
+          (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth()) ||
+          (nsnull != kidNextInFlow))
       {
         // XXX TROY
 #if 0
