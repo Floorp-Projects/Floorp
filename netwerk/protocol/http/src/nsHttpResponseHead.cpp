@@ -446,6 +446,10 @@ nsHttpResponseHead::ParseContentType(char *type)
         ;
     *++p = 0; // overwrite first char after the media type
 
+    // force the content-type to lowercase
+    while (--p >= type)
+        *p = nsCRT::ToLower(*p);
+
     mContentType = type;
 
     return NS_OK;
