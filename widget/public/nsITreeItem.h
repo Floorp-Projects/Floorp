@@ -30,7 +30,7 @@ class nsIImageGroup;
 #define NS_ITREEITEM_IID \
 { 0x2fc8fd02, 0x789f, 0x11d2, { 0x96, 0xed, 0x0, 0x10, 0x4b, 0x7b, 0x7d, 0xeb } }
 
-class nsITreeItem : public nsIDMItem
+class nsITreeItem : public nsISupports
 {
 public:
 	// Inspectors
