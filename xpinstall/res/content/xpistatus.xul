@@ -84,7 +84,7 @@
 
             <box align="vertical">
                 <spring style="height:6px"/>
-                <progressmeter id="dialog.progress" mode="undetermined" style="width:200px;height:10px">
+                <progressmeter id="dialog.progress" mode="normal" value="0" style="width:200px;height:10px">
                 </progressmeter>
             </box>
 

@@ -122,7 +122,7 @@ nsInstallProgressDialog::FinalizeProgress(const PRUnichar *message, PRInt32 item
     nsresult rv = SetActionText( message );
 
     if (NS_SUCCEEDED(rv))
-        rv = SetProgress( itemNum, totNum );
+        rv = SetProgress( itemNum, totNum, 'n' );
     
     return rv;
 }
@@ -208,7 +208,7 @@ nsInstallProgressDialog::SetHeading(const PRUnichar * aHeading)
 NS_IMETHODIMP
 nsInstallProgressDialog::SetActionText(const PRUnichar * aActionText)
 {
-    const PRInt32 maxChars = 40;
+    const PRInt32 maxChars = 50;
 
     nsString theMessage(aActionText);
     PRInt32 len = theMessage.Length();
@@ -224,17 +224,38 @@ nsInstallProgressDialog::SetActionText(const PRUnichar * aActionText)
 }
 
 NS_IMETHODIMP
-nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax)
+nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax, char mode)
 {
     char buf[16];
+    static char modeFlag = 'n';
+    nsresult rv;
+    static PRInt32 previousMax;
+
+    //First check to see if the max value changed so we don't
+    //have to send a max value across the proxy every time.
+    if ( aMax != previousMax)
+    {
+        previousMax = aMax;
+
+        PR_snprintf( buf, sizeof buf, "%lu", aMax );
+        rv = setDlgAttribute( "dialog.progress", "max", buf );
+    }
     
-    PR_snprintf( buf, sizeof buf, "%lu", aMax );
-    nsresult rv = setDlgAttribute( "dialog.progress", "max", buf );
-   
+    //I use this modeFlag business so I don't have to send
+    //progressmeter mode information across the proxy every time.
+    if ( mode != modeFlag )
+    {
+        modeFlag = mode;
+        if ( modeFlag == 'n' )
+            rv = setDlgAttribute( "dialog.progress", "mode", "normal");
+        else
+            rv = setDlgAttribute( "dialog.progress", "mode", "undetermined");
+    }
+
     if ( NS_SUCCEEDED(rv))
     {
         if (aMax != 0)
-            PR_snprintf( buf, sizeof buf, "%lu", ((aMax-aValue)/aMax) );
+            PR_snprintf( buf, sizeof buf, "%lu", 100 * aValue/aMax );
         else
             PR_snprintf( buf, sizeof buf, "%lu", 0 );
 
