@@ -72,11 +72,9 @@ DEFINES= -DEBUG_rhp -D_IMPL_NS_HTML
 
 OBJS=						\
 		.\$(OBJDIR)\mimevcrd.obj	\
-		.\$(OBJDIR)\mimexpcom.obj 	\
 		.\$(OBJDIR)\nsVCard.obj		\
 		.\$(OBJDIR)\nsVCardObj.obj	\
 		.\$(OBJDIR)\nsVCardFactory.obj	\
-		.\$(OBJDIR)\nsMimeContentTypeHandler.obj	\
 		$(NULL)
 
 #//------------------------------------------------------------------------
@@ -107,9 +105,12 @@ LCFLAGS=-DNETSCAPE
 MSGLIBS=				\
 		$(NULL)
 
+LINCS= -I..\glue
+
 # These are the libraries we need to link with to create the dll
 LLIBS=							\
 			$(LLIBS)			\
+			$(DIST)\lib\mimecthglue_s.lib	\
 			$(LIBNSPR)			\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\xpcom.lib       	\

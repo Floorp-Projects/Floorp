@@ -33,19 +33,21 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCalendarModule
 
+EXTRA_DSO_LIBS	= mimecthglue_s
+
 CPPSRCS		= \
-		mimexpcom.cpp \
 		mimecal.cpp \
-		nsMimeContentTypeHandler.cpp \
 		nsCalendarFactory.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES = $(srcdir)/../glue
 

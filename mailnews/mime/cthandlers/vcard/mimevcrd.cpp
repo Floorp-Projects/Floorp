@@ -101,13 +101,6 @@ typedef struct
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
-/*
- * These functions are the public interface for this content type
- * handler and will be called in by the mime component.
- */
-#define      VCARD_CONTENT_TYPE  "text/x-vcard"
-
-
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -119,14 +112,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 MimeDefClass(MimeInlineTextVCard, MimeInlineTextVCardClass,
       			 mimeInlineTextVCardClass, NULL);
 
-extern "C" char *
-MIME_GetContentType(void)
-{
-  return VCARD_CONTENT_TYPE;
-}
-
 extern "C" MimeObjectClass *
-MIME_CreateContentTypeHandlerClass(const char *content_type, 
+MIME_VCardCreateContentTypeHandlerClass(const char *content_type, 
                                    contentTypeHandlerInitStruct *initStruct)
 {
   MimeObjectClass *clazz = (MimeObjectClass *)&mimeInlineTextVCardClass;

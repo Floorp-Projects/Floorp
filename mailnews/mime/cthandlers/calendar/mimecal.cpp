@@ -50,26 +50,14 @@ static int MimeInlineTextCalendar_parse_begin (MimeObject *obj);
 
 extern "C" int CAL_OUT_OF_MEMORY = -1000;
 
-/*
- * These functions are the public interface for this content type
- * handler and will be called in by the mime component.
- */
-#define      CAL_CONTENT_TYPE  "text/calendar"
-
  /* This is the object definition. Note: we will set the superclass 
     to NULL and manually set this on the class creation */
 MimeDefClass(MimeInlineTextCalendar, MimeInlineTextCalendarClass,
              mimeInlineTextCalendarClass, NULL);  
 
-extern "C" char *
-MIME_GetContentType(void)
-{
-  return CAL_CONTENT_TYPE;
-}
-
 extern "C" MimeObjectClass *
-MIME_CreateContentTypeHandlerClass(const char *content_type, 
-                                   contentTypeHandlerInitStruct *initStruct)
+MIME_CalendarCreateContentTypeHandlerClass(const char *content_type, 
+                                           contentTypeHandlerInitStruct *initStruct)
 {
   MimeObjectClass *clazz = (MimeObjectClass *)&mimeInlineTextCalendarClass;
   /*
@@ -143,7 +131,7 @@ MimeInlineTextCalendar_parse_line(char *line, PRInt32 length, MimeObject *obj)
   if (!obj->output_p) return 0;
   if (!obj->options || !obj->options->output_fn) return 0;
   if (!obj->options->write_html_p) {
-    return COM_MimeObject_write(obj, line, length, TRUE);
+    return COM_MimeObject_write(obj, line, length, PR_TRUE);
   }
   
   if (clazz->bufferlen + length >= clazz->buffermax) {
@@ -180,7 +168,7 @@ MimeInlineTextCalendar_parse_eof (MimeObject *obj, PRBool abort_p)
   clazz->buffer = NULL;
   if (status < 0) return status;
   
-  status = COM_MimeObject_write(obj, html, PL_strlen(html), TRUE);
+  status = COM_MimeObject_write(obj, html, PL_strlen(html), PR_TRUE);
   PR_Free(html);
   if (status < 0) return status;
   

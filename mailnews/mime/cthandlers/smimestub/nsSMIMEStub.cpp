@@ -116,15 +116,8 @@ static int MimeInlineTextSMIMEStub_parse_begin (MimeObject *obj);
 
 MimeDefClass(MimeInlineTextSMIMEStub, MimeInlineTextSMIMEStubClass, mimeInlineTextSMIMEStubClass, NULL);  
 
-extern "C" char *
-MIME_GetContentType(void)
-{
-  return SMIME_CONTENT_TYPE;
-}
-
-
 extern "C" MimeObjectClass *
-MIME_CreateContentTypeHandlerClass(const char *content_type, 
+MIME_SMimeCreateContentTypeHandlerClass(const char *content_type, 
                                    contentTypeHandlerInitStruct *initStruct)
 {
   MimeObjectClass *clazz = (MimeObjectClass *)&mimeInlineTextSMIMEStubClass;

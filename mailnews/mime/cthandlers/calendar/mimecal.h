@@ -39,6 +39,12 @@
 
 #include "mimetext.h"
 
+/*
+ * These functions are the public interface for this content type
+ * handler and will be called in by the mime component.
+ */
+#define      CAL_CONTENT_TYPE  "text/calendar"
+
 /* The MimeInlineTextCalendar class implements the text/calendar MIME
    content types.
  */

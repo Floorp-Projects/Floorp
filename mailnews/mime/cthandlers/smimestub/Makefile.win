@@ -58,8 +58,6 @@ DEFINES= -DEBUG_rhp -D_IMPL_NS_HTML
 
 OBJS=						\
 		.\$(OBJDIR)\nsSMIMEStub.obj		\
-		.\$(OBJDIR)\mimexpcom.obj		\
-		.\$(OBJDIR)\nsMimeContentTypeHandler.obj		\
 		.\$(OBJDIR)\nsSMIMEStubFactory.obj		\
 		$(NULL)
 
@@ -100,9 +98,12 @@ LCFLAGS=-DNETSCAPE
 MSGLIBS=				\
 		$(NULL)
 
+LINCS= -I..\glue
+
 # These are the libraries we need to link with to create the dll
 LLIBS=										\
 			$(LLIBS)						\
+			$(DIST)\lib\mimecthglue_s.lib	\
 			$(LIBNSPR)						\
 			$(DIST)\lib\xpcom.lib       	\
 			$(NULL)

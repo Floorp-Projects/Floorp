@@ -51,13 +51,13 @@ else
 EXTRA_DSO_LIBS = msgbaseutil
 endif
 
+EXTRA_DSO_LIBS += mimecthglue_s
+
 CPPSRCS		= \
 		mimevcrd.cpp \
-		mimexpcom.cpp \
 		nsVCard.cpp \
 		nsVCardObj.cpp \
 		nsVCardFactory.cpp \
-		nsMimeContentTypeHandler.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -69,3 +69,4 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES = -I$(srcdir)/../glue
