@@ -43,6 +43,9 @@ var observer = {
             case progId+";onCompletion":
                 onCompletion( data );
                 break;
+            case progId+";onError":
+                onError( data );
+                break;
             default:
                 alert( "Unknown topic: " + topic + "\nData: " + data );
                 break;
@@ -211,7 +214,15 @@ function onCompletion( status ) {
     dialog.progress.setAttribute( "mode", "normal" );
     try {
         // Close the window in 2 seconds (to ensure user sees we're done).
-        window.setTimeout( "window.close();", 2000 );
+        //window.setTimeout( "window.close();", 2000 );
+        // The above line causes crash on Mac (see bugzilla bug #10613).
+        // As a workaround, change button text to "Close" and try a 
+        // simple close().  Note that the "close()" is also failing (silently)
+        // thus the need for the fail-safe mechanism (changing the button
+        // text).
+        dialog.cancel.childNodes[0].nodeValue = "Close";
+        window.close();
+        dump( "Close still not working right!\n" );
     } catch ( exception ) {
         dump( "Error setting close timeout\n" );
         for ( prop in exception ) {
@@ -227,4 +238,21 @@ function onCompletion( status ) {
 function onStatus( status ) {
     // Update status text in dialog.
     dialog.status.childNodes[0].nodeValue = status;
+}
+
+function onError( errorCode ) {
+    // XXX - l10n
+    var msg = "Unknown error";
+    switch ( errorCode ) {
+        default:
+            break;
+    }
+    alert( msg );
+    try {
+        window.close();
+    } catch ( exception ) {
+    }
+    dump( "Error closing dialog\n" );  
+    onStatus( "Error.  Press Close button to close dialog." );
+    dialog.cancel.childNodes[0].nodeValue = "Close";
 }
