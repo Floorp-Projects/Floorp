@@ -1916,6 +1916,13 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
             PR_GetErrorText(errorMsg);
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: SelfRegisterDll(%s) Load FAILED with error:%s", dll->GetFullPath(), errorMsg));
+#if defined(XP_UNIX) || defined(XP_PC)
+	// Put the error message on the screen.
+        printf("**************************************************\n"
+		"nsComponentManager: Load(%s) FAILED with error: %s\n"
+		"**************************************************\n",
+		dll->GetFullPath(), errorMsg);
+#endif
 
         return(NS_ERROR_FAILURE);
     }
