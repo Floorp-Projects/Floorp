@@ -12877,6 +12877,11 @@ rm -f conftest*
 fi
 fi
 
+if test -z "${GLIB_GMODULE_LIBS}" ; then
+    GLIB_GMODULE_LIBS=`$GLIB_CONFIG gmodule --libs`
+fi
+
+
 
 
 
@@ -12888,14 +12893,14 @@ fi
 _SAVE_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS $GLIB_CFLAGS"
 cat > conftest.$ac_ext <<EOF
-#line 12892 "configure"
+#line 12897 "configure"
 #include "confdefs.h"
 #include <gmodule.h>
 int main() {
  int x = 1; x++; 
 ; return 0; }
 EOF
-if { (eval echo configure:12899: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:12904: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
@@ -13605,6 +13610,7 @@ s%@LIBIDL_CONFIG@%$LIBIDL_CONFIG%g
 s%@LIBIDL_CFLAGS@%$LIBIDL_CFLAGS%g
 s%@LIBIDL_LIBS@%$LIBIDL_LIBS%g
 s%@ORBIT_CONFIG@%$ORBIT_CONFIG%g
+s%@GLIB_GMODULE_LIBS@%$GLIB_GMODULE_LIBS%g
 s%@HOST_LIBIDL_CONFIG@%$HOST_LIBIDL_CONFIG%g
 s%@HOST_LIBIDL_CFLAGS@%$HOST_LIBIDL_CFLAGS%g
 s%@HOST_LIBIDL_LIBS@%$HOST_LIBIDL_LIBS%g
