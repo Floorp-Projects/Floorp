@@ -154,7 +154,6 @@ NS_IMETHODIMP nsSOAPMessage::GetVersion(PRUint16 * aVersion)
 /* Internal method for getting  envelope and  version */
 PRUint16 nsSOAPMessage::GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope)
 {
-  NS_ENSURE_ARG_POINTER(aEnvelope);
   if (mMessage) {
     nsCOMPtr < nsIDOMElement > root;
     mMessage->GetDocumentElement(getter_AddRefs(root));

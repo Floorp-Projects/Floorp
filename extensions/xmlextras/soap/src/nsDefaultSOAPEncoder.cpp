@@ -1225,7 +1225,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
   } else switch (type) {
     case nsIDataType::VTYPE_INT8:
       ENCODE_SIMPLE_ARRAY(PRUint8, Int8,
-                      (PRInt16) (signed char) values[i]);
+                      (signed char) values[i]);
     case nsIDataType::VTYPE_INT16:
       ENCODE_SIMPLE_ARRAY(PRInt16, Int16, values[i]);
     case nsIDataType::VTYPE_INT32:
@@ -1233,7 +1233,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
     case nsIDataType::VTYPE_INT64:
       ENCODE_SIMPLE_ARRAY(PRInt64, Int64, values[i]);
     case nsIDataType::VTYPE_UINT8:
-      ENCODE_SIMPLE_ARRAY(PRUint8, Uint8, (PRUint16) values[i]);
+      ENCODE_SIMPLE_ARRAY(PRUint8, Uint8, values[i]);
     case nsIDataType::VTYPE_UINT16:
       ENCODE_SIMPLE_ARRAY(PRUint16, Uint16, values[i]);
     case nsIDataType::VTYPE_UINT32:
