@@ -630,8 +630,6 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
     PRINTDLG * printDlg = (PRINTDLG *)lParam;
     if (printDlg == NULL) return 0L;
 
-    ::SetWindowText(hdlg, "Flying Own Print Dialog");
-
     PRInt16 howToEnableFrameUI = (PRInt16)printDlg->lCustData;
 
     HINSTANCE hInst = (HINSTANCE)::GetWindowLong(hdlg, GWL_HINSTANCE);
