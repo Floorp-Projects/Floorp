@@ -113,6 +113,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "prtypes.h"
+
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
@@ -141,6 +142,16 @@
 #elif defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS)
 #include <dirent.h>
 #elif defined(XP_PC)
+
+// This clashes with some of the Win32 system headers (specifically,
+// winbase.h). Hopefully they'll have been included first; else we may
+// have problems. We could include winbase.h before doing this;
+// unfortunately, it's bring in too much crap and'd slow stuff down
+// more than it's worth doing.
+#ifdef CreateDirectory
+#undef CreateDirectory
+#endif
+
 #include "prio.h"
 #endif
 
