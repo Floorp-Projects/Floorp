@@ -52,11 +52,15 @@ enum JS2Op {
     ePlus,
     eTrue,
     eFalse,
+    eNumber,
     eLexicalRead,       // <multiname index>
     eLexicalWrite,      // <multiname index>
-    eReturn
+    eReturn,
+    eReturnVoid
 };
 
+
+class JS2Metadata;
 
 
 class JS2Engine {
@@ -64,7 +68,7 @@ public:
 
     JS2Engine(World &world);
 
-    js2val interpret(JS2Op *start);
+    js2val interpret(JS2Metadata *metadata, Phase execPhase, uint8 *start);
 
     js2val interpreterLoop();
 
@@ -86,7 +90,9 @@ public:
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
     float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
 
-    JS2Op *pc;
+    uint8 *pc;
+    JS2Metadata *meta;
+    Phase phase;
 
     float64 *nanValue;
     float64 *float64Table[256];

@@ -36,18 +36,6 @@
 #define js2metadata_h___
 
 
-#include "world.h"
-#include "utilities.h"
-
-#include "parser.h"
-
-#include "js2value.h"
-#include "js2engine.h"
-#include "bytecodecontainer.h"
-
-#include <map>
-
-
 namespace JavaScript {
 namespace MetaData {
 
@@ -60,14 +48,13 @@ class StaticBinding;
 class Environment;
 class Context;
 class CompoundAttribute;
+class BytecodeContainer;
 
 typedef void (Invokable)();
 typedef Invokable Callor;
 typedef JS2Object *(Constructor)();
 
 
-enum Phase  { CompilePhase, RunPhase };
-enum Access { ReadAccess, WriteAccess, ReadWriteAccess };
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
@@ -554,7 +541,7 @@ public:
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);
     Reference *EvalExprNode(Environment *env, Phase phase, ExprNode *p);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
-    js2val EvalStmt(Environment *env, Phase phase, StmtNode *p);
+    void EvalStmt(Environment *env, Phase phase, StmtNode *p);
 
 
     JS2Class *objectType(js2val obj);

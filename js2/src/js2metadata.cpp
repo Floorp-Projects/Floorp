@@ -41,8 +41,19 @@
 
 
 #include <algorithm>
+#include <assert.h>
 
+#include "world.h"
+#include "utilities.h"
+#include "js2value.h"
 
+#include <map>
+#include <algorithm>
+
+#include "reader.h"
+#include "parser.h"
+#include "js2engine.h"
+#include "bytecodecontainer.h"
 #include "js2metadata.h"
 
 
@@ -150,15 +161,14 @@ namespace MetaData {
      * Evaluate the linked list of statement nodes beginning at 'p' (generate bytecode)
      * and then execute that bytecode
      */
-    js2val JS2Metadata::EvalStmtList(Phase phase, StmtNode *p) {
-        js2val retval = JS2VAL_VOID;
+    js2val JS2Metadata::EvalStmtList(Phase phase, StmtNode *p)
+    {
         while (p) {
-            retval = EvalStmt(&env, phase, p);
+            EvalStmt(&env, phase, p);
             p = p->next;
         }
-        bCon->emitOp(eReturn);
-        engine->interpret(bCon->getCodeStart());
-        return retval;
+        bCon->emitOp(eReturnVoid);
+        return engine->interpret(this, phase, bCon->getCodeStart());
     }
 
     /*
@@ -166,21 +176,24 @@ namespace MetaData {
      *  - this generates bytecode for each statement, but doesn't actually
      * execute it.
      */
-    js2val JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
+    void JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
     {
-        js2val retval = JS2VAL_VOID;
         switch (p->getKind()) {
         case StmtNode::block:
         case StmtNode::group:
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-                retval = EvalStmtList(phase, b->statements);
+                StmtNode *bp = b->statements;
+                while (bp) {
+                    EvalStmt(env, phase, bp);
+                    bp = bp->next;
+                }
             }
             break;
         case StmtNode::label:
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
-                retval = EvalStmt(env, phase, l->stmt);
+                EvalStmt(env, phase, l->stmt);
             }
             break;
         case StmtNode::Var:
@@ -198,17 +211,13 @@ namespace MetaData {
         case StmtNode::expression:
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                retval = EvalExpression(env, phase, e->expr);
-                if (JS2VAL_IS_OBJECT(retval)) {
-                    JS2Object *obj = JS2VAL_TO_OBJECT(retval);
-                }
-
+                Reference *r = EvalExprNode(env, phase, e->expr);
+                if (r) r->emitReadBytecode(bCon);
             }
             break;
         default:
             NOT_REACHED("Not Yet Implemented");
         }   // switch (p->getKind())
-        return retval;
     }
 
 
@@ -468,23 +477,18 @@ namespace MetaData {
 
 
     /*
-     * Evaluate the expression rooted at p.
-     * Works by generating a JS string that represents the expression and then using
-     * the JS interpreter to execute that string against the current environment. The
-     * result is the value of this expression.
-     *
+     * Evaluate an expression 'p' and execute the assocaited bytecode
      */
     js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
-        Reference *rVal = EvalExprNode(env, phase, p);
-        try {
-        }
-        catch (const char *err) {
-            reportError(Exception::internalError, err, p->pos);
-            return JS2VAL_VOID;
-        }
+        EvalExprNode(env, phase, p);
+        bCon->emitOp(eReturnVoid);
+        return engine->interpret(this, phase, bCon->getCodeStart());
     }
 
+    /*
+     * Evaluate the expression rooted at p.
+     */
     Reference *JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p)
     {
         Reference *returnRef = NULL;
@@ -499,11 +503,11 @@ namespace MetaData {
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
-                if (lVal) {
+                returnRef = EvalExprNode(env, phase, b->op1);
+                if (returnRef) {
                     Reference *rVal = EvalExprNode(env, phase, b->op2);
                     if (rVal) rVal->emitReadBytecode(bCon);
-                    lVal->emitWriteBytecode(bCon);
+                    returnRef->emitWriteBytecode(bCon);
                 }
                 else
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
@@ -531,6 +535,8 @@ namespace MetaData {
 
         case ExprNode::number:
             {
+                bCon->emitOp(eNumber);
+                bCon->addFloat64(checked_cast<NumberExprNode *>(p)->value);
             }
             break;
         case ExprNode::identifier:

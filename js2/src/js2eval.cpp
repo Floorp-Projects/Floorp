@@ -40,9 +40,6 @@
 #endif
 
 
-#include "js2metadata.h"
-
-
 namespace JavaScript {
 namespace MetaData {
 

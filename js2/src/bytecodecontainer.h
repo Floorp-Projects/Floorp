@@ -42,10 +42,6 @@
 #ifndef bytecodecontainer_h___
 #define bytecodecontainer_h___
 
-#include "world.h"
-#include "utilities.h"
-
-#include "js2value.h"
 
 
 namespace JavaScript {
@@ -60,7 +56,7 @@ public:
     BytecodeContainer::~BytecodeContainer() ;
 
     
-    JS2Op *getCodeStart()                   { return (JS2Op *)(mBuffer->begin()); }
+    uint8 *getCodeStart()                   { return mBuffer->begin(); }
 
 
     void emitOp(JS2Op op)                   { adjustStack(op); addByte((uint8)op); }
@@ -71,11 +67,14 @@ public:
     void addPointer(void *v)                { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }
     
     void addFloat64(float64 v)              { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
+    static float64 getFloat64(void *pc)     { return *((float64 *)pc); }
+   
     void addLong(uint32 v)                  { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
+    static uint32 getLong(void *pc)         { return *((uint32 *)pc); }
 
     void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addPointer(mn); }
-
-
+    static Multiname *getMultiname(void *pc){ return (Multiname *)getLong(pc); }
+    
     typedef std::vector<uint8> CodeBuffer;
 
     CodeBuffer *mBuffer;

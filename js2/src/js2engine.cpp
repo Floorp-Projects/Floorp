@@ -41,26 +41,44 @@
 #pragma warning(disable: 4710)
 #endif
 
-#include "numerics.h"
-#include "js2metadata.h"
+#include <algorithm>
+#include <assert.h>
 
+#include "world.h"
+#include "utilities.h"
+#include "js2value.h"
+#include "numerics.h"
+
+#include <map>
+#include <algorithm>
+
+#include "reader.h"
+#include "parser.h"
+#include "js2engine.h"
+#include "bytecodecontainer.h"
+#include "js2metadata.h"
 
 namespace JavaScript {
 namespace MetaData {
 
-js2val JS2Engine::interpret(JS2Op *start)
+js2val JS2Engine::interpret(JS2Metadata *metadata, Phase execPhase, uint8 *start)
 {
     pc = start;
+    meta = metadata;
+    phase = execPhase;
     return interpreterLoop();
 }
 
 js2val JS2Engine::interpreterLoop()
 {
-    js2val retval;
+    js2val retval = JS2VAL_VOID;
     while (true) {
-        switch (*pc) {
+        JS2Op op = (JS2Op)*pc++;
+        switch (op) {
 #include "js2op_arithmetic.cpp"
 #include "js2op_invocation.cpp"
+#include "js2op_access.cpp"
+#include "js2op_literal.cpp"
         }
     }
     return retval;
@@ -69,7 +87,7 @@ js2val JS2Engine::interpreterLoop()
 // return a pointer to an 8 byte chunk in the gc heap
 void *JS2Engine::gc_alloc_8()
 {
-    return NULL;
+    return STD::malloc(8);
 }
 
 // See if the double value is in the hash table, return it's pointer if so
@@ -202,12 +220,16 @@ int JS2Engine::getStackEffect(JS2Op op)
         return -1;
     case eTrue:
     case eFalse:
+    case eNumber:
         return 1;
 
     case eLexicalRead:
         return 0;
     case eLexicalWrite:
         return -1;
+
+    case eReturnVoid:
+        return 0;
 
     default:
         ASSERT(false);

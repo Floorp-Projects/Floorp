@@ -31,11 +31,18 @@
 #include <algorithm>
 #include <assert.h>
 
-#include "js2metadata.h"
-
 #include "world.h"
+#include "utilities.h"
+#include "js2value.h"
+
+#include <map>
+#include <algorithm>
+
 #include "reader.h"
 #include "parser.h"
+#include "js2engine.h"
+#include "bytecodecontainer.h"
+#include "js2metadata.h"
 
 #ifdef DEBUG
 #include "tracer.h"
@@ -140,7 +147,7 @@ static int readEvalPrint(FILE *in)
                 metadata->setCurrentParser(&p);  // for error reporting
 
                 metadata->ValidateStmtList(parsedStatements);
-                js2val rval = metadata->EvalStmtList(MetaData::RunPhase, parsedStatements);
+                js2val rval = metadata->EvalStmtList(RunPhase, parsedStatements);
                 if (!JS2VAL_IS_VOID(rval))
                     stdOut << *metadata->engine->toString(rval) << '\n';                
             }

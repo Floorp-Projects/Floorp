@@ -136,6 +136,8 @@
 #define JS2VAL_UNDEFINED JS2VAL_VOID
 
 typedef uint32 js2val;
+enum Phase  { CompilePhase, RunPhase };
+enum Access { ReadAccess, WriteAccess, ReadWriteAccess };
 
 
 #endif
