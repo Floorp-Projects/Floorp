@@ -125,7 +125,7 @@ NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
     if (nsnull==childFrame)
       break;
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       aCount++;
     childFrame->GetNextSibling(childFrame);
@@ -143,7 +143,7 @@ NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns) const
     if (nsnull==childFrame)
       break;
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
       PRInt32 colCount = ((nsTableRowFrame *)childFrame)->GetMaxColumns();
@@ -244,7 +244,7 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
   while (nsnull != kid) {
     kid->GetRect(kidRect);
     const nsStyleDisplay *childDisplay;
-    kid->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    kid->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay) {
       if (((nsTableRowFrame*)(kid))->Contains(aPoint)) {
         tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
@@ -625,7 +625,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   while (nsnull != rowFrame)
   {
     const nsStyleDisplay *childDisplay;
-    rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
       // get the height of the tallest cell in the row (excluding cells that span rows)
@@ -675,7 +675,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
     while (nsnull != rowFrame)
     {
       const nsStyleDisplay *childDisplay;
-      rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+      rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
       if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       {
         if (gsDebug) printf("TRGF CalcRowH: Step 2 for row %d (%p)...\n", rowIndex, rowFrame);
@@ -685,7 +685,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
         while (nsnull != cellFrame)
         {
           const nsStyleDisplay *childDisplay;
-          cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+          cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
           if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
           {
             if (gsDebug) printf("TRGF CalcRowH:   for cell %p...\n", cellFrame);
@@ -782,7 +782,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   while (nsnull != rowFrame)
   {
     const nsStyleDisplay *childDisplay;
-    rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
       ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
@@ -979,7 +979,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   aReflowState.reflowState.reflowCommand->GetChildFrame(objectFrame); 
   const nsStyleDisplay *childDisplay=nsnull;
   if (nsnull!=objectFrame)
-    objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
   if (PR_TRUE==gsDebugIR) printf("TRGF IR: TargetIsMe with type=%d\n", type);
   switch (type)
   {
@@ -1104,7 +1104,7 @@ PRBool nsTableRowGroupFrame::NoRowsFollow()
   while (nsnull!=nextSib)
   {
     const nsStyleDisplay *sibDisplay;
-    nextSib->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)sibDisplay));
+    nextSib->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)sibDisplay));
     if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == sibDisplay->mDisplay) ||
         (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == sibDisplay->mDisplay) ||
         (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == sibDisplay->mDisplay))
@@ -1114,7 +1114,7 @@ PRBool nsTableRowGroupFrame::NoRowsFollow()
       while (nsnull!=childFrame)
       {
         const nsStyleDisplay *childDisplay;
-        childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+        childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
         if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
         { // found a row 
           result = PR_FALSE;

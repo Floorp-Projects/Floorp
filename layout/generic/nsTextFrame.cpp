@@ -1910,7 +1910,7 @@ NS_IMETHODIMP
 TextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 {
   // Get the text fragments that make up our content
-  nsTextFragment* frag;
+  const nsTextFragment* frag;
   PRInt32 numFrags;
   nsITextContent* tc;
   if (NS_OK == mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
@@ -1920,7 +1920,7 @@ TextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
     // Find fragment that contains the end of the mapped content
     PRInt32 endIndex = mContentOffset + mContentLength;
     PRInt32 offset = 0;
-    nsTextFragment* lastFrag = frag + numFrags;
+    const nsTextFragment* lastFrag = frag + numFrags;
     while (frag < lastFrag) {
       PRInt32 fragLen = frag->GetLength();
       if (endIndex <= offset + fragLen) {
@@ -1978,7 +1978,7 @@ TextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
     aRC.GetWidth(' ', spaceWidth);
 
     // Get the text fragments that make up our content
-    nsTextFragment* frag;
+    const nsTextFragment* frag;
     PRInt32 numFrags;
     nsITextContent* tc;
     if (NS_OK == mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
@@ -1988,7 +1988,7 @@ TextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
       // Find fragment that contains the end of the mapped content
       PRInt32 endIndex = mContentOffset + mContentLength;
       PRInt32 offset = 0;
-      nsTextFragment* lastFrag = frag + numFrags;
+      const nsTextFragment* lastFrag = frag + numFrags;
       while (frag < lastFrag) {
         PRInt32 fragLen = frag->GetLength();
         if (endIndex <= offset + fragLen) {

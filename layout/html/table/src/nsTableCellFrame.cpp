@@ -119,7 +119,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     //XXX: also check style for rule on rendering empty cells
     nsMargin borderPadding;
     const nsStyleSpacing* cellSpacing;
-    GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)cellSpacing));
+    GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)cellSpacing));
     cellSpacing->CalcBorderPaddingFor(this, borderPadding);
     nscoord contentWidth = mPass1DesiredSize.width - (borderPadding.left+borderPadding.right);
     nscoord contentHeight = mPass1DesiredSize.height - (borderPadding.top+borderPadding.bottom);
@@ -587,8 +587,8 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   // get the table frame style context, and from it get cellpadding, cellspacing, and border info
   const nsStyleTable* tableStyle;
   tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  nsStyleSpacing* tableSpacingStyle;
-  tableFrame->GetStyleData(eStyleStruct_Spacing,(nsStyleStruct *&)tableSpacingStyle);
+  const nsStyleSpacing* tableSpacingStyle;
+  tableFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)tableSpacingStyle);
   nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
 
   // check to see if cellpadding or cellspacing is defined

@@ -77,15 +77,15 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext&      aPresContext,
 
 PRInt32 nsTableColFrame::GetSpan()
 {  
-  nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   return tableStyle->mSpan;
 }
 
 nscoord nsTableColFrame::GetColWidthForComputation()
 {
   const nsStylePosition* position;
-  GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)position));
+  GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)position));
   if (eStyleUnit_Coord==position->mWidth.GetUnit())
     return position->mWidth.GetCoordValue();
   else

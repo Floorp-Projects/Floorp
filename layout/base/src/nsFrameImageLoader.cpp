@@ -323,7 +323,7 @@ nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
     const nsStyleSpacing* space;
     nsMargin  borderPadding;
 
-    mTargetFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)space);
+    mTargetFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)space);
     space->CalcBorderPaddingFor(mTargetFrame, borderPadding);
     bounds.MoveBy(borderPadding.left, borderPadding.top);
   }

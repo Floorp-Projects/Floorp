@@ -311,7 +311,7 @@ nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
   for ( ; nsnull!=nextRowGroup; nextRowGroup->GetNextSibling(nextRowGroup))
   {
     const nsStyleDisplay *rowGroupDisplay;
-    nextRowGroup->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)rowGroupDisplay);
+    nextRowGroup->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
       rv = DidAppendRowGroup((nsTableRowGroupFrame*)nextRowGroup);
@@ -330,7 +330,7 @@ NS_IMETHODIMP nsTableFrame::DidAppendRowGroup(nsTableRowGroupFrame *aRowGroupFra
   for ( ; nsnull!=nextRow; nextRow->GetNextSibling(nextRow))
   {
     const nsStyleDisplay *rowDisplay;
-    nextRow->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)rowDisplay);
+    nextRow->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
     if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay)
     {
       rv = ((nsTableRowFrame *)nextRow)->InitChildren();
@@ -359,7 +359,7 @@ nsTableRowGroupFrame* nsTableFrame::NextRowGroupFrame(nsTableRowGroupFrame* aRow
   while (nsnull != aRowGroupFrame)
   {
     const nsStyleDisplay *display;
-    aRowGroupFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    aRowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (PR_TRUE==IsRowGroup(display->mDisplay))
     { 
       break;
@@ -378,7 +378,7 @@ PRInt32 nsTableFrame::GetSpecifiedColumnCount ()
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       mColCount += ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
@@ -613,8 +613,8 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
   NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
   PRInt32 result;
   nsIFrame *tableFrame = this;
-  nsStyleTable *tableStyle=nsnull;
-  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  const nsStyleTable *tableStyle=nsnull;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   result = tableStyle->mCols;
   PRInt32 numCols = GetColCount();
   if (result>numCols)
@@ -649,7 +649,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       ((nsTableColGroupFrame*)childFrame)->SetStartColumnIndex(actualColumns);
@@ -911,7 +911,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
   for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(rowGroupFrame))
   {
     const nsStyleDisplay *rowGroupDisplay;
-    rowGroupFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)rowGroupDisplay);
+    rowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
       nsIFrame *rowFrame;
@@ -919,7 +919,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
       for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(rowFrame))
       {
         const nsStyleDisplay *rowDisplay;
-        rowFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)rowDisplay);
+        rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
         if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay)
         {
           rv = ((nsTableRowFrame *)rowFrame)->InitChildren();
@@ -1640,7 +1640,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
     for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
     {
       const nsStyleDisplay *childDisplay;
-      kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+      kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
       if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP != childDisplay->mDisplay) &&
           (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP != childDisplay->mDisplay) &&
           (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    != childDisplay->mDisplay) &&
@@ -1824,7 +1824,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   aReflowState.reflowState.reflowCommand->GetChildFrame(objectFrame); 
   const nsStyleDisplay *childDisplay=nsnull;
   if (nsnull!=objectFrame)
-    objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
   if (PR_TRUE==gsDebugIR) printf("TIF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type)
   {
@@ -1948,7 +1948,7 @@ NS_METHOD nsTableFrame::IR_ColGroupInserted(nsIPresContext&        aPresContext,
       frameToInsertAfter->SetNextSibling(aInsertedFrame);
       // account for childFrame being a COLGROUP now
       const nsStyleDisplay *display;
-      childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+      childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
       if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
       {
         if (PR_FALSE==adjustStartingColIndex) // we haven't gotten to aDeletedFrame yet
@@ -1960,7 +1960,7 @@ NS_METHOD nsTableFrame::IR_ColGroupInserted(nsIPresContext&        aPresContext,
                                       // start adjusting subsequent col groups' starting col index including aInsertedFrame
     }
     const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
     {
       if (PR_FALSE==adjustStartingColIndex) // we haven't gotten to aDeletedFrame yet
@@ -1994,7 +1994,7 @@ NS_METHOD nsTableFrame::IR_ColGroupAppended(nsIPresContext&        aPresContext,
   while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
   {
     const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
     {
       startingColIndex += ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
@@ -2091,7 +2091,7 @@ NS_METHOD nsTableFrame::IR_ColGroupRemoved(nsIPresContext&        aPresContext,
       adjustStartingColIndex=PR_TRUE; // now that we've removed aDeletedFrame, start adjusting subsequent col groups' starting col index
     }
     const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
     {
       if (PR_FALSE==adjustStartingColIndex) // we haven't gotten to aDeletedFrame yet
@@ -2252,7 +2252,7 @@ nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState)
 {
   nscoord desiredWidth=aReflowState.maxSize.width;
   // this is the biggest hack in the world.  But there's no other rational way to handle nested percent tables
-  nsStylePosition* position;
+  const nsStylePosition* position;
   PRBool isNested=IsNested(aReflowState, position);
   if((eReflowReason_Initial==aReflowState.reason) && 
      (PR_TRUE==isNested) && (eStyleUnit_Percent==position->mWidth.GetUnit()))
@@ -2309,7 +2309,7 @@ void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
 
   // If this is a footer row group, add it to the list of footer row groups
   const nsStyleDisplay *childDisplay;
-  aKidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+  aKidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
   if (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay)
   {
     if (nsnull==aReflowState.footerList)
@@ -2350,7 +2350,7 @@ void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
   {
     nsMargin borderPadding;
     const nsStyleSpacing* tableSpacing;
-    GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)tableSpacing));
+    GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
     tableSpacing->CalcBorderPaddingFor(this, borderPadding);
     nscoord cellSpacing = GetCellSpacing();
     nscoord kidWidth = aKidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
@@ -2398,12 +2398,12 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
 
     const nsStyleDisplay *childDisplay;
-    kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if ((PR_TRUE==IsRowGroup(childDisplay->mDisplay)) ||
         (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay))
     { // for all colgroups and rowgroups...
       const nsStyleSpacing* kidSpacing;
-      kidFrame->GetStyleData(eStyleStruct_Spacing, ((nsStyleStruct *&)kidSpacing));
+      kidFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)kidSpacing));
       nsMargin kidMargin;
       kidSpacing->CalcMarginFor(kidFrame, kidMargin);
 
@@ -2598,7 +2598,7 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
     //kidRect.x += kidMol->margin.left;
     kidRect.y += aReflowState.y;
     const nsStyleDisplay *childDisplay;
-    kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
     {
       PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize, *pKidMaxElementSize);
@@ -2783,11 +2783,11 @@ nscoord nsTableFrame::GetEffectiveContainerHeight(const nsHTMLReflowState& aRefl
   while (nsnull!=rs)
   {
     const nsStyleDisplay *display;
-    rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)
     {
       const nsStylePosition *position;
-      rs->frame->GetStyleData(eStyleStruct_Position, (nsStyleStruct *&)position);
+      rs->frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)position);
       nsStyleUnit unit = position->mHeight.GetUnit();
       if (eStyleUnit_Null==unit || eStyleUnit_Auto==unit)
       {
@@ -2850,7 +2850,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
       while (nsnull!=rowGroupFrame)
       {
         const nsStyleDisplay *rowGroupDisplay;
-        rowGroupFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)rowGroupDisplay));
+        rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
         if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
         { // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
           // and the rowgroup itself needs to be expanded by SUM(row height deltas)
@@ -2860,7 +2860,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
           while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
           {
             const nsStyleDisplay *rowDisplay;
-            rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)rowDisplay));
+            rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
             if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
             { // the row needs to be expanded by the proportion this row contributed to the original height
               nsRect rowRect;
@@ -2877,7 +2877,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
       while (nsnull!=rowGroupFrame)
       {
         const nsStyleDisplay *rowGroupDisplay;
-        rowGroupFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)rowGroupDisplay));
+        rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
         if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
         { // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
           // and the rowgroup itself needs to be expanded by SUM(row height deltas)
@@ -2887,7 +2887,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
           while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
           {
             const nsStyleDisplay *rowDisplay;
-            rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)rowDisplay));
+            rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
             if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
             { // the row needs to be expanded by the proportion this row contributed to the original height
               nsRect rowRect;
@@ -3076,7 +3076,7 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
         break;
       }
       const nsStyleDisplay *childDisplay;
-      childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+      childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
       if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
       {
         PRInt32 colGroupStartingIndex = ((nsTableColGroupFrame *)childFrame)->GetStartColumnIndex();
@@ -3118,8 +3118,8 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
   PRInt32 colIndex=0;
-  nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   EnsureColumns(aPresContext);
   if (nsnull!=mColCache)
   {
@@ -3133,7 +3133,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   while (nsnull!=childFrame)
   { // in this loop, we cache column info and set column style info from cells
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
 
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     { // if it's a col group then get the columns and cache them in the CellMap
@@ -3164,7 +3164,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
         while (nsnull!=rowFrame)
         {
           const nsStyleDisplay *rowDisplay;
-          rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)rowDisplay));
+          rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
           if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
           {
             nsIFrame *cellFrame;
@@ -3176,7 +3176,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
                * set the column style from the cell's width attribute (if this is the first row)
                */
               const nsStyleDisplay *cellDisplay;
-              cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)cellDisplay));
+              cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
               if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
                 SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
               cellFrame->GetNextSibling(cellFrame);
@@ -3195,7 +3195,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   while (nsnull!=childFrame)
   { // for every child, if it's a col group then get the columns
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       nsTableColFrame *colFrame=nsnull;
@@ -3204,11 +3204,11 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
       { // for every column, create an entry in the column cache
         // assumes that the col style has been twiddled to account for first cell width attribute
         const nsStyleDisplay *colDisplay;
-        colFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)colDisplay));
+        colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
         if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
         {
           const nsStylePosition* colPosition;
-          colFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)colPosition));
+          colFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)colPosition));
           PRInt32 repeat = colFrame->GetSpan();
           colIndex = colFrame->GetColumnIndex();
           for (PRInt32 i=0; i<repeat; i++)
@@ -3287,7 +3287,7 @@ void nsTableFrame::InvalidateCellMap()
   for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(rowGroupFrame))
   {
     const nsStyleDisplay *rowGroupDisplay;
-    rowGroupFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)rowGroupDisplay);
+    rowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
       nsIFrame *rowFrame;
@@ -3295,7 +3295,7 @@ void nsTableFrame::InvalidateCellMap()
       for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(rowFrame))
       {
         const nsStyleDisplay *rowDisplay;
-        rowFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)rowDisplay);
+        rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
         if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay)
         {
           ((nsTableRowFrame *)rowFrame)->ResetInitChildren();
@@ -3560,8 +3560,8 @@ NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin&
 nscoord nsTableFrame::GetCellSpacing()
 {
   nsTableFrame* tableFrame = this;
-  nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   nscoord cellSpacing = 0;
   if (tableStyle->mCellSpacing.GetUnit() == eStyleUnit_Coord)
     cellSpacing = tableStyle->mCellSpacing.GetCoordValue();
@@ -3614,7 +3614,7 @@ NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aT
     while ((NS_OK==result) && (nsnull!=parentFrame))
     {
       const nsStyleDisplay *display;
-      parentFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+      parentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
       if (NS_STYLE_DISPLAY_TABLE == display->mDisplay)
       {
         aTableFrame = (nsTableFrame *)parentFrame;
@@ -3630,7 +3630,7 @@ NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aT
 }
 
 /* helper method for determining if this is a nested table or not */
-PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, nsStylePosition *& aPosition) const
+PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const
 {
   PRBool result = PR_FALSE;
 #ifdef NS_DEBUG
@@ -3646,11 +3646,11 @@ PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, nsStylePosi
     break;
 #endif
     const nsStyleDisplay *display;
-    rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)
     {
       result = PR_TRUE;
-      rs->frame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)aPosition));
+      rs->frame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)aPosition));
       break;
     }
     rs = rs->parentReflowState;
@@ -3672,7 +3672,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
   while (nsnull != rs) 
   {
     // if it's a block, use its max width
-    rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_BLOCK==display->mDisplay) 
     { // we found a block, see if it's really a table cell (which means we're a nested table)
       PRBool skipThisBlock=PR_FALSE;
@@ -3682,7 +3682,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
         parentRS = parentRS->parentReflowState;
         if (nsnull!=parentRS)
         {
-          parentRS->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+          parentRS->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
           if (NS_STYLE_DISPLAY_TABLE_CELL==display->mDisplay) {
             if (PR_TRUE==gsDebugNT)
               printf("%p: found a block pframe %p in a cell, skipping it.\n", aReflowState.frame, rs->frame);
@@ -3710,13 +3710,13 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
       nsMargin borderPadding;
       const nsStylePosition* tablePosition;
       const nsStyleSpacing* spacing;
-      rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+      rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
       if (NS_STYLE_DISPLAY_TABLE_CELL==display->mDisplay) 
       { // if it's a cell and the cell has a specified width, use it
         // Compute and subtract out the insets (sum of border and padding) for the table
         lastCellFrame = (nsTableCellFrame*)(rs->frame);
         const nsStylePosition* cellPosition;
-        lastCellFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)cellPosition));
+        lastCellFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)cellPosition));
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
         {
           nsTableFrame *tableParent;
@@ -3748,14 +3748,14 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
       }
       else
       {
-        rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+        rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
         if (NS_STYLE_DISPLAY_TABLE==display->mDisplay) 
         {
           // we only want to do this for inner table frames, so check the frame's parent to make sure it is an outer table frame
           // we know that if both the frame and it's parent map to NS_STYLE_DISPLAY_TABLE, then we have an inner table frame 
           nsIFrame * tableFrameParent;
           rs->frame->GetGeometricParent(tableFrameParent);
-          tableFrameParent->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+          tableFrameParent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
           if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)
           {
             /* We found the nearest containing table (actually, the inner table).  
@@ -3953,8 +3953,8 @@ void nsTableFrame::SetMaxElementSize(nsSize* aMaxElementSize)
 
 PRBool nsTableFrame::RequiresPass1Layout()
 {
-  nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   return (PRBool)(NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy);
 }
 

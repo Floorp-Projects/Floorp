@@ -539,8 +539,8 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
     const nsStyleDisplay*  display;
     const nsStylePosition* position;
      
-    absoluteFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
-    absoluteFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)position);
+    absoluteFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    absoluteFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
 
     // See whether the frame is a newly added frame
     if (!IsAbsoluteFrame(absoluteFrame)) {
