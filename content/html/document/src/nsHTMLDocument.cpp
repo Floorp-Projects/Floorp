@@ -1047,7 +1047,7 @@ nsHTMLDocument::StopDocumentLoad()
 }
 
 // static
-void PR_CALLBACK
+void
 nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
 {
   nsIDocument *doc = NS_REINTERPRET_CAST(nsIDocument *, aRef);
