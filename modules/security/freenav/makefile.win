@@ -29,9 +29,6 @@ OPTIMIZER=-Os -UDEBUG -DNDEBUG
 #//------------------------------------------------------------------------
 DEPTH= ..\..\..
 
-## Include support for MOZ_LITE/MOZ_MEDIUM
-include <$(DEPTH)/config/liteness.mak>
-
 !ifndef MAKE_OBJ_TYPE
 MAKE_OBJ_TYPE=EXE
 !endif
