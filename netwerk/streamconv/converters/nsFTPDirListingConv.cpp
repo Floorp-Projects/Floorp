@@ -870,17 +870,10 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         aString.Append(' ');
 
         // MODIFIED DATE
-        nsString lDate;
-        
-        rv = mDateTimeFormat->FormatPRExplodedTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, &thisEntry->mMDTM, lDate);
-        if (NS_FAILED(rv)) {
-            NS_DELETEXPCOM(thisEntry);
-            return nsnull;
-        }
-
-        nsCAutoString theDate;
-	theDate.AssignWithConversion(lDate);
-        char *escapedDate = nsEscape(theDate.GetBuffer(), url_Path);
+        char buffer[256] = "";
+        PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
+                                "%m/%d/%y %I:%M:%S %p", &thisEntry->mMDTM );
+        char *escapedDate = nsEscape(buffer, url_Path);
 
         aString.Append(escapedDate);
         nsMemory::Free(escapedDate);
