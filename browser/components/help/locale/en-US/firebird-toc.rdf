@@ -56,7 +56,7 @@
         <rdf:li><rdf:Description ID="using-firebird-clicking-a-link" nc:name="Clicking a Link" nc:link="using_firebird.xhtml#clicking_a_link"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-firebird-retracing-your-steps" nc:name="Retracing Your Steps" nc:link="using_firebird.xhtml#retracing_your_steps"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-firebird-stopping-and-reloading" nc:name="Stopping and Reloading" nc:link="using_firebird.xhtml#stopping_and_reloading"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-firebird-tabbed-browsing" nc:name="Tabbed Browsing" nc:link="using_firebird.xhtml#tabbed_browsing"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-firebird-tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-firebird-sidebar" nc:name="Using the Sidebar" nc:link="using_firebird.xhtml#using_the_sidebar"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-firebird-copying-saving-and-printing-pages" nc:name="Copying, Saving, and Printing Pages" nc:link="using_firebird.xhtml#copying_saving_and_printng_pages"/> </rdf:li>
       </rdf:Seq>
@@ -142,7 +142,7 @@
       <nc:subheadings>
         <rdf:Seq>
           <rdf:li> <rdf:Description ID="popup-blocker-what-are-popups" nc:name="What are Popups?" nc:link="popup.xhtml#what_are_popups"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="popup-blocker-preferences" nc:name="Options (Preferences)" nc:link="popup.xhtml#popup_blocker_preferences"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="popup-blocker-preferences" nc:name="Popup Blocker Options" nc:link="popup.xhtml#popup_blocker_preferences"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
   </rdf:Description>
