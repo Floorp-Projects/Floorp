@@ -241,6 +241,7 @@ protected:
   nsCOMPtr<nsIDOMEventTarget> mCurrentTarget;
   nsCOMPtr<nsIDOMEventTarget> mOriginalTarget;
   nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
+  nsCOMPtr<nsIDOMEventTarget> mTmpRealOriginalTarget;
   nsString*	mText;
   nsCOMPtr<nsIPrivateTextRangeList> mTextRange;
   PRPackedBool mEventIsInternal;

@@ -200,6 +200,7 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
   // Get the explicit original target (if it's anonymous make it null)
   {
     mExplicitOriginalTarget = GetTargetFromFrame();
+    mTmpRealOriginalTarget = mExplicitOriginalTarget;
     nsCOMPtr<nsIContent> content = do_QueryInterface(mExplicitOriginalTarget);
     if (content) {
       if (content->IsNativeAnonymous()) {
@@ -409,6 +410,18 @@ nsDOMEvent::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
   }
 
   return GetTarget(aRealEventTarget);
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetTmpRealOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
+{
+  if (mTmpRealOriginalTarget) {
+    *aRealEventTarget = mTmpRealOriginalTarget;
+    NS_ADDREF(*aRealEventTarget);
+    return NS_OK;
+  }
+
+  return GetOriginalTarget(aRealEventTarget);
 }
 
 NS_IMETHODIMP
