@@ -1421,8 +1421,8 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
    NS_ENSURE_TRUE(prefs, NS_ERROR_FAILURE);
 
    // if we get here, we know prefs is not null
-   char *url = nsnull;
-   prefs->CopyCharPref(PREF_BROWSER_STARTUP_HOMEPAGE, &url);
+   nsXPIDLString url;
+   prefs->GetLocalizedUnicharPref(PREF_BROWSER_STARTUP_HOMEPAGE, getter_Copies(url));
    nsString homeURL;
    if(!url)
       {
@@ -1433,8 +1433,7 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
       homeURL.AssignWithConversion(DEFAULT_HOME_PAGE);
       }
    else 
-      homeURL.AssignWithConversion(url);
-   PR_FREEIF(url);
+      homeURL = url;
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
    NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(webNav->LoadURI(homeURL.GetUnicode()), NS_ERROR_FAILURE);

@@ -418,9 +418,9 @@ pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as in
 
 pref("mailnews.max_header_display_length",3); // number of addresses to show
 
-pref("messenger.throbber.url","http://www.mozilla.org");
-pref("compose.throbber.url","http://www.mozilla.org");
-pref("addressbook.throbber.url","http://www.mozilla.org");
+pref("messenger.throbber.url","chrome://messenger/locale/messenger.properties");
+pref("compose.throbber.url","chrome://messenger/locale/messenger.properties");
+pref("addressbook.throbber.url","chrome://messenger/locale/messenger.properties");
 
 pref("mailnews.send_plaintext_flowed", true); // RFC 2646=======
 

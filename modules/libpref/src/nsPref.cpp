@@ -311,17 +311,17 @@ nsresult nsPref::useLockPrefFile()
     nsresult rv = NS_OK;
     PrefResult result = PREF_NOERROR;
     nsCOMPtr<nsIFileSpec> lockPrefFile;
-    nsXPIDLCString prefVal;
+    nsXPIDLString prefVal;
     nsXPIDLCString lockFileName;
     nsXPIDLCString lockVendor;
     char *return_error = nsnull;
     PRUint32 fileNameLen = 0;
     PRUint32 vendorLen = 0;
     nsXPIDLCString configFile;
-    if (NS_SUCCEEDED(rv = CopyCharPref("browser.startup.homepage",
+    if (NS_SUCCEEDED(rv = GetLocalizedUnicharPref("browser.startup.homepage",
 			getter_Copies(prefVal)) && (prefVal))) 
     {
-        printf("\nStartup homepage %s \n", (const char *)prefVal);
+        printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
     }
 
     if (NS_SUCCEEDED(rv = CopyCharPref("general.config.filename",
@@ -442,8 +442,8 @@ nsresult nsPref::useLockPrefFile()
                 JS_EndRequest(gMochaContext);
             }
         }
-    CopyCharPref("browser.startup.homepage",getter_Copies(prefVal));
-    printf("\nStartup homepage %s \n", (const char *)prefVal);
+    GetLocalizedUnicharPref("browser.startup.homepage",getter_Copies(prefVal));
+    printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
     }
     return rv;
 } // nsPref::useLockPrefFile
@@ -829,9 +829,33 @@ NS_IMETHODIMP nsPref::ClearUserPref(const char *pref_name)
 /*
  * Copy prefs
  */
+#if defined(DEBUG_tao_)
+//3456789012345678901234567890123456789012 34567890123456789012345678901234567890
+static const char strArr[][64] = {
+    "browser.startup.homepage",
+    "browser.throbber.url",
+    "startup.homepage_override_url",
+    NULL};
+
+static void checkPref(const char* fname, const char* pref) {
+    int i=0;
+    nsCString cstr(strArr[i]);
+    while (cstr.Length()) { 
+        if (pref == cstr) {
+            printf("\n --> %s:: SHALL use GetLocalizedUnicharPrefto get --%s--\n", fname, pref); 
+            NS_ASSERTION(0, "\n\n");
+            return;
+        }
+        cstr = strArr[++i];
+    }
+}
+#endif
 
 NS_IMETHODIMP nsPref::CopyCharPref(const char *pref, char ** return_buf)
 {
+#if defined(DEBUG_tao_)
+    checkPref("CopyCharPref", pref);
+#endif
     if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_CopyCharPref(pref, return_buf, PR_FALSE));
 }
@@ -845,6 +869,9 @@ static const PRUnichar unicodeFormatter[] = {
 
 NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar ** return_buf)
 {
+#if defined(DEBUG_tao_)
+    checkPref("CopyUnicharPref", pref);
+#endif
     if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     nsresult rv;
     
@@ -861,6 +888,9 @@ nsPref::GetLocalizedUnicharPref(const char *pref, PRUnichar **return_buf)
 {
     nsresult rv;
 
+#if defined(DEBUG_tao_)
+    printf("\n --> nsPref::GetLocalizedUnicharPref(%s) --", pref);
+#endif
     // if the user has set this pref, then just return the user value
     if (PREF_HasUserPref(pref))
         return CopyUnicharPref(pref, return_buf);

@@ -51,7 +51,7 @@ pref("general.fullcircle_collect_ns_data",  false);
 pref("browser.enable_style_sheets",         true);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);     
-pref("browser.startup.homepage",	   "http://www.mozilla.org/");
+pref("browser.startup.homepage",	   "chrome://navigator/locale/navigator.properties");
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", true);
 pref("browser.startup.autoload_homepage",   true);
@@ -568,4 +568,4 @@ pref("sidebar.customize.all_panels.url", "http://sidebar-rdf.netscape.com/%LOCAL
 
 pref("prefs.converted-to-utf8",false);
 
-pref("browser.throbber.url","http://www.mozilla.org/");
+pref("browser.throbber.url","chrome://navigator/locale/navigator.properties");
