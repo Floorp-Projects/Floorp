@@ -172,11 +172,14 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->	    Ensure you have adequate access controls for $BUGZILLA_HOME/data/, $BUGZILLA_HOME/localconfig,
-	    and $BUGZILLA_HOME/shadow directories.
+>	    Ensure you have adequate access controls for the $BUGZILLA_HOME/data/ and
+	    $BUGZILLA_HOME/shadow/ directories, as well as the $BUGZILLA_HOME/localconfig file.
 	    The localconfig file stores your "bugs" user password,
 	    which would be terrible to have in the hands
-	    of a criminal.  Also some files under $BUGZILLA_HOME/data store sensitive information.
+	    of a criminal.  Also some files under $BUGZILLA_HOME/data/ store sensitive information, and
+	    $BUGZILLA_HOME/shadow/ stores bug information for faster retrieval.  If you fail to secure
+	    these directories and this file, you will expose bug information to those who may not
+	    be allowed to see it.
 	  </P
 ><P
 >	    On Apache, you can use .htaccess files to protect access to these directories, as outlined
