@@ -34,6 +34,8 @@ class GraphicState;
 
 typedef GrafPtr nsDrawingSurfaceMac;
 
+//------------------------------------------------------------------------
+
 class nsRenderingContextMac : public nsIRenderingContext
 {
 public:
@@ -111,18 +113,26 @@ public:
   NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
 
 protected:
-  GrafPtr		mOldPort;
+	GrafPtr		mOldPort;
 
-  inline void	StartDraw()
+	inline void	StartDraw()
   				{
 					::GetPort(&mOldPort);
+					NS_ASSERTION((mCurrentBuffer != nsnull), "mCurrentBuffer is null");
 					::SetPort(mCurrentBuffer);
   				}
 
-  inline void	EndDraw()
+	inline void	EndDraw()
   				{
 					::SetPort(mOldPort);
   				}
+
+	enum ClipMethod {
+		clipToMainRegion,
+		clipToClipRegion
+	};
+	void	SetQuickDrawEnvironment(GraphicState* aGraphicState, ClipMethod clipMethod);
+	void	SelectDrawingSurface(nsDrawingSurfaceMac aSurface, GraphicState* aGraphicState);
 	
 protected:
 	float             		mP2T; 				// Pixel to Twip conversion factor
@@ -130,12 +140,13 @@ protected:
 
 	nsDrawingSurfaceMac		mOriginalSurface;
 	nsDrawingSurfaceMac		mFrontBuffer;		// screen port
-	nsDrawingSurfaceMac		mBackBuffer;		// offscreen port
-	nsDrawingSurfaceMac		mCurrentBuffer;		// current buffer to draw into (= mGS->mRenderingSurface)
+	nsDrawingSurfaceMac		mCurrentBuffer;		// current drawing surface (= mGS->mRenderingSurface)
 
 	// graphic state management
-	GraphicState *			mGS;				// Pointer to the current graphic state, top of stack
-	nsVoidArray *			mGSArray;
+	GraphicState *			mGS;				// Pointer to the current graphic state
+	nsVoidArray *			mGSArray;			// GraphicState array,  used when a surface gets selected
+	nsVoidArray *			mSurfaceArray;		// Surface array,       used when a surface gets selected
+	nsVoidArray *			mGSStack;			// GraphicStates stack, used for PushState/PopState
 };
 
 #endif /* nsRenderingContextMac_h___ */
