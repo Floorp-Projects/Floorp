@@ -1174,61 +1174,76 @@ void nsExternalAppHandler::ProcessAnyRefreshTags()
 }
 
 // nsIURIContentListener implementation
-NS_IMETHODIMP nsExternalAppHandler::OnStartURIOpen(nsIURI* aURI, const char* aWindowTarget, PRBool* aAbortOpen)
+NS_IMETHODIMP
+nsExternalAppHandler::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+NS_IMETHODIMP
+nsExternalAppHandler::GetProtocolHandler(nsIURI *aURI,
+                                         nsIProtocolHandler **aProtocolHandler)
 {
   *aProtocolHandler = nsnull;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::IsPreferred(const char * aContentType, nsURILoadCommand aCommand, const char * aWindowTarget,
-                                char ** aDesiredContentType, PRBool * aCanHandleContent)
+NS_IMETHODIMP
+nsExternalAppHandler::IsPreferred(const char * aContentType,
+                                  nsURILoadCommand aCommand,
+                                  char ** aDesiredContentType,
+                                  PRBool * aCanHandleContent)
 
 {
   NS_NOTREACHED("IsPreferred");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::CanHandleContent(const char * aContentType, nsURILoadCommand aCommand,
-                                const char * aWindowTarget, char ** aDesiredContentType,
-                                PRBool * aCanHandleContent)
+NS_IMETHODIMP
+nsExternalAppHandler::CanHandleContent(const char * aContentType,
+                                       nsURILoadCommand aCommand,
+                                       char ** aDesiredContentType,
+                                       PRBool * aCanHandleContent)
 
 {
   NS_NOTREACHED("CanHandleContent");
   return NS_ERROR_NOT_IMPLEMENTED;
 } 
 
-NS_IMETHODIMP nsExternalAppHandler::DoContent(const char * aContentType, nsURILoadCommand aCommand, const char * aWindowTarget, 
-                                              nsIRequest * aRequest,
-                                              nsIStreamListener ** aContentHandler,PRBool * aAbortProcess)
+NS_IMETHODIMP
+nsExternalAppHandler::DoContent(const char * aContentType,
+                                nsURILoadCommand aCommand,
+                                nsIRequest * aRequest,
+                                nsIStreamListener ** aContentHandler,
+                                PRBool * aAbortProcess)
 {
   NS_NOTREACHED("DoContent");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::GetParentContentListener(nsIURIContentListener** aParent)
+NS_IMETHODIMP
+nsExternalAppHandler::GetParentContentListener(nsIURIContentListener** aParent)
 {
   *aParent = nsnull;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::SetParentContentListener(nsIURIContentListener* aParent)
+NS_IMETHODIMP
+nsExternalAppHandler::SetParentContentListener(nsIURIContentListener* aParent)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::GetLoadCookie(nsISupports ** aLoadCookie)
+NS_IMETHODIMP
+nsExternalAppHandler::GetLoadCookie(nsISupports ** aLoadCookie)
 {
   *aLoadCookie = mLoadCookie;
   NS_IF_ADDREF(*aLoadCookie);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::SetLoadCookie(nsISupports * aLoadCookie)
+NS_IMETHODIMP
+nsExternalAppHandler::SetLoadCookie(nsISupports * aLoadCookie)
 {
   mLoadCookie = aLoadCookie;
   return NS_OK;
