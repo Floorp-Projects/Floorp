@@ -1387,7 +1387,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     // size.
     // XXX It would be nice if we could skip this step and the next step if the
     // column width isn't dependent on the max cell width...
-    kidReflowState.reason = eReflowReason_Resize;
+    kidReflowState.reason = eReflowReason_Initial;
     kidReflowState.reflowCommand = nsnull;
     kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
     rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
@@ -1403,7 +1403,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
       desiredSize.height = kidMaxElementSize.height;
     ((nsTableCellFrame *)aNextFrame)->SetPass1DesiredSize(desiredSize);
     ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
-  
     // Now reflow the cell again this time constraining the width
     // XXX Ignore for now the possibility that the column width has changed...
     kidReflowState.availableWidth = availWidth;

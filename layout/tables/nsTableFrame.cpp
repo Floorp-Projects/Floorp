@@ -2166,6 +2166,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
   aStatus = NS_FRAME_COMPLETE;
+  if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) &&
+      (this == (nsTableFrame *)GetFirstInFlow())) {
+    InvalidateFirstPassCache();
+  }
 
   nsresult rv = NS_OK;
 
