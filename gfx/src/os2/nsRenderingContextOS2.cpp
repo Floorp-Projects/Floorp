@@ -352,13 +352,14 @@ nsresult nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface 
 {
    nsresult rc = NS_ERROR_FAILURE;
 
+   nsPaletteInfo palInfo;
+   mContext->GetPaletteInfo(palInfo);
+
    if( aSurface)
    {
       NS_IF_RELEASE(mSurface);
       mSurface = (nsDrawingSurfaceOS2 *) aSurface;
       // If this is a palette device, then select and realize the palette
-      nsPaletteInfo palInfo;
-      mContext->GetPaletteInfo(palInfo);
     
       if (palInfo.isPaletteDevice && palInfo.palette)
       {
