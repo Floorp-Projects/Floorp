@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.7 $ $Date: 2001/10/11 18:40:34 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.8 $ $Date: 2001/10/11 18:41:51 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -54,6 +54,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.7 $ 
 #ifndef CKHELPER_H
 #include "ckhelper.h"
 #endif /* CKHELPER_H */
+
+extern const NSSError NSS_ERROR_NOT_FOUND;
 
 #define NSSTRUSTDOMAIN_DEFAULT_CACHE_SIZE 32
 

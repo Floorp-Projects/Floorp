@@ -32,12 +32,18 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: asymmkey.c,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: asymmkey.c,v $ $Revision: 1.3 $ $Date: 2001/10/11 18:41:50 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
 #endif /* NSSPKI_H */
+
+#ifndef BASE_H
+#include "base.h"
+#endif /* BASE_H */
+
+extern const NSSError NSS_ERROR_NOT_FOUND;
 
 NSS_IMPLEMENT PRStatus
 NSSPrivateKey_Destroy

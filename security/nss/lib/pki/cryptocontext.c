@@ -32,12 +32,14 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.3 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.4 $ $Date: 2001/10/11 18:41:50 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
 #endif /* NSSPKI_H */
+
+extern const NSSError NSS_ERROR_NOT_FOUND;
 
 NSS_IMPLEMENT PRStatus
 NSSCryptoContext_Destroy
