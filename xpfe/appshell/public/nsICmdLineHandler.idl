@@ -39,7 +39,7 @@
 static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType);  \
 static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation);
 
-#define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_default_args) \
+#define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args) \
 NS_IMETHODIMP macro_class::GetCommandLineArgument(char **aCommandLineArgument) \
 { \
     if (!aCommandLineArgument) return NS_ERROR_FAILURE; \
@@ -68,6 +68,12 @@ NS_IMETHODIMP macro_class::GetHandlesArgs(PRBool *aHandlesArgs) \
 { \
     if (!aHandlesArgs) return NS_ERROR_FAILURE; \
     *aHandlesArgs = macro_handles_args; \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetOpenWindowWithArgs(PRBool *aOpenWindowWithArgs) \
+{ \
+    if (!aOpenWindowWithArgs) return NS_ERROR_FAILURE; \
+    *aOpenWindowWithArgs = macro_open_window_with_args; \
     return NS_OK; \
 } \
 NS_IMETHODIMP macro_class::GetDefaultArgs(PRUnichar **aDefaultArgs) \
@@ -110,5 +116,6 @@ interface nsICmdLineHandler : nsISupports
 
     readonly attribute boolean handlesArgs;
     readonly attribute wstring defaultArgs;
+    readonly attribute boolean openWindowWithArgs;
 };
 

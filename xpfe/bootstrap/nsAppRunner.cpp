@@ -332,8 +332,21 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
           if (handlesArgs) {
             if (forceLaunchTask || cmdResult) {
               if (cmdResult && PL_strcmp("1",cmdResult)) {
-                nsString cmdArgs(cmdResult);
-                OpenWindow((const char *)chromeUrlForTask, cmdArgs.GetUnicode());
+                PRBool openWindowWithArgs = PR_TRUE;
+                rv = handler->GetOpenWindowWithArgs(&openWindowWithArgs);
+                if (openWindowWithArgs) {
+                   nsString cmdArgs(cmdResult);
+#ifdef DEBUG_CMD_LINE
+                    printf("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
+#endif /* DEBUG_CMD_LINE */
+                   OpenWindow((const char *)chromeUrlForTask, cmdArgs.GetUnicode());
+                }
+                else {
+#ifdef DEBUG_CMD_LINE
+                    printf("opening %s with %s\n",cmdResult,"OpenChromURL");
+#endif /* DEBUG_CMD_LINE */
+                    OpenChromURL(cmdResult,height, width);
+                }
               }
               else {
                 PRUnichar *defaultArgs;
