@@ -23,8 +23,8 @@
  *                 Karl Guertin <grayrest@grayrest.com> 
  *                 Colin Phillips <colinp@oeone.com> 
  *                 ArentJan Banck <ajbanck@planet.nl>
- *			 			 Eric Belhaire <belhaire@ief.u-psud.fr>
- *						 Mark Swaffer <swaff@fudo.org>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Mark Swaffer <swaff@fudo.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,7 +63,7 @@
  *-------------------------------------------------------------------*/
 
 .toolbarbutton-1 {
-  list-style-image: url("chrome://calendar/skin/btn1.gif");
+  list-style-image: url("chrome://calendar/skin/btn1.png");
 }
 
 
@@ -288,8 +288,24 @@
 *****************************
 */
 #multiweek-grid{
-   border-right: 1px solid #3f7d91;
+   border: 1px solid #3f7d91;
 }
+
+#multiweek-grid-box{
+    border: 1px solid #3f7d91;
+    padding: 2px;
+    margin: 10px 2px 15px 10px;
+    background-color: #E7EEEC;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+}
+
+
+/*Right column*/
+.multiweek-rightcol-class{ 
+    margin: 10px 2px 15px 2px;
+}
+
 
 #multiweek-view-box{
     -moz-box-align: center;
@@ -307,15 +323,28 @@
     padding:0px;
 }
 
+.multiweek-header-class{
+    border-left: 1px solid #3f7d91;
+    -moz-box-align: center;
+    font-size: 1.3em;
+    font-family: Arial, Helvetica;
+    color: #3f7d91;
+    background-color: #FFFFFF;
+    font-weight:bold;
+}
+.multiweek-header-left-class{
+     -moz-box-align: center;
+    font-size: 1.3em;
+    font-family: Arial, Helvetica;
+    color: #3f7d91;
+    font-weight:bold;
+}
+
 .multiweek-leftcol-box-class{ 
    display            : -moz-stack;
    background-color   : #E7EEEC;
 }
 
-/*Right column*/
-.multiweek-rightcol-class{ 
-   background-color   : #E7EEEC;
-}
 /*Previous/Next Buttons*/
 .updownbuttons{
     list-style-image: url("chrome://calendar/skin/pageupdown.gif");
@@ -1291,6 +1320,12 @@ treechildren:-moz-tree-cell-text(selected) {
 .calendar-list-item-class[synching="true"]
 {
    list-style-image     : url( "chrome://calendar/skin/synch_animated.gif" );
+}
+
+listitem[selected="true"] > .calendar-list-item-class
+{
+  background-color     : White;
+  color                : Black;
 }
 
 .todo-due-image-class

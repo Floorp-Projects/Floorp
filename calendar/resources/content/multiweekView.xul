@@ -70,15 +70,10 @@
 
     <vbox id="multiweek-view-box" flex="1">
 
-	<!-- Month View: Controls-->
+	<hbox id="multiweek-content-box">
 
-
-	<vbox id="multiweek-content-box">
-
-	    <!-- Near Future View: Calendar Grid -->
-
-	    <box id="multiweek-grid-box" flex="1" debug="false">
-         <grid id="multiweek-grid" flex="1">
+	 <box id="multiweek-grid-box" flex="1">	  
+            <grid id="multiweek-grid" flex="1">
 		    <columns>
    			<column id="multiweek-view-leftcol" class="multiweek-leftcol-class"/>
    			<column id="multiweek-view-column-1" class="month-column-class" flex="1"/>
@@ -92,28 +87,28 @@
 
 		    <rows >
 			<row id="multiweek-week-header-row">
-			    <vbox class="month-column-center-day-class">
+			    <vbox class="multiweek-header-left-class">
 			       <label id="multiweek-title" />
 			    </vbox>
-			    <vbox class="month-column-center-day-class">
+			    <vbox class="multiweek-header-class">
 				   <label class="month-view-header-days" id="multiweek-view-header-day-1"/>
 			    </vbox>
-			    <vbox class="month-column-center-day-class">
+			    <vbox class="multiweek-header-class">
 				   <label class="month-view-header-days" id="multiweek-view-header-day-2"/>
 			    </vbox>
-			    <vbox class="month-column-center-day-class">
+			    <vbox class="multiweek-header-class">
 				   <label class="month-view-header-days" id="multiweek-view-header-day-3"/>
 			    </vbox>
-			    <vbox class="month-column-center-day-class">
+			    <vbox class="multiweek-header-class">
 				   <label class="month-view-header-days" id="multiweek-view-header-day-4"/>
 			    </vbox>
-			    <vbox class="month-column-center-day-class">
+			    <vbox class="multiweek-header-class">
 				   <label class="month-view-header-days" id="multiweek-view-header-day-5"/>
 			    </vbox>
-			    <vbox class="month-column-center-day-class">
+			    <vbox class="multiweek-header-class">
 				   <label class="month-view-header-days" id="multiweek-view-header-day-6"/>
 			    </vbox>
-			    <vbox class="month-column-center-day-class">
+			    <vbox class="multiweek-header-class">
 				   <label class="month-view-header-days" id="multiweek-view-header-day-7"/>
 			    </vbox>
 			</row>
@@ -336,8 +331,9 @@
 			   </row>
 		    </rows>
 		</grid>
+	    </box>  <!-- End: Multiweek grid box -->
 		<vbox class="multiweek-rightcol-class">
-		  <vbox class="month-column-center-day-class">
+		  <vbox class="multiweek-header-left-class">
 		    <label value="  " />
 		  </vbox>
 		  <vbox class="multiweek-previous-button-box">
@@ -356,8 +352,7 @@
 		    <image id="multiweek-next-button" class="updownbuttons" onclick="gCalendarWindow.goToNext()"/>
 		  </vbox>
 		</vbox>
-	    </box>  <!-- End: Multiweek grid box -->
 
-	</vbox>  <!-- End: Multiweek content box -->
+	</hbox>  <!-- End: Multiweek content box -->
     </vbox>
 </overlay>
