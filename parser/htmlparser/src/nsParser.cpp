@@ -34,7 +34,7 @@
 #include "nsHTMLContentSinkStream.h" //this is here so we can get a null sink, which really should be gotten from nsICOntentSink.h
 #include "nsIStringStream.h"
 
-#undef rickgdebug
+#undef rickgdebug 
 #ifdef  rickgdebug
 #include "CRtfDTD.h"
 #endif

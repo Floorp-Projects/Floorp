@@ -82,6 +82,7 @@ NS_IMPL_RELEASE(nsCParserNode)
 nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber)  
 {
   mLineNumber=aLineNumber;
+  mAttributeCount=0;
   mToken=aToken;
   return NS_OK;
 }

@@ -33,10 +33,10 @@
 #include "plstr.h"
 #include "nsDTDUtils.h"
 #include "nsTagHandler.h"
-#include "nsViewSourceHTML.h"
 #include "nsHTMLTokenizer.h"
 #include "nsTime.h"
 #include "nsIElementObserver.h"
+#include "nsViewSourceHTML.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
@@ -774,7 +774,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
       {
         const nsString& theText=aNode.GetSkippedContent();
         if(0<theText.Length()) {
-          CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE);
+          CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE,PR_FALSE);
         }
       }
       break;
@@ -944,8 +944,7 @@ PRInt32 GetIndexOfChildOrSynonym(nsEntryStack& aTagStack,eHTMLTags aChildTag) {
  *  @return  PR_TRUE if child agrees to be opened here.
  */  
 static
-PRBool CanBeContained(eHTMLTags aParentTag,eHTMLTags aChildTag,nsEntryStack& aTagStack) {
-  PRBool result=PR_TRUE;
+PRBool CanBeContained(eHTMLTags aChildTag,nsEntryStack& aTagStack) {
 
   /* #    Interesting test cases:       Result:
    * 1.   <UL><LI>..<B>..<LI>           inner <LI> closes outer <LI>
@@ -957,26 +956,21 @@ PRBool CanBeContained(eHTMLTags aParentTag,eHTMLTags aChildTag,nsEntryStack& aTa
   //Note: This method is going away. First we need to get the elementtable to do closures right, and
   //      therefore we must get residual style handling to work.
 
-/* // I've removed this on general principle. 
-   // If style tags want to contain each other, the state should be in the element table. 
-
-  if(nsHTMLElement::IsStyleTag(aParentTag))
-    if(nsHTMLElement::IsStyleTag(aChildTag))
-      return PR_TRUE;
-*/
-
+  PRBool result=PR_TRUE;
   if(aTagStack.GetCount()){
     CTagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+    CTagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
     if(theRootTags) {
       PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);          
+      PRInt32 theSPIndex=(theSpecialParents) ? theSpecialParents->GetTopmostIndexOf(aTagStack) : kNotFound;  
       PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aTagStack,aChildTag);
+      PRInt32 theBaseIndex=(theRootIndex>theSPIndex) ? theRootIndex : theSPIndex;
 
-      if((theRootIndex==theChildIndex) && (gHTMLElements[aChildTag].CanContainSelf()))
+      if((theBaseIndex==theChildIndex) && (gHTMLElements[aChildTag].CanContainSelf()))
         result=PR_TRUE;
-      else result=PRBool(theRootIndex>theChildIndex);
+      else result=PRBool(theBaseIndex>theChildIndex);
     }
   }
-
 
   return result;
 }
@@ -1064,6 +1058,15 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
               theChildAgrees=HasOpenContainer(theAncestor);
             }
           }
+
+          if(theChildAgrees) {
+              //This code is here to allow DT/DD (or similar) to close arbitrary stuff between
+              //this instance and a prior one on the stack. I had to add this because
+              //(for now) DT is inline, and fontstyle's can contain them (until Res-style code works)
+            if(gHTMLElements[aChildTag].HasSpecialProperty(kMustCloseSelf)){
+              theChildAgrees=CanBeContained(aChildTag,mBodyContext->mStack);
+            }
+          }
         }
 
         if(!(theCanContainResult && theChildAgrees)) {
@@ -1097,117 +1100,6 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   return result;
 }
 
-#if 0
-/** 
- *  This method gets called when a start token has been 
- *  encountered in the parse process. If the current container
- *  can contain this tag, then add it. Otherwise, you have
- *  two choices: 1) create an implicit container for this tag
- *                  to be stored in
- *               2) close the top container, and add this to
- *                  whatever container ends up on top.
- *   
- *  @update  gess 3/25/98
- *  @param   aToken -- next (start) token to be handled
- *  @param   aNode -- CParserNode representing this start token
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-
-nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
-
-  nsresult  result=NS_OK;
-
-    //Sick as it sounds, I have to make sure the body has been
-    //opened before other tags can be added to the content sink...
-
-  PRBool rickgSkip=PR_FALSE;
-  if(!rickgSkip) {
-
-  /***********************************************************************
-      Subtlety alert: 
-
-      The REAL story on when tags are opened is somewhat confusing, but it's
-      important to understand. Since this is where we deal with it, it's time
-      for a quick disseration. Here goes:
-
-      Given a stack of open tags, a new (child) tag comes along and we need 
-      to see if it can be opened in place. There are at least 2 reasons why
-      it cannot be opened: 1) the parent says so; 2) the child says so.
-
-      Parents refuse to take children they KNOW they can't contain. Consider
-      that the <HTML> tag is only *supposed* to contain certain tags -- 
-      no one would expect it to accept a rogue <LI> tag (for example). 
-
-      Here's an interested case we should not break:
-
-      <HTML>
-        <BODY>
-          <DL> 
-            <DT> 
-              <DD>
-                <LI>
-                  <DT>
- 
-      The DT is not a child of the LI, so the LI closes. Then the DT also
-      closes the DD, and it's parent DT. At last, it reopens itself below DL.
-
-     ***********************************************************************/
-
-    eHTMLTags theParentTag=mBodyContext->Last();
-    PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
-    PRBool theChildAgrees=(theCanContainResult) ? CanBeContained(theParentTag,aChildTag,mBodyContext->mStack) : PR_FALSE;
-
-    if(!(theCanContainResult && theChildAgrees)) {
-      PRInt32 theIndex=FindAutoCloseTargetForStartTag2(aChildTag,mBodyContext->mStack,*this);
-      eHTMLTags theTarg2=mBodyContext->TagAt(theIndex);
-      eHTMLTags theTarget=FindAutoCloseTargetForStartTag(aChildTag,mBodyContext->mStack);
-
-      NS_ASSERTION(theTarg2==theTarget,"Error: target mismatch");
-
-      if(eHTMLTag_unknown!=theTarget){
-        result=CloseContainersTo(theTarget,PR_TRUE);
-        theParentTag=mBodyContext->Last();
-        theCanContainResult=CanContain(theParentTag,aChildTag);
-      }
-    }
-
-    if(PR_FALSE==theCanContainResult){
-      if(CanPropagate(theParentTag,aChildTag))
-        result=CreateContextStackFor(aChildTag);
-      else result=kCantPropagate;
-      if(NS_OK!=result) { 
-        //if you're here, then the new topmost container can't contain aToken.
-        //You must determine what container hierarchy you need to hold aToken,
-        //and create that on the parsestack.
-        result=ReduceContextStackFor(aChildTag);
-
-        PRBool theCanContainResult=CanContain(mBodyContext->Last(),aChildTag);
-
-        if(PR_FALSE==theCanContainResult) {
-          //we unwound too far; now we have to recreate a valid context stack.
-          result=CreateContextStackFor(aChildTag);
-        }
-      }
-    }
-
-  }//if(!rickGSkip)...
-
-  if(nsHTMLElement::IsContainer(aChildTag)){
-      //first, let's see if it's a style element...
-    if(!nsHTMLElement::IsStyleTag(aChildTag)) {
-        //it wasn't a style container, so open the element container...
-      CloseTransientStyles(aChildTag);
-    } 
-    result=OpenContainer(aNode,PR_TRUE);
-  }
-  else {  //we're writing a leaf...
-    result=AddLeaf(aNode);
-  }
-
-  return result;
-}
-#endif
 
 #ifdef  RICKG_DEBUG
 void WriteTokenToLog(CToken* aToken) {

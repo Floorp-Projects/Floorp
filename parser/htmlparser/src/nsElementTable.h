@@ -144,6 +144,7 @@ static const int kNoPropagate     = 0x0010; //If set, this tag won't propagate a
 static const int kBadContentWatch = 0x0020; 
 static const int kNoStyleLeaksIn  = 0x0040; 
 static const int kNoStyleLeaksOut = 0x0080; 
+static const int kMustCloseSelf   = 0x0100; 
 
 //*********************************************************************************************
 // The following ints define the standard groups of HTML elements...
