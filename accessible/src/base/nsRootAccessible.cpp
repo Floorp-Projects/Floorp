@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nsIAccessible.h"
 #include "nsRootAccessible.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
@@ -35,6 +36,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsHTMLLinkAccessible.h"
 #include "nsIURI.h"
+#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIXULDocument.h"
 #include "nsIDOMDocument.h"
@@ -126,6 +128,11 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
     return NS_ERROR_FAILURE;
   }
 
+  /*
+  // Commenting this out for now.
+  // It was requested that we always use pane objects instead of client objects.
+  // However, it might be asked that we put client objects back.
+
   nsCOMPtr<nsIPresContext> context; 
   shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsISupports> container;
@@ -143,8 +150,17 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
   }
 
   *aAccRole = ROLE_CLIENT;
+  */
+
+  *aAccRole = ROLE_PANE;
   return NS_OK;  
 }
+
+NS_IMETHODIMP nsRootAccessible::GetAccState(PRUint32 *aAccState)
+{
+  return nsDocAccessibleMixin::GetAccState(aAccState);
+}
+
 
 NS_IMETHODIMP nsRootAccessible::GetAccValue(nsAWritableString& aAccValue)
 {
@@ -430,3 +446,35 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetDocument(nsIDocument **doc)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsDocAccessibleMixin::GetAccState(PRUint32 *aAccState)
+{
+  // Screen readers need to know when the document is finished loading (STATE_BUSY flag)
+  // We do it this way, rather than via nsIWebProgressListener, because
+  // if accessibility was turned on after a document already finished loading, 
+  // we would get no state changes from nsIWebProgressListener.
+  // The GetBusyFlags method, however, always has the current busy state information for us.
+
+  *aAccState = 0;
+  if (mDocument) {
+    nsCOMPtr<nsIPresShell> presShell;
+    mDocument->GetShellAt(0, getter_AddRefs(presShell));
+    if (presShell) {
+      nsCOMPtr<nsIPresContext> context; 
+      presShell->GetPresContext(getter_AddRefs(context));
+      if (context) {
+        nsCOMPtr<nsISupports> container;
+        context->GetContainer(getter_AddRefs(container));
+        if (container) {
+          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+          if (docShell) {
+            PRUint32 busyFlags;
+            docShell->GetBusyFlags(&busyFlags);
+            if (busyFlags != nsIDocShell::BUSY_FLAGS_NONE)
+              *aAccState = nsIAccessible::STATE_BUSY;
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
