@@ -446,6 +446,7 @@ nsStdURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
             int pieceLen = len - (brk + 1 - options);
             ExtractString(brk+1, o_Query, pieceLen);
             len -= pieceLen + 1;
+            *brk = '\0';
         }
 
         // Now look for ';'
