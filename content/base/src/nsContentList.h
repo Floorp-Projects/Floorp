@@ -294,9 +294,22 @@ protected:
    * observer of the document.
    */
   void CheckDocumentExistence();
+  /**
+   * Remove ourselves from the hashtable that caches commonly accessed
+   * content lists.  Generally done on destruction.
+   */
   void RemoveFromHashtable();
+  /**
+   * If state is not LIST_UP_TO_DATE, fully populate ourselves with
+   * all the nodes we can find.
+   */
   inline void BringSelfUpToDate(PRBool aDoFlush);
-
+  /**
+   * A function to check whether aContent is anonymous from our point
+   * of view.  If it is, we don't care about it, since we should never
+   * contain it or any of its kids.
+   */
+  PRBool IsContentAnonymous(nsIContent* aContent);
   /**
    * Function to use to determine whether a piece of content matches
    * our criterion
