@@ -49,18 +49,19 @@ class nsFileSpec;
  * Users of the service manager must first obtain a pointer to the global
  * service manager by calling NS_GetGlobalServiceManager. After that, 
  * they can request specific services by calling GetService. When they are
- * finished with a service the release it by calling ReleaseService (instead
- * of releasing the service object directly):
+ * finished they can NS_RELEASE() the service as usual.
  *
  *    nsICacheManager* cm;
  *    nsServiceManager::GetService(kCacheManagerCID, kICacheManagerIID, (nsISupports**)&cm);
  *
  *    ... use cm, and then sometime later ...
  *
- *    nsServiceManager::ReleaseService(kCacheManagerCID, cm);
+ *    NS_RELEASE(cm);
  *
  * A user of a service may keep references to particular services indefinitely
- * and only must call ReleaseService when it shuts down. However if the user
+ * and only must call Release when it shuts down.
+ *
+ * Shutdown Listeners: However if the user
  * wishes to voluntarily cooperate with the shutdown of the service it is 
  * using, it may supply an nsIShutdownListener to provide for asynchronous
  * release of the services it is using. The shutdown listener's OnShutdown
@@ -114,6 +115,7 @@ public:
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = nsnull) = 0;
 
+    /* OBSOLETE: use NS_RELEASE(service) instead. */
     NS_IMETHOD
     ReleaseService(const nsCID& aClass, nsISupports* service,
                    nsIShutdownListener* shutdownListener = nsnull) = 0;
@@ -132,6 +134,7 @@ public:
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = nsnull) = 0;
 
+    /* OBSOLETE */
     NS_IMETHOD
     ReleaseService(const char* aProgID, nsISupports* service,
                    nsIShutdownListener* shutdownListener = nsnull) = 0;
@@ -178,6 +181,7 @@ public:
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = nsnull);
 
+    /* OBSOLETE: use NS_RELEASE(service) instead. */
     static nsresult
     ReleaseService(const nsCID& aClass, nsISupports* service,
                    nsIShutdownListener* shutdownListener = nsnull);
@@ -196,6 +200,7 @@ public:
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = nsnull);
 
+    /* OBSOLETE: use NS_RELEASE(service) instead. */
     static nsresult
     ReleaseService(const char* aProgID, nsISupports* service,
                    nsIShutdownListener* shutdownListener = nsnull);
@@ -211,6 +216,9 @@ public:
     static nsIServiceManager* mGlobalServiceManager;
 
 };
+
+////////////////////////////////////////////////////////////////////////////
+// Using servicemanager with COMPtrs
 
 class NS_EXPORT nsGetServiceByCID : public nsCOMPtr_helper
   {
@@ -262,6 +270,12 @@ do_GetService( const char* aProgID, nsresult* error = 0 )
 
 ////////////////////////////////////////////////////////////////////////////////
 // NS_WITH_SERVICE: macro to make using services easier. 
+// 
+// Services can be used with COMPtrs. GetService() is used to get a service.
+// NS_RELEASE() can be called on the service got to release it.
+//
+// NOTE: ReleaseService() is OBSOLETE.
+//
 // Now you can replace this:
 //  {
 //      nsIMyService* service;
@@ -277,109 +291,21 @@ do_GetService( const char* aProgID, nsresult* error = 0 )
 //      if (NS_FAILED(rv)) return rv;
 //      service->Doit(...);     // use my service
 //  }
-// and the automatic destructor will take care of releasing the service. 
-// 
-// Note that this macro requires you to link with the xpcom DLL to pick up the
-// static member functions from nsServiceManager. For situations where you're 
-// passed an nsISupports that is an nsIComponentManager (such as in a DLL's 
-// NSRegisterSelf or NSUnregisterSelf entry points) you can use the following
-// macro instead:
-// 
-//   NSRegisterSelf(nsISupports* servMgr, const char* path) {
-//      NS_WITH_SERVICE1(nsIComponentManager, compMgr, servMgr,
-//                       kComponentManagerCID, &rv);
-//      if (NS_FAILED(rv)) return rv;
-//      compMgr->RegisterComponent(...);     // use the service
-//  }
-//
-// Note that both NS_WITH_SERVICE and NS_WITH_SERVICE1 can be used with a
-// "progid" as well as a "clsid"; for example,
-//
-//   nsresult rv;
-//   NS_WITH_SERVICE(nsIObserverService,
-//                   observer,
-//                   "component://netscape/observer-service", /* or NS_OBSERVERSERVICE_PROGID */
-//                   &rv);
-//
+// and the automatic destructor from COMPtr will take care of releasing the service. 
+////////////////////////////////////////////////////////////////////////////////
+#define NS_WITH_SERVICE(T, var, cid, rvAddr) \
+    nsCOMPtr<T> var = do_GetService(cid, rvAddr);
 
-
-#define NS_WITH_SERVICE(T, var, cid, rvAddr)      \
-  nsService _serv##var(cid, T::GetIID(), rvAddr); \
-  T* var = (T*)(nsISupports*)_serv##var;
-
-#define NS_WITH_SERVICE1(T, var, isupports, cid, rvAddr)     \
-  nsService _serv##var(isupports, cid, T::GetIID(), rvAddr); \
-  T* var = (T*)(nsISupports*)_serv##var;
-
-class nsService {
-protected:
-  nsCID mCID;
-  nsISupports* mService;
-
-public:
-  nsService(nsISupports* aServMgr, const nsCID& aClass, const nsIID& aIID, nsresult *rv)
-    : mCID(aClass), mService(0)
-  {
-    nsIServiceManager* servMgr;
-    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
-    if (NS_SUCCEEDED(*rv)) {
-      *rv = servMgr->GetService(mCID, aIID, &mService);
-      NS_RELEASE(servMgr);
+#define NS_WITH_SERVICE1(T, var, isupportsServMgr, cid, rvAddr)     \
+    nsCOMPtr<T> var; \
+    { \
+        nsCOMPtr<nsIServiceManager> _servMgr = do_QueryInterface(isupportsServMgr, rvAddr); \
+        if (NS_SUCCEEDED(*rvAddr)) \
+        { \
+            *rvAddr = _servMgr->GetService(cid, NS_GET_IID(T), getter_AddRefs(var)); \
+        } \
     }
-  }
-
-  nsService(nsISupports* aServMgr, const char* aProgID, const nsIID& aIID, nsresult *rv)
-    : mService(0)
-  {
-    *rv = nsComponentManager::ProgIDToCLSID(aProgID, &mCID);
-    if (NS_FAILED(*rv)) return;
-  
-    nsIServiceManager* servMgr;
-    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
-    if (NS_SUCCEEDED(*rv)) {
-      *rv = servMgr->GetService(mCID, aIID, &mService);
-      NS_RELEASE(servMgr);
-    }
-  }
-
-  nsService(const nsCID& aClass, const nsIID& aIID, nsresult *rv)
-    : mCID(aClass), mService(0) {
-    *rv = nsServiceManager::GetService(aClass, aIID,
-                                       (nsISupports**)&mService);
-  }
-
-  nsService(const char* aProgID, const nsIID& aIID, nsresult *rv)
-    : mService(0)
-  {
-    *rv = nsComponentManager::ProgIDToCLSID(aProgID, &mCID);
-    if (NS_FAILED(*rv)) return;
-
-    *rv = nsServiceManager::GetService(mCID, aIID,
-                                       (nsISupports**)&mService);
-  }
-
-  ~nsService() {
-    if (mService) {       // mService could be null if the constructor fails
-      nsresult rv = NS_OK;
-      rv = nsServiceManager::ReleaseService(mCID, mService);
-    }
-  }
-
-  nsISupports* operator->() const {
-    NS_PRECONDITION(mService != 0, "Your code should test the error result from the constructor.");
-    return mService;
-  }
-
-  PRBool operator==(const nsISupports* other) {
-    return mService == other;
-  }
-
-  operator nsISupports*() const {
-    return mService;
-  }
-
-};
-
+    
 ////////////////////////////////////////////////////////////////////////////////
 // NS_NewServiceManager: For when you want to create a service manager
 // in a given context.
@@ -407,6 +333,5 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
 // Observing xpcom shutdown
 
 #define NS_XPCOM_SHUTDOWN_OBSERVER_ID "xpcom-shutdown"
-
 
 #endif /* nsIServiceManager_h___ */
