@@ -81,34 +81,20 @@
                   flex="1">
         <!-- note that these values are different than what NSS uses, which
              are (0, -1, 1) respectively -->
-        <grid>
-          <rows>
-            <box>
-              <radio value="0" label="" style="margin: 0px; max-width: 2em;"
-                     id="askFirstTime" group="passwordAskTimes"
-                     oncommand="changePasswordSettings();"/>
-              <text value="&managepassword.askfirsttime;" style="margin: 4px;"/>
-            </box>
-            <box>
-              <radio value="1" label="" style="margin: 0px; max-width: 2em;"
-                     id="askEveryTime" group="passwordAskTimes"
-                     oncommand="changePasswordSettings();"/>
-              <text value="&managepassword.askeverytime;" style="margin: 4px;"/>
-            </box>
-            <box>
-              <radio value="2" label="" style="margin: 0px; max-width: 2em;"
-                     id="askTimeout" group="passwordAskTimes"
-                     oncommand="changePasswordSettings();"/>
-              <text value="&managepassword.asktimeout;" style="margin: 4px;"/>
-              <textbox id="passwordTimeout" size="4"
-                       pref="true" preftype="int"
-                       prefstring="security.password_lifetime"
-                       prefattribute="value"
-                       oninput="changePasswordSettings();"/>
-              <text value="&managepassword.timeout.unit;" style="margin: 4px;"/>
-            </box>
-          </rows>
-        </grid>
+        <radio value="0" label="&managepassword.askfirsttime;" id="askFirstTime" group="passwordAskTimes" 
+               style="margin: 0px;" oncommand="changePasswordSettings();"/>
+        <radio value="1" label="&managepassword.askeverytime;" id="askEveryTime" group="passwordAskTimes"
+               style="margin: 0px;" oncommand="changePasswordSettings();"/>
+        <hbox align="center">
+          <radio value="2" label="&managepassword.asktimeout;" id="askTimeout" group="passwordAskTimes"
+                 style="margin: 0px;" oncommand="changePasswordSettings();"/>
+          <textbox id="passwordTimeout" size="4"
+                   pref="true" preftype="int"
+                   prefstring="security.password_lifetime"
+                   prefattribute="value"
+                   oninput="changePasswordSettings();"/>
+          <text value="&managepassword.timeout.unit;" style="margin: 4px;"/>
+        </hbox>
       </radiogroup>
     </hbox>
   </groupbox>
