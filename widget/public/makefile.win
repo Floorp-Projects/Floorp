@@ -21,16 +21,50 @@ IGNORE_MANIFEST=1
 DEFINES=-D_IMPL_NS_UI 
 MODULE=raptor 
 
-EXPORTS=nsui.h nsIWidget.h nsIButton.h nsICheckButton.h nsIListWidget.h \
-    nsIComboBox.h nsITextWidget.h nsITextAreaWidget.h nsIComboBox.h \
-    nsIListBox.h nsIFileWidget.h nsIScrollbar.h nsGUIEvent.h \
-    nsIRadioButton.h nsIMouseListener.h \
-    nsIEventListener.h nsIMenuListener.h nsIToolkit.h nsWidgetsCID.h nsITabWidget.h \
-    nsITooltipWidget.h nsIAppShell.h nsStringUtil.h nsILookAndFeel.h \
-    nsIDialog.h nsILabel.h nsWidgetSupport.h \
-    nsIMenuBar.h nsIMenu.h nsIMenuItem.h nsIImageButton.h \
-    nsIPopUpMenu.h nsIMenuButton.h nsIImageButtonListener.h \
-    nsIContentConnector.h nsISelectionMgr.h
+EXPORTS=nsui.h \
+  nsIClipboard.h \
+  nsIDragTarget.h \
+  nsIDragSource.h \
+  nsITextDataFlavor.h \
+  nsIDataFlavor.h \
+  nsITransferable.h \
+  nsIDragService.h \
+  nsIDraggedObject.h \
+  nsIWidget.h \
+  nsIButton.h \
+  nsICheckButton.h \
+  nsIListWidget.h \
+  nsIComboBox.h \
+  nsITextWidget.h \
+  nsITextAreaWidget.h \
+  nsIComboBox.h \
+  nsIListBox.h \
+  nsIFileWidget.h \
+  nsIScrollbar.h \
+  nsGUIEvent.h \
+  nsIRadioButton.h \
+  nsIMouseListener.h \
+  nsIEventListener.h \
+  nsIMenuListener.h \
+  nsIToolkit.h \
+  nsWidgetsCID.h \
+  nsITabWidget.h \
+  nsITooltipWidget.h \
+  nsIAppShell.h \
+  nsStringUtil.h \
+  nsILookAndFeel.h \
+  nsIDialog.h \
+  nsILabel.h \
+  nsWidgetSupport.h \
+  nsIMenuBar.h \
+  nsIMenu.h \
+  nsIMenuItem.h \
+  nsIImageButton.h \
+  nsIPopUpMenu.h \
+  nsIMenuButton.h \
+  nsIImageButtonListener.h \
+  nsIContentConnector.h \
+  nsISelectionMgr.h
 
 
 include <$(DEPTH)\config\rules.mak>

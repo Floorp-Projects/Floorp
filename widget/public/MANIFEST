@@ -2,6 +2,14 @@
 # This is a list of local files which get copied to the mozilla:dist:widget directory
 #
 
+nsIClipboard.h
+nsIDragTarget.h
+nsIDragSource.h
+nsITextDataFlavor.h
+nsIDataFlavor.h
+nsITransferable.h
+nsIDragService.h
+nsIDraggedObject.h
 nsui.h
 nsIWidget.h
 nsIButton.h

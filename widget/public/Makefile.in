@@ -25,6 +25,14 @@ include $(DEPTH)/config/autoconf.mk
 DEFINES += -D_IMPL_NS_UI
 
 EXPORTS =               \
+  nsIClipboard.h \
+  nsIDragTarget.h \
+  nsIDragSource.h \
+  nsITextDataFlavor.h \
+  nsIDataFlavor.h \
+  nsITransferable.h \
+  nsIDragService.h \
+  nsIDraggedObject.h \
 	nsIMenuBar.h		\
 	nsIMenu.h		\
 	nsIMenuItem.h		\
