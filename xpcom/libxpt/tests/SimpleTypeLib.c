@@ -83,7 +83,7 @@ main(int argc, char **argv)
 
     header_sz = XPT_SizeOfHeaderBlock(header);
 
-    id = XPT_NewInterfaceDescriptor(0xdead, 2, 0);
+    id = XPT_NewInterfaceDescriptor(0xdead, 2, 2);
     TRY("NewInterfaceDescriptor", id);
     
     ok = XPT_FillInterfaceDirectoryEntry(header->interface_directory, &iid,
@@ -108,6 +108,16 @@ main(int argc, char **argv)
     meth->params[0].flags = XPT_PD_IN;
     meth->params[1].type.prefix.flags = TD_BOOL;
     meth->params[1].flags = XPT_PD_IN;
+
+    /* const one = 1; */
+    id->const_descriptors[0].name = "one";
+    id->const_descriptors[0].type.prefix.flags = TD_UINT16;
+    id->const_descriptors[0].value.ui16 = 1;
+    
+    /* const squeamish = "ossifrage"; */
+    id->const_descriptors[1].name = "squeamish";
+    id->const_descriptors[1].type.prefix.flags = TD_PBSTR | XPT_TDP_POINTER;
+    id->const_descriptors[1].value.string = XPT_NewStringZ("ossifrage");
 
     /* serialize it */
     state = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
