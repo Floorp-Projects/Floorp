@@ -31,9 +31,8 @@
 #include "nsHTMLIIDs.h"
 #include "nsIPtr.h"
 #include "nsIView.h"
-// evil dep's to be removed ASAP
-#include "nsTablePart.h"
-#include "nsTableContent.h"
+// dependancy on content
+#include "nsHTMLTagContent.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -485,14 +484,6 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   // this setting overrides any specific border, margin or 
   // padding information in the cell. If these attributes
   // are not defined, the the cells attributes are used
-  
-  nsHTMLValue padding_value;
-  nsHTMLValue spacing_value;
-  nsHTMLValue border_value;
-
-  nsContentAttr padding_result;
-  nsContentAttr spacing_result;
-  nsContentAttr border_result;
 
   nscoord   padding = 0;
   nscoord   spacing = 0;
@@ -500,54 +491,41 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
 
   float     p2t = aPresContext->GetPixelsToTwips();
 
-  nsTablePart*  table = ((nsTableContent*)mContent)->GetTable();
-
-  NS_ASSERTION(table,"Table Must not be null");
-  if (!table)
+  nsTableFrame*  tableFrame = GetTableFrame();
+  tableFrame->GetGeometricParent((nsIFrame *&)tableFrame); // get the outer frame
+  NS_ASSERTION(tableFrame,"Table Must not be null");
+  if (!tableFrame)
     return;
 
-  padding_result = table->GetAttribute(nsHTMLAtoms::cellpadding,padding_value);
-  spacing_result = table->GetAttribute(nsHTMLAtoms::cellspacing,spacing_value);
-  border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
-
+  // get the table frame style context, and from it get cellpadding, cellspacing, and border info
+  nsIStyleContextPtr tableSC;
+  tableFrame->GetStyleContext(aPresContext, tableSC.AssignRef());
+  nsStyleTable* tableStyle = (nsStyleTable*)tableSC->GetStyleData(eStyleStruct_Table);
+  nsStyleSpacing* tableSpacingStyle = (nsStyleSpacing*)tableSC->GetStyleData(eStyleStruct_Spacing);
   nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
 
   // check to see if cellpadding or cellspacing is defined
-  if (spacing_result == eContentAttr_HasValue || padding_result == eContentAttr_HasValue)
+  if (tableStyle->mCellPadding.GetUnit() != eStyleUnit_Null || 
+      tableStyle->mCellSpacing.GetUnit() != eStyleUnit_Null)
   {
-  
-    PRInt32 value;
-    nsStyleCoord  padding(0);
-    nsStyleCoord  spacing(0);
-
-    if (padding_result == eContentAttr_HasValue && ConvertToPixelValue(padding_value,0,value))
-      padding.SetCoordValue((nscoord)(p2t*(float)value)); 
-    
-    if (spacing_result == eContentAttr_HasValue && ConvertToPixelValue(spacing_value,0,value))
-      spacing.SetCoordValue((nscoord)(p2t*(float)value)); 
-
-    spacingData->mMargin.SetTop(spacing);
-    spacingData->mMargin.SetLeft(spacing);
-    spacingData->mMargin.SetBottom(spacing);
-    spacingData->mMargin.SetRight(spacing);
-    spacingData->mPadding.SetTop(padding);
-    spacingData->mPadding.SetLeft(padding);
-    spacingData->mPadding.SetBottom(padding);
-    spacingData->mPadding.SetRight(padding); 
-
+    spacingData->mMargin.SetTop(tableStyle->mCellSpacing);
+    spacingData->mMargin.SetLeft(tableStyle->mCellSpacing);
+    spacingData->mMargin.SetBottom(tableStyle->mCellSpacing);
+    spacingData->mMargin.SetRight(tableStyle->mCellSpacing);
+    spacingData->mPadding.SetTop(tableStyle->mCellPadding);
+    spacingData->mPadding.SetLeft(tableStyle->mCellPadding);
+    spacingData->mPadding.SetBottom(tableStyle->mCellPadding);
+    spacingData->mPadding.SetRight(tableStyle->mCellPadding); 
   }
-  if (border_result == eContentAttr_HasValue)
+
+  // get border information from the table
+  if (tableSpacingStyle->mBorder.GetTopUnit() != eStyleUnit_Null)
   {
-    PRInt32 intValue = 0;
-
-    if (ConvertToPixelValue(border_value,1,intValue))
-    {    
-      if (intValue > 0)
-        intValue = 1;
-      border = nscoord(p2t*(float)intValue); 
-    }
+    nsStyleCoord borderSize;
+    tableSpacingStyle->mBorder.GetTop(borderSize);
+    border = borderSize.GetCoordValue();
   }
-  MapHTMLBorderStyle(aPresContext, *spacingData,border);
+  MapHTMLBorderStyle(aPresContext, *spacingData, border);
 }
 
 void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
@@ -561,7 +539,6 @@ void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
     text->mTextAlign = value.GetIntValue();
   }
 }
-
 
 
 // Subclass hook for style post processing

@@ -1125,7 +1125,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
 
-  float p2t;
+  float p2t = aPresContext->GetPixelsToTwips();
   nsHTMLValue value;
 
   // width
@@ -1139,7 +1139,6 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
       break;
 
     case eHTMLUnit_Pixel:
-      p2t = aPresContext->GetPixelsToTwips();
       position->mWidth.SetCoordValue(nscoord(p2t * (float)value.GetPixelValue()));
       break;
     }
@@ -1163,6 +1162,23 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
       break;
     }
   }
+
+  // cellpadding
+  nsStyleTable* tableStyle=nsnull;
+  GetAttribute(nsHTMLAtoms::cellpadding, value);
+  if (value.GetUnit() != eHTMLUnit_Null) {
+    tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+    tableStyle->mCellPadding.SetCoordValue(p2t*(float)(value.GetPixelValue()));
+  }
+
+  // cellspacing  (reuses tableStyle if already resolved)
+  GetAttribute(nsHTMLAtoms::cellspacing, value);
+  if (value.GetUnit() != eHTMLUnit_Null) {
+    if (nsnull==tableStyle)
+      tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+    tableStyle->mCellSpacing.SetCoordValue(p2t*(float)(value.GetPixelValue()));
+  }
+
 }
 
 void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
