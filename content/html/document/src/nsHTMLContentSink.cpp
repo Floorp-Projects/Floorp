@@ -3494,7 +3494,7 @@ HTMLContentSink::StartLayout()
 
     rv = mDocumentURI->GetSpec(getter_Copies(ref));
 
-    nsLiteralCString refstr(ref);
+    nsDependentCString refstr(ref);
 
     nsReadingIterator<char> start, end;
 
