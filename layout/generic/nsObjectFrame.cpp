@@ -651,8 +651,8 @@ FirePluginNotFoundEvent(nsIContent *aTarget)
       rv = event->InitEvent(NS_LITERAL_STRING("PluginNotFound"), PR_TRUE,
                             PR_TRUE);
       if (NS_SUCCEEDED(rv)) {
-        PRBool unused;
-        target->DispatchEvent(event, &unused);
+        PRBool defaultActionEnabled;
+        target->DispatchEvent(event, &defaultActionEnabled);
       }
     }
   }

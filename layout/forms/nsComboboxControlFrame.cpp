@@ -2406,8 +2406,9 @@ void nsComboboxControlFrame::FireValueChangeEvent()
   if (manager &&
       NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(NS_LITERAL_STRING("ValueChange"), PR_TRUE, PR_TRUE);
-    PRBool noDefault;
-    presContext->EventStateManager()->DispatchNewEvent(mContent, event, &noDefault);
+    PRBool defaultActionEnabled;
+    presContext->EventStateManager()->DispatchNewEvent(mContent, event,
+                                                       &defaultActionEnabled);
   }
 }
 

@@ -2095,10 +2095,7 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
   nsCOMPtr<nsIDOMDocumentEvent> doc(do_QueryInterface(mDocument));
   nsCOMPtr<nsIDOMEvent> event;
 
-  // Doesn't this seem backwards? Seems like
-  // nsEventStateManager::DispatchNewEvent() screws up on the
-  // logic for its prevent default argument...
-  PRBool preventDefault = PR_TRUE;
+  PRBool defaultActionEnabled = PR_TRUE;
 
   if (doc) {
     doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
@@ -2109,11 +2106,11 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
 
       privateEvent->SetTrusted(PR_TRUE);
 
-      DispatchEvent(event, &preventDefault);
+      DispatchEvent(event, &defaultActionEnabled);
     }
   }
 
-  return preventDefault;
+  return defaultActionEnabled;
 }
 
 static already_AddRefed<nsIDocShellTreeItem>
@@ -3062,9 +3059,9 @@ void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
       privateEvent->SetTrusted(PR_TRUE);
 
-      PRBool noDefault;
       nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aDoc));
-      targ->DispatchEvent(event, &noDefault);
+      PRBool defaultActionEnabled;
+      targ->DispatchEvent(event, &defaultActionEnabled);
     }
   }
 }
@@ -3082,9 +3079,9 @@ void FirePopupWindowEvent(nsIDOMDocument* aDoc)
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
       privateEvent->SetTrusted(PR_TRUE);
 
-      PRBool noDefault;
+      PRBool defaultActionEnabled;
       nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aDoc));
-      targ->DispatchEvent(event, &noDefault);
+      targ->DispatchEvent(event, &defaultActionEnabled);
     }
   }
 }
@@ -4096,8 +4093,8 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
   }
 
   // Retrieve the context
-  nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
-  return aPresContext->EventStateManager()->
+  nsCOMPtr<nsPresContext> presContext = shell->GetPresContext();
+  return presContext->EventStateManager()->
     DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject*, this),
                      aEvent, _retval);
 }
@@ -4197,8 +4194,8 @@ nsGlobalWindow::GetListenerManager(nsIEventListenerManager **aResult)
 NS_IMETHODIMP
 nsGlobalWindow::HandleEvent(nsIDOMEvent *aEvent)
 {
-  PRBool noDefault;
-  return DispatchEvent(aEvent, &noDefault);
+  PRBool defaultActionEnabled;
+  return DispatchEvent(aEvent, &defaultActionEnabled);
 }
 
 NS_IMETHODIMP

@@ -1640,58 +1640,70 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
 {
   *aDOMEvent = nsnull;
 
-  if (aEvent)
-  {
-    switch(aEvent->eventStructType)
-    {
-      case NS_MUTATION_EVENT:
-        return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMutationEvent*,aEvent));
-      case NS_GUI_EVENT:
-      case NS_COMPOSITION_EVENT:
-      case NS_RECONVERSION_EVENT:
-      case NS_QUERYCARETRECT_EVENT:
-        return NS_NewDOMUIEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsGUIEvent*,aEvent));
-      case NS_KEY_EVENT:
-        return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsKeyEvent*,aEvent));
-      case NS_MOUSE_EVENT:
-      case NS_MOUSE_SCROLL_EVENT:
-        return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsInputEvent*,aEvent));
-      case NS_POPUP_EVENT:
-        return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsPopupBlockedEvent*,aEvent));
-      case NS_TEXT_EVENT:
-        return NS_NewDOMTextEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsTextEvent*,aEvent));
-      default:
-        return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+  if (aEvent) {
+    switch(aEvent->eventStructType) {
+    case NS_MUTATION_EVENT:
+      return NS_NewDOMMutationEvent(aDOMEvent, aPresContext,
+                                    NS_STATIC_CAST(nsMutationEvent*,aEvent));
+    case NS_GUI_EVENT:
+    case NS_COMPOSITION_EVENT:
+    case NS_RECONVERSION_EVENT:
+    case NS_QUERYCARETRECT_EVENT:
+      return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
+                              NS_STATIC_CAST(nsGUIEvent*,aEvent));
+    case NS_KEY_EVENT:
+      return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext,
+                                    NS_STATIC_CAST(nsKeyEvent*,aEvent));
+    case NS_MOUSE_EVENT:
+    case NS_MOUSE_SCROLL_EVENT:
+      return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
+                                 NS_STATIC_CAST(nsInputEvent*,aEvent));
+    case NS_POPUP_EVENT:
+      return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext,
+                                        NS_STATIC_CAST(nsPopupBlockedEvent*,
+                                                       aEvent));
+    case NS_TEXT_EVENT:
+      return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
+                                NS_STATIC_CAST(nsTextEvent*,aEvent));
     }
+
+    // For all other types of events, create a vanilla event object.
+    return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
   }
-  else
-  {
-    nsAutoString str(aEventType);
-    if (str.EqualsIgnoreCase("MouseEvent") ||
-        str.EqualsIgnoreCase("MouseEvents") ||
-        str.EqualsIgnoreCase("MouseScrollEvents"))
-       return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMouseEvent*,aEvent));
-    if (str.EqualsIgnoreCase("KeyboardEvent") ||
-        str.EqualsIgnoreCase("KeyEvents"))
-       return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsKeyEvent*,aEvent));
-    if (str.EqualsIgnoreCase("MutationEvent") ||
-        str.EqualsIgnoreCase("MutationEvents"))
-       return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMutationEvent*,aEvent));
-    if (str.EqualsIgnoreCase("TextEvent") ||
-        str.EqualsIgnoreCase("TextEvents"))
-       return NS_NewDOMTextEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsTextEvent*,aEvent));
-    if (str.EqualsIgnoreCase("PopupBlockedEvents"))
-       return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsPopupBlockedEvent*,aEvent));
-    if (str.EqualsIgnoreCase("UIEvent") ||
-        str.EqualsIgnoreCase("UIEvents"))
-       return NS_NewDOMUIEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsGUIEvent*,aEvent));
-    if (str.EqualsIgnoreCase("Event") ||
-        str.EqualsIgnoreCase("Events") ||
-        str.EqualsIgnoreCase("HTMLEvents"))
-       return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
-    
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
+
+  // And if we didn't get an event, check the type argument.
+
+  if (aEventType.LowerCaseEqualsLiteral("mouseevent") ||
+      aEventType.LowerCaseEqualsLiteral("mouseevents") ||
+      aEventType.LowerCaseEqualsLiteral("mousescrollevents"))
+    return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
+                               NS_STATIC_CAST(nsMouseEvent*,aEvent));
+  if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
+      aEventType.LowerCaseEqualsLiteral("keyevents"))
+    return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext,
+                                  NS_STATIC_CAST(nsKeyEvent*,aEvent));
+  if (aEventType.LowerCaseEqualsLiteral("mutationevent") ||
+        aEventType.LowerCaseEqualsLiteral("mutationevents"))
+    return NS_NewDOMMutationEvent(aDOMEvent, aPresContext,
+                                  NS_STATIC_CAST(nsMutationEvent*,aEvent));
+  if (aEventType.LowerCaseEqualsLiteral("textevent") ||
+      aEventType.LowerCaseEqualsLiteral("textevents"))
+    return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
+                              NS_STATIC_CAST(nsTextEvent*,aEvent));
+  if (aEventType.LowerCaseEqualsLiteral("popupblockedevents"))
+    return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext,
+                                      NS_STATIC_CAST(nsPopupBlockedEvent*,
+                                                     aEvent));
+  if (aEventType.LowerCaseEqualsLiteral("uievent") ||
+      aEventType.LowerCaseEqualsLiteral("uievents"))
+    return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
+                            NS_STATIC_CAST(nsGUIEvent*,aEvent));
+  if (aEventType.LowerCaseEqualsLiteral("event") ||
+      aEventType.LowerCaseEqualsLiteral("events") ||
+      aEventType.LowerCaseEqualsLiteral("htmlevents"))
+    return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 /**
@@ -1993,8 +2005,8 @@ nsEventListenerManager::GetListenerManager(nsIEventListenerManager** aInstancePt
 NS_IMETHODIMP 
 nsEventListenerManager::HandleEvent(nsIDOMEvent *aEvent)
 {
-  PRBool noDefault;
-  return DispatchEvent(aEvent, &noDefault);
+  PRBool defaultActionEnabled;
+  return DispatchEvent(aEvent, &defaultActionEnabled);
 }
 
 NS_IMETHODIMP

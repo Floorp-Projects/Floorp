@@ -726,8 +726,8 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(target);
 
-  PRBool cancelled;
-  return target->DispatchEvent(event, &cancelled);
+  PRBool defaultActionEnabled;
+  return target->DispatchEvent(event, &defaultActionEnabled);
 }
 
 /* static */ PRBool

@@ -971,14 +971,17 @@ nsIPrincipal*
 nsDocument::GetPrincipal()
 {
   if (!mPrincipal) {
-    nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> securityManager =
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
+    nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
+
+    if (!securityManager) {
       return nsnull;
+    }
+
     NS_WARN_IF_FALSE(mDocumentURI, "no URI!");
-    rv = securityManager->GetCodebasePrincipal(mDocumentURI,
-                                               getter_AddRefs(mPrincipal));
+    nsresult rv =
+      securityManager->GetCodebasePrincipal(mDocumentURI,
+                                            getter_AddRefs(mPrincipal));
 
     if (NS_FAILED(rv)) {
       return nsnull;
@@ -1914,8 +1917,8 @@ nsDocument::EndLoad()
 
   if (event) {
     event->InitEvent(NS_LITERAL_STRING("DOMContentLoaded"), PR_TRUE, PR_TRUE);
-    PRBool noDefault;
-    DispatchEvent(event, &noDefault);
+    PRBool defaultActionEnabled;
+    DispatchEvent(event, &defaultActionEnabled);
   }
 
   // If this document is a [i]frame, fire a DOMFrameContentLoaded
@@ -2838,8 +2841,8 @@ nsDocument::SetTitle(const nsAString& aTitle)
   CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   if (event) {
     event->InitEvent(NS_LITERAL_STRING("DOMTitleChanged"), PR_TRUE, PR_TRUE);
-    PRBool noDefault;
-    DispatchEvent(event, &noDefault);
+    PRBool defaultActionEnabled;
+    DispatchEvent(event, &defaultActionEnabled);
   }
 
   return NS_OK;
@@ -3754,9 +3757,8 @@ nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
 nsresult
 nsDocument::HandleEvent(nsIDOMEvent *aEvent)
 {
-  PRBool noDefault;
-
-  return DispatchEvent(aEvent, &noDefault);
+  PRBool defaultActionEnabled;
+  return DispatchEvent(aEvent, &defaultActionEnabled);
 }
 
 NS_IMETHODIMP
@@ -3894,10 +3896,6 @@ NS_IMETHODIMP
 nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
   // Obtain a presentation context
-  PRInt32 count = GetNumberOfShells();
-  if (count == 0)
-    return NS_OK;
-
   nsIPresShell *shell = GetShellAt(0);
   if (!shell)
     return NS_ERROR_FAILURE;

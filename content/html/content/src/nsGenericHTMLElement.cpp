@@ -1399,8 +1399,8 @@ nsGenericHTMLElement::DispatchEvent(nsPresContext* aPresContext,
   }
 
   if (aFullDispatch) {
-    return shell->HandleEventWithTarget(aEvent, nsnull, aTarget, NS_EVENT_FLAG_INIT,
-                                        aStatus);
+    return shell->HandleEventWithTarget(aEvent, nsnull, aTarget,
+                                        NS_EVENT_FLAG_INIT, aStatus);
   }
 
   return shell->HandleDOMEventWithTarget(aTarget, aEvent, aStatus);

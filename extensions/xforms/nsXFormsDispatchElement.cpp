@@ -109,8 +109,8 @@ nsXFormsDispatchElement::HandleAction(nsIDOMEvent* aEvent,
   event->InitEvent(name, bubbles, cancelable);
   nsCOMPtr<nsIDOMEventTarget> targetEl = do_QueryInterface(el);
   if (targetEl) {
-    PRBool cancelled;
-    targetEl->DispatchEvent(event, &cancelled);
+    PRBool defaultActionEnabled;
+    targetEl->DispatchEvent(event, &defaultActionEnabled);
   }
   return NS_OK;
 }
