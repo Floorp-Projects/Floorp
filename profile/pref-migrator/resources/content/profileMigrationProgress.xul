@@ -2,50 +2,51 @@
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/profileMigrationProgress.dtd" >
 
+ <window
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+	align="vertical"
+	onload="onLoad()"
+	class="dialog"> 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&window.title;"
-		onload="onLoad()">
-		 
-<html:script language="javascript" src="chrome://profile/content/profileMigrationProgress.js"/>
-  
-    <box align="vertical" style="height: 30%; width: 50%">
-
-        <box align="horizontal">
-          <box align="horizontal" flex="100%" >
-            <html:div> <html:h3> &dialogTitle.label; </html:h3> </html:div>
-          </box>
-          <spring flex="100%"/>
-	<html:img src="chrome://navigator/skin/animthrob_single.gif"/>
-        </box>
-
-        <box align="vertical">
-          <html:div style="height:10px; width:100%"><html:hr/></html:div>
-        </box>
-
-        <box align="horizontal">
-          <spring style="width:10px"/>  
-          <html:div> <html:h5> &currentlyProcessing.text; </html:h5> </html:div>
-        </box>
-
-        <spring style="height:10px"/>  
-
-        <box align="horizontal">  
-          <spring style="width:10px"/>  
-          <html:div> &downloadBeforeUpdate.text; </html:div>
-        </box>
-
-        <spring style="height:20px"></spring>
-        <box align="horizontal">
-          <spring style="width:10px"/>
-          <box align="vertical">
-            <spring style="height:6px"/>
-            <progressmeter id="dialog.progress" mode="undetermined" style="width:200px;height:10px"/>
-          </box>
-       </box>
+<html:script language="javascript" src="chrome://profile/content/profileMigrationProgress.js"/> 
+    
+    <box align="horizontal" flex="100%" style="width: 36em;">
+		<html:div style="width: 40px; margin: 5px;">
+			<html:img id="info.icon" src="chrome://global/skin/message-icon.gif" width="32" height="32" border="0"/>
+		</html:div>
 
 
-    </box>
+		<keyset id="keyset"/>
 
+		<box align="vertical" flex="100%">
+				<html:div id="info.header">
+					&dialogTitle.label;
+				</html:div>
+				
+				<spring style="height: 1em;"/>
+				
+				<html:div id="info.txt" flex="100%">
+					&currentlyProcessing.text;
+				</html:div>
+				<html:div id="info.txt" flex="100%">
+					&downloadBeforeUpdate.text;
+				</html:div>
+				
+				<spring style="height: 1em;"/>
+				
+				<box id="pm-box" align="horizontal">
+					<progressmeter id="dialog.progress" mode="undetermined" flex="100%"/>
+					<spring style="width: 2em;"/>
+				</box>
+	
+				<html:div id="info.txt" flex="100%">
+							Profile Migration xx% complete
+ 				</html:div>
+					
+				<spring style="height: 1em;"/>
+		</box>
+	</box>
+
+	
 </window>

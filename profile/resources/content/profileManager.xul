@@ -30,63 +30,47 @@
 	class="dialog"
 	title="&windowtitle.label;"
 	onload="loadElements();"
-	width="500" height="500"> 
+	align="vertical"> 
+   <!--don't add overall window margins here, this will be added later via class=dialog mechanism
+   once window padding works!-->
       
 <html:script language="javascript" src="profileManager.js"/>
 	    
-<html:div flex="100%" style="width: 100%; height: 100%;">
-<html:div style="width: 300px; margin: 5px;">&intro;</html:div>
-<html:div>&intro.new;</html:div> 
-<html:div>&intro.delete;</html:div> 
-<html:div>&intro.rename;</html:div>
-<html:br></html:br>
-<html:br></html:br>
-<box align="horizontal" style="width: 75%; height: 70%;">
-	<tree id="tree" flex="100%" style="background-color: white; width: 75%; height: 70%; margin: 2px;" 
-		onclick="return showSelection(event.target.parentNode);">
-	  <treecol style="width: 25%"/>
-	  <treecol style="width: 50%"/>
+						<html:div id="dialoginfo">&intro;</html:div>
+						<spring style="height: 1em;"/>
+						<html:div>&intro.new;</html:div> 
+						<html:div>&intro.delete;</html:div> 
+						<html:div>&intro.rename;</html:div>
+						<spring style="height: 1em;"/>
+<box id="table-box" align="horizontal">
+	<html:div id="table-housing" flex="100%">
+		<tree id="tree" onclick="return showSelection(event.target.parentNode);">
+ 	  		<treecol style="width: 25%"/>
+  	  		<treecol style="width: 50%"/>
 
-	  <treehead>
-		<treerow>
-			<treecell style="background-color: #CCCCCC; border-right: 1px solid white;padding: 2px;">&migration.label;</treecell>
-			<treecell style="background-color: #CCCCCC; border-right: 1px solid white;padding: 2px;">&user.label;</treecell>
-		</treerow>
-	  </treehead>
+ 	 		<treehead>
+				<treerow>
+					<treecell>&migration.label;</treecell>
+					<treecell>&user.label;</treecell>
+				</treerow>
+	  		</treehead>
 
-	  <treechildren id="theTreeBody" style="background-color: white; border: 1px inset white;">
-	  </treechildren>
+	  		<treechildren id="theTreeBody">
+	  		</treechildren>
 	</tree>
-		
-	<box align="horizontal">	
-		<box align="vertical">	
-			<titledbutton class="dialog push" value="&newCmd.label;"  onclick="openCreateProfile();" />
-			<titledbutton class="dialog push" id="rename" disabled="true" value="&renameCmd.label;"  onclick="openRename();" />
-			<titledbutton class="dialog push" id="delete" disabled="true" value="&deleteCmd.label;"  onclick="ConfirmDelete();" />
-		</box>
-		<!--<html:br></html:br>-->
+	</html:div>	
 	
-		<box align="vertical" flex="100%">
-			<!-- A workaorund to add some vertical space before the Start/Exit buttons are displayed-->
-			<box align="vertical" flex="100%">
-				<html:p></html:p>
-				<html:p></html:p>
-				<html:p></html:p>
-				<html:p></html:p>
-				<html:p></html:p>
-				<html:p></html:p>
-				<html:p></html:p>
-				<html:p></html:p>
-				<html:br></html:br>
-			</box>
-			<box align="horizontal">
+		<box align="vertical" id="buttons-box">	
+				<titledbutton class="dialog push" value="&newCmd.label;"  onclick="openCreateProfile();" />
+				<titledbutton class="dialog push" id="rename" disabled="true" value="&renameCmd.label;"  onclick="openRename();" />
+				<titledbutton class="dialog push" id="delete" disabled="true" value="&deleteCmd.label;"  onclick="ConfirmDelete();" />
+				<spring style="height: 1em;"/>
 				<titledbutton class="dialog push" id="start" disabled="true" value="&startCmd.label;"  onclick="onStart();" />
 				<titledbutton class="dialog push" value="&exitCmd.label;"  onclick="onExit();" />
-			</box>
 		</box>
-	</box>
+	
+
 </box>
 
-</html:div>
 
 </window>
