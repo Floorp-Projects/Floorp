@@ -603,7 +603,9 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
+#ifdef DEBUG_pavlov
   g_print("nsWindow::Show(%i)   %p\n", bState, this);
+#endif
 
   if (!mWidget)
     return NS_OK; // Will be null durring printing
@@ -612,26 +614,47 @@ NS_METHOD nsWindow::Show(PRBool bState)
   if (bState)
   {
     ::gtk_widget_show(mWidget);
+
+#ifdef DEBUG_pavlov
     g_print("  showing mWidget\n");
+#endif
 
     if (mIsToplevel && mShell)
     {
       ::gtk_widget_show(mVBox);
+
+#ifdef DEBUG_pavlov
       g_print("  showing mVBox\n");
+#endif
+
       ::gtk_widget_show(mShell);
+
+#ifdef DEBUG_pavlov
       g_print("  showing mShell\n");
+#endif
     }
   }
   else
   {
     ::gtk_widget_hide(mWidget);
+
+#ifdef DEBUG_pavlov
     g_print("  hiding mWidget\n");
+#endif
+
     if (mIsToplevel && mShell)
     {
       ::gtk_widget_hide(mShell);
+
+#ifdef DEBUG_pavlov
       g_print("  hiding mShell\n");
+#endif
+
       ::gtk_widget_hide(mVBox);
+
+#ifdef DEBUG_pavlov
       g_print("  hiding mVBox\n");
+#endif
     }    
     // For some strange reason, gtk_widget_hide() does not seem to
     // unmap the window.
