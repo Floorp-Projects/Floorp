@@ -25,12 +25,17 @@
 #ifndef nsNNTPNewsgroupListState_h___
 #define nsNNTPNewsgroupListState_h___
 
+#include "nsIMsgNewsHost.h"
+#include "nsINNTPNewsgroupList.h"
+
+/* XXX - whenever this gets renamed... */
+#include "newsset.h"
 
 /* The below is all stuff that we remember for netlib about which
    articles we've already seen in the current newsgroup. */
 
 typedef struct MSG_NewsKnown {
-	MSG_NewsHost* host;
+	nsIMsgNewsHost* host;
 	char* group_name;
 	msg_NewsArtSet* set; /* Set of articles we've already gotten
 								  from the newsserver (if it's marked
@@ -42,23 +47,16 @@ typedef struct MSG_NewsKnown {
 								  marked read and we're only viewing
 								  unread messages. */
 
-	int32 first_possible;	/* The oldest article in this group. */
-	int32 last_possible;	/* The newest article in this group. */
+	PRInt32 first_possible;	/* The oldest article in this group. */
+	PRInt32 last_possible;	/* The newest article in this group. */
 
-	XP_Bool shouldGetOldest;
+	PRBool shouldGetOldest;
 } MSG_NewsKnown;
 
-extern NS_COM nsresult
-NS_NewMsgXOVERParser(nsIMsgXOVERParser **aInstancePtrResult,
-                     nsIMsgNewsHost *newsHost,
-                     PRInt32 m_firstArticle,
-                     PRInt32 m_lastArticle,
-                     PRInt32 m_firstPossibleArticle,
-                     PRInt32 m_lastPossibleArticle);
 
 extern NS_COM nsresult
-NS_NewMsgNewsArticleList(nsIMsgNewsArticleList **aInstancePtrResult,
-                         nsIMsgNewsHost *newsHost,
-                         nsIMsgNewsgroup *newsgroup);
+NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
+                    nsIMsgNewsHost *newsHost,
+                    nsIMsgNewsgroup *newsgroup);
     
 #endif

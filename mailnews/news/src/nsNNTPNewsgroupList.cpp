@@ -66,80 +66,81 @@ extern "C"
 // related messages get passed to this object.
 class nsNNTPNewsgroupList : public nsIMsgNewsArticleList
 #ifdef HAVE_CHANGELISTENER
-    ,public ChangeListener
+/* ,public ChangeListener */
 #endif
 {
 public:
   nsNNTPNewsgroupList();
-  ~nsNNTPNewsgroupList();
-    // nsIMsgNewsArticleList
-	NS_IMETHOD GetRangeOfArtsToDownload(MSG_NewsHost* host,
-							 const char* group_name,
-							 int32 first_possible,
-							 int32 last_possible,
-							 int32 maxextra,
-							 int32* first,
-							 int32* lastprotected);
-	NS_IMETHOD AddToKnownArticles(MSG_NewsHost* host,
-                                  const char* group_name,
-                                  int32 first, int32 last);
+    ~nsNNTPNewsgroupList();
 
-    // nsIMsgXOVERParser
-    NS_IMETHOD InitXOVER(MSG_NewsHost* host,
-                         const char *group_name,
-                         uint32 first_msg, uint32 last_msg,
-                         uint32 oldest_msg, uint32 youngest_msg);
+  NS_DECL_ISUPPORTS
+  
+  // nsIMsgNewsArticleList
+  NS_IMETHOD GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
+                                      const char* group_name,
+                                      PRInt32 first_possible,
+                                      PRInt32 last_possible,
+                                      PRInt32 maxextra,
+                                      PRInt32* first,
+                                      PRInt32* lastprotected);
+  NS_IMETHOD AddToKnownArticles(nsIMsgNewsHost* host,
+                                const char* group_name,
+                                PRInt32 first, PRInt32 last);
+
+  // XOVER parser to populate this class
+  NS_IMETHOD InitXOVER(PRUint32 first_msg, PRUint32 last_msg);
   NS_IMETHOD ProcessXOVER(char *line);
   NS_IMETHOD ResetXOVER();
   NS_IMETHOD ProcessNonXOVER(char *line);
   NS_IMETHOD FinishXOVER(int status);
-    
-	MSG_Master		*GetMaster() {return m_master;}
-	void			SetMaster(MSG_Master *master) {m_master = master;}
+  
+  MSG_Master		*GetMaster() {return m_master;}
+  void			SetMaster(MSG_Master *master) {m_master = master;}
 #ifdef HAVE_DBVIEW
-	void			SetView(MessageDBView *view);
+  void			SetView(MessageDBView *view);
 #endif
 #ifdef HAVE_PANES
-	void			SetPane(MSG_Pane *pane) {m_pane = pane;}
+  void			SetPane(MSG_Pane *pane) {m_pane = pane;}
 #endif
-    PRBool          m_finishingXover;
-	MSG_NewsHost*	GetHost() {return m_host;}
-	const char *	GetGroupName() {return m_groupName;}
-	const char *	GetURL() {return m_url;}
+  PRBool          m_finishingXover;
+  nsIMsgNewsHost*	GetHost() {return m_host;}
+  const char *	GetGroupName() {return m_groupName;}
+  const char *	GetURL() {return m_url;}
+  
 #ifdef HAVE_CHANGELISTENER
-	virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
+  virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
 #endif
-	void			SetGetOldMessages(XP_Bool getOldMessages) {m_getOldMessages = getOldMessages;}
-	XP_Bool			GetGetOldMessages() {return m_getOldMessages;}
-
+  void			SetGetOldMessages(XP_Bool getOldMessages) {m_getOldMessages = getOldMessages;}
+  XP_Bool			GetGetOldMessages() {return m_getOldMessages;}
+  
 protected:
 #ifdef HAVE_NEWSDB
-	NewsGroupDB		*m_newsDB;
+  NewsGroupDB		*m_newsDB;
 #endif
 #ifdef HAVE_DBVIEW
-	MessageDBView	*m_msgDBView;		// open view on current download, if any
+  MessageDBView	*m_msgDBView;		// open view on current download, if any
 #endif
 #ifdef HAVE_PANES
-	MSG_Pane		*m_pane;
+  MSG_Pane		*m_pane;
 #endif
-	XP_Bool			m_startedUpdate;
-	XP_Bool			m_getOldMessages;
-	XP_Bool			m_promptedAlready;
-	XP_Bool			m_downloadAll;
-	int32			m_maxArticles;
-	char			*m_groupName;
-	MSG_NewsHost	*m_host;
-	char			*m_url;			// url we're retrieving
-	MSG_Master		*m_master;
-
-	MessageKey		m_lastProcessedNumber;
-	MessageKey		m_firstMsgNumber;
-	MessageKey		m_lastMsgNumber;
-	int32			m_firstMsgToDownload;
-	int32			m_lastMsgToDownload;
-
-	struct MSG_NewsKnown	m_knownArts;
-	msg_NewsArtSet	*m_set;
+  XP_Bool			m_startedUpdate;
+  XP_Bool			m_getOldMessages;
+  XP_Bool			m_promptedAlready;
+  XP_Bool			m_downloadAll;
+  PRInt32			m_maxArticles;
+  char			*m_groupName;
+  nsIMsgNewsHost	*m_host;
+  char			*m_url;			// url we're retrieving
+  MSG_Master		*m_master;
+  
+  MessageKey		m_lastProcessedNumber;
+  MessageKey		m_firstMsgNumber;
+  MessageKey		m_lastMsgNumber;
+  PRInt32			m_firstMsgToDownload;
+  PRInt32			m_lastMsgToDownload;
+  
+  struct MSG_NewsKnown	m_knownArts;
+  msg_NewsArtSet	*m_set;
 };
 
 
@@ -153,12 +154,9 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
 }
 
-NS_IMPL_ADDREF(nsNNTPNewsgroupList);
-NS_IMPL_RELEASE(nsNNTPNewsgroupList);
-NS_IMPL_QUERYINTERFACE(nsNNTPNewsgroupList);
-
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, NS_INNTPNEWSGROUPLIST_IID);
                   
-nsNNTPNewsgroupList::InitnsNNTPNewsgroupList(const char *url, const char *groupName, MSG_Pane *pane);
+nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName, MSG_Pane *pane);
 {
 #ifdef HAVE_NEWSDB
 	m_newsDB = NULL;
@@ -166,21 +164,21 @@ nsNNTPNewsgroupList::InitnsNNTPNewsgroupList(const char *url, const char *groupN
 #ifdef HAVE_DBVIEW
 	m_msgDBView = NULL;
 #endif
-	m_groupName = XP_STRDUP(groupName);
+	m_groupName = PL_strdup(groupName);
 	m_host = NULL;
-	m_url = XP_STRDUP(url);
+	m_url = PL_strdup(url);
 	m_lastProcessedNumber = 0;
 	m_lastMsgNumber = 0;
 	m_set = NULL;
 #ifdef HAVE_PANES
-	XP_ASSERT(pane);
+	PR_ASSERT(pane);
 	m_pane = pane;
 	m_master = pane->GetMaster();
 #endif
     m_finishingXover = PR_FALSE;
 
 	m_startedUpdate = FALSE;
-	XP_MEMSET(&m_knownArts, 0, sizeof(m_knownArts));
+	memset(&m_knownArts, 0, sizeof(m_knownArts));
 	m_knownArts.group_name = m_groupName;
 	char* host_and_port = NET_ParseURL(url, GET_HOST_PART);
 	m_host = m_master->FindHost(host_and_port,
@@ -198,8 +196,8 @@ nsNNTPNewsgroupList::InitnsNNTPNewsgroupList(const char *url, const char *groupN
 
 nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
-	XP_FREE(m_url);
-	XP_FREE(m_groupName);
+	PR_Free(m_url);
+	PR_Free(m_groupName);
     
 #ifdef HAVE_DBVIEW
 	if (m_msgDBView != NULL)
@@ -236,19 +234,19 @@ void	nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
 }
 #endif
 
-int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(MSG_NewsHost* host,
+int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 							 const char* group_name,
-							 int32 first_possible,
-							 int32 last_possible,
-							 int32 maxextra,
-							 int32* first,
-							 int32* last)
+							 PRInt32 first_possible,
+							 PRInt32 last_possible,
+							 PRInt32 maxextra,
+							 PRInt32* first,
+							 PRInt32* last)
 {
 	int status = 0;
 	XP_Bool emptyGroup_p = FALSE;
 	MsgERR		err;
 
-	XP_ASSERT(first && last);
+	PR_ASSERT(first && last);
 	if (!first || !last) return -1;
 
 	*first = 0;
@@ -313,12 +311,12 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(MSG_NewsHost* host,
 
 	if (m_knownArts.host != host ||
 	  m_knownArts.group_name == NULL ||
-	  XP_STRCMP(m_knownArts.group_name, group_name) != 0 ||
+	  PL_strcmp(m_knownArts.group_name, group_name) != 0 ||
 	  !m_knownArts.set) 
 	{
 	/* We're displaying some other group.  Clear out that display, and set up
 	   everything to return the proper first chunk. */
-    		XP_ASSERT(FALSE);	// ### dmb todo - need nwo way of doing this
+    		PR_ASSERT(FALSE);	// ### dmb todo - need nwo way of doing this
 		if (emptyGroup_p)
 		  return 0;
 	}
@@ -390,7 +388,7 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(MSG_NewsHost* host,
 		}
 	}
 #ifdef DEBUG_bienvenu
-	XP_Trace("GetRangeOfArtsToDownload(first possible = %ld, last possible = %ld, first = %ld, last = %ld maxextra = %ld\n",
+	PR_LogPrint("GetRangeOfArtsToDownload(first possible = %ld, last possible = %ld, first = %ld, last = %ld maxextra = %ld\n",
 			first_possible, last_possible, *first, *last, maxextra);
 #endif
 	m_firstMsgToDownload = *first;
@@ -398,19 +396,19 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(MSG_NewsHost* host,
 	return 0;
 }
 
-int nsNNTPNewsgroupList::AddToKnownArticles(MSG_NewsHost* host,
+int nsNNTPNewsgroupList::AddToKnownArticles(nsIMsgNewsHost* host,
 					   const char* group_name,
-					   int32 first, int32 last)
+					   PRInt32 first, PRInt32 last)
 {
 	int		status;
 	if (m_knownArts.host != host ||
 	  m_knownArts.group_name == NULL ||
-	  XP_STRCMP(m_knownArts.group_name, group_name) != 0 ||
+	  PL_strcmp(m_knownArts.group_name, group_name) != 0 ||
 	  !m_knownArts.set) 
 	{
 		m_knownArts.host = host;
 		FREEIF(m_knownArts.group_name);
-		m_knownArts.group_name = XP_STRDUP(group_name);
+		m_knownArts.group_name = PL_strdup(group_name);
 		delete m_knownArts.set;
 		m_knownArts.set = msg_NewsArtSet::Create();
 
@@ -445,10 +443,7 @@ int nsNNTPNewsgroupList::AddToKnownArticles(MSG_NewsHost* host,
 nsIM
 
 nsresult
-nsNNTPNewsgroupList::InitXOVER(MSG_NewsHost* /*host*/,
-			const char * /*group_name*/,
-			uint32 first_msg, uint32 last_msg,
-			uint32 /*oldest_msg*/, uint32 /*youngest_msg*/)
+nsNNTPNewsgroupList::InitXOVER(PRUint32 first_msg, PRUint32 last_msg)
 {
     
 	int		status = 0;
@@ -459,7 +454,7 @@ nsNNTPNewsgroupList::InitXOVER(MSG_NewsHost* /*host*/,
 #endif
 	/* Consistency checks, not that I know what to do if it fails (it will
 	 probably handle it OK...) */
-	XP_ASSERT(first_msg <= last_msg);
+	PR_ASSERT(first_msg <= last_msg);
 
 	/* If any XOVER lines from the last time failed to come in, mark those
 	   messages as read. */
@@ -481,11 +476,11 @@ nsNNTPNewsgroupList::ProcessXOVER(char *line)
 {
 	int status = 0;
 	char *next;
-	uint32 message_number;
-	//  int32 lines;
+	PRUint32 message_number;
+	//  PRInt32 lines;
 	XP_Bool read_p = FALSE;
 
-	XP_ASSERT (line);
+	PR_ASSERT (line);
 	if (!line)
 		return -1;
 #ifdef HAVE_DBVIEW
@@ -515,7 +510,7 @@ nsNNTPNewsgroupList::ProcessXOVER(char *line)
 	next = line;
 
 
-	XP_ASSERT(message_number > m_lastProcessedNumber ||
+	PR_ASSERT(message_number > m_lastProcessedNumber ||
 			message_number == 1);
 	if (m_set && message_number > m_lastProcessedNumber + 1)
 	{
@@ -551,11 +546,11 @@ nsNNTPNewsgroupList::ProcessXOVER(char *line)
 	*/
 	if (m_lastMsgNumber > m_firstMsgNumber)
 	{
-		int32	totToDownload = m_lastMsgToDownload - m_firstMsgToDownload;
-		int32	lastIndex = m_lastProcessedNumber - m_firstMsgNumber + 1;
-		int32	numDownloaded = lastIndex;
-		int32	totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
-		int32 	percent = (totIndex) ? (int32)(100.0 * (double)numDownloaded / (double)totToDownload) : 0;
+		PRInt32	totToDownload = m_lastMsgToDownload - m_firstMsgToDownload;
+		PRInt32	lastIndex = m_lastProcessedNumber - m_firstMsgNumber + 1;
+		PRInt32	numDownloaded = lastIndex;
+		PRInt32	totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
+		PRInt32 	percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totToDownload) : 0;
 
 #ifdef HAVE_PANES
 		FE_SetProgressBarPercent (m_pane->GetContext(), percent);
@@ -569,7 +564,7 @@ nsNNTPNewsgroupList::ProcessXOVER(char *line)
 #ifdef HAVE_PANES
 			FE_Progress (m_pane->GetContext(), statusString);
 #endif
-			XP_FREE(statusString);
+			PR_Free(statusString);
 		}
 	}
 	return status;
@@ -635,7 +630,7 @@ nsNNTPNewsgroupList::FinishXOVER (int status)
 
 	if (k->set) 
 	{
-		int32 n = k->set->FirstNonMember();
+		PRInt32 n = k->set->FirstNonMember();
 		if (n < k->first_possible || n > k->last_possible) 
 		{
 		  /* We know we've gotten all there is to know.  Take advantage of that to
@@ -680,14 +675,14 @@ nsNNTPNewsgroupList::FinishXOVER (int status)
 			if (statusString)
 			{
 				FE_Progress (context, statusString);
-				XP_FREE(statusString);
+				PR_Free(statusString);
 			}
 #endif
 		}
 		MSG_FolderInfoNews *newsFolder = NULL;
 #ifdef HAVE_PANES
 		newsFolder = (m_pane) ? savePane->GetMaster()->FindNewsFolder(m_host, m_groupName, FALSE) : 0;
-		FE_PaneChanged(m_pane, FALSE, MSG_PaneNotifyFolderLoaded, (uint32)newsFolder);
+		FE_PaneChanged(m_pane, FALSE, MSG_PaneNotifyFolderLoaded, (PRUint32)newsFolder);
 #endif
 	}
 	return 0;
