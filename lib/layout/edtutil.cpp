@@ -6196,20 +6196,33 @@ void EDT_SetRefresh( MWContext* pContext, XP_Bool bRefreshOn ){
 // Warning this deletes (and recreates) the CEditBuffer.
 XP_Bool EDT_SetEncoding(MWContext* pContext, int16 csid){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
-    XP_Bool bDoIt = TRUE;
+    ED_CharsetEncode bDoIt;
 //  if ( pEditBuffer->HasEncoding() ) {
     char* pMessage = XP_GetString(XP_EDT_I18N_HAS_CHARSET);
     if ( pMessage ) {
-        bDoIt = FE_Confirm(pContext, pMessage);
+        bDoIt = FE_EncodingDialog(pContext);
     }
     else {
         XP_ASSERT(0);
     }
 
-    if ( bDoIt ) {
-        pEditBuffer->ChangeEncoding(csid);
+    switch (bDoIt)
+    {
+        case ED_ENDCODE_CHANGE_CHARSET:
+            // Change encoding and translate document
+            pEditBuffer->ChangeEncoding(csid);
+            return TRUE;
+        case ED_ENCODE_CHANGE_METATAG:
+            // Change encoding and but don't translate document
+            XP_ASSERT(0);     // Not implemented yet
+            return FALSE;
+        case ED_ENCODE_CANCEL:
+            return FALSE;
+        default:
+            XP_ASSERT(0);
+            return FALSE;
     }
-    return bDoIt;
+    return FALSE;       // shouldn't get here
 }
 // End of Block of functions moved from EDITOR.CPP for Win16 Build
 
