@@ -1357,6 +1357,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               title = titleUnicode;
               nsCRT::free(titleUnicode);
             }
+            // This sets title in HTML node
+            SetDocumentTitle(title.GetUnicode());
           }
 
 // #if 0 Replace this with nsIFilePicker code 
@@ -1519,10 +1521,9 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           // File was saved successfully
           *_retval = PR_TRUE;
  
-          // If user changed filename they may have changed title
-          // This will call UpdateWindowTitle
+          // Update window title to show possibly different filename
           if (mustShowFileDialog)
-            SetDocumentTitle(title.GetUnicode());
+            UpdateWindowTitle();
         }
       }
       break;
@@ -1877,7 +1878,6 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
       }
     }
   }
-  UpdateWindowTitle();
 
   return res;
 }
