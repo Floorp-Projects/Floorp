@@ -117,8 +117,8 @@ nsInstallInfo::GetLocalFile(char **aPath)
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
-static NS_DEFINE_IID(kIJARIID, NS_IJAR_IID);
-static NS_DEFINE_IID(kJARCID,  NS_JAR_CID);
+static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
+static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
 
 nsInstall::nsInstall()
 {
@@ -143,7 +143,7 @@ nsInstall::nsInstall()
     mInstallArguments   = "";
 
     // mJarFileData is an opaque handle to the jarfile.
-    nsresult rv = nsComponentManager::CreateInstance(kJARCID, nsnull, kIJARIID, 
+    nsresult rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, kIZipReaderIID, 
                                                      (void**) &mJarFileData);
 
     nsISoftwareUpdate *su;
@@ -2143,13 +2143,15 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
 PRInt32 
 nsInstall::OpenJARFile(void)
 {    
-    PRInt32 result;
-
-    nsresult rv = mJarFileData->Open( nsAutoCString(mJarFileLocation), &result );
+    nsresult rv = mJarFileData->Init(nsFileSpec(mJarFileLocation));
     if (NS_FAILED(rv))
         return UNEXPECTED_ERROR;
 
-    return result;
+    rv = mJarFileData->Open();
+    if (NS_FAILED(rv))
+        return UNEXPECTED_ERROR;
+
+    return SUCCESS;
 }
 
 void
@@ -2207,7 +2209,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
     // We will overwrite what is in the way.  is this something that we want to do?  
     extractHereSpec->Delete(PR_FALSE);
 
-    nsresult rv = mJarFileData->Extract( nsAutoCString(aJarfile), nsNSPRPath( *extractHereSpec ), &result );
+    nsresult rv = mJarFileData->Extract( nsAutoCString(aJarfile), *extractHereSpec );
     if (NS_FAILED(rv)) 
     {
         if (extractHereSpec != nsnull)
@@ -2310,7 +2312,7 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
 {
     char                *buf;
     nsISimpleEnumerator *jarEnum = nsnull;
-    nsIJARItem          *currJARItem = nsnull;
+    nsIZipEntry         *currZipEntry = nsnull;
 
     if ( paths )
     {
@@ -2318,7 +2320,7 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
         pattern += "/*";
         PRInt32 prefix_length = directory.Length()+1; // account for slash
 
-        nsresult rv = mJarFileData->Find( nsAutoCString(pattern), &jarEnum );
+        nsresult rv = mJarFileData->FindEntries( nsAutoCString(pattern), &jarEnum );
         if (NS_FAILED(rv) || !jarEnum)
             goto handle_err;
 
@@ -2326,11 +2328,11 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
         rv = jarEnum->HasMoreElements(&bMore);
         while (bMore && NS_SUCCEEDED(rv))
         {
-            rv = jarEnum->GetNext( (nsISupports**) &currJARItem );
-            if (currJARItem)
+            rv = jarEnum->GetNext( (nsISupports**) &currZipEntry );
+            if (currZipEntry)
             {
                 // expensive 'buf' callee malloc per iteration!
-                rv = currJARItem->GetName(&buf);
+                rv = currZipEntry->GetName(&buf);
                 if (NS_FAILED(rv)) 
                     goto handle_err;
                 if (buf)
@@ -2346,7 +2348,7 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
 
                     PR_FREEIF( buf );
                 }
-                NS_IF_RELEASE(currJARItem);
+                NS_IF_RELEASE(currZipEntry);
             }
             rv = jarEnum->HasMoreElements(&bMore);
         }
@@ -2357,7 +2359,7 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
 
 handle_err:    
     NS_IF_RELEASE(jarEnum);                         
-    NS_IF_RELEASE(currJARItem); 
+    NS_IF_RELEASE(currZipEntry); 
     return EXTRACTION_FAILED;
 }
 

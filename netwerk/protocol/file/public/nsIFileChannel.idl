@@ -23,6 +23,11 @@
 #include "nsIChannel.idl"
 
 interface nsISimpleEnumerator;
+native nsFileSpec(nsFileSpec);
+
+%{C++
+#include "nsFileSpec.h"
+%}
 
 [scriptable, uuid(73025830-0ce2-11d3-9331-00104ba0fd40)]
 interface nsIFileChannel : nsIChannel
@@ -117,5 +122,10 @@ interface nsIFileChannel : nsIChannel
      *   the Query portion of the URI is used as the argument string. 
      */
     void Execute(in string args);
+
+    /**
+     * XXX Until we eliminate nsFileSpec...
+     */
+    [noscript] void GetFileSpec(out nsFileSpec spec);
 };
 

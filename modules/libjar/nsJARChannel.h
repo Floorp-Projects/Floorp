@@ -26,10 +26,10 @@
 #include "nsIJARChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIJARProtocolHandler.h"
-#include "nsJARDownloadListener.h"
+#include "nsIJARURI.h"
 #include "nsIFileSystem.h"
 #include "nsIFileChannel.h"
-#include "nsIJAR.h"
+#include "nsIZipReader.h"
 #include "nsIFileChannel.h"
 #include "nsCOMPtr.h"
 
@@ -90,7 +90,7 @@ protected:
     nsCOMPtr<nsIURI>                    mJARBaseURI;
     nsCOMPtr<nsIFileChannel>            mJARBaseFile;
     char*                               mJAREntry;
-    nsCOMPtr<nsIJAR>                    mJAR;
+    nsCOMPtr<nsIZipReader>              mJAR;
 };
 
 #endif // nsJARChannel_h__

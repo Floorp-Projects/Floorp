@@ -35,8 +35,7 @@ DLLNAME=jar$(VERSION_NUMBER)
 DLL=$(OBJDIR)\$(DLLNAME).dll
 MAPFILE=$(DLLNAME).map
 
-XPIDLSRCS=.\nsIZip.idl \
-          .\nsIJAR.idl \
+XPIDLSRCS=.\nsIZipReader.idl \
           $(NULL)
 
 EXPORTS=zipfile.h

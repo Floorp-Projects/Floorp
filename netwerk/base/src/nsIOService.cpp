@@ -138,27 +138,41 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     return NS_OK;
 }
 
-static nsresult
-GetScheme(const char* inURI, char* *scheme)
+NS_IMETHODIMP
+nsIOService::ExtractScheme(const char* inURI, PRUint32 *startPos, PRUint32 *endPos,
+                           char* *scheme)
 {
     // search for something up to a colon, and call it the scheme
     NS_ASSERTION(inURI, "null pointer");
     if (!inURI) return NS_ERROR_NULL_POINTER;
-    char c;
-    const char* URI = inURI;
-    PRUint8 length = 0;
-    // skip leading white space
-    while (nsString::IsSpace(*URI))
-        URI++;
-    while ((c = *URI++) != '\0') {
-        if (c == ':') {
-            char* newScheme = (char *)PR_Malloc(length+1);
-            if (newScheme == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
 
-            nsCRT::memcpy(newScheme, inURI, length);
-            newScheme[length] = '\0';
-            *scheme = newScheme;
+    const char* uri = inURI;
+
+    // skip leading white space
+    while (nsString::IsSpace(*uri))
+        uri++;
+
+    PRUint32 start = uri - inURI;
+    if (startPos) {
+        *startPos = start;
+    }
+
+    PRUint32 length = 0;
+    char c;
+    while ((c = *uri++) != '\0') {
+        if (c == ':') {
+            if (endPos) {
+                *endPos = start + length + 1;
+            }
+
+            if (scheme) {
+                char* str = (char*)nsAllocator::Alloc(length + 1);
+                if (str == nsnull)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                nsCRT::memcpy(str, &inURI[start], length);
+                str[length] = '\0';
+                *scheme = str;
+            }
             return NS_OK;
         }
         else if (nsString::IsAlpha(c)) {
@@ -177,7 +191,7 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
     nsresult rv;
     nsIURI* base;
     char* scheme;
-    rv = GetScheme(aSpec, &scheme);
+    rv = ExtractScheme(aSpec, nsnull, nsnull, &scheme);
     if (NS_SUCCEEDED(rv)) {
         // then aSpec is absolute
         // ignore aBaseURI in this case

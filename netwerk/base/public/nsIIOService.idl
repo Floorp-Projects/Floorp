@@ -157,6 +157,26 @@ interface nsIIOService : nsISupports
                                      in nsIInputStream inStr,
                                      in nsILoadGroup group,
                                      in nsIURI originalURI);
+
+    /**
+     * Utility for protocol implementors -- extracts the scheme from a URL 
+     * string, consistently and according to spec.
+     * @param urlString - the URL string to parse
+     * @param schemeStartPos - the resulting starting position of the scheme substring
+     *        (may skip over whitespace)
+     * @param schemeEndPos - the resulting ending position of the scheme substring
+     *        (the position of the colon)
+     * @param scheme - an allocated substring containing the scheme. If this parameter
+     *        is null going into the routine, then the scheme is not allocated and
+     *        returned. Free with nsCRT::free.
+     *
+     * @return NS_OK - if successful
+     * @return NS_ERROR_MALFORMED_URI - if the urlString is not of the right form
+     */
+    void extractScheme(in string urlString,
+                       out unsigned long schemeStartPos,
+                       out unsigned long schemeEndPos,
+                       out string scheme);
 };
 
 %{C++
