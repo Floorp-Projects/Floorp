@@ -49,6 +49,7 @@ menuitem {
   color: #000000;
   font: menu;
   list-style-image: none;
+  -moz-image-region: auto;
 }
 
 menuitem[default="true"] {
@@ -95,14 +96,17 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   margin: 0px 0px 0px 6px;
   width: 8px;
   list-style-image: url("chrome://global/skin/menu/menu-arrow.gif");
+  -moz-image-region: auto;
 }
 
 .menu-right[_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-arrow-hov.gif");
+  -moz-image-region: auto;
 }
 
 .menu-right[disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-arrow-dis.gif") !important;
+  -moz-image-region: auto;
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
@@ -168,38 +172,46 @@ menulist > menupopup > menu {
 
 menulist > menupopup > menuitem[selected="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check.gif");
+  -moz-image-region: auto;
 }
   
 menulist > menupopup > menuitem[_moz-menuactive="true"][selected="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
+  -moz-image-region: auto;
 }
 
 /* ::::: checkbox menuitem ::::: */
 
 menuitem[checked="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check.gif");
+  -moz-image-region: auto;
 }
 
 menuitem[checked="true"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-dis.gif");
+  -moz-image-region: auto;
 }
 
 menuitem[checked="true"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
+  -moz-image-region: auto;
 }
 
 /* ::::: radio menuitem ::::: */
 
 menuitem[checked="true"][type="radio"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
+  -moz-image-region: auto;
 }
 
 menuitem[checked="true"][type="radio"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-dis.gif");
+  -moz-image-region: auto;
 }
 
 menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-hov.gif");
+  -moz-image-region: auto;
 }
 
 /* ::::: menuseparator ::::: */
@@ -229,4 +241,5 @@ menulist > menupopup > menuseparator,
 .treecell-popupcell-menu {
   margin-left: -2px;
   list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
+  -moz-image-region: auto;
 }
