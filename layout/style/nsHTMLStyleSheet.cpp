@@ -461,7 +461,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
               }
             }
           }
-          NS_RELEASE(linkHandler);
+          NS_IF_RELEASE(linkHandler);
         } // end link/visited rules
         if (nsnull != mActiveRule) {  // test active state of link
           nsIEventStateManager* eventStateManager;
