@@ -702,7 +702,8 @@ static void InitTraceLog(void)
     gLogLeaksOnly = InitLog("XPCOM_MEM_LEAK_LOG", "leaks", &gBloatLog);
   if (defined || gLogLeaksOnly) {
     RecreateBloatView();
-    if (NS_WARN_IF_FALSE(gBloatView, "out of memory")) {
+    if (!gBloatView) {
+      NS_WARNING("out of memory");
       gBloatLog = nsnull;
       gLogLeaksOnly = PR_FALSE;
     }
@@ -757,7 +758,8 @@ static void InitTraceLog(void)
                                   PL_CompareStrings,
                                   PL_CompareValues,
                                   NULL, NULL);
-    if (NS_WARN_IF_FALSE(gTypesToLog, "out of memory")) {
+    if (!gTypesToLog) {
+      NS_WARNING("out of memory");
       fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- unable to log specific classes\n");
     }
     else {
@@ -794,7 +796,8 @@ static void InitTraceLog(void)
                                     PL_CompareValues,
                                     NULL, NULL);
 
-    if (NS_WARN_IF_FALSE(gObjectsToLog, "out of memory")) {
+    if (!gObjectsToLog) {
+      NS_WARNING("out of memory");
       fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- unable to log specific objects\n");
     }
     else if (! (gRefcntsLog || gAllocLog || gCOMPtrLog)) {

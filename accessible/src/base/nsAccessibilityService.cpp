@@ -244,15 +244,15 @@ nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessib
   GetShellFromNode(aDOMNode, getter_AddRefs(outerWeakShell));
 
   nsCOMPtr<nsIPresShell> outerPresShell(do_QueryReferent(outerWeakShell));
-  if (NS_WARN_IF_FALSE(outerPresShell,
-                       "No outer pres shell in CreateHTMLIFrameAccessible!")) {
+  if (!outerPresShell) {
+    NS_WARNING("No outer pres shell in CreateHTMLIFrameAccessible!");
     return NS_ERROR_FAILURE;
   }
   
   nsCOMPtr<nsIPresContext> outerPresContext;
   outerPresShell->GetPresContext(getter_AddRefs(outerPresContext));
-  if (NS_WARN_IF_FALSE(outerPresContext,
-                       "No outer pres context in CreateHTMLIFrameAccessible!")) {
+  if (!outerPresContext) {
+    NS_WARNING("No outer pres context in CreateHTMLIFrameAccessible!");
     return NS_ERROR_FAILURE;
   }
   

@@ -318,7 +318,7 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
         parentofReplacementFile->Equals(parentofFinalFile, &flagIsEqual);
         if(!flagIsEqual)
         {
-            NS_WARN_IF_FALSE( 0, "File unpacked into a non-dest dir" );
+            NS_WARNING("File unpacked into a non-dest dir" );
             replacementFile->GetLeafName(getter_Copies(leafname));
             rv = replacementFile->MoveTo(parentofFinalFile, leafname);
         }

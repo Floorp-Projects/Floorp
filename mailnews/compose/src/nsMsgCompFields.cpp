@@ -99,7 +99,8 @@ nsMsgCompFields::~nsMsgCompFields()
 
 nsresult nsMsgCompFields::SetAsciiHeader(MsgHeaderID header, const char *value)
 {
-  NS_VERIFY (header >= 0 && header < MSG_MAX_HEADERS, "Invalid message header index!");
+  NS_ASSERTION(header >= 0 && header < MSG_MAX_HEADERS,
+               "Invalid message header index!");
 
   int rv = NS_OK;
   char* old = m_headers[header]; /* Done with careful paranoia, in case the
@@ -126,7 +127,9 @@ nsresult nsMsgCompFields::SetAsciiHeader(MsgHeaderID header, const char *value)
 
 const char* nsMsgCompFields::GetAsciiHeader(MsgHeaderID header)
 {
-  NS_VERIFY (header >= 0 && header < MSG_MAX_HEADERS, "Invalid message header index!");
+  NS_ASSERTION(header >= 0 && header < MSG_MAX_HEADERS,
+               "Invalid message header index!");
+
   return m_headers[header] ? m_headers[header] : "";
 }
 

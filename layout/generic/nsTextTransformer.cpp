@@ -207,11 +207,12 @@ nsTextTransformer::Init(nsIFrame* aFrame,
     tc->GetText(&mFrag);
 
     // Sanitize aStartingOffset
-    if (NS_WARN_IF_FALSE(aStartingOffset >= 0, "bad starting offset")) {
+    if (aStartingOffset < 0) {
+      NS_WARNING("bad starting offset");
       aStartingOffset = 0;
     }
-    else if (NS_WARN_IF_FALSE(aStartingOffset <= mFrag->GetLength(),
-                              "bad starting offset")) {
+    else if (aStartingOffset > mFrag->GetLength()) {
+      NS_WARNING("bad starting offset");
       aStartingOffset = mFrag->GetLength();
     }
     mOffset = aStartingOffset;
@@ -1606,11 +1607,12 @@ nsTextTransformer::Init2(const nsTextFragment* aFrag,
   mFrag = aFrag;
 
   // Sanitize aStartingOffset
-  if (NS_WARN_IF_FALSE(aStartingOffset >= 0, "bad starting offset")) {
+  if (aStartingOffset < 0) {
+    NS_WARNING("bad starting offset");
     aStartingOffset = 0;
   }
-  else if (NS_WARN_IF_FALSE(aStartingOffset <= mFrag->GetLength(),
-                            "bad starting offset")) {
+  else if (aStartingOffset > mFrag->GetLength()) {
+    NS_WARNING("bad starting offset");
     aStartingOffset = mFrag->GetLength();
   }
   mOffset = aStartingOffset;
