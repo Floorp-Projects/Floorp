@@ -45,7 +45,7 @@ Rights Reserved.
         persist="width height screenX screenY sizemode"
         windowtype="mail:messageWindow">
 
-  <stringbundleset id="mailStringBundles">
+  <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   </stringbundleset>
@@ -66,6 +66,7 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgViewNavigation.js"/>
 
   <commandset id="mailCommands">
     <commandset id="mailFileMenuItems"/>

@@ -679,7 +679,7 @@ function performNavigation(type)
   gDBView.viewNavigate(type, resultId, resultIndex, threadIndex, true /* wrap */);
   
   // if we found something....display it.
-  if ((resultId.value != -1) && (resultIndex.value != -1)) 
+  if ((resultId.value != nsMsgViewIndex_None) && (resultIndex.value != nsMsgViewIndex_None)) 
   {
     // load the message key
     gDBView.loadMessageByMsgKey(resultId.value);

@@ -162,6 +162,9 @@ function CrossFolderNavigation(type, supportsFolderPane )
     return nextFolderURI;
 }
 
+// from MailNewsTypes.h
+const nsMsgViewIndex_None = 0xFFFFFFFF;
+
 function ScrollToMessage(type, wrap, selectMessage)
 {
   try {
@@ -176,7 +179,7 @@ function ScrollToMessage(type, wrap, selectMessage)
     gDBView.viewNavigate(type, resultId, resultIndex, threadIndex, true /* wrap */);
 
     // only scroll and select if we found something
-    if ((resultId.value != -1) && (resultIndex.value != -1)) {
+    if ((resultId.value != nsMsgViewIndex_None) && (resultIndex.value != nsMsgViewIndex_None)) {
         if (selectMessage) {
             outlinerSelection.select(resultIndex.value);
         }

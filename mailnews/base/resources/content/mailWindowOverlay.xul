@@ -45,11 +45,11 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
 
-<stringbundleset id="mailStringBundles">
+<stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_viewZoom"/>
 </stringbundleset>
-
+ 
 <commandset id="mailFileMenuItems"
             commandupdater="true"
             events="create-menu-file"
@@ -100,7 +100,7 @@ Rights Reserved.
    <command id="cmd_viewWatchedThreadsWithUnread" oncommand="goDoCommand('cmd_viewWatchedThreadsWithUnread')" disabled="true"/>
    <command id="cmd_viewIgnoredThreads" oncommand="goDoCommand('cmd_viewIgnoredThreads')" disabled="true"/>
    <command id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
-
+   <commandset id="viewZoomCommands"/>
 </commandset>
 
 <commandset id="mailEditMenuItems"
