@@ -361,7 +361,12 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 				        nsEventStatus status = nsEventStatus_eIgnore;
 				        nsKeyEvent event;
 				        event.eventStructType = NS_KEY_EVENT;
-				        event.message = NS_KEY_PRESS;
+				        switch (aEventType)
+				        {
+				          case eKeyPress:  event.message = NS_KEY_PRESS; break;
+				          case eKeyDown:   event.message = NS_KEY_DOWN; break;
+				          default:         event.message = NS_KEY_UP; break;
+				        }
 				        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
 				    }
     
