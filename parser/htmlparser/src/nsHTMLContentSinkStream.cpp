@@ -759,11 +759,6 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
   PRBool            isDirty = IsDirty(aNode);
 
-  if(tag==eHTMLTag_markupDecl) { 
-    Write("<!"); // mdo => Markup Declaration Open.
-    return;
-  }
-
   const nsString&   name = aNode.GetText();
   nsString          tagName;
 
@@ -773,6 +768,15 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   mHTMLTagStack[mHTMLStackPos] = tag;
   mDirtyStack[mHTMLStackPos++] = isDirty;
   tagName = name;
+
+  if (tag == eHTMLTag_markupDecl)
+  {
+    if (!(mFlags & nsIDocumentEncoder::OutputSelectionOnly))
+    {
+      Write("<!"); // mdo => Markup Declaration Open.
+    }
+    return;
+  }
 
   if (mLowerCaseTags == PR_TRUE)
     tagName.ToLowerCase();
@@ -872,11 +876,14 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   {
     tagName.AssignWithConversion("--");
   }
-  else if(tag == eHTMLTag_markupDecl) 
+  else if (tag == eHTMLTag_markupDecl)
   {
-    // mod => Markup Declaration Open, i.e., "<!"
-    Write(kGreaterThan);
-    Write(NS_LINEBREAK);
+    if (!(mFlags & nsIDocumentEncoder::OutputSelectionOnly))
+    {
+      Write(kGreaterThan);
+      Write(NS_LINEBREAK);
+      mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
+    }
     return;
   }
   else
@@ -941,7 +948,8 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
  *  @return  
  */
 nsresult
-nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
+nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
+{
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   eHTMLTags tag = eHTMLTag_unknown;
   if (mHTMLStackPos > 0)
@@ -955,7 +963,6 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
     if (preformatted)
       break;
   }
-
   if (type == eHTMLTag_br ||
       type == eHTMLTag_hr ||
       type == eHTMLTag_meta || 
@@ -974,6 +981,11 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   }
   else if (type == eHTMLTag_text)
   {
+    if ((mHTMLStackPos > 0)
+        && (mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_markupDecl)
+        && (mFlags & nsIDocumentEncoder::OutputSelectionOnly))
+      return NS_OK;
+
     const nsString& text = aNode.GetText();
     if (preformatted)
     {
@@ -1031,7 +1043,7 @@ PRBool nsHTMLContentSinkStream::HasLongLines(const nsString& text)
   {
     PRInt32 eol = text.FindChar('\n', PR_FALSE, start);
     if (eol < 0) eol = text.Length();
-    if ((PRInt32)(eol - start) > longLineLen)
+    if ((PRUint32)(eol - start) > longLineLen)
       return PR_TRUE;
     start = eol+1;
   }
