@@ -55,7 +55,7 @@ interface nsIInterfaceRequestor : nsISupports
 #include "nsCOMPtr.h"
 #endif
 
-class nsGetInterface : public nsCOMPtr_helper
+class NS_EXPORT nsGetInterface : public nsCOMPtr_helper
   {
     public:
       nsGetInterface( nsISupports* aSource, nsresult* error )
