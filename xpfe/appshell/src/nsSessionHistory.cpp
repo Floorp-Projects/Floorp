@@ -49,7 +49,7 @@ class nsHistoryEntry;
 
 static nsHistoryEntry *  GenerateTree(nsIWebShell * aWebShell,nsHistoryEntry *aparent, nsISessionHistory * aSHist);
 
-#define APP_DEBUG 1
+#define APP_DEBUG 0
 
 class nsHistoryEntry
 {
