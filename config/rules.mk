@@ -747,7 +747,7 @@ endif
 install:: $(SDK_HEADERS)
 ifndef NO_INSTALL
 ifdef SDK_HEADERS
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)/$(MODULE)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)
 endif
 endif
 
@@ -1230,7 +1230,6 @@ export:: $(SDK_HEADERS)
 	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $^)
 	$(INSTALL) $(IFLAGS1) $^ $(SDK_PUBLIC)
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $^)
 endif # NO_DIST_INSTALL
 endif 
 
@@ -1442,7 +1441,6 @@ ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $^)
 	$(INSTALL) $(IFLAGS1) $^ $(SDK_PUBLIC)
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $^)
 endif
 
 install:: $(SDK_XPIDLSRCS)
@@ -1452,7 +1450,7 @@ endif
 
 install:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS))
 ifndef NO_INSTALL
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)/$(MODULE)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)
 endif
 
 endif # SDK_XPIDLSRCS
@@ -1473,6 +1471,17 @@ endif
 
 ################################################################################
 # SDK
+
+ifneq (,$(SDK_LIBRARY))
+$(SDK_LIB_DIR)::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+
+ifndef NO_DIST_INSTALL
+libs:: $(SDK_LIBRARY) $(SDK_LIB_DIR)
+	$(INSTALL) $(IFLAGS2) $^
+endif
+
+endif # SDK_LIBRARY
 
 ifneq (,$(SDK_BINARY))
 $(SDK_BIN_DIR)::
