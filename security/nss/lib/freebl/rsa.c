@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.8 2000/09/07 23:18:40 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.9 2000/09/08 22:41:51 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -76,6 +76,7 @@ rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key)
     CHECK_MPI_OK( mp_mul(&psub1, &qsub1, &phi) );
     /* 3.  Compute d = e**-1 mod(phi) using extended Euclidean algorithm */
     CHECK_MPI_OK( mp_xgcd(e, &phi, &tmp, &d, NULL) );
+    CHECK_MPI_OK( mp_mod(&d, &phi, &d) );
     /*     Verify that phi(n) and e have no common divisors */
     if (mp_cmp_d(&tmp, 1) != 0) { 
 	PORT_SetError(SEC_ERROR_NEED_RANDOM);
@@ -265,6 +266,8 @@ RSA_PublicKeyOp(RSAPublicKey  *key,
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+    /* clear the output buffer */
+    memset(output, 0, key->modulus.len);
     MP_DIGITS(&n) = 0;
     MP_DIGITS(&e) = 0;
     MP_DIGITS(&m) = 0;
@@ -319,10 +322,20 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
     unsigned int modLen;
+    unsigned int offset;
+    modLen = rsa_modulusLen(&key->modulus);
     if (!key || !output || !input) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+    /* check input out of range (needs to be in range [0..n-1]) */
+    offset = (key->modulus.data[0] == 0) ? 1 : 0; /* may be leading 0 */
+    if (memcmp(input, key->modulus.data + offset, modLen) >= 0) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    /* clear the output buffer */
+    memset(output, 0, key->modulus.len);
     MP_DIGITS(&p)    = 0;
     MP_DIGITS(&q)    = 0;
     MP_DIGITS(&d_p)  = 0;
@@ -352,9 +365,7 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
     SECITEM_TO_MPINT(key->exponent2,   &d_q);  /* d_p  = q mod (q-1) */
     SECITEM_TO_MPINT(key->coefficient, &qInv); /* qInv = q**-1 mod p */
     /* copy input into mp integer c */
-    modLen = rsa_modulusLen(&key->modulus);
     OCTETS_TO_MPINT(input, &c, modLen);
-    /* XXX check input out of range */
     /* 1. m1 = c**d_p mod p */
     CHECK_MPI_OK( mp_exptmod(&c, &d_p, &p, &m1) );
     /* 2. m2 = c**d_q mod q */
@@ -365,8 +376,8 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
     /* 4.  m = m2 + h * q */
     CHECK_MPI_OK( mp_mul(&h, &q, &m) );
     CHECK_MPI_OK( mp_add(&m, &m2, &m) );
-    /* m is the output */
-    err = mp_to_unsigned_octets(&m, output, modLen);
+    /* m is the output (plus a possible leading 0)*/
+    err = mp_to_unsigned_octets(&m, output + offset, modLen);
     if (err >= 0) err = MP_OKAY;
 cleanup:
     mp_clear(&p);
