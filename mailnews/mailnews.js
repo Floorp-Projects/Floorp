@@ -400,6 +400,8 @@ pref("mail.server.default.max_articles", 500);
 pref("mail.server.default.notify.on", true);
 pref("mail.server.default.mark_old_read", false);
 
+pref("mail.smtpserver.default.auth_method", 2); // auth login
+
 pref("mail.display_glyph",true);   // see <http://www.bucksch.org/1/projects/mozilla/16507/>
 pref("mail.display_struct",true);  // dito
 pref("mail.send_struct",true);     // dito
