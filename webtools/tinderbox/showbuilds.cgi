@@ -334,8 +334,12 @@ sub display_build_table_header {
         }
 
         if( $t->{isbusted} ){
-            print "<td rowspan=2 bgcolor=000000 background=1afi003r.gif>";
-            print "<font color=white>$bn</font>\n";
+            if ($form{'nocrap'}) {
+                print "<th rowspan=2 bgcolor=FF0000>$bn";
+            } else {
+                print "<td rowspan=2 bgcolor=000000 background=1afi003r.gif>";
+                print "<font color=white>$bn</font>";
+            }
             #print "<img src=reledanim.gif>\n";
         }
         else {
@@ -613,8 +617,12 @@ sub do_express {
             print "<td bgcolor=00ff00>";
         }
         else {
-            print "<td bgcolor=000000 background=1afi003r.gif>";
-            print "<font color=white>\n";
+            if ($form{'nocrap'}) {
+                print "<td bgcolor=FF0000>";
+            } else {
+                print "<td bgcolor=000000 background=1afi003r.gif>";
+                print "<font color=white>\n";
+            }
         }
         print "$buildname";
     }
