@@ -204,6 +204,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(void)
   NS_INIT_REFCNT();
 #ifdef INCLUDE_XUL
   nsXULAtoms::AddrefAtoms();
+  nsHTMLAtoms::AddrefAtoms();
 #endif
 }
 
@@ -211,6 +212,7 @@ nsCSSFrameConstructor::~nsCSSFrameConstructor(void)
 {
 #ifdef INCLUDE_XUL
   nsXULAtoms::ReleaseAtoms();
+  nsHTMLAtoms::ReleaseAtoms();
 #endif
 }
 
