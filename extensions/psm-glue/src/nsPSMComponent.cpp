@@ -64,6 +64,9 @@
 
 #include "nsIDOMWindow.h"
 
+#include "nsIObserverService.h"
+#include "nsIProfileChangeStatus.h"
+
 #define PSM_VERSION_REG_KEY "/Netscape/Personal Security Manager"
 
 #if defined(WIN32) || defined(XP_OS2)
@@ -73,7 +76,6 @@
 #else
 #define PSM_FILE_NAME "psm"
 #endif
-
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
@@ -87,6 +89,7 @@ nsPSMComponent::nsPSMComponent()
     NS_INIT_REFCNT();
     mControl = nsnull;
     mCertContentListener = nsnull;
+    mEventLoopThread = nsnull;    
 }
 
 nsPSMComponent::~nsPSMComponent()
@@ -123,8 +126,10 @@ nsPSMComponent::CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aR
     if (mInstance == nsnull) 
     {
         mInstance = new nsPSMComponent();
-        if (mInstance)
+        if (mInstance) {
           mInstance->RegisterCertContentListener();
+          mInstance->RegisterProfileChangeObserver();
+        }
     }
 
     if (mInstance == nsnull)
@@ -152,13 +157,31 @@ nsPSMComponent::RegisterCertContentListener()
   return rv;
 }
 
+nsresult
+nsPSMComponent::RegisterProfileChangeObserver()
+{
+    nsresult rv; 
+    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    NS_ASSERTION(observerService, "could not get observer service");
+    if (observerService) {
+        // Our refcnt must be > 0 when we call AddObserver or we'll get deleted. 
+        ++mRefCnt;
+        observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+        --mRefCnt;
+    }
+    return rv;
+}
+
+
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsPSMComponent, 
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsPSMComponent, 
                               nsIPSMComponent, 
                               nsISecurityManagerComponent,
                               nsIContentHandler,
                               nsISignatureVerifier,
-                              nsIEntropyCollector);
+                              nsIEntropyCollector,
+                              nsIObserver,
+                              nsISupportsWeakReference);
 
 #define INIT_NUM_PREFS 100
 /* preference types */
@@ -612,7 +635,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         if (psmStatus == CMTFailure)
             goto failure;
         
-        if (InitPSMEventLoop(mControl) != PR_SUCCESS)
+        if (InitPSMEventLoop(mControl, &mEventLoopThread) != PR_SUCCESS)
             goto failure;
             
         if (NS_FAILED(PassPrefs()))
@@ -1192,5 +1215,25 @@ nsPSMComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
     if (mControl) {
       CMT_RandomUpdate(mControl, entropy, bufLen);
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPSMComponent::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+    if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
+
+        // The profile is about to change - close our control connection if we have one.
+        // Next time PSM is needed, we'll make a new control connection which
+        // will use the new profile dir.
+        if (mEventLoopThread) {
+            PR_Interrupt(mEventLoopThread);
+            mEventLoopThread = nsnull;
+        }
+        if (mControl) {
+            CMT_CloseControlConnection(mControl);
+            mControl = nsnull;		            
+        }   
+    }    
     return NS_OK;
 }

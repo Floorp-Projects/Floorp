@@ -24,6 +24,7 @@
 #ifndef _NSPSMCOMPONENT_H
 #define  _NSPSMCOMPONENT_H
 #include "nscore.h"
+#include "prthread.h"
 #include "nsIPSMComponent.h"
 #include "nsISignatureVerifier.h"
 #include "nsIStringBundle.h"
@@ -31,6 +32,9 @@
 #include "nsIContentHandler.h"
 #include "nsIURIContentListener.h"
 #include "nsIEntropyCollector.h"
+
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 
@@ -60,7 +64,9 @@ private:
 class nsPSMComponent : public nsIPSMComponent, 
                        public nsIContentHandler, 
                        public nsISignatureVerifier,
-                       public nsIEntropyCollector
+                       public nsIEntropyCollector,
+                       public nsIObserver,
+                       public nsSupportsWeakReference
 {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_PSMCOMPONENT_CID );
@@ -74,12 +80,15 @@ public:
   NS_DECL_NSICONTENTHANDLER
   NS_DECL_NSISIGNATUREVERIFIER
   NS_DECL_NSIENTROPYCOLLECTOR
+  NS_DECL_NSIOBSERVER
 
   static NS_METHOD CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aResult);
   nsresult RegisterCertContentListener();
+  nsresult RegisterProfileChangeObserver();
 private:
   
   PCMT_CONTROL mControl;
+  PRThread *mEventLoopThread;
   
   nsCOMPtr<nsISupports> mSecureBrowserIU;
   nsCOMPtr<nsIURIContentListener> mCertContentListener;
