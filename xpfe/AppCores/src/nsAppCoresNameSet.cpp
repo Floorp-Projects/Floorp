@@ -28,6 +28,8 @@
 #include "nsIDOMDOMPropsCore.h"
 #include "nsIDOMToolkitCore.h"
 #include "nsIDOMPrefsCore.h"
+#include "nsIDOMSignonCore.h"
+#include "nsIDOMWalletCore.h"
 #include "nsIDOMProfileCore.h" 
 #include "nsIDOMRDFCore.h"
 #include "nsIDOMToolbarCore.h"
@@ -41,6 +43,8 @@ static NS_DEFINE_IID(kAppCoresCID,           NS_APPCORESMANAGER_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,        NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kDOMPropsCoreCID,       NS_DOMPROPSCORE_CID);
 static NS_DEFINE_IID(kPrefsCoreCID,          NS_PREFSCORE_CID);
+static NS_DEFINE_IID(kSignonCoreCID,         NS_SIGNONCORE_CID);
+static NS_DEFINE_IID(kWalletCoreCID,         NS_WALLETCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,        NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kRDFCoreCID,            NS_RDFCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,        NS_TOOLBARCORE_CID);
@@ -71,6 +75,8 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
 
     result = NS_InitDOMPropsCoreClass(aScriptContext, nsnull);
     result = NS_InitPrefsCoreClass(aScriptContext, nsnull);
+    result = NS_InitSignonCoreClass(aScriptContext, nsnull);
+    result = NS_InitWalletCoreClass(aScriptContext, nsnull);
       result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
     result = NS_InitToolbarCoreClass(aScriptContext, nsnull);
     result = NS_InitBrowserAppCoreClass(aScriptContext, nsnull);
@@ -101,6 +107,22 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
         result = manager->RegisterGlobalName("PrefsCore", 
                                              kPrefsCoreCID, 
+                                             PR_TRUE);
+
+        if (NS_OK != result) return result;
+
+
+
+        result = manager->RegisterGlobalName("SignonCore", 
+                                             kSignonCoreCID, 
+                                             PR_TRUE);
+
+        if (NS_OK != result) return result;
+
+
+
+        result = manager->RegisterGlobalName("WalletCore", 
+                                             kWalletCoreCID, 
                                              PR_TRUE);
 
         if (NS_OK != result) return result;

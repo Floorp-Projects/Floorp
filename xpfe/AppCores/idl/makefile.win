@@ -35,6 +35,8 @@ IDLSRCS= \
 	DOMPropsCore.idl    \
 	EditorAppCore.idl   \
 	PrefsCore.idl       \
+	SignonCore.idl       \
+	WalletCore.idl       \
 	RDFCore.idl         \
 	Toolbar.idl         \
 	ProfileCore.idl     \

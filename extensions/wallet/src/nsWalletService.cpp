@@ -83,17 +83,20 @@ NS_IMETHODIMP nsWalletlibService::WALLET_Capture(
     return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){
+    ::WLLT_PrefillReturn(results);
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsWalletlibService::SI_DisplaySignonInfoAsHTML(){
     ::SINGSIGN_DisplaySignonInfoAsHTML();
     return NS_OK;
 }
 
-#ifndef HTMLDialogs
-NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(){
-    ::SINGSIGN_SignonViewerReturn();
+NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(nsAutoString results){
+    ::SINGSIGN_SignonViewerReturn(results);
     return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP nsWalletlibService::SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {

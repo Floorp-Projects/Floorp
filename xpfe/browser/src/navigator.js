@@ -486,11 +486,15 @@
 
   function WalletSafeFillin()
   {
-    if (appCore != null) {
-      dump("Wallet Safe Fillin\n");
-      appCore.walletSafeFillin(window.frames[0].frames[1]);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
+    var walletCore = XPAppCoresManager.Find("WalletCore");
+    if (!walletCore) {
+      walletCore = new WalletCore();
+      if (walletCore) {
+        walletCore.Init("WalletCore");
+      }
+    }
+    if (walletCore) {
+      walletCore.ShowWindow(window, window.frames[0].frames[1]);
     }
   }
 
@@ -527,11 +531,15 @@
 
   function SignonViewer()
   {
-    if (appCore != null) {
-      dump("SignonViewer\n");
-      appCore.signonViewer();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
+    var signonCore = XPAppCoresManager.Find("SignonCore");
+    if (!signonCore) {
+      signonCore = new SignonCore();
+      if (signonCore) {
+        signonCore.Init("SignonCore");
+      }
+    }
+    if (signonCore) {
+      signonCore.ShowWindow(window);
     }
   }
 

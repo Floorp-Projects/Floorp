@@ -1,0 +1,14 @@
+interface SignonCore : BaseAppCore
+{
+	void SignonCore();
+	
+	void ShowWindow(in Window currentFrontWin);
+
+	void ChangePanel(in wstring url);
+	void PanelLoaded(in Window win);
+
+	void SaveSignon(in wstring results);
+	void CancelSignon();
+};
+
+

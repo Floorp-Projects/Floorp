@@ -50,11 +50,10 @@ struct nsIWalletService : public nsISupports
     NS_IMETHOD WALLET_Capture
       (nsIDocument* doc, nsString name, nsString value, nsString vcard) = 0;
     NS_IMETHOD WALLET_OKToCapture(PRBool* result, PRInt32 count, char* URLName) = 0;
+    NS_IMETHOD WALLET_PrefillReturn(nsAutoString results)=0;
 
     NS_IMETHOD SI_DisplaySignonInfoAsHTML()=0;
-#ifndef HTMLDialogs
-    NS_IMETHOD SI_SignonViewerReturn()=0;
-#endif
+    NS_IMETHOD SI_SignonViewerReturn(nsAutoString results)=0;
     NS_IMETHOD SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) = 0;
     NS_IMETHOD SI_RestoreSignonData
