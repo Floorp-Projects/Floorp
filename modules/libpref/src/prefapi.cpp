@@ -1803,7 +1803,8 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
     }
     else if ((pref->flags & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK))
     {
-		PR_ASSERT(0);			/* this shouldn't happen */
+      //PR_ASSERT(0);			/* this shouldn't happen */
+      // NS_ASSERTION(0, "Trying to set pref to with the wrong type!");
 		return PREF_TYPE_CHANGE_ERR;
     }
     
@@ -2149,8 +2150,8 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 			char	*destPrefName = NULL;
 			char	*childStart = (srcPrefixLen > 0) ? (child + srcPrefixLen + 1) : child;
 			
-			PR_ASSERT( PL_strncmp(child, curSrcBranch, (PRUint32)srcPrefixLen) == 0 );
-							
+			//NS_ASSERTION( PL_strncmp(child, curSrcBranch, (PRUint32)srcPrefixLen) == 0, "bad pref child in pref_copyTree" );
+            
 			if (*destPrefix > 0)
 				destPrefName = PR_smprintf("%s.%s", destPrefix, childStart);
 			else
