@@ -1,0 +1,76 @@
+<html>
+<head>
+<script TYPE="text/javascript" SRC="nsISHistoryTestLib.js"></script>
+<script TYPE="text/javascript">
+
+function nsISHistoryTest()
+{
+  // Test case for nsISessionHistory
+  // Calls the init() function of nsISHistory
+//  alert("In nsISHistoryTest constructor\n");
+  var interfaceName = "nsISHistory";
+  var sHistory = init();
+  var count = 0;
+  var index = 0;
+  var maxLength = 100;
+
+  // begins OnTestSessionHistory();
+  if (!sHistory)
+  {
+    alert("Unable to get session history");
+    return;
+  }
+
+  alert("Testing nsISHistory interfaces\n");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  count = testHistoryCount(sHistory);	 // GetCount()
+  alert("global count: " + count);
+
+  index = testHistoryIndex(sHistory);	 // GetIndex()
+  alert ("global index: " + index);
+
+  maxLength = testMaxLength(sHistory);	 // GetMaxLength()
+  alert ("global maxLength: " + maxLength);
+
+  // Test GetEntryAtIndex()
+	 for(i=0; i<count; i++) {
+	   entry = testGetEntryAtIndex(sHistory, i, false);
+	   if (entry)
+		 alert("GetEntryAtIndex() Valid, cnt =  " + i);
+	   else
+		 alert("GetEntryAtIndex() Invalid, cnt = " + i);
+	 }   // for
+
+	 // Test the enumerator
+	 var simpleEnum = testSimpleEnum(sHistory);	// Get simple enumerator
+	 alert("global simpleEnum: " + simpleEnum);
+	 if (simpleEnum) {
+		var enumCnt = 0;
+		while (simpleEnum.hasMoreElements())
+		{
+			nextObj = simpleEnum.getNext();
+			alert("global nextObj: " + nextObj);
+			if (!nextObj)
+			  continue;
+			nextHE = nextObj.QueryInterface(Components.interfaces.nsIHistoryEntry);
+			alert("global nextHE: " + nextHE);
+			if (!nextHE)
+			  continue;
+		    testHistoryEntry(nextHE, enumCnt);
+		    enumCnt++;
+		}  // while
+	 }   // if simplenum
+
+}
+
+</script>
+</head>
+<body>
+<script TYPE="text/javascript">
+  nsISHistoryTest();
+alert("finished script execution.");
+</script>
+</body>
+</html>
