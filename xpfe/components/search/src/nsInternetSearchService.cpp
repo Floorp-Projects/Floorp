@@ -82,6 +82,7 @@
 #ifdef	XP_MAC
 #include <Files.h>
 #include <Timer.h>
+#include <Gestalt.h>
 #endif
 
 #ifdef	XP_WIN
@@ -921,7 +922,7 @@ InternetSearchDataSource::DeferredInit()
 		nsCOMPtr<nsIFile>			nativeDir;
 		if (NS_SUCCEEDED(rv = GetSearchFolder(getter_AddRefs(nativeDir))))
 		{
-			rv = GetSearchEngineList(nativeDir, PR_FALSE);
+			rv = GetSearchEngineList(nativeDir, PR_FALSE, PR_FALSE);
 			
 			// read in category list
 			rv = GetCategoryList();
@@ -933,7 +934,13 @@ InternetSearchDataSource::DeferredInit()
 
         rv = NS_GetSpecialDirectory(NS_MAC_INTERNET_SEARCH_DIR, getter_AddRefs(macSearchDir));
         if (NS_SUCCEEDED(rv))
-      		rv = GetSearchEngineList(macSearchDir, PR_TRUE);
+        {
+      		// Mac OS X doesn't have file types set for search files, so don't check them
+      		long response;
+      		OSErr err = ::Gestalt(gestaltSystemVersion, &response);
+      		PRBool checkFileType = (!err) && (response >= 0x00001000) ? PR_FALSE : PR_TRUE;
+      		rv = GetSearchEngineList(macSearchDir, PR_TRUE, checkFileType);
+      	}
 #endif
 	}
 	return(rv);
@@ -2366,12 +2373,12 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 			rv = context->GetHintConst(&hintUni);
 
 			// update graph with various required info
-			SaveEngineInfoIntoGraph(outFile, nsnull, hintUni, dataBuf, PR_FALSE);
+			SaveEngineInfoIntoGraph(outFile, nsnull, hintUni, dataBuf, PR_FALSE, PR_FALSE);
 		}
 		else if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
 		{
 			// update graph with icon info
-			SaveEngineInfoIntoGraph(nsnull, outFile, nsnull, nsnull, PR_FALSE);
+			SaveEngineInfoIntoGraph(nsnull, outFile, nsnull, nsnull, PR_FALSE, PR_FALSE);
 		}
 	}
 
@@ -3689,7 +3696,8 @@ InternetSearchDataSource::GetSearchFolder(nsIFile **searchDir)
 
 nsresult
 InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
-		const PRUnichar *categoryHint, const PRUnichar *dataUni, PRBool checkMacFileType)
+		const PRUnichar *categoryHint, const PRUnichar *dataUni, PRBool isSystemSearchFile,
+		PRBool checkMacFileType)
 {
 	nsresult			rv = NS_OK;
 
@@ -3801,7 +3809,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		}
 	}
 
-	if (checkMacFileType == PR_FALSE)
+	if (isSystemSearchFile == PR_FALSE)
 	{
 		// mark our private search files, so that we can distinguish
 		// between ours and any that are included with the OS
@@ -3892,7 +3900,8 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 
 
 nsresult
-InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMacFileType)
+InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
+              PRBool isSystemSearchFile, PRBool checkMacFileType)
 {
         nsresult			rv = NS_OK;
 
@@ -3925,15 +3934,23 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMa
           continue;
         if (isDirectory)
         {
-          GetSearchEngineList(dirEntry, checkMacFileType);
+          GetSearchEngineList(dirEntry, isSystemSearchFile, checkMacFileType);
           continue;
         }
+
+        // Skip over empty files
+        // Note: use GetFileSize even on Mac [instead of GetFileSizeWithResFork()]
+        // as we want the size of ONLY the data fork
+        PRInt64 fileSize;
+        rv = dirEntry->GetFileSize(&fileSize);
+        if (NS_FAILED(rv) || (fileSize == 0))
+            continue;
     
         nsXPIDLCString pathBuf;
         rv = dirEntry->GetPath(getter_Copies(pathBuf));
         if (NS_FAILED(rv))
         continue;
-      
+
 		nsAutoString	uri;
 		uri.AssignWithConversion((const char *)pathBuf);
 		PRInt32		len = uri.Length();
@@ -4019,7 +4036,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMa
 		  NS_NewLocalFile((const char *)iconSpec, PR_TRUE, getter_AddRefs(iconFile));
 		}
 
-		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, checkMacFileType);
+		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, isSystemSearchFile, checkMacFileType);
 	}
 	
 	return(rv);

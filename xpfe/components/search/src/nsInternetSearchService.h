@@ -147,8 +147,8 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  validateEngine(nsIRDFResource *engine);
   nsresult  DoSearch(nsIRDFResource *source, nsIRDFResource *engine, const nsString &fullURL, const nsString &text);
   nsresult  MapEncoding(const nsString &numericEncoding, nsString &stringEncoding);
-  nsresult  SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon, const PRUnichar *hint, const PRUnichar *data, PRBool checkMacFileType);
-  nsresult  GetSearchEngineList(nsIFile *spec, PRBool checkMacFileType);
+  nsresult  SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon, const PRUnichar *hint, const PRUnichar *data, PRBool isSystemSearchFile, PRBool checkMacFileType);
+  nsresult  GetSearchEngineList(nsIFile *spec, PRBool isSystemSearchFile, PRBool checkMacFileType);
   nsresult  GetCategoryList();
   nsresult  GetSearchFolder(nsIFile **spec);
   nsresult  ReadFileContents(const nsFileSpec &baseFilename, nsString & sourceContents);
