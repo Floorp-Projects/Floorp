@@ -599,7 +599,9 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits;
   // for a printer
   tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
-  if(canRaster == DT_RASPRINTER){ 
+
+  // we have to use the old way.. for 256 color mode and printing.. slow, but will always work.
+  if((256 == mNumPaletteColors) || (canRaster == DT_RASPRINTER)){ 
     for(y=aY0;y<aY1;y+=aHeight){
       for(x=aX0;x<aX1;x+=aWidth){
         this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
@@ -827,8 +829,8 @@ nsImageWin::CleanUpDIB()
     mColorMap = nsnull;
   }
 
-	mNumPaletteColors = -1;
-  mNumBytesPixel = 0;
+	//mNumPaletteColors = -1;
+  //mNumBytesPixel = 0;
 	mSizeImage = 0;
 
 }
