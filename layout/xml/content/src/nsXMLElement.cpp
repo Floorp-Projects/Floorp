@@ -32,8 +32,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIURL.h"
 
-#include "nsIXBLBinding.h"
-
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 
