@@ -49,8 +49,9 @@
     </tabbox>
     <tabpanel id="panel" align="horizontal" style="width: 400px;">
       <box class="tabpanel" id="system" flex="100%" align="vertical">
-        <text class="label" value="&div.cookiesonsystem.label;"/>
-        <spring style="height: 10px;"/>
+        <div>
+          <text class="label" value="&div.cookiesonsystem.label;"/>
+          <spring style="height: 10px;"/>
           <tree id="cookietree" class="inset" style="height: 150px; width: 380px;" align="vertical" 
             multiple="true" onselect="ViewCookieSelected(event);"
             onclick="ViewCookieSelected(event)"
@@ -65,61 +66,63 @@
             </treehead>
             <treechildren id="cookielist"/>
           </tree>
-        <spring style="height: 5px;"/>
-        <fieldset style="border: 2px groove #CCCCDD;">
-          <text class="label" value="&treehead.infoselected.label;"/>
           <spring style="height: 5px;"/>
-          <!-- labels -->
-          <grid>
-            <columns>
-              <column/>
-              <column flex="1"/>
-              <column/>
-            </columns>
-            <rows>
-              <row>
-                <text value="&props.name.label;"/>
-                <textfield id="ifl_name" readonly="true"/>
-              </row>
-              <row>
-                <text value="&props.value.label;"/>
-                <textfield id="ifl_value" readonly="true"/>
-              </row>
-              <row>
-                <text id="ifl_domaintype" value="&props.domain.label;"/>
-                <textfield id="ifl_domain" readonly="true"/>
-              </row>
-              <row>
-                <text value="&props.path.label;"/>
-                <textfield id="ifl_path" readonly="true"/>
-              </row>
-              <row>
-                <text value="&props.secure.label;"/>
-                <textfield id="ifl_secure" readonly="true"/>
-              </row>
-              <row>
-                <text value="&props.expires.label;"/>
-                <textfield id="ifl_expires" readonly="true"/>
-              </row>
-            </rows>
-          </grid>
-        </fieldset>
-        <spring flex="5%"/>
-        <box align="horizontal">
-          <button id="removeCookies" class="dialog push" disabled="true"
-                        value="&button.removecookie.label;"
-                        onclick="DeleteCookieSelected();"/>
-          <button id="removeAllCookies" class="dialog push"
-                        value="&button.removeallcookies.label;"
-                        onclick="DeleteAllCookies();"/>
-          <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
-        </box>
-        <checkbox id="checkbox" value="&checkbox.label;" />
+          <fieldset style="border: 2px groove #CCCCDD;">
+            <text class="label" value="&treehead.infoselected.label;"/>
+            <spring style="height: 5px;"/>
+            <!-- labels -->
+            <grid>
+              <columns>
+                <column/>
+                <column flex="1"/>
+                <column/>
+              </columns>
+              <rows>
+                <row>
+                  <text value="&props.name.label;"/>
+                  <textfield id="ifl_name" readonly="true"/>
+                </row>
+                <row>
+                  <text value="&props.value.label;"/>
+                  <textfield id="ifl_value" readonly="true"/>
+                </row>
+                <row>
+                  <text id="ifl_domaintype" value="&props.domain.label;"/>
+                  <textfield id="ifl_domain" readonly="true"/>
+                </row>
+                <row>
+                  <text value="&props.path.label;"/>
+                  <textfield id="ifl_path" readonly="true"/>
+                </row>
+                <row>
+                  <text value="&props.secure.label;"/>
+                  <textfield id="ifl_secure" readonly="true"/>
+                </row>
+                <row>
+                  <text value="&props.expires.label;"/>
+                  <textfield id="ifl_expires" readonly="true"/>
+                </row>
+              </rows>
+            </grid>
+          </fieldset>
+          <spring flex="5%"/>
+          <box align="horizontal">
+            <button id="removeCookies" class="dialog push" disabled="true"
+                          value="&button.removecookie.label;"
+                          onclick="DeleteCookieSelected();"/>
+            <button id="removeAllCookies" class="dialog push"
+                          value="&button.removeallcookies.label;"
+                          onclick="DeleteAllCookies();"/>
+            <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
+          </box>
+          <checkbox id="checkbox" value="&checkbox.label;" />
+        </div>
       </box>
       
       <box class="tabpanel" id="servers" flex="100%" align="vertical">
-        <text class="label" value="&div.bannedservers.label;"/>
-        <spring flex="5%"/>
+        <div>
+          <text class="label" value="&div.bannedservers.label;"/>
+          <spring flex="5%"/>
           <tree id="permissionstree" class="inset" style="height: 280px; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
                 multiple="true" onclick="ViewPermissionSelected();">
@@ -131,21 +134,23 @@
             </treehead>
             <treechildren id="permissionslist"/>
           </tree>
-        <spring style="height: 5px;"/>
-        <box align="horizontal">
-          <button id="removePermissions" class="dialog push" disabled="true" 
-                        value="&removepermission.label;" 
-                        onclick="DeletePermissionSelected();"/>
-          <button id="removeAllPermissions" class="dialog push"
-                        value="&removeallpermissions.label;" 
-                        onclick="DeleteAllPermissions();"/>
-        </box>
-        <spring style="height: 5px;"/>
+          <spring style="height: 5px;"/>
+          <box align="horizontal">
+            <button id="removePermissions" class="dialog push" disabled="true" 
+                          value="&removepermission.label;" 
+                          onclick="DeletePermissionSelected();"/>
+            <button id="removeAllPermissions" class="dialog push"
+                          value="&removeallpermissions.label;" 
+                          onclick="DeleteAllPermissions();"/>
+          </box>
+          <spring style="height: 5px;"/>
+        </div>
       </box>
 
       <box class="tabpanel" id="images" style="display:none" flex="100%" align="vertical">
-        <text class="label" value="&div.bannedimages.label;"/>
-        <spring flex="5%"/>
+        <div>
+          <text class="label" value="&div.bannedimages.label;"/>
+          <spring flex="5%"/>
           <tree id="imagestree" class="inset" style="height: 280px; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');"
                 multiple="true" onclick="ViewImageSelected();">
@@ -157,16 +162,17 @@
             </treehead>
             <treechildren id="imageslist"/>
           </tree>
-        <spring style="height: 5px;"/>
-        <box align="horizontal">
-          <button id="removeImages" class="dialog push" disabled="true"
-                        value="&removeimage.label;" 
-                        onclick="DeleteImageSelected();"/>
-          <button id="removeAllImages" class="dialog push"
-                        value="&removeallimages.label;" 
-                        onclick="DeleteAllImages();"/>
-        </box>
-        <spring style="height: 5px;"/>
+          <spring style="height: 5px;"/>
+          <box align="horizontal">
+            <button id="removeImages" class="dialog push" disabled="true"
+                          value="&removeimage.label;" 
+                          onclick="DeleteImageSelected();"/>
+            <button id="removeAllImages" class="dialog push"
+                          value="&removeallimages.label;" 
+                          onclick="DeleteAllImages();"/>
+          </box>
+          <spring style="height: 5px;"/>
+        </div>
       </box>
 
     </tabpanel>
@@ -179,4 +185,3 @@
   </box>
 
 </window>
-

@@ -38,21 +38,22 @@
 
   <spring style="height: 10px;"/>
   <box align="vertical" flex="100%">
-    <title>
-      <text id="heading"/>
-    </title>
-    <tree class="inset" style="height: 275px; width: 440px;" align="vertical">
-      <treecol width="45%"/>
-      <treecol width="55%"/>
-      <treehead>
-        <treerow>
-          <treecell id="fieldHeading"/>
-          <treecell id="valueHeading"/>
-         </treerow>          
-      </treehead>
-      <treechildren id="combolists"/>
-    </tree>
-  
+    <div>
+      <title>
+        <text id="heading"/>
+      </title>
+      <tree class="inset" style="height: 275px; width: 440px;" align="vertical">
+        <treecol width="45%"/>
+        <treecol width="55%"/>
+        <treehead>
+          <treerow>
+            <treecell id="fieldHeading"/>
+            <treecell id="valueHeading"/>
+           </treerow>          
+        </treehead>
+        <treechildren id="combolists"/>
+      </tree>
+    </div>  
   </box>
 
   <spring style="height: 10px;"/>
