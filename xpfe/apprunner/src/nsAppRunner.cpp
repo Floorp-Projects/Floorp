@@ -18,9 +18,15 @@
  */
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "nsAppRunner.h"
-#include "nsIFactory.h"
+#include "nsIAppShellService.h"
+#include "nsRepository.h"
+#include "nsIServiceManager.h"
+#include "xp_core.h"
+#include "xp_mcom.h"
+#include "xp_str.h"
 
 // Define Class IDs.
 static NS_DEFINE_IID(kAppRunnerCID, NS_APPRUNNER_CID);
@@ -99,11 +105,11 @@ nsAppRunner::main( int argc, char *argv[] ) {
 | Store the command line arguments in data members with  minor twiddling to    |
 | simplify lookup.                                                             |
 ------------------------------------------------------------------------------*/
-PRBool NSAppRunner::ParseCommandLine( int argc, char *argv[] ) { {
+PRBool nsAppRunner::ParseCommandLine( int argc, char *argv[] ) {
     mArgc = argc;
 
     // Allocate array of arg info structures.
-    mArg = new [argc] Arg;
+    mArg = new Arg[ mArgc ];
 
     // Fill in structures.
     for( int i = 0; i < mArgc; i++ ) {
@@ -125,8 +131,8 @@ PRBool NSAppRunner::ParseCommandLine( int argc, char *argv[] ) { {
             mArg[i].value = p;
 
             // Strip trailing '"'.
-            if ( p[ PR_strlen(p) ] == '"' ) {
-                p[ PR_strlen(p) ] = 0;
+            if ( p[ XP_STRLEN(p) ] == '"' ) {
+                p[ XP_STRLEN(p) ] = 0;
             }
         } else {
             // Have value point to this null string.
@@ -139,72 +145,154 @@ PRBool NSAppRunner::ParseCommandLine( int argc, char *argv[] ) { {
 }
 
 
-/*---------------------- NSAppRunner::IsOptionSpecified ------------------------
-| Enumerate array of arg structures, looking for key.                          |
+/*------------------------- nsAppRunner::IndexOfArg ----------------------------
+| Return index of specified argument "key."  -1 if not found.                  |
 ------------------------------------------------------------------------------*/
-PRBool NSAppRunner::IsOptionSpecified( const char *key, PRBool ignoreCase ) {
-    PRBool result = PR_FALSE;
-    for( int i = 0; i < mArgc; i++ ) {
-        if ( ignoreCase ) {
-            if ( PR_strcmpi( key, mArg[i].key ) == 0 ) {
-                result = PR_TRUE;
-                break;
-            }
-        } else {
-            if ( PR_strcmp( key, mArg[i].key ) == 0 ) {
-                result = PR_TRUE;
-                break;
-            }
+int nsAppRunner::IndexOfArg( const char *key, PRBool ignoreCase ) {
+    int result = -1;
+    for( int i = 0; result == -1 && i < mArgc; i++ ) {
+        if ( ( ignoreCase && XP_STRCASECMP( key, mArg[i].key ) == 0 )
+             ||
+             ( !ignoreCase && XP_STRCMP( key, mArg[i].key ) == 0 ) ) {
+            result = i;
         }
     }
     return result;
 }
 
-/*----------------------- NSAppRunner::*ValueForOption -------------------------
-  Look up key
+
+/*---------------------- nsAppRunner::IsOptionSpecified ------------------------
+| Search for key via IndexOfArg and return true iff it is found.               |
 ------------------------------------------------------------------------------*/
-const char *NSAppRunner::ValueForOption( const char *key, PRBool ignoreCase ) {
-    return 0;
+PRBool nsAppRunner::IsOptionSpecified( const char *key, PRBool ignoreCase ) {
+    int index = this->IndexOfArg( key, ignoreCase );
+    return index != -1;
+}
+
+/*----------------------- nsAppRunner::*ValueForOption -------------------------
+| Search for key via IndexOfArg and return corresponding value if it is found, |
+| 0 otherwise.                                                                 |
+------------------------------------------------------------------------------*/
+const char *nsAppRunner::ValueForOption( const char *key, PRBool ignoreCase ) {
+    const char *result = 0;
+    int index = this->IndexOfArg( key, ignoreCase );
+    if ( index != -1 ) {
+        result = mArg[ index ].value;
+    }
+    return result;
 }
 
 
-    // Process management:
-    //   Initialize       - Initialize kernel services.  Default is to initialize
-    //                      NSPR.
-    //   ShowSplashScreen - Puts up splash screen.  Default is to do nothing.
-    //                      We will override per platform, probably.
-    //   IsSingleInstanceOnly - Default is PR_FALSE, platforms must override
-    //                      if they need to block multiple instances.
-    //   IsAlreadyRunning - Indicate whether another process is already running.
-    //                      Default returns PR_FALSE; platforms should override
-    //                      if they care about this (i.e., return PR_TRUE from
-    //                      PermitsMultipleInstances).
-    //   NotifyServerProcess - Passes request to the server process to be run.
-    //   ...synchronization stuff...TBD
-    virtual PRBool   Initialize();
-    virtual nsresult Exit( nsresult rv );
-    virtual PRBool   ShowSplashScreen();
-    virtual PRBool   IsSingleInstanceOnly() const;
-    virtual PRBool   IsAlreadyRunning() const;
-    virtual PRBool   NotifyServerProcess( int argc, char *argv[] );
+/*------------------------- nsAppRunner::Initialize ----------------------------
+| Default simply returns NS_OK.                                                |
+------------------------------------------------------------------------------*/
+nsresult nsAppRunner::Initialize() {
+    return NS_OK;
+}
 
-    // AppShell loading:
-    //   AppShellCID  - Returns CID for app shell to be loaded/started.
-    //   LoadAppShell - Default creates appShell from ServiceManager using
-    //                  AppShellCID().
-    //   RunShell     - Initialize/Run/Shutdown the app shell
-    //   AppShell     - Returns pointer to app shell
-    virtual nsCID        AppShellCID() const;
-    virtual nsresult     LoadAppShell();
-    virtual nsresult     RunShell();
-    virtual nsIAppShell *AppShell() const;
 
-    // Utilities:
-    //   DisplayMsg - Displays error/status message.  Default is to outpout to
-    //                stderr.  Override to put up message box, etc.
-    virtual void DisplayMsg( const char *title, const char *text );
-            void DisplayMsg( const char *title, const char *text, ... );
-            void DisplayMsg( const char *title, const char *text, valist args );
+/*--------------------------- nsAppRunner::OnExit ------------------------------
+| Default simply returns the input application return value unmodified.        |
+------------------------------------------------------------------------------*/
+nsresult nsAppRunner::OnExit( nsresult rvIn ) {
+    return rvIn;
+}
+
+
+/*------------------------- nsAppRunner::AppShellCID ---------------------------
+| Return the CID for nsAppShell.  Long term, get this ID dynamically?          |
+------------------------------------------------------------------------------*/
+nsCID nsAppRunner::AppShellCID() const {
+    nsCID appShellCID = NS_APPSHELL_SERVICE_CID;
+    return appShellCID;
+}
+
+
+/*------------------------ nsAppRunner::LoadAppShell ---------------------------
+| Create an instance of the app shell (object of class represented by          |
+| the CID returned by AppShellCID).                                            |
+------------------------------------------------------------------------------*/
+nsresult nsAppRunner::LoadAppShell() {
+    nsIAppShellService *appShell = 0;
+    nsIID kIAppShellServiceIID = NS_IAPPSHELL_SERVICE_IID;
+    nsresult rv = nsServiceManager::GetService( this->AppShellCID(),
+                                                kIAppShellServiceIID,
+                                                (nsISupports**)&appShell );
+    if ( rv == NS_OK ) {
+        this->SetAppShell( appShell );
+        NS_IF_RELEASE( appShell );
+    }
+
+    return rv;
+}
+
+
+/*-------------------------- nsAppRunner::RunShell -----------------------------
+| Run the app shell.                                                           |
+------------------------------------------------------------------------------*/
+nsresult nsAppRunner::RunShell() {
+    nsresult result = this->mAppShell->Run();
+    return result;
+}
+
+
+/*-------------------------- nsAppRunner::*AppShell ----------------------------
+| Return the app shell associated with this app runner.                        |
+------------------------------------------------------------------------------*/
+nsIAppShellService *nsAppRunner::AppShell() const {
+    return mAppShell;
+}
+
+
+/*------------------------- nsAppRunner::DisplayMsg ----------------------------
+| Write out the title and text to stderr.                                      |
+------------------------------------------------------------------------------*/
+void nsAppRunner::DisplayMsg( const char *title, const char *text ) {
+    fprintf( stderr, "%s\n", title );
+    fprintf( stderr, "%s\n", text );
+    return;
+}
+
+
+/*------------------------- nsAppRunner::DisplayMsg ----------------------------
+| Use svprintf to expand the text+args then display the complete text using    |
+| the overloaded version of nsAppRunner::DisplayMsg().                         |
+------------------------------------------------------------------------------*/
+static void displayMsg( nsAppRunner &obj, const char *title, const char *text, va_list args ) {
+    // Fix this later.
+    obj.DisplayMsg( title, text );
+    return;
+}
+
+
+/*------------------------- nsAppRunner::DisplayMsg ----------------------------
+| Convert the extra arguments to a vargs list and invoke the static function   |
+| that takes one of those.                                                     |
+------------------------------------------------------------------------------*/
+void nsAppRunner::DisplayMsg( const char *title, const char *text, ... ) {
+    va_list args;
+    va_start( text, args );
+    this->DisplayMsg( title, text, args );
+    va_end( args );
+    return;
+}
+
+
+/*------------------------ nsAppRunner::&SetAppShell ---------------------------
+| Simply do as directed, return *this.                                         |
+------------------------------------------------------------------------------*/
+nsAppRunner &nsAppRunner::SetAppShell( nsIAppShellService *newAppShell ) {
+    // Bump refcount for new shell.
+    newAppShell->AddRef();
+
+    // Release current app shell.
+    NS_IF_RELEASE(this->mAppShell);
+
+    // Attach new one.
+    this->mAppShell = newAppShell;
+
+    return *this;
+}
 
 
 #if 0
