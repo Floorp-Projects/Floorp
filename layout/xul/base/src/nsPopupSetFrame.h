@@ -138,6 +138,10 @@ protected:
 
   PRInt32 mXPos;                // Active child's x position
   PRInt32 mYPos;                // Active child's y position
+
+  nsString mPopupAnchor;        // Active child's anchor.
+  nsString mPopupAlign;         // Active child's align.
+
   nsAutoString mPopupType;
   PRBool mCreateHandlerSucceeded;  // Did the create handler succeed?
   nsSize mLastPref;

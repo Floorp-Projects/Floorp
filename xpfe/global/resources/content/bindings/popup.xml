@@ -18,6 +18,8 @@
     </content>
 
     <implementation>
+      <property name="position" onget="return this.getAttribute('position');"
+                                onset="this.setAttribute('position', val); return val;"/>
       <method name="openPopup">
         <parameter name="element"/>
         <parameter name="xpos"/>

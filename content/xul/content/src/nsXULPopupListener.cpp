@@ -712,6 +712,53 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
   return;
 }
 
+static void ConvertPosition(nsIDOMElement* aPopupElt, nsString& aAnchor, nsString& aAlign, PRInt32& aY)
+{
+  nsAutoString position;
+  aPopupElt->GetAttribute(NS_LITERAL_STRING("position"), position);
+  if (position.IsEmpty())
+    return;
+
+  if (position.Equals(NS_LITERAL_STRING("before_start"))) {
+    aAnchor.AssignWithConversion("topleft");
+    aAlign.AssignWithConversion("bottomleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("before_end"))) {
+    aAnchor.AssignWithConversion("topright");
+    aAlign.AssignWithConversion("bottomright");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("after_start"))) {
+    aAnchor.AssignWithConversion("bottomleft");
+    aAlign.AssignWithConversion("topleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("after_end"))) {
+    aAnchor.AssignWithConversion("bottomright");
+    aAlign.AssignWithConversion("topright");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("start_before"))) {
+    aAnchor.AssignWithConversion("topleft");
+    aAlign.AssignWithConversion("topright");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("start_after"))) {
+    aAnchor.AssignWithConversion("bottomleft");
+    aAlign.AssignWithConversion("bottomright");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("end_before"))) {
+    aAnchor.AssignWithConversion("topright");
+    aAlign.AssignWithConversion("topleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("end_after"))) {
+    aAnchor.AssignWithConversion("bottomright");
+    aAlign.AssignWithConversion("bottomleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("overlap"))) {
+    aAnchor.AssignWithConversion("topleft");
+    aAlign.AssignWithConversion("topleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("after_pointer")))
+    aY += 21;
+}
+
 //
 // LaunchPopup
 //
@@ -818,15 +865,19 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
       nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
         // Find out if we're anchored.
-        nsAutoString anchorAlignment; anchorAlignment.AssignWithConversion("none");
-        mElement->GetAttribute(NS_LITERAL_STRING("popupanchor"), anchorAlignment);
+        mPopupContent = popupContent.get();
 
-        nsAutoString popupAlignment; popupAlignment.AssignWithConversion("topleft");
-        mElement->GetAttribute(NS_LITERAL_STRING("popupalign"), popupAlignment);
+        nsAutoString anchorAlignment;
+        mPopupContent->GetAttribute(NS_LITERAL_STRING("popupanchor"), anchorAlignment);
+
+        nsAutoString popupAlignment;
+        mPopupContent->GetAttribute(NS_LITERAL_STRING("popupalign"), popupAlignment);
 
         PRInt32 xPos = aClientX, yPos = aClientY;
         
-        mPopupContent = popupContent.get();
+        ConvertPosition(mPopupContent, anchorAlignment, popupAlignment, yPos);
+        if (!anchorAlignment.IsEmpty() && !popupAlignment.IsEmpty())
+          xPos = yPos = -1;
 
         nsCOMPtr<nsIDOMNode> parent;
         mPopupContent->GetParentNode(getter_AddRefs(parent));
