@@ -76,7 +76,7 @@ static size_t CopyLowBits(void *dst, size_t dstlen, void *src, size_t srclen)
     return dstlen;
 }
 
-#if defined(SCO) || defined(UNIXWARE) || defined(BSDI)
+#if defined(SCO) || defined(UNIXWARE) || defined(BSDI) || defined(FREEBSD)
 #include <sys/times.h>
 
 #define getdtablesize() sysconf(_SC_OPEN_MAX)
