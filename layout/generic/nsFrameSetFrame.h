@@ -169,6 +169,12 @@ protected:
                        nsFramesetSpec* aSpecs, 
                        nscoord*        aValues);
 
+  void GenerateRowCol(nsIPresContext* aPresContext,
+                       nscoord         aSize,
+                       PRInt32         aNumSpecs,
+                       nsFramesetSpec* aSpecs,
+                       nscoord*        aValues);
+
   virtual void GetDesiredSize(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics&     aDesiredSize);

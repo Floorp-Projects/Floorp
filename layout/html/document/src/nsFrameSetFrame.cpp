@@ -381,6 +381,37 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext,
 }
 
 
+/**
+  * Translate the rows/cols integer sizes into an array of specs for
+  * each cell in the frameset.  Reverse of CalculateRowCol() behaviour.
+  * This allows us to maintain the user size info through reflows.
+  */
+void nsHTMLFramesetFrame::GenerateRowCol(nsIPresContext* aPresContext, 
+                                          nscoord         aSize, 
+                                          PRInt32         aNumSpecs, 
+                                          nsFramesetSpec* aSpecs, 
+                                          nscoord*        aValues)
+{
+  float t2p;
+  aPresContext->GetTwipsToPixels(&t2p);
+  PRInt32 i;
+ 
+  for (i = 0; i < aNumSpecs; i++) {   
+    switch (aSpecs[i].mUnit) {
+      case eFramesetUnit_Fixed:
+        aSpecs[i].mValue = NSToCoordRound(t2p * aValues[i]);
+        break;
+      case eFramesetUnit_Percent: // XXX Only accurate to 1%, need 1 pixel
+        aSpecs[i].mValue = (100*aValues[i])/aSize;
+        break;
+      case eFramesetUnit_Relative:
+        aSpecs[i].mValue = aValues[i];
+        break;
+    }
+  }
+}
+
+
 PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext) 
 {
   float p2t;
@@ -1455,6 +1486,10 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext,
     }
     mColSizes[mDragger->mPrevNeighbor] += change;
     mColSizes[mDragger->mNextNeighbor] -= change;
+
+    // Recompute the specs from the new sizes.
+    nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(&aPresContext);
+    GenerateRowCol(&aPresContext, width, mNumCols, mColSpecs, mColSizes);
   } else {
     change = aEvent->point.y - mLastDragPoint.y;
     if (change < 0) {
@@ -1476,6 +1511,10 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext,
     }
     mRowSizes[mDragger->mPrevNeighbor] += change;
     mRowSizes[mDragger->mNextNeighbor] -= change;
+
+    // Recompute the specs from the new sizes.
+    nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(&aPresContext);
+    GenerateRowCol(&aPresContext, height, mNumRows, mRowSpecs, mRowSizes);
   }
 
   if (change != 0) {
