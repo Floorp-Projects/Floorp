@@ -1286,8 +1286,13 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
       (eReflowReason_Incremental != aReflowState.reason ||
        aReflowState.path->mReflowCommand ||
        mRect != oldRect)) {
-    nscoord containingBlockWidth = -1;
-    nscoord containingBlockHeight = -1;
+    // The containing block for the abs pos kids is formed by our content edge.
+    nscoord containingBlockWidth = aDesiredSize.width -
+      (aReflowState.mComputedBorderPadding.left +
+       aReflowState.mComputedBorderPadding.right);
+    nscoord containingBlockHeight = aDesiredSize.height -
+      (aReflowState.mComputedBorderPadding.top +
+       aReflowState.mComputedBorderPadding.bottom);
     nsRect  childBounds;
 
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
