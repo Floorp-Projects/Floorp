@@ -983,8 +983,14 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
+	// check whether style allows selection
+  // if not dont tell selection the mouse event even occured.
+
   if (!IsMouseCaptured(aPresContext))
     CaptureMouse(aPresContext, PR_TRUE);
+
+  if (!IsSelectable(this))
+    return NS_OK;
 
   PRInt16 displayresult = nsISelectionController::SELECTION_OFF;
   nsresult rv;
@@ -1004,10 +1010,6 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
     return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
 
 
-	// check whether style allows selection
-  // if not dont tell selection the mouse event even occured.
-  if (!IsSelectable(this))
-    return NS_OK;
   nsCOMPtr<nsIPresShell> shell;
   rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
@@ -1140,7 +1142,9 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
                                   nsGUIEvent*     aEvent,
                                   nsEventStatus*  aEventStatus)
 {
-   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
+  if (!IsSelectable(this))
+    return NS_OK;
+  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
   nsresult result;
