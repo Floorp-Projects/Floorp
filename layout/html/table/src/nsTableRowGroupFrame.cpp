@@ -854,7 +854,7 @@ nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
     }
   }
 
-  // Did we successfully relow our mapped children?
+  // Did we successfully reflow our mapped children?
   if (PR_TRUE == reflowMappedOK) {
     // Any space left?
     if (state.availSize.height <= 0) {

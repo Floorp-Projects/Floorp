@@ -19,45 +19,23 @@
 #define nsTableCaptionFrame_h__
 
 #include "nscore.h"
-#include "nsContainerFrame.h"
+#include "nsBodyFrame.h"
 #include "nsTableCaption.h"
 
 /**
  * nsTableCaptionFrame
- * data structure to maintain information about a single table caption geometry
+ * Data structure to maintain information about a single table caption geometry.
+ * A caption is simply a body frame with a few extra data fields that cache 
+ * minimum and maximum width values.
  *
  * @author  sclark
  */
-class nsTableCaptionFrame : public nsContainerFrame
+class nsTableCaptionFrame : public nsBodyFrame
 {
 public:
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
                            nsIFrame*   aParent);
-
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect);
-
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
-
-  /**
-   * @see nsContainerFrame
-   */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
 
   virtual void          VerticallyAlignChild(nsIPresContext* aPresContext);
 
@@ -80,10 +58,6 @@ protected:
     * @see NewFrame
     */
   nsTableCaptionFrame( nsIContent* aContent, nsIFrame* aParentFrame);
-
-  /** Create a psuedo-frame for this caption.  Handles continuing frames as needed.
-    */
-  virtual void CreatePsuedoFrame(nsIPresContext* aPresContext);
 
 private:
   

@@ -90,7 +90,7 @@ protected:
   nsTableCellFrame(nsIContent* aContent,
 					         nsIFrame* aParentFrame);
 
-  /** Create a psuedo-frame for this caption.  Handles continuing frames as needed.
+  /** Create a psuedo-frame for this cell.  Handles continuing frames as needed.
     */
   virtual void CreatePsuedoFrame(nsIPresContext* aPresContext);
 

@@ -420,10 +420,10 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumnsForSpecifiedWidthTabl
 }
 
 PRBool BasicTableLayoutStrategy::BalanceProportionalColumnsForAutoWidthTable( nsIPresContext* aPresContext,
-                                                                  PRInt32 aAvailWidth,
-                                                                  PRInt32 aMaxWidth,
-                                                                  PRInt32 aMinTableWidth, 
-                                                                  PRInt32 aMaxTableWidth)
+                                                                              PRInt32 aAvailWidth,
+                                                                              PRInt32 aMaxWidth,
+                                                                              PRInt32 aMinTableWidth, 
+                                                                              PRInt32 aMaxTableWidth)
 {
   PRBool result = PR_TRUE;
 
