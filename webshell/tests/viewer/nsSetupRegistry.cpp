@@ -179,6 +179,7 @@ static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,        NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFXULBuilderCID,         NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kXULDataSourceCID,			NS_XULDATASOURCE_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,		NS_XULCONTENTSINK_CID);
 
@@ -262,6 +263,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kRDFTreeBuilderCID,        RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFContentSinkCID,        RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFXMLDataSourceCID,      RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFXULBuilderCID,         RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kXULDataSourceCID,		   RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kXULContentSinkCID,		   RDF_DLL, PR_FALSE, PR_FALSE);
 
