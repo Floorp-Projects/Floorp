@@ -102,9 +102,12 @@ static void lo_SetupBreakState (LO_TextBlock * block );
 
 Bool lo_GrowTextBlock (LO_TextBlock * block,
                        uint32 length );
-static void lo_GetTextParseAtributes (lo_DocState * state,
-                                      Bool * multiByte );
-
+typedef enum {
+   kSimpleSBTextParseAttribute = 0,
+   kMBTextParseAttribute,
+   kThaiTextParseAttribute 
+ } loTextParseAttribute;
+static loTextParseAttribute lo_GetTextParseAttributes (lo_DocState * state);
 
 #ifdef XP_MAC
 #define	kStaticMeasureTextBufferSize	512
@@ -4606,19 +4609,16 @@ void lo_FillInLineFeed( MWContext *context,
 
 Bool lo_CanUseBreakTable ( lo_DocState * state )
 {
-	Bool	multiByte;
 	Bool	useBreakTable;
 	
 	useBreakTable = TRUE;
 	
-	lo_GetTextParseAtributes ( state, &multiByte );
-
 #ifndef FAST_MULTI	
 	/* 
      * We also need some sort of check for the script - for example
 	 * Arabic should go through the old algorithm for now.  
      */
-	if ( multiByte )
+	if ( kMBTextParseAttribute == lo_GetTextParseAttributes(state) )
 		{
 		useBreakTable = FALSE;
 		}
@@ -5280,6 +5280,7 @@ static uint32  lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_T
 
 /* the parsers */
 static void lo_ParseSingleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
+static void lo_ParseThaiText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
 static void lo_ParseSinglePreformattedText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
 static void lo_ParseDoubleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
 static void lo_ParseDoublePreformattedText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
@@ -5392,7 +5393,6 @@ lo_CurrentTextBlock ( MWContext * context, lo_DocState * state )
 void lo_AppendTextToBlock ( MWContext *context, lo_DocState *state, LO_TextBlock * block, char *text )
 {
 	Bool	parseAllText;
-	Bool	multiByte;
 	
 	/*
 	 * We have several cases in which we can just bail:
@@ -5467,33 +5467,53 @@ void lo_AppendTextToBlock ( MWContext *context, lo_DocState *state, LO_TextBlock
 	 *      - non-breaking spaces 
      */
 	
-	lo_GetTextParseAtributes ( state, &multiByte );
+    switch( lo_GetTextParseAttributes ( state ))
+    {
+      case kSimpleSBTextParseAttribute:
+                     lo_ParseSingleText ( state, block, parseAllText, text );
+           break;
+  
+      case kMBTextParseAttribute:
+                     lo_ParseDoubleText ( state, block, parseAllText, text );
+           break;
+  
+      case kThaiTextParseAttribute:
+                     lo_ParseThaiText ( state, block, parseAllText, text );
+           break;
+  
+      default:
+           XP_ASSERT(0); /* wrong text parse attribute value */
+           break;
+    }
+}
+static loTextParseAttribute
+lo_GetTextParseAttributes ( lo_DocState * state)
+{
+      
+    XP_ASSERT(NULL != state);
+    if ( state != NULL )
+    {
+       uint16 charset = state->font_stack->text_attr->charset;
+       if ( charset == CS_TIS620 )
+          return kThaiTextParseAttribute;
 
-	if ( FALSE || multiByte )
-		{
-		lo_ParseDoubleText ( state, block, parseAllText, text );
-		}
-	else
-		{
-		lo_ParseSingleText ( state, block, parseAllText, text );
-		}
+       if ( (INTL_CharSetType ( charset ) != SINGLEBYTE ) && 
+           !( INTL_CharSetType ( charset ) & CS_SPACE ) )
+          return kMBTextParseAttribute;
+    }
+ 
+    return kSimpleSBTextParseAttribute;
 }
 
 static void
-lo_GetTextParseAtributes ( lo_DocState * state, Bool * multiByte )
+lo_ParseThaiText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text )
 {
-	int16	charset;
-	
-	*multiByte = FALSE;
-	
-	if ( state != NULL )
-		{
-		charset = state->font_stack->text_attr->charset;
-		if ( (INTL_CharSetType ( charset ) != SINGLEBYTE ) && !( INTL_CharSetType ( charset ) & CS_SPACE ) )
-			{
-			*multiByte = TRUE;
-			}
-		}
+
+   XP_ASSERT(0); /* delete when we really have the code */
+ 
+   /* Call the single byte one untill we have the real lo_ParseThaiText ready */
+ 
+   lo_ParseSingleText(state, block, parseAllText, text);
 }
 
 static void
@@ -6094,12 +6114,11 @@ lo_FlushText ( MWContext * context, lo_DocState * state )
 	
 	if ( block != NULL )
 		{
-		lo_GetTextParseAtributes ( state, &multiByte );
 		
 		/* add any text to the text block that may be sitting in the
            line buffer */
 		/* BRAIN DAMAGE: These should both be handled the same way */
-		if ( multiByte )
+		if ( kMBTextParseAttribute == lo_GetTextParseAttributes(state) )
 			{
 			if ( state->line_buf_len > 0 )
 				{
