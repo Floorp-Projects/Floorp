@@ -163,7 +163,7 @@ WellTerminated(JSContext *cx, JSTokenStream *ts, JSTokenType lastExprType)
     if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
 #if JS_HAS_LEXICAL_CLOSURE
 	if ((tt == TOK_FUNCTION || lastExprType == TOK_FUNCTION) &&
-	    (cx->version < JSVERSION_1_2) && (cx->version >= JSVERSION_1_0)) {
+	    cx->version < JSVERSION_1_2) {
 	    return JS_TRUE;
 	}
 #endif
