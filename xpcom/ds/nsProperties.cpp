@@ -348,6 +348,45 @@ nsPersistentProperties::GetProperty(const nsString& aKey, nsString& aValue)
   return NS_ERROR_FAILURE;
 }
 
+PR_STATIC_CALLBACK(PRIntn)
+AddElemToArray(PLHashEntry* he, PRIntn i, void* arg)
+{
+  nsISupportsArray	*propArray = (nsISupportsArray *) arg;
+
+  nsString* keyStr = new nsString((PRUnichar*) he->key);
+  nsString* valueStr = new nsString((PRUnichar*) he->value);
+
+  // XXX Fix to make XPCOM friendly?
+  nsPropertyElement *element = new nsPropertyElement();
+  element->SetKey(keyStr);
+  element->SetValue(valueStr);
+  propArray->InsertElementAt(element, i);
+
+  return HT_ENUMERATE_NEXT;
+}
+
+NS_IMETHODIMP
+nsPersistentProperties::EnumerateProperties(nsIBidirectionalEnumerator** aResult)
+{
+	if (!mTable)
+		return NS_ERROR_FAILURE;
+
+	nsISupportsArray* propArray;
+	nsresult rv = NS_NewISupportsArray(&propArray);
+	if (rv != NS_OK)
+		return rv;
+
+	// Step through hash entries populating a transient array
+	PL_HashTableEnumerateEntries(mTable, AddElemToArray, (void *)propArray);
+
+	// Convert array into enumerator
+	rv = NS_NewISupportsArrayEnumerator(propArray, aResult);
+	if (rv != NS_OK)
+		return rv;
+
+	return NS_OK;
+}
+
 PRInt32
 nsPersistentProperties::Read()
 {
@@ -423,5 +462,94 @@ nsPersistentProperties::HasProperty(const char* prop, nsISupports* value)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
- 
+
+
+////////////////////////////////////////////////////////////////////////////////
+// PropertyElement
+////////////////////////////////////////////////////////////////////////////////
+
+nsPropertyElement::nsPropertyElement()
+{
+    NS_INIT_REFCNT();
+    mKey = nsnull;
+    mValue = nsnull;
+}
+
+nsPropertyElement::~nsPropertyElement()
+{
+	if (mKey)
+		delete mKey;
+	if (mValue)
+		delete mValue;
+}
+NS_METHOD
+nsPropertyElement::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsPropertyElement* propElem = new nsPropertyElement();
+    if (propElem == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(propElem);
+    nsresult rv = propElem->QueryInterface(aIID, aResult);
+    NS_RELEASE(propElem);
+    return rv;
+}
+
+NS_IMPL_ADDREF(nsPropertyElement)
+NS_IMPL_RELEASE(nsPropertyElement)
+
+NS_IMETHODIMP
+nsPropertyElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    NS_ASSERTION(aInstancePtr != nsnull, "null ptr");
+    if (aIID.Equals(nsIPropertyElement::GetIID()) ||
+        aIID.Equals(nsISupports::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsIPropertyElement*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+nsPropertyElement::GetKey(nsString** aReturnKey)
+{
+	if (aReturnKey)
+	{
+		*aReturnKey = mKey;
+		return NS_OK;
+	}
+
+	return NS_ERROR_INVALID_POINTER;
+}
+
+NS_IMETHODIMP
+nsPropertyElement::GetValue(nsString** aReturnValue)
+{
+	if (aReturnValue)
+	{
+		*aReturnValue = mValue;
+		return NS_OK;
+	}
+
+	return NS_ERROR_INVALID_POINTER;
+}
+
+NS_IMETHODIMP
+nsPropertyElement::SetKey(nsString* aKey)
+{
+	mKey = aKey;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPropertyElement::SetValue(nsString* aValue)
+{
+	mValue = aValue;
+
+	return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
