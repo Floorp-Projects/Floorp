@@ -80,7 +80,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsITimerCallback
-  NS_DECL_NSITIMERCALLBACK
+  NS_IMETHOD Notify(nsITimer *timer) = 0;
 
   virtual nsresult  PlaySound() = 0;
 
