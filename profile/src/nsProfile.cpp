@@ -189,7 +189,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
     // Check result.
     if ( reg != NULL ) {
         // Latch onto the registry object.
-        reg->AddRef();
+        NS_ADDREF(reg);
 
         // Open it against the input file name.
         rv = reg->Open();
@@ -264,7 +264,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
     // Check result.
     if ( reg != NULL ) {
         // Latch onto the registry object.
-        reg->AddRef();
+        NS_ADDREF(reg);
 
         // Open it against the input file name.
         rv = reg->Open();
@@ -289,7 +289,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
                         numKeys++;
                     }
                     *numProfiles = numKeys;
-                    enumKeys->Release();
+                    NS_RELEASE(enumKeys);
                 }
             }
             reg->Close();
@@ -310,7 +310,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
     // Check result.
     if ( reg != NULL ) {
         // Latch onto the registry object.
-        reg->AddRef();
+        NS_ADDREF(reg);
 
         // Open it against the input file name.
         rv = reg->Open();
@@ -372,7 +372,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
   // Check result.
   if ( reg != NULL ) {
       // Latch onto the registry object.
-      reg->AddRef();
+      NS_ADDREF(reg);
 
       // Open it against the input file name.
       rv = reg->Open();
@@ -446,7 +446,7 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
         return NS_ERROR_NULL_POINTER;
 
     // Latch onto the registry object.
-    reg->AddRef();
+    NS_ADDREF(reg);
 
     // Open it against the input file name.
     rv = reg->Open();
