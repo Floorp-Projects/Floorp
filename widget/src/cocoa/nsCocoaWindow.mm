@@ -298,7 +298,10 @@ nsCocoaWindow::nsCocoaWindow()
   , mIsActive(PR_FALSE)
   , mZoomOnShow(PR_FALSE)
 #endif
-: mIsResizing(PR_FALSE)
+: 
+  mOffsetParent(nsnull)
+, mIsDialog(PR_FALSE)
+, mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
 , mWindow(nil)
 {
@@ -367,13 +370,29 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
   Inherited::BaseCreate ( aParent, aRect, aHandleEventFunction, aContext, aAppShell,
                             aToolkit, aInitData );
                             
-  if ( !aParent ) {
+  if ( !aNativeParent ) {
+    mOffsetParent = aParent;
+
+    nsWindowType windowType = eWindowType_toplevel;
+    if (aInitData) {
+      mWindowType = aInitData->mWindowType;
+      // if a toplevel window was requested without a titlebar, use a dialog windowproc
+      if (aInitData->mWindowType == eWindowType_toplevel &&
+        (aInitData->mBorderStyle == eBorderStyle_none ||
+         aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
+        windowType = eWindowType_dialog;
+    } 
+    else
+      mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
+    
     // create the cocoa window
     NSRect rect;
     rect.origin.x = rect.origin.y = 1.0;
-    rect.size.width = rect.size.height = 50.0;
+    rect.size.width = rect.size.height = 1.0;
     unsigned int features = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask 
                               | NSResizableWindowMask;
+    if ( mWindowType == eWindowType_popup || mWindowType == eWindowType_invisible )
+      features = 0;
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
                         backing:NSBackingStoreBuffered defer:NO];
     
@@ -389,7 +408,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
     [mWindow setDelegate:mDelegate];
     
-    mWindowMadeHere = PR_TRUE;
+    mWindowMadeHere = PR_TRUE;    
   }
 
 #if 0
@@ -741,7 +760,7 @@ nsCocoaWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventR
 // Create a nsCocoaWindow using a native window provided by the application
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeParent,   // this is a windowPtr
+NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -755,7 +774,7 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeParent,   // this is a
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aNativeParent,   // this is a windowPtr
+NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -763,9 +782,9 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aNativeParent,   // this is a win
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  return(StandardCreate(nsnull, aRect, aHandleEventFunction,
+  return(StandardCreate(aParent, aRect, aHandleEventFunction,
                           aContext, aAppShell, aToolkit, aInitData,
-                            aNativeParent));
+                            nsnull));
 }
 
 
@@ -971,19 +990,38 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 // Move
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
-{
-  
-  // the assumption is that (aX,aY) is a point in window coordinates. Convert
-  // to screen coordinates before calling |setFrameTopLeftPoint|.
-  if ( mWindow ) {
+{  
+  if ( mWindow ) {  
+    // if we're a popup, we have to convert from our parent widget's coord
+    // system to the global coord system first because the (x,y) we're given
+    // is in its coordinate system.
+    if ( mWindowType == eWindowType_popup ) {
+      nsRect localRect, globalRect; 
+      localRect.x = aX;
+      localRect.y = aY;  
+      if ( mOffsetParent ) {
+        mOffsetParent->WidgetToScreen(localRect,globalRect);
+        aX=globalRect.x;
+        aY=globalRect.y;
+     }
+    }
+    
     NSPoint coord = {aX, aY};
-    coord = [mWindow convertBaseToScreen:coord];
-printf("moving to %d %d\n", aX, aY);
+    //coord = [mWindow convertBaseToScreen:coord];
+printf("moving to %d %d. screen coords %f %f\n", aX, aY, coord.x, coord.y);
 
  //FIXME -- ensure it's on the screen. Cocoa automatically corrects for windows
  //   with title bars, but for other windows, we have to do this...
  
+    // the point we have assumes that the screen origin is the top-left. Well,
+    // it's not. Use the screen object to convert.
+    //FIXME -- doesn't work on monitors other than primary
+    NSRect screenRect = [[NSScreen mainScreen] frame];
+    coord.y = (screenRect.origin.y + screenRect.size.height) - coord.y;
+printf("final coords %f %f\n", coord.x, coord.y);
+printf("- window coords before %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
     [mWindow setFrameTopLeftPoint:coord];
+printf("- window coords after %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
   }
   
 #if 0
@@ -1275,7 +1313,10 @@ printf("resizing to %d %d\n", aWidth, aHeight);
   if ( mWindow ) {
     NSRect newBounds = [mWindow frame];
     newBounds.size.width = aWidth;
-    newBounds.size.height = aHeight + kTitleBarHeight;     // add height of title bar
+    if ( mWindowType == eWindowType_popup )
+      newBounds.size.height = aHeight;
+    else
+      newBounds.size.height = aHeight + kTitleBarHeight;     // add height of title bar
     StartResizing();
     [mWindow setFrame:newBounds display:NO];
     StopResizing();

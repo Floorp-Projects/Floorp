@@ -89,7 +89,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenu)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItem)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScrollbar)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsVertScrollbar)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHorizScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -181,11 +182,11 @@ static nsModuleComponentInfo components[] =
 	{	"Horiz Scrollbar",
 		NS_HORZSCROLLBAR_CID,
 		"@mozilla.org/widgets/horizscroll/mac;1",
-		nsScrollbarConstructor },
+		nsHorizScrollbarConstructor },
 	{	"Vert Scrollbar",
 		NS_VERTSCROLLBAR_CID,
 		"@mozilla.org/widgets/vertscroll/mac;1",
-		nsScrollbarConstructor },
+		nsVertScrollbarConstructor },
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetModule, components)
