@@ -22,8 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= nsappshell
 MODULE		= raptor
+LIBRARY_NAME	= nsappshell
 
 CPPSRCS		= \
 		nsXULCommand.cpp \
@@ -44,7 +44,7 @@ CPPSRCS		= \
 		nsAbout.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/bin -ljsdom
+EXTRA_DSO_LDOPTS = -L$(DIST)/bin -ljsdom $(FULLCIRCLE_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
