@@ -3287,27 +3287,87 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 PresShell::GoToAnchor(const nsString& aAnchorName) const
 {
-  nsCOMPtr<nsIDOMDocument> doc;
-  nsresult                     rv = NS_OK;
-  nsCOMPtr<nsIContent>  content;
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIContent> content;
 
-  if (NS_SUCCEEDED(mDocument->QueryInterface(NS_GET_IID(nsIDOMDocument),
-                                             getter_AddRefs(doc)))) {    
+  // Search for an element with a matching "id" attribute
+  if (doc) {    
     nsCOMPtr<nsIDOMElement> element;
-
-    // Find the element with the specified id
     rv = doc->GetElementById(aAnchorName, getter_AddRefs(element));
     if (NS_SUCCEEDED(rv) && element) {
       // Get the nsIContent interface, because that's what we need to
       // get the primary frame
-      rv = element->QueryInterface(NS_GET_IID(nsIContent),
-                                   getter_AddRefs(content));
+      content = do_QueryInterface(element);
     }
   }
 
-  if (NS_SUCCEEDED(rv) && content) {
+  // Search for an anchor element with a matching "name" attribute
+  if (!content && htmlDoc) {
+    nsCOMPtr<nsIDOMNodeList> list;
+    // Find a matching list of named nodes
+    rv = htmlDoc->GetElementsByName(aAnchorName, getter_AddRefs(list));
+    if (NS_SUCCEEDED(rv) && list) {
+      PRUint32 count;
+      PRUint32 i;
+      list->GetLength(&count);
+      // Loop through the named nodes looking for the first anchor
+      for (i = 0; i < count; i++) {
+        nsCOMPtr<nsIDOMNode> node;
+        rv = list->Item(i, getter_AddRefs(node));
+        if (NS_FAILED(rv)) {
+          break;
+        }
+        // Ensure it's an anchor element
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+        nsAutoString tagName;
+        if (element && NS_SUCCEEDED(element->GetTagName(tagName))) {
+          tagName.ToLowerCase();
+          if (tagName.EqualsWithConversion("a")) {
+            content = do_QueryInterface(element);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Search for anchor in the HTML namespace with a matching name
+  if (!content && !htmlDoc)
+  {
+    nsCOMPtr<nsIDOMNodeList> list;
+    NS_NAMED_LITERAL_STRING(nameSpace, "http://www.w3.org/1999/xhtml");
+    // Get the list of anchor elements
+    rv = doc->GetElementsByTagNameNS(nameSpace, NS_LITERAL_STRING("a"), getter_AddRefs(list));
+    if (NS_SUCCEEDED(rv) && list) {
+      PRUint32 count;
+      PRUint32 i;
+      list->GetLength(&count);
+      // Loop through the named nodes looking for the first anchor
+      for (i = 0; i < count; i++) {
+        nsCOMPtr<nsIDOMNode> node;
+        rv = list->Item(i, getter_AddRefs(node));
+        if (NS_FAILED(rv)) {
+          break;
+        }
+        // Compare the name attribute
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+        nsAutoString value;
+        if (element && NS_SUCCEEDED(element->GetAttribute(NS_LITERAL_STRING("name"), value))) {
+          if (value.EqualsWithConversion(aAnchorName)) {
+            content = do_QueryInterface(element);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+
+  if (content) {
     nsIFrame* frame;
-    
+
     // Get the primary frame
     if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
       rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP,
@@ -4566,7 +4626,7 @@ PresShell::Paint(nsIView              *aView,
       PRBool clipState;
       aRenderingContext.PopState(clipState);
     }
-               
+
 #ifdef NS_DEBUG
     // Draw a border around the frame
     if (nsIFrameDebug::GetShowFrameBorders()) {
