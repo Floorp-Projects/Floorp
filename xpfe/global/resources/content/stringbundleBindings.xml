@@ -8,7 +8,7 @@
     <implementation name="XStringBundle">
       
       <method name="getString">
-        <argument name="aStringKey"/>
+        <parameter name="aStringKey"/>
         <body>
         <![CDATA[
           try {

@@ -56,7 +56,7 @@
         </setter>        
       </property>
       <method name="checkAdjacentElement">
-        <argument name="aNextFlag"/>
+        <parameter name="aNextFlag"/>
         <body>
         <![CDATA[
           var radios = this.getElementsByTagName("radio");
