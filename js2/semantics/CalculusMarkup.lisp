@@ -803,11 +803,20 @@
     (depict-expression markup-stream world set-annotated-expr %prefix%)))
 
 
-; (unique-elt-of <elt-expr>)
-(defun depict-unique-elt-of (markup-stream world level set-annotated-expr)
+; (unique-elt-of <elt-expr> [<var> <condition-expr>])
+(defun depict-unique-elt-of (markup-stream world level set-annotated-expr &optional var condition-annotated-expr)
   (depict-expr-parentheses (markup-stream level %expr%)
-    (depict markup-stream "the one element of ")
-    (depict-expression markup-stream world set-annotated-expr %prefix%)))
+    (cond
+     (var
+       (depict markup-stream "the one element ")
+       (depict-local-variable markup-stream var)
+       (depict markup-stream " " :member-10 " ")
+       (depict-expression markup-stream world set-annotated-expr %term%)
+       (depict markup-stream " that satisfies ")
+       (depict-expression markup-stream world condition-annotated-expr %logical%))
+     (t
+      (depict markup-stream "the one element of ")
+      (depict-expression markup-stream world set-annotated-expr %prefix%)))))
 
 
 ;;; Vectors or Sets

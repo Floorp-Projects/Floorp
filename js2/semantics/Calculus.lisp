@@ -3655,18 +3655,30 @@
     (error "unique-elt-of called on a set with other than one element"))
   (assert-non-null (nth (integer-length set) keywords)))
 
-; (unique-elt-of <elt-expr>)
-; Returns any element of <set-expr>, which must be a nonempty set.
-(defun scan-unique-elt-of (world type-env special-form set-expr)
+; (unique-elt-of <elt-expr> [<var> <condition-expr>])
+; Returns the one element of <set-expr>, which must have exactly one element.  If <var> and <condition-expr> are given,
+; then return the one element of <set-expr> that satisfies <condition-expr>; there must be exactly one such element.
+; <var> may shadow an existing local variable.
+(defun scan-unique-elt-of (world type-env special-form set-expr &optional var-source condition-expr)
   (multiple-value-bind (set-code set-type set-annotated-expr) (scan-set-value world type-env set-expr)
     (let ((elt-type (set-element-type set-type)))
-      (values
-       (ecase (type-kind set-type)
-         (:list-set (list 'unique-elt-of set-code))
-         (:range-set (range-set-out-converter-expr elt-type (list 'range-set-unique-elt-of set-code)))
-         ((:bit-set :restricted-set) (list 'bit-set-unique-elt-of set-code (list 'quote (set-type-keywords set-type)))))
-       elt-type
-       (list 'expr-annotation:special-form special-form set-annotated-expr)))))
+      (if var-source
+        (let* ((var (scan-name world var-source))
+               (local-type-env (type-env-add-binding type-env var elt-type :const t)))
+          (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
+            (unless (eq (type-kind set-type) :list-set)
+              (error "Not implemented"))
+            (values
+             `(unique-elt-of (remove-if-not #'(lambda (,var) ,condition-code) ,set-code))
+             elt-type
+             (list 'expr-annotation:special-form special-form set-annotated-expr var condition-annotated-expr))))
+        (values
+         (ecase (type-kind set-type)
+           (:list-set (list 'unique-elt-of set-code))
+           (:range-set (range-set-out-converter-expr elt-type (list 'range-set-unique-elt-of set-code)))
+           ((:bit-set :restricted-set) (list 'bit-set-unique-elt-of set-code (list 'quote (set-type-keywords set-type)))))
+         elt-type
+         (list 'expr-annotation:special-form special-form set-annotated-expr))))))
 
 
 ;;; Vectors or Sets
