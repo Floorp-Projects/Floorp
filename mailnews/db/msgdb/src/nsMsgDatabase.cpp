@@ -671,6 +671,9 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	// OK, remove from cache first and close the store.
 	RemoveFromCache(this);
 
+	NS_IF_RELEASE(m_dbFolderInfo);
+	m_dbFolderInfo = nsnull;
+
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
 	if (m_mdbStore)
 	{

@@ -1334,7 +1334,10 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			originalInfo = new TNeoFolderInfoTransfer(dbFolderInfo);
 #endif // 0
             if (mDatabase)
+			{
+				dbFolderInfo = null_nsCOMPtr();
                 mDatabase->ForceClosed();
+			}
 			mDatabase = null_nsCOMPtr();
 				
 			nsLocalFolderSummarySpec	summarySpec(dbName);
