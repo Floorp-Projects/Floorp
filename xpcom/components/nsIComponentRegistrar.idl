@@ -63,6 +63,9 @@ interface nsIComponentRegistrar : nsISupports
      *                   application component's directory will be registred
      *                   as defined by NS_XPCOM_COMPONENT_DIR (see 
      *                   nsIDirectoryService.idl)
+     *
+     * @return NS_OK   : Registration was successful.
+     *         NS_ERROR: Method failure.
      */
     void autoRegister(in nsIFile aSpec);
 
@@ -79,6 +82,9 @@ interface nsIComponentRegistrar : nsISupports
      *                   application component's directory will be registred
      *                   as defined by NS_XPCOM_COMPONENT_DIR (see 
      *                   nsIDirectoryService.idl)
+     *
+     * @return NS_OK     Unregistration was successful.
+     *         NS_ERROR* Method failure.
      */
     void autoUnregister(in nsIFile aSpec);
 
@@ -92,6 +98,9 @@ interface nsIComponentRegistrar : nsISupports
      * @param aClassName  : Class Name of CID
      * @param aContractID : ContractID associated with CID aClass
      * @param aFactory    : Factory that will be registered for CID aClass
+     *
+     * @return NS_OK        Registration was successful.
+     *         NS_ERROR*    method failure.
      */
     void registerFactory(in nsCIDRef aClass, 
                          in string aClassName,
@@ -106,6 +115,9 @@ interface nsIComponentRegistrar : nsISupports
      * @param aClass   : ClassID being unregistered
      * @param aFactory : Factory previously registered to create instances of
      *                   ClassID aClass.
+     *
+     * @return NS_OK     Unregistration was successful.
+     *         NS_ERROR* Method failure.
      */    
     void unregisterFactory(in nsCIDRef aClass, 
                            in nsIFactory aFactory);
@@ -129,6 +141,9 @@ interface nsIComponentRegistrar : nsISupports
      *                      passed into the nsIModule's registerSelf
      *                      callback and must be fowarded unmodified when
      *                      registering factories via their location.
+     *
+     * @return NS_OK        Registration was successful.
+     *         NS_ERROR*    Method failure.
      */
     void registerFactoryLocation(in nsCIDRef aClass, 
                                  in string aClassName,
@@ -144,6 +159,9 @@ interface nsIComponentRegistrar : nsISupports
      *
      * @param aClass   : ClassID being unregistered
      * @param aFile    : Component File previously registered
+     *
+     * @return NS_OK     Unregistration was successful.
+     *         NS_ERROR* Method failure.
      */    
     void unregisterFactoryLocation(in nsCIDRef aClass, 
                                    in nsIFile aFile);
