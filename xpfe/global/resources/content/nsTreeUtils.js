@@ -371,9 +371,9 @@ function fillContextMenu(name)
         var cmdNameNode = compositeDB.GetTarget(cmdResource, rdfNameResource, 
                                                 true);
         if (!cmdNameNode) break;
-        cmdNameLiteral = cmdNameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        var cmdNameLiteral = cmdNameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
         if (!cmdNameLiteral) break;
-        cmdName = cmdNameLiteral.Value;
+        var cmdName = cmdNameLiteral.Value;
         if (!cmdName) break;
 
         debug("Command #" + cmdIndex + ": id='" + cmdResource.Value +
