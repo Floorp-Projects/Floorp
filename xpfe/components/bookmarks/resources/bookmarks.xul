@@ -179,7 +179,7 @@
 </toolbox>
 
 <popupset>
-<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+<popup id="contextual" oncreate="return fillContextMenu('contextual', 'bookmarksTree');" >
 	<menu />
 </popup>
 </popupset>
