@@ -106,8 +106,8 @@ public:
   virtual void FillRect(const nsRect& aRect);
   virtual void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
-  virtual void DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints);
-  virtual void FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints);
+  virtual void DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+  virtual void FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
 
   virtual void DrawEllipse(const nsRect& aRect);
   virtual void DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);

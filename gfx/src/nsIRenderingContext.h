@@ -267,14 +267,14 @@ public:
    * @param aPoints points to use for the drawing, last must equal first
    * @param aNumPonts number of points in the polygon
    */
-  virtual void DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints) = 0;
+  virtual void DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
 
   /**
    * Fill a poly in the current foreground color
    * @param aPoints points to use for the drawing, last must equal first
    * @param aNumPonts number of points in the polygon
    */
-  virtual void FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints) = 0;
+  virtual void FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
 
   /**
    * Draw an ellipse in the current foreground color

@@ -784,7 +784,7 @@ void nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, 
 }
 
 
-void nsRenderingContextUnix::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
+void nsRenderingContextUnix::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   PRUint32 i ;
   XPoint * xpoints;
@@ -807,7 +807,7 @@ void nsRenderingContextUnix::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   PR_Free((void *)xpoints);
 }
 
-void nsRenderingContextUnix::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
+void nsRenderingContextUnix::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   PRUint32 i ;
   XPoint * xpoints;

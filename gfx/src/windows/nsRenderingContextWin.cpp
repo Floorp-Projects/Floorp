@@ -719,7 +719,7 @@ void nsRenderingContextWin :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, n
   ::FillRect(mDC, &nr, SetupSolidBrush());
 }
 
-void nsRenderingContextWin::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
+void nsRenderingContextWin::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
@@ -756,7 +756,7 @@ void nsRenderingContextWin::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
     delete pp0;
 }
 
-void nsRenderingContextWin::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
+void nsRenderingContextWin::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
