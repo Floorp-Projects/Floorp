@@ -371,7 +371,7 @@ nsresult TestConnection::WriteBuffer(void)
     //
     else if (mOutStream) {
       rv = mOutStream->Write(buffer, size, &bytesWritten);
-      NS_ASSERTION(size == bytesWritten, "Not enough was written...");
+      NS_ASSERTION((PRUint32)size == bytesWritten, "Not enough was written...");
     }
     PR_Free(buffer);
   } else {

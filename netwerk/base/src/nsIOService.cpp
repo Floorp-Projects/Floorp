@@ -137,7 +137,8 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     progID.ToCString(buf, MAX_NET_PROGID_LENGTH);
 
     NS_WITH_SERVICE(nsIProtocolHandler, handler, buf, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+        return NS_ERROR_UNKNOWN_PROTOCOL;
 
     *result = handler;
     NS_ADDREF(handler);

@@ -40,3 +40,8 @@ interface nsIDNSService : nsISupports
                       in nsIDNSListener listener);
 };
 
+%{C++
+
+#define NS_ERROR_UNKNOWN_HOST  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 30)
+
+%}
