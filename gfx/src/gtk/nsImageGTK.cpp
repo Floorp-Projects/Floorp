@@ -675,29 +675,29 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   int readX, readY;
   unsigned readWidth, readHeight, destX, destY;
 
-  readX = aX; readY = aY;
-  destX = 0;  destY = 0;
-  if ((readY>=(int)surfaceHeight) || (readX>=(int)surfaceWidth) ||
-      (readY+mHeight<0) || (readX+mWidth<0)) {
+  if ((aY>=(int)surfaceHeight) || (aX>=(int)surfaceWidth) ||
+      (aY+aHeight<0) || (aX+aWidth<0)) {
     // This should never happen if the layout engine is sane,
     // as it means we're trying to draw an image which is outside
     // the drawing surface.  Bulletproof gfx for now...
     return;
   }
-  if (readY<0) {
-    destY = -readY;
-    readY = 0;
+
+  if (aX<0) {
+    readX = 0;   readWidth = aWidth+aX;    destX = -aX;
+  } else {
+    readX = aX;  readWidth = aWidth;       destX = 0;
   }
-  if (readX<0) {
-    destX = -readX;
-    readX = 0;
+  if (aY<0) {
+    readY = 0;   readHeight = aHeight+aY;  destY = -aY;
+  } else {
+    readY = aY;  readHeight = aHeight;     destY = 0;
   }
-  readHeight = mHeight-destY;
-  readWidth = mWidth-destX;
-  if (aY+mHeight>(int)surfaceHeight)
-    readHeight = surfaceHeight-readY;
-  if (aX+mWidth>(int)surfaceWidth)
+
+  if (readX+readWidth > surfaceWidth)
     readWidth = surfaceWidth-readX;
+  if (readY+readHeight > surfaceHeight)
+    readHeight = surfaceHeight-readY;
 
 
 //  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
@@ -741,13 +741,9 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
     DrawCompositedGeneral(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
                           ximage, readData);
 
-  unsigned targetWidth, targetHeight;
-  targetWidth = aWidth-(readX-aX);
-  targetHeight = aHeight-(readY-aY);
-
   GdkGC *imageGC = ((nsRenderingContextGTK&)aContext).GetGC();
   gdk_draw_rgb_image(drawing->GetDrawable(), imageGC,
-                     readX, readY, targetWidth, targetHeight,
+                     readX, readY, readWidth, readHeight,
                      GDK_RGB_DITHER_MAX,
                      readData, 3*readWidth);
   gdk_gc_unref(imageGC);
