@@ -41,7 +41,7 @@ nsScreenBeOS :: ~nsScreenBeOS()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenBeOS, NS_GET_IID(nsIScreen))
+NS_IMPL_ISUPPORTS1(nsScreenBeOS, nsIScreen)
 
 
 NS_IMETHODIMP

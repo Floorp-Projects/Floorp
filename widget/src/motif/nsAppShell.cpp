@@ -57,8 +57,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
-NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
+NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)

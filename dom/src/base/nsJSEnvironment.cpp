@@ -402,7 +402,7 @@ nsJSContext::~nsJSContext()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsJSContext, NS_GET_IID(nsIScriptContext));
+NS_IMPL_ISUPPORTS1(nsJSContext, nsIScriptContext)
 
 NS_IMETHODIMP
 nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,

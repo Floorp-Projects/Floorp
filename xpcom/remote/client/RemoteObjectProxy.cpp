@@ -26,7 +26,7 @@
 #include "RPCClientService.h"
 
 
-NS_IMPL_ISUPPORTS(RemoteObjectProxy,NS_GET_IID(RemoteObjectProxy));
+NS_IMPL_ISUPPORTS1(RemoteObjectProxy, RemoteObjectProxy)
 
 RemoteObjectProxy::RemoteObjectProxy(OID _oid, REFNSIID _iid ) {
     NS_INIT_REFCNT();

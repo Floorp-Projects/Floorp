@@ -27,8 +27,6 @@
 #define MAPPING_FACTOR_FOR_OTHERS  0.70f
 
 
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
-
 nsresult
 NS_NewRegressionTestFontMetrics(nsIFontMetrics** aMetrics)
 {
@@ -42,7 +40,7 @@ NS_NewRegressionTestFontMetrics(nsIFontMetrics** aMetrics)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return fm->QueryInterface(kIFontMetricsIID, (void **) aMetrics);
+  return CallQueryInterface(fm, aMetrics);
 }
 
 nsRegressionTestFontMetrics:: nsRegressionTestFontMetrics()
@@ -67,7 +65,7 @@ nsRegressionTestFontMetrics:: nsRegressionTestFontMetrics()
   mUnderlineOffset = 0; 
 }
   
-NS_IMPL_ISUPPORTS(nsRegressionTestFontMetrics, kIFontMetricsIID);
+NS_IMPL_ISUPPORTS1(nsRegressionTestFontMetrics, nsIFontMetrics)
 
 nsRegressionTestFontMetrics::~nsRegressionTestFontMetrics()
 {

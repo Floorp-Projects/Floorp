@@ -39,7 +39,7 @@ nsBaseEditorCommand::nsBaseEditorCommand()
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsBaseEditorCommand, NS_GET_IID(nsIControllerCommand));
+NS_IMPL_ISUPPORTS1(nsBaseEditorCommand, nsIControllerCommand)
 
 #ifdef XP_MAC
 #pragma mark -

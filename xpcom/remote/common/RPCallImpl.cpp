@@ -25,7 +25,7 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsIInterfaceInfo.h"
 
-NS_IMPL_ISUPPORTS(RPCallImpl, NS_GET_IID(IRPCall));
+NS_IMPL_ISUPPORTS1(RPCallImpl, IRPCall)
 
 RPCallImpl::RPCallImpl(IMarshalToolkit * _marshalToolkit) {
     NS_INIT_REFCNT();

@@ -122,7 +122,7 @@ URLLoadInfo::~URLLoadInfo()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS(URLLoadInfo,NS_GET_IID(nsISupports));
+NS_IMPL_THREADSAFE_ISUPPORTS0(URLLoadInfo)
 
 //-----------------------------------------------------------------------------
 // TestHttpEventSink
@@ -190,7 +190,7 @@ InputTestConsumer::~InputTestConsumer()
 {
 }
 
-NS_IMPL_ISUPPORTS(InputTestConsumer,NS_GET_IID(nsIStreamListener));
+NS_IMPL_ISUPPORTS1(InputTestConsumer, nsIStreamListener)
 
 NS_IMETHODIMP
 InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)

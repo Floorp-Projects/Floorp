@@ -35,7 +35,7 @@
 // nsTimerImpl implementation
 //========================================================================================
 
-NS_IMPL_ISUPPORTS(nsTimerImpl, nsITimer::GetIID())
+NS_IMPL_ISUPPORTS1(nsTimerImpl, nsITimer)
 
 //----------------------------------------------------------------------------------------
 nsTimerImpl::nsTimerImpl()

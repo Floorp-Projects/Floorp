@@ -22,7 +22,7 @@
 #include "RPCChannelClientImpl.h"
 #include "prmem.h"
 
-NS_IMPL_ISUPPORTS(RPCChannelClientImpl, NS_GET_IID(IRPCChannel));
+NS_IMPL_ISUPPORTS1(RPCChannelClientImpl, IRPCChannel)
 
 
 RPCChannelClientImpl::RPCChannelClientImpl(ITransport * _transport) {

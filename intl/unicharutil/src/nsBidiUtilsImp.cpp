@@ -32,7 +32,7 @@
 #include "nsIUBidiUtils.h"
 #include "nsIBidi.h"
 static NS_DEFINE_CID(kBidiCID, NS_BIDI_CID);
-NS_IMPL_ISUPPORTS(nsBidiUtilsImp, NS_GET_IID(nsIUBidiUtils));
+NS_IMPL_ISUPPORTS1(nsBidiUtilsImp, nsIUBidiUtils)
 
 static nsCharType ebc2ucd[15] = {
     eCharType_OtherNeutral, /* Placeholder -- there will never be a 0 index value */

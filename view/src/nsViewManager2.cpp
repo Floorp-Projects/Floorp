@@ -167,8 +167,6 @@ nsSize nsViewManager2::gLargestRequestedSize = nsSize(0, 0);
 // Weakly held references to all of the view managers
 nsVoidArray* nsViewManager2::gViewManagers = nsnull;
 
-static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
-
 nsViewManager2::nsViewManager2()
 {
 	NS_INIT_REFCNT();
@@ -300,7 +298,7 @@ nsViewManager2::~nsViewManager2()
 }
 
 
-NS_IMPL_QUERY_INTERFACE(nsViewManager2, knsViewManagerIID)
+NS_IMPL_QUERY_INTERFACE1(nsViewManager2, nsIViewManager)
 
 	NS_IMPL_ADDREF(nsViewManager2);
 

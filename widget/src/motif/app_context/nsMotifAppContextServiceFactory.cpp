@@ -60,7 +60,7 @@ nsMotifAppContextServiceFactory::~nsMotifAppContextServiceFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsMotifAppContextServiceFactory, NS_GET_IID(nsIFactory))
+NS_IMPL_ISUPPORTS1(nsMotifAppContextServiceFactory, nsIFactory)
 
 NS_IMETHODIMP
 nsMotifAppContextServiceFactory::CreateInstance(nsISupports *aOuter,

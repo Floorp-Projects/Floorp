@@ -52,7 +52,6 @@ static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChildWindowIID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
@@ -137,7 +136,7 @@ MyBlendObserver::~MyBlendObserver()
 
 //------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(MyBlendObserver, kIImageObserverIID)
+NS_IMPL_ISUPPORTS1(MyBlendObserver, nsIImageObserver)
 
 void  
 MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
@@ -210,7 +209,7 @@ MyObserver::~MyObserver()
 
 //------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(MyObserver, kIImageObserverIID)
+NS_IMPL_ISUPPORTS1(MyObserver, nsIImageObserver)
 
 void  
 MyObserver::Notify(nsIImageRequest *aImageRequest,

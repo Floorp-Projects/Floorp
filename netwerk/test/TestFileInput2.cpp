@@ -234,7 +234,7 @@ protected:
     PRUint32            mBufferSize;
 };
 
-NS_IMPL_ISUPPORTS(FileSpecWorker, NS_GET_IID(nsIRunnable));
+NS_IMPL_ISUPPORTS1(FileSpecWorker, nsIRunnable)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -327,7 +327,7 @@ protected:
     PRUint32            mBufferSize;
 };
 
-NS_IMPL_ISUPPORTS(FileChannelWorker, NS_GET_IID(nsIRunnable));
+NS_IMPL_ISUPPORTS1(FileChannelWorker, nsIRunnable)
 
 ////////////////////////////////////////////////////////////////////////////////
 

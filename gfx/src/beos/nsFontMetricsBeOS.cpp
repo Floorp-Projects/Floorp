@@ -376,8 +376,7 @@ nsFontEnumeratorBeOS::nsFontEnumeratorBeOS()
   NS_INIT_REFCNT(); 
 } 
  
-NS_IMPL_ISUPPORTS(nsFontEnumeratorBeOS, 
-                  NS_GET_IID(nsIFontEnumerator)); 
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorBeOS, nsIFontEnumerator)
  
 static int 
 CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure) 

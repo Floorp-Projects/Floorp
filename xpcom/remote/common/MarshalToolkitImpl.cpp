@@ -23,7 +23,7 @@
 #include "MarshalToolkitImpl.h"
 
 
-NS_IMPL_ISUPPORTS(MarshalToolkitImpl, NS_GET_IID(nsISupports));
+NS_IMPL_ISUPPORTS0(MarshalToolkitImpl)
 
 
 MarshalToolkitImpl::MarshalToolkitImpl(void) {

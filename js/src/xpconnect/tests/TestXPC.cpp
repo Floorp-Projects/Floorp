@@ -218,8 +218,7 @@ private:
   Mode mMode;
 };
 
-static NS_DEFINE_IID(kMySecManIID, NS_IXPCSECURITYMANAGER_IID);
-NS_IMPL_ISUPPORTS(MySecMan, kMySecManIID);
+NS_IMPL_ISUPPORTS1(MySecMan, nsIXPCSecurityManager)
 
 MySecMan::MySecMan()
     : mMode(OK_ALL)

@@ -29,8 +29,6 @@
 
 #define IsFlagSet(a,b) (a & b)
 
-static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
-
 //------------------------------------------------------------
 
 nsImageMotif :: nsImageMotif()
@@ -80,7 +78,7 @@ nsImageMotif :: ~nsImageMotif()
   
 }
 
-NS_IMPL_ISUPPORTS(nsImageMotif, kIImageIID);
+NS_IMPL_ISUPPORTS1(nsImageMotif, nsIImage)
 
 //------------------------------------------------------------
 

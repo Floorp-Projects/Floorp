@@ -499,7 +499,7 @@ CSSLoaderImpl::~CSSLoaderImpl(void)
   mSheetMapTable.Enumerate(DeleteSheetMap);
 }
 
-NS_IMPL_ISUPPORTS(CSSLoaderImpl, NS_GET_IID(nsICSSLoader))
+NS_IMPL_ISUPPORTS1(CSSLoaderImpl, nsICSSLoader)
 
 NS_IMETHODIMP
 CSSLoaderImpl::Init(nsIDocument* aDocument)

@@ -407,7 +407,7 @@ class nsRPCTestCombImpl : public  nsIRPCTestComb {
     }
 };
 
-NS_IMPL_ISUPPORTS(nsRPCTestCombImpl, NS_GET_IID(nsIRPCTestComb));
+NS_IMPL_ISUPPORTS1(nsRPCTestCombImpl, nsIRPCTestComb)
 int main(int argc, char **args) 
 {
     int i;

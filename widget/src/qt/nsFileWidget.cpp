@@ -24,7 +24,7 @@
 #include "nsFileWidget.h"
 #include "nsWidget.h"
 
-NS_IMPL_ISUPPORTS(nsFileWidget, NS_GET_IID(nsIFileWidget));
+NS_IMPL_ISUPPORTS1(nsFileWidget, nsIFileWidget)
 
 //-------------------------------------------------------------------------
 //

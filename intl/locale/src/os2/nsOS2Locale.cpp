@@ -40,11 +40,10 @@
 #include "prprf.h"
 #include "nsFileSpec.h"
 
-NS_DEFINE_IID(kIOS2LocaleIID, NS_IOS2LOCALE_IID);
 NS_DEFINE_IID(kOS2LocaleCID, NS_OS2LOCALE_CID);
 
 /* nsOS2Locale ISupports */
-NS_IMPL_ISUPPORTS(nsOS2Locale,kIOS2LocaleIID)
+NS_IMPL_ISUPPORTS1(nsOS2Locale,nsIOS2Locale)
 
 nsOS2Locale::nsOS2Locale(void)
 {

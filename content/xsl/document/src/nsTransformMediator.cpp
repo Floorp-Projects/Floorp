@@ -89,7 +89,7 @@ nsTransformMediator::Init(const nsString& aMimeType)
 }
 
 // nsISupports
-NS_IMPL_ISUPPORTS(nsTransformMediator, NS_GET_IID(nsITransformMediator))
+NS_IMPL_ISUPPORTS1(nsTransformMediator, nsITransformMediator)
 
 
 void

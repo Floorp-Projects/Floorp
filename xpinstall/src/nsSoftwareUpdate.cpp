@@ -548,8 +548,7 @@ nsSoftwareUpdateNameSet::~nsSoftwareUpdateNameSet()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsSoftwareUpdateNameSet,
-                  NS_GET_IID(nsIScriptExternalNameSet));
+NS_IMPL_ISUPPORTS1(nsSoftwareUpdateNameSet, nsIScriptExternalNameSet)
 
 
 NS_IMETHODIMP

@@ -4071,8 +4071,7 @@ nsFontEnumeratorGTK::nsFontEnumeratorGTK()
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsFontEnumeratorGTK,
-                  NS_GET_IID(nsIFontEnumerator));
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorGTK, nsIFontEnumerator)
 
 typedef struct EnumerateNodeInfo
 {

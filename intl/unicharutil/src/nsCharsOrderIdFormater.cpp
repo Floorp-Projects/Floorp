@@ -53,9 +53,7 @@ NS_IMETHOD ToString( PRUint32 aOrder, nsString& aResult)
   return NS_OK;
 }
 
-NS_DEFINE_IID(kIOrderIdFormaterIID, NS_IORDERIDFORMATER_IID);
-
-NS_IMPL_ISUPPORTS(nsCharsOrderIdFormater, kIOrderIdFormaterIID);
+NS_IMPL_ISUPPORTS1(nsCharsOrderIdFormater, nsIOrderIdFormater)
 
 class nsCharsOrderIdFormaterFactory : public nsIFactory {
   NS_DECL_ISUPPORTS
@@ -77,7 +75,8 @@ private:
   nsCID mCID;
 }
 
-NS_IMPL_ISUPPORTS(nsCharsOrderIdFormaterFactory, kFactoryIID);
+NS_IMPL_ISUPPORTS1(nsCharsOrderIdFormaterFactory, nsIFactory)
+
 NS_IMETHODIMP nsCharsOrderIdFormaterFactory::CreateInstance(
    nsISupports *aDelegate,
    const nsIID &aIID,

@@ -321,7 +321,7 @@ StyleSetImpl::~StyleSetImpl()
 }
 
 #ifndef MOZ_PERF_METRICS
-NS_IMPL_ISUPPORTS(StyleSetImpl, NS_GET_IID(nsIStyleSet))
+NS_IMPL_ISUPPORTS1(StyleSetImpl, nsIStyleSet)
 #else
 NS_IMPL_ISUPPORTS2(StyleSetImpl, nsIStyleSet, nsITimeRecorder)
 #endif

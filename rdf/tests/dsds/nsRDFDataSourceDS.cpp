@@ -137,7 +137,7 @@ nsRDFDataSourceDataSource::~nsRDFDataSourceDataSource()
 }
 
 
-NS_IMPL_ISUPPORTS(nsRDFDataSourceDataSource, NS_GET_IID(nsIRDFDataSource));
+NS_IMPL_ISUPPORTS1(nsRDFDataSourceDataSource, nsIRDFDataSource)
 
 /* void Init (in string uri); */
 NS_IMETHODIMP

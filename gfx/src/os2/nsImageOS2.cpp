@@ -69,7 +69,7 @@ PRBool  nsImageOS2::gBlenderReady = PR_FALSE;
 
 
 
-NS_IMPL_ISUPPORTS(nsImageOS2, NS_GET_IID(nsIImage));
+NS_IMPL_ISUPPORTS1(nsImageOS2, nsIImage)
 
 //------------------------------------------------------------
 nsImageOS2::nsImageOS2()

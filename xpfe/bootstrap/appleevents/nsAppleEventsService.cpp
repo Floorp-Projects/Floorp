@@ -35,7 +35,7 @@ nsAppleEventsService::~nsAppleEventsService()
 
 }
 
-NS_IMPL_ISUPPORTS(nsAppleEventsService, NS_GET_IID(nsIAppleEventsService));
+NS_IMPL_ISUPPORTS1(nsAppleEventsService, nsIAppleEventsService)
 
 NS_IMETHODIMP nsAppleEventsService::Init(void)
 {

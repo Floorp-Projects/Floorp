@@ -531,9 +531,6 @@ NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
-NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
-NS_DEFINE_IID(kIPluginInputStreamIID, NS_IPLUGININPUTSTREAM_IID);
-
 // mapping from NPError to nsresult
 nsresult fromNPError[] = {
     NS_OK,                          // NPERR_NO_ERROR,
@@ -1702,14 +1699,11 @@ CPluginManagerStream::Close(void)
 // nsISupports functions
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 
-NS_IMPL_ADDREF(CPluginManagerStream);
-NS_IMPL_RELEASE(CPluginManagerStream);
-
-NS_IMPL_QUERY_INTERFACE(CPluginManagerStream, NS_GET_IID(nsIOutputStream));
+NS_IMPL_ISUPPORTS1(CPluginManagerStream, nsIOutputStream)
 
 //////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(CPluginStreamInfo, kIPluginStreamInfoIID);
+NS_IMPL_ISUPPORTS1(CPluginStreamInfo, nsIPluginStreamInfo)
 
 CPluginInputStream::CPluginInputStream(nsIPluginStreamListener* listener)
     : mListener(listener), mStreamType(nsPluginStreamType_Normal),
@@ -1734,7 +1728,7 @@ CPluginInputStream::~CPluginInputStream(void)
     NS_IF_RELEASE(mStreamInfo);
 }
 
-NS_IMPL_ISUPPORTS(CPluginInputStream, kIPluginInputStreamIID);
+NS_IMPL_ISUPPORTS1(CPluginInputStream, nsIPluginInputStream)
 
 NS_METHOD
 CPluginInputStream::Close(void)

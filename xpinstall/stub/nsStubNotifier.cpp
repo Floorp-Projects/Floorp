@@ -36,7 +36,7 @@ nsStubListener::nsStubListener( pfnXPIProgress aProgress )
 nsStubListener::~nsStubListener()
 {}
 
-NS_IMPL_ISUPPORTS(nsStubListener, NS_GET_IID(nsIXPIListener));
+NS_IMPL_ISUPPORTS1(nsStubListener, nsIXPIListener)
 
 
 NS_IMETHODIMP

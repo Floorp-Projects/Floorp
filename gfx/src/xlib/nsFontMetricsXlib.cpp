@@ -4176,8 +4176,7 @@ nsFontEnumeratorXlib::nsFontEnumeratorXlib()
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsFontEnumeratorXlib,
-                  NS_GET_IID(nsIFontEnumerator));
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorXlib, nsIFontEnumerator)
 
 typedef struct EnumerateNodeInfo
 {

@@ -64,9 +64,7 @@ static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
 #endif
 
 #if 0
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecGTK, kDeviceContextSpecIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecGTK)
-NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK, nsIDeviceContextSpec)
 #endif
 
 NS_IMETHODIMP nsDeviceContextSpecGTK :: QueryInterface(REFNSIID aIID, void** aInstancePtr)

@@ -60,7 +60,6 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIContentViewerIID, NS_ICONTENTVIEWER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 
@@ -863,7 +862,7 @@ PluginListener::~PluginListener()
   NS_IF_RELEASE(mNextStream);
 }
 
-NS_IMPL_ISUPPORTS(PluginListener, kIStreamListenerIID)
+NS_IMPL_ISUPPORTS1(PluginListener, nsIStreamListener)
 
 NS_IMETHODIMP
 PluginListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)

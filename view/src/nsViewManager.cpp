@@ -399,8 +399,6 @@ nsSize nsViewManager::gLargestRequestedSize = nsSize(0, 0);
 nsVoidArray* nsViewManager::gViewManagers = nsnull;
 PRUint32 nsViewManager::gLastUserEventTime = 0;
 
-static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
-
 nsViewManager::nsViewManager()
 {
 	NS_INIT_REFCNT();
@@ -509,7 +507,7 @@ nsViewManager::~nsViewManager()
 	}
 }
 
-NS_IMPL_QUERY_INTERFACE(nsViewManager, knsViewManagerIID)
+NS_IMPL_QUERY_INTERFACE1(nsViewManager, nsIViewManager)
 
 	NS_IMPL_ADDREF(nsViewManager);
 

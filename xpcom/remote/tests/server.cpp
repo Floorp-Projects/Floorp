@@ -41,7 +41,7 @@ class nsRPCTestImpl : public  nsIRPCTest {
     }
 };
 
-NS_IMPL_ISUPPORTS(nsRPCTestImpl, NS_GET_IID(nsIRPCTest));
+NS_IMPL_ISUPPORTS1(nsRPCTestImpl, nsIRPCTest)
 int main(int argc, char **args) {
     printf("%x\n",getpid());
     nsRPCTestImpl * test1 = new nsRPCTestImpl();

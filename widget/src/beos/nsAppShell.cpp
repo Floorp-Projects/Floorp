@@ -77,9 +77,8 @@ static sem_id my_find_sem(const char *name)
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
+NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 //-------------------------------------------------------------------------
 //

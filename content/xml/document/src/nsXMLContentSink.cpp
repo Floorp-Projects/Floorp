@@ -1849,7 +1849,7 @@ XMLElementFactoryImpl::~XMLElementFactoryImpl()
 }
 
 
-NS_IMPL_ISUPPORTS(XMLElementFactoryImpl, NS_GET_IID(nsIElementFactory));
+NS_IMPL_ISUPPORTS1(XMLElementFactoryImpl, nsIElementFactory)
 
 
 nsresult

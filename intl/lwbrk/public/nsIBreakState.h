@@ -94,7 +94,6 @@ protected:                                                   \
   const PRUnichar*mText;                                     \
   PRUint32  mLen;                                            \
 };                                                           \
-NS_DEFINE_IID(kIBreakStateIID, NS_IBREAKSTATE_IID);          \
-NS_IMPL_ISUPPORTS( name , kIBreakStateIID);
+NS_IMPL_ISUPPORTS1( name , nsIBreakState)
 
 #endif  /* nsIBreakState_h__ */

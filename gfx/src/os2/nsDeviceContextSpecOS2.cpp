@@ -37,7 +37,7 @@ nsDeviceContextSpecOS2::~nsDeviceContextSpecOS2()
      PrnClosePrinter( mQueue);
 }
 
-NS_IMPL_ISUPPORTS(nsDeviceContextSpecOS2, NS_GET_IID(nsIDeviceContextSpec))
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecOS2, nsIDeviceContextSpec)
 
 nsresult nsDeviceContextSpecOS2::Init( PRTQUEUE *pq)
 {

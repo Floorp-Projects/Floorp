@@ -412,7 +412,7 @@ CSSParserImpl::Init(nsICSSStyleSheet* aSheet)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(CSSParserImpl,NS_GET_IID(nsICSSParser))
+NS_IMPL_ISUPPORTS1(CSSParserImpl, nsICSSParser)
 
 CSSParserImpl::~CSSParserImpl()
 {

@@ -1999,8 +1999,7 @@ nsFontEnumeratorQT::nsFontEnumeratorQT()
   NS_INIT_REFCNT();
 }
  
-NS_IMPL_ISUPPORTS(nsFontEnumeratorQT,
-                  NS_GET_IID(nsIFontEnumerator));
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorQT, nsIFontEnumerator)
 
 static int CompareFontNames(const void *aArg1,const void *aArg2,void *aClosure)
 {

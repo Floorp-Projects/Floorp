@@ -29,7 +29,7 @@
 
 // Base class -- fonts, palette and xpcom -----------------------------------
 
-NS_IMPL_ISUPPORTS(nsDrawingSurfaceOS2, NS_GET_IID(nsIDrawingSurface))
+NS_IMPL_ISUPPORTS1(nsDrawingSurfaceOS2, nsIDrawingSurface)
 
 // We start allocated lCIDs at 2.  This leaves #1 for nsFontMetricsOS2 to
 // do testing with, and 0 is, of course, LCID_DEFAULT.

@@ -28,8 +28,6 @@
 #include "xlibrgb.h"      // for xlib_rgb_get_visual_info
 #include <X11/Xutil.h>    // for XVisualInfo.
 
-static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
-
 #ifdef PR_LOGGING 
 static PRLogModuleInfo *DrawingSurfaceXlibLM = PR_NewLogModule("DrawingSurfaceXlib");
 #endif /* PR_LOGGING */ 
@@ -100,9 +98,7 @@ nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
   }
 }
 
-NS_IMPL_QUERY_INTERFACE(nsDrawingSurfaceXlib, kIDrawingSurfaceIID)
-NS_IMPL_ADDREF(nsDrawingSurfaceXlib)
-NS_IMPL_RELEASE(nsDrawingSurfaceXlib)
+NS_IMPL_ISUPPORTS1(nsDrawingSurfaceXlib, nsIDrawingSurface)
 
 NS_IMETHODIMP
 nsDrawingSurfaceXlib::Init(Display * aDisplay,

@@ -44,8 +44,6 @@
 #include "nsLoggingSink.h"
 #endif
 
-static NS_DEFINE_IID(kIParserServiceIID, NS_IPARSERSERVICE_IID);
-
 class nsParserService : public nsIParserService {
 public:
   nsParserService();
@@ -76,7 +74,7 @@ nsParserService::~nsParserService()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsParserService, kIParserServiceIID)
+NS_IMPL_ISUPPORTS1(nsParserService, nsIParserService)
   
   
 NS_IMETHODIMP 

@@ -131,8 +131,7 @@ public:
 
 };
 
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsOS2CharsetFactory , kIFactoryIID);
+NS_IMPL_ISUPPORTS1( nsOS2CharsetFactory , nsIFactory)
 
 NS_IMETHODIMP nsOS2CharsetFactory::CreateInstance(
     nsISupports* aDelegate, const nsIID &aIID, void** aResult)

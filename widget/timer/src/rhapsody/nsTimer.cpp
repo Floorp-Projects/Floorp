@@ -50,8 +50,6 @@ Michael Hanni <mhanni@sprintmail.com> suggests:
 
 #endif
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
-
 extern void nsTimerExpired(void *aCallData);
 
 class TimerImpl : public nsITimer {
@@ -183,7 +181,7 @@ TimerImpl::Init(PRUint32 aDelay)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
+NS_IMPL_ISUPPORTS1(TimerImpl, nsITimer)
 
 
 void
@@ -209,7 +207,7 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+    return CallQueryInterface(timer, aInstancePtrResult);
 }
 
 

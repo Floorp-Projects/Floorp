@@ -77,8 +77,7 @@ InputTestConsumer::~InputTestConsumer()
 }
 
 
-NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-NS_IMPL_ISUPPORTS(InputTestConsumer,kIStreamListenerIID);
+NS_IMPL_ISUPPORTS1(InputTestConsumer, nsIStreamListener)
 
 
 NS_IMETHODIMP

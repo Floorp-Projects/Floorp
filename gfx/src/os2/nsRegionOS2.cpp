@@ -22,7 +22,7 @@
 #include "nsRegionOS2.h"
 
 
-NS_IMPL_ISUPPORTS(nsRegionOS2, NS_GET_IID(nsIRegion))
+NS_IMPL_ISUPPORTS1(nsRegionOS2, nsIRegion)
 
 nsRegionOS2::nsRegionOS2() 
 {  

@@ -75,8 +75,6 @@ GraphicsState :: ~GraphicsState()
   mFont = nsnull;
 }
 
-static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
 nsRenderingContextMotif :: nsRenderingContextMotif()
 {
   NS_INIT_REFCNT();
@@ -142,9 +140,7 @@ nsRenderingContextMotif :: ~nsRenderingContextMotif()
 
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRenderingContextMotif, kRenderingContextIID)
-NS_IMPL_ADDREF(nsRenderingContextMotif)
-NS_IMPL_RELEASE(nsRenderingContextMotif)
+NS_IMPL_ISUPPORTS1(nsRenderingContextMotif, nsIRenderingContext)
 
 NS_IMETHODIMP
 nsRenderingContextMotif :: Init(nsIDeviceContext* aContext,

@@ -28,8 +28,6 @@
 #include "nsUnicodeMappingUtil.h"
 #include "nsGfxUtils.h"
 
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
-
 #define BAD_FONT_NUM	-1
 
 
@@ -52,7 +50,7 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
 
 //------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsFontMetricsMac, kIFontMetricsIID);
+NS_IMPL_ISUPPORTS1(nsFontMetricsMac, nsIFontMetrics)
 
 
 NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aCX)

@@ -24,14 +24,12 @@
 
 #define UCDATAFILEPATH "./res/unicharutil"
 
-NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
-
 #define CAST_PRUNICHAR_TO_ULONG(u) (unsigned long) (((u) & 0x0000FFFF))
 #define CAST_ULONG_TO_PRUNICHAR(l) ((PRUnichar) (l))
 
 PRBool nsCaseConversionImp::gInit      = PR_FALSE;
 
-NS_IMPL_ISUPPORTS(nsCaseConversionImp, kCaseConversionIID);
+NS_IMPL_ISUPPORTS1(nsCaseConversionImp, nsICaseConversion)
 
 void nsCaseConversionImp::Init()
 {

@@ -77,7 +77,7 @@ CSSFirstLineRule::~CSSFirstLineRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(CSSFirstLineRule, NS_GET_IID(nsIStyleRule));
+NS_IMPL_ISUPPORTS1(CSSFirstLineRule, nsIStyleRule)
 
 NS_IMETHODIMP
 CSSFirstLineRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const

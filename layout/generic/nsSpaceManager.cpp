@@ -88,7 +88,7 @@ nsSpaceManager::~nsSpaceManager()
   ClearFrameInfo();
 }
 
-NS_IMPL_ISUPPORTS(nsSpaceManager, NS_GET_IID(nsISpaceManager));
+NS_IMPL_ISUPPORTS1(nsSpaceManager, nsISpaceManager)
 
 NS_IMETHODIMP
 nsSpaceManager::GetFrame(nsIFrame*& aFrame) const

@@ -45,7 +45,6 @@ static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIPrefIID,               NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
-static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 
 
 
@@ -385,7 +384,7 @@ static char* makeCString( const PRUnichar* aString )
 
 
 // nsIWebShellContainer methods
-NS_IMPL_ISUPPORTS(QMozillaContainer, kIWebShellContainerIID);
+NS_IMPL_ISUPPORTS1(QMozillaContainer, nsIWebShellContainer)
 
 
 

@@ -1192,7 +1192,7 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
 #endif
 }
 
-NS_IMPL_ISUPPORTS(CSSDeclarationImpl, NS_GET_IID(nsICSSDeclaration));
+NS_IMPL_ISUPPORTS1(CSSDeclarationImpl, nsICSSDeclaration)
 
 #define CSS_IF_GET_ELSE(sid,ptr,result) \
   if (sid.Equals(kCSS##ptr##SID))  { *result = m##ptr;  } else

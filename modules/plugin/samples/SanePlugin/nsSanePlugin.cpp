@@ -74,7 +74,6 @@ static PRInt32 gPluginObjectCount = 0;
 
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID             );
 static NS_DEFINE_IID(kIPluginInstanceIID,       NS_IPLUGININSTANCE_IID       );
-static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID );
 static NS_DEFINE_IID(knsSanePluginControlIID,   NS_ISANEPLUGININSTANCE_IID   );
 static NS_DEFINE_CID(kIOServiceCID,             NS_IOSERVICE_CID             );
 static NS_DEFINE_IID(kIPluginManagerIID,        NS_IPLUGINMANAGER_IID        );
@@ -2012,7 +2011,7 @@ nsSanePluginStreamListener::~nsSanePluginStreamListener(void)
 
 // This macro produces a simple version of QueryInterface, AddRef and Release.
 // See the nsISupports.h header file for details.
-NS_IMPL_ISUPPORTS( nsSanePluginStreamListener, kIPluginStreamListenerIID );
+NS_IMPL_ISUPPORTS1(nsSanePluginStreamListener, nsIPluginStreamListener)
 
 NS_METHOD
 nsSanePluginStreamListener::OnStartBinding( nsIPluginStreamInfo* pluginInfo )

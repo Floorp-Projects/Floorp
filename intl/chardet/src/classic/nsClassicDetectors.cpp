@@ -197,7 +197,7 @@ static nsresult JA_AutoCharsetDetectBuffer(const char* aBuffer, const PRInt32 aL
 }
 
 //==========================================================
-NS_IMPL_ISUPPORTS(nsClassicDetector, NS_GET_IID(nsICharsetDetector));
+NS_IMPL_ISUPPORTS1(nsClassicDetector, nsICharsetDetector)
 
 //----------------------------------------------------------
 nsClassicDetector::nsClassicDetector(const char* language)
@@ -252,7 +252,7 @@ NS_IMETHODIMP nsClassicDetector::Done()
 
 //==========================================================
 
-NS_IMPL_ISUPPORTS(nsClassicStringDetector, NS_GET_IID(nsIStringCharsetDetector));
+NS_IMPL_ISUPPORTS1(nsClassicStringDetector, nsIStringCharsetDetector)
 
 //----------------------------------------------------------
 nsClassicStringDetector::nsClassicStringDetector(const char* language)

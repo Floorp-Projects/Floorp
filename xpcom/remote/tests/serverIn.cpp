@@ -282,7 +282,7 @@ class nsRPCTestInImpl : public  nsIRPCTestIn {
 
 };
 
-NS_IMPL_ISUPPORTS(nsRPCTestInImpl, NS_GET_IID(nsIRPCTestIn));
+NS_IMPL_ISUPPORTS1(nsRPCTestInImpl, nsIRPCTestIn)
 int main(int argc, char **args) {
    int i;
     const short num = 2;

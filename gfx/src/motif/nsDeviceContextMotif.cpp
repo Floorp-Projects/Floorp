@@ -29,8 +29,6 @@
 #include "il_util.h"
 
 
-static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
 #define NS_TO_X_COMPONENT(a) ((a << 8) | (a))
 
 #define NS_TO_X_RED(a)   (((NS_GET_R(a) >> (8 - mRedBits)) << mRedOffset) & mRedMask)
@@ -102,9 +100,7 @@ nsDeviceContextMotif :: ~nsDeviceContextMotif()
     delete mDeviceColors;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextMotif, kDeviceContextIID)
-NS_IMPL_ADDREF(nsDeviceContextMotif)
-NS_IMPL_RELEASE(nsDeviceContextMotif)
+NS_IMPL_ISUPPORTS1(nsDeviceContextMotif, nsIDeviceContext)
 
 NS_IMETHODIMP nsDeviceContextMotif :: Init(nsNativeWidget aNativeWidget)
 {

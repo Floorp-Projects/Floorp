@@ -54,62 +54,7 @@ nsFontMetricsPS :: ~nsFontMetricsPS()
   mDeviceContext = nsnull;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsFontMetricsPS.h
- *	@update 2/26/99 dwc
- */
-#ifdef LEAK_DEBUG
-nsrefcnt
-nsFontMetricsPS :: AddRef()
-{
-  NS_PRECONDITION(mRefCnt != 0, "resurrecting a dead object");
-  return ++mRefCnt;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsFontMetricsPS.h
- *	@update 2/26/99 dwc
- */
-nsrefcnt
-nsFontMetricsPS :: Release()
-{
-  NS_PRECONDITION(mRefCnt != 0, "too many release's");
-  if (--mRefCnt == 0) {
-    delete this;
-  }
-  return mRefCnt;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsFontMetricsPS.h
- *	@update 2/26/99 dwc
- */
-nsresult
-nsFontMetricsPS :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtr = NULL;
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kClassIID, kIFontMetricsIID);
-  if (aIID.Equals(kClassIID)) {
-    *aInstancePtr = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-#else
-NS_IMPL_ISUPPORTS(nsFontMetricsPS, kIFontMetricsIID)
-#endif
+NS_IMPL_ISUPPORTS1(nsFontMetricsPS, nsIFontMetrics)
 
 /** ---------------------------------------------------
  *  See documentation in nsFontMetricsPS.h

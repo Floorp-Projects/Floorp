@@ -652,7 +652,7 @@ nsJSProtocolHandler::~nsJSProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsJSProtocolHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS1(nsJSProtocolHandler, nsIProtocolHandler)
 
 NS_METHOD
 nsJSProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

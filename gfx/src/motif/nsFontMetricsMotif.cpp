@@ -27,8 +27,6 @@
 #include "nspr.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
-
 //#define NOISY_FONTS
 
 nsFontMetricsMotif :: nsFontMetricsMotif()
@@ -51,7 +49,7 @@ nsFontMetricsMotif :: ~nsFontMetricsMotif()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsFontMetricsMotif, kIFontMetricsIID)
+NS_IMPL_ISUPPORTS1(nsFontMetricsMotif, nsIFontMetrics)
 
 NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aCX)
 {

@@ -37,7 +37,7 @@ public:
 
 
 
-NS_IMPL_ISUPPORTS(DispatcherImpl, NS_GET_IID(IDispatcher));
+NS_IMPL_ISUPPORTS1(DispatcherImpl, IDispatcher)
 
 
 DispatcherImpl::DispatcherImpl()  
