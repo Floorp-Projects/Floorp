@@ -1,6 +1,6 @@
 <!ENTITY caption.label "Downloading">
 
-<!ENTITY intro.label "This file has mime type #1 and cannot be viewed using Mozilla. You can open it with another application, or save it to disk.">
+<!ENTITY intro.label "This file has mime type #1 and cannot be viewed using #2. You can open it with another application, or save it to disk.">
 
 <!ENTITY runApp.label     "Open using">
 <!ENTITY runApp.accesskey "o">
