@@ -252,7 +252,7 @@ $q++;
 close(LOG);
 close(OUTLOG);
 
-    system( "/bin/mail tinderbox-daemon\@warp < ${DirName}.log.last" );
+    system( "/bin/mail external-tinderbox-incoming\@mozilla.org < ${DirName}.log.last" );
 
 # if this is a test run, set early_exit to 0. This mean one loop of execution
     if ($BuildTest) {
@@ -273,7 +273,7 @@ sub CVSTime {
 }
 
 sub StartBuild {
-    open( LOG, "|/bin/mail tinderbox-daemon\@warp" );
+    open( LOG, "|/bin/mail external-tinderbox-incoming\@mozilla.org" );
     print LOG "\n";
     print LOG "tinderbox: tree: $BuildTree\n";
     print LOG "tinderbox: builddate: $StartTime\n";
