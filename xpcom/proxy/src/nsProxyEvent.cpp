@@ -218,6 +218,8 @@ nsresult
 nsProxyObject::AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
                                       nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType)
 {
+    nsresult rv = NS_OK;
+
     uint8 paramCount = methodInfo->GetParamCount();
 
     for (PRUint32 i = 0; i < paramCount; i++)
@@ -247,7 +249,7 @@ nsProxyObject::AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVar
                 continue;
 
             nsISupports *aProxyObject;
-            nsresult rv = anInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aProxyObject);
+            rv = anInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aProxyObject);
         
             if (NS_FAILED(rv))
             {
@@ -293,6 +295,7 @@ nsProxyObject::AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVar
             }
         }
     }
+    return rv;
 }
 
 void DestroyHandler(PLEvent *self) 
