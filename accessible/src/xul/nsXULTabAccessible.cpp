@@ -254,52 +254,62 @@ nsresult nsXULTabPanelsAccessible::GetAccPluginChild(nsIAccessible **_retval)
   // this big mess eventually gets the HWND for the full
   // page plugin, and creates the shim class so we can
   // get the IAccessible from the system in the widget/src code
+  *_retval = nsnull;
+#ifndef XP_WIN
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  if (!mAccService)
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (doc) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObj;
-    doc->GetScriptGlobalObject(getter_AddRefs(globalObj));
-    if (globalObj) {
-      nsCOMPtr<nsIDocShell> docShell;
-      globalObj->GetDocShell(getter_AddRefs(docShell));
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-      if (webShell) {
-        nsCOMPtr<nsIWebShellContainer> container;
-        webShell->GetContainer(*getter_AddRefs(container));
-        nsCOMPtr<nsIWebShellWindow> wsWin(do_QueryInterface(container));
-        if (wsWin) {
-          nsCOMPtr<nsIWebShell> contentShell;
-          wsWin->GetContentWebShell(getter_AddRefs(contentShell));
-          nsCOMPtr<nsIDocShell> contentDocShell(do_QueryInterface(contentShell));
-          if (contentDocShell) {
-            nsCOMPtr<nsIContentViewer> contentViewer;
-            contentDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-            nsCOMPtr<nsIPluginViewer> pluginViewer (do_QueryInterface(contentViewer));
-            if (pluginViewer) {
-              nsIPluginViewer *pViewer = pluginViewer.get();
-              PluginViewerImpl *viewer = (PluginViewerImpl*)pViewer;
-#ifdef XP_WIN
-              // Plugin code tends to be very platform specific, need to rev this
-              //    when linux/mac plugins come into the picture HWND == windows
-              HWND pluginPort = nsnull;
-              viewer->GetPluginPort(&pluginPort);
-              if (pluginPort != 0) {
-                if (mAccService) {
-                  mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, (PRInt32)pluginPort, _retval);
-                  return NS_OK;
-                }
-              }
-#else
-              *_retval = nsnull;
+  if (!doc)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj;
+  doc->GetScriptGlobalObject(getter_AddRefs(globalObj));
+  if (!globalObj)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+  if (!webShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWebShellContainer> container;
+  webShell->GetContainer(*getter_AddRefs(container));
+  nsCOMPtr<nsIWebShellWindow> wsWin(do_QueryInterface(container));
+  if (!wsWin)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWebShell> contentShell;
+  wsWin->GetContentWebShell(getter_AddRefs(contentShell));
+  nsCOMPtr<nsIDocShell> contentDocShell(do_QueryInterface(contentShell));
+  if (!contentDocShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  contentDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+  nsCOMPtr<nsIPluginViewer> pluginViewer (do_QueryInterface(contentViewer));
+  if (!pluginViewer)
+    return NS_ERROR_FAILURE;
 #endif
-            }
-          }
-        }
-      }
-    }
-  }
-  return NS_ERROR_FAILURE;
+
+#ifdef XP_WIN
+  nsIPluginViewer *pViewer = pluginViewer.get();
+  PluginViewerImpl *viewer = NS_STATIC_CAST(PluginViewerImpl*, pViewer);
+  // Plugin code tends to be very platform specific, need to rev this
+  //    when linux/mac plugins come into the picture HWND == windows
+  HWND pluginPort = nsnull;
+  viewer->GetPluginPort(&pluginPort);
+  if (!pluginPort)
+    return NS_ERROR_FAILURE;
+
+  mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, (PRInt32)pluginPort, _retval);
+  return NS_OK;
+#endif
 }
 
 /**
