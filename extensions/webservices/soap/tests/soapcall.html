@@ -1,0 +1,91 @@
+<HTML>
+<HEAD>
+</HEAD>
+<BODY>
+<H1>SOAP call test</H1>
+<SCRIPT>
+
+// Passed in as the response handler in the asynchronous case
+// and called directly below in the synchronous case
+function onresponse(resp, call) { 
+  if (resp == null) {
+    return;
+  }
+
+  // Was there a SOAP fault in the response?
+  if (resp.generatedFault()) {
+    var f = resp.fault;
+    var detail = f.detail;
+    var ds = new XMLSerializer();
+    var detailStr = ds.serializeToString(detail);
+    alert("Fault:\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
+  }
+  else {
+    var ret = resp.returnValue;
+    var val = ret.value;
+    var retStr = "Success:\nName: " + ret.name + "\nValue: " + val;
+    // In this case, we happen to know that the result value is an array
+    // and the 5th parameter is a struct. 
+    var obj = val[4];
+    retStr += "\nObject:";
+    for (i in obj) {
+      retStr += "\n" + i + ":" + obj[i] + "\n";
+    }
+    alert(retStr);
+  }
+}
+
+function makeCall(syncCall, faultCall) {
+  var s = new SOAPCall();
+  // The targetObjectURI, methodName and destinatioName are mandatory.
+  // The actionURI is optional.
+  s.targetObjectURI = "uri:some-namespace";
+  s.methodName = "GetLastTradePrice";
+  if (faultCall) {
+    s.destinationURI = "http://blueviper/cgi-bin/soapfault.cgi";
+  }
+  else {
+    s.destinationURI = "http://blueviper/cgi-bin/soapsuccess.cgi";
+  }
+  s.actionURI = "uri:some action";
+
+  // Create parameter objects. This is needed if we want named parameters.
+  // If we don't want them to be named, we can just pass the
+  // raw JavaScript values into the setParameters method.
+  var p1 = new SOAPParameter("foo", "a string");
+  var p2 = new SOAPParameter("bar", 4);
+  var p3 = new SOAPParameter();
+  p3.name = "baz";
+  p3.value = true;
+  var p4 = new SOAPParameter();
+  p4.name = "bob";
+  p4.value = new Array(3, "another string", false, 5.235);
+
+  function Dog(name,breed,color) {
+     this.name=name
+     this.breed=breed
+     this.color=color
+  }
+
+  // Set the parameters on the call object. Note that in this case,
+  // the last parameter is an object that will be translated into
+  // a struct parameter. It does not have a parameter wrapper because 
+  // we don't need it to be named
+  s.setParameters(p1, p2, p3, p4, new Dog("Fido", "Lab", "Black"));
+
+  if (syncCall) {
+    var r = s.invoke();
+    onresponse(r, s);
+  }
+  else {
+    s.asyncInvoke(onresponse);
+  }
+}
+</SCRIPT>
+<P>
+<FORM>
+<INPUT TYPE="button" VALUE="Sync call" onclick="makeCall(true, false);">
+<INPUT TYPE="button" VALUE="Async call" onclick="makeCall(false, false);">
+<INPUT TYPE="button" VALUE="Fault call" onclick="makeCall(true, true);">
+</BODY>
+</HTML>
