@@ -316,8 +316,8 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
 
   // now all drawing goes into the memory context
   PmMemStart( mc );
-
-  PgSetRegion( mholdGC->rid );
+  
+//  PgSetRegion( mholdGC->rid );
 
   return NS_OK;
 }
@@ -336,25 +336,32 @@ NS_IMETHODIMP nsDrawingSurfacePh :: ReleaseGC( void )
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 {
-  if (mholdGC==nsnull) mholdGC = mGC;
- 
-//PhGC_t *gc=PgGetGC();
-//printf ("current gc: %p\n",gc);
+PhGC_t *gc=PgGetGC();
 
-  if (mIsOffscreen)
+  if (mholdGC==nsnull) mholdGC = mGC;
+
+  if (gc==mGC)
   {
-//printf ("going offscreen: %p\n",mGC); fflush(stdout);
-    PmMemStart( (PmMemoryContext_t *) mGC);
-    PgSetRegion(mGC->rid);
+    //printf ("don't set gc\n");
+    return 0;
   }
   else
   {
-//printf ("going onscreen: %p\n",mGC); fflush(stdout);
-	PgSetGC(mGC);
-	PgSetRegion(mGC->rid);
+    if (mIsOffscreen)
+    {
+      //printf ("going offscreen: %p\n",mGC); fflush(stdout);
+      PmMemStart( (PmMemoryContext_t *) mGC);
+//      PgSetRegion(mGC->rid);
+    }
+    else
+    {
+      //printf ("going onscreen: %p\n",mGC); fflush(stdout);
+      PgSetGC(mGC);
+//      PgSetRegion(mGC->rid);
+    }
   }
 
-  return NS_OK;
+  return 1;
 }
 
 void nsDrawingSurfacePh::Stop(void)

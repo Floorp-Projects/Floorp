@@ -81,6 +81,8 @@ unsigned char   PhGfxLogState = 0;		/* 0 == Not Enabled */
 #define ENABLE_PHOTON_FLUXING
 #endif
 
+#define SELECT(surf) if (surf->Select()) ApplyClipping(surf->GetGC());
+
 class GraphicsState
 {
 public:
@@ -321,8 +323,7 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
 //printf ("create1: %p\n",mSurface);
   mSurface->Init(mGC);
 //  mSurface->Init(mGC,640,480,0);
-//  mSurface->Select();
-//  ApplyClipping(mSurface->GetGC());
+//  SELECT(mSurface);
   mOffscreenSurface = mSurface;
 
   NS_IF_ADDREF(aWindow);
@@ -600,10 +601,9 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
   return res;
 }
 
-
 NS_IMETHODIMP nsRenderingContextPh :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetClipRect  - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetClipRect\n"));
   PRInt32 x, y, w, h;
 
   if (!mRegion->IsEmpty())
@@ -624,7 +624,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRect(nsRect &aRect, PRBool &aClipVa
 
 NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRegion  - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRegion\n"));
 
   switch(aCombine)
   {
@@ -884,6 +884,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", x0, y0, x1, y1 ));
 
+  SELECT(mSurface);
   PgDrawILine( x0, y0, x1, y1 );
 
   return NS_OK;
@@ -911,6 +912,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline(const nsPoint aPoints[], PRIn
       pts[i].y = y;
     }
 
+    SELECT(mSurface);
     PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_STROKE );
 
     delete [] pts;
@@ -941,6 +943,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawRect(nscoord aX, nscoord aY, nscoord a
   h = aHeight;
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
+  SELECT(mSurface);
   PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_STROKE );
 
   return NS_OK;
@@ -967,9 +970,8 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
   w = aWidth;
   h = aHeight;
 
-  mSurface->Select();
-  ApplyClipping(mSurface->GetGC());
   mTMatrix->TransformCoord(&x,&y,&w,&h);
+  SELECT(mSurface);
   PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL_STROKE );
 
   return NS_OK;
@@ -997,6 +999,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawPolygon(const nsPoint aPoints[], PRInt
       pts[i].y = y;
     }
 
+    SELECT(mSurface);
     PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_STROKE | Pg_CLOSED );
 
     delete [] pts;
@@ -1026,6 +1029,7 @@ NS_IMETHODIMP nsRenderingContextPh :: FillPolygon(const nsPoint aPoints[], PRInt
       pts[i].y = y;
     }
 
+    SELECT(mSurface);
     PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_FILL_STROKE | Pg_CLOSED );
 
     delete [] pts;
@@ -1064,6 +1068,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse(nscoord aX, nscoord aY, nscoor
   radii.x = x+w-1;
   radii.y = y+h-1;
   flags = Pg_EXTENT_BASED | Pg_DRAW_STROKE;
+  SELECT(mSurface);
   PgDrawEllipse( &center, &radii, flags );
 
   return NS_OK;
@@ -1100,6 +1105,7 @@ NS_IMETHODIMP nsRenderingContextPh :: FillEllipse(nscoord aX, nscoord aY, nscoor
   radii.x = x+w-1;
   radii.y = y+h-1;
   flags = Pg_EXTENT_BASED | Pg_DRAW_FILL_STROKE;
+  SELECT(mSurface);
   PgDrawEllipse( &center, &radii, flags );
 
   return NS_OK;
@@ -1314,6 +1320,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
 	  nscoord yy = y;
 	  mTMatrix->TransformCoord(&xx, &yy);
       PhPoint_t pos = { xx, yy };
+      SELECT(mSurface);
       PgDrawText( &ch, 1, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
       x += *aSpacing++;
     }
@@ -1323,6 +1330,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
     mTMatrix->TransformCoord(&x,&y);
     PhPoint_t pos = { x, y };
 
+    SELECT(mSurface);
     PgDrawText( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
   }
 
@@ -1359,6 +1367,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUin
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawString2 aString=<%s> of %d at (%d,%d) aSpacing=<%p>\n", (char *) buffer, aLength, pos.x, pos.y, aSpacing));
 
+  SELECT(mSurface);
   PgDrawTextChars( (char *) aString, aLength, &pos, (Pg_TEXT_WIDECHAR | Pg_TEXT_LEFT | Pg_TEXT_TOP));
   
   return NS_OK;
@@ -1386,6 +1395,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUin
 	  nscoord yy = y;
 	  mTMatrix->TransformCoord(&xx, &yy);
       PhPoint_t pos = { xx, yy };
+      SELECT(mSurface);
       PgDrawText( (char *) ch, 1, &pos, (Pg_TEXT_WIDECHAR | Pg_TEXT_LEFT | Pg_TEXT_TOP));
       x += *aSpacing++;
     }
@@ -1395,6 +1405,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUin
     mTMatrix->TransformCoord(&x,&y);
     PhPoint_t pos = { x, y };
 
+    SELECT(mSurface);
     PgDrawText( (char *) aString, aLength, &pos, (Pg_TEXT_WIDECHAR | Pg_TEXT_LEFT | Pg_TEXT_TOP));
   }
 
@@ -1438,8 +1449,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, nscoord aX, ns
   h = NSToCoordRound( mP2T * aImage->GetHeight());
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-  mSurface->Select();
-  ApplyClipping(mSurface->GetGC());
+  SELECT(mSurface);
   res = aImage->Draw( *this, mSurface, x, y, w, h );
 
 Mask = aImage->GetAlphaBits();
@@ -1462,8 +1472,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, nscoord aX, ns
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
-  mSurface->Select();
-  ApplyClipping(mSurface->GetGC());
+  SELECT(mSurface);
   res = aImage->Draw( *this, mSurface, x, y, w, h );
 Mask = aImage->GetAlphaBits();
   return res;
@@ -1483,8 +1492,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, const nsRect& 
   dr = aDRect;
   mTMatrix->TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
 
-  mSurface->Select();
-  ApplyClipping(mSurface->GetGC());
+  SELECT(mSurface);
   res = aImage->Draw(*this,mSurface,sr.x,sr.y,sr.width,sr.height, dr.x,dr.y,dr.width,dr.height);
 Mask = aImage->GetAlphaBits();
 
@@ -1502,8 +1510,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, const nsRect& 
   tr = aRect;
   mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
 
-  mSurface->Select();
-  ApplyClipping(mSurface->GetGC());
+  SELECT(mSurface);
   res = aImage->Draw(*this,mSurface,tr.x,tr.y,tr.width,tr.height);
 Mask = aImage->GetAlphaBits();
 
@@ -1523,6 +1530,8 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   PRInt32               srcY = aSrcY;
   nsRect                drect = aDestBounds;
   nsDrawingSurfacePh  *destsurf;
+
+  PhGC_t *saveGC=PgGetGC();
 
 #if 0
   printf("nsRenderingContextPh::CopyOffScreenBits() flags=\n");
@@ -1560,13 +1569,22 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   area.pos.y=drect.y;
   area.size.w=drect.width;
   area.size.h=drect.height;
-//  printf ("location: %d, %p %p (%d %d) %d %d %d %d\n",aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
 
+  printf ("location: %d, %p %p (%d %d) %d %d %d %d\n",aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
+
+nsRect rect;
+PRBool valid;
+GetClipRect(rect,valid);
+if (valid)
+{
+  printf ("clip: %d %d %d %d\n",rect.x,rect.y,rect.width,rect.height);
+  area.size.w = rect.width; area.size.h = rect.height; 
+}
+  
   ((nsDrawingSurfacePh *)aSrcSurf)->Stop();
   PhImage_t *image;
   image = ((nsDrawingSurfacePh *)aSrcSurf)->mPixmap;
-  destsurf->Select();
-  ApplyClipping( destsurf->GetGC() );
+  SELECT(destsurf);
 
 if (aSrcSurf==destsurf)
 {
@@ -1587,7 +1605,7 @@ if (aSrcSurf==destsurf)
   else
   {
   PhPoint_t pos = { 0,0 };
-  if (aCopyFlags == 12) 	// oh god, super hack..
+  if (aCopyFlags == 12) 	// oh god, super hack.. ==12
   {
    pos.x=area.pos.x;
    pos.y=area.pos.y;
@@ -1602,6 +1620,7 @@ if (aSrcSurf==destsurf)
 //    PgSetRegion( mPtGC->rid );
   }
 
+  PgSetGC(saveGC);
   return NS_OK;
 }
 
