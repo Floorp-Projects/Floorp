@@ -52,7 +52,7 @@ CXXFLAGS="${CXXFLAGS=}"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=95
+MOZPNG=10002
 NSPR_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla
