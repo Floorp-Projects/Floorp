@@ -41,7 +41,7 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 
-    void Create(nsIWidget *aParent,
+    NS_IMETHOD Create(nsIWidget *aParent,
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
               nsIDeviceContext *aContext = nsnull,
@@ -49,7 +49,7 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-    void Create(nsNativeWidget aParent,
+    NS_IMETHOD Create(nsNativeWidget aParent,
               const nsRect &aRect, 
               EVENT_CALLBACK aHandleEventFunction,
               nsIDeviceContext *aContext = nsnull,
@@ -64,19 +64,19 @@ public:
 
 
     // nsIListBox interface
-    void      SetMultipleSelection(PRBool aMultipleSelections);
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
-    PRInt32   GetSelectedCount();
-    void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
+    NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
+    NS_IMETHOD AddItemAt(nsString &aItem, PRInt32 aPosition);
+    PRInt32    FindItem(nsString &aItem, PRInt32 aStartPos);
+    PRInt32    GetItemCount();
+    PRBool     RemoveItemAt(PRInt32 aPosition);
+    PRBool     GetItemAt(nsString& anItem, PRInt32 aPosition);
+    NS_IMETHOD GetSelectedItem(nsString& aItem);
+    PRInt32    GetSelectedIndex();
+    PRInt32    GetSelectedCount();
+    NS_IMETHOD GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+    NS_IMETHOD SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+    NS_IMETHOD SelectItem(PRInt32 aPosition);
+    NS_IMETHOD Deselect() ;
 
 protected:
     PRBool  mMultiSelect;

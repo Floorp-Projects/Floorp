@@ -46,7 +46,7 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
 // Create
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::Create(nsNativeWidget aParent,
+NS_METHOD nsScrollbar::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -103,10 +103,11 @@ void nsScrollbar::Create(nsNativeWidget aParent,
                 nsXtWidget_Resize_Callback,
                 this);*/
 
+  return NS_OK;
 }
 
 
-void nsScrollbar::Create(nsIWidget *aParent,
+NS_METHOD nsScrollbar::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -123,7 +124,7 @@ void nsScrollbar::Create(nsIWidget *aParent,
   }
 
   Create((nsNativeWidget)parentWidget, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

@@ -82,9 +82,10 @@ nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //
 //-------------------------------------------------------------------------
 
-void nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
+NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 {
   mMultiSelect = aMultipleSelections;
+  return NS_OK;
 }
 
 
@@ -94,7 +95,7 @@ void nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 //
 //-------------------------------------------------------------------------
 
-void nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
+NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
 
@@ -104,6 +105,7 @@ void nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 
   XmListAddItem(mWidget, str, (int)aPosition+1);
   NS_FREE_STR_BUF(val);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -187,7 +189,7 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //  Gets the selected of selected item
 //
 //-------------------------------------------------------------------------
-void nsListBox::GetSelectedItem(nsString& aItem)
+NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
 {
   int * list;
   int   count;
@@ -196,6 +198,7 @@ void nsListBox::GetSelectedItem(nsString& aItem)
     GetItemAt(aItem, list[0]-1); 
     XtFree((char *)list);
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -228,13 +231,14 @@ PRInt32 nsListBox::GetSelectedIndex()
 //  SelectItem
 //
 //-------------------------------------------------------------------------
-void nsListBox::SelectItem(PRInt32 aPosition)
+NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 {
   int count = 0;
   XtVaGetValues(mWidget,  XmNitemCount, &count, nsnull);
   if (aPosition >= 0 && aPosition < count) {
     XmListSelectPos(mWidget, aPosition+1, FALSE);
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -254,7 +258,7 @@ PRInt32 nsListBox::GetSelectedCount()
 //  GetSelectedIndices
 //
 //-------------------------------------------------------------------------
-void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+NS_METHOD nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
   int * list;
   int   count;
@@ -267,6 +271,7 @@ void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
     }
     XtFree((char *)list);
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -274,7 +279,7 @@ void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //  SetSelectedIndices
 //
 //-------------------------------------------------------------------------
-void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
   if (GetSelectedCount() > 0) {
     XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
@@ -283,6 +288,7 @@ void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
   for (i=0;i<aSize;i++) {
     SelectItem(aIndices[i]);
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -290,9 +296,10 @@ void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //  Deselect
 //
 //-------------------------------------------------------------------------
-void nsListBox::Deselect()
+NS_METHOD nsListBox::Deselect()
 {
   XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -300,7 +307,7 @@ void nsListBox::Deselect()
 // nsListBox Creator
 //
 //-------------------------------------------------------------------------
-void nsListBox::Create(nsIWidget *aParent,
+NS_METHOD nsListBox::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -361,6 +368,7 @@ void nsListBox::Create(nsIWidget *aParent,
   mEventCallback = aHandleEventFunction;
 
   //InitCallbacks();
+  return NS_OK;
 
 }
 
@@ -369,7 +377,7 @@ void nsListBox::Create(nsIWidget *aParent,
 // nsListBox Creator
 //
 //-------------------------------------------------------------------------
-void nsListBox::Create(nsNativeWidget aParent,
+NS_METHOD nsListBox::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -377,6 +385,7 @@ void nsListBox::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

@@ -45,7 +45,7 @@ public:
   NS_IMETHOD              GetState(PRBool& aState);
 
 
-  void Create(nsIWidget *aParent,
+  NS_IMETHOD Create(nsIWidget *aParent,
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
               nsIDeviceContext *aContext = nsnull,
@@ -53,7 +53,7 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-  void Create(nsNativeWidget aParent,
+  NS_IMETHOD Create(nsNativeWidget aParent,
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
               nsIDeviceContext *aContext = nsnull,

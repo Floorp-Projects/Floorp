@@ -38,12 +38,11 @@ NS_IMPL_RELEASE(nsButton)
 //-------------------------------------------------------------------------
 nsButton::nsButton() : nsWindow() , nsIButton()
 {
-printf("BUTTON CONSTRUCTED\n");
   NS_INIT_REFCNT();
 }
 
 
-void nsButton::Create(nsIWidget        *aParent,
+NS_METHOD nsButton::Create(nsIWidget        *aParent,
                       const nsRect     &aRect,
                       EVENT_CALLBACK    aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -51,7 +50,6 @@ void nsButton::Create(nsIWidget        *aParent,
                       nsIToolkit       *aToolkit,
                       nsWidgetInitData *aInitData) 
 {
-printf("BUTTON CREATED\n");
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
@@ -79,10 +77,11 @@ printf("BUTTON CREATED\n");
   mEventCallback = aHandleEventFunction;
 
   InitCallbacks("nsButton");
+  return NS_OK;
 
 }
 
-void nsButton::Create(nsNativeWidget aParent,
+NS_METHOD nsButton::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -90,7 +89,7 @@ void nsButton::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-printf("BAD BUTTON CREATE\n");
+  return NS_ERROR_FAILURE;
 
 }
 

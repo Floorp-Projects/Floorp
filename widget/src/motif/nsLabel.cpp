@@ -43,7 +43,7 @@ nsLabel::nsLabel() : nsWindow(), nsILabel()
 }
 
 
-void nsLabel::Create(nsIWidget *aParent,
+NS_METHOD nsLabel::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -81,10 +81,10 @@ void nsLabel::Create(nsIWidget *aParent,
   mEventCallback = aHandleEventFunction;
 
   InitCallbacks("nsLabel");
-
+  return NS_OK;
 }
 
-void nsLabel::Create(nsNativeWidget aParent,
+NS_METHOD nsLabel::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -92,18 +92,20 @@ void nsLabel::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
 //
 //
 //-------------------------------------------------------------------------
-void nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_METHOD nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     nsLabelInitData* data = (nsLabelInitData *) aInitData;
     mAlignment = data->mAlignment;
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

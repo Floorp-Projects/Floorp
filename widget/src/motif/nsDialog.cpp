@@ -42,7 +42,7 @@ nsDialog::nsDialog() : nsWindow(), nsIDialog()
 }
 
 //-------------------------------------------------------------------------
-void nsDialog::Create(nsIWidget *aParent,
+NS_METHOD nsDialog::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -92,10 +92,11 @@ void nsDialog::Create(nsIWidget *aParent,
   mEventCallback = aHandleEventFunction;
 
   InitCallbacks("nsDialog");
+  return NS_OK;
 
 }
 
-void nsDialog::Create(nsNativeWidget aParent,
+NS_METHOD nsDialog::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -103,6 +104,7 @@ void nsDialog::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  return NS_ERORR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

@@ -51,7 +51,7 @@ nsTextAreaWidget::~nsTextAreaWidget()
 }
 
 //-------------------------------------------------------------------------
-void nsTextAreaWidget::Create(nsIWidget *aParent,
+NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -102,7 +102,7 @@ void nsTextAreaWidget::Create(nsIWidget *aParent,
 }
 
 //-------------------------------------------------------------------------
-void nsTextAreaWidget::Create(nsNativeWidget aParent,
+NS_METHOD nsTextAreaWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

@@ -67,12 +67,13 @@ nsComboBox::~nsComboBox()
 // Set the foreground color
 //
 //-------------------------------------------------------------------------
-void nsComboBox::SetForegroundColor(const nscolor &aColor)
+NS_METHOD nsComboBox::SetForegroundColor(const nscolor &aColor)
 {
   nsWindow::SetForegroundColor(aColor);
   PRUint32 pixel;
   mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mOptionMenu, XtNforeground, pixel, nsnull);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -80,12 +81,13 @@ void nsComboBox::SetForegroundColor(const nscolor &aColor)
 // Set the background color
 //
 //-------------------------------------------------------------------------
-void nsComboBox::SetBackgroundColor(const nscolor &aColor)
+NS_METHOD nsComboBox::SetBackgroundColor(const nscolor &aColor)
 {
   nsWindow::SetForegroundColor(aColor);
   PRUint32 pixel;
   mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mOptionMenu, XtNbackground, pixel, nsnull);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -94,9 +96,10 @@ void nsComboBox::SetBackgroundColor(const nscolor &aColor)
 //
 //-------------------------------------------------------------------------
 
-void nsComboBox::SetMultipleSelection(PRBool aMultipleSelections)
+NS_METHOD nsComboBox::SetMultipleSelection(PRBool aMultipleSelections)
 {
   mMultiSelect = aMultipleSelections;
+  return NS_OK;
 }
 
 
@@ -106,7 +109,7 @@ void nsComboBox::SetMultipleSelection(PRBool aMultipleSelections)
 //
 //-------------------------------------------------------------------------
 
-void nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
+NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
 
@@ -127,6 +130,7 @@ void nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
   mItems[mNumItems++] = btn;
 
   NS_FREE_STR_BUF(val);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -218,7 +222,7 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //  Gets the selected of selected item
 //
 //-------------------------------------------------------------------------
-void nsComboBox::GetSelectedItem(nsString& aItem)
+NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 {
   Widget w;
   XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
@@ -228,6 +232,7 @@ void nsComboBox::GetSelectedItem(nsString& aItem)
       GetItemAt(aItem, i);
     }
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -257,7 +262,7 @@ PRInt32 nsComboBox::GetSelectedIndex()
 //  SelectItem
 //
 //-------------------------------------------------------------------------
-void nsComboBox::SelectItem(PRInt32 aPosition)
+NS_METHOD nsComboBox::SelectItem(PRInt32 aPosition)
 {
   if (!mMultiSelect) { 
     if (aPosition >= 0 && aPosition < mNumItems) {
@@ -267,7 +272,9 @@ void nsComboBox::SelectItem(PRInt32 aPosition)
     }
   } else {
     // this is an error
+    return NS_ERROR_FAILURE;
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -290,9 +297,10 @@ PRInt32 nsComboBox::GetSelectedCount()
 //  GetSelectedIndices
 //
 //-------------------------------------------------------------------------
-void nsComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+NS_METHOD nsComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
   // this is an error
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
@@ -300,14 +308,16 @@ void nsComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //  Deselect
 //
 //-------------------------------------------------------------------------
-void nsComboBox::Deselect()
+NS_METHOD nsComboBox::Deselect()
 {
   if (!mMultiSelect) { 
     //::SendMessage(mWnd, LB_SETCURSEL, (WPARAM)-1, (LPARAM)0); 
   } else {
     // this is an error
+    return NS_ERROR_FAILURE;
   }
 
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -340,7 +350,7 @@ nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsComboBox Creator
 //
 //-------------------------------------------------------------------------
-void nsComboBox::Create(nsIWidget *aParent,
+NS_METHOD nsComboBox::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -424,6 +434,7 @@ void nsComboBox::Create(nsIWidget *aParent,
   mEventCallback = aHandleEventFunction;
 
   //InitCallbacks();
+  return NS_OK;
 
 }
 
@@ -432,7 +443,7 @@ void nsComboBox::Create(nsIWidget *aParent,
 // nsComboBox Creator
 //
 //-------------------------------------------------------------------------
-void nsComboBox::Create(nsNativeWidget aParent,
+NS_METHOD nsComboBox::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -440,6 +451,7 @@ void nsComboBox::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
