@@ -1228,12 +1228,12 @@ nsMenuFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
+nsMenuFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
 {
   nsIFrame* frame = mPopupFrames.FirstChild();
   if (frame) {
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
-    popup->KeyboardNavigation(aDirection, aHandledFlag);
+    popup->KeyboardNavigation(aKeyCode, aHandledFlag);
   }
 
   return NS_OK;

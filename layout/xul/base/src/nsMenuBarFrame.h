@@ -111,7 +111,7 @@ public:
   void ToggleMenuActiveState();
   
   // Used to move up, down, left, and right in menus.
-  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+  NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag);
   NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag);
   // Called when the ESC key is held down to close levels of menus.
   NS_IMETHOD Escape(PRBool& aHandledFlag);

@@ -145,7 +145,7 @@ public:
                              const nsString& aPopupAlign,
                              nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
 
-  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+  NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag);
   NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag);
   
   NS_IMETHOD Escape(PRBool& aHandledFlag);
