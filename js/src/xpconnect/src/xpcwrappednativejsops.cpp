@@ -345,7 +345,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
            GetDoubleWrappedJSObject(ccx, wrapperToReflectDoubleWrap))
         {
             // We build and add a getter function.
-            // A security is done on a per-get basis.
+            // A security check is done on a per-get basis.
 
             JSFunction* fun;
 

@@ -64,6 +64,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpctest_calljs.obj  \
 	.\$(OBJDIR)\xpctest_multiple.obj\
 	.\$(OBJDIR)\xpctest_domstring.obj \
+	.\$(OBJDIR)\xpctest_variant.obj \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpconnect -I$(PUBLIC)\xpcom -I$(PUBLIC)\js \

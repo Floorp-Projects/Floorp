@@ -64,8 +64,9 @@ static nsModuleComponentInfo components[] = {
   {nsnull, NS_XPCTESTCHILD3_CID,          "@mozilla.org/js/xpc/test/Child3;1",          xpctest::ConstructXPCTestChild3         },
   {nsnull, NS_XPCTESTCHILD4_CID,          "@mozilla.org/js/xpc/test/Child4;1",          xpctest::ConstructXPCTestChild4         },
   {nsnull, NS_XPCTESTCHILD5_CID,          "@mozilla.org/js/xpc/test/Child5;1",          xpctest::ConstructXPCTestChild5         },
-  {nsnull, NS_ARRAY_CID,                  "@mozilla.org/js/xpc/test/ArrayTest;1",            xpctest::ConstructArrayTest             },
-  {nsnull, NS_XPCTESTDOMSTRING_CID,       "@mozilla.org/js/xpc/test/DOMString;1",       xpctest::ConstructXPCTestDOMString      }
+  {nsnull, NS_ARRAY_CID,                  "@mozilla.org/js/xpc/test/ArrayTest;1",       xpctest::ConstructArrayTest             },
+  {nsnull, NS_XPCTESTDOMSTRING_CID,       "@mozilla.org/js/xpc/test/DOMString;1",       xpctest::ConstructXPCTestDOMString      },
+  {nsnull, NS_XPCTESTVARIANT_CID,         "@mozilla.org/js/xpc/test/TestVariant;1",     xpctest::ConstructXPCTestVariant        }
 };
                                                                
 NS_IMPL_NSGETMODULE(xpconnect_test, components)

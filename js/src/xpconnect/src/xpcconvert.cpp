@@ -38,7 +38,6 @@
 /* Data conversion between native and JavaScript types. */
 
 #include "xpcprivate.h"
-#include "nsReadableUtils.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -345,6 +344,17 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                 nsISupports* iface = *((nsISupports**)s);
                 if(iface)
                 {
+                    if(iid->Equals(NS_GET_IID(nsIVariant)))
+                    {
+                        nsCOMPtr<nsIVariant> variant = do_QueryInterface(iface);
+                        if(!variant)
+                            return JS_FALSE;
+
+                        return XPCVariant::VariantDataToJS(ccx, variant, 
+                                                           scope, pErr, d);
+                    }
+                    // else...
+                    
                     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                     if(!NativeInterface2JSObject(ccx, getter_AddRefs(holder),
                                                  iface, iid, scope, pErr))
@@ -719,8 +729,18 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         case nsXPTType::T_INTERFACE:
         case nsXPTType::T_INTERFACE_IS:
         {
-            NS_ASSERTION(iid,"can't do interface conversions without iid");
             JSObject* obj;
+            NS_ASSERTION(iid,"can't do interface conversions without iid");
+
+            if(iid->Equals(NS_GET_IID(nsIVariant)))
+            {
+                XPCVariant* variant = XPCVariant::newVariant(ccx, s);
+                if(!variant)
+                    return JS_FALSE;
+                *((nsISupports**)d) = NS_STATIC_CAST(nsIVariant*, variant);
+                return JS_TRUE;
+            }
+            //else ...
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
@@ -886,8 +906,16 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
         *pErr = rv;
     if(NS_SUCCEEDED(rv) && wrapper)
     {
-        *dest = NS_STATIC_CAST(nsXPTCStubBase*, wrapper);
-        return JS_TRUE;
+        // We need to go through the QueryInterface logic to make this return
+        // the right thing for the various 'special' interfaces; e.g. 
+        // nsIPropertyBag. We must use AggregatedQueryInterface in cases where 
+        // there is an outer to avoid nasty recursion.
+        rv = aOuter ? wrapper->AggregatedQueryInterface(*iid, dest) :
+                      wrapper->QueryInterface(*iid, dest);
+        if(pErr)
+            *pErr = rv;
+        NS_RELEASE(wrapper);
+        return NS_SUCCEEDED(rv);        
     }
 
     // else...
@@ -1180,7 +1208,8 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
 #define VARARGS_ASSIGN(foo, bar)	(foo) = (bar)
 #endif
 
-const char XPC_ARG_FORMATTER_FORMAT_STR[] = "%ip";
+// We assert below that these formats all begin with "%i".
+const char* XPC_ARG_FORMATTER_FORMAT_STRINGS[] = {"%ip", "%iv", "%is", nsnull};
 
 JSBool JS_DLL_CALLBACK
 XPC_JSArgumentFormatter(JSContext *cx, const char *format,
@@ -1196,24 +1225,67 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
     vp = *vpp;
     VARARGS_ASSIGN(ap, *app);
 
-    nsXPTType type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));
-    nsISupports* iface;
+    nsXPTType type;
+    const nsIID* iid;
+    void* p;
+
+    NS_ASSERTION(format[0] == '%' && format[1] == 'i', "bad format!");
+    char which = format[2];
 
     if(fromJS)
     {
-        if(!XPCConvert::JSData2Native(ccx, &iface, vp[0], type, JS_FALSE,
-                                      &(NS_GET_IID(nsISupports)), nsnull))
+        switch(which)
+        {
+            case 'p':
+                type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));                
+                iid = &NS_GET_IID(nsISupports);
+                break;
+            case 'v':
+                type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));                
+                iid = &NS_GET_IID(nsIVariant);
+                break;
+            case 's':
+                type = nsXPTType((uint8)(TD_DOMSTRING | XPT_TDP_POINTER));                
+                iid = nsnull;
+                p = va_arg(ap, void *);
+                break;
+            default:
+                NS_ERROR("bad format!");
+                return JS_FALSE;
+        }
+
+        if(!XPCConvert::JSData2Native(ccx, &p, vp[0], type, JS_FALSE,
+                                      iid, nsnull))
             return JS_FALSE;
-        *va_arg(ap, nsISupports **) = iface;
+        
+        if(which != 's')
+            *va_arg(ap, void **) = p;
     }
     else
     {
-        const nsIID* iid;
+        switch(which)
+        {
+            case 'p':
+                type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));                
+                iid  = va_arg(ap, const nsIID*);
+                break;
+            case 'v':
+                type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));                
+                iid = &NS_GET_IID(nsIVariant);
+                break;
+            case 's':
+                type = nsXPTType((uint8)(TD_DOMSTRING | XPT_TDP_POINTER));                
+                iid = nsnull;
+                break;
+            default:
+                NS_ERROR("bad format!");
+                return JS_FALSE;
+        }
 
-        iid  = va_arg(ap, const nsIID*);
-        iface = va_arg(ap, nsISupports *);
+        // NOTE: MUST be retrieved *after* the iid in the 'p' case above.
+        p = va_arg(ap, void *);
 
-        if(!XPCConvert::NativeData2JS(ccx, &vp[0], &iface, type, iid,
+        if(!XPCConvert::NativeData2JS(ccx, &vp[0], &p, type, iid,
                                       JS_GetGlobalObject(cx), nsnull))
             return JS_FALSE;
     }
@@ -1323,6 +1395,7 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
 
     // No Action, FRee memory, RElease object
     enum CleanupMode {na, fr, re};
+
     CleanupMode cleanupMode;
 
     JSObject* jsarray = nsnull;

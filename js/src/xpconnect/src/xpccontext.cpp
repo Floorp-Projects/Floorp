@@ -66,9 +66,9 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
         mCallingLangType(LANG_UNKNOWN)
 {
     MOZ_COUNT_CTOR(XPCContext);
-    JS_AddArgumentFormatter(mJSContext,
-                            XPC_ARG_FORMATTER_FORMAT_STR,
-                            XPC_JSArgumentFormatter);
+
+    for(const char** p =  XPC_ARG_FORMATTER_FORMAT_STRINGS; *p; p++)
+        JS_AddArgumentFormatter(mJSContext, *p, XPC_JSArgumentFormatter);
 }
 
 XPCContext::~XPCContext()

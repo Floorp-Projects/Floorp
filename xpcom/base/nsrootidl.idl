@@ -74,8 +74,6 @@ typedef unsigned long       size_t;
 [ptr]         native charPtr(char);
 [ptr]         native unicharPtr(PRUnichar);
 
-[nsid]        native nsCID(nsCID);
-
 [ref, nsid]   native nsIDRef(nsID);
 [ref, nsid]   native nsIIDRef(nsIID);
 [ref, nsid]   native nsCIDRef(nsCID);
@@ -83,6 +81,20 @@ typedef unsigned long       size_t;
 [ptr, nsid]   native nsIDPtr(nsID);
 [ptr, nsid]   native nsIIDPtr(nsIID);
 [ptr, nsid]   native nsCIDPtr(nsCID);
+
+// NOTE: Be careful in using the following 3 types. The *Ref and *Ptr variants 
+// are more commonly used (and better supported). Those variants require 
+// nsMemory alloc'd copies when used as 'out' params while these types do not. 
+// However, currently these types can not be used for 'in' params. And, methods 
+// that use them as 'out' params *must* be declared [notxpcom] (with an explicit 
+// return type of nsresult). This makes such methods implicitly not scriptable.
+// Use of these types in methods without a [notxpcom] declaration will cause
+// the xpidl compiler to raise an error.
+// See: http://bugzilla.mozilla.org/show_bug.cgi?id=93792
+
+[nsid]        native nsIID(nsIID);
+[nsid]        native nsID(nsID);
+[nsid]        native nsCID(nsCID);
 
 [ptr]         native nsQIResult(void);
 

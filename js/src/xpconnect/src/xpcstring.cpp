@@ -47,7 +47,6 @@
  * well as providing refcounting support.
  */
 
-#include "nscore.h"
 #include "xpcprivate.h"
 
 /*

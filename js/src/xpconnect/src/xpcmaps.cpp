@@ -35,7 +35,6 @@
 
 /* Private maps (hashtables). */
 
-#include "nscore.h"
 #include "xpcprivate.h"
 
 /***************************************************************************/

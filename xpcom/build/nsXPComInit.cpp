@@ -93,6 +93,8 @@
 #include "nsTraceRefcnt.h"
 #include "nsTimelineService.h"
 
+#include "nsVariant.h"
+
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
 #endif
@@ -132,6 +134,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService);
     
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant);
+
 #ifdef MOZ_TIMELINE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService);
 #endif
@@ -256,7 +260,8 @@ static nsModuleComponentInfo components[] = {
     COMPONENT(FILESPEC, nsFileSpecImpl::Create),
     COMPONENT(DIRECTORYITERATOR, nsDirectoryIteratorImpl::Create),
 
-    COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create)
+    COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create),
+    COMPONENT(VARIANT, nsVariantConstructor)
 };
 
 #undef COMPONENT

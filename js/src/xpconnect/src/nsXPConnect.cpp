@@ -279,6 +279,14 @@ nsXPConnect::GetRuntime(nsXPConnect* xpc /*= nsnull*/)
     return xpc->EnsureRuntime() ? xpc->mRuntime : nsnull;
 }
 
+// static 
+nsIJSRuntimeService* 
+nsXPConnect::GetJSRuntimeService(nsXPConnect* xpc /* = nsnull */)
+{
+    XPCJSRuntime* rt = GetRuntime(xpc); 
+    return rt ? rt->GetJSRuntimeService() : nsnull;
+}
+
 // static
 XPCContext*
 nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= nsnull*/)

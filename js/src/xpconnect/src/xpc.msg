@@ -147,3 +147,10 @@ XPC_MSG_DEF(NS_ERROR_FILE_NOT_FOUND                 , "File error: Not found")
 XPC_MSG_DEF(NS_ERROR_FILE_READ_ONLY                 , "File error: Read only")
 XPC_MSG_DEF(NS_ERROR_FILE_DIR_NOT_EMPTY             , "File error: Dir not empty")
 XPC_MSG_DEF(NS_ERROR_FILE_ACCESS_DENIED             , "File error: Access denied")
+
+/* added from nsError.h on Sept 6 2001... */
+
+XPC_MSG_DEF(NS_ERROR_CANNOT_CONVERT_DATA            , "Data conversion error")
+XPC_MSG_DEF(NS_ERROR_OBJECT_IS_IMMUTABLE            , "Can not modify immutable data container")
+XPC_MSG_DEF(NS_ERROR_LOSS_OF_SIGNIFICANT_DATA       , "Data conversion failed because significant data would be lost")
+XPC_MSG_DEF(NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA   , "Data conversion succeeded but data was rounded to fit")

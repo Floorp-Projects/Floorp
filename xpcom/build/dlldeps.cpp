@@ -91,6 +91,7 @@
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
 #endif
+#include "nsVariant.h"
 
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
@@ -192,4 +193,5 @@ void XXXNeverCalled()
     NS_TraceMallocDumpAllocations(NULL);
     NS_TraceMallocFlushLogfiles();
 #endif
+    nsVariant();
 }

@@ -44,8 +44,6 @@
  * @See nsIBinaryInputStream
  */
 
-[nsid] native nsID(nsID);
-
 [scriptable, uuid(6c248606-4eae-46fa-9df0-ba58502368eb)]
 interface nsIObjectInputStream : nsIBinaryInputStream
 {

@@ -43,7 +43,6 @@
  */
 
 #include "xpcprivate.h"
-#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError);
 

@@ -71,6 +71,7 @@ CPPSRCS		= \
 		xpcthreadcontext.cpp \
 		xpcthrower.cpp \
 		xpcwrappedjs.cpp \
+		xpcvariant.cpp \
 		xpcwrappedjsclass.cpp \
 		xpcwrappednative.cpp \
 		xpcwrappednativeinfo.cpp \

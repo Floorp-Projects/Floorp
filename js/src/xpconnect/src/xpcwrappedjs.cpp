@@ -464,6 +464,35 @@ nsXPCWrappedJS::SystemIsBeingShutDown(JSRuntime* rt)
 
 /***************************************************************************/
 
+/* readonly attribute nsISimpleEnumerator enumerator; */
+NS_IMETHODIMP 
+nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
+{
+    XPCCallContext ccx(NATIVE_CALLER);
+    if(!ccx.IsValid())
+        return NS_ERROR_UNEXPECTED;
+
+    return nsXPCWrappedJSClass::BuildPropertyEnumerator(ccx, mJSObj, aEnumerate);
+}
+
+/* nsIVariant getProperty (in AString name); */
+NS_IMETHODIMP 
+nsXPCWrappedJS::GetProperty(const nsAReadableString & name, nsIVariant **_retval)
+{
+    XPCCallContext ccx(NATIVE_CALLER);
+    if(!ccx.IsValid())
+        return NS_ERROR_UNEXPECTED;
+
+    JSString* jsstr = XPCStringConvert::ReadableToJSString(ccx, name);
+    if(!jsstr)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return nsXPCWrappedJSClass::
+        GetNamedPropertyAsVariant(ccx, mJSObj, STRING_TO_JSVAL(jsstr), _retval);
+}
+
+/***************************************************************************/
+
 NS_IMETHODIMP
 nsXPCWrappedJS::DebugDump(PRInt16 depth)
 {

@@ -87,4 +87,7 @@ class nsXPCConstructor;
 
 class AutoMarkingPtr;
 
+class xpcProperty;
+class xpcPropertyBagEnumerator;
+
 #endif /* xpcforwards_h___ */

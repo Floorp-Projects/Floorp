@@ -93,6 +93,10 @@
 #include "nsIScriptError.h"
 #include "nsIExceptionService.h"
 
+#include "nsVariant.h"
+#include "nsIPropertyBag.h"
+#include "nsSupportsArray.h"
+
 #include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated
 #ifndef XPCONNECT_STANDALONE
 #define XPC_USE_SECURITY_CHECKED_COMPONENT
@@ -190,7 +194,7 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
 
 /***************************************************************************/
 // data declarations...
-extern const char XPC_ARG_FORMATTER_FORMAT_STR[]; // format string
+extern const char* XPC_ARG_FORMATTER_FORMAT_STRINGS[]; // format strings
 extern const char XPC_CONTEXT_STACK_CONTRACTID[];
 extern const char XPC_RUNTIME_CONTRACTID[];
 extern const char XPC_EXCEPTION_CONTRACTID[];
@@ -372,6 +376,7 @@ public:
     static nsXPConnect*  GetXPConnect();
     static XPCJSRuntime* GetRuntime(nsXPConnect* xpc = nsnull);
     static XPCContext*   GetContext(JSContext* cx, nsXPConnect* xpc = nsnull);
+    static nsIJSRuntimeService* GetJSRuntimeService(nsXPConnect* xpc = nsnull);
 
     // Gets addref'd pointer
     static nsresult GetInterfaceInfoManager(nsIInterfaceInfoManager** iim,
@@ -446,6 +451,8 @@ public:
 
     JSRuntime*     GetJSRuntime() const {return mJSRuntime;}
     nsXPConnect*   GetXPConnect() const {return mXPConnect;}
+
+    nsIJSRuntimeService* GetJSRuntimeService() const {return mJSRuntimeService;}
 
     JSObject2WrappedJSMap*     GetWrappedJSMap()        const
         {return mWrappedJSMap;}
@@ -1965,6 +1972,18 @@ public:
                           const nsXPTMethodInfo* info,
                           nsXPTCMiniVariant* params);
 
+    JSObject*  CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
+                                            JSObject* jsobj, REFNSIID aIID);
+
+    static nsresult BuildPropertyEnumerator(XPCCallContext& ccx,
+                                            JSObject* aJSObj,
+                                            nsISimpleEnumerator** aEnumerate);
+
+    static nsresult GetNamedPropertyAsVariant(XPCCallContext& ccx, 
+                                              JSObject* aJSObj,
+                                              jsval aName, 
+                                              nsIVariant** aResult);
+
     virtual ~nsXPCWrappedJSClass();
 private:
     nsXPCWrappedJSClass();   // not implemented
@@ -1972,9 +1991,6 @@ private:
                         nsIInterfaceInfo* aInfo);
 
     JSObject*  NewOutObject(JSContext* cx);
-
-    JSObject*  CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
-                                            JSObject* jsobj, REFNSIID aIID);
 
     JSBool IsReflectable(uint16 i) const
         {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
@@ -2024,13 +2040,15 @@ private:
 
 class nsXPCWrappedJS : public nsXPTCStubBase,
                        public nsIXPConnectWrappedJS,
-                       public nsSupportsWeakReference
+                       public nsSupportsWeakReference,
+                       public nsIPropertyBag
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDJS
     NS_DECL_NSISUPPORTSWEAKREFERENCE
+    NS_DECL_NSIPROPERTYBAG
 
     // Note that both nsXPTCStubBase and nsIXPConnectWrappedJS declare
     // GetInterfaceInfo methods with the same sig. So, the declaration
@@ -2125,6 +2143,36 @@ private:
 ****************************************************************************
 ***************************************************************************/
 
+class xpcProperty : public nsIProperty
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROPERTY
+
+  xpcProperty(const PRUnichar* aName, PRUint32 aNameLen, nsIVariant* aValue);
+  virtual ~xpcProperty() {}
+
+private:
+    nsString             mName;
+    nsCOMPtr<nsIVariant> mValue;
+};
+
+class xpcPropertyBagEnumerator : public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    xpcPropertyBagEnumerator(PRUint32 count);
+    virtual ~xpcPropertyBagEnumerator() {}
+
+    JSBool AppendElement(nsISupports* element);
+
+private:
+    nsSupportsArray mArray;
+    PRUint32        mIndex;
+    PRUint32        mCount;
+};
 
 /***************************************************************************/
 // data conversion
@@ -3054,6 +3102,45 @@ extern char* xpc_CloneAllAccess();
 
 extern char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[]);
 #endif
+
+/***************************************************************************/
+// in xpcvariant.cpp...
+
+// {1809FD50-91E8-11d5-90F9-0010A4E73D9A}
+#define XPCVARIANT_IID \
+    {0x1809fd50, 0x91e8, 0x11d5, \
+      { 0x90, 0xf9, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a } }
+
+class XPCVariant : public nsIVariant
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIVARIANT
+
+    // We #define and iid so that out module local code can use QI to detect 
+    // if a given nsIVariant is in fact an XPCVariant. 
+    NS_DEFINE_STATIC_IID_ACCESSOR(XPCVARIANT_IID)
+
+    static XPCVariant* newVariant(XPCCallContext& ccx, jsval aJSVal);
+
+    jsval GetJSVal() const {return mJSVal;}
+
+    XPCVariant();
+
+    static JSBool VariantDataToJS(XPCCallContext& ccx, 
+                                  nsIVariant* variant,
+                                  JSObject* scope, nsresult* pErr,
+                                  jsval* pJSVal);
+
+protected:
+    virtual ~XPCVariant();
+
+    JSBool InitializeData(XPCCallContext& ccx);
+
+protected:
+    nsDiscriminatedUnion mData;
+    jsval                mJSVal;
+};
 
 /***************************************************************************/
 // Inlined utilities.
