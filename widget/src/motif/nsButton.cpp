@@ -38,6 +38,7 @@ NS_IMPL_RELEASE(nsButton)
 //-------------------------------------------------------------------------
 nsButton::nsButton() : nsWindow() , nsIButton()
 {
+printf("BUTTON CONSTRUCTED\n");
   NS_INIT_REFCNT();
 }
 
@@ -50,6 +51,7 @@ void nsButton::Create(nsIWidget        *aParent,
                       nsIToolkit       *aToolkit,
                       nsWidgetInitData *aInitData) 
 {
+printf("BUTTON CREATED\n");
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
@@ -88,6 +90,8 @@ void nsButton::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+printf("BAD BUTTON CREATE\n");
+
 }
 
 //-------------------------------------------------------------------------

@@ -324,6 +324,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+printf("ENTER Create a child window\n");
   mBounds = aRect;
   mAppShell = aAppShell;
  
@@ -352,6 +353,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                                     XmNuserData, this,
 				    nsnull);
 
+printf("Created a child window %d %d\n", aRect.width, aRect.height);
   if (aWidgetParent) {
     aWidgetParent->AddChild(this);
   }
@@ -362,6 +364,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 
   InitCallbacks();
   CreateGC();
+printf("EXIT Creating a child window\n");
 }
 
 //-------------------------------------------------------------------------
@@ -972,10 +975,13 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
         // We Cache a Read-Only Shared GC in the Toolkit.  If we don't
         // have one ourselves (because it needs to be writeable) grab the
         // the shared GC
-        if (nsnull == mGC)
+        if (nsnull == mGC) {
+           NS_ASSERTION(mToolkit, "Unable to return GC, toolkit is null");
           res = (void *)((nsToolkit *)mToolkit)->GetSharedGC(); 
-        else
+        }
+        else {
           res = (void *)mGC;
+        }
         NS_ASSERTION(res, "Unable to return GC");
         return res;
       }
