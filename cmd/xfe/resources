@@ -2178,6 +2178,7 @@ Change character encoding of the current page
 *EUC-KREncCmdString:			Korean (EUC-KR)
 *iso-2022-krEncCmdString:		Korean (ISO-2022-KR)
 *koi8-rEncCmdString:			Cyrillic (KOI8-R)
+*koi8-uEncCmdString:			Ukrainian (KOI8-U)
 *iso-8859-5EncCmdString:		Cyrillic (ISO-8859-5)
 *windows-1251EncCmdString:		Cyrillic (Windows-1251)
 *armscii-8EncCmdString:			Armenian (ArmSCII-8)
@@ -5437,6 +5438,8 @@ from the network, or save to a file and then play from the file?
 !	EUC-KR
 !	iso-2022-kr
 !	koi8-r
+!	koi8-u
+!	armscii-8
 !	windows-1251
 !	iso-8859-5
 !	iso-8859-7
@@ -5452,6 +5455,8 @@ from the network, or save to a file and then play from the file?
 !*defaultCharset:	EUC-KR
 !*defaultCharset:	iso-2022-kr
 !*defaultCharset:	koi8-r
+!*defaultCharset:	koi8-u
+!*defaultCharset:	armscii-8
 !*defaultCharset:	windows-1251
 !*defaultCharset:	iso-8859-5
 !*defaultCharset:	iso-8859-7
@@ -5543,6 +5548,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charsetlang*jis_x0212-1990:		Japanese
 *documentFonts.charsetlang*koi8-r:			Cyrillic
 *documentFonts.charsetlang*windows-1251:		Cyrillic
+*documentFonts.charsetlang*koi8-r:			Ukrainian
 *documentFonts.charsetlang*ks_c_5601-1987:		Korean
 *documentFonts.charsetlang*x-cns11643-1110:		Traditional Chinese
 *documentFonts.charsetlang*x-cns11643-1:		Traditional Chinese
@@ -5670,6 +5676,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*koi8-1:					koi8-r
 *documentFonts.charset*koi8-r:					koi8-r
 *documentFonts.charset*koi-8:					koi8-r
+*documentFonts.charset*koi8-u:					koi8-u
 *documentFonts.charset*ks-roman:				x-ignore
 *documentFonts.charset*ksc5601.1987-0:				ks_c_5601-1987
 *documentFonts.charset*ksc5601.1987-1:				x-ksc5601-11

@@ -37,8 +37,6 @@
 #include "libmocha.h"
 #include "libevent.h"
 
-#include <libi18n.h>		/* for the document encoding stuff. */
-#include <intl_csi.h>		/* to get/set doc_csid/win_csid */
 #include "libimg.h"             /* Image Library public API. */
 #include "il_util.h"            /* Colormap/colorspace utilities. */
 
@@ -385,45 +383,6 @@ MenuSpec XFE_Frame::next_submenu_spec[] = {
 	{ xfeCmdNextUnreadThread,		PUSHBUTTON },
 	{ xfeCmdNextCollection,		    PUSHBUTTON },
 	{ xfeCmdNextUnreadCollection, 	PUSHBUTTON },
-	{ NULL }
-};
-
-// Encoding Menu Spec - shared between Browsers, and Mail/News
-// Delete this after we can change ThreadFrame and ComposeFrame
-MenuSpec XFE_Frame::encoding_menu_spec[] = {
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_LATIN1 },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_LATIN2 },
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1250 },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_EUCJP_AUTO },
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_SJIS },
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_EUCJP },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_BIG5 },
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CNS_8BIT },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_GB_8BIT },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_KSC_8BIT_AUTO },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_5 },
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_KOI8_R },
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1251 },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_ARMSCII8 },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_7 },
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1253 },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_9 },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_UTF8 },
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_UTF7 },
-	MENU_SEPARATOR,
-	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_USRDEF2 },
-	MENU_SEPARATOR,
-	{ xfeCmdSetDefaultDocumentEncoding,	PUSHBUTTON },
 	{ NULL }
 };
 
