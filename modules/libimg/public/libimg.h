@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 3.9 2000/09/14 23:09:18 pnunn%netscape.com Exp $
+ *  $Id: libimg.h,v 3.10 2001/06/19 08:46:28 pavlov%netscape.com Exp $
  */
 
 

@@ -23,7 +23,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.h Colormap and colorspace utilities.
  *             
- *   $Id: il_util.h,v 3.5 1999/11/13 22:37:34 cls%seawood.org Exp $
+ *   $Id: il_util.h,v 3.6 2001/06/19 08:46:27 pavlov%netscape.com Exp $
  */
 
 

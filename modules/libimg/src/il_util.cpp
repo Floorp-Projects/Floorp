@@ -23,7 +23,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.cpp,v 3.8 2000/07/20 01:52:02 pnunn%netscape.com Exp $
+ *   $Id: il_util.cpp,v 3.9 2001/06/19 08:47:03 pavlov%netscape.com Exp $
  */
 
 

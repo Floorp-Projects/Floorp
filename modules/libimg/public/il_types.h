@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_types.h --- Image library data types and structures.
- *  $Id: il_types.h,v 3.6 2000/07/20 01:49:58 pnunn%netscape.com Exp $
+ *  $Id: il_types.h,v 3.7 2001/06/19 08:46:25 pavlov%netscape.com Exp $
  */
 
 

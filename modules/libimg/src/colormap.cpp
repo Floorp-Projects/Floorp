@@ -23,7 +23,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  colormap.c
  *             
- *   $Id: colormap.cpp,v 3.4 2001/01/10 06:12:10 jgmyers%netscape.com Exp $
+ *   $Id: colormap.cpp,v 3.5 2001/06/19 08:46:56 pavlov%netscape.com Exp $
  */
 
 

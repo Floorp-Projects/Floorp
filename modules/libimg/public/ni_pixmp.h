@@ -21,7 +21,7 @@
  */
 /* 
  *  ni_pixmp.h --- Cross platform pixmap data structure.
- *  $Id: ni_pixmp.h,v 3.5 1999/11/13 22:37:35 cls%seawood.org Exp $
+ *  $Id: ni_pixmp.h,v 3.6 2001/06/19 08:46:30 pavlov%netscape.com Exp $
  */
 
 
