@@ -7,7 +7,8 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsWeakReference.h"
 #include "nsIWindowWatcher.h"
-#include "WebBrowserContainer.h"
+#include "nsIEmbeddingSiteWindow.h"
+#include <Pt.h>
 
 
 static NS_DEFINE_CID( kCID, NS_IHELPERAPPLAUNCHERDIALOG_IID );
@@ -28,7 +29,7 @@ public:
     NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
 
 private:
-		CWebBrowserContainer* GetWebBrowser(nsIDOMWindow *aWindow);
+		PtWidget_t* GetWebBrowser(nsIDOMWindow *aWindow);
 }; // nsUnknownContentTypeHandler
 
 

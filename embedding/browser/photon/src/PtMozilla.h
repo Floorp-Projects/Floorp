@@ -29,17 +29,16 @@
 
 #include <photon/PtWebClient.h>
 #include <photon/PpProto.h>
-
-#include "WebBrowserContainer.h"
-
+#include "EmbedPrivate.h"
+#if 0
 #include "nsIInputStream.h"
 #include "nsILoadGroup.h"
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
 #include "nsIStreamListener.h"
-#include "nsIExternalHelperAppService.h"
 #include "nsISHistory.h"
 #include "nsIHistoryEntry.h"
+#endif
 
 /*
  * PtMozilla public
@@ -88,14 +87,23 @@ extern PtWidgetClassRef_t *PtMozilla;
 
 #define MAX_URL_LENGTH		1024
 
+typedef enum
+{
+  MOZ_EMBED_FLAG_RELOADNORMAL = 0,
+  MOZ_EMBED_FLAG_RELOADBYPASSCACHE = 1,
+  MOZ_EMBED_FLAG_RELOADBYPASSPROXY = 2,
+  MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE = 3,
+  MOZ_EMBED_FLAG_RELOADCHARSETCHANGE = 4
+} MozEmbedReloadFlags;
+
 // progress callback, can be itemized or full
 #define Pt_MOZ_PROGRESS		1
 #define Pt_MOZ_PROGRESS_ALL	2
 typedef struct mozilla_progress_t
 {
 	int 	type; // unused at this time
-	int32 	cur;
-	int32 	max;
+	int32_t 	cur;
+	int32_t 	max;
 } PtMozillaProgressCb_t;
 
 // url change callback, also used for open callback
@@ -287,23 +295,6 @@ enum
 	Pt_MOZ_COMMAND_SAVEAS,
 };
 
-class BrowserAccess
-{
-public:
-    CWebBrowserContainer				*WebBrowserContainer;
-    nsCOMPtr<nsIWebBrowser>     WebBrowser;
-    nsCOMPtr<nsIBaseWindow>     WebBrowserAsWin;
-    nsCOMPtr<nsIWebNavigation>  WebNavigation;
-		nsCOMPtr<nsISHistory>				mSessionHistory;
-    nsCOMPtr<nsIDocShell>				rootDocShell;
-    nsIPref *mPrefs;
-
-	/* pass extra information to the mozilla widget, so that it will know what to do when Pt_ARG_MOZ_UNKNOWN_RESP comes */
-	nsCOMPtr<nsIHelperAppLauncher> app_launcher;
-	nsCOMPtr<nsISupports> context;
-};
-
-
 typedef struct {
 	short   response;
 	char    user[255];
@@ -316,7 +307,7 @@ typedef struct Pt_mozilla_client_widget
 	PtContainerWidget_t	container;
 
 	// Mozilla interfaces
-	class BrowserAccess *MyBrowser;
+	EmbedPrivate *EmbedRef;
 
 	char				url[MAX_URL_LENGTH];
 	int 				navigate_flags;
