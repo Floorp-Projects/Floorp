@@ -2821,7 +2821,7 @@ nsHttpChannel::GetRedirectionLimit(PRUint32 *value)
 NS_IMETHODIMP
 nsHttpChannel::SetRedirectionLimit(PRUint32 value)
 {
-    mRedirectionLimit = CLAMP(value, 0, 0xff);
+    mRedirectionLimit = PR_MIN(value, 0xff);
     return NS_OK;
 }
 
