@@ -5030,8 +5030,14 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
                                 aTag, aStyleContext, newFrame,
                                 display, frameHasBeenInitialized,
                                 aFrameItems);
-      NS_ASSERTION(aFrameItems.lastChild == newFrame,
+#ifdef DEBUG
+      nsIFrame* debugFrame = aFrameItems.lastChild;
+      if (debugFrame->GetType() == nsLayoutAtoms::placeholderFrame) {
+        debugFrame = ((nsPlaceholderFrame*)debugFrame)->GetOutOfFlowFrame();
+      }
+      NS_ASSERTION(debugFrame == newFrame,
                    "Frame didn't get added to aFrameItems?");
+#endif
       addedToFrameList = PR_TRUE;
     }
   }
@@ -5063,8 +5069,14 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     rv = ConstructFieldSetFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
                                 aTag, aStyleContext, newFrame,
                                 aFrameItems, display, frameHasBeenInitialized);
-    NS_ASSERTION(aFrameItems.lastChild == newFrame,
-                 "Frame didn't get added to aFrameItems?");
+#ifdef DEBUG
+      nsIFrame* debugFrame = aFrameItems.lastChild;
+      if (debugFrame->GetType() == nsLayoutAtoms::placeholderFrame) {
+        debugFrame = ((nsPlaceholderFrame*)debugFrame)->GetOutOfFlowFrame();
+      }
+      NS_ASSERTION(debugFrame == newFrame,
+                   "Frame didn't get added to aFrameItems?");
+#endif
     addedToFrameList = PR_TRUE;
   }
   else if (nsHTMLAtoms::legend == aTag) {
@@ -6517,23 +6529,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     // Create the block frame
     rv = NS_NewBlockFrame(aPresShell, &newFrame);
     if (NS_SUCCEEDED(rv)) { // That worked so construct the block and its children
-      // Stash away frame items before resetting the pseudo state
-      // XXXbz why are we even doing this?  Positioned, floated frames above
-      // don't do it.  ProcessChildren does it anyway.  Is this needed (in
-      // which case we need to add it to more places), or is it just
-      // silliness?
-      nsFrameItems& ourFrameItems = *frameItems;
-      nsPseudoFrames savePseudo;
-      aState.mPseudoFrames.Reset(&savePseudo);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       rv = ConstructBlock(aPresShell, aPresContext, aState, aDisplay, aContent,
                           adjParentFrame, nsnull, aStyleContext, &newFrame,
-                          ourFrameItems, PR_FALSE);
+                          *frameItems, PR_FALSE);
       addedToFrameList = PR_TRUE;
-      if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-        ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-      }
-      aState.mPseudoFrames = savePseudo;
     }
   }
   // See if it's an inline frame of some sort
@@ -6545,16 +6545,10 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     // Create the inline frame
     rv = NS_NewInlineFrame(aPresShell, &newFrame);
     if (NS_SUCCEEDED(rv)) { // That worked so construct the inline and its children
-      nsPseudoFrames savePseudo;
-      aState.mPseudoFrames.Reset(&savePseudo);
       // Note that we want to insert the inline after processing kids, since
       // processing of kids may split the inline.
       rv = ConstructInline(aPresShell, aPresContext, aState, aDisplay, aContent,
                            adjParentFrame, aStyleContext, PR_FALSE, newFrame);
-      if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-        ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-      }
-      aState.mPseudoFrames = savePseudo;
     }
 
     // To keep the hash table small don't add inline frames (they're
