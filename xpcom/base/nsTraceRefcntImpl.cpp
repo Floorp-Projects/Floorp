@@ -187,7 +187,7 @@ public:
 
   static PRIntn TotalEntries(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
-    if (entry) {
+    if (entry && nsCRT::strcmp(entry->mClassName, "TOTAL") != 0) {
       entry->Total((BloatEntry*)arg);
     }
     return HT_ENUMERATE_NEXT;
@@ -202,11 +202,12 @@ public:
     total->mAllStats.mRefsOutstandingVariance += mNewStats.mRefsOutstandingVariance + mAllStats.mRefsOutstandingVariance;
     total->mAllStats.mObjsOutstandingTotal += mNewStats.mObjsOutstandingTotal + mAllStats.mObjsOutstandingTotal;
     total->mAllStats.mObjsOutstandingVariance += mNewStats.mObjsOutstandingVariance + mAllStats.mObjsOutstandingVariance;
-    total->mClassSize += mClassSize;    // adjust for average in DumpTotal
+    PRInt32 rem = (mNewStats.mCreates + mAllStats.mCreates) - (mNewStats.mDestroys + mAllStats.mDestroys);
+    total->mClassSize += mClassSize * rem;    // adjust for average in DumpTotal
   }
 
   nsresult DumpTotal(PRUint32 nClasses, FILE* out) {
-    mClassSize /= nClasses;
+    mClassSize /= (mAllStats.mCreates - mAllStats.mDestroys);
     return Dump(-1, out, &mAllStats);
   }
 
