@@ -3245,6 +3245,13 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
           return NS_OK;
         }
       } else {
+        if (mCurrentFocus != nextFocus) {
+          // A focus or blur handler switched the focus from one of
+          // its focus/blur/change handlers, don't mess with what the
+          // page wanted...
+
+          return NS_OK;
+        }
         GetFocusedFrame(&mCurrentTarget);
         if (mCurrentTarget)
           SetFrameExternalReference(mCurrentTarget);
