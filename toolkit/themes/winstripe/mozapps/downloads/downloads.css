@@ -49,6 +49,7 @@ download {
   -moz-padding-end: 10px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
+  -moz-user-focus: normal;
 }
 
 download[selected="true"] {
@@ -105,6 +106,7 @@ download[state="5"], download[state="6"] {
   padding-bottom: 3px;
   -moz-padding-start: 5px;
   -moz-padding-end: 6px;
+  -moz-user-focus: normal;
 }
 
 #saveToFolder .toolbarbutton-text {
