@@ -24,7 +24,7 @@
 /* namespace for MathML elements                       */
 /*******************************************************/
 
-@namespace mathml url(http://www.w3.org/1998/Math/MathML); 
+@namespace url(http://www.w3.org/1998/Math/MathML); 
 
 
 /*******************************************************/
@@ -252,9 +252,11 @@ math {
 /*  font-size: 24pt; */
 }
 
+/*
 p {
   display: block;
 }
+*/
 
 [background="yellow"] {
    background-color: yellow;
