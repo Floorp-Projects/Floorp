@@ -200,9 +200,8 @@ nsVoidBTree::ElementAt(PRInt32 aIndex) const
                 next = child;
                 break;
             }
-            else {
-                aIndex -= childcount;
-            }
+
+            aIndex -= childcount;
         }
 
         if (! next) {
@@ -301,9 +300,8 @@ nsVoidBTree::InsertElementAt(void* aElement, PRInt32 aIndex)
                 next = child;
                 break;
             }
-            else {
-                aIndex -= childcount;
-            }
+
+            aIndex -= childcount;
         }
 
         if (! next) {
@@ -373,9 +371,8 @@ nsVoidBTree::ReplaceElementAt(void* aElement, PRInt32 aIndex)
                 next = child;
                 break;
             }
-            else {
-                aIndex -= childcount;
-            }
+
+            aIndex -= childcount;
         }
 
         if (! next) {
@@ -434,9 +431,8 @@ nsVoidBTree::RemoveElementAt(PRInt32 aIndex)
                 next = child;
                 break;
             }
-            else {
-                aIndex -= childcount;
-            }
+            
+            aIndex -= childcount;
         }
 
         if (! next) {
@@ -699,16 +695,15 @@ nsVoidBTree::Verify(Node* aNode)
         NS_ASSERTION(aNode->GetCount() == aNode->GetSubTreeSize(), "corrupted");
         return aNode->GetCount();
     }
-    else {
-        PRInt32 childcount = 0;
-        for (PRInt32 i = 0; i < aNode->GetCount(); ++i) {
-            Node* child = NS_REINTERPRET_CAST(Node*, aNode->GetElementAt(i));
-            childcount += Verify(child);
-        }
 
-        NS_ASSERTION(childcount == aNode->GetSubTreeSize(), "corrupted");
-        return childcount;
+    PRInt32 childcount = 0;
+    for (PRInt32 i = 0; i < aNode->GetCount(); ++i) {
+        Node* child = NS_REINTERPRET_CAST(Node*, aNode->GetElementAt(i));
+        childcount += Verify(child);
     }
+
+    NS_ASSERTION(childcount == aNode->GetSubTreeSize(), "corrupted");
+    return childcount;
 }
 
 
@@ -883,10 +878,9 @@ nsVoidBTree::RightMostPath() const
             path.Push(current, count);
             break;
         }
-        else {
-            path.Push(current, count - 1);
-            current = NS_STATIC_CAST(Node*, current->GetElementAt(count - 1));
-        }
+
+        path.Push(current, count - 1);
+        current = NS_STATIC_CAST(Node*, current->GetElementAt(count - 1));
     }
 
     return path;

@@ -370,6 +370,18 @@ public:
         void** mElementRef;
 
     public:
+        Iterator() {}
+
+        Iterator(const Iterator& aOther)
+            : ConstIterator(aOther),
+              mElementRef(aOther.mElementRef) {}
+
+        Iterator&
+        operator=(const Iterator& aOther) {
+            ConstIterator::operator=(aOther);
+            mElementRef = aOther.mElementRef;
+            return *this; }
+
         Iterator& operator++() {
             Next();
             return *this; }
@@ -389,10 +401,9 @@ public:
             return temp; }
 
         void*& operator*() const {
-            if (mIsSingleton)
-                return !mIsExhausted ? *mElementRef : kDummyLast;
-            else
-                return mPath.TopNode()->GetElementAt(mPath.TopIndex()); }
+            return mIsSingleton
+                ? (!mIsExhausted ? *mElementRef : kDummyLast)
+                : mPath.TopNode()->GetElementAt(mPath.TopIndex()); }
 
         PRBool operator==(const Iterator& aOther) const {
             return mIsSingleton
