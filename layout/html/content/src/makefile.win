@@ -23,35 +23,51 @@ REQUIRES=xpcom raptor js
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=				\
+	nsHTMLAnchor.cpp		\
 	nsHTMLApplet.cpp		\
+	nsHTMLArea.cpp			\
+	nsHTMLBase.cpp			\
+	nsHTMLBaseFont.cpp		\
+	nsHTMLBR.cpp			\
 	nsHTMLComment.cpp		\
 	nsHTMLEmbed.cpp			\
+	nsHTMLGenericContent.cpp	\
 	nsHTMLHead.cpp			\
+	nsHTMLHR.cpp			\
+	nsHTMLInput.cpp			\
+	nsHTMLLayer.cpp			\
+	nsHTMLLink.cpp			\
 	nsHTMLMeta.cpp			\
 	nsHTMLObject.cpp		\
+	nsHTMLParam.cpp			\
+	nsHTMLScript.cpp		\
+	nsHTMLStyle.cpp			\
 	nsHTMLTitle.cpp			\
 	nsObjectContent.cpp		\
-	nsHTMLLayer.cpp			\
-	nsHTMLGenericContent.cpp	\
-	nsHTMLAnchor.cpp		\
-	nsHTMLBR.cpp			\
-	nsHTMLHR.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\nsHTMLAnchor.obj		\
 	.\$(OBJDIR)\nsHTMLApplet.obj		\
+	.\$(OBJDIR)\nsHTMLArea.obj		\
+	.\$(OBJDIR)\nsHTMLBase.obj		\
+	.\$(OBJDIR)\nsHTMLBaseFont.obj		\
+	.\$(OBJDIR)\nsHTMLBR.obj		\
 	.\$(OBJDIR)\nsHTMLComment.obj		\
 	.\$(OBJDIR)\nsHTMLEmbed.obj		\
+	.\$(OBJDIR)\nsHTMLGenericContent.obj	\
 	.\$(OBJDIR)\nsHTMLHead.obj		\
+	.\$(OBJDIR)\nsHTMLHR.obj		\
+	.\$(OBJDIR)\nsHTMLInput.obj		\
+	.\$(OBJDIR)\nsHTMLLayer.obj		\
+	.\$(OBJDIR)\nsHTMLLink.obj		\
 	.\$(OBJDIR)\nsHTMLMeta.obj		\
 	.\$(OBJDIR)\nsHTMLObject.obj		\
+	.\$(OBJDIR)\nsHTMLParam.obj		\
+	.\$(OBJDIR)\nsHTMLScript.obj		\
+	.\$(OBJDIR)\nsHTMLStyle.obj		\
 	.\$(OBJDIR)\nsHTMLTitle.obj		\
 	.\$(OBJDIR)\nsObjectContent.obj		\
-	.\$(OBJDIR)\nsHTMLLayer.obj		\
-	.\$(OBJDIR)\nsHTMLGenericContent.obj	\
-	.\$(OBJDIR)\nsHTMLAnchor.obj		\
-	.\$(OBJDIR)\nsHTMLBR.obj		\
-	.\$(OBJDIR)\nsHTMLHR.obj		\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
