@@ -360,28 +360,6 @@ nsMsgFolder::GetURI(char* *name) {
 typedef PRBool
 (*nsArrayFilter)(nsISupports* element, void* data);
 
-static nsresult
-nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
-           nsISupportsArray* *result)
-{
-  nsCOMPtr<nsISupportsArray> f;
-  nsresult rv = NS_NewISupportsArray(getter_AddRefs(f));
-  if (NS_FAILED(rv)) return rv;
-  PRUint32 cnt;
-  rv = array->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> element = getter_AddRefs(array->ElementAt(i));
-    if (filter(element, data)) {
-      if (!f->AppendElement(element)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-  }
-  *result = f;
-  return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 

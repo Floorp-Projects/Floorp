@@ -76,7 +76,6 @@ NS_INTERFACE_MAP_BEGIN(nsMsgProtocol)
    NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-static PRUnichar *GetStringByID(PRInt32 stringID);
 static PRUnichar *FormatStringWithHostNameByID(PRInt32 stringID, nsIMsgMailNewsUrl *msgUri);
 
 
@@ -1365,29 +1364,6 @@ PRInt32 nsMsgAsyncWriteProtocol::SendData(nsIURI * aURL, const char * dataBuffer
 }
 
 #define MSGS_URL    "chrome://messenger/locale/messenger.properties"
-
-PRUnichar *GetStringByID(PRInt32 stringID)
-{
-   nsresult rv;
-   nsCOMPtr <nsIStringBundle> sBundle = nsnull;
-
-   nsCOMPtr<nsIStringBundleService> sBundleService = 
-            do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-   if (NS_FAILED(rv) || (nsnull == sBundleService)) 
-      return nsnull;
-
-   rv = sBundleService->CreateBundle(MSGS_URL, getter_AddRefs(sBundle));
-   if (NS_FAILED(rv)) 
-      return nsnull;
-
-   PRUnichar *ptrv = nsnull;
-   rv = sBundle->GetStringFromID(stringID, &ptrv);
-
-   if (NS_FAILED(rv)) 
-      return nsnull;
-
-   return (ptrv);
-}
 
 PRUnichar *FormatStringWithHostNameByID(PRInt32 stringID, nsIMsgMailNewsUrl *msgUri)
 {
