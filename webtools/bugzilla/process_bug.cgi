@@ -122,7 +122,7 @@ sub ChangeResolution {
 
 foreach my $field ("rep_platform", "priority", "bug_severity", "url",
                    "summary", "component", "bug_file_loc", "short_desc",
-                   "product", "version", "component") {
+                   "product", "version", "component", "op_sys") {
     if (defined $::FORM{$field}) {
         if ($::FORM{$field} ne $::dontchange) {
             DoComma();

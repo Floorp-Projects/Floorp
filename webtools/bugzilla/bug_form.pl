@@ -118,8 +118,10 @@ print "
     <TD><SELECT NAME=product>" .
     make_options(\@::legal_product, $bug{'product'}) .
     "</SELECT></TD>
-    <TD ALIGN=RIGHT><B>OS:</B></TD><TD>$bug{'op_sys'}</TD>
-    <TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
+    <TD ALIGN=RIGHT><B>OS:</B></TD>
+    <TD><SELECT NAME=op_sys>" .
+    make_options(\@::legal_opsys, $bug{'op_sys'}) .
+    "</SELECT><TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
   </TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
       <TD>$bug{'bug_status'}</TD>
