@@ -39,6 +39,6 @@ interface nsIKeyedStreamGenerator: nsISupports {
    */
   readonly attribute float level;           
   
-  /* get the byte at position "index" in the stream */
-  octet getByte(in unsigned long position);  
+  /* get the byte at position "offset" in the stream */
+  octet getByte(in unsigned long offest);  
 };
