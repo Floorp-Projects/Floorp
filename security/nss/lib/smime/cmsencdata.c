@@ -34,7 +34,7 @@
 /*
  * CMS encryptedData methods.
  *
- * $Id: cmsencdata.c,v 1.5 2002/04/12 19:05:19 relyea%netscape.com Exp $
+ * $Id: cmsencdata.c,v 1.6 2003/02/10 22:36:45 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -161,6 +161,7 @@ NSS_CMSEncryptedData_Encode_BeforeStart(NSSCMSEncryptedData *encd)
 
     /* store the bulk key in the contentInfo so that the encoder can find it */
     NSS_CMSContentInfo_SetBulkKey(cinfo, bulkkey);
+    PK11_FreeSymKey (bulkkey);
 
     return SECSuccess;
 }
