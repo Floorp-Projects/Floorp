@@ -877,7 +877,7 @@ RDFXMLDataSourceImpl::Flush(void)
 #ifdef PR_LOGGING
     nsCAutoString spec;
     mURL->GetSpec(spec);
-    PR_LOG(gLog, PR_LOG_ALWAYS,
+    PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] flush(%s)", this, spec.get()));
 #endif
 
@@ -922,14 +922,14 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
     if (mURL) {
         mURL->GetSpec(spec);
     }
-    PR_LOG(gLog, PR_LOG_ALWAYS,
+    PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] refresh(%s) %sblocking", this, spec.get(), (aBlocking ? "" : "non")));
 #endif
     
     // If an asynchronous load is already pending, then just let it do
     // the honors.
     if (IsLoading()) {
-        PR_LOG(gLog, PR_LOG_ALWAYS,
+        PR_LOG(gLog, PR_LOG_NOTICE,
                ("rdfxml[%p] refresh(%s) a load was pending", this, spec.get()));
 
         if (aBlocking) {
@@ -980,7 +980,7 @@ RDFXMLDataSourceImpl::BeginLoad(void)
     if (mURL) {
         mURL->GetSpec(spec);
     }
-    PR_LOG(gLog, PR_LOG_ALWAYS,
+    PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] begin-load(%s)", this, spec.get()));
 #endif
     
@@ -1006,7 +1006,7 @@ RDFXMLDataSourceImpl::Interrupt(void)
     if (mURL) {
         mURL->GetSpec(spec);
     }
-    PR_LOG(gLog, PR_LOG_ALWAYS,
+    PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] interrupt(%s)", this, spec.get()));
 #endif
     
@@ -1031,7 +1031,7 @@ RDFXMLDataSourceImpl::Resume(void)
     if (mURL) {
         mURL->GetSpec(spec);
     }
-    PR_LOG(gLog, PR_LOG_ALWAYS,
+    PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] resume(%s)", this, spec.get()));
 #endif
     
@@ -1056,7 +1056,7 @@ RDFXMLDataSourceImpl::EndLoad(void)
     if (mURL) {
         mURL->GetSpec(spec);
     }
-    PR_LOG(gLog, PR_LOG_ALWAYS,
+    PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] end-load(%s)", this, spec.get()));
 #endif
     

@@ -963,7 +963,7 @@ InMemoryDataSource::~InMemoryDataSource()
     if (mReverseArcs.ops)
         PL_DHashTableFinish(&mReverseArcs);
 
-    PR_LOG(gLog, PR_LOG_ALWAYS,
+    PR_LOG(gLog, PR_LOG_NOTICE,
            ("InMemoryDataSource(%p): destroyed.", this));
 
 #ifdef MOZ_THREADSAFE_RDF
@@ -1038,30 +1038,30 @@ InMemoryDataSource::LogOperation(const char* aOperation,
                                  nsIRDFNode* aTarget,
                                  PRBool aTruthValue)
 {
-    if (! PR_LOG_TEST(gLog, PR_LOG_ALWAYS))
+    if (! PR_LOG_TEST(gLog, PR_LOG_NOTICE))
         return;
 
     nsXPIDLCString uri;
     aSource->GetValue(getter_Copies(uri));
-    PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("InMemoryDataSource(%p): %s", this, aOperation));
+    PR_LogPrint
+           ("InMemoryDataSource(%p): %s", this, aOperation);
 
-    PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("  [(%p)%s]--", aSource, (const char*) uri));
+    PR_LogPrint
+           ("  [(%p)%s]--", aSource, (const char*) uri);
 
     aProperty->GetValue(getter_Copies(uri));
 
     char tv = (aTruthValue ? '-' : '!');
-    PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("  --%c[(%p)%s]--", tv, aProperty, (const char*) uri));
+    PR_LogPrint
+           ("  --%c[(%p)%s]--", tv, aProperty, (const char*) uri);
 
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
 
     if ((resource = do_QueryInterface(aTarget)) != nsnull) {
         resource->GetValue(getter_Copies(uri));
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("  -->[(%p)%s]", aTarget, (const char*) uri));
+        PR_LogPrint
+           ("  -->[(%p)%s]", aTarget, (const char*) uri);
     }
     else if ((literal = do_QueryInterface(aTarget)) != nsnull) {
         nsXPIDLString value;
@@ -1069,14 +1069,14 @@ InMemoryDataSource::LogOperation(const char* aOperation,
         nsAutoString valueStr(value);
         char* valueCStr = ToNewCString(valueStr);
 
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("  -->(\"%s\")\n", valueCStr));
+        PR_LogPrint
+           ("  -->(\"%s\")\n", valueCStr);
 
         nsCRT::free(valueCStr);
     }
     else {
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("  -->(unknown-type)\n"));
+        PR_LogPrint
+           ("  -->(unknown-type)\n");
     }
 }
 #endif

@@ -1422,7 +1422,7 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool aReplac
         // N.B., we only hold a weak reference to the datasource, so
         // just replace the old with the new and don't touch any
         // refcounts.
-        PR_LOG(gLog, PR_LOG_ALWAYS,
+        PR_LOG(gLog, PR_LOG_NOTICE,
                ("rdfserv    replace-datasource [%p] <-- [%p] %s",
                 (*hep)->value, aDataSource, (const char*) uri));
 
@@ -1435,7 +1435,7 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool aReplac
 
         PL_HashTableAdd(mNamedDataSources, key, aDataSource);
 
-        PR_LOG(gLog, PR_LOG_ALWAYS,
+        PR_LOG(gLog, PR_LOG_NOTICE,
                ("rdfserv   register-datasource [%p] %s",
                 aDataSource, (const char*) uri));
 
@@ -1475,7 +1475,7 @@ RDFServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
     // don't release here.
     PL_HashTableRawRemove(mNamedDataSources, hep, *hep);
 
-    PR_LOG(gLog, PR_LOG_ALWAYS,
+    PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfserv unregister-datasource [%p] %s",
             aDataSource, (const char*) uri));
 
