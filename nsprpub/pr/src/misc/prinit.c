@@ -482,7 +482,7 @@ PR_ProcessAttrSetInheritableFD(
 #define OSFD_STRLEN 10
     /* The length of fd type (PRDescType) printed in decimal */
 #define FD_TYPE_STRLEN 1
-    int newSize;
+    PRSize newSize;
     int remainder;
     char *newBuffer;
     int nwritten;
@@ -580,6 +580,14 @@ PR_IMPLEMENT(PRFileDesc *) PR_GetInheritedFD(
                     PR_SetError(PR_UNKNOWN_ERROR, 0);
                     fd = NULL;
                     break;
+            }
+            if (fd) {
+                /*
+                 * An inherited FD is inheritable by default.
+                 * The child process needs to call PR_SetFDInheritable
+                 * to make it non-inheritable if so desired.
+                 */
+                fd->secret->inheritable = PR_TRUE;
             }
             return fd;
         }

@@ -28,7 +28,7 @@ struct select_data_s {
     PRInt32 status;
     PRInt32 error;
     fd_set *rd, *wt, *ex;
-    struct timeval *tv;
+    const struct timeval *tv;
 };
 
 static void
@@ -41,6 +41,46 @@ _PR_MD_select_thread(void *cdata)
     if (cd->status == SOCKET_ERROR) {
         cd->error = WSAGetLastError();
     }
+}
+
+int _PR_NTFiberSafeSelect(
+    int nfds,
+    fd_set *readfds,
+    fd_set *writefds,
+    fd_set *exceptfds,
+    const struct timeval *timeout)
+{
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+    int ready;
+
+    if (_PR_IS_NATIVE_THREAD(me)) {
+        ready = _MD_SELECT(nfds, readfds, writefds, exceptfds, timeout);
+    }
+    else
+    {
+        /*
+        ** Creating a new thread on each call!!
+        ** I guess web server doesn't use non-block I/O.
+        */
+        PRThread *selectThread;
+        struct select_data_s data;
+        data.status = 0;
+        data.error = 0;
+        data.rd = readfds;
+        data.wt = writefds;
+        data.ex = exceptfds;
+        data.tv = timeout;
+
+        selectThread = PR_CreateThread(
+            PR_USER_THREAD, _PR_MD_select_thread, &data,
+            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+        if (selectThread == NULL) return -1;
+
+        PR_JoinThread(selectThread);
+        ready = data.status;
+        if (ready == SOCKET_ERROR) WSASetLastError(data.error);
+    }
+    return ready;
 }
 
 #endif /* !defined(_PR_GLOBAL_THREADS_ONLY) */
@@ -183,33 +223,7 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 #if defined(_PR_GLOBAL_THREADS_ONLY)
     ready = _MD_SELECT(0, &rd, &wt, &ex, tvp);
 #else
-    if (_PR_IS_NATIVE_THREAD(me)) {
-        ready = _MD_SELECT(0, &rd, &wt, &ex, tvp);
-    }
-    else
-    {
-        /*
-        ** Creating a new thread on each call to Poll()!!
-        ** I guess web server doesn't use non-block I/O.
-        */
-        PRThread *selectThread;
-        struct select_data_s data;
-        data.status = 0;
-        data.error = 0;
-        data.rd = &rd;
-        data.wt = &wt;
-        data.ex = &ex;
-        data.tv = tvp;
-
-        selectThread = PR_CreateThread(
-            PR_USER_THREAD, _PR_MD_select_thread, &data,
-            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
-        if (selectThread == NULL) return -1;
-
-        PR_JoinThread(selectThread);
-        ready = data.status;
-        if (ready == SOCKET_ERROR) WSASetLastError(data.error);
-    }
+    ready = _PR_NTFiberSafeSelect(0, &rd, &wt, &ex, tvp);
 #endif
 
     /*

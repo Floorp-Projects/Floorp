@@ -1069,17 +1069,25 @@ _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
     PRUint32 llen, err;
     int rv;
 
-    if (!_nt_use_async || fd->secret->nonblocking) {
+    if (!_nt_use_async || fd->secret->nonblocking || fd->secret->inheritable) {
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
             PR_ASSERT(0 != rv);
             fd->secret->md.io_model_committed = PR_TRUE;
         }
         /*
-         * The accepted socket inherits the nonblocking attribute of
-         * the listening socket, so no need to call _md_MakeNonblock().
+         * The accepted socket inherits the nonblocking and
+         * inheritable (HANDLE_FLAG_INHERIT) attributes of
+         * the listening socket.
          */
-        return _nt_nonblock_accept(fd, (struct sockaddr_in *)raddr, rlen, timeout);
+        accept_sock = _nt_nonblock_accept(fd, (struct sockaddr_in *)raddr, rlen, timeout);
+        if (_nt_use_async && !fd->secret->nonblocking) {
+            u_long zero = 0;
+
+            rv = ioctlsocket(accept_sock, FIONBIO, &zero);
+            PR_ASSERT(0 == rv);
+        }
+        return accept_sock;
     }
 
     if (me->io_suspended) {
@@ -1436,7 +1444,7 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
     int bytes;
     int rv, err;
 
-    if (!_nt_use_async || fd->secret->nonblocking) {
+    if (!_nt_use_async || fd->secret->nonblocking || fd->secret->inheritable) {
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
             PR_ASSERT(0 != rv);
@@ -1513,7 +1521,7 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     int bytes;
     int rv, err;
 
-    if (!_nt_use_async || fd->secret->nonblocking) {
+    if (!_nt_use_async || fd->secret->nonblocking || fd->secret->inheritable) {
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
             PR_ASSERT(0 != rv);
@@ -1589,7 +1597,7 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
         PR_ASSERT(0 != rv);
         fd->secret->md.io_model_committed = PR_TRUE;
     }
-    if (_nt_use_async && !fd->secret->nonblocking)
+    if (_nt_use_async && !fd->secret->nonblocking && !fd->secret->inheritable)
         return pt_SendTo(osfd, buf, amount, flags, addr, addrlen, timeout);
     else
         return _nt_nonblock_sendto(fd, buf, amount, (struct sockaddr *)addr, addrlen, timeout);
@@ -1607,7 +1615,7 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
         PR_ASSERT(0 != rv);
         fd->secret->md.io_model_committed = PR_TRUE;
     }
-    if (_nt_use_async && !fd->secret->nonblocking)
+    if (_nt_use_async && !fd->secret->nonblocking && !fd->secret->inheritable)
         return pt_RecvFrom(osfd, buf, amount, flags, addr, addrlen, timeout);
     else
         return _nt_nonblock_recvfrom(fd, buf, amount, (struct sockaddr *)addr, addrlen, timeout);
@@ -1622,7 +1630,7 @@ _PR_MD_WRITEV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size, PRIntervalTi
     int sent = 0;
     int rv;
 
-    if (!_nt_use_async || fd->secret->nonblocking) {
+    if (!_nt_use_async || fd->secret->nonblocking || fd->secret->inheritable) {
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
             PR_ASSERT(0 != rv);
@@ -1792,12 +1800,7 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, PRIntn mode)
                           flag6,
                           NULL);
         if (file == INVALID_HANDLE_VALUE) {
-			_PR_MD_MAP_OPEN_ERROR(GetLastError());
-            return -1;
-		}
-
-        if (_md_Associate(file) == 0) {
-            CloseHandle(file);
+            _PR_MD_MAP_OPEN_ERROR(GetLastError());
             return -1;
         }
 
@@ -1854,7 +1857,7 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
     PRUint32 bytes;
     int rv, err;
 
-    if (_nt_use_async && !fd->secret->md.nonoverlapped) {
+    if (_nt_use_async && !fd->secret->md.sync_file_io) {
         PRThread *me = _PR_MD_CURRENT_THREAD();
 
         if (me->io_suspended) {
@@ -1866,52 +1869,88 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
 
         me->md.overlapped.overlapped.Offset = SetFilePointer((HANDLE)f, 0, 0, FILE_CURRENT);
 
-        me->io_pending = PR_TRUE;
-        me->io_fd = f;
-        me->state = _PR_IO_WAIT;
-        rv = ReadFile((HANDLE)f, 
-                      (LPVOID)buf, 
-                      len, 
-                      &bytes, 
-                      &me->md.overlapped.overlapped);
-        if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING) ) {
-            me->io_pending = PR_FALSE;
-            me->state = _PR_RUNNING;
-            if (err == ERROR_HANDLE_EOF)
-                return 0;
-			_PR_MD_MAP_READ_ERROR(err);
-            return -1;
-        }
-
-        if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
-            PR_ASSERT(0);
-            return -1;
-        }
-
-        PR_ASSERT(me->io_pending == PR_FALSE || me->io_suspended == PR_TRUE);
-
-        if (me->io_suspended) {
-            if (_PR_PENDING_INTERRUPT(me)) {
-                me->flags &= ~_PR_INTERRUPT;
-                PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
-            } else {
-                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+        if (fd->secret->inheritable) {
+            rv = ReadFile((HANDLE)f, 
+                          (LPVOID)buf, 
+                          len, 
+                          &bytes, 
+                          &me->md.overlapped.overlapped);
+            if (rv != 0) {
+                SetFilePointer((HANDLE)f, bytes, 0, FILE_CURRENT);
+                return bytes;
             }
-            return -1;
-        }
-
-        if (me->md.blocked_io_status == 0) {
-            if (me->md.blocked_io_error == ERROR_HANDLE_EOF)
+            err = GetLastError();
+            if (err == ERROR_IO_PENDING) {
+                rv = GetOverlappedResult((HANDLE)f,
+                        &me->md.overlapped.overlapped, &bytes, TRUE);
+                if (rv != 0) {
+                    SetFilePointer((HANDLE)f, bytes, 0, FILE_CURRENT);
+                    return bytes;
+                }
+                err = GetLastError();
+            }
+            if (err == ERROR_HANDLE_EOF) {
                 return 0;
-			_PR_MD_MAP_READ_ERROR(me->md.blocked_io_error);
-            return -1;
-        }
+            } else {
+                _PR_MD_MAP_READ_ERROR(err);
+                return -1;
+            }
+        } else {
+            if (!fd->secret->md.io_model_committed) {
+                rv = _md_Associate((HANDLE)f);
+                PR_ASSERT(rv != 0);
+                fd->secret->md.io_model_committed = PR_TRUE;
+            }
 
-        SetFilePointer((HANDLE)f, me->md.blocked_io_bytes, 0, FILE_CURRENT);
+            me->io_pending = PR_TRUE;
+            me->io_fd = f;
+            me->state = _PR_IO_WAIT;
+            rv = ReadFile((HANDLE)f, 
+                          (LPVOID)buf, 
+                          len, 
+                          &bytes, 
+                          &me->md.overlapped.overlapped);
+            if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING) ) {
+                me->io_pending = PR_FALSE;
+                me->state = _PR_RUNNING;
+                if (err == ERROR_HANDLE_EOF) {
+                    return 0;
+                }
+                _PR_MD_MAP_READ_ERROR(err);
+                return -1;
+            }
+
+            if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
+                PR_ASSERT(0);
+                return -1;
+            }
+
+            PR_ASSERT(me->io_pending == PR_FALSE || me->io_suspended == PR_TRUE);
+
+            if (me->io_suspended) {
+                if (_PR_PENDING_INTERRUPT(me)) {
+                    me->flags &= ~_PR_INTERRUPT;
+                    PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+                } else {
+                    PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                }
+                return -1;
+            }
+
+            if (me->md.blocked_io_status == 0) {
+                if (me->md.blocked_io_error == ERROR_HANDLE_EOF) {
+                    return 0;
+                }
+                _PR_MD_MAP_READ_ERROR(me->md.blocked_io_error);
+                return -1;
+            }
+
+            SetFilePointer((HANDLE)f, me->md.blocked_io_bytes, 0, FILE_CURRENT);
     
-        PR_ASSERT(me->io_pending == PR_FALSE);
+            PR_ASSERT(me->io_pending == PR_FALSE);
 
-        return me->md.blocked_io_bytes;
+            return me->md.blocked_io_bytes;
+        }
     } else {
 
         rv = ReadFile((HANDLE)f,
@@ -1927,7 +1966,7 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
                 /* The write end of the pipe has been closed. */ 
                 return 0;
             }
-			_PR_MD_MAP_READ_ERROR(err);
+            _PR_MD_MAP_READ_ERROR(err);
             return -1;
         }
         return bytes;
@@ -1941,7 +1980,7 @@ _PR_MD_WRITE(PRFileDesc *fd, void *buf, PRInt32 len)
     PRInt32 bytes;
     int rv, err;
 
-    if (_nt_use_async && !fd->secret->md.nonoverlapped) {
+    if (_nt_use_async && !fd->secret->md.sync_file_io) {
         PRThread *me = _PR_MD_CURRENT_THREAD();
 
         if (me->io_suspended) {
@@ -1953,48 +1992,78 @@ _PR_MD_WRITE(PRFileDesc *fd, void *buf, PRInt32 len)
 
         me->md.overlapped.overlapped.Offset = SetFilePointer((HANDLE)f, 0, 0, FILE_CURRENT);
 
-        me->io_pending = PR_TRUE;
-        me->io_fd = f;
-        me->state = _PR_IO_WAIT;
-        rv = WriteFile((HANDLE)f, 
-                       buf, 
-                       len, 
-                       &bytes, 
-                       &(me->md.overlapped.overlapped));
-        if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING) ) {
-            me->io_pending = PR_FALSE;
-            me->state = _PR_RUNNING;
-			_PR_MD_MAP_WRITE_ERROR(err);
-            return -1;
-        }
-
-        if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
-            PR_ASSERT(0);
-            return -1;
-        }
-
-        PR_ASSERT(me->io_pending == PR_FALSE || me->io_suspended == PR_TRUE);
-
-        if (me->io_suspended) {
-            if (_PR_PENDING_INTERRUPT(me)) {
-                me->flags &= ~_PR_INTERRUPT;
-                PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
-            } else {
-                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+        if (fd->secret->inheritable) {
+            rv = WriteFile((HANDLE)f, 
+                          (LPVOID)buf, 
+                          len, 
+                          &bytes, 
+                          &me->md.overlapped.overlapped);
+            if (rv != 0) {
+                SetFilePointer((HANDLE)f, bytes, 0, FILE_CURRENT);
+                return bytes;
             }
+            err = GetLastError();
+            if (err == ERROR_IO_PENDING) {
+                rv = GetOverlappedResult((HANDLE)f,
+                        &me->md.overlapped.overlapped, &bytes, TRUE);
+                if (rv != 0) {
+                    SetFilePointer((HANDLE)f, bytes, 0, FILE_CURRENT);
+                    return bytes;
+                }
+                err = GetLastError();
+            }
+            _PR_MD_MAP_READ_ERROR(err);
             return -1;
-        }
+        } else {
+            if (!fd->secret->md.io_model_committed) {
+                rv = _md_Associate((HANDLE)f);
+                PR_ASSERT(rv != 0);
+                fd->secret->md.io_model_committed = PR_TRUE;
+            }
 
-        if (me->md.blocked_io_status == 0) {
-			_PR_MD_MAP_WRITE_ERROR(me->md.blocked_io_error);
-            return -1;
-        }
+            me->io_pending = PR_TRUE;
+            me->io_fd = f;
+            me->state = _PR_IO_WAIT;
+            rv = WriteFile((HANDLE)f, 
+                           buf, 
+                           len, 
+                           &bytes, 
+                           &(me->md.overlapped.overlapped));
+            if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING) ) {
+                me->io_pending = PR_FALSE;
+                me->state = _PR_RUNNING;
+                _PR_MD_MAP_WRITE_ERROR(err);
+                return -1;
+            }
 
-        SetFilePointer((HANDLE)f, me->md.blocked_io_bytes, 0, FILE_CURRENT);
+            if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
+                PR_ASSERT(0);
+                return -1;
+            }
+
+            PR_ASSERT(me->io_pending == PR_FALSE || me->io_suspended == PR_TRUE);
+
+            if (me->io_suspended) {
+                if (_PR_PENDING_INTERRUPT(me)) {
+                    me->flags &= ~_PR_INTERRUPT;
+                    PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+                } else {
+                    PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                }
+                return -1;
+            }
+
+            if (me->md.blocked_io_status == 0) {
+                _PR_MD_MAP_WRITE_ERROR(me->md.blocked_io_error);
+                return -1;
+            }
+
+            SetFilePointer((HANDLE)f, me->md.blocked_io_bytes, 0, FILE_CURRENT);
     
-        PR_ASSERT(me->io_pending == PR_FALSE);
+            PR_ASSERT(me->io_pending == PR_FALSE);
 
-        return me->md.blocked_io_bytes;
+            return me->md.blocked_io_bytes;
+        }
     } else {
         rv = WriteFile((HANDLE)f,
                        buf,
@@ -2002,7 +2071,7 @@ _PR_MD_WRITE(PRFileDesc *fd, void *buf, PRInt32 len)
                        &bytes,
                        NULL);
         if (rv == 0) {
-			_PR_MD_MAP_WRITE_ERROR(GetLastError());
+            _PR_MD_MAP_WRITE_ERROR(GetLastError());
             return -1;
         }
         return bytes;
@@ -2187,6 +2256,10 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
 {
     BOOL rv;
 
+    if (fd->secret->md.io_model_committed) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
     rv = SetHandleInformation(
             (HANDLE)fd->secret->md.osfd,
             HANDLE_FLAG_INHERIT,
@@ -3121,48 +3194,49 @@ PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr_in *addr, int *len, 
         while ((rv = accept(osfd, (struct sockaddr *) addr, len)) == -1) {
             if (((err = WSAGetLastError()) == WSAEWOULDBLOCK)
                     && (!fd->secret->nonblocking)) {
-                if ((rv = select(osfd + 1, &rd, NULL, NULL,NULL)) == -1) {
-					_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                if ((rv = _PR_NTFiberSafeSelect(osfd + 1, &rd, NULL, NULL,
+                        NULL)) == -1) {
+                    _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                     break;
-				}
+                }
             } else {
-				_PR_MD_MAP_ACCEPT_ERROR(err);
+                _PR_MD_MAP_ACCEPT_ERROR(err);
                 break;
+            }
         }
-        }
-        return(rv);
     } else if (timeout == PR_INTERVAL_NO_WAIT) {
-        if ((rv = accept(osfd, (struct sockaddr *) addr, len)) == -1)
+        if ((rv = accept(osfd, (struct sockaddr *) addr, len)) == -1) {
             if (((err = WSAGetLastError()) == WSAEWOULDBLOCK)
                     && (!fd->secret->nonblocking)) {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
             } else {
-				_PR_MD_MAP_ACCEPT_ERROR(err);
-            }
-            return(rv);
-        } else {
-retry:
-            if ((rv = accept(osfd, (struct sockaddr *) addr, len)) == -1) {
-                if (((err = WSAGetLastError()) == WSAEWOULDBLOCK)
-                        && (!fd->secret->nonblocking)) {
-                    tv.tv_sec = PR_IntervalToSeconds(timeout);
-                    tv.tv_usec = PR_IntervalToMicroseconds(
-                        timeout - PR_SecondsToInterval(tv.tv_sec));
-                    tvp = &tv;
-
-                    rv = select(osfd + 1, &rd, NULL, NULL, tvp);
-                    if (rv > 0) {
-                        goto retry;
-                    } else if (rv == 0) {
-						PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                    	rv = -1;
-                	} else
-						_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-            	} else {
-					_PR_MD_MAP_ACCEPT_ERROR(err);
-                }
+                _PR_MD_MAP_ACCEPT_ERROR(err);
             }
         }
+    } else {
+retry:
+        if ((rv = accept(osfd, (struct sockaddr *) addr, len)) == -1) {
+            if (((err = WSAGetLastError()) == WSAEWOULDBLOCK)
+                    && (!fd->secret->nonblocking)) {
+                tv.tv_sec = PR_IntervalToSeconds(timeout);
+                tv.tv_usec = PR_IntervalToMicroseconds(
+                    timeout - PR_SecondsToInterval(tv.tv_sec));
+                tvp = &tv;
+
+                rv = _PR_NTFiberSafeSelect(osfd + 1, &rd, NULL, NULL, tvp);
+                if (rv > 0) {
+                    goto retry;
+                } else if (rv == 0) {
+                    PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                    rv = -1;
+                } else {
+                    _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                }
+            } else {
+                _PR_MD_MAP_ACCEPT_ERROR(err);
+            }
+        }
+    }
     return(rv);
 }
 
@@ -3186,16 +3260,17 @@ PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, PRIntervalTime tim
                 timeout - PR_SecondsToInterval(tv.tv_sec));
                 tvp = &tv;
             }
-            if ((rv = select(osfd + 1, &rd, NULL,NULL,tvp)) == -1) {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                return -1;
+            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, &rd, NULL, NULL,
+                    tvp)) == -1) {
+                _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                break;
             } else if (rv == 0) {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                 rv = -1;
                 break;
             }
         } else {
-			_PR_MD_MAP_RECV_ERROR(err);
+            _PR_MD_MAP_RECV_ERROR(err);
             break;
         }
     }
@@ -3224,24 +3299,25 @@ PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalTime tim
                 }
                 FD_ZERO(&wd);
                 FD_SET((SOCKET)osfd, &wd);
-                if ((rv = select(osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
-					_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                    break;
-				}
+                if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wd, NULL,
+                        tvp)) == -1) {
+                    _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                    return -1;
+                }
                 if (rv == 0) {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                    PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                     return -1;
                 }
             } else {
-				_PR_MD_MAP_SEND_ERROR(err);
+                _PR_MD_MAP_SEND_ERROR(err);
                 return -1;
-        }
+            }
         }
         bytesSent += rv;
         if (fd->secret->nonblocking) {
             break;
         }
-        if ((rv >= 0) && (bytesSent < len)) {
+        if (bytesSent < len) {
             if ( timeout == PR_INTERVAL_NO_TIMEOUT ) {
                 tvp = NULL;
             } else {
@@ -3252,12 +3328,13 @@ PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalTime tim
             }
             FD_ZERO(&wd);
             FD_SET((SOCKET)osfd, &wd);
-            if ((rv = select(osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                break;
-			}
+            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wd, NULL,
+                    tvp)) == -1) {
+                _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                return -1;
+            }
             if (rv == 0) {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                 return -1;
             }
         }
@@ -3276,7 +3353,7 @@ PRInt32 _nt_nonblock_writev(PRFileDesc *fd, const PRIOVec *iov, int size, PRInte
         if (rv > 0) 
             sent += rv;
         if ( rv != iov[index].iov_len ) {
-            if (rv <= 0) {
+            if (rv < 0) {
                 if (fd->secret->nonblocking
                         && (PR_GetError() == PR_WOULD_BLOCK_ERROR)
                         && (sent > 0)) {
@@ -3318,24 +3395,25 @@ PRInt32 _nt_nonblock_sendto(
                 }
                 FD_ZERO(&wd);
                 FD_SET((SOCKET)osfd, &wd);
-                if ((rv = select(osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
-					_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                    break;
-				}
+                if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wd, NULL,
+                        tvp)) == -1) {
+                    _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                    return -1;
+                }
                 if (rv == 0) {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                    PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                     return -1;
                 }
             } else {
-				_PR_MD_MAP_SENDTO_ERROR(err);
+                _PR_MD_MAP_SENDTO_ERROR(err);
                 return -1;
-        }
+            }
         }
         bytesSent += rv;
         if (fd->secret->nonblocking) {
             break;
         }
-        if ((rv >= 0) && (bytesSent < len)) {
+        if (bytesSent < len) {
             if ( timeout == PR_INTERVAL_NO_TIMEOUT ) {
                 tvp = NULL;
             } else {
@@ -3346,12 +3424,13 @@ PRInt32 _nt_nonblock_sendto(
             }
             FD_ZERO(&wd);
             FD_SET((SOCKET)osfd, &wd);
-            if ((rv = select(osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                break;
-			}
+            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wd, NULL,
+                    tvp)) == -1) {
+                _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                return -1;
+            }
             if (rv == 0) {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                 return -1;
             }
         }
@@ -3379,16 +3458,17 @@ PRInt32 _nt_nonblock_recvfrom(PRFileDesc *fd, char *buf, int len, struct sockadd
             }
             FD_ZERO(&rd);
             FD_SET((SOCKET)osfd, &rd);
-            if ((rv = select(osfd + 1, &rd, NULL,NULL,tvp)) == -1) {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                return -1;
+            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, &rd, NULL, NULL,
+                    tvp)) == -1) {
+                _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                break;
             } else if (rv == 0) {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                 rv = -1;
                 break;
             }
         } else {
-			_PR_MD_MAP_RECVFROM_ERROR(err);
+            _PR_MD_MAP_RECVFROM_ERROR(err);
             break;
         }
     }

@@ -548,8 +548,8 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
         return PR_FAILURE;
     }
 #ifdef WINNT
-    (*readPipe)->secret->md.nonoverlapped = PR_TRUE;
-    (*writePipe)->secret->md.nonoverlapped = PR_TRUE;
+    (*readPipe)->secret->md.sync_file_io = PR_TRUE;
+    (*writePipe)->secret->md.sync_file_io = PR_TRUE;
 #endif
     return PR_SUCCESS;
 #elif defined(XP_UNIX)
