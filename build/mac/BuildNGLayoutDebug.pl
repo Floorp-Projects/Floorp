@@ -36,7 +36,9 @@ $pull{mac} = 0;
 
 $build{all} = 0;
 $build{dist} = 0;
-$build{projects}= 0;
+$build{common}= 0;
+$build{nglayout}= 0;
+
 
 #
 # UI
@@ -51,6 +53,10 @@ $build{projects}= 0;
 #damn, this does not work on 
 if (0)
 {
+  while (GetFrontProcess	() !=  GetCurrentProcess())
+  {
+	   SetFrontProcess( GetCurrentProcess() );
+  }
 	@pick = MacPerl::Pick("What would you like to do?", @choices);
 	$pull{all} = 0;
 	$build{all} = 1;
@@ -83,8 +89,11 @@ else
 {
 	$pull{all} = 1;
 	$build{all} = 1;
-#	$build{projects} = 1;
-#	$build{dist} = 1;
+#	$pull{netlib} = 1;
+#	$pull{nglayout} = 1;
+#	$build{common} = 1;
+#	$build{nglayout} = 1;
+# $build{dist} = 1;
 #	$pull{nglayout} = 1;
 }
 
@@ -111,7 +120,6 @@ $MOZ_SRC = cwd();
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 OpenErrorLog("::NGLayoutBuildLog");
-
 Checkout();
 chdir($MOZ_SRC);
 BuildDist();
