@@ -345,20 +345,6 @@ NS_METHOD nsFrame::GetContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetContentIndex(PRInt32& aIndexInParent) const
-{
-  nsIContent* parent;
-  mContent->GetParent(parent);
-  if (nsnull != parent) {
-    parent->IndexOf(mContent, aIndexInParent);
-    NS_RELEASE(parent);
-  }
-  else {
-    aIndexInParent = 0;
-  }
-  return NS_OK;
-}
-
 NS_METHOD nsFrame::GetStyleContext(nsIPresContext*   aPresContext,
                                    nsIStyleContext*& aStyleContext)
 {
@@ -1428,6 +1414,26 @@ NS_METHOD nsFrame::Scrolled(nsIView *aView)
   return NS_OK;
 }
 
+PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
+{
+  nsIContent* content;
+  PRInt32     result = -1;
+
+  aFrame->GetContent(content);
+  if (nsnull != content) {
+    nsIContent* parentContent;
+
+    content->GetParent(parentContent);
+    if (nsnull != parentContent) {
+      parentContent->IndexOf(content, result);
+      NS_RELEASE(parentContent);
+    }
+    NS_RELEASE(content);
+  }
+
+  return result;
+}
+
 // Debugging
 NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
@@ -1471,10 +1477,8 @@ NS_METHOD nsFrame::ListTag(FILE* out) const
     fputs(buf, out);
     NS_RELEASE(tag);
   }
-  PRInt32 contentIndex;
 
-  GetContentIndex(contentIndex);
-  fprintf(out, "(%d)@%p", contentIndex, this);
+  fprintf(out, "(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }
 

@@ -1407,6 +1407,8 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
     WillReflow(aPresContext);
     nsFramesetDrag drag(mDragger->mVertical, mDragger->mPrevNeighbor, change, this);
     Reflow(aPresContext, &drag, metrics, state, status);
+    // XXX Compiler warning that didStatus is being used without having been
+    // initialized...
     DidReflow(aPresContext, didStatus);
     NS_IF_RELEASE(acx);
   }

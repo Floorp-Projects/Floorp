@@ -110,7 +110,6 @@ public:
   NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;
-  NS_IMETHOD  GetContentIndex(PRInt32& aIndexInParent) const;
   NS_IMETHOD  GetStyleContext(nsIPresContext* aContext,
                               nsIStyleContext*& aStyleContext);
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
@@ -219,6 +218,10 @@ public:
   // aDamageRect is in the frame's local coordinate space
   void        Invalidate(const nsRect& aDamageRect,
                          PRBool aImmediate = PR_FALSE) const;
+
+  // Helper function to return the index in parent of the frame's content
+  // object. Returns -1 on error or if the frame doesn't have a content object
+  static PRInt32 ContentIndexInContainer(const nsIFrame* aFrame);
 
 #ifdef NS_DEBUG
   /**

@@ -1047,10 +1047,8 @@ NS_METHOD nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
       fputs(buf, out);
       NS_RELEASE(tag);
     }
-    PRInt32 contentIndex;
 
-    GetContentIndex(contentIndex);
-    fprintf(out, "(%d)", contentIndex);
+    fprintf(out, "(%d)", ContentIndexInContainer(this));
     out << mRect;
     if (0 != mState) {
       fprintf(out, " [state=%08x]", mState);

@@ -154,8 +154,6 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
 NS_IMETHODIMP nsAbsoluteFrame::ListTag(FILE* out) const
 {
   fputs("*absolute", out);
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, "(%d)@%p", contentIndex, this);
+  fprintf(out, "(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }

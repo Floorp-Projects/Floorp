@@ -143,14 +143,6 @@ public:
   NS_IMETHOD  GetContent(nsIContent*& aContent) const = 0;
 
   /**
-   * Get the index in parent of the frame's content object
-   * XXX This really doesn't belong in nsIFrame. It's just a helper
-   * function that asks the content parent for the index-in-container of
-   * this frame's content object...
-   */
-  NS_IMETHOD  GetContentIndex(PRInt32& aIndexInParent) const = 0;
-
-  /**
    * Get the style context associated with this frame. Note that GetStyleContext()
    * adds a reference to the style context so the caller must do a release.
    *

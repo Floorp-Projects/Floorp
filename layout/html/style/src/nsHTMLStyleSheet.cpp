@@ -1396,7 +1396,24 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
           rv = ConstructFrameByDisplayType(aPresContext, display,
                                            aContent, aParentFrame,
                                            styleContext, aFrameSubTree);
+
+
         }
+
+#if 0
+        // If the frame is a block-level frame and it has a fixed height and overflow
+        // property of scroll, then wrap it in a scroll frame.
+        // XXX Deal with replaced elements and overflow of auto and width, too
+        nsIFrame* kidFrame = nsnull;
+        nsresult rv;
+        if ((NS_STYLE_OVERFLOW_SCROLL == kidDisplay->mOverflow) ||
+            (NS_STYLE_OVERFLOW_AUTO == kidDisplay->mOverflow)) {
+          rv = NS_NewScrollFrame(&kidFrame, aKid, aParentFrame);
+          if (NS_OK == rv) {
+            kidFrame->SetStyleContext(aPresContext, kidSC);
+          }
+        }
+#endif
       }
     }
     NS_RELEASE(styleContext);

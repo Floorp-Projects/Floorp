@@ -361,8 +361,6 @@ nsFormControlFrame::GetWidget(nsIView* aView, nsIWidget** aWidget)
     result = NS_ERROR_FAILURE;
 
   } else {
-    const nsIID id = GetIID();
-
     result =  widget->QueryInterface(kIWidgetIID, (void**)aWidget); // keep the ref
     if (NS_FAILED(result)) {
       NS_ASSERTION(0, "The widget interface is invalid");  // need to print out more details of the widget

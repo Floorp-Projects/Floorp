@@ -159,8 +159,6 @@ nsPlaceholderFrame::AttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP nsPlaceholderFrame::ListTag(FILE* out) const
 {
   fputs("*placeholder", out);
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, "(%d)@%p", contentIndex, this);
+  fprintf(out, "(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }

@@ -1671,9 +1671,7 @@ ToCString(const PRUnichar* cp, PRInt32 aLen, nsString& aBuf)
 NS_IMETHODIMP
 TextFrame::ListTag(FILE* out) const
 {
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, "Text(%d)@%p", contentIndex, this);
+  fprintf(out, "Text(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }
 
