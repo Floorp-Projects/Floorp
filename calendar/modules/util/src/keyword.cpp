@@ -33,11 +33,11 @@
 
 //---------------------------------------------------------------------
 
-JulianKeyword * JulianKeyword::m_Instance = 0;
+nsCalKeyword * nsCalKeyword::m_Instance = 0;
 
 //---------------------------------------------------------------------
 
-JulianKeyword::JulianKeyword()
+nsCalKeyword::nsCalKeyword()
 {
     ms_sVCALENDAR  = "VCALENDAR";    
     ms_ATOM_VCALENDAR.setString(ms_sVCALENDAR);
@@ -560,17 +560,17 @@ JulianKeyword::JulianKeyword()
    
 //---------------------------------------------------------------------
 
-JulianKeyword * JulianKeyword::Instance()
+nsCalKeyword * nsCalKeyword::Instance()
 {
     if (m_Instance == 0)
-        m_Instance = new JulianKeyword();
+        m_Instance = new nsCalKeyword();
     PR_ASSERT(m_Instance != 0);
     return m_Instance;
 }
 
 //---------------------------------------------------------------------
 
-JulianKeyword::~JulianKeyword()
+nsCalKeyword::~nsCalKeyword()
 {
     /*
     if (m_Instance != 0)
@@ -581,14 +581,14 @@ JulianKeyword::~JulianKeyword()
 }
 
 //---------------------------------------------------------------------
-// JulianAtomRange
+// nsCalAtomRange
 //---------------------------------------------------------------------
 
-JulianAtomRange * JulianAtomRange::m_Instance = 0;
+nsCalAtomRange * nsCalAtomRange::m_Instance = 0;
 
 //---------------------------------------------------------------------
 
-JulianAtomRange::~JulianAtomRange()
+nsCalAtomRange::~nsCalAtomRange()
 {
     /*
     if (m_Instance != 0)
@@ -600,106 +600,106 @@ JulianAtomRange::~JulianAtomRange()
 
 //---------------------------------------------------------------------
 
-JulianAtomRange *
-JulianAtomRange::Instance()
+nsCalAtomRange *
+nsCalAtomRange::Instance()
 {
     if (m_Instance == 0)
-        m_Instance = new JulianAtomRange();
+        m_Instance = new nsCalAtomRange();
     PR_ASSERT(m_Instance != 0);
     return m_Instance;
 }
 
 //---------------------------------------------------------------------
 
-JulianAtomRange::JulianAtomRange()
+nsCalAtomRange::nsCalAtomRange()
 {
  // ATOM RANGES
-    ms_asAltrepLanguageParamRange[0] = JulianKeyword::Instance()->ms_ATOM_ALTREP;
-    ms_asAltrepLanguageParamRange[1] = JulianKeyword::Instance()->ms_ATOM_LANGUAGE;
+    ms_asAltrepLanguageParamRange[0] = nsCalKeyword::Instance()->ms_ATOM_ALTREP;
+    ms_asAltrepLanguageParamRange[1] = nsCalKeyword::Instance()->ms_ATOM_LANGUAGE;
     ms_asAltrepLanguageParamRangeSize = 2;
 
-    ms_asTZIDValueParamRange[0] = JulianKeyword::Instance()->ms_ATOM_VALUE; 
-    ms_asTZIDValueParamRange[1] = JulianKeyword::Instance()->ms_ATOM_TZID;
+    ms_asTZIDValueParamRange[0] = nsCalKeyword::Instance()->ms_ATOM_VALUE; 
+    ms_asTZIDValueParamRange[1] = nsCalKeyword::Instance()->ms_ATOM_TZID;
     ms_asTZIDValueParamRangeSize = 2;
     
-    ms_asLanguageParamRange[0] = JulianKeyword::Instance()->ms_ATOM_LANGUAGE;
+    ms_asLanguageParamRange[0] = nsCalKeyword::Instance()->ms_ATOM_LANGUAGE;
     ms_asLanguageParamRangeSize = 1;
     
-    ms_asEncodingValueParamRange[0] = JulianKeyword::Instance()->ms_ATOM_ENCODING;
-    ms_asEncodingValueParamRange[1] = JulianKeyword::Instance()->ms_ATOM_VALUE;
+    ms_asEncodingValueParamRange[0] = nsCalKeyword::Instance()->ms_ATOM_ENCODING;
+    ms_asEncodingValueParamRange[1] = nsCalKeyword::Instance()->ms_ATOM_VALUE;
     ms_asEncodingValueParamRangeSize = 2;
 
-    ms_asEncodingValueFMTTypeParamRange[0] = JulianKeyword::Instance()->ms_ATOM_ENCODING;
-    ms_asEncodingValueFMTTypeParamRange[1] = JulianKeyword::Instance()->ms_ATOM_VALUE;
-    ms_asEncodingValueFMTTypeParamRange[2] = JulianKeyword::Instance()->ms_ATOM_FMTTYPE;
+    ms_asEncodingValueFMTTypeParamRange[0] = nsCalKeyword::Instance()->ms_ATOM_ENCODING;
+    ms_asEncodingValueFMTTypeParamRange[1] = nsCalKeyword::Instance()->ms_ATOM_VALUE;
+    ms_asEncodingValueFMTTypeParamRange[2] = nsCalKeyword::Instance()->ms_ATOM_FMTTYPE;
     ms_asEncodingValueFMTTypeParamRangeSize = 3;
 
-    ms_asSentByParamRange[0] = JulianKeyword::Instance()->ms_ATOM_SENTBY;
+    ms_asSentByParamRange[0] = nsCalKeyword::Instance()->ms_ATOM_SENTBY;
     ms_asSentByParamRangeSize = 1;
 
-    ms_asReltypeParamRange[0] = JulianKeyword::Instance()->ms_ATOM_RELTYPE;
+    ms_asReltypeParamRange[0] = nsCalKeyword::Instance()->ms_ATOM_RELTYPE;
     ms_asReltypeParamRangeSize = 1;
 
-    ms_asRelatedValueParamRange[0] = JulianKeyword::Instance()->ms_ATOM_VALUE;
-    ms_asRelatedValueParamRange[1] = JulianKeyword::Instance()->ms_ATOM_RELATED;
+    ms_asRelatedValueParamRange[0] = nsCalKeyword::Instance()->ms_ATOM_VALUE;
+    ms_asRelatedValueParamRange[1] = nsCalKeyword::Instance()->ms_ATOM_RELATED;
     ms_asRelatedValueParamRangeSize = 2;
 
-    ms_asBinaryURIValueRange[0] = JulianKeyword::Instance()->ms_ATOM_BINARY;    
-    ms_asBinaryURIValueRange[1] = JulianKeyword::Instance()->ms_ATOM_URI;
+    ms_asBinaryURIValueRange[0] = nsCalKeyword::Instance()->ms_ATOM_BINARY;    
+    ms_asBinaryURIValueRange[1] = nsCalKeyword::Instance()->ms_ATOM_URI;
     ms_asBinaryURIValueRangeSize = 2;
 
-    ms_asDateDateTimeValueRange[0] = JulianKeyword::Instance()->ms_ATOM_DATE;
-    ms_asDateDateTimeValueRange[1] = JulianKeyword::Instance()->ms_ATOM_DATETIME;
+    ms_asDateDateTimeValueRange[0] = nsCalKeyword::Instance()->ms_ATOM_DATE;
+    ms_asDateDateTimeValueRange[1] = nsCalKeyword::Instance()->ms_ATOM_DATETIME;
     ms_asDateDateTimeValueRangeSize = 2;
 
-    ms_asDurationDateTimeValueRange[0] = JulianKeyword::Instance()->ms_ATOM_DURATION;
-    ms_asDurationDateTimeValueRange[1] = JulianKeyword::Instance()->ms_ATOM_DATETIME;
+    ms_asDurationDateTimeValueRange[0] = nsCalKeyword::Instance()->ms_ATOM_DURATION;
+    ms_asDurationDateTimeValueRange[1] = nsCalKeyword::Instance()->ms_ATOM_DATETIME;
     ms_asDurationDateTimeValueRangeSize = 2;
 
-    ms_asDateDateTimePeriodValueRange[0] = JulianKeyword::Instance()->ms_ATOM_DATE;
-    ms_asDateDateTimePeriodValueRange[1] = JulianKeyword::Instance()->ms_ATOM_DATETIME;
-    ms_asDateDateTimePeriodValueRange[2] = JulianKeyword::Instance()->ms_ATOM_PERIOD;
+    ms_asDateDateTimePeriodValueRange[0] = nsCalKeyword::Instance()->ms_ATOM_DATE;
+    ms_asDateDateTimePeriodValueRange[1] = nsCalKeyword::Instance()->ms_ATOM_DATETIME;
+    ms_asDateDateTimePeriodValueRange[2] = nsCalKeyword::Instance()->ms_ATOM_PERIOD;
     ms_asDateDateTimePeriodValueRangeSize = 3;
 
-    ms_asRelTypeRange[0] = JulianKeyword::Instance()->ms_ATOM_PARENT;
-    ms_asRelTypeRange[1] = JulianKeyword::Instance()->ms_ATOM_CHILD;
-    ms_asRelTypeRange[2] = JulianKeyword::Instance()->ms_ATOM_SIBLING;
+    ms_asRelTypeRange[0] = nsCalKeyword::Instance()->ms_ATOM_PARENT;
+    ms_asRelTypeRange[1] = nsCalKeyword::Instance()->ms_ATOM_CHILD;
+    ms_asRelTypeRange[2] = nsCalKeyword::Instance()->ms_ATOM_SIBLING;
     ms_iRelTypeRangeSize = 3;
 
-    ms_asRelatedRange[0] = JulianKeyword::Instance()->ms_ATOM_START;
-    ms_asRelatedRange[1] = JulianKeyword::Instance()->ms_ATOM_END;
+    ms_asRelatedRange[0] = nsCalKeyword::Instance()->ms_ATOM_START;
+    ms_asRelatedRange[1] = nsCalKeyword::Instance()->ms_ATOM_END;
     ms_iRelatedRangeSize = 2;
     
-    ms_asParameterRange[0] = JulianKeyword::Instance()->ms_ATOM_ALTREP; 
-    ms_asParameterRange[1] = JulianKeyword::Instance()->ms_ATOM_ENCODING; 
-    ms_asParameterRange[2] = JulianKeyword::Instance()->ms_ATOM_LANGUAGE; 
-    ms_asParameterRange[3] = JulianKeyword::Instance()->ms_ATOM_TZID; 
-    ms_asParameterRange[4] = JulianKeyword::Instance()->ms_ATOM_VALUE; 
+    ms_asParameterRange[0] = nsCalKeyword::Instance()->ms_ATOM_ALTREP; 
+    ms_asParameterRange[1] = nsCalKeyword::Instance()->ms_ATOM_ENCODING; 
+    ms_asParameterRange[2] = nsCalKeyword::Instance()->ms_ATOM_LANGUAGE; 
+    ms_asParameterRange[3] = nsCalKeyword::Instance()->ms_ATOM_TZID; 
+    ms_asParameterRange[4] = nsCalKeyword::Instance()->ms_ATOM_VALUE; 
     ms_iParameterRangeSize = 5;
 
-    ms_asIrregularProperties[0] = JulianKeyword::Instance()->ms_ATOM_ATTENDEE; 
-    ms_asIrregularProperties[1] = JulianKeyword::Instance()->ms_ATOM_FREEBUSY;
-    ms_asIrregularProperties[2] = JulianKeyword::Instance()->ms_ATOM_RECURRENCEID;
-    ms_asIrregularProperties[3] = JulianKeyword::Instance()->ms_ATOM_ORGANIZER;
+    ms_asIrregularProperties[0] = nsCalKeyword::Instance()->ms_ATOM_ATTENDEE; 
+    ms_asIrregularProperties[1] = nsCalKeyword::Instance()->ms_ATOM_FREEBUSY;
+    ms_asIrregularProperties[2] = nsCalKeyword::Instance()->ms_ATOM_RECURRENCEID;
+    ms_asIrregularProperties[3] = nsCalKeyword::Instance()->ms_ATOM_ORGANIZER;
     ms_iIrregularPropertiesSize = 4;
     
-    ms_asValueRange[0] = JulianKeyword::Instance()->ms_ATOM_BINARY;
-    ms_asValueRange[1] = JulianKeyword::Instance()->ms_ATOM_BOOLEAN;
-    ms_asValueRange[2] = JulianKeyword::Instance()->ms_ATOM_CALADDRESS;
-    ms_asValueRange[3] = JulianKeyword::Instance()->ms_ATOM_DATE;
-    ms_asValueRange[4] = JulianKeyword::Instance()->ms_ATOM_DATETIME;
-    ms_asValueRange[5] = JulianKeyword::Instance()->ms_ATOM_DURATION;
-    ms_asValueRange[6] = JulianKeyword::Instance()->ms_ATOM_FLOAT;
-    ms_asValueRange[7] = JulianKeyword::Instance()->ms_ATOM_INTEGER;
-    ms_asValueRange[8] = JulianKeyword::Instance()->ms_ATOM_PERIOD;
-    ms_asValueRange[9] = JulianKeyword::Instance()->ms_ATOM_RECUR;
-    ms_asValueRange[10] = JulianKeyword::Instance()->ms_ATOM_TEXT;
-    ms_asValueRange[11] = JulianKeyword::Instance()->ms_ATOM_TIME;
-    ms_asValueRange[12] = JulianKeyword::Instance()->ms_ATOM_URI;
-    ms_asValueRange[13] = JulianKeyword::Instance()->ms_ATOM_UTCOFFSET;
+    ms_asValueRange[0] = nsCalKeyword::Instance()->ms_ATOM_BINARY;
+    ms_asValueRange[1] = nsCalKeyword::Instance()->ms_ATOM_BOOLEAN;
+    ms_asValueRange[2] = nsCalKeyword::Instance()->ms_ATOM_CALADDRESS;
+    ms_asValueRange[3] = nsCalKeyword::Instance()->ms_ATOM_DATE;
+    ms_asValueRange[4] = nsCalKeyword::Instance()->ms_ATOM_DATETIME;
+    ms_asValueRange[5] = nsCalKeyword::Instance()->ms_ATOM_DURATION;
+    ms_asValueRange[6] = nsCalKeyword::Instance()->ms_ATOM_FLOAT;
+    ms_asValueRange[7] = nsCalKeyword::Instance()->ms_ATOM_INTEGER;
+    ms_asValueRange[8] = nsCalKeyword::Instance()->ms_ATOM_PERIOD;
+    ms_asValueRange[9] = nsCalKeyword::Instance()->ms_ATOM_RECUR;
+    ms_asValueRange[10] = nsCalKeyword::Instance()->ms_ATOM_TEXT;
+    ms_asValueRange[11] = nsCalKeyword::Instance()->ms_ATOM_TIME;
+    ms_asValueRange[12] = nsCalKeyword::Instance()->ms_ATOM_URI;
+    ms_asValueRange[13] = nsCalKeyword::Instance()->ms_ATOM_UTCOFFSET;
     ms_iValueRangeSize = 14;
-    ms_asEncodingRange[0] = JulianKeyword::Instance()->ms_ATOM_8bit;
-    ms_asEncodingRange[1] = JulianKeyword::Instance()->ms_ATOM_Base64;
+    ms_asEncodingRange[0] = nsCalKeyword::Instance()->ms_ATOM_8bit;
+    ms_asEncodingRange[1] = nsCalKeyword::Instance()->ms_ATOM_Base64;
     ms_iEncodingRangeSize = 2;
 };
 
@@ -709,23 +709,23 @@ JulianAtomRange::JulianAtomRange()
 
 //---------------------------------------------------------------------
 
-JulianLogErrorMessage * JulianLogErrorMessage::m_Instance = 0;
-t_int32 JulianLogErrorMessage::ms_iStaticErrorNumber = 10000;
+nsCalLogErrorMessage * nsCalLogErrorMessage::m_Instance = 0;
+t_int32 nsCalLogErrorMessage::ms_iStaticErrorNumber = 10000;
 
 //---------------------------------------------------------------------
 
-JulianLogErrorMessage *
-JulianLogErrorMessage::Instance()
+nsCalLogErrorMessage *
+nsCalLogErrorMessage::Instance()
 {
     if (m_Instance == 0)
-        m_Instance = new JulianLogErrorMessage();
+        m_Instance = new nsCalLogErrorMessage();
     PR_ASSERT(m_Instance != 0);
     return m_Instance;
 }
 
 //---------------------------------------------------------------------
 
-JulianLogErrorMessage::~JulianLogErrorMessage()
+nsCalLogErrorMessage::~nsCalLogErrorMessage()
 {
     /*
     if (m_Instance != 0)
@@ -737,7 +737,7 @@ JulianLogErrorMessage::~JulianLogErrorMessage()
 
 //---------------------------------------------------------------------
 
-JulianLogErrorMessage::JulianLogErrorMessage()
+nsCalLogErrorMessage::nsCalLogErrorMessage()
 {
 #if 0
     ms_sDTEndBeforeDTStart = "error: DTEnd before DTStart.  Setting DTEnd equal to DTStart.";
@@ -1076,25 +1076,25 @@ JulianLogErrorMessage::JulianLogErrorMessage()
 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
-// JulianFormatString
+// nsCalFormatString
 //---------------------------------------------------------------------
 
-JulianFormatString * JulianFormatString::m_Instance = 0;
+nsCalFormatString * nsCalFormatString::m_Instance = 0;
 
 //---------------------------------------------------------------------
 
-JulianFormatString *
-JulianFormatString::Instance()
+nsCalFormatString *
+nsCalFormatString::Instance()
 {
     if (m_Instance == 0)
-        m_Instance = new JulianFormatString();
+        m_Instance = new nsCalFormatString();
     PR_ASSERT(m_Instance != 0);
     return m_Instance;
 }
 
 //---------------------------------------------------------------------
 
-JulianFormatString::~JulianFormatString()
+nsCalFormatString::~nsCalFormatString()
 {
     /*
     if (m_Instance != 0)
@@ -1106,7 +1106,7 @@ JulianFormatString::~JulianFormatString()
 
 //---------------------------------------------------------------------
 
-JulianFormatString::JulianFormatString()
+nsCalFormatString::nsCalFormatString()
 {
     ms_sDateTimeISO8601Pattern = "yyyyMMdd'T'HHmmss'Z'";
     ms_sDateTimeISO8601LocalPattern = "yyyyMMdd'T'HHmmss";

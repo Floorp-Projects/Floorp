@@ -493,7 +493,7 @@ TimeBasedEvent::formatChar(t_int32 c, UnicodeString sFilterAttendee,
         }
         return sResult;        
       case ms_cAttach: 
-          s = JulianKeyword::Instance()->ms_sATTACH;
+          s = nsCalKeyword::Instance()->ms_sATTACH;
           return ICalProperty::propertyVectorToICALString(s, getAttach(), sResult);
       case ms_cAttendees:   
           {
@@ -545,80 +545,80 @@ TimeBasedEvent::formatChar(t_int32 c, UnicodeString sFilterAttendee,
              //        return sResult.toString();
           }
       case ms_cCategories:
-          s = JulianKeyword::Instance()->ms_sCATEGORIES;
+          s = nsCalKeyword::Instance()->ms_sCATEGORIES;
           return ICalProperty::propertyVectorToICALString(s, getCategories(), sResult);     
       case ms_cClass:
-          s = JulianKeyword::Instance()->ms_sCLASS;
+          s = nsCalKeyword::Instance()->ms_sCLASS;
           return ICalProperty::propertyToICALString(s, getClassProperty(), sResult);
       case ms_cComment: 
-          s = JulianKeyword::Instance()->ms_sCOMMENT;
+          s = nsCalKeyword::Instance()->ms_sCOMMENT;
           return ICalProperty::propertyVectorToICALString(s, getComment(), sResult);
       case ms_cURL: 
-          s = JulianKeyword::Instance()->ms_sURL;
+          s = nsCalKeyword::Instance()->ms_sURL;
           return ICalProperty::propertyToICALString(s, getURLProperty(), sResult);
       case ms_cCreated: 
-          s = JulianKeyword::Instance()->ms_sCREATED;
+          s = nsCalKeyword::Instance()->ms_sCREATED;
           return ICalProperty::propertyToICALString(s, getCreatedProperty(), sResult);
       case ms_cDescription:  
-          s = JulianKeyword::Instance()->ms_sDESCRIPTION;
+          s = nsCalKeyword::Instance()->ms_sDESCRIPTION;
           return ICalProperty::propertyToICALString(s, getDescriptionProperty(), sResult);  
       case ms_cDTStart: 
-          s = JulianKeyword::Instance()->ms_sDTSTART;
+          s = nsCalKeyword::Instance()->ms_sDTSTART;
           return ICalProperty::propertyToICALString(s, getDTStartProperty(), sResult);  
       case ms_cDTStamp:
-          s = JulianKeyword::Instance()->ms_sDTSTAMP;
+          s = nsCalKeyword::Instance()->ms_sDTSTAMP;
           return ICalProperty::propertyToICALString(s, getDTStampProperty(), sResult);  
       case ms_cExDate:
-          s = JulianKeyword::Instance()->ms_sEXDATE;
+          s = nsCalKeyword::Instance()->ms_sEXDATE;
           return ICalProperty::propertyVectorToICALString(s, getExDates(), sResult);
       case ms_cExRule:     
           if (getExRules() != 0)
           {
-              //s = JulianKeyword::Instance()->ms_sEXRULE;
+              //s = nsCalKeyword::Instance()->ms_sEXRULE;
               //return ICalComponent::propertyVToCalString(s, getExRules(), sResult);
               return ICalProperty::vectorToICALString(getExRules(), sResult);        
           }
           return "";
       case ms_cLastModified: 
-          s = JulianKeyword::Instance()->ms_sLASTMODIFIED;
+          s = nsCalKeyword::Instance()->ms_sLASTMODIFIED;
           return ICalProperty::propertyToICALString(s, getLastModifiedProperty(), sResult);  
       case ms_cRDate: 
-          s = JulianKeyword::Instance()->ms_sRDATE;
+          s = nsCalKeyword::Instance()->ms_sRDATE;
           return ICalProperty::propertyVectorToICALString(s, getRDates(), sResult);
       case ms_cRRule: 
           if (getRRules() != 0)
           {
-              //s = JulianKeyword::Instance()->ms_sRRULE;
+              //s = nsCalKeyword::Instance()->ms_sRRULE;
               //return ICalComponent::propertyVToCalString(s, getRRules(), sResult);
               return ICalProperty::vectorToICALString(getRRules(), sResult);        
           }    
           return "";
       case ms_cRecurrenceID: 
-          s = JulianKeyword::Instance()->ms_sRECURRENCEID;
+          s = nsCalKeyword::Instance()->ms_sRECURRENCEID;
           return ICalProperty::propertyToICALString(s, getRecurrenceIDProperty(), sResult);
       case ms_cRelatedTo:
-          s = JulianKeyword::Instance()->ms_sRELATEDTO;
+          s = nsCalKeyword::Instance()->ms_sRELATEDTO;
           return ICalProperty::propertyVectorToICALString(s, getRelatedTo(), sResult);
       case ms_cRequestStatus:
-          s = JulianKeyword::Instance()->ms_sREQUESTSTATUS;
+          s = nsCalKeyword::Instance()->ms_sREQUESTSTATUS;
           return ICalProperty::propertyVectorToICALString(s, getRequestStatus(), sResult);
       case ms_cSequence:
-          s = JulianKeyword::Instance()->ms_sSEQUENCE;
+          s = nsCalKeyword::Instance()->ms_sSEQUENCE;
           return ICalProperty::propertyToICALString(s, getSequenceProperty(), sResult);
       case ms_cStatus:
-          s = JulianKeyword::Instance()->ms_sSTATUS;
+          s = nsCalKeyword::Instance()->ms_sSTATUS;
           return ICalProperty::propertyToICALString(s, getStatusProperty(), sResult);
       case ms_cSummary:
-          s = JulianKeyword::Instance()->ms_sSUMMARY;
+          s = nsCalKeyword::Instance()->ms_sSUMMARY;
           return ICalProperty::propertyToICALString(s, getSummaryProperty(), sResult);
       case ms_cUID:
-          s = JulianKeyword::Instance()->ms_sUID;
+          s = nsCalKeyword::Instance()->ms_sUID;
           return ICalProperty::propertyToICALString(s, getUIDProperty(), sResult);
       case ms_cOrganizer:
-          s = JulianKeyword::Instance()->ms_sORGANIZER;
+          s = nsCalKeyword::Instance()->ms_sORGANIZER;
           return ICalProperty::propertyToICALString(s, getOrganizerProperty(), sResult);
       case ms_cContact: 
-          s = JulianKeyword::Instance()->ms_sCONTACT;
+          s = nsCalKeyword::Instance()->ms_sCONTACT;
           return ICalProperty::propertyVectorToICALString(s, getContact(), sResult);
       case ms_cXTokens: 
           return ICalProperty::vectorToICALString(getXTokens(), sResult);
@@ -645,15 +645,15 @@ TimeBasedEvent::parseType(UnicodeString & sType, ICalReader * brFile,
 
     JulianPtrArray * parameters = new JulianPtrArray();
 
-    parseStatus = JulianKeyword::Instance()->ms_sOK;
+    parseStatus = nsCalKeyword::Instance()->ms_sOK;
     PR_ASSERT(parameters != 0 && brFile != 0);
     if (parameters == 0 || brFile == 0)
     {
         // Return an invalid event
         return parseStatus;
     }
-    //UnicodeString end = JulianKeyword::Instance()->ms_sEND_WITH_COLON; end += sType;
-    //UnicodeString begin = JulianKeyword::Instance()->ms_sBEGIN_WITH_COLON; begin += sType;
+    //UnicodeString end = nsCalKeyword::Instance()->ms_sEND_WITH_COLON; end += sType;
+    //UnicodeString begin = nsCalKeyword::Instance()->ms_sBEGIN_WITH_COLON; begin += sType;
     
     ErrorCode status = ZERO_ERROR;
 
@@ -703,7 +703,7 @@ TimeBasedEvent::parseType(UnicodeString & sType, ICalReader * brFile,
             continue;
         }
         // break on END:type (where type is matching VEVENT, VTODO, VJOURNAL)
-        if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
+        if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
             (propVal.compareIgnoreCase(sType) == 0))
         {
             ICalProperty::deleteICalParameterVector(parameters);
@@ -712,24 +712,24 @@ TimeBasedEvent::parseType(UnicodeString & sType, ICalReader * brFile,
             break;
         }
         if (
-            ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
+            ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) &&
              ((propVal.compareIgnoreCase(sType) == 0) && !bIgnoreBeginError )||
-             ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+             ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
               (ICalProperty::IsXToken(propVal)))
             ) ||
-            ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
+            ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
             (
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) || 
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+            (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) || 
+            (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+            (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+            (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) ||
+            (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) ||
+            (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
             (ICalProperty::IsXToken(propVal)))
             ))
         {
@@ -741,7 +741,7 @@ TimeBasedEvent::parseType(UnicodeString & sType, ICalReader * brFile,
             parseStatus = strLine;
             
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
+                nsCalLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
                 sType, strLine, 300);
             
             bNewEvent = TRUE;
@@ -749,8 +749,8 @@ TimeBasedEvent::parseType(UnicodeString & sType, ICalReader * brFile,
         }
         else 
         {
-            if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
-                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVALARM) == 0))
+            if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) &&
+                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVALARM) == 0))
             {
 
                 ICalProperty::deleteICalParameterVector(parameters);
@@ -772,11 +772,11 @@ TimeBasedEvent::parseType(UnicodeString & sType, ICalReader * brFile,
                         else
                         {
                             if (m_Log) m_Log->logError(
-                                JulianLogErrorMessage::Instance()->ms_iInvalidAlarm, 300);
+                                nsCalLogErrorMessage::Instance()->ms_iInvalidAlarm, 300);
                             delete alarm; alarm = 0;
                         }
                     }
-                    if (sOK.compareIgnoreCase(JulianKeyword::Instance()->ms_sOK) == 0)
+                    if (sOK.compareIgnoreCase(nsCalKeyword::Instance()->ms_sOK) == 0)
                         bNextAlarm = FALSE;
                     else
                     {
@@ -787,7 +787,7 @@ TimeBasedEvent::parseType(UnicodeString & sType, ICalReader * brFile,
                             bNextAlarm = FALSE;                        
                     }
                 }
-                if (sOK.compareIgnoreCase(JulianKeyword::Instance()->ms_sOK) != 0)
+                if (sOK.compareIgnoreCase(nsCalKeyword::Instance()->ms_sOK) != 0)
                 {
                     parseStatus = sOK;
                     break;
@@ -826,15 +826,15 @@ void TimeBasedEvent::storeAttach(UnicodeString & strLine, UnicodeString & propVa
     // check parameters (binary, uri), todo: checkEncoding range
     // todo: check FMTTYPE so it doesn't complain.
     t_bool bParamValid = ICalProperty::CheckParamsWithValueRangeCheck(parameters, 
-        JulianAtomRange::Instance()->ms_asEncodingValueFMTTypeParamRange,
-        JulianAtomRange::Instance()->ms_asEncodingValueFMTTypeParamRangeSize, 
-        JulianAtomRange::Instance()->ms_asBinaryURIValueRange,
-        JulianAtomRange::Instance()->ms_asBinaryURIValueRangeSize);        
+        nsCalAtomRange::Instance()->ms_asEncodingValueFMTTypeParamRange,
+        nsCalAtomRange::Instance()->ms_asEncodingValueFMTTypeParamRangeSize, 
+        nsCalAtomRange::Instance()->ms_asBinaryURIValueRange,
+        nsCalAtomRange::Instance()->ms_asBinaryURIValueRangeSize);        
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
     addAttach(propVal, parameters);
 }
@@ -849,13 +849,13 @@ void TimeBasedEvent::storeAttendees(UnicodeString & strLine, UnicodeString & pro
         if (!attendee->isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidAttendee, 200);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidAttendee, 200);
 
             UnicodeString u;
-            u = JulianLogErrorMessage::Instance()->ms_sRS202;
+            u = nsCalLogErrorMessage::Instance()->ms_sRS202;
             u += '.'; u += ' ';
             u += strLine;
-            //setRequestStatus(JulianLogErrorMessage::Instance()->ms_iRS202); 
+            //setRequestStatus(nsCalLogErrorMessage::Instance()->ms_iRS202); 
             addRequestStatus(u);
             delete attendee; attendee = 0;
         }
@@ -869,13 +869,13 @@ void TimeBasedEvent::storeCategories(UnicodeString & strLine, UnicodeString & pr
     JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
 {
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asLanguageParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     addCategoriesPropertyVector(propVal, parameters);
@@ -887,16 +887,16 @@ void TimeBasedEvent::storeClass(UnicodeString & strLine, UnicodeString & propVal
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getClassProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sCLASS, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sCLASS, 100);
     }
     setClass(propVal, parameters);
 }
@@ -904,14 +904,14 @@ void TimeBasedEvent::storeComment(UnicodeString & strLine, UnicodeString & propV
     JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
 {
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
     
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     addComment(propVal, parameters);
@@ -920,13 +920,13 @@ void TimeBasedEvent::storeContact(UnicodeString & strLine, UnicodeString & propV
     JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
 {
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);        
+            nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+            nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);        
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     addContact(propVal, parameters);
@@ -938,16 +938,16 @@ void TimeBasedEvent::storeCreated(UnicodeString & strLine, UnicodeString & propV
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getCreatedProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sCREATED, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sCREATED, 100);
     }
     DateTime d;
     d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
@@ -959,23 +959,23 @@ void TimeBasedEvent::storeDescription(UnicodeString & strLine, UnicodeString & p
 {
     // check parameters
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
     
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     // check for duplicates
     if (getDescriptionProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sDESCRIPTION, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sDESCRIPTION, 100);
     }
 
     setDescription(propVal, parameters);     
@@ -985,28 +985,28 @@ void TimeBasedEvent::storeDTStart(UnicodeString & strLine, UnicodeString & propV
 {
     // check parameters (date, datetime), TZID
     t_bool bParamValid = ICalProperty::CheckParamsWithValueRangeCheck(parameters, 
-        JulianAtomRange::Instance()->ms_asTZIDValueParamRange,
-        JulianAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
-        JulianAtomRange::Instance()->ms_asDateDateTimeValueRange,
-        JulianAtomRange::Instance()->ms_asDateDateTimeValueRangeSize);
+        nsCalAtomRange::Instance()->ms_asTZIDValueParamRange,
+        nsCalAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
+        nsCalAtomRange::Instance()->ms_asDateDateTimeValueRange,
+        nsCalAtomRange::Instance()->ms_asDateDateTimeValueRangeSize);
     
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getDTStartProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sDTSTART, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sDTSTART, 100);
     }
     
     UnicodeString u, out;
-    u = JulianKeyword::Instance()->ms_sVALUE;
+    u = nsCalKeyword::Instance()->ms_sVALUE;
     out = ICalParameter::GetParameterFromVector(u, out, parameters);
 
     t_bool bIsDate = DateTime::IsParseableDate(propVal);
@@ -1014,22 +1014,22 @@ void TimeBasedEvent::storeDTStart(UnicodeString & strLine, UnicodeString & propV
     if (bIsDate)
     {
         // if there is a VALUE=X parameter, make sure X is DATE
-        if (out.size() != 0 && (JulianKeyword::Instance()->ms_ATOM_DATE != out.hashCode()))
+        if (out.size() != 0 && (nsCalKeyword::Instance()->ms_ATOM_DATE != out.hashCode()))
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
-                JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
+                nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
         }
         setAllDayEvent(TRUE);
     }
     else
     {
         // if there is a VALUE=X parameter, make sure X is DATETIME
-        if (out.size() != 0 && (JulianKeyword::Instance()->ms_ATOM_DATETIME != out.hashCode()))
+        if (out.size() != 0 && (nsCalKeyword::Instance()->ms_ATOM_DATETIME != out.hashCode()))
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
-                JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
+                nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
         }
         setAllDayEvent(FALSE);
     }
@@ -1047,16 +1047,16 @@ void TimeBasedEvent::storeDTStamp(UnicodeString & strLine, UnicodeString & propV
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getDTStampProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sDTSTAMP, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sDTSTAMP, 100);
     }
     DateTime d;
     d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
@@ -1068,15 +1068,15 @@ void TimeBasedEvent::storeExDate(UnicodeString & strLine, UnicodeString & propVa
 {
     // check parameters (date, datetime)
     t_bool bParamValid = ICalProperty::CheckParamsWithValueRangeCheck(parameters, 
-        JulianAtomRange::Instance()->ms_asTZIDValueParamRange,
-        JulianAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
-        JulianAtomRange::Instance()->ms_asDateDateTimeValueRange,
-        JulianAtomRange::Instance()->ms_asDateDateTimeValueRangeSize);
+        nsCalAtomRange::Instance()->ms_asTZIDValueParamRange,
+        nsCalAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
+        nsCalAtomRange::Instance()->ms_asDateDateTimeValueRange,
+        nsCalAtomRange::Instance()->ms_asDateDateTimeValueRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
     // DONE:?TODO: finish
     addExDate(propVal, parameters);
@@ -1088,8 +1088,8 @@ void TimeBasedEvent::storeExRule(UnicodeString & strLine, UnicodeString & propVa
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
     // TODO: finish, pass timezones.
     addExRuleString(strLine);
@@ -1101,16 +1101,16 @@ void TimeBasedEvent::storeLastModified(UnicodeString & strLine, UnicodeString & 
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getLastModifiedProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sLASTMODIFIED, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sLASTMODIFIED, 100);
     }
     DateTime d;
     d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
@@ -1122,21 +1122,21 @@ void TimeBasedEvent::storeOrganizer(UnicodeString & strLine, UnicodeString & pro
 {
     // check parameters 
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asSentByParamRange,
-        JulianAtomRange::Instance()->ms_asSentByParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asSentByParamRange,
+        nsCalAtomRange::Instance()->ms_asSentByParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getOrganizerProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sORGANIZER, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sORGANIZER, 100);
     }
     setOrganizer(propVal, parameters);
 }
@@ -1145,15 +1145,15 @@ void TimeBasedEvent::storeRDate(UnicodeString & strLine, UnicodeString & propVal
 {
      // check parameters (date, datetime, period)
     t_bool bParamValid = ICalProperty::CheckParamsWithValueRangeCheck(parameters, 
-        JulianAtomRange::Instance()->ms_asTZIDValueParamRange,
-        JulianAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
-        JulianAtomRange::Instance()->ms_asDateDateTimePeriodValueRange,
-        JulianAtomRange::Instance()->ms_asDateDateTimePeriodValueRangeSize);
+        nsCalAtomRange::Instance()->ms_asTZIDValueParamRange,
+        nsCalAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
+        nsCalAtomRange::Instance()->ms_asDateDateTimePeriodValueRange,
+        nsCalAtomRange::Instance()->ms_asDateDateTimePeriodValueRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
     // TODO: finish
     addRDate(propVal, parameters);
@@ -1165,8 +1165,8 @@ void TimeBasedEvent::storeRRule(UnicodeString & strLine, UnicodeString & propVal
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
     // TODO: finish, pass timezones.
     addRRuleString(strLine);
@@ -1178,9 +1178,9 @@ void TimeBasedEvent::storeRecurrenceID(UnicodeString & strLine, UnicodeString & 
     if (getRecurrenceIDProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-        JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-        JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-        JulianKeyword::Instance()->ms_sRECURRENCEID, 100);
+        nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+        nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+        nsCalKeyword::Instance()->ms_sRECURRENCEID, 100);
     }
     DateTime d(propVal);
     
@@ -1195,13 +1195,13 @@ void TimeBasedEvent::storeRelatedTo(UnicodeString & strLine, UnicodeString & pro
 {
     // check parameters: todo: check reltype
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-            JulianAtomRange::Instance()->ms_asReltypeParamRange,
-            JulianAtomRange::Instance()->ms_asReltypeParamRangeSize);
+            nsCalAtomRange::Instance()->ms_asReltypeParamRange,
+            nsCalAtomRange::Instance()->ms_asReltypeParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     addRelatedTo(propVal, parameters);
@@ -1211,21 +1211,21 @@ void TimeBasedEvent::storeRequestStatus(UnicodeString & strLine, UnicodeString &
 {
     // check parameters 
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asLanguageParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     /*
     if (getRequestStatusProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-        JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-        JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, JulianKeyword::Instance()->ms_s, 100);
+        nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+        nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, nsCalKeyword::Instance()->ms_s, 100);
     }
     */
     //setRequestStatus(propVal, parameters);
@@ -1241,8 +1241,8 @@ void TimeBasedEvent::storeSequence(UnicodeString & strLine, UnicodeString & prop
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     char * pcc = propVal.toCString("");
@@ -1253,9 +1253,9 @@ void TimeBasedEvent::storeSequence(UnicodeString & strLine, UnicodeString & prop
     if (getSequenceProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sSEQUENCE, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sSEQUENCE, 100);
     }  
     if (!bParseError)
     {
@@ -1264,9 +1264,9 @@ void TimeBasedEvent::storeSequence(UnicodeString & strLine, UnicodeString & prop
     else
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sSEQUENCE,
+            nsCalLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sSEQUENCE,
             propVal, 200);
     }
 }
@@ -1277,16 +1277,16 @@ void TimeBasedEvent::storeStatus(UnicodeString & strLine, UnicodeString & propVa
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getStatusProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sSTATUS, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sSTATUS, 100);
     }
     setStatus(propVal, parameters);
 }
@@ -1295,21 +1295,21 @@ void TimeBasedEvent::storeSummary(UnicodeString & strLine, UnicodeString & propV
 {
     // check parameters 
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asLanguageParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getSummaryProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sSUMMARY, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sSUMMARY, 100);
     }
     setSummary(propVal, parameters);
 }
@@ -1320,16 +1320,16 @@ void TimeBasedEvent::storeUID(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getUIDProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sUID, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sUID, 100);
     }
     setUID(propVal, parameters);
 }
@@ -1340,16 +1340,16 @@ void TimeBasedEvent::storeURL(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, strLine, 100);
     }
 
     if (getURLProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sTIMEBASEDEVENT, 
-            JulianKeyword::Instance()->ms_sURL, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sTIMEBASEDEVENT, 
+            nsCalKeyword::Instance()->ms_sURL, 100);
     }
 
     setURL(propVal, parameters);
@@ -1402,26 +1402,26 @@ UnicodeString TimeBasedEvent::toICALString(UnicodeString sMethod, UnicodeString 
     
     t_int32 hashCode = sMethod.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_PUBLISH == hashCode) 
+    if (nsCalKeyword::Instance()->ms_ATOM_PUBLISH == hashCode) 
         s = publishMessage();
-    else if (JulianKeyword::Instance()->ms_ATOM_REQUEST == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_REQUEST == hashCode)
         s = requestMessage();
-    else if (JulianKeyword::Instance()->ms_ATOM_CANCEL == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_CANCEL == hashCode)
         s = cancelMessage();
-    else if (JulianKeyword::Instance()->ms_ATOM_REPLY == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_REPLY == hashCode)
         s = replyMessage(sName);
-    else if (JulianKeyword::Instance()->ms_ATOM_REFRESH == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_REFRESH == hashCode)
         s = refreshMessage(sName);
-    else if (JulianKeyword::Instance()->ms_ATOM_COUNTER == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_COUNTER == hashCode)
         s = counterMessage();
-    else if (JulianKeyword::Instance()->ms_ATOM_DECLINECOUNTER == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_DECLINECOUNTER == hashCode)
         s = declineCounterMessage();
-    else if (JulianKeyword::Instance()->ms_ATOM_ADD == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_ADD == hashCode)
         s = addMessage();
     /*
-    else if (JulianKeyword::Instance()->ms_ATOM_DELEGATEREQUEST == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_DELEGATEREQUEST == hashCode)
         s = delegateRequestMessage(sName, sDelegatedTo, isRecurring);
-    else if (JulianKeyword::Instance()->ms_ATOM_DELEGATEREPLY == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_DELEGATEREPLY == hashCode)
         s = delegateReplyMessage(sName, sDelegatedTo, isRecurring);
     */
     return s;
@@ -1783,7 +1783,7 @@ UnicodeString TimeBasedEvent::delegateRequestMessage(UnicodeString sAttendeeFilt
       //DebugMsg.Instance().println(0,"No such attendee");
       return "";
     }
-    if (me.getStatus().compareIgnoreCase(JulianKeyword::Instance()->ms_sDELEGATED) != 0) {      
+    if (me.getStatus().compareIgnoreCase(nsCalKeyword::Instance()->ms_sDELEGATED) != 0) {      
       //LogStream.Instance().println(2, Utility.ErrorMsg("DelegateRequestError"));
       //DebugMsg.Instance().println(0,"I did not delegate yet");
       return "";
@@ -1805,13 +1805,13 @@ UnicodeString TimeBasedEvent::delegateRequestMessage(UnicodeString sAttendeeFilt
     delegateName = *((UnicodeString)delegateTo.lastElement();)
 
     // according to spec, rsvp, expect should be set to exactly what delegate had
-    String sRSVP = PropertyKeywords.JulianKeyword::Instance()->ms_sTRUE;
-    String sExpect = PropertyKeywords.JulianKeyword::Instance()->ms_sREQUEST;
-    String sRole = PropertyKeywords.JulianKeyword::Instance()->ms_sDELEGATE;
+    String sRSVP = PropertyKeywords.nsCalKeyword::Instance()->ms_sTRUE;
+    String sExpect = PropertyKeywords.nsCalKeyword::Instance()->ms_sREQUEST;
+    String sRole = PropertyKeywords.nsCalKeyword::Instance()->ms_sDELEGATE;
 
     delegate.setName(delegateName);
-    delegate.setRole(PropertyKeywords.JulianKeyword::Instance()->ms_sDELEGATE);
-    delegate.setRSVP(PropertyKeywords.JulianKeyword::Instance()->ms_sTRUE);
+    delegate.setRole(PropertyKeywords.nsCalKeyword::Instance()->ms_sDELEGATE);
+    delegate.setRSVP(PropertyKeywords.nsCalKeyword::Instance()->ms_sTRUE);
     delegate.setDelegatedFrom(sAttendeeFilter);
     //delegate.load("ATTENDEE;ROLE=DELEGATE;RSVP=" + sRSVP +";EXPECT="+ sExpect +";DELEGATED-FROM=" + sAttendeeFilter + ":" + delegateName);
 
@@ -1826,9 +1826,9 @@ UnicodeString TimeBasedEvent::delegateRequestMessage(UnicodeString sAttendeeFilt
     // UPDATE ATTENDEE PROPERTIES HERE (attendee status is accepted, declined, delegated)
     //   what about response-sequence ? (will we keep it)
     if (bRecur) 
-      return format(JulianKeyword::Instance()->ms_sRecurDelegateRequestMessage, TRUE);  // this is a delegate request
+      return format(nsCalKeyword::Instance()->ms_sRecurDelegateRequestMessage, TRUE);  // this is a delegate request
     else
-      return format(JulianKeyword::Instance()->ms_sDelegateRequestMessage, TRUE);  // this is a delegate request
+      return format(nsCalKeyword::Instance()->ms_sDelegateRequestMessage, TRUE);  // this is a delegate request
 }
 */
 
@@ -1996,7 +1996,7 @@ TimeBasedEvent::splitDates(JulianPtrArray * out,
             // getTZID from date, check for it from VTimezone vector.
             // then get the the NLSTimeZone from that VTimeZone
             u = ip->getParameterValue(
-                JulianKeyword::Instance()->ms_sTZID, u, status);
+                nsCalKeyword::Instance()->ms_sTZID, u, status);
             
             if (!FAILURE(status))
             {
@@ -2011,7 +2011,7 @@ TimeBasedEvent::splitDates(JulianPtrArray * out,
             u = *((UnicodeString *)ip->getValue());
     
             st = new UnicodeStringTokenizer(u, 
-                JulianKeyword::Instance()->ms_sCOMMA_SYMBOL);
+                nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL);
             PR_ASSERT(st != 0);
             if (st != 0)
             {
@@ -2108,7 +2108,7 @@ TimeBasedEvent::getPeriodRDates(JulianPtrArray * out)
             ip = (ICalProperty *) getRDates()->GetAt(i);
             u = *((UnicodeString *)ip->getValue());
             st = new UnicodeStringTokenizer(u, 
-                JulianKeyword::Instance()->ms_sCOMMA_SYMBOL);
+                nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL);
             PR_ASSERT(st != 0);
             if (st != 0)
             {
@@ -2210,7 +2210,7 @@ void checkRecurrence()
 void checkRange(UnicodeString sPropName, UnicodeString sPropValue, UnicodeString sRange[]) {
     t_boolean b = FALSE;
     
-    if (sPropName.equalsIgnoreCase(PropertyKeywords.JulianKeyword::Instance()->ms_sCLASS)) {
+    if (sPropName.equalsIgnoreCase(PropertyKeywords.nsCalKeyword::Instance()->ms_sCLASS)) {
       if (ParserUtil.isXToken(sPropValue))
 	return;
       else {
@@ -2219,7 +2219,7 @@ void checkRange(UnicodeString sPropName, UnicodeString sPropValue, UnicodeString
           DebugMsg.Instance().println(0, "Bad value " + sPropValue + " for property " + sPropName);
           LogStream.Instance().println(2, Utility.ErrorMsg("InvalidPropertyValue") +
                      " TimeBasedEvent:" + sPropValue);
-          setRequestStatus(Utility.ErrorMsg("RS201") + ";" + PropertyKeywords.JulianKeyword::Instance()->ms_sCLASS);
+          setRequestStatus(Utility.ErrorMsg("RS201") + ";" + PropertyKeywords.nsCalKeyword::Instance()->ms_sCLASS);
           setDefaultProps(sPropName);         
         }
         return;
@@ -2252,7 +2252,7 @@ void TimeBasedEvent::setDefaultProps(UnicodeString sPropName) {
     UnicodeString u;
     t_int32 hashCode = sPropName.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_DESCRIPTION == hashCode) {
+    if (nsCalKeyword::Instance()->ms_ATOM_DESCRIPTION == hashCode) {
       //LogStream.Instance().println(0, Utility.ErrorMsg("DefaultTBEDescription"));
       // Setting default Description to empty string
       //if (getDescription( == hashCode) {
@@ -2264,21 +2264,21 @@ void TimeBasedEvent::setDefaultProps(UnicodeString sPropName) {
         u = getSummary();
         setDescription(u);
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_CLASS == hashCode) {
+    else if (nsCalKeyword::Instance()->ms_ATOM_CLASS == hashCode) {
       //LogStream.Instance().println(0, Utility.ErrorMsg("DefaultTBEClass"));
         u = "";
       setClass(u);
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_STATUS == hashCode) {
+    else if (nsCalKeyword::Instance()->ms_ATOM_STATUS == hashCode) {
       //LogStream.Instance().println(0, Utility.ErrorMsg("DefaultTBEStatus"));
         u = "";
         setStatus(u);
     }
-    //else if (sPropName.equalsIgnoreCase(PropertyKeywords.JulianKeyword::Instance()->ms_sTRANSP)) {
+    //else if (sPropName.equalsIgnoreCase(PropertyKeywords.nsCalKeyword::Instance()->ms_sTRANSP)) {
     //  LogStream.Instance().println(0, Utility.ErrorMsg("DefaultTBETransp"));
-    //  setTransp(PropertyKeywords.JulianKeyword::Instance()->ms_sOPAQUE);
+    //  setTransp(PropertyKeywords.nsCalKeyword::Instance()->ms_sOPAQUE);
     //}
-    else if (JulianKeyword::Instance()->ms_ATOM_REQUESTSTATUS == hashCode) {
+    else if (nsCalKeyword::Instance()->ms_ATOM_REQUESTSTATUS == hashCode) {
       //LogStream.Instance().println(0, Utility.ErrorMsg("DefaultTBERequestStatus"));
         u = "";
         setRequestStatus(u);
@@ -2307,12 +2307,12 @@ void TimeBasedEvent::selfCheck()
 
     // NOTE: setting default CLASS to PUBLIC if CLASS is invalid or not in range
     if (getClass().size() == 0 || 
-        (getClass().compareIgnoreCase(JulianKeyword::Instance()->ms_sPRIVATE) != 0) &&
-        (getClass().compareIgnoreCase(JulianKeyword::Instance()->ms_sPUBLIC) != 0) &&
-        (getClass().compareIgnoreCase(JulianKeyword::Instance()->ms_sCONFIDENTIAL) != 0))
+        (getClass().compareIgnoreCase(nsCalKeyword::Instance()->ms_sPRIVATE) != 0) &&
+        (getClass().compareIgnoreCase(nsCalKeyword::Instance()->ms_sPUBLIC) != 0) &&
+        (getClass().compareIgnoreCase(nsCalKeyword::Instance()->ms_sCONFIDENTIAL) != 0))
 
     {
-        setClass(JulianKeyword::Instance()->ms_sPUBLIC);
+        setClass(nsCalKeyword::Instance()->ms_sPUBLIC);
     }
 }
 

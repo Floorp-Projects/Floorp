@@ -236,7 +236,7 @@ void Attendee::parse(UnicodeString & propVal,
 void Attendee::addParamValList(UnicodeString & paramValList, t_int32 hashCode)
 {
     UnicodeStringTokenizer * stMult = new UnicodeStringTokenizer(paramValList, 
-        JulianKeyword::Instance()->ms_sCOMMA_SYMBOL);
+        nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL);
     PR_ASSERT(stMult != 0);
     if (stMult != 0)
     {
@@ -266,11 +266,11 @@ void Attendee::addParamValList(UnicodeString & paramValList, t_int32 hashCode)
             }
             nsCalUtility::stripDoubleQuotes(u);  // double quote property
             
-            if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_TO == hashCode)
+            if (nsCalKeyword::Instance()->ms_ATOM_DELEGATED_TO == hashCode)
             {
                 addDelegatedTo(u);
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_FROM == hashCode)
+            else if (nsCalKeyword::Instance()->ms_ATOM_DELEGATED_FROM == hashCode)
             {
                 addDelegatedFrom(u);
             }
@@ -294,21 +294,21 @@ void Attendee::setParam(UnicodeString & paramName,
     if (paramName.size() == 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidParameterName, 
-            JulianKeyword::Instance()->ms_sATTENDEE, paramName, 200);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName, 
+            nsCalKeyword::Instance()->ms_sATTENDEE, paramName, 200);
     }
     else
     {
         t_int32 hashCode = paramName.hashCode();
 
-        if (JulianKeyword::Instance()->ms_ATOM_ROLE == hashCode)
+        if (nsCalKeyword::Instance()->ms_ATOM_ROLE == hashCode)
         {
             i = stringToRole(paramVal);
             if (i < 0)
             {
                 if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
-                    JulianKeyword::Instance()->ms_sATTENDEE, 
+                    nsCalLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
+                    nsCalKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
             else 
@@ -316,21 +316,21 @@ void Attendee::setParam(UnicodeString & paramName,
                 if (getRole() >= 0)
                 {
                     if (m_Log) m_Log->logError(
-                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
-                        JulianKeyword::Instance()->ms_sATTENDEE, 
+                        nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
+                        nsCalKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }   
                 setRole((Attendee::ROLE) i);
             }
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_CUTYPE == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_CUTYPE == hashCode)
         {
             i = stringToType(paramVal);
             if (i < 0)
             {
                 if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue,
-                    JulianKeyword::Instance()->ms_sATTENDEE, 
+                    nsCalLogErrorMessage::Instance()->ms_iInvalidParameterValue,
+                    nsCalKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
             else 
@@ -338,21 +338,21 @@ void Attendee::setParam(UnicodeString & paramName,
                 if (getType() >= 0)
                 {
                     if (m_Log) m_Log->logError(
-                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, 
+                        nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }
                 setType((Attendee::TYPE) i);
             }
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_PARTSTAT == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_PARTSTAT == hashCode)
         {
             i = stringToStatus(paramVal);
             if (i < 0 || !isValidStatus(m_ComponentType, (Attendee::STATUS) i))
             {
                 if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue,
-                    JulianKeyword::Instance()->ms_sATTENDEE, 
+                    nsCalLogErrorMessage::Instance()->ms_iInvalidParameterValue,
+                    nsCalKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
             else 
@@ -360,21 +360,21 @@ void Attendee::setParam(UnicodeString & paramName,
                 if (getStatus() >= 0)
                 {
                     if (m_Log) m_Log->logError(
-                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, 
+                        nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }
                 setStatus((Attendee::STATUS) i);
             }
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_EXPECT == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_EXPECT == hashCode)
         {
             i = stringToExpect(paramVal);
             if (i < 0)
             {
                 if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue,
-                    JulianKeyword::Instance()->ms_sATTENDEE, 
+                    nsCalLogErrorMessage::Instance()->ms_iInvalidParameterValue,
+                    nsCalKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
             else 
@@ -382,21 +382,21 @@ void Attendee::setParam(UnicodeString & paramName,
                 if (getExpect() >= 0)
                 {
                     if (m_Log) m_Log->logError(
-                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, 
+                        nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }
                 setExpect((Attendee::EXPECT) i);
             }
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_RSVP == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_RSVP == hashCode)
         {
             i = stringToRSVP(paramVal);
             if (i < 0)
             {
                 if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue,
-                    JulianKeyword::Instance()->ms_sATTENDEE, 
+                    nsCalLogErrorMessage::Instance()->ms_iInvalidParameterValue,
+                    nsCalKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
             else 
@@ -404,74 +404,74 @@ void Attendee::setParam(UnicodeString & paramName,
                 if (getRSVP() >= 0)
                 {
                     if (m_Log) m_Log->logError(
-                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, 
+                        nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }
                 setRSVP((Attendee::RSVP) i);
             }
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_TO == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_DELEGATED_TO == hashCode)
         {
             addParamValList(paramVal, hashCode);
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_FROM == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_DELEGATED_FROM == hashCode)
         {
             addParamValList(paramVal, hashCode);
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_MEMBER == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_MEMBER == hashCode)
         {
             addParamValList(paramVal, hashCode);
         }
 
         // Newer properties 3-23-98 (cn, sent-by (double-quote), dir (double-quote))
-        else if (JulianKeyword::Instance()->ms_ATOM_CN == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_CN == hashCode)
         {
             if (getCN().size() != 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
             setCN(paramVal);
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_LANGUAGE == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_LANGUAGE == hashCode)
         {
             if (getLanguage().size() != 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
             setLanguage(paramVal);
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_SENTBY == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_SENTBY == hashCode)
         {
             if (getSentBy().size() != 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
             nsCalUtility::stripDoubleQuotes(paramVal);  // double quote property
             setSentBy(paramVal);
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_DIR == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_DIR == hashCode)
         {
             if (getDir().size() != 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
             nsCalUtility::stripDoubleQuotes(paramVal);  // double quote property
             setDir(paramVal);
         }
         else if (ICalProperty::IsXToken(paramName))
         {
-            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+            if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, paramName, 100);
         }
         else 
         {
-            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 200);
+            if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName,
+                        nsCalKeyword::Instance()->ms_sATTENDEE, paramName, 200);
         }
     }
 }
@@ -490,7 +490,7 @@ UnicodeString & Attendee::toICALString(UnicodeString & out)
     if (getStatus() != STATUS_NEEDSACTION)
     {
 #if 0
-        //if (sStatus.compareIgnoreCase(JulianKeyword::Instance()->ms_sNEEDSACTION) != 0) {
+        //if (sStatus.compareIgnoreCase(nsCalKeyword::Instance()->ms_sNEEDSACTION) != 0) {
         /*
         if (vsDelegatedTo != NULL && vsDelegatedTo.contains(sName))
         return formatDoneDelegateFromOnly();
@@ -530,7 +530,7 @@ UnicodeString & Attendee::toICALString(UnicodeString & sProp,
 
 UnicodeString & Attendee::toString(UnicodeString & out)  
 { 
-    out = toString(JulianFormatString::Instance()->ms_AttendeeStrDefaultFmt, out);
+    out = toString(nsCalFormatString::Instance()->ms_AttendeeStrDefaultFmt, out);
     return out;
 }
 
@@ -540,7 +540,7 @@ UnicodeString & Attendee::toString(UnicodeString & strFmt,
                                    UnicodeString & out) 
 {
     if (strFmt.size() == 0 && 
-        JulianFormatString::Instance()->ms_AttendeeStrDefaultFmt.size() > 0)
+        nsCalFormatString::Instance()->ms_AttendeeStrDefaultFmt.size() > 0)
     {
         // if empty format string, use default
         return toString(out);
@@ -642,7 +642,7 @@ t_bool Attendee::isValid()
         return FALSE;
     // change to URL, must have "MAILTO:" in front
     mailto = m_sName.extractBetween(0, 7, mailto);
-    if (mailto.compareIgnoreCase(JulianKeyword::Instance()->ms_sMAILTO_COLON) != 0)
+    if (mailto.compareIgnoreCase(nsCalKeyword::Instance()->ms_sMAILTO_COLON) != 0)
         return FALSE;
     else
         return TRUE;
@@ -683,7 +683,7 @@ UnicodeString Attendee::format(UnicodeString strFmt)
 {
     UnicodeString s, info;
     t_int32 i,j;    
-    s += JulianKeyword::Instance()->ms_sATTENDEE;
+    s += nsCalKeyword::Instance()->ms_sATTENDEE;
 
     for ( i = 0; i < strFmt.size(); )
     {
@@ -728,57 +728,57 @@ UnicodeString Attendee::formatChar(t_int32 c)
         // ALWAYS MUST BE LAST OF PARAMS
         s = ":"; //ms_sCOLON_SYMBOL;
         s += getName();
-        s += JulianKeyword::Instance()->ms_sLINEBREAK; 
+        s += nsCalKeyword::Instance()->ms_sLINEBREAK; 
 	    return s;
     }
     case ms_cAttendeeRole: 
         s = roleToString(getRole(), s);
         return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sROLE, s, u);
+            nsCalKeyword::Instance()->ms_sROLE, s, u);
     case ms_cAttendeeStatus: 
         s = statusToString(getStatus(), s);
         return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sPARTSTAT, s, u);
+            nsCalKeyword::Instance()->ms_sPARTSTAT, s, u);
     case ms_cAttendeeRSVP:
         s = rsvpToString(getRSVP(), s);
         return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sRSVP, s, u);
+            nsCalKeyword::Instance()->ms_sRSVP, s, u);
     case ms_cAttendeeType: 
         s = typeToString(getType(), s);
 	    return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sCUTYPE, s, u);
+            nsCalKeyword::Instance()->ms_sCUTYPE, s, u);
     case ms_cAttendeeExpect:
         s = expectToString(getExpect(), s);
         return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sEXPECT, s, u);
+            nsCalKeyword::Instance()->ms_sEXPECT, s, u);
     case ms_cAttendeeDelegatedTo:
         xp = getDelegatedTo();
 	    return printMailToVector(
-            JulianKeyword::Instance()->ms_sDELEGATED_TO, xp, u);
+            nsCalKeyword::Instance()->ms_sDELEGATED_TO, xp, u);
     case ms_cAttendeeDelegatedFrom: 
         xp = getDelegatedFrom();
 	    return printMailToVector(
-            JulianKeyword::Instance()->ms_sDELEGATED_FROM, xp, u);
+            nsCalKeyword::Instance()->ms_sDELEGATED_FROM, xp, u);
     case ms_cAttendeeMember: 
         xp = getMember();
         return printMailToVector(
-            JulianKeyword::Instance()->ms_sMEMBER, xp, u);
+            nsCalKeyword::Instance()->ms_sMEMBER, xp, u);
     case ms_cAttendeeDir:
         s = m_Dir;
         s = nsCalUtility::addDoubleQuotes(s);
         return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sDIR, s, u);
+            nsCalKeyword::Instance()->ms_sDIR, s, u);
     case ms_cAttendeeSentBy:
         s = m_SentBy;
         s = nsCalUtility::addDoubleQuotes(s);
         return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sSENTBY, s, u);
+            nsCalKeyword::Instance()->ms_sSENTBY, s, u);
     case ms_cAttendeeCN:
         return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sCN, m_CN, u);
+            nsCalKeyword::Instance()->ms_sCN, m_CN, u);
     case ms_cAttendeeLanguage:
         return ICalProperty::parameterToCalString(
-            JulianKeyword::Instance()->ms_sLANGUAGE, m_Language, u);
+            nsCalKeyword::Instance()->ms_sLANGUAGE, m_Language, u);
     default:
         return "";
     }
@@ -817,21 +817,21 @@ Attendee::printMailToVector(UnicodeString & propName, JulianPtrArray * mailto,
 
 UnicodeString Attendee::formatDoneAction() 
 {    
-    return format(JulianFormatString::Instance()->ms_sAttendeeDoneActionMessage); 
+    return format(nsCalFormatString::Instance()->ms_sAttendeeDoneActionMessage); 
 }
 
 //---------------------------------------------------------------------
 #if 0
 UnicodeString Attendee::formatDoneDelegateToOnly() 
 { 
-    return format(JulianFormatString::Instance()->ms_sAttendeeDoneDelegateToOnly);
+    return format(nsCalFormatString::Instance()->ms_sAttendeeDoneDelegateToOnly);
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString Attendee::formatDoneDelegateFromOnly() 
 { 
-    return format(JulianFormatString::Instance()->ms_sAttendeeDoneDelegateFromOnly); 
+    return format(nsCalFormatString::Instance()->ms_sAttendeeDoneDelegateFromOnly); 
 }
 #endif
 //---------------------------------------------------------------------
@@ -839,21 +839,21 @@ UnicodeString Attendee::formatDoneDelegateFromOnly()
 // no need for %S, assumed to be NEEDS-ACTION
 UnicodeString Attendee::formatNeedsAction() 
 { 
-    return format(JulianFormatString::Instance()->ms_sAttendeeNeedsActionMessage); 
+    return format(nsCalFormatString::Instance()->ms_sAttendeeNeedsActionMessage); 
 }
 
 //---------------------------------------------------------------------
 #if 0
 UnicodeString Attendee::formatDelegateToOnly() 
 { 
-    return format(JulianFormatString::Instance()->ms_sAttendeeNeedsActionDelegateToOnly); 
+    return format(nsCalFormatString::Instance()->ms_sAttendeeNeedsActionDelegateToOnly); 
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString Attendee::formatDelegateFromOnly() 
 { 
-    return format(JulianFormatString::Instance()->ms_sAttendeeNeedsActionDelegateFromOnly); 
+    return format(nsCalFormatString::Instance()->ms_sAttendeeNeedsActionDelegateFromOnly); 
 }  
 #endif
 //---------------------------------------------------------------------
@@ -949,16 +949,16 @@ Attendee::stringToRole(UnicodeString & sRole)
 
 #if 0
     /* Old keywords */
-    if (JulianKeyword::Instance()->ms_ATOM_ATTENDEE == hashCode) return ROLE_ATTENDEE;
-    else if (JulianKeyword::Instance()->ms_ATOM_ORGANIZER == hashCode) return ROLE_ORGANIZER;
-    else if (JulianKeyword::Instance()->ms_ATOM_OWNER == hashCode) return ROLE_OWNER;
-    else if (JulianKeyword::Instance()->ms_ATOM_DELEGATE == hashCode) return ROLE_DELEGATE;
+    if (nsCalKeyword::Instance()->ms_ATOM_ATTENDEE == hashCode) return ROLE_ATTENDEE;
+    else if (nsCalKeyword::Instance()->ms_ATOM_ORGANIZER == hashCode) return ROLE_ORGANIZER;
+    else if (nsCalKeyword::Instance()->ms_ATOM_OWNER == hashCode) return ROLE_OWNER;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DELEGATE == hashCode) return ROLE_DELEGATE;
 #endif
 
-    if (JulianKeyword::Instance()->ms_ATOM_CHAIR == hashCode) return ROLE_CHAIR;
-    else if (JulianKeyword::Instance()->ms_ATOM_REQ_PARTICIPANT == hashCode) return ROLE_REQ_PARTICIPANT;
-    else if (JulianKeyword::Instance()->ms_ATOM_OPT_PARTICIPANT == hashCode) return ROLE_OPT_PARTICIPANT;
-    else if (JulianKeyword::Instance()->ms_ATOM_NON_PARTICIPANT == hashCode) return ROLE_NON_PARTICIPANT;
+    if (nsCalKeyword::Instance()->ms_ATOM_CHAIR == hashCode) return ROLE_CHAIR;
+    else if (nsCalKeyword::Instance()->ms_ATOM_REQ_PARTICIPANT == hashCode) return ROLE_REQ_PARTICIPANT;
+    else if (nsCalKeyword::Instance()->ms_ATOM_OPT_PARTICIPANT == hashCode) return ROLE_OPT_PARTICIPANT;
+    else if (nsCalKeyword::Instance()->ms_ATOM_NON_PARTICIPANT == hashCode) return ROLE_NON_PARTICIPANT;
     else if (ICalProperty::IsXToken(sRole)) return ROLE_XPARAMVAL;
     else return ROLE_INVALID;
 }
@@ -971,11 +971,11 @@ Attendee::stringToType(UnicodeString & sType)
     sType.toUpper();
     t_int32 hashCode = sType.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_INDIVIDUAL == hashCode) return TYPE_INDIVIDUAL;
-    else if (JulianKeyword::Instance()->ms_ATOM_GROUP == hashCode) return TYPE_GROUP;
-    else if (JulianKeyword::Instance()->ms_ATOM_RESOURCE == hashCode) return TYPE_RESOURCE;
-    else if (JulianKeyword::Instance()->ms_ATOM_ROOM == hashCode) return TYPE_ROOM;
-    else if (JulianKeyword::Instance()->ms_ATOM_UNKNOWN == hashCode) return TYPE_UNKNOWN;
+    if (nsCalKeyword::Instance()->ms_ATOM_INDIVIDUAL == hashCode) return TYPE_INDIVIDUAL;
+    else if (nsCalKeyword::Instance()->ms_ATOM_GROUP == hashCode) return TYPE_GROUP;
+    else if (nsCalKeyword::Instance()->ms_ATOM_RESOURCE == hashCode) return TYPE_RESOURCE;
+    else if (nsCalKeyword::Instance()->ms_ATOM_ROOM == hashCode) return TYPE_ROOM;
+    else if (nsCalKeyword::Instance()->ms_ATOM_UNKNOWN == hashCode) return TYPE_UNKNOWN;
     else if (ICalProperty::IsXToken(sType)) return TYPE_XPARAMVAL;
     else return TYPE_INVALID;
 }
@@ -988,15 +988,15 @@ Attendee::stringToStatus(UnicodeString & sStatus)
     sStatus.toUpper();
     t_int32 hashCode = sStatus.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_NEEDSACTION == hashCode) return STATUS_NEEDSACTION;
-    else if (JulianKeyword::Instance()->ms_ATOM_VCALNEEDSACTION == hashCode) return STATUS_NEEDSACTION;
+    if (nsCalKeyword::Instance()->ms_ATOM_NEEDSACTION == hashCode) return STATUS_NEEDSACTION;
+    else if (nsCalKeyword::Instance()->ms_ATOM_VCALNEEDSACTION == hashCode) return STATUS_NEEDSACTION;
     
-    else if (JulianKeyword::Instance()->ms_ATOM_ACCEPTED == hashCode) return STATUS_ACCEPTED;
-    else if (JulianKeyword::Instance()->ms_ATOM_DECLINED == hashCode) return STATUS_DECLINED;
-    else if (JulianKeyword::Instance()->ms_ATOM_TENTATIVE == hashCode) return STATUS_TENTATIVE;
-    else if (JulianKeyword::Instance()->ms_ATOM_COMPLETED == hashCode) return STATUS_COMPLETED;
-    else if (JulianKeyword::Instance()->ms_ATOM_INPROCESS == hashCode) return STATUS_INPROCESS;
-    else if (JulianKeyword::Instance()->ms_ATOM_DELEGATED == hashCode) return STATUS_DELEGATED;
+    else if (nsCalKeyword::Instance()->ms_ATOM_ACCEPTED == hashCode) return STATUS_ACCEPTED;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DECLINED == hashCode) return STATUS_DECLINED;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TENTATIVE == hashCode) return STATUS_TENTATIVE;
+    else if (nsCalKeyword::Instance()->ms_ATOM_COMPLETED == hashCode) return STATUS_COMPLETED;
+    else if (nsCalKeyword::Instance()->ms_ATOM_INPROCESS == hashCode) return STATUS_INPROCESS;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DELEGATED == hashCode) return STATUS_DELEGATED;
     else if (ICalProperty::IsXToken(sStatus)) return STATUS_XPARAMVAL;
     else return STATUS_INVALID;
 }
@@ -1009,8 +1009,8 @@ Attendee::stringToRSVP(UnicodeString & sRSVP)
     sRSVP.toUpper();
     t_int32 hashCode = sRSVP.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_FALSE == hashCode) return RSVP_FALSE;
-    else if (JulianKeyword::Instance()->ms_ATOM_TRUE == hashCode) return RSVP_TRUE;
+    if (nsCalKeyword::Instance()->ms_ATOM_FALSE == hashCode) return RSVP_FALSE;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TRUE == hashCode) return RSVP_TRUE;
     else return RSVP_INVALID;
 }
 
@@ -1022,9 +1022,9 @@ Attendee::stringToExpect(UnicodeString & sExpect)
     sExpect.toUpper();
     t_int32 hashCode = sExpect.hashCode();
     
-    if (JulianKeyword::Instance()->ms_ATOM_FYI == hashCode) return EXPECT_FYI;
-    else if (JulianKeyword::Instance()->ms_ATOM_REQUIRE == hashCode) return EXPECT_REQUIRE;
-    else if (JulianKeyword::Instance()->ms_ATOM_REQUEST == hashCode) return EXPECT_REQUEST;
+    if (nsCalKeyword::Instance()->ms_ATOM_FYI == hashCode) return EXPECT_FYI;
+    else if (nsCalKeyword::Instance()->ms_ATOM_REQUIRE == hashCode) return EXPECT_REQUIRE;
+    else if (nsCalKeyword::Instance()->ms_ATOM_REQUEST == hashCode) return EXPECT_REQUEST;
     else return EXPECT_INVALID;
 }
 
@@ -1038,20 +1038,20 @@ Attendee::roleToString(Attendee::ROLE role, UnicodeString & out)
 
 #if 0
         /* Old Keywords */
-    case ROLE_ATTENDEE: out = JulianKeyword::Instance()->ms_sATTENDEE; break;
-    case ROLE_ORGANIZER: out = JulianKeyword::Instance()->ms_sORGANIZER; break;
-    case ROLE_OWNER: out = JulianKeyword::Instance()->ms_sOWNER; break;
-    case ROLE_DELEGATE: out = JulianKeyword::Instance()->ms_sDELEGATE; break;
+    case ROLE_ATTENDEE: out = nsCalKeyword::Instance()->ms_sATTENDEE; break;
+    case ROLE_ORGANIZER: out = nsCalKeyword::Instance()->ms_sORGANIZER; break;
+    case ROLE_OWNER: out = nsCalKeyword::Instance()->ms_sOWNER; break;
+    case ROLE_DELEGATE: out = nsCalKeyword::Instance()->ms_sDELEGATE; break;
 #endif
 
-    case ROLE_CHAIR: out = JulianKeyword::Instance()->ms_sCHAIR; break;
-    case ROLE_REQ_PARTICIPANT: out = JulianKeyword::Instance()->ms_sREQ_PARTICIPANT; break;
-    case ROLE_OPT_PARTICIPANT: out = JulianKeyword::Instance()->ms_sOPT_PARTICIPANT; break;
-    case ROLE_NON_PARTICIPANT: out = JulianKeyword::Instance()->ms_sNON_PARTICIPANT; break;
-    case ROLE_XPARAMVAL: out = JulianKeyword::Instance()->ms_sXPARAMVAL; break; 
+    case ROLE_CHAIR: out = nsCalKeyword::Instance()->ms_sCHAIR; break;
+    case ROLE_REQ_PARTICIPANT: out = nsCalKeyword::Instance()->ms_sREQ_PARTICIPANT; break;
+    case ROLE_OPT_PARTICIPANT: out = nsCalKeyword::Instance()->ms_sOPT_PARTICIPANT; break;
+    case ROLE_NON_PARTICIPANT: out = nsCalKeyword::Instance()->ms_sNON_PARTICIPANT; break;
+    case ROLE_XPARAMVAL: out = nsCalKeyword::Instance()->ms_sXPARAMVAL; break; 
     default:
         // default return req participant
-        out = JulianKeyword::Instance()->ms_sREQ_PARTICIPANT;
+        out = nsCalKeyword::Instance()->ms_sREQ_PARTICIPANT;
         break;
     }
     return out;
@@ -1064,15 +1064,15 @@ Attendee::typeToString(Attendee::TYPE type, UnicodeString & out)
 {
     switch(type)
     {
-    case TYPE_INDIVIDUAL: out = JulianKeyword::Instance()->ms_sINDIVIDUAL; break;
-    case TYPE_GROUP: out = JulianKeyword::Instance()->ms_sGROUP; break;
-    case TYPE_RESOURCE: out = JulianKeyword::Instance()->ms_sRESOURCE; break;
-    case TYPE_ROOM: out = JulianKeyword::Instance()->ms_sROOM; break;
-    case TYPE_UNKNOWN: out = JulianKeyword::Instance()->ms_sUNKNOWN; break;
-    case TYPE_XPARAMVAL: out = JulianKeyword::Instance()->ms_sXPARAMVAL; break; 
+    case TYPE_INDIVIDUAL: out = nsCalKeyword::Instance()->ms_sINDIVIDUAL; break;
+    case TYPE_GROUP: out = nsCalKeyword::Instance()->ms_sGROUP; break;
+    case TYPE_RESOURCE: out = nsCalKeyword::Instance()->ms_sRESOURCE; break;
+    case TYPE_ROOM: out = nsCalKeyword::Instance()->ms_sROOM; break;
+    case TYPE_UNKNOWN: out = nsCalKeyword::Instance()->ms_sUNKNOWN; break;
+    case TYPE_XPARAMVAL: out = nsCalKeyword::Instance()->ms_sXPARAMVAL; break; 
     default:
         // default return individual
-        out = JulianKeyword::Instance()->ms_sINDIVIDUAL;
+        out = nsCalKeyword::Instance()->ms_sINDIVIDUAL;
         break;
     }
     return out;
@@ -1085,17 +1085,17 @@ Attendee::statusToString(Attendee::STATUS status, UnicodeString & out)
 {
     switch(status)
     {
-        case STATUS_NEEDSACTION: out = JulianKeyword::Instance()->ms_sNEEDSACTION; break;
-        case STATUS_ACCEPTED: out = JulianKeyword::Instance()->ms_sACCEPTED; break; 
-        case STATUS_DECLINED: out = JulianKeyword::Instance()->ms_sDECLINED; break; 
-        case STATUS_TENTATIVE: out = JulianKeyword::Instance()->ms_sTENTATIVE; break; 
-        case STATUS_COMPLETED: out = JulianKeyword::Instance()->ms_sCOMPLETED; break; 
-        case STATUS_DELEGATED: out = JulianKeyword::Instance()->ms_sDELEGATED; break; 
-        case STATUS_INPROCESS: out = JulianKeyword::Instance()->ms_sINPROCESS; break; 
-        case STATUS_XPARAMVAL: out = JulianKeyword::Instance()->ms_sXPARAMVAL; break; 
+        case STATUS_NEEDSACTION: out = nsCalKeyword::Instance()->ms_sNEEDSACTION; break;
+        case STATUS_ACCEPTED: out = nsCalKeyword::Instance()->ms_sACCEPTED; break; 
+        case STATUS_DECLINED: out = nsCalKeyword::Instance()->ms_sDECLINED; break; 
+        case STATUS_TENTATIVE: out = nsCalKeyword::Instance()->ms_sTENTATIVE; break; 
+        case STATUS_COMPLETED: out = nsCalKeyword::Instance()->ms_sCOMPLETED; break; 
+        case STATUS_DELEGATED: out = nsCalKeyword::Instance()->ms_sDELEGATED; break; 
+        case STATUS_INPROCESS: out = nsCalKeyword::Instance()->ms_sINPROCESS; break; 
+        case STATUS_XPARAMVAL: out = nsCalKeyword::Instance()->ms_sXPARAMVAL; break; 
         default:
             // default return needs-action
-            out = JulianKeyword::Instance()->ms_sNEEDSACTION;
+            out = nsCalKeyword::Instance()->ms_sNEEDSACTION;
             break;
     }
     return out;
@@ -1108,11 +1108,11 @@ Attendee::rsvpToString(Attendee::RSVP rsvp, UnicodeString & out)
 {
     switch(rsvp)
     {
-        case RSVP_FALSE: out = JulianKeyword::Instance()->ms_sFALSE; break; 
-        case RSVP_TRUE: out = JulianKeyword::Instance()->ms_sTRUE; break; 
+        case RSVP_FALSE: out = nsCalKeyword::Instance()->ms_sFALSE; break; 
+        case RSVP_TRUE: out = nsCalKeyword::Instance()->ms_sTRUE; break; 
         default:
             // default return false
-            out = JulianKeyword::Instance()->ms_sFALSE;
+            out = nsCalKeyword::Instance()->ms_sFALSE;
             break;
     }
     return out;
@@ -1125,12 +1125,12 @@ Attendee::expectToString(Attendee::EXPECT expect, UnicodeString & out)
 {
     switch(expect)
     {
-        case EXPECT_FYI: out = JulianKeyword::Instance()->ms_sFYI; break; 
-        case EXPECT_REQUIRE: out = JulianKeyword::Instance()->ms_sREQUIRE; break; 
-        case EXPECT_REQUEST: out = JulianKeyword::Instance()->ms_sREQUEST; break;
+        case EXPECT_FYI: out = nsCalKeyword::Instance()->ms_sFYI; break; 
+        case EXPECT_REQUIRE: out = nsCalKeyword::Instance()->ms_sREQUIRE; break; 
+        case EXPECT_REQUEST: out = nsCalKeyword::Instance()->ms_sREQUEST; break;
         default:
             // default return fyi
-            out = JulianKeyword::Instance()->ms_sFYI;
+            out = nsCalKeyword::Instance()->ms_sFYI;
             break;
     }
     return out;

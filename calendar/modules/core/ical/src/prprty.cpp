@@ -63,7 +63,7 @@ ICalProperty::propertyToICALString(UnicodeString & sProp,
             aName = (ICalParameter *) parameters->GetAt(i);
             retVal += aName->toICALString(u);
         }
-        retVal += ':'; retVal += sVal; retVal += JulianKeyword::Instance()->ms_sLINEBREAK;
+        retVal += ':'; retVal += sVal; retVal += nsCalKeyword::Instance()->ms_sLINEBREAK;
     }
     //if (FALSE) TRACE("retVal = %s\r\n", retVal.toCString(""));
     return retVal;
@@ -132,7 +132,7 @@ t_bool ICalProperty::CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
             return FALSE;
         }
 
-        if (JulianKeyword::Instance()->ms_ATOM_VALUE == u.hashCode())
+        if (nsCalKeyword::Instance()->ms_ATOM_VALUE == u.hashCode())
         {
             u = ip->getParameterValue(u);
             if (!nsCalUtility::checkRange(u.hashCode(), validValueRange,
@@ -143,36 +143,36 @@ t_bool ICalProperty::CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
             }
         }
 
-        else if (JulianKeyword::Instance()->ms_ATOM_ENCODING == u.hashCode())
+        else if (nsCalKeyword::Instance()->ms_ATOM_ENCODING == u.hashCode())
         {
             u = ip->getParameterValue(u);
             if (!nsCalUtility::checkRange(u.hashCode(), 
-                JulianAtomRange::Instance()->ms_asEncodingRange,
-                JulianAtomRange::Instance()->ms_iEncodingRangeSize))
+                nsCalAtomRange::Instance()->ms_asEncodingRange,
+                nsCalAtomRange::Instance()->ms_iEncodingRangeSize))
             {
                 if (!ICalProperty::IsXToken(u))
                     return FALSE; 
             }
         }
 
-        else if (JulianKeyword::Instance()->ms_ATOM_RELTYPE == u.hashCode())
+        else if (nsCalKeyword::Instance()->ms_ATOM_RELTYPE == u.hashCode())
         {
             u = ip->getParameterValue(u);
             if (!nsCalUtility::checkRange(u.hashCode(), 
-                JulianAtomRange::Instance()->ms_asRelTypeRange,
-                JulianAtomRange::Instance()->ms_iRelTypeRangeSize))
+                nsCalAtomRange::Instance()->ms_asRelTypeRange,
+                nsCalAtomRange::Instance()->ms_iRelTypeRangeSize))
             {
                 if (!ICalProperty::IsXToken(u))
                     return FALSE; 
             }
         }
 
-        else if (JulianKeyword::Instance()->ms_ATOM_RELATED == u.hashCode())
+        else if (nsCalKeyword::Instance()->ms_ATOM_RELATED == u.hashCode())
         {
             u = ip->getParameterValue(u);
             if (!nsCalUtility::checkRange(u.hashCode(), 
-                JulianAtomRange::Instance()->ms_asRelatedRange,
-                JulianAtomRange::Instance()->ms_iRelatedRangeSize))
+                nsCalAtomRange::Instance()->ms_asRelatedRange,
+                nsCalAtomRange::Instance()->ms_iRelatedRangeSize))
             {
                 return FALSE;
             }
@@ -191,8 +191,8 @@ t_bool ICalProperty::checkParam(UnicodeString & propName,
     t_int32 hashCode = propName.hashCode();
     
     if (nsCalUtility::checkRange(hashCode, 
-        JulianAtomRange::Instance()->ms_asIrregularProperties,
-        JulianAtomRange::Instance()->ms_iIrregularPropertiesSize))
+        nsCalAtomRange::Instance()->ms_asIrregularProperties,
+        nsCalAtomRange::Instance()->ms_iIrregularPropertiesSize))
     {
         // if special property, then don't check parameters
         return FALSE;
@@ -207,8 +207,8 @@ t_bool ICalProperty::checkParam(UnicodeString & propName,
 
         // not a valid parameter for th
         if (!nsCalUtility::checkRange(pNHC, 
-            JulianAtomRange::Instance()->ms_asParameterRange, 
-            JulianAtomRange::Instance()->ms_iParameterRangeSize))
+            nsCalAtomRange::Instance()->ms_asParameterRange, 
+            nsCalAtomRange::Instance()->ms_iParameterRangeSize))
             return TRUE;
         
         else
@@ -217,19 +217,19 @@ t_bool ICalProperty::checkParam(UnicodeString & propName,
             // check parameter name ranges here
             // TODO: For now check only VALUE, ENCODING, 
             // TODO: Check LANGUAGE later
-            if (JulianKeyword::Instance()->ms_ATOM_VALUE == pNHC)
+            if (nsCalKeyword::Instance()->ms_ATOM_VALUE == pNHC)
             {
                 if ((!nsCalUtility::checkRange(pVHC, 
-                    JulianAtomRange::Instance()->ms_asValueRange, 
-                    JulianAtomRange::Instance()->ms_iValueRangeSize)) 
+                    nsCalAtomRange::Instance()->ms_asValueRange, 
+                    nsCalAtomRange::Instance()->ms_iValueRangeSize)) 
                     && (!IsXToken(paramVal)))
                     return TRUE;
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_ENCODING == pNHC)
+            else if (nsCalKeyword::Instance()->ms_ATOM_ENCODING == pNHC)
             {
                 if ((!nsCalUtility::checkRange(pVHC, 
-                    JulianAtomRange::Instance()->ms_asEncodingRange, 
-                    JulianAtomRange::Instance()->ms_iEncodingRangeSize)) && (!IsXToken(paramVal)))
+                    nsCalAtomRange::Instance()->ms_asEncodingRange, 
+                    nsCalAtomRange::Instance()->ms_iEncodingRangeSize)) && (!IsXToken(paramVal)))
                     return TRUE;
             }
             return FALSE;
@@ -326,7 +326,7 @@ void ICalProperty::parsePropertyLine(UnicodeString & strLine,
         {
             // NOTE: TODO: This assumes semicolons can't exist between DQUOTE
             UnicodeStringTokenizer * st = new UnicodeStringTokenizer(u, 
-                JulianKeyword::Instance()->ms_sSEMICOLON_SYMBOL);
+                nsCalKeyword::Instance()->ms_sSEMICOLON_SYMBOL);
             PR_ASSERT(st != 0);
             PR_ASSERT(parameters != 0);
 
@@ -568,7 +568,7 @@ ICalProperty::parameterToCalString(UnicodeString sParam,
     out = "";
     if (sVal.size() > 0) 
     {
-        out = JulianKeyword::Instance()->ms_sSEMICOLON_SYMBOL; 
+        out = nsCalKeyword::Instance()->ms_sSEMICOLON_SYMBOL; 
         out += sParam; 
         out += '='; 
         out += sVal;
@@ -667,7 +667,7 @@ ICalProperty::vectorToICALString(JulianPtrArray * strings, UnicodeString & retVa
         for (i = 0; i < strings->GetSize(); i++)
         {
             u = *((UnicodeString *) strings->GetAt(i));
-            u += JulianKeyword::Instance()->ms_sLINEBREAK;
+            u += nsCalKeyword::Instance()->ms_sLINEBREAK;
             retVal += multiLineFormat(u);
         }
     }
@@ -691,12 +691,12 @@ ICalProperty::multiLineFormat(UnicodeString & s)
 
         sResult = s.extractBetween(0, ms_iMAX_LINE_LENGTH, sResult);
         t = s.extractBetween(ms_iMAX_LINE_LENGTH, size, t);
-        t.insert(0, JulianKeyword::Instance()->ms_sLINEBREAKSPACE);
+        t.insert(0, nsCalKeyword::Instance()->ms_sLINEBREAKSPACE);
         sResult += multiLineFormat(t);
 
         // end recursion
         size = sResult.size();
-        if (sResult.endsWith(JulianKeyword::Instance()->ms_sLINEFEEDSPACE))
+        if (sResult.endsWith(nsCalKeyword::Instance()->ms_sLINEFEEDSPACE))
         sResult.removeBetween(size - 1, size);
         s = sResult;
         return s;

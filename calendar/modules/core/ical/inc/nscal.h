@@ -213,7 +213,7 @@ public:
     JLog* getLog() const { return m_Log; };
 
     /**
-     * Return the vector of JulianLogErrors on this ICalComponent:
+     * Return the vector of nsCalLogErrors on this ICalComponent:
      * Return 0 if ic is not in this calendar.
      * Return 0 if ic has no error vector.
      * Do not deallocate returned vector.  Returns a ptr to vector, not a new vector.
@@ -224,7 +224,7 @@ public:
     JulianPtrArray * getLogVector(ICalComponent * ic);
 
     /**
-     * Return the vector of JulianLogErrors on this calendar.
+     * Return the vector of nsCalLogErrors on this calendar.
      * Return 0 if this calendar has no error vector.
      * Do not deallocate returned vector.  Returns a ptr to vector, not a new vector.
      */

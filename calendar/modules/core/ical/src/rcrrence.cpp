@@ -69,7 +69,7 @@
 //#define DEBUG 1
 //---------------------------------------------------------------------
 //static UnicodeString s_sSemiColonSymbol = ";";
-//static UnicodeString JulianKeyword::Instance()->ms_sCOMMA_SYMBOL = ",";
+//static UnicodeString nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL = ",";
 
 /*
  *  This is a hack so I could get it compiled on unix.  We need
@@ -330,7 +330,7 @@ Recurrence::parsePropertyLine(UnicodeString & strLine,
         u = strLine.extractBetween(iColon + 1, strLine.size(), u);
 
         UnicodeStringTokenizer * st = 
-            new UnicodeStringTokenizer(u, JulianKeyword::Instance()->ms_sSEMICOLON_SYMBOL);
+            new UnicodeStringTokenizer(u, nsCalKeyword::Instance()->ms_sSEMICOLON_SYMBOL);
         
         PR_ASSERT(st != 0);
 
@@ -409,7 +409,7 @@ Recurrence::parse(UnicodeString & s)
     for (i = 0; i < parameters->GetSize(); i++)
     {
         ip = (ICalParameter *) parameters->GetAt(i);
-        if (ip->getParameterName(u).compareIgnoreCase(JulianKeyword::Instance()->ms_sFREQ) == 0)
+        if (ip->getParameterName(u).compareIgnoreCase(nsCalKeyword::Instance()->ms_sFREQ) == 0)
         {
             t = ip->getParameterValue(t);
 #if JULIAN_DEBUGGING_RECURRENCE
@@ -451,20 +451,20 @@ Recurrence::parse(UnicodeString & s)
             t_int32 tSize = t.size();
             JAtom atomParam(u);
             
-            if (JulianKeyword::Instance()->ms_ATOM_UNTIL == atomParam)
+            if (nsCalKeyword::Instance()->ms_ATOM_UNTIL == atomParam)
             {
                 // TODO: ONLY accepts UTC time for now
                 m_Until.setTimeString(t);
                 // TODO: Log if m_Until is invalid or before start time
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_COUNT == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_COUNT == atomParam)
             {
                 char * tcc = t.toCString("");
                 PR_ASSERT(tcc != 0);
                 m_iCount = nsCalUtility::atot_int32(tcc, bParseError, tSize);
                 delete [] tcc; tcc = 0;
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_INTERVAL == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_INTERVAL == atomParam)
             {
                 // TODO: if duration allowed, parse duration, then it to interval
                 char * tcc = t.toCString("");
@@ -472,18 +472,18 @@ Recurrence::parse(UnicodeString & s)
                 tempInterval = nsCalUtility::atot_int32(tcc, bParseError, tSize);
                 delete [] tcc; tcc = 0;
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_WKST == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_WKST == atomParam)
             {
                 m_iWkSt = stringToDay(t, bParseError);
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_BYSETPOS == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_BYSETPOS == atomParam)
             {
-                parseDelimited(t, JulianKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
+                parseDelimited(t, nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
                 m_aiBySetPos = verifyIntList(v, -366, 366, sErrorMsg, retSize, bParseError, TRUE);
                 m_iBySetPosLen = retSize;
                 m_iActiveGenerators++;
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_BYMINUTE == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_BYMINUTE == atomParam)
             {
                 dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByMinuteGntrIndex);
                 if (dg->getSpan() < m_iType)
@@ -493,13 +493,13 @@ Recurrence::parse(UnicodeString & s)
                 }
                 else
                 {
-                    parseDelimited(t, JulianKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
+                    parseDelimited(t, nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
                     m_aiByMinute = verifyIntList(v, 0, 59, sErrorMsg, retSize, bParseError);
                     dg->setParamsArray(m_aiByMinute, retSize);
                     m_iActiveGenerators++;
                 }
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_BYHOUR == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_BYHOUR == atomParam)
             {
                 dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByHourGntrIndex);
                 if (dg->getSpan() < m_iType)
@@ -509,13 +509,13 @@ Recurrence::parse(UnicodeString & s)
                 }
                 else
                 {
-                    parseDelimited(t, JulianKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
+                    parseDelimited(t, nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
                     m_aiByHour = verifyIntList(v, 0, 23, sErrorMsg, retSize, bParseError);
                     dg->setParamsArray(m_aiByHour, retSize);
                     m_iActiveGenerators++;
                 }
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_BYMONTHDAY == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_BYMONTHDAY == atomParam)
             {
                 dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByMonthDayGntrIndex);
                 if (dg->getSpan() < m_iType)
@@ -525,14 +525,14 @@ Recurrence::parse(UnicodeString & s)
                 }
                 else
                 {
-                    parseDelimited(t, JulianKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
+                    parseDelimited(t, nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
                     m_aiByMonthDay = verifyIntList(v, -31, 31, sErrorMsg, retSize, bParseError, TRUE);
                     dg->setParamsArray(m_aiByMonthDay, retSize);
                     m_iActiveGenerators++;
                     byMonthDaySize = retSize;
                 }
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_BYYEARDAY == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_BYYEARDAY == atomParam)
             {
                 dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByYearDayGntrIndex);
                 if (dg->getSpan() < m_iType)
@@ -542,7 +542,7 @@ Recurrence::parse(UnicodeString & s)
                 }
                 else
                 {
-                    parseDelimited(t, JulianKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
+                    parseDelimited(t, nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
                     m_aiByYearDay = verifyIntList(v, -366, 366, sErrorMsg, retSize, bParseError, TRUE);
                     dg->setParamsArray(m_aiByYearDay, retSize);
                     m_iActiveGenerators++;
@@ -550,7 +550,7 @@ Recurrence::parse(UnicodeString & s)
                     bYearDay = TRUE;
                 }
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_BYWEEKNO == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_BYWEEKNO == atomParam)
             {
                 dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByWeekNoGntrIndex);
                 if (dg->getSpan() < m_iType)
@@ -560,7 +560,7 @@ Recurrence::parse(UnicodeString & s)
                 }
                 else
                 {
-                    parseDelimited(t, JulianKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
+                    parseDelimited(t, nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
                     m_aiByWeekNo = verifyIntList(v, -53, 53, sErrorMsg, retSize, bParseError, TRUE);
                     dg->setParamsArray(m_aiByWeekNo, retSize);
                     m_iActiveGenerators++;
@@ -568,7 +568,7 @@ Recurrence::parse(UnicodeString & s)
                     bWeekNo = TRUE;
                 }
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_BYMONTH == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_BYMONTH == atomParam)
             {
                 dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByMonthGntrIndex);
                 if (dg->getSpan() < m_iType)
@@ -578,7 +578,7 @@ Recurrence::parse(UnicodeString & s)
                 }
                 else
                 {
-                    parseDelimited(t, JulianKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
+                    parseDelimited(t, nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
                     m_aiByMonth = verifyIntList(v, 1, 12, sErrorMsg, retSize, bParseError, TRUE);
                     dg->setParamsArray(m_aiByMonth, retSize);
                     m_iActiveGenerators++;
@@ -587,7 +587,7 @@ Recurrence::parse(UnicodeString & s)
                     byMonthSize = retSize;
                 }
             }
-            else if (JulianKeyword::Instance()->ms_ATOM_BYDAY == atomParam)
+            else if (nsCalKeyword::Instance()->ms_ATOM_BYDAY == atomParam)
             {
                 switch(m_iType)
                 {
@@ -611,7 +611,7 @@ Recurrence::parse(UnicodeString & s)
                 }
                 else
                 {
-                    parseDelimited(t, JulianKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
+                    parseDelimited(t, nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL, v);
                     m_aaiByDay = createByDayList(v, m_iType, retSize, bParseError);
                     dg->setRDay(m_aaiByDay, retSize);
                     m_iActiveGenerators++;
@@ -872,7 +872,7 @@ Recurrence::stringEnforce(DateTime startDate, JulianPtrArray * srr,
             {
                 // log an invalid rdate
                 if (log != 0) log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iInvalidRDate, 200);
+                    nsCalLogErrorMessage::Instance()->ms_iInvalidRDate, 200);
             }
         }
     }
@@ -1006,7 +1006,7 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log,
         if (log != 0)
         {
             log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidRecurrenceError, 200);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidRecurrenceError, 200);
         }
         return;
     }
@@ -1412,13 +1412,13 @@ t_int32 Recurrence::stringToDay(UnicodeString & s, t_bool & error)
     }
     else
     {
-        if (s == JulianKeyword::Instance()->ms_sSU) i = Calendar::SUNDAY;
-        else if (s == JulianKeyword::Instance()->ms_sMO) i = Calendar::MONDAY;
-        else if (s == JulianKeyword::Instance()->ms_sTU) i = Calendar::TUESDAY;
-        else if (s == JulianKeyword::Instance()->ms_sWE) i = Calendar::WEDNESDAY;
-        else if (s == JulianKeyword::Instance()->ms_sTH) i = Calendar::THURSDAY;
-        else if (s == JulianKeyword::Instance()->ms_sFR) i = Calendar::FRIDAY;
-        else if (s == JulianKeyword::Instance()->ms_sSA) i = Calendar::SATURDAY;
+        if (s == nsCalKeyword::Instance()->ms_sSU) i = Calendar::SUNDAY;
+        else if (s == nsCalKeyword::Instance()->ms_sMO) i = Calendar::MONDAY;
+        else if (s == nsCalKeyword::Instance()->ms_sTU) i = Calendar::TUESDAY;
+        else if (s == nsCalKeyword::Instance()->ms_sWE) i = Calendar::WEDNESDAY;
+        else if (s == nsCalKeyword::Instance()->ms_sTH) i = Calendar::THURSDAY;
+        else if (s == nsCalKeyword::Instance()->ms_sFR) i = Calendar::FRIDAY;
+        else if (s == nsCalKeyword::Instance()->ms_sSA) i = Calendar::SATURDAY;
         else
         {
             error = TRUE;
@@ -1586,12 +1586,12 @@ t_int32 Recurrence::stringToType(UnicodeString & s, t_bool & bParseError)
 
     if (s.size() > 0)
     {
-        if (s == JulianKeyword::Instance()->ms_sMINUTELY) iType = nsCalUtility::RT_MINUTELY;
-        else if (s == JulianKeyword::Instance()->ms_sHOURLY) iType = nsCalUtility::RT_HOURLY;
-        else if (s == JulianKeyword::Instance()->ms_sDAILY) iType = nsCalUtility::RT_DAILY;
-        else if (s == JulianKeyword::Instance()->ms_sWEEKLY) iType = nsCalUtility::RT_WEEKLY;
-        else if (s == JulianKeyword::Instance()->ms_sMONTHLY) iType = nsCalUtility::RT_MONTHLY;
-        else if (s == JulianKeyword::Instance()->ms_sYEARLY) iType = nsCalUtility::RT_YEARLY;
+        if (s == nsCalKeyword::Instance()->ms_sMINUTELY) iType = nsCalUtility::RT_MINUTELY;
+        else if (s == nsCalKeyword::Instance()->ms_sHOURLY) iType = nsCalUtility::RT_HOURLY;
+        else if (s == nsCalKeyword::Instance()->ms_sDAILY) iType = nsCalUtility::RT_DAILY;
+        else if (s == nsCalKeyword::Instance()->ms_sWEEKLY) iType = nsCalUtility::RT_WEEKLY;
+        else if (s == nsCalKeyword::Instance()->ms_sMONTHLY) iType = nsCalUtility::RT_MONTHLY;
+        else if (s == nsCalKeyword::Instance()->ms_sYEARLY) iType = nsCalUtility::RT_YEARLY;
         else bParseError = TRUE;
     }
     else

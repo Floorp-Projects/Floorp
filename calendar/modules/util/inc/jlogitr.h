@@ -28,14 +28,14 @@
 #include "jlogvctr.h"
 #include "nscalutilexp.h"
 
-class NS_CAL_UTIL JulianLogIterator
+class NS_CAL_UTIL nsCalLogIterator
 {
 private:
     /*-----------------------------
     ** MEMBERS
     **---------------------------*/
     JulianPtrArray * m_LogToIterateOver;
-    JulianLogErrorVector::ECompType m_iComponentType;
+    nsCalLogErrorVector::ECompType m_iComponentType;
     t_bool m_bValid;
     t_int32 m_iIndex;
 
@@ -43,39 +43,39 @@ private:
     ** PRIVATE METHODS
     **---------------------------*/
     
-    JulianLogIterator();
-    JulianLogIterator(JulianPtrArray * toIterate, JulianLogErrorVector::ECompType iComponentType,
+    nsCalLogIterator();
+    nsCalLogIterator(JulianPtrArray * toIterate, nsCalLogErrorVector::ECompType iComponentType,
         t_bool bValid);
     
-    JulianLogErrorVector * findNextElement(t_int32 startIndex);
+    nsCalLogErrorVector * findNextElement(t_int32 startIndex);
 public:
 
     
-    static JulianLogIterator * createIterator(JulianPtrArray * toIterate,
-        JulianLogErrorVector::ECompType iComponentType, t_bool bValid);
+    static nsCalLogIterator * createIterator(JulianPtrArray * toIterate,
+        nsCalLogErrorVector::ECompType iComponentType, t_bool bValid);
 
     /**
      * Do this to create iterator of VEVENT log messages
       t_int32 i;
-      JulianLogErrorVector * evtErrVctr = 0;
-      JulianLogError * error = 0;
+      nsCalLogErrorVector * evtErrVctr = 0;
+      nsCalLogError * error = 0;
       if (log != 0)
       {
-         JulianLogIterator * itr = log->createIterator((t_int32) ICalComponent::ICAL_COMPONENT_VEVENT)
+         nsCalLogIterator * itr = log->createIterator((t_int32) ICalComponent::ICAL_COMPONENT_VEVENT)
          for (evtErrVctr = itr->firstElement(); evtErrVctr != 0; evtErrVctr = itr->nextElement())
          {
               if (evtErrVctr->GetErrors() != 0)
               {    
                     for (i = 0; i < evtErrVctr->GetErrors()->GetSize(); i++)
                     {
-                          error = (JulianLogError *) errVctr->GetErrors()->GetAt(i);
+                          error = (nsCalLogError *) errVctr->GetErrors()->GetAt(i);
                           // do what you want.    
                     }
               }
          }
      */
-    JulianLogErrorVector * firstElement();
-    JulianLogErrorVector * nextElement();
+    nsCalLogErrorVector * firstElement();
+    nsCalLogErrorVector * nextElement();
 };
 
 #endif /* __JULIANLOGITERATOR_H_ */

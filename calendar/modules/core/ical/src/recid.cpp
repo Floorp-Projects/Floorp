@@ -101,41 +101,41 @@ void nsCalRecurrenceID::setParam(UnicodeString & paramName, UnicodeString & para
     t_int32 i;
     if (paramName.size() == 0)
     {
-        if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName, 
-            JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 200);
+        if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName, 
+            nsCalKeyword::Instance()->ms_sRECURRENCEID, paramName, 200);
     }
     else
     {
         t_int32 hashCode = paramName.hashCode();
 
-        if (JulianKeyword::Instance()->ms_ATOM_RANGE == hashCode)
+        if (nsCalKeyword::Instance()->ms_ATOM_RANGE == hashCode)
         {
             i = nsCalRecurrenceID::stringToRange(paramVal);
             if (i < 0)
             {
-                if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
-                    JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, paramVal, 200);
+                if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
+                    nsCalKeyword::Instance()->ms_sRECURRENCEID, paramName, paramVal, 200);
             }
             else 
             {
                 if (getRange() >= 0)
                 {
-                    if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
-                        JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 100);
+                    if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
+                        nsCalKeyword::Instance()->ms_sRECURRENCEID, paramName, 100);
                 }
                 setRange((nsCalRecurrenceID::RANGE) i);
             }        
         } 
         else if (ICalProperty::IsXToken(paramName))
         {
-            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
-                        JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 100);
+            if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
+                        nsCalKeyword::Instance()->ms_sRECURRENCEID, paramName, 100);
         }
         else 
         {
             // NOTE: what about optional parameters?? THERE ARE NONE.
-            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName,
-                        JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 200);
+            if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName,
+                        nsCalKeyword::Instance()->ms_sRECURRENCEID, paramName, 200);
         }
     }
 }
@@ -185,11 +185,11 @@ nsCalRecurrenceID::toString(UnicodeString & out)
 {
     UnicodeString u;
     out = "";
-    out += JulianKeyword::Instance()->ms_sRANGE; 
-    out += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+    out += nsCalKeyword::Instance()->ms_sRANGE; 
+    out += nsCalKeyword::Instance()->ms_sCOLON_SYMBOL;
     out += rangeToString(m_Range, u);
-    out += JulianKeyword::Instance()->ms_sDATE; 
-    out += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+    out += nsCalKeyword::Instance()->ms_sDATE; 
+    out += nsCalKeyword::Instance()->ms_sCOLON_SYMBOL;
     out += m_DateTime.toISO8601();
     return out;
 }
@@ -205,13 +205,13 @@ nsCalRecurrenceID::toICALString(UnicodeString & sProp, UnicodeString & out)
     {
         UnicodeString u;
         out += ';';
-        out += JulianKeyword::Instance()->ms_sRANGE; 
+        out += nsCalKeyword::Instance()->ms_sRANGE; 
         out += '=';
         out += rangeToString(m_Range, u);
     }
     out += ':';
     out += m_DateTime.toISO8601();
-    out += JulianKeyword::Instance()->ms_sLINEBREAK;
+    out += nsCalKeyword::Instance()->ms_sLINEBREAK;
     return out;
 }
 
@@ -231,9 +231,9 @@ nsCalRecurrenceID::stringToRange(UnicodeString & sRange)
 {
     t_int32 hashCode = sRange.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_THISANDPRIOR == hashCode) 
+    if (nsCalKeyword::Instance()->ms_ATOM_THISANDPRIOR == hashCode) 
         return RANGE_THISANDPRIOR;
-    else if (JulianKeyword::Instance()->ms_ATOM_THISANDFUTURE == hashCode) 
+    else if (nsCalKeyword::Instance()->ms_ATOM_THISANDFUTURE == hashCode) 
         return RANGE_THISANDFUTURE;
     else return RANGE_NONE;
 }
@@ -247,8 +247,8 @@ nsCalRecurrenceID::rangeToString(nsCalRecurrenceID::RANGE range,
     out = "";
     switch(range)
     {
-    case RANGE_THISANDPRIOR: out = JulianKeyword::Instance()->ms_sTHISANDPRIOR; break;
-    case RANGE_THISANDFUTURE: out = JulianKeyword::Instance()->ms_sTHISANDFUTURE; break;
+    case RANGE_THISANDPRIOR: out = nsCalKeyword::Instance()->ms_sTHISANDPRIOR; break;
+    case RANGE_THISANDFUTURE: out = nsCalKeyword::Instance()->ms_sTHISANDFUTURE; break;
     default:
         // NONE case
         out = "";

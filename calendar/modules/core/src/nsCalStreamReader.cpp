@@ -64,23 +64,23 @@ nsCalStreamReader::nsCalStreamReader(nsCapiCallbackReader * reader,
 
 //---------------------------------------------------------------------
 
-JulianUtility::MimeEncoding
+nsCalUtility::MimeEncoding
 nsCalStreamReader::stringToEncodingType(UnicodeString & propVal)
 {
-    if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_s7bit) == 0)
+    if (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_s7bit) == 0)
     {
-        return JulianUtility::MimeEncoding_7bit;
+        return nsCalUtility::MimeEncoding_7bit;
     }
-    else if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sQUOTED_PRINTABLE) == 0)
+    else if (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sQUOTED_PRINTABLE) == 0)
     {
-        return JulianUtility::MimeEncoding_QuotedPrintable;
+        return nsCalUtility::MimeEncoding_QuotedPrintable;
     }
-    else if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sBase64) == 0)
+    else if (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBase64) == 0)
     {
-        return JulianUtility::MimeEncoding_Base64;
+        return nsCalUtility::MimeEncoding_Base64;
     }
     else
-        return JulianUtility::MimeEncoding_7bit;
+        return nsCalUtility::MimeEncoding_7bit;
 }
 
 //---------------------------------------------------------------------
@@ -107,7 +107,7 @@ void nsCalStreamReader::ParseCalendars(ICalReader * reader,
         JLog * log = 0;
         ErrorCode status = ZERO_ERROR;
         UnicodeString strLine, propName, propVal;
-        JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit;
+        nsCalUtility::MimeEncoding encoding = nsCalUtility::MimeEncoding_7bit;
 
         nsCapiCallbackReader * cr = (nsCapiCallbackReader *) reader;
 
@@ -141,8 +141,8 @@ void nsCalStreamReader::ParseCalendars(ICalReader * reader,
             if (TRUE) TRACE("\t--Parser: propName = --%s--, propVal = --%s--,paramSize = %d\r\n",
                 propName.toCString(""), propVal.toCString(""), parameters->GetSize());
 #endif
-            if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
-                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0))
+            if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) &&
+                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0))
             {
                 // parse an NSCalendar, add it to outCalendars                    
                 NSCalendar * cal = new NSCalendar(log);
@@ -151,7 +151,7 @@ void nsCalStreamReader::ParseCalendars(ICalReader * reader,
                 outCalendars->Add(cal);
             }
             else if (propName.compareIgnoreCase(
-                JulianKeyword::Instance()->ms_sCONTENT_TRANSFER_ENCODING) == 0)
+                nsCalKeyword::Instance()->ms_sCONTENT_TRANSFER_ENCODING) == 0)
             {
                 ICalProperty::Trim(propVal);
                 encoding = stringToEncodingType(propVal);

@@ -552,7 +552,7 @@ VFreebusy::parse(ICalReader * brFile, UnicodeString & method,
                  UnicodeString & parseStatus, JulianPtrArray * vTimeZones,
                  t_bool bIgnoreBeginError, nsCalUtility::MimeEncoding encoding)
 {
-    parseStatus = JulianKeyword::Instance()->ms_sOK;
+    parseStatus = nsCalKeyword::Instance()->ms_sOK;
     UnicodeString strLine, propName, propVal;
 
     JulianPtrArray * parameters = new JulianPtrArray();
@@ -585,8 +585,8 @@ VFreebusy::parse(ICalReader * brFile, UnicodeString & method,
             
             continue;
         }
-        else if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0))
+        else if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
+            (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0))
         {
             ICalProperty::deleteICalParameterVector(parameters);
             parameters->RemoveAll();
@@ -594,21 +594,21 @@ VFreebusy::parse(ICalReader * brFile, UnicodeString & method,
             break;
         }
         else if (
-            ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
-             ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) && !bIgnoreBeginError )||
-             ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+            ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) &&
+             ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0) && !bIgnoreBeginError )||
+             ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+              (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
               (ICalProperty::IsXToken(propVal)))
             ) ||
-            ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-                   ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+            ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
+                   ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
                    (ICalProperty::IsXToken(propVal)))
             )
             ) //else if
@@ -621,8 +621,8 @@ VFreebusy::parse(ICalReader * brFile, UnicodeString & method,
 
             parseStatus = strLine;
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 300);
+                nsCalLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
+                nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 300);
             break;
         }
         else
@@ -674,13 +674,13 @@ VFreebusy::storeData(UnicodeString & strLine, UnicodeString & propName,
     else
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 200);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, propName, 200);
         UnicodeString u;
-        u = JulianLogErrorMessage::Instance()->ms_sRS202;
+        u = nsCalLogErrorMessage::Instance()->ms_sRS202;
         u += '.'; u += ' ';
         u += strLine;
-        //setRequestStatus(JulianLogErrorMessage::Instance()->ms_iRS202); 
+        //setRequestStatus(nsCalLogErrorMessage::Instance()->ms_iRS202); 
         addRequestStatus(u);
         return FALSE;
     }
@@ -698,13 +698,13 @@ void VFreebusy::storeAttendees(UnicodeString & strLine, UnicodeString & propVal,
         if (!attendee->isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidAttendee, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propVal, 200);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidAttendee, 
+                nsCalKeyword::Instance()->ms_sVFREEBUSY, propVal, 200);
             UnicodeString u;
-            u = JulianLogErrorMessage::Instance()->ms_sRS202;
+            u = nsCalLogErrorMessage::Instance()->ms_sRS202;
             u += '.'; u += ' ';
             u += strLine;
-            //setRequestStatus(JulianLogErrorMessage::Instance()->ms_iRS202); 
+            //setRequestStatus(nsCalLogErrorMessage::Instance()->ms_iRS202); 
             addRequestStatus(u);
             delete attendee; attendee = 0;
         }
@@ -719,14 +719,14 @@ void VFreebusy::storeComment(UnicodeString & strLine, UnicodeString & propVal,
 {
     // check parameters
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
     
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
     addComment(propVal, parameters);
 }
@@ -735,13 +735,13 @@ void VFreebusy::storeContact(UnicodeString & strLine, UnicodeString & propVal,
 {
     // check parameters
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);        
+            nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+            nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);        
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
     addContact(propVal, parameters);
 }
@@ -752,16 +752,16 @@ void VFreebusy::storeCreated(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 
     if (getCreatedProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sCREATED, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sCREATED, 100);
     }
     DateTime d;
     d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
@@ -776,16 +776,16 @@ void VFreebusy::storeDuration(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 
     if (m_TempDuration != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sDURATION, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sDURATION, 100);
     }
     //Duration d(propVal);
     if (m_TempDuration == 0)
@@ -803,17 +803,17 @@ void VFreebusy::storeDTEnd(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 
     // DTEND must be in UTC
     if (getDTEndProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sDTEND, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sDTEND, 100);
     }
     DateTime d;
     d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
@@ -827,17 +827,17 @@ void VFreebusy::storeDTStart(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 
     // DTSTART must be in UTC
     if (getDTStartProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sDTSTART, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sDTSTART, 100);
     }
     DateTime d;
     d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
@@ -851,16 +851,16 @@ void VFreebusy::storeDTStamp(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 
     if (getDTStampProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sDTSTAMP, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sDTSTAMP, 100);
     }
     DateTime d;
     d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
@@ -879,12 +879,12 @@ void VFreebusy::storeFreebusy(UnicodeString & strLine, UnicodeString & propVal,
         if (!freeb->isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidFreebusy, 200);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidFreebusy, 200);
             UnicodeString u;
-            u = JulianLogErrorMessage::Instance()->ms_sRS202;
+            u = nsCalLogErrorMessage::Instance()->ms_sRS202;
             u += '.'; u += ' ';
             u += strLine;
-            //setRequestStatus(JulianLogErrorMessage::Instance()->ms_iRS202); 
+            //setRequestStatus(nsCalLogErrorMessage::Instance()->ms_iRS202); 
             addRequestStatus(u);
             delete freeb; freeb = 0;
         }
@@ -901,16 +901,16 @@ void VFreebusy::storeLastModified(UnicodeString & strLine, UnicodeString & propV
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 
     if (getLastModified().getTime() >= 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sLASTMODIFIED, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sLASTMODIFIED, 100);
     }
     DateTime d;
     d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
@@ -922,21 +922,21 @@ void VFreebusy::storeOrganizer(UnicodeString & strLine, UnicodeString & propVal,
 {
     // check parameters 
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asSentByParamRange,
-        JulianAtomRange::Instance()->ms_asSentByParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asSentByParamRange,
+        nsCalAtomRange::Instance()->ms_asSentByParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 
     if (getOrganizerProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sORGANIZER, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sORGANIZER, 100);
     }
     setOrganizer(propVal, parameters);
 }
@@ -945,22 +945,22 @@ void VFreebusy::storeRequestStatus(UnicodeString & strLine, UnicodeString & prop
 {
     // check parameters 
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asLanguageParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 #if 0
     /* Don't print duplicated property on Request Status */
     if (getRequestStatusProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-        JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-        JulianKeyword::Instance()->ms_sVFREEBUSY, 
-        JulianKeyword::Instance()->ms_sREQUESTSTATUS, 100);
+        nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+        nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+        nsCalKeyword::Instance()->ms_sREQUESTSTATUS, 100);
     }
     
 #endif
@@ -976,8 +976,8 @@ void VFreebusy::storeSequence(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
 
     char * pcc = propVal.toCString("");
@@ -987,9 +987,9 @@ void VFreebusy::storeSequence(UnicodeString & strLine, UnicodeString & propVal,
     if (getSequenceProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sSEQUENCE, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sSEQUENCE, 100);
     }
     if (!bParseError)
     {
@@ -998,9 +998,9 @@ void VFreebusy::storeSequence(UnicodeString & strLine, UnicodeString & propVal,
     else
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sSEQUENCE, propVal, 200);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sSEQUENCE, propVal, 200);
     }
 }
 void VFreebusy::storeUID(UnicodeString & strLine, UnicodeString & propVal, 
@@ -1010,15 +1010,15 @@ void VFreebusy::storeUID(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
     if (getUIDProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sUID, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sUID, 100);
     }
     setUID(propVal, parameters);
 }
@@ -1029,15 +1029,15 @@ void VFreebusy::storeURL(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
     }
      if (getURLProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, 
-            JulianKeyword::Instance()->ms_sURL, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVFREEBUSY, 
+            nsCalKeyword::Instance()->ms_sURL, 100);
     }
     setURL(propVal, parameters);
     //addURL(propVal, parameters);
@@ -1051,13 +1051,13 @@ t_bool VFreebusy::isValid()
 
     // TODO: handle bad method names
 
-    if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sPUBLISH) == 0)
+    if (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sPUBLISH) == 0)
     {
         // publish must have dtstamp
         if (!getDTStamp().isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
         }
 
@@ -1065,24 +1065,24 @@ t_bool VFreebusy::isValid()
         if (getOrganizer().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
         }
     }
-    else if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREQUEST) == 0)
+    else if (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sREQUEST) == 0)
     {
         // publish must have dtstamp
         if (!getDTStamp().isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
         }
         // TODO: must have requested attendee address
         if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
         {
             if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
+                    nsCalLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
             return FALSE;
         }
 
@@ -1090,7 +1090,7 @@ t_bool VFreebusy::isValid()
         if (getOrganizer().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
         }
 
@@ -1098,36 +1098,36 @@ t_bool VFreebusy::isValid()
         if (!dS.isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
         }
         if (!dE.isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingEndingTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingEndingTime, 300);
             return FALSE;
         }
         if (dS.afterDateTime(dE))
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
             return FALSE;
         }
     }
-    else if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0)
+    else if (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sREPLY) == 0)
     {
         // both request and reply must have valid dtstamp and a UID
         if (!getDTStamp().isValid()) 
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
         }
 
         if (getUID().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingUID, 300);
             return FALSE;
         }
 
@@ -1135,33 +1135,33 @@ t_bool VFreebusy::isValid()
         if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
         {
             if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
+                    nsCalLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
             return FALSE;
         }
         // must have originator' organizer address
         if (getOrganizer().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
         }
         // must have start, end
         if (!dS.isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
         }
         if (!dE.isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingEndingTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingEndingTime, 300);
             return FALSE;
         }
         if (dS.afterDateTime(dE))
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
             return FALSE;
         }
     }
@@ -1189,7 +1189,7 @@ t_bool VFreebusy::isValid()
 //---------------------------------------------------------------------
 UnicodeString VFreebusy::toICALString()
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyAllMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVFreebusyAllMessage, "");
 }
 //---------------------------------------------------------------------
 UnicodeString VFreebusy::toICALString(UnicodeString sMethod, 
@@ -1199,12 +1199,12 @@ UnicodeString VFreebusy::toICALString(UnicodeString sMethod,
     // NOTE: Remove later, to avoid warnings
     if (isRecurring) {}
 
-    if (sMethod.compareIgnoreCase(JulianKeyword::Instance()->ms_sPUBLISH) == 0)
-        return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyPublishMessage, "");
-    else if (sMethod.compareIgnoreCase(JulianKeyword::Instance()->ms_sREQUEST) == 0)
-        return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyRequestMessage, "");
-    else if (sMethod.compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0)
-        return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyReplyMessage, sName);
+    if (sMethod.compareIgnoreCase(nsCalKeyword::Instance()->ms_sPUBLISH) == 0)
+        return formatHelper(nsCalFormatString::Instance()->ms_sVFreebusyPublishMessage, "");
+    else if (sMethod.compareIgnoreCase(nsCalKeyword::Instance()->ms_sREQUEST) == 0)
+        return formatHelper(nsCalFormatString::Instance()->ms_sVFreebusyRequestMessage, "");
+    else if (sMethod.compareIgnoreCase(nsCalKeyword::Instance()->ms_sREPLY) == 0)
+        return formatHelper(nsCalFormatString::Instance()->ms_sVFreebusyReplyMessage, sName);
     else
         return toICALString();
 }
@@ -1212,12 +1212,12 @@ UnicodeString VFreebusy::toICALString(UnicodeString sMethod,
 UnicodeString VFreebusy::toString()
 {
     return ICalComponent::toStringFmt(
-        JulianFormatString::Instance()->ms_VFreebusyStrDefaultFmt);
+        nsCalFormatString::Instance()->ms_VFreebusyStrDefaultFmt);
 }
 //---------------------------------------------------------------------
 UnicodeString VFreebusy::formatHelper(UnicodeString & strFmt, UnicodeString sFilterAttendee)
 {
-    UnicodeString u = JulianKeyword::Instance()->ms_sVFREEBUSY;
+    UnicodeString u = nsCalKeyword::Instance()->ms_sVFREEBUSY;
     return ICalComponent::format(u, strFmt, sFilterAttendee);
 }
 //---------------------------------------------------------------------
@@ -1262,52 +1262,52 @@ VFreebusy::formatChar(t_int32 c, UnicodeString sFilterAttendee,
             return sResult;    
         }
     case ms_cFreebusy:
-        s = JulianKeyword::Instance()->ms_sFREEBUSY;
+        s = nsCalKeyword::Instance()->ms_sFREEBUSY;
         return ICalProperty::propertyVectorToICALString(s, getFreebusy(), sResult);
     case ms_cComment: 
-        s = JulianKeyword::Instance()->ms_sCOMMENT;
+        s = nsCalKeyword::Instance()->ms_sCOMMENT;
         return ICalProperty::propertyVectorToICALString(s, getComment(), sResult);     
     case ms_cContact: 
-        s = JulianKeyword::Instance()->ms_sCONTACT;
+        s = nsCalKeyword::Instance()->ms_sCONTACT;
         return ICalProperty::propertyVectorToICALString(s, getContact(), sResult);
         /*
     case ms_cCreated: 
-        s = JulianKeyword::Instance()->ms_sCREATED;
+        s = nsCalKeyword::Instance()->ms_sCREATED;
         return ICalProperty::propertyToICALString(s, getCreatedProperty(), sResult);  
         */
     case ms_cDTEnd:
-        s = JulianKeyword::Instance()->ms_sDTEND;
+        s = nsCalKeyword::Instance()->ms_sDTEND;
         return ICalProperty::propertyToICALString(s, getDTEndProperty(), sResult);
     case ms_cDuration:
-        s = JulianKeyword::Instance()->ms_sDURATION;
+        s = nsCalKeyword::Instance()->ms_sDURATION;
         s += ':';
         s += getDuration().toICALString();
-        s += JulianKeyword::Instance()->ms_sLINEBREAK;
+        s += nsCalKeyword::Instance()->ms_sLINEBREAK;
         return s;
     case ms_cDTStart: 
-        s = JulianKeyword::Instance()->ms_sDTSTART;
+        s = nsCalKeyword::Instance()->ms_sDTSTART;
         return ICalProperty::propertyToICALString(s, getDTStartProperty(), sResult);  
     case ms_cDTStamp:
-        s = JulianKeyword::Instance()->ms_sDTSTAMP;
+        s = nsCalKeyword::Instance()->ms_sDTSTAMP;
         return ICalProperty::propertyToICALString(s, getDTStampProperty(), sResult);  
     //case ms_cRelatedTo:
-    //    s = JulianKeyword::Instance()->ms_sRELATEDTO;
+    //    s = nsCalKeyword::Instance()->ms_sRELATEDTO;
     //    return ICalProperty::propertyVectorToICALString(s, getRelatedTo(), sResult);
     case ms_cOrganizer:
-        s = JulianKeyword::Instance()->ms_sORGANIZER;
+        s = nsCalKeyword::Instance()->ms_sORGANIZER;
         return ICalProperty::propertyToICALString(s, getOrganizerProperty(), sResult);
     case ms_cRequestStatus:
-        s = JulianKeyword::Instance()->ms_sREQUESTSTATUS;
+        s = nsCalKeyword::Instance()->ms_sREQUESTSTATUS;
         //return ICalProperty::propertyToICALString(s, getRequestStatusProperty(), sResult);
         return ICalProperty::propertyVectorToICALString(s, getRequestStatus(), sResult);
     case ms_cSequence:
-        s = JulianKeyword::Instance()->ms_sSEQUENCE;
+        s = nsCalKeyword::Instance()->ms_sSEQUENCE;
         return ICalProperty::propertyToICALString(s, getSequenceProperty(), sResult);
     case ms_cUID:
-        s = JulianKeyword::Instance()->ms_sUID;
+        s = nsCalKeyword::Instance()->ms_sUID;
         return ICalProperty::propertyToICALString(s, getUIDProperty(), sResult);
     case ms_cURL: 
-        s = JulianKeyword::Instance()->ms_sURL;
+        s = nsCalKeyword::Instance()->ms_sURL;
         //return ICalProperty::propertyVectorToICALString(s, getURL(), sResult);
         return ICalProperty::propertyToICALString(s, getURLProperty(), sResult);
     case ms_cXTokens: 

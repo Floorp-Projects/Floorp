@@ -39,9 +39,9 @@ const t_int32 Freebusy::ms_iDEFAULT_STATUS= FB_STATUS_BUSY;
 #endif
 
 //UnicodeString Freebusy::m_strDefaultFmt = "\tTYPE= ^T STATUS = ^S ^P\r\n";
-//const UnicodeString Freebusy::JulianKeyword::Instance()->ms_sDEFAULT_TYPE   = JulianKeyword::Instance()->ms_sBUSY; 
-//const UnicodeString Freebusy::JulianKeyword::Instance()->ms_sDEFAULT_STATUS = JulianKeyword::Instance()->ms_sBUSY; 
-//static UnicodeString s_sComma = JulianKeyword::Instance()->ms_sCOMMA_SYMBOL;
+//const UnicodeString Freebusy::nsCalKeyword::Instance()->ms_sDEFAULT_TYPE   = nsCalKeyword::Instance()->ms_sBUSY; 
+//const UnicodeString Freebusy::nsCalKeyword::Instance()->ms_sDEFAULT_STATUS = nsCalKeyword::Instance()->ms_sBUSY; 
+//static UnicodeString s_sComma = nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL;
 
 //---------------------------------------------------------------------
 
@@ -50,12 +50,12 @@ Freebusy::stringToType(UnicodeString & sType)
 {
     t_int32 hashCode = sType.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_BUSY == hashCode) return FB_TYPE_BUSY;
-    else if (JulianKeyword::Instance()->ms_ATOM_FREE == hashCode) return FB_TYPE_FREE;
+    if (nsCalKeyword::Instance()->ms_ATOM_BUSY == hashCode) return FB_TYPE_BUSY;
+    else if (nsCalKeyword::Instance()->ms_ATOM_FREE == hashCode) return FB_TYPE_FREE;
     // added 4-28-98
-    else if (JulianKeyword::Instance()->ms_ATOM_BUSY_UNAVAILABLE == hashCode) 
+    else if (nsCalKeyword::Instance()->ms_ATOM_BUSY_UNAVAILABLE == hashCode) 
         return FB_TYPE_BUSY_UNAVAILABLE;
-    else if (JulianKeyword::Instance()->ms_ATOM_BUSY_TENTATIVE == hashCode) 
+    else if (nsCalKeyword::Instance()->ms_ATOM_BUSY_TENTATIVE == hashCode) 
         return FB_TYPE_BUSY_TENTATIVE;
     else if (ICalProperty::IsXToken(sType))
         return FB_TYPE_XPARAMVAL;
@@ -69,15 +69,15 @@ Freebusy::typeToString(Freebusy::FB_TYPE type, UnicodeString & out)
 {
     switch(type)
     {
-    case FB_TYPE_BUSY: out = JulianKeyword::Instance()->ms_sBUSY; break;
-    case FB_TYPE_FREE: out = JulianKeyword::Instance()->ms_sFREE; break;
+    case FB_TYPE_BUSY: out = nsCalKeyword::Instance()->ms_sBUSY; break;
+    case FB_TYPE_FREE: out = nsCalKeyword::Instance()->ms_sFREE; break;
     // added 4-28-98
-    case FB_TYPE_BUSY_UNAVAILABLE: out = JulianKeyword::Instance()->ms_sBUSY_UNAVAILABLE; break;
-    case FB_TYPE_BUSY_TENTATIVE: out = JulianKeyword::Instance()->ms_sBUSY_TENTATIVE; break;
-    case FB_TYPE_XPARAMVAL: out = JulianKeyword::Instance()->ms_sXPARAMVAL; break;
+    case FB_TYPE_BUSY_UNAVAILABLE: out = nsCalKeyword::Instance()->ms_sBUSY_UNAVAILABLE; break;
+    case FB_TYPE_BUSY_TENTATIVE: out = nsCalKeyword::Instance()->ms_sBUSY_TENTATIVE; break;
+    case FB_TYPE_XPARAMVAL: out = nsCalKeyword::Instance()->ms_sXPARAMVAL; break;
     default:
         // return default BUSY
-        out = JulianKeyword::Instance()->ms_sBUSY;
+        out = nsCalKeyword::Instance()->ms_sBUSY;
         break;
     }
     return out;
@@ -90,9 +90,9 @@ Freebusy::stringToStatus(UnicodeString & sStatus)
 {
     t_int32 hashCode = sStatus.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_BUSY == hashCode) return FB_STATUS_BUSY;
-    else if (JulianKeyword::Instance()->ms_ATOM_UNAVAILABLE == hashCode) return FB_STATUS_UNAVAILABLE;
-    else if (JulianKeyword::Instance()->ms_ATOM_TENTATIVE == hashCode) return FB_STATUS_TENTATIVE;
+    if (nsCalKeyword::Instance()->ms_ATOM_BUSY == hashCode) return FB_STATUS_BUSY;
+    else if (nsCalKeyword::Instance()->ms_ATOM_UNAVAILABLE == hashCode) return FB_STATUS_UNAVAILABLE;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TENTATIVE == hashCode) return FB_STATUS_TENTATIVE;
     else return FB_STATUS_INVALID;
 }
 
@@ -103,12 +103,12 @@ Freebusy::statusToString(Freebusy::FB_STATUS status, UnicodeString & out)
 {
     switch(status)
     {
-    case FB_STATUS_BUSY: out = JulianKeyword::Instance()->ms_sBUSY; break;
-    case FB_STATUS_UNAVAILABLE: out = JulianKeyword::Instance()->ms_sUNAVAILABLE; break;
-    case FB_STATUS_TENTATIVE: out = JulianKeyword::Instance()->ms_sTENTATIVE; break;
+    case FB_STATUS_BUSY: out = nsCalKeyword::Instance()->ms_sBUSY; break;
+    case FB_STATUS_UNAVAILABLE: out = nsCalKeyword::Instance()->ms_sUNAVAILABLE; break;
+    case FB_STATUS_TENTATIVE: out = nsCalKeyword::Instance()->ms_sTENTATIVE; break;
     default:
         // return default BUSY
-        out = JulianKeyword::Instance()->ms_sBUSY;
+        out = nsCalKeyword::Instance()->ms_sBUSY;
         break;
     }
     return out;
@@ -130,7 +130,7 @@ void Freebusy::parsePeriod(UnicodeString & s, JulianPtrArray * vTimeZones)
     {
     }
     stMult = new UnicodeStringTokenizer(s, 
-        JulianKeyword::Instance()->ms_sCOMMA_SYMBOL);
+        nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL);
     PR_ASSERT(stMult != 0);
     if (stMult != 0)
     {
@@ -147,8 +147,8 @@ void Freebusy::parsePeriod(UnicodeString & s, JulianPtrArray * vTimeZones)
             {
                 if (!p->isValid())
                 {
-                    if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iFreebusyPeriodInvalid, 
-                        JulianKeyword::Instance()->ms_sFREEBUSY, sPeriod, 200);
+                    if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iFreebusyPeriodInvalid, 
+                        nsCalKeyword::Instance()->ms_sFREEBUSY, sPeriod, 200);
                 }
                 else
                 {
@@ -168,47 +168,47 @@ void Freebusy::setParam(UnicodeString & paramName, UnicodeString & paramVal)
     t_int32 i;
     if (paramName.size() == 0)
     {
-        if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName, 
-            JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 200);
+        if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName, 
+            nsCalKeyword::Instance()->ms_sFREEBUSY, paramName, 200);
     }
     else
     {
         t_int32 hashCode = paramName.hashCode();
 
-        if (JulianKeyword::Instance()->ms_ATOM_FBTYPE == hashCode)
+        if (nsCalKeyword::Instance()->ms_ATOM_FBTYPE == hashCode)
         {
             i = Freebusy::stringToType(paramVal);
             if (i < 0)
             {
-                if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
-                    JulianKeyword::Instance()->ms_sFREEBUSY, paramName, paramVal, 200);
+                if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
+                    nsCalKeyword::Instance()->ms_sFREEBUSY, paramName, paramVal, 200);
             }
             else 
             {
                 if (getType() >= 0)
                 {
-                    if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
-                        JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
+                    if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
+                        nsCalKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
                 }
                 setType((Freebusy::FB_TYPE) i);
             }
         
         } 
 #if 0
-        else if (JulianKeyword::Instance()->ms_ATOM_BSTAT == hashCode)   
+        else if (nsCalKeyword::Instance()->ms_ATOM_BSTAT == hashCode)   
         {
             i = Freebusy::stringToStatus(paramVal);
             if (i < 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
-                    JulianKeyword::Instance()->ms_sFREEBUSY, paramName, paramVal, 200);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
+                    nsCalKeyword::Instance()->ms_sFREEBUSY, paramName, paramVal, 200);
             }
             else 
             {
                 if (getStatus() >= 0)
                 {
-                    if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
-                        JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
+                    if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
+                        nsCalKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
                 }
                 setStatus((Freebusy::FB_STATUS) i);
             }
@@ -216,14 +216,14 @@ void Freebusy::setParam(UnicodeString & paramName, UnicodeString & paramVal)
 #endif
         else if (ICalProperty::IsXToken(paramName))
         {
-            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
-                        JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
+            if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
+                        nsCalKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
         }
         else 
         {
             // NOTE: what about optional parameters?? THERE ARE NONE.
-            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName,
-                        JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 200);
+            if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName,
+                        nsCalKeyword::Instance()->ms_sFREEBUSY, paramName, 200);
         }
     }
 }
@@ -507,7 +507,7 @@ t_bool Freebusy::isValid()
 
 UnicodeString & Freebusy::toString(UnicodeString & out)
 {
-    out = toString(JulianFormatString::Instance()->ms_FreebusyStrDefaultFmt, out);
+    out = toString(nsCalFormatString::Instance()->ms_FreebusyStrDefaultFmt, out);
     return out;
 }
 
@@ -516,7 +516,7 @@ UnicodeString & Freebusy::toString(UnicodeString & out)
 UnicodeString & 
 Freebusy::toString(UnicodeString & strFmt, UnicodeString & out) 
 {
-    if (strFmt.size() == 0 && JulianFormatString::Instance()->ms_FreebusyStrDefaultFmt.size() > 0)
+    if (strFmt.size() == 0 && nsCalFormatString::Instance()->ms_FreebusyStrDefaultFmt.size() > 0)
     {
         // if empty string, use default
         return toString(out);
@@ -610,12 +610,12 @@ UnicodeString & Freebusy::toICALString(UnicodeString & out)
     UnicodeString s, u;
     t_int32 i;
 
-    out = JulianKeyword::Instance()->ms_sFREEBUSY;
+    out = nsCalKeyword::Instance()->ms_sFREEBUSY;
     s = typeToString(getType(), s);
-    out += ICalProperty::parameterToCalString(JulianKeyword::Instance()->ms_sFBTYPE, s, u);
+    out += ICalProperty::parameterToCalString(nsCalKeyword::Instance()->ms_sFBTYPE, s, u);
 #if 0
     s = statusToString(getStatus(), s);
-    out += ICalProperty::parameterToCalString(JulianKeyword::Instance()->ms_sBSTAT, s, u);
+    out += ICalProperty::parameterToCalString(nsCalKeyword::Instance()->ms_sBSTAT, s, u);
 #endif
     out += ":";
     if (m_vPeriod != 0)
@@ -627,13 +627,13 @@ UnicodeString & Freebusy::toICALString(UnicodeString & out)
             if (i < m_vPeriod->GetSize() -1)
             {
                 out += p->toICALString();
-                out += JulianKeyword::Instance()->ms_sCOMMA_SYMBOL;
+                out += nsCalKeyword::Instance()->ms_sCOMMA_SYMBOL;
             }
             else
                 out += p->toICALString();
         }
     }
-    out += JulianKeyword::Instance()->ms_sLINEBREAK;
+    out += nsCalKeyword::Instance()->ms_sLINEBREAK;
     out = ICalProperty::multiLineFormat(out);
     return out;
 }

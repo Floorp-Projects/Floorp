@@ -314,7 +314,7 @@ Date DateTime::parse(UnicodeString & s, Locale & locale)
     {
         for (i = 0; i < kPATTERNSIZE; i++)
         {
-            if ((d = parseTime(JulianFormatString::Instance()->ms_asDateTimePatterns[i], s, locale)) > 0)
+            if ((d = parseTime(nsCalFormatString::Instance()->ms_asDateTimePatterns[i], s, locale)) > 0)
             {
                 break;
             }
@@ -451,16 +451,16 @@ Date DateTime::parseISO8601(UnicodeString & us, TimeZone * timezone)
         if (bUTC)
         {
          
-            if ((t = parseTime(JulianFormatString::Instance()->ms_asDateTimePatterns[0], temp, (TimeZone *) m_kGMTTimeZone)) < 0)
+            if ((t = parseTime(nsCalFormatString::Instance()->ms_asDateTimePatterns[0], temp, (TimeZone *) m_kGMTTimeZone)) < 0)
             {
-                t = parseTime(JulianFormatString::Instance()->ms_asDateTimePatterns[1], temp, (TimeZone *) m_kGMTTimeZone);
+                t = parseTime(nsCalFormatString::Instance()->ms_asDateTimePatterns[1], temp, (TimeZone *) m_kGMTTimeZone);
             }
         }
         else 
         {        
-            if ((t = parseTime(JulianFormatString::Instance()->ms_asDateTimePatterns[0], temp, timezone)) < 0)
+            if ((t = parseTime(nsCalFormatString::Instance()->ms_asDateTimePatterns[0], temp, timezone)) < 0)
             {
-                t = parseTime(JulianFormatString::Instance()->ms_asDateTimePatterns[1], temp, timezone);
+                t = parseTime(nsCalFormatString::Instance()->ms_asDateTimePatterns[1], temp, timezone);
             }
         }
 
@@ -1115,20 +1115,20 @@ t_bool DateTime::sameDMY(DateTime * d, TimeZone * timezone)
 UnicodeString DateTime::toString(TimeZone * timezone)
 {
     //return strftimeNoLocale(ms_sDefaultPattern, m_TimeZone);
-    return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeDefaultPattern, timezone);
+    return strftimeNoLocale(nsCalFormatString::Instance()->ms_sDateTimeDefaultPattern, timezone);
 }
 //---------------------------------------------------------------------
 
 UnicodeString DateTime::toISO8601Local(TimeZone * timezone)
 {
     //return strftimeNoLocale(ms_sISO8601LocalPattern, m_TimeZone);
-    return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeISO8601LocalPattern, timezone);
+    return strftimeNoLocale(nsCalFormatString::Instance()->ms_sDateTimeISO8601LocalPattern, timezone);
 }
 //---------------------------------------------------------------------
 
 UnicodeString DateTime::toISO8601()
 {
-    return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeISO8601Pattern, 
+    return strftimeNoLocale(nsCalFormatString::Instance()->ms_sDateTimeISO8601Pattern, 
         (TimeZone *) m_kGMTTimeZone);
 }
 //---------------------------------------------------------------------
@@ -1136,14 +1136,14 @@ UnicodeString DateTime::toISO8601()
 UnicodeString DateTime::toISO8601LocalTimeOnly(TimeZone * timezone)
 {
     //return strftimeNoLocale(ms_sISO8601TimeOnlyPattern, m_TimeZone);
-    return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeISO8601TimeOnlyPattern, timezone);
+    return strftimeNoLocale(nsCalFormatString::Instance()->ms_sDateTimeISO8601TimeOnlyPattern, timezone);
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString DateTime::toISO8601TimeOnly()
 {
-    return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeISO8601TimeOnlyPattern, 
+    return strftimeNoLocale(nsCalFormatString::Instance()->ms_sDateTimeISO8601TimeOnlyPattern, 
         (TimeZone *) m_kGMTTimeZone);
 }
 
@@ -1152,14 +1152,14 @@ UnicodeString DateTime::toISO8601TimeOnly()
 UnicodeString DateTime::toISO8601LocalDateOnly(TimeZone * timezone)
 {
     //return strftimeNoLocale(ms_sISO8601DateOnlyPattern, m_TimeZone);
-    return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeISO8601DateOnlyPattern, timezone);
+    return strftimeNoLocale(nsCalFormatString::Instance()->ms_sDateTimeISO8601DateOnlyPattern, timezone);
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString DateTime::toISO8601DateOnly()
 {
-    return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeISO8601DateOnlyPattern, 
+    return strftimeNoLocale(nsCalFormatString::Instance()->ms_sDateTimeISO8601DateOnlyPattern, 
         (TimeZone *) m_kGMTTimeZone);
 }
 

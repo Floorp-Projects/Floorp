@@ -27,7 +27,7 @@
 
 //---------------------------------------------------------------------
 #if 0
-JulianLogError::JulianLogError(UnicodeString & errorString, 
+nsCalLogError::nsCalLogError(UnicodeString & errorString, 
                                t_int32 errorPriority)
 {
     m_ErrorString = errorString;
@@ -36,7 +36,7 @@ JulianLogError::JulianLogError(UnicodeString & errorString,
 }
 #endif
 //---------------------------------------------------------------------
-JulianLogError::JulianLogError(t_int32 errorID,
+nsCalLogError::nsCalLogError(t_int32 errorID,
                                UnicodeString & shortReturnStatusCode,
                                UnicodeString & offendingData,
                                t_int32 errorPriority)
@@ -47,14 +47,14 @@ JulianLogError::JulianLogError(t_int32 errorID,
     m_Priority = errorPriority;
 }
 //---------------------------------------------------------------------
-void JulianLogError::deleteJulianLogErrorVector(JulianPtrArray * errors)
+void nsCalLogError::deleteNsCalLogErrorVector(JulianPtrArray * errors)
 {
     if (errors != 0)
     {
         t_int32 i;
         for (i = errors->GetSize() - 1; i >= 0; i--)
         {
-            delete ((JulianLogError *) errors->GetAt(i));
+            delete ((nsCalLogError *) errors->GetAt(i));
         }
     }
 }

@@ -109,9 +109,9 @@ ICalComponent::format(UnicodeString & sComponentName,
                       t_bool delegateRequest) 
 {
     UnicodeString s, into;
-    s = JulianKeyword::Instance()->ms_sBEGIN_WITH_COLON;
+    s = nsCalKeyword::Instance()->ms_sBEGIN_WITH_COLON;
     s += sComponentName;
-    s += JulianKeyword::Instance()->ms_sLINEBREAK;
+    s += nsCalKeyword::Instance()->ms_sLINEBREAK;
 
 
     t_int32 i,j;    
@@ -157,9 +157,9 @@ ICalComponent::format(UnicodeString & sComponentName,
             break;
         }
     }
-    s += JulianKeyword::Instance()->ms_sEND_WITH_COLON;
+    s += nsCalKeyword::Instance()->ms_sEND_WITH_COLON;
     s += sComponentName;
-    s += JulianKeyword::Instance()->ms_sLINEBREAK;
+    s += nsCalKeyword::Instance()->ms_sLINEBREAK;
     return s;
 }// end 
 
@@ -170,13 +170,13 @@ ICalComponent::componentToString(ICAL_COMPONENT ic)
 {
     switch (ic)
     {
-    case ICAL_COMPONENT_VEVENT: return JulianKeyword::Instance()->ms_sVEVENT;
-    case ICAL_COMPONENT_VTODO: return JulianKeyword::Instance()->ms_sVTODO;
-    case ICAL_COMPONENT_VJOURNAL: return JulianKeyword::Instance()->ms_sVJOURNAL;
-    case ICAL_COMPONENT_VFREEBUSY: return JulianKeyword::Instance()->ms_sVFREEBUSY;
-    case ICAL_COMPONENT_VTIMEZONE: return JulianKeyword::Instance()->ms_sVTIMEZONE;
-    case ICAL_COMPONENT_VALARM: return JulianKeyword::Instance()->ms_sVALARM;
-    case ICAL_COMPONENT_TZPART: return JulianKeyword::Instance()->ms_sTZPART;
+    case ICAL_COMPONENT_VEVENT: return nsCalKeyword::Instance()->ms_sVEVENT;
+    case ICAL_COMPONENT_VTODO: return nsCalKeyword::Instance()->ms_sVTODO;
+    case ICAL_COMPONENT_VJOURNAL: return nsCalKeyword::Instance()->ms_sVJOURNAL;
+    case ICAL_COMPONENT_VFREEBUSY: return nsCalKeyword::Instance()->ms_sVFREEBUSY;
+    case ICAL_COMPONENT_VTIMEZONE: return nsCalKeyword::Instance()->ms_sVTIMEZONE;
+    case ICAL_COMPONENT_VALARM: return nsCalKeyword::Instance()->ms_sVALARM;
+    case ICAL_COMPONENT_TZPART: return nsCalKeyword::Instance()->ms_sTZPART;
     default:
         return "";
     }
@@ -191,13 +191,13 @@ ICalComponent::stringToComponent(UnicodeString & s, t_bool & error)
     t_int32 hashCode = s.hashCode();
     error = FALSE;
 
-    if (JulianKeyword::Instance()->ms_ATOM_VEVENT == hashCode) return ICAL_COMPONENT_VEVENT;
-    else if (JulianKeyword::Instance()->ms_ATOM_VTODO == hashCode) return ICAL_COMPONENT_VTODO;
-    else if (JulianKeyword::Instance()->ms_ATOM_VJOURNAL == hashCode) return ICAL_COMPONENT_VJOURNAL;
-    else if (JulianKeyword::Instance()->ms_ATOM_VFREEBUSY == hashCode) return ICAL_COMPONENT_VFREEBUSY;
-    else if (JulianKeyword::Instance()->ms_ATOM_VTIMEZONE == hashCode) return ICAL_COMPONENT_VTIMEZONE;
-    else if (JulianKeyword::Instance()->ms_ATOM_VALARM == hashCode) return ICAL_COMPONENT_VALARM;
-    else if (JulianKeyword::Instance()->ms_ATOM_TZPART == hashCode) return ICAL_COMPONENT_TZPART;
+    if (nsCalKeyword::Instance()->ms_ATOM_VEVENT == hashCode) return ICAL_COMPONENT_VEVENT;
+    else if (nsCalKeyword::Instance()->ms_ATOM_VTODO == hashCode) return ICAL_COMPONENT_VTODO;
+    else if (nsCalKeyword::Instance()->ms_ATOM_VJOURNAL == hashCode) return ICAL_COMPONENT_VJOURNAL;
+    else if (nsCalKeyword::Instance()->ms_ATOM_VFREEBUSY == hashCode) return ICAL_COMPONENT_VFREEBUSY;
+    else if (nsCalKeyword::Instance()->ms_ATOM_VTIMEZONE == hashCode) return ICAL_COMPONENT_VTIMEZONE;
+    else if (nsCalKeyword::Instance()->ms_ATOM_VALARM == hashCode) return ICAL_COMPONENT_VALARM;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TZPART == hashCode) return ICAL_COMPONENT_TZPART;
     else 
     {
         error = TRUE;
@@ -215,51 +215,51 @@ t_bool ICalComponent::propertyNameToKeyLetter(UnicodeString & propertyName,
     t_bool retStatus = TRUE;
     outLetter = ' ';
 
-    if (JulianKeyword::Instance()->ms_ATOM_ATTENDEE == hashCode) outLetter = ms_cAttendees;    
-    else if (JulianKeyword::Instance()->ms_ATOM_ATTACH == hashCode) outLetter = ms_cAttach;
-    else if (JulianKeyword::Instance()->ms_ATOM_CATEGORIES == hashCode) outLetter = ms_cCategories;
-    else if (JulianKeyword::Instance()->ms_ATOM_CLASS == hashCode) outLetter = ms_cClass;
-    else if (JulianKeyword::Instance()->ms_ATOM_COMMENT == hashCode) outLetter = ms_cComment;
-    else if (JulianKeyword::Instance()->ms_ATOM_COMPLETED == hashCode) outLetter = ms_cCompleted;
-    else if (JulianKeyword::Instance()->ms_ATOM_CONTACT == hashCode) outLetter = ms_cContact;
-    else if (JulianKeyword::Instance()->ms_ATOM_CREATED == hashCode) outLetter = ms_cCreated;
-    else if (JulianKeyword::Instance()->ms_ATOM_DTEND == hashCode) outLetter = ms_cDTEnd;
-    else if (JulianKeyword::Instance()->ms_ATOM_DTSTART == hashCode) outLetter = ms_cDTStart;
-    else if (JulianKeyword::Instance()->ms_ATOM_DTSTAMP == hashCode) outLetter = ms_cDTStamp;
-    else if (JulianKeyword::Instance()->ms_ATOM_DESCRIPTION == hashCode) outLetter = ms_cDescription;
-    else if (JulianKeyword::Instance()->ms_ATOM_DUE == hashCode) outLetter = ms_cDue;
-    else if (JulianKeyword::Instance()->ms_ATOM_DURATION == hashCode) outLetter = ms_cDuration;
-    else if (JulianKeyword::Instance()->ms_ATOM_EXDATE == hashCode) outLetter = ms_cExDate;
-    else if (JulianKeyword::Instance()->ms_ATOM_EXRULE == hashCode) outLetter = ms_cExRule;
-    else if (JulianKeyword::Instance()->ms_ATOM_FREEBUSY == hashCode) outLetter = ms_cFreebusy;
-    else if (JulianKeyword::Instance()->ms_ATOM_GEO == hashCode) outLetter = ms_cGEO;
-    else if (JulianKeyword::Instance()->ms_ATOM_LASTMODIFIED == hashCode) outLetter = ms_cLastModified;
-    else if (JulianKeyword::Instance()->ms_ATOM_LOCATION == hashCode) outLetter = ms_cLocation;
-    else if (JulianKeyword::Instance()->ms_ATOM_ORGANIZER == hashCode) outLetter = ms_cOrganizer;
-    else if (JulianKeyword::Instance()->ms_ATOM_PERCENTCOMPLETE == hashCode) outLetter = ms_cPercentComplete;
-    else if (JulianKeyword::Instance()->ms_ATOM_PRIORITY == hashCode) outLetter = ms_cPriority;
-    else if (JulianKeyword::Instance()->ms_ATOM_RDATE == hashCode) outLetter = ms_cRDate;
-    else if (JulianKeyword::Instance()->ms_ATOM_RRULE == hashCode) outLetter = ms_cRRule;
-    else if (JulianKeyword::Instance()->ms_ATOM_RECURRENCEID == hashCode) outLetter = ms_cRecurrenceID;
-    else if (JulianKeyword::Instance()->ms_ATOM_RELATEDTO == hashCode) outLetter = ms_cRelatedTo;
-    else if (JulianKeyword::Instance()->ms_ATOM_REPEAT == hashCode) outLetter = ms_cRepeat;
-    else if (JulianKeyword::Instance()->ms_ATOM_REQUESTSTATUS == hashCode) outLetter = ms_cRequestStatus;
-    else if (JulianKeyword::Instance()->ms_ATOM_RESOURCES == hashCode) outLetter = ms_cResources;
-    else if (JulianKeyword::Instance()->ms_ATOM_SEQUENCE == hashCode) outLetter = ms_cSequence;
-    else if (JulianKeyword::Instance()->ms_ATOM_STATUS == hashCode) outLetter = ms_cStatus;
-    else if (JulianKeyword::Instance()->ms_ATOM_SUMMARY == hashCode) outLetter = ms_cSummary;
-    else if (JulianKeyword::Instance()->ms_ATOM_TRANSP == hashCode) outLetter = ms_cTransp;
-    //else if (JulianKeyword::Instance()->ms_ATOM_TRIGGER == hashCode) outLetter = ms_cTrigger;
-    else if (JulianKeyword::Instance()->ms_ATOM_UID == hashCode) outLetter = ms_cUID;
-    else if (JulianKeyword::Instance()->ms_ATOM_URL == hashCode) outLetter = ms_cURL;
-    //else if (JulianKeyword::Instance()->ms_ATOM_TZOFFSET == hashCode) outLetter = ms_cTZOffset;
-    else if (JulianKeyword::Instance()->ms_ATOM_TZOFFSETTO == hashCode) outLetter = ms_cTZOffsetTo;
-    else if (JulianKeyword::Instance()->ms_ATOM_TZOFFSETFROM == hashCode) outLetter = ms_cTZOffsetFrom;
-    else if (JulianKeyword::Instance()->ms_ATOM_TZNAME == hashCode) outLetter = ms_cTZName;
-    //else if (JulianKeyword::Instance()->ms_ATOM_DAYLIGHT == hashCode) outLetter = ms_cDayLight;
-    //else if (JulianKeyword::Instance()->ms_ATOM_STANDARD == hashCode) outLetter = ms_cStandard;
-    else if (JulianKeyword::Instance()->ms_ATOM_TZURL == hashCode) outLetter = ms_cTZURL;
-    else if (JulianKeyword::Instance()->ms_ATOM_TZID == hashCode) outLetter = ms_cTZID;
+    if (nsCalKeyword::Instance()->ms_ATOM_ATTENDEE == hashCode) outLetter = ms_cAttendees;    
+    else if (nsCalKeyword::Instance()->ms_ATOM_ATTACH == hashCode) outLetter = ms_cAttach;
+    else if (nsCalKeyword::Instance()->ms_ATOM_CATEGORIES == hashCode) outLetter = ms_cCategories;
+    else if (nsCalKeyword::Instance()->ms_ATOM_CLASS == hashCode) outLetter = ms_cClass;
+    else if (nsCalKeyword::Instance()->ms_ATOM_COMMENT == hashCode) outLetter = ms_cComment;
+    else if (nsCalKeyword::Instance()->ms_ATOM_COMPLETED == hashCode) outLetter = ms_cCompleted;
+    else if (nsCalKeyword::Instance()->ms_ATOM_CONTACT == hashCode) outLetter = ms_cContact;
+    else if (nsCalKeyword::Instance()->ms_ATOM_CREATED == hashCode) outLetter = ms_cCreated;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DTEND == hashCode) outLetter = ms_cDTEnd;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DTSTART == hashCode) outLetter = ms_cDTStart;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DTSTAMP == hashCode) outLetter = ms_cDTStamp;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DESCRIPTION == hashCode) outLetter = ms_cDescription;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DUE == hashCode) outLetter = ms_cDue;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DURATION == hashCode) outLetter = ms_cDuration;
+    else if (nsCalKeyword::Instance()->ms_ATOM_EXDATE == hashCode) outLetter = ms_cExDate;
+    else if (nsCalKeyword::Instance()->ms_ATOM_EXRULE == hashCode) outLetter = ms_cExRule;
+    else if (nsCalKeyword::Instance()->ms_ATOM_FREEBUSY == hashCode) outLetter = ms_cFreebusy;
+    else if (nsCalKeyword::Instance()->ms_ATOM_GEO == hashCode) outLetter = ms_cGEO;
+    else if (nsCalKeyword::Instance()->ms_ATOM_LASTMODIFIED == hashCode) outLetter = ms_cLastModified;
+    else if (nsCalKeyword::Instance()->ms_ATOM_LOCATION == hashCode) outLetter = ms_cLocation;
+    else if (nsCalKeyword::Instance()->ms_ATOM_ORGANIZER == hashCode) outLetter = ms_cOrganizer;
+    else if (nsCalKeyword::Instance()->ms_ATOM_PERCENTCOMPLETE == hashCode) outLetter = ms_cPercentComplete;
+    else if (nsCalKeyword::Instance()->ms_ATOM_PRIORITY == hashCode) outLetter = ms_cPriority;
+    else if (nsCalKeyword::Instance()->ms_ATOM_RDATE == hashCode) outLetter = ms_cRDate;
+    else if (nsCalKeyword::Instance()->ms_ATOM_RRULE == hashCode) outLetter = ms_cRRule;
+    else if (nsCalKeyword::Instance()->ms_ATOM_RECURRENCEID == hashCode) outLetter = ms_cRecurrenceID;
+    else if (nsCalKeyword::Instance()->ms_ATOM_RELATEDTO == hashCode) outLetter = ms_cRelatedTo;
+    else if (nsCalKeyword::Instance()->ms_ATOM_REPEAT == hashCode) outLetter = ms_cRepeat;
+    else if (nsCalKeyword::Instance()->ms_ATOM_REQUESTSTATUS == hashCode) outLetter = ms_cRequestStatus;
+    else if (nsCalKeyword::Instance()->ms_ATOM_RESOURCES == hashCode) outLetter = ms_cResources;
+    else if (nsCalKeyword::Instance()->ms_ATOM_SEQUENCE == hashCode) outLetter = ms_cSequence;
+    else if (nsCalKeyword::Instance()->ms_ATOM_STATUS == hashCode) outLetter = ms_cStatus;
+    else if (nsCalKeyword::Instance()->ms_ATOM_SUMMARY == hashCode) outLetter = ms_cSummary;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TRANSP == hashCode) outLetter = ms_cTransp;
+    //else if (nsCalKeyword::Instance()->ms_ATOM_TRIGGER == hashCode) outLetter = ms_cTrigger;
+    else if (nsCalKeyword::Instance()->ms_ATOM_UID == hashCode) outLetter = ms_cUID;
+    else if (nsCalKeyword::Instance()->ms_ATOM_URL == hashCode) outLetter = ms_cURL;
+    //else if (nsCalKeyword::Instance()->ms_ATOM_TZOFFSET == hashCode) outLetter = ms_cTZOffset;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TZOFFSETTO == hashCode) outLetter = ms_cTZOffsetTo;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TZOFFSETFROM == hashCode) outLetter = ms_cTZOffsetFrom;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TZNAME == hashCode) outLetter = ms_cTZName;
+    //else if (nsCalKeyword::Instance()->ms_ATOM_DAYLIGHT == hashCode) outLetter = ms_cDayLight;
+    //else if (nsCalKeyword::Instance()->ms_ATOM_STANDARD == hashCode) outLetter = ms_cStandard;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TZURL == hashCode) outLetter = ms_cTZURL;
+    else if (nsCalKeyword::Instance()->ms_ATOM_TZID == hashCode) outLetter = ms_cTZID;
     else 
     {
         retStatus = FALSE;

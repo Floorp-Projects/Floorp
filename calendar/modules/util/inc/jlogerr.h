@@ -33,7 +33,7 @@
  *  the error string.  It also has a priority level and an error log number id.
  *  TODO: c++doc this 
  */
-class NS_CAL_UTIL JulianLogError
+class NS_CAL_UTIL nsCalLogError
 {
 private:
     /*-----------------------------
@@ -48,20 +48,20 @@ private:
     /*-----------------------------
     ** PRIVATE METHODS
     **---------------------------*/
-    JulianLogError();
+    nsCalLogError();
 public:
     /*-----------------------------
     ** CONSTRUCTORS and DESTRUCTORS
     **---------------------------*/
 #if 0
-    JulianLogError(UnicodeString & errorString, 
+    nsCalLogError(UnicodeString & errorString, 
         t_int32 errorPriority);
 #endif
-    JulianLogError(t_int32 errorID,
+    nsCalLogError(t_int32 errorID,
         UnicodeString & shortReturnStatusCode,
         UnicodeString & offendingData, t_int32 errorPriority);
 
-    virtual ~JulianLogError() {}
+    virtual ~nsCalLogError() {}
     /*----------------------------- 
     ** ACCESSORS (GET AND SET) 
     **---------------------------*/ 
@@ -83,7 +83,7 @@ public:
     /*----------------------------- 
     ** STATIC METHODS 
     **---------------------------*/ 
-    static void deleteJulianLogErrorVector(JulianPtrArray * errors);
+    static void deleteNsCalLogErrorVector(JulianPtrArray * errors);
     /*----------------------------- 
     ** OVERLOADED OPERATORS 
     **---------------------------*/ 

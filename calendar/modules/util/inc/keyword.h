@@ -32,15 +32,15 @@
 /**
  * singleton class to contain all ICAL keywords
  */
-class NS_CAL_UTIL JulianKeyword
+class NS_CAL_UTIL nsCalKeyword
 {
 private:
-    static JulianKeyword * m_Instance;
-    JulianKeyword();
+    static nsCalKeyword * m_Instance;
+    nsCalKeyword();
         
 public:
-    static JulianKeyword * Instance();
-    ~JulianKeyword();
+    static nsCalKeyword * Instance();
+    ~nsCalKeyword();
 
     /* iCALENDAR KEYWORDS*/
     UnicodeString ms_sVCALENDAR;   
@@ -771,16 +771,16 @@ public:
 /**
  *  singleton class that contains JAtom ranges for parameter checking.
  */
-class NS_CAL_UTIL JulianAtomRange
+class NS_CAL_UTIL nsCalAtomRange
 {
 private:
-    static JulianAtomRange * m_Instance;
-    JulianAtomRange();
+    static nsCalAtomRange * m_Instance;
+    nsCalAtomRange();
 
 public:
 
-    ~JulianAtomRange();
-    static JulianAtomRange * Instance();
+    ~nsCalAtomRange();
+    static nsCalAtomRange * Instance();
 
     /*
     calscale:                           x-token
@@ -891,16 +891,16 @@ public:
  * For now, messages are not localized.
  * NOTE: TODO: Localize the log error message one day
  */
-class NS_CAL_UTIL JulianLogErrorMessage
+class NS_CAL_UTIL nsCalLogErrorMessage
 {
 
 private:
-    static JulianLogErrorMessage * m_Instance;
-    JulianLogErrorMessage();
+    static nsCalLogErrorMessage * m_Instance;
+    nsCalLogErrorMessage();
 
 public:
-    ~JulianLogErrorMessage();
-    static JulianLogErrorMessage * Instance();
+    ~nsCalLogErrorMessage();
+    static nsCalLogErrorMessage * Instance();
    
 #if 0
     UnicodeString ms_sDTEndBeforeDTStart;
@@ -1240,17 +1240,17 @@ public:
  * Singleton class that contains all formatting strings used
  * to print iCalendar object to output.
  */
-class NS_CAL_UTIL JulianFormatString
+class NS_CAL_UTIL nsCalFormatString
 {
 
 private:
-    static JulianFormatString * m_Instance;
-    JulianFormatString();
+    static nsCalFormatString * m_Instance;
+    nsCalFormatString();
 
 public:
     
-    static JulianFormatString * Instance();
-    ~JulianFormatString();
+    static nsCalFormatString * Instance();
+    ~nsCalFormatString();
 
     /* DateTime string*/
     UnicodeString ms_asDateTimePatterns[16];

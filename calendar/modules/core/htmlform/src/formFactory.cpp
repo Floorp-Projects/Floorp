@@ -644,19 +644,19 @@ TextOffset		status_start = 0,
 		}
 
 		usAttendStatus.extractBetween(status_start, status_end, tempString);
-		if (tempString == JulianKeyword::Instance()->ms_sACCEPTED )
+		if (tempString == nsCalKeyword::Instance()->ms_sACCEPTED )
 		{
 			doAddHTML( Accepted_Gif_HTML );
 		} else
-		if (tempString == JulianKeyword::Instance()->ms_sDECLINED )
+		if (tempString == nsCalKeyword::Instance()->ms_sDECLINED )
 		{
 			doAddHTML( Declined_Gif_HTML );
 		} else
-		if (tempString == JulianKeyword::Instance()->ms_sDELEGATED )
+		if (tempString == nsCalKeyword::Instance()->ms_sDELEGATED )
 		{
 			doAddHTML( Delegated_Gif_HTML );
 		} else
-		if (tempString == JulianKeyword::Instance()->ms_sVCALNEEDSACTION )
+		if (tempString == nsCalKeyword::Instance()->ms_sVCALNEEDSACTION )
 		{
 			doAddHTML( NeedsAction_Gif_HTML );
 		} else
@@ -1174,13 +1174,13 @@ JulianFormFactory::getJulianErrorString(int32 ErrorNum)
 {
    JulianString* errortext = nil;
 
-    if ((t_int32)ErrorNum == JulianLogErrorMessage::Instance()->ms_iDTEndBeforeDTStart) errortext = &error1; else
-    if ((t_int32)ErrorNum == JulianLogErrorMessage::Instance()->ms_iInvalidPromptValue) errortext = &error2; else
-    if ((t_int32)ErrorNum == JulianLogErrorMessage::Instance()->ms_iInvalidTimeStringError) errortext = &error3; else
-    if ((t_int32)ErrorNum == JulianLogErrorMessage::Instance()->ms_iInvalidRecurrenceError) errortext = &error4; else
-    if ((t_int32)ErrorNum == JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue) errortext = &error5; else
-    if ((t_int32)ErrorNum == JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName) errortext = &error6; else
-    if ((t_int32)ErrorNum == JulianLogErrorMessage::Instance()->ms_iInvalidParameterName) errortext = &error7; else
+    if ((t_int32)ErrorNum == nsCalLogErrorMessage::Instance()->ms_iDTEndBeforeDTStart) errortext = &error1; else
+    if ((t_int32)ErrorNum == nsCalLogErrorMessage::Instance()->ms_iInvalidPromptValue) errortext = &error2; else
+    if ((t_int32)ErrorNum == nsCalLogErrorMessage::Instance()->ms_iInvalidTimeStringError) errortext = &error3; else
+    if ((t_int32)ErrorNum == nsCalLogErrorMessage::Instance()->ms_iInvalidRecurrenceError) errortext = &error4; else
+    if ((t_int32)ErrorNum == nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyValue) errortext = &error5; else
+    if ((t_int32)ErrorNum == nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyName) errortext = &error6; else
+    if ((t_int32)ErrorNum == nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName) errortext = &error7; else
     errortext = &error0;
 
     return errortext->GetBuffer();
@@ -1226,7 +1226,7 @@ JulianFormFactory::doStatus()
     errors = thisICalComp ? firstCalendar->getLogVector(thisICalComp) : firstCalendar->getLogVector();
     if (errors != nil)
     {
-        JulianLogError * element;
+        nsCalLogError * element;
         int32 error_max = MIN(5, errors->GetSize());
         int32 lost_errors = errors->GetSize() - error_max;
         JulianString u;
@@ -1235,7 +1235,7 @@ JulianFormFactory::doStatus()
         {
             char* errorprefix;
 
-            element = (JulianLogError *)errors->GetAt(x);
+            element = (nsCalLogError *)errors->GetAt(x);
             u = "";
 		    
             cjst = element->getShortReturnStatusCode().toCString("");

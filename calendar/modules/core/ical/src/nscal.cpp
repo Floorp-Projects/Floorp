@@ -243,8 +243,8 @@ NSCalendar::export(const char * filename, t_bool & status)
         UnicodeString sResult, out;
         status = TRUE;
 
-        sResult = JulianKeyword::Instance()->ms_sBEGIN_VCALENDAR;
-        sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+        sResult = nsCalKeyword::Instance()->ms_sBEGIN_VCALENDAR;
+        sResult += nsCalKeyword::Instance()->ms_sLINEBREAK;
         ucc = sResult.toCString("");
         if (ucc != 0)
         {
@@ -283,8 +283,8 @@ NSCalendar::export(const char * filename, t_bool & status)
         status |= printComponentVectorToFile(getJournals(), f);
         status |= printComponentVectorToFile(getVFreebusy(), f);
 
-        sResult = JulianKeyword::Instance()->ms_sEND_VCALENDAR;
-        sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+        sResult = nsCalKeyword::Instance()->ms_sEND_VCALENDAR;
+        sResult += nsCalKeyword::Instance()->ms_sLINEBREAK;
         ucc = sResult.toCString("");
         if (ucc != 0)
         {
@@ -383,8 +383,8 @@ NSCalendar::parse(ICalReader * brFile,
         }
 
         // break for "END:" line
-        else if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0))
+        else if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
+            (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0))
         {
             ICalProperty::deleteICalParameterVector(parameters);
             parameters->RemoveAll();
@@ -397,7 +397,7 @@ NSCalendar::parse(ICalReader * brFile,
         }
         else
         {
-            if (propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0)
+            if (propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0)
             {
                 ICalProperty::deleteICalParameterVector(parameters);
                 parameters->RemoveAll();
@@ -445,7 +445,7 @@ NSCalendar::parse(ICalReader * brFile,
                                     else
                                     {
                                         if (m_Log) m_Log->logError(
-                                            JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
+                                            nsCalLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                         delete ic; ic = 0;
                                     }
                                 }
@@ -464,7 +464,7 @@ NSCalendar::parse(ICalReader * brFile,
                                     else
                                     {
                                         if (m_Log) m_Log->logError(
-                                            JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
+                                            nsCalLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                         delete ic; ic = 0;
                                     }
                                 }
@@ -487,7 +487,7 @@ NSCalendar::parse(ICalReader * brFile,
                                     else
                                     {
                                         if (m_Log) m_Log->logError(
-                                            JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
+                                            nsCalLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                         delete ic; ic = 0;
                                     }
                                 }
@@ -505,7 +505,7 @@ NSCalendar::parse(ICalReader * brFile,
                                     else
                                     {
                                         if (m_Log) m_Log->logError(
-                                            JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
+                                            nsCalLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                         delete ic; ic = 0;
                                     }
                                 }
@@ -527,7 +527,7 @@ NSCalendar::parse(ICalReader * brFile,
                             else
                             {
                                 if (m_Log) m_Log->logError(
-                                    JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
+                                    nsCalLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                 delete ic; ic = 0;
                             }
                         }
@@ -540,7 +540,7 @@ NSCalendar::parse(ICalReader * brFile,
                             bUpdatedComponent = addComponentWithType(ic, ic->GetType());                            
                             if (m_Log) 
                             {   
-                                m_Log->setCurrentEventLogComponentType((JulianLogErrorVector::ECompType) ic->GetType());
+                                m_Log->setCurrentEventLogComponentType((nsCalLogErrorVector::ECompType) ic->GetType());
                                 m_Log->setCurrentEventLogValidity(TRUE);
                                 uid = "";
 #if 0
@@ -580,9 +580,9 @@ NSCalendar::parse(ICalReader * brFile,
                         {
                             if (m_Log) 
                             {
-                                //m_Log->setCurrentEventLogComponentType((JulianLogErrorVector::ECompType) ic->GetType());
+                                //m_Log->setCurrentEventLogComponentType((nsCalLogErrorVector::ECompType) ic->GetType());
                                 // make invalid event errors go to NSCALENDAR
-                                m_Log->setCurrentEventLogComponentType(JulianLogErrorVector::ECompType_NSCALENDAR);
+                                m_Log->setCurrentEventLogComponentType(nsCalLogErrorVector::ECompType_NSCALENDAR);
                                 m_Log->setCurrentEventLogValidity(FALSE);
                                 uid = "";
 #if 0
@@ -614,7 +614,7 @@ NSCalendar::parse(ICalReader * brFile,
 #endif
                             }
                             if (m_Log) m_Log->logError(
-                                JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
+                                nsCalLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
 #if 0
                             if (m_Log) 
                             {
@@ -634,7 +634,7 @@ NSCalendar::parse(ICalReader * brFile,
                             delete ic; ic = 0;
                         }
 #endif // #else
-                        if (sOK.compareIgnoreCase(JulianKeyword::Instance()->ms_sOK) == 0)
+                        if (sOK.compareIgnoreCase(nsCalKeyword::Instance()->ms_sOK) == 0)
                             bNextComponent = FALSE;
                         else 
                         {
@@ -659,13 +659,13 @@ NSCalendar::parse(ICalReader * brFile,
                         if (m_Log) 
                         {
                             m_Log->addEventErrorEntry();
-                            //m_Log->setCurrentEventLogComponentType(JulianLogErrorVector::ECompType_XCOMPONENT);
+                            //m_Log->setCurrentEventLogComponentType(nsCalLogErrorVector::ECompType_XCOMPONENT);
                             // make x-toekn errors go to NSCALENDAR
-                            m_Log->setCurrentEventLogComponentType(JulianLogErrorVector::ECompType_NSCALENDAR);
+                            m_Log->setCurrentEventLogComponentType(nsCalLogErrorVector::ECompType_NSCALENDAR);
                         }   
                         if (m_Log) m_Log->logError(
-                            JulianLogErrorMessage::Instance()->ms_iXTokenComponentIgnored, 
-                            JulianKeyword::Instance()->ms_sNSCALENDAR, sName, 200);
+                            nsCalLogErrorMessage::Instance()->ms_iXTokenComponentIgnored, 
+                            nsCalKeyword::Instance()->ms_sNSCALENDAR, sName, 200);
 
                         // Ignore all lines between BEGIN:X-COMPONENT and END:X-COMPONENT
                         while (TRUE)
@@ -677,23 +677,23 @@ NSCalendar::parse(ICalReader * brFile,
                             ICalProperty::deleteICalParameterVector(parameters);
                             parameters->RemoveAll();
                             
-                            if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
+                            if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
                                 (propVal.compareIgnoreCase(sName) == 0))
                             {
                                 // correct end of X-Component parsing
                                 break;
                             }
                             else if (
-                                ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) && 
-                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0)) ||
+                                ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) && 
+                                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0)) ||
                                 
-                                ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) && 
-                                ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
-                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
-                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
-                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
-                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
-                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+                                ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) && 
+                                ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) ||
+                                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) ||
+                                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+                                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
                                 (ICalProperty::IsXToken(propVal)))))
                                 
                             {
@@ -702,10 +702,10 @@ NSCalendar::parse(ICalReader * brFile,
                                 // or BEGIN:X-token
                             
                                 if (m_Log) m_Log->logError(
-                                    JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
-                                    JulianKeyword::Instance()->ms_sNSCALENDAR, strLine, 300);
+                                    nsCalLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
+                                    nsCalKeyword::Instance()->ms_sNSCALENDAR, strLine, 300);
                                 sOK = propName;
-                                sOK += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+                                sOK += nsCalKeyword::Instance()->ms_sCOLON_SYMBOL;
                                 sOK += propVal;
                                 bNextComponent = TRUE;
                                 sName = propVal;
@@ -723,7 +723,7 @@ NSCalendar::parse(ICalReader * brFile,
             }
             else 
             {
-                if (m_Log) m_Log->setCurrentEventLogComponentType(JulianLogErrorVector::ECompType_NSCALENDAR);
+                if (m_Log) m_Log->setCurrentEventLogComponentType(nsCalLogErrorVector::ECompType_NSCALENDAR);
                 storeData(strLine, propName, propVal, parameters);
 
                 ICalProperty::deleteICalParameterVector(parameters);
@@ -746,67 +746,67 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
     t_int32 i;
    
     t_int32 hashCode = propName.hashCode();
-    if (JulianKeyword::Instance()->ms_ATOM_VERSION == hashCode)
+    if (nsCalKeyword::Instance()->ms_ATOM_VERSION == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         setVersion(propVal, parameters);       
         return TRUE;
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_PRODID == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_PRODID == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         setProdid(propVal, parameters);
         return TRUE;
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_CALSCALE == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_CALSCALE == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         // if propVal != CALSCALE, just log, 
         // will set to GREGORIAN later.
-        if (JulianKeyword::Instance()->ms_ATOM_GREGORIAN != propVal.hashCode())
+        if (nsCalKeyword::Instance()->ms_ATOM_GREGORIAN != propVal.hashCode())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
-                JulianKeyword::Instance()->ms_sVCALENDAR,
+                nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
+                nsCalKeyword::Instance()->ms_sVCALENDAR,
                 propName, propVal, 200);
         }
 
         setCalScale(propVal, parameters);
         return TRUE;
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_METHOD == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_METHOD == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         i = stringToMethod(propVal);
         if (i < 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
-                JulianKeyword::Instance()->ms_sVCALENDAR,
+                nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
+                nsCalKeyword::Instance()->ms_sVCALENDAR,
                 propName, propVal, 200);
         }
         else 
@@ -814,8 +814,8 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
             if (getMethod() >= 0)
             {
                 if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-                    JulianKeyword::Instance()->ms_sVCALENDAR,
+                    nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+                    nsCalKeyword::Instance()->ms_sVCALENDAR,
                     propName, propVal, 100);
             }
             setMethod((NSCalendar::METHOD) i);
@@ -829,26 +829,26 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
         return TRUE;
     }
 #if 0
-    else if (JulianKeyword::Instance()->ms_ATOM_SOURCE == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_SOURCE == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {            
            if (m_Log) m_Log->logError(
-               JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-               JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
+               nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+               nsCalKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         setSource(propVal, parameters);
         return TRUE;
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_NAME == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_NAME == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         setName(propVal, parameters);
         return TRUE;
@@ -857,8 +857,8 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
     else
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
-            JulianKeyword::Instance()->ms_sVCALENDAR,
+            nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
+            nsCalKeyword::Instance()->ms_sVCALENDAR,
             propName, 200);
 
         return FALSE;
@@ -952,7 +952,7 @@ NSCalendar::getLogVector(ICalComponent * ic)
         if (vvError != 0)
         {
             t_int32 i = 0;
-            JulianLogErrorVector * lev = 0;
+            nsCalLogErrorVector * lev = 0;
             UnicodeString uid;
 #if 0
             UnicodeString rid;
@@ -982,8 +982,8 @@ NSCalendar::getLogVector(ICalComponent * ic)
 
             for (i = 0; i < vvError->GetSize(); i++)
             {
-                lev = (JulianLogErrorVector *) vvError->GetAt(i);
-                if ((lev->GetComponentType() == (JulianLogErrorVector::ECompType) ic->GetType()) &&
+                lev = (nsCalLogErrorVector *) vvError->GetAt(i);
+                if ((lev->GetComponentType() == (nsCalLogErrorVector::ECompType) ic->GetType()) &&
                     (lev->GetUID() == uid) 
 #if 0
                     && (lev->GetRecurrenceID() == rid)
@@ -1008,11 +1008,11 @@ NSCalendar::getLogVector()
         if (vvError != 0)
         {
             t_int32 i = 0;
-            JulianLogErrorVector * lev = 0;
+            nsCalLogErrorVector * lev = 0;
             for (i = 0; i < vvError->GetSize(); i++)
             {
-                lev = (JulianLogErrorVector *) vvError->GetAt(i);
-                if (lev->GetComponentType() == JulianLogErrorVector::ECompType_NSCALENDAR)
+                lev = (nsCalLogErrorVector *) vvError->GetAt(i);
+                if (lev->GetComponentType() == nsCalLogErrorVector::ECompType_NSCALENDAR)
                     return (lev->GetErrors());
             }
         }
@@ -1025,24 +1025,24 @@ NSCalendar::getLogVector()
 UnicodeString NSCalendar::toString()
 {
     UnicodeString sResult, s, out;
-    s = JulianKeyword::Instance()->ms_sPRODID;
+    s = nsCalKeyword::Instance()->ms_sPRODID;
     sResult += ICalProperty::propertyToICALString(s, getProdidProperty(), out);
-    s = JulianKeyword::Instance()->ms_sCALSCALE;
+    s = nsCalKeyword::Instance()->ms_sCALSCALE;
     sResult += ICalProperty::propertyToICALString(s, getCalScaleProperty(), out);
-    s = JulianKeyword::Instance()->ms_sVERSION;
+    s = nsCalKeyword::Instance()->ms_sVERSION;
     sResult += ICalProperty::propertyToICALString(s, getVersionProperty(), out);
 #if 0
-    s = JulianKeyword::Instance()->ms_sNAME;
+    s = nsCalKeyword::Instance()->ms_sNAME;
     sResult += ICalProperty::propertyToICALString(s, getNameProperty(), out);
-    s = JulianKeyword::Instance()->ms_sSOURCE;
+    s = nsCalKeyword::Instance()->ms_sSOURCE;
     sResult += ICalProperty::propertyToICALString(s, getSourceProperty(), out);
 #endif
     // print method
-    sResult += JulianKeyword::Instance()->ms_sMETHOD;
-    sResult += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+    sResult += nsCalKeyword::Instance()->ms_sMETHOD;
+    sResult += nsCalKeyword::Instance()->ms_sCOLON_SYMBOL;
     sResult += methodToString(getMethod(), out); 
 
-    sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+    sResult += nsCalKeyword::Instance()->ms_sLINEBREAK;
     //sResult += ICalProperty::propertyToICALString(s, getMethodProperty(), sResult);
 
     return sResult;
@@ -1055,23 +1055,23 @@ NSCalendar::createCalendarHeader(UnicodeString & sResult)
 {
     UnicodeString s, out;
     sResult = "";
-    s = JulianKeyword::Instance()->ms_sPRODID;
+    s = nsCalKeyword::Instance()->ms_sPRODID;
     sResult += ICalProperty::propertyToICALString(s, getProdidProperty(), out);
-    s = JulianKeyword::Instance()->ms_sCALSCALE;
+    s = nsCalKeyword::Instance()->ms_sCALSCALE;
     sResult += ICalProperty::propertyToICALString(s, getCalScaleProperty(), out);
-    s = JulianKeyword::Instance()->ms_sVERSION;
+    s = nsCalKeyword::Instance()->ms_sVERSION;
     sResult += ICalProperty::propertyToICALString(s, getVersionProperty(), out);
 #if 0
-    s = JulianKeyword::Instance()->ms_sNAME;
+    s = nsCalKeyword::Instance()->ms_sNAME;
     sResult += ICalProperty::propertyToICALString(s, getNameProperty(), out);
-    s = JulianKeyword::Instance()->ms_sSOURCE;
+    s = nsCalKeyword::Instance()->ms_sSOURCE;
     sResult += ICalProperty::propertyToICALString(s, getSourceProperty(), out);
 #endif    
     // print method enum
-    sResult += JulianKeyword::Instance()->ms_sMETHOD; 
-    sResult += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+    sResult += nsCalKeyword::Instance()->ms_sMETHOD; 
+    sResult += nsCalKeyword::Instance()->ms_sCOLON_SYMBOL;
     sResult += methodToString(getMethod(), out); 
-    sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+    sResult += nsCalKeyword::Instance()->ms_sLINEBREAK;
     //sResult += ICalProperty::propertyToICALString(s, getMethodProperty(), out);
     
     return sResult;
@@ -1082,8 +1082,8 @@ NSCalendar::createCalendarHeader(UnicodeString & sResult)
 UnicodeString NSCalendar::toICALString()
 {
     UnicodeString sResult, out;
-    sResult = JulianKeyword::Instance()->ms_sBEGIN_VCALENDAR;
-    sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+    sResult = nsCalKeyword::Instance()->ms_sBEGIN_VCALENDAR;
+    sResult += nsCalKeyword::Instance()->ms_sLINEBREAK;
     sResult += createCalendarHeader(out);
     sResult += ICalProperty::vectorToICALString(getXTokens(), out);
     //if (FALSE) TRACE("out = %s", out.toCString(""));
@@ -1094,8 +1094,8 @@ UnicodeString NSCalendar::toICALString()
     sResult += printComponentVector(getVFreebusy(), out);
     sResult += printComponentVector(getTodos(), out);
     sResult += printComponentVector(getJournals(), out);
-    sResult += JulianKeyword::Instance()->ms_sEND_VCALENDAR;
-    sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+    sResult += nsCalKeyword::Instance()->ms_sEND_VCALENDAR;
+    sResult += nsCalKeyword::Instance()->ms_sLINEBREAK;
     return sResult;
 }
 //---------------------------------------------------------------------
@@ -1390,7 +1390,7 @@ NSCalendar::createVFreebusyHelper(Freebusy * f, DateTime start,
                 ev = (VEvent *) v->GetAt(i);
 
                 // must be opaque
-                if (ev->getTransp() == JulianKeyword::Instance()->ms_sOPAQUE)
+                if (ev->getTransp() == nsCalKeyword::Instance()->ms_sOPAQUE)
                 {
                     startP = ev->getDTStart();
                     endP = ((ev->isAllDayEvent()) ? start : ev->getDTEnd());
@@ -1599,7 +1599,7 @@ NSCalendar::debugPrintComponentVector(JulianPtrArray * components,
             out += num;
             out += ")\t";
             out += ic->toString();
-            out += JulianKeyword::Instance()->ms_sLINEBREAK;
+            out += nsCalKeyword::Instance()->ms_sLINEBREAK;
         }
     }
     else
@@ -1958,14 +1958,14 @@ NSCalendar::stringToMethod(UnicodeString & method)
 {
     t_int32 hashCode = method.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_PUBLISH == hashCode) return METHOD_PUBLISH;
-    else if (JulianKeyword::Instance()->ms_ATOM_REQUEST == hashCode) return METHOD_REQUEST;
-    else if (JulianKeyword::Instance()->ms_ATOM_REPLY == hashCode) return METHOD_REPLY;
-    else if (JulianKeyword::Instance()->ms_ATOM_CANCEL == hashCode) return METHOD_CANCEL;
-    else if (JulianKeyword::Instance()->ms_ATOM_REFRESH == hashCode) return METHOD_REFRESH;
-    else if (JulianKeyword::Instance()->ms_ATOM_COUNTER == hashCode) return METHOD_COUNTER;
-    else if (JulianKeyword::Instance()->ms_ATOM_DECLINECOUNTER == hashCode) return METHOD_DECLINECOUNTER;
-    else if (JulianKeyword::Instance()->ms_ATOM_ADD == hashCode) return METHOD_ADD;
+    if (nsCalKeyword::Instance()->ms_ATOM_PUBLISH == hashCode) return METHOD_PUBLISH;
+    else if (nsCalKeyword::Instance()->ms_ATOM_REQUEST == hashCode) return METHOD_REQUEST;
+    else if (nsCalKeyword::Instance()->ms_ATOM_REPLY == hashCode) return METHOD_REPLY;
+    else if (nsCalKeyword::Instance()->ms_ATOM_CANCEL == hashCode) return METHOD_CANCEL;
+    else if (nsCalKeyword::Instance()->ms_ATOM_REFRESH == hashCode) return METHOD_REFRESH;
+    else if (nsCalKeyword::Instance()->ms_ATOM_COUNTER == hashCode) return METHOD_COUNTER;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DECLINECOUNTER == hashCode) return METHOD_DECLINECOUNTER;
+    else if (nsCalKeyword::Instance()->ms_ATOM_ADD == hashCode) return METHOD_ADD;
     else return METHOD_INVALID;
 }
 
@@ -2027,14 +2027,14 @@ UnicodeString & NSCalendar::methodToString(NSCalendar::METHOD method, UnicodeStr
 {
     switch(method)
     {
-    case METHOD_PUBLISH: out = JulianKeyword::Instance()->ms_sPUBLISH; break;
-    case METHOD_REQUEST: out = JulianKeyword::Instance()->ms_sREQUEST; break;
-    case METHOD_REPLY: out = JulianKeyword::Instance()->ms_sREPLY; break;
-    case METHOD_CANCEL: out = JulianKeyword::Instance()->ms_sCANCEL; break;
-    case METHOD_REFRESH: out = JulianKeyword::Instance()->ms_sREFRESH; break;
-    case METHOD_COUNTER: out = JulianKeyword::Instance()->ms_sCOUNTER; break;
-    case METHOD_DECLINECOUNTER: out = JulianKeyword::Instance()->ms_sDECLINECOUNTER; break;
-    case METHOD_ADD: out = JulianKeyword::Instance()->ms_sADD; break;
+    case METHOD_PUBLISH: out = nsCalKeyword::Instance()->ms_sPUBLISH; break;
+    case METHOD_REQUEST: out = nsCalKeyword::Instance()->ms_sREQUEST; break;
+    case METHOD_REPLY: out = nsCalKeyword::Instance()->ms_sREPLY; break;
+    case METHOD_CANCEL: out = nsCalKeyword::Instance()->ms_sCANCEL; break;
+    case METHOD_REFRESH: out = nsCalKeyword::Instance()->ms_sREFRESH; break;
+    case METHOD_COUNTER: out = nsCalKeyword::Instance()->ms_sCOUNTER; break;
+    case METHOD_DECLINECOUNTER: out = nsCalKeyword::Instance()->ms_sDECLINECOUNTER; break;
+    case METHOD_ADD: out = nsCalKeyword::Instance()->ms_sADD; break;
     default:
         // TODO: Log and error??
         out = "";

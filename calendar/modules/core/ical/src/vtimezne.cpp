@@ -154,7 +154,7 @@ VTimeZone::parse(ICalReader * brFile, UnicodeString & sType,
                  t_bool bIgnoreBeginError, nsCalUtility::MimeEncoding encoding)
 {
     UnicodeString strLine, propName, propVal;
-    parseStatus = JulianKeyword::Instance()->ms_sOK;
+    parseStatus = nsCalKeyword::Instance()->ms_sOK;
     JulianPtrArray * parameters = new JulianPtrArray();
     PR_ASSERT(parameters != 0 && brFile != 0);
     if (parameters == 0 || brFile == 0)
@@ -188,29 +188,29 @@ VTimeZone::parse(ICalReader * brFile, UnicodeString & sType,
             
             continue;
         }
-        else if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-                 (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0))
+        else if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
+                 (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0))
         {
              ICalProperty::deleteICalParameterVector(parameters);
              parameters->RemoveAll();
 
              break;            
         }
-        else if (((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-                   ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+        else if (((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
+                   ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
                    (ICalProperty::IsXToken(propVal)))
                    ) ||
-                  ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
-                   ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) && !bIgnoreBeginError) || 
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
-                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                  ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) &&
+                   ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0) && !bIgnoreBeginError) || 
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+                   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) ||
                    (ICalProperty::IsXToken(propVal))
                   ))
         
@@ -223,15 +223,15 @@ VTimeZone::parse(ICalReader * brFile, UnicodeString & sType,
             parameters->RemoveAll();
 
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
-                JulianKeyword::Instance()->ms_sVTIMEZONE, strLine, 300);
+                nsCalLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
+                nsCalKeyword::Instance()->ms_sVTIMEZONE, strLine, 300);
            
             parseStatus = strLine;
             break;            
         }
-        else if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
-                 ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sDAYLIGHT) == 0) ||
-                 (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sSTANDARD) == 0)))
+        else if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) &&
+                 ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sDAYLIGHT) == 0) ||
+                 (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sSTANDARD) == 0)))
         {
             // Add the DAYLIGHT, STANDARD parts 
             ICalProperty::deleteICalParameterVector(parameters);
@@ -246,7 +246,7 @@ VTimeZone::parse(ICalReader * brFile, UnicodeString & sType,
                 if (!tzpart->isValid())
                 {
                     if (m_Log) m_Log->logError(
-                        JulianLogErrorMessage::Instance()->ms_iInvalidTZPart, 200);
+                        nsCalLogErrorMessage::Instance()->ms_iInvalidTZPart, 200);
                     delete tzpart; tzpart = 0;
                 }
                 else
@@ -279,60 +279,60 @@ void VTimeZone::storeData(UnicodeString & strLine, UnicodeString & propName,
     } 
     //UnicodeString u;
     t_int32 hashCode = propName.hashCode();
-    //if (propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sLASTMODIFIED) == 0)
+    //if (propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sLASTMODIFIED) == 0)
     
-    if (JulianKeyword::Instance()->ms_ATOM_LASTMODIFIED == hashCode)
+    if (nsCalKeyword::Instance()->ms_ATOM_LASTMODIFIED == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
         }
 
         if (getLastModifiedProperty() != 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
+                nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+                nsCalKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
         }
         DateTime d(propVal);
         setLastModified(d, parameters);
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_TZID == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_TZID == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
         }
 
         if (getTZIDProperty() != 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
+                nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+                nsCalKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
         }
         setTZID(propVal, parameters);
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_TZURL == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_TZURL == hashCode)
     {
         // no parameters
         if (parameters->GetSize() > 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
         }
 
         if (getTZURLProperty() != 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
+                nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+                nsCalKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
         }
         setTZURL(propVal, parameters);
     }
@@ -343,8 +343,8 @@ void VTimeZone::storeData(UnicodeString & strLine, UnicodeString & propName,
     else 
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
-            JulianKeyword::Instance()->ms_sVTIMEZONE, propName, 200);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
+            nsCalKeyword::Instance()->ms_sVTIMEZONE, propName, 200);
     }
 }
 //---------------------------------------------------------------------
@@ -452,8 +452,8 @@ t_bool VTimeZone::isValid()
 //---------------------------------------------------------------------
 UnicodeString VTimeZone::toICALString()
 {
-    UnicodeString u = JulianKeyword::Instance()->ms_sVTIMEZONE;
-    return ICalComponent::format(u, JulianFormatString::Instance()->ms_sVTimeZoneAllMessage, "");
+    UnicodeString u = nsCalKeyword::Instance()->ms_sVTIMEZONE;
+    return ICalComponent::format(u, nsCalFormatString::Instance()->ms_sVTimeZoneAllMessage, "");
 }
 //---------------------------------------------------------------------
 UnicodeString VTimeZone::toICALString(UnicodeString method,
@@ -468,7 +468,7 @@ UnicodeString VTimeZone::toICALString(UnicodeString method,
 UnicodeString VTimeZone::toString()
 {
     return ICalComponent::toStringFmt(
-        JulianFormatString::Instance()->ms_VTimeZoneStrDefaultFmt);
+        nsCalFormatString::Instance()->ms_VTimeZoneStrDefaultFmt);
 }
 //---------------------------------------------------------------------
 UnicodeString VTimeZone::toStringChar(t_int32 c, UnicodeString & dateFmt)
@@ -525,13 +525,13 @@ UnicodeString VTimeZone::formatChar(t_int32 c, UnicodeString sFilterAttendee,
         }
         return s;
     case ms_cLastModified:
-        s = JulianKeyword::Instance()->ms_sLASTMODIFIED;
+        s = nsCalKeyword::Instance()->ms_sLASTMODIFIED;
         return ICalProperty::propertyToICALString(s, getLastModifiedProperty(), sResult); 
     case ms_cTZID:
-        s = JulianKeyword::Instance()->ms_sTZID;
+        s = nsCalKeyword::Instance()->ms_sTZID;
         return ICalProperty::propertyToICALString(s, getTZIDProperty(), sResult); 
     case ms_cTZURL:
-        s = JulianKeyword::Instance()->ms_sTZURL;
+        s = nsCalKeyword::Instance()->ms_sTZURL;
         return ICalProperty::propertyToICALString(s, getTZURLProperty(), sResult);
     case ms_cXTokens: 
         return ICalProperty::vectorToICALString(getXTokens(), sResult);
@@ -631,13 +631,13 @@ TZPart * VTimeZone::getPart(UnicodeString & u)
 //---------------------------------------------------------------------
 TZPart * VTimeZone::getStandardPart()
 {
-    UnicodeString u = JulianKeyword::Instance()->ms_sSTANDARD;
+    UnicodeString u = nsCalKeyword::Instance()->ms_sSTANDARD;
     return getPart(u);
 }
 //---------------------------------------------------------------------
 TZPart * VTimeZone::getDaylightPart()
 {
-    UnicodeString u = JulianKeyword::Instance()->ms_sDAYLIGHT;
+    UnicodeString u = nsCalKeyword::Instance()->ms_sDAYLIGHT;
     return getPart(u);
 }
 //---------------------------------------------------------------------
@@ -779,7 +779,7 @@ VTimeZone::DateTimeApplyTimeZone(UnicodeString & time,
     UnicodeString out, u;
     VTimeZone * vt = 0;
     TimeZone *t = 0;
-    u = JulianKeyword::Instance()->ms_sTZID;
+    u = nsCalKeyword::Instance()->ms_sTZID;
     out = ICalParameter::GetParameterFromVector(u, out, parameters);
 
     //if (FALSE) TRACE("out = %s\r\n", out.toCString(""));

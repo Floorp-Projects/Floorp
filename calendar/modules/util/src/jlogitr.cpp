@@ -27,8 +27,8 @@
 #include "jlogitr.h"
 
 //---------------------------------------------------------------------
-JulianLogIterator::JulianLogIterator(JulianPtrArray * toIterate,
-                                     JulianLogErrorVector::ECompType iComponentType,
+nsCalLogIterator::nsCalLogIterator(JulianPtrArray * toIterate,
+                                     nsCalLogErrorVector::ECompType iComponentType,
                                      t_bool bValid):
 m_LogToIterateOver(toIterate),
 m_iComponentType(iComponentType),
@@ -38,51 +38,51 @@ m_bValid(bValid)
 //---------------------------------------------------------------------
 
 
-JulianLogIterator::JulianLogIterator()
+nsCalLogIterator::nsCalLogIterator()
 {
 }
 
 //---------------------------------------------------------------------
 
-JulianLogIterator * 
-JulianLogIterator::createIterator(JulianPtrArray * toIterate, 
-                                  JulianLogErrorVector::ECompType iComponentType,
+nsCalLogIterator * 
+nsCalLogIterator::createIterator(JulianPtrArray * toIterate, 
+                                  nsCalLogErrorVector::ECompType iComponentType,
                                   t_bool bValid)
 {
     if (toIterate == 0)
         return 0;
     else
-        return new JulianLogIterator(toIterate, iComponentType, bValid);
+        return new nsCalLogIterator(toIterate, iComponentType, bValid);
 }
 
 //---------------------------------------------------------------------
 
-JulianLogErrorVector * 
-JulianLogIterator::firstElement()
+nsCalLogErrorVector * 
+nsCalLogIterator::firstElement()
 {
     return findNextElement(0);
 }
 
 //---------------------------------------------------------------------
 
-JulianLogErrorVector * 
-JulianLogIterator::nextElement()
+nsCalLogErrorVector * 
+nsCalLogIterator::nextElement()
 {
     return findNextElement(++m_iIndex);
 }
 
 //---------------------------------------------------------------------
 
-JulianLogErrorVector * 
-JulianLogIterator::findNextElement(t_int32 startIndex)
+nsCalLogErrorVector * 
+nsCalLogIterator::findNextElement(t_int32 startIndex)
 {
     if (m_LogToIterateOver != 0)
     {
-        JulianLogErrorVector * errVctr = 0;
+        nsCalLogErrorVector * errVctr = 0;
         t_int32 i;
         for (i = startIndex; i < m_LogToIterateOver->GetSize(); i++)
         {
-            errVctr = (JulianLogErrorVector *) m_LogToIterateOver->GetAt(i);
+            errVctr = (nsCalLogErrorVector *) m_LogToIterateOver->GetAt(i);
             if ((errVctr->GetComponentType() == m_iComponentType) &&
                 (errVctr->IsValid() == m_bValid))
             {

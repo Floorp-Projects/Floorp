@@ -78,7 +78,7 @@ private:
     /**
      * current vector of errors that is currently being written to.
      */
-    JulianLogErrorVector * m_CurrentEventLogVctr;
+    nsCalLogErrorVector * m_CurrentEventLogVctr;
 
     /** TRUE = writeToString, FALSE = writeToFile, immutable */
     t_bool m_WriteToString;
@@ -90,7 +90,7 @@ private:
     FILE * m_Stream;
 
     /* if successful addition return TRUE, else FALSE */
-    t_bool addErrorToVector(JulianLogError * error);
+    t_bool addErrorToVector(nsCalLogError * error);
 
 public:
 
@@ -172,7 +172,7 @@ public:
 
      * @param           ComponentType
      */
-    void setCurrentEventLogComponentType(JulianLogErrorVector::ECompType iComponentType);
+    void setCurrentEventLogComponentType(nsCalLogErrorVector::ECompType iComponentType);
 
 #if 0
     void setUIDRecurrenceID(UnicodeString & uid, UnicodeString & rid);
@@ -207,7 +207,7 @@ public:
      *      createIterator(logPtr, ECompType_XCOMPONENT, FALSE)
      * 
      */
-    static JulianLogIterator * createIterator(JLog * aLog, JulianLogErrorVector::ECompType iComponentType, t_bool bValid = TRUE);
+    static nsCalLogIterator * createIterator(JLog * aLog, nsCalLogErrorVector::ECompType iComponentType, t_bool bValid = TRUE);
 #endif
 
     void logError(const t_int32 errorID, t_int32 level = m_DEFAULT_LEVEL);

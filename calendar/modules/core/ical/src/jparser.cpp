@@ -65,15 +65,15 @@ JulianParser::JulianParser(ICalCAPIReader * reader,
 nsCalUtility::MimeEncoding
 JulianParser::stringToEncodingType(UnicodeString & propVal)
 {
-    if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_s7bit) == 0)
+    if (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_s7bit) == 0)
     {
         return nsCalUtility::MimeEncoding_7bit;
     }
-    else if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sQUOTED_PRINTABLE) == 0)
+    else if (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sQUOTED_PRINTABLE) == 0)
     {
         return nsCalUtility::MimeEncoding_QuotedPrintable;
     }
-    else if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sBase64) == 0)
+    else if (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBase64) == 0)
     {
         return nsCalUtility::MimeEncoding_Base64;
     }
@@ -145,8 +145,8 @@ void JulianParser::ParseCalendars(ICalReader * reader,
             if (TRUE) TRACE("\t--Parser: propName = --%s--, propVal = --%s--,paramSize = %d\r\n",
                 propName.toCString(""), propVal.toCString(""), parameters->GetSize());
 #endif
-            if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
-                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0))
+            if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) &&
+                (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0))
             {
                 // parse an NSCalendar, add it to outCalendars                    
                 NSCalendar * cal = new NSCalendar(log);
@@ -155,7 +155,7 @@ void JulianParser::ParseCalendars(ICalReader * reader,
                 outCalendars->Add(cal);
             }
             else if (propName.compareIgnoreCase(
-                JulianKeyword::Instance()->ms_sCONTENT_TRANSFER_ENCODING) == 0)
+                nsCalKeyword::Instance()->ms_sCONTENT_TRANSFER_ENCODING) == 0)
             {
                 ICalProperty::Trim(propVal);
                 encoding = stringToEncodingType(propVal);

@@ -171,7 +171,7 @@ VAlarm::parse(ICalReader * brFile, UnicodeString & sType,
 {
     UnicodeString strLine, propName, propVal;
     JulianPtrArray * parameters = new JulianPtrArray();
-    parseStatus = JulianKeyword::Instance()->ms_sOK;
+    parseStatus = nsCalKeyword::Instance()->ms_sOK;
 
     PR_ASSERT(parameters != 0 && brFile != 0);
     if (parameters == 0 || brFile == 0)
@@ -200,8 +200,8 @@ VAlarm::parse(ICalReader * brFile, UnicodeString & sType,
             continue;
         }
         // END:STANDARD OR END:DAYLIGHT (sType = daylight or standard)
-         else if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-             (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVALARM) == 0))
+         else if ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
+             (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVALARM) == 0))
          {
             ICalProperty::deleteICalParameterVector(parameters);
             parameters->RemoveAll();
@@ -209,31 +209,31 @@ VAlarm::parse(ICalReader * brFile, UnicodeString & sType,
             break;
          }
          else if (
-                ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-                    (   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
-                        (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
-                        (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
-                        (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) || 
-                        (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) || 
-                        (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) || 
+                ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sEND) == 0) &&
+                    (   (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) ||
+                        (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) ||
+                        (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                        (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) || 
+                        (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0) || 
+                        (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0) || 
                         (ICalProperty::IsXToken(propVal)))
                   ) ||
-                  ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
-                  ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) || 
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) || 
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) || 
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) || 
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) || 
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) || 
+                  ((propName.compareIgnoreCase(nsCalKeyword::Instance()->ms_sBEGIN) == 0) &&
+                  ((propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVEVENT) == 0) || 
+                  (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTODO) == 0) || 
+                  (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVJOURNAL) == 0) || 
+                  (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVFREEBUSY) == 0) || 
+                  (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVTIMEZONE) == 0) || 
+                  (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVCALENDAR) == 0) || 
                   (ICalProperty::IsXToken(propVal)) ||
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVALARM) == 0)))) 
+                  (propVal.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVALARM) == 0)))) 
          {
              // END:VEVENT, VTODO, VCALENDAR, VJOURNAL, VFREEBUSY, VTIMEZONE, x-token
              // BEGIN:VEVENT, VTODO, VJOURNAL, VFREEBUSY, VTIMEZONE, VCALENDAR, VALARM, xtoken
              // abrupt end
              if (m_Log) m_Log->logError(
-                 JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
-                 JulianKeyword::Instance()->ms_sVALARM, strLine, 300);
+                 nsCalLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
+                 nsCalKeyword::Instance()->ms_sVALARM, strLine, 300);
              ICalProperty::deleteICalParameterVector(parameters);
              parameters->RemoveAll();
 
@@ -262,25 +262,25 @@ void VAlarm::storeAction(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVALARM, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+                nsCalKeyword::Instance()->ms_sVALARM, strLine, 100);
     }
     i = stringToAction(propVal);
     if (i < 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
-            JulianKeyword::Instance()->ms_sVALARM,
-            JulianKeyword::Instance()->ms_sACTION, propVal, 200);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
+            nsCalKeyword::Instance()->ms_sVALARM,
+            nsCalKeyword::Instance()->ms_sACTION, propVal, 200);
     }
     else 
     {
         if (getAction() >= 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVALARM,
-                JulianKeyword::Instance()->ms_sACTION, propVal, 100);
+                nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+                nsCalKeyword::Instance()->ms_sVALARM,
+                nsCalKeyword::Instance()->ms_sACTION, propVal, 100);
         }
         setAction((VAlarm::ACTION) i);
     }
@@ -292,15 +292,15 @@ void VAlarm::storeAttach(UnicodeString & strLine, UnicodeString & propVal,
 {
     t_bool bParamValid;
     bParamValid = ICalProperty::CheckParamsWithValueRangeCheck(parameters, 
-        JulianAtomRange::Instance()->ms_asEncodingValueFMTTypeParamRange,
-        JulianAtomRange::Instance()->ms_asEncodingValueFMTTypeParamRangeSize, 
-        JulianAtomRange::Instance()->ms_asBinaryURIValueRange,
-        JulianAtomRange::Instance()->ms_asBinaryURIValueRangeSize);        
+        nsCalAtomRange::Instance()->ms_asEncodingValueFMTTypeParamRange,
+        nsCalAtomRange::Instance()->ms_asEncodingValueFMTTypeParamRangeSize, 
+        nsCalAtomRange::Instance()->ms_asBinaryURIValueRange,
+        nsCalAtomRange::Instance()->ms_asBinaryURIValueRangeSize);        
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVALARM, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVALARM, strLine, 100);
     }
     addAttach(propVal, parameters);
 }
@@ -317,7 +317,7 @@ void VAlarm::storeAttendee(UnicodeString & strLine, UnicodeString & propVal,
         if (!attendee->isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidAttendee, 200);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidAttendee, 200);
             delete attendee; attendee = 0;
         }
         else
@@ -333,23 +333,23 @@ void VAlarm::storeDescription(UnicodeString & strLine, UnicodeString & propVal,
     // check parameters
     t_bool bParamValid;
     bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
     
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVALARM, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVALARM, strLine, 100);
     }
 
     // check for duplicates
     if (getDescriptionProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVALARM, 
-            JulianKeyword::Instance()->ms_sDESCRIPTION, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVALARM, 
+            nsCalKeyword::Instance()->ms_sDESCRIPTION, 100);
     }
 
     setDescription(propVal, parameters);
@@ -362,16 +362,16 @@ void VAlarm::storeDuration(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVALARM, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVALARM, strLine, 100);
     }
 
     if (getDurationProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVALARM, 
-            JulianKeyword::Instance()->ms_sDURATION, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVALARM, 
+            nsCalKeyword::Instance()->ms_sDURATION, 100);
     }
     nsCalDuration d(propVal);
     setDuration(d, parameters);
@@ -387,8 +387,8 @@ void VAlarm::storeRepeat(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVALARM, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVALARM, strLine, 100);
     }
 
     char * pcc = propVal.toCString("");
@@ -399,9 +399,9 @@ void VAlarm::storeRepeat(UnicodeString & strLine, UnicodeString & propVal,
     if (getRepeatProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVALARM, 
-            JulianKeyword::Instance()->ms_sREPEAT, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVALARM, 
+            nsCalKeyword::Instance()->ms_sREPEAT, 100);
     }  
     if (!bParseError)
     {
@@ -410,9 +410,9 @@ void VAlarm::storeRepeat(UnicodeString & strLine, UnicodeString & propVal,
     else
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
-            JulianKeyword::Instance()->ms_sVALARM, 
-            JulianKeyword::Instance()->ms_sREPEAT, propVal, 200);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
+            nsCalKeyword::Instance()->ms_sVALARM, 
+            nsCalKeyword::Instance()->ms_sREPEAT, propVal, 200);
     }
 }
 //---------------------------------------------------------------------
@@ -422,21 +422,21 @@ void VAlarm::storeSummary(UnicodeString & strLine, UnicodeString & propVal,
     // check parameters 
     t_bool bParamValid;
     bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asLanguageParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVALARM, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVALARM, strLine, 100);
     }
 
     if (getSummaryProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVALARM, 
-            JulianKeyword::Instance()->ms_sSUMMARY, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVALARM, 
+            nsCalKeyword::Instance()->ms_sSUMMARY, 100);
     }
     setSummary(propVal, parameters);
 }
@@ -448,21 +448,21 @@ void VAlarm::storeTrigger(UnicodeString & strLine, UnicodeString & propVal,
     // check parameters 
     t_bool bParamValid;
     bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asRelatedValueParamRange,
-        JulianAtomRange::Instance()->ms_asRelatedValueParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asRelatedValueParamRange,
+        nsCalAtomRange::Instance()->ms_asRelatedValueParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVALARM, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVALARM, strLine, 100);
     }
     // if propVal is a datetime, store trigger as a datetime, otherwise store is as a duration
     if (getDurationProperty() != 0 || m_TriggerDateTime.isValid())
     {
            if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVALARM, 
-                JulianKeyword::Instance()->ms_sDURATION, 100);
+                nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+                nsCalKeyword::Instance()->ms_sVALARM, 
+                nsCalKeyword::Instance()->ms_sDURATION, 100);
     }
 
     DateTime dt(propVal);
@@ -502,8 +502,8 @@ VAlarm::storeData(UnicodeString & strLine, UnicodeString & propName,
     else
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
-            JulianKeyword::Instance()->ms_sVALARM, propName, 200);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
+            nsCalKeyword::Instance()->ms_sVALARM, propName, 200);
     }
 }
 
@@ -524,7 +524,7 @@ void VAlarm::selfCheck()
         if (getDescription().size() == 0)
         {
             // TODO: make this localized;
-            //u = JulianLogErrorMessage::Instance()->ms_iDefaultAlarmDescriptionString;
+            //u = nsCalLogErrorMessage::Instance()->ms_iDefaultAlarmDescriptionString;
             u = "DEFAULT";
             setDescription(u);
         }
@@ -537,14 +537,14 @@ void VAlarm::selfCheck()
         if (getDescription().size() == 0)
         {
             // TODO: make this localized;
-            //u = JulianLogErrorMessage::Instance()->ms_iDefaultAlarmDescriptionString;
+            //u = nsCalLogErrorMessage::Instance()->ms_iDefaultAlarmDescriptionString;
             u = "DEFAULT";
             setDescription(u);
         }
         if (getSummary().size() == 0)
         {
              // TODO: make this localized;
-            //u = JulianLogErrorMessage::Instance()->ms_iDefaultAlarmSummaryString;
+            //u = nsCalLogErrorMessage::Instance()->ms_iDefaultAlarmSummaryString;
             u = "DEFAULT";
             setSummary(u);
         }
@@ -621,8 +621,8 @@ t_bool VAlarm::isValid()
 //---------------------------------------------------------------------
 UnicodeString VAlarm::toICALString()
 {
-    UnicodeString u = JulianKeyword::Instance()->ms_sVALARM;
-    return ICalComponent::format(u, JulianFormatString::Instance()->ms_sVAlarmAllMessage, "");
+    UnicodeString u = nsCalKeyword::Instance()->ms_sVALARM;
+    return ICalComponent::format(u, nsCalFormatString::Instance()->ms_sVAlarmAllMessage, "");
 }
 //---------------------------------------------------------------------
 UnicodeString VAlarm::toICALString(UnicodeString method,
@@ -637,7 +637,7 @@ UnicodeString VAlarm::toICALString(UnicodeString method,
 UnicodeString VAlarm::toString()
 {
     return ICalComponent::toStringFmt(
-        JulianFormatString::Instance()->ms_VAlarmStrDefaultFmt);
+        nsCalFormatString::Instance()->ms_VAlarmStrDefaultFmt);
 }
 //---------------------------------------------------------------------
 UnicodeString VAlarm::formatChar(t_int32 c, UnicodeString sFilterAttendee,
@@ -654,45 +654,45 @@ UnicodeString VAlarm::formatChar(t_int32 c, UnicodeString sFilterAttendee,
     {
     case ms_cAction:
          // print method enum
-         sResult += JulianKeyword::Instance()->ms_sACTION; 
-         sResult += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+         sResult += nsCalKeyword::Instance()->ms_sACTION; 
+         sResult += nsCalKeyword::Instance()->ms_sCOLON_SYMBOL;
          sResult += actionToString(getAction(), s); 
-         sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+         sResult += nsCalKeyword::Instance()->ms_sLINEBREAK;
          return sResult;
     case ms_cAttendees:
-        s = JulianKeyword::Instance()->ms_sATTENDEE;
+        s = nsCalKeyword::Instance()->ms_sATTENDEE;
         return ICalProperty::propertyVectorToICALString(s, getAttendees(), sResult);    
     case ms_cAttach:
-        s = JulianKeyword::Instance()->ms_sATTACH;
+        s = nsCalKeyword::Instance()->ms_sATTACH;
         return ICalProperty::propertyVectorToICALString(s, getAttach(), sResult);    
     case ms_cDescription:
-        s = JulianKeyword::Instance()->ms_sDESCRIPTION;
+        s = nsCalKeyword::Instance()->ms_sDESCRIPTION;
           return ICalProperty::propertyToICALString(s, getDescriptionProperty(), sResult);
     case ms_cDuration:
-        s = JulianKeyword::Instance()->ms_sDURATION;
+        s = nsCalKeyword::Instance()->ms_sDURATION;
         return ICalProperty::propertyToICALString(s, getDurationProperty(), sResult);
     case ms_cRepeat:
-        s = JulianKeyword::Instance()->ms_sREPEAT;
+        s = nsCalKeyword::Instance()->ms_sREPEAT;
         return ICalProperty::propertyToICALString(s, getRepeatProperty(), sResult);    
     case ms_cTrigger:
-        s = JulianKeyword::Instance()->ms_sTRIGGER;
+        s = nsCalKeyword::Instance()->ms_sTRIGGER;
         if (m_Trigger != 0)
         {
             return ICalProperty::propertyToICALString(s, getTriggerProperty(), sResult);    
         }
         else
         {
-            s += JulianKeyword::Instance()->ms_sSEMICOLON_SYMBOL;
-            s += JulianKeyword::Instance()->ms_sVALUE;
+            s += nsCalKeyword::Instance()->ms_sSEMICOLON_SYMBOL;
+            s += nsCalKeyword::Instance()->ms_sVALUE;
             s += '=';
-            s += JulianKeyword::Instance()->ms_sDATETIME;
-            s += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+            s += nsCalKeyword::Instance()->ms_sDATETIME;
+            s += nsCalKeyword::Instance()->ms_sCOLON_SYMBOL;
             s += m_TriggerDateTime.toISO8601();
-            s += JulianKeyword::Instance()->ms_sLINEBREAK;
+            s += nsCalKeyword::Instance()->ms_sLINEBREAK;
             return s;
         }
     case ms_cSummary:
-        s = JulianKeyword::Instance()->ms_sSUMMARY;
+        s = nsCalKeyword::Instance()->ms_sSUMMARY;
         return ICalProperty::propertyToICALString(s, getSummaryProperty(), sResult);
     case ms_cXTokens: 
         return ICalProperty::vectorToICALString(getXTokens(), sResult);
@@ -769,10 +769,10 @@ VAlarm::stringToAction(UnicodeString & action)
 {
     t_int32 hashCode = action.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_AUDIO == hashCode) return ACTION_AUDIO;
-    else if (JulianKeyword::Instance()->ms_ATOM_DISPLAY == hashCode) return ACTION_DISPLAY;
-    else if (JulianKeyword::Instance()->ms_ATOM_EMAIL == hashCode) return ACTION_EMAIL;
-    else if (JulianKeyword::Instance()->ms_ATOM_PROCEDURE == hashCode) return ACTION_PROCEDURE;
+    if (nsCalKeyword::Instance()->ms_ATOM_AUDIO == hashCode) return ACTION_AUDIO;
+    else if (nsCalKeyword::Instance()->ms_ATOM_DISPLAY == hashCode) return ACTION_DISPLAY;
+    else if (nsCalKeyword::Instance()->ms_ATOM_EMAIL == hashCode) return ACTION_EMAIL;
+    else if (nsCalKeyword::Instance()->ms_ATOM_PROCEDURE == hashCode) return ACTION_PROCEDURE;
     else return ACTION_INVALID;
     // ??? is AUDIO to be default, or should I have invalid state?
 }
@@ -783,10 +783,10 @@ UnicodeString & VAlarm::actionToString(VAlarm::ACTION action, UnicodeString & ou
 {
     switch(action)
     {
-    case ACTION_AUDIO: out = JulianKeyword::Instance()->ms_sAUDIO; break;
-    case ACTION_DISPLAY: out = JulianKeyword::Instance()->ms_sDISPLAY; break;
-    case ACTION_EMAIL: out = JulianKeyword::Instance()->ms_sEMAIL; break;
-    case ACTION_PROCEDURE: out = JulianKeyword::Instance()->ms_sPROCEDURE; break;
+    case ACTION_AUDIO: out = nsCalKeyword::Instance()->ms_sAUDIO; break;
+    case ACTION_DISPLAY: out = nsCalKeyword::Instance()->ms_sDISPLAY; break;
+    case ACTION_EMAIL: out = nsCalKeyword::Instance()->ms_sEMAIL; break;
+    case ACTION_PROCEDURE: out = nsCalKeyword::Instance()->ms_sPROCEDURE; break;
     default:
         out = "";
         break;

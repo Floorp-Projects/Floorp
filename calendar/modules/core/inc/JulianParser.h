@@ -41,7 +41,7 @@ class nsCalStreamReader
 private:
     /*char * m_Buffer;*/
 
-    static JulianUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
+    static nsCalUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
 
     JulianPtrArray * m_OutCalendars;
     nsCapiCallbackReader * m_Reader;

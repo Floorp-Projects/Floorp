@@ -39,7 +39,7 @@
 //---------------------------------------------------------------------
 void VEvent::setDefaultFmt(UnicodeString s)
 {
-    JulianFormatString::Instance()->ms_VEventStrDefaultFmt = s;
+    nsCalFormatString::Instance()->ms_VEventStrDefaultFmt = s;
 }
 //---------------------------------------------------------------------
 
@@ -155,7 +155,7 @@ VEvent::parse(ICalReader * brFile, UnicodeString & sMethod,
               UnicodeString & parseStatus, JulianPtrArray * vTimeZones,
               t_bool bIgnoreBeginError, nsCalUtility::MimeEncoding encoding) 
 {
-    UnicodeString u = JulianKeyword::Instance()->ms_sVEVENT;
+    UnicodeString u = nsCalKeyword::Instance()->ms_sVEVENT;
     return parseType(u, brFile, sMethod, parseStatus, vTimeZones, bIgnoreBeginError, encoding);
 }
 
@@ -210,7 +210,7 @@ void VEvent::selfCheck()
     // if is anniversary event, set transp to TRANSPARENT
     if (isAllDayEvent())
     {
-        setTransp(JulianKeyword::Instance()->ms_sTRANSP);
+        setTransp(nsCalKeyword::Instance()->ms_sTRANSP);
         
         // if no dtend, set dtend to end of day of dtstart.
         if (!getDTEnd().isValid())
@@ -232,7 +232,7 @@ void VEvent::selfCheck()
             setDTEnd(d);
 
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iDTEndBeforeDTStart, 100);
+                nsCalLogErrorMessage::Instance()->ms_iDTEndBeforeDTStart, 100);
         }
     }
     else 
@@ -254,7 +254,7 @@ void VEvent::selfCheck()
             setDTEnd(d);
 
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iDTEndBeforeDTStart, 100);
+                nsCalLogErrorMessage::Instance()->ms_iDTEndBeforeDTStart, 100);
         }
     }
     if (getStatus().size() > 0)
@@ -264,14 +264,14 @@ void VEvent::selfCheck()
         u.toUpper();
         ICalProperty::Trim(u);
         JAtom ua(u);
-        if ((JulianKeyword::Instance()->ms_ATOM_CONFIRMED != ua) && 
-            (JulianKeyword::Instance()->ms_ATOM_TENTATIVE != ua) && 
-            (JulianKeyword::Instance()->ms_ATOM_CANCELLED != ua))
+        if ((nsCalKeyword::Instance()->ms_ATOM_CONFIRMED != ua) && 
+            (nsCalKeyword::Instance()->ms_ATOM_TENTATIVE != ua) && 
+            (nsCalKeyword::Instance()->ms_ATOM_CANCELLED != ua))
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
-                JulianKeyword::Instance()->ms_sVEVENT, 
-                JulianKeyword::Instance()->ms_sSTATUS, u, 200);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
+                nsCalKeyword::Instance()->ms_sVEVENT, 
+                nsCalKeyword::Instance()->ms_sSTATUS, u, 200);
 
             setStatus("");
         }
@@ -284,27 +284,27 @@ void VEvent::storeDTEnd(UnicodeString & strLine, UnicodeString & propVal,
 {
     // check parameters
     t_bool bParamValid = ICalProperty::CheckParamsWithValueRangeCheck(parameters, 
-        JulianAtomRange::Instance()->ms_asTZIDValueParamRange,
-        JulianAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
-        JulianAtomRange::Instance()->ms_asDateDateTimeValueRange,
-        JulianAtomRange::Instance()->ms_asDateDateTimeValueRangeSize);
+        nsCalAtomRange::Instance()->ms_asTZIDValueParamRange,
+        nsCalAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
+        nsCalAtomRange::Instance()->ms_asDateDateTimeValueRange,
+        nsCalAtomRange::Instance()->ms_asDateDateTimeValueRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
     }
 
     if (getDTEndProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVEVENT, 
-            JulianKeyword::Instance()->ms_sDTEND, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVEVENT, 
+            nsCalKeyword::Instance()->ms_sDTEND, 100);
     }  
     UnicodeString u, out;
 
-    u = JulianKeyword::Instance()->ms_sVALUE;
+    u = nsCalKeyword::Instance()->ms_sVALUE;
     out = ICalParameter::GetParameterFromVector(u, out, parameters);
 
     t_bool bIsDate = DateTime::IsParseableDate(propVal);
@@ -312,21 +312,21 @@ void VEvent::storeDTEnd(UnicodeString & strLine, UnicodeString & propVal,
     if (bIsDate)
     {
         // if there is a VALUE=X parameter, make sure X is DATE
-        if (out.size() != 0 && (JulianKeyword::Instance()->ms_ATOM_DATE != out.hashCode()))
+        if (out.size() != 0 && (nsCalKeyword::Instance()->ms_ATOM_DATE != out.hashCode()))
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
-                JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
+                nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
         }   
     }
     else
     {
         // if there is a VALUE=X parameter, make sure X is DATETIME
-        if (out.size() != 0 && (JulianKeyword::Instance()->ms_ATOM_DATETIME != out.hashCode()))
+        if (out.size() != 0 && (nsCalKeyword::Instance()->ms_ATOM_DATETIME != out.hashCode()))
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
-                JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+                nsCalLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
+                nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
         }
     }
 
@@ -342,16 +342,16 @@ void VEvent::storeDuration(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
     }
 
     if (m_TempDuration != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVEVENT, 
-            JulianKeyword::Instance()->ms_sDURATION, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVEVENT, 
+            nsCalKeyword::Instance()->ms_sDURATION, 100);
     }
     //Duration d(propVal);
     if (m_TempDuration == 0)
@@ -369,16 +369,16 @@ void VEvent::storeGEO(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
     }
 
     if (getGEOProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVEVENT, 
-            JulianKeyword::Instance()->ms_sGEO, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVEVENT, 
+            nsCalKeyword::Instance()->ms_sGEO, 100);
     }
     setGEO(propVal, parameters);
 }       
@@ -386,22 +386,22 @@ void VEvent::storeLocation(UnicodeString & strLine, UnicodeString & propVal,
     JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
 {
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
 
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
     }
 
     if (getLocationProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVEVENT, 
-            JulianKeyword::Instance()->ms_sLOCATION, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVEVENT, 
+            nsCalKeyword::Instance()->ms_sLOCATION, 100);
     }
     setLocation(propVal, parameters);
 }  
@@ -415,8 +415,8 @@ void VEvent::storePriority(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
     }
     
     char * pcc = propVal.toCString("");
@@ -426,9 +426,9 @@ void VEvent::storePriority(UnicodeString & strLine, UnicodeString & propVal,
     if (getPriorityProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVEVENT, 
-            JulianKeyword::Instance()->ms_sPRIORITY, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVEVENT, 
+            nsCalKeyword::Instance()->ms_sPRIORITY, 100);
     }
     if (!bParseError)
     {
@@ -436,9 +436,9 @@ void VEvent::storePriority(UnicodeString & strLine, UnicodeString & propVal,
     }
     else
     {
-        if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
-            JulianKeyword::Instance()->ms_sVEVENT, 
-            JulianKeyword::Instance()->ms_sPRIORITY, propVal, 200);
+        if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
+            nsCalKeyword::Instance()->ms_sVEVENT, 
+            nsCalKeyword::Instance()->ms_sPRIORITY, propVal, 200);
     }
 }  
 void VEvent::storeResources(UnicodeString & strLine, UnicodeString & propVal, 
@@ -446,13 +446,13 @@ void VEvent::storeResources(UnicodeString & strLine, UnicodeString & propVal,
 {
 // check parameters 
     t_bool bParamValid = ICalProperty::CheckParams(parameters, 
-        JulianAtomRange::Instance()->ms_asLanguageParamRange,
-        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+        nsCalAtomRange::Instance()->ms_asLanguageParamRange,
+        nsCalAtomRange::Instance()->ms_asLanguageParamRangeSize);
     if (!bParamValid)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
     }
 
     addResourcesPropertyVector(propVal, parameters);
@@ -464,16 +464,16 @@ void VEvent::storeTransp(UnicodeString & strLine, UnicodeString & propVal,
     if (parameters->GetSize() > 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
-            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            nsCalKeyword::Instance()->ms_sVEVENT, strLine, 100);
     }
 
     if (getTranspProperty() != 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVEVENT, 
-            JulianKeyword::Instance()->ms_sTRANSP, 100);
+            nsCalLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            nsCalKeyword::Instance()->ms_sVEVENT, 
+            nsCalKeyword::Instance()->ms_sTRANSP, 100);
     }
     setTransp(propVal, parameters);
 }       
@@ -500,10 +500,10 @@ VEvent::storeData(UnicodeString & strLine, UnicodeString & propName,
             }
         }
         if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
-                JulianKeyword::Instance()->ms_sVEVENT, propName, 200);
+                nsCalLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
+                nsCalKeyword::Instance()->ms_sVEVENT, propName, 200);
         UnicodeString u;
-        u = JulianLogErrorMessage::Instance()->ms_sRS202;
+        u = nsCalLogErrorMessage::Instance()->ms_sRS202;
         u += '.'; u += ' ';
         u += strLine;
         addRequestStatus(u);
@@ -573,7 +573,7 @@ UnicodeString VEvent::formatHelper(UnicodeString & strFmt,
                                    UnicodeString sFilterAttendee, 
                                    t_bool delegateRequest) 
 {
-    UnicodeString u = JulianKeyword::Instance()->ms_sVEVENT;
+    UnicodeString u = nsCalKeyword::Instance()->ms_sVEVENT;
     return ICalComponent::format(u, strFmt, sFilterAttendee, delegateRequest);
 }
 
@@ -582,7 +582,7 @@ UnicodeString VEvent::formatHelper(UnicodeString & strFmt,
 UnicodeString VEvent::toString()
 {
     return ICalComponent::toStringFmt(
-        JulianFormatString::Instance()->ms_VEventStrDefaultFmt);
+        nsCalFormatString::Instance()->ms_VEventStrDefaultFmt);
 }
 
 //---------------------------------------------------------------------
@@ -620,29 +620,29 @@ UnicodeString VEvent::formatChar(t_int32 c, UnicodeString sFilterAttendee,
     UnicodeString s, sResult;
     switch (c) {
     case ms_cDTEnd:
-        s = JulianKeyword::Instance()->ms_sDTEND;
+        s = nsCalKeyword::Instance()->ms_sDTEND;
         return ICalProperty::propertyToICALString(s, getDTEndProperty(), sResult);
     case ms_cDuration:
-        s = JulianKeyword::Instance()->ms_sDURATION;
+        s = nsCalKeyword::Instance()->ms_sDURATION;
         s += ':';
         s += getDuration().toICALString();
-        s += JulianKeyword::Instance()->ms_sLINEBREAK;
+        s += nsCalKeyword::Instance()->ms_sLINEBREAK;
         return s;
         //return ICalProperty::propertyToICALString(s, getDurationProperty(), sResult);
     case ms_cLocation: 
-        s = JulianKeyword::Instance()->ms_sLOCATION;
+        s = nsCalKeyword::Instance()->ms_sLOCATION;
         return ICalProperty::propertyToICALString(s, getLocationProperty(), sResult);
     case ms_cPriority: 
-        s = JulianKeyword::Instance()->ms_sPRIORITY;
+        s = nsCalKeyword::Instance()->ms_sPRIORITY;
         return ICalProperty::propertyToICALString(s, getPriorityProperty(), sResult);    
     case ms_cResources:
-        s = JulianKeyword::Instance()->ms_sRESOURCES;
+        s = nsCalKeyword::Instance()->ms_sRESOURCES;
         return ICalProperty::propertyVectorToICALString(s, getResources(), sResult);    
     case ms_cGEO: 
-        s = JulianKeyword::Instance()->ms_sGEO;
+        s = nsCalKeyword::Instance()->ms_sGEO;
         return ICalProperty::propertyToICALString(s, getGEOProperty(), sResult);     
     case ms_cTransp:
-        s = JulianKeyword::Instance()->ms_sTRANSP;
+        s = nsCalKeyword::Instance()->ms_sTRANSP;
         return ICalProperty::propertyToICALString(s, getTranspProperty(), sResult);
     default:
         {
@@ -655,41 +655,41 @@ UnicodeString VEvent::formatChar(t_int32 c, UnicodeString sFilterAttendee,
 
 t_bool VEvent::isValid()
 {
-    if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sPUBLISH) == 0) ||
-        (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREQUEST) == 0) ||
-        (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sADD) == 0))
+    if ((getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sPUBLISH) == 0) ||
+        (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sREQUEST) == 0) ||
+        (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sADD) == 0))
     {
         // must have dtstart
         if ((!getDTStart().isValid()))
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
         }
         // If dtend exists, make sure it is not before dtstart
         if (getDTEnd().isValid() && getDTEnd() < getDTStart())
         { 
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
+                nsCalLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
             return FALSE;
         }
         // must have dtstamp, summary, uid
         if (!getDTStamp().isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
         }
         if (getSummary().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingSummary, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingSummary, 300);
             return FALSE;
         }
         if (getUID().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingUID, 300);
             return FALSE;
         }
 
@@ -698,7 +698,7 @@ t_bool VEvent::isValid()
         if (getOrganizer().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
         }
         */
@@ -706,34 +706,34 @@ t_bool VEvent::isValid()
         if (getSequence() < 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
             return FALSE;
         }
-        if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREQUEST) == 0)
+        if (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sREQUEST) == 0)
         {
             if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
             {
                 if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
+                    nsCalLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
                 return FALSE;
             }
         }
     }
-    else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0) ||
-             (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sCANCEL) == 0) ||
-             (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sDECLINECOUNTER) == 0))
+    else if ((getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sREPLY) == 0) ||
+             (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sCANCEL) == 0) ||
+             (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sDECLINECOUNTER) == 0))
     {
          // must have dtstamp, uid
         if (!getDTStamp().isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
         }
         if (getUID().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingUID, 300);
             return FALSE;
         }
 
@@ -741,58 +741,58 @@ t_bool VEvent::isValid()
         if (getOrganizer().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
         }
         // must have sequence >= 0
         if (getSequence() < 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
             return FALSE;
         }
-        if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0)
+        if (getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sREPLY) == 0)
         {
             // TODO: attendees are required, commenting out for now
             if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
             {
                 if (m_Log) m_Log->logError(
-                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
+                    nsCalLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
                 return FALSE;
             }
         }
     }
-    else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREFRESH) == 0))
+    else if ((getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sREFRESH) == 0))
     {
         // must have dtstamp, uid
         if (!getDTStamp().isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
         }
         if (getUID().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingUID, 300);
             return FALSE;
         }
         // TODO: attendees required?
     }
-    else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sCOUNTER) == 0))
+    else if ((getMethod().compareIgnoreCase(nsCalKeyword::Instance()->ms_sCOUNTER) == 0))
     {
         // must have dtstamp, uid
         if (!getDTStamp().isValid())
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
         }
 
         if (getUID().size() == 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+                nsCalLogErrorMessage::Instance()->ms_iMissingUID, 300);
             return FALSE;
         }
 
@@ -800,7 +800,7 @@ t_bool VEvent::isValid()
         if (getSequence() < 0)
         {
             if (m_Log) m_Log->logError(
-                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);   
+                nsCalLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);   
             return FALSE;
         }
     }
@@ -821,79 +821,79 @@ t_bool VEvent::isCriticalInfoSame()
 
 UnicodeString VEvent::cancelMessage() 
 {
-    UnicodeString s = JulianKeyword::Instance()->ms_sCANCELLED;
+    UnicodeString s = nsCalKeyword::Instance()->ms_sCANCELLED;
     setStatus(s);
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventCancelMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventCancelMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VEvent::requestMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventRequestMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventRequestMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VEvent::requestRecurMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventRecurRequestMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventRecurRequestMessage, "");
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VEvent::counterMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventCounterMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventCounterMessage, "");
 }
 
 //---------------------------------------------------------------------
   
 UnicodeString VEvent::declineCounterMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventDeclineCounterMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventDeclineCounterMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VEvent::addMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventAddMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventAddMessage, "");
 }
 
 //---------------------------------------------------------------------
   
 UnicodeString VEvent::refreshMessage(UnicodeString sAttendeeFilter) 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventRefreshMessage, sAttendeeFilter);
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventRefreshMessage, sAttendeeFilter);
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VEvent::allMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventAllPropertiesMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventAllPropertiesMessage, "");
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VEvent::replyMessage(UnicodeString sAttendeeFilter) 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventReplyMessage, sAttendeeFilter);
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventReplyMessage, sAttendeeFilter);
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VEvent::publishMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventPublishMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventPublishMessage, "");
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VEvent::publishRecurMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventRecurPublishMessage, "");
+    return formatHelper(nsCalFormatString::Instance()->ms_sVEventRecurPublishMessage, "");
 }
 
 //---------------------------------------------------------------------

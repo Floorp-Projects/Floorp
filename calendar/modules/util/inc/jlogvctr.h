@@ -27,7 +27,7 @@
 #include "jlogerr.h"
 #include "nscalutilexp.h"
 
-class NS_CAL_UTIL JulianLogErrorVector
+class NS_CAL_UTIL nsCalLogErrorVector
 {
 public:
 
@@ -62,9 +62,9 @@ public:
     ** CONSTRUCTORS and DESTRUCTORS
     **---------------------------*/
 
-    JulianLogErrorVector();
-    JulianLogErrorVector(ECompType iICalComponentType);
-    ~JulianLogErrorVector();
+    nsCalLogErrorVector();
+    nsCalLogErrorVector(ECompType iICalComponentType);
+    ~nsCalLogErrorVector();
     
     /*----------------------------- 
     ** ACCESSORS (GET AND SET) 
@@ -89,7 +89,7 @@ public:
     ** UTILITIES 
     **---------------------------*/ 
     
-    void AddError(JulianLogError * error);
+    void AddError(nsCalLogError * error);
 };
 
 

@@ -107,60 +107,60 @@ void nsCalOrganizer::setParam(UnicodeString & paramName,
     if (paramName.size() == 0)
     {
         if (m_Log) m_Log->logError(
-            JulianLogErrorMessage::Instance()->ms_iInvalidParameterName, 
-            JulianKeyword::Instance()->ms_sORGANIZER, paramName, 200);
+            nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName, 
+            nsCalKeyword::Instance()->ms_sORGANIZER, paramName, 200);
     }
     else
     {
         t_int32 hashCode = paramName.hashCode();
 
-        if (JulianKeyword::Instance()->ms_ATOM_CN == hashCode)
+        if (nsCalKeyword::Instance()->ms_ATOM_CN == hashCode)
         {
             if (getCN().size() != 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
             setCN(paramVal);
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_LANGUAGE == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_LANGUAGE == hashCode)
         {
             if (getLanguage().size() != 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
             setLanguage(paramVal);
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_SENTBY == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_SENTBY == hashCode)
         {
             if (getSentBy().size() != 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
             nsCalUtility::stripDoubleQuotes(paramVal);  // double quote property
             setSentBy(paramVal);
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_DIR == hashCode)
+        else if (nsCalKeyword::Instance()->ms_ATOM_DIR == hashCode)
         {
             if (getDir().size() != 0)
             {
-                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
+                 if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        nsCalKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
             nsCalUtility::stripDoubleQuotes(paramVal);  // double quote property
             setDir(paramVal);
         }
         else if (ICalProperty::IsXToken(paramName))
         {
-            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
-                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
+            if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
+                        nsCalKeyword::Instance()->ms_sORGANIZER, paramName, 100);
         }
         else 
         {
-            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName,
-                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 200);
+            if (m_Log) m_Log->logError(nsCalLogErrorMessage::Instance()->ms_iInvalidParameterName,
+                        nsCalKeyword::Instance()->ms_sORGANIZER, paramName, 200);
         }
     }
 }
@@ -183,12 +183,12 @@ UnicodeString & nsCalOrganizer::toICALString(UnicodeString & sProp,
     UnicodeString u;
     if (m_CN.size() > 0)
     {
-        out += ';'; out += JulianKeyword::Instance()->ms_sCN; 
+        out += ';'; out += nsCalKeyword::Instance()->ms_sCN; 
         out += '='; out += m_CN;
     }
     if (m_Language.size() > 0)
     {
-        out += ';'; out += JulianKeyword::Instance()->ms_sLANGUAGE; 
+        out += ';'; out += nsCalKeyword::Instance()->ms_sLANGUAGE; 
         out += '='; out += m_Language;
     }
     if (m_SentBy.size() > 0)
@@ -196,7 +196,7 @@ UnicodeString & nsCalOrganizer::toICALString(UnicodeString & sProp,
         // double quote sent-by, dir
         u = m_SentBy;
         u = nsCalUtility::addDoubleQuotes(u);
-        out += ';'; out += JulianKeyword::Instance()->ms_sSENTBY; 
+        out += ';'; out += nsCalKeyword::Instance()->ms_sSENTBY; 
         out += '='; out += u;
     }
     if (m_Dir.size() > 0)
@@ -204,12 +204,12 @@ UnicodeString & nsCalOrganizer::toICALString(UnicodeString & sProp,
         // double quote sent-by, dir
         u = m_Dir;
         u = nsCalUtility::addDoubleQuotes(u);
-        out += ';'; out += JulianKeyword::Instance()->ms_sDIR; 
+        out += ';'; out += nsCalKeyword::Instance()->ms_sDIR; 
         out += '='; out += u;
     }
     out += ':';
     out += m_Name;
-    out += JulianKeyword::Instance()->ms_sLINEBREAK;
+    out += nsCalKeyword::Instance()->ms_sLINEBREAK;
     return out;
 }
 
@@ -217,7 +217,7 @@ UnicodeString & nsCalOrganizer::toICALString(UnicodeString & sProp,
 
 UnicodeString & nsCalOrganizer::toString(UnicodeString & out)
 {
-    out = toString(JulianFormatString::Instance()->ms_OrganizerStrDefaultFmt, out);
+    out = toString(nsCalFormatString::Instance()->ms_OrganizerStrDefaultFmt, out);
     return out;
 }
 
@@ -227,7 +227,7 @@ UnicodeString & nsCalOrganizer::toString(UnicodeString & strFmt,
                                     UnicodeString & out)
 {
     if (strFmt.size() == 0 && 
-        JulianFormatString::Instance()->ms_OrganizerStrDefaultFmt.size() > 0)
+        nsCalFormatString::Instance()->ms_OrganizerStrDefaultFmt.size() > 0)
     {
         // if empty string, use default
         return toString(out);
@@ -318,7 +318,7 @@ t_bool nsCalOrganizer::isValid()
         return FALSE;
     // change to URL, must have "MAILTO:" in front
     mailto = getName().extractBetween(0, 7, mailto);
-    if (mailto.compareIgnoreCase(JulianKeyword::Instance()->ms_sMAILTO_COLON) != 0)
+    if (mailto.compareIgnoreCase(nsCalKeyword::Instance()->ms_sMAILTO_COLON) != 0)
         return FALSE;
     else
         return TRUE;

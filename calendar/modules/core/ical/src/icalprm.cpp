@@ -91,7 +91,7 @@ ICalParameter::getParameterValue(UnicodeString & retValue) const
 UnicodeString & 
 ICalParameter::toICALString(UnicodeString & result) const
 {
-    result = JulianKeyword::Instance()->ms_sSEMICOLON_SYMBOL;
+    result = nsCalKeyword::Instance()->ms_sSEMICOLON_SYMBOL;
     result += m_ParameterName;
     result += '=';
     result += m_ParameterValue;

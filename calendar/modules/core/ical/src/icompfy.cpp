@@ -45,27 +45,27 @@ ICalComponentFactory::Make(UnicodeString & name, JLog * initLog)
 
     t_int32 hashCode = name.hashCode();
 
-    if (JulianKeyword::Instance()->ms_ATOM_VEVENT == hashCode)
+    if (nsCalKeyword::Instance()->ms_ATOM_VEVENT == hashCode)
     {
         ret = (ICalComponent *) new VEvent(initLog);    
         PR_ASSERT(ret != 0);
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_VTODO == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_VTODO == hashCode)
     {
         ret = (ICalComponent *) new VTodo(initLog);
         PR_ASSERT(ret != 0);
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_VJOURNAL == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_VJOURNAL == hashCode)
     {
         ret = (ICalComponent *) new VJournal(initLog);
         PR_ASSERT(ret != 0);
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_VFREEBUSY == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_VFREEBUSY == hashCode)
     {
         ret = (ICalComponent *) new VFreebusy(initLog);    
         PR_ASSERT(ret != 0);
     }
-    else if (JulianKeyword::Instance()->ms_ATOM_VTIMEZONE == hashCode)
+    else if (nsCalKeyword::Instance()->ms_ATOM_VTIMEZONE == hashCode)
     {
         ret = (ICalComponent *) new VTimeZone(initLog);
         PR_ASSERT(ret != 0);

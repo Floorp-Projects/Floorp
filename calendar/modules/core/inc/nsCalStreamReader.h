@@ -36,7 +36,7 @@
 class NS_CALENDAR nsCalStreamReader
 {
 private:
-    static JulianUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
+    static nsCalUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
 
 
     /* dont deallocate these */

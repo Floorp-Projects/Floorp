@@ -58,7 +58,7 @@ UnicodeStringTokenizer::UnicodeStringTokenizer(UnicodeString & str)
 {
     m_String = str;
     m_MaxPosition = m_String.size();
-    m_StringDelimeters = JulianKeyword::Instance()->ms_sDEFAULT_DELIMS;
+    m_StringDelimeters = nsCalKeyword::Instance()->ms_sDEFAULT_DELIMS;
 }
 #endif
 //---------------------------------------------------------------------

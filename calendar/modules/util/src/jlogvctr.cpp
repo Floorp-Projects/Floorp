@@ -26,30 +26,30 @@
 #include "jlogvctr.h"
 
 //---------------------------------------------------------------------
-JulianLogErrorVector::JulianLogErrorVector()
+nsCalLogErrorVector::nsCalLogErrorVector()
 {
     m_ICalComponentType = ECompType_NSCALENDAR;
     m_ErrorVctr = 0;
     m_bValidEvent = TRUE;
 }
 //---------------------------------------------------------------------
-JulianLogErrorVector::JulianLogErrorVector(ECompType iICalComponentType)
+nsCalLogErrorVector::nsCalLogErrorVector(ECompType iICalComponentType)
 {
     m_ICalComponentType = iICalComponentType;
     m_ErrorVctr = 0;
     m_bValidEvent = TRUE;
 }
 //---------------------------------------------------------------------
-JulianLogErrorVector::~JulianLogErrorVector()
+nsCalLogErrorVector::~nsCalLogErrorVector()
 {
     if (m_ErrorVctr != 0)
     {
-        JulianLogError::deleteJulianLogErrorVector(m_ErrorVctr);   
+        nsCalLogError::deleteNsCalLogErrorVector(m_ErrorVctr);   
         delete m_ErrorVctr; m_ErrorVctr = 0;
     }
 }
 //---------------------------------------------------------------------
-void JulianLogErrorVector::AddError(JulianLogError * error)
+void nsCalLogErrorVector::AddError(nsCalLogError * error)
 {
     if (m_ErrorVctr == 0)
         m_ErrorVctr = new JulianPtrArray();

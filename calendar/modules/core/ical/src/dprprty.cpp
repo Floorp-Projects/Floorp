@@ -168,12 +168,12 @@ DateTimeProperty::toICALString(UnicodeString & sProp,
 
             // don't print the TZID and VALUE parameters
             // thus it will only print in Z time and VALUE assumed to be DATETIME
-            if ((u.compareIgnoreCase(JulianKeyword::Instance()->ms_sTZID) != 0) &&
-                (u.compareIgnoreCase(JulianKeyword::Instance()->ms_sVALUE) != 0))
+            if ((u.compareIgnoreCase(nsCalKeyword::Instance()->ms_sTZID) != 0) &&
+                (u.compareIgnoreCase(nsCalKeyword::Instance()->ms_sVALUE) != 0))
                 out += aName->toICALString(u);
 
         }
-        out += ':'; out += sVal; out += JulianKeyword::Instance()->ms_sLINEBREAK;
+        out += ':'; out += sVal; out += nsCalKeyword::Instance()->ms_sLINEBREAK;
     }
     //if (FALSE) TRACE("out = %s\r\n", out.toCString(""));
     return out;

@@ -33,7 +33,7 @@ const t_int32 JLog::m_DEFAULT_LEVEL = 200;
 const char * JLog::m_DEFAULT_FILENAME = "JLog.txt";
 
 //---------------------------------------------------------------------
-t_bool JLog::addErrorToVector(JulianLogError * error)
+t_bool JLog::addErrorToVector(nsCalLogError * error)
 {
     t_bool status = FALSE;
     if (m_CurrentEventLogVctr == 0)
@@ -82,11 +82,11 @@ JLog::~JLog()
 {
     if (m_ErrorVctr != 0)
     {
-        JulianLogErrorVector * evtLogVctr = 0;
+        nsCalLogErrorVector * evtLogVctr = 0;
         t_int32 i = 0;
         for (i = m_ErrorVctr->GetSize() - 1; i >= 0; i--)
         {
-            evtLogVctr = (JulianLogErrorVector *) m_ErrorVctr->GetAt(i);
+            evtLogVctr = (nsCalLogErrorVector *) m_ErrorVctr->GetAt(i);
             delete evtLogVctr;
         }
         delete m_ErrorVctr; m_ErrorVctr = 0;
@@ -104,8 +104,8 @@ void JLog::addEventErrorEntry()
     }
     if (m_ErrorVctr != 0)
     {
-        JulianLogErrorVector * evtVctr = 0;
-        evtVctr = new JulianLogErrorVector();
+        nsCalLogErrorVector * evtVctr = 0;
+        evtVctr = new nsCalLogErrorVector();
         if (evtVctr != 0)
         {
             m_ErrorVctr->Add(evtVctr);
@@ -126,7 +126,7 @@ void JLog::setCurrentEventLogValidity(t_bool b)
 
 //---------------------------------------------------------------------
 
-void JLog::setCurrentEventLogComponentType(JulianLogErrorVector::ECompType iComponentType)
+void JLog::setCurrentEventLogComponentType(nsCalLogErrorVector::ECompType iComponentType)
 {
     if (m_CurrentEventLogVctr != 0)
     {
@@ -169,13 +169,13 @@ JLog::getEventErrorLog(t_int32 index) const
 
 //---------------------------------------------------------------------
 #if 0
-JulianLogIterator * 
-JLog::createIterator(JLog * aLog, JulianLogErrorVector::ECompType iComponentType, t_bool bValid)
+nsCalLogIterator * 
+JLog::createIterator(JLog * aLog, nsCalLogErrorVector::ECompType iComponentType, t_bool bValid)
 {
     if (aLog->GetErrorVector() == 0)
         return 0;
     else
-        return JulianLogIterator::createIterator(aLog->GetErrorVector(), iComponentType, bValid);
+        return nsCalLogIterator::createIterator(aLog->GetErrorVector(), iComponentType, bValid);
 }
 #endif
 //---------------------------------------------------------------------
@@ -210,13 +210,13 @@ void JLog::logError(const t_int32 errorID,
                     UnicodeString & paramValue,
                     t_int32 level)
 {
-    JulianLogError * error = 0;
+    nsCalLogError * error = 0;
     UnicodeString shortReturnStatus = "3.0";
     UnicodeString offendingData;
 
     offendingData += propName; offendingData += ':'; offendingData += paramName;
     offendingData += ':'; offendingData += paramValue;
-    error = new JulianLogError(errorID, shortReturnStatus, offendingData, level);
+    error = new nsCalLogError(errorID, shortReturnStatus, offendingData, level);
     if (error != 0)
     {
         t_bool bAdded;

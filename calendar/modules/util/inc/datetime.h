@@ -52,7 +52,7 @@ private:
     **---------------------------*/
 
 #if 0
-    /* date formatting strings.  Moved to JulianFormatString class */
+    /* date formatting strings.  Moved to nsCalFormatString class */
     static UnicodeString ms_asPatterns[];
     static UnicodeString ms_sISO8601Pattern;
     static UnicodeString ms_sISO8601LocalPattern;
