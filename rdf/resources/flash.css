@@ -15,12 +15,3 @@ treeitem[type="http://home.netscape.com/NC-rdf#OnlinePresence"] > treecell > tit
 treeitem[type="http://home.netscape.com/NC-rdf#Biff"] > treecell > titledbutton {
   list-style-image: url("resource:/res/rdf/unread.gif");
 }
-
-treeitem[type="http://www.mozilla.org/RDF#BustedBuild"] > treecell > titledbutton {
-  list-style-image: url("file:///D|/tmp/flames.gif");
-}
-
-treeitem[type="http://www.mozilla.org/RDF#TreeStatus"] > treecell > titledbutton {
-  list-style-image: none;
-}
-
