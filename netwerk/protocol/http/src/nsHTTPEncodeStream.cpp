@@ -23,7 +23,7 @@
 #include "nsHTTPEncodeStream.h"
 #include "nsIHTTPProtocolHandler.h"
 
-#include <prmem.h>
+#include "prmem.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPEncodeStream methods:
