@@ -1392,6 +1392,9 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/pref/autoconfig/src/Makefile
             extensions/pref/autoconfig/resources/Makefile
             " ;;
+        reporter ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/reporter/Makefile
+            " ;;
         spellcheck ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/spellcheck/Makefile
             extensions/spellcheck/idl/Makefile

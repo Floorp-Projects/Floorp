@@ -1,0 +1,20 @@
+var err = initInstall("Website Reporter", "Reporter", "$Version$"); 
+logComment("initInstall: " + err);
+
+addFile("Reporter Chrome",
+        "bin/chrome/reporter.jar",   // jar source folder
+        getFolder("Chrome"),         // target folder
+        "");                         // target subdir
+
+var jarFolder = getFolder("Chrome", "reporter.jar");
+
+registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/reporter/");
+registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/reporter/");
+registerChrome(LOCALE | DELAYED_CHROME, jarFolder, "locale/en-US/reporter/");
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);
+
