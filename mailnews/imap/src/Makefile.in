@@ -22,19 +22,45 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=imap
-LIBRARY_NAME=imap
+MODULE=msgimap
+LIBRARY_NAME=msgimap_s
 
-EXPORTS = \
-	nsIMAPGroupRecord.h \
-	nsImapMessage.h \
-	$(NULL)
+EXPORTS = 								\
+			nsImapMessage.h 			\
+			nsIMAPBodyShell.h			\
+			nsIMAPGenericParser.h		\
+			nsIMAPHostSessionList.h		\
+			nsIMAPNamespace.h			\
+			nsImapCore.h				\
+			nsImapFlagAndUidState.h		\
+			nsImapIncomingServer.h		\
+			nsImapMailFolder.h			\
+			nsImapProtocol.h			\
+			nsImapProxyEvent.h			\
+			nsImapSearchResults.h		\
+			nsImapServerResponseParser.h \
+			nsImapService.h				\
+			nsImapUrl.h					\
+			nsImapUtils.h				\
+			$(NULL)
 
-CPPSRCS = \
-	nsIMAPGroupRecord.cpp \
-	nsImapMessage.cpp \
-	nsImapUtils.cpp		\
-		$(NULL)
+CPPSRCS = 								\
+			nsImapMessage.cpp 			\
+			nsImapUtils.cpp				\
+			nsIMAPBodyShell.cpp			\
+			nsIMAPGenericParser.cpp		\
+			nsIMAPHostSessionList.cpp	\
+			nsIMAPNamespace.cpp			\
+			nsImapIncomingServer.cpp 	\
+			nsImapMailFolder.cpp		\
+			nsImapProtocol.cpp			\
+			nsImapProxyEvent.cpp		\
+			nsImapSearchResults.cpp		\
+			nsImapServerResponseParser.cpp \
+			nsImapService.cpp			\
+			nsImapUrl.cpp				\
+			nsImapFlagAndUidState.cpp	\
+			$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
