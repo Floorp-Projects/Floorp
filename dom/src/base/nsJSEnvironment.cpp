@@ -1663,12 +1663,14 @@ nsresult nsJSEnvironment::Init()
   }
 
   // Initialize LiveConnect.  XXXbe use contractid rather than GetCID
+  // NOTE: LiveConnect is optional so initialisation will still succeed
+  //       even if the service is not present.
   nsCOMPtr<nsILiveConnectManager> manager = 
-           do_GetService(nsIJVMManager::GetCID(), &rv);
+           do_GetService(nsIJVMManager::GetCID());
 
   // Should the JVM manager perhaps define methods for starting up
   // LiveConnect?
-  if (NS_SUCCEEDED(rv) && manager != nsnull) {
+  if (manager) {
     PRBool started = PR_FALSE;
     rv = manager->StartupLiveConnect(sRuntime, started);
   }
