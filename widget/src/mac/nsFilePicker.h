@@ -55,15 +55,15 @@ protected:
   NS_IMETHOD            OnCancel();
 
   // actual implementations of get/put dialogs using NavServices
-	PRBool PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outFileSpec ) ;
-	PRBool GetFile ( Str255 & inTitle, FSSpec* outFileSpec ) ;
-	PRBool GetFolder ( Str255 & inTitle, FSSpec* outFileSpec ) ;
+  PRInt16 PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* outFileSpec) ;
+  PRInt16 GetLocalFile(Str255 & inTitle, FSSpec* outFileSpec);
+  PRInt16 GetLocalFolder(Str255 & inTitle, FSSpec* outFileSpec);
 
   PRBool                 mIOwnEventLoop;
   PRBool                 mWasCancelled;
   nsString               mTitle;
   PRInt16                mMode;
-  nsString               mFile;
+  nsCOMPtr<nsILocalFile> mFile;
   PRUint32               mNumberOfFilters;  
   const PRUnichar**      mTitles;
   const PRUnichar**      mFilters;

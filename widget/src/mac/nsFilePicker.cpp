@@ -21,19 +21,23 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
+#include <StandardFile.h>
+
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
+#include "nsILocalFile.h"
+#include "nsILocalFileMac.h"
 
 #include "nsStringUtil.h"
-#include <StandardFile.h>
+
 #if USE_IC
 # include <ICAPI.h>
 #endif
+
 #include "nsMacControl.h"
 #include "nsCarbonHelpers.h"
 
 #include "nsFilePicker.h"
-#include "nsLocalFile.h"
 
 
 
@@ -110,6 +114,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 {
   NS_ENSURE_ARG_POINTER(retval);
 
+  *retval = returnCancel;
+  
   nsString filterList;
   GetFilterListArray(filterList);
   char *filterBuffer = filterList.ToNewCString();
@@ -120,27 +126,29 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   nsMacControl::StringToStr255(mDefault,defaultName);
     
   FSSpec theFile;
-  PRBool userClicksOK = PR_FALSE;
+  PRInt16 userClicksOK = returnCancel;
   
   // XXX Ignore the filter list for now....
   
   if (mMode == modeLoad)
-    userClicksOK = GetFile ( title, &theFile );
+    userClicksOK = GetLocalFile(title, &theFile);
   else if (mMode == modeSave)
-    userClicksOK = PutFile ( title, defaultName, &theFile );
+    userClicksOK = PutLocalFile(title, defaultName, &theFile);
   else if (mMode == modeGetFolder)
-    userClicksOK = GetFolder ( title, &theFile );  
+    userClicksOK = GetLocalFolder(title, &theFile);
 
   // Clean up filter buffers
   delete[] filterBuffer;
 
-  if ( userClicksOK ) {
-    /*    nsNativeFileSpec fileSpec(theFile);
-    nsFilePath filePath(fileSpec);
-	
-    mFile = theFile;
-    mFileSpec = fileSpec;
-    */
+  if ( userClicksOK )
+  {
+    nsCOMPtr<nsILocalFile>    localFile(do_CreateInstance("component://mozilla/file/local"));
+	  nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(localFile));
+
+    nsresult rv = macFile->InitWithFSSpec(&theFile);
+    if (NS_FAILED(rv)) return rv;
+
+    mFile = do_QueryInterface(macFile);
   }
   
   *retval = userClicksOK;
@@ -149,14 +157,13 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
 //-------------------------------------------------------------------------
 //
-// myProc
+// FileDialogEventHandlerProc
 //
 // An event filter proc for NavServices so the dialogs will be movable-modals. However,
 // this doesn't seem to work as of yet...I'll play around with it some more.
 //
 //-------------------------------------------------------------------------
-pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data ) ;
-pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
+static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
 {
 	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
 	switch ( msg ) {
@@ -180,13 +187,13 @@ pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBack
 // they do so, the selected file is in the FSSpec.
 //
 //-------------------------------------------------------------------------
-PRBool
-nsFilePicker :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec* outSpec )
+PRInt16
+nsFilePicker::GetLocalFile(Str255 & inTitle, /* filter list here later */ FSSpec* outSpec)
 {
- 	PRBool retVal = PR_FALSE;
+ 	PRInt16 retVal = returnCancel;
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
-	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+	NavEventUPP eventProc = NewNavEventProc(FileDialogEventHandlerProc);  // doesn't really matter if this fails
 
 	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
 	if (anErr == noErr)	{	
@@ -219,14 +226,13 @@ nsFilePicker :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 			anErr = AEGetNthPtr(&(reply.selection), 1, typeFSS, &theKeyword, &actualType,
 				&theFSSpec, sizeof(theFSSpec), &actualSize);
 			
-			if (anErr == noErr) {
+			if (anErr == noErr)
+			{
 				*outSpec = theFSSpec;	// Return the FSSpec
-				mSelectResult = returnOK;
+				retVal = returnOK;
 				
 				// Some housekeeping for Nav Services 
 				::NavDisposeReply(&reply);
-				
-				retVal = PR_TRUE;
 			}
 
 		} // if user clicked OK	
@@ -248,13 +254,13 @@ nsFilePicker :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 // they do so, the folder location is in the FSSpec.
 //
 //-------------------------------------------------------------------------
-PRBool
-nsFilePicker :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
+PRInt16
+nsFilePicker::GetLocalFolder(Str255 & inTitle, FSSpec* outSpec)
 {
- 	PRBool retVal = PR_FALSE;
+ 	PRInt16 retVal = returnCancel;
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
-	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+	NavEventUPP eventProc = NewNavEventProc(FileDialogEventHandlerProc);  // doesn't really matter if this fails
 
 	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
 	if (anErr == noErr)	{	
@@ -287,12 +293,10 @@ nsFilePicker :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 			
 			if (anErr == noErr) {
 				*outSpec = theFSSpec;	// Return the FSSpec
-				mSelectResult = returnOK;
+				retVal = returnOK;
 				
 				// Some housekeeping for Nav Services 
 				::NavDisposeReply(&reply);
-				
-				retVal = PR_TRUE;
 			}
 
 		} // if user clicked OK	
@@ -302,9 +306,71 @@ nsFilePicker :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 		::DisposeNavEventUPP(eventProc);
 		
 	return retVal;
-
-
 } // GetFolder
+
+PRInt16
+nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* outFileSpec)
+{
+ 	PRInt16 retVal = returnCancel;
+	NavReplyRecord reply;
+	NavDialogOptions dialogOptions;
+	NavEventUPP eventProc = NewNavEventProc(FileDialogEventHandlerProc);  // doesn't really matter if this fails
+	OSType				typeToSave = 'TEXT';
+	OSType				creatorToSave = 'MOZZ';
+
+	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
+	if (anErr == noErr)	{	
+		// Set the options for how the get file dialog will appear
+		dialogOptions.dialogOptionFlags |= kNavNoTypePopup;
+		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
+		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
+		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
+		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
+		::BlockMoveData(inDefaultName, dialogOptions.savedFileName, *inDefaultName + 1);
+		
+		// Display the get file dialog
+		anErr = ::NavPutFile(
+					NULL,
+					&reply,
+					&dialogOptions,
+					eventProc,
+					typeToSave,
+					creatorToSave,
+					NULL); // callbackUD	
+	
+		// See if the user has selected save
+		if (anErr == noErr && reply.validRecord)
+		{
+			AEKeyword	theKeyword;
+			DescType	actualType;
+			Size		actualSize;
+			FSSpec		theFSSpec;
+			
+			// Get the FSSpec for the file to be opened
+			anErr = AEGetNthPtr(&(reply.selection), 1, typeFSS, &theKeyword, &actualType,
+				&theFSSpec, sizeof(theFSSpec), &actualSize);
+			
+			if (anErr == noErr) {
+				*outFileSpec = theFSSpec;	// Return the FSSpec
+				
+				if (reply.replacing)
+					retVal = returnReplace;
+				else
+					retVal = returnOK;
+				
+				// Some housekeeping for Nav Services 
+				::NavCompleteSave(&reply, kNavTranslateInPlace);
+				::NavDisposeReply(&reply);
+			}
+
+		} // if user clicked OK	
+	} // if can get dialog options
+	
+	if ( eventProc )
+		::DisposeNavEventUPP(eventProc);
+	
+	return retVal;	
+}
 
 //-------------------------------------------------------------------------
 //
@@ -427,16 +493,7 @@ bail_wo_IC:
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(*aFile);
-
-
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
-    
-  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-  file->InitWithPath(nsCAutoString(mFile));
-
-  NS_ADDREF(*aFile = file);
-
+  NS_IF_ADDREF(*aFile = mFile);
   return NS_OK;
 }
 
