@@ -22,6 +22,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS=identity
+
 PROGRAM = testmailnews
 
 CPPSRCS = \
