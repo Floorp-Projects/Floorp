@@ -1324,96 +1324,100 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
     BCursor const *newCursor = B_CURSOR_SYSTEM_DEFAULT;
+    bool doDelete = true;
 
     switch (aCursor) {
       case eCursor_standard:
       case eCursor_wait:
       case eCursor_move:
              newCursor = B_CURSOR_SYSTEM_DEFAULT;
+             doDelete = false;
              break;
 
       case eCursor_select:
              newCursor = B_CURSOR_I_BEAM;
+             doDelete = false;
              break;
 
       case eCursor_hyperlink:
-             newCursor = B_CURSOR_HYPERLINK;
+             newCursor = new BCursor(cursorHyperlink);
              break;
 
       case eCursor_sizeWE:
-             newCursor = B_CURSOR_WESTEAST;
+             newCursor = new BCursor(cursorHorizontalDrag);
              break;
 
       case eCursor_sizeNS:
-             newCursor = B_CURSOR_NORTHSOUTH;
+             newCursor = new BCursor(cursorVerticalDrag);
              break;
 
       case eCursor_sizeNW:
-             newCursor = B_CURSOR_NORTHWEST;
+             newCursor = new BCursor(cursorUpperRight);
              break;
 
       case eCursor_sizeSE:
-             newCursor = B_CURSOR_SOUTHEAST;
+             newCursor = new BCursor(cursorLowerLeft);
              break;
 
       case eCursor_sizeNE:
-             newCursor = B_CURSOR_NORTHEAST;
+             newCursor = new BCursor(cursorUpperLeft);
              break;
 
       case eCursor_sizeSW:
-             newCursor = B_CURSOR_SOUTHWEST;
+             newCursor = new BCursor(cursorLowerRight);
              break;
 
       case eCursor_arrow_north:
       case eCursor_arrow_north_plus:
-             newCursor = B_CURSOR_NORTH;
+             newCursor = new BCursor(cursorTop);
              break;
 
       case eCursor_arrow_south:
       case eCursor_arrow_south_plus:
-             newCursor = B_CURSOR_SOUTH;
+             newCursor = new BCursor(cursorBottom);
              break;
 
       case eCursor_arrow_east:
       case eCursor_arrow_east_plus:
-             newCursor = B_CURSOR_EAST;
+             newCursor = new BCursor(cursorLeft);
              break;
 
       case eCursor_arrow_west:
       case eCursor_arrow_west_plus:
-             newCursor = B_CURSOR_WEST;
+             newCursor = new BCursor(cursorRight);
              break;
 
       case eCursor_crosshair:
-             newCursor = B_CURSOR_CROSS;
+             newCursor = new BCursor(cursorCrosshair);
              break;
 
       case eCursor_help:
-             newCursor = B_CURSOR_HELP;
+             newCursor = new BCursor(cursorHelp);
              break;
 
       case eCursor_grab:
-             newCursor = B_CURSOR_GRAB;
+             newCursor = new BCursor(cursorGrab);
              break;
 
       case eCursor_grabbing:
-             newCursor = B_CURSOR_GRABBING;
+             newCursor = new BCursor(cursorGrabbing);
              break;
 
       case eCursor_copy:
-             newCursor = B_CURSOR_COPY;
+             newCursor = new BCursor(cursorCopy);
              break;
 
       case eCursor_alias:
-             newCursor = B_CURSOR_ALIAS;
+             newCursor = new BCursor(cursorAlias);
              break;
 
       case eCursor_spinning:
-             newCursor = B_CURSOR_SPINNING;
+             newCursor = new BCursor(cursorWatch2);
              break;
                
       default:
              NS_ASSERTION(0, "Invalid cursor type");
+             doDelete = false;
              break;
     }
 
@@ -1422,6 +1426,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       mView->SetViewCursor(newCursor, true);
       mView->UnlockLooper();
     }
+    if (doDelete) delete newCursor;
   }
   return NS_OK;
 }
