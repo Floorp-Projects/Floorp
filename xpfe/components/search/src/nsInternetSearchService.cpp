@@ -386,6 +386,7 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Description;
 nsIRDFResource			*InternetSearchDataSource::kNC_Version;
 nsIRDFResource			*InternetSearchDataSource::kNC_actionButton;
 nsIRDFResource			*InternetSearchDataSource::kNC_actionBar;
+nsIRDFResource			*InternetSearchDataSource::kNC_searchForm;
 nsIRDFResource			*InternetSearchDataSource::kNC_LastText;
 nsIRDFResource			*InternetSearchDataSource::kNC_URL;
 nsIRDFResource			*InternetSearchDataSource::kRDF_InstanceOf;
@@ -454,6 +455,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "Version",             &kNC_Version);
 		gRDFService->GetResource(NC_NAMESPACE_URI "actionButton",        &kNC_actionButton);
 		gRDFService->GetResource(NC_NAMESPACE_URI "actionBar",           &kNC_actionBar);
+		gRDFService->GetResource(NC_NAMESPACE_URI "searchForm",          &kNC_searchForm);
 		gRDFService->GetResource(NC_NAMESPACE_URI "LastText",            &kNC_LastText);
 		gRDFService->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",         &kRDF_InstanceOf);
@@ -520,6 +522,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Version);
 		NS_IF_RELEASE(kNC_actionButton);
 		NS_IF_RELEASE(kNC_actionBar);
+		NS_IF_RELEASE(kNC_searchForm);
 		NS_IF_RELEASE(kNC_LastText);
 		NS_IF_RELEASE(kNC_URL);
 		NS_IF_RELEASE(kRDF_InstanceOf);
@@ -3338,6 +3341,17 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 				getter_AddRefs(barLiteral))))
 		{
 			rv = updateAtom(mInner, engine, kNC_actionBar, barLiteral, nsnull);
+		}
+	}
+
+	nsAutoString	searchFormValue;
+	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "searchForm", searchFormValue)))
+	{
+		nsCOMPtr<nsIRDFLiteral>	searchFormLiteral;
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(searchFormValue.get(),
+				getter_AddRefs(searchFormLiteral))))
+		{
+			rv = updateAtom(mInner, engine, kNC_searchForm, searchFormLiteral, nsnull);
 		}
 	}
 

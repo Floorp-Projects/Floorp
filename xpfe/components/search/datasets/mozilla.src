@@ -6,6 +6,7 @@
 	name = "mozilla.org"
 	method = "get"
 	action = "http://www.mozilla.org/htdig-cgi/htsearch"
+	searchForm = "http://www.mozilla.org/search.html"
 	>
 	
 <input name="config" value="htdig">
