@@ -36,6 +36,9 @@ interface nsIEditorSpellCheck : nsISupports
   wstring       GetPersonalDictionaryWord();
   void          AddWordToDictionary(in wstring word);
   void          RemoveWordFromDictionary(in wstring word);
+  void          GetDictionaryList([array, size_is(count)] out wstring dictionaryList, out PRUint32 count);
+  void          GetCurrentDictionary(out wstring dictionary);
+  void          SetCurrentDictionary(in wstring dictionary);
   void          CloseSpellChecking();
 
 };
