@@ -2573,7 +2573,30 @@ nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
       EndPageLoad(aProgress, channel, aStatus);
     }
   }
+  else if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_REDIRECTING)) {
+    // XXX Is it enough if I check just for the above 2 flags for redirection 
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
 
+    // Is the document stop notification for this document?
+    if (aProgress == webProgress.get()) {
+      nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+      if (channel) {
+        // Get the uri from the channel
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        // Add the original url to global History so that
+        // visited url color changes happen.
+        if (uri) {
+          // Update Global history if necessary...
+          PRBool updateHistory = PR_FALSE;
+          ShouldAddToGlobalHistory(uri, &updateHistory);
+          if(updateHistory) {
+            AddToGlobalHistory(uri);
+          }
+        }  // uri
+      }  // channel
+    }  // aProgress
+  }
   return NS_OK;
 }
 
