@@ -54,6 +54,8 @@ protected:
     void            GetParameterType(char *aBuffer, IdlParameter &aParameter);
     void            GetInterfaceIID(char *aBuffer, IdlInterface &aInterface);
     void            GetInterfaceIID(char *aBuffer, char *aInterfaceName);
+    void            GetXPIDLInterfaceIID(char *aBuffer, char *aInterfaceName);
+    void            GetXPIDLInterfaceIID(char *aBuffer, IdlInterface &aInterface);
     void            GetCapitalizedName(char *aBuffer, IdlObject &aObject);
     void            EnumerateAllObjects(IdlSpecification &aSpec, 
                                         PLHashEnumerator aEnumerator,

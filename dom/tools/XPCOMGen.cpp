@@ -52,6 +52,7 @@ static const char *kIncludeDefaultsStr =
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 static const char *kIncludeJSStr = "#include \"jsapi.h\"\n";
 static const char *kForwardClassStr = "class nsIDOM%s;\n";
+static const char *kForwardXPIDLClassStr = "class %s;\n";
 static const char *kUuidStr = 
 "#define %s \\\n"
 "%s\n\n";
@@ -191,7 +192,20 @@ ForwardDeclEnumerator(PLHashEntry *he, PRIntn i, void *arg)
   char buf[512];
 
   ofstream *file = (ofstream *)arg;
-  sprintf(buf, kForwardClassStr, (char *)he->key);
+  switch ((Type)(int)(he->value)) {
+  case TYPE_OBJECT:
+    sprintf(buf, kForwardClassStr, (char *)he->key);
+    break;
+
+  case TYPE_XPIDL_OBJECT:
+    sprintf(buf, kForwardXPIDLClassStr, (char *)he->key);
+    break;
+
+  default:
+    // uh oh...
+    break;
+  }
+
   *file << buf;
   
   return HT_ENUMERATE_NEXT;

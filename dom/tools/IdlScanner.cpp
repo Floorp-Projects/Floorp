@@ -205,6 +205,9 @@ Token* IdlScanner::NextToken()
         case 'w':
           WKeywords(mTokenName + 1, mCurrentToken); 
           break;
+        case 'x':
+          XKeywords(mTokenName + 1, mCurrentToken);
+          break;
         case '"':
           String(c, mCurrentToken); // has to be a string
           break;
@@ -1105,6 +1108,40 @@ void IdlScanner::WKeywords(char *aCurrentPos, Token *aToken)
     }
     else {
       aToken->SetToken(STRING_TOKEN);
+    }
+  }
+  else {
+    // it must be an identifier
+    KeywordMismatch(c, aCurrentPos, aToken);
+  }
+}
+
+//
+// Either 'xpidl' or an identifier
+//
+void IdlScanner::XKeywords(char *aCurrentPos, Token *aToken)
+{
+  int c = mInputFile->get();
+  if (c != EOF && c == 'p' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'i' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'd' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'l' && (*aCurrentPos++ = c)) {
+    // if terminated is a keyword
+    c = mInputFile->get();
+    if (c != EOF) {
+      if (isalpha(c) || isdigit(c) || c == '_') {
+        // more characters, it must be an identifier
+        *aCurrentPos++ = c;
+        Identifier(aCurrentPos, aToken);
+      }
+      else {
+        // it is a keyword
+        aToken->SetToken(XPIDL_TOKEN);
+        mInputFile->putback(c);
+      }
+    }
+    else {
+      aToken->SetToken(XPIDL_TOKEN);
     }
   }
   else {

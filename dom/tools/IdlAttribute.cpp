@@ -49,4 +49,3 @@ int IdlAttribute::GetReadOnly()
 {
   return mReadOnly;
 }
-

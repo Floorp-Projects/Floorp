@@ -32,7 +32,6 @@ public:
 
   void            SetReadOnly(int aReadOnlyFlag);
   int             GetReadOnly();
-
 };
 
 #ifdef XP_MAC
