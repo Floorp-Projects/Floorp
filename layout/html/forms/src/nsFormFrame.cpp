@@ -118,6 +118,12 @@ static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 //----------------------------------------------------------------------
 
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
+//ahmed 15-1
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
+#endif
+//end
 
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -706,6 +712,14 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     return NS_FORM_NOTOK;
   }
 
+//ahmed
+#ifdef IBMBIDI
+  nsBidiOptions bidiOptions;
+  aPresContext->GetBidi(&bidiOptions);
+  mCtrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
+  mTextDir          = GET_BIDI_OPTION_DIRECTION(bidiOptions);
+#endif
+//ahmed end
    // Get a service to process the value part of the form data
    // If one doesn't exist, that fine. It's not required.
   nsresult result = NS_OK;
@@ -976,6 +990,50 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 char*
 nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder)
 {
+#ifdef IBMBIDI_0 // Until we finalize the conversion routine
+  //ahmed 15-1
+  nsString temp;
+  nsresult rv = NS_OK;
+  nsIUBidiUtils* bidiUtils = do_getService("@mozilla.org/intl/unicharbidiutil;1");
+  nsString newBuffer;
+  //This condition handle the RTL,LTR for a logical file
+  if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( mCharset.EqualsIgnoreCase("windows-1256") ) ){
+    bidiUtils->Conv_06_FE_WithReverse(nsString(aSrc), newBuffer,mTextDir);
+    aSrc = (PRUnichar *)newBuffer.GetUnicode();
+    aLen=newBuffer.Length();
+  }
+  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL )&&( mCharset.EqualsIgnoreCase("IBM864") ) ){
+    //For 864 file, When it is logical, if LTR then only convert
+    //If RTL will mak a reverse for the buffer
+    bidiUtils->Conv_FE_06(nsString(aSrc), newBuffer);
+    aSrc = (PRUnichar *)newBuffer.GetUnicode();
+    temp = newBuffer;
+    aLen=newBuffer.Length();
+    if (mTextDir == 2) { //RTL
+    //Now we need to reverse the Buffer, it is by searshing the buffer
+      PRUint32 loop = aLen;
+      for (int z=0; z<=aLen; z++){
+        temp.SetCharAt((PRUnichar)aSrc[loop], z);
+        loop--;
+      }
+    }
+    aSrc = (PRUnichar *)temp.GetUnicode();
+  }
+  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( mCharset.EqualsIgnoreCase("IBM864"))&& (mTextDir == IBMBIDI_TEXTDIRECTION_RTL) ){
+
+    bidiUtils->Conv_FE_06(nsString(aSrc), newBuffer);
+    aSrc = (PRUnichar *)newBuffer.GetUnicode();
+    temp = newBuffer;
+    aLen=newBuffer.Length();
+    //Now we need to reverse the Buffer, it is by searshing the buffer
+    PRUint32 loop = aLen;
+    for (int z=0; z<=aLen; z++){
+      temp.SetCharAt((PRUnichar)aSrc[loop], z);
+      loop--;
+    }
+    aSrc = (PRUnichar *)temp.GetUnicode();
+  }
+#endif
    char* res = nsnull;
    if(NS_SUCCEEDED(encoder->Reset()))
    {
@@ -1081,6 +1139,25 @@ void nsFormFrame::GetSubmitCharset(nsString& oCharset)
     NS_RELEASE(doc);
   }
 
+#ifdef IBMBIDI
+//ahmed 15-1   why it is here, I think you have to put it after the next conditions
+  mCharset=oCharset;
+//ahmed 
+  if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( oCharset.EqualsIgnoreCase("windows-1256") ) ) {
+//Mohamed
+    oCharset.AssignWithConversion("IBM864");
+  }
+  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL )&&( oCharset.EqualsIgnoreCase("IBM864") ) ) {
+    oCharset.AssignWithConversion("IBM864i");
+  }
+  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( oCharset.EqualsIgnoreCase("ISO-8859-6") ) )  {
+    oCharset.AssignWithConversion("IBM864");
+  }
+  else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( oCharset.EqualsIgnoreCase("UTF-8") ) ) {
+    oCharset.AssignWithConversion("IBM864");
+  }
+
+#endif
 }
 
 NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)

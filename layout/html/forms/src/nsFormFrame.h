@@ -127,6 +127,13 @@ protected:
   nsVoidArray          mRadioGroups;
   nsIFormControlFrame* mTextSubmitter;
   PRBool               mTextSubmitterSet;
+#ifdef IBMBIDI
+//ahmed
+  nsAutoString         mCharset;            // The charset in use
+  PRUint8              mTextDir;            // The direction of the text 
+  PRUint8              mCtrlsModAtSubmit;   // The text mode of the control (logical/visual)
+                                            // Direction and text mode are set by Bidi Options in Preferences
+#endif
 };
 
 #endif // nsFormFrame_h___
