@@ -50,7 +50,7 @@ import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
 
-class XML extends XMLObjectImpl implements Wrapper
+class XML extends XMLObjectImpl
 {
     final static class XScriptAnnotation extends XmlBookmark
     {
@@ -256,8 +256,6 @@ class XML extends XMLObjectImpl implements Wrapper
             frag = ((XMLObjectImpl) inputObject).toXMLString(0);
         } else {
             if (inputObject instanceof Wrapper) {
-                // Note: the check has to be done after the check for
-                //  XMLObjectImpl as XML also implements Wrapper
                 Object wrapped = ((Wrapper)inputObject).unwrap();
                 if (wrapped instanceof XmlObject) {
                     return createFromXmlObject(lib, (XmlObject)wrapped);
@@ -3065,11 +3063,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         return null;
     }
 
-    //
-    // Implementation of Wrapper
-    //
-
-    public Object unwrap()
+    XmlObject getXmlObject()
     {
         XmlObject xo;
         XmlCursor cursor = newCursor();
@@ -3080,5 +3074,4 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         }
         return xo;
     }
-
 }

@@ -1563,6 +1563,15 @@ class XMLList extends XMLObjectImpl implements Function
         }
     }
 
+    org.apache.xmlbeans.XmlObject getXmlObject()
+    {
+        if (length() == 1) {
+            return getXmlFromAnnotation(0).getXmlObject();
+        } else {
+            throw ScriptRuntime.typeError("getXmlObject method works only on lists containing one item");
+        }
+    }
+
     /**
      * See ECMA 357, 11_2_2_1, Semantics, 3_e.
      */

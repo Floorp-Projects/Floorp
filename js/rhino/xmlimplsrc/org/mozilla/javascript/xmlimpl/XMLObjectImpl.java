@@ -131,6 +131,11 @@ abstract class XMLObjectImpl extends XMLObject
     abstract String toXMLString(int indent);
     abstract Object valueOf();
 
+    /**
+     * Extension to access native implementation from scripts
+     */
+    abstract org.apache.xmlbeans.XmlObject getXmlObject();
+
     protected abstract Object jsConstructor(Context cx, boolean inNewExpr,
                                             Object[] args);
 
@@ -373,12 +378,14 @@ abstract class XMLObjectImpl extends XMLObject
         Id_toXMLString             = 39,
         Id_valueOf                 = 40,
 
-        MAX_PROTOTYPE_ID           = 40;
+        Id_getXmlObject            = 41,
+
+        MAX_PROTOTYPE_ID           = 41;
 
     protected int findPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2004-08-21 11:02:57 CEST
+// #generated# Last update: 2004-11-10 15:38:11 CET
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 4: c=s.charAt(0);
@@ -421,15 +428,15 @@ abstract class XMLObjectImpl extends XMLObject
                 case 's': X="setChildren";id=Id_setChildren; break L;
                 case 't': X="toXMLString";id=Id_toXMLString; break L;
                 } break L;
-            case 12: c=s.charAt(0);
-                if (c=='a') { X="addNamespace";id=Id_addNamespace; }
-                else if (c=='p') { X="prependChild";id=Id_prependChild; }
-                else if (c=='s') {
-                    c=s.charAt(3);
+            case 12: switch (s.charAt(0)) {
+                case 'a': X="addNamespace";id=Id_addNamespace; break L;
+                case 'g': X="getXmlObject";id=Id_getXmlObject; break L;
+                case 'p': X="prependChild";id=Id_prependChild; break L;
+                case 's': c=s.charAt(3);
                     if (c=='L') { X="setLocalName";id=Id_setLocalName; }
                     else if (c=='N') { X="setNamespace";id=Id_setNamespace; }
-                }
-                break L;
+                    break L;
+                } break L;
             case 14: X="hasOwnProperty";id=Id_hasOwnProperty; break L;
             case 15: X="removeNamespace";id=Id_removeNamespace; break L;
             case 16: c=s.charAt(0);
@@ -510,6 +517,8 @@ abstract class XMLObjectImpl extends XMLObject
           case Id_toSource:          arity=1; s="toSource";          break;
           case Id_toXMLString:       arity=1; s="toXMLString";       break;
           case Id_valueOf:           arity=0; s="valueOf";           break;
+
+          case Id_getXmlObject:      arity=0; s="getXmlObject";      break;
           default: throw new IllegalArgumentException(String.valueOf(id));
         }
         initPrototypeMethod(XMLOBJECT_TAG, id, s, arity);
@@ -693,6 +702,11 @@ abstract class XMLObjectImpl extends XMLObject
           }
           case Id_valueOf:
             return realThis.valueOf();
+
+          case Id_getXmlObject: {
+            org.apache.xmlbeans.XmlObject xmlObject = realThis.getXmlObject();
+            return Context.javaToJS(xmlObject, scope);
+          }
         }
         throw new IllegalArgumentException(String.valueOf(id));
     }
