@@ -48,7 +48,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   
   //nsIDragService
-  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
 
   //nsIDragSession
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
@@ -63,7 +63,7 @@ private:
   char* LookupMimeMappingsForItem ( DragReference inDragRef, ItemReference itemRef ) ;
 
   void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray ) ;
-  void BuildDragRegion ( nsIRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn ) ;
+  void BuildDragRegion ( nsIScriptableRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn ) ;
   OSErr GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference inDragRef, unsigned int inItemIndex, 
                              FlavorType inFlavor, void** outData, unsigned int * outSize ) ;
 
