@@ -38,6 +38,8 @@ OBJS =                                     \
 	.\$(OBJDIR)\ControlSite.obj        \
 	$(NULL)
 
+# most of these have to be here for nsSetupRegistry.cpp...
+
 LINCS=  \
   -I$(PUBLIC)\raptor \
   -I$(PUBLIC)\xpcom \
@@ -50,6 +52,9 @@ LINCS=  \
   -I$(PUBLIC)\oji \
   -I$(PUBLIC)\editor \
   -I$(PUBLIC)\uconv \
+  -I$(PUBLIC)\intl \
+  -I$(PUBLIC)\locale \
+  -I$(PUBLIC)\unicharutil \
   -I$(PUBLIC)\pref \
   -I$(PUBLIC)\rdf
 
