@@ -7,5 +7,10 @@ TODO
 constant.h
 test.pl
 typemap
+Entry.pm
+Connection.pm
+LDIF.pm
+README
+MPL-1.0.txt
 t/search.pl
 t/write.pl
