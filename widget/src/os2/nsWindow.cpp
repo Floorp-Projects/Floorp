@@ -128,7 +128,7 @@ static POINTS gLastButton1Down = {0,0};
 
 #define XFROMMP(m)    (SHORT(LOUSHORT(m)))
 #define YFROMMP(m)    (SHORT(HIUSHORT(m)))
-////////////////////////////////////////////////////
+ ////////////////////////////////////////////////////
 
 static PRBool gGlobalsInitialized = PR_FALSE;
 static HPOINTER gPtrArray[IDC_COUNT];
@@ -145,28 +145,31 @@ static int currentWindowIdentifier = 0;
 #endif
 
 //-------------------------------------------------------------------------
-// Drag and Drop flags and helper functions
+// Drag and Drop flags and global data
 // see the D&D section toward the end of this file for additional info
 
-#define DRAG_NONE       0   // no drag in progress
-#define DRAG_FROMSYS    1   // native drag that Moz isn't involved in
-#define DRAG_OVEROTHER  2   // native drag over another Moz window
-#define DRAG_OVERTHIS   4   // native drag over this nsWindow object
-#define DRAG_FROMMOZ    8   // Moz is the source, pointer could be anywhere
+#define DispatchDragDropEvent(msg) DispatchStandardEvent(msg,NS_DRAGDROP_EVENT)
 
-nsresult SetNativeDragData( PDRAGINFO pdraginfo, nsIDragService* dragService);
-nsresult GetNativeDropData( PDRAGINFO pdraginfo, nsITransferable* trans);
-char *   GetAtom( ATOM aAtom);
-char *   GetFilePath( PDRAGITEM pdragitem);
-char *   GetFileContents( PDRAGITEM pdragitem);
+// actions that might cause problems during d&d
+#define ACTION_PAINT    1
+#define ACTION_DRAW     2
+#define ACTION_SCROLL   3
+#define ACTION_SHOW     4
+#define ACTION_PTRPOS   5
 
-// gInDrop counteracts a "fix one thing, break something else" problem:
-// it is set & cleared by OnDrop() to enable the display of new content
-// areas (i.e. new tabs) which would otherwise be suppressed by Show()
-// during a native drag;  it must be global because the new window
-// belongs to a different nsWindow object than the one dropped on
+// shorten these references a bit
+#define DND_None                (nsIDragSessionOS2::DND_NONE)               
+#define DND_NativeDrag          (nsIDragSessionOS2::DND_NATIVEDRAG)         
+#define DND_MozDrag             (nsIDragSessionOS2::DND_MOZDRAG)            
+#define DND_InDrop              (nsIDragSessionOS2::DND_INDROP)             
+#define DND_DragStatus          (nsIDragSessionOS2::DND_DRAGSTATUS)         
+#define DND_DispatchEnterEvent  (nsIDragSessionOS2::DND_DISPATCHENTEREVENT) 
+#define DND_DispatchEvent       (nsIDragSessionOS2::DND_DISPATCHEVENT)      
+#define DND_GetDragoverResult   (nsIDragSessionOS2::DND_GETDRAGOVERRESULT)  
+#define DND_ExitSession         (nsIDragSessionOS2::DND_EXITSESSION)        
 
-PRBool gInDrop = PR_FALSE;
+// set when any nsWindow is being dragged over
+static PRUint32  gDragStatus = 0;
 
 //-------------------------------------------------------------------------
 //
@@ -184,7 +187,6 @@ nsWindow::nsWindow() : nsBaseWidget()
     mlHave              = 0;
     mlUsed              = 0;
     mFrameIcon          = 0;
-    mNativeDrag         = FALSE;
     mDeadKey            = 0;
     mHaveDeadKey        = FALSE;
     // This is so that frame windows can be destroyed from their destructors.
@@ -201,6 +203,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mInSetFocus         = FALSE;
     mChromeHidden       = FALSE;
     mDragHps            = 0;
+    mDragStatus         = 0;
 
     mIsTopWidgetWindow = PR_FALSE;
 
@@ -402,10 +405,10 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
     event.nativeMsg = 0;
 
     if (nsnull == aPoint) {     // use the point from the event
-      // for most events, get the message position;  for native drag events,
-      // msg position is incorrect, so get the current position instead
+      // for most events, get the message position;  for drag events,
+      // msg position may be incorrect, so get the current position instead
       POINTL ptl;
-      if (mNativeDrag)
+      if (CheckDragStatus(ACTION_PTRPOS, 0))
         WinQueryPointerPos( HWND_DESKTOP, &ptl);
       else
         WinQueryMsgPos( 0/*hab*/, &ptl);
@@ -1177,14 +1180,9 @@ NS_METHOD nsWindow::Show(PRBool bState)
       HWND hwnd = GetMainWindow();
       if( bState == PR_TRUE)
       {
-        // if we're in a drag & Moz didn't originate it, suppress popups
-        // like the Bookmark menu (mainly because we can't hide them again
-        // during the drag);  however, if a drop just occurred, display
-        // the window anyway (otherwise, the contents of new tabs will
-        // never be displayed
-
-        PRUint32 dragStatus = GetDragStatus(0, 0);
-        if (gInDrop || !(dragStatus & (DRAG_OVEROTHER | DRAG_OVERTHIS)))
+        // don't try to show new windows (e.g. the Bookmark menu)
+        // during a native dragover because they'll remain invisible;
+      if (CheckDragStatus(ACTION_SHOW, 0))
           WinShowWindow( hwnd, TRUE);
       }
       else
@@ -1947,7 +1945,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
         // during a native drag over the current window or any drag
         // originating in Moz, return a drag HPS to avoid screen corruption;
             HPS hps = 0;
-            GetDragStatus(DRAG_OVERTHIS | DRAG_FROMMOZ, &hps);
+            CheckDragStatus(ACTION_DRAW, &hps);
             if (!hps)
               hps = WinGetPS(mWnd);
             nsPaletteOS2::SelectGlobalPalette(hps, mWnd);
@@ -2021,7 +2019,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     // Moz-originated drag - during a native drag, the screen
     // isn't updated until the drag ends. so there's no corruption
   HPS hps = 0;
-  GetDragStatus(DRAG_FROMMOZ, &hps);
+  CheckDragStatus(ACTION_SCROLL, &hps);
 
   WinScrollWindow( mWnd, aDx, -aDy, aClipRect ? &rcl : 0, 0, 0,
                    0, SW_SCROLLCHILDREN | SW_INVALIDATERGN);
@@ -2039,7 +2037,7 @@ NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
     // Moz-originated drag - during a native drag, the screen
     // isn't updated until the drag ends. so there's no corruption
   HPS hps = 0;
-  GetDragStatus(DRAG_FROMMOZ, &hps);
+  CheckDragStatus(ACTION_SCROLL, &hps);
 
     // Scroll the entire contents of the window + change the offset of any child windows
   WinScrollWindow( mWnd, aDx, -aDy, 0, 0, 0, 0,
@@ -2066,7 +2064,7 @@ NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy)
     // Moz-originated drag - during a native drag, the screen
     // isn't updated until the drag ends. so there's no corruption
   HPS hps = 0;
-  GetDragStatus(DRAG_FROMMOZ, &hps);
+  CheckDragStatus(ACTION_SCROLL, &hps);
 
     // Scroll the bits in the window defined by trect. 
     // Child windows are not scrolled.
@@ -2513,7 +2511,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             result = DispatchMouseEvent( NS_CONTEXTMENU, mp1, mp2);
           }
           break;
-    
+
           // if MB1 & MB2 are both pressed, perform a copy or paste;
           // see how far the mouse has moved since MB1-down to determine
           // the operation (this really ought to look for selected content)
@@ -2669,26 +2667,15 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           OnPresParamChanged( mp1, mp2);
           result = PR_TRUE;
           break;
-    
+
+          // all msgs that occur when this window is the target of a drag
         case DM_DRAGOVER:
-          OnDragOver(mp1, mp2, rc);
-          result = PR_TRUE;
-          break;
-    
         case DM_DRAGLEAVE:
-          OnDragLeave(mp1, mp2);
-          result = PR_TRUE;
-          break;
-    
         case DM_DROP:
-          OnDrop( mp1, mp2);
-          result = PR_TRUE;
-          break;
-    
-          // this cancels a drag - after we do our cleanup
-          // pass this to the default wndproc to do its cleanup
+        case DM_RENDERCOMPLETE:
         case DM_DROPHELP:
-          OnDragLeave(mp1, mp2);
+          OnDragDropMsg(msg, mp1, mp2, rc);
+          result = PR_TRUE;
           break;
     }
     
@@ -2858,7 +2845,7 @@ PRBool nsWindow::OnPaint()
       // drag, get the special drag HPS then pass it to WinBeginPaint();
       // if there is no hpsDrag, WinBeginPaint() will return a normal HPS
       HPS hpsDrag = 0;
-      GetDragStatus(DRAG_FROMMOZ, &hpsDrag);
+      CheckDragStatus(ACTION_PAINT, &hpsDrag);
       HPS hPS = WinBeginPaint(mWnd, hpsDrag, &rcl);
       nsPaletteOS2::SelectGlobalPalette(hPS, mWnd);
 
@@ -3518,242 +3505,150 @@ void nsWindow::RemoveFromStyle( ULONG style)
 }
 
 // --------------------------------------------------------------------------
-// Drag'n'drop --------------------------------------------------------------
-//
-// General considerations:  PM normally locks the screen during a drag to
-// prevent video corruption.  Since this conflicts with Mozilla's penchant
-// for popping up menus, scrolling windows, etc. during a drag, Moz leaves
-// the screen unlocked.  Thus, a *lot* of screwing-around is required to
-// avoid said corruption when it originates a drag.  Even more is required
-// when the drag originates elsewhere & the screen is locked.
-//
-// GetDragStatus() is at the heart of this corruption-avoidance scheme, and
-// as far as its author (R.Walsh) can tell, every invocation is *required*.
-// The end result:  for Moz drags, all while-you-drag features should be
-// fully enabled & corruption free;  for native drags, popups & scrolling
-// are suppressed but some niceties, such as moving the cursor in text
-// fields, are enabled.
-// 
-// For native drags, Mozilla will permit you to drop these items:  WPS Url
-// objects, files, the contents of files (Alt-drop), and text from DragText.
-//
-// A note on DragText support:  DT offers several text rendering mechanisms.
-// However, some employ deferred rendering (which nsWindow doesn't support
-// currently), and some are only available to registered users.  To provide
-// at least some d&d text support for all users, two rendering mechanisms
-// are implemented.  DRM_ATOM (a freeware feature) uses a Drg API atom for
-// drags under 256 characters.  DRM_OS2FILE (a shareware feature) uses a
-// temporary file that DT creates for each drag it originates.  The code
-// below uses the presence of another of DT's rendering mechanisms,
-// DRM_DTSHARE, to distinguish these text-bearing files from other files.
-
+// Drag & Drop - Target methods
 // --------------------------------------------------------------------------
-#define DispatchDragDropEvent(msg) DispatchStandardEvent(msg,NS_DRAGDROP_EVENT)
+//
+// nsWindow knows almost nothing about d&d except that it can cause
+// video corruption if the screen is updated during a drag. It relies
+// on nsIDragSessionOS2 to handle native d&d messages and to return
+// the status flags it uses to control screen updates.
+//
+// OnDragDropMsg() handles all of the DM_* messages messages nsWindow
+// should ever receive.  CheckDragStatus() determines if a screen update
+// is safe and may return a drag HPS if doing so will avoid corruption.
+// As far as its author (R.Walsh) can tell, every use is required.
+//
+// For Moz drags, all while-you-drag features should be fully enabled &
+// corruption free;  for native drags, popups & scrolling are suppressed
+// but some niceties, e.g. moving the cursor in text fields, are enabled.
+//
 // --------------------------------------------------------------------------
 
-PRBool nsWindow::OnDragOver(MPARAM mp1, MPARAM mp2, MRESULT &mr)
+// This method was designed to be totally ignorant of drag and drop.
+// It gives nsIDragSessionOS2 (near) complete control over handling.
+
+PRBool nsWindow::OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &mr)
 {
   nsresult rv;
-  USHORT usDrop = DOR_DROP;
-  USHORT usDefaultOp = DO_MOVE;
-  PDRAGINFO pdraginfo = (PDRAGINFO)mp1;
+  PRUint32 eventType = 0;
+  PRUint32 dragFlags = 0;
 
-  nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
-  nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  mr = 0;
+  nsCOMPtr<nsIDragService> dragService =
+                    do_GetService("@mozilla.org/widget/dragservice;1", &rv);
+  if (dragService) {
+    nsCOMPtr<nsIDragSessionOS2> dragSession(
+                        do_QueryInterface(dragService, &rv));
+    if (dragSession) {
 
-  DrgAccessDraginfo(pdraginfo);
+        // handle all possible input without regard to outcome
+      switch (msg) {
 
-    // no drag session means this is a native drag's first dragover;
-    // if the dragged item is acceptable, a transferable will be created,
-    // the current drag will be identified as native, and a drag-enter
-    // event will be dispatched
-  if (!dragSession) {
-    if (NS_SUCCEEDED(SetNativeDragData( pdraginfo, dragService))) {
-      dragService->GetCurrentSession(getter_AddRefs(dragSession));
-      if (dragSession) {
-        mNativeDrag = TRUE;
-        DispatchDragDropEvent(NS_DRAGDROP_ENTER);
+        case DM_DRAGOVER:
+          rv = dragSession->DragOverMsg((PDRAGINFO)mp1, mr, &dragFlags);
+          eventType = NS_DRAGDROP_OVER;
+          break;
+
+        case DM_DRAGLEAVE:
+          rv = dragSession->DragLeaveMsg((PDRAGINFO)mp1, &dragFlags);
+          eventType = NS_DRAGDROP_EXIT;
+          break;
+
+        case DM_DROP:
+          rv = dragSession->DropMsg((PDRAGINFO)mp1, mWnd, &dragFlags);
+          eventType = NS_DRAGDROP_DROP;
+          break;
+
+        case DM_DROPHELP:
+          rv = dragSession->DropHelpMsg((PDRAGINFO)mp1, &dragFlags);
+          eventType = NS_DRAGDROP_EXIT;
+          break;
+
+        case DM_RENDERCOMPLETE:
+          rv = dragSession->RenderCompleteMsg((PDRAGTRANSFER)mp1,
+                                              SHORT1FROMMP(mp2), &dragFlags);
+          eventType = NS_DRAGDROP_DROP;
+          break;
+
+        default:
+          rv = NS_ERROR_FAILURE;
+      }
+
+        // handle all possible outcomes without regard to their source
+      if NS_SUCCEEDED(rv) {
+        mDragStatus = gDragStatus = (dragFlags & DND_DragStatus);
+
+        if (dragFlags & DND_DispatchEnterEvent)
+          DispatchDragDropEvent(NS_DRAGDROP_ENTER);
+
+        if (dragFlags & DND_DispatchEvent)
+          DispatchDragDropEvent(eventType);
+
+        if (dragFlags & DND_GetDragoverResult)
+          dragSession->GetDragoverResult(mr);
+
+        if (dragFlags & DND_ExitSession)
+          dragSession->ExitSession(&dragFlags);
       }
     }
   }
-
-    // no dragsession at this point means the drag will never be acceptable
-    // or there was an error, so tell PM not to bother us again;  otherwise,
-    // determine the type of operation
-  if (!dragSession) {
-    usDrop = DOR_NEVERDROP;
-  }
-  else {
-    switch (pdraginfo->usOperation) {
-      case DO_COPY:
-        usDefaultOp = DO_COPY;
-        dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
-        break;
-      case DO_LINK:
-        usDefaultOp = DO_LINK;
-        dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_LINK);
-        break;
-      default:
-        dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
-        break;
-    }
-
-    // some widgets fail to set canDrop appropriately, so preset it,
-    // then dispatch the event
-    dragSession->SetCanDrop(PR_TRUE);
-    DispatchDragDropEvent(NS_DRAGDROP_OVER);
-
-    // if the target won't accept the drop, let PM know
-    PRBool canDrop;
-    dragSession->GetCanDrop(&canDrop);
-    if (!canDrop)
-      usDrop = DOR_NODROP;
-  }
-
-  mr = MRFROM2SHORT(usDrop, usDefaultOp);
-  DrgFreeDraginfo(pdraginfo);
+    // save final drag status
+  gDragStatus = mDragStatus = (dragFlags & DND_DragStatus);
 
   return PR_TRUE;
 }
 
 // --------------------------------------------------------------------------
 
-PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
+// CheckDragStatus() concentrates all the hacks needed to avoid video
+// corruption during d&d into one place.  The caller specifies an action
+// that might be a problem;  the method tells it whether to proceed and
+// provides a Drg HPS if the situation calls for one.
+
+PRBool nsWindow::CheckDragStatus(PRUint32 aAction, HPS * oHps)
 {
-  DispatchDragDropEvent(NS_DRAGDROP_EXIT);
+  PRBool rtn    = PR_TRUE;
+  PRBool getHps = PR_FALSE;
 
-    // if this is a native drag, we have to do cleanup - in particular,
-    // freeing the transferable created on the first dragover
-  if (mNativeDrag) {
-    nsresult rv;
-    nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
-    nsCOMPtr<nsIDragSession> dragSession;
-    dragService->GetCurrentSession(getter_AddRefs(dragSession));
-    if (dragSession) {
-      dragService->InvokeDragSession(0, 0, 0, 0);
-      dragService->EndDragSession();
-      mNativeDrag = FALSE;
-    }
+  switch (aAction) {
+
+      // OnPaint() & Scroll..() - only Moz drags get a Drg hps
+    case ACTION_PAINT:
+    case ACTION_SCROLL:
+      if (gDragStatus & DND_MozDrag)
+        getHps = PR_TRUE;
+      break;
+
+      // GetNativeData() - Moz drags + native drags over this nsWindow
+    case ACTION_DRAW:
+      if ((gDragStatus & DND_MozDrag) ||
+          (mDragStatus & DND_NativeDrag))
+        getHps = PR_TRUE;
+      break;
+
+      // Show() - don't show popups during a native dragover
+    case ACTION_SHOW:
+      if ((gDragStatus & (DND_NativeDrag | DND_InDrop)) == DND_NativeDrag)
+        rtn = PR_FALSE;
+      break;
+
+      // InitEvent() - use PtrPos while in drag, MsgPos otherwise
+    case ACTION_PTRPOS:
+      if (!gDragStatus)
+        rtn = PR_FALSE;
+      break;
+
+    default:
+      rtn = PR_FALSE;
   }
 
-  return PR_TRUE;
-}
-
-// --------------------------------------------------------------------------
-
-PRBool nsWindow::OnDrop(MPARAM mp1, MPARAM mp2)
-{
-  nsresult rv;
-  PDRAGINFO pdraginfo = (PDRAGINFO)mp1;
-
-  nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
-  nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragSession));
-
-  if (!dragSession || !DrgAccessDraginfo(pdraginfo))
-    return PR_FALSE;
-
-    // for native drags, retrieve the dragged item's data, put it in a
-    // transferable, then pass it to nsDragService for use by the target
-  if (mNativeDrag) {
-    nsCOMPtr<nsITransferable> trans(do_CreateInstance("@mozilla.org/widget/transferable;1", &rv));
-    rv = GetNativeDropData(pdraginfo, trans);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsISupportsArray> transArray(do_CreateInstance("@mozilla.org/supports-array;1", &rv));
-      if (NS_SUCCEEDED(rv)) {
-        transArray->InsertElementAt(trans, 0);
-        dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
-        dragService->InvokeDragSession(0, transArray, 0, 0);
-      }
-    }
-  }
-  else
-  {
-    switch (pdraginfo->usOperation) {
-      case DO_COPY:
-        dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
-        break;
-      case DO_LINK:
-        dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_LINK);
-        break;
-      default:
-        dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
-        break;
-    }
-    rv = NS_OK;
-  }
-
-    // if all of the above went well, dispatch the event;  setting gInDrop
-    // enables the display of new tabs that would otherwise be suppressed
-  if (NS_SUCCEEDED(rv)) {
-    gInDrop = PR_TRUE;
-    DispatchDragDropEvent(NS_DRAGDROP_DROP);
-    gInDrop = PR_FALSE;
-  }
-
-    // target deletes the string handles
-  DrgDeleteDraginfoStrHandles(pdraginfo);
-
-    // if the source was Moz, this will fail (as it should) because
-    // we're still in DrgDrag;  in that case the source will free this
-  DrgFreeDraginfo(pdraginfo);
-
-  if (mNativeDrag && dragSession) {
-    dragService->InvokeDragSession(0, 0, 0, 0);
-    dragService->EndDragSession();
-    mNativeDrag = PR_FALSE;
-  }
-
-  return (NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE);
-}
-
-// --------------------------------------------------------------------------
-
-// This method is used to determine if it is possible to paint the screen
-// during d&d without corruption.  If not, the caller will probably suppress
-// the paint or other screen activity.  If requested, a drag HPS will be
-// returned if the current status matches one of the flags specified in aState.
-
-PRUint32 nsWindow::GetDragStatus(PRUint32 aState, HPS * oHps)
-{
-  PRUint32  rtn = DRAG_NONE;
-
-    // a drag from another app is over the current object's window
-  if (mNativeDrag)
-    rtn = DRAG_OVERTHIS;
-  else
-
-    // if there's a drag anywhere in the system, see if Moz is involved,
-    // as indicated by the existence of a dragsession
-  if (DrgQueryDragStatus() == DGS_DRAGINPROGRESS) {
-    rtn = DRAG_FROMSYS;
-    nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1");
-    nsCOMPtr<nsIDragSession> dragSession;
-    dragService->GetCurrentSession(getter_AddRefs(dragSession));
-    if (dragSession) {
-      nsCOMPtr<nsIDOMNode> dragNode;
-      dragSession->GetSourceNode(getter_AddRefs(dragNode));
-
-    // if there's a source node, then Moz originated the drag - otherwise,
-    // the drag originated elsewhere;  since we eliminated native drags
-    // over the current object's window above, the drag pointer must be
-    // be over some other object's window (e.g. the pointer is over the
-    // Bookmark button, causing the bookmark menu to appear & need painting)
-      if (dragNode)
-        rtn = DRAG_FROMMOZ;
-      else
-        rtn = DRAG_OVEROTHER;
-    }
-  }
-
-    // if the caller wants an HPS, and the current drag status matches
-    // the specified drag state, *and* a drag hps hasn't already been
-    // requested for this window, get the hps;  otherwise, return zero;
-    // (if we provide a 2nd hps for a window, the cursor in text fields
-    // won't be erased when it's moved to another position)
+    // if the caller wants an HPS, and the current drag status
+    // calls for one, *and* a drag hps hasn't already been requested
+    // for this window, get the hps;  otherwise, return zero;
+    // (if we provide a 2nd hps for a window, the cursor in text
+    // fields won't be erased when it's moved to another position)
   if (oHps)
-    if (!mDragHps && (rtn & aState)) {
+    if (getHps && !mDragHps) {
       mDragHps = DrgGetPS(mWnd);
       *oHps = mDragHps;
     }
@@ -3778,220 +3673,6 @@ PRBool nsWindow::ReleaseIfDragHPS(HPS aHps)
   }
 
   return PR_FALSE;
-}
-
-// --------------------------------------------------------------------------
-// D&D helper functions
-// --------------------------------------------------------------------------
-
-// evaluates a native drag, and if acceptable, creates a transferable, inserts
-// the available flavors (but not the data), then passes it to nsDragService
-// so Mozilla widgets can review the item being dragged over them
-
-nsresult  SetNativeDragData( PDRAGINFO pdraginfo, nsIDragService* dragService)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-  PDRAGITEM pdragitem = DrgQueryDragitemPtr(pdraginfo, 0);
-  if (!pdragitem)
-    return rv;
-
-    // the only acceptable DRMs are atoms & files that already exist
-  if (DrgVerifyRMF(pdragitem, "DRM_ATOM", 0) ||
-      (DrgVerifyRMF(pdragitem, "DRM_OS2FILE", 0) &&
-      pdragitem->hstrContainerName && pdragitem->hstrSourceName)) {
-
-    nsCOMPtr<nsITransferable> trans(do_CreateInstance("@mozilla.org/widget/transferable;1", &rv));
-    if (trans) {
-    // everything is always "text"
-      trans->AddDataFlavor(kUnicodeMime);
-
-    // if the dragitem explicitly identifies itself as a URL,
-    // or if this is *not* one of DragText's temporary files,
-    // identify this as a URL too
-      if (DrgVerifyType(pdragitem, "UniformResourceLocator") ||
-          !DrgVerifyRMF(pdragitem, "DRM_DTSHARE", 0))
-        trans->AddDataFlavor(kURLMime);
-
-      nsCOMPtr<nsISupportsArray> transArray(do_CreateInstance("@mozilla.org/supports-array;1", &rv));
-      if (transArray) {
-        transArray->InsertElementAt(trans, 0);
-        dragService->StartDragSession();
-        dragService->InvokeDragSession(0, transArray, 0, 0);
-        rv = NS_OK;
-      }
-    }
-  }
-  return rv;
-}
-
-// --------------------------------------------------------------------------
-
-// after a native item has been dropped, this retrieves its data and
-// places its in the supplied transferable
-
-nsresult  GetNativeDropData( PDRAGINFO pdraginfo, nsITransferable* trans)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  char * pszText = 0;
-
-  PDRAGITEM pdragitem = DrgQueryDragitemPtr(pdraginfo, 0);
-  if (!pdragitem)
-    return rv;
-
-  BOOL isUrl = DrgVerifyType(pdragitem, "UniformResourceLocator");
-  nsCString textStr;
-
-    // DRM_ATOM uses a Drg HSTR in ulItemID to pass up to 255 chars
-  if (DrgVerifyRMF(pdragitem, "DRM_ATOM", 0)) {
-    pszText = GetAtom(pdragitem->ulItemID);
-    if (pszText)
-      textStr.Assign(pszText);
-  }
-  else
-    // for DRM_OS2FILE, use the file's contents if it is a WPS Url object
-    // or a DragText temp file being used to pass text (identifiable by the
-    // presence of DRM_DTSHARE), or if the user has pressed the Alt key when
-    // dropping;  otherwise, get the file's path & transform it into a Url
-  if (DrgVerifyRMF(pdragitem, "DRM_OS2FILE", 0)) {
-    if (isUrl ||
-        DrgVerifyRMF(pdragitem, "DRM_DTSHARE", 0) ||
-        (WinGetKeyState(HWND_DESKTOP, VK_ALT) & 0x8000)) {
-      pszText = GetFileContents(pdragitem);
-      if (pszText)
-        textStr.Assign(pszText);
-    }
-    else {
-      pszText = GetFilePath(pdragitem);
-      if (pszText) {
-        isUrl = TRUE;
-        nsCOMPtr<nsILocalFile> file;
-        if (NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(pszText),
-                                               PR_TRUE, getter_AddRefs(file))))
-          NS_GetURLSpecFromFile(file, textStr);
-      }
-    }
-  }
-
-  nsMemory::Free(pszText);
-  if (textStr.IsEmpty())
-    return rv;
-
-    // if this is a URL, append a title to the string
-  if (isUrl && pdragitem->hstrTargetName) {
-    pszText = GetAtom(pdragitem->hstrTargetName);
-    if (pszText) {
-      textStr += NS_LITERAL_CSTRING("\n");
-      textStr += pszText;
-      nsMemory::Free(pszText);
-    }
-  }
-
-    // convert the string to Unicode
-  ULONG ulInLength = textStr.Length() + 1;
-  PRUnichar* pszUCS = (PRUnichar*)nsMemory::Alloc(2*ulInLength);
-  if (!pszUCS)
-    return rv;
-  ULONG ulOutLength = MultiByteToWideChar( 0, PromiseFlatCString(textStr).get(),
-                                           ulInLength-1, pszUCS,  2*ulInLength);
-
-    // if successful, set the UCS string into the transferable,
-  if (ulOutLength) {
-    pszUCS[ulOutLength] = 0;
-    nsCOMPtr<nsISupportsString> textPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
-    if (textPrimitive ) {
-      textPrimitive->SetData(nsDependentString(pszUCS));
-
-    // for URLs, we have to set the entire string into the transferable
-    // and label it accordingly, then get rid of the title we added
-      if (isUrl) {
-        trans->SetTransferData(kURLMime, textPrimitive, 2*ulOutLength);
-        PRUnichar* pBrk = (PRUnichar*)UniStrchr((const UniChar*)pszUCS, L'\n');
-        if (pBrk) {
-          *pBrk = 0;
-          ulOutLength = UniStrlen((const UniChar*)pszUCS);
-          textPrimitive->SetData(nsDependentString(pszUCS));
-        }
-      }
-    // set the text or URL-minus-title into the transferable
-    // and label it as plain text
-      trans->SetTransferData(kUnicodeMime, textPrimitive, 2*ulOutLength);
-      rv = NS_OK;
-    }
-  }
-  nsMemory::Free(pszUCS);
-
-  return rv;
-}
-
-// --------------------------------------------------------------------------
-
-// return a ptr to a buffer containing the text associated with a
-// drag atom;  the caller frees the buffer
-
-char * GetAtom( ATOM aAtom)
-{
-  ULONG ulInLength = DrgQueryStrNameLen(aAtom) + 1;
-  char* pszText = (char*)nsMemory::Alloc(ulInLength);
-  if (pszText)
-    DrgQueryStrName(aAtom, ulInLength, pszText);
-
-  return pszText;
-}
-
-// --------------------------------------------------------------------------
-
-// return a ptr to a buffer containing the file path specified in the
-// dragitem;  the caller frees the buffer
-
-char * GetFilePath( PDRAGITEM pdragitem)
-{
-  ULONG ulCnrLength = DrgQueryStrNameLen(pdragitem->hstrContainerName);
-  ULONG ulSrcLength = DrgQueryStrNameLen(pdragitem->hstrSourceName);
-  char* pszText = (char*)nsMemory::Alloc(ulCnrLength+ulSrcLength+1);
-  if (pszText) {
-    DrgQueryStrName(pdragitem->hstrContainerName, ulCnrLength+1, pszText);
-    DrgQueryStrName(pdragitem->hstrSourceName, ulSrcLength+1, &pszText[ulCnrLength]);
-  }
-  return pszText;
-}
-
-// --------------------------------------------------------------------------
-
-// read the file specified in the dragitem;  return either a pointer to
-// the buffer containing its contents (which the caller must free) or a
-// null ptr if there were any failures
-
-char * GetFileContents( PDRAGITEM pdragitem)
-{
-
-  char* pszText = 0;
-  char* pszPath = GetFilePath( pdragitem);
-  if (pszPath) {
-    FILE *fp = fopen(pszPath, "r");
-    if (fp) {
-      fseek(fp, 0, SEEK_END);
-      ULONG filesize = ftell(fp);
-      fseek(fp, 0, SEEK_SET);
-      if (filesize > 0) {
-        size_t readsize = (size_t)filesize;
-        pszText = (char*)nsMemory::Alloc(readsize+1);
-        if (pszText) {
-          readsize = fread((void *)pszText, 1, readsize, fp);
-          if (readsize)
-            pszText[readsize] = '\0';
-          else {
-            nsMemory::Free(pszText);
-            pszText = 0;
-          }
-        }
-      }
-      fclose(fp);
-    }
-    nsMemory::Free(pszPath);
-  }
-
-  return pszText;
 }
 
 // --------------------------------------------------------------------------
