@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: ident,v 1.4 1998/06/13 18:26:54 jwz Exp $
+# $Id: ident,v 1.5 1998/07/28 19:16:48 jwz%netscape.com Exp $
 
 # ident --	Look up identifiers
 #
@@ -134,10 +134,10 @@ sub ident {
 			    print("<li>$fnam:\n<ul>\n");
 			    print(
 "View "
-."<a href=\"/webtools/bonsai/cvslog.cgi?file=/mozilla/"
+."<a href=\"" . $Conf->bonsaihome ."/cvslog.cgi?file=/mozilla/"
 .$fnam
 ."&root=/cvsroot\">change log </a> or Blame"
-."<a href=\"/webtools/bonsai/cvsblame.cgi?&file=/mozilla/"
+."<a href=\"" . $Conf->bonsaihome . "/cvsblame.cgi?&file=/mozilla/"
 .$fnam
 ."&root=/cvsroot\">"
 ." annotations</a>"
