@@ -88,9 +88,13 @@ public:
     virtual ~nsFileStream();
 
     nsresult Close();
+    nsresult InitWithFileDescriptor(PRFileDesc* fd, nsISupports* parent);
 
 protected:
-    PRFileDesc*         mFD;
+    PRFileDesc*           mFD;
+    nsCOMPtr<nsISupports> mParent; // strong reference to parent nsFileIO,
+                                   // which ensures mFD remains valid.
+    PRBool                mCloseFD;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +120,7 @@ public:
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-    nsresult InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file, PRBool deleteOnClose);
+
 protected:
     nsLineBuffer     *mLineBuffer;
     nsCOMPtr<nsIFile> mFileToDelete;
@@ -137,7 +141,6 @@ public:
     
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-    nsresult InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

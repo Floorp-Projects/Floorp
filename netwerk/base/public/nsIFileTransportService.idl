@@ -49,7 +49,8 @@ interface nsIFileTransportService : nsISupports
 {
     nsITransport createTransport(in nsIFile file,
                                  in long ioFlags,
-                                 in long perm);
+                                 in long perm,
+                                 in boolean closeStreamWhenDone);
 
     // This version can be used with an existing input stream to serve
     // as a data pump:
@@ -60,7 +61,8 @@ interface nsIFileTransportService : nsISupports
                                            in long contentLength,
                                            in boolean closeStreamWhenDone);
 
-    nsITransport createTransportFromStreamIO(in nsIStreamIO io);
+    nsITransport createTransportFromStreamIO(in nsIStreamIO io,
+                                             in boolean closeStreamWhenDone);
 
     void dispatchRequest(in nsIRunnable runnable);
     void processPendingRequests();

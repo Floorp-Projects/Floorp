@@ -78,6 +78,9 @@ public:
     // will drop any reference to the response headers after this call.
     nsHttpResponseHead *TakeResponseHead();
 
+    // Called to find out if the transaction generated a complete response.
+    PRBool ResponseIsComplete() { return mResponseIsComplete; }
+
     // nsAHttpTransaction methods:
     void     SetConnection(nsAHttpConnection *conn) { NS_IF_ADDREF(mConnection = conn); }
     void     SetSecurityInfo(nsISupports *info) { mSecurityInfo = info; }
@@ -133,6 +136,7 @@ private:
 
     PRPackedBool                    mHaveStatusLine;
     PRPackedBool                    mHaveAllHeaders;
+    PRPackedBool                    mResponseIsComplete;
     PRPackedBool                    mFiredOnStart;
     PRPackedBool                    mNoContent;       // expecting an empty entity body?
     PRPackedBool                    mPrematureEOF;
