@@ -594,6 +594,25 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRExplodedTime& outDate) {
         PRExplodedTime nowETime;
         PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &nowETime);
         curTime.tm_year = nowETime.tm_year;
+
+        PRBool thisCalendarYear = PR_FALSE;
+        if (nowETime.tm_month > curTime.tm_month) {
+            thisCalendarYear = PR_TRUE;
+        } else if (nowETime.tm_month == curTime.tm_month
+                   && nowETime.tm_mday > curTime.tm_mday) {
+            thisCalendarYear = PR_TRUE;
+        } else if (nowETime.tm_month == curTime.tm_month
+                   && nowETime.tm_mday == curTime.tm_mday)
+                   && nowETime.tm_hour > curTime.tm_hour) {
+            thisCalendarYear = PR_TRUE;
+        } else if (nowETime.tm_month == curTime.tm_month
+                   && nowETime.tm_mday == curTime.tm_mday
+                   && nowETime.tm_hour == curTime.tm_hour
+                   && nowETime.tm_min >= curTime.tm_min) {
+            thisCalendarYear = PR_TRUE;
+        }
+
+        if (!thisCalendarYear) curTime.tm_year--;
     }
 
     // set the out param
