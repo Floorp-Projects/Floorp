@@ -248,134 +248,6 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
   return NS_OK;
 }
 
-class nsAttrValueContent : public nsIContent, public nsITextContent
-{
-public:
-  NS_IMETHOD GetTag(nsIAtom *&aResult) const {
-    aResult = nsnull;
-    return NS_OK;
-  }
-  NS_IMETHOD GetDocument(nsIDocument *&aResult) const {
-    aResult = nsnull;
-    return NS_OK;
-  }
-  NS_IMETHOD SetDocument(nsIDocument *aDocument, PRBool aDeep) {
-    return NS_OK;
-  }
-  NS_IMETHOD CanContainChildren(PRBool &aResult) const {
-    aResult = PR_FALSE;
-    return NS_OK;
-  }
-  NS_IMETHOD GetParent(nsIContent *&aResult) const {
-    aResult = nsnull;
-    return NS_OK;
-  }
-  NS_IMETHOD SetParent(nsIContent *aParent) {
-    return NS_OK;
-  }
-  NS_IMETHOD GetNameSpaceID(PRInt32 &aResult) const {
-    aResult = kNameSpaceID_None;
-    return NS_OK;
-  }
-  NS_IMETHOD IndexOf(nsIContent *aPossibleChild, PRInt32 &aIndex) const {
-    aIndex = -1;
-    return NS_OK;
-  }
-  NS_IMETHOD InsertChildAt(nsIContent *aKid, PRInt32 aIndex, PRBool aNotify) {
-    return NS_OK;
-  }
-  NS_IMETHOD ChildCount(PRInt32 &aResult) const {
-    aResult = 0;
-    return NS_OK;
-  }
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent *&aResult) const {
-    aResult = nsnull;
-    return NS_OK;
-  }
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
-    return NS_OK;
-  }
-  NS_IMETHOD IsSynthetic(PRBool &aResult) {
-    aResult = PR_TRUE;
-    return NS_OK;
-  }
-  NS_IMETHOD ReplaceChildAt(nsIContent *aKid, PRInt32 aIndex, PRBool aNotify) {
-    return NS_OK;
-  }
-  NS_IMETHOD AppendChildTo(nsIContent *aKid, PRBool aNotify) {
-    return NS_OK;
-  }
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom *aName, const nsString &aValue, PRBool aNotify) {
-    return NS_OK;
-  }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aName, nsString &aResult) const {
-    return NS_CONTENT_ATTR_NOT_THERE;
-  }
-  NS_IMETHOD ParseAttributeString(const nsString &aStr, nsIAtom *&aName, PRInt32 &aNameSpaceID) {
-    aName = nsnull;
-    aNameSpaceID = kNameSpaceID_None;
-    return NS_OK; 
-  }
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, nsIAtom *&aPrefix) {
-    aPrefix = nsnull;
-    return NS_OK;
-  }
-  NS_IMETHOD GetAttributeCount(PRInt32 &aCountResult) const {
-    aCountResult = 0;
-    return NS_OK;
-  }
-  NS_IMETHOD List(FILE *out=stdout, PRInt32 aIndent=0) const {
-    return NS_OK;
-  }
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, PRBool aNotify) {
-    return NS_OK;
-  }
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32 &aNameSpaceID, nsIAtom *&aName) const {
-    aName = nsnull;
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  NS_IMETHOD RangeAdd(nsIDOMRange &aRange) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD RangeRemove(nsIDOMRange &aRange) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD GetRangeList(nsVoidArray *&aResult) const {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter &aConverter) const {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter &aConverter) const {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter &aConverter) const {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD HandleDOMEvent(nsIPresContext &aPresContext, nsEvent *aEvent, nsIDOMEvent **aDOMEvent, PRUint32 aFlags, nsEventStatus &aEventStatus) {
-    return NS_OK;
-  }
-  NS_IMETHOD GetText(const nsTextFragment *&aFragmentsResult, PRInt32 &aNumFragmentsResult) {
-    // XXX ???;
-    aNumFragmentsResult = 1;
-    return NS_OK;
-  }
-  NS_IMETHOD SetText(const PRUnichar *aBuffer, PRInt32 aLength, PRBool aNotify) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD SetText(const char *aBuffer, PRInt32 aLength, PRBool aNotify) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD IsOnlyWhitespace(PRBool *aResult) {
-    *aResult = PR_FALSE;
-    return NS_OK;
-  }
-
-protected:
-  nsIContent* mContent;
-  const char* mAttr;
-};
-
 nsresult
 nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
                                                nsIFrame*             aParentFrame,
@@ -3529,12 +3401,36 @@ nsCSSFrameConstructor::GetFloaterContainingBlock(nsIPresContext* aPresContext,
   return containingBlock;
 }
 
+// Helper function to determine whether a given frame is generated content
+// for the specified content object. Returns PR_TRUE if the frame is associated
+// with generated content and PR_FALSE otherwise
+static inline PRBool
+IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame)
+{
+  nsFrameState  state;
+  PRBool        result = PR_FALSE;
+
+  // First check the frame state bit
+  aFrame->GetFrameState(&state);
+  if (state & NS_FRAME_GENERATED_CONTENT) {
+    nsIContent* content;
+
+    // Check that it has the same content pointer
+    aFrame->GetContent(&content);
+    result = (content == aContent);
+    NS_IF_RELEASE(content);
+  }
+
+  return result;
+}
+
 // This function is called by ContentAppended() and ContentInserted() when
 // appending flowed frames to a parent's principal child list. It handles the
 // case where the parent frame has :after pseudo-element generated content
 nsresult
 nsCSSFrameConstructor::AppendFrames(nsIPresContext* aPresContext,
                                     nsIPresShell*   aPresShell,
+                                    nsIContent*     aContainer,
                                     nsIFrame*       aParentFrame,
                                     nsIFrame*       aFrameList)
 {
@@ -3544,17 +3440,11 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext* aPresContext,
   nsIFrame* lastChild = frames.LastChild();
 
   // See if the parent has an :after pseudo-element
-  PRBool    lastIsGenerated = PR_FALSE;
-  if (lastChild) {
-    nsFrameState  state;
-
-    lastChild->GetFrameState(&state);
-    if (state & NS_FRAME_GENERATED_CONTENT) {
-      // Insert the frames before the :after pseudo-element
-      return aParentFrame->InsertFrames(*aPresContext, *aPresShell,
-                                        nsnull, frames.GetPrevSiblingFor(lastChild),
-                                        aFrameList);
-    }
+  if (lastChild && IsGeneratedContentFor(aContainer, lastChild)) {
+    // Insert the frames before the :after pseudo-element
+    return aParentFrame->InsertFrames(*aPresContext, *aPresShell,
+                                      nsnull, frames.GetPrevSiblingFor(lastChild),
+                                      aFrameList);
   }
 
   // Append the frames to the end of the parent's child list
@@ -3628,7 +3518,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     // Notify the parent frame passing it the list of new frames
     if (NS_SUCCEEDED(result)) {
       // Append the flowed frames to the principal child list
-      AppendFrames(aPresContext, shell, adjustedParentFrame, firstAppendedFrame);
+      AppendFrames(aPresContext, shell, aContainer, adjustedParentFrame,
+                   firstAppendedFrame);
 
       // If there are new absolutely positioned child frames, then notify
       // the parent
@@ -3888,7 +3779,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
         // Notify the parent frame
         if (isAppend) {
-          rv = AppendFrames(aPresContext, shell, parentFrame, newFrame);
+          rv = AppendFrames(aPresContext, shell, aContainer, parentFrame, newFrame);
         } else {
           if (!prevSibling) {
             // We're inserting the new frame as the first child. See if the
@@ -3896,14 +3787,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             nsIFrame* firstChild;
             parentFrame->FirstChild(nsnull, &firstChild);
 
-            if (firstChild) {
-              nsFrameState  state;
-
-              firstChild->GetFrameState(&state);
-              if (state & NS_FRAME_GENERATED_CONTENT) {
-                // Insert the new frames after the :before pseudo-element
-                prevSibling = firstChild;
-              }
+            if (IsGeneratedContentFor(aContainer, firstChild)) {
+              // Insert the new frames after the :before pseudo-element
+              prevSibling = firstChild;
             }
           }
           rv = parentFrame->InsertFrames(*aPresContext, *shell, nsnull,

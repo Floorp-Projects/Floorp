@@ -149,6 +149,7 @@ protected:
 
   nsresult AppendFrames(nsIPresContext* aPresContext,
                         nsIPresShell*   aPresShell,
+                        nsIContent*     aContainer,
                         nsIFrame*       aParentFrame,
                         nsIFrame*       aFrameList);
 
