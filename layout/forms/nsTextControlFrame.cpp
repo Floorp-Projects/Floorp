@@ -3161,12 +3161,15 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
   // than descending from the root frame of the frame hierarchy.
   first->AddStateBits(NS_FRAME_REFLOW_ROOT);
 
-//we must turn off scrollbars for singleline text controls
+  nsIScrollableFrame *scrollableFrame = nsnull;
+  CallQueryInterface(first, &scrollableFrame);
+  NS_ASSERTION(scrollableFrame, "Child must be scrollable");
+
+  // we must turn off scrollbars for singleline text controls
+  // XXX FIXME this should be removed,
+  // nsGfxScrollFrameInner::CreateAnonymousContent handles this
   if (IsSingleLineTextControl()) 
   {
-    nsIScrollableFrame *scrollableFrame = nsnull;
-    if (first)
-      first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
     if (scrollableFrame)
       scrollableFrame->SetScrollbarVisibility(PR_FALSE, PR_FALSE);
   }
@@ -3198,20 +3201,9 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
                                       listener, PR_FALSE, systemGroup);
   }
 
-  while(first)
-  {
-    nsIView *view = first->GetView();
-    if (view)
-    {
-      nsIScrollableView *scrollView = view->ToScrollableView();
-      if (scrollView)
-      {
-        mScrollableView = scrollView; // Note: views are not addref'd
-        mTextSelImpl->SetScrollableView(scrollView);
-        break;
-      }
-    }
-    first = first->GetFirstChild(nsnull);
+  if (scrollableFrame) {
+    mScrollableView = scrollableFrame->GetScrollableView();
+    mTextSelImpl->SetScrollableView(mScrollableView);
   }
 
   return rv;
