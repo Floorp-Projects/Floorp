@@ -20,3 +20,41 @@
     David Hyatt (hyatt@apple.com)
 */
 
+var gSiteBox;
+var gUnblockButton;
+var gPageReport;
+
+function onLoad()
+{
+  gSiteBox = document.getElementById("siteBox");
+  gUnblockButton = document.getElementById("unblockButton");
+  gPageReport = opener.gBrowser.pageReport;
+
+  buildSiteBox();
+}
+
+function buildSiteBox()
+{
+  for (var i = 0; i < gPageReport.length; i++) {
+    var found = false;
+    for (var j = 0; j < gSiteBox.childNodes.length; j++) {
+      if (gSiteBox.childNodes[i].label == gPageReport[i]) {
+        found = true;
+        break;
+      }
+    }
+
+    if (found) continue;
+
+    var listitem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                             "listitem");
+    listitem.setAttribute("label", gPageReport[i]);
+    gSiteBox.appendChild(listitem);
+  }
+}
+
+function siteSelected()
+{
+  gUnblockButton.disabled = (gSiteBox.selectedItems.length == 0);
+}
+

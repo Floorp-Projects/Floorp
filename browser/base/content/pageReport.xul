@@ -38,10 +38,22 @@
         title="&caption.label;"
         onload="onLoad()"
         style="width: 40em;"
+        buttons="accept"
         persist="screenX screenY"
         screenX="24" screenY="24">
               
   <script type="application/x-javascript" src="chrome://browser/content/pageReport.js"/>
  
-           
+  <vbox>
+    <description>
+      &intro.label;
+    </description>
+    <listbox style="height:10em" id="siteBox" onselect="siteSelected();" flex="1"/>
+    <separator class="thin"/>
+    <hbox>
+      <button label="&unblock.label;" id="unblockButton" disabled="true"/>
+      <spacer flex="1"/>
+      <button dlgtype="accept" label="&done.label;" default="true" oncommand="window.close();"/>
+    </hbox>
+  </vbox>    
  </dialog>

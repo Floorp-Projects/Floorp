@@ -1,1 +1,7 @@
 <!ENTITY caption.label "Blocked Resource Report">
+
+<!ENTITY intro.label "The following sites were prevented from displaying 
+unrequested pop-up windows:">
+
+<!ENTITY done.label "Done">
+<!ENTITY unblock.label "Unblock Site">
