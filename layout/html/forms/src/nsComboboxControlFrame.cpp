@@ -151,7 +151,6 @@ NS_IMPL_ISUPPORTS1(nsComboButtonListener, nsIDOMMouseListener)
 
 // static class data member for Bug 32920
 nsComboboxControlFrame * nsComboboxControlFrame::mFocused = nsnull;
-nscoord nsComboboxControlFrame::mCachedScrollbarWidth     = kSizeNotSet;
 
 nsresult
 NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags)
@@ -1299,21 +1298,14 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // the default size of the of scrollbar
   // that will be the default width of the dropdown button
   // the height will be the height of the text
-  if (mCachedScrollbarWidth == kSizeNotSet) {
-    nsCOMPtr<nsIDeviceContext> dx;
-    aPresContext->GetDeviceContext(getter_AddRefs(dx));
-    if (dx) { 
-      float w, h;
-      // Get the width in Device pixels times p2t
-      dx->GetScrollBarDimensions(w, h);
-      // Get the scale factor for mapping from one device (screen) 
-      //   to another device (screen or printer)
-      // Typically when it is a screen the scale 1.0
-      //   when it is a printer is could be anything
-      float scale;
-      dx->GetCanonicalPixelScale(scale); 
-      mCachedScrollbarWidth = NSToCoordRound(w * scale);
-    }
+  nscoord scrollbarWidth = 0;
+  nsCOMPtr<nsIDeviceContext> dx;
+  aPresContext->GetDeviceContext(getter_AddRefs(dx));
+  if (dx) { 
+    float w, h;
+    // Get the width in Device pixels times p2t
+    dx->GetScrollBarDimensions(w, h);
+    scrollbarWidth = NSToCoordRound(w);
   }
   
   // set up a new reflow state for use throughout
@@ -1347,7 +1339,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         REFLOW_DEBUG_MSG("------------Reflowing AreaFrame and bailing----\n\n");
         ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
                            mDisplayFrame, mButtonFrame, mItemDisplayWidth, 
-                           mCachedScrollbarWidth, borderPadding);
+                           scrollbarWidth, borderPadding);
         REFLOW_COUNTER();
         UNCONSTRAINED_CHECK();
         REFLOW_DEBUG_MSG3("&** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
@@ -1405,7 +1397,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         // Do simple reflow and bail out
         ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
                            mDisplayFrame, mButtonFrame, 
-                           mItemDisplayWidth, mCachedScrollbarWidth, borderPadding, kSizeNotSet, PR_TRUE);
+                           mItemDisplayWidth, scrollbarWidth, borderPadding, kSizeNotSet, PR_TRUE);
         REFLOW_DEBUG_MSG3("+** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
         REFLOW_COUNTER();
         UNCONSTRAINED_CHECK();
@@ -1575,8 +1567,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // the variable "size" will now be 
   // the default size of the dropdown btn
-  if (mCachedScrollbarWidth > 0) {
-    size.width = mCachedScrollbarWidth;
+  if (scrollbarWidth > 0) {
+    size.width = scrollbarWidth;
   }
 
   // Get the border and padding for the dropdown
@@ -1633,7 +1625,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // this reflows and makes and last minute adjustments
   ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
-                     mDisplayFrame, mButtonFrame, mItemDisplayWidth, mCachedScrollbarWidth, 
+                     mDisplayFrame, mButtonFrame, mItemDisplayWidth, scrollbarWidth, 
                      borderPadding, size.height);
 
   // The dropdown was reflowed UNCONSTRAINED before, now we need to check to see
@@ -1690,7 +1682,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // this reflows and makes and last minute adjustments
   ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
-                     mDisplayFrame, mButtonFrame, mItemDisplayWidth, mCachedScrollbarWidth, 
+                     mDisplayFrame, mButtonFrame, mItemDisplayWidth, scrollbarWidth, 
                      borderPadding, 
                      aDesiredSize.height- borderPadding.top - borderPadding.bottom -
                      dspBorderPadding.top - dspBorderPadding.bottom);
