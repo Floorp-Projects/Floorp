@@ -40,6 +40,7 @@
 #include "prmon.h"
 #include "prtime.h"
 #include "nsGUIEvent.h"
+#include "plevent.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
@@ -73,11 +74,19 @@ static nsCOMPtr<nsIEventQueueService>  gEventQueueService;
 
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
+// If PR_TRUE the user is currently moving a top level window.
+static PRBool gIsMovingWindow = PR_FALSE;
+
+// Message filter used to determine if the user is currently 
+// moving a top-level window.
+static HHOOK   nsMsgFilterHook = NULL;
+
 //
 // Static thread local storage index of the Toolkit 
 // object associated with a given thread...
 //
 static PRUintn gToolkitTLSIndex = 0;
+
 
 HINSTANCE nsToolkit::mDllInstance = 0;
 PRBool    nsToolkit::mIsNT = PR_FALSE;
@@ -170,6 +179,37 @@ void RunPump(void* arg)
     }
 #endif
 }
+
+/* Detect when the user is moving a top-level window */
+
+LRESULT CALLBACK DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
+{
+    /* This msg filter is required to determine when the user has
+     * clicked in the window title bar and is moving the window. 
+     */
+
+    CWPSTRUCT* sysMsg = (CWPSTRUCT*)lParam;
+    if (sysMsg) {
+      if (sysMsg->message == WM_ENTERSIZEMOVE) {
+        gIsMovingWindow = PR_TRUE; 
+        // Notify xpcom that it should favor interactivity
+        // over performance because the user is moving a 
+        // window
+        PL_FavorPerformanceHint(PR_FALSE, 0);
+      } else if (sysMsg->message == WM_EXITSIZEMOVE) {
+        gIsMovingWindow = PR_FALSE;
+        // Notify xpcom that it should go back to its 
+        // previous performance setting which may favor
+        // performance over interactivity
+        PL_FavorPerformanceHint(PR_TRUE, 0);
+      }
+    }
+
+    return CallNextHookEx(nsMsgFilterHook, code, wParam, lParam);
+}
+
+
+
 
 #ifdef MOZ_UNICODE
 
@@ -449,6 +489,13 @@ nsToolkit::~nsToolkit()
     // Remove reference to cached event queue
     gEventQueueService = nsnull;
 
+    // Unhook the filter used to determine when
+    // the user is moving a top-level window.
+    if (nsMsgFilterHook != NULL) {
+      UnhookWindowsHookEx(nsMsgFilterHook);
+      nsMsgFilterHook = NULL;
+    }
+
 #ifdef MOZ_STATIC_COMPONENT_LIBS
     nsToolkit::Shutdown();
 #endif
@@ -648,9 +695,21 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
         // create a thread where the message pump will run
         CreateUIThread();
     }
+
+    // Hook window move messages so the toolkit can report when
+    // the user is moving a top-level window.
+    if (nsMsgFilterHook == NULL) {
+      nsMsgFilterHook = SetWindowsHookEx(WH_CALLWNDPROC, DetectWindowMove, 
+                                                NULL, GetCurrentThreadId());
+    }
+
     return NS_OK;
 }
 
+PRBool nsToolkit::UserIsMovingWindow(void)
+{
+    return gIsMovingWindow;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -895,5 +954,6 @@ void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD tim
       MouseTrailer::mHoldMouse = NULL;
     }
 }
+
 
 

@@ -894,6 +894,18 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD GetAttention() = 0;
 
+    /**
+     * Get the last user input event time in milliseconds. If there are any pending
+     * native toolkit input events it returns the current time. All input events are 
+     * included (ie. it is *not* limited to events targeted at this nsIWidget instance.
+     *
+     * @param aTime Last user input time in milliseconds. This value can be used to compare
+     * durations but can not be used for determining wall clock time. The value returned 
+     * is platform dependent, but is compatible with the expression 
+     * PR_IntervalToMicroseconds(PR_IntervalNow()).
+     */
+    NS_IMETHOD GetLastInputEventTime(PRUint32& aTime) = 0;
+
 };
 
 #endif // nsIWidget_h__

@@ -824,6 +824,11 @@ nsBaseWidget::GetAttention() {
 }
 
 NS_IMETHODIMP
+nsBaseWidget::GetLastInputEventTime(PRUint32& aTime) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsBaseWidget::SetIcon(const nsAString&)
 {
   return NS_OK;

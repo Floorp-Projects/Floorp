@@ -463,7 +463,12 @@ PL_DequeueEvent(PLEvent* self, PLEventQueue* queue);
  * Give hint to native PL_Event notification mechanism. If the native 
  * platform needs to tradeoff performance vs. native event starvation
  * this hint tells the native dispatch code which to favor.
- * The default is to prevent event starvation.
+ * The default is to prevent event starvation. 
+ * 
+ * Calls to this function may be nested. When the number of calls that 
+ * pass PR_TRUE is subtracted from the number of calls that pass PR_FALSE 
+ * is greater than 0, performance is given precedence over preventing 
+ * event starvation.
  *
  * The starvationDelay arg is only used when 
  * favorPerformanceOverEventStarvation is PR_FALSE. It is the
@@ -524,7 +529,6 @@ PR_EXTERN(HWND)
     PL_GetNativeEventReceiverWindow( 
         PLEventQueue *eqp 
     );
-
 #endif /* XP_PC */
 
 #ifdef XP_UNIX

@@ -60,6 +60,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
+#include "nsIWidget.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsINodeInfo.h"
@@ -4054,7 +4055,15 @@ HTMLContentSink::DidProcessAToken(void)
     shell->GetViewManager(getter_AddRefs(vm));
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     PRUint32 eventTime;
-    nsresult rv = vm->GetLastUserEventTime(eventTime);
+    nsCOMPtr<nsIWidget> widget;
+    nsresult rv = vm->GetWidget(getter_AddRefs(widget));
+    if (!widget || NS_FAILED(widget->GetLastInputEventTime(eventTime))) {
+        // If we can't get the last input time from the widget
+        // then we will get it from the viewmanager.
+        rv = vm->GetLastUserEventTime(eventTime);
+        NS_ENSURE_TRUE(NS_SUCCEEDED(rv), NS_ERROR_FAILURE);
+    }
+
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv), NS_ERROR_FAILURE);
 
     if ((!(mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE)) &&

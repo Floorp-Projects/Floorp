@@ -369,6 +369,7 @@ public:
     NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
     NS_IMETHOD              GetAttention();
+    NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
 
     // nsIKBStateControl interface 
 
