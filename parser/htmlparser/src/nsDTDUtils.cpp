@@ -30,11 +30,11 @@
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 
-MOZ_DECL_CTOR_COUNTER(nsEntryStack);
-MOZ_DECL_CTOR_COUNTER(nsDTDContext);
-MOZ_DECL_CTOR_COUNTER(nsTokenAllocator);
-MOZ_DECL_CTOR_COUNTER(CNodeRecycler);
-MOZ_DECL_CTOR_COUNTER(CObserverService); 
+MOZ_DECL_CTOR_COUNTER(nsEntryStack)
+MOZ_DECL_CTOR_COUNTER(nsDTDContext)
+MOZ_DECL_CTOR_COUNTER(nsTokenAllocator)
+MOZ_DECL_CTOR_COUNTER(CNodeRecycler)
+MOZ_DECL_CTOR_COUNTER(CObserverService)
  
 
 /**************************************************************************************

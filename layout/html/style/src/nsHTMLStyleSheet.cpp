@@ -513,7 +513,7 @@ public:
   } mHash;
 };
 
-MOZ_DECL_CTOR_COUNTER(AttributeKey);
+MOZ_DECL_CTOR_COUNTER(AttributeKey)
 
 AttributeKey::AttributeKey(nsIHTMLMappedAttributes* aAttributes)
   : mAttributes(aAttributes)

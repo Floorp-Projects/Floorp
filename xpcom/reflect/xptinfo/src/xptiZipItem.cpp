@@ -24,7 +24,7 @@
 
 #include "xptiprivate.h"
 
-MOZ_DECL_CTOR_COUNTER(xptiZipItem);
+MOZ_DECL_CTOR_COUNTER(xptiZipItem)
 
 xptiZipItem::xptiZipItem()
     :   mName(nsnull),

@@ -25,7 +25,7 @@
 #include "nsHashtable.h"
 #include "nsIStatefulFrame.h" // Get StateType enum
 
-MOZ_DECL_CTOR_COUNTER(HistoryKey);
+MOZ_DECL_CTOR_COUNTER(HistoryKey)
 
 class HistoryKey: public nsVoidKey {
  public:

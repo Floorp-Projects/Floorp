@@ -207,7 +207,7 @@ nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure);
 // nsFactoryEntry
 ////////////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(nsFactoryEntry);
+MOZ_DECL_CTOR_COUNTER(nsFactoryEntry)
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
                                const char *aLocation,

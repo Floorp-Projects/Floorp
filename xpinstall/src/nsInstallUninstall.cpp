@@ -34,7 +34,7 @@
 extern "C" NS_EXPORT PRInt32 SU_Uninstall(char *regPackageName);
 REGERR su_UninstallProcessItem(char *component_path);
 
-MOZ_DECL_CTOR_COUNTER(nsInstallUninstall);
+MOZ_DECL_CTOR_COUNTER(nsInstallUninstall)
 
 nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
                                         const nsString& regName,

@@ -197,7 +197,7 @@ static PRIntn  PR_CALLBACK _hashEnumerate(PLHashEntry *he, PRIntn i, void *arg)
 // HashKey 
 //
 
-MOZ_DECL_CTOR_COUNTER(nsHashKey);
+MOZ_DECL_CTOR_COUNTER(nsHashKey)
 
 nsHashKey::nsHashKey(void)
 {
@@ -212,7 +212,7 @@ nsHashKey::~nsHashKey(void)
   MOZ_COUNT_DTOR(nsHashKey);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHashtable);
+MOZ_DECL_CTOR_COUNTER(nsHashtable)
 
 nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
   : mLock(NULL), mEnumerating(PR_FALSE)

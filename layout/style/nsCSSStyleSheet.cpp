@@ -1354,7 +1354,7 @@ void CSSStyleSheetImpl::operator delete(void* ptr)
   }
 }
 
-MOZ_DECL_CTOR_COUNTER(CSSStyleSheetImpl);
+MOZ_DECL_CTOR_COUNTER(CSSStyleSheetImpl)
 
 CSSStyleSheetImpl::CSSStyleSheetImpl()
   : nsICSSStyleSheet(),

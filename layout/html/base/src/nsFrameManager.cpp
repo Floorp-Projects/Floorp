@@ -114,7 +114,7 @@ protected:
   PLHashTable* mTable;
 };
 
-MOZ_DECL_CTOR_COUNTER(UndisplayedNode);
+MOZ_DECL_CTOR_COUNTER(UndisplayedNode)
 
 class UndisplayedNode {
 public:
@@ -2158,7 +2158,7 @@ CompareKeys(void* key1, void* key2)
   return key1 == key2;
 }
 
-MOZ_DECL_CTOR_COUNTER(FrameHashTable);
+MOZ_DECL_CTOR_COUNTER(FrameHashTable)
 
 FrameHashTable::FrameHashTable(PRUint32 aNumBuckets)
 {
@@ -2436,7 +2436,7 @@ FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFram
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(UndisplayedMap);
+MOZ_DECL_CTOR_COUNTER(UndisplayedMap)
 
 UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
 {

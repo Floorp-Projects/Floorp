@@ -33,7 +33,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-MOZ_DECL_CTOR_COUNTER(nsAuthEngine);
+MOZ_DECL_CTOR_COUNTER(nsAuthEngine)
 
 nsAuthEngine::nsAuthEngine()
 {

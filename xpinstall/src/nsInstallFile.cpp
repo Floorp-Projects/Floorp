@@ -44,7 +44,7 @@
         inFinalFileSpec	- final	location on disk
 */
 
-MOZ_DECL_CTOR_COUNTER(nsInstallFile);
+MOZ_DECL_CTOR_COUNTER(nsInstallFile)
 
 nsInstallFile::nsInstallFile(nsInstall* inInstall,
                              const nsString& inComponentName,

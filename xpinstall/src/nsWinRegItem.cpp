@@ -29,7 +29,7 @@
 
 /* Public Methods */
 
-MOZ_DECL_CTOR_COUNTER(nsWinRegItem);
+MOZ_DECL_CTOR_COUNTER(nsWinRegItem)
 
 nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, const nsString& val, PRInt32 *aReturn)
 : nsInstallObject(regObj->InstallObject())

@@ -86,7 +86,7 @@ static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
 #define NS_IF_DELETE(ptr)   \
   if (nsnull != ptr) { delete ptr; ptr = nsnull; }
 
-MOZ_DECL_CTOR_COUNTER(nsAtomList);
+MOZ_DECL_CTOR_COUNTER(nsAtomList)
 
 nsAtomList::nsAtomList(nsIAtom* aAtom)
   : mAtom(aAtom),
@@ -136,7 +136,7 @@ PRBool nsAtomList::Equals(const nsAtomList* aOther) const
   return PR_FALSE;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsAttrSelector);
+MOZ_DECL_CTOR_COUNTER(nsAttrSelector)
 
 #ifdef DEBUG_REFS
 PRUint32 gAttrSelectorCount=0;
@@ -275,7 +275,7 @@ void nsAttrSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 }
 
-MOZ_DECL_CTOR_COUNTER(nsCSSSelector);
+MOZ_DECL_CTOR_COUNTER(nsCSSSelector)
 
 #ifdef DEBUG_REFS
 PRUint32 gSelectorCount=0;
@@ -907,7 +907,7 @@ protected:
   nsICSSStyleRule *mRule;
 };
 
-MOZ_DECL_CTOR_COUNTER(DOMCSSDeclarationImpl);
+MOZ_DECL_CTOR_COUNTER(DOMCSSDeclarationImpl)
 
 DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(nsICSSStyleRule *aRule)
 {

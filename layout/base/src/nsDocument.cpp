@@ -491,7 +491,7 @@ nsDOMImplementation::Init(nsIURI* aBaseURI)
 // =
 // ==================================================================
 
-MOZ_DECL_CTOR_COUNTER(nsDocumentChildNodes);
+MOZ_DECL_CTOR_COUNTER(nsDocumentChildNodes)
 
 nsDocumentChildNodes::nsDocumentChildNodes(nsIDocument* aDocument)
 {
@@ -549,7 +549,7 @@ nsDocumentChildNodes::DropReference()
 // =
 // ==================================================================
 
-MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList);
+MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList)
 
 nsAnonymousContentList::nsAnonymousContentList(nsISupportsArray* aElements)
 {

@@ -143,7 +143,7 @@ typedef enum {
     eRDFContentSinkState_InEpilog
 } RDFContentSinkState;
 
-MOZ_DECL_CTOR_COUNTER(RDFContentSinkImpl::NameSpaceEntry);
+MOZ_DECL_CTOR_COUNTER(RDFContentSinkImpl::NameSpaceEntry)
 
 class RDFContentSinkImpl : public nsIRDFContentSink
 {

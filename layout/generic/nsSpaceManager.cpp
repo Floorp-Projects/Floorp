@@ -1028,7 +1028,7 @@ nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 /////////////////////////////////////////////////////////////////////////////
 // FrameInfo
 
-MOZ_DECL_CTOR_COUNTER(nsSpaceManager::FrameInfo);
+MOZ_DECL_CTOR_COUNTER(nsSpaceManager::FrameInfo)
 
 nsSpaceManager::FrameInfo::FrameInfo(nsIFrame* aFrame, const nsRect& aRect)
   : mFrame(aFrame), mRect(aRect), mNext(0)
@@ -1046,7 +1046,7 @@ nsSpaceManager::FrameInfo::~FrameInfo()
 /////////////////////////////////////////////////////////////////////////////
 // BandRect
 
-MOZ_DECL_CTOR_COUNTER(BandRect);
+MOZ_DECL_CTOR_COUNTER(BandRect)
 
 nsSpaceManager::BandRect::BandRect(nscoord    aLeft,
                                    nscoord    aTop,

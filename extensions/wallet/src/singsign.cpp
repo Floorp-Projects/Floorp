@@ -660,7 +660,7 @@ si_CompareEncryptedToEncrypted(const nsString& crypt1, const nsString& crypt2) {
  * Managing Signon List *
  ************************/
 
-MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct);
+MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct)
 
 class si_SignonDataStruct {
 public:
@@ -677,7 +677,7 @@ public:
   PRBool isPassword;
 };
 
-MOZ_DECL_CTOR_COUNTER(si_SignonUserStruct);
+MOZ_DECL_CTOR_COUNTER(si_SignonUserStruct)
 
 class si_SignonUserStruct {
 public:
@@ -692,7 +692,7 @@ public:
   nsVoidArray * signonData_list;
 };
 
-MOZ_DECL_CTOR_COUNTER(si_SignonURLStruct);
+MOZ_DECL_CTOR_COUNTER(si_SignonURLStruct)
 
 class si_SignonURLStruct {
 public:
@@ -709,7 +709,7 @@ public:
   nsVoidArray * signonUser_list;
 };
 
-MOZ_DECL_CTOR_COUNTER(si_Reject);
+MOZ_DECL_CTOR_COUNTER(si_Reject)
 
 class si_Reject {
 public:

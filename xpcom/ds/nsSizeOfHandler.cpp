@@ -65,7 +65,7 @@ public:
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(SizeOfDataStats);
+MOZ_DECL_CTOR_COUNTER(SizeOfDataStats)
 
 SizeOfDataStats::SizeOfDataStats(nsIAtom* aType, PRUint32 aSize)
   : mType(aType),

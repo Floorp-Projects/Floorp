@@ -197,7 +197,7 @@ NS_NewEmptyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsFrame);
+MOZ_DECL_CTOR_COUNTER(nsFrame)
 
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.

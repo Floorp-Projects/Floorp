@@ -26,7 +26,7 @@
 
 /* Public Methods */
 
-MOZ_DECL_CTOR_COUNTER(nsWinReg);
+MOZ_DECL_CTOR_COUNTER(nsWinReg)
 
 nsWinReg::nsWinReg(nsInstall* suObj)
 {

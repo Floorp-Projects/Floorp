@@ -113,7 +113,7 @@ nsTextTransformer::Shutdown()
 
 #define MAX_UNIBYTE 127
 
-MOZ_DECL_CTOR_COUNTER(nsTextTransformer);
+MOZ_DECL_CTOR_COUNTER(nsTextTransformer)
 
 nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
                                      nsIWordBreaker* aWordBreaker,

@@ -27,7 +27,7 @@
 
 /* Public Methods */
 
-MOZ_DECL_CTOR_COUNTER(nsWinProfileItem);
+MOZ_DECL_CTOR_COUNTER(nsWinProfileItem)
 
 nsWinProfileItem::nsWinProfileItem(nsWinProfile* profileObj, 
                                    nsString sectionName,

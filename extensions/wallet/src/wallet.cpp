@@ -202,7 +202,7 @@ wallet_GetWalletNotificationPref(void) {
 enum PlacementType {DUP_IGNORE, DUP_OVERWRITE, DUP_BEFORE, DUP_AFTER, AT_END, BY_LENGTH};
 #define LIST_COUNT(list)  ((list) ? (list)->Count() : 0)
 
-MOZ_DECL_CTOR_COUNTER(wallet_Sublist);
+MOZ_DECL_CTOR_COUNTER(wallet_Sublist)
 
 class wallet_Sublist {
 public:
@@ -225,7 +225,7 @@ public:
  * item2 is a value.  Therefore this generic data structure refers to them simply as 
  * item1 and item2.
  */
-MOZ_DECL_CTOR_COUNTER(wallet_MapElement);
+MOZ_DECL_CTOR_COUNTER(wallet_MapElement)
 
 class wallet_MapElement {
 public:
@@ -290,7 +290,7 @@ PRIVATE nsVoidArray * wallet_DistinguishedSchema_list=0;
 #define NO_CAPTURE 0
 #define NO_PREVIEW 1
 
-MOZ_DECL_CTOR_COUNTER(wallet_PrefillElement);
+MOZ_DECL_CTOR_COUNTER(wallet_PrefillElement)
 
 class wallet_PrefillElement {
 public:
@@ -3753,7 +3753,7 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* 
   Recycle(message);
 }
 
-MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct);
+MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct)
 
 /* should move this to an include file */
 class si_SignonDataStruct {

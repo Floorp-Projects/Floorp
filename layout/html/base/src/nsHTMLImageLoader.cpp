@@ -31,7 +31,7 @@
 #undef NOISY_IMAGE_LOADING
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLImageLoader);
+MOZ_DECL_CTOR_COUNTER(nsHTMLImageLoader)
 
 nsHTMLImageLoader::nsHTMLImageLoader()
   : mBaseURL(nsnull),

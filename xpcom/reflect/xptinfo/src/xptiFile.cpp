@@ -24,7 +24,7 @@
 
 #include "xptiprivate.h"
 
-MOZ_DECL_CTOR_COUNTER(xptiFile);
+MOZ_DECL_CTOR_COUNTER(xptiFile)
 
 xptiFile::xptiFile()
     :   mSize(),
