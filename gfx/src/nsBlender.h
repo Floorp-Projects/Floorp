@@ -214,6 +214,17 @@ protected:
   PRInt32             mSrcSpan;
   PRInt32             mSecondSrcSpan;
   PRInt32             mDestSpan;
+  
+  PRUint16						mRedMask;
+  PRUint16						mBlueMask;
+  PRUint16						mGreenMask;
+  PRUint16						mRedSetMask;
+  PRUint16						mGreenSetMask;
+  PRUint16						mBlueSetMask;  
+  PRUint8							mRedShift;
+  PRUint8							mGreenShift;
+  PRUint8							mBlueShift;
+  
 };
 
 #endif

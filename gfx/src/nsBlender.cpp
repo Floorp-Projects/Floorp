@@ -63,6 +63,45 @@ nsBlender::Init(nsIDeviceContext *aContext)
 {
   mContext = aContext;
   NS_IF_ADDREF(mContext);
+  
+  // need to set up some masks for 16 bit Mac or Unix
+#ifdef XP_MAC
+	mRedMask = 0x7c00;
+	mGreenMask = 0x03e0;
+	mBlueMask = 0x001f;
+	mRedSetMask = 0xf8;
+	mGreenSetMask = 0xf8;
+	mBlueSetMask = 0xf8;	
+ 	mRedShift = 7;
+  mGreenShift = 2;
+  mBlueShift = 3;
+#endif
+
+#ifdef XP_WIN
+	mRedMask = 0xf800;
+	mGreenMask = 0x07e0;
+	mBlueMask = 0x001f;
+	mRedSetMask = 0xf8;
+	mGreenSetMask = 0xfC;
+	mBlueSetMask = 0xf8;	
+ 	mRedShift = 8;
+  mGreenShift = 3;
+  mBlueShift = 3;
+#endif  
+  
+#ifdef XP_UNIX
+	mRedMask = 0xf800;
+	mGreenMask = 0x07e0;
+	mBlueMask = 0x001f;
+	mRedSetMask = 0xf8;
+	mGreenSetMask = 0xfC;
+	mBlueSetMask = 0xf8;	
+ 	mRedShift = 8;
+  mGreenShift = 3;
+  mBlueShift = 3;
+#endif  
+  
+  
 
   return NS_OK;
 }
@@ -72,10 +111,13 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDra
                     nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
                     nsDrawingSurface aSecondSrc, nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
-  nsresult      result = NS_ERROR_FAILURE;
-  nsPoint       srcloc, maskloc;
-  nsPixelFormat pixformat;
-  nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
+nsresult      result = NS_ERROR_FAILURE;
+nsPoint       srcloc, maskloc;
+nsPixelFormat pixformat;
+nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
+
+
+
 
   SrcSurf = (nsIDrawingSurface *)aSrc;
   DstSurf = (nsIDrawingSurface *)aDst;
@@ -83,10 +125,8 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDra
 
   mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
 
-  if (NS_OK == SrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY))
-  {
-    if (NS_OK == DstSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0))
-    {
+  if (NS_OK == SrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY)){
+    if (NS_OK == DstSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0)){
       if (SecondSrcSurf)
         SecondSrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
 
@@ -168,166 +208,49 @@ nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride, PRInt32 aSrcByt
                                PRInt32 aLines, PRInt32 aAlpha, nsPixelFormat &aPixFormat,
                                nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
-  nsresult  result = NS_OK;
-
-//  if (CalcAlphaMetrics(&mSrcInfo, &mDstInfo,
-//                       ((nsnull != mSecondSrcbinfo) || (PR_TRUE == secondsrcissurf)) ? &mSecondSrcInfo : nsnull,
-//                       &srcloc, NULL, &maskloc, aWidth, aHeight, &numlines, &numbytes,
-//                       &s1, &d1, &ssl, &m1, &slinespan, &dlinespan, &mlinespan))
-if (1)
+nsresult  result = NS_OK;
+PRUint32 depth;
+ 
+  mContext->GetDepth(depth);
+  // now do the blend
+  switch (depth)
   {
-//    if (mSrcInfo.bmBitsPixel == mDstInfo.bmBitsPixel)
-if (1)
+    case 32:
+        Do32Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                  aSrcBackColor, aSecondSrcBackColor, aPixFormat);
+        result = NS_OK;
+      break;
+
+    case 24:
+        Do24Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                  aSrcBackColor, aSecondSrcBackColor, aPixFormat);
+      break;
+
+    case 16:
+        Do16Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                  aSrcBackColor, aSecondSrcBackColor, aPixFormat);
+      break;
+
+    case 8:
     {
-      PRUint32 depth;
-      mContext->GetDepth(depth);
-      // now do the blend
-      switch (depth)
-      {
-        case 32:
-//          if (!mask){
-            Do32Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
-                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
-            result = NS_OK;
-//          }else
-//            result = NS_ERROR_FAILURE;
-          break;
+      IL_ColorSpace *thespace = nsnull;
 
-        case 24:
-//          if (mask){
-//            Do24BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-//                              NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
-//            result = NS_OK;
-//          }else{
-            Do24Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
-                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
-//            result = NS_OK;
-//          }
-          break;
-
-        case 16:
-//          if (!mask){
-            Do16Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
-                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
-//            result = NS_OK;
-//          }
-//          else
-//            result = NS_ERROR_FAILURE;
-          break;
-
-        case 8:
-        {
-          IL_ColorSpace *thespace = nsnull;
-
-//          if (mask){
-//            Do8BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-//                             NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
-//            result = NS_OK;
-//          }else{
-            if ((result = mContext->GetILColorSpace(thespace)) == NS_OK){
-              Do8Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
-                       aSecondSrcBits, aSrcStride, aDestStride, thespace,
-                       nsHighQual, aSrcBackColor, aSecondSrcBackColor);
-              IL_ReleaseColorSpace(thespace);
-            }
-//          }
-          break;
+        if ((result = mContext->GetILColorSpace(thespace)) == NS_OK){
+          Do8Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                   aSecondSrcBits, aSrcStride, aDestStride, thespace,
+                   nsHighQual, aSrcBackColor, aSecondSrcBackColor);
+          IL_ReleaseColorSpace(thespace);
         }
-      }
+      break;
     }
-    else
-      result = NS_ERROR_FAILURE;
   }
 
   return result;
 }
 
-/** --------------------------------------------------------------------------
- * Calculate the metrics for the alpha layer before the blend
- * @param aSrcInfo -- a pointer to a source bitmap
- * @param aDestInfo -- a pointer to the destination bitmap
- * @param aSrcUL -- upperleft for the source blend
- * @param aMaskInfo -- a pointer to the mask bitmap
- * @param aMaskUL -- upperleft for the mask bitmap
- * @param aWidth -- width of the blend
- * @param aHeight -- heigth of the blend
- * @param aNumLines -- a pointer to number of lines to do for the blend
- * @param aNumbytes -- a pointer to the number of bytes per line for the blend
- * @param aSImage -- a pointer to a the bit pointer for the source
- * @param aDImage -- a pointer to a the bit pointer for the destination 
- * @param aMImage -- a pointer to a the bit pointer for the mask 
- * @param aSLSpan -- number of bytes per span for the source
- * @param aDLSpan -- number of bytes per span for the destination
- * @param aMLSpan -- number of bytes per span for the mask
- * @result PR_TRUE if calculation was succesful
- */
-#if 0
-PRBool nsBlender::CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo, BITMAP *aSecondSrcInfo,
-                              nsPoint *aSrcUL,
-                              BITMAP  *aMaskInfo,nsPoint *aMaskUL,
-                              PRInt32 aWidth,PRInt32 aHeight,
-                              PRInt32 *aNumlines,
-                              PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
-                              PRUint8 **aSecondSImage,
-                              PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan)
-{
-PRBool    doalpha = PR_FALSE;
-nsRect    srect,drect,irect;
-PRInt32   startx,starty;
-nsRect    trect;
-
-  if(aMaskInfo){
-    drect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
-    trect.SetRect(aMaskUL->x,aMaskUL->y,aMaskInfo->bmWidth,aSrcInfo->bmHeight);
-    drect.IntersectRect(drect, trect);
-  }else{
-    //arect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
-    //srect.SetRect(aMaskUL->x,aMaskUL->y,aWidth,aHeight);
-    //arect.IntersectRect(arect,srect);
-
-    drect.SetRect(0, 0, aDestInfo->bmWidth, aDestInfo->bmHeight);
-    trect.SetRect(aSrcUL->x, aSrcUL->y, aWidth, aHeight);
-    drect.IntersectRect(drect, trect);
-  }
-
-  srect.SetRect(0, 0, aSrcInfo->bmWidth, aSrcInfo->bmHeight);
-  trect.SetRect(aSrcUL->x, aSrcUL->y, aWidth, aHeight);
-  srect.IntersectRect(srect, trect);
-
-  if (irect.IntersectRect(srect, drect)){
-    *aNumbytes = CalcBytesSpan(irect.width, aDestInfo->bmBitsPixel);
-    *aNumlines = irect.height;
-
-    startx = irect.x;
-    starty = irect.y;
-
-    // calculate destination information
-    *aDLSpan = mDRowBytes;
-    *aDImage = ((PRUint8*)aDestInfo->bmBits) + (starty * (*aDLSpan)) + ((aDestInfo->bmBitsPixel >> 3) * startx);
-
-    *aSLSpan = mSRowBytes;
-    *aSImage = ((PRUint8*)aSrcInfo->bmBits) + (starty * (*aSLSpan)) + ((aSrcInfo->bmBitsPixel >> 3) * startx);
-
-    if (nsnull != aSecondSrcInfo)
-      *aSecondSImage = ((PRUint8*)aSecondSrcInfo->bmBits) + (starty * (*aSLSpan)) + ((aSrcInfo->bmBitsPixel >> 3) * startx);
-
-    doalpha = PR_TRUE;
-
-    if(aMaskInfo){
-      *aMLSpan = aMaskInfo->bmWidthBytes;
-      *aMImage = (PRUint8*)aMaskInfo->bmBits;
-    }else{
-      aMLSpan = 0;
-      *aMImage = nsnull;
-    }
-  }
-
-  return doalpha;
-}
-#endif
 
 /** --------------------------------------------------------------------------
  * Blend two 32 bit image arrays
@@ -518,9 +441,12 @@ PRUint16  srccolor,secsrccolor;
 
 //------------------------------------------------------------
 
-#define RED16(x)    (((x) & 0xf800) >> 8)
-#define GREEN16(x)  (((x) & 0x07e0) >> 3)
-#define BLUE16(x)   (((x) & 0x001f) << 3)
+
+
+#define RED16(x)    (((x) & mRedMask) >> mRedShift)
+#define GREEN16(x)  (((x) & mGreenMask) >> mGreenShift)
+#define BLUE16(x)   (((x) & mBlueMask) << mBlueShift)
+
 
 /** --------------------------------------------------------------------------
  * Blend two 16 bit image arrays using a passed in blend value
@@ -558,8 +484,7 @@ PRInt16     dspan,sspan,span;
   xinc = 1;
   yinc = 1;
 
-  if (nsnull != aSecondSImage)
-  {
+  if (nsnull != aSecondSImage) {
     ss1 = (PRUint16 *)aSecondSImage;
     srccolor = ((NS_GET_R(aSrcBackColor) & 0xf8) << 8) |
                ((NS_GET_G(aSrcBackColor) & 0xfc) << 3) |
@@ -567,9 +492,9 @@ PRInt16     dspan,sspan,span;
     secsrccolor = ((NS_GET_R(aSecondSrcBackColor) & 0xf8) << 8) |
                   ((NS_GET_G(aSecondSrcBackColor) & 0xfc) << 3) |
                   ((NS_GET_B(aSecondSrcBackColor) & 0xf8) >> 3);
-  }
-  else
+  } else {
     ss1 = nsnull;
+  }
 
   if (nsnull != ss1){
     for (y = 0; y < aNumlines; y++){
@@ -581,8 +506,7 @@ PRInt16     dspan,sspan,span;
         stemp = *s2;
         sstemp = *ss2;
 
-        if ((stemp != srccolor) || (sstemp != secsrccolor))
-        {
+        if ((stemp != srccolor) || (sstemp != secsrccolor)) {
           dtemp = *d2;
 
           red = (RED16(dtemp) * val1 + RED16(stemp) * val2) >> 8;
@@ -600,7 +524,7 @@ PRInt16     dspan,sspan,span;
           if (blue > 255)
             blue = 255;
 
-          *d2 = (PRUint16)((red & 0xf8) << 8) | ((green & 0xfc) << 3) | ((blue & 0xf8) >> 3);
+          *d2 = (PRUint16)((red & mRedSetMask) << mRedShift) | ((green & mGreenSetMask) << mGreenShift) | ((blue & mBlueSetMask) >> mBlueShift);
         }
 
         d2++;
@@ -612,9 +536,7 @@ PRInt16     dspan,sspan,span;
       d1 += dspan;
       ss1 += sspan;
     }
-  }
-  else
-  {
+  } else {
     for (y = 0; y < aNumlines; y++){
       s2 = s1;
       d2 = d1;
