@@ -1091,7 +1091,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 void 
 nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 {
-  nsString accelText;
+  nsAutoString accelText;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::acceltext, accelText);
   if (!accelText.IsEmpty()) {
     // Just use this.
@@ -1100,7 +1100,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   }
 
   // See if we have a key node and use that instead.
-  nsString keyValue;
+  nsAutoString keyValue;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::key, keyValue);
 
   nsCOMPtr<nsIDocument> document;
@@ -1123,11 +1123,11 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 	nsAutoString commandAtom("command");
   nsAutoString controlAtom("control");
 
-	nsString shiftValue;
-	nsString altValue;
-	nsString commandValue;
-  nsString controlValue;
-	nsString keyChar = " ";
+	nsAutoString shiftValue;
+	nsAutoString altValue;
+	nsAutoString commandValue;
+  nsAutoString controlValue;
+	nsAutoString keyChar = " ";
 	
 	keyElement->GetAttribute(keyAtom, keyChar);
 	keyElement->GetAttribute(shiftAtom, shiftValue);
@@ -1138,13 +1138,13 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   nsAutoString xulkey;
   keyElement->GetAttribute(nsAutoString("xulkey"), xulkey);
   if (xulkey.Equals("true")) {
-      // Set the default for the xul key modifier
+    // Set the default for the xul key modifier
 #ifdef XP_MAC
-      commandValue = "true";
+    commandValue = "true";
 #elif defined(XP_PC) || defined(NTO)
-      controlValue = "true";
+    controlValue = "true";
 #else 
-      altValue = "true";
+    altValue = "true";
 #endif
   }
   
