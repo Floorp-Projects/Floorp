@@ -38,6 +38,15 @@ CONFIG_CONFIG_MAK=1
 #//
 #//------------------------------------------------------------------------
 
+
+
+#//-----------------------------------------------------------------------
+#//
+#// Detect WinNT vs. Win9x and set WINOS appropriately.
+#//
+#// Set WINOS in your environment to avoid the timewasting uname call
+#//
+#//-----------------------------------------------------------------------
 !if !defined(WINOS)
 !if [$(MOZ_TOOLS)\bin\uname > osuname.inc]
 !endif
@@ -49,69 +58,16 @@ WINOS=$(WINOS: =)^
 !endif
 !endif
 
-# need this everywhere jsapi.h might be included
-LCFLAGS=$(LCFLAGS) -DJS_THREADSAFE
 
-!ifndef JAVA_HOME
-JAVA_HOME=$(JDKHOME)
-!endif
 
-!if "$(STAND_ALONE_JAVA)" == "1"
-LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
-!endif
-
-NECKO=1
-LCFLAGS=$(LCFLAGS) -DNECKO
-
-!ifndef MOZ_JAVA
-MOZ_OJI = 1             # on by default now
-!endif
-
-!ifdef MOZ_LIBTEST
-MOZ_LIBTEST = 1
-LCFLAGS=$(LCFLAGS) -DLAYPROBE_API
-!endif
-
-!ifdef MOZ_JAVA
-MOZ_JAVA_FLAG=-DJAVA
-!ifdef MOZ_OJI
-!error You can't define both MOZ_JAVA and MOZ_OJI anymore. 
-!endif
-JAVA_OR_OJI = 1
-JAVA_OR_NSJVM = 1
-!endif
-
-!ifdef NSJVM
-JAVA_OR_NSJVM = 1
-AWT_11 = 1              # always build awt 1.1 with nsjvm now
-!endif
-
-!ifdef MOZ_OJI
-LCFLAGS=$(LCFLAGS) -DOJI
-JAVA_OR_OJI=1
-!endif
-
-!ifdef SMART_MAIL
-LCFLAGS=$(LCFLAGS) -DSMART_MAIL
-!endif
-
-!ifdef MOZ_TRACE_XPCOM_REFCNT
-LCFLAGS=$(LCFLAGS) -DMOZ_TRACE_XPCOM_REFCNT
-!endif
-
-!ifdef MOZ_SMOOTH_PROGRESS
-LCFLAGS=$(LCFLAGS) -DSMOOTH_PROGRESS
-!endif
+#//-----------------------------------------------------------------------
+#//
+#// DIST DEFINITION
+#//
+#//-----------------------------------------------------------------------
 
 XPDIST=$(DEPTH)\dist
 PUBLIC=$(XPDIST)\include
-
-#//-----------------------------------------------------------------------
-#// OBJDIR is NOT the same as DIST for Win16. The Win16 dist stuff can
-#// be built with EXE or DLL compiler flags, but the DIST directory
-#// has the same name no matter what
-#//-----------------------------------------------------------------------
-
 
 !ifdef NGLAYOUT_BUILD_PREFIX
 DIST_PREFIX=NGL
@@ -157,16 +113,23 @@ NGLAYOUT_DIST=$(XPDIST)\NGL$(MOZ_BITS)_D.OBJ
 !endif
 
 
+
+#//-----------------------------------------------------------------------
+#//
+#// Basic configuration settings
+#//
+#//-----------------------------------------------------------------------
+
 CFGFILE=$(OBJDIR)\cmd.cfg
 
 INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(DEPTH)\include
 
-# Perhaps we should add MOZ_LITENESS_FLAGS to 16 bit build
 !if "$(MOZ_BITS)" == "16"
 CFLAGS=$(MOZ_JAVA_FLAG) -DLAYERS -DEDITOR $(OS_CFLAGS) $(MOZ_CFLAGS)
 !else
-CFLAGS=$(MOZ_JAVA_FLAG) -DLAYERS $(OS_CFLAGS) $(MOZ_CFLAGS) $(MOZ_LITENESS_FLAGS)
+CFLAGS=$(MOZ_JAVA_FLAG) -DLAYERS $(OS_CFLAGS) $(MOZ_CFLAGS)
 !endif
+
 LFLAGS=$(OS_LFLAGS) $(LLFLAGS) $(MOZ_LFLAGS)
 
 # This compiles in heap dumping utilities and other good stuff 
@@ -180,15 +143,17 @@ CFLAGS = $(CFLAGS) -DDEVELOPER_DEBUG
 CFLAGS = $(CFLAGS) -FR
 !endif
 
+
+
+#//-----------------------------------------------------------------------
+#//
+#// feature-specific configuration settings
+#//
+#//-----------------------------------------------------------------------
+
 !ifdef STANDALONE_IMAGE_LIB
 CFLAGS=$(CFLAGS) -DSTANDALONE_IMAGE_LIB
 !endif
-
-# Switching off NuCache for now...
-# !ifndef NO_NU_CACHE
-# NU_CACHE = 1
-# CFLAGS=$(CFLAGS) -DNU_CACHE
-# !endif
 
 # Crash-reporting system.  http://www.fullcirclesoftware.com
 !ifdef MOZ_FULLCIRCLE
@@ -229,6 +194,70 @@ CFLAGS = $(CFLAGS) -DLIVEWIRE
 CFLAGS = $(CFLAGS) -DMOZILLA_CLIENT
 !endif
 
+# need this everywhere jsapi.h might be included
+CFLAGS=$(CFLAGS) -DJS_THREADSAFE
+
+!if "$(STAND_ALONE_JAVA)" == "1"
+CFLAGS=$(CFLAGS) -DSTAND_ALONE_JAVA
+!endif
+
+NECKO=1
+CFLAGS=$(CFLAGS) -DNECKO
+
+!ifndef MOZ_JAVA
+MOZ_OJI = 1             # on by default now
+!endif
+
+!ifdef MOZ_LIBTEST
+MOZ_LIBTEST = 1
+CFLAGS=$(CFLAGS) -DLAYPROBE_API
+!endif
+
+!ifdef MOZ_JAVA
+MOZ_JAVA_FLAG=-DJAVA
+!ifdef MOZ_OJI
+!error You can't define both MOZ_JAVA and MOZ_OJI anymore. 
+!endif
+JAVA_OR_OJI = 1
+JAVA_OR_NSJVM = 1
+!endif
+
+!ifdef NSJVM
+JAVA_OR_NSJVM = 1
+AWT_11 = 1              # always build awt 1.1 with nsjvm now
+!endif
+
+!ifdef MOZ_OJI
+CFLAGS=$(CFLAGS) -DOJI
+JAVA_OR_OJI=1
+!endif
+
+!ifdef SMART_MAIL
+CFLAGS=$(CFLAGS) -DSMART_MAIL
+!endif
+
+!ifdef MOZ_TRACE_XPCOM_REFCNT
+CFLAGS=$(CFLAGS) -DMOZ_TRACE_XPCOM_REFCNT
+!endif
+
+!ifdef MOZ_SMOOTH_PROGRESS
+CFLAGS=$(CFLAGS) -DSMOOTH_PROGRESS
+!endif
+
+!if defined(USE_STRING2)
+CFLAGS = $(CFLAGS) -DUSE_STRING2
+!endif
+
+
+
+#//-----------------------------------------------------------------------
+#//
+#// build tools
+#//
+#//-----------------------------------------------------------------------
+
+NMAKE=nmake -nologo -$(MAKEFLAGS)
+
 # use whatever perl is in the path. we don't need to hardcode it
 # unless, of course it exists in the hardcoded places
 !if exist($(MOZ_TOOLS)\perl5\bin\perl.exe)
@@ -257,9 +286,6 @@ MKDIR = mkdir
 QUIET=@
 !endif
 
-!if defined(USE_STRING2)
-CFLAGS = $(CFLAGS) -DUSE_STRING2
-!endif
 
 
 #//------------------------------------------------------------------------
@@ -277,6 +303,7 @@ CFLAGS = $(CFLAGS) -DDEBUG_$(USERNAME)
 CFLAGS = $(CFLAGS) -Gh
 !endif
 !endif
+
 
 #//------------------------------------------------------------------------
 #//
@@ -299,23 +326,35 @@ MAKE_INSTALL=$(QUIET)$(DEPTH)\config\makecopy.exe
 MAKE_MANGLE=$(DEPTH)\config\mangle.exe
 MAKE_UNMANGLE=if exist unmangle.bat call unmangle.bat
 
+
+
 #//------------------------------------------------------------------------
 #//
 #// Common Libraries
 #//
 #//------------------------------------------------------------------------
-LIBNSPR=$(DIST)\lib\nspr3.lib
-LIBNSPR=$(LIBNSPR) $(DIST)\lib\plds3.lib $(DIST)\lib\plc3.lib
+LIBNSPR=$(DIST)\lib\nspr3.lib $(DIST)\lib\plds3.lib $(DIST)\lib\plc3.lib
 
 NSPRDIR = nsprpub
 CFLAGS = $(CFLAGS) -DNSPR20
 
 LIBJPEG=$(DIST)\lib\jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib
 
-######################################################################
-### Windows-Specific Java Stuff
+
+
+#//------------------------------------------------------------------------
+#//
+#// Windows-Specific Java Stuff
+#//
+#// (Is this used anymore? Even if it is should it be in config.mak?)
+#//
+#//------------------------------------------------------------------------
 
 PATH_SEPARATOR = ;
+
+!ifndef JAVA_HOME
+JAVA_HOME=$(JDKHOME)
+!endif
 
 # where the bytecode will go
 !if "$(AWT_11)" == "1"
@@ -427,7 +466,6 @@ JAVA_DEFINES = $(JAVA_DEFINES) -DAWT_102
 JMCSRCDIR = $(JMCSRCDIR:/=\)
 JAVA_BOOT_CLASSPATH = $(JAVA_BOOT_CLASSPATH:/=\)
 
-NMAKE=nmake -nologo -$(MAKEFLAGS)
 
 ########
 #   Get the cwd to prepend to all compiled source
