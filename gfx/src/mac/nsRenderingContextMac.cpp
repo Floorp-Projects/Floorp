@@ -96,7 +96,7 @@ nsRenderingContextMac :: nsRenderingContextMac()
   mContext = nsnull ;
   mFrontBuffer = nsnull ;
   mRenderingSurface = nsnull ;
-  mCurrentColor = 0;
+  mCurrentColor = NS_RGB(255,255,255);
   mTMatrix = nsnull;
   mP2T = 1.0f;
   mStateCache = new nsVoidArray();
@@ -186,6 +186,7 @@ nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,
   NS_IF_ADDREF(mContext);
 
   mRenderingSurface = (nsDrawingSurfaceMac) aSurface;
+  
   return (CommonInit());
 }
 
@@ -202,6 +203,7 @@ nsresult nsRenderingContextMac :: CommonInit()
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
   mTMatrix->AddScale(app2dev, app2dev);
+  this->SetColor(mCurrentColor);
   return NS_OK;
 }
 
@@ -494,14 +496,16 @@ nsIRegion * pRegion ;
 void nsRenderingContextMac :: SetColor(nscolor aColor)
 {
 RGBColor	thecolor;
- // mCurrentColor = ((nsDeviceContextMac *)mContext)->ConvertPixel(aColor);
+GrafPtr		curport;
 
-	
-	thecolor.red = NS_GET_R(aColor);
-	thecolor.red = NS_GET_G(aColor);
-	thecolor.red = NS_GET_B(aColor);
+	GetPort(&curport);
+	SetPort(mCurrentSurface);
+	thecolor.red = NS_GET_R(aColor)<<8;
+	thecolor.green = NS_GET_G(aColor)<<8;
+	thecolor.blue = NS_GET_B(aColor)<<8;
 	::RGBForeColor(&thecolor);
   mCurrentColor = aColor ;
+  SetPort(curport);
  
 }
 
@@ -540,7 +544,7 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 const nsFont& nsRenderingContextMac :: GetFont()
 {
   const nsFont* font;
-  mFontMetrics->GetFont(font);
+  //mFontMetrics->GetFont(font);
   return *font;
 }
 
@@ -684,7 +688,7 @@ Rect		therect;
 
 void nsRenderingContextMac :: FillRect(const nsRect& aRect)
 {
-  FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
+	FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 //------------------------------------------------------------------------
