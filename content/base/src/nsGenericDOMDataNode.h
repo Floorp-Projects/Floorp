@@ -255,8 +255,8 @@ public:
 
   //----------------------------------------
 
-  already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText,
-                                                nsIDocument *aOwnerDocument);
+  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText,
+                                                        nsIDocument *aOwnerDocument);
 
 #ifdef DEBUG
   void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
