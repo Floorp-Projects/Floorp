@@ -228,7 +228,7 @@
   -moz-image-region: rect(68px 149px 101px 100px);
 }
 
-#button-stop[disabled] {
+#button-stop[disabled="true"] {
   -moz-image-region: rect(68px 199px 101px 150px) !important;
 }
 
