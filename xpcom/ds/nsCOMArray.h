@@ -54,7 +54,7 @@ protected:
     nsCOMArray_base(PRInt32 aCount) : mArray(aCount) {}
     nsCOMArray_base(const nsCOMArray_base& other);
 
-    PRInt32 IndexOf(nsISupports* aObject) {
+    PRInt32 IndexOf(nsISupports* aObject) const {
         return mArray.IndexOf(aObject);
     }
 
@@ -144,7 +144,7 @@ class nsCOMArray : public nsCOMArray_base
     }
 
     // index of the element in question.. does NOT refcount
-    PRInt32 IndexOf(T* aObject) {
+    PRInt32 IndexOf(T* aObject) const {
         return nsCOMArray_base::IndexOf(aObject);
     }
 
