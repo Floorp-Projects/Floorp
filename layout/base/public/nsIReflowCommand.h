@@ -40,10 +40,7 @@ struct nsSize;
  * target frame (the frame for which the reflow command is destined). Reflow
  * commands are processed by invoking the frame's Reflow() member function.
  *
- * @see nsIFrame#ContentAppended()
  * @see nsIFrame#ContentChanged()
- * @see nsIFrame#ContentDeleted()
- * @see nsIFrame#ContentInserted()
  * @see nsIFrame#ContentReplaced()
  * @see nsIPresShell#AppendReflowCommand()
  * @see nsIPresShell#ProcessReflowCommands()
@@ -51,18 +48,25 @@ struct nsSize;
 class nsIReflowCommand : public nsISupports {
 public:
   enum ReflowType {
-    // Reflow commands generated in response to a content insert/delete/append
-    // notification. The target of the reflow command is the container frame
-    // itself
+    // Reflow commands generated in response to a content append,
+    // insert, and remove notification. The target of the reflow
+    // command is the container frame itself.
     FrameAppended,
     FrameInserted,
-    FrameDeleted,
+    FrameRemoved,
 
-    // This reflow command is used when a leaf node's content changes (e.g. some
-    // text in a text run, an image's source, etc.). The target of the reflow
-    // command is the frame that changed (see nsIFrame#ContentChanged() for how
-    // the target frame is determined).
+    // This reflow command is used when a leaf node's content changes
+    // (e.g. some text in a text run, an image's source, etc.). The
+    // target of the reflow command is the frame that changed (see
+    // nsIFrame#ContentChanged() for how the target frame is
+    // determined).
     ContentChanged,
+
+    // This reflow command is used when the style for a frame has
+    // changed. This also implies that if the frame is a container
+    // that its childrens style has also changed. The target of the
+    // reflow command is the frame that changed style.
+    StyleChanged,
 
     // When an incremental reflow operation affects a next-in-flow,
     // these commands are used to get the next-in-flow to update
@@ -75,7 +79,7 @@ public:
     // an incremental reflow.
     CheckPullupReflow,
 
-    // Trap door for extensions
+    // Trap door for extensions.
     UserDefined
   };
 
