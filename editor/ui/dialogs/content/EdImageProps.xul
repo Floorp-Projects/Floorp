@@ -665,24 +665,8 @@
 </xul:window>
 
 <!-- The old stuff:
-
-
-<xul:popup id="ImageTextAlignment">
-  <xul:menu>
-    <xul:menuitem name="&topPopup.value;" onclick="SetImageAlignment('^')"/>
-    <xul:menuitem name="&centerPopup.value;" onclick="SetImageAlignment('.')"/>
-    <xul:menuitem name="&bottomPopup.value;" onclick="SetImageAlignment('v')"/>
-    <xul:menuitem name="&wrapRightPopup.value;" onclick="SetImageAlignment(']')"/>
-    <xul:menuitem name="&wrapLeftPopup.value;" onclick="SetImageAlignment('[')"/>
-  </xul:menu>
-</xul:popup>
-
-            <xul:checkbox value="1"/>
-            Leave Image at Original Location
-
-            <xul:checkbox value="1"/>
-            Page Background
-
+    <input type="checkbox"> Leave Image at Original Location
+    <input type="checkbox"> Page Background
             <input type="button" value=" Edit Image "/>
             <input type="button" value=" Remove Image Map " disabled />
 -->
