@@ -4755,9 +4755,8 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     nsCOMPtr<nsIOutputStream> out;
     nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out),
                                                   aBookmarksFile,
-                                                  PR_WRONLY,
-                                                  /*octal*/ 0600,
-                                                  0);
+                                                  -1,
+                                                  /*octal*/ 0600);
     if (NS_FAILED(rv)) return rv;
 
     // We need a buffered output stream for performance.
@@ -4783,6 +4782,7 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     // All went ok. Maybe except for problems in Write(), but the stream detects
     // that for us
     nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(strm);
+    NS_ASSERTION(safeStream, "expected a safe output stream!");
     if (NS_SUCCEEDED(rv) && safeStream)
         rv = safeStream->Finish();
   
