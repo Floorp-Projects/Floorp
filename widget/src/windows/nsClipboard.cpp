@@ -738,38 +738,35 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
 
   nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kFileMime), outData, outDataLen);
   if ( NS_SUCCEEDED(loadResult) && *outData ) {
-	  // we have a file path in |data|. Is it an internet shortcut or a normal file?
-	  char* filepath = NS_REINTERPRET_CAST(char*, *outData);
-    if ( IsInternetShortcut(filepath) ) {
-      char* buffer = nsnull;
+    // we have a file path in |data|. Is it an internet shortcut or a normal file?
+    const char* filepath = NS_REINTERPRET_CAST(char*, *outData);
+    nsCOMPtr<nsILocalFile> file;
+    nsresult rv = NS_NewNativeLocalFile(nsDependentCString(filepath), PR_TRUE, getter_AddRefs(file));
+    if (NS_FAILED(rv))
+      return dataFound;
 
-      ResolveShortcut ( filepath, &buffer );     
-      if ( buffer ) {
+    if ( IsInternetShortcut(filepath) ) {
+      nsCAutoString url;
+      ResolveShortcut( file, url );
+      if ( !url.IsEmpty() ) {
         // convert it to unicode and pass it out
         nsMemory::Free(*outData);
-        nsAutoString urlUnicode;
-        urlUnicode.AssignWithConversion( buffer );
-        *outData = ToNewUnicode(urlUnicode);
-        *outDataLen = strlen(buffer) * sizeof(PRUnichar);
-        nsMemory::Free(buffer);
+        *outData = UTF8ToNewUnicode(url);
+        *outDataLen = nsCRT::strlen(NS_STATIC_CAST(PRUnichar*, *outData));
 
         dataFound = PR_TRUE;
       }
     }
     else {
       // we have a normal file, use some Necko objects to get our file path
-	    nsCOMPtr<nsILocalFile> file;
-        if ( NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(filepath), PR_TRUE, getter_AddRefs(file))) ) {
-        nsCAutoString urlSpec;
-        NS_GetURLSpecFromFile(file, urlSpec);
+      nsCAutoString urlSpec;
+      NS_GetURLSpecFromFile(file, urlSpec);
 
-          // convert it to unicode and pass it out
-          nsMemory::Free(*outData);
-          *outData = ToNewUnicode(NS_ConvertUTF8toUCS2(urlSpec));
-          *outDataLen = strlen(urlSpec.get()) * sizeof(PRUnichar);
-          dataFound = PR_TRUE;
-        
-      }
+      // convert it to unicode and pass it out
+      nsMemory::Free(*outData);
+      *outData = UTF8ToNewUnicode(urlSpec);
+      *outDataLen = nsCRT::strlen(NS_STATIC_CAST(PRUnichar*, *outData));
+      dataFound = PR_TRUE;
     } // else regular file
   }
 
@@ -780,48 +777,20 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
 //
 // ResolveShortcut
 //
-// Use some Win32 mumbo-jumbo to read in the shortcut file and parse out the URL
-// in references
-//
 void
-nsClipboard :: ResolveShortcut ( const char* inFileName, char** outURL )
+nsClipboard :: ResolveShortcut ( nsILocalFile* aFile, nsACString& outURL )
 {
-// IUniformResourceLocator isn't supported by VC5 (bless its little heart)
-#if _MSC_VER >= 1200
-  HRESULT result;
+  nsCOMPtr<nsIFileProtocolHandler> fph;
+  nsresult rv = NS_GetFileProtocolHandler(getter_AddRefs(fph));
+  if (NS_FAILED(rv))
+    return;
 
-  IUniformResourceLocator* urlLink = nsnull;
-  result = ::CoCreateInstance ( CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
-                                IID_IUniformResourceLocator, (void**)&urlLink );
-  if ( SUCCEEDED(result) && urlLink ) {
-    IPersistFile* urlFile = nsnull;
-    result = urlLink->QueryInterface (IID_IPersistFile, (void**)&urlFile );
-    if ( SUCCEEDED(result) && urlFile ) {
-      WORD wideFileName[MAX_PATH];
-      ::MultiByteToWideChar ( CP_ACP, 0, inFileName, -1, wideFileName, MAX_PATH );
+  nsCOMPtr<nsIURI> uri;
+  rv = fph->ReadURLFile(aFile, getter_AddRefs(uri));
+  if (NS_FAILED(rv))
+    return;
 
-      result = urlFile->Load(wideFileName, STGM_READ);
-      if (SUCCEEDED(result) ) {
-        LPSTR lpTemp = nsnull;
-
-        result = urlLink->GetURL(&lpTemp);
-        if ( SUCCEEDED(result) && lpTemp ) {
-          *outURL = PL_strdup (lpTemp);
-
-          // free the string that GetURL alloc'd
-          IMalloc* pMalloc;
-          result = SHGetMalloc(&pMalloc);
-          if ( SUCCEEDED(result) ) {
-            pMalloc->Free(lpTemp);
-            pMalloc->Release();
-          }
-        }
-      }
-      urlFile->Release();
-    }
-    urlLink->Release();
-  }
-#endif
+  uri->GetSpec(outURL);
 } // ResolveShortcut
 
 
@@ -835,9 +804,8 @@ nsClipboard :: IsInternetShortcut ( const char* inFileName )
 {
   if ( strstr(inFileName, ".URL") || strstr(inFileName, ".url") )
     return PR_TRUE;
-  else
-    return PR_FALSE;
-
+  
+  return PR_FALSE;
 } // IsInternetShortcut
 
 

@@ -3741,46 +3741,20 @@ nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, char **aShortcut
 }
 
 #ifdef XP_WIN
-// *** code copied from widget/src/windows/nsClipboard.cpp
 // Determines the URL for a shortcut file 
-
-static void ResolveShortcut(const nsAFlatString &aFileName, char** aOutURL)
+static void ResolveShortcut(nsIFile* aFile, nsACString& aURI)
 {
+    nsCOMPtr<nsIFileProtocolHandler> fph;
+    nsresult rv = NS_GetFileProtocolHandler(getter_AddRefs(fph));
+    if (NS_FAILED(rv))
+        return;
 
-// IUniformResourceLocator isn't supported by VC5 (bless its little heart)
-#if _MSC_VER >= 1200
-    HRESULT result;
+    nsCOMPtr<nsIURI> uri;
+    rv = fph->ReadURLFile(aFile, getter_AddRefs(uri));
+    if (NS_FAILED(rv))
+        return;
 
-    IUniformResourceLocator* urlLink = nsnull;
-    result = ::CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
-                                IID_IUniformResourceLocator, (void**)&urlLink);
-    if (SUCCEEDED(result) && urlLink) {
-        IPersistFile* urlFile = nsnull;
-        result = urlLink->QueryInterface(IID_IPersistFile, (void**)&urlFile);
-        if (SUCCEEDED(result) && urlFile) {
-
-            result = urlFile->Load(aFileName.get(), STGM_READ);
-            if (SUCCEEDED(result) ) {
-                LPSTR lpTemp = nsnull;
-
-                result = urlLink->GetURL(&lpTemp);
-                if (SUCCEEDED(result) && lpTemp) {
-                    *aOutURL = PL_strdup(lpTemp);
-
-                    // free the string that GetURL alloc'd
-                    IMalloc* pMalloc;
-                    result = SHGetMalloc(&pMalloc);
-                    if (SUCCEEDED(result)) {
-                        pMalloc->Free(lpTemp);
-                        pMalloc->Release();
-                    }
-                }
-            }
-            urlFile->Release();
-        }
-        urlLink->Release();
-    }
-#endif
+    uri->GetSpec(aURI);
 } 
 
 nsresult
@@ -3888,25 +3862,18 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
             nsCAutoString extension;
 
             url->GetFileExtension(extension);
-            if (!extension.Equals(NS_LITERAL_CSTRING("url"),
-                                  nsCaseInsensitiveCStringComparator()))
+            if (!extension.LowerCaseEqualsLiteral("url"))
                 continue;
 
             nsAutoString name(Substring(bookmarkName, 0, 
                                         bookmarkName.Length() - extension.Length() - 1));
      
-            nsAutoString path;
-            currFile->GetPath(path);
 
-            nsXPIDLCString resolvedURL;
-            ResolveShortcut(path, getter_Copies(resolvedURL));
+            nsCAutoString resolvedURL;
+            ResolveShortcut(currFile, resolvedURL);
 
             nsCOMPtr<nsIRDFResource> bookmark;
-            // As far as I can tell, IUniformResourceLocator::GetURL()
-            // returns the URL in pure ASCII. However, it could be UTF-8 (I'm
-            // almost sure that it's not in any legacy encoding) so that I'm
-            // assuming it's in UTF-8.
-            // http://msdn.microsoft.com/library/default.asp?url=/workshop/misc/shortcuts/reference/iuniformresourcelocator.asp
+            // ResolveShortcut gives us a UTF8 string (uri->GetSpec)
             rv = CreateBookmarkInContainer(name.get(),
                  NS_ConvertUTF8toUTF16(resolvedURL).get(),
                  nsnull, nsnull, nsnull, aParentResource, -1,
