@@ -81,6 +81,7 @@ CPPSRCS		= \
 		nsDragService.cpp \
 		nsFilePicker.cpp \
 		nsSound.cpp \
+		nsNativeKeyBindings.cpp \
 		$(NULL)
 
 # build our subdirs, too

@@ -212,6 +212,9 @@ public: //for methods who access nsTextControlFrame directly
   nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
   nsresult OffsetToDOMPoint(PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
 
+  /* called to free up native keybinding services */
+  static NS_HIDDEN_(void) ShutDown();
+
 protected:
 
   /**

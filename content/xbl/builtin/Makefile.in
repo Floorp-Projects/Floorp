@@ -48,7 +48,11 @@ else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		= mac
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+DIRS		= gtk2
+else
 DIRS		= unix
+endif
 endif
 endif
 

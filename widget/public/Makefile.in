@@ -71,6 +71,7 @@ EXPORTS		= \
 		nsIDragSessionOS2.h \
 		nsIXRemoteWidgetHelper.h \
 		nsIPluginWidget.h \
+		nsINativeKeyBindings.h \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
