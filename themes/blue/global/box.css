@@ -17,7 +17,7 @@ title
     padding               : inherit;
   }
 
-title text {
+title > text {
   margin : 0px 3px 0px 3px;
 }
     
