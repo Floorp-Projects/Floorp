@@ -31,8 +31,8 @@
 //-------------------------------------------------------------------------------------------------
 var bug = 68498;
 var summary = 'Creating a Deletable local variable using eval';
-var statprefix = '; currently at statement ';
-var statsuffix = ' within test -';
+var statprefix = '; currently at expect[';
+var statsuffix = '] within test -';
 var actual = [ ];
 var expect = [ ];
 
