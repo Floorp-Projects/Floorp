@@ -74,9 +74,9 @@ morkFactory::~morkFactory() /*i*/ // assert CloseFactory() executed earlier
 /*public non-poly*/
 morkFactory::morkFactory() // uses orkinHeap
 : morkObject(morkUsage::kGlobal, (nsIMdbHeap*) 0)
-, mFactory_Heap()
 , mFactory_Env(morkUsage::kMember, (nsIMdbHeap*) 0, this,
   new orkinHeap())
+, mFactory_Heap()
 {
   if ( mFactory_Env.Good() )
   {
@@ -88,8 +88,8 @@ morkFactory::morkFactory() // uses orkinHeap
 /*public non-poly*/
 morkFactory::morkFactory(nsIMdbHeap* ioHeap)
 : morkObject(morkUsage::kHeap, ioHeap)
-, mFactory_Heap()
 , mFactory_Env(morkUsage::kMember, (nsIMdbHeap*) 0, this, ioHeap)
+, mFactory_Heap()
 {
   if ( mFactory_Env.Good() )
   {
