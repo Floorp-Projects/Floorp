@@ -151,6 +151,22 @@ UnregisterProc(nsIComponentManager *aCompMgr,
                                        "application/http-index-format", PR_TRUE);
 }
 
+static NS_METHOD
+RegisterWindowDS(nsIComponentManager *aCompMgr,
+                 nsIFile *aPath,
+                 const char *registryLocation,
+                 const char *componentType,
+                 const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return catman->AddCategoryEntry("app-startup", "Window Data Source",
+                                    "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
+                                    PR_TRUE, PR_TRUE, nsnull);
+}
+
 static const nsModuleComponentInfo components[] = {
    { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       "@mozilla.org/xpfe/http-index-format-factory-constructor",
@@ -218,7 +234,7 @@ static const nsModuleComponentInfo components[] = {
     { "nsWindowDataSource",
       NS_WINDOWDATASOURCE_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-      nsWindowDataSourceConstructor },
+      nsWindowDataSourceConstructor, RegisterWindowDS },
 #if defined(XP_WIN)
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
