@@ -1016,7 +1016,7 @@ HTMLContentSink::~HTMLContentSink()
   }
 }
 
-NS_IMPL_ISUPPORTS(HTMLContentSink, NS_IHTML_CONTENT_SINK_IID)
+NS_IMPL_ISUPPORTS(HTMLContentSink, kIHTMLContentSinkIID)
 
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
