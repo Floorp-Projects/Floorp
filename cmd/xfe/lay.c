@@ -486,7 +486,7 @@ fe_DrawSelectedShadows(MWContext *context, fe_Drawable *fe_drawable,
 	{
 #	  define gray50_width  8
 #	  define gray50_height 2
-	  static char gray50_bits[] = { 0x55, 0xAA };
+	  static unsigned char gray50_bits[] = { 0x55, 0xAA };
 	  gray50 =
 	    XCreateBitmapFromData (XtDisplay (widget),
 				   RootWindowOfScreen (XtScreen (widget)),
@@ -770,7 +770,7 @@ static unsigned char line_feed_bits[] = { /* lifted from Lucid Emacs */
     0x00, 0xbc, 0xfc, 0xe0, 0xe0, 0x72, 0x3e, 0x1e, 0x1e, 0x3e};
 #define page_mark_width 8
 #define page_mark_height 15
-static char page_mark_bits[] = { /* from RobinS */
+static unsigned char page_mark_bits[] = { /* from RobinS */
  0xfe,0x4f,0x4f,0x4f,0x4f,0x4e,0x48,0x48,0x48,0x48,0x48,0x48,0x48,0x48,0x48};
 
 static fe_bitmap_info fe_line_feed_bitmap =
@@ -1233,7 +1233,7 @@ fe_Display3DBorder(MWContext *context, LO_TableStruct *ts,
 		{
 #	  define gray50_width  8
 #	  define gray50_height 2
-		  static char gray50_bits[] = { 0x55, 0xAA };
+		  static unsigned char gray50_bits[] = { 0x55, 0xAA };
 		  gray50 =
 			XCreateBitmapFromData (fe_display,
 								   RootWindowOfScreen (XtScreen (CONTEXT_WIDGET(context))),
@@ -1874,18 +1874,6 @@ XFE_LayoutNewDocument (MWContext *context, URL_Struct *url,
   color.pixel = CONTEXT_DATA (context)->default_bg_pixel;
   fe_QueryColor (context, &color);
 
-  /* The pixmap itself is freed when its IL_Image is destroyed. */
-  CONTEXT_DATA (context)->backdrop_pixmap = 0;
-
-  /* Set background after making the backdrop_pixmap 0 as SetBackground
-   * will ignore a background setting request if backdrop_pixmap is
-   * available.
-   */
-  XFE_SetBackgroundColor (context,
-			  color.red >> 8,
-			  color.green >> 8,
-			  color.blue >> 8);
-
   if (grid_cell_p) {
     if (!CONTEXT_DATA (context)->drawing_area) return;
 
@@ -1898,6 +1886,18 @@ XFE_LayoutNewDocument (MWContext *context, URL_Struct *url,
 		 XmNwidth, &w, XmNheight, &h, 0);
   }
   if (!w || !h) abort ();
+
+  /* The pixmap itself is freed when its IL_Image is destroyed. */
+  CONTEXT_DATA (context)->backdrop_pixmap = 0;
+
+  /* Set background after making the backdrop_pixmap 0 as SetBackground
+   * will ignore a background setting request if backdrop_pixmap is
+   * available.
+   */
+  XFE_SetBackgroundColor (context,
+			  color.red >> 8,
+			  color.green >> 8,
+			  color.blue >> 8);
 
   /* Clear the background since, in the case of grid cells without borders, 
      the grid boundaries don't get cleared */
@@ -3324,9 +3324,8 @@ static int fe_auto_scroll_x = 0;
 static int fe_auto_scroll_y = 0;
 
 static void
-fe_auto_scroll_timer (XtPointer closure, XtIntervalId *id)
+fe_auto_scroll_timer (MWContext *context, XtIntervalId *id)
 {
-  MWContext *context = closure;
   int scale = 50; /* #### */
   int msecs = 10; /* #### */
   long new_x = (CONTEXT_DATA (context)->document_x +
@@ -3338,7 +3337,7 @@ fe_auto_scroll_timer (XtPointer closure, XtIntervalId *id)
   fe_ScrollTo (context, (new_x > 0 ? new_x : 0), (new_y > 0 ? new_y : 0));
 
   auto_scroll_timer =
-    XtAppAddTimeOut (fe_XtAppContext, msecs, fe_auto_scroll_timer, closure);
+    XtAppAddTimeOut (fe_XtAppContext, msecs, fe_auto_scroll_timer, context);
 }
 
 /* Invoked via a translation on <Btn1Down> and <Btn2Down>.
@@ -4015,6 +4014,7 @@ Boolean fe_HandleHREF (MWContext *context,
 	    }
 	}
     }
+
   {
     JSEvent *jsevent = XP_NEW_ZAP(JSEvent);
 
@@ -4037,10 +4037,11 @@ Boolean fe_HandleHREF (MWContext *context,
     ET_SendEvent (context, (LO_Element *) xref,
 		  jsevent, fe_mocha_handle_click,
 		  mocha_closure);
+
     return True;
   }
 
-  return False;
+  /*return False;*/
 }
 
 static Boolean
