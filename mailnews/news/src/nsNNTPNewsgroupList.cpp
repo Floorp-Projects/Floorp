@@ -207,8 +207,6 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
 static nsresult 
 openWindow( const PRUnichar *chrome, const PRUnichar *args ) 
 {
-// turn this code off until I can fix the mac project file.
-#if defined(XP_UNIX) || defined(XP_WIN)
     nsCOMPtr<nsIDOMWindow> hiddenWindow;
     JSContext *jsContext = nsnull;
     nsresult rv;
@@ -235,9 +233,6 @@ openWindow( const PRUnichar *chrome, const PRUnichar *args )
         }
     }
     return rv;
-#else
-    return NS_OK;
-#endif
 }       
 
 nsresult
