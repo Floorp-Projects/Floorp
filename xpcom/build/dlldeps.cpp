@@ -190,7 +190,7 @@ void XXXNeverCalled()
       CallCreateInstance(id, nsnull, id, nsnull);
       CallCreateInstance("", nsnull, id, nsnull);
       CallGetClassObject(id, id, nsnull);
-      CallGetClassObjectByContractID("", id, nsnull);
+      CallGetClassObject("", id, nsnull);
 
       nsServiceManager::GetGlobalServiceManager(nsnull);
     }
