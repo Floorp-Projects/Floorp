@@ -1420,8 +1420,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
 	}
 
 	int matchGreedyKid(MatchState state, RENode ren, RENode stop,
-                            int kidCount, int maxKid,
-                            int index, int previousKid)
+                            int kidCount, int index, int previousKid)
 	{
 	    GreedyState grState = new GreedyState();
 	    grState.state = state;
@@ -1433,53 +1432,23 @@ public class NativeRegExp extends ScriptableObject implements Function {
 	    return greedyRecurse(grState, index, previousKid);
 	}
 
-	
-	/*
-	int matchGreedyKid(MatchState state, RENode ren, RENode stop,
-                            int kidCount, int maxKid,
-                            char[] input, int index, int previousKid)
-    {
-        // assume that kids have been matched as required, 
-        // see if the rest of the input matches
-        int match = matchRENodes(state, ren.next, stop, input, index);
-        // for non-greedy matching, return as soon as the rest matches
-        if ((match != -1) && ((ren.flags & RENode.MINIMAL) != 0))
-            return match;
-        if ((maxKid != 0) && (kidCount >= maxKid))  {
-            // not allowed any more kids, return whatever we have
-            return match;
-        }
-        // try taking another child in any case
-        int kidMatch = matchRENodes(state, (RENode)ren.kid, 
-                                                ren.next, input, index);
-        if (kidMatch == -1) {
-            // no more kids available, return with as far as we got
-            if ((match != -1) && (previousKid != -1))
-                // rerun last kid if match was a success
-                matchRENodes(state, (RENode)ren.kid, 
-                                        ren.next, input, previousKid);
-            return matchRENodes(state, ren.next, stop, input, index);   
-        }
-        // if we match, but didn't advance, stop now
-        if (kidMatch == index) return kidMatch;
-        // go deeper to see how that looks
-        int deeper = matchGreedyKid(state, ren, stop, ++kidCount, maxKid,
-                                                    input, kidMatch, index);                    
-        if (match != -1) { // if we could match here, see if deeper was better
-            if (deeper == -1) { // couldn't do better, reset lastKid
-                if (previousKid != -1)
-                    matchRENodes(state, (RENode)ren.kid, ren.next,
-                                                        input, previousKid);
-                return matchRENodes(state, ren.next, stop, input, index);
-            }
-            else // deeper was better, return it
-                return deeper;
-        }
-        else { // couldn't complete from here so take another child
-            return deeper;
-        }
-    }
-	*/
+	int matchNonGreedyKid(MatchState state, RENode ren,
+	                        int kidCount, int maxKid,
+	                        int index)
+	{
+	    int kidMatch;
+	    int match;
+
+	    match = matchRENodes(state, ren.next, null, index);
+	    if (match != -1) return index;
+	    kidMatch = matchRENodes(state, (RENode)ren.kid, ren.next, index);
+	    if (kidMatch == -1)
+	        return -1;
+	    else {
+	        if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
+	        return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch);
+	    }
+	}
 
     int matchRENodes(MatchState state, RENode ren, RENode stop, int index)
     {
@@ -1517,22 +1486,35 @@ public class NativeRegExp extends ScriptableObject implements Function {
 						if (num == ren.max)
 							// Have matched the exact count required, 
 							// need to match the rest of the regexp.
-							break;						
-						return matchGreedyKid(state, ren, stop, num, ren.max,
+							break;
+						if ((ren.flags & RENode.MINIMAL) == 0)
+							return matchGreedyKid(state, ren, stop, num,
                                                         index, lastKid);
+						else {
+							index = matchNonGreedyKid(state, ren, num,
+														ren.max, index);
+							if (index == -1) return -1;
+						}						
                     }
+					break;
                 case REOP_PLUS: {
-                        int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, index);
-                        if (kidMatch != -1)
-                            return matchGreedyKid(state, ren, stop, 1, 0,
-                                                        kidMatch, index);
-                        else
-                            return -1;
+						int kidMatch = matchRENodes(state, (RENode)ren.kid, 
+														ren.next, index);
+						if (kidMatch == -1)
+						    return -1;
+						if ((ren.flags & RENode.MINIMAL) == 0)
+						    return matchGreedyKid(state, ren, stop, 1, 
+															kidMatch, index);
+						index = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
+						if (index == -1) return -1;
                     }
-                case REOP_STAR:
-                    return matchGreedyKid(state, ren, stop,
-                                                        0, 0, index, -1);
+					break;
+                case REOP_STAR:					
+					if ((ren.flags & RENode.MINIMAL) == 0)
+					    return matchGreedyKid(state, ren, stop, 0, index, -1);
+					index = matchNonGreedyKid(state, ren, 0, 0, index);
+					if (index == -1) return -1;
+					break;
                 case REOP_OPT: {
                         int saveNum = state.parenCount;
                         if (((ren.flags & RENode.MINIMAL) != 0)) {
