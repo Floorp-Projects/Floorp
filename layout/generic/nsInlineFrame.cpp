@@ -231,32 +231,6 @@ nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
   // Gather up children from the overflow lists
   DrainOverflowLists();
 
-  // XXX CONSTRUCTION
-  // Create new frames if necessary
-  if (NS_FRAME_FIRST_REFLOW & mState) {
-    if ((nsnull == mPrevInFlow) && (nsnull == mNextInFlow) &&
-        (0 == mChildCount)) {
-      rv = CreateNewFrames(aLineLayout.mPresContext);
-      if (NS_OK != rv) {
-        goto done;
-      }
-    }
-  }
-  else if (nsnull != aReflowCommand) {
-    nsIFrame* target;
-    aReflowCommand->GetTarget(target);
-    if (this == target) {
-      nsIReflowCommand::ReflowType type;
-      aReflowCommand->GetType(type);
-      if (nsIReflowCommand::FrameAppended == type) {
-        rv = CreateNewFrames(aLineLayout.mPresContext);
-        if (NS_OK != rv) {
-          goto done;
-        }
-      }
-    }
-  }
-
   // Ask each child frame for its text runs
   frame = mFirstChild;
   n = mChildCount;
@@ -483,87 +457,6 @@ nsInlineFrame::FrameAppendedReflow(nsInlineReflowState& aState)
     }
   }
   return rs;
-}
-
-// XXX CONSTRUCTION
-nsresult
-nsInlineFrame::CreateNewFrames(nsIPresContext* aPresContext)
-{
-  // reason: initial:     (a) null nif, pif: create frames
-  //                      (b) pullup: don't create frames
-  // reason: incremental: (a) append targetted at us => create frames
-
-  // Get the childPrevInFlow for our eventual first child if we are a
-  // continuation and we have no children and the last child in our
-  // prev-in-flow is incomplete. While we are at it, we also compute
-  // our kidContentIndex.
-  PRInt32 kidContentIndex;
-  nsIFrame* childPrevInFlow = nsnull;
-  nsIFrame* prevChild = nsnull;
-  if ((nsnull == mFirstChild) && (nsnull != mPrevInFlow)) {
-    nsInlineFrame* prev = (nsInlineFrame*)mPrevInFlow;
-    NS_ASSERTION(prev->mLastContentOffset >= prev->mFirstContentOffset,
-                 "bad prevInFlow");
-    kidContentIndex = prev->NextChildOffset();
-    if (!prev->mLastContentIsComplete) {
-      // Our prev-in-flow's last child is not complete
-      prev->LastChild(childPrevInFlow);
-    }
-  }
-  else {
-    kidContentIndex = NextChildOffset();
-    LastChild(prevChild);
-  }
-
-  nsresult rv;
-  PRInt32 lastContentIndex;
-  mContent->ChildCount(lastContentIndex);
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("enter nsInlineFrame::CreateNewFrames: kidContentIndex=%d lastContentIndex=%d childPrevInFlow=%p",
-      kidContentIndex, lastContentIndex, childPrevInFlow));
-  while (kidContentIndex < lastContentIndex) {
-    nsIContent* kid;
-    mContent->ChildAt(kidContentIndex, kid);
-    if (nsnull == kid) {
-      // Our content container is bad
-      break;
-    }
-
-    // Create child
-    nsIFrame* child;
-    rv = nsHTMLBase::CreateFrame(aPresContext, this, kid, childPrevInFlow,
-                                 child);
-    NS_RELEASE(kid);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    if (nsnull == prevChild) {
-      mFirstChild = child;
-      mFirstContentOffset = kidContentIndex;
-    }
-    else {
-      prevChild->SetNextSibling(child);
-    }
-    mChildCount++;
-    kidContentIndex++;
-    childPrevInFlow = nsnull;
-    prevChild = child;
-    NS_FRAME_TRACE(NS_FRAME_TRACE_NEW_FRAMES,
-       ("nsInlineFrame::CreateNewFrames: new-frame=%p prev-in-flow=%p",
-        child, childPrevInFlow));
-  }
-  if (kidContentIndex == 0) {
-    NS_ASSERTION(lastContentIndex == 0, "bad kid content index");
-    mLastContentOffset = 0;
-  } else {
-    mLastContentOffset = kidContentIndex - 1;
-  }
-  NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
-  mLastContentIsComplete = PR_TRUE;
-
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit nsInlineFrame::CreateNewFrames"));
-  return NS_OK;
 }
 
 nsInlineReflowStatus
