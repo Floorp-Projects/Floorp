@@ -158,6 +158,13 @@ interface nsILocalFileMac : nsILocalFile
     */
     void openDocWithApp(in nsILocalFile aAppToOpenWith, in boolean aLaunchInBackground);
 
+   /**
+    * isPackage
+    *
+    * returns true if a directory is determined to be a package under Mac OS 9/X
+    *
+    */
+    boolean isPackage();
 };
 
 %{C++
