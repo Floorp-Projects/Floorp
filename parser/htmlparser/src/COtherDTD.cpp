@@ -1736,7 +1736,7 @@ PRInt32 COtherDTD::OpenHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
 
   PRInt32 result=mSink->OpenHTML(aNode); 
-  mContextStack.InsertElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
+  mContextStack.ReplaceElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
   return result;
 }
 
@@ -1766,7 +1766,7 @@ PRInt32 COtherDTD::CloseHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 COtherDTD::OpenHead(const nsIParserNode& aNode){
-  mContextStack.InsertElementAt((void*)eHTMLTag_head,++mContextStackPos);
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_head,++mContextStackPos);
   PRInt32 result=mSink->OpenHead(aNode); 
   return result;
 }
@@ -1826,7 +1826,7 @@ PRInt32 COtherDTD::OpenBody(const nsIParserNode& aNode){
 
   if(kNoError==result) {
     result=mSink->OpenBody(aNode); 
-    mContextStack.InsertElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
+    mContextStack.ReplaceElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
   }
   return result;
 }
@@ -1933,7 +1933,7 @@ PRInt32 COtherDTD::CloseMap(const nsIParserNode& aNode){
 PRInt32 COtherDTD::OpenFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
   PRInt32 result=mSink->OpenFrameset(aNode); 
-  mContextStack.InsertElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
+  mContextStack.ReplaceElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
   return result;
 }
 
@@ -1988,7 +1988,7 @@ PRInt32 COtherDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleS
 
     default:
       result=mSink->OpenContainer(aNode); 
-      mContextStack.InsertElementAt((void*)nodeType,mContextStackPos++);
+      mContextStack.ReplaceElementAt((void*)nodeType,mContextStackPos++);
       break;
   }
 
@@ -2040,7 +2040,7 @@ PRInt32 COtherDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBo
       break;
   }
 
-  mLeafBits.InsertElementAt((void*)PR_FALSE, mContextStackPos);
+  mLeafBits.ReplaceElementAt((void*)PR_FALSE, mContextStackPos);
   if((kNoError==result) && (PR_TRUE==aUpdateStyles)){
     UpdateStyleStackForCloseTag(nodeType,aTag);
   }
@@ -2271,7 +2271,7 @@ PRInt32 COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualT
     case eHTMLTag_tt:
     case eHTMLTag_u:
     case eHTMLTag_var:
-      mStyleStack.InsertElementAt((void*)aTag,mStyleStackPos++);
+      mStyleStack.ReplaceElementAt((void*)aTag,mStyleStackPos++);
       break;
 
     case eHTMLTag_h1: case eHTMLTag_h2:
