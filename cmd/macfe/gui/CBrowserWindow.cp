@@ -50,6 +50,7 @@
 #include "CMiniSecurityButton.h"
 
 #include "CRDFCoordinator.h"
+#include "CRDFToolbarContainer.h"	// to handle HT commands, we need to tell the container
 
 	// stuff added by deeje
 #include "macutil.h"
@@ -126,6 +127,7 @@ CBrowserWindow::CBrowserWindow(LStream* inStream)
 	mIsHTMLHelp = false;
 	mHTMLView = nil;
 	mNavCenterParent = nil;
+	mToolbarContainer = nil;
 	
 	mPopdownParent = nil;			// popdown tree view stuff
 	mSavedPopdownTarget = nil;
@@ -169,6 +171,10 @@ void CBrowserWindow::FinishCreateSelf(void)
 	AdjustStagger(WindowType_Browser); // <--- I moved this down to CNetscapeWindow - jrm 98/04/14
 	UReanimator::LinkListenerToControls(this, this, mPaneID);
 	
+	// Get the toolbar container. If it is an RDF container, store it so that we can send HT 
+	// commands to it later. Recall that editor has a 'DbCt' as well 
+	mToolbarContainer = dynamic_cast<CRDFToolbarContainer*>(FindPaneByID('DbCt'));
+		
 	// Show/hide toolbars based on preference settings
 	XP_Bool	value;
 	PREF_GetBoolPref(Pref_ShowToolbar, &value);
@@ -557,6 +563,12 @@ Boolean	CBrowserWindow::ObeyCommand(
 	CommandT			inCommand,
 	void				*ioParam)
 {
+	if ( inCommand >= cmd_NavCenterBase && inCommand <= cmd_NavCenterCap ) {
+		if ( mToolbarContainer)
+			mToolbarContainer->HandleHTCommand(inCommand);
+		return true;
+	}
+
 	LCommander	*target;
 	Boolean		cmdHandled = false;
 	// check for synthetic commands from history items

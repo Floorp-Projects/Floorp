@@ -41,7 +41,7 @@ typedef enum {
 class CBrowserContext;
 class CNSContext; // mjc
 class CHTMLView;
-class CRDFCoordinator;
+class CRDFToolbarContainer;
 
 
 class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public LListener
@@ -260,4 +260,6 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 		CHTMLView*				mHTMLView;
 
 		LStr255					mCurrentKeyword;			// holds current internet keyword string
+
+		CRDFToolbarContainer*	mToolbarContainer;			// the HT_Pane containing the toolbars
 };
