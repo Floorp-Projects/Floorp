@@ -27,11 +27,11 @@ VPATH=@srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 install::
-    $(INSTALL) $(srcdir)/inspector-history.rdf $(DIST)/bin/chrome/inspector
-    $(INSTALL) $(srcdir)/inspector-prefs.rdf $(DIST)/bin/chrome/inspector
-    $(INSTALL) $(srcdir)/viewer-registry.rdf $(DIST)/bin/chrome/inspector
-    $(INSTALL) $(srcdir)/search-registry.rdf $(DIST)/bin/chrome/inspector
-    $(INSTALL) $(srcdir)/prefs/inspector.js $(DIST)/bin/defaults/pref
+	$(INSTALL) $(srcdir)/inspector-history.rdf $(DIST)/bin/chrome/inspector
+	$(INSTALL) $(srcdir)/inspector-prefs.rdf $(DIST)/bin/chrome/inspector
+	$(INSTALL) $(srcdir)/viewer-registry.rdf $(DIST)/bin/chrome/inspector
+	$(INSTALL) $(srcdir)/search-registry.rdf $(DIST)/bin/chrome/inspector
+	$(INSTALL) $(srcdir)/prefs/inspector.js $(DIST)/bin/defaults/pref
 
 include $(topsrcdir)/config/rules.mk
 
