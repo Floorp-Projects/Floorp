@@ -16,7 +16,6 @@
   
   grippy, grippy[collapse="before"]
     {
-      -moz-binding          : url("chrome://global/skin/classicBindings.xml#grippy");
       border                : 1px solid ThreeDShadow;
   	  list-style-image      : url("chrome://global/skin/grippy-horizontal-before.gif");
   	  cursor                : pointer;
@@ -65,7 +64,6 @@
   vbox > splitter
     {
       cursor              : n-resize;
-      -moz-binding        : url("chrome://global/skin/classicBindings.xml#splitter-hack");
       border-top          : 1px solid ThreeDHighlight;
     }
     

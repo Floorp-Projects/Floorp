@@ -4,9 +4,16 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="tabbox" extends="xul:box">
+  <binding id="tab-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/tabcontrol.css"/>
+    </resources>
+  </binding>
+
+  <binding id="tabcontrol" display="xul:box"
+           extends="chrome://global/content/bindings/tabcontrol.xml#tab-base">
     <content orient="vertical"/>
-    <!-- pass-through implementation -->
+
     <implementation>
       <property name="selectedTab">
         <setter>
@@ -22,6 +29,7 @@
           return val;
         ]]>
         </setter>
+        
         <getter>
         <![CDATA[
           var tabs = this.getElementsByTagNameNS(
@@ -33,32 +41,57 @@
         </getter>
       </property>
     </implementation>
+    
     <handlers>
-    <handler event="keypress" keycode="vk_tab" modifiers="control">
-      <![CDATA[
-       var tabs = this.getElementsByTagNameNS(
-                                                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                "tabs");
-       tabs = tabs.length ? tabs[0] : null;
-       if (tabs)
-         tabs.advanceSelectedTab(1);
-       ]]>
-    </handler>
-    <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
-      <![CDATA[
-       var tabs = this.getElementsByTagNameNS(
-                                                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                "tabs");
-       tabs = tabs.length ? tabs[0] : null;
-       if (tabs)
-         tabs.advanceSelectedTab(-1);
-       ]]>
-    </handler>
+      <handler event="keypress" keycode="vk_tab" modifiers="control">
+        <![CDATA[
+         var tabs = this.getElementsByTagNameNS(
+                                                  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                  "tabs");
+         tabs = tabs.length ? tabs[0] : null;
+         if (tabs)
+           tabs.advanceSelectedTab(1);
+         ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
+        <![CDATA[
+         var tabs = this.getElementsByTagNameNS(
+                                                  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                  "tabs");
+         tabs = tabs.length ? tabs[0] : null;
+         if (tabs)
+           tabs.advanceSelectedTab(-1);
+         ]]>
+      </handler>
     </handlers>
   </binding>
 
-  <binding id="tabs" extends="xul:box">
+  <binding id="tabs" display="xul:box"
+           extends="chrome://global/content/bindings/tabcontrol.xml#tab-base">
     <implementation>
+      <constructor>
+      <![CDATA[
+        // first and last tabs need to be able to have unique styles
+        // and also need to select first tab on startup.
+        var tabs = this.getElementsByTagNameNS(
+                      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                      "tab");
+        if (tabs.length) {
+          if (tabs.length > 1) {
+          tabs[0].setAttribute("first-tab", "true");
+          tabs[tabs.length - 1].setAttribute("last-tab", "true");
+          }
+          else if (tabs.length == 1)
+          tabs[0].setAttribute("first-tab", "true");
+        }
+        this.selectedTab = tabs[0];
+        var o = this.getAttribute("orient");
+        if (!o)
+          this.setAttribute("orient", "horizontal");
+      ]]>
+      </constructor>
+      
       <property name="selectedTab">
         <getter>
         <![CDATA[
@@ -96,43 +129,23 @@
         </setter>
       </property>
     
-    <method name="advanceSelectedTab">
-      <parameter name="aDir"/>
-      <body>
-      <![CDATA[
-              var next = this.selectedTab[aDir == -1 ? "previousSibling" : "nextSibling"];
-              if (next && !next.getAttribute("hidden")) {
-                this.selectedTab = next;
-                next.focus();
-              }
-      ]]>
-      </body>
+      <method name="advanceSelectedTab">
+        <parameter name="aDir"/>
+        <body>
+        <![CDATA[
+          var next = this.selectedTab[aDir == -1 ? "previousSibling" : "nextSibling"];
+          if (next && !next.getAttribute("hidden")) {
+            this.selectedTab = next;
+            next.focus();
+          }
+        ]]>
+        </body>
       </method>
-    <constructor>
-      <![CDATA[
-      // first and last tabs need to be able to have unique styles
-      // and also need to select first tab on startup.
-      var tabs = this.getElementsByTagNameNS(
-                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                    "tab");
-      if (tabs.length) {
-        if (tabs.length > 1) {
-        tabs[0].setAttribute("first-tab", "true");
-        tabs[tabs.length - 1].setAttribute("last-tab", "true");
-        }
-        else if (tabs.length == 1)
-        tabs[0].setAttribute("first-tab", "true");
-      }
-      this.selectedTab = tabs[0];
-      var o = this.getAttribute("orient");
-      if (!o)
-        this.setAttribute("orient", "horizontal");
-      ]]>
-      </constructor>
     </implementation>
   </binding>
   
-  <binding id="tabpanels" extends="xul:deck">
+  <binding id="tabpanels" display="xul:deck"
+           extends="chrome://global/content/bindings/tabcontrol.xml#tab-base">
     <implementation>
       <!-- should be defined on deck! -->
       <property name="index"
@@ -141,13 +154,15 @@
     </implementation>
   </binding>
 
-  <binding id="tab" extends="xul:button">
+  <binding id="tab" display="xul:button"
+           extends="chrome://global/content/bindings/tabcontrol.xml#tab-base">
     <content>
       <xul:box class="tab-box" flex="1" autostretch="never" orient="horizontal">
         <xul:image class="tab-image" inherits="src"/>
         <xul:text class="tab-text" inherits="value=label,accesskey,crop,disabled"/>
       </xul:box>
     </content>
+    
     <implementation>
       <property name="label">
         <getter>
@@ -158,9 +173,11 @@
           return val;
         </setter>
       </property>
+
       <property name="tabs" 
                 onget="return this.getAttribute('tabs');"
                 onset="this.setAttribute('tabs', val); return val;"/>
+
       <!-- XXX -->                
       <property name="selected">
         <getter>
@@ -176,6 +193,7 @@
         </setter>
       </property>
     </implementation>
+    
     <handlers>
       <handler event="click" button="0">
       <![CDATA[
@@ -184,31 +202,35 @@
           if (tabs.localName == "tabs")
             break;
           tabs = tabs.parentNode;
-        } while(tabs.localName != "tabbox");
+        } while(tabs.localName != "tabcontrol");
         tabs.selectedTab = this;
         if (!this.selected) this.selected = true;
       ]]>
       </handler>
-    <handler event="keypress" keycode="vk_left">
-    <![CDATA[
-      this.parentNode.advanceSelectedTab(-1);
-    ]]>
-    </handler>
-    <handler event="keypress" keycode="vk_right">
-    <![CDATA[
-      this.parentNode.advanceSelectedTab(1);
-    ]]>
-    </handler>
-    <handler event="keypress" keycode="vk_up">
-    <![CDATA[
-      this.parentNode.advanceSelectedTab(-1);
-    ]]>
-    </handler>
-    <handler event="keypress" keycode="vk_down">
-    <![CDATA[
-      this.parentNode.advanceSelectedTab(1);
-    ]]>
-    </handler>
+      
+      <handler event="keypress" keycode="vk_left">
+      <![CDATA[
+        this.parentNode.advanceSelectedTab(-1);
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_right">
+      <![CDATA[
+        this.parentNode.advanceSelectedTab(1);
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_up">
+      <![CDATA[
+        this.parentNode.advanceSelectedTab(-1);
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_down">
+      <![CDATA[
+        this.parentNode.advanceSelectedTab(1);
+      ]]>
+      </handler>
     </handlers>
   </binding>
   

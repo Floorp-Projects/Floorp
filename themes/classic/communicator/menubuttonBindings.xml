@@ -5,7 +5,8 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
    
-  <binding id="menubutton-toolbar">
+  <binding id="menubutton-toolbar"
+           extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
     <content>
       <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
                   inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey,disabled"/>
@@ -16,7 +17,8 @@
     </content>
   </binding>
   
-  <binding id="menubutton-toolbar-single" extends="chrome://global/content/menulistBindings.xml#menubutton-single-left">
+  <binding id="menubutton-toolbar-single"
+           extends="chrome://global/content/bindings/menubutton.xml#menubutton-single-left">
     <content>
       <xul:hbox class="menubutton-toolbar-single-internal-box" flex="1" autostretch="never">
         <xul:image class="menubutton-toolbar-single-icon" inherits="src,disabled"/>
@@ -27,7 +29,8 @@
     </content>
   </binding>
   
-  <binding id="menubutton-toolbar-single-ile" extends="chrome://global/content/xulBindings.xml#inline-edit-base" display="xul:menu">
+  <binding id="menubutton-toolbar-single-ile" display="xul:menu"
+           extends="chrome://global/content/bindings/general.xml#inline-edit-base">
     <content>
       <xul:hbox class="menubutton-toolbar-single-internal-box" flex="1" autostretch="never">
         <xul:image class="menubutton-toolbar-single-icon" inherits="src,disabled"/>

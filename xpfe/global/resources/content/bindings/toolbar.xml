@@ -1,85 +1,16 @@
 <?xml version="1.0"?>
 
-<!-- -*- Mode: HTML -*- -->
-
-<!-- The contents of this file are subject to the Netscape Public
-License Version 1.1 (the "License"); you may not use this file
-except in compliance with the License. You may obtain a copy of
-the License at http://www.mozilla.org/NPL/
-
-Software distributed under the License is distributed on an "AS
-IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-implied. See the License for the specific language governing
-rights and limitations under the License.
-
-The Original Code is Mozilla Communicator client code, released
-March 31, 1998.
-
-The Initial Developer of the Original Code is Netscape
-Communications Corporation. Portions created by Netscape are
-Copyright (C) 1998-2000 Netscape Communications Corporation. All
-Rights Reserved.
-
-Original Author:
-  Ben Goodger <ben@netscape.com>
-
-Contributor(s): 
-
--->
-
-
 <bindings id="toolbarBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="toolbargrippy" extends="xul:button">
-    <implementation>
-      <property name="collapsed">
-        <getter>
-          return this.getAttribute("moz_grippy_collapsed");
-        </getter>
-        <setter>
-          this.setAttribute("moz_grippy_collapsed", val);
-          return val;
-        </setter>
-      </property>
-      <method name="returnNode">
-        <parameter name="aNodeA"/>
-        <parameter name="aNodeB"/>
-        <body>
-        <![CDATA[
-          var node = this.parentNode;
-          while (node && node.localName != "window" && 
-                 (node.localName != aNodeA && (node.localName != aNodeB)))  {
-            node = node.parentNode;
-          }
-          return node;
-        ]]>
-        </body>
-      </method>
-      <method name="grippyTriggered">
-        <body>
-        <![CDATA[
-          var toolbox = this.returnNode("toolbox");
-          var toolbar = this.returnNode("toolbar", "menubar");
-          if (this.collapsed)
-            toolbox.expandToolbar(this.id);
-          else
-            toolbox.collapseToolbar(toolbar);
-        ]]>
-        </body>
-      </method>
-    </implementation>  
-    <handlers>
-      <handler event="command">
-      <![CDATA[
-        this.grippyTriggered();
-      ]]>
-      </handler>
-    </handlers>
-  </binding>  
+  <binding id="toolbar-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+  </binding>
 
-  <binding id="toolbox" extends="xul:box">
+  <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <content orient="vertical">
       <xul:box orient="vertical" flex="1" class="toolbar-internal-box">
         <children/>
@@ -89,7 +20,12 @@ Contributor(s):
         <xul:spring flex="1" class="collapsed-tray-spring"/>
       </xul:box>
     </content>
+    
     <implementation>
+      <constructor>
+        this.init(event);
+      </constructor>
+
       <method name="collapseToolbar">
         <parameter name="toolbar"/>
         <body>
@@ -105,6 +41,7 @@ Contributor(s):
         ]]>
         </body>
       </method>
+      
       <method name="expandToolbar">
         <parameter name="aGrippyID"/>
         <body>
@@ -121,6 +58,7 @@ Contributor(s):
         ]]>
         </body>
       </method>
+      
       <method name="findNodeByAttribute">
         <parameter name="aAttribute"/>
         <parameter name="aValue"/>
@@ -140,6 +78,7 @@ Contributor(s):
         ]]>
         </body>
       </method>
+      
       <method name="createCollapsedGrippy">
         <parameter name="aToolbar"/>
         <body>
@@ -172,6 +111,7 @@ Contributor(s):
         ]]>        
         </body>
       </method>
+      
       <method name="init">
         <parameter name="aEvent"/>
         <body>
@@ -183,6 +123,7 @@ Contributor(s):
         ]]>
         </body>
       </method>
+      
       <property name="deferAttached">
         <getter>
           return this.getAttribute("deferattached");
@@ -192,23 +133,22 @@ Contributor(s):
           return val;
         </setter>
       </property>
-	  <constructor>
-        this.init(event);
-      </constructor>
+      
     </implementation>
   </binding>
 
-  <binding id="toolbar" extends="xul:box">
+  <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <content>
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
-      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
+      <xul:box flex="1" class="toolbar-holder" autostretch="never"
+               inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch">
         <children/>
       </xul:box>
     </content>
+    
     <implementation>
-      <property name="grippy" readonly="true" onget="return document.getAnonymousNodes(this)[0];"/>
       <method name="findNodeByAttribute">
         <parameter name="aAttribute"/>
         <parameter name="aValue"/>
@@ -231,6 +171,10 @@ Contributor(s):
   </binding>
 
   <binding id="menubar" extends="xul:menubar">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+
     <content>
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy" class="toolbar-grippy"/>
@@ -238,6 +182,7 @@ Contributor(s):
         <children/>
       </xul:box>
     </content>
+    
     <implementation>
       <method name="findNodeByAttribute">
         <parameter name="aAttribute"/>
@@ -259,5 +204,61 @@ Contributor(s):
       </method>
     </implementation>
   </binding>
-          
+
+  <binding id="toolbargrippy" extends="xul:button">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+
+    <implementation>
+      <property name="collapsed">
+        <getter>
+          return this.getAttribute("moz_grippy_collapsed");
+        </getter>
+        <setter>
+          this.setAttribute("moz_grippy_collapsed", val);
+          return val;
+        </setter>
+      </property>
+      
+      <method name="returnNode">
+        <parameter name="aNodeA"/>
+        <parameter name="aNodeB"/>
+        <body>
+        <![CDATA[
+          var node = this.parentNode;
+          while (node && node.localName != "window" && 
+                 (node.localName != aNodeA && (node.localName != aNodeB)))  {
+            node = node.parentNode;
+          }
+          return node;
+        ]]>
+        </body>
+      </method>
+      
+      <method name="grippyClicked">
+        <body>
+        <![CDATA[
+          var toolbox = this.returnNode("toolbox");
+          var toolbar = this.returnNode("toolbar", "menubar");
+          if (this.collapsed) 
+            toolbox.expandToolbar(this.id);
+          else
+            toolbox.collapseToolbar(toolbar);
+        ]]>
+        </body>
+      </method>
+    </implementation>  
+    
+    <handlers>
+      <handler event="click">
+      <![CDATA[
+        this.grippyClicked();
+      ]]>
+      </handler>
+    </handlers>
+  </binding>  
+
+  <binding id="toolbarseparator" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
+
 </bindings>          

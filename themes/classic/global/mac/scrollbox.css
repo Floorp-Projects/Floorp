@@ -1,0 +1,41 @@
+/*
+ * Autorepeatbutton
+ */
+.autorepeatbutton-up {
+    list-style-image: url("chrome://global/skin/arrow-med-up.gif")
+}
+
+.autorepeatbutton-down {
+    list-style-image: url("chrome://global/skin/arrow-med-down.gif")
+}
+
+autorepeatbutton {
+  margin: 1px 2px 2px 1px;
+  border: 1px solid transparent;
+  padding: 1px;
+  height: 1em;  
+  text-align: left;
+  vertical-align: middle;
+}
+
+autorepeatbutton:hover {
+  margin: 1px;
+  border: 1px inset #DDDDDD;
+  padding: 2px 1px 1px 2px;
+}
+
+autorepeatbutton > .autorepeatbutton-up {
+    padding: 2px 0px 4px 17px;
+}
+
+autorepeatbutton:hover > .autorepeatbutton-up {
+    list-style-image: url("chrome://global/skin/arrow-med-up-hover.gif")
+}
+
+autorepeatbutton > .autorepeatbutton-down {
+    padding: 4px 0px 2px 17px;
+}
+
+autorepeatbutton:hover > .autorepeatbutton-down {
+    list-style-image: url("chrome://global/skin/arrow-med-down-hover.gif")
+}

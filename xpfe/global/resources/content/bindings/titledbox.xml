@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<bindings id="titledboxBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="titledbox-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/titledbox.css"/>
+    </resources>
+  </binding>
+
+  <binding id="titledbox" extends="chrome://global/content/bindings/titledbox.xml#titledbox-base">
+    <content>
+      <xul:box class="titledbox-title" autostretch="never" orient="vertical">
+        <children includes="label"/>
+      </xul:box>
+      <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
+        <children/>
+      </xul:box>
+    </content>    
+  </binding>
+    
+  <binding id="label" extends="chrome://global/content/bindings/titledbox.xml#titledbox-base">
+    <content>
+      <xul:text inherits="value"/>
+    </content>
+  </binding>
+
+</bindings>

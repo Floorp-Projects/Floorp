@@ -3,7 +3,7 @@
  **/
 .box-smallheader 
   {
-    -moz-binding          : url(chrome://global/content/dialogBindings.xml#smallheader);
+    -moz-binding          : url(chrome://communicator/content/dialogBindings.xml#smallheader);
     border-left           : 1px solid ThreeDShadow;
     border-top            : 1px solid ThreeDShadow;
     border-right          : 1px solid ThreeDHighlight;

@@ -244,7 +244,6 @@
   
 menulist[editable="true"] 
   {
-    -moz-binding          : url("chrome://global/skin/menulistBindings.xml#menulist-editable") !important;
     padding             : 0px;
   }
    
@@ -303,111 +302,6 @@ menulist[editable="true"]:focus > .menulist-internal-box > .menulist-dropmarker-
     list-style-image  : url("chrome://global/skin/menulist-active-arrow.gif");
 
 	}
-
-
-
-
-/* rules for popups and separators associated with menulists */
-
-/** -- modern's version --
-  menulist > menupopup,
-  .menulist-menupopup
-  {
-    border              : 1px solid #313948;
-    padding             : 0px;
-    min-width           : 0px;
-    background-color	  : #C2D0D0;
-  }
-    
-  menulist > menupopup > .popup-internal-box
-    {
-      border: 0px;
-    }
-  
-  menulist > menupopup > menuseparator 
-    {
-      border-top: 1px solid #919FA3;
-      border-bottom: 1px solid #E6EFEE;
-    }
-
-  menulist > menupopup > menuitem,
-  menulist > menupopup > menu 
-    {
-      padding-right       : 12px;
-      padding-top         : 1px;
-      padding-bottom      : 1px;
-      min-width           : 0px;
-      max-width           : none !important;
-      color				        : #000000;
-      font                : message-box;
-    }
-
-
-  menulist > menupopup > menuitem[menuactive="true"]
-    {
-    	background-color  : #465B75;
-    	color			  : #FFFFFF;
-    }
-
-  menulist > menupopup > menuitem[selected="true"] > .menu-iconic-left
-    {
-      list-style-image    : url(chrome://global/skin/menu-check.gif);
-    }
-  
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-iconic-left
-    {
-      list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
-    }
-  
-  menulist > menupopup > arrowscrollbox > vbox > autorepeatbutton:hover 
-    {
-      background-color: #B2BFBF;
-      border: 1px inset #B2BFBF;
-    }
-
--- end modern's version -- **/
-
-/* rules for popups and separators associated with menulists */
-  menulist > menupopup,
-  .menulist-menupopup 
-    {
-      border-left           : thin solid white;
-      border-top            : thin solid white;
-      border-right          : 3px ridge black;
-      border-bottom         : 3px ridge black;
-      background-color	    : #DDDDDD;
-      min-width				: 0px;
-    }
-  
-  menulist > menupopup > menuitem
-  	{
-  	  font: message-box;
-  	  min-width: 0px;
-  	  max-width: none;
-  	  padding: 0px 4px !important;
-  	}
-
-  menulist > menupopup > menuitem > .menu-iconic-left
-    {
-      width               : 10px;
-      margin			  : 0px 5px 0px -6px;
-      padding-left		  : 0px;
-  	}
-  
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"]
-    {
-      list-style-image    : url(chrome://global/skin/menulist-select-dot-active.gif);
-      margin-right		  : 3px;
-    }
-  
-  menulist > menupopup > menuitem[selected="true"]
-    {
-      list-style-image    : url(chrome://global/skin/menulist-select-dot.gif);
-      margin-right		  : 3px;
-    }
-
-
-
 
 /* :::::::::: compact menulists :::::::::: */
 

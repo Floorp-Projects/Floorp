@@ -1,0 +1,42 @@
+menupopup, popup 
+  {
+    background-color      : Menu;
+    border-left           : thin solid black;
+    border-top            : thin solid black;
+    border-right          : 3px ridge black;
+    border-bottom         : 3px ridge black;
+    -moz-user-focus			  : ignore;
+  }
+
+/** Tooltips (tooltip <popup> element)
+ *  class="tooltip"
+ **/
+.tooltip
+  {
+    background-color      : InfoBackground;
+    border                : 1px solid #000000;
+    color                 : InfoText;
+    font                  : message-box;
+    padding               : 2px 3px 2px 3px;
+    margin				  : 0px;
+  }
+
+.tooltip > .popup-internal-box
+  {
+  	border: none;
+  	padding: 0px;
+  }
+  
+/* rules for popups associated with menulists */
+
+  menulist > menupopup,
+  .menulist-menupopup 
+    {
+      border-left           : thin solid white;
+      border-top            : thin solid white;
+      border-right          : 3px ridge black;
+      border-bottom         : 3px ridge black;
+      background-color	    : #DDDDDD;
+      min-width				: 0px;
+    }
+  

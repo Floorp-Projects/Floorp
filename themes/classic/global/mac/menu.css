@@ -1,19 +1,4 @@
  
-menubar 
-  {
-    background-color      : white;
-    /* DON'T DELETE.  Removes disappearance of scrollbars
-     * in content pane when window is made smaller.
-     * Talk to evaughan@netscape.com for details.
-     */
-    min-width             : 1px;
-  }
-
-menubar > toolbargrippy 
-  {
-    display               : none;
-  }
-
 menu, menuitem  
   {
     color                 : MenuText;
@@ -33,34 +18,6 @@ menuitem[menuactive="true"][disabled="true"]
   {
 	color                 : GrayText;
   }
-
-/* XXX menupopups have to have a color explicitly specified. this is a bug */
-menupopup, popup 
-  {
-    background-color      : Menu;
-    border-left           : thin solid black;
-    border-top            : thin solid black;
-    border-right          : 3px ridge black;
-    border-bottom         : 3px ridge black;
-    -moz-user-focus			  : ignore;
-  }
-
-menupopup > menu, popup > menu,
-menupopup > menuitem, popup > menuitem
-  {
-	font				  : menu;
-    max-width             : 42em;
-    min-width             : 14em;
-    padding 			  : 0px;
-  }
-
-/* Don't display grayed items in the contextual popup menus */
-/* BUGGY: DON'T UNCOMMENT UNTIL BUG #46005 IS RESOLVED (7/20/00)
-popup > menuitem[disabled="true"], popup > menu[disabled="true"] 
-  {
-  	display				  : none;
-  }
-*/
 
 menuseparator 
   {
@@ -218,66 +175,34 @@ menuitem[checked="true"][menuactive="true"]
     list-style-image      : url("chrome://global/skin/menu-arrow-hover.gif");
   }
 
-/** Tooltips (tooltip <popup> element)
- *  class="tooltip"
- **/
-.tooltip
-  {
-    background-color      : InfoBackground;
-    border                : 1px solid #000000;
-    color                 : InfoText;
-    font                  : message-box;
-    padding               : 2px 3px 2px 3px;
-    margin				  : 0px;
-  }
-
-.tooltip > .popup-internal-box
-  {
-  	border: none;
-  	padding: 0px;
-  }
+/* rules for menuitems associated with menulists */
   
-/*
- * Autorepeatbutton
- */
-.autorepeatbutton-up {
-    list-style-image: url("chrome://global/skin/arrow-med-up.gif")
-}
+  menulist > menupopup > menuitem
+  	{
+  	  font: message-box;
+  	  min-width: 0px;
+  	  max-width: none;
+  	  padding: 0px 4px !important;
+  	}
 
-.autorepeatbutton-down {
-    list-style-image: url("chrome://global/skin/arrow-med-down.gif")
-}
-
-autorepeatbutton {
-  margin: 1px 2px 2px 1px;
-  border: 1px solid transparent;
-  padding: 1px;
-  height: 1em;  
-  text-align: left;
-  vertical-align: middle;
-}
-
-autorepeatbutton:hover {
-  margin: 1px;
-  border: 1px inset #DDDDDD;
-  padding: 2px 1px 1px 2px;
-}
-
-autorepeatbutton > .autorepeatbutton-up {
-    padding: 2px 0px 4px 17px;
-}
-
-autorepeatbutton:hover > .autorepeatbutton-up {
-    list-style-image: url("chrome://global/skin/arrow-med-up-hover.gif")
-}
-
-autorepeatbutton > .autorepeatbutton-down {
-    padding: 4px 0px 2px 17px;
-}
-
-autorepeatbutton:hover > .autorepeatbutton-down {
-    list-style-image: url("chrome://global/skin/arrow-med-down-hover.gif")
-}
+  menulist > menupopup > menuitem > .menu-iconic-left
+    {
+      width               : 10px;
+      margin			  : 0px 5px 0px -6px;
+      padding-left		  : 0px;
+  	}
+  
+  menulist > menupopup > menuitem[menuactive="true"][selected="true"]
+    {
+      list-style-image    : url(chrome://global/skin/menulist-select-dot-active.gif);
+      margin-right		  : 3px;
+    }
+  
+  menulist > menupopup > menuitem[selected="true"]
+    {
+      list-style-image    : url(chrome://global/skin/menulist-select-dot.gif);
+      margin-right		  : 3px;
+    }
 
 /* ::::: autocomplete menuitems ::::: */
 
@@ -287,3 +212,5 @@ autorepeatbutton:hover > .autorepeatbutton-down {
     font                   : message-box;
   }
 
+
+  

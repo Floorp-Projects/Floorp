@@ -8,7 +8,6 @@
 /*** TAB: TOP <tab> ***/
 
 tab { 
-  -moz-binding		: url(chrome://global/skin/classicBindings.xml#tab);
   color				: #000000; 
   padding			: 0px;
 }
@@ -91,7 +90,6 @@ tab:hover:active[selected="true"] > .tab-image-right {
 }
 
 tabs {
-  -moz-binding		: url(chrome://global/skin/classicBindings.xml#tabs);
   padding			: 0px;
 }
 

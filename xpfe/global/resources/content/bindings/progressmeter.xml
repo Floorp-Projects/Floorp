@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+
+<bindings id="progressmeterBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="progressmeter" extends="xul:box">
+    <resources>
+      <stylesheet src="chrome://global/skin/progressmeter.css"/>
+    </resources>
+
+    <content>
+      <xul:box class="progressmeter-internal-box" flex="1">
+        <xul:stack class="progressmeter-stack" flex="1">
+          <xul:progressbar class="progressmeter-progressbar" inherits="value,statusbar">
+            <xul:box class="progress-bar"/>
+            <xul:box class="progress-remainder"/>
+          </xul:progressbar>
+          <xul:box>
+            <xul:spring flex="1"/>
+            <xul:text class="progress-text" inherits="value=label"/>
+            <xul:spring flex="1"/>
+          </xul:box>
+        </xul:stack>
+      </xul:box>
+    </content>
+    
+    <implementation>
+      <constructor>
+        this.setAttribute("empty", "true");
+      </constructor>
+      
+      <property name="label" onset="if (this.label != val) this.setAttribute('label',val); return val;"
+                                      onget="return this.getAttribute('label');"/>
+
+      <property name="mode" onset="if (this.mode != val) this.setAttribute('mode', val); return val;"
+                            onget="return this.getAttribute('mode');"/>
+
+      <property name="value" onget="return this.getAttribute('value');">
+        <setter><![CDATA[
+          var p = Math.round(val);
+          var c = this.value; 
+          if (p != c) {
+            var delta = p - c;
+            if (delta < 0)
+              delta = -delta;
+            if (delta > 3 || p == 0 || p == 100)
+              this.setAttribute("value", p);
+          }
+          
+          return p;
+        ]]></setter>
+      </property>
+    </implementation>
+  </binding>
+
+</bindings>

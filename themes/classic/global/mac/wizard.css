@@ -1,0 +1,129 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+.wizard-header {
+  list-style-image: url("chrome://communicator/skin/content-large.gif");
+  background-color: #FFFFFF;
+}
+
+.wizard-header-box-2 {
+  border-top: 1px solid #FFFFFF;
+  border-bottom: 1px solid #777777;
+  background-color: #CCCCFF;
+  color: #000000;
+}
+
+.wizard-header-box-text {
+  border-bottom: 1px solid #9999FF; 
+  padding: 6px 0px 6px 0px;
+}
+
+.wizard-header-label {
+  margin-left: 23px;
+  font-weight: bold;
+}
+
+.wizard-header-box-icon {
+  margin: 3px 20px 0px 3px;
+}
+
+.wizard-header-icon {
+  list-style-image: inherit;
+}
+
+.wizard-page-box {
+  padding: 15px 23px;
+  background-color: #FFFFFF;
+}
+
+.wizard-buttons-top {
+  padding: 6px 10px;
+  background-color: #FFFFFF;
+}
+
+.wizard-buttons-separator {
+  margin: 0px !important;
+  border-top: 1px solid #000000 !important;
+  border-bottom: 1px solid #FFFFFF !important;
+}
+
+.wizard-buttons-btm {
+  padding: 3px 6px 6px 6px;
+  background-color: #DDDDDD;
+}
+
+.wizard-label-box {
+  border: 1px solid #777777;
+  padding: 0px 6px;
+  background-color: #BBBBBB;
+  font-weight: bold;
+}
+
+.wizard-button {
+  font: menu !important;
+}
+
+.wizard-nav-button,
+.wizard-nav-button[disabled="true"]:hover:active {
+  -moz-binding: url("chrome://global/skin/buttonBindings.xml#buttonleft") !important;
+  margin: 0px !important;
+  border-top: 1px solid #666666 !important;
+  border-right: 1px solid #333333 !important;
+  border-bottom: 1px solid #333333 !important;
+  border-left: 1px solid #666666 !important;
+  min-width: 0px !important;
+  min-height: 0px !important;
+}
+
+.wizard-nav-button > .button-box-1,
+.wizard-nav-button[disabled="true"]:hover:active > .button-box-1 {
+  border-top: 1px solid #FFFFFF !important;
+  border-right: 1px solid #888888 !important;
+  border-bottom: 1px solid #888888 !important;
+  border-left: 1px solid #FFFFFF !important;
+  background-color: #CCCCCC !important;
+  padding: 0px 4px !important;
+}
+
+.wizard-nav-button:hover:active {
+  border-top: 1px solid #333333 !important;
+  border-right: 1px solid #666666 !important;
+  border-bottom: 1px solid #666666 !important;
+  border-left: 1px solid #333333 !important;
+}
+
+.wizard-nav-button:hover:active > .button-box-1 {
+  background-color: #AAAAAA !important;
+  border-top: 1px solid #777777 !important;
+  border-right: 1px solid #AAAAAA !important;
+  border-bottom: 1px solid #AAAAAA !important;
+  border-left: 1px solid #777777 !important;
+  background-color: #888888 !important;
+}
+
+.wizard-button[wizardbutton="back"] {
+  list-style-image: url("chrome://global/skin/wizard-btn-lft.gif");
+}
+
+.wizard-button[wizardbutton="next"] {
+  list-style-image: url("chrome://global/skin/wizard-btn-rit.gif");
+}
+
+.wizard-button[wizardbutton="back"][disabled="true"],
+.wizard-button[wizardbutton="back"][disabled="true"]:hover:active {
+  list-style-image: url("chrome://global/skin/wizard-btn-lft-dis.gif");
+}
+
+.wizard-button[wizardbutton="next"][disabled="true"],
+.wizard-button[wizardbutton="next"][disabled="true"]:hover:active {
+  list-style-image: url("chrome://global/skin/wizard-btn-rit-dis.gif");
+}
+
+.wizard-button[wizardbutton="back"]:hover:active {
+  list-style-image: url("chrome://global/skin/wizard-btn-lft-act.gif");
+}
+
+.wizard-button[wizardbutton="next"]:hover:active {
+  list-style-image: url("chrome://global/skin/wizard-btn-rit-act.gif");
+}
+
+

@@ -5,7 +5,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <xul:box class="button-box-1" autostretch="never" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1">
@@ -18,7 +18,7 @@
     </content>
   </binding>
 
-  <binding id="buttonright" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="buttonright" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <xul:box class="button-box-1" autostretch="never" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1">
@@ -31,7 +31,7 @@
     </content>
   </binding>
   
-  <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <xul:box class="button-box-1" autostretch="never" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical" align="center">
@@ -44,7 +44,7 @@
     </content>
   </binding>
 
-  <binding id="buttonbottom" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="buttonbottom" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <xul:box class="button-box-1" autostretch="never" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical" align="center">
@@ -57,7 +57,7 @@
     </content>
   </binding>
 
-  <binding id="exit-button" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="exit-button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
         <xul:spring class="button-image-left" inherits="default,disabled"/>
       <xul:box flex="1" class="button-image-middle" inherits="default,disabled" orient="vertical" align="center">
@@ -74,7 +74,7 @@
     </content>
   </binding>
 
-  <binding id="nine-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="nine-slice-button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <xul:box class="button-box-left" inherits="default,disabled" orient="vertical">
         <xul:spring class="button-left-top" inherits="default,disabled"/>
@@ -105,7 +105,7 @@
   </binding>
 
 
-  <binding id="simplebutton" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="simplebutton" extends="chrome://global/content/bindings/button.xml#button-base">
     <content orient="vertical" autostretch="never" align="center">
       <xul:image class="simplebutton-icon" inherits="src,disabled"/>
       <xul:text class="simplebutton-text" inherits="value=label,accesskey,crop,disabled"/>

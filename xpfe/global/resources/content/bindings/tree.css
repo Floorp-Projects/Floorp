@@ -1,0 +1,67 @@
+
+tree {
+  -moz-user-focus: normal;
+  display: -moz-xul-grid;
+  min-width: 0px;
+  min-height: 0px;
+  width: 200px;
+  height: 200px;
+}
+
+tree[rows] {
+  height: auto;
+}
+
+treehead, treerows, treechildren, treeitem, treecolgroup {
+  display: -moz-xul-grid-group;
+}
+
+treehead, treerows, treechildren, treeitem {
+  -moz-xul-box-orient: vertical;
+}
+
+treechildren, treehead, treerows {
+  -moz-user-focus: none;
+}
+
+treecol, treerow {
+  display: -moz-xul-grid-line;
+}
+
+treecol {
+  min-width: 16px;
+  width: 16px;
+  -moz-xul-box-orient: vertical;
+}
+
+treecol[hidden="true"] {
+  display: -moz-xul-grid-line;
+  visibility: collapse;
+}
+
+treechildren {
+  display: -moz-xul-grid-group;
+}
+
+tree > treechildren {
+  overflow: auto;
+  min-height: 0px;
+}
+
+treeitem > treechildren {
+  display: none;
+}
+
+treeitem[open="true"] > treechildren {
+  display: -moz-xul-grid-group;
+}
+
+treecell { 
+  vertical-align: middle;
+} 
+
+treecell[hidden="true"] {
+  display: -moz-xul-box;
+  visibility: collapse;
+}
+

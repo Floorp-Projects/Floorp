@@ -86,6 +86,7 @@ thumb[align="vertical"]:active {
 }
 
 scrollbarbutton {
+  -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbarbutton");
   -moz-user-focus: ignore;
   -moz-user-select: none;
   vertical-align: bottom;

@@ -6,7 +6,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="autocomplete-result-popup" extends="chrome://global/content/autocomplete.xml#autocomplete-result-popup">
-    <content menugenerated="true">
+    <content menugenerated="true" orient="vertical">
       <xul:box class="autocomplete-result-box" flex="1">
         <xul:outliner anonid="outliner" class="autocomplete-outliner" flex="1">
           <xul:outlinerbody anonid="outlinerbody" class="autocomplete-outlinerbody" flex="1"/>
@@ -339,13 +339,6 @@
         this.parentNode.selectedIndex = null;
       </handler>
     </handlers>
-  </binding>
-  
-  <binding id="autocomplete-result" extends="chrome://global/content/xulBindings.xml#menuitem">
-    <content>
-      <xul:text class="menu-text autocomplete-page-url" inherits="value=label" flex="2" crop="right"/>
-      <xul:text class="autocomplete-page-title" inherits="value=comment" flex="1" crop="right"/>
-    </content>
   </binding>
   
 </bindings>

@@ -1,14 +1,14 @@
 
 .menubutton-dual.top
   {
-    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex");
+    -moz-binding          : url("chrome://global/content/bindings/menubutton.xml#menubutton-dual-ex");
     border                : 1px solid transparent;
     -moz-user-focus       : ignore !important;
   }
 
 .menubutton-dual.left
   {
-    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex-left");
+    -moz-binding          : url("chrome://global/content/bindings/menubutton.xml#menubutton-dual-ex-left");
     border                : 1px solid transparent;
     -moz-user-focus       : none !important;
   }  
@@ -317,7 +317,7 @@
  */
 menubutton.button-toolbar-2
   {
-    -moz-binding            : url("chrome://global/content/menulistBindings.xml#menubutton-single-right") !important;
+    -moz-binding            : url("chrome://global/content/bindings/menubutton.xml#menubutton-single-right") !important;
     border                  : 1px solid transparent;
     margin                  : 0px;
   }
@@ -361,11 +361,11 @@ menubutton.button-toolbar-2[open="true"] > .menubutton-internal-box
   }
  
 menubutton.button-toolbar-2.top {
-  -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop") !important;
+  -moz-binding        : url("chrome://global/content/bindings/button.xml#buttontop") !important;
 }
 
 menubutton.button-toolbar-2.bottom {
-  -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop") !important;
+  -moz-binding        : url("chrome://global/content/bindings/button.xml#buttontop") !important;
 }
 
 /** Low profile rollover menubuttons
@@ -373,7 +373,7 @@ menubutton.button-toolbar-2.bottom {
  
 .menubutton-dual.button-toolbar-3
   {
-    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex");
+    -moz-binding          : url("chrome://global/content/bindings/menubutton.xml#menubutton-dual-ex");
   }  
   
 .menubutton-dual.button-toolbar-3 > .menubutton-dual-ex-button,

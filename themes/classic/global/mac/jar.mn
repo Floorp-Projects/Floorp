@@ -1,7 +1,6 @@
 classic.jar:
     skin/classic/global/contents.rdf
     skin/classic/global/autocomplete.css
-    skin/classic/global/box.css
     skin/classic/global/button.css
     skin/classic/global/checkbox.css
     skin/classic/global/commonDialog.css
@@ -13,14 +12,18 @@ classic.jar:
     skin/classic/global/menu.css
     skin/classic/global/menubutton.css
     skin/classic/global/menulist.css
+    skin/classic/global/popup.css
+    skin/classic/global/progressmeter.css
     skin/classic/global/radio.css
     skin/classic/global/scrollbars.css
+    skin/classic/global/scrollbox.css
     skin/classic/global/splitter.css
     skin/classic/global/tabcontrol.css
-    skin/classic/global/textfield.css
+    skin/classic/global/textbox.css
     skin/classic/global/toolbar.css
     skin/classic/global/tree.css
     skin/classic/global/outliner.css
+    skin/classic/global/wizard.css
     skin/classic/global/wizardOverlay.css
     skin/classic/global/buttonBindings.xml
     skin/classic/global/classicBindings.xml
@@ -206,6 +209,12 @@ classic.jar:
     skin/classic/global/tab-unselect-active-right.gif
     skin/classic/global/tab-unselect-left.gif
     skin/classic/global/tab-unselect-middle.gif
+    skin/classic/global/wizard-btn-lft.gif
+    skin/classic/global/wizard-btn-rit.gif
+    skin/classic/global/wizard-btn-lft-dis.gif
+    skin/classic/global/wizard-btn-rit-dis.gif
+    skin/classic/global/wizard-btn-lft-act.gif
+    skin/classic/global/wizard-btn-rit-act.gif
     skin/classic/global/menulist-scroll.gif
     skin/classic/global/tab-unselect-right.gif
     skin/classic/global/ubhist-arrow.gif

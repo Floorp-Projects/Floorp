@@ -61,7 +61,7 @@ button.edit-mode:hover,
 button.edit-mode:hover:active,
 button.edit-mode 
   {
-    -moz-binding          : url(chrome://global/content/xulBindings.xml#buttonleft);
+    -moz-binding          : url(chrome://global/content/bindings/button.xml#buttonleft);
     -moz-border-radius    : 0px 0px 8px 8px;
     padding               : 1px 5px 1px 4px;
     margin                : 0px 1px;

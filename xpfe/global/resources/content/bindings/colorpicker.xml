@@ -1,10 +1,14 @@
 <?xml version="1.0"?>
 
-<bindings id="xulBindings"
+<bindings id="colorpickerBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="colorpicker" extends="xul:box">
+  <binding id="colorpicker">
+    <resources>
+      <stylesheet src="chrome://global/skin/colorpicker.css"/>
+    </resources>
+    
     <content>
       <xul:box flex="1" orient="vertical">
 
@@ -130,6 +134,7 @@
 
       <method name="resetHover">
         <body><![CDATA[
+          dump("go!\n");
           if (this.mHoverCell)
             this.mHoverCell.removeAttribute("hover");
         ]]></body>
@@ -256,7 +261,11 @@
     </handlers>
   </binding>
 
-  <binding id="colorpickerButton" extends="xul:box">
+  <binding id="colorpicker-button">
+    <resources>
+      <stylesheet src="chrome://global/skin/colorpicker.css"/>
+    </resources>
+    
     <content>
       <xul:box class="colorpicker-button-internal-box" allowevents="true" flex="1">
 
@@ -350,7 +359,8 @@
           this.mOpen = true;
           this.setAttribute("open", "true");
 
-          this.mPicker.resetHover();
+          if ("resetHover" in this.mPicker)
+            this.mPicker.resetHover();
 
           document._focusedPicker = this;
           document.addEventListener("keydown", this.mPickerKeyDown, true);

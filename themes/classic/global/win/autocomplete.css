@@ -7,11 +7,6 @@ textbox[type="autocomplete"]
     cursor              : default !important;
   }
 
-.textbox-input 
-  {
-    cursor              : text;
-  }
-
 .autocomplete-internal-box 
   {
     padding             : 0px !important;
@@ -20,6 +15,11 @@ textbox[type="autocomplete"]
 .autocomplete-textbox-container
   {
     padding             : 1px 2px 1px 2px;
+  }
+
+.autocomplete-textbox 
+  {
+    cursor              : text;
   }
 
 /* ::::: history button ::::: */

@@ -11,26 +11,87 @@
 /* all localizable skin settings shall live here */
 @import url(chrome://global/locale/intl.css);
 
-@import url(chrome://global/skin/box.css);
-@import url(chrome://global/skin/button.css);
-@import url(chrome://global/skin/checkbox.css);
-@import url(chrome://global/skin/radio.css);
-@import url(chrome://global/skin/tree.css);
-@import url(chrome://global/skin/outliner.css);
-@import url(chrome://global/skin/splitter.css);
-@import url(chrome://global/skin/radio.css);
-@import url(chrome://global/skin/menubutton.css);
-@import url(chrome://global/skin/menulist.css);
-@import url(chrome://global/skin/menu.css);
-@import url(chrome://global/skin/formatting.css);
-@import url(chrome://global/skin/textfield.css);
-@import url(chrome://global/skin/toolbar.css);
-@import url(chrome://global/skin/tabcontrol.css);
-@import url(chrome://global/skin/colorpicker.css);
+@import url("chrome://global/skin/formatting.css");
+/*
+@import url("chrome://global/content/bindings/outliner.css");
+@import url("chrome://global/content/bindings/popup.css");
+@import url("chrome://global/content/bindings/scrollbar.css");
+@import url("chrome://global/content/bindings/tree.css");
+
+@import url("chrome://global/skin/button.css");
+@import url("chrome://global/skin/checkbox.css");
+@import url("chrome://global/skin/colorpicker.css");
+@import url("chrome://global/skin/menu.css");
+@import url("chrome://global/skin/menubutton.css");
+@import url("chrome://global/skin/menulist.css");
+@import url("chrome://global/skin/outliner.css");
+@import url("chrome://global/skin/popup.css");
+@import url("chrome://global/skin/progressmeter.css");
+@import url("chrome://global/skin/radio.css");
+@import url("chrome://global/skin/scrollbox.css");
+@import url("chrome://global/skin/splitter.css");
+@import url("chrome://global/skin/tabcontrol.css");
+@import url("chrome://global/skin/textbox.css");
+@import url("chrome://global/skin/toolbar.css");
+@import url("chrome://global/skin/tree.css");
+*/
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
-@namespace html url("http://www.w3.org/1999/xhtml"); 
 
+/**  
+ * bindings
+ **/
+
+  button.plain
+    {
+      -moz-binding			  : url(chrome://global/content/xulBindings.xml#buttonleft);
+    }
+
+  button.plain-extended
+    {
+      -moz-binding        : url("chrome://global/skin/buttonBindings.xml#buttonleft");
+    }
+
+  button, 
+  .exit-dialog 
+    {
+  	  -moz-binding        : url(chrome://global/skin/buttonBindings.xml#nine-slice-button);
+    }
+  
+  menulist 
+    {
+      -moz-binding		  : url(chrome://global/skin/menulistBindings.xml#nine-slice-menulist);
+    }
+  
+  menulist[editable="true"] 
+    {
+      -moz-binding          : url("chrome://global/skin/menulistBindings.xml#menulist-editable") !important;
+    }
+
+  grippy, grippy[collapse="before"]
+    {
+      -moz-binding          : url("chrome://global/skin/classicBindings.xml#grippy");
+    }
+  
+  tab 
+    { 
+      -moz-binding		: url(chrome://global/skin/classicBindings.xml#tab);
+    }
+  
+  tabs 
+    {
+      -moz-binding		: url(chrome://global/skin/classicBindings.xml#tabs);
+    }
+    
+  .wizard-header 
+    {
+      -moz-binding          : url("chrome://global/content/bindings/wizard.xml#wizard-header-mac");
+    }
+  
+  .wizard-buttons 
+    {
+      -moz-binding          : url("chrome://global/content/bindings/wizard.xml#wizard-buttons-mac");
+    }
 
 /**  
  * XUL <window> element
@@ -151,9 +212,9 @@
     }
 
 /**
- * html|iframe default sizing 
+ * iframe default sizing 
  **/
-  html|iframe 
+  iframe 
     {
       min-width           : 10px;
       min-height          : 10px;
@@ -161,80 +222,4 @@
       height              : 100px;
       border              : none;
     }
-
-/** 
- * XUL <progressmeter> 
- **/
-  progressmeter[mode="undetermined"] > .progressmeter-internal-box
-    {
-      background-image    : url(chrome://global/skin/progressmeter-busy.gif);
-    }
- 
-  progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar {
-      visibility: collapse;
-  }
-
-  progressmeter 
-    {
-      min-width           : 100px;
-      margin              : 0px 4px 0px 4px;
-      border-top          : 1px solid #AAAAAA;
-      border-left		  : 1px solid #AAAAAA;
-      border-right		  : 1px solid #FFFFFF;
-      border-bottom		  : 1px solid #FFFFFF;
-    }
-
-  progressmeter > .progressmeter-internal-box 
-    {
-      border              : 1px solid #000000;
-      max-height		  : 12px;
-      height              : 10px;
-
-    }
-    
-  .progressmeter-statusbar 
-    {
-      border-left         : 1px solid #FFFFFF;
-      border-top          : 1px solid #FFFFFF;
-      border-right        : 1px solid #9D9D9D;
-      border-bottom       : 1px solid #9D9D9D;
-      margin              : 0px;
-    }
-    
-  .progressmeter-statusbar > .progressmeter-internal-box
-    {
-      border              : 1px solid #DDDDDD;
-    }  
-
-/* progress indicators */
-  .progress-bar 
-    {
-      background-color	  : #9999FF;
-	  background-image    : url(chrome://global/skin/progressmeter-bar.gif);
-	  border-left		  : 1px solid #6666CC;
-	  border-right		  : 1px solid #000000;
-    }
-  
-  .progressmeter-progressbar[value="0"] > .progress-bar,
-  .progressmeter-progressbar[value="100"] > .progress-bar
-    {
-      display			  : none;
-    } 
-  
-  .progressmeter-progressbar
-    {
-  	  max-height		  : 10px;  
-    }
-    
-/* No progress text in mac status bars */
-  .progress-text 
-    {
-      display				: none;
-    }
-
-/** XUL <scrollbar> element **/
-  scrollbar 
-    { 
-      -moz-user-focus     : ignore; 
-    } 
 

@@ -1,0 +1,29 @@
+/*
+ * Autorepeatbutton
+ */
+.autorepeatbutton-up 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-up.gif")
+  }
+
+.autorepeatbutton-down 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-down.gif")
+  }
+
+autorepeatbutton 
+  {
+    margin                : 1px 2px 2px 1px;
+    border                : 1px solid transparent;
+    padding               : 1px;
+    height                : 1em;  
+    text-align            : center;
+    vertical-align        : middle;
+  }
+
+autorepeatbutton:hover 
+  {
+    margin                : 1px;
+    border                : 1px inset ThreeDFace;
+    padding               : 2px 1px 1px 2px;
+  }

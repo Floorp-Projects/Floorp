@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<bindings id="textBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <binding id="text-label">
+    <handlers>
+      <handler event="click" action="var forElementID = this.getAttribute('for');
+                                     if (forElementID)
+                                       var forElement = document.getElementById(forElementID);
+                                     if(forElement)
+                                       forElement.focus();
+                                    "/>
+    </handlers>
+  </binding>
+  
+  <binding id="text-editable-display" extends="chrome://global/content/bindings/text.xml#text"/>
+  
+  <binding id="text-editable-edit" extends="xul:box">
+    <content>
+      <xul:box flex="1">
+        <html:input type="text" inherits="value,type,maxlength,disabled,size,readonly"/>
+      </xul:box>
+    </content>
+    <handlers>
+      <handler event="blur" action="this.setAttribute('mode','display');"/>
+    </handlers>
+  </binding>
+
+</bindings>
+

@@ -5,7 +5,7 @@
   /* outer frame */
   .button-toolbar-1, .button-toolbar-2
     {
-      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop");
+      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttontop");
       min-width           : 47px;
       margin              : 0px;
       border              : 1px solid transparent;
@@ -91,7 +91,7 @@
  **/
   .button-toolbar
     {
-      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
+      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttonleft");
       margin              : 1px; 
       border              : 1px solid transparent;
       min-width           : 0px;
@@ -135,6 +135,7 @@
   .button-toolbar:hover
     {
       border              : 1px solid ThreeDDarkShadow;
+      color               : #0000FF;
     }
     
   .button-toolbar:hover > .button-internal-box
@@ -143,7 +144,11 @@
       border-top          : 1px solid ThreeDHighlight;
       border-right        : 1px solid ThreeDShadow;
       border-bottom       : 1px solid ThreeDShadow;
-      color               : #0000FF;
+    }
+    
+  .button-toolbar:hover:active
+    {
+      color               : #000080;
     }
     
   .button-toolbar:hover:active > .button-internal-box
@@ -153,7 +158,6 @@
       border-top          : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
       border-bottom       : 1px solid ThreeDHighlight;
-      color               : #000080;
     }
     
   .button-toolbar[disabled="true"],
@@ -180,7 +184,7 @@
     {
       background-color    : transparent;
       color               : -moz-DialogText;
-      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
+      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttonleft");
       min-width           : 0px;
       margin              : 0px;
       border              : 1px solid transparent;
@@ -243,7 +247,7 @@
 
   menubutton.button-toolbar-4
     {
-      -moz-binding        : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+      -moz-binding        : url("chrome://global/content/bindings/menubutton.xml#menubutton-single-right");
     }
 
 /** Low profile rollover buttons, e.g. "search"
@@ -251,7 +255,7 @@
  
   .button-toolbar-3
     {
-      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
+      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttonleft");
       margin              : 0px 0px 1px 3px !important;
       min-width           : 0px;
       background-color    : transparent;

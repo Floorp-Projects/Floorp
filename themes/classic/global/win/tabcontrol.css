@@ -3,7 +3,6 @@
 /*============ tabpanels widget =============*/
 
 tabpanels {
-  /*-moz-binding: url("chrome://global/skin/tabBindings.xml#tabpanels"); */
   padding: 5px;
 }
 
@@ -45,12 +44,6 @@ tabpanels.light {
 .tabpanels-inner-box {
   border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
-}
-
-/*============ tabs widget ============*/
-
-tabs {
-  -moz-binding: url("chrome://global/skin/tabBindings.xml#tabs");
 }
 
 /* tabs-spring ========================== */

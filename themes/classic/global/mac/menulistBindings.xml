@@ -5,17 +5,7 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- 
-  BINDING : menulist
-  XUL
-  REPRESENTATION : <menulist>
-  -->
-  
-
-   
-  <!-- new stretchy menulist --> 
-   
-  <binding id="nine-slice-menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
+  <binding id="nine-slice-menulist" extends="chrome://global/content/bindings/menulist.xml#menulist">
   	<content>
       <xul:box class="menulist-box-left" inherits="disabled" orient="vertical">
         <xul:spring class="menulist-left-top" inherits="disabled"/>
@@ -48,7 +38,7 @@
     </content>
   </binding>
 
-  <binding id="menulist-compact" extends="chrome://global/content/menulistBindings.xml#menulist">
+  <binding id="menulist-compact" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content flex="1">
       <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
@@ -61,7 +51,7 @@
    
    
    
-  <binding id="menulist-editable" extends="chrome://global/content/menulistBindings.xml#menulist-editable">
+  <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist-editable">
     <content>
       <xul:box class="menulist-internal-box" flex="1">
         <xul:box class="menulist-display-box" flex="1" valign="middle" autostretch="never">
