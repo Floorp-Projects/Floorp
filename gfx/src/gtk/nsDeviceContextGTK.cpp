@@ -356,7 +356,6 @@ NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
   GetTwipsToDevUnits(t2d);
   PRInt32     dpi = NSToIntRound(t2d * 1440);
   int         numnames = 0;
-  XFontStruct *fonts;
   nsresult    rv = NS_ERROR_FAILURE;
   
   if (nsnull == wildstring)
@@ -372,12 +371,12 @@ NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
              "-*-%s-*-*-normal-*-*-*-%d-%d-*-*-*-*",
              fontName, dpi, dpi);
   nsCRT::free(fontName);
-  
-  fnames = ::XListFontsWithInfo(GDK_DISPLAY(), wildstring, 1, &numnames, &fonts);
-  
+ 
+  fnames = ::XListFonts(GDK_DISPLAY(), wildstring, 1, &numnames);
+ 
   if (numnames > 0)
   {
-    ::XFreeFontInfo(fnames, fonts, numnames);
+    ::XFreeFontNames(fnames);
     rv = NS_OK;
   }
   
