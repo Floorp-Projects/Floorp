@@ -248,7 +248,7 @@ NS_IMETHODIMP nsView :: Destroy()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetViewManager(nsIViewManager *&aViewMgr)
+NS_IMETHODIMP nsView :: GetViewManager(nsIViewManager *&aViewMgr) const
 {
   NS_IF_ADDREF(mViewManager);
   aViewMgr = mViewManager;
@@ -856,13 +856,13 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord x, nscoord y)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y)
+NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y) const
 {
   nsIView *rootView;
 
   mViewManager->GetRootView(rootView);
 
-  if (this == rootView)
+  if (this == ((const nsView*)rootView))
     *x = *y = 0;
   else
   {
@@ -914,7 +914,7 @@ NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetDimensions(nscoord *width, nscoord *height)
+NS_IMETHODIMP nsView :: GetDimensions(nscoord *width, nscoord *height) const
 {
   *width = mBounds.width;
   *height = mBounds.height;
@@ -958,7 +958,7 @@ NS_IMETHODIMP nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nsc
 }
 
 NS_IMETHODIMP nsView :: GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom,
-                                PRBool &aResult)
+                                PRBool &aResult) const
 {
   if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom))
     aResult = PR_FALSE;
@@ -991,7 +991,7 @@ NS_IMETHODIMP nsView :: SetVisibility(nsViewVisibility aVisibility)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetVisibility(nsViewVisibility &aVisibility)
+NS_IMETHODIMP nsView :: GetVisibility(nsViewVisibility &aVisibility) const
 {
   aVisibility = mVis;
   return NS_OK;
@@ -1003,7 +1003,7 @@ NS_IMETHODIMP nsView :: SetZIndex(PRInt32 zindex)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetZIndex(PRInt32 &aZIndex)
+NS_IMETHODIMP nsView :: GetZIndex(PRInt32 &aZIndex) const
 {
   aZIndex = mZindex;
   return NS_OK;
@@ -1015,7 +1015,7 @@ NS_IMETHODIMP nsView :: SetParent(nsIView *aParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetParent(nsIView *&aParent)
+NS_IMETHODIMP nsView :: GetParent(nsIView *&aParent) const
 {
   aParent = mParent;
   return NS_OK;
@@ -1095,13 +1095,13 @@ NS_IMETHODIMP nsView :: RemoveChild(nsIView *child)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetChildCount(PRInt32 &aCount)
+NS_IMETHODIMP nsView :: GetChildCount(PRInt32 &aCount) const
 {
   aCount = mNumKids;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetChild(PRInt32 index, nsIView *&aChild)
+NS_IMETHODIMP nsView :: GetChild(PRInt32 index, nsIView *&aChild) const
 { 
   NS_PRECONDITION(!(index > mNumKids), "bad index");
 
@@ -1127,7 +1127,7 @@ NS_IMETHODIMP nsView :: SetTransform(nsTransform2D &aXForm)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetTransform(nsTransform2D &aXForm)
+NS_IMETHODIMP nsView :: GetTransform(nsTransform2D &aXForm) const
 {
   if (nsnull != mXForm)
     aXForm = *mXForm;
@@ -1143,7 +1143,7 @@ NS_IMETHODIMP nsView :: SetOpacity(float opacity)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetOpacity(float &aOpacity)
+NS_IMETHODIMP nsView :: GetOpacity(float &aOpacity) const
 {
   aOpacity = mOpacity;
   return NS_OK;
@@ -1171,7 +1171,7 @@ NS_IMETHODIMP nsView :: SetClientData(void *aData)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetClientData(void *&aData)
+NS_IMETHODIMP nsView :: GetClientData(void *&aData) const
 {
   aData = mClientData;
   return NS_OK;
@@ -1238,7 +1238,7 @@ NS_IMETHODIMP nsView :: SetWidget(nsIWidget *aWidget)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetWidget(nsIWidget *&aWidget)
+NS_IMETHODIMP nsView :: GetWidget(nsIWidget *&aWidget) const
 {
   NS_IF_ADDREF(mWindow);
   aWidget = mWindow;
@@ -1316,7 +1316,7 @@ NS_IMETHODIMP nsView :: ClearViewFlags(PRUint32 aFlags)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetViewFlags(PRUint32 *aFlags)
+NS_IMETHODIMP nsView :: GetViewFlags(PRUint32 *aFlags) const
 {
   *aFlags = mVFlags;
   return NS_OK;
@@ -1352,7 +1352,7 @@ NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidge
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetDirtyRegion(nsIRegion *&aRegion)
+NS_IMETHODIMP nsView :: GetDirtyRegion(nsIRegion *&aRegion) const
 {
   aRegion = mDirtyRegion;
   NS_IF_ADDREF(aRegion);

@@ -110,7 +110,7 @@ public:
    * Get the view manager the "owns" the view
    * @result view manager
    */
-  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) = 0;
+  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) const = 0;
 
   /**
    * Called to indicate that the specified rect of the view
@@ -160,7 +160,7 @@ public:
    * @param x out parameter for x position
    * @param y out parameter for y position
    */
-  NS_IMETHOD  GetPosition(nscoord *x, nscoord *y) = 0;
+  NS_IMETHOD  GetPosition(nscoord *x, nscoord *y) const = 0;
   
   /**
    * Called to indicate that the dimensions of the view (actually the
@@ -169,7 +169,7 @@ public:
    * @param height new height
    */
   NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE) = 0;
-  NS_IMETHOD  GetDimensions(nscoord *width, nscoord *height) = 0;
+  NS_IMETHOD  GetDimensions(nscoord *width, nscoord *height) const = 0;
 
   /**
    * Called to indicate that the dimensions and position of the view have
@@ -215,7 +215,7 @@ public:
    * @result PR_TRUE of there actually is a clip for the view, else PR_FALSE
    */
   NS_IMETHOD  GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom,
-                      PRBool &aResult) = 0;
+                      PRBool &aResult) const = 0;
 
   /**
    * Called to indicate that the visibility of a view has been
@@ -228,7 +228,7 @@ public:
    * Called to query the visibility state of a view.
    * @result current visibility state
    */
-  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) = 0;
+  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const = 0;
 
   /**
    * Called to indicate that the z-index of a view has been changed.
@@ -242,7 +242,7 @@ public:
    * The z-index is relative to all siblings of the view.
    * @result current z depth
    */
-  NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) = 0;
+  NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) const = 0;
 
   /**
    * Called to set the parent of the view.
@@ -254,7 +254,7 @@ public:
    * Called to query the parent of the view.
    * @result view's parent
    */
-  NS_IMETHOD  GetParent(nsIView *&aParent) = 0;
+  NS_IMETHOD  GetParent(nsIView *&aParent) const = 0;
 
   /**
    * Called to query the next sibling of the view.
@@ -289,7 +289,7 @@ public:
    * Get the number of children for this view.
    * @result child count
    */
-  NS_IMETHOD  GetChildCount(PRInt32 &aCount) = 0;
+  NS_IMETHOD  GetChildCount(PRInt32 &aCount) const = 0;
   
   /**
    * Get a child at a specific index. Could be replaced by some sort of
@@ -297,7 +297,7 @@ public:
    * @param index of desired child view
    * @result the view at index or nsnull if there is no such child
    */
-  NS_IMETHOD  GetChild(PRInt32 index, nsIView*& aChild) = 0;
+  NS_IMETHOD  GetChild(PRInt32 index, nsIView*& aChild) const = 0;
 
   /**
    * Note: This didn't exist in 4.0. This transform might include scaling
@@ -311,7 +311,7 @@ public:
    * but probably not rotation for the first pass.
    * @result view's transformation
    */
-  NS_IMETHOD  GetTransform(nsTransform2D &aXForm) = 0;
+  NS_IMETHOD  GetTransform(nsTransform2D &aXForm) const = 0;
 
   /**
    * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
@@ -327,7 +327,7 @@ public:
    * completely opaque.
    * @result view's opacity value
    */
-  NS_IMETHOD  GetOpacity(float &aOpacity) = 0;
+  NS_IMETHOD  GetOpacity(float &aOpacity) const = 0;
 
   /**
    * Used to ask a view if it has any areas within its bounding box
@@ -354,7 +354,7 @@ public:
    * Query the view for it's link to client owned data.
    * @result data associated with view or nsnull if there is none.
    */
-  NS_IMETHOD  GetClientData(void *&aData) = 0;
+  NS_IMETHOD  GetClientData(void *&aData) const = 0;
 
   /**
    * Get the nearest widget in this view or a parent of this view and
@@ -369,7 +369,7 @@ public:
    * Gets the dirty region associated with this view. Used by the view
    * manager.
    */
-  NS_IMETHOD GetDirtyRegion(nsIRegion *&aRegion) = 0;
+  NS_IMETHOD GetDirtyRegion(nsIRegion *&aRegion) const = 0;
 
   /**
    * Sets the dirty region associated with this view. Used by the view
@@ -412,7 +412,7 @@ public:
    * @param aWidget out parameter for widget that this view contains,
     *       or nsnull if there is none.
    */
-  NS_IMETHOD GetWidget(nsIWidget *&aWidget) = 0;
+  NS_IMETHOD GetWidget(nsIWidget *&aWidget) const = 0;
 
   /**
    * Output debug info to FILE
@@ -440,7 +440,7 @@ public:
    * event handling
    * @param aFlags out parameter for view flags
    */
-  NS_IMETHOD GetViewFlags(PRUint32 *aFlags) = 0;
+  NS_IMETHOD GetViewFlags(PRUint32 *aFlags) const = 0;
 
   /**
    * Get pointer to temporary data storage used by
