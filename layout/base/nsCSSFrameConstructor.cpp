@@ -2714,7 +2714,9 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       nsIFrame* geometricParent = aParentFrame;
        
       if (canBePositioned) {
-        if (isAbsolutelyPositioned) {
+        if (isFloating) {
+          geometricParent = aState.mFloatedItems.containingBlock;
+        } if (isAbsolutelyPositioned) {
           geometricParent = aState.mAbsoluteItems.containingBlock;
         } else if (isFixedPositioned) {
           geometricParent = aState.mFixedItems.containingBlock;
@@ -5437,7 +5439,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                       parentFrame, newFrame);
 
     if (NS_SUCCEEDED(rv)) {
-      // Delete the current frame and insert the new frame
+      // Delete the current frame
       parentFrame->RemoveFrame(*aPresContext, *presShell, listName, aFrame);
       if (placeholderFrame) {
         // Remove the association between the old frame and its placeholder
@@ -5451,6 +5453,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
         // Make sure that's correct
         ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
       }
+      
+      // Insert the new frame
       parentFrame->InsertFrames(*aPresContext, *presShell, listName, prevSibling, newFrame);
     }
 
