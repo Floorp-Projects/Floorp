@@ -353,7 +353,7 @@ nsSecurityNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 // Methods implementing ISupports //
 ////////////////////////////////////
 
-NS_IMPL_ISUPPORTS2(nsScriptSecurityManager,
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptSecurityManager,
                    nsIScriptSecurityManager,
                    nsIXPCSecurityManager)
 

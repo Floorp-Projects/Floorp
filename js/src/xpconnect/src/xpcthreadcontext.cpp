@@ -45,7 +45,8 @@
 * is using it.
 */
 
-NS_IMPL_ISUPPORTS2(nsXPCThreadJSContextStackImpl, nsIThreadJSContextStack, nsIJSContextStack)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCThreadJSContextStackImpl, 
+        nsIThreadJSContextStack, nsIJSContextStack)
 
 static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack = nsnull;
 
