@@ -23,6 +23,9 @@
  *     Scott MacGregor <mscott@netscape.com>
  */
 
+var prefContractID             = "@mozilla.org/preferences;1";
+var externalProtocolServiceID = "@mozilla.org/uriloader/external-protocol-service;1";
+
 // dialog is just an array we'll use to store various properties from the dialog document...
 var dialog;
 
@@ -30,21 +33,18 @@ var dialog;
 var helperAppLoader; 
 
 // random global variables...
-var started   = false;
 var completed = false;
 var startTime = 0;
-// since this progress dialog is brought up after we've already started downloading, we need to record the # bytes already 
-// downloaded before we started showing progress. This is used to make sure our time remaining calculation works correctly...
 var elapsed = 0;
 var interval = 500; // Update every 500 milliseconds.
 var lastUpdate = -interval; // Update initially.
+var keepProgressWindowUpBox;
+var targetFile;
 
 // These are to throttle down the updating of the download rate figure.
 var priorRate = 0;
 var rateChanges = 0;
 var rateChangeLimit = 2;
-
-var warningLimit = 30000; // Warn on Cancel after 30 sec (30000 milleseconds).
 
 // all progress notifications are done through our nsIWebProgressListener implementation...
 var progressListener = {
@@ -62,17 +62,11 @@ var progressListener = {
         // Put progress meter at 100%.
         dialog.progress.setAttribute( "value", 100 );
         dialog.progress.setAttribute( "mode", "normal" );
-        try {
-          // Close the window in 2 seconds (to ensure user sees we're done).
-          window.setTimeout( "window.close();", 2000 );
-        } 
-        catch ( exception ) 
-        {
-          // OK, try to just close the window immediately.
-          window.close();
-          // If that's not working either, change button text to give user a clue.
-          dialog.cancel.childNodes[0].nodeValue = "Close";
-        }
+        var percentMsg = getString( "percentMsg" );
+        percentMsg = replaceInsert( percentMsg, 1, 100 );
+        dialog.progressText.setAttribute("value", percentMsg);
+
+        processEndOfDownload();
       }
     },
     
@@ -189,8 +183,6 @@ var progressListener = {
     },
     onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
     {
-//      if (aMessage && aMessage != "")
-//        dialog.status.setAttribute("value", aMessage);
     },
     onSecurityChange: function(aWebProgress, aRequest, state)
     {
@@ -249,22 +241,32 @@ function formatSeconds( secs )
   return result;
 }
 
-function loadDialog() {
+function loadDialog() 
+{ 
   var sourceUrlValue = {};
   var initialDownloadTimeValue = {};
-  var targetFile =  helperAppLoader.getDownloadInfo(sourceUrlValue, initialDownloadTimeValue);
+  // targetFile is global because we are going to want re-use later one...
+  targetFile =  helperAppLoader.getDownloadInfo(sourceUrlValue, initialDownloadTimeValue);
+
   var sourceUrl = sourceUrlValue.value;
   startTime = initialDownloadTimeValue.value / 1000;
 
   // set the elapsed time on the first pass...
   var now = ( new Date() ).getTime();
-  var elapsed = now - startTime;
+  // intialize the elapsed time global variable slot
+  elapsed = now - startTime;
   // Update elapsed time display.
   dialog.timeElapsed.setAttribute("value", formatSeconds( elapsed / 1000 ));
   dialog.timeLeft.setAttribute("value", formatSeconds( 0 ));
 
   dialog.location.setAttribute("value", sourceUrlValue.value.spec );
   dialog.fileName.setAttribute( "value", targetFile.unicodePath );
+  
+  var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
+  if (prefs)
+    keepProgressWindowUpBox.checked = prefs.GetBoolPref("browser.download.keepProgressWndAlive");
+
+
 }
 
 function replaceInsert( text, index, value ) {
@@ -294,7 +296,8 @@ function onLoad() {
     dialog.progressText = document.getElementById("dialog.progressText");
     dialog.timeLeft    = document.getElementById("dialog.timeLeft");
     dialog.timeElapsed = document.getElementById("dialog.timeElapsed");
-    dialog.cancel      = document.getElementById("dialog.cancel");
+    dialog.cancel      = document.getElementById("cancel");
+    keepProgressWindowUpBox = document.getElementById('keepProgressDialogUp');
 
     // Set up dialog button callbacks.
     var object = this;
@@ -310,6 +313,13 @@ function onLoad() {
 
 function onUnload() 
 {
+
+  // remember the user's decision for the checkbox.
+
+  var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
+  if (prefs)
+    prefs.SetBoolPref("browser.download.keepProgressWndAlive", keepProgressWindowUpBox.checked);
+
    // Cancel app launcher.
    if (helperAppLoader)
    {
@@ -339,4 +349,66 @@ function onCancel ()
     
   // Close up dialog by returning true.
   return true;
+}
+
+// closeWindow should only be called from processEndOfDownload
+function closeWindow()
+{
+  // while the time out was fired the user may have checked the
+  // keep this dialog open box...so we should abort and not actually
+  // close the window.
+
+  if (!keepProgressWindowUpBox.checked)
+    window.close();
+  else
+    setupPostProgressUI();
+}
+
+function setupPostProgressUI()
+{
+  //dialog.cancel.childNodes[0].nodeValue = "Close";
+  // turn the cancel button into a close button
+  var cancelButton = document.getElementById('cancel');
+  if (cancelButton)
+  {
+    cancelButton.value = "Close"; // mscott -> replace with a string bundle
+    cancelButton.setAttribute("onclick", "window.close()");
+  }
+
+  // enable the open and open folder buttons
+  var openFolderButton = document.getElementById('openFolder');
+  var openButton = document.getElementById('open');
+  
+  openFolderButton.removeAttribute("disabled");
+  openButton.removeAttribute("disabled");
+}
+
+// when we receive a stop notification we are done reporting progress on the download
+// now we have to decide if the window is supposed to go away or if we are supposed to remain open
+// and enable the open and open folder buttons on the dialog.
+function processEndOfDownload()
+{
+  if (!keepProgressWindowUpBox.checked)
+    return window.setTimeout( "closeWindow();", 2000 ); // shut down, we are all done.
+  
+  // o.t the user has asked the window to stay open so leave it open and enable the open and open new folder buttons
+  setupPostProgressUI();
+}
+
+function doOpen()
+{
+  try {
+    var localFile = targetFile.QueryInterface(Components.interfaces.nsILocalFile);
+    if (localFile)
+      localFile.launch();
+  } catch (ex) {}
+}
+
+function doOpenFolder()
+{
+  try {
+    var localFile = targetFile.QueryInterface(Components.interfaces.nsILocalFile);
+    if (localFile)
+      localFile.reveal();
+  } catch (ex) {}
 }
