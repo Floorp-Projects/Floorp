@@ -550,12 +550,12 @@ BOOL CPublishDlg::OnInitDialog()
 
     // Get the default publish URL and password
     pInitLocation = EDT_GetDefaultPublishURL(m_pMWContext, &pFilename, &pInitUserName, &pPassword);
-    if( pFilename ){
+    if( pFilename )
         m_csFilename = pFilename;
         // Don't free yet - we may use it for title
-    }
 
-    if( pPassword ){
+    if( pPassword )
+    {
         m_csPassword = pPassword;
         XP_FREEIF(pPassword);
     }
@@ -571,13 +571,15 @@ BOOL CPublishDlg::OnInitDialog()
     XP_FREEIF(pInitUserName);
 
     EDT_PageData * pPageData = EDT_GetPageData(m_pMWContext);
-    if( pPageData ){
+    if( pPageData )
+    {
         m_csTitle = pPageData->pTitle;
         EDT_FreePageData(pPageData);
     }
 
     // If empty, fill in title with Filename without extension
-    if( m_csTitle.IsEmpty() && pFilename ){
+    if( m_csTitle.IsEmpty() && pFilename )
+    {
         char * pTitle = EDT_GetPageTitleFromFilename(pFilename);
         if( pTitle ){
             m_csTitle = pTitle;
@@ -601,16 +603,19 @@ BOOL CPublishDlg::OnInitDialog()
     //  to the preference list. First item = most recently-added
     int i;
     BOOL bLocationFound = FALSE;
-    for( i= 0; i < MAX_PUBLISH_LOCATIONS; i++ ){
+    for( i= 0; i < MAX_PUBLISH_LOCATIONS; i++ )
+    {
         m_ppUserList[i] = NULL;
         m_ppPasswordList[i] = NULL;
         char *pLocation = NULL;
-		if( EDT_GetPublishingHistory( i, &pLocation, &m_ppUserList[i], &m_ppPasswordList[i] ) &&
-            pLocation && *pLocation ){
+		if( EDT_GetPublishingHistory(m_pMWContext, i, &pLocation, &m_ppUserList[i], &m_ppPasswordList[i] ) &&
+            pLocation && *pLocation )
+        {
             pLocationComboBox->AddString(pLocation);
             // If previous location = the initial new location,
             //  then use the previous username and password 
-            if( !bLocationFound && !strcmp(pLocation, pInitLocation) ){
+            if( !bLocationFound && !strcmp(pLocation, pInitLocation) )
+            {
                 // Should there ever be an existing initial username? (not likely!)
                 //if( m_csUserName.IsEmpty() ){
                 m_csUserName = m_ppUserList[i]; 
@@ -623,6 +628,11 @@ BOOL CPublishDlg::OnInitDialog()
         }
         XP_FREEIF(pLocation);
     } 
+
+    // Pad an existing password to 10 characters to not reveal how long it is
+    if( !m_csPassword.IsEmpty() )
+        while( m_csPassword.GetLength() < 10 )
+            m_csPassword += " ";
 
     // Terminate the lists
     m_ppUserList[i] = NULL;
