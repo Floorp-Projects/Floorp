@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIVariant.h"
 #include "wspprivate.h"
 
 /***************************************************************************/

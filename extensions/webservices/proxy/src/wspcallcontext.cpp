@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "wspprivate.h"
+#include "nsIVariant.h"
 #include "nsIWSDL.h"
 #include "nsISOAPCall.h"
 #include "nsISOAPHeaderBlock.h"

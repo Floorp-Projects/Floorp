@@ -42,6 +42,8 @@
 #include "nsString.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIServiceManager.h"
+#include "nsIProperty.h"
+#include "nsIVariant.h"
 
 const PRUint8 sInt8Val = 2;
 const PRInt16 sInt16Val = 0x1234;

@@ -64,6 +64,7 @@
 #include "nsIDOMAttr.h"
 #include "nsPrintfCString.h"
 #include "nsISOAPPropertyBagMutator.h"
+#include "nsIProperty.h"
 #include "nsIPropertyBag.h"
 #include "nsSupportsArray.h"
 

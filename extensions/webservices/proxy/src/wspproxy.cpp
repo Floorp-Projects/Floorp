@@ -46,6 +46,7 @@
 #include "nsISOAPHeaderBlock.h"
 #include "nsISOAPEncoding.h"
 #include "nsIComponentManager.h"
+#include "nsIVariant.h"
 #include "nsVoidArray.h"
 
 #define NS_SOAP_1_1_ENCODING_NAMESPACE \

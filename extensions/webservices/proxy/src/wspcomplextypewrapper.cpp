@@ -45,6 +45,8 @@
 
 // xpcom includes
 #include "nsIServiceManager.h"
+#include "nsIProperty.h"
+#include "nsIVariant.h"
 
 class WSPComplexTypeProperty : public nsIProperty
 {

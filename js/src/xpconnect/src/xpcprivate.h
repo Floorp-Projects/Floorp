@@ -103,6 +103,7 @@
 
 #include "nsVariant.h"
 #include "nsIPropertyBag.h"
+#include "nsIProperty.h"
 #include "nsSupportsArray.h"
 
 #include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated

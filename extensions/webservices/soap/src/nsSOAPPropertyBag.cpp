@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsString.h"
+#include "nsIProperty.h"
 #include "nsSOAPPropertyBag.h"
 #include "nsCOMArray.h"
 #include "nsInterfaceHashtable.h"
