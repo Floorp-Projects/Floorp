@@ -326,6 +326,10 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     maxWidth = maxHeight = NS_UNCONSTRAINEDSIZE;
   }
 
+  float p2t, t2p;
+  aPresContext->GetPixelsToTwips(&p2t);
+  aPresContext->GetTwipsToPixels(&t2p);
+
   for (;;) {
     PRBool haveComputedSize = PR_FALSE;
     PRBool needIntrinsicImageSize = PR_FALSE;
@@ -348,6 +352,12 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
             ? (float) mIntrinsicImageSize.width
             : (float) mIntrinsicImageSize.height;     // avoid divide by zero
           float height = (float) mIntrinsicImageSize.height;
+
+          // snap the width to the nearest pixel value to prevent a
+          // feedback loop.
+          PRInt32 pixelWidth = NSTwipsToIntPixels(newWidth + nscoord(p2t / 2), t2p);
+          newWidth = NSIntPixelsToTwips(pixelWidth, p2t);
+
           newHeight = (nscoord)
             NSToIntRound(newWidth * height / width);
           newHeight = MINMAX(newHeight, minHeight, maxHeight);
@@ -371,6 +381,12 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         float height = mIntrinsicImageSize.height
           ? (float) mIntrinsicImageSize.height
           : (float) mIntrinsicImageSize.width;         // avoid divide by zero
+
+        // snap the height to the nearest pixel value to prevent a
+        // feedback loop.
+        PRInt32 pixelHeight = NSTwipsToIntPixels(newHeight + nscoord(p2t / 2), t2p);
+        newHeight = NSIntPixelsToTwips(pixelHeight, p2t);
+
         newWidth = (nscoord)
           NSToIntRound(newHeight * width / height);
         newWidth = MINMAX(newWidth, minWidth, maxWidth);
