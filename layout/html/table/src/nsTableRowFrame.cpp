@@ -1102,26 +1102,28 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
                                         nscoord&        aMaxCellTopMargin,
                                         nscoord&        aMaxCellBottomMargin)
 {
+  // Initialize OUT parameters
   aMaxCellTopMargin = aMaxCellBottomMargin = 0;
 
-  // Walk the list of children looking for aKidFrame. While we're at
-  // it get the maxCellHeight and maxVertCellSpace for all the
-  // frames except aKidFrame
-  for (nsIFrame* frame = mFrames.FirstChild(); nsnull != frame;) 
-  {
-    const nsStyleDisplay *kidDisplay;
-    frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
-    {
-      if (frame != aKidFrame) {
+  // Walk the child frames (except aKidFrame) and find the table cell frames
+  for (nsIFrame* frame = mFrames.FirstChild(); frame; frame->GetNextSibling(&frame)) {
+    if (frame != aKidFrame) {
+      // See if the frame is a table cell frame
+      const nsStyleDisplay *kidDisplay;
+      frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
+
+      if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
+        nsMargin  kidMargin;
+        
         // Update the max top and bottom margins
-        nsMargin       kidMargin;
         aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)frame, kidMargin);
         if (kidMargin.top > aMaxCellTopMargin)
           aMaxCellTopMargin = kidMargin.top;
         if (kidMargin.bottom > aMaxCellBottomMargin)
           aMaxCellBottomMargin = kidMargin.bottom;
 
+        // Update maxCellHeight and maxVertCellSpace. When determining this we
+        // don't include cells that span rows
         PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan(mRowIndex, ((nsTableCellFrame *)frame));
         if (mMinRowSpan == rowSpan) {
           // Get the cell's desired height the last time it was reflowed
@@ -1139,14 +1141,9 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
           }
   
           // Update maxCellVertHeight
-          nsMargin margin;
-    
-          if (aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)frame, margin) == NS_OK)
-          {
-            nscoord height = desiredSize.height + margin.top + margin.bottom;
-            if (height > aReflowState.maxCellVertSpace) {
-              aReflowState.maxCellVertSpace = height;
-            }
+          nscoord vertHeight = desiredSize.height + kidMargin.top + kidMargin.bottom;
+          if (vertHeight > aReflowState.maxCellVertSpace) {
+            aReflowState.maxCellVertSpace = vertHeight;
           }
         }
 
@@ -1157,8 +1154,6 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
         // table cell, and that will include the max element size...
       }
     }
-
-    frame->GetNextSibling(&frame);
   }
 
   // Update the running x-offset based on the frame's current x-origin
@@ -1282,8 +1277,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     if (kidMargin.bottom > maxCellBottomMargin)
       maxCellBottomMargin = kidMargin.bottom;
 
-    // At this point, we know the column widths. Get the available width
-    // from the known column widths
+    // At this point, we know the column widths. Compute the cell available width
     PRInt32 cellColIndex;
     ((nsTableCellFrame *)aNextFrame)->GetColIndex(cellColIndex);
     PRInt32 cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
@@ -1360,9 +1354,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     // Calculate the cell's actual size given its pass2 size. This function
     // takes into account the specified height (in the style), and any special
     // logic needed for backwards compatibility
-    // XXX We need to ask the table (or the table layout strategy) if the column
-    // widths have changed. If so, we just bail and return a status indicating
-    // what happened and let the table reflow all the table cells...
     CalculateCellActualSize(aNextFrame, desiredSize.width, desiredSize.height,
                             cellAvailWidth);
 
