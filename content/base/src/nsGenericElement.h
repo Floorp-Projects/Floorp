@@ -434,9 +434,6 @@ public:
 
   // nsIHTMLContent interface methods
   NS_IMETHOD Compact();
-  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,
-                              const nsHTMLValue& aValue,
-                              PRBool aNotify);
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,
                               nsHTMLValue& aValue) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;

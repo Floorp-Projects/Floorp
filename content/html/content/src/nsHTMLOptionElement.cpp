@@ -114,6 +114,14 @@ public:
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
 
   // nsIContent
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify, PRBool aDeepSetDocument);
   virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
@@ -348,73 +356,10 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
   return NS_OK;
 }
 
-//NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
-//NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index)
-//NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
+NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, selected)
+NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
 //NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
-
-NS_IMETHODIMP
-nsHTMLOptionElement::GetDisabled(PRBool* aDisabled)
-{
-  nsHTMLValue val;
-  nsresult rv = GetHTMLAttribute(nsHTMLAtoms::disabled, val);
-  *aDisabled = (NS_CONTENT_ATTR_NOT_THERE != rv);
-  return NS_OK;
-}
-                                                         
-NS_IMETHODIMP
-nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
-{
-  if (aDisabled) {
-    return SetHTMLAttribute(nsHTMLAtoms::disabled, nsHTMLValue(), PR_TRUE);
-  }
-
-  return UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
-}
-
-NS_IMETHODIMP                                                      
-nsHTMLOptionElement::GetLabel(nsAString& aValue)
-{                                                                  
-  nsGenericHTMLElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::label, aValue);
-  return NS_OK;
-}         
-                                                         
-NS_IMETHODIMP                                                      
-nsHTMLOptionElement::SetLabel(const nsAString& aValue)
-{                                                                  
-  nsresult result;
-
-  result = nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsHTMLAtoms::label,
-                                         aValue, PR_TRUE);
-  // XXX Why does this only happen to the combobox?  and what about
-  // when the text gets set and label is blank?
-  if (NS_SUCCEEDED(result)) {
-    NotifyTextChanged();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsHTMLOptionElement::GetDefaultSelected(PRBool* aDefaultSelected)
-{
-  nsHTMLValue val;                                                 
-
-  nsresult rv = GetHTMLAttribute(nsHTMLAtoms::selected, val);
-  *aDefaultSelected = (NS_CONTENT_ATTR_NOT_THERE != rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
-{
-  if (aDefaultSelected) {
-    return SetHTMLAttribute(nsHTMLAtoms::selected, nsHTMLValue(), PR_TRUE);
-  }
-
-  return UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::selected, PR_TRUE);
-}
+NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
 
 NS_IMETHODIMP 
 nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
@@ -556,6 +501,23 @@ nsHTMLOptionElement::NotifyTextChanged()
   }
 }
 
+nsresult
+nsHTMLOptionElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             nsIAtom* aPrefix, const nsAString& aValue,
+                             PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                              aValue, aNotify);
+  if (NS_SUCCEEDED(rv) && aNotify && aName == nsHTMLAtoms::label &&
+      aNameSpaceID == kNameSpaceID_None) {
+    // XXX Why does this only happen to the combobox?  and what about
+    // when the text gets set and label is blank?
+    NotifyTextChanged();
+  }
+
+  return rv;
+}
+
 //
 // Override nsIContent children changing methods so we can detect when our text
 // is changing
@@ -679,9 +641,8 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         nsAutoString value(NS_REINTERPRET_CAST(const PRUnichar*,
                                                JS_GetStringChars(jsstr)));
 
-        result = nsGenericHTMLElement::SetAttr(kNameSpaceID_None,
-                                               nsHTMLAtoms::value, value,
-                                               PR_FALSE);
+        result = SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value,
+                         PR_FALSE);
         if (NS_FAILED(result)) {
           return result;
         }
@@ -694,7 +655,8 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
                                           argv[2],
                                           &defaultSelected)) &&
             (JS_TRUE == defaultSelected)) {
-          result = SetHTMLAttribute(nsHTMLAtoms::selected, nsHTMLValue(), PR_FALSE);
+          result = SetAttr(kNameSpaceID_None, nsHTMLAtoms::selected,
+                           EmptyString(), PR_FALSE);
           NS_ENSURE_SUCCESS(result, result);
         }
 

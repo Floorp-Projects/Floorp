@@ -214,26 +214,12 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
-NS_IMETHODIMP
-nsHTMLButtonElement::GetType(nsAString& aType)
-{
-  return AttributeToString(nsHTMLAtoms::type,
-                           nsHTMLValue(mType, eHTMLUnit_Enumerated),
-                           aType);
-}
-
-
-NS_IMETHODIMP
-nsHTMLButtonElement::SetType(const nsAString& aType)
-{
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType, PR_TRUE);
-}
-
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
 NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, Type, type, "submit")
 
 NS_IMETHODIMP
 nsHTMLButtonElement::Blur()

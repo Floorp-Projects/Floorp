@@ -1274,7 +1274,7 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
 #else
   // We ought to be able to transfer ownership of the selector and the
   // declaration since this rule should now be unused, but unfortunately
-  // SetHTMLAttribute might use it before setting the new rule (see
+  // SetInlineStyleRule might use it before setting the new rule (see
   // stack in bug 209575).  So leave the declaration pointer on the old
   // rule.
   mDeclaration->AddRef();

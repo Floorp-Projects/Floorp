@@ -71,18 +71,6 @@ public:
   NS_IMETHOD Compact() = 0;
 
   /**
-   * Set an attribute to an HTMLValue type.  (Assumes namespace
-   * kNameSpaceID_None).
-   *
-   * @param aAttribute the attribute to set
-   * @param aValue the value to set it to
-   * @param aNotify whether to notify the document of the change
-   */
-  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,
-                              const nsHTMLValue& aValue,
-                              PRBool aNotify) = 0;
-
-  /**
    * Get an attribute as HTMLValue type
    *
    * @param aAttribute the attribute to get
