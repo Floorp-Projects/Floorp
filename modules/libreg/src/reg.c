@@ -310,7 +310,7 @@ static REGFILE* vr_findRegFile(char *filename)
 
     pReg = RegList;
     while( pReg != NULL ) {
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_BEOS
         if ( 0 == XP_STRCMP( filename, pReg->filename ) ) {
 #else
         if ( 0 == XP_STRCASECMP( filename, pReg->filename ) ) {
