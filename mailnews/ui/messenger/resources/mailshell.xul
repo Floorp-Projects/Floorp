@@ -8,9 +8,9 @@
 	onconstruction="MsgStartUp()"
         style="width:100%;height:100%">
 
-<html:script src="widgetglue.js"></html:script>
-<html:script src="commandglue.js"></html:script>
-<html:script src="shareglue.js"></html:script>
+<html:script src="resource:/res/mailnews/widgetglue.js"></html:script>
+<html:script src="resource:/res/mailnews/commandglue.js"></html:script>
+<html:script src="resource:/res/mailnews/shareglue.js"></html:script>
 
   <menubar>
     <menu name="File">
@@ -265,7 +265,7 @@
     </toolbox>
 
     <!-- The main mail three pane frame -->
-    <html:iframe src="3panemail.html" name="browser.3panemail" flex="100%" />
+    <html:iframe src="resource:/res/mailnews/3panemail.html" name="browser.3panemail" flex="100%" />
 
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
     <box align="horizontal" id="status-bar">
