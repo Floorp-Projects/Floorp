@@ -3852,7 +3852,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
     if (originalRecipients[i].IsEmpty())
       continue;
     rv = m_compFields->SplitRecipientsEx(originalRecipients[i].get(),
-                                         getter_AddRefs(addressArray),                                                        getter_AddRefs(emailArray));
+                                         getter_AddRefs(addressArray), getter_AddRefs(emailArray));
     if (NS_SUCCEEDED(rv))
     {
       PRInt32 nbrRecipients;

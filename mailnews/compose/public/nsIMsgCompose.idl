@@ -164,7 +164,7 @@ interface nsIMsgCompose : nsISupports {
 		CheckAndPopulateRecipients will perform several tasks:
 		  1) if populateMailList is true, it will populate mailing presents in the compose field
 		  2) if returnNoHTMLRecipients is true, build a list of non HTML recipient
-		  3) return the lowest common format preferred by recipients (unknow, plaintext or html)
+		  3) return the lowest common format preferred by recipients (unknown, plaintext or html)
 	*/
 	unsigned long CheckAndPopulateRecipients(in boolean populateMailList, in boolean returnNonHTMLRecipients, out wstring nonHTMLRecipients);
   
