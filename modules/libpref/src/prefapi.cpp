@@ -528,7 +528,7 @@ PR_IMPLEMENT(void) PREF_CleanupPrefs()
 		PR_HashTableDestroy(gHashTable);
 	gHashTable = NULL;
 
- 	if (!gSavedLine)
+ 	if (gSavedLine)
 		free(gSavedLine);
 	gSavedLine = NULL;
 
