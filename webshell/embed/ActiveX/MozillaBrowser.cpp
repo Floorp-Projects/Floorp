@@ -548,6 +548,38 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 }
 
 
+HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
+{
+	if (!m_bEditorMode)
+	{
+		return E_UNEXPECTED;
+	}
+	if (!m_pEditor)
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
+	switch (nCmdID)
+	{
+	case IDM_BOLD:
+		break;
+	case IDM_ITALIC:
+		break;
+	case IDM_UNDERLINE:
+		break;
+	
+	// TODO add the rest!
+	
+	default:
+		// DO NOTHING
+		break;
+	}
+
+	return S_OK;
+}
+
+
 // Returns the presentation shell
 HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 {
@@ -2394,11 +2426,15 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 ///////////////////////////////////////////////////////////////////////////////
 // Ole Command Handlers
 
-HRESULT _stdcall CMozillaBrowser::EditModeHandler(IOleCommandTarget *pTarget, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+HRESULT _stdcall CMozillaBrowser::EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
-	CMozillaBrowser *pBrowser = dynamic_cast<CMozillaBrowser *>(pTarget);
 	BOOL bEditorMode = (nCmdID == IDM_EDITMODE) ? TRUE : FALSE;
-	pBrowser->SetEditorMode(bEditorMode);
+	pThis->SetEditorMode(bEditorMode);
 	return S_OK;
 }
 
+HRESULT _stdcall CMozillaBrowser::EditCommandHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+{
+	pThis->OnEditorCommand(nCmdID);
+	return S_OK;
+}
