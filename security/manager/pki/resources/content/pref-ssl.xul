@@ -25,7 +25,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/SSLPrefs.dtd">
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/pref-ssl.dtd">
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
@@ -49,17 +49,17 @@
     <title><text value="&SSLProtocolVersions;"/></title>
 
     <!-- Prefs -->
-<box orient="vertical" flex="1">
-    <checkbox id="enableSSL2" value="Enable SSL version 2"
-              pref="true" preftype="bool" prefstring="security.enable_ssl2"
-              prefattribute="checked"/>
-    <checkbox id="enableSSL3" value="Enable SSL version 3"
-              pref="true" preftype="bool" prefstring="security.enable_ssl3"
-              prefattribute="checked"/>
-    <checkbox id="enableTLS" value="Enable TLS"
-              pref="true" preftype="bool" prefstring="security.enable_tls"
-              prefattribute="checked"/>
-</box>
+    <box orient="vertical" flex="1" autostretch="never" >
+      <checkbox id="enableSSL2" value="Enable SSL version 2"
+                pref="true" preftype="bool" prefstring="security.enable_ssl2"
+                prefattribute="checked"/>
+      <checkbox id="enableSSL3" value="Enable SSL version 3"
+                pref="true" preftype="bool" prefstring="security.enable_ssl3"
+                prefattribute="checked"/>
+      <checkbox id="enableTLS" value="Enable TLS"
+                pref="true" preftype="bool" prefstring="security.enable_tls"
+                prefattribute="checked"/>
+    </box>
 
     <box orient="vertical" halign="right">
       <button class="dialog" value="Edit SSL Ciphers..." disabled="true"
@@ -69,7 +69,7 @@
 
   </titledbox>
 
-  <titledbox orient="vertical">
+  <titledbox orient="vertical" autostretch="never" >
     <title><text value="&SSLWarnings;"/></title>
     <html>
 Netscape can alert you to the security status of the web page you are viewing.
@@ -101,7 +101,7 @@ Set Netscape to show a warning and ask permission before:
               prefattribute="checked" checked="true"/>
   </titledbox>
 
-  <titledbox orient="vertical">
+  <titledbox orient="vertical" autostretch="never" >
     <title><text value="&SSLClientAuthMethod;"/></title>
     <html>Decide how Netscape selects a security certificate to 
 	present to web sites that require one:</html>

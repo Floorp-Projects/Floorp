@@ -37,7 +37,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/SecurityPrefs.dtd">
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/pref-security.dtd">
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
@@ -52,7 +52,7 @@
   </script>
   <script src="chrome://global/content/strres.js" />
   <script src="pippki.js" />
-  <script src="SecurityPrefs.js" />
+  <script src="pref-security.js" />
             
   <!-- Fancy panel header -->
   <box class="box-smallheader" title="&security.label;" 
