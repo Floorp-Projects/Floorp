@@ -66,7 +66,10 @@ enum Node_slots {
   NODE_PREVIOUSSIBLING = -8,
   NODE_NEXTSIBLING = -9,
   NODE_ATTRIBUTES = -10,
-  NODE_OWNERDOCUMENT = -11
+  NODE_OWNERDOCUMENT = -11,
+  NODE_NAMESPACEURI = -12,
+  NODE_PREFIX = -13,
+  NODE_LOCALNAME = -14
 };
 
 /***********************************************************************/
@@ -229,6 +232,42 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NODE_NAMESPACEURI:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_NAMESPACEURI, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetNamespaceURI(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NODE_PREFIX:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_PREFIX, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetPrefix(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NODE_LOCALNAME:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_LOCALNAME, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetLocalName(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
@@ -270,6 +309,18 @@ SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
           rv = a->SetNodeValue(prop);
+          
+        }
+        break;
+      }
+      case NODE_PREFIX:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_PREFIX, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+          rv = a->SetPrefix(prop);
           
         }
         break;
@@ -607,6 +658,85 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
 
 //
+// Native method Normalize
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeNormalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_NORMALIZE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Normalize();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Supports
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeSupports(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  PRBool nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_SUPPORTS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    result = nativeThis->Supports(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method AddEventListener
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -756,6 +886,9 @@ static JSPropertySpec NodeProperties[] =
   {"nextSibling",    NODE_NEXTSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"attributes",    NODE_ATTRIBUTES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"ownerDocument",    NODE_OWNERDOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"namespaceURI",    NODE_NAMESPACEURI,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"prefix",    NODE_PREFIX,    JSPROP_ENUMERATE},
+  {"localName",    NODE_LOCALNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -771,6 +904,8 @@ static JSFunctionSpec NodeMethods[] =
   {"appendChild",          NodeAppendChild,     1},
   {"hasChildNodes",          NodeHasChildNodes,     0},
   {"cloneNode",          NodeCloneNode,     1},
+  {"normalize",          NodeNormalize,     0},
+  {"supports",          NodeSupports,     2},
   {"addEventListener",          EventTargetAddEventListener,     3},
   {"removeEventListener",          EventTargetRemoveEventListener,     3},
   {0}

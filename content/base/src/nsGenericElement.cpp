@@ -458,6 +458,13 @@ nsGenericElement::GetNodeName(nsString& aNodeName)
 }
 
 nsresult
+nsGenericElement::GetLocalName(nsString& aNodeName)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
 nsGenericElement::GetNodeValue(nsString& aNodeValue)
 {
   aNodeValue.Truncate();

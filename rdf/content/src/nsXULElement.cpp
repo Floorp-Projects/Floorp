@@ -1084,6 +1084,38 @@ nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 
 
 NS_IMETHODIMP
+nsXULElement::GetNamespaceURI(nsString& aNamespaceURI)
+{ 
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULElement::GetPrefix(nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULElement::SetPrefix(const nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULElement::GetLocalName(nsString& aLocalName)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
 nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
     NS_PRECONDITION(aNewChild != nsnull, "null ptr");
@@ -1361,6 +1393,23 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
+NS_IMETHODIMP
+nsXULElement::Normalize()
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULElement::Supports(const nsString& aFeature, const nsString& aVersion,
+                       PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 //----------------------------------------------------------------------
 // nsIDOMElement interface
 
@@ -1532,14 +1581,6 @@ nsXULElement::GetElementsByAttribute(const nsString& aAttribute,
 
     *aReturn = elements;
     return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULElement::Normalize()
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

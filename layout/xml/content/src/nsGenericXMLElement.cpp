@@ -86,6 +86,42 @@ nsGenericXMLElement::CopyInnerTo(nsIContent* aSrcContent,
 }
 
 nsresult
+nsGenericXMLElement::GetNamespaceURI(nsString& aNamespaceURI)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsGenericXMLElement::GetPrefix(nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsGenericXMLElement::SetPrefix(const nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsGenericXMLElement::GetLocalName(nsString& aLocalName)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsGenericXMLElement::Supports(const nsString& aFeature,
+                              const nsString& aVersion, PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
 nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext, 
                                      void** aScriptObject)
 {

@@ -233,7 +233,6 @@
     "element.getattribute", \
     "element.getattributenode", \
     "element.getelementsbytagname", \
-    "element.normalize", \
     "element.removeattribute", \
     "element.removeattributenode", \
     "element.setattribute", \
@@ -674,15 +673,20 @@
     "node.haschildnodes", \
     "node.insertbefore", \
     "node.lastchild", \
+    "node.localname", \
+    "node.namespaceuri", \
     "node.nextsibling", \
     "node.nodename", \
     "node.nodetype", \
     "node.nodevalue", \
+    "node.normalize", \
     "node.ownerdocument", \
     "node.parentnode", \
+    "node.prefix", \
     "node.previoussibling", \
     "node.removechild", \
     "node.replacechild", \
+    "node.supports", \
     "nodelist.item", \
     "nodelist.length", \
     "notation.publicid", \

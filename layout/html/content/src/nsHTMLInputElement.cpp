@@ -122,10 +122,6 @@ public:
                                   nsIDOMNodeList** aReturn) {              
     return mInner.GetElementsByTagName(aTagname, aReturn);                     
   }                                                                        
-  NS_IMETHOD Normalize() {                                                 
-    return mInner.Normalize();                                                 
-  }
-
 
 
   // nsIDOMHTMLElement

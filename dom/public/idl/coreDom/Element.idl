@@ -15,5 +15,4 @@
    Attr                      removeAttributeNode(in Attr oldAttr)
                                                  raises(DOMException);
    NodeList                  getElementsByTagName(in DOMString name);
-   void                      normalize();
  };

@@ -433,6 +433,50 @@ nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   return result;
 }
 
+NS_IMETHODIMP 
+nsDOMAttribute::GetNamespaceURI(nsString& aNamespaceURI)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsDOMAttribute::GetPrefix(nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsDOMAttribute::SetPrefix(const nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsDOMAttribute::GetLocalName(nsString& aLocalName)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsDOMAttribute::Normalize()
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::Supports(const nsString& aFeature, const nsString& aVersion,
+                         PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 //----------------------------------------------------------------------
 
 nsAttributeChildList::nsAttributeChildList(nsDOMAttribute* aAttribute)

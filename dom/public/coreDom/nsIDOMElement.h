@@ -55,8 +55,6 @@ public:
   NS_IMETHOD    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)=0;
 
   NS_IMETHOD    GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn)=0;
-
-  NS_IMETHOD    Normalize()=0;
 };
 
 
@@ -69,7 +67,6 @@ public:
   NS_IMETHOD    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);  \
   NS_IMETHOD    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);  \
   NS_IMETHOD    GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn);  \
-  NS_IMETHOD    Normalize();  \
 
 
 
@@ -82,7 +79,6 @@ public:
   NS_IMETHOD    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) { return _to SetAttributeNode(aNewAttr, aReturn); }  \
   NS_IMETHOD    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) { return _to RemoveAttributeNode(aOldAttr, aReturn); }  \
   NS_IMETHOD    GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn) { return _to GetElementsByTagName(aName, aReturn); }  \
-  NS_IMETHOD    Normalize() { return _to Normalize(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype);
