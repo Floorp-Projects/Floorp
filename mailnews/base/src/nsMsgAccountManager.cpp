@@ -29,6 +29,7 @@
 #include "plstr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsIMsgBiffManager.h"
 
 #include "nsCRT.h"  // for nsCRT::strtok
 
@@ -38,6 +39,8 @@
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
+
 
 // use this to search all accounts for the given account and store the
 // resulting key in hashKey
@@ -113,11 +116,16 @@ public:
   NS_IMETHOD FindServersByHostname(const char* hostname,
                                    const nsIID& iid,
                                    nsISupportsArray* *serverArray);
+
   NS_IMETHOD GetIdentitiesForServer(nsIMsgIncomingServer *server,
                                     nsISupportsArray **_retval);
 
   NS_IMETHOD GetServersForIdentity(nsIMsgIdentity *identity,
                                    nsISupportsArray **_retval);
+
+  //Add/remove an account to/from the Biff Manager if it has Biff turned on.
+  nsresult addAccountToBiff(nsIMsgAccount *account);
+  nsresult removeAccountFromBiff(nsIMsgAccount *account);
   
 private:
   nsHashtable *m_accounts;
@@ -136,10 +144,15 @@ private:
                                      void *closure);
   static PRBool hashTableFindFirst(nsHashKey *aKey, void *aData,
                                    void *closure);
+
   static PRBool findIdentitiesForServer(nsHashKey *aKey,
                                         void *aData, void *closure);
   static PRBool findServersForIdentity (nsHashKey *aKey,
                                         void *aData, void *closure);
+
+  // remove all of the servers from the Biff Manager
+  static PRBool hashTableRemoveAccountFromBiff(nsHashKey *aKey, void *aData, void *closure);
+
   // nsISupportsArray enumerators
   static PRBool findServerByName(nsISupports *aElement, void *data);
   
@@ -163,6 +176,7 @@ nsMsgAccountManager::nsMsgAccountManager() :
 nsMsgAccountManager::~nsMsgAccountManager()
 {
   if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+  m_accounts->Enumerate(hashTableRemoveAccountFromBiff, this);
   delete m_accounts;
 }
 
@@ -236,9 +250,62 @@ nsMsgAccountManager::addAccount(nsIMsgAccount *account)
     if (m_accounts->Count() == 1)
       m_defaultAccount = dont_QueryInterface(account);
 
+	addAccountToBiff(account);
     return NS_OK;
 }
 
+nsresult
+nsMsgAccountManager::addAccountToBiff(nsIMsgAccount *account)
+{
+	nsresult rv;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	PRBool doBiff = PR_FALSE;
+
+	NS_WITH_SERVICE(nsIMsgBiffManager, biffManager, kMsgBiffManagerCID, &rv);
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = account->GetIncomingServer(getter_AddRefs(server));
+
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = server->GetDoBiff(&doBiff);
+	}
+
+	if(NS_SUCCEEDED(rv) && doBiff)
+	{
+		rv = biffManager->AddServerBiff(server);
+	}
+
+	return rv;
+}
+
+nsresult nsMsgAccountManager::removeAccountFromBiff(nsIMsgAccount *account)
+{
+	nsresult rv;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	PRBool doBiff = PR_FALSE;
+
+	NS_WITH_SERVICE(nsIMsgBiffManager, biffManager, kMsgBiffManagerCID, &rv);
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = account->GetIncomingServer(getter_AddRefs(server));
+
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = server->GetDoBiff(&doBiff);
+	}
+
+	if(NS_SUCCEEDED(rv) && doBiff)
+	{
+		rv = biffManager->RemoveServerBiff(server);
+	}
+
+	return rv;
+}
 
 /* get the default account. If no default account, pick the first account */
 NS_IMETHODIMP
@@ -338,6 +405,17 @@ nsMsgAccountManager::hashTableFindFirst(nsHashKey *aKey,
   return PR_FALSE;                 // stop enumerating immediately
 }
 
+// enumaration for removing accounts from the BiffManager
+PRBool nsMsgAccountManager::hashTableRemoveAccountFromBiff(nsHashKey *aKey, void *aData, void *closure)
+{
+	nsIMsgAccount* account = (nsIMsgAccount *)aData;
+	nsMsgAccountManager *accountManager = (nsMsgAccountManager*)closure;
+
+	accountManager->removeAccountFromBiff(account);
+	
+	return PR_TRUE;
+
+}
 
 
 /* nsISupportsArray getAccounts (); */

@@ -27,4 +27,5 @@ nsMessageViewDataSource.h
 nsMsgAccount.h
 nsMsgAccountManager.h
 nsMsgRDFDataSource.h
+nsMsgBiffManager.h
 

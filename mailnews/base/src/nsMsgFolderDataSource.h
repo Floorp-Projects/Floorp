@@ -131,6 +131,8 @@ protected:
 	nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
+
 	nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
@@ -146,6 +148,8 @@ protected:
   nsresult DoNewFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments);
 
+  nsresult DoFolderAssert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target);
+
   nsresult DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
 
@@ -159,6 +163,7 @@ protected:
   static nsIRDFResource* kNC_SpecialFolder;
   static nsIRDFResource* kNC_TotalMessages;
   static nsIRDFResource* kNC_TotalUnreadMessages;
+  static nsIRDFResource* kNC_Charset;
 
   // commands
   static nsIRDFResource* kNC_Delete;

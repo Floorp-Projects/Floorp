@@ -44,18 +44,19 @@ static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsIRDFResource* nsMsgFolderDataSource::kNC_Child;
-nsIRDFResource* nsMsgFolderDataSource::kNC_MessageChild;
-nsIRDFResource* nsMsgFolderDataSource::kNC_Folder;
-nsIRDFResource* nsMsgFolderDataSource::kNC_Name;
-nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder;
-nsIRDFResource* nsMsgFolderDataSource::kNC_TotalMessages;
-nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_MessageChild = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Name= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_TotalMessages= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
 
 // commands
-nsIRDFResource* nsMsgFolderDataSource::kNC_Delete;
-nsIRDFResource* nsMsgFolderDataSource::kNC_NewFolder;
-nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Delete= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_NewFolder= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages= nsnull;
 
 
 
@@ -97,6 +98,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
   NS_RELEASE2(kNC_SpecialFolder, refcnt);
   NS_RELEASE2(kNC_TotalMessages, refcnt);
   NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
+  NS_RELEASE2(kNC_Charset, refcnt);
 
   NS_RELEASE2(kNC_Delete, refcnt);
   NS_RELEASE2(kNC_NewFolder, refcnt);
@@ -146,6 +148,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::Init(const char* uri)
     mRDFService->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     mRDFService->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
     mRDFService->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
+    mRDFService->GetResource(NC_RDF_CHARSET, &kNC_Charset);
     
 	mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
     mRDFService->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
@@ -281,7 +284,13 @@ NS_IMETHODIMP nsMsgFolderDataSource::Assert(nsIRDFResource* source,
                       nsIRDFNode* target,
                       PRBool tv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+	//We don't handle tv = PR_FALSE at the moment.
+	if(NS_SUCCEEDED(rv) && tv)
+		return DoFolderAssert(folder, property, target);
+	else
+		return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::Unassert(nsIRDFResource* source,
@@ -356,6 +365,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsIMsgFolder *folder,
   (*arcs)->AppendElement(kNC_SpecialFolder);
   (*arcs)->AppendElement(kNC_TotalMessages);
   (*arcs)->AppendElement(kNC_TotalUnreadMessages);
+  (*arcs)->AppendElement(kNC_Charset);
   (*arcs)->AppendElement(kNC_Child);
   (*arcs)->AppendElement(kNC_MessageChild);
   
@@ -583,6 +593,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createTotalMessagesNode(folder, target);
 	else if (peq(kNC_TotalUnreadMessages, property))
 		rv = createUnreadMessagesNode(folder, target);
+	else if (peq(kNC_Charset, property))
+		rv = createCharsetNode(folder, target);
 	else if (peq(kNC_Child, property))
 		rv = createFolderChildNode(folder, target);
 	else if (peq(kNC_MessageChild, property))
@@ -650,6 +662,22 @@ nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
 		}
 	}
 	return rv;
+}
+
+nsresult
+nsMsgFolderDataSource::createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target)
+{
+	PRUnichar *charset;
+	nsString charsetStr;
+	nsresult rv = folder->GetCharset(&charset);
+	//We always need to return a value
+	if(NS_SUCCEEDED(rv))
+		charsetStr = charset;
+	else
+		charsetStr ="";
+	createNode(charsetStr, target);
+	return NS_OK;
+
 }
 
 nsresult 
@@ -775,6 +803,32 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
 	return rv;
 }
 
+nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target)
+{
+	nsresult rv = NS_ERROR_FAILURE;
+
+	if(peq(kNC_Charset, property))
+	{
+		nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(target));
+		if(literal)
+		{
+			PRUnichar *value;
+			rv = literal->GetValue(&value);
+			if(NS_SUCCEEDED(rv))
+			{
+				rv = folder->SetCharset(value);
+				delete[] value;
+			}
+		}
+		else
+			rv = NS_ERROR_FAILURE;
+	}
+
+	return rv;
+
+}
+
+
 nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion)
 {
@@ -790,7 +844,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 	}
 
     if (peq(kNC_Name, property) || peq(kNC_SpecialFolder, property) || peq(kNC_TotalMessages, property)
-		|| peq(kNC_TotalUnreadMessages, property))
+		|| peq(kNC_TotalUnreadMessages, property) || peq(kNC_Charset, property))
 	{
 		nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));
 
