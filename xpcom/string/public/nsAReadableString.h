@@ -737,7 +737,7 @@ basic_nsAReadableString<CharT>::FindChar( CharT aChar, PRUint32 aOffset ) const
         PRInt32 fragmentLength = iter.size_forward();
         const CharT* charFoundAt = nsCharTraits<CharT>::find(iter.get(), fragmentLength, aChar);
         if ( charFoundAt )
-          return lengthSearched + (charFoundAt-iter.get());
+          return lengthSearched + (charFoundAt-iter.get()) + aOffset;
 
         lengthSearched += fragmentLength;
         iter.advance(fragmentLength);
