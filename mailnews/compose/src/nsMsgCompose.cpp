@@ -2308,10 +2308,10 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       compose->ProcessReplyFlags();
 
       // Close the window ONLY if we are not going to do a save operation
-      PRUnichar *fieldsFCC = nsnull;
-      if (NS_SUCCEEDED(compFields->GetFcc(&fieldsFCC)))
+      nsXPIDLString fieldsFCC;
+      if (NS_SUCCEEDED(compFields->GetFcc(getter_Copies(fieldsFCC))))
       {
-        if (fieldsFCC && *fieldsFCC)
+        if (!fieldsFCC.IsEmpty())
         {
           if (Compare(nsDependentString(fieldsFCC),
                       NS_LITERAL_STRING("nocopy://"),
