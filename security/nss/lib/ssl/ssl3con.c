@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.5 2000/05/18 15:32:18 mcgreer%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.6 2000/05/24 03:35:23 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -1813,6 +1813,7 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
     SECItem           params;
     int               keySize;
     CK_FLAGS          keyFlags;
+    CK_VERSION        pms_version;
     CK_SSL3_KEY_MAT_PARAMS key_material_params;
     CK_SSL3_KEY_MAT_OUT    returnedKeys;
     CK_SSL3_MASTER_KEY_DERIVE_PARAMS master_params;
@@ -1832,7 +1833,7 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
     }
 
     if (pms || !pwSpec->master_secret) {
-	master_params.pVersion                     = NULL;
+	master_params.pVersion                     = &pms_version;
 	master_params.RandomInfo.pClientRandom     = cr;
 	master_params.RandomInfo.ulClientRandomLen = SSL3_RANDOM_LENGTH;
 	master_params.RandomInfo.pServerRandom     = sr;
@@ -1846,6 +1847,15 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
 	pwSpec->master_secret = PK11_DeriveWithFlags((PK11SymKey *)pms, 
 					master_derive, &params, key_derive, 
 					CKA_DERIVE, 0, keyFlags);
+	if (pwSpec->master_secret != NULL && ss->detectRollBack) {
+	    SSL3ProtocolVersion client_version;
+	    client_version = pms_version.major << 8 | pms_version.minor;
+	    if (client_version != ss->clientHelloVersion) {
+		/* Destroy it.  Version roll-back detected. */
+		PK11_FreeSymKey(pwSpec->master_secret);
+	    	pwSpec->master_secret = NULL;
+	    }
+	}
 	if (pwSpec->master_secret == NULL) {
 	    /* Generate a faux master secret in the same slot as the old one. */
 	    PK11SlotInfo * slot = PK11_GetSlotFromKey((PK11SymKey *)pms);
@@ -2556,7 +2566,8 @@ ssl3_SendClientHello(sslSocket *ss)
 	return rv;	/* err set by ssl3_AppendHandshake* */
     }
 
-    rv = ssl3_AppendHandshakeNumber(ss, ss->version, 2);
+    ss->clientHelloVersion = ss->version;
+    rv = ssl3_AppendHandshakeNumber(ss, ss->clientHelloVersion, 2);
     if (rv != SECSuccess) {
 	return rv;	/* err set by ssl3_AppendHandshake* */
     }
@@ -4545,7 +4556,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     tmp = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
     if (tmp < 0)
 	goto loser;		/* malformed, alert already sent */
-    version = (SSL3ProtocolVersion)tmp;
+    ss->clientHelloVersion = version = (SSL3ProtocolVersion)tmp;
     rv = ssl3_NegotiateVersion(ss, version);
     if (rv != SECSuccess) {
 	/* We can't do the usual isTLS test here, because the negotiated
@@ -4968,6 +4979,7 @@ ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, int length)
     suite_length = (buffer[3] << 8) | buffer[4];
     sid_length   = (buffer[5] << 8) | buffer[6];
     rand_length  = (buffer[7] << 8) | buffer[8];
+    ss->clientHelloVersion = version;
 
     rv = ssl3_NegotiateVersion(ss, version);
     if (rv != SECSuccess) {
@@ -5722,8 +5734,8 @@ ssl3_GenerateRSAPMS(sslSocket *ss, ssl3CipherSpec *spec,
     }
 
     /* Generate the pre-master secret ...  */
-    version.major = MSB(ss->version);
-    version.minor = LSB(ss->version);
+    version.major = MSB(ss->clientHelloVersion);
+    version.minor = LSB(ss->clientHelloVersion);
 
     param.data = (unsigned char *)&version;
     param.len  = sizeof version;
@@ -5777,7 +5789,10 @@ ssl3_HandleRSAClientKeyExchange(sslSocket *ss,
 	}
     }
     /*
-     * decrypt out of the incoming buffer
+     * decrypt pms out of the incoming buffer
+     * Note: CKM_SSL3_PRE_MASTER_KEY_GEN is NOT the mechanism used to do 
+     *	the unwrap.  Rather, it is the mechanism with which the unwrapped
+     *	pms will be used.
      */
     pms = PK11_PubUnwrapSymKey(serverKey, &enc_pms,
 			       CKM_SSL3_PRE_MASTER_KEY_GEN, CKA_DERIVE, 0);
