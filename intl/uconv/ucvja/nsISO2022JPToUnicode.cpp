@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#if 0
 
 #include "nsIComponentManager.h"
 #include "nsISO2022JPToUnicode.h"
@@ -259,3 +260,4 @@ NS_IMETHODIMP nsISO2022JPToUnicode::Reset()
   mCharset = kASCII;
   return nsBufferDecoderSupport::Reset();
 }
+#endif
