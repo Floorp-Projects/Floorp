@@ -47,6 +47,7 @@
 #include "nsProxiedService.h"
 
 #include "nsNetUtil.h"
+#include "nsCRT.h"
 
 /* Network */
 
@@ -171,9 +172,7 @@ typedef struct
  * + 17 leap years * 86,400 additional sec/leapyear =     1,468,800 seconds
  *                                                  = 2,208,988,800 seconds
  */
-//turned off until we finish testing it
-//#if defined(XP_MAC)
-#if 0
+#if defined(XP_MAC)
 #define NEED_TO_FIX_4X_COOKIES 1
 #define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
 #endif /* XP_MAC */
@@ -350,7 +349,7 @@ extern "C" void ProfileMigrationController(void *data)
 NS_IMETHODIMP
 nsPrefMigration::WindowCloseCallback()
 {
-
+  
   if (mPMProgressWindow)
     mPMProgressWindow->Close();
 
@@ -1359,8 +1358,9 @@ nsPrefMigration::DoTheCopy(nsIFileSpec * oldPath, nsIFileSpec * newPath, PRBool 
 
 #if defined(NEED_TO_FIX_4X_COOKIES)
 
-PRInt32
-GetLine(nsInputFileStream strm, nsAutoString& aLine) {
+static PRInt32
+GetCookieLine(nsInputFileStream strm, nsAutoString& aLine) 
+{
 
   /* read the line */
   aLine.Truncate();
@@ -1374,15 +1374,15 @@ GetLine(nsInputFileStream strm, nsAutoString& aLine) {
     }
 
     aLine.Append(c);
-    if (c == '\n') {
+    if ((c == CR) || (c == LF)) {
       break;
     }
   }
   return 0;
 }
 
-nsresult
-Put(nsOutputFileStream strm, const nsString& aLine)
+static nsresult
+PutCookieLine(nsOutputFileStream strm, const nsString& aLine)
 {
   /* allocate a buffer from the heap */
   char * cp = aLine.ToNewCString();
@@ -1409,23 +1409,29 @@ Fix4xCookies(nsIFileSpec * profilePath) {
   }
 
   /* open input file */
-  nsInputFileStream inStream(profileDirectory + COOKIES_FILE_NAME_IN_4x);
+  nsFileSpec oldCookies(profileDirectory);
+  oldCookies += COOKIES_FILE_NAME_IN_4x;
+  
+  nsInputFileStream inStream(oldCookies);
   if (!inStream.is_open()) {
     return NS_ERROR_FAILURE;
   }
 
   /* open output file */
-  nsOutputFileStream outStream(profileDirectory + COOKIES_FILE_NAME_IN_5x);
+  nsFileSpec newCookies(profileDirectory);
+  newCookies += COOKIES_FILE_NAME_IN_5x;
+  
+  nsOutputFileStream outStream(newCookies);
   if (!outStream.is_open()) {
     return NS_ERROR_FAILURE;
   }
 
-  while (GetLine(inStream,inBuffer) != -1){
+  while (GetCookieLine(inStream,inBuffer) != -1){
 
     /* skip line if it is a comment or null line */
     if (inBuffer.CharAt(0) == '#' || inBuffer.CharAt(0) == CR ||
         inBuffer.CharAt(0) == LF || inBuffer.CharAt(0) == 0) {
-      Put(outStream, inBuffer);
+      PutCookieLine(outStream, inBuffer);
       continue;
     }
 
@@ -1463,7 +1469,7 @@ Fix4xCookies(nsIFileSpec * profilePath) {
 
     /* generate the output buffer and write it to file */
     outBuffer = prefix + '\t' + dateString + '\t' + suffix;
-    Put(outStream, outBuffer);
+    PutCookieLine(outStream, outBuffer);
   }
 
   inStream.close();
