@@ -1326,17 +1326,26 @@ nsHTMLEditor::SplitTableCell()
   nsCOMPtr<nsIDOMElement> cell2;
 //  PRInt32 startRowIndex2, startColIndex2, rowSpan2, colSpan2, actualRowSpan2, actualColSpan2;
 //  PRBool  isSelected2;
+  nsAutoString tagName;
+  PRInt32 selCount;
+  nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(targetCell), tagName, selCount);
+  if (NS_FAILED(res)) return res;
+  // We're not in a cell, or there's > 1 selected
+  if(!targetCell || selCount > 1) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   nsAutoEditBatch beginBatching(this);
+
   //Don't let Rules System change the selection
   nsAutoTxnsConserveSelection dontChangeSelection(this);
 
+//////////////////////////////////////////////////// IN PROGRESS!
+
   // Get cell, table, etc. at selection anchor node
-  nsresult res = GetCellContext(nsnull,
-                                getter_AddRefs(table), 
-                                getter_AddRefs(targetCell),
-                                nsnull, nsnull,
-                                &startRowIndex, &startColIndex);
+  res = GetCellContext(nsnull,
+                       getter_AddRefs(table), 
+                       getter_AddRefs(targetCell),
+                       nsnull, nsnull,
+                       &startRowIndex, &startColIndex);
   if (NS_FAILED(res)) return res;
   if(!table || !targetCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 

@@ -129,30 +129,26 @@ nsEditorShellMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
   nsresult res = mouseEvent->GetClickCount(&clickCount);
   if (NS_FAILED(res)) return res;
 
-  // This is the XP way to detect double click
-  if (clickCount == 2)
+  nsCOMPtr<nsIDOMNode> node;
+  if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(node))) && node)
   {
-    nsCOMPtr<nsIDOMNode> node;
-    if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(node))) && node)
+    // We are only interested in elements, not text nodes
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+    if (element)
     {
-      // We are only interested in elements, not text nodes
-      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-      if (element)
-      {
-        PRInt32 x,y;
-        res = mouseEvent->GetClientX(&x);
-        if (NS_FAILED(res)) return res;
+      PRInt32 x,y;
+      res = mouseEvent->GetClientX(&x);
+      if (NS_FAILED(res)) return res;
 
-        res = mouseEvent->GetClientY(&y);
-        if (NS_FAILED(res)) return res;
+      res = mouseEvent->GetClientY(&y);
+      if (NS_FAILED(res)) return res;
 
-        // Set selection to node clicked on
-        mEditorShell->SelectElement(element);
+      // Let editor decide what to do with this
+      PRBool handled;
+      mEditorShell->HandleMouseClickOnElement(element, clickCount, x, y, &handled);
 
-        mEditorShell->EditElementProperties(element, x, y);
-        // We are handling the event
+      if (handled)
         return NS_ERROR_BASE; // consumed
-      }
     }
   }
   return NS_OK; // didn't handle event

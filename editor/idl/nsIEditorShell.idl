@@ -193,12 +193,11 @@ interface nsIEditorShell : nsISupports
   
   /** Element insert and property editing */
 
-  /** Launch the "Advanced Edit" property dialog
-    *   for the supplied element
-    * (Called by the DblClick handler in EditorShellMouseListener owned by EditorShell)
-    * Use x and y are hints to allow different behavior near left and top borders, etc.
+  /** Let editor handle clicking on a non-text element
+    *  to do selection, property editing, etc.
+    * Returns true if we "consumed" the event
     */
-  void EditElementProperties(in nsIDOMElement element, in PRInt32 x, in PRInt32 y);
+  boolean HandleMouseClickOnElement(in nsIDOMElement element, in PRInt32 clickCount, in PRInt32 x, in PRInt32 y);
 
   /** Return an element only if it is the only node selected,
     *    such as an image, horizontal rule, etc.
