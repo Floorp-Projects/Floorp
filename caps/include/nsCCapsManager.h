@@ -41,6 +41,7 @@ class nsCCapsManager : public nsICapsManager {
 public:
 
 NS_DECL_ISUPPORTS
+NS_DECL_NSICAPSMANAGER
 
 nsPrivilegeManager * thePrivilegeManager;
 nsPrincipalManager * thePrincipalManager;
@@ -58,40 +59,11 @@ NS_IMETHOD
 CreateCertificatePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsIPrincipal** prin);
 
 NS_IMETHOD
-GetPermission(nsIPrincipal * prin, nsITarget * target, PRInt16 * privilegeState);
-
-NS_IMETHOD
-SetPermission(nsIPrincipal * prin, nsITarget* target, PRInt16 privilegeState);
-
-NS_IMETHOD
-AskPermission(nsIPrincipal * prin, nsITarget * target, PRInt16 * privilegeState);
-
-NS_IMETHOD
-Initialize(PRBool * result);
-
-NS_IMETHOD
-InitializeFrameWalker(nsICapsSecurityCallbacks * aInterface);
-
-NS_IMETHOD
 RegisterPrincipal(nsIPrincipal * prin);
-
-NS_IMETHOD
-EnablePrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *result);
-
-NS_IMETHOD
-IsPrivilegeEnabled(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *result);
-
-NS_IMETHOD
-RevertPrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *result);
-
-NS_IMETHOD
-DisablePrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *result);
 
 //NS_IMETHOD
 //CreateMixedPrincipalArray(void * zig, const char * name, const char* codebase, nsIPrincipalArray * * result);
 
-NS_IMETHOD
-IsAllowed(void * annotation, const char * target, PRBool * result);
 
 static nsCCapsManager *
 GetSecurityManager();

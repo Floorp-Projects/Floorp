@@ -27,39 +27,7 @@ class nsPrivilege : public nsIPrivilege {
 public:
 
 	NS_DECL_ISUPPORTS
-
-	NS_IMETHOD
-	GetState(PRInt16 * state);
-
-	NS_IMETHOD 
-	SetState(PRInt16 state);
-
-	NS_IMETHOD 
-	GetDuration(PRInt16 * duration);
-
-	NS_IMETHOD 
-	SetDuration(PRInt16 duration);
-
-	NS_IMETHOD
-	SameState(nsIPrivilege * other, PRBool * result);
-
-	NS_IMETHOD
-	SameDuration(nsIPrivilege * other, PRBool * result);
-
-	NS_IMETHOD
-	IsAllowed(PRBool * result);
-
-	NS_IMETHOD
-	IsForbidden(PRBool * result);
-
-	NS_IMETHOD
-	IsBlank(PRBool * result);
-
-	NS_IMETHOD
-	ToString(char * * result);
-
-	NS_IMETHOD
-	Equals(nsIPrivilege * perm, PRBool * res);
+    NS_DECL_NSIPRIVILEGE
 
 	nsPrivilege(PRInt16 state, PRInt16 duration);
 	virtual ~nsPrivilege(void);

@@ -50,6 +50,7 @@ class nsTarget : public nsITarget {
 public:
 
 	NS_DECL_ISUPPORTS
+    NS_DECL_NSITARGET
 
 	nsTarget(char *name, nsIPrincipal * prin, 
 		PRInt32 risk = JavaSecUI_targetRiskHigh(), 
@@ -84,39 +85,9 @@ public:
 
 	nsIPrivilege * CheckPrivilegeEnabled(nsIPrincipal * p, void * data);
 
-	NS_IMETHOD RegisterTarget(void * context, nsITarget * * target);
-
-	NS_IMETHOD EnablePrivilege(nsIPrincipal * prin, void * data, nsIPrivilege * * priv);
-
 //	virtual nsIPrivilege * EnablePrivilege(nsIPrincipal *prin, void *data);
 //seems more likely to bleong to nsIPrivilege
 	nsIPrivilege * GetPrincipalPrivilege(nsIPrincipal *prin, void *data);
-
-	NS_IMETHOD GetFlattenedTargetArray(nsTargetArray * * targs);
-
-	NS_IMETHOD GetRisk(char * * risk);
-
-	NS_IMETHOD GetRiskColor(char * * riskColor);
-
-	NS_IMETHOD GetDescription(char * * description);
-
-	NS_IMETHOD GetDetailDescription(char * * detailedDescription);
-
-	NS_IMETHOD GetHelpURL(char * * helpUrl);
-
-	NS_IMETHOD GetDetailedInfo(void *a, char * * dinfo);
-
-	NS_IMETHOD GetPrincipal (nsIPrincipal * * prin);
-
-	NS_IMETHOD GetName(char * * name);
-
-	NS_IMETHOD IsRegistered(PRBool * result);
-
-	NS_IMETHOD Equals(nsITarget * other, PRBool * eq);
-
-	NS_IMETHOD HashCode(PRUint32 * code);
-
-	NS_IMETHOD ToString(char * * result);
 
 private:
 

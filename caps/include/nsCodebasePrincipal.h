@@ -34,6 +34,8 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_CODEBASEPRINCIPAL_CID)
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINCIPAL
+  NS_DECL_NSICODEBASEPRINCIPAL
 
   nsCodebasePrincipal();
 
@@ -41,36 +43,6 @@ public:
   Init(PRInt16 type, nsIURI * uri);
 
   virtual ~nsCodebasePrincipal(void);
-
-  NS_IMETHOD
-  GetURLString(char ** cburl);
-  
-  NS_IMETHOD
-  GetURL(nsIURI * * url);
-
-  NS_IMETHOD 
-  IsCodebaseExact(PRBool * result);
-
-  NS_IMETHOD
-  IsCodebaseRegex(PRBool * result);
-
-  NS_IMETHOD
-  ToJSPrincipal(JSPrincipals * * jsprin);
-  
-  NS_IMETHOD
-  GetType(PRInt16 * type);
-
-  NS_IMETHOD
-  IsSecure(PRBool * result);
-
-  NS_IMETHOD
-  ToString(char ** result);
-
-  NS_IMETHOD
-  HashCode(PRUint32 * code);
-
-  NS_IMETHOD
-  Equals(nsIPrincipal * other, PRBool * result);
 
 protected:
   nsIURI * itsURL;
