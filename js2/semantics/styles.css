@@ -30,9 +30,9 @@ DT {font-style: italic; margin-top: 3pt}
 .grammar-lhs {}
 .grammar-rhs {margin-left: 9pt;}
 .grammar-argument {margin-left: 18pt; margin-top: 6pt; margin-bottom: 6pt}
-.semantics {margin-left: 9pt; margin-top: 3pt; margin-bottom: 3pt}
-.semantics-next {margin-left: 27pt; margin-bottom: 3pt}
-.semantic-comment {margin-left: 9pt; margin-top: 9pt; margin-bottom: 0pt}
+.semantics {margin-left: 9pt; margin-top: 6pt; margin-bottom: 3pt}
+.semantics-next {margin-left: 27pt; margin-top: 0pt; margin-bottom: 3pt}
+.semantic-comment {margin-left: 9pt; margin-top: 12pt; margin-bottom: 0pt}
 
 .symbol {font-family: Symbol}
 .unicode {font-family: "Lucida Sans Unicode", serif}
