@@ -372,7 +372,23 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 NS_METHOD
 nsWebShellWindow::Close()
 {
-  return nsXULWindow::Destroy();
+#ifdef XP_MAC // Anyone still using native menus should add themselves here.
+  // unregister as document listener
+  // this is needed for menus
+   nsCOMPtr<nsIContentViewer> cv;
+   if(mDocShell)
+ 	   mDocShell->GetContentViewer(getter_AddRefs(cv));
+   nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+   if(docv)
+      {
+      nsCOMPtr<nsIDocument> doc;
+      docv->GetDocument(*getter_AddRefs(doc));
+      if(doc)
+         doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+      }
+#endif
+   
+   return nsXULWindow::Destroy();
 }
 
 

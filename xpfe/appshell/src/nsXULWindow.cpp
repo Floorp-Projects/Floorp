@@ -288,8 +288,8 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       {
       nsCOMPtr<nsIDocument> doc;
       docv->GetDocument(*getter_AddRefs(doc));
-      if(doc)
-         doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+/*      if(doc)
+         doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));  */
       }
 #endif
 
