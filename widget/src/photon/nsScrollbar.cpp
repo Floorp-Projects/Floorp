@@ -61,29 +61,34 @@ nsScrollbar::~nsScrollbar ()
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::CreateNative (PtWidget_t * parentWindow)
 {
-	nsresult  res = NS_ERROR_FAILURE;
-	PhPoint_t pos;
-	PhDim_t   dim;
-	PtArg_t   arg[4];
-	
-	pos.x = mBounds.x;
-	pos.y = mBounds.y;
-	dim.w = mBounds.width;
-	dim.h = mBounds.height;
-	
-	PtSetArg( &arg[0], Pt_ARG_ORIENTATION, mOrientation, 0 );
-	PtSetArg( &arg[1], Pt_ARG_POS, &pos, 0 );
-	PtSetArg( &arg[2], Pt_ARG_DIM, &dim, 0 );
-	PtSetArg( &arg[3], Pt_ARG_FLAGS, 0, Pt_GETS_FOCUS);
-	mWidget = PtCreateWidget( PtScrollbar, parentWindow, 4, arg );
-	if( mWidget ) {
-		res = NS_OK;
-		
-		/* Add an Activate Callback */
-		PtAddCallback(mWidget, Pt_CB_SCROLL_MOVE, handle_scroll_move_event, this);
-	}
-	return res;
+  nsresult  res = NS_ERROR_FAILURE;
+  PhPoint_t pos;
+  PhDim_t   dim;
+  PtArg_t   arg[5];
+
+  pos.x = mBounds.x;
+  pos.y = mBounds.y;
+  dim.w = mBounds.width;
+  dim.h = mBounds.height;
+
+  PtSetArg( &arg[0], Pt_ARG_ORIENTATION, mOrientation, 0 );
+  PtSetArg( &arg[1], Pt_ARG_POS, &pos, 0 );
+  PtSetArg( &arg[2], Pt_ARG_DIM, &dim, 0 );
+  PtSetArg( &arg[3], Pt_ARG_FLAGS, 0, Pt_GETS_FOCUS);
+	PtSetArg( &arg[4], Pt_ARG_BASIC_FLAGS, Pt_ALL_INLINES, -1 );
+  mWidget = PtCreateWidget( PtScrollbar, parentWindow, 5, arg );
+  if( mWidget )
+  {
+    res = NS_OK;
+
+    /* Add an Activate Callback */
+    PtAddCallback(mWidget, Pt_CB_SCROLL_MOVE, handle_scroll_move_event, this);
+  }
+
+  return res;
 }
+
+
 
 //-------------------------------------------------------------------------
 //
