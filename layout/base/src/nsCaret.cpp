@@ -49,6 +49,11 @@
 
 #include "nsCaret.h"
 
+// Because of drawing issues, we currently always make a new RC. See bug 28068
+// Before removing this, stuff will need to be fixed and tested on all platforms.
+// For example, turning this off on Mac right now causes drawing problems on pages
+// with form elements.
+#define DONT_REUSE_RENDERING_CONTEXT
 
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
@@ -63,6 +68,7 @@ nsCaret::nsCaret()
 , mReadOnly(PR_TRUE)
 , mDrawn(PR_FALSE)
 , mLastCaretFrame(nsnull)
+, mLastCaretView(nsnull)
 , mLastContentOffset(0)
 {
   NS_INIT_REFCNT();
@@ -326,6 +332,7 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
   if (mLastCaretFrame == aFrame)
   {
     mLastCaretFrame = nsnull;     // frames are not refcounted.
+    mLastCaretView = nsnull;
     mLastContentOffset = 0;
   }
   
@@ -432,63 +439,76 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 {
   if (!mDomSelectionWeak)
     return PR_FALSE;
-  nsCOMPtr<nsIDOMSelection> domSelection =  do_QueryReferent(mDomSelectionWeak);
-  PRBool isCollapsed;
+  
+  nsCOMPtr<nsIDOMSelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  if (!domSelection) return PR_FALSE;
+  
+  PRBool isCollapsed = PR_FALSE;
+  domSelection->GetIsCollapsed(&isCollapsed);
+  if (!isCollapsed) return PR_FALSE;
 
-  if (domSelection && NS_SUCCEEDED(domSelection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
-  {
-    // start and end parent should be the same since we are collapsed
-    nsCOMPtr<nsIDOMNode>  focusNode;
-    PRInt32 contentOffset;
-    
-    if (NS_SUCCEEDED(domSelection->GetFocusNode(getter_AddRefs(focusNode))) && focusNode &&
-        NS_SUCCEEDED(domSelection->GetFocusOffset(&contentOffset)))
-    {
-      nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
+  // start and end parent should be the same since we are collapsed
+  nsCOMPtr<nsIDOMNode>  focusNode;
+  domSelection->GetFocusNode(getter_AddRefs(focusNode));
+  if (!focusNode) return PR_FALSE;
+  
+  PRInt32 contentOffset;
+  if (NS_FAILED(domSelection->GetFocusOffset(&contentOffset)))
+    return PR_FALSE;
+  
+  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(focusNode);
+  if (!contentNode) return PR_FALSE;
       
-      if (contentNode)
-      {
-        nsIFrame* theFrame = nsnull;
-        PRInt32   theFrameOffset = 0;
-        nsresult err;
-        //get frame selection and find out what frame to use...
-        nsCOMPtr<nsIFrameSelection> frameSelection;
-        nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-        if (!presShell)
-          return PR_FALSE;
-          
-        err = presShell->GetFrameSelection(getter_AddRefs(frameSelection));
-        if (NS_FAILED(err) || !frameSelection)
-          return PR_FALSE;
+  //get frame selection and find out what frame to use...
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell)
+    return PR_FALSE;
+    
+  nsCOMPtr<nsIFrameSelection> frameSelection;
+  presShell->GetFrameSelection(getter_AddRefs(frameSelection));
+  if (!frameSelection)
+    return PR_FALSE;
 
-        PRBool hintRight;
-        domSelection->GetHint(&hintRight);//translate hint.
-        nsIFrameSelection::HINT hint;
-        if (hintRight)
-          hint = nsIFrameSelection::HINTRIGHT;
-        else
-          hint = nsIFrameSelection::HINTLEFT;
+  PRBool hintRight;
+  domSelection->GetHint(&hintRight);//translate hint.
+  nsIFrameSelection::HINT hint;
+  hint = (hintRight) ? nsIFrameSelection::HINTRIGHT : nsIFrameSelection::HINTLEFT;
 
-        err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, hint, &theFrame, &theFrameOffset);
-        if (NS_FAILED(err))
-          return PR_FALSE;
+  nsIFrame* theFrame = nsnull;
+  PRInt32   theFrameOffset = 0;
 
-        // mark the frame, so we get notified on deletion.
-        // frames are never unmarked, which means that we'll touch every frame we visit.
-        // this is not ideal.
-        nsFrameState frameState;
-        theFrame->GetFrameState(&frameState);
-        frameState |= NS_FRAME_EXTERNAL_REFERENCE;
-        theFrame->SetFrameState(frameState);
-        
-        mLastCaretFrame = theFrame;
-        mLastContentOffset = theFrameOffset;
-        return PR_TRUE;
-      }
-    }
+  nsresult rv = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, hint, &theFrame, &theFrameOffset);
+  if (NS_FAILED(rv) || !theFrame)
+    return PR_FALSE;
+
+  // now we have a frame, check whether it's appropriate to show the caret here
+  const nsStyleUserInterface* userinterface;
+  theFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+  if (userinterface)
+  {
+    if (
+#ifdef SUPPORT_USER_MODIFY
+          // editable content still defaults to NS_STYLE_USER_MODIFY_READ_ONLY at present. See bug 15284
+          (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
+#endif          
+          (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
+          (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
+    {
+      return PR_FALSE;
+    }  
   }
-
-  return PR_FALSE;
+  
+  // mark the frame, so we get notified on deletion.
+  // frames are never unmarked, which means that we'll touch every frame we visit.
+  // this is not ideal.
+  nsFrameState frameState;
+  theFrame->GetFrameState(&frameState);
+  frameState |= NS_FRAME_EXTERNAL_REFERENCE;
+  theFrame->SetFrameState(frameState);
+  
+  mLastCaretFrame = theFrame;
+  mLastContentOffset = theFrameOffset;
+  return PR_TRUE;
 }
 
 
@@ -510,9 +530,11 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 
   viewOffset.x = 0;
   viewOffset.y = 0;
+  
+  nsPoint   withinViewOffset(0, 0);
   // get the offset of this frame from its parent view (walks up frame hierarchy)
   nsIView* theView = nsnull;
-  caretFrame->GetOffsetFromView(presContext, viewOffset, &theView);
+  caretFrame->GetOffsetFromView(presContext, withinViewOffset, &theView);
   if (theView == nsnull) return;
   
   nsIView*    returnView = nsnull;    // views are not refcounted
@@ -525,6 +547,8 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     nsIView*            startingView = theView;
     nsIScrollableView*  scrollableView = nsnull;
   
+    nsPoint             drawViewOffset(0, 0);         // offset to the view we are using to draw
+    
     // walk up to the first view with a widget
     do {
       theView->GetPosition(&x, &y);
@@ -535,19 +559,20 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 
       PRBool hasWidget;
       theView->HasWidget(&hasWidget);
-      
       if (hasWidget)
       {
         returnView = theView;
         break;
       }
-      viewOffset.x += x;
-      viewOffset.y += y;
+      drawViewOffset.x += x;
+      drawViewOffset.y += y;
       
       theView->GetParent(theView);
     } while (theView);
-  
-  
+    
+    viewOffset = withinViewOffset;
+    viewOffset += drawViewOffset;
+    
     if (scrollableView)
     {
       const nsIView*      clipView = nsnull;
@@ -558,7 +583,7 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
       clipView->GetBounds(bounds);
       scrollableView->GetScrollPosition(bounds.x, bounds.y);
       
-      bounds += viewOffset;   // offset to coords of returned view
+      bounds += drawViewOffset;   // offset to coords of returned view
       outClipRect = bounds;
     }
     else
@@ -626,14 +651,22 @@ PRBool nsCaret::MustDrawCaret()
 
 /*-----------------------------------------------------------------------------
 
-  DrawCaretWithContext
-  
-  By this point, the caret rect should have been set up.
-  
+  DrawCaret
+    
 ----------------------------------------------------------------------------- */
 
-void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
+void nsCaret::DrawCaret()
 {
+  // do we need to draw the caret at all?
+  if (!MustDrawCaret())
+    return;
+  
+  // if we are drawing, not erasing, then set up the frame etc.
+  if (!mDrawn)
+  {
+    if (!SetupDrawingFrameAndOffset())
+      return;
+  }
   
   NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
   
@@ -658,37 +691,44 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
   
   frameRect += viewOffset;
 
-  nsCOMPtr<nsIPresContext> presContext;
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (presShell)
-  {
-    if (NS_FAILED(presShell->GetPresContext(getter_AddRefs(presContext))))
-      return;
-  }
-  else
+  if (!presShell) return;
+  
+  nsCOMPtr<nsIPresContext> presContext;
+  if (NS_FAILED(presShell->GetPresContext(getter_AddRefs(presContext))))
     return;
 
-  // make a rendering context, if we didn't get passed one
-  nsCOMPtr<nsIRenderingContext> localRC = do_QueryInterface(inRendContext);   // OK if inRendContext is null
-  if (!localRC)
+  // if the view changed, or we don't have a rendering context, make one
+  // because of drawing issues, always make a new RC at the momemt. See bug 28068
+  if (
+#ifdef DONT_REUSE_RENDERING_CONTEXT
+      PR_TRUE ||
+#endif
+      (mLastCaretView != drawingView) || !mRendContext)
   {
+    mRendContext = nsnull;    // free existing one if we have one
+    
     nsCOMPtr<nsIDeviceContext>    dx;
-
     if (NS_FAILED(presContext->GetDeviceContext(getter_AddRefs(dx))) || !dx)
       return;
       
-    if (NS_FAILED(dx->CreateRenderingContext(drawingView, *getter_AddRefs(localRC))) || !localRC)
-      return;
+    if (NS_FAILED(dx->CreateRenderingContext(drawingView, *getter_AddRefs(mRendContext))) || !mRendContext)
+      return;      
   }
-  
+
+  // push a known good state
+  mRendContext->PushState();
+
+  // views are not refcounted
+  mLastCaretView = drawingView;
+
   if (!mDrawn)
   {
     nsPoint   framePos(0, 0);
     nsRect    caretRect = frameRect;
     
-    mLastCaretFrame->GetPointFromOffset(presContext, localRC, mLastContentOffset, &framePos);
+    mLastCaretFrame->GetPointFromOffset(presContext, mRendContext, mLastContentOffset, &framePos);
     caretRect += framePos;
-
     
     //printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
     if(mCaretTwipsWidth < 0)
@@ -721,52 +761,17 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
       inRendContext.SetColor(NS_RGB(85, 85, 85));   // we are drawing it; gray
     */
     
-  localRC->SetColor(NS_RGB(255,255,255));
-  localRC->InvertRect(mCaretRect);
+  mRendContext->SetColor(NS_RGB(255,255,255));
+  mRendContext->InvertRect(mCaretRect);
+
+  PRBool emptyClip;   // I know what you're thinking. "Did he fire six shots or only five?"
+  mRendContext->PopState(emptyClip);
+
   ToggleDrawnStatus();
 
-}
-
-//-----------------------------------------------------------------------------
-void nsCaret::DrawCaret()
-{
-  // do we need to draw the caret at all?
-  if (!MustDrawCaret())
-    return;
-  
-  // if we are drawing, not erasing, then set up the frame etc.
-  if (!mDrawn)
-  {
-    if (! SetupDrawingFrameAndOffset())
-      return;
-  }
-      
-  DrawCaretWithContext(nsnull);
-}
-
-
-//-----------------------------------------------------------------------------
-void nsCaret::RefreshDrawCaret(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect)
-{
-/*  
-  if (! SetupDrawingFrameAndOffset())
-    return;
-
-  NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
-  
-  nsPoint   viewOffset(0, 0);
-  nsIView   *drawingView;
-  //GetViewForRendering(viewOffset, drawingView);
-
-  mLastCaretFrame->GetOffsetFromView(viewOffset, &drawingView);
-
-  // are we in the view that is being painted?
-  if (drawingView == nsnull || drawingView != aView)
-    return;
-  
-  mDrawn = PR_FALSE;    // we're rendering to a view that is being redrawn
-  DrawCaretWithContext(inRendContext);
-*/
+#ifdef DONT_REUSE_RENDERING_CONTEXT
+  mRendContext = nsnull;
+#endif
 }
 
 #ifdef XP_MAC
