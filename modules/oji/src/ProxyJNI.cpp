@@ -26,6 +26,7 @@
 #include "nsHashtable.h"
 #include "nsVector.h"
 #include "plstr.h"
+#include "jvmmgr.h"
 
 #include "ProxyJNI.h"
 
@@ -235,7 +236,7 @@ private:
 	static ProxyJNIEnv& nsJNIEnvRef(JNIEnv* env) { return *(ProxyJNIEnv*)env; }
 
 	nsISecureJNI2* operator->() { return mSecureEnv; }
-	nsISecurityContext* getContext() { return mContext; }
+	nsISecurityContext* getContext() { return JVM_GetJSSecurityContext(); }
 
 	static jint JNICALL GetVersion(JNIEnv* env)
 	{
@@ -371,7 +372,9 @@ private:
 		JNIMethod* method = (JNIMethod*)methodID;
 		MarshalledArgs jargs(method, args);
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, jargs, &outObject, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, jargs, &outObject, securityContext);
+		securityContext->Release();
 		
 		return outObject;
 	}
@@ -381,7 +384,9 @@ private:
 		jobject outObject = NULL;
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		JNIMethod* method = (JNIMethod*)methodID;
-		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, args, &outObject, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, args, &outObject, securityContext);
+		securityContext->Release();
 		return outObject;
 	}
 
@@ -428,7 +433,9 @@ private:
 	{
 		jvalue outValue = { NULL };
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue, securityContext);
+		securityContext->Release();
 		return outValue;
 	}
 	
@@ -443,7 +450,9 @@ private:
 	{
 		jvalue unusedValue;
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallMethod(jvoid_type, obj, method->mMethodID, args, &unusedValue, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->CallMethod(jvoid_type, obj, method->mMethodID, args, &unusedValue, securityContext);
+		securityContext->Release();
 	}
 
 	static void InvokeVoidMethod(JNIEnv *env, jobject obj, JNIMethod* method, va_list args)
@@ -528,7 +537,9 @@ private:
 	{
 		jvalue outValue = { NULL };
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue, securityContext);
+		securityContext->Release();
 		return outValue;
 	}
 	
@@ -543,7 +554,9 @@ private:
 	{
 		jvalue unusedValue;
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallNonvirtualMethod(jvoid_type, obj, clazz, method->mMethodID, args, &unusedValue, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->CallNonvirtualMethod(jvoid_type, obj, clazz, method->mMethodID, args, &unusedValue, securityContext);
+		securityContext->Release();
 	}
 
 	static void InvokeNonVirtualVoidMethod(JNIEnv *env, jobject obj, jclass clazz, JNIMethod* method, va_list args)
@@ -624,7 +637,9 @@ private:
 	{
 		jvalue outValue = { NULL };
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue, securityContext);
+		securityContext->Release();
 		return outValue;
 	}
 
@@ -649,7 +664,9 @@ private:
 	static void SetField(JNIEnv* env, jobject obj, JNIField* field, jvalue value)
 	{
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->SetField(field->mFieldType, obj, field->mFieldID, value, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->SetField(field->mFieldType, obj, field->mFieldID, value, securityContext);
+		securityContext->Release();
 	}
 
 #define IMPLEMENT_SET_FIELD(methodName, fieldType, jvalueField)										\
@@ -699,7 +716,9 @@ private:
 	{
 		jvalue outValue = { NULL };
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue, securityContext);
+		securityContext->Release();
 		return outValue;
 	}
 	
@@ -714,7 +733,9 @@ private:
 	{
 		jvalue unusedValue;
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallStaticMethod(jvoid_type, clazz, method->mMethodID, args, &unusedValue, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->CallStaticMethod(jvoid_type, clazz, method->mMethodID, args, &unusedValue, securityContext);
+		securityContext->Release();
 	}
 
 	static void InvokeStaticVoidMethod(JNIEnv *env, jclass clazz, JNIMethod* method, va_list args)
@@ -795,7 +816,9 @@ private:
 	{
 		jvalue outValue = { NULL };
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue, securityContext);
+		securityContext->Release();
 		return outValue;
 	}
 
@@ -820,7 +843,9 @@ private:
 	static void SetStaticField(JNIEnv* env, jclass clazz, JNIField* field, jvalue value)
 	{
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->SetStaticField(field->mFieldType, clazz, field->mFieldID, value, secureEnv.getContext());
+		nsISecurityContext* securityContext = secureEnv.getContext();
+		nsresult result = secureEnv->SetStaticField(field->mFieldType, clazz, field->mFieldID, value, securityContext);
+		securityContext->Release();
 	}
 
 #define IMPLEMENT_SET_FIELD(methodName, fieldType, jvalueField)										\
@@ -1068,8 +1093,10 @@ private:
 	}
 
 public:
-	ProxyJNIEnv(nsIJVMPlugin* jvmPlugin);
+	ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* secureEnv);
 	~ProxyJNIEnv();
+	
+	nsISecureJNI2* getSecureEnv() { return mSecureEnv; }
 };
 
 JNINativeInterface_ ProxyJNIEnv::theFuncs = {
@@ -1451,15 +1478,16 @@ JNINativeInterface_ ProxyJNIEnv::theFuncs = {
 
 nsHashtable* ProxyJNIEnv::theIDTable = NULL;
 
-ProxyJNIEnv::ProxyJNIEnv(nsIJVMPlugin* jvmPlugin)
-	:	mSecureEnv(NULL), mContext(NULL), mJavaThread(NULL)
+ProxyJNIEnv::ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* secureEnv)
+	:	mSecureEnv(secureEnv), mContext(NULL), mJavaThread(NULL)
 {
 	this->functions = &theFuncs;
 	if (theIDTable == NULL)
 		theIDTable = new nsHashtable();
 	
-	// Ask the JVM for a new nsISecureJNI2.
-	nsresult result = jvmPlugin->GetSecureJNI(this, &mSecureEnv);
+	// Ask the JVM for a new nsISecureJNI2, if none provided.
+	if (secureEnv == NULL)
+		nsresult result = jvmPlugin->CreateSecureEnv(this, &mSecureEnv);
 }
 
 ProxyJNIEnv::~ProxyJNIEnv()
@@ -1470,9 +1498,9 @@ ProxyJNIEnv::~ProxyJNIEnv()
 		mSecureEnv->Release();
 }
 
-JNIEnv* CreateProxyJNI(nsIJVMPlugin* jvmPlugin)
+JNIEnv* CreateProxyJNI(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* inSecureEnv)
 {
-	return new ProxyJNIEnv(jvmPlugin);
+	return new ProxyJNIEnv(jvmPlugin, inSecureEnv);
 }
 
 void DeleteProxyJNI(JNIEnv* env)
@@ -1480,4 +1508,10 @@ void DeleteProxyJNI(JNIEnv* env)
 	ProxyJNIEnv* proxyEnv = (ProxyJNIEnv*)env;
 	if (proxyEnv != NULL)
 		delete proxyEnv;
+}
+
+nsISecureJNI2* GetSecureEnv(JNIEnv* env)
+{
+	ProxyJNIEnv* proxyEnv = (ProxyJNIEnv*)env;
+	return proxyEnv->getSecureEnv();
 }
