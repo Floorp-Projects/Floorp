@@ -334,7 +334,7 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
   nsFileSpec oldProfilePath(oldProfilePathStr); /* nsFileSpec version of the profile's 4.x root dir */
   nsFileSpec newProfilePath(newProfilePathStr); /* Ditto for the profile's new 5.x root dir         */
 
-#ifdef XP_UNIX 
+#if defined(XP_UNIX) || defined(XP_MAC)
   printf("TODO:  port the code that checks for space before copying.\n");
 #else  
   PRUint32 totalMailSize = 0, 
@@ -474,7 +474,7 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
   PR_FREEIF(profile_hd_name);
   PR_FREEIF(mail_hd_name);
   PR_FREEIF(news_hd_name);
-#endif /* XP_UNIX */
+#endif /* XP_UNIX || XP_MAC */
 
   PRBool needToRenameFilterFiles;
   if (PL_strcmp(MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x)) {
