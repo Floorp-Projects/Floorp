@@ -77,13 +77,12 @@ static char gHeadingTags[]={
   0};
 
 static char  gStyleTags[]={
-  eHTMLTag_a,       eHTMLTag_b,    eHTMLTag_big,
-  eHTMLTag_blink,   eHTMLTag_cite,    eHTMLTag_em, 
-  eHTMLTag_font,    eHTMLTag_i,  eHTMLTag_kbd,     
-  eHTMLTag_s,       eHTMLTag_small,   
-  eHTMLTag_strike,  
-  eHTMLTag_strong,  eHTMLTag_sub,     eHTMLTag_sup,     
-  eHTMLTag_tt,      eHTMLTag_u,       eHTMLTag_var,     
+  eHTMLTag_a,       eHTMLTag_b,     eHTMLTag_big,
+  eHTMLTag_blink,   eHTMLTag_cite,  eHTMLTag_em, 
+  eHTMLTag_font,    eHTMLTag_i,     eHTMLTag_kbd,     
+  eHTMLTag_s,       eHTMLTag_small, eHTMLTag_strike,  
+  eHTMLTag_strong,  eHTMLTag_sub,   eHTMLTag_sup,     
+  eHTMLTag_tt,      eHTMLTag_u,     eHTMLTag_var,     
   0};
   
 static char  gWhitespaceTags[]={
@@ -1042,7 +1041,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_object,    eHTMLTag_p, 
-    eHTMLTag_q, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
     eHTMLTag_samp,      eHTMLTag_script,    
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
@@ -1128,6 +1127,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_small:
     case eHTMLTag_span:
     case eHTMLTag_strike:
+    case eHTMLTag_s:
     case eHTMLTag_sub:
     case eHTMLTag_sup:
     case eHTMLTag_tt:

@@ -298,7 +298,7 @@ protected:
     /**
       * Indent/outdent when the open/close tags are encountered.
       * This implies that breakAfterOpen() and breakBeforeClose()
-      * are true no matter what those methods return.
+      * are PR_TRUE no matter what those methods return.
       */
     PRBool IndentChildren(eHTMLTags aTag) const;
 
@@ -321,7 +321,7 @@ protected:
     /**
       * Are we allowed to insert new white space before the open tag.
       *
-      * Returning false does not prevent inserting WS
+      * Returning PR_FALSE does not prevent inserting WS
       * before the tag if WS insertion is allowed for another reason,
       * e.g. there is already WS there or we are after a tag that
       * has PermitWSAfter*().
