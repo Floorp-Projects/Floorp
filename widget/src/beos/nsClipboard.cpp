@@ -31,8 +31,13 @@
 #include "nsIWidget.h"
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
+#include "nsXPIDLString.h"
+#include "nsPrimitiveHelpers.h"
+#include "nsISupportsPrimitives.h"
 
 #include <View.h>
+#include <Clipboard.h>
+#include <Message.h>
 
 // The class statics:
 BView *nsClipboard::sView = 0;
@@ -202,32 +207,75 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
   // make sure we have a good transferable
   if (nsnull == mTransferable) {
+#ifdef DEBUG_CLIPBOARD
     printf("  SetNativeClipboardData: no transferable!\n");
+#endif /* DEBUG_CLIPBOARD */
     return NS_ERROR_FAILURE;
   }
 
-//  // If we're already the selection owner, don't need to do anything,
-//  // we'll already get the events:
-//  if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
-//    return NS_OK;
-//
-//  // Clear the native clipboard
-//  if (sWidget &&
-//      gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
-//    gtk_selection_remove_all(sWidget);
-//
-//
-//  // register as the selection owner:
-//  gint have_selection =
-//    gtk_selection_owner_set(sWidget,
-//                            GDK_SELECTION_PRIMARY,
-//                            GDK_CURRENT_TIME);
-//  if (have_selection == 0)
-//    return NS_ERROR_FAILURE;
+  // lock the native clipboard
+  if (!be_clipboard->Lock())
+    return NS_ERROR_FAILURE;
+
+  // clear the native clipboard
+  nsresult rv = NS_ERROR_FAILURE;
+  if (B_OK == be_clipboard->Clear()) {
+    // set data to the native clipboard
+    BMessage *msg = be_clipboard->Data();
+    if (NULL != msg) {
+      // Get the transferable list of data flavors
+      nsCOMPtr<nsISupportsArray> dfList;
+      mTransferable->FlavorsTransferableCanExport(getter_AddRefs(dfList));
+
+      // Walk through flavors that contain data and register them
+      // into the BMessage as supported flavors
+      PRUint32 i;
+      PRUint32 cnt;
+      dfList->Count(&cnt);
+      for (i = 0; i < cnt; i++) {
+	nsCOMPtr<nsISupports> genericFlavor;
+	dfList->GetElementAt(i, getter_AddRefs(genericFlavor));
+	nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor));
+	if (NULL != currentFlavor) {
+	  nsXPIDLCString flavorStr;
+	  currentFlavor->ToString(getter_Copies(flavorStr));
+
+#ifdef DEBUG_CLIPBOARD
+	  printf("nsClipboard: %d = %s\n", i, (const char *)flavorStr);
+#endif /* DEBUG_CLIPBOARD */
+	  if (0 == strcmp(flavorStr, kUnicodeMime)) {
+	    void *data = nsnull;
+	    PRUint32 dataSize = 0;
+	    nsCOMPtr<nsISupports> genericDataWrapper;
+	    rv = mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &dataSize);
+            nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr, genericDataWrapper, &data, dataSize);
+#ifdef DEBUG_CLIPBOARD
+	    if (NS_FAILED(rv))
+	      printf("nsClipboard: Error getting data from transferable\n");
+#endif /* DEBUG_CLIPBOARD */
+	    if ((0 != dataSize) && (NULL != data)) {
+	      const char *utf8Str = NS_ConvertUCS2toUTF8((const PRUnichar*)data, (PRUint32)dataSize);
+	      uint32 utf8Len = strlen(utf8Str);
+	      if (B_OK == msg->AddData(kTextMime, B_MIME_TYPE, (void *)utf8Str, utf8Len))
+		rv = NS_OK;
+	    }
+#ifdef DEBUG_CLIPBOARD
+	    else {
+	      printf("nsClipboard: Error null data from transferable\n");
+	    }
+#endif /* DEBUG_CLIPBOARD */
+	  }
+	}
+      }
+    }
+  }
+  if (B_OK != be_clipboard->Commit())
+    rv = NS_ERROR_FAILURE;
+  be_clipboard->Unlock();
 
   mIgnoreEmptyNotification = PR_FALSE;
 
-  return NS_OK;
+  return rv;
 }
 
 
@@ -237,8 +285,6 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWhichClipboard )
 {
-  nsresult rv = NS_OK;
-
 #ifdef DEBUG_CLIPBOARD
   printf("  nsClipboard::GetNativeClipboardData()\n");
 #endif /* DEBUG_CLIPBOARD */
@@ -249,121 +295,30 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWh
     return NS_ERROR_FAILURE;
   }
 
-  // Dunno why we need to do this, copying the win32 code ...
-  nsCOMPtr<nsITransferable> trans = do_QueryInterface(aTransferable);
-  if (!trans)
-    return rv;
+  // get native clipboard data
+  if (!be_clipboard->Lock())
+    return NS_ERROR_FAILURE;
 
-//  //
-//  // We can't call the copy callback when we're blocking on the paste callback;
-//  // so if this app is already the selection owner, we need to copy our own
-//  // data without going through the X server.
-//  //
-//  if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
-//  {
-//    // XXX only support text/plain for now
-//    nsAutoString  dataFlavor(kTextMime);
-//
-//    // Get data out of our existing transferable.
-//    void     *clipboardData;
-//    PRUint32 dataLength;
-//    rv = mTransferable->GetTransferData(&dataFlavor, 
-//                                        &clipboardData,
-//                                        &dataLength);
-//    if (NS_SUCCEEDED(rv))
-//      rv = trans->SetTransferData(&dataFlavor,
-//                                  clipboardData, dataLength);
-//    return rv;
-//  }
-//
-//#define ONLY_SUPPORT_PLAIN_TEXT 1
-//#ifdef ONLY_SUPPORT_PLAIN_TEXT
-//  gtk_selection_convert(sWidget, GDK_SELECTION_PRIMARY,
-//                        GDK_SELECTION_TYPE_STRING, GDK_CURRENT_TIME);
-//  // Tried to use straight Xlib call but this would need more work:
-//  //XConvertSelection(GDK_WINDOW_XDISPLAY(sWidget->window),
-//  //                  XA_PRIMARY, XA_STRING, gdk_selection_property, 
-//  //                  GDK_WINDOW_XWINDOW(sWidget->window), GDK_CURRENT_TIME);
-//
-//#else /* ONLY_SUPPORT_PLAIN_TEXT */
-//    //
-//    // XXX This code isn't implemented for Unix yet!
-//    // Instead of SetTransferData it will have to call gtk_selection_convert.
-//    //
-//
-//  // Get the transferable list of data flavors
-//  nsVoidArray * dfList;
-//  aTransferable->GetTransferDataFlavors(&dfList);
-//
-//  // Walk through flavors and see which flavor matches the one being pasted:
-//  PRUint32 i;
-//  PRUint32 cnt = 0;
-//  nsresult rv = dfList->Count(&cnt);
-//  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-//  for (i=0;i<cnt;i++) {
-//    nsString * df = (nsString *)dfList->ElementAt(i);
-//    if (nsnull != df) {
-//      UINT format = GetFormat(*df);
-//
-//      void   * data;
-//      PRUint32 dataLen;
-//
-//      if (nsnull != aDataObject) {
-//        res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
-//        if (NS_OK == res) {
-//          trans->SetTransferData(df, data, dataLen);
-//        }
-//      } else if (nsnull != aWindow) {
-//        res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
-//        if (NS_OK == res) {
-//          trans->SetTransferData(df, data, dataLen);
-//        }
-//      } 
-//    }
-//  }
-//#endif /* ONLY_SUPPORT_PLAIN_TEXT */
-//
-//  //
-//  // We've told X what type to send, and we just have to wait
-//  // for the callback saying that the data have been transferred.
-//  //
-//
-//  // Set a flag saying that we're blocking waiting for the callback:
-//  mBlocking = PR_TRUE;
-//#ifdef DEBUG_CLIPBOARD
-//  printf("Waiting for the callback\n");
-//#endif /* DEBUG_CLIPBOARD */
-//
-//  // Now we need to wait until the callback comes in ...
-//  // i is in case we get a runaway (yuck).
-//  for (int i=0; mBlocking == PR_TRUE && i < 10000; ++i)
-//  {
-//    gtk_main_iteration_do(PR_TRUE);
-//  }
-//
-//#ifdef DEBUG_CLIPBOARD
-//  printf("Got the callback: '%s', %d\n",
-//         mSelectionData.data, mSelectionData.length);
-//#endif /* DEBUG_CLIPBOARD */
-//
-//  // We're back from the callback, no longer blocking:
-//  mBlocking = PR_FALSE;
-//
-//  // 
-//  // Now we have data in mSelectionData.data.
-//  // We just have to copy it to the transferable.
-//  // 
-//  nsAutoString  dataFlavor(kTextMime);
-//  trans->SetTransferData(&dataFlavor, mSelectionData.data, mSelectionData.length);
-//
-//  // Can't free the selection data -- the transferable just saves a pointer.
-//  // But the transferable is responsible for freeing it, so we have to
-//  // consider it freed now:
-//  //g_free(mSelectionData.data);
-//  mSelectionData.data = nsnull;
-//  mSelectionData.length = 0;
+  BMessage *msg = be_clipboard->Data();
+  nsresult rv = NS_ERROR_FAILURE;
 
-  return NS_OK;
+  if (NULL != msg) {
+    const void *data;
+    ssize_t size;
+    status_t rc = msg->FindData(kTextMime, B_MIME_TYPE, &data, &size);
+    if ((B_OK == rc) && (NULL != data) && (0 != size)) {
+      nsString ucs2Str = NS_ConvertUTF8toUCS2((const char*)data, (PRUint32)size);
+      nsCOMPtr<nsISupports> genericDataWrapper;
+      nsXPIDLCString mime;
+      mime = kUnicodeMime;
+      nsPrimitiveHelpers::CreatePrimitiveForData(mime, (void*)ucs2Str.GetUnicode(), ucs2Str.Length() * 2, getter_AddRefs(genericDataWrapper));
+      aTransferable->SetTransferData(mime, genericDataWrapper, ucs2Str.Length() * 2);
+      rv = NS_OK;
+    }
+  }
+  be_clipboard->Unlock();
+
+  return rv;
 }
 
 //
