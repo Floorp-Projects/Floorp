@@ -587,8 +587,8 @@ Rights Reserved.
         <menuitem id="context-bookmarklink"
                   value="&bookmarkLinkCmd.label;"
                   accesskey="&bookmarkLinkCmd.accesskey;"
-                  oncommand="BrowserAddBookmark( contextMenu.linkURL(),
-                                                 contextMenu.linkText() )"/>
+                  oncommand="addBookmark(contextMenu.linkURL(),
+                                         contextMenu.linkText());"/>
 
 </popup>
 

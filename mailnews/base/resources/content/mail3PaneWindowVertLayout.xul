@@ -33,13 +33,8 @@ Rights Reserved.
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 
-<!DOCTYPE window [
-<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
-%messengerDTD;
-<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
-%navigatorDTD;
-]>   
-                  
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd" >
+        
 <window id="messengerWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -67,7 +62,6 @@ Rights Reserved.
 <script type="text/javascript" src="chrome://messenger/content/mailContextMenus.js"/>
 <script type="text/javascript" src="chrome://messenger/content/messengerdnd.js"/>
 <script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
-<script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
 <script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
 <script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
