@@ -106,29 +106,7 @@ nsMsgComposeFactory::~nsMsgComposeFactory()
 	PL_strfree(mProgID);
 }   
 
-nsresult nsMsgComposeFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-  if (aResult == NULL)  
-    return NS_ERROR_NULL_POINTER;  
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
-    *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(nsCOMTypeInfo<nsIFactory>::GetIID()))   
-    *aResult = (void *)(nsIFactory*)this;   
-
-  if (*aResult == NULL)
-    return NS_NOINTERFACE;
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsMsgComposeFactory)
-NS_IMPL_RELEASE(nsMsgComposeFactory)
+NS_IMPL_ISUPPORTS1(nsMsgComposeFactory, nsIFactory)
 
 nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
 {  
