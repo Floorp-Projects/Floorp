@@ -5493,22 +5493,22 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
         *ppPassword = NULL;
     }
 
-    if( !bLastPublishFailed && !EDT_IS_NEW_DOCUMENT(pMWContext) ){
 #if defined(SingleSignon)
-        // Check if we saved a username/password for this URL
-        char * pUserNameSingleSignon = NULL;
-        char * pPasswordSingleSignon = NULL;
-        SI_RestoreOldSignonDataFromBrowser(
-            pMWContext, pURL, FALSE, &pUserNameSingleSignon, &pPasswordSingleSignon);
-        if (pUserNameSingleSignon) {
-            *ppUserName = pUserNameSingleSignon;
-            *ppPassword = pPasswordSingleSignon;
-            // If we found a name, we assume the location part of 
-            //   URL is correct, so just return that
-            return EDT_ReplaceFilename(pURL, NULL, TRUE);
-        }
+    // Check if we saved a username/password for this URL
+    char * pUserNameSingleSignon = NULL;
+    char * pPasswordSingleSignon = NULL;
+    SI_RestoreOldSignonDataFromBrowser(
+        pMWContext, pURL, FALSE, &pUserNameSingleSignon, &pPasswordSingleSignon);
+    if (pUserNameSingleSignon) {
+        *ppUserName = pUserNameSingleSignon;
+        *ppPassword = pPasswordSingleSignon;
+        // If we found a name, we assume the location part of 
+        //   URL is correct, so just return that
+        return EDT_ReplaceFilename(pURL, NULL, TRUE);
+    }
 #endif
 
+    if( !bLastPublishFailed && !EDT_IS_NEW_DOCUMENT(pMWContext) ){
         int iType = NET_URL_Type(pURL);
         if( iType == FTP_TYPE_URL ||
             iType == HTTP_TYPE_URL ||
