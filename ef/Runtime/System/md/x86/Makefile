@@ -50,6 +50,19 @@ LOCAL_MD_EXPORTS_x86 +=  	x86LinuxThread.h			\
 
 endif
 
+ifeq ($(OS_ARCH),FreeBSD)
+ASFILES	=	x86FreeBSDException.s					\
+		x86FreeBSDInvokeNative.s					\
+		$(NULL)
+
+CPPSRCS	+= 	x86FreeBSDThread.cpp					\
+		$(NULL)
+
+LOCAL_MD_EXPORTS_x86 +=  	x86FreeBSDThread.h			\
+				$(NULL)
+
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS	+= 	Win32ExceptionHandler.cpp                               \
 		x86Win32InvokeNative.cpp				\

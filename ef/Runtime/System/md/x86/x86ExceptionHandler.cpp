@@ -20,7 +20,7 @@
 // simon
 // bjorn
 
-#if defined(_WIN32) || defined(LINUX)
+#if defined(_WIN32) || defined(LINUX) || defined (FREEBSD)
 
 #include "SysCalls.h"
 #include "prprf.h"
@@ -90,8 +90,8 @@ extern "C" SYSCALL_FUNC(JavaObject&) x86NewExceptionInstance(StandardClass class
 
 
 //--------------------------------------------------------------------------------
-// LINUX specific -- FIX make another file for this
-#ifdef LINUX
+// LINUX/FREEBSD specific -- FIX make another file for this
+#if defined( LINUX ) || defined( FREEBSD )
 
 extern "C"
 {
