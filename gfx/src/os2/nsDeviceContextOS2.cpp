@@ -987,6 +987,11 @@ nsresult nsDeviceContextOS2::EndDocument()
 
 nsresult nsDeviceContextOS2::BeginPage()
 {
+  return NS_OK;
+}
+
+nsresult nsDeviceContextOS2::EndPage()
+{
   if (NULL != mPrintDC)
   {
 
@@ -1000,11 +1005,6 @@ nsresult nsDeviceContextOS2::BeginPage()
       return NS_ERROR_FAILURE;
   }
 
-  return NS_OK;
-}
-
-nsresult nsDeviceContextOS2::EndPage()
-{
   return NS_OK;
 }
 
