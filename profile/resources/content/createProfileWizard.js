@@ -212,7 +212,8 @@ function Finish(opener)
 {
   // lets check if we're at final stage using null
   if(testMap[currentPageTag].next)
-    return null;
+    return;
+
 	try {
 		saveData();
 		proceed = processCreateProfileData();
@@ -224,6 +225,9 @@ function Finish(opener)
 			else {
 				ExitApp();
 			}
+		}
+		else {
+			return;
 		}
 	}
 	catch (ex) {
