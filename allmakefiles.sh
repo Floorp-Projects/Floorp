@@ -1215,6 +1215,9 @@ for extension in $MOZ_EXTENSIONS; do
         finger ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/finger/Makefile
             " ;;
+        negotiateauth ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/negotiateauth/Makefile
+            " ;;
         gnomevfs ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/gnomevfs/Makefile
             " ;;

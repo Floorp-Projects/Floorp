@@ -532,6 +532,10 @@ pref("network.http.proxy.pipelining", false);
 pref("network.http.pipelining.maxrequests" , 4);
 
 pref("network.http.proxy.ssl.connect",true);
+
+// Whether to warn if the user connects to a site with authentication
+// information that isn't required.
+pref("network.http.confirm_superfluous_auth",true);
 // </http>
 
 // This preference controls whether or not internationalized domain names (IDN)
@@ -559,6 +563,20 @@ pref("network.dir.format", 2);
 
 // enables the prefetch service (i.e., prefetching of <link rel="next"> URLs).
 pref("network.prefetch-next", true);
+
+
+// The following prefs pertain to the negotiate-auth extension (see bug 17578),
+// which provides transparent Kerberos authentication using the SPNEGO protocol.
+// Each pref is a comma-separated list of keys, where each key has the format:
+//   [scheme "://"] [host [":" port]]
+// For example, "foo.com" would match "http://www.foo.com/bar", etc.
+
+// This list controls which URIs can support the negotiate auth protocol.  This
+// list should be limited to the servers you know you'll need to login to.
+pref("network.negotiate-auth.trusted-uris", "https://");
+// This list controls which URIs can support delegation.
+pref("network.negotiate-auth.delegation-uris", "");
+
 
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
