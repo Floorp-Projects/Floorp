@@ -1474,13 +1474,8 @@ nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
 PRInt32
 nsPop3Protocol::SendXtndXlstMsgid()
 {
-#if 0
-    if (net_xtnd_xlst_command_unimplemented)
-  	return(start_use_top_for_fake_uidl(ce));
-#else
     if (!(m_pop3CapabilityFlags & POP3_HAS_XTND_XLST))
         return StartUseTopForFakeUidl();
-#endif 
     PL_strcpy(m_pop3ConData->output_buffer, "XTND XLST Message-Id" CRLF);
     m_pop3ConData->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
     m_pop3ConData->pause_for_read = PR_TRUE;
@@ -1580,13 +1575,8 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
 PRInt32
 nsPop3Protocol::SendUidlList()
 {
-#if 0
-    if (net_uidl_command_unimplemented)
-        return(net_pop3_send_xtnd_xlst_msgid(ce));
-#else
     if (!(m_pop3CapabilityFlags & POP3_HAS_XTND_XLST))
         return SendXtndXlstMsgid();
-#endif 
 
     PL_strcpy(m_pop3ConData->output_buffer, "UIDL" CRLF);
     m_pop3ConData->next_state_after_response = POP3_GET_UIDL_LIST;
@@ -1611,11 +1601,7 @@ nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
     if(!m_pop3ConData->command_succeeded) {
         m_pop3ConData->next_state = POP3_SEND_XTND_XLST_MSGID;
         m_pop3ConData->pause_for_read = PR_FALSE;
-#if 0
-        net_uidl_command_unimplemented = PR_TRUE;
-#else
         m_pop3CapabilityFlags &= ~POP3_HAS_UIDL;
-#endif 
         return(0);
         
 #if 0  /* this if block shows what UIDL used to do in this case */
@@ -1868,11 +1854,7 @@ nsPop3Protocol::GetMsg()
                 m_pop3ConData->next_state = POP3_GET_MSG;
             } else if ((c != TOO_BIG) && (m_pop3ConData->size_limit > 0) &&
                        (info->size > m_pop3ConData->size_limit) && 
-#if 0
-                       !net_top_command_unimplemented &&
-#else
                        !(m_pop3CapabilityFlags & POP3_HAS_TOP) &&
-#endif 
                        (m_pop3ConData->only_uidl == NULL)) { 
                 /* message is too big */
                 m_pop3ConData->truncating_cur_msg = PR_TRUE;
@@ -1933,15 +1915,8 @@ nsPop3Protocol::GetMsg()
 PRInt32
 nsPop3Protocol::SendTop()
 {
-#if 0
-    PR_ASSERT(!(net_uidl_command_unimplemented && 
-                net_xtnd_xlst_command_unimplemented &&
-                net_top_command_unimplemented) );
-    PR_ASSERT(!net_top_command_unimplemented);
-#else
     PR_ASSERT(!(m_pop3CapabilityFlags & (POP3_HAS_UIDL | POP3_HAS_XTND_XLST |
                                          POP3_HAS_TOP)));
-#endif
 
     PR_snprintf(m_pop3ConData->output_buffer, 
                 OUTPUT_BUFFER_SIZE,  
@@ -2224,16 +2199,9 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         /* meaning _handle_line read ".\r\n" at end-of-msg */
     {
         m_pop3ConData->pause_for_read = PR_FALSE;
-#if 0
-        if (m_pop3ConData->truncating_cur_msg ||
-            (m_pop3ConData->leave_on_server && !(net_uidl_command_unimplemented &&
-                                                 net_xtnd_xlst_command_unimplemented &&
-                                                 net_top_command_unimplemented) ))
-#else
         if (m_pop3ConData->truncating_cur_msg ||
             !(m_pop3CapabilityFlags & (POP3_HAS_UIDL | POP3_HAS_XTND_XLST |
                                        POP3_HAS_TOP)))
-#endif 
         {
             /* We've retrieved all or part of this message, but we want to
                keep it on the server.  Go on to the next message. */
@@ -2283,17 +2251,9 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
            
            Note that the progress bar will not be accurate in this case.
            Oops. #### */
-#if 0
-        char *host, *fmt, *buf;
-        int size;
-#endif 
         PRBool prefBool = PR_FALSE;
 
-#if 0        
-        net_top_command_unimplemented = PR_TRUE;
-#else
         m_pop3CapabilityFlags &= ~POP3_HAS_TOP;
-#endif 
         m_pop3ConData->truncating_cur_msg = PR_FALSE;
 
 #if 0
