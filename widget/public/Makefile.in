@@ -69,6 +69,7 @@ EXPORTS = \
 	nsIContentConnector.h \
 	nsIClipboard.h \
 	nsITransferable.h \
+	nsIFileListTransferable.h \
 	nsIDragService.h \
 	nsIDragSession.h \
 	nsIClipboardOwner.h \
