@@ -984,19 +984,13 @@ void nsClipboard::SelectionClearCB(GtkWidget *aWidget,
   g_print("  nsClipboard::SelectionClearCB\n");
 #endif /* DEBUG_CLIPBOARD */
 
-  if (!aWidget)
-  {
+  if (!aWidget) {
     NS_ASSERTION(PR_FALSE, "Null widget passed to SelectionClearCB)\n");
     return;
   }
-  if (!aEvent)
-  {
+
+  if (!aEvent) {
     NS_ASSERTION(PR_FALSE, "Null event passed to SelectionClearCB)\n");
-    return;
-  }
-  if (!aData)
-  {
-    NS_ASSERTION(PR_FALSE, "Null data passed to SelectionClearCB)\n");
     return;
   }
 
