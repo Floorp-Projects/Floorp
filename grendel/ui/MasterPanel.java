@@ -49,7 +49,7 @@ import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JToolBar;
+//import javax.swing.JToolBar;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
@@ -84,6 +84,7 @@ import grendel.widgets.ColumnHeader;
 import grendel.widgets.ColumnModel;
 import grendel.widgets.ColumnChangeListener;
 import grendel.widgets.DefaultCellRenderer;
+import grendel.widgets.GrendelToolBar;
 import grendel.widgets.SelectionEvent;
 import grendel.widgets.SelectionListener;
 import grendel.widgets.SelectionManager;
@@ -126,7 +127,6 @@ public class MasterPanel extends GeneralPanel {
 
   public MasterPanel() {
     fPanel = this;
-
     JScrollPane scrollPane = new JScrollPane();
     //scrollPane.setBorder(BorderUIResource.getLoweredBevelBorderUIResource());
     scrollPane.setBorder(BorderFactory.createLoweredBevelBorder());
@@ -228,7 +228,7 @@ public class MasterPanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public JToolBar getToolBar() {
+  public GrendelToolBar getToolBar() {
     return buildToolBar("masterToolBar", fActions);
   }
 
