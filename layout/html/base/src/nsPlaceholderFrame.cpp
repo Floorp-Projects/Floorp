@@ -22,6 +22,7 @@
 #include "nsBodyFrame.h"
 #include "nsIStyleContext.h"
 #include "nsCSSLayout.h"
+#include "nsIView.h"
 
 static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
 
@@ -207,6 +208,12 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the tag
   ListTag(out);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+    NS_RELEASE(view);
+  }
 
   // Output the rect
   out << mRect;
