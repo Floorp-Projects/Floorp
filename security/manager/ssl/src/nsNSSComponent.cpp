@@ -337,6 +337,37 @@ nsNSSComponent::RegisterCertContentListener()
   return rv;
 }
 
+/* Table of pref names and SSL cipher ID */
+typedef struct {
+  char* pref;
+  long id;
+} CipherPref;
+
+static CipherPref CipherPrefs[] = {
+/* SSL2 ciphers */
+ {"security.ssl2.rc4_128", SSL_EN_RC4_128_WITH_MD5},
+ {"security.ssl2.rc2_128", SSL_EN_RC2_128_CBC_WITH_MD5},
+ {"security.ssl2.des_ede3_192", SSL_EN_DES_192_EDE3_CBC_WITH_MD5},
+ {"security.ssl2.des_64", SSL_EN_DES_64_CBC_WITH_MD5},
+ {"security.ssl2.rc4_40", SSL_EN_RC4_128_EXPORT40_WITH_MD5},
+ {"security.ssl2.rc2_40", SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5},
+ /* SSL3 ciphers */
+ {"security.ssl3.fortezza_fortezza_sha", SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA},
+ {"security.ssl3.fortezza_rc4_sha", SSL_FORTEZZA_DMS_WITH_RC4_128_SHA},
+ {"security.ssl3.rsa_rc4_128_md5", SSL_RSA_WITH_RC4_128_MD5},
+ {"security.ssl3.rsa_fips_des_ede3_sha", SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA},
+ {"security.ssl3.rsa_des_ede3_sha", SSL_RSA_WITH_3DES_EDE_CBC_SHA},
+ {"security.ssl3.rsa_fips_des_sha", SSL_RSA_FIPS_WITH_DES_CBC_SHA},
+ {"security.ssl3.rsa_des_sha", SSL_RSA_WITH_DES_CBC_SHA},
+ {"security.ssl3.rsa_1024_rc4_56_sha", TLS_RSA_EXPORT1024_WITH_RC4_56_SHA},
+ {"security.ssl3.rsa_1024_des_cbc_sha", TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA},
+ {"security.ssl3.rsa_rc4_40_md5", SSL_RSA_EXPORT_WITH_RC4_40_MD5},
+ {"security.ssl3.rsa_rc2_40_md5", SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5},
+ {"security.ssl3.fortezza_null_sha", SSL_FORTEZZA_DMS_WITH_NULL_SHA},
+ {"security.ssl3.rsa_null_md5", SSL_RSA_WITH_NULL_MD5},
+ {NULL, 0} /* end marker */
+};
+
 nsresult
 nsNSSComponent::InitializeNSS()
 {
@@ -389,6 +420,13 @@ nsNSSComponent::InitializeNSS()
   SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
   mPref->GetBoolPref("security.enable_tls", &enabled);
   SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+
+  // Set SSL/TLS ciphers
+  for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
+    mPref->GetBoolPref(cp->pref, &enabled);
+
+    SSL_CipherPrefSetDefault(cp->id, enabled);
+  }
 
   // Enable ciphers for PKCS#12
   SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
@@ -518,6 +556,7 @@ void
 nsNSSComponent::PrefChanged(const char* prefName)
 {
   PRBool enabled;
+
   if (!nsCRT::strcmp(prefName, "security.enable_ssl2")) {
     mPref->GetBoolPref("security.enable_ssl2", &enabled);
     SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
@@ -527,6 +566,15 @@ nsNSSComponent::PrefChanged(const char* prefName)
   } else if (!nsCRT::strcmp(prefName, "security.enable_tls")) {
     mPref->GetBoolPref("security.enable_tls", &enabled);
     SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+  } else {
+    /* Look through the cipher table and set according to pref setting */
+    for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
+      if (!nsCRT::strcmp(prefName, cp->pref)) {
+        mPref->GetBoolPref(cp->pref, &enabled);
+        SSL_CipherPrefSetDefault(cp->id, enabled);
+        break;
+      }
+    }
   }
 }
 
