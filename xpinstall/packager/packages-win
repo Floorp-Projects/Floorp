@@ -161,6 +161,12 @@ bin\components\mozldap.xpt
 bin\nsldap32v50.dll
 bin\nsldappr32v50.dll
 
+;PSM related files
+bin\components\pippki.dll
+bin\components\pippki.xpt
+bin\chrome\pipnss.jar
+bin\chrome\pippki.jar
+
 ; chrome stuff
 bin\chrome\help.jar
 bin\chrome\comm.jar
