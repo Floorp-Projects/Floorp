@@ -51,11 +51,9 @@ endif
 OS_CFLAGS              = $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe $(THREAD_FLAG) -DOPENBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
 ifeq ($(USE_PTHREADS),1)
-OS_LIBS                        = -lc_r
 THREAD_FLAG		+= -pthread
 # XXX probably should define _THREAD_SAFE too.
 else
-OS_LIBS                        = -lc
 DEFINES                        += -D_PR_LOCAL_THREADS_ONLY
 endif
 
