@@ -27,7 +27,7 @@ org.mozilla.dom.test.DocumentImpl_createProcessingInstruction_String_String_2
 org.mozilla.dom.test.DocumentImpl_createProcessingInstruction_String_String_3
 org.mozilla.dom.test.DocumentImpl_createTextNode_String_0
 org.mozilla.dom.test.DocumentImpl_createTextNode_String_1
-org.mozilla.dom.test.DocumentImpl_getDoctype
+org.mozilla.dom.test.DocumentImpl_getDoctype_xml
 org.mozilla.dom.test.DocumentImpl_getDocumentElement
 org.mozilla.dom.test.DocumentImpl_getElementsByTagName_String_0
 org.mozilla.dom.test.DocumentImpl_getElementsByTagName_String_1

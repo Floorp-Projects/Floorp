@@ -93,10 +93,6 @@ org.mozilla.dom.test.DocumentImpl_importNode_Node_boolean_0
 org.mozilla.dom.test.DocumentImpl_importNode_Node_boolean_1
 org.mozilla.dom.test.DocumentImpl_importNode_Node_boolean_2
 org.mozilla.dom.test.DocumentImpl_importNode_Node_boolean_3
-org.mozilla.dom.test.DocumentTypeImpl_getName
-org.mozilla.dom.test.DocumentTypeImpl_getPublicId
-org.mozilla.dom.test.DocumentTypeImpl_getSystemId
-org.mozilla.dom.test.DocumentTypeImpl_getInternalSubset
 org.mozilla.dom.test.ElementImpl_getAttributeNode_String_0
 org.mozilla.dom.test.ElementImpl_getAttributeNode_String_1
 org.mozilla.dom.test.ElementImpl_getAttribute_String_0
