@@ -54,7 +54,7 @@
 #define NS_METHOD_(type) type __stdcall
 #define NS_METHOD nsresult __stdcall
 
-#else  /* !XP_PC */
+#elif  XP_MAC
 
 #define NS_EXPORT __declspec(export)
 #define NS_EXPORT_(type) __declspec(export) type
@@ -67,8 +67,19 @@
 #define NS_METHOD_(type) type
 #define NS_METHOD nsresult
 
-#endif /* !XP_PC */
+#else  /* !XP_PC && !XP_MAC */
+
+#define NS_EXPORT
+#define NS_EXPORT_(type) type
+
+#define NS_IMETHOD_(type) virtual type
+#define NS_IMETHOD virtual nsresult
+#define NS_IMETHODIMP_(type) type
+#define NS_IMETHODIMP nsresult
+
+#define NS_METHOD_(type) type
+#define NS_METHOD nsresult
+
+#endif /* !XP_PC && !XP_MAC */
 
 #endif
-
-
