@@ -27,7 +27,7 @@ nsRegionMac :: nsRegionMac()
   NS_INIT_REFCNT();
 
 	mRegion = nsnull;
-  mRegionType = eRegionType_empty;
+  mRegionType = eRegionComplexity_empty;
 }
 
 //---------------------------------------------------------------------
@@ -48,7 +48,7 @@ NS_IMPL_RELEASE(nsRegionMac)
 nsresult nsRegionMac :: Init(void)
 {
 	mRegion = ::NewRgn();
-  mRegionType = eRegionType_empty;
+  mRegionType = eRegionComplexity_empty;
 
   return NS_OK;
 }
@@ -168,7 +168,7 @@ RgnHandle	thergn;
 
 PRBool nsRegionMac :: IsEmpty(void)
 {
-  if (mRegionType == eRegionType_empty)
+  if (mRegionType == eRegionComplexity_empty)
     return PR_TRUE;
 	else
   	return PR_FALSE;
@@ -247,9 +247,9 @@ NS_IMETHODIMP nsRegionMac :: GetRegionComplexity(nsRegionComplexity &aComplexity
 void nsRegionMac :: SetRegionType()
 {
   if (::EmptyRgn(mRegion) == PR_TRUE)
-    mRegionType = eRegionType_empty;
+    mRegionType = eRegionComplexity_empty;
   else
-    mRegionType = eRegionType_rect ;
+    mRegionType = eRegionComplexity_rect ;
 }
 
 

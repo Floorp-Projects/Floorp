@@ -26,7 +26,7 @@ nsRegionGTK :: nsRegionGTK()
   NS_INIT_REFCNT();
   
   mRegion = nsnull;
-  mRegionType = eRegionType_empty;
+  mRegionType = eRegionComplexity_empty;
 }
 
 nsRegionGTK :: ~nsRegionGTK()
@@ -44,7 +44,7 @@ NS_IMPL_RELEASE(nsRegionGTK)
 nsresult nsRegionGTK :: Init(void)
 {
   mRegion = ::gdk_region_new();  //correct?
-  mRegionType = eRegionType_empty;
+  mRegionType = eRegionComplexity_empty;
   
   return NS_OK;
 }
@@ -157,7 +157,7 @@ void nsRegionGTK :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
 
 PRBool nsRegionGTK :: IsEmpty(void)
 {
-  if (mRegionType == eRegionType_empty)
+  if (mRegionType == eRegionComplexity_empty)
     return PR_TRUE;
 
   return PR_FALSE;
@@ -227,9 +227,9 @@ NS_IMETHODIMP nsRegionGTK :: GetRegionComplexity(nsRegionComplexity &aComplexity
 void nsRegionGTK :: SetRegionType()
 {
   if (::gdk_region_empty(mRegion) == TRUE)
-    mRegionType = eRegionType_empty;
+    mRegionType = eRegionComplexity_empty;
   else
-    mRegionType = eRegionType_rect ;
+    mRegionType = eRegionComplexity_rect ;
 }
 
 void nsRegionGTK :: SetRegionEmpty()

@@ -25,7 +25,7 @@ nsRegionMotif :: nsRegionMotif()
   NS_INIT_REFCNT();
 
   mRegion = nsnull;
-  mRegionType = eRegionType_empty;
+  mRegionType = eRegionComplexity_empty;
 }
 
 nsRegionMotif :: ~nsRegionMotif()
@@ -42,7 +42,7 @@ NS_IMPL_RELEASE(nsRegionMotif)
 nsresult nsRegionMotif :: Init(void)
 {
   mRegion = ::XCreateRegion();
-  mRegionType = eRegionType_empty;
+  mRegionType = eRegionComplexity_empty;
 
   return NS_OK;
 }
@@ -143,7 +143,7 @@ void nsRegionMotif :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 a
 
 PRBool nsRegionMotif :: IsEmpty(void)
 {
-  if (mRegionType == eRegionType_empty)
+  if (mRegionType == eRegionComplexity_empty)
     return PR_TRUE;
 
   return PR_FALSE;
@@ -207,9 +207,9 @@ NS_IMETHODIMP nsRegionMotif :: GetRegionComplexity(nsRegionComplexity &aComplexi
 void nsRegionMotif :: SetRegionType()
 {
   if (::XEmptyRegion(mRegion) == True)
-    mRegionType = eRegionType_empty;
+    mRegionType = eRegionComplexity_empty;
   else
-    mRegionType = eRegionType_rect ;
+    mRegionType = eRegionComplexity_rect ;
 }
 
 void nsRegionMotif :: SetRegionEmpty()
