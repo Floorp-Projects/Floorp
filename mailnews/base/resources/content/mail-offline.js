@@ -57,24 +57,29 @@ function GetMailOfflinePrefs()
 // Check for unsent messages
 function CheckForUnsentMessages()
 {
-  var am = Components.classes["@mozilla.org/messenger/account-manager;1"]
-               .getService(Components.interfaces.nsIMsgAccountManager);
-  var msgSendlater = Components.classes["@mozilla.org/messengercompose/sendlater;1"]
-               .getService(Components.interfaces.nsIMsgSendLater);
-  var identitiesCount, allIdentities, currentIdentity, numMessages, msgFolder;
+  try
+  {
+    var am = Components.classes["@mozilla.org/messenger/account-manager;1"]
+                 .getService(Components.interfaces.nsIMsgAccountManager);
+    var msgSendlater = Components.classes["@mozilla.org/messengercompose/sendlater;1"]
+                 .getService(Components.interfaces.nsIMsgSendLater);
+    var identitiesCount, allIdentities, currentIdentity, numMessages, msgFolder;
 
-  if(am) { 
-    allIdentities = am.allIdentities;
-    identitiesCount = allIdentities.Count();
-    for (var i = 0; i < identitiesCount; i++) {
-      currentIdentity = allIdentities.QueryElementAt(i, Components.interfaces.nsIMsgIdentity);
-      msgFolder = msgSendlater.getUnsentMessagesFolder(currentIdentity);
-      if(msgFolder) {
-        // if true, descends into all subfolders 
-        numMessages = msgFolder.getTotalMessages(false);
-        if(numMessages > 0) return true;
-      }
-    } 
+    if(am) { 
+      allIdentities = am.allIdentities;
+      identitiesCount = allIdentities.Count();
+      for (var i = 0; i < identitiesCount; i++) {
+        currentIdentity = allIdentities.QueryElementAt(i, Components.interfaces.nsIMsgIdentity);
+        msgFolder = msgSendlater.getUnsentMessagesFolder(currentIdentity);
+        if(msgFolder) {
+          // if true, descends into all subfolders 
+          numMessages = msgFolder.getTotalMessages(false);
+          if(numMessages > 0) return true;
+        }
+      } 
+    }
+  }
+  catch(ex) {
   }
   return false;
 }
