@@ -78,13 +78,12 @@ nsXPConnect::nsXPConnect()
 
 #ifdef XPC_TOOLS_SUPPORT
   {
-    nsDependentCString filename(PR_GetEnv("MOZILLA_JS_PROFILER_OUTPUT"));
-    if(!filename.IsEmpty())
+    char* filename = PR_GetEnv("MOZILLA_JS_PROFILER_OUTPUT");
+    if(filename && *filename)
     {
-
         mProfilerOutputFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
         if(mProfilerOutputFile &&
-           NS_SUCCEEDED(mProfilerOutputFile->InitWithNativePath(filename)))
+           NS_SUCCEEDED(mProfilerOutputFile->InitWithNativePath(nsDependentCString(filename))))
         {
             mProfiler = do_GetService(XPCTOOLS_PROFILER_CONTRACTID);
             if(mProfiler)
@@ -93,7 +92,7 @@ nsXPConnect::nsXPConnect()
                 {
 #ifdef DEBUG
                     printf("***** profiling JavaScript. Output to: %s\n",
-                           filename.get());
+                           filename);
 #endif
                 }
             }
