@@ -84,7 +84,7 @@ class nsSharedBufferHandle
 
     public:
       nsSharedBufferHandle( CharT* aDataStart, CharT* aDataEnd )
-          : nsBufferHandle(aDataStart, aDataEnd)
+          : nsBufferHandle<CharT>(aDataStart, aDataEnd)
         {
           mFlags |= kIsShared;
         }
@@ -139,7 +139,7 @@ class nsXXXBufferHandle
   {
     public:
       nsXXXBufferHandle( CharT* aDataStart, CharT* aDataEnd, CharT* aStorageStart, CharT* aStorageEnd )
-          : nsSharedBufferHandle(aDataStart, aDataEnd),
+          : nsSharedBufferHandle<CharT>(aDataStart, aDataEnd),
             mStorageStart(aStorageStart),
             mStorageEnd(aStorageEnd)
         {

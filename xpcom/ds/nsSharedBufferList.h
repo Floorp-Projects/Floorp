@@ -47,7 +47,7 @@ class nsSharedBufferList
           : public nsXXXBufferHandle<PRUnichar>
         {
           public:
-            Buffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageStart, PRUnichar* aStorageEnd ) : nsXXXBufferHandle(aDataStart, aDataEnd, aStorageStart, aStorageEnd) { }
+            Buffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageStart, PRUnichar* aStorageEnd ) : nsXXXBufferHandle<PRUnichar>(aDataStart, aDataEnd, aStorageStart, aStorageEnd) { }
 
             Buffer* mPrev;
             Buffer* mNext;
