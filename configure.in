@@ -479,6 +479,21 @@ case "$host" in
 
 esac
 
+dnl =======================================================
+dnl Check to see if we are using an old version of the Compaq C compiler.
+dnl =======================================================
+
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING(for old DEC C++ compiler)
+AC_TRY_COMPILE([], [
+#if defined(__DECCXX) && (__DECCXX_VER<60290024)
+#error "Compiler is too old."
+#endif ],
+[AC_MSG_RESULT([no])],
+AC_MSG_ERROR([Compiler is too old.  Get a new one: http://www.unix.digital.com/dtk/]) )
+AC_LANG_RESTORE
+
 dnl ========================================================
 dnl Check which style vtables we're using on Solaris
 dnl Options current are:
@@ -1691,6 +1706,15 @@ if test "$ac_cv_have_uname_us_domainname_field" = "true"; then
     AC_MSG_RESULT(yes)
 else
     AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(for 64-bit OS)
+AC_TRY_RUN([ int main () {
+    if (sizeof(long) == 8) { return 0; } return 1; } ],
+        result="yes", result="no", result="maybe" )
+AC_MSG_RESULT("$result")
+if test "$result" = "yes"; then
+    AC_DEFINE(HAVE_64BIT_OS)
 fi
 
 dnl Checks for header files.

@@ -112,9 +112,11 @@
 
 /* ===== pooling ===== */
 
+#if defined(HAVE_64BIT_OS)
+#define MORK_CONFIG_ALIGN_8 1 /* must have 8 byte alignment */
+#else
 #define MORK_CONFIG_PTR_SIZE_4 1 /* sizeof(void*) == 4 */
-
-//define MORK_CONFIG_ALIGN_8 1 /* must have 8 byte alignment */
+#endif
 
 //define MORK_DEBUG_HEAP_STATS 1 /* analyze per-block heap usage */
 
