@@ -126,19 +126,18 @@
       <vbox flex="1">
         <label class="header" id="extDisplayName"/>
         <hbox align="center">
-          <label value="&author.label;"/>
           <label id="extAuthor"/>
         </hbox>
         <label id="extDescription" flex="1"/>
       </vbox>
       <vbox>
-        <button id="disableExtension" label="Disable Extension" oncommand="toggleExtension();"/> <!-- XXXdwh localize -->
+        <button disabled="true" id="disableExtension" label="Disable Extension" oncommand="toggleExtension();"/> <!-- XXXdwh localize -->
         <button disabled="true" label="Uninstall Extension" oncommand="uninstallExtension();"/> <!-- XXXdwh localize -->
       </vbox>
     </hbox>
     <separator/>
     <hbox align="start">
-          <html:a class="themesLink" href="&getNewThemesURL;"
+          <html:a class="themesLink" href="http://www.mozilla.org/projects/phoenix/extensions/index.html"
               style="padding-left:4px; display: block;" target="_new">Get New Extensions</html:a>
     </hbox>
   </vbox>
