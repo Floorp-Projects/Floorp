@@ -546,6 +546,9 @@ nsMsgAppCore::OpenURL(const char * url)
 {
 	if (url)
 	{
+#ifdef DEBUG_sspitzer
+		printf("nsMsgAppCore::OpenURL(%s)\n",url);
+#endif    
 		nsIMsgMessageService * messageService = nsnull;
 		nsresult rv = GetMessageServiceFromURI(url, &messageService);
 
