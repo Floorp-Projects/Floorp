@@ -348,15 +348,19 @@ CalendarEventDataSource.prototype.getEventsForMonth = function calEvent_getEvent
    
    while( eventList.hasMoreElements() )
    {
-      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
+//      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
+      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
       
-      var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
+//      var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
       
       var EventObject = new Object;
       
-      EventObject.event = tmpevent;
+//      EventObject.event = tmpevent;
+      EventObject.event = tmpevent.event;
       
-      EventObject.displayDate = displayDate;
+//      EventObject.displayDate = displayDate;
+      EventObject.displayDate = new Date( tmpevent.displayDate );
+      EventObject.displayDateEnd = new Date( tmpevent.displayDateEnd );
       
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
