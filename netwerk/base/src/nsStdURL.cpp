@@ -1313,6 +1313,16 @@ nsStdURL::GetFile(nsIFile * *aFile)
         if (path.CharAt(0) == '/')
             path.Cut(0, 1);
     }
+    else if (mHost) {
+        // Deal with the case where the user type file://C|/ (2 slashes instead of 3).
+        // In this case, the C| ends up as the host name (ugh).
+        nsCAutoString host(mHost);
+        PRInt32 len = host.Length();
+        if (len == 2 && host.CharAt(1) == '|') {
+            host.SetCharAt(':', 1);
+            path.Insert(host, 0);
+        }
+    }
     path.ReplaceChar('/', '\\');
 #elif defined(XP_MAC)
 	// For now we'll just convert the /'s into :'s to make it look like a Mac path
