@@ -1190,13 +1190,18 @@ public class Context
 
     /**
      * Create an array with a set of initial elements.
-     * <p>
-     * @param scope the scope to create the object in
+     *
+     * @param scope the scope to create the object in.
      * @param elements the initial elements. Each object in this array
-     *                 must be an acceptable JavaScript type.
-     * @return the new array object
+     *                 must be an acceptable JavaScript type and type
+     *                 of array should be exactly Object[], not
+     *                 SomeObjectSubclass[].
+     * @return the new array object.
      */
-    public Scriptable newArray(Scriptable scope, Object[] elements) {
+    public Scriptable newArray(Scriptable scope, Object[] elements)
+    {
+        if (elements.getClass().getComponentType() != ScriptRuntime.ObjectClass)
+            throw new IllegalArgumentException();
         Scriptable result = new NativeArray(elements);
         newArrayHelper(scope, result);
         return result;
