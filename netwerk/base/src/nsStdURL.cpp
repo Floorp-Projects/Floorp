@@ -286,16 +286,12 @@ nsStdURL::AppendString(nsCString& buffer, char * fromUnescapedStr,
     if (!fromUnescapedStr)
         return NS_ERROR_FAILURE;
 
-    char* temp = nsnull;
     if (toFormat == ESCAPED) {
-        rv = nsURLEscape(fromUnescapedStr, mask, &temp);
-        if (NS_SUCCEEDED(rv))
-            buffer += temp;
+        rv = nsAppendURLEscapedString(buffer, fromUnescapedStr, mask);
     } else {
         buffer += fromUnescapedStr;
     }
 
-    CRTFREEIF(temp);
     return rv;
 }
 
@@ -348,7 +344,6 @@ nsStdURL::GetSpec(char **o_Spec)
 {
     nsresult rv = NS_OK;
     nsCAutoString finalSpec; // guaranteed to be singlebyte.
-    finalSpec.SetCapacity(64);
     if (mScheme)
     {
         rv = AppendString(finalSpec,mScheme,ESCAPED,nsIIOService::url_Scheme);
@@ -761,7 +756,6 @@ nsStdURL::GetPath(char** o_Path)
     //Take all the elements of the path and construct it
     nsCAutoString path;
     nsresult rv = NS_OK;
-    path.SetCapacity(64);
     if (mDirectory)
     {
         rv = AppendString(path,mDirectory,ESCAPED,nsIIOService::url_Directory);

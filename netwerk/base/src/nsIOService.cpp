@@ -294,9 +294,17 @@ nsIOService::SetOffline(PRBool offline)
 // URL parsing utilities
 
 NS_IMETHODIMP
-nsIOService::Escape(const char *str, PRInt16 mask, char **result)
+nsIOService::Escape(const char *str, PRInt16 mask, char** result)
 {
-    return nsURLEscape((char*)str,mask,result);
+    nsCAutoString esc_str;
+    nsresult rv = nsURLEscape((char*)str,mask,esc_str);
+    CRTFREEIF(*result);
+    if (NS_FAILED(rv))
+        return rv;
+    *result = esc_str.ToNewCString();
+    if (!*result)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
