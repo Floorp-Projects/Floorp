@@ -1678,9 +1678,9 @@ public:
 					               const PRUnichar* aString, PRUint32 aLength);
 					       						       
 #ifdef MOZ_MATHML
-  virtual nsresult GetBoudingMetrics(const PRUnichar* aString,
+  virtual nsresult GetBoundingMetrics(const PRUnichar* aString,
                                      PRUint32         aLength,
-				                             nsBoundingMetrics& aBoundingMetrics);
+	                             nsBoundingMetrics& aBoundingMetrics);
 #endif							     						       					   
 };
 
@@ -1753,7 +1753,7 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
 nsresult
 nsFontXlibNormal::GetBoundingMetrics(const PRUnichar* aString,
                                      PRUint32         aLength,
-				                             nsBoundingMetrics& aBoundingMetrics)
+	                             nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
 
@@ -2049,7 +2049,7 @@ nsFontXlibUserDefined::GetBoundingMetrics(const PRUnichar* aString,
     }
   }
 
-  return NS_OK
+  return NS_OK;
 }						
 #endif 
 

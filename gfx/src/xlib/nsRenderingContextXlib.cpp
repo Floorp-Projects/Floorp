@@ -1573,8 +1573,7 @@ nsRenderingContextXlib::GetBoundingMetrics(const PRUnichar*   aString,
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
         if (currFont != prevFont) {
-          prevFont->GetBoundingMetrics(prevFont,
-                                       (const PRUnichar*) &aString[start],
+          prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
                                        i - start, rawbm);
           if (firstTime) {
             firstTime = PR_FALSE;
@@ -1594,8 +1593,7 @@ nsRenderingContextXlib::GetBoundingMetrics(const PRUnichar*   aString,
     }
     
     if (prevFont) {
-      prevFont->GetBoundingMetrics(prevFont, 
-                                   (const PRUnichar*) &aString[start],
+      prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
                                    i - start, rawbm);
       if (firstTime) {
         aBoundingMetrics = rawbm;
