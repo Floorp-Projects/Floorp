@@ -801,6 +801,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void) selectContainer:(int)inRowIndex
 {
   [mContainerPane selectRow:inRowIndex byExtendingSelection:NO];
+  [mAddSeparatorButton setEnabled:(inRowIndex == kBookmarkMenuContainerIndex)];
   if (inRowIndex == kHistoryContainerIndex) {
     [mItemPane setDataSource:mHistorySource];
     [mItemPane setDelegate:mHistorySource];
@@ -809,7 +810,8 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     [mItemPane setTarget:mHistorySource];
     [mItemPane setDoubleAction: @selector(openHistoryItem:)];
     [mItemPane setDeleteAction: @selector(deleteHistoryItems:)];
-  } else {
+  } 
+  else {
     [mItemPane setDataSource:self];
     [mItemPane setDelegate:self];
     BookmarkFolder *activeCollection = [mRootBookmarks objectAtIndex:inRowIndex];
@@ -822,13 +824,10 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     else
       [self setCanEditSelectedContainerContents:YES];
     // if its a smart folder, but not the history folder
-    if ([[self activeCollection] isSmartFolder] && (inRowIndex != kHistoryContainerIndex)) {
+    if ([[self activeCollection] isSmartFolder] && (inRowIndex != kHistoryContainerIndex))
       [mItemPane setDeleteAction:nil];
-    }
-    else {
+    else
       [mItemPane setDeleteAction:@selector(deleteBookmarks:)];
-    }
-    [mAddSeparatorButton setEnabled:(kBookmarkMenuContainerIndex == inRowIndex)];
   }
   [mItemPane reloadData];
 }
