@@ -4,7 +4,7 @@
 
 my $cygwin_mountprefix = "";
 if ($^O eq "cygwin") {
-$cygwin_mountprefix = `mount -p | awk '{ if (/^\//) print $1}' | head -1`;
+$cygwin_mountprefix = `mount -p | awk '{ if (/^\//) { print $1; exit } }'`;
 } else {
 # we'll be pulling in some stuff from the script directory
 require FindBin;
