@@ -24,7 +24,10 @@
 
 #include "xptcprivate.h"
 
-#ifndef sparc
+/* solaris defines __sparc for workshop compilers and 
+   linux defines __sparc__ */
+
+#if !defined(__sparc) && !defined(__sparc__)
 #error "This code is for Sparc only"
 #endif
 
