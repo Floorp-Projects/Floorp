@@ -146,6 +146,12 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect
 
 }
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define HAIRY_CONVERT_888
+#endif
+
+#ifdef HAIRY_CONVERT_888
+
 // This is really ugly. Mozilla uses BGR image data, while
 // gdk_rgb uses RGB data. So before we draw an image
 // we copy it to a temp buffer and swap R and B.
@@ -239,6 +245,58 @@ moz_gdk_draw_bgr_image (GdkDrawable *drawable,
 
   g_free (tmp_buf);
 }
+
+#else
+
+static void
+moz_gdk_draw_bgr_image (GdkDrawable *drawable,
+                    GdkGC *gc,
+                    gint x,
+                    gint y,
+                    gint width,
+                    gint height,
+                    GdkRgbDither dith,
+                    guchar *rgb_buf,
+                    gint rowstride)
+{ 
+  int tx, ty;
+  guchar *tmp_buf;
+  guchar *obuf;
+  gint bpl;
+  guchar *bptr, *bp2;
+  int r, g, b;
+  
+  bpl = (width * 3 + 3) & ~0x3;
+  tmp_buf = (guchar *)g_malloc (bpl * height);
+
+  bptr = rgb_buf;
+  obuf = tmp_buf;
+
+  for (ty = 0; ty < height; ty++)
+    { 
+      bp2 = bptr; 
+      for (tx = 0; tx < width; tx++)
+        { 
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          obuf[tx * 3] = b;
+          obuf[tx * 3 + 1] = g;
+          obuf[tx * 3 + 2] = r;
+          bp2 += 3;
+        }
+      bptr += rowstride;
+      obuf += bpl;
+    }
+
+  gdk_draw_rgb_image (drawable, gc, x, y, width, height,
+                      dith, tmp_buf, bpl);
+
+  g_free (tmp_buf);
+}
+
+#endif
+
 
 //------------------------------------------------------------
 
