@@ -46,6 +46,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
+#include "nsIWebBrowserFocus.h"
 
 class nsWebBrowserInitInfo
 {
@@ -69,7 +70,8 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIScrollable, 
                      public nsITextScroll, 
                      public nsIInterfaceRequestor,
-                     public nsIWebBrowserPersist
+                     public nsIWebBrowserPersist,
+                     public nsIWebBrowserFocus
 {
 friend class nsDocShellTreeOwner;
 friend class nsWBURIContentListener;
@@ -87,7 +89,7 @@ public:
     NS_DECL_NSIWEBNAVIGATION
     NS_DECL_NSIWEBBROWSERSETUP
     NS_DECL_NSIWEBBROWSERPERSIST
-
+    NS_DECL_NSIWEBBROWSERFOCUS
 protected:
     virtual ~nsWebBrowser();
     NS_IMETHOD InternalDestroy();
