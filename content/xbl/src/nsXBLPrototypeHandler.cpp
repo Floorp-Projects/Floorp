@@ -90,11 +90,17 @@ PRUint32 nsXBLPrototypeHandler::gRefCnt = 0;
 PRInt32 nsXBLPrototypeHandler::kMenuAccessKey = -1;
 PRInt32 nsXBLPrototypeHandler::kAccelKey = -1;
 
-const PRInt32 nsXBLPrototypeHandler::cShift = (1<<1);
-const PRInt32 nsXBLPrototypeHandler::cAlt = (1<<2);
-const PRInt32 nsXBLPrototypeHandler::cControl = (1<<3);
-const PRInt32 nsXBLPrototypeHandler::cMeta = (1<<4);
-const PRInt32 nsXBLPrototypeHandler::cAllModifiers = cShift | cAlt | cControl | cMeta;
+const PRInt32 nsXBLPrototypeHandler::cShift = (1<<0);
+const PRInt32 nsXBLPrototypeHandler::cAlt = (1<<1);
+const PRInt32 nsXBLPrototypeHandler::cControl = (1<<2);
+const PRInt32 nsXBLPrototypeHandler::cMeta = (1<<3);
+
+const PRInt32 nsXBLPrototypeHandler::cShiftMask = (1<<4);
+const PRInt32 nsXBLPrototypeHandler::cAltMask = (1<<5);
+const PRInt32 nsXBLPrototypeHandler::cControlMask = (1<<6);
+const PRInt32 nsXBLPrototypeHandler::cMetaMask = (1<<7);
+
+const PRInt32 nsXBLPrototypeHandler::cAllModifiers = cShiftMask | cAltMask | cControlMask | cMetaMask;
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
                                              const PRUnichar* aPhase,
@@ -594,33 +600,26 @@ nsXBLPrototypeHandler::GetController(nsIDOMEventReceiver* aReceiver)
 PRBool
 nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 {
-  if (mDetail == -1 && mMisc == 0 && mKeyMask == 0)
+  if (mDetail == -1)
     return PR_TRUE; // No filters set up. It's generic.
 
-  // Get the keycode and charcode of the key event.
-  PRUint32 keyCode, charCode;
-  aKeyEvent->GetKeyCode(&keyCode);
-  aKeyEvent->GetCharCode(&charCode);
+  // Get the keycode or charcode of the key event.
+  PRUint32 code;
+  if (mMisc)
+    aKeyEvent->GetCharCode(&code);
+  else
+    aKeyEvent->GetKeyCode(&code);
 
-  PRBool keyMatched = (mDetail == PRInt32(mMisc ? charCode : keyCode));
-
-  if (!keyMatched)
+  if (code != PRUint32(mDetail))
     return PR_FALSE;
 
-  // Now check modifier keys
-  PRInt32 modKeys = cAllModifiers;
-  // Don't check shift if we matched the char code and shift isn't specified
-  // in the handler.
-  if (mMisc && !(mKeyMask & cShift))
-    modKeys &= ~cShift;
-
-  return ModifiersMatchMask(aKeyEvent, modKeys);
+  return ModifiersMatchMask(aKeyEvent);
 }
 
 PRBool
 nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 {
-  if (mDetail == -1 && mMisc == 0 && mKeyMask == 0)
+  if (mDetail == -1 && mMisc == 0 && (mKeyMask & cAllModifiers) == 0)
     return PR_TRUE; // No filters set up. It's generic.
 
   unsigned short button;
@@ -632,8 +631,8 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
   aMouseEvent->GetDetail(&clickcount);
   if (mMisc != 0 && (clickcount != mMisc))
     return PR_FALSE;
-  
-  return ModifiersMatchMask(aMouseEvent, cAllModifiers);
+
+  return ModifiersMatchMask(aMouseEvent);
 }
 
 struct keyCodeData {
@@ -790,18 +789,18 @@ PRInt32 nsXBLPrototypeHandler::KeyToMask(PRInt32 key)
   switch (key)
   {
     case nsIDOMKeyEvent::DOM_VK_META:
-      return cMeta;
+      return cMeta | cMetaMask;
       break;
 
     case nsIDOMKeyEvent::DOM_VK_ALT:
-      return cAlt;
+      return cAlt | cAltMask;
       break;
 
     case nsIDOMKeyEvent::DOM_VK_CONTROL:
     default:
-      return cControl;
+      return cControl | cControlMask;
   }
-  return cControl;  // for warning avoidance
+  return cControl | cControlMask;  // for warning avoidance
 }
 
 void
@@ -880,22 +879,25 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::modifiers, modifiers);
   
   if (!modifiers.IsEmpty()) {
+    mKeyMask = cAllModifiers;
     char* str = ToNewCString(modifiers);
     char* newStr;
     char* token = nsCRT::strtok( str, ", ", &newStr );
     while( token != NULL ) {
       if (PL_strcmp(token, "shift") == 0)
-        mKeyMask |= cShift;
+        mKeyMask |= cShift | cShiftMask;
       else if (PL_strcmp(token, "alt") == 0)
-        mKeyMask |= cAlt;
+        mKeyMask |= cAlt | cAltMask;
       else if (PL_strcmp(token, "meta") == 0)
-        mKeyMask |= cMeta;
+        mKeyMask |= cMeta | cMetaMask;
       else if (PL_strcmp(token, "control") == 0)
-        mKeyMask |= cControl;
+        mKeyMask |= cControl | cControlMask;
       else if (PL_strcmp(token, "accel") == 0)
         mKeyMask |= KeyToMask(kAccelKey);
       else if (PL_strcmp(token, "access") == 0)
         mKeyMask |= KeyToMask(kMenuAccessKey);
+      else if (PL_strcmp(token, "any") == 0)
+        mKeyMask &= ~(mKeyMask << 4);
     
       token = nsCRT::strtok( newStr, ", ", &newStr );
     }
@@ -913,6 +915,10 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   }
 
   if (!key.IsEmpty()) {
+    if (mKeyMask == 0)
+      mKeyMask = cAllModifiers;
+    if (!(mKeyMask & cShift))
+      mKeyMask &= ~cShiftMask;
     if ((mKeyMask & cShift) != 0)
       ToUpperCase(key);
     else
@@ -927,8 +933,11 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     if (mType & NS_HANDLER_TYPE_XUL)
       mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::keycode, key);
     
-    if (!key.IsEmpty())
+    if (!key.IsEmpty()) {
+      if (mKeyMask == 0)
+        mKeyMask = cAllModifiers;
       mDetail = GetMatchingKeyCode(key);
+    }
   }
 
   nsAutoString preventDefault(aPreventDefault);
@@ -937,32 +946,31 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 }
 
 PRBool
-nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
-                                          PRInt32 aModifiersMask)
+nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
   nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
 
   PRBool keyPresent;
-  if (aModifiersMask & cMeta) {
+  if (mKeyMask & cMetaMask) {
     key ? key->GetMetaKey(&keyPresent) : mouse->GetMetaKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cMeta) != 0))
       return PR_FALSE;
   }
 
-  if (aModifiersMask & cShift) {
+  if (mKeyMask & cShiftMask) {
     key ? key->GetShiftKey(&keyPresent) : mouse->GetShiftKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cShift) != 0))
       return PR_FALSE;
   }
 
-  if (aModifiersMask & cAlt) {
+  if (mKeyMask & cAltMask) {
     key ? key->GetAltKey(&keyPresent) : mouse->GetAltKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cAlt) != 0))
       return PR_FALSE;
   }
 
-  if (aModifiersMask & cControl) {
+  if (mKeyMask & cControlMask) {
     key ? key->GetCtrlKey(&keyPresent) : mouse->GetCtrlKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cControl) != 0))
       return PR_FALSE;
