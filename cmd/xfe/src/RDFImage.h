@@ -41,6 +41,8 @@ typedef struct _RDFImageList {
   Widget  widget;
   char * imageURL;
   PRBool isSpaceAvailable;
+  struct _RDFImageList * prev;
+  struct _RDFImageList * next;
 } RDFImageList;
 
 typedef struct  _callbackClientData {
@@ -59,11 +61,11 @@ class XFE_RDFImage : XFE_Image
 
 public:
   XFE_RDFImage(XFE_Component * frame, void * requestedObj, char * imageUrl, fe_colormap *, Widget);
-  virtual ~XFE_RDFImage();
+  ~XFE_RDFImage();
 
   void     setCompleteCallback(completeCallbackPtr    callback, void * callbackData);
   void  RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32  height);
-  void RDFNewPixmap(IL_Pixmap * image, Boolean isMask);
+  void RDFNewPixmap(IL_Pixmap * image, PRBool isMask);
   void  RDFImageComplete(IL_Pixmap * image);
   void  addListener(void * requestedObj, Widget w, char * imageURL);
   PRBool  isrequestorAlive(Widget w);
@@ -73,7 +75,7 @@ public:
   virtual PRInt32 getImageWidth();
   virtual PRInt32 getImageHeight();
   virtual void     loadImage();
-  virtual Boolean  isImageLoaded();
+  virtual PRBool  isImageLoaded();
 
 
   static class XFE_RDFImage * isImageAvailable(char * imageURL);
@@ -85,7 +87,7 @@ public:
 
 
 private:
-  Boolean     frameLoaded;    // Indicates if frame is loaded
+  PRBool     frameLoaded;    // Indicates if frame is loaded
   int         pairCount;      // Specifies whether pixmap and mask are ready
   static int  refCount;      // Count of # of images loaded
   static int  m_numRDFImagesLoaded;  // # of images in the cache
@@ -93,7 +95,7 @@ private:
   static unsigned int MaxRdfImages;     // Max # of images the cache can hold
   static unsigned int ImageListIncrSize;  // cache size  increment.
 
-  static void removeListener(int);
+  static void removeListener(RDFImageList *);
   static void imageCacheInitialize();
   completeCallbackPtr    completeCallback;   // Callback to call after complete image has been obtained.
   void *      callbackData;

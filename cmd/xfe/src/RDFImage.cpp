@@ -34,7 +34,7 @@
 extern "C"
 {
 void DisplayPixmap(MWContext *, IL_Pixmap *, IL_Pixmap * , PRInt32, PRInt32, PRInt32, PRInt32, PRInt32, PRInt32);
-void NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
+void NewPixmap(MWContext *, IL_Pixmap * image, PRBool mask);
 void ImageComplete(MWContext *, IL_Pixmap * image);
 void fe_load_default_font(MWContext *context);
 };
@@ -45,7 +45,7 @@ int XFE_RDFImage::m_numRDFImagesLoaded = 0;
 RDFImageList * XFE_RDFImage::RDFImagesCache = (RDFImageList *) NULL;
 // Max number of images in cache - to be replaced with very clever hash table
 unsigned int XFE_RDFImage::MaxRdfImages = 30;
-unsigned int XFE_RDFImage::ImageListIncrSize = 20;
+//unsigned int XFE_RDFImage::ImageListIncrSize = 20;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ XFE_RDFImage::XFE_RDFImage(XFE_Component * frame,
 
 
   // Make sure the cache is up and running.
-  XFE_RDFImage::imageCacheInitialize();
+//  XFE_RDFImage::imageCacheInitialize();
 
 
   if (cxtInitSucceeded)
@@ -148,7 +148,7 @@ XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32 widt
 
 /* Image library callback */
 void
-XFE_RDFImage::RDFNewPixmap(IL_Pixmap * image, Boolean isMask)
+XFE_RDFImage::RDFNewPixmap(IL_Pixmap * image, PRBool isMask)
 {
 	if (isMask)
 		m_mask = image;
@@ -187,7 +187,7 @@ XFE_RDFImage::RDFImageComplete(IL_Pixmap * image)
 }
 
 /* returns if the image has been completely loaded */
-Boolean 
+PRBool 
 XFE_RDFImage::isImageLoaded(void)
 {
      return (completelyLoaded);
@@ -252,6 +252,29 @@ XFE_RDFImage::loadImage(void)
 XFE_RDFImage *
 XFE_RDFImage::isImageAvailable(char * imageURL)
 {
+   RDFImageList * ptr = RDFImagesCache;
+   if (!ptr)
+      return (XFE_RDFImage *) NULL;
+   do 
+   {
+
+      if ((!XP_STRCMP(imageURL, ptr->imageURL))) {
+        /* If the RDFImage object related to the url 
+         * is still around, and the pixmap has been completely loaded,
+         * return handle to the RDFImage object.
+         */
+
+        if (ptr->obj && ((ptr->obj)->isImageLoaded()))
+          return (ptr->obj); 
+        else
+          /* The image URL is in the cache,but the image is not ready yet */
+          return((XFE_RDFImage *)NULL);
+      }
+      ptr = ptr->next;
+   } while (ptr != RDFImagesCache);
+   return (XFE_RDFImage *)NULL;
+
+#ifdef UNDEF
 int   i = 0;
 
   for (i = 0; i< m_numRDFImagesLoaded; i++)
@@ -269,6 +292,34 @@ int   i = 0;
    }   // for
 
    return (XFE_RDFImage * ) NULL;
+#endif  /* UNDEF */
+}
+
+
+
+/* 
+ * Remove a widget from the listener list.
+ * This s'd be called by the destroy callback of the
+ * widget that requested the image. This is to take care of cases
+ * where a specific widget associated with the image goes away, but the
+ * class that it originated from is not gone. This
+ * works with isRequestorAlive()
+ */
+
+void
+XFE_RDFImage::removeListener(Widget w)
+{
+
+   RDFImageList * ptr = RDFImagesCache;
+   if (!ptr)
+      return;
+   do 
+   {
+      if (ptr->widget == w) {
+        ptr->widget = NULL;
+      }
+      ptr = ptr->next;
+   } while (ptr != RDFImagesCache);
 
 }
 
@@ -281,85 +332,92 @@ int   i = 0;
 void
 XFE_RDFImage::removeListener(void * obj)
 {
-   int totalImages = m_numRDFImagesLoaded;
-   for (int i=0; i<totalImages; i++)
+   RDFImageList * ptr = RDFImagesCache, *p;
+   int cnt = m_numRDFImagesLoaded;
+   if (!ptr)
+      return;
+
+   do 
    {
-     if (RDFImagesCache[i].requestedObj == obj) {
-       removeListener(i);
-     }
-   } 
-}
+      if (ptr->requestedObj == obj) {
+        removeListener(ptr);
+        // set the pointers properly
+        ptr->prev->next = ptr->next;
+        ptr->next->prev = ptr->prev;
+        p = ptr->next;
+        if (ptr == RDFImagesCache)
+            RDFImagesCache = ptr->next;
+        XP_FREE(ptr);
+        ptr = p;
+      }
+      else
+        ptr = ptr->next;
+      cnt--;
+   } while (/* ptr->next != RDFImagesCache */ cnt != 0) ;
+
+}  /* removeListener */
+
 
 /* free and reset an element in the cache */
 void
-XFE_RDFImage::removeListener(int i) {
+XFE_RDFImage::removeListener(RDFImageList * ptr) {
 
-  if (!RDFImagesCache[i].isSpaceAvailable) {
-         // free the string
-    if (RDFImagesCache[i].imageURL) {
-         free(RDFImagesCache[i].imageURL);
-         RDFImagesCache[i].imageURL = (char *) NULL;
+    // free the string
+    if (ptr->imageURL) {
+         free(ptr->imageURL);
     }
 
-         // Set the widget pointer to NULL
-         RDFImagesCache[i].widget = NULL;
+    // Set the widget pointer to NULL
+    ptr->widget = NULL;
 
-         /* I don't think I need to do this here. The RDFImage
-          * object can be deleted from the destructor
-          */
-#ifdef UNDEF
-     if (RDFImagesCache[i].obj) {
-         delete(RDFImagesCache[i].obj);  
-         RDFImagesCache[i].obj = (XFE_RDFImage *) NULL;
+    /* Delete the RDFImage object  */
+
+     if (ptr->obj) {
+         delete(ptr->obj);  
      }
-#endif  /* UNDEF  */
 
-         // reset the requestor's pointer 
-         RDFImagesCache[i].requestedObj = (void *)NULL;
+    // reset the requestor's pointer 
+    ptr->requestedObj = (void *)NULL;
 
-         // Mark the space to be available
-         RDFImagesCache[i].isSpaceAvailable = True;
-         m_numRDFImagesLoaded--;
-  }
-}
+    m_numRDFImagesLoaded--;
 
+}  /* removeListener */
 
-/* 
- * Remove a widget from the listener list.
- * This s'd be called by the destroy callback of the
- * widget that requested the image. This is to take care of cases
- * where a specific widget associated with the image goes away, but the
- * class that it originated from is not gone. This is suppose to
- * work with isRequestorAlive()
- */
-
-void
-XFE_RDFImage::removeListener(Widget w)
-{
-   for (int i=0; i<m_numRDFImagesLoaded; i++)
-   {
-     if (RDFImagesCache[i].widget == w) {
-         RDFImagesCache[i].widget = NULL;
-     }
-   }
-
-}
 
 /* Add a new image to the cache */
 void
 XFE_RDFImage::addListener(void * requestedObj, Widget w, char * imageURL)
 {
 
-   int i =0;
+   RDFImageList * ptr = XP_NEW_ZAP(RDFImageList);
+
+  if (m_numRDFImagesLoaded == 0) {
+    /* First entry */
+    RDFImagesCache = ptr;
+  }
+  ptr->next = RDFImagesCache;
+  ptr->prev = ((m_numRDFImagesLoaded == 0) ? RDFImagesCache : RDFImagesCache->prev);
+  (ptr->prev)->next = ptr;
+  RDFImagesCache->prev = ptr;
+
+  ptr->obj = this;
+  ptr->requestedObj = requestedObj;
+  ptr->widget  = w;
+  ptr->imageURL  = (char *)XP_ALLOC(sizeof(char) * (strlen(imageURL) + 1));
+  strncpy(ptr->imageURL, imageURL, strlen(imageURL));
+  m_numRDFImagesLoaded++;
+  
+
+#ifdef UNDEF
   /* Go through the cache and see if there are any existing 
    * space that is available.
    */
-
   for (i=0; i<m_numRDFImagesLoaded; i++) {
     if (RDFImagesCache[i].isSpaceAvailable) {
       break;
     }
   }
+
 
   if (m_numRDFImagesLoaded == MaxRdfImages) {
     /* The array is full. realloc */
@@ -367,9 +425,8 @@ XFE_RDFImage::addListener(void * requestedObj, Widget w, char * imageURL)
      MaxRdfImages +=ImageListIncrSize;
 
   }
-  
   if (m_numRDFImagesLoaded < MaxRdfImages) {
-   RDFImagesCache[i].obj = this;
+RDFImagesCache[i].obj = this;
    RDFImagesCache[i].requestedObj = requestedObj;
    RDFImagesCache[i].widget  = w;
    RDFImagesCache[i].imageURL  = (char *)XP_ALLOC(sizeof(char) * (strlen(imageURL) + 1));
@@ -377,8 +434,10 @@ XFE_RDFImage::addListener(void * requestedObj, Widget w, char * imageURL)
     RDFImagesCache[i].isSpaceAvailable = False;
    m_numRDFImagesLoaded++;
   }
+#endif   /* UNDEF  */
 
-}
+}   /* addListener */
+
 
 /* 
  * This is called by RDFDisplayPixmap(), 
@@ -388,11 +447,27 @@ XFE_RDFImage::addListener(void * requestedObj, Widget w, char * imageURL)
 PRBool 
 XFE_RDFImage::isrequestorAlive(Widget w)
 {
+   RDFImageList * ptr = RDFImagesCache;
+
+   if (!ptr)
+     return(False);     
+   do 
+   {
+      if (ptr->widget  == w) {
+        return(True);
+      }
+      ptr = ptr->next;
+   } while (ptr != RDFImagesCache);
+   return (False);
+
+#ifdef UNDEF
   for(int i = 0; i<m_numRDFImagesLoaded; i++) {
     if (RDFImagesCache[i].widget == w)
       return (True);
   }
   return (False);
+#endif  /* UNDEF  */
+
 }
 
 /* 
@@ -404,12 +479,25 @@ XFE_RDFImage::isrequestorAlive(Widget w)
 XFE_RDFImage * 
 XFE_RDFImage::getRDFImageObject(Widget w)
 {
+   RDFImageList * ptr = RDFImagesCache;
+   if (!ptr)
+     return(XFE_RDFImage *)  NULL;
+   do 
+   {
+      if (ptr->widget  == w) {
+        return(ptr->obj);
+      }
+      ptr = ptr->next;
+   } while (ptr != RDFImagesCache);
+   return (XFE_RDFImage *)NULL;
 
+#ifdef UNDEF
   for(int i = 0; i<m_numRDFImagesLoaded; i++) {
     if (RDFImagesCache[i].widget == w)
       return (RDFImagesCache[i].obj);
   }
   return (XFE_RDFImage *) NULL;
+#endif  /* UNDEF  */
 }
 
 
