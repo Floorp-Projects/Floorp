@@ -210,7 +210,6 @@ nsMsgPlatformFileToURL ; 2
 ?SetAttachVCard@nsMsgCompFields@@UAGIH@Z ; 2
 ?DeliverAsMailExit@nsMsgComposeAndSend@@QAEXPAVnsIURI@@I@Z ; 2
 ?SetAttachments@nsMsgCompFields@@UAGIPBD@Z ; 2
-?CreateAndSendMessage@nsMsgComposeAndSend@@UAGIPAVnsIEditorShell@@PAVnsIMsgIdentity@@PAVnsIMsgCompFields@@HHHPAVnsIMsgDBHdr@@PBD4IPBUnsMsgAttachmentData@@PBUnsMsgAttachedFile@@PAXPAPAVnsIMsgSendListener@@I@Z ; 2
 ?OnDataAvailable@nsURLFetcher@@UAGIPAVnsIRequest@@PAVnsISupports@@PAVnsIInputStream@@II@Z ; 2
 ??1nsSmtpUrl@@MAE@XZ ; 2
 ?CountCompFieldAttachments@nsMsgComposeAndSend@@QAEIXZ ; 2
@@ -251,7 +250,6 @@ msg_generate_message_id ; 2
 ?GetOriginalMsgURI@nsMsgComposeParams@@UAGIPAPAD@Z ; 1
 ?GetKey@nsSmtpServer@@UAGIPAPAD@Z ; 1
 ?GetType@nsMsgCompose@@UAGIPAH@Z ; 1
-?SetEditor@nsMsgCompose@@UAGIPAVnsIEditorShell@@@Z ; 1
 ??_GnsComposeStringService@@UAEPAXI@Z ; 1
 ?saveKeyList@nsSmtpService@@AAEIXZ ; 1
 ??0nsComposeStringService@@QAE@XZ ; 1
@@ -286,7 +284,6 @@ msg_generate_message_id ; 2
 ??_GnsSmtpService@@UAEPAXI@Z ; 1
 ??_GnsMsgDocumentStateListener@@UAEPAXI@Z ; 1
 ?GetFormat@nsMsgComposeParams@@UAGIPAH@Z ; 1
-?ConvertAndLoadComposeWindow@nsMsgCompose@@QAEIPAVnsIEditorShell@@AAVnsString@@11HH@Z ; 1
 ?GetServerByKey@nsSmtpService@@UAGIPBDPAPAVnsISmtpServer@@@Z ; 1
 ?BuildBodyMessageAndSignature@nsMsgCompose@@QAEIXZ ; 1
 ?InitCompose@nsMsgComposeService@@UAGIPAVnsIDOMWindowInternal@@PAVnsIMsgComposeParams@@PAPAVnsIMsgCompose@@@Z ; 1

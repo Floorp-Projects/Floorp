@@ -487,8 +487,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
   // So set it back to writable.
   // Note!  enableEditableFields in gComposeRecyclingListener::onReopen
   // will redundantly set this flag to writable, but it gets there
-  // too late.  This will be revisited when cmanske lands the
-  // next stage of editorshell removal.
+  // too late.
   PRUint32 flags = 0;
   m_editor->GetFlags(&flags);
   flags &= ~nsIPlaintextEditor::eEditorReadonlyMask;
@@ -1255,7 +1254,7 @@ nsresult nsMsgCompose::ClearEditor()
 
 // This used to be called BEFORE editor was created 
 //  (it did the loadUrl that triggered editor creation)
-// Since editorShell removal, it is called from JS after editor creation
+// It is called from JS after editor creation
 //  (loadUrl is done in JS)
 NS_IMETHODIMP nsMsgCompose::InitEditor(nsIEditor* aEditor, nsIDOMWindow* aContentWindow)
 {
