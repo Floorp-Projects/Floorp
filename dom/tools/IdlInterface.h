@@ -48,7 +48,7 @@ public:
                   ~IdlInterface();
 
   void            InheritsFrom(char *aBase);
-  long            BaseClasseCount();
+  long            BaseClassCount();
   char*           GetBaseClassAt(long aIndex);
   void            AddTypedef(IdlTypedef *aTypedef);
   long            TypedefCount();

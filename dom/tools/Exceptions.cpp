@@ -86,4 +86,20 @@ AbortParser::AbortParser(char *aFileName, long aLineNumber)
   SetMessage(message);
 }
 
+FileNotFoundException::FileNotFoundException(char *aFileName)
+{
+  char message[512]; // seems big enough
+  strcpy(message, "File not found: ");
+  strcat(message, aFileName);
 
+  SetMessage(message);
+}
+
+CantOpenFileException::CantOpenFileException(char *aFileName)
+{
+  char message[512]; // seems big enough
+  strcpy(message, "Can't open file: ");
+  strcat(message, aFileName);
+
+  SetMessage(message);
+}
