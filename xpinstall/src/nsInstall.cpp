@@ -112,18 +112,23 @@ NS_SoftwareUpdateRequestAutoReg()
 {
   nsresult rv;
   nsCOMPtr<nsIFile> file;
-  NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                         getter_AddRefs(file));
-  
+
+  if (nsSoftwareUpdate::GetProgramDirectory())
+    // xpistub case, use target directory instead
+    nsSoftwareUpdate::GetProgramDirectory()->Clone(getter_AddRefs(file));
+  else
+    NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                           getter_AddRefs(file));
+
   if (!file) {
     NS_WARNING("Getting NS_XPCOM_CURRENT_PROCESS_DIR failed");
     return;
   }
-  
+
   file->AppendNative(nsDependentCString(".autoreg"));
-  
+
   rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
-  
+
   if (NS_FAILED(rv)) {
     NS_WARNING("creating file failed");
     return;
