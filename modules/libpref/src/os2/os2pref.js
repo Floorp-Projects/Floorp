@@ -83,6 +83,8 @@ pref("font.size.nav4rounding", false);
 
 pref("netinst.profile.show_profile_wizard", true); 
 
+pref("middlemouse.paste", true);
+
 //The following pref is internal to Communicator. Please
 //do *not* place it in the docs...
 pref("netinst.profile.show_dir_overwrite_msg",  true); 
