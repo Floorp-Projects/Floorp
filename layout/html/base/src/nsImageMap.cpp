@@ -689,6 +689,7 @@ public:
 
 ImageMapImpl::ImageMapImpl(nsIAtom* aTag)
 {
+  NS_INIT_REFCNT();
   mTag = aTag;
   NS_IF_ADDREF(aTag);
 }
