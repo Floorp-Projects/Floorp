@@ -38,14 +38,13 @@
   <!-- This tab is currently not used -->
   <tab id="imageLinkTab" label="&imageLinkTab.label;"/>
 
-  <groupbox id="imageLocation">
-    <caption label="&locationBox.label;"/>
-    <!--/////// Src URL and ALT Text //////-->
-    <label control   = "srcInput"
+  <vbox id="imageLocation"> 
+    <spacer class="spacer"/>
+    <label control = "srcInput"
       value = "&locationEditField.label;"
       tooltiptext="&locationEditField.tooltip;"
       />
-    <textbox
+    <textbox flex="1"
       id         = "srcInput" 
       oninput    = "ChangeImageSrc()"
       style      = "min-width : 20em"/>
@@ -58,18 +57,22 @@
       <button id="ChooseFile"/>
     </hbox>
     <spacer class="spacer"/>
-    <hbox>
-      <label id      = "altTextLabel" 
-        control     = "altTextInput"
-        tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
-        value   = "&altTextEditField.label;"/>
-      <textbox
-        id     ="altTextInput"
-        style  = "min-width : 20em"
-        tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"/>
-    </hbox>
-    <spacer class="spacer"/>
-  </groupbox>
+    <radiogroup id="altTextRadioGroup" flex="1">
+      <hbox align="center">
+        <radio id = "altTextRadio" 
+          label   = "&altText.label;"
+          oncommand = "SetAltTextDisabled(false);"/>
+        <textbox flex="1"
+          id      = "altTextInput"
+          style   = "min-width : 20em"
+          tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
+          oninput = "SetAltTextDisabled(false);"/>
+      </hbox>
+      <radio id = "noAltTextRadio" 
+        label   = "&noAltText.label;"
+        oncommand = "SetAltTextDisabled(true);"/>
+    </radiogroup>
+  </vbox>
 
   <groupbox id="imagePreview" orient="horizontal">
     <caption label="&previewBox.label;"/>
@@ -95,150 +98,147 @@
     </vbox>
   </groupbox>
 
-  <groupbox id="imageDimensions" align="start">
-    <caption id="dimensionsLabel" label="&dimensionsBox.label;"/>
-    <vbox>
-          <hbox>
-            <radiogroup id="imgSizeGroup">
-              <radio
-                id      = "actualSizeRadio" 
-                label   = "&actualSizeRadio.label;"
-                tooltip = "aTooltip" tooltiptext="&actualSizeRadio.tooltip;"
-                oncommand = "SetActualSize()"/>
-              <radio
-                id      = "customSizeRadio" 
-                label   = "&customSizeRadio.label;"
-                tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
-                oncommand = "doDimensionEnabling();" />
-            </radiogroup>
-            <spacer flex="1"/>
-            <vbox>
-              <spacer flex="1"/>
-              <!--////// CONSTRAIN DIMENSIONS //////-->
-              <checkbox id="constrainCheckbox" label="&constrainCheckbox.label;"
-                   oncommand="ToggleConstrain()"
-                   tooltiptext="&constrainCheckbox.tooltip;"/>
-            </vbox>
-            <spacer flex="1"/>
-          </hbox>
-          <spacer class="spacer"/>
-          <grid class="big-left-margin">
-            <columns><column/><column/><column flex="1"/></columns>
-            <rows>
-              <!--//////  IMAGE WIDTH  //////-->
-              <row align="center">
-                <label id    = "widthLabel"
-                  control   = "widthInput"
-                  value = "&widthEditField.label;" />
-                <textbox
-                  id       = "widthInput" 
-                  class    = "narrow"
-                  oninput  = "constrainProportions(this.id, 'heightInput')"/>
-                <menulist id = "widthUnitsMenulist"
-                  oncommand = "doDimensionEnabling();" />
-                <!-- contents are appended by JS -->
-              </row>
-              <!--////// IMAGE HEIGHT //////-->
-              <row align="center">
-                <label id    = "heightLabel"
-                  control   = "heightInput"
-                  value = "&heightEditField.label;" />
-                <textbox
-                  id       = "heightInput" 
-                  class    = "narrow"
-                  oninput  = "constrainProportions(this.id, 'widthInput')"/>
-                <menulist id = "heightUnitsMenulist"
-                  oncommand = "doDimensionEnabling();" />
-                <!-- contents are appended by JS -->
-              </row>
-            </rows>          
-          </grid>
-          <spacer flex="1"/>
-    </vbox>
-  </groupbox>
+  <vbox id="imageDimensions" align="start">
+    <spacer class="spacer"/>
+    <hbox>
+      <radiogroup id="imgSizeGroup">
+        <radio
+          id      = "actualSizeRadio" 
+          label   = "&actualSizeRadio.label;"
+          tooltip = "aTooltip" tooltiptext="&actualSizeRadio.tooltip;"
+          oncommand = "SetActualSize()"/>
+        <radio
+          id      = "customSizeRadio" 
+          label   = "&customSizeRadio.label;"
+          tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
+          oncommand = "doDimensionEnabling();" />
+      </radiogroup>
+      <spacer flex="1"/>
+      <vbox>
+        <spacer flex="1"/>
+        <checkbox id="constrainCheckbox" label="&constrainCheckbox.label;"
+             oncommand="ToggleConstrain()"
+             tooltiptext="&constrainCheckbox.tooltip;"/>
+      </vbox>
+      <spacer flex="1"/>
+    </hbox>
+    <spacer class="spacer"/>
+    <grid class="big-left-margin">
+      <columns><column/><column/><column flex="1"/></columns>
+      <rows>
+        <row align="center">
+          <label id    = "widthLabel"
+            control   = "widthInput"
+            value = "&widthEditField.label;" />
+          <textbox
+            id       = "widthInput" 
+            class    = "narrow"
+            oninput  = "constrainProportions(this.id, 'heightInput')"/>
+          <menulist id = "widthUnitsMenulist"
+            oncommand = "doDimensionEnabling();" />
+          <!-- contents are appended by JS -->
+        </row>
+        <row align="center">
+          <label id    = "heightLabel"
+            control   = "heightInput"
+            value = "&heightEditField.label;" />
+          <textbox
+            id       = "heightInput" 
+            class    = "narrow"
+            oninput  = "constrainProportions(this.id, 'widthInput')"/>
+          <menulist id = "heightUnitsMenulist"
+            oncommand = "doDimensionEnabling();" />
+          <!-- contents are appended by JS -->
+        </row>
+      </rows>          
+    </grid>
+    <spacer flex="1"/>
+  </vbox>
 
   <hbox id="imageAppearance">
     <groupbox>
-          <caption id="spacingLabel" label="&spacingBox.label;"/>
-          <grid>
-            <columns><column/><column/><column/></columns>
-            <rows>
-              <row align="center">
-                <label 
-                  class = "align-right" 
-                  id    = "leftrightLabel"
-                  value = "&leftRightEditField.label;"/>
-                <textbox
-                  class     = "narrow"
-                  id        = "imageleftrightInput" 
-                  oninput   = "forceInteger(this.id)"/>
-                <label 
-                  id    = "leftrighttypeLabel"
-                  value = "&pixelsPopup.value;" />
-              </row>
-              <row align="center">
-                <label 
-                  class = "align-right" 
-                  id    = "topbottomLabel"
-                  value = "&topBottomEditField.label;"/>
-                <textbox
-                  class     = "narrow"
-                  id        = "imagetopbottomInput" 
-                  oninput   = "forceInteger(this.id)"/>
-                <label
-                  id    = "topbottomtypeLabel"
-                  value = "&pixelsPopup.value;" />
-              </row>
-              <row align="center">
-                <label class = "align-right" 
-                  id    = "borderLabel"
-                  value = "&borderEditField.label;"/>
-                <textbox
-                  class     = "narrow"
-                  id        = "border" 
-                  oninput   = "forceInteger(this.id)"/>
-                <label 
-                  id    = "bordertypeLabel"
-                  value = "&pixelsPopup.value;" />
-              </row>
-            </rows>
-          </grid>
-        </groupbox>
+      <caption id="spacingLabel" label="&spacingBox.label;"/>
+      <grid>
+        <columns><column/><column/><column/></columns>
+        <rows>
+          <row align="center">
+            <label 
+              class = "align-right" 
+              id    = "leftrightLabel"
+              value = "&leftRightEditField.label;"/>
+            <textbox
+              class     = "narrow"
+              id        = "imageleftrightInput" 
+              oninput   = "forceInteger(this.id)"/>
+            <label 
+              id    = "leftrighttypeLabel"
+              value = "&pixelsPopup.value;" />
+          </row>
+          <spacer class="spacer"/>
+          <row align="center">
+            <label 
+              class = "align-right" 
+              id    = "topbottomLabel"
+              value = "&topBottomEditField.label;"/>
+            <textbox
+              class     = "narrow"
+              id        = "imagetopbottomInput" 
+              oninput   = "forceInteger(this.id)"/>
+            <label
+              id    = "topbottomtypeLabel"
+              value = "&pixelsPopup.value;" />
+          </row>
+          <spacer class="spacer"/>
+          <row align="center">
+            <label class = "align-right" 
+              id    = "borderLabel"
+              value = "&borderEditField.label;"/>
+            <textbox
+              class     = "narrow"
+              id        = "border" 
+              oninput   = "forceInteger(this.id)"/>
+            <label 
+              id    = "bordertypeLabel"
+              value = "&pixelsPopup.value;" />
+          </row>
+        </rows>
+      </grid>
+    </groupbox>
 
     <vbox>
       <groupbox align="start">
-          <caption id="alignLabel" label="&alignment.label;"/>
-          <menulist id="alignTypeSelect" class="align-menu">
-            <menupopup>
-              <menuitem class="align-menu" value="top"    label="&topPopup.value;"/>
-              <menuitem class="align-menu" value="middle" label="&centerPopup.value;"/>
-              <menuitem class="align-menu" value="bottom" label="&bottomPopup.value;"/>
-              <!-- HTML attribute value is opposite of the button label on purpose -->
-              <menuitem class="align-menu" value="right"  label="&wrapLeftPopup.value;"/>
-              <menuitem class="align-menu" value="left"   label="&wrapRightPopup.value;"/>
-            </menupopup>
-          </menulist>
-        </groupbox>
+        <caption id="alignLabel" label="&alignment.label;"/>
+        <menulist id="alignTypeSelect" class="align-menu">
+          <menupopup>
+            <menuitem class="align-menu" value="top"    label="&topPopup.value;"/>
+            <menuitem class="align-menu" value="middle" label="&centerPopup.value;"/>
+            <menuitem class="align-menu" value="bottom" label="&bottomPopup.value;"/>
+            <!-- HTML attribute value is opposite of the button label on purpose -->
+            <menuitem class="align-menu" value="right"  label="&wrapLeftPopup.value;"/>
+            <menuitem class="align-menu" value="left"   label="&wrapRightPopup.value;"/>
+          </menupopup>
+        </menulist>
+      </groupbox>
 
       <groupbox>
-         <caption id="imagemapLabel" label="&imagemapBox.label;"/>
-         <hbox equalsize="always">
+        <caption id="imagemapLabel" label="&imagemapBox.label;"/>
+        <hbox equalsize="always">
 
 <!-- Hide Image Map Editor. Not ready for prime time yet
-          <button
-            id      = "editImageMap"
-            oncommand = "editImageMap()"
-            tooltiptext="&editImageMapButton.tooltip;"
-            label   = "&editImageMapButton.label;"
-            flex    = "1"/>
+        <button
+          id      = "editImageMap"
+          oncommand = "editImageMap()"
+          tooltiptext="&editImageMapButton.tooltip;"
+          label   = "&editImageMapButton.label;"
+          flex    = "1"/>
 -->
-          <button
-            id      = "removeImageMap"
-            oncommand = "removeImageMap()"
-            label   = "&removeImageMapButton.label;"
-            flex    = "1"/>
-          <spacer flex="1"/><!-- remove when we restore Image Map Editor -->
-          </hbox>
+        <button
+          id      = "removeImageMap"
+          oncommand = "removeImageMap()"
+          label   = "&removeImageMapButton.label;"
+          flex    = "1"/>
+        <spacer flex="1"/><!-- remove when we restore Image Map Editor -->
+        </hbox>
       </groupbox>
     </vbox>
   </hbox>

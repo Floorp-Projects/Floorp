@@ -20,7 +20,7 @@
    - Contributor(s): 
   -->
 
-<!-- These strings are for use specifically in the editor's image dialog. -->
+<!-- These strings are for use specifically in the editor's image and form image dialogs. -->
 
 <!-- Window title -->
 <!ENTITY windowTitle.label "Image Properties">
@@ -28,18 +28,17 @@
 <!ENTITY pixelsPopup.value "pixels">
 <!ENTITY percentPopup.value "percent">
 
-<!-- These are in the location box. -->
-<!ENTITY locationBox.label "Image Information">
-<!ENTITY locationEditField.label "Image URL:">
+<!-- These are in the Location tab panel -->
+<!ENTITY locationEditField.label "Image Location:">
 <!ENTITY locationEditField.tooltip "Type the image's filename or location">
-<!ENTITY altTextEditField.label "Alternative Text:">
+<!ENTITY altText.label "Alternate text:">
 <!ENTITY altTextEditField.tooltip "Type text to display in place of the image">
+<!ENTITY noAltText.label "Don't use alternate text">
 
 <!ENTITY previewBox.label "Image Preview">
-
 <!ENTITY MoreFewerButton.tooltip "Display more or fewer properties to edit">
-<!-- These controls are in the Dimensions box of the expanded area -->
-<!ENTITY dimensionsBox.label "Dimensions">
+
+<!-- These controls are in the Dimensions tab panel -->
 <!-- actualSize.label should be same as actualSizeRadio.label + ":" -->
 <!ENTITY actualSize.label "Actual Size:">
 <!ENTITY actualSizeRadio.label "Actual Size">
@@ -65,7 +64,7 @@
 <!ENTITY wrapRightPopup.value "Wrap to the right">
 <!ENTITY wrapLeftPopup.value "Wrap to the left">
 
-<!-- These controls are in the Spacing Box of the expanded area -->
+<!-- These controls are in the Spacing Box -->
 <!ENTITY spacingBox.label "Spacing">
 <!ENTITY spacingBox.tooltip "Type a number for the amount of space around image">
 <!ENTITY leftRightEditField.label "Left and Right:">
@@ -80,7 +79,7 @@
 
 <!-- These tabs are currently used in the image input dialog -->
 <!ENTITY imageInputTab.label "Form">
-<!ENTITY imageLocationTab.label "Image">
+<!ENTITY imageLocationTab.label "Location">
 <!ENTITY imageDimensionsTab.label "Dimensions">
 <!ENTITY imageAppearanceTab.label "Appearance">
 <!-- This tab is currently not used -->
