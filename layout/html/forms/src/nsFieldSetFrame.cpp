@@ -213,12 +213,16 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
 
         if (mLegendFrame) {
 
+          // Use the rect of the legend frame, not mLegendRect, so we draw our
+          // border under the legend's left and right margins.
+          const nsRect & legendRect = mLegendFrame->GetRect();
+        
           // we should probably use PaintBorderEdges to do this but for now just use clipping
           // to achieve the same effect.
 
           // draw left side
           nsRect clipRect(rect);
-          clipRect.width = mLegendRect.x - rect.x;
+          clipRect.width = legendRect.x - rect.x;
           clipRect.height = border.top;
 
           aRenderingContext.PushState();
@@ -231,8 +235,8 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
 
           // draw right side
           clipRect = rect;
-          clipRect.x = mLegendRect.x + mLegendRect.width;
-          clipRect.width -= (mLegendRect.x + mLegendRect.width);
+          clipRect.x = legendRect.x + legendRect.width;
+          clipRect.width -= (legendRect.x + legendRect.width);
           clipRect.height = border.top;
 
           aRenderingContext.PushState();
