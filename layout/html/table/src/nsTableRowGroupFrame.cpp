@@ -817,7 +817,8 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   for (rowFrame = startRowFrame, rowIndex = 0; rowFrame && (extra > 0); rowFrame = rowFrame->GetNextRow(), rowIndex++) {
     RowInfo& rInfo = rowInfo[rowIndex];
     if (rInfo.hasPctHeight) {
-      nscoord rowExtra = PR_MAX(0, rInfo.pctHeight - rInfo.height);
+      nscoord rowExtra = (rInfo.pctHeight > rInfo.height)  
+                         ? rInfo.pctHeight - rInfo.height: 0;
       rowExtra = PR_MIN(rowExtra, extra);
       UpdateHeights(rInfo, rowExtra, heightOfRows, heightOfUnStyledRows);
       extra -= rowExtra;
@@ -1283,6 +1284,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
     }
     isTopOfPage = PR_FALSE; // after the 1st row, we can't be on top of the page any more.
   }
+  return NS_OK;
 }
 
 /** Layout the entire row group.
@@ -2117,11 +2119,10 @@ nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame,
   NS_ENSURE_ARG_POINTER(aFrame);
 
   nsITableCellLayout* cellFrame;
-  nsresult result = aFrame->QueryInterface(NS_GET_IID(nsITableCellLayout),(void**)&cellFrame);
-  
-  if(NS_FAILED(result) || !cellFrame)
-    return result?result:NS_ERROR_FAILURE;
-  
+  nsresult result = CallQueryInterface(aFrame, &cellFrame);
+  if(NS_FAILED(result)) 
+    return result;
+
   nsTableFrame* parentFrame = nsnull;
   result = nsTableFrame::GetTableFrame(this, parentFrame);
   nsTableCellMap* cellMap = parentFrame->GetCellMap();
