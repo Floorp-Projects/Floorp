@@ -36,14 +36,13 @@
 #define D(x)
 #endif
 
+#ifdef MOZ_SELECTOR_BAR
 extern "C"
 {
 void ncview_image_complete_cb(XtPointer client_data);
 
 };
 
-
-#ifdef MOZ_SELECTOR_BAR
 typedef struct _SelectorCBStruct {
   XFE_NavCenterView *ncview;
   HT_View view;
@@ -262,10 +261,9 @@ XFE_NavCenterView::notify(HT_Resource		n,
       if (!_firstViewAdded) {
           HT_View view = HT_GetView(n);
           HT_Pane pane = HT_GetPane(view);
+          _ht_view = view;
           m_rdfview->setHTView(view);
           HT_SetSelectedView(pane, view);
-          _ht_view = view;
-
           _firstViewAdded = 1;
       }
 #endif
@@ -434,7 +432,7 @@ XFE_NavCenterView::getSelector(void)
   return (m_selector);
 
 }
-#endif /*MOZ_SELECTOR_BAR*/
+#endif  /* MOZ_SELECTOR_BAR  */
 
  void 
 XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32 height)
@@ -464,7 +462,7 @@ XFE_NavCenterView::handleNewPixmap(Widget w, IL_Pixmap * image, Boolean mask)
 
    rdfImage = XFE_RDFImage::getRDFImageObject(w);
    if (rdfImage)
-     rdfImage->RDFNewPixmap(image, mask);
+     rdfImage->RDFNewPixmap(image, (PRBool)mask);
 }
 
 
@@ -485,7 +483,8 @@ XFE_NavCenterView::handleImageComplete(Widget w, IL_Pixmap * image)
     rdfImage->RDFImageComplete(image);
 }
 
-extern "C" {
+#ifdef MOZ_SELECTOR_BAR
+extern "C" 
 void ncview_image_complete_cb(XtPointer client_data)
 {
      callbackClientData * cb = (callbackClientData *) client_data;
@@ -509,4 +508,4 @@ void ncview_image_complete_cb(XtPointer client_data)
 
 }
 
-};
+#endif /*MOZ_SELECTOR_BAR*/

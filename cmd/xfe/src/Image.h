@@ -50,7 +50,7 @@ public:
   virtual Pixmap  getMask();
   virtual PRInt32 getImageWidth();
   virtual PRInt32 getImageHeight();
-  virtual Boolean  isImageLoaded();
+  virtual PRBool  isImageLoaded();
   virtual void     loadImage();
 
 
