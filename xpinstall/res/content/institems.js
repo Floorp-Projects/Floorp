@@ -51,28 +51,27 @@ function addTreeItem(num, modName, url)
 
 function onLoad() 
 {
-    var i = 0;
-	var row = 0;
-	var moduleName;
-	var URL;
-    var numberOfDialogTreeElements;
-              doSetOKCancel(onOk, cancel);
-	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
-	if( !param )
-	{
-		dump( " error getting param block interface\n" );
-		return;
-	}
-    param.SetInt(0, 1 ); /* Set the default return to Cancel */
+  var row = 0;
+  var moduleName, URL, numberOfDialogTreeElements;
 
-	numberOfDialogTreeElements = param.GetInt(1);
+  doSetOKCancel(onOk, onCancel);
 
-    for (i=0; i < numberOfDialogTreeElements; i++)
-	{
-        moduleName = param.GetString(i);
-		URL = param.GetString(++i);
-        addTreeItem(row++, moduleName, URL);
-	}
+  param = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+
+  param.SetInt(0, 1 ); /* Set the default return to Cancel */
+
+  numberOfDialogTreeElements = param.GetInt(1);
+
+  for (var i=0; i < numberOfDialogTreeElements; i++)
+  {
+    moduleName = param.GetString(i);
+    URL = param.GetString(++i);
+    addTreeItem(row++, moduleName, URL);
+  }
+
+  var bundle = document.getElementById("xpinstallBundle");
+  var okButton = bundle.getString("OK");
+  document.getElementById("ok").label = okButton;
 }
 
 function onOk() 
@@ -84,7 +83,7 @@ function onOk()
    window.close();
 }
 
-function cancel() 
+function onCancel() 
 {
 	// set the cancel button in the param block
 	if (param)
