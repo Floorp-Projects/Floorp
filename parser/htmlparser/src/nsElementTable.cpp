@@ -1458,56 +1458,8 @@ PRInt32 nsHTMLElement::GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags
     if(theSynTags) {
       theChildIndex=LastOf(aContext,*theSynTags);
     } 
-    else{
-      PRInt32 theGroup=nsHTMLElement::GetSynonymousGroups(aChildTag);
-      if(theGroup) {
-        theChildIndex=aContext.GetCount();
-        while(-1<--theChildIndex) {
-          eHTMLTags theTag=aContext[theChildIndex];
-          if(gHTMLElements[theTag].IsMemberOf(theGroup)) {
-            break;   
-          }
-        }
-      }
-    } 
   }
   return theChildIndex;
-}
-
-int nsHTMLElement::GetSynonymousGroups(eHTMLTags aTag) {
-  int result=0;
-
-  int theGroup=gHTMLElements[aTag].mParentBits;
-  switch(theGroup) {
-
-    case kPhrase:
-    case kSpecial:
-    case kFontStyle: 
-    case kHTMLContent:
-    case kHeadContent:
-    case kHeadMisc:
-    case kFormControl:
-    case kPreformatted:
-    case kHeading:
-    case kBlockMisc:
-    case kBlock:
-    case kList:
-    case kPCDATA:
-    case kExtensions:
-    case kTable:
-    case kSelf:
-    case kInlineEntity:
-    case kBlockEntity:
-    case kFlowEntity:
-    case kAllTags:
-    default:
-      break;
-  }
-
-  if(eHTMLTag_font==aTag)  //hack for backward compatibility
-    result&=kFontStyle;
-
-  return result;
 }
 
 /**

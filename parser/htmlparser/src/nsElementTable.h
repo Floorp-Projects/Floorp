@@ -190,8 +190,6 @@ struct nsHTMLElement {
                   }
 
 
-  static  int     GetSynonymousGroups(eHTMLTags aTag);
-
   static  PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag);
 
   const TagList*  GetSynonymousTags(void) const {return mSynonymousTags;}
