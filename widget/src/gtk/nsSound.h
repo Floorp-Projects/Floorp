@@ -33,6 +33,10 @@ class nsSound : public nsISound {
   nsSound();
   virtual ~nsSound();
 
+  NS_IMETHOD Play(nsIURI *aURI);
+  NS_IMETHOD Init(void);
+  NS_IMETHOD Beep(void);
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
 

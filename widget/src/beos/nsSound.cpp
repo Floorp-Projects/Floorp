@@ -75,8 +75,9 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(nsIFileSpec *filespec)
+NS_METHOD nsSound::Play(nsIURI *aURI)
 {
+/*
 	char *filename;
 	filespec->GetNativePath(&filename);
 
@@ -89,6 +90,6 @@ NS_METHOD nsSound::Play(nsIFileSpec *filespec)
 		mSound->StartPlaying();
 
 	nsCRT::free(filename);
-
+*/
 	return NS_OK;
 }
