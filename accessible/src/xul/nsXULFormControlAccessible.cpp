@@ -499,7 +499,7 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccState(PRUint32 *_retval)
     mDOMNode->GetParentNode(getter_AddRefs(parentNode));
     if (parentNode) {
       nsCOMPtr<nsIDOMNode> focusedNode;
-      GetFocusedNode(getter_AddRefs(focusedNode));
+      GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode));
       if (focusedNode == parentNode)
         *_retval |= STATE_FOCUSED;
     }

@@ -73,7 +73,7 @@ public:
   NS_DECL_NSIACCESSIBLE
   NS_DECL_NSPIACCESSIBLE
 
-  NS_IMETHOD GetFocusedNode(nsIDOMNode **aFocusedNode);
+  static nsresult GetFocusedNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aFocusedNode);
 
   // nsIAccessNode
   NS_IMETHOD Shutdown();

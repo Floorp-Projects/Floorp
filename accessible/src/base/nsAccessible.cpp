@@ -499,16 +499,16 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   return PR_FALSE;
 }
 
-NS_IMETHODIMP nsAccessible::GetFocusedNode(nsIDOMNode **aFocusedNode) 
+nsresult nsAccessible::GetFocusedNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aFocusedNode)
 {
   nsCOMPtr<nsIFocusController> focusController;
   nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
   if (content)
     content->GetDocument(getter_AddRefs(document));
 
   if (!document)
-    document = do_QueryInterface(mDOMNode);
+    document = do_QueryInterface(aCurrentNode);
   if (document) {
     nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
     document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
@@ -561,7 +561,7 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
     else { 
       *aAccState |= STATE_FOCUSABLE;
       nsCOMPtr<nsIDOMNode> focusedNode;
-      if (NS_SUCCEEDED(GetFocusedNode(getter_AddRefs(focusedNode))) && focusedNode == mDOMNode)
+      if (NS_SUCCEEDED(GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode))) && focusedNode == mDOMNode)
         *aAccState |= STATE_FOCUSED;
     }
   }
@@ -585,7 +585,8 @@ NS_IMETHODIMP nsAccessible::GetAccFocused(nsIAccessible **aAccFocused)
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
 
   nsCOMPtr<nsIDOMNode> focusedNode;
-  if (accService && NS_SUCCEEDED(GetFocusedNode(getter_AddRefs(focusedNode)))) {
+  if (accService &&
+       NS_SUCCEEDED(GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode)))) {
     nsCOMPtr<nsIAccessible> accessible;
     if (NS_SUCCEEDED(accService->GetAccessibleInWeakShell(focusedNode, 
                                                           mWeakShell,

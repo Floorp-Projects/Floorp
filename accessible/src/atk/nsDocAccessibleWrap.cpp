@@ -337,6 +337,13 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         rv = NS_OK;
         break;
 
+    case nsIAccessibleEventReceiver::EVENT_ATK_LINK_SELECTED:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_LINK_SELECTED\n"));
+        g_signal_emit_by_name(accWrap->GetAtkObject(),
+                              "link_selected");
+        rv = NS_OK;
+        break;
+
         // Is a superclass of ATK event children_changed
     case nsIAccessibleEventReceiver::EVENT_REORDER:
         AtkChildrenChange *pAtkChildrenChange;

@@ -444,11 +444,17 @@ NS_IMETHODIMP nsAccessibleHyperText::GetSelectedLinkIndex(PRInt32 *aSelectedLink
 {
   *aSelectedLinkIndex = -1;
 
-  nsCOMPtr<nsIDOMNode> focusedNode;
-  NS_REINTERPRET_CAST(nsAccessible*, this)->GetFocusedNode(getter_AddRefs(focusedNode));
-
-  PRUint32 index, count, linkCount = 0;
+  PRUint32 count;
   mTextChildren->Count(&count);
+  if (count <= 0)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> curNode(do_QueryInterface(mTextChildren->ElementAt(0)));
+
+  nsCOMPtr<nsIDOMNode> focusedNode;
+  nsAccessible::GetFocusedNode(curNode, getter_AddRefs(focusedNode));
+
+  PRUint32 index, linkCount = 0;
   for (index = 0; index < count; index++) {
     nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
     nsCOMPtr<nsIDOMNode> parentNode;
