@@ -29,7 +29,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= locale
 LIBRARY_NAME	= nslocale_s
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+DIRS		= os2
+else
 DIRS		= unix
+endif
 
 REQUIRES	= xpcom unicharutil
 

@@ -41,6 +41,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpconnect
 LIBRARY_NAME	= xpconnect
+SHORT_LIBNAME	= xpconect
 
 CPPSRCS		= \
 		nsXPConnect.cpp \
@@ -76,9 +77,8 @@ IS_COMPONENT	= 1
 # this is automatically discovered under BeOS
 ifneq ($(OS_ARCH),BeOS)
 LIBS		+= \
-		-lmozjs \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 endif
 

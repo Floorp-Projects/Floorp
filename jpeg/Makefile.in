@@ -76,7 +76,7 @@ EXPORTS		= \
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-ifeq ($(subst /,_,$(shell uname -s)),OS2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CSRCS		+= \
 		jcapimin.c \
 		jcparam.c \
@@ -94,14 +94,12 @@ CSRCS		+= \
 		jcprepct.c \
 		$(NULL)
 
-OS2_IMPLIB	= 1
-LIBRARY		= $(LIBRARY_NAME)$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
-DEF_FILE	= $(LIBRARY_NAME).def
-TARGETS		= $(LIBRARY)
 endif
 
 # need static lib for some of the libimg componentry to link properly
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 override NO_STATIC_LIB=
+endif
 
 include $(topsrcdir)/config/rules.mk
 

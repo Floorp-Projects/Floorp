@@ -28,19 +28,20 @@ MODULE		= docshell
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= docshell
+EXTRA_DSO_LIBS	= jsdom
 
 CPPSRCS		= \
 		nsDocShellModule.cpp		\
 		$(NULL)
 
 SHARED_LIBRARY_LIBS= \
-		$(DIST)/lib/libbasedocshell_s.a	\
+		$(DIST)/lib/libbasedocshell_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS= \
 		-L$(DIST)/bin \
-		-lmozjs \
-		-ljsdom \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NULL)

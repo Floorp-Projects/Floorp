@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= raptor
 LIBRARY_NAME	= raptorgfx
+SHORT_LIBNAME	= nggfx
 
 REQUIRES	= util img xpcom raptor netlib dom js
 
@@ -68,7 +69,7 @@ CPPSRCS		= \
 		nsImageNetContextAsync.cpp \
 		nsImageNetContextSync.cpp \
 		nsImageRenderer.cpp \
-        nsRenderingContextImpl.cpp \
+	        nsRenderingContextImpl.cpp \
 		nsImageRequest.cpp \
 		nsImageSystemServices.cpp \
 		nsImageURL.cpp \
@@ -79,8 +80,8 @@ CPPSRCS		= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libimg_s.a \
-		$(DIST)/lib/libmozutil_s.a \
+		$(DIST)/lib/libimg_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

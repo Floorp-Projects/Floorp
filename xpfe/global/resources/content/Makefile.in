@@ -26,7 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+DIRS		= os2
+else
 DIRS		= unix
+endif
 
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/browserBindings.xul \
