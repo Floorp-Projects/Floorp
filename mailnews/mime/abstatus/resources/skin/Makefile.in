@@ -28,6 +28,3 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-install::
-	$(INSTALL) $(srcdir)/abookstat.gif $(DIST)/bin/chrome/skins/modern/messenger/skin
-

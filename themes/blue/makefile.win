@@ -30,3 +30,9 @@ CHROME_DIR = skins\$(THEME)
 
 include <$(DEPTH)\config\rules.mak>
 
+chrome::
+        $(REGCHROME) skin blue/communicator blue.jar
+        $(REGCHROME) skin blue/editor blue.jar
+        $(REGCHROME) skin blue/global blue.jar
+        $(REGCHROME) skin blue/messenger blue.jar
+        $(REGCHROME) skin blue/navigator blue.jar

@@ -1,2 +1,2 @@
-packages/core.jar:
-    communicator/content/pref/platformPrefOverlay.xul
+comm.jar:
+    content/communicator/pref/platformPrefOverlay.xul

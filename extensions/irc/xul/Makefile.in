@@ -38,3 +38,8 @@ CHROME_MISC = \
 
 include $(topsrcdir)/config/rules.mk
 
+chrome::
+	@$(REGCHROME) content chatzilla chatzilla.jar; \
+	$(REGCHROME) skin modern/chatzilla chatzilla.jar; \
+	$(REGCHROME) locale en-US/chatzilla chatzilla.jar; \
+	$(REGCHROME) content communicator comm.jar

@@ -26,24 +26,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-
-FILES		= \
-		createProfileWizard.dtd		\
-		newProfile1_1.dtd		\
-		newProfile1_2.dtd		\
-		profileManager.properties	\
-		profileManagerDelete.dtd	\
-		profileManagerMigrateAll.dtd	\
-		createProfileWizard.properties	\
-		newProfile1_2.properties	\
-		migration.properties		\
-		profileSelection.dtd		\
-		confirmMigration.dtd		\
-		selectLang.dtd			\
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/chrome/locales/en-US/communicator/locale/profile
 

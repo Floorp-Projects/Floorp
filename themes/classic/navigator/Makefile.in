@@ -28,35 +28,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
-
-EXPORT_RESOURCE_SAMPLES = \
-	back.gif \
-	back-disabled.gif \
-	back-hover.gif \
-	back-hover-active.gif \
-	forward.gif \
-	forward-hover.gif \
-	forward-hover-active.gif \
-	forward-disabled.gif \
-	location-hover.gif \
-	location.gif \
-	reload.gif \
-	reload-disabled.gif \
-	reload-hover.gif \
-	reload-hover-active.gif \
-	stop.gif \
-	stop-disabled.gif \
-	stop-hover.gif \
-	stop-hover-active.gif \
-	$(NULL)
-
 DIRS		= win
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

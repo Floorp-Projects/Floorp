@@ -22,3 +22,6 @@
 DEPTH=..\..
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+        $(REGCHROME) locale en-US/necko en-US.jar

@@ -30,15 +30,4 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS        = content locale skin
 
-CHROME_DIR = packages/cview
-CHROME_MISC_DIR = .
-
-# this is the magic variable that causes the various parts of the
-# chrome registration information to get created.
-CHROME_TYPE = content locale skin
-
-CHROME_MISC = \
-	manifest.rdf \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk

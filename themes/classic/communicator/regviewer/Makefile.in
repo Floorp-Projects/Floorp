@@ -27,17 +27,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
-
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/regviewer
-
-EXPORT_RESOURCE_SAMPLES = \
-		regviewer.css \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 

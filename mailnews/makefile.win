@@ -24,3 +24,7 @@ DEPTH=..
 DIRS=public base db local news imap mime compose addrbook import absync
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+        $(REGCHROME) content messenger messenger.jar
+        $(REGCHROME) locale en-US/messenger en-US.jar

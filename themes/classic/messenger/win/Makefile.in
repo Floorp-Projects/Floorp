@@ -27,22 +27,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
-
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/messenger/skin
-
-EXPORT_RESOURCE_SAMPLES = \
-	subscribe.css \
-	threadPane.css \
-	folderPane.css \
-	msgHdrViewOverlay.css \
-	pref-mailnews.css \
-	messenger.css \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-
-distclean clean clobber realclean clobber_all::
-	rm -f $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

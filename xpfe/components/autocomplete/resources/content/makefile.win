@@ -23,10 +23,3 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTXUL=$(DIST)\bin\chrome\packages\widget-toolkit\global\content
-
-install::
-	$(MAKE_INSTALL) autocomplete.xml $(DISTXUL)
-
-clobber::
-  rm -f $(DISTXUL)\autocomplete.xml

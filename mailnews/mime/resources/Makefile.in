@@ -29,8 +29,3 @@ include $(DEPTH)/config/autoconf.mk
 DIRS		= content
 
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(srcdir)/mime.properties $(DIST)/bin/chrome/locales/en-US/messenger/locale
-	$(INSTALL) $(srcdir)/mimeheader.properties $(DIST)/bin/chrome/locales/en-US/messenger/locale
-

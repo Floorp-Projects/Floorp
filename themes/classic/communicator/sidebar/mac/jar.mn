@@ -1,4 +1,4 @@
-skins/classic.jar:
-    communicator/skin/sidebar/customize.css 
-    communicator/skin/sidebar/preview.css   
-    communicator/skin/sidebar/sidebar.css  
+classic.jar:
+    skin/classic/communicator/sidebar/customize.css 
+    skin/classic/communicator/sidebar/preview.css   
+    skin/classic/communicator/sidebar/sidebar.css  

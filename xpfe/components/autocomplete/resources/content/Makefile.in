@@ -26,10 +26,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_CHROME	= $(srcdir)/autocomplete.xml \
-                $(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(EXPORT_CHROME) $(DIST)/bin/chrome/packages/widget-toolkit/global/content

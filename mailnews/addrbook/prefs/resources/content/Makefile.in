@@ -26,17 +26,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/packages/messenger/messenger/content/addressbook
-
-EXPORT_RESOURCE_SAMPLES = \
-		pref-addressing.xul \
-		pref-addressbookOverlay.xul \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

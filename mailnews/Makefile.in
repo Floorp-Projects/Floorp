@@ -30,3 +30,6 @@ DIRS		= idl public base db news local mime compose imap addrbook import absync
 
 include $(topsrcdir)/config/rules.mk
 
+chrome::
+	@$(REGCHROME) content messenger messenger.jar; \
+	$(REGCHROME) locale en-US/messenger en-US.jar

@@ -22,12 +22,3 @@
 DEPTH=..\..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
-
-DISTBROWSER=$(DIST)\bin\chrome\locales\en-US\messenger\locale\addressbook
-
-
-install::
-	$(MAKE_INSTALL) pref-addressing.dtd $(DISTBROWSER)
-
-clobber::
-  rm -f $(DIST)\bin\chrome\locales\en-US\messenger\locale\addressbook\pref-addressing.dtd

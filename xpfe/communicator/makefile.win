@@ -24,3 +24,7 @@ DEPTH=..\..
 DIRS= resources
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+        $(REGCHROME) content communicator comm.jar
+        $(REGCHROME) locale en-US/communicator en-US.jar

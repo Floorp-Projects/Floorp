@@ -28,44 +28,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-EXPORT_RESOURCE = \
-		$(srcdir)/box.css \
-		$(srcdir)/brand.css \
-		$(srcdir)/broken.gif \
-		$(srcdir)/button.css \
-		$(srcdir)/communicator.css \
-		$(srcdir)/content-large.gif \
-		$(srcdir)/content-small.gif \
-		$(srcdir)/dialogOverlay.css \
-		$(srcdir)/document-error.gif \
-		$(srcdir)/document.gif \
-		$(srcdir)/formatting.css \
-		$(srcdir)/lock.gif \
-		$(srcdir)/menubutton.css \
-		$(srcdir)/menubuttonBindings.xml \
-		$(srcdir)/navbar-endbox.gif \
-		$(srcdir)/offline.gif \
-		$(srcdir)/online.gif \
-		$(srcdir)/prefpanels.css \
-		$(srcdir)/securityOverlay.css \
-		$(srcdir)/splitter.css \
-		$(srcdir)/tasksOverlay.css \
-		$(srcdir)/tb-menubutton-dm-clicked.gif \
-		$(srcdir)/tb-menubutton-dm-disabled.gif \
-		$(srcdir)/tb-menubutton-dm-hover.gif \
-		$(srcdir)/tb-menubutton-dm.gif \
-		$(srcdir)/toolbar.css \
-		$(srcdir)/unlock.gif \
-		$(srcdir)/throbber-groove-bottom.gif \
-		$(srcdir)/throbber-groove-left.gif \
-		$(srcdir)/throbber-groove-right.gif \
-		$(srcdir)/throbber-groove-top.gif \
-		$(NULL)
-
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related 
 
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin
-

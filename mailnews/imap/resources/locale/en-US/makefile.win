@@ -23,10 +23,3 @@ DEPTH=..\..\..\..\..
 MODULE=msgimap
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-	$(MAKE_INSTALL) imapMsgs.properties $(DIST)\bin\chrome\locales\en-US\messenger\locale
-
-clobber::
-	rm -f $(DIST)bin\chrome\locales\en-US\messenger\locale\imapMsgs.properties
-

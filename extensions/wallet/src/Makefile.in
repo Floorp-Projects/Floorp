@@ -46,11 +46,6 @@ DEFAULTS_FILES	= \
 		$(srcdir)/SchemaConcat.tbl \
 		$(NULL)
 
-CHROME_FILES	= \
-		$(srcdir)/cookie.properties \
-		$(srcdir)/wallet.properties \
-		$(NULL)
-
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(NSPR_LIBS) \
@@ -61,5 +56,4 @@ include $(topsrcdir)/config/rules.mk
 
 install::
 	$(INSTALL) $(DEFAULTS_FILES) $(DIST)/bin/defaults/wallet
-	$(INSTALL) $(CHROME_FILES) $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
 

@@ -25,9 +25,6 @@ THEME_ROOT_DEPTH = .
 include <$(DEPTH)\config\config.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-CHROME_TYPE = skin
-CHROME_DIR = skins\$(THEME)
-
 DIRS =  communicator\search\win  \
         communicator\sidebar\win \
         communicator\win         \
@@ -37,3 +34,10 @@ DIRS =  communicator\search\win  \
         navigator\win
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+        $(REGCHROME) skin classic/communicator classic.jar
+        $(REGCHROME) skin classic/editor classic.jar
+        $(REGCHROME) skin classic/global classic.jar
+        $(REGCHROME) skin classic/messenger classic.jar
+        $(REGCHROME) skin classic/navigator classic.jar

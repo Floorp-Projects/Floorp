@@ -32,3 +32,8 @@ CHROME_MISC = \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+        $(REGCHROME) content browser embed.jar
+        $(REGCHROME) skin modern/browser embed.jar
+        $(REGCHROME) locale en-US/browser embed.jar

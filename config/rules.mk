@@ -71,6 +71,10 @@ ifndef topsrcdir
 topsrcdir		= $(DEPTH)
 endif
 
+ifndef MOZILLA_DIR
+MOZILLA_DIR = $(DEPTH)
+endif
+
 ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
@@ -1126,102 +1130,17 @@ GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
 endif
 
 ################################################################################
-# Generate chrome building rules.
-#
-# You need to set these in your makefile.win to utilize this support:
-#   CHROME_DIR - specifies the chrome subdirectory where your chrome files
-#                go; e.g., CHROME_DIR=navigator or CHROME_DIR=global
-#
-# Note:  All file listed in the next three macros MUST be prefaced with .\ (or ./)!
-#
-#   CHROME_CONTENT - list of chrome content files; these can be prefaced with
-#                arbitrary paths; e.g., CHROME_CONTENT=./content/default/foobar.xul
-#   CHROME_SKIN - list of skin files
-#   CHROME_L10N - list of localization files, e.g., CHROME_L10N=./locale/en-US/foobar.dtd
-#
-# These macros are optional, if not specified, each defaults to ".".
-#   CHROME_CONTENT_DIR - specifies a subdirectory within CHROME_DIR where
-#                  all CHROME_CONTENT files will be installed.
-#   CHROME_SKIN_DIR - Like above, but for skin files
-#   CHROME_L10N_DIR - Like above, but for localization files
-#   CHROME_TYPE - The type of chrome being generated (content, skin, locale).
-#                  Top-level makefiles (the same one copying the rdf manifests
-#                  and generating the jar file) should define this macro.
-#                  This will notify the chrome registry of a new installation.
-ifneq ($(MOZ_ENABLE_JAR_PACKAGING),)
+# CHROME PACKAGING
 
-JAR_MANIFEST := $(srcdir)/jar.mn
-install::
-	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars-unix.pl -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+JAR_MANIFEST := jar.mn
 
-ifneq ($(CHROME_TYPE),)
-install:: $(addprefix bogus/, $(CHROME_TYPE))
+chrome::
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(MOZILLA_DIR)/config/make-jars.pl -c -d $(DIST)/bin/chrome < $(JAR_MANIFEST); fi
 
-$(addprefix bogus/, $(CHROME_TYPE)):
-	@echo $(patsubst bogus/%, %, $@),install,url,jar:resource:/chrome/$(CHROME_DIR).jar!/ >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
-endif #CHROME_TYPE
+install:: chrome
 
-# keeping this in so that bad install rules will work.
-ifneq ($(CHROME_DIR),)
-CHROME_DIST := $(DIST)/bin/chrome/$(CHROME_DIR)
-endif
+REGCHROME = $(PERL) $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt
 
-else # MOZ_DISBALE_JAR_PACKAGING
-
-ifneq ($(CHROME_DIR),)
-CHROME_DIST := $(DIST)/bin/chrome/$(CHROME_DIR)
-
-# Content
-ifneq ($(CHROME_CONTENT),)
-ifeq ($(CHROME_CONTENT_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_CONTENT_DIR := .
-endif
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_CONTENT)) $(CHROME_DIST)/$(CHROME_CONTENT_DIR)
-endif
-# content
-
-# Skin
-ifneq ($(CHROME_SKIN),)
-ifeq ($(CHROME_SKIN_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_SKIN_DIR := .
-endif
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_SKIN)) $(CHROME_DIST)/$(CHROME_SKIN_DIR)
-endif
-# skin
-
-# Localization.
-ifneq ($(CHROME_L10N),)
-ifeq ($(CHROME_L10N_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_L10N_DIR := .
-endif
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_L10N)) $(CHROME_DIST)/$(CHROME_L10N_DIR)
-endif
-# localization
-
-# misc
-ifneq ($(CHROME_MISC),)
-ifeq ($(CHROME_MISC_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_MISC_DIR := .
-endif
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_MISC)) $(CHROME_DIST)/$(CHROME_MISC_DIR)
-endif
-# misc
-
-ifneq ($(CHROME_TYPE),)
-install:: $(addprefix bogus/, $(CHROME_TYPE))
-
-$(addprefix bogus/, $(CHROME_TYPE)):
-	@echo $(patsubst bogus/%, %, $@),install,url,resource:/chrome/$(CHROME_DIR)/ >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
-endif
-
-endif #chrome
-
-endif # MOZ_DISABLE_JAR_PACKAGING
-# chrome
 ##############################################################################
 
 ifndef NO_MDUPDATE

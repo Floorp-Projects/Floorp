@@ -27,46 +27,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
-
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/global/skin
-
-EXPORT_RESOURCE_SAMPLES = \
-	box.css \
-	button.css \
-	checkbox.css \
-	commonDialog.css \
-	colorpicker.css \
-	console.css \
-	filepicker.css \
-	formatting.css \
-	global.css \
-	menu.css \
-	menubutton.css \
-	menulist.css \
-	radio.css \
-	scrollbars.css \
-	splitter.css \
-	tabcontrol.css \
-	textfield.css \
-	toolbar.css \
-	tree.css \
-	wizardOverlay.css \
-	buttonBindings.xml \
-	classicBindings.xml \
-	menulistBindings.xml \
-	tabBindings.xml \
-	treeBindings.xml \
-	scrollbar-slider-bg.gif \
-	error-icon.gif \
-	message-icon.gif \
-	question-icon.gif \
-	alert-icon.gif \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

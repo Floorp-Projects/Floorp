@@ -40,8 +40,3 @@ override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
-
-install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/CookieViewer.xul $(srcdir)/CookieViewer.js $(DIST)/bin/chrome/packages/core/communicator/content/wallet
-	$(INSTALL) $(srcdir)/CookieViewer.properties $(srcdir)/CookieViewer.dtd $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
-

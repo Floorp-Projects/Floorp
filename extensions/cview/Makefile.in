@@ -30,7 +30,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS            = resources
 
-INSTALLROOT = $(DIST)/bin/chrome/packages/cview/cview
-
 include $(topsrcdir)/config/rules.mk
 

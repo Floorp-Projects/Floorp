@@ -24,14 +24,3 @@ THEME_ROOT_DEPTH = ..\..
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
-
-clobber::
-	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\*.*
-
-install:: 
-	$(MAKE_INSTALL) folderPane.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) msgHdrViewOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) pref-mailnews.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) subscribe.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) threadPane.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) messenger.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin

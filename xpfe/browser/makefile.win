@@ -24,3 +24,7 @@ DEPTH=..\..
 DIRS=public src samples resources
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+        $(REGCHROME) content navigator comm.jar
+        $(REGCHROME) locale en-US/navigator en-US.jar

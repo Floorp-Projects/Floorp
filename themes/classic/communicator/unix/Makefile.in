@@ -27,21 +27,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
-
-EXPORT_RESOURCE = \
-		$(srcdir)/box.css \
-		$(srcdir)/brand.css \
-		$(srcdir)/button.css \
-		$(srcdir)/communicator.css \
-		$(srcdir)/formatting.css \
-		$(srcdir)/menubutton.css \
-		$(srcdir)/toolbar.css \
-		$(srcdir)/dialogOverlay.css \
-		$(srcdir)/tasksOverlay.css \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin
 

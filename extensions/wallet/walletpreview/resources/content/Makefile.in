@@ -27,7 +27,3 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
-
-install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/WalletPreview.xul $(srcdir)/WalletPreview.js $(DIST)/bin/chrome/packages/core/communicator/content/wallet
-	

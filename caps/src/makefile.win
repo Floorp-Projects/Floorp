@@ -116,10 +116,8 @@ include <$(DEPTH)/config/rules.mak>
 install::  $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-	$(MAKE_INSTALL) security.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\security
 
 clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\security\security.properties
 

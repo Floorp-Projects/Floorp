@@ -1,2 +1,2 @@
-locales/en-US.jar:
-	communicator/locale/security/security.properties
+en-US.jar:
+	locale/en-US/communicator/security/security.properties

@@ -22,9 +22,3 @@
 DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
-
-install::
-	$(MAKE_INSTALL) platformMailnewsOverlay.xul			$(DIST)\bin\chrome\packages\messenger\messenger\content
-
-clobber::
-	rm -f $(DIST)\chrome\packages\messenger\messenger\content\platformMailnewsOverlay.xul

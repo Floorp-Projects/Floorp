@@ -27,27 +27,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-FILES		= \
-        createProfileWizard.js		\
-        createProfileWizard.xul		\
-	profileManager.js			\
-        deleteProfile.js			\
-        deleteProfile.xul			\
-        migrateAllProfile.xul		\
-	newProfile1_1.xul			\
-        newProfile1_2.xul			\
-	newProfile1_1.js			\
-	newProfile1_2.js			\
-	profileSelection.xul			\
-	profileSelection.js			\
-	confirmMigration.xul			\
-	confirmMigration.js			\
-	selectLang.xul				\
-	selectLang.js				\
-        $(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/chrome/packages/core/communicator/content/profile
 

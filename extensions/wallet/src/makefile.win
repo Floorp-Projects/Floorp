@@ -79,8 +79,6 @@ clobber::
 	rm -f $(DIST)\bin\defaults\wallet\FieldSchema.tbl
 	rm -f $(DIST)\bin\defaults\wallet\URLFieldSchema.tbl
 	rm -f $(DIST)\bin\defaults\wallet\SchemaConcat.tbl
-	rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\cookie.properties
-	rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\wallet.properties
 
 install:: $(DLL)
 		$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
@@ -88,5 +86,3 @@ install:: $(DLL)
 		$(MAKE_INSTALL) FieldSchema.tbl $(DIST)\bin\defaults\wallet
 		$(MAKE_INSTALL) URLFieldSchema.tbl $(DIST)\bin\defaults\wallet
 		$(MAKE_INSTALL) SchemaConcat.tbl $(DIST)\bin\defaults\wallet
-		$(MAKE_INSTALL) cookie.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
-		$(MAKE_INSTALL) wallet.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet

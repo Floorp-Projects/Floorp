@@ -28,29 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-EXPORT_RESOURCE = \
-		$(srcdir)/lock.gif \
-		$(srcdir)/unlock.gif \
-		$(srcdir)/broken.gif \
-		$(srcdir)/menubuttonBindings.xml \
-		$(srcdir)/offline.gif \
-		$(srcdir)/online.gif \
-		$(srcdir)/smallheader-bg.gif \
-		$(srcdir)/smallheader-bg-pale.gif \
-		$(srcdir)/securityOverlay.css \
-		$(srcdir)/toolbar-bg.gif \
-		$(srcdir)/toolbar-bg.png \
-		$(srcdir)/search.gif \
-		$(srcdir)/search-active.gif \
-		$(srcdir)/search-hover.gif \
-		$(srcdir)/content-large.gif \
-		$(srcdir)/content-small.gif \
-		$(NULL)
-
 DIRS = bookmarks directory profile regviewer related search sidebar win xpinstall
 
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin
 

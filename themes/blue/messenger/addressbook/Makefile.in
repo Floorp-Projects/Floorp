@@ -27,26 +27,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
-
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/messenger/skin/addressbook
-
-EXPORT_RESOURCE_SAMPLES = \
-		addressbook.css \
-		newcard.gif \
-		newlist.gif \
-		edit.gif \
-		property.gif \
-		abnewmsg.gif \
-		newmsgab.gif \
-		person.gif \
-		list.gif \
-		myaddrbk.gif \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

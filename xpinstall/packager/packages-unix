@@ -12,7 +12,7 @@
 ;
 ; en-US
 bin/defaults/profile/en-US/*
-bin/chrome/locales/en-US/*
+bin/chrome/en-US.jar
 bin/searchplugins/*
 
 [deflenus]
@@ -187,19 +187,21 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 
-bin/chrome/packages/widget-toolkit/*
-bin/chrome/packages/core/*
-bin/chrome/skins/*
--bin/chrome/packages/core/editor/content/EditorInitPage.html
--bin/chrome/packages/core/editor/content/EditorInitPagePlain.html
+bin/chrome/toolkit.jar
+bin/chrome/comm.jar
+bin/chrome/modern.jar
+bin/chrome/classic.jar
+bin/chrome/blue.jar
+;-bin/chrome/comm/content/editor/EditorInitPage.html
+;-bin/chrome/comm/content/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
-;-bin/chrome/packages/core/editor/content/TextEditorAppShell.xul
--bin/chrome/packages/core/editor/content/sb-bookmarks-panel.xul
--bin/chrome/packages/core/editor/content/sb-bookmarks.js
--bin/chrome/packages/core/editor/content/sb-file-contextMenu.js
--bin/chrome/packages/core/editor/content/sb-file-panel.js
--bin/chrome/packages/core/editor/content/sb-file-panel.xul
--bin/chrome/packages/core/editor/content/sb-FileWidgetFileHandler.js
+;-bin/chrome/comm/content/editor/content/TextEditorAppShell.xul
+;-bin/chrome/comm/content/editor/content/sb-bookmarks-panel.xul
+;-bin/chrome/comm/content/editor/content/sb-bookmarks.js
+;-bin/chrome/comm/content/editor/content/sb-file-contextMenu.js
+;-bin/chrome/comm/content/editor/content/sb-file-panel.js
+;-bin/chrome/comm/content/editor/content/sb-file-panel.xul
+;-bin/chrome/comm/content/editor/content/sb-FileWidgetFileHandler.js
 
 ; all the pref files must be part of base
 ; to prevent migration bugs
@@ -261,12 +263,12 @@ bin/components/msgsearch.xpt
 bin/components/txmgr.xpt
 bin/components/import.xpt
 bin/components/absync.xpt
-bin/chrome/packages/messenger/*
+bin/chrome/messenger.jar
 
 
 [chatzilla]
 bin/components/chatzilla-service.js
-bin/chrome/packages/chatzilla/*
+bin/chrome/chatzilla/*
 
 
 [talkback]

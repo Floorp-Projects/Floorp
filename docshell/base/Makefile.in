@@ -57,6 +57,3 @@ override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(srcdir)/appstrings.properties $(DIST)/bin/chrome/locales/en-US/global/locale

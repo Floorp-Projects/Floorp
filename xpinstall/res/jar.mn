@@ -1,10 +1,10 @@
-packages/core.jar:
-    communicator/content/xpinstall/xpistatus.xul (content/xpistatus.xul)
-    communicator/content/xpinstall/xpistatus.js (content/xpistatus.js)
-    communicator/content/xpinstall/institems.xul (content/institems.xul)
-    communicator/content/xpinstall/institems.js (content/institems.js)
+comm.jar:
+    content/communicator/xpinstall/xpistatus.xul (content/xpistatus.xul)
+    content/communicator/xpinstall/xpistatus.js (content/xpistatus.js)
+    content/communicator/xpinstall/institems.xul (content/institems.xul)
+    content/communicator/xpinstall/institems.js (content/institems.js)
 
-locales/en-US.jar:
-    communicator/locale/xpinstall/xpinstall.properties (locale/en-US/xpinstall.properties)
-    communicator/locale/xpinstall/xpistatus.dtd (locale/en-US/xpistatus.dtd)
-    communicator/locale/xpinstall/institems.dtd (locale/en-US/institems.dtd)
+en-US.jar:
+    locale/en-US/communicator/xpinstall/xpinstall.properties (locale/en-US/xpinstall.properties)
+    locale/en-US/communicator/xpinstall/xpistatus.dtd (locale/en-US/xpistatus.dtd)
+    locale/en-US/communicator/xpinstall/institems.dtd (locale/en-US/institems.dtd)

@@ -28,38 +28,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-EXPORT_RESOURCE = \
-		$(srcdir)/brand.css \
-		$(srcdir)/securityOverlay.css \
-		$(srcdir)/box.css \
-		$(srcdir)/button.css \
-		$(srcdir)/communicator.css \
-		$(srcdir)/formatting.css \
-		$(srcdir)/menubuttonBindings.xml \
-		$(srcdir)/menubutton.css \
-		$(srcdir)/splitter.css \
-		$(srcdir)/toolbar.css \
-		$(srcdir)/navbar-endbox.gif \
-		$(srcdir)/tb-menubutton-dm.gif \
-		$(srcdir)/tb-menubutton-dm-disabled.gif \
-		$(srcdir)/online.gif \
-		$(srcdir)/offline.gif \
-		$(srcdir)/document.gif \
-		$(srcdir)/document-error.gif \
-		$(srcdir)/lock.gif \
-		$(srcdir)/unlock.gif \
-		$(srcdir)/broken.gif \
-		$(srcdir)/tasksOverlay.css \
-		$(srcdir)/dialogOverlay.css \
-		$(srcdir)/prefpanels.css \
-		$(srcdir)/content-large.gif \
-		$(srcdir)/content-small.gif \
-		$(NULL)
-
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related 
 
 include $(topsrcdir)/config/rules.mk
 
-install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin
 

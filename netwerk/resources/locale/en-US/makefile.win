@@ -25,10 +25,3 @@ include <$(DEPTH)\config\rules.mak>
 
 LOCALEDIR=$(DIST)\bin\chrome\locales\en-US\necko\locale
 
-install::
-	$(MAKE_INSTALL) necko.properties $(LOCALEDIR)
-	$(MAKE_INSTALL) redirect_loop.dtd $(LOCALEDIR)
-
-clobber::
-	rm -f $(DIST)\bin\chrome\locales\en-US\necko\locale\*.*
-

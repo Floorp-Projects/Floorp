@@ -36,15 +36,20 @@ MOZ_DECL_CTOR_COUNTER(nsRegisterItem);
 
 nsRegisterItem:: nsRegisterItem(  nsInstall* inInstall,
                                   nsIFile* chrome,
-                                  PRUint32 chromeType )
-: nsInstallObject(inInstall), mChrome(chrome), mChromeType(chromeType)
+                                  PRUint32 chromeType,
+                                  const char* path )
+: nsInstallObject(inInstall), mChrome(chrome), mChromeType(chromeType), mPath(nsnull)
 {
+    if (path) {
+        mPath = nsCRT::strdup(path);
+    }
     MOZ_COUNT_CTOR(nsRegisterItem);
 }
 
 
 nsRegisterItem::~nsRegisterItem()
 {
+    if (mPath) nsCRT::free(mPath);
     MOZ_COUNT_DTOR(nsRegisterItem);
 }
 
@@ -168,8 +173,10 @@ PRInt32 nsRegisterItem::Prepare()
         if (!localURL)
             return nsInstall::UNEXPECTED_ERROR;
 
-        if (!isDir)
+        if (!isDir) {
             mURL.Append("!/");
+            mURL.Append(mPath);
+        }
 //    }
 
     return nsInstall::SUCCESS;

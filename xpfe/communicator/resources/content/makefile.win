@@ -21,30 +21,10 @@
 
 DEPTH=..\..\..\..
 
-CHROME_DIR=packages\core
-CHROME_CONTENT_DIR=communicator\content
-CHROME_MISC_DIR=.
-CHROME_TYPE=content
-
 DIRS= win
-
-CHROME_MISC = \
-	.\manifest.rdf \
-	$(NULL)
-
-CHROME_CONTENT = \
-	.\builtinURLs.js \
-	.\communicatorOverlay.xul \
-	.\utilityOverlay.xul \
-	.\utilityOverlay.js \
-	.\utilityOverlay.css \
-	.\taskbarOverlay.xul \
-	.\tasksOverlay.js \
-	.\tasksOverlay.xul \
-	.\dialogBindings.xml \
-	.\browserBindings.xul \
-	.\editorBindings.xul \
-	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
+chrome::
+        $(REGCHROME) content communicator comm.jar
+        $(REGCHROME) locale en-US/communicator en-US.jar

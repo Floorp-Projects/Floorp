@@ -22,12 +22,3 @@
 DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
-
-DISTBROWSER=$(DIST)\bin\chrome\locales\en-US\messenger\locale\addressbook
-
-
-install::
-	$(MAKE_INSTALL) absync.properties $(DISTBROWSER)
-
-clobber::
-  rm -f $(DIST)\bin\chrome\locales\en-US\messenger\locale\addressbook\absync.properties

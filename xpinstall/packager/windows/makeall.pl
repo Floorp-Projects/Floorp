@@ -352,17 +352,12 @@ sub CreateTmpStage()
       }
 
       # Remove the locales, packages, and skins dirs if they exist.
-      if(-d "$gLocalTmpStage\\$mComponent\\bin\\chrome\\locales")
-      {
-        system("perl rdir.pl $gLocalTmpStage\\$mComponent\\bin\\chrome\\locales");
-      }
-      if(-d "$gLocalTmpStage\\$mComponent\\bin\\chrome\\packages")
-      {
-        system("perl rdir.pl $gLocalTmpStage\\$mComponent\\bin\\chrome\\packages");
-      }
-      if(-d "$gLocalTmpStage\\$mComponent\\bin\\chrome\\skins")
-      {
-        system("perl rdir.pl $gLocalTmpStage\\$mComponent\\bin\\chrome\\skins");
+      my @dirs = <$gLocalTmpStage\\$mComponent\\bin\\chrome\\*>;
+      foreach $d (@dirs) {
+          if(-d "$d")
+          {
+              system("perl rdir.pl $d");
+          }
       }
     }
   }

@@ -28,51 +28,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/messenger/skin/addressbook
-
-EXPORT_RESOURCE_SAMPLES = \
-		abnewmsg.gif \
-		call-disabled.gif \
-		call-hover-active.gif \
-		call-hover.gif \
-		call.gif \
-		edit.gif \
-		list.gif \
-		myaddrbk.gif \
-		newcard-disabled.gif \
-		newcard-hover-active.gif \
-		newcard-hover.gif \
-		newcard.gif \
-		newlist-disabled.gif \
-		newlist-hover-active.gif \
-		newlist-hover.gif \
-		newlist.gif \
-		newmsgab.gif \
-		newmsg-hover-active.gif \
-		newmsg-disabled.gif \
-		newmsg-hover.gif \
-		newmsg.gif \
-		person-disabled.gif \
-		person-hover-active.gif \
-		person-hover.gif \
-		person.gif \
-		property.gif \
-		searchold-disabled.gif \
-		searchold-hover-active.gif \
-		searchold-hover.gif \
-		searchold.gif \
-		trash-disabled.gif \
-		trash-hover.gif \
-		trash.gif \
-		trash-hover-active.gif \
-		$(NULL)
 DIRS = win
 
 include $(topsrcdir)/config/rules.mk
-
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

@@ -24,10 +24,3 @@ THEME_ROOT_DEPTH = ..\..
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
-
-clobber::
-	rm -f $(DIST)\chrome\skins\$(THEME)\navigator\skin\*.*
-
-install:: 
-	$(MAKE_INSTALL) navigator.css $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-

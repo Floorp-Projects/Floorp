@@ -1,7 +1,7 @@
-skins/classic.jar:
-    communicator/skin/search/findresults.css
-    communicator/skin/search/icons.css
-    communicator/skin/search/internet.css
-    communicator/skin/search/internetresults.css
-    communicator/skin/search/search-editor.css
-    communicator/skin/search/search.css
+classic.jar:
+    skin/classic/communicator/search/findresults.css
+    skin/classic/communicator/search/icons.css
+    skin/classic/communicator/search/internet.css
+    skin/classic/communicator/search/internetresults.css
+    skin/classic/communicator/search/search-editor.css
+    skin/classic/communicator/search/search.css

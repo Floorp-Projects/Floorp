@@ -27,45 +27,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
-
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/sidebar
-
-EXPORT_RESOURCE_SAMPLES = \
-        list-up-dis.gif  \
-        sidebar-icon.gif \
-        customize.css  \
-        list-up.gif \
-        sidebar-topright-cap.gif \
-        list-down-dis.gif  \
-        preview.css  \
-        sidebar.css \
-        list-down.gif \
-        sidebar-bottomright-cap.gif \
-        sidebarSplitterBindings.xml \
-        sbtab-darkondark-left.gif \
-        sbtab-darkondark-right.gif \
-        sbtab-darkonlight-left.gif \
-        sbtab-darkonlight-right.gif \
-        sbtab-lightondark-left.gif \
-        sbtab-lightondark-right.gif \
-        sbtab-dark.gif \
-        sbtab-light.gif \
-        sbsplitter-bg.gif \
-        sbpicker-arrow.gif \
-	sbgrippy-left-hover.gif \
-	sbgrippy-left.gif \
-	sbgrippy-right-hover.gif \
-	sbgrippy-right.gif \
-	sidebar-close-hover.gif \
-	sidebar-close.gif \
-	sidebar-open-hover.gif \
-	sidebar-open.gif \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

@@ -18,11 +18,3 @@
 DEPTH=..\..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-        $(MAKE_INSTALL) eudoraImportMsgs.properties $(DIST)\bin\chrome\locales\en-US\messenger\locale
-
-clobber::
-        rm -f $(DIST)bin\chrome\locales\en-US\messenger\locale\eudoraImportMsgs.properties
-
-

@@ -12,7 +12,7 @@
 ;
 ; en-US 
 viewer:defaults:profile:en-US:*
-viewer:chrome:locales:en-US:*
+viewer:chrome:en-US.jar
 viewer:Search Plugins:*
 
 [deflenus]
@@ -164,20 +164,22 @@ viewer:Components:Necko.shlb
 viewer:Components:Necko2.shlb 
 viewer:Components:necko.xpt 
 
-viewer:chrome:packages:core:*
-viewer:chrome:packages:widget-toolkit:*
-viewer:chrome:skins:*
--viewer:chrome:packages:core:editor:content:EditorInitPage.html
--viewer:chrome:packages:core:editor:content:EditorInitPagePlain.html
+viewer:chrome:comm.jar
+viewer:chrome:toolkit.jar
+viewer:chrome:modern.jar
+viewer:chrome:classic.jar
+viewer:chrome:blue.jar
+-viewer:chrome:comm:content:editor:EditorInitPage.html
+-viewer:chrome:comm:content:editor:EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
-;-viewer:chrome:packages:core:editor:content:TextEditorAppShell.xul
--viewer:chrome:packages:core:editor:content:sb-bookmarks-panel.xul
--viewer:chrome:packages:core:editor:content:sb-bookmarks.js
--viewer:chrome:packages:core:editor:content:sb-file-contextMenu.js
--viewer:chrome:packages:core:editor:content:sb-file-panel.js
--viewer:chrome:packages:core:editor:content:sb-file-panel.xul
--viewer:chrome:packages:core:editor:content:sb-FileWidgetFileHandler.js
--viewer:chrome:packages:core:communicator:content:domviewer
+;-viewer:chrome:comm:content:editor:TextEditorAppShell.xul
+-viewer:chrome:comm:content:editor:sb-bookmarks-panel.xul
+-viewer:chrome:comm:content:editor:sb-bookmarks.js
+-viewer:chrome:comm:content:editor:sb-file-contextMenu.js
+-viewer:chrome:comm:content:editor:sb-file-panel.js
+-viewer:chrome:comm:content:editor:sb-file-panel.xul
+-viewer:chrome:comm:content:editor:sb-FileWidgetFileHandler.js
+-viewer:chrome:comm:content:communicator:domviewer
 
 ; all the pref files must be part of base
 ; to prevent migration bugs
@@ -236,7 +238,7 @@ viewer:res:throbber:*
 viewer:res:ua.css
 
 [mail] 
-viewer:chrome:packages:messenger:*
+viewer:chrome:messenger.jar
 viewer:Components:MsgAddrbook.shlb 
 viewer:Components:MsgAddrbook.xpt 
 viewer:Components:mimeEmitter.shlb 
@@ -268,4 +270,4 @@ viewer:res:Mailnews:*
 
 [chatzilla]
 viewer:Components:chatzilla-service.js
-viewer:chrome:packages:chatzilla:*
+viewer:chrome:chatzilla.jar

@@ -28,30 +28,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
-
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/bookmarks
-
-EXPORT_RESOURCE_SAMPLES = \
-        bookmark-folder-closed.gif \
-        bookmark-folder-open.gif \
-	bookmark-item.gif \
-	bookmarks.css \
-        home.gif \
-        home-hover.gif \
-        home-active.gif \
-        iefavorite.gif \
-        iefolder.gif \
-        personal-folder-closed.gif \
-        personal-folder-open.gif \
-        location.gif \
-        location-hover.gif \
-        location-clicked.gif \
-        $(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

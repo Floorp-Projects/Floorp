@@ -26,17 +26,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_DIR	= $(DIST)/bin/chrome/locales/en-US/messenger/locale/isp
-
-EXPORT_RESOURCE_FILES = \
-		aol.rdf			\
-		example.rdf		\
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_DIR)
-

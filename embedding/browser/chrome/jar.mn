@@ -1,11 +1,9 @@
-packages/embedding.jar:
-        browser/content/mini-nav.js (content/mini-nav.js)
-        browser/content/mini-nav.xul (content/mini-nav.xul)
-	browser/skin/back.gif (skin/back.gif)
-	browser/skin/forward.gif (skin/forward.gif)
-	browser/skin/reload.gif (skin/reload.gif)
-	browser/skin/stop.gif (skin/stop.gif)
-	browser/skin/embedding.css (skin/embedding.css)
-
-locales/en-US.jar:
-        browser/locale/embedding.dtd (locale/en-US/embedding.dtd)
+embed.jar:
+        content/browser/mini-nav.js (content/mini-nav.js)
+        content/browser/mini-nav.xul (content/mini-nav.xul)
+	skin/modern/browser/back.gif (skin/back.gif)
+	skin/modern/browser/forward.gif (skin/forward.gif)
+	skin/modern/browser/reload.gif (skin/reload.gif)
+	skin/modern/browser/stop.gif (skin/stop.gif)
+	skin/modern/browser/embedding.css (skin/embedding.css)
+        locale/en-US/browser/embedding.dtd (locale/en-US/embedding.dtd)

@@ -1,2 +1,2 @@
-packages/core.jar:
-    navigator/content/platformNavigationBindings.xul
+comm.jar:
+    content/navigator/platformNavigationBindings.xul

@@ -27,33 +27,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
-
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
-
-EXPORT_RESOURCE_SAMPLES = \
-	alertl.gif \
-	back.gif \
-	errorl.gif \
-	forward.gif \
-	home.gif \
-	location-hover.gif \
-	location.gif \
-	messagel.gif \
-	mynetscape.gif \
-	n-box-persbar.gif \
-	navigator.css \
-	print.gif \
-	questionl.gif \
-	reload.gif \
-	search.gif \
-	stop.gif \
-	navigatorBindings.xml \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

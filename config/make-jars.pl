@@ -29,6 +29,12 @@ if (defined($opt_v)) {
     $verbose = true;
 }
 
+if ($verbose eq true) {
+    print "make-jars "
+        . ($copyFiles ? "-c " : "")
+        . "-v -d $destPath\n";
+}
+
 sub Cleanup
 {
     while (true) {
@@ -172,7 +178,14 @@ sub EnsureFileInDir
 {
     my ($destPath, $srcPath, $doCleanup, $override) = @_;
 
-    if (!-e $destPath || $override eq true) {
+    #print "EnsureFileInDir($destPath, $srcPath, $doCleanup, $override)\n";
+    my $destStat = stat($destPath);
+    my $destMtime = $destStat ? $destStat->mtime : 0;
+    my $srcStat = stat($srcPath);
+    my $srcMtime = $srcStat ? $srcStat->mtime : 0;
+    #print "destMtime = $destMtime, srcMtime = $srcMtime\n";
+    if (!-e $destPath || $destMtime < $srcMtime || $override eq true) {
+        #print "copying $destPath, from $srcPath\n";
         my $dir = "";
         my $file;
         if ($destPath =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
@@ -200,14 +213,14 @@ sub EnsureFileInDir
     return 0;
 }
 
-while (<>) {
+while (<STDIN>) {
     chomp;
   start: 
     if (/^([\w\d.\-\\\/]+)\:\s*$/) {
         my $jarfile = $1;
         my $args = "";
         my $overrides = "";
-        while (<>) {
+        while (<STDIN>) {
             if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = $2;

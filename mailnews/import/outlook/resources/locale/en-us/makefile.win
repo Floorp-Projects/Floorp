@@ -22,11 +22,3 @@
 DEPTH=..\..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-        $(MAKE_INSTALL) outlookImportMsgs.properties $(DIST)\bin\chrome\locales\en-US\messenger\locale
-
-clobber::
-        rm -f $(DIST)bin\chrome\locales\en-US\messenger\locale\outlookImportMsgs.properties
-
-

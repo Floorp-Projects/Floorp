@@ -28,16 +28,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-CHROME_DIR = skins/$(THEME)
-CHROME_MISC_DIR = .
-CHROME_TYPE = skin
-
-CHROME_MISC = \
-	manifest.rdf \
-	preview.png \
-	$(NULL)
-
 DIRS  = communicator global navigator editor messenger 
 
 include $(topsrcdir)/config/rules.mk
 
+chrome::
+	@$(REGCHROME) skin blue/communicator blue.jar; \
+	$(REGCHROME) skin blue/editor blue.jar; \
+	$(REGCHROME) skin blue/global blue.jar; \
+	$(REGCHROME) skin blue/messenger blue.jar; \
+	$(REGCHROME) skin blue/navigator blue.jar

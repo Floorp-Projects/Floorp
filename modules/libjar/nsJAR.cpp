@@ -1119,7 +1119,7 @@ nsZipReaderCache::nsZipReaderCache()
 NS_IMETHODIMP
 nsZipReaderCache::Init(PRUint32 cacheSize)
 {
-#ifdef DEBUG_warren
+#ifdef xDEBUG_warren
   mCacheSize = 1;//cacheSize;   // XXX hack
 #else
   mCacheSize = cacheSize;

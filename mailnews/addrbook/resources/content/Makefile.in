@@ -26,35 +26,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/packages/messenger/messenger/content/addressbook
-
-EXPORT_RESOURCE_SAMPLES = \
-		abAddressBookNameDialog.js \
-		abAddressBookNameDialog.xul \
-		abCardOverlay.js \
-		abCardOverlay.xul \
-		abCardViewOverlay.js \
-		abCardViewOverlay.xul \
-		abCommon.js \
-		abDirTreeOverlay.xul \
-		abEditCardDialog.xul \
-		abNewCardDialog.xul \
-		abResultsTreeOverlay.xul \
-		abSelectAddressesDialog.js \
-		abSelectAddressesDialog.xul \
-		addressbook.js \
-		addressbook.xul \
-		abDragDrop.js \
-		abMailListDialog.js \
-		abMailListDialog.xul \
-		abListOverlay.xul \
-		abEditListDialog.xul \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

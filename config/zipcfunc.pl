@@ -81,9 +81,10 @@ sub ZipChrome()
   }
 
   # Call CreateArchive() on locales, packages, and skins
-  CreateArchive("loc", $inSourcePath . $gPathDelimiter . "locales",  "$inTargetPath");
-  CreateArchive("pkg", $inSourcePath . $gPathDelimiter . "packages", "$inTargetPath");
-  CreateArchive("skn", $inSourcePath . $gPathDelimiter . "skins",    "$inTargetPath");
+#  CreateArchive("loc", $inSourcePath . $gPathDelimiter . "locales",  "$inTargetPath");
+#  CreateArchive("pkg", $inSourcePath . $gPathDelimiter . "packages", "$inTargetPath");
+#  CreateArchive("skn", $inSourcePath . $gPathDelimiter . "skins",    "$inTargetPath");
+  CreateArchive("jar", $inSourcePath . $gPathDelimiter, "$inTargetPath");
   return(0);
 }
 
@@ -161,11 +162,11 @@ sub CreateArchive()
         if($inUpdate =~ /noupdate/i)
         {
           print "\n";
-          if(-e "..$gPathDelimiter$dirName.$inExtension")
+          if(-e "$dirName.$inExtension")
           {
             # Delete archive is one already exists in target location
             print " Removing $dirName.$inExtension\n";
-            unlink "..$gPathDelimiter$dirName.$inExtension";
+            unlink "$dirName.$inExtension";
           }
 
           print " Creating $dirName.$inExtension\n";
@@ -173,7 +174,7 @@ sub CreateArchive()
         }
         elsif($inUpdate =~ /update/i)
         {
-          if(!(-e "..$gPathDelimiter$dirName.$inExtension"))
+          if(!(-e "$dirName.$inExtension"))
           {
             print "\n";
             print " Creating $dirName.$inExtension\n";
@@ -188,9 +189,9 @@ sub CreateArchive()
 
         # Create the archive in $inDest
         chdir("$dirName");
-        if(system("zip $mZipParam -r ..$gPathDelimiter..$gPathDelimiter$dirName.$inExtension *") != 0)
+        if(system("zip $mZipParam -r ..$gPathDelimiter$dirName.$inExtension *") != 0)
         {
-          print "Error: zip $mZipParam -r ..$gPathDelimiter..$gPathDelimiter$dirName.$inExtension *\n";
+          print "Error: zip $mZipParam -r ..$gPathDelimiter$dirName.$inExtension *\n";
           chdir("..");
           return(1);
         }

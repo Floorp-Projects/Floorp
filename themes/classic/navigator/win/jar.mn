@@ -1,2 +1,2 @@
-skins/classic.jar:
-       navigator/skin/navigator.css
+classic.jar:
+       skin/classic/navigator/navigator.css

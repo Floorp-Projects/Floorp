@@ -1,7 +1,7 @@
-skins/classic.jar:
-	messenger/skin/msgHdrViewOverlay.css
-	messenger/skin/threadPane.css
-	messenger/skin/pref-mailnews.css
-	messenger/skin/folderPane.css
-	messenger/skin/messenger.css
-	messenger/skin/subscribe.css
+classic.jar:
+	skin/classic/messenger/msgHdrViewOverlay.css
+	skin/classic/messenger/threadPane.css
+	skin/classic/messenger/pref-mailnews.css
+	skin/classic/messenger/folderPane.css
+	skin/classic/messenger/messenger.css
+	skin/classic/messenger/subscribe.css
