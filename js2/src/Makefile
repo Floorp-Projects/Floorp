@@ -1,6 +1,8 @@
 CC = gcc
-CFLAGS = -g -ggdb -DDEBUG -DXP_UNIX -Wall -W -Wpointer-arith -Wbad-function-cast \
-	-Wstrict-prototypes -Wmissing-prototypes -Wno-non-virtual-dtor
+DEFINES += -DDEBUG
+CFLAGS = -g -ggdb $(DEFINES) -DDEBUG -DXP_UNIX -Wall -W -Wpointer-arith \
+	-Wbad-function-cast -Wstrict-prototypes -Wmissing-prototypes \
+	-Wno-non-virtual-dtor
 
 objs = 	hash.o \
 	icodegenerator.o \
@@ -15,7 +17,10 @@ objs = 	hash.o \
 	vmtypes.o \
 	debugger.o \
 	xmlparser.o \
-	icodeasm.o
+	icodeasm.o \
+	exception.o \
+	exception_msgs.o \
+	lexutils.o
 
 test_objs = hash.o \
 	icodeasm.o \
