@@ -63,7 +63,7 @@ static const nsModuleComponentInfo msgDB_components[] = {
       NS_MSG_RETENTIONSETTINGS_CONTRACTID, nsMsgRetentionSettingsConstructor },
     { "Msg Download Settings", NS_MSG_DOWNLOADSETTINGS_CID,
       NS_MSG_DOWNLOADSETTINGS_CONTRACTID, nsMsgDownloadSettingsConstructor },
-   { "Msg DB Service" NS_MSGDB_SERVICE_CID, NS_MSGDB_SERVICE_CONTRACTID, nsMsgDBServiceConstructor }
+   { "Msg DB Service", NS_MSGDB_SERVICE_CID, NS_MSGDB_SERVICE_CONTRACTID, nsMsgDBServiceConstructor }
 };
 
 PR_STATIC_CALLBACK(void)
