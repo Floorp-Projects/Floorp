@@ -78,6 +78,13 @@ public:
    */
   NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus) = 0;
 
+  /**
+   * Notify the observer that some content of unknown type has been
+   * encountered...
+   */
+  NS_IMETHOD HandleUnknownContentType( nsIURL *aURL,
+                                       const char *aContentType,
+                                       const char *aCommand ) = 0;
 };
 
 

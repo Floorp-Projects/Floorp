@@ -824,8 +824,11 @@ nsWebShellWindow::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
    * Load the menus, run the startup script etc.. only once. So, Use
    * the mChrome Initialized  member to check whether chrome should be 
    * initialized or not - Radha
+   *
+   * This breaks file download (where I'm using a single window with
+   * two separate xul files).  I'm turning this off for now... - Law
    */
-  if (mChromeInitialized)
+  if (0 && mChromeInitialized)
     return NS_OK;
 
   mChromeInitialized = PR_TRUE;
@@ -922,6 +925,14 @@ nsWebShellWindow::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
 
 NS_IMETHODIMP
 nsWebShellWindow::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::HandleUnknownContentType(nsIURL* aURL,
+                                           const char *aContentType,
+                                           const char *aCommand )
 {
   return NS_OK;
 }

@@ -107,6 +107,10 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD_(void) Alert(const nsString &aText);
   
     NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+  NS_IMETHOD HandleUnknownContentType( nsIURL *aURL,
+                                       const char *aContentType,
+                                       const char *aCommand );
+
 
     NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
                                const nsString &aDefault,

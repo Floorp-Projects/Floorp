@@ -114,6 +114,9 @@ public:
                                PRUint32 aProgressMax);
   NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
+  NS_IMETHOD HandleUnknownContentType(nsIURL* aURL,
+                                      const char *aContentType,
+                                      const char *aCommand );
 
   
   // nsIDocumentObserver
