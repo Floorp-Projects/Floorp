@@ -78,7 +78,6 @@ nsInternetCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsInternetCiter::GetCiteString(const nsAReadableString& aInString, nsAWritableString& aOutString)
 {
-  PRInt32 i = 0;
   aOutString.SetLength(0);
   PRUnichar uch = nl;
 
@@ -131,8 +130,6 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsAReadableString& aInString,
   nsReadingIterator <PRUnichar> beginIter,endIter;
   aInString.BeginReading(beginIter);
   aInString.EndReading(endIter);
-  PRInt32 length = aInString.Length();
-  PRInt32 i = 0;
   while (beginIter!= endIter)  // loop over lines
   {
     // Clear out cites first, at the beginning of the line:
@@ -233,12 +230,12 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
 
     // Special case: if this is a blank line, maintain a blank line
     // (retain the original paragraph breaks)
-    if (tString[posInString] == nl)
+    if (tString[posInString] == nl && aOutString.Length() > 0)
     {
       nsReadingIterator <PRUnichar> outPeekIter;
       aOutString.EndReading(outPeekIter);
       outPeekIter.advance(-1);
-      if (aOutString.Length() > 0 && (*outPeekIter) != nl)
+      if ((*outPeekIter) != nl)
         aOutString.Append(nl);
       AddCite(aOutString, newCiteLevel);
       aOutString.Append(nl);
