@@ -184,8 +184,7 @@ nsEvaluateStringProxy::BringUpConsole()
 
     // Next, find out whether there's a console already open.
     nsCOMPtr<nsIDOMWindow> console;
-    nsAutoString windowType = NS_LITERAL_STRING("global:console");
-    rv = windowMediator->GetMostRecentWindow(windowType.GetUnicode(),
+    rv = windowMediator->GetMostRecentWindow(NS_LITERAL_STRING("global:console"),
                                              getter_AddRefs(console));
     if (NS_FAILED(rv)) return rv;
 

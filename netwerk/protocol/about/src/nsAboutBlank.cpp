@@ -38,7 +38,7 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsresult rv;
     nsIChannel* channel;
     nsISupports* s;
-    rv = NS_NewCStringInputStream(&s, kBlankPage);
+    rv = NS_NewCStringInputStream(&s, nsCString(kBlankPage));
     if (NS_FAILED(rv)) return rv;
     nsIInputStream* in;
 

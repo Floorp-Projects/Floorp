@@ -137,7 +137,7 @@ nsSimpleURI::SetScheme(const char* scheme)
 NS_IMETHODIMP
 nsSimpleURI::GetPrePath(char* *result)
 {
-    nsCAutoString prePath = mScheme;
+    nsCAutoString prePath(mScheme);
     prePath += ":";
     *result = prePath.ToNewCString();
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;

@@ -74,7 +74,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 
         nsCOMPtr<nsISupports> s;
         const char* msg = "Bloat statistics cleared.";
-        rv = NS_NewCStringInputStream(getter_AddRefs(s), msg);
+        rv = NS_NewCStringInputStream(getter_AddRefs(s), nsCString(msg));
         if (NS_FAILED(rv)) return rv;
 
         size = nsCRT::strlen(msg);
@@ -88,7 +88,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     	
         nsCOMPtr<nsISupports> s;
         const char* msg = "Memory leaks dumped.";
-        rv = NS_NewCStringInputStream(getter_AddRefs(s), msg);
+        rv = NS_NewCStringInputStream(getter_AddRefs(s), nsCString(msg));
         if (NS_FAILED(rv)) return rv;
 
         size = nsCRT::strlen(msg);
