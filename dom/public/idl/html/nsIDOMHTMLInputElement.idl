@@ -40,6 +40,16 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+/**
+ * The nsIDOMHTMLInputElement interface is the interface to a [X]HTML
+ * input element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf9093-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
@@ -55,9 +65,11 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute long                  maxLength;
            attribute DOMString             name;
            attribute boolean               readOnly;
+  // Modified in DOM Level 2:
            attribute unsigned long         size;
            attribute DOMString             src;
            attribute long                  tabIndex;
+  // Modified in DOM Level 2:
            attribute DOMString             type;
            attribute DOMString             useMap;
            attribute DOMString             value;

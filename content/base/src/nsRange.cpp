@@ -178,10 +178,11 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
 // Note that both of the above might be true.
 // If neither are true, the node is contained inside of the range.
 // XXX - callers responsibility to ensure node in same doc as range! 
-nsresult CompareNodeToRange(nsIContent* aNode, 
-                        nsIDOMRange* aRange,
-                        PRBool *outNodeBefore,
-                        PRBool *outNodeAfter)
+
+// static
+nsresult
+nsRange::CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
+                            PRBool *outNodeBefore, PRBool *outNodeAfter)
 {
   // create a pair of dom points that expresses location of node:
   //     NODE(start), NODE(end)
@@ -377,12 +378,11 @@ nsRangeUtils::IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
 }
 
 NS_IMETHODIMP
-nsRangeUtils::CompareNodeToRange(nsIContent* aNode, 
-                                nsIDOMRange* aRange,
-                                PRBool *outNodeBefore,
-                                PRBool *outNodeAfter)
+nsRangeUtils::CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
+                                 PRBool *outNodeBefore, PRBool *outNodeAfter)
 {
-  return ::CompareNodeToRange(aNode, aRange, outNodeBefore, outNodeAfter);
+  return nsRange::CompareNodeToRange(aNode, aRange, outNodeBefore,
+                                     outNodeAfter);
 }
 
 #ifdef XP_MAC
@@ -1171,12 +1171,6 @@ nsresult nsRange::Collapse(PRBool aToStart)
     return DoSetRange(mEndParent,mEndOffset,mEndParent,mEndOffset);
 }
 
-nsresult nsRange::Unposition()
-{
-  return DoSetRange(nsCOMPtr<nsIDOMNode>(),0,nsCOMPtr<nsIDOMNode>(),0); 
-  // note that "nsCOMPtr<nsIDOMmNode>()" is the moral equivalent of null
-}
-
 nsresult nsRange::SelectNode(nsIDOMNode* aN)
 {
   if (!nsContentUtils::CanCallerAccess(aN)) {
@@ -1749,8 +1743,9 @@ nsresult nsRange::DeleteContents()
   return CollapseRangeAfterDelete(this);
 }
 
-nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
-                                   PRInt32* aCmpRet)
+NS_IMETHODIMP
+nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
+                               PRInt16* aCmpRet)
 {
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;

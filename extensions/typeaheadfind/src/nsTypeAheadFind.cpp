@@ -1223,7 +1223,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
     return NS_ERROR_FAILURE;
   }
 
-  PRInt32 rangeCompareResult = 0;
+  PRInt16 rangeCompareResult = 0;
   mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START,
                                           mSearchRange, &rangeCompareResult);
   // No need to wrap find in doc if starting at beginning

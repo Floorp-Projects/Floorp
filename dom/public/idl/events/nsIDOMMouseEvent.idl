@@ -40,6 +40,16 @@
 
 #include "nsIDOMUIEvent.idl"
 
+/**
+ * The nsIDOMMouseEvent interface is the datatype for all mouse events
+ * in the Document Object Model.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Events/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(ff751edc-8b02-aae7-0010-8301838a3123)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
@@ -49,9 +59,9 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   readonly attribute long               clientX;
   readonly attribute long               clientY;
 
-  readonly attribute boolean            altKey;
   readonly attribute boolean            ctrlKey;
   readonly attribute boolean            shiftKey;
+  readonly attribute boolean            altKey;
   readonly attribute boolean            metaKey;
 
   readonly attribute unsigned short     button;

@@ -38,162 +38,80 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * The complete Range spec is located at:
- * http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html
- */
 #include "domstubs.idl"
+
+/**
+ * The nsIDOMRange interface is an interface to a DOM range object.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Traversal-Range/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf90ce-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMRange : nsISupports
 {
-  /**
-   * CompareHow group
-   * Passed as a parameter to the compareBoundaryPoints method.
-   */
-    const unsigned short START_TO_START = 0;// Compare start boundary-point of sourceRange to start boundary-point of Range on which compareBoundaryPoints is invoked
-    const unsigned short START_TO_END = 1;  // Compare start boundary-point of sourceRange to end boundary-point of Range on which compareBoundaryPoints is invoked
-    const unsigned short END_TO_START = 2;  // Compare end boundary-point of sourceRange to start boundary-point of Range on which compareBoundaryPoints is invoked
-    const unsigned short END_TO_END = 3;    // Compare end boundary-point of sourceRange to end boundary-point of Range on which compareBoundaryPoints is invoked
+  readonly attribute nsIDOMNode       startContainer;
+                                        // raises(DOMException) on retrieval
 
-    readonly attribute nsIDOMNode startContainer;// Node within which the Range begins
-    readonly attribute long startOffset;         // Offset within the starting node of the Range
-    readonly attribute nsIDOMNode endContainer;  // Node within which the Range ends
-    readonly attribute long endOffset;           // Offset within the ending node of the Range
+  readonly attribute long             startOffset;
+                                        // raises(DOMException) on retrieval
 
-    readonly attribute boolean collapsed; // TRUE if the Range is collapsed
-    readonly attribute nsIDOMNode commonAncestorContainer; //The deepest common ancestor container of the Range's two boundary-points
+  readonly attribute nsIDOMNode       endContainer;
+                                        // raises(DOMException) on retrieval
 
+  readonly attribute long             endOffset;
+                                        // raises(DOMException) on retrieval
 
-    /**
-     * Sets the attributes describing the start of the Range. The start 
-     * position of a Range is guaranteed to never be after the end position.
-     * To enforce this restriction, if the start is set to be at a position
-     * after the end, the Range is collapsed to that position
-     * @param parent      The Parent Node value. This parameter must not be null. 
-     * @param offset      start offset value.
-     */
-     void setStart(in nsIDOMNode parent, in long offset);
+  readonly attribute boolean          collapsed;
+                                        // raises(DOMException) on retrieval
 
-    /**
-     * Sets the start position to be before the specified node.
-     * @param sibling     Range starts before sibling Node. 
-     */
-     void setStartBefore(in nsIDOMNode sibling);
+  readonly attribute nsIDOMNode       commonAncestorContainer;
+                                        // raises(DOMException) on retrieval
 
-    /**
-     * Sets the start position to be after the specified node.
-     * @param sibling     Range starts after sibling Node. 
-     */
-     void setStartAfter(in nsIDOMNode sibling);
+  void               setStart(in nsIDOMNode refNode, in long offset)
+                                        raises(RangeException, DOMException);
+  void               setEnd(in nsIDOMNode refNode, in long offset)
+                                        raises(RangeException, DOMException);
+  void               setStartBefore(in nsIDOMNode refNode)
+                                        raises(RangeException, DOMException);
+  void               setStartAfter(in nsIDOMNode refNode)
+                                        raises(RangeException, DOMException);
+  void               setEndBefore(in nsIDOMNode refNode)
+                                        raises(RangeException, DOMException);
+  void               setEndAfter(in nsIDOMNode refNode)
+                                        raises(RangeException, DOMException);
+  void               collapse(in boolean toStart)
+                                        raises(DOMException);
+  void               selectNode(in nsIDOMNode refNode)
+                                        raises(RangeException, DOMException);
+  void               selectNodeContents(in nsIDOMNode refNode)
+                                        raises(RangeException, DOMException);
 
-    /**
-     * Sets the attributes describing the end of a Range.  If the
-     * end is set to be at a position before the start, the Range
-     * is collapsed to that position.
-     * @param parent      The Parent Node value. This parameter must not be null. 
-     * @param offset      end offset value.
-     */
-     void setEnd(in nsIDOMNode parent, in long offset);
+  // CompareHow
+  const unsigned short      START_TO_START                 = 0;
+  const unsigned short      START_TO_END                   = 1;
+  const unsigned short      END_TO_END                     = 2;
+  const unsigned short      END_TO_START                   = 3;
 
-    /**
-     * Sets the end position to be before the specified node
-     * @param sibling     Range ends before sibling Node. 
-     */
-     void setEndBefore(in nsIDOMNode sibling);
-
-    /**
-     * Sets the end position to be after the specified node
-     * @param sibling     Range ends before sibling Node. 
-     */
-     void setEndAfter(in nsIDOMNode sibling);
- 
-    /**
-     * Collapse a Range onto one of its boundary-points 
-     * @param toStart     If TRUE. collapses the Range onto its start,
-     *                    if FALSE, collapses onto its end.
-     */
-     void collapse(in boolean toStart);
- 
-    /**
-     * Select a node and its contents.  Replaces the 
-     * contents of the range with this node.
-     * @param n           The Node to select.
-     */
-     void selectNode(in nsIDOMNode n);
-
-    /**
-     * Select the contents within a node.  Replace the 
-     * contents of the range with this node's contents.
-     * @param n           Node to select from. 
-     */
-     void selectNodeContents(in nsIDOMNode n);
- 
-    /**
-     * Compare the boundary-points of two Ranges in a document.
-     * @param how         parameter from CompareHow group, how the boundary points
-     *                    are to be compared. 
-     * @param srcRange    the range which will have its boundary points compared. 
-     * Return Value:      -1, 0 or 1 depending on whether the corresponding 
-     *                    boundary-point of the Range is before, equal to, or after the
-     *                    corresponding boundary-point of sourceRange. 
-     */
-     long  compareBoundaryPoints(in unsigned short how, in nsIDOMRange srcRange);
- 
-    /**
-     * Removes the contents of a Range from the containing document or document
-     * fragment without returning a reference to the removed content.
-     */
-     void deleteContents();
- 
-    /**
-     * Moves the contents of a Range from the containing document or document
-     * fragment to a new DocumentFragment. 
-     * Return Value:      A DocumentFragment containing the extracted contents. 
-     */
-     nsIDOMDocumentFragment extractContents();
-
-    /**
-     * Duplicates the contents of a Range  
-     * Return Value:      A DocumentFragment that contains content equivalent to this Range. 
-     */
-     nsIDOMDocumentFragment cloneContents();
- 
-    /**
-     * Inserts a node into the Document or DocumentFragment at the start of the Range.
-     * If the container is a Text node, this will be split at the start of the Range.
-     * Adjacent Text nodes will not be automatically merged.
-     * @param n           The node to insert at the start of the Range 
-     */
-     void insertNode(in nsIDOMNode n);
-
-    /**
-     * Reparents the contents of the Range to the given node and inserts
-     * the node at the position of the start of the Range. 
-     * @param n          The node to surround the contents with.
-     */
-     void surroundContents(in nsIDOMNode n);
- 
-    /**
-     * Produces a new Range whose boundary-points are equal to the
-     * boundary-points of the Range. 
-     * Return Value:      The duplicated Range. 
-     */
-     nsIDOMRange cloneRange();
- 
-    /**
-     * Called to indicate that the Range is no longer in use and that
-     * the implementation may relinquish any resources associated with
-     * this Range. Subsequent calls to any methods or attribute getters
-     * on this Range will result in a DOMException being thrown with an
-     * error code of INVALID_STATE_ERR. 
-     */
-     void detach();
- 
-    /**
-     * Returns the contents of a Range as a string. This string contains
-     * only the data characters, not any markup. 
-     * Return Value:      The contents of the Range.
-     */
-     DOMString toString();
+  short              compareBoundaryPoints(in unsigned short how,
+                                           in nsIDOMRange sourceRange)
+                                        raises(DOMException);
+  void               deleteContents()
+                                        raises(DOMException);
+  nsIDOMDocumentFragment extractContents()
+                                        raises(DOMException);
+  nsIDOMDocumentFragment cloneContents()
+                                        raises(DOMException);
+  void               insertNode(in nsIDOMNode newNode)
+                                        raises(DOMException, RangeException);
+  void               surroundContents(in nsIDOMNode newParent)
+                                        raises(DOMException, RangeException);
+  nsIDOMRange        cloneRange()
+                                        raises(DOMException);
+  DOMString          toString()
+                                        raises(DOMException);
+  void               detach()
+                                        raises(DOMException);
 };
- 

@@ -40,6 +40,16 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+/**
+ * The nsIDOMHTMLImageElement interface is the interface to a [X]HTML
+ * img element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf90ab-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
 {
@@ -47,12 +57,16 @@ interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
            attribute DOMString        align;
            attribute DOMString        alt;
            attribute DOMString        border;
+  // Modified in DOM Level 2:
            attribute long             height;
+  // Modified in DOM Level 2:
            attribute long             hspace;
            attribute boolean          isMap;
            attribute DOMString        longDesc;
            attribute DOMString        src;
-           attribute long             vspace;
-           attribute long             width;
            attribute DOMString        useMap;
+  // Modified in DOM Level 2:
+           attribute long             vspace;
+  // Modified in DOM Level 2:
+           attribute long             width;
 };

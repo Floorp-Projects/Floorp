@@ -162,7 +162,25 @@ public:
   NS_DECL_NSIDOM3NODE
 
   // nsIDOMHTMLDocument interface
-  NS_DECL_NSIDOMHTMLDOCUMENT
+  NS_IMETHOD GetTitle(nsAString & aTitle);
+  NS_IMETHOD SetTitle(const nsAString & aTitle);
+  NS_IMETHOD GetReferrer(nsAString & aReferrer);
+  NS_IMETHOD GetURL(nsAString & aURL);
+  NS_IMETHOD GetBody(nsIDOMHTMLElement * *aBody);
+  NS_IMETHOD SetBody(nsIDOMHTMLElement * aBody);
+  NS_IMETHOD GetImages(nsIDOMHTMLCollection * *aImages);
+  NS_IMETHOD GetApplets(nsIDOMHTMLCollection * *aApplets);
+  NS_IMETHOD GetLinks(nsIDOMHTMLCollection * *aLinks);
+  NS_IMETHOD GetForms(nsIDOMHTMLCollection * *aForms);
+  NS_IMETHOD GetAnchors(nsIDOMHTMLCollection * *aAnchors);
+  NS_IMETHOD GetCookie(nsAString & aCookie);
+  NS_IMETHOD SetCookie(const nsAString & aCookie);
+  NS_IMETHOD Open(void);
+  NS_IMETHOD Close(void);
+  NS_IMETHOD Write(const nsAString & text);
+  NS_IMETHOD Writeln(const nsAString & text);
+  NS_IMETHOD GetElementsByName(const nsAString & elementName,
+                               nsIDOMNodeList **_retval); 
 
   // nsIDOMNSHTMLDocument interface
   NS_DECL_NSIDOMNSHTMLDOCUMENT

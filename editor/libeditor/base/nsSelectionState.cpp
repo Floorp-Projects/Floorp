@@ -167,7 +167,7 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
     itsItem->GetRange(address_of(itsRange));
     if (!myRange || !itsRange) return PR_FALSE;
   
-    PRInt32 compResult;
+    PRInt16 compResult;
     myRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, itsRange, &compResult);
     if (compResult) return PR_FALSE;
     myRange->CompareBoundaryPoints(nsIDOMRange::END_TO_END, itsRange, &compResult);
