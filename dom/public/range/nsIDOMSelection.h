@@ -71,6 +71,8 @@ public:
 
   NS_IMETHOD    AddRange(nsIDOMRange* aRange)=0;
 
+  NS_IMETHOD    RemoveRange(nsIDOMRange* aRange)=0;
+
   NS_IMETHOD    StartBatchChanges()=0;
 
   NS_IMETHOD    EndBatchChanges()=0;
@@ -101,6 +103,7 @@ public:
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aReturn);  \
   NS_IMETHOD    DeleteFromDocument();  \
   NS_IMETHOD    AddRange(nsIDOMRange* aRange);  \
+  NS_IMETHOD    RemoveRange(nsIDOMRange* aRange);  \
   NS_IMETHOD    StartBatchChanges();  \
   NS_IMETHOD    EndBatchChanges();  \
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener);  \
@@ -126,6 +129,7 @@ public:
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aReturn) { return _to ContainsNode(aNode, aRecursive, aReturn); }  \
   NS_IMETHOD    DeleteFromDocument() { return _to DeleteFromDocument(); }  \
   NS_IMETHOD    AddRange(nsIDOMRange* aRange) { return _to AddRange(aRange); }  \
+  NS_IMETHOD    RemoveRange(nsIDOMRange* aRange) { return _to RemoveRange(aRange); }  \
   NS_IMETHOD    StartBatchChanges() { return _to StartBatchChanges(); }  \
   NS_IMETHOD    EndBatchChanges() { return _to EndBatchChanges(); }  \
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener) { return _to AddSelectionListener(aNewListener); }  \

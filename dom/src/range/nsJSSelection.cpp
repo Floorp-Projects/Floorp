@@ -713,6 +713,60 @@ SelectionAddRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
 
 //
+// Native method RemoveRange
+//
+PR_STATIC_CALLBACK(JSBool)
+SelectionRemoveRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSelection *nativeThis = (nsIDOMSelection*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMRange> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+  *rval = JSVAL_NULL;
+
+  {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SELECTION_REMOVERANGE, PR_FALSE);
+    }
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
+    }
+  }
+
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIRangeIID,
+                                           "Range",
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->RemoveRange(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method StartBatchChanges
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -996,6 +1050,7 @@ static JSFunctionSpec SelectionMethods[] =
   {"containsNode",          SelectionContainsNode,     2},
   {"deleteFromDocument",          SelectionDeleteFromDocument,     0},
   {"addRange",          SelectionAddRange,     1},
+  {"removeRange",          SelectionRemoveRange,     1},
   {"startBatchChanges",          SelectionStartBatchChanges,     0},
   {"endBatchChanges",          SelectionEndBatchChanges,     0},
   {"addSelectionListener",          SelectionAddSelectionListener,     1},
