@@ -496,6 +496,8 @@ editor/ui/Makefile
 editor/ui/composer/Makefile
 editor/ui/composer/content/Makefile
 editor/ui/composer/skin/Makefile
+editor/ui/composer/locale/Makefile
+editor/ui/composer/locale/en-US/Makefile
 editor/ui/dialogs/Makefile
 editor/ui/dialogs/content/Makefile
 editor/ui/dialogs/skin/Makefile
