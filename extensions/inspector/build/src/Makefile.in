@@ -34,6 +34,9 @@ FORCE_SHARED_LIB = 1
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = inspectr
 endif
+
+PACKAGE_FILE = inspector.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  gfx \

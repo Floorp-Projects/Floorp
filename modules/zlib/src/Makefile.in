@@ -31,6 +31,8 @@ MODULE		= zlib
 LIBRARY_NAME	= mozz
 GRE_MODULE	= 1
 
+PACKAGE_FILE = zlib.pkg
+
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
 MAPFILE	= $(LIBRARY_NAME).map

@@ -36,6 +36,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsAccessibilityModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = accessibility.pkg
+
 REQUIRES	= xpcom \
 		  $(NULL)
 

@@ -35,6 +35,8 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCtlLEModule
 
+PACKAGE_FILE = ctl.pkg
+
 REQUIRES	= \
 		  xpcom \
 		  string \

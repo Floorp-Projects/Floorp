@@ -29,6 +29,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetGTKModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = widget_gtk.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  appshell \

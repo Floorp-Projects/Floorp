@@ -30,6 +30,8 @@ IS_COMPONENT    = 1
 MODULE_NAME     = nsGfxMacModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE  = gfxmac.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  widget \
@@ -87,7 +89,6 @@ LOCAL_INCLUDES	= \
 
 include $(topsrcdir)/config/rules.mk
 
-        
 CXXFLAGS    += $(TK_CFLAGS)
 CFLAGS      += $(TK_CFLAGS)
 INCLUDES    += $(TK_CFLAGS) -I$(srcdir)/..

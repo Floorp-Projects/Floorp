@@ -29,6 +29,8 @@ MODULE          = xlibxtbin
 LIBRARY_NAME	= xlibxtbin
 EXPORT_LIBRARY = 1
 
+PACKAGE_FILE = xlibxtbin.pkg
+
 REQUIRES	= xlibrgb
 
 CPPSRCS         = \

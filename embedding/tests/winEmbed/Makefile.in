@@ -38,6 +38,9 @@ PROGRAM		= winEmbed$(BIN_SUFFIX)
 RESFILE		= winEmbed.res
 
 MODULE		= winEmbed
+
+PACKAGE_FILE = winembed.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  embed_base \

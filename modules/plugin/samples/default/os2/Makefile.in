@@ -30,6 +30,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= plugin
 LIBRARY_NAME	= npnulos2
 RESFILE		= npnulos2.res
+
+PACKAGE_FILE = npnul.pkg
+
 REQUIRES	= java \
 		  plugin \
 		  $(NULL)

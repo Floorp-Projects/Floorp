@@ -37,6 +37,9 @@ ifneq ($(OS_ARCH),WINNT)
 # To avoid conflict with OS/2 system uconv.dll
 SHORT_LIBNAME  = mozuconv
 endif
+
+PACKAGE_FILE = uconv.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  intl \

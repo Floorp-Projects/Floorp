@@ -29,6 +29,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom
 
+PACKAGE_FILE = xpcom.pkg
+PACKAGE_VARS += USE_SHORT_LIBNAME
+
+ifdef ENABLE_TESTS
+PACKAGE_FILE += xpcom-tests.pkg
+endif
+
 # Do not set EXPORT_LIBRARY as we do not want xpcom in the static libs list
 #EXPORT_LIBRARY = 1
 GRE_MODULE	= 1

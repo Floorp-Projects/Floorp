@@ -48,6 +48,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsProfileModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = profile.pkg
+
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \

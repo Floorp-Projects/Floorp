@@ -31,6 +31,9 @@ LIBRARY_NAME	= composer
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsComposerModule
+
+PACKAGE_FILE = composer.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \

@@ -33,6 +33,7 @@ SHORT_LIBNAME	= xpcomct
 endif
 
 GRE_MODULE	= 1
+PACKAGE_FILE = xpcomobsolete.pkg
 
 DIRS            = component
 
