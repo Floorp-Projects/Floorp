@@ -135,7 +135,7 @@ function enterNewSite(site) {
 function onPopupPrefsOK()
 {
   if (!nsIPermissionManager)
-    nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+    var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 
   var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(nsIPermissionManager);
@@ -162,7 +162,7 @@ function onPopupPrefsOK()
 function onImagePrefsOK()
 {
   if (!nsIPermissionManager)
-    nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+    var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 
   var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(nsIPermissionManager);
