@@ -60,6 +60,9 @@ typedef PRUcs2 PRUnichar;
 #define NS_IMPORT _declspec(dllimport)
 #define NS_IMPORT_(type) type _declspec(dllimport) __stdcall
 #define NS_EXPORT _declspec(dllexport)
+// XXX NS_EXPORT_ defined in nsCOm.h (xpcom) differs in where the __declspec
+// is placed. It needs to be done this way to make the 4.x compiler happy...
+#undef NS_EXPORT_
 #define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
 #else
 /* XXX do something useful? */
