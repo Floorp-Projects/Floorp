@@ -53,7 +53,6 @@ public:
 				  nsAString & aURI);
   static nsresult GetLocalName(const nsAString & aQName,
 			       nsAString & aLocalName);
-  static PRInt32 GetArrayIndex(const nsAString& src, nsAString & dst);
 
 // All those missing string functions have to come from somewhere...
 

@@ -1337,8 +1337,144 @@ NS_IMETHODIMP
   return NS_OK;
 }
 
-//  Incomplete -- becomes very complex due to variant arrays
+#define MAX_ARRAY_DIMENSIONS 100
+/**
+ * Extract multiple bracketted numbers from the end of
+ * the string and return the string with the number
+ * removed or return the original string and -1.  Either
+ * the number of dimensions or the size of any particular
+ * dimension can be returned as -1.  An over-all -1
+ * means that either there were no dimensions or there
+ * was a fundamental problem interpreting it.  A
+ * -1 on any particular size of a dimension means that
+ * that particular size was not available or was not
+ * interpretable.  That may be a recoverable error
+ * if the values represented a size, because we can
+ * manually scan the array, but that shouldbe fatal
+ * if specifying a position.  In these cases, the
+ * bracketted values are removed.
+ */
+static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString & dst)
+{
+  dst.Assign(src);
+  nsReadingIterator < PRUnichar > i1;
+  nsReadingIterator < PRUnichar > i2;
+  src.BeginReading(i1);
+  src.EndReading(i2);
+  if (src.IsEmpty()) return -1;
+  while (i1 != i2      //  Loop past white space
+    && *(--i2) <= ' ')
+    ;
+  if (*i2 != ']') {                  //  In this case, not an array dimension
+    int len = Distance(i1, i2) - 1;  //  This is the size to truncate to at the end.
+    src.Left(dst, len);              //  Truncate the string.
+    return -1;                       //  Eliminated white space.
+  }
 
+  int d = 1;    //  Counting the dimensions
+  for (;;) {	//  First look for the matching bracket from reverse and commas.
+    if (i1 == i2) {                  //  No matching bracket.
+      return -1;
+    }
+    PRUnichar c = *(--i2);
+    if (c == '[') {                  //  Matching bracket found!
+      break;
+    }
+    if (c == ',') {
+      d++;
+    }
+  }
+  int len;
+  {
+    nsReadingIterator < PRUnichar > i3 = i2++;  //  Cover any extra white space
+    while (i1 != i2      //  Loop past white space
+      && *(--i2) <= ' ')
+      ;
+    len = Distance(i1, i3);        //  Length remaining in string after operation
+  }
+
+  if (d > MAX_ARRAY_DIMENSIONS) {  //  Completely ignore it if too many dimensions.
+    return -1;
+  }
+
+  i1 = i2;
+  src.EndReading(i2);
+  while (*(--i2) != ']')           //  Find end bracket again
+    ;
+
+  d = 0;                           //  Start with first dimension.
+  dim[d] = -1;
+  PRBool finished = PR_FALSE;      //  Disallow space within numbers
+
+  while (i1 != i2) {
+    PRUnichar c = *(i1++);
+    if (c < '0' || c > '9') {
+//  There may be slightly more to do here if alternative radixes are supported.
+      if (c <= ' ') {              //  Accept anything < space as whitespace
+        if (dim[d] >= 0) {
+	  finished = PR_TRUE;
+        }
+      }
+      else if (c == ',') {         //  Introducing new dimension
+	dim[++d] = -1;             //  Restarting it at -1
+	finished = PR_FALSE;
+      }
+      else
+        return -1;                 //  Unrecognized character
+    } else {
+      if (finished) {
+        return -1;                 //  Numbers not allowed after white space
+      }
+      if (dim[d] == -1)
+	dim[d] = 0;
+      if (dim[d] < 214748364) {
+        dim[d] = dim[d] * 10 + c - '0';
+      }
+      else {
+	return -1;                 //  Number got too big.
+      }
+    }
+  }
+  src.Left(dst, len);              //  Truncate the string.
+  return d + 1;                    //  Return the number of dimensions
+}
+
+/**
+ * Extract multiple bracketted numbers from the end of
+ * the string and reconcile with a passed-in set of
+ * dimensions, computing the offset in the array.
+ * Presumes that the caller already knows the dimensions
+ * fit into 32-bit signed integer, due to computing
+ * total size of array.
+ *
+ * If there is extra garbage within the 
+ * Any blank or unreadable dimensions or extra garbage
+ * within the string result in a return of -1, which is
+ * bad wherever a position string was interpreted.
+ */
+static PRInt32 GetArrayPosition(const nsAString& src, PRInt32 d, PRInt32* dim)
+{
+  PRInt32 pos[MAX_ARRAY_DIMENSIONS];
+  nsAutoString leftover;
+  PRInt32 result = GetArrayDimensions(src, pos, leftover);
+  if (result != d                //  Easy cases where something went wrong
+    || !leftover.IsEmpty())
+    return -1;
+  result = 0;
+  for (PRInt32 i = 0;;) {
+    PRInt32 next = pos[i];
+    if (next == -1
+      || next >= dim[i])
+      return -1;
+    result = result + next;
+    if (++i < d)                 //  Multiply for next round.
+      result = result * dim[i];
+    else
+      return result;
+  }
+}
+
+//  Incomplete -- becomes very complex due to variant arrays
 NS_IMETHODIMP
     nsArrayEncoder::Decode(nsISOAPEncoding * aEncoding,
 			   nsIDOMElement * aSource,
@@ -1355,11 +1491,29 @@ NS_IMETHODIMP
 			      kSOAPArrayTypeAttribute, value);
   if (NS_FAILED(rc))
     return rc;
-  int size = -1;
-  if (!value.IsEmpty()) {	//  Need to truncate []
+  PRInt32 d;                  //  Number of dimensions
+  PRInt32 dim[MAX_ARRAY_DIMENSIONS];
+  PRInt32 size = -1;
+  if (!value.IsEmpty()) {
     nsAutoString dst;
-    size = nsSOAPUtils::GetArrayIndex(value, dst);
+    d = GetArrayDimensions(value, dim, dst);
     value.Assign(dst);
+
+    if (d > 0) {
+      PRInt64 tot = 1;  //  Collect in 64 bits, just to make sure it fits
+      for (int i = 0; i < d; i++) {
+	PRInt32 next = dim[i];
+	if (next == -1) {
+          tot = -1;
+	  break;
+	}
+	tot = tot * next;
+	if (tot > 2147483647) {
+          return NS_ERROR_FAILURE;
+	}
+      }
+      size = (PRInt32)tot;
+    }
 
     nsCOMPtr < nsISchemaCollection > collection;
     rc = aEncoding->GetSchemaCollection(getter_AddRefs(collection));
@@ -1378,13 +1532,42 @@ NS_IMETHODIMP
 			      kSOAPArrayPositionAttribute, value);
   if (NS_FAILED(rc))
     return rc;
-  PRInt32 first;
+  PRInt32 first;           //  Computing first ismuch trickier, because size may be unspecified.
   if (!value.IsEmpty()) {  //  See if the array has an initial position.
+    PRInt32 pos[MAX_ARRAY_DIMENSIONS];
     nsAutoString leftover;
-    first = nsSOAPUtils::GetArrayIndex(value, leftover);
+    first = GetArrayDimensions(value, pos, leftover);
+    if (d == -1)
+      d = first;
     if (first == -1        //  We have to understand this or report an error
+        || first != d      //  But the first does not need to be understood
         || !leftover.IsEmpty())
       return NS_ERROR_ILLEGAL_VALUE;
+    PRInt32 old0 = dim[0];
+    if (dim[0] == -1) {    //  It is OK to have a first where dimension 0 is unspecified
+       dim[0] = 2147483647;
+    }
+    first  = 0;
+    for (PRInt32 i = 0;;) {
+      PRInt64 next = pos[i];
+      if (next == -1
+        || next >= dim[i])
+        return NS_ERROR_ILLEGAL_VALUE;
+      next = (first + next);
+      if (next > 2147483647)
+        return NS_ERROR_ILLEGAL_VALUE;
+      first = (PRInt32)next;
+      if (++i < d) {
+	next = first * dim[i];
+	if (next > 2147483647)
+          return NS_ERROR_ILLEGAL_VALUE;
+        first = (PRInt32)next;
+      }
+      else {
+	break;
+      }
+    }
+    dim[0] = old0;
   }
   else {
     first = 0;
@@ -1392,8 +1575,14 @@ NS_IMETHODIMP
   if (size == -1) {  //  If no known size, we have to go through and pre-count.
     nsCOMPtr<nsIDOMElement> child;
     nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
+    PRInt32 pp[MAX_ARRAY_DIMENSIONS];
+    if (d != -1) {
+      for (int i = d; i-- != 0;) {
+	pp[i] = 0;
+      }
+    }
     size = 0;
-    PRUint32 next = first;
+    PRInt32 next = first;
     while (child) {
       nsAutoString pos;
       nsresult rc =
@@ -1401,25 +1590,58 @@ NS_IMETHODIMP
 			      kSOAPArrayPositionAttribute, pos);
       if (NS_FAILED(rc))
         return rc;
-      PRInt32 p;
       if (!pos.IsEmpty()) {  //  See if the item in the array has a position
         nsAutoString leftover;
-        PRInt32 p = nsSOAPUtils::GetArrayIndex(value, leftover);
-        if (p == -1        //  We have to understand this or report an error
-            || !leftover.IsEmpty())
+        PRInt32 inc[MAX_ARRAY_DIMENSIONS];
+        PRInt32 i = GetArrayDimensions(value, inc, leftover);
+        if (i == -1        //  We have to understand this or report an error
+            || !leftover.IsEmpty()
+	    || (d != -1
+               && d != i))
           return NS_ERROR_ILLEGAL_VALUE;
+	if (d == -1) {
+	  d = i;             //  If we never had dimension count before, we do now.
+          for (int i = d; i-- != 0;) {
+	    pp[i] = 0;
+          }
+	}
+	for (i = 0; i < d; i++) {
+          PRInt32 n = inc[i];
+	  if (n == -1) {  //  Positions must be concrete
+            return NS_ERROR_ILLEGAL_VALUE;
+	  }
+	  if (n >= pp[i])
+            pp[i] = n + 1;
+	}
       }
       else {
-	p = next++;        //  Just use the next one if no position
-      }
-      if (p >= size) {
-	size = p + 1;
+	next++;            //  Keep tabs on how many unnumbered items there are
       }
 
-      nsCOMPtr<nsIDOMElement> next;
-      nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(next));
-      child = next;
+      nsCOMPtr<nsIDOMElement> nextchild;
+      nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(nextchild));
+      child = nextchild;
     }
+    if (d == -1) {         //  If unknown or 1 dimension, unpositioned entries can help
+      d = 1;
+      pp[0] = next;
+    }
+    else if (d == 1
+      && next > pp[0]) {
+      pp[0] = next;
+    }
+    PRInt64 tot = 1;  //  Collect in 64 bits, just to make sure it fits
+    for (int i = 0; i < d; i++) {
+      PRInt32 next = dim[i];
+      if (next == -1) {          //  Only derive those with no other declaration
+        dim[i] = next = pp[i];
+      }
+      tot = tot * next;
+      if (tot > 2147483647) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+    size = (PRInt32)tot;  //  At last, we know the dimensions of the array.
   }
 
 //  After considerable work, we may have a schema type and a size.
@@ -1440,10 +1662,8 @@ NS_IMETHODIMP
           break;\
         PRInt32 p;\
         if (!pos.IsEmpty()) {\
-          nsAutoString leftover;\
-          PRInt32 p = nsSOAPUtils::GetArrayIndex(value, leftover);\
-          if (p == -1\
-              || !leftover.IsEmpty()) {\
+          PRInt32 p = GetArrayPosition(value, d, dim);\
+          if (p == -1) {\
             rc = NS_ERROR_ILLEGAL_VALUE;\
 	    break;\
 	  }\
@@ -1509,7 +1729,7 @@ NS_IMETHODIMP
   } else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion])) {
     if (name.Equals(kArraySOAPType)) {
       return NS_ERROR_ILLEGAL_VALUE;	//  Fix nested arrays later
-    } else if (name.Equals(kArraySOAPType)) {
+    } else if (name.Equals(kStructSOAPType)) {
       return NS_ERROR_ILLEGAL_VALUE;	//  Fix nested structs later
     } else
       return NS_ERROR_ILLEGAL_VALUE;
