@@ -40,12 +40,21 @@
 [% END %]
 
 [% DEFAULT
-  h1 = title
   h2 = ""
   h3 = "" 
   bgcolor = "#ffffff"
   onload = ""
 %]
+
+[%# We should be able to set the default value of the h1 variable
+  # to the value of the title variable using the DEFAULT directive,
+  # but that doesn't work if a caller sets h1 to the empty string
+  # to avoid h1 inheriting the value of title, since DEFAULT
+  # mistakenly treats empty strings as undefined and gives h1 the
+  # value of title anyway.  To get around that problem we explicitly
+  # set h1's default value here only if it is undefined. %]
+[% h1 = title IF !h1.defined %]
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
   <head>
