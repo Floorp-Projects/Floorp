@@ -1345,7 +1345,14 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
                     FALSE);
         }
         else
+        {
+          GetPrivateProfileString(szSection, "Message", "", szBuf, sizeof(szBuf), szFileIniConfig);
+          if ( szBuf[0] != '\0' )
+            ShowMessage(szBuf, TRUE);  
           WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
+          if ( szBuf[0] != '\0' )
+            ShowMessage(szBuf, FALSE);  
+        }
       }
     }
 

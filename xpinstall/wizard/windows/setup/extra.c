@@ -2901,6 +2901,37 @@ BOOL IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected)
   return(FALSE);
 }
 
+void RestoreInvisibleFlag(siC *siCNode)
+{
+  char szBuf[MAX_BUF_TINY];
+  char szAttribute[MAX_BUF_TINY];
+
+  GetPrivateProfileString(siCNode->szReferenceName, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  lstrcpy(szAttribute, szBuf);
+  strupr(szAttribute);
+
+  if(strstr(szAttribute, "INVISIBLE"))
+    siCNode->dwAttributes |= SIC_INVISIBLE;
+  else
+    siCNode->dwAttributes &= ~SIC_INVISIBLE;
+}
+
+void RestoreAdditionalFlag(siC *siCNode)
+{
+  char szBuf[MAX_BUF_TINY];
+  char szAttribute[MAX_BUF_TINY];
+
+  GetPrivateProfileString(siCNode->szReferenceName, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  lstrcpy(szAttribute, szBuf);
+  strupr(szAttribute);
+
+  if(strstr(szAttribute, "ADDITIONAL") && !strstr(szAttribute, "NOTADDITIONAL"))
+    siCNode->dwAttributes |= SIC_ADDITIONAL;
+  else
+    siCNode->dwAttributes &= ~SIC_ADDITIONAL;
+}
+
+
 //  This function:
 //  - Zeros the SELECTED and ADDITIONAL attributes of all components.
 //  - Set all attributes as specified for the specific Setup Type
@@ -2928,13 +2959,18 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
     if(siCNode == NULL)
       break;
 
+    /* clear these flags for all components so they can be
+     * reset later if they belong to the setup type the user
+     * selected */
     siCNode->dwAttributes &= ~SIC_SELECTED;
     siCNode->dwAttributes &= ~SIC_ADDITIONAL;
+    siCNode->dwAttributes |= SIC_INVISIBLE;
 
     /* Force Upgrade needs to be performed here because the user has just
      * selected the destination path for the product.  The destination path is
      * critical to the checking of the Force Upgrade. */
     ResolveForceUpgrade(siCNode);
+    ResolveSupercede(siCNode);
     siCNode = siCNode->Next;
   } while((siCNode != NULL) && (siCNode != siComponents));
 
@@ -2946,6 +2982,12 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
   {
     if((siCNode = SiCNodeFind(siComponents, szComponentSection)) != NULL)
     {
+      /* Component is in the Setup Type the user selected, so we now need to
+       * reset the INVISIBLE and ADDITIONAL flags because they were unset
+       * above and also are not reset anywhere else. */
+      RestoreInvisibleFlag(siCNode);
+      RestoreAdditionalFlag(siCNode);
+
       wsprintf(szOverrideSection, "%s-Override-%s", siCNode->szReferenceName, szSTSection);
       GetPrivateProfileString(szOverrideSection, "Attributes", "", szOverrideAttributes, sizeof(szOverrideAttributes), szFileIniConfig);
 
@@ -2963,12 +3005,15 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
       {
         /* Setup Type other than custom detected, so
          * make sure all components from this Setup Type
-         * is selected (regardless if it's DISABLED or not). */
-        siCNode->dwAttributes |= SIC_SELECTED;
+         * is selected (regardless if it's DISABLED or not). 
+         * Don't select components that are superceded */
+        if(!siCNode->bSupercede)
+          siCNode->dwAttributes |= SIC_SELECTED;
+
         if(*szOverrideAttributes != '\0')
           siCNode->dwAttributes = ParseComponentAttributes(szOverrideAttributes, siCNode->dwAttributes, TRUE);
       }
-      else if(!(siCNode->dwAttributes & SIC_DISABLED) && !siCNode->bForceUpgrade)
+      else if(!(siCNode->dwAttributes & SIC_DISABLED) && !siCNode->bForceUpgrade && !siCNode->bSupercede)
       {
         /* Custom setup type detected and the component is
          * not DISABLED and FORCE_UPGRADE.  Reset the component's 
@@ -2977,6 +3022,7 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
          * it as is.  The user will see the component in the Options
          * Dialogs as not selected and DISABLED.  Not sure why we
          * want this, but marketing might find it useful someday. */
+
         GetPrivateProfileString(siCNode->szReferenceName, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
         siCNode->dwAttributes = ParseComponentAttributes(szBuf, 0, FALSE);
         if(*szOverrideAttributes != '\0')
@@ -3916,6 +3962,12 @@ HRESULT ParseComponentAttributes(char *szAttribute, DWORD dwAttributes, BOOL bOv
   else if(strstr(szBuf, "ADDITIONAL"))
     dwAttributes |= SIC_ADDITIONAL;
 
+  if(strstr(szBuf, "NOTSUPERCEDE"))
+    dwAttributes &= ~SIC_SUPERCEDE;
+  else if(strstr(szBuf, "SUPERCEDE"))
+    dwAttributes |= SIC_SUPERCEDE;
+   
+
   return(dwAttributes);
 }
 
@@ -3944,6 +3996,59 @@ siC *SiCNodeFind(siC *siCHeadNode, char *szInReferenceName)
   } while((siCNode != NULL) && (siCNode != siCHeadNode));
 
   return(NULL);
+}
+
+BOOL ResolveSupercede(siC *siCObject)
+{
+  DWORD dwIndex;
+  char  szFilePath[MAX_BUF];
+  char  szSupercedeFile[MAX_BUF];
+  char  szType[MAX_BUF_TINY];
+  char  szKey[MAX_BUF_TINY];
+
+  siCObject->bSupercede = FALSE;
+  if(siCObject->dwAttributes & SIC_SUPERCEDE)
+  {
+    dwIndex = 0;
+    GetPrivateProfileString(siCObject->szReferenceName, "SupercedeType", "", szType, sizeof(szType), szFileIniConfig);
+    if(*szType !='\0')
+    {
+      if(lstrcmpi(szType, "File Exists") == 0)
+      {
+        wsprintf(szKey, "SupercedeFile%d", dwIndex);        
+        GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupercedeFile, sizeof(szSupercedeFile), szFileIniConfig);
+        while(*szSupercedeFile != '\0')
+        {
+          DecryptString(szFilePath, szSupercedeFile);
+          if(FileExists(szFilePath))
+          {
+            siCObject->bSupercede = TRUE;
+
+            /* Found at least one file, so break out of while loop */
+            break;
+          }
+          wsprintf(szKey, "SupercedeFile%d", ++dwIndex);        
+          GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupercedeFile, sizeof(szSupercedeFile), szFileIniConfig);
+        }
+      }
+    }
+
+    if(siCObject->bSupercede)
+    {
+      siCObject->dwAttributes &= ~SIC_SELECTED;
+      siCObject->dwAttributes |= SIC_DISABLED;
+    }
+    else
+      /* Make sure to unset the DISABLED bit.  If the Setup Type is other than
+       * Custom, then we don't care if it's DISABLED or not because this flag
+       * is only used in the Custom dialogs.
+       *
+       * If the Setup Type is Custom and this component is DISABLED by default
+       * via the config.ini, it's default value will be restored in the
+       * SiCNodeSetItemsSelected() function that called ResolveSupercede(). */
+      siCObject->dwAttributes &= ~SIC_DISABLED;
+  }
+  return(siCObject->bSupercede);
 }
 
 BOOL ResolveForceUpgrade(siC *siCObject)
