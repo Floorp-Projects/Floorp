@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.4 $ $Date: 2000/09/11 22:37:01 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.5 $ $Date: 2002/05/20 16:01:21 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -39,11 +39,16 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 # This'll need some help from a build person.
 
-nssckepv.h: ck.api ckapi.perl
-nssckft.h: ck.api ckapi.perl
-nssckg.h: ck.api ckapi.perl
-nssck.api: ck.api ckapi.perl
-	perl ckapi.perl ck.api
+# The generated files are checked in, and differ from what ckapi.perl
+# will produce.  ckapi.perl is currently newer than the targets, so
+# these rules are invoked, causing the wrong files to be generated.
+# Turning off to fix builds.
+#
+# nssckepv.h: ck.api ckapi.perl
+# nssckft.h: ck.api ckapi.perl
+# nssckg.h: ck.api ckapi.perl
+# nssck.api: ck.api ckapi.perl
+# 	perl ckapi.perl ck.api
 
 export:: private_export
 
