@@ -821,6 +821,12 @@ toolkit/skin/unix/Makefile
 toolkit/skin/win/Makefile
 "
 
+MAKEFILES_minotaur="
+mail/Makefile
+mail/base/Makefile
+"
+
+
 if [ "$MACOSX" ]; then
     MAKEFILES_macmorefiles="
        lib/mac/MoreFiles/Makefile
@@ -1222,6 +1228,10 @@ fi
 
 if test -n "$MOZ_PHOENIX"; then
     add_makefiles "$MAKEFILES_phoenix"
+fi
+
+if test -n "$MOZ_MINOTAUR"; then
+    add_makefiles "$MAKEFILES_minotaur"
 fi
 
 else
