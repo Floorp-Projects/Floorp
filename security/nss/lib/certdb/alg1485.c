@@ -1,4 +1,5 @@
-/*
+/* alg1485.c - implementation of RFCs 1485, 1779 and 2253.
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -38,6 +39,9 @@
 #include "secitem.h"
 #include "secerr.h"
 
+/* for better RFC 2253 compliance. */
+#define NSS_STRICT_RFC_2253_VALUES_ONLY 1
+
 struct NameToKind {
     const char * name;
     unsigned int maxLen; /* max bytes in UTF8 encoded string value */
@@ -46,30 +50,41 @@ struct NameToKind {
 
 /* Add new entries to this table, and maybe to function CERT_ParseRFC1485AVA */
 static const struct NameToKind name2kinds[] = {
-    { "CN",             64, SEC_OID_AVA_COMMON_NAME              },
-    { "ST",            128, SEC_OID_AVA_STATE_OR_PROVINCE        },
-    { "OU",             64, SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME },
-    { "DC",            128, SEC_OID_AVA_DC                       },
-    { "C",               2, SEC_OID_AVA_COUNTRY_NAME             },
-    { "O",              64, SEC_OID_AVA_ORGANIZATION_NAME        },
-    { "L",             128, SEC_OID_AVA_LOCALITY                 },
-    { "dnQualifier", 32767, SEC_OID_AVA_DN_QUALIFIER             },
-    { "E",             128, SEC_OID_PKCS9_EMAIL_ADDRESS          },
-    { "UID",           256, SEC_OID_RFC1274_UID                  },
-    { "MAIL",          256, SEC_OID_RFC1274_MAIL                 },
-    { "SURNAME",        64, SEC_OID_AVA_SURNAME                  },
-    { "SERIAL",         64, SEC_OID_AVA_SERIAL_NUMBER            },
-    { "STREET",        128, SEC_OID_AVA_STREET_ADDRESS           },
-    { "TITLE",          64, SEC_OID_AVA_TITLE                    },
-    { "ADDRESS",       128, SEC_OID_AVA_POSTAL_ADDRESS           },
-    { "CODE",           40, SEC_OID_AVA_POSTAL_CODE              },
-    { "BOX",            40, SEC_OID_AVA_POST_OFFICE_BOX          },
-    { "GIVEN",          64, SEC_OID_AVA_GIVEN_NAME               },
-    { "INITIALS",       64, SEC_OID_AVA_INITIALS                 },
-    { "GENERATION",     64, SEC_OID_AVA_GENERATION_QUALIFIER     },
-    { "HOUSE",          64, SEC_OID_AVA_HOUSE_IDENTIFIER         },
-    { "AKA",            64, SEC_OID_AVA_PSEUDONYM                },
-    { 0,               256, SEC_OID_UNKNOWN                      }
+/* keywords given in RFC 2253 */
+    { "CN",                      64, SEC_OID_AVA_COMMON_NAME              },
+    { "L",                      128, SEC_OID_AVA_LOCALITY                 },
+    { "ST",                     128, SEC_OID_AVA_STATE_OR_PROVINCE        },
+    { "O",                       64, SEC_OID_AVA_ORGANIZATION_NAME        },
+    { "OU",                      64, SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME },
+    { "C",                        2, SEC_OID_AVA_COUNTRY_NAME             },
+    { "STREET",                 128, SEC_OID_AVA_STREET_ADDRESS           },
+    { "DC",                     128, SEC_OID_AVA_DC                       },
+    { "UID",                    256, SEC_OID_RFC1274_UID                  },
+
+#ifndef NSS_STRICT_RFC_2253_KEYWORDS_ONLY
+/* NSS legacy keywords */
+    { "dnQualifier",          32767, SEC_OID_AVA_DN_QUALIFIER             },
+    { "E",                      128, SEC_OID_PKCS9_EMAIL_ADDRESS          },
+    { "MAIL",                   256, SEC_OID_RFC1274_MAIL                 },
+
+#ifndef NSS_LEGACY_KEYWORDS_ONLY
+/* values from draft-ietf-ldapbis-user-schema-05 */
+    { "SN",                      64, SEC_OID_AVA_SURNAME                  },
+    { "serialNumber",            64, SEC_OID_AVA_SERIAL_NUMBER            },
+    { "title",                   64, SEC_OID_AVA_TITLE                    },
+    { "postalAddress",          128, SEC_OID_AVA_POSTAL_ADDRESS           },
+    { "postalCode",              40, SEC_OID_AVA_POSTAL_CODE              },
+    { "postOfficeBox",           40, SEC_OID_AVA_POST_OFFICE_BOX          },
+    { "givenName",               64, SEC_OID_AVA_GIVEN_NAME               },
+    { "initials",                64, SEC_OID_AVA_INITIALS                 },
+    { "generationQualifier",     64, SEC_OID_AVA_GENERATION_QUALIFIER     },
+    { "houseIdentifier",         64, SEC_OID_AVA_HOUSE_IDENTIFIER         },
+#if 0 /* removed.  Not yet in any IETF draft or RFC. */
+    { "pseudonym",               64, SEC_OID_AVA_PSEUDONYM                },
+#endif
+#endif
+#endif
+    { 0,                        256, SEC_OID_UNKNOWN                      }
 };
 
 #define C_DOUBLE_QUOTE '\042'
@@ -478,12 +493,14 @@ CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen)
     int i, reqLen=0;
     char *d = dst;
     PRBool needsQuoting = PR_FALSE;
+    char lastC = 0;
     
     /* need to make an initial pass to determine if quoting is needed */
     for (i = 0; i < srclen; i++) {
 	char c = src[i];
 	reqLen++;
-	if (SPECIAL_CHAR(c)) {
+	if (!needsQuoting && (SPECIAL_CHAR(c) ||
+	    (OPTIONAL_SPACE(c) && OPTIONAL_SPACE(lastC)))) {
 	    /* entirety will need quoting */
 	    needsQuoting = PR_TRUE;
 	}
@@ -491,9 +508,10 @@ CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen)
 	    /* this char will need escaping */
 	    reqLen++;
 	}
+	lastC = c;
     }
     /* if it begins or ends in optional space it needs quoting */
-    if (srclen > 0 &&
+    if (!needsQuoting && srclen > 0 && 
 	(OPTIONAL_SPACE(src[srclen-1]) || OPTIONAL_SPACE(src[0]))) {
 	needsQuoting = PR_TRUE;
     }
@@ -584,7 +602,7 @@ get_oid_string(SECItem *oid)
 		PRUint32 one = PR_MIN(n/40, 2); /* never > 2 */
 		PRUint32 two = n - one * 40;
         
-		a = PR_smprintf("%lu.%lu", one, two);
+		a = PR_smprintf("OID.%lu.%lu", one, two);
 		if( (char *)NULL == a ) {
 		    PORT_SetError(SEC_ERROR_NO_MEMORY);
 		    return (char *)NULL;
@@ -640,6 +658,7 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
     SECStatus rv;
     SECItem *avaValue = NULL;
     char *unknownTag = NULL;
+    PRBool hexValue = PR_FALSE;
     char tmpBuf[384];
 
     tag = CERT_GetAVATag(ava);
@@ -654,6 +673,9 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
     }
     maxLen = n2k->maxLen;
 
+#ifdef NSS_STRICT_RFC_2253_VALUES_ONLY
+    if (!unknownTag)
+#endif
     avaValue = CERT_DecodeAVAValue(&ava->value);
     if(!avaValue) {
 	/* the attribute value is not recognized, get the hex value */
@@ -662,6 +684,7 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
 	    if (unknownTag) PR_smprintf_free(unknownTag);
 	    return SECFailure;
 	}
+	hexValue = PR_TRUE;
     }
 
     /* Check value length */
@@ -681,8 +704,18 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
     if (unknownTag) PR_smprintf_free(unknownTag);
     tmpBuf[len++] = '=';
     
-    /* escape and quote as necessary */
-    rv = CERT_RFC1485_EscapeAndQuote(tmpBuf+len, sizeof(tmpBuf)-len, 
+    /* escape and quote as necessary - don't quote hex strings */
+    if (hexValue) {
+        /* appent avaValue to tmpBuf */
+	if (avaValue->len + len + 1 > sizeof tmpBuf) {
+	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	    rv = SECFailure;
+    	} else {
+	    PORT_Strcpy(tmpBuf+len, (char *)avaValue->data);
+	    rv = SECSuccess;
+	}
+    } else 
+	rv = CERT_RFC1485_EscapeAndQuote(tmpBuf+len, sizeof(tmpBuf)-len, 
 		    		     (char *)avaValue->data, avaValue->len);
     SECITEM_FreeItem(avaValue, PR_TRUE);
     if (rv) return SECFailure;
@@ -694,12 +727,9 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
 char *
 CERT_NameToAscii(CERTName *name)
 {
-    SECStatus rv;
     CERTRDN** rdns;
     CERTRDN** lastRdn;
     CERTRDN** rdn;
-    CERTAVA** avas;
-    CERTAVA* ava;
     PRBool first = PR_TRUE;
     stringBuf strBuf = { NULL, 0, 0 };
     
@@ -717,11 +747,19 @@ CERT_NameToAscii(CERTName *name)
      * Loop over name contents in _reverse_ RDN order appending to string
      */
     for (rdn = lastRdn; rdn >= rdns; rdn--) {
-	avas = (*rdn)->avas;
-	while ((ava = *avas++) != NULL) {
-	    /* Put in comma separator */
+	CERTAVA** avas = (*rdn)->avas;
+	CERTAVA* ava;
+	PRBool newRDN = PR_TRUE;
+
+	/* 
+	 * XXX Do we need to traverse the AVAs in reverse order, too?
+	 */
+	while (avas && (ava = *avas++) != NULL) {
+	    SECStatus rv;
+	    /* Put in comma or plus separator */
 	    if (!first) {
-		rv = AppendStr(&strBuf, ", ");
+		/* Use of spaces is deprecated in RFC 2253. */
+		rv = AppendStr(&strBuf, newRDN ? "," : "+");
 		if (rv) goto loser;
 	    } else {
 		first = PR_FALSE;
@@ -730,10 +768,11 @@ CERT_NameToAscii(CERTName *name)
 	    /* Add in tag type plus value into buf */
 	    rv = AppendAVA(&strBuf, ava);
 	    if (rv) goto loser;
+	    newRDN = PR_FALSE;
 	}
     }
     return strBuf.buffer;
-  loser:
+loser:
     if (strBuf.buffer) {
 	PORT_Free(strBuf.buffer);
     }
@@ -779,19 +818,16 @@ CERT_GetNameElement(PRArenaPool *arena, CERTName *name, int wantedTag)
 {
     CERTRDN** rdns;
     CERTRDN *rdn;
-    CERTAVA** avas;
-    CERTAVA* ava;
     char *buf = 0;
-    int tag;
-    SECItem *decodeItem = NULL;
     
     rdns = name->rdns;
-    while ((rdn = *rdns++) != 0) {
-	avas = rdn->avas;
-	while ((ava = *avas++) != 0) {
-	    tag = CERT_GetAVATag(ava);
+    while (rdns && (rdn = *rdns++) != 0) {
+	CERTAVA** avas = rdn->avas;
+	CERTAVA*  ava;
+	while (avas && (ava = *avas++) != 0) {
+	    int tag = CERT_GetAVATag(ava);
 	    if ( tag == wantedTag ) {
-		decodeItem = CERT_DecodeAVAValue(&ava->value);
+		SECItem *decodeItem = CERT_DecodeAVAValue(&ava->value);
 		if(!decodeItem) {
 		    return NULL;
 		}
