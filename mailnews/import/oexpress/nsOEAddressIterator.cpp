@@ -71,6 +71,7 @@ PRBool nsOEAddressIterator::EnumUser( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid
 			if (newRow) {
 				if (BuildCard( pName, newRow, pUser)) {
 					m_database->AddCardRowToDB( newRow);
+					IMPORT_LOG0( "* Added entry to address book database\n");
 				}
 			}
 			m_pWab->ReleaseUser( pUser);

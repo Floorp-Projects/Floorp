@@ -100,6 +100,26 @@ function test2() {
 
 function test3() {
 	dump( "test3\n");
+	dump( "Loading outlook express component\n");
+	var module = Components.classes["component://netscape/import/import-oe"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded outlook express import module\n");
+	dump( "Getting the settings interface\n");
+
+	var setInterface = module.GetImportInterface( "settings");
+	setInterface = setInterface.QueryInterface( Components.interfaces.nsIImportSettings);
+
+	dump( "Got the settings interface\n");
+
+	var location = new Object();
+	if (setInterface.Import( location)) {
+		dump( "Settings import returned success\n");
+		dump( "Location: " + location + "\n");
+	}
+	else {
+		dump( "Settings import returned failure\n");
+	}
 }
 
 </script>
@@ -108,7 +128,7 @@ function test3() {
 <form name="form">
 <input type="button" value="Import Outlook Express Mail" onclick="test1();"><br>
 <input type="button" value="Import Outlook Express Address Book" onclick="test2();"><br>
-<input type="button" value="Test3" onclick="test3();">
+<input type="button" value="Import Outlook Express Settings" onclick="test3();">
 <form> 
 
 </body>

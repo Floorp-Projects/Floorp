@@ -18,9 +18,7 @@
 
 /*
 
-  A sample of XPConnect. This file contains the XPCOM factory the
-  creates for SampleImpl objects.
-
+	Outlook Express (Win32) import module
 */
 
 #include "nsCOMPtr.h"

@@ -32,6 +32,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\WabObject.obj				\
 		.\$(OBJDIR)\nsOERegUtil.obj			\
 		.\$(OBJDIR)\nsOE5File.obj			\
+		.\$(OBJDIR)\nsOESettings.obj		\
         $(NULL)
 
 LLIBS=\

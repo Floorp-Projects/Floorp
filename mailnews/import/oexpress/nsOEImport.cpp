@@ -19,8 +19,7 @@
 
 /*
 
-  A sample of XPConnect. This file contains an implementation of
-  nsISample.
+  Outlook Express (Win32) import mail and addressbook interfaces
 
 */
 #include "nscore.h"
@@ -43,6 +42,7 @@
 #include "nsIOutputStream.h"
 #include "nsOE5File.h"
 #include "nsIAddrDatabase.h"
+#include "nsOESettings.h"
 
 #include "OEDebugLog.h"
 
@@ -257,6 +257,16 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 		return( rv);
 	}
 	
+	if (!nsCRT::strcmp( pImportType, "settings")) {
+		nsIImportSettings *pSettings = nsnull;
+		rv = nsOESettings::Create( &pSettings);
+		if (NS_SUCCEEDED( rv)) {
+			pSettings->QueryInterface( kISupportsIID, (void **)ppInterface);
+		}
+		NS_IF_RELEASE( pSettings);
+		return( rv);
+	}
+		
 	return( NS_ERROR_NOT_AVAILABLE);
 }
 

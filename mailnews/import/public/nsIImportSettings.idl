@@ -1,0 +1,52 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+  	Interface for importing settings.  Settings can be auto-located or
+	specified by a specific file.  Depends upon the app that the settings
+	are coming from.
+  
+*/
+
+#include "nsISupports.idl"
+
+interface nsIMsgAccount;
+interface nsIFileSpec;
+
+[scriptable, uuid(a9411860-66ac-11d3-a206-00a0cc26da63)]
+interface nsIImportSettings : nsISupports
+{		
+	boolean		AutoLocate( out wstring description, out nsIFileSpec location);
+	
+	void		SetLocation( in nsIFileSpec location);
+
+	/*
+		Create all of the accounts, identities, and servers.  Return an
+		account where any local mail from this app should be imported.
+		The returned account can be null which indicates that no suitable
+		account for local mail was created and a new account specifically for
+		the imported mail should be created.
+	*/
+	boolean		Import( out nsIMsgAccount localMailAccount);
+};
+	
+
+
+%{ C++
+
+%}

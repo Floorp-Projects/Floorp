@@ -113,15 +113,17 @@ public:
 	NS_IMETHOD CancelImport(void);
 
 private:
-	PRBool	GetAccount( nsIFileSpec **ppSpec);
+	PRBool	GetAccount( nsIMsgFolder **ppFolder);
 	PRBool	FindAccount( nsIMsgFolder **ppFolder);
 	void	GetDefaultMailboxes( void);
 	void	GetDefaultLocation( void);
 	void	GetDefaultDestination( void);
 
 private:
+	PRUnichar *			m_pName;	// module name that created this interface
 	nsIMsgFolder *		m_pDestFolder;
 	PRBool				m_deleteDestFolder;
+	PRBool				m_createdAccount;
 	nsIFileSpec *		m_pSrcLocation;
 	PRBool				m_gotLocation;
 	PRBool				m_found;
@@ -145,6 +147,7 @@ public:
 	PRUint32				currentSize;
 	nsIMsgFolder *			destRoot;
 	PRBool					ownsDestRoot;
+	PRBool					ownsAccount;
 	nsISupportsArray *		boxes;
 	nsIImportMail *			mailImport;
 	nsIOutputStream *		successLog;
@@ -193,6 +196,8 @@ nsImportGenericMail::nsImportGenericMail()
 
 	m_pDestFolder = nsnull;
 	m_deleteDestFolder = PR_FALSE;
+	m_createdAccount = PR_FALSE;
+	m_pName = nsnull;
 }
 
 
@@ -203,6 +208,9 @@ nsImportGenericMail::~nsImportGenericMail()
 		m_pThreadData = nsnull;
 	}
 	
+	if (m_pName)
+		nsCRT::free( m_pName);
+
 	NS_IF_RELEASE( m_pDestFolder);
 	NS_IF_RELEASE( m_pSrcLocation);
 	NS_IF_RELEASE( m_pInterface);
@@ -307,6 +315,17 @@ NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *ite
 		m_deleteDestFolder = PR_FALSE;
 	}
 	
+	if (!nsCRT::strcasecmp( dataId, "name")) {
+		// BIG CHEAT, is this OK to do?
+		PRUnichar *pName = (PRUnichar *)item;
+		if (m_pName)
+			nsCRT::free( m_pName);
+		if (pName)
+			m_pName = nsCRT::strdup( pName);
+		else
+			m_pName = nsnull;
+	}
+
 	return( NS_OK);
 }
 
@@ -364,8 +383,19 @@ void nsImportGenericMail::GetDefaultDestination( void)
 {
 	if (m_pDestFolder)
 		return;
+	if (!m_pInterface)
+		return;
+
 	nsIMsgFolder *	rootFolder;
 	m_deleteDestFolder = PR_FALSE;
+	m_createdAccount = PR_FALSE;
+	if (GetAccount( &rootFolder)) {
+		m_pDestFolder = rootFolder;
+		m_deleteDestFolder = PR_TRUE;
+		m_createdAccount = PR_TRUE;
+		return;
+	}
+
 	if (FindAccount( &rootFolder)) {
 		// create the sub folder for our import.
 		char *pName = nsnull;
@@ -582,6 +612,7 @@ ImportThreadData::ImportThreadData()
 	currentSize = 0;
 	destRoot = nsnull;
 	ownsDestRoot = PR_FALSE;
+	ownsAccount = PR_FALSE;
 	boxes = nsnull;
 	mailImport = nsnull;
 	successLog = nsnull;
@@ -716,11 +747,12 @@ ImportMailThread( void *stuff)
 				rv = curFolder->CreateSubfolder( pStr);
 				rv = curFolder->GetChildNamed( pStr, getter_AddRefs( subFolder));
 				newFolder = do_QueryInterface( subFolder);
-				newFolder->GetPath( getter_AddRefs( outBox));
+				if (newFolder)
+					newFolder->GetPath( getter_AddRefs( outBox));
 				
 				nsCRT::free( pStr);
 
-				if (size && import) {
+				if (size && import && newFolder && outBox) {
 					PRBool fatalError = PR_FALSE;
 					pData->currentSize = size;
 					rv = pData->mailImport->ImportMailbox( box, outBox, pData->errorLog, pData->successLog, &fatalError);
@@ -748,11 +780,11 @@ ImportMailThread( void *stuff)
 }
 
 
-PRBool nsImportGenericMail::GetAccount( nsIFileSpec **ppSpec)
+PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 {
 	nsresult	rv;
 	
-	*ppSpec = nsnull;
+	*ppFolder = nsnull;
 
     NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
     if (NS_FAILED(rv)) {
@@ -778,97 +810,63 @@ PRBool nsImportGenericMail::GetAccount( nsIFileSpec **ppSpec)
 		return( PR_FALSE);
 	}	
 
-	// Create a new account for the import?
+	// Create a new account for the import
 	
 	nsCOMPtr<nsIMsgIncomingServer> server;
 
-	rv = nsComponentManager::CreateInstance("component://netscape/messenger/server&type=pop3",
-                                          nsnull,
-                                          nsCOMTypeInfo<nsIMsgIncomingServer>::GetIID(),
-                                          getter_AddRefs(server));
+	rv = accMgr->CreateIncomingServer( "none", getter_AddRefs( server));
 
-	server->SetKey( "importedPOP1");
-	server->SetType( "pop3");
+	nsString	prettyName;
+	if (m_pName)
+		prettyName = m_pName;
+	else
+		prettyName = "Imported Mail";
 	
-	nsString	prettyName = "Imported Mail";
+	char *pName = prettyName.ToNewCString();
 	server->SetPrettyName( (PRUnichar *) prettyName.GetUnicode());
-	server->SetHostName( "imported.mail.noserver");
-	server->SetUsername( "ImportTest");
+	server->SetHostName( "imported.mail");
+	server->SetUsername( "nobody");  
 
-	nsFileSpec profileDir;
-  
-	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-	if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Unable to get profile service.\n");
-		return( PR_FALSE);
-	}
-  
-	rv = profile->GetCurrentProfileDir(&profileDir);
-	if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Unable to get profile directory\n");
-		return( PR_FALSE);
-	}
-
-    nsCOMPtr<nsIFileSpec>	mailDir;
-    nsFileSpec				dir(profileDir);
-    PRBool					dirExists;
-    
-    // turn profileDir into the mail dir.
-    dir += "Mail";
-    if (!dir.Exists()) {
-      dir.CreateDir();
-    }
-    dir += "imported.mail";
-     
-    rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs( mailDir));
-    if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Unable to create mail dir file spec\n");
-		return( PR_FALSE);
-	}
-    
-    rv = mailDir->Exists(&dirExists);
-    if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Failed to see if mail dir exists\n");
-		return( PR_FALSE);
-	}
-    
-    if (!dirExists) {
-		mailDir->CreateDir();
-    }
-    
-    char *str = nsnull;
-    mailDir->GetNativePath( &str);
-    
-    if (str && *str) {
-		server->SetLocalPath( str);
-		IMPORT_LOG1( "New account mail dir: %s\n", str);
-		nsCRT::free( str);
-	}
+	nsCRT::free( pName);
 	
 	// create a new account with the server and identity.
 	nsCOMPtr<nsIMsgAccount>	account;
-	rv = accMgr->GetAccount( "ImportedMailAccount", getter_AddRefs( account));
-	if (NS_FAILED( rv)) {
-		rv = accMgr->CreateAccount( getter_AddRefs( account));
-		if (NS_FAILED( rv)) {
-			IMPORT_LOG0( "*** Error creating new account\n");
-			return( PR_FALSE);
-		}
-		
-		rv = account->SetKey( "ImportedMailAccount");
 
-		rv = account->SetIncomingServer( server);	
-	}
-		
-
-	rv = mailDir->QueryInterface( nsIFileSpec::GetIID(), (void **) ppSpec);
-	
+	rv = accMgr->CreateAccount( getter_AddRefs( account));
 	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Unable to get nsIFileSpec interface from nsIFileSpec!\n");
+		IMPORT_LOG0( "*** Error creating new account\n");
 		return( PR_FALSE);
 	}
+	
+	rv = account->SetIncomingServer( server);	
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "*** Error setting incoming server on account\n");
+	}
+	if (identity) {
+		rv = account->AddIdentity( identity);
+		if (NS_FAILED( rv)) {
+			IMPORT_LOG0( "*** Error adding identity to account\n");
+		}
+		rv = account->SetDefaultIdentity( identity);	
+		if (NS_FAILED( rv)) {
+			IMPORT_LOG0( "*** Error setting default identity for account\n");
+		}
+	}
 
-	return( PR_TRUE);
+
+	nsCOMPtr<nsIFolder>	rootFolder;
+	rv = server->GetRootFolder( getter_AddRefs( rootFolder));
+	if (NS_SUCCEEDED( rv) && (rootFolder != nsnull)) {
+		rv = rootFolder->QueryInterface( nsIMsgFolder::GetIID(), (void **)ppFolder);
+		if (NS_SUCCEEDED( rv)) {
+			IMPORT_LOG0( "****** CREATED NEW ACCOUNT FOR IMPORT\n");
+			return( PR_TRUE);
+		}
+	}
+			
+	IMPORT_LOG0( "****** FAILED TO CREATE NEW ACCOUNT FOR IMPORT\n");
+
+	return( PR_FALSE);
 }
 
 PRBool nsImportGenericMail::FindAccount( nsIMsgFolder **ppFolder)

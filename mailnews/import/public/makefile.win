@@ -25,6 +25,7 @@ XPIDLSRCS=      .\nsIImportService.idl  			\
 				.\nsIImportGeneric.idl				\
 				.\nsIImportAddressBooks.idl			\
 				.\nsIImportABDescriptor.idl			\
+				.\nsIImportSettings.idl				\
                 $(NULL)
 
 MODULE= import
