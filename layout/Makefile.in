@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base html xul
+DIRS		= base html xml xul xbl xsl
 
 ifdef MOZ_MATHML
 DIRS           += mathml
@@ -36,7 +36,7 @@ ifdef MOZ_SVG
 DIRS           += svg
 endif
 
-DIRS           += build
+DIRS           += events build
 
 ifdef ENABLE_TESTS
 DIRS		+= html/tests
