@@ -10,8 +10,12 @@
 		
 		readonly attribute	boolean			isCollapsed;
 		
-		void		getAnchorNodeAndOffset(out Node anchorNode, out long offset);
-		void		getFocusNodeAndOffset(out Node focusNode, out long offset);		
+		readonly attribute	long				rangeCount;
+		
+		Range		getRangeAt(in long index);
+		
+		/* void		getAnchorNodeAndOffset(out Node anchorNode, out long offset); */
+		/* void		getFocusNodeAndOffset(out Node focusNode, out long offset);	*/
 		
 		void		clearSelection();
 		
