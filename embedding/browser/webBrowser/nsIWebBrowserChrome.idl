@@ -38,6 +38,12 @@ interface nsIWebBrowserChrome : nsISupports
 	void setJSStatus(in wstring status);
 
 	/*
+		Called when the js default status value changes.  nsnull will be passed
+		when there is no longer any js default status.
+	*/
+	void setJSDefaultStatus(in wstring status);
+
+	/*
 		Called when the current link the mouse is over changes.  nsnull will 
 		be passed when the mouse is no longer over a link.
 	*/
