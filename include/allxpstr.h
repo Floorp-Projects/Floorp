@@ -4706,7 +4706,9 @@ ResDef(XP_ERRNO_EHOSTUNREACH    ,WSAEHOSTUNREACH    ,"No route to host")
 END_STR(mcom_include_xp_error_i_strings)
 
 #else
-
+#ifdef XP_MAC
+#include "xp_sock.h"
+#endif
 RES_START
 BEGIN_STR(mcom_include_xp_error_i_strings)
 ResDef(XP_ERRNO_EPIPE           ,EPIPE              ,"Broken pipe")
