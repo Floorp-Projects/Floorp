@@ -39,8 +39,6 @@
 #include "nsCom.h"
 #include "nsString.h"
 
-#include "nsFixedSizeAllocator.h"
-
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 
@@ -49,7 +47,13 @@ class nsStringKey;
 
 class NS_COM nsHashKey {
   protected:
-    nsHashKey(void);
+    nsHashKey(void) {
+#ifdef DEBUG
+        mKeyType = UnknownKey;
+#endif
+        MOZ_COUNT_CTOR(nsHashKey);
+    }
+
 
   public:
     virtual ~nsHashKey(void);
@@ -103,7 +107,6 @@ class NS_COM nsHashtable {
     PRLock*     mLock;
     PLHashTable mHashtable;
     PRBool      mEnumerating;
-    nsFixedSizeAllocator mPool;
 
   public:
     nsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
