@@ -949,42 +949,44 @@ function dumpDOM2(aNode)
 
 function unicodeToEntity(text)
 {
+  const charTable = {
+    '&': "&amp;",
+    '<': "&lt;",
+    '>': "&gt;",
+    '"': "&quot;"
+  };
+
+  function charTableLookup(letter) {
+    return charTable[letter];
+  }
+
+  function convertEntity(letter) {
+    try {
+      return gEntityConverter.ConvertToEntity(letter, entityVersion);
+    } catch (ex) {
+      return letter;
+    }
+  }
+
   if (!gEntityConverter) {
     try {
-      gEntityConverter = Components.classes["@mozilla.org/intl/entityconverter;1"]
-                                   .createInstance(Components.interfaces.nsIEntityConverter);
+      gEntityConverter =
+        Components.classes["@mozilla.org/intl/entityconverter;1"]
+                  .createInstance(Components.interfaces.nsIEntityConverter);
     } catch (ex) { }
   }
-  var entityVersion = Components.interfaces.nsIEntityConverter.html40 |
-                      Components.interfaces.nsIEntityConverter.mathml20;
 
-  var str = '';
-  for (var i = 0; i < text.length; ++i) {
-    if ((text.charCodeAt(i) > 0x7F) && gEntityConverter) {
-      try {
-        str += gEntityConverter.ConvertToEntity(text[i], entityVersion);
-      } catch (ex) {
-        str += text[i];
-      }
-      continue;
-    }
-    switch (text[i]) {
-      case '<':
-        str += "&lt;";
-        break;
-      case '>':
-        str += "&gt;";
-        break;
-      case '&':
-        str += "&amp;";
-        break;
-      case '"':
-        str += "&quot;";
-        break;
-      default:
-        str += text[i];
-        break;
-    }
-  }
+  const entityVersion =
+    Components.interfaces.nsIEntityConverter.html40 |
+    Components.interfaces.nsIEntityConverter.mathml20;
+
+  var str = text;
+
+  // replace chars in our charTable
+  str = str.replace(/[<>&"]/g, charTableLookup);
+
+  // replace chars > 0x7f via nsIEntityConverter
+  str = str.replace(/[^\0-\u007f]/g, convertEntity);
+
   return str;
 }

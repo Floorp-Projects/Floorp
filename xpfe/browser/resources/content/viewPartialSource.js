@@ -441,39 +441,46 @@ function getOuterMarkup(node, indent) {
 ////////////////////////////////////////////////////////////////////////////////
 function unicodeTOentity(text)
 {
+  const charTable = {
+    '&': '&amp;<span class="entity">amp;</span>',
+    '<': '&amp;<span class="entity">lt;</span>',
+    '>': '&amp;<span class="entity">gt;</span>',
+    '"': '&amp;<span class="entity">quot;</span>'
+  };
+
+  function charTableLookup(letter) {
+    return charTable[letter];
+  }
+
+  function convertEntity(letter) {
+    try {
+      var unichar = gEntityConverter.ConvertToEntity(letter, entityVersion);
+      var entity = unichar.substring(1); // extract '&'
+      return '&amp;<span class="entity">' + entity + '</span>';
+    } catch (ex) {
+      return letter;
+    }
+  }
+
   if (!gEntityConverter) {
     try {
-      gEntityConverter = Components.classes["@mozilla.org/intl/entityconverter;1"]
-                                   .createInstance(Components.interfaces.nsIEntityConverter);
+      gEntityConverter =
+        Components.classes["@mozilla.org/intl/entityconverter;1"]
+                  .createInstance(Components.interfaces.nsIEntityConverter);
     } catch(e) { }
   }
-  var entityVersion = Components.interfaces.nsIEntityConverter.html40
-                    + Components.interfaces.nsIEntityConverter.mathml20;
 
-  var str = '';
-  for (var i = 0; i < text.length; i++) {
-    var c = text.charCodeAt(i);
-    if ((c <= 0x7F) || !gEntityConverter) {
-      if (text[i] == '<')
-        str += '&amp;<span class="entity">lt;</span>';
-      else if (text[i] == '>')
-        str += '&amp;<span class="entity">gt;</span>';
-      else if (text[i] == '&')
-        str += '&amp;<span class="entity">amp;</span>';
-      else
-        str += text[i];
-    }
-    else {
-      try {
-        var unichar = gEntityConverter.ConvertToEntity(text[i], entityVersion);
-        str += '&amp;<span class="entity">'
-            +  unichar.substring(1, unichar.length) // extract '&'
-            +  '</span>';
-      }
-      catch(e) {
-        str += text[i];
-      }
-    }
-  }
+  const entityVersion =
+    Components.interfaces.nsIEntityConverter.html40 |
+    Components.interfaces.nsIEntityConverter.mathml20;
+
+  var str = text;
+
+  // replace chars in our charTable
+  str = str.replace(/[<>&"]/g, charTableLookup);
+
+  // replace chars > 0x7f via nsIEntityConverter
+  str = str.replace(/[^\0-\u007f]/g, convertEntity);
+
   return str;
 }
