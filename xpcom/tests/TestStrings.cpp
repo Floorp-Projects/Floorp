@@ -113,13 +113,39 @@ PRBool test_find()
 PRBool test_rfind()
   {
     const char text[] = "<!DOCTYPE blah blah blah>";
+    const char term[] = "bLaH";
     nsCString src(text);
-    PRInt32 i = src.RFind("bLaH", PR_TRUE, 3, -1); 
-    if (i == -1)
-      return PR_TRUE;
+    PRInt32 i;
 
-    printf("i=%d\n", i);
-    return PR_FALSE;
+    i = src.RFind(term, PR_TRUE, 3, -1); 
+    if (i != kNotFound)
+      {
+        printf("unexpected result searching from offset=3, i=%d\n", i);
+        return PR_FALSE;
+      }
+
+    i = src.RFind(term, PR_TRUE, -1, -1);
+    if (i != 20)
+      {
+        printf("unexpected result searching from offset=-1, i=%d\n", i);
+        return PR_FALSE;
+      }
+
+    i = src.RFind(term, PR_TRUE, 13, -1);
+    if (i != 10)
+      {
+        printf("unexpected result searching from offset=13, i=%d\n", i);
+        return PR_FALSE;
+      }
+
+    i = src.RFind(term, PR_TRUE, 22, 3);
+    if (i != 20)
+      {
+        printf("unexpected result searching from offset=22, i=%d\n", i);
+        return PR_FALSE;
+      }
+
+    return PR_TRUE;
   }
 
 PRBool test_rfind_2()
@@ -144,6 +170,19 @@ PRBool test_rfind_3()
 
     printf("i=%d\n", i);
     return PR_FALSE;
+  }
+
+PRBool test_rfind_4()
+  {
+    nsCString value("a.msf");
+    PRInt32 i = value.RFind(".msf");
+    if (i != 1)
+      {
+        printf("i=%d\n", i);
+        return PR_FALSE;
+      }
+
+    return PR_TRUE;
   }
 
 PRBool test_distance()
@@ -444,6 +483,7 @@ tests[] =
     { "test_rfind", test_rfind },
     { "test_rfind_2", test_rfind_2 },
     { "test_rfind_3", test_rfind_3 },
+    { "test_rfind_4", test_rfind_4 },
     { "test_distance", test_distance },
     { "test_length", test_length },
     { "test_trim", test_trim },

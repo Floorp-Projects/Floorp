@@ -956,47 +956,49 @@ Find_ComputeSearchRange( PRUint32 bigLen, PRUint32 littleLen, PRInt32& offset, P
 
   /**
    * this method changes the meaning of |offset| and |count|:
+   *
+   * upon entry,
+   *   |offset| specifies the end point from which to search backwards
+   *   |count| specifies the number of iterations from |offset|
    * 
    * upon return,
    *   |offset| specifies start of search range
    *   |count| specifies length of search range
+   *
+   *
+   * EXAMPLE
+   * 
+   *                            + -- littleLen=4 -- +
+   *                            :                   :
+   *   |____|____|____|____|____|____|____|____|____|____|____|____|
+   *                            :                                  :
+   *                         offset=5                           bigLen=12
+   *
+   *   if count = 4, then we expect this function to return offset = 2 and
+   *   count = 7.
+   *
    */ 
 static void
 RFind_ComputeSearchRange( PRUint32 bigLen, PRUint32 littleLen, PRInt32& offset, PRInt32& count )
   {
-    // |count| specifies how many iterations to make from |offset|
-
     if (littleLen > bigLen)
       {
+        offset = 0;
         count = 0;
         return;
       }
 
-    PRInt32 maxOffset = PRInt32(bigLen - littleLen);
     if (offset < 0)
-      {
-        offset = maxOffset;
-      }
-    else if (offset > maxOffset)
-      {
-        count = 0;
-        return;
-      }
+      offset = bigLen - littleLen;
+    if (count < 0)
+      count = offset + 1;
 
-    // always do at least one iteration
-    PRInt32 maxCount = offset + 1;
-    if (count < 0 || count > maxCount)
-      {
-        count = maxCount;
-      }
-    else
-      {
-        count += littleLen;
-        if (count > maxCount)
-          count = maxCount;
-      }
+    PRInt32 start = offset - count + 1;
+    if (start < 0)
+      start = 0;
 
-    offset -= (count - littleLen);
+    count = offset + littleLen - start;
+    offset = start;
   }
 
 //-----------------------------------------------------------------------------
