@@ -21,6 +21,9 @@
 
 #include "domstubs.idl"
 
+interface nsISelection;
+
+
 [scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMWindow : nsISupports
 {
@@ -28,10 +31,10 @@ interface nsIDOMWindow : nsISupports
   readonly attribute nsIDOMWindow             parent;
 
   /* [replaceable] readonly attribute  nsIDOMWindow top; */
-  [noscript] readonly attribute nsIDOMWindow  top;
+  readonly attribute nsIDOMWindow             top;
 
   /* [replaceable] readonly attribute  nsIDOMBarProp scrollbars; */
-  [noscript] readonly attribute nsIDOMBarProp scrollbars;
+  readonly attribute nsIDOMBarProp            scrollbars;
 
   readonly attribute nsIDOMWindowCollection   frames;
 
