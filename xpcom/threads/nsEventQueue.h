@@ -36,7 +36,10 @@ public:
     NS_DECL_ISUPPORTS
 
   // nsIEventQueue interface...
-    NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent);
+    NS_IMETHOD InitEvent(PLEvent* aEvent, void* owner, 
+		                 PLHandleEventProc handler, PLDestroyEventProc destructor);
+    
+	NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent);
     NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult);
 
     NS_IMETHOD ProcessPendingEvents();

@@ -135,6 +135,19 @@ nsEventQueueImpl::NotifyObservers(const char *aTopic)
     os->Notify(us, topic.GetUnicode(), NULL);
 }
 
+
+NS_IMETHODIMP
+nsEventQueueImpl::InitEvent(PLEvent* aEvent,
+							void* owner, 
+							PLHandleEventProc handler,
+							PLDestroyEventProc destructor)
+{
+	PL_InitEvent(aEvent, owner, handler, destructor);
+	return NS_OK;
+}
+
+
+
 NS_IMETHODIMP_(PRStatus)
 nsEventQueueImpl::PostEvent(PLEvent* aEvent)
 {
