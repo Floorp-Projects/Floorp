@@ -78,7 +78,7 @@
 #define XPCOM_DLL  "libxpcom.so"
 #define PREF_DLL	"libpref.so"   // mscott: is this right?
 #define MSGIMAP_DLL "libmsgimap.so"
-#define APPCORES_DLL  "libappcores.so"
+#define APPSHELL_DLL "libnsappshell.so"
 #endif
 #endif
 
@@ -182,7 +182,7 @@ protected:
 
 	nsresult InitializeProtocol(const char * urlSpec);
 	PRBool m_protocolInitialized; 
-  nsIEventQueue *m_eventQueue;
+    nsIEventQueue *m_eventQueue;
 };
 
 nsIMAP4TestDriver::nsIMAP4TestDriver(nsIEventQueue *queue)
@@ -283,9 +283,7 @@ nsresult nsIMAP4TestDriver::RunDriver()
 			status = ReadAndDispatchCommand();
 		}  // if running url
 #ifdef XP_UNIX
-
-        PL_ProcessPendingEvents(m_eventQueue);
-
+        m_eventQueue->ProcessPendingEvents();
 #endif
 #ifdef XP_PC	
 		MSG msg;
@@ -697,8 +695,6 @@ int main()
 
     nsComponentManager::RegisterComponent(kImapProtocolCID, nsnull, nsnull,
                                           MSGIMAP_DLL, PR_FALSE, PR_FALSE);
-
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
 
 	// Create the Event Queue for the test app thread...a standin for the ui thread
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 
