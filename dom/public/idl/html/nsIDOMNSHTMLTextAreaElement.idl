@@ -51,4 +51,7 @@ interface nsIDOMNSHTMLTextAreaElement : nsISupports
   readonly attribute long    textLength;
   attribute long             selectionStart;
   attribute long             selectionEnd;
+
+  void                       setSelectionRange(in long selectionStart,
+                                               in long selectionEnd);
 };

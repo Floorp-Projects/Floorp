@@ -165,6 +165,7 @@ protected:
 
   nsresult SetValueInternal(const nsAString& aValue,
                             nsITextControlFrame* aFrame);
+  nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 };
 
 nsresult
@@ -839,63 +840,88 @@ NS_IMETHODIMP
 nsHTMLTextAreaElement::GetSelectionStart(PRInt32 *aSelectionStart)
 {
   NS_ENSURE_ARG_POINTER(aSelectionStart);
-  nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
-
-  nsCOMPtr<nsITextControlFrame>
-    textControlFrame(do_QueryInterface(formControlFrame));
-    
-  if (textControlFrame) {
-    PRInt32 selectionEnd;
-    return textControlFrame->GetSelectionRange(aSelectionStart, &selectionEnd);
-  }
-
-  return NS_OK;
+  
+  PRInt32 selEnd;
+  return GetSelectionRange(aSelectionStart, &selEnd);
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetSelectionStart(PRInt32 aSelectionStart)
 {
-  nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
+  nsresult rv = NS_ERROR_FAILURE;
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
-  nsCOMPtr<nsITextControlFrame>
-    textControlFrame(do_QueryInterface(formControlFrame));
+  if (formControlFrame){
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
 
-  if (textControlFrame)
-    textControlFrame->SetSelectionStart(aSelectionStart);
+    if (textControlFrame)
+      rv = textControlFrame->SetSelectionStart(aSelectionStart);
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetSelectionEnd(PRInt32 *aSelectionEnd)
 {
   NS_ENSURE_ARG_POINTER(aSelectionEnd);
-  nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
-
-  nsCOMPtr<nsITextControlFrame>
-    textControlFrame(do_QueryInterface(formControlFrame));
-    
-  if (textControlFrame) {
-    PRInt32 selectionStart;
-    return textControlFrame->GetSelectionRange(&selectionStart, aSelectionEnd);
-  }
-
-  return NS_OK;
+  
+  PRInt32 selStart;
+  return GetSelectionRange(&selStart, aSelectionEnd);
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
-  nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
+  nsresult rv = NS_ERROR_FAILURE;
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
-  nsCOMPtr<nsITextControlFrame>
-    textControlFrame(do_QueryInterface(formControlFrame));
+  if (formControlFrame) {
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
 
-  if (textControlFrame)
-    textControlFrame->SetSelectionEnd(aSelectionEnd);
+    if (textControlFrame)
+      rv = textControlFrame->SetSelectionEnd(aSelectionEnd);
+  }
 
-  return NS_OK;
+  return rv;
 }
+
+nsresult
+nsHTMLTextAreaElement::GetSelectionRange(PRInt32* aSelectionStart,
+                                      PRInt32* aSelectionEnd)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
+
+  if (formControlFrame) {
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
+
+    if (textControlFrame)
+      rv = textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd)
+{ 
+  nsresult rv = NS_ERROR_FAILURE;
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
+
+  if (formControlFrame) {
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
+
+    if (textControlFrame)
+      rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
+  }
+
+  return rv;
+} 
 
 nsresult
 nsHTMLTextAreaElement::Reset()

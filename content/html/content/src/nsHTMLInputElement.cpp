@@ -109,8 +109,6 @@
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
-typedef nsITextControlFrame textControlPlace;
-
 //
 // Accessors for mBitField
 //
@@ -2079,17 +2077,18 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart,
                                       PRInt32 aSelectionEnd)
 {
+  nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsCOMPtr<textControlPlace>
-      textControlFrame(do_QueryInterface(formControlFrame));
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
 
     if (textControlFrame)
-      textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
+      rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2104,17 +2103,18 @@ nsHTMLInputElement::GetSelectionStart(PRInt32* aSelectionStart)
 NS_IMETHODIMP
 nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
 {
+  nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsCOMPtr<textControlPlace>
-      textControlFrame(do_QueryInterface(formControlFrame));
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
 
     if (textControlFrame)
-      textControlFrame->SetSelectionStart(aSelectionStart);
+      rv = textControlFrame->SetSelectionStart(aSelectionStart);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2130,34 +2130,36 @@ nsHTMLInputElement::GetSelectionEnd(PRInt32* aSelectionEnd)
 NS_IMETHODIMP
 nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
+  nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsCOMPtr<textControlPlace>
-      textControlFrame(do_QueryInterface(formControlFrame));
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
 
     if (textControlFrame)
-      textControlFrame->SetSelectionEnd(aSelectionEnd);
+      rv = textControlFrame->SetSelectionEnd(aSelectionEnd);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
 nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart,
                                       PRInt32* aSelectionEnd)
 {
+  nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsCOMPtr<textControlPlace>
-      textControlFrame(do_QueryInterface(formControlFrame));
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
 
     if (textControlFrame)
-      textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
+      rv = textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
