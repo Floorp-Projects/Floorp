@@ -25,8 +25,6 @@ REQUIRES	= xpcom netlib
 
 CPPSRCS		= TestAtoms.cpp TestCRT.cpp FilesTest.cpp
 
-OBJS		= $(CPPSRCS:.cpp=.o)
-
 EX_LIBS		= \
 		  $(DIST)/lib/libraptorbase.a \
 		  $(DIST)/lib/libxpcom.a \
@@ -46,10 +44,6 @@ ifneq ($(OS_RELEASE),1.2)
 OS_LIBS		+= /usr/lib/libdl.so
 endif
 endif
-
-$(OBJDIR)/%.o: %.cpp
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -c $<
 
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
