@@ -188,4 +188,5 @@ interface nsINativeAppSupport : nsISupports {
     void startServerMode();
 
     void onLastWindowClosing();
+    void ReOpen();
 };

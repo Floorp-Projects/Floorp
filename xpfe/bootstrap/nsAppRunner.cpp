@@ -341,7 +341,7 @@ static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined (XP_MAC) && !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_PHOTON) && !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK)
+#if !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_PHOTON) && !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK)
 
 nsresult NS_CreateSplashScreen(nsISplashScreen **aResult)
 {
@@ -375,7 +375,8 @@ PRBool NS_CanRun()
 //       then rely on nsINativeAppSupport and its use of
 //       nsISplashScreen will be removed.
 //
-#if !defined( XP_PC ) && !defined(MOZ_WIDGET_GTK)
+
+#if !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK) && !defined(XP_MAC)
 
 nsresult NS_CreateNativeAppSupport(nsINativeAppSupport **aResult)
 {
@@ -1289,6 +1290,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 {
   nsresult rv;
   NS_TIMELINE_ENTER("main1");
+  nsCOMPtr<nsISupports> nativeAppOwner(nativeApp);
 
   //----------------------------------------------------------------
   // First we need to check if a previous installation occured and
@@ -1334,10 +1336,11 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   nsCOMPtr<nsIObserverService> obsService(do_GetService("@mozilla.org/observer-service;1"));
   if (obsService)
   {
-    nsCOMPtr<nsIObserver> splashScreenObserver(do_QueryInterface(nativeApp));
+    nsCOMPtr<nsIObserver> splashScreenObserver(do_QueryInterface(nativeAppOwner));
     if (splashScreenObserver)
     {
       obsService->AddObserver(splashScreenObserver, NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, PR_FALSE);
+      obsService->AddObserver(splashScreenObserver, "startup_user_notifcations", PR_FALSE);
     }
   }
 
@@ -1356,16 +1359,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
                                      nsnull /* default */);
 #endif
 
-
-  // remove the nativeApp as an XPCOM autoreg observer
-  if (obsService)
-  {
-    nsCOMPtr<nsIObserver> splashScreenObserver(do_QueryInterface(nativeApp));
-    if (splashScreenObserver)
-    {
-      obsService->RemoveObserver(splashScreenObserver, NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
-    }
-  }
 
   NS_TIMELINE_ENTER("startupNotifier");
 
@@ -1412,21 +1405,24 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   /* if we couldn't get the nsIAppShellService service, then we should hide the
      splash screen and return */
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
+  {
     // See if platform supports nsINativeAppSupport.
-    nsCOMPtr<nsINativeAppSupport> nativeAppSupport(do_QueryInterface(nativeApp));
-    if (nativeAppSupport) {
+    nsCOMPtr<nsINativeAppSupport> nativeAppSupport(do_QueryInterface(nativeAppOwner));
+    if (nativeAppSupport) 
+    {
       // Use that interface to remove splash screen.
       nativeAppSupport->HideSplashScreen();
-    } else {
+    }
+    else
+    {
       // See if platform supports nsISplashScreen, instead.
-      nsCOMPtr<nsISplashScreen> splashScreen(do_QueryInterface(nativeApp));
-      if (splashScreen) {
+      nsCOMPtr<nsISplashScreen> splashScreen(do_QueryInterface(nativeAppOwner));
+      if (splashScreen)
+      {
         splashScreen->Hide();
       }
     }
-    // Release argument object.
-    NS_IF_RELEASE(nativeApp);
     return rv;
   }
 
@@ -1435,13 +1431,9 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_ENTER("appShell->Initialize");
 
   // Create the Application Shell instance...
-  rv = appShell->Initialize(cmdLineArgs, nativeApp);
+  rv = appShell->Initialize(cmdLineArgs, nativeAppOwner);
 
   NS_TIMELINE_LEAVE("appShell->Initialize");
-
-  // We are done with the native app (or splash screen) object here;
-  // the app shell owns it now.
-  NS_IF_RELEASE(nativeApp);
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
   if (NS_FAILED(rv)) return rv;
@@ -1482,6 +1474,13 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     NS_WARNING("failed to process command line");
     return rv;
   }
+  
+	if (obsService)
+  {
+    nsAutoString userMessage; userMessage.AssignWithConversion("Creating first window...");
+    obsService->NotifyObservers(nsnull, "startup_user_notifcations", userMessage.get());
+  }
+  
 
   // Make sure there exists at least 1 window.
   NS_TIMELINE_ENTER("Ensure1Window");
@@ -1502,6 +1501,21 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   if (remoteService)
     remoteService->Startup();
 #endif /* MOZ_ENABLE_XREMOTE */
+
+  // remove the nativeApp as an XPCOM autoreg observer
+  if (obsService)
+  {
+    nsCOMPtr<nsIObserver> splashScreenObserver(do_QueryInterface(nativeAppOwner));
+    if (splashScreenObserver)
+    {
+      obsService->RemoveObserver(splashScreenObserver, NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
+      obsService->RemoveObserver(splashScreenObserver, "startup_user_notifcations");
+    }
+  }
+
+  // We are done with the native app (or splash screen) object here;
+  // the app shell owns it now.
+  nativeAppOwner = nsnull;
 
   // Start main event loop
   NS_TIMELINE_ENTER("appShell->Run");
