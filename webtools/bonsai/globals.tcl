@@ -446,6 +446,7 @@ proc WriteCheckins {} {
         puts $fid [EmailFromUsername $i]
     }
     puts $fid "mozilla-builds@mozilla.org"
+    puts $fid "sheriffs@netscape.com"
     close $fid
     frename $filename [DataDir]/hooklist
     
