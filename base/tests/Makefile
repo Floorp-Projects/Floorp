@@ -53,5 +53,5 @@ $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
 
 install:: $(TARGETS)
-	$(INSTALL) $(TARGETS) $(DIST)/bin
+	$(INSTALL) $(PROGS) $(DIST)/bin
 
