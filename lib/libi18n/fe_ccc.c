@@ -49,6 +49,9 @@ IMPORTANT NOTE:
 	is now replaced by mz_mbNullConv 
 	we eventually should replacing mz_hz2gb after we extract the hz -> gb conversion
 */
+MODULE_PRIVATE unsigned char* mz_euctwtob5( CCCDataObject obj, const unsigned char *in,  int32 insize);
+MODULE_PRIVATE unsigned char* mz_b5toeuctw( CCCDataObject obj, const unsigned char *in,  int32 insize);
+
 PRIVATE unsigned char *
 mz_hz2gb(CCCDataObject obj, const unsigned char *kscbuf, int32 kscbufsz);
 PRIVATE unsigned char *
@@ -202,10 +205,8 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		/*  TRADITIONAL CHINESE */
 		{CS_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK },
-#ifdef FEATURE_BIG5CNS
-		{CS_BIG5,		CS_CNS_8BIT,	0, (CCCFunc)mz_b52cns,		0},
-		{CS_CNS_8BIT,	CS_BIG5,		0, (CCCFunc)mz_cns2b5,		0},
-#endif
+		{CS_BIG5,		CS_CNS_8BIT,	0, (CCCFunc)mz_b5toeuctw,		0},
+		{CS_CNS_8BIT,	CS_BIG5,		0, (CCCFunc)mz_euctwtob5,		0},
 		{CS_X_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_BIG5,		CS_X_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 
@@ -325,10 +326,10 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		/*  TRADITIONAL CHINESE */
 		{CS_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
-#ifdef FEATURE_BIG5CNS
-		{CS_BIG5,		CS_CNS_8BIT,	0, (CCCFunc)mz_b52cns,		0},
-		{CS_CNS_8BIT,	CS_BIG5,		0, (CCCFunc)mz_cns2b5,		0},
-#endif
+
+		{CS_BIG5,		CS_CNS_8BIT,	0, (CCCFunc)mz_b5toeuctw,		0},
+		{CS_CNS_8BIT,	CS_BIG5,		0, (CCCFunc)mz_euctwtob5,		0},
+
 		{CS_X_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_BIG5,		CS_X_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 
@@ -507,12 +508,12 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		/*  TRADITIONAL CHINESE */
 		{CS_CNS_8BIT,	CS_CNS_8BIT,	0, mz_mbNullConv,	INTL_CHARLEN_CNS_8BIT},
-#ifdef FEATURE_BIG5CNS
-		{CS_BIG5,		CS_CNS_8BIT,	0, mz_b52cns,		0},
-		{CS_CNS_8BIT,	CS_BIG5,		0, mz_cns2b5,		0},
-		{CS_X_BIG5,		CS_CNS_8BIT,	0, mz_b52cns,		0},
-		{CS_CNS_8BIT,	CS_X_BIG5,		0, mz_cns2b5,		0},
-#endif
+
+		{CS_BIG5,		CS_CNS_8BIT,	0, mz_b5toeuctw,		0},
+		{CS_CNS_8BIT,	CS_BIG5,		0, mz_euctwtob5,		0},
+		{CS_X_BIG5,		CS_CNS_8BIT,	0, mz_b5toeuctw,		0},
+		{CS_CNS_8BIT,	CS_X_BIG5,		0, mz_euctwtob5,		0},
+
 		{CS_BIG5,		CS_BIG5,		0, mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_X_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_BIG5,		CS_X_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
