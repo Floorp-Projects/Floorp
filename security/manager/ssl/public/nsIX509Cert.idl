@@ -203,6 +203,7 @@ interface nsIX509Cert : nsISupports {
 
   [noscript] unsigned long getRawDER(out charPtr result);
 
+  PRBool isSameCert(in nsIX509Cert other);
 };
 
 %{C++

@@ -2667,6 +2667,20 @@ nsNSSCertificate::GetASN1Structure(nsIASN1Object * *aASN1Structure)
   return rv;
 }
 
+NS_IMETHODIMP
+nsNSSCertificate::IsSameCert(nsIX509Cert *other, PRBool *result)
+{
+  NS_ENSURE_ARG(other);
+  NS_ENSURE_ARG(result);
+
+  nsNSSCertificate *other2 = NS_STATIC_CAST(nsNSSCertificate*, other);
+  if (!other2)
+    return NS_ERROR_FAILURE;
+  
+  *result = (mCert == other2->mCert);
+  return NS_OK;
+}
+
 
 /* nsNSSCertificateDB */
 
