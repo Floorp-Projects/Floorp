@@ -24,8 +24,6 @@
 #include "nsVector.h"
 #include "rdf.h"
 
-class nsISupportsArray;
-
 ////////////////////////////////////////////////////////////////////////
 
 /**
@@ -56,8 +54,8 @@ public:
 	
     // TreeItem APIs
     NS_IMETHOD GetFirstVisibleItemIndex(int& index) const;
-    NS_IMETHOD GetNthTreeItem(nsITreeItem*& pItem, int n) const;
-    NS_IMETHOD GetItemTextForColumn(nsString& nodeText, nsITreeItem* pItem, nsITreeColumn* pColumn) const;
+    NS_IMETHOD GetNthTreeItem(nsITreeDMItem*& pItem, int n) const;
+    NS_IMETHOD GetItemTextForColumn(nsString& nodeText, nsITreeDMItem* pItem, nsITreeColumn* pColumn) const;
 
 
 private:
