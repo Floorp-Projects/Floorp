@@ -26,7 +26,7 @@ LLIBS=                  \
 
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
+
 include <$(DEPTH)/config/config.mak>
 
 
@@ -55,3 +55,4 @@ install:: $(PROGRAM)
 
 clobber::
 	rm -f $(DIST)\bin\TestStreamConv.exe
+

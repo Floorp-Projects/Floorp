@@ -17,7 +17,7 @@
 
 #
 
-IGNORE_MANIFEST=1
+
 
 MODULE = jpeg
 EXPORTS = jconfig.h jerror.h jinclude.h jmorecfg.h jpeglib.h jpegint.h jwinfig.h
