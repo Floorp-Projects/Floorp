@@ -56,6 +56,23 @@ interface nsIXULTemplateBuilder : nsISupports
 [scriptable, uuid(f6ed69be-1dd1-11b2-adfc-9db02ac57d88)]
 interface nsIXULOutlinerBuilderObserver : nsISupports
 {
+    /**
+     * Methods used by the drag feedback code to determine if a drag is allowable at
+     * the current location. To get the behavior where drops are only allowed on
+     * items, such as the mailNews folder pane, always return false from |canDropBeforeAfter()|.
+     */
+    boolean canDropOn(in long index);
+    boolean canDropBeforeAfter(in long index, in boolean before);
+
+    /**
+     * Called when the user drops something on this view. The |orientation| param
+     * specifies before/on/after the given |row|.
+     */
+    const long inDropBefore = 1;
+    const long inDropOn = 2;
+    const long inDropAfter = 3;
+    void onDrop(in long row, in long orientation);
+ 
     /** 
      * Called when an item is opened or closed. 
      */
