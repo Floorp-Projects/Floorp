@@ -28,6 +28,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "plstr.h"
 #include "nsReadableUtils.h"
 #include "prlog.h"
 #include "nsMemory.h"
