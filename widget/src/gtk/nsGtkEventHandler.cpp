@@ -372,7 +372,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     } else
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
-#if defined(DEBUG_akkana_not) || defined(DEBUG_pavlov) || defined (DEBUG_ftang)
+#if defined(DEBUG_akkana_not) || defined (DEBUG_ftang)
     printf("Key Press event: keyCode = 0x%x, char code = '%c'",
            anEvent.keyCode, anEvent.charCode);
     if (anEvent.isShift)
@@ -411,9 +411,9 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
   nsSizeEvent event;
 
   InitAllocationEvent(alloc, p, event, NS_SIZE);
-  NS_ADDREF(widget);
+  NS_ADDREF(NS_STATIC_CAST(nsIWidget*,widget));
   widget->OnResize(event);
-  NS_RELEASE(widget);
+  NS_RELEASE(NS_STATIC_CAST(nsIWidget*,widget));
 
   delete event.windowSize;
 }
@@ -427,9 +427,9 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
   InitExposeEvent(event, p, pevent, NS_PAINT);
 
   nsWindow *win = (nsWindow *)p;
-  win->AddRef();
+  NS_ADDREF(NS_STATIC_CAST(nsIWidget*,win));
   win->OnExpose(pevent);
-  win->Release();
+  NS_RELEASE(NS_STATIC_CAST(nsIWidget*,win));
 
   UninitExposeEvent(event, p, pevent, NS_PAINT);
 
@@ -533,9 +533,9 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
   GdkWindow *win = (GdkWindow *)widget->GetNativeData(NS_NATIVE_WINDOW);
   gdk_window_get_pointer(win, &sevent.point.x, &sevent.point.y, nsnull);
 
-  widget->AddRef();
+  NS_ADDREF(NS_STATIC_CAST(nsIWidget*,widget));
   widget->OnScroll(sevent, adj->value);
-  widget->Release();
+  NS_RELEASE(NS_STATIC_CAST(nsIWidget*,widget));
 
 /* FIXME we need to set point.* from the event stuff. */
 #if 0
@@ -689,7 +689,7 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
       || event->keyval == GDK_Control_R)
     return PR_TRUE;
 
-  win->AddRef();
+  NS_ADDREF(NS_STATIC_CAST(nsIWidget*,win));
   InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
   win->OnKey(kevent);
 
@@ -701,7 +701,7 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
   InitKeyPressEvent(event,p, kevent);
   win->OnKey(kevent);
 
-  win->Release();
+  NS_RELEASE(NS_STATIC_CAST(nsIWidget*,win));
   if (w)
   {
     gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
@@ -725,9 +725,9 @@ gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
     return PR_TRUE;
 
   InitKeyEvent(event, p, kevent, NS_KEY_UP);
-  win->AddRef();
+  NS_ADDREF(NS_STATIC_CAST(nsIWidget*,win));
   win->OnKey(kevent);
-  win->Release();
+  NS_RELEASE(NS_STATIC_CAST(nsIWidget*,win));
   
   if (w)
   {
@@ -757,7 +757,7 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
       || event->keyval == GDK_Control_R)
     return PR_TRUE;
 
-  win->AddRef();
+  NS_ADDREF(NS_STATIC_CAST(nsIWidget*,win));
   //
   // First, dispatch the Key event as a virtual key down event
   //
@@ -793,7 +793,7 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
     win->OnKey(kevent);
   }
 
-  win->Release();
+  NS_RELEASE(NS_STATIC_CAST(nsIWidget*,win));
   if (w)
   {
     gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
@@ -816,9 +816,9 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
   InitKeyEvent(event, p, kevent, NS_KEY_UP);
 
   nsWindow * win = (nsWindow *) p;
-  win->AddRef();
+  NS_ADDREF(NS_STATIC_CAST(nsIWidget*,win));
   win->OnKey(kevent);
-  win->Release();
+  NS_RELEASE(NS_STATIC_CAST(nsIWidget*,win));
 
   if (w)
   {

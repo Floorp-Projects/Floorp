@@ -190,7 +190,7 @@ static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 nsWidget::nsWidget()
 {
   // XXX Shouldn't this be done in nsBaseWidget?
-  NS_INIT_REFCNT();
+  //  NS_INIT_REFCNT();
 
   if (!sLookAndFeel) {
     if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
@@ -292,48 +292,7 @@ nsWidget::~nsWidget()
 // nsISupport stuff
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ADDREF(nsWidget)
-NS_IMPL_RELEASE(nsWidget)
-NS_IMETHODIMP nsWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    if (aIID.Equals(nsIKBStateControl::GetIID())) {
-        *aInstancePtr = (void*) ((nsIKBStateControl*)this);
-    	NS_ADDREF((nsBaseWidget*)this);
-        return NS_OK;
-    }
-
-    return nsBaseWidget::QueryInterface(aIID,aInstancePtr);
-}
-
-NS_IMETHODIMP nsWidget::GetAbsoluteBounds(nsRect &aRect)
-{
-  gint x;
-  gint y;
-
-#ifdef DEBUG_pavlov
-  g_print("nsWidget::GetAbsoluteBounds\n");
-#endif
-  if (mWidget)
-  {
-    if (mWidget->window)
-    {
-      gdk_window_get_origin(mWidget->window, &x, &y);
-      aRect.x = x;
-      aRect.y = y;
-#ifdef DEBUG_pavlov
-      g_print("  x = %i, y = %i\n", x, y);
-#endif
-    }
-    else
-      return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS_INHERITED(nsWidget, nsBaseWidget, nsIKBStateControl)
 
 NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
@@ -369,9 +328,9 @@ void
 nsWidget::IndentByDepth(FILE* out)
 {
   PRInt32 depth = 0;
-  nsWidget* parent = (nsWidget*)mParent;
+  nsWidget* parent = (nsWidget*)mParent.get();
   while (parent) {
-    parent = (nsWidget*) parent->mParent;
+    parent = (nsWidget*) parent->mParent.get();
     depth++;
   }
   while (--depth >= 0) fprintf(out, "  ");
@@ -386,7 +345,7 @@ nsWidget::IndentByDepth(FILE* out)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
-
+  //  printf("%p nsWidget::Destroy()\n", this);
   // make sure we don't call this more than once.
   if (mIsDestroying)
     return NS_OK;
@@ -397,9 +356,6 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   // call in and clean up any of our base widget resources
   // are released
   nsBaseWidget::Destroy();
-
-  // release our parent
-  NS_IF_RELEASE(mParent);
 
   // destroy our native windows
   DestroyNative();
@@ -468,10 +424,10 @@ nsWidget::OnDestroySignal(GtkWidget* aGtkWidget)
 
 nsIWidget* nsWidget::GetParent(void)
 {
-  if (mParent) {
-    NS_ADDREF(mParent);
-  }
-  return mParent;
+  nsIWidget *ret;
+  ret = mParent;
+  NS_IF_ADDREF(ret);
+  return ret;
 }
 
 //-------------------------------------------------------------------------
@@ -1106,10 +1062,11 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
     (aInitData->mWindowType == eWindowType_dialog ||
      aInitData->mWindowType == eWindowType_toplevel) ?
     nsnull : aParent;
+
   BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
+
   mParent = aParent;
-  NS_IF_ADDREF(mParent);
 
   if (aNativeParent) {
     parentWidget = GTK_OBJECT(aNativeParent);
@@ -1687,12 +1644,12 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext,
                              gint            x,
                              gint            y,
-                             guint           time)
+                             guint           aTime)
 {
   if (!mIsDragDest)
   {
     // this will happen on the first motion event, so we will generate an ENTER event
-    OnDragEnterSignal(aGdkDragContext, x, y, time);
+    OnDragEnterSignal(aGdkDragContext, x, y, aTime);
   }
 
 
@@ -1702,9 +1659,7 @@ nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext,
 	    gtk_type_name (GTK_OBJECT (source_widget)->klass->type) :
 	    "unknown");
 
-  gdk_drag_status (aGdkDragContext, aGdkDragContext->suggested_action, time);
-
-
+  gdk_drag_status (aGdkDragContext, aGdkDragContext->suggested_action, aTime);
 
   nsMouseEvent event;
 
@@ -1728,7 +1683,7 @@ nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext,
 nsWidget::OnDragEnterSignal(GdkDragContext *aGdkDragContext,
                              gint            x,
                              gint            y,
-                             guint           time)
+                             guint           aTime)
 {
   // we are a drag dest.. cool huh?
   mIsDragDest = PR_TRUE;
@@ -1752,7 +1707,7 @@ nsWidget::OnDragEnterSignal(GdkDragContext *aGdkDragContext,
 
 /* virtual */ void 
 nsWidget::OnDragLeaveSignal(GdkDragContext   *context,
-                            guint             time)
+                            guint             aTime)
 {
   mIsDragDest = PR_FALSE;
 
@@ -1800,7 +1755,7 @@ nsWidget::OnDragBeginSignal(GdkDragContext * aGdkDragContext)
 nsWidget::OnDragDropSignal(GdkDragContext *aDragContext,
                            gint            x,
                            gint            y,
-                           guint           time)
+                           guint           aTime)
 {
   nsMouseEvent    event;
 
@@ -1808,9 +1763,8 @@ nsWidget::OnDragDropSignal(GdkDragContext *aDragContext,
   event.eventStructType = NS_DRAGDROP_EVENT;
   event.widget = this;
   
-  // Test coordinates.
-  event.point.x = 17;
-  event.point.y = 19;
+  event.point.x = x;
+  event.point.y = y;
 
   AddRef();
 

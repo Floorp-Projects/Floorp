@@ -93,6 +93,13 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray *aTransferableA
   mWidget = gtk_invisible_new();
   gtk_widget_show(mWidget);
 
+  gtk_object_set_data(GTK_OBJECT(mWidget), "ds", this);
+
+  // Set up the paste handler:
+  gtk_signal_connect(GTK_OBJECT(mWidget), "drag_data_received",
+                     GTK_SIGNAL_FUNC(nsDragService::SelectionReceivedCB),
+                     nsnull);
+
   // add the flavors from the transferables. Cache this array for the send data proc
   GtkTargetList *targetlist = RegisterDragItemsAndFlavors(aTransferableArray);
 
@@ -222,7 +229,7 @@ nsDragService::RegisterDragItemsAndFlavors(nsISupportsArray *inArray)
 PRBool nsDragService::DoConvert(GdkAtom type)
 {
 
-  g_print("nsDragService::DoRealConvert(%li)\n    {\n", type);
+  g_print("nsDragService::DoConvert(%li)\n    {\n", type);
   int e = 0;
   // Set a flag saying that we're blocking waiting for the callback:
   mBlocking = PR_TRUE;
@@ -243,7 +250,7 @@ PRBool nsDragService::DoConvert(GdkAtom type)
 #ifdef DEBUG_DRAG
   printf("      Waiting for the callback... mBlocking = %d\n", mBlocking);
 #endif /* DEBUG_CLIPBOARD */
-  for (e=0; mBlocking == PR_TRUE && e < 1000; ++e)
+  for (e=0; mBlocking == PR_TRUE && e < 5; ++e)
   {
     gtk_main_iteration_do(PR_TRUE);
   }
@@ -257,8 +264,6 @@ PRBool nsDragService::DoConvert(GdkAtom type)
 
   return PR_FALSE;
 }
-
-#if 0
 
 /**
  * Called when the data from a drag comes in (recieved from gdk_selection_convert)
@@ -279,9 +284,9 @@ nsDragService::SelectionReceivedCB (GtkWidget        *aWidget,
 #ifdef DEBUG_DRAG
   printf("      nsDragService::SelectionReceivedCB\n      {\n");
 #endif
-  nsDragService *ds =(nsDragSession *)gtk_object_get_data(GTK_OBJECT(aWidget),
-                                                        "ds");
-  if (!cb)
+  nsDragService *ds =(nsDragService *)gtk_object_get_data(GTK_OBJECT(aWidget),
+                                                          "ds");
+  if (!ds)
   {
     g_print("no dragservice found.. this is bad.\n");
     return;
@@ -296,14 +301,14 @@ nsDragService::SelectionReceivedCB (GtkWidget        *aWidget,
 
 
 /**
- * local method (called from nsClipboard::SelectionReceivedCB)
+ * local method (called from nsDragService::SelectionReceivedCB)
  *
  * @param  aWidget the widget
  * @param  aSelectionData gtk selection stuff
  */
 void
 nsDragService::SelectionReceiver (GtkWidget *aWidget,
-                                GtkSelectionData *aSD)
+                                  GtkSelectionData *aSD)
 {
   gint type;
 
@@ -318,7 +323,7 @@ nsDragService::SelectionReceiver (GtkWidget *aWidget,
     return;
   }
 
-
+#if 0
   switch (type)
   {
   case GDK_TARGET_STRING:
@@ -345,6 +350,7 @@ nsDragService::SelectionReceiver (GtkWidget *aWidget,
     return;
 
   default:
+#endif
     mSelectionData = *aSD;
     mSelectionData.data = g_new(guchar, aSD->length + 1);
     memcpy(mSelectionData.data,
@@ -352,16 +358,17 @@ nsDragService::SelectionReceiver (GtkWidget *aWidget,
            aSD->length);
     mSelectionData.length = aSD->length;
     return;
+#if 0
   }
+#endif
 }
 
-#endif
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
 {
   g_print("nsDragService::GetNumDropItems\n");
-  *aNumItems = 0;
+  *aNumItems = 1;
   return NS_OK;
 }
 
@@ -370,7 +377,7 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
 {
 
 #ifdef DEBUG_DRAG
-  printf("nsClipboard::GetNativeClipboardData()\n");
+  printf("nsDragService::GetData()\n");
 #endif /* DEBUG_CLIPBOARD */
 
   // make sure we have a good transferable
@@ -397,7 +404,7 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));
-      if (DoConvert(gdk_atom_intern(flavorStr, 1))) {
+      if (DoConvert(gdk_atom_intern(flavorStr, FALSE))) {
         foundFlavor = flavorStr;
         break;
       }
@@ -426,7 +433,9 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
 #endif
 
   nsCOMPtr<nsISupports> genericDataWrapper;
-  nsPrimitiveHelpers::CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
+  nsPrimitiveHelpers::CreatePrimitiveForData ( foundFlavor,
+                                               mSelectionData.data,
+                                               mSelectionData.length, getter_AddRefs(genericDataWrapper) );
   aTransferable->SetTransferData(foundFlavor,
                                  genericDataWrapper,
                                  mSelectionData.length);
@@ -533,7 +542,7 @@ nsDragService::DragDrop(GtkWidget	       *widget,
   g_print("drop\n");
   //gHaveDrag = PR_FALSE;
 
-  if (context->targets){
+  if (context->targets) {
     gtk_drag_get_data (widget, context, 
 			                 GPOINTER_TO_INT (context->targets->data), 
 			                 time);

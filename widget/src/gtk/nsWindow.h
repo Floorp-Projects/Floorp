@@ -40,14 +40,20 @@ class nsIAppShell;
  * Native GTK++ window wrapper.
  */
 
-class nsWindow : public nsWidget
+class nsWindow : public nsWidget,
+                 public nsITimerCallback
 {
 
 public:
-      // nsIWidget interface
+  // nsIWidget interface
 
   nsWindow();
   virtual ~nsWindow();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsITimerCallback
+  virtual void Notify(nsITimer* aTimer);
 
   NS_IMETHOD           WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
 
@@ -71,7 +77,6 @@ public:
   NS_IMETHOD           BeginResizingChildren(void);
   NS_IMETHOD           EndResizingChildren(void);
 
-  NS_IMETHOD           GetAbsoluteBounds(nsRect &aRect);
   NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
@@ -242,6 +247,8 @@ protected:
 #endif
 
 private:
+  nsresult     SetMiniIcon(GdkPixmap *window_pixmap,
+                           GdkBitmap *window_mask);
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
   nsresult     SetIcon();
@@ -251,6 +258,8 @@ private:
   PRBool       mBlockFocusEvents;
   PRInt32      mScrollExposeCounter;
   void DestroyNativeChildren(void);
+
+  nsITimer *mExposeTimer;
 };
 
 //

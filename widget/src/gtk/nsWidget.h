@@ -41,6 +41,7 @@ class nsIToolkit;
 
 #include "gtkmozbox.h"
 #include "nsITimer.h"
+#include "nsITimerCallback.h"
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
@@ -70,10 +71,7 @@ public:
   nsWidget();
   virtual ~nsWidget();
 
-  // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIWidget
 
@@ -126,7 +124,6 @@ public:
 
   void* GetNativeData(PRUint32 aDataType);
 
-  NS_IMETHOD GetAbsoluteBounds(nsRect &aRect);
   NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
   NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
 
@@ -401,7 +398,7 @@ protected:
   // our mozbox for those native widgets
   GtkWidget *mMozBox;
 
-  nsIWidget *mParent;
+  nsCOMPtr<nsIWidget> mParent;
 
   // This is the composite update area (union of all the calls to
   // Invalidate)
