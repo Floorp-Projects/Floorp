@@ -48,8 +48,8 @@ CPPSRCS		= \
 		nsJSXULRadioGroupElement.cpp \
 		nsJSXULMenuListElement.cpp \
 		nsRDFDOMNodeList.cpp \
+		nsRuleNetwork.cpp \
 		nsXULElement.cpp \
-		nsRDFGenericBuilder.cpp \
 		nsXULAttributes.cpp \
 		nsXULContentSink.cpp \
 		nsXULContentUtils.cpp \
@@ -60,6 +60,7 @@ CPPSRCS		= \
 		nsXULControllers.cpp \
 		nsXULKeyListener.cpp \
 		nsXULPopupElement.cpp \
+		nsXULTemplateBuilder.cpp \
 		nsXULTreeElement.cpp \
 		nsXULIFrameElement.cpp \
 		nsXULBrowserElement.cpp \
