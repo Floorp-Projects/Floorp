@@ -33,8 +33,11 @@
 <?xml-stylesheet href="chrome://browser/content/customizeToolbar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/customizeToolbar.css" type="text/css"?>
 
-<dialog id="main-window" onload="buildDialog()" ondialogaccept="updateToolbar()"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<dialog id="main-window"
+        title="&window.title"
+        onload="buildDialog()"
+        ondialogaccept="updateToolbar()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://browser/content/customizeToolbar.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
