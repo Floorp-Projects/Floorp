@@ -30,6 +30,7 @@ var bundle = srGetStrBundle("chrome://search/locale/search-editor.properties");
 var pref = null;
 var RDF = null;
 var RDFC = null;
+var RDFCUtils = null;
 var catDS = null;
 
 try
@@ -42,12 +43,16 @@ try
 
 	RDFC = Components.classes["component://netscape/rdf/container"].getService();
 	if (RDFC)	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
+
+	RDFCUtils = Components.classes["component://netscape/rdf/container-utils"].getService();
+	if (RDFCUtils)	RDFCUtils = RDFCUtils.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
 }
 catch(e)
 {
 	pref = null;
 	RDF = null;
 	RDFC = null;
+	RDFCUtils = null;
 }
 
 
@@ -128,11 +133,14 @@ function doLoad()
 				break;
 			}
 		}
-		if (found == false)
+		if (categoryPopup.childNodes.length > 0)
 		{
-			categoryList.selectedItem = categoryPopup.childNodes[0];
+			if (found == false)
+			{
+				categoryList.selectedItem = categoryPopup.childNodes[0];
+			}
+			chooseCategory(categoryList.selectedItem);
 		}
-		chooseCategory(categoryList.selectedItem);
 	}
 
 }
@@ -248,6 +256,14 @@ function AddEngine()
 	if (!select_list)	return(false)
 	if (select_list.length < 1)	return(false);
 
+	// make sure we have at least one category to add engine into
+	var categoryPopup = document.getElementById( "categoryPopup" );
+	if (!categoryPopup)	return(false);
+	if (categoryPopup.childNodes.length < 1)
+	{
+		if (NewCategory() == false)	return(false);
+	}
+
 	var promptStr = bundle.GetStringFromName("AddEnginePrompt");
 	if (!confirm(promptStr))	return(false);
 
@@ -256,8 +272,11 @@ function AddEngine()
 
 	var ref = engineList.getAttribute("ref");
 	if ((!ref) || (ref == ""))	return(false);
+
 	var categoryRes = RDF.GetResource(ref);
 	if (!categoryRes)	return(false);
+
+	RDFCUtils.MakeSeq(catDS, categoryRes);
 
 	RDFC.Init(catDS, categoryRes);
 
@@ -381,6 +400,39 @@ function NewCategory()
 	var promptStr = bundle.GetStringFromName("NewCategoryPrompt");
 	var name = prompt(promptStr, "");
 	if ((!name) || (name == ""))	return(false);
+
+	var newName = RDF.GetLiteral(name);
+	if (!newName)	return(false);
+
+	var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
+	if (!categoryRes)	return(false);
+
+	RDFC.Init(catDS, categoryRes);
+
+	var randomID = Math.random();
+	var categoryID = "NC:SearchCategory?category=urn:search:category:" + randomID.toString();
+	var currentCatRes = RDF.GetResource(categoryID);
+	if (!currentCatRes)	return(false);
+
+	var titleRes = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
+	if (!titleRes)	return(false);
+
+	// set the category's name
+	catDS.Assert(currentCatRes, titleRes, newName, true);
+
+	// and insert the category
+	RDFC.AppendElement(currentCatRes);
+
+	RDFCUtils.MakeSeq(catDS, currentCatRes);
+
+	// try and select the new category
+	var categoryList = document.getElementById( "categoryList" );
+	var select_list = categoryList.getElementsByAttribute("id", categoryID);
+	if (select_list && select_list.length > 0)
+	{
+		categoryList.selectedItem = select_list[0];
+		chooseCategory(categoryList.selectedItem);
+	}
 	return(true);
 }
 
@@ -427,6 +479,50 @@ function RemoveCategory()
 {
 	var promptStr = bundle.GetStringFromName("RemoveCategoryPrompt");
 	if (!confirm(promptStr))	return(false);
+
+	var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
+	if (!categoryRes)	return(false);
+
+	var categoryPopup = document.getElementById( "categoryPopup" );
+	if (!categoryPopup)	return(false);
+	if (categoryPopup.childNodes.length < 1)	return(false);
+
+	var categoryList = document.getElementById( "categoryList" );
+	if (!categoryList)	return(false);
+
+	var idNum = categoryList.selectedIndex;
+
+	var id = categoryList.selectedItem.getAttribute("id");
+	if ((!id) || (id == ""))	return(false);
+
+	var idRes = RDF.GetResource(id);
+	if (!idRes)	return(false);
+
+	RDFC.Init(catDS, categoryRes);
+
+	var nodeIndex = RDFC.IndexOf(idRes);
+	if (nodeIndex < 1)	return(false);		// how did that happen?
+
+	RDFC.RemoveElementAt(nodeIndex, true, idRes);
+
+	// try and select another category
+	if (idNum > 0)	--idNum;
+	else		idNum = 0;
+
+	if (categoryPopup.childNodes.length > 0)
+	{
+		categoryList.selectedItem = categoryPopup.childNodes[idNum];
+		chooseCategory(categoryList.selectedItem);
+	}
+	else
+	{
+		// last category was deleted, so empty out engine list
+		var treeNode = document.getElementById("engineList");
+		if (treeNode)
+		{
+			treeNode.setAttribute( "ref", "" );
+		}
+	}
 	return(true);
 }
 
