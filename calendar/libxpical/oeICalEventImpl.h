@@ -79,7 +79,7 @@ public:
   oeICalEventImpl();
   virtual ~oeICalEventImpl();
   /* additional members */
-  void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar );
+  void ParseIcalComponent( icalcomponent *vcalendar );
   icalcomponent *AsIcalComponent();
   NS_IMETHODIMP SetId( PRUint32 newid );
   icaltimetype GetNextAlarmTime( icaltimetype begin );
@@ -110,7 +110,7 @@ private:
     icaltimetype m_lastalarmack;
     vector<PRTime> m_exceptiondates;
     icaltimetype GetNextRecurrence( icaltimetype begin );
-    icaltimetype oeICalEventImpl::CalculateAlarmTime( icaltimetype date );
+    icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );
 };
 

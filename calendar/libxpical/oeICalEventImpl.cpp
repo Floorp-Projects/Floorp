@@ -43,6 +43,8 @@
 //#include "stdlib.h"
 #include "nsCOMPtr.h"
 
+#define strcasecmp strcmp
+
 #define RECUR_NONE 0
 #define RECUR_DAILY 1
 #define RECUR_WEEKLY 2
