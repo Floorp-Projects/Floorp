@@ -32,10 +32,6 @@
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
 
-// XXX to be moved with its own factory
-#include "nsIUnicodeDecodeUtil.h"
-#include "nsUnicodeDecodeUtil.h"
-
 static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
 
 //----------------------------------------------------------------------------
