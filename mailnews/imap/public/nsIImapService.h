@@ -141,6 +141,14 @@ public:
                                      nsIUrlListener* aUrlListener,
                                      PRInt32 level,
                                      nsIURL** aURL) = 0;
+    NS_IMETHOD OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
+                                 nsIMsgFolder* aSrcFolder,
+                                 const char* messageIds,
+                                 nsIMsgFolder* aDstFolder,
+                                 PRBool idsAreUids,
+                                 PRBool isMove,
+                                 nsIUrlListener* aUrlListener,
+                                 nsIURL** aURL) = 0;
 };
 
 
