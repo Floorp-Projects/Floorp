@@ -42,12 +42,12 @@ EXPORTS =				\
 	nsIStyleRule.h			\
 	nsIStyleSet.h			\
 	nsIStyleSheet.h			\
-	nsITextContent.h		\
+	nsITextContent.h		      \
 	nsLayoutAtoms.h			\
 	nsStyleConsts.h			\
 	nsStyleCoord.h			\
 	nsStyleStruct.h			\
-	nsTextFragment.h		\
+	nsTextFragment.h              \
         $(NULL)
 
 MODULE=raptor 

@@ -29,7 +29,6 @@
 #include "nsRange.h"
 
 #include "nsISelection.h"
-#include "nsICollection.h"
 #include "nsIEnumerator.h"
 
 

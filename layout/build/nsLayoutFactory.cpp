@@ -23,7 +23,6 @@
 #include "nsIDocument.h"
 #include "nsIHTMLContent.h"
 #include "nsITextContent.h"
-#include "nsICollection.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
 #include "nsIFrameUtil.h"
@@ -34,7 +33,6 @@
 #include "nsIServiceManager.h"
 #include "nsICSSParser.h"
 #include "nsIHTMLStyleSheet.h"
-#include "nsICollection.h"
 #include "nsIDOMRange.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptNameSetRegistry.h"
@@ -59,8 +57,8 @@ static NS_DEFINE_CID(kRangeCID,  NS_RANGE_CID);
 static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 
 
-nsresult NS_NewRangeList(nsICollection **);
-nsresult NS_NewRange(nsIDOMRange **);
+extern nsresult NS_NewRangeList(nsISelection **);
+extern nsresult NS_NewRange(nsIDOMRange **);
 extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 
 
@@ -198,8 +196,8 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kCRangeListCID)) {
-    nsICollection *coll;
-    res = NS_NewRangeList((nsICollection **)&coll);
+    nsISelection *coll;
+    res = NS_NewRangeList(&coll);
     if (!NS_SUCCEEDED(res)) {
       return res;
     }

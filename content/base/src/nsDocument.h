@@ -29,9 +29,10 @@
 #include "nsIJSScriptObject.h"
 #include "nsIContent.h"
 
-class nsICollection;
 class nsIEventListenerManager;
 class nsDOMStyleSheetCollection;
+class nsISelection;
+
 
 class nsPostData : public nsIPostData {
 public:
@@ -229,7 +230,7 @@ public:
   /**
     * Returns the Selection Object
    */
-  NS_IMETHOD GetSelection(nsICollection ** aSelection);
+  NS_IMETHOD GetSelection(nsISelection ** aSelection);
   /**
     * Selects all the Content
    */

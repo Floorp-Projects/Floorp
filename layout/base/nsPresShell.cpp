@@ -41,7 +41,6 @@
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
 #include "nsISelection.h"
-#include "nsICollection.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
@@ -160,7 +159,6 @@ static NS_DEFINE_IID(kIPresShellIID, NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
 static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
-static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
@@ -490,11 +488,10 @@ PresShell::Init(nsIDocument* aDocument,
   mStyleSet = aStyleSet;
   NS_ADDREF(aStyleSet);
 
-  nsCOMPtr<nsICollection>selection;
-  nsresult result = nsRepository::CreateInstance(kRangeListCID, nsnull, kICollectionIID, getter_AddRefs(selection));
+  nsCOMPtr<nsISelection>selection;
+  nsresult result = nsRepository::CreateInstance(kRangeListCID, nsnull, kISelectionIID, getter_AddRefs(selection));
   if (!NS_SUCCEEDED(result))
     return result;
-  selection->Clear();//clear all old selection
   // XXX This code causes the document object (and the entire content model) to be leaked...
 #if 0
   nsCOMPtr<nsIDOMRange>range;

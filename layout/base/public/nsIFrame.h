@@ -125,14 +125,15 @@ enum nsFramePaintLayer {
 };
 
 enum nsSelectionAmount {
-  eCharacter = 0,
-  eWord      = 1,
-  eLine      = 2  //previous drawn line in flow.
+  eSelectCharacter = 0,
+  eSelectWord      = 1,
+  eSelectLine      = 2,  //previous drawn line in flow.
+  eSelectNoAmount  = 3   //just bounce back current offset.
 };
 
 enum nsDirection {
-  eNext    = 0,
-  ePrevious= 1
+  eDirNext    = 0,
+  eDirPrevious= 1
 };
 
 //----------------------------------------------------------------------
@@ -566,11 +567,13 @@ public:
    *  return NS_ERROR_FAILURE
    *  @param aAmount eWord, eCharacter, eLine
    *  @param aDirection enum defined in this file to be eForward or eBackward
+   *  @param aStartOffset start offset to start the peek. 0 == beginning -1 = end
    *  @param aResultFrame frame that actually is the next/previous
    *  @param aFrameOffset offset from frame of the frame results
    *  @param aContentOffset offset from content of the frame results
    */
-  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset) = 0;
+  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
+                         nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset) = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add

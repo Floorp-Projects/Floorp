@@ -30,7 +30,6 @@ class nsIDocumentContainer;
 class nsIDocumentObserver;
 class nsIPresContext;
 class nsIPresShell;
-class nsICollection;
 
 class nsIStreamListener;
 class nsIStreamObserver;
@@ -224,7 +223,7 @@ public:
   /**
     * Returns the Selection Object
    */
-  NS_IMETHOD GetSelection(nsICollection ** aSelection) = 0;
+  NS_IMETHOD GetSelection(nsISelection ** aSelection) = 0;
   /**
     * Selects all the Content
    */

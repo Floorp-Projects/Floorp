@@ -46,6 +46,10 @@
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
 
+#include "nsFrameTraversal.h"
+#include "nsCOMPtr.h"
+
+
 // Some Misc #defines
 #define SELECTION_DEBUG        0
 #define FORCE_SELECTION_UPDATE 1
@@ -1850,11 +1854,33 @@ nsFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffs
 
 
 NS_IMETHODIMP
-nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFrame **aResultFrame, 
-                    PRInt32 *aFrameOffset, PRInt32 *aContentOffset)
+nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset,
+                    nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset)
 {
-  //default, no matter what grab next/ previous sibling. 
-  return NS_ERROR_FAILURE;
+  //this will use the nsFrameTraversal as the default peek method.
+  //this should change to use geometry and also look to ALL the child lists
+  nsCOMPtr<nsIEnumerator> frameTraversal;
+  nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
+  if (NS_FAILED(result))
+    return result;
+  nsISupports *isupports;
+  if (aDirection == eDirNext)
+    result = frameTraversal->Next();
+  else 
+    result = frameTraversal->Prev();
+
+  if (NS_FAILED(result))
+    return result;
+  result = frameTraversal->CurrentItem(&isupports);
+  if (NS_FAILED(result))
+    return result;
+  if (!isupports)
+    return NS_ERROR_NULL_POINTER;
+  //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+  //for speed reasons
+  nsIFrame *newFrame = (nsIFrame *)isupports;
+  return newFrame->PeekOffset(aAmount, aDirection, aStartOffset, aResultFrame,
+                          aFrameOffset, aContentOffset);
 }
 
 //-----------------------------------------------------------------------------------

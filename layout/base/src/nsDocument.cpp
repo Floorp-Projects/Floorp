@@ -65,7 +65,6 @@
 #include "nsLayoutCID.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
-#include "nsICollection.h"
 #include "nsIEnumerator.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
@@ -91,7 +90,6 @@ static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kIDOMRange, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
-static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
 static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -1901,7 +1899,7 @@ void      nsDocument::Finalize(JSContext *aContext)
 /**
   * Returns the Selection Object
  */
-NS_IMETHODIMP nsDocument::GetSelection(nsICollection ** aSelection) {
+NS_IMETHODIMP nsDocument::GetSelection(nsISelection ** aSelection) {
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
   return NS_ERROR_FAILURE;
