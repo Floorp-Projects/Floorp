@@ -426,7 +426,7 @@ public:
 
   void StartLayout();
 
-  void ScrollToRef();
+  void ScrollToRef(PRBool aReallyScroll);
   void TryToScrollToRef();
 
   void AddBaseTagInfo(nsIHTMLContent* aContent);
@@ -2741,8 +2741,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
       PRUint32 LoadType;
       docShell->GetLoadType(&LoadType);
 
-      if (!(LoadType & nsIDocShell::LOAD_CMD_HISTORY))
-        ScrollToRef();
+      ScrollToRef(LoadType & nsIDocShell::LOAD_CMD_HISTORY == 0);
     }
   }
 
@@ -2813,6 +2812,7 @@ HTMLContentSink::Notify(nsITimer *timer)
   }
 
   // Now try and scroll to the reference
+  // XXX Should we scroll unconditionally for history loads??
   TryToScrollToRef();
 
   mNotificationTimer = 0;
@@ -4309,11 +4309,11 @@ HTMLContentSink::TryToScrollToRef()
     return;
   }
 
-  ScrollToRef();
+  ScrollToRef(PR_TRUE);
 }
 
 void
-HTMLContentSink::ScrollToRef()
+HTMLContentSink::ScrollToRef(PRBool aReallyScroll)
 {
   // XXX Duplicate code in nsXMLContentSink.
   // XXX Be sure to change both places if you make changes here.
@@ -4346,7 +4346,7 @@ HTMLContentSink::ScrollToRef()
 
       // Check an empty string which might be caused by the UTF-8 conversion
       if (!ref.IsEmpty()) {
-        rv = shell->GoToAnchor(ref, PR_TRUE);
+        rv = shell->GoToAnchor(ref, aReallyScroll);
       } else {
         rv = NS_ERROR_FAILURE;
       }
@@ -4362,7 +4362,7 @@ HTMLContentSink::ScrollToRef()
           rv = CharsetConvRef(docCharset, unescapedRef, ref);
 
           if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-            rv = shell->GoToAnchor(ref, PR_TRUE);
+            rv = shell->GoToAnchor(ref, aReallyScroll);
         }
       }
 

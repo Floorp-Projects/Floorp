@@ -94,6 +94,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIScriptElement.h"
 #include "nsStyleLinkElement.h"
+#include "nsIImageLoadingContent.h"
 #include "nsEscape.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
@@ -127,7 +128,10 @@ public:
     : mInner(do_GetWeakReference(aInner))
   {
   }
-
+  virtual ~nsScriptLoaderObserverProxy()
+  {
+  }
+  
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTLOADEROBSERVER
 
@@ -325,7 +329,7 @@ nsXMLContentSink::WillBuildModel(void)
 nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRefInDocCharset, nsString& aRefInUnicode);
 
 void
-nsXMLContentSink::ScrollToRef()
+nsXMLContentSink::ScrollToRef(PRBool aReallyScroll)
 {
   // XXX Duplicate code in nsHTMLContentSink.
   // XXX Be sure to change both places if you make changes here.
@@ -353,7 +357,7 @@ nsXMLContentSink::ScrollToRef()
 
         // Check an empty string which might be caused by the UTF-8 conversion
         if (!ref.IsEmpty())
-          rv = shell->GoToAnchor(ref, PR_TRUE);
+          rv = shell->GoToAnchor(ref, aReallyScroll);
         else
           rv = NS_ERROR_FAILURE;
 
@@ -368,7 +372,7 @@ nsXMLContentSink::ScrollToRef()
             rv = CharsetConvRef(docCharset, unescapedRef, ref);
 
             if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-              rv = shell->GoToAnchor(ref, PR_TRUE);
+              rv = shell->GoToAnchor(ref, aReallyScroll);
           }
         }
       }
@@ -406,8 +410,6 @@ nsXMLContentSink::MaybePrettyPrint()
 NS_IMETHODIMP
 nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
-  nsresult rv = NS_OK;
-
   // XXX this is silly; who cares?
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
@@ -458,12 +460,10 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     if (docShell) {
       PRUint32 documentLoadType = 0;
       docShell->GetLoadType(&documentLoadType);
-      if (!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY)) {
-        ScrollToRef();
-      }
+      ScrollToRef(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY == 0);
     }
 #else
-    ScrollToRef();
+    ScrollToRef(PR_TRUE);
 #endif
 
     mDocument->EndLoad();
@@ -549,11 +549,9 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   //  Scroll to Anchor only if the document was *not* loaded through history means. 
   PRUint32 documentLoadType = 0;
   docShell->GetLoadType(&documentLoadType);
-  if (!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY)) {
-    ScrollToRef();
-  }
+  ScrollToRef(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY == 0);
 #else
-  ScrollToRef();
+  ScrollToRef(PR_TRUE);
 #endif
 
   originalDocument->EndLoad();

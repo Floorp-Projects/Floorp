@@ -170,7 +170,7 @@ protected:
   static void
   GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
 
-  void ScrollToRef();
+  void ScrollToRef(PRBool aReallyScroll);
   
   nsresult MaybePrettyPrint();
   
