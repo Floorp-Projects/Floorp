@@ -3,7 +3,6 @@ themes/modern/Makefile
 themes/modern/communicator/Makefile
 themes/modern/communicator/bookmarks/Makefile
 themes/modern/communicator/directory/Makefile
-themes/modern/communicator/pref/Makefile
 themes/modern/communicator/profile/Makefile
 themes/modern/communicator/regviewer/Makefile
 themes/modern/communicator/related/Makefile
