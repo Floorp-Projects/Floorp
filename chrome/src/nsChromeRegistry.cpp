@@ -1447,6 +1447,9 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
                                                 PRBool aRemove)
 {
   // XXX don't allow local chrome overrides of install chrome!
+#ifdef DEBUG
+  printf("***** Chrome Registration: Installing %s at %s\n", (const char*)aProviderType, (const char*)aBaseURL);
+#endif
 
   // Load the data source found at the base URL.
   nsCOMPtr<nsIRDFDataSource> dataSource;
