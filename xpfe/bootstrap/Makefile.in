@@ -355,9 +355,3 @@ libs::
 
 echo_objs:
 	@echo $(OBJS)
-
-README_FILE = $(topsrcdir)/readme.txt
-
-libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
-	$(INSTALL) $(topsrcdir)/license $(DIST)/bin
