@@ -107,7 +107,14 @@ sub _create {
                                        $id);
 
     if ($result) {
+        my $is_main_db;
+        unless ($is_main_db = Bugzilla->dbwritesallowed()) {
+            Bugzilla->switch_to_main_db();
+        }
         $self->derive_groups($tables_locked_for_derive_groups);
+        unless ($is_main_db) {
+            Bugzilla->switch_to_shadow_db();
+        }
     }
 
     return $self;
