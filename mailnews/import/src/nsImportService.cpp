@@ -157,6 +157,7 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////
+nsresult NS_NewImportService(nsIImportService** aImportService);
 
 nsresult NS_NewImportService(nsIImportService** aImportService)
 {
@@ -482,7 +483,7 @@ nsresult nsImportService::DoDiscover( void)
 								LoadModuleInfo( pClsId, pSupports);
 								nsAllocator::Free(pSupports);
 							}
-							naAllocator::Free(pClsId);
+							nsAllocator::Free(pClsId);
 						}	
 					}
 				}
