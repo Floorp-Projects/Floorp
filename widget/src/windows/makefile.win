@@ -23,6 +23,8 @@ REQUIRES=xpcom gfxwin raptor dom network netlib
 DEFINES =-D_IMPL_NS_WIDGET
 
 CPPSRCS =              \
+	nsFontRetrieverService.cpp      \
+	nsFontSizeIterator.cpp      \
 	nsNativeDragTarget.cpp      \
 	nsNativeDragSource.cpp      \
 	nsDragService.cpp      \
@@ -56,6 +58,8 @@ CPPSRCS =              \
 MODULE=raptor 
 
 OBJS =                             \
+	.\$(OBJDIR)\nsFontRetrieverService.obj  \
+	.\$(OBJDIR)\nsFontSizeIterator.obj  \
 	.\$(OBJDIR)\nsNativeDragTarget.obj  \
 	.\$(OBJDIR)\nsNativeDragSource.obj  \
 	.\$(OBJDIR)\nsDragService.obj  \
