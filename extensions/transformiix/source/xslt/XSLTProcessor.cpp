@@ -38,12 +38,15 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.36 2001/03/06 00:12:09 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.cpp,v 1.37 2001/03/07 00:42:57 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
 #ifdef MOZ_XSL
 #include "nsIObserverService.h"
+#include "nslog.h"
+#else
+#include "TxLog.h"
 #endif
 
   //-----------------------------------/
@@ -53,7 +56,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.36 $ $Date: 2001/03/06 00:12:09 $
+ * @version $Revision: 1.37 $ $Date: 2001/03/07 00:42:57 $
 **/
 
 /**
@@ -842,9 +845,9 @@ void XSLTProcessor::processAction
             Node* priorNode = xslAction->getPreviousSibling();
             Node* nextNode = xslAction->getNextSibling();
             if (priorNode && (priorNode->getNodeType()==Node::TEXT_NODE))
-                printf("Textnode found in prior in whitespace strip\n");
+                cout << "Textnode found in prior in whitespace strip"<<endl;
             if (nextNode && (nextNode->getNodeType()==Node::TEXT_NODE))
-                printf("Textnode found in next in whitespace strip\n");
+                cout << "Textnode found in next in whitespace strip"<<endl;
             #endif
             if (XMLUtils::shouldStripTextnode(curValue))
                 textValue="";
@@ -1720,6 +1723,8 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
 } //-- xslCopyOf
 
 #ifdef MOZ_XSL
+#define PRINTF NS_LOG_PRINTF(XSLT)
+#define FLUSH  NS_LOG_FLUSH(XSLT)
 NS_IMETHODIMP
 XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                                nsIDOMNode* aStyleDOM,
@@ -1756,7 +1761,9 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
         docURL->GetSpec(&urlString);
         String documentBase(urlString);
-//cout << "documentbase: " << documentBase << endl;
+        NS_IMPL_LOG(XSLT)
+        PRINTF("Transforming with stylesheet %s",documentBase.toCharArray());
+        FLUSH();
         ps->setDocumentBase(documentBase);
         nsCRT::free(urlString);
         NS_IF_RELEASE(docURL);
