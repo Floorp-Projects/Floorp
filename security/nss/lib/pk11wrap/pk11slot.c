@@ -1149,6 +1149,7 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx)
 	if (rv == SECSuccess && slot->nssToken && !PK11_IsFriendly(slot)) {
 	    /* notify stan about the login if certs are not public readable */
 	    nssToken_LoadCerts(slot->nssToken);
+	    nssToken_UpdateTrustForCerts(slot->nssToken);
 	}
     } else if (!attempt) PORT_SetError(SEC_ERROR_BAD_PASSWORD);
     return rv;

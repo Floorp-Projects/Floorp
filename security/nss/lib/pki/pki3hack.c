@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.44 $ $Date: 2002/03/08 00:02:35 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.45 $ $Date: 2002/03/15 19:23:10 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -280,6 +280,25 @@ nssToken_LoadCerts(NSSToken *token)
 	}
     }
     return nssrv;
+}
+
+NSS_IMPLEMENT void
+nssToken_UpdateTrustForCerts(NSSToken *token)
+{
+    nssListIterator *certs;
+    NSSCertificate *cert;
+    certs = nssList_CreateIterator(token->certList);
+    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
+         cert != (NSSCertificate *)NULL;
+         cert  = (NSSCertificate *)nssListIterator_Next(certs))
+    {
+	CERTCertificate *cc = STAN_GetCERTCertificate(cert);
+	cc->trust = NULL;
+	/* force an update of the trust fields of the CERTCertificate */
+	(void)stan_GetCERTCertificate(cert, PR_FALSE);
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
 }
 
 NSS_IMPLEMENT PRBool
