@@ -14,7 +14,7 @@
         <xul:label class="header expanderButton" anonid="label" xbl:inherits="value=label,disabled" mousethrough="always" flex="1"/>
         <xul:button anonid="clear-button" xbl:inherits="label=clearlabel,disabled=cleardisabled,hidden=clearhidden" mousethrough="always"/>
       </xul:hbox>
-      <xul:vbox flex="1" anonid="settings" class="settingsContainer" collapsed="true">
+      <xul:vbox flex="1" anonid="settings" class="settingsContainer" collapsed="true" xbl:inherits="align">
         <children/>
       </xul:vbox>
     </content>

@@ -37,7 +37,6 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://mozapps/skin/extensions/about.css" type="text/css"?> 
 
 <!DOCTYPE dialog [
 <!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/extensions/update.dtd">
@@ -52,7 +51,7 @@
         buttons="cancel" 
         onload="gUpdateDialog.init();" 
         onunload="gUpdateDialog.uninit();"
-        oncancel="onCancelUpdateCheck();">
+        ondialogcancel="gUpdateDialog.cancel();">
         
   <script type="application/x-javascript" src="chrome://mozapps/content/extensions/update.js"/>
   

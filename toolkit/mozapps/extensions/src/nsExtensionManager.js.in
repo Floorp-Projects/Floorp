@@ -37,13 +37,99 @@
 
 var gExtensionManager = null;
 
+const PREF_EM_APP_ID            = "app.id";
+const PREF_EM_APP_VERSION       = "app.version";
+const PREF_EM_LAST_APP_VERSION  = "extensions.lastAppVersion";
+const PREF_UPDATE_EXTENSIONS    = "update.extensions.enabled";
+const PREF_UPDATE_AUTOUPDATE    = "update.extensions.autoUpdate";
+const PREF_UPDATE_APP           = "update.app.enabled";
+
+function Extension (aID, aVersion, aName, aRow, aXPIURL)
+{
+  this.id = aID;
+  this.version = aVersion;
+  this.name = aName;
+  this.row = aRow;
+  this.xpiURL = aXPIURL;
+}
+
+function VersionChecker(aExtensionResource, aAppID, aAppVersion, aDataSource)
+{
+  this._extensionResource = aExtensionResource;
+  this._appID = aAppID;
+  this._appVersion = aAppVersion;
+  this._ds = aDataSource;
+}
+
+VersionChecker.prototype = { 
+  get isCompatible ()
+  {
+    var targets = this._ds.GetTargets(this._extensionResource, this._ds._emR("targetApplication"), true);
+    while (targets.hasMoreElements()) {
+      var targetAppString = targets.getNext().QueryInterface(Components.interfaces.nsIRDFLiteral);
+
+      var versionParts = targetAppString.Value.split(",");
+      if (versionParts[0] == this._appID) {
+        var minRequiredVersionStr = versionParts[1];
+        var maxRequiredVersionStr = versionParts[2];
+        var power = this._getLargestPower([this._appVersion, 
+                                          minRequiredVersionStr, 
+                                          maxRequiredVersionStr]);
+        var minRequiredVersion = this._parseVersion(minRequiredVersionStr, power);
+        var maxRequiredVersion = this._parseVersion(maxRequiredVersionStr, power);
+        var appVersion = this._parseVersion(this._appVersion, power);
+        
+        return (appVersion >= minRequiredVersion && 
+                appVersion <= maxRequiredVersion);
+      }
+    }
+    return false;
+  },
+
+  // Convert a version string into an integer value
+  _parseVersion: function (aVersion, aPower)
+  {
+    var parts = aVersion.split(".");
+    var version = 0;
+    if (aPower == 0)
+      aPower = parts.length;
+    
+    for (var i = 0; i < parts.length; ++i) {
+      var token = parts[i];
+      if (token.charAt(token.length-1) == "+") {
+        token = token.substr(0, token.lastIndexOf("+"));
+        version += 1;
+        if (token.length == 0)
+          continue;
+      }
+      
+      version += parseInt(token) * Math.pow(10, aPower - i);
+    }
+    return version;
+  },
+  
+  _parsePower: function (aVersion)
+  {
+    return aVersion.split(".").length;
+  },
+
+  _getLargestPower: function (aVersionArray)
+  {
+    var biggestPower = 0;
+    for (var i = 0; i < aVersionArray.length; ++i) {
+      var power = this._parsePower(aVersionArray[i]);
+      if (power > biggestPower) 
+        biggestPower = power;
+    }
+    return biggestPower;
+  }
+}
+
 function nsExtensionManager()
 {
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
   os.addObserver(this, "profile-after-change", false);
-  
-  dump("*** global extensions startup!\n");
 }
 
 nsExtensionManager.prototype = {
@@ -61,43 +147,44 @@ nsExtensionManager.prototype = {
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
       var currAppVersion = pref.getCharPref(PREF_EM_APP_VERSION);
-      var lastAppVersion = pref.getCharPref(PREF_EM_LAST_APP_VERSION);
+      try {
+        var lastAppVersion = pref.getCharPref(PREF_EM_LAST_APP_VERSION);
+      }
+      catch (e) {}
       if (currAppVersion != lastAppVersion) {
         // Version mismatch, we're have to load the extensions datasource
-        // and do version checking. 
-        var power = currAppVersion.split(".").length;
-        currAppVersion = this.parseVersion(currAppVersion, power);
-        
-        var extensions = ds.getIncompatibleExtensionList(currAppVersion);
-        var updater = new nsExtensionUpdater(extensions, appID, currAppVersion);
-        updater.checkForUpdates(doneUpdatingExtension);
-      }
+        // and do version checking. Time hit here doesn't matter since this 
+        // doesn't happen all that often.
+        this._ensureDS();
+        var currAppID = pref.getCharPref(PREF_EM_APP_ID);
+        var extensions = this._ds.getIncompatibleExtensionList(currAppID, currAppVersion);
 
-      dump("*** profile extensions startup\n");
+        if (extensions.length > 0) {
+          var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher);
+          var ary = Components.classes["@mozilla.org/supports-array;1"]
+                              .createInstance(Components.interfaces.nsISupportsArray);
+          for (var i = 0; i < extensions.length; ++i) {
+            var str = Components.classes["@mozilla.org/supports-string;1"]
+                                .createInstance(Components.interfaces.nsISupportsString);
+            str.data = extensions[i].toSource();
+            ary.AppendElement(str);
+            
+            // Now disable the extension so it won't hurt anything. 
+            this.disableExtension(extensions[i].id);
+          }
+          ww.openWindow(null, "chrome://mozapps/content/extensions/mismatch.xul", 
+                        "", "chrome,centerscreen,modal", ary);
+          // 
+        }
+      }
+      
+      // Now update the last app version so we don't do this checking 
+      // again.
+      // pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
     }
   },
   
-  parseVersion: function (aVersion, aPower)
-  {
-    var parts = aVersion.split(".");
-    var vrsion = 0;
-    if (aPower == 0)
-      aPower = parts.length;
-    
-    for (var i = 0; i < parts.length; ++i) {
-      var token = parts[i];
-      if (token.charAt(token.length-1) == "+") {
-        token = token.substr(0, token.lastIndexOf("+"));
-        version += 1;
-        if (token.length == 0)
-          continue;
-      }
-      
-      version += parseInt(token) * Math.pow(10, aPower - i);
-    }
-    return version;
-  },
-
   // nsIExtensionManager
   installExtensionFromStream: function (aStream, aUseProfile)
   {
@@ -269,11 +356,6 @@ nsExtensionUpdater.prototype = {
 };
 
 
-const PREF_EM_DEFAULTUPDATEURL = "update.url.extensions";
-const PREF_EM_APP_ID = "app.id";
-const PREF_EM_LAST_APP_VERSION = "extensions.lastAppVersion";
-const PREF_EM_APP_VERSION = "general.useragent.vendorSub";
-
 function EM_NS(aProperty)
 {
   return "http://www.mozilla.org/2004/em-rdf#" + aProperty;
@@ -307,10 +389,10 @@ nsExtensionsDataSource.prototype = {
   {
     var extensions = [];
     if (aExtensionID) {
-      extensions.push({ id: aExtensionID, 
-                        version: this.getExtensionProperty(aExtensionID, "version"),
-                        name: this.getExtensionProperty(aExtensionID, "name"), 
-                        row: -1, xpiURL: "" });
+      extensions.push(new Extension(aExtensionID, 
+                                    this.getExtensionProperty(aExtensionID, "version"),
+                                    this.getExtensionProperty(aExtensionID, "name"),
+                                    -1, ""));
     }
     else {
       var ctr = Components.classes["@mozilla.org/rdf/container;1"]
@@ -321,9 +403,33 @@ nsExtensionsDataSource.prototype = {
       while (elements.hasMoreElements()) {
         var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
         var id = this._stripPrefix(e.Value);
-        extensions.push({ id: id, version: this.getExtensionProperty(id, "version"), 
-                          name: this.getExtensionProperty(id, "name"), row: -1, 
-                          xpiURL: "" });
+        extensions.push(new Extension(id, 
+                                      this.getExtensionProperty(id, "version"),
+                                      this.getExtensionProperty(id, "name"),
+                                      -1, ""));
+      }
+    }
+    return extensions;
+  },
+  
+  getIncompatibleExtensionList: function (aAppID, aAppVersion)
+  {
+    var extensions = [];
+    
+    var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                        .createInstance(Components.interfaces.nsIRDFContainer);
+    ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
+    
+    var elements = ctr.GetElements();
+    while (elements.hasMoreElements()) {
+      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var checker = new VersionChecker(e, aAppID, aAppVersion, this);
+      if (!checker.isCompatible) {
+        var id = this._stripPrefix(e.Value);
+        extensions.push(new Extension(id, 
+                                      this.getExtensionProperty(id, "version"),
+                                      this.getExtensionProperty(id, "name"),
+                                      -1, ""));
       }
     }
     return extensions;
@@ -448,13 +554,23 @@ nsExtensionsDataSource.prototype = {
   loadExtensions: function (aProfile)
   {
     var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-    var key = aProfile ? "ProfD" : "ProfD"; // XCurProcDir
+    var key = aProfile ? "ProfD" : "ProfD"; // XXXben - XCurProcDir
     var extensionsFile = fileLocator.get(key, Components.interfaces.nsIFile);
-    extensionsFile.append("Extensions");
+    extensionsFile.append("extensions");
+    var extensionsDir = extensionsFile.clone();
     extensionsFile.append("extensions.rdf");
     
-    if (!extensionsFile.exists())
-      return;
+    if (!extensionsFile.exists()) {
+      // XXXben - Copy over the default file - temporary. 
+      if (key == "ProfD") {
+        var defaultExtensionsFile = fileLocator.get("ProfDefNoLoc", Components.interfaces.nsIFile);
+        defaultExtensionsFile.append("extensions");
+        defaultExtensionsFile.append("extensions.rdf");
+        defaultExtensionsFile.copyTo(extensionsDir, "extensions.rdf");
+      }
+      else
+        return;
+    }
 
     var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
                            .getService(Components.interfaces.nsIIOService);
