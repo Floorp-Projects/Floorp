@@ -429,7 +429,11 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistant, nsIFile **_ret
 
 	// check to see if it is one of our defaults
         
-    if (strncmp(prop, "xpcom.currentProcess.componentRegistry", 38) == 0)
+    if (strncmp(prop, "xpcom.currentProcess", 38) == 0)
+    {
+        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
+    }
+    else if (strncmp(prop, "xpcom.currentProcess.componentRegistry", 38) == 0)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
         if (NS_FAILED(rv)) return rv;
