@@ -233,7 +233,7 @@ sub GenerateEmailInput {
 <tr><td>
 <table cellspacing=0 cellpadding=0>
 <tr>
-<td rowspan=2 valign=top><a href="helpemailquery.html">Email:</a>
+<td rowspan=2 valign=top><a href="queryhelp.cgi#peopleinvolved">Email:</a>
 <input name="email$id" size="30" value="$defstr">&nbsp;matching as
 } . BuildPulldown("emailtype$id",
                   [["regexp", "regexp"],
@@ -538,17 +538,19 @@ push @::legal_resolution, "---"; # Oy, what a hack.
 
 my @logfields = ("[Bug creation]", @::log_columns);
 
+print"<P>Give me a <A HREF=\"queryhelp.cgi\">clue</A> about how to use this form.<P>";
+
 print qq{
 <FORM METHOD=GET ACTION="buglist.cgi">
 
 <table>
 <tr>
-<th align=left><A HREF="bug_status.html">Status</a>:</th>
-<th align=left><A HREF="bug_status.html">Resolution</a>:</th>
-<th align=left><A HREF="bug_status.html#rep_platform">Platform</a>:</th>
-<th align=left><A HREF="bug_status.html#op_sys">OpSys</a>:</th>
-<th align=left><A HREF="bug_status.html#priority">Priority</a>:</th>
-<th align=left><A HREF="bug_status.html#severity">Severity</a>:</th>
+<th align=left><A HREF="queryhelp.cgi#status">Status</a>:</th>
+<th align=left><A HREF="queryhelp.cgi#resolution">Resolution</a>:</th>
+<th align=left><A HREF="queryhelp.cgi#platform">Platform</a>:</th>
+<th align=left><A HREF="queryhelp.cgi#opsys">OpSys</a>:</th>
+<th align=left><A HREF="queryhelp.cgi#priority">Priority</a>:</th>
+<th align=left><A HREF="queryhelp.cgi#severity">Severity</a>:</th>
 };
 
 print "
@@ -846,7 +848,7 @@ for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <INPUT TYPE="submit" VALUE="Add another boolean chart" NAME="cmd-add$n-0-0" $jsmagic>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<NOBR><A HREF="booleanchart.html">What is this stuff?</A></NOBR>
+<NOBR><A HREF="queryhelp.cgi#advancedquerying">What is this stuff?</A></NOBR>
 };
     }
     print qq{
@@ -935,26 +937,29 @@ if ($userdefaultquery) {
 
 print "
 </FORM>
-<P>Give me a <A HREF=\"help.html\">clue</A> about how to use this form.
-<P>
 ";
 
+###
+### I really hate this redudancy, but if somebody for some inexplicable reason doesn't like using
+### the footer for these links, they can uncomment this section. 
+###
 
-if (UserInGroup("tweakparams")) {
-    print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
-}
-if (UserInGroup("editcomponents")) {
-    print "<a href=editproducts.cgi>Edit Bugzilla products and components</a><br>\n";
-}
-if (UserInGroup("editkeywords")) {
-    print "<a href=editkeywords.cgi>Edit Bugzilla keywords</a><br>\n";
-}
-if ($userid) {
-    print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
-}
-print "<a href=userprefs.cgi>Change your password or preferences.</a><br>\n";
-print "<a href=\"enter_bug.cgi\">Report a new bug.</a><br>\n";
-print "<a href=\"createaccount.cgi\">Open a new Bugzilla account</a><br>\n";
-print "<a href=\"reports.cgi\">Bug reports</a><br>\n";
+# if (UserInGroup("tweakparams")) {
+#     print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
+# }
+# if (UserInGroup("editcomponents")) {
+#     print "<a href=editproducts.cgi>Edit Bugzilla products and components</a><br>\n";
+# }
+# if (UserInGroup("editkeywords")) {
+#     print "<a href=editkeywords.cgi>Edit Bugzilla keywords</a><br>\n";
+# }
+# if ($userid) {
+#     print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
+# }
+# print "<a href=userprefs.cgi>Change your password or preferences.</a><br>\n";
+# print "<a href=\"enter_bug.cgi\">Report a new bug.</a><br>\n";
+# print "<a href=\"createaccount.cgi\">Open a new Bugzilla account</a><br>\n";
+# print "<a href=\"reports.cgi\">Bug reports</a><br>\n";
+
 
 PutFooter();
