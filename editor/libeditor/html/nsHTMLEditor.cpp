@@ -42,7 +42,10 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
+
 #include "nsIFrameSelection.h"  // For TABLESELECTION_ defines
+#include "nsIIndependentSelection.h" //domselections answer to frameselection
+
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
@@ -104,10 +107,12 @@ const PRUnichar nbsp = 160;
 { 0xa6cf9107, 0x15b3, 0x11d2, { 0x93, 0x2e, 0x0, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
 static NS_DEFINE_CID(kCNavDTDCID,    NS_CNAVDTD_CID);
 
+
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
+static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
 static NS_DEFINE_IID(kFileWidgetCID,  NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -4961,6 +4966,77 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
     aOutputString = *(ruleInfo.outString);
   }
   else
+  {
+    nsCOMPtr<nsIDOMRange> range;
+    nsresult res = nsComponentManager::CreateInstance(kCRangeCID,
+                               nsnull,
+                               NS_GET_IID(nsIDOMRange),
+                               getter_AddRefs(range));
+    NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMSelection> selection;
+    res = nsComponentManager::CreateInstance(kCDOMSelectionCID,
+                               nsnull,
+                               NS_GET_IID(nsIDOMSelection),
+                               getter_AddRefs(selection));
+    if (selection)
+    {
+//get the independent selection interface
+      nsCOMPtr<nsIIndependentSelection> indSel = do_QueryInterface(selection);
+      if (indSel)
+      {
+        nsCOMPtr<nsIPresShell> presShell;
+        if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
+          indSel->SetPresShell(presShell);
+      }
+      nsCOMPtr<nsIDOMElement> rootElement;
+      GetRootElement(getter_AddRefs(rootElement));
+      NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
+      nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
+      if (content)
+      {
+        range->SetStart(rootElement,0);
+        PRInt32 children;
+        if (NS_SUCCEEDED(content->ChildCount(children)))
+        {
+          range->SetEnd(rootElement,children);
+        }
+        if (NS_SUCCEEDED(selection->AddRange(range)))
+        {
+          // Set the wrap column.  If our wrap column is 0,
+          // i.e. wrap to body width, then don't set it, let the
+          // document encoder use its own default.
+          PRInt32 wrapColumn;
+          PRUint32 wc =0;
+          if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
+          {
+            if (wrapColumn != 0)
+            {
+              if (wrapColumn < 0)
+                wc = 0;
+              else
+                wc = (PRUint32)wrapColumn;
+            }
+          }
+          return selection->ToString(aFormatType, aFlags, wc, aOutputString);
+        }
+      }
+    }
+  }
+
+#if 0
+
+  PRBool cancel, handled;
+  nsString resultString;
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
+  ruleInfo.outString = &resultString;
+  ruleInfo.outputFormat = &aFormatType;
+  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel, &handled);
+  if (cancel || NS_FAILED(rv)) { return rv; }
+  if (handled)
+  { // this case will get triggered by password fields
+    aOutputString = *(ruleInfo.outString);
+  }
+  else
   { // default processing
     rv = NS_OK;
     
@@ -4979,6 +5055,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
       else if (mFlags & eEditorPlaintextMask)
         aFlags |= nsIDocumentEncoder::OutputPreformatted;
     }
+
 
     nsCOMPtr<nsIDocumentEncoder> encoder;
     char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
@@ -5036,6 +5113,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
 
     rv = encoder->EncodeToString(aOutputString);
   }
+#endif
   return rv;
 }
 
