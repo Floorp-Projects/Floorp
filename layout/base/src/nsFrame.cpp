@@ -727,19 +727,24 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
   } else { // Content is After End
 
     if (mouseEvent->isShift) {
-      if (mStartSelectionPoint->IsAnchor()) {
+      if (selStartContent == nsnull && selEndContent == nsnull) {
+        // Shift Click without first clicking in the window
+        // is interpreted the same as just clicking in a window
+        mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+        mStartSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+        addRangeToSelectionTrackers(newContent, newContent, kInsertInAddList); // add to selection
+
+      } else if (mStartSelectionPoint->IsAnchor()) {
         if (SELECTION_DEBUG) printf("New Content is after,  Append new content\n");
         addRangeToSelectionTrackers(selEndContent, newContent,  kInsertInAddList); // add to selection
         mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
+
       } else {
         if (SELECTION_DEBUG) printf("New Content is after,  End will now be Start\n");
         
         addRangeToSelectionTrackers(selStartContent, selEndContent, kInsertInRemoveList); // removed from selection
-
         mStartSelectionPoint->SetPoint(selEndContent, mEndSelectionPoint->GetOffset(), PR_TRUE);
-
         mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
-
         addRangeToSelectionTrackers(newContent, newContent,  kInsertInAddList); // add to selection
       }
 
