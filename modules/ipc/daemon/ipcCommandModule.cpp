@@ -46,193 +46,198 @@
 #include "ipcd.h"
 #include "ipcm.h"
 
-typedef void (* ipcmMsgHandler)(ipcClient *, const ipcMessage *);
-
-//
-// helpers
-//
-
-static char **
-ipcm_BuildStringArray(const ipcStringNode *nodes)
+struct ipcCommandModule
 {
-    size_t count = 0;
+    typedef void (* MsgHandler)(ipcClient *, const ipcMessage *);
 
-    const ipcStringNode *node;
-    
-    for (node = nodes; node; node = node->mNext)
-        count++;
+    //
+    // helpers
+    //
 
-    char **strs = (char **) calloc(count + 1, sizeof(char *));
-    if (!strs)
-        return NULL;
+    static char **
+    BuildStringArray(const ipcStringNode *nodes)
+    {
+        size_t count = 0;
 
-    count = 0;
-    for (node = nodes; node; node = node->mNext, ++count)
-        strs[count] = (char *) node->Value();
+        const ipcStringNode *node;
+        
+        for (node = nodes; node; node = node->mNext)
+            count++;
 
-    return strs;
-}
+        char **strs = (char **) calloc(count + 1, sizeof(char *));
+        if (!strs)
+            return NULL;
 
-static nsID **
-ipcm_BuildIDArray(const ipcIDNode *nodes)
-{
-    size_t count = 0;
+        count = 0;
+        for (node = nodes; node; node = node->mNext, ++count)
+            strs[count] = (char *) node->Value();
 
-    const ipcIDNode *node;
-    
-    for (node = nodes; node; node = node->mNext)
-        count++;
-
-    nsID **ids = (nsID **) calloc(count + 1, sizeof(nsID *));
-    if (!ids)
-        return NULL;
-
-    count = 0;
-    for (node = nodes; node; node = node->mNext, ++count)
-        ids[count] = (nsID *) &node->Value();
-
-    return ids;
-}
-
-//
-// message handlers
-//
-
-static void
-ipcm_OnPing(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got PING\n"));
-
-    IPC_SendMsg(client, new ipcmMessagePing());
-}
-
-static void
-ipcm_OnClientHello(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got CLIENT_HELLO\n"));
-
-    ipcMessageCast<ipcmMessageClientHello> msg(rawMsg);
-    const char *name = msg->PrimaryName();
-    if (name)
-        client->AddName(name);
-
-    IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
-}
-
-static void
-ipcm_OnClientAddName(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got CLIENT_ADD_NAME\n"));
-
-    ipcMessageCast<ipcmMessageClientAddName> msg(rawMsg);
-    const char *name = msg->Name();
-    if (name)
-        client->AddName(name);
-}
-
-static void
-ipcm_OnClientDelName(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got CLIENT_DEL_NAME\n"));
-
-    ipcMessageCast<ipcmMessageClientDelName> msg(rawMsg);
-    const char *name = msg->Name();
-    if (name)
-        client->DelName(name);
-}
-
-static void
-ipcm_OnClientAddTarget(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got CLIENT_ADD_TARGET\n"));
-
-    ipcMessageCast<ipcmMessageClientAddTarget> msg(rawMsg);
-    client->AddTarget(msg->Target());
-}
-
-static void
-ipcm_OnClientDelTarget(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got CLIENT_DEL_TARGET\n"));
-
-    ipcMessageCast<ipcmMessageClientDelTarget> msg(rawMsg);
-    client->DelTarget(msg->Target());
-}
-
-static void
-ipcm_OnQueryClientByName(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got QUERY_CLIENT_BY_NAME\n"));
-
-    ipcMessageCast<ipcmMessageQueryClientByName> msg(rawMsg);
-    ipcClient *result = IPC_GetClientByName(msg->Name());
-    if (result) {
-        LOG(("  client exists w/ ID = %u\n", result->ID()));
-        IPC_SendMsg(client, new ipcmMessageClientID(result->ID()));
+        return strs;
     }
-    else {
-        LOG(("  client does not exist\n"));
-        IPC_SendMsg(client, new ipcmMessageError(IPCM_ERROR_CLIENT_NOT_FOUND));
+
+    static nsID **
+    BuildIDArray(const ipcIDNode *nodes)
+    {
+        size_t count = 0;
+
+        const ipcIDNode *node;
+        
+        for (node = nodes; node; node = node->mNext)
+            count++;
+
+        nsID **ids = (nsID **) calloc(count + 1, sizeof(nsID *));
+        if (!ids)
+            return NULL;
+
+        count = 0;
+        for (node = nodes; node; node = node->mNext, ++count)
+            ids[count] = (nsID *) &node->Value();
+
+        return ids;
     }
-}
 
-static void
-ipcm_OnQueryClientInfo(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got QUERY_CLIENT_INFO\n"));
+    //
+    // message handlers
+    //
 
-    ipcMessageCast<ipcmMessageQueryClientInfo> msg(rawMsg);
-    ipcClient *result = IPC_GetClientByID(msg->ClientID());
-    if (result) {
-        char **names = ipcm_BuildStringArray(result->Names());
-        nsID **targets = ipcm_BuildIDArray(result->Targets());
-        IPC_SendMsg(client, new ipcmMessageClientInfo(result->ID(),
-                                                      (const char **) names,
-                                                      (const nsID **)targets));
-        free(names);
-        free(targets);
+    static void
+    OnPing(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got PING\n"));
+
+        IPC_SendMsg(client, new ipcmMessagePing());
     }
-    else {
-        LOG(("  client does not exist\n"));
-        IPC_SendMsg(client, new ipcmMessageError(IPCM_ERROR_CLIENT_NOT_FOUND));
+
+    static void
+    OnClientHello(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_HELLO\n"));
+
+        ipcMessageCast<ipcmMessageClientHello> msg(rawMsg);
+        const char *name = msg->PrimaryName();
+        if (name)
+            client->AddName(name);
+
+        IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
     }
-}
 
-static void
-ipcm_OnForward(ipcClient *client, const ipcMessage *rawMsg)
-{
-    LOG(("got FORWARD\n"));
+    static void
+    OnClientAddName(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_ADD_NAME\n"));
 
-    ipcMessageCast<ipcmMessageForward> msg(rawMsg);
-
-    ipcClient *dest = IPC_GetClientByID(msg->DestClientID());
-    if (!dest) {
-        LOG(("  destination client not found!\n"));
-        return;
+        ipcMessageCast<ipcmMessageClientAddName> msg(rawMsg);
+        const char *name = msg->Name();
+        if (name)
+            client->AddName(name);
     }
-    ipcMessage *newMsg = new ipcMessage(msg->InnerTarget(),
-                                        msg->InnerData(),
-                                        msg->InnerDataLen());
-    IPC_SendMsg(dest, newMsg);
-}
+
+    static void
+    OnClientDelName(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_DEL_NAME\n"));
+
+        ipcMessageCast<ipcmMessageClientDelName> msg(rawMsg);
+        const char *name = msg->Name();
+        if (name)
+            client->DelName(name);
+    }
+
+    static void
+    OnClientAddTarget(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_ADD_TARGET\n"));
+
+        ipcMessageCast<ipcmMessageClientAddTarget> msg(rawMsg);
+        client->AddTarget(msg->Target());
+    }
+
+    static void
+    OnClientDelTarget(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_DEL_TARGET\n"));
+
+        ipcMessageCast<ipcmMessageClientDelTarget> msg(rawMsg);
+        client->DelTarget(msg->Target());
+    }
+
+    static void
+    OnQueryClientByName(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got QUERY_CLIENT_BY_NAME\n"));
+
+        ipcMessageCast<ipcmMessageQueryClientByName> msg(rawMsg);
+        ipcClient *result = IPC_GetClientByName(msg->Name());
+        if (result) {
+            LOG(("  client exists w/ ID = %u\n", result->ID()));
+            IPC_SendMsg(client, new ipcmMessageClientID(result->ID()));
+        }
+        else {
+            LOG(("  client does not exist\n"));
+            IPC_SendMsg(client, new ipcmMessageError(IPCM_ERROR_CLIENT_NOT_FOUND));
+        }
+    }
+
+    static void
+    OnQueryClientInfo(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got QUERY_CLIENT_INFO\n"));
+
+        ipcMessageCast<ipcmMessageQueryClientInfo> msg(rawMsg);
+        ipcClient *result = IPC_GetClientByID(msg->ClientID());
+        if (result) {
+            char **names = BuildStringArray(result->Names());
+            nsID **targets = BuildIDArray(result->Targets());
+
+            IPC_SendMsg(client, new ipcmMessageClientInfo(result->ID(),
+                                                          (const char **) names,
+                                                          (const nsID **) targets));
+
+            free(names);
+            free(targets);
+        }
+        else {
+            LOG(("  client does not exist\n"));
+            IPC_SendMsg(client, new ipcmMessageError(IPCM_ERROR_CLIENT_NOT_FOUND));
+        }
+    }
+
+    static void
+    OnForward(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got FORWARD\n"));
+
+        ipcMessageCast<ipcmMessageForward> msg(rawMsg);
+
+        ipcClient *dest = IPC_GetClientByID(msg->DestClientID());
+        if (!dest) {
+            LOG(("  destination client not found!\n"));
+            return;
+        }
+        ipcMessage *newMsg = new ipcMessage(msg->InnerTarget(),
+                                            msg->InnerData(),
+                                            msg->InnerDataLen());
+        IPC_SendMsg(dest, newMsg);
+    }
+};
 
 void
 IPCM_HandleMsg(ipcClient *client, const ipcMessage *rawMsg)
 {
-    static ipcmMsgHandler handlers[] =
+    static ipcCommandModule::MsgHandler handlers[] =
     {
-        ipcm_OnPing,
+        ipcCommandModule::OnPing,
         NULL, // ERROR
-        ipcm_OnClientHello,
+        ipcCommandModule::OnClientHello,
         NULL, // CLIENT_ID
         NULL, // CLIENT_INFO
-        ipcm_OnClientAddName,
-        ipcm_OnClientDelName,
-        ipcm_OnClientAddTarget,
-        ipcm_OnClientDelTarget,
-        ipcm_OnQueryClientByName,
-        ipcm_OnQueryClientInfo,
-        ipcm_OnForward,
+        ipcCommandModule::OnClientAddName,
+        ipcCommandModule::OnClientDelName,
+        ipcCommandModule::OnClientAddTarget,
+        ipcCommandModule::OnClientDelTarget,
+        ipcCommandModule::OnQueryClientByName,
+        ipcCommandModule::OnQueryClientInfo,
+        ipcCommandModule::OnForward,
     };
 
     int type = IPCM_GetMsgType(rawMsg);
@@ -240,7 +245,7 @@ IPCM_HandleMsg(ipcClient *client, const ipcMessage *rawMsg)
 
     if (type < IPCM_MSG_TYPE_UNKNOWN) {
         if (handlers[type]) {
-            ipcmMsgHandler handler = handlers[type];
+            ipcCommandModule::MsgHandler handler = handlers[type];
             handler(client, rawMsg);
         }
     }
