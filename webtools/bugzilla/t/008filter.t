@@ -203,7 +203,8 @@ sub directive_ok {
     # filtered, we may not catch that case.
     return 1 if $directive =~ /FILTER\ (html|csv|js|url_quote|css_class_quote|
                                         ics|quoteUrls|time|uri|xml|lower|
-                                        unitconvert|none)/x;
+                                        obsolete|inactive|closed|unitconvert|
+                                        none)/x;
 
     return 0;
 }
