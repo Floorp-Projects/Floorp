@@ -35,8 +35,8 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.19 $
-# $Date: 2004/01/07 01:47:09 $
+# $Revision: 1.20 $
+# $Date: 2004/01/07 02:20:24 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -363,6 +363,13 @@ sub daemonize {
 
     print "$PROGRAM pid: $$\n";
 
+    # Stevens did not mention this but it is now fashionable to close
+    # the standard file discriptors.
+
+    close (STDIN) || die ("Could not close STDIN. $!\n");
+    close (STDOUT) || die ("Could not close STDOUT. $!\n");
+    close (STDERR) || die ("Could not close STDERR. $!\n");
+    
     return ;
 }
 
