@@ -171,27 +171,19 @@ XBLBindings.prototype =
   populateBindings: function()
   {
     var urls = this.mDOMUtils.getBindingURLs(this.mSubject);
+    var menulist = document.getElementById("mlBindings");
 
-    var popup = document.getElementById("mpBindings");
-    this.clearChildren(popup);
+    menulist.removeAllItems();
 
     var urlCount = urls.length;
     var i;
 
     for (i = 0; i < urlCount; ++i) {
       var url = urls.queryElementAt(i, Components.interfaces.nsIURI).spec;
-      var menu = document.createElement("menuitem");
-      menu.setAttribute("value", url);
-      menu.setAttribute("label", url);
-      popup.appendChild(menu);
+      menulist.appendItem(url, url);
     }
     
-    var menulist = document.getElementById("mlBindings");
-    menulist.label = "";
-    if (!popup.childNodes.length)
-      menulist.value = "";
-    else
-      menulist.value = popup.childNodes[0].getAttribute("value");
+    menulist.selectedIndex = 0;
   },
   
   displayBinding: function(aURL)
