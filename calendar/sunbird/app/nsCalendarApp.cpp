@@ -41,14 +41,22 @@
 #include <windows.h>
 #endif
 
+char *temparg[20];
 int main(int argc, char* argv[])
 {
   nsXREAppData appData;
+  temparg[0] = argv[0];
+  temparg[1] = "-calendar";
+  int i;
+  for( i=1; i<argc; i++ ) {
+     temparg[i+1]=argv[i];
+  }
+  temparg[i+1]=nsnull;
   appData.SetSplashEnabled(PR_FALSE);
   appData.SetProductName(NS_LITERAL_CSTRING("Sunbird"));
   appData.SetUseStartupPrefs(PR_FALSE);
 
-  return xre_main(argc, argv, appData);
+  return xre_main(argc+1, temparg, appData);
 }
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)

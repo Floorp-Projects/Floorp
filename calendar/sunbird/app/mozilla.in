@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.2 2004/01/14 15:25:56 mostafah%oeone.com Exp $
+## $Id: mozilla.in,v 1.3 2004/02/11 15:11:51 mostafah%oeone.com Exp $
 ## 
 ## Usage:
 ##
@@ -112,4 +112,4 @@ if [ $debugging = 1 ]
 then
   echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
 fi
-exec "$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@" -calendar
+exec "$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
