@@ -116,7 +116,7 @@ nsresult nsMimeEmitterFactory::CreateInstance(nsISupports *aOuter,
 
 	*aResult = NULL;  
   
-	nsISupports *inst = nsnull;
+	//nsISupports *inst = nsnull;
 
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!

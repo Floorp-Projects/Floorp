@@ -933,7 +933,8 @@ NS_IMETHODIMP nsAddrDBEnumerator::CurrentItem(nsISupports **aItem)
     if (mCurrentRow) 
 	{
 		nsCOMPtr<nsIAbCard> temp = mResultCard;
-        nsresult rv = mDB->CreateABCard(mCurrentRow, getter_AddRefs(mResultCard));
+        nsresult rv;
+        rv = mDB->CreateABCard(mCurrentRow, getter_AddRefs(mResultCard));
         *aItem = mResultCard;
         return NS_OK;
     }
