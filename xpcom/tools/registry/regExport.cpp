@@ -18,9 +18,11 @@
 
 #include <stdio.h>
 
+#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsIRegistry.h"
+#include "nsXPComCIID.h"
 #include "nsIEnumerator.h"
-#include "nsIFactory.h"
 #include "prmem.h"
 #include "plstr.h"
 
@@ -47,46 +49,59 @@ int main( int argc, char *argv[] ) {
 	argv = const_cast<char**>(myArgs);
 #endif
 
-    // Get nsRegistry factory.
-    nsCID cid = NS_IREGISTRY_IID; // Not really an IID, but this factory stuff is a hack anyway.
-    nsIFactory *factory;
-    nsresult rv = NS_RegistryGetFactory( cid, 0, &factory );
+    nsresult rv;
+
+    // Initialize XPCOM
+    nsIServiceManager *servMgr = NULL;
+    rv = NS_InitXPCOM(&servMgr);
+    if (NS_FAILED(rv))
+    {
+        // Cannot initialize XPCOM
+        printf("Cannot initialize XPCOM. Exit. [rv=0x%08X]\n", (int)rv);
+        exit(-1);
+    }
+
+    // Get the component manager
+    nsIComponentManager *compMgr = NULL;
+    static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+    static NS_DEFINE_IID(kComponentManagerIID, NS_ICOMPONENTMANAGER_IID);
+    rv = servMgr->GetService(kComponentManagerCID, kComponentManagerIID, (nsISupports **)&compMgr);
+    if (NS_FAILED(rv))
+    {
+        // Cant get component manager
+        printf("Cannot get component manager from service manager.. Exit. [rv=0x%08X]\n", (int)rv);
+        exit(-1);
+    }
+
+    // Create the registry
+    nsIRegistry *reg;
+    static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
+    static NS_DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID);
+    rv = compMgr->CreateInstance(kRegistryCID, NULL, kRegistryIID, (void **) &reg);
 
     // Check result.
     if ( rv == NS_OK ) {
-        // Create registry implementation object.
-        nsIID regIID = NS_IREGISTRY_IID;
-        nsIRegistry *reg;
-        rv = factory->CreateInstance( 0, regIID, (void**)&reg );
-
-        // Check result.
+        // Latch onto the registry object.
+        reg->AddRef();
+      
+        // Open it against the input file name.
+        rv = reg->Open( argv[1] );
+        
         if ( rv == NS_OK ) {
-            // Latch onto the registry object.
-            reg->AddRef();
-
-            // Open it against the input file name.
-            rv = reg->Open( argv[1] );
-        
-            if ( rv == NS_OK ) {
-                printf( "Registry %s opened OK.\n", argv[1] ? argv[1] : "<default>" );
-        
-                // Recurse over all 3 branches.
-                display( reg, nsIRegistry::Common, "nsRegistry::Common" );
-                display( reg, nsIRegistry::Users, "nsRegistry::Users" );
-                display( reg, nsIRegistry::Common, "nsRegistry::CurrentUser" );
-        
-            } else {
-                printf( "Error opening registry file %s, rv=0x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
-            }
-            // Release the registry.
-            reg->Release();
+            printf( "Registry %s opened OK.\n", argv[1] ? argv[1] : "<default>" );
+            
+            // Recurse over all 3 branches.
+            display( reg, nsIRegistry::Common, "nsRegistry::Common" );
+            display( reg, nsIRegistry::Users, "nsRegistry::Users" );
+            display( reg, nsIRegistry::Common, "nsRegistry::CurrentUser" );
+            
         } else {
-            printf( "Error creating nsRegistry object, rv=0x%08X\n", (int)rv );
+            printf( "Error opening registry file %s, rv=0x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
         }
-        // Release the factory.
-        factory->Release();
+        // Release the registry.
+        reg->Release();
     } else {
-        printf( "Error creating nsRegistry factory, rv=0x%08X\n", (int)rv );
+        printf( "Error creating nsRegistry object, rv=0x%08X\n", (int)rv );
     }
 
     return rv;
