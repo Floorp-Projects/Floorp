@@ -641,7 +641,10 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
       // Extension lookup gave us no useful match
       GetFromTypeAndExtension(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM), fileExtension,
                               getter_AddRefs(mimeInfo));
+      mimeType.AssignLiteral(APPLICATION_OCTET_STREAM);
     }
+    if (channel)
+      channel->SetContentType(mimeType);
   } 
   else {
     GetFromTypeAndExtension(aMimeContentType, fileExtension,
