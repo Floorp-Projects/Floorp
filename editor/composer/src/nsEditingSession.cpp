@@ -146,6 +146,9 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   mEditorType.Truncate();
   mEditorFlags = 0;
 
+  // Always remove existing editor
+  TearDownEditorOnWindow(aWindow);
+  
   // Tells embedder that startup is in progress
   mEditorStatus = eEditorCreationInProgress;
 
@@ -174,7 +177,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
                                     &mBaseCommandControllerId);
   if (NS_FAILED(rv)) return rv;
 
-  // the second is an controller to monitor doc state,
+  // The second is a controller to monitor doc state,
   // such as creation and "dirty flag"
   rv = SetupEditorCommandController("@mozilla.org/editor/editordocstatecontroller;1",
                                     aWindow,
@@ -452,13 +455,15 @@ NS_IMETHODIMP
 nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
   nsresult rv;
-  
+
   if (mStateMaintainer)
   {
     nsCOMPtr<nsIEditor> editor;
     rv = GetEditorForWindow(aWindow, getter_AddRefs(editor));
     if (editor)
     {
+      // If we had an editor -- we are loading a new URL into existing window
+
       // Remove all the listeners
       nsCOMPtr<nsISelection>	selection;
       editor->GetSelection(getter_AddRefs(selection));	
@@ -488,8 +493,16 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
       rv = SetEditorOnControllers(aWindow, nsnull);
       if (NS_FAILED(rv)) return rv;  
     }
+    else
+    {
+      // No editor: we have a new window and previous controllers
+      //   were destroyed with the contentWindow.
+      //   Clear IDs to trigger creation of new controllers
+      mBaseCommandControllerId = 0;
+      mDocStateControllerId = 0;
+      mHTMLCommandControllerId = 0;
+    }
   }
-  
   nsCOMPtr<nsIEditorDocShell> editorDocShell;
   rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
   if (NS_FAILED(rv)) return rv;  

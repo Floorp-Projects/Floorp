@@ -51,13 +51,22 @@ nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* inOwningDocShell)
 ----------------------------------------------------------------------------*/
 nsDocShellEditorData::~nsDocShellEditorData()
 {
-  if (mEditor)
+  // Get editing session on the root docShell
+  nsCOMPtr <nsIEditingSession> editingSession;
+  nsresult rv = GetOrCreateEditingSession(getter_AddRefs(editingSession), PR_FALSE);
+
+  if (editingSession)
+  {
+    nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(mDocShell);
+    // This will eventually call nsDocShellEditorData::SetEditor(nsnull)
+    //   which will call mEditorPreDestroy() and delete the editor
+    editingSession->TearDownEditorOnWindow(domWindow);
+  }
+  else if (mEditor) // Should never have this w/o nsEditingSession!
   {
     mEditor->PreDestroy();
     mEditor = nsnull;     // explicit clear to make destruction order predictable
   }
-  
-  mEditingSession = nsnull;
 }
 
 
@@ -127,7 +136,7 @@ nsresult
 nsDocShellEditorData::GetEditingSession(nsIEditingSession **outEditingSession)
 {
   NS_ENSURE_ARG_POINTER(outEditingSession);
-  return GetOrCreateEditingSession(outEditingSession);
+  return GetOrCreateEditingSession(outEditingSession, PR_TRUE);
 }
 
 
@@ -180,7 +189,7 @@ nsDocShellEditorData::SetEditor(nsIEditor *inEditor)
 
 ----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::GetOrCreateEditingSession(nsIEditingSession **outEditingSession)
+nsDocShellEditorData::GetOrCreateEditingSession(nsIEditingSession **outEditingSession, PRBool inAllowCreation)
 {
   NS_ENSURE_ARG_POINTER(outEditingSession);
   *outEditingSession = nsnull;
@@ -203,6 +212,10 @@ nsDocShellEditorData::GetOrCreateEditingSession(nsIEditingSession **outEditingSe
     // if necessary.
     if (!mEditingSession)
     {
+      // Caller doesn't want a new EditingSession if it doesn't already exist
+      if (!inAllowCreation)
+        return NS_OK;
+
       mEditingSession = do_CreateInstance("@mozilla.org/editor/editingsession;1", &rv);
       if (NS_FAILED(rv)) return rv;
 
