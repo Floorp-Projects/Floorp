@@ -48,6 +48,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIPref.h"
+#include "nsRepeater.h"
 #include "macstdlibextras.h"
 #include "SIOUX.h"
 
@@ -280,26 +281,27 @@ CBrowserApp::ProcessNextEvent()
 	Boolean	gotEvent = ::WaitNextEvent(everyEvent, &macEvent, mSleepTime,
 										mMouseRgn);
 
-#if DEBUG
-    // NOTE: SIOUX doesn't get any nullEvents because it rudely sets the
-    // cursor on nullEvents - even if the mouse is not over its window
-		if (gotEvent && SIOUXHandleOneEvent(&macEvent))
-			return;
-#endif
-	
 		// Let Attachments process the event. Continue with normal
 		// event dispatching unless suppressed by an Attachment.
 	
 	if (LAttachable::ExecuteAttachments(msg_Event, &macEvent)) {
 		if (gotEvent) {
+#if DEBUG
+         if (!SIOUXHandleOneEvent(&macEvent))
+#endif
 			DispatchEvent(macEvent);
 		} else {
 			UseIdleTime(macEvent);
+			
+  		   Repeater::DoIdlers(macEvent);
+         // yield to other threads
+         ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 		}
 	}
 
 									// Repeaters get time after every event
 	LPeriodical::DevoteTimeToRepeaters(macEvent);
+	Repeater::DoRepeaters(macEvent);
 	
 									// Update status of menu items
 	if (IsOnDuty() && GetUpdateCommandStatus()) {
