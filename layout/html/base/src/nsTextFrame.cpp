@@ -1819,7 +1819,7 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
   nsCOMPtr<nsIDOMNode> thisNode;
   thisNode = do_QueryInterface(content);
 
-  PRBool found = PR_FALSE;
+  PRBool found = PR_TRUE;
   if (thisNode == startNode){
     if ((mContentOffset + mContentLength) >= startOffset){
       found = PR_TRUE;
@@ -1838,6 +1838,8 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
     if (thisNode == endNode){
       if (mContentOffset < endOffset)
         found = PR_TRUE;
+      else
+        found = PR_FALSE;
     }
   if (found){ //if range contains this frame...
 /*    nsRect frameRect;
