@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -61,14 +60,11 @@ nsChromeUIDataSource::nsChromeUIDataSource(nsIRDFDataSource* aComposite)
                                     (nsISupports**)&mRDFService);
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
 
-  mRDFService->RegisterDataSource(this, PR_FALSE);
+  mRDFService->RegisterDataSource(this, PR_TRUE);
 }
 
 nsChromeUIDataSource::~nsChromeUIDataSource()
 {
-  if (mComposite)
-    mComposite->RemoveObserver(this);
-
   mRDFService->UnregisterDataSource(this);
 
   if (mRDFService) {
@@ -91,13 +87,10 @@ nsChromeUIDataSource::Release()
 
   // delete if the last reference is our strong circular reference
   if (mComposite && PRInt32(mRefCnt) == 1) {
-    ++mRefCnt;
-    nsCOMPtr<nsIRDFDataSource> composite = mComposite;
-    mComposite = 0; // release
-    composite->RemoveObserver(this);
-    --mRefCnt;
+    mComposite->RemoveObserver(this);
+    return 0;
   }
-  if (mRefCnt == 0) {
+  else if (mRefCnt == 0) {
     delete this;
     return 0;
   }
@@ -442,10 +435,9 @@ NS_NewChromeUIDataSource(nsIRDFDataSource* aComposite, nsIRDFDataSource** aResul
   if (! aResult)
       return NS_ERROR_NULL_POINTER;
 
-  // No addrefs. The composite addrefs us already.
   nsChromeUIDataSource* ChromeUIDataSource = new nsChromeUIDataSource(aComposite);
   if (ChromeUIDataSource == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
-  *aResult = ChromeUIDataSource;
+  NS_ADDREF(*aResult = ChromeUIDataSource);
   return NS_OK;
 }
