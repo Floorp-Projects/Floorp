@@ -852,25 +852,24 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
                                    NS_ConvertASCIItoUCS2(mStreamName).get());
         }
 
+        // see http://bugzilla.mozilla.org/show_bug.cgi?id=139556#c64
+        // for the reason behind this evil reference counting.
+        nsISupports* doomed = mContext.get();
+        NS_IF_ADDREF(doomed);
+        mContext = 0;
         if (mListener) {
-            mListener->OnStopRequest(this, mContext, mStatus);
+            nsCOMPtr<nsIStreamListener> listener  = do_QueryInterface(mListener);
             mListener = 0;
+            listener->OnStopRequest(this, doomed, mStatus);
         }
 
         // if we have a context, we have to ensure that it is released on the 
         // proper thread.
-        if (mContext) {
-            if (mEventQ) {
-                // see http://bugzilla.mozilla.org/show_bug.cgi?id=139556#c64
-                // for the reason behind this evil reference counting.
-                nsISupports* doomed = mContext.get();
-                NS_ADDREF(doomed);
-                mContext = 0;
+        if (doomed) {
+            if (mEventQ) 
                 NS_ProxyRelease(mEventQ, doomed);
-            }
-            else {
-                mContext = nsnull;
-            }
+            else
+                NS_IF_RELEASE(doomed);
         }
         break;
       }
@@ -1039,25 +1038,24 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
                                    NS_NET_STATUS_WROTE_TO, 
                                    NS_ConvertASCIItoUCS2(mStreamName).get());
 
+        // see http://bugzilla.mozilla.org/show_bug.cgi?id=139556#c64
+        // for the reason behind this evil reference counting.
+        nsISupports* doomed = mContext.get();
+        NS_ADDREF(doomed);
+        mContext = 0;
         if (mProvider) {
-            mProvider->OnStopRequest(this, mContext, mStatus);
+            nsCOMPtr <nsIStreamProvider> provider = do_QueryInterface(mProvider);
             mProvider = 0;
+            provider->OnStopRequest(this, doomed, mStatus);
         }
 
         // if we have a context, we have to ensure that it is released on the
         // proper thread.
-        if (mContext) {
-            if (mEventQ) {
-                // see http://bugzilla.mozilla.org/show_bug.cgi?id=139556#c64
-                // for the reason behind this evil reference counting.
-                nsISupports* doomed = mContext.get();
-                NS_ADDREF(doomed);
-                mContext = 0;
+        if (doomed) {
+            if (mEventQ)
                 NS_ProxyRelease(mEventQ, doomed);
-            }
-            else {
-                mContext = nsnull;
-            }
+            else
+                NS_RELEASE(doomed);
         }
         mXferState = CLOSING;
         break;
