@@ -26,15 +26,92 @@
 
 // Style change hints
 #define NS_STYLE_HINT_UNKNOWN     0
-#define NS_STYLE_HINT_CONTENT     1   // change was contentual (ie: SRC=)
-#define NS_STYLE_HINT_VISUAL      2   // change was visual only (ie: COLOR=)
-#define NS_STYLE_HINT_REFLOW      3   // change requires reflow (ie: WIDTH=)
-#define NS_STYLE_HINT_FRAMECHANGE 4   // change requires frame change (ie: DISPLAY=)
+#define NS_STYLE_HINT_AURAL       1   // change was aural
+#define NS_STYLE_HINT_CONTENT     2   // change was contentual (ie: SRC=)
+#define NS_STYLE_HINT_VISUAL      3   // change was visual only (ie: COLOR=)
+#define NS_STYLE_HINT_REFLOW      4   // change requires reflow (ie: WIDTH=)
+#define NS_STYLE_HINT_FRAMECHANGE 5   // change requires frame change (ie: DISPLAY=)
 
+// Indicies into border/padding/margin arrays
+#define NS_SIDE_TOP     0
+#define NS_SIDE_RIGHT   1
+#define NS_SIDE_BOTTOM  2
+#define NS_SIDE_LEFT    3
+
+
+// Azimuth - See nsStyleAural
+#define NS_STYLE_AZIMUTH_LEFT_SIDE        0x00
+#define NS_STYLE_AZIMUTH_FAR_LEFT         0x01
+#define NS_STYLE_AZIMUTH_LEFT             0x02
+#define NS_STYLE_AZIMUTH_CENTER_LEFT      0x03
+#define NS_STYLE_AZIMUTH_CENTER           0x04
+#define NS_STYLE_AZIMUTH_CENTER_RIGHT     0x05
+#define NS_STYLE_AZIMUTH_RIGHT            0x06
+#define NS_STYLE_AZIMUTH_FAR_RIGHT        0x07
+#define NS_STYLE_AZIMUTH_RIGHT_SIDE       0x08
+#define NS_STYLE_AZIMUTH_BEHIND           0x80  // bits
+#define NS_STYLE_AZIMUTH_LEFTWARDS        0x10  // bits
+#define NS_STYLE_AZIMUTH_RIGHTWARDS       0x20  // bits
+
+// See nsStyleAural
+#define NS_STYLE_ELEVATION_BELOW          1
+#define NS_STYLE_ELEVATION_LEVEL          2
+#define NS_STYLE_ELEVATION_ABOVE          3
+#define NS_STYLE_ELEVATION_HIGHER         4
+#define NS_STYLE_ELEVATION_LOWER          5
+
+// See nsStyleAural
+#define NS_STYLE_PITCH_X_LOW              1
+#define NS_STYLE_PITCH_LOW                2
+#define NS_STYLE_PITCH_MEDIUM             3
+#define NS_STYLE_PITCH_HIGH               4
+#define NS_STYLE_PITCH_X_HIGH             5
+
+// See nsStyleAural
+#define NS_STYLE_PLAY_DURING_MIX          0x01  // bit field
+#define NS_STYLE_PLAY_DURING_REPEAT       0x02
+
+// See nsStyleAural
+#define NS_STYLE_SPEAK_NONE               0
+#define NS_STYLE_SPEAK_NORMAL             1
+#define NS_STYLE_SPEAK_SPELL_OUT          2
+
+// See nsStyleAural 
+#define NS_STYLE_SPEAK_HEADER_ONCE        0
+#define NS_STYLE_SPEAK_HEADER_ALWAYS      1
+
+// See nsStyleAural 
+#define NS_STYLE_SPEAK_NUMERAL_DIGITS     0
+#define NS_STYLE_SPEAK_NUMERAL_CONTINUOUS 1
+
+// See nsStyleAural 
+#define NS_STYLE_SPEAK_PUNCTUATION_NONE   0
+#define NS_STYLE_SPEAK_PUNCTUATION_CODE   1
+
+// See nsStyleAural 
+#define NS_STYLE_SPEECH_RATE_X_SLOW       0
+#define NS_STYLE_SPEECH_RATE_SLOW         1
+#define NS_STYLE_SPEECH_RATE_MEDIUM       2
+#define NS_STYLE_SPEECH_RATE_FAST         3
+#define NS_STYLE_SPEECH_RATE_X_FAST       4
+#define NS_STYLE_SPEECH_RATE_FASTER       10
+#define NS_STYLE_SPEECH_RATE_SLOWER       11
+
+// See nsStyleAural 
+#define NS_STYLE_VOLUME_SILENT            0
+#define NS_STYLE_VOLUME_X_SOFT            1
+#define NS_STYLE_VOLUME_SOFT              2
+#define NS_STYLE_VOLUME_MEDIUM            3
+#define NS_STYLE_VOLUME_LOUD              4
+#define NS_STYLE_VOLUME_X_LOUD            5
 
 // See nsStyleColor
 #define NS_STYLE_BG_ATTACHMENT_FIXED            0x01
 #define NS_STYLE_BG_ATTACHMENT_SCROLL           0x02
+
+// See nsStyleColor
+#define NS_STYLE_COLOR_TRANSPARENT              0
+#define NS_STYLE_COLOR_INVERT                   1
 
 // See nsStyleColor
 #define NS_STYLE_BG_COLOR_TRANSPARENT           0x01
@@ -49,6 +126,10 @@
 #define NS_STYLE_BG_REPEAT_X                    0x01
 #define NS_STYLE_BG_REPEAT_Y                    0x02
 #define NS_STYLE_BG_REPEAT_XY                   0x03
+
+// See nsStyleTable
+#define NS_STYLE_BORDER_COLLAPSE                0
+#define NS_STYLE_BORDER_SEPARATE                1
 
 // See nsStyleSpacing mBorder enum values
 #define NS_STYLE_BORDER_WIDTH_THIN              0
@@ -67,6 +148,7 @@
 #define NS_STYLE_BORDER_STYLE_BLANK             7
 #define NS_STYLE_BORDER_STYLE_INSET             8
 #define NS_STYLE_BORDER_STYLE_OUTSET            9
+#define NS_STYLE_BORDER_STYLE_HIDDEN            10
 
 // See nsStyleDisplay
 #define NS_STYLE_CLEAR_NONE                     0
@@ -78,12 +160,30 @@
 #define NS_STYLE_CLEAR_COLUMN                   6
 #define NS_STYLE_CLEAR_PAGE                     7
 
+// See
+#define NS_STYLE_CONTENT_OPEN_QUOTE             0
+#define NS_STYLE_CONTENT_CLOSE_QUOTE            1
+#define NS_STYLE_CONTENT_NO_OPEN_QUOTE          2
+#define NS_STYLE_CONTENT_NO_CLOSE_QUOTE         3
+
 // See nsStyleColor
 #define NS_STYLE_CURSOR_INHERIT                 0
 #define NS_STYLE_CURSOR_AUTO                    1
-#define NS_STYLE_CURSOR_DEFAULT                 2
-#define NS_STYLE_CURSOR_HAND                    3
-#define NS_STYLE_CURSOR_IBEAM                   4
+#define NS_STYLE_CURSOR_CROSSHAIR               2
+#define NS_STYLE_CURSOR_DEFAULT                 3    // ie: an arrow
+#define NS_STYLE_CURSOR_POINTER                 4    // for links
+#define NS_STYLE_CURSOR_MOVE                    5 
+#define NS_STYLE_CURSOR_E_RESIZE                6     
+#define NS_STYLE_CURSOR_NE_RESIZE               7      
+#define NS_STYLE_CURSOR_NW_RESIZE               8      
+#define NS_STYLE_CURSOR_N_RESIZE                9     
+#define NS_STYLE_CURSOR_SE_RESIZE               10      
+#define NS_STYLE_CURSOR_SW_RESIZE               11     
+#define NS_STYLE_CURSOR_S_RESIZE                12    
+#define NS_STYLE_CURSOR_W_RESIZE                13    
+#define NS_STYLE_CURSOR_TEXT                    14   // ie: i-beam
+#define NS_STYLE_CURSOR_WAIT                    15
+#define NS_STYLE_CURSOR_HELP                    16
 
 // See nsStyleDisplay
 #define NS_STYLE_DIRECTION_LTR                  0
@@ -140,10 +240,31 @@
 #define NS_STYLE_FONT_SIZE_LARGER               7
 #define NS_STYLE_FONT_SIZE_SMALLER              8
 
+// See nsStyleFont
+#define NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED   -4
+#define NS_STYLE_FONT_STRETCH_EXTRA_CONDENSED   -3
+#define NS_STYLE_FONT_STRETCH_CONDENSED         -2
+#define NS_STYLE_FONT_STRETCH_SEMI_CONDENSED    -1
+#define NS_STYLE_FONT_STRETCH_NORMAL            0
+#define NS_STYLE_FONT_STRETCH_SEMI_EXPANDED     1
+#define NS_STYLE_FONT_STRETCH_EXPANDED          2
+#define NS_STYLE_FONT_STRETCH_EXTRA_EXPANDED    3
+#define NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED    4
+#define NS_STYLE_FONT_STRETCH_WIDER             10
+#define NS_STYLE_FONT_STRETCH_NARROWER          -10
+
 // See nsStyleFont mFlags
 #define NS_STYLE_FONT_DEFAULT                   0x00
 #define NS_STYLE_FONT_SIZE_EXPLICIT             0x01
 #define NS_STYLE_FONT_FACE_EXPLICIT             0x02
+
+// See nsStyleFont - system fonts
+#define NS_STYLE_FONT_CAPTION                   1
+#define NS_STYLE_FONT_ICON                      2
+#define NS_STYLE_FONT_MENU                      3
+#define NS_STYLE_FONT_MESSAGE_BOX               4
+#define NS_STYLE_FONT_SMALL_CAPTION             5
+#define NS_STYLE_FONT_STATUS_BAR                6
 
 // See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_NORMAL                0
@@ -179,23 +300,29 @@
 #define NS_STYLE_OVERFLOW_SCROLL                2
 #define NS_STYLE_OVERFLOW_AUTO                  3
 
-// See nsStyleDisplay
-#define NS_STYLE_LINE_HEIGHT_NORMAL             0
-
 // See nsStyleList
-#define NS_STYLE_LIST_STYLE_IMAGE_NONE          0
-
-// See nsStyleList
-#define NS_STYLE_LIST_STYLE_NONE                0
-#define NS_STYLE_LIST_STYLE_DISC                1
-#define NS_STYLE_LIST_STYLE_CIRCLE              2
-#define NS_STYLE_LIST_STYLE_SQUARE              3
-#define NS_STYLE_LIST_STYLE_DECIMAL             4
-#define NS_STYLE_LIST_STYLE_LOWER_ROMAN         5
-#define NS_STYLE_LIST_STYLE_UPPER_ROMAN         6
-#define NS_STYLE_LIST_STYLE_LOWER_ALPHA         7
-#define NS_STYLE_LIST_STYLE_UPPER_ALPHA         8
-#define NS_STYLE_LIST_STYLE_BASIC               9       // not in css
+#define NS_STYLE_LIST_STYLE_NONE                  0
+#define NS_STYLE_LIST_STYLE_DISC                  1
+#define NS_STYLE_LIST_STYLE_CIRCLE                2
+#define NS_STYLE_LIST_STYLE_SQUARE                3
+#define NS_STYLE_LIST_STYLE_DECIMAL               4
+#define NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO  5
+#define NS_STYLE_LIST_STYLE_LOWER_ROMAN           6
+#define NS_STYLE_LIST_STYLE_UPPER_ROMAN           7
+#define NS_STYLE_LIST_STYLE_LOWER_GREEK           8
+#define NS_STYLE_LIST_STYLE_LOWER_ALPHA           9
+#define NS_STYLE_LIST_STYLE_LOWER_LATIN           9   // == ALPHA
+#define NS_STYLE_LIST_STYLE_UPPER_ALPHA           10
+#define NS_STYLE_LIST_STYLE_UPPER_LATIN           10  // == ALPHA
+#define NS_STYLE_LIST_STYLE_HEBREW                11
+#define NS_STYLE_LIST_STYLE_ARMENIAN              12
+#define NS_STYLE_LIST_STYLE_GEORGIAN              13
+#define NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC       14
+#define NS_STYLE_LIST_STYLE_HIRAGANA              15
+#define NS_STYLE_LIST_STYLE_KATAKANA              16
+#define NS_STYLE_LIST_STYLE_HIRAGANA_IROHA        17
+#define NS_STYLE_LIST_STYLE_KATAKANA_IROHA        18
+#define NS_STYLE_LIST_STYLE_BASIC                 100  // not in css
 
 // See nsStyleList
 #define NS_STYLE_LIST_STYLE_POSITION_INSIDE     0
@@ -203,9 +330,6 @@
 
 // See nsStyleSpacing
 #define NS_STYLE_MARGIN_SIZE_AUTO               0
-
-// See nsStyleText (word/letter)
-#define NS_STYLE_SPACING_NORMAL                 0
 
 // See nsStyleText
 #define NS_STYLE_TEXT_ALIGN_DEFAULT             0
@@ -246,11 +370,17 @@
 // See nsStyleDisplay
 #define NS_STYLE_VISIBILITY_HIDDEN              0
 #define NS_STYLE_VISIBILITY_VISIBLE             1
+#define NS_STYLE_VISIBILITY_COLLAPSE            2
 
 // See nsStyleText
 #define NS_STYLE_WHITESPACE_NORMAL              0
 #define NS_STYLE_WHITESPACE_PRE                 1
 #define NS_STYLE_WHITESPACE_NOWRAP              2
+
+// See nsStyleText
+#define NS_STYLE_UNICODE_BIDI_NORMAL            0
+#define NS_STYLE_UNICODE_BIDI_EMBED             1
+#define NS_STYLE_UNICODE_BIDI_OVERRIDE          2
 
 // See nsStyleTable (here for HTML 4.0 for now, should probably change to side flags)
 #define NS_STYLE_TABLE_FRAME_NONE               0
@@ -276,11 +406,30 @@
 #define NS_STYLE_TABLE_LAYOUT_AUTO              0
 #define NS_STYLE_TABLE_LAYOUT_FIXED             1
 
+#define NS_STYLE_TABLE_EMPTY_CELLS_HIDE         0
+#define NS_STYLE_TABLE_EMPTY_CELLS_SHOW         1
+
 // constants for cell "scope" attribute
 #define NS_STYLE_CELL_SCOPE_ROW                 0
 #define NS_STYLE_CELL_SCOPE_COL                 1
 #define NS_STYLE_CELL_SCOPE_ROWGROUP            2
 #define NS_STYLE_CELL_SCOPE_COLGROUP            3
 
+// See nsStylePage
+#define NS_STYLE_PAGE_MARKS_NONE                0x00
+#define NS_STYLE_PAGE_MARKS_CROP                0x01
+#define NS_STYLE_PAGE_MARKS_REGISTER            0x02
+
+// See nsStylePage
+#define NS_STYLE_PAGE_SIZE_AUTO                 0
+#define NS_STYLE_PAGE_SIZE_PORTRAIT             1
+#define NS_STYLE_PAGE_SIZE_LANDSCAPE            2
+
+// See nsStyleBreaks
+#define NS_STYLE_PAGE_BREAK_AUTO                0
+#define NS_STYLE_PAGE_BREAK_ALWAYS              1
+#define NS_STYLE_PAGE_BREAK_AVOID               2
+#define NS_STYLE_PAGE_BREAK_LEFT                3
+#define NS_STYLE_PAGE_BREAK_RIGHT               4
 
 #endif /* nsStyleConsts_h___ */
