@@ -344,10 +344,10 @@
     [self deleteBookmark: item];
   }
 
-  // restore selection to location near last item deleted
+  // restore selection to location near last item deleted or last item
   int total = [mOutlineView numberOfRows];
-  if (index == total)
-    index--;
+  if (index >= total)
+    index = total - 1;
   [mOutlineView selectRow: index byExtendingSelection: NO];
 }
 

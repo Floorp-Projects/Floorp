@@ -57,7 +57,7 @@
 
 -(void)controlTextDidEndEditing: (NSNotification*) aNotification
 {
-  if (!mBookmarkItem)
+  if (![mBookmarkItem contentNode])
     return;
  
   unsigned int len;
@@ -109,6 +109,7 @@
   [mBookmarkItem contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gDescriptionAtom, buf, PR_TRUE);
   
   [mOutlineView reloadItem: mBookmarkItem reloadChildren: NO];
+  BookmarksService::BookmarkChanged([mBookmarkItem contentNode], TRUE);  
 }
 
 -(void)setBookmark: (BookmarkItem*) aBookmark

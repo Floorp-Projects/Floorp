@@ -265,9 +265,29 @@ BookmarksService::BookmarkChanged(nsIContent* aItem, bool shouldFlush = true)
     BookmarksService* instance = (BookmarksService*)gInstances->ElementAt(i);
    
     if (instance->mDataSource) {
+      // We're a tree view
       BookmarkItem* item = GetWrapperFor(aItem);
       [(instance->mDataSource) reloadDataForItem: item reloadChildren: NO];
     }
+    else if (instance->mToolbar) {
+      // We're a personal toolbar.  It'll figure out what to do.
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aItem));
+      [(instance->mToolbar) editButton: elt];
+    }
+    else {
+      // We're the menu.  Reset the title, in case it's changed.
+      nsCOMPtr<nsIContent> parent;
+      aItem->GetParent(*getter_AddRefs(parent));
+      NSMenu* menu = LocateMenu(parent);
+      PRUint32 contentID = 0;
+      aItem->GetContentID(&contentID);
+      NSMenuItem* childItem = [menu itemWithTag: contentID];
+      nsAutoString name;
+      aItem->GetAttr(kNameSpaceID_None, gNameAtom, name);
+      NSString* title = [NSString stringWithCharacters: name.get() length: name.Length()];
+      [childItem setTitle: title];
+    }
+    
   }
 
   if (shouldFlush)

@@ -20,6 +20,7 @@
 * Contributor(s):
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 *   Kathy Brade <brade@netscape.com>
+*   David Haas  <haasd@cae.wisc.edu>
 */
 
 #import "CHBookmarksButton.h"
@@ -116,6 +117,22 @@
   [mButtons insertObject: button atIndex: aIndex];
   if ([self isShown])
     [self reflowButtonsStartingAtIndex: aIndex];
+}
+
+-(void)editButton: (nsIDOMElement*)aElt
+{
+  int count = [mButtons count];
+  for (int i = 0; i < count; i++) {
+    CHBookmarksButton* button = [mButtons objectAtIndex: i];
+    if ([button element] == aElt) {
+      [button setElement: aElt];
+      if (count > i && [self isShown])
+        [self reflowButtonsStartingAtIndex: i];
+      break;
+    }
+  }
+
+  [self setNeedsDisplay: [self isShown]];
 }
 
 -(void)removeButton: (nsIDOMElement*)aElt
