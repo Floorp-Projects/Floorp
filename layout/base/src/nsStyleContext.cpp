@@ -204,6 +204,11 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
       result = 0;
       break;
   }
+  if ((NS_SPACING_PADDING == aSpacing) || (NS_SPACING_BORDER == aSpacing)) {
+    if (result < 0) {
+      result = 0;
+    }
+  }
   return result;
 }
 
