@@ -1662,25 +1662,24 @@ function MsgAddAllToAddressBook() {}
 function SpaceHit(event)
 {
   var contentWindow = window.top._content;
-  var oldScrollY = contentWindow.scrollY;
-
-  var numPages;
-  var command;
 
   if (event && event.shiftKey) {
-    numPages = -1;
-    command = "cmd_previousUnreadMsg";
+    // if at the start of the message, go to the previous one
+    if (contentWindow.scrollY > 0) {
+      contentWindow.scrollByPages(-1);
+    }
+    else {
+      goDoCommand("cmd_previousUnreadMsg");
+    }
   }
   else {
-    numPages = 1;
-    command = "cmd_nextUnreadMsg";
-  }
-
-  contentWindow.scrollByPages(numPages);
-
-  // if at the end (or start) of the message, go to the next one
-  if (oldScrollY == contentWindow.scrollY) {
-    goDoCommand(command);
+    // if at the end of the message, go to the next one
+    if (contentWindow.scrollY < contentWindow.scrollMaxY) {
+      contentWindow.scrollByPages(1);
+    }
+    else {
+      goDoCommand("cmd_nextUnreadMsg");
+    }
   }
 }
 

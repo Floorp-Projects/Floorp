@@ -221,7 +221,14 @@ NS_IMETHODIMP nsScrollPortView::GetScrollPreference(nsScrollPreference &aScrollP
 }
 
 static void ComputeVelocities(PRInt32 aCurVelocity, nscoord aCurPos, nscoord aDstPos,
-                              PRInt32* aVelocities) {
+                              PRInt32* aVelocities, float aT2P, float aP2T) {
+  // scrolling always works in units of whole pixels. So compute velocities
+  // in pixels and then scale them up. This ensures, for example, that
+  // a 1-pixel scroll isn't broken into N frames of 1/N pixels each, each
+  // frame increment being rounded to 0 whole pixels.
+  aCurPos = NSTwipsToIntPixels(aCurPos, aT2P);
+  aDstPos = NSTwipsToIntPixels(aDstPos, aT2P);
+
   PRInt32 i;
   PRInt32 direction = (aCurPos < aDstPos ? 1 : -1);
   PRInt32 absDelta = (aDstPos - aCurPos)*direction;
@@ -239,8 +246,9 @@ static void ComputeVelocities(PRInt32 aCurVelocity, nscoord aCurPos, nscoord aDs
   }
   NS_ASSERTION(total == absDelta, "Invalid velocity sum");
 
+  PRInt32 scale = direction*((PRInt32)aP2T);
   for (i = 0; i < SMOOTH_SCROLL_FRAMES; i++) {
-    aVelocities[i*2] *= direction;
+    aVelocities[i*2] *= scale;
   }
 }
   
@@ -340,11 +348,19 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestina
   mSmoothScroll->mFrameIndex = 0;
   ClampScrollValues(mSmoothScroll->mDestinationX, mSmoothScroll->mDestinationY, this);
 
+  nsCOMPtr<nsIDeviceContext> dev;
+  mViewManager->GetDeviceContext(*getter_AddRefs(dev));
+  float p2t, t2p;
+  dev->GetDevUnitsToAppUnits(p2t); 
+  dev->GetAppUnitsToDevUnits(t2p);
+
   // compute velocity vectors
   ComputeVelocities(currentVelocityX, mOffsetX,
-                    mSmoothScroll->mDestinationX, mSmoothScroll->mVelocities);
+                    mSmoothScroll->mDestinationX, mSmoothScroll->mVelocities,
+                    t2p, p2t);
   ComputeVelocities(currentVelocityY, mOffsetY,
-                    mSmoothScroll->mDestinationY, mSmoothScroll->mVelocities + 1);
+                    mSmoothScroll->mDestinationY, mSmoothScroll->mVelocities + 1,
+                    t2p, p2t);
 
   return NS_OK;
 }

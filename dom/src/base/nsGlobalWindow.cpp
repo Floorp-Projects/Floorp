@@ -1867,44 +1867,90 @@ GlobalWindowImpl::GetPageYOffset(PRInt32* aPageYOffset)
   return GetScrollY(aPageYOffset);
 }
 
+nsresult
+GlobalWindowImpl::GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY)
+{
+  nsresult rv;
+  nsIScrollableView *view = nsnull;      // no addref/release for views
+  float p2t, t2p;
+
+  GetScrollInfo(&view, &p2t, &t2p);
+  if (!view)
+    return NS_ERROR_FAILURE;
+
+  nsSize scrolledSize;
+  rv = view->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIView* portView;
+  rv = CallQueryInterface(view, &portView);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRect portRect;
+  portView->GetBounds(portRect);
+
+  if (aScrollMaxX)
+    *aScrollMaxX = PR_MAX(0,
+      (PRInt32)floor(t2p*(scrolledSize.width - portRect.width)));
+  if (aScrollMaxY)
+    *aScrollMaxY = PR_MAX(0,
+      (PRInt32)floor(t2p*(scrolledSize.height - portRect.height)));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetScrollMaxX(PRInt32* aScrollMaxX)
+{
+  NS_ENSURE_ARG_POINTER(aScrollMaxX);
+  *aScrollMaxX = 0;
+  return GetScrollMaxXY(aScrollMaxX, nsnull);
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetScrollMaxY(PRInt32* aScrollMaxY)
+{
+  NS_ENSURE_ARG_POINTER(aScrollMaxY);
+  *aScrollMaxY = 0;
+  return GetScrollMaxXY(nsnull, aScrollMaxY);
+}
+
+nsresult
+GlobalWindowImpl::GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY)
+{
+  nsresult rv;
+  nsIScrollableView *view = nsnull;      // no addref/release for views
+  float p2t, t2p;
+
+  GetScrollInfo(&view, &p2t, &t2p);
+  if (!view)
+    return NS_ERROR_FAILURE;
+
+  nscoord xPos, yPos;
+  rv = view->GetScrollPosition(xPos, yPos);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aScrollX)
+    *aScrollX = NSTwipsToIntPixels(xPos, t2p);
+  if (aScrollY)
+    *aScrollY = NSTwipsToIntPixels(yPos, t2p);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
 {
   NS_ENSURE_ARG_POINTER(aScrollX);
-  nsresult result = NS_OK;
-  nsIScrollableView *view = nsnull;      // no addref/release for views
-  float p2t, t2p;
-
   *aScrollX = 0;
-
-  GetScrollInfo(&view, &p2t, &t2p);
-  if (view) {
-    nscoord xPos, yPos;
-    result = view->GetScrollPosition(xPos, yPos);
-    *aScrollX = NSTwipsToIntPixels(xPos, t2p);
-  }
-
-  return result;
+  return GetScrollXY(aScrollX, nsnull);
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
 {
   NS_ENSURE_ARG_POINTER(aScrollY);
-  nsresult result = NS_OK;
-  nsIScrollableView *view = nsnull;      // no addref/release for views
-  float p2t, t2p;
-
   *aScrollY = 0;
-
-  GetScrollInfo(&view, &p2t, &t2p);
-  if (view) {
-    nscoord xPos, yPos;
-    result = view->GetScrollPosition(xPos, yPos);
-    *aScrollY = NSTwipsToIntPixels(yPos, t2p);
-  }
-
-  return result;
+  return GetScrollXY(nsnull, aScrollY);
 }
 
 NS_IMETHODIMP

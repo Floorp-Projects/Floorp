@@ -163,6 +163,8 @@ protected:
             id == sControllers_id  ||
             id == sScrollX_id      ||
             id == sScrollY_id      ||
+            id == sScrollMaxX_id   ||
+            id == sScrollMaxY_id   ||
             id == sLength_id       ||
             id == sFrames_id       ||
             id == sSelf_id);
@@ -245,6 +247,8 @@ protected:
   static jsval sScrollIntoView_id;
   static jsval sScrollX_id;
   static jsval sScrollY_id;
+  static jsval sScrollMaxX_id;
+  static jsval sScrollMaxY_id;
   static jsval sOpen_id;
   static jsval sItem_id;
   static jsval sEnumerate_id;

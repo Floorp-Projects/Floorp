@@ -262,6 +262,9 @@ protected:
 
   PRBool   GetBlurSuppression();
 
+  nsresult GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY);
+  nsresult GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY);
+
 protected:
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
