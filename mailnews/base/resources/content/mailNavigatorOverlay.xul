@@ -38,7 +38,15 @@
           }
           var composeService = Components.classes["@mozilla.org/messengercompose;1"].getService(Components.interfaces.nsIMsgComposeService);
           if (composeService) {
-            params.identity = composeService.defaultIdentity;
+            // it is possible you won't have a default identity
+            // like if you've never launched mail before on a new profile.
+            // see bug #196073
+            try {
+              params.identity = composeService.defaultIdentity;
+            }
+            catch (ex) {
+              params.identity = null;
+            }
             composeService.OpenComposeWindowWithParams(null, params);
           }
         }                                                                         
