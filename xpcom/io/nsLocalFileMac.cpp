@@ -1595,10 +1595,27 @@ nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBo
         macErr = ::FSpGetDirectoryID(&srcSpec, &dirID, &isDirectory);       
         if (macErr == noErr)
         {
+            const PRInt32   kCopyBufferSize = (1024 * 512);   // allocate our own buffer to speed file copies. Bug #103202
+            OSErr     tempErr;
+            Handle    copyBufferHand = ::TempNewHandle(kCopyBufferSize, &tempErr);
+            void*     copyBuffer = nsnull;
+            PRInt32   copyBufferSize = 0;
+
+            // it's OK if the allocated failed; FSpFileCopy will just fall back on its own internal 16k buffer
+            if (copyBufferHand) 
+            {
+              ::HLock(copyBufferHand);
+              copyBuffer = *copyBufferHand;
+              copyBufferSize = kCopyBufferSize;
+            }
+
             if ( isDirectory )
-                macErr = MacFSpDirectoryCopyRename( &srcSpec, &destSpec, newPascalName, NULL, 0, true, NULL );
+                macErr = MacFSpDirectoryCopyRename( &srcSpec, &destSpec, newPascalName, copyBuffer, copyBufferSize, true, NULL );
             else
-                macErr = ::FSpFileCopy( &srcSpec, &destSpec, newPascalName, NULL, 0, true );
+                macErr = ::FSpFileCopy( &srcSpec, &destSpec, newPascalName, copyBuffer, copyBufferSize, true );
+
+            if (copyBufferHand)
+              ::DisposeHandle(copyBufferHand);
         }
     }
     else
