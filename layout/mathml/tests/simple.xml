@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="mathml.css" type="text/css"?>
-<!DOCTYPE math SYSTEM "mathml.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "mathml.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <!--
   *  The contents of this file are subject to the Mozilla Public
   *  License Version 1.1 (the "License"); you may not use this file
@@ -23,8 +23,12 @@
   *    Roger B. Sidje <rbs@maths.uq.edu.au>
   -->
 
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<head>
+  <title>Simple Document with MathML</title>
+</head>
+<body>
 
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <mrow>
    <mi>x</mi>
    <mo>=</mo>
@@ -36,3 +40,6 @@
    </mfrac>
 </mrow>
 </math>
+
+</body>
+</html>

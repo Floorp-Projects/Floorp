@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="mathml.css" type="text/css"?>
-<!DOCTYPE math SYSTEM "mathml.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "mathml.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <!--
   *  The contents of this file are subject to the Mozilla Public
   *  License Version 1.1 (the "License"); you may not use this file
@@ -23,30 +23,67 @@
   *    Roger B. Sidje <rbs@maths.uq.edu.au>
   -->
 
+<head>
+  <title>Testing stretchy MathML symbols</title>
+</head>
+<body>
+
+Testing stretchy symbols -- view the source...
+
 <math xmlns="http://www.w3.org/1998/Math/MathML">
+<msup>
+  <mrow>
+    <mo symmetric='false' minsize='3'>(</mo>
+    <mo>...</mo>
+    <msup>
+      <mrow>
+        <mo symmetric='false' minsize='2'>(</mo>
+        <msup>
+          <mrow>
+            <mo symmetric='false'>(</mo>
+            <msub><mi>a</mi><mn>0</mn></msub>
+            <mo>+</mo>
+            <msub><mi>a</mi><mn>1</mn></msub>
+            <mo symmetric='false'>)</mo>
+          </mrow>
+          <msub><mi>n</mi><mn>1</mn></msub>
+        </msup>
+        <mo>+</mo>
+        <msub><mi>a</mi><mn>2</mn></msub>
+        <mo symmetric='false' minsize='2'>)</mo>
+      </mrow>    
+      <msub><mi>n</mi><mn>2</mn></msub>
+    </msup>
+    <mo>+</mo><mo>...</mo><mo>+</mo>
+    <msup><mi>a</mi><mi>p</mi></msup>
+    <mo symmetric='false' minsize='3'>)</mo>
+  </mrow>
+  <msup><mi>n</mi><mi>p</mi></msup>
+</msup>
+</math>
 
-<mn>Testing stretchy symbols -- view the source...</mn>
 
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <mrow>
   <mi>A</mi>
   <mo>=</mo>
-  <mrow>
-    <mo>[</mo>
-      <mtable>
-        <mtr>
-          <mtd><mi>x</mi></mtd>
-          <mtd><mi>y</mi></mtd>
-        </mtr>
-        <mtr>
-          <mtd><mi>z</mi></mtd>
-          <mtd><mi>w</mi></mtd>
-        </mtr>
-      </mtable>
-    <mo>]</mo>
-  </mrow>
+  <mfenced open="[" close="]">
+    <mtable>
+      <mtr>
+        <mtd><mi>x</mi></mtd>
+        <mtd><mi>y</mi></mtd>
+      </mtr>
+      <mtr>
+        <mtd><mi>z</mi></mtd>
+        <mtd><mi>w</mi></mtd>
+      </mtr>
+    </mtable>
+  </mfenced>
 </mrow>
 <mo>;</mo>
+</math>
 
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <mrow>
     <mi>x</mi>
     <mo>+</mo>
@@ -60,9 +97,11 @@
     </mrow>
 </mrow>
 <mo>;</mo>
+</math>
 
 in binomial formulas
 
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <mrow>
     <mo>(</mo>
     <mfrac linethickness="0">
@@ -168,13 +207,14 @@ in binomial formulas
      <mi>n</mi>
   </msup>
 </mrow>
-
+</math>
 
 
 and elsewhere,
 
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <mrow>
-<mo>{</mo>
+<mo symmetric='false'>{</mo>
 
 <mrow>
   <msub>
@@ -227,8 +267,8 @@ and elsewhere,
 <mo>;</mo>
 
 <mover>
-   <mrow> <mi>a</mi> <mo>+</mo> <mi>b</mi> </mrow>
-   <mo>&#x2190;</mo>
+   <mrow> <mi>aa</mi> <mo>+</mo> <mi>bb</mi> </mrow>
+   <mo>&OverBrace;</mo>
 </mover>
 
 <mo>;</mo>
@@ -334,3 +374,6 @@ and elsewhere,
 </mrow>
      
 </math>
+
+</body>
+</html>

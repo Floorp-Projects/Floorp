@@ -1,112 +1,145 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="mathml.css" type="text/css"?>
-<!DOCTYPE document SYSTEM "mathml.dtd">
-
-<document
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-  xmlns:math="http://www.w3.org/1998/Math/MathML"
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "mathml.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns:math="http://www.w3.org/1998/Math/MathML"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
 >
-
-<!-- 
+<!--
   *  The contents of this file are subject to the Mozilla Public
   *  License Version 1.1 (the "License"); you may not use this file
   *  except in compliance with the License. You may obtain a copy of
   *  the License at http://www.mozilla.org/MPL/
-  *  
+  *
   *  Software distributed under the License is distributed on an "AS
   *  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
   *  implied. See the License for the specific language governing
   *  rights and limitations under the License.
-  *  
+  *
   *  The Original Code is Mozilla MathML Project.
-  *  
+  *
   *  The Initial Developer of the Original Code is The University of
   *  Queensland.  Portions created by The University of Queensland are
-  *  Copyright (C) The University of Queensland.  All
+  *  Copyright (C) 1999 The University of Queensland.  All
   *  Rights Reserved.
-  *  
+  *
   *  Contributor(s):
   *    Roger B. Sidje <rbs@maths.uq.edu.au>
   -->
 
-<document>
+<head>
+  <title>Mixing MathML with other markup</title>
+</head>
 
-<math>
-   <math:ms>Mixing MathML markups and other markups to get special effects</math:ms>
-   <math:mfrac linethickness="3">
-      <math:mfrac>
-        <math:mn>a</math:mn>
-        <html:img src="resource:/res/toolbar/TB_Back.gif"/>
-      </math:mfrac>
-      <math:mfrac>
-        <math:mn>b</math:mn>
-        <html:img src="resource:/res/toolbar/TB_Forward.gif"/>
-      </math:mfrac>
-   </math:mfrac>
+<body style="font-size: 18pt; background-color: gold; background-image: url(resource:/res/samples/raptor.jpg); background-repeat: no-repeat; background-attachment: fixed;">
+
+<h2 style="text-align: center; color: blue">
+Mixing MathML markups and other markups to get special effects</h2>
+
+<br />
+
+A fraction with the animated throbber as denominator...
+View the source...
+
+<math mode="display" xmlns="http://www.w3.org/1998/Math/MathML">
+  <mfrac linethickness="3">
+    <mi>a</mi>
+    <html:img src="resource:/chrome/skins/modern/global/skin/animthrob.gif" />
+  </mfrac>
 </math>
 
-<p/>
+<br />
 
-<math>
-   <mo>See the difference between math:mi over an html:i (which doesn't understand the sriptlevel)</mo>
 
-   <math:mfrac>
-      <math:mi>a</math:mi>
-      <html:i>a</html:i>
-   </math:mfrac>
+See the difference between &lt;mi&gt; an &lt;html:i&gt;
+(which doesn't understand the scriptlevel) :
+
+<math mode="display" xmlns="http://www.w3.org/1998/Math/MathML">
+  <mfrac>
+    <mi>a</mi>
+    <mi>a</mi>
+  </mfrac>
+
+  &nbsp;
+
+  <mfrac>
+    <html:i>a</html:i>
+    <html:i>a</html:i>
+  </mfrac>
 </math>
 
-<!--
-<p/>
-<xul:toolbox>
-   <xul:toolbar>
-        <html:span style="display: table-cell">
-        <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
-        <html:img  src="../images/raptor.jpg"/><html:br/>Back</html:button>
-        </html:span>
-        <html:span style="display: table-cell">
-                <html:input style="width:325px;"></html:input>   
-        </html:span>
-   </xul:toolbar>        
-</xul:toolbox>
+<br />
 
-<p/>
--->
+And there could be more...
 
+<div style="text-align: center">
+  <button style="background-color:rgb(192,192,192)">
+     <span style="color: brown;">
+       For example, a MathML continued fraction inside a HTML button<br />
+     </span> 
+     <math xmlns="&mathml;">
+       <mrow>
+         <mfrac>
+           <mi>&pi;</mi>
+           <mn>4</mn>
+         </mfrac>
+         <mo>=</mo>
+         <mfrac numalign="left">
+            <mstyle scriptlevel="0">
+              <mn>1</mn>
+            </mstyle>
+            <mstyle scriptlevel="0">
+               <mrow>
+                 <mn>2</mn>
+                 <mo>+</mo>
+                 <mfrac numalign="left">
+                   <mstyle scriptlevel="0">
+                     <msup><mn>1</mn><mn>2</mn></msup>
+                   </mstyle>
+                   <mstyle scriptlevel="0">
+                      <mrow>
+                        <mn>2</mn>
+                        <mo>+</mo>
+                        <mfrac numalign="left">
+                          <mstyle scriptlevel="0">
+                            <msup><mn>3</mn><mn>2</mn></msup>
+                          </mstyle>               
+                          <mstyle scriptlevel="0">
+                            <mrow>
+                               <mn>2</mn>
+                               <mo>+</mo>
+                               <mfrac numalign="left">
+                                 <mstyle scriptlevel="0">
+                                   <msup><mn>5</mn><mn>2</mn></msup>
+                                 </mstyle>
+                                 <mstyle scriptlevel="0">
+                                   <mrow>
+                                      <mn>2</mn>
+                                      <mo>+</mo>
+                                      <mfrac numalign="left">
+                                        <mstyle scriptlevel="0">
+                                          <msup><mn>7</mn><mn>2</mn></msup>
+                                        </mstyle>
+                                        <mstyle scriptlevel="0">
+                                          <mn>2</mn><mo>+</mo><mo fontweight="bold">...</mo>
+                                        </mstyle>
+                                      </mfrac>
+                                    </mrow>
+                                 </mstyle>
+                               </mfrac>
+                             </mrow>
+                          </mstyle>
+                        </mfrac>
+                      </mrow>
+                   </mstyle>
+                 </mfrac>      
+               </mrow> 
+            </mstyle> 
+         </mfrac>  
+      </mrow>
+    </math>
+  </button>
+</div>
 
-<!-- 
-Possibly crash on the code below !
-It seems that a table-cell only wants to be sole child or has only table-cell as siblings.
-Bug or feature ?
--->
-
-<!--
-
-<math>
-   <math:mfrac>
-      <math:mi>a</math:mi>
-      <html:span style="display: table-cell">
-          <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
-          <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back</html:button>
-      </html:span>
-   </math:mfrac>
-</math>
-
-<p/>
-
-<math>
-   <math:mfrac>
-      <html:span style="display: table-cell">
-          <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
-          <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back</html:button>
-      </html:span>
-      <math:mi>a</math:mi>
-   </math:mfrac>
-</math>
-
-<p/>
-
--->
-
-</document>
+</body>
+</html>
