@@ -108,6 +108,7 @@ sub populateUserPrefsRights {
             $user->hasRight('userPrefs.editOthers.personalDetails'), # XXX
             $user->hasRight('userPrefs.editOthers.settings'), # XXX
             $user->hasRight('userPrefs.editOthers.groups'));
+         # note there is no 'userPrefs.editOthers.state'
 }
 
 sub populateUserPrefsHash {
@@ -132,6 +133,7 @@ sub populateUserPrefsHash {
     $self->populateUserPrefsHashFieldCategory($app, $targetUser, $rightContactMethods, 'contact', $editingUserIsTargetUser, $userData);
     $self->populateUserPrefsHashFieldCategory($app, $targetUser, $rightPersonalDetails, 'personal', $editingUserIsTargetUser, $userData);
     $self->populateUserPrefsHashFieldCategory($app, $targetUser, $rightSettings, 'settings', $editingUserIsTargetUser, $userData);
+    # don't do the 'state' category
 
     $userData->{'groups'} = {};
     if ($rightGroups) {
@@ -370,10 +372,15 @@ sub applyUserPrefsFieldChange {
                     return [$targetUserID, "fields.$fieldCategory.$fieldName", 'contact.cannotRemoveLastContactMethod'];
                 }
             } else {
-                my($crypt, $password) = $app->getService('service.passwords')->newPassword();
-                $targetUser->prepareAddressChange($field, $newValue, $crypt);
-                # send confirmation request:
-                $app->output($fieldName, $targetUser)->loginDetails($field->username, $password);
+                my $field = $targetUser->getField('contact', $fieldName);
+                my($overrideCrypt, $overridePassword) = $app->getService('service.passwords')->newPassword();
+                my $overrideToken = $targetUser->addFieldChange($field, $field->data, $overrideCrypt, 1); # XXX BARE CONSTANT ALERT
+                my($changeCrypt, $changePassword) = $app->getService('service.passwords')->newPassword();
+                my $changeToken = $targetUser->addFieldChange($field, $newValue, $changeCrypt, 0); # XXX BARE CONSTANT ALERT
+                # send confirmation requests:
+                $app->output($fieldName, $targetUser)->userPrefsOverrideDetails($overrideToken, $overridePassword);
+                $field->returnNewData();
+                $app->output($fieldName, $targetUser)->userPrefsChangeDetails($changeToken, $changePassword);
                 return [$targetUserID, "fields.$fieldCategory.$fieldName", 'contact.confirmationSent'];
             }
         } elsif ($rightContactMethods) {
@@ -419,6 +426,26 @@ sub applyUserPrefsFieldChange {
     return;
 }
 
+# dispatcher.commands
+sub cmdUserPrefsConfirmSet {
+    my $self = shift;
+    my($app) = @_;
+    my $user = $app->getObject('user');
+    if (not defined($user)) {
+        $app->getService('user.login')->requireLogin($app);
+        return;
+    }
+    if ($user->performFieldChange($app,
+                                  $app->input->getArgument('changeID'),
+                                  $app->input->getArgument('changePassword'),
+                                  0)) { # XXX
+        $self->output->userPrefsSuccess();
+    } else {
+        $self->output->userPrefsNotification([[$user->userID, 'change', 'accessDenied']]);
+    }
+}
+
+
 # dispatcher.output.generic
 sub outputUserPrefs {
     my $self = shift;
@@ -435,7 +462,7 @@ sub outputUserPrefsNotification {
     my $self = shift;
     my($app, $output, $notifications) = @_;
     $output->output('userPrefs.notification', {
-                                               'notifications' => $notifications,,
+                                               'notifications' => $notifications,
                                               });
 }
 
@@ -446,18 +473,36 @@ sub outputUserPrefsSuccess {
     $output->output('userPrefs.success', {});
 }
 
+# dispatcher.output.generic
+sub outputUserPrefsOverrideDetails {
+    my $self = shift;
+    my($app, $output, $overrideToken, $overridePassword) = @_;
+    $output->output('userPrefs.change.overrideDetails', {
+                                                         'token' => $overrideToken,
+                                                         'password' => $overridePassword,
+                                                        });
+}
+
+# dispatcher.output.generic
+sub outputUserPrefsChangeDetails {
+    my $self = shift;
+    my($app, $output, $changeToken, $changePassword) = @_;
+    $output->output('userPrefs.change.changeDetails', {
+                                                       'token' => $changeToken,
+                                                       'password' => $changePassword,
+                                                      });
+}
+
 # dispatcher.output
 sub strings {
     return (
             'userPrefs.index' => 'The user preferences editor. This will be passed a stack of user profiles in a multi-level hash called data.userData, the array of userIDs in data.userIDs, and the details of each field in another multi-level hash as data.metaData.',
             'userPrefs.notification' => 'If anything needs to be reported after the prefs are submitted then this will be called. Things to notify are reported in data.notifications, which is an array of arrays containing the userID relatd to the notification, the field related to the notification, and the notification type, which will be one of: contact.confirmationSent (no error occured), contact.cannotRemoveLastContactMethod (user error), password.mismatch.new (user error), password.mismatch.old *user error), user.noSuchUser (internal error), invalid (internal error), field.unknownCategory (internal error), accessDenied (internal error). The internal errors could also be caused by a user attempting to circumvent the security system.',
-            'userPrefs.success' => 'If the user preferences are successfully submitted, this will be used. Typically this will simply be the main application command index..',
+            'userPrefs.success' => 'If the user preferences are successfully submitted, this will be used. Typically this will simply be the main application command index.',
+            'userPrefs.change.overrideDetails' => 'The message that is sent containing the token and password required to override a change of address.',
+            'userPrefs.change.changeDetails' => 'The message that is sent containing the token and password required to confirm a change of address.',
             );
 }
-
-
-
-# outputLoginDetails() should be provided by some other service
 
 # setup.install
 sub setupInstall {

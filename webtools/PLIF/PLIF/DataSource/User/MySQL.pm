@@ -68,7 +68,7 @@ sub getUserIDByContactDetails {
 sub getUserByID {
     my $self = shift;
     my($app, $id) = @_;
-    my @userData = $self->database($app)->execute('SELECT userID, mode, password, adminMessage, newFieldID, newFieldValue, newFieldKey
+    my @userData = $self->database($app)->execute('SELECT userID, mode, password, adminMessage
                                                    FROM user WHERE userID = ?', $id)->row;
     if (@userData) {
         # fields
@@ -93,24 +93,24 @@ sub getUserByID {
     } else {
         return ();
     }
-    # return userID, mode, password, adminMessage, newFieldID,
-    # newFieldValue, newFieldKey, [ fieldID, data ]*, [ groupID, name, level ]*,
+    # return userID, mode, password, adminMessage,
+    # [ fieldID, data ]*, [ groupID, name, level ]*,
     # [rightNames]*; or () if unsuccessful
 }
 
 sub setUser {
     my $self = shift;
-    my($app, $userID, $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey) = @_;
+    my($app, $userID, $mode, $password, $adminMessage) = @_;
     # if userID is undefined, then add a new entry and return the
     # userID (so that it can be used in setUserField and
     # setUserGroups, later).
     if (defined($userID)) {
-        $self->database($app)->execute('UPDATE user SET mode=?, password=?, adminMessage=?, newFieldID=?, newFieldValue=?, newFieldKey=?
-                                        WHERE userID = ?', $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey, $userID);
+        $self->database($app)->execute('UPDATE user SET mode=?, password=?, adminMessage=?
+                                        WHERE userID = ?', $mode, $password, $adminMessage, $userID);
         return $userID;
     } else {
-        return $self->database($app)->execute('INSERT INTO user SET mode=?, password=?, adminMessage=?, newFieldID=?, newFieldValue=?, newFieldKey=?',
-                                              $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey)->MySQLID;
+        return $self->database($app)->execute('INSERT INTO user SET mode=?, password=?, adminMessage=?',
+                                              $mode, $password, $adminMessage)->MySQLID;
     }
 }
 
@@ -126,6 +126,36 @@ sub removeUserField {
     my $self = shift;
     my($app, $userID, $fieldID) = @_;
     $self->database($app)->execute('DELETE FROM userData WHERE userID = ? AND fieldID = ?', $userID, $fieldID);
+}
+
+sub setUserFieldChange {
+    my $self = shift;
+    my($app, $userID, $fieldID, $newData, $password, $type) = @_;
+    return $self->database($app)->execute('INSERT INTO userDataChanges SET userID=?, fieldID=?, newData=?, password=?, type=?', $userID, $fieldID, $newData, $password, $type)->MySQLID;
+}
+
+sub getUserFieldChangeFromChangeID {
+    my $self = shift;
+    my($app, $changeID) = @_;
+    return $self->database($app)->execute('SELECT userID, fieldID, newData, password, createTime, type FROM userDataChanges WHERE changeID = ?', $changeID)->row;
+}
+
+sub getUserFieldChangesFromUserIDAndFieldID {
+    my $self = shift;
+    my($app, $userID, $fieldID) = @_;
+    return $self->database($app)->execute('SELECT changeID, newData, password, createTime, type FROM userDataChanges WHERE userID = ? AND fieldID = ?', $userID, $fieldID)->rows;
+}
+
+sub removeUserFieldChangeByChangeID {
+    my $self = shift;
+    my($app, $changeID) = @_;
+    $self->database($app)->execute('DELETE FROM userDataChanges WHERE changeID = ?', $changeID);
+}
+
+sub removeUserFieldChangesByUserIDAndFieldID {
+    my $self = shift;
+    my($app, $userID, $fieldID) = @_;
+    $self->database($app)->execute('DELETE FROM userDataChanges WHERE userID = ? AND fieldID = ?', $userID, $fieldID);
 }
 
 sub setUserGroups {
@@ -317,19 +347,16 @@ sub setupInstall {
     my $self = shift;
     my($app) = @_;
     my $helper = $self->helper($app);
-    $self->dump(9, 'about to configure user data source...');
-    if (not $helper->tableExists($app, $self->database($app), 'user')) {
+    my $database = $self->database($app);
+    if (not $helper->tableExists($app, $database, 'user')) {
         $app->output->setupProgress('dataSource.user.user');
-        $self->database($app)->execute('
+        $database->execute('
             CREATE TABLE user (
-                               userID integer unsigned auto_increment NOT NULL PRIMARY KEY,
-                               password varchar(255) NOT NULL,
-                               mode integer unsigned NOT NULL DEFAULT 0,
-                               adminMessage varchar(255),
-                               newFieldID integer unsigned,
-                               newFieldValue varchar(255),
-                               newFieldKey varchar(255)
-                               )
+                                  userID integer unsigned auto_increment NOT NULL PRIMARY KEY,
+                                  password varchar(255) NOT NULL,
+                                  mode integer unsigned NOT NULL DEFAULT 0,
+                                  adminMessage varchar(255),
+                                  )
         ');
         # +-------------------+
         # | user              |
@@ -338,16 +365,27 @@ sub setupInstall {
         # | password          |
         # | mode              | 0 = active, 1 = account disabled
         # | adminMessage      | string displayed when user (tries to) log in
-        # | newFieldID        | \
-        # | newFieldValue     |  > used when user tries to change his e-mail
-        # | newFieldKey       | /  address, for example
         # +-------------------+
     } else {
+        $app->output->setupProgress('dataSource.user.user.schemaChanges');
         # check its schema is up to date
+        # delete user table's newField* fields.
+        # note: can't move this data because new format uses more
+        # fields, such as changeID, which old format knew nothing
+        # about.
+        if ($helper->columnExists($app, $database, 'user', 'newFieldID')) {
+            $database->execute('ALTER TABLE user REMOVE COLUMN newFieldID');
+        }
+        if ($helper->columnExists($app, $database, 'user', 'newFieldValue')) {
+            $database->execute('ALTER TABLE user REMOVE COLUMN newFieldValue');
+        }
+        if ($helper->columnExists($app, $database, 'user', 'newFieldKey')) {
+            $database->execute('ALTER TABLE user REMOVE COLUMN newFieldKey');
+        }
     }
-    if (not $helper->tableExists($app, $self->database($app), 'userData')) {
+    if (not $helper->tableExists($app, $database, 'userData')) {
         $app->output->setupProgress('dataSource.user.userData');
-        $self->database($app)->execute('
+        $database->execute('
             CREATE TABLE userData (
                                   userID integer unsigned NOT NULL,
                                   fieldID integer unsigned NOT NULL,
@@ -365,9 +403,38 @@ sub setupInstall {
     } else {
         # check its schema is up to date
     }
-    if (not $helper->tableExists($app, $self->database($app), 'userDataTypes')) {
+    if (not $helper->tableExists($app, $database, 'userDataChanges')) {
+        $app->output->setupProgress('dataSource.user.userDataChanges');
+        $database->execute('
+            CREATE TABLE userDataChanges (
+                                  changeID integer unsigned NOT NULL,
+                                  userID integer unsigned NOT NULL,
+                                  fieldID integer unsigned NOT NULL,
+                                  newData text,
+                                  password varchar(255) NOT NULL,
+                                  createTime TIMESTAMP DEFAULT NULL,
+                                  type integer unsigned NOT NULL DEFAULT 0,
+                                  PRIMARY KEY (changeID),
+                                  KEY (userID, fieldID)
+                                  )
+        ');
+        # +-------------------+
+        # | userDataChanges   |
+        # +-------------------+
+        # | changeID       K1 | auto_increment
+        # | userID         K2 | points to entries in the table above
+        # | fieldID        K2 | points to entries in the table below
+        # | newData           | e.g. 'ian@hixie.ch'
+        # | password          | encrypted password
+        # | createTime        | datetime
+        # | type              | 0 = normal, 1 = remove all other user/field reqs
+        # +-------------------+
+    } else {
+        # check its schema is up to date
+    }
+    if (not $helper->tableExists($app, $database, 'userDataTypes')) {
         $app->output->setupProgress('dataSource.user.userDataTypes');
-        $self->database($app)->execute('
+        $database->execute('
             CREATE TABLE userDataTypes (
                                   fieldID integer unsigned auto_increment NOT NULL PRIMARY KEY,
                                   category varchar(64) NOT NULL,
@@ -393,9 +460,9 @@ sub setupInstall {
     } else {
         # check its schema is up to date
     }
-    if (not $helper->tableExists($app, $self->database($app), 'userGroupsMapping')) {
+    if (not $helper->tableExists($app, $database, 'userGroupsMapping')) {
         $app->output->setupProgress('dataSource.user.userGroupsMapping');
-        $self->database($app)->execute('
+        $database->execute('
             CREATE TABLE userGroupsMapping (
                                   userID integer unsigned NOT NULL,
                                   groupID integer unsigned NOT NULL,
@@ -412,14 +479,15 @@ sub setupInstall {
         # +-------------------+
         # [1]: level 0 is reserved for 'not a member' which in the database is represented by absence
     } else {
+        $app->output->setupProgress('dataSource.user.userGroupsMapping.schemaChanges');
         # check its schema is up to date
-        if (not $helper->columnExists($app, $self->database($app), 'userGroupsMapping', 'level')) {
-            $self->database($app)->execute('ALTER TABLE userGroupsMapping ADD COLUMN level integer unsigned NOT NULL DEFAULT 1');
+        if (not $helper->columnExists($app, $database, 'userGroupsMapping', 'level')) {
+            $database->execute('ALTER TABLE userGroupsMapping ADD COLUMN level integer unsigned NOT NULL DEFAULT 1');
         }
     }
-    if (not $helper->tableExists($app, $self->database($app), 'groups')) {
+    if (not $helper->tableExists($app, $database, 'groups')) {
         $app->output->setupProgress('dataSource.user.groups');
-        $self->database($app)->execute('
+        $database->execute('
             CREATE TABLE groups (
                                   groupID integer unsigned auto_increment NOT NULL PRIMARY KEY,
                                   name varchar(255) NOT NULL,
@@ -435,9 +503,9 @@ sub setupInstall {
     } else {
         # check its schema is up to date
     }
-    if (not $helper->tableExists($app, $self->database($app), 'groupRightsMapping')) {
+    if (not $helper->tableExists($app, $database, 'groupRightsMapping')) {
         $app->output->setupProgress('dataSource.user.groupRightsMapping');
-        $self->database($app)->execute('
+        $database->execute('
             CREATE TABLE groupRightsMapping (
                                   groupID integer unsigned NOT NULL,
                                   rightID integer unsigned NOT NULL,
@@ -453,9 +521,9 @@ sub setupInstall {
     } else {
         # check its schema is up to date
     }
-    if (not $helper->tableExists($app, $self->database($app), 'rights')) {
+    if (not $helper->tableExists($app, $database, 'rights')) {
         $app->output->setupProgress('dataSource.user.rights');
-        $self->database($app)->execute('
+        $database->execute('
             CREATE TABLE rights (
                                   rightID integer unsigned auto_increment NOT NULL PRIMARY KEY,
                                   name varchar(255) NOT NULL,
@@ -471,6 +539,5 @@ sub setupInstall {
     } else {
         # check its schema is up to date
     }
-    $self->dump(9, 'done configuring user data source');
     return;
 }

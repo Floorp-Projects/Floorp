@@ -89,14 +89,14 @@ sub getUserByID {
     my $self = shift;
     my($app, $id) = @_;
     $self->notImplemented();
-    # return userID, disabled, password, adminMessage, newFieldID, newFieldValue, 
-    # newFieldKey, [ fieldID, data ]*, [ groupID, name, level ]*, [rightNames]*
+    # return userID, disabled, password, adminMessage,
+    # [ fieldID, data ]*, [ groupID, name, level ]*, [rightNames]*
     # or () if unsuccessful
 }
 
 sub setUser {
     my $self = shift;
-    my($app, $userID, $disabled, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey) = @_;
+    my($app, $userID, $disabled, $password, $adminMessage) = @_;
     # if userID is undefined, then add a new entry and return the
     # userID (so that it can be used in setUserField and
     # setUserGroups, later).
@@ -110,6 +110,39 @@ sub setUserField {
 }
 
 sub removeUserField {
+    my $self = shift;
+    my($app, $userID, $fieldID) = @_;
+    $self->notImplemented();
+}
+
+sub setUserFieldChange {
+    my $self = shift;
+    my($app, $userID, $fieldID, $newData, $password, $type) = @_;
+    $self->notImplemented();
+    # return change ID
+}
+
+sub getUserFieldChangeFromChangeID {
+    my $self = shift;
+    my($app, $changeID) = @_;
+    $self->notImplemented();
+    # return [userID, fieldID, newData, password, createTime, type]
+}
+
+sub getUserFieldChangesFromUserIDAndFieldID {
+    my $self = shift;
+    my($app, $userID, $fieldID) = @_;
+    $self->notImplemented();
+    # return [changeID, newData, password, createTime, type]*
+}
+
+sub removeUserFieldChangeByChangeID {
+    my $self = shift;
+    my($changeID) = @_;
+    $self->notImplemented();
+}
+
+sub removeUserFieldChangesByUserIDAndFieldID {
     my $self = shift;
     my($app, $userID, $fieldID) = @_;
     $self->notImplemented();

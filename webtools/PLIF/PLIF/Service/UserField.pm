@@ -64,8 +64,9 @@ sub init {
     $self->name($fieldName); # change this at your peril
     $self->typeData($fieldTypeData); # change this at your peril
     $self->mode($fieldMode); # change this at your peril
-    $self->data($fieldData); # this is the only thing you should be changing
+    $self->{'data'} = $fieldData; # read this via $field->data and write via $field->data($foo)
     # don't forget to update the 'hash' function if you add more member variables here
+    $self->{'_DATAFIELD'} = 'data';
     $self->{'_DELETE'} = 0;
     $self->{'_DIRTY'} = 0;
 }
@@ -87,6 +88,22 @@ sub remove {
     $self->{'_DIRTY'} = 1;
 }
 
+sub data {
+    my $self = shift;
+    if (@_) {
+        my($value) = @_;
+        if (defined($value)) {
+            $self->assert($self->validate($value), 0, 'tried to set data to invalid value'); # XXX might want to provide more debugging data
+            $self->{'data'} = $value;
+            $self->{'_DIRTY'} = 1;
+        } else {
+            $self->remove();
+        }
+    } else {
+        return $self->{$self->{'_DATAFIELD'}};
+    }
+}
+
 sub hash {
     my $self = shift;
     return $self->data;
@@ -98,40 +115,42 @@ sub hash {
 # followed by the field data itself
 sub username {
     my $self = shift;
-    $self->assert($self->category eq 'contact', 1, 'Tried to get the username from the non-contact field \''.($self->fieldID).'\'');
+    $self->assert($self->category eq 'contact', 0, 'Tried to get the username from the non-contact field \''.($self->fieldID).'\'');
     return $self->typeData.$self->data;
 }
 
 sub address {
     my $self = shift;
-    $self->assert($self->category eq 'contact', 1, 'Tried to get the address of the non-contact field \''.($self->fieldID).'\'');
-    if ($self->propertyExists('newAddress')) {
-        return $self->newAddress;
-    } else {
-        return $self->data;
-    }
+    $self->assert($self->category eq 'contact', 0, 'Tried to get the address of the non-contact field \''.($self->fieldID).'\'');
+    return $self->data;
 }
 
-sub prepareAddressChange {
+sub prepareChange {
     my $self = shift;
-    my($newAddress) = @_;
-    $self->assert($self->category eq 'contact', 1, 'Tried to change the address of the non-contact field \''.($self->fieldID).'\'');
-    $self->{'newAddress'} = $newAddress; # access directly so as not to set the _DIRTY flag
+    my($newData) = @_;
+    $self->assert($self->validate($newData), 0, 'tried to prepare change to invalid value'); # XXX might want to provide more debugging data
+    $self->newData($newData);
+}
+
+# sets a flag so that calls to ->data and ->address will return the
+# value as stored in the database
+sub returnOldData {
+    my $self = shift;
+    my($newData) = @_;
+    $self->{'_DATAFIELD'} = 'data';
+}
+
+# sets a flag so that calls to ->data and ->address will return the
+# value set by prepareChange() rather than the actual value of the
+# field (as stored in the database)
+sub returnNewData {
+    my $self = shift;
+    my($newData) = @_;
+    $self->{'_DATAFIELD'} = 'newData';
 }
 
 
 # Internal Routines
-
-sub propertySet {
-    my $self = shift;
-    my($name, $value) = @_;
-    if ($name eq 'data') {
-        $self->assert($self->validate($value), 0, 'tried to set data to invalid value'); # XXX might want to provide more debugging data
-    }
-    my $result = $self->SUPER::propertySet(@_);
-    $self->{'_DIRTY'} = 1;
-    return $result;
-}
 
 sub DESTROY {
     my $self = shift;

@@ -96,7 +96,7 @@ sub getUserByID {
 sub getNewUser {
     my $self = shift;
     my($app, $password) = @_;
-    return $self->objectCreate($app, undef, 0, $password, '', '', '', '', {}, {}, []);
+    return $self->objectCreate($app, undef, 0, $password, '', '', '', '', {}, [], []);
 }
 
 sub objectProvides {
@@ -107,16 +107,13 @@ sub objectProvides {
 
 sub objectInit {
     my $self = shift;
-    my($app, $userID, $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldPassword, $fields, $groups, $rights) = @_;
+    my($app, $userID, $mode, $password, $adminMessage, $fields, $groups, $rights) = @_;
     $self->{'_DIRTY'} = {}; # make sure propertySet is happy
     $self->SUPER::objectInit(@_);
     $self->userID($userID);
     $self->mode($mode); # 0=active, 1=disabled   XXX need a way to make this extensible
     $self->password($password);
     $self->adminMessage($adminMessage);
-    $self->newFieldID($newFieldID);
-    $self->newFieldValue($newFieldValue);
-    $self->newFieldPassword($newFieldPassword);
     $self->fields({});
     $self->fieldsByID({});
     # don't forget to update the 'hash' function if you add more properties/field whatever you want to call them
@@ -192,58 +189,37 @@ sub getAddress {
     }
 }
 
-sub prepareAddressChange {
+sub addFieldChange {
     my $self = shift;
-    my($field, $newAddress, $password) = @_;
-    if ($field->validate($newAddress)) {
-        $self->newFieldID($field->fieldID);
-        $self->newFieldValue($newAddress);
-        $self->newFieldPassword($password);
-        $field->prepareAddressChange($newAddress);
-        return $self;
-    } else {
-        return undef;
-    }
+    my($field, $newData, $password, $type) = @_;
+    $field->prepareChange($newData);
+    return $self->app->getService('dataSource.user')->setUserFieldChange($self->app, $self->userID, $field->fieldID, $newData, $password, $type);
 }
 
-# Call this if you don't yet have a field handle.
-# If you have got a new field already, it is safe to just call prepareAddressChange().
-sub prepareAddressAddition {
+sub performFieldChange {
     my $self = shift;
-    my($fieldName, $newAddress, $password) = @_;
-    my $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByName($self->app, $self, 'contact', $fieldName, undef));
-    return $self->prepareAddressChange($field, $newAddress, $password);
-}
-
-sub doAddressChange {
-    my $self = shift;
-    my($password) = @_;
-    # it is defined that if $password is undefined, then this method
-    # will reset the fields to prevent multiple attempts. See the
-    # resetAddressChange() method.
-    if ($self->newFieldID) {
-        my $field = $self->fieldsByID->{$self->newFieldID};
-        $self->assert(defined($field), 1, 'Database integrity error: newFieldID doesn\'t map to a field!');
-        if (defined($password) and ($self->app->getService('service.passwords')->checkPassword($self->newFieldPassword, $password))) {
-            $field->data($self->newFieldValue);
-        } elsif (not defined($field->data)) {
-            $field->remove();
-        }
-        $self->newFieldID(undef);
-        $self->newFieldValue(undef);
-        $self->newFieldPassword(undef);
-        return $field;
-    } else {
+    my($changeID, $candidatePassword, $minTime) = @_;
+    my $dataSource = $self->app->getService('dataSource.user');
+    my($userID, $fieldID, $newData, $password, $createTime, $type) = $dataSource->getUserFieldChangeFromChangeID($self->app, $changeID);
+    # check for valid change
+    if (($userID != $self->userID) or # wrong change ID
+        (not $self->app->getService('service.password')->checkPassword($candidatePassword, $password)) or # wrong password
+        ($createTime < $minTime)) { # expired change
         return 0;
     }
-}
-
-sub resetAddressChange {
-    my $self = shift;
-    # calling the doAddressChange() function with no arguments is the
-    # same as calling doAddressChange() with the wrong password, which
-    # resets the fields (to prevent multiple attempts)
-    return defined($self->doAddressChange());
+    # perform the change
+    $self->getFieldByID($fieldID)->data($newData);
+    # remove the change from the list of pending changes
+    if ($type == 1) { # XXX HARDCODED CONSTANT ALERT
+        # this is an override change
+        # remove all pending changes for this field (including this one)
+        $dataSource->removeUserFieldChangesByUserIDAndFieldID($self->app, $userID, $fieldID);
+    } else {
+        # this is a normal change
+        # remove just this change
+        $dataSource->removeUserFieldChangesByChangeID($self->app, $changeID);
+    }
+    return 1;
 }
 
 # a convenience method for either setting a user setting from a new
