@@ -26,13 +26,11 @@ sub main {
 
   # Report some kind of status to parent script.
   #
-  #	 $TinderUtils::build_status = 'busted';
-  #  $TinderUtils::build_status = 'testfailed';
-  #  $TinderUtils::build_status = 'success';
-  #  
+  #	 {'busted', 'testfailed', 'success'}
+  #
 
   # Report a fake success, for example's sake.
-  $TinderUtils::build_status = 'success';
+  return 'success';
 }
 
 # Need to end with a true value, (since we're using "require").
