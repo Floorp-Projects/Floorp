@@ -910,3 +910,14 @@ XfeTabDrawRaised(Widget w,Boolean raised)
 	_XfePointerInside(w) = pointer_inside_save;
 }
 /*----------------------------------------------------------------------*/
+/* extern */ unsigned char
+XfeTabGetOrientation(Widget w)
+{
+    XfeTabPart * tp = _XfeTabPart(w);
+
+    assert( _XfeIsAlive(w) );
+    assert( XfeIsTab(w) );
+
+	return tp->orientation;
+}
+/*----------------------------------------------------------------------*/

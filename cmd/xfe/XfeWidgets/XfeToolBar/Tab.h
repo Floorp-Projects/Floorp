@@ -94,6 +94,9 @@ extern void
 XfeTabDrawRaised			(Widget		w,
 							 Boolean	raised);
 /*----------------------------------------------------------------------*/
+extern unsigned char
+XfeTabGetOrientation		(Widget		w);
+/*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION
 
