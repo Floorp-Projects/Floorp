@@ -45,7 +45,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#define CORE_LIB_COUNT 11
+#define CORE_LIB_COUNT 13
 
 const char kHTTPProto[] = "http://";
 const char kFTPProto[] = "ftp://";
