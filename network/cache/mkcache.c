@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -117,10 +117,10 @@ PRIVATE DB * cache_database = 0;
 	= PR_INIT_STATIC_CLIST(&active_cache_data_objects);
 
 typedef struct _CacheDataObject {
-	PRCList          links;
+    PRCList          links;
     XP_File          fp;
     NET_StreamClass *next_stream;
-	URL_Struct      *URL_s;
+    URL_Struct      *URL_s;
 #ifdef NU_CACHE
     	void* 	cache_object;
 #else
@@ -136,7 +136,7 @@ PUBLIC PRBool
 NET_IsCacheTraceOn(void)
 {
 #ifdef NU_CACHE
-	return CacheTrace_IsEnabled();
+    return CacheTrace_IsEnabled();
 #else
     return NET_CacheTraceOn;
 #endif
@@ -1401,25 +1401,25 @@ PRIVATE int net_CacheWrite (NET_StreamClass *stream, CONST char* buffer, int32 l
     CacheDataObject* obj = stream->data_object;
     if (obj && obj->cache_object)
     {
-     if (!CacheObject_Write(obj->cache_object, buffer, len))
-     {
-         if (obj->URL_s)
-          obj->URL_s->dont_cache = TRUE;
+         if (!CacheObject_Write(obj->cache_object, buffer, len))
+         {
+             if (obj->URL_s)
+              obj->URL_s->dont_cache = TRUE;
 
-         /* CacheObject_MarkForDeletion(); TODO*/
-     }
-     /* Write for next stream */
-     if (obj->next_stream)
-     {
-         int status = 0;
-         PR_ASSERT(buffer && (len >= 0));
-         status = (*obj->next_stream->put_block)
-          (obj->next_stream, buffer, len);
+             /* CacheObject_MarkForDeletion(); TODO*/
+         }
+        /* Write for next stream */
+        if (obj->next_stream)
+        {
+            int status = 0;
+            PR_ASSERT(buffer && (len >= 0));
+            status = (*obj->next_stream->put_block)
+            (obj->next_stream, buffer, len);
 
-         /* abort */
-         if(status < 0)
-          return(status);
-     }
+            /* abort */
+            if(status < 0)
+                return(status);
+        }
     }
     return(1);
 }
@@ -1482,14 +1482,14 @@ PRIVATE void net_CacheComplete (NET_StreamClass *stream)
     /* If object is in memory GetFilename will return null so this is ok */
     if (obj->URL_s && CacheObject_GetFilename(obj->cache_object))
     {
-     StrAllocCopy(obj->URL_s->cache_file, CacheObject_GetFilename(obj->cache_object));
+         StrAllocCopy(obj->URL_s->cache_file, CacheObject_GetFilename(obj->cache_object));
     }
 
     /* Complete the next stream */
     if (obj->next_stream)
     {
-     (*obj->next_stream->complete)(obj->next_stream);
-     PR_Free(obj->next_stream);
+        (*obj->next_stream->complete)(obj->next_stream);
+        PR_Free(obj->next_stream);
     }
     
     /* Do the things I don't as yet understand or have time to */
@@ -1769,7 +1769,7 @@ NET_CacheConverter (FO_Present_Types format_out,
     cache_object = CacheObject_Create(URL_s->address);
     if (!cache_object)
      return 0;
-    do_disk_cache = FALSE; /* Testing remove later */
+    do_disk_cache = TRUE; /* Testing remove later */
     CacheObject_SetModule(cache_object, (PRInt16) (do_disk_cache ? DISK_MODULE_ID : MEM_MODULE_ID));
     CacheObject_SetExpires(cache_object, URL_s->expires);
     CacheObject_SetEtag(cache_object, URL_s->etag);
@@ -1779,7 +1779,9 @@ NET_CacheConverter (FO_Present_Types format_out,
     CacheObject_SetCharset(cache_object, URL_s->charset);
     CacheObject_SetContentEncoding(cache_object, URL_s->content_encoding);
     CacheObject_SetPageServicesURL(cache_object, URL_s->page_services_url);
-    /* This filename discovery thing takes place every time! So optimize this in nu code */
+    /* This filename discovery thing takes place every time! 
+     * So optimize this in nu code, TODO
+     */
     /* BEGIN BAD CODE */
        filename = WH_TempName(xpCache, "cache");
      
@@ -1938,7 +1940,7 @@ NET_CacheConverter (FO_Present_Types format_out,
      FE/History takes this, this should be ripped off.*/
     if (URL_s->post_data)
     {
-     CacheObject_SetPostData(cache_object, URL_s->post_data, URL_s->post_data_size);
+        CacheObject_SetPostData(cache_object, URL_s->post_data, URL_s->post_data_size);
     }
 
     data_object = PR_NEW(CacheDataObject);
@@ -1967,9 +1969,9 @@ NET_CacheConverter (FO_Present_Types format_out,
     stream = PR_NEW(NET_StreamClass);
     if (!stream)
     {
-     CacheObject_Destroy(cache_object);
-     PR_Free(data_object);
-     return NULL;
+        CacheObject_Destroy(cache_object);
+        PR_Free(data_object);
+        return NULL;
     }
 
     stream->name         = "Nu Cache Stream";
@@ -3897,6 +3899,14 @@ found:
 		return 0;
 	  }
 	return stream;
+}
+#endif
+
+#ifdef NU_CACHE
+PUBLIC XP_Bool
+NET_IsURLInCache(const URL_Struct *URL_s)
+{
+    return CacheManager_Contains(URL_s->address);
 }
 #endif
 
