@@ -55,7 +55,6 @@ ifdef NS_USE_GCC
 CC			= gcc -Wall
 CCC			= g++ -Wall
 COMPILER_TAG		= _gcc
-ASFLAGS			+= -x assembler-with-cpp
 ifdef NO_MDUPDATE
 OS_CFLAGS		= $(NOMD_OS_CFLAGS)
 else
