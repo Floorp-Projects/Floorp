@@ -49,13 +49,19 @@ nsAbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
 }
 
 nsAbsoluteFrame::nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsFrame(aContent, aParent)
+  : nsContainerFrame(aContent, aParent)
 {
-  mFrame = nsnull;
 }
 
 nsAbsoluteFrame::~nsAbsoluteFrame()
 {
+}
+
+NS_IMETHODIMP
+nsAbsoluteFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+{
+  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
+  return NS_OK;
 }
 
 nsIView* nsAbsoluteFrame::CreateView(nsIView*         aContainingView,
@@ -275,13 +281,13 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
                                   nsReflowStatus&      aStatus)
 {
   // Have we created the absolutely positioned item yet?
-  if (nsnull == mFrame) {
+  if (nsnull == mFirstChild) {
     // If the content object is a container then wrap it in a body pseudo-frame
     if (mContent->CanContainChildren()) {
-      nsBodyFrame::NewFrame(&mFrame, mContent, this);
+      nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
 
       // Use our style context for the pseudo-frame
-      mFrame->SetStyleContext(aPresContext, mStyleContext);
+      mFirstChild->SetStyleContext(aPresContext, mStyleContext);
 
     } else {
       // Create the absolutely positioned item as a pseudo-frame child. We'll
@@ -289,7 +295,7 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
       nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
   
       nsresult rv = delegate->CreateFrame(aPresContext, mContent, this,
-                                          mStyleContext, mFrame);
+                                          mStyleContext, mFirstChild);
       NS_RELEASE(delegate);
       if (NS_OK != rv) {
         return rv;
@@ -312,7 +318,7 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     nsIView*         view = CreateView(containingView, rect, position, display);
     NS_RELEASE(containingView);
 
-    mFrame->SetView(view);  
+    mFirstChild->SetView(view);  
     NS_RELEASE(view);
 
     // Resize reflow the absolutely positioned element
@@ -325,9 +331,9 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     }
 
     nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(mFrame, aReflowState, availSize, eReflowReason_Initial);
-    mFrame->WillReflow(*aPresContext);
-    mFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+    nsReflowState   reflowState(mFirstChild, aReflowState, availSize, eReflowReason_Initial);
+    mFirstChild->WillReflow(*aPresContext);
+    mFirstChild->Reflow(aPresContext, desiredSize, reflowState, aStatus);
 
     // Figure out what size to actually use. If the position style is 'auto' or
     // the container should be enlarged to contain overflowing frames then use
@@ -340,61 +346,12 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     if (eStyleUnit_Auto == position->mHeight.GetUnit()) {
       rect.height = desiredSize.height;
     }
-    mFrame->SizeTo(rect.width, rect.height);
-    mFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    mFirstChild->SetRect(rect);
+    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
   // Return our desired size as (0, 0)
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-}
-
-NS_METHOD
-nsAbsoluteFrame::ChildCount(PRInt32& aChildCount) const
-{
-  aChildCount = 1;
-  return NS_OK;
-}
-
-NS_METHOD
-nsAbsoluteFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
-{
-  aFrame = (0 == aIndex) ? mFrame : nsnull;
-  return NS_OK;
-}
-
-NS_METHOD
-nsAbsoluteFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
-{
-  aIndex = (aChild == mFrame) ? 0 : -1;
-  return NS_OK;
-}
-
-NS_METHOD
-nsAbsoluteFrame::FirstChild(nsIFrame*& aFirstChild) const
-{
-  aFirstChild = mFrame;
-  return NS_OK;
-}
-
-NS_METHOD
-nsAbsoluteFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
-{
-  aNextChild = nsnull;
-  return NS_OK;
-}
-
-NS_METHOD
-nsAbsoluteFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
-{
-  aPrevChild = nsnull;
-  return NS_OK;
-}
-
-NS_METHOD
-nsAbsoluteFrame::LastChild(nsIFrame*& aLastChild) const
-{
-  aLastChild = mFrame;
-  return NS_OK;
 }
 
 NS_METHOD nsAbsoluteFrame::ListTag(FILE* out) const
@@ -403,33 +360,5 @@ NS_METHOD nsAbsoluteFrame::ListTag(FILE* out) const
   PRInt32 contentIndex;
   GetContentIndex(contentIndex);
   fprintf(out, "(%d)@%p", contentIndex, this);
-  return NS_OK;
-}
-
-NS_METHOD nsAbsoluteFrame::List(FILE* out, PRInt32 aIndent) const
-{
-  // Indent
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
-
-  // Output the tag
-  ListTag(out);
-  nsIView* view;
-  GetView(view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
-    NS_RELEASE(view);
-  }
-
-  // Output the rect
-  out << mRect;
-
-  // List the absolutely positioned frame
-  if (0 != mState) {
-    fprintf(out, " [state=%08x]", mState);
-  }
-  fputs("<\n", out);
-  mFrame->List(out, aIndent + 1);
-  fputs(">\n", out);
-
   return NS_OK;
 }
