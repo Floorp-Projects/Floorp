@@ -39,7 +39,7 @@
         <xul:spacer class="tabs-left"/>
         <xul:toolbarbutton class="tabs-newbutton" xbl:inherits="oncommand=onnewtab,tooltiptext=tooltiptextnew"/>
       </xul:stack>
-      <xul:box flex="1" style="min-width: 1px;">
+      <xul:hbox flex="1" style="min-width: 1px;">
         <children/>
         <xul:spacer class="tabs-right" flex="1"/>
       </xul:hbox>
