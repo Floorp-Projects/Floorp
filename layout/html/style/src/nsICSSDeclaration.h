@@ -349,6 +349,7 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSValueList* mKeyEquivalent;
   nsCSSValue      mUserFocus;
   nsCSSValue      mResizer;
+  nsCSSValue      mBehavior;
 };
 
 struct nsCSSAural : public nsCSSStruct  { // NEW

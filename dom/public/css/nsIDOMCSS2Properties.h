@@ -59,6 +59,9 @@ public:
   NS_IMETHOD    GetBackgroundRepeat(nsString& aBackgroundRepeat)=0;
   NS_IMETHOD    SetBackgroundRepeat(const nsString& aBackgroundRepeat)=0;
 
+  NS_IMETHOD    GetBehavior(nsString& aBehavior)=0;
+  NS_IMETHOD    SetBehavior(const nsString& aBehavior)=0;
+
   NS_IMETHOD    GetBorder(nsString& aBorder)=0;
   NS_IMETHOD    SetBorder(const nsString& aBorder)=0;
 
@@ -424,6 +427,8 @@ public:
   NS_IMETHOD    SetBackgroundPosition(const nsString& aBackgroundPosition);  \
   NS_IMETHOD    GetBackgroundRepeat(nsString& aBackgroundRepeat);  \
   NS_IMETHOD    SetBackgroundRepeat(const nsString& aBackgroundRepeat);  \
+  NS_IMETHOD    GetBehavior(nsString& aBehavior);  \
+  NS_IMETHOD    SetBehavior(const nsString& aBehavior);  \
   NS_IMETHOD    GetBorder(nsString& aBorder);  \
   NS_IMETHOD    SetBorder(const nsString& aBorder);  \
   NS_IMETHOD    GetBorderCollapse(nsString& aBorderCollapse);  \
@@ -674,6 +679,8 @@ public:
   NS_IMETHOD    SetBackgroundPosition(const nsString& aBackgroundPosition) { return _to SetBackgroundPosition(aBackgroundPosition); } \
   NS_IMETHOD    GetBackgroundRepeat(nsString& aBackgroundRepeat) { return _to GetBackgroundRepeat(aBackgroundRepeat); } \
   NS_IMETHOD    SetBackgroundRepeat(const nsString& aBackgroundRepeat) { return _to SetBackgroundRepeat(aBackgroundRepeat); } \
+  NS_IMETHOD    GetBehavior(nsString& aBehavior) { return _to GetBehavior(aBehavior); } \
+  NS_IMETHOD    SetBehavior(const nsString& aBehavior) { return _to SetBehavior(aBehavior); } \
   NS_IMETHOD    GetBorder(nsString& aBorder) { return _to GetBorder(aBorder); } \
   NS_IMETHOD    SetBorder(const nsString& aBorder) { return _to SetBorder(aBorder); } \
   NS_IMETHOD    GetBorderCollapse(nsString& aBorderCollapse) { return _to GetBorderCollapse(aBorderCollapse); } \

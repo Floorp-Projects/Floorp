@@ -293,6 +293,8 @@ struct nsStyleUserInterface: public nsStyleStruct {
   PRUint8   mUserFocus;       // [inherited] (auto-select)
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
   PRUint8   mResizer;         // [reset]
+  nsString  mBehavior;        // [reset] absolute url string
+
 };
 
 struct nsStylePrint: public nsStyleStruct {

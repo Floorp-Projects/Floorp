@@ -3734,6 +3734,17 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems)
 {
+/*
+  nsCOMPtr<nsIStyleContext> styleContext;
+  aNewFrame->GetStyleContext(getter_AddRefs(styleContext));
+
+  const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
+      styleContext->GetStyleData(eStyleStruct_UserInterface);
+
+  if (ui->mBehavior != "")
+    printf("The behavior is not the empty string!\n");
+*/
+
    // only these tags types can have anonymous content. We do this check for performance
   // reasons. If we did a query interface on every tag it would be very inefficient.
   if (aTag !=  nsHTMLAtoms::input &&

@@ -1496,16 +1496,33 @@ void StyleUserInterfaceImpl::ResetFrom(const nsStyleUserInterface* aParent, nsIP
 
 void StyleUserInterfaceImpl::SetFrom(const nsStyleUserInterface& aSource)
 {
-  nsCRT::memcpy((nsStyleUserInterface*)this, &aSource, sizeof(nsStyleUserInterface));
+  mUserInput = aSource.mUserInput;
+  mUserModify = aSource.mUserModify;
+  mUserFocus = aSource.mUserFocus;
+
+  mUserSelect = aSource.mUserSelect;
+  mKeyEquivalent = aSource.mKeyEquivalent;
+  mResizer = aSource.mResizer;
+  mBehavior = aSource.mBehavior;
 }
 
 void StyleUserInterfaceImpl::CopyTo(nsStyleUserInterface& aDest) const
 {
-  nsCRT::memcpy(&aDest, (const nsStyleUserInterface*)this, sizeof(nsStyleUserInterface));
+  aDest.mUserInput = mUserInput;
+  aDest.mUserModify = mUserModify;
+  aDest.mUserFocus = mUserFocus;
+
+  aDest.mUserSelect = mUserSelect;
+  aDest.mKeyEquivalent = mKeyEquivalent;
+  aDest.mResizer = mResizer;
+  aDest.mBehavior = mBehavior;
 }
 
 PRInt32 StyleUserInterfaceImpl::CalcDifference(const StyleUserInterfaceImpl& aOther) const
 {
+  if (mBehavior != aOther.mBehavior)
+    return NS_STYLE_HINT_FRAMECHANGE;
+
   if ((mUserInput == aOther.mUserInput) && 
       (mResizer == aOther.mResizer)) {
     if ((mUserModify == aOther.mUserModify) && 

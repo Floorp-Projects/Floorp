@@ -796,7 +796,8 @@ nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
     mUserSelect(aCopy.mUserSelect),
     mKeyEquivalent(nsnull),
     mUserFocus(aCopy.mUserFocus),
-    mResizer(aCopy.mResizer)
+    mResizer(aCopy.mResizer),
+    mBehavior(aCopy.mBehavior)
 {
   CSS_IF_COPY(mKeyEquivalent, nsCSSValueList);
 }
@@ -827,6 +828,7 @@ void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
   }
   mUserFocus.AppendToString(buffer, eCSSProperty_user_focus);
   mResizer.AppendToString(buffer, eCSSProperty_resizer);
+  mBehavior.AppendToString(buffer, eCSSProperty_behavior);
   fputs(buffer, out);
 }
 
@@ -1566,6 +1568,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_key_equivalent:
     case eCSSProperty_user_focus:
     case eCSSProperty_resizer:
+    case eCSSProperty_behavior:
       CSS_ENSURE(UserInterface) {
         switch (aProperty) {
           case eCSSProperty_user_input:       mUserInterface->mUserInput = aValue;      break;
@@ -1579,6 +1582,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             break;
           case eCSSProperty_user_focus:       mUserInterface->mUserFocus = aValue;      break;
           case eCSSProperty_resizer:          mUserInterface->mResizer = aValue;        break;
+          case eCSSProperty_behavior:         mUserInterface->mBehavior = aValue;       break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
@@ -2269,6 +2273,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
       case eCSSProperty_user_select:
       case eCSSProperty_user_focus:
       case eCSSProperty_resizer:
+      case eCSSProperty_behavior:
         if (nsnull != mUserInterface) {
           CSS_ENSURE_IMPORTANT(UserInterface) {
             switch (aProperty) {
@@ -2277,6 +2282,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_user_select,  mUserInterface->mUserSelect);
               CSS_CASE_IMPORTANT(eCSSProperty_user_focus,   mUserInterface->mUserFocus);
               CSS_CASE_IMPORTANT(eCSSProperty_resizer,      mUserInterface->mResizer);
+              CSS_CASE_IMPORTANT(eCSSProperty_behavior,     mUserInterface->mBehavior);
               CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
@@ -2954,6 +2960,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_key_equivalent:
     case eCSSProperty_user_focus:
     case eCSSProperty_resizer:
+    case eCSSProperty_behavior:
       if (nsnull != mUserInterface) {
         switch (aProperty) {
           case eCSSProperty_user_input:       aValue = mUserInterface->mUserInput;       break;
@@ -2966,6 +2973,8 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
             break;
           case eCSSProperty_user_focus:       aValue = mUserInterface->mUserFocus;       break;
           case eCSSProperty_resizer:          aValue = mUserInterface->mResizer;         break;
+          case eCSSProperty_behavior:         aValue = mUserInterface->mBehavior;        break;
+
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }

@@ -2523,6 +2523,11 @@ MapDeclarationUIInto(nsICSSDeclaration* aDeclaration,
         ui->mUserSelect = parentUI->mUserSelect;
       }
 
+      // behavior: url, none
+      if (eCSSUnit_URL == ourUI->mBehavior.GetUnit()) {
+        ourUI->mBehavior.GetStringValue(ui->mBehavior);
+      }
+
       // key-equivalent: none, enum XXX, inherit
       nsCSSValueList*  keyEquiv = ourUI->mKeyEquivalent;
       if (keyEquiv) {
