@@ -864,7 +864,7 @@ nsDOMDataSource::CreateDOMNodeTarget(nsIDOMNode *aNode, nsIRDFResource *aPropert
     GetFieldNameFromRes(aProperty, &fieldName);
     
     // maybe it's an attribute reference?
-    if (!fieldName.Find("@", false, 0, 1)) {
+    if (!fieldName.Find("@", PR_FALSE, 0, 1)) {
       // first make sure we're looking at an element node...
       nsCOMPtr<nsIDOMElement> el = do_QueryInterface(aNode);
       if (el) {
@@ -890,7 +890,7 @@ nsDOMDataSource::GetFieldNameFromRes(nsIRDFResource* aProperty, nsAutoString* aR
   aProperty->GetValue(&resval);
   nsAutoString val;
   val.AssignWithConversion(resval);
-  PRInt32 offset = val.Find(INS_NAMESPACE_URI, false, 0, 1);
+  PRInt32 offset = val.Find(INS_NAMESPACE_URI, PR_FALSE, 0, 1);
   if (!offset) {
     PRInt32 len = strlen(INS_NAMESPACE_URI);
     val.Right(*aResult, val.Length() - len);
