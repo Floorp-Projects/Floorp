@@ -430,15 +430,17 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 
   // Plan to build the content by default.
   PRBool buildContent = PR_TRUE;
-  PRInt32 childCount;
-  aBoundElement->ChildCount(childCount);
-  if (childCount > 0) {
-    // See if there's an excludes attribute.
-    // We'll only build content if all the explicit children are 
-    // in the excludes list.
-    nsAutoString excludes;
-    content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
-    if (!excludes.EqualsWithConversion("*")) {
+
+  // See if there's an excludes attribute.
+  nsAutoString excludes;
+  content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
+  if (!excludes.EqualsWithConversion("*")) {
+    PRInt32 childCount;
+    aBoundElement->ChildCount(childCount);
+    if (childCount > 0) {
+      // We'll only build content if all the explicit children are 
+      // in the excludes list.
+    
       if (!excludes.IsEmpty()) {
         // Walk the children and ensure that all of them
         // are in the excludes array.
