@@ -75,7 +75,8 @@ nsGtkUtils::gtk_widget_set_color(GtkWidget *  widget,
   g_return_if_fail (color != NULL);
   g_return_if_fail (flags == 0);
 
-  rc_style  = gtk_object_get_data (GTK_OBJECT (widget), "modify-style");
+  rc_style = (GtkRcStyle *) gtk_object_get_data (GTK_OBJECT (widget), 
+												 "modify-style");
 
   if (!rc_style)
   {
