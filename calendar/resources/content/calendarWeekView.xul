@@ -53,7 +53,20 @@
    >
 <script type="application/x-javascript" src="chrome://calendar/content/calendarWeekView.js"/>
    
-   <vbox id="week-view-box" flex="1">
+   <script type="application/x-javascript">
+      var ArrayOfDayNames = new Array();
+   
+      ArrayOfDayNames[0] = "&day.1.DDD;";
+      ArrayOfDayNames[1] = "&day.2.DDD;";
+      ArrayOfDayNames[2] = "&day.3.DDD;";
+      ArrayOfDayNames[3] = "&day.4.DDD;";
+      ArrayOfDayNames[4] = "&day.5.DDD;";
+      ArrayOfDayNames[5] = "&day.6.DDD;";
+      ArrayOfDayNames[6] = "&day.7.DDD;";
+      
+    </script>
+
+    <vbox id="week-view-box" flex="1">
   
       <!-- Week View: Controls-->
           
@@ -93,37 +106,37 @@
          <box id="week-view-header-days" flex="1">
             <vbox flex="1" class="weekview-daynumber-class">
                <label id="week-header-date-1" value="" />
-               <label value="&day.1.DDD;"/>
+               <label id="week-header-date-text-1" value="&day.1.DDD;"/>
             </vbox>
             
             <vbox flex="1" class="weekview-daynumber-class">
                <label id="week-header-date-2" value="" />
-               <label value="&day.2.DDD;" />
+               <label id="week-header-date-text-2" value="&day.2.DDD;" />
             </vbox>
             
             <vbox flex="1" class="weekview-daynumber-class">
                <label id="week-header-date-3" value="" />
-               <label value="&day.3.DDD;" />
+               <label id="week-header-date-text-3" value="&day.3.DDD;" />
             </vbox>
                   
             <vbox flex="1" class="weekview-daynumber-class">
                <label id="week-header-date-4" value="" />
-               <label value="&day.4.DDD;" />
+               <label id="week-header-date-text-4" value="&day.4.DDD;" />
             </vbox>
                  
             <vbox flex="1" class="weekview-daynumber-class">
                <label id="week-header-date-5" value="" />
-               <label value="&day.5.DDD;" />
+               <label id="week-header-date-text-5" value="&day.5.DDD;" />
             </vbox>
                   
             <vbox flex="1" class="weekview-daynumber-class">
                <label id="week-header-date-6" value="" />
-               <label value="&day.6.DDD;" />
+               <label id="week-header-date-text-6" value="&day.6.DDD;" />
             </vbox>
             
             <vbox flex="1" class="weekview-daynumber-class">
                <label id="week-header-date-7" value="" />
-               <label value="&day.7.DDD;" />
+               <label id="week-header-date-text-7" value="&day.7.DDD;" />
             </vbox>
             
             <vbox id="week-view-header-spacer"/>

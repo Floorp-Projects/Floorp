@@ -37,7 +37,7 @@
 
 var gAllEvents = new Array();
 var CreateAlarmBox = true;
-var gDateFormatter = new DateFormater();  // used to format dates and times
+var gDateFormatter = new DateFormater( opener.gCalendarWindow );  // used to format dates and times
 var kungFooDeathGripOnEventBoxes = new Array();
 
 function onLoad()
@@ -297,7 +297,7 @@ function snoozeAlarm( Event )
 
 function getFormatedDate( date )
 {
-   return( gDateFormatter.getFormatedDate( date ) );
+   return( opener.gCalendarWindow.dateFormater.getFormatedDate( date ) );
 }
 
 
@@ -307,7 +307,7 @@ function getFormatedDate( date )
 
 function getFormatedTime( date )
 {
-   var timeString = gDateFormatter.getFormatedTime( date );
+   var timeString = opener.gCalendarWindow.dateFormater.getFormatedTime( date );
    
    return timeString;
 }

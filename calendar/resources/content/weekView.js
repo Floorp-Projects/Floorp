@@ -431,12 +431,32 @@ WeekView.prototype.refreshDisplay = function( )
 {
    
    // Set the from-to title string, based on the selected date
+   var Offset = this.calendarWindow.calendarPreferences.getPref( "weekstart" );
    
    var viewDay = this.calendarWindow.getSelectedDate().getDay();
    var viewDayOfMonth = this.calendarWindow.getSelectedDate().getDate();
    var viewMonth = this.calendarWindow.getSelectedDate().getMonth();
    var viewYear = this.calendarWindow.getSelectedDate().getFullYear();
    
+   viewDay -= Offset;
+
+   if( viewDay < 0 )
+      viewDay += 7;
+
+   NewArrayOfDayNames = new Array();
+   
+   for( i = 0; i < ArrayOfDayNames.length; i++ )
+   {
+      NewArrayOfDayNames[i] = ArrayOfDayNames[i];
+   }
+
+   for( i = 0; i < Offset; i++ )
+   {
+      var FirstElement = NewArrayOfDayNames.shift();
+
+      NewArrayOfDayNames.push( FirstElement );
+   }
+
    var daysLeftInWeek = 6 - viewDay;
    var dateOfLastDayInWeek = viewDayOfMonth + daysLeftInWeek;
    
@@ -458,14 +478,17 @@ WeekView.prototype.refreshDisplay = function( )
    
    var weekDate = new Date( viewYear, viewMonth, dateOfFirstDayInWeek );
    
-   for( var dayIndex = 1; dayIndex < gHeaderDateItemArray.length; ++dayIndex )
+   for( var dayIndex = 1; dayIndex < 8; ++dayIndex )
    {
       var dateOfDay = weekDate.getDate();
       
-      var headerDateItem = gHeaderDateItemArray[ dayIndex ];
+      var headerDateItem = document.getElementById( "week-header-date-"+dayIndex );
       headerDateItem.setAttribute( "value" , dateOfDay );
       headerDateItem.setAttribute( "date", weekDate );
       headerDateItem.numEvents = 0;
+      
+      document.getElementById( "week-header-date-text-"+dayIndex ).setAttribute( "value", NewArrayOfDayNames[dayIndex-1] );
+      
       // advance to next day 
       
       weekDate.setDate( dateOfDay + 1 );

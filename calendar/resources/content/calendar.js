@@ -579,7 +579,7 @@ function CalendarWindow( calendarDataSource )
    
    this.EventSelection = new CalendarEventSelection( this );
 
-   this.dateFormater = new DateFormater();
+   this.dateFormater = new DateFormater( this );
    
    this.monthView = new MonthView( this );
    this.weekView = new WeekView( this );

@@ -80,7 +80,7 @@ DateUtils.getLastDayOfMonth = function( year, month  )
 
 
 
-function DateFormater()
+function DateFormater( CalendarWindow )
 {
    // we get the date bundle in case the locale changes, can
    // we be notified of a locale change instead, then we could
@@ -88,6 +88,7 @@ function DateFormater()
    
    this.dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
+   this.CalendarWindow = CalendarWindow;
 }
 
 
@@ -103,7 +104,7 @@ DateFormater.prototype.getFormatedDate = function( date )
    // that displays the date uses this function we will be able to 
    // make a user settable date format and use it here.
 
-   if( gCalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
+   if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
    {
       var oneBasedMonthNum = date.getMonth() + 1;
    
@@ -117,9 +118,6 @@ DateFormater.prototype.getFormatedDate = function( date )
    {
       return( dateService.FormatDate( "", dateService.dateFormatShort, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
    }
-   
-   
-   
 }
 
 

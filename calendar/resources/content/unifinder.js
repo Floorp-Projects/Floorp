@@ -78,8 +78,6 @@ function unifinderInit( CalendarWindow )
 
 var gSearchEventTable = new Array();
 
-var gDateFormater = new DateFormater();
-
 /**
 *   Observer for the calendar event data source. This keeps the unifinder
 *   display up to date when the calendar event data is changed
@@ -148,7 +146,7 @@ function prepareCalendarUnifinder( eventSource )
 
 function formatUnifinderEventDate( date )
 {
-   return( gDateFormater.getFormatedDate( date ) );
+   return( gCalendarWindow.dateFormater.getFormatedDate( date ) );
 }
 
 
@@ -158,7 +156,7 @@ function formatUnifinderEventDate( date )
 
 function formatUnifinderEventTime( time )
 {
-   var timeString = gDateFormater.getFormatedTime( time );
+   var timeString = gCalendarWindow.dateFormater.getFormatedTime( time );
    return timeString;
    
 }

@@ -77,8 +77,6 @@
 */
 
 
-var gDateFormatter = new DateFormater();  // used to format dates and times
-
 var gEvent;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
 
@@ -1226,7 +1224,7 @@ function setTimeFieldValue( elementId, newDate  )
 
 function formatDate( date )
 {
-   return( gDateFormatter.getFormatedDate( date ) );
+   return( opener.gCalendarWindow.dateFormater.getFormatedDate( date ) );
 }
 
 
@@ -1236,7 +1234,7 @@ function formatDate( date )
 
 function formatTime( time )
 {
-   var timeString = gDateFormatter.getFormatedTime( time );
+   var timeString = opener.gCalendarWindow.dateFormater.getFormatedTime( time );
    return timeString;
 }
 
