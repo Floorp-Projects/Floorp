@@ -230,7 +230,8 @@ results show up. */
 
 $where = " WHERE main.guid = '" . $reqItemGuid . "' 
              AND applications.guid = '" . $reqTargetAppGuid . "'
-             AND (version.OSID = 1 OR version.OSID = " . $osid . ")";
+             AND (version.OSID = 1 OR version.OSID = " . $osid . ")
+             AND version.approved = 'YES'";
 
 /* Sort the result set so that the greatest OS Specific is the last one
 at each level. */
