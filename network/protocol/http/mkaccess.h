@@ -69,6 +69,19 @@ NET_CookieWarningPrefChanged(const char * newpref, void * data);
 MODULE_PRIVATE int PR_CALLBACK
 NET_CookieScriptPrefChanged(const char * newpref, void * data);
 
+MODULE_PRIVATE void
+net_http_password_data_interp(
+        char *module,
+        char *key,
+        char *data, int32 data_len,
+        char *type_buffer, int32 type_buffer_size,
+        char *url_buffer, int32 url_buffer_size,
+        char *username_buffer, int32 username_buffer_size,
+        char *password_buffer, int32 password_buffer_size);
+
+PUBLIC void NET_DeleteCookie(char* cookieURL);
+PUBLIC void NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry);
+
 
 /*============================================================================================
     THIS IS THE BEGINNING OF TRUST.H WHICH IDEALLY SHOULD BE A SEPERATE FILE
