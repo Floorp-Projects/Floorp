@@ -54,7 +54,7 @@ nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
   HPS hps = WinGetScreenPS( HWND_DESKTOP);
   HDC hdc = GpiQueryDevice( hps);
 
-  DevQueryCaps(hdc, CAPS_HORIZONTAL_RESOLUTION, 2, alArray);
+  DevQueryCaps(hdc, CAPS_WIDTH, 2, alArray);
 
   *outTop = 0;
   *outLeft = 0;
