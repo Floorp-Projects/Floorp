@@ -66,7 +66,12 @@ RDFJSec_GetPrincipalURLString(char *principalID)
 RDF_Cursor
 RDFJSec_ListAllPrincipals()
 {
-  RDF_Cursor c = RDF_GetSources(gJSecDB, gNavCenter->RDF_JSec, gNavCenter->RDF_JSecPrincipal, RDF_RESOURCE_TYPE, TRUE);
+  RDF_Cursor c = NULL;
+  if (gNavCenter != NULL) {
+    c = RDF_GetSources(gJSecDB, gNavCenter->RDF_JSec, 
+                       gNavCenter->RDF_JSecPrincipal, 
+                       RDF_RESOURCE_TYPE, TRUE);
+  }
   return(c);
 }
 
@@ -108,7 +113,7 @@ RDFJSec_NewPrincipal(char* principalID)
 JSec_Error
 RDFJSec_AddPrincipal(JSec_Principal pr)
 {
-  if (pr == NULL) {
+  if ((pr == NULL) || (gNavCenter == NULL)) {
     return JSec_NullObject;
   }
   if (RDF_HasAssertion(gJSecDB, pr, gNavCenter->RDF_JSecPrincipal, gNavCenter->RDF_JSec, 
@@ -126,7 +131,7 @@ JSec_Error
 RDFJSec_DeletePrincipal(JSec_Principal pr)
 {
   RDF_Cursor c;
-  if (pr == NULL) {
+  if ((pr == NULL) || (gNavCenter == NULL)) {
     return JSec_NullObject;
   }
   /* Before deleting the principal, delete all the PrincipalUses for this principal. 
@@ -261,7 +266,7 @@ JSec_Error
 RDFJSec_AddPrincipalUsePrivilege (JSec_PrincipalUse prUse, char* priv)
 {
   char *oldPriv;
-  if ((prUse == NULL) || (priv == NULL)) {
+  if ((prUse == NULL) || (priv == NULL) || (gNavCenter == NULL)) {
     return JSec_NullObject;
   }
   /* Each PrincipalUse can only have one Privilege. Thus delete the old privilege*/
@@ -274,7 +279,7 @@ RDFJSec_AddPrincipalUsePrivilege (JSec_PrincipalUse prUse, char* priv)
 JSec_Error 
 RDFJSec_DeletePrincipalUsePrivilege (JSec_PrincipalUse prUse, char* priv)
 {
-  if ((prUse == NULL) || (priv == NULL)) {
+  if ((prUse == NULL) || (priv == NULL) || (gNavCenter == NULL)) {
     return JSec_NullObject;
   }
   RDF_Unassert(gJSecDB, prUse, gNavCenter->RDF_JSecAccess, priv, RDF_STRING_TYPE);  
@@ -286,6 +291,9 @@ RDFJSec_PrivilegeOfPrincipalUse (JSec_PrincipalUse prUse)
 {
   RDF_Cursor c = NULL;
   char *privilege;
+  if (gNavCenter == NULL) {
+    return NULL;
+  }
   c = RDF_GetTargets(gJSecDB, (RDF_Resource)prUse, gNavCenter->RDF_JSecAccess, RDF_STRING_TYPE,  TRUE);
   if (c == NULL) {
     return NULL;
@@ -299,7 +307,7 @@ JSec_Error
 RDFJSec_AddTargetToPrincipalUse(JSec_PrincipalUse prUse, JSec_Target tr)
 {
   JSec_Target oldTarget;
-  if ((prUse == NULL) || (tr == NULL)) {
+  if ((prUse == NULL) || (tr == NULL) || (gNavCenter == NULL)) {
     return JSec_NullObject;
   }
   /* Each PrincipalUse can only have one Target. Thus delete the old target */
@@ -312,7 +320,7 @@ RDFJSec_AddTargetToPrincipalUse(JSec_PrincipalUse prUse, JSec_Target tr)
 JSec_Error 
 RDFJSec_DeleteTargetToPrincipalUse(JSec_PrincipalUse prUse, JSec_Target tr)
 {
-  if ((prUse == NULL) || (tr == NULL)) {
+  if ((prUse == NULL) || (tr == NULL) || (gNavCenter == NULL)) {
     return JSec_NullObject;
   }
   RDF_Unassert(gJSecDB, prUse, gNavCenter->RDF_JSecTarget, tr, RDF_RESOURCE_TYPE);  
@@ -324,7 +332,7 @@ RDFJSec_TargetOfPrincipalUse (JSec_PrincipalUse prUse)
 {
   RDF_Cursor	c = NULL;
   JSec_Target tr;
-  if (prUse == NULL) {
+  if ((prUse == NULL) || (gNavCenter == NULL)) {
     return NULL;
   }
   c = RDF_GetTargets(gJSecDB, (RDF_Resource)prUse, gNavCenter->RDF_JSecTarget, RDF_RESOURCE_TYPE,  true);
@@ -346,6 +354,11 @@ RDFJSec_NewTarget(char* targetName, JSec_Principal pr)
   if (targetID == NULL) {
     return NULL;
   }
+
+  if (gNavCenter == NULL) {
+    return NULL;
+  }
+
   sprintf(targetID, "%s!%s", targetName, principalID);
   tr = RDF_GetResource(NULL, targetID, FALSE);
   if (!tr) {
