@@ -281,11 +281,7 @@ protected:
   NS_IMETHOD DoAfterUndoTransaction();
   // called after a transaction is redone successfully
   NS_IMETHOD DoAfterRedoTransaction();
-  
-  // called after the document has been saved
-  NS_IMETHOD DoAfterDocumentSave();
-  
-  
+
   typedef enum {
     eDocumentCreated,
     eDocumentToBeDestroyed,
@@ -444,27 +440,6 @@ public:
   nsCOMPtr<nsIDOMNode> GetLeftmostChild(nsIDOMNode  *aCurrentNode, 
                                         PRBool       bNoBlockCrossing = PR_FALSE);
 
-  /** GetFirstTextNode ADDREFFS and will get the next available text node from the passed
-   *  in node parameter it can also return NS_ERROR_FAILURE if no text nodes are available
-   *  now it simply returns the first node in the dom
-   *  @param nsIDOMNode *aNode is the node to start looking from
-   *  @param nsIDOMNode **aRetNode is the return location of the text dom node
-   *
-   * NOTE: this method will probably be removed.
-   */
-  static nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
-
-  /** GetFirstNodeOfType ADDREFFS and will get the next available node from the passed
-   *  in aStartNode parameter of type aTag.
-   *  It can also return NS_ERROR_FAILURE if no such nodes are available
-   *  @param   aStartNode is the node to start looking from
-   *  @param   aTag is the type of node we are searching for
-   *  @param   aResult is the node we found, or nsnull if there is none
-   */
-  static nsresult GetFirstNodeOfType(nsIDOMNode     *aStartNode, 
-                                     const nsAReadableString &aTag, 
-                                     nsIDOMNode    **aResult);
-
   /** returns PR_TRUE if aNode is of the type implied by aTag */
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
   static PRBool NodeIsType(nsIDOMNode *aNode, const nsAReadableString &aTag);
@@ -497,7 +472,9 @@ public:
   
   /** Find the deep first and last children. Returned nodes are AddReffed */
   nsresult GetFirstEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outFirstNode);
+#ifdef XXX_DEAD_CODE
   nsresult GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outLastNode);
+#endif
 
 
   /** from html rules code - migration in progress */
@@ -518,9 +495,7 @@ public:
   nsresult CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
                        nsIDOMNode *aEndParent, PRInt32 aEndOffset,
                        nsIDOMRange **aRange);
-  // Gets the node at the StartOffset of StartParent in aRange
-  //  (this is a table cell in cell selection mode)
-  nsresult GetFirstNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aNode);
+
   // Creates a range with just the supplied node and appends that to the selection
   nsresult AppendNodeToSelectionAsRange(nsIDOMNode *aNode);
   // When you are using AppendNodeToSelectionAsRange, call this first to start a new selection
