@@ -39,7 +39,7 @@ struct JSSL_SocketData {
     jobject socketObject; /* weak global ref */
     jobject certApprovalCallback; /* global ref */
     jobject clientCertSelectionCallback; /* global ref */
-    char *clientCertNickname;
+    CERTCertificate *clientCert;
     PRFilePrivate *jsockPriv;
 };
 typedef struct JSSL_SocketData JSSL_SocketData;

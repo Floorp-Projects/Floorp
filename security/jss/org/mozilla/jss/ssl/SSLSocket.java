@@ -524,10 +524,28 @@ public class SSLSocket extends java.net.Socket {
 
     /**
      * Sets the nickname of the certificate to use for client authentication.
+     * Alternately, you can specify an SSLClientCertificateSelectionCallback,
+     * which will receive a list of certificates that are valid for client
+     * authentication.
+     * @see org.mozilla.jss.ssl.SSLClientCertificateSelectionCallback
      */
     public void setClientCertNickname(String nick) throws SocketException {
         base.setClientCertNickname(nick);
     }
+
+    /**
+     * Sets the certificate to use for client authentication.
+     * Alternately, you can specify an SSLClientCertificateSelectionCallback,
+     * which will receive a list of certificates that are valid for client
+     * authentication.
+     * @see org.mozilla.jss.ssl.SSLClientCertificateSelectionCallback
+     */
+    public void setClientCert( org.mozilla.jss.crypto.X509Certificate cert)
+        throws SocketException
+    {
+        base.setClientCert(cert);
+    }
+
 
     /**
      * Enables/disables the request of client authentication. This is only

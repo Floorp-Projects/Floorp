@@ -192,7 +192,7 @@ JSSL_CreateSocketData(JNIEnv *env, jobject sockObj, PRFileDesc* newFD,
     sockdata->socketObject = NULL;
     sockdata->certApprovalCallback = NULL;
     sockdata->clientCertSelectionCallback = NULL;
-    sockdata->clientCertNickname = NULL;
+    sockdata->clientCert = NULL;
     sockdata->jsockPriv = priv;
 
     /*
@@ -234,8 +234,8 @@ JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd)
     if( sd->clientCertSelectionCallback != NULL ) {
         (*env)->DeleteGlobalRef(env, sd->clientCertSelectionCallback);
     }
-    if( sd->clientCertNickname != NULL ) {
-        PR_Free(sd->clientCertNickname);
+    if( sd->clientCert != NULL ) {
+        CERT_DestroyCertificate(sd->clientCert);
     }
     PR_Free(sd);
 }
@@ -452,25 +452,45 @@ Java_org_mozilla_jss_ssl_SocketBase_getLocalPortNative(JNIEnv *env,
     }
 }
 
+/*
+ * This is here for backwards binary compatibility: I didn't want to remove
+ * the symbol from the DLL. This would only get called if someone were using
+ * a pre-3.2 version of the JSS classes with this post-3.2 library. Using
+ * different versions of the classes and the C code is not supported.
+ */
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SocketBase_setClientCertNicknameNative(
-    JNIEnv *env, jobject self, jstring nickStr)
+    JNIEnv *env, jobject self, jstring nick)
+{
+    PR_ASSERT(0);
+    JSS_throwMsg(env, SOCKET_EXCEPTION, "JSS JAR/DLL mismatch");
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_setClientCert(
+    JNIEnv *env, jobject self, jobject certObj)
 {
     JSSL_SocketData *sock = NULL;
-    const char *nick=NULL;
     SECStatus status;
+    CERTCertificate *cert = NULL;
+
+    if( certObj == NULL ) {
+        JSS_throw(env, NULL_POINTER_EXCEPTION);
+        goto finish;
+    }
 
     if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
 
     /*
-     * Store the nickname in the SocketData.
+     * Store the cert in the SocketData.
      */
-    nick = (*env)->GetStringUTFChars(env, nickStr, NULL);
-    if( nick == NULL )  goto finish;
-    if( sock->clientCertNickname != NULL ) {
-        PR_Free(sock->clientCertNickname);
+    if( JSS_PK11_getCertPtr(env, certObj, &cert) != PR_SUCCESS ) {
+        goto finish;
     }
-    sock->clientCertNickname = PL_strdup(nick);
+    if( sock->clientCert != NULL ) {
+        CERT_DestroyCertificate(sock->clientCert);
+    }
+    sock->clientCert = CERT_DupCertificate(cert);
 
     /*
      * Install the callback.
@@ -484,9 +504,6 @@ Java_org_mozilla_jss_ssl_SocketBase_setClientCertNicknameNative(
     }
 
 finish:
-    if( nick != NULL ) {
-        (*env)->ReleaseStringUTFChars(env, nickStr, nick);
-    }
     EXCEPTION_CHECK(env, sock)
 }
 

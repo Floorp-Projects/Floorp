@@ -243,6 +243,8 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative2;
 Java_org_mozilla_jss_ssl_SocketBase_getLocalAddressNative;
 Java_org_mozilla_jss_pkcs11_PK11PrivKey_getDSAParamsNative;
 Java_org_mozilla_jss_CryptoManager_verifyCertNowNative;
+Java_org_mozilla_jss_ssl_SSLServerSocket_setServerCert;
+Java_org_mozilla_jss_ssl_SocketBase_setClientCert;
 ;+    local:
 ;+       *;
 ;+};

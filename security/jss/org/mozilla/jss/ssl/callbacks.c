@@ -615,7 +615,6 @@ JSSL_GetClientAuthData( void * arg,
                         CERTCertificate **  pRetCert,
                         SECKEYPrivateKey ** pRetKey)
 {
-    CERTCertificate *  cert;
     SECKEYPrivateKey * privkey;
     JSSL_SocketData *  sock;
     SECStatus          rv         = SECFailure;
@@ -623,21 +622,15 @@ JSSL_GetClientAuthData( void * arg,
     PR_ASSERT(arg != NULL);
     sock = (JSSL_SocketData*) arg;
 
-    if (sock->clientCertNickname) {
-        cert = PK11_FindCertFromNickname(sock->clientCertNickname,
-                                         NULL /*pinarg*/);
-        if ( cert ) {
-            privkey = PK11_FindKeyByAnyCert(cert, NULL /*pinarg*/);
-            if ( privkey ) {
-                rv = SECSuccess;
-            } else { 
-                CERT_DestroyCertificate(cert);
-            }
+    if (sock->clientCert) {
+        privkey = PK11_FindKeyByAnyCert(sock->clientCert, NULL /*pinarg*/);
+        if ( privkey ) {
+            rv = SECSuccess;
         }
     }
     
     if (rv == SECSuccess) {
-        *pRetCert = cert; 
+        *pRetCert = CERT_DupCertificate(sock->clientCert); 
         *pRetKey  = privkey;
     }
     

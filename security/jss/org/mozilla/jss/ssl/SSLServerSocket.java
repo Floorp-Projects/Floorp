@@ -37,6 +37,9 @@ import java.net.InetAddress;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.crypto.ObjectNotFoundException;
+import org.mozilla.jss.crypto.TokenException;
 
 /**
  * SSL server socket.
@@ -231,8 +234,25 @@ public class SSLServerSocket extends java.net.ServerSocket {
     /**
      * Sets the certificate to use for server authentication.
      */
-    public native void setServerCertNickname(String nickname)
-            throws SocketException;
+    public void setServerCertNickname(String nick) throws SocketException
+    {
+      try {
+        setServerCert( CryptoManager.getInstance().findCertByNickname(nick) );
+      } catch(CryptoManager.NotInitializedException nie) {
+        throw new SocketException("CryptoManager not initialized");
+      } catch(ObjectNotFoundException onfe) {
+        throw new SocketException("Object not found: " + onfe);
+      } catch(TokenException te) {
+        throw new SocketException("Token Exception: " + te);
+      }
+    }
+
+    /**
+     * Sets the certificate to use for server authentication.
+     */
+    public native void setServerCert(
+        org.mozilla.jss.crypto.X509Certificate certnickname)
+        throws SocketException;
 
     /**
      * Enables/disables the request of client authentication. This is only
@@ -315,6 +335,15 @@ public class SSLServerSocket extends java.net.ServerSocket {
      */
     public void setClientCertNickname(String nick) throws SocketException {
         base.setClientCertNickname(nick);
+    }
+
+    /**
+     * Sets the certificate to use for client authentication.
+     */
+    public void setClientCert(org.mozilla.jss.crypto.X509Certificate cert)
+        throws SocketException
+    {
+        base.setClientCert(cert);
     }
 
     /**

@@ -41,7 +41,9 @@ import java.util.Vector;
 import java.util.Enumeration;
 import java.lang.reflect.Constructor;
 import org.mozilla.jss.util.Assert;
-
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.crypto.ObjectNotFoundException;
+import org.mozilla.jss.crypto.TokenException;
 
 class SocketBase {
 
@@ -210,13 +212,22 @@ class SocketBase {
         setSSLOption(SSL_REQUIRE_CERTIFICATE, require ? (onRedo ? 1 : 2) : 0);
     }
 
-    void setClientCertNickname(String nick) throws SocketException {
-        if( nick != null && nick.length() > 0 ) {
-            setClientCertNicknameNative(nick);
-        }
+    /**
+     * Sets the nickname of the certificate to use for client authentication.
+     */
+    public void setClientCertNickname(String nick) throws SocketException {
+      try {
+        setClientCert( CryptoManager.getInstance().findCertByNickname(nick) );
+      } catch(CryptoManager.NotInitializedException nie) {
+        throw new SocketException("CryptoManager not initialized");
+      } catch(ObjectNotFoundException onfe) {
+        throw new SocketException("Object not found: " + onfe);
+      } catch(TokenException te) {
+        throw new SocketException("Token Exception: " + te);
+      }
     }
 
-    private native void setClientCertNicknameNative(String nick)
+    native void setClientCert(org.mozilla.jss.crypto.X509Certificate cert)
         throws SocketException;
 
     void useCache(boolean b) throws SocketException {

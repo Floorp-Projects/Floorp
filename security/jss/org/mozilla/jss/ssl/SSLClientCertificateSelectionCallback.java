@@ -44,14 +44,13 @@ import java.util.Vector;
 import java.net.*;
 
 /**
- * This interface is what you should implement if you want to
- * be able to decide whether or not you want to approve the peer's cert,
- * instead of having NSS do that.
+ * Implement this if you want to specify dynamically which certificate
+ * should be presented for client authentication.
  */
 public interface SSLClientCertificateSelectionCallback {
 
 	/**
-	 *  this method will be called form the native callback code
+	 *  This method will be called from the native callback code
 	 *  when a certificate is requested. You must return a String
 	 *  which is the nickname of the certificate you wish to present.
 	 *

@@ -174,36 +174,47 @@ finish:
     }
 }
 
+/*
+ * This is here for backwards binary compatibility: I didn't want to remove
+ * the symbol from the DLL. This would only get called if someone were using
+ * a pre-3.2 version of the JSS classes with this post-3.2 library. Using
+ * different versions of the classes and the C code is not supported.
+ */
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SSLServerSocket_setServerCertNickname(
-    JNIEnv *env, jobject self, jstring nicknameStr)
+    JNIEnv *env, jobject self, jstring nick)
+{
+    PR_ASSERT(0);
+    JSS_throwMsg(env, SOCKET_EXCEPTION, "JSS JAR/DLL version mismatch");
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLServerSocket_setServerCert(
+    JNIEnv *env, jobject self, jobject certObj)
 {
     JSSL_SocketData *sock;
-    const char *nickname=NULL;
     CERTCertificate* cert=NULL;
     SECKEYPrivateKey* privKey=NULL;
     SECStatus status;
 
-    if(nicknameStr == NULL) {
+    if( certObj == NULL ) {
+        JSS_throw(env, NULL_POINTER_EXCEPTION);
         goto finish;
     }
+
     if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
 
-    nickname = (*env)->GetStringUTFChars(env, nicknameStr, NULL);
-    if( nickname == NULL ) goto finish;
+    if( JSS_PK11_getCertPtr(env, certObj, &cert) != PR_SUCCESS ) {
+        goto finish;
+    }
+    PR_ASSERT(cert!=NULL); /* shouldn't happen */
 
-    cert = PK11_FindCertFromNickname((char *)nickname, NULL);   /* CONST */
-    if (cert != NULL) {
-        privKey = PK11_FindKeyByAnyCert(cert, NULL);
-        if (privKey != NULL) {
-            status = SSL_ConfigSecureServer(sock->fd, cert, privKey, kt_rsa);
-            if( status != SECSuccess) {
-                JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
-                    "Failed to configure secure server certificate and key");
-                goto finish;
-            }
-        } else {
-            JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "Failed to locate private key");
+    privKey = PK11_FindKeyByAnyCert(cert, NULL);
+    if (privKey != NULL) {
+        status = SSL_ConfigSecureServer(sock->fd, cert, privKey, kt_rsa);
+        if( status != SECSuccess) {
+            JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
+                "Failed to configure secure server certificate and key");
             goto finish;
         }
     } else {
@@ -214,12 +225,6 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_setServerCertNickname(
 finish:
     if(privKey!=NULL) {
         SECKEY_DestroyPrivateKey(privKey);
-    }
-    if(cert!=NULL) {
-        CERT_DestroyCertificate(cert);
-    }
-    if( nickname != NULL ) {
-        (*env)->ReleaseStringUTFChars(env, nicknameStr, nickname);
     }
 }
 
