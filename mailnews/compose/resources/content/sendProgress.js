@@ -198,7 +198,7 @@ function onLoad() {
     window.moveTo(opener.screenX + 16, opener.screenY + 32);
 
     //We need to delay the set title else dom will overwrite it
-    return window.setTimeout( "SetTitle('" + subject + "');", 0 );
+    return window.setTimeout(SetTitle, 0, subject);
 }
 
 function onUnload() 
