@@ -28,7 +28,7 @@
 
 .bookmarkitem[menuactive="true"]
   {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item-sel.gif");
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.png");
   }
   
 .bookmarkfolder
@@ -38,7 +38,7 @@
 
 .bookmarkfolder[menuactive="true"]
   {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed-sel.gif");
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.png");
   }
   
 .bookmarkfolder[open="true"]
@@ -48,7 +48,7 @@
 
 .bookmarkfolder[open="true"][menuactive="true"]
   {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open-sel.gif");
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.png");
   }  
   
   
@@ -73,7 +73,7 @@ treeitem[selected="true"][type="http://home.netscape.com/NC-rdf#Folder"] > treer
 treeitem[selected="true"][type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"] > treerow > .treecell-bookmark,
 treeitem[selected="true"][container="true"][open="true"] > treerow > .treecell-bookmark
 {
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed-sel.gif");
+ list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.png");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > .treecell-bookmark,
@@ -85,7 +85,7 @@ treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"][open="true"] >
 treeitem[selected="true"][type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > .treecell-bookmark,
 treeitem[selected="true"][type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"][open="true"] > treerow > .treecell-bookmark
 {
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open-sel.gif");
+ list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.png");
 }
 
 treeitem[container="true"][open="true"] > treerow > .treecell-bookmark {

@@ -20,21 +20,15 @@
 
   <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
   	<content inherits="false">
-  	  <xul:stack flex="1">
-  	  	<xul:box flex="1" class="toolbar-primary-bg-images">
-        	<xul:box class="toolbar-primary-image-left"/>
-    		<xul:box flex="1" class="toolbar-primary-image-middle"/>
-    	   	<xul:box class="toolbar-primary-image-right"/>
-    	</xul:box>
-    	<xul:box flex="1">
-       		<xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
+  	  	<xul:box class="toolbar-primary-image-left">
+        	<xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
            		                onclick="this.grippyClicked();" tbattr="toolbar-grippy"
             	                class="toolbar-primary-grippy"/>
-        	<xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,tborient:orient,tbautostretch:autostretch" autostretch="never">
+    	</xul:box>	
+        <xul:box flex="1" class="toolbar-primary-image-middle toolbar-holder" inherits="collapsed,last-toolbar,tborient:orient,tbautostretch:autostretch" autostretch="never">
         	  <children/>
-        	</xul:box>
-      	</xul:box>
-      </xul:stack>
+        </xul:box>
+        <xul:spring class="toolbar-primary-image-right"/>
     </content>
   </binding>
 
@@ -53,31 +47,27 @@
 
   <binding id="nav-bar-inner" extends="xul:box">
     <content>
-      <xul:stack flex="1">
-      	<xul:box flex="1" class="navbar-inner-groove-images">
-        	<xul:box class="navbar-inner-groove-image-left"/>
-    		<xul:box flex="1" class="navbar-inner-groove-image-middle"/>
-    	   	<xul:box class="navbar-inner-groove-image-right"/>
-    	</xul:box>
-	    <xul:box flex="1">
-	    	<children/>
+ 		<xul:spring class="navbar-inner-groove-image-left"/>
+ 		<xul:box flex="1" class="navbar-inner-border-outer">
+ 			<xul:box flex="1" class="navbar-inner-border-middle">
+ 				<xul:box flex="1" class="navbar-inner-border-inner">
+			    	<children/>
+	    		</xul:box>
+	    	</xul:box>
 	    </xul:box>
-      </xul:stack>
+      	<xul:spring class="navbar-inner-groove-image-right"/>
     </content>
   </binding>
   
   <binding id="urlbar-group" extends="xul:box">
     <content>
-      <xul:stack flex="1">
-      	<xul:box flex="1" class="urlbar-groove-images">
-        	<xul:box class="urlbar-image-left"/>
-    		<xul:box flex="1" class="urlbar-image-middle"/>
-    	   	<xul:box class="urlbar-image-right"/>
-    	</xul:box>
-	    <xul:box flex="1">
-	    	<children/>
+    	<xul:spring class="urlbar-image-left"/>
+ 		<xul:box flex="1" class="urlbar-border-outer">
+ 			<xul:box flex="1" class="urlbar-border-inner">
+		    	<children/>
+	    	</xul:box>
 	    </xul:box>
-      </xul:stack>
+      	<xul:spring class="urlbar-image-right"/>
     </content>
   </binding>
 

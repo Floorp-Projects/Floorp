@@ -48,8 +48,8 @@
  
  .button-toolbar[open="true"]
    {
-     border                 : 1px solid #336699;
-     border-bottom          : 1px solid #CCCCCC;
+     border                 : 0px solid #336699;
+     border-bottom          : 0px solid #CCCCCC;
    }
 
 /** 

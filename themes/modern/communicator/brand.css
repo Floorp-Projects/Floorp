@@ -3,12 +3,10 @@
   {
     behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
-    width                 : 56px;
-    max-width             : 56px;
-    padding               : 7px 8px 6px 16px;
-    margin                : 0px;
+    margin                : 3px 1px 6px 8px;
+    padding               : 0px;
     cursor                : pointer;
-    border                : none;
+    border                : 0px;
     background-color	  : transparent;
   }  
 
@@ -19,12 +17,12 @@
   
 #navigator-throbber:hover:active
   {
-    padding               : 8px 7px 5px 17px;
+    margin               : 4px 0px 5px 9px;
   }
 
 #navigator-throbber > .button-internal-box
   {
-    border                : none;
+    border                : 0px;
     padding               : 0px;
     margin                : 0px;
   }

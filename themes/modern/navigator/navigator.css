@@ -43,6 +43,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
  */
 #back-button 
   {
+  	margin-left			  : 0px;
     list-style-image      : url("chrome://navigator/skin/back.png");
   }
 
@@ -179,11 +180,27 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   	height				  : 31px;
   }
 
-.navbar-inner-groove-image-middle
+/* 3px border on top and bottom of navbar-inner */
+
+.navbar-inner-border-outer
   {
-  	background			  : url("chrome://navigator/skin/navbar-inner-groove-middle.png") repeat-x;
+  	border-top			  : 1px solid #8191AA;
+  	border-bottom		  : 1px solid #66799B;
+  	height				  : 31px;
   }
 
+.navbar-inner-border-middle
+  {
+  	border-top			  : 1px solid #9CACC7;
+  	border-bottom		  : 1px solid #4E5F7A;
+  }
+ 
+.navbar-inner-border-inner
+  {
+  	border-top			  : 1px solid #AEBED6;
+  	border-bottom		  : 1px solid #415171;
+  }
+	
 .navbar-inner-groove-image-right
   {
   	background			  : url("chrome://navigator/skin/navbar-inner-groove-right.png") no-repeat;
@@ -194,7 +211,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #urlbar-group
   {
   	behavior			  : url("chrome://global/skin/globalBindings.xml#urlbar-group");
-  	margin				  : 6px 8px 6px 8px;
+  	margin				  : 3px 8px 4px 2px;
   }
 
 .urlbar-image-left
@@ -204,11 +221,16 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   	height				  : 18px;
   }
 
-.urlbar-image-middle
+.urlbar-border-outer
   {
-  	background			  : url("chrome://navigator/skin/urlbar-middle.png") repeat-x;
+  	border-top			  : 1px solid #424242;
   }
 
+.urlbar-border-inner
+  {
+  	border-top			  : 1px solid #CACAC9;
+  }
+  
 .urlbar-image-right
   {
   	background			  : url("chrome://navigator/skin/urlbar-right.png") no-repeat;
@@ -218,11 +240,17 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #page-proxy-button 
   {
-  	margin-left			  : 4px;
+  	margin-left			  : 0px;
   	margin-right		  : 2px;
+  	margin-top			  : -1px;
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.png"); 
 	cursor                : grab;
   } 
+
+#urlbar
+  {
+  	margin-top			  : -1px !important;
+  }
 
 /* #ubhist-keyword-popup does not exist in Mozilla, only in Netscape.  It gets overlayed in with 
  * navExtraOverlay.xul.  Ideally, this styling should only exist in Netscape, but since it is
@@ -255,7 +283,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #ubhist
   {
-    margin                : 3px 1px 3px 0px;
+    margin                : 2px 1px 3px 0px;
     width                 : 10px; 
     list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
     border                : none;
@@ -297,7 +325,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   
 #search-button
   {
-    margin-right          : 10px;
+    margin-right          : 4px;
   }
   
 #home-button

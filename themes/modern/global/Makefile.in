@@ -188,6 +188,10 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	taskbar-groove-middle.png \
 	taskbar-groove-right.png \
 	taskbar-mail-clicked.png \
+	tb-grippy-down.png \
+	tb-grippy-up-clicked.png \
+	tb-grippy-up.png \
+	tb-grippy-down-clicked.png \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

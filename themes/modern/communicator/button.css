@@ -4,8 +4,8 @@
  **/
   .button-toolbar
     {
-      border                : 1px solid transparent;
-      margin                : 1px 0px 1px 0px;
+      border                : 0px solid transparent;
+      margin                : 0px 0px 0px 0px;
       -moz-border-radius    : 0px;
       color                 : #FFFFFF;
       padding               : 0px;
@@ -15,13 +15,13 @@
     
   .button-toolbar:hover
     {
-      border                : 1px solid #FFFFFF;
+      border                : 0px solid #FFFFFF;
     }
   
   .button-toolbar:hover:active,
   .button-toolbar[home-dragover="true"]
     {
-      border                : 1px solid #336699;
+      border                : 0px solid #336699;
     }
     
   .button-toolbar > .button-internal-box,
@@ -55,7 +55,7 @@
     
   .button-toolbar[toggled="true"]
     {
-      border                : 1px solid 0x003366;
+      border                : 0px solid 0x003366;
       background-color      : #AAAAAA;
       -moz-border-radius    : 4px;
     }    
@@ -64,7 +64,7 @@
   .button-toolbar[disabled="true"]:hover,
   .button-toolbar[disabled="true"]:hover:active
     {
-      border                : 1px solid transparent;
+      border                : 0px solid transparent;
     }
 
 /** The largest type of toolbar buttons. In the Seamonkey implementation, 
@@ -198,11 +198,10 @@
   .button-toolbar-3 
     {
 	  behavior			    : url("chrome://global/skin/globalBindings.xml#three-slice-button");
-      margin                : 0px 0px 0px 3px;
       font-weight           : bold;
       background-color      : transparent;
       border				: 0px;
-      margin				: 5px 7px 6px 0px;
+      margin				: 2px 7px 3px 0px;
       color					: #2F405D;
     }
 

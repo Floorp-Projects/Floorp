@@ -182,3 +182,7 @@ install::
 	$(MAKE_INSTALL) print-hover.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) print-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) print.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-down.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-up-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-up.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-down-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin

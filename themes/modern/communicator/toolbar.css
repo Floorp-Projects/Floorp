@@ -3,60 +3,63 @@
 
 toolbar
   {
-    background-color      : #CCCCCC;
-    border-bottom         : 1px solid #003366;
+    background-color      : #394B6E;
+    border-bottom         : 1px solid #677684;
+    border-top			  : 1px solid #A9B7D8;
   }
 
 toolbargrippy 
   { 
-    background-image      : url("chrome://global/skin/taskbar-tab-trans.gif"); 
-    background-repeat     : no-repeat;
-    border-right          : 1px solid #003366;
-    width                 : 10px;
-    height                : 10px;
+    background		      : url("chrome://global/skin/tb-grippy-up.png") no-repeat bottom;
+    width                 : 9px;
+    height                : 7px;
+    margin				  : 0px 0px 3px 2px;
   } 
 
-toolbar[collapsed="true"]
+toolbargrippy:hover:active
   {
-    min-height            : 0px;
+  	background		      : url("chrome://global/skin/tb-grippy-up-clicked.png") no-repeat bottom;
   }
+
+.collapsed-tray-holder
+  {
+  	background-color	  : #394B6E; //#B0BFD4;
+  	border-bottom		  : 1px solid #11151F;
+	border-top			  : 1px solid #A9B7D8;
+  }
+
+toolbargrippy[tbgrippy-collapsed="true"]
+  {
+  	background			  : url(chrome://global/skin/tb-grippy-down.png) no-repeat bottom left;
+  	margin				  : 1px 0px 1px 2px;
+  }
+
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active
+  {
+  	background		      : url("chrome://global/skin/tb-grippy-down-clicked.png") no-repeat bottom left;
+  }
+
 
 toolbar[collapsed="true"] > toolbargrippy 
   {
     width                 : 30px;
   }
-
-toolbargrippy:hover 
-  {
-    background-color      : #99cccc !important; 
-    background-image      : url("chrome://global/skin/taskbar-tab-hover.gif") !important;  
-  } 
-
   
-.toolbar-primary 
+.toolbar-standard > toolbargrippy
   {
-    background-image      : url("chrome://global/skin/navbar-bg.gif");
-    background-color      : #CCCCCC;
-    padding               : 0px;
-    border                : none;
-  }
-  
-.toolbar-primary > toolbargrippy, .toolbar-standard > toolbargrippy
-  {
-    background-color      : #003366; 
+  	background-color      : #003366; 
     background-image      : url("chrome://global/skin/taskbar-tab.gif"); 
     background-repeat     : no-repeat;
   }
-  
+
 .toolbar-standard 
   {
     color                 : white;
-    background-color      : #003366;
+    background-color      : #394B6E;
     padding               : 0px;
     margin                : 0px;
     border                : none;
   }
-
 
 .toolbarseparator-standard
   { 
@@ -65,3 +68,38 @@ toolbargrippy:hover
     border-right          : 1px solid #FFFFFF;
     margin                : 2px 0.2em 2px 0.2em;
   } 
+
+.toolbar-primary 
+  {
+    behavior			  : url("chrome://global/skin/globalBindings.xml#toolbar-primary");
+    padding               : 0px;
+    border-bottom         : 1px solid #354557;
+    border-top			  : 0px;
+	background-color	  : transparent;
+    background-image	  : none;
+  }
+  
+.toolbar-primary-image-left
+  {
+    background		      : url("chrome://global/skin/navbar-bg-leftcap.png") no-repeat;
+    width				  : 41px;
+    max-height			  : 43px;
+  }
+
+.toolbar-primary-image-middle
+  {
+    background            : url("chrome://global/skin/navbar-bg.png") repeat-x;
+  }
+
+.toolbar-primary-image-right
+  {
+  	background			  : url("chrome://global/skin/navbar-bg-rightcap.png") no-repeat;
+  	width				  : 25px;
+  	max-height			  : 43px;
+  }
+
+.toolbary-primary-grippy
+  {
+  	background-image	  : none;
+  	background-color	  : transparent;
+  }
