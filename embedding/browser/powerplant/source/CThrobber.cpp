@@ -168,7 +168,7 @@ void CThrobber::DrawSelf()
 
    StColorPortState	origState(UQDGlobals::GetCurrentPort());
 
-   nsIRenderingContext *cx = mWidget->GetRenderingContext();
+   nsCOMPtr<nsIRenderingContext> cx = getter_AddRefs(mWidget->GetRenderingContext());
    nsRect bounds;
    nsIImageRequest *imgreq;
    nsIImage *img;
