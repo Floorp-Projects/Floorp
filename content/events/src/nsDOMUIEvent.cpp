@@ -464,7 +464,7 @@ nsDOMUIEvent::GetReconversionReply(nsReconversionEventReply** aReply)
     *aReply = &(NS_STATIC_CAST(nsReconversionEvent*, mEvent)->theReply);
     return NS_OK;
   }
-  aReply = nsnull;
+  *aReply = nsnull;
   return NS_ERROR_FAILURE;
 }
 
@@ -476,7 +476,7 @@ nsDOMUIEvent::GetQueryCaretRectReply(nsQueryCaretRectEventReply** aReply)
     *aReply = &(NS_STATIC_CAST(nsQueryCaretRectEvent*, mEvent)->theReply);
     return NS_OK;
   }
-  aReply = nsnull;
+  *aReply = nsnull;
   return NS_ERROR_FAILURE;
 }
 
