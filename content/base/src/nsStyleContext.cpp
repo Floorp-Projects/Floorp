@@ -566,6 +566,8 @@ public:
   virtual nsIStyleContext*  GetParent(void) const;
   virtual nsISupportsArray* GetStyleRules(void) const;
   virtual PRInt32 GetStyleRuleCount(void) const;
+  virtual PRInt32 GetBackstopStyleRuleCount(void) const;
+  virtual void SetBackstopStyleRuleCount(PRInt32 aCount);
 
   virtual nsIStyleContext* FindChildWithContent(nsIContent* aContent);
   virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules);
@@ -599,6 +601,7 @@ protected:
   PRUint32          mHashValid: 1;
   PRUint32          mHashValue: 31;
   nsISupportsArray* mRules;
+  PRInt32           mBackstopRuleCount;
   PRInt32           mDataCode;
 
   // the style data...
@@ -631,6 +634,7 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mChild(nsnull),
     mContent(aContent),
     mRules(aRules),
+    mBackstopRuleCount(0),
     mDataCode(-1),
     mFont(aPresContext->GetDefaultFont(), aPresContext->GetDefaultFixedFont()),
     mColor(),
@@ -752,6 +756,17 @@ PRInt32 StyleContextImpl::GetStyleRuleCount(void) const
     return mRules->Count();
   }
   return 0;
+}
+
+PRInt32 StyleContextImpl::GetBackstopStyleRuleCount(void) const
+{
+  return mBackstopRuleCount;
+}
+
+void StyleContextImpl::SetBackstopStyleRuleCount(PRInt32 aCount)
+{
+  NS_PRECONDITION(aCount <= GetStyleRuleCount(), "bad backstop rule count");
+  mBackstopRuleCount = aCount;
 }
 
 nsIStyleContext* StyleContextImpl::FindChildWithContent(nsIContent* aContent)
@@ -930,7 +945,7 @@ nsStyleStruct* StyleContextImpl::GetMutableStyleData(nsStyleStructID aSID)
   }
   if (nsnull != result) {
     if (0 == mDataCode) {
-      mDataCode = ++gLastDataCode;
+//      mDataCode = ++gLastDataCode;  // XXX temp disable, this is still used but not needed to force unique
     }
   }
   return result;
@@ -978,7 +993,7 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
 
   if ((nsnull != mRules) && (0 < mRules->Count())) {
     MapStyleData  data(this, aPresContext);
-    mRules->EnumerateBackwards(MapStyleRule, &data);
+    mRules->EnumerateForwards(MapStyleRule, &data);
   }
   if (-1 == mDataCode) {
     mDataCode = 0;
@@ -998,7 +1013,7 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
 
     if ((nsnull != mRules) && (0 < mRules->Count())) {
       MapStyleData  data(this, aPresContext);
-      mRules->EnumerateBackwards(MapStyleRule, &data);
+      mRules->EnumerateForwards(MapStyleRule, &data);
     }
   }
 }
