@@ -90,9 +90,9 @@ nsFactoryEntry::Init(nsDllStore* dllCollection,
   cid = aClass;
   
   // If dll not already in dllCollection, add it.
-  // PR_EnterMonitor(mMonitor);
+  // PR_EnterMonitor(mMon);
   dll = dllCollection->Get(aLibrary);
-  // PR_ExitMonitor(mMonitor);
+  // PR_ExitMonitor(mMon);
 	
   if (dll == NULL) {
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
@@ -114,9 +114,9 @@ nsFactoryEntry::Init(nsDllStore* dllCollection,
              ("nsComponentManager: Adding New dll \"%s\" to mDllStore.",
               aLibrary));
 
-      // PR_EnterMonitor(mMonitor);
+      // PR_EnterMonitor(mMon);
       dllCollection->Put(aLibrary, dll);
-      // PR_ExitMonitor(mMonitor);
+      // PR_ExitMonitor(mMon);
     }
   }
   else {
@@ -135,7 +135,7 @@ nsFactoryEntry::Init(nsDllStore* dllCollection,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-  : mFactories(NULL), mProgIDs(NULL), mMonitor(NULL), mDllStore(NULL)
+  : mFactories(NULL), mProgIDs(NULL), mMon(NULL), mDllStore(NULL)
 {
     NS_INIT_REFCNT();
 }
@@ -153,9 +153,9 @@ nsresult nsComponentManagerImpl::Init(void)
         if (mProgIDs == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    if (mMonitor == NULL) {
-        mMonitor = PR_NewMonitor();
-        if (mMonitor == NULL)
+    if (mMon == NULL) {
+        mMon = PR_NewMonitor();
+        if (mMon == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mDllStore == NULL) {
@@ -193,8 +193,8 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
         delete mFactories;
     if (mProgIDs)
         delete mProgIDs;
-    if (mMonitor)
-        PR_DestroyMonitor(mMonitor);
+    if (mMon)
+        PR_DestroyMonitor(mMon);
     if (mDllStore)
         delete mDllStore;
 }
@@ -860,7 +860,7 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
 	
   PR_ASSERT(aFactory != NULL);
 	
-  PR_EnterMonitor(mMonitor);
+  PR_EnterMonitor(mMon);
 	
   nsIDKey key(aClass);
   nsFactoryEntry *entry = (nsFactoryEntry*) mFactories->Get(&key);
@@ -892,7 +892,7 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
   }
 #endif
 	
-  PR_ExitMonitor(mMonitor);
+  PR_ExitMonitor(mMon);
 	
   if (entry != NULL)
   {
@@ -1197,7 +1197,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     }
   }
 	
-  PR_EnterMonitor(mMonitor);
+  PR_EnterMonitor(mMon);
 
   nsIDKey key(aClass);
   nsFactoryEntry* entry = new nsFactoryEntry(aClass, aFactory);
@@ -1205,7 +1205,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
       return NS_ERROR_OUT_OF_MEMORY;
   mFactories->Put(&key, entry);
 	
-  PR_ExitMonitor(mMonitor);
+  PR_ExitMonitor(mMon);
 	
   PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
          ("\t\tFactory register succeeded."));
@@ -1251,7 +1251,7 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
     }
   }
 	
-  PR_EnterMonitor(mMonitor);
+  PR_EnterMonitor(mMon);
 	
 #ifdef USE_REGISTRY
   if (aPersist == PR_TRUE)
@@ -1295,7 +1295,7 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
   }
 	
   done:	
-  PR_ExitMonitor(mMonitor);
+  PR_ExitMonitor(mMon);
   PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
          ("\t\tFactory register succeeded."));
   return rv;
@@ -1322,9 +1322,9 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
   {
     if (old->factory == aFactory)
     {
-      PR_EnterMonitor(mMonitor);
+      PR_EnterMonitor(mMon);
       old = (nsFactoryEntry *) mFactories->Remove(&key);
-      PR_ExitMonitor(mMonitor);
+      PR_ExitMonitor(mMon);
       delete old;
       res = NS_OK;
     }
@@ -1357,7 +1357,7 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
 	
   nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 	
-  PR_EnterMonitor(mMonitor);
+  PR_EnterMonitor(mMon);
 	
   if (old != NULL && old->dll != NULL)
   {
@@ -1383,7 +1383,7 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
 #endif
   }
 	
-  PR_ExitMonitor(mMonitor);
+  PR_ExitMonitor(mMon);
 	
   PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
          ("nsComponentManager: ! Factory unregister %s.", 
@@ -1411,7 +1411,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
 	
   nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 	
-  PR_EnterMonitor(mMonitor);
+  PR_EnterMonitor(mMon);
 	
   if (old != NULL && old->dll != NULL)
   {
@@ -1437,7 +1437,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
 #endif
   }
 	
-  PR_ExitMonitor(mMonitor);
+  PR_ExitMonitor(mMon);
 	
   PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
          ("nsComponentManager: ! Factory unregister %s.", 
@@ -1471,7 +1471,7 @@ nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure)
 nsresult
 nsComponentManagerImpl::FreeLibraries(void) 
 {
-  PR_EnterMonitor(mMonitor);
+  PR_EnterMonitor(mMon);
 	
   PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
          ("nsComponentManager: Freeing Libraries."));
@@ -1481,7 +1481,7 @@ nsComponentManagerImpl::FreeLibraries(void)
   if (NS_FAILED(rv)) return rv;
   mFactories->Enumerate(nsFreeLibraryEnum, serviceMgr);
 	
-  PR_ExitMonitor(mMonitor);
+  PR_ExitMonitor(mMon);
 	
   return NS_OK;
 }
