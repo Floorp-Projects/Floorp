@@ -21,8 +21,8 @@
 
 #include "GtkMozEmbedStream.h"
 #include "nsIPipe.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 
 // nsIInputStream interface
 
@@ -40,8 +40,8 @@ GtkMozEmbedStream::~GtkMozEmbedStream()
 NS_METHOD GtkMozEmbedStream::Init()
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIBufferInputStream> bufInStream;
-  nsCOMPtr<nsIBufferOutputStream> bufOutStream;
+  nsCOMPtr<nsIInputStream> bufInStream;
+  nsCOMPtr<nsIOutputStream> bufOutStream;
   
   rv = NS_NewPipe(getter_AddRefs(bufInStream),
 		  getter_AddRefs(bufOutStream));
