@@ -45,6 +45,8 @@ ChatFrame::ChatFrame(wxWindow* aParent)
 {
     wxXmlResource::Get()->LoadFrame(this, aParent, wxT("chat_frame"));
 
+    SetName("chat");
+
     SetIcon(wxICON(appicon));
 
     SetupDefaultGeckoWindow();

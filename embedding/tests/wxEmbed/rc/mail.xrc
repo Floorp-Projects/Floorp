@@ -5,7 +5,7 @@
   <object class="wxFrame" name="mail_frame">
     <title>wxEmbed Mail</title>
     <size>300,300</size>
-    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxCLIP_CHILDREN</style>
+    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxMINIMIZE_BOX|wxMAXIMIZE_BOX|wxCLIP_CHILDREN</style>
     <pos>-1,-1</pos>
 
     <!-- Mail menu -->

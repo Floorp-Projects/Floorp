@@ -34,10 +34,17 @@
 #include "GeckoFrame.h"
 #include "GeckoContainer.h"
 
+#include "nsIWebBrowserFocus.h"
+
 GeckoFrame::GeckoFrame() :
     mGeckoWnd(NULL)
 {
 }
+
+BEGIN_EVENT_TABLE(GeckoFrame, wxFrame)
+    EVT_ACTIVATE(GeckoFrame::OnActivate) 
+END_EVENT_TABLE()
+
 
 bool GeckoFrame::SetupDefaultGeckoWindow()
 {
@@ -68,7 +75,34 @@ bool GeckoFrame::SetupGeckoWindow(GeckoWindow *aGeckoWindow, GeckoContainerUI *a
     geckoContainer->CreateBrowser(0, 0, size.GetWidth(), size.GetHeight(),
         (nativeWindow) aGeckoWindow->GetHWND(), aWebBrowser);
 
-    aUI->ShowWindow(PR_TRUE);
+    nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(*aWebBrowser);
+    if (webBrowserAsWin)
+    {
+        webBrowserAsWin->SetVisibility(PR_TRUE);
+    }
 
     return TRUE;
 }
+
+void GeckoFrame::OnActivate(wxActivateEvent &event)
+{
+    nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(mWebBrowser));
+    if (focus)
+    {
+        if (event.GetActive())
+            focus->Activate();
+        else
+            focus->Deactivate();
+    }
+    wxFrame::OnActivate(event);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// GeckoContainerUI overrides
+
+void GeckoFrame::SetFocus()
+{
+    mGeckoWnd->SetFocus();
+}
+

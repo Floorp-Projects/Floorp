@@ -34,13 +34,29 @@
 
 #include "GeckoFrame.h"
 
+#include "nsICommandManager.h"
+#include "nsICommandParams.h"
+
 class EditorFrame :
     public GeckoFrame
 {
+protected:
+    DECLARE_EVENT_TABLE()
+    void OnEditBold(wxCommandEvent &event);
+    void OnEditItalic(wxCommandEvent &event);
+    void OnEditUnderline(wxCommandEvent &event);
+    void OnEditIndent(wxCommandEvent &event);
+    void OnEditOutdent(wxCommandEvent &event);
+    void OnUpdateToggleCmd(wxUpdateUIEvent &event);
 public :
     EditorFrame(wxWindow* aParent);
 
-    DECLARE_EVENT_TABLE()
+    nsCOMPtr<nsICommandManager> mCommandManager;
+
+    void MakeEditable();
+    void DoCommand(const char *aCommand, nsICommandParams *aCommandParams);
+    void IsCommandEnabled(const char *aCommand, PRBool *retval);
+    void GetCommandState(const char *aCommand, nsICommandParams *aCommandParams);
 };
 
 #endif

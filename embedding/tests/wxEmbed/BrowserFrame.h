@@ -37,9 +37,7 @@
 class BrowserFrame :
     public GeckoFrame
 {
-public :
-    BrowserFrame(wxWindow* aParent);
-
+protected:
     DECLARE_EVENT_TABLE()
 
     void OnBrowserUrl(wxCommandEvent &event);
@@ -52,6 +50,8 @@ public :
     void OnUpdateBrowserBack(wxUpdateUIEvent &event);
     void OnUpdateBrowserForward(wxUpdateUIEvent &event);
     void OnUpdateBrowserStop(wxUpdateUIEvent &event);
+public :
+    BrowserFrame(wxWindow* aParent);
 
     // GeckoContainerUI overrides
     virtual nsresult CreateBrowserWindow(PRUint32 aChromeFlags,

@@ -41,6 +41,8 @@ class GeckoWindow : public wxPanel
 protected:
     DECLARE_EVENT_TABLE()
     void OnSize(wxSizeEvent &event);
+    void OnSetFocus(wxFocusEvent &event);
+    void OnKillFocus(wxFocusEvent &event);
 
     GeckoContainer *mGeckoContainer;
 
