@@ -203,7 +203,7 @@ esmtp_value_encode(char *addr)
 // END OF TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-nsSmtpProtocol::nsSmtpProtocol(nsIURI * aURL) : m_responseText("", eOneByte)
+nsSmtpProtocol::nsSmtpProtocol(nsIURI * aURL)
 {
   Initialize(aURL);
 }
@@ -360,7 +360,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
         ClearFlag(SMTP_PAUSE_FOR_READ);
 
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, m_responseText.GetBuffer()));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, m_responseText));
 		status = MK_SMTP_SERVER_ERROR;
         return(MK_SMTP_SERVER_ERROR);
     }
@@ -413,7 +413,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
-	nsAutoString buffer ((const char *) "HELO ", eOneByte);
+	nsCAutoString buffer ("HELO ");
 
     if(m_responseCode != 220)
 	{
@@ -426,7 +426,7 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 	buffer += CRLF;
 	
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer.GetBuffer());
+    status = SendData(url, buffer);
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
@@ -439,7 +439,7 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRUint32 length) 
 {
     PRInt32 status = 0;
-	nsAutoString buffer((const char *) "EHLO ", eOneByte);
+	nsCAutoString buffer("EHLO ");
 
     if(m_responseCode != 220)
 	{
@@ -452,7 +452,7 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 	buffer += CRLF;
 
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer.GetBuffer());
+    status = SendData(url, buffer);
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_EHLO_RESPONSE;
@@ -465,7 +465,7 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
-	nsAutoString buffer (eOneByte);
+	nsCAutoString buffer;
 
 	// extract the email addresss
 	const char * userAddress = nsnull;
@@ -478,7 +478,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	if(!userAddress)
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-    url->SetErrorMessage(NET_ExplainErrorDetails(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS));
 		return(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS);
 	}
 
@@ -546,7 +546,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	  }
 
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer.GetBuffer());
+    status = SendData(url, buffer);
 
     m_nextState = SMTP_RESPONSE;
 
@@ -563,7 +563,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 length)
 {
   PRInt32 status = 0;
-  nsAutoString buffer(eOneByte);
+  nsCAutoString buffer;
 
   if (m_responseCode != 250) 
   {
@@ -573,7 +573,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	buffer += CRLF;
 
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer.GetBuffer());
+    status = SendData(url, buffer);
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
@@ -585,7 +585,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	char *ptr = NULL;
 	PRBool auth_login_enabled = PR_FALSE;
 
-	ptr = PL_strcasestr(m_responseText.GetBuffer(), "DSN");
+	ptr = PL_strcasestr(m_responseText, "DSN");
 	if (ptr && nsCRT::ToUpper(*(ptr-1)) != 'X')
 	{
 		// temporary hack to disable return receipts until we have a preference to handle it...
@@ -605,9 +605,9 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	{
 		/* okay user has set to use skey
 		   let's see does the server have the capability */
-		if (PL_strcasestr(m_responseText.GetBuffer(), " PLAIN") != 0)
+		if (PL_strcasestr(m_responseText, " PLAIN") != 0)
 			m_authMethod =  SMTP_AUTH_PLAIN;
-		else if (PL_strcasestr(m_responseText.GetBuffer(), "AUTH=LOGIN") != 0)
+		else if (PL_strcasestr(m_responseText, "AUTH=LOGIN") != 0)
 			m_authMethod = SMTP_AUTH_LOGIN;	/* old style */
 	}
 #ifdef UNREADY_CODE
@@ -643,7 +643,7 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   case 2:
 	  {
 		  const nsString * mailPassword = nsnull;
-		  m_runningURL->GetUserPassword(&mailPassword);
+		  //m_runningURL->GetUserPassword(&mailPassword);
 		  m_nextState = SMTP_SEND_HELO_RESPONSE;
 #ifdef UNREADY_CODE
 		  if (mailPassword == NULL)
@@ -826,12 +826,12 @@ PRInt32 nsSmtpProtocol::SendVerifyResponse()
 PRInt32 nsSmtpProtocol::SendMailResponse()
 {
 	PRInt32 status = 0;
-	nsAutoString buffer(eOneByte);
+	nsCAutoString buffer;
 
     if(m_responseCode != 250)
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND, m_responseText.GetBuffer()));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND, m_responseText));
 		return(MK_ERROR_SENDING_FROM_COMMAND);  
 	}
 
@@ -873,7 +873,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 	m_addresses += PL_strlen (m_addresses) + 1;
 	m_addressesLeft--;
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer.GetBuffer());
+    status = SendData(url, buffer);
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_RCPT_RESPONSE;
@@ -885,12 +885,12 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 PRInt32 nsSmtpProtocol::SendRecipientResponse()
 {
     PRInt32 status = 0;
-	nsAutoString buffer(eOneByte);
+	nsCAutoString buffer;
 
 	if(m_responseCode != 250 && m_responseCode != 251)
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND, m_responseText.GetBuffer()));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND, m_responseText));
         return(MK_ERROR_SENDING_RCPT_COMMAND);
 	}
 
@@ -906,7 +906,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 	buffer = "DATA";
 	buffer += CRLF;
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);  
-    status = SendData(url, buffer.GetBuffer());   
+    status = SendData(url, buffer);   
 
     m_nextState = SMTP_RESPONSE;  
     m_nextStateAfterResponse = SMTP_SEND_DATA_RESPONSE; 
@@ -924,7 +924,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
 		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_DATA_COMMAND, 
-			m_responseText.GetBuffer()));
+			m_responseText));
         return(MK_ERROR_SENDING_DATA_COMMAND);
 	}
 #ifdef UNREADY_CODE
@@ -1103,9 +1103,8 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 	// to post data...
 
 	// always issue a '.' and CRLF when we are done...
-	nsAutoString cmd ((const char *) CRLF "." CRLF, eOneByte);
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-	SendData(url, cmd.GetBuffer());
+	SendData(url, CRLF "." CRLF);
 #ifdef UNREADY_CODE
 		NET_Progress(CE_WINDOW_ID,
 					XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
@@ -1167,7 +1166,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
     if(m_responseCode != 250)
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE, m_responseText.GetBuffer()));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE, m_responseText));
         return(MK_ERROR_SENDING_MESSAGE);
 	}
 
