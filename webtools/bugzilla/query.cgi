@@ -33,16 +33,19 @@ $::CheckOptionValues = 0;       # It's OK if we have some bogus things in the
 
 # Shut up misguided -w warnings about "used only once":
 
-use vars @::legal_resolution,
-  @::legal_product,
+use vars
+  @::CheckOptionValues,
+  @::legal_resolution,
   @::legal_bug_status,
-  @::legal_priority,
+  @::legal_components,
+  @::legal_keywords,
   @::legal_opsys,
   @::legal_platform,
-  @::legal_components,
-  @::legal_versions,
+  @::legal_priority,
+  @::legal_product,
   @::legal_severity,
   @::legal_target_milestone,
+  @::legal_versions,
   @::log_columns,
   %::versions,
   %::components,
