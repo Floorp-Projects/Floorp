@@ -118,6 +118,15 @@ nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 
   CommonInit(::WinOpenWindowDC((HWND)aWidget));
 
+// It would seem that Mozilla basically requires that mTwipsToPixels = 1/15 and 
+// mPixelsToTwips = 15. Some side effects from not doing this are boxes drawing
+// wrong and fonts coming out incorrect. We only want to do this for screen,
+// not printing.
+
+  mTwipsToPixels = 1.0f / 15.0f;
+
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
+
   return retval;
 }
 
@@ -185,11 +194,7 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
 
   GFX (::DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray), FALSE);
 
-// It would seem that Mozilla basically requires that mTwipsToPixels = 1/15 and 
-// mPixelsToTwips = 15. Some side effects from not doing this are boxes drawing
-// wrong and fonts coming out incorrect.
-//  mTwipsToPixels = ((float)alArray [CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
-  mTwipsToPixels = 1.0f / 15.0f;
+  mTwipsToPixels = ((float)alArray [CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
