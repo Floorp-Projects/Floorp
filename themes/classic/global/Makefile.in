@@ -28,7 +28,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
+ifeq ($(OS_ARCH),OS2)
+DIRS = win
+else
 DIRS = win unix
+endif
 
 # split EXPORT_RESOURCE_SAMPLES in two otherwise the generated commands
 # can be too long for some systems.
