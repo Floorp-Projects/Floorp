@@ -137,7 +137,6 @@ bin/components/libgkview.so
 bin/components/librdf.so
 bin/components/libshistory.so
 bin/components/libstrres.so
-bin/components/libtimer_gtk.so
 bin/components/libtxmgr.so
 bin/components/libtxtsvc.so
 bin/components/libuconv.so
