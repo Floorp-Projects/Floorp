@@ -159,7 +159,7 @@ inline int	nsParseMailMessageState::msg_UnHex(char C)
 }
 
 // This class is part of the mailbox parsing state machine 
-class nsMsgMailboxParser : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsIDBChangeListener
+class nsMsgMailboxParser : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsMsgLineBufferHandler, public nsIDBChangeListener
 {
 public:
   nsMsgMailboxParser(nsIMsgFolder *);

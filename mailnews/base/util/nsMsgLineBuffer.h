@@ -68,7 +68,7 @@ public:
   virtual PRInt32 HandleLine(char *line, PRUint32 line_length) = 0;
 };
 
-class NS_MSG_BASE nsMsgLineBuffer : public nsMsgLineBufferHandler
+class NS_MSG_BASE nsMsgLineBuffer : public nsByteArray
 {
 public:
   nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convertNewlinesP);

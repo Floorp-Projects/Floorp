@@ -79,7 +79,7 @@ NS_GetWeakReference( nsISupports* aInstancePtr, nsresult* aErrorPtr )
     return NS_STATIC_CAST(nsIWeakReference*, result);
   }
 
-NS_COM nsresult
+NS_IMETHODIMP
 nsSupportsWeakReference::GetWeakReference( nsIWeakReference** aInstancePtr )
   {
     if ( !aInstancePtr )

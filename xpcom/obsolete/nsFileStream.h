@@ -118,8 +118,12 @@ class nsIFileSpec;
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
-#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(_MSC_VER))
+#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(XP_WIN))
 #define NS_USING_NAMESPACE
+#endif
+
+#if !defined(NS_USING_STL) && (defined(__MWERKS__) || defined(XP_WIN))
+#define NS_USING_STL
 #endif
 
 #ifdef NS_USING_NAMESPACE
@@ -676,7 +680,7 @@ protected:
 
 
 //========================================================================================
-class nsIOFileStream
+class NS_COM_OBSOLETE nsIOFileStream
 // Please read the comments at the top of this file
 //========================================================================================
 :	public nsInputFileStream
