@@ -20,10 +20,8 @@
 #ifndef nsXULCommand_h__
 #define nsXULCommand_h__
 
+//#include "nsIMenuListener.h"
 #include "nsIXULCommand.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIDOMElement.h"    // for some older c++ compilers.
@@ -37,9 +35,7 @@ class nsIDOMEvent;
 
 //----------------------------------------------------------------------
 
-class nsXULCommand : public nsIXULCommand,
-                     public nsIDOMMouseListener,
-                     public nsIDOMKeyListener
+class nsXULCommand : public nsIXULCommand //public nsIMenuListener
 
 {
 public:
@@ -49,44 +45,16 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // XUL UI Objects
-  NS_IMETHOD SetName(const nsString &aName);
-  NS_IMETHOD GetName(nsString &aName) const;
 
-  NS_IMETHOD AddUINode(nsIDOMNode * aNode);
-  NS_IMETHOD RemoveUINode(nsIDOMNode * aCmd);
+  NS_IMETHOD SetMenuItem(nsIMenuItem * aMenuItem);
+  NS_IMETHOD AttributeHasBeenSet(const nsString & aAttr);
+  NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
+  NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
+  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
 
-  NS_IMETHOD SetEnabled(PRBool aIsEnabled);
-  NS_IMETHOD GetEnabled(PRBool & aIsEnabled);
-
-  NS_IMETHOD SetTooltip(const nsString &aTip);
-  NS_IMETHOD GetTooltip(nsString &aTip) const;
-  NS_IMETHOD SetDescription(const nsString &aDescription);
-  NS_IMETHOD GetDescription(nsString &aDescription) const;
-
+  NS_IMETHOD SetCommand(const nsString & aStrCmd);
   NS_IMETHOD DoCommand();
 
-  // Non-Interface Methods
-  NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMNode);
-  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
-  NS_IMETHOD SetCommand(const nsString & aStrCmd);
-
-
-  // nsIDOMEventListener
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
-
-  // nsIDOMMouseListener (is derived from nsIDOMEventListener)
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
-
-  // nsIDOMKeyListener 
-  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
   // nsIMenuListener 
   virtual nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
@@ -94,16 +62,11 @@ public:
 protected:
   NS_IMETHOD ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript);
 
-  nsString     mName;
-  nsString     mCommandStr;
-  nsString     mTooltip;
-  nsString     mDescription;
-  PRBool       mIsEnabled;
-
-  nsVoidArray  mSrcWidgets;
-
+  nsString                 mCommandStr;
   nsCOMPtr<nsIWebShell>    mWebShell;
   nsCOMPtr<nsIDOMElement>  mDOMElement;
+
+  nsIMenuItem *            mMenuItem;
 
 };
 
