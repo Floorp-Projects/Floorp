@@ -34,6 +34,7 @@ includedir	= @includedir@/mozilla-$(MOZILLA_VERSION)
 libdir		= @libdir@
 datadir		= @datadir@
 mandir		= @mandir@
+idldir		= @datadir@/idl/mozilla-$(MOZILLA_VERSION)
 
 mozappdir	= $(libdir)/mozilla-$(MOZILLA_VERSION)
 mredir		= $(libdir)/mre/mre-$(MOZILLA_VERSION)

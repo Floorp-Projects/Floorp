@@ -103,6 +103,17 @@ export:: $(TARGETS) $(HEADERS)
 	-rm -f $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 	-rm -f $(DIST)/bin/chrome/chromelist.txt
 
+# we don't use an explicit dependency here because then we would
+# regenerate nsBuildID.h during the make install phase and that would
+# be bad.
+install::
+	@if test ! -f nsBuildID.h; then\
+		echo "You must have done at least a make export before trying to do a make install."; \
+		echo "(nsBuildID.h is missing.)"; \
+		exit 1; \
+	fi;
+	$(SYSINSTALL) $(IFLAGS1) nsBuildID.h $(DESTDIR)$(includedir)
+
 GARBAGE += build_number nsBuildID \
 	$(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 
