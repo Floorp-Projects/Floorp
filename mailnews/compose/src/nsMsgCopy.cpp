@@ -196,7 +196,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   nsCOMPtr<nsIMsgFolder>  dstFolder;
   PRBool                  isDraft = PR_FALSE;
   PRBool                  waitForUrl = PR_FALSE;
-  nsresult			rv;
+  nsresult                rv;
 
   if (!aMsgSendObj)
     return NS_ERROR_INVALID_ARG;
@@ -267,9 +267,9 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
   if ((!aDiskFile) || (!dstFolder))
     return NS_ERROR_INVALID_ARG;
 
-	//Call copyservice with dstFolder, disk file, and txnManager
-	if(NS_SUCCEEDED(rv))
-	{
+  //Call copyservice with dstFolder, disk file, and txnManager
+  if(NS_SUCCEEDED(rv))
+  {
     CopyListener    *tPtr = new CopyListener();
     if (!tPtr)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -322,9 +322,9 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
         if (eventQueue)
             eventQueue->ProcessPendingEvents();
     }
-	}
+  }
 
-	return rv;
+  return rv;
 }
 
 // nsIUrlListener methods

@@ -73,6 +73,7 @@
 #include "nsIPrefService.h"
 #include "nsISignatureVerifier.h"
 #include "nsISSLSocketControl.h"
+#include "nsPrintfCString.h"
 
 #ifndef XP_UNIX
 #include <stdarg.h>
@@ -102,7 +103,7 @@ nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
 
   nsresult rv = NS_OK;
   va_list args;
-	
+
   nsCOMPtr<nsIPrompt> dialog;
   aSmtpUrl->GetPrompt(getter_AddRefs(dialog));
   NS_ENSURE_TRUE(dialog, NS_ERROR_FAILURE);
@@ -113,20 +114,24 @@ nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
   
   va_start (args, code);
   
-  switch (code)	{
-		case NS_ERROR_SMTP_SERVER_ERROR:
-                case NS_ERROR_TCP_READ_ERROR:
-                case NS_ERROR_SENDING_FROM_COMMAND:
-                case NS_ERROR_SENDING_RCPT_COMMAND:
-                case NS_ERROR_SENDING_DATA_COMMAND:
-                case NS_ERROR_SENDING_MESSAGE:   
-                  smtpBundle->GetStringByID(code, getter_Copies(eMsg));
-                  msg = nsTextFormatter::vsmprintf(eMsg, args);
-                  break;
-                default:
-                  smtpBundle->GetStringByID(NS_ERROR_COMMUNICATIONS_ERROR, getter_Copies(eMsg));
-                  msg = nsTextFormatter::smprintf(eMsg, code);
-                  break;
+  switch (code)
+  {
+      case NS_ERROR_SMTP_SERVER_ERROR:
+      case NS_ERROR_TCP_READ_ERROR:
+      case NS_ERROR_SMTP_TEMP_SIZE_EXCEEDED:
+      case NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_1:
+      case NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_2:
+      case NS_ERROR_SENDING_FROM_COMMAND:
+      case NS_ERROR_SENDING_RCPT_COMMAND:
+      case NS_ERROR_SENDING_DATA_COMMAND:
+      case NS_ERROR_SENDING_MESSAGE:   
+           smtpBundle->GetStringByID(code, getter_Copies(eMsg));
+           msg = nsTextFormatter::vsmprintf(eMsg, args);
+           break;
+      default:
+           smtpBundle->GetStringByID(NS_ERROR_COMMUNICATIONS_ERROR, getter_Copies(eMsg));
+           msg = nsTextFormatter::smprintf(eMsg, code);
+           break;
   }
   
   if (msg) 
@@ -278,12 +283,19 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     m_addressCopy = nsnull;
     m_addresses = nsnull;
 
-  	m_addressesLeft = nsnull;
+    m_addressesLeft = nsnull;
     m_verifyAddress = nsnull;
 #ifdef UNREADY_CODE 
     m_totalAmountWritten = 0;
-    m_totalMessageSize = 0;
 #endif /* UNREADY_CODE */
+
+    m_sizelimit = 0;
+    m_totalMessageSize = 0;
+    nsCOMPtr<nsIFileSpec> fileSpec;
+    m_runningURL->GetPostMessageFile(getter_AddRefs(fileSpec));
+    if (fileSpec)
+        fileSpec->GetFileSize(&m_totalMessageSize);
+
     m_originalContentLength = 0;
     m_totalAmountRead = 0;
 
@@ -317,8 +329,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 
     if (m_prefTrySSL == PREF_SECURE_ALWAYS_SMTPS)
         rv = OpenNetworkSocket(aURL, "ssl", callbacks);  
-    else
-    if (m_prefTrySSL != PREF_SECURE_NEVER)
+    else if (m_prefTrySSL != PREF_SECURE_NEVER)
     {
         rv = OpenNetworkSocket(aURL, "starttls", callbacks);  
         if (NS_FAILED(rv) && m_prefTrySSL == PREF_SECURE_TRY_STARTTLS)
@@ -543,8 +554,8 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
   }
   
   /* don't check for a HELO response because it can be bogus and
-	 * we don't care
-	 */
+   * we don't care
+   */
   
   if(!((const char *)emailAddress) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_16))
   {
@@ -600,7 +611,10 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
     {
       buffer = "MAIL FROM:<";
       buffer += fullAddress;
-      buffer += ">" CRLF;
+      buffer += ">";
+      if(TestFlag(SMTP_EHLO_SIZE_ENABLED))
+        buffer += nsPrintfCString(" SIZE=%d", m_totalMessageSize);;
+      buffer += CRLF;
     }
     PR_FREEIF (fullAddress);
   }
@@ -695,21 +709,39 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
             if(m_prefTrySecAuth)
             {
-            if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
-            {
-                nsresult rv;
-                nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
-                // this checks if psm is installed...
-                if (NS_SUCCEEDED(rv))
-                  SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+                if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
+                {
+                    nsresult rv;
+                    nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+                    // this checks if psm is installed...
+                    if (NS_SUCCEEDED(rv))
+                      SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
                 }
             }
 
             // for use after mechs disabled fallbacks when login failed
             BackupAuthFlags();
         }
+        else if (responseLine.Compare("SIZE", PR_TRUE, 4) == 0)
+        {
+            SetFlag(SMTP_EHLO_SIZE_ENABLED);
+
+            m_sizelimit = atol((responseLine.get()) + 4);
+        }
+
         startPos = endPos + 1;
     } while (endPos >= 0);
+
+    if(TestFlag(SMTP_EHLO_SIZE_ENABLED) &&
+       m_sizelimit > 0 && (PRInt32)m_totalMessageSize > m_sizelimit)
+    {
+        nsresult rv = nsExplainErrorDetails(m_runningURL,
+                NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_1, m_sizelimit);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+        m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+        return(NS_ERROR_SENDING_FROM_COMMAND);
+    }
 
     m_nextState = SMTP_AUTH_PROCESS_STATE;
     return status;
@@ -1084,16 +1116,22 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 {
   PRInt32 status = 0;
   nsCAutoString buffer;
-  
+  nsresult rv;
+
   if(m_responseCode != 250 || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_11))
   {
-    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_FROM_COMMAND, m_responseText.get());
+    rv = nsExplainErrorDetails(m_runningURL,
+     (m_responseCode == 452) ? NS_ERROR_SMTP_TEMP_SIZE_EXCEEDED :
+    ((m_responseCode == 552) ? NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_2 :
+                               NS_ERROR_SENDING_FROM_COMMAND),
+                               m_responseText.get());
+
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
     
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
     return(NS_ERROR_SENDING_FROM_COMMAND);
   }
-  
+
   /* Send the RCPT TO: command */
 #ifdef UNREADY_CODE
   if (TestFlag(SMTP_EHLO_DSN_ENABLED) &&
@@ -1145,10 +1183,16 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 {
   PRInt32 status = 0;
   nsCAutoString buffer;
-  
+  nsresult rv;
+
   if(m_responseCode != 250 && m_responseCode != 251)
   {
-    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_RCPT_COMMAND, m_responseText.get());
+    rv = nsExplainErrorDetails(m_runningURL,
+     (m_responseCode == 452) ? NS_ERROR_SMTP_TEMP_SIZE_EXCEEDED :
+    ((m_responseCode == 552) ? NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_2 :
+                               NS_ERROR_SENDING_FROM_COMMAND),
+                               m_responseText.get());
+
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
     
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1157,7 +1201,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
   
   if(m_addressesLeft > 0)
   {
-		/* more senders to RCPT to 
+    /* more senders to RCPT to 
     */
     // fake to 250 because SendMailResponse() can't handle 251
     m_responseCode = 250;
