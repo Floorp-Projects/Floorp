@@ -2069,8 +2069,12 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
   if(IsMemberOf(kPhrase)){
 
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
-      eHTMLTags theTag=aContext.TagAt(theIndex);
-      if(theTag!=mTagID) {
+      eHTMLTags theTag = aContext.TagAt(theIndex);
+      if(theTag != mTagID) {
+        // Allow phrasals to close userdefined tags. bug 256731
+        if(eHTMLTag_userdefined == theTag) {
+          continue; // We can close this.
+        }
 
           //fixes a derivative of bug 22842...
         if(CanContainType(kBlock)) { //INS/DEL can contain blocks.
