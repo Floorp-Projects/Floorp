@@ -1,0 +1,46 @@
+# Example configuration file for Bonsai
+
+# The Bonsai modules and their relation to cvs
+
+# treelist is a list of all configured Bonsai modules
+# to add a module, add its name to the treelist
+# then duplicate the treeinfo lines below and
+# change the values appropriately
+
+set treelist { default }
+
+set treeinfo(default,module) mymodule
+set treeinfo(default,branch) {}
+set treeinfo(default,repository) {/usr/local/cvsroot}
+set treeinfo(default,description) {MyModule long description}
+set treeinfo(default,shortdesc) {MyModule short description}
+
+# Where to find system commands
+set cvscommand _CVS_
+set rlogcommand _RLOG_
+set rcsdiffcommand _RCSDIFF_
+set cocommand _CO_
+
+# URL to your copy of LXR
+set lxr_base http://localhost/webtools/lxr/source
+set mozilla_lxr_kludge TRUE
+
+# URL to your copy of tinderbox
+set tinderbox_base http://localhost/webtools/tinderbox
+
+# how bug numbers are HTMLified
+set BUGSYSTEMEXPR {<A HREF="http://localhost/bugzilla/show_bug.cgi?id=&">&</A>}
+
+# Somebody responsible for the CVS repository
+set cvsadmin somebody@somedomain
+set userdomain somedomain
+
+# User and password for access to the MySQL bonsai database
+# use empty string ("") for password if you want to access the database
+# without using a password (not recommended)
+set mysqluser nobody
+set mysqlpassword ""
+
+# LDAP server if you have one
+set ldapserver ldap.somedomain
+set ldapport 389

@@ -198,10 +198,12 @@ print q(
 );
 
 foreach $path (split('/',$rcs_path)) {
+
+# Customize this translation
     $link_path .= url_encode2($path).'/' if $path ne 'mozilla';
-    print "<A HREF='http://lxr.mozilla.org/mozilla/source/$link_path'>$path</a>/ ";
+    print "<A HREF='$lxr_base/$link_path'>$path</a>/ ";
 }
-print "<A HREF='http://lxr.mozilla.org/mozilla/source/$link_path$file_tail'>$file_tail</a> ";
+print "<A HREF='$lxr_base/$link_path$file_tail'>$file_tail</a> ";
 
 print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
 print " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
@@ -220,7 +222,7 @@ print qq(
       <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
        <TR>
         <TD NOWRAP>
-         <A HREF="http://lxr.mozilla.org/mozilla/source/$link_path$file_tail">LXR: Cross Reference</A>
+         <A HREF="$lxr_base/$link_path$file_tail">LXR: Cross Reference</A>
         </TD>
        </TR><TR>
         <TD NOWRAP>

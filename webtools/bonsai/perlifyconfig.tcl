@@ -66,6 +66,12 @@ puts $fid "\$rcsdiffcommand = [PerlStringify $rcsdiffcommand];"
 puts $fid "\$cocommand = [PerlStringify $cocommand];"
 puts $fid "\$lxr_base = [PerlStringify $lxr_base];"
 puts $fid "\$mozilla_lxr_kludge = [PerlStringify $mozilla_lxr_kludge];"
+puts $fid "\$tinderbox_base = [PerlStringify $tinderbox_base];"
+puts $fid "\$mysqluser = [PerlStringify $mysqluser];"
+puts $fid "\$mysqlpassword = [PerlStringify $mysqlpassword];"
+puts $fid "\$cvsadmin = [PerlStringify $cvsadmin];"
+puts $fid "\$userdomain = [PerlStringify $userdomain];"
+# perl scripts don't use the LDAP config variables
 set list ""
 foreach i $treelist {
     append list [PerlStringify $i]

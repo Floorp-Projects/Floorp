@@ -1,4 +1,3 @@
-# Generated automatically from Makefile.in by configure.
 #!gmake
 #
 # The contents of this file are subject to the Netscape Public License
@@ -23,21 +22,21 @@
 # to where you will install the running Bonsai.  Then "make install" should
 # copy things for you.
 
-CC = gcc
-CFLAGS = -g -O2
+CC = @CC@
+CFLAGS = @CFLAGS@
 # -lcrypt
-LDFLAGS = -lcrypt 
+LDFLAGS = @LIBS@
 # /usr/bin/perl
-PERL = /usr/bonsaitools/bin/perl
+PERL = @PERL@
 # /usr/local/src/mysqltcl-1.53/mysqltclsh
-MYSQLTCL = /usr/bonsaitools/bin/mysqltcl
+MYSQLTCL = @MYSQLTCL@
 # /var/www/bonsai
-PREFIX = /usr/ns-home/docs/bonsai
+PREFIX = @prefix@/bonsai
 
-CVS=/toollinks/cvs
-RLOG=/toollinks/rlog
-CO=/toollinks/co
-RCSDIFF=/toollinks/rcsdiff
+CVS=@CVS@
+RLOG=@RLOG@
+CO=@CO@
+RCSDIFF=@RCSDIFF@
 
 FILES = CGI.tcl			\
 	SourceChecker.cgi	\

@@ -28,8 +28,11 @@ set cocommand /tools/ns/bin/co
 set lxr_base http://cvs-mirror.mozilla.org/webtools/lxr/source
 set mozilla_lxr_kludge TRUE
 
-set ldapserver nsdirectory.mcom.com
-# set ldapserver hoth.mcom.com
+set cvsadmin terry@mozilla.org
+set mysqluser nobody
+set mysqlpassword ""
+
+set ldapserver nsdirectory.netscape.com
 set ldapport 389
 
 
@@ -60,8 +63,8 @@ if {[info exists tcl_version] && $tcl_version >= 8.0} {
         }
         return [clock scan $str]
     }
-    proc fmtclock {date args} {
-    }
+#    proc fmtclock {date args} {
+#    }
 }
     
 
@@ -70,9 +73,13 @@ proc NOTDEF {foo} {
 }
 
 proc ConnectToDatabase {} {
-    global mysqlhandle
+    global mysqlhandle mysqluser mysqlpassword
     if {![info exists mysqlhandle]} {
-        set mysqlhandle [mysqlconnect]
+        if { $mysqlpassword == "" } {
+            set mysqlhandle [mysqlconnect -user "$mysqluser"]
+        } else {
+            set mysqlhandle [mysqlconnect -user "$mysqluser" -password "$mysqlpassword"]
+        }
         mysqluse $mysqlhandle "bonsai"
     }
 }
@@ -175,6 +182,7 @@ proc AddToDatabase {lines desc} {
         lassign [split $line "|"] chtype date name repository dir \
             file version sticky branch addlines removelines
 
+        Log "line <$line> date <$date>"
         regsub {^T} $branch {} branch
         regsub {/$} $dir {} dir
         if {[cequal $addlines ""]} {

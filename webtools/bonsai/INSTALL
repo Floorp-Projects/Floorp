@@ -33,7 +33,7 @@ tree control (Bonsai - http://www.mozilla.org/bonsai.html).
 While LXR formatting is not as pretty as LSN's one, it has a huge
 advantage - it lets you see where the identifier is defined and used.
 And Bonsai brings nice and easy (though sometimes incompatible with
-browsers other but Netscape's own) intarface to the CVS history. This
+browsers other but Netscape's own) interface to the CVS history. This
 includes getting list of changes, giffs between revisions, etc.
 
 All in all LXR+Bonsai+other stuff beneath is a useful tool capable
@@ -68,6 +68,10 @@ The short list of the things you will need:
    6) Date::Parse module for Perl
    7) Some kind of HTTP server so you could use CGI scripts
 
+   You could try running the ./configure script to see what tools it
+complains about right now. Mind you, it won't check for the MySQL
+database.
+
 1.1 Getting and setting up MySQL database
 
    Visit MySQL homepage at http://www.tcx.se and grab the latest
@@ -82,19 +86,21 @@ writable by all users on your machine and change access level
 later. This would save you a lot of time trying to guess whether it's
 permissions or a mistake in the script that make things fail.
 
-1.2-3 Getting and building Tcl & TclX 7.6
+1.2-3 Getting and building Tcl & TclX 8.0.4
 
-    Tcl homepage is at http://www.scriptics.com. You may get sources
-for UNIX from ftp://ftp.scriptics.com/pub/tcl/tcl7_6/tcl7.6p2.tar.gz.
+    Bonsai works with Tcl & TclX 7.6 too, but if you need to build,
+you might as well get the latest stable versions.
+Tcl homepage is at http://www.scriptics.com. You may get sources
+for UNIX from ftp://ftp.scriptics.com/pub/tcl/tcl8_0/tcl8.0.4.tar.gz.
 TclX is an extension for Tcl that adds a lot of useful functions that
 are heavily used in Bonsai tool. 
 TclX page is http://www.neosoft.com/tclx. Download sources from
-ftp://ftp.neosoft.com/pub/tcl/TclX/tclX7.6.0.tar.gz. Watch out for the
+ftp://ftp.neosoft.com/pub/tcl/TclX/tclX8.0.4.tar.gz. Watch out for the
 case of the letters in URL. These guys are going to bring some fun
 into your life by spelling their program name in various ways.
 
-    Now you've probably got both Tcl and TclX 7.6. You may try to use
-version 8.X but I'm not sure about results. Unfortunately I'm not an
+    Now you've probably got both Tcl and TclX 8.0.4. You may try to use
+later versions but I'm not sure about results. Unfortunately I'm not an
 expert in "Tcl&Co.".
 
     Build and install Tcl first. Then build and install TclX. This
@@ -102,20 +108,13 @@ should go without serious problems
 
 1.4 mysqltcl - the tricky part
 
-   Grab msqltcl 1.50 (yes, "msqltcl" without 'y'. That's not a typo) from
-MySQL site's contributed software area (http://www.tcx.se/Contrib/) or
-from mSQL site (www.hughes.com.au). I've used version 1.50 and it
-works for me, though you may try more recent version at your own
-risk. You're risking anyway. 
+   Grab mysqltcl 1.53 from MySQL site's contributed software area
+(http://www.tcx.se/Contrib/) I've used version 1.53 and it works for
+me, though you may try more recent version at your own risk. You're
+risking anyway.
 
-   Then grab mysqltcl.c-patch from MySQL's contrib area and apply this
-patch to msqltcl.c file from msqltcl-1.50 distribution. 
-
-   Try to make msqltcl binary which is in fact mYsqltcl already. Very
-likely that you will not be able to compile it without modifications.
-    
-   You can use the patch in APPENDIX 1 to see what changes I had to make
-to compile mysqltcl. Your mileage may vary.
+   You will need to patch mysqltcl to include support for TclX. A
+patch is provided in Appendix A.
 
 1.5 Perl + Mysql
 
@@ -161,13 +160,7 @@ id you're running the daemon with.
 2. TWEAKING THE TOOLS
 
    Now you should have all necessary tools to be able to run LXR and
-Bonsai scripts and see why the wouldn't work for you right now. 
-
-   First of all you have to change "#!/usr/bonsaitools" to wherever
-you've installed your binaries in all executable scripts in LXR and
-Bonsai directories.  There is now a Makefile with a "make install"
-command that can make this easier.  See the Makefile for details.
-
+Bonsai scripts and see why the wouldn't work for you right now.
 
 2.1 LXR
 
@@ -217,24 +210,34 @@ Here is the short list of changes I had to make
 setup. You have to make a lot of changes until more portable
 configuration mechanism is introduced. 
 
-   First of all, create data/ directory in your Bonsai dir. Then edit
-data/configdata file as described in README file. Create
-appropriate data/XXX directory for each tree XXX you've configured in
-'configdata'. Compile trapdoor program and place binary in the data/
-dir ('make install' will do this for you.).
-run 'trapdoor <admin password here> >data/passwd' it will set up
-admin's password. At least it should. It worked for me with empty
-password, but I still am unable to change it from the web.
+   These steps should create a basic Bonsai install:
+
+   ./configure
+   make install
+
+   You might want to give the option --prefix=<path> to configure to
+install Bonsai in another place than /usr/local, e.g. /var/www.  It
+will make a new directory named "bonsai" in the prefix directory you specify.
+
+   Edit data/configdata file as described in README file. Create
+appropriate data/XXX directory for each tree XXX you've configured
+in 'configdata'.
+
+   Go to the data directory and run 
+
+   trapdoor <admin password here> >data/passwd
+
+   it will set up admin's password.
 
    file: cvsblame.cgi
-      @line 120: you may add your own translation to help find
+      @line 202: you may add your own translation to help find
       appropriate RCS file for the given source file.
       TODO: We'd better get this information from CVS/Repository
             file. It's more generic than hardcoded tweaks.
 
    file: cvslog.cgi
-      @line 90: the same tweaks to find RCS file for given source file
-      @ line 463: add translations to $lxr_path to help find source
+      @line 154: the same tweaks to find RCS file for given source file
+      @ line 475: add translations to $lxr_path to help find source
 		  file for given RCS file.
       TODO: This should be done using information in
             $CVSROOT/CVSROOT/modules file. Typical example is the
@@ -245,24 +248,9 @@ password, but I still am unable to change it from the web.
 
 
    file: cvsquery.cgi
-      @line 23: There are some cases when cvsrot is not passed as
+      @line 25: There are some cases when cvsroot is not passed as
           parameter for cvsquery.cgi. You should better check for
 	  empty CVS_ROOT and set it to your CVSROOT path.
-
-      @line 71: Here we should try to make backward translation for
-          directory name similar to one @line 463 in cvslog.cgi.
-
-      
-      @line 151: you will probably want to send email somewhere else
-	  but people @netscape.com 8-)
-
-
-   file: dolog.pl
-      @line 42: change path to rlog program
-
-   file: toplevel.cgi
-      @line 240: remove links that are not accessible to you anyway
-
 
 That's basically it. With some luck and persistence you will have 90%
 working system at this point. A lot of these things are just asking to be
@@ -271,7 +259,9 @@ fixed in near feature. And I hope they will be.
 3. Setting up database
 
    This is quite simple but time consuming operation.
-First create database structure using maketable.sh csript.
+First create database structure using maketable.sh script. You might
+want to edit it to use the user and password you want for the bonsai
+database.
 Then go to Bonsai administration page and press "Rebuild CVS history"
 button. Then you may go to the theater and watch a movie or two. It
 will talke a lot of time. It takes several seconds to process one
@@ -279,8 +269,22 @@ file. The more revisions in file the more time it will take. My SUN
 workstation with 2x200Mhz UltraSPARC processors run about an hour to
 process about 4K files with 20K+ revisions. Your mileage may vary.
 
-Read the comments at the top of dolog.pl to see how to keep your
-database updated when people make checkins.
+Copy "dolog.pl" to your CVSROOT directory, and check it in. Add
+"dolog.pl" to CVSROOT/checkoutlist, and check it in. Then, add a line
+to your CVSROOT/loginfo file that says something like:
+
+      ALL      $CVSROOT/CVSROOT/dolog.pl -r /cvsroot bonsai-checkin-daemon@my.bonsai.machine
+
+Replace "/cvsroot" with the name of the CVS root directory, and
+"my.bonsai.machine" with the name of the machine Bonsai runs on. Now,
+on my.bonsai.machine, add a mail alias so that mail sent to
+"bonsai-checkin-daemon" will get piped to handleCheckinMail.tcl. The
+first argument to handleCheckinMail.tcl is the directory that bonsai
+is installed in. E.g. in /etc/aliases, add
+
+ bonsai-checkin-daemon: "|/usr/local/bonsai/handleCheckinMail.tcl /usr/local/bonsai"
+
+or whatever is appropriate for your mail transport agent.
  
 4. Things to do
 
@@ -315,116 +319,79 @@ time trying. Or just reading.
 APPENDIXES
 *******************************************************
 
+APPENDIX 1. Patch to build mysqltcl with TclX
+---------------------------------------------
 
-APPENDIX 1. Patch to build mysqltcl.
---------------------------------------
-
-diff -u -r msqltcl-1.50/Makefile mysqltcl-1.50/Makefile
---- msqltcl-1.50/Makefile	Tue Jun  6 07:25:39 1995
-+++ mysqltcl-1.50/Makefile	Tue Jun 23 18:20:07 1998
-@@ -38,11 +38,11 @@
- #
- #----- Tcl/Tk libraries & such
- # Path for Tcl include files.
--TCLINCL = -I/usr/local/include
-+TCLINCL = -I../include
- # Path for Tk include files, if different from the above.
- TKINCL =
- # Libraries required to link plain Tcl.
--TCLLIBS = -L/usr/local/lib -ltcl -lm
-+TCLLIBS = -L../lib -ltclx7.6.0 -ltcl7.6 -lm -lnsl -lsocket
- # Libraries required to link plain Tk.
- TKLIBS = -L/usr/local/lib -ltk -ltcl -lX11 -lm
+diff -u -r mysqltcl-1.53/Makefile mysqltcl-1.53p/Makefile
+--- mysqltcl-1.53/Makefile	Mon Jul  6 18:11:55 1998
++++ mysqltcl-1.53p/Makefile	Wed Apr 28 09:48:55 1999
+@@ -10,7 +10,7 @@
+ TKHOME   = /usr
+ MYSQLHOME = /usr/local/mysql
  
-@@ -66,11 +66,11 @@
- #
- #----- Tcl/Tk libraries & such
- # Path for Tcl include files.
--NEWTCLINCL = -I/usr/local/new/include
-+NEWTCLINCL = -I../include
- # Path for Tk include files, if different from the above.
- NEWTKINCL =
- # Libraries required to link plain Tcl.
--NEWTCLLIBS = -L/usr/local/new/lib -ltcl -lm
-+NEWTCLLIBS = -L../lib -ltclx7.6.0 -ltcl7.6 -lm -lnsl -lsocket
- # Libraries required to link plain Tk.
- NEWTKLIBS = -L/usr/local/new/lib -ltk -ltcl -lX11 -lm
+-SHARED = yes
++SHARED = no
+ #PLATFORM=SunOS-5.5.1-sparc
+ #PLATFORM=SunOS-5.6-sparc
+ PLATFORM=Linux-2.0-i586
+@@ -59,7 +59,7 @@
+ CPPFLAGS  = -I$(XHOME)/include -I$(TCLHOME)/include -I$(TKHOME)/include \
+ 	-I$(MYSQLHOME)/include
+ LOADLIBES = -L$(XHOME)/lib -L$(TCLHOME)/lib -L$(TKHOME)/lib \
+-	-L$(MYSQLHOME)/lib -lmysqlclient -ltk8.0 -ltcl8.0 -lX11 -lm -ldl $(LIBS) 
++	-L$(MYSQLHOME)/lib -lmysqlclient -ltclx8.0.4 -ltk8.0 -ltcl8.0 -lX11 -lm -ldl $(LIBS) 
  
-@@ -82,7 +82,7 @@
- # Path for TclX/TkX include files, if different from plain Tcl.
- NEWTCLXINCL =
- # Extra libraries required to link TclX.
--NEWTCLXLIBS = -L/usr/local/new/lib -ltclx
-+NEWTCLXLIBS = -L../mysql/lib -ltclx
- # Extra libraries required to link TkX.
- NEWTKXLIBS = -L/usr/local/new/lib -ltkx -ltclx
- # TclX/TkX 'AppInit' files (base names).
-@@ -94,16 +94,16 @@
- #
- #----- mSQL libraries & such
- # Path for mSQL include files.
--MSQLINCL = -I/usr/local2/src/Minerva/include
-+MSQLINCL = -I../mysql/include
- # Libraries required to link an mSQL application.
--MSQLLIB = -L/usr/local2/src/Minerva/lib -lmsql
-+MSQLLIB = -L../mysql/lib -lmysqlclient
+ all: $(OUTPUT)
  
- #===== END OF CONFIGURATION DEFINITIONS =====
+diff -u -r mysqltcl-1.53/mysqltcl.c mysqltcl-1.53p/mysqltcl.c
+--- mysqltcl-1.53/mysqltcl.c	Mon Jul  6 17:35:17 1998
++++ mysqltcl-1.53p/mysqltcl.c	Mon Apr 26 11:21:10 1999
+@@ -27,7 +27,7 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
  
- INCL = -I. ${MSQLINCL} ${TCLINCL} ${TKINCL}
- CFLAGS = ${OPTIM} -c
- LDFLAGS = ${OPTIM}
--PROGS = msqltcl msqlwish
-+PROGS = msqltcl # msqlwish
- TCLLINK = ${MSQLLIB} ${TCLLIBS}
- TKLINK = ${MSQLLIB} ${TKLIBS}
+-#include <tcl.h>
++#include <tclExtend.h>
+ #include <mysql.h>
  
-diff -u -r msqltcl-1.50/new-tclAppInit.c mysqltcl-1.50/new-tclAppInit.c
---- msqltcl-1.50/new-tclAppInit.c	Tue Jun  6 07:25:38 1995
-+++ mysqltcl-1.50/new-tclAppInit.c	Tue Jun 23 18:28:14 1998
-@@ -14,7 +14,7 @@
- static char sccsid[] = "@(#) tclAppInit.c 1.11 94/12/17 16:14:03";
- #endif /* not lint */
+ #include <errno.h>
+diff -u -r mysqltcl-1.53/mysqltclsh.c mysqltcl-1.53p/mysqltclsh.c
+--- mysqltcl-1.53/mysqltclsh.c	Wed Mar 18 13:44:55 1998
++++ mysqltcl-1.53p/mysqltclsh.c	Mon Apr 26 11:26:26 1999
+@@ -17,7 +17,7 @@
+ #include <X11/Intrinsic.h>
+ #endif
  
 -#include "tcl.h"
 +#include "tclExtend.h"
  
  /*
   * The following variable is a special hack that is needed in order for
-@@ -48,7 +48,7 @@
-     int argc;			/* Number of command-line arguments. */
-     char **argv;		/* Values of command-line arguments. */
- {
--    Tcl_Main(argc, argv);
+@@ -61,7 +61,7 @@
+ #ifdef TCL_XT_TEST
+     XtToolkitInitialize();
+ #endif
+-    Tcl_Main(argc, argv, Tcl_AppInit);
 +    TclX_Main(argc, argv, Tcl_AppInit);
      return 0;			/* Needed only to prevent compiler warning. */
  }
  
-@@ -79,6 +79,10 @@
+@@ -92,6 +92,10 @@
  	return TCL_ERROR;
      }
  
-+    if (Tclx_Init(interp) == TCL_ERROR) {
++       if (Tclx_Init(interp) == TCL_ERROR) {
 +	return TCL_ERROR;
 +    }
 +
-     /*
-      * Call the init procedures for included packages.  Each call should
-      * look like this:
-@@ -90,7 +94,7 @@
-      * where "Mod" is the name of the module.
-      */
- 
--    if (Msqltcl_Init(interp) == TCL_ERROR) {
-+    if (Mysqltcl_Init(interp) == TCL_ERROR) {
- 	return TCL_ERROR;
-     }
- 
-@@ -106,6 +110,6 @@
+ #ifdef TCL_TEST
+ #ifdef TCL_XT_TEST
+      if (Tclxttest_Init(interp) == TCL_ERROR) {
+@@ -135,6 +139,6 @@
       * then no user-specific startup file will be run under any conditions.
       */
  
--    tcl_RcFileName = "~/.tclshrc";
-+/*    tcl_RcFileName = "~/.tclshrc"; */
+-    Tcl_SetVar(interp, "tcl_rcFileName", "~/.tclshrc", TCL_GLOBAL_ONLY);
++/*    Tcl_SetVar(interp, "tcl_rcFileName", "~/.tclshrc", TCL_GLOBAL_ONLY);*/
      return TCL_OK;
  }

@@ -42,6 +42,7 @@ $flag_tagcmd = 0;
 $repository = '';
 $repository_tag = '';
 $mailhost = 'localhost';
+$rlogcommand = '/usr/bin/rlog';
 
 @mailto=();
 @changed_files = ();
@@ -183,7 +184,7 @@ sub process_cvs_info {
                 if( ! -r $rcsfile ){
                     $rcsfile = "$envcvsroot/$repository/Attic/$fn,v";
                 }
-                open(LOG, "/tools/ns/bin/rlog -N -r$rev $rcsfile |") 
+                open(LOG, "$rlogcommand -N -r$rev $rcsfile |") 
                         || print STDERR "dolog.pl: Couldn't run rlog\n";
                 while(<LOG>){
                     if (/^date:.* author: ([^;]*);.*/) {

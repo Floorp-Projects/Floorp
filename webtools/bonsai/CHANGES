@@ -11,6 +11,6 @@ will tell you what has been changed in the last week.
 
 
 
-4/9/99 Now uses DBI::mysql instead of the mysql perl module that came with 
-mysql.  One side effect of htis is that it now tries to log in as user
-"bonsai"; I'm actually not sure what username it was trying before.
+4/30/99 Now uses autoconf, and comes with a configure script.  A few
+new variables can be defined in your configdata file, and probably
+need to be.  See the file configdata.in for a list of the new parameters.

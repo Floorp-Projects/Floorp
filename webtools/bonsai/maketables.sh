@@ -16,7 +16,25 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-mysql > /dev/null 2>/dev/null << OK_ALL_DONE
+USER=nobody
+PASSWORD=
+
+if test x$PASSWORD = x ; then
+  MYSQL="mysql -u $USER"
+else
+  MYSQL="mysql -u $USER -p $PASSWORD"
+fi
+
+echo
+echo "Will use user=\"$USER\" and password=\"$PASSWORD\" for bonsai database."
+echo "If you have a previous bonsai install, this script will drop all"
+echo "bonsai tables. Press ctrl-c to bail out now or return to continue."
+
+read
+
+echo Dropping old tables
+
+$MYSQL > /dev/null 2>/dev/null << OK_ALL_DONE
 
 use bonsai;
 
@@ -30,9 +48,9 @@ drop table branches;
 drop table tags;
 OK_ALL_DONE
 
+echo creating new tables
 
-
-mysql << OK_ALL_DONE
+$MYSQL << OK_ALL_DONE
 use bonsai;
 create table descs (
     id mediumint not null auto_increment primary key,

@@ -101,13 +101,13 @@ sub validateRepository {
             return;
         }
     }
-    print "Invalid repository $root selected.  Send mail to terry\@netscape.com if you think this should have worked.\n";
+    print "Invalid repository $root selected.  Send mail to $cvsadmin if you think this should have worked.\n";
     exit;
 }
 
 sub ConnectToDatabase {
     if ($dbh == "") {
-        $dbh = DBI->connect("bonsai","bonsai","","mysql") || die "Can't connect to database server -- $DBD::mysql::db_errstr";
+        $dbh = DBI->connect("bonsai","$mysqluser","","mysql") || die "Can't connect to database server -- $DBD::mysql::db_errstr";
     }
     return $dbh;
 }

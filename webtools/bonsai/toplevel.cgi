@@ -254,7 +254,7 @@ puts "
 <tr>
 <td valign=top>
 <a href=$cvsqueryurl><b>CVS Query Tool</b></a><br>
-<a href=http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi>Tinderbox continuous builds</a><br>
+<a href=$tinderbox_base/showbuilds.cgi>Tinderbox continuous builds</a><br>
 <a href=\"switchtree.cgi[BatchIdPart ?]\">Switch to look at a different tree or branch</a><br>
 <a href=viewold.cgi[BatchIdPart ?]>Time warp -- view a different day's hook.</a><br>
 <a href=countcheckins.cgi[BatchIdPart ?]>See some stupid statistics about recent checkins.</a><br>

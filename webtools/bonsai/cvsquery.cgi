@@ -159,7 +159,7 @@ $query_debug = $form{'debug'};
 $result= &query_checkins( $mod_map );
 
 for $i (@{$result}) {
-    $w{"$i->[$CI_WHO]\@netscape.com"} = 1;
+    $w{"$i->[$CI_WHO]\@$userdomain"} = 1;
 }
 
 @p = sort keys %w;
