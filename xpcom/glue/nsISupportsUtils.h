@@ -142,19 +142,19 @@ public:
 #if defined(NS_DEBUG) && defined(NS_MT_SUPPORTED)
 
 extern "C" NS_EXPORT void* NS_CurrentThread(void);
+extern "C" NS_EXPORT void NS_CheckThreadSafe(void* owningThread, const char* msg);
 
-#define NS_DECL_OWNINGTHREAD     void* _mOwningThread;
-#define NS_IMPL_OWNINGTHREAD()   (_mOwningThread = NS_CurrentThread())
-#define NS_ASSERT_OWNINGTHREAD(_class) \
-    NS_ASSERTION(_mOwningThread == NS_CurrentThread(), #_class " not thread-safe");
+#define NS_DECL_OWNINGTHREAD            void* _mOwningThread;
+#define NS_IMPL_OWNINGTHREAD()          (_mOwningThread = NS_CurrentThread())
+#define NS_ASSERT_OWNINGTHREAD(_class)  NS_CheckThreadSafe(_mOwningThread, #_class " not thread-safe")
 
-#else // !(defined(NS_DEBUG) && !defined(NS_MT_SUPPORTED))
+#else // !(defined(NS_DEBUG) && defined(NS_MT_SUPPORTED))
 
-#define NS_DECL_OWNINGTHREAD     /* nothing */
-#define NS_IMPL_OWNINGTHREAD()   ((void)0)
-#define NS_ASSERT_OWNINGTHREAD(_class) ((void)0)
+#define NS_DECL_OWNINGTHREAD            /* nothing */
+#define NS_IMPL_OWNINGTHREAD()          ((void)0)
+#define NS_ASSERT_OWNINGTHREAD(_class)  ((void)0)
 
-#endif // !(defined(NS_DEBUG) && !defined(NS_MT_SUPPORTED))
+#endif // !(defined(NS_DEBUG) && defined(NS_MT_SUPPORTED))
 
 ////////////////////////////////////////////////////////////////////////////////
 

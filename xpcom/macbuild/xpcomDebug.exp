@@ -1,3 +1,4 @@
 # These are now just additions for the debug build.
 PL_VectorAssertValid
 NS_CurrentThread
+NS_CheckThreadSafe

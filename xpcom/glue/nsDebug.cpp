@@ -340,12 +340,36 @@ NS_ErrorAccordingToNSPR()
 #include "prthread.h"
 
 extern "C" NS_EXPORT void* NS_CurrentThread(void);
+extern "C" NS_EXPORT void NS_CheckThreadSafe(void* owningThread, const char* msg);
 
 void*
 NS_CurrentThread(void)
 {
   void* th = PR_CurrentThread();
   return th;
+}
+
+/*
+ * DON'T TOUCH THAT DIAL...
+ * For now, we're making the thread-safety checking be on by default which, yes, slows
+ * down linux a bit... but we're doing it so that everybody has a chance to exercise 
+ * their code a good deal before the beta. After we branch, we'll turn this back off
+ * and then you can enable it explicitly by setting XPCOM_CHECK_THREADSAFE. This will
+ * let you verify the thread-safety of your classes without impacting everyone all the
+ * time.
+ */
+static PRBool gCheckThreadSafeDefault = PR_TRUE; // READ THE ABOVE COMMENT FIRST!
+
+void
+NS_CheckThreadSafe(void* owningThread, const char* msg)
+{
+  static int check = -1;
+  if (check == -1) {
+    check = gCheckThreadSafeDefault || getenv("XPCOM_CHECK_THREADSAFE") != 0;
+  }
+  if (check) {
+    NS_ASSERTION(owningThread == NS_CurrentThread(), msg);
+  }
 }
 
 #endif // NS_DEBUG
