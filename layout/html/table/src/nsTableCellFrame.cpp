@@ -774,6 +774,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_UNCONSTRAINEDSIZE != cellHeight) {
     cellHeight += topInset + bottomInset;
   }
+  cellHeight = nsTableFrame::RoundToPixel(cellHeight, p2t); // work around block rounding errors
 
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
@@ -782,6 +783,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_UNCONSTRAINEDSIZE != cellWidth) {
     cellWidth += leftInset + rightInset;    
   }
+  cellWidth = nsTableFrame::RoundToPixel(cellWidth, p2t); // work around block rounding errors
 
   // set the cell's desired size and max element size
   aDesiredSize.width   = cellWidth;

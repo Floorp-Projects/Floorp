@@ -346,7 +346,8 @@ nsTableFrame::InterruptNotification(nsIPresContext* aPresContext,
 
 nscoord 
 nsTableFrame::RoundToPixel(nscoord aValue,
-                           float   aPixelToTwips)
+                           float   aPixelToTwips,
+                           PRBool  aRoundUp)
 {
   nscoord halfPixel = NSToCoordRound(aPixelToTwips / 2.0f);
   nscoord fullPixel = NSToCoordRound(aPixelToTwips);
@@ -355,7 +356,7 @@ nsTableFrame::RoundToPixel(nscoord aValue,
     return aValue;
   }
   else {
-    if (excess > halfPixel) {
+    if ((excess > halfPixel) || aRoundUp) {
       return aValue + (fullPixel - excess);
     }
     else {
@@ -3214,15 +3215,12 @@ nsTableFrame::DistributeSpaceToCells(nsIPresContext*          aPresContext,
   // now that all of the rows have been resized, resize the cells       
   nsTableRowGroupFrame* rowGroupFrame = (nsTableRowGroupFrame*)aRowGroupFrame;
   nsIFrame * rowFrame = rowGroupFrame->GetFirstFrame();
-  while (nsnull!=rowFrame) {
+  while (rowFrame) {
     const nsStyleDisplay *rowDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) { 
       ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
     }
-    // The calling function, DistributeSpaceToRows, takes care of the recursive row
-    // group descent, which is why there's no NS_STYLE_DISPLAY_TABLE_ROW_GROUP case
-    // here.
     rowGroupFrame->GetNextFrame(rowFrame, &rowFrame);
   }
 }
@@ -3233,7 +3231,7 @@ nsTableFrame::DistributeSpaceToRows(nsIPresContext*          aPresContext,
                                     nsIFrame*                aRowGroupFrame, 
                                     nscoord                  aSumOfRowHeights,
                                     nscoord                  aExcess, 
-                                    nscoord&                 aExcessForRowGroup, 
+                                    nscoord&                 aExcessAllocated,
                                     nscoord&                 aRowGroupYPos)
 {
   // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
@@ -3241,7 +3239,10 @@ nsTableFrame::DistributeSpaceToRows(nsIPresContext*          aPresContext,
   nscoord cellSpacingY = GetCellSpacingY();
   nsTableRowGroupFrame* rowGroupFrame = (nsTableRowGroupFrame*)aRowGroupFrame;
   nsIFrame* rowFrame = rowGroupFrame->GetFirstFrame();
+  nscoord excessForRowGroup = 0;
   nscoord y = 0;
+  float p2t;
+  aPresContext->GetPixelsToTwips(&p2t);
   while (rowFrame) {
     const nsStyleDisplay *rowDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
@@ -3250,14 +3251,15 @@ nsTableFrame::DistributeSpaceToRows(nsIPresContext*          aPresContext,
       nsRect rowRect;
       rowFrame->GetRect(rowRect);
       float percent = ((float)(rowRect.height)) / (float)aSumOfRowHeights;
-      nscoord excessForRow = NSToCoordRound((float)aExcess * percent);
+      nscoord excessForRow = RoundToPixel(NSToCoordRound((float)aExcess * percent), p2t, PR_TRUE);
+      excessForRow = PR_MIN(excessForRow, aExcess - aExcessAllocated);
 
       nsRect newRowRect(rowRect.x, y, rowRect.width, excessForRow + rowRect.height);
       rowFrame->SetRect(aPresContext, newRowRect);
-      // better if this were part of an overloaded row::SetRect
-      y += excessForRow + rowRect.height + cellSpacingY;
+      y = newRowRect.YMost() + cellSpacingY;
 
-      aExcessForRowGroup += excessForRow;
+      aExcessAllocated  += excessForRow;
+      excessForRowGroup += excessForRow;
     }
 
     rowGroupFrame->GetNextFrame(rowFrame, &rowFrame);
@@ -3266,9 +3268,9 @@ nsTableFrame::DistributeSpaceToRows(nsIPresContext*          aPresContext,
   nsRect rowGroupRect;
   aRowGroupFrame->GetRect(rowGroupRect);  
   nsRect newRowGroupRect(rowGroupRect.x, aRowGroupYPos, rowGroupRect.width, 
-                         aExcessForRowGroup + rowGroupRect.height);
+                         excessForRowGroup + rowGroupRect.height);
   aRowGroupFrame->SetRect(aPresContext, newRowGroupRect);
-  aRowGroupYPos += aExcessForRowGroup + rowGroupRect.height;
+  aRowGroupYPos = newRowGroupRect.YMost();
 
   DistributeSpaceToCells(aPresContext, aReflowState, aRowGroupFrame);
 }
@@ -3329,16 +3331,14 @@ nsTableFrame::CalcDesiredHeight(nsIPresContext*          aPresContext,
           sumOfRowHeights += rgFrame->GetHeightOfRows(aPresContext);
         }
       }
-  
+
+      nscoord excessAllocated = 0;
       for (rgX = 0; rgX < numRowGroups; rgX++) {
         nsTableRowGroupFrame* rgFrame = 
           GetRowGroupFrame((nsIFrame*)rowGroups.ElementAt(rgX));
         if (rgFrame) {
-          nscoord excessForGroup = 0;
-          const nsStyleTable* tableStyle;
-          GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
           DistributeSpaceToRows(aPresContext, aReflowState, rgFrame, sumOfRowHeights, 
-                                excess, excessForGroup, rowGroupYPos);
+                                excess, excessAllocated, rowGroupYPos);
 
           // Make sure child views are properly positioned
           // XXX what happens if childFrame is a scroll frame and this gets skipped?
