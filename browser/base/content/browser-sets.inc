@@ -187,7 +187,13 @@
     <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
+
+#ifndef XP_MACOSX
+# Ctrl+I is conventially mapped to Info on MacOS X, thus it should not be 
+# overridden for other purposes there. 
     <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd2.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
+#endif
+
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 #ifdef XP_MACOSX
     <key id="key_gotoHistory"  key="&history.commandKey;"  command="viewHistorySidebar" modifiers="accel,shift"/>
