@@ -335,12 +335,14 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   nsresult rv;   // XXXbz Should failures in this method fire onerror?
 
   // First, get a document (needed for security checks, base URI and the like)
+  // Even if we do not have a document, we want to keep going here.  The
+  // reason is that nodes created by the HTMLFragmentContentSink have no
+  // document (not even in the nodeinfo) and are used when cutting and
+  // pasting, as well as for drag&drop.  So if we are to have composer sorta
+  // working....  Once bug 198486 is fixed, we can go back to just bailing on
+  // a null document.
   nsCOMPtr<nsIDocument> doc;
   rv = GetOurDocument(getter_AddRefs(doc));
-  if (!doc) {
-    // No reason to bother, I think...
-    return rv;
-  }
 
   nsCOMPtr<nsIURI> imageURI;
   rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
@@ -358,7 +360,11 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // not to show the broken image icon.  If the load is blocked by the
   // content policy or security manager, we will want to cancel with
   // the error code from those.
-  nsresult cancelResult = CanLoadImage(imageURI, doc);
+  nsresult cancelResult = NS_OK;
+  if (doc) {
+    // Can't do security or content policy checks without a document
+    cancelResult = CanLoadImage(imageURI, doc);
+  }
   if (NS_SUCCEEDED(cancelResult)) {
     cancelResult = NS_ERROR_IMAGE_SRC_CHANGED;
   }
@@ -373,11 +379,15 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup;
-  doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-  NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
+  if (doc) {
+    doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
+  }
 
   nsCOMPtr<nsIURI> documentURI;
-  doc->GetDocumentURL(getter_AddRefs(documentURI));
+  if (doc) {
+    doc->GetDocumentURL(getter_AddRefs(documentURI));
+  }
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
@@ -473,17 +483,17 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
                                    nsIDocument* aDocument,
                                    nsIURI** aURI)
 {
-  NS_PRECONDITION(aDocument, "Must have a document");
+  NS_WARN_IF_FALSE(aDocument, "Must have a document");
   NS_PRECONDITION(aURI, "Null out param");
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   
   // (1) Get the base URI
   nsCOMPtr<nsIURI> baseURL;
   nsCOMPtr<nsIHTMLContent> thisContent = do_QueryInterface(this);
   if (thisContent) {
     rv = thisContent->GetBaseURL(*getter_AddRefs(baseURL));
-  } else {
+  } else if (aDocument) {
     rv = aDocument->GetBaseURL(*getter_AddRefs(baseURL));
     if (!baseURL) {
       rv = aDocument->GetDocumentURL(getter_AddRefs(baseURL));
@@ -493,7 +503,9 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
 
   // (2) Get the charset
   nsAutoString charset;
-  aDocument->GetDocumentCharacterSet(charset);
+  if (aDocument) {
+    aDocument->GetDocumentCharacterSet(charset);
+  }
 
   // (3) Construct the silly thing
   return NS_NewURI(aURI,
@@ -566,6 +578,11 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
 
   nsCOMPtr<nsIDocument> document;
   rv = GetOurDocument(getter_AddRefs(document));
+
+  if (!document) {
+    // no use to fire events if there is no document....
+    return rv;
+  }
 
   nsCOMPtr<nsIPresShell> shell;
   document->GetShellAt(0, getter_AddRefs(shell));
