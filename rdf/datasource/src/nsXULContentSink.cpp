@@ -27,6 +27,14 @@
 
   For more information on XUL, see http://www.mozilla.org/xpfe
 
+  TO DO
+  -----
+
+  1) Get rid of PopResourceAndState(), and create a single state struct that
+     holds the resource and parser state, as well as the _line number_ in which
+     the state was entered. This'll make it a lot easier to print out meaningful
+     debug info to the log.
+
 */
 
 #include "nsCOMPtr.h"
@@ -66,6 +74,10 @@
 static const char kNameSpaceSeparator[] = ":";
 static const char kNameSpaceDef[] = "xmlns";
 static const char kXULID[] = "id";
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog;
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // RDF core vocabulary
@@ -178,7 +190,7 @@ protected:
     void      PopNameSpaces(void);
 
     nsINameSpaceManager* mNameSpaceManager;
-    nsVoidArray* mNameSpaceStack;
+    nsVoidArray mNameSpaceStack;
     
     void SplitQualifiedName(const nsString& aQualifiedName,
                             PRInt32& rNameSpaceID,
@@ -256,7 +268,6 @@ nsIRDFResource*      XULContentSinkImpl::kXUL_element;
 XULContentSinkImpl::XULContentSinkImpl()
     : mDocumentURL(nsnull),
       mDataSource(nsnull),
-      mNameSpaceStack(nsnull),
       mContextStack(nsnull),
       mText(nsnull),
       mTextLength(0),
@@ -290,35 +301,52 @@ XULContentSinkImpl::XULContentSinkImpl()
         NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIXUL_element, &kXUL_element)),
                   "unalbe to get resource");
     }
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsXULContentSink");
+#endif
 }
 
 
 XULContentSinkImpl::~XULContentSinkImpl()
 {
-    NS_IF_RELEASE(mNameSpaceManager);
-    NS_IF_RELEASE(mDocumentURL);
-    NS_IF_RELEASE(mDataSource);
-    NS_IF_RELEASE(mDocument);
-    NS_IF_RELEASE(mParser);
-    NS_IF_RELEASE(mFragmentRoot);
+    // There shouldn't be any here except in an error condition
+    PRInt32 index = mNameSpaceStack.Count();
 
-    if (mNameSpaceStack) {
-        // NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
-        fprintf(stderr, "XULContentSinkImpl destructor: namespace stack not empty\n");
+    while (0 < index--) {
+        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[index];
 
-        // There shouldn't be any here except in an error condition
-        PRInt32 index = mNameSpaceStack->Count();
+#ifdef PR_LOGGING
+        if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+            nsAutoString uri;
+            nsCOMPtr<nsIAtom> prefixAtom;
 
-        while (0 < index--) {
-            nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
-            NS_RELEASE(nameSpace);
+            nameSpace->GetNameSpaceURI(uri);
+            nameSpace->GetNameSpacePrefix(*getter_AddRefs(prefixAtom));
+
+            nsAutoString prefix;
+            if (prefixAtom)
+                prefix = prefixAtom->GetUnicode();
+            else
+                prefix = "<default>";
+
+            char* prefixStr = prefix.ToNewCString();
+            char* uriStr = uri.ToNewCString();
+
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+                   ("xul: warning: unclosed namespace '%s' (%s)",
+                    prefixStr, uriStr));
+
+            delete[] prefixStr;
+            delete[] uriStr;
         }
-        delete mNameSpaceStack;
-    }
-    if (mContextStack) {
-        // NS_PRECONDITION(0 == mContextStack->Count(), "content stack not empty");
-        fprintf(stderr, "XULContentSinkImpl destructor: content stack not empty\n");
+#endif
 
+        NS_RELEASE(nameSpace);
+    }
+
+    if (mContextStack) {
         // XXX we should never need to do this, but, we'll write the
         // code all the same. If someone left the content stack dirty,
         // pop all the elements off the stack and release them.
@@ -327,11 +355,60 @@ XULContentSinkImpl::~XULContentSinkImpl()
             nsIRDFResource* resource;
             XULContentSinkState state;
             PopResourceAndState(resource, state);
+
+#ifdef PR_LOGGING
+            if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+                nsAutoString tag("unknown");
+                nsAutoString nameSpaceURI("unknown");
+
+                nsresult rv;
+                nsCOMPtr<nsIRDFNode> typeNode;
+
+                // pull the namespace and tag out of the resource by
+                // walking the 'type' arc.
+                rv = mDataSource->GetTarget(resource, kRDF_type, PR_TRUE, getter_AddRefs(typeNode));
+                if (NS_OK == rv) {
+                    nsCOMPtr<nsIRDFResource> type( do_QueryInterface(typeNode) );
+                    if (type) {
+                        nsCOMPtr<nsIRDFDocument> rdfDoc( do_QueryInterface(mDocument) );
+                        if (rdfDoc) {
+                            PRInt32 nameSpaceID;
+                            nsCOMPtr<nsIAtom> tagAtom;
+                            rv = rdfDoc->SplitProperty(type, &nameSpaceID, getter_AddRefs(tagAtom));
+                            if (NS_SUCCEEDED(rv)) {
+                                tag = tagAtom->GetUnicode();
+                                mNameSpaceManager->GetNameSpaceURI(nameSpaceID, nameSpaceURI);
+                            }
+                        }
+                    }
+                }
+
+                char* tagStr = tag.ToNewCString();
+                char* nameSpaceURIStr = nameSpaceURI.ToNewCString();
+                
+                PR_LOG(gLog, PR_LOG_ALWAYS,
+                       ("xul: warning: unclosed tag '%s' in namepace '%s'",
+                        tagStr, nameSpaceURIStr));
+
+                delete[] tagStr;
+                delete[] nameSpaceURIStr;
+            }
+#endif
+
             NS_IF_RELEASE(resource);
         }
 
         delete mContextStack;
     }
+
+
+    NS_IF_RELEASE(mNameSpaceManager);
+    NS_IF_RELEASE(mDocumentURL);
+    NS_IF_RELEASE(mDataSource);
+    NS_IF_RELEASE(mDocument);
+    NS_IF_RELEASE(mParser);
+    NS_IF_RELEASE(mFragmentRoot);
+
     PR_FREEIF(mText);
 
     if (--gRefCnt == 0) {
@@ -463,8 +540,24 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
     // we're in the epilog, there should be no new elements
     NS_PRECONDITION(mState != eXULContentSinkState_InEpilog, "tag in XUL doc epilog");
 
-#ifdef DEBUG
-    const nsString& text = aNode.GetText();
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        const nsString& text = aNode.GetText();
+
+        nsAutoString extraWhiteSpace;
+        PRInt32 count = mContextStack ? mContextStack->Count() : 0;
+        while (--count >= 0)
+            extraWhiteSpace += "  ";
+
+        char* extraWhiteSpaceStr = extraWhiteSpace.ToNewCString();
+        char* textStr = text.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("xul: %.5d. %s<%s>", aNode.GetSourceLineNumber(), extraWhiteSpaceStr, textStr));
+
+        delete[] textStr;
+        delete[] extraWhiteSpaceStr;
+    }
 #endif
 
     if (mState != eXULContentSinkState_InScript) {
@@ -500,8 +593,24 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 {
     nsresult rv;
 
-#ifdef DEBUG
-    const nsString& text = aNode.GetText();
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        const nsString& text = aNode.GetText();
+
+        nsAutoString extraWhiteSpace;
+        PRInt32 count = mContextStack ? mContextStack->Count() : 0;
+        while (--count > 0)
+            extraWhiteSpace += "  ";
+
+        char* extraWhiteSpaceStr = extraWhiteSpace.ToNewCString();
+        char* textStr = text.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("xul: %.5d. %s</%s>", aNode.GetSourceLineNumber(), extraWhiteSpaceStr, textStr));
+
+        delete[] textStr;
+        delete[] extraWhiteSpaceStr;
+    }
 #endif
 
     if (mState == eXULContentSinkState_InScript) {
@@ -524,16 +633,21 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 		}
 
     nsIRDFResource* resource;
-	  if (popContent) {
-		    if (NS_FAILED(PopResourceAndState(resource, mState))) {
-						char* tagStr = aNode.GetText().ToNewCString();
-						printf("extra close tag '</%s>' at line %d\n", tagStr, aNode.GetSourceLineNumber());
-						delete[] tagStr;
-
-						// Failure to return NS_OK causes stuff to freak out. See Bug 4433.
-						return NS_OK;
-				}
-		}
+    if (popContent) {
+        if (NS_FAILED(PopResourceAndState(resource, mState))) {
+#ifdef PR_LOGGING
+            if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+                char* tagStr = aNode.GetText().ToNewCString();
+                PR_LOG(gLog, PR_LOG_ALWAYS,
+                       ("xul: extra close tag '</%s>' at line %d\n",
+                        tagStr, aNode.GetSourceLineNumber()));
+                delete[] tagStr;
+            }
+#endif
+            // Failure to return NS_OK causes stuff to freak out. See Bug 4433.
+            return NS_OK;
+        }
+    }
 
     PRInt32 nestLevel = mContextStack->Count();
     if (nestLevel == 0)
@@ -557,7 +671,9 @@ XULContentSinkImpl::AddLeaf(const nsIParserNode& aNode)
 NS_IMETHODIMP
 XULContentSinkImpl::NotifyError(const nsParserError* aError)
 {
-    printf("XULContentSinkImpl::NotifyError\n");
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("xul: parser error '%s'", aError));
+
     return NS_OK;
 }
 
@@ -566,7 +682,9 @@ NS_IMETHODIMP
 XULContentSinkImpl::AddXMLDecl(const nsIParserNode& aNode)
 {
     // XXX We'll ignore it for now
-    printf("XULContentSinkImpl::AddXMLDecl\n");
+    PR_LOG(gLog, PR_LOG_WARNING,
+           ("xul: ignoring XML decl at line %d", aNode.GetSourceLineNumber()));
+
     return NS_OK;
 }
 
@@ -772,7 +890,9 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 XULContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode)
 {
-    printf("XULContentSinkImpl::AddDocTypeDecl\n");
+    PR_LOG(gLog, PR_LOG_WARNING,
+           ("xul: ignoring doctype decl at line %d", aNode.GetSourceLineNumber()));
+
     return NS_OK;
 }
 
@@ -838,21 +958,27 @@ XULContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 XULContentSinkImpl::AddUnparsedEntity(const nsIParserNode& aNode)
 {
-    printf("XULContentSinkImpl::AddUnparsedEntity\n");
+    PR_LOG(gLog, PR_LOG_WARNING,
+           ("xul: ignoring unparsed entity at line %d", aNode.GetSourceLineNumber()));
+
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 XULContentSinkImpl::AddNotation(const nsIParserNode& aNode)
 {
-    printf("XULContentSinkImpl::AddNotation\n");
+    PR_LOG(gLog, PR_LOG_WARNING,
+           ("xul: ignoring notation at line %d", aNode.GetSourceLineNumber()));
+
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 XULContentSinkImpl::AddEntityReference(const nsIParserNode& aNode)
 {
-    printf("XULContentSinkImpl::AddEntityReference\n");
+    PR_LOG(gLog, PR_LOG_WARNING,
+           ("xul: ignoring entity reference at line %d", aNode.GetSourceLineNumber()));
+
     return NS_OK;
 }
 
@@ -1043,13 +1169,14 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
         const nsString& key = aNode.GetKeyAt(i);
         attr = key;
         nsIAtom* prefix = CutNameSpacePrefix(attr);
-        if (prefix != nsnull)
-        {
+        if (prefix) {
             SplitQualifiedName(key, nameSpaceID, attr);
             NS_RELEASE(prefix);
         }
-        else
-            nameSpaceID = kNameSpaceID_None; // Unqualified attributes have a namespace of none (always)
+        else {
+            // Unqualified attributes have a namespace of none (always)
+            nameSpaceID = kNameSpaceID_None;
+        }
 
 		// Look for XUL:ID
         if (nameSpaceID != kNameSpaceID_None)
@@ -1080,30 +1207,41 @@ nsresult
 XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
                                   nsIRDFResource* aSubject)
 {
-    // Add tag attributes to the content attributes
-    nsAutoString k, v;
-    nsAutoString attr;
-    PRInt32 nameSpaceID;
-    PRInt32 ac = aNode.GetAttributeCount();
+    nsresult rv;
 
+    // Add tag attributes to the content attributes
+    PRInt32 ac = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < ac; i++) {
-        // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
 
-        attr = key;
+        nsAutoString attr = key;
+        PRInt32 nameSpaceID;
+
         nsIAtom* prefix = CutNameSpacePrefix(attr);
-        if (prefix != nsnull)
-        {
+        if (prefix) {
             SplitQualifiedName(key, nameSpaceID, attr);
             NS_RELEASE(prefix);
         }
-        else
-            nameSpaceID = kNameSpaceID_None; // Unqualified attributes have a namespace of none (always)
+        else {
+            // Unqualified attributes have a namespace of none (always)
+            nameSpaceID = kNameSpaceID_None;
+        }
 
-        // Don't add xmlns: declarations, these are really just
-        // processing instructions.
-        if (nameSpaceID == kNameSpaceID_XMLNS)
-            continue;
+        // This is a _righteous_ hack. We allow an 'xmlns:' attribute
+        // to be treated as a normal attribute, and just add an
+        // assertion into the graph. The XUL builder is clever enough
+        // to spot properties constructed this way, and will do the
+        // appropriate magic to install the right namespace hierarchy
+        // when it constructs the content model.
+        //
+        // If this ever rises to bite, then all we need to do is just
+        // dump some extra cruft into the graph at this point to
+        // identify the namespace prefix and its URI.
+        //
+        // For more info, see Bugs 3275 and 3334.
+        //
+        //if (nameSpaceID == kNameSpaceID_XMLNS)
+        //    continue;
 
         // skip xul:id (and potentially others in the future). These
         // are all "special" and should've been dealt with by the
@@ -1112,26 +1250,40 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
             (attr == kXULID))
             continue;
 
-        v = aNode.GetValueAt(i);
-        nsRDFParserUtils::StripAndConvert(v);
+        nsAutoString valueStr(aNode.GetValueAt(i));
+        nsRDFParserUtils::StripAndConvert(valueStr);
 
         //if (nameSpaceID == kNameSpaceID_HTML)
         //    attr.ToLowerCase(); // Not our problem. You'd better be lowercase.
 
         // Get the URI for the namespace, so we can construct a
         // fully-qualified property name.
-        mNameSpaceManager->GetNameSpaceURI(nameSpaceID, k);
+        nsAutoString propertyStr;
+        mNameSpaceManager->GetNameSpaceURI(nameSpaceID, propertyStr);
 
         // Insert a '#' if the namespace doesn't end with one, or the
         // attribute doesn't start with one.
+        //
+        // XXX Is this the right thing to do? In general, what's the
+        // right way to construct a resource or property URI from a
+        // prefix:attribute pair?
         if (! ((attr.First() == '#') &&
-               (k.Last() == '#' || k.Last() == '/'))) {
-            k.Append('#');
+               (propertyStr.Last() == '#' || propertyStr.Last() == '/'))) {
+            propertyStr.Append('#');
         }
-        k.Append(attr);
+        propertyStr.Append(attr);
 
         // Add the attribute to RDF
-        rdf_Assert(mDataSource, aSubject, k, v);
+        nsCOMPtr<nsIRDFResource> property;
+        rv = gRDFService->GetUnicodeResource(propertyStr, getter_AddRefs(property));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFLiteral> value;
+        rv = gRDFService->GetLiteral(valueStr, getter_AddRefs(value));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mDataSource->Assert(aSubject, property, value, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
     }
     return NS_OK;
 }
@@ -1488,71 +1640,65 @@ XULContentSinkImpl::PopResourceAndState(nsIRDFResource*& rResource,
 void
 XULContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
 {
-    nsAutoString k, uri, prefix;
-    PRInt32 ac = aNode.GetAttributeCount();
-    PRInt32 offset;
-    nsresult result = NS_OK;
     nsINameSpace* nameSpace = nsnull;
-
-    if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
-        nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
+    if (0 < mNameSpaceStack.Count()) {
+        nameSpace = (nsINameSpace*)mNameSpaceStack[mNameSpaceStack.Count() - 1];
         NS_ADDREF(nameSpace);
     }
     else {
         mNameSpaceManager->CreateRootNameSpace(nameSpace);
     }
 
-    if (nsnull != nameSpace) {
-        for (PRInt32 i = 0; i < ac; i++) {
-            const nsString& key = aNode.GetKeyAt(i);
-            k.Truncate();
-            k.Append(key);
-            // Look for "xmlns" at the start of the attribute name
-            offset = k.Find(kNameSpaceDef);
-            if (0 == offset) {
-                prefix.Truncate();
+    NS_ASSERTION(nameSpace != nsnull, "no parent namespace");
+    if (! nameSpace)
+        return;
 
-                if (k.Length() >= sizeof(kNameSpaceDef)) {
-                    // If the next character is a :, there is a namespace prefix
-                    PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
-                    if (':' == next) {
-                        k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
-                    }
-                    else {
-                        continue; // it's not "xmlns:"
-                    }
-                }
+    PRInt32 ac = aNode.GetAttributeCount();
+    for (PRInt32 i = 0; i < ac; i++) {
+        nsAutoString k(aNode.GetKeyAt(i));
 
-                // Get the attribute value (the URI for the namespace)
-                uri = aNode.GetValueAt(i);
-                nsRDFParserUtils::StripAndConvert(uri);
+        // Look for "xmlns" at the start of the attribute name
+        PRInt32 offset = k.Find(kNameSpaceDef);
+        if (0 != offset)
+            continue;
 
-                // Open a local namespace
-                nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
-                nsINameSpace* child = nsnull;
-                nameSpace->CreateChildNameSpace(prefixAtom, uri, child);
-                if (nsnull != child) {
-                    NS_RELEASE(nameSpace);
-                    nameSpace = child;
-                }
-
-                // XXX I don't think that this is important for XUL,
-                // since we won't be streaming it back out.
-                // 
-                // Add it to the set of namespaces used in the RDF/XML
-                // document.
-                //mDataSource->AddNameSpace(prefixAtom, uri);
-      
-                NS_IF_RELEASE(prefixAtom);
+        nsAutoString prefix;
+        if (k.Length() >= sizeof(kNameSpaceDef)) {
+            // If the next character is a :, there is a namespace prefix
+            PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
+            if (':' == next) {
+                k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
+            }
+            else {
+                continue; // it's not "xmlns:"
             }
         }
 
-        // Now push the *last* namespace that we discovered on to the stack.
-        if (nsnull == mNameSpaceStack) {
-            mNameSpaceStack = new nsVoidArray();
+        // Get the attribute value (the URI for the namespace)
+        nsAutoString uri(aNode.GetValueAt(i));
+        nsRDFParserUtils::StripAndConvert(uri);
+
+        // Open a local namespace
+        nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
+        nsINameSpace* child = nsnull;
+        nameSpace->CreateChildNameSpace(prefixAtom, uri, child);
+        if (nsnull != child) {
+            NS_RELEASE(nameSpace);
+            nameSpace = child;
         }
-        mNameSpaceStack->AppendElement(nameSpace);
+
+        // XXX I don't think that this is important for XUL,
+        // since we won't be streaming it back out.
+        // 
+        // Add it to the set of namespaces used in the RDF/XML
+        // document.
+        //mDataSource->AddNameSpace(prefixAtom, uri);
+      
+        NS_IF_RELEASE(prefixAtom);
     }
+
+    // Now push the *last* namespace that we discovered on to the stack.
+    mNameSpaceStack.AppendElement(nameSpace);
 }
 
 nsIAtom* 
@@ -1575,9 +1721,9 @@ XULContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix)
 {
     PRInt32 id = kNameSpaceID_Unknown;
   
-    if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
-        PRInt32 index = mNameSpaceStack->Count() - 1;
-        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
+    if (0 < mNameSpaceStack.Count()) {
+        PRInt32 index = mNameSpaceStack.Count() - 1;
+        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[index];
         nameSpace->FindNameSpaceID(aPrefix, id);
     }
 
@@ -1587,10 +1733,10 @@ XULContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix)
 void
 XULContentSinkImpl::PopNameSpaces(void)
 {
-    if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
-        PRInt32 index = mNameSpaceStack->Count() - 1;
-        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
-        mNameSpaceStack->RemoveElementAt(index);
+    if (0 < mNameSpaceStack.Count()) {
+        PRInt32 index = mNameSpaceStack.Count() - 1;
+        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[index];
+        mNameSpaceStack.RemoveElementAt(index);
 
         // Releasing the most deeply nested namespace will recursively
         // release intermediate parent namespaces until the next

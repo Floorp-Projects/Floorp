@@ -98,6 +98,16 @@ public:
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aValue);
 
+    nsresult
+    SetWidgetAttribute(nsIContent* aToolbarItemElement,
+                       nsIRDFResource* aProperty,
+                       nsIRDFNode* aValue);
+
+    nsresult
+    UnsetWidgetAttribute(nsIContent* aToolbarItemElement,
+                         nsIRDFResource* aProperty,
+                         nsIRDFNode* aValue);
+
     nsresult 
     GetRootWidgetAtom(nsIAtom** aResult) {
         NS_ADDREF(kToolbarAtom);
@@ -141,6 +151,9 @@ public:
  
     static nsIAtom* kToolbarAtom;
     static nsIAtom* kTitledButtonAtom;
+    static nsIAtom* kAlignAtom;
+    static nsIAtom* kSrcAtom;
+    static nsIAtom* kValueAtom;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -149,6 +162,9 @@ nsrefcnt RDFToolbarBuilderImpl::gRefCnt = 0;
 
 nsIAtom* RDFToolbarBuilderImpl::kToolbarAtom;
 nsIAtom* RDFToolbarBuilderImpl::kTitledButtonAtom;
+nsIAtom* RDFToolbarBuilderImpl::kAlignAtom;
+nsIAtom* RDFToolbarBuilderImpl::kSrcAtom;
+nsIAtom* RDFToolbarBuilderImpl::kValueAtom;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -174,8 +190,11 @@ RDFToolbarBuilderImpl::RDFToolbarBuilderImpl(void)
     : RDFGenericBuilderImpl()
 {
     if (gRefCnt == 0) {
-        kToolbarAtom             = NS_NewAtom("toolbar");
-        kTitledButtonAtom        = NS_NewAtom("titledbutton");
+        kToolbarAtom      = NS_NewAtom("toolbar");
+        kTitledButtonAtom = NS_NewAtom("titledbutton");
+        kAlignAtom        = NS_NewAtom("align");
+        kSrcAtom          = NS_NewAtom("src");
+        kValueAtom        = NS_NewAtom("value");
     }
 
     ++gRefCnt;
@@ -188,6 +207,9 @@ RDFToolbarBuilderImpl::~RDFToolbarBuilderImpl(void)
         
         NS_RELEASE(kToolbarAtom);
         NS_RELEASE(kTitledButtonAtom);
+        NS_RELEASE(kAlignAtom);
+        NS_RELEASE(kSrcAtom);
+        NS_RELEASE(kValueAtom);
     }
 }
 
@@ -250,7 +272,7 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
             return rv;
         }
 
-        // Ignore properties that are used to indicate "tree-ness"
+        // Ignore properties that are used to indicate containment
         if (IsContainmentProperty(aElement, property))
             continue;
 
@@ -271,42 +293,22 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
         if (rv == NS_RDF_NO_VALUE)
             continue;
 
-        nsCOMPtr<nsIRDFResource> resource;
-        nsCOMPtr<nsIRDFLiteral> literal;
-
         nsAutoString s;
-        if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, getter_AddRefs(resource)))) {
-            nsXPIDLCString uri;
-            resource->GetValue( getter_Copies(uri) );
-            s = uri;
-        }
-        else if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, getter_AddRefs(literal)))) {
-            nsXPIDLString p;
-            literal->GetValue( getter_Copies(p) );
-            s = p;
-        }
-        else {
-            NS_ERROR("not a resource or a literal");
-            return NS_ERROR_UNEXPECTED;
-        }
+        rv = nsRDFContentUtils::GetTextForNode(value, s);
+        if (NS_FAILED(rv)) return rv;
 
         toolbarItem->SetAttribute(nameSpaceID, tag, s, PR_FALSE);
 
-        nsString nameAtom;
-        tag->ToString(nameAtom);
-        if (nameAtom == "Name")
-        {
-            nsIAtom* lowerName = NS_NewAtom("value");
+        nsString tagStr;
+        tag->ToString(tagStr);
+        if (tagStr.EqualsIgnoreCase("name")) {
             // Hack to ensure that we add in a lowercase value attribute also.
-            toolbarItem->SetAttribute(kNameSpaceID_None, lowerName, s, PR_FALSE);
-            NS_RELEASE(lowerName);
+            toolbarItem->SetAttribute(kNameSpaceID_None, kValueAtom, s, PR_FALSE);
         }
 
         // XXX (Dave) I want these to go away. Style sheets should be used for these.
-        nsIAtom* alignment = NS_NewAtom("align");
-        nsIAtom* imagesrc = NS_NewAtom("src");
-        toolbarItem->SetAttribute(kNameSpaceID_None, alignment, "right", PR_FALSE);
-        toolbarItem->SetAttribute(kNameSpaceID_None, imagesrc, "resource:/res/toolbar/TB_Location.gif", PR_FALSE);
+        toolbarItem->SetAttribute(kNameSpaceID_None, kAlignAtom, "right", PR_FALSE);
+        toolbarItem->SetAttribute(kNameSpaceID_None, kSrcAtom,   "resource:/res/toolbar/TB_Location.gif", PR_FALSE);
     }
 
     // Finally, mark this as a "container" so that we know to
@@ -329,6 +331,115 @@ RDFToolbarBuilderImpl::RemoveWidgetItem(nsIContent* aToolbarItemElement,
                                         nsIRDFResource* aProperty,
                                         nsIRDFResource* aValue)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    // Find the doomed kid and blow it away.
+    PRInt32 count;
+    if (NS_FAILED(rv = aToolbarItemElement->ChildCount(count)))
+        return rv;
+
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIContent> kid;
+        rv = aToolbarItemElement->ChildAt(i, *getter_AddRefs(kid));
+        if (NS_FAILED(rv)) return rv;
+
+        // Make sure it's a <xul:toolbar> or <xul:titledbutton>
+        PRInt32 nameSpaceID;
+        rv = kid->GetNameSpaceID(nameSpaceID);
+        if (NS_FAILED(rv)) return rv;
+
+        if (nameSpaceID != kNameSpaceID_XUL)
+            continue; // wrong namespace
+
+        nsCOMPtr<nsIAtom> tag;
+        rv = kid->GetTag(*getter_AddRefs(tag));
+        if (NS_FAILED(rv)) return rv;
+
+        if ((tag.get() != kTitledButtonAtom) &&
+            (tag.get() != kToolbarAtom))
+            continue; // wrong tag
+
+        // Now get the resource ID from the RDF:ID attribute. We do it
+        // via the content model, because you're never sure who
+        // might've added this stuff in...
+        nsCOMPtr<nsIRDFResource> resource;
+        rv = GetElementResource(kid, getter_AddRefs(resource));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving resource");
+        if(NS_FAILED(rv)) return rv;
+
+        if (resource.get() != aValue)
+            continue; // not the resource we want
+
+        // Fount it! Now kill it.
+        rv = aToolbarItemElement->RemoveChildAt(i, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove xul:toolbar/titledbutton from xul:toolbar");
+        if (NS_FAILED(rv)) return rv;
+
+        return NS_OK;
+    }
+
+    // XXX make this a warning
+    NS_WARNING("unable to find child to remove");
+    return NS_OK;
 }
+
+
+nsresult
+RDFToolbarBuilderImpl::SetWidgetAttribute(nsIContent* aToolbarItemElement,
+                                          nsIRDFResource* aProperty,
+                                          nsIRDFNode* aValue)
+{
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tag;
+    rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag));
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString value;
+    rv = nsRDFContentUtils::GetTextForNode(aValue, value);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aToolbarItemElement->SetAttribute(nameSpaceID, tag, value, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX This should go away and just be determined dynamically;
+    // e.g., by setting an attribute on the "xul:menu" tag.
+    nsAutoString tagStr;
+    tag->ToString(tagStr);
+    if (tagStr.EqualsIgnoreCase("name")) {
+        // Hack to ensure that we add in a lowercase name attribute also.
+        aToolbarItemElement->SetAttribute(kNameSpaceID_None, kValueAtom, value, PR_TRUE);
+    }
+
+    return NS_OK;
+}
+
+nsresult
+RDFToolbarBuilderImpl::UnsetWidgetAttribute(nsIContent* aToolbarItemElement,
+                                            nsIRDFResource* aProperty,
+                                            nsIRDFNode* aValue)
+{
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tag;
+    rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aToolbarItemElement->UnsetAttribute(nameSpaceID, tag, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX This should go away and just be determined dynamically;
+    // e.g., by setting an attribute on the "xul:menu" tag.
+    nsAutoString tagStr;
+    tag->ToString(tagStr);
+    if (tagStr.EqualsIgnoreCase("name")) {
+        // Hack to ensure that we add in a lowercase name attribute also.
+        aToolbarItemElement->UnsetAttribute(kNameSpaceID_None, kValueAtom, PR_TRUE);
+    }
+
+    return NS_OK;
+}
+
+

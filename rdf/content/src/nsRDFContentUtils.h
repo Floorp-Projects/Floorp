@@ -44,6 +44,9 @@ public:
     
     static nsresult
     FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody);
+
+    static nsresult
+    GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
 };
 
 

@@ -81,6 +81,77 @@ static const char kPersonalToolbarFolder[]  = "Personal Toolbar Folder";
 
 ////////////////////////////////////////////////////////////////////////
 
+PRInt32 gRefCnt;
+nsIRDFService* gRDFService;
+nsIRDFResource* kNC_Bookmark;
+nsIRDFResource* kNC_BookmarkAddDate;
+nsIRDFResource* kNC_BookmarksRoot;
+nsIRDFResource* kNC_Description;
+nsIRDFResource* kNC_Folder;
+nsIRDFResource* kNC_IEFavoritesRoot;
+nsIRDFResource* kNC_Name;
+nsIRDFResource* kNC_PersonalToolbarFolder;
+nsIRDFResource* kNC_ShortcutURL;
+nsIRDFResource* kNC_URL;
+nsIRDFResource* kRDF_type;
+nsIRDFResource* kWEB_LastModifiedDate;
+nsIRDFResource* kWEB_LastVisitDate;
+
+static void
+bm_AddRefGlobals()
+{
+    if (gRefCnt++ == 0) {
+        nsresult rv;
+        if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                        kIRDFServiceIID,
+                                                        (nsISupports**) &gRDFService))) {
+            NS_ERROR("unable to get RDF service");
+            return;
+        }
+
+        gRDFService->GetResource(kURINC_Bookmark,          &kNC_Bookmark);
+        gRDFService->GetResource(kURINC_BookmarkAddDate,   &kNC_BookmarkAddDate);
+        gRDFService->GetResource(kURINC_BookmarksRoot,     &kNC_BookmarksRoot);
+        gRDFService->GetResource(kURINC_Description,       &kNC_Description);
+        gRDFService->GetResource(kURINC_Folder,            &kNC_Folder);
+        gRDFService->GetResource(kURINC_IEFavoritesRoot,   &kNC_IEFavoritesRoot);
+        gRDFService->GetResource(kURINC_Name,              &kNC_Name);
+        gRDFService->GetResource(kURINC_PersonalToolbarFolder, &kNC_PersonalToolbarFolder);
+        gRDFService->GetResource(kURINC_ShortcutURL,       &kNC_ShortcutURL);
+        gRDFService->GetResource(kURINC_URL,               &kNC_URL);
+        gRDFService->GetResource(kURIRDF_type,             &kRDF_type);
+        gRDFService->GetResource(kURIWEB_LastModifiedDate, &kWEB_LastModifiedDate);
+        gRDFService->GetResource(kURIWEB_LastVisitDate,    &kWEB_LastVisitDate);
+    }    
+}
+
+
+static void
+bm_ReleaseGlobals()
+{
+    if (--gRefCnt == 0) {
+        if (gRDFService)
+            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+
+        NS_IF_RELEASE(kNC_Bookmark);
+        NS_IF_RELEASE(kNC_BookmarkAddDate);
+        NS_IF_RELEASE(kNC_BookmarksRoot);
+        NS_IF_RELEASE(kNC_Description);
+        NS_IF_RELEASE(kNC_Folder);
+        NS_IF_RELEASE(kNC_IEFavoritesRoot);
+        NS_IF_RELEASE(kNC_Name);
+        NS_IF_RELEASE(kNC_PersonalToolbarFolder);
+        NS_IF_RELEASE(kNC_ShortcutURL);
+        NS_IF_RELEASE(kNC_URL);
+        NS_IF_RELEASE(kRDF_type);
+        NS_IF_RELEASE(kWEB_LastModifiedDate);
+        NS_IF_RELEASE(kWEB_LastVisitDate);
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+
 /**
  * The bookmark parser knows how to read <tt>bookmarks.html</tt> and convert it
  * into an RDF graph.
@@ -91,22 +162,6 @@ private:
     nsIRDFDataSource       *mDataSource;
 
 protected:
-    static PRInt32 gRefCnt;
-
-    static nsIRDFService* gRDFService;
-    static nsIRDFResource* kNC_Bookmark;
-    static nsIRDFResource* kNC_BookmarkAddDate;
-    static nsIRDFResource* kNC_Description;
-    static nsIRDFResource* kNC_Folder;
-    static nsIRDFResource* kNC_Name;
-    static nsIRDFResource* kNC_PersonalToolbarFolder;
-    static nsIRDFResource* kNC_URL;
-    static nsIRDFResource* kNC_ShortcutURL;
-    static nsIRDFResource* kRDF_type;
-    static nsIRDFResource* kWEB_LastModifiedDate;
-    static nsIRDFResource* kWEB_LastVisitDate;
-
-
     nsresult AssertTime(nsIRDFResource* aSource,
                         nsIRDFResource* aLabel,
                         PRInt32 aTime);
@@ -133,43 +188,9 @@ public:
 };
 
 
-PRInt32 BookmarkParser::gRefCnt;
-nsIRDFService* BookmarkParser::gRDFService;
-nsIRDFResource* BookmarkParser::kNC_Bookmark;
-nsIRDFResource* BookmarkParser::kNC_BookmarkAddDate;
-nsIRDFResource* BookmarkParser::kNC_Description;
-nsIRDFResource* BookmarkParser::kNC_Folder;
-nsIRDFResource* BookmarkParser::kNC_Name;
-nsIRDFResource* BookmarkParser::kNC_PersonalToolbarFolder;
-nsIRDFResource* BookmarkParser::kNC_URL;
-nsIRDFResource* BookmarkParser::kNC_ShortcutURL;
-nsIRDFResource* BookmarkParser::kRDF_type;
-nsIRDFResource* BookmarkParser::kWEB_LastModifiedDate;
-nsIRDFResource* BookmarkParser::kWEB_LastVisitDate;
- 
 BookmarkParser::BookmarkParser()
 {
-    if (gRefCnt++ == 0) {
-        nsresult rv;
-        if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                        kIRDFServiceIID,
-                                                        (nsISupports**) &gRDFService))) {
-            NS_ERROR("unable to get RDF service");
-            return;
-        }
-
-        gRDFService->GetResource(kURINC_Bookmark,          &kNC_Bookmark);
-        gRDFService->GetResource(kURINC_BookmarkAddDate,   &kNC_BookmarkAddDate);
-        gRDFService->GetResource(kURINC_Description,       &kNC_Description);
-        gRDFService->GetResource(kURINC_Folder,            &kNC_Folder);
-        gRDFService->GetResource(kURINC_Name,              &kNC_Name);
-        gRDFService->GetResource(kURINC_PersonalToolbarFolder, &kNC_PersonalToolbarFolder);
-        gRDFService->GetResource(kURINC_URL,               &kNC_URL);
-        gRDFService->GetResource(kURINC_ShortcutURL,       &kNC_ShortcutURL);
-        gRDFService->GetResource(kURIRDF_type,             &kRDF_type);
-        gRDFService->GetResource(kURIWEB_LastModifiedDate, &kWEB_LastModifiedDate);
-        gRDFService->GetResource(kURIWEB_LastVisitDate,    &kWEB_LastVisitDate);
-    }    
+    bm_AddRefGlobals();
 }
 
 nsresult
@@ -182,22 +203,7 @@ BookmarkParser::Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource)
 
 BookmarkParser::~BookmarkParser(void)
 {
-    if (--gRefCnt == 0) {
-        if (gRDFService)
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-
-        NS_IF_RELEASE(kNC_Bookmark);
-        NS_IF_RELEASE(kNC_BookmarkAddDate);
-        NS_IF_RELEASE(kNC_Description);
-        NS_IF_RELEASE(kNC_Folder);
-        NS_IF_RELEASE(kNC_Name);
-        NS_IF_RELEASE(kNC_PersonalToolbarFolder);
-        NS_IF_RELEASE(kNC_URL);
-        NS_IF_RELEASE(kNC_ShortcutURL);
-        NS_IF_RELEASE(kRDF_type);
-        NS_IF_RELEASE(kWEB_LastModifiedDate);
-        NS_IF_RELEASE(kWEB_LastVisitDate);
-    }
+    bm_ReleaseGlobals();
 }
 
 static const char kHREFEquals[]   = "HREF=\"";
@@ -421,6 +427,12 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 		return rv;
 	}
 
+	if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource, aContainer, bookmark)))
+	{
+		NS_ERROR("unable to add bookmark to container");
+		return rv;
+	}
+
 	rv = mDataSource->Assert(bookmark, kRDF_type, kNC_Bookmark, PR_TRUE);
     if (rv != NS_RDF_ASSERTION_ACCEPTED)
     {
@@ -443,12 +455,6 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 			NS_ERROR("unable to set bookmark name");
 			return rv;
 		}
-	}
-
-	if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource, aContainer, bookmark)))
-	{
-		NS_ERROR("unable to add bookmark to container");
-		return rv;
 	}
 
 	AssertTime(bookmark, kNC_BookmarkAddDate, addDate);
@@ -651,26 +657,15 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
  * <tt>bookmarks.html</tt> file from the local disk and present an
  * in-memory RDF graph based on it.
  */
-static	nsIRDFService* gRDFService = nsnull;
 
 class BookmarkDataSourceImpl : public nsIRDFBookmarkDataSource {
-private:
-    // pseudo-constants
-    static nsIRDFResource* kNC_URL;
-    static nsIRDFResource* kNC_ShortcutURL;
-    static nsIRDFResource* kNC_BookmarksRoot;
-    static nsIRDFResource* kNC_IEFavoritesRoot;
-    static nsIRDFResource* kNC_Bookmark;
-    static nsIRDFResource* kRDF_type;
-    static nsIRDFResource* kNC_Folder;
-    static PRInt32 gRefCnt;
-
 protected:
-    static nsIRDFDataSource* mInner;
+    nsIRDFDataSource* mInner;
 
     nsresult ReadBookmarks(void);
     nsresult WriteBookmarks(void);
-    nsresult AddColumns(void);
+
+    PRBool CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
 
 public:
     BookmarkDataSourceImpl(void);
@@ -808,16 +803,6 @@ public:
 
 };
 
-nsIRDFResource	*BookmarkDataSourceImpl::kNC_URL;
-nsIRDFResource	*BookmarkDataSourceImpl::kNC_ShortcutURL;
-nsIRDFResource	*BookmarkDataSourceImpl::kNC_BookmarksRoot;
-nsIRDFResource	*BookmarkDataSourceImpl::kNC_IEFavoritesRoot;
-nsIRDFResource	*BookmarkDataSourceImpl::kNC_Bookmark;
-nsIRDFResource	*BookmarkDataSourceImpl::kRDF_type;
-nsIRDFResource	*BookmarkDataSourceImpl::kNC_Folder;
-PRInt32		BookmarkDataSourceImpl::gRefCnt;
-nsIRDFDataSource *BookmarkDataSourceImpl::mInner;
-
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -826,44 +811,14 @@ BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
 	// XXX rvg there should be only one instance of this class. 
 	// this is actually true of all datasources.
 	NS_INIT_REFCNT();
-
-	if (gRefCnt++ == 0)
-	{
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-						kIRDFServiceIID,
-						(nsISupports**) &gRDFService);
-
-		gRDFService->GetResource(kURINC_URL,             &kNC_URL);
-		gRDFService->GetResource(kURINC_ShortcutURL,     &kNC_ShortcutURL);
-		gRDFService->GetResource(kURINC_Bookmark,        &kNC_Bookmark);
-		gRDFService->GetResource(kURINC_BookmarksRoot,   &kNC_BookmarksRoot);
-		gRDFService->GetResource(kURINC_IEFavoritesRoot, &kNC_IEFavoritesRoot);
-		gRDFService->GetResource(kURIRDF_type,           &kRDF_type);
-		gRDFService->GetResource(kURINC_Folder,          &kNC_Folder);
-	}
+    bm_AddRefGlobals();
 }
 
 BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
 {
+    NS_RELEASE(mInner);
 	Flush();
-
-	if (--gRefCnt == 0)
-	{
-		// unregister this from the RDF service
-		gRDFService->UnregisterDataSource(this);
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-		gRDFService = nsnull;
-
-		NS_RELEASE(kNC_URL);
-		NS_RELEASE(kNC_ShortcutURL);
-		NS_RELEASE(kNC_Bookmark);
-		NS_RELEASE(kNC_BookmarksRoot);
-		NS_RELEASE(kNC_IEFavoritesRoot);
-		NS_RELEASE(kRDF_type);
-		NS_RELEASE(kNC_Folder);
-
-		NS_RELEASE(mInner);
-	}
+    bm_ReleaseGlobals();
 }
 
 //NS_IMPL_ISUPPORTS(BookmarkDataSourceImpl, kIRDFDataSourceIID);
@@ -950,8 +905,12 @@ BookmarkDataSourceImpl::Assert(nsIRDFResource* aSource,
                                nsIRDFNode* aTarget,
                                PRBool aTruthValue)
 {
-    // XXX TODO: filter out asserts we don't care about
-    return mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
+    if (CanAccept(aSource, aProperty, aTarget)) {
+        return mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
+    }
+    else {
+        return NS_RDF_ASSERTION_REJECTED;
+    }
 }
 
 
@@ -961,8 +920,12 @@ BookmarkDataSourceImpl::Unassert(nsIRDFResource* aSource,
                                  nsIRDFResource* aProperty,
                                  nsIRDFNode* aTarget)
 {
-    // XXX TODO: filter out unasserts we don't care about
-    return mInner->Unassert(aSource, aProperty, aTarget);
+    if (CanAccept(aSource, aProperty, aTarget)) {
+        return mInner->Unassert(aSource, aProperty, aTarget);
+    }
+    else {
+        return NS_RDF_ASSERTION_REJECTED;
+    }
 }
 
 
@@ -1091,6 +1054,28 @@ BookmarkDataSourceImpl::WriteBookmarks(void)
 {
     //PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+PRBool
+BookmarkDataSourceImpl::CanAccept(nsIRDFResource* aSource,
+                                  nsIRDFResource* aProperty,
+                                  nsIRDFNode* aTarget)
+{
+    // XXX This is really crippled, and needs to be stricter. We want
+    // to exclude any property that isn't talking about a known
+    // bookmark.
+    if (! rdf_IsOrdinalProperty(aProperty) ||
+        (aProperty != kRDF_type) ||
+        (aProperty != kWEB_LastModifiedDate) ||
+        (aProperty != kWEB_LastVisitDate) ||
+        (aProperty != kNC_Name) ||
+        (aProperty != kNC_BookmarkAddDate)) {
+        return PR_TRUE;
+    }
+    else {
+        return PR_FALSE;
+    }
 }
 
 #if FIXME

@@ -54,6 +54,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsITextContent.h"
 #include "nsIURL.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
@@ -67,6 +68,7 @@
 #include "rdf_qsort.h"
 #include "nsRDFGenericBuilder.h"
 #include "prtime.h"
+#include "prlog.h"
 
 #include "rdf_qsort.h"
 
@@ -99,6 +101,10 @@ static NS_DEFINE_IID(kIDomXulElementIID,         NS_IDOMXULELEMENT_IID);
 
 #define	BUILDER_NOTIFY_MINIMUM_TIMEOUT	5000L
 
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog;
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 
 class RDFTreeBuilderImpl : public RDFGenericBuilderImpl
@@ -123,6 +129,20 @@ public:
     RemoveWidgetItem(nsIContent* aElement,
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aValue);
+
+    nsresult
+    SetWidgetAttribute(nsIContent* aTreeItemElement,
+                       nsIRDFResource* aProperty,
+                       nsIRDFNode* aValue);
+
+    nsresult
+    UnsetWidgetAttribute(nsIContent* aTreeItemElement,
+                         nsIRDFResource* aProperty,
+                         nsIRDFNode* aValue);
+
+    nsresult
+    FindTextElement(nsIContent* aElement,
+                    nsITextContent** aResult);
 
     nsresult
     EnsureCell(nsIContent* aTreeItemElement, PRInt32 aIndex, nsIContent** aCellElement);
@@ -267,6 +287,11 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kOpenAtom            = NS_NewAtom("open");
     }
     ++gRefCnt;
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsRDFTreeBuilder");
+#endif
 }
 
 RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
@@ -349,16 +374,19 @@ RDFTreeBuilderImpl::UpdateContainer(nsIContent *container)
 											child->UnsetAttribute(kNameSpaceID_None, kLastPulseAtom, PR_FALSE);
 											if (NS_SUCCEEDED(rv = child->SetAttribute(kNameSpaceID_None, kLastPulseAtom, lastPulse, PR_FALSE)))
 											{
-#ifdef	DEBUG
-												nsIRDFResource		*res;
-												if (NS_SUCCEEDED(rv = dom->GetResource(&res)))
-												{
-													nsXPIDLCString	uri;
-													res->GetValue( getter_Copies(uri) );
-													const char *url = uri;
-													printf("    URL '%s' gets a pulse now (at %lu)\n", url, now);
-													NS_RELEASE(res);
-												}
+#ifdef PR_LOGGING
+                                                if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+                                                    nsIRDFResource		*res;
+                                                    if (NS_SUCCEEDED(rv = dom->GetResource(&res)))
+                                                        {
+                                                            nsXPIDLCString	uri;
+                                                            res->GetValue( getter_Copies(uri) );
+                                                            const char *url = uri;
+                                                            PR_LOG(gLog, PR_LOG_DEBUG,
+                                                                   ("    URL '%s' gets a pulse now (at %lu)\n", url, now));
+                                                            NS_RELEASE(res);
+                                                        }
+                                                }
 #endif
 												CheckRDFGraphForUpdates(child);
 											}
@@ -593,24 +621,27 @@ RDFTreeBuilderImpl::Notify(nsITimer *timer)
 	if (mRoot)
 	{
 		nsresult		rv;
-#ifdef	DEBUG
-		nsIDOMXULElement	*domElement;
+#ifdef	PR_LOGGING
+        if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+            nsIDOMXULElement	*domElement;
 
-		if (NS_SUCCEEDED(rv = mRoot->QueryInterface(kIDomXulElementIID, (void **)&domElement)))
-		{
-			nsIRDFResource		*res;
+            if (NS_SUCCEEDED(rv = mRoot->QueryInterface(kIDomXulElementIID, (void **)&domElement)))
+                {
+                    nsIRDFResource		*res;
 
-			if (NS_SUCCEEDED(rv = domElement->GetResource(&res)))
-			{
-				nsXPIDLCString	uri;
-				res->GetValue( getter_Copies(uri) );
-				const char	*url = uri;
-				printf("Timer fired for '%s'\n", url);
+                    if (NS_SUCCEEDED(rv = domElement->GetResource(&res)))
+                        {
+                            nsXPIDLCString	uri;
+                            res->GetValue( getter_Copies(uri) );
+                            const char	*url = uri;
+                            PR_LOG(gLog, PR_LOG_DEBUG,
+                                   ("Timer fired for '%s'\n", url));
 
-				NS_RELEASE(res);
-			}
-			NS_RELEASE(domElement);
-		}
+                            NS_RELEASE(res);
+                        }
+                    NS_RELEASE(domElement);
+                }
+        }
 #endif
 		nsIContent	*treeBody;
 		if (NS_SUCCEEDED(rv = nsRDFContentUtils::FindTreeBodyElement(mRoot, &treeBody)))
@@ -1112,10 +1143,127 @@ RDFTreeBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
     }
 
     // XXX make this a warning
-    NS_ERROR("unable to find child to remove");
+    NS_WARNING("unable to find child to remove");
     return NS_OK;
 }
 
+
+
+nsresult
+RDFTreeBuilderImpl::SetWidgetAttribute(nsIContent* aTreeItemElement,
+                                       nsIRDFResource* aProperty,
+                                       nsIRDFNode* aValue)
+{
+    nsresult rv;
+
+    // figure out the textual value that we want to use
+    nsAutoString value;
+    rv = nsRDFContentUtils::GetTextForNode(aValue, value);
+
+    // see it it's a cell in the tree
+    PRInt32 index;
+    if (NS_SUCCEEDED(rv = GetColumnForProperty(mRoot, aProperty, &index))) {
+        // ...yep.
+        nsCOMPtr<nsIContent> cellElement;
+        rv = EnsureCell(aTreeItemElement, index, getter_AddRefs(cellElement));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to ensure cell exists");
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsITextContent> text;
+        rv = FindTextElement(cellElement, getter_AddRefs(text));
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(text != nsnull, "unable to find text child");
+        if (text)
+            text->SetText(value, value.Length(), PR_TRUE);
+    }
+
+
+    // no matter what, it's also been set as an attribute.
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tagAtom;
+    rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tagAtom));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aTreeItemElement->SetAttribute(nameSpaceID, tagAtom, value, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+nsresult
+RDFTreeBuilderImpl::UnsetWidgetAttribute(nsIContent* aTreeItemElement,
+                                         nsIRDFResource* aProperty,
+                                         nsIRDFNode* aValue)
+{
+    nsresult rv;
+
+    PRInt32 index;
+    if (NS_SUCCEEDED(rv = GetColumnForProperty(mRoot, aProperty, &index))) {
+        // it's a cell. find it.
+        nsCOMPtr<nsIContent> cellElement;
+        rv = EnsureCell(aTreeItemElement, index, getter_AddRefs(cellElement));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to ensure cell exists");
+        if (NS_FAILED(rv)) return rv;
+
+        // find the text element
+        nsCOMPtr<nsITextContent> text;
+        rv = FindTextElement(cellElement, getter_AddRefs(text));
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(text != nsnull, "unable to find text child");
+        if (text)
+            text->SetText(nsAutoString(), 0, PR_TRUE);
+    }
+
+    // no matter what, it's also been created as an attribute.
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tagAtom;
+    rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tagAtom));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aTreeItemElement->UnsetAttribute(nameSpaceID, tagAtom, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+
+nsresult
+RDFTreeBuilderImpl::FindTextElement(nsIContent* aElement,
+                                    nsITextContent** aResult)
+{
+    nsresult rv;
+
+    PRInt32 count;
+    rv = aElement->ChildCount(count);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element child count");
+    if (NS_FAILED(rv)) return rv;
+
+    while (--count >= 0) {
+        nsCOMPtr<nsIContent> child;
+        rv = aElement->ChildAt(count, *getter_AddRefs(child));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child element");
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsITextContent> text( do_QueryInterface(child) );
+        if (text) {
+            *aResult = text;
+            NS_ADDREF(*aResult);
+            return NS_OK;
+        }
+
+        // depth-first search
+        rv = FindTextElement(child, aResult);
+        if (NS_FAILED(rv)) return rv;
+
+        if (*aResult)
+            return NS_OK;
+    }
+
+    *aResult = nsnull;
+    return NS_OK;
+}
 
 nsresult
 RDFTreeBuilderImpl::EnsureCell(nsIContent* aTreeItemElement,

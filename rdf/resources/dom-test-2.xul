@@ -6,24 +6,29 @@ This test exercises some of the DOMAttr stuff.
 -->
 <?xml-stylesheet href="dom-test-1.css" type="text/css"?>
 
-<xul:window
+<window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:script>
 function DumpAttributes()
 {
-  var bookmarksRoot = document.getElementById("NC:BookmarksRoot");
-  dump("bookmarksRoot = " + bookmarksRoot + "\n");
-  if (bookmarksRoot == null)
+  // get the personal toolbar folder, which'll be constructed
+  // automagically by RDF
+  var folder = document.getElementById("NC:PersonalToolbarFolder");
+  dump("folder = " + folder + "\n");
+  if (folder == null)
     return;
 
-  var attrs = bookmarksRoot.attributes;
+  // get the attributes of the folder
+  var attrs = folder.attributes;
   dump("attrs = " + attrs + "\n");
   if (attrs == null)
     return;
 
+  // iterate n' print
   for (var i = 0; i &lt; attrs.length; ++i) {
     var attr = attrs[i];
     dump("attrs[" + i + "] = " + attr + "\n");
@@ -33,10 +38,36 @@ function DumpAttributes()
     }
   }
 }
+
+
+function SetItemText()
+{
+  var folder = document.getElementById("NC:PersonalToolbarFolder");
+  dump("folder = " + folder + "\n");
+  if (folder == null)
+    return;
+
+  var attrs = folder.attributes;
+  dump("attrs = " + attrs + "\n");
+  if (attrs == null)
+    return;
+
+  var attr = attrs.getNamedItem('nc:Name');
+  dump("attrs.getNamedItem('nc:Name') = " + attr + "\n");
+  if (attr == null)
+    return;
+
+  var newValue = document.getElementById("NewText").value;
+  dump("newValue = " + newValue + "\n");
+  
+  attr.value = newValue;
+}
   
 </html:script>
 
 <html:button onclick="DumpAttributes();">DumpAttributes</html:button>
+<html:input id="NewText" type="text"/>
+<html:button onclick="SetItemText();">Set Item Text</html:button>
 
 <tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
@@ -52,4 +83,4 @@ function DumpAttributes()
   </treebody>
 </tree>
 
-</xul:window>
+</window>

@@ -65,7 +65,9 @@ public:
   // of the content model should be informed that the content model is
   // invalid?
 
-  NS_IMETHOD SplitProperty(nsIRDFResource* aResource, PRInt32* aNameSpaceID, nsIAtom** aTag) = 0;
+  NS_IMETHOD SplitProperty(nsIRDFResource* aResource,
+                           PRInt32* aNameSpaceID,
+                           nsIAtom** aTag) = 0;
 
   NS_IMETHOD AddElementForResource(nsIRDFResource* aResource, nsIContent* aElement) = 0;
 
