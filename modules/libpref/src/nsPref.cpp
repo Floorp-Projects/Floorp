@@ -138,6 +138,8 @@ protected:
 
     static nsresult convertUTF8ToUnicode(const char *utf8String,
                                          PRUnichar **aResult);
+    /* used to ref-count the pref observers */
+    nsSupportsHashtable             mObservers;
 }; // class nsPref
 
 nsPref* nsPref::gInstance = NULL;
@@ -360,7 +362,9 @@ nsresult nsPref::useLockPrefFile()
     if (NS_SUCCEEDED(rv = GetLocalizedUnicharPref("browser.startup.homepage",
 			getter_Copies(prefVal)) && (prefVal))) 
     {
+#ifdef DEBUG_tao
         printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
+#endif
     }
 
     if (NS_SUCCEEDED(rv = CopyCharPref("general.config.filename",
@@ -484,7 +488,9 @@ nsresult nsPref::useLockPrefFile()
             }
         }
     GetLocalizedUnicharPref("browser.startup.homepage",getter_Copies(prefVal));
+#ifdef DEBUG_tao
     printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
+#endif
     }
     return rv;
 } // nsPref::useLockPrefFile
@@ -591,12 +597,32 @@ NS_IMETHODIMP nsPref::ResetPrefs()
     return rv;
 } // nsPref::ResetPrefs
 
+static int PR_CALLBACK
+NotifyObserver(const char *newpref, void *data)
+{
+    nsCOMPtr<nsIObserver> observer = NS_STATIC_CAST(nsIObserver *, data);
+    observer->Observe(observer, NS_LITERAL_STRING("nsPref:changed"),
+                      NS_ConvertASCIItoUCS2(newpref));
+    return 0;
+}
+
+static PRBool PR_CALLBACK
+UnregisterObservers(nsHashKey *aKey, void *aData, void *closure)
+{
+    nsCStringKey *stringKey = NS_REINTERPRET_CAST(nsCStringKey *, aKey);
+    nsCOMPtr<nsIObserver> obs = do_QueryInterface((nsISupports *)aData);
+    PREF_UnregisterCallback(stringKey->GetString(), NotifyObserver, obs);
+    return PR_TRUE;
+}
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::ShutDown()
 //----------------------------------------------------------------------------------------
 {
+    mObservers.Enumerate(UnregisterObservers, nsnull);
+#ifdef DEBUG_alecf
     printf("PREF_Cleanup()\n");
+#endif
     PREF_Cleanup();
     return NS_OK;
 } // nsPref::ShutDown
@@ -1188,6 +1214,22 @@ NS_IMETHODIMP nsPref::UnregisterCallback( const char* domain,
     return _convertRes(PREF_UnregisterCallback(domain, callback, instance_data));
 }
 
+NS_IMETHODIMP nsPref::AddObserver(const char *domain,
+                                  nsIObserver *observer)
+{
+    nsCStringKey key(domain);
+    mObservers.Put(&key, observer);
+    return RegisterCallback(domain, NotifyObserver, observer);
+}
+
+NS_IMETHODIMP nsPref::RemoveObserver(const char *domain,
+                                     nsIObserver *observer)
+{
+    nsCStringKey key(domain);
+    mObservers.Remove(&key);
+    return UnregisterCallback(domain, NotifyObserver, observer);
+}
+
 /*
  * Tree editing
  */
@@ -1463,11 +1505,13 @@ PRBool pref_VerifyLockFileSpec(char* buf, long buflen)
 	        (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
 	        (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]);
 
+#ifdef DEBUG_neeti
         printf("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
 	        (int)digest[0],(int)digest[1],(int)digest[2],(int)digest[3],
 	        (int)digest[4],(int)digest[5],(int)digest[6],(int)digest[7],
 	        (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
 	        (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]); 
+#endif
 
    
 		success = ( PL_strncmp((const char*) buf + 3, szHash, (PRUint32)(hash_length - 4)) == 0 );
