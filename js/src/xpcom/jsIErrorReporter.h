@@ -28,21 +28,25 @@ extern "C" {
 #include <jsapi.h>
 }
 
+#define JS_IERRORREPORTER_IID \
+    { 0, 0, 0, \
+	{0, 0, 0, 0, 0, 0, 0, 0}}
+
 class jsIErrorReporter: public nsISupports {
  public:
-    jsIErrorReporter();
-    virtual ~jsIErrorReporter() = 0;
     /**
      * Report a warning.
      */
-    NS_IMETHOD reportWarning(JSString *message,
-			     JSErrorReport *report) = 0;
+    virtual void reportWarning(jsIContext *cx,
+			       JSString *message,
+			       JSErrorReport *report) = 0;
 
     /**
      * Report an error.
      */
-    NS_IMETHOD reportError(JSString *message,
-			   JSErrorReport *report) = 0;
+    virtual void reportError(jsIContext *cx,
+			     JSString *message,
+			     JSErrorReport *report) = 0;
 
 };
 

@@ -62,6 +62,17 @@ public:
     void enter(void);
     void exit(void);
 
+    JSString *newStringCopyZ(const char *string);
+    JSString *newUCStringCopyZ(const jschar *string);
+    JSString *newStringCopyN(const char *string, size_t len);
+    JSString *newUCStringCopyN(const jschar *string, size_t len);
+    JSString *newString(char *string, size_t len);
+    JSString *newUCString(jschar *string, size_t len);
+
+    JSBool addRoot(void *root);
+    JSBool addNamedRoot(void *root, const char *name);
+    JSBool removeRoot(void *root);
+
     friend class jsRuntime;
     friend class jsScriptable;
     friend void ErrorReporterHandler(JSContext *cx, const char *message,

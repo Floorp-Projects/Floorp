@@ -23,17 +23,43 @@ static NS_DEFINE_IID(kIScriptableIID, JS_ISCRIPTABLE_IID);
 
 NS_IMPL_ISUPPORTS(jsScriptable, kIScriptableIID);
 
+void
+jsScriptable::init(jsIContext *icx, JSObject *object)
+{
+    jsContext *cx = (jsContext *)icx;
+#if 0
+    /* can't do this yet. see comment in ~jsScriptable. */
+    cx->addRoot(&obj);
+    cx->addRoot(&className);
+#endif
+    setJSObject(cx, object);
+}
+
 jsScriptable::jsScriptable(jsIContext *cx, JSObject *object)
 {
-    /*    cx->addRoot(&obj); */
-    /*    cx->addRoot(&className); */
-    setJSObject(cx, object);
+    init(cx, object);
+}
+
+jsScriptable::jsScriptable(jsIContext *cx, JSClass *clasp)
+{
+    jsContext *icx = (jsContext *)cx;
+    JSObject *obj = JS_NewObject(icx->cx, clasp, NULL, NULL);
+    init(cx, obj);
 }
 
 jsScriptable::~jsScriptable()
 {
-    /* cx->removeRoot(&obj); */
-    /* cx->removeRoot(&className); */
+    /* we need to remove the root, but we don't want to cache a
+     * JSContext *, since that JSContext could easily go away.
+     * We may need to reach into JSContext->rt and cache that, and
+     * then find a context on that runtime to use for the call to
+     * JS_RemoveRoot.  What do we do if there aren't any contexts on
+     * that runtime at destructor time?  Do we create one?
+     */
+#if 0
+    cx->removeRoot(&obj);
+    cx->removeRoot(&className);
+#endif
 }
 
 JSObject *jsScriptable::getJSObject(jsIContext *cx)
@@ -41,7 +67,7 @@ JSObject *jsScriptable::getJSObject(jsIContext *cx)
     return obj;
 }
 
-void
+nsresult
 jsScriptable::setJSObject(jsIContext *cx, JSObject *object)
 {
     obj = object;
@@ -56,70 +82,77 @@ jsScriptable::setJSObject(jsIContext *cx, JSObject *object)
 ->name);
 
     /* XXX update proto and parent */
+    return NS_OK;
 }
 
 JSString *
-jsScriptable::getClassName()
+jsScriptable::getClassName(jsIContext *cx)
 {
     return className;
 }
 
-jsval
-jsScriptable::get(jsval id)
+nsresult
+jsScriptable::get(jsIContext *cx, const char *name, jsval *vp)
 {
-    return JSVAL_VOID;
+    jsContext *icx = (jsContext *)cx;
+    if (!JS_GetProperty(icx->cx, obj, name, vp)) {
+	return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
 }
 
-JSBool
-jsScriptable::has(jsval id)
+nsresult
+jsScriptable::has(jsIContext *cx, jsval id, JSBool *bp)
 {
-    return JS_FALSE;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void
-jsScriptable::put(jsval id, jsval v)
+nsresult
+jsScriptable::put(jsIContext *cx, const char *name, jsval v)
 {
+    jsContext *icx = (jsContext *)cx;
+    if (!JS_SetProperty(icx->cx, obj, name, &v)) {
+	return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
 }
 
-void
-jsScriptable::del(jsval id)
+nsresult
+jsScriptable::del(jsIContext *cx, jsval id)
 {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 jsIScriptable *
-jsScriptable::getPrototype()
+jsScriptable::getPrototype(jsIContext *cx)
 {
     return proto;
 }
 
-void
-jsScriptable::setPrototype(jsIScriptable *prototype)
+nsresult
+jsScriptable::setPrototype(jsIContext *cx, jsIScriptable *prototype)
 {
     proto = prototype;
     /* set the prototype of the underlying JSObject * */
+    return NS_OK;
 }
 
 jsIScriptable *
-jsScriptable::getParentScope()
+jsScriptable::getParentScope(jsIContext *cx)
 {
     return parent;
 }
 
-void
-jsScriptable::setParentScope(jsIScriptable *parent)
+nsresult
+jsScriptable::setParentScope(jsIContext *cx, jsIScriptable *parent)
 {
     this->parent = parent;
     /* set parent of underlying JSObject */
+    return NS_OK;
 }
 
-jsval
-jsScriptable::getDefaultValue(JSType hint)
+nsresult
+jsScriptable::getDefaultValue(jsIContext *cx, JSType hint, jsval *vp)
 {
-    return JSVAL_VOID;
-}
-
-JSBool
-jsScriptable::hasInstance(jsIScriptable *instance)
-{
-    return JS_FALSE;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
