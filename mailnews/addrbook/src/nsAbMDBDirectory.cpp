@@ -447,93 +447,39 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
   return rv;
 }
 
-
-// Not called
-nsresult nsAbMDBDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Server *server)
-{
-  if (mIsQueryURI)
-    return NS_ERROR_NOT_IMPLEMENTED;
-
-  if (!server->fileName)  // file name does not exist
-    return NS_OK;
-  if (PL_strlen(server->fileName) == 0)  // file name does not exist
-    return NS_OK;
-
-  nsresult rv = NS_OK;
-  nsFileSpec* dbPath = nsnull;
-  nsCOMPtr<nsIAddrDatabase> database;
-
-
-  nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
-  if(NS_SUCCEEDED(rv))
-    abSession->GetUserProfileDirectory(&dbPath);
-  
-  if (dbPath)
-  {
-    (*dbPath) += server->fileName;
-
-    // close file before delete it
-    nsCOMPtr<nsIAddrDatabase> addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
-
-    if (NS_SUCCEEDED(rv) && addrDBFactory)
-      rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
-    delete dbPath;
-  }
-
-  /* delete cards */
-  nsCOMPtr<nsISupportsArray> cardArray;
-  nsCOMPtr<nsIEnumerator> cardChild;
-
-  NS_NewISupportsArray(getter_AddRefs(cardArray));
-  rv = directory->GetChildCards(getter_AddRefs(cardChild));
-
-  if (NS_SUCCEEDED(rv) && cardChild)
-  {
-    nsCOMPtr<nsISupports> item;
-    rv = cardChild->First();
-    if (NS_SUCCEEDED(rv))
-    {
-      do 
-      {
-        cardChild->CurrentItem(getter_AddRefs(item));
-        if (item)
-        {
-          nsCOMPtr<nsIAbCard> card;
-          card = do_QueryInterface(item, &rv);
-          if (card)
-          {
-            cardArray->AppendElement(card);
-          }
-        }
-        rv = cardChild->Next();
-      } while (NS_SUCCEEDED(rv));
-
-      if (database)
-      {
-        PRUint32 cardCount;
-        rv = cardArray->Count(&cardCount);
-                NS_ENSURE_SUCCESS(rv, rv);
-        for(PRUint32 i = 0; i < cardCount; i++)
-        {
-          nsCOMPtr<nsISupports> cardSupports = getter_AddRefs(cardArray->ElementAt(i));
-          nsCOMPtr<nsIAbCard> card = do_QueryInterface(cardSupports, &rv);
-          if (card)
-          {
-            database->DeleteCard(card, PR_TRUE);
-          }
-        }
-      }
-    }
-  }
-  return rv;
-}
-
 NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
 {
-  if (mIsQueryURI)
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
 
-  nsresult rv = NS_OK;
+  if (mIsQueryURI) {
+    // if this is a query, delete the cards from the directory (without the query)
+    // before we do the delete, make this directory (which represents the search)
+    // a listener on the database, so that it will get notified when the cards are deleted
+    // after delete, remove this query as a listener.
+    nsCOMPtr<nsIAddressBook> addressBook = do_GetService(NS_ADDRESSBOOK_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIAddrDatabase> database;
+    rv = addressBook->GetAbDatabaseFromURI(mURINoQuery.get(), getter_AddRefs(database));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = database->AddListener(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = gRDFService->GetResource(mURINoQuery.get(), getter_AddRefs(resource));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(resource, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = directory->DeleteCards(cards);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = database->RemoveListener(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return rv;
+  }
 
   if (!mDatabase)
     rv = GetAbDatabase();
@@ -750,7 +696,9 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
   {
     nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(newList, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    mDatabase->AddListener(listener);
+    
+    rv = mDatabase->AddListener(listener);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     dbnewList->CopyDBMailList (dblist);
     AddMailListToDirectory(newList);
@@ -1047,36 +995,21 @@ nsresult nsAbMDBDirectory::OnSearchFoundCard (nsIAbCard* card)
   return NS_OK;
 }
 
-
 nsresult nsAbMDBDirectory::GetAbDatabase()
 {
-  nsresult rv = NS_OK;
-  if (!mDatabase && mURI)
-  {
-    nsFileSpec* dbPath = nsnull;
-    
-    nsCOMPtr<nsIAddrBookSession> abSession = 
-      do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-    if(NS_SUCCEEDED(rv))
-      abSession->GetUserProfileDirectory(&dbPath);
-    
-    nsCAutoString file(&(mURI[strlen(kMDBDirectoryRoot)]));
-    PRInt32 pos = file.Find("/");
-    if (pos != -1)
-      file.Truncate(pos);
-    (*dbPath) += file.get();
-    
-    nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-      do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
-    
-    if (NS_SUCCEEDED(rv) && addrDBFactory)
-      rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
-    
-    if (mDatabase)
-      mDatabase->AddListener(this);
-    
-    delete dbPath;
+  if (!mDatabase && mURI) {
+    nsresult rv;
+
+    nsCOMPtr<nsIAddressBook> addressBook = do_GetService(NS_ADDRESSBOOK_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = addressBook->GetAbDatabaseFromURI(mURI, getter_AddRefs(mDatabase));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mDatabase->AddListener(this);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+
   if (!mDatabase)
     return NS_ERROR_NULL_POINTER;
   return NS_OK;

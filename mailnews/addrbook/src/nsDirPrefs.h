@@ -52,6 +52,7 @@ class nsIPref;
 #define kAllDirectoryRoot          "moz-abdirectory://" 
 
 #define kMDBDirectoryRoot          "moz-abmdbdirectory://"
+#define kMDBDirectoryRootLen       21
 #define kPersonalAddressbook       "abook.mab"
 #define kPersonalAddressbookUri    "moz-abmdbdirectory://abook.mab"
 #define kCollectedAddressbook      "history.mab"

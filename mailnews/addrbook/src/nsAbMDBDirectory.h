@@ -112,7 +112,6 @@ protected:
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
   nsresult NotifyItemChanged(nsISupports *item);
-	nsresult DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Server *server);
 	nsresult RemoveCardFromAddressList(nsIAbCard* card);
 
 	nsresult AddMailList(const char *uriName);

@@ -254,45 +254,47 @@ NS_IMETHODIMP nsAddressBook::SetDocShellWindow(nsIDOMWindowInternal *aWin)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDatabase **db)
+NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatabase **aDB)
 {
-  nsCOMPtr<nsIAddrDatabase> database;  
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aDB);
   
-  nsresult rv = NS_ERROR_NULL_POINTER;
-  if (uri)
-  {
-    nsFileSpec* dbPath = nsnull;
+  nsresult rv;
+  
+  nsCOMPtr<nsIAddrBookSession> abSession = 
+    do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsFileSpec* dbPath;
+  rv = abSession->GetUserProfileDirectory(&dbPath);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+ /* directory URIs are of the form
+  * moz-abmdbdirectory://foo
+  * mailing list URIs are of the form
+  * moz-abmdbdirectory://foo/bar
+  *
+  * if we are passed a mailing list URI, we want the db for the parent.
+  */
+  if (strlen(aURI) < kMDBDirectoryRootLen)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCAutoString file(aURI + kMDBDirectoryRootLen);
+  PRInt32 pos = file.Find("/");
+  if (pos != kNotFound)
+    file.Truncate(pos);
+  (*dbPath) += file.get();
+  
+  nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+    do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = addrDBFactory->Open(dbPath, PR_TRUE, aDB, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  delete dbPath;
     
-    nsCOMPtr<nsIAddrBookSession> abSession = 
-      do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-    if(NS_SUCCEEDED(rv))
-      abSession->GetUserProfileDirectory(&dbPath);
-    
-    if (NS_SUCCEEDED(rv) && dbPath)
-    {
-      nsCAutoString file(&(uri[PL_strlen(kMDBDirectoryRoot)]));
-      PRInt32 pos = file.Find("/");
-      if (pos != kNotFound)
-        file.Truncate(pos);
-      (*dbPath) += file.get();
-      
-      nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-        do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
-      
-      if (NS_SUCCEEDED(rv) && addrDBFactory)
-        rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
-      
-      delete dbPath;
-      
-      if (NS_SUCCEEDED(rv) && database)
-      {
-        NS_IF_ADDREF(*db = database);
-      }
-      else
-        rv = NS_ERROR_NULL_POINTER;
-    }
-  }
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db)
