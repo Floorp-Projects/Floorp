@@ -128,7 +128,7 @@ void nsMsgBodyHandler::OpenLocalFolder()
 		{
 			nsFileSpec path;
 			fileSpec->GetFileSpec(&path);
-			m_scope->m_fileStream = new nsIOFileStream(path);
+			m_scope->m_fileStream = new nsInputFileStream(path);
 		}
 	}
 	if (m_scope->m_fileStream)
