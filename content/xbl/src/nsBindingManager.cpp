@@ -1123,6 +1123,8 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
   GetBinding(aContent, getter_AddRefs(binding));
   if (binding) {
     PRBool supportsInterface;
+    // The binding should not be asked for nsISupports
+    NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsISupports)), "Asking a binding for nsISupports");
     binding->ImplementsInterface(aIID, &supportsInterface);
     if (supportsInterface) {
       nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS;
