@@ -112,12 +112,18 @@ function Startup() {
   doSetOKCancel(Save, Cancel);
 }
 
+function EncodeVerticalBars(s) {
+  s = s.replace(/^+/gi, "^1");
+  s = s.replace(/\|+/gi, "^2");
+  return s;
+}
+
 function Save() {
   var list = prefillList[prefillList.length-2];
   var url = prefillList[prefillList.length-1];
   var fillins = "";
 
-  for (i=1; i<=fieldCount; i++) { 
+  for (var i=1; i<=fieldCount; i++) { 
     var menuList = document.getElementById("x" + i);
     fillins +=
       menuList.selectedItem.getAttribute("data") + "#*%$" +
@@ -127,7 +133,8 @@ function Save() {
   var checkBox = document.getElementById("checkbox");
   var checked = checkBox.checked;
 
-  var result = "|list|"+list+"|fillins|"+fillins+"|url|"+url+"|skip|"+checked+"|";
+  var result = "|list|"+list+"|fillins|"+EncodeVerticalBars(fillins)+
+               "|url|"+EncodeVerticalBars(url)+"|skip|"+checked+"|";
   walletpreview.SetValue(result, window);
   return true;
 }

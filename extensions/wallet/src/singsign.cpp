@@ -2536,21 +2536,20 @@ SI_InSequence(const nsString& sequence, PRInt32 number)
   return PR_FALSE;
 }
 
-PUBLIC PRUnichar*
-SI_FindValueInArgs(const nsString& results, const nsString& name)
+PUBLIC void
+SI_FindValueInArgs(const nsString& results, const nsString& name, nsString& value)
 {
   /* note: name must start and end with a vertical bar */
-  nsAutoString value;
   PRInt32 start, length;
   start = results.Find(name);
   PR_ASSERT(start >= 0);
   if (start < 0) {
-    return nsAutoString().ToNewUnicode();
+    return;
   }
   start += name.Length(); /* get passed the |name| part */
   length = results.FindChar('|', PR_FALSE,start) - start;
   results.Mid(value, start, length);
-  return value.ToNewUnicode();
+  return;
 }
 
 PUBLIC void
@@ -2572,7 +2571,7 @@ SINGSIGN_SignonViewerReturn(const nsString& results) {
   /*
    * step backwards through all users and delete those that are in the sequence */
   nsAutoString gone;
-  gone = SI_FindValueInArgs(results, NS_ConvertToString("|goneS|"));
+  SI_FindValueInArgs(results, NS_ConvertToString("|goneS|"), gone);
   PRInt32 urlCount = LIST_COUNT(si_signon_list);
   while (urlCount>0) {
     urlCount--;
@@ -2597,7 +2596,7 @@ SINGSIGN_SignonViewerReturn(const nsString& results) {
   si_SaveSignonDataLocked();
 
   /* step backwards through all rejects and delete those that are in the sequence */
-  gone = SI_FindValueInArgs(results, NS_ConvertToString("|goneR|"));
+  SI_FindValueInArgs(results, NS_ConvertToString("|goneR|"), gone);
   si_lock_signon_list();
   PRInt32 rejectCount = LIST_COUNT(si_reject_list);
   while (rejectCount>0) {

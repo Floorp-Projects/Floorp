@@ -110,8 +110,8 @@ extern void SI_InitSignonFileName();
 extern PRBool
 SI_InSequence(const nsString& sequence, int number);
 
-extern PRUnichar*
-SI_FindValueInArgs(const nsString& results, const nsString& name);
+extern void
+SI_FindValueInArgs(const nsString& results, const nsString& name, nsString& value);
 
 extern void
 SI_DeleteAll();

@@ -2737,7 +2737,7 @@ Wallet_SignonViewerReturn(const nsString& results)
     /* step through all nopreviews and delete those that are in the sequence */
     {
       nsAutoString temp1; temp1.AssignWithConversion("|goneP|");
-      gone = SI_FindValueInArgs(results, temp1);
+      SI_FindValueInArgs(results, temp1, gone);
     }
     PRInt32 count = LIST_COUNT(wallet_URL_list);
     while (count>0) {
@@ -2755,7 +2755,7 @@ Wallet_SignonViewerReturn(const nsString& results)
     /* step through all nocaptures and delete those that are in the sequence */
     {
       nsAutoString temp2; temp2.AssignWithConversion("|goneC|");
-      gone = SI_FindValueInArgs(results, temp2);
+      SI_FindValueInArgs(results, temp2, gone);
     }
     PRInt32 count2 = LIST_COUNT(wallet_URL_list);
     while (count2>0) {
@@ -3169,26 +3169,34 @@ WLLT_InitReencryptCallback(nsIDOMWindowInternal* window) {
   registered = PR_TRUE;
 }
 
+PRIVATE void
+wallet_DecodeVerticalBars(nsString& s) {
+  s.ReplaceSubstring(NS_ConvertASCIItoUCS2("^2"), NS_ConvertASCIItoUCS2("|"));
+  s.ReplaceSubstring(NS_ConvertASCIItoUCS2("^1"), NS_ConvertASCIItoUCS2("^"));
+}
+
 /*
  * return after previewing a set of prefills
  */
 PUBLIC void
 WLLT_PrefillReturn(const nsString& results)
 {
-  PRUnichar* listAsAscii;
-  PRUnichar* fillins;
-  PRUnichar* urlName;
-  PRUnichar* skip;
+  nsAutoString listAsAscii;
+  nsAutoString fillins;
+  nsAutoString urlName;
+  nsAutoString skip;
   nsAutoString next;
 
   /* get values that are in environment variables */
-  fillins = SI_FindValueInArgs(results, NS_ConvertToString("|fillins|"));
-  listAsAscii = SI_FindValueInArgs(results, NS_ConvertToString("|list|"));
-  skip = SI_FindValueInArgs(results, NS_ConvertToString("|skip|"));
-  urlName = SI_FindValueInArgs(results, NS_ConvertToString("|url|"));
+  SI_FindValueInArgs(results, NS_ConvertToString("|fillins|"), fillins);
+  SI_FindValueInArgs(results, NS_ConvertToString("|list|"), listAsAscii);
+  SI_FindValueInArgs(results, NS_ConvertToString("|skip|"), skip);
+  SI_FindValueInArgs(results, NS_ConvertToString("|url|"), urlName);
+  wallet_DecodeVerticalBars(fillins);
+  wallet_DecodeVerticalBars(urlName);
 
   /* add url to url list if user doesn't want to preview this page in the future */
-  if (nsAutoString(skip).EqualsWithConversion("true")) {
+  if (skip.EqualsWithConversion("true")) {
     nsAutoString url = nsAutoString(urlName);
     nsVoidArray* dummy;
     nsAutoString value; value.AssignWithConversion("nn");
@@ -3202,8 +3210,8 @@ WLLT_PrefillReturn(const nsString& results)
   /* process the list, doing the fillins */
   nsVoidArray * list;
   PRInt32 error;
-  list = (nsVoidArray *)nsAutoString(listAsAscii).ToInteger(&error);
-  if (fillins[0] == '\0') { /* user pressed CANCEL */
+  list = (nsVoidArray *)listAsAscii.ToInteger(&error);
+  if (fillins.Length() == 0) { /* user pressed CANCEL */
     wallet_ReleasePrefillElementList(list);
     return;
   }
@@ -3221,7 +3229,6 @@ WLLT_PrefillReturn(const nsString& results)
    */
 
   wallet_PrefillElement * mapElementPtr;
-  nsAutoString fillinsString = nsAutoString(fillins);
   /* step through pre-fill list */
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=0; i<count; i++) {
@@ -3231,15 +3238,15 @@ WLLT_PrefillReturn(const nsString& results)
     if (mapElementPtr->count != 0) {
       /* count != 0 indicates a new schema name */
       nsAutoString tail;
-      if (wallet_GetNextInString(fillinsString, next, tail) == -1) {
+      if (wallet_GetNextInString(fillins, next, tail) == -1) {
         break;
       }
-      fillinsString = tail;
+      fillins = tail;
       if (next != mapElementPtr->schema) {
         break; /* something's wrong so stop prefilling */
       }
-      wallet_GetNextInString(fillinsString, next, tail);
-      fillinsString = tail;
+      wallet_GetNextInString(fillins, next, tail);
+      fillins = tail;
     }
     if (next == mapElementPtr->value) {
       /*
