@@ -5,6 +5,7 @@ help.jar:
 *       content/help/contents.rdf                       (content/contents.rdf)
         content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
         content/help/helpContextOverlay.xul             (content/helpContextOverlay.xul)
+*       content/help/platformClasses.css                (content/platformClasses.css)
 
 en-US.jar:
         locale/en-US/help/mozillahelp.rdf               (locale/en-US/mozillahelp.rdf)
