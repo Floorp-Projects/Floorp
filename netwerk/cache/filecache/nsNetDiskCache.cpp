@@ -45,6 +45,7 @@
 #include "netCore.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+#include "nsString.h"
 
 #if !defined(IS_LITTLE_ENDIAN) && !defined(IS_BIG_ENDIAN)
 ERROR! Must have a byte order
