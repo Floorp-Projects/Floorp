@@ -25,8 +25,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.8 $
-# $Date: 2002/02/11 23:08:44 $
+# $Revision: 1.9 $
+# $Date: 2002/02/22 21:41:37 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -60,6 +60,9 @@ min-archive-files	Change the minimum number of files which must be in
 
 max-archive-days	Change the maximum number of days that files are kept 
 			in the archive. The default is: $MAX_ARCHIVE_DAYS
+
+index-only		Add index files to each directory but do not cull 
+			any files. 
 
 All arguments following the named arguments are treated as a list of
 directories which needs pruning.
@@ -297,11 +300,20 @@ sub time_sorted_dir_files {
     return @file_set;
 }
 
+
+# We assume each directory contains the output of some process at
+# various times. Remove older files according to the policy.
+
 sub purge_dirs {
     my @dir_list = @_;
 
     foreach $dir (@dir_list) {
 	
+	my $dir_ok = (-d $dir) && (-r $dir) && (-w $dir);
+
+	($dir_ok) ||
+	    die("Directory: '$dir', is not a writable directory\n");	
+
 	my @file_set = time_sorted_dir_files($dir);
 
 	my $num_files_seen = 0; 
@@ -327,11 +339,23 @@ sub purge_dirs {
 }
 
 
+# create an index.html file for each directory given as input.
+
+# this is necessary because our filenames are so long (embedded
+# date/time) that by default browsers do not show the full name in a
+# directory listing. However if we put the names in an index.html file
+# then the bwoser displays the filenames, no matter how long they are.
+
 
 sub print_dirs_index {
     my @dir_list = @_;
 
     foreach $dir (@dir_list) {
+
+	my $dir_ok = (-d $dir) && (-r $dir) && (-w $dir);
+
+	($dir_ok) ||
+	    die("Directory: '$dir', is not a writable directory\n");	
 
 	my $index_file = "$dir/index.html";
 	open (INDEX, ">$index_file") ||
@@ -485,6 +509,7 @@ sub parse_args {
     if( !GetOptions (\%Prog_Args,
 		     "version", "help", 
 		     "min-archive-files=s", "max-archive-days=s",
+		     "index-only!",
 		     ) ) {
 	print("Illegal options in \@ARGV: '@ARGV'\n");
 	usage();
@@ -501,6 +526,19 @@ sub parse_args {
     }
     
     
+    if ( ($Prog_Args{'min-archive-days'}) &&
+	 ($Prog_Args{'min-archive-days'} !~ m/\d+/)
+	 ) {
+	die("Argument min-archive-days must be a number. \n".
+	    "It is: '$Prog_Args{'min-archive-days'}'\n");
+    }
+    if ( ($Prog_Args{'max-archive-days'}) &&
+	 ($Prog_Args{'max-archive-days'} !~ m/\d+/)
+	 ) {
+	die("Argument max-archive-days must be a number. ".
+	    "It is: '$Prog_Args{'max-archive-days'}'\n");
+    }
+
     $MIN_ARCHIVE_FILES = $Prog_Args{'min-archive-files'} || 
 	$MIN_ARCHIVE_FILES;
 
@@ -513,6 +551,14 @@ sub parse_args {
 
     $MAX_ARCHIVE_SECONDS = $MAX_ARCHIVE_DAYS*24*60*60;
     @ARCHIVE_DIRS = map { untaint_filename($_) } @ARGV;
+
+    foreach $dir (@ARCHIVE_DIRS) {
+
+	my $dir_ok = (-d $dir) && (-r $dir) && (-w $dir);
+
+	($dir_ok) ||
+	    die("Directory: '$dir', is not a writable directory\n");	
+    }
 
     return ;
 }
@@ -528,8 +574,11 @@ sub parse_args {
   get_env();
   parse_args();
 
-  purge_dirs(@ARCHIVE_DIRS);	
   print_dirs_index(@ARCHIVE_DIRS);
+
+  if( !($Prog_Args{'index-only'}) ) {
+      purge_dirs(@ARCHIVE_DIRS);	
+  }
 
   exit 0;
 }
