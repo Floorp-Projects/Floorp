@@ -166,14 +166,9 @@ function evalInTargetScope (script)
         return false;
     }
     
-    ASSERT (console.currentFrameIndex < console.frames.length,
-            "console.currentFrameIndex out of range");
-
     try
     {
-        return console.frames[console.currentFrameIndex].eval (script,
-                                                               MSG_VAL_CONSOLE,
-                                                               1);
+        return getCurrentFrame().eval (script, MSG_VAL_CONSOLE, 1);
     }
     catch (ex)
     {
