@@ -1130,7 +1130,11 @@ PRBool nsHTMLEditor::IsVisBreak(nsIDOMNode *aNode)
   GetNodeLocation(aNode, address_of(selNode), &selOffset);
   selOffset++; // lets look after the break
   nsWSRunObject wsObj(this, selNode, selOffset);
-  if (wsObj.mEndReason | nsWSRunObject::eBlock)
+  nsCOMPtr<nsIDOMNode> visNode;
+  PRInt32 visOffset=0;
+  PRInt16 visType=0;
+  wsObj.NextVisibleNode(selNode, selOffset, address_of(visNode), &visOffset, &visType);
+  if (visType & nsWSRunObject::eBlock)
     return PR_FALSE;
   
   return PR_TRUE;
