@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.84 2004/12/07 11:52:56 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.85 2004/12/18 11:52:20 jake%bugzilla.org Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -517,11 +517,13 @@
     <title>Configuration</title>
 
     <warning>
-      <para>Poorly-configured MySQL and Bugzilla installations have
-      given attackers full access to systems in the past. Please take the
-      security parts of these guidelines seriously, even for Bugzilla 
-      machines hidden away behind your firewall. Be certain to read
-      <xref linkend="security"/> for some important security tips.</para>      
+      <para>
+        Poorly-configured MySQL and Bugzilla installations have
+        given attackers full access to systems in the past. Please take the
+        security parts of these guidelines seriously, even for Bugzilla 
+        machines hidden away behind your firewall. Be certain to read
+        <xref linkend="security"/> for some important security tips.
+      </para>      
     </warning>
 
     <section id="localconfig">
@@ -530,16 +532,16 @@
       <para>
         Once you run <filename>checksetup.pl</filename> with all the correct 
         modules installed, it displays a message about, and write out a 
-        file called, 
-        <filename>localconfig</filename>. This file contains the default
-        settings for a number of Bugzilla parameters.
+        file called, <filename>localconfig</filename>. This file contains
+        the default settings for a number of Bugzilla parameters.
       </para>
       
-      <para>Load this file in your editor. The only value you 
-      <emphasis>need</emphasis> to change is $db_pass, the password for
-      the user you will create for your database.
-      Pick a strong password (for simplicity, it should not contain
-      single quote characters) and put it here.
+      <para>
+        Load this file in your editor. The only value you 
+        <emphasis>need</emphasis> to change is $db_pass, the password for
+        the user you will create for your database. Pick a strong
+        password (for simplicity, it should not contain single quote
+        characters) and put it here.
       </para>
       
       <para>
@@ -553,8 +555,8 @@
         You may also wish to change the names of 
         the priorities, severities, operating systems and platforms for your
         installation. However, you can always change these after installation
-        has finished; if you then re-run 
-        <filename>checksetup.pl</filename>, the changes will get picked up.
+        has finished; if you then re-run <filename>checksetup.pl</filename>,
+        the changes will get picked up.
       </para>
     </section>
     
@@ -562,29 +564,46 @@
       <title>MySQL</title>
 
       <caution>
-        <para>MySQL's default configuration is very insecure.
-        <xref linkend="security-mysql"/> has some good information for
-        improving your installation's security.
+        <para>
+          MySQL's default configuration is very insecure.
+          <xref linkend="security-mysql"/> has some good information for
+          improving your installation's security.
         </para>
       </caution>
      
       <section id="install-setupdatabase">
         <title>Allow large attachments</title>
         
-        <para>You need to configure MySQL to accept large packets, if you
-        want to have attachments larger than 64K. Add the text
-        below to your
-        <filename>/etc/my.cnf</filename>. 
-        There is also a parameter in Bugzilla
-        for setting the maximum allowable attachment size, (default 1MB).
-        Bugzilla will only accept attachments up to the lower of these two
-        sizes.
+        <para>
+          By default, MySQL will only accept packets up to 64Kb in size.
+          If you want to have attachments larger than this, you will need
+          to modify your <filename>/etc/my.cnf</filename> as below.
         </para>
 
-          <screen>  [mysqld]
+        <para>
+          If you are using MySQL 4.0 or newer, enter:
+        </para>
+        <screen>  [mysqld]
+  # Allow packets up to 1M
+  max_allowed_packet=1M</screen>
+
+        <para>
+          If you are using an older version of MySQL, enter:
+        </para>
+        <screen>  [mysqld]
   # Allow packets up to 1M
   set-variable = max_allowed_packet=1M</screen>
+
+        <para>
+          There is also a parameter in Bugzilla called 'maxattachmentsize'
+          (default = 1000 Kb) that controls the maximum allowable attachment
+          size. Attachments larger than <emphasis>either</emphasis> the 
+          'max_allowed_packet' or 'maxattachmentsize' value will not be
+          accepted by Bugzilla.
+        </para>
       </section>
+
+
 
       <section>
         <title>Allow small words in full-text indexes</title>
@@ -616,47 +635,61 @@
 
       <section>
         <title>Permit attachments table to grow beyond 4GB</title>
-        <para>By default, MySQL will limit the size of a table
-        to 4GB.  This limit is present even if the underlying filesystem
-        has no such limit or if you are using RAID.  To set a higher
-        limit, follow these instructions.</para>
-        <para>Run the <filename>MySQL</filename> command-line client and
-        enter:</para>
+
+        <para>
+          By default, MySQL will limit the size of a table to 4GB.
+          This limit is present even if the underlying filesystem
+          has no such limit or if you are using RAID.  To set a higher
+          limit, follow these instructions.
+        </para>
+
+        <para>
+          Run the <filename>MySQL</filename> command-line client and
+          enter:
+        </para>
 
         <screen>  <prompt>mysql&gt;</prompt> ALTER TABLE attachments 
           AVG_ROW_LENGTH=1000000, MAX_ROWS=20000;
         </screen>
-        <para>The above command will change the limit to 20GB. Mysql will have 
-        to make a temporary copy of your entire table to do this. Ideally, 
-        you should do this when your attachments table is still small.</para>
+
+        <para>
+          The above command will change the limit to 20GB. Mysql will have 
+          to make a temporary copy of your entire table to do this. Ideally, 
+          you should do this when your attachments table is still small.
+        </para>
       </section>
             
       <section id="install-setupdatabase-adduser">
         <title>Add a user to MySQL</title>
 
-        <para>You need to add a new MySQL user for
-        Bugzilla to use. (It's not safe to have Bugzilla use the MySQL root
-        account.) The following instructions assume the defaults in 
-        <filename>localconfig</filename>; 
-        if you changed those, you need to modify the 
-        SQL command appropriately. You will need the 
-        <replaceable>$db_pass</replaceable> password you set in
-        <filename>localconfig</filename> in 
-        <xref linkend="localconfig"/>.
+        <para>
+          You need to add a new MySQL user for Bugzilla to use.
+          (It's not safe to have Bugzilla use the MySQL root account.)
+          The following instructions assume the defaults in
+          <filename>localconfig</filename>; if you changed those,
+          you need to modify the SQL command appropriately. You will
+          need the <replaceable>$db_pass</replaceable> password you
+          set in <filename>localconfig</filename> in 
+          <xref linkend="localconfig"/>.
         </para>
 
-        <para>We use an SQL <command>GRANT</command> command to create a 
-        <quote>bugs</quote>
-        user. This also restricts the 
-        <quote>bugs</quote>
-        user to operations within a database called 
-        <quote>bugs</quote>, and only allows the account to connect from 
-        <quote>localhost</quote>. 
-        Modify it to reflect your setup if you will be connecting from
-        another machine or as a different user.</para>
+        <para>
+          We use an SQL <command>GRANT</command> command to create
+          a <quote>bugs</quote> user. This also restricts the 
+          <quote>bugs</quote>user to operations within a database
+          called <quote>bugs</quote>, and only allows the account
+          to connect from <quote>localhost</quote>. Modify it to
+          reflect your setup if you will be connecting from another
+          machine or as a different user.
+        </para>
         
-        <para>Run the <filename>mysql</filename> command-line client.</para>
-        <para>If you are using MySQL 4.0 or newer, enter:</para>
+        <para>
+          Run the <filename>mysql</filename> command-line client.
+        </para>
+
+        <para>
+          If you are using MySQL 4.0 or newer, enter:
+        </para>
 
         <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT, INSERT,
          UPDATE, DELETE, INDEX, ALTER, CREATE, LOCK TABLES,
@@ -664,11 +697,14 @@
          TO bugs@localhost IDENTIFIED BY '<replaceable>$db_pass</replaceable>';
   <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;</screen>
 
-        <para>If you are using an older version of MySQL,
-          the <computeroutput>LOCK TABLES</computeroutput> and 
+        <para>
+          If you are using an older version of MySQL,the
+          <computeroutput>LOCK TABLES</computeroutput> and 
           <computeroutput>CREATE TEMPORARY TABLES</computeroutput>
-          permissions will be unavailable and should be removed from the permissions
-          list. In this case, the following command line can be used:</para>
+          permissions will be unavailable and should be removed from
+          the permissions list. In this case, the following command
+          line can be used:
+        </para>
 
         <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT, INSERT,
          UPDATE, DELETE, INDEX, ALTER, CREATE, DROP,
