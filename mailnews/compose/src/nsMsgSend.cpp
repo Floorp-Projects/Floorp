@@ -3150,7 +3150,7 @@ nsMsgComposeAndSend::DeleteListeners()
     PRInt32 i;
     for (i=0; i<mListenerArrayCount; i++)
     {
-      NS_RELEASE(mListenerArray[i]);
+      NS_IF_RELEASE(mListenerArray[i]);
     }
     
     PR_FREEIF(mListenerArray);
