@@ -69,29 +69,7 @@ nsInternetCiter::~nsInternetCiter()
 {
 }
 
-NS_IMPL_ADDREF(nsInternetCiter)
-
-NS_IMPL_RELEASE(nsInternetCiter)
-
-NS_IMETHODIMP
-nsInternetCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports)))
-  {
-    *aInstancePtr = (void*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICiter))) {
-    *aInstancePtr = (void*)(nsICiter*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS1(nsInternetCiter, nsICiter)
 
 NS_IMETHODIMP
 nsInternetCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString)

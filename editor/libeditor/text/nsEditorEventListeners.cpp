@@ -98,9 +98,7 @@ static NS_DEFINE_CID(kCaretCID,                NS_CARET_CID);
  * nsTextEditorKeyListener implementation
  */
 
-NS_IMPL_ADDREF(nsTextEditorKeyListener)
-
-NS_IMPL_RELEASE(nsTextEditorKeyListener)
+NS_IMPL_ISUPPORTS2(nsTextEditorKeyListener, nsIDOMEventListener, nsIDOMKeyListener)
 
 
 nsTextEditorKeyListener::nsTextEditorKeyListener()
@@ -112,33 +110,6 @@ nsTextEditorKeyListener::nsTextEditorKeyListener()
 nsTextEditorKeyListener::~nsTextEditorKeyListener() 
 {
 }
-
-
-
-nsresult
-nsTextEditorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
-    *aInstancePtr = (void*)(nsIDOMKeyListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
 
 
 nsresult
@@ -311,9 +282,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
  * nsTextEditorMouseListener implementation
  */
 
-NS_IMPL_ADDREF(nsTextEditorMouseListener)
-
-NS_IMPL_RELEASE(nsTextEditorMouseListener)
+NS_IMPL_ISUPPORTS2(nsTextEditorMouseListener, nsIDOMEventListener, nsIDOMMouseListener)
 
 
 nsTextEditorMouseListener::nsTextEditorMouseListener() 
@@ -325,34 +294,6 @@ nsTextEditorMouseListener::nsTextEditorMouseListener()
 nsTextEditorMouseListener::~nsTextEditorMouseListener() 
 {
 }
-
-
-
-nsresult
-nsTextEditorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
-    *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
 
 
 nsresult
@@ -494,9 +435,7 @@ nsTextEditorMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
  * nsTextEditorTextListener implementation
  */
 
-NS_IMPL_ADDREF(nsTextEditorTextListener)
-
-NS_IMPL_RELEASE(nsTextEditorTextListener)
+NS_IMPL_ISUPPORTS2(nsTextEditorTextListener, nsIDOMEventListener, nsIDOMTextListener)
 
 
 nsTextEditorTextListener::nsTextEditorTextListener()
@@ -506,34 +445,8 @@ nsTextEditorTextListener::nsTextEditorTextListener()
 }
 
 
-
 nsTextEditorTextListener::~nsTextEditorTextListener() 
 {
-}
-
-nsresult
-nsTextEditorTextListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMTextListener))) {
-    *aInstancePtr = (void*)(nsIDOMTextListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
 }
 
 nsresult
@@ -881,34 +794,7 @@ nsTextEditorCompositionListener::~nsTextEditorCompositionListener()
 {
 }
 
-
-nsresult
-nsTextEditorCompositionListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMCompositionListener))) {
-    *aInstancePtr = (void*)(nsIDOMCompositionListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsTextEditorCompositionListener)
-
-NS_IMPL_RELEASE(nsTextEditorCompositionListener)
+NS_IMPL_ISUPPORTS2(nsTextEditorCompositionListener, nsIDOMEventListener, nsIDOMCompositionListener)
 
 nsresult
 nsTextEditorCompositionListener::HandleEvent(nsIDOMEvent* aEvent)
@@ -1086,9 +972,7 @@ NS_NewEditorFocusListener(nsIDOMEventListener ** aInstancePtrResult,
  * nsTextEditorFocusListener implementation
  */
 
-NS_IMPL_ADDREF(nsTextEditorFocusListener)
-
-NS_IMPL_RELEASE(nsTextEditorFocusListener)
+NS_IMPL_ISUPPORTS2(nsTextEditorFocusListener, nsIDOMEventListener, nsIDOMFocusListener)
 
 
 nsTextEditorFocusListener::nsTextEditorFocusListener() 
@@ -1097,33 +981,6 @@ nsTextEditorFocusListener::nsTextEditorFocusListener()
 
 nsTextEditorFocusListener::~nsTextEditorFocusListener() 
 {
-}
-
-nsresult
-nsTextEditorFocusListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMEventListenerIID)) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMFocusListenerIID)) {
-    *aInstancePtr = (void*)(nsIDOMFocusListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
 }
 
 nsresult

@@ -116,9 +116,7 @@ nsTextEditRules::~nsTextEditRules()
  *  XPCOM Cruft
  ********************************************************/
 
-NS_IMPL_ADDREF(nsTextEditRules)
-NS_IMPL_RELEASE(nsTextEditRules)
-NS_IMPL_QUERY_INTERFACE1(nsTextEditRules, nsIEditRules)
+NS_IMPL_ISUPPORTS1(nsTextEditRules, nsIEditRules)
 
 
 /********************************************************

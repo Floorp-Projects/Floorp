@@ -72,13 +72,7 @@ class nsHTMLEditUtils;
 // ==================================================================
 // DocumentResizeEventListener
 // ==================================================================
-NS_IMPL_ADDREF(DocumentResizeEventListener)
-NS_IMPL_RELEASE(DocumentResizeEventListener)
-
-NS_INTERFACE_MAP_BEGIN(DocumentResizeEventListener)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(DocumentResizeEventListener, nsIDOMEventListener)
 
 DocumentResizeEventListener::DocumentResizeEventListener(nsIHTMLEditor * aEditor) :
  mEditor(aEditor)
@@ -100,13 +94,7 @@ DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 // ResizerSelectionListener
 // ==================================================================
 
-NS_IMPL_ADDREF(ResizerSelectionListener)
-NS_IMPL_RELEASE(ResizerSelectionListener)
-
-NS_INTERFACE_MAP_BEGIN(ResizerSelectionListener)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(ResizerSelectionListener, nsISelectionListener)
 
 ResizerSelectionListener::ResizerSelectionListener(nsIHTMLEditor * aEditor) :
  mEditor(aEditor)
@@ -135,9 +123,7 @@ ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection 
 // ResizerMouseMotionListener
 // ==================================================================
 
-NS_IMPL_ADDREF(ResizerMouseMotionListener)
-
-NS_IMPL_RELEASE(ResizerMouseMotionListener)
+NS_IMPL_ISUPPORTS2(ResizerMouseMotionListener, nsIDOMEventListener, nsIDOMMouseMotionListener)
 
 ResizerMouseMotionListener::ResizerMouseMotionListener(nsIHTMLEditor * aEditor):
  mEditor(aEditor)
@@ -182,12 +168,6 @@ ResizerMouseMotionListener::DragMove(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
 }
-
-NS_INTERFACE_MAP_BEGIN(ResizerMouseMotionListener)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
-NS_INTERFACE_MAP_END
 
 // ==================================================================
 // nsHTMLEditor
