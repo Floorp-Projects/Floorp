@@ -78,9 +78,7 @@ NS_IMETHODIMP nsIOService::GetURLSpecFromFile(nsIFile* aFile, char * *aURL)
          // Escape the path with the directory mask
          rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
          if (NS_SUCCEEDED(rv)) {
-
-             // colons (originally slashes) need encoding
-             escPath.ReplaceSubstring(":", "%2F");
+         
              escPath.Insert("file:///", 0);
  
              PRBool dir;
