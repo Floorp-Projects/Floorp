@@ -233,7 +233,7 @@ nsIWidget * nsShellInstance::CreateApplicationWindow(const nsRect &aRect,
   mApplicationWindow->Create((nsIWidget*)NULL, 
                   aRect, 
                   aHandleEventFunction, 
-                  nsnull, nsnull, (nsWidgetInitData *) GetNativeInstance());
+                  nsnull, nsnull, nsnull, (nsWidgetInitData *) GetNativeInstance());
 
   return (mApplicationWindow);
 }
