@@ -32,6 +32,7 @@ GRE_MODULE	= 1
 SDK_XPIDLSRCS   = \
               nsIPrefService.idl \
               nsIPrefBranch.idl \
+              nsIPrefBranch2.idl \
               nsIPrefLocalizedString.idl \
               $(NULL)
 

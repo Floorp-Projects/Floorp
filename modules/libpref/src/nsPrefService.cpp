@@ -113,6 +113,7 @@ NS_INTERFACE_MAP_BEGIN(nsPrefService)
     NS_INTERFACE_MAP_ENTRY(nsIPrefService)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
     NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
+    NS_INTERFACE_MAP_ENTRY(nsIPrefBranch2)
     NS_INTERFACE_MAP_ENTRY(nsIPrefBranchInternal)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -128,7 +129,7 @@ nsresult nsPrefService::Init()
   if (!rootBranch)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mRootBranch = (nsIPrefBranchInternal *)rootBranch;
+  mRootBranch = (nsIPrefBranch2 *)rootBranch;
   
   nsXPIDLCString lockFileName;
   nsresult rv;

@@ -22,6 +22,7 @@
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
  * Brian Nesse <bnesse@netscape.com>
+ * Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -60,7 +61,7 @@ class nsPrefBranch : public nsIPrefBranchInternal,
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFBRANCH
-  NS_DECL_NSIPREFBRANCHINTERNAL
+  NS_DECL_NSIPREFBRANCH2
   NS_DECL_NSISECURITYPREF
   NS_DECL_NSIOBSERVER
 

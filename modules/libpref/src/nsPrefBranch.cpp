@@ -112,6 +112,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsPrefBranch)
 NS_INTERFACE_MAP_BEGIN(nsPrefBranch)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefBranch)
   NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
+  NS_INTERFACE_MAP_ENTRY(nsIPrefBranch2)
   NS_INTERFACE_MAP_ENTRY(nsIPrefBranchInternal)
   NS_INTERFACE_MAP_ENTRY(nsISecurityPref)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
@@ -602,7 +603,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
 
 
 /*
- *  nsIPrefBranchInternal methods
+ *  nsIPrefBranch2 methods
  */
 
 NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak)
@@ -734,7 +735,7 @@ PR_STATIC_CALLBACK(nsresult) NotifyObserver(const char *newpref, void *data)
     observer = do_QueryReferent(weakRef);
     if (!observer) {
       // this weak referenced observer went away, remove them from the list
-      nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(pData->pBranch);
+      nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(pData->pBranch);
       if (pbi) {
         observer = NS_STATIC_CAST(nsIObserver *, pData->pObserver);
         pbi->RemoveObserver(newpref, observer);
