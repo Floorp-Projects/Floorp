@@ -170,21 +170,25 @@ my $i = 0;
 foreach (@sortedcount)
 {
   my $id = $_;
-  SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, groupset, bug_status" .
+  SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, groupset, bug_status, resolution" .
                  " FROM bugs WHERE bug_id = $id");
-  my ($component, $severity, $op_sys, $milestone, $summary, $groupset, $bug_status) = FetchSQLData();
+  my ($component, $severity, $op_sys, $milestone, $summary, $groupset, $bug_status, $resolution) = FetchSQLData();.
         next unless $groupset == 0;
         $summary = html_quote($summary);
 
-  unless ( ($bug_status eq "VERIFIED") | ($bug_status eq "CLOSED") ) {
+  # Show all bugs except those CLOSED _OR_ VERIFIED but not INVALID or WONTFIX.
+  # We want to see VERIFIED INVALID and WONTFIX because common "bugs" which aren't
+  # bugs end up in this state.
+  unless ( ($bug_status eq "CLOSED") || ( ($bug_status eq "VERIFIED") &&
+          ! ( ($resolution eq "INVALID") || ($resolution eq "WONTFIX") ) ) ) {
     print "<tr>";
     print '<td><center>';
-    if  ( ($bug_status eq "RESOLVED") ) {
+    if  ( ($bug_status eq "RESOLVED") || ($bug_status eq "VERIFIED") ) {
       print "<strike>";
     }
     print "<A HREF=\"show_bug.cgi?id=" . $id . "\">";
     print $id . "</A>";
-    if  ( ($bug_status eq "RESOLVED") ) {
+    if  ( ($bug_status eq "RESOLVED") || ($bug_status eq "VERIFIED") ) {
       print "</strike>";
     }
     print "</center></td>";
