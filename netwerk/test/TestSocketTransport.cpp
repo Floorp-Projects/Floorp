@@ -38,6 +38,13 @@
 
 #include "nsCRT.h"
 
+#if defined(XP_MAC)
+#include "macstdlibextras.h"
+  // Set up the toolbox and (if DEBUG) the console.  Do this in a static initializer,
+  // to make it as unlikely as possible that somebody calls printf() before we get initialized.
+static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); InitializeSIOUX(true); } } gInitializer;
+#endif // XP_MAC
+
 // forward declarations...
 class TestConnection;
 
@@ -55,8 +62,12 @@ static nsIThread*      gThreads[NUM_TEST_THREADS];
 //static nsITimer*       gPeriodicTimer;
 
 
-void Pump_PLEvents(void)
+void Pump_PLEvents(nsIEventQueueService * eventQService);
+void Pump_PLEvents(nsIEventQueueService * eventQService)
 {
+	nsIEventQueue* eventQ = nsnull;
+  eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+
   while ( gKeepRunning ) {
 #ifdef WIN32
     MSG msg;
@@ -68,14 +79,10 @@ void Pump_PLEvents(void)
       gKeepRunning = FALSE;
     }
 #else
-#ifdef XP_MAC
-    /* Mac stuff is missing here! */
-#else
     nsresult rv;  
     PLEvent *gEvent;
-    rv = gEventQ->GetEvent(&gEvent);
-    rv = gEventQ->HandleEvent(gEvent);
-#endif /* XP_UNIX */
+    rv = eventQ->GetEvent(&gEvent);
+    rv = eventQ->HandleEvent(gEvent);
 #endif /* !WIN32 */
   }
 
@@ -214,6 +221,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
     rv = sts->CreateTransport(aHostName, aPort, &mTransport);
   }
 
+
   if (NS_SUCCEEDED(rv)) {
     if (mIsAsync) {
       // Create a stream for the data being written to the server...
@@ -302,7 +310,7 @@ TestConnection::Run(void)
       } else {
         rv = WriteBuffer();
       }
-      Pump_PLEvents();    
+      Pump_PLEvents(eventQService);    
     }
     else {
       while (NS_SUCCEEDED(rv)) {
@@ -484,6 +492,7 @@ void TimerCallback(nsITimer* aTimer, void* aClosure)
 
 #endif /* USE_TIMERS */
 
+nsresult NS_AutoregisterComponents();
 nsresult NS_AutoregisterComponents()
 {
   nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
@@ -509,6 +518,7 @@ main(int argc, char* argv[])
   char* hostName = nsnull;
   int i;
 
+
   for (i=1; i<argc; i++) {
     // Turn on synchronous mode...
     if (PL_strcasecmp(argv[i], "-sync") == 0) {
@@ -522,7 +532,13 @@ main(int argc, char* argv[])
     hostName = "chainsaw";
   }
   printf("Using %s as echo server...\n", hostName);
-   
+
+#ifdef XP_MAC
+	(void) PR_PutEnv("NSPR_LOG_MODULES=nsSocketTransport:5");
+	(void) PR_PutEnv("NSPR_LOG_FILE=nspr.log");
+	PR_Init_Log();
+#endif
+
   // -----
   //
   // Initialize XPCom...
@@ -539,8 +555,6 @@ main(int argc, char* argv[])
   rv = eventQService->CreateThreadEventQueue();
   if (NS_FAILED(rv)) return rv;
 
-  eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
-
   //
   // Create the connections and threads...
   //
@@ -548,6 +562,7 @@ main(int argc, char* argv[])
     gConnections[i] = new TestConnection(hostName, 7, bIsAsync);
     rv = NS_NewThread(&gThreads[i], gConnections[i]);
   }
+
 
 #if defined(USE_TIMERS)
   //
@@ -560,11 +575,12 @@ main(int argc, char* argv[])
   
 
   // Enter the message pump to allow the URL load to proceed.
-  Pump_PLEvents();
+  Pump_PLEvents(eventQService);
 
   PRTime endTime;
   endTime = PR_Now();
-  printf("Elapsed time: %ld\n", (PRInt32)(endTime/1000UL-gElapsedTime/1000UL));
+
+//  printf("Elapsed time: %ld\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL));
 
   NS_RELEASE(eventQService);
 
