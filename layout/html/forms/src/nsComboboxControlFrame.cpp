@@ -159,6 +159,10 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void *)(nsIStatefulFrame*)this;
     NS_ADDREF_THIS();
     return NS_OK;
+  } else if (aIID.Equals(nsCOMTypeInfo<nsIRollupListener>::GetIID())) {
+    *aInstancePtr = (void*)(nsIRollupListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
   }
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
@@ -356,6 +360,21 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 void 
 nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
 {
+  nsIWidget * widget = nsnull;
+
+  // Get parent view
+  nsIFrame * listFrame;
+  if (NS_OK == mListControlFrame->QueryInterface(kIFrameIID, (void **)&listFrame)) {
+    nsIView * view = nsnull;
+    listFrame->GetView(&view);
+    NS_ASSERTION(view != nsnull, "nsComboboxControlFrame view is null");
+    view->GetWidget(widget);
+    if (nsnull != widget) {
+      widget->CaptureRollupEvents((nsIRollupListener *)this, !mDroppedDown);
+      NS_RELEASE(widget);
+    }
+  }
+
   if (PR_TRUE == aShowList) {
     ShowPopup(PR_TRUE);
     mDroppedDown = PR_TRUE;
@@ -954,11 +973,9 @@ nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
 NS_IMETHODIMP 
 nsComboboxControlFrame::ToggleList(nsIPresContext* aPresContext)
 {
-  if (PR_TRUE == mDroppedDown) {
-    ShowList(aPresContext, PR_FALSE);
-  } else {
-    ShowList(aPresContext, PR_TRUE);
-  }
+
+  ShowList(aPresContext, (PR_FALSE == mDroppedDown));
+
   return NS_OK;
 }
 
@@ -1390,6 +1407,26 @@ nsComboboxControlFrame::Blur(nsIDOMEvent* aEvent)
     printf("Button\n");
   }
 #endif
+  return NS_OK;
+}
+
+/*nsresult
+nsComboboxControlFrame::HandleEvent(nsIDOMEvent* aEvent)        
+{ 
+  ToggleList(mPresContext);  
+  return NS_OK; 
+}*/
+
+//----------------------------------------------------------------------
+  //nsIRollupListener
+//----------------------------------------------------------------------
+NS_IMETHODIMP 
+nsComboboxControlFrame::Rollup()
+{
+  if (mDroppedDown) {
+    ShowDropDown(PR_FALSE);
+    mListControlFrame->CaptureMouseEvents(PR_FALSE);
+  }
   return NS_OK;
 }
 
