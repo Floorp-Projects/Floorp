@@ -665,6 +665,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.SetColor(color->mBackgroundColor);
     aRenderingContext.FillRect(mRect);
   }
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsHTMLFrameInnerFrame", &aRenderingContext);
   return NS_OK;
 }
 

@@ -1345,6 +1345,7 @@ nsObjectFrame::Paint(nsIPresContext* aPresContext,
         }
     }
 #endif /* !XP_MAC */
+    DO_GLOBAL_REFLOW_COUNT_DSP("nsObjectFrame", &aRenderingContext);
     return NS_OK;
 }
 

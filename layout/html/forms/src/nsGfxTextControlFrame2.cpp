@@ -2026,7 +2026,9 @@ nsGfxTextControlFrame2::Paint(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  return nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  nsresult rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsGfxTextControlFrame2", &aRenderingContext);
+  return rv;
 }
 
 

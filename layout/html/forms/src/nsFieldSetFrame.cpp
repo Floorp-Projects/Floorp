@@ -252,6 +252,7 @@ nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 #endif
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsFieldSetFrame", &aRenderingContext);
   return NS_OK;
 }
 

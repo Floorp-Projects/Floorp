@@ -1505,4 +1505,13 @@ nsPresContext::CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFram
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPresContext::PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIFrame * aFrame, PRUint32 aColor)
+{
+  if (mShell) {
+    mShell->PaintCount(aName, aRenderingContext, this, aFrame, aColor);
+  }
+  return NS_OK;
+}
 #endif

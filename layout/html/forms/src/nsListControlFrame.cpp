@@ -335,6 +335,7 @@ nsListControlFrame::Paint(nsIPresContext* aPresContext,
     return nsScrollFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   }
 
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame", &aRenderingContext);
   return NS_OK;
 
 }

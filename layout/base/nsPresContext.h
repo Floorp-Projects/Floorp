@@ -67,6 +67,10 @@ class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
 
+#ifdef MOZ_REFLOW_PERF
+class nsIRenderingContext;
+#endif
+
 #define NS_IPRESCONTEXT_IID   \
 { 0x0a5d12e0, 0x944e, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
@@ -474,6 +478,7 @@ public:
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;
+  NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRendingContext, nsIFrame * aFrame, PRUint32 aColor) = 0;
 #endif
 };
 
@@ -495,10 +500,25 @@ extern NS_LAYOUT nsresult
 
 
 #ifdef MOZ_REFLOW_PERF
+
 #define DO_GLOBAL_REFLOW_COUNT(_name, _type) \
   aPresContext->CountReflows((_name), (_type), (nsIFrame*)this); 
 #else
 #define DO_GLOBAL_REFLOW_COUNT(_name, _type)
 #endif // MOZ_REFLOW_PERF
+
+#if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
+#define DO_GLOBAL_REFLOW_COUNT_DSP(_name, _rend) \
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) { \
+    aPresContext->PaintCount((_name), (_rend), (nsIFrame*)this, 0); \
+  }
+#define DO_GLOBAL_REFLOW_COUNT_DSP_J(_name, _rend, _just) \
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) { \
+    aPresContext->PaintCount((_name), (_rend), (nsIFrame*)this, (_just)); \
+  }
+#else
+#define DO_GLOBAL_REFLOW_COUNT_DSP(_name, _rend)
+#define DO_GLOBAL_REFLOW_COUNT_DSP_J(_name, _rend, _just)
+#endif // MOZ_REFLOW_PERF_DSP
 
 #endif /* nsIPresContext_h___ */
