@@ -3742,7 +3742,10 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   nsCOMPtr<nsIDOMElement>newElement;
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  res = doc->CreateElement(realTagName, getter_AddRefs(newElement));
+  nsString qualifiedTag;
+  qualifiedTag.AssignWithConversion("html:");
+  qualifiedTag+=realTagName;
+  res = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/TR/REC-html40"), qualifiedTag, getter_AddRefs(newElement));
   if (NS_FAILED(res) || !newElement)
     return NS_ERROR_FAILURE;
 
@@ -5118,63 +5121,74 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
   }
   else
   {
-    nsCOMPtr<nsIDOMRange> range;
-    nsresult res = nsComponentManager::CreateInstance(kCRangeCID,
-                               nsnull,
-                               NS_GET_IID(nsIDOMRange),
-                               getter_AddRefs(range));
-    NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
     nsCOMPtr<nsIDOMSelection> selection;
-    res = nsComponentManager::CreateInstance(kCDOMSelectionCID,
-                               nsnull,
-                               NS_GET_IID(nsIDOMSelection),
-                               getter_AddRefs(selection));
-    if (selection)
+
+    // Set the selection, if appropriate:
+    if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
     {
-//get the independent selection interface
-      nsCOMPtr<nsIIndependentSelection> indSel = do_QueryInterface(selection);
-      if (indSel)
+      rv = GetSelection(getter_AddRefs(selection));
+      if (NS_FAILED(rv))
+        return rv;
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMRange> range;
+      rv = nsComponentManager::CreateInstance(kCRangeCID,
+                                 nsnull,
+                                 NS_GET_IID(nsIDOMRange),
+                                 getter_AddRefs(range));
+      if (!range)
+        return NS_ERROR_FAILURE;
+      rv = nsComponentManager::CreateInstance(kCDOMSelectionCID,
+                                 nsnull,
+                                 NS_GET_IID(nsIDOMSelection),
+                                 getter_AddRefs(selection));
+      if (selection)
       {
-        nsCOMPtr<nsIPresShell> presShell;
-        if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
-          indSel->SetPresShell(presShell);
-      }
-      nsCOMPtr<nsIDOMElement> rootElement;
-      GetRootElement(getter_AddRefs(rootElement));
-      NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
-      nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
-      if (content)
-      {
-        range->SetStart(rootElement,0);
-        PRInt32 children;
-        if (NS_SUCCEEDED(content->ChildCount(children)))
+  //get the independent selection interface
+        nsCOMPtr<nsIIndependentSelection> indSel = do_QueryInterface(selection);
+        if (indSel)
         {
-          range->SetEnd(rootElement,children);
+          nsCOMPtr<nsIPresShell> presShell;
+          if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
+            indSel->SetPresShell(presShell);
         }
-        if (NS_SUCCEEDED(selection->AddRange(range)))
+        nsCOMPtr<nsIDOMElement> rootElement;
+        GetRootElement(getter_AddRefs(rootElement));
+        NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
+        nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
+        if (content)
         {
-          // Set the wrap column.  If our wrap column is 0,
-          // i.e. wrap to body width, then don't set it, let the
-          // document encoder use its own default.
-          PRInt32 wrapColumn;
-          PRUint32 wc =0;
-          if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
+          range->SetStart(rootElement,0);
+          PRInt32 children;
+          if (NS_SUCCEEDED(content->ChildCount(children)))
           {
-            if (wrapColumn != 0)
-            {
-              if (wrapColumn < 0)
-                wc = 0;
-              else
-                wc = (PRUint32)wrapColumn;
-            }
+            range->SetEnd(rootElement,children);
           }
-#ifdef DEBUG_mjudge
-          printf("Editor: getting output with wrapcol = %d (GetBodyWrapWidth returned %d\n", wc, wrapColumn);
-#endif
-          return selection->ToString(aFormatType, aFlags, wc, aOutputString);
+          if (NS_FAILED(selection->AddRange(range)))
+            return NS_ERROR_FAILURE;
         }
       }
     }
+    // Set the wrap column.  If our wrap column is 0,
+    // i.e. wrap to body width, then don't set it, let the
+    // document encoder use its own default.
+    PRInt32 wrapColumn;
+    PRUint32 wc =0;
+    if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
+    {
+      if (wrapColumn != 0)
+      {
+        if (wrapColumn < 0)
+          wc = 0;
+        else
+          wc = (PRUint32)wrapColumn;
+      }
+    }
+#ifdef DEBUG_mjudge
+    printf("Editor: getting output with wrapcol = %d (GetBodyWrapWidth returned %d\n", wc, wrapColumn);
+#endif
+    return selection->ToString(aFormatType, aFlags, wc, aOutputString);
   }
 
 #if 0
