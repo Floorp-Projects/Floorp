@@ -231,9 +231,8 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   stringOut.SetString(asctime(tmTime));	// set the default string, in case for API/conversion errors
   
   // convert struct tm to input format of mac toolbox call
-  NS_ASSERTION(tmTime->tm_year >= 0, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_mon >= 0, "tm is not set correctly");
-  NS_ASSERTION(tmTime->tm_mday >= 0, "tm is not set correctly");
+  NS_ASSERTION(tmTime->tm_mday >= 1, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_hour >= 0, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_min >= 0, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_sec >= 0, "tm is not set correctly");
@@ -262,20 +261,17 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
     res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-    aLocale.SetString(aLocaleUnichar);
-    
-    //TODO: Get a charset name from a script code.
-    nsIMacLocale* macLocale;
-    short langcode;
-    res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-    res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode);
-    macLocale->Release();
+    if (NS_SUCCEEDED(res)) {
+      aLocale.SetString(aLocaleUnichar);
+      //TODO: Get a charset name from a script code.
+      nsIMacLocale* macLocale;
+      short langcode;
+      res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
+      if (NS_SUCCEEDED(res)) {
+        res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode);
+        macLocale->Release();
+      }
+    }    
   }
 
   Handle itl1Handle = (Handle) GetItl1Resource(scriptcode);
