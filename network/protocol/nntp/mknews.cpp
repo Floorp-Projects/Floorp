@@ -59,6 +59,14 @@
 #include "prefapi.h"	
 #include "xplocale.h"
 
+#ifdef XPCOM_XOVER
+#include "nsIMsgXOVERParser.h"
+#endif
+
+#ifdef XPCOM_NEWSPARSE
+#include "nsIMsgNewsArticleList.h"
+#endif
+
 /*#define CACHE_NEWSGRP_PASSWORD*/
 
 /* for XP_GetString() */
@@ -436,8 +444,17 @@ typedef struct _NewsConData {
                                      */
 
     /* random pointer for libmsg state */
+#ifdef XPCOM_XOVER
+    nsINetXOVERParser *xover_parser;
+#else
     void *xover_parse_state;
+#endif
+
+#ifdef XPCOM_NEWSPARSE
+    nsINetNewsArticleList *article_list;
+#else
 	void *newsgroup_parse_state;
+#endif
 
 	TCP_ConData * tcp_con_data;
 
@@ -2040,7 +2057,11 @@ net_news_password_response(ActiveEntry * ce)
 			cd->next_state = SEND_FIRST_NNTP_COMMAND;
 
 		net_news_last_username_probably_valid = TRUE;
+#ifdef XPCOM_XOVER
+        nsresult = cd->xover_parser->Reset();
+#else
 		MSG_ResetXOVER( ce->URL_s->msg_pane, &cd->xover_parse_state );
+#endif
         return(0);
 	  }
 	else
@@ -2359,9 +2380,17 @@ net_figure_next_chunk(ActiveEntry *ce)
 	if (!host_and_port) return MK_OUT_OF_MEMORY;
 
 	if (cd->first_art > 0) {
+#ifdef XPCOM_NEWSPARSE
+      /* XXX - parse state stored in MSG_Pane cd->pane */
+      nsresult = cd->article_list->AddToKnownArticles(cd->host,
+                                                      cd->group_name,
+                                                      cd->first_art,
+                                                      cd->last_art);
+#else
 	  ce->status = MSG_AddToKnownArticles(cd->pane, cd->host,
 										 cd->group_name,
 										 cd->first_art, cd->last_art);
+#endif
 	  if (ce->status < 0) {
 		FREEIF (host_and_port);
 		return ce->status;
@@ -2377,6 +2406,17 @@ net_figure_next_chunk(ActiveEntry *ce)
 	}
 
 
+#ifdef XPCOM_NEWSPARSE
+    /* XXX - parse state stored in MSG_Pane cd->pane */
+    nsresult =
+      cd->xover_parser->GetRangeOfArtsToDownload(cd->host,
+                                                 cd->group_name,
+                                                 cd->first_possible_art,
+                                                 cd->last_possible_art,
+                                                 cd->num_wanted - cd->num_loaded,
+                                                 &(cd->first_art),
+                                                 &(cd->last_art));
+#else
 	ce->status = MSG_GetRangeOfArtsToDownload(cd->pane,
 											 &cd->xover_parse_state,
 											 cd->host,
@@ -2386,7 +2426,7 @@ net_figure_next_chunk(ActiveEntry *ce)
 											 cd->num_wanted - cd->num_loaded,
 											 &(cd->first_art),
 											 &(cd->last_art));
-
+#endif
 	if (ce->status < 0) {
 	  FREEIF (host_and_port);
 	  return ce->status;
@@ -2404,11 +2444,19 @@ net_figure_next_chunk(ActiveEntry *ce)
     NNTP_LOG_NOTE(("    Chunk will be (%ld-%ld)", cd->first_art, cd->last_art));
 
 	cd->article_num = cd->first_art;
+#ifdef XPCOM_XOVER
+    nsresult= NS_NewMsgXOVERParser(&cd->xover_parser,
+                                   cd->host, cd->group_name,
+                                   cd->first_art, cd->last_art,
+                                   cd->first_possible_art,
+                                   cd->last_possible_art);
+#else    
 	ce->status = MSG_InitXOVER (cd->pane,
 							   cd->host, cd->group_name,
 							   cd->first_art, cd->last_art,
 							   cd->first_possible_art, cd->last_possible_art,
 							   &cd->xover_parse_state);
+#endif
 	FREEIF (host_and_port);
 
 	if (ce->status < 0) {
@@ -2543,7 +2591,11 @@ net_read_xover (ActiveEntry *ce)
 						 ce->URL_s->content_length);
 	  }
 
+#ifdef XPCOM_XOVER
+    nsresult = cd->xover_parser->Process(line);
+#else
 	ce->status = MSG_ProcessXOVER (cd->pane, line, &cd->xover_parse_state);
+#endif
 
 	cd->num_loaded++;
 
@@ -2559,9 +2611,14 @@ net_process_xover (ActiveEntry *ce)
     NewsConData * cd = (NewsConData *)ce->con_data;
 
 
+#ifdef XPCOM_XOVER
+    /* xover_parse_state stored in MSG_Pane cd->pane */
+      nsresult = cd->xover_parser->Finish(0);
+#else
 	/*	if (cd->xover_parse_state) { ### dmb - we need a different check */
 	  ce->status = MSG_FinishXOVER (cd->pane, &cd->xover_parse_state, 0);
 	  PR_ASSERT (!cd->xover_parse_state);
+#endif
 	  if (ce->status < 0) return ce->status;
 
 	cd->next_state = NEWS_DONE;
@@ -2709,8 +2766,13 @@ net_read_news_group_response (ActiveEntry *ce)
 		*cd->message_id = '\0';
 
 	  /* Give the message number to the header parser. */
+#if XPCOM_XOVER
+      nsresult = cd->xover_parser->ProcessNonXOVER(cd->response_txt);
+      return nsresult; /* XXX need to find out how that works */
+#else
 	  return MSG_ProcessNonXOVER (cd->pane, cd->response_txt,
 								  &cd->xover_parse_state);
+#endif
 	}
   else
 	{
@@ -2765,7 +2827,12 @@ net_read_news_group_body (ActiveEntry *ce)
 	/* The NNTP server quotes all lines beginning with "." by doubling it. */
 	line++;
 
+#ifdef XPCOM_XOVER
+  nsresult = cd->xover_parser->ProcessNonXOVER(line);
+  return nsresult; /* XXX - must find out how this works */
+#else
   return MSG_ProcessNonXOVER (cd->pane, line, &cd->xover_parse_state);
+#endif
 }
 
 
@@ -3553,8 +3620,13 @@ static int net_list_group(ActiveEntry *ce)
 			OUTPUT_BUFFER_SIZE, 
 			"listgroup %.512s" CRLF, 
 			cd->group_name);
+#ifdef XPCOM_NEWSPARSE
+    nsresult = NS_NewMsgNewsArticleList(&cd->article_list,
+                                        cd->host, cd->group_name);
+#else
 	MSG_InitAddArticleKeyToGroup(cd->pane, cd->host, cd->group_name,
 							   &cd->newsgroup_parse_state);
+#endif
     ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
@@ -3598,7 +3670,11 @@ static int net_list_group_response(ActiveEntry *ce)
 		{
 			long found_id = MSG_MESSAGEKEYNONE;
 			sscanf(line, "%ld", &found_id);
+#ifdef XPCOM_NEWSPARSE
+            nsresult = cd->article_list->AddArticleKey(found_id);
+#else
 			MSG_AddArticleKeyToGroup(cd->newsgroup_parse_state, (int32) found_id);
+#endif
 		}
 		else
 		{
@@ -5151,20 +5227,35 @@ net_ProcessNews (ActiveEntry *ce)
 					   data, there was an error or we were interrupted or
 					   something.  So, tell libmsg there was an abnormal
 					   exit so that it can free its data. */
+#ifdef XPCOM_XOVER
+              if (cd->xover_parse != NULL)
+#else
 				if (cd->xover_parse_state != NULL)
+#endif
 				{
 					int status;
 /*					PR_ASSERT (ce->status < 0);*/
+#ifdef XPCOM_XOVER
+                    /* XXX - how/when to Release() this? */
+                    nsresult = cd->xover_parser->Finish(ce->status);
+#else
 					status = MSG_FinishXOVER (cd->pane,
 											  &cd->xover_parse_state,
 											  ce->status);
 					PR_ASSERT (!cd->xover_parse_state);
+#endif
 					if (ce->status >= 0 && status < 0)
 					  ce->status = status;
 				}
 				else
 				{
+#ifdef XPCOM_NEWSPARSE
+                  /* XXX - state is stored in the MSG_Pane cd->pane */
+                  /* XXX - how/when to Release() this? */
+                  nsresult = cd->article_list->ClearState();
+#else
 					MSG_ClearListNewsgroupState(cd->pane, cd->host, cd->group_name, ce->status);
+#endif
 				}
 
 				if (cd->control_con)
