@@ -28,7 +28,7 @@ time of the web updates.  Also the OS process scheduler could do a
 better job of scheduling if there were two different processes one
 which was IO bound and one which was CPU bound.  
 
-It would be really nice if could mail tinderbox the updates which
+It would be really nice if CVS could mail tinderbox the updates which
 apply to the branches of interest, then tinderbox would not have to
 pool and it would get the branch information which it needs.
 

@@ -90,8 +90,9 @@ ability to test each module in isolation and to quickly port modules
 to new architectures.
 
 The source code should be able to run using the standard Perl
-libraries, as it can be difficult for some users to add libraries onto
-production machines.
+libraries, as it can be difficult for some users to add libraries
+which are not included in the perl distribution onto production
+machines.
 
 Put CVS keywords into all the source files so that when the software
 is deployed, there is no doubt what version was checked out and where
