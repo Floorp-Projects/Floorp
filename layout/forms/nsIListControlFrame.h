@@ -29,7 +29,7 @@ class nsFormFrame;
 class nsIPresContext;
 class nsString;
 class nsIContent;
-
+class nsIPresState;
 
 // IID for the nsIListControlFrame class
 #define NS_ILISTCONTROLFRAME_IID    \
@@ -99,6 +99,11 @@ public:
    *
    */
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent) = 0;
+
+  /**
+   *
+   */
+  NS_IMETHOD SetPresState(nsIPresState * aState) = 0;
 
 };
 
