@@ -254,3 +254,4 @@
 
 <!ENTITY findOnSearchBarCmd.label       "Find in this Page">
 <!ENTITY currentDownloads.label          "Current Downloads">
+<!ENTITY openDownloadsSidebar.commandkey "E">
