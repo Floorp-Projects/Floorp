@@ -23,6 +23,8 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
+ * Contributor(s): 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -37,38 +39,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
-#include "nsAppRootAccessible.h"
+#include <atk/atk.h>
+#include "nsMaiInterface.h"
+#include "nsAccessibleWrap.h"
 
-nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
-                                           nsIWeakReference* aShell):
-    nsRootAccessible(aDOMNode, aShell)
+MaiInterface::MaiInterface(nsAccessibleWrap *aAccWrap)
 {
-    MAI_LOG_DEBUG(("New Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->AddRootAccessible(this);
 }
 
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
+MaiInterface::~MaiInterface()
 {
-    MAI_LOG_DEBUG(("Delete Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->RemoveRootAccessible(this);
 }
 
-NS_IMETHODIMP nsRootAccessibleWrap::GetAccParent(nsIAccessible **  aAccParent)
+GType
+MaiInterface::GetAtkType()
 {
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    nsresult rv = NS_OK;
-    if (root) {
-        NS_IF_ADDREF(*aAccParent = root);
+    MaiInterfaceType type = GetType();
+    GType atkType;
+    switch (type) {
+    case MAI_INTERFACE_COMPONENT:
+        atkType = ATK_TYPE_COMPONENT;
+        break;
+    case MAI_INTERFACE_ACTION:
+        atkType = ATK_TYPE_ACTION;
+        break;
+    case MAI_INTERFACE_VALUE:
+        atkType = ATK_TYPE_VALUE;
+        break;
+    case MAI_INTERFACE_EDITABLE_TEXT:
+        atkType = ATK_TYPE_EDITABLE_TEXT;
+        break;
+    case MAI_INTERFACE_HYPERLINK:
+        atkType = ATK_TYPE_HYPERLINK;
+        break;
+    case MAI_INTERFACE_HYPERTEXT:
+        atkType = ATK_TYPE_HYPERTEXT;
+        break;
+    case MAI_INTERFACE_SELECTION:
+        atkType = ATK_TYPE_SELECTION;
+        break;
+    case MAI_INTERFACE_TABLE:
+        atkType = ATK_TYPE_TABLE;
+        break;
+    case MAI_INTERFACE_TEXT:
+        atkType = ATK_TYPE_TEXT;
+        break;
+    default:
+        atkType = G_TYPE_INVALID;
     }
-    else {
-        *aAccParent = nsnull;
-        rv = NS_ERROR_FAILURE;
-    }
-    return rv;
+    return atkType;
 }

@@ -23,6 +23,8 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
+ * Contributor(s): John Sun (john.sun@sun.com)
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -37,38 +39,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
-#include "nsAppRootAccessible.h"
+#ifndef __NS_MAI_H__
+#define __NS_MAI_H__
 
-nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
-                                           nsIWeakReference* aShell):
-    nsRootAccessible(aDOMNode, aShell)
-{
-    MAI_LOG_DEBUG(("New Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->AddRootAccessible(this);
-}
+#include <atk/atk.h>
+#include <glib.h>
+#include <glib-object.h>
 
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
-{
-    MAI_LOG_DEBUG(("Delete Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->RemoveRootAccessible(this);
-}
+#include "nsAccessibleWrap.h"
 
-NS_IMETHODIMP nsRootAccessibleWrap::GetAccParent(nsIAccessible **  aAccParent)
-{
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    nsresult rv = NS_OK;
-    if (root) {
-        NS_IF_ADDREF(*aAccParent = root);
-    }
-    else {
-        *aAccParent = nsnull;
-        rv = NS_ERROR_FAILURE;
-    }
-    return rv;
-}
+extern PRLogModuleInfo *gMaiLog;
+
+/*
+#ifdef MAI_LOGGING
+#define MAI_LOG(level, args) \
+PR_BEGIN_MACRO \
+    if (!gMaiLog) { \
+        gMaiLog = PR_NewLogModule("Mai"); \
+        PR_ASSERT(gMaiLog); \
+    } \
+    PR_LOG(gMaiLog, (level), args); \
+PR_END_MACRO
+#else
+#define MAI_LOG(level, args) 
+#endif
+
+#define MAI_LOG_DEBUG(args) MAI_LOG(PR_LOG_DEBUG, args)
+#define MAI_LOG_WARNING(args) MAI_LOG(PR_LOG_WARNING, args)
+#define MAI_LOG_ERROR(args) MAI_LOG(PR_LOG_ERROR, args)
+*/
+#define MAI_LOG_DEBUG(a)  printf a
+
+#define MAI_TYPE_ATK_OBJECT             (mai_atk_object_get_type ())
+#define MAI_ATK_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
+                                         MAI_TYPE_ATK_OBJECT, MaiAtkObject))
+#define MAI_ATK_OBJECT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), \
+                                         MAI_TYPE_ATK_OBJECT, \
+                                         MaiAtkObjectClass))
+#define MAI_IS_ATK_OBJECT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
+                                         MAI_TYPE_ATK_OBJECT))
+#define MAI_IS_ATK_OBJECT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), \
+                                         MAI_TYPE_ATK_OBJECT))
+#define MAI_ATK_OBJECT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), \
+                                         MAI_TYPE_ATK_OBJECT, \
+                                         MaiAtkObjectClass))
+GType mai_atk_object_get_type(void);
+nsresult CheckMaiAtkObject(AtkObject *aAtkObj);
+nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj);
+
+#endif /* __NS_MAI_H__ */

@@ -43,6 +43,7 @@
 #include "nsHTMLLinkAccessibleWrap.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
+#include "nsIServiceManager.h"
 
 /*
  * nsAccessibleHyperText supports both nsIAccessibleHyperText and nsIAccessibleText.
@@ -397,10 +398,29 @@ NS_IMETHODIMP nsAccessibleHyperText::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
         nsCOMPtr<nsIWeakReference> weakShell;
         nsAccessibilityService::GetShellFromNode(parentNode, getter_AddRefs(weakShell));
         NS_ENSURE_TRUE(weakShell, NS_ERROR_FAILURE);
-        *aLink = new nsHTMLLinkAccessibleWrap(parentNode, weakShell);
+
+        // Check to see if we already have it in the cache.
+        nsCOMPtr<nsIAccessibilityService>
+          accService(do_GetService("@mozilla.org/accessibilityService;1"));
+        NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIAccessible> cachedAcc;
+        nsresult rv = accService->GetCachedAccessible(parentNode, weakShell,
+                                             getter_AddRefs(cachedAcc));
+        NS_ENSURE_SUCCESS(rv, rv);
+        *aLink = nsnull;
+        if (cachedAcc) {
+          // Retrieved from cache
+          nsCOMPtr<nsIAccessibleHyperLink> cachedLink(do_QueryInterface(cachedAcc));
+          if (cachedLink)
+            *aLink = cachedLink;
+        }
+        if (!(*aLink)) {
+          *aLink = new nsHTMLLinkAccessibleWrap(parentNode, weakShell);
+          nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(*aLink));
+          accessNode->Init();
+        }
         NS_IF_ADDREF(*aLink);
-        nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(*aLink));
-        accessNode->Init();
         break;
       }
     }

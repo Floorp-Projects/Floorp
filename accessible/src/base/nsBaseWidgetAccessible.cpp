@@ -339,14 +339,18 @@ NS_IMETHODIMP nsLinkableAccessible::AccDoAction(PRUint8 index)
 NS_IMETHODIMP nsLinkableAccessible::GetAccKeyboardShortcut(nsAString& _retval)
 {
   if (IsALink()) {
+    nsresult rv;
     nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mLinkContent));
     if (linkNode && mDOMNode != linkNode) {
       nsCOMPtr<nsIAccessible> linkAccessible;
       nsCOMPtr<nsIAccessibilityService> accService = 
         do_GetService("@mozilla.org/accessibilityService;1");
-      accService->GetAccessibleInWeakShell(linkNode, mWeakShell,
-                                           getter_AddRefs(linkAccessible));
-      return linkAccessible->GetAccKeyboardShortcut(_retval);
+      rv = accService->GetAccessibleInWeakShell(linkNode, mWeakShell,
+                                                getter_AddRefs(linkAccessible));
+      if (NS_SUCCEEDED(rv) && linkAccessible)
+        return linkAccessible->GetAccKeyboardShortcut(_retval);
+      else
+        return rv;
     }
   }
   return nsAccessible::GetAccKeyboardShortcut(_retval);;
