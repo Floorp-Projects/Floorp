@@ -76,6 +76,7 @@ nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** i
 
 nsCollation::nsCollation()
 {
+  MOZ_COUNT_CTOR(nsCollation);
   nsresult res;
   mCaseConversion = do_GetService(NS_UNICHARUTIL_CONTRACTID, &res);
   NS_ASSERTION(NS_SUCCEEDED(res), "CreateInstance failed for kCaseConversionIID");
@@ -83,6 +84,7 @@ nsCollation::nsCollation()
 
 nsCollation::~nsCollation()
 {
+  MOZ_COUNT_DTOR(nsCollation);
 }
 
 nsresult nsCollation::CompareString(nsICollation *inst, const nsCollationStrength strength, 
