@@ -13415,39 +13415,22 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(nsPresContext* aPresContext,
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
-ProcessRestyle(nsISupports* aContent,
-               nsCSSFrameConstructor::RestyleData& aData,
-               void* aPresContext)
+CollectRestyles(nsISupports* aContent,
+                nsCSSFrameConstructor::RestyleData& aData,
+                void* aRestyleArrayPtr)
 {
-  nsPresContext* context = NS_STATIC_CAST(nsPresContext*, aPresContext);
-  nsIContent* content = NS_STATIC_CAST(nsIContent*, aContent);
+  nsCSSFrameConstructor::RestyleEnumerateData** restyleArrayPtr =
+    NS_STATIC_CAST(nsCSSFrameConstructor::RestyleEnumerateData**,
+                   aRestyleArrayPtr);
+  nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
+    *restyleArrayPtr;
+  currentRestyle->mContent = NS_STATIC_CAST(nsIContent*, aContent);
+  currentRestyle->mRestyleHint = aData.mRestyleHint;
+  currentRestyle->mChangeHint = aData.mChangeHint;
 
-  if (!content->GetDocument() ||
-      content->GetDocument() != context->GetDocument()) {
-    // Content node has been removed from our document; nothing else to do here
-    return PL_DHASH_NEXT;
-  }
-  
-  nsIPresShell* shell = context->PresShell();
+  // Increment to the next slot in the array
+  *restyleArrayPtr = currentRestyle + 1; 
 
-  nsIFrame* primaryFrame = nsnull;
-  shell->GetPrimaryFrameFor(content, &primaryFrame);
-  if (aData.mRestyleHint & eReStyle_Self) {
-    shell->FrameConstructor()->RestyleElement(context, content, primaryFrame,
-                                              aData.mChangeHint);
-  } else if (aData.mChangeHint &&
-             (primaryFrame ||
-              (aData.mChangeHint & nsChangeHint_ReconstructFrame))) {
-    // Don't need to recompute style; just apply the hint
-    nsStyleChangeList changeList;
-    changeList.AppendChange(primaryFrame, content, aData.mChangeHint);
-    shell->FrameConstructor()->ProcessRestyledFrames(changeList, context);
-  }
-
-  if (aData.mRestyleHint & eReStyle_LaterSiblings) {
-    shell->FrameConstructor()->RestyleLaterSiblings(context, content);
-  }
-  
   return PL_DHASH_NEXT;
 }
 
@@ -13458,8 +13441,59 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   nsIPresShell* shell = mDocument->GetShellAt(0);
   nsPresContext* context = shell->GetPresContext();
 
-  mPendingRestyles.Enumerate(ProcessRestyle, context);
+  nsCSSFrameConstructor::RestyleEnumerateData* restylesToProcess =
+    new nsCSSFrameConstructor::RestyleEnumerateData[mPendingRestyles.Count()];
+  if (!restylesToProcess) {
+    return;
+  }
+
+  nsCSSFrameConstructor::RestyleEnumerateData* lastRestyle = restylesToProcess;
+  mPendingRestyles.Enumerate(CollectRestyles, &lastRestyle);
+
+  NS_ASSERTION(lastRestyle - restylesToProcess ==
+               PRInt32(mPendingRestyles.Count()),
+               "Enumeration screwed up somehow");
+
+  // Clear the hashtable so we don't end up trying to process a restyle we're
+  // already processing, sending us into an infinite loop.
   mPendingRestyles.Clear();
+
+  for (nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
+         restylesToProcess;
+       currentRestyle != lastRestyle;
+       ++currentRestyle) {
+    nsIContent* content = currentRestyle->mContent;
+
+    if (!content->GetDocument() ||
+        content->GetDocument() != context->GetDocument()) {
+      // Content node has been removed from our document; nothing else
+      // to do here
+      continue;
+    }
+  
+    nsChangeHint changeHint = currentRestyle->mChangeHint;
+    nsReStyleHint restyleHint = currentRestyle->mRestyleHint;
+
+    nsIFrame* primaryFrame = nsnull;
+    shell->GetPrimaryFrameFor(content, &primaryFrame);
+    if (restyleHint & eReStyle_Self) {
+      shell->FrameConstructor()->RestyleElement(context, content, primaryFrame,
+                                                currentRestyle->mChangeHint);
+    } else if (changeHint &&
+               (primaryFrame ||
+                (changeHint & nsChangeHint_ReconstructFrame))) {
+      // Don't need to recompute style; just apply the hint
+      nsStyleChangeList changeList;
+      changeList.AppendChange(primaryFrame, content, changeHint);
+      shell->FrameConstructor()->ProcessRestyledFrames(changeList, context);
+    }
+
+    if (restyleHint & eReStyle_LaterSiblings) {
+      shell->FrameConstructor()->RestyleLaterSiblings(context, content);
+    }
+  }
+
+  delete [] restylesToProcess;
 }
 
 void
