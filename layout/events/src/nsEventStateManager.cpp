@@ -593,7 +593,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
 #ifdef XP_MAC
-    PRBool isSpecialAccessKeyDown = keyEvent->isControl;
+    PRBool isSpecialAccessKeyDown = keyEvent->isMeta;
 #else
     PRBool isSpecialAccessKeyDown = keyEvent->isAlt;
 #endif
