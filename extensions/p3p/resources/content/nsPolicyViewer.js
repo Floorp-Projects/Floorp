@@ -609,7 +609,7 @@ function getStrBundleService ()
 function getBundle ()
 {
   if (!gStrBundle) {
-    gStrBundle = getStrBundleService().createBundle("chrome://p3p/locale/p3p.properties");
+    gStrBundle = getStrBundleService().createBundle("chrome://p3p/locale/P3P.properties");
   }
   return gStrBundle;
 } 

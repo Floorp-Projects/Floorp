@@ -15,5 +15,5 @@ en-US.jar:
   locale/en-US/p3p/contents.rdf         (resources/locale/en-US/contents.rdf)
   locale/en-US/p3p/pageInfoOverlay.dtd  (resources/locale/en-US/pageInfoOverlay.dtd)
   locale/en-US/p3p/p3p.dtd              (resources/locale/en-US/p3p.dtd)
-  locale/en-US/p3p/p3p.properties       (resources/locale/en-US/p3p.properties)
+  locale/en-US/p3p/P3P.properties       (resources/locale/en-US/P3P.properties)
 
