@@ -181,7 +181,10 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 }
 
                 case Id_new_CommonError:
-                    return new_CommonError(function, cx, scope, args);
+                    // The implementation of all the ECMA error constructors
+                    // (SyntaxError, TypeError, etc.)
+
+                    return NativeError.make(cx, scope, function, args);
             }
         }
         throw IdFunction.onBadMethodId(this, methodId);
@@ -510,23 +513,6 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         return ScriptRuntime.constructError(error, message,
                                             sourceName, lineNumber,
                                             lineSource, columnNumber);
-    }
-
-    /**
-     * The implementation of all the ECMA error constructors (SyntaxError,
-     * TypeError, etc.)
-     */
-    private Object new_CommonError(IdFunction ctorObj, Context cx,
-                                   Scriptable scope, Object[] args)
-    {
-        Scriptable proto = (Scriptable)(ctorObj.get("prototype", ctorObj));
-
-        Scriptable newInstance = new NativeError();
-        newInstance.setPrototype(proto);
-        newInstance.setParentScope(scope);
-        if (args.length > 0)
-            newInstance.put("message", newInstance, args[0]);
-        return newInstance;
     }
 
     /*

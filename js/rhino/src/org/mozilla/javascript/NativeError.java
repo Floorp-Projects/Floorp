@@ -50,54 +50,78 @@ final class NativeError extends IdScriptable
     {
         NativeError obj = new NativeError();
         obj.prototypeFlag = true;
-        obj.messageValue = "";
-        obj.nameValue = "Error";
+        ScriptableObject.putProperty(obj, "name", "Error");
+        ScriptableObject.putProperty(obj, "message", "");
+        ScriptableObject.putProperty(obj, "fileName", "");
+        ScriptableObject.putProperty(obj, "lineNumber", new Integer(0));
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
     protected String toSource(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
-        Object value = messageValue;
-        if (value == NOT_FOUND)
-            return "(new Error())";
-        String str = ScriptRuntime.toString(value);
-        str = ScriptRuntime.escapeString(str);
-        return "(new Error(\""+str+"\"))";
+        // Emulation of SpiderMonkey behavior
+        Object name = ScriptableObject.getProperty(this, "name");
+        Object message = ScriptableObject.getProperty(this, "message");
+        Object fileName = ScriptableObject.getProperty(this, "fileName");
+        Object lineNumber = ScriptableObject.getProperty(this, "lineNumber");
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("(new ");
+        if (name == NOT_FOUND) {
+            name = Undefined.instance;
+        }
+        sb.append(ScriptRuntime.toString(name));
+        sb.append("(");
+        if (message != NOT_FOUND
+            || fileName != NOT_FOUND
+            || lineNumber != NOT_FOUND)
+        {
+            if (message == NOT_FOUND) {
+                message = "";
+            }
+            sb.append(ScriptRuntime.uneval(cx, scope, message));
+            if (fileName != NOT_FOUND || lineNumber != NOT_FOUND) {
+                sb.append(", ");
+                if (fileName == NOT_FOUND) {
+                    fileName = "";
+                }
+                sb.append(ScriptRuntime.uneval(cx, scope, fileName));
+                if (lineNumber != NOT_FOUND) {
+                    int line = ScriptRuntime.toInt32(lineNumber);
+                    if (line != 0) {
+                        sb.append(", ");
+                        sb.append(ScriptRuntime.toString(line));
+                    }
+                }
+            }
+        }
+        sb.append("))");
+        return sb.toString();
     }
 
-    protected int getIdAttributes(int id)
+    static NativeError make(Context cx, Scriptable scope, IdFunction ctorObj,
+                            Object[] args)
     {
-        if (id == Id_message || id == Id_name) { return EMPTY; }
-        return super.getIdAttributes(id);
-    }
+        Scriptable proto = (Scriptable)(ctorObj.get("prototype", ctorObj));
 
-    protected boolean hasIdValue(int id)
-    {
-        if (id == Id_message) { return messageValue != NOT_FOUND; }
-        if (id == Id_name) { return nameValue != NOT_FOUND; }
-        return super.hasIdValue(id);
-    }
+        NativeError obj = new NativeError();
+        obj.setPrototype(proto);
+        obj.setParentScope(scope);
 
-    protected Object getIdValue(int id)
-    {
-        if (id == Id_message) { return messageValue; }
-        if (id == Id_name) { return nameValue; }
-        return super.getIdValue(id);
-    }
-
-    protected void setIdValue(int id, Object value)
-    {
-        if (id == Id_message) { messageValue = value; return; }
-        if (id == Id_name) { nameValue = value; return; }
-        super.setIdValue(id, value);
-    }
-
-    protected void deleteIdValue(int id)
-    {
-        if (id == Id_message) { messageValue = NOT_FOUND; return; }
-        if (id == Id_name) { nameValue = NOT_FOUND; return; }
-        super.deleteIdValue(id);
+        if (args.length >= 1) {
+            ScriptableObject.putProperty(obj, "message",
+                                         ScriptRuntime.toString(args[0]));
+            if (args.length >= 2) {
+                ScriptableObject.putProperty(obj, "fileName", args[1]);
+                if (args.length >= 3) {
+                    int line = ScriptRuntime.toInt32(args[2]);
+                    ScriptableObject.putProperty(obj, "lineNumber",
+                                                 new Integer(line));
+                }
+            }
+        }
+        return obj;
     }
 
     public int methodArity(int methodId)
@@ -116,11 +140,7 @@ final class NativeError extends IdScriptable
     {
         if (prototypeFlag) {
             if (methodId == Id_constructor) {
-                NativeError result = new NativeError();
-                if (args.length >= 1)
-                    result.messageValue = ScriptRuntime.toString(args[0]);
-                result.setPrototype(getClassPrototype(scope, "Error"));
-                return result;
+                return make(cx, scope, f, args);
             }
             else if (methodId == Id_toString) {
                 return js_toString(thisObj);
@@ -131,7 +151,7 @@ final class NativeError extends IdScriptable
 
     private static String js_toString(Scriptable thisObj)
     {
-        return getName(thisObj)+": "+getMessage(thisObj);
+        return getString(thisObj, "name")+": "+getString(thisObj, "message");
     }
 
     public String getClassName()
@@ -144,22 +164,15 @@ final class NativeError extends IdScriptable
         return js_toString(this);
     }
 
-    private static String getName(Scriptable obj)
+    private static String getString(Scriptable obj, String id)
     {
-        Object value = ScriptRuntime.getStrIdElem(obj, "name");
-        return ScriptRuntime.toString(value);
-    }
-
-    private static String getMessage(Scriptable obj)
-    {
-        Object value = ScriptRuntime.getStrIdElem(obj, "message");
+        Object value = ScriptableObject.getProperty(obj, id);
+        if (value == NOT_FOUND) return "";
         return ScriptRuntime.toString(value);
     }
 
     protected String getIdName(int id)
     {
-        if (id == Id_message) { return "message"; }
-        if (id == Id_name) { return "name"; }
         if (prototypeFlag) {
             if (id == Id_constructor) return "constructor";
             if (id == Id_toString) return "toString";
@@ -167,30 +180,10 @@ final class NativeError extends IdScriptable
         return null;
     }
 
-// #string_id_map#
-
-    private static final int
-        Id_message               = 1,
-        Id_name                  = 2,
-
-        MAX_INSTANCE_ID          = 2;
-
-    { setMaxId(MAX_INSTANCE_ID); }
-
     protected int mapNameToId(String s)
     {
         int id;
-// #generated# Last update: 2001-05-19 21:55:23 CEST
-        L0: { id = 0; String X = null;
-            int s_length = s.length();
-            if (s_length==4) { X="name";id=Id_name; }
-            else if (s_length==7) { X="message";id=Id_message; }
-            if (X!=null && X!=s && !X.equals(s)) id = 0;
-        }
-// #/generated#
-// #/string_id_map#
-
-        if (id != 0 || !prototypeFlag) { return id; }
+        if (!prototypeFlag) { return 0; }
 
 // #string_id_map#
 // #generated# Last update: 2001-05-19 21:55:23 CEST
@@ -205,15 +198,12 @@ final class NativeError extends IdScriptable
     }
 
     private static final int
-        Id_constructor    = MAX_INSTANCE_ID + 1,
-        Id_toString       = MAX_INSTANCE_ID + 2,
+        Id_constructor    = 1,
+        Id_toString       = 2,
 
-        MAX_PROTOTYPE_ID  = MAX_INSTANCE_ID + 2;
+        MAX_PROTOTYPE_ID  = 2;
 
 // #/string_id_map#
-
-    private Object messageValue = NOT_FOUND;
-    private Object nameValue = NOT_FOUND;
 
     private boolean prototypeFlag;
 }
