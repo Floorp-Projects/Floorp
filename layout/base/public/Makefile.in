@@ -93,6 +93,7 @@ nsIPrivateDOMImplementation.h \
 nsIContentSerializer.h \
 nsIHTMLToTextSink.h \
 nsIScrollableViewProvider.h \
+nsIPrintContext.h \
 $(NULL)
 
 XPIDLSRCS	= \
