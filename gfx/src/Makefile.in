@@ -100,7 +100,7 @@ CPPSRCS += \
 endif
 
 ifneq (,$(filter gtk xlib beos,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS		+= scale.cpp
+CPPSRCS		+= imgScaler.cpp
 endif
 
 SHARED_LIBRARY_LIBS = \

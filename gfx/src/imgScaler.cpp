@@ -22,7 +22,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "scale.h"
+#include "imgScaler.h"
 
 // Scaling code from Graphics Gems book III                     
 // http://www.acm.org/pubs/tog/GraphicsGems/gemsiii/fastBitmap.c

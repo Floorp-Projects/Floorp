@@ -63,7 +63,7 @@ EXPORTS		+= nsIPrintingContext.h
 endif
 
 ifneq (,$(filter gtk xlib beos,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS		+= scale.h
+EXPORTS		+= imgScaler.h
 endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
