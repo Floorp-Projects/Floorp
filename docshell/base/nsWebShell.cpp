@@ -3019,18 +3019,23 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
         nsCAutoString hostStr(buf);
         PRInt32 dotLoc = hostStr.FindChar('.');
 
-        // First see if we should throw it to the keyword server.
-        NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
-        PRBool keywordsEnabled = PR_FALSE;
-        rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
-        if (NS_FAILED(rv)) return rv;
 
-        if (keywordsEnabled && (-1 == dotLoc)) {
-            // only send non-qualified hosts to the keyword server
-            nsAutoString keywordSpec("keyword:");
-            keywordSpec.Append(host);
-            return LoadURL(keywordSpec.GetUnicode(), "view");
-        } // end keywordsEnabled
+        if (aStatus == NS_ERROR_UNKNOWN_HOST
+            || aStatus == NS_ERROR_CONNECTION_REFUSED
+            || aStatus == NS_ERROR_NET_TIMEOUT) {
+            // First see if we should throw it to the keyword server.
+            NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
+            PRBool keywordsEnabled = PR_FALSE;
+            rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
+            if (NS_FAILED(rv)) return rv;
+
+            if (keywordsEnabled && (-1 == dotLoc)) {
+                // only send non-qualified hosts to the keyword server
+                nsAutoString keywordSpec("keyword:");
+                keywordSpec.Append(host);
+                return LoadURL(keywordSpec.GetUnicode(), "view");
+            } // end keywordsEnabled
+        }
 
         // Doc failed to load because the host was not found.
         if (aStatus == NS_ERROR_UNKNOWN_HOST) {
