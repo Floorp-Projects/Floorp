@@ -63,6 +63,14 @@ public:
    NS_IMETHOD GetToPrinter( PRBool &aToPrinter ) = 0; 
 
   /*
+   * If PR_TRUE, print to printer  
+   * @update 
+   * @param aIsPPreview -- Set to PR_TRUE for print preview, PR_FALSE otherwise.
+   * @return 
+   **/
+   NS_IMETHOD GetIsPrintPreview( PRBool &aIsPPreview ) = 0; 
+
+  /*
    * If PR_TRUE, first page first 
    * @update 
    * @param aFpf -- 
