@@ -2533,6 +2533,8 @@ dsN *CreateDSNode()
 
   dsNode->ullSpaceRequired = 0;
 
+  if((dsNode->szVDSPath = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
   if((dsNode->szPath = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
   dsNode->Next             = dsNode;
@@ -2567,6 +2569,7 @@ void DsNodeDelete(dsN **dsNTemp)
     (*dsNTemp)->Next       = NULL;
     (*dsNTemp)->Prev       = NULL;
 
+    FreeMemory(&((*dsNTemp)->szVDSPath));
     FreeMemory(&((*dsNTemp)->szPath));
     FreeMemory(dsNTemp);
   }
@@ -2788,24 +2791,108 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
   return(IDCANCEL);
 }
 
+BOOL ContainsReparseTag(char *szPath, char *szReparsePath, DWORD dwReparsePathSize)
+{
+  BOOL  bFoundReparseTag  = FALSE;
+  DWORD dwOriginalLen     = lstrlen(szPath);
+  DWORD dwLen             = dwOriginalLen;
+  char  *szPathTmp        = NULL;
+  char  *szBuf            = NULL;
+
+  if((szPathTmp = NS_GlobalAlloc(dwLen + 1)) == NULL)
+    exit(1);
+  if((szBuf = NS_GlobalAlloc(dwLen + 1)) == NULL)
+    exit(1);
+
+  lstrcpy(szPathTmp, szPath);
+  while((szPathTmp[dwLen - 2] != ':') && (szPathTmp[dwLen - 2] != '\\'))
+  {
+    if(FileExists(szPathTmp) & FILE_ATTRIBUTE_REPARSE_POINT)
+    {
+      if((DWORD)lstrlen(szPathTmp) <= dwReparsePathSize)
+        lstrcpy(szReparsePath, szPathTmp);
+      else
+        ZeroMemory(szReparsePath, dwReparsePathSize);
+
+      bFoundReparseTag = TRUE;
+      break;
+    }
+
+    lstrcpy(szBuf, szPathTmp);
+    RemoveBackSlash(szBuf);
+    ParsePath(szBuf, szPathTmp, dwOriginalLen + 1, PP_PATH_ONLY);
+    dwLen = lstrlen(szPathTmp);
+  }
+
+  FreeMemory(&szBuf);
+  FreeMemory(&szPathTmp);
+  return(bFoundReparseTag);
+}
+
 void UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullSize, dsN **dsnComponentDSRequirement)
 {
   BOOL  bFound = FALSE;
   dsN   *dsnTemp = *dsnComponentDSRequirement;
+  char  szReparsePath[MAX_BUF];
+  char  szVDSPath[MAX_BUF];
+  char  szRootPath[MAX_BUF];
 
   if(ullSize > 0)
   {
+    ParsePath(szPath, szRootPath, sizeof(szRootPath), PP_ROOT_ONLY);
+
+    if(ulOSType & OS_WIN95_DEBUTE)
+      // check for Win95 debute version
+      lstrcpy(szVDSPath, szRootPath);
+    else if((ulOSType & OS_NT5) && ContainsReparseTag(szPath, szReparsePath, sizeof(szReparsePath)))
+    {
+      // check for Reparse Tag (mount points under NT5 only)
+      if(*szReparsePath == '\0')
+      {
+        // szReparsePath is not big enough to hold the Reparse path.  This is a
+        // non fatal error.  Keep going using szPath instead.
+        lstrcpy(szVDSPath, szPath);
+      }
+      else if(GetDiskSpaceAvailable(szReparsePath) == GetDiskSpaceAvailable(szPath))
+        // Check for user quota on path.  It is very unlikely that the user quota
+        // for the path will be the same as the quota for its root path when user
+        // quota is enabled.
+        //
+        // If it happens to be the same, then I'm assuming that the disk space on
+        // the path's root path will decrease at the same rate as the path with
+        // user quota enabled.
+        //
+        // If user quota is not enabled on the folder, then use the root path.
+        lstrcpy(szVDSPath, szReparsePath);
+      else
+        lstrcpy(szVDSPath, szPath);
+    }
+    else if(GetDiskSpaceAvailable(szRootPath) == GetDiskSpaceAvailable(szPath))
+      // Check for user quota on path.  It is very unlikely that the user quota
+      // for the path will be the same as the quota for its root path when user
+      // quota is enabled.
+      //
+      // If it happens to be the same, then I'm assuming that the disk space on
+      // the path's root path will decrease at the same rate as the path with
+      // user quota enabled.
+      //
+      // If user quota is not enabled on the folder, then use the root path.
+      lstrcpy(szVDSPath, szRootPath);
+    else
+      lstrcpy(szVDSPath, szPath);
+
     do
     {
       if(*dsnComponentDSRequirement == NULL)
       {
         *dsnComponentDSRequirement = CreateDSNode();
         dsnTemp = *dsnComponentDSRequirement;
+        strcpy(dsnTemp->szVDSPath, szVDSPath);
         strcpy(dsnTemp->szPath, szPath);
         dsnTemp->ullSpaceRequired = ullSize;
         bFound = TRUE;
       }
-      else if(lstrcmpi(dsnTemp->szPath, szPath) == 0)
+      else if(lstrcmpi(dsnTemp->szVDSPath, szVDSPath) == 0)
       {
         dsnTemp->ullSpaceRequired += ullSize;
         bFound = TRUE;
@@ -2818,6 +2905,7 @@ void UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullSize, dsN **dsnCompo
     if(bFound == FALSE)
     {
       dsnTemp = CreateDSNode();
+      strcpy(dsnTemp->szVDSPath, szVDSPath);
       strcpy(dsnTemp->szPath, szPath);
       dsnTemp->ullSpaceRequired = ullSize;
       DsNodeInsert(dsnComponentDSRequirement, dsnTemp);
@@ -2878,8 +2966,8 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
   }
 
   /* take the uncompressed size of Xpcom into account */
-  if(*szBufTempPath != '\0')
-    UpdatePathDiskSpaceRequired(szBufTempPath, siCFXpcomFile.ullInstallSize, dsnComponentDSRequirement);
+  if(*szTempDir != '\0')
+    UpdatePathDiskSpaceRequired(szTempDir, siCFXpcomFile.ullInstallSize, dsnComponentDSRequirement);
 
   return(hResult);
 }
@@ -2891,7 +2979,6 @@ HRESULT VerifyDiskSpace()
   dsN       *dsnComponentDSRequirement = NULL;
   dsN       *dsnTemp = NULL;
 
-
   InitComponentDiskSpaceInfo(&dsnComponentDSRequirement);
   if(dsnComponentDSRequirement != NULL)
   {
@@ -2901,7 +2988,7 @@ HRESULT VerifyDiskSpace()
     {
       if(dsnTemp != NULL)
       {
-        ullDSAvailable = GetDiskSpaceAvailable(dsnTemp->szPath);
+        ullDSAvailable = GetDiskSpaceAvailable(dsnTemp->szVDSPath);
         if(ullDSAvailable < dsnTemp->ullSpaceRequired)
         {
           hRetValue = ErrorMsgDiskSpace(ullDSAvailable, dsnTemp->ullSpaceRequired, dsnTemp->szPath, FALSE);
