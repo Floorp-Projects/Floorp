@@ -440,7 +440,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
       nsCOMPtr<nsIContentViewer> cv;
       cvc->GetContentViewer(getter_AddRefs(cv));
       if (cv)
-        cv->SetPreviousViewer(nsnull);
+        cv->Show();
     }
   }
   
