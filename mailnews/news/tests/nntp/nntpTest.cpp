@@ -62,7 +62,6 @@
 #define NEWS_DLL	"msgnews.dll"
 #define PREF_DLL	"xppref32.dll"
 #define APPSHELL_DLL	"nsappshell.dll"
-#define LAYOUT_DLL	"raptorhtml.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -72,7 +71,6 @@
 #define NEWS_DLL   "libmsgnews.so"
 #define PREF_DLL   "libpref.so"
 #define APPSHELL_DLL "libnsappshell.so"
-#define LAYOUT_DLL	"libraptorhtml.so"
 #endif
 #endif
 
@@ -777,8 +775,6 @@ int main()
     nsComponentManager::RegisterComponent(kNntpUrlCID, NULL, NULL, NEWS_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-
 	// make sure prefs get initialized and loaded..
 	// mscott - this is just a bad bad bad hack right now until prefs
 	// has the ability to take nsnull as a parameter. Once that happens,
