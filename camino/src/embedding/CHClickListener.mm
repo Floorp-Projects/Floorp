@@ -54,6 +54,7 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
+#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
@@ -81,7 +82,10 @@
 
 -(IBAction)selectOption:(id)aSender
 {
-  nsIDOMHTMLOptionElement* optionElt = (nsIDOMHTMLOptionElement*) [aSender tag];
+  nsIDOMHTMLOptionElement* optionElt = (nsIDOMHTMLOptionElement*)[[aSender representedObject] pointerValue];
+  NS_ASSERTION(optionElt, "Missing option element");
+  if (!optionElt) return;
+
   optionElt->SetSelected(PR_TRUE);
 
   // Fire a DOM event for the title change.
@@ -115,110 +119,150 @@ CHClickListener::~CHClickListener()
 NS_IMETHODIMP
 CHClickListener::MouseDown(nsIDOMEvent* aEvent)
 {
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aEvent));
+  if (!mouseEvent) return NS_ERROR_FAILURE;
+  
+  PRUint16 button;
+  mouseEvent->GetButton(&button);
+  // only show popup on left button
+  if (button != 0)
+    return NS_OK;
+
   nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetTarget(getter_AddRefs(target));
+  mouseEvent->GetTarget(getter_AddRefs(target));
   if (!target)
     return NS_OK;
+
   nsCOMPtr<nsIDOMHTMLSelectElement> sel(do_QueryInterface(target));
-  if (sel) {
-    PRInt32 size = 0;
-    sel->GetSize(&size);
-    PRBool multiple = PR_FALSE;
-    sel->GetMultiple(&multiple);
-    if(size > 1 || multiple)
-      return NS_OK;
-    // the call to popUpContextMenu: is synchronous so we don't need to
-    // worry about retaining the menu for later.
-    NSMenu* menu = [[[NSMenu alloc] init] autorelease];
+  if (!sel)
+    return NS_OK;
 
-    // We'll set the disabled state as the options are created, so disable
-    // auto-enabling via NSMenuValidation.
-    [menu setAutoenablesItems: NO];
+  PRInt32 size = 0;
+  sel->GetSize(&size);
+  PRBool multiple = PR_FALSE;
+  sel->GetMultiple(&multiple);
+  if(size > 1 || multiple)
+    return NS_OK;
 
-    nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
-    sel->GetOptions(getter_AddRefs(options));
-    PRUint32 count;
-    options->GetLength(&count);
-    PRInt32 selIndex = 0;
-    for (PRUint32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIDOMNode> node;
-      options->Item(i, getter_AddRefs(node));
-      nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
-      nsAutoString text;
-      option->GetLabel(text);
-      if (text.IsEmpty())
-        option->GetText(text);
-      NSString* title = [[NSString stringWith_nsAString: text] stringByTruncatingTo:75 at:kTruncateAtMiddle];
+  // the call to popUpContextMenu: is synchronous so we don't need to
+  // worry about retaining the menu for later.
+  NSMenu* menu = [[[NSMenu alloc] init] autorelease];
+
+  // We'll set the disabled state as the options are created, so disable
+  // auto-enabling via NSMenuValidation.
+  [menu setAutoenablesItems: NO];
+
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
+  sel->GetOptions(getter_AddRefs(options));
+  PRUint32 count;
+  options->GetLength(&count);
+  PRInt32 selIndex = 0;   // currently unused
+
+  nsCOMPtr<nsIDOMHTMLOptGroupElement> curOptGroup;
+
+  for (PRUint32 i = 0; i < count; i++) {
+    nsAutoString itemLabel;
+
+    nsCOMPtr<nsIDOMNode> node;
+    options->Item(i, getter_AddRefs(node));
+
+    nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
+
+    nsCOMPtr<nsIDOMNode> parentNode;
+    option->GetParentNode(getter_AddRefs(parentNode));
+    nsCOMPtr<nsIDOMHTMLOptGroupElement> parentOptGroup = do_QueryInterface(parentNode);
+    if (parentOptGroup && (parentOptGroup != curOptGroup))
+    {
+      // insert optgroup item
+      parentOptGroup->GetLabel(itemLabel);
+      NSString* title = [[NSString stringWith_nsAString: itemLabel] stringByTruncatingTo:75 at:kTruncateAtMiddle];
       NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];
       [menu addItem: menuItem];
-      [menuItem setTag: (int)option.get()];
-      PRBool selected;
-      option->GetSelected(&selected);
-      if (selected) {
-        [menuItem setState: NSOnState];
-        selIndex = i;
-      }
-      PRBool disabled;
-      option->GetDisabled(&disabled);
-      if (disabled)
-        [menuItem setEnabled: NO];
-      CHOptionSelector* optSelector = [[[CHOptionSelector alloc] initWithSelect: sel] autorelease];
-      [menuItem setTarget: optSelector];									// retains
-      if (!selected)
-        [menuItem setAction:@selector(selectOption:)];
+      [menuItem setEnabled: NO];
+
+      curOptGroup = parentOptGroup;
     }
 
-    nsCOMPtr<nsIDOMNSHTMLElement> nsSel(do_QueryInterface(sel));
-    PRInt32 left, top, height;
-    PRInt32 clientX, clientY;
-    nsSel->GetOffsetLeft(&left);
-    nsSel->GetOffsetTop(&top);
-    nsSel->GetOffsetHeight(&height);
+    option->GetLabel(itemLabel);
+    if (itemLabel.IsEmpty())
+      option->GetText(itemLabel);
 
-    nsCOMPtr<nsIDOMElement> currOffsetParent;
-    nsSel->GetOffsetParent(getter_AddRefs(currOffsetParent));
-    while (currOffsetParent) {
-      nsCOMPtr<nsIDOMNSHTMLElement> currNS(do_QueryInterface(currOffsetParent));
-      PRInt32 currLeft, currTop;
-      currNS->GetOffsetLeft(&currLeft);
-      currNS->GetOffsetTop(&currTop);
-      left += currLeft;
-      top += currTop;
-      currNS->GetOffsetParent(getter_AddRefs(currOffsetParent));
+    NSString* title = [[NSString stringWith_nsAString: itemLabel] stringByTruncatingTo:75 at:kTruncateAtMiddle];
+    
+    // indent items in optgroup
+    if (parentOptGroup)
+      title = [@"  " stringByAppendingString:title];
+
+    NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];
+    [menu addItem: menuItem];
+    [menuItem setRepresentedObject:[NSValue valueWithPointer:option.get()]];
+
+    PRBool selected;
+    option->GetSelected(&selected);
+    if (selected) {
+      [menuItem setState: NSOnState];
+      selIndex = i;
     }
-    
-    nsCOMPtr<nsIDOMMouseEvent> msEvent(do_QueryInterface(aEvent));
-    msEvent->GetClientX(&clientX);
-    msEvent->GetClientY(&clientY);
-
-    PRInt32 xDelta = clientX - left;
-    PRInt32 yDelta = top + height - clientY;
-
-    nsCOMPtr<nsIContent> selContent = do_QueryInterface(sel);
-    nsCOMPtr<nsIDocument> doc = selContent->GetDocument();
-
-    // I'm going to assume that if we got a mousedown for a content node,
-    // it's actually in a document.
-
-    nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(sgo);
-    PRInt32 scrollX, scrollY;
-    window->GetScrollX(&scrollX);
-    window->GetScrollY(&scrollY);
-    xDelta += scrollX; // Normal direction.
-    yDelta -= scrollY; // Remember, y is flipped.
-    
-    const float kMenuWidth = 20.0;               // specify something small so it sizes to fit
-    const float kMenuPopupHeight = 20.0;         // height of a popup in aqua
-    NSEvent* event = [NSApp currentEvent];
-    NSPoint point = [event locationInWindow];
-    NSRect bounds = { {point.x - xDelta, point.y - yDelta}, {kMenuWidth, kMenuPopupHeight} };
-
-    NSPopUpButtonCell *cell = [[NSPopUpButtonCell alloc] initTextCell: @"" pullsDown: NO];
-    [cell setMenu: menu];
-    [cell setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
-    [cell trackMouse: event inRect: bounds ofView: [[event window] contentView] untilMouseUp: YES];
-    [cell release];
+    PRBool disabled;
+    option->GetDisabled(&disabled);
+    if (disabled)
+      [menuItem setEnabled: NO];
+    CHOptionSelector* optSelector = [[[CHOptionSelector alloc] initWithSelect: sel] autorelease];
+    [menuItem setTarget: optSelector];									// retains
+    if (!selected)
+      [menuItem setAction:@selector(selectOption:)];
   }
+
+  nsCOMPtr<nsIDOMNSHTMLElement> nsSel(do_QueryInterface(sel));
+  PRInt32 left, top, height;
+  PRInt32 clientX, clientY;
+  nsSel->GetOffsetLeft(&left);
+  nsSel->GetOffsetTop(&top);
+  nsSel->GetOffsetHeight(&height);
+
+  nsCOMPtr<nsIDOMElement> currOffsetParent;
+  nsSel->GetOffsetParent(getter_AddRefs(currOffsetParent));
+  while (currOffsetParent) {
+    nsCOMPtr<nsIDOMNSHTMLElement> currNS(do_QueryInterface(currOffsetParent));
+    PRInt32 currLeft, currTop;
+    currNS->GetOffsetLeft(&currLeft);
+    currNS->GetOffsetTop(&currTop);
+    left += currLeft;
+    top += currTop;
+    currNS->GetOffsetParent(getter_AddRefs(currOffsetParent));
+  }
+  
+  mouseEvent->GetClientX(&clientX);
+  mouseEvent->GetClientY(&clientY);
+
+  PRInt32 xDelta = clientX - left;
+  PRInt32 yDelta = top + height - clientY;
+
+  nsCOMPtr<nsIContent> selContent = do_QueryInterface(sel);
+  nsCOMPtr<nsIDocument> doc = selContent->GetDocument();
+
+  // I'm going to assume that if we got a mousedown for a content node,
+  // it's actually in a document.
+
+  nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(sgo);
+  PRInt32 scrollX, scrollY;
+  window->GetScrollX(&scrollX);
+  window->GetScrollY(&scrollY);
+  xDelta += scrollX; // Normal direction.
+  yDelta -= scrollY; // Remember, y is flipped.
+  
+  const float kMenuWidth = 20.0;               // specify something small so it sizes to fit
+  const float kMenuPopupHeight = 20.0;         // height of a popup in aqua
+  NSEvent* event = [NSApp currentEvent];
+  NSPoint point = [event locationInWindow];
+  NSRect bounds = { {point.x - xDelta, point.y - yDelta}, {kMenuWidth, kMenuPopupHeight} };
+
+  NSPopUpButtonCell *cell = [[NSPopUpButtonCell alloc] initTextCell: @"" pullsDown: NO];
+  [cell setMenu: menu];
+  [cell setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
+  [cell trackMouse: event inRect: bounds ofView: [[event window] contentView] untilMouseUp: YES];
+  [cell release];
+
   return NS_OK;
 }
