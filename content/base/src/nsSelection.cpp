@@ -5239,7 +5239,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
     nsCOMPtr<nsIDOMRange> newrange,	range = do_QueryInterface(element);
     if (!range)
       return NS_ERROR_UNEXPECTED;
-      
+/*      
     // For bug 46554: since the only callers of ContainsNode() is the copy code from document, 
     // I'm altering the semantics of this routine.  Now it will consider any node whose 
     // children are all selected to be selected itself.  This is to help the user get 
@@ -5251,7 +5251,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
 
     rv = PromoteRange(newrange);
     if (NS_FAILED(rv)) return rv;
-    
+*/    
     nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
     if (content)
     {
