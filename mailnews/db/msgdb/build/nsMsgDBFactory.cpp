@@ -181,15 +181,15 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kCMailDB, nsnull, nsnull,
+  rv = compMgr->RegisterComponent(kCMailDB, "Local Mail DB", "component://netscape/messenger/maildb",
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv))finalResult = rv;
 
-  rv = compMgr->RegisterComponent(kCNewsDB, nsnull, nsnull, 
+  rv = compMgr->RegisterComponent(kCNewsDB, "News DB", "component://netscape/messenger/newsdb", 
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-  rv = compMgr->RegisterComponent(kCImapDB, nsnull, nsnull,
+  rv = compMgr->RegisterComponent(kCImapDB, "IMAP DB", "component://netscape/messenger/imapdb",
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
   
