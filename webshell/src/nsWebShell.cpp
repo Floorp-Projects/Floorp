@@ -1184,7 +1184,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
 #ifndef XP_MAC
   nsIFactory *multiMixedFactSup;
   rv = nsComponentManager::FindFactory(kMultiMixedConverterCID, &multiMixedFactSup);
-  if (SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv)) {
       rv = nsComponentManager::RegisterFactory(kMultiMixedConverterCID,
                                              "MultiMixedConverter",
                                              NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=text/html",
