@@ -721,10 +721,11 @@ txPushNewContext::execute(txExecutionState& aEs)
                                    aEs.getEvalContext());
         NS_ENSURE_SUCCESS(rv, rv);
     }
-    rv = sorter.sortNodeSet(nodes, &aEs);
+    nsRefPtr<NodeSet> sortedNodes;
+    rv = sorter.sortNodeSet(nodes, &aEs, getter_AddRefs(sortedNodes));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    txNodeSetContext* context = new txNodeSetContext(nodes, &aEs);
+    txNodeSetContext* context = new txNodeSetContext(sortedNodes, &aEs);
     NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
     context->next();
