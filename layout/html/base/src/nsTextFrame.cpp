@@ -1751,9 +1751,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
   // Quirks mode text  decoration are rendered by children; see bug 1777
   // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
   // does the painting of text decorations.
-  nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
-  if (eCompatibility_NavQuirks == mode) {
+  if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
     nscolor overColor, underColor, strikeColor;
   
     PRBool useOverride = PR_FALSE;

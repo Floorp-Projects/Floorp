@@ -782,8 +782,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   // this should probably be cached somewhere
-  nsCompatibility compatMode;
-  aPresContext->GetCompatibilityMode(&compatMode);
+  nsCompatibility compatMode = aPresContext->CompatibilityMode();
 
   // Initialize out parameter
   if (aDesiredSize.mComputeMEW) {

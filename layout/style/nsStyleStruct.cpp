@@ -896,7 +896,7 @@ nsStyleTableBorder::nsStyleTableBorder(nsIPresContext* aPresContext)
 
   nsCompatibility compatMode = eCompatibility_FullStandards;
   if (aPresContext)
-    aPresContext->GetCompatibilityMode(&compatMode);
+    compatMode = aPresContext->CompatibilityMode();
   mEmptyCells = (compatMode == eCompatibility_NavQuirks)
                   ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
                   : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;

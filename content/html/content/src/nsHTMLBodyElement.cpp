@@ -165,9 +165,8 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   PRInt32 bodyRightMargin = -1;
 
   // check the mode (fortunately, the ruleData has a presContext for us to use!)
-  nsCompatibility mode;
   NS_ASSERTION(aData->mPresContext, "null presContext in ruleNode was unexpected");
-  aData->mPresContext->GetCompatibilityMode(&mode);
+  nsCompatibility mode = aData->mPresContext->CompatibilityMode();
 
 
   if (mPart->GetAttrCount() > 0) {

@@ -142,9 +142,7 @@ nsInlineFrame::IsEmpty()
 #if 0
   // I used to think inline frames worked this way, but it seems they
   // don't.  At least not in our codebase.
-  nsCompatibility compatMode;
-  GetPresContext()->GetCompatibilityMode(&compatMode);
-  if (compatMode == eCompatibility_FullStandards) {
+  if (GetPresContext()->CompatibilityMode() == eCompatibility_FullStandards) {
     return PR_FALSE;
   }
 #endif

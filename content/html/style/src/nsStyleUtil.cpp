@@ -231,9 +231,7 @@ nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 
     PRInt32 row = fontSize - sFontSizeTableMin;
 
-		nsCompatibility mode;
-	  aPresContext->GetCompatibilityMode(&mode);
-	  if (mode == eCompatibility_NavQuirks) {
+	  if (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
 	    dFontSize = NSIntPixelsToTwips(sQuirksFontSizeTable[row][column[aHTMLSize]], p2t);
 	  } else {
 	    dFontSize = NSIntPixelsToTwips(sStrictFontSizeTable[row][column[aHTMLSize]], p2t);

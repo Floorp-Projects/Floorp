@@ -3557,9 +3557,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
       } else if (aData->mPresContext) {
         // in NavQuirks mode, allow the empty string to set the
         // background to empty
-        nsCompatibility mode;
-        aData->mPresContext->GetCompatibilityMode(&mode);
-        if (eCompatibility_NavQuirks == mode &&
+        if (eCompatibility_NavQuirks == aData->mPresContext->CompatibilityMode() &&
             eHTMLUnit_Empty == value.GetUnit())
           aData->mColorData->mBackImage.SetNoneValue();
       }

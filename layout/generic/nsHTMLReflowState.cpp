@@ -1512,9 +1512,7 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
     // an element in quirks mode gets a containing block based on looking for a
     // parent with a non-auto height if the element has a percent height
     if (NS_AUTOHEIGHT == aContainingBlockHeight) {
-      nsCompatibility mode;
-      aPresContext->GetCompatibilityMode(&mode);
-      if (eCompatibility_NavQuirks == mode &&
+      if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
           mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
         aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS);
       }
@@ -1719,10 +1717,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           // Get the containing block reflow state
           const nsHTMLReflowState* cbrs = parentReflowState->mCBReflowState;
           NS_ASSERTION(nsnull != cbrs, "no containing block");
-          nsCompatibility mode;
-          aPresContext->GetCompatibilityMode(&mode);
           // in quirks mode, get the cb height using the special quirk method
-          if (eCompatibility_NavQuirks == mode) {
+          if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
             if (!IS_TABLE_CELL(fType)) {
               aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs);
               if (aContainingBlockHeight == NS_AUTOHEIGHT) {

@@ -1217,8 +1217,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   // which *element* it's matching (style rules should not stop matching
   // when the display type is changed).
 
-  nsCompatibility mode;
-  aData->mPresContext->GetCompatibilityMode(&mode);
+  nsCompatibility mode = aData->mPresContext->CompatibilityMode();
 
   if (aData->mSID == eStyleStruct_TableBorder) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();

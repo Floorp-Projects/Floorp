@@ -182,7 +182,7 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
   mCurrentSpan = mRootSpan = nsnull;
   mSpanDepth = 0;
 
-  mPresContext->GetCompatibilityMode(&mCompatMode);
+  mCompatMode = mPresContext->CompatibilityMode();
 }
 
 nsLineLayout::~nsLineLayout()

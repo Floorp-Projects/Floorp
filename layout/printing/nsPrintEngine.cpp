@@ -2711,13 +2711,11 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   }
 #endif // NS_PRINT_PREVIEW
 
-  nsCompatibility mode;
-  mPresContext->GetCompatibilityMode(&mode);
-
   // Setup hierarchical relationship in view manager
   aPO->mViewManager->SetRootView(aPO->mRootView);
   aPO->mPresShell->Init(aPO->mDocument, aPO->mPresContext,
-                        aPO->mViewManager, aPO->mStyleSet, mode);
+                        aPO->mViewManager, aPO->mStyleSet,
+                        mPresContext->CompatibilityMode());
 
   if (!containerIsSet) {
     nsCOMPtr<nsISupports> supps(do_QueryInterface(aPO->mWebShell));

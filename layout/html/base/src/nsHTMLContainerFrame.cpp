@@ -104,11 +104,9 @@ nsHTMLContainerFrame::PaintDecorationsAndChildren(
   nscolor underColor, overColor, strikeColor;
   PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE;
   nsCOMPtr<nsIFontMetrics> fm;
-  nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
   PRBool isVisible;
 
-  if (eCompatibility_NavQuirks != mode && 
+  if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode() && 
       NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
       NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext,
                                         PR_TRUE, &isVisible)) &&

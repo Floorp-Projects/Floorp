@@ -71,8 +71,7 @@ public:
   // nsIPresContext methods
   NS_IMETHOD Init(nsIDeviceContext* aDeviceContext);
   NS_IMETHOD SetShell(nsIPresShell* aShell);
-  NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult);
-  NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
+  virtual void SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult);
   NS_IMETHOD SetImageAnimationMode(PRUint16 aMode);
   NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags);
@@ -256,7 +255,6 @@ protected:
 
   nsCOMPtr<nsIURI>      mBaseURL;
 
-  nsCompatibility       mCompatibilityMode;
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
 
   PRUint16              mImageAnimationMode;

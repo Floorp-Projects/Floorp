@@ -758,21 +758,13 @@ nsPresContext::Observe(nsISupports* aSubject,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsPresContext::GetCompatibilityMode(nsCompatibility* aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-  *aResult = mCompatibilityMode;
-  return NS_OK;
-}
-
- 
-NS_IMETHODIMP
+void
 nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
 {
   mCompatibilityMode = aMode;
 
-  NS_ENSURE_TRUE(mShell, NS_OK);
+  if (!mShell)
+    return;
 
   // enable/disable the QuirkSheet
   nsCOMPtr<nsIStyleSet> set;
@@ -780,7 +772,6 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
   if (set) {
     set->EnableQuirkStyleSheet(mCompatibilityMode == eCompatibility_NavQuirks);
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
