@@ -30,8 +30,6 @@
 #define XP_MAC 1
 #define _PR_NO_PREEMPT 1
 #define _NO_FAST_STRING_INLINES_ 1
-#define NSPR20 1
-#define NSPR20_FOR_DOGBERT 1
 
 // Need to define NETSCAPE so that Nelson's Java SSL API bits compile.
 #ifndef NETSCAPE

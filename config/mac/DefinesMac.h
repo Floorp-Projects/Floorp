@@ -49,11 +49,6 @@
 #define NDEBUG
 #endif
 
-/* Some NSPR defines */
-#ifndef NSPR20
-#define NSPR20 1
-#endif
-
 /* Some other random defines */
 #define _NO_FAST_STRING_INLINES_ 1
 #define _PR_NO_PREEMPT 1
