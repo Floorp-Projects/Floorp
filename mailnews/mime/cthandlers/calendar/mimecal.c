@@ -75,7 +75,7 @@ int
 mime_TranslateCalendar(char* caldata, char** html) 
 {
   *html = XP_STRDUP("\
-<body text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\
+<text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\
 <center><table BORDER=1 BGCOLOR=\"#CCFFFF\" ><tr>\
 <td>This libmime Content Type Handler plugin for the Content-Type <b>text/calendar\
 </b> is functional!</td>\
