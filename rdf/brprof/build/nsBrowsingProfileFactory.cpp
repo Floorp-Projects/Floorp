@@ -32,7 +32,7 @@ nsConstructBrowsingProfile(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     nsresult rv;
     NS_ASSERTION(aOuter == nsnull, "no aggregation");
     nsIBrowsingProfile* brprof;
-    rv = NS_NewBrowsingProfile(nsnull, &brprof);
+    rv = NS_NewBrowsingProfile(&brprof);
     if (NS_FAILED(rv)) {
         NS_ERROR("Unable to construct browsing profile");
         return rv;
