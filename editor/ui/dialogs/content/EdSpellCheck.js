@@ -64,7 +64,7 @@ function Startup()
   dialog.ReplaceButton       = document.getElementById("Replace");
   dialog.IgnoreButton        = document.getElementById("Ignore");
   dialog.CloseButton         = document.getElementById("Close");
-  dialog.ReplaceWordInput    = document.getElementById("ReplaceWord");
+  dialog.ReplaceWordInput    = document.getElementById("ReplaceWordInput");
   dialog.SuggestedList       = document.getElementById("SuggestedList");
   dialog.LanguageMenulist    = document.getElementById("LanguageMenulist");
 
@@ -198,11 +198,14 @@ function DoEnabling()
 
     dialog.ReplaceButton.removeAttribute("default");
     dialog.IgnoreButton.removeAttribute("default");
+
     dialog.CloseButton.setAttribute("default","true");
+    // Shouldn't have to do this if "default" is true?
+    dialog.CloseButton.focus();
 
     SetElementEnabledById("MisspelledWordLabel", false);
     SetElementEnabledById("ReplaceWordLabel", false);
-    SetElementEnabledById("ReplaceWord", false);
+    SetElementEnabledById("ReplaceWordInput", false);
     SetElementEnabledById("CheckWord", false);
     SetElementEnabledById("SuggestedListLabel", false);
     SetElementEnabledById("SuggestedList", false);
@@ -214,7 +217,7 @@ function DoEnabling()
   } else {
     SetElementEnabledById("MisspelledWordLabel", true);
     SetElementEnabledById("ReplaceWordLabel", true);
-    SetElementEnabledById("ReplaceWord", true);
+    SetElementEnabledById("ReplaceWordInput", true);
     SetElementEnabledById("CheckWord", true);
     SetElementEnabledById("SuggestedListLabel", true);
     SetElementEnabledById("SuggestedList", true);
