@@ -48,7 +48,25 @@
 #include "plarena.h"
 
 class Token;
+class TokenEnumeration;
 class TokenAnalyzer;
+
+/**
+ * Helper class to enumerate Token objects in a PLDHashTable
+ * safely and without copying (see bugzilla #174859). The
+ * enumeration is safe to use until a PL_DHASH_ADD
+ * or PL_DHASH_REMOVE is performed on the table.
+ */
+class TokenEnumeration {
+public:
+    TokenEnumeration(PLDHashTable* table);
+    bool hasMoreTokens();
+    Token* nextToken();
+    
+private:
+    PRUint32 mEntrySize, mEntryCount, mEntryOffset;
+    char *mEntryAddr, *mEntryLimit;
+};
 
 class Tokenizer {
 public:
@@ -62,7 +80,8 @@ public:
     void remove(const char* word, PRUint32 count = 1);
     
     PRUint32 countTokens();
-    Token* getTokens();
+    Token* copyTokens();
+    TokenEnumeration getTokens();
 
     /**
      * Assumes that text is mutable and
@@ -98,8 +117,8 @@ public:
     virtual ~nsBayesianFilter();
     
     nsresult tokenizeMessage(const char* messageURI, TokenAnalyzer* analyzer);
-    void classifyMessage(PRUint32 count, Token tokens[], const char* messageURI, nsIJunkMailClassificationListener* listener);
-    void observeMessage(PRUint32 count, Token tokens[], const char* messageURI, nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification, nsIJunkMailClassificationListener* listener);
+    void classifyMessage(Tokenizer& tokens, const char* messageURI, nsIJunkMailClassificationListener* listener);
+    void observeMessage(Tokenizer& tokens, const char* messageURI, nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification, nsIJunkMailClassificationListener* listener);
 
     void writeTrainingData();
     void readTrainingData();
