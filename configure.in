@@ -3496,7 +3496,9 @@ MOZ_ARG_ENABLE_BOOL(native-uconv,
 if test "$MOZ_USE_NATIVE_UCONV"; then
     AC_DEFINE(MOZ_USE_NATIVE_UCONV)
 fi
-
+if test "$MOZ_USE_NATIVE_UCONV" -a "$ac_cv_func_iconv" != "yes"; then
+    AC_MSG_ERROR([iconv() not found.  Cannot enable native uconv support.])
+fi
 
 dnl ========================================================
 dnl Libeditor can be build as plaintext-only,
@@ -5309,7 +5311,12 @@ HAVE_SYS_VFS_H
 HAVE_WCRTOMB
 "
 
-AC_CONFIG_HEADER(gfx/gfx-config.h netwerk/necko-config.h xpcom/xpcom-config.h)
+AC_CONFIG_HEADER(
+gfx/gfx-config.h
+netwerk/necko-config.h
+xpcom/xpcom-config.h
+xpcom/xpcom-private.h
+)
 
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)

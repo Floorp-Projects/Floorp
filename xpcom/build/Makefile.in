@@ -73,6 +73,7 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
+		-I.. \
 		-I$(srcdir)/../glue \
 		-I$(srcdir)/../base \
 		-I$(srcdir)/../ds \

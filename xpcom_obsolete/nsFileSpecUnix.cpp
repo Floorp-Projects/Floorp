@@ -45,6 +45,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <limits.h>
+#include "xpcom-private.h"
 #include "nsError.h"
 #include "prio.h"   /* for PR_Rename */
 

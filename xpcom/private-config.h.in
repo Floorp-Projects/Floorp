@@ -1,0 +1,27 @@
+/* Global defines needed by xpcom implementation */
+
+#ifndef _PRIVATE_CONFIG_H_
+#define _PRIVATE_CONFIG_H_
+
+#undef HAVE_64BIT_OS
+
+#undef HAVE_DLFCN_H
+
+#undef HAVE_GCC3_ABI
+
+#undef HAVE_ICONV
+
+#undef HAVE_ICONV_WITH_CONST_INPUT
+
+#undef HAVE_MBRTOWC
+
+#undef HAVE_MMAP
+
+#undef MOZ_DLL_SUFFIX
+
+#undef MOZILLA_VERSION
+
+#undef HAVE_WCRTOMB
+
+#endif /* _PRIVATE_CONFIG_H_ */
+
