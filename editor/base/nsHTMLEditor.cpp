@@ -1,4 +1,4 @@
-/* -*- Mode: C++ tab-width: 2 indent-tabs-mode: nil c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL") you may not use this file except in
@@ -153,7 +153,6 @@ nsHTMLEditor::nsHTMLEditor()
 , mRules(nsnull)
 , mIsComposing(PR_FALSE)
 , mMaxTextLength(-1)
-, mWrapColumn(0)
 {
 // Done in nsEditor
 // NS_INIT_REFCNT();
@@ -894,7 +893,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
     return res;
   }
 
-#if defined(DEBUG_akkana)
+#if defined(DEBUG_akkana_verbose)
   printf("============ Fragment dump :===========\n");
 
   nsCOMPtr<nsIContent> fragc (do_QueryInterface(docfrag));
@@ -2565,6 +2564,22 @@ NS_IMETHODIMP nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
 #pragma mark -
 #endif
 
+NS_IMETHODIMP
+nsHTMLEditor::GetBodyStyleContext(nsIStyleContext** aStyleContext)
+{
+  nsCOMPtr<nsIDOMElement> body;
+  nsresult res = GetBodyElement(getter_AddRefs(body));
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(body);
+
+  nsIFrame *frame;
+  res = mPresShell->GetPrimaryFrameFor(content, &frame);
+  if (NS_FAILED(res)) return res;
+  
+  nsCOMPtr<nsIStyleContext> styleContext;
+  return mPresShell->GetStyleContextFor(frame, aStyleContext);
+}
+
 //
 // Get the wrap width for the first PRE tag in the document.
 // If no PRE tag, throw an error.
@@ -2576,6 +2591,10 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
   if (! aWrapColumn)
     return NS_ERROR_NULL_POINTER;
 
+  *aWrapColumn = -1;        // default: no wrap
+
+#define PRE_NODE_IN_BODY 1
+#ifdef PRE_NODE_IN_BODY
   nsCOMPtr<nsIDOMElement> preElement = FindPreElement();
   if (!preElement)
     return NS_ERROR_UNEXPECTED;
@@ -2607,19 +2626,49 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
     *aWrapColumn = -1;  // no wrap
 
   return NS_OK;
+
+#else /* PRE_NODE_IN_BODY */
+  nsCOMPtr<nsIStyleContext> styleContext;
+  res = GetBodyStyleContext(getter_AddRefs(styleContext));
+  if (NS_FAILED(res)) return res;
+
+  const nsStyleText* styleText =
+    (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
+
+  if (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace)
+    *aWrapColumn = 0;   // wrap to window width
+  else if (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace)
+  {
+    const nsStylePosition* stylePosition =
+      (const nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position); 
+    if (stylePosition->mWidth.GetUnit() == eStyleUnit_Chars)
+      *aWrapColumn = stylePosition->mWidth.GetIntValue(); 
+    else {
+#ifdef DEBUG_akkana
+      printf("Can't set wrap column: style unit is %d\n",
+             stylePosition->mWidth.GetUnit());
+#endif
+      *aWrapColumn = -1;
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+  else
+    *aWrapColumn = -1;
+  return NS_OK;
+#endif /* PRE_NODE_IN_BODY */
 }
 
 //
 // Change the wrap width on the first <PRE> tag in this document.
 // (Eventually want to search for more than one in case there are
 // interspersed quoted text blocks.)
+// Alternately: Change the wrap width on the editor style sheet.
 // 
 NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 {
   nsresult res;
 
-  mWrapColumn = aWrapColumn;
-
+#ifdef PRE_NODE_IN_BODY
   nsCOMPtr<nsIDOMElement> preElement = FindPreElement();
   if (!preElement)
     return NS_ERROR_UNEXPECTED;
@@ -2646,13 +2695,14 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   nsString numCols;
   numCols.Append(aWrapColumn, 10);
   res = SetAttribute(preElement, colsStr, numCols);
-
-  // Layout doesn't detect that this attribute change requires redraw.  Sigh.
-  //HACKForceRedraw();  // This doesn't do it either!
-
   return res;
-}  
 
+#else /* PRE_NODE_IN_BODY */
+  // Need to set a style sheet here ...
+  // Probably need to keep around an mPlaintextStyleSheet for this purpose.
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif /* PRE_NODE_IN_BODY */
+}  
 
 
 // 
@@ -2989,7 +3039,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             printf("Don't know how to insert an image yet!\n");
             //nsIImage* image = (nsIImage *)data;
             //NS_RELEASE(image);
-            rv = NS_ERROR_FAILURE; // for now give error code
+            rv = NS_ERROR_NOT_IMPLEMENTED; // for now give error code
           }
         }
 
@@ -3069,15 +3119,19 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
     // Set the wrap column.  If our wrap column is 0,
     // i.e. wrap to body width, then don't set it, let the
     // document encoder use its own default.
-    if (mWrapColumn != 0)
+    PRInt32 wrapColumn;
+    if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
     {
-      PRUint32 wc;
-      if (mWrapColumn < 0)
-        wc = 0;
-      else
-        wc = (PRUint32)mWrapColumn;
-      if (mWrapColumn > 0)
-        (void)encoder->SetWrapColumn(wc);
+      if (wrapColumn != 0)
+      {
+        PRUint32 wc;
+        if (wrapColumn < 0)
+          wc = 0;
+        else
+          wc = (PRUint32)wrapColumn;
+        if (wrapColumn > 0)
+          (void)encoder->SetWrapColumn(wc);
+      }
     }
 
     rv = encoder->EncodeToString(aOutputString);
@@ -3147,16 +3201,20 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   // Set the wrap column.  If our wrap column is 0,
   // i.e. wrap to body width, then don't set it, let the
   // document encoder use its own default.
-  if (mWrapColumn != 0)
-  {
-    PRUint32 wc;
-    if (mWrapColumn < 0)
-      wc = 0;
-    else
-      wc = (PRUint32)mWrapColumn;
-    if (mWrapColumn > 0)
-      (void)encoder->SetWrapColumn(wc);
-  }
+    PRInt32 wrapColumn;
+    if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
+    {
+      if (wrapColumn != 0)
+      {
+        PRUint32 wc;
+        if (wrapColumn < 0)
+          wc = 0;
+        else
+          wc = (PRUint32)wrapColumn;
+        if (wrapColumn > 0)
+          (void)encoder->SetWrapColumn(wc);
+      }
+    }
 
   return encoder->EncodeToStream(aOutputStream);
 }
@@ -3611,7 +3669,9 @@ void nsHTMLEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
   aSelection->Extend(endNode, endOffset);
 }
 
+#ifdef XP_MAC
 #pragma mark -
+#endif
 
 //================================================================
 // HTML Editor methods
@@ -4471,7 +4531,9 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
 }
 
 
+#ifdef XP_MAC
 #pragma mark -
+#endif
 
 nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 {

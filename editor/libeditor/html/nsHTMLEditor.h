@@ -188,6 +188,10 @@ public:
 
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
+
+  /* ------------ Utility Routines, not part of public API -------------- */
+  NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
+
 protected:
 
   virtual void  InitRules();
@@ -432,7 +436,6 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool 	mIsComposing;
   PRInt32 mMaxTextLength;
-  PRUint32 mWrapColumn;
 
 // friends
 friend class nsHTMLEditRules;
