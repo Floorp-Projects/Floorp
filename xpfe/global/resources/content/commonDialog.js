@@ -23,14 +23,16 @@
  */
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"; 
- 
+
+var gCommonDialogParam;
+
 function commonDialogOnLoad()
 {
   doSetOKCancel(commonDialogOnOK, commonDialogOnCancel, commonDialogOnButton2, commonDialogOnButton3);
-  param = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+  gCommonDialogParam = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 	
   // display the main text
-	var messageText = param.GetString(0);
+	var messageText = gCommonDialogParam.GetString(0);
   var messageParent = document.getElementById("info.box");
   var messageParagraphs = messageText.split("\n");
   
@@ -43,58 +45,58 @@ function commonDialogOnLoad()
       messageParent.appendChild(htmlNode);
     }
   
-  setElementText("info.header", param.GetString(3), true); 
+  setElementText("info.header", gCommonDialogParam.GetString(3), true); 
     
   // set the window title
-  window.title = param.GetString(12);
+  window.title = gCommonDialogParam.GetString(12);
   
   // set the icon	
   var iconElement = document.getElementById("info.icon");
-  var iconURL = param.GetString(2);
+  var iconURL = gCommonDialogParam.GetString(2);
   if (iconURL) iconElement.setAttribute("src", iconURL);
   
   // set the number of command buttons
-  var nButtons = param.GetInt(2);
+  var nButtons = gCommonDialogParam.GetInt(2);
   if (nButtons == 1) hideElementById("cancel");
   switch (nButtons)
     {
       case 4:
         unHideElementByID("Button3");
-        setElementText("Button3", param.GetString(11));
+        setElementText("Button3", gCommonDialogParam.GetString(11));
         // fall through
       case 3:
         unHideElementByID("Button2");
-        setElementText("Button2", param.GetString(10));
+        setElementText("Button2", gCommonDialogParam.GetString(10));
         // fall through
       default:
       case 2:
-        var string = param.GetString(8);
+        var string = gCommonDialogParam.GetString(8);
         if (string) setElementText("ok", string);
         // fall through
       case 1:
-        string = param.GetString(9);
+        string = gCommonDialogParam.GetString(9);
         if (string) setElementText("cancel", string);
         break;
     }
 
   // initialize the checkbox
-  setCheckbox(param.GetString(1), param.GetInt(1));
+  setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1));
 	
   // initialize the edit fields
-	var nEditFields = param.GetInt(3);
+	var nEditFields = gCommonDialogParam.GetInt(3);
   switch (nEditFields)
     {
       case 2:
         var password2Container = document.getElementById("password2EditField");
         password2Container.removeAttribute("collapsed");
         var password2Field = document.getElementById("dialog.password2");
-        password2Field.value = param.GetString(7);
+        password2Field.value = gCommonDialogParam.GetString(7);
         
-        var password2Label = param.GetString(5);
+        var password2Label = gCommonDialogParam.GetString(5);
         if (password2Label) setElementText("password2.text", password2Label);
         
         var containerID, fieldID, labelID;
-        if (param.GetInt(4) == 1)
+        if (gCommonDialogParam.GetInt(4) == 1)
           {
             // two password fields ('password' and 'retype password')
             containerID = "password1EditField";
@@ -110,16 +112,15 @@ function commonDialogOnLoad()
           
         unHideElementByID(containerID);
         var field = document.getElementById(fieldID);
-        field.value = param.GetString(6);
+        field.value = gCommonDialogParam.GetString(6);
             
-        var label = param.GetString(4);
+        var label = gCommonDialogParam.GetString(4);
         if (label) setElementText(labelID, label);
         field.focus();
 
         break;
     case 1:
-      var editFieldIsPassword = param.GetInt(4);
-      var containerID, fieldID;
+      var editFieldIsPassword = gCommonDialogParam.GetInt(4);
       if (editFieldIsPassword == 1) 
         {
           containerID = "password1EditField";
@@ -130,18 +131,18 @@ function commonDialogOnLoad()
         {
           containerID = "loginEditField";
           fieldID = "dialog.loginname";
-          setElementText("login.text", param.GetString(4));
+          setElementText("login.text", gCommonDialogParam.GetString(4));
         }
       
       unHideElementByID(containerID);
-      var field = document.getElementById(fieldID);
-      field.value = param.GetString(6);
+      field = document.getElementById(fieldID);
+      field.value = gCommonDialogParam.GetString(6);
       field.focus();
       break;
   }	
 
 	// set the pressed button to cancel to handle the case where the close box is pressed
-	param.SetInt(0, 1);
+	gCommonDialogParam.SetInt(0, 1);
 
 }
 
@@ -170,7 +171,7 @@ function hideElementById (aElementID)
 
 function onCheckboxClick(aCheckboxElement)
 {
-  param.SetInt(1, aCheckboxElement.checked);
+  gCommonDialogParam.SetInt(1, aCheckboxElement.checked);
 }
 
 function setElementText(aElementID, aValue, aChildNodeFlag)
@@ -185,35 +186,35 @@ function setElementText(aElementID, aValue, aChildNodeFlag)
 
 function commonDialogOnOK()
 {
-	param.SetInt(0, 0 );
-	var numEditfields = param.GetInt( 3 );
+	gCommonDialogParam.SetInt(0, 0 );
+	var numEditfields = gCommonDialogParam.GetInt( 3 );
 	if (numEditfields == 2) 
     {
       var editField2 = document.getElementById("dialog.password2");
-      param.SetString(7, editField2.value);
+      gCommonDialogParam.SetString(7, editField2.value);
     }
-  var editfield1Password = param.GetInt(4);
+  var editfield1Password = gCommonDialogParam.GetInt(4);
   var editField1 = editfield1Password == 1 ? document.getElementById("dialog.password1") :
                                              document.getElementById("dialog.loginname");
-  param.SetString(6, editField1.value);
+  gCommonDialogParam.SetString(6, editField1.value);
   return true;
 }
 
 function commonDialogOnCancel()
 {
-	param.SetInt(0, 1);
+	gCommonDialogParam.SetInt(0, 1);
 	return true;
 }
 
 function commonDialogOnButton2()
 {
-	param.SetInt(0, 2);
+	gCommonDialogParam.SetInt(0, 2);
 	return true;
 }
 
 function commonDialogOnButton3()
 {
-	param.SetInt(0, 3);
+	gCommonDialogParam.SetInt(0, 3);
 	return true;
 }
 
