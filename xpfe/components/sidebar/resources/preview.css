@@ -27,6 +27,8 @@
 */
 
 iframe#previewframe {
- min-width: 162px;
- min-height: 200px;
+ min-width: 10px;
+ min-height: 10px;
+ width: 162px;
+ height: 200px;
 }

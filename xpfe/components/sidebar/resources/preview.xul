@@ -43,8 +43,7 @@
 
   <titledbutton id="paneltitle" class="plain paneltitle" align="left"/>
 
-  <html:iframe id="previewframe" type="content" src="about:blank" 
-    style="height:200px; width:162px" />
+  <html:iframe id="previewframe" type="content" src="about:blank" flex="1"/>
 
   <box align="horizontal">
     <spring flex="50%"/>
