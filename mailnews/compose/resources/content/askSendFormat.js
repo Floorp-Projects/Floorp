@@ -23,11 +23,11 @@ function Startup()
 		    element.setAttribute("value", labels.getAttribute("button2Label"));
 		    element = document.getElementById("Button2");
 		    element.setAttribute("value", labels.getAttribute("button3Label"));
-		    element.setAttribute("style", "display:inline");
+            element.removeAttribute("hidden");
 		    element.setAttribute("disabled", "true");
 		    element = document.getElementById("Button3");
 		    element.setAttribute("value", labels.getAttribute("button4Label"));
-		    element.setAttribute("style", "display:inline");
+            element.removeAttribute("hidden");
 		    element.setAttribute("disabled", "true");
 		    
 		    //set buttons action
