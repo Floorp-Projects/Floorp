@@ -88,6 +88,11 @@ public:
     PRUint32 MaxReuseCount() { return mMaxReuseCount; }
     PRUint32 IdleTimeout()   { return mIdleTimeout; }
 
+    void     DontReuse()     { mKeepAlive = PR_FALSE;
+                               mReuseCount = 0;
+                               mMaxReuseCount = 0;
+                               mIdleTimeout = 0; }
+
     void DropTransaction();
     void ReportProgress(PRUint32 progress, PRInt32 progressMax);
 

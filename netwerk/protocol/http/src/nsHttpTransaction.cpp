@@ -397,7 +397,12 @@ nsHttpTransaction::HandleContentStart()
             LOG(("chunked decoder created\n"));
 
             val = mResponseHead->PeekHeader(nsHttp::Trailer);
-            NS_ASSERTION(!val, "FIXME: unhandled trailer header present!");
+            if (val) {
+                LOG(("response contains a Trailer header\n"));
+                // FIXME we should at least eat the trailer headers so this
+                // connection could be reused.
+                mConnection->DontReuse();
+            }
         }
         else if (mContentLength == -1) {
             // check if this is a no-content response
