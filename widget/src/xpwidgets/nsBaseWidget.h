@@ -61,6 +61,8 @@ public:
     virtual void            AddChild(nsIWidget* aChild);
     virtual void            RemoveChild(nsIWidget* aChild);
 
+    NS_IMETHOD              SetZIndex(PRInt32 aZIndex);
+    NS_IMETHOD              GetZIndex(PRInt32* aZIndex);
 
     virtual nscolor         GetForegroundColor(void);
     NS_IMETHOD              SetForegroundColor(const nscolor &aColor);
@@ -129,13 +131,12 @@ protected:
     PRBool            mIsAltDown;
     PRBool            mIsDestroying;
     PRBool            mOnDestroyCalled;
-    //PRInt32           mWidth;
-    //PRInt32           mHeight;
     nsRect            mBounds;
     nsIWidget        *mVScrollbar;
+    PRInt32           mZIndex;
 
     // keep the list of children
-    nsCOMPtr<nsISupportsArray> mChildren;    
+    nsCOMPtr<nsISupportsArray> mChildren;
     
     class Enumerator : public nsIBidirectionalEnumerator {
     public:

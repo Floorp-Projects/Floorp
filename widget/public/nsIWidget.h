@@ -297,8 +297,6 @@ class nsIWidget : public nsISupports {
     /**
      * Make the window modal 
      *
-     * 
-     *
      */
     NS_IMETHOD SetModal(void) = 0;
 
@@ -344,6 +342,16 @@ class nsIWidget : public nsISupports {
                       PRInt32 aWidth,
                       PRInt32 aHeight,
                       PRBool   aRepaint) = 0;
+
+    /**
+     * Set's the widget's z-index.
+     */
+    NS_IMETHOD SetZIndex(PRInt32 aZIndex) = 0;
+
+    /**
+     * Get's the widget's z-index. 
+     */
+    NS_IMETHOD GetZIndex(PRInt32* aZIndex) = 0;
 
     /**
      * Enable or disable this Widget
