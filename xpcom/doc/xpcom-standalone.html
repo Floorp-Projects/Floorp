@@ -31,8 +31,10 @@ Registry : mozilla/modules/libreg</li>
 <li>
 XPCOM : mozilla/xpcom</li>
 </ul>
-<b>NOTE: xpcom apis are not frozen yet. By XPCOM 1.0 release they will
+<b>NOTE 1: xpcom apis are not frozen yet. By XPCOM 1.0 release they will
 be.</b>
+<br><b>NOTE 2: xpcom standalone differs from the xpcom built with mozilla.
+Hence cannot be used with the mozilla browser.</b>
 <h3>
 2.0&nbsp; Building Standalone XPCOM</h3>
 Here are the instructions for building the Standalone XPCOM on unix:
@@ -55,8 +57,8 @@ Here are the instructions for building the Standalone XPCOM on unix:
 <li>
 <tt>gmake</tt></li>
 </ol>
-<i>Big thanks to Christopher Seawood &lt;cls@seawood.org> for make this
-so simple.</i>
+<i>Thanks to Christopher Seawood &lt;cls@seawood.org> for make this so
+simple.</i>
 <h3>
 3.0&nbsp; Testing Standalone XPCOM</h3>
 <tt>xpcom/sample</tt> contains a sample application and a component. This
@@ -106,7 +108,7 @@ cannot open shared object file: No such file or directory</tt></b></li>
 <b>Link errors when building xpcom standalone</b></li>
 
 <ol>This is mostly due to the fact that probably xpcom is not being built
-standalone. Make sure you did "<tt>configure --enable-xpcom-standalone"</tt></ol>
+standalone. Make sure you did "<tt>configure --enable-modules=xpcom"</tt></ol>
 </ol>
 
 <h3>
@@ -128,7 +130,8 @@ Disabled control of XPT from preferences.</li>
 <li>
 Disabled use of ZIP format of XPT files.</li>
 </ol>
-
+Until we fix these differences, the non-standalone xpcom will be the one
+used by the mozilla browser.
 <h3>
 6.0&nbsp; TODO for v 1.0</h3>
 
