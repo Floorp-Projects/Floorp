@@ -32,7 +32,9 @@
   orient="vertical"
   onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
-	<script language="javascript" src="chrome://global/content/strres.js"></script>
+  <stringbundle id="bundle_newProfile1_2"
+                src="chrome://communicator/locale/profile/newProfile1_2.properties"/>
+
   <script language="JavaScript" src="chrome://communicator/content/profile/newProfile1_2.js"></script>
 
   <html>&pnl2.intro.text;</html> 

@@ -19,19 +19,25 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onclose="onCancel();"
         onload="Startup('newProfile1_1','content');">
+  
+  <stringbundle id="bundle_createProfileWizard"
+                src="chrome://communicator/locale/profile/createProfileWizard.properties"/>
+  <stringbundle id="bundle_profileManager"
+                src="chrome://communicator/locale/profile/profileManager.properties"/>
 
-	<script language="javascript" src="chrome://global/content/strres.js"></script>
-	<script language="javascript" src="chrome://communicator/content/profile/createProfileWizard.js"></script>
-	<script language="javascript" src="chrome://global/content/wizardOverlay.js"></script>
-	<script language="javascript" src="chrome://global/content/wizardHandlerSet.js"></script>
-	<script language="javascript" src="chrome://global/content/wizardManager.js"></script>
-	<script language="javascript" src="chrome://global/content/widgetStateManager.js"></script>
+  <!-- XXX: strres.js is needed so that wizardManager.js will work -->
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/profile/createProfileWizard.js"/>
+  <script type="text/javascript" src="chrome://global/content/wizardOverlay.js"/>
+  <script type="text/javascript" src="chrome://global/content/wizardHandlerSet.js"/>
+  <script type="text/javascript" src="chrome://global/content/wizardManager.js"/>
+  <script type="text/javascript" src="chrome://global/content/widgetStateManager.js"/>
 
   <box class="box-header" id="header" title="&window.title.label;" description="&profileWizard.title;"/>
   <box class="wizard-box" flex="1">
-  	<html:iframe src="about:blank" style="width: 40em; height: 20em; overflow: auto;" name="content" id="content" flex="1"/>
+    <iframe src="about:blank" style="width: 40em; height: 20em; overflow: auto;" name="content" id="content" flex="1"/>
   </box>
   <separator class="groove"/>
-	<box id="wizardButtons"/>
+  <box id="wizardButtons"/>
 
 </window>

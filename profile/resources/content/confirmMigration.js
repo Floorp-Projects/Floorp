@@ -1,53 +1,34 @@
-var bundle;
+var gMigrationBundle;
 var profile = Components.classes["@mozilla.org/profile/manager;1"].getService();
 profile = profile.QueryInterface(Components.interfaces.nsIProfileInternal);
 
 function handleOKButton()
 {
-	profile.automigrate = true;
-	return true;
+  profile.automigrate = true;
+  return true;
 }
 function handleCancelButton()
 {
-	profile.automigrate = false;
-	return true;
+  profile.automigrate = false;
+  return true;
 }
 
 function onLoad()
 {
-  try {
-    bundle = srGetStrBundle("chrome://communicator/locale/profile/migration.properties");
-  }
-  catch (ex) {
-    dump("please fix bug #26291\n");
-  }
+  gMigrationBundle = document.getElementById("bundle_migration");
 
-	doSetOKCancel(handleOKButton, handleCancelButton);
+  doSetOKCancel(handleOKButton, handleCancelButton);
   var okButton = document.getElementById("ok");
   var cancelButton = document.getElementById("cancel");
-  if( !okButton || !cancelButton )
+  if (!okButton || !cancelButton)
     return false;
 
-  try {
-    okButton.setAttribute( "value", bundle.GetStringFromName( "migrate" ) );
-  }
-  catch (ex) {
-    dump("please fix bug #26291\n");
-    okButton.setAttribute( "value", "Migrate *");
-  }
-
-  okButton.setAttribute( "class", ( okButton.getAttribute( "class" ) + " padded" ) );
-
-  try {
-    cancelButton.setAttribute( "value", bundle.GetStringFromName( "newprofile" ) );
-  }
-  catch (ex) {
-    dump("please fix bug #26291\n");
-    cancelButton.setAttribute("value","New Profile *");
-  }
-
-  cancelButton.setAttribute( "class", ( cancelButton.getAttribute( "class" ) + " padded" ) );
+  okButton.setAttribute("value", gMigrationundle.getString("migrate"));
+  okButton.setAttribute("class", okButton.getAttribute("class") + " padded");
+  cancelButton.setAttribute("value", gMigrationBundle.getString("newprofile"));
+  cancelButton.setAttribute("class", cancelButton.getAttribute("class") + " padded");
   okButton.focus();
   centerWindowOnScreen();
+  return true;
 }
 

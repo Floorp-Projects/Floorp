@@ -25,6 +25,8 @@
 
 var profile = Components.classes["@mozilla.org/profile/manager;1"].getService();
 profile = profile.QueryInterface(Components.interfaces.nsIProfileInternal); 
+var gCreateProfileWizardBundle;
+var gProfileManagerBundle;
 
 // Navigation Set for pages contained in wizard 
 var wizardMap = {
@@ -44,6 +46,8 @@ function Startup( startPage, frame_id )
     dump("Please supply a content_frame ID!");
     return false;
   }
+  gCreateProfileWizardBundle = document.getElementById("bundle_createProfileWizard");
+  gProfileManagerBundle = document.getElementById("bundle_profileManager");
   
   // instantiate the Wizard Manager
   wizardManager                   = new WizardManager( frame_id, null, null, wizardMap );
@@ -53,7 +57,7 @@ function Startup( startPage, frame_id )
   // set the button handler functions
   wizardManager.SetHandlers( null, null, onFinish, onCancel, null, null );
   // load the start page
-	wizardManager.LoadPage( startPage, false );
+  wizardManager.LoadPage (startPage, false);
   // move to center of screen if no opener, otherwise, to center of opener
   if( window.opener )
     moveToAlertPosition();
@@ -67,10 +71,10 @@ function onCancel()
     window.close();
   else { 
     try {
-    	profile.forgetCurrentProfile();
+      profile.forgetCurrentProfile();
     }
     catch (ex) {
-    	dump("failed to forget current profile.\n");
+      dump("failed to forget current profile.\n");
     }
     ExitApp();
   }
@@ -135,25 +139,25 @@ function processCreateProfileData( aProfName, aProfDir, langcode)
   try {
     // note: deleted check for empty profName string here as this should be
     //       done by panel. -bmg (31/10/99)
-		// todo: move this check into the panel itself, activated ontyping :P
+    // todo: move this check into the panel itself, activated ontyping :P
     //       this should definetly be moved to that page.. but how about providing
     //       user with some feedback about what's wrong. .. TOOLTIP! o_O
     //       or.. some sort of onblur notification. like a dialog then, or a 
     //       dropout layery thing. yeah. something like that to tell them when 
     //       it happens, not when the whole wizard is complete. blah. 
-    if( profile.profileExists( aProfName ) )	{
-      alert( bundle.GetStringFromName( "profileExists" ) );
+    if (profile.profileExists(aProfName)) {
+      alert(gCreateProfileWizardBundle.getString("profileExists"));
       // this is a bad but probably acceptable solution for now. 
       // when we add more panels, we will want a better solution. 
       window.frames["content"].document.getElementById("ProfileName").focus();
-			return false;
-		}
+      return false;
+    }
     var invalidChars = ["/", "\\", "*", ":"];
     for( var i = 0; i < invalidChars.length; i++ )
     {
       if( aProfName.indexOf( invalidChars[i] ) != -1 ) {
-        var aString = pmbundle.GetStringFromName("invalidCharA");
-        var bString = pmbundle.GetStringFromName("invalidCharB");
+        var aString = gProfileManagerBundle.getString("invalidCharA");
+        var bString = gProfileManagerBundle.getString("invalidCharB");
         bString = bString.replace(/\s*<html:br\/>/g,"\n");
         var lString = aString + invalidChars[i] + bString;
         alert( lString );
@@ -201,7 +205,3 @@ function ExitApp()
   appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
   appShell.Quit();
 }
-
-// load string bundle
-var bundle = srGetStrBundle("chrome://communicator/locale/profile/createProfileWizard.properties");
-var pmbundle = srGetStrBundle("chrome://communicator/locale/profile/profileManager.properties");
