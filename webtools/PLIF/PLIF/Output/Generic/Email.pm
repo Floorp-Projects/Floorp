@@ -65,7 +65,7 @@ sub open {
     eval {
         local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required (so it says in man perlfunc)
         local $^W = 0; # XXX shut up warnings in Net::SMTP
-        $self->handle(Net::SMTP->new($self->host, 'Timeout' => 15));  # XXX hard coded timeout
+        $self->handle(Net::SMTP->new($self->host, 'Timeout' => $self->timeout));
         alarm(0);
     };
     if ($@) {
@@ -133,7 +133,7 @@ sub DESTROY {
 
 # dataSource.configuration.client
 sub settings {
-    return qw(host address);
+    return qw(host address timeout);
 }
 
 # setup.configure
@@ -170,6 +170,16 @@ sub setupConfigure {
     }
     $self->address($value);
 
+    $value = $self->timeout;
+    if (not defined($value)) {
+        $value = 5;
+    }
+    $value = $app->input->getArgument('protocol.email.timeout', $value);
+    if (not defined($value)) {
+        return 'protocol.email.timeout';
+    }
+    $self->timeout($value);
+
     $self->open();
     $app->getService('dataSource.configuration')->setSettings($app, $self, 'protocol.email');
     $self->dump(9, 'done configuring protocol.email');
@@ -179,6 +189,7 @@ sub setupConfigure {
 sub hash {
     my $self = shift;
     return {
-            'address' => $self->address,
-           };
+        'address' => $self->address,
+        # XXX RFC822 date -- need to provide this WITHOUT duplicating code in StdOut outputter
+    };
 }
