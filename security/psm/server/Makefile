@@ -146,12 +146,9 @@ XPCOM_LIBS = \
 
 EXTRA_LIBS = \
 	$(DIST)/lib/ssl.lib \
-	$(DIST)/lib/jar.lib \
-	$(DIST)/lib/zlib.lib \
 	$(DIST)/lib/nss.lib \
 	$(DIST)/lib/ssl.lib \
 	$(DIST)/lib/crmf.lib \
-	$(DIST)/lib/sectool.lib \
 	$(DIST)/lib/pkcs12.lib \
 	$(DIST)/lib/pkcs7.lib \
 	$(DIST)/lib/certhi.lib \
@@ -161,11 +158,9 @@ EXTRA_LIBS = \
 	$(DIST)/lib/pk11wrap.lib \
 	$(DIST)/lib/softoken.lib \
 	$(DIST)/lib/certdb.lib \
-	$(DIST)/lib/swfci.lib \
-	$(DIST)/lib/crypto.lib \
-	$(DIST)/lib/freebl.lib \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/crypto.lib \
+	$(DIST)/lib/freebl.lib \
 	$(DIST)/lib/dbm.lib \
 	$(DIST)/lib/protocol.lib \
 	$(DIST)/lib/xpcom.lib \
