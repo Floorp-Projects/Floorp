@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  appcomps \
 		  caps \
 		  uriloader \
+		  xulapp \
 		  $(NULL)
 
 #    PatriciaTree.cpp \
