@@ -243,6 +243,13 @@ function selectProduct(f) {
     // Apparently, IE4 chokes on the below, so do nothing if running that.
     var agt=navigator.userAgent.toLowerCase();
     if ((agt.indexOf("msie") != -1)) return;
+    // Netscape 4.04 and 4.05 also choke with an "undefined"
+    // error.  if someone can figure out how to "define" the
+    // whatever, we'll remove this hack.  in the mean time, we'll
+    // assume that v4.00-4.03 also die, so we'll disable the neat
+    // javascript stuff for Netscape 4.05 and earlier.
+    var agtver = parseFloat(navigator.appVersion);
+    if (agtver <= 4.05 ) return;
 
     var cnt = 0;
     var i;
