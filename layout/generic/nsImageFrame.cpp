@@ -576,7 +576,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
       // We have a width, and an auto height. Compute height from
       // width once we have the intrinsic image size.
       if (mIntrinsicSize.height != 0) {
-        newHeight = mIntrinsicSize.height;
+        newHeight = (mIntrinsicSize.height * newWidth) / mIntrinsicSize.width;
         haveComputedSize = PR_TRUE;
       } else {
         newHeight = NSIntPixelsToTwips(1, p2t); // XXX?
@@ -588,7 +588,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     // once we have the intrinsic image size.
     newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
     if (mIntrinsicSize.width != 0) {
-      newWidth = mIntrinsicSize.width;
+      newWidth = (mIntrinsicSize.width * newHeight) / mIntrinsicSize.height;
       haveComputedSize = PR_TRUE;
     } else {
       newWidth = NSIntPixelsToTwips(1, p2t);
