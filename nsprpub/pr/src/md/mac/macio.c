@@ -250,10 +250,10 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 		if (op == READ_ASYNC)
 		{
 			/*
-			**  Skanky optimization so that reads < 2K are actually done synchronously
+			**  Skanky optimization so that reads < 20K are actually done synchronously
 			**  to optimize performance on small reads (e.g. registry reads on startup)
 			*/
-			if (bytes > 2048L)
+			if ( bytes > 20480L )
 			{
 	   			me->io_pending = PR_TRUE; /* Only mark thread io pending in async call */
 				(void) PBReadAsync(&pbAsync);
