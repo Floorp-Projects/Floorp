@@ -50,14 +50,6 @@
 /* from certdb.h */
 #define CERTDB_USER (1<<6)
 
-#if 0
-/* from certdb.h */
-typedef SECStatus (* PermCertCallback)(CERTCertificate *cert, SECItem *k, void *pdata);
-/* from certdb.h */
-SECStatus SEC_TraversePermCerts
-   (CERTCertDBHandle *handle, PermCertCallback certfunc, void *udata);
-#endif
-
 /*
  *  S O B _ l i s t _ c e r t s
  *
@@ -114,6 +106,8 @@ char *JAR_JAR_list_certs (void)
   {
   SECStatus status = SECFailure;
   CERTCertDBHandle *certdb;
+  CERTCertList *certs;
+  CERTCertListNode *node;
 
   char *ugly_list;
 
@@ -126,8 +120,17 @@ char *JAR_JAR_list_certs (void)
     {
     *ugly_list = 0;
 
-    status = SEC_TraversePermCerts 
-            (certdb, jar_list_cert_callback, (void *) &ugly_list);
+    certs = PK11_ListCerts(PK11CertListUnique, NULL/* pwarg*/);
+    if (certs)
+      {
+	for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node,certs);
+				node = CERT_LIST_NEXT(node))
+           {
+	    jar_list_cert_callback(node->cert, NULL, (void *)&ugly_list);
+	   }
+	CERT_DestroyCertList(certs);
+	status = SECSuccess;
+       }
     }
 
   JAR_close_database (certdb);
