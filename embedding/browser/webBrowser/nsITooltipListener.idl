@@ -1,0 +1,57 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Author:
+ *   Mike Pinkerton <pinkerton@netscape.com>
+ *
+ * Contributor(s): 
+ */
+ 
+#include "nsISupports.idl"
+
+
+//
+// nsITooltipListener interface
+//
+// Used to tell an embedding client when a tooltip should be displayed or hidden.
+//
+
+
+[uuid(44b78386-1dd2-11b2-9ad2-e4eee2ca1916)]
+interface nsITooltipListener : nsISupports
+{
+    // Called when the tooltip should be displayed. The tooltip will
+    // time out after a pre-determined length of time. 
+    //
+    // aXCoords, aYCoords - the X/Y coordinates of where to display
+    //    the tooltip. Note these coordinates are local to the the browser
+    //    content area, not the top-level window.
+    // aTipText - the text to display, obtained from the TITLE attribute
+    //    on the node (or a containing parent) over which the mouse is hovering.
+    //    This is a unicode string.
+    //
+    // Returning any result other than NS_OK will cause Gecko to
+    // behave as if no tooltip was displayed (no auto-timeout, etc).
+  void OnShowTooltip ( in long aXCoords, in long aYCoords, in wstring aTipText ) ;
+  
+    // Called when the tooltip should be hidden, either by a mouse move
+    // or an auto-hide of the tooltip.
+  void OnHideTooltip ( ) ;
+};
+
