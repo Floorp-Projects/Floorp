@@ -282,6 +282,9 @@ done:
 static XP_Bool vr_CompareDirs( char *dir1, char *dir2 )
 {
     int len1,len2;
+   
+    if (!dir1 || !dir2) return FALSE;
+
     len1 = XP_STRLEN( dir1 );
     len2 = XP_STRLEN( dir2 );
 
