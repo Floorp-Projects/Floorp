@@ -2620,8 +2620,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
 
         if (pobj != obj) {
-            /* Don't clone a setter or shared prototype property. */
-            if (attrs & (JSPROP_SETTER | JSPROP_SHARED)) {
+            /* Don't clone a shared prototype property. */
+            if (attrs & JSPROP_SHARED) {
                 JS_UNLOCK_SCOPE(cx, scope);
 
                 return SPROP_SET(cx, sprop, obj, pobj, vp);
