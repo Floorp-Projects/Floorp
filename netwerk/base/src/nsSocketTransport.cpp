@@ -266,6 +266,11 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
             rv = NS_ERROR_OUT_OF_MEMORY;
         else {
             mSocketTypeCount = 0;
+            nsCOMPtr<nsISocketProviderService> spserv(do_GetService(kSocketProviderService, &rv));
+            if (NS_FAILED(rv))
+                return rv;
+            nsCOMPtr<nsISocketProvider> provider;
+
             for (PRUint32 type = 0; type < aSocketTypeCount; type++) {
                 const char * socketType = aSocketTypes[type];
                 if (socketType == nsnull)
@@ -273,6 +278,16 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
 #ifdef DEBUG
                 LOG(("nsSocketTransport: pushing io layer: %s\n", socketType));
 #endif
+
+                // verify that we have a socket provider that can actually
+                // give us this type of socket.  this allows us to return failure now,
+                // rather returning a confusing error when we try to connect the
+                // socket.  see bug 74387.
+
+                rv = spserv->GetSocketProvider(socketType, getter_AddRefs(provider));
+                if (NS_FAILED(rv))
+                    return rv;
+
                 mSocketTypes[mSocketTypeCount] = nsCRT::strdup(socketType);
                 if (!mSocketTypes[mSocketTypeCount]) {
                     rv = NS_ERROR_OUT_OF_MEMORY;
