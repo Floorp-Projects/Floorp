@@ -548,6 +548,11 @@ input[type=image]:focus {
 input[type=image] {
   box-sizing: border-box;
   border: 2px solid blue;
+  cursor: pointer;
+}
+
+input[type=image][disabled] {
+  cursor: default;
 }
 
 input[type=file] {
