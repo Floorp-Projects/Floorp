@@ -1713,33 +1713,33 @@ size_t JS::printChars(FILE *file, const char *begin, const char *end)
 	char buffer[1024];
 
 	while (n > sizeof buffer) {
-		memcpy(buffer, s, sizeof buffer);
+		std::memcpy(buffer, begin, sizeof buffer);
 		translateLFtoCR(buffer, buffer + sizeof buffer);
 		extra += fwrite(buffer, 1, sizeof buffer, file);
 		n -= sizeof buffer;
-		s += sizeof buffer;
+		begin += sizeof buffer;
 	}
-	memcpy(buffer, s, n);
+	std::memcpy(buffer, begin, n);
 	translateLFtoCR(buffer, buffer + n);
 	return extra + fwrite(buffer, 1, n, file);
 }
 
 int std::fputc(int c, FILE *file)
 {
-	char buffer = c;
+	char buffer = static_cast<char>(c);
 	if (buffer == '\n')
 		buffer = '\r';
-	return fwrite(&buffer, 1, 1, file);
+	return static_cast<int>(fwrite(&buffer, 1, 1, file));
 }
 
 int std::fputs(const char *s, FILE *file)
 {
-	return static_cast<int>(printChars(file, s, s + strlen(s)));
+	return static_cast<int>(JS::printChars(file, s, s + strlen(s)));
 }
 
 int std::fprintf(FILE* file, const char *format, ...)
 {
-	Buffer<char, 1024> b;
+	JS::Buffer<char, 1024> b;
 
 	while (true) {
 		va_list args;
@@ -1748,7 +1748,7 @@ int std::fprintf(FILE* file, const char *format, ...)
 		va_end(args);
 		if (n >= 0 && n < b.size) {
 			translateLFtoCR(b.buffer, b.buffer + n);
-			return static_cast<int>(fwrite(b.buffer, 1, n, file));
+			return static_cast<int>(fwrite(b.buffer, 1, static_cast<size_t>(n), file));
 		}
 		b.expand(b.size*2);
 	}
