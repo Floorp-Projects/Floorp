@@ -21,6 +21,7 @@
 
 #include "nsMsgDatabase.h"
 #include "nsDBFolderInfo.h"
+#include "nsNewsSet.h"
 
 #ifdef WE_HAVE_MDBINTERFACES
 static NS_DEFINE_IID(kIMDBIID, NS_IMDB_IID);
@@ -395,6 +396,93 @@ nsresult nsMsgDatabase::GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **pmsgHd
 	}
 
 	return err;
+}
+
+nsresult nsMsgDatabase::DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator)
+{
+	nsresult	err = NS_OK;
+
+	for (PRUint32 index = 0; index < messageKeys.GetSize(); index++)
+	{
+		MessageKey messageKey = messageKeys.GetAt(index);
+		nsMsgHdr *msgHdr = NULL;
+		
+		err = GetMsgHdrForKey(messageKey, &msgHdr);
+		if (msgHdr == NULL || err != NS_OK)
+		{
+			err = NS_MSG_MESSAGE_NOT_FOUND;
+			break;
+		}
+		err = DeleteHeader(msgHdr, instigator, index % 300 == 0);
+		if (err != NS_OK)
+			break;
+	}
+//	Commit();
+	return err;
+}
+
+
+nsresult nsMsgDatabase::DeleteHeader(nsMsgHdr *msgHdr, nsIDBChangeListener *instigator, PRBool commit, PRBool notify /* = TRUE */)
+{
+	MessageKey	messageKey = msgHdr->GetMessageKey();
+	// only need to do this for mail - will this speed up news expiration? Is dirtying objects
+	// we're about to delete slow for neoaccess? But are we short circuiting some
+	// notifications that we need?
+//	if (GetMailDB())
+		SetHdrFlag(msgHdr, TRUE, MSG_FLAG_EXPUNGED);	// tell mailbox (mail)
+
+	if (m_newSet)	// if it's in the new set, better get rid of it.
+		m_newSet->Remove(msgHdr->GetMessageKey());
+
+	if (m_dbFolderInfo != NULL)
+	{
+		PRBool isRead;
+		m_dbFolderInfo->ChangeNumMessages(-1);
+		m_dbFolderInfo->ChangeNumVisibleMessages(-1);
+		IsRead(msgHdr->GetMessageKey(), &isRead);
+		if (!isRead)
+			m_dbFolderInfo->ChangeNumNewMessages(-1);
+
+		m_dbFolderInfo->m_expungedBytes += msgHdr->GetMessageSize();
+
+	}	
+
+	if (notify)
+		NotifyKeyChangeAll(messageKey, msgHdr->GetFlags(), instigator); // tell listeners
+
+//	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
+		RemoveHeaderFromDB(msgHdr);
+//	if (commit)
+//		Commit();			// ### dmb is this a good time to commit?
+	msgHdr->Release();	// even though we're deleting it from the db, need to unrefer.
+	return NS_OK;
+}
+
+// This is a lower level routine which doesn't send notifcations or
+// update folder info. One use is when a rule fires moving a header
+// from one db to another, to remove it from the first db.
+
+nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
+{
+	return NS_OK;
+}
+
+nsresult nsMsgDatabase::IsRead(MessageKey messageKey, PRBool *pRead)
+{
+	nsresult	err = NS_OK;
+	nsMsgHdr *msgHdr;
+
+	err = GetMsgHdrForKey(messageKey, &msgHdr);
+	if (err == NS_OK && msgHdr != NULL)
+	{
+		err = IsHeaderRead(msgHdr, pRead);
+		msgHdr->Release();
+		return err;
+	}
+	else
+	{
+		return NS_MSG_MESSAGE_NOT_FOUND;
+	}
 }
 
 

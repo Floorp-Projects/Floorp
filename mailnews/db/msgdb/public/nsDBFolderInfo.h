@@ -93,9 +93,14 @@ public:
 
 	MessageKey			GetLastMessageLoaded();
 	void				SetLastMessageLoaded(MessageKey lastLoaded);
+
+	void				SetFolderSize(PRUint32 size);
+	void				SetFolderDate(time_t date);
+
 	// get and set arbitrary property, aka row cell value.
 	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
 	nsresult	SetProperty(const char *propertyName, nsString &propertyStr);
+	nsresult	SetUint32Property(const char *propertyName, PRUint32 propertyValue);
 
 	PRUint16	m_version;			// for upgrading...
 	PRInt32		m_sortType;			// the last sort type open on this db.

@@ -47,6 +47,8 @@ public:
 	MessageKey  GetMessageKey();
 	MessageKey	GetThreadId();
 	void		SetMessageKey(MessageKey inKey) {m_messageKey = inKey;}
+	virtual	PRUint32 GetMessageSize() {return m_messageSize;}
+	virtual PRUint32 GetFlags() {return m_flags;}
 
 			// this is almost always the m_messageKey, except for the first message.
 			// NeoAccess doesn't allow fID's of 0.

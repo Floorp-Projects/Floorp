@@ -189,6 +189,17 @@ void nsDBFolderInfo::SetHighWater(MessageKey highWater, PRBool force /* = FALSE 
 	}
 }
 
+void	nsDBFolderInfo::SetFolderSize(PRUint32 size)
+{
+	m_folderSize = size;
+}
+
+void	nsDBFolderInfo::SetFolderDate(time_t folderDate)
+{
+	m_folderDate = folderDate;
+}
+
+
 MessageKey	nsDBFolderInfo::GetHighWater() 
 {
 	return m_highWaterMessageKey;
@@ -404,6 +415,13 @@ nsresult	nsDBFolderInfo::GetProperty(const char *propertyName, nsString &resultP
 		err = m_mdb->RowCellColumnTonsString(m_mdbRow, property_token, resultProperty);
 
 	return err;
+}
+
+nsresult	nsDBFolderInfo::SetUint32Property(const char *propertyName, PRUint32 propertyValue)
+{
+	nsString propertyStr;
+	propertyStr.Append(propertyValue, 10);
+	return SetProperty(propertyName, propertyStr);
 }
 
 nsresult	nsDBFolderInfo::SetProperty(const char *propertyName, nsString &propertyStr)

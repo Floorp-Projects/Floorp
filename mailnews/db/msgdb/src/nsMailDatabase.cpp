@@ -138,7 +138,7 @@ nsresult nsMailDatabase::OnNewPath (nsFilePath &newPath)
 	return ret;
 }
 
-nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &messageKeys, ChangeListener *instigator)
+nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator)
 {
 	nsresult ret = NS_OK;
 	m_folderFile = PR_Open(m_dbName, PR_RDWR, 0);
@@ -151,9 +151,23 @@ nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &messageKeys, ChangeListen
 }
 
 
-/* static */  nsresult nsMailDatabase::SetFolderInfoValid(nsFilePath &pathname, int num, int numunread)
+/* static */  nsresult nsMailDatabase::SetSummaryValid(PRBool valid)
 {
 	nsresult ret = NS_OK;
+	struct stat st;
+
+	if (stat(m_dbName, &st)) 
+		return NS_MSG_ERROR_FOLDER_MISSING;
+
+	if (valid)
+	{
+		m_dbFolderInfo->SetFolderSize(st.st_size);
+		m_dbFolderInfo->SetFolderDate(st.st_mtime);
+	}
+	else
+	{
+		m_dbFolderInfo->SetFolderDate(0);	// that ought to do the trick.
+	}
 	return ret;
 }
 
@@ -215,11 +229,6 @@ nsresult SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, Messa
 	return ret;
 }
 
-nsresult nsMailDatabase::SetSummaryValid(PRBool valid /* = TRUE */)
-{
-	nsresult ret = NS_OK;
-	return ret;
-}
 	
 nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
 {

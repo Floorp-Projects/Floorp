@@ -25,7 +25,6 @@
 // This is the subclass of nsMsgDatabase that handles local mail messages.
 class nsOfflineImapOperation;
 class nsMsgKeyArray;
-class ChangeListener;
 class MSG_Master;
 class MSG_FolderInfo;
 
@@ -45,7 +44,7 @@ public:
 
 	virtual nsresult		OnNewPath (nsFilePath &newPath);
 
-	virtual nsresult		DeleteMessages(nsMsgKeyArray &messageKeys, ChangeListener *instigator);
+	virtual nsresult		DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator);
 
 //	virtual int				GetCurVersion() {return kMailDBVersion;}
 	static  nsresult		SetFolderInfoValid(nsFilePath &pathname, int num, int numunread);

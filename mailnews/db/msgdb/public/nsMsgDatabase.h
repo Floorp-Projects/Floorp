@@ -24,11 +24,12 @@
 #include "nsString.h"
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
+#include "nsMsgMessageFlags.h"
 
 class ListContext;
 class nsDBFolderInfo;
 class nsMsgKeyArray;
-class ChangeListener;
+class nsNewsSet;
 
 class nsDBChangeAnnouncer : public XPPtrArray  // array of ChangeListeners
 {
@@ -112,7 +113,10 @@ public:
 
 	// helpers for user command functions like delete, mark read, etc.
 
-	virtual nsresult	DeleteMessages(nsMsgKeyArray &messageKeys, ChangeListener *instigator);
+	virtual nsresult	DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator);
+	virtual nsresult	DeleteHeader(nsMsgHdr *msgHdr, nsIDBChangeListener *instigator, PRBool commit, PRBool notify  = TRUE);
+	virtual nsresult	RemoveHeaderFromDB(nsMsgHdr *msgHdr);
+	virtual nsresult	IsRead(MessageKey messageKey, PRBool *pRead);
 
 	// used mainly to force the timestamp of a local mail folder db to
 	// match the time stamp of the corresponding berkeley mail folder,
@@ -148,6 +152,8 @@ protected:
 	mdbTable		*m_mdbAllMsgHeadersTable;
 	nsFilePath		m_dbName;
 
+	nsNewsSet *m_newSet;		// new messages since last open.
+
 	nsrefcnt		mRefCnt;
 
 	static void		AddToCache(nsMsgDatabase* pMessageDB) 
@@ -155,6 +161,15 @@ protected:
 	static void		RemoveFromCache(nsMsgDatabase* pMessageDB);
 	static int		FindInCache(nsMsgDatabase* pMessageDB);
 			PRBool	MatchDbName(nsFilePath &dbName);	// returns TRUE if they match
+
+	virtual nsresult SetKeyFlag(MessageKey messageKey, PRBool set, PRInt32 flag,
+							  nsIDBChangeListener *instigator = NULL);
+	virtual void	SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
+	virtual void	MarkHdrReadInDB(nsMsgHdr *msgHdr, PRBool bRead,
+									nsIDBChangeListener *instigator);
+
+	virtual			nsresult			IsHeaderRead(nsMsgHdr *hdr, PRBool *pRead);
+
 	static nsMsgDatabaseArray*	GetDBCache();
 	static nsMsgDatabaseArray	*m_dbCache;
 
