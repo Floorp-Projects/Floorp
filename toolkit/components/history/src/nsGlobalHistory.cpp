@@ -102,6 +102,7 @@ nsIRDFResource* nsGlobalHistory::kNC_URL;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDateAndSite;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
+nsIRDFResource* nsGlobalHistory::kNC_DayFolderIndex;
 nsIMdbFactory* nsGlobalHistory::gMdbFactory = nsnull;
 nsIPrefBranch* nsGlobalHistory::gPrefBranch = nsnull;
 
@@ -560,6 +561,7 @@ nsGlobalHistory::~nsGlobalHistory()
     NS_IF_RELEASE(kNC_HistoryRoot);
     NS_IF_RELEASE(kNC_HistoryByDateAndSite);
     NS_IF_RELEASE(kNC_HistoryByDate);
+    NS_IF_RELEASE(kNC_DayFolderIndex);
     
     NS_IF_RELEASE(gMdbFactory);
     NS_IF_RELEASE(gPrefBranch);
@@ -1532,7 +1534,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
            (aProperty == kNC_NameSort) ||
            (aProperty == kNC_Hostname) ||
            (aProperty == kNC_Referrer) ||
-           (aProperty == kNC_URL)) {
+           (aProperty == kNC_URL) ||
+           (aProperty == kNC_DayFolderIndex)) {
 
     const char* uri;
     rv = aSource->GetValueConst(&uri);
@@ -1551,23 +1554,52 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     }
 
     // find URIs are special
-    if (((aProperty == kNC_Name) || (aProperty == kNC_NameSort)) &&
-        IsFindResource(aSource)) {
-      
-      // for sorting, we sort by uri, so just return the URI as a literal
-      if (aProperty == kNC_NameSort) {
-        nsCOMPtr<nsIRDFLiteral> uriLiteral;
-        rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri).get(),
-                                     getter_AddRefs(uriLiteral));
-        if (NS_FAILED(rv))    return(rv);
-        
-        *aTarget = uriLiteral;
-        NS_ADDREF(*aTarget);
-        return NS_OK;
+    if (IsFindResource(aSource)) {
+      if (aProperty == kNC_Name || aProperty == kNC_NameSort) {
+
+        // for sorting, we sort by uri, so just return the URI as a literal
+        if (aProperty == kNC_NameSort) {
+          nsCOMPtr<nsIRDFLiteral> uriLiteral;
+          rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri).get(),
+                                       getter_AddRefs(uriLiteral));
+          if (NS_FAILED(rv))    return(rv);
+
+          *aTarget = uriLiteral;
+          NS_ADDREF(*aTarget);
+          return NS_OK;
+        }
+        else 
+          return GetFindUriName(uri, aTarget);
+      } else if (aProperty == kNC_DayFolderIndex) {
+        // parse out the 'text' token
+        nsVoidArray tokenList;
+        FindUrlToTokenList(uri, tokenList);
+
+        nsCOMPtr<nsIRDFInt> intLiteral;
+
+        for (PRInt32 i = 0; i < tokenList.Count(); ++i) {
+          tokenPair* token = NS_STATIC_CAST(tokenPair*, tokenList[i]);
+          if (!strcmp(token->tokenName, "text")) {
+            rv = gRDFService->GetIntLiteral(atoi(token->tokenValue),
+                                            getter_AddRefs(intLiteral));
+            break;
+          }
+        }
+
+        FreeTokenList(tokenList);
+
+        if (intLiteral && NS_SUCCEEDED(rv)) {
+          *aTarget = intLiteral;
+          NS_ADDREF(*aTarget);
+          return NS_OK;
+        } else {
+          *aTarget = nsnull;
+          return rv;
+        }
       }
-      else 
-        return GetFindUriName(uri, aTarget);
-    }
+    } else if (aProperty == kNC_DayFolderIndex)
+      return NS_RDF_NO_VALUE;
+
     // ok, we got this far, so we have to retrieve something from
     // the row in the database
     nsCOMPtr<nsIMdbRow> row;
@@ -1806,7 +1838,8 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
            (aProperty == kNC_AgeInDays) ||
            (aProperty == kNC_Name) ||
            (aProperty == kNC_Hostname) ||
-           (aProperty == kNC_Referrer)) {
+           (aProperty == kNC_Referrer) ||
+           (aProperty == kNC_DayFolderIndex)) {
     nsresult rv;
     
     nsCOMPtr<nsIRDFNode> target;
@@ -2066,7 +2099,8 @@ nsGlobalHistory::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool
     // we handle children of find urls
     *result = (aArc == kNC_child ||
                aArc == kNC_Name ||
-               aArc == kNC_NameSort);
+               aArc == kNC_NameSort ||
+               aArc == kNC_DayFolderIndex);
   }
   else if (IsURLInHistory(aSource)) {
     // If the URL is in the history, then it'll have all the
@@ -2140,6 +2174,7 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
     array->AppendElement(kNC_child);
     array->AppendElement(kNC_Name);
     array->AppendElement(kNC_NameSort);
+    array->AppendElement(kNC_DayFolderIndex);
     
     return NS_NewArrayEnumerator(aLabels, array);
   }
@@ -2343,6 +2378,7 @@ nsGlobalHistory::Init()
     gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Referrer"),    &kNC_Referrer);
     gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),       &kNC_child);
     gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"),         &kNC_URL);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "DayFolderIndex"), &kNC_DayFolderIndex);
     gRDFService->GetResource(NS_LITERAL_CSTRING("NC:HistoryRoot"),               &kNC_HistoryRoot);
     gRDFService->GetResource(NS_LITERAL_CSTRING("NC:HistoryByDateAndSite"),           &kNC_HistoryByDateAndSite);
     gRDFService->GetResource(NS_LITERAL_CSTRING("NC:HistoryByDate"),           &kNC_HistoryByDate);

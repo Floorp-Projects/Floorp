@@ -351,6 +351,7 @@ protected:
   static nsIRDFResource* kNC_HistoryRoot;
   static nsIRDFResource* kNC_HistoryByDate;
   static nsIRDFResource* kNC_HistoryByDateAndSite;
+  static nsIRDFResource* kNC_DayFolderIndex;
 
   static nsIMdbFactory* gMdbFactory;
   static nsIPrefBranch* gPrefBranch;

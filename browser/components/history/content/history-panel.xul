@@ -121,9 +121,10 @@
         <treechildren>
           <treeitem uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#VisitCount" hidden="true"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#Date" hidden="true"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
+                        dayindex="rdf:http://home.netscape.com/NC-rdf#DayFolderIndex"
+                        visitcount="rdf:http://home.netscape.com/NC-rdf#VisitCount"
+                        date="rdf:http://home.netscape.com/NC-rdf#Date"/>
             </treerow>
           </treeitem>
         </treechildren>
@@ -132,14 +133,8 @@
     <treecols id="historyTreeCols">
       <treecol flex="1" id="Name" persist="sortActive sortDirection" 
                hideheader="true" primary="true"
-               sort="rdf:http://home.netscape.com/NC-rdf#Name"
+               sort="rdf:http://home.netscape.com/NC-rdf#DayFolderIndex"
                sortActive="true"/>
-      <treecol id="VisitCount" hidden="true" hideheader="true"
-               persist="sortActive sortDirection"
-               sort="rdf:http://home.netscape.com/NC-rdf#VisitCount"/>
-      <treecol id="Date" hidden="true" hideheader="true"
-               persist="sortActive sortDirection"
-               sort="rdf:http://home.netscape.com/NC-rdf#Date"/>
     </treecols>
   </tree>
 </page>

@@ -135,21 +135,26 @@ function SortBy(sortKey)
   var sortDirection;
   switch(sortKey) {
     case "visited":
-      sortKey = "VisitCount";    
+      sortKey = "rdf:http://home.netscape.com/NC-rdf#VisitCount";
       sortDirection = "ascending";
       break;
     case "name":
-      sortKey = "Name";
+      sortKey = "rdf:http://home.netscape.com/NC-rdf#Name";
       sortDirection = "natural";
       break;
     case "lastvisited":
-      sortKey = "Date";
+      sortKey = "rdf:http://home.netscape.com/NC-rdf#Date";
       sortDirection = "ascending";
+      break;
+    case "day":
+      sortKey = "rdf:http://home.netscape.com/NC-rdf#DayFolderIndex";
+      sortDirection = "natural";
       break;
     default:
       return;    
   }
-  var col = document.getElementById(sortKey);
+  var col = document.getElementById("Name");
+  col.setAttribute("sort", sortKey);
   col.setAttribute("sortDirection", sortDirection);
   gHistoryTree.treeBoxObject.view.cycleHeader(sortKey, col);
 }
