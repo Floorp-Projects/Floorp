@@ -189,7 +189,6 @@ protected:
 
   PRBool IsScrollable() const;
   nsresult SetInitialValue();
-  void InvalidateCachedState();
   virtual PRIntn GetSkipSides() const;
   void RemoveNewlines(nsString &aString);
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
@@ -273,7 +272,6 @@ private:
   nsCOMPtr<nsISelectionController> mSelCon;
 
   //cached sizes and states
-  nsString*    mCachedState;
   nscoord      mSuggestedWidth;
   nscoord      mSuggestedHeight;
   nsSize       mSize;
