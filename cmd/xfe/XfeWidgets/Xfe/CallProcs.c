@@ -99,6 +99,28 @@ _XfeCallProcSelectPixel(Widget w,int offset,XrmValue * value)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
+_XfeCallProcDefaultLabelFontList(Widget w,int offset,XrmValue * value)
+{
+    static XmFontList font_list;
+
+	font_list = XmFontListCopy(_XmGetDefaultFontList(w,XmLABEL_FONTLIST));
+    
+    value->addr = (XPointer) &font_list;
+    value->size = sizeof(font_list);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+_XfeCallProcDefaultTextFontList(Widget w,int offset,XrmValue * value)
+{
+    static XmFontList font_list;
+
+	font_list = XmFontListCopy(_XmGetDefaultFontList(w,XmTEXT_FONTLIST));
+    
+    value->addr = (XPointer) &font_list;
+    value->size = sizeof(font_list);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
 _XfeCallProcOrientationCursor(Widget w,int offset,XrmValue * value)
 {
     static Cursor		drag_cursor;

@@ -321,6 +321,16 @@ if (_XfeIsAlive(_w) && XtIsRealized(_w)) \
 #define XfePrepare8				(1 << 7)
 #define XfePrepare9				(1 << 8)
 #define XfePrepare10			(1 << 9)
+#define XfePrepare11			(1 << 10)
+#define XfePrepare12			(1 << 11)
+#define XfePrepare13			(1 << 12)
+#define XfePrepare14			(1 << 13)
+#define XfePrepare15			(1 << 14)
+#define XfePrepare16			(1 << 15)
+#define XfePrepare17			(1 << 16)
+#define XfePrepare18			(1 << 17)
+#define XfePrepare19			(1 << 18)
+#define XfePrepare20			(1 << 19)
 #define XfePrepareAll			(~(0))
 
 /*----------------------------------------------------------------------*/
@@ -483,6 +493,16 @@ _XfeCallProcSelectPixel			(Widget			w,
 /*----------------------------------------------------------------------*/
 extern void
 _XfeCallProcOrientationCursor	(Widget			w,
+								 int			offset,
+								 XrmValue *		value);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeCallProcDefaultLabelFontList(Widget			w,
+								 int			offset,
+								 XrmValue *		value);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeCallProcDefaultTextFontList	(Widget			w,
 								 int			offset,
 								 XrmValue *		value);
 /*----------------------------------------------------------------------*/

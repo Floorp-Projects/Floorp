@@ -32,55 +32,55 @@
 /* XfeLabel - superclass = XfePrimitive									*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_LABEL_STRING					(1 << 0)
+#define _XFE_PREPARE_LABEL_STRING					XfePrepare1
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeButton - superclass = XfeLabel									*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_BUTTON_PIXMAP					(1 << 1)
-#define _XFE_PREPARE_BUTTON_ARMED_PIXMAP			(1 << 2)
-#define _XFE_PREPARE_BUTTON_RAISED_PIXMAP			(1 << 3)
-#define _XFE_PREPARE_BUTTON_INSENSITIVE_PIXMAP		(1 << 4)
+#define _XFE_PREPARE_BUTTON_PIXMAP					XfePrepare2
+#define _XFE_PREPARE_BUTTON_ARMED_PIXMAP			XfePrepare3
+#define _XFE_PREPARE_BUTTON_RAISED_PIXMAP			XfePrepare4
+#define _XFE_PREPARE_BUTTON_INSENSITIVE_PIXMAP		XfePrepare5
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeLogo - superclass = XfeButton										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_LOGO_ANIMATION					(1 << 5)
+#define _XFE_PREPARE_LOGO_ANIMATION					XfePrepare6
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeTab - superclass = XfeButton										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_TAB_BOTTOM_PIXMAP				(1 << 5)
-#define _XFE_PREPARE_TAB_HORIZONTAL_PIXMAP			(1 << 6)
-#define _XFE_PREPARE_TAB_LEFT_PIXMAP				(1 << 7)
-#define _XFE_PREPARE_TAB_RIGHT_PIXMAP				(1 << 8)
-#define _XFE_PREPARE_TAB_TOP_PIXMAP					(1 << 9)
-#define _XFE_PREPARE_TAB_VERTICAL_PIXMAP			(1 << 10)
-#define _XFE_PREPARE_TAB_BOTTOM_RAISED_PIXMAP		(1 << 11)
-#define _XFE_PREPARE_TAB_HORIZONTAL_RAISED_PIXMAP	(1 << 12)
-#define _XFE_PREPARE_TAB_LEFT_RAISED_PIXMAP			(1 << 13)
-#define _XFE_PREPARE_TAB_RIGHT_RAISED_PIXMAP		(1 << 14)
-#define _XFE_PREPARE_TAB_TOP_RAISED_PIXMAP			(1 << 15)
-#define _XFE_PREPARE_TAB_VERTICAL_RAISED_PIXMAP		(1 << 16)
+#define _XFE_PREPARE_TAB_BOTTOM_PIXMAP				XfePrepare6
+#define _XFE_PREPARE_TAB_HORIZONTAL_PIXMAP			XfePrepare7
+#define _XFE_PREPARE_TAB_LEFT_PIXMAP				XfePrepare8
+#define _XFE_PREPARE_TAB_RIGHT_PIXMAP				XfePrepare9
+#define _XFE_PREPARE_TAB_TOP_PIXMAP					XfePrepare10
+#define _XFE_PREPARE_TAB_VERTICAL_PIXMAP			XfePrepare11
+#define _XFE_PREPARE_TAB_BOTTOM_RAISED_PIXMAP		XfePrepare12
+#define _XFE_PREPARE_TAB_HORIZONTAL_RAISED_PIXMAP	XfePrepare13
+#define _XFE_PREPARE_TAB_LEFT_RAISED_PIXMAP			XfePrepare14
+#define _XFE_PREPARE_TAB_RIGHT_RAISED_PIXMAP		XfePrepare15
+#define _XFE_PREPARE_TAB_TOP_RAISED_PIXMAP			XfePrepare16
+#define _XFE_PREPARE_TAB_VERTICAL_RAISED_PIXMAP		XfePrepare17
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeComboBox - superclass = XfeManager								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_ARROW							(1 << 0)
+#define _XFE_PREPARE_ARROW							XfePrepare1
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeToolBar - superclass = XfeOriented								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_MAX_CHILD_DIMENSIONS			(1 << 0)
+#define _XFE_PREPARE_MAX_CHILD_DIMENSIONS			XfePrepare1
 
 #endif											/* end PrepareP.h		*/
