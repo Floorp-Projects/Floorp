@@ -842,6 +842,7 @@ nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 		if (NS_FAILED(rv)) return rv;
 
 		rv = StoreImapFlags(kImapMsgSeenFlag, markRead,  keysToMarkRead);
+		mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
 	}
 	return rv;
 }
@@ -856,7 +857,10 @@ nsImapMailFolder::MarkAllMessagesRead(void)
 		nsMsgKeyArray thoseMarked;
 		rv = mDatabase->MarkAllRead(&thoseMarked);
 		if (NS_SUCCEEDED(rv))
+		{
 			rv = StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, thoseMarked);
+			mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+		}
 	}
 
 	return rv;
