@@ -1006,7 +1006,7 @@ nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary,
                        PromiseFlatCString(aFontDirName).get(), 
                        PromiseFlatCString(fontSummaryFilename).get(),
                        fallbackFontSummaryFilename.Length()>0 ?
-                       PromiseFlatCString(fallbackFontSummaryFilename).get()
+                       fallbackFontSummaryFilename.get()
                        :"<none>"));
             
   //
