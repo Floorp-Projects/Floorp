@@ -398,7 +398,8 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
   if (imapFolder)
     imapFolder->GetCanIOpenThisFolder(&canOpenThisFolder);
   
-  if (!canOpenThisFolder) return NS_OK;
+  if (!canOpenThisFolder) 
+    return NS_OK;
   
   nsCOMPtr<nsIImapUrl> imapUrl;
   nsCAutoString urlSpec;
@@ -3314,19 +3315,25 @@ NS_IMETHODIMP nsImapService::NewURI(const nsACString &aSpec,
     NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
 
     // now try to get the folder in question...
-    nsCOMPtr<nsIFolder> aRootFolder;
-    server->GetRootFolder(getter_AddRefs(aRootFolder));
+    nsCOMPtr<nsIFolder> rootFolder;
+    server->GetRootFolder(getter_AddRefs(rootFolder));
 
-    if (aRootFolder && !folderName.IsEmpty())
+    if (rootFolder && !folderName.IsEmpty())
     {
-      nsCOMPtr<nsIFolder> aFolder;
-      rv = aRootFolder->FindSubFolder(folderName, getter_AddRefs(aFolder));
+      nsCOMPtr<nsIFolder> folder;
+      nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder, &rv);
+      nsCOMPtr <nsIMsgImapMailFolder> subFolder;
+      if (imapRoot)
+      {
+        imapRoot->FindOnlineSubFolder(folderName, getter_AddRefs(subFolder));
+        folder = do_QueryInterface(subFolder, &rv);
+      }
       if (NS_SUCCEEDED(rv))
       {
-        nsCOMPtr<nsIImapMessageSink> msgSink = do_QueryInterface(aFolder);
+        nsCOMPtr<nsIImapMessageSink> msgSink = do_QueryInterface(folder);
         rv = aImapUrl->SetImapMessageSink(msgSink);
 
-        nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aFolder);
+        nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
         rv = SetImapUrlSink(msgFolder, aImapUrl);	
         nsXPIDLCString msgKey;
 
