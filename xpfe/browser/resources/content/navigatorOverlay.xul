@@ -348,7 +348,7 @@ END of Deprecated -->
 		<template>
 			<rule iscontainer="true">
 			  <menupopup>
-				<menu uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name">
+				<menu class="menu-iconic bookmarkfolder" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name">
                                         <menupopup />
                                 </menu>
 			  </menupopup>
@@ -360,7 +360,7 @@ END of Deprecated -->
 			</rule>
 			<rule>
 			  <menupopup>
-				<menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)" />
+				<menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)" />
 			  </menupopup>
 			</rule>
 		</template>
@@ -479,5 +479,14 @@ END of Deprecated -->
   </menu>
   <spring flex="100%"/>
 </menubar>
+
+  <box id="status-bar" class="chromeclass-status">
+    <progressmeter id="statusbar-icon" mode="normal" value="0"/>
+    <spring style="width: 1em"/>
+    <image id="status-icon"/>
+    <text id="statusText" class="status-bar" flex="1" value="&statusText.label;"/>
+    <text class="status-bar" value="&buildId.label;"/>
+    <button class="plain" id="lock-button" />
+  </box>
 
 </overlay>
