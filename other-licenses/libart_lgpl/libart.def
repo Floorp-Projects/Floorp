@@ -1,6 +1,6 @@
 ; libart.def : Declares the funcion exports of the DLL.
 
-LIBRARY      "libart"
+LIBRARY 
 DESCRIPTION  'libart Windows Dynamic Link Library'
 
 EXPORTS
@@ -46,9 +46,14 @@ EXPORTS
  art_pixbuf_new_rgba
  art_pixbuf_new_rgba_dnotify
  art_rect_list_from_uta
- art_rgba_rgba_composite
- art_rgba_fill_run
- art_rgba_run_alpha
+ art_render_clear_rgb
+ art_render_gradient_linear
+ art_render_gradient_radial
+ art_render_image_solid
+ art_render_invoke
+ art_render_mask_solid
+ art_render_new
+ art_render_svp
  art_rgb_affine
  art_rgb_affine_run
  art_rgb_bitmap_affine
@@ -58,6 +63,9 @@ EXPORTS
  art_rgb_run_alpha
  art_rgb_svp_aa
  art_rgb_svp_alpha
+ art_rgba_fill_run
+ art_rgba_rgba_composite
+ art_rgba_run_alpha
  art_svp_add_segment
  art_svp_diff
  art_svp_free
