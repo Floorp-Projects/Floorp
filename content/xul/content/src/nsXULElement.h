@@ -618,6 +618,8 @@ protected:
     nsIControllers  *Controllers() const { return mSlots ? mSlots->mControllers.get() : nsnull; }
     nsXULAttributes *Attributes() const  { return mSlots ? mSlots->GetAttributes()    : nsnull; }
 
+    void UnregisterAccessKey(const nsAString& aOldValue);
+
     static nsIXBLService *gXBLService;
 };
 

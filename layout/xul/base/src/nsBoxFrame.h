@@ -250,8 +250,11 @@ protected:
     nscoord mFlex;
     nscoord mAscent;
 
-private: 
+protected:
+    nsresult RegUnregAccessKey(nsIPresContext* aPresContext,
+                               PRBool aDoReg);
   
+private: 
     friend class nsBoxFrameInner;
     friend class nsBoxDebug;
     nsBoxFrameInner* mInner;

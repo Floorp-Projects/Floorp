@@ -48,6 +48,12 @@
 #include "nsLayoutAtoms.h"
 #include "nsISizeOfHandler.h"
 
+#ifdef INCLUDE_XUL
+#include "nsINameSpaceManager.h"
+#include "nsXULAtoms.h"
+#include "nsIEventStateManager.h"
+#endif
+
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_FINAL_SIZE
 
@@ -71,8 +77,117 @@ nsAreaFrame::nsAreaFrame()
 {
 }
 
+#ifdef INCLUDE_XUL
+
+// If you make changes to this function, check its counterparts 
+// in nsBoxFrame and nsTextBoxFrame
+nsresult
+nsAreaFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
+                               PRBool aDoReg)
+{
+  // if we have no content, we can't do anything
+  if (!mContent)
+    return NS_ERROR_FAILURE;
+
+  PRBool isXUL = mContent->IsContentOfType(nsIContent::eXUL);
+  if (!isXUL)
+    return NS_OK;
+
+  // find out what type of element this is
+  nsCOMPtr<nsIAtom> atom;
+  nsresult rv = mContent->GetTag(*getter_AddRefs(atom));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // only support accesskeys for the following elements
+  if (atom != nsXULAtoms::label)
+    return NS_OK;
+
+  // To filter out <label>s without a control attribute.
+  // XXXjag a side-effect is that we filter out anonymous <label>s
+  // in e.g. <menu>, <menuitem>, <button>. These <label>s inherit
+  // |accesskey| and would otherwise register themselves, overwriting
+  // the content we really meant to be registered.
+  if (!mContent->HasAttr(kNameSpaceID_None, nsXULAtoms::control))
+    return NS_OK;
+
+  nsAutoString accessKey;
+  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
+
+  if (accessKey.IsEmpty())
+    return NS_OK;
+
+  // With a valid PresContext we can get the ESM 
+  // and register the access key
+  nsCOMPtr<nsIEventStateManager> esm;
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+
+  rv = NS_OK;
+
+  if (esm) {
+    PRUint32 key = accessKey.First();
+    if (aDoReg)
+      rv = esm->RegisterAccessKey(nsnull, mContent, key);
+    else
+      rv = esm->UnregisterAccessKey(nsnull, mContent, key);
+  }
+
+  return rv;
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
+
+#ifdef INCLUDE_XUL
+NS_IMETHODIMP
+nsAreaFrame::Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsBlockFrame::Init(aPresContext,
+                                   aContent,
+                                   aParent,
+                                   aContext,
+                                   aPrevInFlow);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // register access key
+  return RegUnregAccessKey(aPresContext, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsAreaFrame::Destroy(nsIPresContext* aPresContext)
+{
+  // unregister access key
+  RegUnregAccessKey(aPresContext, PR_FALSE);
+
+  return nsBlockFrame::Destroy(aPresContext);
+} 
+
+NS_IMETHODIMP
+nsAreaFrame::AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
+                              nsIAtom* aAttribute,
+                              PRInt32 aModType,
+                              PRInt32 aHint)
+{
+  nsresult rv = nsBlockFrame::AttributeChanged(aPresContext, aChild,
+                                               aNameSpaceID, aAttribute,
+                                               aModType, aHint);
+
+  // If the accesskey changed, register for the new value
+  // The old value has been unregistered in nsXULElement::SetAttr
+  if (aAttribute == nsXULAtoms::accesskey || aAttribute == nsXULAtoms::control)
+    RegUnregAccessKey(aPresContext, PR_TRUE);
+
+  return rv;
+}
+#endif
 
 NS_IMETHODIMP
 nsAreaFrame::GetFrameType(nsIAtom** aType) const

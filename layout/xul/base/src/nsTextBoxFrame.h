@@ -42,7 +42,8 @@
 
 class nsAccessKeyInfo;
 
-class nsTextBoxFrame : public nsLeafBoxFrame
+typedef nsLeafBoxFrame nsTextBoxFrameSuper;
+class nsTextBoxFrame : public nsTextBoxFrameSuper
 {
 public:
 
@@ -62,6 +63,8 @@ public:
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
@@ -118,6 +121,9 @@ protected:
                            nsSize&              aSize,
                            nscoord&             aAscent);
 
+  nsresult RegUnregAccessKey(nsIPresContext* aPresContext,
+                             PRBool          aDoReg);
+
 private:
 
   PRBool  AlwaysAppendAccessKey();
@@ -131,8 +137,10 @@ private:
   PRBool mNeedsRecalc;
   nsSize mTextSize;
   nscoord mAscent;
+
   static PRBool gAlwaysAppendAccessKey;
   static PRBool gAccessKeyPrefInitialized;
+
 }; // class nsTextBoxFrame
 
 #endif /* nsTextBoxFrame_h___ */

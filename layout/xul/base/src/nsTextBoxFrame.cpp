@@ -60,6 +60,10 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIEventStateManager.h"
 #include "nsITheme.h"
 #include "nsUnicharUtils.h"
 
@@ -135,6 +139,11 @@ nsTextBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         Redraw(state);
     }
 
+    // If the accesskey changed, register for the new value
+    // The old value has been unregistered in nsXULElement::SetAttr
+    if (aAttribute == nsXULAtoms::accesskey || aAttribute == nsXULAtoms::control)
+        RegUnregAccessKey(aPresContext, PR_TRUE);
+
     return NS_OK;
 }
 
@@ -158,14 +167,28 @@ nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
                      nsIStyleContext* aContext,
                      nsIFrame*        aPrevInFlow)
 {
-    nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+    nsresult rv = nsTextBoxFrameSuper::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+    if (NS_FAILED(rv))
+        return rv;
 
     mState |= NS_STATE_NEED_LAYOUT;
     PRBool aResize;
     PRBool aRedraw;
     UpdateAttributes(aPresContext, nsnull, aResize, aRedraw); /* update all */
 
-    return rv;
+    // register access key
+    RegUnregAccessKey(aPresContext, PR_TRUE);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextBoxFrame::Destroy(nsIPresContext* aPresContext)
+{
+    // unregister access key
+    RegUnregAccessKey(aPresContext, PR_FALSE);
+
+    return nsTextBoxFrameSuper::Destroy(aPresContext);
 }
 
 PRBool
@@ -261,6 +284,7 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
         UpdateAccessTitle();
         aResize = PR_TRUE;
     }
+
 }
 
 NS_IMETHODIMP
@@ -850,3 +874,49 @@ nsTextBoxFrame::GetFrameName(nsAString& aResult) const
     return NS_OK;
 }
 #endif
+
+// If you make changes to this function, check its counterparts 
+// in nsBoxFrame and nsAreaFrame
+nsresult
+nsTextBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
+                                  PRBool          aDoReg)
+{
+    // if we have no content, we can't do anything
+    if (!mContent)
+        return NS_ERROR_FAILURE;
+
+    // check if we have a |control| attribute
+    // do this check first because few elements have control attributes, and we
+    // can weed out most of the elements quickly.
+
+    // XXXjag a side-effect is that we filter out anonymous <label>s
+    // in e.g. <menu>, <menuitem>, <button>. These <label>s inherit
+    // |accesskey| and would otherwise register themselves, overwriting
+    // the content we really meant to be registered.
+    if (!mContent->HasAttr(kNameSpaceID_None, nsXULAtoms::control))
+        return NS_OK;
+
+    // see if we even have an access key
+    nsAutoString accessKey;
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
+
+    if (accessKey.IsEmpty())
+        return NS_OK;
+
+    nsresult rv = NS_OK;
+
+    // With a valid PresContext we can get the ESM 
+    // and (un)register the access key
+    nsCOMPtr<nsIEventStateManager> esm;
+    aPresContext->GetEventStateManager(getter_AddRefs(esm));
+
+    if (esm) {
+        PRUint32 key = accessKey.First();
+        if (aDoReg)
+            rv = esm->RegisterAccessKey(nsnull, mContent, key);
+        else
+            rv = esm->UnregisterAccessKey(nsnull, mContent, key);
+    }
+
+    return rv;
+}
