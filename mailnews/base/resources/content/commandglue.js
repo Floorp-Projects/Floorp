@@ -57,9 +57,14 @@ function FindInSidebar(currentWindow, id)
 	}
 }
 
+function GetThreadPane()
+{
+	return frames[0].frames[1].frames[0];
+}
+
 function GetThreadTree()
 {
-	var threadTree = frames[0].frames[1].frames[0].document.getElementById('threadTree');
+	var threadTree = GetThreadPane().document.getElementById('threadTree');
 	return threadTree;
 }
 
@@ -197,7 +202,9 @@ function ChangeFolderByURI(uri)
 
 function SortThreadPane(column, sortKey)
 {
-	var node = frames[0].frames[1].document.getElementById(column);
+    var threadPane = GetThreadPane();
+
+	var node = threadPane.document.getElementById(column);
 	if(!node)
 		return false;
 
@@ -273,5 +280,12 @@ function RefreshThreadTreeView()
 	var currentFolder = GetThreadTreeFolder();  
 	var currentFolderID = currentFolder.getAttribute('id');
 	currentFolder.setAttribute('id', currentFolderID);
+}
+
+function ToggleTwisty(treeItem)
+{
+	dump(treeItem);
+	return true;
+
 }
 
