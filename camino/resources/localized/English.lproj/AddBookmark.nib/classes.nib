@@ -1,0 +1,17 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {cancelAddBookmark = id; confirmAddBookmark = id; parentFolderChanged = id; }; 
+            CLASS = AddBookmarkDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mParentFolderPopup = NSPopUpButton; 
+                mTabGroupCheckbox = NSButton; 
+                mTitleField = NSTextField; 
+            }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+    ); 
+    IBVersion = 1; 
+}
