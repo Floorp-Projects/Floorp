@@ -162,7 +162,6 @@ nsIAtom* nsXBLBinding::kActionAtom = nsnull;
 nsIAtom* nsXBLBinding::kMethodAtom = nsnull;
 nsIAtom* nsXBLBinding::kParameterAtom = nsnull;
 nsIAtom* nsXBLBinding::kBodyAtom = nsnull;
-nsIAtom* nsXBLBinding::kPropertyAtom = nsnull;
 nsIAtom* nsXBLBinding::kOnSetAtom = nsnull;
 nsIAtom* nsXBLBinding::kOnGetAtom = nsnull;
 nsIAtom* nsXBLBinding::kGetterAtom = nsnull;
@@ -270,7 +269,6 @@ nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
     kMethodAtom = NS_NewAtom("method");
     kParameterAtom = NS_NewAtom("parameter");
     kBodyAtom = NS_NewAtom("body");
-    kPropertyAtom = NS_NewAtom("property");
     kOnSetAtom = NS_NewAtom("onset");
     kOnGetAtom = NS_NewAtom("onget");
     kGetterAtom = NS_NewAtom("getter");
@@ -312,7 +310,6 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kMethodAtom);
     NS_RELEASE(kParameterAtom);
     NS_RELEASE(kBodyAtom);
-    NS_RELEASE(kPropertyAtom); 
     NS_RELEASE(kOnSetAtom);
     NS_RELEASE(kOnGetAtom);
     NS_RELEASE(kGetterAtom);
