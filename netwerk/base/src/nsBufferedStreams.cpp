@@ -69,7 +69,7 @@ nsBufferedStream::Close()
         rv = mStream->Close();
         NS_RELEASE(mStream);
         mStream = nsnull;
-        delete mBuffer;
+        delete[] mBuffer;
         mBuffer = nsnull;
         mBufferSize = 0;
         mBufferStartOffset = 0;
