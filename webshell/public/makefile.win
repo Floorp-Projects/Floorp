@@ -19,20 +19,21 @@ DEPTH=..\..
 
 IGNORE_MANIFEST=1
 
-MODULE=raptor 
+MODULE=raptor
 
-EXPORTS =					\
-        nsIBrowserWindow.h			\
-        nsIContentViewer.h			\
-        nsIContentViewerContainer.h		\
-        nsIDocumentLoader.h			\
-	nsIDocumentLoaderObserver.h		\
-        nsIDocumentViewer.h			\
-	nsILinkHandler.h			\
-	nsIThrobber.h				\
-	nsIWebShell.h				\
-	nsweb.h					\
-	$(NULL)
+EXPORTS =                               \
+        nsIBrowserWindow.h              \
+        nsIContentViewer.h              \
+        nsIContentViewerContainer.h     \
+        nsIDocumentLoader.h             \
+        nsIDocumentLoaderObserver.h     \
+        nsIDocumentViewer.h             \
+        nsILinkHandler.h                \
+        nsIThrobber.h                   \
+        nsIWebShell.h                   \
+        nsIClipboardCommands            \
+        nsweb.h                         \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
