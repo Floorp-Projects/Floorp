@@ -32,15 +32,15 @@
 { 0x798e24a1, 0xd7a5, 0x11d2, { 0xbf, 0x86, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
 class nsIDocument;
-class nsIRDFResource;
+class nsIXULContentSink;
 
 class nsIXULDocumentInfo : public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IXULDOCUMENTINFO_IID; return iid; }
 
-    NS_IMETHOD Init(nsIDocument* aParentDoc, nsIRDFResource* aFragmentRoot) = 0;
+    NS_IMETHOD Init(nsIDocument* aParentDoc, nsIXULContentSink* aParentSink) = 0;
     NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
-    NS_IMETHOD GetResource(nsIRDFResource** aResult) = 0;
+    NS_IMETHOD GetContentSink(nsIXULContentSink** aResult) = 0;
 };
 
 

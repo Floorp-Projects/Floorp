@@ -23,7 +23,7 @@
 
 #include "nsIXULDocumentInfo.h"
 #include "nsIDocument.h"
-#include "nsIRDFResource.h"
+#include "nsIXULContentSink.h"
 #include "nsRDFCID.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -48,20 +48,20 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIDocumentInfo
-    NS_IMETHOD Init(nsIDocument* aDocument, nsIRDFResource* aResource);
+    NS_IMETHOD Init(nsIDocument* aDocument, nsIXULContentSink* aResource);
     NS_IMETHOD GetDocument(nsIDocument** aDocument);
-    NS_IMETHOD GetResource(nsIRDFResource** aResource);
+    NS_IMETHOD GetContentSink(nsIXULContentSink** aContentSink);
 
 private:
     nsIDocument* mParentDocument;
-    nsIRDFResource* mFragmentRoot;
+    nsIXULContentSink* mContentSink;
 };
 
 
 ////////////////////////////////////////////////////////////////////////
 
 XULDocumentInfoImpl::XULDocumentInfoImpl(void)
-:mParentDocument(nsnull), mFragmentRoot(nsnull)
+:mParentDocument(nsnull), mContentSink(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -69,35 +69,25 @@ XULDocumentInfoImpl::XULDocumentInfoImpl(void)
 
 XULDocumentInfoImpl::~XULDocumentInfoImpl(void)
 {
-  NS_IF_RELEASE(mParentDocument);
-  NS_IF_RELEASE(mFragmentRoot);
 }
 
 nsresult
-XULDocumentInfoImpl::Init(nsIDocument* aDocument, nsIRDFResource* aResource) {
-  NS_IF_RELEASE(mParentDocument);
-  NS_IF_RELEASE(mFragmentRoot);
-
+XULDocumentInfoImpl::Init(nsIDocument* aDocument, nsIXULContentSink* aContentSink) {
   mParentDocument = aDocument;
-  mFragmentRoot = aResource;
-
-  NS_IF_ADDREF(mParentDocument);
-  NS_IF_ADDREF(mFragmentRoot);
+  mContentSink = aContentSink;
 
   return NS_OK;
 }
 
 nsresult
 XULDocumentInfoImpl::GetDocument(nsIDocument** aDocument) {
-  NS_IF_ADDREF(mParentDocument);
   *aDocument = mParentDocument;
   return NS_OK;
 }
 
 nsresult
-XULDocumentInfoImpl::GetResource(nsIRDFResource** aResource) {
-  NS_IF_ADDREF(mFragmentRoot);
-  *aResource = mFragmentRoot;
+XULDocumentInfoImpl::GetContentSink(nsIXULContentSink** aContentSink) {
+  *aContentSink = mContentSink;
   return NS_OK;
 }
 
