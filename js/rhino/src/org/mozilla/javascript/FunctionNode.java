@@ -84,20 +84,20 @@ public class FunctionNode extends Node {
      * The three types of functions have different treatment and must be
      * distinquished.
      */
-    public static final byte FUNCTION_STATEMENT            = 1;
-    public static final byte FUNCTION_EXPRESSION           = 2;
-    public static final byte FUNCTION_EXPRESSION_STATEMENT = 3;
+    public static final int FUNCTION_STATEMENT            = 1;
+    public static final int FUNCTION_EXPRESSION           = 2;
+    public static final int FUNCTION_EXPRESSION_STATEMENT = 3;
 
-    public byte getFunctionType() {
+    public int getFunctionType() {
         return itsFunctionType;
     }
 
-    public void setFunctionType(byte functionType) {
+    public void setFunctionType(int functionType) {
         itsFunctionType = functionType;
     }
 
     protected VariableTable itsVariableTable;
     protected boolean itsNeedsActivation;
     protected boolean itsCheckThis;
-    protected byte itsFunctionType;
+    protected int itsFunctionType;
 }

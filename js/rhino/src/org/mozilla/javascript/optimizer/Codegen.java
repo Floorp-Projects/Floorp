@@ -551,7 +551,7 @@ public class Codegen extends Interpreter {
               case TokenStream.FUNCTION:
                 if (inFunction || parent.getType() != TokenStream.SCRIPT) {
                     FunctionNode fn = (FunctionNode) node.getProp(Node.FUNCTION_PROP);
-                    byte t = fn.getFunctionType();
+                    int t = fn.getFunctionType();
                     if (t != FunctionNode.FUNCTION_STATEMENT) {
                         visitFunction(fn, t == FunctionNode.FUNCTION_EXPRESSION_STATEMENT);
                     }
