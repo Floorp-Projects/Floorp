@@ -27,3 +27,6 @@
 // Splash screen bitmap ID.
 #define IDB_SPLASH  101
 
+// DDE application name
+#define ID_DDE_APPLICATION_NAME 102
+

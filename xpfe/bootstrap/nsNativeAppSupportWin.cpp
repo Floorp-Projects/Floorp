@@ -548,33 +548,38 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
 
     // Grab mutex before doing DdeInitialize!  This is
     // important (see comment above).
-    Mutex ddeLock = Mutex( MOZ_DDE_MUTEX_NAME );
-    if ( ddeLock.Lock( MOZ_DDE_START_TIMEOUT ) ) {
-        // Initialize DDE.
-        UINT rc = DdeInitialize( &mInstance,
+	int retval;
+	UINT id = ID_DDE_APPLICATION_NAME;
+	char nameBuf[ 128 ];
+	retval = LoadString( (HINSTANCE) NULL, id, (LPTSTR) nameBuf, sizeof(nameBuf) );
+	if ( retval != 0 ) {   
+		Mutex ddeLock = Mutex( MOZ_DDE_MUTEX_NAME );
+		if ( ddeLock.Lock( MOZ_DDE_START_TIMEOUT ) ) {
+			// Initialize DDE.
+			UINT rc = DdeInitialize( &mInstance,
                                  nsNativeAppSupportWin::HandleDDENotification,
                                  APPCLASS_STANDARD,
                                  0 );
-        if ( rc == DMLERR_NO_ERROR ) {
-            mApplication = DdeCreateStringHandle( mInstance,
-                                                  MOZ_DDE_APPLICATION,
+			if ( rc == DMLERR_NO_ERROR ) {
+				mApplication = DdeCreateStringHandle( mInstance,
+                                                  nameBuf,
                                                   CP_WINANSI );
-            mTopic       = DdeCreateStringHandle( mInstance,
+				mTopic       = DdeCreateStringHandle( mInstance,
                                                   MOZ_DDE_TOPIC,
                                                   CP_WINANSI );
-            if ( mApplication && mTopic ) {
-                // Everything OK so far, try to connect to previusly
-                // started Mozilla.
-                HCONV hconv = DdeConnect( mInstance, mApplication, mTopic, 0 );
+				if ( mApplication && mTopic ) {
+					// Everything OK so far, try to connect to previusly
+					// started Mozilla.
+					HCONV hconv = DdeConnect( mInstance, mApplication, mTopic, 0 );
                 
-                if ( hconv ) {
-                    // We're the client...
-                    // Get command line to pass to server.
-                    LPTSTR cmd = GetCommandLine();
-                    #if MOZ_DEBUG_DDE
-                    printf( "Acting as DDE client, cmd=%s\n", cmd );
-                    #endif
-                    rc = (UINT)DdeClientTransaction( (LPBYTE)cmd,
+					if ( hconv ) {
+						// We're the client...
+						// Get command line to pass to server.
+						LPTSTR cmd = GetCommandLine();
+						#if MOZ_DEBUG_DDE
+						printf( "Acting as DDE client, cmd=%s\n", cmd );
+						#endif
+						rc = (UINT)DdeClientTransaction( (LPBYTE)cmd,
                                                      strlen( cmd ) + 1,
                                                      hconv,
                                                      0,
@@ -582,54 +587,55 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
                                                      XTYP_EXECUTE,
                                                      MOZ_DDE_EXEC_TIMEOUT,
                                                      0 );
-                    if ( rc ) {
-                        // Inform caller that request was issued.
-                        rv = NS_OK;
-                    } else {
-                        // Something went wrong.  Not much we can do, though...
-                        #if MOZ_DEBUG_DDE
-                        printf( "DdeClientTransaction failed, error = 0x%08X\n",
+						if ( rc ) {
+							// Inform caller that request was issued.
+							rv = NS_OK;
+						} else {
+							// Something went wrong.  Not much we can do, though...
+							#if MOZ_DEBUG_DDE
+							printf( "DdeClientTransaction failed, error = 0x%08X\n",
                                 (int)DdeGetLastError( mInstance ) );
-                        #endif
-                    }
-                } else {
-                    // We're going to be the server...
-                    #if MOZ_DEBUG_DDE
-                    printf( "Setting up DDE server...\n" );
-                    #endif
+							#endif
+						}
+					} else {
+						// We're going to be the server...
+						#if MOZ_DEBUG_DDE
+						printf( "Setting up DDE server...\n" );
+						#endif
 
-                    // Next step is to register a DDE service.
-                    rc = (UINT)DdeNameService( mInstance, mApplication, 0, DNS_REGISTER );
+						// Next step is to register a DDE service.
+						rc = (UINT)DdeNameService( mInstance, mApplication, 0, DNS_REGISTER );
 
-                    if ( rc ) {
-                        #if MOZ_DEBUG_DDE
-                        printf( "...DDE server started\n" );
-                        #endif
-                        // Tell app to do its thing.
-                        *aResult = PR_TRUE;
-                        rv = NS_OK;
-                    } else {
-                        #if MOZ_DEBUG_DDE
-                        printf( "DdeNameService failed, error = 0x%08X\n",
+						if ( rc ) {
+							#if MOZ_DEBUG_DDE
+							printf( "...DDE server started\n" );
+							#endif
+							// Tell app to do its thing.
+							*aResult = PR_TRUE;
+							rv = NS_OK;
+						} else {
+							#if MOZ_DEBUG_DDE
+							printf( "DdeNameService failed, error = 0x%08X\n",
                                 (int)DdeGetLastError( mInstance ) );
-                        #endif
-                    }
-                }
-            } else {
-                #if MOZ_DEBUG_DDE
-                printf( "DdeCreateStringHandle failed, error = 0x%08X\n",
+							#endif
+						}
+					}
+				} else {
+					#if MOZ_DEBUG_DDE
+					printf( "DdeCreateStringHandle failed, error = 0x%08X\n",
                         (int)DdeGetLastError( mInstance ) );
-                #endif
-            }
-        } else {
-            #if MOZ_DEBUG_DDE
-            printf( "DdeInitialize failed, error = 0x%08X\n", (int)rc );
-            #endif
-        }
+					#endif
+				}
+			} else {
+				#if MOZ_DEBUG_DDE
+				printf( "DdeInitialize failed, error = 0x%08X\n", (int)rc );
+				#endif
+			}
 
-        // Release mutex.
-        ddeLock.Unlock();
-    }
+			// Release mutex.
+			ddeLock.Unlock();
+		}
+	}
 
     // Clean up.  The only case in which we need to preserve DDE stuff
     // is if we're going to be acting as server.
