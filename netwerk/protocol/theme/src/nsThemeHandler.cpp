@@ -289,7 +289,7 @@ static void drawTitle(const Rect *bounds, ThemeButtonKind kind,
 static RoutineDescriptor drawTitleDescriptor = BUILD_ROUTINE_DESCRIPTOR(uppThemeButtonDrawProcInfo, &drawTitle);
 static ThemeButtonDrawUPP drawTitleUPP = ThemeButtonDrawUPP(&drawTitleDescriptor);
 
-static nsresult drawThemeButton(Arguments& args, nsIInputStream **result, PRInt32 *length)
+static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputStream **result, PRInt32 *length)
 {
     int width = getIntArgument(args, "width", 40);
     int height = getIntArgument(args, "height", 20);
@@ -308,7 +308,7 @@ static nsresult drawThemeButton(Arguments& args, nsIInputStream **result, PRInt3
     };
 
     Rect buttonBounds = { 0, 0, height, width }, backgroundBounds;
-    status = ::GetThemeButtonBackgroundBounds(&buttonBounds, kThemePushButton, &drawInfo, &backgroundBounds);
+    status = ::GetThemeButtonBackgroundBounds(&buttonBounds, kind, &drawInfo, &backgroundBounds);
     if (status == noErr) {
         width = backgroundBounds.right - backgroundBounds.left;
         height = backgroundBounds.bottom - backgroundBounds.top;
@@ -329,7 +329,7 @@ static nsresult drawThemeButton(Arguments& args, nsIInputStream **result, PRInt3
             title, buttonBounds, drawInfo
         };
         
-        status = ::DrawThemeButton(&buttonBounds, kThemePushButton, &drawInfo,
+        status = ::DrawThemeButton(&buttonBounds, kind, &drawInfo,
                                    NULL, NULL, drawTitleUPP,
                                    reinterpret_cast<UInt32>(&buttonInfo));
 
@@ -407,6 +407,7 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
     bool isThumbPressed = getBoolArgument(args, "thumb", false);
     bool isLeftArrowPressed = getBoolArgument(args, "left", false);
     bool isRightArrowPressed = getBoolArgument(args, "right", false);
+    const char* part = getArgument(args, "part", NULL);
 
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     OSStatus status;
@@ -415,7 +416,7 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
     ThemeTrackPressState pressState = ((isThumbPressed ? kThemeThumbPressed : 0) |
                                        (isRightArrowPressed ? (kThemeRightOutsideArrowPressed | kThemeLeftInsideArrowPressed) : 0) |
                                        (isLeftArrowPressed ? (kThemeLeftOutsideArrowPressed | kThemeRightInsideArrowPressed) : 0));
-    ThemeTrackAttributes trackState = ((isHorizontal ? kThemeTrackHorizontal : 0) | kThemeTrackShowThumb);
+    ThemeTrackAttributes attributes = ((isHorizontal ? kThemeTrackHorizontal : 0) | kThemeTrackShowThumb);
     Rect scrollbarBounds = { 0, 0, (short) height , (short) width };
 
     TempGWorld world(scrollbarBounds);
@@ -428,7 +429,7 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
         drawInfo.kind = kThemeScrollBar;
         drawInfo.min = min, drawInfo.max = max, drawInfo.value = value;
         drawInfo.reserved = 0;
-        drawInfo.attributes = trackState;
+        drawInfo.attributes = attributes;
         drawInfo.enableState = enableState;
         drawInfo.trackInfo.scrollbar.viewsize = viewSize;
         drawInfo.trackInfo.scrollbar.pressState = pressState;
@@ -436,7 +437,6 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
 
         // now, encode the image as a 'PNGf' image, and return the encoded image
         // as an nsIInputStream.
-        const char* part = getArgument(args, "part", NULL);
         if (part != NULL) {
             if (::strcmp(part, "thumb") == 0) {
                 rv = drawThemeScrollbarThumb(world, drawInfo, result, length);
@@ -450,6 +450,20 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
                 rv = drawThemeScrollbarArrow(world, scrollbarBounds, drawInfo.bounds,
                                              false, isHorizontal,
                                              result, length);
+            } else
+            if (::strcmp(part, "track") == 0) {
+                Rect trackBounds = {
+                    0, 0,
+                    drawInfo.bounds.bottom - drawInfo.bounds.top,
+                    drawInfo.bounds.right - drawInfo.bounds.left
+                };
+                TempGWorld trackWorld(trackBounds);
+                if (trackWorld.valid()) {
+                    trackWorld.fill(0xFF000000);
+                    trackWorld.copy(world, drawInfo.bounds, trackBounds);
+                    trackWorld.xorFill(0xFF000000);
+                    rv = encodeGWorld(trackWorld, 'PNGf', result, length);
+                }
             }
         } else {
             // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
@@ -461,6 +475,37 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
     
     return rv;
 }
+
+struct ButtonEntry {
+    const char* name;
+    ThemeButtonKind kind;
+};
+
+static ButtonEntry kButtonEntries[] = {
+    "button", kThemePushButton,
+    "checkBox", kThemeCheckBox,
+    "radioButton", kThemeRadioButton,
+    "bevelButton", kThemeBevelButton,
+    "arrowButton", kThemeArrowButton,
+    "popupButton", kThemePopupButton,
+    "disclosureButton", kThemeDisclosureButton,
+    "incDecButton", kThemeIncDecButton,
+    "smallBevelButton", kThemeSmallBevelButton,
+    "mediumBevelButton", kThemeMediumBevelButton,
+    "largeBevelButton", kThemeLargeBevelButton
+};
+
+class ButtonMap : public map<string, ThemeButtonKind> {
+public:
+    ButtonMap(ButtonEntry entries[], size_t count)
+    {
+        ButtonEntry* limit = entries + count;
+        for (ButtonEntry* entry = entries; entry < limit; ++entry)
+            (*this)[entry->name] = entry->kind;
+    }
+};
+
+static ButtonMap gButtonActions(kButtonEntries, sizeof(kButtonEntries) / sizeof(ButtonEntry));
 
 /*
     1.  Parse the URL path, which will be of the form:
@@ -493,8 +538,9 @@ nsThemeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     PRInt32 contentLength = 0;
     nsCOMPtr<nsIInputStream> input;
 
-    if (action == "button") {
-        rv = drawThemeButton(args, getter_AddRefs(input), &contentLength);
+    ButtonMap::const_iterator ba = gButtonActions.find(action);
+    if (ba != gButtonActions.end()) {
+        rv = drawThemeButton(ba->second, args, getter_AddRefs(input), &contentLength);
     } else if (action == "scrollbar") {
         rv = drawThemeScrollbar(args, getter_AddRefs(input), &contentLength);
     } else {
