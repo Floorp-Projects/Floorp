@@ -53,6 +53,7 @@ private:
 private:
 	PRInt32		m_numFields;
 	PRInt32	*	m_pFields;
+	PRBool *	m_pActive;
 	PRInt32		m_allocated;
 	nsVoidArray	m_descriptions;
 	PRInt32		m_mozFieldCount;

@@ -52,7 +52,5 @@ public:
 protected:		
 };
 
-extern nsresult NS_NewEudoraImport(nsIImportModule** aImport);
-
 
 #endif /* nsEudoraImport_h___ */

@@ -138,7 +138,22 @@ interface nsIImportAddressBooks : nsISupports
 		a different thread than ImportAddressBook()
 	*/
 	unsigned long GetImportProgress();
-	
+
+	/*
+		Set the location for reading sample data, this should be the same
+		as what is passed later to FindAddressBooks
+	*/
+	void	SetSampleLocation( in nsIFileSpec location);
+
+	/*
+		Return a string of sample data for a record, each field
+		is separated by a newline (which means no newlines in the fields!)
+		This is only supported by address books which use field maps and
+		is used by the field map UI to allow the user to properly
+		align fields to be imported.
+	*/
+	wstring GetSampleData( in long recordNumber, out boolean recordExists);
+
 };
 	
 

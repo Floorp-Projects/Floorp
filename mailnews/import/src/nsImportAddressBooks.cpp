@@ -58,6 +58,9 @@ static NS_DEFINE_IID(kIStandardUrlIID, NS_IURL_IID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIImportFieldMapIID, NS_IIMPORTFIELDMAP_IID);
+static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
+static NS_DEFINE_IID(kISupportsWStringIID, NS_ISUPPORTSWSTRING_IID);
+
 
 static const char *kDirectoryDataSourceRoot = "abdirectory://";
 static const char *kCardDataSourceRoot = "abcard://";
@@ -277,6 +280,35 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 		}
 	}
 
+	if (!nsCRT::strncasecmp( dataId, "sampleData-", 11)) {
+		// extra the record number
+		const char *pNum = dataId + 11;
+		PRInt32	rNum = 0;
+		while (*pNum) {
+			rNum *= 10;
+			rNum += (*pNum - '0');
+			pNum++;
+		}
+		IMPORT_LOG1( "Requesting sample data #: %ld\n", rNum);
+		if (m_pInterface) {
+			nsCOMPtr<nsISupportsWString>	data;
+			rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, kISupportsWStringIID, getter_AddRefs( data));
+			if (NS_FAILED( rv))
+				return( rv);
+			PRUnichar *	pData = nsnull;
+			PRBool		found = PR_FALSE;
+			rv = m_pInterface->GetSampleData( rNum, &found, &pData);
+			if (NS_FAILED( rv))
+				return( rv);
+			if (found) {
+				data->SetData( pData);
+				*_retval = data;
+				NS_ADDREF( *_retval);
+			}
+			nsCRT::free( pData);
+		}
+	}
+
 	return( NS_OK);
 }
 
@@ -302,6 +334,8 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 		NS_IF_RELEASE( m_pLocation);
 		if (item)
 			item->QueryInterface( nsIFileSpec::GetIID(), (void **) &m_pLocation);
+		if (m_pInterface)
+			m_pInterface->SetSampleLocation( m_pLocation);
 	}
 
 	if (!nsCRT::strcasecmp( dataId, "addressDestination")) {
@@ -322,7 +356,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 		if (item)
 			item->QueryInterface( nsIImportFieldMap::GetIID(), (void **) &m_pFieldMap);
 	}
-
+	
 	return( NS_OK);
 }
 
@@ -898,6 +932,22 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					if (pDestDB) {
 						PRUnichar *pSuccess = nsnull;
 						PRUnichar *pError = nsnull;
+
+						/*
+						if (pData->fieldMap) {
+							PRInt32		sz = 0;
+							PRInt32		mapIndex;
+							PRBool		active;
+							pData->fieldMap->GetMapSize( &sz);
+							IMPORT_LOG1( "**** Field Map Size: %d\n", (int) sz);
+							for (PRInt32 i = 0; i < sz; i++) {
+								pData->fieldMap->GetFieldMap( i, &mapIndex);
+								pData->fieldMap->GetFieldActive( i, &active);
+								IMPORT_LOG3( "Field map #%d: index=%d, active=%d\n", (int) i, (int) mapIndex, (int) active);
+							}
+						}
+						*/
+
 						rv = pData->addressImport->ImportAddressBook(	book, 
 																	pDestDB, // destination
 																	pData->fieldMap, // fieldmap

@@ -51,7 +51,6 @@ public:
 protected:		
 };
 
-extern nsresult NS_NewTextImport(nsIImportModule** aImport);
 
 
 #endif /* nsTextImport_h___ */

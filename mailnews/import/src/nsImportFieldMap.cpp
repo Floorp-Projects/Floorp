@@ -26,6 +26,8 @@
 #include "nsImportFieldMap.h"
 #include "nsImportStringBundle.h"
 
+#include "ImportDebug.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -52,6 +54,7 @@ nsImportFieldMap::nsImportFieldMap()
 	NS_INIT_ISUPPORTS(); 
 	m_numFields = 0;
 	m_pFields = nsnull;
+	m_pActive = nsnull;
 	m_allocated = 0;
 	// need to init the description array
 	m_mozFieldCount = 0;
@@ -70,6 +73,9 @@ nsImportFieldMap::~nsImportFieldMap()
 { 
 	if (m_pFields)
 		delete [] m_pFields;
+	if (m_pActive)
+		delete [] m_pActive;
+
 	nsString *	pStr;
 	for (PRInt32 i = 0; i < m_mozFieldCount; i++) {
 		pStr = (nsString *) m_descriptions.ElementAt( i);
@@ -130,8 +136,10 @@ NS_IMETHODIMP nsImportFieldMap::DefaultFieldMap(PRInt32 size)
 	nsresult rv = SetFieldMapSize( size);
 	if (NS_FAILED( rv))
 		return( rv);
-	for (PRInt32 i = 0; i < size; i++)
+	for (PRInt32 i = 0; i < size; i++) {
 		m_pFields[i] = i;
+		m_pActive[i] = PR_TRUE;
+	}
 	
 	return( NS_OK);
 }
@@ -183,6 +191,29 @@ NS_IMETHODIMP nsImportFieldMap::SetFieldMapByDescription(PRInt32 index, const PR
 
 	return( SetFieldMap( index, i));
 }
+
+
+NS_IMETHODIMP nsImportFieldMap::GetFieldActive(PRInt32 index, PRBool *active)
+{
+    NS_PRECONDITION(active != nsnull, "null ptr");
+	if (!active)
+		return NS_ERROR_NULL_POINTER;
+	if ((index < 0) || (index >= m_numFields))
+		return( NS_ERROR_FAILURE);
+		
+	*active = m_pActive[index];
+	return( NS_OK);
+}
+
+NS_IMETHODIMP nsImportFieldMap::SetFieldActive(PRInt32 index, PRBool active)
+{
+	if ((index < 0) || (index >= m_numFields))
+		return( NS_ERROR_FAILURE);
+
+	m_pActive[index] = active;
+	return( NS_OK);
+}
+
 
 NS_IMETHODIMP nsImportFieldMap::SetFieldValue(nsIAddrDatabase *database, nsIMdbRow *row, PRInt32 fieldNum, const PRUnichar *value)
 {
@@ -505,20 +536,29 @@ nsresult nsImportFieldMap::Allocate( PRInt32 newSize)
 		sz += 30;
 
 	PRInt32	*pData = new PRInt32[ sz];
-
 	if (!pData)
 		return( NS_ERROR_FAILURE);
+	PRBool *pActive = new PRBool[sz];
+	if (!pActive)
+		return( NS_ERROR_FAILURE);
+
 
 	PRInt32	i;
-	for (i = 0; i < sz; i++)
+	for (i = 0; i < sz; i++) {
 		pData[i] = -1;
+		pActive[i] = PR_TRUE;
+	}
 	if (m_numFields) {
-		for (i = 0; i < m_numFields; i++)
+		for (i = 0; i < m_numFields; i++) {
 			pData[i] = m_pFields[i];
+			pActive[i] = m_pActive[i];
+		}
 		delete [] m_pFields;
+		delete [] m_pActive;
 	}
 	m_allocated = sz;
 	m_pFields = pData;
+	m_pActive = pActive;
 	return( NS_OK);
 }
 

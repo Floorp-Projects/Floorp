@@ -55,7 +55,7 @@ public:
 protected:		
 };
 
-extern nsresult NS_NewOutlookImport(nsIImportModule** aImport);
+
 
 
 #endif /* nsOutlookImport_h___ */

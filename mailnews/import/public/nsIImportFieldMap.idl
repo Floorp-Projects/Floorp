@@ -72,6 +72,16 @@ interface nsIImportFieldMap : nsISupports
 	void	SetFieldMapByDescription( in long index, in wstring fieldDesc);	
 	
 	/*
+		Return if this field is "active" in the map.
+	*/
+	boolean	GetFieldActive( in long index);
+
+	/*
+		Set the active state of this field
+	*/
+	void	SetFieldActive( in long index, in boolean active);
+
+	/*
 		Set the value of the given field in the database row 
 	*/
 	void	SetFieldValue( in nsIAddrDatabase database, in nsIMdbRow row, in long fieldNum, in wstring value);

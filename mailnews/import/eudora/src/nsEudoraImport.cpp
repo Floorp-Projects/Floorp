@@ -148,6 +148,11 @@ public:
 	/* unsigned long GetImportProgress (); */
 	NS_IMETHOD GetImportProgress(PRUint32 *_retval);
  
+	NS_IMETHOD GetSampleData( PRInt32 index, PRBool *pFound, PRUnichar **pStr)
+		{ return( NS_ERROR_FAILURE);}
+
+	NS_IMETHOD SetSampleLocation( nsIFileSpec *) { return( NS_OK); }
+
 private:
 	static void	ReportSuccess( nsString& name, nsString *pStream);
 
@@ -162,21 +167,6 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////
-
-nsresult NS_NewEudoraImport(nsIImportModule** aImport)
-{
-    NS_PRECONDITION(aImport != nsnull, "null ptr");
-    if (! aImport)
-        return NS_ERROR_NULL_POINTER;
-
-    *aImport = new nsEudoraImport();
-    if (! *aImport)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aImport);
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////
 
 

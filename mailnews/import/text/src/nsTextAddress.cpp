@@ -60,7 +60,6 @@ nsresult nsTextAddress::ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIF
 	NS_IF_RELEASE( m_fieldMap);
 	m_database = pDb;
 	m_fieldMap = nsnull;
-	NS_ADDREF( m_fieldMap);
 	NS_ADDREF( m_database);
 	
 	nsresult rv = pSrc->OpenStreamForReading();
@@ -413,16 +412,22 @@ nsresult nsTextAddress::DetermineDelim( nsIFileSpec *pSrc)
 	PRInt32	lineCount = 0;
 	PRInt32	tabCount = 0;
 	PRInt32	commaCount = 0;
+	PRInt32	tabLines = 0;
+	PRInt32	commaLines = 0;
 
-	while (!eof && NS_SUCCEEDED( rv) && (lineCount < 50)) {
+	while (!eof && NS_SUCCEEDED( rv) && (lineCount < 100)) {
 		wasTruncated = PR_FALSE;
 		rv = pSrc->ReadLine( &pLine, kTextAddressBufferSz, &wasTruncated);
 		if (wasTruncated)
 			pLine[kTextAddressBufferSz - 1] = 0;
 		if (NS_SUCCEEDED( rv)) {
 			lineLen = nsCRT::strlen( pLine);
-			tabCount += CountFields( pLine, lineLen, 9);
-			commaCount += CountFields( pLine, lineLen, ',');
+			tabCount = CountFields( pLine, lineLen, 9);
+			commaCount = CountFields( pLine, lineLen, ',');
+			if (tabCount > commaCount)
+				tabLines++;
+			else if (commaCount)
+				commaLines++;
 			rv = pSrc->Eof( &eof);
 		}
 		lineCount++;
@@ -432,15 +437,10 @@ nsresult nsTextAddress::DetermineDelim( nsIFileSpec *pSrc)
 	
 	delete [] pLine;
 	
-	if ((commaCount <= lineCount) && (tabCount <= lineCount)) {
-		IMPORT_LOG0( "*** Does not appear to be a tab or comma separated file\n");
-		return( NS_ERROR_FAILURE);
-	}
-
-	if (commaCount > tabCount)
-		m_delim = ',';
-	else
+	if (tabLines > commaLines)
 		m_delim = 9;
+	else
+		m_delim = ',';
 
 	return( NS_OK);
 }
@@ -468,10 +468,14 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
 	nsCString	fieldVal;
 	PRInt32		fieldNum;
 	PRInt32		numFields = 0;
+	PRBool		active;
 	rv = m_fieldMap->GetMapSize( &numFields);
 	for (PRInt32 i = 0; (i < numFields) && NS_SUCCEEDED( rv); i++) {
+		active = PR_FALSE;
 		rv = m_fieldMap->GetFieldMap( i, &fieldNum);
-		if (NS_SUCCEEDED( rv)) {
+		if (NS_SUCCEEDED( rv))
+			rv = m_fieldMap->GetFieldActive( i, &active);
+		if (NS_SUCCEEDED( rv) && active) {
 			if (GetField( pLine, len, i, fieldVal, m_delim)) {
 				if (fieldVal.Length()) {
 					if (!newRow) {
@@ -491,7 +495,9 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
 			
 		}
 		else {
-			IMPORT_LOG1( "*** Error getting field map for index %ld\n", i);
+			if (active) {
+				IMPORT_LOG1( "*** Error getting field map for index %ld\n", i);
+			}
 		}
 
 	}
@@ -548,7 +554,7 @@ nsresult nsTextAddress::IsLDIFFile( nsIFileSpec *pSrc, PRBool *pIsLDIF)
 	char	field[kMaxLDIFLen];
 	PRInt32	fLen = 0;
 	char *	pChar;
-	PRInt32	rCount = 0;
+	PRInt32	rCount = 1;
 	PRInt32	i;
 	PRBool	gotLDIF = PR_FALSE;
 	PRInt32	commaCount = 0;
@@ -596,9 +602,11 @@ nsresult nsTextAddress::IsLDIFFile( nsIFileSpec *pSrc, PRBool *pIsLDIF)
 						if (!nsCRT::strcmp( sLDIFFields[i], field)) {
 							ldifFields++;
 							gotLDIF = PR_TRUE;
+							break;
 						}
 						i++;
 					}
+					
 				}
 			}
 
@@ -611,18 +619,22 @@ nsresult nsTextAddress::IsLDIFFile( nsIFileSpec *pSrc, PRBool *pIsLDIF)
 	
 	delete [] pLine;
 	
-	// Hmmm... what happened here!
-	if (!rCount)
-		rCount = 1;
-	if (!lineCount)
-		lineCount = 1;
-
 	ldifFields /= rCount;
 	tabCount /= lineCount;
 	commaCount /= lineCount;
 
+	/*
 	if ((tabCount <= ldifFields) && (commaCount <= ldifFields) && (ldifFields > 1)) {
 		*pIsLDIF = PR_TRUE;
+	}
+	*/
+	if (rCount == 1) {
+		if ((ldifFields >= 3) && (lineCount < 500))
+			*pIsLDIF = PR_TRUE;
+	}
+	else {
+		if (ldifFields >= 3)
+			*pIsLDIF = PR_TRUE;
 	}
 
 	return( NS_OK);

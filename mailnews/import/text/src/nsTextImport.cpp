@@ -93,32 +93,27 @@ public:
 	/* unsigned long GetImportProgress (); */
 	NS_IMETHOD GetImportProgress(PRUint32 *_retval);
  
+	NS_IMETHOD GetSampleData( PRInt32 index, PRBool *pFound, PRUnichar **pStr);
+
+	NS_IMETHOD SetSampleLocation( nsIFileSpec *);
+
 private:
+	void	ClearSampleFile( void);
+
 	static void	ReportSuccess( nsString& name, nsString *pStream);
 	static void SetLogs( nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess);
 	static void ReportError( PRInt32 errorNum, nsString& name, nsString *pStream);
+	static void	SanitizeSampleData( nsCString& val);
 
 private:
 	nsTextAddress	m_text;
+	PRBool			m_haveDelim;
+	nsIFileSpec *	m_fileLoc;
+	char			m_delim;
 };
 
 
 ////////////////////////////////////////////////////////////////////////
-
-nsresult NS_NewTextImport(nsIImportModule** aImport)
-{
-    NS_PRECONDITION(aImport != nsnull, "null ptr");
-    if (! aImport)
-        return NS_ERROR_NULL_POINTER;
-
-    *aImport = new nsTextImport();
-    if (! *aImport)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aImport);
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -242,11 +237,21 @@ nsresult ImportAddressImpl::Create(nsIImportAddressBooks** aImport)
 ImportAddressImpl::ImportAddressImpl()
 {
     NS_INIT_REFCNT();
+
+	m_fileLoc = nsnull;
+	m_haveDelim = PR_FALSE;
 }
 
 
 ImportAddressImpl::~ImportAddressImpl()
 {
+	if (m_fileLoc) {
+		PRBool open = PR_FALSE;
+		m_fileLoc->IsStreamOpen( &open);
+		if (open)
+			m_fileLoc->CloseStream();
+		NS_RELEASE( m_fileLoc);
+	}
 }
 
 
@@ -294,6 +299,8 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
     if (!pLoc || !ppArray)
         return NS_ERROR_NULL_POINTER;
 	
+	ClearSampleFile();
+
 	*ppArray = nsnull;
 	PRBool exists = PR_FALSE;
 	nsresult rv = pLoc->Exists( &exists);
@@ -306,12 +313,16 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 		return( NS_ERROR_FAILURE);
 
 	rv = m_text.DetermineDelim( pLoc);
-
+	
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Error determining delimitter\n");
 		return( rv);
 	}
-
+	m_haveDelim = PR_TRUE;
+	m_delim = m_text.GetDelim();
+	
+	m_fileLoc = pLoc;
+	NS_ADDREF( m_fileLoc);
 
 	/* Build an address book descriptor based on the file passed in! */
 	nsCOMPtr<nsISupportsArray>	array;
@@ -426,7 +437,9 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 		SetLogs( success, error, pErrorLog, pSuccessLog);
 	    return( NS_ERROR_NULL_POINTER);
 	}
-    
+   
+	ClearSampleFile();
+
     PRBool		abort = PR_FALSE;
     nsString	name;
     PRUnichar *	pName;
@@ -532,4 +545,111 @@ NS_IMETHODIMP ImportAddressImpl::GetNeedsFieldMap(nsIFileSpec *location, PRBool 
 		*_retval = PR_FALSE;
 	
 	return( NS_OK);
+}
+
+void ImportAddressImpl::SanitizeSampleData( nsCString& val)
+{
+	// remove any line-feeds...
+	val.ReplaceSubstring( "\x0D\x0A", ", ");
+	val.ReplaceChar( 13, ',');
+	val.ReplaceChar( 10, ',');
+}
+
+NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, PRUnichar **pStr)
+{
+    NS_PRECONDITION(pFound != nsnull, "null ptr");
+    NS_PRECONDITION(pStr != nsnull, "null ptr");
+	if (!pFound || !pStr)
+		return( NS_ERROR_NULL_POINTER);
+	
+	if (!m_fileLoc) {
+		IMPORT_LOG0( "*** Error, called GetSampleData before SetSampleLocation\n");
+		return( NS_ERROR_FAILURE);
+	}
+
+	nsresult	rv;
+	*pStr = nsnull;
+	PRBool		open = PR_FALSE;
+	PRUnichar	term = 0;
+
+	if (!m_haveDelim) {
+		rv = m_fileLoc->IsStreamOpen( &open);
+		if (open) {
+			m_fileLoc->CloseStream();
+			open = PR_FALSE;
+		}
+		rv = m_text.DetermineDelim( m_fileLoc);
+		if (NS_FAILED( rv))
+			return( rv);
+		m_haveDelim = PR_TRUE;
+		m_delim = m_text.GetDelim();
+	}
+	else {
+		rv = m_fileLoc->IsStreamOpen( &open);			
+	}
+	
+	if (!open) {
+		rv = m_fileLoc->OpenStreamForReading();
+		if (NS_FAILED( rv)) {
+			*pFound = PR_FALSE;
+			*pStr = nsCRT::strdup( &term);
+			return( NS_OK);
+		}
+	}
+	
+	PRInt32	lineLen;
+	PRInt32	bufSz = 10240;
+	char	*pLine = new char[bufSz];
+
+	rv = nsTextAddress::ReadRecordNumber( m_fileLoc, pLine, bufSz, m_delim, &lineLen, index);
+	if (NS_SUCCEEDED( rv)) {
+		nsString	str;
+		nsCString	field;
+		PRInt32		fNum = 0;
+		while (nsTextAddress::GetField( pLine, lineLen, fNum, field, m_delim)) {
+			if (fNum)
+				str.Append( "\n");
+			SanitizeSampleData( field);
+			str.Append( field);
+			fNum++;
+			field.Truncate();
+		}
+
+		*pStr = nsCRT::strdup( str.GetUnicode());
+		*pFound = PR_TRUE;
+
+		IMPORT_LOG1( "Sample data: %S\n", str.GetUnicode());
+	}
+	else {
+		*pFound = PR_FALSE;
+		*pStr = nsCRT::strdup( &term);
+	}
+
+	delete [] pLine;
+
+	return( NS_OK);
+}
+
+NS_IMETHODIMP ImportAddressImpl::SetSampleLocation( nsIFileSpec *pLocation)
+{
+	NS_IF_RELEASE( m_fileLoc);
+	m_haveDelim = PR_FALSE;
+	m_fileLoc = pLocation;
+	NS_IF_ADDREF( m_fileLoc);
+
+	return( NS_OK);
+}
+
+
+void ImportAddressImpl::ClearSampleFile( void)
+{
+	if (m_fileLoc) {
+		PRBool		open = PR_FALSE;
+		m_fileLoc->IsStreamOpen( &open);
+		if (open)
+			m_fileLoc->CloseStream();
+		NS_RELEASE( m_fileLoc);
+		m_fileLoc = nsnull;
+		m_haveDelim = PR_FALSE;
+	}
 }

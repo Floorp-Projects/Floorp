@@ -54,7 +54,6 @@ public:
 protected:		
 };
 
-extern nsresult NS_NewOEImport(nsIImportModule** aImport);
 
 
 #endif /* nsOEImport_h___ */

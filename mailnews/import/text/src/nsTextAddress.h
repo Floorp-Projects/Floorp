@@ -43,6 +43,7 @@ public:
 	nsresult	ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors);
 
 	nsresult	DetermineDelim( nsIFileSpec *pSrc);
+	char		GetDelim( void) { return( m_delim);}
 
 	static nsresult		IsLDIFFile( nsIFileSpec *pSrc, PRBool *pIsLDIF);
 	
