@@ -802,7 +802,6 @@ extensions/inspector/Makefile
 extensions/inspector/base/Makefile
 extensions/inspector/base/public/Makefile
 extensions/inspector/base/src/Makefile
-extensions/inspector/base/src/win/Makefile
 extensions/inspector/build/Makefile
 extensions/inspector/build/src/Makefile
 extensions/inspector/resources/Makefile
