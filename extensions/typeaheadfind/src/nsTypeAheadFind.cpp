@@ -2442,6 +2442,10 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
     if (mIsFindAllowedInWindow) {
       UseInWindow(topContentWin);
     }
+    else {
+      CancelFind();
+      mFocusedWindow = nsnull;
+    }
   }
   if (!mIsFindAllowedInWindow) {
     return NS_OK;
