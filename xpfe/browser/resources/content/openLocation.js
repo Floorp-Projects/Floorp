@@ -33,7 +33,7 @@ function onLoad() {
 	dialog.newWindow = document.getElementById( "dialog.newWindow" );
 	dialog.newWindowDiv = document.getElementById( "dialog.newWindowDiv" );
 	dialog.editNewWindow = document.getElementById( "dialog.editNewWindow" );
-  dialog.open            = document.getElementById("ok");
+        dialog.open            = document.getElementById("ok");
 	dialog.openWhereBox = document.getElementById( "dialog.openWhereBox" );
 
 
@@ -80,31 +80,30 @@ function onTyping( key ) {
 }
 
 function open() {
-	if ( dialog.open.disabled || dialog.input.value == "" ) {
-		return false;
-	}
+  if ( dialog.open.disabled || dialog.input.value == "" ) {
+    return false;
+  }
 
-	var url = dialog.input.value;
-	    
-	try {
-	    if ( dialog.topWindow.checked ) {
-	        // Open the URL.
-	        browser.loadUrl( url );
-	    } else if ( dialog.newWindow.checked ) {
-		    /* User wants new window. */
-            window.opener.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "all,dialog=no", url );
-	    } else if ( dialog.editNewWindow.checked ) {
-            window.opener.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
-        }
-    } catch( exception ) {
-	    // XXX l10n
-	    alert( "Error opening location." );
-	    return false;
-	}
+  var url = dialog.input.value;
 
-   // Delay closing slightly to avoid timing bug on Linux.
-   window.setTimeout( "window.close()", 10 );
-   return false;
+  try {
+    if ( dialog.topWindow.checked ) {
+      // Open the URL.
+      browser.loadUrl( url );
+    } else if ( dialog.newWindow.checked ) {
+      /* User wants new window. */
+      window.opener.delayedOpenWindow("chrome://navigator/content/navigator.xul","all,dialog=no",url);
+    } else if ( dialog.editNewWindow.checked ) {
+      window.opener.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url);
+    }
+  } catch( exception ) {
+    // XXX l10n
+    alert( "Error opening location." );
+    return false;
+  }
+
+  window.close();
+  return false;
 }
 
 function createInstance( progid, iidName ) {
