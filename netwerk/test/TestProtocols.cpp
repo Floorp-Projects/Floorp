@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=2 sw=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -47,6 +48,9 @@
 #ifdef WIN32 
 #include <windows.h>
 #endif
+#ifdef XP_UNIX
+#include <unistd.h>
+#endif
 #include "nspr.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -67,6 +71,9 @@
 #include "nsIInterfaceRequestor.h" 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDNSService.h" 
+#include "nsIAuthPrompt.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "nsISimpleEnumerator.h"
 #include "nsXPIDLString.h"
@@ -91,6 +98,39 @@ static nsIEventQueue* gEventQ = nsnull;
 static PRBool gAskUserForInput = PR_FALSE;
 static PRBool gResume = PR_FALSE;
 static PRUint32 gStartAt = 0;
+
+//-----------------------------------------------------------------------------
+// Set proxy preferences for testing
+//-----------------------------------------------------------------------------
+
+static nsresult
+SetHttpProxy(const char *proxy)
+{
+  const char *colon = strchr(proxy, ':');
+  if (!colon)
+  {
+    NS_WARNING("invalid proxy token; use host:port");
+    return NS_ERROR_UNEXPECTED;
+  }
+  int port = atoi(colon + 1);
+  if (port == 0)
+  {
+    NS_WARNING("invalid proxy port; must be an integer");
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsCAutoString proxyHost;
+  proxyHost = Substring(proxy, colon);
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+  {
+    prefs->SetCharPref("network.proxy.http", proxyHost.get());
+    prefs->SetIntPref("network.proxy.http_port", port);
+    prefs->SetIntPref("network.proxy.type", 1); // manual proxy config
+  }
+  LOG(("connecting via proxy=%s:%d\n", proxyHost.get(), port));
+  return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // HeaderVisitor
@@ -180,6 +220,97 @@ TestHttpEventSink::OnRedirect(nsIHttpChannel *channel, nsIChannel *newChannel)
 {
     LOG(("\n+++ TestHTTPEventSink::OnRedirect +++\n"));
     return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// TestAuthPrompt
+//-----------------------------------------------------------------------------
+
+class TestAuthPrompt : public nsIAuthPrompt
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAUTHPROMPT
+
+  TestAuthPrompt();
+  virtual ~TestAuthPrompt();
+};
+
+NS_IMPL_ISUPPORTS1(TestAuthPrompt, nsIAuthPrompt)
+
+TestAuthPrompt::TestAuthPrompt()
+{
+}
+
+TestAuthPrompt::~TestAuthPrompt()
+{
+}
+
+NS_IMETHODIMP
+TestAuthPrompt::Prompt(const PRUnichar *dialogTitle,
+                       const PRUnichar *text,
+                       const PRUnichar *passwordRealm,
+                       PRUint32 savePassword,
+                       const PRUnichar *defaultText,
+                       PRUnichar **result,
+                       PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
+                                          const PRUnichar *dialogText,
+                                          const PRUnichar *passwordRealm,
+                                          PRUint32 savePassword,
+                                          PRUnichar **user,
+                                          PRUnichar **pwd,
+                                          PRBool *_retval)
+{
+    NS_ConvertUTF16toUTF8 text(passwordRealm);
+    printf("* --------------------------------------------------------------------------- *\n");
+    printf("* Authentication Required [%s]\n", text.get());
+    printf("* --------------------------------------------------------------------------- *\n");
+
+    char buf[256];
+    int n;
+
+    printf("Enter username: ");
+    fgets(buf, sizeof(buf), stdin);
+    n = strlen(buf);
+    buf[n-1] = '\0'; // trim trailing newline
+    *user = ToNewUnicode(nsDependentCString(buf));
+
+    const char *p;
+#ifdef XP_UNIX
+    p = getpass("Enter password: ");
+#else
+    printf("Enter password: ");
+    fgets(buf, sizeof(buf), stdin);
+    n = strlen(buf);
+    buf[n-1] = '\0'; // trim trailing newline
+    p = buf;
+#endif
+    *pwd = ToNewUnicode(nsDependentCString(p));
+
+    // zap buf 
+    memset(buf, 0, sizeof(buf));
+
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+TestAuthPrompt::PromptPassword(const PRUnichar *dialogTitle,
+                               const PRUnichar *text,
+                               const PRUnichar *passwordRealm,
+                               PRUint32 savePassword,
+                               PRUnichar **pwd,
+                               PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-----------------------------------------------------------------------------
@@ -413,18 +544,29 @@ public:
     NotificationCallbacks() {
     }
 
-    NS_IMETHOD GetInterface(const nsIID& eventSinkIID, void* *result) {
+    NS_IMETHOD GetInterface(const nsIID& iid, void* *result) {
         nsresult rv = NS_ERROR_FAILURE;
 
-        if (eventSinkIID.Equals(NS_GET_IID(nsIHttpEventSink))) {
+        if (iid.Equals(NS_GET_IID(nsIHttpEventSink))) {
           TestHttpEventSink *sink;
 
           sink = new TestHttpEventSink();
           if (sink == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
           NS_ADDREF(sink);
-          rv = sink->QueryInterface(eventSinkIID, result);
+          rv = sink->QueryInterface(iid, result);
           NS_RELEASE(sink);
+        }
+
+        if (iid.Equals(NS_GET_IID(nsIAuthPrompt))) {
+          TestAuthPrompt *prompt;
+
+          prompt = new TestAuthPrompt();
+          if (prompt == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+          NS_ADDREF(prompt);
+          rv = prompt->QueryInterface(iid, result);
+          NS_RELEASE(prompt);
         }
         return rv;
     }
@@ -595,7 +737,7 @@ main(int argc, char* argv[])
     }
 
 #if defined(PR_LOGGING)
-        gTestLog = PR_NewLogModule("Test");
+    gTestLog = PR_NewLogModule("Test");
 #endif
 
     /* 
@@ -637,6 +779,11 @@ main(int argc, char* argv[])
             if (PL_strcasecmp(argv[i], "-resume") == 0) {
                 gResume = PR_TRUE;
                 gStartAt = atoi(argv[++i]);
+                continue;
+            }
+
+            if (PL_strcasecmp(argv[i], "-proxy") == 0) {
+                SetHttpProxy(argv[++i]);
                 continue;
             }
 

@@ -181,10 +181,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #include "nsHttpAuthManager.h"
 #include "nsHttpBasicAuth.h"
 #include "nsHttpDigestAuth.h"
-#ifdef XP_WIN
 #include "nsHttpNTLMAuth.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpNTLMAuth, Init)
-#endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNTLMAuth)
 #undef LOG
 #undef LOG_ENABLED
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpHandler, Init)
@@ -888,12 +886,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "digest",
       nsHttpDigestAuthConstructor },
 
-#ifdef XP_WIN
     { "HTTP NTLM Auth Encoder",
       NS_HTTPNTLMAUTH_CID,
       NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "ntlm",
       nsHttpNTLMAuthConstructor },
-#endif
 
     { NS_HTTPAUTHMANAGER_CLASSNAME,
       NS_HTTPAUTHMANAGER_CID,

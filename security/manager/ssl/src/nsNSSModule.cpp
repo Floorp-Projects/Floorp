@@ -52,6 +52,7 @@
 #include "nsICategoryManager.h"
 #include "nsCRLManager.h"
 #include "nsCipherInfo.h"
+#include "nsNTLMAuthModule.h"
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
@@ -166,6 +167,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertPicker)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCRLManager)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCipherInfoService)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PR_FALSE, nsNTLMAuthModule, InitTest)
 
 static NS_METHOD RegisterPSMContentListeners(
                       nsIComponentManager *aCompMgr,
@@ -379,6 +381,13 @@ static const nsModuleComponentInfo components[] =
     NS_PKCS11MODULEDB_CID,
     NS_CRYPTO_FIPSINFO_SERVICE_CONTRACTID,
     nsPKCS11ModuleDBConstructor
+  },
+
+  {
+    NS_NTLMAUTHMODULE_CLASSNAME,
+    NS_NTLMAUTHMODULE_CID,
+    NS_NTLMAUTHMODULE_CONTRACTID,
+    nsNTLMAuthModuleConstructor
   }
 };
 
