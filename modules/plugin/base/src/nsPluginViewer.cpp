@@ -41,6 +41,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIDOMDocument.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -133,7 +134,11 @@ public:
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aContainerResult);
+  NS_IMETHOD LoadComplete(nsresult aStatus);
+  NS_IMETHOD Destroy(void);
   NS_IMETHOD Stop(void);
+  NS_IMETHOD GetDOMDocument(nsIDOMDocument **aResult);
+  NS_IMETHOD SetDOMDocument(nsIDOMDocument *aDocument);
   NS_IMETHOD GetBounds(nsRect& aResult);
   NS_IMETHOD SetBounds(const nsRect& aBounds);
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
@@ -382,12 +387,35 @@ PluginViewerImpl::Stop(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PluginViewerImpl::LoadComplete(nsresult aStatus)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::Destroy(void)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::GetDOMDocument(nsIDOMDocument **aResult)
+{
+  return CallQueryInterface(mDocument, aResult);
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
+{
+  return NS_ERROR_FAILURE;
+}
+
 static nsEventStatus PR_CALLBACK
 HandlePluginEvent(nsGUIEvent *aEvent)
 {
   return nsEventStatus_eIgnore;
 }
-
 nsresult
 PluginViewerImpl::MakeWindow(nsNativeWidget aParent,
                              nsIDeviceContext* aDeviceContext,

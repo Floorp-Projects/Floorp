@@ -31,6 +31,7 @@ class nsIDeviceContext;
 class nsString;
 struct nsRect;
 class nsIContentViewerContainer;
+class nsIDOMDocument;
 
 // IID for the nsIContentViewer interface
 #define NS_ICONTENT_VIEWER_IID \
@@ -61,7 +62,12 @@ public:
 
   NS_IMETHOD GetContainer(nsISupports** aContainerResult) = 0;
 
+  NS_IMETHOD LoadComplete(nsresult aStatus) = 0;
+  NS_IMETHOD Destroy(void) = 0;
   NS_IMETHOD Stop(void) = 0;
+
+  NS_IMETHOD GetDOMDocument(nsIDOMDocument **aResult) = 0;
+  NS_IMETHOD SetDOMDocument(nsIDOMDocument *aDocument) = 0;
 
   NS_IMETHOD GetBounds(nsRect& aBounds) = 0;
 
