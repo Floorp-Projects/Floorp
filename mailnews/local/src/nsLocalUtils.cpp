@@ -88,10 +88,6 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
                 nsFileSpec& pathResult)
 {
   nsresult rv;
-
-  nsAutoString sep;
-  sep += PR_GetDirectorySeparator();
-
   nsAutoString sbdSep;
   rv = nsGetMailFolderSeparator(sbdSep);
   if (NS_FAILED(rv)) return rv;
@@ -107,167 +103,56 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     return NS_ERROR_FAILURE;
   }
 
-  // the server name is the first component of the path, so extract it out
-  PRInt32 hostStart;
-
-  hostStart = uri.Find('/');
-  if (hostStart <= 0) return NS_ERROR_FAILURE;
-
-  // skip past all //
-  while (uri[hostStart]=='/') hostStart++;
-
-  // cut mailbox://hostname/folder -> hostname/folder
-  nsAutoString hostname;
-  uri.Right(hostname, uri.Length() - hostStart);
-
-  PRInt32 hostEnd = hostname.Find('/');
-
-  // folder comes after the hostname, after the '/'
-  nsAutoString folder;
-  hostname.Right(folder, hostname.Length() - hostEnd - 1);
-
-  // cut off first '/' and everything following it
-  // hostname/folder -> hostname
-  if (hostEnd >0) {
-    hostname.Truncate(hostEnd);
-  }
+  // start parsing the uriStr
+  const char* curPos = uriStr;
   
-  // local mail case
-  // should return a list of all local mail folders? or maybe nothing
-  // at all?
-  char *hostchar = hostname.ToNewCString();
-  rv = nsGetMailboxRoot(hostchar, pathResult);
-#ifdef DEBUG_alecf
-  printf("nsGetMailboxRoot(%s) = %s\n\tfolder = %s\n",
-         hostchar, (const char*)pathResult,
-         folder.ToNewCString());
-#endif
-  delete[] hostchar;
+  // skip past schema 
+  while (*curPos != ':') curPos++;
+  curPos++;
+  while (*curPos == '/') curPos++;
 
-  if (NS_FAILED(rv)) {
-    pathResult = nsnull;
-    return rv;
-  }
-#if 0
-  nsAutoString path="";
-  uri.Cut(0, nsCRT::strlen(rootURI));
+  char *slashPos = PL_strchr(curPos, '/');
+  int length;
 
-  PRInt32 uriLen = uri.Length();
-  PRInt32 pos;
-  while(uriLen > 0) {
-    nsAutoString folderName;
+  // if there are no more /'s then we just copy the rest of the string
+  if (slashPos)
+    length = (slashPos - curPos) + 1;
+  else
+    length = PL_strlen(curPos) + 1;
 
-    PRInt32 leadingPos;
-    // if it's the first character then remove it.
-    while ((leadingPos = uri.Find('/')) == 0) {
-      uri.Cut(0, 1);
-      uriLen--;
+  char* hostname = new char[length];
+  PL_strncpyz(hostname, curPos, length);
+
+  // begin pathResult with the mailbox root
+  rv = nsGetMailboxRoot(hostname, pathResult);
+  delete[] hostname;
+
+  if (slashPos) {
+    // advance past hostname
+    curPos=slashPos;
+    curPos++;
+
+    // for each token in between the /'s, put a .sbd on the end and
+    // append to the path
+    char *newStr=nsnull;
+    char *temp = PL_strdup(curPos);
+    char *token = nsCRT::strtok(temp, "/", &newStr);
+    while (token) {
+      nsAutoString dir(token);
+      
+      // look for next token
+      token = nsCRT::strtok(newStr, "/", &newStr);
+      
+      // check if we're the last entry
+      if (token)
+        dir += sbdSep;            // no, we're not, so append .sbd
+      
+      pathResult += dir;
     }
-
-    if (uriLen == 0)
-      break;
-
-    pos = uri.Find('/');
-    if (pos < 0)
-      pos = uriLen;
-
-
-    PRInt32 leftRes = uri.Left(folderName, pos);
-
-    NS_ASSERTION(leftRes == pos,
-                 "something wrong with nsString");
-	//We only want to add this after the first time around.
-	if(path.Length() > 0)
-	{
-		path += sep;
-		path += PR_GetDirectorySeparator();
-	}
-    // the first time around the separator is special because
-    // the root mail folder doesn't end with .sbd
-    sep = sbdSep;
-
-    path += folderName;
-    uri.Cut(0, pos);
-    uriLen -= pos;
-  }
-
-  if(path.Length() > 0)
-	  pathResult +=path;
-#endif
-
-  if (folder != "") {
-    pathResult += folder;
+    PL_strfree(temp);
   }
   return NS_OK;
 }
-
-#if 0
-static
-nsresult
-nsPath2LocalURI(const char* rootURI, const nsFileSpec& spec, char **uri)
-{
-  nsresult rv;
-
-
-  nsAutoString sep;
-  /* sspitzer: is this ok for mail and news? */
-  rv = nsGetMailFolderSeparator(sep);
-  if (NS_FAILED(rv)) return rv;
-
-  PRUint32 sepLen = sep.Length();
-
-  nsFileSpec root;
-  // local mail case
-  rv = nsGetMailboxRoot(root);
-  if (NS_FAILED(rv)) return rv;
-
-  const char *path = spec;
-  nsAutoString pathStr(path);
-  path = root;
-  nsAutoString rootStr(path);
-  
-  PRInt32 pos = pathStr.Find(rootStr);
-  if (pos != 0)     // if doesn't start with root path
-    return NS_ERROR_FAILURE;
-
-  nsAutoString uriStr(rootURI);
-
-  PRUint32 rootStrLen = rootStr.Length();
-  pathStr.Cut(0, rootStrLen);
-  PRInt32 pathStrLen = pathStr.Length();
-
-  char dirSep = PR_GetDirectorySeparator();
-  
-  while (pathStrLen > 0) {
-    nsAutoString folderName;
-    
-    PRInt32 leadingPos;
-    // if it's the first character then remove it.
-    while ((leadingPos = pathStr.Find(dirSep)) == 0) {
-      pathStr.Cut(0, 1);
-      pathStrLen--;
-    }
-    if (pathStrLen == 0)
-      break;
-
-    pos = pathStr.Find(sep);
-    if (pos < 0) 
-      pos = pathStrLen;
-
-    PRInt32 leftRes = pathStr.Left(folderName, pos);
-    NS_ASSERTION(leftRes == pos,
-                 "something wrong with nsString");
-
-    pathStr.Cut(0, pos + sepLen);
-    pathStrLen -= pos + sepLen;
-
-    uriStr += '/';
-    uriStr += folderName;
-  }
-  *uri = uriStr.ToNewCString();
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsLocalURI2Name(const char* rootURI, char* uriStr, nsString& name)
@@ -275,8 +160,16 @@ nsLocalURI2Name(const char* rootURI, char* uriStr, nsString& name)
   nsAutoString uri = uriStr;
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
-  PRInt32 pos = uri.RFind("/");
+  PRInt32 pos = uri.RFind('/');
   PRInt32 length = uri.Length();
+
+  // if the last character is a /, chop it off and search again
+  if (pos == (length-1)) {
+    uri.Truncate(length-1);     // chop the last character
+    length--;
+    pos = uri.RFind('/');
+  }
+
   PRInt32 count = length - (pos + 1);
   return uri.Right(name, count);
 }
@@ -293,10 +186,6 @@ nsresult nsParseLocalMessageURI(const char* uri,
 {
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
-
-#ifdef DEBUG_alecf
-  printf("nsParseLocalMessageURI(%s..)\n", uri);
-#endif
 
 	nsAutoString uriStr = uri;
 	PRInt32 keySeparator = uriStr.Find('#');
