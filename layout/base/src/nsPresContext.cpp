@@ -240,6 +240,23 @@ nsPresContext::SetShell(nsIPresShell* aShell)
           nsAutoString charset;
           doc->GetDocumentCharacterSet(charset);
           mDeviceContext->GetLangGroup(charset, getter_AddRefs(mLangGroup));
+          if (mLangGroup && mPrefs) {
+            nsAutoString pref("font.size.serif.");
+            const PRUnichar* langGroup = nsnull;
+            mLangGroup->GetUnicode(&langGroup);
+            pref.Append(langGroup);
+            char name[128];
+            pref.ToCString(name, sizeof(name));
+            PRInt32 value = 12;
+            mPrefs->GetIntPref(name, &value);
+            mDefaultFont.size = NSIntPointsToTwips(value);
+            pref.SetString("font.size.monospace.");
+            pref.Append(langGroup);
+            pref.ToCString(name, sizeof(name));
+            value = 10;
+            mPrefs->GetIntPref(name, &value);
+            mDefaultFixedFont.size = NSIntPointsToTwips(value);
+          }
         }
       }
     }
