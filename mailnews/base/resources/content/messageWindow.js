@@ -460,9 +460,6 @@ var MessageWindowController =
 			case "cmd_markAsFlagged":
       case "button_file":
 			case "cmd_file":
-      case "cmd_synchronizeOffline":
-			case "cmd_downloadFlagged":
-			case "cmd_downloadSelected":
 			case "cmd_settingsOffline":
 			case "cmd_nextMsg":
       case "button_next":
@@ -473,6 +470,10 @@ var MessageWindowController =
 			case "cmd_previousUnreadMsg":
 			case "cmd_previousFlaggedMsg":
 				return true;
+      case "cmd_synchronizeOffline":
+			case "cmd_downloadFlagged":
+			case "cmd_downloadSelected":
+        return CheckOnline();
 			default:
 				return false;
 		}
@@ -528,8 +529,8 @@ var MessageWindowController =
 				return IsGetNextNMessagesEnabled();		
 			case "cmd_downloadFlagged":
 			case "cmd_downloadSelected":
-                return true;
-            case "cmd_synchronizeOffline":
+      case "cmd_synchronizeOffline":
+                return CheckOnline();
 			case "cmd_settingsOffline":
                 return IsAccountOfflineEnabled();
 			case "cmd_close":

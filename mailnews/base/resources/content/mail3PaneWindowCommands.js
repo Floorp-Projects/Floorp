@@ -259,13 +259,14 @@ var DefaultController =
 			case "cmd_emptyTrash":
 			case "cmd_compactFolder":
 			case "cmd_sortByThread":
-      case "cmd_downloadFlagged":
-      case "cmd_downloadSelected":
-	  case "cmd_settingsOffline":
-      case "cmd_synchronizeOffline":
+  	  case "cmd_settingsOffline":
       case "cmd_close":
       case "cmd_selectThread":
 				return true;
+      case "cmd_downloadFlagged":
+      case "cmd_downloadSelected":
+      case "cmd_synchronizeOffline":
+        return(CheckOnline());
 
       case "cmd_watchThread":
       case "cmd_killThread":
@@ -417,7 +418,7 @@ var DefaultController =
       case "cmd_downloadSelected":
         return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline() && GetNumSelectedMessages() > 0);
       case "cmd_synchronizeOffline":
-        return IsAccountOfflineEnabled();       
+        return CheckOnline() && IsAccountOfflineEnabled();       
       case "cmd_settingsOffline":
         return (MailAreaHasFocus() && IsAccountOfflineEnabled());
       default:
