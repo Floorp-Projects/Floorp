@@ -206,6 +206,11 @@ NS_IMETHODIMP nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWidget::ShowMenuBar(PRBool aShow)
+{
+  return NS_ERROR_FAILURE;
+}
+
 void * nsWidget::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {

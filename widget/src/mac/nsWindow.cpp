@@ -56,23 +56,23 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
   mResizingChildren = PR_FALSE;
   mVisible = PR_FALSE;
   mEnabled = PR_TRUE;
-	SetPreferredSize(0,0);
+  SetPreferredSize(0,0);
 
-	mFontMetrics = nsnull;
-	mMenuBar = nsnull;
-	mTempRenderingContext = nsnull;
+  mFontMetrics = nsnull;
+  mMenuBar = nsnull;
+  mTempRenderingContext = nsnull;
 
   mWindowRegion = nsnull;
   mVisRegion = nsnull;
   mWindowPtr = nsnull;
   mDrawing = PR_FALSE;
-	mDestroyCalled = PR_FALSE;
-	mDestructorCalled = PR_FALSE;
+  mDestroyCalled = PR_FALSE;
+  mDestructorCalled = PR_FALSE;
 
-	SetBackgroundColor(NS_RGB(255, 255, 255));
-	SetForegroundColor(NS_RGB(0, 0, 0));
-	
-	mPluginPort = nsnull;
+  SetBackgroundColor(NS_RGB(255, 255, 255));
+  SetForegroundColor(NS_RGB(0, 0, 0));
+
+  mPluginPort = nsnull;
 }
 
 
@@ -402,6 +402,12 @@ NS_IMETHODIMP nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
   NS_IF_ADDREF(aMenuBar);
   mMenuBar = aMenuBar;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::ShowMenuBar(PRBool aShow)
+{
+  // this may never be implemented on the Mac
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

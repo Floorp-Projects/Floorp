@@ -112,12 +112,12 @@ nsWindow::nsWindow() : nsBaseWidget()
     mHitSubMenus        = new nsVoidArray();
     mVScrollbar         = nsnull;
 
-	mIMEProperty		= 0;
-	mIMEIsComposing		= PR_FALSE;
-	mIMECompositionString = NULL;
-	mIMECompositionStringSize = 0;
-	mIMECompositionStringSize = 0;
-	mIMECompositionUniString = NULL;
+    mIMEProperty        = 0;
+    mIMEIsComposing     = PR_FALSE;
+    mIMECompositionString = NULL;
+    mIMECompositionStringSize = 0;
+    mIMECompositionStringSize = 0;
+    mIMECompositionUniString = NULL;
 
 #ifdef NEW_DRAG_AND_DROP
     mNativeDragTarget = nsnull;
@@ -3120,19 +3120,31 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 {
   mMenuBar = aMenuBar;
   NS_ADDREF(mMenuBar);
+  return ShowMenuBar(PR_TRUE);
+}
 
-  HMENU nativeMenuHandle;
-  void * voidData;
-  aMenuBar->GetNativeData(voidData);
-  nativeMenuHandle = (HMENU)voidData;
+NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
+{
+  nsresult rv = NS_ERROR_FAILURE;
 
-  if (nsnull != nativeMenuHandle) {
-    ::SetMenu(mWnd, nativeMenuHandle);
-    return NS_OK;
+  if (aShow) {
+    if (mMenuBar) {
+      HMENU nativeMenuHandle;
+      void  *voidData;
+      mMenuBar->GetNativeData(voidData);
+      nativeMenuHandle = (HMENU)voidData;
+
+      if (nativeMenuHandle) {
+        ::SetMenu(mWnd, nativeMenuHandle);
+        rv = NS_OK;
+      }
+    }
   } else {
-    return NS_ERROR_FAILURE;
+    ::SetMenu(mWnd, 0);
+    rv = NS_OK;
   }
-} 
+  return rv;
+}
 
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
