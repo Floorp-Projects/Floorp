@@ -2272,6 +2272,9 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 	MWContext	  				   *pContext = pFrame ? pFrame->GetMainContext()->GetContext() : NULL;
 	static CGenericFrame		   *pCurrentFrame = NULL;
 
+    //  Ensure all the helper information is loaded.
+    fe_MimeProtocolHelperInit();
+
 	// We only allow one pref UI window up at a time
 	if (pCurrentFrame) {
 		HWND	hwnd = ::GetLastActivePopup(pCurrentFrame->m_hWnd);

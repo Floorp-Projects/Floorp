@@ -212,8 +212,16 @@ void fe_AddTypeToList(NET_cdataStruct *cd_item)
 				cd_item->ci.desc = XP_STRDUP(cd_item->ci.type);
 
 			} else {
-				szFile[0] = toupper(szFile[0]);
-				cd_item->ci.desc = PR_smprintf("%s %s", szFile, szLoadString(IDS_STRING_FILE));
+                char *pStringFile = szLoadString(IDS_STRING_FILE);
+                int iLen = lstrlen(szFile) + lstrlen(pStringFile) + 2;
+
+				cd_item->ci.desc = (char *)XP_ALLOC(iLen);
+                if(cd_item->ci.desc)    {
+    				szFile[0] = toupper(szFile[0]);
+                    lstrcpy(cd_item->ci.desc, szFile);
+                    lstrcat(cd_item->ci.desc, " ");
+                    lstrcat(cd_item->ci.desc, pStringFile);
+                }
 			}
 		}
 
@@ -262,26 +270,32 @@ void fe_SetExtensionList(NET_cdataStruct *cd_item)
 	}
 }
 
+//  Retrieve the default entry of the key.
+BOOL GetKeyDefault(const char *pKey, char *pBuf, long *plBuf)   {
+    BOOL bRetval = FALSE;
+
+    if(ERROR_SUCCESS == RegQueryValue(HKEY_CLASSES_ROOT, pKey, pBuf, plBuf))   {
+        bRetval = TRUE;
+    }
+
+    return bRetval;
+}
+
 // Retrieve the class name for the given extension
 BOOL
-GetClassName(LPCSTR lpszExtension, CString &strClass)
+GetExtClassName(LPCSTR lpszExtension, CString &strClass)
 {
-    char    szKey[_MAX_EXT + 1];  // space for '.'
+    char    szKey[_MAX_EXT + 1] = { '.', '\0' };
     char    szClass[128];
-	LONG	lResult;
-	LONG	lcb;
+	LONG	lcb = sizeof(szClass);
 
 	// Look up the file association key which maps a file extension
 	// to a file class
-    wsprintf(szKey, ".%s", lpszExtension);
+    lstrcat(szKey, lpszExtension);
 
-	lcb = sizeof(szClass);
-    lResult = RegQueryValue(HKEY_CLASSES_ROOT, szKey, szClass, &lcb);
-	
-#ifdef _WIN32
-	ASSERT(lResult != ERROR_MORE_DATA);
-#endif
-	if (lResult != ERROR_SUCCESS || lcb <= 1)
+    BOOL bResult = GetKeyDefault(szKey, szClass, &lcb);
+
+    if(FALSE == bResult || lcb <= 1)
 		return FALSE;
 
     strClass = szClass;
@@ -289,7 +303,7 @@ GetClassName(LPCSTR lpszExtension, CString &strClass)
 }
 
 //  Return value must be freed by caller.
-char *InventMime(const char *pExtension)
+char *InventMime(const char *pExtension, const char *pClassName)
 {
     LPSTR   lpszMimeType = NULL;
     char    szKey[_MAX_EXT + 1];  // space for '.'
@@ -331,33 +345,29 @@ char *InventMime(const char *pExtension)
 
 	//  Finally, default to fake generated mime type
     if (!lpszMimeType) {
-        CString strClass;
-        
         // Only do this is there's a class associated with the extension
-        if (GetClassName(pExtension, strClass) && !strClass.IsEmpty())
-            lpszMimeType = PR_smprintf("%s%s", SZ_WINASSOC, (LPCSTR)strClass);
+        if (pClassName && *pClassName)
+            lpszMimeType = PR_smprintf("%s%s", SZ_WINASSOC, pClassName);
     }
 
     return lpszMimeType;
 }
 
 //  Return value must be freed by caller.
-char *InventDescription(const char *pExtension)
+char *InventDescription(const char *pExtension, const char *pClassName)
 {
-    CString strClass;
-
     if (!pExtension)
         return NULL;
 
     // Get the class name
-    if (GetClassName(pExtension, strClass) && !strClass.IsEmpty()) {
+    if (pClassName && *pClassName)  {
         LONG    cbData;
         LONG    lResult;
 
 #ifdef _WIN32
         // See how much space we need
         cbData = 0;
-        lResult = RegQueryValue(HKEY_CLASSES_ROOT, (LPCSTR)strClass, NULL, &cbData);
+        lResult = RegQueryValue(HKEY_CLASSES_ROOT, pClassName, NULL, &cbData);
         if (lResult == ERROR_SUCCESS && cbData > 1) {
             LPSTR   lpszDescription = (LPSTR)XP_ALLOC(cbData);
 
@@ -365,7 +375,7 @@ char *InventDescription(const char *pExtension)
                 return NULL;
 
             // Get the string
-            VERIFY(RegQueryValue(HKEY_CLASSES_ROOT, (LPCSTR)strClass, lpszDescription, &cbData) == ERROR_SUCCESS);
+            VERIFY(RegQueryValue(HKEY_CLASSES_ROOT, pClassName, lpszDescription, &cbData) == ERROR_SUCCESS);
             return lpszDescription;
         }
 #else
@@ -374,7 +384,7 @@ char *InventDescription(const char *pExtension)
 
 		// Get the string
 		cbData = sizeof(szDescription);
-		lResult = RegQueryValue(HKEY_CLASSES_ROOT, (LPCSTR)strClass, szDescription, &cbData);
+		lResult = RegQueryValue(HKEY_CLASSES_ROOT, pClassName, szDescription, &cbData);
 		return lResult == ERROR_SUCCESS ? XP_STRDUP(szDescription) : NULL;
 #endif
     }
@@ -385,7 +395,7 @@ char *InventDescription(const char *pExtension)
 // Create a front-end data structure if necessary, and set how_handle as
 // HANDLE_SHELLEXECUTE if there's a shell\open command for the file extension.
 // It will also set the description if there isn't already one
-void ShellHelper(NET_cdataStruct *pNet, const char *pExtension)
+void ShellHelper(NET_cdataStruct *pNet, const char *pExtension, const char *pClassName)
 {
     if(pNet != NULL && pNet->ci.fe_data == NULL)    {
         //  Create front end counter-part.
@@ -404,8 +414,11 @@ void ShellHelper(NET_cdataStruct *pNet, const char *pExtension)
 			//
 			// Assume that we can't shell execute it
 			pApp->how_handle = HANDLE_UNKNOWN;
+            pApp->strFileClass = "";
 
-            if (GetClassName(pExtension, pApp->strFileClass)) {
+            if (pClassName && *pClassName) {
+                pApp->strFileClass = pClassName;
+
 				// XXX - We really should handle verbs other than Open. FindExecutable()
 				// and ShellExecute() don't either, but ShellExecuteEx() does...
                 char aExe[_MAX_PATH];
@@ -432,7 +445,7 @@ void ShellHelper(NET_cdataStruct *pNet, const char *pExtension)
 
         //  Give it a description if not already set.
         if(pExtension != NULL && pNet->ci.desc == NULL)   {
-            pNet->ci.desc = InventDescription(pExtension);
+            pNet->ci.desc = InventDescription(pExtension, pClassName);
         }
     }
 }
@@ -444,7 +457,7 @@ void ShellHelper(NET_cdataStruct *pNet, const char *pExtension)
 // There must be an extension, and the extension must not begin with
 // a leading '.'
 NET_cdataStruct *
-ProcessFileExtension(const char *pExtension, const char *ccpMimeType)
+ProcessFileExtension(const char *pExtension, const char *pClassName, const char *ccpMimeType)
 {
 	NET_cdataStruct *pExistingItem = NULL;
 
@@ -471,7 +484,7 @@ ProcessFileExtension(const char *pExtension, const char *ccpMimeType)
                     // there's a shell\open command for the file extension. It will
                     // also set the description if there isn't already one
                     if(pListEntry->ci.type)
-						ShellHelper(pListEntry, pExtension);
+						ShellHelper(pListEntry, pExtension, pClassName);
 
 					// Remember this item
 					pExistingItem = pListEntry;
@@ -490,7 +503,7 @@ ProcessFileExtension(const char *pExtension, const char *ccpMimeType)
     const char *pMimeType = ccpMimeType;
     BOOL bFreeMimeType = FALSE;
     if(pMimeType == NULL)   {
-        pMimeType = (const char *)InventMime(pExtension);
+        pMimeType = (const char *)InventMime(pExtension, pClassName);
         if(pMimeType)   {
             bFreeMimeType = TRUE;
         }
@@ -527,7 +540,7 @@ ProcessFileExtension(const char *pExtension, const char *ccpMimeType)
 							// necessary, and set how to handle as HANDLE_SHELLEXECUTE if
 							// there's a shell\open command for the file extension. It will
 							// also set the description if there isn't already one
-							ShellHelper(pListEntry, pExtension);
+							ShellHelper(pListEntry, pExtension, pClassName);
 						}
 					}
                 }
@@ -584,7 +597,7 @@ ProcessFileExtension(const char *pExtension, const char *ccpMimeType)
             // necessary, and set how to handle as HANDLE_SHELLEXECUTE if
             // there's a shell\open command for the file extension. It will
             // also set the description if there isn't already one
-            ShellHelper(pNew, pExtension);
+            ShellHelper(pNew, pExtension, pClassName);
         }
     }
 
@@ -771,7 +784,7 @@ void fe_ChangeDescription(NET_cdataStruct *pcdata, LPCSTR lpszExt, LPCSTR lpszDe
        CString strClass;
 
 		// Get the class name
-		if (GetClassName(lpszExt, strClass) && !strClass.IsEmpty()) {
+		if (GetExtClassName(lpszExt, strClass) && !strClass.IsEmpty()) {
 			// Set the description
 			RegSetValue(HKEY_CLASSES_ROOT, strClass, REG_SZ, lpszDescription, lstrlen(lpszDescription));
 
@@ -1049,7 +1062,7 @@ fe_NewFileType(LPCSTR lpszDescription,
 	// Set the file type class associated with the extension. Note that we ONLY
 	// do this if there is no file type class. If there's already a file type class
 	// we assume that we're just adding another MIME type for this file type
-	if (!GetClassName(lpszExtension, strFileClass)) {
+	if (!GetExtClassName(lpszExtension, strFileClass)) {
 		// Create a file type class
 		strFileClass = exts[i];
 		strFileClass += "file";
@@ -1207,7 +1220,7 @@ fe_RemoveFileType(NET_cdataStruct *pcdata)
 			CString	strClass;
 	
 			// Get the file type class
-			if (GetClassName(pcdata->exts[i], strClass)) {
+			if (GetExtClassName(pcdata->exts[i], strClass)) {
 				// Remove the subkey for the file type class. Don't delete the file type class
 				// unless this is the only netlib entry that has this file type class. The
 				// reason for this is that we arrange items by MIME type and not by file type class
@@ -1493,7 +1506,7 @@ fe_ChangeFileType(NET_cdataStruct *pcdata, LPCSTR lpszMimeType, int nHowToHandle
 			break;
 
 		case HANDLE_SHELLEXECUTE:
-			if (GetClassName(pcdata->exts[0], strFileClass) && !strFileClass.IsEmpty())
+			if (GetExtClassName(pcdata->exts[0], strFileClass) && !strFileClass.IsEmpty())
 				SetShellOpenCommand(strFileClass, lpszOpenCmd);
 			break;
 
@@ -1708,20 +1721,31 @@ BOOL  CopyRegKeys(HKEY  hKeyOldName,
 //      For each protocol, it calls ProcessShellProtocol();
 void registry_Loop()
 {
-    char aExtension[MAX_PATH + 1];
-    memset(aExtension, 0, sizeof(aExtension));
+    char aExtension[MAX_PATH + 1] = { '\0' };
+    DWORD dwExtension = 0;
+    char aClassName[128] = { '\0' };
+    long lClassName = 0;
 
     DWORD dwExtKey = 0;
     LONG lCheckEnum = ERROR_SUCCESS;
+    CString csClassName;
 
     do  {
-        lCheckEnum = RegEnumKey(HKEY_CLASSES_ROOT, dwExtKey++, aExtension, sizeof(aExtension));
+        aExtension[0] = '\0';
+        dwExtension = sizeof(aExtension);
+        lCheckEnum = RegEnumKeyEx(HKEY_CLASSES_ROOT, dwExtKey++, aExtension, &dwExtension, NULL, NULL, NULL, NULL);
         if(lCheckEnum == ERROR_SUCCESS) {
-            if(aExtension[0] == '.')    {
-                ProcessFileExtension(&aExtension[1], NULL);
-            }
-            else    {
-                //ProcessShellProtocol(&aExtension[0]);
+            //  I was trying to get the class name using RegEnumKeyEx,
+            //      but all I ever got was empty strings....
+            aClassName[0] = '\0';
+            lClassName = sizeof(aClassName);
+            if(GetKeyDefault(aExtension, aClassName, &lClassName))   {
+                if(aExtension[0] == '.')    {
+                    ProcessFileExtension(&aExtension[1], aClassName, NULL);
+                }
+                else    {
+                    //ProcessShellProtocol(&aExtension[0], aClassName);
+                }
             }
         }
     }
