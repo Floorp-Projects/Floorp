@@ -1868,17 +1868,8 @@ nsFontMetricsWin::InitMetricsFor(HDC aDC, nsFontWin* aFont)
 }
 
 HFONT
-nsFontMetricsWin::CreateFontHandle(HDC aDC, LOGFONT* aLogFont)
+nsFontMetricsWin::CreateFontAdjustHandle(HDC aDC, LOGFONT* aLogFont)
 {
-  /*
-   * According to http://msdn.microsoft.com/library/
-   * CreateFontIndirectW is only supported on NT/2000
-   */
-  if (mFont.sizeAdjust <= 0) {
-    // Quick return for the common case where no adjustement is needed
-    return ::CreateFontIndirect(aLogFont);
-  }
-
   // Adjust the aspect-value so that the x-height of the final font
   // is mFont.size * mFont.sizeAdjust
 
@@ -1937,25 +1928,52 @@ nsFontMetricsWin::CreateFontHandle(HDC aDC, LOGFONT* aLogFont)
   return nsnull;
 }
 
-nsFontWin*
-nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
+HFONT
+nsFontMetricsWin::CreateFontHandle(HDC aDC, nsString* aName, LOGFONT* aLogFont)
 {
   PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
   PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
 
-  LOGFONT logFont;
-  FillLogFont(&logFont, weight);
+  FillLogFont(aLogFont, weight);
  
   /*
    * XXX we are losing info by converting from Unicode to system code page
    * but we don't really have a choice since CreateFontIndirectW is
    * not supported on Windows 9X (see below) -- erik
    */
-  logFont.lfFaceName[0] = 0;
   WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
-    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
+    aLogFont->lfFaceName, sizeof(aLogFont->lfFaceName), nsnull, nsnull);
 
-  HFONT hfont = CreateFontHandle(aDC, &logFont);
+  if (mFont.sizeAdjust <= 0) {
+    // Quick return for the common case where no adjustement is needed
+    return ::CreateFontIndirect(aLogFont);
+  }
+  return CreateFontAdjustHandle(aDC, aLogFont);
+}
+
+HFONT
+nsFontMetricsWin::CreateFontHandle(HDC aDC, nsGlobalFont* aGlobalFont, LOGFONT* aLogFont)
+{
+  PRUint16 weightTable = LookForFontWeightTable(aDC, &aGlobalFont->name);
+  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
+
+  FillLogFont(aLogFont, weight);
+  aLogFont->lfCharSet = aGlobalFont->logFont.lfCharSet;
+  aLogFont->lfPitchAndFamily = aGlobalFont->logFont.lfPitchAndFamily;
+  strcpy(aLogFont->lfFaceName, aGlobalFont->logFont.lfFaceName);
+
+  if (mFont.sizeAdjust <= 0) {
+    // Quick return for the common case where no adjustement is needed
+    return ::CreateFontIndirect(aLogFont);
+  }
+  return CreateFontAdjustHandle(aDC, aLogFont);
+}
+
+nsFontWin*
+nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
+{
+  LOGFONT logFont;
+  HFONT hfont = CreateFontHandle(aDC, aName, &logFont);
   if (hfont) {
     HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
     char name[sizeof(logFont.lfFaceName)];
@@ -1999,16 +2017,8 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
 nsFontWin*
 nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
 {
-  PRUint16 weightTable = LookForFontWeightTable(aDC, &aGlobalFont->name);
-  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
-
   LOGFONT logFont;
-  FillLogFont(&logFont, weight);
-  logFont.lfCharSet = aGlobalFont->logFont.lfCharSet;
-  logFont.lfPitchAndFamily = aGlobalFont->logFont.lfPitchAndFamily;
-  strcpy(logFont.lfFaceName, aGlobalFont->logFont.lfFaceName);
-
-  HFONT hfont = CreateFontHandle(aDC, &logFont);
+  HFONT hfont = CreateFontHandle(aDC, aGlobalFont, &logFont);
   if (hfont) {
     nsFontWin* font = nsnull;
     if (eFontType_Unicode == aGlobalFont->fonttype) {
@@ -2309,22 +2319,8 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
 nsFontWin*
 nsFontMetricsWin::LoadSubstituteFont(HDC aDC, nsString* aName)
 {
-  PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
-  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
-
   LOGFONT logFont;
-  FillLogFont(&logFont, weight);
- 
-  /*
-   * XXX we are losing info by converting from Unicode to system code page
-   * but we don't really have a choice since CreateFontIndirectW is
-   * not supported on Windows 9X (see below) -- erik
-   */
-  logFont.lfFaceName[0] = 0;
-  WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
-    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
-
-  HFONT hfont = CreateFontHandle(aDC, &logFont);
+  HFONT hfont = CreateFontHandle(aDC, aName, &logFont);
   if (hfont) {
     // XXX 'displayUnicode' has to be initialized based on the desired rendering mode
     PRBool displayUnicode = PR_FALSE;
@@ -4431,22 +4427,8 @@ nsFontWinA::DumpFontInfo()
 nsFontWin*
 nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
 {
-  PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
-  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
-
   LOGFONT logFont;
-  FillLogFont(&logFont, weight);
-
-  /*
-   * XXX we are losing info by converting from Unicode to system code page
-   * but we don't really have a choice since CreateFontIndirectW is
-   * not supported on Windows 9X (see below) -- erik
-   */
-  logFont.lfFaceName[0] = 0;
-  WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
-    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
-
-  HFONT hfont = CreateFontHandle(aDC, &logFont);
+  HFONT hfont = CreateFontHandle(aDC, aName, &logFont);
   if (hfont) {
 #ifdef DEBUG_FONT_SIGNATURE
     printf("%s\n", logFont.lfFaceName);
@@ -4483,16 +4465,8 @@ nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
 nsFontWin*
 nsFontMetricsWinA::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
 {
-  PRUint16 weightTable = LookForFontWeightTable(aDC, &aGlobalFont->name);
-  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
-
   LOGFONT logFont;
-  FillLogFont(&logFont, weight);
-  logFont.lfCharSet = aGlobalFont->logFont.lfCharSet;
-  logFont.lfPitchAndFamily = aGlobalFont->logFont.lfPitchAndFamily;
-  strcpy(logFont.lfFaceName, aGlobalFont->logFont.lfFaceName);;
-
-  HFONT hfont = CreateFontHandle(aDC, &logFont);
+  HFONT hfont = CreateFontHandle(aDC, aGlobalFont, &logFont);
   if (hfont) {
     nsFontWinA* font = new nsFontWinA(&logFont, hfont, aGlobalFont->ccmap);
     if (font) {
@@ -4518,8 +4492,12 @@ nsFontSubset::Load(HDC aDC, nsFontMetricsWinA* aFontMetricsWinA, nsFontWinA* aFo
 {
   LOGFONT* logFont = &aFont->mLogFont;
   logFont->lfCharSet = mCharset;
-
-  HFONT hfont = aFontMetricsWinA->CreateFontHandle(aDC, logFont);
+  // create a font handle without filling & overwriting what is in logFont
+  const nsFont* font;
+  aFontMetricsWinA->GetFont(font);
+  HFONT hfont = (font->sizeAdjust <= 0) 
+    ? ::CreateFontIndirect(logFont)
+    : aFontMetricsWinA->CreateFontAdjustHandle(aDC, logFont);
   if (hfont) {
     int i = gCharsetToIndex[mCharset];
     if (!gCharsetInfo[i].mCCMap)
@@ -4787,17 +4765,8 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
 nsFontWin*
 nsFontMetricsWinA::LoadSubstituteFont(HDC aDC, nsString* aName)
 {
-  PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
-  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
-
   LOGFONT logFont;
-  FillLogFont(&logFont, weight);
-
-  logFont.lfFaceName[0] = 0;
-  WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
-    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
-
-  HFONT hfont = CreateFontHandle(aDC, &logFont);
+  HFONT hfont = CreateFontHandle(aDC, aName, &logFont);
   if (hfont) {
     HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
     char name[sizeof(logFont.lfFaceName)];
