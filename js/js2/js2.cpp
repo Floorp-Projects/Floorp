@@ -153,9 +153,6 @@ static ICodeModule* genCode(Context &cx, StmtNode *p, const String &fileName)
     icg.returnStmt(ret);
 
     ICodeModule *icm = icg.complete();
-
-stdOut << icg;
-
     icm->setFileName (fileName);
     return icm;
 }
@@ -365,7 +362,6 @@ static void testCompile()
             icg.genStmt(s);
             s = s->next;
         }
-//        stdOut << icg;
         cx.interpret(icg.complete(), JSValues());
     }
 }

@@ -45,13 +45,19 @@ namespace JSClasses {
     using JSTypes::JSScope;
     using ICG::ICodeModule;
     
+
     struct JSSlot {
+        typedef enum { kNoFlag = 0, kIsConstructor = 0x01 } SlotFlags;   // <-- readonly, enumerable etc
+
         JSType* mType;
         uint32 mIndex;
+        SlotFlags mFlags;
         
-        JSSlot() : mType(0)
+        JSSlot() : mType(0), mFlags(kNoFlag)
         {
         }
+
+        bool isConstructor() const          { return (mFlags & kIsConstructor) != 0; }
     };
 
 #if defined(XP_MAC)
@@ -79,7 +85,6 @@ namespace JSClasses {
         uint32 mStaticCount;
         JSSlots mStaticSlots;
         JSValue* mStaticData;
-        ICodeModule* mInitializer;
         // typedef std::vector<ICodeModule*, gc_allocator<ICodeModule*> > JSMethods;
         // JSMethods mMethods;
     public:
@@ -88,8 +93,7 @@ namespace JSClasses {
                 mScope(new JSScope(scope)),
                 mSlotCount(superClass ? superClass->mSlotCount : 0),
                 mStaticCount(0),
-                mStaticData(0),
-                mInitializer(0)
+                mStaticData(0)
         {
             // to "inherit" superClass methods.
             if (superClass)
@@ -106,16 +110,6 @@ namespace JSClasses {
             return mScope;
         }
 
-        void setInitializer(ICodeModule* init)
-        {
-            mInitializer = init;
-        }
-        
-        ICodeModule* getInitializer()
-        {
-            return mInitializer;
-        }
-        
         const JSSlot& defineSlot(const String& name, JSType* type)
         {
             JSSlot& slot = mSlots[name];
@@ -156,17 +150,28 @@ namespace JSClasses {
             slot.mIndex = mStaticCount++;
             return slot;
         }
+
+        const JSSlot& defineConstructor(const String& name)
+        {
+            JSSlot& slot = mStaticSlots[name];
+            ASSERT(slot.mType == 0);
+            slot.mType = &JSTypes::Function_Type;
+            slot.mIndex = mStaticCount++;
+            slot.mFlags = JSSlot::kIsConstructor;
+            return slot;
+        }
         
         const JSSlot& getStatic(const String& name)
         {
             return mStaticSlots[name];
         }
         
-        bool hasStatic(const String& name, JSType*& type)
+        bool hasStatic(const String& name, JSType*& type, bool &isConstructor)
         {
             JSSlots::const_iterator i = mStaticSlots.find(name);
             if (i != mStaticSlots.end()) {
                 type = i->second.mType;
+                isConstructor = i->second.isConstructor();
                 return true;
             }
             return false;

@@ -481,6 +481,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             assert(mPC != endPC);
             Instruction* instruction = *mPC;
             switch (instruction->op()) {
+            case SUPER:
+                {
+                    Super* su = static_cast<Super*>(instruction);
+                    ASSERT((*registers)[0].isObject());         // should be scope of current class
+                    JSScope *s = static_cast<JSScope *>((*registers)[0].object->getPrototype());
+                    (*registers)[dst(su).first] = s;
+                }
+                break;
             case METHOD_CALL:
                 {
                     MethodCall* call = static_cast<MethodCall*>(instruction);
@@ -553,6 +561,38 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                                mActivation, mGlobal, op1(call));
                         mActivation = new Activation(target->getICode(), mActivation, kNullValue, op4(call));
                         mGlobal = op2(call)->getScope();
+                        registers = &mActivation->mRegisters;
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
+                        continue;
+                    }
+                }
+
+            case CONSTRUCTOR_CALL:
+                {
+                    ConstructorCall* call = static_cast<ConstructorCall*>(instruction);
+                    JSClass* thisClass = op1(call);
+                    const JSValue& value = (*thisClass)[op2(call)];
+                    // FIXME: throw runtime error if not a function value.
+                    ASSERT(value.isFunction());
+                    JSFunction *target = value.function;
+                    if (target->isNative()) {
+                        RegisterList &params = op4(call);
+                        JSValues argv(params.size() + 1, kNullValue);
+                        argv[0] = (*registers)[op3(call).first];
+                        JSValues::size_type i = 1;
+                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
+                                        src != end; ++src, ++i) {
+                            argv[i] = (*registers)[src->first];
+                        }
+                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        break;
+                    }
+                    else {
+                        mLinkage = new Linkage(mLinkage, ++mPC,
+                                               mActivation, mGlobal, TypedRegister(NotARegister, &Any_Type));
+                        mActivation = new Activation(target->getICode(), mActivation, (*registers)[op3(call).first], op4(call));
+                        mGlobal = op1(call)->getScope();
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
@@ -667,36 +707,31 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_CLASS:
                 {
                     NewClass* nc = static_cast<NewClass*>(instruction);
-                    const JSValue& value = mGlobal->getVariable(*src1(nc));
-                    if (value.isType()) {
-                        JSClass* thisClass = dynamic_cast<JSClass*>(value.type);
-                        if (thisClass) {
-                            JSInstance* thisInstance = new(thisClass) JSInstance(thisClass);
-                            (*registers)[dst(nc).first] = thisInstance;
-                            JSValues args(1);
-                            args[0] = thisInstance;
-                            TypedRegister voidRegister(NotARegister, &None_Type);
-                            InstructionIterator nextPC = ++mPC;
-                            do {
-                                // call the constructor(s), if any.
-                                ICodeModule* init = thisClass->getInitializer();
-                                if (init) {
-                                    mLinkage = new Linkage(mLinkage, nextPC,
-                                                           mActivation, mGlobal, voidRegister);
-                                    mActivation = new Activation(init, args);
-                                    registers = &mActivation->mRegisters;
-                                    nextPC = init->its_iCode->begin();
-                                    endPC = init->its_iCode->end();
-                                }
-                                thisClass = thisClass->getSuperClass();
-                            } while (thisClass);
-                            
-                            mPC = nextPC;
-                            continue;
+                    JSClass* thisClass = src1(nc);
+                    JSInstance* thisInstance = new(thisClass) JSInstance(thisClass);
+                    (*registers)[dst(nc).first] = thisInstance;
+/*
+                    JSValues args(1);
+                    args[0] = thisInstance;
+                    TypedRegister voidRegister(NotARegister, &None_Type);
+                    InstructionIterator nextPC = ++mPC;
+                    do {
+                        // call the constructor(s), if any.
+                        ICodeModule* init = thisClass->getInitializer();
+                        if (init) {
+                            mLinkage = new Linkage(mLinkage, nextPC,
+                                                   mActivation, mGlobal, voidRegister);
+                            mActivation = new Activation(init, args);
+                            registers = &mActivation->mRegisters;
+                            nextPC = init->its_iCode->begin();
+                            endPC = init->its_iCode->end();
                         }
-                    } else {
-                        // XXX Runtime error.
-                    }
+                        thisClass = thisClass->getSuperClass();
+                    } while (thisClass);
+                    
+                    mPC = nextPC;
+                    continue;
+*/
                 }
                 break;
             case NEW_FUNCTION:
