@@ -1926,7 +1926,7 @@ const PRInt32 kNumLines = 8;
 {
   // XXXdwh. We basically always get 1 or -1 as the delta.  This is treated by 
   // Gecko as the number of lines to scroll.  We go ahead and use a 
-  // default kNumLines of 4 for now (until I learn how we can get settings from
+  // default kNumLines of 8 for now (until I learn how we can get settings from
   // the OS). --dwh
   nsMouseScrollEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
@@ -1934,9 +1934,6 @@ const PRInt32 kNumLines = 8;
   geckoEvent.delta = PRInt32([theEvent deltaY])*(-kNumLines);
   geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
  
-  // obscure the cursor during a wheel scroll
-  ::ObscureCursor();
-
   // send event into Gecko by going directly to the
   // the widget.
   mGeckoChild->DispatchWindowEvent(geckoEvent);

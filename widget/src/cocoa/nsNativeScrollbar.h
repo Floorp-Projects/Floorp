@@ -55,11 +55,6 @@ class nsIScrollbarMediator;
 // with a stub gecko frame to scroll in the GFXScrollFrame mechanism
 //
 
-// {c2281100-3b4b-11d6-a384-f705fd0766fc}
-#define NS_NATIVESCROLLBAR_CID \
-{ 0xc2281100, 0x3b4b, 0x11d6, { 0xa3, 0x84, 0xf7, 0x05, 0xfd, 0x07, 0x66, 0xfc } }
-
-
 class nsNativeScrollbar : public nsChildView, public nsINativeScrollbar
 {
 private:
@@ -87,6 +82,8 @@ protected:
   NSScroller* GetControl() { return mView; }
 
   void UpdateContentPosition(PRUint32 inNewPos);
+  
+  void RecreateHorizontalScrollbar();
 
   virtual NSView*   CreateCocoaView() ;
   virtual GrafPtr   GetQuickDrawPort() ;
