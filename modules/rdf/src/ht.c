@@ -6696,6 +6696,9 @@ HT_LaunchURL(HT_Pane pane, char *url, MWContext *context)
 			{
 				if (startsWith("ftp://", resourceID(u)))
 				{
+					/* XXX note: disable ftp until RDF_BRANCH_060398 lands */
+					return(retVal);
+/*
 					if (!RDF_HasAssertion(pane->db, gNavCenter->RDF_FTP,
 						gCoreVocab->RDF_parent, gNavCenter->RDF_LocalFiles,
 						RDF_RESOURCE_TYPE, PR_TRUE))
@@ -6706,6 +6709,7 @@ HT_LaunchURL(HT_Pane pane, char *url, MWContext *context)
 							RDF_RESOURCE_TYPE);
 						gAutoOpenPane = NULL;
 					}
+*/
 				}
 				gAutoOpenPane = pane;
 				RDF_Assert(pane->db, u, gCoreVocab->RDF_parent,
