@@ -160,7 +160,7 @@ PRUint32 nsBasicUTF7Decoder::CharToValue(char aChar) {
     return (PRUint8)(26+26+aChar-'0');
   else if (aChar=='+')
     return (PRUint8)(26+26+10);
-  else if (aChar=='/')
+  else if (aChar==mLastChar)
     return (PRUint8)(26+26+10+1);
   else
     return -1;
