@@ -966,6 +966,7 @@ alpha*-*-osf*)
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS='-compatibility_version 1 -current_version 1'
     AC_DEFINE(NO_X11)
+    AC_DEFINE(DARWIN)
     AC_DEFINE(RHAPSODY)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
