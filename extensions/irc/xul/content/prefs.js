@@ -96,7 +96,7 @@ function initPrefs()
          ["autoRejoin",         false,    ".connect"],
          ["awayNick",           "",       ".ident"],
          ["bugURL",           "https://bugzilla.mozilla.org/show_bug.cgi?id=%s",
-                                          "global"],
+                                          "appearance.misc"],
          ["channelHeader",      true,     "global.header"],
          ["channelLog",         false,    "global.log"],
          ["channelMaxLines",    500,      "global.maxLines"],
@@ -356,6 +356,7 @@ function getNetworkPrefManager(network)
          ["autoRejoin",       defer, ".connect"],
          ["away",             "",    "hidden"],
          ["awayNick",         defer, ".ident"],
+         ["bugURL",           defer, "appearance.misc"],
          ["charset",          defer, ".connect"],
          ["collapseMsgs",     defer, "appearance.misc"],
          ["connectTries",     defer, ".connect"],
@@ -440,6 +441,7 @@ function getChannelPrefManager(channel)
     var prefs =
         [
          ["autoRejoin",       defer, ".connect"],
+         ["bugURL",           defer, "appearance.misc"],
          ["charset",          defer, ".connect"],
          ["collapseMsgs",     defer, "appearance.misc"],
          ["displayHeader",    client.prefs["channelHeader"],

@@ -747,13 +747,22 @@ function insertChannelLink (matchText, containerTag, eventData)
     containerTag.appendChild (anchor);
 }
 
-function insertBugzillaLink (matchText, containerTag)
+function insertBugzillaLink (matchText, containerTag, eventData)
 {
     var number = matchText.match (/(\d+)/)[1];
 
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
-    anchor.setAttribute ("href", client.prefs["bugURL"].replace("%s", number));
+
+    var bugURL;
+    if (eventData.channel)
+        bugURL = eventData.channel.prefs["bugURL"];
+    else if (eventData.network)
+        bugURL = eventData.network.prefs["bugURL"];
+    else
+        bugURL = client.prefs["bugURL"];
+
+    anchor.setAttribute ("href", bugURL.replace("%s", number));
     anchor.setAttribute ("class", "chatzilla-link");
     anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);
