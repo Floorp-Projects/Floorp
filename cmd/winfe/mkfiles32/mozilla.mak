@@ -80,6 +80,9 @@ SPELLCHK_DATA = $(DEPTH)\modules\spellchk\data
 !if !defined(MOZ_PURIFY)
 MOZ_PURIFY=C:\Pure\Purify
 !endif
+!if !defined(MOZ_PURIFYCACHE)
+MOZ_PURIFYCACHE=$(FULL_OUTDIR)\PurifyCache
+!endif
 
 # No security means no patcher required.
 !if "$(NO_SECURITY)" == "1"
@@ -309,6 +312,11 @@ CFLAGS_WINDOWS_C=		$(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\win16\private
 !endif
 
 OUTDIR=$(MOZ_OUT)\$(PROD)$(VERSTR)
+!if "$(MOZ_OUT)" == "."
+FULL_OUTDIR=$(MOZ_SRC)\mozilla\cmd\winfe\mkfiles32\$(PROD)$(VERSTR)
+!else
+FULL_OUTDIR=$(OUTDIR)
+!endif
 GENDIR=.\_gen
 
 # I changed $(DIST_PREFIX)954.0" to "WIN954.0" so that lite and medium builds will work.
@@ -1404,7 +1412,7 @@ ALL : $(OUTDIR)\mozilla.dep "$(OUTDIR)" prebuild $(OUTDIR)\resdll.dll $(OUTDIR)\
 !include "$(OUTDIR)\mozilla.dep"
 !endif
 
-PURIFY : "$(OUTDIR)" "$(OUTDIR)\PurifyCache" "$(OUTDIR)\mozilla.exe" pure
+PURIFY : "$(OUTDIR)" "$(MOZ_PURIFYCACHE)" "$(OUTDIR)\mozilla.exe" pure
 
 !ENDIF
 
@@ -1418,8 +1426,8 @@ $(GENDIR) :
     if not exist "$(GENDIR)/$(NULL)" mkdir "$(GENDIR)"
 
 
-$(OUTDIR)\PurifyCache :
-	if not exist "$(OUTDIR)\PurifyCache\$(NULL)" mkdir "$(OUTDIR)\PurifyCache"
+$(MOZ_PURIFYCACHE) :
+	if not exist "$(MOZ_PURIFYCACHE)\$(NULL)" mkdir "$(MOZ_PURIFYCACHE)"
 
 #
 #	RDF Images need binary conversion
@@ -2843,8 +2851,7 @@ exports:
 
 pure:
 	$(MOZ_PURIFY)\purify /Run=no /ErrorCallStackLength=20 /AllocCallStackLength=20 \
-	/CacheDir="$(DEPTH)\cmd\winfe\mkfiles32\$(PROD)$(VERSTR)\PurifyCache" \
-	/Out "$(DEPTH)\cmd\winfe\mkfiles32\$(PROD)$(VERSTR)\mozilla.exe"
+	/CacheDir="$(MOZ_PURIFYCACHE)" /Out "$(FULL_OUTDIR)\mozilla.exe"
 
 # for debugging this makefile
 symbols:
