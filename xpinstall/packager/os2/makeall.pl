@@ -674,14 +674,14 @@ sub CreateTmpStage()
 
   # Copy the component's staging dir locally so that the chrome packages, locales, and skins dirs can be
   # removed prior to creating the .xpi file.
-  mkdir("$gLocalTmpStage", 775);
+  mkdir("$gLocalTmpStage", 0775);
 
   foreach $mComponent (@gComponentList)
   {
     print "\n Copying $mComponent:\n";
     print " From: $inStagePath/$mComponent\n";
     print "   To: $gLocalTmpStage/$mComponent\n\n";
-    mkdir("$gLocalTmpStage/$mComponent", 775);
+    mkdir("$gLocalTmpStage/$mComponent", 0775);
 
     # If it's not talkback then copy the component over to the local tmp stage.
     # If it is, then skip the copy because there will be nothing at the source.
@@ -729,7 +729,7 @@ sub VerifyComponents()
     if($mComponent =~ /talkback/i)
     {
       print " place holder: $inStagePath/$mComponent\n";
-      mkdir("$inStagePath/$mComponent", 775);
+      mkdir("$inStagePath/$mComponent", 0775);
     }
     elsif(-d "$inStagePath/$mComponent")
     {

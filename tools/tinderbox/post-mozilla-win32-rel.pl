@@ -31,7 +31,7 @@ sub packit {
 
   #my $dos_stagedir = `cygpath -w $stagedir`;
   #chomp ($dos_stagedir);
-  mkdir  $stagedir, 775;
+  mkdir  $stagedir, 0775;
   TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
   TinderUtils::run_shell_command "cp $package_location/sea/*.exe $package_location/stub/*.exe  $stagedir/";
 

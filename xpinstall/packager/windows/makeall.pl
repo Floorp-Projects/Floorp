@@ -647,7 +647,7 @@ sub VerifyComponents()
     if($mComponent =~ /talkback/i)
     {
       print " place holder: $gDirStageProduct/$mComponent\n";
-      mkdir("$gDirStageProduct/$mComponent", 775);
+      mkdir("$gDirStageProduct/$mComponent", 0775);
     }
     elsif(-d "$gDirStageProduct/$mComponent")
     {
