@@ -203,6 +203,9 @@ MimeMultipartRelated_finalize (MimeObject *obj)
 	MimeMultipartRelated* relobj = (MimeMultipartRelated*) obj;
 	PR_FREEIF(relobj->base_url);
 	PR_FREEIF(relobj->curtag);
+        PR_FREEIF(relobj->head_buffer);
+        relobj->head_buffer_fp = 0;
+        relobj->head_buffer_size = 0;
 	if (relobj->hash) {
     PL_HashTableEnumerateEntries(relobj->hash, mime_multipart_related_nukehash, NULL);
     PL_HashTableDestroy(relobj->hash);
