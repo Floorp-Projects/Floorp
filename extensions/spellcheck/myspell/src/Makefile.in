@@ -53,11 +53,9 @@ IS_COMPONENT	= 1
 
 REQUIRES	= xpcom \
 		  string \
-		  necko \
 		  uconv \
 		  unicharutil \
 		  spellchecker \
-                  intl \
 		  $(NULL)
 
 CPPSRCS =         affentry.cpp \

@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  unicharutil \
 		  content \
-		  dom \
 		  layout \
 		  locale \
 		  $(NULL)

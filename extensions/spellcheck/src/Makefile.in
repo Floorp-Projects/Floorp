@@ -56,12 +56,10 @@ REQUIRES	= xpcom \
 		  string \
 		  editor \
 		  content \
-		  layout \
 		  dom \
 		  necko \
 		  widget \
 		  pref \
-		  gfx \
 		  txtsvc \
 		  uconv \
 		  unicharutil \

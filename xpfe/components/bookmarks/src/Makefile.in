@@ -48,7 +48,6 @@ LIBRARY_NAME	= bookmarks_s
 REQUIRES	= xpcom \
 		  string \
 		  rdf \
-		  appshell \
 		  widget \
 		  necko \
 		  nkcache \
