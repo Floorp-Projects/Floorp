@@ -25,7 +25,7 @@
 #include HG40855
 
 #include "nsIOutputStream.h"
-#include "nsINntpURL.h"
+#include "nsINntpUrl.h"
 
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
@@ -137,6 +137,7 @@ public:
 	virtual ~nsNNTPProtocol();
 
 	PRInt32 LoadURL(nsIURL * aURL);
+	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
 
 	NS_DECL_ISUPPORTS
 
@@ -175,6 +176,10 @@ public:
 	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
 private:
+	// the following flag is used to determine when a url is currently being run. It is cleared on calls
+	// to ::StopBinding and it is set whenever we call Load on a url
+	PRBool	m_urlInProgress;	
+
 	// News Event Sinks
     nsINNTPNewsgroupList	* m_newsgroupList;
     nsINNTPArticleList		* m_articleList;
@@ -189,8 +194,7 @@ private:
 	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
 
 	// the nsINntpURL that is currently running
-	nsINntpURL				* m_runningURL;
-	nsIURL					* m_url; // eventually this will just be m_runningURL...
+	nsINntpUrl				* m_runningURL;
 	
 	PRUint32 m_flags; // used to store flag information
 
@@ -242,6 +246,9 @@ private:
     PRInt32   m_articleNumber;   /* current article number */
 	char	 *m_commandSpecificData;
 	char	 *m_searchData;
+
+	PRBool	  m_socketIsOpen; // mscott: we should look into keeping this state in the nsSocketTransport...
+							  // I'm using it to make sure I open the socket the first time a URL is loaded into the connection
 
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
