@@ -23,48 +23,62 @@
 #ifndef nsWebBrowser_h__
 #define nsWebBrowser_h__
 
+// Local Includes
+#include "nsDocShellTreeOwner.h"
+
+// Core Includes
 #include "nsCOMPtr.h"
 
-#include "nsCWebBrowser.h"
-
 // Interfaces needed
+#include "nsCWebBrowser.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
-#include "nsIProgress.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIScrollable.h"
+#include "nsISHistory.h"
 #include "nsISupportsArray.h"
 #include "nsITextScroll.h"
 #include "nsIWidget.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebProgress.h"
 
 class nsWebBrowserInitInfo
 {
 public:
    //nsIBaseWindow Stuff
-/*   nativeWindow         parentNativeWindow;
-   nsCOMPtr<nsIWidget>  parentWidget; */
-   PRInt32        x;
-   PRInt32        y;
-   PRInt32        cx;
-   PRInt32        cy;
-   PRBool         visible;
+   PRInt32                 x;
+   PRInt32                 y;
+   PRInt32                 cx;
+   PRInt32                 cy;
+   PRBool                  visible;
+   nsCOMPtr<nsISHistory>   sessionHistory;
+   nsString                name;
 };
 
 
-class nsWebBrowser : public nsIWebBrowser, public nsIWebNavigation,
-   public nsIProgress, public nsIBaseWindow, public nsIScrollable,
-   public nsITextScroll
+class nsWebBrowser : public nsIWebBrowser,
+                     public nsIDocShellTreeItem,
+                     public nsIWebNavigation,
+                     public nsIWebProgress, 
+                     public nsIBaseWindow,
+                     public nsIScrollable, 
+                     public nsITextScroll, 
+                     public nsIInterfaceRequestor
 {
+friend class nsDocShellTreeOwner;
 public:
    NS_DECL_ISUPPORTS
 
-   NS_DECL_NSIWEBBROWSER
-   NS_DECL_NSIWEBNAVIGATION
-   NS_DECL_NSIPROGRESS
    NS_DECL_NSIBASEWINDOW
+   NS_DECL_NSIDOCSHELLTREEITEM
+   NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSISCROLLABLE   
    NS_DECL_NSITEXTSCROLL
+   NS_DECL_NSIWEBBROWSER
+   NS_DECL_NSIWEBNAVIGATION
+   NS_DECL_NSIWEBPROGRESS
 
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
@@ -73,19 +87,26 @@ protected:
    virtual ~nsWebBrowser();
 
    void UpdateListeners();
-   nsresult CreateDocShell(const PRUnichar* contentType);
+   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
+   NS_IMETHOD EnsureDocShellTreeOwner();
 
 protected:
+   nsDocShellTreeOwner*       mDocShellTreeOwner;
    nsCOMPtr<nsISupportsArray> mListenerList;
    nsCOMPtr<nsIDocShell>      mDocShell;
-   PRBool                     mCreated;
-   nsWebBrowserInitInfo*      mInitInfo;
-   nsCOMPtr<nsIWidget>        mParentWidget;
-   nativeWindow               mParentNativeWindow;
+   nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
+   nsCOMPtr<nsIBaseWindow>    mDocShellAsWin;
+   nsCOMPtr<nsIDocShellTreeItem> mDocShellAsItem;
+   nsCOMPtr<nsIWebNavigation>  mDocShellAsNav;
+   nsCOMPtr<nsIScrollable>    mDocShellAsScrollable;
+   nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;
    nsCOMPtr<nsIWidget>        mInternalWidget;
+   nsWebBrowserInitInfo*      mInitInfo;
+   nativeWindow               mParentNativeWindow;
 
    //Weak Reference interfaces...
-   nsIWebBrowserChrome*       mTopLevelWindow;           
+   nsIWidget*                 mParentWidget;
+   nsIDocShellTreeItem*       mParent;           
 };
 
 #endif /* nsWebBrowser_h__ */
