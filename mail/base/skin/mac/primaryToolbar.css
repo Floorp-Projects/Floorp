@@ -255,7 +255,7 @@ toolbar[iconsize="small"] #button-getmsg {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
 
-toolbar[iconsize="small"] #button-getmsg:active {
+toolbar[iconsize="small"] #button-getmsg[buttondown], toolbar[iconsize="small"] #button-getmsg:active {
   -moz-image-region: rect(24px 24px 48px 0px);
 } 
 
