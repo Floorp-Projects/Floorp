@@ -147,6 +147,12 @@ table {
   margin-top: 0;
   margin-bottom: 0;
 }
+table[align=left] {
+  margin-right: 4px;
+}
+table[align=right] {
+  margin-left: 4px;
+}
 
 /* must never set padding in td, th */
 td, th {
@@ -210,13 +216,13 @@ a:visited {
 }
 a:active {
   display: inline;
-  color: lime;
+  color: red;
   text-decoration: underline;
   cursor: pointer;
 }
 a:out-of-date {
   display: inline;
-  color: red;
+  color: lime;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -410,6 +416,13 @@ br {
 }
 img {
   display: inline;
+}
+/* note: not exactly 4.x compatible; 4.x has 3px for *both* margins */
+img[align=left] {
+  margin-right: 4px;
+}
+img[align=right] {
+  margin-left: 4px;
 }
 img:-moz-text {
   /* font-family: sans-serif; */
@@ -1064,7 +1077,7 @@ area {
   display: none;
 }
 map {
-  display: block;
+  display: none;
 }
 base {
   display: none;
