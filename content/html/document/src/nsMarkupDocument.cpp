@@ -157,7 +157,6 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
 {
  
   PRInt32     count = GetNumberOfStyleSheets();
-  nsIURL&      docURL = *mDocumentURL;
 
   for (PRInt32 index = 0; index < count; index++)
   {
@@ -172,7 +171,7 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
       if (nsnull == sheetURL) {
         break;
       }
-      if (!(*sheetURL == docURL)) {
+      if (!sheetURL->Equals(mDocumentURL)) {
         NS_RELEASE(sheetURL);
         break;
       }
