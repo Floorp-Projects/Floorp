@@ -1313,7 +1313,7 @@ function gotoIRCURL (url)
         if (url.pass)
             pass = url.pass;
         else
-            pass = window.prompt(getMsg(MSG_URL_PASSWORD, url.spec));
+            pass = window.promptPassword(getMsg(MSG_URL_PASSWORD, url.spec));
     }
     
     if (url.isserver)
@@ -1395,7 +1395,7 @@ function gotoIRCURL (url)
                 if (url.key)
                     key = url.key;
                 else
-                    key = window.prompt(getMsg(MSG_URL_KEY, url.spec));
+                    key = window.promptPassword(getMsg(MSG_URL_KEY, url.spec));
             }
 
             var charset;

@@ -899,3 +899,20 @@ function prompt(msg, initial, parent, title)
 
     return rv.value
 }
+
+function promptPassword(msg, initial, parent, title)
+{
+    var PROMPT_CTRID = "@mozilla.org/embedcomp/prompt-service;1";
+    var nsIPromptService = Components.interfaces.nsIPromptService;
+    var ps = Components.classes[PROMPT_CTRID].createInstance(nsIPromptService);
+    if (!parent)
+        parent = window;
+    if (!title)
+        title = MSG_PROMPT;
+    rv = { value: initial };
+
+    if (!ps.promptPassword (parent, title, msg, rv, null, {value: null}))
+        return null;
+
+    return rv.value
+}
