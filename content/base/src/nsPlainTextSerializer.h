@@ -174,6 +174,7 @@ protected:
   nsString         mInIndentString;
   PRInt32          mCiteQuoteLevel;
   PRInt32          mFlags;
+  PRInt32          mFloatingLines; // To store the number of lazy line breaks
 
   // The wrap column is how many standard sized chars (western languages)
   // should be allowed on a line. There could be less chars if the chars
@@ -195,6 +196,11 @@ protected:
   PRPackedBool     mInWhitespace;
   PRPackedBool     mPreFormatted;
   PRPackedBool     mStartedOutput; // we've produced at least a character
+
+  // While handling a new tag, this variable should remind if any line break
+  // is due because of a closing tag. Setting it to "TRUE" while closing the tags.
+  // Hence opening tags are guaranteed to start with appropriate line breaks.
+  PRPackedBool     mLineBreakDue; 
 
   nsString         mURL;
   PRInt32          mHeaderStrategy;    /* Header strategy (pref)

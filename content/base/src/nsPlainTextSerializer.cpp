@@ -212,6 +212,8 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
     else
       mFlags |= nsIDocumentEncoder::OutputNoFramesContent;
   }
+  mLineBreakDue = PR_FALSE;
+  mFloatingLines = -1;
 
   return NS_OK;
 }
@@ -539,6 +541,9 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     return NS_OK;
   }
 
+  if (mLineBreakDue)
+    EnsureVerticalSpace(mFloatingLines);
+
   // Check if this tag's content that should not be output
   if ((type == eHTMLTag_noscript &&
        !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) ||
@@ -805,23 +810,30 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
            (type == eHTMLTag_li) ||
            (type == eHTMLTag_dt)) {
     // Items that should always end a line, but get no more whitespace
-    EnsureVerticalSpace(0);
+    if (mFloatingLines < 0)
+      mFloatingLines = 0;
+    mLineBreakDue = PR_TRUE;
   } 
   else if (type == eHTMLTag_pre) {
-    EnsureVerticalSpace(1);
+    mFloatingLines = 1;
+    mLineBreakDue = PR_TRUE;
   }
   else if (type == eHTMLTag_ul) {
     mIndent -= kIndentSizeList;
-    if (--mULCount + mOLStackIndex == 0)
-      EnsureVerticalSpace(1);
+    if (--mULCount + mOLStackIndex == 0) {
+      mFloatingLines = 1;
+      mLineBreakDue = PR_TRUE;
+    }
   }
   else if (type == eHTMLTag_ol) {
     FlushLine(); // Doing this after decreasing OLStackIndex would be wrong.
     mIndent -= kIndentSizeList;
     mOLStackIndex--;
-    if (mULCount + mOLStackIndex == 0)
-      EnsureVerticalSpace(1);
-  }
+    if (mULCount + mOLStackIndex == 0) {
+      mFloatingLines = 1;
+      mLineBreakDue = PR_TRUE;
+    }
+  }  
   else if (type == eHTMLTag_dd) {
     mIndent -= kIndentSizeDD;
   }
@@ -838,8 +850,13 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     // in formatted mode, otherwise 0.
     // This is hard. Sometimes 0 is a better number, but
     // how to know?
-    EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted)
-                        ? 1 : 0);
+    if (mFlags & nsIDocumentEncoder::OutputFormatted)
+      EnsureVerticalSpace(1);
+    else {
+      if (mFloatingLines < 0)
+        mFloatingLines = 0;
+      mLineBreakDue = PR_TRUE;
+    }
   }
 
   //////////////////////////////////////////////////////////////
@@ -923,6 +940,9 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     return NS_OK;
   }
   
+  if (mLineBreakDue)
+    EnsureVerticalSpace(mFloatingLines);
+
   eHTMLTags type = (eHTMLTags)aTag;
   
   if ((mTagStackIndex > 1 &&
@@ -1062,6 +1082,8 @@ nsPlainTextSerializer::EnsureVerticalSpace(PRInt32 noOfRows)
   while(mEmptyLines < noOfRows) {
     EndLine(PR_FALSE);
   }
+  mLineBreakDue = PR_FALSE;
+  mFloatingLines = -1;
 }
 
 /**
@@ -1121,6 +1143,9 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
 {
   PRUint32 prefixwidth = (mCiteQuoteLevel > 0 ? mCiteQuoteLevel + 1:0)+mIndent;
   
+  if (mLineBreakDue)
+    EnsureVerticalSpace(mFloatingLines);
+
   PRInt32 linelength = mCurrentLine.Length();
   if(0 == linelength) {
     if(0 == aLineFragmentLength) {
@@ -1360,6 +1385,8 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
   mCurrentLineWidth = 0;
   mAtFirstColumn=PR_TRUE;
   mInWhitespace=PR_TRUE;
+  mLineBreakDue = PR_FALSE;
+  mFloatingLines = -1;
 }
 
 
