@@ -19,12 +19,13 @@
 #include "msgCore.h"
 #include "nsNNTPNewsgroupList.h"
 #include "nsINNTPHost.h"
+#include "nsINNTPArticleList.h"
 
 /* XXX - temporary hack so this will compile */
 
 typedef PRUint32 MessageKey;
 
-class nsNNTPArticleList
+class nsNNTPArticleList : nsINNTPArticleList
 #ifdef HAVE_CHANGELISTENER
  : public ChangeListener
 #endif
@@ -33,7 +34,7 @@ public:
 	nsNNTPArticleList(const nsINNTPHost * newshost,
                       const nsINNTPNewsgroup* newsgroup);
                                   /* , MSG_Pane *pane); */
-    virtual ~nsNNTPArticleList();
+        virtual ~nsNNTPArticleList();
 
     NS_DECL_ISUPPORTS
   
@@ -64,6 +65,9 @@ protected:
 	PRInt32					m_dbIndex;
 	MessageKey				m_highwater;
 };
+
+NS_IMPL_ADDREF(nsNNTPArticleList) //, (NS_INNTPARTICLELIST_IID))
+NS_IMPL_QUERY_INTERFACE(nsNNTPArticleList, IID())
 
 nsNNTPArticleList::nsNNTPArticleList(const nsINNTPHost* newsHost,
                                      const nsINNTPNewsgroup* newsgroup)
@@ -104,6 +108,7 @@ nsNNTPArticleList::Initialize(const nsINNTPHost * newsHost,
     return NS_MSG_SUCCESS;
 }
 
+#if 0
 nsNNTPArticleList::~nsNNTPArticleList()
 {
 #ifdef HAVE_NEWSDB
@@ -111,6 +116,7 @@ nsNNTPArticleList::~nsNNTPArticleList()
 		m_newsDB->Close();
 #endif
 }
+#endif
 
 nsresult
 nsNNTPArticleList::AddArticleKey(PRInt32 key)
