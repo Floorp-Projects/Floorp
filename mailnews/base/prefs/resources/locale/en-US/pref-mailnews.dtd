@@ -26,8 +26,6 @@ Rights Reserved.
 <!ENTITY chooseExp.label                  "Note: For this setting to take effect, you will need to exit and then restart Mail.">
 <!ENTITY playSound.label                  "Play a sound when new messages arrive">
 <!ENTITY playSound.accesskey              "p">
-<!ENTITY rememberLastMsg.label            "Remember the last selected message">
-<!ENTITY rememberLastMsg.accesskey        "r">
 <!ENTITY confirmMove.label                "Confirm when moving folders to the trash">
 <!ENTITY confirmMove.accesskey            "m">
 <!ENTITY useMessenger.label               "Use Mail from MAPI-based applications">

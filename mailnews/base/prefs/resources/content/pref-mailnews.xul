@@ -14,7 +14,7 @@
   <script language="javascript">
   <![CDATA[
     var _elementIDs = ["mailPaneConfig", "mailnewsConfirmMoveFoldersToTrash", 
-                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailnewsRememberSelectedMessage"];
+                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl"];
   ]]>
   </script>
   <script language="javascript" src="chrome://global/content/strres.js"></script>
@@ -39,21 +39,10 @@
     <html>&chooseExp.label;</html>
 
 	<separator class="thin"/>
-	<checkbox id="mailnewsRememberSelectedMessage" value="&rememberLastMsg.label;" accesskey="&rememberLastMsg.accesskey;"
-              pref="true" preftype="bool" prefstring="mailnews.remember_selected_message" 
-              prefattribute="checked"/>
     <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;" accesskey="&confirmMove.label;"
               pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
               prefattribute="checked"/>
-<!--
-	<checkbox id="mailPlaySound" value="&playSound.label;" accesskey="&playSound.accesskey;"
-              pref="true" preftype="bool" prefstring="mail.play_sound"
-              prefattribute="checked"/>
-		
-    <checkbox id="reuseThreadWindow" value="&reuseMessage.label;" accesskey="&reuseMessage.accesskey;"
-              pref="true" preftype="bool" prefstring="mailnews.reuse_message_window"
-              prefattribute="checked"/>
--->
+
 	</titledbox>
 
 	<titledbox orient="vertical">
