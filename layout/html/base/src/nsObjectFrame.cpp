@@ -986,7 +986,6 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     nsCOMPtr<nsIURI> fullURL;
 
     nsAutoString classid;
-    PRInt32 nameSpaceID;
 
     if (NS_SUCCEEDED(rv = GetBaseURL(*getter_AddRefs(baseURL)))) {
       nsAutoString codeBase;
@@ -1002,8 +1001,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     }
 
     // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
-    mContent->GetNameSpaceID(nameSpaceID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(nameSpaceID, nsHTMLAtoms::classid, classid)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid)) {
       PRBool bJavaObject;
 
       bJavaObject = !nsCRT::strncmp(classid.get(), NS_LITERAL_STRING("java:").get(), 5);
