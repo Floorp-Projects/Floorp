@@ -108,7 +108,15 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
             ap = &arena_freelist;
             JS_ACQUIRE_LOCK(arena_freelist_lock);
             while ((b = *ap) != NULL) {         /* reclaim a free arena */
-                if (b->avail + nb <= b->limit) {
+                /*
+                 * Insist on exact arenasize match if nb is not greater than
+                 * arenasize, otherwise take any arena big enough.  The GC
+                 * counts on arenasize matching to keep its thing and flags
+                 * arenas parallel.
+                 */
+                if ((nb > pool->arenasize)
+                    ? b->base + nb <= b->limit
+                    : b->base + pool->arenasize == b->limit) {
                     *ap = b->next;
                     JS_RELEASE_LOCK(arena_freelist_lock);
                     b->next = NULL;
