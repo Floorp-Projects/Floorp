@@ -269,8 +269,12 @@ nsFtpConnectionThread::Process() {
                 {
                 if (mConn) delete mConn;
 
-                if (mResponseCode == 421) {
-                    // The command channel dropped for some reason. Fire it back up.
+                if (mResponseCode == 421 && 
+                    mInternalError != NS_ERROR_FTP_LOGIN) {
+                    // The command channel dropped for some reason.
+                    // Fire it back up, unless we were trying to login
+                    // in which case the server might just be telling us
+                    // that the max number of users has been reached...
                     mState = FTP_COMMAND_CONNECT;
                     mNextState = FTP_S_USER;
                 } else {
