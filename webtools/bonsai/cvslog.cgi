@@ -463,14 +463,15 @@ sub print_useful_links {
     my ($dir, $file) = $path =~ m@(.*/)?(.+)@;
     $dir =~ s@/$@@;
 
-    my $lxr_base = "http://cvs-mirror.mozilla.org/webtools/lxr/source";
     my $diff_base = "cvsview2.cgi";
     my $blame_base = "cvsblame.cgi";
 
     # total kludge!!  lxr omits the top-level "mozilla" directory...
     my $lxr_path = $path;
-    $lxr_path =~ s@^ns/@@;
-    $lxr_path =~ s@^mozilla/@@;
+    if ($mozilla_lxr_kludge eq 'TRUE') {
+      $lxr_path =~ s@^ns/@@;
+      $lxr_path =~ s@^mozilla/@@;
+    }
 
     my $lxr_link = "$lxr_base/$lxr_path";
     my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file";

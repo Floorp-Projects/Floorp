@@ -72,7 +72,7 @@ for $k (@revs) {
     if (IsHidden($fullname)) {
         next;
     }
-    open( DIFF, "/tools/ns/bin/rcsdiff -c -r$prevrev -r$rev $fullname 2>&1|" );
+    open( DIFF, "$rcsdiffcommand -c -r$prevrev -r$rev $fullname 2>&1|" );
     $_ =~ s/&/&amp;/g;
     $_ =~ s/</&lt;/g;
     while(<DIFF>){

@@ -55,11 +55,11 @@ flush stdout
 set repositoryid [GetId repositories repository $repository]
 
 proc ProcessOneFile {filename} {
-    global repository startfrom
+    global repository startfrom rlogcommand
 
     puts "$filename"
     flush stdout
-    set fid [open "|/tools/ns/bin/rlog $filename" r]
+    set fid [open "|$rlogcommand $filename" r]
     set doingtags 0
     catch {unset branchname}
     regsub -- {,v$} $filename {} filerealname
@@ -211,7 +211,7 @@ proc digest {str} {
 set env(CVSROOT) $treeinfo($treeid,repository)
 set origdir [pwd]
 cd /
-set fid [open "|/tools/ns/bin/cvs checkout -c" r]
+set fid [open "|$cvscommand checkout -c" r]
 cd $origdir
 
 set curline ""

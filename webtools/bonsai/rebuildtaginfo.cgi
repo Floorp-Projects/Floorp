@@ -42,7 +42,7 @@ set numtags 0
 my_for_recursive_glob filename $repository "*,v" {
     puts "$filename<br>"
     flush stdout
-    set fid [open "|/tools/ns/bin/rlog -h $filename" r]
+    set fid [open "|$rc -h $filename" r]
     set doingtags 0
     while {1} {
         if {[gets $fid line] < 0} {

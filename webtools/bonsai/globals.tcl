@@ -21,7 +21,12 @@
 # closetimestamp -- when the tree was closed.  When we open, it probably
 #     becomes the lastgoodtimestamp
 
-
+set cvscommand /tools/ns/bin/cvs
+set rlogcommand /tools/ns/bin/rlog
+set rcsdiffcommand /tools/ns/bin/rcsdiff
+set cocommand /tools/ns/bin/co
+set lxr_base http://cvs-mirror.mozilla.org/webtools/lxr/source
+set mozilla_lxr_kludge TRUE
 
 set ldapserver directory.mcom.com
 # set ldapserver hoth.mcom.com

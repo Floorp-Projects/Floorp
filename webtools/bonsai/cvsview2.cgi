@@ -393,7 +393,7 @@ $prefix .= "&root=$opt_root";
 $magic_url = "$prefix&subdir=$opt_subdir";
 
 # Now that we've munged QUERY_STRING into perl variables, set rcsdiff options.
-$rcsdiff = '/tools/ns/bin/rcsdiff -f';
+$rcsdiff = "$rcsdiffcommand -f";
 $rcsdiff .= ' -w' if ($opt_whitespace_mode eq 'ignore');
 
 # Handle the "root" argument
@@ -466,17 +466,17 @@ sub do_diff_links {
 
     open(RCSDIFF, "$rcsdiff -r$opt_rev1 -r$opt_rev2 $opt_file 2>/dev/null |");
 
-
     print '<FORM><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR VALIGN=TOP>';
 
-    my $lxr_base = "http://cvs-mirror.mozilla.org/webtools/lxr/source";
     my $diff_base = "cvsview2.cgi";
     my $blame_base = "cvsblame.cgi";
 
     # total kludge!!  lxr omits the top-level "mozilla" directory...
     my $lxr_path = "$opt_subdir/$opt_file";
-    $lxr_path =~ s@^ns/@@;
-    $lxr_path =~ s@^mozilla/@@;
+    if ($mozilla_lxr_kludge eq 'TRUE') {
+      $lxr_path =~ s@^ns/@@;
+      $lxr_path =~ s@^mozilla/@@;
+    }
 
     my $lxr_link = "$lxr_base/$lxr_path";
     my $blame_link = "$blame_base?root=$CVS_ROOT\&file=$opt_subdir/$opt_file";
@@ -658,12 +658,12 @@ sub do_directory {
         $path = "$dir/Attic/$file,v" if (! -r $path);
         &parse_rcs_file($path);
 
-        my $lxr_base = "http://cvs-mirror.mozilla.org/webtools/lxr/source";
-
         # total kludge!!  lxr omits the top-level "mozilla" directory...
         my $lxr_path = "$opt_subdir/$file";
-        $lxr_path =~ s@^ns/@@;
-        $lxr_path =~ s@^mozilla/@@;
+        if (mozilla_lxr_kludge) {
+          $lxr_path =~ s@^ns/@@;
+          $lxr_path =~ s@^mozilla/@@;
+        }
 
         my $lxr_link = "$lxr_base/$lxr_path";
 
@@ -783,7 +783,7 @@ sub html_diff {
     local ($old_line_num) = 1;
 
     open(DIFF, "$rcsdiff -f -r$rev1 -r$rev2 $file 2>/dev/null |");
-    open(OLDREV, "/tools/ns/bin/co -p$rev1 $file 2>/dev/null |");
+    open(OLDREV, "$cocommand -p$rev1 $file 2>/dev/null |");
 
     $anchor_num = 0;
 

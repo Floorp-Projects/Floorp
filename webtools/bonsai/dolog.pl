@@ -1,4 +1,4 @@
-#! /tools/ns/bin/perl5
+#!/tools/ns/bin/perl5
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -40,6 +40,7 @@ $flag_debug = 0;
 $flag_tagcmd = 0;
 $repository = '';
 $repository_tag = '';
+$rlogcommand = '/tools/ns/bin/rlog';
 
 @mailto=();
 @changed_files = ();
@@ -177,7 +178,7 @@ sub process_cvs_info {
                 if( ! -r $rcsfile ){
                     $rcsfile = "$envcvsroot/$repository/Attic/$fn,v";
                 }
-                open(LOG, "/tools/ns/bin/rlog -N -r$rev $rcsfile |") 
+                open(LOG, "$rlogcommand -N -r$rev $rcsfile |") 
                         || print STDERR "dolog.pl: Couldn't run rlog\n";
                 while(<LOG>){
                     if( /^revision /){

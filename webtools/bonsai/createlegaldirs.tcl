@@ -39,7 +39,7 @@ proc digest {str} {
 set env(CVSROOT) $treeinfo($treeid,repository)
 set origdir [pwd]
 cd /
-set fid [open "|/tools/ns/bin/cvs checkout -c" r]
+set fid [open "|$cvscommand checkout -c" r]
 cd $origdir
 
 set curline ""

@@ -60,6 +60,12 @@ puts $fid "\# gets automatically generated from that one."
 puts $fid ""
 regsub -all {(^|[^\])&} $BUGSYSTEMEXPR {\1$\&} BUGSYSTEMEXPR
 puts $fid "\$BUGSYSTEMEXPR = [PerlStringify $BUGSYSTEMEXPR];"
+puts $fid "\$cvscommand = [PerlStringify $cvscommand];"
+puts $fid "\$rlogcommand = [PerlStringify $rlogcommand];"
+puts $fid "\$rcsdiffcommand = [PerlStringify $rcsdiffcommand];"
+puts $fid "\$cocommand = [PerlStringify $cocommand];"
+puts $fid "\$lxr_base = [PerlStringify $lxr_base];"
+puts $fid "\$mozilla_lxr_kludge = [PerlStringify $mozilla_lxr_kludge];"
 set list ""
 foreach i $treelist {
     append list [PerlStringify $i]
