@@ -30,10 +30,8 @@ function ComposeStartup()
 	var args = GetArgs();
 
 	// Generate a unique number, do we have a better way?
-	// I don't think so a user can create two message compositions
-	// in the same millisecond!!
 	var date = new Date();
-	sessionID = date.getTime();
+	sessionID = date.getTime() + Math.random();
 
 	appCoreName = "EditorAppCore:" + sessionID;
 	editorAppCore = XPAppCoresManager.Find(appCoreName);	
@@ -56,7 +54,6 @@ function ComposeStartup()
 		editorName = appCoreName; //Very important to set this variable used by Editor js
 
 		// setEditorType MUST be call before setContentWindow
-dump("args.editorType.toLowerCase(): " + args.editorType.toLowerCase() + "\n");
 		if (args.editorType && args.editorType.toLowerCase() == "html")
 		{
 			editorAppCore.setEditorType("html");

@@ -28,10 +28,8 @@ function ComposeMessage(tree, nodeList, msgAppCore, type)
 	dump("\nComposeMessage from XUL\n");
 
 	// Generate a unique number, do we have a better way?
-	// I don't think so a user can create two message compositions
-	// in the same millisecond!!
 	var date = new Date();
-	sessionID = date.getTime();
+	sessionID = date.getTime() + Math.random();
 	
 	var composeAppCoreName = "ComposeAppCore:" + sessionID;
 	var composeAppCore = XPAppCoresManager.Find(composeAppCoreName);
