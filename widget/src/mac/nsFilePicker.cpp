@@ -73,7 +73,7 @@ OSType nsFilePicker::sCurrentProcessSignature = 0;
 //
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
-  , mAllFilesDisplayed(PR_TRUE)
+  : mAllFilesDisplayed(PR_TRUE)
   , mSelectedType(0)
   , mTypeOffset(0)
 {
