@@ -674,6 +674,10 @@ Decode(void)
 	if (rv) {
 	    SECU_PrintError("crmftest", "CRMF_CertRequestGetCertTemplateValidity");
 	}
+	if (!validity.notBefore) {
+	    /* We encoded a notBefore, so somthing's wrong if it's not here. */
+	    printf("ERROR: Validity period notBefore date missing.\n");
+	}
 	/* XXX It's all parsed now.  We probably should DO SOMETHING with it.
 	** But nope.  We just throw it all away.
 	** Maybe this was intended to be no more than a decoder test.

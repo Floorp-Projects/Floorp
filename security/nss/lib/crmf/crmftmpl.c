@@ -46,7 +46,7 @@ SEC_ASN1_MKSUB(SEC_NullTemplate)
 SEC_ASN1_MKSUB(SEC_BitStringTemplate)
 SEC_ASN1_MKSUB(SEC_IntegerTemplate)
 SEC_ASN1_MKSUB(SEC_OctetStringTemplate)
-SEC_ASN1_MKSUB(SEC_UTCTimeTemplate)
+SEC_ASN1_MKSUB(CERT_TimeChoiceTemplate)
 SEC_ASN1_MKSUB(CERT_SubjectPublicKeyInfoTemplate)
 SEC_ASN1_MKSUB(CERT_NameTemplate)
 
@@ -82,11 +82,11 @@ static const SEC_ASN1Template CRMFOptionalValidityTemplate[] = {
     { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED | SEC_ASN1_NO_STREAM |
       SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | SEC_ASN1_XTRN | 0, 
       offsetof (CRMFOptionalValidity, notBefore),
-      SEC_ASN1_SUB(SEC_UTCTimeTemplate) },
+      SEC_ASN1_SUB(CERT_TimeChoiceTemplate) },
     { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED | SEC_ASN1_NO_STREAM |
       SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | SEC_ASN1_XTRN | 1, 
       offsetof (CRMFOptionalValidity, notAfter),
-      SEC_ASN1_SUB(SEC_UTCTimeTemplate) },
+      SEC_ASN1_SUB(CERT_TimeChoiceTemplate) },
     { 0 }
 };
 
