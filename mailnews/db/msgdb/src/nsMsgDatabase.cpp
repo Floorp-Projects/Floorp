@@ -4309,3 +4309,10 @@ NS_IMETHODIMP nsMsgDatabase::ResetHdrCacheSize(PRUint32 aSize)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgDatabase::SetFolderStream(nsIOFileStream *aFileStream)
+{
+  NS_ASSERTION(0, "Trying to set the folderStream, not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+

@@ -83,6 +83,8 @@ public:
   NS_IMETHOD    ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds);
   NS_IMETHOD    ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes);
 
+  NS_IMETHOD SetFolderStream(nsIOFileStream *aFileStream);
+
     friend class nsMsgOfflineOpEnumerator;
 protected:
 
@@ -103,6 +105,7 @@ protected:
 	PRBool					m_reparse;
 	nsFileSpec				*m_folderSpec;
 	nsIOFileStream			*m_folderStream; 	/* this is a cache for loops which want file left open */
+  PRBool m_ownFolderStream; //if we are the owner of m_folderStream
 };
 
 #endif

@@ -215,4 +215,9 @@ nsresult nsImapMailDatabase::AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMailDatabase::SetFolderStream(nsIOFileStream *aFileStream)
+{
+  NS_ASSERTION(0, "Trying to set folderStream, not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 

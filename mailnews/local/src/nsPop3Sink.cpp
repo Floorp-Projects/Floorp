@@ -193,11 +193,17 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     rv = m_newMailParser->Init(serverFolder, m_folder, fileSpec, m_outFileStream, aMsgWindow);
 	// if we failed to initialize the parser, then just don't use it!!!
 	// we can still continue without one...
+
     if (NS_FAILED(rv))
-	{
-		NS_IF_RELEASE(m_newMailParser);
-		rv = NS_OK;
-	}
+    {
+		  NS_IF_RELEASE(m_newMailParser);
+		  rv = NS_OK;
+    }
+    else
+    {
+      // Share the inbox fileStream so that moz-status-line flags can be set in the Inbox 
+      m_newMailParser->SetDBFolderStream(m_outFileStream); 
+    }
 
     if (uidlDownload && m_newMailParser)
         m_newMailParser->DisableFilters();
@@ -218,6 +224,7 @@ nsPop3Sink::EndMailDelivery()
     if (m_outFileStream)
       m_outFileStream->flush();	// try this.
     m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
+    m_newMailParser->SetDBFolderStream(nsnull); // stream is going away
   }
   if (m_outFileStream)
   {
@@ -256,6 +263,9 @@ nsPop3Sink::ReleaseFolderLock()
 nsresult 
 nsPop3Sink::AbortMailDelivery()
 {
+  if (m_newMailParser)
+    m_newMailParser->SetDBFolderStream(nsnull); //stream is going away
+
   if (m_outFileStream)
   {
     if (m_outFileStream->is_open())
@@ -268,7 +278,6 @@ nsPop3Sink::AbortMailDelivery()
   we have truncated the inbox, so berkeley mailbox and msf file are in sync*/
   if (m_newMailParser)
     m_newMailParser->UpdateDBFolderInfo();
-  
   nsresult rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 
@@ -438,6 +447,11 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
     // See bug 62480
         if (!m_outFileStream)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        /*This file stream is also used by db so file pos could have changed
+        set it to the end of the file before writing anything */
+
+        m_outFileStream->seek(PR_SEEK_END, 0);
         PRInt32 bytes = m_outFileStream->write(buffer,bufferLen);
         if (bytes != bufferLen) return NS_ERROR_FAILURE;
 	}
@@ -461,7 +475,12 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *msgWindow)
     if (NS_FAILED(rv)) return rv;
     NS_ASSERTION(m_newMailParser, "could not get m_newMailParser");
     if (m_newMailParser)
-      m_newMailParser->PublishMsgHeader(msgWindow);
+    {
+      m_newMailParser->PublishMsgHeader(msgWindow); 
+
+      //PublishMsgHeader might have changed the postion of file stream pointer, reset it back.
+      m_outFileStream->seek(PR_SEEK_END, 0);
+    }    
 
 #ifdef DEBUG
 	printf("Incorporate message complete.\n");

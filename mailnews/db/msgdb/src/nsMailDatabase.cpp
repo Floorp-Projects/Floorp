@@ -55,7 +55,7 @@ struct mdbOid gAllOfflineOpsTableOID;
 
 
 nsMailDatabase::nsMailDatabase()
-    : m_reparse(PR_FALSE), m_folderSpec(nsnull), m_folderStream(nsnull)
+    : m_reparse(PR_FALSE), m_folderSpec(nsnull), m_folderStream(nsnull), m_ownFolderStream(PR_FALSE)
 {
   m_mdbAllOfflineOpsTable = nsnull;
 }
@@ -68,6 +68,12 @@ nsMailDatabase::~nsMailDatabase()
     m_mdbAllOfflineOpsTable->Release();
 }
 
+NS_IMETHODIMP nsMailDatabase::SetFolderStream(nsIOFileStream *aFileStream)
+{
+  m_folderStream = aFileStream; //m_folderStream is set externally, so m_ownFolderStream is false
+  m_ownFolderStream = PR_FALSE;
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
@@ -235,20 +241,29 @@ NS_IMETHODIMP nsMailDatabase::StartBatch()
 {
 #ifndef XP_MAC
   if (!m_folderStream)
-	  m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
+  {
+    m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
+    m_ownFolderStream = PR_TRUE;
+  }
+  else 
+    m_ownFolderStream = PR_FALSE; //better to set it, if EndBatch was not called last time
 #endif  
 return NS_OK;
 }
 
 NS_IMETHODIMP nsMailDatabase::EndBatch()
 {
-#ifndef XP_MAC
-  if (m_folderStream)
+#ifndef XP_MAC  //only if we own the stream, then we should close it
+  if (m_ownFolderStream)
   {
-    m_folderStream->close();  
-    delete m_folderStream;
+    if (m_folderStream)
+    {
+      m_folderStream->close();  
+      delete m_folderStream;
+    }
+    m_folderStream = nsnull;
+    m_ownFolderStream = PR_FALSE;
   }
-  m_folderStream = nsnull;
 #endif
   return NS_OK;
 }
@@ -258,14 +273,21 @@ NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChan
 {
 	nsresult ret = NS_OK;
   if (!m_folderStream)
+  {
 	  m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
+    m_ownFolderStream = PR_TRUE;
+  }
 	ret = nsMsgDatabase::DeleteMessages(nsMsgKeys, instigator);
-	if (m_folderStream)
+  if (m_ownFolderStream)//only if we own the stream, then we should close it
+  {
+	  if (m_folderStream)
     {
       m_folderStream->close();
-	  delete m_folderStream;
+	    delete m_folderStream;
     }
-	m_folderStream = NULL;
+	  m_folderStream = nsnull;
+    m_ownFolderStream = PR_FALSE;
+  }
 	SetFolderInfoValid(m_folderSpec, 0, 0);
 	return ret;
 }
@@ -276,7 +298,7 @@ PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags fla
 {
   nsIOFileStream *fileStream = NULL;
   PRBool		ret = PR_FALSE;
-  
+
   if (nsMsgDatabase::SetHdrFlag(msgHdr, bSet, flag))
   {
     UpdateFolderFlag(msgHdr, bSet, flag, &fileStream);
@@ -288,6 +310,7 @@ PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags fla
     }
     ret = PR_TRUE;
   }
+
   return ret;
 }
 
@@ -916,4 +939,3 @@ NS_IMETHODIMP nsMsgOfflineOpEnumerator::HasMoreElements(PRBool *aResult)
   *aResult = !mDone;
   return NS_OK;
 }
-

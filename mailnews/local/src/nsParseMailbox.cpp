@@ -644,6 +644,14 @@ NS_IMETHODIMP nsParseMailMessageState::SetMailDB(nsIMsgDatabase *mailDB)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsParseMailMessageState::SetDBFolderStream(nsIOFileStream *fileStream)
+{
+  NS_ASSERTION(m_mailDB, "m_mailDB is not set");
+  if (m_mailDB)
+    m_mailDB->SetFolderStream(fileStream);
+  return NS_OK;
+}
+
 /* #define STRICT_ENVELOPE */
 
 PRBool

@@ -39,6 +39,7 @@
 
 interface nsIMsgDatabase;
 interface nsIMsgDBHdr;
+interface nsIOFileStream;
 
 %{C++
 #include "nsIMsgDatabase.h"
@@ -52,6 +53,7 @@ interface nsIMsgParseMailMsgState : nsISupports {
 
     attribute unsigned long envelopePos;
     void SetMailDB(in nsIMsgDatabase aDatabase);
+    void setDBFolderStream(in nsIOFileStream fileStream);
     void Clear();
 
     void ParseAFolderLine(in string line, in unsigned long lineLength);

@@ -52,6 +52,7 @@ interface nsIMsgThread;
 interface nsIDBFolderInfo;
 interface nsIMsgOfflineImapOperation;
 interface nsIMsgFolder;
+interface nsIOFileStream;
 
 [ptr] native octetPtr(PRUint8);
 
@@ -269,5 +270,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
 
   // for msg hdr hash table allocation. controllable by caller to improve folder loading preformance.
   attribute unsigned long msgHdrCacheSize;
+
+  void setFolderStream(in nsIOFileStream aFileStream);
 };
 
