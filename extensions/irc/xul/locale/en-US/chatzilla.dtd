@@ -27,17 +27,58 @@
 <!ENTITY key.label		"Key">
 <!ENTITY network.label		"Network">
 
-<!-- ADD ENTITIES -->
-
 <!ENTITY OptionsCmd.label	"Options">
-<!ENTITY ShowToolbarCmd.label	"Show Toolbar">
-<!ENTITY ShowUserlistCmd.label	"Show Userlist">
-<!ENTITY ShowStatusbarCmd.label	"Show Statusbar">
 <!ENTITY EnableSmileysCmd.label "Enable Smileys">
-<!ENTITY DebugMsgCmd.label	"Debug Messages">
+<!ENTITY DebugMsgCmd.label	"Debug Mode">
+<!ENTITY DebugMsgCmd.aKey	"D">
 <!ENTITY SaveSetNowCmd.label	"Save Settings Now">
 <!ENTITY SaveSetExitCmd.label	"Save Settings On Exit">
 <!ENTITY ViewCmd.label	"View">
+<!ENTITY ViewCmd.aKey	"V">
+<!ENTITY ShowTabStripCmd.label	"Show Tabs">
+<!ENTITY ShowTabStripCmd.aKey	"T">
+<!ENTITY ShowUserlistCmd.label	"Show Userlist">
+<!ENTITY ShowUserlistCmd.aKey	"U">
+<!ENTITY ShowStatusbarCmd.label	"Show Statusbar">
+<!ENTITY ShowStatusbarCmd.aKey	"S">
+<!ENTITY NoneCmd.label	"No motif">
+<!ENTITY NoneCmd.aKey	"N">
+<!ENTITY DefaultCmd.label	"Default motif">
+<!ENTITY DefaultCmd.aKey	"D">
+<!ENTITY DarkCmd.label	"Dark motif">
+<!ENTITY DarkCmd.aKey	"k">
+<!ENTITY LightCmd.label	"Light motif">
+<!ENTITY LightCmd.aKey	"L">
 <!ENTITY HideCmd.label	"Hide">
 <!ENTITY ClearViewCmd.label	"Clear this view">
+<!ENTITY ClearViewCmd.aKey	"">
 <!ENTITY DeleteViewCmd.label	"Delete this view">
+<!ENTITY DeleteViewCmd.aKey	"">
+<!ENTITY StatusCmd.label	"Connection Status">
+<!ENTITY StatusCmd.aKey	"C">
+
+<!ENTITY CloseCmd.label	"Close">
+<!ENTITY CloseCmd.aKey	"C">
+
+<!ENTITY PopupQueryCmd.label "Private chat with $nick">
+<!ENTITY PopupQueryCmd.aKey  "P">
+<!ENTITY PopupWhoisCmd.label "Who is $nick">
+<!ENTITY PopupWhoisCmd.aKey  "W">
+<!ENTITY PopupPingCmd.label "Ping time to $nick">
+<!ENTITY PopupPingCmd.aKey  "I">
+<!ENTITY PopupVersionCmd.label "Query $nick's IRC client version">
+<!ENTITY PopupVersionCmd.aKey  "C">
+<!ENTITY PopupHighlightStyle.label "Highlight $nick's messages">
+<!ENTITY PopupHighlightStyle.aKey "H">
+<!ENTITY PopupHighlightNoStyle.label "None">
+<!ENTITY PopupGiveOp.label "Grant operator status">
+<!ENTITY PopupGiveOp.aKey  "O">
+<!ENTITY PopupTakeOp.label "Revoke operator status">
+<!ENTITY PopupTakeOp.aKey  "O">
+<!ENTITY PopupGiveVoice.label "Grant voiced status">
+<!ENTITY PopupGiveVoice.aKey  "V">
+<!ENTITY PopupTakeVoice.label "Revoke voiced status">
+<!ENTITY PopupTakeVoice.aKey  "V">
+<!ENTITY PopupKick.label "Kick">
+<!ENTITY PopupKick.aKey  "K">
+
