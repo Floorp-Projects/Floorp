@@ -366,7 +366,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
 
 		NS_IMETHOD HasMoreElements(PRBool *result) 
 		{
-			nsresult rv;
+			nsresult rv = NS_OK;
 			if (mNext == nsnull && mDir) 
 			{
 				char* name = My_ReadDir(mDir, PR_SKIP_BOTH);
@@ -408,7 +408,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
 
 		NS_IMETHOD GetNext(nsISupports **result) 
 		{
-			nsresult rv;
+			nsresult rv = NS_OK;
 			PRBool hasMore;
 			rv = HasMoreElements(&hasMore);
 			if (NS_FAILED(rv)) return rv;
