@@ -561,10 +561,13 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
     PRBool scrollFrameHasBG =
       nsCSSRendering::FindBackground(aPresContext, scrollFrame, &scrollFrameBG,
                                      &scrollFrameIsCanvas);
+    const nsStyleDisplay* bgDisplay = scrollFrame->GetStyleDisplay();
     drawnOnUniformField = scrollFrameHasBG &&
       !(scrollFrameBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
       (scrollFrameBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) &&
-      !HasNonZeroBorderRadius(scrollFrame->GetStyleContext());
+      !HasNonZeroBorderRadius(scrollFrame->GetStyleContext()) &&
+      !(bgDisplay->IsAbsolutelyPositioned()
+        && (bgDisplay->mClipFlags & NS_STYLE_CLIP_RECT));
   }
   aView->SetHasUniformBackground(drawnOnUniformField);
 
