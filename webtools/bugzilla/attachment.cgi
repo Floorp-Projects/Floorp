@@ -36,6 +36,12 @@ use vars qw(
   $vars
 );
 
+# Win32 specific hack to avoid a hang when creating/showing an attachment
+if ($^O eq 'MSWin32') {
+    binmode(STDIN);
+    binmode(STDOUT);
+}
+
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
