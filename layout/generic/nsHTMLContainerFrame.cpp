@@ -132,6 +132,14 @@ nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Color);
   PRInt32 myCursor = styleColor->mCursor;
 
+  if (NS_STYLE_CURSOR_INHERIT != myCursor) {
+    // If this container has a particular cursor, use it, otherwise
+    // let the child decide.
+    *aFrame = this;
+    aCursor = myCursor;
+    return NS_OK;
+  }
+
   // Get child's cursor, if any
   nsContainerFrame::GetCursorAndContentAt(aPresContext, aPoint, aFrame, aContent, aCursor);
   if (aCursor != NS_STYLE_CURSOR_INHERIT) {
@@ -147,14 +155,6 @@ nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
       }
       NS_RELEASE(tag);
     }
-    return NS_OK;
-  }
-
-  if (NS_STYLE_CURSOR_INHERIT != myCursor) {
-    // If this container has a particular cursor, use it, otherwise
-    // let the child decide.
-    *aFrame = this;
-    aCursor = myCursor;
     return NS_OK;
   }
 
