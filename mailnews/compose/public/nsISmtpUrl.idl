@@ -83,6 +83,7 @@ interface nsISmtpUrl : nsISupports {
     attribute nsISmtpServer smtpServer;
     
     const PRInt32 DEFAULT_SMTP_PORT = 25;
+    const PRInt32 DEFAULT_SMTPS_PORT = 465;
 };
 
 [scriptable, uuid(5EE2AFF7-9C6F-11d3-98A3-001083010E9B)]
