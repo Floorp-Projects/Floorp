@@ -37,6 +37,7 @@ use File::Basename;
 use File::Copy;
 use File::Find;
 use File::Path;
+use File::stat;
 use Getopt::Long;
 
 # initialize variables
@@ -48,7 +49,7 @@ $file             = "";		# file being copied
 $srcdir           = "";		# directory being copied from
 $destdir          = "";		# destination being copied to
 $package          = "";		# file listing files to copy
-$os               = "";		# os type (unix, mac, dos)
+$os               = "NULL";	# os type (MacOS, MSDOS, "" == Unix)
 $verbose          = 0;		# shorthand for --debug 1
 $lineno           = 0;		# line # of package file for error text
 $debug            = 0;		# controls amount of debug output
@@ -192,7 +193,7 @@ sub do_delete
 			die "Error: rmtree() failed: $!.  Exiting...\n";
 	} else {
 		die "Error: delete failed: $target is not a file or directory ($package, $component, $lineno).  Exiting...\n";
-	};
+	}
 }
 
 
@@ -231,7 +232,7 @@ sub do_copyfile
 			$basefile = basename ($altdest);
 			($debug >= 5) &&
 				print "recursive find w/altdest: $path $basefile\n";
-		};
+		}
 	} else {
 		if ($batch) {
 			$path = "$destdir$PD$component$PD$File::Find::dir";
@@ -244,14 +245,14 @@ sub do_copyfile
 			$basefile = basename ($file);
 			($debug >= 5) &&
 				print "recursive find w/o altdest: $path $basefile\n";
-		};
-	};
+		}
+	}
 
 	# create the directory path to the file if not there yet
 	if (!( -d $path)) {
 		mkpath ($path, 0, 0755) ||
 			die "Error: mkpath() failed: $!.  Exiting...\n";
-	};
+	}
 
 	if (-f $srcfile) {	# don't copy if it's a directory
 		if ($debug >= 1) {
@@ -266,7 +267,17 @@ sub do_copyfile
 		}
 		copy ("$srcfile", "$path$PD$basefile") ||
 			die "Error: copy of file $srcdir$PD$file failed ($package, $component, $lineno): $!.  Exiting...\n";
-	};
+
+		# if this is unix, set the dest file permissions
+		if ($os eq "") {
+			# read permissions
+			$st = stat($srcfile) ||
+				die "Error: can't stat $srcfile: $!  Exiting...\n";
+			# set permissions
+			($debug >= 2) && print "chmod ".$st->mode."\n";
+			chmod ($st->mode, "$path$PD$basefile");
+		}
+	}
 }
 
 
@@ -289,7 +300,7 @@ sub do_batchcopy
 		$batch = 1;			# flag for do_copyfile
 		find (\&do_copyfile, $entry);
 		$batch = 0;
-	};
+	}
 }
 
 
@@ -313,7 +324,7 @@ sub do_component
 	} else {
 		mkdir ("$destdir$PD$component", 0755) ||
 			die "Error: couldn't create component directory \"$component\": $!.  Exiting...\n";
-	};
+	}
 }
 
 
