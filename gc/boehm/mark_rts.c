@@ -160,7 +160,6 @@ char * b; char * e;
     ENABLE_SIGNALS();
 }
 
-
 /* Add [b,e) to the root set.  Adding the same interval a second time	*/
 /* is a moderately fast noop, and hence benign.  We do not handle	*/
 /* different but overlapping intervals efficiently.  (We do handle	*/
@@ -248,6 +247,43 @@ GC_bool tmp;
     add_roots_to_index(GC_static_roots + n_root_sets);
     GC_root_size += (ptr_t)e - (ptr_t)b;
     n_root_sets++;
+}
+
+void GC_remove_roots(b, e)
+char * b; char * e;
+{
+    DCL_LOCK_STATE;
+    
+    DISABLE_SIGNALS();
+    LOCK();
+    GC_remove_roots_inner(b, e);
+    UNLOCK();
+    ENABLE_SIGNALS();
+}
+
+void GC_remove_roots_inner(b, e)
+char * b; char * e;
+{
+    register int i;
+    
+    for (i = 0; i < n_root_sets; ) {
+    	if (GC_static_roots[i].r_start == (ptr_t)b && GC_static_roots[i].r_end == (ptr_t)e) {
+    	    GC_root_size -=
+		(GC_static_roots[i].r_end - GC_static_roots[i].r_start);
+    	    GC_static_roots[i].r_start = GC_static_roots[n_root_sets-1].r_start;
+    	    GC_static_roots[i].r_end = GC_static_roots[n_root_sets-1].r_end;
+    	    GC_static_roots[i].r_tmp = GC_static_roots[n_root_sets-1].r_tmp;
+    	    n_root_sets--;
+    	} else {
+    	    i++;
+    	}
+    }
+#   ifndef MSWIN32
+    /* rehash the root table. */
+    for (i = 0; i < RT_SIZE; i++) GC_root_index[i] = 0;
+    for (i = 0; i < n_root_sets; i++)
+        add_roots_to_index(GC_static_roots + i);
+#   endif
 }
 
 void GC_clear_roots GC_PROTO((void))
