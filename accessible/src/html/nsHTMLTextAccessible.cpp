@@ -76,33 +76,6 @@ nsIFrame* nsHTMLTextAccessible::GetFrame()
 NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
 {
   nsTextAccessible::GetState(aState);
-  // Get current selection and find out if current node is in it
-  nsCOMPtr<nsIPresShell> shell(GetPresShell());
-  if (!shell) {
-     return NS_ERROR_FAILURE;  
-  }
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  // The root frame and all text frames in the document share the same
-  // selection controller.
-  nsIFrame *frame = shell->GetRootFrame();
-  if (frame) {
-    nsCOMPtr<nsISelectionController> selCon;
-    frame->GetSelectionController(shell->GetPresContext(),
-                                  getter_AddRefs(selCon));
-    if (selCon) {
-      nsCOMPtr<nsISelection> domSel;
-      selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-      if (domSel) {
-        PRBool isSelected = PR_FALSE, isCollapsed = PR_TRUE;
-        domSel->ContainsNode(mDOMNode, PR_TRUE, &isSelected);
-        domSel->GetIsCollapsed(&isCollapsed);
-        if (isSelected && !isCollapsed)
-          *aState |=STATE_SELECTED;
-      }
-    }
-  }
-  *aState |= STATE_SELECTABLE;
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   if (docAccessible) {
