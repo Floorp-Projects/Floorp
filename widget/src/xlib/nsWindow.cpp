@@ -602,13 +602,6 @@ NS_IMETHODIMP nsWindow::Update(void)
     }
   } 
 
-  // The view manager also expects us to force our
-  // children to update too!
-
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    kid->Update();
-  }
-
   // While I'd think you should NS_RELEASE(aPaintEvent.widget) here,
   // if you do, it is a NULL pointer.  Not sure where it is getting
   // released.

@@ -433,6 +433,8 @@ static PRBool IsViewVisible(nsView *aView)
 void
 nsViewManager::PostInvalidateEvent()
 {
+  NS_ASSERTION(IsRootVM(), "Caller screwed up");
+  
   nsCOMPtr<nsIEventQueue> eventQueue;
   mEventQueueService->GetSpecialEventQueue(
     nsIEventQueueService::UI_THREAD_EVENT_QUEUE, getter_AddRefs(eventQueue));
@@ -491,11 +493,14 @@ nsViewManager::~nsViewManager()
     mRootView = nsnull;
   }
 
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                           getter_AddRefs(eventQueue));
-  NS_ASSERTION(nsnull != eventQueue, "Event queue is null"); 
-  eventQueue->RevokeEvents(this);
+  if (IsRootVM()) {
+    nsCOMPtr<nsIEventQueue> eventQueue;
+    mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                             getter_AddRefs(eventQueue));
+    NS_ASSERTION(nsnull != eventQueue, "Event queue is null"); 
+    eventQueue->RevokeEvents(this);
+  }
+  
   mInvalidateEventQueue = nsnull;  
   mSynthMouseMoveEventQueue = nsnull;  
 
@@ -615,9 +620,15 @@ NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView)
     nsView* parent = mRootView->GetParent();
     if (parent) {
       parent->InsertChild(mRootView, nsnull);
+      mRootViewManager = parent->GetViewManager()->RootViewManager();
+    } else {
+      mRootViewManager = this;
     }
 
     mRootView->SetZIndex(PR_FALSE, 0, PR_FALSE);
+  } else {
+    // XXXbz not really needed, probably
+    mRootViewManager = this;
   }
 
   return NS_OK;
@@ -727,7 +738,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 {
   NS_ASSERTION(aRegion != nsnull, "Null aRegion");
 
-  if (PR_FALSE == mRefreshEnabled)
+  if (! IsRefreshEnabled())
     return;
 
   nsRect viewRect;
@@ -760,12 +771,12 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   MOZ_TIMER_START(mWatch);
 #endif
 
-  NS_ASSERTION(!mPainting, "recursive painting not permitted");
-  if (mPainting) {
-    mRecursiveRefreshPending = PR_TRUE;
+  NS_ASSERTION(!IsPainting(), "recursive painting not permitted");
+  if (IsPainting()) {
+    RootViewManager()->mRecursiveRefreshPending = PR_TRUE;
     return;
   }  
-  mPainting = PR_TRUE;
+  SetPainting(PR_TRUE);
 
   // force double buffering in general
   aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
@@ -795,7 +806,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
       //couldn't get rendering context. this is ok at init time atleast
       if (nsnull == localcx) {
-        mPainting = PR_FALSE;
+        SetPainting(PR_FALSE);
         return;
       }
     } else {
@@ -914,7 +925,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     localcx->Translate(viewRect.x, viewRect.y);
   }
 
-  mPainting = PR_FALSE;
+  SetPainting(PR_FALSE);
 
   // notify the listeners.
   if (nsnull != mCompositeListeners) {
@@ -929,9 +940,9 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     }
   }
 
-  if (mRecursiveRefreshPending) {
+  if (RootViewManager()->mRecursiveRefreshPending) {
     UpdateAllViews(aUpdateFlags);
-    mRecursiveRefreshPending = PR_FALSE;
+    RootViewManager()->mRecursiveRefreshPending = PR_FALSE;
   }
 
   localcx->ReleaseBackbuffer();
@@ -1544,6 +1555,8 @@ nsViewManager::CreateBlendingBuffers(nsIRenderingContext *aRC,
 
 void nsViewManager::ProcessPendingUpdates(nsView* aView)
 {
+  NS_ASSERTION(IsRootVM(), "Updates will be missed");
+
   // Protect against a null-view.
   if (!aView) {
     return;
@@ -1563,18 +1576,20 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView)
   // process pending updates in child view.
   for (nsView* childView = aView->GetFirstChild(); childView;
        childView = childView->GetNextSibling()) {
-    if (childView->GetViewManager() == this) {
-      ProcessPendingUpdates(childView);
-    }
+    ProcessPendingUpdates(childView);
   }
 }
 
 NS_IMETHODIMP nsViewManager::Composite()
 {
-  if (mUpdateCnt > 0)
+  if (!IsRootVM()) {
+    return RootViewManager()->Composite();
+  }
+  
+  if (UpdateCount() > 0)
     {
       ForceUpdate();
-      mUpdateCnt = 0;
+      ClearUpdateCount();
     }
 
   return NS_OK;
@@ -1611,12 +1626,7 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
     return;
   }
 
-  nsView* realRoot = mRootView;
-  while (realRoot->GetParent()) {
-    realRoot = realRoot->GetParent();
-  }
-
-  UpdateWidgetArea(realRoot, damageRect, view);
+  UpdateWidgetArea(RootViewManager()->GetRootView(), damageRect, view);
 
   Composite();
 }
@@ -1688,12 +1698,13 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
 
   if (!childCovers) {
     nsViewManager* vm = aWidgetView->GetViewManager();
-    ++vm->mUpdateCnt;
+    nsViewManager* rootVM = RootViewManager();
+    rootVM->IncrementUpdateCount();
 
-    if (!vm->mRefreshEnabled) {
+    if (!IsRefreshEnabled()) {
       // accumulate this rectangle in the view's dirty region, so we can process it later.
       vm->AddRectToDirtyRegion(aWidgetView, bounds);
-      vm->mHasPendingInvalidates = PR_TRUE;
+      rootVM->mHasPendingInvalidates = PR_TRUE;
     } else {
       ViewToWidget(aWidgetView, aWidgetView, bounds);
       widget->Invalidate(bounds, PR_FALSE);
@@ -1743,19 +1754,18 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
 
     UpdateWidgetArea(widgetParent, damagedRect, nsnull);
   } else {
+    // Propagate the update to the root widget of the root view manager, since
+    // iframes, for example, can overlap each other and be translucent.  So we
+    // have to possibly invalidate our rect in each of the widgets we have
+    // lying about.
     damagedRect.MoveBy(ComputeViewOffset(view));
 
-    nsView* realRoot = mRootView;
-    while (realRoot->GetParent()) {
-      realRoot = realRoot->GetParent();
-    }
-
-    UpdateWidgetArea(realRoot, damagedRect, nsnull);
+    UpdateWidgetArea(RootViewManager()->GetRootView(), damagedRect, nsnull);
   }
 
-  ++mUpdateCnt;
+  RootViewManager()->IncrementUpdateCount();
 
-  if (!mRefreshEnabled) {
+  if (!IsRefreshEnabled()) {
     return NS_OK;
   }
 
@@ -1769,6 +1779,10 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
 
 NS_IMETHODIMP nsViewManager::UpdateAllViews(PRUint32 aUpdateFlags)
 {
+  if (RootViewManager() != this) {
+    return RootViewManager()->UpdateAllViews(aUpdateFlags);
+  }
+  
   UpdateViews(mRootView, aUpdateFlags);
   return NS_OK;
 }
@@ -1781,9 +1795,7 @@ void nsViewManager::UpdateViews(nsView *aView, PRUint32 aUpdateFlags)
   // update all children as well.
   nsView* childView = aView->GetFirstChild();
   while (nsnull != childView)  {
-    if (childView->GetViewManager() == this) {
-      UpdateViews(childView, aUpdateFlags);
-    }
+    UpdateViews(childView, aUpdateFlags);
     childView = childView->GetNextSibling();
   }
 }
@@ -1854,7 +1866,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           break;
 
         // Refresh the view
-        if (mRefreshEnabled) {
+        if (IsRefreshEnabled()) {
           // If an ancestor widget was hidden and then shown, we could
           // have a delayed resize to handle.
           if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
@@ -2239,8 +2251,9 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
 void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent,
                                          PRBool aCaptured, PLArenaPool &aPool)
 {
-  NS_ASSERTION(!mPainting, "View manager cannot handle events during a paint");
-  if (mPainting) {
+  NS_ASSERTION(!IsPainting(),
+               "View manager cannot handle events during a paint");
+  if (IsPainting()) {
     return;
   }
 
@@ -2363,9 +2376,8 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
 
 NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 {
-  nsView* rootParent = mRootView ? mRootView->GetParent() : nsnull;
-  if (rootParent) {
-    return rootParent->GetViewManager()->GrabMouseEvents(aView, aResult);
+  if (!IsRootVM()) {
+    return RootViewManager()->GrabMouseEvents(aView, aResult);
   }
 
   // Along with nsView::SetVisibility, we enforce that the mouse grabber
@@ -2393,20 +2405,6 @@ NS_IMETHODIMP nsViewManager::GrabKeyEvents(nsIView *aView, PRBool &aResult)
   mKeyGrabber = NS_STATIC_CAST(nsView*, aView);
   aResult = PR_TRUE;
   return NS_OK;
-}
-
-nsView* nsViewManager::GetMouseEventGrabber() const {
-  nsView* root = mRootView;
-  while (root && root->GetParent()) {
-    nsViewManager* viewManager = root->GetParent()->GetViewManager();
-    if (!viewManager)
-      return nsnull;
-    root = viewManager->mRootView;
-  }
-  if (!root)
-    return nsnull;
-  nsViewManager* viewManager = root->GetViewManager();
-  return viewManager ? viewManager->mMouseGrabber : nsnull;
 }
 
 NS_IMETHODIMP nsViewManager::GetMouseEventGrabber(nsIView *&aView)
@@ -2827,8 +2825,9 @@ static PRBool IsAncestorOf(const nsView* aAncestor, const nsView* aView)
 */
 PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
 {
-  NS_ASSERTION(!mPainting, "View manager shouldn't be scrolling during a paint");
-  if (mPainting) {
+  NS_ASSERTION(!IsPainting(),
+               "View manager shouldn't be scrolling during a paint");
+  if (IsPainting()) {
     return PR_FALSE; // do the safe thing
   }
 
@@ -2997,6 +2996,21 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
     }
   }
   return NS_OK;
+}
+
+void nsViewManager::UpdateWidgetsForView(nsView* aView)
+{
+  NS_PRECONDITION(aView, "Must have view!");
+
+  if (aView->HasWidget()) {
+    aView->GetWidget()->Update();
+  }
+
+  for (nsView* childView = aView->GetFirstChild();
+       childView;
+       childView = childView->GetNextSibling()) {
+    UpdateWidgetsForView(childView);
+  }
 }
 
 PRBool nsViewManager::IsViewInserted(nsView *aView)
@@ -3213,6 +3227,10 @@ void nsViewManager::AddRectToDirtyRegion(nsView* aView, const nsRect &aRect) con
 
 NS_IMETHODIMP nsViewManager::DisableRefresh(void)
 {
+  if (!IsRootVM()) {
+    return RootViewManager()->DisableRefresh();
+  }
+  
   if (mUpdateBatchCnt > 0)
     return NS_OK;
 
@@ -3222,6 +3240,10 @@ NS_IMETHODIMP nsViewManager::DisableRefresh(void)
 
 NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
 {
+  if (!IsRootVM()) {
+    return RootViewManager()->EnableRefresh(aUpdateFlags);
+  }
+  
   if (mUpdateBatchCnt > 0)
     return NS_OK;
 
@@ -3245,6 +3267,10 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
 
 NS_IMETHODIMP nsViewManager::BeginUpdateViewBatch(void)
 {
+  if (!IsRootVM()) {
+    return RootViewManager()->BeginUpdateViewBatch();
+  }
+  
   nsresult result = NS_OK;
   
   if (mUpdateBatchCnt == 0) {
@@ -3260,6 +3286,10 @@ NS_IMETHODIMP nsViewManager::BeginUpdateViewBatch(void)
 
 NS_IMETHODIMP nsViewManager::EndUpdateViewBatch(PRUint32 aUpdateFlags)
 {
+  if (!IsRootVM()) {
+    return RootViewManager()->EndUpdateViewBatch(aUpdateFlags);
+  }
+  
   nsresult result = NS_OK;
 
   --mUpdateBatchCnt;
@@ -3305,19 +3335,19 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
   nsView              *view = NS_STATIC_CAST(nsView*, aView);
   nsIRenderingContext *localcx = nsnull;
 
-  if (PR_FALSE == mRefreshEnabled)
+  if (! IsRefreshEnabled())
     return NS_OK;
 
-  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+  NS_ASSERTION(!IsPainting(), "recursive painting not permitted");
 
-  mPainting = PR_TRUE;
+  SetPainting(PR_TRUE);
 
   mContext->CreateRenderingContext(localcx);
 
   //couldn't get rendering context. this is ok if at startup
   if (nsnull == localcx)
     {
-      mPainting = PR_FALSE;
+      SetPainting(PR_FALSE);
       return NS_ERROR_FAILURE;
     }
 
@@ -3340,7 +3370,7 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
 
   NS_RELEASE(localcx);
 
-  mPainting = PR_FALSE;
+  SetPainting(PR_FALSE);
 
   return NS_OK;
 
@@ -3373,9 +3403,12 @@ NS_IMETHODIMP nsViewManager::GetWidget(nsIWidget **aWidget)
 
 NS_IMETHODIMP nsViewManager::ForceUpdate()
 {
-  nsIWidget* widget = GetWidget();
-  if (widget)
-    widget->Update();
+  if (!IsRootVM()) {
+    return RootViewManager()->ForceUpdate();
+  }
+
+  // Walk the view tree looking for widgets, and call Update() on each one
+  UpdateWidgetsForView(mRootView);
   return NS_OK;
 }
 
@@ -3881,11 +3914,24 @@ void nsViewManager::ShowDisplayList(const nsVoidArray* aDisplayList)
 
 nsPoint nsViewManager::ComputeViewOffset(const nsView *aView)
 {
+  NS_PRECONDITION(aView, "Null view in ComputeViewOffset?");
+  
   nsPoint origin(0, 0);
+#ifdef DEBUG
+  const nsView* rootView;
+  const nsView* origView = aView;
+#endif
+
   while (aView) {
+#ifdef DEBUG
+    rootView = aView;
+#endif
     origin += aView->GetPosition();
     aView = aView->GetParent();
   }
+  NS_ASSERTION(rootView ==
+               origView->GetViewManager()->RootViewManager()->GetRootView(),
+               "Unexpected root view");
   return origin;
 }
 
@@ -3896,6 +3942,7 @@ PRBool nsViewManager::DoesViewHaveNativeWidget(nsView* aView)
   return PR_FALSE;
 }
 
+/* static */
 nsView* nsViewManager::GetWidgetView(nsView *aView)
 {
   while (aView) {
@@ -4053,13 +4100,17 @@ nsViewManager::AllowDoubleBuffering(PRBool aDoubleBuffer)
 NS_IMETHODIMP
 nsViewManager::IsPainting(PRBool& aIsPainting)
 {
-  aIsPainting = mPainting;
+  aIsPainting = IsPainting();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsViewManager::FlushPendingInvalidates()
 {
+  if (!IsRootVM()) {
+    return RootViewManager()->FlushPendingInvalidates();
+  }
+  
   if (mHasPendingInvalidates) {
     ProcessPendingUpdates(mRootView);
     mHasPendingInvalidates = PR_FALSE;
@@ -4070,6 +4121,8 @@ nsViewManager::FlushPendingInvalidates()
 void
 nsViewManager::ProcessInvalidateEvent()
 {
+  NS_ASSERTION(IsRootVM(),
+               "Incorrectly targeted invalidate event");
   FlushPendingInvalidates();
   mInvalidateEventQueue = nsnull;
 }

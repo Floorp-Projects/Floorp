@@ -112,6 +112,11 @@ public:
   /**
    * Called to force a redrawing of any dirty areas.
    */
+  // XXXbz why is this exposed?  Shouldn't update view batches handle this?
+  // It's not like Composite() does what's expected inside a view update batch
+  // anyway, since dirty areas may not have been invalidated on the widget yet
+  // and widget changes may not have been propagated yet.  Maybe this should
+  // call FlushPendingInvalidates()?
   NS_IMETHOD  Composite(void) = 0;
 
   /**
@@ -348,6 +353,9 @@ public:
    * prevent the view manager from refreshing.
    * @return error status
    */
+  // XXXbz callers of this function don't seem to realize that it disables
+  // refresh for the entire view manager hierarchy.... Maybe it shouldn't do
+  // that?
   NS_IMETHOD DisableRefresh(void) = 0;
 
   /**
@@ -409,6 +417,7 @@ public:
   /**
    * Display the specified view. Used when printing.
    */
+   //XXXbz how is this different from UpdateView(NS_VMREFRESH_IMMEDIATE)?
   NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect) = 0;
 
   /**
@@ -437,6 +446,9 @@ public:
    * Callers should use UpdateView(view, NS_VMREFRESH_IMMEDIATE) in most cases instead
    * @result error status
    */
+  // XXXbz Callers seem to be confused about this one... and it doesn't play
+  // right with view update batching at all (will miss updates).  Maybe this
+  // should call FlushPendingInvalidates()?
   NS_IMETHOD ForceUpdate() = 0;
   
   /**
