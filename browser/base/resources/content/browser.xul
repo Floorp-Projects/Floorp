@@ -210,24 +210,15 @@ Contributor(s): ______________________________________. -->
          key="&selectAllCmd.key;"
          modifiers="accel"/>
   
-          <!-- View Menu -->
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
     <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
-
-    <!-- Search Menu -->  
     <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
     <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
-
-    <!-- Go Menu -->
-
-    <!-- Bookmarks Menu -->
     <key id="addBookmarkKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark" modifiers="accel"/>
     <key id="addBookmarkAsKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel,shift"/>
     <key id="manBookmarkKb" key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark" modifiers="accel"/>
-
-    <!-- Misc -->
     <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
@@ -402,7 +393,7 @@ Contributor(s): ______________________________________. -->
   </popup>
   <popup id="bmContext"/>
 
-  <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
+  <toolbox class="toolbox-top" deferattached="true">
       <menubar id="main-menubar" class="chromeclass-menubar" grippytooltiptext="&menuBar.tooltip;">
       <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
