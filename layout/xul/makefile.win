@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS = content
+DIRS = base content
 
 include <$(DEPTH)\layout\config\rules.mak>
