@@ -6332,7 +6332,7 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				}
 			else
 			/* do we have an old break position we can use? */
-			if ( state->old_break_pos != -1 )
+			if ( state->old_break_pos != -1 && state->old_break_block != NULL )
 				{
 #ifdef LOG
 				PR_LogPrint ( "Too long - Breaking at the old_break_pos: %ld, width %ld\n"
