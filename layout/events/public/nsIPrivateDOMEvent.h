@@ -16,48 +16,28 @@
  * Reserved.
  */
 
-#ifndef nsIEventStateManager_h__
-#define nsIEventStateManager_h__
+#ifndef nsIPrivateDOMEvent_h__
+#define nsIPrivateDOMEvent_h__
 
 #include "nsGUIEvent.h"
 #include "nsISupports.h"
-#include "nsVoidArray.h"
-#include "nsIContent.h"
 
 class nsIPresContext;
-class nsIDOMEventState;
-class nsIDOMEvent;
 
 /*
  * Event listener manager interface.
  */
-#define NS_IEVENTSTATEMANAGER_IID \
+#define NS_IPRIVATEDOMEVENT_IID \
 { /* 80a98c80-2036-11d2-bd89-00805f8ae3f4 */ \
 0x80a98c80, 0x2036, 0x11d2, \
 {0xbd, 0x89, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
 
-class nsIEventStateManager : public nsISupports {
+class nsIPrivateDOMEvent : public nsISupports {
 
 public:
-
- /**
-  * Gets the current event target. 
-  * @param
-  */
-
-  NS_IMETHOD GetEventTarget(nsISupports **aResult) = 0;
-
- /**
-  * Gets the current event target. 
-  * @param
-  */
-
-  NS_IMETHOD SetEventTarget(nsISupports *aSupports) = 0;
-
-
-  NS_IMETHOD GetLastMouseOverContent(nsIContent **aContent) = 0;
-  NS_IMETHOD SetLastMouseOverContent(nsIContent *aContent) = 0;
-
+  NS_IMETHOD DuplicatePrivateData() = 0;
 };
 
-#endif // nsIEventStateManager_h__
+extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent);
+
+#endif // nsIPrivateDOMEvent_h__

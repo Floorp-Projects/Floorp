@@ -21,22 +21,27 @@
 
 #include "nsIDOMEvent.h"
 #include "nsISupports.h"
+#include "nsIPrivateDOMEvent.h"
+
 #include "nsIPresContext.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 class nsIContent;
 
-class nsDOMEvent : public nsIDOMEvent, public nsIDOMNSEvent {
+class nsDOMEvent : public nsIDOMEvent, public nsIDOMNSEvent, public nsIPrivateDOMEvent {
+
+#define DOM_EVENT_INIT      0x0001
+#define DOM_EVENT_BUBBLE    0x0002
+#define DOM_EVENT_CAPTURE   0x0004
 
 public:
-
-  enum nsEventStatus {  
-    nsEventStatus_eIgnore, // The event is ignored, do default processing           
-    nsEventStatus_eConsumeNoDefault, // The event is consumed, don't do default processing
-    nsEventStatus_eConsumeDoDefault // The event is consumed, but do default processing
+  enum nsDOMEvents {
+    eDOMEvents_mousedown=0, eDOMEvents_mouseup=1, eDOMEvents_click=2, eDOMEvents_dblclick=3, eDOMEvents_mouseover=4, eDOMEvents_mouseout=5,
+    eDOMEvents_mousemove=6, eDOMEvents_keydown=7, eDOMEvents_keyup=8, eDOMEvents_keypress=9, eDOMEvents_focus=10, eDOMEvents_blur=11,
+    eDOMEvents_load=12, eDOMEvents_abort=13, eDOMEvents_error=14
   };
 
-  nsDOMEvent(nsIPresContext* aPresContext);
+  nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent);
   virtual ~nsDOMEvent();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -83,25 +88,24 @@ public:
   NS_IMETHOD    GetButton(PRUint32* aButton);
   NS_IMETHOD    SetButton(PRUint32 aButton);
 
-  // nsINSEventInterface
+  // nsIDOMNSEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
   NS_IMETHOD    SetLayerX(PRInt32 aLayerX);
 
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY);
   NS_IMETHOD    SetLayerY(PRInt32 aLayerY);
 
-  // Local functions
-  NS_IMETHOD SetGUIEvent(nsGUIEvent *aEvent);
-  NS_IMETHOD SetEventTarget(nsISupports *aTarget);
+  // nsIPrivateDOMEvent interface
+  NS_IMETHOD    DuplicatePrivateData();
 
 protected:
 
   PRUint32 mRefCnt : 31;
-  nsGUIEvent *kEvent;
-  nsISupports *kTarget;
-  nsIPresContext *kPresContext;
+  nsEvent *mEvent;
+  nsIPresContext *mPresContext;
 
   const char* GetEventName(PRUint32 aEventType);
 
 };
+
 #endif // nsDOMEvent_h__

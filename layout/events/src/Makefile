@@ -32,6 +32,7 @@ MODULE = raptor
 EXPORTS = \
 	nsEventListenerManager.h \
 	nsEventStateManager.h \
+	nsDOMEvent.h \
 	$(NULL)
 
 REQUIRES = xpcom raptor dom js

@@ -246,8 +246,9 @@ public:
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
-                            nsGUIEvent* aEvent, 
-                            nsIDOMEvent* aDOMEvent,
+                            nsEvent* aEvent, 
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
                             nsEventStatus& aEventStatus);
 
 

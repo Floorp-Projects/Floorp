@@ -74,7 +74,7 @@ NS_METHOD nsEventStateManager::SetLastMouseOverContent(nsIContent *aContent)
   NS_IF_RELEASE(mLastMouseOverContent);
   
   mLastMouseOverContent = aContent;
-  NS_ADDREF(mLastMouseOverContent);
+  NS_IF_ADDREF(mLastMouseOverContent);
   return NS_OK;
 }
 

@@ -158,8 +158,9 @@ public:
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
-                            nsGUIEvent* aEvent, 
-                            nsIDOMEvent* aDOMEvent,
+                            nsEvent* aEvent, 
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
                             nsEventStatus& aEventStatus);
 
   // Utility routines for making attribute parsing easier

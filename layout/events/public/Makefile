@@ -22,6 +22,7 @@ MODULE = raptor
 EXPORTS =			    \
 	nsIEventListenerManager.h   \
 	nsIEventStateManager.h	    \
+	nsIPrivateDOMEvent.h	    \
         $(NULL)
 
 include $(DEPTH)/config/config.mk

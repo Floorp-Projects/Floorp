@@ -18,17 +18,12 @@
 
 #include "nsDOMEvent.h"
 #include "nsIDOMNode.h"
+#include "nsIEventStateManager.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMNSEventIID, NS_IDOMNSEVENT_IID);
-
-
-enum mEventEnum {
-  onmousedown=0, onmouseup=1, onclick=2, ondblclick=3, onmouseover=4, onmouseout=5,
-  onmousemove=6, onkeydown=7, onkeyup=8, onkeypress=9, onfocus=10, onblur=11,
-  onload=12, onabort=13, onerror=14
-};
+static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 
 static char* mEventNames[] = {
   "onmousedown", "onmouseup", "onclick", "ondblclick", "onmouseover", "onmouseout",
@@ -36,13 +31,15 @@ static char* mEventNames[] = {
   "onload", "onabort", "onerror"
 };
 
-nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext) {
-  kPresContext = aPresContext;
-  NS_ADDREF(kPresContext);
+nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
+  mPresContext = aPresContext;
+  NS_ADDREF(mPresContext);
+  mEvent = aEvent;
+  NS_INIT_REFCNT();
 }
 
 nsDOMEvent::~nsDOMEvent() {
-  NS_RELEASE(kPresContext);
+  NS_RELEASE(mPresContext);
 }
 
 NS_IMPL_ADDREF(nsDOMEvent)
@@ -65,13 +62,18 @@ nsresult nsDOMEvent::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
+  if (aIID.Equals(kIPrivateDOMEventIID)) {
+    *aInstancePtrResult = (void*) ((nsIPrivateDOMEvent*)this);
+    AddRef();
+    return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 
 // nsIDOMEventInterface
 NS_METHOD nsDOMEvent::GetType(nsString& aType)
 {
-  const char* mName = GetEventName(kEvent->message);
+  const char* mName = GetEventName(mEvent->message);
 
   if (nsnull != mName) {
     aType = nsString(mName);
@@ -88,7 +90,15 @@ NS_METHOD nsDOMEvent::SetType(const nsString& aType)
 
 NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
 {
-  return kTarget->QueryInterface(kIDOMNodeIID, (void**)aTarget);
+  nsIEventStateManager *mManager;
+  nsISupports *mTarget;
+  
+  if (NS_OK == mPresContext->GetEventStateManager(&mManager)) {
+    mManager->GetEventTarget(&mTarget);
+    NS_RELEASE(mManager);
+  }
+  
+  return mTarget->QueryInterface(kIDOMNodeIID, (void**)aTarget);
 }
 
 NS_METHOD nsDOMEvent::SetTarget(nsIDOMNode* aTarget)
@@ -118,7 +128,7 @@ NS_METHOD nsDOMEvent::SetScreenY(PRInt32 aScreenY)
 
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 {
-  *aClientX = NS_TO_INT_ROUND(kEvent->point.x * kPresContext->GetTwipsToPixels());
+  *aClientX = NS_TO_INT_ROUND(mEvent->point.x * mPresContext->GetTwipsToPixels());
   return NS_OK;
 }
 
@@ -129,7 +139,7 @@ NS_METHOD nsDOMEvent::SetClientX(PRInt32 aClientX)
 
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
-  *aClientY = NS_TO_INT_ROUND(kEvent->point.y * kPresContext->GetTwipsToPixels());
+  *aClientY = NS_TO_INT_ROUND(mEvent->point.y * mPresContext->GetTwipsToPixels());
   return NS_OK;
 }
 
@@ -140,7 +150,7 @@ NS_METHOD nsDOMEvent::SetClientY(PRInt32 aClientY)
 
 NS_METHOD nsDOMEvent::GetAltKey(PRBool* aIsDown)
 {
-  *aIsDown = ((nsInputEvent*)kEvent)->isAlt;
+  *aIsDown = ((nsInputEvent*)mEvent)->isAlt;
   return NS_OK;
 }
 
@@ -151,7 +161,7 @@ NS_METHOD nsDOMEvent::SetAltKey(PRBool aAltKey)
 
 NS_METHOD nsDOMEvent::GetCtrlKey(PRBool* aIsDown)
 {
-  *aIsDown = ((nsInputEvent*)kEvent)->isControl;
+  *aIsDown = ((nsInputEvent*)mEvent)->isControl;
   return NS_OK;
 }
 
@@ -162,7 +172,7 @@ NS_METHOD nsDOMEvent::SetCtrlKey(PRBool aCtrlKey)
 
 NS_METHOD nsDOMEvent::GetShiftKey(PRBool* aIsDown)
 {
-  *aIsDown = ((nsInputEvent*)kEvent)->isShift;
+  *aIsDown = ((nsInputEvent*)mEvent)->isShift;
   return NS_OK;
 }
 
@@ -193,10 +203,10 @@ NS_METHOD nsDOMEvent::SetCharCode(PRUint32 aCharCode)
 
 NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
 {
-  switch (kEvent->message) {
+  switch (mEvent->message) {
   case NS_KEY_UP:
   case NS_KEY_DOWN:
-    *aKeyCode = ((nsKeyEvent*)kEvent)->keyCode;
+    *aKeyCode = ((nsKeyEvent*)mEvent)->keyCode;
     break;
   default:
     return NS_ERROR_FAILURE;
@@ -211,7 +221,7 @@ NS_METHOD nsDOMEvent::SetKeyCode(PRUint32 aKeyCode)
 
 NS_METHOD nsDOMEvent::GetButton(PRUint32* aButton)
 {
-  switch (kEvent->message) {
+  switch (mEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_LEFT_BUTTON_DOWN:
   case NS_MOUSE_LEFT_DOUBLECLICK:
@@ -258,15 +268,9 @@ NS_METHOD nsDOMEvent::SetLayerY(PRInt32 aLayerY)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsDOMEvent::SetGUIEvent(nsGUIEvent *aEvent)
+NS_METHOD nsDOMEvent::DuplicatePrivateData()
 {
-  kEvent = aEvent;
-  return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetEventTarget(nsISupports *aTarget)
-{
-  kTarget = aTarget;
+  //XXX Write me!
   return NS_OK;
 }
 
@@ -276,34 +280,44 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_MOUSE_LEFT_BUTTON_DOWN:
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    return mEventNames[onmousedown];
+    return mEventNames[eDOMEvents_mousedown];
     break;
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
-    return mEventNames[onmouseup];
+    return mEventNames[eDOMEvents_mouseup];
     break;
   case NS_MOUSE_LEFT_DOUBLECLICK:
   case NS_MOUSE_RIGHT_DOUBLECLICK:
-    return mEventNames[ondblclick];
+    return mEventNames[eDOMEvents_dblclick];
     break;
-  /*case NS_MOUSE_ENTER:
-    return mEventNames[onmouseover];
+  case NS_MOUSE_ENTER:
+    return mEventNames[eDOMEvents_mouseover];
     break;
   case NS_MOUSE_EXIT:
-    return mEventNames[onmouseout];
-    break;*/
+    return mEventNames[eDOMEvents_mouseout];
+    break;
   case NS_MOUSE_MOVE:
-    return mEventNames[onmousemove];
+    return mEventNames[eDOMEvents_mousemove];
     break;
   case NS_KEY_UP:
-    return mEventNames[onkeyup];
+    return mEventNames[eDOMEvents_keyup];
     break;
   case NS_KEY_DOWN:
-    return mEventNames[onkeydown];
+    return mEventNames[eDOMEvents_keydown];
     break;
   default:
     break;
   }
   return nsnull;
+}
+
+nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent) 
+{
+  nsDOMEvent* it = new nsDOMEvent(&aPresContext, aEvent);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  return it->QueryInterface(kIDOMEventIID, (void **) aInstancePtrResult);
 }

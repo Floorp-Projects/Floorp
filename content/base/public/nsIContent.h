@@ -155,9 +155,10 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
-                                  nsGUIEvent* aEvent,
-                                  nsIDOMEvent* aDOMEvent,
-                                  nsEventStatus& aEventStatus) = 0;
+                            nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus& aEventStatus) = 0;
 };
 
 #endif /* nsIContent_h___ */

@@ -224,9 +224,10 @@ public:
   virtual nsIContent* GetNextContent(nsIContent *aContent) const = 0;
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
-                                  nsGUIEvent* aEvent, 
-                                  nsIDOMEvent* aDOMEvent,
-                                  nsEventStatus& aEventStatus) = 0;
+                            nsEvent* aEvent, 
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus& aEventStatus) = 0;
 
 
 
