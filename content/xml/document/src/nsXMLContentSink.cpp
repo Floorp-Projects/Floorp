@@ -528,10 +528,19 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
 
   nsINodeInfo* nodeInfo = aContent->GetNodeInfo();
 
+  // Some HTML nodes need DoneAddingChildren() called to initialize
+  // properly (eg form state restoration).
+  if ((nodeInfo->NamespaceID() == kNameSpaceID_XHTML &&
+       (nodeInfo->NameAtom() == nsHTMLAtoms::select ||
+        nodeInfo->NameAtom() == nsHTMLAtoms::textarea ||
+        nodeInfo->NameAtom() == nsHTMLAtoms::object ||
+        nodeInfo->NameAtom() == nsHTMLAtoms::applet))
 #ifdef MOZ_XTF
-  if (nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin)
-    aContent->DoneAddingChildren();
+      || nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin
 #endif
+      ) {
+    aContent->DoneAddingChildren();
+  }
   
   if (!nodeInfo->NamespaceEquals(kNameSpaceID_XHTML) &&
       !nodeInfo->NamespaceEquals(kNameSpaceID_SVG)) {
@@ -1069,6 +1078,14 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   if (nameSpaceID > kNameSpaceID_LastBuiltin)
     content->BeginAddingChildren();
 #endif
+
+  // Some HTML nodes need DoneCreatingElement() called to initialize
+  // properly (eg form state restoration).
+  if (nodeInfo->NamespaceID() == kNameSpaceID_XHTML &&
+      (nodeInfo->NameAtom() == nsHTMLAtoms::input ||
+       nodeInfo->NameAtom() == nsHTMLAtoms::button)) {
+    content->DoneCreatingElement();
+  }
 
   return result;
 }
