@@ -9119,6 +9119,26 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
     nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                   GetAbsoluteContainingBlock(aPresContext, aParentFrame),
                                   GetFloaterContainingBlock(aPresContext, aParentFrame));
+
+    // Get the element's tag
+    nsCOMPtr<nsIAtom>  tag;
+    aChild->GetTag(*getter_AddRefs(tag));
+
+    nsCOMPtr<nsIStyleContext> styleContext;
+    rv = ResolveStyleContext(aPresContext, aParentFrame, aChild, tag, getter_AddRefs(styleContext));
+
+    if (NS_SUCCEEDED(rv)) {
+      // Pre-check for display "none" - only if we find that, do we create
+      // any frame at all
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        styleContext->GetStyleData(eStyleStruct_Display);
+
+      if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+        *aNewFrame = nsnull;
+        return NS_OK;
+      }
+    }
+
     rv = ConstructFrame(aPresContext, state, aChild, aParentFrame, frameItems);
     
     nsIFrame* newFrame = frameItems.childList;
