@@ -34,6 +34,8 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
 *       4. write(contents, permissions);
 *       5. append(dirPath, fileName);
 *       6. mkdir(path, permissions);
+*       7. rmdir(path);
+*       8. rm(path);
 *
 *       Instructions:
 *
@@ -106,7 +108,7 @@ exists : function (path) {
         return;
     }
 
-    dump("\n\n**** Checking to see if the file exists ****\n\n");
+    //dump("\n\n**** Checking to see if the file exists ****\n\n");
 
     try{ 
 
@@ -119,7 +121,7 @@ exists : function (path) {
 
     catch(error) { dump("**** ERROR:"+error+"\n\n"); }
 
-    dump("File \""+path+"\" exists = "+fileExists+"\n\n");
+    //dump("File \""+path+"\" exists = "+fileExists+"\n\n");
 
     return fileExists;
 },
@@ -140,7 +142,7 @@ switch(setMode){
 
 case "w":
 
-    dump("open file for writing\n\n");
+    //dump("open file for writing\n\n");
 
     if(!path || !setMode){
         dump("Missing path or mode in arguments . . .\n\n");
@@ -149,7 +151,7 @@ case "w":
 
     try{
 
-        dump("Closing any existing handles . . . \n\n");
+        //dump("Closing any existing handles . . . \n\n");
         this.close();
 
         this.fileInst           = new FilePath( path );
@@ -158,14 +160,14 @@ case "w":
 
     if(fileExists){
 
-        dump("deleting old file and creating a new one . . . \n\n"); 
+        //dump("deleting old file and creating a new one . . . \n\n"); 
         this.fileInst["delete"](false);
         fileExists=false;
 
     }
 
     if (!fileExists){
-        dump("\n\nCreating new file "+path+"\n\n");
+        //dump("\n\nCreating new file "+path+"\n\n");
         this.fileInst.create(0, 0644);
         fileExists=true;
     }
@@ -182,7 +184,7 @@ case "w":
 
 case "a":
 
-    dump("open file for appending\n\n");
+    //dump("open file for appending\n\n");
 
     if(!path || !setMode){
         dump("Missing path or mode in arguments . . .\n\n");
@@ -191,7 +193,7 @@ case "a":
 
     try{
 
-        dump("Closing any existing handles . . . \n\n");
+        //dump("Closing any existing handles . . . \n\n");
         this.close();
 
         this.fileInst           = new FilePath(path);
@@ -199,7 +201,7 @@ case "a":
         var fileExists          = this.exists(path);
 
     if ( !fileExists ){
-        dump("\n\nCreating new file "+path+"\n\n");
+        //dump("\n\nCreating new file "+path+"\n\n");
         this.fileInst.create(0, 0644);
         fileExists=true;
     }
@@ -217,14 +219,14 @@ case "a":
 
 case "r":
 
-    dump("open file for reading\n\n");
+    //dump("open file for reading\n\n");
 
     if(!path){
         dump("Missing path argument . . . \n\n");
         return;
     }
 
-    dump("Closing any existing handles . . . \n\n");
+    //dump("Closing any existing handles . . . \n\n");
     this.close();
 
     try {
@@ -281,23 +283,23 @@ write : function(buffer, perms){
     if(!perms)
         perms=0644;
 
-    dump("trying to initialize filechannel\n\n");
+    //dump("trying to initialize filechannel\n\n");
 
     this.fileChannel.init(this.fileInst, this.mode, perms)
     this.fileInst.permissions=perms;
 
-    dump("initialized filechannel and set desired permissions\n\n");
+    //dump("initialized filechannel and set desired permissions\n\n");
     
 
     var fileSize            = parseInt( this.fileInst.fileSize );
-    dump("got initial file size = "+fileSize+"\n\n");
+    //dump("got initial file size = "+fileSize+"\n\n");
 
     var outStream           = this.fileChannel.openOutputStream();
-    dump("got outStream\n\n");
+    //dump("got outStream\n\n");
 
         
     if( outStream.Write(buffer, buffSize) )
-        dump("Write to file successful . . . \n\n");
+        //dump("Write to file successful . . . \n\n");
 
     outStream.Flush();
 
@@ -332,7 +334,7 @@ read : function() {
     var offset      = this.fileInst.fileSize;
     var perm        = this.fileInst.permissions;     
 
-    dump("PATH i am trying to read = " + this.fileInst.path + "\n");
+    //dump("PATH i am trying to read = " + this.fileInst.path + "\n");
 
     this.fileChannel.init(this.fileInst, 1, perm);
 
@@ -342,7 +344,7 @@ read : function() {
 
     var fileContents        = this.inputStream.read(this.fileInst.fileSize);
 
-    dump(fileContents);
+    //dump(fileContents);
 
     inStream.Close();
         
@@ -362,7 +364,7 @@ read : function() {
 
 mkdir : function(path, permissions){
 
-    dump("Closing any existing handles . . . \n\n");
+    //dump("Closing any existing handles . . . \n\n");
     this.close();
 
     if(!path){
@@ -396,13 +398,12 @@ mkdir : function(path, permissions){
 
     if(!permissions)
         permissions     = 0755;
-        dump("\n\nCreating new Directory \""+path+"\"\n\n");
+        //dump("\n\nCreating new Directory \""+path+"\"\n\n");
         this.fileInst.create( 1, parseInt(permissions) );  //*NOTE* permission 0777 doesn't seem to work here -pete
 
     }
 
-    else{ dump("Sorry Directory "+path+" already exists\n\n"); }
-    
+    else{ return; /**dump("Sorry Directory "+path+" already exists\n\n");***/ }
     
     }
 
@@ -414,6 +415,65 @@ mkdir : function(path, permissions){
 
 /********************* MKDIR ****************************/
 
+/********************* RM *******************************/
+
+rm : function (path) {
+
+    this.close();
+
+    if(!path){
+        dump("Missing path in argument . . .\n\n");
+        return;
+    }
+
+    if(!this.exists(path))
+		return;
+
+    try{ 
+    this.fileInst            = new FilePath(path);
+		if(this.fileInst.isDirectory()){
+		dump("Sorry file is a directory. Try rmdir() instead . . .\n");
+		return;
+		}
+
+		this.fileInst['delete'](false);
+
+		}
+
+    catch (error){ dump("**** ERROR:"+error+"\n\n"); }
+    this.close();
+
+},
+
+/********************* RM *******************************/
+
+/********************* RMDIR ****************************/
+
+rmdir : function (path) {
+
+    this.close();
+
+    if(!path){
+        dump("Missing path in argument . . .\n\n");
+        return;
+    }
+
+    if(!this.exists(path))
+		return;
+
+    try{ 
+    this.fileInst            = new FilePath(path);
+		this.fileInst['delete'](true);
+		}
+
+    catch (error){ dump("**** ERROR:"+error+"\n\n"); }
+    this.close();
+
+},
+
+/********************* RMDIR ****************************/
+
+
 /********************* APPEND ***************************/
 
 append : function (dirPath, fileName) {
@@ -423,7 +483,7 @@ append : function (dirPath, fileName) {
         return;
     }
 
-    dump("\n\n**** Checking to see if the directory exists "+fileName+"****\n\n");
+    //dump("\n\n**** Checking to see if the directory exists "+fileName+"****\n\n");
     this.exists(dirPath);
 
     try{ 
@@ -438,7 +498,7 @@ append : function (dirPath, fileName) {
 
     catch(error) { dump("**** ERROR:"+error+"\n\n"); }
 
-    dump("File \""+dirPath+"\" appended = "+fileAppended+"\n\n");
+    //dump("File \""+dirPath+"\" appended = "+fileAppended+"\n\n");
 
     return fileAppended;
 },
@@ -449,7 +509,7 @@ append : function (dirPath, fileName) {
 
 validatePermissions : function(num){
 
-    dump("Checking for valid permission\n\n");
+    //dump("Checking for valid permission\n\n");
 
     if ( parseInt(num.toString(10).length) < 3 ) 
         return false;
@@ -466,7 +526,7 @@ close : function(){
 
     /***************** Destroy Instances *********************/
 
-    dump("**** destroying any object instances ****\n\n");
+    //dump("**** destroying any object instances ****\n\n");
 
     if(this.fileInst)       delete this.fileInst;
     if(this.fileChannel)    delete this.fileChannel;
