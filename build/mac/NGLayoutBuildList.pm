@@ -285,6 +285,8 @@ sub BuildClientDist()
 
 	#PREFS
 	InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
+	BuildOneProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp", 			"headers", "", 0, 0, 0);
+	BuildOneProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref.xpt", "", 1, 0, 1);
 
 	#XPCOM
 	InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",							"$distdirectory:idl:");
