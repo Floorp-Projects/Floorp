@@ -68,6 +68,7 @@ nsHTTPEncodeStream::Create(nsIInputStream *rawStream, PRUint32 flags,
     if (str == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    NS_ADDREF(str);
     nsresult rv = str->Init(rawStream, flags);
     if (NS_FAILED(rv)) {
         NS_RELEASE(str);

@@ -914,36 +914,31 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     }
 
     // Now pass on absolute url to the click handler
-    nsIInputStream* postDataStream = nsnull;
+    nsCOMPtr<nsIInputStream> postDataStream;
     if (isPost) {
-      nsresult rv;
-      nsCAutoString postBuffer;
-      postBuffer.AssignWithConversion(data);
-
       if (isURLEncoded) {
-        rv = NS_NewPostDataStream(&postDataStream, !isURLEncoded, postBuffer.get(), 0);
+        nsCAutoString postBuffer;
+        postBuffer.AssignWithConversion(data);
+        NS_NewPostDataStream(getter_AddRefs(postDataStream), !isURLEncoded,
+                             postBuffer.get(), 0);
       } else {
-// Cut-and-paste of NS_NewPostDataStream
-        NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-	nsCOMPtr<nsIProtocolHandler> pHandler;
-	rv = serv->GetProtocolHandler("http", getter_AddRefs(pHandler));
-	if (NS_FAILED(rv)) return rv;
-	
-	nsCOMPtr<nsIHTTPProtocolHandler> http = do_QueryInterface(pHandler, &rv);
-	if (NS_FAILED(rv)) return rv;
-	
-// Cut-and-paste of nsHTTPHandler::NewPostDataStream inside if(isFile)
-        nsIInputStream* rawStream = nsnull; // Strong
-        rv = multipartDataFile->GetInputStream(&rawStream); // AddRef
-	if (NS_FAILED(rv)) return rv;
-	
-	rv = http->NewEncodeStream(rawStream, nsIHTTPProtocolHandler::ENCODE_NORMAL, &postDataStream);
-        NS_RELEASE(rawStream);
-// End Cut-and-pastisms
-      }
+        // Cut-and-paste of NS_NewPostDataStream
+        nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID));
+        if (serv && multipartDataFile) {
 
-      /* The postBuffer is now owned by the IPostData instance */
+          nsCOMPtr<nsIProtocolHandler> pHandler;
+          serv->GetProtocolHandler("http", getter_AddRefs(pHandler));
+          nsCOMPtr<nsIHTTPProtocolHandler> http(do_QueryInterface(pHandler));
+
+          nsCOMPtr<nsIInputStream> rawStream;
+          multipartDataFile->GetInputStream(getter_AddRefs(rawStream));
+
+          if (http && rawStream) {
+            http->NewEncodeStream(rawStream, nsIHTTPProtocolHandler::ENCODE_NORMAL,
+                                  getter_AddRefs(postDataStream));
+          }
+        }
+      }
     }    
     if (handler) {
 #if defined(DEBUG_rods) || defined(DEBUG_pollmann)
@@ -975,13 +970,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 //        mdf.Delete(PR_FALSE);
 //      }
 //    }
-// XXX DON'T NS_IF_RELEASE(postDataStream), this happens in Necko!
-
-// If you need these for debugging...
-// wrap them in DEBUG_<username>
-// Printing the data and url prints the contents of passwords
-//DebugPrint("url", absURLSpec);
-//DebugPrint("data", data);
   }
   return result;
 }
