@@ -1,7 +1,7 @@
     /* for localization */
     var Bundle = srGetStrBundle("chrome://wallet/locale/WalletPreview.properties");
-    var heading = Bundle.GetStringFromName("bypass");
-    var bypass = Bundle.GetStringFromName("heading");
+    var heading = Bundle.GetStringFromName("heading");
+    var bypass = Bundle.GetStringFromName("bypass");
     var okCmdLabel = Bundle.GetStringFromName("okCmdLabel");
     var cancelCmdLabel = Bundle.GetStringFromName("cancelCmdLabel");
 
