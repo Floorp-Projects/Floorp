@@ -43,6 +43,7 @@
 #include "ExprResult.h"
 #include "Names.h"
 #include "XMLParser.h"
+#include "TxLog.h"
 #include "txAtoms.h"
 
 /**
@@ -402,6 +403,29 @@ Node* ProcessorState::findTemplate(Node* aNode,
         }
     }
 
+    #ifdef PR_LOGGING
+    char *nodeBuf = 0, *modeBuf = 0;
+    if (matchTemplate) {
+        char *matchBuf = 0, *uriBuf = 0;
+        PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+               ("MatchTemplate, Pattern %s, Mode %s, Stylesheet %s, " \
+                "Node %s\n",
+                (matchBuf = ((Element*)matchTemplate)->getAttribute("match").toCharArray()),
+                (modeBuf = aMode.toCharArray()),
+                (uriBuf = matchTemplate->getBaseURI().toCharArray()),
+                (nodeBuf = aNode->getNodeName().toCharArray())));
+        delete matchBuf;
+        delete uriBuf;
+    }
+    else {
+        PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+               ("No match, Node %s, Mode %s\n", 
+                (nodeBuf  = aNode->getNodeName().toCharArray()),
+                (modeBuf = aMode.toCharArray())));
+    }
+    delete nodeBuf;
+    delete modeBuf;
+    #endif
     return matchTemplate;
 }
 
