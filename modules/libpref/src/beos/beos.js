@@ -19,7 +19,9 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): 
+ * Sergei Dolgov <sergei_d@fi.tartu.ee
+ * Paul Ashford <arougthopher@lizardland.net>xx
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -85,3 +87,13 @@ pref("font.size.fixed.zh-TW", 16);
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
+/*
+ * Set Default accelKey to be "Alt", which is the default under BeOS
+ * The generalAccessKey is used for shortcuts on web pages, set to Ctrl
+ * The menuAccessKey is now the "windows" key
+ */
+pref("ui.key.accelKey", 18);
+pref("ui.key.generalAccessKey", 17);
+pref("ui.key.menuAccessKey", 17);
+
+pref("browser.download.dir", "/boot/home/Downloads");
