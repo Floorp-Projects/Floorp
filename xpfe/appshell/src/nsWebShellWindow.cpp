@@ -49,6 +49,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLImageElement.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -74,13 +75,16 @@ static NS_DEFINE_IID(kIDOMElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXULCommandIID,         NS_IXULCOMMAND_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID,   NS_IDOMCHARACTERDATA_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 
 static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
-//static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
+//static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID); 
 
 #include "nsIWebShell.h"
 
+const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
+const char * kThrobberOffStr = "resource:/res/throbber/anims00.gif";
 
 nsWebShellWindow::nsWebShellWindow()
 {
@@ -91,6 +95,7 @@ nsWebShellWindow::nsWebShellWindow()
   mController = nsnull;
   mStatusText = nsnull;
   mURLBarText = nsnull;
+  mThrobber   = nsnull;
 }
 
 
@@ -105,6 +110,7 @@ nsWebShellWindow::~nsWebShellWindow()
   NS_IF_RELEASE(mController);
   NS_IF_RELEASE(mStatusText);
   NS_IF_RELEASE(mURLBarText);
+  NS_IF_RELEASE(mThrobber);
 }
 
 
@@ -310,6 +316,10 @@ NS_IMETHODIMP
 nsWebShellWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                               nsLoadType aReason)
 {
+  if (nsnull != mThrobber) {
+    mThrobber->SetSrc(kThrobberOnStr);
+  }
+
   nsAutoString url(aURL);
   nsAutoString gecko("Gecko - ");
   gecko.Append(url);
@@ -356,6 +366,9 @@ NS_IMETHODIMP
 nsWebShellWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                              PRInt32 aStatus)
 {
+  if (nsnull != mThrobber) {
+    mThrobber->SetSrc(kThrobberOffStr);
+  }
    
   UpdateButtonStatus(PR_FALSE);
   if (nsnull != mStatusText) {
@@ -379,7 +392,7 @@ nsIDOMNode * nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, 
       while (nsnull != node) {
         nsString name;
         node->GetNodeName(name);
-        //printf("[%s]\n", name.ToNewCString());
+        printf("[%s]\n", name.ToNewCString());
         if (name.Equals(aName)) {
           NS_ADDREF(node);
           NS_RELEASE(parent);
@@ -654,7 +667,7 @@ nsIDOMNode *  nsWebShellWindow::FindNamedDOMNode(const nsString &aName, nsIDOMNo
   while (nsnull != node) {
     nsString name;
     node->GetNodeName(name);
-    //printf("FindNamedDOMNode[%s] %d == %d\n", name.ToNewCString(), aCount, aEndCount);
+    printf("FindNamedDOMNode[%s] %d == %d\n", name.ToNewCString(), aCount, aEndCount);
     if (name.Equals(aName)) {
       aCount++;
       if (aCount == aEndCount) {
@@ -778,6 +791,17 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
       if (nsnull != contentWS) {
         LoadCommands(contentWS, toolbarDOMDoc);
         PRInt32 count = 0;
+        nsIDOMNode * imgNode = FindNamedDOMNode(nsAutoString("IMG"), parent, count, 7);
+        if (nsnull != imgNode) {
+          if (NS_OK == imgNode->QueryInterface(kIDOMHTMLImageElementIID, (void**) &mThrobber)) {
+            nsAutoString srcStr;
+            mThrobber->GetSrc(srcStr);
+            //printf("src: %s\n", srcStr.ToNewCString());            
+          }
+          NS_RELEASE(imgNode);
+        }
+      
+        count = 0;
         nsIDOMNode * node = FindNamedDOMNode(nsAutoString("INPUT"), parent, count, 1);
         if (nsnull != node) {
           if (NS_OK == node->QueryInterface(kIDOMHTMLInputElementIID, (void**) &mURLBarText)) {

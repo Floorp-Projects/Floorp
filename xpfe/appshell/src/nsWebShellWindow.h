@@ -37,6 +37,7 @@ class nsIXULCommand;
 class nsIDOMCharacterData;
 class nsIDOMDocument;
 class nsIDOMHTMLInputElement;
+class nsIDOMHTMLImageElement;
 
 class nsWebShellWindow : public nsIWebShellContainer,
                          public nsIDocumentLoaderObserver
@@ -103,6 +104,7 @@ protected:
   nsIWidgetController*    mController;
   nsIDOMCharacterData*    mStatusText;
   nsIDOMHTMLInputElement* mURLBarText;
+  nsIDOMHTMLImageElement* mThrobber;
 
   nsVoidArray mCommands;
 };
