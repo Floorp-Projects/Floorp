@@ -109,7 +109,7 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", 'TEXT', 'ttxt' },
   { MESSAGE_RFC822, "eml", "RFC-822 data", 'TEXT', 'MOSS' },
   { IMAGE_GIF, "gif", "GIF Image", 0,0 },
-  { IMAGE_JPG, "jpeg,jpg", "JPEG Image", 0, 0 },
+  { IMAGE_JPG, "jpeg,jpg,jfif,pjpeg,pjp", "JPEG Image", 0, 0 },
   { IMAGE_PNG, "png", "PNG Image", 0, 0 },
   { IMAGE_BMP, "bmp", "BMP Image", 0, 0 },
   { IMAGE_ICO, "ico,cur", "ICO Image", 0, 0 },

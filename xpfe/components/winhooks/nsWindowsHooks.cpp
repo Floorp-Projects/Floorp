@@ -86,7 +86,7 @@ static ProtocolRegistryEntry
     ftp( "ftp" ),
     chrome( "chrome" ),
     gopher( "gopher" );
-const char *jpgExts[]  = { ".jpg", ".jpeg", 0 };
+const char *jpgExts[]  = { ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", 0 };
 const char *gifExts[]  = { ".gif", 0 };
 const char *pngExts[]  = { ".png", 0 };
 const char *mngExts[]  = { ".mng", 0 };
