@@ -1633,7 +1633,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
                         0, beNameAttr, sizeof(beNameAttr)-1)) > 0)
                     {
                         beNameAttr[len] = '\0';
-                        name = NS_ConvertUTF8toUCS2(beNameAttr);
+                        CopyUTF8toUTF16(beNameAttr, name);
                         rv = NS_OK;
                     }
                 }
@@ -1643,7 +1643,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
                 nsCAutoString leafName;
                 rv = aFileLocal->GetNativeLeafName(leafName);
                 if (NS_SUCCEEDED(rv)) {
-                    name = NS_ConvertUTF8toUCS2(leafName);
+                    CopyUTF8toUTF16(leafName, name);
                     rv = NS_OK;
                 }
             }

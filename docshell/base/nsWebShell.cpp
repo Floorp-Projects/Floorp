@@ -862,10 +862,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
         if(keywordsEnabled && (-1 == dotLoc)) {
           // only send non-qualified hosts to the keyword server
-          nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
-          keywordSpec.Append(NS_ConvertUTF8toUCS2(host));
-
-          NS_NewURI(getter_AddRefs(newURI), keywordSpec, nsnull);
+          NS_NewURI(getter_AddRefs(newURI),
+                    NS_LITERAL_CSTRING("keyword:") + host, nsnull);
         } // end keywordsEnabled
       }
 

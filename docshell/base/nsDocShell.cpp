@@ -2531,7 +2531,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         // Get the host
         nsCAutoString host;
         aURI->GetHost(host);
-        formatStrs[0].Assign(NS_ConvertUTF8toUCS2(host));
+        CopyUTF8toUTF16(host, formatStrs[0]);
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("dnsNotFound"));
     }
@@ -2558,7 +2558,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         // Get the host
         nsCAutoString host;
         aURI->GetHost(host);
-        formatStrs[0].Assign(NS_ConvertUTF8toUCS2(host));
+        CopyUTF8toUTF16(host, formatStrs[0]);
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("netTimeout"));
     }

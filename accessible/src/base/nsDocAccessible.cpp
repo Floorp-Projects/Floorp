@@ -180,9 +180,7 @@ NS_IMETHODIMP nsDocAccessible::GetURL(nsAString& aURL)
     if (pURI) 
       pURI->GetSpec(theURL);
   }
-  //XXXaaronl Need to use CopyUTF8toUCS2(nsDependentCString(theURL), aURL); 
-  //          when it's written
-  aURL.Assign(NS_ConvertUTF8toUCS2(theURL)); 
+  CopyUTF8toUTF16(theURL, aURL);
   return NS_OK;
 }
 

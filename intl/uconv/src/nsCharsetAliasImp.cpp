@@ -114,7 +114,7 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    // string bundles use UTF8 keys
    nsAutoString result;
    nsresult rv = mDelegate->Get(NS_ConvertASCIItoUCS2(aKey), result);
-   oResult = NS_LossyConvertUCS2toASCII(result);
+   LossyAppendUTF16toASCII(result, oResult);
    return rv;
 }
 

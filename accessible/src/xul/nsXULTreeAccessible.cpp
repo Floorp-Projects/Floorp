@@ -395,9 +395,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetValue(nsAString& _retval)
   PRInt32 level;
   mTreeView->GetLevel(mRow, &level);
 
-  nsCString str;
+  nsString str;
   str.AppendInt(level);
-  _retval = NS_ConvertASCIItoUCS2(str);
+  _retval = str;
 
   return NS_OK;
 }

@@ -182,13 +182,13 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   PRBool isStatefulCharset = statefulCharset(aCharset.get());
 
   if (!isStatefulCharset && IsASCII(aURI)) {
-    _retval.Assign(NS_ConvertASCIItoUCS2(aURI));
+    CopyASCIItoUTF16(aURI, _retval);
     return rv;
   }
 
   if (!isStatefulCharset && aIRI) {
     if (IsUTF8(aURI)) {
-      _retval.Assign(NS_ConvertUTF8toUCS2(aURI));
+      CopyUTF8toUTF16(aURI, _retval);
       return rv;
     }
   }
