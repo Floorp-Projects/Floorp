@@ -559,7 +559,11 @@ nsNntpIncomingServer::SetNewsgroupAsSubscribed(const char *aName)
 	if(NS_FAILED(rv)) return rv;
 #endif
 
-	rv = ds->Assert(newsgroupResource, kNC_Subscribed, subscribedLiteral, PR_TRUE);
+	nsCOMPtr<nsIRDFNode> oldLiteral;
+	rv = ds->GetTarget(newsgroupResource, kNC_Subscribed, PR_TRUE, getter_AddRefs(oldLiteral));
+	if(NS_FAILED(rv)) return rv;
+
+	rv = ds->Change(newsgroupResource, kNC_Subscribed, oldLiteral, subscribedLiteral);
 	if(NS_FAILED(rv)) return rv;
 
 	return NS_OK;
@@ -601,6 +605,14 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Name", getter_AddRefs(kNC_Name));
 	if(NS_FAILED(rv)) return rv;
 
+	nsCOMPtr<nsIRDFLiteral> subscribedLiteral;
+	nsAutoString subscribedString("false");
+	rv = rdfService->GetLiteral(subscribedString.GetUnicode(), getter_AddRefs(subscribedLiteral));
+	if(NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIRDFResource> kNC_Subscribed;
+	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
+	if(NS_FAILED(rv)) return rv;
+
 	nsCOMPtr<nsIRDFDataSource> ds;
 	rv = rdfService->GetDataSource("rdf:subscribe",getter_AddRefs(ds));
 	if(NS_FAILED(rv)) return rv;
@@ -609,10 +621,14 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 	rv = ds->Assert(newsgroupResource, kNC_Name, nameLiteral, PR_TRUE);
 	if(NS_FAILED(rv)) return rv;
 
+	rv = ds->Assert(newsgroupResource, kNC_Subscribed, subscribedLiteral, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+
 	nsCOMPtr<nsIRDFResource> kNC_Child;
 	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(kNC_Child));
 	if(NS_FAILED(rv)) return rv;
 
+	// this assumes a lot about how we get back the list of newsgroups from the server
 	PRInt32 slashpos = groupUri.RFindChar('/',PR_TRUE);
 	PRInt32 dotpos = groupUri.RFindChar('.',PR_TRUE);
 	nsCOMPtr <nsIRDFResource> parent;
