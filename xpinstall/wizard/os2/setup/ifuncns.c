@@ -127,95 +127,19 @@ void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShort
   }
 }
 
-/* EXPLANATION
-Enumerate through a given subkey and check to see if any keys have the exact same install directory
-If they do, delete them. Very straightforward */
-DWORD GetWinRegSubKeyProductPath(char *szInKey, char *szReturnSubKey, DWORD dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare, char *szInCurrentVersion)
+void CleanupPreviousVersionINIKeys(void)
 {
-  char      *szRv = NULL;
-  char      szKey[MAX_BUF];
-  char      szBuf[MAX_BUF];
-//  HKEY      hkHandle;
-  DWORD     dwIndex;
-  DWORD     dwBufSize;
-  DWORD     dwTotalSubKeys;
-  DWORD     dwTotalValues;
-//  FILETIME  ftLastWriteFileTime;
-  BOOL      bFoundSubKey;
-
-  bFoundSubKey = FALSE;
-
-//  if(RegOpenKeyEx(hkRootKey, szInKey, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
-  {
-    *szReturnSubKey = '\0';
-    return(0);
-  }
-
-  dwTotalSubKeys = 0;
-  dwTotalValues  = 0;
-//  RegQueryInfoKey(hkHandle, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
-  for(dwIndex = 0; dwIndex < dwTotalSubKeys; dwIndex++)
-  {
-    dwBufSize = dwReturnSubKeySize;
-//    if(RegEnumKeyEx(hkHandle, dwIndex, szReturnSubKey, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
-    {
-      if(  (*szInCurrentVersion != '\0') && (strcmpi(szInCurrentVersion, szReturnSubKey) != 0)  )
-      {
-        /* The key found is not the CurrentVersion (current UserAgent), so we can return it to be deleted.
-         * We don't want to return the SubKey that is the same as the CurrentVersion because it might
-         * have just been created by the current installation process.  So deleting it would be a
-         * "Bad Thing" (TM).
-         *
-         * If it was not created by the current installation process, then it'll be left
-         * around which is better than deleting something we will need later. To make sure this case is
-         * not encountered, CleanupPreviousVersionRegKeys() should be called at the *end* of the
-         * installation process (at least after all the .xpi files have been processed). */
-        if(szInSubSubKey && (*szInSubSubKey != '\0'))
-          sprintf(szKey, "%s\\%s\\%s", szInKey, szReturnSubKey, szInSubSubKey);
-        else
-          sprintf(szKey, "%s\\%s", szInKey, szReturnSubKey);
-
-  //      GetWinReg(hkRootKey, szKey, szInName, szBuf, sizeof(szBuf));
-        AppendBackSlash(szBuf, sizeof(szBuf));
-        if(strcmpi(szBuf, szCompare) == 0)
-        {
-          bFoundSubKey = TRUE;
-          /* found one subkey. break out of the for() loop */
-          break;
-        }
-      }
-    }
-  }
-
-//  RegCloseKey(hkHandle);
-  if(!bFoundSubKey)
-    *szReturnSubKey = '\0';
-  return(dwTotalSubKeys);
-}
-
-void CleanupPreviousVersionRegKeys(void)
-{
-/* OK, OS/2 things to do here */
-/* Look at all keys in OS2.INI beginning with Mozilla (Product Reg Key)*/
-/* If they contain an Install Directory that is the same as what we just installed, remove the app */
-
-
-
-  DWORD dwIndex = 0;
-  DWORD dwSubKeyCount;
+  ULONG ulIndex = 0;
   char  szBufTiny[MAX_BUF_TINY];
-  char  szKeyRoot[MAX_BUF_TINY];
   char  szCurrentVersion[MAX_BUF_TINY];
-  char  szUAShort[MAX_BUF_TINY];
-  char  szRvSubKey[MAX_PATH + 1];
+  char  szUserAgent[MAX_BUF];
   char  szPath[MAX_BUF];
-  char  szKey[MAX_BUF];
+  char  szApp[MAX_BUF];
   char  szCleanupProduct[MAX_BUF];
-//  HKEY  hkeyRoot;
-  char  szSubSubKey[] = "Main";
   char  szName[] = "Install Directory";
-  char  szWRMSUninstall[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
-  char  szSection[] = "Cleanup Previous Product RegKeys";
+  char  szSection[] = "Cleanup Previous Product INIApps";
+  ULONG ulAppsLength;
+  CHAR* szApps;
 
   strcpy(szPath, sgProduct.szPath);
   if(*sgProduct.szSubPath != '\0')
@@ -225,73 +149,44 @@ void CleanupPreviousVersionRegKeys(void)
   }
   AppendBackSlash(szPath, sizeof(szPath));
 
-  sprintf(szBufTiny, "Product Reg Key%d", dwIndex);        
-  GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
+  sprintf(szBufTiny, "Product INI App%d", ulIndex);
+  GetPrivateProfileString(szSection, szBufTiny, "", szApp, sizeof(szApp), szFileIniConfig);
 
-  while(*szKey != '\0')
+  while(*szApp != '\0')
   {
-    sprintf(szBufTiny, "Reg Key Root%d",dwIndex);
-    GetPrivateProfileString(szSection, szBufTiny, "", szKeyRoot, sizeof(szKeyRoot), szFileIniConfig);
-//    hkeyRoot = ParseRootKey(szKeyRoot);
-
-    sprintf(szBufTiny, "Product Name%d", dwIndex);        
+    sprintf(szBufTiny, "Product Name%d", ulIndex);
     GetPrivateProfileString(szSection, szBufTiny, "", szCleanupProduct, sizeof(szCleanupProduct), szFileIniConfig);
     // something is wrong, they didn't give a product name.
     if(*szCleanupProduct == '\0')
       return;
 
-    sprintf(szBufTiny, "Current Version%d", dwIndex);        
+    sprintf(szBufTiny, "Current Version%d", ulIndex);
     GetPrivateProfileString(szSection, szBufTiny, "", szCurrentVersion, sizeof(szCurrentVersion), szFileIniConfig);
 
-    do
-    {
-      // if the current version is not found, we'll get null in szCurrentVersion and GetWinRegSubKeyProductPath() will do the right thing
-//      dwSubKeyCount = GetWinRegSubKeyProductPath(hkeyRoot, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, szCurrentVersion);
-  	  
-      if(*szRvSubKey != '\0')
-      {
-        if(dwSubKeyCount > 1)
-        {
-          AppendBackSlash(szKey, sizeof(szKey));
-          strcat(szKey, szRvSubKey);
+    sprintf(szUserAgent, "%s %s", szApp, szCurrentVersion);
+
+    PrfQueryProfileSize(HINI_USERPROFILE, NULL, NULL, &ulAppsLength);
+    szApps = (char*)malloc(ulAppsLength+1);
+    PrfQueryProfileString(HINI_USERPROFILE, NULL, NULL, NULL, szApps, ulAppsLength);
+    szApps[ulAppsLength] = '\0';
+    while (*szApps) {
+      if (strncmp(szApps, szApp, strlen(szApp)) == 0) {
+        if (strncmp(szApps, szUserAgent, strlen(szUserAgent)) != 0) {
+          char szKey[MAX_BUF];
+          PrfQueryProfileString(HINI_USERPROFILE, szApps, szName, "", szKey, MAX_BUF);
+          if (szKey[0]) {
+            AppendBackSlash(szKey, sizeof(szKey));
+            if (strcmpi(szKey, szPath) == 0) {
+              PrfWriteProfileString(HINI_USER, szApps, NULL, NULL);
+            }
+          }
         }
-//        DeleteWinRegKey(hkeyRoot, szKey, TRUE);
-
-        GetUserAgentShort(szRvSubKey, szUAShort, sizeof(szUAShort));
-        if(*szUAShort != '\0')
-        {
-          /* delete uninstall key that contains product name and its user agent in parenthesis, for
-           * example:
-           *     Mozilla (0.8)
-           */
-          sprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)", szCleanupProduct, szUAShort);
-//          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
-
-          /* delete uninstall key that contains product name and its user agent not in parenthesis,
-           * for example:
-           *     Mozilla 0.8
-           */
-          sprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", szCleanupProduct, szUAShort);
-//          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
-
-          /* We are not looking to delete just the product name key, for example:
-           *     Mozilla
-           *
-           * because it might have just been created by the current installation process, so
-           * deleting this would be a "Bad Thing" (TM).  Besides, we shouldn't be deleting the
-           * CurrentVersion key that might have just gotten created because GetWinRegSubKeyProductPath()
-           * will not return the CurrentVersion key.
-           */
-        }
-        // the szKey was stepped on.  Reget it.
-        sprintf(szBufTiny, "Product Reg Key%d", dwIndex);        
-        GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
       }
-    }  while (*szRvSubKey != '\0');
-    sprintf(szBufTiny, "Product Reg Key%d", ++dwIndex);        
-    GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
+      szApps = strchr(szApps, '\0')+1;
+    }
+    sprintf(szBufTiny, "Product Reg Key%d", ++ulIndex);        
+    GetPrivateProfileString(szSection, szBufTiny, "", szApp, sizeof(szApp), szFileIniConfig);
   } 
-
 }
 
 void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
@@ -579,6 +474,7 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
   HDIR            hFile;
   FILEFINDBUF3    fdFile;
   ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szFromDir[MAX_BUF];
   char            szFromTemp[MAX_BUF];
   char            szToTemp[MAX_BUF];
@@ -621,7 +517,9 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
 
   strcat(szFrom, "*.*");
   ulFindCount = 1;
-  if((DosFindFirst(szFrom, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+  hFile = HDIR_CREATE;
+  ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+  if((DosFindFirst(szFrom, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
     bFound = FALSE;
   else
     bFound = TRUE;
@@ -692,6 +590,7 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists, BOOL bDnu)
   HDIR            hFile;
   FILEFINDBUF3    fdFile;
   ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szFromDir[MAX_BUF];
   char            szFromTemp[MAX_BUF];
   char            szToTemp[MAX_BUF];
@@ -721,7 +620,9 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists, BOOL bDnu)
   ParsePath(szFrom, szFromDir, sizeof(szFromDir), FALSE, PP_PATH_ONLY);
 
   ulFindCount = 1;
-  if((DosFindFirst(szFrom, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+  hFile = HDIR_CREATE;
+  ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+  if((DosFindFirst(szFrom, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
     bFound = FALSE;
   else
     bFound = TRUE;
@@ -779,6 +680,7 @@ HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilenam
   HDIR            hFile;
   FILEFINDBUF3    fdFile;
   ULONG           ulFindCount;
+  ULONG           ulAttrs;
   BOOL            bFound;
 
   strcpy(szSourceFullFilename, szSourcePath);
@@ -819,7 +721,9 @@ HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilenam
 
     /* find the largest numbered filename in the szDestPath */
     ulFindCount = 1;
-    if((DosFindFirst(szSearchDestFullFilename, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+    hFile = HDIR_CREATE;
+    ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+    if((DosFindFirst(szSearchDestFullFilename, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
       bFound = FALSE;
     else
       bFound = TRUE;
@@ -1117,6 +1021,7 @@ HRESULT FileDelete(LPSTR szDestination)
   HDIR            hFile;
   FILEFINDBUF3    fdFile;
   ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szBuf[MAX_BUF];
   char            szPathOnly[MAX_BUF];
   BOOL            bFound;
@@ -1133,7 +1038,9 @@ HRESULT FileDelete(LPSTR szDestination)
   ParsePath(szDestination, szPathOnly, sizeof(szPathOnly), FALSE, PP_PATH_ONLY);
 
   ulFindCount = 1;
-  if((DosFindFirst(szDestination, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+  hFile = HDIR_CREATE;
+  ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+  if((DosFindFirst(szDestination, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
     bFound = FALSE;
   else
     bFound = TRUE;
@@ -1191,6 +1098,7 @@ HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
   HDIR            hFile;
   FILEFINDBUF3    fdFile;
   ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szDestTemp[MAX_BUF];
   BOOL            bFound;
 
@@ -1204,7 +1112,9 @@ HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
     strcat(szDestTemp, "*");
 
     ulFindCount = 1;
-    if((DosFindFirst(szDestTemp, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+    hFile = HDIR_CREATE;
+    ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+    if((DosFindFirst(szDestTemp, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
       bFound = FALSE;
     else
       bFound = TRUE;
@@ -1344,9 +1254,7 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
           GetPrivateProfileString(szSection, "Message", "", szBuf, sizeof(szBuf), szFileIniConfig);
           if ( szBuf[0] != '\0' )
             ShowMessage(szBuf, TRUE);  
-#ifdef OLDCODE /* @MAK */
-          WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
-#endif
+          WinSpawn(szTarget, szParameters, szWorkingDir, bWait);
           if ( szBuf[0] != '\0' )
             ShowMessage(szBuf, FALSE);  
         }
@@ -1612,9 +1520,7 @@ HRESULT ProcessProgramFolderShowCmd()
 
     if(iShowFolder != SW_HIDE)
       if(sgProduct.dwMode != SILENT)
-#ifdef OLDCODE
-        WinSpawn(szProgramFolder, NULL, NULL, iShowFolder, TRUE);
-#endif
+        WinSpawn(szProgramFolder, NULL, NULL, TRUE);
 
 #endif
     ++dwIndex0;

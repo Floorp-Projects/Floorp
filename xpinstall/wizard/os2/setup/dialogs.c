@@ -61,7 +61,7 @@ BOOL AskCancelDlg(HWND hDlg)
   {
     GetPrivateProfileString("Strings", "Message Cancel Setup AUTO mode", "", szMsg, sizeof(szMsg), szFileIniConfig);
     ShowMessage(szMsg, TRUE);
-    Delay(5);
+    DosSleep(5000);
     ShowMessage(szMsg, FALSE);
     bRv = TRUE;
   }
@@ -735,20 +735,10 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
           break;
 
         case IDC_README:
-          if(*diSetupType.szReadmeApp != '\0') {
-            STARTDATA startdata;
-            PID       pid;
-            ULONG     ulSessID;
-        
-            memset(&startdata, 0, sizeof(STARTDATA));
-            startdata.Length  = sizeof(STARTDATA);
-            startdata.PgmName = diSetupType.szReadmeApp;
-            strcpy(szBuf, szSetupDir);
-            AppendBackSlash(szBuf, sizeof(szBuf));
-            strcat(szBuf, diSetupType.szReadmeFilename);
-            startdata.PgmInputs = szBuf;
-            DosStartSession(&startdata, &ulSessID, &pid);  /* Start the session */
-          }
+          if(*diSetupType.szReadmeApp == '\0')
+            WinSpawn(diSetupType.szReadmeFilename, NULL, szSetupDir, FALSE);
+          else
+            WinSpawn(diSetupType.szReadmeApp, diSetupType.szReadmeFilename, szSetupDir, FALSE);
           return (MRESULT)TRUE;
           break;
 
@@ -2411,11 +2401,9 @@ void CommitInstall(void)
 
         if(RetrieveArchives() == WIZ_OK)
         {
-#ifdef OLDCODE
           /* Check to see if Turbo is required.  If so, set the
            * appropriate Windows registry keys */
           SetTurboArgs();
-#endif
 
           if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
             SetSetupState(SETUP_STATE_UNPACK_XPCOM);
@@ -2486,7 +2474,7 @@ void CommitInstall(void)
               ProcessProgramFolderShowCmd();
 
             CleanupArgsRegistry();
-//            CleanupPreviousVersionRegKeys();
+            CleanupPreviousVersionINIKeys();
             if(NeedReboot())
             {
               CleanupXpcomFile();

@@ -62,7 +62,7 @@ int         VerifyArchive(LPSTR szArchive);
 HRESULT     ProcessSetVersionRegistry(DWORD dwTiming, char *szSectionPrefix);
 char        *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char *szInputString, char *szOutBuf, DWORD dwOutBufSize);
 void        GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShortSize);
-void        CleanupPreviousVersionRegKeys(void);
+void        CleanupPreviousVersionINIKeys(void);
 HRESULT     CleanupArgsRegistry();
 void        ProcessFileOpsForSelectedComponents(DWORD dwTiming);
 void        ProcessFileOpsForAll(DWORD dwTiming);
