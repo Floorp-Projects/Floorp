@@ -65,6 +65,15 @@ static PRBool gKeepRunning = PR_TRUE;
 //static PRInt32 gMsgCount = 0;
 static ipcIService *gIpcServ = nsnull;
 
+static void
+SendMsg(ipcIService *ipc, PRUint32 cID, const nsID &target, const char *data, PRUint32 dataLen)
+{
+    printf("*** sending message: [to-client=%u dataLen=%u]\n", cID, dataLen);
+
+    ipc->SendMessage(cID, target, (const PRUint8 *) data, dataLen);
+//    gMsgCount++;
+}
+
 //-----------------------------------------------------------------------------
 
 class myIpcMessageObserver : public ipcIMessageObserver
@@ -79,9 +88,9 @@ public:
 NS_IMPL_ISUPPORTS1(myIpcMessageObserver, ipcIMessageObserver)
 
 NS_IMETHODIMP
-myIpcMessageObserver::OnMessageAvailable(const nsID &target, const char *data, PRUint32 dataLen)
+myIpcMessageObserver::OnMessageAvailable(const nsID &target, const PRUint8 *data, PRUint32 dataLen)
 {
-    printf("*** got message: [%s]\n", data);
+    printf("*** got message: [%s]\n", (const char *) data);
 
 //    if (--gMsgCount == 0)
 //        gKeepRunning = PR_FALSE;
@@ -118,21 +127,13 @@ myIpcClientObserver::OnClientStatus(PRUint32 aReqToken,
                 printf("***   name:%s --> ID:%u\n", cName.get(), aClientID);
         }
         const char hello[] = "hello friend!";
-        gIpcServ->SendMessage(aClientID, kTestTargetID, hello, sizeof(hello));
+        SendMsg(gIpcServ, aClientID, kTestTargetID, hello, sizeof(hello));
     }
 
     return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
-
-void SendMsg(ipcIService *ipc, const nsID &target, const char *data, PRUint32 dataLen)
-{
-    printf("*** sending message: [dataLen=%u]\n", dataLen);
-
-    ipc->SendMessage(0, target, data, dataLen);
-//    gMsgCount++;
-}
 
 int main(int argc, char **argv)
 {
@@ -235,7 +236,7 @@ int main(int argc, char **argv)
                 "58 this is a really long message.\n"
                 "59 this is a really long message.\n"
                 "60 this is a really long message.\n";
-        SendMsg(ipcServ, kTestTargetID, data, strlen(data)+1);
+        SendMsg(ipcServ, 0, kTestTargetID, data, strlen(data)+1);
 
         PRUint32 reqToken;
         nsCOMPtr<ipcIClientObserver> obs(new myIpcClientObserver());

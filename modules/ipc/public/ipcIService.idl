@@ -152,10 +152,11 @@ interface ipcIService : nsISupports
      * @param aData      the message data.
      * @param aDataLen   the message length.
      */
-    [noscript] void sendMessage(in unsigned long aClientID,
-                                in nsIDRef       aTarget,
-                                in string        aData,
-                                in unsigned long aDataLen);
+    void sendMessage(in unsigned long aClientID,
+                     in nsIDRef       aTarget,
+                     [array, const, size_is(aDataLen)]
+                     in octet         aData,
+                     in unsigned long aDataLen);
 };
 
 [scriptable, uuid(e40a4a3c-2dc1-470e-ab7f-5675fe1f1384)]
@@ -169,9 +170,10 @@ interface ipcIMessageObserver : nsISupports
      * @param aData     the data of the message.
      * @param aDataLen  the data length of the message.
      */
-    [noscript] void onMessageAvailable(in nsIDRef       aTarget,
-                                       in string        aData,
-                                       in unsigned long aDataLen);
+    void onMessageAvailable(in nsIDRef       aTarget,
+                            [array, const, size_is(aDataLen)]
+                            in octet         aData,
+                            in unsigned long aDataLen);
 };
 
 [scriptable, uuid(e858d450-62b2-482d-99bb-3b5425aa28cc)]
@@ -200,7 +202,7 @@ interface ipcIClientObserver : nsISupports
      * @param aStatus        client status (e.g. CLIENT_UP).
      */
     void onClientStatus(in unsigned long  aRequestToken,
-                        in unsigned long  aStatus,
+                        in unsigned long  aClientStatus,
                         in unsigned long  aClientID,
                         in ipcIClientInfo aClientInfo);
 

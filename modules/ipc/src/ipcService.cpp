@@ -320,7 +320,7 @@ ipcService::SetMessageObserver(const nsID &target, ipcIMessageObserver *observer
 NS_IMETHODIMP
 ipcService::SendMessage(PRUint32 clientID,
                         const nsID &target,
-                        const char *data,
+                        const PRUint8 *data,
                         PRUint32 dataLen)
 {
     NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
@@ -332,9 +332,9 @@ ipcService::SendMessage(PRUint32 clientID,
 
     ipcMessage *msg;
     if (clientID)
-        msg = new ipcmMessageForward(clientID, target, data, dataLen);
+        msg = new ipcmMessageForward(clientID, target, (const char *) data, dataLen);
     else
-        msg = new ipcMessage(target, data, dataLen);
+        msg = new ipcMessage(target, (const char *) data, dataLen);
 
     if (!msg)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -406,7 +406,7 @@ ipcService::OnMessageAvailable(const ipcMessage *msg)
         ipcIMessageObserver *observer = (ipcIMessageObserver *) mObserverDB.Get(&key);
         if (observer)
             observer->OnMessageAvailable(msg->Target(),
-                                         msg->Data(),
+                                         (const PRUint8 *) msg->Data(),
                                          msg->DataLen());
     }
 }
