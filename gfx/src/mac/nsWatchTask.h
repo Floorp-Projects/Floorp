@@ -39,11 +39,11 @@
 #ifndef WatchTask_h__
 #define WatchTask_h__
 
-
 #ifndef XP_MACOSX
 #include <Retrace.h>
 #endif
 #include <Quickdraw.h>
+
 #include "prtypes.h"
 #include "gfxCore.h"
 
@@ -87,9 +87,7 @@ private:
     // the VBL task
   static pascal void DoWatchTask(nsWatchTask* theTaskPtr) ;
   
-#if !TARGET_CARBON
-  VBLTask mTask;            // this must be first!!
-#endif
+
   long mChecksum;           // 'mozz' to validate we have real data at interrupt time (not needed?)
   void* mSelf;              // so we can get back to |this| from the static routine
   long mTicks;              // last time the event loop was hit

@@ -54,14 +54,7 @@
  */
 inline PRBool CurrentPortIsWMPort()
 {
-#if TARGET_CARBON
   return PR_FALSE;
-#else
-  GrafPtr curPort;
-  ::GetPort(&curPort);
-  
-  return (curPort == ::LMGetWMgrPort());
-#endif
 }
 
 
@@ -82,20 +75,6 @@ inline PRBool ValidateDrawingState()
   if (CurrentPortIsWMPort() && (FrontWindow() != nil))
     return false;
 
-#if TARGET_CARBON
-  //if (! IsValidPort(curPort))   // rather slow
-  //  return false;
-#else
-  // all our ports should be onscreen or offscreen color graphics ports
-  // Onscreen ports have portVersion 0xC000, GWorlds have 0xC001.
-#if DEBUG
-  if ((((UInt16)curPort->portVersion & 0xC000) != 0xC000) && !IsSIOUXWindow((GrafPtr)curPort))
-    return false;
-#else
-  if ((((UInt16)curPort->portVersion & 0xC000) != 0xC000))
-    return false;
-#endif
-#endif
 
   // see if the device is in the device list. If not, it probably means that
   // it's the device for an offscreen GWorld. In that case, the current port

@@ -201,7 +201,6 @@ printf("told to draw at %ld %ld w %ld h %ld\n", inBoxRect.left, inBoxRect.top, i
 void
 nsNativeThemeMac::DrawEditText ( const Rect& inBoxRect, PRBool inIsDisabled )
 {
-#if TARGET_CARBON
   Pattern whitePat;
   ::BackColor(whiteColor);
   ::BackPat(GetQDGlobalsWhite(&whitePat));
@@ -209,14 +208,12 @@ nsNativeThemeMac::DrawEditText ( const Rect& inBoxRect, PRBool inIsDisabled )
   
   ThemeDrawState drawState = inIsDisabled ? kThemeStateDisabled : kThemeStateActive;
   ::DrawThemeEditTextFrame(&inBoxRect, drawState);
-#endif
 }
 
 
 void
 nsNativeThemeMac::DrawListBox ( const Rect& inBoxRect, PRBool inIsDisabled )
 {
-#if TARGET_CARBON
   Pattern whitePat;
   ::BackColor(whiteColor);
   ::BackPat(GetQDGlobalsWhite(&whitePat));
@@ -224,7 +221,6 @@ nsNativeThemeMac::DrawListBox ( const Rect& inBoxRect, PRBool inIsDisabled )
   
   ThemeDrawState drawState = inIsDisabled ? kThemeStateDisabled : kThemeStateActive;
   ::DrawThemeListBoxFrame(&inBoxRect, drawState);
-#endif
 }
 
 
@@ -488,7 +484,6 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
       
   // XXX we should probably cache some of these metrics
   
-#if TARGET_CARBON
   switch ( aWidgetType ) {
   
     case NS_THEME_BUTTON:
@@ -525,7 +520,6 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
     }
       
   }
-#endif
   
   return NS_OK;
 }
@@ -547,7 +541,6 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   aResult->SizeTo(0,0);
   *aIsOverridable = PR_TRUE;
   
-#if TARGET_CARBON
   switch ( aWidgetType ) {
   
     case NS_THEME_BUTTON:
@@ -686,7 +679,6 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     }
 
   }
-#endif
 
   return NS_OK;
 }

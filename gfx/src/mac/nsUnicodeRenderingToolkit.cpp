@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsUnicodeRenderingToolkit.h"
 #include "nsUnicodeFontMappingMac.h"
 #include "nsUnicodeFallbackCache.h"
@@ -53,10 +54,10 @@
 
 #include <FixMath.h>
 
-
 #define BAD_FONT_NUM -1
 #define BAD_SCRIPT 0x7F
 #define STACK_TRESHOLD 1000
+
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 //#define DISABLE_TEC_FALLBACK
