@@ -271,14 +271,15 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _resul
                 if (NS_FAILED(rv)) return rv;
 
                 rv = protoDoc->Read(objectInput);
-                if (NS_SUCCEEDED(rv))
+                if (NS_SUCCEEDED(rv)) {
                     NS_ADDREF(*_result = protoDoc);
+                    PutPrototype(protoDoc);
+                }
 
                 gFastLoadService->EndMuxedDocument(aURI);
 
                 RemoveFromFastLoadSet(aURI);
 
-                PutPrototype(protoDoc);
             }
         }
     }
