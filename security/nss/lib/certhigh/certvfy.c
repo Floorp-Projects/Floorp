@@ -404,18 +404,21 @@ loser:
     NSSCertificate *me;
     NSSTime *nssTime;
     NSSUsage nssUsage;
-    NSSCertificate *chain[2];
+    NSSCertificate *chain[3];
     PRStatus status;
     me = STAN_GetNSSCertificate(cert);
     nssTime = NSSTime_SetPRTime(NULL, validTime);
     nssUsage.anyUsage = PR_FALSE;
     nssUsage.nss3usage = usage;
     nssUsage.nss3lookingForCA = PR_TRUE;
+    memset(chain, 0, 3*sizeof(NSSCertificate *));
     (void)NSSCertificate_BuildChain(me, nssTime, &nssUsage, NULL, 
                                     chain, 2, NULL, &status);
     nss_ZFreeIf(nssTime);
     if (status == PR_SUCCESS) {
-	CERTCertificate *rvc = STAN_GetCERTCertificate(chain[1]);
+	/* if it's a root, the chain will only have one cert */
+	NSSCertificate *issuer = chain[1] ? chain[1] : chain[0];
+	CERTCertificate *rvc = STAN_GetCERTCertificate(issuer);
 	return rvc;
     }
     return NULL;

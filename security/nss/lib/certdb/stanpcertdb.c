@@ -111,10 +111,6 @@ CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
     PRStatus ret;
 
     CERT_LockCertTrust(cert);
-    /* only set the trust on permanent certs */
-    if ( cert->trust == NULL ) {
-	goto done;
-    }
     if (PK11_IsReadOnly(cert->slot)) {
 	char *nickname = cert_parseNickname(cert->nickname);
 	/* XXX store it on a writeable token */
