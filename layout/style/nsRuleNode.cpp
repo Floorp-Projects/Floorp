@@ -149,26 +149,12 @@ static void EnsureBlockDisplay(PRUint8& display)
   switch (display) {
   case NS_STYLE_DISPLAY_NONE :
     // never change display:none *ever*
-    break;
-
   case NS_STYLE_DISPLAY_TABLE :
   case NS_STYLE_DISPLAY_BLOCK :
-    // do not muck with these at all - already blocks
-    break;
-
   case NS_STYLE_DISPLAY_LIST_ITEM :
-    // do not change list items to blocks - retain the bullet/numbering
-    break;
-
-  case NS_STYLE_DISPLAY_TABLE_ROW_GROUP :
-  case NS_STYLE_DISPLAY_TABLE_COLUMN :
-  case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP :
-  case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP :
-  case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP :
-  case NS_STYLE_DISPLAY_TABLE_ROW :
-  case NS_STYLE_DISPLAY_TABLE_CELL :
-  case NS_STYLE_DISPLAY_TABLE_CAPTION :
-    // special cases: don't do anything since these cannot really be floated anyway
+    // do not muck with these at all - already blocks
+    // This is equivalent to nsStyleDisplay::IsBlockLevel.  (XXX Maybe we
+    // should just call that?)
     break;
 
   case NS_STYLE_DISPLAY_INLINE_TABLE :
