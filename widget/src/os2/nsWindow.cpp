@@ -1377,9 +1377,9 @@ NS_METHOD nsWindow::Enable(PRBool bState)
 
 NS_METHOD nsWindow::IsEnabled(PRBool *aState)
 {
-  NS_ENSURE_ARG_POINTER(aState);
-  *aState = PR_TRUE;
-  return NS_ERROR_NOT_IMPLEMENTED;
+   NS_ENSURE_ARG_POINTER(aState);
+   *aState = !mWnd || ::WinIsWindowEnabled(mWnd);
+   return NS_OK;
 }
 
 
