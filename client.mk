@@ -395,9 +395,9 @@ ifdef RUN_AUTOCONF_LOCALLY
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
-        cd $(ROOTDIR); \
-	$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk && \
-	$(MAKE) -f mozilla/client.mk real_checkout
+        cd $(ROOTDIR) && \
+	$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk
+	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk real_checkout
 
 real_checkout:
 #	@: Start the checkout. Split the output to the tty and a log file. \
@@ -447,9 +447,9 @@ ifdef RUN_AUTOCONF_LOCALLY
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
-        cd $(ROOTDIR); \
-	$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk && \
-        cd mozilla; \
+        cd $(ROOTDIR) && \
+	$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk
+	@cd $(TOPSRCDIR) && \
 	$(MAKE) -f client.mk real_fast-update
 
 real_fast-update:
