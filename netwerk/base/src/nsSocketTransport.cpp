@@ -1842,6 +1842,7 @@ NS_IMETHODIMP
 nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
+  mEventSink = 0;
 
   // Get a nsIProgressEventSink so that we can fire status/progress on it-
   if (mCallbacks) {
@@ -1852,8 +1853,7 @@ nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
       // Now generate a proxied event sink-
       NS_WITH_SERVICE(nsIProxyObjectManager, 
                       proxyMgr, kProxyObjectManagerCID, &rv);
-      if (NS_SUCCEEDED(rv))
-      {
+      if (NS_SUCCEEDED(rv)) {
         rv = proxyMgr->GetProxyObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
                                       NS_GET_IID(nsIProgressEventSink),
                                       sink,
