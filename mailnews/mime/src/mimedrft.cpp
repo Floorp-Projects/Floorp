@@ -203,7 +203,11 @@ mime_dump_attachments ( attachmentList );
 		curAttachment++;
 	  }
 	if (attachments.Length())
+	{
 	  compFields->SetAttachments(attachments);
+	  // remember the temp files to delete
+	  compFields->SetTemporaryFiles(attachments);
+	}
   }
 
   NS_WITH_SERVICE(nsIMsgComposeService, msgComposeService,
