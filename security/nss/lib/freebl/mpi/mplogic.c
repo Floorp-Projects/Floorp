@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.9 2000/08/01 01:38:30 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.10 2000/08/02 20:52:17 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -200,45 +200,13 @@ mp_err mpl_xor(mp_int *a, mp_int *b, mp_int *c)
 mp_err mpl_rsh(const mp_int *a, mp_int *b, mp_digit d)
 {
   mp_err   res;
-  mp_digit dshift, bshift;
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
-
-  dshift = d / DIGIT_BIT;  /* How many whole digits to shift by */
-  bshift = d % DIGIT_BIT;  /* How many bits to shift by         */
 
   if((res = mp_copy(a, b)) != MP_OKAY)
     return res;
 
-  /* Shift over as many whole digits as necessary */
-  if(dshift) 
-    s_mp_rshd(b, dshift);
-
-  /* Now handle any remaining bit shifting */
-  if(bshift)
-  {
-    mp_digit  prev = 0, next, mask = (1 << bshift) - 1;
-    int       ix;
-
-    /*
-      'mask' is a digit with the lower bshift bits set, the rest
-      clear.  It is used to mask off the bottom bshift bits of each
-      digit, which are then shifted on to the top of the next lower
-      digit.
-     */
-    for(ix = USED(b) - 1; ix >= 0; ix--) {
-      /* Take off the lower bits and shift them up... */
-      next = (DIGIT(b, ix) & mask) << (DIGIT_BIT - bshift);
-
-      /* Shift down the current digit, and mask in the bits saved
-	 from the previous digit 
-       */
-      DIGIT(b, ix) = (DIGIT(b, ix) >> bshift) | prev;
-      prev = next;
-    }
-  }
-
-  s_mp_clamp(b);   
+  s_mp_div_2d(b, d);
 
   return MP_OKAY;
 
@@ -251,35 +219,13 @@ mp_err mpl_rsh(const mp_int *a, mp_int *b, mp_digit d)
 mp_err mpl_lsh(const mp_int *a, mp_int *b, mp_digit d)
 {
   mp_err   res;
-  mp_digit dshift, bshift;
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
-
-  dshift = d / DIGIT_BIT;
-  bshift = d % DIGIT_BIT;
 
   if((res = mp_copy(a, b)) != MP_OKAY)
     return res;
 
-  if(dshift)
-    if((res = s_mp_lshd(b, dshift)) != MP_OKAY)
-      return res;
-
-  if(bshift){ 
-    int       ix;
-    mp_digit  prev = 0, next, mask = (1 << bshift) - 1;
-
-    for(ix = 0; ix < USED(b); ix--) {
-      next = (DIGIT(b, ix) >> (DIGIT_BIT - bshift)) & mask;
-
-      DIGIT(b, ix) = (DIGIT(b, ix) << bshift) | prev;
-      prev = next;
-    }
-  }
-
-  s_mp_clamp(b);
-
-  return MP_OKAY;
+  return s_mp_mul_2d(b, d);
 
 } /* end mpl_lsh() */
 
