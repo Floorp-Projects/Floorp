@@ -380,7 +380,9 @@
                </hbox>
                <tree id="unifinder-search-results-listbox" flex="1" 
                   onselect="unifinderClickEvent( event )"
-                  seltype="multiple" enableColumnDrag="false">
+                  seltype="multiple" 
+                  enableColumnDrag="true"
+                  >
                <treecols id="unifinder-search-results-tree-cols">
                   <treecol id="unifinder-search-results-tree-col-title"
                       persist="hidden ordinal width" flex="1" 
@@ -391,7 +393,7 @@
                       hidden="true"
                       flex="1" label="&calendar.unifinder.tree.startdate.label;"/>
                    <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-search-results-tree-col-duedate"
+                   <treecol id="unifinder-search-results-tree-col-enddate"
                       persist="hidden ordinal width" 
                       hidden="true"
                       flex="1" label="&calendar.unifinder.tree.enddate.label;"/>
