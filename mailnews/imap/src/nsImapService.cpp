@@ -1544,7 +1544,7 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
             GetFolderName(parent, getter_Copies(folderName));
             urlSpec.Append("/create>");
             urlSpec.Append(hierarchySeparator);
-            if (nsCRT::strlen(folderName) > 0)
+            if ((const char *) folderName && nsCRT::strlen(folderName) > 0)
             {
                 urlSpec.Append((const char *) folderName);
                 urlSpec.Append(hierarchySeparator);
