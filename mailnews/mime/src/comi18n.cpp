@@ -1558,7 +1558,7 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
 //  PL_strcpy(srcCharset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
 //  PL_strcpy(dstCharset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
 
-  res = aMimeCharsetConverterClass.Initialize(from_charset, from_charset, autoDetection, -1);
+  res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, autoDetection, -1);
 
   if (res != -1) {
     res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength, NULL);
