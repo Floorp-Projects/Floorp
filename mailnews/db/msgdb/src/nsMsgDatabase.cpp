@@ -84,12 +84,12 @@ nsMsgDatabase::CleanupCache()
 //----------------------------------------------------------------------
 // FindInCache
 //----------------------------------------------------------------------
-nsMsgDatabase* nsMsgDatabase::FindInCache(const char * pDbName)
+nsMsgDatabase* nsMsgDatabase::FindInCache(nsFilePath &dbName)
 {
 	for (int i = 0; i < GetDBCache()->GetSize(); i++)
 	{
 		nsMsgDatabase* pMessageDB = GetDBCache()->GetAt(i);
-		if (pMessageDB->MatchDbName(pDbName))
+		if (pMessageDB->MatchDbName(dbName))
 		{
 			return(pMessageDB);
 		}
@@ -110,6 +110,12 @@ int nsMsgDatabase::FindInCache(nsMsgDatabase* pMessageDB)
 		}
 	}
 	return(-1);
+}
+
+PRBool nsMsgDatabase::MatchDbName(nsFilePath &dbName)	// returns TRUE if they match
+{
+	// ### we need equality operators for nsFileSpec...
+	return strcmp(dbName, m_dbName); 
 }
 
 //----------------------------------------------------------------------
@@ -135,7 +141,91 @@ void nsMsgDatabase::DumpCache()
 #endif
         GetDBCache()->GetAt(i);
 #ifdef DEBUG_bienvenu
-		XP_Trace("db %s in cache use count = %d\n", pMessageDB->m_dbName, pMessageDB->m_useCount);
+		XP_Trace("db %s in cache use count = %d\n", pMessageDB->m_dbName, pMessageDB->mRefCnt);
 #endif
 	}
 }
+#endif /* DEBUG */
+
+// ref counting methods - if we inherit from nsISupports, we won't need these,
+// and we can take advantage of the nsISupports ref-counting tracing methods
+nsrefcnt nsMsgDatabase::AddRef(void)
+{
+  return ++mRefCnt;
+}
+
+nsrefcnt nsMsgDatabase::Release(void)
+{
+	NS_PRECONDITION(0 != mRefCnt, "dup release");
+	if (--mRefCnt == 0) 
+	{
+		delete this;
+		return 0;
+	}
+	return mRefCnt;
+}
+
+/* static */ mdbFactory *nsMsgDatabase::GetMDBFactory()
+{
+	static mdbFactory *gMDBFactory = NULL;
+	if (!gMDBFactory)
+	{
+		// ### hook up class factory code when it's working
+//		gMDBFactory = new mdbFactory;
+	}
+	return gMDBFactory;
+}
+
+nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
+{
+	nsresult ret = NS_OK;
+	mdbFactory *myMDBFactory = GetMDBFactory();
+	if (myMDBFactory)
+	{
+		ret = myMDBFactory->MakeEnv(&m_mdbEnv);
+	}
+	return ret;
+}
+
+nsresult		nsMsgDatabase::CloseMDB(PRBool commit /* = TRUE */)
+{
+	--mRefCnt;
+	PR_ASSERT(mRefCnt >= 0);
+	if (mRefCnt == 0)
+	{
+		RemoveFromCache(this);
+#ifdef DEBUG_bienvenu1
+		if (GetNumInCache() != 0)
+		{
+			XP_Trace("closing %s\n", m_dbName);
+			DumpCache();
+		}
+		XP_Trace("On close - cache used = %lx", CNeoPersist::FCacheUsed);
+#endif
+		// if this terrifies you, we can make it a static method
+		delete this;	
+		return(NS_OK);
+	}
+	else
+	{
+		return(NS_OK);
+	}
+}
+
+// force the database to close - this'll flush out anybody holding onto
+// a database without having a listener!
+// This is evil in the com world, but there are times we need to delete the file.
+nsresult nsMsgDatabase::ForceClosed()
+{
+	nsresult	err = NS_OK;
+
+	while (mRefCnt > 0 && NS_SUCCEEDED(err))
+	{
+		int32 saveUseCount = mRefCnt;
+		err = CloseMDB();
+		if (saveUseCount == 1)
+			break;
+	}
+	return err;
+}
+

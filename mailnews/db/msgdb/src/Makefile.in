@@ -31,7 +31,7 @@ EXPORTS = \
 
 CPPSRCS = \
 	nsMsgDatabase.cpp\
-	nsMailMsgDatabase.cpp\
+	nsMailDatabase.cpp\
 	$(NULL)
 
 DIRS = public src tests

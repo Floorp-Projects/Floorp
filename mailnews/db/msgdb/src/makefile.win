@@ -22,17 +22,17 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=mailnews
 MODULE= mailnews
-REQUIRES=
+REQUIRES=rdf
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=    nsMsgDatabase.cpp\
-			nsMailMsgDatabase.cpp\
+			nsMailDatabase.cpp\
 			nsMsgHdr.cpp\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj  \
-			.\$(OBJDIR)\nsMailMsgDatabase.obj\
+			.\$(OBJDIR)\nsMailDatabase.obj\
 			.\$(OBJDIR)\nsMsgHdr.obj\
 			$(NULL)
 
@@ -41,7 +41,7 @@ EXPORTS=	\
 			$(NULL)
 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor  -I$(PUBLIC)\rdf
 
 LCFLAGS = \
         $(LCFLAGS) \
