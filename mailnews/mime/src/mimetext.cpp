@@ -173,14 +173,6 @@ static int MimeInlineText_initializeCharset(MimeObject *obj)
     }
   }
 
-  //update MsgWindow charset if we are instructed to do so
-  if (text->needUpdateMsgWinCharset && *text->charset) {
-    if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
-      SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
-    else
-      SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(text->charset).get());
-  }
-
   text->initializeCharset = PR_TRUE;
 
   return 0;
@@ -521,7 +513,16 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
     MimeInlineText  *text = (MimeInlineText *) obj;
 
     if (!text->initializeCharset)
+    {
       MimeInlineText_initializeCharset(obj);
+      //update MsgWindow charset if we are instructed to do so
+      if (text->needUpdateMsgWinCharset && *text->charset) {
+        if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
+          SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
+        else
+          SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(text->charset).get());
+      }
+    }
 
     //if autodetect is on, push line to dam
     if (text->inputAutodetect)

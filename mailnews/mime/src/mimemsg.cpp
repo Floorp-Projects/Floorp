@@ -485,11 +485,18 @@ MimeMessage_close_headers (MimeObject *obj)
       ( obj->options->part_to_load == NULL )
      )
   {
-    char  *charset = NULL;
-    char  *lct = MimeHeaders_get (msg->hdrs, HEADER_CONTENT_TYPE,
-									                PR_FALSE, PR_FALSE);
-		if (lct)
-      charset = MimeHeaders_get_parameter (lct, "charset", NULL, NULL);
+    // call SetMailCharacterSetToMsgWindow() to set a menu charset
+    if (mime_typep(body, (MimeObjectClass *) &mimeInlineTextClass))
+    {
+      MimeInlineText  *text = (MimeInlineText *) body;
+      if (text && text->charset && *text->charset)
+      {
+        if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
+          SetMailCharacterSetToMsgWindow(body, NS_LITERAL_STRING("ISO-8859-1").get());
+        else
+          SetMailCharacterSetToMsgWindow(body, NS_ConvertASCIItoUCS2(text->charset).get());
+      }
+    }
 
     char  *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
 									                  PR_FALSE, PR_FALSE);
@@ -500,8 +507,6 @@ MimeMessage_close_headers (MimeObject *obj)
 
     mimeEmitterStartBody(obj->options, (obj->options->headers == MimeHeadersNone), msgID, outCharset);
     PR_FREEIF(msgID);
-    PR_FREEIF(lct);
-    PR_FREEIF(charset);
 
 	// setting up truncated message html fotter function
 	char *xmoz = MimeHeaders_get(msg->hdrs, HEADER_X_MOZILLA_STATUS, PR_FALSE,
