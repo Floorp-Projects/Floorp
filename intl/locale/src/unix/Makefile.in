@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  pref \
 		  uconv \
+		  unicharutil \
 		  $(NULL)
 
 SHARED_LIBRARY_LIBS = ../libnslocale_s.a
@@ -49,6 +50,7 @@ CPPSRCS		= \
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
