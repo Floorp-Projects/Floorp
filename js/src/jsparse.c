@@ -2337,9 +2337,10 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_IMPORT:
 #endif
       case TOK_RESERVED:
-	js_ReportCompileError(cx, ts, "%.*s is a reserved identifier",
-	    ts->token.pos.end.index - ts->token.pos.begin.index,
-	    ts->token.ptr);
+	js_ReportCompileError(cx, ts, "%s is a reserved identifier",
+                              js_DeflateString(cx, ts->token.ptr,
+                                               ts->token.pos.end.index -
+                                               ts->token.pos.begin.index));
 	return NULL;
 
       case TOK_ERROR:
