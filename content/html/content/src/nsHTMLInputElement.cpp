@@ -1473,9 +1473,14 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       case NS_FOCUS_CONTENT:
       {
         if (formControlFrame) {
-          SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_TRUE);
-          formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-          SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_FALSE);
+          // If this is a file control, check to see if focus has bubbled
+          // up from it's child textfield or child button.  If that's the case, 
+          // don't focus this parent file control -- leave focus on the child.
+          if (type != NS_FORM_INPUT_FILE || !(aFlags & NS_EVENT_FLAG_BUBBLE)) {
+            SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_TRUE);
+            formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+            SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_FALSE);
+          }
           return NS_OK;
         }
       }                                                                         
