@@ -1215,6 +1215,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSStmtInfo stmtInfo, *stmt, *stmt2;
     JSAtom *label;
 
+    CHECK_RECURSION();
+
     ts->flags |= TSF_OPERAND;
     tt = js_GetToken(cx, ts);
     ts->flags &= ~TSF_OPERAND;
