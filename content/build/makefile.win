@@ -27,13 +27,12 @@ DEFINES=-D_IMPL_NS_HTML
 MODULE=raptor 
 IS_COMPONENT = 1
 
-CPPSRCS=dlldeps.cpp nsContentDLF.cpp nsContentFactory.cpp nsContentModule.cpp
-
 CPP_OBJS=				\
 	.\$(OBJDIR)\dlldeps.obj		\
 	.\$(OBJDIR)\nsContentDLF.obj	\
 	.\$(OBJDIR)\nsContentFactory.obj	\
 	.\$(OBJDIR)\nsContentModule.obj	\
+	.\$(OBJDIR)\nsContentHTTPStartup.obj \
 	$(NULL)
 
 EXPORTS=nsContentCID.h
@@ -93,14 +92,7 @@ clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f gbdate.h
 
-!if !EXIST ( gbdate.h )
-
-gbdate.h::
+gbdate.h:: gbdate.pl
   $(PERL) gbdate.pl > gbdate.h
 
-!else
-
-gbdate.h::
-
-!endif
 

@@ -56,8 +56,7 @@
 
 #include "nsRange.h"
 #include "nsGenericElement.h"
-#include "nsIHTTPProtocolHandler.h"
-#include "gbdate.h"
+#include "nsContentHTTPStartup.h"
 #include "nsContentPolicyUtils.h"
 #define PRODUCT_NAME "Gecko"
 
@@ -66,7 +65,6 @@
 #include "nsXULContentUtils.h"
 #endif
 
-static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 static nsContentModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
@@ -215,8 +213,6 @@ nsContentModule::Initialize()
       gRegistry->AddExternalNameSet(nameSet);
     }
   }
-
-  SetUserAgent();
 
   return rv;
 }
@@ -377,6 +373,8 @@ static Components gComponents[] = {
 #endif
   { "Controller Command Manager", NS_CONTROLLERCOMMANDMANAGER_CID,
     "@mozilla.org/content/controller-command-manager;1", },
+  { "Content HTTP Startup Listener", NS_CONTENTHTTPSTARTUP_CID,
+    NS_CONTENTHTTPSTARTUP_CONTRACTID, },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
@@ -407,8 +405,11 @@ nsContentModule::RegisterSelf(nsIComponentManager *aCompMgr,
     cp++;
   }
 
-  rv = RegisterDocumentFactories(aCompMgr, aPath);
+  // not fatal if these fail
+  nsContentHTTPStartup::RegisterHTTPStartup();
 
+  rv = RegisterDocumentFactories(aCompMgr, aPath);
+  
   return rv;
 }
 
@@ -433,6 +434,7 @@ nsContentModule::UnregisterSelf(nsIComponentManager* aCompMgr,
     cp++;
   }
 
+  nsContentHTTPStartup::UnregisterHTTPStartup();
   UnregisterDocumentFactories(aCompMgr, aPath);
 
   return NS_OK;
@@ -448,20 +450,3 @@ nsContentModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
   return NS_ERROR_FAILURE;
 }
 
-void
-nsContentModule::SetUserAgent( void )
-{
-  nsString productName; productName.AssignWithConversion(PRODUCT_NAME);
-  nsString productVersion; productVersion.AssignWithConversion(PRODUCT_VERSION);
-  nsresult rv = nsnull;
-
-  nsCOMPtr<nsIHTTPProtocolHandler> theService(do_GetService(kHTTPHandlerCID,
-								   &rv));
-
-  if( NS_SUCCEEDED(rv) && (nsnull != theService) )
-  {
-    rv = theService->SetProduct(productName.GetUnicode());
-	
-    rv = theService->SetProductSub(productVersion.GetUnicode());
-  }
-}

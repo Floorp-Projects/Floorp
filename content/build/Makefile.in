@@ -39,13 +39,14 @@ CPPSRCS		= \
 		nsContentDLF.cpp \
 		nsContentFactory.cpp \
 		nsContentModule.cpp \
+		nsContentHTTPStartup.cpp \
 		$(NULL)
 
 ifndef MKSHLIB_FORCE_ALL
 CPPSRCS		+= dlldeps.cpp
 endif
 
-EXPORTS		= nsContentCID.h $(BUILD_DATE)
+EXPORTS		= nsContentCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkconevents_s.$(LIB_SUFFIX) \
@@ -95,7 +96,7 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 
 GARBAGE+=$(BUILD_DATE)
 
-$(BUILD_DATE):
+$(BUILD_DATE): gbdate.pl
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
 
