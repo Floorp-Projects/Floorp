@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "nsAppRunner.h"
+#include "nsAppRunnerImpl.h"
 #include "nsIAppShellService.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

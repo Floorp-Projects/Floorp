@@ -22,11 +22,11 @@ DEFINES=-D_IMPL_NS_APPRUNNER -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 CPPSRCS=            \
-	nsAppRunner.cpp \
+	nsAppRunnerImpl.cpp \
 	$(NULL)
 
 CPP_OBJS=                       \
-	.\$(OBJDIR)\nsAppRunner.obj \
+	.\$(OBJDIR)\nsAppRunnerImpl.obj \
 	$(NULL)
 
 LINCS=                 \
