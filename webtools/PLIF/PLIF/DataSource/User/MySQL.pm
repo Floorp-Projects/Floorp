@@ -465,7 +465,7 @@ sub setupInstall {
         # | userDataTypes     |
         # +-------------------+
         # | fieldID        K1 | auto_increment
-        # | category       K2 | e.g. contact, personal, setting [1]
+        # | category       K2 | e.g. contact, personal, settings [1]
         # | name           K2 | e.g. sms, homepage, notifications [1]
         # | type              | e.g. number, string, notifications [2]
         # | data              | e.g. 'SMS', 'optional', null

@@ -109,7 +109,7 @@ sub registerField {
 sub registerSetting {
     my $self = shift;
     my($app, $setting, @data) = @_;
-    return $self->registerField($app, 'setting', $setting, @data);
+    return $self->registerField($app, 'settings', $setting, @data);
 }
 
 sub removeField {

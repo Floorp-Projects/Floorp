@@ -255,9 +255,9 @@ sub setting {
     my($variable, $setting) = @_;
     $self->assert(ref($variable) eq 'SCALAR', 1, 'Internal Error: User object was expecting a scalar ref for setting() but didn\'t get one');
     if (defined($$variable)) {
-        $self->getField('setting', $setting)->data($$variable);
+        $self->getField('settings', $setting)->data($$variable);
     } else {
-        my $field = $self->hasField('setting', $setting);
+        my $field = $self->hasField('settings', $setting);
         if (defined($field)) {
             $$variable = $field->data;
         }

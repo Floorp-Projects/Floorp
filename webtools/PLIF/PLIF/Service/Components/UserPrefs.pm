@@ -342,7 +342,9 @@ sub applyUserPrefsChanges {
             $newValue = $newValue->[0];
             if ($newValue =~ /^\d+$/o) {
                 my $userLevel = $user->levelInGroup($groupID);
-                if ($userLevel == 2) { # if editing user is a group op # XXX BARE CONSTANT ALERT
+                if (($userLevel > 2) or ($rightGroups)) {
+                    $targetUser->joinGroup($groupID, $newValue);
+                } elsif ($userLevel == 2) { # if editing user is a group admin # XXX BARE CONSTANT ALERT
                     my $targetUserLevel = $targetUser->levelInGroup($groupID);
                     # if target user is member or below and is being made member or below
                     if (($targetUserLevel < 2) and
@@ -353,8 +355,6 @@ sub applyUserPrefsChanges {
                         $self->warn(2, "user $userID tried to change user $targetUserID's group $groupID permissions from $targetUserLevel to $newValue while at level $userLevel: denied");
                         push(@notifications, [$targetUserID, "groups.$groupID", 'accessDenied']);
                     }
-                } elsif (($userLevel > 2) or ($rightGroups)) {
-                    $targetUser->joinGroup($groupID, $newValue);
                 } else {
                     my $userID = $user->userID;
                     $self->warn(2, "user $userID tried to change user $targetUserID's group $groupID permissions: denied");
@@ -409,7 +409,7 @@ sub applyUserPrefsFieldChange {
             $self->warn(2, "user $userID tried to change user $targetUserID's $fieldCategory.$fieldName field: denied");
             return [$targetUserID, "fields.$fieldCategory.$fieldName", 'accessDenied'];
         }
-    } elsif ($fieldCategory eq 'setting') {
+    } elsif ($fieldCategory eq 'settings') {
         if ($editingUserIsTargetUser or $rightSettings) {
             if ($newValue eq '') {
                 $field->remove();
