@@ -80,20 +80,16 @@ Contributor(s):
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   </stringbundleset>
   
-  <commandset id="globalEditMenuItems"
-              commandupdater="true"
+  <commandset commandupdater="true"
               events="focus"
               oncommandupdate="goUpdateGlobalEditMenuItems()"/>
-  <commandset id="selectEditMenuItems"
-              commandupdater="true"
+  <commandset commandupdater="true"
               events="select"
               oncommandupdate="goUpdateSelectEditMenuItems()"/>
-  <commandset id="undoEditMenuItems"
-              commandupdater="true"
+  <commandset commandupdater="true"
               events="undo"
               oncommandupdate="goUpdateUndoEditMenuItems()"/>
-  <commandset id="clipboardEditMenuItems"
-              commandupdater="true"
+  <commandset commandupdater="true"
               events="clipboard"
               oncommandupdate="goUpdatePasteMenuItems()"/>
   <command id="cmd_newNavigator"
@@ -913,14 +909,12 @@ Contributor(s):
     
   <!-- we only need to handle |ondragdrop| because everything else is
         taken care of by the builtin behavior inside the tabbrowser -->
-  <hbox id="browser" flex="1"
-        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-    <tabbrowser id="content"
-                flex="1" contenttooltip="aHTMLTooltip"
-                contentcontextmenu="contentAreaContextMenu"
-                onnewtab="BrowserOpenTab();"
-                onclick="return contentAreaClick(event);"/>
-  </hbox>
+  <tabbrowser id="content"
+              flex="1" contenttooltip="aHTMLTooltip"
+              contentcontextmenu="contentAreaContextMenu"
+              onnewtab="BrowserOpenTab();"
+              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
+              onclick="return contentAreaClick(event);"/>
 
   <statusbar class="chromeclass-status"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">

@@ -267,8 +267,8 @@ function Startup()
   // Add a capturing event listener to the content area
   // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
   //  so we'll be notified when onloads complete.
-  var contentArea = document.getElementById("browser");
-  contentArea.addEventListener("load", loadEventHandlers, true);
+  var contentArea = document.getElementById("content");
+  contentArea.addEventListener("load", loadEventHandlers, false);
 
   var turboMode = false;
   // set default character set if provided
