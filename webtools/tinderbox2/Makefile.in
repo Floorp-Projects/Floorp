@@ -80,7 +80,7 @@ set_build_permissions:
 	find $(builddir) -type f | xargs chmod 444
 	find $(builddir)/bin -type f | xargs chmod 555
 	find $(builddir)/test/vcsim -type f | xargs chmod 555
-	find $(builddir)/test -type f -name 'gen*' | xargs chmod 555
+	find $(builddir)/test -type f -name '*tst' | xargs chmod 555
 	find $(builddir)/clientbin -type f | xargs chmod 555
 
 compile_all_code: build
