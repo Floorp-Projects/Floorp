@@ -527,7 +527,7 @@ NS_COM nsresult NS_NewTypicalInputFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile
     /*Default nsprMode == PR_RDONLY*/
-    /*Default accessmode = 0700 (octal)*/)
+    /*Default accessmode = 0666 (octal)*/)
 // Factory method to get an nsInputStream from a file, using most common options
 //----------------------------------------------------------------------------------------
 {
@@ -539,7 +539,7 @@ NS_COM nsresult NS_NewTypicalInputFileStream(
     nsISupports    * supports;
     nsIInputStream * inStr;
 
-    nsresult rv = NS_NewIOFileStream(&supports, inFile, PR_RDONLY, 0700);
+    nsresult rv = NS_NewIOFileStream(&supports, inFile, PR_RDONLY, 0666);
 
     *aResult = nsnull;
     if (NS_SUCCEEDED(rv)) {
@@ -550,7 +550,7 @@ NS_COM nsresult NS_NewTypicalInputFileStream(
     }
     return rv;
 #else
-    return NS_NewIOFileStream(aResult, inFile, PR_RDONLY, 0700);
+    return NS_NewIOFileStream(aResult, inFile, PR_RDONLY, 0666);
 #endif
 }
 
@@ -578,7 +578,7 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile
     /*default nsprMode= (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE)*/
-    /*Default accessMode= 0700 (octal)*/)
+    /*Default accessMode= 0666 (octal)*/)
 // Factory method to get an nsOutputStream to a file - most common case.
 //----------------------------------------------------------------------------------------
 {
@@ -594,7 +594,7 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
         &supports,
         inFile,
         (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
-        0700);
+        0666);
 
     *aResult = nsnull;
     if (NS_SUCCEEDED(rv)) { 
@@ -613,7 +613,7 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
         getter_AddRefs(supports),
         inFile,
         (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
-        0700);
+        0666);
 
     *aResult = nsnull;
     if (NS_SUCCEEDED(rv)) { 
@@ -627,7 +627,7 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
         aResult,
         inFile,
         (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
-        0700);
+        0666);
 #endif
 }
 
@@ -636,7 +636,7 @@ NS_COM nsresult NS_NewIOFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile,
     PRInt32 nsprMode /*default = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE)*/,
-    PRInt32 accessMode /*Default = 0700 (octal)*/)
+    PRInt32 accessMode /*Default = 0666 (octal)*/)
     // Factory method to get an object that implements both nsIInputStream
     // and nsIOutputStream, associated with a file.
 //----------------------------------------------------------------------------------------
@@ -669,7 +669,7 @@ NS_COM nsresult NS_NewTypicalIOFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile
     /*default nsprMode= (PR_RDWR | PR_CREATE_FILE)*/
-    /*Default accessMode= 0700 (octal)*/)
+    /*Default accessMode= 0666 (octal)*/)
     // Factory method to get an object that implements both nsIInputStream
     // and nsIOutputStream, associated with a single file.
 //----------------------------------------------------------------------------------------
@@ -678,5 +678,5 @@ NS_COM nsresult NS_NewTypicalIOFileStream(
         aResult,
         inFile,
         (PR_RDWR | PR_CREATE_FILE),
-        0700);
+        0666);
 }
