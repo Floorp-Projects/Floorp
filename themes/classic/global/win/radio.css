@@ -82,4 +82,7 @@
       padding             : 0px;
     }
     
-    
+  .radio-internal-box
+    {
+      user-focus          : none;
+    }    

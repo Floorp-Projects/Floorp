@@ -7,6 +7,11 @@
       margin: 3px 5px 3px 5px;
     }
 
+  radio > .internal-box
+    {
+      user-focus: none;
+    }
+
 
 /* checkmark outer frame */
   radio > .internal-box > .checkmark-box 
