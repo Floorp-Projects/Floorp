@@ -835,7 +835,7 @@
   <tab id="TagModeButton"      class="tab-bottom edit-mode _plain" type="text" selected="0" label="&AllTagsMode.label;"    oncommand="SetEditMode(2);"
           tooltiptext="&AllTagsMode.tooltip;"/>
   <tab id="SourceModeButton"   class="tab-bottom edit-mode _plain" type="text" selected="0" label="&SourceMode.label;"     oncommand="SetEditMode(3);"
-          tooltiptext="&HTMLSourceMode.tooltip;"/>
+          tooltiptext="&HTMLSourceMode.tooltip;" dir="&SourceTabDirection;"/>
   <tab id="PreviewModeButton"  class="tab-bottom edit-mode _plain" type="text" selected="0" label="&PreviewMode.label;"    oncommand="SetEditMode(0);"
           tooltiptext="&PreviewMode.tooltip;"/>
 
