@@ -1,0 +1,6 @@
+LIBRARY wf_test
+
+EXPORTS
+	JVMP_GetExtension
+	
+	

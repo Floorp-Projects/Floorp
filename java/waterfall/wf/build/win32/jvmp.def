@@ -1,0 +1,4 @@
+LIBRARY jvmp
+
+EXPORTS
+	JVMP_GetPlugin  @1
