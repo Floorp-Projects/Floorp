@@ -48,8 +48,6 @@ extern "C" {
 
 #include "nsIPref.h"
 
-#define     MIME_PREFS_FILE   "prefs50.js"
-
 typedef struct _nsMIMESession nsMIMESession;
 
 /* stream functions */
@@ -150,6 +148,7 @@ extern "C" char             *GetOSTempFile(const char *name);
 
 /* This is the next generation string retrieval call */
 extern "C" char             *MimeGetStringByID(PRInt32 stringID);
+
 
 #ifdef __cplusplus
 }

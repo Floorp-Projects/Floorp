@@ -179,3 +179,126 @@ MimeGetStringByName(const char *aHeaderName)
 
   return nsnull;
 }
+
+//
+// Hopefully, someone will write and XP call like this eventually!
+//
+#define     TPATH_LEN   1024
+
+#ifdef WIN32
+#include "windows.h"
+#endif
+
+static char *
+GetTheTempDirectoryOnTheSystem(void)
+{
+  char *retPath = (char *)PR_Malloc(TPATH_LEN);
+  if (!retPath)
+    return nsnull;
+
+  retPath[0] = '\0';
+#ifdef WIN32
+  if (getenv("TEMP"))
+    PL_strncpy(retPath, getenv("TEMP"), TPATH_LEN);  // environment variable
+  else if (getenv("TMP"))
+    PL_strncpy(retPath, getenv("TMP"), TPATH_LEN);   // How about this environment variable?
+  else
+    GetWindowsDirectory(retPath, TPATH_LEN);
+#endif 
+
+  // RICHIE - should do something better here!
+
+#if defined(XP_UNIX) || defined(XP_BEOS)
+  char *tPath = getenv("TMPDIR");
+  if (!tPath)
+    PL_strncpy(retPath, "/tmp/", TPATH_LEN);
+  else
+    PL_strncpy(retPath, tPath, TPATH_LEN);
+#endif
+
+#ifdef XP_MAC
+  PL_strncpy(retPath, "", TPATH_LEN);
+#endif
+
+  return retPath;
+}
+
+//
+// Create a file spec for the a unique temp file
+// on the local machine. Caller must free memory
+//
+nsFileSpec * 
+nsMsgCreateTempFileSpec(char *tFileName)
+{
+  if ((!tFileName) || (!*tFileName))
+    tFileName = "nsmail.tmp";
+
+  // Age old question, where to store temp files....ugh!
+  char  *tDir = GetTheTempDirectoryOnTheSystem();
+  if (!tDir)
+    return (new nsFileSpec("mozmail.tmp"));  // No need to I18N
+
+  nsFileSpec *tmpSpec = new nsFileSpec(tDir);
+  if (!tmpSpec)
+  {
+    PR_FREEIF(tDir);
+    return (new nsFileSpec("mozmail.tmp"));  // No need to I18N
+  }
+
+  *tmpSpec += tFileName;
+  tmpSpec->MakeUnique();
+
+  PR_FREEIF(tDir);
+  return tmpSpec;
+}
+
+//
+// Create a file spec for the a unique temp file
+// on the local machine. Caller must free memory
+// returned
+//
+char * 
+nsMsgCreateTempFileName(char *tFileName)
+{
+  if ((!tFileName) || (!*tFileName))
+    tFileName = "nsmail.tmp";
+
+  // Age old question, where to store temp files....ugh!
+  char  *tDir = GetTheTempDirectoryOnTheSystem();
+  if (!tDir)
+    return "mozmail.tmp";  // No need to I18N
+
+  nsFileSpec tmpSpec(tDir);
+  tmpSpec += tFileName;
+  tmpSpec.MakeUnique();
+
+  PR_FREEIF(tDir);
+  char *tString = (char *)PL_strdup(tmpSpec.GetNativePathCString());
+  if (!tString)
+    return PL_strdup("mozmail.tmp");  // No need to I18N
+  else
+    return tString;
+}
+
+char * 
+nsMimePlatformFileToURL (const char *name)
+{
+	char *prefix = "file:///";
+	char *retVal = (char *)PR_Malloc(PL_strlen(name) + PL_strlen(prefix) + 1);
+	if (retVal)
+	{
+		PL_strcpy(retVal, prefix);
+		PL_strcat(retVal, name);
+	}
+
+  char *ptr = retVal;
+  while (*ptr)
+  {
+    if (*ptr == '\\') *ptr = '/';
+    if ( (*ptr == ':') && (ptr > (retVal+4)) )
+      *ptr = '|';
+
+    ++ptr;
+  }
+	return retVal;
+}

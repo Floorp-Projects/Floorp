@@ -120,7 +120,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   PR_ASSERT(length > 0);
   if (length <= 0) return 0;
 
-  status = MimeObject_grow_obuffer (obj, length * 2 + 40);
+  status = MimeObject_grow_obuffer (obj, (length * 2) + 40);
   if (status < 0) return status;
 
   /* Copy `line' to `out', quoting HTML along the way.

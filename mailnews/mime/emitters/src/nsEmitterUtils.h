@@ -24,5 +24,14 @@
 extern "C" PRBool   EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header);
 extern "C" char     *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
 
+//
+// Create a file spec or file name using the name passed
+// in as a template
+//
+nsFileSpec  *nsMsgCreateTempFileSpec(char *tFileName);
+char        *nsMsgCreateTempFileName(char *tFileName);
+
+char        *nsMimePlatformFileToURL (const char *name);
+
 #endif // _nsEmitterUtils_h_
 

@@ -24,6 +24,7 @@ include <$(DEPTH)\config\config.mak>
 
 EXPORTS =								\
 		nsMimeTypes.h		\
+		nsMimeStringResources.h		\
 		nsMimeObjectClassAccess.h		\
 		nsMimeConverter.h				\
 		mimetext.h						\

@@ -37,6 +37,9 @@
 #include "nsIAllocator.h"
 #include "nsIBuffer.h"
 #include "nsMimeStringResources.h"
+#include "nsIPref.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 ////////////////////////////////////////////////////////////////
 // Bridge routines for new stream converter XP-COM interface 
@@ -212,9 +215,29 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
     }
     else
     {
-      mWrapperOutput = PR_TRUE;
-      PR_FREEIF(mOutputFormat);
-      mOutputFormat = PL_strdup("text/html");
+      // Ok, we are adding a pref to turn on the new XUL header output. If this 
+      // pref is true, then we will use the new quoting, otherwise, we default to
+      // the old split display quoting.
+      //
+      nsresult    rv;
+      PRBool      mimeXULOutput = PR_FALSE;
+
+      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+      if (NS_SUCCEEDED(rv) && prefs) 
+        rv = prefs->GetBoolPref("mail.mime_xul_output", &mimeXULOutput);
+
+      if (mimeXULOutput)
+      {
+        PR_FREEIF(mOutputFormat);
+        mOutputFormat = PL_strdup("text/xul");
+        *aNewType = nsMimeOutput::nsMimeMessageXULDisplay;
+      }
+      else
+      {
+        mWrapperOutput = PR_TRUE;
+        PR_FREEIF(mOutputFormat);
+        mOutputFormat = PL_strdup("text/html");
+      }
     }
   }
   else // this is a part that should just come out raw!
@@ -346,6 +369,11 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
 	  switch (newType)
 	  {
+    case nsMimeOutput::nsMimeMessageXULDisplay:
+			PR_FREEIF(mOutputFormat);
+			mOutputFormat = PL_strdup("text/xul");
+      break;
+
 		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
 			mWrapperOutput = PR_TRUE;
 			PR_FREEIF(mOutputFormat);
@@ -536,6 +564,7 @@ char *output = "\
     return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 
   mTotalRead += aLength;
+  readLen = aLength;
   aIStream->Read(buf, aLength, &readLen);
 
   if (mBridgeStream)
@@ -581,14 +610,6 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
     printf("nsStreamConverter::OnStopRequest()\n");
 #endif
 
-  // 
-  // Now complete the emitter and do necessary cleanup!
-  //
-  if (mEmitter)
-  {
-    mEmitter->Complete();
-  }
-
   //
   // Now complete the stream!
   //
@@ -596,6 +617,14 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
   {
     nsMIMESession   *tSession = (nsMIMESession *) mBridgeStream;
     tSession->complete((nsMIMESession *)mBridgeStream);
+  }
+
+  // 
+  // Now complete the emitter and do necessary cleanup!
+  //
+  if (mEmitter)
+  {
+    mEmitter->Complete();
   }
 
   // First close the output stream...

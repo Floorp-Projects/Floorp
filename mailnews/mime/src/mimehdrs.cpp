@@ -2492,12 +2492,13 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 {
   int     status = 0;
 
-  mimeEmitterStartAttachment(opt, lname, content_type, lname_url);
-
-  status = MimeHeaders_write_all_headers (hdrs, opt, TRUE);
-  mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, lname_url);
-
-  mimeEmitterEndAttachment(opt);
+  // RICHIE SHERRY 
+  // Writing a header "box" is not needed anymore since we are doing
+  // attachments a whole new way... I need to clean this up and this
+  // routine will probably go away for good...but until then, just return
+  // success
+  //
+  // status = MimeHeaders_write_all_headers (hdrs, opt, TRUE);
 
   if (status < 0) 
     return status;

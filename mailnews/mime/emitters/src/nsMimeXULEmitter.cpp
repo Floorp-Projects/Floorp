@@ -478,6 +478,9 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
   UtilityWriteCRLF("xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" ");
   UtilityWriteCRLF("align=\"vertical\"> ");
 
+  // Now, the JavaScript...
+  UtilityWriteCRLF("<html:script language=\"javascript\" src=\"chrome://messenger/content/attach.js\"/>");
+
   return NS_OK;
 }
 
@@ -656,28 +659,20 @@ nsMimeXULEmitter::Complete()
 nsresult
 nsMimeXULEmitter::DumpAttachmentMenu()
 {
-/*
-<popup id="toolbarContextMenu">
-<menu>
-<menuitem name="Delete" onclick="mailNewsCore.deleteButton(document.popupElement)">
-</menu>
-</popup>
-*/
-
   if ( (!mAttachArray) || (mAttachArray->Count() <= 0) )
     return NS_OK;
 
   char *buttonXUL = PR_smprintf(
-                      "<titledbutton src=\"chrome://messenger/skin/attach.gif\" value=\"%d Attachments\" align=\"right\"/>", 
+                      "<titledbutton src=\"chrome://messenger/skin/attach.gif\" value=\"%d Attachments\" align=\"right\" class=\"popup\" popup=\"attachmentPopup\"/>", 
                       mAttachArray->Count());
 
   if ( (!buttonXUL) || (!*buttonXUL) )
     return NS_OK;
 
   UtilityWriteCRLF("<box align=\"horizontal\">");
-  UtilityWriteCRLF(buttonXUL);
-  PR_FREEIF(buttonXUL);
 
+  UtilityWriteCRLF("<popup id=\"attachmentPopup\">");
+  UtilityWriteCRLF("<menu>");
 
   // Now we can finally write out the attachment information...  
   if (mAttachArray->Count() > 0)
@@ -690,12 +685,20 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       if (!attachInfo)
         continue;
 
+      UtilityWrite("<menuitem value=\"");
       UtilityWrite(attachInfo->displayName);
-      UtilityWriteCRLF(" ");
+      UtilityWrite("\" onaction=\"OpenAttachURL('");
+      UtilityWrite(attachInfo->urlSpec);
+      UtilityWriteCRLF("' );\"  />");
     }
   }
 
+  UtilityWriteCRLF("</menu>");
+  UtilityWriteCRLF("</popup>");
+  UtilityWriteCRLF(buttonXUL);
+
   UtilityWriteCRLF("</box>");
+  PR_FREEIF(buttonXUL);
 
   return NS_OK;
 }
@@ -734,7 +737,8 @@ nsMimeXULEmitter::OutputGenericHeader(const char *aHeaderVal)
 
   if (val)
   {
-    UtilityWriteCRLF("<box align=\"horizontal\" style=\"padding: 2px;\">");
+    //UtilityWriteCRLF("<box align=\"vertical\" style=\"padding: 2px;\">");
+    UtilityWriteCRLF("<box style=\"padding: 2px;\">");
     rv = WriteXULTag(aHeaderVal, val);
     UtilityWriteCRLF("</box>");
     return rv;
@@ -760,7 +764,6 @@ nsMimeXULEmitter::DumpSubjectFromDate()
       UtilityWriteCRLF("<spring flex=\"2\"/>");
       UtilityWriteCRLF("</box>");
 
-
       UtilityWriteCRLF("<box name=\"header-attachment\" align=\"horizontal\" flex=\"100%\">");
       UtilityWriteCRLF("<spring flex=\"1\"/>");
 
@@ -781,19 +784,25 @@ nsresult
 nsMimeXULEmitter::DumpToCC()
 {
   UtilityWriteCRLF("<toolbar>");
+  UtilityWriteCRLF("<box name=\"header-splitter2\" align=\"horizontal\" flex=\"100%\" >");
 
-    UtilityWriteCRLF("<box name=\"header-part2\" align=\"vertical\" flex=\"100%\" style=\"width: 100%; \" >");
-      UtilityWriteCRLF("<spring flex=\"1\"/>");
+    UtilityWriteCRLF("<box name=\"header-part2\" align=\"vertical\" flex=\"100%\" style=\"background-color: #FF0000; \" >");
+    UtilityWriteCRLF("<spring flex=\"1\"/>");
 
-        OutputGenericHeader(HEADER_TO);
-        UtilityWriteCRLF("</box>");
+          OutputGenericHeader(HEADER_TO);
 
-        UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\">");
-
-      UtilityWriteCRLF("<spring flex=\"1\"/>");
-      OutputGenericHeader(HEADER_CC);
+    UtilityWriteCRLF("<spring flex=\"1\"/>");
     UtilityWriteCRLF("</box>");
 
+    UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\" style=\"background-color: #00FF00; \">");
+    UtilityWriteCRLF("<spring flex=\"1\"/>");
+
+      OutputGenericHeader(HEADER_CC);
+
+    UtilityWriteCRLF("<spring flex=\"1\"/>");
+    UtilityWriteCRLF("</box>");
+
+  UtilityWriteCRLF("</box>");
   UtilityWriteCRLF("</toolbar>");
   return NS_OK;
 }

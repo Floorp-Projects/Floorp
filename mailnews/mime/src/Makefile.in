@@ -74,6 +74,7 @@ CPPSRCS		= \
 EXPORTS		= \
 		nsMimeTypes.h \
 		nsMimeObjectClassAccess.h \
+		nsMimeStringResources.h \
 		nsMimeConverter.h \
 		mimetext.h \
 		mimeleaf.h \

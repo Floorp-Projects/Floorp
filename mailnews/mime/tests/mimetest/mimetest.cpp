@@ -164,6 +164,7 @@ public:
     ConsoleOutputStreamListener(void) 
     { 
       NS_INIT_REFCNT(); 
+      mComplete = PR_FALSE;
       mIndentCount = 0;
       mInClosingTag = PR_FALSE;
       mOutFormat = nsMimeOutput::nsMimeMessageRaw;
@@ -191,6 +192,7 @@ public:
        PR_Write(PR_GetSpecialFD(PR_StandardOutput), note, PL_strlen(note));
       }
 
+      mComplete = PR_TRUE;
       return NS_OK;
     }
 
@@ -203,8 +205,13 @@ public:
 
     nsresult    DoIndent();
     NS_IMETHOD  SetFormat(nsMimeOutputType  aFormat);
+    PRBool      CompleteYet()
+    {
+      return mComplete;
+    }
 
 private:
+  PRBool              mComplete;
   PRInt32             mIndentCount;
   PRBool              mInClosingTag;
   nsMimeOutputType    mOutFormat;
@@ -417,7 +424,7 @@ main(int argc, char** argv)
   // Do some sanity checking...
   if (argc < 2) 
   {
-    fprintf(stderr, "usage: %s <rfc822_disk_file> <any_arg_for_Draft_processing>\n", argv[0]);
+    fprintf(stderr, "usage: %s <rfc822_disk_file> <any_arg_for_XUL_output>\n", argv[0]);
     return 1;
   }
   
@@ -452,7 +459,7 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   char              *contentType = nsnull;
 
   if (numArgs >= 3)
-    outFormat = nsMimeOutput::nsMimeMessageDraftOrTemplate;
+    outFormat = nsMimeOutput::nsMimeMessageXULDisplay;
   else
     outFormat = nsMimeOutput::nsMimeMessageQuoting;
 

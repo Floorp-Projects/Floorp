@@ -75,7 +75,7 @@ static NS_DEFINE_CID(kMsgCompFieldsCID,       NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 
 // Utility to create a nsIURI object...
-nsresult 
+extern "C" nsresult 
 nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec)
 {  
   nsresult  res;
@@ -204,7 +204,7 @@ typedef enum {
 										              // DON'T remove.
 } nsMsgBoolHeaderSet;
 
-static void
+extern "C" void
 mime_dump_attachments ( nsMsgAttachmentData *attachData )
 {
   PRInt32     i = 0;

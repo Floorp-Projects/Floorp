@@ -31,6 +31,8 @@ EXPORT_RESOURCES = \
 	$(srcdir)/mailheader-micro.css \
 	$(srcdir)/mailheader-normal.css \
 	$(srcdir)/mailheader-all.css \
+	$(srcdir)/addcard.gif \
+	$(srcdir)/attach.gif \
 	$(NULL)
 
 EXPORT_RESOURCES_TO_REMOVE := $(addprefix $(MESSENGER_DIR)/, $(EXPORT_RESOURCES))

@@ -28,6 +28,7 @@ EXPORTS=	nsEmitterUtils.h	\
 			nsMimeHtmlEmitter.h	\
 			nsMimeRawEmitter.h	\
 			nsMimeXmlEmitter.h	\
+			nsMimeXULEmitter.h	\
 			$(NULL)
 
 ################################################################################
@@ -41,6 +42,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsEmitterUtils.obj		\
 			.\$(OBJDIR)\nsMimeHtmlEmitter.obj	\
 			.\$(OBJDIR)\nsMimeRawEmitter.obj	\
 			.\$(OBJDIR)\nsMimeXmlEmitter.obj	\
+			.\$(OBJDIR)\nsMimeXULEmitter.obj	\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

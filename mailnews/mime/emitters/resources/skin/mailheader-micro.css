@@ -3,8 +3,13 @@
  * attributes
  */
 window          { overflow: auto; }
-mailheader      { display: block; background-color:  #E0E0E0; }
+mailheader      { display: block; }
 mailattachcount { display: none; }
+
+box[name=header-attachment] { background-color: #EFEFEF; border: 2px solid #EFEFEF }
+box[name=header-part1]      { background-color: #EFEFEF; border: 2px solid #EFEFEF }
+box[name=header-part2]      { background-color: #DEDEDE; border: 2px solid #DEDEDE }
+box[name=header-part3]      { background-color: #DEDEDE; border: 2px solid #DEDEDE }
 
 /**************************************************
  * These are all the headers that are displayed
@@ -18,29 +23,20 @@ mailattachcount { display: none; }
 header                  { display: none; text-align: left; }
 headerdisplayname       { font-weight: bold; }
 
-header[field=DATE]:before { font-weight: bold; }
-header[field=DATE { display: block; text-align:left; }
+header[field=DATE]      { display: block; text-align:left; }
 
-header[field=TO]:before { font-weight: bold; }
 header[field=TO]        { display: block; text-align: left; }
 
-header[field=FROM]:before { font-weight: bold; }
 header[field=FROM]        { display: block; text-align:left; }
 
-header[field=SUBJECT]:before { font-weight: bold; }
-header[field=SUBJECT] { display: block; text-align: left; 
-                       background-color: lightyellow; border: 1px solid #CCCCCC; }
+header[field=SUBJECT] { display: block; text-align: left; font-weight: bold; }
 
-header[field=CC]:before { font-weight: bold; }
 header[field=CC] { display: block; text-align:left; }
 
-header[field=BCC]:before { font-weight: bold; }
 header[field=BCC] { display: block; text-align:left; }
 
-header[field=NEWSGROUPS]:before { font-weight: bold; }
 header[field=NEWSGROUPS] { display: block; text-align:left; }
 
-header[field=ORGANIZATION]:before { font-weight: bold; }
 header[field=ORGANIZATION] { display: block; text-align:left; }
 
 /**************************************************
@@ -52,100 +48,68 @@ header[field=ORGANIZATION] { display: block; text-align:left; }
  * "X-" are turned off!
  */
 
-header[field=RETURN-PATH]:before {  font-weight: bold; }
 header[field=RETURN-PATH] { display: none; text-align:left; }
 
-header[field=STATUS]:before {  font-weight: bold; }
 header[field=STATUS] { display: none; text-align:left; }
 
-header[field=RECEIVED]:before {  font-weight: bold; }
 header[field=RECEIVED] { display: none; text-align:left; }
 
-header[field=MIME-VERSION]:before {  font-weight: bold; }
 header[field=MIME-VERSION] { display: none; text-align:left; }
 
-header[field=PRECEDENCE]:before {  font-weight: bold; }
 header[field=PRECEDENCE] { display: none; text-align: left; }
 
-header[field=CONTENT-BASE]:before { font-weight: bold; }
 header[field=CONTENT-BASE] { display: none; text-align:left; }
 
-header[field=CONTENT-LOCATION]:before { font-weight: bold; }
 header[field=CONTENT-LOCATION] { display: none; text-align:left; }
 
-header[field=CONTENT-ID]:before { font-weight: bold; }
 header[field=CONTENT-ID] { display: none; text-align:left; }
 
-header[field=CONTENT-DESCRIPTION]:before { font-weight: bold; }
 header[field=CONTENT-DESCRIPTION] { display: none; text-align:left; }
 
-header[field=CONTENT-DISPOSITION]:before { font-weight: bold; }
 header[field=CONTENT-DISPOSITION] { display: none; text-align:left; }
 
-header[field=CONTENT-ENCODING]:before { font-weight: bold; }
 header[field=CONTENT-ENCODING] { display: none; text-align:left; }
 
-header[field=CONTENT-LENGTH]:before { font-weight: bold; }
 header[field=CONTENT-LENGTH] { display: none; text-align:left; }
 
-header[field=CONTENT-NAME]:before { font-weight: bold; }
 header[field=CONTENT-NAME] { display: none; text-align:left; }
 
-header[field=CONTENT-TRANSFER-ENCODING]:before { font-weight: bold; }
 header[field=CONTENT-TRANSFER-ENCODING] { display: none; text-align:left; }
 
-header[field=CONTENT-TYPE]:before { font-weight: bold; }
 header[field=CONTENT-TYPE] { display: none; text-align:left; }
 
-header[field=DISTRIBUTION]:before { font-weight: bold; }
 header[field=DISTRIBUTION] { display: none; text-align:left; }
 
-header[field=FCC]:before { font-weight: bold; }
 header[field=FCC] { display: none; text-align:left; }
 
-header[field=FOLLOWUP-TO]:before { font-weight: bold; }
 header[field=FOLLOWUP-TO] { display: none; text-align:left; }
 
-header[field=LINES]:before { font-weight: bold; }
 header[field=LINES] { display: none; text-align:left; }
 
-header[field=MESSAGE-ID]:before { font-weight: bold; }
 header[field=MESSAGE-ID] { display: none; text-align:left; }
 
-header[field=REFERENCES]:before { font-weight: bold; }
 header[field=REFERENCES] { display: none; text-align:left; }
 
-header[field=REPLY-TO]:before { font-weight: bold;}
 header[field=REPLY-TO] { display: none; text-align:left; }
 
-header[field=RESENT-COMMENTS]:before { font-weight: bold; }
 header[field=RESENT-COMMENTS] { display: none; text-align:left; }
 
-header[field=RESENT-DATE]:before { font-weight: bold; }
 header[field=RESENT-DATE] { display: none; text-align:left; }
 
-header[field=RESENT-FROM]:before { font-weight: bold; }
 header[field=RESENT-FROM] { display: none; text-align:left; }
 
-header[field=RESENT-MESSAGE-ID]:before { font-weight: bold; }
 header[field=RESENT-MESSAGE-ID] { display: none; text-align:left; }
 
-header[field=RESENT-SENDER]:before { font-weight: bold; }
 header[field=RESENT-SENDER] { display: none; text-align:left; }
 
-header[field=RESENT-TO]:before {  font-weight: bold; }
 header[field=RESENT-TO] { display: none; text-align:left; }
 
-header[field=RESENT-CC]:before {  font-weight: bold; }
 header[field=RESENT-CC] { display: none; text-align:left; }
 
-header[field=SENDER]:before {  font-weight: bold; }
 header[field=SENDER] { display: none; text-align:left; }
 
-header[field=XREF]:before { font-weight: bold; }
 header[field=XREF] { display: none; text-align:left; }
 
-header[field=APPROVED-BY]:before {  font-weight: bold; }
 header[field=APPROVED-BY] { display: none; text-align:left; }
 
 /**************************************************
@@ -154,51 +118,35 @@ header[field=APPROVED-BY] { display: none; text-align:left; }
  * all header display
  **************************************************/
 
-header[field=X-SUN-CHARSET]:before { font-weight: bold; }
 header[field=X-SUN-CHARSET] { display: none; text-align:left; }
 
-header[field=X-SUN-CONTENT-LENGTH]:before { font-weight: bold; }
 header[field=X-SUN-CONTENT-LENGTH] { display: none; text-align:left; }
 
-header[field=X-SUN-DATA-DESCRIPTION]:before { font-weight: bold; }
 header[field=X-SUN-DATA-DESCRIPTION] { display: none; text-align:left; }
 
-header[field=X-SUN-DATA-NAME]:before { font-weight: bold; }
 header[field=X-SUN-DATA-NAME] { display: none; text-align:left; }
 
-header[field=X-SUN-DATA-TYPE]:before { font-weight: bold; }
 header[field=X-SUN-DATA-TYPE] { display: none; text-align:left; }
 
-header[field=X-SUN-ENCODING-INFO]:before { font-weight: bold; }
 header[field=X-SUN-ENCODING-INFO] { display: none; text-align:left; }
 
-header[field=X-PRIORITY]:before { font-weight: bold; }
 header[field=X-PRIORITY] { display: none; text-align:left; }
 
-header[field=X-MOZILLA-PARTURL]:before { font-weight: bold; }
 header[field=X-MOZILLA-PARTURL] { display: none; text-align:left; }
 
-header[field=X-MOZILLA-DRAFT-INFO]:before {  font-weight: bold; }
 header[field=X-MOZILLA-DRAFT-INFO] { display: none; text-align:left; }
 
-header[field=X-ACCEPT-LANGUAGE]:before {  font-weight: bold; }
 header[field=X-ACCEPT-LANGUAGE] { display: none; text-align:left; }
 
-header[field=X-MAILING-LIST]:before {  font-weight: bold; }
 header[field=X-MAILING-LIST] { display: none; text-align:left; }
 
-header[field=X-MAILING-LOOP]:before {  font-weight: bold; }
 header[field=X-MAILING-LOOP] { display: none; text-align:left; }
 
-header[field=X-LOOP]:before {  font-weight: bold; }
 header[field=X-LOOP] { display: none; text-align: left; }
 
-header[field=X-MAILER]:before { font-weight: bold; }
 header[field=X-MAILER] { display: none; text-align:left; }
 
-header[field=X-MOZILLA-STATUS]:before { font-weight: bold; }
 header[field=X-MOZILLA-STATUS] { display: none; text-align:left; }
 
-header[field=X-MOZILLA-STATUS2]:before { font-weight: bold; }
 header[field=X-MOZILLA-STATUS2] { display: none; text-align: left; }
 

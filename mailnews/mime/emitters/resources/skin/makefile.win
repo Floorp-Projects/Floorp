@@ -24,8 +24,12 @@ install::
 	$(MAKE_INSTALL) mailheader-micro.css	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) mailheader-normal.css	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) mailheader-all.css		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) addcard.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) attach.gif		$(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\skin\default\mailheader-micro.css
 	rm -f $(DIST)\bin\chrome\messenger\skin\default\mailheader-normal.css
 	rm -f $(DIST)\bin\chrome\messenger\skin\default\mailheader-all.css
+	rm -f $(DIST)\bin\chrome\messenger\skin\default\addcard.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\default\attach.gif

@@ -32,14 +32,15 @@ typedef long nsMimeOutputType;
 [scriptable, uuid(E4ED8894-3F9E-11d3-9896-001083010E9B)] 
 interface nsMimeOutput
 { 
-    const long nsMimeMessageSplitDisplay = 0;
-    const long nsMimeMessageHeaderDisplay = 1;
-    const long nsMimeMessageBodyDisplay = 2;
+  const long nsMimeMessageSplitDisplay = 0;
+  const long nsMimeMessageHeaderDisplay = 1;
+  const long nsMimeMessageBodyDisplay = 2;
 	const long nsMimeMessageQuoting = 3;
 	const long nsMimeMessageRaw = 4;
 	const long nsMimeMessageDraftOrTemplate = 5;
 	const long nsMimeMessageEditorTemplate = 6;
-	const long nsMimeUnknown = 7;
+	const long nsMimeMessageXULDisplay = 7;
+	const long nsMimeUnknown = 8;
 }; 
 
 [scriptable, uuid(E4ED8892-3F9E-11d3-9896-001083010E9B)]
