@@ -22,7 +22,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIURL.h"
-
+#include "nsIUrlListener.h"
 
 /* 6CFFCEB0-CB8C-11d2-8065-006008128C4E */
 
@@ -46,6 +46,16 @@ class nsIMsgMailNewsUrl : public nsIURL
 public:
     static const nsIID& IID() { static nsIID iid = NS_IMSGMAILNEWSURL_IID; return iid; }
 
+	///////////////////////////////////////////////////////////////////////////////
+	// Eventually we'd like to push this type of functionality up into nsIURL.
+	// The idea is to allow the "application" (the part of the code which wants to 
+	// run a url in order to perform some action) to register itself as a listener
+	// on url. As a url listener, the app will be informed when the url begins to run
+	// and when the url is finished. 
+	////////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener) = 0;
+	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener) = 0;
+
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the nsIMsgMailNewsUrl specific info....
 	///////////////////////////////////////////////////////////////////////////////
@@ -54,13 +64,10 @@ public:
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const = 0;
 
-	// If the application wants to check to see if the url is currently being run
-	// or not, it can us GetRunningUrlFlag. Protocol connections typically set this
-	// value when they are actually processing the url. Why might an application care?
-	// Let's say I'm writing a test harness and I want to prompt the user for another 
-	// command after the url is done being run?
-	NS_IMETHOD SetRunningUrlFlag(PRBool runningUrl) = 0;
-	NS_IMETHOD GetRunningUrlFlag(PRBool *runningUrl) = 0;
+	// if you really want to know what the current state of the url is (running or not
+	// running) you should look into becoming a urlListener...
+	NS_IMETHOD SetUrlState(PRBool runningUrl, nsresult aStatusCode) = 0;
+	NS_IMETHOD GetUrlState(PRBool *runningUrl) = 0;
 };
 
 #endif /* nsIMsgMailNewsUrl_h___ */
