@@ -30,7 +30,6 @@
 #include "nsIMessenger.h"
 #include "nsMessenger.h"
 
-#include "nsIMsgGroupRecord.h"
 #include "nsMsgGroupRecord.h"
 
 #include "nsMsgAppCore.h"
