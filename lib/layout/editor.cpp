@@ -662,7 +662,12 @@ XP_Bool EDT_CheckPublishURL( MWContext *pContext, char *pURL)
               }
               XP_FREEIF(message);
               // Check for any other errors
+#ifdef XP_WIN
               return EDT_CheckPublishURL(pContext, ppURL);
+#else
+// TO MAC AND UNIX - DELETE THIS WHEN YOUR CALLS TO EDT_CheckPublishURL USE ppURL
+              return EDT_CheckPublishURL(pContext, pURL);
+#endif
           }
       }
       else if( xpStrId == XP_EDT_PUBLISH_NO_EXTENSION )
