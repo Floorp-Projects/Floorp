@@ -25,6 +25,7 @@ EXPORTS =				\
 	nsIMenuFrame.h      \
 	nsIPopupSetFrame.h	\
   nsPIBoxObject.h \
+  nsIScrollbarMediator.h \
     $(NULL)
 
 XPIDLSRCS=      .\nsIBoxObject.idl                  \
