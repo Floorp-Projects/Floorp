@@ -681,7 +681,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
     rv = htmlContainer->GetCSSLoader(*getter_AddRefs(mCSSLoader));
     if (NS_FAILED(rv)) return rv;
 
-    rv = aDocument->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
+    rv = aPrototype->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
     if (NS_FAILED(rv)) return rv;
 
     mState = eInProlog;

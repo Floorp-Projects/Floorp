@@ -552,7 +552,6 @@ nsDocument::~nsDocument()
     }
   }
 
-  NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mPrincipal);
   mDocumentLoadGroup = nsnull;
 
@@ -631,6 +630,10 @@ nsDocument::~nsDocument()
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
   }
+
+  // Do this after notifying the nodeinfo manager that we're going away since
+  // it will save our url before dropping the reference.
+  NS_IF_RELEASE(mDocumentURL);
 }
 
 PRBool gCheckedForXPathDOM = PR_FALSE;

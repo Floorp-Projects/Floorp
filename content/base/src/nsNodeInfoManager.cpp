@@ -154,6 +154,9 @@ nsNodeInfoManager::Init(nsIDocument *aDocument,
 
   mDocument = aDocument;
   mNameSpaceManager = aNameSpaceManager;
+  if (aDocument) {
+    mDocumentURL = nsnull;
+  }
 
   return NS_OK;
 }
@@ -162,6 +165,9 @@ nsNodeInfoManager::Init(nsIDocument *aDocument,
 NS_IMETHODIMP
 nsNodeInfoManager::DropDocumentReference()
 {
+  if (mDocument) {
+    mDocument->GetDocumentURL(getter_AddRefs(mDocumentURL));
+  }
   mDocument = nsnull;
 
   return NS_OK;
@@ -328,6 +334,28 @@ nsNodeInfoManager::GetDocument(nsIDocument*& aDocument)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNodeInfoManager::GetDocumentURL(nsIURI** aURL)
+{
+  NS_ENSURE_ARG_POINTER(aURL);
+  NS_ASSERTION(!mDocument || !mDocumentURL,
+               "how'd we end up with both a document and a url?");
+
+  if (mDocument) {
+    return mDocument->GetDocumentURL(aURL);
+  }
+  *aURL = mDocumentURL;
+  NS_IF_ADDREF(*aURL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNodeInfoManager::SetDocumentURL(nsIURI* aURL)
+{
+  NS_ENSURE_FALSE(mDocument, NS_ERROR_UNEXPECTED);
+  mDocumentURL = aURL;
+  return NS_OK;
+}
 
 void
 nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
