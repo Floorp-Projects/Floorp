@@ -26,6 +26,8 @@
 
 */
 
+@import url(chrome://global/skin/);
+
 treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton
 {
     list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
@@ -54,11 +56,3 @@ treeitem > treerow > treecell > titledbutton {
 treeitem > treerow > treecell > titledbutton > .twisty{
   display: none;
 }
-
-/* Override rule in xul.css  */
-/* not yet
-treeitem[selected="true"] > treerow {
-  color: inherit;
-  background-color: inherit;
-}
-*/
