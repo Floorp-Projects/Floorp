@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_object_prc.c          copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Object processing routines (implementation)                * */
 /* *                                                                        * */
@@ -35,6 +35,16 @@
 /* *             - added ani-object routines for delta-image processing     * */
 /* *             - added compression/filter/interlace fields to             * */
 /* *               object-buffer for delta-image processing                 * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/17/2000 - G.Juyn                                * */
+/* *             - changed support for delta-image processing               * */
+/* *             0.5.3 - 06/20/2000 - G.Juyn                                * */
+/* *             - fixed some small things (as precaution)                  * */
+/* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
+/* *             - added processing of PLTE/tRNS & color-info for           * */
+/* *               delta-images in the ani_objects chain                    * */
+/* *             0.5.3 - 06/22/2000 - G.Juyn                                * */
+/* *             - added support for PPLT chunk                             * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -799,10 +809,10 @@ mng_retcode reset_object_details (mng_datap  pData,
       pBuf->iPrimarybluey    = pData->iGlobalPrimarybluey;
     }
 
-    if (pData->bHasglobalSRGB)           /* glbal sRGB present ? */
+    if (pData->bHasglobalSRGB)           /* global sRGB present ? */
       pBuf->iRenderingintent = pData->iGlobalRendintent;
 
-    if (pData->bHasglobalICCP)           /* glbal iCCP present ? */
+    if (pData->bHasglobalICCP)           /* global iCCP present ? */
     {
       if (pData->iGlobalProfilesize)
       {
@@ -864,18 +874,20 @@ void add_ani_object (mng_datap          pData,
 {
   mng_object_headerp pLast = (mng_object_headerp)pData->pLastaniobj;
 
-  if (pLast)
+  if (pLast)                           /* link it as last in the chain */
   {
     pObject->pPrev      = pLast;
     pLast->pNext        = pObject;
   }
   else
   {
+    pObject->pPrev      = MNG_NULL;    /* be on the safe side */
     pData->pFirstaniobj = pObject;
   }
 
+  pObject->pNext        = MNG_NULL;    /* be on the safe side */
   pData->pLastaniobj    = pObject;
-
+                                       /* keep track for jumping */
   pObject->iFramenr     = pData->iFrameseq;
   pObject->iLayernr     = pData->iLayerseq;
   pObject->iPlaytime    = pData->iFrametime;
@@ -889,12 +901,17 @@ void add_ani_object (mng_datap          pData,
 mng_retcode create_ani_image (mng_datap pData)
 {
   mng_ani_imagep pImage;
-  mng_imagep     pCurrent = (mng_imagep)pData->pCurrentobj;
+  mng_imagep     pCurrent;
   mng_retcode    iRetcode;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_IMAGE, MNG_LC_START)
 #endif
+
+  if (pData->bHasDHDR)                 /* processing delta-image ? */
+    pCurrent = (mng_imagep)pData->pObjzero;
+  else                                 /* get the current object */
+    pCurrent = (mng_imagep)pData->pCurrentobj;
 
   if (!pCurrent)                       /* otherwise object 0 */
     pCurrent = (mng_imagep)pData->pObjzero;
@@ -948,22 +965,47 @@ mng_retcode process_ani_image (mng_datap   pData,
 {
   mng_retcode    iRetcode = MNG_NOERROR;
   mng_ani_imagep pImage   = (mng_imagep)pObject;
-  mng_imagep     pCurrent = (mng_imagep)pData->pCurrentobj;
-  mng_imagep     pObjzero = (mng_imagep)pData->pObjzero;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_IMAGE, MNG_LC_START)
 #endif
 
-  if (pCurrent)                        /* active object ? */
+  if (pData->bHasDHDR)                 /* processing delta-image ? */
   {
-    mng_imagedatap pBuf = pCurrent->pImgbuf;
+    mng_imagep pDelta = (mng_imagep)pData->pDeltaImage;
+
+    if (!pData->iBreakpoint)           /* only execute if not broken before */
+    {                                  /* make sure to process pixels as well */
+      pData->bDeltaimmediate = MNG_FALSE;
+                                       /* execute the delta process */
+      iRetcode = execute_delta_image (pData, pDelta, (mng_imagep)pData->pObjzero);
+
+      if (iRetcode)                    /* on error bail out */
+        return iRetcode;
+    }
+                                       /* now go and shoot it off (if required) */
+    if ((pDelta->bVisible) && (pDelta->bViewable))
+      iRetcode = display_image (pData, pDelta, MNG_FALSE);
+
+    if (!pData->bTimerset)
+      pData->bHasDHDR = MNG_FALSE;     /* this image signifies IEND !! */
+
+  }
+  else
+  if (pData->pCurrentobj)              /* active object ? */
+  {
+    mng_imagep     pCurrent = (mng_imagep)pData->pCurrentobj;
+    mng_imagedatap pBuf     = pCurrent->pImgbuf;
 
     if (!pData->iBreakpoint)           /* don't copy it again ! */
     {
       if (pBuf->iImgdatasize)          /* buffer present in active object ? */
                                        /* then drop it */
         MNG_FREE (pData, pBuf->pImgdata, pBuf->iImgdatasize)
+
+      if (pBuf->iProfilesize)          /* iCCP profile present ? */
+                                       /* then drop it */
+        MNG_FREE (pData, pBuf->pProfile, pBuf->iProfilesize)
                                        /* now blatently copy the animation buffer */
       MNG_COPY (pBuf, pImage->pImgbuf, sizeof (mng_imagedata))
 
@@ -978,23 +1020,25 @@ mng_retcode process_ani_image (mng_datap   pData,
         MNG_ALLOC (pData, pBuf->pProfile, pBuf->iProfilesize)
         MNG_COPY (pBuf->pProfile, pImage->pImgbuf->pProfile, pBuf->iProfilesize)
       }
-    }  
+    }
                                        /* now go and shoot it off (if required) */
-    if ((pImage->bVisible) && (pImage->bViewable))
+    if ((pCurrent->bVisible) && (pCurrent->bViewable))
       iRetcode = display_image (pData, pCurrent, MNG_FALSE);
   }
-  else                                 /* overlay with object 0 status */
+  else
   {
-    pImage->bVisible   = pObjzero->bVisible;
-    pImage->bViewable  = pObjzero->bViewable;
-    pImage->iPosx      = pObjzero->iPosx;
-    pImage->iPosy      = pObjzero->iPosy;
-    pImage->bClipped   = pObjzero->bClipped;
-    pImage->iClipl     = pObjzero->iClipl;
-    pImage->iClipr     = pObjzero->iClipr;
-    pImage->iClipt     = pObjzero->iClipt;
-    pImage->iClipb     = pObjzero->iClipb;
-                                       /* so this should do the trick */
+    mng_imagep pObjzero = (mng_imagep)pData->pObjzero;
+                                       /* overlay with object 0 status */
+    pImage->bVisible  = pObjzero->bVisible;
+    pImage->bViewable = pObjzero->bViewable;
+    pImage->iPosx     = pObjzero->iPosx;
+    pImage->iPosy     = pObjzero->iPosy;
+    pImage->bClipped  = pObjzero->bClipped;
+    pImage->iClipl    = pObjzero->iClipl;
+    pImage->iClipr    = pObjzero->iClipr;
+    pImage->iClipt    = pObjzero->iClipt;
+    pImage->iClipb    = pObjzero->iClipb;
+                                       /* now this should do the trick */
     if ((pImage->bVisible) && (pImage->bViewable))
       iRetcode = display_image (pData, pImage, MNG_FALSE);
   }
@@ -1002,7 +1046,7 @@ mng_retcode process_ani_image (mng_datap   pData,
   if (!iRetcode)                       /* all's well ? */
   {
     if (pData->bTimerset)              /* timer break ? */
-      pData->iBreakpoint = 99;         /* fictive number ! */
+      pData->iBreakpoint = 99;         /* fictive number; no more processing needed! */
     else
       pData->iBreakpoint = 0;          /* else clear it */
   }
@@ -1747,7 +1791,7 @@ mng_retcode process_ani_endl (mng_datap   pData,
     while ((pLOOP) &&
            ((pLOOP->sHeader.fCleanup != free_ani_loop) ||
             (pLOOP->iLevel           != pENDL->iLevel)    ))
-      pLOOP = (mng_ani_loopp)pLOOP->sHeader.pPrev;
+      pLOOP = pLOOP->sHeader.pPrev;
   }
                                        /* got it now ? */
   if ((pLOOP) && (pLOOP->iLevel == pENDL->iLevel))
@@ -1764,26 +1808,7 @@ mng_retcode process_ani_endl (mng_datap   pData,
     if (!pLOOP->iRunningcount)         /* reached zero ? */
     {                                  /* was this the outer LOOP ? */
       if (pLOOP == pData->pFirstaniobj)
-      {                                /* then we can clean up all ani objects */
-        mng_objectp       pObject = pData->pFirstaniobj;
-        mng_objectp       pNext;
-        mng_cleanupobject fCleanup;
-
-        while (pObject)                /* more objects to discard ? */
-        {
-          pNext = ((mng_object_headerp)pObject)->pNext;
-                                       /* call appropriate cleanup */
-          fCleanup = ((mng_object_headerp)pObject)->fCleanup;
-          fCleanup (pData, pObject);
-
-          pObject = pNext;             /* neeeext */
-        }
-                                       /* indicate we left the outmost loop */
-        pData->bHasLOOP     = MNG_FALSE;
-        pData->pFirstaniobj = 0;       /* leave no trace !!! */
-        pData->pLastaniobj  = 0;
-        pData->pCurraniobj  = 0;
-      }
+        pData->bHasLOOP = MNG_FALSE;
     }
     else
     {
@@ -1795,7 +1820,7 @@ mng_retcode process_ani_endl (mng_datap   pData,
   }
   else
   {
-
+    MNG_ERROR (pData, 1234);
     /* TODO: error abort ??? */
 
   }
@@ -2757,6 +2782,8 @@ mng_retcode process_ani_dhdr (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_DHDR, MNG_LC_START)
 #endif
 
+  pData->bHasDHDR = MNG_TRUE;          /* let everyone know we're inside a DHDR */
+
   iRetcode = process_display_dhdr (pData, pDHDR->iObjectid,
                                    pDHDR->iImagetype, pDHDR->iDeltatype,
                                    pDHDR->iBlockwidth, pDHDR->iBlockheight,
@@ -2974,6 +3001,87 @@ mng_retcode process_ani_ijng (mng_datap   pData,
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_IJNG, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+/* ************************************************************************** */
+
+mng_retcode create_ani_pplt (mng_datap      pData,
+                             mng_uint8      iType,
+                             mng_uint32     iCount,
+                             mng_rgbpaltab* paIndexentries,
+                             mng_uint8arr*  paAlphaentries,
+                             mng_uint8arr*  paUsedentries)
+{
+  mng_ani_ppltp pPPLT;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_ANI_PPLT, MNG_LC_START)
+#endif
+
+  MNG_ALLOC (pData, pPPLT, sizeof (mng_ani_pplt))
+
+  pPPLT->sHeader.fCleanup = free_ani_pplt;
+  pPPLT->sHeader.fProcess = process_ani_pplt;
+
+  pPPLT->iType            = iType;
+  pPPLT->iCount           = iCount;
+
+  MNG_COPY (&pPPLT->aIndexentries, paIndexentries, sizeof (pPPLT->aIndexentries))
+  MNG_COPY (&pPPLT->aAlphaentries, paAlphaentries, sizeof (pPPLT->aAlphaentries))
+  MNG_COPY (&pPPLT->aUsedentries,  paUsedentries,  sizeof (pPPLT->aUsedentries ))
+
+  add_ani_object (pData, (mng_object_headerp)pPPLT);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_ANI_PPLT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode free_ani_pplt (mng_datap   pData,
+                           mng_objectp pObject)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_ANI_PPLT, MNG_LC_START)
+#endif
+
+  MNG_FREEX (pData, pObject, sizeof (mng_ani_pplt))
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_ANI_PPLT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode process_ani_pplt (mng_datap   pData,
+                              mng_objectp pObject)
+{
+  mng_ani_ppltp pPPLT = (mng_ani_ppltp)pObject;
+  mng_retcode iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_ANI_PPLT, MNG_LC_START)
+#endif
+
+  iRetcode = process_display_pplt (pData, pPPLT->iType, pPPLT->iCount,
+                                   &pPPLT->aIndexentries, &pPPLT->aAlphaentries,
+                                   &pPPLT->aUsedentries);
+
+  if (iRetcode)                        /* on error bail out */
+    return iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_ANI_PPLT, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;

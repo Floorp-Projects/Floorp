@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_object_prc.h          copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.1                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Object processing routines (definition)                    * */
 /* *                                                                        * */
@@ -27,6 +27,9 @@
 /* *               created object (wasn't necessary)                        * */
 /* *             - added compression/filter/interlace fields to             * */
 /* *               object-buffer for delta-image processing                 * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/22/2000 - G.Juyn                                * */
+/* *             - added support for PPLT chunk                             * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -132,146 +135,153 @@ mng_retcode promote_imageobject  (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode create_ani_image  (mng_datap     pData);
+mng_retcode create_ani_image  (mng_datap      pData);
 
-mng_retcode create_ani_plte   (mng_datap     pData,
-                               mng_uint32    iEntrycount,
-                               mng_rgbpaltab aEntries);
+mng_retcode create_ani_plte   (mng_datap      pData,
+                               mng_uint32     iEntrycount,
+                               mng_rgbpaltab  aEntries);
 
-mng_retcode create_ani_trns   (mng_datap     pData,
-                               mng_uint32    iRawlen,
-                               mng_uint8arr  aRawdata);
+mng_retcode create_ani_trns   (mng_datap      pData,
+                               mng_uint32     iRawlen,
+                               mng_uint8arr   aRawdata);
 
-mng_retcode create_ani_gama   (mng_datap     pData,
-                               mng_bool      bEmpty,
-                               mng_uint32    iGamma);
+mng_retcode create_ani_gama   (mng_datap      pData,
+                               mng_bool       bEmpty,
+                               mng_uint32     iGamma);
 
-mng_retcode create_ani_chrm   (mng_datap     pData,
-                               mng_bool      bEmpty,
-                               mng_uint32    iWhitepointx,
-                               mng_uint32    iWhitepointy,
-                               mng_uint32    iRedx,
-                               mng_uint32    iRedy,
-                               mng_uint32    iGreenx,
-                               mng_uint32    iGreeny,
-                               mng_uint32    iBluex,
-                               mng_uint32    iBluey);
+mng_retcode create_ani_chrm   (mng_datap      pData,
+                               mng_bool       bEmpty,
+                               mng_uint32     iWhitepointx,
+                               mng_uint32     iWhitepointy,
+                               mng_uint32     iRedx,
+                               mng_uint32     iRedy,
+                               mng_uint32     iGreenx,
+                               mng_uint32     iGreeny,
+                               mng_uint32     iBluex,
+                               mng_uint32     iBluey);
 
-mng_retcode create_ani_srgb   (mng_datap     pData,
-                               mng_bool      bEmpty,
-                               mng_uint8     iRenderinginent);
+mng_retcode create_ani_srgb   (mng_datap      pData,
+                               mng_bool       bEmpty,
+                               mng_uint8      iRenderinginent);
 
-mng_retcode create_ani_iccp   (mng_datap     pData,
-                               mng_bool      bEmpty,
-                               mng_uint32    iProfilesize,
-                               mng_ptr       pProfile);
+mng_retcode create_ani_iccp   (mng_datap      pData,
+                               mng_bool       bEmpty,
+                               mng_uint32     iProfilesize,
+                               mng_ptr        pProfile);
 
-mng_retcode create_ani_bkgd   (mng_datap     pData,
-                               mng_uint16    iRed,
-                               mng_uint16    iGreen,
-                               mng_uint16    iBlue);
+mng_retcode create_ani_bkgd   (mng_datap      pData,
+                               mng_uint16     iRed,
+                               mng_uint16     iGreen,
+                               mng_uint16     iBlue);
 
-mng_retcode create_ani_loop   (mng_datap     pData,
-                               mng_uint8     iLevel,
-                               mng_uint32    iRepeatcount,
-                               mng_uint8     iTermcond,
-                               mng_uint32    iItermin,
-                               mng_uint32    iItermax,
-                               mng_uint32    iCount,
-                               mng_uint32p   pSignals);
+mng_retcode create_ani_loop   (mng_datap      pData,
+                               mng_uint8      iLevel,
+                               mng_uint32     iRepeatcount,
+                               mng_uint8      iTermcond,
+                               mng_uint32     iItermin,
+                               mng_uint32     iItermax,
+                               mng_uint32     iCount,
+                               mng_uint32p    pSignals);
 
-mng_retcode create_ani_endl   (mng_datap     pData,
-                               mng_uint8     iLevel);
+mng_retcode create_ani_endl   (mng_datap      pData,
+                               mng_uint8      iLevel);
 
-mng_retcode create_ani_defi   (mng_datap     pData);
+mng_retcode create_ani_defi   (mng_datap      pData);
 
-mng_retcode create_ani_basi   (mng_datap     pData,
-                               mng_uint16    iRed,
-                               mng_uint16    iGreen,
-                               mng_uint16    iBlue,
-                               mng_bool      bHasalpha,
-                               mng_uint16    iAlpha,
-                               mng_uint8     iViewable);
+mng_retcode create_ani_basi   (mng_datap      pData,
+                               mng_uint16     iRed,
+                               mng_uint16     iGreen,
+                               mng_uint16     iBlue,
+                               mng_bool       bHasalpha,
+                               mng_uint16     iAlpha,
+                               mng_uint8      iViewable);
 
-mng_retcode create_ani_clon   (mng_datap     pData,
-                               mng_uint16    iCloneid,
-                               mng_uint16    iSourceid,
-                               mng_uint8     iClonetype,
-                               mng_bool      bHasdonotshow,
-                               mng_uint8     iDonotshow,
-                               mng_uint8     iConcrete,
-                               mng_bool      bHasloca,
-                               mng_uint8     iLocatype,
-                               mng_int32     iLocax,
-                               mng_int32     iLocay);
+mng_retcode create_ani_clon   (mng_datap      pData,
+                               mng_uint16     iCloneid,
+                               mng_uint16     iSourceid,
+                               mng_uint8      iClonetype,
+                               mng_bool       bHasdonotshow,
+                               mng_uint8      iDonotshow,
+                               mng_uint8      iConcrete,
+                               mng_bool       bHasloca,
+                               mng_uint8      iLocatype,
+                               mng_int32      iLocax,
+                               mng_int32      iLocay);
 
-mng_retcode create_ani_back   (mng_datap     pData,
-                               mng_uint16    iRed,
-                               mng_uint16    iGreen,
-                               mng_uint16    iBlue,
-                               mng_uint8     iMandatory,
-                               mng_uint16    iImageid,
-                               mng_uint8     iTile);
+mng_retcode create_ani_back   (mng_datap      pData,
+                               mng_uint16     iRed,
+                               mng_uint16     iGreen,
+                               mng_uint16     iBlue,
+                               mng_uint8      iMandatory,
+                               mng_uint16     iImageid,
+                               mng_uint8      iTile);
 
-mng_retcode create_ani_fram   (mng_datap     pData,
-                               mng_uint8     iFramemode,
-                               mng_uint8     iChangedelay,
-                               mng_uint32    iDelay,
-                               mng_uint8     iChangetimeout,
-                               mng_uint32    iTimeout,
-                               mng_uint8     iChangeclipping,
-                               mng_uint8     iCliptype,
-                               mng_int32     iClipl,
-                               mng_int32     iClipr,
-                               mng_int32     iClipt,
-                               mng_int32     iClipb);
+mng_retcode create_ani_fram   (mng_datap      pData,
+                               mng_uint8      iFramemode,
+                               mng_uint8      iChangedelay,
+                               mng_uint32     iDelay,
+                               mng_uint8      iChangetimeout,
+                               mng_uint32     iTimeout,
+                               mng_uint8      iChangeclipping,
+                               mng_uint8      iCliptype,
+                               mng_int32      iClipl,
+                               mng_int32      iClipr,
+                               mng_int32      iClipt,
+                               mng_int32      iClipb);
 
-mng_retcode create_ani_move   (mng_datap     pData,
-                               mng_uint16    iFirstid,
-                               mng_uint16    iLastid,
-                               mng_uint8     iType,
-                               mng_int32     iLocax,
-                               mng_int32     iLocay);
+mng_retcode create_ani_move   (mng_datap      pData,
+                               mng_uint16     iFirstid,
+                               mng_uint16     iLastid,
+                               mng_uint8      iType,
+                               mng_int32      iLocax,
+                               mng_int32      iLocay);
 
-mng_retcode create_ani_clip   (mng_datap     pData,
-                               mng_uint16    iFirstid,
-                               mng_uint16    iLastid,
-                               mng_uint8     iType,
-                               mng_int32     iClipl,
-                               mng_int32     iClipr,
-                               mng_int32     iClipt,
-                               mng_int32     iClipb);
+mng_retcode create_ani_clip   (mng_datap      pData,
+                               mng_uint16     iFirstid,
+                               mng_uint16     iLastid,
+                               mng_uint8      iType,
+                               mng_int32      iClipl,
+                               mng_int32      iClipr,
+                               mng_int32      iClipt,
+                               mng_int32      iClipb);
 
-mng_retcode create_ani_show   (mng_datap     pData,
-                               mng_uint16    iFirstid,
-                               mng_uint16    iLastid,
-                               mng_uint8     iMode);
+mng_retcode create_ani_show   (mng_datap      pData,
+                               mng_uint16     iFirstid,
+                               mng_uint16     iLastid,
+                               mng_uint8      iMode);
 
-mng_retcode create_ani_term   (mng_datap     pData,
-                               mng_uint8     iTermaction,
-                               mng_uint8     iIteraction,
-                               mng_uint32    iDelay,
-                               mng_uint32    iItermax);
+mng_retcode create_ani_term   (mng_datap      pData,
+                               mng_uint8      iTermaction,
+                               mng_uint8      iIteraction,
+                               mng_uint32     iDelay,
+                               mng_uint32     iItermax);
 
-mng_retcode create_ani_save   (mng_datap     pData);
-mng_retcode create_ani_seek   (mng_datap     pData);
+mng_retcode create_ani_save   (mng_datap      pData);
+mng_retcode create_ani_seek   (mng_datap      pData);
 
-mng_retcode create_ani_dhdr   (mng_datap     pData,
-                               mng_uint16    iObjectid,
-                               mng_uint8     iImagetype,
-                               mng_uint8     iDeltatype,
-                               mng_uint32    iBlockwidth,
-                               mng_uint32    iBlockheight,
-                               mng_uint32    iBlockx,
-                               mng_uint32    iBlocky);
+mng_retcode create_ani_dhdr   (mng_datap      pData,
+                               mng_uint16     iObjectid,
+                               mng_uint8      iImagetype,
+                               mng_uint8      iDeltatype,
+                               mng_uint32     iBlockwidth,
+                               mng_uint32     iBlockheight,
+                               mng_uint32     iBlockx,
+                               mng_uint32     iBlocky);
 
-mng_retcode create_ani_prom   (mng_datap     pData,
-                               mng_uint8     iBitdepth,
-                               mng_uint8     iColortype,
-                               mng_uint8     iFilltype);
+mng_retcode create_ani_prom   (mng_datap      pData,
+                               mng_uint8      iBitdepth,
+                               mng_uint8      iColortype,
+                               mng_uint8      iFilltype);
 
-mng_retcode create_ani_ipng   (mng_datap     pData);
-mng_retcode create_ani_ijng   (mng_datap     pData);
+mng_retcode create_ani_ipng   (mng_datap      pData);
+mng_retcode create_ani_ijng   (mng_datap      pData);
+
+mng_retcode create_ani_pplt   (mng_datap      pData,
+                               mng_uint8      iType,
+                               mng_uint32     iCount,
+                               mng_rgbpaltab* paIndexentries,
+                               mng_uint8arr*  paAlphaentries,
+                               mng_uint8arr*  paUsedentries);
 
 /* ************************************************************************** */
 
@@ -326,6 +336,8 @@ mng_retcode free_ani_ipng     (mng_datap    pData,
                                mng_objectp  pObject);
 mng_retcode free_ani_ijng     (mng_datap    pData,
                                mng_objectp  pObject);
+mng_retcode free_ani_pplt     (mng_datap    pData,
+                               mng_objectp  pObject);
 
 /* ************************************************************************** */
 
@@ -379,6 +391,8 @@ mng_retcode process_ani_prom  (mng_datap    pData,
 mng_retcode process_ani_ipng  (mng_datap    pData,
                                mng_objectp  pObject);
 mng_retcode process_ani_ijng  (mng_datap    pData,
+                               mng_objectp  pObject);
+mng_retcode process_ani_pplt  (mng_datap    pData,
                                mng_objectp  pObject);
 
 /* ************************************************************************** */

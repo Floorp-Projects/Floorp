@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_cms.c                 copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : color management routines (implementation)                 * */
 /* *                                                                        * */
@@ -30,6 +30,11 @@
 /* *                                                                        * */
 /* *             0.5.2 - 06/10/2000 - G.Juyn                                * */
 /* *             - fixed some compilation-warnings (contrib Jason Morris)   * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
+/* *             - fixed problem with color-correction for stored images    * */
+/* *             0.5.3 - 06/23/2000 - G.Juyn                                * */
+/* *             - fixed problem with incorrect gamma-correction            * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -117,11 +122,17 @@ mng_retcode init_full_cms (mng_datap pData)
 {
   mng_cmsprof    hProf;
   mng_cmstrans   hTrans;
-  mng_imagedatap pBuf = ((mng_imagep)pData->pObjzero)->pImgbuf;
+  mng_imagep     pImage = (mng_imagep)pData->pCurrentobj;
+  mng_imagedatap pBuf;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_FULL_CMS, MNG_LC_START)
 #endif
+
+  if (!pImage)                         /* no current object? then use object 0 */
+    pImage = (mng_imagep)pData->pObjzero;
+
+  pBuf = pImage->pImgbuf;              /* address the buffer */ 
 
   if ((pBuf->bHasICCP) || (pData->bHasglobalICCP))
   {
@@ -462,11 +473,17 @@ mng_retcode correct_full_cms (mng_datap pData)
 mng_retcode init_gamma_only (mng_datap pData)
 {
   mng_float      dGamma;
-  mng_imagedatap pBuf = ((mng_imagep)pData->pObjzero)->pImgbuf;
+  mng_imagep     pImage = (mng_imagep)pData->pCurrentobj;
+  mng_imagedatap pBuf;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_GAMMA_ONLY, MNG_LC_START)
 #endif
+
+  if (!pImage)                         /* no current object? then use object 0 */
+    pImage = (mng_imagep)pData->pObjzero;
+
+  pBuf = pImage->pImgbuf;              /* address the buffer */
 
   if (pBuf->bHasGAMA)                  /* get the gamma value */
     dGamma = (mng_float)pBuf->iGamma / 100000;

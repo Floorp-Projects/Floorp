@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_data.h                copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : main data structure definition                             * */
 /* *                                                                        * */
@@ -43,6 +43,15 @@
 /* *             - added getalphaline callback for RGB8_A8 canvasstyle      * */
 /* *             0.5.2 - 06/06/2000 - G.Juyn                                * */
 /* *             - added parameter for delayed buffer-processing            * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/16/2000 - G.Juyn                                * */
+/* *             - added update-region parms for refresh calback            * */
+/* *             - added Needrefresh parameter                              * */
+/* *             0.5.3 - 06/17/2000 - G.Juyn                                * */
+/* *             - added Deltaimmediate parm for faster delta-processing    * */
+/* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
+/* *             - added Speed parameter to facilitate testing              * */
+/* *             - added Imagelevel parameter for processtext callback      * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -172,6 +181,8 @@ typedef struct mng_data_struct {
            mng_uint32        iPlaytime;
            mng_uint32        iSimplicity;
 
+           mng_uint32        iImagelevel;        /* level an image inside a stream */
+
            mng_uint32        iCanvasstyle;       /* layout of the drawing-canvas */
            mng_uint32        iBkgdstyle;         /* layout of the background-canvas */
 
@@ -198,7 +209,9 @@ typedef struct mng_data_struct {
            mng_float         dDisplaygamma;      /* initially set for sRGB conditions */
            mng_float         dDfltimggamma;
 
-           mng_bool          bStorechunks;       /* switch to store chunkdata */
+           mng_bool          bStorechunks;       /* switch for storing chunkdata */
+
+           mng_speedtype     iSpeed;             /* speed-modifier for animations */
 
            mng_uint32        iMaxwidth;          /* maximum canvas size */
            mng_uint32        iMaxheight;         /* initially set to 1024 x 1024 */
@@ -333,6 +346,7 @@ typedef struct mng_data_struct {
                                                     mng_read_resume! */
            mng_uint8         iSuspendpoint;      /* indicates at which point the flow
                                                     was broken to suspend input-reading */
+           mng_bool          bNeedrefresh;       /* indicates screen-refresh is needed */   
            mng_objectp       pCurrentobj;        /* current "object" */
            mng_objectp       pCurraniobj;        /* current animation object
                                                     "to be"/"being" processed */
@@ -343,6 +357,11 @@ typedef struct mng_data_struct {
            mng_objectp       pStorebuf;          /* current store object-buffer for row routines */
            mng_objectp       pRetrieveobj;       /* current retrieve object for row routines */
            mng_savedatap     pSavedata;          /* pointer to saved data (after SAVE) */
+
+           mng_uint32        iUpdateleft;        /* update region for refresh */
+           mng_uint32        iUpdateright;
+           mng_uint32        iUpdatetop;
+           mng_uint32        iUpdatebottom;
 
            mng_int8          iPass;              /* current interlacing pass;
                                                     negative value means no interlace */
@@ -484,6 +503,7 @@ typedef struct mng_data_struct {
            mng_uint32        iDeltaBlockheight;
            mng_uint32        iDeltaBlockx;
            mng_uint32        iDeltaBlocky;
+           mng_bool          bDeltaimmediate;
 
            mng_ptr           fDeltagetrow;       /* internal delta-proc callbacks */
            mng_ptr           fDeltaaddrow;

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_hlapi.c               copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : high-level application API (implementation)                * */
 /* *                                                                        * */
@@ -49,6 +49,15 @@
 /* *             - added delta-image field initialization                   * */
 /* *             0.5.2 - 06/06/2000 - G.Juyn                                * */
 /* *             - added initialization of the buffer-suspend parameter     * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/16/2000 - G.Juyn                                * */
+/* *             - added initialization of update-region for refresh        * */
+/* *             - added initialization of Needrefresh parameter            * */
+/* *             0.5.3 - 06/17/2000 - G.Juyn                                * */
+/* *             - added initialization of Deltaimmediate                   * */
+/* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
+/* *             - added initialization of Speed                            * */
+/* *             - added initialization of Imagelevel                       * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -313,6 +322,8 @@ mng_handle MNG_DECL mng_initialize (mng_int32     iUserdata,
   pData->dDfltimggamma         = 0.45455;
 
   pData->bStorechunks          = 1;    /* initially remember chunks */
+                                       /* normal animation-speed ! */
+  pData->iSpeed                = mng_st_normal;
                                        /* initial image limits */
   pData->iMaxwidth             = 1600;
   pData->iMaxheight            = 1200;
@@ -464,6 +475,8 @@ mng_retcode MNG_DECL mng_reset (mng_handle hHandle)
   pData->iFramecount           = 0;
   pData->iPlaytime             = 0;
 
+  pData->iImagelevel           = 0;    /* no image encountered */
+
   pData->iMagnify              = 0;    /* 1-to-1 display */
   pData->iOffsetx              = 0;    /* no offsets */
   pData->iOffsety              = 0;
@@ -568,6 +581,7 @@ mng_retcode MNG_DECL mng_reset (mng_handle hHandle)
   pData->iBreakpoint           = 0;
   pData->bSuspended            = MNG_FALSE;
   pData->iSuspendpoint         = 0;
+  pData->bNeedrefresh          = MNG_FALSE;
 
   pData->pCurrentobj           = 0;    /* these don't exist yet */
   pData->pCurraniobj           = 0;
@@ -580,6 +594,11 @@ mng_retcode MNG_DECL mng_reset (mng_handle hHandle)
   pData->pSavedata             = 0;    /* no saved data ! */
                                        /* TODO: remove in 1.0.0 !!! */
   pData->bEMNGMAhack           = MNG_FALSE;
+
+  pData->iUpdateleft           = 0;    /* no region updated yet */
+  pData->iUpdateright          = 0;
+  pData->iUpdatetop            = 0;
+  pData->iUpdatebottom         = 0;
 
   pData->iPass                 = 0;    /* interlacing stuff and temp buffers */
   pData->iRow                  = 0;
@@ -707,6 +726,7 @@ mng_retcode MNG_DECL mng_reset (mng_handle hHandle)
   pData->iDeltaBlockheight     = 0;
   pData->iDeltaBlockx          = 0;
   pData->iDeltaBlocky          = 0;
+  pData->bDeltaimmediate       = MNG_FALSE;
 #endif
 
 #ifdef MNG_INCLUDE_ZLIB

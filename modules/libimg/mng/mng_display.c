@@ -54,6 +54,16 @@
 /* *             - fixed display of stored JNG images                       * */
 /* *             0.5.3 - 06/13/2000 - G.Juyn                                * */
 /* *             - fixed problem with BASI-IEND as object 0                 * */
+/* *             0.5.3 - 06/16/2000 - G.Juyn                                * */
+/* *             - changed progressive-display processing                   * */
+/* *             0.5.3 - 06/17/2000 - G.Juyn                                * */
+/* *             - changed delta-image processing                           * */
+/* *             0.5.3 - 06/20/2000 - G.Juyn                                * */
+/* *             - fixed some minor stuff                                   * */
+/* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
+/* *             - added speed-modifier to timing routine                   * */
+/* *             0.5.3 - 06/22/2000 - G.Juyn                                * */
+/* *             - added support for PPLT chunk processing                  * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -83,6 +93,42 @@
 
 /* ************************************************************************** */
 /* *                                                                        * */
+/* * Progressive display refresh - does the actual call to refresh and sets * */
+/* * the timer to allow the app to perform the actual refresh to the screen * */
+/* * (eg. process its main message-loop)                                    * */
+/* *                                                                        * */
+/* ************************************************************************** */
+
+mng_retcode display_progressive_refresh (mng_datap  pData,
+                                         mng_uint32 iInterval)
+{                                      /* tell the app to refresh */
+  if ((pData->iUpdatetop < pData->iUpdatebottom) && (pData->iUpdateleft < pData->iUpdateright))
+  {
+    if (!pData->fRefresh (((mng_handle)pData),
+                          pData->iUpdatetop,    pData->iUpdateleft,
+                          pData->iUpdatebottom, pData->iUpdateright))
+      MNG_ERROR (pData, MNG_APPMISCERROR)
+
+    pData->iUpdateleft   = 0;          /* reset update-region */
+    pData->iUpdateright  = 0;
+    pData->iUpdatetop    = 0;
+    pData->iUpdatebottom = 0;
+    pData->bNeedrefresh  = MNG_FALSE;  /* reset refreshneeded indicator */
+
+    if (iInterval)                     /* interval requested ? */
+    {                                  /* setup the timer */
+      if (!pData->fSettimer ((mng_handle)pData, iInterval))
+        MNG_ERROR (pData, MNG_APPTIMERERROR)
+
+      pData->bTimerset = MNG_TRUE;     /* and indicate so */
+    }
+  }
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+/* *                                                                        * */
 /* * Generic display routines                                               * */
 /* *                                                                        * */
 /* ************************************************************************** */
@@ -94,16 +140,29 @@
 mng_retcode interframe_delay (mng_datap pData)
 {
   mng_uint32 iWaitfor;
-  mng_bool   bOke;
+  mng_uint32 iInterval;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INTERFRAME_DELAY, MNG_LC_START)
 #endif
 
+  if (!pData->bRunning)                /* sanity check for frozen status */
+    MNG_WARNING (pData, MNG_IMAGEFROZEN)
+
   if (pData->iFramedelay > 0)          /* let the app refresh first */
-    if (!pData->fRefresh (((mng_handle)pData), 0, 0,
-                          pData->iHeight, pData->iWidth))
-      MNG_ERROR (pData, MNG_APPMISCERROR)
+  {
+    if ((pData->iUpdatetop < pData->iUpdatebottom) && (pData->iUpdateleft < pData->iUpdateright))
+      if (!pData->fRefresh (((mng_handle)pData),
+                            pData->iUpdatetop,    pData->iUpdateleft,
+                            pData->iUpdatebottom, pData->iUpdateright))
+        MNG_ERROR (pData, MNG_APPMISCERROR)
+
+    pData->iUpdateleft   = 0;          /* reset update-region */
+    pData->iUpdateright  = 0;
+    pData->iUpdatetop    = 0;
+    pData->iUpdatebottom = 0;
+    pData->bNeedrefresh  = MNG_FALSE;  /* reset refreshneeded indicator */
+  }
                                        /* get current tickcount */
   pData->iRuntime = pData->fGettickcount ((mng_handle)pData);
                                        /* tickcount wrapped around ? */
@@ -117,33 +176,47 @@ mng_retcode interframe_delay (mng_datap pData)
   /* TODO: yeah, what to do ??? */
 
   if (pData->iTicks)                   /* what are we aiming for */
-    iWaitfor = pData->iFrametime + ((1000 * pData->iFramedelay) / pData->iTicks);
+  {
+    switch (pData->iSpeed)             /* honor speed modifier */
+    {
+      case mng_st_fast :
+        {
+          iWaitfor = (mng_uint32)(( 500 * pData->iFramedelay) / pData->iTicks);
+          break;
+        }
+      case mng_st_slow :
+        {
+          iWaitfor = (mng_uint32)((3000 * pData->iFramedelay) / pData->iTicks);
+          break;
+        }
+      case mng_st_slowest :
+        {
+          iWaitfor = (mng_uint32)((8000 * pData->iFramedelay) / pData->iTicks);
+          break;
+        }
+      default :
+        {
+          iWaitfor = (mng_uint32)((1000 * pData->iFramedelay) / pData->iTicks);
+        }
+    }
+
+    iWaitfor = pData->iFrametime + iWaitfor;
+  }
   else
     iWaitfor = pData->iFrametime;
 
   if (pData->iRuntime < iWaitfor)      /* delay necessary ? */
-  {                                    /* then set the timer */
-    bOke = pData->fSettimer ((mng_handle)pData, iWaitfor - pData->iRuntime);
-    pData->bTimerset = MNG_TRUE;       /* and indicate so */
-  }
+    iInterval = iWaitfor - pData->iRuntime;
   else
-  {
-    if (!pData->bRunning)              /* sanity check for frozen status */
-      MNG_WARNING (pData, MNG_IMAGEFROZEN)
-                                       /* just give the app some breathing space */
-    bOke = pData->fSettimer ((mng_handle)pData, 10);
-    pData->bTimerset = MNG_TRUE;       /* and indicate so */
-  }
-
-  if (!bOke)                           /* timer set not oke ? */
+    iInterval = 10;                    /* force app to process messageloop */
+                                       /* set the timer */
+  if (!pData->fSettimer ((mng_handle)pData, iInterval))
     MNG_ERROR (pData, MNG_APPTIMERERROR)
 
+  pData->bTimerset   = MNG_TRUE;       /* and indicate so */
   pData->iFrametime  = iWaitfor;       /* increase frametime in advance */
                                        /* setup for next delay */
   pData->iFramedelay = pData->iNextdelay;
-
-  /* note that slow systems may never catch up !!!
-     TODO: set timer at least 10 times per second to prevent deadlock */
 
   /* TODO: some provision to compensate during slow file-access (such as
      on low-bandwidth network connections);
@@ -453,7 +526,7 @@ mng_retcode next_frame (mng_datap  pData,
 
 mng_retcode next_layer (mng_datap pData)
 {
-  mng_imagep  pImage   = (mng_imagep)pData->pCurrentobj;
+  mng_imagep  pImage;
   mng_retcode iRetcode = MNG_NOERROR;
 
 #ifdef MNG_SUPPORT_TRACE
@@ -485,6 +558,11 @@ mng_retcode next_layer (mng_datap pData)
 
     if (iRetcode)                      /* on error bail out */
       return iRetcode;
+
+    if (pData->bHasDHDR)               /* processing a delta-image ? */
+      pImage = (mng_imagep)pData->pDeltaImage;
+    else
+      pImage = (mng_imagep)pData->pCurrentobj;
 
     if (!pImage)                       /* not an active object ? */
       pImage = (mng_imagep)pData->pObjzero;
@@ -576,7 +654,11 @@ mng_retcode display_image (mng_datap  pData,
     if ((pData->iDestr >= pData->iDestl) && (pData->iDestb >= pData->iDestt))
     {
       mng_int32   iY;
+#ifdef MNG_NO_CMS
+      mng_retcode iRetcode = MNG_NOERROR;
+#else
       mng_retcode iRetcode;
+#endif
 
       set_display_routine (pData);     /* determine display routine */
                                        /* and image-buffer retrieval routine */
@@ -727,6 +809,131 @@ mng_retcode display_image (mng_datap  pData,
 #endif
 
   return MNG_NOERROR;                  /* whehehe, this is good ! */
+}
+
+/* ************************************************************************** */
+
+mng_retcode execute_delta_image (mng_datap  pData,
+                                 mng_imagep pTarget,
+                                 mng_imagep pDelta)
+{
+  mng_imagedatap pBuftarget = pTarget->pImgbuf;
+  mng_imagedatap pBufdelta  = pDelta->pImgbuf;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_EXECUTE_DELTA_IMAGE, MNG_LC_START)
+#endif
+
+  if (pBufdelta->bHasPLTE)             /* palette in delta ? */
+  {
+    mng_uint32 iX;
+                                       /* new palette larger than old one ? */
+    if ((!pBuftarget->bHasPLTE) || (pBuftarget->iPLTEcount < pBufdelta->iPLTEcount))
+      pBuftarget->iPLTEcount = pBufdelta->iPLTEcount;
+                                       /* it's definitely got a PLTE now */
+    pBuftarget->bHasPLTE = MNG_TRUE;
+
+    for (iX = 0; iX < pBufdelta->iPLTEcount; iX++)
+    {
+      pBuftarget->aPLTEentries[iX].iRed   = pBufdelta->aPLTEentries[iX].iRed;
+      pBuftarget->aPLTEentries[iX].iGreen = pBufdelta->aPLTEentries[iX].iGreen;
+      pBuftarget->aPLTEentries[iX].iBlue  = pBufdelta->aPLTEentries[iX].iBlue;
+    }
+  }
+
+  if (pBufdelta->bHasTRNS)             /* cheap transparency in delta ? */
+  {
+    switch (pData->iColortype)         /* drop it into the target */
+    {
+      case 0: {                        /* gray */
+                pBuftarget->iTRNSgray  = pBufdelta->iTRNSgray;
+                pBuftarget->iTRNSred   = 0;
+                pBuftarget->iTRNSgreen = 0;
+                pBuftarget->iTRNSblue  = 0;
+                pBuftarget->iTRNScount = 0;
+                break;
+              }
+      case 2: {                        /* rgb */
+                pBuftarget->iTRNSgray  = 0;
+                pBuftarget->iTRNSred   = pBufdelta->iTRNSred;
+                pBuftarget->iTRNSgreen = pBufdelta->iTRNSgreen;
+                pBuftarget->iTRNSblue  = pBufdelta->iTRNSblue;
+                pBuftarget->iTRNScount = 0;
+                break;
+              }
+      case 3: {                        /* indexed */
+                pBuftarget->iTRNSgray  = 0;
+                pBuftarget->iTRNSred   = 0;
+                pBuftarget->iTRNSgreen = 0;
+                pBuftarget->iTRNSblue  = 0;
+                                       /* existing range smaller than new one ? */
+                if ((!pBuftarget->bHasTRNS) || (pBuftarget->iTRNScount < pBufdelta->iTRNScount))
+                  pBuftarget->iTRNScount = pBufdelta->iTRNScount;
+
+                MNG_COPY (&pBuftarget->aTRNSentries, &pBufdelta->aTRNSentries, pBufdelta->iTRNScount)
+                break;
+              }
+    }
+
+    pBuftarget->bHasTRNS = MNG_TRUE;   /* tell it it's got a tRNS now */
+  }
+
+  
+  /* TODO: copy bKGD (if it exists!) */
+
+
+  if (pBufdelta->bHasGAMA)             /* gamma in source ? */
+  {
+    pBuftarget->bHasGAMA = MNG_TRUE;   /* drop it onto the target */
+    pBuftarget->iGamma   = pBufdelta->iGamma;
+  }
+
+  if (pBufdelta->bHasCHRM)             /* chroma in delta ? */
+  {                                    /* drop it onto the target */
+    pBuftarget->bHasCHRM       = MNG_TRUE;
+    pBuftarget->iWhitepointx   = pBufdelta->iWhitepointx;
+    pBuftarget->iWhitepointy   = pBufdelta->iWhitepointy;
+    pBuftarget->iPrimaryredx   = pBufdelta->iPrimaryredx;
+    pBuftarget->iPrimaryredy   = pBufdelta->iPrimaryredy;
+    pBuftarget->iPrimarygreenx = pBufdelta->iPrimarygreenx;
+    pBuftarget->iPrimarygreeny = pBufdelta->iPrimarygreeny;
+    pBuftarget->iPrimarybluex  = pBufdelta->iPrimarybluex;
+    pBuftarget->iPrimarybluey  = pBufdelta->iPrimarybluey;
+  }
+
+  if (pBufdelta->bHasSRGB)             /* sRGB in delta ? */
+  {                                    /* drop it onto the target */
+    pBuftarget->bHasSRGB         = MNG_TRUE;
+    pBuftarget->iRenderingintent = pBufdelta->iRenderingintent;
+  }
+
+  if (pBufdelta->bHasICCP)             /* ICC profile in delta ? */
+  {
+    pBuftarget->bHasICCP = MNG_TRUE;   /* drop it onto the target */
+
+    if (pBuftarget->pProfile)          /* profile existed ? */
+      MNG_FREEX (pData, pBuftarget->pProfile, pBuftarget->iProfilesize)
+                                       /* allocate a buffer & copy it */
+    MNG_ALLOC (pData, pBuftarget->pProfile, pBufdelta->iProfilesize)
+    MNG_COPY  (pBuftarget->pProfile, pBufdelta->pProfile, pBufdelta->iProfilesize)
+                                       /* store it's length as well */
+    pBuftarget->iProfilesize = pBufdelta->iProfilesize;
+  }
+
+  if (!pData->bDeltaimmediate)         /* need to execute delta pixels ? */
+  {
+
+
+    /* TODO: execute delta pixels (if they exist!) */
+
+
+  }  
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_EXECUTE_DELTA_IMAGE, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
 }
 
 /* ************************************************************************** */
@@ -1104,6 +1311,10 @@ mng_retcode process_display_ihdr (mng_datap pData)
                                          pData->iBitdepth, pData->iColortype,
                                          pData->iCompression, pData->iFilter,
                                          pData->iInterlace, MNG_TRUE);
+                                       /* process immediatly if bitdepth & colortype are equal */
+      pData->bDeltaimmediate =
+        (mng_bool)((pData->iBitdepth  == ((mng_imagep)pData->pDeltaImage)->pImgbuf->iBitdepth ) &&
+                   (pData->iColortype == ((mng_imagep)pData->pDeltaImage)->pImgbuf->iColortype)    );
     }
     else
     {
@@ -1358,6 +1569,7 @@ mng_retcode process_display_iend (mng_datap pData)
 {
   mng_retcode iRetcode, iRetcode2;
   mng_bool bDodisplay = MNG_FALSE;
+  mng_bool bCleanup   = (mng_bool)(pData->iBreakpoint != 0);
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_IEND, MNG_LC_START)
@@ -1374,7 +1586,8 @@ mng_retcode process_display_iend (mng_datap pData)
 
   if ((pData->bHasBASI) ||             /* was it a BASI stream */
       (bDodisplay)      ||             /* or should we display the JNG */
-      (pData->iBreakpoint))            /* or did we get broken last time ? */
+                                       /* or did we get broken here last time ? */
+      ((pData->iBreakpoint) && (pData->iBreakpoint != 8)))
   {
     mng_imagep pImage = (mng_imagep)pData->pCurrentobj;
 
@@ -1390,6 +1603,28 @@ mng_retcode process_display_iend (mng_datap pData)
 
       if (pData->bTimerset)            /* timer break ? */
         pData->iBreakpoint = 6;
+    }
+  }
+
+  if ((pData->bHasDHDR) ||             /* was it a DHDR stream */
+      (pData->iBreakpoint == 8))       /* or did we get broken here last time ? */
+  {
+    mng_imagep pImage = (mng_imagep)pData->pDeltaImage;
+                                       /* perform the delta operations needed */
+    iRetcode = execute_delta_image (pData, pImage, (mng_imagep)pData->pObjzero);
+
+    if (iRetcode)                      /* on error bail out */
+      return iRetcode;
+                                       /* display it now then ? */
+    if ((pImage->bVisible) && (pImage->bViewable))
+    {                                  /* ok, so do it */
+      iRetcode = display_image (pData, pImage, MNG_FALSE);
+
+      if (iRetcode)                    /* on error bail out */
+        return iRetcode;
+
+      if (pData->bTimerset)            /* timer break ? */
+        pData->iBreakpoint = 8;
     }
   }
 
@@ -1428,10 +1663,27 @@ mng_retcode process_display_iend (mng_datap pData)
                                        /* if the image was displayed on the fly, */
                                        /* we'll have to make the app refresh */
     if ((pData->eImagetype != mng_it_mng) && (pData->fDisplayrow))
-      if (!pData->fRefresh (((mng_handle)pData), 0, 0,
-                            pData->iHeight, pData->iWidth))
-        MNG_ERROR (pData, MNG_APPMISCERROR)
+      pData->bNeedrefresh = MNG_TRUE;
 
+    if (bCleanup)                      /* if we got broken last time we need to cleanup */
+    {
+      pData->bHasIHDR = MNG_FALSE;     /* IEND signals the end for most ... */
+      pData->bHasBASI = MNG_FALSE;
+      pData->bHasDHDR = MNG_FALSE;
+#ifdef MNG_INCLUDE_JNG
+      pData->bHasJHDR = MNG_FALSE;
+      pData->bHasJSEP = MNG_FALSE;
+      pData->bHasJDAT = MNG_FALSE;
+#endif
+      pData->bHasPLTE = MNG_FALSE;
+      pData->bHasTRNS = MNG_FALSE;
+      pData->bHasGAMA = MNG_FALSE;
+      pData->bHasCHRM = MNG_FALSE;
+      pData->bHasSRGB = MNG_FALSE;
+      pData->bHasICCP = MNG_FALSE;
+      pData->bHasBKGD = MNG_FALSE;
+      pData->bHasIDAT = MNG_FALSE;
+    }
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -1519,9 +1771,7 @@ mng_retcode process_display_mend (mng_datap pData)
   }
 
   if (!pData->pCurraniobj)             /* always let the app refresh at the end ! */
-    if (!pData->fRefresh (((mng_handle)pData), 0, 0,
-                          pData->iHeight, pData->iWidth))
-      MNG_ERROR (pData, MNG_APPMISCERROR)
+    pData->bNeedrefresh = MNG_TRUE;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_MEND, MNG_LC_END)
@@ -2763,7 +3013,8 @@ mng_retcode process_display_dhdr (mng_datap  pData,
                                   mng_uint32 iBlockx,
                                   mng_uint32 iBlocky)
 {
-  mng_imagep pImage;
+  mng_imagep  pImage;
+  mng_retcode iRetcode;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_DHDR, MNG_LC_START)
@@ -2808,18 +3059,6 @@ mng_retcode process_display_dhdr (mng_datap  pData,
         pData->iDatawidth      = iBlockwidth;
         pData->iDataheight     = iBlockheight;
       }
-                                       /* full image replace ? */
-      if (iDeltatype == MNG_DELTATYPE_REPLACE)
-      {
-        mng_retcode iRetcode = reset_object_details (pData, pImage,
-                                                     pData->iDatawidth, pData->iDataheight,
-                                                     pData->iBitdepth, pData->iColortype,
-                                                     pData->iCompression, pData->iFilter,
-                                                     pData->iInterlace, MNG_TRUE);
-
-        if (iRetcode)                  /* on error bail out */
-          return iRetcode;     
-      }
 
       switch (iDeltatype)              /* determine nr of delta-channels */
       {
@@ -2852,8 +3091,71 @@ mng_retcode process_display_dhdr (mng_datap  pData,
               }
 
       }
+                                       /* full image replace ? */
+      if (iDeltatype == MNG_DELTATYPE_REPLACE)
+      {
+        iRetcode = reset_object_details (pData, pImage,
+                                         pData->iDatawidth, pData->iDataheight,
+                                         pData->iBitdepth, pData->iColortype,
+                                         pData->iCompression, pData->iFilter,
+                                         pData->iInterlace, MNG_FALSE);
 
-      pData->pStoreobj = pImage;       /* this is our target */
+        if (iRetcode)                  /* on error bail out */
+          return iRetcode;
+
+        pData->pStoreobj = pImage;     /* and store straight into this object */
+      }
+      else
+      {
+        mng_imagedatap pBufzero, pBuf;
+                                       /* we store in object 0 and process it later */
+        pData->pStoreobj = pData->pObjzero;
+                                       /* make sure to initialize object 0 then */
+        iRetcode = reset_object_details (pData, (mng_imagep)pData->pObjzero,
+                                         pData->iDatawidth, pData->iDataheight,
+                                         pData->iBitdepth, pData->iColortype,
+                                         pData->iCompression, pData->iFilter,
+                                         pData->iInterlace, MNG_TRUE);
+
+        if (iRetcode)                  /* on error bail out */
+          return iRetcode;
+
+        pBuf     = pImage->pImgbuf;    /* copy possible palette & cheap transparency */
+        pBufzero = ((mng_imagep)pData->pObjzero)->pImgbuf;
+
+        pBufzero->bHasPLTE = pBuf->bHasPLTE;
+        pBufzero->bHasTRNS = pBuf->bHasTRNS;
+
+        if (pBufzero->bHasPLTE)        /* copy palette ? */
+        {
+          mng_uint32 iX;
+
+          pBufzero->iPLTEcount = pBuf->iPLTEcount;
+
+          for (iX = 0; iX < pBuf->iPLTEcount; iX++)
+          {
+            pBufzero->aPLTEentries [iX].iRed   = pBuf->aPLTEentries [iX].iRed;
+            pBufzero->aPLTEentries [iX].iGreen = pBuf->aPLTEentries [iX].iGreen;
+            pBufzero->aPLTEentries [iX].iBlue  = pBuf->aPLTEentries [iX].iBlue;
+          }
+        }
+
+        if (pBufzero->bHasTRNS)        /* copy cheap transparency ? */
+        {
+          pBufzero->iTRNSgray  = pBuf->iTRNSgray;
+          pBufzero->iTRNSred   = pBuf->iTRNSred;
+          pBufzero->iTRNSgreen = pBuf->iTRNSgreen;
+          pBufzero->iTRNSblue  = pBuf->iTRNSblue;
+          pBufzero->iTRNScount = pBuf->iTRNScount;
+
+          MNG_COPY (&pBufzero->aTRNSentries, &pBuf->aTRNSentries,
+                    sizeof (pBufzero->aTRNSentries))
+        }
+                                       /* process immediatly if bitdepth & colortype are equal */
+        pData->bDeltaimmediate =
+          (mng_bool)((pData->iBitdepth  == ((mng_imagep)pData->pDeltaImage)->pImgbuf->iBitdepth ) &&
+                     (pData->iColortype == ((mng_imagep)pData->pDeltaImage)->pImgbuf->iColortype)    );
+      }
 
       switch (pData->iColortype)       /* determine row initialization routine */
       {
@@ -3080,6 +3382,148 @@ mng_retcode process_display_ijng (mng_datap pData)
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_IJNG, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode process_display_pplt (mng_datap      pData,
+                                  mng_uint8      iType,
+                                  mng_uint32     iCount,
+                                  mng_rgbpaltab* paIndexentries,
+                                  mng_uint8arr*  paAlphaentries,
+                                  mng_uint8arr*  paUsedentries)
+{
+  mng_uint32     iX;
+  mng_imagep     pImage = (mng_imagep)pData->pObjzero;
+  mng_imagedatap pBuf   = pImage->pImgbuf;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_PPLT, MNG_LC_START)
+#endif
+
+  switch (iType)
+  {
+    case MNG_DELTATYPE_REPLACERGB :
+      {
+        for (iX = 0; iX < iCount; iX++)
+        {
+          if ((*(paUsedentries)) [iX])
+          {
+            pBuf->aPLTEentries [iX].iRed   = (*(paIndexentries)) [iX].iRed;
+            pBuf->aPLTEentries [iX].iGreen = (*(paIndexentries)) [iX].iGreen;
+            pBuf->aPLTEentries [iX].iBlue  = (*(paIndexentries)) [iX].iBlue;
+          }
+        }
+
+        break;
+      }
+    case MNG_DELTATYPE_DELTARGB :
+      {
+        for (iX = 0; iX < iCount; iX++)
+        {
+          if ((*(paUsedentries)) [iX])
+          {
+            pBuf->aPLTEentries [iX].iRed   =
+                               (mng_uint8)(pBuf->aPLTEentries [iX].iRed   +
+                                           (*(paIndexentries)) [iX].iRed  );
+            pBuf->aPLTEentries [iX].iGreen =
+                               (mng_uint8)(pBuf->aPLTEentries [iX].iGreen +
+                                           (*(paIndexentries)) [iX].iGreen);
+            pBuf->aPLTEentries [iX].iBlue  =
+                               (mng_uint8)(pBuf->aPLTEentries [iX].iBlue  +
+                                           (*(paIndexentries)) [iX].iBlue );
+          }
+        }
+
+        break;
+      }
+    case MNG_DELTATYPE_REPLACEALPHA :
+      {
+        for (iX = 0; iX < iCount; iX++)
+        {
+          if ((*(paUsedentries)) [iX])
+            pBuf->aTRNSentries [iX] = (*(paAlphaentries)) [iX];
+        }
+
+        break;
+      }
+    case MNG_DELTATYPE_DELTAALPHA :
+      {
+        for (iX = 0; iX < iCount; iX++)
+        {
+          if ((*(paUsedentries)) [iX])
+            pBuf->aTRNSentries [iX] =
+                               (mng_uint8)(pBuf->aTRNSentries [iX] +
+                                           (*(paAlphaentries)) [iX]);
+        }
+
+        break;
+      }
+    case MNG_DELTATYPE_REPLACERGBA :
+      {
+        for (iX = 0; iX < iCount; iX++)
+        {
+          if ((*(paUsedentries)) [iX])
+          {
+            pBuf->aPLTEentries [iX].iRed   = (*(paIndexentries)) [iX].iRed;
+            pBuf->aPLTEentries [iX].iGreen = (*(paIndexentries)) [iX].iGreen;
+            pBuf->aPLTEentries [iX].iBlue  = (*(paIndexentries)) [iX].iBlue;
+            pBuf->aTRNSentries [iX]        = (*(paAlphaentries)) [iX];
+          }
+        }
+
+        break;
+      }
+    case MNG_DELTATYPE_DELTARGBA :
+      {
+        for (iX = 0; iX < iCount; iX++)
+        {
+          if ((*(paUsedentries)) [iX])
+          {
+            pBuf->aPLTEentries [iX].iRed   =
+                               (mng_uint8)(pBuf->aPLTEentries [iX].iRed   +
+                                           (*(paIndexentries)) [iX].iRed  );
+            pBuf->aPLTEentries [iX].iGreen =
+                               (mng_uint8)(pBuf->aPLTEentries [iX].iGreen +
+                                           (*(paIndexentries)) [iX].iGreen);
+            pBuf->aPLTEentries [iX].iBlue  =
+                               (mng_uint8)(pBuf->aPLTEentries [iX].iBlue  +
+                                           (*(paIndexentries)) [iX].iBlue );
+            pBuf->aTRNSentries [iX] =
+                               (mng_uint8)(pBuf->aTRNSentries [iX] +
+                                           (*(paAlphaentries)) [iX]);
+          }
+        }
+
+        break;
+      }
+  }
+
+  if ((iType != MNG_DELTATYPE_REPLACERGB) && (iType != MNG_DELTATYPE_DELTARGB))
+  {
+    if (pBuf->bHasTRNS)
+    {
+      if (iCount > pBuf->iTRNScount)
+        pBuf->iTRNScount = iCount;
+    }
+    else
+    {
+      pBuf->iTRNScount = iCount;
+      pBuf->bHasTRNS   = MNG_TRUE;
+    }
+  }
+
+  if ((iType != MNG_DELTATYPE_REPLACEALPHA) && (iType != MNG_DELTATYPE_DELTAALPHA))
+  {
+    if (iCount > pBuf->iPLTEcount)
+      pBuf->iPLTEcount = iCount;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_PPLT, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;

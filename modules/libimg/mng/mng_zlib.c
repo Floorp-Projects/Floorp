@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_zlib.c                copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : ZLIB library interface (implementation)                    * */
 /* *                                                                        * */
@@ -27,6 +27,9 @@
 /* *             0.5.2 - 05/24/2000 - G.Juyn                                * */
 /* *             - moved init of default zlib parms from here to            * */
 /* *               "mng_hlapi.c"                                            * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/16/2000 - G.Juyn                                * */
+/* *             - changed progressive-display processing                   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -217,7 +220,13 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
               iRslt = ((mng_correctrow)pData->fCorrectrow) (pData);
                                        /* slap onto canvas ? */
             if ((!iRslt) && (pData->fDisplayrow))
+            {
               iRslt = ((mng_displayrow)pData->fDisplayrow) (pData);
+
+              if (!iRslt)              /* check progressive display refresh */
+                iRslt = display_progressive_check (pData);
+
+            }
           }
         }
 

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_prop_xs.c             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : property get/set interface (implementation)                * */
 /* *                                                                        * */
@@ -14,10 +14,6 @@
 /* * email     : mailto:info@3-t.com                                        * */
 /* *                                                                        * */
 /* * comment   : implementation of the property get/set functions           * */
-/* *                                                                        * */
-/* * requires  : libmng.h                                                   * */
-/* *             mng_data.h                                                 * */
-/* *             mng_error.h                                                * */
 /* *                                                                        * */
 /* * changes   : 0.5.1 - 05/08/2000 - G.Juyn                                * */
 /* *             - fixed calling convention                                 * */
@@ -35,6 +31,10 @@
 /* *             - fixed up punctuation (contribution by Tim Rowley)        * */
 /* *             0.5.2 - 06/05/2000 - G.Juyn                                * */
 /* *             - added support for RGB8_A8 canvasstyle                    * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
+/* *             - added get/set for speedtype to facilitate testing        * */
+/* *             - added get for imagelevel during processtext callback     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -792,6 +792,26 @@ mng_retcode MNG_DECL mng_set_jpeg_maxjdat (mng_handle hHandle,
 #endif /* MNG_INCLUDE_JNG */
 
 /* ************************************************************************** */
+
+#ifdef MNG_SUPPORT_DISPLAY
+mng_retcode MNG_DECL mng_set_speed (mng_handle    hHandle,
+                                    mng_speedtype iSpeed)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SPEED, MNG_LC_START)
+#endif
+
+  ((mng_datap)hHandle)->iSpeed = iSpeed;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SPEED, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_SUPPORT_DISPLAY */
+
+/* ************************************************************************** */
 /* *                                                                        * */
 /* *  Property get functions                                                * */
 /* *                                                                        * */
@@ -1412,6 +1432,42 @@ mng_uint32 MNG_DECL mng_get_jpeg_maxjdat (mng_handle hHandle)
   return ((mng_datap)hHandle)->iMaxJDAT;
 }
 #endif /* MNG_INCLUDE_JNG */
+
+/* ************************************************************************** */
+
+#ifdef MNG_SUPPORT_DISPLAY
+mng_speedtype MNG_DECL mng_get_speed (mng_handle hHandle)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_SPEED, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_SPEED, MNG_LC_END)
+#endif
+
+  return ((mng_datap)hHandle)->iSpeed;
+}
+#endif /* MNG_SUPPORT_DISPLAY */
+
+/* ************************************************************************** */
+
+mng_uint32 MNG_DECL mng_get_imagelevel (mng_handle hHandle)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_IMAGELEVEL, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_IMAGELEVEL, MNG_LC_END)
+#endif
+
+  return ((mng_datap)hHandle)->iImagelevel;
+}
 
 /* ************************************************************************** */
 /* * end of file                                                            * */
