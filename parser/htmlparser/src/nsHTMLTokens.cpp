@@ -707,7 +707,8 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
 
             if(NS_OK==result) {
               result=aScanner.ReadWhile(temp,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
-              aScanner.SkipWhitespace(); //but skip terminating whitespace...
+              if(NS_OK==result)
+                aScanner.SkipWhitespace(); //but skip terminating whitespace...
             }
             
             if(NS_OK==result) {
