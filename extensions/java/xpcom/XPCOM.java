@@ -39,6 +39,7 @@ package org.mozilla.xpcom;
 
 import java.lang.reflect.*;
 import java.io.*;
+import java.util.*;
 
 
 /**
@@ -159,11 +160,37 @@ public final class XPCOM {
    */
   public static nsISupports queryInterface(nsISupports aObject, String aIID)
   {
-    Class[] interfaces = aObject.getClass().getInterfaces();
-    for (int i = 0; i < interfaces.length; i++ ) {
-      if (aIID.equals(XPCOM.getInterfaceIID(interfaces[i])))
+    ArrayList classes = new ArrayList();
+    classes.add(aObject.getClass());
+
+    while (!classes.isEmpty()) {
+      Class clazz = (Class) classes.remove(0);
+
+      // Skip over any class/interface in the "java.*" and "javax.*" domains.
+      if (clazz.getName().startsWith("java")) {
+        continue;
+      }
+
+      // If given IID matches that of the current class/interface, then we
+      // know that aObject implements the interface specified by the given IID.
+      String iid = XPCOM.getInterfaceIID(clazz);
+      if (iid != null && aIID.equals(iid)) {
         return aObject;
+      }
+
+      // clazz didn't match, so add the interfaces it implements
+      Class[] interfaces = clazz.getInterfaces();
+      for (int i = 0; i < interfaces.length; i++ ) {
+        classes.add(interfaces[i]);
+      }
+
+      // Also add its superclass
+      Class superclass = clazz.getSuperclass();
+      if (superclass != null) {
+        classes.add(superclass);
+      }
     }
+
     return null;
   }
 
@@ -199,12 +226,13 @@ public final class XPCOM {
       iid = (String) iidField.get(null);
     } catch (NoSuchFieldException e) {
       // Class may implement non-Mozilla interfaces, which would not have an
-      // IID method.  In that case, just return an empty string.
-      iid = "";
+      // IID method.  In that case, just null.
+      iid = null;
     } catch (IllegalAccessException e) {
-      // XXX Should be using a logging service, such as java.util.logging
+      // Not allowed to access that field for some reason.  Write out an
+      // error message, but don't fail.
       System.err.println("ERROR: Could not get field " + iidName.toString());
-      iid = "";
+      iid = null;
     }
 
     return iid;
