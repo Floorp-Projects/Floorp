@@ -80,7 +80,7 @@ public:
 nsresult
 NS_NewGlobalHistoryFactory(nsIFactory** result);
 
-#endif nsIGlobalHistory_h__
+#endif /* nsIGlobalHistory_h__ */
 
 
 
