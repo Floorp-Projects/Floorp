@@ -45,7 +45,7 @@ my $form = $cgi->Vars;
 my $vars;
 $vars->{'form'} = $form;
 $vars->{'newsgroup'} = $newsgroup;
-$vars->{'stylesheet'} = $form->{'stylesheet'} || "skin/planet.css";
+$vars->{'stylesheet'} = "skin/planet.css";
 
 my $template = Template->new({
     INCLUDE_PATH => ["template"],
