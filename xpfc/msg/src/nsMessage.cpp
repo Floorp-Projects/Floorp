@@ -25,6 +25,12 @@ static NS_DEFINE_IID(kMessageIID,       NS_IMESSAGE_IID);
 nsMessage :: nsMessage()
 {
   NS_INIT_REFCNT();
+
+  mSender = "";
+  mRecipients = "";
+  mSubject = "";
+  mBody = "";
+
 }
 
 nsMessage :: ~nsMessage()  
@@ -42,41 +48,52 @@ nsresult nsMessage::Init()
 
 nsresult nsMessage::SetSender(nsString& aSender)
 {
+  mSender = aSender;
   return NS_OK;
 }
 
 nsresult nsMessage::AddRecipient(nsString& aRecipient)
 {
+  if (mRecipients != "")
+    mRecipients += ",";
+  mRecipients += aRecipient;
+
   return NS_OK;
 }
 
 nsresult nsMessage::SetSubject(nsString& aSubject)
 {
+  mSubject = aSubject;
   return NS_OK;
 }
 
 nsresult nsMessage::SetBody(nsString& aBody)
 {
+  mBody = aBody;
   return NS_OK;
 }
 
 nsresult nsMessage::GetSender(nsString& aSender)
 {
+  aSender = mSender;
   return NS_OK;
 }
 
 nsresult nsMessage::GetReciepients(nsString& aRecipients)
 {
+  aRecipients = mRecipients;
   return NS_OK;
 }
 
 nsresult nsMessage::GetSubject(nsString& aSubject)
 {
+  aSubject = mSubject;
   return NS_OK;
 }
 
 nsresult nsMessage::GetBody(nsString& aBody)
 {
+  aBody = mBody;
   return NS_OK;
 }
 
