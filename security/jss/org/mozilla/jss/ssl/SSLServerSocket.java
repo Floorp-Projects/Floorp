@@ -159,8 +159,12 @@ public class SSLServerSocket extends java.net.ServerSocket {
      */
     public Socket accept() throws IOException {
         SSLSocket s = new SSLSocket();
-        s.setSockProxy( new SocketProxy(
-            socketAccept(s, base.getTimeout(), handshakeAsClient) ) );
+        /* socketAccept can throw an exception for timeouts or IO errors */
+        /* so first get a socket pointer, and if successful create the SocketProxy */
+        byte[] socketPointer = null;
+        socketPointer = socketAccept(s, base.getTimeout(), handshakeAsClient);
+        SocketProxy sp = new SocketProxy(socketPointer );
+        s.setSockProxy(sp);
         return s;
     }
 
