@@ -1189,6 +1189,7 @@ nsHTMLSelectElement::SetProperty(JSContext *aContext,
     res = mOptions->QueryInterface(kIJSScriptObjectIID, (void **)&optList);
     if (NS_SUCCEEDED(res) && optList) {
       res = optList->SetProperty(aContext, aObj, aID, aVp);
+      NS_RELEASE(optList);
     }
   } else {
     res = mInner.SetProperty(aContext, aObj, aID, aVp);
@@ -1427,13 +1428,13 @@ nsHTMLOptionCollection::RemoveOption(nsIContent* aOption)
 PRInt32
 nsHTMLOptionCollection::IndexOf(nsIContent* aOption)
 {
-  nsIDOMHTMLOptionElement* option;
+  nsCOMPtr<nsIDOMHTMLOptionElement> option;
 
   if (mDirty && (nsnull != mSelect)) {
     GetOptions();
   }
   if ((nsnull != aOption) &&
-    NS_SUCCEEDED(aOption->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option))) {
+    NS_SUCCEEDED(aOption->QueryInterface(kIDOMHTMLOptionElementIID, getter_AddRefs(option)))) {
     return mElements.IndexOf(option);
   }
   return -1;
