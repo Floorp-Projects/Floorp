@@ -186,7 +186,7 @@
       <separator id="commandBarSeparator"/>              
       <button id="updateButton" 
               label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
-              oncommand="onSoftwareUpdateCheck();"/>
+              command="cmd_update"/>
     </hbox>
     
     <resizer id="windowResizer" dir="bottomright"/>

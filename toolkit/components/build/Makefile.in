@@ -45,7 +45,6 @@ REQUIRES = 	\
 		docshell \
 		autocomplete \
 		downloads \
-		extensions \
 		mimetype \
 		webbrowserpersist \
 		progressDlg \
@@ -68,7 +67,6 @@ CPPSRCS = nsModule.cpp
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../autocomplete/src \
 	-I$(srcdir)/../downloads/src \
-	-I$(srcdir)/../extensions/src \
 	-I$(srcdir)/../history/src \
 	-I$(srcdir)/../satchel/src \
 	-I$(srcdir)/../passwordmgr/base \
@@ -81,7 +79,6 @@ endif
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)extensions_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)satchel_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \

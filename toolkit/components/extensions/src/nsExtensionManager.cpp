@@ -104,6 +104,20 @@ nsExtensionManager::DisableExtension(const char* aExtensionID)
 }
 
 NS_IMETHODIMP
+nsExtensionManager::UpdateExtension(const char* aExtensionID)
+{
+  nsXPIDLString updateURL;
+  mDataSource->GetUpdateURL(getter_Copies(updateURL));
+
+  if (str) {
+    
+
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsExtensionManager::InstallTheme(const char* aThemeID)
 {
   return NS_OK;
@@ -123,6 +137,12 @@ nsExtensionManager::EnableTheme(const char* aThemeID)
 
 NS_IMETHODIMP
 nsExtensionManager::DisableTheme(const char* aThemeID)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsExtensionManager::UpdateTheme(const char* aThemeID)
 {
   return NS_OK;
 }

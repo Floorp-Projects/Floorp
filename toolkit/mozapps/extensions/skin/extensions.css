@@ -2,6 +2,10 @@
   background-color: ThreeDFace;
 }
 
+#extensionsView {
+  background-image: url("chrome://mozapps/skin/extensions/viewWatermark.png");
+}
+
 /* Extension Manager Command Bar */
 #commandBar {
   padding: 0px 10px 5px 10px;
@@ -10,13 +14,13 @@
 #uninstallButton {
   margin: 0px;
   -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/extensions/extensionUninstall.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
 }
 
 #updateButton {
   margin: 0px;
   -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/extensions/extensionUpdate.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
 }
 
 #uninstallButton .button-icon, #updateButton .button-icon {
@@ -24,7 +28,7 @@
 }
 
 #uninstallButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanupDisabled.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
 }
 
 #commandBarSeparator {
