@@ -24,6 +24,7 @@ EXPORTS =					\
         nsIContentViewer.h			\
         nsIContentViewerContainer.h		\
         nsIDocumentLoader.h			\
+	nsIDocumentLoaderObserver.h		\
         nsIDocumentViewer.h			\
 	nsILinkHandler.h			\
 	nsIThrobber.h				\

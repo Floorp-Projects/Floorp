@@ -455,6 +455,41 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
       }
       break;
 
+    case NS_PAGE_LOAD:
+    case NS_PAGE_UNLOAD:
+      if (nsnull != mLoadListeners) {
+        if (nsnull == *aDOMEvent) {
+          mRet = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+        }
+        if (NS_OK == mRet) {
+          for (int i=0; i<mLoadListeners->Count(); i++) {
+            nsIDOMEventListener *mEventListener;
+            nsIDOMLoadListener *mLoadListener;
+
+            mEventListener = (nsIDOMEventListener*)mLoadListeners->ElementAt(i);
+
+            if (NS_OK == mEventListener->QueryInterface(kIDOMLoadListenerIID, (void**)&mLoadListener)) {
+              switch(aEvent->message) {
+                case NS_PAGE_LOAD:
+                  mRet = mLoadListener->Load(*aDOMEvent);
+                  break;
+                case NS_PAGE_UNLOAD:
+                  mRet = mLoadListener->Unload(*aDOMEvent);
+                  break;
+                default:
+                  break;
+              }
+              NS_RELEASE(mLoadListener);
+            }
+            else {
+              mRet = mEventListener->ProcessEvent(*aDOMEvent);
+            }
+            aEventStatus = (NS_OK == mRet) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+          }
+        }
+      }
+      break;
+
     default:
       break;
   }

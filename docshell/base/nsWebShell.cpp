@@ -19,11 +19,15 @@
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIDocumentLoaderObserver.h"
+#include "nsDOMEvent.h"
+#include "nsIPresContext.h"
 #include "nsRepository.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
@@ -72,7 +76,8 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webwidget");
 class nsWebShell : public nsIWebShell,
                    public nsIWebShellContainer,
                    public nsILinkHandler,
-                   public nsIScriptContextOwner
+                   public nsIScriptContextOwner,
+                   public nsIDocumentLoaderObserver
 {
 public:
   nsWebShell();
@@ -158,6 +163,9 @@ public:
   NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
 
+  // nsIDocumentLoaderObserver
+  NS_IMETHOD OnConnectionsComplete();
+
   // nsWebShell
   void HandleLinkClickEvent(const nsString& aURLSpec,
                             const nsString& aTargetSpec,
@@ -229,6 +237,8 @@ static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
@@ -278,6 +288,7 @@ nsWebShell::~nsWebShell()
   // Stop any pending document loads and destroy the loader...
   if (nsnull != mDocLoader) {
     mDocLoader->Stop();
+    mDocLoader->RemoveObserver((nsIDocumentLoaderObserver*)this);
     NS_RELEASE(mDocLoader);
   }
 
@@ -343,6 +354,11 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIScriptContextOwnerIID)) {
     *aInstancePtr = (void*)(nsIScriptContextOwner*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
+    *aInstancePtr = (void*)(nsIDocumentLoaderObserver*)this;
     AddRef();
     return NS_OK;
   }
@@ -461,6 +477,8 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   if (NS_OK != rv) {
     goto done;
   }
+  //Register ourselves as an observer for the new doc loader
+  mDocLoader->AddObserver((nsIDocumentLoaderObserver*)this);
 
   // Create device context
   rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull,
@@ -1282,6 +1300,31 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
   // XXX Is this right? Why are we passing in a context?
   NS_IF_RELEASE(aContext);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::OnConnectionsComplete()
+{
+  nsresult ret = NS_ERROR_FAILURE;
+  
+  if (nsnull != mScriptGlobal) {
+    nsIDocumentViewer *mDocViewer;
+    if (nsnull != mContentViewer && 
+        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&mDocViewer)) {
+      nsIPresContext *mPresContext;
+      if (NS_OK == mDocViewer->GetPresContext(mPresContext)) {
+        nsEventStatus mStatus = nsEventStatus_eIgnore;
+        nsMouseEvent mEvent;
+        mEvent.eventStructType = NS_EVENT;
+        mEvent.message = NS_PAGE_LOAD;
+        ret = mScriptGlobal->HandleDOMEvent(*mPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+
+        NS_RELEASE(mPresContext);
+      }
+      NS_RELEASE(mDocViewer);
+    }
+  }
+  return ret;
 }
 
 //----------------------------------------------------------------------

@@ -32,6 +32,7 @@ class nsIContentViewer;
 class nsIContentViewerContainer;
 class nsIStreamListener;
 class nsIStreamObserver;
+class nsIDocumentLoaderObserver;
 
 /* f43ba260-0737-11d2-beb9-00805f8a66dc */
 #define NS_IDOCUMENTLOADERFACTORY_IID   \
@@ -80,6 +81,10 @@ public:
     NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance) = 0;
 
     NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory) = 0;
+
+    NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver) = 0;
+
+    NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver) = 0;
 };
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */

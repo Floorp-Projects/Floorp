@@ -35,6 +35,12 @@ static NS_DEFINE_IID(kIScriptContextIID, NS_ISCRIPTCONTEXT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 
+void PR_CALLBACK
+NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+{
+  printf("Script error: %s\n", message);
+}
+
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
   mRefCnt = 0;
@@ -102,16 +108,13 @@ nsresult nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     }
 
     NS_RELEASE(owner);
+  
+    if (NS_OK == res) {
+      ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter); 
+    }
   }
 
   return res;
-}
-
-void nsJSContext::RunGC()
-{
-  if (nsnull != mContext) {
-    JS_GC(mContext);
-  }
 }
 
 nsresult nsJSContext::InitClasses()
@@ -162,7 +165,6 @@ nsIScriptContext* nsJSEnvironment::GetNewContext()
   NS_ADDREF(context);
   return context;
 }
-
 
 extern "C" NS_DOM nsresult NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext)
 {

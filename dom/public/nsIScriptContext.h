@@ -80,8 +80,6 @@ public:
    *
    **/
   virtual nsresult            InitContext(nsIScriptGlobalObject *aGlobalObject) = 0;
-
-  virtual void                RunGC() = 0;
 };
 
 /**
