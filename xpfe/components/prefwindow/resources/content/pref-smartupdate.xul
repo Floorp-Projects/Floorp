@@ -27,27 +27,26 @@
 	
 	  <box align="vertical">
 	  <html:fieldset style="width: 100%;">
-      <box align="horizontal">
+	  <html:div>
 			  <html:input type="checkbox" id="pref:0:bool:autoupdate.enabled" />
 			  <html:label for="pref:0:bool:autoupdate.enabled">
 				  &enableSU.label;
 			  </html:label>
-      </box>
-
-      <box align="horizontal">
-			  <html:input type="checkbox" id="pref:0:bool:autoupdate.enabled" />
-			  <html:label for="pref:0:bool:autoupdate.enabled">
+	  </html:div>
+	  <html:div>
+			  <html:input type="checkbox" id="pref:0:bool:autoupdate.confirm_install" />
+			  <html:label for="pref:0:bool:autoupdate.confirm_install">
   			  &requireConfirmation.label;
 			  </html:label>
-	    </box>
+		</html:div>
 	</html:fieldset>
 	  <html:fieldset style="width: 100%;">
       <box align="horizontal">
 	   &selectUninstall.label;
-            <html:textarea name="textstyle" ROWS="10" COLS="30" id="pref:string:browser.related.disabledForDomains">
+            <html:textarea name="textstyle" ROWS="40" COLS="30" id="pref:string:browser.related.disabledForDomains">
             </html:textarea>
           <spring flex="15%"/>
-          <titledbutton id="pref:0:bool:smartupdate" value="&uninstallButton.label;" style="height:20px;" />
+          <titledbutton id="pref:0:bool:smartupdate" value="&uninstallButton.label;" flex="1" style="max-height:13px;"/>
 	  </box>
 	  </html:fieldset>
     </box>
