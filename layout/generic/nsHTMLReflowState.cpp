@@ -568,9 +568,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     // Use the placeholder position
     computedOffsets.top = placeholderOffset.y;
   } else {
-    nsStyleCoord  coord;
-    ComputeVerticalValue(containingBlockHeight, mStylePosition->mOffset.GetTopUnit(),
-                         mStylePosition->mOffset.GetTop(coord), computedOffsets.top);
+    nsStyleCoord c;
+    ComputeVerticalValue(containingBlockHeight,
+                         mStylePosition->mOffset.GetTopUnit(),
+                         mStylePosition->mOffset.GetTop(c),
+                         computedOffsets.top);
   }
   if (eStyleUnit_Inherit == mStylePosition->mOffset.GetBottomUnit()) {
     computedOffsets.bottom = cbrs->computedOffsets.bottom;
@@ -583,9 +585,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       bottomIsAuto = PR_TRUE;
     }
   } else {
-    nsStyleCoord  coord;
-    ComputeVerticalValue(containingBlockHeight, mStylePosition->mOffset.GetBottomUnit(),
-                         mStylePosition->mOffset.GetBottom(coord), computedOffsets.bottom);
+    nsStyleCoord c;
+    ComputeVerticalValue(containingBlockHeight,
+                         mStylePosition->mOffset.GetBottomUnit(),
+                         mStylePosition->mOffset.GetBottom(c),
+                         computedOffsets.bottom);
   }
 
   // Check for a percentage based height and a containing block height
@@ -783,15 +787,15 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       // the containingBlockHeight calcuation.
       if (cbrs->parentReflowState) {
         nsIFrame* f = cbrs->parentReflowState->frame;
-        nsIAtom*  frameType;
+        nsIAtom*  cbFrameType;
 
-        f->GetFrameType(&frameType);
-        if (nsLayoutAtoms::scrollFrame == frameType) {
+        f->GetFrameType(&cbFrameType);
+        if (nsLayoutAtoms::scrollFrame == cbFrameType) {
           // Use the scroll frame's computed height instead
           containingBlockHeight =
             ((nsHTMLReflowState*)cbrs->parentReflowState)->computedHeight;
         }
-        NS_IF_RELEASE(frameType);
+        NS_IF_RELEASE(cbFrameType);
       }
     }
 
@@ -1115,13 +1119,18 @@ nsHTMLReflowState::CalculateBlockSideMargins(const nsHTMLReflowState* cbrs,
     mComputedBorderPadding.left - mComputedBorderPadding.right;
 
   // See whether we're over constrained
-  if (!isAutoLeftMargin && !isAutoRightMargin) {
-    // Neither margin is 'auto' so we're over constrained. Use the
-    // 'direction' property to tell which margin to ignore
-    if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
-      isAutoRightMargin = PR_TRUE;
-    } else {
-      isAutoLeftMargin = PR_TRUE;
+
+  // XXX NOTE: do ont mess with tables so that they can be centered;
+  // we need a better way to factor this in!!!
+  if (mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE) {
+    if (!isAutoLeftMargin && !isAutoRightMargin) {
+      // Neither margin is 'auto' so we're over constrained. Use the
+      // 'direction' property to tell which margin to ignore
+      if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
+        isAutoRightMargin = PR_TRUE;
+      } else {
+        isAutoLeftMargin = PR_TRUE;
+      }
     }
   }
 
