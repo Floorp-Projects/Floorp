@@ -101,7 +101,7 @@ Rights Reserved.
 				<box align="vertical" style="height:170px; border-top:solid black 1px">
 					<tree id="addressBucket" style="height:100px; min-width:10px" flex="1" multiple="true">
                                                 <treecolgroup>
-						  <treecol style="width:100%" flex="1"/>
+						  <treecol flex="1"/>
                                                 </treecolgroup>
 						<treechildren id="bucketBody" flex="1"/>
 					</tree>
