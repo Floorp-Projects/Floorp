@@ -308,8 +308,8 @@ static nsFontCharSetInfo KSC5601 =
   { "ks_c_5601-1987", DoubleByteConvert, 1 };
 static nsFontCharSetInfo X11Johab =
   { "x-x11johab", DoubleByteConvert, 1 };
-static nsFontCharSetInfo Johab =
-  { "x-johab", DoubleByteConvert, 1 };
+static nsFontCharSetInfo JohabNoAscii =
+  { "x-johab-noascii", DoubleByteConvert, 1 };
 
 static nsFontCharSetInfo ISO106461 =
   { nsnull, ISO10646Convert, 1 };
@@ -479,7 +479,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "johabs-1",           &FLG_KO,      &X11Johab      },
   { "johabsh-1",          &FLG_KO,      &X11Johab      },
   { "ksc5601.1987-0",     &FLG_KO,      &KSC5601       },
-  { "ksc5601.1992-3",     &FLG_KO,      &Johab         },
+  { "ksc5601.1992-3",     &FLG_KO,      &JohabNoAscii  },
   { "microsoft-cp1251",   &FLG_NONE,    &CP1251        },
   { "misc-fontspecific",  &FLG_NONE,    &Unknown       },
   { "sgi-fontspecific",   &FLG_NONE,    &Unknown       },
