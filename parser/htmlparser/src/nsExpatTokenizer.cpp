@@ -112,7 +112,7 @@ nsExpatTokenizer::GetCID()
  */
 nsresult nsExpatTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
 {                                                                        
-  if (NULL == aInstancePtr) {                                            
+  if (!aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
 
@@ -175,9 +175,9 @@ void nsExpatTokenizer::SetupExpatParser(void) {
  *  @param   
  *  @return  
  */
-nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {  
+nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) 
+  : nsHTMLTokenizer(), mBytesParsed(0) {  
   NS_INIT_REFCNT();
-  mBytesParsed = 0;
   mState = new XMLParserState;
   mState->tokenAllocator = nsnull;
   mState->parser = nsnull;
@@ -185,19 +185,15 @@ nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {
   mState->indoctype = PR_FALSE;
   mState->incdata = PR_FALSE;
 
-  nsAutoString buffer; buffer.AssignWithConversion("UTF-16");
-  const PRUnichar* encoding = buffer.get();
-  if (encoding) {
-    mExpatParser = XML_ParserCreate((const XML_Char*) encoding);
-    if (mExpatParser) {
+  mExpatParser = XML_ParserCreate((const XML_Char*) NS_LITERAL_STRING("UTF-16").get());
+  if (mExpatParser) {
 #ifdef XML_DTD
-      XML_SetParamEntityParsing(mExpatParser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetParamEntityParsing(mExpatParser, XML_PARAM_ENTITY_PARSING_ALWAYS);
 #endif
-      if (aURL)
-        XML_SetBase(mExpatParser, (const XML_Char*) aURL->get());
-      
-      SetupExpatParser();
-    }
+    if (aURL)
+      XML_SetBase(mExpatParser, (const XML_Char*) aURL->get());
+    
+    SetupExpatParser();
   }
 }
 
@@ -273,11 +269,8 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
 
   aLine.Truncate(0);
   if (startIndex == endIndex) {
-    /* Special case if the error is on a line where the only character is a newline */
-      // STRING USE WARNING: I have no idea what this is supposed to do; to me it looks like a no-op
-      //  ... so I'm not going to delete it but I will fix it to conform to the new standard.
-    // aLine.Append("");
-    aLine.AppendWithConversion("");
+    // Special case if the error is on a line where the only character is a newline.
+    // Do nothing
   }
   else {
     NS_ASSERTION(endIndex - startIndex >= sizeof(PRUnichar), "?");
@@ -752,7 +745,7 @@ void Tokenizer_HandleProcessingInstruction(void *userData,
 {
   XMLParserState* state = (XMLParserState*) userData;
   nsAutoString theString;
-  theString. AppendWithConversion("<?");
+  theString.AppendWithConversion("<?");
   theString.Append((PRUnichar *) target);
   if(data) {
     theString.AppendWithConversion(" ");
@@ -799,7 +792,8 @@ void Tokenizer_HandleUnparsedEntityDecl(void *userData,
 // aDTD is an in/out parameter.  Returns true if the aDTD is a chrome url or if the
 // filename contained within the url exists in the special DTD directory ("dtd"
 // relative to the current process directory).  For the latter case, aDTD is set
-// to the file: url that points to the DTD file found in the local DTD directory.
+// to the file: url that points to the DTD file found in the local DTD directory
+// AND the old URI is relased.
 static PRBool
 IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
 {
@@ -820,12 +814,12 @@ IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
     nsCOMPtr<nsIURL> dtdURL;
     dtdURL = do_QueryInterface(*aDTD, &res);
     if (NS_SUCCEEDED(res)) {
-      char* fileName = nsnull;    
-      res = dtdURL->GetFileName(&fileName);
-      if (NS_SUCCEEDED(res) && nsnull != fileName) {
+      nsXPIDLCString fileName;    
+      res = dtdURL->GetFileName(getter_Copies(fileName));
+      if (NS_SUCCEEDED(res) && fileName) {
         nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
         nsString path; path.AssignWithConversion(kDTDDirectory);        
-        path.AppendWithConversion(fileName);
+        path.AppendWithConversion(fileName.get());
         dtdPath += path;
         if (dtdPath.Exists()) {
           // The DTD was found in the local DTD directory.
@@ -833,12 +827,11 @@ IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
           nsFileURL dtdFile(dtdPath);
           nsCOMPtr<nsIURI> dtdURI;
           res = NS_NewURI(getter_AddRefs(dtdURI), dtdFile.GetURLString());
-          if (NS_SUCCEEDED(res) && nsnull != dtdURI) {
+          if (NS_SUCCEEDED(res) && dtdURI) {
             *aDTD = dtdURI;
             isLoadable = PR_TRUE;
           }
         }
-        nsCRT::free(fileName);
       }
     }
   }  
@@ -847,23 +840,23 @@ IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
 }
 
 nsresult
-nsExpatTokenizer::OpenInputStream(const nsString& aURLStr, 
-                                  const nsString& aBaseURL, 
+nsExpatTokenizer::OpenInputStream(const XML_Char* aURLStr, 
+                                  const XML_Char* aBaseURL, 
                                   nsIInputStream** in, 
                                   nsString* aAbsURL) 
 {
   nsresult rv;
   nsCOMPtr<nsIURI> baseURI;  
-  rv = NS_NewURI(getter_AddRefs(baseURI), aBaseURL);
-  if (NS_SUCCEEDED(rv) && nsnull != baseURI) {
+  rv = NS_NewURI(getter_AddRefs(baseURI), NS_ConvertUCS2toUTF8((const PRUnichar*)aBaseURL).get());
+  if (NS_SUCCEEDED(rv) && baseURI) {
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), aURLStr, baseURI);
+    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8((const PRUnichar*)aURLStr).get(), baseURI);
     if (NS_SUCCEEDED(rv) && uri) {
       if (IsLoadableDTD(address_of(uri))) {
         rv = NS_OpenURI(in, uri);
         char* absURL = nsnull;
         uri->GetSpec(&absURL);
-        aAbsURL->AppendWithConversion(absURL);
+        aAbsURL->AssignWithConversion(absURL);
         nsCRT::free(absURL);
       } 
       else {
@@ -935,28 +928,23 @@ int Tokenizer_HandleExternalEntityRef(XML_Parser parser,
 
 #ifdef XML_DTD
   // Load the external entity into a buffer
-  nsCOMPtr<nsIInputStream> in = nsnull;
-  nsAutoString urlSpec( (const PRUnichar*) systemId );
-  nsAutoString baseURL( (const PRUnichar*) base );
+  nsCOMPtr<nsIInputStream> in;
   nsAutoString absURL;
 
-  nsresult rv = nsExpatTokenizer::OpenInputStream(urlSpec, baseURL, getter_AddRefs(in), &absURL);
+  nsresult rv = nsExpatTokenizer::OpenInputStream(systemId, base, getter_AddRefs(in), &absURL);
 
-  if (NS_SUCCEEDED(rv) && nsnull != in) {
+  if (NS_SUCCEEDED(rv) && in) {
     PRUint32 retLen = 0;
     PRUnichar *uniBuf = nsnull;
     rv = nsExpatTokenizer::LoadStream(in, uniBuf, retLen);
 
     // Pass the buffer to expat for parsing
-    if (NS_SUCCEEDED(rv) && nsnull != uniBuf) {    
+    if (NS_SUCCEEDED(rv) && uniBuf) {    
       // Create a parser for parsing the external entity
-      nsAutoString encoding; encoding.AssignWithConversion("UTF-16");  
-      XML_Parser entParser = nsnull;
+      XML_Parser entParser = XML_ExternalEntityParserCreate(parser, 0, 
+        (const XML_Char*) NS_LITERAL_STRING("UTF-16").get());
 
-      entParser = XML_ExternalEntityParserCreate(parser, 0, 
-        (const XML_Char*) encoding.get());
-
-      if (nsnull != entParser) {
+      if (entParser) {
         XML_SetBase(entParser, (const XML_Char*) absURL.get());
         result = XML_Parse(entParser, (char *)uniBuf,  retLen * sizeof(PRUnichar), 1);
         XML_ParserFree(entParser);

@@ -2142,8 +2142,8 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
 
 static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, nsCharsetSource& oCharsetSource) {
  oCharsetSource= kCharsetFromAutoDetection;
- oCharset.SetLength(0);
- // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-oCharseting
+ oCharset.Truncate();
+ // See http://www.w3.org/TR/2000/REC-xml-20001006#sec-guessing
  // for details
  // Also, MS Win2K notepad now generate 3 bytes BOM in UTF8 as UTF8 signature
  // We need to check that
@@ -2181,41 +2181,85 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
            // 3C 00 3F 00 UTF-16, little-endian, no Byte Order Mark
            oCharset.AssignWithConversion(UCS2_LE); // should change to UTF-16LE
         } 
-     } else if((0x3C==aBytes[0]) && (0x3F==aBytes[1]) &&
+     } else if(                     (0x3F==aBytes[1]) &&
                (0x78==aBytes[2]) && (0x6D==aBytes[3]) &&
-               (0 == PL_strncmp("<?xml version", (char*)aBytes, 13 ))) {
+               (0 == PL_strncmp("<?xml", (char*)aBytes, 5 ))) {
        // 3C 3F 78 6D
-       nsAutoString firstXbytes;
-       firstXbytes.AppendWithConversion((const char*)aBytes, (PRInt32)
-                       ((aLen > XMLENCODING_PEEKBYTES)?
-                       XMLENCODING_PEEKBYTES:
-                       aLen)); 
-       PRInt32 xmlDeclEnd = firstXbytes.Find("?>", PR_FALSE, 13);
-	   // 27 == strlen("<xml? version="1" encoding=");
-       if((kNotFound != xmlDeclEnd) &&(xmlDeclEnd > 27 )){
-           firstXbytes.Cut(xmlDeclEnd, firstXbytes.Length()-xmlDeclEnd);
-           PRInt32 encStart = firstXbytes.Find("encoding", PR_FALSE,13);
-           if(kNotFound != encStart) {
-             encStart = firstXbytes.FindCharInSet("\"'", encStart+8);
-                              // 8 == strlen("encoding")
-             if(kNotFound != encStart) {
-                PRUnichar q = firstXbytes.CharAt(encStart); 
-                PRInt32 encEnd = firstXbytes.FindChar(q, PR_FALSE, encStart+1);
-                if(kNotFound != encEnd) {
-                   PRInt32 count = encEnd - encStart -1;
-                   if(count >0) {
-                      const PRUnichar *u = firstXbytes.get();
-                      // if UTF-16, it should have been detected by now
-                      // otherwise, the label must be invalid
-                      if (nsCRT::strncasecmp(&u[encStart+1], NS_LITERAL_STRING("UTF-16").get(), count)) {
-                        firstXbytes.Mid(oCharset,(encStart+1), count);
-                        oCharsetSource= kCharsetFromMetaTag;
-                      }
-                   }
-                }
+       // ASCII characters are in their normal positions, so we can safely
+       // deal with the XML declaration in the old C way
+       // XXX This part could be made simpler by using CWordTokenizer<char>,
+       //     but bug 104479 must be fixed first.
+       // The shortest string so far (strlen==5):
+       // <?xml
+       PRInt32 i;
+       PRBool versionFound = PR_FALSE, encodingFound = PR_FALSE;
+       for (i=6; i < aLen && !encodingFound; i++) {
+         // end of XML declaration?
+         if ((((char*)aBytes)[i] == '?') && 
+           ((i+1) < aLen) &&
+           (((char*)aBytes)[i+1] == '>')) {
+           break;
+         }
+         // Version is required.
+         if (!versionFound) {
+           // Want to avoid string comparisons, hence looking for 'n'
+           // and only if found check the string leading to it. Not
+           // foolproof, but fast.
+           // The shortest string allowed before this is  (strlen==13):
+           // <?xml version
+           if ((((char*)aBytes)[i] == 'n') &&
+             (i >= 12) && 
+             (0 == PL_strncmp("versio", (char*)(aBytes+i-6), 6 ))) {
+             // Fast forward through version
+             char q = 0;
+             for (++i; i < aLen; i++) {
+               char qi = ((char*)aBytes)[i];
+               if (qi == '\'' || qi == '"') {
+                 if (q && q == qi) {
+                   //  ending quote
+                   versionFound = PR_TRUE;
+                   break;
+                 } else {
+                   // Starting quote
+                   q = qi;
+                 }
+               }
              }
            }
-       }
+         } else {
+           // encoding must follow version
+           // Want to avoid string comparisons, hence looking for 'g'
+           // and only if found check the string leading to it. Not
+           // foolproof, but fast.
+           // The shortest allowed string before this (strlen==26):
+           // <?xml version="1" encoding
+           if ((((char*)aBytes)[i] == 'g') &&
+             (i >= 25) && 
+             (0 == PL_strncmp("encodin", (char*)(aBytes+i-7), 7 ))) {
+             PRInt32 encStart;
+             char q = 0;
+             for (++i; i < aLen; i++) {
+               char qi = ((char*)aBytes)[i];
+               if (qi == '\'' || qi == '"') {
+                 if (q && q == qi) {
+                   PRInt32 count = i - encStart;
+                   // encoding value is invalid if it is UTF-16
+                   if (count > 0 && 
+                     (0 != PL_strcmp("UTF-16", (char*)(aBytes+encStart)))) {
+                     oCharset.AssignWithConversion((char*)(aBytes+encStart),count);
+                     oCharsetSource = kCharsetFromMetaTag;
+                   }
+                   encodingFound = PR_TRUE;
+                   break;
+                 } else {
+                   encStart = i+1;
+                   q = qi;
+                 }
+               }
+             }
+           }
+         } // if (!versionFound)
+       } // for
      }
    break;
    case 0xEF:  
