@@ -258,7 +258,7 @@ nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
    res = PrepareDecoder();
    if(NS_SUCCEEDED(res)) 
    {
-        PRInt32 inLength = nsCRT::strlen(aIn);
+        PRInt32 inLength = strlen(aIn);
         PRInt32 outLength;
         res= mDecoder->GetMaxLength(aIn, inLength,&outLength);
         if(NS_SUCCEEDED(res)) {
