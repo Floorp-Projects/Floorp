@@ -90,9 +90,8 @@ nsresult nsMsgMailSession::GetCurrentServer(nsIMsgIncomingServer ** aServer)
 
   if (NS_FAILED(rv)) return rv;
 
+  //if successful aServer will be addref'd by GetIncomingServer
   rv = defaultAccount->GetIncomingServer(aServer);
-  if (NS_SUCCEEDED(rv))
-  	NS_ADDREF(*aServer);
 
   return rv;
 }
