@@ -64,9 +64,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStreamObserver
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
-                        const nsString& aMsg);
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
   NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
 
 protected:
@@ -767,13 +767,23 @@ TempObserver::QueryInterface(const nsIID& aIID,
 
 
 NS_IMETHODIMP
-TempObserver::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
-                        const nsString& aMsg)
+TempObserver::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
 #if 0
   fputs("[progress ", stdout);
   fputs(mURL, stdout);
   printf(" %d %d ", aProgress, aProgressMax);
+  fputs("]\n", stdout);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TempObserver::OnStatus(nsIURL* aURL, const nsString& aMsg)
+{
+#if 0
+  fputs("[status ", stdout);
+  fputs(mURL, stdout);
   fputs(aMsg, stdout);
   fputs("]\n", stdout);
 #endif

@@ -705,26 +705,30 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const nsString& aURL)
 NS_IMETHODIMP
 nsBrowserWindow::OnProgress(nsIURL* aURL,
                             PRInt32 aProgress,
-                            PRInt32 aProgressMax,
-                            const nsString& aMsg)
+                            PRInt32 aProgressMax)
 {
   if (mStatus) {
-    if (aMsg.Length() < 1) {
-      nsAutoString url;
-      if (nsnull != aURL) {
-        aURL->ToString(url);
-      }
-      url.Append(": progress ");
-      url.Append(aProgress, 10);
-      if (0 != aProgressMax) {
-        url.Append(" (out of ");
-        url.Append(aProgressMax, 10);
-        url.Append(")");
-      }
-      mStatus->SetText(url);
-    } else {
-      mStatus->SetText(aMsg);
+    nsAutoString url;
+    if (nsnull != aURL) {
+      aURL->ToString(url);
     }
+    url.Append(": progress ");
+    url.Append(aProgress, 10);
+    if (0 != aProgressMax) {
+      url.Append(" (out of ");
+      url.Append(aProgressMax, 10);
+      url.Append(")");
+    }
+    mStatus->SetText(url);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::OnStatus(nsIURL* aURL, const nsString& aMsg)
+{
+  if (mStatus) {
+    mStatus->SetText(aMsg);
   }
   return NS_OK;
 }

@@ -316,8 +316,7 @@ nsDocLoader::OnStartBinding(nsIURL* aURL, const char *aContentType)
 }
 
 NS_IMETHODIMP
-nsDocLoader::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
-                        const nsString& aMsg)
+nsDocLoader::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
   nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
   fputs(*url, stdout);
@@ -325,6 +324,17 @@ nsDocLoader::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
   if (0 != aProgressMax) {
     printf(" (out of %d)", aProgressMax);
   }
+  fputs("\n", stdout);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocLoader::OnStatus(nsIURL* aURL, const nsString& aMsg)
+{
+  nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
+  fputs(*url, stdout);
+  printf(": status ");
+  fputs(aMsg, stdout);
   fputs("\n", stdout);
   return NS_OK;
 }

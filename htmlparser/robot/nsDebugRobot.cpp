@@ -124,7 +124,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg) { return NS_OK; }
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax) { return NS_OK; }
+  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg) { return NS_OK; }
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType) { return NS_OK; }
   NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
 };

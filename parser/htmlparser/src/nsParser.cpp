@@ -676,12 +676,28 @@ nsresult nsParser::GetBindInfo(nsIURL* aURL){
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-nsParser::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
-                         const nsString& aMsg)
+nsParser::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
   nsresult result=0;
   if (nsnull != mObserver) {
-    mObserver->OnProgress(aURL, aProgress, aProgressMax, aMsg);
+    mObserver->OnProgress(aURL, aProgress, aProgressMax);
+  }
+  return result;
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 5/12/98
+ *  @param   
+ *  @return  error code -- 0 if ok, non-zero if error.
+ */
+nsresult
+nsParser::OnStatus(nsIURL* aURL, const nsString &aMsg)
+{
+  nsresult result=0;
+  if (nsnull != mObserver) {
+    mObserver->OnStatus(aURL, aMsg);
   }
   return result;
 }
