@@ -130,7 +130,7 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 1.70 $;
+my $VERSION = q$Revision: 2.0 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
