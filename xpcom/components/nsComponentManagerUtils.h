@@ -58,6 +58,8 @@ typedef nsresult (*nsUnregisterProc)(nsISupports* aServMgr, const char *path);
     {0x92, 0xfb, 0x00, 0xe0, 0x98, 0x05, 0x57, 0x0f} \
 }
 
+#define NS_COMPONENTMANAGER_PROGID "xpcom.componentmanager.1"
+
 extern NS_COM nsresult
 NS_GetGlobalComponentManager(nsIComponentManager* *result);
 
