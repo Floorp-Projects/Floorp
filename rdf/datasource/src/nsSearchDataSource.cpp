@@ -1160,6 +1160,43 @@ SearchDataSource::ReadFileContents(char *basename, nsString& sourceContents)
 #endif	XP_MAC
 
 	nsInputFileStream		searchFile(searchEngine);
+
+#ifdef	XP_MAC
+	if (!searchFile.is_open())
+	{
+		// on Mac, nsDirectoryIterator resolves aliases before returning them currently;
+		// so, if we can't open the file directly, walk the directory and see if we then
+		// find a match
+
+		// on Mac, use system's search files
+		nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
+		nsFileSpec 			nativeDir(searchSitesDir);
+		for (nsDirectoryIterator i(nativeDir); i.Exists(); i++)
+		{
+			const nsFileSpec	fileSpec = (const nsFileSpec &)i;
+			const char		*childURL = fileSpec;
+			if (!isVisible(fileSpec))	continue;
+			if (childURL != nsnull)
+			{
+				// be sure to resolve aliases in case we encounter one
+				CInfoPBRec	cInfo;
+				PRBool		wasAliased = PR_FALSE;
+				fileSpec.ResolveAlias(wasAliased);
+				nsAutoString	childPath(childURL);
+				PRInt32		separatorOffset = childPath.RFind(":");
+				if (separatorOffset > 0)
+				{
+						childPath.Cut(0, separatorOffset+1);
+				}
+				if (childPath.EqualsIgnoreCase(basename))
+				{
+					searchFile = fileSpec;
+				}
+			}
+		}
+	}
+#endif
+
 	if (searchFile.is_open())
 	{
 		nsRandomAccessInputStream	stream(searchFile);
