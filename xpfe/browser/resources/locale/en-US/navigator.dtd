@@ -60,7 +60,6 @@
 <!ENTITY taskbarCmd.label "Taskbar">
 <!ENTITY taskbarCmd.accesskey "t">
 
-<!-- the command keys for Larger and Smaller were intended to be + and -, but see bug 52756 -->
 <!ENTITY textZoomEnlargeCmd.label "Larger">
 <!ENTITY textZoomEnlargeCmd.accesskey "l">
 <!ENTITY textZoomEnlargeCmd.commandkey "+">
