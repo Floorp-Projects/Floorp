@@ -127,11 +127,13 @@ CBrowserView::CBrowserView()
 
 	mbDocumentLoading = PR_FALSE;
 
-	m_pFindDlg = NULL;
-  m_pPrintProgressDlg = NULL;
+    m_pFindDlg = NULL;
+    m_pPrintProgressDlg = NULL;
 
-  m_bUrlBarClipOp = FALSE;
-  m_bCurrentlyPrinting = FALSE;
+    m_bUrlBarClipOp = FALSE;
+    m_bCurrentlyPrinting = FALSE;
+
+    m_SecurityState = SECURITY_STATE_INSECURE;
 }
 
 CBrowserView::~CBrowserView()
@@ -992,4 +994,18 @@ void CBrowserView::Activate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
         default:
             break;
     }
+}
+
+void CBrowserView::ShowSecurityInfo()
+{
+    HWND hParent = mpBrowserFrame->m_hWnd;
+
+    if(m_SecurityState == SECURITY_STATE_INSECURE) {
+        CString csMsg;
+        csMsg.LoadString(IDS_NOSECURITY_INFO);
+        ::MessageBox(hParent, csMsg, "MfcEmbed", MB_OK);
+        return;
+    }
+
+    ::MessageBox(hParent, "To Be Done..........", "MfcEmbed", MB_OK);
 }

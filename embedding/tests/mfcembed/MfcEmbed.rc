@@ -67,6 +67,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON    DISCARDABLE     "res\\mfcembed.ico"
+IDR_SECURITY_LOCK       ICON    DISCARDABLE     "res\\ssecur.ico"
+IDR_SECURITY_UNLOCK     ICON    DISCARDABLE     "res\\sinsecur.ico"
+IDR_SECURITY_BROKEN     ICON    DISCARDABLE     "res\\broken.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -346,7 +349,6 @@ BEGIN
     EDITTEXT        IDC_EDIT_HOMEPAGE,53,95,211,14,ES_AUTOHSCROLL
 END
 
-
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -449,6 +451,14 @@ END
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
     IDR_MAINFRAME           "mfcembed"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_NOSECURITY_INFO     "This page has no security information or was not encrypted.\nThis means it was possible for other people to view this page when it was loaded."
+    IDS_ENCRYPTION_HIGH_GRADE "High-grade Encryption (%1% %2!d! bit)"
+    IDS_ENCRYPTION_LOW_GRADE "Low-grade Encryption (%1% %2!d! bit)"
+    IDS_ENCRYPTION_NONE     "Connection Not Encrypted"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

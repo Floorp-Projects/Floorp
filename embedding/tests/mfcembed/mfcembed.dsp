@@ -218,7 +218,19 @@ SOURCE=.\winEmbedFileLocProvider.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\res\broken.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\mfcembed.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\sinsecur.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ssecur.ico
 # End Source File
 # Begin Source File
 

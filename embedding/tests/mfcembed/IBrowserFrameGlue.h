@@ -42,6 +42,7 @@ struct IBrowserFrameGlue {
 	virtual void UpdateProgress(PRInt32 aCurrent, PRInt32 aMax) = 0;
 	virtual void UpdateBusyState(PRBool aBusy) = 0;
 	virtual void UpdateCurrentURI(nsIURI *aLocation) = 0;
+	virtual void UpdateSecurityStatus(PRInt32 aState) = 0;
 
 	// BrowserFrame Related Methods
 	virtual PRBool CreateNewBrowserFrame(PRUint32 chromeMask, 
@@ -74,6 +75,7 @@ struct IBrowserFrameGlue {
 		virtual void UpdateProgress(PRInt32 aCurrent, PRInt32 aMax);	\
 		virtual void UpdateBusyState(PRBool aBusy);						\
 		virtual void UpdateCurrentURI(nsIURI *aLocation);				\
+		virtual void UpdateSecurityStatus(PRInt32 aState);              \
 		virtual PRBool CreateNewBrowserFrame(PRUint32 chromeMask, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, nsIWebBrowser** aWebBrowser);	\
 		virtual void DestroyBrowserFrame();							\
 		virtual void GetBrowserFrameTitle(PRUnichar **aTitle);	\

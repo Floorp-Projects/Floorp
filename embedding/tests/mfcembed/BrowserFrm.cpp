@@ -86,6 +86,7 @@ static UINT indicators[] =
 {
 	ID_SEPARATOR,           // For the Status line
 	ID_SEPARATOR,           // For the Progress Bar
+	ID_SEPARATOR,           // For the padlock image
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -176,7 +177,7 @@ int CBrowserFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// Create the status bar with two panes - one pane for actual status
 	// text msgs. and the other for the progress control
-	if (!m_wndStatusBar.Create(this) ||
+	if (!m_wndStatusBar.CreateEx(this) ||
 		!m_wndStatusBar.SetIndicators(indicators,
 		  sizeof(indicators)/sizeof(UINT)))
 	{
@@ -198,6 +199,14 @@ int CBrowserFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create progress bar\n");
 		return -1;      // fail to create
 	}
+
+	// The third pane(i.e. at index 2) of the status bar will have 
+	// the security lock icon displayed in it. Set up it's size(16) 
+	// and style(no border)so that the padlock icons can be properly drawn
+	m_wndStatusBar.SetPaneInfo(2, -1, SBPS_NORMAL|SBPS_NOBORDERS, 16);
+
+	// Also, set the padlock icon to be the insecure icon to begin with
+	UpdateSecurityStatus(nsIWebProgressListener::STATE_IS_INSECURE);
 
 	// Based on the "chromeMask" we were supplied during construction
 	// hide any requested UI elements - statusbar, menubar etc...
@@ -303,4 +312,66 @@ void CBrowserFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 	CFrameWnd::OnActivate(nState, pWndOther, bMinimized);
 	
     m_wndBrowserView.Activate(nState, pWndOther, bMinimized);
+}
+
+#define IS_SECURE(state) ((state & 0xFFFF) == nsIWebProgressListener::STATE_IS_SECURE)
+void CBrowserFrame::UpdateSecurityStatus(PRInt32 aState)
+{
+    int iResID = nsIWebProgressListener::STATE_IS_INSECURE;
+    
+    if(IS_SECURE(aState)){
+        iResID = IDR_SECURITY_LOCK;
+        m_wndBrowserView.m_SecurityState = CBrowserView::SECURITY_STATE_SECURE;
+    }
+    else if(aState == nsIWebProgressListener::STATE_IS_INSECURE) {
+        iResID = IDR_SECURITY_UNLOCK;
+        m_wndBrowserView.m_SecurityState = CBrowserView::SECURITY_STATE_INSECURE;
+    }
+    else if(aState == nsIWebProgressListener::STATE_IS_BROKEN) {
+        iResID = IDR_SECURITY_BROKEN;
+        m_wndBrowserView.m_SecurityState = CBrowserView::SECURITY_STATE_BROKEN;
+    }
+
+    CStatusBarCtrl& sb = m_wndStatusBar.GetStatusBarCtrl();
+    sb.SetIcon(2, //2 is the pane index of the status bar where the lock icon will be shown
+        (HICON)::LoadImage(AfxGetResourceHandle(),
+        MAKEINTRESOURCE(iResID), IMAGE_ICON, 16,16,0));       
+}
+
+void CBrowserFrame::ShowSecurityInfo()
+{   
+    m_wndBrowserView.ShowSecurityInfo();
+}
+
+// CMyStatusBar Class
+CMyStatusBar::CMyStatusBar()
+{
+}
+
+CMyStatusBar::~CMyStatusBar()
+{
+}
+
+BEGIN_MESSAGE_MAP(CMyStatusBar, CStatusBar)
+	//{{AFX_MSG_MAP(CMyStatusBar)
+	ON_WM_LBUTTONDOWN()
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+void CMyStatusBar::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+    // Check to see if the mouse click was within the
+    // padlock icon pane(at pane index 2) of the status bar...
+
+    RECT rc;
+    GetItemRect(2, &rc );
+
+    if(PtInRect(&rc, point)) 
+    {
+        CBrowserFrame *pFrame = (CBrowserFrame *)GetParent();
+        if(pFrame != NULL)
+            pFrame->ShowSecurityInfo();
+    }
+    	
+	CStatusBar::OnLButtonDown(nFlags, point);
 }

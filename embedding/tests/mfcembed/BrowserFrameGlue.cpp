@@ -391,3 +391,10 @@ HWND CBrowserFrame::BrowserFrameGlueObj::GetBrowserFrameNativeWnd()
 	METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
 	return pThis->m_hWnd;
 }
+
+void CBrowserFrame::BrowserFrameGlueObj::UpdateSecurityStatus(PRInt32 aState)
+{
+    METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
+
+    pThis->UpdateSecurityStatus(aState);
+}
