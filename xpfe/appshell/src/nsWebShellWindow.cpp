@@ -414,7 +414,10 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
   nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
-    pnsMenu->Create(aMenuBar, aMenuName);
+    nsISupports * supports = nsnull;
+    aMenuBar->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenu->Create(supports, aMenuName);
+    NS_RELEASE(supports);
 
     // Set nsMenu Name
     pnsMenu->SetLabel(aMenuName); 
@@ -467,7 +470,11 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     // Set nsMenuItem Name
     //pnsMenuItem->SetLabel(menuitemName);
     // Make nsMenuItem a child of nsMenu
-    pParentMenu->AddMenuItem(pnsMenuItem);
+    //pParentMenu->AddMenuItem(pnsMenuItem);
+    nsISupports * supports = nsnull;
+    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
+    pParentMenu->AddItem(supports);
+    NS_RELEASE(supports);
           
     // Create MenuDelegate - this is the intermediator inbetween 
     // the DOM node and the nsIMenuItem
@@ -518,12 +525,19 @@ void nsWebShellWindow::LoadSubMenu(
   nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
-    pnsMenu->Create(pParentMenu, menuName);
+    nsISupports * supports = nsnull;
+    pParentMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenu->Create(supports, menuName);
+    NS_RELEASE(supports); // Balance QI
 
     // Set nsMenu Name
     pnsMenu->SetLabel(menuName); 
     // Make nsMenu a child of parent nsMenu
-    pParentMenu->AddMenu(pnsMenu);
+    //pParentMenu->AddMenu(pnsMenu);
+    supports = nsnull;
+    pnsMenu->QueryInterface(kISupportsIID, (void**) &supports);
+	pParentMenu->AddItem(supports);
+	NS_RELEASE(supports);
 
     // Begin menuitem inner loop
     nsCOMPtr<nsIDOMNode> menuitemNode;
