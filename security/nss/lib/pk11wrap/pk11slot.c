@@ -565,6 +565,67 @@ SECMOD_HasRootCerts(void)
 /***********************************************************
  * Functions to find specific slots.
  ***********************************************************/
+PK11SlotList *
+PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
+                        const char* tokenName, PRBool presentOnly)
+{
+    SECMODModuleList *mlp;
+    SECMODModuleList *modules = SECMOD_GetDefaultModuleList();
+    SECMODListLock *moduleLock = SECMOD_GetDefaultModuleListLock();
+    int i;
+    PK11SlotList* slotList = NULL;
+    PRUint32 slotcount = 0;
+
+    slotList = PK11_NewSlotList();
+    if (!slotList) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return NULL;
+    }
+
+    if ( ((NULL == dllName) || (0 == *dllName)) &&
+        ((NULL == slotName) || (0 == *slotName)) &&
+        ((NULL == tokenName) || (0 == *tokenName)) ) {
+        /* default to softoken */
+        PK11_AddSlotToList(slotList, PK11_GetInternalKeySlot());
+        return slotList;
+    }
+
+    /* work through all the slots */
+    SECMOD_GetReadLock(moduleLock);
+    for (mlp = modules; mlp != NULL; mlp = mlp->next) {
+        PORT_Assert(mlp->module);
+        PORT_Assert(mlp->module->dllName);
+        if (mlp->module && ((!dllName) || (mlp->module->dllName &&
+            (0 == PORT_Strcmp(mlp->module->dllName, dllName))))) {
+            PORT_Assert(mlp->module->slots);
+            for (i=0; i < mlp->module->slotCount; i++) {
+                PK11SlotInfo *tmpSlot = (mlp->module->slots?mlp->module->slots[i]:NULL);
+                PORT_Assert(tmpSlot);
+                if (tmpSlot && (PR_FALSE == presentOnly || PK11_IsPresent(tmpSlot)) &&
+                    ( (!tokenName) || (tmpSlot->token_name &&
+                    (0==PORT_Strcmp(tmpSlot->token_name, tokenName)))) &&
+                    ( (!slotName) || (tmpSlot->slot_name &&
+                    (0==PORT_Strcmp(tmpSlot->slot_name, slotName)))) ) {
+                    PK11SlotInfo* slot = PK11_ReferenceSlot(tmpSlot);
+                    if (slot) {
+                        PK11_AddSlotToList(slotList, slot);
+                        slotcount++;
+                    }
+                }
+            }
+        }
+    }
+    SECMOD_ReleaseReadLock(moduleLock);
+
+    if (0 == slotcount) {
+        PORT_SetError(SEC_ERROR_NO_TOKEN);
+        PK11_FreeSlotList(slotList);
+        slotList = NULL;
+    }
+
+    return slotList;
+}
+
 PK11SlotInfo *
 PK11_FindSlotByName(char *name)
 {
@@ -1676,7 +1737,7 @@ PK11_ReadMechanismList(PK11SlotInfo *slot)
 {
     CK_ULONG count;
     CK_RV crv;
-    int i;
+    PRUint32 i;
 
     if (slot->mechanismList) {
 	PORT_Free(slot->mechanismList);
@@ -1888,7 +1949,6 @@ PK11_TokenRefresh(PK11SlotInfo *slot)
 {
     CK_TOKEN_INFO tokenInfo;
     CK_RV crv;
-    SECStatus rv;
 
     /* set the slot flags to the current token values */
     if (!slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
