@@ -40,6 +40,10 @@
 #include "prlog.h"
 
 #ifdef XP_MAC
+#define HACK_DONT_USE_LIBREG 1
+#endif
+
+#if HACK_DONT_USE_LIBREG
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
@@ -452,7 +456,7 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
     PRInt32 pos = uriStr.Find(':');
     if (pos < 0) {
         // no colon, so try the default resource factory
-#ifdef XP_MAC
+#if HACK_DONT_USE_LIBREG
         nsIServiceManager* servMgr;
         nsServiceManager::GetGlobalServiceManager(&servMgr);
         nsIFactory* fact;
@@ -481,7 +485,7 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
         delete[] prefixStr;
         if (progID == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
-#ifdef XP_MAC
+#if HACK_DONT_USE_LIBREG
         nsIServiceManager* servMgr;
         nsServiceManager::GetGlobalServiceManager(&servMgr);
         nsIFactory* fact;
@@ -500,7 +504,7 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
         PR_smprintf_free(progID);
         if (NS_FAILED(rv)) {
             // if we failed, try the default resource factory
-#ifdef XP_MAC
+#if HACK_DONT_USE_LIBREG
             nsIServiceManager* servMgr;
             nsServiceManager::GetGlobalServiceManager(&servMgr);
             nsIFactory* fact;
@@ -678,7 +682,7 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
     delete[] name;
     if (progID == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-#ifdef XP_MAC
+#if HACK_DONT_USE_LIBREG
     nsIServiceManager* servMgr;
     nsServiceManager::GetGlobalServiceManager(&servMgr);
     nsIFactory* fact;
