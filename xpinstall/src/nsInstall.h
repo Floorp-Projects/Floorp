@@ -143,7 +143,7 @@ class nsInstall
             PACKAGE_FOLDER_NOT_SET      = -224,
             EXTRACTION_FAILED           = -225,
             FILENAME_ALREADY_USED       = -226,
-            ABORT_INSTALL               = -227,
+            INSTALL_CANCELLED           = -227,
             DOWNLOAD_ERROR              = -228,
             SCRIPT_ERROR                = -229,
 

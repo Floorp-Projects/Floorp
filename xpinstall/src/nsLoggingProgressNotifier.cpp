@@ -246,7 +246,7 @@ nsLoggingProgressListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
         *mLogStream << "     Install completed successfully, restart required" << nsEndl;
         break;
 
-    case nsInstall::ABORT_INSTALL:
+    case nsInstall::INSTALL_CANCELLED:
         *mLogStream << "     Install cancelled by script" << nsEndl;
         break;
 

@@ -373,7 +373,7 @@ InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   {
     //  public int AbortInstall(void);
 
-    if(NS_OK != nativeThis->AbortInstall(nsInstall::ABORT_INSTALL))
+    if(NS_OK != nativeThis->AbortInstall(nsInstall::INSTALL_CANCELLED))
     {
       return JS_FALSE;
     }
@@ -1044,7 +1044,6 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   // if we couldn't find one return null rval from here
   if(nsnull == folder)
   {
-    nativeThis->SaveError(nsInstall::DOES_NOT_EXIST);
     return JS_TRUE;
   }
   
@@ -1440,7 +1439,7 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   // Now validate the arguments
   PRBool goodargs = PR_FALSE;
-  uint32 chromeType;
+  uint32 chromeType = 0;
   nsIFile* chrome = nsnull;
   if ( argc >=2 )
   {
@@ -1461,15 +1460,7 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
   }
 
-  if (goodargs)
-  {
-    *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType));
-  }
-  else
-  {
-    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
-    nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-  }
+  *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType));
 
   return JS_TRUE;
 }
@@ -1829,7 +1820,7 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::PACKAGE_FOLDER_NOT_SET,     "PACKAGE_FOLDER_NOT_SET"       },
     { nsInstall::EXTRACTION_FAILED,          "EXTRACTION_FAILED"            },
     { nsInstall::FILENAME_ALREADY_USED,      "FILENAME_ALREADY_USED"        },
-    { nsInstall::ABORT_INSTALL,              "ABORT_INSTALL"                },
+    { nsInstall::INSTALL_CANCELLED,          "INSTALL_CANCELLED"            },
     { nsInstall::DOWNLOAD_ERROR,             "DOWNLOAD_ERROR"               },
     { nsInstall::SCRIPT_ERROR,               "SCRIPT_ERROR"                 },
     { nsInstall::ALREADY_EXISTS,             "ALREADY_EXISTS"               },
