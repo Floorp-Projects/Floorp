@@ -3782,7 +3782,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	else if (file)
 	{
 		nsXPIDLCString  fileURL;
-		if (NS_FAILED(rv = file->GetURL(getter_Copies(fileURL))))
+		if (NS_FAILED(rv = NS_GetURLSpecFromFile(file,getter_Copies(fileURL))))
 			return(rv);
 		iconURL.Assign(NS_LITERAL_STRING("moz-icon:"));
 		iconURL.AppendWithConversion(fileURL);
