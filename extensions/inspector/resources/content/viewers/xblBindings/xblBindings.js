@@ -311,24 +311,24 @@ XBLBindings.prototype =
     
     // disable/enable radio buttons
     var hasget = aProp && (aProp.hasAttribute("onget") || aProp.getElementsByTagName("getter").length);
-    getradio.setAttribute("disabled", !hasget);
-    if (!hasget && getradio.checked)
-      getradio.removeAttribute("checked");
+    getradio.disabled = !hasget;
+    if (!hasget && getradio.hasAttribute("selected"))
+      getradio.removeAttribute("selected");
     var hasset = aProp && (aProp.hasAttribute("onset") || aProp.getElementsByTagName("setter").length);
-    setradio.setAttribute("disabled", !hasset);
-    if (!hasset && setradio.checked)
-      setradio.removeAttribute("checked");
+    setradio.disabled = !hasset;
+    if (!hasset && setradio.hasAttribute("selected"))
+      setradio.removeAttribute("selected");
     
     // make sure at least one is checked
-    if (!setradio.checked && !getradio.checked) {
+    if (!setradio.hasAttribute("selected") && !getradio.hasAttribute("selected")) {
       if (!getradio.disabled) 
-        getradio.setAttribute("checked", "true");
+        getradio.setAttribute("selected", "true");
       else if (!setradio.disabled)
-        setradio.setAttribute("checked", "true");
+        setradio.setAttribute("selected", "true");
     }
     
     // display text
-    var et = getradio.hasAttribute("checked") ? "get" : setradio.hasAttribute("checked") ? "set" : null;
+    var et = getradio.hasAttribute("selected") ? "get" : setradio.hasAttribute("selected") ? "set" : null;
     var text = "";
     if (!et || !aProp) {
       // do nothing
