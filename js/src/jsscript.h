@@ -50,8 +50,8 @@ JS_BEGIN_EXTERN_C
 /*
  * Exception handling runtime information.
  *
- * All fields except length are code offsets, relative to the beginning of
- * the script.  If script->trynotes is not null, it points to a vector of
+ * All fields except length are code offsets relative to the main entry point
+ * of the script.  If script->trynotes is not null, it points to a vector of
  * these structs terminated by one with catchStart == 0.
  */
 struct JSTryNote {
