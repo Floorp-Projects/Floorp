@@ -158,7 +158,7 @@ nsRDFDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     PRUint32 cnt;
     nsresult rv = mElements->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
-    NS_PRECONDITION(aIndex < cnt, "invalid arg");
+
     if (aIndex >= (PRUint32) cnt)
         return NS_ERROR_INVALID_ARG;
 
