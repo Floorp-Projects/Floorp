@@ -341,10 +341,14 @@ function cmgr_add (command)
 }
 
 CommandManager.prototype.removeCommands =
-function cmgr_removes (commands)
+function cmgr_removes (cmdary)
 {
-    for (var c in commands)
-        this.removeCommand(commands[c]);
+    for (var i in cmdary)
+    {
+        var command = isinstance(cmdary[i], Array) ?
+            {name: cmdary[i][0]} : cmdary[i];
+        this.removeCommand(command);
+    }
 }
 
 CommandManager.prototype.removeCommand =
