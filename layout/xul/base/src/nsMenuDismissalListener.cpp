@@ -32,7 +32,7 @@
 
 NS_IMPL_ADDREF(nsMenuDismissalListener)
 NS_IMPL_RELEASE(nsMenuDismissalListener)
-NS_IMPL_QUERY_INTERFACE2(nsMenuDismissalListener, nsIDOMMouseListener, nsIRollupListener)
+NS_IMPL_QUERY_INTERFACE3(nsMenuDismissalListener, nsIDOMMouseListener, nsIMenuRollup, nsIRollupListener)
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ nsMenuDismissalListener::SetCurrentMenuParent(nsIMenuParent* aMenuParent)
   if (!widget)
     return;
 
-  widget->CaptureRollupEvents(this, PR_TRUE, PR_FALSE);
+  widget->CaptureRollupEvents(this, PR_TRUE, PR_TRUE);
   mWidget = widget;
 
   NS_ADDREF(nsMenuFrame::mDismissalListener = this);
@@ -96,6 +96,68 @@ nsMenuDismissalListener::Rollup()
   }
   return NS_OK;
 }
+
+
+// uggggh.
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+
+
+NS_IMETHODIMP
+nsMenuDismissalListener::GetSubmenuWidgetChain(nsISupportsArray **_retval)
+{
+  NS_NewISupportsArray ( _retval );
+  nsCOMPtr<nsIMenuParent> curr ( dont_QueryInterface(mMenuParent) );
+  while ( curr ) {
+    nsCOMPtr<nsIWidget> widget;
+    curr->GetWidget ( getter_AddRefs(widget) );
+    nsCOMPtr<nsISupports> genericWidget ( do_QueryInterface(widget) );
+    (**_retval).AppendElement ( genericWidget );
+    
+    // move up the chain
+    nsIFrame* currAsFrame = nsnull;
+    if ( NS_SUCCEEDED(curr->QueryInterface(kIFrameIID, NS_REINTERPRET_CAST(void**,&currAsFrame))) ) {
+      nsIFrame* parentFrame = nsnull;
+      currAsFrame->GetParent(&parentFrame);
+      nsIMenuParent* next;
+      nsCOMPtr<nsIMenuFrame> menuFrame ( do_QueryInterface(parentFrame) );
+      if ( menuFrame ) {
+        menuFrame->GetMenuParent ( &next );       // Advance to next parent
+        curr = dont_AddRef(next);
+      }
+      else {
+        // we are a menuParent but not a menuFrame. This is probably the case
+        // of the menu bar. Nothing to do here, really.
+        return NS_OK;
+      }
+    }
+    else {
+      // We've run into a menu parent that isn't a frame at all. Not good.
+      NS_WARNING ( "nsIMenuParent that is not a nsIFrame" );
+      return NS_ERROR_FAILURE;
+    }
+  } // foreach parent menu
+  
+  return NS_OK; 
+}
+
+#if 0
+NS_IMETHODIMP
+nsMenuDismissalListener::FirstMenuParent(nsIMenuParent * *_retval)
+{
+  NS_IF_ADDREF(*_retval = mMenuParent);
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMenuDismissalListener::NextMenuParent(nsIMenuParent * inCurrent, nsIMenuParent * *_retval)
+{
+//XXX for now don't return anything in the chain
+  *_retval = nsnull;
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP
 nsMenuDismissalListener::Unregister()

@@ -571,6 +571,17 @@ nsMenuBarFrame::DismissChain()
 NS_IMETHODIMP
 nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
 {
+  // (pinkerton/hyatt)
+  // since the menubar is a menuparent but not a menuItem, the win32 rollup code
+  // would erroneously add the entire top-level window to the widget list built up for
+  // determining if a click is in a submenu's menu chain. To get around this, we just 
+  // don't let the menubar have a widget. Things seem to work because the dismissal
+  // listener is registered when a new menu is popped up, which is the only real reason
+  // why we need a widget at all.
+  *aWidget = nsnull;
+  return NS_OK;
+
+#if DONT_WANT_TO_DO_THIS
   // Get parent view
   nsIView * view = nsnull;
   nsMenuPopupFrame::GetNearestEnclosingView(mPresContext, this, &view);
@@ -578,7 +589,7 @@ nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
     return NS_OK;
 
   view->GetWidget(*aWidget);
-  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP

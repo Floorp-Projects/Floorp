@@ -265,24 +265,25 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
         OpenMenu(PR_TRUE);
     }
   }
-  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsDisabled()) {
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsDisabled() && IsMenu() ) {
     PRBool isMenuBar = PR_FALSE;
     if (mMenuParent)
       mMenuParent->IsMenuBar(isMenuBar);
 
     // The menu item was selected. Bring up the menu.
     // We have children.
-    if (mIsMenu)
+    if ( isMenuBar || !mMenuParent ) {
       ToggleMenuState();
 
-    if (isMenuBar && mIsMenu) {
-
-      if (!IsOpen()) {
+      if (!IsOpen() && mMenuParent) {
         // We closed up. The menu bar should always be
         // deactivated when this happens.
         mMenuParent->SetActive(PR_FALSE);
       }
     }
+    else
+      if ( !IsOpen() )
+        OpenMenu(PR_TRUE);
   }
   else if ( aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP && mMenuParent && !IsDisabled()) {
     // if this menu is a context menu it accepts right-clicks...fire away!
