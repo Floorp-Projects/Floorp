@@ -129,6 +129,9 @@ sub CheckCanChangeField {
     if ($oldvalue eq $newvalue) {
         return 1;
     }
+    if (trim($oldvalue) eq trim($newvalue)) {
+        return 1;
+    }
     if ($f =~ /^longdesc/) {
         return 1;
     }
