@@ -3693,7 +3693,6 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
 
   PRInt32 msgCountLeft = msgCount;
   PRUint32 msgsDownloaded = 0;
-  const PRInt32 kHdrsToFetchAtOnce = 200;
   do 
   {
     nsCString idString;
@@ -4971,13 +4970,13 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
       {
         base64Str = PL_Base64Encode((char*)password, PL_strlen(password), nsnull);
         PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
-        PR_FREEIF(base64Str);
+        PR_Free(base64Str);
         rv = SendData(m_dataOutputBuf, PR_TRUE /* suppress logging */);
         if (NS_SUCCEEDED(rv))
            ParseIMAPandCheckForNewMail(currentCommand);
         if (GetServerStateParser().LastCommandSuccessful())
         {
-          PR_FREEIF(currentCommand);
+          PR_Free(currentCommand);
           return;
         }
       } // if last command successful
@@ -7171,8 +7170,7 @@ PRBool nsImapProtocol::TryToLogon()
         else if (GetServerStateParser().GetCapabilityFlag() & kHasAuthLoginCapability)
         {
           AuthLogin (userName, password,  kHasAuthLoginCapability); 
-          logonTries++; // I think this counts against most
-                  // servers as a logon try 
+          logonTries++; // This counts as a logon try for most servers
         }
         else
           InsecureLogin(userName, password);
@@ -7182,20 +7180,20 @@ PRBool nsImapProtocol::TryToLogon()
 
       if (!GetServerStateParser().LastCommandSuccessful())
       {
-              // login failed!
-              // if we failed because of an interrupt, then do not bother the user
-              if (m_imapServerSink)
-                rv = m_imapServerSink->ForgetPassword();
+          // login failed!
+          // if we failed because of an interrupt, then do not bother the user
+          if (m_imapServerSink && !DeathSignalReceived())
+            rv = m_imapServerSink->ForgetPassword();
 
-              if (!DeathSignalReceived())
-              {
-                AlertUserEventUsingId(IMAP_LOGIN_FAILED);
-                m_hostSessionList->SetPasswordForHost(GetImapServerKey(), nsnull);
-                m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
-                SendSetBiffIndicatorEvent(m_currentBiffState);
-                password.Truncate();
-            } // if we didn't receive the death signal...
-          } // if login failed
+          if (!DeathSignalReceived())
+          {
+            AlertUserEventUsingId(IMAP_LOGIN_FAILED);
+            m_hostSessionList->SetPasswordForHost(GetImapServerKey(), nsnull);
+            m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
+            SendSetBiffIndicatorEvent(m_currentBiffState);
+            password.Truncate();
+        } // if we didn't receive the death signal...
+      } // if login failed
       else  // login succeeded
       {
         rv = m_hostSessionList->SetPasswordForHost(GetImapServerKey(), password);
@@ -7245,18 +7243,18 @@ PRBool nsImapProtocol::TryToLogon()
       {
       // The user hit "Cancel" on the dialog box
           //AlertUserEvent("Login cancelled.");
-      HandleCurrentUrlError();
+        HandleCurrentUrlError();
 #ifdef UNREADY_CODE
-      SetCurrentEntryStatus(-1);
-          SetConnectionStatus(-1);        // stop netlib
+        SetCurrentEntryStatus(-1);
+        SetConnectionStatus(-1);        // stop netlib
 #endif
-      break;
+        break;
       }
   }
 
   while (!loginSucceeded && ++logonTries < 4);
 
-  PR_FREEIF(userName);
+  PR_Free(userName);
   if (!loginSucceeded)
   {
     m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
