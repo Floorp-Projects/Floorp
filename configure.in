@@ -3272,9 +3272,20 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
-MOZ_ARG_ENABLE_BOOL(gprof,
-[  --enable-gprof          Enable gprof symbols],
-  [ _GPROF_CFLAGS="-pg" ])
+MOZ_ARG_ENABLE_BOOL(eazel-profiler,
+[  --enable-eazel-profiler          Enable Corel/Eazel profiler],
+  [  ENABLE_EAZEL_PROFILER=1
+     AC_DEFINE(ENABLE_EAZEL_PROFILER)
+     USE_ELF_DYNSTR_GC=
+     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
+     EAZEL_PROFILER_CFLAGS="-g -O -gdwarf-2 -finstrument-functions -D__NO_STRING_INLINES  -D__NO_MATH_INLINES"
+     EAZEL_PROFILER_LIBS="-lprofiler -lpthread"])
+
+MOZ_ARG_WITH_STRING(profile-modules,
+[  --with-profile-modules    Enable/disable profile for specific modules only],
+  [ MOZ_PROFILE_MODULES=`echo $withval | sed 's/,/ /g'` ] )
+dnl ========================================================
+dnl ========================================================
 
 dnl Enable performance metrics.
 MOZ_ARG_ENABLE_BOOL(perf-metrics,
@@ -3295,10 +3306,6 @@ MOZ_ARG_WITH_STRING(insure-exclude-dirs,
 [  --with-insure-exclude-dirs=\$dirs
                           Dirs to not instrument ],
   MOZ_INSURE_EXCLUDE_DIRS="config $withval" )
-
-MOZ_ARG_ENABLE_BOOL(profile,
-[  --enable-profile        Enable profiling (solaris only)],
-  MOZILLA_GPROF=1)
 
 MOZ_ARG_ENABLE_BOOL(boehm,
 [  --enable-boehm          Enable the Boehm Garbage Collector],
@@ -3593,12 +3600,15 @@ dnl AC_SUBST(MOZ_NETCAST)
 AC_SUBST(BUILD_MODULES)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
+AC_SUBST(MOZ_PROFILE_MODULES)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DBGRINFO_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
-AC_SUBST(MOZILLA_GPROF)
+AC_SUBST(ENABLE_EAZEL_PROFILER)
+AC_SUBST(EAZEL_PROFILER_CFLAGS)
+AC_SUBST(EAZEL_PROFILER_LIBS)
 AC_SUBST(MOZ_PERF_METRICS)
 AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LOG_REFCNT)
@@ -3812,14 +3822,12 @@ AC_SUBST(FULLCIRCLE_LIBS)
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
-	$_GPROF_CFLAGS \
 	$CFLAGS`
 
 CXXFLAGS=`echo \
 	$_MOZ_RTTI_FLAGS \
 	$_MOZ_EXCEPTIONS_FLAGS \
 	$_WARNINGS_CXXFLAGS \
-	$_GPROF_CFLAGS \
 	$CXXFLAGS`
 
 COMPILE_CFLAGS=`echo \

@@ -35,6 +35,7 @@ LIBS= \
 		$(DIST)/lib/libxpfelocation_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgtksuperwin \
+		$(PROFILE_LIBS) \
                 $(NULL)
 
 LIBS += $(TK_LIBS)
