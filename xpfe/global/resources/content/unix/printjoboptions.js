@@ -52,10 +52,6 @@ function initDialog()
 
   dialog.cmdLabel        = document.getElementById("cmdLabel");
 
-  dialog.reverseGroup    = document.getElementById("reverseGroup");
-  dialog.firstRadio      = document.getElementById("firstRadio");
-  dialog.lastRadio       = document.getElementById("lastRadio");
-
   dialog.colorGroup      = document.getElementById("colorGroup");
   dialog.colorRadio      = document.getElementById("colorRadio");
   dialog.grayRadio       = document.getElementById("grayRadio");
@@ -115,7 +111,6 @@ function getDoubleStr( val, dec )
 //---------------------------------------------------
 function loadDialog()
 {
-  var print_reversed      = false;
   var print_color         = true;
   var print_paper_size    = 0;
   var print_orientation   = 0;
@@ -136,7 +131,6 @@ function loadDialog()
   } catch(e) {}
 
   if (printService) {
-    print_reversed   = printService.printReversed;
     print_color      = printService.printInColor;
     print_paper_size = printService.paperSize;
     print_orientation = printService.orientation;
@@ -150,7 +144,6 @@ function loadDialog()
   }
 
   if (doDebug) {
-    dump("printReversed "+print_reversed+"\n");
     dump("printInColor  "+print_color+"\n");
     dump("paperSize     "+print_paper_size+"\n");
     dump("orientation   "+print_orientation+"\n");
@@ -170,12 +163,6 @@ function loadDialog()
     dialog.colorGroup.selectedItem = dialog.colorRadio;
   } else {
     dialog.colorGroup.selectedItem = dialog.grayRadio;
-  }
-
-  if ( print_reversed) {
-    dialog.reverseGroup.selectedItem = dialog.lastRadio;
-  } else {
-    dialog.reverseGroup.selectedItem = dialog.firstRadio;
   }
 
   if ( print_paper_size == gPrintOptInterface.kLetterPaperSize ) {
@@ -228,7 +215,6 @@ function onAccept()
   var print_paper_size = 0;
 
   if (printService) {
-    printService.printReversed = dialog.lastRadio.selected;
     printService.printInColor  = dialog.colorRadio.selected;
 
     if (dialog.letterRadio.selected) {
