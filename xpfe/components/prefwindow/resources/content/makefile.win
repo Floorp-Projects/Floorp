@@ -25,7 +25,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install::
 	$(MAKE_INSTALL) pref-advanced.xul  $(DIST)\bin\chrome\communicator\content\pref
-	$(MAKE_INSTALL) pref-advanced-imageblocking.xul  $(DIST)\bin\chrome\communicator\content\pref
+	$(MAKE_INSTALL) pref-imageblocking.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-appearance.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-applications.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-cache.js  $(DIST)\bin\chrome\communicator\content\pref
