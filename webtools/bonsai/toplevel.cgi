@@ -128,14 +128,12 @@ foreach c $checkinlist {
     }
 }
 
-if {[info exists people]} {
-    
-    puts "The following people are on \"the hook\", since they have made"
-    puts "checkins to the tree since it last opened: "
-    puts "<p>"
 
-    set peoplelist [lsort [array names people]]
-
+proc GetInfoForPeople {peoplelist} {
+    global ldaperror fullname curcontact errvar ldapserver ldapport
+    if {$ldaperror} {
+        return
+    }
     set query "(| "
     foreach p $peoplelist {
         append query "(mail=$p@netscape.com) "
@@ -143,9 +141,6 @@ if {[info exists people]} {
         set curcontact($p) ""
     }
     append query ")"
-
-    set ldaperror 0 
-
     if {[catch {set fid [open "|./data/ldapsearch -b \"o=Netscape Communications Corp.,c=US\" -h $ldapserver -p $ldapport -s sub -S mail \"$query\" mail cn nscpcurcontactinfo" r]} errvar]} {
         set ldaperror 1
     } else {
@@ -170,6 +165,24 @@ if {[info exists people]} {
         if {[catch {close $fid} errvar]} {
             set ldaperror 1
         }
+    }
+}
+
+
+set ldaperror 0 
+
+if {[info exists people]} {
+    
+    puts "The following people are on \"the hook\", since they have made"
+    puts "checkins to the tree since it last opened: "
+    puts "<p>"
+
+    set peoplelist [lsort [array names people]]
+
+    set list $peoplelist
+    while {![lempty $list]} {
+        GetInfoForPeople [lrange $list 0 19]
+        set list [lrange $list 20 end]
     }
 
     if {$ldaperror} {
