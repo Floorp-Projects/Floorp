@@ -19,6 +19,7 @@
 #include "stdafx.h"
 
 #include <limits.h>
+#include <shlobj.h>
 
 #include "WebShellContainer.h"
 

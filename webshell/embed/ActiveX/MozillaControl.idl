@@ -137,17 +137,6 @@ library MOZILLACONTROLLib
         HRESULT Busy([out,retval] VARIANT_BOOL *pBool);
     }
 
-    typedef
-    [
-        uuid(34A226E0-DF30-11CF-89A9-00A0C9054129),
-        helpstring("Constants for WebBrowser CommandStateChange")
-    ]
-    enum CommandStateChangeConstants {
-        [helpstring("Command Change")]      CSC_UPDATECOMMANDS  = 0xFFFFFFFF,
-        [helpstring("Navigate Forward")]    CSC_NAVIGATEFORWARD = 0x00000001,
-        [helpstring("Navigate Back")]       CSC_NAVIGATEBACK    = 0x00000002,
-    } CommandStateChangeConstants;
-
     [
         uuid(0002DF05-0000-0000-C000-000000000046), // IID_IWebBrowserApp
         helpstring("Web Browser Application Interface."),

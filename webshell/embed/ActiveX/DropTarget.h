@@ -41,6 +41,8 @@ END_COM_MAP()
 
 	// Sets the owner of this object
 	void SetOwner(CMozillaBrowser *pOwner);
+	// Helper method to extract a URL from an internet shortcut file
+	HRESULT CDropTarget::GetURLFromFile(const TCHAR *pszFile, tstring &szURL);
 
 // IDropTarget
 	virtual HRESULT STDMETHODCALLTYPE DragEnter(/* [unique][in] */ IDataObject __RPC_FAR *pDataObj, /* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
