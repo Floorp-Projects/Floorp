@@ -188,7 +188,7 @@ public:
     static void mark(const void *p)       { ((PondScum *)p)[-1].mark(); }
     static void markJS2Value(js2val v);
 
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue)  { ASSERT(false); }
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags)  { ASSERT(false); }
 
 };
 
@@ -368,7 +368,17 @@ public:
 
 
 // A DYNAMICPROPERTY record describes one dynamic property of one (prototype or class) instance.
-typedef std::map<String, js2val> DynamicPropertyMap;
+class DynamicPropertyValue {
+public:
+    enum Flags { ENUMERATE = 0x1, READONLY = 0x2, PERMANENT = 0x4 };
+
+    DynamicPropertyValue(js2val v) : value(v), flags(ENUMERATE) { }
+    DynamicPropertyValue(js2val v, uint32 f) : value(v), flags(f) { }
+
+    js2val value;
+    uint32 flags;
+};
+typedef std::map<String, DynamicPropertyValue> DynamicPropertyMap;
 typedef DynamicPropertyMap::iterator DynamicPropertyIterator;
 
 
@@ -559,6 +569,7 @@ public:
 
 
 // Instances which do not respond to the function call or new operators are represented as SIMPLEINSTANCE records
+// XXX SimpleInstance dynamic properties don't need the ECMA3 property attributes
 class SimpleInstance : public JS2Object {
 public:
     SimpleInstance(JS2Class *type);
@@ -573,7 +584,7 @@ public:
     virtual void markChildren();
     virtual ~SimpleInstance()            { }
 
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags);
 
 };
 
@@ -593,7 +604,7 @@ public:
     virtual void markChildren();
     virtual ~PrototypeInstance()            { }
 
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags);
 
 };
 
@@ -657,7 +668,7 @@ class ArrayInstance : public PrototypeInstance {
 public:
     ArrayInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { setLength(meta, this, 0); }
 
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags);
     virtual ~ArrayInstance()             { }
 };
 

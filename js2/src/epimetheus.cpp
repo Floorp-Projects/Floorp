@@ -326,7 +326,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
 
                         stdOut << " Dynamic Properties:\n";                    
                         for (DynamicPropertyIterator dpi = pInst->dynamicProperties.begin(), dpend = pInst->dynamicProperties.end(); (dpi != dpend); dpi++) {
-                            stdOut << "\t" << dpi->first << " = " << *meta->toString(dpi->second) << "\n";
+                            stdOut << "\t" << dpi->first << " = " << *meta->toString(dpi->second.value) << "\n";
                         }
                     }
                 }

@@ -74,13 +74,20 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length)
         // Can't call 'writeDynamicProperty' as that'll just cycle back here for
         // ArrayInstances.
         DynamicPropertyMap *dMap = &checked_cast<PrototypeInstance *>(obj)->dynamicProperties;
+        DynamicPropertyIterator i = dMap->find(*meta->engine->length_StringAtom);
+        if (i != dMap->end()) {
+            i->second.value = result;
+            return result;
+        }
+/*
         for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
             if (i->first == *meta->engine->length_StringAtom) {
-                i->second = result;
+                i->second.value = result;
                 return result;
             }
         }
-        const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, result);
+*/
+        const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(result));
         checked_cast<PrototypeInstance *>(obj)->dynamicProperties.insert(e);
     }
     else {
@@ -143,7 +150,8 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
         for (uint32 i = 0; i < length; i++) {
             mn.name = meta->engine->numberToString(i);
             if (meta->readDynamicProperty(arrInst, &mn, &lookup, RunPhase, &result)
-                    && !JS2VAL_IS_UNDEFINED(result))
+                    && !JS2VAL_IS_UNDEFINED(result)
+                    && !JS2VAL_IS_NULL(result) )
                 s->append(*meta->toString(result));
             if (i < (length - 1))
                 s->append(widenCString(","));
@@ -849,7 +857,7 @@ void initArrayObject(JS2Metadata *meta)
         FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
         fInst->fWrap = callInst->fWrap;
         meta->writeDynamicProperty(meta->arrayClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-        meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
+        fInst->writeProperty(meta, meta->engine->length_StringAtom, INT_TO_JS2VAL(pf->length), DynamicPropertyValue::PERMANENT | DynamicPropertyValue::READONLY);
         
         pf++;
     }

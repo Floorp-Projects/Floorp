@@ -189,7 +189,8 @@ public:
 
     int64 checkInteger(js2val x);
 
-    JS2Metadata *meta;
+    JS2Metadata *meta;                  // engine needs access to 'meta' for the string 'world'
+                                        // the environment, error reporter and forIterator object
 
     // Current engine execution state
     uint8 *pc;
@@ -207,7 +208,7 @@ public:
     String *allocStringPtr(const String *s);
     String *allocStringPtr(const char *s);
 
-    String *numberToString(float64 *number);
+    String *numberToString(float64 *number);    // non-static since they need access to meta
     String *numberToString(int32 i);
 
     js2val allocFloat(float32 x); 
@@ -246,7 +247,7 @@ public:
     const String *public_StringAtom;
     const String *private_StringAtom;
     const String *Function_StringAtom;
-    const String *object_StringAtom;
+    const String *Object_StringAtom;
     const String *Empty_StringAtom;
     const String *Dollar_StringAtom;
     const String *prototype_StringAtom;

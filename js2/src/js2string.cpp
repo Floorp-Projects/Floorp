@@ -82,12 +82,12 @@ static js2val String_Call(JS2Metadata *meta, const js2val thisValue, js2val argv
 
 js2val String_fromCharCode(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
-    String *resultStr = meta->engine->allocStringPtr((String *)NULL);   // can't use Empty_StringAtom; because we're modifying this below
-    resultStr->reserve(argc);
+    String resultStr;
+    resultStr.reserve(argc);
     for (uint32 i = 0; i < argc; i++)
-        *resultStr += (char16)(JS2Engine::float64toUInt16(argv[i]));
+        resultStr += (char16)(JS2Engine::float64toUInt16(meta->toFloat64(argv[i])));
 
-    return STRING_TO_JS2VAL(resultStr);
+    return STRING_TO_JS2VAL(meta->engine->allocStringPtr(&resultStr));
 }
 
 static js2val String_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
@@ -806,6 +806,11 @@ void initStringObject(JS2Metadata *meta)
         meta->defineLocalMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         v = new Variable(meta->numberClass, INT_TO_JS2VAL(1), true);
         meta->defineLocalMember(meta->env, meta->engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+
+        SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
+        callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), String_fromCharCode);
+        v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
+        meta->defineLocalMember(meta->env, &meta->world.identifiers["fromCharCode"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);        
     meta->env->removeTopFrame();
     
     PrototypeFunction *pf = &prototypeFunctions[0];

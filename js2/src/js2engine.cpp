@@ -393,7 +393,7 @@ namespace MetaData {
                   INIT_STRINGATOM(public),
                   INIT_STRINGATOM(private),
                   INIT_STRINGATOM(Function),
-                  INIT_STRINGATOM(object),
+                  INIT_STRINGATOM(Object),
                   Empty_StringAtom(&world.identifiers[""]),
                   Dollar_StringAtom(&world.identifiers["$"]),
                   INIT_STRINGATOM(prototype),
@@ -890,7 +890,7 @@ namespace MetaData {
         JS2Object::mark(public_StringAtom);
         JS2Object::mark(private_StringAtom);
         JS2Object::mark(Function_StringAtom);
-        JS2Object::mark(object_StringAtom);
+        JS2Object::mark(Object_StringAtom);
         JS2Object::mark(Empty_StringAtom);
         JS2Object::mark(Dollar_StringAtom);
         JS2Object::mark(prototype_StringAtom);

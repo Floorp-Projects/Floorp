@@ -119,7 +119,7 @@ namespace MetaData {
                     pb = pb->next;
                 }
                 if (prototype)
-                    writeDynamicProperty(result, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(pCount), RunPhase);
+                    checked_cast<PrototypeInstance *>(result)->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(pCount), DynamicPropertyValue::READONLY);
                 pb = fnDef->parameters;
                 compileFrame->positional = new Variable *[pCount];
                 compileFrame->positionalCount = pCount;
@@ -2948,7 +2948,7 @@ doUnary:
         // XXX objectType returns the ECMA4 type, not the [[class]] value, so returns class 'Prototype' for ECMA3 objects
         //        JS2Class *type = meta->objectType(thisValue);
 
-        String s = "[" + *meta->engine->object_StringAtom + " " + *type->getName() + "]";
+        String s = "[object " + *type->getName() + "]";
         return STRING_TO_JS2VAL(meta->engine->allocString(s));
     }
     
@@ -3136,7 +3136,7 @@ static const uint8 urlCharType[256] =
         SimpleInstance *fInst = new SimpleInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code);
         writeDynamicProperty(glob, new Multiname(&world.identifiers[name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-        writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(length), RunPhase);
+        fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(length), DynamicPropertyValue::READONLY);
     }
 
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true; c->defaultValue = defaultVal;
@@ -3156,7 +3156,7 @@ static const uint8 urlCharType[256] =
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
 
-        MAKEBUILTINCLASS(objectClass, NULL, false, true, false, engine->object_StringAtom, JS2VAL_VOID);
+        MAKEBUILTINCLASS(objectClass, NULL, false, true, false, engine->Object_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(undefinedClass, objectClass, false, false, true, engine->undefined_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(nullClass, objectClass, false, true, true, engine->null_StringAtom, JS2VAL_NULL);
         MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, engine->allocStringPtr(&world.identifiers["Boolean"]), JS2VAL_FALSE);
@@ -3199,7 +3199,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
         writeDynamicProperty(glob, new Multiname(&world.identifiers["NaN"], publicNamespace), true, engine->nanValue, RunPhase);
         writeDynamicProperty(glob, new Multiname(&world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
-        // XXX add 'version' 
+        // XXX add 'version()' 
         writeDynamicProperty(glob, new Multiname(&world.identifiers["version"], publicNamespace), true, INT_TO_JS2VAL(0), RunPhase);
         // Function properties of the global object 
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN, 1);
@@ -3230,8 +3230,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
         FunctionInstance *fInst = new FunctionInstance(functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
-        writeDynamicProperty(objectClass->prototype, new Multiname(engine->toString_StringAtom, publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-        writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(0), RunPhase);
+        objectClass->prototype->writeProperty(this, engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), 0);
+        fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(0), DynamicPropertyValue::READONLY);
 
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Date"]), JS2VAL_NULL);
@@ -3383,11 +3383,16 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             isPrototypeInstance = true;
             dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
         }
+        DynamicPropertyIterator i = dMap->find(*name);
+        if (i != dMap->end())
+            return obj;
+/*
         for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
             if (i->first == *name) {
                 return obj;
             }
         }
+*/
         if (isPrototypeInstance) {
             PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(obj);
             if (pInst->parent)
@@ -3413,11 +3418,16 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             isPrototypeInstance = true;
             dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
         }
+        DynamicPropertyIterator i = dMap->find(*name);
+        if (i != dMap->end())
+            return true;
+/*
         for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
             if (i->first == *name) {
                 return true;
             }
         }
+*/
         return false;
     }
 
@@ -3446,12 +3456,19 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
         if (dMap == NULL)
             return false; // 'None'
+        DynamicPropertyIterator i = dMap->find(*name);
+        if (i != dMap->end()) {
+            *rval = i->second.value;
+            return true;
+        }
+/*
         for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
             if (i->first == *name) {
                 *rval = i->second;
                 return true;
             }
         }
+*/
         if (isPrototypeInstance) {
             PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(container);
             if (pInst->parent)
@@ -3464,20 +3481,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return false;   // 'None'
     }
 
-    void SimpleInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue)
+    void SimpleInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue, uint32 flags)
     {
         ASSERT(dynamicProperties);
-        const DynamicPropertyMap::value_type e(*name, newValue);
+        const DynamicPropertyMap::value_type e(*name, DynamicPropertyValue(newValue, flags));
         dynamicProperties->insert(e);
     }
 
-    void PrototypeInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue)
+    void PrototypeInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue, uint32 flags)
     {
-        const DynamicPropertyMap::value_type e(*name, newValue);
+        const DynamicPropertyMap::value_type e(*name, DynamicPropertyValue(newValue, flags));
         dynamicProperties.insert(e);
     }
 
-    void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue)
+    void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags)
     {
         // An index has to pass the test that :
         //   ToString(ToUint32(ToString(index))) == ToString(index)     
@@ -3485,14 +3502,22 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         //
         //  ToString(ToUint32(name)) == name
         //
-        const DynamicPropertyMap::value_type e(*name, newValue);
+
+        // XXX things would go faster if the index made it here as an int
+        // (which it more typically is) rather than converted to string
+        // and back.
+
+        const DynamicPropertyMap::value_type e(*name, DynamicPropertyValue(newValue, flags));
         dynamicProperties.insert(e);
 
         const char16 *numEnd;        
         float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
         uint32 index = JS2Engine::float64toUInt32(f);
 
-        if (index == f) {
+        char buf[dtosStandardBufferSize];
+        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, index, dtosStandard, 0);
+
+        if (widenCString(chrp) == *name) {
             uint32 length = getLength(meta, this);
             if (index >= length)
                 setLength(meta, this, index + 1);
@@ -3518,19 +3543,26 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
         if (dMap == NULL)
             return false; // 'None'
+        DynamicPropertyIterator i = dMap->find(*name);
+        if (i != dMap->end()) {
+            i->second.value = newValue;
+            return true;
+        }
+/*
         for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
             if (i->first == *name) {
-                i->second = newValue;
+                i->second.value = newValue;
                 return true;
             }
         }
+*/
         if (!createIfMissing)
             return false;
         if (container->kind == SimpleInstanceKind) {
             SimpleInstance *dynInst = checked_cast<SimpleInstance *>(container);
             InstanceBinding *ib = resolveInstanceMemberName(dynInst->type, multiname, ReadAccess, phase);
             if (ib == NULL) {
-                dynInst->writeProperty(this, name, newValue);
+                dynInst->writeProperty(this, name, newValue, 0);
                 return true;
             }
         }
@@ -3539,14 +3571,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 GlobalObject *glob = checked_cast<GlobalObject *>(container);
                 LocalMember *m = findFlatMember(glob, multiname, ReadAccess, phase);
                 if (m == NULL) {
-                    const DynamicPropertyMap::value_type e(*name, newValue);
+                    const DynamicPropertyMap::value_type e(*name, DynamicPropertyValue(newValue));
                     glob->dynamicProperties.insert(e);
                     return true;
                 }
             }
             else {
                 PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(container);
-                pInst->writeProperty(this, name, newValue);
+                pInst->writeProperty(this, name, newValue, 0);
                 return true;
             }
         }
@@ -3951,6 +3983,15 @@ deleteClassProperty:
         else {
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
         }
+        DynamicPropertyIterator i = dMap->find(*name);
+        if (i != dMap->end()) {
+            if ((i->second.flags & DynamicPropertyValue::PERMANENT) == 0) {
+                dMap->erase(i);
+                *result = true;
+                return true;
+            }
+        }
+/*
         for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
             if (i->first == *name) {
                 dMap->erase(i);
@@ -3958,6 +3999,7 @@ deleteClassProperty:
                 return true;
             }
         }
+*/
         return false;
     }
 
@@ -4651,7 +4693,7 @@ deleteClassProperty:
         }
         if (dynamicProperties) {
             for (DynamicPropertyIterator i = dynamicProperties->begin(), end = dynamicProperties->end(); (i != end); i++) {
-                GCMARKVALUE(i->second);
+                GCMARKVALUE(i->second.value);
             }        
         }
     }
@@ -4704,7 +4746,7 @@ deleteClassProperty:
     {
         GCMARKOBJECT(parent)
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            GCMARKVALUE(i->second);
+            GCMARKVALUE(i->second.value);
         }        
     }
 
@@ -4794,7 +4836,7 @@ deleteClassProperty:
         Frame::markChildren();
         GCMARKOBJECT(internalNamespace)
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            GCMARKVALUE(i->second);
+            GCMARKVALUE(i->second.value);
         }        
     }
 
@@ -4836,8 +4878,7 @@ deleteClassProperty:
             ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
             (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
 
-            mn.name = meta->engine->numberToString(i);
-            meta->writeDynamicProperty(arrInst, &mn, true, argBase[i], RunPhase);
+            arrInst->writeProperty(meta, meta->engine->numberToString(i), argBase[i], 0);
         }
         setLength(meta, arrInst, i);
     }
