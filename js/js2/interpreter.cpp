@@ -98,7 +98,7 @@ struct Activation : public gc_base {
         const JSValues& params = caller->mRegisters;
         for (RegisterList::const_iterator src = list.begin(), 
                  end = list.end(); src != end; ++src, ++dest) {
-            *dest = params[*src];
+            *dest = params[(*src).first];
         }
     }
 
@@ -128,10 +128,10 @@ struct Linkage : public Context::Frame, public gc_base {
     Linkage*            mNext;              // next linkage in linkage stack.
     InstructionIterator mReturnPC;
     Activation*         mActivation;        // caller's activation.
-    Register            mResult;            // the desired target register for the return value
+    TypedRegister       mResult;            // the desired target register for the return value
 
     Linkage(Linkage* linkage, InstructionIterator returnPC,
-            Activation* activation, Register result) 
+            Activation* activation, TypedRegister result) 
         :   mNext(linkage), mReturnPC(returnPC),
             mActivation(activation), mResult(result)
     {
@@ -146,31 +146,6 @@ void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode
         iCode = mActivation->mICode;
     }
 };
-/*
-void Context::doCall(JSFunction *target, Instruction *pc)
-{
-    if (target->isNative()) {
-        RegisterList &params = op3(call);
-        JSValues argv(params.size());
-        JSValues::size_type i = 0;
-        for (RegisterList::const_iterator src = params.begin(), end = params.end();
-                        src != end; ++src, ++i) {
-            argv[i] = (*registers)[*src];
-        }
-        if (op2(call) != NotARegister)
-            (*registers)[op2(call)] = static_cast<JSNativeFunction*>(target)->mCode(argv);
-        return pc;
-    }
-    else {
-        mLinkage = new Linkage(mLinkage, ++mPC,
-                               mActivation, op1(call));
-        iCode = target->getICode();
-        mActivation = new Activation(iCode, mActivation, op3(call));
-        registers = &mActivation->mRegisters;
-        continue;
-    }
-}
-*/
 
 static JSValue shiftLeft_Default(const JSValue& r1, const JSValue& r2)
 {
@@ -517,17 +492,17 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case CALL:
                 {
                     Call* call = static_cast<Call*>(instruction);
-                    JSFunction *target = (*registers)[op2(call)].function;
+                    JSFunction *target = (*registers)[op2(call).first].function;
                     if (target->isNative()) {
                         RegisterList &params = op3(call);
                         JSValues argv(params.size());
                         JSValues::size_type i = 0;
                         for (RegisterList::const_iterator src = params.begin(), end = params.end();
                                         src != end; ++src, ++i) {
-                            argv[i] = (*registers)[*src];
+                            argv[i] = (*registers)[src->first];
                         }
-                        if (op2(call) != NotARegister)
-                            (*registers)[op2(call)] = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        if (op2(call).first != NotARegister)
+                            (*registers)[op2(call).first] = static_cast<JSNativeFunction*>(target)->mCode(argv);
                         break;
                     }
                     else {
@@ -553,7 +528,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     mLinkage = linkage->mNext;
                     mActivation = linkage->mActivation;
                     registers = &mActivation->mRegisters;
-                    (*registers)[linkage->mResult] = result;
+                    (*registers)[linkage->mResult.first] = result;
                     mPC = linkage->mReturnPC;
                 }
                 continue;
@@ -562,8 +537,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     Return* ret = static_cast<Return*>(instruction);
                     JSValue result;
-                    if (op1(ret) != NotARegister) 
-                        result = (*registers)[op1(ret)];
+                    if (op1(ret).first != NotARegister) 
+                        result = (*registers)[op1(ret).first];
                     Linkage* linkage = mLinkage;
                     if (!linkage)
                     {
@@ -574,57 +549,57 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     mLinkage = linkage->mNext;
                     mActivation = linkage->mActivation;
                     registers = &mActivation->mRegisters;
-                    (*registers)[linkage->mResult] = result;
+                    (*registers)[linkage->mResult.first] = result;
                     mPC = linkage->mReturnPC;
                 }
                 continue;
             case MOVE:
                 {
                     Move* mov = static_cast<Move*>(instruction);
-                    (*registers)[dst(mov)] = (*registers)[src1(mov)];
+                    (*registers)[dst(mov).first] = (*registers)[src1(mov).first];
                 }
                 break;
             case LOAD_NAME:
                 {
                     LoadName* ln = static_cast<LoadName*>(instruction);
-                    (*registers)[dst(ln)] = mGlobal->getVariable(*src1(ln));
+                    (*registers)[dst(ln).first] = mGlobal->getVariable(*src1(ln));
                 }
                 break;
             case SAVE_NAME:
                 {
                     SaveName* sn = static_cast<SaveName*>(instruction);
-                    mGlobal->setVariable(*dst(sn), (*registers)[src1(sn)]);
+                    mGlobal->setVariable(*dst(sn), (*registers)[src1(sn).first]);
                 }
                 break;
             case NEW_OBJECT:
                 {
                     NewObject* no = static_cast<NewObject*>(instruction);
-                    (*registers)[dst(no)] = JSValue(new JSObject());
+                    (*registers)[dst(no).first] = JSValue(new JSObject());
                 }
                 break;
             case NEW_ARRAY:
                 {
                     NewArray* na = static_cast<NewArray*>(instruction);
-                    (*registers)[dst(na)] = JSValue(new JSArray());
+                    (*registers)[dst(na).first] = JSValue(new JSArray());
                 }
                 break;
             case GET_PROP:
                 {
                     GetProp* gp = static_cast<GetProp*>(instruction);
-                    JSValue& value = (*registers)[src1(gp)];
+                    JSValue& value = (*registers)[src1(gp).first];
                     if (value.tag == JSValue::object_tag) {
                         JSObject* object = value.object;
-                        (*registers)[dst(gp)] = object->getProperty(*src2(gp));
+                        (*registers)[dst(gp).first] = object->getProperty(*src2(gp));
                     }
                 }
                 break;
             case SET_PROP:
                 {
                     SetProp* sp = static_cast<SetProp*>(instruction);
-                    JSValue& value = (*registers)[dst(sp)];
+                    JSValue& value = (*registers)[dst(sp).first];
                     if (value.tag == JSValue::object_tag) {
                         JSObject* object = value.object;
-                        object->setProperty(*src1(sp), (*registers)[src2(sp)]);
+                        object->setProperty(*src1(sp), (*registers)[src2(sp).first]);
                     }
                 }
                 break;
@@ -647,20 +622,20 @@ using JSString throughout.
             case GET_ELEMENT:
                 {
                     GetElement* ge = static_cast<GetElement*>(instruction);
-                    JSValue& value = (*registers)[src1(ge)];
+                    JSValue& value = (*registers)[src1(ge).first];
                     if (value.tag == JSValue::array_tag) {
                         JSArray* array = value.array;
-                        (*registers)[dst(ge)] = (*array)[(*registers)[src2(ge)]];
+                        (*registers)[dst(ge).first] = (*array)[(*registers)[src2(ge).first]];
                     }
                 }
                 break;
             case SET_ELEMENT:
                 {
                     SetElement* se = static_cast<SetElement*>(instruction);
-                    JSValue& value = (*registers)[dst(se)];
+                    JSValue& value = (*registers)[dst(se).first];
                     if (value.tag == JSValue::array_tag) {
                         JSArray* array = value.array;
-                        (*array)[(*registers)[src1(se)]] = (*registers)[src2(se)];
+                        (*array)[(*registers)[src1(se).first]] = (*registers)[src2(se).first];
                     }
                 }
                 break;
@@ -668,19 +643,19 @@ using JSString throughout.
             case LOAD_IMMEDIATE:
                 {
                     LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
-                    (*registers)[dst(li)] = JSValue(src1(li));
+                    (*registers)[dst(li).first] = JSValue(src1(li));
                 }
                 break;
             case LOAD_STRING:
                 {
                     LoadString* ls = static_cast<LoadString*>(instruction);
-                    (*registers)[dst(ls)] = JSValue(src1(ls));
+                    (*registers)[dst(ls).first] = JSValue(src1(ls));
                 }
                 break;
-            case LOAD_VALUE:
+            case LOAD_BOOLEAN:
                 {
-                    LoadValue* lv = static_cast<LoadValue*>(instruction);
-                    (*registers)[dst(lv)] = src1(lv);
+                    LoadBoolean* lb = static_cast<LoadBoolean*>(instruction);
+                    (*registers)[dst(lb).first] = JSValue(src1(lb));
                 }
                 break;
             case BRANCH:
@@ -695,8 +670,8 @@ using JSString throughout.
                 {
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
-                    ASSERT((*registers)[src1(bc)].isBoolean());
-                    if ((*registers)[src1(bc)].boolean) {
+                    ASSERT((*registers)[src1(bc).first].isBoolean());
+                    if ((*registers)[src1(bc).first].boolean) {
                         mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
@@ -706,8 +681,8 @@ using JSString throughout.
                 {
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
-                    ASSERT((*registers)[src1(bc)].isBoolean());
-                    if (!(*registers)[src1(bc)].boolean) {
+                    ASSERT((*registers)[src1(bc).first].isBoolean());
+                    if (!(*registers)[src1(bc).first].boolean) {
                         mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
@@ -730,9 +705,9 @@ using JSString throughout.
             case STRICT_EQ:
                 {
                     Arithmetic* mul = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(mul)];
-                    JSValue& r1 = (*registers)[src1(mul)];
-                    JSValue& r2 = (*registers)[src2(mul)];
+                    JSValue& dest = (*registers)[dst(mul).first];
+                    JSValue& r1 = (*registers)[src1(mul).first];
+                    JSValue& r2 = (*registers)[src2(mul).first];
                     const JSValue ovr = findBinaryOverride(r1, r2, BinaryOperator::mapICodeOp(instruction->op()));
                     JSFunction *target = ovr.function;
                     if (target->isNative()) {
@@ -756,19 +731,19 @@ using JSString throughout.
             case VAR_XCR:
                 {
                     VarXcr *vx = static_cast<VarXcr*>(instruction);
-                    JSValue& dest = (*registers)[dst(vx)];
-                    JSValue r = (*registers)[src1(vx)].toNumber();
+                    JSValue& dest = (*registers)[dst(vx).first];
+                    JSValue r = (*registers)[src1(vx).first].toNumber();
                     dest = r;
                     r.f64 += val3(vx);
-                    (*registers)[src1(vx)] = r;
+                    (*registers)[src1(vx).first] = r;
                 }
                 break;
 
             case PROP_XCR:
                 {
                     PropXcr *px = static_cast<PropXcr*>(instruction);
-                    JSValue& dest = (*registers)[dst(px)];
-                    JSValue& base = (*registers)[src1(px)];
+                    JSValue& dest = (*registers)[dst(px).first];
+                    JSValue& base = (*registers)[src1(px).first];
                     JSObject *object = base.object;
                     JSValue r = object->getProperty(*src2(px)).toNumber();
                     dest = r;
@@ -780,7 +755,7 @@ using JSString throughout.
             case NAME_XCR:
                 {
                     NameXcr *nx = static_cast<NameXcr*>(instruction);
-                    JSValue& dest = (*registers)[dst(nx)];
+                    JSValue& dest = (*registers)[dst(nx).first];
                     JSValue r = mGlobal->getVariable(*src1(nx)).toNumber();
                     dest = r;
                     r.f64 += val3(nx);
@@ -791,38 +766,38 @@ using JSString throughout.
             case TEST:
                 {
                     Test* tst = static_cast<Test*>(instruction);
-                    (*registers)[dst(tst)] = (*registers)[src1(tst)].toBoolean();
+                    (*registers)[dst(tst).first] = (*registers)[src1(tst).first].toBoolean();
                 }
                 break;
             case NEGATE:
                 {
                     Negate* neg = static_cast<Negate*>(instruction);
-                    (*registers)[dst(neg)] = JSValue(-(*registers)[src1(neg)].toNumber().f64);
+                    (*registers)[dst(neg).first] = JSValue(-(*registers)[src1(neg).first].toNumber().f64);
                 }
                 break;
             case POSATE:
                 {
                     Posate* pos = static_cast<Posate*>(instruction);
-                    (*registers)[dst(pos)] = (*registers)[src1(pos)].toNumber();
+                    (*registers)[dst(pos).first] = (*registers)[src1(pos).first].toNumber();
                 }
                 break;
             case BITNOT:
                 {
                     Bitnot* bn = static_cast<Bitnot*>(instruction);
-                    (*registers)[dst(bn)] = JSValue(~(*registers)[src1(bn)].toInt32().i32);
+                    (*registers)[dst(bn).first] = JSValue(~(*registers)[src1(bn).first].toInt32().i32);
                 }
                 break;
             case NOT:
                 {
                     Not* nt = static_cast<Not*>(instruction);
-                    ASSERT((*registers)[src1(nt)].isBoolean());
-                    (*registers)[dst(nt)] = JSValue(!(*registers)[src1(nt)].boolean);
+                    ASSERT((*registers)[src1(nt).first].isBoolean());
+                    (*registers)[dst(nt).first] = JSValue(!(*registers)[src1(nt).first].boolean);
                 }
                 break;
             case THROW:
                 {
                     Throw* thrw = static_cast<Throw*>(instruction);
-                    throw new JSException((*registers)[op1(thrw)]);
+                    throw new JSException((*registers)[op1(thrw).first]);
                 }
                 
             case TRYIN:
@@ -857,7 +832,7 @@ using JSString throughout.
             case WITHIN:
                 {
                     Within* within = static_cast<Within*>(instruction);
-                    JSValue& value = (*registers)[op1(within)];
+                    JSValue& value = (*registers)[op1(within).first];
                     assert(value.tag == JSValue::object_tag);
                     mGlobal = new JSScope(mGlobal, value.object);
                 }

@@ -46,9 +46,9 @@ namespace JavaScript {
 namespace ICG {
     
     using namespace VM;
+    using namespace JSTypes;
     
-    
-    typedef std::map<String, Register, std::less<String> > VariableList;
+    typedef std::map<String, TypedRegister, std::less<String> > VariableList;
     typedef std::pair<uint32, uint32> InstructionMapping;
     typedef std::vector<InstructionMapping *> InstructionMap;
    
@@ -105,12 +105,6 @@ namespace ICG {
     // function/script, adds statements and expressions to it and then
     // converts it into an ICodeModule, ready for execution.
     
-    struct Result {
-        Result(Register reg, JSTypes::JSType type) : reg(reg), type(type) {}
-        Register reg;
-        JSTypes::JSType type;
-    };
-
     class ICodeGenerator {
     private:
         InstructionStream *iCode;
@@ -122,10 +116,11 @@ namespace ICG {
         uint32   maxRegister;           // highest (ever) allocated register
         uint32   parameterCount;        // number of parameters declared for the function
                                         // these must come before any variables declared.
-        Register exceptionRegister;     // reserved to carry the exception object.
+        TypedRegister exceptionRegister;// reserved to carry the exception object.
         VariableList *variableList;     // name|register pair for each variable
 
-        World *mWorld;                  // used to register strings        
+        World *mWorld;                  // used to register strings
+        JSScope *mGlobal;               // the scope for compiling within
         LabelStack mLabelStack;         // stack of LabelEntry objects, one per nested looping construct
         InstructionMap *mInstructionMap;// maps source position to instruction index
 
@@ -146,15 +141,15 @@ namespace ICG {
         void jsr(Label *label)  { iCode->push_back(new Jsr(label)); }
         void rts()              { iCode->push_back(new Rts()); }
         void branch(Label *label);
-        GenericBranch *branchTrue(Label *label, Register condition);
-        GenericBranch *branchFalse(Label *label, Register condition);
+        GenericBranch *branchTrue(Label *label, TypedRegister condition);
+        GenericBranch *branchFalse(Label *label, TypedRegister condition);
         
         void beginTry(Label *catchLabel, Label *finallyLabel)
             { iCode->push_back(new Tryin(catchLabel, finallyLabel)); }
         void endTry()
             { iCode->push_back(new Tryout()); }
 
-        void beginWith(Register obj)
+        void beginWith(TypedRegister obj)
             { iCode->push_back(new Within(obj)); }
         void endWith()
             { iCode->push_back(new Without()); }
@@ -164,7 +159,7 @@ namespace ICG {
 
         void resetStatement() { resetTopRegister(); }
 
-        void setRegisterForVariable(const StringAtom& name, Register r) 
+        void setRegisterForVariable(const StringAtom& name, TypedRegister r) 
         { (*variableList)[name] = r; }
 
 
@@ -172,16 +167,18 @@ namespace ICG {
 
         ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
 
-        Register grabRegister(const StringAtom& name) 
+        TypedRegister grabRegister(const StringAtom& name, const JSType *type) 
         {
-            Register result = getRegister(); 
+            TypedRegister result(getRegister(), type); 
             (*variableList)[name] = result; 
             registerBase = topRegister;
             return result;
         }
+
+        const JSType *findType(const StringAtom& typeName);
     
     public:
-        ICodeGenerator(World *world = NULL);
+        ICodeGenerator(World *world, JSScope *global);
         
         ~ICodeGenerator()
         {
@@ -193,65 +190,66 @@ namespace ICG {
                 
         ICodeModule *complete();
 
-        Result genExpr(ExprNode *p, 
+        TypedRegister genExpr(ExprNode *p, 
                     bool needBoolValueInBranch = false, 
                     Label *trueBranch = NULL, 
                     Label *falseBranch = NULL);
         void preprocess(StmtNode *p);
-        Register genStmt(StmtNode *p, LabelSet *currentLabelSet = NULL);
+        TypedRegister genStmt(StmtNode *p, LabelSet *currentLabelSet = NULL);
 
         void isScript() { mWithinWith = true; }
 
-        void returnStmt(Register r);
-        void throwStmt(Register r)
+        void returnStmt(TypedRegister r);
+        void throwStmt(TypedRegister r)
         { iCode->push_back(new Throw(r)); }
 
-        Register allocateVariable(const StringAtom& name);
-        Register allocateVariable(const StringAtom& name, const StringAtom& /*type */)
-        { return allocateVariable(name); }
+        TypedRegister allocateVariable(const StringAtom& name);
+        TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName);
 
-        Register findVariable(const StringAtom& name)
+        TypedRegister findVariable(const StringAtom& name)
         { VariableList::iterator i = variableList->find(name);
-        return (i == variableList->end()) ? NotARegister : (*i).second; }
+        return (i == variableList->end()) ? TypedRegister(NotARegister, &None_Type) : (*i).second; }
         
-        Register allocateParameter(const StringAtom& name) 
-        { parameterCount++; return grabRegister(name); }
+        TypedRegister allocateParameter(const StringAtom& name) 
+        { parameterCount++; return grabRegister(name, &Any_Type); }
+        TypedRegister allocateParameter(const StringAtom& name, const StringAtom& typeName) 
+        { parameterCount++; return grabRegister(name, findType(typeName)); }
         
         Formatter& print(Formatter& f);
         
-        Register op(ICodeOp op, Register source);
-        Register op(ICodeOp op, Register source1, Register source2);
-        Register call(Register target, RegisterList args);
-        void callVoid(Register target, RegisterList args);
+        TypedRegister op(ICodeOp op, TypedRegister source);
+        TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
+        TypedRegister call(TypedRegister target, RegisterList args);
+        void callVoid(TypedRegister target, RegisterList args);
 
-        void move(Register destination, Register source);
-        Register logicalNot(Register source);
-        Register test(Register source);
+        void move(TypedRegister destination, TypedRegister source);
+        TypedRegister logicalNot(TypedRegister source);
+        TypedRegister test(TypedRegister source);
         
-        Register loadValue(JSValue value);
-        Register loadImmediate(double value);
-        Register loadString(String &value);
+        TypedRegister loadBoolean(bool value);
+        TypedRegister loadImmediate(double value);
+        TypedRegister loadString(String &value);
                 
-        Register newObject();
-        Register newArray();
+        TypedRegister newObject();
+        TypedRegister newArray();
         
-        Register loadName(const StringAtom &name);
-        void saveName(const StringAtom &name, Register value);
-        Register nameInc(const StringAtom &name);
-        Register nameDec(const StringAtom &name);
+        TypedRegister loadName(const StringAtom &name);
+        void saveName(const StringAtom &name, TypedRegister value);
+        TypedRegister nameInc(const StringAtom &name);
+        TypedRegister nameDec(const StringAtom &name);
        
-        Register getProperty(Register base, const StringAtom &name);
-        void setProperty(Register base, const StringAtom &name, Register value);
-        Register propertyInc(Register base, const StringAtom &name);
-        Register propertyDec(Register base, const StringAtom &name);
+        TypedRegister getProperty(TypedRegister base, const StringAtom &name);
+        void setProperty(TypedRegister base, const StringAtom &name, TypedRegister value);
+        TypedRegister propertyInc(TypedRegister base, const StringAtom &name);
+        TypedRegister propertyDec(TypedRegister base, const StringAtom &name);
         
-        Register getElement(Register base, Register index);
-        void setElement(Register base, Register index, Register value);
-        Register elementInc(Register base, Register index);
-        Register elementDec(Register base, Register index);
+        TypedRegister getElement(TypedRegister base, TypedRegister index);
+        void setElement(TypedRegister base, TypedRegister index, TypedRegister value);
+        TypedRegister elementInc(TypedRegister base, TypedRegister index);
+        TypedRegister elementDec(TypedRegister base, TypedRegister index);
 
-        Register varInc(Register var);
-        Register varDec(Register var);
+        TypedRegister varInc(TypedRegister var);
+        TypedRegister varDec(TypedRegister var);
         
         Register getRegisterBase()                  { return topRegister; }
         InstructionStream *get_iCode()              { return iCode; }
