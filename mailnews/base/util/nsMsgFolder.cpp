@@ -492,10 +492,11 @@ nsMsgFolder::parseURI(PRBool needServer)
     rv = url->GetFileName(getter_Copies(fileName));
     if (NS_SUCCEEDED(rv)) {
       // XXX conversion to unicode here? is fileName in UTF8?
+		// yes, let's say it is in utf8
 
       char* result = nsnull;
       rv = ioServ->Unescape(fileName, &result);
-      mName = result;
+	  mName = result;
     }
   }
 
@@ -576,15 +577,20 @@ nsMsgFolder::parseURI(PRBool needServer)
     nsCAutoString newPath("");
 
     char *newStr=nsnull;
-    nsCAutoString hashedToken;
-    char *token =
-      nsCRT::strtok(NS_CONST_CAST(char *,(const char*)result), "/", &newStr);
+	nsCAutoString oldPath(result);
+	nsCAutoString pathPiece;
 
+	PRInt32 startSlashPos = oldPath.FindChar('/');
+	PRInt32 endSlashPos = (startSlashPos >= 0) 
+		? oldPath.FindChar('/', PR_FALSE, startSlashPos + 1) : oldPath.Length() - 1;
+	if (endSlashPos == -1)
+		endSlashPos = oldPath.Length();
     // trick to make sure we only add the path to the first n-1 folders
     PRBool haveFirst=PR_FALSE;
-    while (token) {
+    while (startSlashPos != -1) {
+	  oldPath.Mid(pathPiece, startSlashPos + 1, endSlashPos - startSlashPos);
       // skip leading '/' (and other // style things)
-      if (nsCRT::strcmp(token, "")!=0) {
+      if (pathPiece.Length() > 0) {
 
         // add .sbd onto the previous path
         if (haveFirst) {
@@ -592,13 +598,20 @@ nsMsgFolder::parseURI(PRBool needServer)
           newPath += "/";
         }
         
-        hashedToken = token;
-        NS_MsgHashIfNecessary(hashedToken);
-        newPath += hashedToken;
+        NS_MsgHashIfNecessary(pathPiece);
+        newPath += pathPiece;
         haveFirst=PR_TRUE;
       }
-      
-      token = nsCRT::strtok(newStr, "/", &newStr);
+	  // look for the next slash
+      startSlashPos = endSlashPos;
+
+	  endSlashPos = (startSlashPos >= 0) 
+			? oldPath.FindChar('/', PR_FALSE, startSlashPos + 1) : oldPath.Length() - 1;
+	  if (endSlashPos == -1)
+			endSlashPos = oldPath.Length();
+
+      if (startSlashPos == endSlashPos)
+		  break;
     }
 
     // now append munged path onto server path
