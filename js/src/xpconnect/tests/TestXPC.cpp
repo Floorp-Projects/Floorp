@@ -1237,7 +1237,7 @@ sm_test_done:
 //    printf("-----------------------\n");
     JSContext *cx;
     if (NS_SUCCEEDED(cxstack->Pop(&cx))) {
-        NS_ASSERTION(cx == mContext, "JS context stack push/pop mismatch");
+        NS_ASSERTION(cx == jscontext, "JS context stack push/pop mismatch");
     }
     
     xpc->AbandonJSContext(jscontext);
