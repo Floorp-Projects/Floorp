@@ -46,6 +46,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)ucvtw2_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvtw_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvko_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)ucvcn_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../util \
@@ -53,6 +54,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/../util \
 				-I$(srcdir)/../ucvtw2 \
 				-I$(srcdir)/../ucvtw \
 				-I$(srcdir)/../ucvko \
+				-I$(srcdir)/../ucvcn \
 				$(NULL)
 
 
