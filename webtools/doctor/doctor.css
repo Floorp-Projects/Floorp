@@ -1,27 +1,16 @@
-#panels { width: 98%; height: 84%; }
-
-.panel {
-  border: 2px inset black;
-  position: absolute;
-  width: 98%;
-  height: 84%;
-  visibility: hidden;
-  overflow: scroll;
-}
-
-#editPanel { overflow: visible; }
-#modifiedPanel { padding: 8px; }
-#savePanel { overflow: visible; border: 0px; }
-
-#content { width: 100%; height: 100%; }
-
 /*
- * Tab styles
+ * Banner and Navigation Bar
  */
 
-/* Hide the "Edit" tab unless the page can be edited in WYSIWYG mode. */
-button.tab#editTab { display: none; }
-button.tab.wysiwyg#editTab { display: inline; }
+#bannernav {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+
+/*
+ * Tabs
+ */
 
 button.tab {
   background-color: #fofofo;
@@ -43,4 +32,71 @@ button.tab:hover {
 button.tab.active, button.tab[disabled].active, button.tab:hover.active {
   background-color: #b0b0b0;
   color: #000000;
+}
+
+/* Hide the "Edit" tab unless the page can be edited in WYSIWYG mode. */
+button.tab#editTab {
+  display: none;
+}
+button.tab.wysiwyg#editTab {
+  display: inline;
+}
+
+/* Hide the "View Original" and "View Diff" tabs if a new page is being created. */
+body.new button.tab#originalTab, body.new button.tab#diffTab {
+  display: none;
+}
+
+
+/*
+ * Panels
+ */
+
+#panels {
+  width: 98%;
+  height: 84%;
+}
+
+.panel {
+  border: 2px inset black;
+  position: absolute;
+  width: 98%;
+  height: 84%;
+  visibility: hidden;
+  overflow: scroll;
+}
+
+#editPanel {
+  overflow: visible;
+}
+#modifiedPanel {
+  padding: 8px;
+}
+#savePanel {
+  overflow: visible;
+  border: 0px;
+  padding-top: 50px;
+}
+
+#content {
+  width: 100%;
+  height: 100%;
+}
+
+
+/*
+ * Form
+ */
+
+label {
+  font-weight: bold;
+}
+
+table#submit-changes {
+  float: left;
+  margin-right: 20px;
+}
+  
+table#submit-changes th {
+  text-align: right;
 }

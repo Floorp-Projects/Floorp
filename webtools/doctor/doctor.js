@@ -55,7 +55,7 @@ function switchToTab(newTab) {
     var modifiedPanel = document.getElementById('modifiedPanel');
     var content_file = document.getElementById('content_file');
     if (content_file.value) {
-      modifiedPanel.innerHTML = '<iframe name="modified"></iframe>';
+      modifiedPanel.innerHTML = '<iframe id="modified" name="modified"></iframe>';
       submitForm("modified", "regurgitate");
     }
     else {
@@ -64,7 +64,7 @@ function switchToTab(newTab) {
   }
   else if (newTab == "diff") {
     synchronizeEditModes();
-    submitForm("diffPanel", "review", { raw: "1" });
+    submitForm("diffPanel", "diff", { raw: "1" });
   }
   else if (newTab == "save") {
     synchronizeEditModes();

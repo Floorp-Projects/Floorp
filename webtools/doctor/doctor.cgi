@@ -56,6 +56,8 @@ my $template = Template->new(
   {
     # Colon-separated list of directories containing templates.
     INCLUDE_PATH => "templates" ,
+    PRE_CHOMP => 1,
+    POST_CHOMP => 1,
 
     FILTERS => 
     {
@@ -89,46 +91,16 @@ use AppConfig qw(:expand :argcount);
 # in the configuration file.
 my $config = AppConfig->new(
   { 
-    CREATE => 1 , 
-    GLOBAL => {
+    CASE    => 1,
+    CREATE  => 1 , 
+    GLOBAL  => {
       ARGCOUNT => ARGCOUNT_ONE , 
     }
   }
 );
 $config->file("doctor.conf");
-
-# Write parameters into global variables.
-my $TEMP_DIR = $config->get('TEMP_DIR');
-my $READ_CVS_SERVER = $config->get('READ_CVS_SERVER');
-my $READ_CVS_USERNAME = $config->get('READ_CVS_USERNAME');
-my $READ_CVS_PASSWORD = $config->get('READ_CVS_PASSWORD');
-my $WRITE_CVS_SERVER = $config->get('WRITE_CVS_SERVER');
-my $WEB_BASE_URI = $config->get('WEB_BASE_URI');
-my $WEB_BASE_URI_PATTERN = $config->get('WEB_BASE_URI_PATTERN');
-my $WEB_BASE_PATH = $config->get('WEB_BASE_PATH');
-my $ADMIN_EMAIL = $config->get('ADMIN_EMAIL');
-
-# !!! Switch use of the global variables above to this hash!
-my $CONFIG = {
-  TEMP_DIR              => $TEMP_DIR              , 
-  READ_CVS_SERVER       => $READ_CVS_SERVER       ,
-  READ_CVS_USERNAME     => $READ_CVS_USERNAME     ,
-  READ_CVS_PASSWORD     => $READ_CVS_PASSWORD     ,
-  WRITE_CVS_SERVER      => $WRITE_CVS_SERVER      ,
-  WEB_BASE_URI          => $WEB_BASE_URI          ,
-  WEB_BASE_URI_PATTERN  => $WEB_BASE_URI_PATTERN  ,
-  WEB_BASE_PATH         => $WEB_BASE_PATH         ,
-  ADMIN_EMAIL           => $ADMIN_EMAIL           ,
-  DOCTOR_EMAIL          => $config->get('DOCTOR_EMAIL') ,
-  EDITOR_EMAIL          => $config->get('EDITOR_EMAIL') ,
-  DB_HOST               => $config->get('DB_HOST') ,
-  DB_PORT               => $config->get('DB_PORT') ,
-  DB_NAME               => $config->get('DB_NAME') ,
-  DB_USERNAME           => $config->get('DB_USERNAME') ,
-  DB_PASSWORD           => $config->get('DB_PASSWORD') ,
-};
-
-$vars->{'CONFIG'} = $CONFIG;
+my %CONFIG = $config->varlist(".*");
+$vars->{'config'} = \%CONFIG;
 
 # Store the home directory so we can get back to it after changing directories
 # in certain places in the code.
@@ -139,27 +111,55 @@ my $HOME = cwd;
 # Main Body Execution
 ################################################################################
 
-# Note: All calls to this script should contain an "action" variable whose 
-# value determines what the user wants to do.  The code below checks the value 
+# All calls to this script should contain an "action" variable whose value
+# determines what the user wants to do.  The code below checks the value 
 # of that variable and runs the appropriate code.
 
-# Determine whether to use the action specified by the user or the default,
-# and if the user wants to edit a file, but they haven't specified the name
-# of the file, prompt them for it.
-my $action = 
-  lc($request->param('action')) || ($request->param('file') ? "edit" : "choose");
+my $action = lc($request->param('action'));
+if (!$action) {
+  $action = $request->param('file') ? "edit" : "choose";
+}
 
+# Displays a form for choosing the page you want to edit.
 if    ($action eq "choose")       { choose()      }
+
+# Displays a page with UI for editing the page online, downloading it
+# for local editing, viewing the original and the user's modified versions,
+# getting a diff of the user's changes, and committing the user's changes
+# or submitting them to the editors for review.  This is the principle
+# interface to Doctor functionality, and many other actions are called
+# from links, forms, and JavaScript on this page.
 elsif ($action eq "edit")         { edit()        }
-elsif ($action eq "review")       { review()      }
-elsif ($action eq "commit")       { commit()      }
-elsif ($action eq "create")       { create()      }
-elsif ($action eq "download")     { download()    }
-elsif ($action eq "display")      { display()     }
+
+# Retrieves a page from CVS and returns it.  Called by the "download the page"
+# link on the Edit page for users who want to download and edit pages locally
+# instead of via the embedded textarea.  Also called by the View Original panel
+# of the Edit page to show the original version of the page being edited.
+elsif ($action eq "download" || $action eq "display")
+                                  { retrieve()    }
+
+# Generates and returns a diff of changes between the submitted version
+# of a page and the version in CVS.  Called by the Show Diff panel of the Edit page.
 elsif ($action eq "diff")         { diff()        }
-elsif ($action eq "queue")        { queue()       }
-elsif ($action eq "list")         { list()        }
+
+# Returns the content that was submitted to it.  Useful for displaying
+# the modified version of a page the user downloaded and edited locally,
+# since for security reasons there's no way to get access to a file
+# in a file upload control on the client side.  Called by JavaScript
+# when the user focuses the View Edited panel on the Edit page after entering
+# a filename into the file upload control.
 elsif ($action eq "regurgitate")  { regurgitate() }
+
+# Submits a change to the editors for review.  Requires the EDITOR_EMAIL config
+# parameter to be set to the editors' email addresses.
+elsif ($action eq "queue")        { queue()       }
+
+# Adds and commits a new page to the repository.
+elsif ($action eq "create")       { create()      }
+
+# Commits changes to an existing page to the repository.
+elsif ($action eq "commit")       { commit()      }
+
 else
 {
   ThrowCodeError("couldn't recognize the value of the action parameter", "Unknown Action");
@@ -180,64 +180,27 @@ sub choose
 
 sub edit
 {
-  if ($request->param('patch_id')) {
-    # Get the patch and metadata from the database.
-    my $id = ValidateID($request->param('patch_id'));
-    my $dbh = ConnectToDatabase();
-    my $get_patch_sth =
-      $dbh->prepare("SELECT file, version, patch FROM patch WHERE id = ?");
-    $get_patch_sth->execute($id);
-    my ($file, $oldversion, $patch) = $get_patch_sth->fetchrow_array();
-    $get_patch_sth->finish();
-    $dbh->disconnect();
-
-    # Check out the file from the repository.
-    CreateTempDir();
-    my $newversion = CheckOutFile($file);
-    
-    ValidateVersions($oldversion, $newversion);
-
-    # Apply the patch.
-    open(PATCH, "|/usr/bin/patch $file 2>&1 > /dev/null");
-    print PATCH $patch;
-    close(PATCH);
-
-    # Get the file with the patch applied.
-    open(NEWFILE, "< $file");
-    undef $/;
-    my $content = <NEWFILE>;
-    close(NEWFILE);
+  ValidateFile();
+ 
+  my $file = $request->param('file');
   
-    # Delete the temporary directory into which we checked out the file.
-    DeleteTempDir();
-  
-    my $line_endings = "unix";
-    if ($content =~ /\r\n/s) { $line_endings = "windows" }
-    elsif ($content =~ /\r[^\n]/s) { $line_endings = "mac" }
+  # Remove the base path from the beginning of the file to save space
+  # when displaying it.
+  $file =~ /^\Q$CONFIG{WEB_BASE_PATH}\E(.*)$/;
+  $vars->{'short_file'} = "/$1";
+  $vars->{'file'} = $file;
 
-    $vars->{'content'} = $content;
-    $vars->{'version'} = $newversion;
-    $vars->{'line_endings'} = $line_endings;
-    $vars->{'patch_id'} = $id;
-    $vars->{'file'} = $file;
+  if ($request->param('content'))
+  {
+    ValidateContent();
+    $vars->{'content'} = $request->param('content');
+    $vars->{'version'} = $request->param('version');
+    $vars->{'line_endings'} = $request->param('line_endings');
   }
-  else {
-    ValidateFile();
-   
-    $vars->{'file'} = $request->param('file');
-    
-    if ($request->param('content'))
-    {
-      ValidateContent();
-      $vars->{'content'} = $request->param('content');
-      $vars->{'version'} = $request->param('version');
-      $vars->{'line_endings'} = $request->param('line_endings');
-    }
-    else
-    {
-      ($vars->{'content'}, $vars->{'version'}, $vars->{'line_endings'}) 
-        = RetrieveFile($request->param('file'));
-    }
+  else
+  {
+    ($vars->{'content'}, $vars->{'version'}, $vars->{'line_endings'}) 
+      = RetrieveFile($request->param('file'));
   }
 
   print $request->header;
@@ -245,7 +208,7 @@ sub edit
     || ThrowCodeError($template->error(), "Template Processing Failed");
 }
 
-sub download
+sub retrieve
 {
   ValidateFile();
  
@@ -258,55 +221,16 @@ sub download
 
   my ($content) = RetrieveFile($file);
   my $filesize = length($content);
-    
-  print $request->header(-type=>"text/plain; name=\"$filename\"",
-                         -content_disposition=> "attachment; filename=\"$filename\"",
-                         -content_length => $filesize);
-  print $content;
-}
 
-sub display
-{
-  ValidateFile();
- 
-  my $file = $request->param('file');
-  
-  # Separate the name of the file from its path.
-  $file =~ /^(.*)\/([^\/]+)$/;
-  my $path = $1;
-  my $filename = $2;
-
-  my ($content) = RetrieveFile($file);
-  my $filesize = length($content);
+  my $disposition = $action eq "download" ? "attachment" : "inline";
     
   print $request->header(-type=>"text/html; name=\"$filename\"",
-                         -content_disposition=> "inline; filename=\"$filename\"",
+                         -content_disposition=> "$disposition; filename=\"$filename\"",
                          -content_length => $filesize);
   print $content;
 }
 
-sub regurgitate
-{
-  ValidateFile();
- 
-  my $content = GetUploadedContent() || $request->param('content');
-
-  my $file = $request->param('file');
-  
-  # Separate the name of the file from its path.
-  $file =~ /^(.*)\/([^\/]+)$/;
-  my $path = $1;
-  my $filename = $2;
-
-  my $filesize = length($content);
-    
-  print $request->header(-type=>"text/html; name=\"$filename\"",
-                         -content_disposition=> "inline; filename=\"$filename\"",
-                         -content_length => $filesize);
-  print $content;
-}
-
-sub review
+sub diff
 {
   # Displays a diff between the version of a file in the repository
   # and the version submitted by the user so the user can review the
@@ -357,206 +281,109 @@ sub review
            || ThrowCodeError("Template Process Failed", $template->error());
 }
 
-sub commit 
+sub regurgitate
 {
-  # Commit a file to the repository.  Checks out the file via cvs, 
-  # applies the changes, generates a diff, and then checks the file 
-  # back in.  It would be easier if we could commit a file by piping
-  # it into standard input, but cvs does not provide for this.
-  
+  # Returns the content that was submitted to it.  Useful for displaying
+  # the modified version of a document the user downloaded and edited locally,
+  # since for security reasons there's no way to get access to the file
+  # until the user uploads it to the server.  When the user clicks
+  # on the "modified" tab, client-side JS checks to see if there's a value
+  # in the file upload control, and if so it adds an iframe to the "modified"
+  # panel and posts the file to it with action=regurgitate, which then returns
+  # the content of the file to the user, who can then see his changes.
+
   ValidateFile();
-  ValidateContent();
-  ValidateUsername();
-  ValidatePassword();
-  ValidateComment();
-  my $patch_id;
-  if ($request->param('patch_id')) {
-    $patch_id = ValidateID($request->param('patch_id'));
-  }
-  
-  # Create and change to a temporary sub-directory into which 
-  # we will check out the file being committed.
-  CreateTempDir();
-  
-  # Check out the file from the repository.
+ 
+  my $content = GetUploadedContent() || $request->param('content');
+
   my $file = $request->param('file');
-  my $oldversion = $request->param('version');
-  my $newversion = CheckOutFile($file);
   
-  # Throw an error if the version of the file that was edited
-  # does not match the version in the repository.  In the future
-  # we should try to merge the user's changes if possible.
-  if ($oldversion && $newversion && $oldversion != $newversion) 
-  {
-    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
-      but version <em>$newversion</em> is in the repository.  Reload the edit 
-      page and make your changes again (and bother the authors of this script 
-      to implement change merging
-      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
-  }
-  
-  # Replace the checked out file with the edited version, generate
-  # a diff between the edited file and the version in the repository,
-  # and check in the edited file.
-  ReplaceFile($file);
-  $vars->{'diff'} = DiffFile($file);
-  $vars->{'checkin_results'} = CheckInFile($file);
-  
-  # Delete the temporary directory into which we checked out the file.
-  DeleteTempDir();
-  
-  # Delete the patch from the patches queue.
-  if ($patch_id) {
-    my $dbh = ConnectToDatabase();
-    $dbh->do("DELETE FROM patch WHERE id = $patch_id");
-    $dbh->disconnect;
-  }
-  
-  $vars->{'file'} = $file;
-  
-  print $request->header;
-  $template->process("committed.tmpl", $vars)
-    || ThrowCodeError($template->error(), "Template Processing Failed");
+  # Separate the name of the file from its path.
+  $file =~ /^(.*)\/([^\/]+)$/;
+  my $path = $1;
+  my $filename = $2;
+
+  my $filesize = length($content);
+    
+  print $request->header(-type=>"text/html; name=\"$filename\"",
+                         -content_disposition=> "inline; filename=\"$filename\"",
+                         -content_length => $filesize);
+  print $content;
 }
 
 sub queue
 {
-  # Queue the file for review.
-  # Checks out the file via cvs, applies the changes, generates a diff,
-  # and then saves the diff with meta-data to a file for retrieval
-  # by people with CVS access.
+  # Sends the diff or new file to an editors mailing list for review.
   
+  ThrowCodeError("The administrator has not enabled submission of patches for review.",
+                 "Review Not Enabled")
+    unless $CONFIG{EDITOR_EMAIL};
+
   ValidateFile();
   ValidateContent();
   # XXX validate the version as well?
   # XXX validate the user's email address
   my $email = $request->param('email');
   
-  # Create and change to a temporary sub-directory into which we will check out
-  # the file being committed.
-  CreateTempDir();
-  
-  # Check out the file from the repository.
   my $file = $request->param('file');
-  my $comment = $request->param('queue_comment');
-  my $oldversion = $request->param('version');
-  my $newversion = CheckOutFile($file);
-  
-  # Throw an error if the version of the file that was edited
-  # does not match the version in the repository.  In the future
-  # we should try to merge the user's changes if possible.
-  if ($oldversion && $newversion && $oldversion != $newversion) 
-  {
-    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
-      but version <em>$newversion</em> is in the repository.  Reload the edit 
-      page and make your changes again (and bother the authors of this script 
-      to implement change merging
-      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
+  my $comment = $request->param('comment');
+
+  my ($patch, $oldversion, $newversion);
+  if ($request->param('is_new')) {
+    $patch = $request->param('content');
+    $oldversion = "-new";
   }
-  
-  # Replace the checked out file with the edited version, and generate a patch
-  # that patches the checked out file to make it look like the edited version.
-  ReplaceFile($file);
-  my $patch = DiffFile($file);
-  
-  # Delete the temporary directory into which we checked out the file.
-  DeleteTempDir();
+  else {
+    # Create and change to a temporary sub-directory into which we will check out
+    # the file being committed.
+    CreateTempDir();
+    
+    # Check out the file from the repository.
+    $oldversion = $request->param('version');
+    $newversion = CheckOutFile($file);
+    
+    # Throw an error if the version of the file that was edited
+    # does not match the version in the repository.  In the future
+    # we should try to merge the user's changes if possible.
+    if ($oldversion && $newversion && $oldversion != $newversion) 
+    {
+      ThrowCodeError("You edited version <em>$oldversion</em> of the file,
+        but version <em>$newversion</em> is in the repository.  Reload the edit 
+        page and make your changes again (and bother the authors of this script 
+        to implement change merging
+        (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
+    }
+    
+    # Replace the checked out file with the edited version, and generate a patch
+    # that patches the checked out file to make it look like the edited version.
+    ReplaceFile($file);
+    $patch = DiffFile($file);
+    
+    # Delete the temporary directory into which we checked out the file.
+    DeleteTempDir();
+  }
 
   eval {
-    use Mail::Mailer;
-
-    # Generate a random string to serve as an attachment boundary.
-    my @chars = (0..9);
-    my $dashes = "--------------";
-    my $boundary = "${dashes}394857292719284728394756";
-    my $i = 0;
-    while ($patch =~ /\Q$boundary\E/ && ++$i < 100) {
-      $boundary = $dashes . join("", @chars[ map {rand @chars} (1..24) ]);
-    }
-    if ($patch =~ /\Q$boundary\E/ && $i == 100) {
-      die "can't find a unique string that isn't in the patch file: $boundary";
-    }
-    my $mailer = new Mail::Mailer;
-    $mailer->open( { From     => $email,
-                     To       => $CONFIG->{EDITOR_EMAIL},
-                     Subject  => "patch: $file v$oldversion",
-                     "MIME-Version" => "1.0",
-                     "Content-Type" => "multipart/mixed; boundary=\"$boundary\"" });
-
-    print $mailer "This is a multi-part message in MIME format.\n";
-    print $mailer "$boundary\n";
-    print $mailer "Content-Type: text/plain; charset=us-ascii; format=flowed\n";
-    print $mailer "Content-Transfer-Encoding: 7bit\n";
-    print $mailer "\n";
-    print $mailer "$comment\n\n";
-    print $mailer "$boundary\n";
-    print $mailer "Content-Type: text/plain\n";
-    print $mailer " name=\"patch.txt\"\n";
-    print $mailer "Content-Transfer-Encoding: 7bit\n";
-    print $mailer "Content-Disposition: inline\n";
-    print $mailer " filename=\"patch.txt\"\n";
-    print $mailer "\n";
-    print $mailer $patch;
-    print $mailer "$boundary\n";
-
-    $mailer->close;
+    use MIME::Entity;
+    my $mail = MIME::Entity->build(Type     =>"multipart/mixed",
+                                   From     => $email,
+                                   To       => $CONFIG{EDITOR_EMAIL},
+                                   Subject  => "patch: $file v$oldversion");
+    $mail->attach(Data        =>$comment,
+                  Encoding    => "quoted-printable");
+    $mail->attach(Data        => $patch,
+                  Encoding    => "quoted-printable",
+                  Disposition => "inline",
+                  Filename    => "patch.txt");
+    $mail->send();
   };
   if ($@) {
-    ThrowCodeError($@, "Mailing Patch to Editors Failure");
+    ThrowCodeError($@, "Mail Failure");
   }
-
-#  my $dbh = ConnectToDatabase();
-#  my $insert_patch_sth =
-#    $dbh->prepare("INSERT INTO patch (id, submitter, submitted, file, version,
-#                                      patch, comment)
-#                   VALUES (?, ?, NOW(), ?, ?, ?, ?)");
-
-#  $dbh->do("START TRANSACTION");
-#  my ($patch_id) = $dbh->selectrow_array("SELECT MAX(id) FROM patch");
-#  $patch_id = ($patch_id || 0) + 1;
-#  $insert_patch_sth->execute($patch_id, $request->param('email'), $file,
-#                             $oldversion, $patch, $comment);
-#  $dbh->commit;
-#  $dbh->disconnect;
 
   print $request->header;
   $template->process("queued.tmpl", $vars)
     || ThrowCodeError($template->error(), "Template Processing Failed");
-}
-
-sub list
-{
-  my $dbh = ConnectToDatabase();
-  my $get_patches_sth =
-    $dbh->prepare("SELECT id, submitter, submitted, file, version, comment FROM patch");
-  $get_patches_sth->execute();
-  my ($patch, @patches);
-  while ( $patch = $get_patches_sth->fetchrow_hashref ) {
-    push(@patches, $patch);
-  }
-  $vars->{patches} = \@patches;
-
-  $dbh->disconnect;
-
-  print $request->header;
-  $template->process("list.tmpl", $vars)
-    || ThrowCodeError($template->error(), "Template Processing Failed");
-}
-
-sub ConnectToDatabase
-{
-  use DBI;
-  
-  # Establish a database connection.
-  my $dsn = "DBI:mysql:host=$CONFIG->{DB_HOST};database=$CONFIG->{DB_NAME};port=$CONFIG->{DB_PORT}";
-  my $dbh = DBI->connect($dsn,
-                         $CONFIG->{DB_USERNAME},
-                         $CONFIG->{DB_PASSWORD},
-                         { RaiseError => 1,
-                           PrintError => 0,
-                           ShowErrorStatement => 1,
-                           AutoCommit => 0 } );
-  return $dbh;
 }
 
 sub create
@@ -632,6 +459,61 @@ sub create
     || ThrowCodeError($template->error(), "Template Processing Failed");
 }
 
+sub commit 
+{
+  # Commit a file to the repository.  Checks out the file via cvs, 
+  # applies the changes, generates a diff, and then checks the file 
+  # back in.  It would be easier if we could commit a file by piping
+  # it into standard input, but cvs does not provide for this.
+  
+  ValidateFile();
+  ValidateContent();
+  ValidateUsername();
+  ValidatePassword();
+  ValidateComment();
+  my $patch_id;
+  if ($request->param('patch_id')) {
+    $patch_id = ValidateID($request->param('patch_id'));
+  }
+  
+  # Create and change to a temporary sub-directory into which 
+  # we will check out the file being committed.
+  CreateTempDir();
+  
+  # Check out the file from the repository.
+  my $file = $request->param('file');
+  my $oldversion = $request->param('version');
+  my $newversion = CheckOutFile($file);
+  
+  # Throw an error if the version of the file that was edited
+  # does not match the version in the repository.  In the future
+  # we should try to merge the user's changes if possible.
+  if ($oldversion && $newversion && $oldversion != $newversion) 
+  {
+    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
+      but version <em>$newversion</em> is in the repository.  Reload the edit 
+      page and make your changes again (and bother the authors of this script 
+      to implement change merging
+      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
+  }
+  
+  # Replace the checked out file with the edited version, generate
+  # a diff between the edited file and the version in the repository,
+  # and check in the edited file.
+  ReplaceFile($file);
+  $vars->{'diff'} = DiffFile($file);
+  $vars->{'checkin_results'} = CheckInFile($file);
+  
+  # Delete the temporary directory into which we checked out the file.
+  DeleteTempDir();
+  
+  $vars->{'file'} = $file;
+  
+  print $request->header;
+  $template->process("committed.tmpl", $vars)
+    || ThrowCodeError($template->error(), "Template Processing Failed");
+}
+
 ################################################################################
 # Input Validation
 ################################################################################
@@ -648,8 +530,8 @@ sub ValidateFile
 
   # Remove the absolute URI for files on the web site (if any)
   # from the beginning of the path.
-  if ($WEB_BASE_URI_PATTERN) { $file =~ s/^$WEB_BASE_URI_PATTERN//i }
-  else                       { $file =~ s/^\Q$WEB_BASE_URI\E//i     }
+  if ($CONFIG{WEB_BASE_URI_PATTERN}) { $file =~ s/^$CONFIG{WEB_BASE_URI_PATTERN}//i }
+  else                       { $file =~ s/^\Q$CONFIG{WEB_BASE_URI}\E//i     }
 
 
   # Entire Path Issues
@@ -665,7 +547,7 @@ sub ValidateFile
 
   # Add the base path of the file in the cvs repository if necessary.
   # (i.e. if the user entered a URL or a path based on the URL).
-  if ($file !~ /^\Q$WEB_BASE_PATH\E/) { $file = $WEB_BASE_PATH . $file }
+  if ($file !~ /^\Q$CONFIG{WEB_BASE_PATH}\E/) { $file = $CONFIG{WEB_BASE_PATH} . $file }
 
 
   # End of Path Issues
@@ -687,7 +569,7 @@ sub ValidateFile
 
   # Construct a URL to the file if possible.
   my $url = $file;
-  if ($url =~ s/^\Q$WEB_BASE_PATH\E(.*)$/$1/i) { $vars->{'file_url'} = $WEB_BASE_URI . $url }
+  if ($url =~ s/^\Q$CONFIG{WEB_BASE_PATH}\E(.*)$/$1/i) { $vars->{'file_url'} = $CONFIG{WEB_BASE_URI} . $url }
 
 }
 
@@ -779,7 +661,7 @@ sub RetrieveFile
   my ($name) = @_;
   
   my @args = ("-d",
-              ":pserver:$READ_CVS_USERNAME:$READ_CVS_PASSWORD\@$READ_CVS_SERVER", 
+              ":pserver:$CONFIG{READ_CVS_USERNAME}:$CONFIG{READ_CVS_PASSWORD}\@$CONFIG{READ_CVS_SERVER}", 
               "checkout",
               "-p", # write to STDOUT
               $name);
@@ -800,8 +682,8 @@ sub RetrieveFile
   {
     # Include the command in the error message (but hide the username/password).
     my $command = join(" ", "cvs", @args);
-    $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
-    $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
+    $command =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
+    $errors =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
     
     ThrowUserError("Doctor could not check out the file from the repository.",
                    undef,
@@ -836,7 +718,7 @@ sub CheckOutFile
   
   my @args = ("-t", # debugging messages from which to extract the version
               "-d", 
-              ":pserver:$READ_CVS_USERNAME:$READ_CVS_PASSWORD\@$READ_CVS_SERVER", 
+              ":pserver:$CONFIG{READ_CVS_USERNAME}:$CONFIG{READ_CVS_PASSWORD}\@$CONFIG{READ_CVS_SERVER}", 
               "checkout", 
               $file);
   
@@ -852,8 +734,8 @@ sub CheckOutFile
   {
     # Include the command in the error message (but hide the password).
     my $command = join(" ", "cvs", @args);
-    $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
-    $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
+    $command =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
+    $errors =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
     
     ThrowUserError("Doctor could not check out the file from the repository.",
                    undef,
@@ -876,7 +758,7 @@ sub DiffFile
   my ($file) = @_;
   
   my @args = ("-d", 
-              ":pserver:$READ_CVS_USERNAME:$READ_CVS_PASSWORD\@$READ_CVS_SERVER", 
+              ":pserver:$CONFIG{READ_CVS_USERNAME}:$CONFIG{READ_CVS_PASSWORD}\@$CONFIG{READ_CVS_SERVER}", 
               "diff", 
               "-u", 
               $file);
@@ -896,8 +778,8 @@ sub DiffFile
   {
     # Include the command in the error message (but hide the password).
     my $command = join(" ", "cvs", @args);
-    $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
-    $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
+    $command =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
+    $errors =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
     
     ThrowUserError("Doctor could not diff your version of the file 
                     against the version in the repository.",
@@ -923,7 +805,7 @@ sub CheckInFile
   
   my $comment = $request->param('comment');
   my @args = ("-d" , 
-              ":pserver:$username:$password\@$WRITE_CVS_SERVER" , 
+              ":pserver:$username:$password\@$CONFIG{WRITE_CVS_SERVER}" , 
               "commit" , 
               "-m" , 
               $comment , 
@@ -977,7 +859,7 @@ sub ThrowUserError
   # working directory (if any; generally all user errors should be caught
   # before we do anything requiring the creation of a temporary directory).
   chdir($HOME);
-  rmtree("$TEMP_DIR/$PID", 0, 1) if -e "$TEMP_DIR/$PID";
+  rmtree("$CONFIG{TEMP_DIR}/$PID", 0, 1) if -e "$CONFIG{TEMP_DIR}/$PID";
   
   print $request->header;
   $template->process("user-error.tmpl", $vars)
@@ -998,10 +880,10 @@ sub ThrowCodeError
   
   # Return to the original working directory and delete the temporary
   # working directory.
-  (chdir($HOME) && (-e "$TEMP_DIR/$PID" ? rmtree("$TEMP_DIR/$PID", 0, 1) : 1))
+  (chdir($HOME) && (-e "$CONFIG{TEMP_DIR}/$PID" ? rmtree("$CONFIG{TEMP_DIR}/$PID", 0, 1) : 1))
     || ($vars->{'message'} = 
          ("couldn't return to original working directory '$HOME' " . 
-          "and delete temporary working directory '$TEMP_DIR/$PID': $!" . 
+          "and delete temporary working directory '$CONFIG{TEMP_DIR}/$PID': $!" . 
           "; error occurred while trying to display error message: " . 
           ($vars->{'title'} ? "$vars->{'title'}: ": "") . $vars->{'message'}));
   
@@ -1014,7 +896,7 @@ sub ThrowCodeError
          provided below. Please forward this information along with any
          other information that would help diagnose and fix this problem
          to the system administrator at
-         <a href=\"mailto:$CONFIG->{'ADMIN_EMAIL'}\">$CONFIG->{'ADMIN_EMAIL'}</a>.
+         <a href=\"mailto:$CONFIG{ADMIN_EMAIL}\">$CONFIG{ADMIN_EMAIL}</a>.
          </p>
          <p>
          couldn't process error.tmpl template: " . $template->error() . 
@@ -1068,25 +950,25 @@ sub CreateTempDir
   # Creates and changes to a temporary sub-directory unique to this process
   # that can be used for CVS activities requiring the manipulation of files.
   
-  if (!-e $TEMP_DIR and !mkdir($TEMP_DIR))
+  if (!-e $CONFIG{TEMP_DIR} and !mkdir($CONFIG{TEMP_DIR}))
   {
     ThrowCodeError("couldn't create the temporary directory 
-                    <em>$TEMP_DIR</em>: $!");
+                    <em>$CONFIG{TEMP_DIR}</em>: $!");
   }
-  elsif (!-d $TEMP_DIR)
+  elsif (!-d $CONFIG{TEMP_DIR})
   {
-    ThrowCodeError("couldn't use the temporary directory <em>$TEMP_DIR</em> 
+    ThrowCodeError("couldn't use the temporary directory <em>$CONFIG{TEMP_DIR}</em> 
                     because it isn't a directory.");
   }
   
   # Create and change to a unique sub-directory in the temporary directory.
-  mkdir("$TEMP_DIR/$PID") 
+  mkdir("$CONFIG{TEMP_DIR}/$PID") 
     || ThrowCodeError("couldn't create a temporary sub-directory 
-                       <em>$TEMP_DIR/$PID</em>: $!");
+                       <em>$CONFIG{TEMP_DIR}/$PID</em>: $!");
   
-  chdir("$TEMP_DIR/$PID") 
+  chdir("$CONFIG{TEMP_DIR}/$PID") 
     || ThrowCodeError("couldn't change to the temporary sub-directory 
-                       <em>$TEMP_DIR/$PID</em>: $!");
+                       <em>$CONFIG{TEMP_DIR}/$PID</em>: $!");
 }
 
 sub DeleteTempDir
@@ -1094,7 +976,7 @@ sub DeleteTempDir
   # Changes back to the home directory and deletes the temporary directory.
   
   chdir($HOME);
-  rmtree("$TEMP_DIR/$PID", 0, 1)
+  rmtree("$CONFIG{TEMP_DIR}/$PID", 0, 1)
     || ThrowCodeError("couldn't delete the temporary sub-directory 
-                       <em>$TEMP_DIR/$PID</em>: $!");
+                       <em>$CONFIG{TEMP_DIR}/$PID</em>: $!");
 }
