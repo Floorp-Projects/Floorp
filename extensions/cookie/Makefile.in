@@ -46,10 +46,6 @@ REQUIRES	= xpcom \
 		  appshell \
 		  $(NULL)
 
-ifdef ENABLE_TESTS
-DIRS		= tests
-endif
-
 CPPSRCS		= \
 		nsModuleFactory.cpp \
 		nsPermission.cpp \
