@@ -173,7 +173,10 @@
           return;
         }
         
-        this.selected = event.target;
+        if (event.target == this)
+          this.selected = null
+        else
+          this.selected = event.target;
       ]]>
       </handler>
       <handler event="dblclick" action="if (this.selected &amp;&amp; event.button == 0) this.selected.fireEvent('open');"/>

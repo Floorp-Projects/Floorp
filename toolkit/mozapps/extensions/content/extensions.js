@@ -8,6 +8,8 @@ var gExtensionManager = null;
 var gDownloadListener = null;
 var gExtensionssView  = null;
 var gWindowState      = "";
+var gURIPrefix        = ""; // extension or theme prefix
+var gDSRoot           = ""; // extension or theme root
 
 const PREF_EM_EXTENSIONS_DISABLED = "extensions.safeMode";
 
@@ -15,7 +17,7 @@ const PREF_EM_EXTENSIONS_DISABLED = "extensions.safeMode";
 // Utility Functions 
 function stripPrefix(aResourceURI)
 {
-  return aResourceURI.substr("urn:mozilla:extension:".length, aResourceURI.length);
+  return aResourceURI.substr(gURIPrefix.length, aResourceURI.length);
 }
 
 function openURL(aURL)
@@ -58,8 +60,13 @@ function onExtensionSelect(aEvent)
 function Startup() 
 {
   gWindowState = window.arguments[0];
+  gURIPrefix  = gWindowState == "extensions" ? "urn:mozilla:extension:" : "urn:mozilla:theme:";
+  gDSRoot     = gWindowState == "extensions" ? "urn:mozilla:extension:root" : "urn:mozilla:theme:root";
+  
+  document.documentElement.setAttribute("windowtype", document.documentElement.getAttribute("windowtype") + "-" + gWindowState);
 
   gExtensionsView = document.getElementById("extensionsView");
+  gExtensionsView.setAttribute("state", gWindowState);
   gExtensionManager = Components.classes["@mozilla.org/extensions/manager;1"]
                                 .getService(Components.interfaces.nsIExtensionManager);
   
@@ -71,7 +78,7 @@ function Startup()
 
   // Finally, update the UI. 
   gExtensionsView.database.AddDataSource(gExtensionManager.datasource);
-  gExtensionsView.setAttribute("ref", "urn:mozilla:extension:root");
+  gExtensionsView.setAttribute("ref", gDSRoot);
   gExtensionsView.focus();
   
   // Restore the last-selected extension
@@ -82,6 +89,11 @@ function Startup()
     gExtensionsView.selectionForward();
   else
     gExtensionsView.selected = lastSelected;
+
+  var extensionsStrings = document.getElementById("extensionsStrings");
+  document.documentElement.setAttribute("title", extensionsStrings.getString(gWindowState + "Title"));
+  
+  gExtensionsViewController.onCommandUpdate(); 
 }
 
 function Shutdown() 
@@ -106,7 +118,9 @@ function buildContextMenu(aEvent)
   while (popup.hasChildNodes())
     popup.removeChild(popup.firstChild);
 
-  var menus = gWindowState == "extensions" ? gExtensionContextMenus : gThemeContextMenus;  
+  var isExtensions = gWindowState == "extensions";
+
+  var menus = isExtensions ? gExtensionContextMenus : gThemeContextMenus;  
   for (var i = 0; i < menus.length; ++i) {
     var clonedMenu = document.getElementById(menus[i]).cloneNode(true);
     clonedMenu.id = clonedMenu.id + "_clone";
@@ -118,19 +132,21 @@ function buildContextMenu(aEvent)
   var name = document.popupNode.getAttribute("name");
   menuitem_about.setAttribute("label", extensionsStrings.getFormattedString("aboutExtension", [name]));
   
-  var canEnable = gExtensionsViewController.isCommandEnabled("cmd_enable");
-  var menuitemToShow, menuitemToHide;
-  if (canEnable) {
-    menuitemToShow = document.getElementById("menuitem_enable_clone");
-    menuitemToHide = document.getElementById("menuitem_disable_clone");
+  if (isExtensions) {
+    var canEnable = gExtensionsViewController.isCommandEnabled("cmd_enable");
+    var menuitemToShow, menuitemToHide;
+    if (canEnable) {
+      menuitemToShow = document.getElementById("menuitem_enable_clone");
+      menuitemToHide = document.getElementById("menuitem_disable_clone");
+    }
+    else {
+      menuitemToShow = document.getElementById("menuitem_disable_clone");
+      menuitemToHide = document.getElementById("menuitem_enable_clone");
+    }
+    menuitemToShow.hidden = false;
+    menuitemToHide.hidden = true;
   }
-  else {
-    menuitemToShow = document.getElementById("menuitem_disable_clone");
-    menuitemToHide = document.getElementById("menuitem_enable_clone");
-  }
-  menuitemToShow.hidden = false;
-  menuitemToHide.hidden = true;
-  
+    
   return true;
 }
 
@@ -141,7 +157,6 @@ var gExtensionsDNDObserver =
 {
   _ioServ: null,
   _filePH: null,
-  _mimeSvc: null,
   
   _ensureServices: function ()
   {
@@ -150,8 +165,6 @@ var gExtensionsDNDObserver =
                                .getService(Components.interfaces.nsIIOService);
       this._filePH = this._ioServ.getProtocolHandler("file")
                          .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-      this._mimeSvc = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
-                                .getService(Components.interfaces.nsIMIMEService);
     }
   },
   
@@ -171,9 +184,9 @@ var gExtensionsDNDObserver =
       xfer.getTransferData("text/x-moz-url", data, length);
       var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
 
-      var file = this._filePH.getFileFromURLSpec(fileURL);
-      var mimeType = this._mimeSvc.getTypeFromFile(file);
-      if (mimeType != "application/x-xpinstall") {
+      var fileURI = this._ioServ.newURI(fileURL, null, null);
+      var url = fileURI.QueryInterface(Components.interfaces.nsIURL);
+      if (url.fileExtension != "jar" && url.fileExtension != "xpi") {
         aDragSession.canDrop = false;
         break;
       }
@@ -185,7 +198,10 @@ var gExtensionsDNDObserver =
     this._ensureServices();
     
     var xpinstallObj = {};
-  
+    var themes = {};
+    var xpiCount = 0;
+    var themeCount = 0;
+    
     var count = aDragSession.numDropItems;
     for (var i = 0; i < count; ++i) {
       var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
@@ -200,9 +216,21 @@ var gExtensionsDNDObserver =
                           .createInstance(Components.interfaces.nsIURI);
       uri.spec = fileURL;
       var url = uri.QueryInterface(Components.interfaces.nsIURL);
-      xpinstallObj[url.fileName] = fileURL;
+      if (url.fileExtension == "xpi") {
+        xpinstallObj[url.fileName] = fileURL;
+        ++xpiCount;
+      }
+      else if (url.fileExtension == "jar") {
+        themes[url.fileName] = fileURL;
+        ++themeCount;
+      }
     }
-    InstallTrigger.install(xpinstallObj);
+    if (xpiCount > 0) 
+      InstallTrigger.install(xpinstallObj);
+    if (themeCount > 0) {
+      for (var fileName in themes)
+        InstallTrigger.installChrome(InstallTrigger.SKIN, themes[fileName], fileName);
+    }
   },
   _flavourSet: null,  
   getSupportedFlavours: function ()
@@ -369,10 +397,11 @@ var gExtensionsViewController = {
     cmd_update: function ()
     { 
       var id = stripPrefix(gExtensionsView.selected.id);
-      var items = gExtensionManager.getItemList(id, nsIUpdateItem.TYPE_EXTENSION, { });
+      var itemType = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION : nsIUpdateItem.TYPE_THEME;
+      var items = gExtensionManager.getItemList(id, itemType, { });
       var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                               .getService(Components.interfaces.nsIUpdateService);
-      updates.checkForUpdates(items, items.length, nsIUpdateItem.TYPE_EXTENSION, 
+      updates.checkForUpdates(items, items.length, itemType, 
                               Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
                               window);
     },
