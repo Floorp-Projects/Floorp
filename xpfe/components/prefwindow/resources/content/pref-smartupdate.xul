@@ -25,9 +25,6 @@
     <checkbox id="XPInstallEnabled" value="&enableSU.label;" accesskey="&enableSU.accesskey;"
               pref="true" preftype="bool" prefstring="xpinstall.enabled"
               prefattribute="checked"/>
-    <checkbox id="XPInstallNotificationsEnabled" value="&enableNotification.label;" accesskey="&enableNotification.accesskey;"
-              pref="true" preftype="bool" prefstring="xpinstall.notifications.enabled"
-              prefattribute="checked"/>
   </titledbox>
 
 <!--
