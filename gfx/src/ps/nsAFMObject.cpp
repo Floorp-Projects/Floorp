@@ -36,6 +36,7 @@
 #include "Courier-Oblique.h"
 #include "Symbol.h"
 #include "nslog.h"
+#undef fprintf
 
 NS_IMPL_LOG(nsAFMObjectLog)
 #define PRINTF NS_LOG_PRINTF(nsAFMObjectLog)
