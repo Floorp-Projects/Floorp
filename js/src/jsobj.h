@@ -363,9 +363,8 @@ extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 		JSProperty **propp);
 
-extern JSBool
-js_FindVariable(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
-		JSProperty **propp);
+extern JSObject *
+js_FindIdentifierBase(JSContext *cx, jsid id);
 
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
