@@ -78,6 +78,7 @@ public:
                             PRInt32 aY);
     NS_IMETHOD         PlaceBehind(nsIWidget *aWidget,
                                    PRBool     aActivate);
+    NS_IMETHOD         SetSizeMode(PRInt32 aMode);
     NS_IMETHOD         Enable(PRBool aState);
     NS_IMETHOD         SetFocus(PRBool aRaise = PR_FALSE);
     NS_IMETHOD         GetScreenBounds(nsRect &aRect);
@@ -158,6 +159,8 @@ public:
                                      GdkEventScroll *aEvent);
     void               OnVisibilityNotifyEvent(GtkWidget *aWidget,
                                                GdkEventVisibility *aEvent);
+    void               OnWindowStateEvent(GtkWidget *aWidget,
+                                          GdkEventWindowState *aEvent);
 
     nsresult           NativeCreate(nsIWidget        *aParent,
                                     nsNativeWidget    aNativeParent,
@@ -208,6 +211,7 @@ private:
     PRPackedBool        mRetryPointerGrab;
     PRPackedBool        mRetryKeyboardGrab;
     GtkWindow          *mTransientParent;
+    PRInt32             mSizeState;
 };
 
 class nsChildWindow : public nsWindow {
