@@ -73,16 +73,16 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 psm_RelEng_srvr_bld:
-	cd ../coreconf; gmake
+	cd ../coreconf; $(MAKE)
 	cd ../../nsprpub; $(MAKE) OBJDIR_NAME=$(OBJDIR_NAME)
-	cd ../nss; gmake import IMPORTS=dbm/DBM_1_54
-	cd ../nss; gmake 
+	cd ../nss; $(MAKE) import IMPORTS=dbm/DBM_1_54
+	cd ../nss; $(MAKE)
 ifeq ($(OS_ARCH), WINNT)
-	gmake import IMPORTS=nlslayer/m16
+	$(MAKE) import IMPORTS=nlslayer/m16
 else
-	gmake import IMPORTS=nlslayer/PR3 RELEASE_TREE=/h/tortoise/export/share/builds/components
+	$(MAKE) import IMPORTS=nlslayer/PR3 RELEASE_TREE=/h/tortoise/export/share/builds/components
 endif
-	cd ui;gmake
-	gmake
-	cd server;gmake build_xpi
+	cd ui; $(MAKE)
+	$(MAKE)
+	cd server; $(MAKE) build_xpi
 
