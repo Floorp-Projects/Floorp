@@ -62,7 +62,7 @@
  
 static NS_DEFINE_IID(kCPrinterEnumerator, NS_PRINTER_ENUMERATOR_CID);
 
-NS_IMPL_ISUPPORTS1(nsPrintOptions, nsIPrintOptions)
+NS_IMPL_ISUPPORTS2(nsPrintOptions, nsIPrintOptions, nsIPrintSettingsService)
 
 // Pref Constants
 const char kMarginTop[]       = "print_margin_top";
@@ -332,57 +332,6 @@ const char* nsPrintOptions::GetPrefName(const char *    aPrefName,
 
 }
 
-/** ---------------------------------------------------
- *  Helper function - Returns either the name or sets the length to zero
- */
-static void GetAdjustedPrinterName(nsIPrintSettings* aPS, PRBool aUsePNP, nsString& aPrinterName)
-{
-  aPrinterName.SetLength(0);
-
-  // Get the Printer Name from the PtinerSettings 
-  // to use as a prefix for Pref Names
-  PRUnichar* prtName = nsnull;
-  if (aUsePNP && NS_SUCCEEDED(aPS->GetPrinterName(&prtName))) {
-    if (prtName && !*prtName) {
-      nsMemory::Free(prtName);
-      prtName = nsnull;
-    }
-  }
-
-  if (prtName) {
-    aPrinterName = prtName;
-    PRUnichar uc = '_';
-    const char* replaceStr = " \n\r";
-    for (PRInt32 i=0;i<(PRInt32)strlen(replaceStr);i++) {
-      PRUnichar uChar = replaceStr[i];
-      aPrinterName.ReplaceChar(uChar, uc);
-    }
-  }
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS, PRBool aUsePNP, PRUint32 aFlags)
-{
-  nsString prtName;
-  // read any non printer specific prefs
-  // with empty printer name
-  nsresult rv = ReadPrefs(aPS, prtName, aFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get the Printer Name from the PtinerSettings 
-  // to use as a prefix for Pref Names
-  GetAdjustedPrinterName(aPS, aUsePNP, prtName);
-  if (prtName.Length()) {
-    // Now read any printer specific prefs
-    return ReadPrefs(aPS, prtName, aFlags);
-  }
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Testing of read/write prefs
 // This define controls debug output 
@@ -626,24 +575,6 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUi
   }
   return NS_ERROR_FAILURE;
 }
-
-/* void SavePrintSettingsToPrefs (in nsIPrintSettings aPS); */
-/** ---------------------------------------------------
- *  This will asve into prefs most all the PrintSettings either generically (not specified printer)
- *  or to a specific printer.
- */
-nsresult 
-nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS, PRBool aUsePrinterNamePrefix, PRUint32 aFlags)
-{
-  nsString prtName;
-  // Get the Printer Name from the PtinerSettings 
-  // to use as a prefix for Pref Names
-  GetAdjustedPrinterName(aPS, aUsePrinterNamePrefix, prtName);
-
-  // Now write any printer specific prefs
-  return WritePrefs(aPS, prtName, aFlags);
-}
-
 
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
@@ -924,6 +855,11 @@ NS_IMETHODIMP nsPrintOptions::CreatePrintSettings(nsIPrintSettings **_retval)
   return rv;
 }
 
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-- nsIPrintSettingsService
+//-----------------------------------------------------
+//-----------------------------------------------------
 /* readonly attribute nsIPrintSettings globalPrintSettings; */
 NS_IMETHODIMP nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings)
 {
@@ -955,6 +891,121 @@ NS_IMETHODIMP nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings * *aGlobal
   NS_ADDREF(*aGlobalPrintSettings);
 
   return NS_OK;
+}
+
+/* readonly attribute nsIPrintSettings newPrintSettings; */
+NS_IMETHODIMP
+nsPrintOptions::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
+{
+    NS_ENSURE_ARG_POINTER(aNewPrintSettings);
+
+    nsresult rv = CreatePrintSettings(aNewPrintSettings);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = InitPrintSettingsFromPrinter(nsnull, *aNewPrintSettings);
+    return rv;
+}
+
+//-----------------------------------------------------------------------
+NS_IMETHODIMP
+nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+{
+    NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
+
+    nsresult rv;
+    nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
+    if (prtEnum) {
+        rv = prtEnum->GetDefaultPrinterName(aDefaultPrinterName);
+    }
+    return rv;
+}
+
+//-----------------------------------------------------------------------
+NS_IMETHODIMP
+nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+{
+    NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+    PRUnichar* printerName = nsnull;
+    if (!aPrinterName) {
+        GetDefaultPrinterName(&printerName);
+        if (!printerName || !*printerName) return NS_OK;
+    }
+    nsresult rv;
+    nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
+    if (prtEnum) {
+        rv = prtEnum->InitPrintSettingsFromPrinter(aPrinterName?aPrinterName:printerName, aPrintSettings);
+    }
+    if (printerName) {
+        nsMemory::Free(printerName);
+    }
+    return rv;
+}
+
+/** ---------------------------------------------------
+ *  Helper function - Returns either the name or sets the length to zero
+ */
+static void GetAdjustedPrinterName(nsIPrintSettings* aPS, PRBool aUsePNP, nsString& aPrinterName)
+{
+  aPrinterName.SetLength(0);
+
+  // Get the Printer Name from the PtinerSettings 
+  // to use as a prefix for Pref Names
+  PRUnichar* prtName = nsnull;
+  if (aUsePNP && NS_SUCCEEDED(aPS->GetPrinterName(&prtName))) {
+    if (prtName && !*prtName) {
+      nsMemory::Free(prtName);
+      prtName = nsnull;
+    }
+  }
+
+  if (prtName) {
+    aPrinterName = prtName;
+    PRUnichar uc = '_';
+    const char* replaceStr = " \n\r";
+    for (PRInt32 i=0;i<(PRInt32)strlen(replaceStr);i++) {
+      PRUnichar uChar = replaceStr[i];
+      aPrinterName.ReplaceChar(uChar, uc);
+    }
+  }
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsPrintOptionsImpl.h
+ *	@update 1/12/01 rods
+ */
+NS_IMETHODIMP 
+nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS, PRBool aUsePNP, PRUint32 aFlags)
+{
+  nsString prtName;
+  // read any non printer specific prefs
+  // with empty printer name
+  nsresult rv = ReadPrefs(aPS, prtName, aFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the Printer Name from the PtinerSettings 
+  // to use as a prefix for Pref Names
+  GetAdjustedPrinterName(aPS, aUsePNP, prtName);
+  if (prtName.Length()) {
+    // Now read any printer specific prefs
+    return ReadPrefs(aPS, prtName, aFlags);
+  }
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  This will asve into prefs most all the PrintSettings either generically (not specified printer)
+ *  or to a specific printer.
+ */
+nsresult 
+nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS, PRBool aUsePrinterNamePrefix, PRUint32 aFlags)
+{
+  nsString prtName;
+  // Get the Printer Name from the PtinerSettings 
+  // to use as a prefix for Pref Names
+  GetAdjustedPrinterName(aPS, aUsePrinterNamePrefix, prtName);
+
+  // Now write any printer specific prefs
+  return WritePrefs(aPS, prtName, aFlags);
 }
 
 
@@ -1121,7 +1172,7 @@ public:
 };
 Tester::Tester()
 {
-  static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+  const char* kPrintOptionsCID = "@mozilla.org/gfx/printsettings-service;1";
   nsCOMPtr<nsIPrintSettings> ps;
   nsresult rv;
   nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);

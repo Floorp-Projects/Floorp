@@ -104,7 +104,6 @@
 #include "nsIServiceManager.h"
 
 // Printer Includes
-#include "nsIPrintOptions.h"
 #include "nsIWebBrowserPrint.h"
 
 // qa additions

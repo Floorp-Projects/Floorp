@@ -149,14 +149,14 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/gfx/devicecontextspecfactory;1",
     nsDeviceContextSpecFactoryMacConstructor },
 #if TARGET_CARBON
-  { "nsPrintOptions",
-    NS_PRINTOPTIONS_CID,
-    "@mozilla.org/gfx/printoptions;1",
+  { "PrintSettings Service",
+    NS_PRINTSETTINGSSERVICE_CID,
+    "@mozilla.org/gfx/printsettings-service;1",
     nsPrintOptionsXConstructor },
 #else
-  { "Print Options",
-    NS_PRINTOPTIONS_CID,
-    "@mozilla.org/gfx/printoptions;1",
+  { "PrintSettings Service",
+    NS_PRINTSETTINGSSERVICE_CID,
+    "@mozilla.org/gfx/printsettings-service;1",
     nsPrintOptionsMacConstructor },
 #endif
   { "nsFontEnumerator",

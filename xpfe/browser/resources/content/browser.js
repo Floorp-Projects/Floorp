@@ -198,7 +198,7 @@ function BrowserExitPrintPreview()
   mainWin.setAttribute("onclose", gOldCloseHandler);
 }
 
-function GetPrintSettings(webBrowserPrint)
+function GetPrintSettings()
 {
   var prevPS = gPrintSettings;
 
@@ -211,13 +211,15 @@ function GetPrintSettings(webBrowserPrint)
         gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
       }
 
+      var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                                        .getService(Components.interfaces.nsIPrintSettingsService);
       if (gPrintSettingsAreGlobal) {
-        gPrintSettings = webBrowserPrint.globalPrintSettings;        
+        gPrintSettings = psService.globalPrintSettings;        
         if (gSavePrintSettings) {
-          webBrowserPrint.initPrintSettingsFromPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
+          psService.initPrintSettingsFromPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
         }
       } else {
-        gPrintSettings = webBrowserPrint.newPrintSettings;
+        gPrintSettings = psService.newPrintSettings;
       }
     }
   } catch (e) {
@@ -249,7 +251,7 @@ function BrowserPrintPreview()
     var webBrowserPrint = ifreq.getInterface(
       Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings(webBrowserPrint);
+      gPrintSettings = GetPrintSettings();
       webBrowserPrint.printPreview(gPrintSettings, null);
     }
 
@@ -274,7 +276,7 @@ function BrowserPrintSetup()
     var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings(webBrowserPrint);
+      gPrintSettings = GetPrintSettings();
     }
 
     didOK = goPageSetup(window, gPrintSettings);  // from utilityOverlay.js
@@ -282,7 +284,9 @@ function BrowserPrintSetup()
 
       if (webBrowserPrint) {
         if (gPrintSettingsAreGlobal && gSavePrintSettings) {
-          webBrowserPrint.savePrintSettingsToPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
+          var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                                            .getService(Components.interfaces.nsIPrintSettingsService);
+          psService.savePrintSettingsToPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
         }
         if (webBrowserPrint.doingPrintPreview) {
           webBrowserPrint.printPreview(gPrintSettings, null);
@@ -301,7 +305,7 @@ function BrowserPrint()
     var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings(webBrowserPrint);
+      gPrintSettings = GetPrintSettings();
       webBrowserPrint.print(gPrintSettings, null);
     }
   } catch (e) {

@@ -26,6 +26,7 @@
 
 var dialog;
 var printService       = null;
+var printOptions       = null;
 var gOriginalNumCopies = 1;
 
 var paramBlock;
@@ -176,7 +177,7 @@ listElement.prototype =
 //---------------------------------------------------
 function getPrinters()
 {
-  var printerEnumerator = printService.availablePrinters();
+  var printerEnumerator = printOptions.availablePrinters();
 
   var selectElement = new listElement(dialog.printerList);
   selectElement.clearList();
@@ -198,7 +199,7 @@ function setPrinterDefaultsForSelectedPrinter()
   gPrintSettings.printerName  = dialog.printerList.value;
  
   // First get any defaults from the printer 
-  gWebBrowserPrint.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
+  printService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
 
   var flags = gPrintSetInterface.kInitSavePaperSizeType | gPrintSetInterface.kInitSavePaperSizeUnit |
               gPrintSetInterface.kInitSavePaperWidth | gPrintSetInterface.kInitSavePaperHeight |
@@ -206,7 +207,7 @@ function setPrinterDefaultsForSelectedPrinter()
               gPrintSetInterface.kInitSavePrintCommand;
 
   // now augment them with any values from last time
-  gWebBrowserPrint.initPrintSettingsFromPrefs(gPrintSettings, true, flags);
+  printService.initPrintSettingsFromPrefs(gPrintSettings, true, flags);
 
 }
 
@@ -252,11 +253,12 @@ function loadDialog()
   var print_tofile        = "";
 
   try {
-    printService = Components.classes["@mozilla.org/gfx/printoptions;1"];
+    printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"];
     if (printService) {
       printService = printService.getService();
       if (printService) {
-        printService = printService.QueryInterface(Components.interfaces.nsIPrintOptions);
+        printService = printService.QueryInterface(Components.interfaces.nsIPrintSettingsService);
+        printOptions = printService.QueryInterface(Components.interfaces.nsIPrintOptions);
       }
     }
   } catch(e) {}
@@ -435,12 +437,12 @@ function onAccept()
     saveToPrefs = prefs.getBoolPref("print.save_print_settings");
   }
 
-  if (saveToPrefs && gWebBrowserPrint != null) {
+  if (saveToPrefs && printService != null) {
     var flags = gPrintSetInterface.kInitSavePaperSizeType | gPrintSetInterface.kInitSavePaperSizeUnit |
                 gPrintSetInterface.kInitSavePaperWidth | gPrintSetInterface.kInitSavePaperHeight |
                 gPrintSetInterface.kInitSavePaperName |
                 gPrintSetInterface.kInitSavePrintCommand;
-    gWebBrowserPrint.savePrintSettingsToPrefs(gPrintSettings, true, flags);
+    printService.savePrintSettingsToPrefs(gPrintSettings, true, flags);
   }
 
   // set return value to "print"

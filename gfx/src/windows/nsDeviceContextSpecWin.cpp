@@ -60,7 +60,6 @@
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsGfxCIID.h"
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // File Picker
 #include "nsILocalFile.h"

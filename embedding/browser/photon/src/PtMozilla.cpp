@@ -36,7 +36,6 @@
 #include "nsIHistoryEntry.h"
 
 #include "nsIWebBrowserPrint.h"
-#include "nsIPrintOptions.h"
 
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
