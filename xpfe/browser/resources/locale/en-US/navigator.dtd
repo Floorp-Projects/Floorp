@@ -130,7 +130,7 @@
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
-<!ENTITY searchOptions.label "Search options">
+<!ENTITY searchOptions.label "Search Options">
 <!ENTITY simpleMode.label "Simple">
 <!ENTITY advancedMode.label "Advanced">
 <!ENTITY searchBookmarksHistoryCmd.label "Search Bookmarks/History">
