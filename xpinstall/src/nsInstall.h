@@ -252,6 +252,7 @@ class nsInstall
         PRInt32    FileOpFileModDateChanged(nsInstallFolder& aTarget, double aOldStamp, PRBool* aReturn);
         PRInt32    FileOpFileMove(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn);
         PRInt32    FileOpFileRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpFileWindowsGetShortName(nsInstallFolder& aTarget, nsString& aShortPathName);
         PRInt32    FileOpFileWindowsShortcut(nsIFile* aTarget, nsIFile* aShortcutPath, nsString& aDescription, nsIFile* aWorkingPath, nsString& aParams, nsIFile* aIcon, PRInt32 aIconId, PRInt32* aReturn);
         PRInt32    FileOpFileMacAlias(nsIFile *aSourceFile, nsIFile *aAliasFile, PRInt32* aReturn);
         PRInt32    FileOpFileUnixLink(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);

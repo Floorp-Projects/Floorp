@@ -992,6 +992,54 @@ InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 }
 
 //
+// Native method FileWindowsGetShortName
+//
+JSBool PR_CALLBACK
+InstallFileOpFileWindowsGetShortName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsAutoString shortPathName;
+  nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  JSObject *jsObj;
+  nsInstallFolder *longPathName;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  //  public String windowsGetShortName (File NativeFolderPath);
+
+  if ( argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
+  {
+    // error, return NULL
+    return JS_TRUE;
+  }
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+    // error, return NULL
+    return JS_TRUE;
+  }
+
+  longPathName = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!longPathName || NS_OK != nativeThis->FileOpFileWindowsGetShortName(*longPathName, shortPathName))
+  {
+    return JS_TRUE;
+  }
+
+  if(shortPathName.Length() != 0)
+    *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_STATIC_CAST(const jschar*, shortPathName.GetUnicode()), shortPathName.Length()));
+
+  return JS_TRUE;
+}
+
+//
 // Native method FileWindowsShortcut
 //
 JSBool PR_CALLBACK
@@ -1362,6 +1410,7 @@ static JSFunctionSpec FileOpMethods[] =
   {"modDateChanged",            InstallFileOpFileModDateChanged,       2},
   {"move",                      InstallFileOpFileMove,                 2},
   {"rename",                    InstallFileOpFileRename,               2},
+  {"windowsGetShortName",       InstallFileOpFileWindowsGetShortName,  1},
   {"windowsShortcut",           InstallFileOpFileWindowsShortcut,      7},
   {"macAlias",                  InstallFileOpFileMacAlias,             2},
   {"unixLink",                  InstallFileOpFileUnixLink,             2},
