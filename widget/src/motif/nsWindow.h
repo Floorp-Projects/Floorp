@@ -72,7 +72,7 @@ public:
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren(void);
     NS_IMETHOD              Show(PRBool aState);
-    NS_IMETHOD              SetModal(void);
+    NS_IMETHOD              SetModal(PRBool aModal);
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
     virtual void            AddChild(nsIWidget* aChild);

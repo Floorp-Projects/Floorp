@@ -582,7 +582,7 @@ NS_METHOD nsWindow::Show(PRBool aState)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::SetModal(void)
+NS_METHOD nsWindow::SetModal(PRBool aModal)
 {
   //XXX:Implement this
   return NS_OK;
