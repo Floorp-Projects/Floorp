@@ -44,7 +44,7 @@
   <keyset id="keyset"/>
   <broadcaster id="args" value=""/>
 
-  <titledbox orient="vertical"><title><text value="&category.label;"/></title>
+  <titledbox orient="vertical"><title value="&category.label;"/>
     <radiogroup id="CatGrp" orient="vertical" persist="category letter_index char_index">
       <radio group="CatGrp" id="AccentUpper" value="&accentUpper.label;"   oncommand="ChangeCategory(this.id)"/>
       <radio group="CatGrp" id="AccentLower" value="&accentLower.label;"   oncommand="ChangeCategory(this.id)"/>

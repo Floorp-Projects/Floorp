@@ -49,8 +49,7 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical" autostretch="never">
-    <title><text value="&tableEditing.label;"/></title>
-  
+    <title value="&tableEditing.label;"/>
       <checkbox 
         value     = "&maintainTableStructure.label;"
         id        = "maintainTableStructure" 
@@ -84,7 +83,7 @@
 
   <!-- Recent files menu -->
 	<titledbox orient="vertical">
-    <title><text value="&recentFiles.title;"/></title>
+    <title value="&recentFiles.title;"/>
     <box align="horizontal" valign="middle">
       <text value="&documentsInMenu;"/>
       <textfield 
@@ -104,7 +103,7 @@
 <!-- Take out Auto-Save; not supported at this time
   -->
 	<titledbox orient="vertical">
-    <title><text value="&saving;"/></title>
+    <title value="&saving;"/>
     <box align="horizontal" valign="middle">
       <checkbox 
         value      = "&AutoSaveCheck;"
@@ -132,7 +131,7 @@
 
 <!-- HTML formatting on output -->
 	<titledbox orient="vertical">
-    <title><text value="&savingFiles.title;"/></title>
+    <title value="&savingFiles.title;"/>
     <box align="horizontal" valign="middle">
       <checkbox 
         value      = "&preserveExistingFormatting;"
@@ -148,7 +147,7 @@
 
 <!-- External Editors are not supported at this time
 		<titledbox orient="vertical">
-					<title><text value="&exterLegend.label;"/></title> 
+					<title value="&exterLegend.label;"/> 
     <box>
       <checkbox 
         name  = "htmlSourceEditorCheckbox"

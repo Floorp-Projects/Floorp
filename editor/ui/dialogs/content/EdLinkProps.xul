@@ -46,12 +46,12 @@
   <keyset id="keyset"/>
 
   <box orient="vertical" style="min-width: 20em">
-    <titledbox orient="vertical"><title><text id="linkTextCaption" align="left"/></title>
+    <titledbox orient="vertical"><title id="linkTextCaption" align="left"/>
       <text class="label" id="linkTextMessage"/> 
 	    <textfield id="linkTextInput" flex="1" onkeyup="ChangeText()"/>
     </titledbox>
 
-    <titledbox orient="vertical"><title><text class="label" value="&LinkURLBox.label;"/></title>
+    <titledbox orient="vertical"><title value="&LinkURLBox.label;"/>
       <text class="label" value="&LinkURLEditField.label;"/>
       <box autostretch="never" valign="middle">
         <textfield id="hrefInput" flex="1" style="min-width: 18em" onkeyup="ChangeLocation()"/>

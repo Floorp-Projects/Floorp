@@ -141,6 +141,7 @@ function SetupComposerWindowCommands()
   commandManager.registerCommand("cmd_revert",        nsRevertCommand);
   commandManager.registerCommand("cmd_openRemote",    nsOpenRemoteCommand);
   commandManager.registerCommand("cmd_preview",       nsPreviewCommand);
+  commandManager.registerCommand("cmd_editSendPage",  nsSendPageCommand);
   commandManager.registerCommand("cmd_quit",          nsQuitCommand);
   commandManager.registerCommand("cmd_close",         nsCloseCommand);
   commandManager.registerCommand("cmd_preferences",   nsPreferencesCommand);
@@ -392,9 +393,9 @@ function CloseWindow()
 {
   FinishHTMLSource();
 
-  // Close window; check to make sure document is saved
-  var result = CheckAndSaveDocument(window.editorShell.GetString("BeforeClosing"));
-  if (result == true) // If they saved the document, or it is unchanged, exit
+  // Check to make sure document is saved. "true" means allow "Don't Save" button,
+  //   so user can choose to close without saving
+  if (CheckAndSaveDocument(window.editorShell.GetString("BeforeClosing"), true)) 
   {
     if (window.InsertCharWindow)
       SwitchInsertCharToAnotherEditorOrClose();
@@ -441,31 +442,51 @@ var nsPreviewCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    // maybe disable if we haven't saved?
-    // return (window.editorShell && !window.editorShell.documentModified);   
-    return (window.editorShell != null);
+    return (window.editorShell != null && (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
+
 	  // Don't continue if user canceled during prompt for saving
-    if (!CheckAndSaveDocument(window.editorShell.GetString("BeforePreview")))
+    // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
+    if (!CheckAndSaveDocument(window.editorShell.GetString("BeforePreview"), DocumentHasBeenSaved()))
 	    return;
 
-	  var fileurl = "";
-	  try {
-	    fileurl = window._content.location;
-	  } catch (e) {
-	    return;
-	  }
+    // Check if we saved again just in case?
+	  if (DocumentHasBeenSaved())
+	    window.openDialog(getBrowserURL(), "EditorPreview", "chrome,all,dialog=no", window._content.location);
+  }
+};
 
-	  // CheckAndSave doesn't tell us if the user said "Don't Save",
-	  // so make sure we have a url:
-	  if (fileurl != "" && fileurl != "about:blank")
-	  {
-	    window.openDialog(getBrowserURL(), "EditorPreview", "chrome,all,dialog=no", fileurl);
-	  }
+//-----------------------------------------------------------------------------------
+var nsSendPageCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell != null && (DocumentHasBeenSaved() || window.editorShell.documentModified));
+  },
+
+  doCommand: function(aCommand)
+  {
+    FinishHTMLSource();
+
+	  // Don't continue if user canceled during prompt for saving
+    // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
+    if (!CheckAndSaveDocument(window.editorShell.GetString("SendPageReason"), DocumentHasBeenSaved()))
+	    return;
+
+    // Check if we saved again just in case?
+	  if (DocumentHasBeenSaved())
+    {
+      // Lauch Messenger Composer window with current page as contents
+      var pageTitle = window.editorShell.editorDocument.title;
+      var pageUrl = window.editorShell.editorDocument.location;
+      window.openDialog("chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
+                          "chrome,all,dialog=no", "attachment='" + pageUrl + "',body='" + pageUrl +
+                          "',subject='" + pageTitle + "',bodyislink=true");
+    }
   }
 };
 
@@ -765,7 +786,7 @@ var nsPagePropertiesCommand =
   },
   doCommand: function(aCommand)
   {
-    window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal,resizable", "");
+    window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", "");
   }
 };
 

@@ -48,7 +48,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />
-  <titledbox orient="vertical"><title><text value="&size.label;"/></title>
+  <titledbox orient="vertical"><title value="&size.label;"/>
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>

@@ -63,7 +63,7 @@
   <box>
     <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
     <spring class="spacer"/>
-    <textfield class="narrow" id="StartingNumber" onkeyup="forceInteger('StartingNumber')"/>
+    <textfield class="narrow" id="StartingNumber" onkeyup="FilterStartNumber()"/>
     <spring/>
   </box>
   <!-- from EdDialogOverlay -->

@@ -46,7 +46,7 @@
   <broadcaster id="args" value=""/>
 
   <titledbox orient="vertical" flex="1">
-	<title><text id="titleInput" value="&link.label;"/></title>
+	<title id="titleInput" value="&link.label;"/>
 
 	  <grid>
 		<columns><column/><column/><column/></columns>
@@ -71,7 +71,7 @@
 
 
     <titledbox orient="vertical" flex="1">
-	<title><text id="targetLabel" value="&targetFieldset.label;"/></title>
+	<title id="targetLabel" value="&targetFieldset.label;"/>
 	  <grid>
 		<columns><column/><column/><column/></columns>
 		  <rows>

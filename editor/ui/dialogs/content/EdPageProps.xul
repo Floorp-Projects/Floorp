@@ -45,27 +45,27 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
   <grid>
-    <columns><column/><column flex="1"/></columns>
+    <columns><column flex="1"/><column flex="2"/></columns>
     <rows>
       <row>
-        <text class="label" value="&location.label;" flex ="1"/>
-        <text class="label" value="&locationNewPage.label;" id="PageLocation" flex ="1"/>
+        <text class="label" value="&location.label;"/>
+        <text class="label" value="&locationNewPage.label;" id="PageLocation"/>
       </row>
       <row>
-        <text class="label" value="&lastModified.label;" flex ="1" align="left"/>
+        <text class="label" value="&lastModified.label;" align="left"/>
         <text class="label" id="PageModDate" align="left"/>
       </row>
       <row valign="middle">
         <text class="label" value="&titleInput.label;"/>
-        <textfield id="TitleInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
+        <textfield class="MinWidth20em" id="TitleInput" onkeyup="TextfieldChanged(this.id)"/>
       </row>
       <row valign="middle">
         <text class="label" value="&authorInput.label;"/>
-        <textfield id="AuthorInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
+        <textfield class="MinWidth20em" id="AuthorInput" onkeyup="TextfieldChanged(this.id)"/>
       </row>
       <row valign="middle">
         <text class="label" value="&descriptionInput.label;"/>
-        <textfield class="MinWidth20em" id="DescriptionInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
+        <textfield class="MinWidth20em" id="DescriptionInput" onkeyup="TextfieldChanged(this.id)"/>
       </row>
     </rows>
   </grid>

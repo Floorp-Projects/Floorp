@@ -54,7 +54,7 @@
   <popupset id="aTooltipSet" />
 
   <titledbox orient="vertical">
-    <title><text value="&locationBox.label;"/></title>
+    <title value="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
     <grid>
       <columns><column/><column/><column/></columns>
@@ -88,7 +88,9 @@
         </row>
       </rows>
     </grid>
+    <spring class="spacer"/>
   </titledbox>
+  <spring class="spacer"/>
   <box> 
     <button 
       class   = "dialog" 
@@ -108,7 +110,7 @@
       <box orient="vertical">
         <!-- //////// Image Dimensions //////// -->
         <titledbox orient="vertical" flex="1">
-          <title><text id="dimensionsLabel" value="&dimensionsBox.label;"/></title>
+          <title id="dimensionsLabel" value="&dimensionsBox.label;"/>
           <radiogroup id="imgSizeGroup" orient="vertical">
             <radio
               group   = "imgSizeGroup"
@@ -165,7 +167,7 @@
         </titledbox>
         <!--////// IMAGE MAP BUTTONS //////-->
         <titledbox flex="1">
-          <title><text id="imagemapLabel" value="&imagemapBox.label;"/></title>
+          <title id="imagemapLabel" value="&imagemapBox.label;"/>
           <box>
             <button
               class   = "dialog"
@@ -186,7 +188,7 @@
       <box orient="vertical" flex="1">
         <!--//////// Alignment ////////-->
         <titledbox flex="1" orient="vertical">
-          <title><text class="label" id="alignLabel" value="&alignment.label;"/></title>
+          <title id="alignLabel" value="&alignment.label;"/>
           <menulist id = "alignTypeSelect" onchange ="doOverallEnabling()">
             <menupopup valign="middle">
               <menuitem class="middle"><image id="img-align-top"/>   <text class="label" value = "&topPopup.value;"/></menuitem>
@@ -200,7 +202,7 @@
 
         <!--//////// Borders and Spacing ////////-->
         <titledbox flex="1">
-          <title><text id="spacingLabel" value="&spacingBox.label;"/></title>
+          <title id="spacingLabel" value="&spacingBox.label;"/>
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>
