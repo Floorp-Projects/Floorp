@@ -35,6 +35,7 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMHTMLObjectElement.h"
 
 
@@ -42,6 +43,7 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLObjectElementIID, NS_IDOMHTMLOBJECTELEMENT_IID);
 
 //
@@ -65,7 +67,8 @@ enum HTMLObjectElement_slots {
   HTMLOBJECTELEMENT_TYPE = -15,
   HTMLOBJECTELEMENT_USEMAP = -16,
   HTMLOBJECTELEMENT_VSPACE = -17,
-  HTMLOBJECTELEMENT_WIDTH = -18
+  HTMLOBJECTELEMENT_WIDTH = -18,
+  HTMLOBJECTELEMENT_CONTENTDOCUMENT = -19
 };
 
 /***********************************************************************/
@@ -301,6 +304,19 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetWidth(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case HTMLOBJECTELEMENT_CONTENTDOCUMENT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOBJECTELEMENT_CONTENTDOCUMENT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMDocument* prop;
+          rv = a->GetContentDocument(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -550,6 +566,22 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case HTMLOBJECTELEMENT_CONTENTDOCUMENT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOBJECTELEMENT_CONTENTDOCUMENT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMDocument* prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                  kIDocumentIID, "Document",
+                                                  cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+          }
+      
+          rv = a->SetContentDocument(prop);
+          NS_IF_RELEASE(prop);
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -637,6 +669,7 @@ static JSPropertySpec HTMLObjectElementProperties[] =
   {"useMap",    HTMLOBJECTELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"vspace",    HTMLOBJECTELEMENT_VSPACE,    JSPROP_ENUMERATE},
   {"width",    HTMLOBJECTELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {"contentDocument",    HTMLOBJECTELEMENT_CONTENTDOCUMENT,    JSPROP_ENUMERATE},
   {0}
 };
 
