@@ -198,7 +198,8 @@ xpcPerThreadData::xpcPerThreadData()
     :   mException(nsnull),
         mJSContextStack(new nsDeque(nsnull)),
         mSafeJSContext(nsnull),
-        mNextThread(nsnull)
+        mNextThread(nsnull),
+        mSafeContextIsFromSetter(PR_FALSE)
 {
     if(gLock)
     {
@@ -219,7 +220,7 @@ xpcPerThreadData::Cleanup()
         mJSContextStack = nsnull;
     }
 
-    if(mSafeJSContext)
+    if(mSafeJSContext && !mSafeContextIsFromSetter)
     {
         JS_DestroyContext(mSafeJSContext);
         mSafeJSContext = nsnull;
@@ -328,8 +329,8 @@ xpcPerThreadData::GetSafeJSContext()
 nsresult
 xpcPerThreadData::SetSafeJSContext(JSContext *cx)
 {
-    NS_ASSERTION(!mSafeJSContext, "SetSafeJSContext called too late!");
     mSafeJSContext = cx;
+    mSafeContextIsFromSetter = PR_TRUE;
     return NS_OK;
 }
 
