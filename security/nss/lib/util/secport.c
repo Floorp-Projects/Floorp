@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.14 2002/05/01 00:06:39 wtc%netscape.com Exp $
+ * $Id: secport.c,v 1.15 2003/06/03 23:24:31 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -210,9 +210,13 @@ PORT_NewArena(unsigned long chunksize)
 void *
 PORT_ArenaAlloc(PLArenaPool *arena, size_t size)
 {
-    void *p;
+    void *p = NULL;
 
     PORTArenaPool *pool = (PORTArenaPool *)arena;
+
+    if (size <= 0) {
+	size = 1;
+    }
 
     /* Is it one of ours?  Assume so and check the magic */
     if (ARENAPOOL_MAGIC == pool->magic ) {
@@ -245,7 +249,12 @@ PORT_ArenaAlloc(PLArenaPool *arena, size_t size)
 void *
 PORT_ArenaZAlloc(PLArenaPool *arena, size_t size)
 {
-    void *p = PORT_ArenaAlloc(arena, size);
+    void *p;
+
+    if (size <= 0)
+        size = 1;
+
+    p = PORT_ArenaAlloc(arena, size);
 
     if (p) {
 	PORT_Memset(p, 0, size);
