@@ -130,7 +130,7 @@ nsresult nsCParserNode::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  *  @return  
  */
 void nsCParserNode::AddAttribute(CToken* aToken) {
-  NS_PRECONDITION(mAttributeCount<PRInt32(sizeof(mAttributes)), "Buffer overrun!");
+  NS_PRECONDITION(mAttributeCount<eMaxAttr, "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
 
   if(mAttributeCount<eMaxAttr) {
@@ -288,7 +288,7 @@ PRInt32 nsCParserNode::GetSourceLineNumber(void) const {
 
 CToken* nsCParserNode::PopAttributeToken()
 {
-  NS_PRECONDITION(mAttributeCount<PRInt32(sizeof(mAttributes)), "Buffer overrun!");
+  NS_PRECONDITION(mAttributeCount<eMaxAttr, "Buffer overrun!");
   if(mAttributeCount > 0) {
     CToken* theAttrToken = mAttributes[--mAttributeCount];
     mAttributes[mAttributeCount] = nsnull;
