@@ -17,7 +17,7 @@
 
 DEPTH=../..
 
-DIRS = coreDom coreEvents events 
+DIRS = coreDom coreEvents events html
 
 DEFINES = -D_IMPL_NS_DOM
  

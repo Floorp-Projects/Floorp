@@ -17,43 +17,6 @@
 
 DEPTH=../..
 
-include $(DEPTH)/config/config.mk
-
-DIRS = coreDOM
-
-LIBRARY_NAME = jsdom
-
-MODULE = raptor
-
-REQUIRES = xpcom raptor dom js netlib
-
-LCFLAGS = -D_IMPL_NS_DOM
-
-CPPSRCS =				\
-	nsJSEnvironment.cpp		\
-	nsJSWindow.cpp          \
-	nsJSNavigator.cpp       \
-	nsGlobalWindow.cpp      \
-	$(NULL)
-
-ifeq ($(OS_ARCH),IRIX)
-LD = $(CCC)
-LD_ALL = -all
-LD_NONE = -none
-endif
-
-# These must be maintained in the proper order for Linux.
-
-EXTRA_DSO_LDOPTS = \
-	$(LD_ALL)					\
-	$(DIST)/lib/libdomcore_s.a			\
-	$(LD_NONE)					\
-	$(DIST)/bin/libraptorbase.so			\
-	$(DIST)/bin/libnetlib.so			\
-	$(DIST)/bin/libxpcom.so				\
-	$(DIST)/bin/libnspr21.so			\
-	$(DIST)/bin/libplds21.so			\
-	$(DIST)/bin/libplc21.so				\
-	-lm
+DIRS = base coreDOM html build
 
 include $(DEPTH)/config/rules.mk
