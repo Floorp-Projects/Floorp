@@ -100,6 +100,37 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
 #define kInstallLocaleProperties "chrome://global/locale/commonDialogs.properties"
 
+/**
+ * Request that an autoreg be performed at next startup. (Used
+ * internally by XPI.)  This basically drops a files next to the
+ * application.  Next time XPCOM sees this file, it will cause
+ * an autoreg, then delete this file.
+ */
+static void
+NS_SoftwareUpdateRequestAutoReg()
+{
+  nsresult rv;
+  nsCOMPtr<nsIFile> file;
+  NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                         getter_AddRefs(file));
+  
+  if (!file) {
+    NS_WARNING("Getting NS_XPCOM_CURRENT_PROCESS_DIR failed");
+    return;
+  }
+  
+  file->AppendNative(nsDependentCString(".autoreg"));
+  
+  rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
+  
+  if (NS_FAILED(rv)) {
+    NS_WARNING("creating file failed");
+    return;
+  }
+}
+
+
+
 MOZ_DECL_CTOR_COUNTER(nsInstallInfo)
 
 nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
