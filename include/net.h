@@ -693,7 +693,11 @@ typedef struct _mdata {
 #define IMAGE_JPG                           "image/jpeg"
 #define IMAGE_PJPG                          "image/pjpeg"
 #define IMAGE_PNG                           "image/png"
+
+#ifndef IMAGE_ART
 #define IMAGE_ART                           "image/x-art"
+#endif
+
 #define IMAGE_ART2                          "image/x-jg"
 #define IMAGE_PPM                           "image/x-portable-pixmap"
 #define IMAGE_XBM                           "image/x-xbitmap"
