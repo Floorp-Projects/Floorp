@@ -28,6 +28,7 @@
 #include <LPeriodical.h>
 #include <LCommander.h>
 #include <LDragAndDrop.h>
+#include <TArray.h>
 
 class StPluginFocus;
 
@@ -73,6 +74,7 @@ public:
 	
 	virtual void			ClickSelf(const SMouseDownEvent& inMouseDown);
 	virtual void			EventMouseUp(const EventRecord &inMacEvent);
+	virtual Boolean			ObeyCommand(CommandT inCommand, void *ioParam);
 	virtual Boolean			HandleKeyPress(const EventRecord& inKeyEvent);
 	virtual void			DrawSelf();
 	virtual void			SpendTime(const EventRecord& inMacEvent);
@@ -102,7 +104,7 @@ public:
 			void			SetBrokenPlugin();
 			void			DrawBroken(Boolean hilite);
 
-			void			SetPositioned() { fPositioned = true; }
+			void			SetPositioned(Boolean positioned = true) { fPositioned = positioned; }
 
 // ее window control
 
@@ -110,6 +112,11 @@ public:
 			void 			UnregisterWindow(void* window);
 			Boolean			PassWindowEvent(EventRecord& inEvent, WindowPtr window);
 			
+			SInt16			AllocateMenuID(Boolean isSubmenu);
+			Boolean			IsPluginCommand(CommandT inCommand);
+			
+	static	CPluginView*	FindPlugin(WindowPtr window);
+	
 private:
 			void			ResetDrawRect();
 	
@@ -127,6 +134,7 @@ private:
 			LO_EmbedStruct* fEmbedStruct;
 			Boolean			fIsPrinting;
 			LArray*			fWindowList;
+			TArray<SInt16>*	fMenuList;
 			
 	static	LArray*			sPluginList;
 };
