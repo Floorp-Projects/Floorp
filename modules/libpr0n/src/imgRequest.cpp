@@ -97,33 +97,78 @@ nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
 
   mObservers.AppendElement(NS_STATIC_CAST(void*, observer));
 
+  // OnStartDecode
   if (mState & onStartDecode)
     observer->OnStartDecode(nsnull, nsnull);
+
+  // OnStartContainer
   if (mState & onStartContainer)
     observer->OnStartContainer(nsnull, nsnull, mImage);
 
-  // XXX send the decoded rect in here
+  // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
+  PRUint32 nframes;
+  mImage->GetNumFrames(&nframes);
 
+  if (nframes > 0) {
+    nsCOMPtr<gfxIImageFrame> frame;
+    
+    // Is this a single frame image?
+    if (nframes == 1) {
+      // Get the first frame
+      mImage->GetFrameAt(0, getter_AddRefs(frame));
+      NS_ASSERTION(frame, "GetFrameAt gave back a null frame!");
+    } else if (nframes > 1) {
+      /* multiple frames, we'll use the current one */
+      mImage->GetCurrentFrame(getter_AddRefs(frame));
+      NS_ASSERTION(frame, "GetCurrentFrame gave back a null frame!");
+    }
+    
+    // OnStartFrame
+    observer->OnStartFrame(nsnull, nsnull, frame);
+    
+    if (!(mState & onStopContainer)) {
+      // OnDataAvailable
+      nsRect r;
+      frame->GetRect(r);  // XXX we shouldn't send the whole rect here
+      observer->OnDataAvailable(nsnull, nsnull, frame, &r);
+    } else {
+      // OnDataAvailable
+      nsRect r;
+      frame->GetRect(r);  // We're done loading this image, send the the whole rect
+      observer->OnDataAvailable(nsnull, nsnull, frame, &r);
+      
+      // OnStopFrame
+      observer->OnStopFrame(nsnull, nsnull, frame);
+    }
+  }
+
+  // OnStopContainer
   if (mState & onStopContainer)
     observer->OnStopContainer(nsnull, nsnull, mImage);
-  if (mState & onStopDecode)
-    observer->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
 
-  if (mObservers.Count() == 1) {
+  nsresult status;
+  if (mStatus & imgIRequest::STATUS_LOAD_COMPLETE)
+    status = NS_IMAGELIB_SUCCESS_LOAD_FINISHED;
+  else if (mStatus & imgIRequest::STATUS_ERROR)
+    status = NS_IMAGELIB_ERROR_FAILURE;
+
+  // OnStopDecode
+  if (mState & onStopDecode)
+    observer->OnStopDecode(nsnull, nsnull, status, nsnull);
+
+  if (mImage && (mObservers.Count() == 1)) {
     PRUint32 nframes;
     mImage->GetNumFrames(&nframes);
-  //if (nframes > 1) {
-      PR_LOG(gImgLog, PR_LOG_DEBUG,
-             ("[this=%p] imgRequest::AddObserver -- starting animation\n", this));
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgRequest::AddObserver -- starting animation\n", this));
 
-      mImage->StartAnimation();
-  //}
+    mImage->StartAnimation();
   }
 
   if (mState & onStopRequest) {
     nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(observer));
     PR_ASSERT(observer);
-    ob->OnStopRequest(nsnull, nsnull, NS_OK, nsnull);
+    ob->OnStopRequest(nsnull, nsnull, status, nsnull);
   } 
 
   return NS_OK;
@@ -153,6 +198,18 @@ nsresult imgRequest::RemoveObserver(imgIDecoderObserver *observer, nsresult stat
 
       this->RemoveFromCache();
       this->Cancel(NS_BINDING_ABORTED);
+
+      if (!(mState & onStopDecode)) {
+        // make sure that observer gets an onStopRequest message sent to it
+        observer->OnStopDecode(nsnull, nsnull, NS_IMAGELIB_ERROR_FAILURE, nsnull);
+      }
+
+      if (!(mState & onStopRequest)) {
+        // make sure that observer gets an onStopRequest message sent to it
+        nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(observer));
+        PR_ASSERT(ob);
+        ob->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED, nsnull);
+      }
     }
   }
 
@@ -430,21 +487,32 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx,
 }
 
 /* void onStopDecode (in imgIRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
+NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, nsresult aStatus, const PRUnichar *aStatusArg)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStopDecode");
 
+  if (mState & onStopDecode) {
+    NS_WARNING("OnStopDecode called multiple times.");
+    return NS_OK;
+  }
+
   mState |= onStopDecode;
 
-  if (NS_FAILED(status))
+  if (!(mStatus & imgIRequest::STATUS_ERROR) && NS_FAILED(aStatus))
     mStatus |= imgIRequest::STATUS_ERROR;
 
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
 
+  nsresult status;
+  if (mStatus & imgIRequest::STATUS_LOAD_COMPLETE)
+    status = NS_IMAGELIB_SUCCESS_LOAD_FINISHED;
+  else if (mStatus & imgIRequest::STATUS_ERROR)
+    status = NS_IMAGELIB_ERROR_FAILURE;
+
   while (++i < count) {
     imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
-    if (ob) ob->OnStopDecode(request, cx, status, statusArg);
+    if (ob) ob->OnStopDecode(aRequest, aCX, status, aStatusArg);
   }
 
   return NS_OK;
@@ -499,7 +567,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
              ("[this=%p] imgRequest::OnStartRequest -- http status = 404. canceling.\n", this));
 
       mStatus |= imgIRequest::STATUS_ERROR;
-      // this->Cancel(NS_BINDING_ABORTED);
+      this->Cancel(NS_BINDING_ABORTED);
       this->RemoveFromCache();
 
       return NS_BINDING_ABORTED;
@@ -552,23 +620,13 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   /* break the cycle from the cache entry. */
   mCacheEntry = nsnull;
 #endif
-  switch(status) {
-  case NS_BINDING_ABORTED:
-  case NS_BINDING_FAILED:
-  case NS_ERROR_IMAGELIB_NO_DECODER:
 
+  if (NS_FAILED(status)) {
     mStatus |= imgIRequest::STATUS_ERROR;
-
     this->RemoveFromCache();
     this->Cancel(status); // stops animations
-
-    break;
-  case NS_BINDING_SUCCEEDED:
+  } else {
     mStatus |= imgIRequest::STATUS_LOAD_COMPLETE;
-    break;
-  default:
-    printf("weird status return %i\n", status);
-    break;
   }
 
   mChannel->GetOriginalURI(getter_AddRefs(mURI));
@@ -592,9 +650,13 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
         nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(iob));
         if (ob) ob->OnStopRequest(aRequest, ctxt, status, statusArg);
       }
-    } else {
-      NS_NOTREACHED("why did we get a null item ?");
     }
+  }
+
+  // if there was an error loading the image, (mState & onStopDecode) won't be true.
+  // Send an onStopDecode message
+  if (!(mState & onStopDecode)) {
+    this->OnStopDecode(nsnull, nsnull, status, statusArg);
   }
 
   return NS_OK;
@@ -669,7 +731,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       this->RemoveFromCache();
 
       // XXX notify the person that owns us now that wants the imgIContainer off of us?
-      return NS_ERROR_IMAGELIB_NO_DECODER;
+      return NS_IMAGELIB_ERROR_NO_DECODER;
     }
 
     mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));

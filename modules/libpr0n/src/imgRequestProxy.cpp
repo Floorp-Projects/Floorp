@@ -69,9 +69,7 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 {
   PR_ASSERT(request);
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequestProxy::Init (request=%p) {ENTER}\n",
-          this, request));
+  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequestProxy::Init", "request", request);
 
   mOwner = NS_STATIC_CAST(imgIRequest*, request);
 
@@ -79,6 +77,8 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   // XXX we should save off the thread we are getting called on here so that we can proxy all calls to mDecoder to it.
 
   mContext = cx;
+
+  // XXX we should only create a channel, etc if the image isn't finished loading already.
 
   nsISupports *inst = nsnull;
   inst = new DummyChannel(this, aLoadGroup);
@@ -93,10 +93,6 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   }
 
   request->AddObserver(this);
-
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequestProxy::Init {EXIT}\n",
-          this));
 
   return NS_OK;
 }
@@ -314,7 +310,7 @@ NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *c
     loadGroup->RemoveRequest(mDummyChannel, mContext, statusCode, statusText);
   }
   mDummyChannel = nsnull;
-      
+
   return NS_OK;
 }
 
