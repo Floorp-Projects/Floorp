@@ -230,7 +230,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
             *result = mNext;        // might return nsnull
             NS_IF_ADDREF(*result);
             
-            mNext = null_nsCOMPtr();
+            mNext = nsnull;
             return NS_OK;
         }
 
