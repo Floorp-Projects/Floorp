@@ -398,8 +398,16 @@ pascal	OSErr	XGetVInfo(short volReference,
 			*vRefNum = pb.ioVRefNum;
 			
 			/* return the freeBytes and totalBytes */
+#if TARGET_CARBON
+			/* NSCP - API changes for Carbon */
+			totalBytes->hi = pb.ioVTotalBytes & 0xFFFFFFFF00000000;
+			totalBytes->lo = pb.ioVTotalBytes & 0x00000000FFFFFFFF;
+			freeBytes->hi = pb.ioVFreeBytes & 0xFFFFFFFF00000000;
+			freeBytes->lo = pb.ioVFreeBytes & 0x00000000FFFFFFFF;
+#else
 			*totalBytes = pb.ioVTotalBytes;
 			*freeBytes = pb.ioVFreeBytes;
+#endif
 		}
 	}
 	else
