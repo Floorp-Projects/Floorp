@@ -48,6 +48,7 @@ CPPSRCS		= \
 		nsTreeCellFrame.cpp \
 		nsTreeRowFrame.cpp \
 		nsTreeTwistyListener.cpp \
+		nsTreeItemDragCapturer.cpp \
 		nsSpinnerFrame.cpp \
 		nsScrollbarFrame.cpp \
 		nsScrollbarButtonFrame.cpp \
