@@ -1621,6 +1621,7 @@ nsFontMetricsOS2::ResolveForwards(HPS                  aPS,
         fh = new nsFontOS2();
         *fh = *mFontHandle;
         fh->mFattrs.usCodePage = 1252;
+        fh->mConvertCodePage = 1252;
         fontSwitch.mFont = fh;
         while( ++currChar < lastChar )
         {
@@ -1715,6 +1716,7 @@ nsFontMetricsOS2::ResolveBackwards(HPS                  aPS,
         fh = new nsFontOS2();
         *fh = *mFontHandle;
         fh->mFattrs.usCodePage = 1252;
+        fh->mConvertCodePage = 1252;
         fontSwitch.mFont = fh;
         while( --currChar > lastChar )
         {
