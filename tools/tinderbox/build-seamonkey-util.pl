@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.217 $ ';
+$::UtilsVersion = '$Revision: 1.218 $ ';
 
 package TinderUtils;
 
@@ -1907,15 +1907,18 @@ sub CodesizeTest {
   my $type; # "auto" or "base"
   my $zee;  # Letter that shows up on tbox.
   my $testNameString;
+  my $graphName;
 
   if($isEmbedTest) {
     $testNameString = "Embed"; 
     $type = "base";     # Embed test.
-    $zee = "mZ"; 
+    $zee = "mZ";
+    $graphName = "codesize_embed";
   } else {
     $testNameString = "SeaMonkey"; 
     $type = "auto";  # SeaMonkey test.
     $zee = "Z";
+    $graphName = "codesize";
   }
 
   my $new_log   = "Codesize-" . $type . "-new.log";
@@ -1967,11 +1970,11 @@ sub CodesizeTest {
     my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
     my $z_data_string = PrintSize($z_data,4);
     print_log "TinderboxPrint:" .
-      "<a title=\"$testNameString: Code + data size of all shared libs & executables\" href=\"http://$Settings::results_server/graph/query.cgi?testname=codesize&tbox=" .
+      "<a title=\"$testNameString: Code + data size of all shared libs & executables\" href=\"http://$Settings::results_server/graph/query.cgi?testname=$graphName&tbox=" .
         ::hostname() . "&autoscale=1&units=bytes&days=7&avg=0&showpoint=$time,$z_data\">$zee:$z_data_string" . "B</a>\n";
     
     if($Settings::TestsPhoneHome) {
-      send_results_to_server($z_data, "--", "codesize", ::hostname());
+      send_results_to_server($z_data, "--", $graphName, ::hostname());
     }
     
     my $zdiff_data = extract_token_from_file("$build_dir/$test_log", "__codesizeDiff", ":");
