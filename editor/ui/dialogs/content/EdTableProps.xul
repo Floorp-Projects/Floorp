@@ -26,14 +26,14 @@
 <!-- table tab -->
 		<box align="vertical">
      <titledbutton value="TABLE PANEL"/> 
-      <html:div> This is the TABLE Tab </html:div>
+      <html:div> WORK IN PROGRESS:  This is the TABLE Tab </html:div>
     </box>
 <!-- end of table tab -->
 
 <!-- cell tab -->
 		<box align="vertical">
       <titledbutton value="CELL PANEL"/> 
-      <html:div> This is the CELL Tab </html:div>
+      <html:div> WORK IN PROGRESS:  This is the CELL Tab </html:div>
     </box>
 <!-- end of cell tab -->
 	 </tabpanel> 
@@ -41,9 +41,9 @@
 
   <spring flex="100%"/>
   <box>
-    <titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvanced()" value="Advanced Edit..."/>
+    <titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvanced()" value="&AdvancedEditButton.label;"/>
     <spring flex="100%"/>    
-    <titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
-    <titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
+    <titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
+    <titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
   </box>
 </window>
