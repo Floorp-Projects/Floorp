@@ -134,6 +134,7 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     int bufsize = 0;
     char *showDlg = NULL;
     int i, j;
+    char *defSec = NULL; // default Setup Type
     char *currSec = (char *) malloc(strlen(SETUP_TYPEd) + 1); // e.g. SetupType12
     if (!currSec) return E_MEM;
     char *currKey = (char *) malloc(1 + 3); // e.g. C0, C1, C12
@@ -163,6 +164,10 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     XI_VERIFY(gCtx);
 
     /* optional keys */
+    err = aParser->GetStringAlloc(GENERAL, DEFAULT_SETUP_TYPE, &defSec, &bufsize);
+    if (err != OK && err != nsINIParser::E_NO_KEY) goto BAIL; else err = OK;
+
+    bufsize = 0;
     err = aParser->GetStringAlloc(DLG_SETUP_TYPE, MSG0, &mMsg0, &bufsize);
     if (err != OK && err != nsINIParser::E_NO_KEY) goto BAIL; else err = OK;
 
@@ -265,6 +270,7 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     }
 
     /* setup types */
+    gCtx->opt->mSetupType = 0;
     for (i=0; i<MAX_SETUP_TYPES; i++)
     {
         sprintf(currSec, SETUP_TYPEd, i);
@@ -278,6 +284,9 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
             err = OK;
             break;
         }
+
+        if (defSec && strcasecmp(currDescShort, defSec) == 0)
+            gCtx->opt->mSetupType = i;
 
         bufsize = 0;
         err = aParser->GetStringAlloc(currSec, DESC_LONG, &currDescLong,
@@ -385,34 +394,11 @@ nsSetupTypeDlg::Show()
         currST = GetSetupTypeList();
         if (!currST) return E_NO_SETUPTYPES;
 
-        // first radio button
-        gCtx->opt->mSetupType = 0;
-        radbtns[0] = gtk_radio_button_new_with_label(NULL,
-                        currST->GetDescShort());
-        sGroup = gtk_radio_button_group(GTK_RADIO_BUTTON(radbtns[0]));
-        gtk_table_attach(GTK_TABLE(stTable), radbtns[0], 0, 1, 0, 1,
-            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-            0, 0);
-        gtk_signal_connect(GTK_OBJECT(radbtns[0]), "toggled",
-                           GTK_SIGNAL_FUNC(RadBtnToggled), 0);
-        gtk_widget_show(radbtns[0]);
+        sGroup=NULL;
 
-        desc[0] = gtk_label_new(currST->GetDescLong());
-        gtk_label_set_justify(GTK_LABEL(desc[0]), GTK_JUSTIFY_LEFT);
-        gtk_label_set_line_wrap(GTK_LABEL(desc[0]), TRUE);
-        hbox = gtk_hbox_new(FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox), desc[0], FALSE, FALSE, 0);
-        gtk_widget_show(hbox);
-        gtk_table_attach_defaults(GTK_TABLE(stTable), hbox, 1, 2, 0, 1);
-        gtk_widget_show(desc[0]);
-
-        // remaining radio buttons
-        for (i = 1; i < numSetupTypes; i++)
+        // radio buttons
+        for (i = 0; i < numSetupTypes; i++)
         {
-            currST = currST->GetNext();
-            if (!currST) break;
-
             radbtns[i] = gtk_radio_button_new_with_label(sGroup,
                             currST->GetDescShort());
             sGroup = gtk_radio_button_group(GTK_RADIO_BUTTON(radbtns[i]));
@@ -432,7 +418,12 @@ nsSetupTypeDlg::Show()
             gtk_widget_show(hbox);
             gtk_table_attach_defaults(GTK_TABLE(stTable), hbox, 1, 2, i, i+1);
             gtk_widget_show(desc[i]);
+
+            currST = currST->GetNext();
         }
+
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(
+                                        radbtns[gCtx->opt->mSetupType]), TRUE);
 
         // insert a [1 x 2] heterogeneous table in the third row
         destTable = gtk_table_new(1, 2, FALSE);
