@@ -38,6 +38,19 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIScriptSecurityManagerIID, NS_ISCRIPTSECURITYMANAGER_IID);
 static NS_DEFINE_IID(kIXPCSecurityManagerIID, NS_IXPCSECURITYMANAGER_IID);
 
+static const char accessErrorMessage[] = 
+    "access disallowed from scripts at %s to documents at another domain";
+
+enum {
+    SCRIPT_SECURITY_SAME_DOMAIN_ACCESS,
+    SCRIPT_SECURITY_ALL_ACCESS,
+    SCRIPT_SECURITY_NO_ACCESS
+};
+
+////////////////////////////////////
+// Methods implementing ISupports //
+////////////////////////////////////
+
 NS_IMETHODIMP
 nsScriptSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -59,29 +72,10 @@ nsScriptSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsScriptSecurityManager);
 NS_IMPL_RELEASE(nsScriptSecurityManager);
 
-static const char accessErrorMessage[] = 
-    "access disallowed from scripts at %s to documents at another domain";
 
-nsScriptSecurityManager::nsScriptSecurityManager(void)
-    : mSystemPrincipal(nsnull)
-{
-    NS_INIT_REFCNT();
-}
-
-nsScriptSecurityManager::~nsScriptSecurityManager(void)
-{
-//  nsServiceManager::ReleaseService(kPrefServiceCID, mPrefs);  
-} 
-
-nsScriptSecurityManager *
-nsScriptSecurityManager::GetScriptSecurityManager()
-{
-    static nsScriptSecurityManager *ssecMan = NULL;
-    if (!ssecMan) 
-        ssecMan = new nsScriptSecurityManager();
-    return ssecMan;
-}
-
+///////////////////////////////////////////////////
+// Methods implementing nsIScriptSecurityManager //
+///////////////////////////////////////////////////
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext, 
@@ -126,14 +120,23 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
         *aResult = PR_TRUE;
         return NS_OK;
     }
-    if (nsCRT::strcmp(scheme, "file") == 0) {
-        JSContext *cx = (JSContext*) aContext->GetNativeContext();
-        nsCOMPtr<nsIPrincipal> principal;
-        if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal))) || 
-            !principal)
-        {
+    if (nsCRT::strcmp(scheme, "about") == 0) {
+        nsXPIDLCString spec;
+        if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
             return NS_ERROR_FAILURE;
+        if (nsCRT::strcmp(spec, "about:blank") == 0) {
+            *aResult = PR_TRUE;
+            return NS_OK;
         }
+    }
+    JSContext *cx = (JSContext*) aContext->GetNativeContext();
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal))) || 
+        !principal)
+    {
+        return NS_ERROR_FAILURE;
+    }
+    if (nsCRT::strcmp(scheme, "file") == 0) {
         nsCOMPtr<nsICodebasePrincipal> codebase;
         if (NS_SUCCEEDED(principal->QueryInterface(
                  NS_GET_IID(nsICodebasePrincipal), 
@@ -153,27 +156,22 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
         if (NS_FAILED(principal->CanAccess("UniversalFileRead", aResult)))
             return NS_ERROR_FAILURE;
 
-        if (!*aResult) {
-            // Report error.
-            nsXPIDLCString spec;
-            if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
-                return NS_ERROR_FAILURE;
-	        JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
-        }
-        return NS_OK;
+        if (*aResult)
+            return NS_OK;
     }
-    if (nsCRT::strcmp(scheme, "about") == 0) {
+
+    // Only allowed for the system principal to create other URIs.
+    if (NS_FAILED(principal->Equals(mSystemPrincipal, aResult)))
+        return NS_ERROR_FAILURE;
+
+    if (!*aResult) {
+        // Report error.
         nsXPIDLCString spec;
         if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
             return NS_ERROR_FAILURE;
-        if (nsCRT::strcmp(spec, "about:blank") == 0) {
-            *aResult = PR_TRUE;
-            return NS_OK;
-        }
+	    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
     }
 
-    // Otherwise, not allowed.
-    *aResult = PR_FALSE;
     return NS_OK;
 }
 
@@ -204,6 +202,89 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI *aURI,
     *result = codebase;
     NS_ADDREF(*result);
     return NS_OK;
+}
+
+////////////////////////////////////////////////
+// Methods implementing nsIXPCSecurityManager //
+////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext, 
+                                          const nsIID &aIID, 
+                                          nsISupports *aObj)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCreateInstance(JSContext *aJSContext, 
+                                           const nsCID &aCID)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanGetService(JSContext *aJSContext, 
+                                       const nsCID &aCID)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCallMethod(JSContext *aJSContext, 
+                                       const nsIID &aIID, 
+                                       nsISupports *aObj, 
+                                       nsIInterfaceInfo *aInterfaceInfo, 
+                                       PRUint16 aMethodIndex, 
+                                       const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanGetProperty(JSContext *aJSContext, 
+                                        const nsIID &aIID, 
+                                        nsISupports *aObj, 
+                                        nsIInterfaceInfo *aInterfaceInfo, 
+                                        PRUint16 aMethodIndex, 
+                                        const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanSetProperty(JSContext *aJSContext, 
+                                        const nsIID &aIID, 
+                                        nsISupports *aObj, 
+                                        nsIInterfaceInfo *aInterfaceInfo, 
+                                        PRUint16 aMethodIndex, 
+                                        const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+///////////////////
+// Other methods //
+///////////////////
+
+nsScriptSecurityManager::nsScriptSecurityManager(void)
+    : mSystemPrincipal(nsnull)
+{
+    NS_INIT_REFCNT();
+}
+
+nsScriptSecurityManager::~nsScriptSecurityManager(void)
+{
+//  nsServiceManager::ReleaseService(kPrefServiceCID, mPrefs);  
+} 
+
+nsScriptSecurityManager *
+nsScriptSecurityManager::GetScriptSecurityManager()
+{
+    static nsScriptSecurityManager *ssecMan = NULL;
+    if (!ssecMan) 
+        ssecMan = new nsScriptSecurityManager();
+    return ssecMan;
 }
 
 NS_IMETHODIMP
@@ -410,7 +491,8 @@ nsScriptSecurityManager::AddSecPolicyPrefix(JSContext *cx, char *pref_str)
 char *
 nsScriptSecurityManager::GetSitePolicy(const char *org)
 {
-    char *sitepol, *sp, *nextsp, *orghost = 0, *retval = 0, *prot, *bar, *end, *match = 0;
+    char *sitepol, *sp, *nextsp, *orghost = 0, *retval = 0, *prot, *bar;
+    char *end, *match = 0;
     int splen, matlen;
     nsIURL *url;
     nsresult rv;
@@ -418,7 +500,8 @@ nsScriptSecurityManager::GetSitePolicy(const char *org)
     NS_WITH_SERVICE(nsIComponentManager, compMan, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) 
         return nsnull;
-    rv = compMan->CreateInstance(kURLCID,NULL, NS_GET_IID(nsIURL), (void**) &url);
+    rv = compMan->CreateInstance(kURLCID, nsnull, NS_GET_IID(nsIURL), 
+                                 (void**) &url);
     if (NS_FAILED(rv)) 
         return nsnull;
     nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
@@ -494,11 +577,9 @@ nsScriptSecurityManager::GetSitePolicy(const char *org)
     return retval;
 }
 
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
 {
-#if 0
     nsCOMPtr<nsIPrincipal> subject;
     if (NS_FAILED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
@@ -509,67 +590,8 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
         return NS_ERROR_FAILURE;
     if (!ok) {
         JS_ReportError(aJSContext, "Access denied to XPConnect service.");
-        NS_ASSERTION(ok, "Access denied to XPConnect service.");
         return NS_ERROR_FAILURE;
     }
-#endif
     return NS_OK;
 }
-
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanCreateWrapper(JSContext * aJSContext, 
-                                          const nsIID & aIID, 
-                                          nsISupports * aObj)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanCreateInstance(JSContext * aJSContext, 
-                                           const nsCID & aCID)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanGetService(JSContext * aJSContext, 
-                                       const nsCID & aCID)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanCallMethod(JSContext * aJSContext, 
-                                       const nsIID & aIID, 
-                                       nsISupports *aObj, 
-                                       nsIInterfaceInfo *aInterfaceInfo, 
-                                       PRUint16 aMethodIndex, 
-                                       const jsid aName)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanGetProperty(JSContext * aJSContext, 
-                                        const nsIID & aIID, 
-                                        nsISupports *aObj, 
-                                        nsIInterfaceInfo *aInterfaceInfo, 
-                                        PRUint16 aMethodIndex, 
-                                        const jsid aName)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanSetProperty(JSContext * aJSContext, 
-                                        const nsIID & aIID, 
-                                        nsISupports *aObj, 
-                                        nsIInterfaceInfo *aInterfaceInfo, 
-                                        PRUint16 aMethodIndex, 
-                                        const jsid aName)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
 

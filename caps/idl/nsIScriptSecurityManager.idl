@@ -15,46 +15,16 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #include "nsISupports.idl"
-#include "nsIPrincipal.idl"
 
-[ptr] native nsJSPrincipalsList(nsJSPrincipalsList);
-[ptr] native JSContext(JSContext);
-[ptr] native JSObject(JSObject);
-[ptr] native JSFunction(JSFunction);
-[ptr] native jsval(jsval);
-
-interface nsString;
+interface nsIPrincipal;
 interface nsIScriptContext;
-interface nsIScriptGlobalObject;
 interface nsIURI;
-
-%{C++
-struct nsJSPrincipalsList;
-struct JSContext;
-struct JSObject;
-%}
 
 [uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
 interface nsIScriptSecurityManager : nsISupports
 {
-	// NB TODO: Change to string representation
-	const short SCRIPT_SECURITY_ALL_ACCESS = 0 << 0;
-	const short SCRIPT_SECURITY_NO_ACCESS = 1 << 0;
-	const short SCRIPT_SECURITY_SAME_DOMAIN_ACCESS  = 1 << 1;
-	const short SCRIPT_SECURITY_SIGNED_ACCESS = 1 << 2;
-
-	// NB TODO: Move to Capabilities manager
-	const short eJSTarget_UniversalBrowserRead=0;
-	const short eJSTarget_UniversalBrowserWrite=1;
-	const short eJSTarget_UniversalSendMail=2;
-	const short eJSTarget_UniversalFileRead=3;
-	const short eJSTarget_UniversalFileWrite=4;
-	const short eJSTarget_UniversalPreferencesRead=5;
-	const short eJSTarget_UniversalPreferencesWrite=6;
-	const short eJSTarget_UniversalDialerAccess=7;
-	const short eJSTarget_Max=8;
-
 	boolean CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, 
 	                          [const] in string prop, in boolean isWrite);
 

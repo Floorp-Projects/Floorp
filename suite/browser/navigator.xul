@@ -539,9 +539,8 @@ Contributor(s): ______________________________________. -->
   </toolbox>
 
   
-  <html:iframe id="content-frame" src="contentframe.xul" flex="100%" />
+  <html:iframe id="content-frame" src="chrome://navigator/content/contentframe.xul" flex="100%" />
 
- 
 
 
   <box align="horizontal" id="status-bar" chromeclass="status">
