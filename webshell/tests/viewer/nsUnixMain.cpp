@@ -27,7 +27,7 @@ extern "C" char *fe_GetConfigDir(void) {
   return strdup("/tmp");
 }
 
-extern XtAppContext gAppContext; // XXX This should be changed
+XtAppContext gAppContext; // XXX This should be changed
 static nsNativeViewerApp* gTheApp;
 PLEventQueue*  gUnixMainEventQueue = nsnull;
 
