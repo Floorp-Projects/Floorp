@@ -40,14 +40,5 @@ include $(topsrcdir)/config/rules.mk
 
 _BUILTINS = htmlBindings.xml
 
-ifeq ($(OS_ARCH),WINNT)
-_BUILTINS += \
-	buttonBindings.xml \
-	selectBindings.xml \
-	checkboxBindings.xml \
-	fieldsetBindings.xml \
-	$(NULL)
-endif
-
 libs:: $(_BUILTINS)
 	$(INSTALL) $^ $(DIST)/bin/res/builtin

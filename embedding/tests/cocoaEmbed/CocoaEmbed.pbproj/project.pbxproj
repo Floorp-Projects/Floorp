@@ -2069,11 +2069,6 @@
 			path = htmlBindings.xml;
 			refType = 4;
 		};
-		F6BD64D401B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = platformButtonBindings.xml;
-			refType = 4;
-		};
 		F6BD64D501B3172601A962F7 = {
 			isa = PBXFileReference;
 			path = platformHTMLBindings.xml;

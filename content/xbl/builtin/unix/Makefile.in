@@ -30,4 +30,3 @@ include $(topsrcdir)/config/rules.mk
 
 libs:: $(TARGETS)
 	$(INSTALL) $(srcdir)/platformHTMLBindings.xml $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/xbl-forms.css $(DIST)/bin/res/builtin
