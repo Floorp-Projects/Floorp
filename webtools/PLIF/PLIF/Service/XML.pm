@@ -101,7 +101,7 @@ sub walk {
     my $walkAttributes = $handler->can('walkAttributes') ? sub { $handler->walkAttributes(@_); } : sub { return 1; };
     my $walkElement = $handler->can('walkElement') ? sub { $handler->walkElement(@_); } : sub { return 1; };
     my $walkText = $handler->can('walkText') ? sub { $handler->walkText(@_); } : sub { return 1; };
-    my $walkNesting = $handler->can('walkNesting') ? sub { $handler->walkNesting(@_); } : sub { return @_; };
+    my $walkNesting = $handler->can('walkNesting') ? sub { $handler->walkNesting(@_); } : sub { shift; return @_; };
     # walk the tree
     my $index = 0;
     my @stack = ();
