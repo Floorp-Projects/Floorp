@@ -4716,7 +4716,7 @@ nsFrame::GetProperty(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsFrame::GetStyleDataExternal(nsStyleStructID aSID,
-                              const nsStyleStruct*& aStyleStruct)
+                              const nsStyleStruct*& aStyleStruct) const
 {
   if (!mStyleContext) {
     aStyleStruct = nsnull;

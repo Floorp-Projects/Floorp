@@ -580,7 +580,7 @@ public:
    * Get the style data associated with this frame.
    */
   NS_IMETHOD GetStyleDataExternal(nsStyleStructID aSID,
-                                  const nsStyleStruct*& aStyleStruct) = 0;
+                                  const nsStyleStruct*& aStyleStruct) const = 0;
 
 #ifdef _IMPL_NS_LAYOUT
   nsresult GetStyleData(nsStyleStructID       aSID,
@@ -591,7 +591,7 @@ public:
   }
 #else
   nsresult GetStyleData(nsStyleStructID       aSID,
-                        const nsStyleStruct*& aStyleStruct) {
+                        const nsStyleStruct*& aStyleStruct) const {
     return GetStyleDataExternal(aSID, aStyleStruct);
   }
 #endif
