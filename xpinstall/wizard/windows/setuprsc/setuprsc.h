@@ -148,6 +148,7 @@
 #define IDS_STR_SETUP                   11025
 #define IDS_STR_DOWNLOAD_SITE           11026
 #define IDS_STR_SAVE_INSTALLER_FILES    11027
+#define IDS_MSG_INIT_SETUP              11028
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

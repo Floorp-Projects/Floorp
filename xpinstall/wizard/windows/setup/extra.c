@@ -1974,6 +1974,8 @@ siC *CreateSiCNode()
     exit(1);
   if((siCNode->szParameter = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
+  if((siCNode->szReferenceName = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
   siCNode->siCDDependencies = NULL;
   siCNode->siCDDependees    = NULL;
   siCNode->Next             = NULL;
@@ -2015,6 +2017,7 @@ void SiCNodeDelete(siC *siCTemp)
     FreeMemory(&(siCTemp->szArchivePath));
     FreeMemory(&(siCTemp->szArchiveName));
     FreeMemory(&(siCTemp->szParameter));
+    FreeMemory(&(siCTemp->szReferenceName));
     FreeMemory(&(siCTemp->szDescriptionLong));
     FreeMemory(&(siCTemp->szDescriptionShort));
     FreeMemory(&siCTemp);
@@ -2029,6 +2032,8 @@ siCD *CreateSiCDepNode()
     exit(1);
 
   if((siCDepNode->szDescriptionShort = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
+  if((siCDepNode->szReferenceName = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
   siCDepNode->Next = NULL;
   siCDepNode->Prev = NULL;
@@ -2063,6 +2068,7 @@ void SiCDepNodeDelete(siCD *siCDepTemp)
     siCDepTemp->Prev       = NULL;
 
     FreeMemory(&(siCDepTemp->szDescriptionShort));
+    FreeMemory(&(siCDepTemp->szReferenceName));
     FreeMemory(&siCDepTemp);
   }
 }
@@ -2217,30 +2223,98 @@ BOOL IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected)
   return(FALSE);
 }
 
-void SiCNodeSetItemsSelected(DWORD dwSetupType, DWORD dwItems, DWORD *dwItemsSelected)
+void SiCNodeSetItemsSelected(DWORD dwSetupType)
 {
-  DWORD i;
-  siC   *siCTemp;
+  siC  *siCNode;
+  char szBuf[MAX_BUF];
+  char szIndex0[MAX_BUF];
+  char szSTSection[MAX_BUF];
+  char szComponentKey[MAX_BUF];
+  char szComponentSection[MAX_BUF];
+  DWORD dwIndex0;
 
-  for(i = 0; i < sgProduct.dwNumberOfComponents; i++)
+  lstrcpy(szSTSection, "Setup Type");
+  itoa(dwSetupType, szBuf, 10);
+  lstrcat(szSTSection, szBuf);
+
+  /* for each component in the global list, unset its SELECTED attribute */
+  siCNode = siComponents;
+  do
   {
-    siCTemp = SiCNodeGetObject(i, TRUE, AC_ALL);
-    if(IsInList(i, dwItems, dwItemsSelected))
+    if(siCNode == NULL)
+      break;
+
+    siCNode->dwAttributes &= ~SIC_SELECTED;
+    siCNode = siCNode->Next;
+  } while((siCNode != NULL) && (siCNode != siComponents));
+
+  /* for each component in a setup type, set its attribute to be SELECTED */
+  dwIndex0 = 0;
+  itoa(dwIndex0, szIndex0, 10);
+  lstrcpy(szComponentKey, "C");
+  lstrcat(szComponentKey, szIndex0);
+  GetPrivateProfileString(szSTSection, szComponentKey, "", szComponentSection, sizeof(szComponentSection), szFileIniConfig);
+  while(*szComponentSection != '\0')
+  {
+    if((siCNode = SiCNodeFind(siComponents, szComponentSection)) != NULL)
     {
-      if((siCTemp->lRandomInstallPercentage != 0) &&
-         (siCTemp->lRandomInstallPercentage <= siCTemp->lRandomInstallValue))
-        siCTemp->dwAttributes &= ~SIC_SELECTED;
+      if((siCNode->lRandomInstallPercentage != 0) &&
+         (siCNode->lRandomInstallPercentage <= siCNode->lRandomInstallValue))
+        siCNode->dwAttributes &= ~SIC_SELECTED;
       else if(sgProduct.dwCustomType != dwSetupType)
-        // If the user selected the Custom Setup Type, then do not set the
-        // Selected bit.  Leave as default - which is what is set in
-        // config.ini originally.
-        // Else, make sure it's set because this component is listed in
-        // the dwSetupType's section to be installed.
-        siCTemp->dwAttributes |= SIC_SELECTED;
+        siCNode->dwAttributes |= SIC_SELECTED;
+      else
+      {
+        /* user selected Custom setup type.  reset the component's attribute to default */
+        GetPrivateProfileString(siCNode->szReferenceName, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        siCNode->dwAttributes = ParseComponentAttributes(szBuf);
+      }
     }
-    else
-      siCTemp->dwAttributes &= ~SIC_SELECTED;
+
+    ++dwIndex0;
+    itoa(dwIndex0, szIndex0, 10);
+    lstrcpy(szComponentKey, "C");
+    lstrcat(szComponentKey, szIndex0);
+    GetPrivateProfileString(szSTSection, szComponentKey, "", szComponentSection, sizeof(szComponentSection), szFileIniConfig);
   }
+}
+
+char *SiCNodeGetReferenceName(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
+{
+  DWORD dwCount = 0;
+  siC   *siCTemp = siComponents;
+
+  if(siCTemp != NULL)
+  {
+    if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+       ((dwACFlag == AC_ALL) ||
+       ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+       ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
+    {
+      if(dwIndex == 0)
+        return(siCTemp->szReferenceName);
+
+      ++dwCount;
+    }
+
+    siCTemp = siCTemp->Next;
+    while((siCTemp != NULL) && (siCTemp != siComponents))
+    {
+      if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+         ((dwACFlag == AC_ALL) ||
+         ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+         ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
+      {
+        if(dwIndex == dwCount)
+          return(siCTemp->szReferenceName);
+      
+        ++dwCount;
+      }
+
+      siCTemp = siCTemp->Next;
+    }
+  }
+  return(NULL);
 }
 
 char *SiCNodeGetDescriptionShort(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
@@ -2449,6 +2523,31 @@ int SiCNodeGetIndexDS(char *szInDescriptionShort)
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
       if(lstrcmpi(szInDescriptionShort, siCTemp->szDescriptionShort) == 0)
+        return(dwCount);
+      
+      ++dwCount;
+      siCTemp = siCTemp->Next;
+    }
+  }
+  return(-1);
+}
+
+/* retrieve Index of node containing Reference Name */
+int SiCNodeGetIndexRN(char *szInReferenceName)
+{
+  DWORD dwCount = 0;
+  siC   *siCTemp = siComponents;
+
+  if(siCTemp != NULL)
+  {
+    if(lstrcmpi(szInReferenceName, siCTemp->szReferenceName) == 0)
+      return(dwCount);
+
+    ++dwCount;
+    siCTemp = siCTemp->Next;
+    while((siCTemp != NULL) && (siCTemp != siComponents))
+    {
+      if(lstrcmpi(szInReferenceName, siCTemp->szReferenceName) == 0)
         return(dwCount);
       
       ++dwCount;
@@ -3046,143 +3145,186 @@ long RandomSelect()
   return(lArbitrary);
 }
 
+siC *SiCNodeFind(siC *siCHeadNode, char *szInReferenceName)
+{
+  siC *siCNode = siCHeadNode;
+
+  do
+  {
+    if(siCNode == NULL)
+      break;
+
+    if(lstrcmpi(siCNode->szReferenceName, szInReferenceName) == 0)
+      return(siCNode);
+
+    siCNode = siCNode->Next;
+  } while((siCNode != NULL) && (siCNode != siCHeadNode));
+
+  return(NULL);
+}
+
 void InitSiComponents(char *szFileIni)
 {
   DWORD dwIndex0;
   DWORD dwIndex1;
+  int   iCurrentLoop;
   char  szIndex0[MAX_BUF];
   char  szIndex1[MAX_BUF];
   char  szBuf[MAX_BUF];
-  char  szComponentItem[MAX_BUF];
+  char  szComponentKey[MAX_BUF];
+  char  szComponentSection[MAX_BUF];
   char  szDependency[MAX_BUF];
   char  szDependee[MAX_BUF];
+  char  szSTSection[MAX_BUF];
   char  szDPSection[MAX_BUF];
-  siC   *siCTemp;
-  siCD  *siCDepTemp;
-  siCD  *siCDDependeeTemp;
+  siC   *siCTemp            = NULL;
+  siCD  *siCDepTemp         = NULL;
+  siCD  *siCDDependeeTemp   = NULL;
 
-  dwIndex0 = 0;
-  itoa(dwIndex0, szIndex0, 10);
-  lstrcpy(szComponentItem, "Component");
-  lstrcat(szComponentItem, szIndex0);
-  GetPrivateProfileString(szComponentItem, "Archive", "", szBuf, MAX_BUF, szFileIni);
-  while(*szBuf != '\0')
+  /* clean up the list before reading new components given the Setup Type */
+  DeInitSiComponents(&siComponents);
+
+  /* Parse the Setup Type sections in reverse order because
+   * the Custom Setup Type is always last.  It needs to be parsed
+   * first because the component list it has will be shown in its
+   * other custom dialogs.  Order matters! */
+  for(iCurrentLoop = 3; iCurrentLoop >= 0; iCurrentLoop--)
   {
-    /* create and initialize empty node */
-    siCTemp = CreateSiCNode();
+    lstrcpy(szSTSection, "Setup Type");
+    itoa(iCurrentLoop, szBuf, 10);
+    lstrcat(szSTSection, szBuf);
 
-    /* store name of archive for component */
-    lstrcpy(siCTemp->szArchiveName, szBuf);
-    
-    /* get short description of component */
-    GetPrivateProfileString(szComponentItem, "Description Short", "", szBuf, MAX_BUF, szFileIni);
-    lstrcpy(siCTemp->szDescriptionShort, szBuf);
-
-    /* get long description of component */
-    GetPrivateProfileString(szComponentItem, "Description Long", "", szBuf, MAX_BUF, szFileIni);
-    lstrcpy(siCTemp->szDescriptionLong, szBuf);
-
-    /* get commandline parameter for component */
-    GetPrivateProfileString(szComponentItem, "Parameter", "", szBuf, MAX_BUF, szFileIni);
-    DecryptString(siCTemp->szParameter, szBuf);
-
-    /* get install size required in destination for component.  Sould be in Kilobytes */
-    GetPrivateProfileString(szComponentItem, "Install Size", "", szBuf, MAX_BUF, szFileIni);
-    if(*szBuf != '\0')
-      siCTemp->ullInstallSize = _atoi64(szBuf);
-    else
-      siCTemp->ullInstallSize = 0;
-
-    /* get install size required in system for component.  Sould be in Kilobytes */
-    GetPrivateProfileString(szComponentItem, "Install Size System", "", szBuf, MAX_BUF, szFileIni);
-    if(*szBuf != '\0')
-      siCTemp->ullInstallSizeSystem = _atoi64(szBuf);
-    else
-      siCTemp->ullInstallSizeSystem = 0;
-
-    /* get install size required in temp for component.  Sould be in Kilobytes */
-    GetPrivateProfileString(szComponentItem, "Install Size Archive", "", szBuf, MAX_BUF, szFileIni);
-    if(*szBuf != '\0')
-      siCTemp->ullInstallSizeArchive = _atoi64(szBuf);
-    else
-      siCTemp->ullInstallSizeArchive = 0;
-
-    /* get attributes of component */
-    GetPrivateProfileString(szComponentItem, "Attributes", "", szBuf, MAX_BUF, szFileIni);
-    siCTemp->dwAttributes = ParseComponentAttributes(szBuf);
-
-    /* get the random percentage value and select or deselect the component (by default) for
-     * installation */
-    GetPrivateProfileString(szComponentItem, "Random Install Percentage", "", szBuf, MAX_BUF, szFileIni);
-    if(*szBuf != '\0')
-    {
-      siCTemp->lRandomInstallPercentage = atol(szBuf);
-      if(siCTemp->lRandomInstallPercentage != 0)
-        siCTemp->lRandomInstallValue = RandomSelect();
-    }
-
-    /* get all dependencies for this component */
-    dwIndex1 = 0;
-    itoa(dwIndex1, szIndex1, 10);
-    lstrcpy(szDependency, "Dependency");
-    lstrcat(szDependency, szIndex1);
-    GetPrivateProfileString(szComponentItem, szDependency, "", szBuf, MAX_BUF, szFileIni);
-    while(*szBuf != '\0')
-    {
-      /* create and initialize empty node */
-      siCDepTemp = CreateSiCDepNode();
-
-      /* store name of archive for component */
-      lstrcpy(siCDepTemp->szDescriptionShort, szBuf);
-
-      /* inserts the newly created component into the global component queue */
-      SiCDepNodeInsert(&(siCTemp->siCDDependencies), siCDepTemp);
-
-      ++dwIndex1;
-      itoa(dwIndex1, szIndex1, 10);
-      lstrcpy(szDependency, "Dependency");
-      lstrcat(szDependency, szIndex1);
-      GetPrivateProfileString(szComponentItem, szDependency, "", szBuf, MAX_BUF, szFileIni);
-    }
-
-    /* get all dependees for this component */
-    dwIndex1 = 0;
-    itoa(dwIndex1, szIndex1, 10);
-    lstrcpy(szDependee, "Dependee");
-    lstrcat(szDependee, szIndex1);
-    GetPrivateProfileString(szComponentItem, szDependee, "", szBuf, MAX_BUF, szFileIni);
-    while(*szBuf != '\0')
-    {
-      /* create and initialize empty node */
-      siCDDependeeTemp = CreateSiCDepNode();
-
-      /* store name of archive for component */
-      lstrcpy(siCDDependeeTemp->szDescriptionShort, szBuf);
-
-      /* inserts the newly created component into the global component queue */
-      SiCDepNodeInsert(&(siCTemp->siCDDependees), siCDDependeeTemp);
-
-      ++dwIndex1;
-      itoa(dwIndex1, szIndex1, 10);
-      lstrcpy(szDependee, "Dependee");
-      lstrcat(szDependee, szIndex1);
-      GetPrivateProfileString(szComponentItem, szDependee, "", szBuf, MAX_BUF, szFileIni);
-    }
-
-    // locate previous path if necessary
-    lstrcpy(szDPSection, szComponentItem);
-    lstrcat(szDPSection, "-Destination Path");
-    if(LocatePreviousPath(szDPSection, siCTemp->szDestinationPath, MAX_PATH) == FALSE)
-      ZeroMemory(siCTemp->szDestinationPath, MAX_PATH);
-
-    /* inserts the newly created component into the global component queue */
-    SiCNodeInsert(&siComponents, siCTemp);
-
-    ++dwIndex0;
+    /* read in each component given a setup type */
+    dwIndex0 = 0;
     itoa(dwIndex0, szIndex0, 10);
-    lstrcpy(szComponentItem, "Component");
-    lstrcat(szComponentItem, szIndex0);
-    GetPrivateProfileString(szComponentItem, "Archive", "", szBuf, MAX_BUF, szFileIni);
+    lstrcpy(szComponentKey, "C");
+    lstrcat(szComponentKey, szIndex0);
+    GetPrivateProfileString(szSTSection, szComponentKey, "", szComponentSection, sizeof(szComponentSection), szFileIni);
+    while(*szComponentSection != '\0')
+    {
+      GetPrivateProfileString(szComponentSection, "Archive", "", szBuf, MAX_BUF, szFileIni);
+      if((*szBuf != '\0') && (SiCNodeFind(siComponents, szComponentSection) == NULL))
+      {
+        /* create and initialize empty node */
+        siCTemp = CreateSiCNode();
+
+        /* store name of archive for component */
+        lstrcpy(siCTemp->szArchiveName, szBuf);
+        
+        /* get short description of component */
+        GetPrivateProfileString(szComponentSection, "Description Short", "", szBuf, MAX_BUF, szFileIni);
+        lstrcpy(siCTemp->szDescriptionShort, szBuf);
+
+        /* get long description of component */
+        GetPrivateProfileString(szComponentSection, "Description Long", "", szBuf, MAX_BUF, szFileIni);
+        lstrcpy(siCTemp->szDescriptionLong, szBuf);
+
+        /* get commandline parameter for component */
+        GetPrivateProfileString(szComponentSection, "Parameter", "", szBuf, MAX_BUF, szFileIni);
+        DecryptString(siCTemp->szParameter, szBuf);
+
+        /* set reference name for component */
+        lstrcpy(siCTemp->szReferenceName, szComponentSection);
+
+        /* get install size required in destination for component.  Sould be in Kilobytes */
+        GetPrivateProfileString(szComponentSection, "Install Size", "", szBuf, MAX_BUF, szFileIni);
+        if(*szBuf != '\0')
+          siCTemp->ullInstallSize = _atoi64(szBuf);
+        else
+          siCTemp->ullInstallSize = 0;
+
+        /* get install size required in system for component.  Sould be in Kilobytes */
+        GetPrivateProfileString(szComponentSection, "Install Size System", "", szBuf, MAX_BUF, szFileIni);
+        if(*szBuf != '\0')
+          siCTemp->ullInstallSizeSystem = _atoi64(szBuf);
+        else
+          siCTemp->ullInstallSizeSystem = 0;
+
+        /* get install size required in temp for component.  Sould be in Kilobytes */
+        GetPrivateProfileString(szComponentSection, "Install Size Archive", "", szBuf, MAX_BUF, szFileIni);
+        if(*szBuf != '\0')
+          siCTemp->ullInstallSizeArchive = _atoi64(szBuf);
+        else
+          siCTemp->ullInstallSizeArchive = 0;
+
+        /* get attributes of component */
+        GetPrivateProfileString(szComponentSection, "Attributes", "", szBuf, MAX_BUF, szFileIni);
+        siCTemp->dwAttributes = ParseComponentAttributes(szBuf);
+
+        /* get the random percentage value and select or deselect the component (by default) for
+         * installation */
+        GetPrivateProfileString(szComponentSection, "Random Install Percentage", "", szBuf, MAX_BUF, szFileIni);
+        if(*szBuf != '\0')
+        {
+          siCTemp->lRandomInstallPercentage = atol(szBuf);
+          if(siCTemp->lRandomInstallPercentage != 0)
+            siCTemp->lRandomInstallValue = RandomSelect();
+        }
+
+        /* get all dependencies for this component */
+        dwIndex1 = 0;
+        itoa(dwIndex1, szIndex1, 10);
+        lstrcpy(szDependency, "Dependency");
+        lstrcat(szDependency, szIndex1);
+        GetPrivateProfileString(szComponentSection, szDependency, "", szBuf, MAX_BUF, szFileIni);
+        while(*szBuf != '\0')
+        {
+          /* create and initialize empty node */
+          siCDepTemp = CreateSiCDepNode();
+
+          /* store name of archive for component */
+          lstrcpy(siCDepTemp->szReferenceName, szBuf);
+
+          /* inserts the newly created component into the global component list */
+          SiCDepNodeInsert(&(siCTemp->siCDDependencies), siCDepTemp);
+
+          ++dwIndex1;
+          itoa(dwIndex1, szIndex1, 10);
+          lstrcpy(szDependency, "Dependency");
+          lstrcat(szDependency, szIndex1);
+          GetPrivateProfileString(szComponentSection, szDependency, "", szBuf, MAX_BUF, szFileIni);
+        }
+
+        /* get all dependees for this component */
+        dwIndex1 = 0;
+        itoa(dwIndex1, szIndex1, 10);
+        lstrcpy(szDependee, "Dependee");
+        lstrcat(szDependee, szIndex1);
+        GetPrivateProfileString(szComponentSection, szDependee, "", szBuf, MAX_BUF, szFileIni);
+        while(*szBuf != '\0')
+        {
+          /* create and initialize empty node */
+          siCDDependeeTemp = CreateSiCDepNode();
+
+          /* store name of archive for component */
+          lstrcpy(siCDDependeeTemp->szReferenceName, szBuf);
+
+          /* inserts the newly created component into the global component list */
+          SiCDepNodeInsert(&(siCTemp->siCDDependees), siCDDependeeTemp);
+
+          ++dwIndex1;
+          itoa(dwIndex1, szIndex1, 10);
+          lstrcpy(szDependee, "Dependee");
+          lstrcat(szDependee, szIndex1);
+          GetPrivateProfileString(szComponentSection, szDependee, "", szBuf, MAX_BUF, szFileIni);
+        }
+
+        // locate previous path if necessary
+        lstrcpy(szDPSection, szComponentSection);
+        lstrcat(szDPSection, "-Destination Path");
+        if(LocatePreviousPath(szDPSection, siCTemp->szDestinationPath, MAX_PATH) == FALSE)
+          ZeroMemory(siCTemp->szDestinationPath, MAX_PATH);
+
+        /* inserts the newly created component into the global component list */
+        SiCNodeInsert(&siComponents, siCTemp);
+      }
+
+      ++dwIndex0;
+      itoa(dwIndex0, szIndex0, 10);
+      lstrcpy(szComponentKey, "C");
+      lstrcat(szComponentKey, szIndex0);
+      GetPrivateProfileString(szSTSection, szComponentKey, "", szComponentSection, sizeof(szComponentSection), szFileIni);
+    }
   }
 
   sgProduct.dwNumberOfComponents = dwIndex0;
@@ -3330,64 +3472,139 @@ void InitSiteSelector(char *szFileIni)
   }
 }
 
+#ifdef SSU_DEBUG
+void ViewSiComponentsDependency(char *szBuffer, char *szIndentation, siC *siCNode)
+{
+  siC  *siCNodeTemp;
+  siCD *siCDependencyTemp;
+
+  siCDependencyTemp = siCNode->siCDDependencies;
+  if(siCDependencyTemp != NULL)
+  {
+    char  szIndentationPadding[MAX_BUF];
+    DWORD dwIndex;
+
+    lstrcpy(szIndentationPadding, szIndentation);
+    lstrcat(szIndentationPadding, "    ");
+
+    do
+    {
+      lstrcat(szBuffer, szIndentationPadding);
+      lstrcat(szBuffer, siCDependencyTemp->szReferenceName);
+      lstrcat(szBuffer, "::");
+
+      if((dwIndex = SiCNodeGetIndexRN(siCDependencyTemp->szReferenceName)) != -1)
+        lstrcat(szBuffer, SiCNodeGetDescriptionShort(dwIndex, TRUE, AC_ALL));
+      else
+        lstrcat(szBuffer, "Component does not exist");
+
+      lstrcat(szBuffer, ":");
+      lstrcat(szBuffer, "\n");
+
+      if(dwIndex != -1)
+      {
+        if((siCNodeTemp = SiCNodeGetObject(dwIndex, TRUE, AC_ALL)) != NULL)
+          ViewSiComponentsDependency(szBuffer, szIndentationPadding, siCNodeTemp);
+        else
+          lstrcat(szBuffer, "Node not found");
+      }
+
+      siCDependencyTemp = siCDependencyTemp->Next;
+    }while((siCDependencyTemp != NULL) && (siCDependencyTemp != siCNode->siCDDependencies));
+  }
+}
+
+void ViewSiComponentsDependee(char *szBuffer, char *szIndentation, siC *siCNode)
+{
+  siC  *siCNodeTemp;
+  siCD *siCDependeeTemp;
+
+  siCDependeeTemp = siCNode->siCDDependees;
+  if(siCDependeeTemp != NULL)
+  {
+    char  szIndentationPadding[MAX_BUF];
+    DWORD dwIndex;
+
+    lstrcpy(szIndentationPadding, szIndentation);
+    lstrcat(szIndentationPadding, "    ");
+
+    do
+    {
+      lstrcat(szBuffer, szIndentationPadding);
+      lstrcat(szBuffer, siCDependeeTemp->szReferenceName);
+      lstrcat(szBuffer, "::");
+
+      if((dwIndex = SiCNodeGetIndexRN(siCDependeeTemp->szReferenceName)) != -1)
+        lstrcat(szBuffer, SiCNodeGetDescriptionShort(dwIndex, TRUE, AC_ALL));
+      else
+        lstrcat(szBuffer, "Component does not exist");
+
+      lstrcat(szBuffer, ":");
+      lstrcat(szBuffer, "\n");
+
+      if(dwIndex != -1)
+      {
+        if((siCNodeTemp = SiCNodeGetObject(dwIndex, TRUE, AC_ALL)) != NULL)
+          ViewSiComponentsDependency(szBuffer, szIndentationPadding, siCNodeTemp);
+        else
+          lstrcat(szBuffer, "Node not found");
+      }
+
+      siCDependeeTemp = siCDependeeTemp->Next;
+    }while((siCDependeeTemp != NULL) && (siCDependeeTemp != siCNode->siCDDependees));
+  }
+}
+
 void ViewSiComponents()
 {
   char  szBuf[MAX_BUF];
   siC   *siCTemp = siComponents;
-  siCD  *siCDepTemp;
 
-  if(siCTemp != NULL)
+  // build dependency list
+  ZeroMemory(szBuf, sizeof(szBuf));
+  lstrcpy(szBuf, "Dependency:\n");
+
+  do
   {
-    siCDepTemp = siCTemp->siCDDependencies;
-    lstrcpy(szBuf, siCTemp->szDescriptionShort);
+    if(siCTemp == NULL)
+      break;
+
+    lstrcat(szBuf, "    ");
+    lstrcat(szBuf, siCTemp->szReferenceName);
+    lstrcat(szBuf, "::");
+    lstrcat(szBuf, siCTemp->szDescriptionShort);
     lstrcat(szBuf, ":\n");
 
-    if(siCDepTemp != NULL)
-    {
-      lstrcat(szBuf, "    ");
-      lstrcat(szBuf, siCDepTemp->szDescriptionShort);
-      lstrcat(szBuf, "\n");
-
-      siCDepTemp = siCDepTemp->Next;
-      while((siCDepTemp != NULL) && (siCDepTemp != siCTemp->siCDDependencies))
-      {
-        lstrcat(szBuf, "    ");
-        lstrcat(szBuf, siCDepTemp->szDescriptionShort);
-        lstrcat(szBuf, "\n");
-
-        siCDepTemp = siCDepTemp->Next;
-      }
-    }
+    ViewSiComponentsDependency(szBuf, "    ", siCTemp);
 
     siCTemp = siCTemp->Next;
-    while((siCTemp != NULL) && (siCTemp != siComponents))
-    {
-      siCDepTemp = siCTemp->siCDDependencies;
-      lstrcat(szBuf, siCTemp->szDescriptionShort);
-      lstrcat(szBuf, ":\n");
+  } while((siCTemp != NULL) && (siCTemp != siComponents));
 
-      if(siCDepTemp != NULL)
-      {
-        lstrcat(szBuf, "    ");
-        lstrcat(szBuf, siCDepTemp->szDescriptionShort);
-        lstrcat(szBuf, "\n");
+  MessageBox(hWndMain, szBuf, NULL, MB_ICONEXCLAMATION);
 
-        siCDepTemp = siCDepTemp->Next;
-        while((siCDepTemp != NULL) && (siCDepTemp != siCTemp->siCDDependencies))
-        {
-          lstrcat(szBuf, "    ");
-          lstrcat(szBuf, siCDepTemp->szDescriptionShort);
-          lstrcat(szBuf, "\n");
+  // build dependee list
+  ZeroMemory(szBuf, sizeof(szBuf));
+  lstrcpy(szBuf, "Dependee:\n");
 
-          siCDepTemp = siCDepTemp->Next;
-        }
-      }
-      siCTemp = siCTemp->Next;
-    }
+  do
+  {
+    if(siCTemp == NULL)
+      break;
 
-    MessageBox(hWndMain, szBuf, NULL, MB_ICONEXCLAMATION);
-  }
+    lstrcat(szBuf, "    ");
+    lstrcat(szBuf, siCTemp->szReferenceName);
+    lstrcat(szBuf, "::");
+    lstrcat(szBuf, siCTemp->szDescriptionShort);
+    lstrcat(szBuf, ":\n");
+
+    ViewSiComponentsDependee(szBuf, "    ", siCTemp);
+
+    siCTemp = siCTemp->Next;
+  } while((siCTemp != NULL) && (siCTemp != siComponents));
+
+  MessageBox(hWndMain, szBuf, NULL, MB_ICONEXCLAMATION);
 }
+#endif /* SSU_DEBUG */
 
 void DeInitSiCDependencies(siCD *siCDDependencies)
 {
@@ -3415,28 +3632,28 @@ void DeInitSiCDependencies(siCD *siCDDependencies)
   SiCDepNodeDelete(siCDepTemp);
 }
 
-void DeInitSiComponents()
+void DeInitSiComponents(siC **siCHeadNode)
 {
   siC   *siCTemp;
   
-  if(siComponents == NULL)
+  if((*siCHeadNode) == NULL)
   {
     return;
   }
-  else if((siComponents->Prev == NULL) || (siComponents->Prev == siComponents))
+  else if(((*siCHeadNode)->Prev == NULL) || ((*siCHeadNode)->Prev == (*siCHeadNode)))
   {
-    SiCNodeDelete(siComponents);
+    SiCNodeDelete((*siCHeadNode));
     return;
   }
   else
   {
-    siCTemp = siComponents->Prev;
+    siCTemp = (*siCHeadNode)->Prev;
   }
 
-  while(siCTemp != siComponents)
+  while(siCTemp != (*siCHeadNode))
   {
     SiCNodeDelete(siCTemp);
-    siCTemp = siComponents->Prev;
+    siCTemp = (*siCHeadNode)->Prev;
   }
   SiCNodeDelete(siCTemp);
 }
@@ -3475,7 +3692,7 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
 
   if(siCDepTemp != NULL)
   {
-    if((dwIndex = SiCNodeGetIndexDS(siCDepTemp->szDescriptionShort)) != -1)
+    if((dwIndex = SiCNodeGetIndexRN(siCDepTemp->szReferenceName)) != -1)
     {
       if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == FALSE)
       {
@@ -3487,7 +3704,7 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
     siCDepTemp = siCDepTemp->Next;
     while((siCDepTemp != NULL) && (siCDepTemp != siCDInDependency))
     {
-      if((dwIndex = SiCNodeGetIndexDS(siCDepTemp->szDescriptionShort)) != -1)
+      if((dwIndex = SiCNodeGetIndexRN(siCDepTemp->szReferenceName)) != -1)
       {
         if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == FALSE)
         {
@@ -3555,7 +3772,7 @@ BOOL ResolveComponentDependee(siCD *siCDInDependee)
 
   if(siCDDependeeTemp != NULL)
   {
-    if((dwIndex = SiCNodeGetIndexDS(siCDDependeeTemp->szDescriptionShort)) != -1)
+    if((dwIndex = SiCNodeGetIndexRN(siCDDependeeTemp->szReferenceName)) != -1)
     {
       if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == TRUE)
       {
@@ -3566,7 +3783,7 @@ BOOL ResolveComponentDependee(siCD *siCDInDependee)
     siCDDependeeTemp = siCDDependeeTemp->Next;
     while((siCDDependeeTemp != NULL) && (siCDDependeeTemp != siCDInDependee))
     {
-      if((dwIndex = SiCNodeGetIndexDS(siCDDependeeTemp->szDescriptionShort)) != -1)
+      if((dwIndex = SiCNodeGetIndexRN(siCDDependeeTemp->szReferenceName)) != -1)
       {
         if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == TRUE)
         {
@@ -3598,7 +3815,7 @@ ssi* SsiGetNode(LPSTR szDescription)
   return(NULL);
 }
 
-void ResolveDependees(LPSTR szToggledDescriptionShort)
+void ResolveDependees(LPSTR szToggledReferenceName)
 {
   BOOL  bAtLeastOneSelected;
   BOOL  bMoreToResolve  = FALSE;
@@ -3611,12 +3828,12 @@ void ResolveDependees(LPSTR szToggledDescriptionShort)
       break;
 
     if((siCTemp->siCDDependees != NULL) &&
-       (lstrcmpi(siCTemp->szDescriptionShort, szToggledDescriptionShort) != 0))
+       (lstrcmpi(siCTemp->szReferenceName, szToggledReferenceName) != 0))
     {
       bAtLeastOneSelected = ResolveComponentDependee(siCTemp->siCDDependees);
       if(bAtLeastOneSelected == FALSE)
       {
-        if((dwIndex = SiCNodeGetIndexDS(siCTemp->szDescriptionShort)) != -1)
+        if((dwIndex = SiCNodeGetIndexRN(siCTemp->szReferenceName)) != -1)
         {
           if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == TRUE)
           {
@@ -3627,7 +3844,7 @@ void ResolveDependees(LPSTR szToggledDescriptionShort)
       }
       else
       {
-        if((dwIndex = SiCNodeGetIndexDS(siCTemp->szDescriptionShort)) != -1)
+        if((dwIndex = SiCNodeGetIndexRN(siCTemp->szReferenceName)) != -1)
         {
           if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == FALSE)
           {
@@ -3642,7 +3859,7 @@ void ResolveDependees(LPSTR szToggledDescriptionShort)
   } while((siCTemp != NULL) && (siCTemp != siComponents));
 
   if(bMoreToResolve == TRUE)
-    ResolveDependees(szToggledDescriptionShort);
+    ResolveDependees(szToggledReferenceName);
 }
 
 void ParseCommandLine(LPSTR lpszCmdLine)
@@ -4120,6 +4337,7 @@ BOOL CheckLegacy(HWND hDlg)
   FreeMemory(&szMessage[0]);
   FreeMemory(&szMessage[1]);
   FreeMemory(&szMessage[2]);
+  FreeMemory(&szMessage[3]);
 
   /* returning TRUE means the user wants to go back and choose a different destination path
    * returning FALSE means the user is ignoring the warning
@@ -4155,8 +4373,14 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 {
   HDC  hdc;
   char szBuf[MAX_BUF];
+  char szMsgInitSetup[MAX_BUF];
   char szPreviousPath[MAX_BUF];
   char szShowDialog[MAX_BUF];
+
+  if(NS_LoadString(hSetupRscInst, IDS_MSG_INIT_SETUP, szMsgInitSetup, sizeof(szMsgInitSetup)) != WIZ_OK)
+    return(1);
+
+  ShowMessage(szMsgInitSetup, TRUE);
 
   if(CheckInstances())
     return(1);
@@ -4360,19 +4584,19 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* Get Setup Types info */
   GetPrivateProfileString("Setup Type0", "Description Short", "", diSetupType.stSetupType0.szDescriptionShort, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Setup Type0", "Description Long",  "", diSetupType.stSetupType0.szDescriptionLong,  MAX_BUF, szFileIniConfig);
-  STGetComponents("Setup Type0", &diSetupType.stSetupType0, szFileIniConfig);
+  STSetVisibility(&diSetupType.stSetupType0);
 
   GetPrivateProfileString("Setup Type1", "Description Short", "", diSetupType.stSetupType1.szDescriptionShort, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Setup Type1", "Description Long",  "", diSetupType.stSetupType1.szDescriptionLong,  MAX_BUF, szFileIniConfig);
-  STGetComponents("Setup Type1", &diSetupType.stSetupType1, szFileIniConfig);
+  STSetVisibility(&diSetupType.stSetupType1);
 
   GetPrivateProfileString("Setup Type2", "Description Short", "", diSetupType.stSetupType2.szDescriptionShort, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Setup Type2", "Description Long",  "", diSetupType.stSetupType2.szDescriptionLong,  MAX_BUF, szFileIniConfig);
-  STGetComponents("Setup Type2", &diSetupType.stSetupType2, szFileIniConfig);
+  STSetVisibility(&diSetupType.stSetupType2);
 
   GetPrivateProfileString("Setup Type3", "Description Short", "", diSetupType.stSetupType3.szDescriptionShort, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Setup Type3", "Description Long",  "", diSetupType.stSetupType3.szDescriptionLong,  MAX_BUF, szFileIniConfig);
-  STGetComponents("Setup Type3", &diSetupType.stSetupType3, szFileIniConfig);
+  STSetVisibility(&diSetupType.stSetupType3);
 
   /* remember the radio button that is considered the Custom type (the last radio button) */
   SetCustomType();
@@ -4507,25 +4731,21 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   {
     dwSetupType     = ST_RADIO0;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 1") == 0) && diSetupType.stSetupType1.bVisible)
   {
     dwSetupType     = ST_RADIO1;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 2") == 0) && diSetupType.stSetupType2.bVisible)
   {
     dwSetupType     = ST_RADIO2;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 3") == 0) && diSetupType.stSetupType3.bVisible)
   {
     dwSetupType     = ST_RADIO3;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
   }
   else
   {
@@ -4533,27 +4753,24 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     {
       dwSetupType     = ST_RADIO0;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
     }
     else if(diSetupType.stSetupType1.bVisible)
     {
       dwSetupType     = ST_RADIO1;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
     }
     else if(diSetupType.stSetupType2.bVisible)
     {
       dwSetupType     = ST_RADIO2;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
     }
     else if(diSetupType.stSetupType3.bVisible)
     {
       dwSetupType     = ST_RADIO3;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
     }
   }
+  SiCNodeSetItemsSelected(dwSetupType);
 
   /* get install size required in temp for component Xpcom.  Sould be in Kilobytes */
   GetPrivateProfileString("Core", "Install Size", "", szBuf, MAX_BUF, szFileIniConfig);
@@ -4593,6 +4810,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   OutputSetupTitle(hdc);
   ReleaseDC(hWndMain, hdc);
   CleanupXpcomFile();
+  ShowMessage(szMsgInitSetup, FALSE);
 
   return(0);
 }
@@ -4821,39 +5039,12 @@ void SetCustomType()
     sgProduct.dwCustomType = ST_RADIO0;
 }
 
-void STGetComponents(LPSTR szSection, st *stSetupType, LPSTR szFileIniConfig)
+void STSetVisibility(st *stSetupType)
 {
-  DWORD dwIndex;
-  char  szIndex[MAX_BUF];
-  char  szKey[MAX_BUF];
-  char  szBuf[MAX_BUF];
-
   if(*(stSetupType->szDescriptionShort) == '\0')
     stSetupType->bVisible = FALSE;
   else
     stSetupType->bVisible = TRUE;
-
-  dwIndex = 0;
-  stSetupType->dwCItems = 0;
-  itoa(dwIndex, szIndex, 10);
-  lstrcpy(szKey, "C");
-  lstrcat(szKey, szIndex);
-  GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
-  while(*szBuf != '\0')
-  {
-    /* hack used to determine the numerical value of the component */
-    if(lstrlen(szBuf) > 8)
-    {
-      ++stSetupType->dwCItems;
-      stSetupType->dwCItemsSelected[dwIndex] = atoi(&szBuf[9]);
-    }
-
-    ++dwIndex;
-    itoa(dwIndex, szIndex, 10);
-    lstrcpy(szKey, "C");
-    lstrcat(szKey, szIndex);
-    GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
-  }
 }
 
 HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
@@ -5613,7 +5804,7 @@ void DeInitialize()
   CleanTempFiles();
   DirectoryRemove(szTempDir, FALSE);
 
-  DeInitSiComponents();
+  DeInitSiComponents(&siComponents);
   DeInitSXpcomFile();
   DeInitSDObject();
   DeInitDlgReboot(&diReboot);

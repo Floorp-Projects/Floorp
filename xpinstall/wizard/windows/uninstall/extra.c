@@ -196,6 +196,9 @@ HRESULT Initialize(HINSTANCE hInstance)
   if((szTempDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
+  if((szOSTempDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
   if((szFileIniUninstall = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
@@ -1641,6 +1644,7 @@ void DeInitialize()
   DeInitUninstallGeneral();
 
   FreeMemory(&szTempDir);
+  FreeMemory(&szOSTempDir);
   FreeMemory(&szUninstallDir);
   FreeMemory(&szEGlobalAlloc);
   FreeMemory(&szEDllLoad);

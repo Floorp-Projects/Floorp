@@ -817,10 +817,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST0)      == BST_CHECKED)
           {
             if(dwSetupType != ST_RADIO0)
-            {
-              ResetComponentAttributes(szFileIniConfig);
-              SiCNodeSetItemsSelected(ST_RADIO0, diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
-            }
+              SiCNodeSetItemsSelected(ST_RADIO0);
 
             dwSetupType     = ST_RADIO0;
             dwTempSetupType = dwSetupType;
@@ -828,10 +825,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST1) == BST_CHECKED)
           {
             if(dwSetupType != ST_RADIO1)
-            {
-              ResetComponentAttributes(szFileIniConfig);
-              SiCNodeSetItemsSelected(ST_RADIO1, diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
-            }
+              SiCNodeSetItemsSelected(ST_RADIO1);
 
             dwSetupType     = ST_RADIO1;
             dwTempSetupType = dwSetupType;
@@ -839,10 +833,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST2) == BST_CHECKED)
           {
             if(dwSetupType != ST_RADIO2)
-            {
-              ResetComponentAttributes(szFileIniConfig);
-              SiCNodeSetItemsSelected(ST_RADIO2, diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
-            }
+              SiCNodeSetItemsSelected(ST_RADIO2);
 
             dwSetupType     = ST_RADIO2;
             dwTempSetupType = dwSetupType;
@@ -850,10 +841,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
           {
             if(dwSetupType != ST_RADIO3)
-            {
-              ResetComponentAttributes(szFileIniConfig);
-              SiCNodeSetItemsSelected(ST_RADIO3, diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
-            }
+              SiCNodeSetItemsSelected(ST_RADIO3);
 
             dwSetupType     = ST_RADIO3;
             dwTempSetupType = dwSetupType;
@@ -961,7 +949,7 @@ void InvalidateLBCheckbox(HWND hwndListBox)
 void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
 {
   BOOL  bMoreToResolve;
-  LPSTR szToggledDescriptionShort = NULL;
+  LPSTR szToggledReferenceName = NULL;
   DWORD dwAttributes;
 
   // Checks to see if the checkbox is checked or not checked, and
@@ -972,8 +960,8 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
     if(dwAttributes & SIC_SELECTED)
     {
       SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE, dwACFlag);
-      szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE, dwACFlag);
-      ResolveDependees(szToggledDescriptionShort);
+      szToggledReferenceName = SiCNodeGetReferenceName(dwIndex, FALSE, dwACFlag);
+      ResolveDependees(szToggledReferenceName);
     }
     else
     {
@@ -983,8 +971,8 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
       while(bMoreToResolve)
         bMoreToResolve = ResolveDependencies(-1);
 
-      szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE, dwACFlag);
-      ResolveDependees(szToggledDescriptionShort);
+      szToggledReferenceName = SiCNodeGetReferenceName(dwIndex, FALSE, dwACFlag);
+      ResolveDependees(szToggledReferenceName);
     }
 
     InvalidateLBCheckbox(hwndListBox);
