@@ -36,12 +36,13 @@ Contributor(s): ______________________________________. -->
 		  <html:div><html:u>N</html:u>ew </html:div> 
 	      <spring flex="100%"/> 
 	      <html:div>Ctrl+N</html:div>
-		  <titledbutton value=""/> 
+		  <titledbutton class="menu-right" value=""/> 
 	    </xpmenu>
 	    <xpmenuitem> 
 		  <html:div><html:u>O</html:u>pen...</html:div> 
-	   <spring flex="100%"/> 
-	   <html:div>Ctrl+O</html:div> 
+	      <spring flex="100%"/> 
+	      <html:div>Ctrl+O</html:div>
+          <titledbutton class="menu-right" value=""/>
 	    </xpmenuitem> 
 		  <xpmenuitem> 
 			  <html:div><html:u>C</html:u>lose</html:div> 
