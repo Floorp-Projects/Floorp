@@ -112,8 +112,6 @@ install:: master.ini
 !endif
 
 install::
-!if exist($(DIST)\bin\chrome\installed-chrome.txt)
-	del $(DIST)\bin\chrome\installed-chrome.txt
-!endif
+	$(RM) $(DIST)\bin\chrome\installed-chrome.txt
 
 FORCE::
