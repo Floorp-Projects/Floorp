@@ -173,7 +173,7 @@ sub pickos {
             /\(.*NetBSD.*\)/ && do {return "NetBSD";};
             /\(.*BeOS.*\)/ && do {return "BeOS";};
             /\(.*AIX.*\)/ && do {return "AIX";};
-            /\(.*IBM.*\)/ && do {return "OS/2";};
+            /\(.*OS\/2.*\)/ && do {return "OS/2";};
             /\(.*QNX.*\)/ && do {return "Neutrino";};
             /\(.*VMS.*\)/ && do {return "OpenVMS";};
             /\(.*Windows XP.*\)/ && do {return "Windows XP";};
