@@ -77,31 +77,21 @@ html|a[class="CardViewText"] {
 
 /* CardEdit styles - used in the Card Edit Dialog */
 
-box[class="CardEditWidth"] {
+[class="CardEditWidth"] {
 	width: 25em;
 }
 
-html|input[class="CardEdit"] {
-	margin: 2px 0px 2px 0px ;
-	padding: 0px;
-}
-
-html|label[class="CardEdit"] {
+[class="CardEditLabel"] {
 	padding: 0px;
 	margin-top: 3px;
 }
 
-html|input[class="CardEditCheckbox"] {
-	margin-left: 0px;
-	margin-bottom: 0px;
-}
-
-box[class="alignWithFieldset"] {
+[class="alignBoxWithFieldset"] {
 	margin-left: 6px;
 	margin-right: 5px;
 }
 
-spring.stateZipSpacer { width: 3em; }
+.stateZipSpacer { width: 3em; }
 
 
 /* Custom Trees */

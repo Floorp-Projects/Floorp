@@ -35,12 +35,10 @@ Rights Reserved.
 		class="dialog"
 		align="vertical">
 
-<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
-
 	<keyset id="keyset"/>
 
-	<box align="horizontal">
-		<html:label for="abPopup">&chooseAddressBook.label;</html:label>
+	<box orient="horizontal" autostretch="never" valign="center">
+		<!--html:label for="abPopup">&chooseAddressBook.label;</html:label>
 		<html:div>
 			<html:select id="abPopup" ref="abdirectory://" datasources="rdf:addressdirectory"> 
 				<template> 
@@ -49,14 +47,22 @@ Rights Reserved.
 					</html:option>
 				</template> 
 			</html:select> 
-		</html:div>
+		</html:div-->
+
+
+
+		<text for="abPopup" value="&chooseAddressBook.label;"/>
+		<menulist id="abPopup">
+			<menupopup id="abPopup-menupopup" ref="abdirectory://" datasources="rdf:addressdirectory">
+				<template> 
+					<menuitem uri="..."
+					          value="rdf:http://home.netscape.com/NC-rdf#DirName"
+					          data="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+				</template> 
+			</menupopup>
+		</menulist>
+
 	</box>
-	
-	<!--box align="horizontal">
-		<html:label for="chooseAddressBook">&chooseAddressBook.label;</html:label>
-		<html:select id="chooseAddressBook">
-		</html:select>
-	</box-->
 	
 	<spring style="height:1em"/>
 		

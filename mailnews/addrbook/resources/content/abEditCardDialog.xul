@@ -25,8 +25,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardOverlay.xul"?>
 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		onload="OnLoadEditCard()"
 		class="dialog"
 		align="vertical">

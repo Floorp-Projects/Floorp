@@ -40,20 +40,29 @@ function OnLoadNewCard()
 	{
 		if ( window.arguments[0].selectedAB )
 			editCard.selectedAB = window.arguments[0].selectedAB;
+		else
+			editCard.selectedAB = "abdirectory://abook.mab";
 	}
 
 	// set popup with address book names
 	var abPopup = document.getElementById('abPopup');
 	if ( abPopup )
 	{
-		if ( editCard.selectedAB )
-			abPopup.value = editCard.selectedAB;
-		else {
-			// this should not be hardcoded.
-			abPopup.value = "abdirectory://abook.mab";
+		var menupopup = document.getElementById('abPopup-menupopup');
+		
+		if ( editCard.selectedAB && menupopup && menupopup.childNodes )
+		{
+			for ( var index = menupopup.childNodes.length - 1; index >= 0; index-- )
+			{
+				if ( menupopup.childNodes[index].getAttribute('data') == editCard.selectedAB )
+				{
+					abPopup.value = menupopup.childNodes[index].getAttribute('value');
+					break;
+				}
+			}
 		}
 	}
-	
+
 	GetCardValues(editCard.card, document);
 
 	//// FIX ME - looks like we need to focus on both the text field and the tab widget
@@ -149,7 +158,7 @@ function NewCardOKButton()
 	var popup = document.getElementById('abPopup');
 	if ( popup )
 	{
-		var uri = popup.value;
+		var uri = popup.getAttribute('data');
 		
 		// FIX ME - hack to avoid crashing if no ab selected because of blank option bug from template
 		// should be able to just remove this if we are not seeing blank lines in the ab popup
