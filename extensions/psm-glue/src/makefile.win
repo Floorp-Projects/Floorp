@@ -58,7 +58,8 @@ OBJS = \
     .\$(OBJDIR)\nsPSMModule.obj \
     .\$(OBJDIR)\nsSecureBrowserUIImpl.obj \
     .\$(OBJDIR)\nsSSLIOLayer.obj \
-	.\$(OBJDIR)\nsSSLSocketProvider.obj \
+    .\$(OBJDIR)\nsSSLSocketProvider.obj \
+    .\$(OBJDIR)\nsSDR.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

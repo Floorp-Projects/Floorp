@@ -41,6 +41,7 @@ CPPSRCS	= \
 	nsPSMModule.cpp \
 	nsSSLIOLayer.cpp \
 	nsSecureBrowserUIImpl.cpp \
+	nsSDR.cpp \
 	$(NULL)
 
 CSRCS = \

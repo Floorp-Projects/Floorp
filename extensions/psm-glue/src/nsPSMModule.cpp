@@ -33,6 +33,11 @@
 
 #include "nsSSLSocketProvider.h"
 
+#include "nsSDR.h"
+
+// Define SDR object constructor
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSecretDecoderRing, init)
+
 static nsModuleComponentInfo components[] =
 {
     { 
@@ -68,6 +73,13 @@ static nsModuleComponentInfo components[] =
         NS_SSLSOCKETPROVIDER_CID,
         NS_ISSLSOCKETPROVIDER_PROGID,
         nsSSLSocketProvider::Create 
+    },
+
+    {
+        NS_SDR_CLASSNAME,
+        NS_SDR_CID,
+        NS_SDR_PROGID,
+        nsSecretDecoderRingConstructor
     }
 };
 
