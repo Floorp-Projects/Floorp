@@ -35,9 +35,8 @@
 {
   if (!splashImage)
   {
-    if ([NSImage imageNamed:@"splash"])
-      splashImage = [NSImage imageNamed:@"splash"];
-    else
+    NSImage* splashImage = [NSImage imageNamed:@"splash"];
+    if (!splashImage)
       splashImage = [NSImage imageNamed:@"NSApplicationIcon"];
   }
 
@@ -55,7 +54,8 @@
     mStatusField = [[[NSTextField alloc] initWithFrame:statusFieldRect] autorelease];
 #endif
 
-    NSRect versionFieldRect = NSMakeRect(2.0, 2.0, (splashRect.size.width - 5.0), 16.0);
+    const float kVersionLeftOffset = 160.0;
+    NSRect versionFieldRect = NSMakeRect(kVersionLeftOffset, 18.0, (splashRect.size.width - kVersionLeftOffset - 14.0), 16.0);
     NSTextField* versionField = [[[NSTextField alloc] initWithFrame:versionFieldRect] autorelease];
 
     [contentImageView setImage:splashImage];
@@ -79,6 +79,8 @@
     [versionField setBordered:NO];
     [versionField setFont:[NSFont labelFontOfSize:10.0]];
     [versionField setTextColor:[NSColor grayColor]];
+    [versionField setAlignment:NSRightTextAlignment];
+
     NSString* versionString = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleGetInfoString"];
     NSString* buildIDString = [NSString stringWithFormat: NSLocalizedString(@"BuildID", @""), NS_BUILD_ID];
     [versionField setStringValue:[NSString stringWithFormat:@"%@ (%@)", versionString, buildIDString]];
@@ -89,7 +91,8 @@
 #endif
     [[self contentView] addSubview:versionField];
 
-    [self setOpaque:(shouldFade ? NO : YES)];
+    [self setBackgroundColor: [NSColor clearColor]];
+    [self setOpaque:NO];
     [self setHasShadow:YES];
     [self setReleasedWhenClosed:YES];
     [self center];
