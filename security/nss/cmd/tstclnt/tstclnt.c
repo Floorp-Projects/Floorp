@@ -64,6 +64,9 @@
 #define PRINTF  if (verbose)  printf
 #define FPRINTF if (verbose) fprintf
 
+#define MAX_WAIT_FOR_SERVER 600
+#define WAIT_INTERVAL       100
+
 int ssl2CipherSuites[] = {
     SSL_EN_RC4_128_WITH_MD5,			/* A */
     SSL_EN_RC4_128_EXPORT40_WITH_MD5,		/* B */
@@ -244,7 +247,6 @@ ownBadCertHandler(void * arg, PRFileDesc * socket)
     return SECSuccess;	/* override, say it's OK. */
 }
 
-
 int main(int argc, char **argv)
 {
     PRFileDesc *       s;
@@ -273,16 +275,19 @@ int main(int argc, char **argv)
     PRPollDesc         pollset[2];
     char               buf[PR_NETDB_BUF_SIZE];
     PRBool             useCommandLinePassword = PR_FALSE;
+    PRBool             pingServerFirst = PR_FALSE;
     int                error=0;
+    int                iter;
     PLOptState *optstate;
     PLOptStatus optstatus;
+    PRStatus prStatus;
 
     progName = strrchr(argv[0], '/');
     if (!progName)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    optstate = PL_CreateOptState(argc, argv, "23Tfc:h:p:d:m:n:ovw:x");
+    optstate = PL_CreateOptState(argc, argv, "23Tfc:h:p:d:m:n:oqvw:x");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -319,6 +324,8 @@ int main(int argc, char **argv)
 	  case 'o': override = 1; 			break;
 
 	  case 'p': port = strdup(optstate->value);	break;
+
+	  case 'q': pingServerFirst = PR_TRUE;          break;
 
 	  case 'v': verbose++;	 			break;
 
@@ -393,6 +400,40 @@ int main(int argc, char **argv)
 	   (ip >> 16) & 0xff,
 	   (ip >>  8) & 0xff,
 	   (ip >>  0) & 0xff);
+
+    if (pingServerFirst) {
+	int iter = 0;
+	PRErrorCode err;
+	do {
+	    s = PR_NewTCPSocket();
+	    if (s == NULL) {
+		SECU_PrintError(progName, "Failed to create a TCP socket");
+	    }
+	    opt.option             = PR_SockOpt_Nonblocking;
+	    opt.value.non_blocking = PR_FALSE;
+	    prStatus = PR_SetSocketOption(s, &opt);
+	    if (prStatus != PR_SUCCESS) {
+		PR_Close(s);
+		SECU_PrintError(progName, 
+		                "Failed to set blocking socket option");
+		return SECFailure;
+	    }
+	    prStatus = PR_Connect(s, &addr, PR_INTERVAL_NO_TIMEOUT);
+	    if (prStatus == PR_SUCCESS) 
+		return SECSuccess;
+	    err = PR_GetError();
+	    if ((err != PR_CONNECT_REFUSED_ERROR) && 
+	        (err != PR_CONNECT_RESET_ERROR)) {
+		SECU_PrintError(progName, "TCP Connection failed");
+		return SECFailure;
+	    }
+	    PR_Close(s);
+	    PR_Sleep(PR_MillisecondsToInterval(WAIT_INTERVAL));
+	} while (++iter < MAX_WAIT_FOR_SERVER);
+	SECU_PrintError(progName, 
+                     "Client timed out while waiting for connection to server");
+	return SECFailure;
+    }
 
     /* Create socket */
     s = PR_NewTCPSocket();
