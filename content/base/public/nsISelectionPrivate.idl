@@ -43,6 +43,7 @@
 interface nsIDOMRange;
 interface nsISelectionListener;
 
+[ptr] native nsIPresShell(nsIPresShell);
 
 [scriptable, uuid(2d5535e2-1dd2-11b2-8e38-d53ec833adf6)]
 interface nsISelectionPrivate : nsISupports
@@ -84,5 +85,8 @@ interface nsISelectionPrivate : nsISupports
       *    a table element isn't selected.
       */
     long getTableSelectionType(in nsIDOMRange range);
+    
+    /* Internal utility method to set the pres shell on a newly created selection */
+    [noscript] void setPresShell(in nsIPresShell aPresShell);
 };
 

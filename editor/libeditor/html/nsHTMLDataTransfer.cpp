@@ -64,8 +64,6 @@
 #include "nsISelectionController.h"
 #include "nsIFileChannel.h"
 #include "nsIFrameSelection.h"  // For TABLESELECTION_ defines
-#include "nsIIndependentSelection.h" //domselections answer to frameselection
-
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"

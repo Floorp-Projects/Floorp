@@ -78,8 +78,6 @@
 
 #include "TransactionFactory.h"
 
-#include "nsIIndependentSelection.h" //domselections answer to frameselection
-
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"

@@ -64,8 +64,6 @@
 #include "nsIDOMEventGroup.h"
 #include "nsCRT.h"
 
-#include "nsIIndependentSelection.h" //domselections answer to frameselection
-
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 
@@ -1484,9 +1482,9 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
       if (!selection) return NS_ERROR_FAILURE;
 
       // get the independent selection interface
-      nsCOMPtr<nsIIndependentSelection> indSel = do_QueryInterface(selection);
-      if (indSel)
-        indSel->SetPresShell(presShell);
+      nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+      if (selPriv)
+        selPriv->SetPresShell(presShell);
 
       nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
       if (content)
