@@ -18,6 +18,7 @@ Open Issues
  personal toolbar d&d is fubar (moreso than in the trunk)
  need to readd platformNavigationOverlay.xul once proper makefiles are in win/unix directories (this is why View | Full Screen is missing and things like alt+<-/-> don't work)
  doesn't load homepage upon startup (does in subsequent windows)
+ view source needs to open in notepad/system editor
 
 See Also
 --------
