@@ -525,7 +525,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
       lastColGroup->AppendChild (col, PR_FALSE);
     }
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
-    lastColGroupFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+    lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 }
 
@@ -1136,12 +1136,11 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*         aPresCo
 */
 
 /* Layout the entire inner table. */
-NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
+NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
                                nsReflowMetrics& aDesiredSize,
                                const nsReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
-  NS_PRECONDITION(nsnull != aPresContext, "null arg");
   if (gsDebug==PR_TRUE) 
   {
     printf("-----------------------------------------------------------------\n");
@@ -1167,7 +1166,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     nsMargin myBorderPadding;
     mySpacing->CalcBorderPaddingFor(this, myBorderPadding);
   
-    InnerTableReflowState state(aPresContext, aReflowState, myBorderPadding);
+    InnerTableReflowState state(&aPresContext, aReflowState, myBorderPadding);
   
     nsIFrame* target;
     aReflowState.reflowCommand->GetTarget(target);
@@ -1187,21 +1186,21 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     nsReflowMetrics desiredSize(nsnull);
     // XXX Correctly compute the available space...
     nsReflowState kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
-    kidFrame->WillReflow(*aPresContext);
-    aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+    kidFrame->WillReflow(aPresContext);
+    aStatus = ReflowChild(kidFrame, &aPresContext, desiredSize, kidReflowState);
 
     // Resize the row group frame
     nsRect  kidRect;
     kidFrame->GetRect(kidRect);
     kidFrame->SizeTo(desiredSize.width, desiredSize.height);
 
-#if 1
+#if 0
     // XXX For the time being just fall through and treat it like a
     // pass 2 reflow...
     mPass = kPASS_SECOND;
 #else
     // XXX Hack...
-    AdjustSiblingsAfterReflow(aPresContext, state, kidFrame, desiredSize.height -
+    AdjustSiblingsAfterReflow(&aPresContext, state, kidFrame, desiredSize.height -
                               oldKidRect.height);
     aDesiredSize.width = mRect.width;
     aDesiredSize.height = state.y + myBorderPadding.top + myBorderPadding.bottom;
@@ -1214,22 +1213,22 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     if (PR_FALSE==IsFirstPassValid())
     { // we treat the table as if we've never seen the layout data before
       mPass = kPASS_FIRST;
-      aStatus = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState, aStatus);
+      aStatus = ResizeReflowPass1(&aPresContext, aDesiredSize, aReflowState, aStatus);
       // check result
     }
     mPass = kPASS_SECOND;
 
     // assign column widths, and assign aMaxElementSize->width
-    BalanceColumnWidths(aPresContext, aReflowState, aReflowState.maxSize,
+    BalanceColumnWidths(&aPresContext, aReflowState, aReflowState.maxSize,
                         aDesiredSize.maxElementSize);
 
     // assign table width
-    SetTableWidth(aPresContext);
+    SetTableWidth(&aPresContext);
 
     // Constrain our reflow width to the computed table width
     nsReflowState    reflowState(aReflowState);
     reflowState.maxSize.width = mRect.width;
-    aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, reflowState, 0, 0);
+    aStatus = ResizeReflowPass2(&aPresContext, aDesiredSize, reflowState, 0, 0);
 
     mPass = kPASS_UNDEFINED;
   }

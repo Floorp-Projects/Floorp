@@ -25,7 +25,7 @@ class nsPageFrame : public nsContainerFrame {
 public:
   nsPageFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);

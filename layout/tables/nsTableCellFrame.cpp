@@ -214,13 +214,11 @@ nsTableFrame* nsTableCellFrame::GetTableFrame()
 
 /**
   */
-NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
+NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
                                    nsReflowMetrics& aDesiredSize,
                                    const nsReflowState& aReflowState,
                                    nsReflowStatus& aStatus)
 {
-  NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
-
 #ifdef NS_DEBUG
   //PreReflowCheck();
 #endif
@@ -269,7 +267,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   // get frame, creating one if needed
   if (nsnull==mFirstChild)
   {
-    CreatePsuedoFrame(aPresContext);
+    CreatePsuedoFrame(&aPresContext);
   }
 
   // reduce available space by insets, if we're in a constrained situation
@@ -290,9 +288,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.maxSize.width);
   nsReflowState kidReflowState(mFirstChild, aReflowState, availSize);
-  mFirstChild->WillReflow(*aPresContext);
+  mFirstChild->WillReflow(aPresContext);
   mFirstChild->MoveTo(leftInset, topInset);
-  aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState);
+  aStatus = ReflowChild(mFirstChild, &aPresContext, kidSize, kidReflowState);
 
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {

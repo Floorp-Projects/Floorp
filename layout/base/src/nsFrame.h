@@ -147,7 +147,7 @@ public:
   NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
   NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
                         nsDidReflowStatus aStatus);
-  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);

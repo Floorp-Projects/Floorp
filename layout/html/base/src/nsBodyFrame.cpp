@@ -87,7 +87,7 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
-NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
+NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
                               nsReflowMetrics&     aDesiredSize,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
@@ -106,7 +106,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     }
 #endif
 //XXX    NS_ASSERTION(eReflowReason_Initial == aReflowState.reason, "bad reason");
-    CreateColumnFrame(aPresContext);
+    CreateColumnFrame(&aPresContext);
   }
   else {
 //XXX remove this code and uncomment the assertion when the table code plays nice
@@ -154,7 +154,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     mySpacing->CalcBorderPaddingFor(this, borderPadding);
   
     // Compute the child frame's max size
-    nsSize  kidMaxSize = GetColumnAvailSpace(aPresContext, borderPadding,
+    nsSize  kidMaxSize = GetColumnAvailSpace(&aPresContext, borderPadding,
                                              aReflowState.maxSize);
     mSpaceManager->Translate(borderPadding.left, borderPadding.top);
   
@@ -169,7 +169,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     nsReflowState reflowState(mFirstChild, aReflowState, kidMaxSize);
     nsRect        desiredRect;
 
-    mFirstChild->WillReflow(*aPresContext);
+    mFirstChild->WillReflow(aPresContext);
     mFirstChild->MoveTo(borderPadding.left, borderPadding.top);
     mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
     reflowRunaround->Reflow(aPresContext, mSpaceManager, aDesiredSize,
@@ -206,7 +206,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
 #endif
   
     // Reflow any absolutely positioned frames that need reflowing
-    ReflowAbsoluteItems(aPresContext, aReflowState);
+    ReflowAbsoluteItems(&aPresContext, aReflowState);
 
     // Return our desired size
     ComputeDesiredSize(desiredRect, aReflowState.maxSize, borderPadding, aDesiredSize);
@@ -535,7 +535,7 @@ void nsBodyFrame::ReflowAbsoluteItems(nsIPresContext*      aPresContext,
         nsReflowState   reflowState(absoluteFrame, aReflowState, availSize,
                                     reflowReason);
         nsReflowStatus  status;
-        absoluteFrame->Reflow(aPresContext, desiredSize, reflowState, status);
+        absoluteFrame->Reflow(*aPresContext, desiredSize, reflowState, status);
         
         // Figure out what size to actually use. If we let the child choose its
         // size, then use what the child requested. Otherwise, use the value

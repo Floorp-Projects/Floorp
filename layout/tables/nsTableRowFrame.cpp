@@ -795,7 +795,7 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   * This method stacks cells horizontally according to HTML 4.0 rules.
   */
 NS_METHOD
-nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
+nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
                         nsReflowMetrics&     aDesiredSize,
                         const nsReflowState& aReflowState,
                         nsReflowStatus&      aStatus)
@@ -820,7 +820,7 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
   // Initialize our automatic state object
   nsTableFrame* tableFrame;
   mContentParent->GetContentParent((nsIFrame*&)tableFrame);
-  RowReflowState state(aPresContext, aReflowState, tableFrame);
+  RowReflowState state(&aPresContext, aReflowState, tableFrame);
 
   // Do the reflow
   nsresult  result;
@@ -828,17 +828,17 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
     NS_ASSERTION(nsnull == mFirstChild, "unexpected reflow reason");
-    result = InitialReflow(aPresContext, state, aDesiredSize);
+    result = InitialReflow(&aPresContext, state, aDesiredSize);
     GetMinRowSpan();
     FixMinCellHeight();
     break;
 
   case eReflowReason_Resize:
-    result = ResizeReflow(aPresContext, state, aDesiredSize);
+    result = ResizeReflow(&aPresContext, state, aDesiredSize);
     break;
 
   case eReflowReason_Incremental:
-    result = IncrementalReflow(aPresContext, state, aDesiredSize);
+    result = IncrementalReflow(&aPresContext, state, aDesiredSize);
     break;
 
   }

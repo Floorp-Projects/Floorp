@@ -419,7 +419,7 @@ public:
    *          you must <b>always</b> reflow at least one frame regardless of the
    *          available space
    */
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus) = 0;

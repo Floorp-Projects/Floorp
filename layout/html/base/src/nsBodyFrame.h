@@ -39,7 +39,7 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);

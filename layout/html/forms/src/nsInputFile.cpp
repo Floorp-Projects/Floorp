@@ -148,7 +148,7 @@ nsInputFileFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 // XXX hey chris: nsInlineFrame doesn't implement this anymore; this
 // needs to be reworked to deal with the new inline frame code
 
-NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext*      aCX, 
+NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aCX, 
                                        nsReflowMetrics&     aDesiredSize,
                                        const nsReflowState& aReflowState, 
                                        nsReflowStatus&      aStatus)
@@ -162,13 +162,13 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext*      aCX,
     NS_ASSERTION(2 == numChildren, "nsInputFile must contain 2 children");
     nsInput* childContent;
     if (nsnull == mStyleContext) {
-      GetStyleContext(aCX, mStyleContext);
+      GetStyleContext(&aCX, mStyleContext);
     }
     for (int i = 0; i < numChildren; i++) {
       childContent = (nsInput *)content->ChildAt(i);
       // Use this style context for the children. They will not modify it.
       // XXX When IStyleContext provides an api for cloning/inheriting, it could be used instead.
-      childContent->CreateFrame(aCX, this, mStyleContext, childFrame);
+      childContent->CreateFrame(&aCX, this, mStyleContext, childFrame);
       if (0 == i) {
         mFirstChild = childFrame;
         PRInt32 contentIndex;

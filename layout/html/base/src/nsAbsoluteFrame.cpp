@@ -49,7 +49,7 @@ nsAbsoluteFrame::~nsAbsoluteFrame()
 {
 }
 
-NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
+NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
                                       nsReflowMetrics&     aDesiredSize,
                                       const nsReflowState& aReflowState,
                                       nsReflowStatus&      aStatus)
@@ -61,13 +61,13 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
       nsBodyFrame::NewFrame(&mFrame, mContent, this);
 
       // Use our style context for the pseudo-frame
-      mFrame->SetStyleContext(aPresContext, mStyleContext);
+      mFrame->SetStyleContext(&aPresContext, mStyleContext);
 
     } else {
       // Ask the content delegate to create the frame
-      nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
+      nsIContentDelegate* delegate = mContent->GetDelegate(&aPresContext);
   
-      nsresult rv = delegate->CreateFrame(aPresContext, mContent, this,
+      nsresult rv = delegate->CreateFrame(&aPresContext, mContent, this,
                                           mStyleContext, mFrame);
       NS_RELEASE(delegate);
       if (NS_OK != rv) {

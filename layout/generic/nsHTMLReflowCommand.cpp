@@ -127,7 +127,7 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&  aPresContext,
 
     nsReflowState   reflowState(root, *this, aMaxSize);
     nsReflowStatus  status;
-    root->Reflow(&aPresContext, aDesiredSize, reflowState, status);
+    root->Reflow(aPresContext, aDesiredSize, reflowState, status);
   }
 
   return NS_OK;

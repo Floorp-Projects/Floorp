@@ -67,7 +67,7 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
 #if XXX_not_yet
-  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
