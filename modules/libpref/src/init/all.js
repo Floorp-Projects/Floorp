@@ -131,7 +131,7 @@ pref("browser.PICS.service.http___home_netscape_com_default_rating.s", 0);
 
 // gfx widgets
 pref("nglayout.widget.mode", 2);
-pref("nglayout.widget.gfxscrollbars", false);
+pref("nglayout.widget.gfxscrollbars", true);
 
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
