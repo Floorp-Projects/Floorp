@@ -187,8 +187,6 @@ private:
 
     static PRInt32 PR_CALLBACK PrefsCallback(const char *, void *);
 
-    nsresult CreateServicesFromCategory(const char *category);
-
 private:
     static nsHttpHandler *mGlobalInstance;
 
