@@ -21,6 +21,7 @@
 *
 * SUMMARY:  Regression test for bug 83293
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=83293
+* and http://bugzilla.mozilla.org/show_bug.cgi?id=92942
 *
 * str.replace(strA, strB) == str.replace(new RegExp(strA),strB)
 * See ECMA-262 Section 15.5.4.11 String.prototype.replace
@@ -80,20 +81,36 @@ function test()
   expect = str.replace(new RegExp(strA), strB);
   reportCompare(expect, actual, status);
 
+
+ /* This example is from jim@jibbering.com (see Bugzilla bug 92942)
+  * It is a variation on the example below.
+  *
+  * Here we are using the regexp /$/ instead of the regexp //.
+  * Now /$/ means we should match the "empty string" conceived of
+  * at the end-boundary of the word, instead of the one at the beginning.
+  */
+  status = 'Section E of test';
+  var strJim = 'aa$aa';
+  strA = '$';
+  actual = strJim.replace(strA, strB);             // WRONG: 'aaZaa'
+  expect = strJim.replace(new RegExp(strA), strB); // expect 'aa$aaZ'
+  reportCompare(expect, actual, status);
+
+
  /*
   * Note: 'Zabc' is the result we expect for 'abc'.replace('', 'Z').
   *
   * The string '' is supposed to be equivalent to new RegExp('') = //.
-  * The RegExp // means we should match the "empty string" conceived of
+  * The regexp // means we should match the "empty string" conceived of
   * at the beginning boundary of the word, before the first character.
   */
-  status = 'Section E of test';
+  status = 'Section F of test';
   strA = cnEmptyString;
   actual = str.replace(strA, strB);
   expect = 'Zabc';
   reportCompare(expect, actual, status);
 
-  status = 'Section F of test';
+  status = 'Section G of test';
   strA = cnEmptyString;
   actual = str.replace(strA, strB);
   expect = str.replace(new RegExp(strA), strB);
