@@ -1332,6 +1332,8 @@ validateSecretKey(PK11Session *session, PK11Object *object,
     CK_BBOOL cktrue = CK_TRUE;
     CK_BBOOL ckfalse = CK_FALSE;
     PK11Attribute *attribute = NULL;
+    unsigned long requiredLen;
+
     crv = pk11_defaultAttribute(object,CKA_SENSITIVE,
 				isFIPS?&cktrue:&ckfalse,sizeof(CK_BBOOL));
     if (crv != CKR_OK)  return crv; 
@@ -1394,7 +1396,13 @@ validateSecretKey(PK11Session *session, PK11Object *object,
     case CKK_CDMF:
 	attribute = pk11_FindAttribute(object,CKA_VALUE);
 	/* shouldn't happen */
-	if (attribute == NULL) return CKR_TEMPLATE_INCOMPLETE;
+	if (attribute == NULL) 
+	    return CKR_TEMPLATE_INCOMPLETE;
+	requiredLen = pk11_MapKeySize(key_type);
+	if (attribute->attrib.ulValueLen != requiredLen) {
+	    pk11_FreeAttribute(attribute);
+	    return CKR_KEY_SIZE_RANGE;
+	}
 	pk11_FormatDESKey((unsigned char*)attribute->attrib.pValue,
 						 attribute->attrib.ulValueLen);
 	pk11_FreeAttribute(attribute);

@@ -433,7 +433,7 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
     unsigned effectiveKeyLength;
-    unsigned char newdeskey[8];
+    unsigned char newdeskey[24];
     PRBool useNewKey=PR_FALSE;
     int t;
 
@@ -570,7 +570,6 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    break;
 	}
 	t = (pMechanism->mechanism == CKM_CDMF_ECB) ? NSS_DES : NSS_DES_CBC;
-	useNewKey=PR_TRUE;
 	if (crv != CKR_OK) break;
 	goto finish_des;
     case CKM_DES_ECB:
@@ -613,16 +612,25 @@ finish_des:
 	    crv = CKR_KEY_HANDLE_INVALID;
 	    break;
 	}
-	if (useNewKey) {
+	if (key_type == CKK_DES2 && 
+            (t == NSS_DES_EDE3_CBC || t == NSS_DES_EDE3)) {
+	    /* extend DES2 key to DES3 key. */
+	    memcpy(newdeskey, att->attrib.pValue, 16);
+	    memcpy(newdeskey + 16, newdeskey, 8);
+	    useNewKey=PR_TRUE;
+	} else if (key_type == CKK_CDMF) {
 	    crv = pk11_cdmf2des((unsigned char*)att->attrib.pValue,newdeskey);
 	    if (crv != CKR_OK) {
 		pk11_FreeAttribute(att);
 		break;
-	     }
+	    }
+	    useNewKey=PR_TRUE;
 	}
 	context->cipherInfo = DES_CreateContext(
 		useNewKey ? newdeskey : (unsigned char*)att->attrib.pValue,
 		(unsigned char*)pMechanism->pParameter,t, isEncrypt);
+	if (useNewKey) 
+	    memset(newdeskey, 0, sizeof newdeskey);
 	pk11_FreeAttribute(att);
 	if (context->cipherInfo == NULL) {
 	    crv = CKR_HOST_MEMORY;
@@ -3518,7 +3526,8 @@ loser:
     
 /* it doesn't matter yet, since we colapse error conditions in the
  * level above, but we really should map those few key error differences */
-CK_RV pk11_mapWrap(CK_RV crv) 
+static CK_RV 
+pk11_mapWrap(CK_RV crv) 
 { 
     switch (crv) {
     case CKR_ENCRYPTED_DATA_INVALID:  crv = CKR_WRAPPED_KEY_INVALID; break;
@@ -3881,7 +3890,7 @@ CK_RV NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
 {
     PK11Object *key = NULL;
     PK11Session *session;
-    int key_length = 0;
+    CK_ULONG key_length = 0;
     unsigned char * buf = NULL;
     CK_RV crv = CKR_OK;
     int i;
@@ -3944,7 +3953,7 @@ CK_RV NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
 		break;
 	    }
 
-	    if(key_length == 0) {
+	    if (key_length == 0 || key_length > bsize) {
 		key_length = bsize;
 	    }
 	    if (key_length > MAX_KEY_LEN) {
@@ -4056,7 +4065,8 @@ loser:
  */
 static void
 pk11_freeSSLKeys(CK_SESSION_HANDLE session,
-				CK_SSL3_KEY_MAT_OUT *returnedMaterial ) {
+				CK_SSL3_KEY_MAT_OUT *returnedMaterial ) 
+{
 	if (returnedMaterial->hClientMacSecret != CK_INVALID_HANDLE) {
 	   NSC_DestroyObject(session,returnedMaterial->hClientMacSecret);
 	}
@@ -4077,7 +4087,8 @@ pk11_freeSSLKeys(CK_SESSION_HANDLE session,
  * semantics.
  */
 static CK_RV
-pk11_DeriveSensitiveCheck(PK11Object *baseKey,PK11Object *destKey) {
+pk11_DeriveSensitiveCheck(PK11Object *baseKey,PK11Object *destKey) 
+{
     PRBool hasSensitive;
     PRBool sensitive = PR_FALSE;
     PRBool hasExtractable;
@@ -4137,8 +4148,9 @@ pk11_DeriveSensitiveCheck(PK11Object *baseKey,PK11Object *destKey) {
 /*
  * make known fixed PKCS #11 key types to their sizes in bytes
  */	
-static unsigned long
-pk11_MapKeySize(CK_KEY_TYPE keyType) {
+unsigned long
+pk11_MapKeySize(CK_KEY_TYPE keyType) 
+{
     switch (keyType) {
     case CKK_CDMF:
 	return 8;

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: softoken.h,v 1.3 2001/11/08 00:15:41 relyea%netscape.com Exp $
+ * $Id: softoken.h,v 1.4 2003/10/25 00:12:34 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SOFTOKEN_H_
@@ -151,6 +151,10 @@ extern unsigned char * DES_PadBuffer(PRArenaPool *arena, unsigned char *inbuf,
 */
 extern CK_RV pk11_fipsPowerUpSelfTest( void ); 
 
+/*
+** make known fixed PKCS #11 key types to their sizes in bytes
+*/	
+unsigned long pk11_MapKeySize(CK_KEY_TYPE keyType);
 
 SEC_END_PROTOS
 
