@@ -2097,6 +2097,17 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresCon
         aReflowState.footerFrame->MoveTo(kidRect.x, kidRect.y);
       }
     }
+
+    // Invalidate the area we offset. Note that we only repaint within
+    // our existing frame bounds.
+    // XXX It would be better to bitblt the row frames and not repaint,
+    // but we don't have such a view manager function yet...
+    aKidFrame->GetRect(kidRect);
+    if (kidRect.YMost() < mRect.height) {
+      nsRect  dirtyRect(0, kidRect.YMost(),
+                        mRect.width, mRect.height - kidRect.YMost());
+      Invalidate(dirtyRect);
+    }
   }
 
   return NS_OK;
@@ -2260,6 +2271,19 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       return rv;
     }
     aDesiredSize.width = PR_MIN(aDesiredSize.width, pass1Width);
+
+    // If this is an incremental reflow and we're here that means we had to
+    // reflow all the rows, e.g., the column widths changed. We need to make
+    // sure that any damaged areas are repainted
+    if (eReflowReason_Incremental == aReflowState.reason) {
+      nsRect  damageRect;
+
+      damageRect.x = 0;
+      damageRect.y = 0;
+      damageRect.width = mRect.width;
+      damageRect.height = mRect.height;
+      Invalidate(damageRect);
+    }
   }
   else
   {
@@ -2267,19 +2291,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   SetColumnDimensions(aDesiredSize.height);
-
-  // If this is an incremental reflow, then we need to make sure that any
-  // damaged areas are repainted
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsRect  damageRect;
-
-    // XXX We need finer granularity than this...
-    damageRect.x = 0;
-    damageRect.y = 0;
-    damageRect.width = mRect.width;
-    damageRect.height = mRect.height;
-    Invalidate(damageRect);
-  }
 
   if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
@@ -3342,11 +3353,24 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
   // that follow. Otherwise, return and we'll recompute the column widths
   // and reflow all the row group frames
   if (!NeedsReflow(aReflowState.reflowState)) {
+    // If the row group frame changed height, then damage the horizontal strip
+    // that was either added or went away
+    if (desiredSize.height != oldKidRect.height) {
+      nsRect  dirtyRect;
+
+      dirtyRect.x = 0;
+      dirtyRect.y = PR_MIN(oldKidRect.YMost(), kidRect.YMost());
+      dirtyRect.width = mRect.width;
+      dirtyRect.height = PR_MAX(oldKidRect.YMost(), kidRect.YMost()) -
+                         dirtyRect.y;
+      Invalidate(dirtyRect);
+    }
+
     // Adjust the row groups that follow
     AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
                               aDesiredSize.maxElementSize, desiredSize.height -
                               oldKidRect.height);
-    
+
     // Return our size and our status
     aDesiredSize.width = ComputeDesiredWidth(aReflowState.reflowState);
     nscoord defaultHeight = aReflowState.y + aReflowState.mBorderPadding.top +

@@ -821,8 +821,6 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aPresContex
       kidFrame->GetOrigin(origin);
       origin.y += aDeltaY;
   
-      // XXX We need to send move notifications to the frame. At least see if
-      // views need to be repositioned
       nsIHTMLReflow* htmlReflow;
       if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         htmlReflow->WillReflow(aPresContext);
@@ -1507,14 +1505,50 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
     // If the row has no cells that span into or across the row, then we
     // don't have to call CalculateRowHeights() which is quite expensive
     if (IsSimpleRowFrame(aReflowState.tableFrame, aNextFrame)) {
-      // Inform the row of its new height.
-      ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
-      
-      // Adjust the frames that follow...
-      AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
-                                aDesiredSize.maxElementSize,
-                                desiredSize.height - oldKidRect.height);
-      aDesiredSize.height = aReflowState.y;
+      // XXX This optimization isn't ready to be enabled yet, because the
+      // row frame code needs to change to size the cell frame and vertically
+      // align it and either bitblt it into its new position or repaint
+#if 0
+      // See if the row changed height
+      if (oldKidRect.height == desiredSize.height) {
+        // We don't need to do any painting. The row frame has made sure that
+        // the cell is properly positioned, and done any necessary repainting.
+        // Just calculate our desired height
+        nsIFrame* lastKidFrame = mFrames.LastChild();
+        nsRect    lastKidRect;
+
+        lastKidFrame->GetRect(lastKidRect);
+        aDesiredSize.height = lastKidRect.YMost();
+
+      } else {
+#endif
+        // Inform the row of its new height.
+        ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
+
+        // Because other cells in the row may need to be be aligned differently,
+        // repaint the entire row
+        // XXX Improve this so the row knows it should bitblt (or repaint) those
+        // cells that change position...
+        Invalidate(kidRect);
+
+        // Invalidate the area we're offseting. Note that we only repaint within
+        // our existing frame bounds.
+        // XXX It would be better to bitblt the row frames and not repaint,
+        // but we don't have such a view manager function yet...
+        if (kidRect.YMost() < mRect.height) {
+          nsRect  dirtyRect(0, kidRect.YMost(),
+                            mRect.width, mRect.height - kidRect.YMost());
+          Invalidate(dirtyRect);
+        }
+
+        // Adjust the frames that follow
+        AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
+                                  aDesiredSize.maxElementSize,
+                                  desiredSize.height - oldKidRect.height);
+        aDesiredSize.height = aReflowState.y;
+#if 0
+      }
+#endif
     
     } else {
       // Adjust the frames that follow...
@@ -1524,6 +1558,12 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
   
       // Now recalculate the row heights
       CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState);
+
+      // Because we don't know what changed repaint everything.
+      // XXX We should change CalculateRowHeights() to return the bounding
+      // rect of what changed. Or whether anything moved or changed size...
+      nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
+      Invalidate(dirtyRect);
     }
   }
   
