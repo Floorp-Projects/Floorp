@@ -538,6 +538,7 @@ private:
 		// We're counting the number of |nsWebShells| to help find leaks
 	static unsigned long gNumberOfWebShells;
 
+public:
 	static unsigned long TotalWebShellsInExistence() { return gNumberOfWebShells; }
 #endif
 };
