@@ -54,8 +54,6 @@ MODULE_PRIVATE unsigned char* mz_b5toeuctw( CCCDataObject obj, const unsigned ch
 
 PRIVATE unsigned char *
 mz_hz2gb(CCCDataObject obj, const unsigned char *kscbuf, int32 kscbufsz);
-PRIVATE unsigned char *
-mz_gb2gb(CCCDataObject obj, const unsigned char *kscbuf, int32 kscbufsz);
 
 PRIVATE unsigned char *
 mz_mbNullConv(CCCDataObject obj, const unsigned char *buf, int32 bufsz);
@@ -201,9 +199,12 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_KSC_8BIT,	CS_KSC5601,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 
 		/*  SIMPLIFIED CHINESE */
-		{CS_GB_8BIT,	CS_GB_8BIT,		0, (CCCFunc)mz_gb2gb,		0},
+		{CS_GB_8BIT,	CS_GB_8BIT,		0, (CCCFunc)mz_hz2gb,		0},
 		{CS_GB2312,	  CS_GB_8BIT,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_GB_8BIT,	CS_GB2312,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
+
+		{CS_HZ,	CS_GB_8BIT,		0, (CCCFunc)mz_hz2gb,		0},
+		/* we need gb2hz routine to complete hz support */
 
 		/*  TRADITIONAL CHINESE */
 		{CS_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK },
@@ -322,9 +323,12 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_KSC_8BIT,	CS_KSC5601,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 
 		/*  SIMPLIFIED CHINESE */
-		{CS_GB_8BIT,	CS_GB_8BIT,		0, (CCCFunc)mz_gb2gb,		0},
+		{CS_GB_8BIT,	CS_GB_8BIT,		0, (CCCFunc)mz_hz2gb,		0},
 		{CS_GB2312,	  CS_GB_8BIT,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_GB_8BIT,	CS_GB2312,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
+
+		{CS_HZ,	CS_GB_8BIT,		0, (CCCFunc)mz_hz2gb,		0},
+		/* we need gb2hz routine to complete hz support */
 
 		/*  TRADITIONAL CHINESE */
 		{CS_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
@@ -504,9 +508,12 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_KSC_8BIT,	CS_KSC5601,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 
 		/*  SIMPLIFIED CHINESE */
-		{CS_GB_8BIT,	CS_GB_8BIT,		0, (CCCFunc)mz_gb2gb,		0},
+		{CS_GB_8BIT,	CS_GB_8BIT,		0, (CCCFunc)mz_hz2gb,		0},
 		{CS_GB2312,	  CS_GB_8BIT,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_GB_8BIT,	CS_GB2312,	0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
+
+		{CS_HZ,	CS_GB_8BIT,		0, (CCCFunc)mz_hz2gb,		0},
+		/* we need gb2hz routine to complete hz support */
 
 		/*  TRADITIONAL CHINESE */
 		{CS_CNS_8BIT,	CS_CNS_8BIT,	0, mz_mbNullConv,	INTL_CHARLEN_CNS_8BIT},
@@ -572,137 +579,153 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  * this routine is needed to make sure parser and layout see whole
  * characters, not partial characters
  */
+
+typedef enum {
+	kHZSingle,
+	kHZSingleTild,
+	kHZSingleTildLFCR,
+	kHZDouble,
+	kHZDoubleGet1,
+	kHZDoubleTild,
+	kGBDoubleGet1, 	 /* hacky state which allow GB pass through */
+
+} HZ_STATE;
+
 PRIVATE unsigned char *
-mz_gb2gb(CCCDataObject obj, const unsigned char *gbbuf, int32 gbbufsz)
+mz_hz2gb(CCCDataObject obj, const unsigned char *inbuf, int32 inbufsize)
 {
-	return mz_hz2gb(obj, gbbuf, gbbufsz);
-}
-PRIVATE unsigned char *
-mz_hz2gb(CCCDataObject obj, const unsigned char *gbbuf, int32 gbbufsz)
-{
-	unsigned char *start, *p, *q;
-	unsigned char *output;
-	int i, j, len;
-	unsigned char *uncvtbuf = INTL_GetCCCUncvtbuf(obj);
+	HZ_STATE state;
+	unsigned char *outbuf;
+	unsigned char *out;
+	const unsigned char *in;
+        int32 i;
 
-	q = output = XP_ALLOC(strlen((char*)uncvtbuf) + gbbufsz + 1);
-	if (q == NULL)
-		return NULL;
+	state = (HZ_STATE)INTL_GetCCCCvtflag(obj);    
 
-	start = NULL;
+	out = outbuf = XP_ALLOC(inbufsize + 1 + 1); /*  1 for unconverted, 4 for fake escape 1 for NULL */
+        XP_ASSERT(NULL != out);
 
-	for (j = 0; j < 2; j++)
-	{
-		len = 0;
-		if (j == 0)
-			len = strlen((char *)uncvtbuf);
-		if (len)
-			p = (unsigned char *) uncvtbuf;
-		else
+        if((kHZDoubleGet1 == state) ||(kGBDoubleGet1 == state))
+        {
+		/* If we have anything in the unconverted buffer, let's output it 
+		   please notice the usage of uncoverted buffer in this routine is different from other,
+ 		   it is really "converted, but not output yet" buffer 
+		*/ 
+		unsigned char* u = INTL_GetCCCUncvtbuf(obj);
+		XP_ASSERT(NULL != u);
+                *out++ = *u; 
+        } 
+
+        for(in = inbuf, i = 0;  i < inbufsize; i++, in++)
+        {
+        	switch(state)
 		{
-			p = (unsigned char *) gbbuf ;
-			len = gbbufsz;
-			j = 100;  /* quit this loop next time */
-		}
-		for (i = 0; i < len;)
-		{
-			if (start)
-			{
-				if (*p == '~' && *(p+1) == '}')   /* switch back to ASCII mode */
-				{
-					for (; start < p; start++)
-						*q++ = *start | 0x80;
-					p += 2;
-					i += 2;
-					start = NULL;
-				}
-				else if (*p == 0x0D && *(p+1) == 0x0A)  /* Unix or Mac return */
-				{
-					for (; start < p; start++)
-						*q++ = *start | 0x80;
-					i += 2;
-					*q++ = *p++;   /* 0x0D  */
-					*q++ = *p++;   /* 0x0A  */
-					start = NULL;   /* reset start if we see normal line return */
-				}
-				else if (*p == 0x0A)  /* Unix or Mac return */
-				{
-					for (; start < p; start++)
-						*q++ = *start | 0x80;
-					i ++;
-					*q++ = *p++;   /* LF  */
-					start = NULL;   /* reset start if we see normal line return */
-				}
-				else if (*p == 0x0D)  /* Unix or Mac return */
-				{
-					for (; start < p; start++)
-						*q++ = *start | 0x80;
-					i ++;
-					*q++ = *p++;   /* LF  */
-					start = NULL;   /* reset start if we see normal line return */
-				}
-				else
-				{
-					i ++ ;
-					p ++ ;
-				}
+		case kHZSingle:
+			if(0x80 & *in) {
+				state = kGBDoubleGet1; /* change state */
+   	   			*out++ = *in;  /* get 1 double byte, output it */
 			}
-			else
-			{
-				if (*p == '~' && *(p+1) == '{')    /* switch to GB mode */
-				{
-					start = p + 2;
-					p += 2;
-					i += 2;
-				}
-				else if (*p == '~' && *(p+1) == 0x0D && *(p+2) == 0x0A)  /* line-continuation marker */
-				{
-					i += 3;
-					p += 3;
-				}
-				else if (*p == '~' && *(p+1) == 0x0A)  /* line-continuation marker */
-				{
-					i += 2;
-					p += 2;
-				}
-				else if (*p == '~' && *(p+1) == 0x0D)  /* line-continuation marker */
-				{
-					i += 2;
-					p += 2;
-				}
-				else if (*p == '~' && *(p+1) == '~')   /* ~~ means ~ */
-				{
-					*q++ = '~';
-					p += 2;
-					i += 2;
-				}
-				else
-				{
-					i ++;
-					*q++ = *p++;
-				}
+			else if('~' == *in) {
+				state = kHZSingleTild; /* change state */
+			} else {
+   	   			*out++ = *in;  /* normal single byte, output it, do not change state */
 			}
-		}
-	}
-	*q = '\0';
-	INTL_SetCCCLen(obj, q - output);
-	if (start)
-	{
+			break;
 
-		/* Consider UNCVTBUF_SIZE is only 8 byte long, it's not enough 
-		   for HZ anyway. Let's convert leftover to GB first and deal with
-		   unfinished buffer in the coming block.
+		case kHZSingleTild:
+			switch(*in)
+			{
+				case '{':
+					state = kHZDouble; /* change state */
+					break;
+				case '~':
+   	   				*out++ = '~';  /* a ~~ , generate a ~ */
+					state = kHZSingle; /* change state  back to normal  */
+					break;
+				case LF: /* continue in ASCII mode */
+				case CR: /* continue in ASCII mode */
+					state = kHZSingleTildLFCR; 
+					break;
+				default:
+   	   				*out++ = '~';  
+   	   				i--; in--; /* unread it */
+  					state = kHZSingle; 
+					break;
+			}
+			break;
+
+		case kHZSingleTildLFCR:
+			switch(*in)
+			{
+				case LF: /* continue in ASCII mode */
+				case CR: /* continue in ASCII mode */
+					/* eat all following CR or LF */
+					break;
+
+				default:
+					i--; in--; /* unread it */
+					state = kHZSingle;
+					break;
+			}
+			break;
+
+		case kHZDouble:
+			if('~' == *in) {
+				state = kHZDoubleTild; /* change state, generate nothing */
+			} else {
+   	   			*out++ = 0x80 | *in;  /* get one byte in double byte, output it */
+				state = kHZDoubleGet1; /* change state */
+			}
+			break;
+
+		case kHZDoubleGet1:
+   			*out++ = 0x80 | *in;  /* get the 2nd byte in double byte character, output it with hi-bit on */
+			state = kHZDouble; /* change state */
+			break;
+
+		case kHZDoubleTild:
+			if('}' == *in) {
+				state = kHZSingle; /* change state, output nothing */
+			} else {
+   	   			*out++ = 0x80 | '~';  /* not the escape sequence, output the ~ with hi-bit on */
+   	   			*out++ = 0x80 | *in;  /* now output it with hi-bit on*/
+				state = kHZDouble; /* change state */
+			}
+			break;
+
+		case kGBDoubleGet1:
+   	   		*out++ = *in;  /* get the 2nd byte in double byte character, output it */
+			state = kHZSingle; /* change state */
+			break;
+
+
+		default:
+			XP_ASSERT(0); 
+			state = kHZSingle; /* change state so the program won't stop */
+			break;
+		}
+	} 
+ 
+
+        if((kHZDoubleGet1 == state) ||(kGBDoubleGet1 == state))
+        {
+		/* We need to make sure we always return in the boundary of a character, 
+		   So we back off one byte, store it in the unconverted buf  
 		*/
-		INTL_SetCCCLen(obj, INTL_GetCCCLen(obj) + p - start);
-		for (; start < p; start++)
-			*q++ = *start | 0x80;
-		*q = '\0';
+		unsigned char* u = INTL_GetCCCUncvtbuf(obj);
+		XP_ASSERT(NULL != u);
 
-		q = uncvtbuf;
-		XP_STRCPY((char *)q, "~{");
-	}
+                out--;	/* back up */
+                *u = *out; /* store it into unconvert buffer */	
+                *(u+1) = '\0';  /* null terminate the unconvertered buffer */
+        } 
+	INTL_SetCCCCvtflag(obj, ((int32)state));    
 
-    return output;
+
+	*out = '\0';
+	INTL_SetCCCLen(obj, out - outbuf);
+
+	return outbuf;
 }
 
 
@@ -718,10 +741,7 @@ mz_hz2gb(CCCDataObject obj, const unsigned char *gbbuf, int32 gbbufsz)
 	mz_ksc2ksc
 	mz_sjis2sjis
 	mz_utf82utf8
-
-   It should also replace
-		mz_gb2gb
-   but currently mz_gb2gb also handle hz to gb. We need to move that functionality out of mz_gb2gb
+	mz_gb2gb
  */
 PRIVATE unsigned char *
 mz_mbNullConv(CCCDataObject obj, const unsigned char *buf, int32 bufsz)
