@@ -2405,7 +2405,7 @@ nsMsgComposeAndSend::DeliverMessage()
 	else if (mail_p)
 		DeliverFileAsMail();
 	else
-		abort();
+      return NS_ERROR_UNEXPECTED;
 
   return NS_OK;
 }
