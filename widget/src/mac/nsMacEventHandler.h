@@ -20,6 +20,7 @@
 
 #include <Events.h>
 #include <MacWindows.h>
+#include <TextServices.h>
 #include "nsDeleteObserver.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
@@ -42,6 +43,13 @@ public:
 		virtual PRBool	DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
 		//virtual PRBool	TrackDrag ( Point aMouseGlobal, UInt32 aKeyModifiers ) ;
 
+		//
+		// TSM Event Handlers
+		//
+		virtual long 	HandlePositionToOffset(Point aPoint,short* regionClass);
+		virtual PRBool 	HandleOffsetToPosition(long offset,Point* position);
+		virtual PRBool	HandleUpdate(Handle textHandle,ScriptCode script,long fixedLength);
+		
 protected:
 		virtual PRBool	HandleKeyEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleActivateEvent(EventRecord& aOSEvent);
@@ -54,6 +62,9 @@ protected:
 									EventRecord&	aOSEvent,
 									nsMouseEvent&	aMouseEvent,
 									PRUint32		aMessage);
+		virtual PRBool	HandleStartComposition(void);
+		virtual PRBool	HandleEndComposition(void);
+		virtual PRBool  HandleTextEvent(void);
 
 public:
 	virtual void	NotifyDelete(void* aDeletedObject);
@@ -64,6 +75,11 @@ protected:
 	PRBool				mMouseInWidgetHit;
 	nsWindow*			mLastWidgetPointed;
 	RgnHandle			mUpdateRgn;
+	TSMDocumentID		mTSMDocument;
+	PRBool				mIMEIsComposing;
+	PRUnichar			*mIMECompositionString;
+	size_t				mIMECompositionStringSize;
+	size_t				mIMECompositionStringLength;
   static PRBool	mInBackground;
 
 };

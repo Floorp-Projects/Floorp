@@ -40,6 +40,7 @@
 
 class nsToolkit;
 class nsMacMessageSink;
+class nsMacTSMMessagePump;
 
 //================================================
 
@@ -55,6 +56,7 @@ private:
 	nsToolkit*				mToolkit;
 	nsMacMessageSink*       mMessageSink;
 	nsIEventQueue*			mEventQueue;
+	nsMacTSMMessagePump*	mTSMMessagePump;
 
 	// CLASS METHODS
 		    	    
