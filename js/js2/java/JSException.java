@@ -2,16 +2,16 @@
 
 class JSException extends RuntimeException {
 
-    JSException(StackValue x)
+    JSException(JSValue x)
     {
         value = x;
     }
     
-    StackValue getValue()
+    JSValue getValue()
     {
         return value;
     }
     
-    StackValue value;
+    JSValue value;
     
 }

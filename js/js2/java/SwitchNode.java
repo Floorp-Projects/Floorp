@@ -22,13 +22,13 @@ class SwitchNode extends ControlNode {
     ControlNode eval(Environment theEnv)
     {
         ControlNode n = super.eval(theEnv);
-        double d = theEnv.theStack.pop().d;
+        JSValue v = theEnv.theStack.pop();
         int count = caseExpr.size();
         for (int i = 0; i < count; i++) {
             ExpressionNode e = (ExpressionNode)(caseExpr.elementAt(i));
             e.eval(theEnv);
-            double d2 = theEnv.theStack.pop().d;
-            if (d == d2)
+            v.eq(theEnv);                       
+            if (theEnv.theStack.pop().toJSBoolean().isTrue())
                 return (ControlNode)(caseCode.elementAt(i));
         }
         if (defaultCode != null)

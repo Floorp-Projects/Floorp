@@ -8,29 +8,29 @@ class LogicalNode extends BinaryNode {
     void eval(Environment theEnv)
     {
         left.eval(theEnv);
-        double d = theEnv.theStack.pop().d;
+        JSBoolean b = theEnv.theStack.pop().toJSBoolean();
         if (op == "&&") {
-            if (d == 0.0)
-                theEnv.theStack.push(new StackValue(0));
+            if (b.isFalse())
+                theEnv.theStack.push(b);
             else {
                 right.eval(theEnv);
-                d = theEnv.theStack.pop().d;
-                if (d == 0.0)
-                    theEnv.theStack.push(new StackValue(0));
+                b = theEnv.theStack.pop().toJSBoolean();
+                if (b.isFalse())
+                    theEnv.theStack.push(b);
                 else
-                    theEnv.theStack.push(new StackValue(1));
+                    theEnv.theStack.push(JSBoolean.JSTrue);
             }
         }
         if (op == "||") {
-            if (d != 0.0)
-                theEnv.theStack.push(new StackValue(1));
+            if (b.isTrue())
+                theEnv.theStack.push(b);
             else {
                 right.eval(theEnv);
-                d = theEnv.theStack.pop().d;
-                if (d != 0.0)
-                    theEnv.theStack.push(new StackValue(1));
+                b = theEnv.theStack.pop().toJSBoolean();
+                if (b.isTrue())
+                    theEnv.theStack.push(b);
                 else
-                    theEnv.theStack.push(new StackValue(0));
+                    theEnv.theStack.push(JSBoolean.JSFalse);
             }
         }
         else

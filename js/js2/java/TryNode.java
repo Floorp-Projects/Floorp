@@ -33,7 +33,7 @@ class TryNode extends ControlNode {
                 ExpressionNode e = (ExpressionNode)(catchExpr.elementAt(i));
                 String id = ((JSObject)e).value;
                 theEnv.theStack.setStack(stackHeight);
-                theEnv.theGlobals.put(id, new Double(x.getValue().d));
+                theEnv.theGlobals.put(id, x.getValue());
                 return (ControlNode)(catchCode.elementAt(i));
             }
         }

@@ -1,3 +1,3 @@
-class JSNumber extends JSValue {
+abstract class JSNumber extends JSValue {
     
 }

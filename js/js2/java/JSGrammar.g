@@ -45,14 +45,14 @@ options {
 // ********* Identifiers **********
 identifier returns [ExpressionNode e]
     { e = null; }
-	:	opI:IDENT       { e = new JSObject("object", opI.getText()); }
-	|	"version"       { e = new JSObject("object", "version"); }
-	|	"override"      { e = new JSObject("object", "override"); }
-	|	"method"        { e = new JSObject("object", "method"); }
-	|	"getter"        { e = new JSObject("object", "getter"); }
-	|	"setter"        { e = new JSObject("object", "setter"); }
-	|	"traditional"   { e = new JSObject("object", "traditional"); }
-	|	"constructor"   { e = new JSObject("object", "constructor"); }
+	:	opI:IDENT       { e = new JSObject(opI.getText()); }
+	|	"version"       { e = new JSObject("version"); }
+	|	"override"      { e = new JSObject("override"); }
+	|	"method"        { e = new JSObject("method"); }
+	|	"getter"        { e = new JSObject("getter"); }
+	|	"setter"        { e = new JSObject("setter"); }
+	|	"traditional"   { e = new JSObject("traditional"); }
+	|	"constructor"   { e = new JSObject("constructor"); }
 	;
 
 qualified_identifier returns [ExpressionNode e]
@@ -79,15 +79,15 @@ primary_expression[boolean initial] returns [ExpressionNode e]
 
 simple_expression returns [ExpressionNode e]
     { e = null; }
-	:	"null"      { e = new JSObject("object", "null"); }
-	|	"true"      { e = new JSBoolean("true"); }
-	|	"false"     { e = new JSBoolean("false"); }
+	:	"null"      { e = new JSObject("null"); }
+	|	"true"      { e = JSBoolean.JSTrue; }
+	|	"false"     { e = JSBoolean.JSFalse; }
 	|	opN:NUMBER  { e = new JSDouble(opN.getText()); }
 	|	opS:STRING  { e = new JSString(opS.getText()); }
-	|	"this"      { e = new JSObject("object", "this"); }
-	|	"super"     { e = new JSObject("object", "super"); }
+	|	"this"      { e = new JSObject("this"); }
+	|	"super"     { e = new JSObject("super"); }
 	|	e = qualified_identifier_or_parenthesized_expression
-	|	opR:REGEXP  { e = new JSObject("regexp", opR.getText()); }
+	|	opR:REGEXP  { e = new JSObject(opR.getText()); }
 	|	e = array_literal
 	;
 

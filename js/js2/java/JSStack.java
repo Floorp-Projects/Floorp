@@ -5,7 +5,7 @@ class JSStack {
     
     Stack stack = new Stack();
     
-    void push(StackValue v)
+    void push(JSValue v)
     {
         stack.push(v);
     }
@@ -15,9 +15,14 @@ class JSStack {
         return stack.isEmpty();
     }
 
-    StackValue pop()
+    JSValue pop()
     {
-        return (StackValue)stack.pop();
+        return (JSValue)stack.pop();
+    }
+    
+    JSValue peek()
+    {
+        return (JSValue)stack.peek();
     }
     
     int size()

@@ -5,11 +5,62 @@ class JSInteger extends JSNumber {
         i = new Integer(s).intValue();
     }
     
-    void eval(Environment theEnv)
+    JSInteger(int p)
     {
-        theEnv.theStack.push(new StackValue(i));
+        i = p;
     }
     
+    void eval(Environment theEnv)
+    {
+        theEnv.theStack.push(this);
+    }
+
+    JSBoolean toJSBoolean() {
+        return (i != 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
+    }
+    
+    JSDouble toJSDouble() {
+        return new JSDouble(i);
+    }
+    
+    JSInteger toJSInteger() {
+        return this;
+    }
+    
+    JSString toJSString() {
+        return new JSString(Integer.toString(i));
+    }
+    
+    void and(Environment theEnv) {
+        JSValue vR = theEnv.theStack.pop();
+        theEnv.theStack.push(new JSInteger(i & vR.toJSInteger().i));
+    }
+    
+    void or(Environment theEnv) {
+        JSValue vR = theEnv.theStack.pop();
+        theEnv.theStack.push(new JSInteger(i | vR.toJSInteger().i));
+    }
+
+    void xor(Environment theEnv) {
+        JSValue vR = theEnv.theStack.pop();
+        theEnv.theStack.push(new JSInteger(i ^ vR.toJSInteger().i));
+    }
+
+    void shl(Environment theEnv) {
+        JSValue vR = theEnv.theStack.pop();
+        theEnv.theStack.push(new JSInteger(i >> vR.toJSInteger().i));
+    }
+
+    void shr(Environment theEnv) {
+        JSValue vR = theEnv.theStack.pop();
+        theEnv.theStack.push(new JSInteger(i << vR.toJSInteger().i));
+    }
+
+    void ushl(Environment theEnv) {
+        JSValue vR = theEnv.theStack.pop();
+        theEnv.theStack.push(new JSInteger(i >>> vR.toJSInteger().i));
+    }
+
     int i;
     
 }
