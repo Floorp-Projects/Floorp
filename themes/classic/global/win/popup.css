@@ -44,6 +44,7 @@ popup {
 /* ::::: tooltip ::::: */
 
 tooltip {
+  -moz-appearance: tooltip;
   margin-top: 21px;
   border: 1px solid InfoText;
   padding: 2px 3px;
