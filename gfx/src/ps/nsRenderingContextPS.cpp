@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -41,12 +42,16 @@
 #include "nsDeviceContextPS.h"
 #include "nsPostScriptObj.h"  
 #include "nsIRegion.h"      
-#include "nsIImage.h"      
+#include "nsIImage.h"
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include <math.h>
 
 // Macro to convert from TWIPS (1440 per inch) to POINTS (72 per inch)
-#define NS_PIXELS_TO_POINTS(x) (x * 10)
+#define NS_PIXELS_TO_POINTS(x) ((x) * 10)
 
 #define FLAG_CLIP_VALID       0x0001
 #define FLAG_CLIP_CHANGED     0x0002
@@ -69,7 +74,7 @@ public:
   PS_State        *mNext;
   nsTransform2D   mMatrix;
   nsRect          mLocalClip;
-  nsIFontMetrics  *mFontMetrics;
+  nsCOMPtr<nsIFontMetrics>  mFontMetrics;
   nscolor         mCurrentColor;
   nscolor         mTextColor;
   nsLineStyle     mLineStyle;
@@ -142,25 +147,25 @@ nsRenderingContextPS :: nsRenderingContextPS()
 
   mStateCache = new nsVoidArray();
 
-  PushState();
-
   mP2T = 1.0f;
+
+  PushState();
 }
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
  */
-nsRenderingContextPS :: ~nsRenderingContextPS()
+nsRenderingContextPS::~nsRenderingContextPS()
 {
-  if (nsnull != mStateCache){
+  if (mStateCache){
     PRInt32 cnt = mStateCache->Count();
 
     while (--cnt >= 0){
       PS_State *state = (PS_State *)mStateCache->ElementAt(cnt);
       mStateCache->RemoveElementAt(cnt);
 
-      if (nsnull != state)
+      if (state)
         delete state;
     }
 
@@ -169,9 +174,6 @@ nsRenderingContextPS :: ~nsRenderingContextPS()
   }
 
   mTranMatrix = nsnull;
-
-  NS_IF_RELEASE(mContext);
-  NS_IF_RELEASE(mFontMetrics);
 }
 
 /** ---------------------------------------------------
@@ -179,19 +181,21 @@ nsRenderingContextPS :: ~nsRenderingContextPS()
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP
-nsRenderingContextPS :: Init(nsIDeviceContext* aContext)
+nsRenderingContextPS::Init(nsIDeviceContext* aContext)
 {
-float app2dev;
+  float app2dev;
+
+  NS_ENSURE_TRUE(nsnull != aContext, NS_ERROR_NULL_POINTER);
 
   mContext = aContext;
-  if (mContext) {
-  	mPSObj = ((nsDeviceContextPS*)mContext)->GetPrintContext();
-  }
-  NS_IF_ADDREF(mContext);
+
+  mPSObj = NS_REINTERPRET_CAST(nsDeviceContextPS *, mContext.get())->GetPrintContext();
+
+  NS_ENSURE_TRUE(nsnull != mPSObj, NS_ERROR_NULL_POINTER);
 
   // initialize the matrix
   mContext->GetAppUnitsToDevUnits(app2dev);
-	mTranMatrix->AddScale(app2dev, app2dev);
+  mTranMatrix->AddScale(app2dev, app2dev);
   mContext->GetDevUnitsToAppUnits(mP2T);
   return NS_OK;
 }
@@ -265,8 +269,8 @@ nsRenderingContextPS :: Reset()
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetDeviceContext(nsIDeviceContext *&aContext)
 {
-  NS_IF_ADDREF(mContext);
   aContext = mContext;
+  NS_IF_ADDREF(aContext);
   return NS_OK;
 }
 
@@ -512,12 +516,24 @@ nsRenderingContextPS :: GetLineStyle(nsLineStyle &aLineStyle)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: SetFont(const nsFont& aFont)
+nsRenderingContextPS::SetFont(const nsFont& aFont)
 {
-  NS_IF_RELEASE(mFontMetrics);
-  if (mContext) {
-  	mContext->GetMetricsFor(aFont, mFontMetrics);
+  nsCOMPtr<nsIFontMetrics> newMetrics;
+  nsresult rv = mContext->GetMetricsFor(aFont, *getter_AddRefs(newMetrics));
+  if (NS_SUCCEEDED(rv)) {
+    rv = SetFont(newMetrics);
   }
+  return rv;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP 
+nsRenderingContextPS::SetFont(nsIFontMetrics *aFontMetrics)
+{
+  mFontMetrics = (nsFontMetricsPS *)aFontMetrics;
   return NS_OK;
 }
 
@@ -526,12 +542,10 @@ nsRenderingContextPS :: SetFont(const nsFont& aFont)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: SetFont(nsIFontMetrics *aFontMetrics)
+nsRenderingContextPS::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
-
-  NS_IF_RELEASE(mFontMetrics);
-  mFontMetrics = aFontMetrics;
-  NS_IF_ADDREF(mFontMetrics);
+  aFontMetrics = (nsIFontMetrics *)mFontMetrics;
+  NS_IF_ADDREF(aFontMetrics);
   return NS_OK;
 }
 
@@ -540,22 +554,9 @@ nsRenderingContextPS :: SetFont(nsIFontMetrics *aFontMetrics)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
+nsRenderingContextPS::Translate(nscoord aX, nscoord aY)
 {
-
-  NS_IF_ADDREF(mFontMetrics);
-  aFontMetrics = mFontMetrics;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *	@update 12/21/98 dwc
- */
-NS_IMETHODIMP 
-nsRenderingContextPS :: Translate(nscoord aX, nscoord aY)
-{
-	mTranMatrix->AddTranslation((float)aX,(float)aY);
+  mTranMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
@@ -963,7 +964,7 @@ nsRenderingContextPS :: GetWidth(char ch, nscoord& aWidth)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
+nsRenderingContextPS::GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
 {
   PRUnichar buf[1];
   buf[0] = ch;
@@ -975,7 +976,7 @@ nsRenderingContextPS :: GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: GetWidth(const char* aString, nscoord& aWidth)
+nsRenderingContextPS::GetWidth(const char* aString, nscoord& aWidth)
 {
   return GetWidth(aString, strlen(aString),aWidth);
 }
@@ -985,16 +986,14 @@ nsRenderingContextPS :: GetWidth(const char* aString, nscoord& aWidth)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& aWidth)
+nsRenderingContextPS::GetWidth(const char* aString,PRUint32 aLength,nscoord& aWidth)
 {
-
-  if (nsnull != mFontMetrics){
-    ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aWidth,aLength);
-    return NS_OK;
-  } else {
-    return NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_FAILURE;
+  if (mFontMetrics) {
+    rv = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get())->GetStringWidth(aString,aWidth,aLength);
   }
-
+  
+  return rv;
 }
 
 /** ---------------------------------------------------
@@ -1002,7 +1001,7 @@ nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& a
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
+nsRenderingContextPS::GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
 {
   return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
@@ -1014,14 +1013,13 @@ nsRenderingContextPS :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoord &aWidth, PRInt32 *aFontID)
 {
+  nsresult rv = NS_ERROR_FAILURE;
 
-  if (nsnull != mFontMetrics){
-    ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aWidth,aLength);
-    return NS_OK;
-  } else {
-    return NS_ERROR_FAILURE;
+  if (mFontMetrics) {
+    rv = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get())->GetStringWidth(aString, aWidth, aLength);
   }
 
+  return rv;
 }
 
 /** --------------------------------------------------- */
@@ -1030,29 +1028,35 @@ NS_IMETHODIMP
 nsRenderingContextPS :: GetTextDimensions(const char* aString, PRUint32 aLength,
                                           nsTextDimensions& aDimensions)
 {
-  if (nsnull != mFontMetrics){
-    ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aDimensions.width,aLength);
-     mFontMetrics->GetMaxAscent(aDimensions.ascent);
-     mFontMetrics->GetMaxDescent(aDimensions.descent);
-    return NS_OK;
-  } else {
-    return NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (mFontMetrics) {
+    nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
+    metrics->GetStringWidth(aString, aDimensions.width, aLength);
+    metrics->GetMaxAscent(aDimensions.ascent);
+    metrics->GetMaxDescent(aDimensions.descent);
+    rv = NS_OK;
   }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
 nsRenderingContextPS :: GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
                                           nsTextDimensions& aDimensions, PRInt32* aFontID)
 {
-  if (nsnull != mFontMetrics){
-    ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aDimensions.width,aLength);
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (mFontMetrics) {
+    nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
+    metrics->GetStringWidth(aString, aDimensions.width, aLength);
      //XXX temporary - bug 96609
-     mFontMetrics->GetMaxAscent(aDimensions.ascent);
-     mFontMetrics->GetMaxDescent(aDimensions.descent);
-    return NS_OK;
-  } else {
-    return NS_ERROR_FAILURE;
+    metrics->GetMaxAscent(aDimensions.ascent);
+    metrics->GetMaxDescent(aDimensions.descent);
+    rv = NS_OK;
   }
+
+  return rv;
 }
 
 /** ---------------------------------------------------
@@ -1090,7 +1094,7 @@ PRInt32       y = aY;
 #if 0
   //this doesn't need to happen here anymore, but a
   //new api will come along that will need this stuff. MMP
-  if (nsnull != mFontMetrics){
+  if (mFontMetrics) {
     nsFont *font;
     mFontMetrics->GetFont(font);
     PRUint8 decorations = font->decorations;
@@ -1122,7 +1126,7 @@ PRInt32         y = aY;
 nsIFontMetrics  *fMetrics;
 
   nsCOMPtr<nsIAtom> langGroup = nsnull;
-  ((nsFontMetricsPS*)mFontMetrics)->GetLangGroup(getter_AddRefs(langGroup));
+  mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
   mPSObj->setlanggroup(langGroup.get());
 
   /* build up conversion table */
@@ -1148,7 +1152,7 @@ nsIFontMetrics  *fMetrics;
 
   fMetrics = mFontMetrics;
 
-  if (nsnull != fMetrics){
+  if (fMetrics) {
     const nsFont *font;
     fMetrics->GetFont(font);
     PRUint8 decorations = font->decorations;
@@ -1264,17 +1268,9 @@ NS_IMETHODIMP
 nsRenderingContextPS::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                                                     nscoord aWidth,nscoord aHeight)
 {
-
   return NS_OK;
 }
 
-
-#ifdef USE_IMG2
-
-#include "imgIContainer.h"
-#include "gfxIImageFrame.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 
 /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
 NS_IMETHODIMP nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
@@ -1317,12 +1313,12 @@ NS_IMETHODIMP nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRec
 NS_IMETHODIMP nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
 {
   nsRect dr;
-  nsRect sr;
 
   dr = *aDestRect;
   mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
 #if 0
+  nsRect sr;
   // need to do this if we fix the comments below
   sr = *aSrcRect;
   mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
@@ -1349,8 +1345,6 @@ NS_IMETHODIMP nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const
 
   return NS_OK;
 }
-
-#endif
 
 #ifdef MOZ_MATHML
   /**
@@ -1416,9 +1410,11 @@ nsAutoString    fontFamily;
   //mStates->mFont = mCurrFont = tfont;
   mStates->mFontMetrics = mFontMetrics;
 
+  nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
+
   // get the fontfamily we are using, not what we want, but what we are using
-  fontFamily.AssignWithConversion(((nsFontMetricsPS*)mFontMetrics)->mAFMInfo->mPSFontInfo->mFamilyName);
-  fontIndex = ((nsFontMetricsPS*)mFontMetrics)->GetFontIndex();
+  fontFamily.AssignWithConversion(metrics->mAFMInfo->mPSFontInfo->mFamilyName);
+  fontIndex = metrics->GetFontIndex();
 
   mPSObj->setscriptfont(fontIndex,fontFamily,fontHeight,font->style,font->variant,font->weight,font->decorations);
 }
@@ -1484,32 +1480,5 @@ HPEN nsRenderingContextPS :: SetupDottedPen(void)
   return mCurrPen;
 }
 
-#endif
+#endif /* NOTNOW */
 
-
-#ifdef DC
-NS_IMETHODIMP
-nsRenderingContextPS::GetColor(nsString& aColor)
-{
-  char cbuf[40];
-  PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
-              NS_GET_R(mCurrentColor),
-              NS_GET_G(mCurrentColor),
-              NS_GET_B(mCurrentColor));
-  aColor = cbuf;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextPS::SetColor(const nsString& aColor)
-{
-  nscolor rgb;
-  if (NS_ColorNameToRGB(aColor, &rgb)) {
-    SetColor(rgb);
-  }
-  else if (NS_HexToRGB(aColor, &rgb)) {
-    SetColor(rgb);
-  }
-  return NS_OK;
-}
-#endif

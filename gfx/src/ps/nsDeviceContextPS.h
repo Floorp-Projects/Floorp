@@ -91,11 +91,14 @@ public:
   NS_IMETHOD  GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
   NS_IMETHOD  BeginDocument(PRUnichar * aTitle);
   NS_IMETHOD  EndDocument(void);
+  NS_IMETHOD  AbortDocument(void);
   NS_IMETHOD  BeginPage(void);
   NS_IMETHOD  EndPage(void);
   NS_IMETHOD  CreateFontCache();
   
   NS_IMETHOD  SetSpec(nsIDeviceContextSpec *aSpec);
+
+  nsPostScriptObj*    GetPrintContext() { return mPSObj; }
 
 protected:
   virtual     ~nsDeviceContextPS();
@@ -105,10 +108,6 @@ protected:
   nsCOMPtr<nsIDeviceContextSpec>  mSpec;
   nsCOMPtr<nsIDeviceContext>      mParentDeviceContext;
   nsPostScriptObj       *mPSObj;
-
-public:
-  nsPostScriptObj*    GetPrintContext() { return mPSObj; }
-
 };
 
 #endif /* nsDeviceContextPS_h___ */

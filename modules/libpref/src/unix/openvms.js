@@ -51,8 +51,8 @@ pref("applications.tn3270", "create /term /detach \"telnet /term=IBM-3278-5 %h %
 pref("applications.rlogin", "create /term /detach \"rlogin %h\"");
 pref("applications.rlogin_with_user", "create /term /detach \"rlogin %h -l %u\"");
 
-/* PostScript module specific */
-pref("print.postscript.print_command", "print");
+/* PostScript module specific (see unix.js for additional configuration details) */
+pref("print.postscript.print_command", "print /delete");
 /* Print module independant */
 pref("print.print_color", false);
 

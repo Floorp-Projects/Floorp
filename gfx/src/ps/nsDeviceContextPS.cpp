@@ -45,11 +45,19 @@
  */
 #define WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS 1
 
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#define PR_LOGGING 1
+#include "prlog.h"
+
 #include "nsDeviceContextPS.h"
 #include "nsRenderingContextPS.h"
 #include "nsString.h"
 #include "nsFontMetricsPS.h"
 #include "nsPostScriptObj.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo *nsDeviceContextPSLM = PR_NewLogModule("nsDeviceContextPS");
+#endif /* PR_LOGGING */
 
 #ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
 static int instance_counter = 0;
@@ -60,11 +68,12 @@ static int instance_counter = 0;
  *	@update 12/21/98 dwc
  */
 nsDeviceContextPS :: nsDeviceContextPS()
-  : DeviceContextImpl()
-{
-  mSpec = nsnull; 
-  mParentDeviceContext = nsnull;
-  
+  : DeviceContextImpl(),
+  mSpec(nsnull),
+  mParentDeviceContext(nsnull)
+{ 
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::nsDeviceContextPS()\n"));
+
 #ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
   instance_counter++;
   NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
@@ -75,8 +84,15 @@ nsDeviceContextPS :: nsDeviceContextPS()
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-nsDeviceContextPS :: ~nsDeviceContextPS()
+nsDeviceContextPS::~nsDeviceContextPS()
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::~nsDeviceContextPS()\n"));
+
+  if (mPSObj) {
+    delete mPSObj;
+    mPSObj = nsnull;
+  }
+  
   /* nsCOMPtr<> will dispose the objects... */
   mSpec = nsnull;
   mParentDeviceContext = nsnull;
@@ -88,8 +104,10 @@ nsDeviceContextPS :: ~nsDeviceContextPS()
 }
 
 NS_IMETHODIMP
-nsDeviceContextPS :: SetSpec(nsIDeviceContextSpec* aSpec)
+nsDeviceContextPS::SetSpec(nsIDeviceContextSpec* aSpec)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::SetSpec()\n"));
+
   nsresult  rv = NS_ERROR_FAILURE;
 
 #ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
@@ -126,8 +144,10 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsDeviceContextPS,
 NS_IMETHODIMP
 nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aParentContext)
 {
-float origscale, newscale;
-float t2d, a2d;
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::InitDeviceContextPS()\n"));
+
+  float origscale, newscale;
+  float t2d, a2d;
 
 #ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
   NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
@@ -135,6 +155,8 @@ float t2d, a2d;
     return NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW;
   }
 #endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
+
+  NS_ENSURE_ARG_POINTER(aParentContext);
 
   mDepth = 1;     // just for arguments sake
 
@@ -152,8 +174,7 @@ float t2d, a2d;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
 
   mParentDeviceContext = aParentContext;
-  NS_ASSERTION(mParentDeviceContext, "aCreatingDeviceContext cannot be NULL!!!");
-  return  NS_OK;
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -163,8 +184,10 @@ float t2d, a2d;
  *  @param aContext -- our newly created Postscript RenderingContextPS
  *  @return -- NS_OK if everything succeeded.
  */
-NS_IMETHODIMP nsDeviceContextPS :: CreateRenderingContext(nsIRenderingContext *&aContext)
+NS_IMETHODIMP nsDeviceContextPS::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::CreateRenderingContext()\n"));
+
   nsresult rv;
    
   aContext = nsnull;
@@ -187,8 +210,10 @@ NS_IMETHODIMP nsDeviceContextPS :: CreateRenderingContext(nsIRenderingContext *&
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
+NS_IMETHODIMP nsDeviceContextPS::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::SupportsNativeWidgets()\n"));
+
   aSupportsWidgets = PR_FALSE;
   return NS_OK;
 }
@@ -197,8 +222,10 @@ NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidget
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
+NS_IMETHODIMP nsDeviceContextPS::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetScrollBarDimensions()\n"));
+
   //XXX: Hardcoded values for Postscript
   aWidth  = 20.f;
   aHeight = 20.f;
@@ -209,8 +236,10 @@ NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsDeviceContextPS::GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDrawingSurface()\n"));
+
   aSurface = nsnull;
   return NS_OK;
 }
@@ -221,6 +250,8 @@ NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aConte
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDepth(mDepth=%d)\n", 24));
+
   /* PostScript module uses 24bit RGB images */
   return(24);
 }
@@ -229,15 +260,18 @@ NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: CheckFontExistence(const nsString& aFontName)
+NS_IMETHODIMP nsDeviceContextPS::CheckFontExistence(const nsString& aFontName)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::CheckFontExistence()\n"));
 
   // XXX this needs to find out if this font is supported for postscript
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextPS :: GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
+NS_IMETHODIMP nsDeviceContextPS::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetSystemFont()\n"));
+
   if (mParentDeviceContext != nsnull) {
     return mParentDeviceContext->GetSystemFont(aID, aFont);
   }
@@ -250,9 +284,9 @@ NS_IMETHODIMP nsDeviceContextPS :: GetSystemFont(nsSystemFontID aID, nsFont *aFo
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  nsIDeviceContextSpecPS *psSpec;
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDeviceSurfaceDimensions()\n"));
+
   nsresult rv = NS_ERROR_FAILURE;
-  float width, height;
 
   if (mPSObj && mPSObj->mPrintSetup) {
     aWidth  = NSToIntRound(mPSObj->mPrintSetup->width  * mDevUnitsToAppUnits); 
@@ -267,6 +301,8 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRI
  */
 NS_IMETHODIMP nsDeviceContextPS::GetRect(nsRect &aRect)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetRect()\n"));
+
   PRInt32 width, height;
   nsresult rv;
   rv = GetDeviceSurfaceDimensions(width, height);
@@ -282,6 +318,8 @@ NS_IMETHODIMP nsDeviceContextPS::GetRect(nsRect &aRect)
  */
 NS_IMETHODIMP nsDeviceContextPS::GetClientRect(nsRect &aRect)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetClientRect()\n"));
+
   return GetRect(aRect);
 }
 
@@ -289,8 +327,10 @@ NS_IMETHODIMP nsDeviceContextPS::GetClientRect(nsRect &aRect)
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext)
+NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice, nsIDeviceContext *&aContext)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDeviceContextFor()\n"));
+
   return NS_OK;
 }
 
@@ -300,8 +340,9 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
  */
 NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle)
 {
-  if (!mPSObj)
-    return NS_ERROR_NULL_POINTER;
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::BeginDocument()\n"));
+
+  NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
 
   mPSObj->settitle(aTitle); 
   return NS_OK;
@@ -313,8 +354,31 @@ NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle)
  */
 NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::EndDocument()\n"));
+
+  NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
+  
+  /* Finish the document and print it... */  
+  mPSObj->end_document();
+
   delete mPSObj;
   mPSObj = nsnull;
+
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ */
+NS_IMETHODIMP nsDeviceContextPS::AbortDocument(void)
+{
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::AbortDocument()\n"));
+
+  NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
+  
+  delete mPSObj;
+  mPSObj = nsnull;
+  
   return NS_OK;
 }
 
@@ -324,8 +388,9 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
  */
 NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
 {
-  if (!mPSObj)
-    return NS_ERROR_NULL_POINTER;
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::BeginPage()\n"));
+
+  NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
 
   // begin the page
   mPSObj->begin_page(); 
@@ -338,6 +403,10 @@ NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
  */
 NS_IMETHODIMP nsDeviceContextPS::EndPage(void)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::EndPage()\n"));
+
+  NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
+
   // end the page
   mPSObj->end_page();
   return NS_OK;
@@ -347,8 +416,10 @@ NS_IMETHODIMP nsDeviceContextPS::EndPage(void)
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
+NS_IMETHODIMP nsDeviceContextPS::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::ConvertPixel()\n"));
+
   aPixel = aColor;
   return NS_OK;
 }
@@ -375,12 +446,14 @@ NS_IMETHODIMP nsFontCachePS::CreateFontMetricsInstance(nsIFontMetrics** aResult)
 /* override DeviceContextImpl::CreateFontCache() */
 NS_IMETHODIMP nsDeviceContextPS::CreateFontCache()
 {
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::CreateFontCache()\n"));
+
   mFontCache = new nsFontCachePS();
-  if (nsnull == mFontCache) {
+  if (!mFontCache) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mFontCache->Init(this);
-  return NS_OK;
+  
+  return mFontCache->Init(this);
 }
 
 

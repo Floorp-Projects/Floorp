@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -43,7 +44,7 @@
 #include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetricsPS.h"
 #include "nsPoint.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -51,13 +52,11 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContextPS.h"
 #include "nsVoidArray.h"
 
-class     nsPostScriptObj;
+class nsPostScriptObj;
 class PS_State;
-
-typedef void* nsDrawingSurfacePS;
 
 class nsRenderingContextPS :  public nsRenderingContextImpl
 {
@@ -68,10 +67,6 @@ public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_DECL_ISUPPORTS
-
-  // nsIPrinterRenderingContext methods
-
-protected:
 
 public:
   // nsIRenderingContext
@@ -184,10 +179,8 @@ public:
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                         nscoord aWidth,nscoord aHeight);
 
-#ifdef USE_IMG2
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
   NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
-#endif
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
@@ -260,21 +253,18 @@ private:
   void PushClipState(void);
 
 protected:
-  nsIDeviceContext    *mContext;
-  nsIFontMetrics	    *mFontMetrics;
+  nsCOMPtr<nsIDeviceContext> mContext;
+  nsCOMPtr<nsIFontMetrics>   mFontMetrics;
   nsLineStyle          mCurrLineStyle;
   PS_State            *mStates;
   nsVoidArray         *mStateCache;
   float               mP2T;
   nscolor             mCurrentColor;
 
-
   //state management
   PRUint8             *mGammaTable;
   nsPostScriptObj     *mPSObj;
-
-
 };
 
 
-#endif /* nsRenderingContextPS_h___ */
+#endif /* !nsRenderingContextPS_h___ */

@@ -200,9 +200,7 @@ struct PrintSetup_ {
   XL_CompletionRoutine completion; /* Called when translation finished */
   void* carg;                   /* Data saved for completion routine */
   int status;                   /* Status of URL on completion */
-#ifdef VMS
-  const char *print_cmd;        /* print command issued in dtor*/
-#endif
+  const char *print_cmd;        /* print command */
 
 	/* "other" font is for encodings other than iso-8859-1 */
   char *otherFontName[N_FONTS];		   
@@ -260,7 +258,7 @@ public:
    *  end the current document
    *	@update 2/1/99 dwc
    */
-  void end_document();
+  nsresult end_document();
   /** ---------------------------------------------------
    *  move the cursor to this location
    *	@update 2/1/99 dwc
