@@ -743,7 +743,10 @@ pluginInstanceOwner :: ~pluginInstanceOwner()
   if (nsnull != mInstance)
   {
     mInstance->Stop();
-    mInstance->Destroy();
+    nsCOMPtr<nsIPluginHost> host;
+    host = do_GetService(kCPluginManagerCID);
+    if(host)
+      host->StopPluginInstance(mInstance);
     NS_RELEASE(mInstance);
   }
 
