@@ -121,23 +121,21 @@ public class GeneralPanel extends JPanel {
       res = new GrendelToolBar();
       //  res.setLayout(new ToolBarLayout());
 
-      ResourceBundle resources = ResourceBundle.getBundle(fResourceBase + ".Menus");
-      String toolbar = resources.getString(aToolbar);
+      ResourceBundle toolbarresources = ResourceBundle.getBundle(fResourceBase + ".Toolbar");
+      ResourceBundle menuresources = ResourceBundle.getBundle(fResourceBase + ".Menus");
+      String toolbar = menuresources.getString(aToolbar);
       StringTokenizer tokens = new StringTokenizer(toolbar, " ", false);
       while (tokens.hasMoreTokens()) {
         String token = tokens.nextToken();
         if (DEBUG) {
           System.out.println("Local token = " + token);
         }
-        JButton button = makeToolbarButton(token);
         UIAction action = (UIAction)commands.get(token);
-
-        if (action != null) {
-          button.addActionListener(action);
-        } else {
-          button.setEnabled(false);
-        }
-        res.add(button);
+        String icon = toolbarresources.getString(token + "Icon");
+        String label = toolbarresources.getString(token + "Label");
+        String tooltip = toolbarresources.getString(token + "Tooltip");
+        
+        res.addButton(action, icon, label, tooltip);
       }
     } catch (MissingResourceException e) {
       System.err.println(e);

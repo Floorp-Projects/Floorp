@@ -864,24 +864,20 @@ public class CompositionPanel extends GeneralPanel {
 
     GrendelToolBar toolBar = new GrendelToolBar();
 
-    addToolbarButton(toolBar, new SendNow(),
+    toolBar.addButton( new SendNow(),
                      "send",       "Send",     "Send this message");
-    addToolbarButton(toolBar, new QuoteOriginalText(),
-                     "quote",      "Quote",    "Quote the previous document");
-    addToolbarButton(toolBar, new SelectAddresses(),
+    toolBar.addButton( new SelectAddresses(),
                      "address",    "Address",  "Address this message");
-    addToolbarButton(toolBar, new AttachFile(),
+    toolBar.addButton( new AttachFile(),
                      "attach",     "Attach",   "Include an attachment");
-    addToolbarButton(toolBar, null,
+    toolBar.addButton( null,
                      "spelling",   "Spelling", "Check Spelling");
-    addToolbarButton(toolBar, new SaveDraft(),
+    toolBar.addButton( new SaveDraft(),
                      "save",       "Save",     "Save this message as a draft");
-    addToolbarButton(toolBar, null,
-                     "security",   "Security", "Show security Information");
-    addToolbarButton(toolBar, null,
+    toolBar.addButton( null,
+                     "print",      "Print",    "Print this message");
+    toolBar.addButton( null,
                      "stop",       "Stop",     "Stop the current Transfer (ESC)" );
-    //addToolbarButton(toolBar, new AddSignatureAction(),
-    //                 "signature",  "Add the signature of the current personality" );
 
     return toolBar;
   }
