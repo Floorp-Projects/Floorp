@@ -18,7 +18,9 @@
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #include "nslayout.h"
 #include "nsDST.h"
-#include "nsCRT.h"
+#ifdef NS_DEBUG
+#include <string.h>
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // Structure that represents a node in the DST
@@ -76,7 +78,7 @@ void
 nsDST::NodeArena::FreeNode(void* p)
 {
 #ifdef NS_DEBUG
-  nsCRT::memset(p, 0xde, sizeof(Node));
+  memset(p, 0xde, sizeof(Node));
 #endif
   // Add this node to the head of the free-list
   ((Node*)p)->mLeft = mFreeList;
@@ -322,7 +324,7 @@ nsDST::Dump(FILE* out) const
 
   int numNodes = 0;
   int nodesPerLevel[maxLevels];  // count of the number of nodes at a given level
-  nsCRT::memset(&nodesPerLevel, 0, sizeof(int) * maxLevels);
+  memset(&nodesPerLevel, 0, sizeof(int) * maxLevels);
 
   // Walk each node in the tree recording its node level
   GatherStatistics(mRoot, 0, numNodes, nodesPerLevel);
