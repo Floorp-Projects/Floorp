@@ -346,10 +346,22 @@ nsGenericHTMLElement::SetLang(const nsString& aLang)
   return NS_OK;
 }
 
+static nsGenericHTMLElement::EnumTable kDirTable[] = {
+  { "ltr", NS_STYLE_DIRECTION_LTR },
+  { "rtl", NS_STYLE_DIRECTION_RTL },
+  { 0 }
+};
+
 nsresult
 nsGenericHTMLElement::GetDir(nsString& aDir)
 {
-  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::dir, aDir);
+  nsHTMLValue value;
+  nsresult result = GetHTMLAttribute(nsHTMLAtoms::dir, value);
+
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+    EnumValueToString(value, kDirTable, aDir);
+  }
+
   return NS_OK;
 }
 
@@ -1618,12 +1630,6 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
 }         
           
 // XXX check all mappings against ebina's usage
-static nsGenericHTMLElement::EnumTable kDirTable[] = {
-  { "ltr", NS_STYLE_DIRECTION_LTR },
-  { "rtl", NS_STYLE_DIRECTION_RTL },
-  { 0 }
-};
-
 static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
