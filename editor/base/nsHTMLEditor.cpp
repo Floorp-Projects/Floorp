@@ -227,12 +227,22 @@ nsHTMLEditor::nsHTMLEditor()
 
 nsHTMLEditor::~nsHTMLEditor()
 {
+  /* first, delete the transaction manager if there is one.
+     this will release any remaining transactions.
+     this is important because transactions can hold onto the atoms (gTypingTxnName, ...)
+     and to make the optimization (holding refcounted statics) work correctly, 
+     the editor instance needs to hold the last refcount.
+     If you get this wrong, expect to deref a garbage gTypingTxnName pointer if you bring up a second editor.
+  */
+  if (mTxnMgr) { 
+    mTxnMgr = 0;
+  }
   nsrefcnt refCount=0;
   if (gTypingTxnName)  // we addref'd in the constructor
   { // want to release it without nulling out the pointer.
     refCount = gTypingTxnName->Release();
     if (0==refCount) {
-      gTypingTxnName = nsnull;
+      gTypingTxnName = nsnull; 
     }
   }
 
