@@ -31,6 +31,7 @@
 #include "nsICapabilities.h"
 #include "nsIProgressEventSink.h"
 
+#include "nsIStreamConverterService.h"
 
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -38,6 +39,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 // mscott - i ripped this event sink getter class off of the one in the old
 // webshell doc loader...
@@ -86,6 +88,10 @@ public:
                   nsIURI * aReferringURI,
                   nsISupports * aOpenContext,
                   nsISupports ** aCurrentOpenContext);
+
+    nsresult DispatchContent(nsIChannel * aChannel, nsISupports * aCtxt);
+    nsresult RetargetOutput(nsIChannel * aChannel, const char * aSrcContentType, 
+                            const char * aOutContentType, nsIStreamListener * aStreamListener);
 
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
@@ -173,20 +179,9 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
 NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
 {
   nsresult rv = NS_OK;
-
-  nsXPIDLCString aContentType;
-  rv = aChannel->GetContentType(getter_Copies(aContentType));
-  if (NS_FAILED(rv)) return rv;
-
-  // go to the uri dispatcher and give them our stuff...
-  NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = pURILoader->DispatchContent(aContentType, "view", m_windowTarget, 
-                                     aChannel, aCtxt, m_contentListener, getter_AddRefs(m_targetStreamListener));
-    if (m_targetStreamListener)
-      m_targetStreamListener->OnStartRequest(aChannel, aCtxt);
-  }
+  rv = DispatchContent(aChannel, aCtxt);
+  if (m_targetStreamListener)
+    m_targetStreamListener->OnStartRequest(aChannel, aCtxt);
   return rv;
 }
 
@@ -209,6 +204,77 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISuppor
     m_targetStreamListener->OnStopRequest(aChannel, aCtxt, aStatus, errorMsg);
 
   return NS_OK;
+}
+
+nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports * aCtxt)
+{
+  nsXPIDLCString aContentType;
+  nsresult rv = aChannel->GetContentType(getter_Copies(aContentType));
+  if (NS_FAILED(rv)) return rv;
+
+  // go to the uri dispatcher and give them our stuff...
+  NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIURIContentListener> aContentListener;
+    nsXPIDLCString aDesiredContentType;
+    rv = pURILoader->DispatchContent(aContentType, "view", m_windowTarget, 
+                                     aChannel, aCtxt, 
+                                     m_contentListener, 
+                                     getter_Copies(aDesiredContentType), 
+                                     getter_AddRefs(aContentListener));
+    if (NS_SUCCEEDED(rv) && aContentListener)
+    {
+      nsCOMPtr<nsIStreamListener> aContentStreamListener;
+      PRBool aAbortProcess = PR_FALSE;
+      nsCAutoString contentTypeToUse;
+      if (aDesiredContentType)
+        contentTypeToUse = aDesiredContentType;
+      else
+        contentTypeToUse = aContentType;
+
+      rv = aContentListener->DoContent(contentTypeToUse, "view", m_windowTarget, 
+                                    aChannel, getter_AddRefs(aContentStreamListener),
+                                    &aAbortProcess);
+
+      // the listener is doing all the work from here...we are done!!!
+      if (aAbortProcess) return rv;
+
+      // okay, all registered listeners have had a chance to handle this content...
+      // did one of them give us a stream listener back? if so, let's start reading data
+      // into it...
+      rv = RetargetOutput(aChannel, aContentType, aDesiredContentType, aContentStreamListener);
+    }
+  }
+  return rv;
+}
+
+nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * aSrcContentType, const char * aOutContentType,
+                                            nsIStreamListener * aStreamListener)
+{
+  nsresult rv = NS_OK;
+  // do we need to invoke the stream converter service?
+  if (aOutContentType && *aOutContentType && nsCRT::strcasecmp(aSrcContentType, aOutContentType))
+  {
+    	NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+	    if (NS_FAILED(rv)) return rv;
+      nsAutoString aUnicSrc (aSrcContentType);
+      nsAutoString aUniTo (aOutContentType);
+
+      // The following call binds this channelListener's mNextListener (typically
+      // the nsDocumentBindInfo) to the underlying stream converter, and returns
+      // the underlying stream converter which we then set to be this channelListener's
+      // mNextListener. This effectively nestles the stream converter down right
+      // in between the raw stream and the final listener.
+
+      nsIStreamListener *converterListener = nsnull;
+      rv = StreamConvService->AsyncConvertData(aUnicSrc.GetUnicode(), aUniTo.GetUnicode(), aStreamListener, aChannel,
+                                             getter_AddRefs(m_targetStreamListener));
+  }
+  else
+    m_targetStreamListener = aStreamListener; // no converter necessary so use a direct pipe
+
+  return rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -298,7 +364,8 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
                                       nsIChannel * aChannel, 
                                       nsISupports * aCtxt, 
                                       nsIURIContentListener * aContentListener,
-                                      nsIStreamListener ** aTargetListener)
+                                      char ** aContentTypeToUse,
+                                      nsIURIContentListener ** aContentListenerToUse)
 {
   // okay, now we've discovered the content type. We need to do the following:
   // (1) Give our uri content listener first crack at handling this content type.  
@@ -308,7 +375,9 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
   // find a content handler that can and will handle the content
   PRBool canHandleContent = PR_FALSE;
   if (listenerToUse)
-    listenerToUse->CanHandleContent(aContentType, aCommand, aWindowTarget, &canHandleContent);
+    listenerToUse->CanHandleContent(aContentType, aCommand, aWindowTarget, 
+                                    aContentTypeToUse, 
+                                    &canHandleContent);
   if (!canHandleContent) // if it can't handle the content, scan through the list of registered listeners
   {
      PRInt32 i = 0;
@@ -319,7 +388,9 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
 		    nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
         if (listener)
          {
-            rv = listener->CanHandleContent(aContentType, aCommand, aWindowTarget, &canHandleContent);
+            rv = listener->CanHandleContent(aContentType, aCommand, aWindowTarget, 
+                                            aContentTypeToUse,
+                                            &canHandleContent);
             if (canHandleContent)
               listenerToUse = listener;
          }
@@ -329,25 +400,9 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
 
   if (canHandleContent && listenerToUse)
   {
-      nsCOMPtr<nsIStreamListener> aContentStreamListener;
-      PRBool aAbortProcess = PR_FALSE;
-      rv = listenerToUse->DoContent(aContentType, aCommand, aWindowTarget, 
-                                    aChannel, getter_AddRefs(aContentStreamListener),
-                                    &aAbortProcess);
-
-      // the listener is doing all the work from here...we are done!!!
-      if (aAbortProcess) return rv;
-
-
-      // okay, all registered listeners have had a chance to handle this content...
-      // did one of them give us a stream listener back? if so, let's start reading data
-      // into it...
-      if (aContentStreamListener)
-      {
-        *aTargetListener = aContentStreamListener;
-        NS_IF_ADDREF(*aTargetListener);
-        return rv;
-      }
+    *aContentListenerToUse = listenerToUse;
+    NS_IF_ADDREF(*aContentListenerToUse);
+    return rv;
   }
 
   // no registered content listeners to handle this type!!! so go to the register 
