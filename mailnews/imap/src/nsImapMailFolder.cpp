@@ -3154,6 +3154,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
           keysToFlag.Add(msgKey);
           StoreImapFlags((filterLabel << 9), PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
         }
+        break;
         case nsMsgFilterAction::JunkScore:
         {
           nsCAutoString junkScoreStr;
@@ -3170,6 +3171,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
               keysToClassify->Add(msgKey);
           }
         }
+        break;
         default:
           break;
       }
