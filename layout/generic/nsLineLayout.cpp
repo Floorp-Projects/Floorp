@@ -841,10 +841,10 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
   nsIFrame* kidFrame;
   if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
     AbsoluteFrame::NewFrame(&kidFrame, aKid, mKidIndex, mBlock);
-    kidFrame->SetStyleContext(kidSC);
+    kidFrame->SetStyleContext(mPresContext, kidSC);
   } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
     PlaceholderFrame::NewFrame(&kidFrame, aKid, mKidIndex, mBlock);
-    kidFrame->SetStyleContext(kidSC);
+    kidFrame->SetStyleContext(mPresContext, kidSC);
   } else if (nsnull == mKidPrevInFlow) {
     // Create initial frame for the child
 
@@ -882,7 +882,7 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
       nsFrame::NewFrame(&kidFrame, aKid, mKidIndex, mBlock);
       break;
     }
-    kidFrame->SetStyleContext(kidSC);
+    kidFrame->SetStyleContext(mPresContext, kidSC);
   } else {
     // Since kid has a prev-in-flow, use that to create the next
     // frame.

@@ -17,7 +17,7 @@
  */
 #include "nsHTMLIIDs.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLFrameType.h"
+#include "nsBlockFrame.h"
 
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
-const nsIID kIHTMLFrameTypeIID = NS_IHTMLFRAMETYPE_IID;
+const nsIID kBlockFrameCID = NS_BLOCKFRAME_CID;

@@ -73,9 +73,9 @@ public:
              PRInt32 aIndexInParent,
              nsIFrame* aParentFrame);
 
-  NS_METHOD Paint(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
 protected:
   virtual ~HRuleFrame();
