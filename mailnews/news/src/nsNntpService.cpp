@@ -965,3 +965,4 @@ NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 
 	return rv;
 }
+
