@@ -41,8 +41,9 @@
 #include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
 #include "nsDOMEvent.h"
+#include "nsIScrollableView.h"
 
-NS_DEF_PTR(nsIStyleContext);
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 NS_IMETHODIMP
 nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
@@ -400,10 +401,10 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
 
       aFrame->GetParentWithView(parent);
       NS_ASSERTION(parent, "GetParentWithView failed");
-      nsIView* parView;
+      nsIView* parentView;
    
-      parent->GetView(parView);
-      NS_ASSERTION(parView, "no parent with view");
+      parent->GetView(parentView);
+      NS_ASSERTION(parentView, "no parent with view");
 
       // Create a view
       static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
@@ -414,17 +415,24 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
                                                      kIViewIID, 
                                                      (void **)&view);
       if (NS_OK == result) {
-        nsIView*        rootView = parView;
         nsIViewManager* viewManager;
-        rootView->GetViewManager(viewManager);
-
-        // Initialize the view
+        parentView->GetViewManager(viewManager);
         NS_ASSERTION(nsnull != viewManager, "null view manager");
 
+        // Initialize the view
         nsRect bounds;
         aFrame->GetRect(bounds);
-        view->Init(viewManager, bounds, rootView);
-        viewManager->InsertChild(rootView, view, zIndex);
+        view->Init(viewManager, bounds, parentView);
+
+        // Insert the view into the view hierarchy. If the parent view is a
+        // scrolling view we need to do this differently
+        nsIScrollableView*  scrollingView;
+        if (NS_SUCCEEDED(parentView->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+          scrollingView->SetScrolledView(view);
+        } else {
+          viewManager->InsertChild(parentView, view, zIndex);
+        }
+
         // If the background color is transparent or the visibility is hidden
         // then mark the view as having transparent content.
         // XXX We could try and be smarter about this and check whether there's
