@@ -55,7 +55,7 @@ while test $# -gt 0; do
       echo_exec_prefix=yes
       ;;
     --version)
-      echo -1
+      echo %MOZILLA_VERSION%
       exit 0
       ;;
     --cflags)
