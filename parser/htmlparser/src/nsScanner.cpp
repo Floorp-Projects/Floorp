@@ -1346,12 +1346,22 @@ void nsScanner::EndReading(nsScannerIterator& aPosition)
 void nsScanner::SetPosition(nsScannerIterator& aPosition, PRBool aTerminate, PRBool aReverse)
 {
   if (mSlidingBuffer) {
+#ifdef DEBUG
+    PRUint32 origRemaining = mCountRemaining;
+#endif
+
     if (aReverse) {
       mCountRemaining += (Distance(aPosition, mCurrentPosition));
     }
     else {
       mCountRemaining -= (Distance(mCurrentPosition, aPosition));
     }
+
+    NS_ASSERTION((mCountRemaining >= origRemaining && aReverse) ||
+                 (mCountRemaining <= origRemaining && !aReverse),
+                 "Improper use of nsScanner::SetPosition. Make sure to set the"
+                 " aReverse parameter correctly");
+
     mCurrentPosition = aPosition;
     if (aTerminate && (mCurrentPosition == mEndPosition)) {
       mMarkPosition = mCurrentPosition;
