@@ -40,9 +40,6 @@
 #include "BookmarkMenu.h"	  // Need for file bookmark generate function
 #endif
 
-#ifdef OLD_BOOKMARKS
-#include "bkmks.h"
-#endif /*OLD_BOOKMARKS*/
 #include "htrdf.h"
 #include "net.h"
 #include "layers.h"
