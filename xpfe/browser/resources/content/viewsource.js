@@ -577,3 +577,9 @@ function BrowserSetForcedCharacterSet(aCharset)
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
   PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
+
+function updateSavePageItems()
+{
+  var autoDownload = gPrefs.getBoolPref("browser.download.autoDownload");
+  goSetMenuValue("savepage", autoDownload ? "valueSave" : "valueSaveAs");
+}

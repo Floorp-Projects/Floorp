@@ -176,6 +176,8 @@ nsPrefWindow.prototype =
                       return this.pref.getBoolPref( aPrefString );
                     case "int":
                       return this.pref.getIntPref( aPrefString );
+                    case "localfile":
+                      return this.pref.getComplexValue( aPrefString, Components.interfaces.nsILocalFile);
                     case "localizedstring":
                       return this.pref.getComplexValue( aPrefString, Components.interfaces.nsIPrefLocalizedString ).data;
                     case "color":
@@ -207,6 +209,9 @@ nsPrefWindow.prototype =
                       break;
                     case "int":
                       this.pref.setIntPref( aPrefString, aValue );
+                      break;
+                    case "localfile":
+                      this.pref.setComplexValue( aPrefString, Components.interfaces.nsILocalFile, aValue );
                       break;
                     case "color":
                     case "string":

@@ -242,6 +242,8 @@ function saveDocument(aDocument)
                  null, false, null, null);
 }
 
+const SAVETYPE_COMPLETE_PAGE = 0x00;
+const SAVETYPE_TEXT_ONLY     = 0x02;
 /**
  * internalSave: Used when saving a document or URL. This method:
  *  - Determines a local target filename to use (unless parameter
@@ -268,40 +270,48 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
 {
   // Note: aDocument == null when this code is used by save-link-as...
   var contentType = (aDocument ? aDocument.contentType : null);
+  var saveMode = GetSaveModeForContentType(contentType);
+  var isDocument = aDocument != null && saveMode != SAVEMODE_FILEONLY;
+  var saveAsType = SAVETYPE_COMPLETE_PAGE;
 
+  var file, fileURL;
   // Find the URI object for aURL and the FileName/Extension to use when saving.
   // FileName/Extension will be ignored if aChosenData supplied.
   var fileInfo = new FileInfo(aDefaultFileName);
-  if (!aChosenData)
+  if (aChosenData)
+    file = aChosenData.file;
+  else {
     initFileInfo(fileInfo, aURL, aDocument, contentType);
-
-  var saveMode = GetSaveModeForContentType(contentType);
-  var isDocument = aDocument != null && saveMode != SAVEMODE_FILEONLY;
-
-  // Show the file picker that allows the user to confirm the target filename:
-  var fpParams = {
-    fp: makeFilePicker(),
-    fpTitleKey: aFilePickerTitleKey,
-    isDocument: isDocument,
-    fileInfo: fileInfo,
-    contentType: contentType,
-    saveMode: saveMode
-  };
-  // If aChosenData is null then the file picker is shown.
-  if (!aChosenData) {
+    var fpParams = {
+      fpTitleKey: aFilePickerTitleKey,
+      isDocument: isDocument,
+      fileInfo: fileInfo,
+      contentType: contentType,
+      saveMode: saveMode,
+      saveAsType: saveAsType,
+      file: file,
+      fileURL: fileURL
+    };
     if (!poseFilePicker(fpParams))
       // If the method returned false this is because the user cancelled from
       // the save file picker dialog.
       return;
+
+    saveAsType = fpParams.saveAsType;
+    saveMode = fpParams.saveMode;
+    file = fpParams.file;
+    fileURL = fpParams.fileURL;
   }
 
+  if (!fileURL)
+    fileURL = makeFileURI(file);
 
   // XXX We depend on the following holding true in appendFiltersForContentType():
-  // If we should save as a complete page, the filterIndex is 0.
-  // If we should save as text, the filterIndex is 2.
+  // If we should save as a complete page, the saveAsType is SAVETYPE_COMPLETE_PAGE.
+  // If we should save as text, the saveAsType is SAVETYPE_TEXT_ONLY.
   var useSaveDocument = isDocument &&
-                        (((fpParams.saveMode & SAVEMODE_COMPLETE_DOM) && (fpParams.fp.filterIndex == 0)) ||
-                         ((fpParams.saveMode & SAVEMODE_COMPLETE_TEXT) && (fpParams.fp.filterIndex == 2)));
+                        (((saveMode & SAVEMODE_COMPLETE_DOM) && (saveAsType == SAVETYPE_COMPLETE_PAGE)) ||
+                         ((saveMode & SAVEMODE_COMPLETE_TEXT) && (saveAsType == SAVETYPE_TEXT_ONLY)));
 
   // If we're saving a document, and are saving either in complete mode or
   // as converted text, pass the document to the web browser persist component.
@@ -309,8 +319,8 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
   var source = useSaveDocument ? aDocument : fileInfo.uri;
   var persistArgs = {
     source      : source,
-    contentType : (!aChosenData && useSaveDocument && fpParams.fp.filterIndex == 2) ? "text/plain" : contentType,
-    target      : (aChosenData ? makeFileURI(aChosenData.file) : fpParams.fp.fileURL),
+    contentType : (!aChosenData && useSaveDocument && saveAsType == SAVETYPE_TEXT_ONLY) ? "text/plain" : contentType,
+    target      : fileURL,
     postData    : isDocument ? getPostData() : null,
     bypassCache : aShouldBypassCache
   };
@@ -336,8 +346,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
     var filesFolder = null;
     if (persistArgs.contentType != "text/plain") {
       // Create the local directory into which to save associated files.
-      var destFile = (aChosenData ? aChosenData.file : fpParams.fp.file);
-      filesFolder = destFile.clone();
+      filesFolder = file.clone();
 
       var nameWithoutExtension = filesFolder.leafName.replace(/\.[^.]*$/, "");
       var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
@@ -454,19 +463,35 @@ function initFileInfo(aFI, aURL, aDocument, aContentType)
  */
 function poseFilePicker(aFpP)
 {
+  const nsILocalFile = Components.interfaces.nsILocalFile;
+  const kDownloadDirPref = "dir";
+
+  var branch = getPrefsBrowserDownload("browser.download.");
+  var dir = null;
+
+  // Try and pull in download directory pref
+  try {
+    dir = branch.getComplexValue(kDownloadDirPref, nsILocalFile);
+  } catch (e) { }
+
+  var autoDownload = branch.getBoolPref("autoDownload");
+  if (dir && autoDownload) {
+    dir.append(getNormalizedLeafName(aFpP.fileInfo.fileName, aFpP.fileInfo.fileExt));
+    aFpP.file = uniqueFile(dir);
+    return true;
+  }
+
+  // Show the file picker that allows the user to confirm the target filename:
+  var fp = makeFilePicker();
   var titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
   var bundle = getStringBundle();
-  var fp = aFpP.fp; // simply for smaller readable code
   fp.init(window, bundle.GetStringFromName(titleKey),
           Components.interfaces.nsIFilePicker.modeSave);
 
-  var prefs = getPrefsBrowserDownload("browser.download.");
-  const nsILocalFile = Components.interfaces.nsILocalFile;
   try {
-    fp.displayDirectory = prefs.getComplexValue("dir", nsILocalFile);
-  }
-  catch (e) {
-  }
+    if (dir.exists())
+      fp.displayDirectory = dir;
+  } catch (e) { }
 
   fp.defaultExtension = aFpP.fileInfo.fileExt;
   fp.defaultString = getNormalizedLeafName(aFpP.fileInfo.fileName,
@@ -476,7 +501,7 @@ function poseFilePicker(aFpP)
 
   if (aFpP.isDocument) {
     try {
-      fp.filterIndex = prefs.getIntPref("save_converter_index");
+      fp.filterIndex = branch.getIntPref("save_converter_index");
     }
     catch (e) {
     }
@@ -486,14 +511,36 @@ function poseFilePicker(aFpP)
     return false;
 
   if (aFpP.isDocument) 
-    prefs.setIntPref("save_converter_index", fp.filterIndex);
+    branch.setIntPref("save_converter_index", fp.filterIndex);
 
   // Now that the user has had a chance to change the directory and/or filename,
   // re-read those values...
-  var directory = fp.file.parent.QueryInterface(nsILocalFile);
-  prefs.setComplexValue("dir", nsILocalFile, directory);
+  if (branch.getBoolPref("lastLocation") || autoDownload) {
+    var directory = fp.file.parent.QueryInterface(nsILocalFile);
+    branch.setComplexValue(kDownloadDirPref, nsILocalFile, directory);
+  }
   fp.file.leafName = validateFileName(fp.file.leafName);
+
+  aFpP.saveAsType = fp.filterIndex;
+  aFpP.file = fp.file;
+  aFpP.fileURL = fp.fileURL;
   return true;
+}
+
+// Since we're automatically downloading, we don't get the file picker's
+// logic to check for existing files, so we need to do that here.
+//
+// Note - this code is identical to that in nsHelperAppDlg.js.
+// If you are updating this code, update that code too! We can't share code
+// here since that code is called in a js component.
+
+function uniqueFile(aLocalFile)
+{
+  while (aLocalFile.exists()) {
+    parts = /(-\d+)?(\.[^.]+)?$/.test(aLocalFile.leafName);
+    aLocalFile.leafName = RegExp.leftContext + (RegExp.$1 - 1) + RegExp.$2;
+  }
+  return aLocalFile;
 }
 
 // We have no DOM, and can only save the URL as is.

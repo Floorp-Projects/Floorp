@@ -265,11 +265,14 @@ function loadEventHandlers(event)
  **/
 function getContentAreaFrameCount()
 {
-  var saveFrameItem = document.getElementById("savepage");
+  var saveFrameItem = document.getElementById("saveframe");
   if (!content || !content.frames.length || !isContentFrame(document.commandDispatcher.focusedWindow))
     saveFrameItem.setAttribute("hidden", "true");
-  else
+  else {
+    var autoDownload = pref.getBoolPref("browser.download.autoDownload");
+    goSetMenuValue("saveframe", autoDownload ? "valueSave" : "valueSaveAs");
     saveFrameItem.removeAttribute("hidden");
+  }
 }
 
 // When a content area frame is focused, update the focused frame URL
@@ -2570,4 +2573,10 @@ function SwitchFocusedTextEntryDirection()
       else
         focusedElement.style.direction = "ltr";
   }
+}
+
+function updateSavePageItems()
+{
+  var autoDownload = pref.getBoolPref("browser.download.autoDownload");
+  goSetMenuValue("savepage", autoDownload ? "valueSave" : "valueSaveAs");
 }
