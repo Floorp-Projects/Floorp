@@ -129,7 +129,7 @@ public class NativeArray extends IdScriptable {
                              Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            switch (f.methodId()) {
                 case Id_constructor:
                     return jsConstructor(cx, scope, args, f, thisObj == null);
 

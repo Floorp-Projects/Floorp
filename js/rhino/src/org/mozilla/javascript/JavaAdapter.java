@@ -168,17 +168,17 @@ public final class JavaAdapter implements IdFunctionMaster
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
         JavaAdapter obj = new JavaAdapter();
-        IdFunction f = new IdFunction(obj, FTAG, Id_JavaAdapter,
-                                      "JavaAdapter", 1);
-        f.enableConstructorUsage();
-        f.defineAsScopeProperty(scope, sealed);
+        IdFunction ctor = new IdFunction(obj, FTAG, Id_JavaAdapter,
+                                         "JavaAdapter", 1, scope);
+        ctor.markAsConstructor(null);
+        ctor.exportAsScopeProperty(sealed);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (f.hasTag(FTAG)) {
-            if (f.methodId == Id_JavaAdapter) {
+            if (f.methodId() == Id_JavaAdapter) {
                 return js_createAdpter(cx, scope, args);
             }
         }

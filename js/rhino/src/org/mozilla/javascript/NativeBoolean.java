@@ -70,7 +70,7 @@ final class NativeBoolean extends IdScriptable {
                              Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            switch (f.methodId()) {
               case Id_constructor: {
                 boolean b = ScriptRuntime.toBoolean(args, 0);
                 if (thisObj == null) {

@@ -88,55 +88,12 @@ final class NativeString extends IdScriptable {
         return super.getIdValue(id);
     }
 
-    protected int methodArity(int methodId)
-    {
-        if (prototypeFlag) {
-            switch (methodId) {
-                case ConstructorId_fromCharCode:   return 1;
-
-                case Id_constructor:               return 1;
-                case Id_toString:                  return 0;
-                case Id_toSource:                  return 0;
-                case Id_valueOf:                   return 0;
-                case Id_charAt:                    return 1;
-                case Id_charCodeAt:                return 1;
-                case Id_indexOf:                   return 1;
-                case Id_lastIndexOf:               return 1;
-                case Id_split:                     return 2;
-                case Id_substring:                 return 2;
-                case Id_toLowerCase:               return 0;
-                case Id_toUpperCase:               return 0;
-                case Id_substr:                    return 2;
-                case Id_concat:                    return 1;
-                case Id_slice:                     return 2;
-                case Id_bold:                      return 0;
-                case Id_italics:                   return 0;
-                case Id_fixed:                     return 0;
-                case Id_strike:                    return 0;
-                case Id_small:                     return 0;
-                case Id_big:                       return 0;
-                case Id_blink:                     return 0;
-                case Id_sup:                       return 0;
-                case Id_sub:                       return 0;
-                case Id_fontsize:                  return 0;
-                case Id_fontcolor:                 return 0;
-                case Id_link:                      return 0;
-                case Id_anchor:                    return 0;
-                case Id_equals:                    return 1;
-                case Id_equalsIgnoreCase:          return 1;
-                case Id_match:                     return 1;
-                case Id_search:                    return 1;
-                case Id_replace:                   return 1;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            int methodId = f.methodId();
+            switch (methodId) {
                 case ConstructorId_fromCharCode: {
                     int N = args.length;
                     if (N < 1)
@@ -176,11 +133,11 @@ final class NativeString extends IdScriptable {
                     String target = ScriptRuntime.toString(thisObj);
                     double pos = ScriptRuntime.toInteger(args, 0);
                     if (pos < 0 || pos >= target.length()) {
-                        if (f.methodId == Id_charAt) return "";
+                        if (methodId == Id_charAt) return "";
                         else return ScriptRuntime.NaNobj;
                     }
                     char c = target.charAt((int)pos);
-                    if (f.methodId == Id_charAt) return String.valueOf(c);
+                    if (methodId == Id_charAt) return String.valueOf(c);
                     else return wrap_int(c);
                 }
 
@@ -260,7 +217,7 @@ final class NativeString extends IdScriptable {
                 case Id_equalsIgnoreCase: {
                     String s1 = ScriptRuntime.toString(thisObj);
                     String s2 = ScriptRuntime.toString(args, 0);
-                    return wrap_boolean(f.methodId == Id_equals
+                    return wrap_boolean(methodId == Id_equals
                         ? s1.equals(s2) : s1.equalsIgnoreCase(s2));
                 }
 
@@ -769,6 +726,50 @@ final class NativeString extends IdScriptable {
             }
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (prototypeFlag) {
+            switch (methodId) {
+                case ConstructorId_fromCharCode:   return 1;
+
+                case Id_constructor:               return 1;
+                case Id_toString:                  return 0;
+                case Id_toSource:                  return 0;
+                case Id_valueOf:                   return 0;
+                case Id_charAt:                    return 1;
+                case Id_charCodeAt:                return 1;
+                case Id_indexOf:                   return 1;
+                case Id_lastIndexOf:               return 1;
+                case Id_split:                     return 2;
+                case Id_substring:                 return 2;
+                case Id_toLowerCase:               return 0;
+                case Id_toUpperCase:               return 0;
+                case Id_substr:                    return 2;
+                case Id_concat:                    return 1;
+                case Id_slice:                     return 2;
+                case Id_bold:                      return 0;
+                case Id_italics:                   return 0;
+                case Id_fixed:                     return 0;
+                case Id_strike:                    return 0;
+                case Id_small:                     return 0;
+                case Id_big:                       return 0;
+                case Id_blink:                     return 0;
+                case Id_sup:                       return 0;
+                case Id_sub:                       return 0;
+                case Id_fontsize:                  return 0;
+                case Id_fontcolor:                 return 0;
+                case Id_link:                      return 0;
+                case Id_anchor:                    return 0;
+                case Id_equals:                    return 1;
+                case Id_equalsIgnoreCase:          return 1;
+                case Id_match:                     return 1;
+                case Id_search:                    return 1;
+                case Id_replace:                   return 1;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
     private static final int

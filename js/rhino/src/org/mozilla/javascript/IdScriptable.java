@@ -318,8 +318,7 @@ public abstract class IdScriptable extends ScriptableObject
      */
     protected Object getIdValue(int id)
     {
-        IdFunction f = newIdFunction(id);
-        f.setParentScope(getParentScope());
+        IdFunction f = newIdFunction(id, getParentScope());
         return cacheIdValue(id, f);
     }
 
@@ -431,21 +430,12 @@ public abstract class IdScriptable extends ScriptableObject
             setPrototype(getObjectPrototype(scope));
         }
 
-        String name = getClassName();
-        IdFunction ctor = newIdFunction(name, constructorId);
-        ctor.initAsConstructor(scope, this);
+        IdFunction ctor = newIdFunction(getClassName(), constructorId, scope);
+        ctor.markAsConstructor(this);
         fillConstructorProperties(cx, ctor, sealed);
-        if (sealed) {
-            ctor.sealObject();
-        }
-
         cacheIdValue(constructorId, ctor);
 
-        if (sealed) {
-            sealObject();
-        }
-
-        defineProperty(scope, name, ctor, ScriptableObject.DONTENUM);
+        ctor.exportAsScopeProperty(sealed);
     }
 
     protected void fillConstructorProperties
@@ -456,8 +446,7 @@ public abstract class IdScriptable extends ScriptableObject
     protected void addIdFunctionProperty
         (Scriptable obj, int id, boolean sealed)
     {
-        IdFunction f = newIdFunction(id);
-        f.setParentScope(getParentScope());
+        IdFunction f = newIdFunction(id, getParentScope());
         if (sealed) { f.sealObject(); }
         defineProperty(obj, getIdName(id), f, DONTENUM);
     }
@@ -487,14 +476,15 @@ public abstract class IdScriptable extends ScriptableObject
                                        f.getFunctionName());
     }
 
-    protected IdFunction newIdFunction(int id)
+    protected IdFunction newIdFunction(int id, Scriptable scope)
     {
-        return newIdFunction(getIdName(id), id);
+        return newIdFunction(getIdName(id), id, scope);
     }
 
-    protected IdFunction newIdFunction(String name, int id)
+    protected IdFunction newIdFunction(String name, int id, Scriptable scope)
     {
-        IdFunction f = new IdFunction(this, null, id, name, methodArity(id));
+        IdFunction f = new IdFunction(this, null, id, name, methodArity(id),
+                                      scope);
         if (isSealed()) { f.sealObject(); }
         return f;
     }

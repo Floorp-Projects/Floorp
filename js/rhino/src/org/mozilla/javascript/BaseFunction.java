@@ -159,7 +159,8 @@ public class BaseFunction extends IdScriptable implements Function {
                              Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            int methodId = f.methodId();
+            switch (methodId) {
               case Id_constructor:
                 return jsConstructor(cx, scope, args);
 
@@ -186,7 +187,7 @@ public class BaseFunction extends IdScriptable implements Function {
 
               case Id_apply:
               case Id_call:
-                return applyOrCall(f.methodId == Id_apply, cx, scope,
+                return applyOrCall(methodId == Id_apply, cx, scope,
                                    thisObj, args);
             }
         }

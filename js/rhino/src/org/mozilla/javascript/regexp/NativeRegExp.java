@@ -2625,7 +2625,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                              Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            switch (f.methodId()) {
               case Id_compile:
                 return realThis(thisObj, f).compile(cx, scope, args);
 

@@ -101,7 +101,7 @@ final class NativeDate extends IdScriptable
                              Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            int methodId = f.methodId;
+            int methodId = f.methodId();
             switch (methodId) {
                 case ConstructorId_now:
                     return wrap_double(now());

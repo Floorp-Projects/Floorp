@@ -49,16 +49,13 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         NativeWith obj = new NativeWith();
         obj.prototypeFlag = true;
 
-        IdFunction ctor = new IdFunction(obj, FTAG, Id_constructor,
-                                         "constructor", 0);
-        ctor.initAsConstructor(scope, obj);
-        if (sealed) { ctor.sealObject(); }
-
-        obj.setParentScope(ctor);
+        obj.setParentScope(scope);
         obj.setPrototype(ScriptableObject.getObjectPrototype(scope));
 
-        ScriptableObject.defineProperty(scope, "With", ctor,
-                                        ScriptableObject.DONTENUM);
+        IdFunction ctor = new IdFunction(obj, FTAG, Id_constructor,
+                                         "With", 0, scope);
+        ctor.markAsConstructor(obj);
+        ctor.exportAsScopeProperty(sealed);
     }
 
     private NativeWith() {
@@ -149,7 +146,7 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
                              Scriptable thisObj, Object[] args)
     {
         if (f.hasTag(FTAG)) {
-            if (f.methodId == Id_constructor) {
+            if (f.methodId() == Id_constructor) {
                 throw Context.reportRuntimeError1("msg.cant.call.indirect", "With");
             }
         }
@@ -160,7 +157,7 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
     {
         if (functionObj instanceof IdFunction) {
             IdFunction f = (IdFunction)functionObj;
-            return f.hasTag(FTAG) && f.methodId == Id_constructor;
+            return f.hasTag(FTAG) && f.methodId() == Id_constructor;
         }
         return false;
     }

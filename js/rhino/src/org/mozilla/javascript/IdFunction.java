@@ -40,13 +40,14 @@ package org.mozilla.javascript;
 public class IdFunction extends BaseFunction
 {
     public IdFunction(IdFunctionMaster master, Object tag, int id,
-                      String name, int arity)
+                      String name, int arity, Scriptable scope)
     {
         this.functionName = name;
         this.master = master;
         this.tag = tag;
         this.methodId = id;
         this.arity = arity;
+        setParentScope(scope);
     }
 
     public final boolean hasTag(Object tag)
@@ -54,27 +55,27 @@ public class IdFunction extends BaseFunction
         return this.tag == tag;
     }
 
-    public final int getMethodId()
+    public final int methodId()
     {
         return methodId;
     }
 
-    public final void enableConstructorUsage()
+    public final void markAsConstructor(Scriptable prototypeProperty)
     {
         useCallAsConstructor = true;
+        setImmunePrototypeProperty(prototypeProperty);
     }
 
-    public final void defineAsScopeProperty(Scriptable scope, boolean seal)
+    public final void exportAsScopeProperty(boolean seal)
     {
-        defineAsScopeProperty(scope, ScriptableObject.DONTENUM, seal);
+        exportAsScopeProperty(ScriptableObject.DONTENUM, seal);
     }
 
-    public void defineAsScopeProperty(Scriptable scope, int attributes,
-                                      boolean seal)
+    public void exportAsScopeProperty(int attributes, boolean seal)
     {
-        setParentScope(scope);
         if (seal) { sealObject(); }
-        ScriptableObject.defineProperty(scope, functionName, this, attributes);
+        ScriptableObject.defineProperty(getParentScope(), functionName, this,
+                                        attributes);
     }
 
     public Scriptable getPrototype()
@@ -137,17 +138,6 @@ public class IdFunction extends BaseFunction
 
     public int getLength() { return getArity(); }
 
-    /** Prepare to be used as constructor .
-     ** @param scope constructor scope
-     ** @param prototype DontEnum, DontDelete, ReadOnly prototype property
-     ** of the constructor */
-    public void initAsConstructor(Scriptable scope, Scriptable prototype)
-    {
-        useCallAsConstructor = true;
-        setParentScope(scope);
-        setImmunePrototypeProperty(prototype);
-    }
-
     public final RuntimeException unknown()
     {
         // It is program error to call id-like methods for unknown or
@@ -157,7 +147,7 @@ public class IdFunction extends BaseFunction
 
     private final IdFunctionMaster master;
     private final Object tag;
-    public final int methodId;
+    private final int methodId;
     private int arity;
     private boolean useCallAsConstructor;
 }

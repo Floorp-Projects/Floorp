@@ -118,7 +118,7 @@ public class NativeJavaTopPackage
 
         // getClass implementation
         IdFunction getClass = new IdFunction(top, FTAG, Id_getClass,
-                                             "getClass", 1);
+                                             "getClass", 1, scope);
 
         // We want to get a real alias, and not a distinct JavaPackage
         // with the same packageName, so that we share classes and top
@@ -129,7 +129,7 @@ public class NativeJavaTopPackage
         // a ScriptableObject.
         ScriptableObject global = (ScriptableObject) scope;
 
-        getClass.defineAsScopeProperty(global, sealed);
+        getClass.exportAsScopeProperty(sealed);
         global.defineProperty("Packages", top, ScriptableObject.DONTENUM);
         global.defineProperty("java", javaAlias, ScriptableObject.DONTENUM);
     }
@@ -138,7 +138,7 @@ public class NativeJavaTopPackage
                              Scriptable thisObj, Object[] args)
     {
         if (f.hasTag(FTAG)) {
-            if (f.methodId == Id_getClass) {
+            if (f.methodId() == Id_getClass) {
                 return js_getClass(cx, scope, args);
             }
         }

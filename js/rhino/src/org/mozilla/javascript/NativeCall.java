@@ -150,7 +150,7 @@ final class NativeCallPrototype extends IdScriptable
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        if (f.methodId == Id_constructor) {
+        if (f.methodId() == Id_constructor) {
             if (thisObj != null) {
                 throw Context.reportRuntimeError1("msg.only.from.new", "Call");
             }

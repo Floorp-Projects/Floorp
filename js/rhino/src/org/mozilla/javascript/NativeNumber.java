@@ -90,7 +90,7 @@ final class NativeNumber extends IdScriptable {
                              Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            switch (f.methodId()) {
                 case Id_constructor: {
                     double val = (args.length >= 1)
                         ? ScriptRuntime.toNumber(args[0]) : 0.0;

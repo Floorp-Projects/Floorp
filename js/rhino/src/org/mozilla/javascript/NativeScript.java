@@ -130,7 +130,7 @@ class NativeScript extends NativeFunction implements Script
                              Scriptable thisObj, Object[] args)
     {
         if (0 <= prototypeIdShift) {
-            switch (f.methodId - prototypeIdShift) {
+            switch (f.methodId() - prototypeIdShift) {
                 case Id_constructor: {
                     String source = (args.length == 0)
                                     ? ""

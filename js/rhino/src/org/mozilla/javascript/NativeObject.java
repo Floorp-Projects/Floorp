@@ -75,7 +75,7 @@ final class NativeObjectPrototype extends NativeObject
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        switch (f.methodId) {
+        switch (f.methodId()) {
             case Id_constructor: {
                 if (thisObj != null) {
                     // BaseFunction.construct will set up parent, proto

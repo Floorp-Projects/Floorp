@@ -85,7 +85,7 @@ final class NativeError extends IdScriptable
                              Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            switch (f.methodId()) {
               case Id_constructor:
                 return make(cx, scope, f, args);
 

@@ -99,8 +99,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
               default:
                   throw Kit.codeBug();
             }
-            IdFunction f = new IdFunction(obj, FTAG, id, name, arity);
-            f.defineAsScopeProperty(scope, sealed);
+            IdFunction f = new IdFunction(obj, FTAG, id, name, arity, scope);
+            f.exportAsScopeProperty(sealed);
         }
 
         ScriptableObject.defineProperty(scope, "NaN",
@@ -135,18 +135,15 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                         newObject(cx, scope, "Error",
                                                   ScriptRuntime.emptyArgs);
             errorProto.put("name", errorProto, name);
-            IdFunction ctor = new IdFunction(obj, FTAG, Id_new_CommonError,
-                                             name, 1);
-            ctor.initAsConstructor(scope, errorProto);
             if (sealed) {
-                ctor.sealObject();
                 if (errorProto instanceof ScriptableObject) {
                     ((ScriptableObject)errorProto).sealObject();
                 }
             }
-            ScriptableObject.defineProperty(scope, name, ctor,
-                                            ScriptableObject.DONTENUM);
-
+            IdFunction ctor = new IdFunction(obj, FTAG, Id_new_CommonError,
+                                             name, 1, scope);
+            ctor.markAsConstructor(errorProto);
+            ctor.exportAsScopeProperty(sealed);
         }
     }
 
@@ -154,17 +151,18 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                              Scriptable thisObj, Object[] args)
     {
         if (f.hasTag(FTAG)) {
-            switch (f.methodId) {
+            int methodId = f.methodId();
+            switch (methodId) {
                 case Id_decodeURI:
                 case Id_decodeURIComponent: {
                     String str = ScriptRuntime.toString(args, 0);
-                    return decode(cx, str, f.methodId == Id_decodeURI);
+                    return decode(cx, str, methodId == Id_decodeURI);
                 }
 
                 case Id_encodeURI:
                 case Id_encodeURIComponent: {
                     String str = ScriptRuntime.toString(args, 0);
-                    return encode(cx, str, f.methodId == Id_encodeURI);
+                    return encode(cx, str, methodId == Id_encodeURI);
                 }
 
                 case Id_escape:
@@ -475,7 +473,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
     {
         if (functionObj instanceof IdFunction) {
             IdFunction function = (IdFunction)functionObj;
-            if (function.hasTag(FTAG) && function.methodId == Id_eval) {
+            if (function.hasTag(FTAG) && function.methodId() == Id_eval) {
                 return true;
             }
         }

@@ -227,10 +227,10 @@ public class ImporterTopLevel extends IdScriptable
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
-	                         Scriptable thisObj, Object[] args)
+                             Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            switch (f.methodId()) {
               case Id_constructor:
                 return js_construct(scope, args);
 

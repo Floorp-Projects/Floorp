@@ -88,7 +88,8 @@ final class NativeMath extends IdScriptable
                              Scriptable thisObj, Object[] args)
     {
         double x;
-        switch (f.methodId) {
+        int methodId = f.methodId();
+        switch (methodId) {
             case Id_toSource:
                 return "Math";
 
@@ -102,7 +103,7 @@ final class NativeMath extends IdScriptable
             case Id_asin:
                 x = ScriptRuntime.toNumber(args, 0);
                 if (x == x && -1.0 <= x && x <= 1.0) {
-                    x = (f.methodId == Id_acos) ? Math.acos(x) : Math.asin(x);
+                    x = (methodId == Id_acos) ? Math.acos(x) : Math.asin(x);
                 } else {
                     x = Double.NaN;
                 }
@@ -150,7 +151,7 @@ final class NativeMath extends IdScriptable
 
             case Id_max:
             case Id_min:
-                x = (f.methodId == Id_max)
+                x = (methodId == Id_max)
                     ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
                 for (int i = 0; i != args.length; ++i) {
                     double d = ScriptRuntime.toNumber(args[i]);
@@ -158,7 +159,7 @@ final class NativeMath extends IdScriptable
                         x = d; // NaN
                         break;
                     }
-                    if (f.methodId == Id_max) {
+                    if (methodId == Id_max) {
                         // if (x < d) x = d; does not work due to -0.0 >= +0.0
                         x = Math.max(x, d);
                     } else {
