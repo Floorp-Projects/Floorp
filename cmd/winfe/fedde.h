@@ -188,6 +188,7 @@ struct CDDEWrapper	{
 	//	Client Window change commands.
 	static void WindowChange(CDDEWindowChangeItem *pItem, int iChange, TwoByteBool bExiting = FALSE, DWORD dwX = 0, DWORD dwY = 0,
 	    DWORD dwCX = 0, DWORD cwCY = 0);
+
 };
 
 //	Function declarations

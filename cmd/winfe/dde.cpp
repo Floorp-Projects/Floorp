@@ -32,6 +32,7 @@
 #include "net.h"        // Added so cache can be referenced (8/18/97)
 #include "mkcache.h"    // Ditto
 #include "cxprint.h"    // The printing context... used for PrintWindow and PrintURL (8/27/97)
+#include "animecho.h"
 
 //	Our DDE instance identifier.
 DWORD CDDEWrapper::m_dwidInst;
@@ -342,6 +343,20 @@ void DDEStartup()
 		(char *)(const char *)CS, CP_WINANSI);
     CS.LoadString(IDS_DDE_PRINTURL);
 	CDDEWrapper::m_hsz[CDDEWrapper::m_PrintURL] =
+		DdeCreateStringHandle(CDDEWrapper::m_dwidInst,
+		(char *)(const char *)CS, CP_WINANSI);
+
+	// Added by DWH 4/98
+	CS.LoadString(IDS_DDE_REGISTERANIMATIONECHO);
+	CDDEWrapper::m_hsz[CDDEWrapper::m_RegisterAnimationEcho] =
+		DdeCreateStringHandle(CDDEWrapper::m_dwidInst,
+		(char *)(const char *)CS, CP_WINANSI);
+	CS.LoadString(IDS_DDE_UNREGISTERANIMATIONECHO);
+	CDDEWrapper::m_hsz[CDDEWrapper::m_UnRegisterAnimationEcho] =
+		DdeCreateStringHandle(CDDEWrapper::m_dwidInst,
+		(char *)(const char *)CS, CP_WINANSI);
+	CS.LoadString(IDS_DDE_ANIMATIONECHO);
+	CDDEWrapper::m_hsz[CDDEWrapper::m_AnimationEcho] =
 		DdeCreateStringHandle(CDDEWrapper::m_dwidInst,
 		(char *)(const char *)CS, CP_WINANSI);
 
@@ -1798,6 +1813,10 @@ HDDEDATA CDDEWrapper::PokeHandler(HSZ& hszTopic, HSZ& hszItem,
 		return(RegisterURLEcho(hszItem, hData));
 	case m_UnRegisterURLEcho:
 		return(UnRegisterURLEcho(hszItem, hData));
+	case m_RegisterAnimationEcho:
+		return(RegisterAnimationEcho(hszItem, hData));
+	case m_UnRegisterAnimationEcho:
+		return(UnRegisterAnimationEcho(hszItem, hData));
 	case m_WindowChange:
 		return(WindowChange(hszItem, hData));
 	case m_CancelProgress:
@@ -3254,6 +3273,73 @@ void CDDEWrapper::URLEcho(CDDEEchoItem *pItem, CString& csURL, CString& csMimeTy
 		delete pConv;
 	}
 }
+
+
+// Functions for handling animation echoing (Added by Dave Hyatt 4/98)
+HDDEDATA CDDEWrapper::RegisterAnimationEcho(HSZ& hszItem, HDDEDATA& hData)
+{
+	//	Scan in our arguments.
+	CString csServiceName;
+	ScanArgs(hszItem, "QCS", &csServiceName);
+
+	//	Have the URL echo class handle it.
+	CDDEAnimationEcho::DDERegister(csServiceName);
+
+	return((HDDEDATA)DDE_FACK);
+}
+
+
+HDDEDATA CDDEWrapper::UnRegisterAnimationEcho(HSZ& hszItem, HDDEDATA& hData)
+{
+	//	Scan in our arguments.
+	CString csServiceName;
+	ScanArgs(hszItem, "QCS", &csServiceName);
+
+	//	Have the URL echo class handle it.
+	if(CDDEAnimationEcho::DDEUnRegister(csServiceName) == TRUE)  {
+	    return((HDDEDATA)DDE_FACK);
+    }
+
+    return((HDDEDATA)DDE_FNOTPROCESSED);
+}
+
+void CDDEWrapper::AnimationEcho(CDDEAnimationEcho *pItem, DWORD dwWindowID, DWORD dwState)
+{
+	//	Get the server name.
+	CString csServiceName = pItem->GetServiceName();
+	
+	//	Establish the connection to homeworld.
+	CDDEWrapper *pConv = ClientConnect(csServiceName, m_hsz[m_AnimationEcho]);
+
+	if(pConv == NULL)	
+	{
+		CDDEAnimationEcho::DDEUnRegister(csServiceName);
+		return;
+	}
+	
+	//	Save the conversation, in case the DDE server disconnects behind
+	//		our backs.
+	HCONV hSaveConv = pConv->m_hConv;
+
+	//	Create our argument list.
+	HSZ hszItem = MakeItemArgs("DW,DW", &dwWindowID, &dwState);
+		
+	//	Do the transaction, expect nothing.
+	DdeClientTransaction(NULL, 0L, hSaveConv, hszItem, CF_TEXT,
+		XTYP_POKE, m_Timeout, NULL);
+
+	//	Cut the cord.
+	DdeFreeStringHandle(m_dwidInst, hszItem);
+	DdeDisconnect(hSaveConv);
+
+	//	Make sure we still have a conversation, if so, delete the object.
+	pConv = GetConvObj(hSaveConv);
+	if(pConv)	
+	{
+		delete pConv;
+	}
+}
+
 
 //	Purpose:	Register a DDE server to monitor a certain window's close.
 //	Arguments:	hszItem	the argumetns, the server and the window

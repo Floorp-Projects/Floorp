@@ -23,6 +23,7 @@
 #include "prefapi.h"
 #include "custom.h"
 #include "sysinfo.h"
+#include "animecho.h"
 
 #define ANIMATION_WIDTH     16
 #define ANIMATION_HEIGHT    16
@@ -392,7 +393,25 @@ void CAnimation2::StopAnimation()
 void CAnimation2::StartAnimation()
 {
     m_iAnimationCount = 1;
-	m_uAnimationClock = SetTimer(WIN_ANIMATE_ICON_TIMER, ANIMATION_PERIOD/m_iFrameCount, NULL);
+
+	if (m_uAnimationClock == 0)
+	{
+		// The animation is not currently running.
+		m_uAnimationClock = SetTimer(WIN_ANIMATE_ICON_TIMER, ANIMATION_PERIOD/m_iFrameCount, NULL);
+			
+		// Added by Dave (4/98). DDE Hook to listen to animation.
+		CFrameWnd* pFrame = GetTopLevelFrame();
+		if (pFrame->IsKindOf(RUNTIME_CLASS(CGenericFrame)))
+		{
+			CGenericFrame* pGenFrame = (CGenericFrame*)pFrame;
+			CWinCX* pWinContext = pGenFrame->GetMainWinContext();
+			if (pWinContext)
+			{
+				DWORD dwWindowID = pWinContext->GetContextID();
+				CDDEAnimationEcho::Echo(dwWindowID, (DWORD)1);
+			}
+		}
+	}
 }
 
 void CAnimation2::AnimateIcon()

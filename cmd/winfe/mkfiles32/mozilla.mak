@@ -1208,6 +1208,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\animbar.cpp   
 	$(DEPTH)\cmd\winfe\animbar2.cpp   
 	$(DEPTH)\cmd\winfe\apiapi.cpp 
+	$(DEPTH)\cmd\winfe\animecho.cpp
 	$(DEPTH)\cmd\winfe\askmedlg.cpp 
 	$(DEPTH)\cmd\winfe\authdll.cpp
 	$(DEPTH)\cmd\winfe\button.cpp 

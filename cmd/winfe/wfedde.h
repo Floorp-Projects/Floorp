@@ -44,6 +44,8 @@
 #endif // WIN32
 #include "genchrom.h"
 
+class CDDEAnimationEcho;
+
 //	Constants
 //
 //	Change this on each revision.  Hiword is major, Loword is minor.
@@ -117,6 +119,9 @@ struct CDDEWrapper	{
         m_ExecuteJavaScript,
         m_PrintWindow,
         m_PrintURL,
+		m_RegisterAnimationEcho,  // Added by DWH (4/98)
+		m_AnimationEcho,
+		m_UnRegisterAnimationEcho,
         // End of the new topics -- Dave Hyatt (8/13/97)
 		m_MaxHSZ,	//	Where all hsz strings end, and where topics end
 		m_Timeout = 30000,	//	Timeout value, in milliseconds, that the we will wait as a client.
@@ -227,6 +232,10 @@ struct CDDEWrapper	{
 	HDDEDATA WindowChange(HSZ& hszItem, HDDEDATA& hData);
 	HDDEDATA CancelProgress(HSZ& hszItem, HDDEDATA& hData);
 	
+	// Server Pokes for animation changes (added 4/98 by DWH).
+	HDDEDATA RegisterAnimationEcho(HSZ& hszItem, HDDEDATA& hData);
+	HDDEDATA UnRegisterAnimationEcho(HSZ& hszItem, HDDEDATA& hData);
+
 	//	Client connection establisher.
 	static CDDEWrapper *ClientConnect(const char *cpService,
 		HSZ& hszTopic);
@@ -264,6 +273,9 @@ struct CDDEWrapper	{
 	    DWORD dwCX = 0, DWORD cwCY = 0);
 
 	static void StatusBarChange(CDDEStatusBarChangeItem *pItem, LPCSTR lpStatusMsg);//JOKI
+
+	// Client animation echo commands
+	static void AnimationEcho(CDDEAnimationEcho* pItem, DWORD dwWindowID, DWORD dwAnimationState);
 };
 
 //	Global variables
