@@ -28,8 +28,11 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsFileStream.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsIFile.h"
+#include "nsXPIDLString.h"
 #include "nsIFileSpec.h"
-#include "nsFileLocations.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
@@ -299,13 +302,24 @@ cookie_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar * s
 }
 
 PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
-  nsIFileSpec* spec = 
-    NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);
-  if (!spec) {
-    return NS_ERROR_FAILURE;
-  }
-  nsresult res = spec->GetFileSpec(&dirSpec);
-  NS_RELEASE(spec);
+    
+  nsresult res;
+  nsCOMPtr<nsIFile> aFile;
+  nsCOMPtr<nsIFileSpec> tempSpec;
+  
+  res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aFile));
+  if (NS_FAILED(res)) return res;
+  
+  // TODO: When the calling code can take an nsIFile,
+  // this conversion to nsFileSpec can be avoided. 
+  nsXPIDLCString pathBuf;
+  aFile->GetPath(getter_Copies(pathBuf));
+  res = NS_NewFileSpec(getter_AddRefs(tempSpec));
+  if (NS_FAILED(res)) return res;
+  res = tempSpec->SetNativePath(pathBuf);
+  if (NS_FAILED(res)) return res;
+  res = tempSpec->GetFileSpec(&dirSpec);
+  
   return res;
 }
 
