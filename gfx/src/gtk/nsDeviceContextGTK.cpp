@@ -75,14 +75,20 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   mDepth = vis->depth;
 
   sb = gtk_vscrollbar_new(NULL);
+  gtk_widget_ref(sb);
+  gtk_object_sink(GTK_OBJECT(sb));
   gtk_widget_size_request(sb,&req);
   mScrollbarWidth = req.width;
   gtk_widget_destroy(sb);
+  gtk_widget_unref(sb);
   
   sb = gtk_hscrollbar_new(NULL);
+  gtk_widget_ref(sb);
+  gtk_object_sink(GTK_OBJECT(sb));
   gtk_widget_size_request(sb,&req);
   mScrollbarHeight = req.height;
   gtk_widget_destroy(sb);
+  gtk_widget_unref(sb);
 
   return NS_OK;
 }
