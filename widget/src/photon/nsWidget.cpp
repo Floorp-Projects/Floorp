@@ -2711,7 +2711,7 @@ nsAutoString nsWidget::GuiEventToString(nsGUIEvent * aGuiEvent)
 {
   NS_ASSERTION(nsnull != aGuiEvent,"cmon, null gui event.");
 
-  nsAutoString eventName = (const PRUnichar *) "UNKNOWN";
+  nsAutoString eventName; eventName.AssignWithConversion("UNKNOWN");
 
 #define _ASSIGN_eventName(_value,_name)\
 case _value: eventName = (const PRUnichar *)  _name ; break
@@ -2795,7 +2795,7 @@ nsAutoString nsWidget::PhotonEventToString(PhEvent_t * aPhEvent)
 {
   NS_ASSERTION(nsnull != aPhEvent,"cmon, null photon gui event.");
 
-  nsAutoString eventName = (const PRUnichar *) "UNKNOWN";
+  nsAutoString eventName; eventName.AssignWithConversion("UNKNOWN");
 
 #define _ASSIGN_eventName(_value,_name)\
 case _value: eventName = (const PRUnichar *) _name ; break
