@@ -209,7 +209,7 @@ tristatecheckbox {
    border: 1px solid black;
 }
 
-tristatecheckbox[pseudoclass~="hover"] {
-   background: blue;
-   border: 2px dashed red;
+tristatecheckbox[depress] {
+   background: darkGray;
+   border: 1px inset black;
 }
