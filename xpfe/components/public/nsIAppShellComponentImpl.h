@@ -151,8 +151,12 @@ className::Initialize( nsIAppShellService *anAppShell, \
 NS_IMETHODIMP \
 className::Shutdown() { \
     nsresult rv = NS_OK; \
-    if ( mServiceMgr && Is_Service() ) { \
-        rv = mServiceMgr->ReleaseService( progId, this ); \
+    if ( mServiceMgr ) { \
+        if ( Is_Service() ) { \
+            rv = mServiceMgr->ReleaseService( progId, this ); \
+        } \
+        mServiceMgr->Release(); \
+        mServiceMgr = 0; \
     } \
     return rv; \
 } \
