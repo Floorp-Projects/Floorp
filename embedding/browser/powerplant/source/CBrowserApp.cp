@@ -49,10 +49,11 @@
 #include "CWebBrowserCMAttachment.h"
 #include "UMacUnicode.h"
 #include "CAppFileLocationProvider.h"
+#include "EmbedEventHandling.h"
 
-#include "nsIImageManager.h"
+#include "nsEmbedAPI.h"
+
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -63,7 +64,6 @@
 #include "nsILocalFileMac.h"
 #include "nsIFileChannel.h"
 #include "nsIFileSpec.h"
-#include "nsEmbedAPI.h"
 #include "nsMPFileLocProvider.h"
 #include "nsXPIDLString.h"
 #include "macstdlibextras.h"
@@ -195,6 +195,7 @@ CBrowserApp::CBrowserApp()
    rv = NS_InitEmbedding(appDir, fileLocProvider);
 
    InitializeWindowCreator();
+   InitializeEmbedEventHandling(this);
 }
 
 
@@ -282,65 +283,16 @@ CBrowserApp::MakeMenuBar()
 }
 
 // ---------------------------------------------------------------------------
-//	¥ ProcessNextEvent												  [public]
+//	¥ AdjustCursor												      [public]
 // ---------------------------------------------------------------------------
-//	Retrieve and handle the next event in the event queue 
 
-void
-CBrowserApp::ProcessNextEvent()
+void CBrowserApp::AdjustCursor(const EventRecord& inMacEvent)
 {
-	EventRecord		macEvent;
-
-		// When on duty (application is in the foreground), adjust the
-		// cursor shape before waiting for the next event. Except for the
-		// very first time, this is the same as adjusting the cursor
-		// after every event.
-	
-	if (IsOnDuty()) {
-			
-			// Calling OSEventAvail with a zero event mask will always
-			// pass back a null event. However, it fills the EventRecord
-			// with the information we need to set the cursor shape--
-			// the mouse location in global coordinates and the state
-			// of the modifier keys.
-			
-		::OSEventAvail(0, &macEvent);
-		AdjustCursor(macEvent);
-	}
-	
-		// Retrieve the next event. Context switch could happen here.
-	
-	SetUpdateCommandStatus(false);
-	Boolean	gotEvent = ::WaitNextEvent(everyEvent, &macEvent, mSleepTime,
-										mMouseRgn);
-
-		// Let Attachments process the event. Continue with normal
-		// event dispatching unless suppressed by an Attachment.
-	
-	if (LAttachable::ExecuteAttachments(msg_Event, &macEvent)) {
-		if (gotEvent) {
-#if DEBUG
-            if (macEvent.what == kHighLevelEvent || !SIOUXHandleOneEvent(&macEvent))
-#endif
-			    DispatchEvent(macEvent);
-			    
-		} else {
-			UseIdleTime(macEvent);
-			
-  		    Repeater::DoIdlers(macEvent);
-                // yield to other threads
-            ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-		}
-	}
-
-									// Repeaters get time after every event
-	LPeriodical::DevoteTimeToRepeaters(macEvent);
-	Repeater::DoRepeaters(macEvent);
-	
-									// Update status of menu items
-	if (IsOnDuty() && GetUpdateCommandStatus()) {
-		UpdateMenus();
-	}
+  // Needed in order to give an attachment to the application a
+  // msg_AdjustCursor. CEmbedEventAttachment needs this.
+  
+  if (ExecuteAttachments(msg_AdjustCursor, (void*) &inMacEvent))
+	  LEventDispatcher::AdjustCursor(inMacEvent);
 }
 
 
