@@ -187,7 +187,7 @@ nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
 {
   GEUS_ElementCreated(aNodeInfo);
 
-  return nsGenericElement::Init(aNodeInfo);
+  return nsGenericContainerElement::Init(aNodeInfo);
 }
 
 #endif
@@ -231,7 +231,7 @@ static NS_DEFINE_CID(kCSSOMFactoryCID, NS_CSSOMFACTORY_CID);
 
 NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLContent)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
+NS_INTERFACE_MAP_END_INHERITING(nsGenericContainerElement)
  
 
 nsresult
@@ -424,7 +424,7 @@ nsGenericHTMLElement::GetElementsByTagName(const nsAString& aTagname,
   if (mNodeInfo && mNodeInfo->NamespaceEquals(kNameSpaceID_None))
     ToLowerCase(tagName);
 
-  return nsGenericElement::GetElementsByTagName(tagName, aReturn);
+  return nsGenericContainerElement::GetElementsByTagName(tagName, aReturn);
 }
 
 // Implementation for nsIDOMHTMLElement
@@ -1281,7 +1281,8 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 {
   PRBool doNothing = aDocument == mDocument; // short circuit useless work
 
-  nsGenericElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
+  nsGenericContainerElement::SetDocument(aDocument, aDeep,
+                                         aCompileEventHandlers);
 
   ReparseStyleAttribute();
   if (!doNothing && mDocument) {
@@ -2165,7 +2166,7 @@ nsGenericHTMLElement::GetBaseURI() const
     return nsnull;
   }
 
-  return nsGenericElement::GetBaseURI();
+  return nsGenericContainerElement::GetBaseURI();
 }
 
 nsresult
@@ -3442,7 +3443,7 @@ nsGenericHTMLFormElement::SetParent(nsIContent* aParent)
     FindAndSetForm();
   }
 
-  nsGenericElement::SetParent(aParent);
+  nsGenericHTMLElement::SetParent(aParent);
 }
 
 void
