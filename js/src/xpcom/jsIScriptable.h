@@ -1,71 +1,154 @@
-/* -*- Mode: cc; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
- */
-
-/*
- * jsIScriptable.h -- the XPCOM interface to native JavaScript objects.
- */
-
-class jsIScriptable;		/* for mutually-dependent includes */
-
-#ifndef JS_ISCRIPTABLE_H
-#define JS_ISCRIPTABLE_H
-
+#ifndef _jsIScriptable
+#define _jsIScriptable
+#include "jsapi.h"
 #include "nsISupports.h"
-#include "jsIContext.h"
-#include <jsapi.h>
 
 #define JS_ISCRIPTABLE_IID \
     { 0, 0, 0, \
 	{0, 0, 0, 0, 0, 0, 0, 0}}
 
-#define JSSCRIPTABLE_NOT_FOUND -1
-
-class jsIScriptable: public nsISupports {
- public:
-    virtual JSString *getClassName(jsIContext *) = 0;
-
-    /* XXX use jsid for name/index? */
-    NS_IMETHOD get(jsIContext *cx, const char *name, jsval *vp) = 0;
-    NS_IMETHOD has(jsIContext *cx, jsval id, JSBool *bp) = 0;
-    NS_IMETHOD put(jsIContext *cx, const char *name, jsval v) = 0;
-    NS_IMETHOD del(jsIContext *cx, jsval id) = 0;
-
-    virtual jsIScriptable *getPrototype(jsIContext *cx) = 0;
-    NS_IMETHOD setPrototype(jsIContext *cx, jsIScriptable *prototype) = 0;
-    virtual jsIScriptable *getParentScope(jsIContext *cx) = 0;
-    NS_IMETHOD setParentScope(jsIContext *cx, jsIScriptable *parent) = 0;
-    /* virtual JSIdArray *getIds(); */
-    NS_IMETHOD getDefaultValue(jsIContext *cx, JSType hint, jsval *vp) = 0;
-
-    /**
-     * Return a classic JSAPI JSObject * for this object.
-     * Return NULL if you don't know how to, and the engine will
-     * construct a proxy for you.
-     */
-    virtual JSObject *getJSObject(jsIContext *) = 0;
-
-    /**
-     * Set the JSObject proxy for this object (typically one created
-     * by the engine in response to a NULL return fron getJSObject).
-     * Context is provided for GC rooting and other tasks.  Be sure
-     * to unroot the proxy in your destructor, etc.
-     */
-    NS_IMETHOD setJSObject(jsIContext *, JSObject *)= 0;
+class Meth {
+public:
+	virtual nsresult invoke(int argc, jsval* args, jsval* rval) =0;
+	virtual	void SetJSContext(JSContext* cx) =0;
+	virtual	JSContext* GetJSContext() =0;
+	virtual	void SetJSVal(JSContext* cx, jsval v) =0;
+	virtual jsval GetJSVal(JSContext* cx) =0;
+	virtual int AddRef() =0;
+	virtual int SubRef() =0;
 };
 
-#endif /* JS_ISCRIPTABLE_H */
+#define Method(C) Method_##C
+#define DefMethodClass(C)\
+class C;\
+class Method_##C : public Meth {\
+	JSContext* cx;	\
+	jsval mval;\
+	int _ref;\
+public:\
+	C* thisptr;	\
+	nsresult (C::*method)(JSContext* cx, int argc, jsval* args, jsval* rval);\
+	virtual nsresult invoke(int argc, jsval* args, jsval* rval) {\
+		return (thisptr->*method)(cx,argc,args,rval);\
+	}\
+	virtual void SetJSContext(JSContext* _cx) {\
+        cx = _cx;\
+	}\
+	virtual JSContext* GetJSContext() {\
+        return cx;\
+	}\
+	virtual void SetJSVal(JSContext* cx, jsval v) {\
+		if (mval)\
+				JS_RemoveRoot(cx,&mval);\
+		mval = v;\
+		JS_AddRoot(cx,&mval);\
+	}\
+	virtual jsval GetJSVal(JSContext* cx) {\
+		return mval;\
+	}\
+	virtual int AddRef() {\
+		return _ref++;\
+	}\
+	virtual int SubRef() {\
+		return --_ref;\
+	}\
+	Method_##C() : cx(NULL), mval(0), _ref(0) {}\
+	~Method_##C() {\
+		if (mval)\
+			JS_RemoveRoot(cx,&mval);\
+	}\
+}
+
+class jsIScriptable : public nsISupports {
+public:
+	// static conversion between JS and C++
+	static JS_PUBLIC_API(nsresult) FromJS(JSContext* cx, jsval v, double* d);
+	static JS_PUBLIC_API(nsresult) FromJS(JSContext* cx, jsval v, char** s, size_t n);
+	static JS_PUBLIC_API(nsresult) FromJS(JSContext* cx, jsval v, jsIScriptable** o);
+	static JS_PUBLIC_API(nsresult) ToJS(JSContext* cx, double d, jsval* v);
+	static JS_PUBLIC_API(nsresult) ToJS(JSContext* cx, char* s, jsval* v);
+	static JS_PUBLIC_API(nsresult) ToJS(JSContext* cx, jsIScriptable* o, jsval* v);
+	static JS_PUBLIC_API(nsresult) ToJS(JSContext* cx, Meth* m, jsval* v);
+	virtual JSObject* GetJS() =0;			// returns the peer JS object
+	virtual void SetJS(JSObject *o) =0;	// sets the peer
+	virtual nsresult get(JSContext* cx, char* p, jsval* v) =0; // gets the property
+	virtual nsresult put(JSContext* cx, char* p, jsval v) =0;	// sets ...
+	virtual char** GetIds() =0;    // returns an array with the identifiers (ints or strings) that can be enumerated
+	virtual JSObject *getParent(JSContext* cx) =0;
+	virtual void setParent(JSContext* cx, JSObject *o) =0; 
+	virtual JSObject* getProto(JSContext* cx) =0;
+	virtual void setProto(JSContext* cx, JSObject *o) =0;
+};
+
+#define Scriptable(C) jsScriptable_##C
+#define DefScriptableClass(C)\
+DefMethodClass(C);\
+class jsScriptable_##C : public jsIScriptable {\
+	JSObject* obj;\
+	int _ref;\
+	int sz;\
+	char** names;\
+    Method(C)* meths;\
+public:\
+    NS_DECL_ISUPPORTS;\
+	jsScriptable_##C(int _sz=0) : _ref(0), sz(_sz), obj(NULL) {\
+		names = new char*[sz];\
+		meths = new Method(C)[sz];\
+		for (int i=0; i<sz; i++)\
+			names[i] = NULL;\
+	}\
+	~jsScriptable_##C() {\
+		delete names;\
+		delete meths;\
+	}\
+	nsresult AddMethod(char* nm, nsresult (C::*method)(JSContext*, int, jsval*, jsval*)) {\
+		for (int i=0; i<sz; i++) \
+			if (names[i] == NULL) {\
+				names[i] = nm;\
+				meths[i].method = method;\
+				meths[i].thisptr = (C*)this;\
+				return NS_OK;\
+			}\
+		return NS_ERROR_FAILURE;\
+	}\
+	nsresult GetMethod(char* nm, Meth** meth) {\
+		for (int i=0; i<sz; i++) \
+			if (strcmp(names[i],nm) == 0) {\
+                *meth = &meths[i];\
+				return NS_OK;\
+			}\
+		return NS_ERROR_FAILURE;\
+	}\
+	nsresult RemoveMethod(char* nm) {\
+		for (int i=0; i<sz; i++) \
+			if (strcmp(names[i],nm) == 0) {\
+				names[i] = NULL;\
+				return NS_OK;\
+			}\
+		return NS_ERROR_FAILURE;\
+	}\
+	virtual JSObject* GetJS() { \
+		return obj;\
+	}\
+	virtual	void SetJS(JSObject *o) { \
+		obj = o; \
+	}\
+	char** GetIds() {\
+		return NULL;\
+	}\
+	virtual JSObject *getParent(JSContext* cx) {\
+		return (obj ? JS_GetParent(cx,obj) : NULL);\
+	}\
+	virtual void setParent(JSContext* cx, JSObject *o) {\
+		if (obj) JS_SetParent(cx,obj,o);\
+	}\
+	virtual JSObject* getProto(JSContext* cx) {\
+		return (obj ? JS_GetPrototype(cx, obj) : NULL);\
+	}\
+	virtual void setProto(JSContext* cx, JSObject *o) {\
+		if (obj) JS_SetPrototype(cx,obj,o);\
+	}\
+};\
+NS_IMPL_ISUPPORTS(Scriptable(C), kIScriptableIID)
+
+#endif
