@@ -120,8 +120,12 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 4;
         break;
     case eMetric_TextFieldHeight:
-        aMetric = 10;
-    break;
+//        aMetric = 10;
+        aMetric = 15;
+        break;
+    case eMetric_TextFieldBorder:
+        aMetric = 2;
+        break;
     case eMetric_TextVerticalInsidePadding:
         aMetric = 0;
         break;
@@ -129,10 +133,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         break;
     case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 3;
+        aMetric = 15;
         break;
     case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 0;
+        aMetric = 1;
         break;
     case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
         aMetric = 10;
@@ -141,22 +145,28 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 8;
         break;
     case eMetric_CheckboxSize:
-        aMetric = 12;
+        aMetric = 15;
         break;
     case eMetric_RadioboxSize:
-        aMetric = 12;
+        aMetric = 15;
         break;
     case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 0;
+        aMetric = 15;
         break;
     case eMetric_ListHorizontalInsideMinimumPadding:
-        aMetric = 3;
+        aMetric = 15;
         break;
     case eMetric_ListShouldUseVerticalInsidePadding:
-        aMetric = 0;
+        aMetric = 1;
         break;
     case eMetric_ListVerticalInsidePadding:
-        aMetric = 0;
+        aMetric = 1;
+        break;
+    case eMetric_CaretBlinkTime:
+        aMetric = 500;
+        break;
+    case eMetric_CaretWidthTwips:
+        aMetric = 20;
         break;
     default:
         aMetric = -1;
