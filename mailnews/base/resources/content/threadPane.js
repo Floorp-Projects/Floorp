@@ -157,6 +157,7 @@ function HandleColumnClick(columnID)
   }
   else {
     if (!simpleColumns && (dbview.viewFlags & nsMsgViewFlagsType.kThreadedDisplay)) {
+      dbview.viewFlags &= ~nsMsgViewFlagsType.kThreadedDisplay;
       MsgSortThreadPane(sortType);
     }
     else if (dbview.sortType == sortType) {
@@ -292,7 +293,7 @@ function MsgSortThreadPane(sortType)
 {
   var dbview = GetDBView();
   var viewFlags = dbview.viewFlags;
-  dbview.viewFlags &= ~ (nsMsgViewFlagsType.kThreadedDisplay | nsMsgViewFlagsType.kGroupBySort);
+  dbview.viewFlags &= ~ nsMsgViewFlagsType.kGroupBySort;
   if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
   {
     dbview.sortType = sortType; // save sort in current view
