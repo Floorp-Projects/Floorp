@@ -274,7 +274,7 @@ STDMETHODIMP CPalmSyncImp::nsSynchronizeAB(BOOL aIsUnicode, long aCategoryIndex,
 STDMETHODIMP CPalmSyncImp::nsAddAllABRecords(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName,
                             int aRemoteRecCount, lpnsABCOMCardStruct aRemoteRecList)
 {
-    // since we are not returning any data we donot need to keep the nsAbPalmHotSync reference
+    // since we are not returning any data we don't need to keep the nsAbPalmHotSync reference
     // in order to free the returned data in its destructor. Just create a local nsAbPalmHotSync var.
     nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryIndex, -1);
 

@@ -348,6 +348,14 @@ long CALLBACK CondCfgDlgProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lPar
               LoadString((HINSTANCE)hLangInstance, IDS_SYNC_FILES, szBuffer, 
                          sizeof(szBuffer));
               break;
+            case ePCtoHH:
+              CheckRadioButton( hWnd, IDC_RADIO_SYNC, IDC_RADIO_DONOTHING, IDC_RADIO_PCTOHH);
+              LoadString((HINSTANCE)hLangInstance, IDS_PCTOHH, szBuffer, sizeof(szBuffer));
+              break;
+            case eHHtoPC:
+              CheckRadioButton( hWnd, IDC_RADIO_SYNC, IDC_RADIO_DONOTHING, IDC_RADIO_HHTOPC);
+              LoadString((HINSTANCE)hLangInstance, IDS_HHTOPC, szBuffer, sizeof(szBuffer));
+              break;
             case eDoNothing:
             default:
               CheckRadioButton(hWnd, IDC_RADIO_SYNC, IDC_RADIO_DONOTHING, 
@@ -366,6 +374,15 @@ long CALLBACK CondCfgDlgProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lPar
               case eFast:
               case eSlow:
                 LoadString((HINSTANCE)hLangInstance, IDS_SYNC_FILES, szBuffer,
+                           sizeof(szBuffer));
+                break;
+              case ePCtoHH:
+                LoadString((HINSTANCE)hLangInstance, IDS_PCTOHH, szBuffer,
+                           sizeof(szBuffer));
+                break;
+
+              case eHHtoPC:
+                LoadString((HINSTANCE)hLangInstance, IDS_HHTOPC, szBuffer,
                            sizeof(szBuffer));
                 break;
               case eDoNothing:
@@ -388,14 +405,22 @@ long CALLBACK CondCfgDlgProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lPar
 		{
           case IDC_RADIO_SYNC:
           case IDC_RADIO_DONOTHING:
+          case IDC_RADIO_HHTOPC:
+          case IDC_RADIO_PCTOHH:
             CheckRadioButton( hWnd, IDC_RADIO_SYNC, IDC_RADIO_DONOTHING, wParam);
             break;
           case IDCANCEL:
             EndDialog(hWnd, 1);
             return TRUE;
           case IDOK:
-            pCfgInfo->syncNew  = (IsDlgButtonChecked(hWnd, IDC_RADIO_SYNC))
-				? eFast : eDoNothing;
+            if (IsDlgButtonChecked(hWnd, IDC_RADIO_SYNC)) 
+                pCfgInfo->syncNew = eFast;
+            else if (IsDlgButtonChecked(hWnd, IDC_RADIO_PCTOHH)) 
+                pCfgInfo->syncNew = ePCtoHH;
+            else if (IsDlgButtonChecked(hWnd, IDC_RADIO_HHTOPC))
+                pCfgInfo->syncNew = eHHtoPC;
+            else
+                pCfgInfo->syncNew = eDoNothing;
             pCfgInfo->syncPref = (IsDlgButtonChecked(hWnd, IDC_MAKEDEFAULT))
 				?  ePermanentPreference : eTemporaryPreference;
             EndDialog(hWnd, 0);
@@ -442,6 +467,24 @@ void LdCfgDlgBmps(HWND hDlg)
   hBmp = CreateMappedBitmap((HINSTANCE)hLangInstance, IDB_DONOTHING, 0, &cMap, 1);
   // associate the bitmap with the button.
   if ((hwndButton = GetDlgItem(hDlg, IDC_DONOTHING)) != NULL)
+  {
+    hOldBmp = (HBITMAP)SendMessage(hwndButton, STM_SETIMAGE,
+                                   (WPARAM)IMAGE_BITMAP, (LPARAM)(HANDLE)hBmp);
+    if (hOldBmp != NULL)
+      DeleteObject((HGDIOBJ)hOldBmp);
+  }
+  hBmp = CreateMappedBitmap((HINSTANCE)hLangInstance, IDB_PCTOHH, 0, &cMap, 1);
+  // associate the bitmap with the button.
+  if ((hwndButton = GetDlgItem(hDlg, IDC_PCTOHH)) != NULL)
+  {
+    hOldBmp = (HBITMAP)SendMessage(hwndButton, STM_SETIMAGE,
+                                   (WPARAM)IMAGE_BITMAP, (LPARAM)(HANDLE)hBmp);
+    if (hOldBmp != NULL)
+      DeleteObject((HGDIOBJ)hOldBmp);
+  }
+  hBmp = CreateMappedBitmap((HINSTANCE)hLangInstance, IDB_HHTOPC, 0, &cMap, 1);
+  // associate the bitmap with the button.
+  if ((hwndButton = GetDlgItem(hDlg, IDC_HHTOPC)) != NULL)
   {
     hOldBmp = (HBITMAP)SendMessage(hwndButton, STM_SETIMAGE,
                                    (WPARAM)IMAGE_BITMAP, (LPARAM)(HANDLE)hBmp);

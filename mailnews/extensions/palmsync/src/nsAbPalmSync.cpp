@@ -407,8 +407,9 @@ nsresult nsAbPalmHotSync::DoSyncAndGetUpdatedCards(PRInt32 aPalmCount, lpnsABCOM
     if(NS_FAILED(rv))
         return rv;
 
-    // we are just storing the pointer array here not record arrays
-    for (PRInt32 i=0; i < aPalmCount; i++) {
+    // we are just storing the pointer array here, not record arrays
+    for (PRInt32 i=0; i < aPalmCount; i++) 
+    {
         mPalmRecords.AppendElement(&aPalmRecords[i]);
 #ifdef RAJIV_DEBUG        
         DisplayTestData(&aPalmRecords[i],PR_FALSE);
@@ -420,9 +421,11 @@ nsresult nsAbPalmHotSync::DoSyncAndGetUpdatedCards(PRInt32 aPalmCount, lpnsABCOM
     PRUint32  deletedCardCount=0;
     mABDB->GetDeletedCardCount(&deletedCardCount);
     mTotalCardCount += deletedCardCount;
-    if(mTotalCardCount) {
+    if(mTotalCardCount) 
+    {
         mCardListForPalm = (lpnsABCOMCardStruct) CoTaskMemAlloc(sizeof(nsABCOMCardStruct) * mTotalCardCount);
-        if(!mCardListForPalm) {
+        if(!mCardListForPalm) 
+        {
             mABDB->Close(PR_FALSE);
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -445,26 +448,32 @@ nsresult nsAbPalmHotSync::DoSyncAndGetUpdatedCards(PRInt32 aPalmCount, lpnsABCOM
 
     // if there are no new cards to be added in Palm close DB
     // else wait for Done to be called.
-    if(!mIsNewCardForPalm) {
+    if(!mIsNewCardForPalm) 
+    {
         rv = mABDB->Close(NS_SUCCEEDED(rv) && mPalmRecords.Count());
 
-        if(NS_SUCCEEDED(rv)) {
+        if(NS_SUCCEEDED(rv)) 
+        {
             mDBOpen = PR_FALSE;
             PRUint32 modTimeInSec;
             nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
             rv = UpdateABInfo(modTimeInSec, mPalmCategoryIndex);
         }
-        else { // get back the previous file
+        else
+        { // get back the previous file
             rv = mABDB->ForceClosed();
-            if(NS_SUCCEEDED(rv)) {
+            if(NS_SUCCEEDED(rv)) 
+            {
                 nsCAutoString leafName;
                 mABFile->GetNativeLeafName(leafName);
                 PRBool bExists=PR_FALSE;
                 mPreviousABFile->Exists(&bExists);
-                if(bExists) {
+                if(bExists) 
+                {
                     nsCOMPtr<nsIFile> parent;
                     rv = mABFile->GetParent(getter_AddRefs(parent));
-                    if (NS_SUCCEEDED(rv)) {
+                    if (NS_SUCCEEDED(rv)) 
+                    {
                         mABFile->Remove(PR_FALSE);
                         mPreviousABFile->CopyToNative(parent, leafName);
                     }
@@ -509,10 +518,12 @@ nsresult nsAbPalmHotSync::LoadDeletedCardsSinceLastSync()
         if (NS_FAILED(rv) || !lastModifiedDate)
             continue;
 
-        if(lastModifiedDate > mPalmSyncTimeStamp) {
+        if(lastModifiedDate > mPalmSyncTimeStamp)
+        {
             nsAbIPCCard  ipcCard(card);
             // check in the list of Palm records
-            for(PRInt32 i=mPalmRecords.Count()-1; i >=0;  i--) {
+            for(PRInt32 i=mPalmRecords.Count()-1; i >=0;  i--) 
+            {
                 nsABCOMCardStruct * palmRec = (nsABCOMCardStruct *) mPalmRecords.ElementAt(i);
                 // if same record exists in palm list, donot delete it from Palm
                 if(ipcCard.Same(palmRec, mIsPalmDataUnicode))
@@ -542,7 +553,8 @@ nsresult nsAbPalmHotSync::LoadNewModifiedCardsSinceLastSync()
     // create the list of cards to be sent to Palm
     nsCOMPtr<nsISupports> item;
     nsCOMPtr<nsIAbCard> card;
-    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next()) {
+    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next()) 
+    {
         rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
         if (NS_FAILED(rv)) 
             return rv;
@@ -562,7 +574,8 @@ nsresult nsAbPalmHotSync::LoadNewModifiedCardsSinceLastSync()
             continue;
 
         if(lastModifiedDate > mPalmSyncTimeStamp  // take care of modified
-            || !lastModifiedDate || !mPalmSyncTimeStamp) {  // take care of new or never before sync
+            || !lastModifiedDate || !mPalmSyncTimeStamp) 
+        {  // take care of new or never before sync
             
             //create nsAbIPCCard and assign its status based on lastModifiedDate
             nsAbIPCCard ipcCard(card);
@@ -576,7 +589,8 @@ nsresult nsAbPalmHotSync::LoadNewModifiedCardsSinceLastSync()
             if(NS_FAILED(rv))
                 break;
 
-            if(ipcCard.GetStatus() == ATTR_NEW) {
+            if(ipcCard.GetStatus() == ATTR_NEW) 
+            {
                 mNewCardsArray->AppendElement(card);
                 mNewCardCount++;
                 mIsNewCardForPalm = PR_TRUE;
@@ -588,7 +602,7 @@ nsresult nsAbPalmHotSync::LoadNewModifiedCardsSinceLastSync()
 }
 
 
-// this take care of the all cases when the state is either mod or new
+// this take care of the all cases when the state is either modified or new
 PRBool nsAbPalmHotSync::CheckWithPalmRecord(nsAbIPCCard  * aIPCCard)
 {
     NS_ENSURE_ARG_POINTER(aIPCCard);
@@ -598,39 +612,43 @@ PRBool nsAbPalmHotSync::CheckWithPalmRecord(nsAbIPCCard  * aIPCCard)
 
     PRBool keep = PR_TRUE;
 
-    for(PRInt32 i=mPalmRecords.Count()-1; i >=0;  i--) {
+    for(PRInt32 i=mPalmRecords.Count()-1; i >=0;  i--) 
+    {
         nsABCOMCardStruct * palmRec = (nsABCOMCardStruct *) mPalmRecords.ElementAt(i);
         
-        // if same records exists in palm list also
-        if(aIPCCard->Same(palmRec, mIsPalmDataUnicode)) {
+        // if same record is in palm list also
+        if(aIPCCard->Same(palmRec, mIsPalmDataUnicode)) 
+        {
             // if the state deleted on both sides no need to do anything
             if ((palmRec->dwStatus & ATTR_DELETED || palmRec->dwStatus & ATTR_ARCHIVED) &&
-                (aIPCCard->GetStatus() == ATTR_DELETED)) {
+                (aIPCCard->GetStatus() == ATTR_DELETED)) 
+            {
                 mPalmRecords.RemoveElementAt(i);
                 return PR_FALSE;
             }
-            // if deleted on Palm and added or modified on Moz, donot delete on Moz
+            // if deleted on Palm and added or modified on Moz, don't delete on Moz
             if ( (palmRec->dwStatus & ATTR_DELETED || palmRec->dwStatus & ATTR_ARCHIVED) && 
-                 ((aIPCCard->GetStatus() == ATTR_NEW) || (aIPCCard->GetStatus() == ATTR_MODIFIED)) ) {
+                 ((aIPCCard->GetStatus() == ATTR_NEW) || (aIPCCard->GetStatus() == ATTR_MODIFIED)) ) 
+            {
                 mPalmRecords.RemoveElementAt(i);
                 return PR_TRUE;
             }
 
             // set the palm record ID in the card if not already set
-            if(!aIPCCard->GetRecordId()) {
+            if(!aIPCCard->GetRecordId()) 
+            {
                 ConvertAssignPalmIDAttrib(palmRec->dwRecordId, aIPCCard);
                 mABDB->EditCard(aIPCCard, PR_FALSE);
                 aIPCCard->SetRecordId(palmRec->dwRecordId);
             }
 
-            // if deleted in Moz and added or modified on Palm, donot delete on Palm
+            // if deleted in Moz and added or modified on Palm, don't delete on Palm
             if ( (aIPCCard->GetStatus() == ATTR_DELETED) && 
                  ((palmRec->dwStatus == ATTR_NEW) 
-                   ||(palmRec->dwStatus == ATTR_MODIFIED)) ) {
+                   ||(palmRec->dwStatus == ATTR_MODIFIED)) ) 
                 return PR_FALSE;
-            }
 
-            // for rest of the cases with state as either mod or new::
+            // for rest of the cases with state as either mod or new:
             nsStringArray diffAttrs;
             PRBool isFieldsMatch=PR_FALSE;
             if(mIsPalmDataUnicode)
@@ -638,13 +656,15 @@ PRBool nsAbPalmHotSync::CheckWithPalmRecord(nsAbIPCCard  * aIPCCard)
             else
                 isFieldsMatch = aIPCCard->EqualsAfterUnicodeConversion(palmRec, diffAttrs);
 
-            // if fields are ditto no need to keep it for sync
-            if(isFieldsMatch) {
+            // if fields match, no need to keep it for sync
+            if(isFieldsMatch) 
+            {
                 keep = PR_FALSE;
-                // since the fields are ditto no need to update Moz AB with palm record
+                // since the fields match, no need to update Moz AB with palm record
                 mPalmRecords.RemoveElementAt(i); 
             }
-            else {
+            else 
+            {
                 // we add an additional record on both sides alike Palm Desktop sync
                 palmRec->dwStatus = ATTR_NONE;
                 aIPCCard->SetStatus(ATTR_NEW);
@@ -667,7 +687,8 @@ nsresult nsAbPalmHotSync::AddToListForPalm(nsAbIPCCard & ipcCard)
         return NS_ERROR_UNEXPECTED;
 
     nsresult rv = ipcCard.GetABCOMCardStruct(mIsPalmDataUnicode, &mCardListForPalm[mCardForPalmCount]);
-    if(NS_SUCCEEDED(rv)) {
+    if(NS_SUCCEEDED(rv)) 
+    {
         mCardListForPalm[mCardForPalmCount].dwCategoryId = mPalmCategoryId;
         mCardForPalmCount++;
     }
@@ -701,23 +722,23 @@ nsresult nsAbPalmHotSync::OpenABDBForHotSync(PRBool aCreate)
 
     // get nsIFile for nsFileSpec from abSession, why use a obsolete class if not required!
     rv = NS_FileSpecToIFile(dbPath, getter_AddRefs(mABFile));
-    if(NS_FAILED(rv))  {
+    if(NS_FAILED(rv))  
+    {
         delete dbPath;
         return rv;
     }
 
     nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
              do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
-    if(NS_FAILED(rv)) {
+    if(NS_FAILED(rv)) 
+    {
         delete dbPath;
         return rv;
     }
     
     rv = addrDBFactory->Open(dbPath, aCreate, getter_AddRefs(mABDB), PR_TRUE);
     delete dbPath;
-    if(NS_FAILED(rv)) {
-        return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
     mDBOpen = PR_TRUE;  // Moz AB DB is now Open
 
     return rv;
@@ -733,13 +754,15 @@ nsresult nsAbPalmHotSync::KeepCurrentStateAsPrevious()
     nsCAutoString previousLeafName(mFileName);
     previousLeafName += PREVIOUS_EXTENSION;
 
-    if(!mPreviousABFile) {
+    if(!mPreviousABFile) 
+    {
         nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
         if(NS_FAILED(rv)) 
             return rv;
         nsFileSpec* dbPath;
         rv = abSession->GetUserProfileDirectory(&dbPath); // this still uses nsFileSpec!!!
-        if(NS_SUCCEEDED(rv)) {
+        if(NS_SUCCEEDED(rv)) 
+        {
             (*dbPath) += previousLeafName.get();
             // get nsIFile for nsFileSpec from abSession, why use a obsolete class if not required!
             rv = NS_FileSpecToIFile(dbPath, getter_AddRefs(mPreviousABFile));
@@ -751,7 +774,8 @@ nsresult nsAbPalmHotSync::KeepCurrentStateAsPrevious()
 
     PRBool bExists=PR_FALSE;
     mABFile->Exists(&bExists);
-    if(bExists) {
+    if(bExists) 
+    {
         mPreviousABFile->Exists(&bExists);
         if(bExists)
             rv = mPreviousABFile->Remove(PR_FALSE);
@@ -771,7 +795,8 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
 
     nsresult rv = NS_OK;
 
-    for(PRInt32 i=mPalmRecords.Count()-1; i >=0;  i--) {
+    for(PRInt32 i=mPalmRecords.Count()-1; i >=0;  i--) 
+    {
         nsABCOMCardStruct * palmRec = (nsABCOMCardStruct *)mPalmRecords.ElementAt(i);
         nsAbIPCCard ipcCard(palmRec, PR_FALSE);
 
@@ -786,20 +811,24 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
         nsCOMPtr<nsIAbCard> existingCard;
         rv = mABDB->GetCardFromAttribute(nsnull, CARD_ATTRIB_PALMID, recordIDBuf,
                                              PR_FALSE, getter_AddRefs(existingCard));
-        if(NS_SUCCEEDED(rv) && existingCard) {
+        if(NS_SUCCEEDED(rv) && existingCard) 
+        {
             // Archived is the same as deleted in palm.
-            if(palmRec->dwStatus & ATTR_DELETED || palmRec->dwStatus & ATTR_ARCHIVED) {
+            if(palmRec->dwStatus & ATTR_DELETED || palmRec->dwStatus & ATTR_ARCHIVED) 
+            {
                 mABDB->DeleteCard(existingCard, PR_FALSE);
                 continue;
             }
             if(palmRec->dwStatus & ATTR_NEW)
                 continue;
-            if(palmRec->dwStatus & ATTR_MODIFIED) {
+            if(palmRec->dwStatus & ATTR_MODIFIED) 
+            {
                 PRBool isEqual=PR_FALSE;
                 ipcCard.Equals(existingCard, &isEqual);
                 if(isEqual)
                     continue;
-                else {
+                else 
+                {
                     existingCard->Copy(&ipcCard);
                     rv = mABDB->EditCard(existingCard, PR_FALSE);
                     continue;
@@ -824,12 +853,14 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
         // if the card does not exist
         if((ipcCard.GetStatus() == ATTR_NEW)
             ||(ipcCard.GetStatus() == ATTR_MODIFIED)
-            || (ipcCard.GetStatus() == ATTR_NONE)) {
+            || (ipcCard.GetStatus() == ATTR_NONE)) 
+        {
             PRUint32 modTimeInSec;
             nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
             ipcCard.SetLastModifiedDate(modTimeInSec);
             rv = mABDB->CreateNewCardAndAddToDB(newCard, PR_FALSE);
-            if(NS_SUCCEEDED(rv)) {
+            if(NS_SUCCEEDED(rv)) 
+            {
                 // now set the attribute for the PalmRecID in the card in the DB
                 dbCard->SetAbDatabase(mABDB);
                 dbCard->SetStringAttribute(CARD_ATTRIB_PALMID, NS_ConvertASCIItoUCS2(recordIDBuf).get());
@@ -851,11 +882,14 @@ nsresult nsAbPalmHotSync::Done(PRBool aSuccess, PRInt32 aPalmCatIndex, PRUint32 
 
     nsresult rv=NS_ERROR_UNEXPECTED;
 
-    if(aPalmRecIDListCount == mNewCardCount) {
-        for(PRUint32 i=0; i<aPalmRecIDListCount; i++) {
+    if(aPalmRecIDListCount == mNewCardCount) 
+    {
+        for(PRUint32 i=0; i<aPalmRecIDListCount; i++) 
+        {
             nsCOMPtr<nsIAbMDBCard> dbCard;
             rv = mNewCardsArray->QueryElementAt(i, NS_GET_IID(nsIAbMDBCard), getter_AddRefs(dbCard));
-            if(NS_SUCCEEDED(rv) && dbCard) {
+            if(NS_SUCCEEDED(rv) && dbCard) 
+            {
                 ConvertAssignPalmIDAttrib(aPalmRecordIDList[i], dbCard);
                 nsCOMPtr<nsIAbCard> newCard;
                 newCard = do_QueryInterface(dbCard, &rv);
@@ -865,27 +899,34 @@ nsresult nsAbPalmHotSync::Done(PRBool aSuccess, PRInt32 aPalmCatIndex, PRUint32 
         }
     }
 
-    if(mABDB && mDBOpen) {
-        if(aSuccess) {
+    if(mABDB && mDBOpen) 
+    {
+        if(aSuccess) 
+        {
             rv = mABDB->Close(PR_TRUE);
-            if(NS_SUCCEEDED(rv)) {
+            if(NS_SUCCEEDED(rv)) 
+            {
                 mDBOpen = PR_FALSE;
                 PRUint32 modTimeInSec;
                 nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
                 rv = UpdateABInfo(modTimeInSec, aPalmCatIndex);
             }
         }
-        if(NS_FAILED(rv) || !aSuccess) { // get back the previous file
+        if(NS_FAILED(rv) || !aSuccess) 
+        { // get back the previous file
             rv = mABDB->ForceClosed();
-            if(NS_SUCCEEDED(rv)) {
+            if(NS_SUCCEEDED(rv)) 
+            {
                 nsCAutoString leafName;
                 mABFile->GetNativeLeafName(leafName);
                 PRBool bExists=PR_FALSE;
                 mPreviousABFile->Exists(&bExists);
-                if(bExists) {
+                if(bExists) 
+                {
                     nsCOMPtr<nsIFile> parent;
                     rv = mABFile->GetParent(getter_AddRefs(parent));
-                    if (NS_SUCCEEDED(rv)) {
+                    if (NS_SUCCEEDED(rv)) 
+                    {
                         mABFile->Remove(PR_FALSE);
                         mPreviousABFile->CopyToNative(parent, leafName);
                     }

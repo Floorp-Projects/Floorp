@@ -163,9 +163,12 @@ long MozABPCManager::SynchronizePCAB(LONG categoryIndex, LONG categoryId, CPStri
 
     CMozABConduitRecord ** tempMozABConduitRecList = new CMozABConduitRecord*[updatedPalmRecCount];
     nsABCOMCardStruct * palmCardList = new nsABCOMCardStruct[updatedPalmRecCount];
-    if(palmCardList) {
-        for(DWORD i=0; i<updatedPalmRecCount; i++) {
-            if(*updatedPalmRecList) {
+    if(palmCardList)
+    {
+        for(DWORD i=0; i<updatedPalmRecCount; i++) 
+        {
+            if(*updatedPalmRecList)
+            {
                 CMozABConduitRecord * pConduitRecord = new CMozABConduitRecord(**updatedPalmRecList);
                 memcpy(&palmCardList[i], &pConduitRecord->m_nsCard, sizeof(nsABCOMCardStruct));
                 tempMozABConduitRecList[i]=pConduitRecord;
@@ -176,14 +179,17 @@ long MozABPCManager::SynchronizePCAB(LONG categoryIndex, LONG categoryId, CPStri
         HRESULT hres = pNsPalmSync->nsSynchronizeAB(FALSE, categoryIndex, categoryId, categoryName.GetBuffer(0),
                                                 updatedPalmRecCount, palmCardList,
                                                 &dwMozCardCount, &mozCardList);
-        if(hres == S_OK && mozCardList) {
+        if(hres == S_OK && mozCardList) 
+        {
             *pUpdatedPCRecListCount = dwMozCardCount;
             CPalmRecord ** mozRecordList = (CPalmRecord **) malloc(sizeof(CPalmRecord *) * dwMozCardCount);
             *updatedPCRecList = mozRecordList;
-            if (mozRecordList) {
+            if (mozRecordList) 
+            {
                 memset(mozRecordList, 0, sizeof(CPalmRecord *) * dwMozCardCount);
                 int i=0;
-                for (i=0; i < dwMozCardCount; i++) {
+                for (i=0; i < dwMozCardCount; i++) 
+                {
                     CMozABConduitRecord * pConduitRecord = new CMozABConduitRecord(mozCardList[i]);
                     CPalmRecord * pMozRecord = new CPalmRecord;
                     pConduitRecord->ConvertToGeneric(*pMozRecord);
@@ -204,9 +210,9 @@ long MozABPCManager::SynchronizePCAB(LONG categoryIndex, LONG categoryId, CPStri
         retval = GEN_ERR_LOW_MEMORY;
 
 
-    if(palmCardList)
         delete palmCardList;
-    if(tempMozABConduitRecList) {
+    if(tempMozABConduitRecList) 
+    {
         for(DWORD j=0; j<updatedPalmRecCount; j++)
             delete tempMozABConduitRecList[j];
         delete tempMozABConduitRecList;
@@ -228,9 +234,12 @@ long MozABPCManager::AddRecords(LONG categoryIndex, CPString & categoryName,
 
     CMozABConduitRecord ** tempMozABConduitRecList = new CMozABConduitRecord*[updatedPalmRecCount];
     nsABCOMCardStruct * palmCardList = new nsABCOMCardStruct[updatedPalmRecCount];
-    if(palmCardList) {
-        for(DWORD i=0; i<updatedPalmRecCount; i++) {
-            if(*updatedPalmRecList) {
+    if(palmCardList) 
+    {
+        for(DWORD i=0; i<updatedPalmRecCount; i++) 
+        {
+            if(*updatedPalmRecList) 
+            {
                 CMozABConduitRecord * pConduitRecord = new CMozABConduitRecord(**updatedPalmRecList);
                 memcpy(&palmCardList[i], &pConduitRecord->m_nsCard, sizeof(nsABCOMCardStruct));
                 tempMozABConduitRecList[i]=pConduitRecord;
@@ -246,9 +255,10 @@ long MozABPCManager::AddRecords(LONG categoryIndex, CPString & categoryName,
     else
         retval = GEN_ERR_LOW_MEMORY;
 
-    if(palmCardList)
         delete palmCardList;
-    if(tempMozABConduitRecList) {
+    if(tempMozABConduitRecList) 
+    {
+
         for(DWORD i=0; i<updatedPalmRecCount; i++)
             delete tempMozABConduitRecList[i];
         delete tempMozABConduitRecList;
