@@ -77,6 +77,7 @@ static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
+static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -1546,11 +1547,42 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   if(rv == NS_OK)
 	  rv = aOwner->GetInstance(instance);
   else if (aMimeType)
+  {
     // We were unable to find a plug-in yet we 
     // really do have mime type. Return the error
     // so that the nsObjectFrame can render any 
     // alternate content.
-    return rv;
+
+    // but try to load the default plugin first. We need to do this
+    // for <embed> tag leaving <object> to play with its alt content.
+    // but before we return an error let's see if this is an <embed>
+    // tag and try to launch the default plugin
+    nsIPluginTagInfo2 *pti2;
+
+    nsresult result = aOwner->QueryInterface(kIPluginTagInfo2IID, (void **)&pti2);
+
+    if(result != NS_OK)
+      return rv;
+
+    nsPluginTagType tagType;
+
+    result = pti2->GetTagType(&tagType);
+
+    NS_RELEASE(pti2);
+
+    if((result != NS_OK) || (tagType != nsPluginTagType_Embed))
+      return rv;
+
+    result = SetUpDefaultPluginInstance(aMimeType, aURL, aOwner);
+
+    if(result == NS_OK)
+	    result = aOwner->GetInstance(instance);
+
+    if(result != NS_OK)
+      return rv;
+
+    rv = NS_OK;
+  }
 
   // if we have a failure error, it means we found a plugin for the mimetype,
   // but we had a problem with the entry point
@@ -1861,6 +1893,72 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
     NS_RELEASE(instance);
 
     return NS_OK;
+}
+
+nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsIURI *aURL,
+                                                      nsIPluginInstanceOwner *aOwner)
+{
+  nsresult result = NS_ERROR_FAILURE;
+  nsIPluginInstance* instance = NULL;
+  nsIPlugin* plugin = NULL;
+  const char* mimetype;
+  nsString strProgID; strProgID.AssignWithConversion (NS_INLINE_PLUGIN_PROGID_PREFIX);
+  char buf[255];  // todo: need to use a const
+		
+  if(!aURL)
+    return NS_ERROR_FAILURE;
+
+  mimetype = aMimeType;
+
+  strProgID.AppendWithConversion("*");
+  strProgID.ToCString(buf, 255);     // todo: need to use a const
+  
+  result = nsComponentManager::CreateInstance(buf, nsnull, nsIPluginInstance::GetIID(), (void**)&instance);
+
+  // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
+  if (NS_FAILED(result)) 
+  {
+    result = GetPluginFactory("*", &plugin);
+    if(!NS_FAILED(result))
+    {
+      result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
+      NS_RELEASE(plugin);
+    }
+  }
+
+  // neither an XPCOM or legacy plugin could be instantiated, so return the failure
+  if(NS_FAILED(result))
+    return result;
+
+  // it is adreffed here
+  aOwner->SetInstance(instance);
+
+  nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
+  if(peer == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // set up the peer for the instance
+  peer->Initialize(aOwner, mimetype);   
+
+  nsIPluginInstancePeer *pi;
+
+  result = peer->QueryInterface(kIPluginInstancePeerIID, (void **)&pi);
+
+  if(result != NS_OK)
+    return result;
+
+  // tell the plugin instance to initialize itself and pass in the peer.
+  instance->Initialize(pi);  // this will not add a ref to the instance (or owner). MMP
+
+  NS_RELEASE(pi);
+
+  // we should addref here
+  AddInstanceToActiveList(instance, aURL);
+
+  //release what was addreffed in Create(Plugin)Instance
+  NS_RELEASE(instance);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

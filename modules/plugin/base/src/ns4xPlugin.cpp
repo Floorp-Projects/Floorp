@@ -35,6 +35,10 @@
 #include <Resources.h>
 #endif
 
+#include "nsIPref.h"
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
 ////////////////////////////////////////////////////////////////////////
 
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
@@ -837,7 +841,9 @@ ns4xPlugin::_forceredraw(NPP npp)
 NPError NP_EXPORT
 ns4xPlugin::_getvalue(NPP npp, NPNVariable variable, void *result)
 {
-	if(!npp)
+  nsresult res;
+
+  if(!npp)
 		return NPERR_INVALID_INSTANCE_ERROR;
 
   switch(variable)
@@ -852,11 +858,29 @@ ns4xPlugin::_getvalue(NPP npp, NPNVariable variable, void *result)
   case NPNVnetscapeWindow : return NPERR_GENERIC_ERROR;
 #endif
 
-  case NPNVjavascriptEnabledBool : *(NPBool*)result = TRUE; return NPERR_NO_ERROR;
+  case NPNVjavascriptEnabledBool: 
+  {
+    *(NPBool*)result = PR_TRUE; 
 
-  case NPNVasdEnabledBool : *(NPBool*)result = FALSE; return NPERR_NO_ERROR;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
+    if(NS_SUCCEEDED(res) && (nsnull != prefs))
+    {
+      PRBool js;
+      res = prefs->GetBoolPref("javascript.enabled", &js);
+      if(NS_SUCCEEDED(res))
+        *(NPBool*)result = js; 
+    }
 
-  case NPNVisOfflineBool : *(NPBool*)result = FALSE; return NPERR_NO_ERROR;
+    return NPERR_NO_ERROR;
+  }
+
+  case NPNVasdEnabledBool: 
+    *(NPBool*)result = FALSE; 
+    return NPERR_NO_ERROR;
+
+  case NPNVisOfflineBool: 
+    *(NPBool*)result = FALSE; 
+    return NPERR_NO_ERROR;
 
   default : return NPERR_GENERIC_ERROR;
 
