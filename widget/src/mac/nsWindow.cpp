@@ -624,14 +624,72 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 
 //-------------------------------------------------------------------------
 //	Update
-//		Called by the event handler to redraw the widgets.
-//		The window visRgn is expected to be set to whatever needs to be drawn
-//		(ie. if we are not between BeginUpdate/EndUpdate, we redraw the whole widget)
+//
+//		Redraw this widget.
+//
+//		We draw the widget between BeginUpdate and EndUpdate because some
+//		operations go much faster when the visRgn contains what needs to be
+//		painted. Then we restore the original updateRgn and validate this
+//		widget's rectangle.
 //-------------------------------------------------------------------------
 NS_IMETHODIMP	nsWindow::Update()
 {
 	if (! mVisible)
 		return NS_OK;
+
+	static PRBool  reentrant = PR_FALSE;
+
+	if (reentrant)
+		HandleUpdateEvent();
+	else
+	{
+		reentrant = PR_TRUE;
+		GrafPtr savePort;
+		::GetPort(&savePort);
+		::SetPort(mWindowPtr);
+
+		// make a copy of the window update rgn
+		RgnHandle saveUpdateRgn = ::NewRgn();
+		::CopyRgn(((WindowRecord*)mWindowPtr)->updateRgn, saveUpdateRgn);
+
+		// draw the widget
+		::BeginUpdate(mWindowPtr);
+		HandleUpdateEvent();
+		::EndUpdate(mWindowPtr);
+
+		// restore the window update rgn
+		::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
+
+		// validate the rect of the widget we have just drawn
+		nsRect bounds = mBounds;
+		LocalToWindowCoordinate(bounds);
+		Rect macRect;
+		nsRectToMacRect(bounds, macRect);
+		::ValidRect(&macRect);
+		::DisposeRgn(saveUpdateRgn);
+
+		::SetPort(savePort);
+		reentrant = PR_FALSE;
+	}
+
+	return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//	HandleUpdateEvent
+//
+//		Called by the event handler to redraw the top-level widget.
+//		Must be called between BeginUpdate/EndUpdate: the window visRgn
+//		is expected to be set to whatever needs to be drawn.
+//-------------------------------------------------------------------------
+nsresult nsWindow::HandleUpdateEvent()
+{
+	if (! mVisible)
+		return NS_OK;
+
+	// get the damaged region from the OS
+	RgnHandle damagedRgn = mWindowPtr->visRgn;
 
 	// calculate the update region relatively to the window port rect
 	// (at this point, the grafPort origin should always be 0,0
@@ -646,7 +704,7 @@ NS_IMETHODIMP	nsWindow::Update()
 	::OffsetRgn(updateRgn, bounds.x, bounds.y);
 
 	// check if the update region is visible
-	::SectRgn(mWindowPtr->visRgn, updateRgn, updateRgn);
+	::SectRgn(damagedRgn, updateRgn, updateRgn);
 	if (!::EmptyRgn(updateRgn))
 	{
 		nsIRenderingContext* renderingContext = GetRenderingContext();
@@ -654,8 +712,6 @@ NS_IMETHODIMP	nsWindow::Update()
 		{
 			// determine the rect to draw
 			nsRect rect;
-					//GetBounds(rect);
-					//rect.x = rect.y = 0;
 			Rect macRect = (*updateRgn)->rgnBBox;
 			::OffsetRect(&macRect, -bounds.x, -bounds.y);
 			rect.SetRect(macRect.left, macRect.top, macRect.right - macRect.left, macRect.bottom - macRect.top);
@@ -727,44 +783,41 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+	// scroll the rect
 	StartDraw();
-
-		// scroll the rect
 		Rect macRect;
 		nsRectToMacRect(*aClipRect, macRect);
 
 		RgnHandle updateRgn = ::NewRgn();
 		if (updateRgn == nil)
 			return NS_ERROR_OUT_OF_MEMORY;
-//		::ClipRect(&macRect);
+		// ::ClipRect(&macRect);
 		::ScrollRect(&macRect, aDx, aDy, updateRgn);
 		::InvalRgn(updateRgn);
 		::DisposeRgn(updateRgn);
-
-		// scroll the children
-		nsIEnumerator* children = GetChildren();
-		if (children)
-		{
-			nsWindow* child;
-			children->First();
-			do
-			{
-				if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child))) {
-					nsRect bounds;
-					child->GetBounds(bounds);
-					bounds.x += aDx;
-					bounds.y += aDy;
-					child->SetBounds(bounds);
-
-					child->Scroll(aDx, aDy, &bounds);
-	          	}
-			}
-			while (NS_SUCCEEDED(children->Next()));			
-			delete children;
-		}
-
 	EndDraw();
 
+	// scroll the children
+	nsIEnumerator* children = GetChildren();
+	if (children)
+	{
+		nsWindow* child;
+		children->First();
+		do
+		{
+			if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child))) {
+				nsRect bounds;
+				child->GetBounds(bounds);
+				bounds.x += aDx;
+				bounds.y += aDy;
+				child->SetBounds(bounds);
+
+				child->Scroll(aDx, aDy, &bounds);
+          	}
+		}
+		while (NS_SUCCEEDED(children->Next()));			
+		delete children;
+	}
 	return NS_OK;
 }
 
