@@ -262,7 +262,7 @@ GiveSystemInfo(void)
 }
 #endif /* IBM R2 */
 
-#if defined(__linux)
+#if defined(LINUX)
 #include <linux/kernel.h>
 
 static size_t
@@ -283,7 +283,7 @@ GiveSystemInfo(void)
     }
 #endif
 }
-#endif /* __linux */
+#endif /* LINUX */
 
 #if defined(NCR)
 
@@ -741,7 +741,7 @@ void RNG_SystemInfoForRNG(void)
 #ifdef DO_PS
 For now it is considered that it is too expensive to run the ps command
 for the small amount of entropy it provides.
-#if defined(__sun) && (!defined(__svr4) && !defined(SVR4)) || defined(bsdi) || defined(__linux)
+#if defined(__sun) && (!defined(__svr4) && !defined(SVR4)) || defined(bsdi) || defined(LINUX)
     static char ps_cmd[] = "ps aux";
 #else
     static char ps_cmd[] = "ps -el";
