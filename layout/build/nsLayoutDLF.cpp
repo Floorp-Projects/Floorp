@@ -33,6 +33,7 @@
 #include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsICSSLoader.h"
+#include "nsIPluginHost.h"
 
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
@@ -54,6 +55,7 @@ static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
+static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 
@@ -87,28 +89,6 @@ static char* gImageTypes[] = {
   "image/x-png",
   "image/x-art",
   "image/x-jg",
-  0
-};
-
-// XXX temporary
-static char* gPluginTypes[] = {
-  "video/quicktime",
-  "video/msvideo",
-  "video/x-msvideo",
-  "application/vnd.netfpx",
-  "image/vnd.fpx",
-  "model/vrml",
-  "x-world/x-vrml",
-  "audio/midi",
-  "audio/x-midi",
-  "audio/wav",
-  "audio/x-wav", 
-  "audio/aiff",
-  "audio/x-aiff",
-  "audio/basic",
-  "application/x-shockwave-flash",
-  "application/pdf",
-  "application/npapi-test",
   0
 };
 
@@ -326,11 +306,11 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
   }
 
   // Try plugin types
-  typeIndex = 0;
-  while(gPluginTypes[typeIndex]) {
-    if (0== PL_strcmp(gPluginTypes[typeIndex++], aContentType)) {
+  nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
+  if(pluginHost)
+  {
+    if(pluginHost->IsPluginEnabledForType(aContentType) == NS_OK)
       return NS_NewPluginContentViewer(aCommand, aDocListener, aDocViewer);
-    }
   }
 
   return rv;
@@ -589,9 +569,6 @@ nsLayoutModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
     if (NS_FAILED(rv))
       break;
     rv = RegisterTypes(aCompMgr, "view", aPath, gImageTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = RegisterTypes(aCompMgr, "view", aPath, gPluginTypes);
     if (NS_FAILED(rv))
       break;
     rv = RegisterTypes(aCompMgr, "view", aPath, gRDFTypes);
