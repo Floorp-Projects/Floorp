@@ -70,7 +70,6 @@
 #define NC_RDF_PAGETITLE_MAIN                 NC_RDF_PAGETITLE_PREFIX "Main"
 #define NC_RDF_PAGETITLE_SERVER               NC_RDF_PAGETITLE_PREFIX "Server"
 #define NC_RDF_PAGETITLE_COPIES               NC_RDF_PAGETITLE_PREFIX "Copies"
-#define NC_RDF_PAGETITLE_ADVANCED             NC_RDF_PAGETITLE_PREFIX "Advanced"
 #define NC_RDF_PAGETITLE_OFFLINEANDDISKSPACE  NC_RDF_PAGETITLE_PREFIX "OfflineAndDiskSpace"
 #define NC_RDF_PAGETITLE_DISKSPACE            NC_RDF_PAGETITLE_PREFIX "DiskSpace"
 #define NC_RDF_PAGETITLE_ADDRESSING           NC_RDF_PAGETITLE_PREFIX "Addressing"
@@ -125,7 +124,6 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleCopies=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleOfflineAndDiskSpace=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleDiskSpace=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAddressing=nsnull;
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAdvanced=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleFakeAccount=nsnull;
 
@@ -193,8 +191,6 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
                                  &kNC_PageTitleDiskSpace);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_ADDRESSING),
                                  &kNC_PageTitleAddressing);
-    getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_ADVANCED),
-                                 &kNC_PageTitleAdvanced);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_SMTP),
                                  &kNC_PageTitleSMTP);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_FAKEACCOUNT),
@@ -252,7 +248,6 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
     NS_IF_RELEASE(kNC_PageTitleOfflineAndDiskSpace);
     NS_IF_RELEASE(kNC_PageTitleDiskSpace);
     NS_IF_RELEASE(kNC_PageTitleAddressing);
-    NS_IF_RELEASE(kNC_PageTitleAdvanced);
     NS_IF_RELEASE(kNC_PageTitleSMTP);
     NS_IF_RELEASE(kNC_PageTitleFakeAccount);
     NS_IF_RELEASE(kTrueLiteral);
@@ -356,11 +351,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     else if (source == kNC_PageTitleAddressing)
       mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-addressing").get(),
                                        getter_Copies(pageTitle));
-
-    else if (source == kNC_PageTitleAdvanced)
-      mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-advanced").get(),
-                                       getter_Copies(pageTitle));
-
     else if (source == kNC_PageTitleSMTP)
       mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-smtp").get(),
                                        getter_Copies(pageTitle));
@@ -447,8 +437,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = NS_LITERAL_STRING("am-offline.xul");
     else if (source == kNC_PageTitleAddressing)
       str = NS_LITERAL_STRING("am-addressing.xul");
-    else if (source == kNC_PageTitleAdvanced)
-      str = NS_LITERAL_STRING("am-advanced.xul");
     else if (source == kNC_PageTitleSMTP)
       str = NS_LITERAL_STRING("am-smtp.xul");
     else if (source == kNC_PageTitleFakeAccount)
@@ -800,51 +788,47 @@ nsresult
 nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
                                                        nsISupportsArray *aNodeArray)
 {
-  nsresult rv;
-  if (aSource == kNC_PageTitleSMTP) {
-    // aNodeArray->AppendElement(kNC_PageTitleAdvanced);
-  }
-  else {
+  // If this isn't a server, just return.
+  if (aSource == kNC_PageTitleSMTP)
+    return NS_OK;
 
-    /* if this is a server, then support the settings */
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = getServerForFolderNode(aSource, getter_AddRefs(server));
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = getServerForFolderNode(aSource, getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+  if (server) {
+
+    PRBool hasIdentities;
+    rv = serverHasIdentities(server, &hasIdentities);
     if (NS_FAILED(rv)) return rv;
-    if (server) {
 
-      PRBool hasIdentities;
-      rv = serverHasIdentities(server, &hasIdentities);
-      if (NS_FAILED(rv)) return rv;
+    if (hasIdentities) {
+      aNodeArray->AppendElement(kNC_PageTitleServer);
+      aNodeArray->AppendElement(kNC_PageTitleCopies);
+      aNodeArray->AppendElement(kNC_PageTitleAddressing);
+    }
 
-      if (hasIdentities) {
-        aNodeArray->AppendElement(kNC_PageTitleServer);
-        aNodeArray->AppendElement(kNC_PageTitleCopies);
-        aNodeArray->AppendElement(kNC_PageTitleAddressing);
-      }
+    // Check the offline capability before adding
+    // offline item
+    PRInt32 offlineSupportLevel = 0;
+    rv = server->GetOfflineSupportLevel(&offlineSupportLevel);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-      // Check the offline capability before adding
-      // offline item
-      PRInt32 offlineSupportLevel = 0;
-      rv = server->GetOfflineSupportLevel(&offlineSupportLevel);
-      NS_ENSURE_SUCCESS(rv,rv);
+    PRBool supportsDiskSpace;
+    rv = server->GetSupportsDiskSpace(&supportsDiskSpace);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-      PRBool supportsDiskSpace;
-      rv = server->GetSupportsDiskSpace(&supportsDiskSpace);
-      NS_ENSURE_SUCCESS(rv,rv);
+    // currently there is no offline without diskspace
+    if (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR) {
+      aNodeArray->AppendElement(kNC_PageTitleOfflineAndDiskSpace);
+    }
+    else if (supportsDiskSpace) {
+      aNodeArray->AppendElement(kNC_PageTitleDiskSpace);
+    }
 
-      // currently there is no offline without diskspace
-      if (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR) {
-        aNodeArray->AppendElement(kNC_PageTitleOfflineAndDiskSpace);
-      }
-      else if (supportsDiskSpace) {
-        aNodeArray->AppendElement(kNC_PageTitleDiskSpace);
-      }
-
-      if (hasIdentities) {
-        // extensions come after the default panels
-        rv = appendGenericSettingsResources(server, aNodeArray);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add generic panels");
-      }
+    if (hasIdentities) {
+      // extensions come after the default panels
+      rv = appendGenericSettingsResources(server, aNodeArray);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add generic panels");
     }
   }
 

@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-
-<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
-
-<!DOCTYPE page SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
-
-<page  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-</page>

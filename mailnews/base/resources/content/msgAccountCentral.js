@@ -247,7 +247,7 @@ function ComposeAMessage(event)
 // selectPage: the xul file name for the viewing page, 
 // null for the account main page, other pages are
 // 'am-server.xul', 'am-copies.xul', 'am-offline.xul', 
-// 'am-addressing.xul','am-advanced.xul', 'am-smtp.xul'
+// 'am-addressing.xul', 'am-smtp.xul'
 function ViewSettings(selectPage)
 {
     window.parent.MsgAccountManager(selectPage);
