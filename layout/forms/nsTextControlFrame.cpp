@@ -2789,7 +2789,7 @@ nsTextControlFrame::AttributeChanged(nsIContent*     aChild,
   if (nsHTMLAtoms::maxlength == aAttribute) 
   {
     PRInt32 maxLength;
-    nsresult rv = GetMaxLength(&maxLength);
+    rv = GetMaxLength(&maxLength);
     
     nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
     if (textEditor)
@@ -2803,6 +2803,7 @@ nsTextControlFrame::AttributeChanged(nsIContent*     aChild,
           textEditor->SetMaxTextLength(-1);
       }
     }
+    rv = NS_OK; // don't propagate the error
   } 
   else if (mEditor && nsHTMLAtoms::readonly == aAttribute) 
   {

@@ -566,51 +566,18 @@ nsresult
 nsFormControlFrame::RegUnRegAccessKey(nsPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg)
 {
   NS_ASSERTION(aPresContext, "aPresContext is NULL in RegUnRegAccessKey!");
-  NS_ASSERTION(aFrame, "aFrame is NULL in RegUnRegAccessKey!");
+  NS_ENSURE_ARG_POINTER(aFrame);
 
-  nsresult rv = NS_ERROR_FAILURE;
   nsAutoString accessKey;
 
-  if (aFrame) {
-    nsIContent* content = aFrame->GetContent();
-#if 1
-      nsAutoString resultValue;
-      rv = content->GetAttr(kNameSpaceID_None,
-                            nsHTMLAtoms::accesskey, accessKey);
-#else
-      nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(content));
-      if (inputElement) {
-        rv = inputElement->GetAccessKey(accessKey);
-      } else {
-        nsCOMPtr<nsIDOMHTMLTextAreaElement> textarea(do_QueryInterface(content));
-        if (textarea) {
-          rv = textarea->GetAccessKey(accessKey);
-        } else {
-          nsCOMPtr<nsIDOMHTMLLabelElement> label(do_QueryInterface(content));
-          if (label) {
-            rv = label->GetAccessKey(accessKey);
-          } else {
-            nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(content));
-            if (legend) {
-              rv = legend->GetAccessKey(accessKey);
-            } else {
-              nsCOMPtr<nsIDOMHTMLButtonElement> btn(do_QueryInterface(content));
-              if (btn) {
-                rv = btn->GetAccessKey(accessKey);
-              } 
-            }
-          }
-        }
-      }
-#endif
-  }
-
+  nsIContent* content = aFrame->GetContent();
+  content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
   if (!accessKey.IsEmpty()) {
     nsIEventStateManager *stateManager = aPresContext->EventStateManager();
     if (aDoReg) {
-      return stateManager->RegisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
+      return stateManager->RegisterAccessKey(content, (PRUint32)accessKey.First());
     } else {
-      return stateManager->UnregisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
+      return stateManager->UnregisterAccessKey(content, (PRUint32)accessKey.First());
     }
   }
   return NS_ERROR_FAILURE;
