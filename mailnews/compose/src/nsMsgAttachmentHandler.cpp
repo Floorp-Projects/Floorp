@@ -263,12 +263,8 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
         }
       }
 
-      // If the Mail charset is ISO_2022_JP we force it to use Base64 for attachments (bug#104255). 
-      // Use 7 bit for other STATFUL charsets ( e.g. ISO_2022_KR). 
-      if ((PL_strcasecmp(charset, "iso-2022-jp") == 0) &&
-        (PL_strcasecmp(m_type, TEXT_HTML) == 0))
-        needsB64 = PR_TRUE;
-      else if((nsMsgI18Nstateful_charset(charset)) &&
+      // If the Mail charset is multibyte, we force it to use Base64 for attachments.
+      if ((!mMainBody && charset && nsMsgI18Nmultibyte_charset(charset)) &&
         ((PL_strcasecmp(m_type, TEXT_HTML) == 0) ||
         (PL_strcasecmp(m_type, TEXT_MDL) == 0) ||
         (PL_strcasecmp(m_type, TEXT_PLAIN) == 0) ||
@@ -281,8 +277,7 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
         (PL_strcasecmp(m_type, MESSAGE_RFC822) == 0) ||
         (PL_strcasecmp(m_type, MESSAGE_NEWS) == 0)))
       {
-        PR_FREEIF(m_encoding);
-        m_encoding = PL_strdup (mMainBody ? ENCODING_7BIT : ENCODING_8BIT);
+        needsB64 = PR_TRUE;
       }
       else if (encode_p &&
         m_size > 500 &&

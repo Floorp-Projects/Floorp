@@ -805,13 +805,22 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
                   !PL_strcasecmp (charset, "iso-8859-1"))
       PL_strcpy (charset_label, "us-ascii");
     
-    // If charset is JIS and and type is HTML
-    // then no charset to be specified (apply base64 instead)
-    // in order to avoid mismatch META_TAG (bug#104255).
-    if ( ((PL_strcasecmp(charset, "iso-2022-jp") != 0) ||
-                (PL_strcasecmp(type, TEXT_HTML) != 0) ||
-                (PL_strcasecmp(encoding, ENCODING_BASE64) != 0)) &&
-                (*charset_label))
+    // If charset is multibyte then no charset to be specified (apply base64 instead).
+    // The list of file types match with PickEncoding() where we put base64 label.
+    if ( ((charset && !nsMsgI18Nmultibyte_charset(charset)) ||
+         ((PL_strcasecmp(type, TEXT_HTML) == 0) ||
+         (PL_strcasecmp(type, TEXT_MDL) == 0) ||
+         (PL_strcasecmp(type, TEXT_PLAIN) == 0) ||
+         (PL_strcasecmp(type, TEXT_RICHTEXT) == 0) ||
+         (PL_strcasecmp(type, TEXT_ENRICHED) == 0) ||
+         (PL_strcasecmp(type, TEXT_VCARD) == 0) ||
+         (PL_strcasecmp(type, APPLICATION_DIRECTORY) == 0) || /* text/x-vcard synonym */
+         (PL_strcasecmp(type, TEXT_CSS) == 0) ||
+         (PL_strcasecmp(type, TEXT_JSSS) == 0) ||
+         (PL_strcasecmp(type, MESSAGE_RFC822) == 0) ||
+         (PL_strcasecmp(type, MESSAGE_NEWS) == 0)) ||
+         (PL_strcasecmp(encoding, ENCODING_BASE64) != 0)) &&
+         (*charset_label))
     {
       PUSH_STRING ("; charset=");
       PUSH_STRING (charset_label);
