@@ -103,6 +103,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
 #include "nsLinebreakConverter.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 
 #include "nsILocalFile.h"		// Using nsILocalFile to get file size
@@ -114,7 +115,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
 //----------------------------------------------------------------------
 
@@ -1233,7 +1233,7 @@ nsFormFrame::GetContentType(char* aPathName, char** aContentType)
       fileExt--;
     }
     if (fileExt) {
-      NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+      nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
       if (NS_FAILED(rv)) return rv;
       if (NS_SUCCEEDED(MIMEService->GetTypeFromExtension(++fileExt, aContentType)))
           return NS_OK;

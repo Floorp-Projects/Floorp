@@ -24,13 +24,11 @@
 #include "nsCOMPtr.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
-#include "nsIMIMEService.h"
 #include "nsIFileTransportService.h"
 #include "netCore.h"
 #include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////

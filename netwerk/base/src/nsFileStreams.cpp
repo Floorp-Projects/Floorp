@@ -26,6 +26,7 @@
 #include "prerror.h"
 #include "nsCRT.h"
 #include "nsInt64.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIFile.h"
 #include "nsDirectoryIndexStream.h"
@@ -48,8 +49,6 @@
 PRLogModuleInfo* gFileIOLog = nsnull;
 
 #endif /* PR_LOGGING */
-
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileIO
@@ -153,7 +152,7 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
         *contentLength = -1;
     }
     else {
-        NS_WITH_SERVICE(nsIMIMEService, mimeServ, kMIMEServiceCID, &rv);
+        nsCOMPtr<nsIMIMEService> mimeServ (do_GetService(NS_MIMESERVICE_PROGID, &rv));
         if (NS_SUCCEEDED(rv)) {
             rv = mimeServ->GetTypeFromFile(mFile, contentType);
         }
