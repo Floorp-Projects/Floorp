@@ -237,4 +237,7 @@ NS_IMETHODIMP nsGenericAccessible::AccGetDOMNode(nsIDOMNode **_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
+NS_IMETHODIMP nsGenericAccessible::CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

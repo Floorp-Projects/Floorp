@@ -73,6 +73,7 @@
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIScriptGlobalObject.h"
 
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
@@ -496,7 +497,7 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAWritableString& aURL)
   NS_ASSERTION(presShell,"Shell is gone!!! What are we doing here?");
 
   nsCOMPtr<nsIDocShell> docShell;
-  nsAccessible::GetDocShellFromPS(presShell, getter_AddRefs(docShell));
+  GetDocShellFromPS(presShell, getter_AddRefs(docShell));
 
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(docShell));
   nsXPIDLCString theURL;
@@ -565,3 +566,21 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetDocument(nsIDocument **doc)
 }
 
 
+NS_IMETHODIMP nsDocAccessibleMixin::GetDocShellFromPS(nsIPresShell* aPresShell, nsIDocShell** aDocShell)
+{
+  *aDocShell = nsnull;
+  if (aPresShell) {
+    nsCOMPtr<nsIDocument> doc;
+    aPresShell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIScriptGlobalObject> scriptObj;
+      doc->GetScriptGlobalObject(getter_AddRefs(scriptObj));
+      if (scriptObj) {
+        scriptObj->GetDocShell(aDocShell);
+        if (*aDocShell)
+          return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}

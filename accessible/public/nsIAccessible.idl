@@ -73,6 +73,9 @@ interface nsIAccessible : nsISupports
 
   nsIDOMNode accGetDOMNode();
 
+  // Used by Accessible implementation to save data and speed up accessibility tree walking
+  [noscript] void CacheOptimizations(in nsIAccessible aParent, in PRInt32 aSiblingIndex, in nsIDOMNodeList aSiblingList);
+
  // MSAA State flags - used for bitfield. More than 1 allowed.
   const unsigned long  STATE_UNAVAILABLE        = 0x00000001;  // Disabled, maps to opposite of Java ENABLED, Gnome/ATK SENSITIVE?
   const unsigned long  STATE_SELECTED           = 0x00000002;

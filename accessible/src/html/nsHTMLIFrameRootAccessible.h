@@ -87,8 +87,14 @@ class nsHTMLIFrameRootAccessible : public nsRootAccessible
     NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
 
   protected:
-    NS_IMETHOD GetHTMLIFrameAccessible(nsIAccessible** aAcc);
-    nsCOMPtr<nsIDOMNode> mRealDOMNode;
+    Init();
+
+    // In these variable names, "outer" relates to the nsHTMLIFrameAccessible, as opposed to the 
+    // nsHTMLIFrameRootAccessible which is "inner".
+    // The outer node is a <browser> or <iframe> tag, whereas the inner node corresponds to the inner document root.
+
+    nsCOMPtr<nsIDOMNode> mOuterNode;
+    nsCOMPtr<nsIAccessible> mOuterAccessible;
 };
 
 

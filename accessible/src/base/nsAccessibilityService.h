@@ -71,4 +71,4 @@ private:
 
 };
 
-#endif /* __nsIccessibilityService_h__ */
+#endif /* __nsIAccessibilityService_h__ */

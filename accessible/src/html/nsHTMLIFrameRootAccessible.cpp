@@ -40,16 +40,9 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsIDocShell.h"
-#include "nsIWebShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIXULDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentType.h"
-#include "nsINameSpaceManager.h"
 #include "nsReadableUtils.h"
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLIFrameRootAccessible)
@@ -162,9 +155,8 @@ NS_IMETHODIMP nsHTMLIFrameAccessible::GetDocument(nsIDocument **doc)
 // construction 
 //-----------------------------------------------------
 nsHTMLIFrameRootAccessible::nsHTMLIFrameRootAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-  nsRootAccessible(aShell)
+  mOuterNode(aNode), nsRootAccessible(aShell)
 {
-  mRealDOMNode = aNode;
 }
 
 //-----------------------------------------------------
@@ -174,113 +166,42 @@ nsHTMLIFrameRootAccessible::~nsHTMLIFrameRootAccessible()
 {
 }
 
+nsHTMLIFrameRootAccessible::Init()
+{
+  if (!mOuterAccessible) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mOuterNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    if (doc) {
+      nsCOMPtr<nsIPresShell> parentShell;
+      doc->GetShellAt(0, getter_AddRefs(parentShell));
+      if (parentShell) {
+        nsCOMPtr<nsIContent> content(do_QueryInterface(mOuterNode));
+        nsIFrame* frame = nsnull;
+        parentShell->GetPrimaryFrameFor(content, &frame);
+        NS_ASSERTION(frame, "No outer frame.");
+        frame->GetAccessible(getter_AddRefs(mOuterAccessible));
+        NS_ASSERTION(mOuterAccessible, "Something's wrong - there's no accessible for the outer parent of this frame.");
+      }
+    }
+  }
+}
   /* readonly attribute nsIAccessible accParent; */
 NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccParent(nsIAccessible * *_retval) 
 { 
-  nsCOMPtr<nsIAccessible> accessible;
-  if (NS_SUCCEEDED(GetHTMLIFrameAccessible(getter_AddRefs(accessible))))
-    return accessible->GetAccParent(_retval);
-
-  *_retval = nsnull;
-  return NS_OK;
+  Init();
+  return mOuterAccessible->GetAccParent(_retval);
 }
 
   /* nsIAccessible getAccNextSibling (); */
 NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccNextSibling(nsIAccessible **_retval) 
 {
-  nsCOMPtr<nsIAccessible> accessible;
-
-  if (NS_SUCCEEDED(GetHTMLIFrameAccessible(getter_AddRefs(accessible))))
-    return accessible->GetAccNextSibling(_retval);
-
-  *_retval = nsnull;
-  return NS_ERROR_FAILURE;
+  Init();
+  return mOuterAccessible->GetAccNextSibling(_retval);
 }
 
-  /* nsIAccessible getAccPreviousSibling (); */
 NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccPreviousSibling(nsIAccessible **_retval) 
 {
-  nsCOMPtr<nsIAccessible> accessible;
-
-  if (NS_SUCCEEDED(GetHTMLIFrameAccessible(getter_AddRefs(accessible))))
-    return accessible->GetAccPreviousSibling(_retval);
-
-  *_retval = nsnull;
-  return NS_ERROR_FAILURE;
+  Init();
+  return mOuterAccessible->GetAccPreviousSibling(_retval);
 }
-
-NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetHTMLIFrameAccessible(nsIAccessible** aAcc)
-{
-  // Start by finding our PresShell and from that
-  // we get our nsIDocShell in order to walk the DocShell tree
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
-  if (!presShell) {
-     *aAcc = nsnull;
-     return NS_ERROR_FAILURE;  
-  }
-
-  nsCOMPtr<nsIDocShell> docShell;
-  if (NS_SUCCEEDED(GetDocShellFromPS(presShell, getter_AddRefs(docShell)))) {
-    // Now that we have the DocShell QI 
-    // it to a tree item to find it's parent
-    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
-    if (item) {
-      nsCOMPtr<nsIDocShellTreeItem> itemParent;
-      item->GetParent(getter_AddRefs(itemParent));
-      // QI to get the WebShell for the parent document
-      nsCOMPtr<nsIDocShell> parentDocShell(do_QueryInterface(itemParent));
-      if (parentDocShell) {
-        // Get the PresShell/Content and 
-        // Root Content Node of the parent document
-        nsCOMPtr<nsIPresShell> parentPresShell;
-        nsCOMPtr<nsIPresContext> parentPresContext;
-        nsCOMPtr<nsIContent> rootContent;
-        if (NS_SUCCEEDED(GetDocShellObjects(parentDocShell,
-                                            getter_AddRefs(parentPresShell), 
-                                            getter_AddRefs(parentPresContext),
-                                            getter_AddRefs(rootContent)))) {
-          // QI the DocShell (of this sub-doc) to a webshell
-          nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-          if (webShell && parentPresShell && parentPresContext && rootContent) {
-            // Now, find the Content in the parent document
-            // that represents this sub-doc, 
-            // we do that matching webshells
-            nsCOMPtr<nsIContent> content;
-            if (FindContentForWebShell(parentPresShell, 
-                                       rootContent, 
-                                       webShell,
-                                       getter_AddRefs(content))) {
-              // OK, we found the content node in the parent doc
-              // that corresponds to this sub-doc
-              // Get the frame for that content
-              nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(parentPresShell);
-              nsIFrame* frame = nsnull;
-              parentPresShell->GetPrimaryFrameFor(content, &frame);
-#ifdef NS_DEBUG_X
-              printf("** Found: Con:%p  Fr:%p", content, frame);
-              char * name;
-              if (GetNameForFrame(frame, &name)) {
-                printf(" Name:[%s]", name);
-                nsMemory::Free(name);
-              }
-              printf("\n");
-#endif
-
-
-              nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-              nsCOMPtr<nsIAccessible> acc(do_QueryInterface(frame));
-
-              *aAcc = acc;
-              NS_IF_ADDREF(*aAcc);
-
-              return NS_OK;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
