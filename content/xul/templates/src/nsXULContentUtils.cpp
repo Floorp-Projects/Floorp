@@ -428,6 +428,7 @@ nsXULContentUtils::FindChildByTag(nsIContent* aElement,
         return NS_OK;
     }
 
+    *aResult = nsnull;
     return NS_RDF_NO_VALUE; // not found
 }
 
