@@ -86,6 +86,7 @@ endif
 CPPSRCS =			\
 	nsBarProps.cpp          \
 	nsDOMException.cpp 	\
+	nsDOMWindowUtils.cpp 	\
 	nsJSEnvironment.cpp	\
 	nsFocusController.cpp	\
 	nsGlobalWindow.cpp      \

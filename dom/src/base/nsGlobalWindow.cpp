@@ -121,6 +121,7 @@
 #include "nsIEntropyCollector.h"
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
+#include "nsDOMWindowUtils.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIContentViewer.h"
@@ -4523,13 +4524,19 @@ GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
   if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
     if (mDocShell) {
       nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
-      *aSink = docCharset;
+      if (docCharset) {
+        *aSink = docCharset;
+        NS_ADDREF(((nsISupports *) *aSink));
+      }
     }
   }
   else if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
     if (mDocShell) {
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-      *aSink = webNav;
+      if (webNav) {
+        *aSink = webNav;
+        NS_ADDREF(((nsISupports *) *aSink));
+      }
     }
   }
   else if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
@@ -4538,7 +4545,10 @@ GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
       mDocShell->GetContentViewer(getter_AddRefs(viewer));
       if (viewer) {
         nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
-        *aSink = webBrowserPrint;
+        if (webBrowserPrint) {
+          *aSink = webBrowserPrint;
+          NS_ADDREF(((nsISupports *) *aSink));
+        }
       }
     }
   }
@@ -4548,6 +4558,23 @@ GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
       nsIScriptEventManager* mgr = doc->GetScriptEventManager();
       if (mgr) {
         *aSink = mgr;
+        NS_ADDREF(((nsISupports *) *aSink));
+      }
+    }
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils))) {
+    nsCOMPtr<nsISupports> utils(do_QueryReferent(mWindowUtils));
+    if (utils) {
+      *aSink = utils;
+      NS_ADDREF(((nsISupports *) *aSink));
+    } else {
+      nsDOMWindowUtils *utilObj = new nsDOMWindowUtils(this);
+      nsCOMPtr<nsISupports> utilsIfc =
+                              NS_ISUPPORTS_CAST(nsIDOMWindowUtils *, utilObj);
+      if (utilsIfc) {
+        mWindowUtils = do_GetWeakReference(utilsIfc);
+        *aSink = utilsIfc;
+        NS_ADDREF(((nsISupports *) *aSink));
       }
     }
   }
@@ -4555,7 +4582,6 @@ GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
     return QueryInterface(aIID, aSink);
   }
 
-  NS_IF_ADDREF(((nsISupports *) * aSink));
   return NS_OK;
 }
 
