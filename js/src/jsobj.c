@@ -297,15 +297,29 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         oldproto = JSVAL_TO_OBJECT(LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO));
         if (oldproto && OBJ_SCOPE(oldproto) == scope) {
             /* Either obj needs a new empty scope, or it should share pobj's. */
-            if (!pobj) {
-                /* With no proto and no scope of its own, obj is truly empty. */
+            if (!pobj ||
+                !OBJ_IS_NATIVE(pobj) ||
+                OBJ_GET_CLASS(cx, pobj) != LOCKED_OBJ_GET_CLASS(oldproto)) {
+                /*
+                 * With no proto and no scope of its own, obj is truly empty.
+                 *
+                 * If pobj is not native, obj needs its own empty scope -- it
+                 * should not continue to share oldproto's scope once oldproto
+                 * is not on obj's prototype chain.  That would put properties
+                 * from oldproto's scope ahead of properties defined by pobj,
+                 * in lookup order.
+                 *
+                 * If pobj's class differs from oldproto's, we may need a new
+                 * scope to handle differences in private and reserved slots,
+                 * so we suboptimally but safely make one.
+                 */
                 scope = js_GetMutableScope(cx, obj);
                 if (!scope) {
                     JS_UNLOCK_OBJ(cx, obj);
                     SET_SLOT_DONE(rt);
                     return JS_FALSE;
                 }
-            } else if (OBJ_IS_NATIVE(pobj) && OBJ_SCOPE(pobj) != scope) {
+            } else if (OBJ_SCOPE(pobj) != scope) {
 #ifdef JS_THREADSAFE
                 /*
                  * We are about to nest scope locks.  Help jslock.c:ShareScope
