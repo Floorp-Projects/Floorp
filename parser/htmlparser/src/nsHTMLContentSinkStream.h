@@ -147,6 +147,7 @@ protected:
     void AddStartTag(const nsIParserNode& aNode);
     void AddEndTag(const nsIParserNode& aNode);
     void AddIndent();
+    void EnsureBufferSize(PRInt32 aNewSize);
 
     nsresult InitEncoder(const nsString& aCharset);
 
@@ -164,6 +165,9 @@ protected:
     nsString* mString;
 
     int       mTabLevel;
+    char*     mBuffer;
+    PRInt32   mBufferSize;
+    PRInt32   mBufferLength;
 
     PRInt32   mIndent;
     PRBool    mLowerCaseTags;
@@ -178,7 +182,6 @@ protected:
 
     nsIUnicodeEncoder*  mUnicodeEncoder;
     nsString            mCharsetOverride;
-    nsCAutoString       mBuffer;
 };
 
 
