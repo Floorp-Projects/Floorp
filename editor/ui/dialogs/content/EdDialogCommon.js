@@ -963,7 +963,6 @@ function GetDefaultBrowserColors()
   colors.TextColor = 0;
   colors.BackgroundColor = 0;
   try { useSysColors = prefs.GetBoolPref("browser.display.use_system_colors"); } catch (e) {}
-  }
 
   if (!useSysColors)
   {
