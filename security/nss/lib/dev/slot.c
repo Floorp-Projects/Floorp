@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.4 $ $Date: 2001/09/19 19:08:29 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.5 $ $Date: 2001/09/19 21:37:20 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -396,7 +396,7 @@ NSS_IMPLEMENT void
 NSSSlot_SetPasswordDefaults
 (
   NSSSlot *slot,
-  PRInt32 askPasswordTimes
+  PRInt32 askPasswordTimeout
 )
 {
     slot->authInfo.askPasswordTimeout = askPasswordTimeout;
@@ -464,6 +464,7 @@ NSSSlot_CreateSession
 	    } else {
 		nss_ZFreeIf(rvSession);
 	    }
+	    return (nssSession *)NULL;
 	}
     }
     rvSession->handle = session;
