@@ -15,7 +15,9 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-# AUTHOR INFO HERE...
+# Original Author:
+#   L. David Baron <dbaron@fas.harvard.edu> - wrote script loosely
+#     based on Chris Waterson's find-leakers.pl and make-tree.pl
 #
 # See http://www.mozilla.org/performance/refcnt-balancer.html for more info.
 #
