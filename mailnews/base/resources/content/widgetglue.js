@@ -270,16 +270,8 @@ function MsgFilters() {}
 function MsgFolderProperties() {}
 function MsgPreferences() 
 {
-    var prefsCore = XPAppCoresManager.Find("PrefsCore");
-    if (!prefsCore) {
-      prefsCore = new PrefsCore();
-      if (prefsCore) {
-        prefsCore.Init("PrefsCore");
-      }
-    }
-    if (prefsCore) {
-      prefsCore.ShowWindow(window);
-    }
+    var prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+    prefwindow.showWindow("widgetglue.js", window, "chrome://messenger/content/pref-mailnews.html");
 }
 
 function MsgShowMsgToolbar() {}
