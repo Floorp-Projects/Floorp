@@ -1,0 +1,120 @@
+#!/bin/sh
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+## $Id: mozilla.in,v 1.1 2002/08/21 19:21:36 bryner%netscape.com Exp $
+## 
+## Usage:
+##
+## $ mozilla [args]
+##
+## This script is meant to run the mozilla-bin binary from either 
+## mozilla/xpfe/bootstrap or mozilla/dist/bin.
+##
+## The script will setup all the environment voodoo needed to make
+## the mozilla-bin binary to work.
+##
+
+#uncomment for debugging
+#set -x
+
+moz_libdir=%MOZAPPDIR%
+MRE_HOME=%MREDIR%
+
+# honor MOZILLA_FIVE_HOME if it's there
+if [ -n "$MOZILLA_FIVE_HOME" ] ; then
+  dist_bin="$MOZILLA_FIVE_HOME"
+else
+  # Use run-mozilla.sh in the current dir if it exists
+  # If not, then start resolving symlinks until we find run-mozilla.sh
+  found=0
+  progname=$0
+  curdir=`dirname "$progname"`
+  run_moz="$curdir/run-mozilla.sh"
+  if test -x "$run_moz"; then
+    dist_bin=$curdir
+    found=1
+  else
+    here=`/bin/pwd`
+    while [ -h "$progname" ]; do
+      bn=`basename "$progname"`
+      cd `dirname "$progname"`
+      progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
+      if [ ! -x "$progname" ]; then
+        break
+      fi
+      curdir=`dirname "$progname"`
+      run_moz="$curdir/run-mozilla.sh"
+      if [ -x "$run_moz" ]; then
+        cd "$curdir"
+        dist_bin=`pwd`
+        found=1
+        break
+      fi
+    done
+    cd "$here"
+  fi
+  if [ $found = 0 ]; then
+    # Check default compile-time libdir
+    if [ -x "$moz_libdir/run-mozilla.sh" ]; then
+      dist_bin=$moz_libdir
+    else 
+      echo "Cannot find mozilla runtime directory. Exiting."
+      exit 1
+    fi
+  fi
+fi
+
+script_args=""
+moreargs=""
+debugging=0
+MOZILLA_BIN="mozilla-bin"
+
+if [ "$OSTYPE" = "beos" ]; then
+  mimeset -F $MOZILLA_BIN
+fi
+
+while [ $# -gt 0 ]
+do
+  case "$1" in
+    -p | -pure)
+      MOZILLA_BIN="mozilla-bin.pure"
+      shift
+      ;;
+    -g | --debug)
+      script_args="$script_args -g"
+      debugging=1
+      shift
+      ;;
+    -d | --debugger)
+      script_args="$script_args -d $2"
+      shift 2
+      ;;
+    *)
+      moreargs="$moreargs \"$1\""
+      shift 1
+      ;;
+  esac
+done
+
+export MRE_HOME
+eval "set -- $moreargs"
+if [ $debugging = 1 ]
+then
+  echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
+fi
+exec "$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
