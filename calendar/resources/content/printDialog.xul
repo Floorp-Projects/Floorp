@@ -43,15 +43,12 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
 <?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 
-<?xml-stylesheet href="chrome://calendar/content/datepicker/datepicker.css" ?>
-<?xml-stylesheet href="chrome://calendar/content/datepicker/calendar.css" ?>
-
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datepicker.css" ?>
 
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE dialog 
@@ -102,6 +99,11 @@ var descriptionTag="&newevent.description.label;"
 
 <script type="application/x-javascript" src="chrome://calendar/content/printDialog.js"/>
 
+<!-- required for datepicker (probably until bug 58757 fixed) -->
+<script type="application/x-javascript"
+ src="chrome://global/content/strres.js" />
+<script type="application/x-javascript" 
+ src="chrome://calendar/content/dateUtils.js"/>
 
 
 <!-- Data used in JS from dtd -->
@@ -110,10 +112,6 @@ var descriptionTag="&newevent.description.label;"
     <data id="data-event-title-edit"            value="&event.title.edit;" />
 </dataset>
 
-
-<!-- Picker popups -->
-
-   <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" value=""/>
 
    <vbox id="standard-dialog-content"  flex="1">
    
@@ -166,20 +164,8 @@ var descriptionTag="&newevent.description.label;"
                             <label value="&newevent.startdate.label;"/>
                         </hbox>
                         <hbox  id="start-date-box" align="center">
-                            <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );"/>
-                            <textbox id="start-time-text"
-                                     readonly="true"
-                                     value=""
-                                     onmousedown="prepareTimePicker('start-time-text')"
-                                     popup="oe-time-picker-popup"
-                                     position="after_start"
-                                     collapsed="true"/>
-                            <image id="start-time-button"
-                                   class="event-time-button-class"
-                                   onmousedown="prepareTimePicker('start-time-text')"
-                                   popup="oe-time-picker-popup"
-                                   position="after_start"
-                                   collapsed="true"/>
+                            <datepicker id="start-date-picker" value=""
+                             onchange="onDatePick( this );"/>
                         </hbox>
                      </row>
                      
