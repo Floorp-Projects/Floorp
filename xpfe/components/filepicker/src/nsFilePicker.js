@@ -100,6 +100,10 @@ nsFilePicker.prototype = {
   set defaultString(a) { this.mDefaultString = a; },
   get defaultString()  { return this.mDefaultString; },
 
+  /* attribute wstring defaultExtension */
+  set defaultExtension(ext) { },
+  get defaultExtension() { return ""; },
+  
   /* attribute long filterIndex; */
   set filterIndex(a) { this.mFilterIndex = a; },
   get filterIndex() { return this.mFilterIndex; },

@@ -47,6 +47,8 @@ public:
     // nsIFilePicker (less what's in nsBaseFilePicker)
   NS_IMETHOD GetDefaultString(PRUnichar * *aDefaultString);
   NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
+  NS_IMETHOD GetDefaultExtension(PRUnichar * *aDefaultExtension);
+  NS_IMETHOD SetDefaultExtension(const PRUnichar * aDefaultExtension);
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
   NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
@@ -73,6 +75,7 @@ protected:
   PRInt16                mMode;
   nsCString              mFile;
   nsString               mDefault;
+  nsString               mDefaultExtension;
   nsString               mFilterList;
   nsIUnicodeEncoder*     mUnicodeEncoder;
   nsIUnicodeDecoder*     mUnicodeDecoder;

@@ -48,6 +48,8 @@ public:
     // nsIFilePicker (less what's in nsBaseFilePicker)
   NS_IMETHOD GetDefaultString(PRUnichar * *aDefaultString);
   NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
+  NS_IMETHOD GetDefaultExtension(PRUnichar * *aDefaultExtension);
+  NS_IMETHOD SetDefaultExtension(const PRUnichar * aDefaultExtension);
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
