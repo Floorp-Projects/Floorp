@@ -18,7 +18,7 @@
 
 
 #include "editor.h"
-
+#include "nsIDOMEventReceiver.h" 
 
 //class implementations are in order they are declared in editor.h
 
@@ -49,30 +49,35 @@ Editor::Init(nsIDOMDocument *aDomInterface)
 
   mDomInterfaceP = aDomInterface;
 
+  static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
+  static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
+  static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
+
   nsresult t_result = NS_NewEditorKeyListener(context_AddRefs(mKeyListenerP), this);
   if (NS_OK != t_result)
   {
-    assert(FALSE);
+    assert(0);
     return t_result;
   }
   t_result = NS_NewEditorMouseListener(context_AddRefs(mMouseListenerP), this);
   if (NS_OK != t_result)
   {
-    mKeyListener = 0; //dont keep the key listener if the mouse listener fails.
-    assert(FALSE);
+    mKeyListenerP = 0; //dont keep the key listener if the mouse listener fails.
+    assert(0);
     return t_result;
   }
   COM_auto_ptr<nsIDOMEventReceiver> erP;
   t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, context_AddRefs(erP));
   if (NS_OK != t_result) 
   {
-    mKeyListener = 0;
-    m_MouseListener = 0; //dont need these if we cant register them
-    assert(FALSE);
+    mKeyListenerP = 0;
+    mMouseListenerP = 0; //dont need these if we cant register them
+    assert(0);
     return t_result;
   }
   erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
   erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+  return NS_OK;
 }
 
 
@@ -84,6 +89,7 @@ Editor::Init(nsIDOMDocument *aDomInterface)
 PRBool
 Editor::KeyDown(int aKeycode)
 {
+  return PR_TRUE;
 }
 
 
@@ -91,6 +97,7 @@ Editor::KeyDown(int aKeycode)
 PRBool
 Editor::MouseClick(int aX,int aY)
 {
+  return PR_FALSE;
 }
 //END Editor Calls from public
 
