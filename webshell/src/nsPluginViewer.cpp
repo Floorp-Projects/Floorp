@@ -21,30 +21,11 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIPluginHost.h"
+#include "nsIPluginInstance.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsRepository.h"
 #include "nsWidgetsCID.h"
-
-//#include "nsString.h"
-//#include "nsISupports.h"
-//
-//#include "nsIDocument.h"
-//#include "nsIPresContext.h"
-//#include "nsIPresShell.h"
-//#include "nsIStyleSet.h"
-//#include "nsIStyleSheet.h"
-//
-//#include "nsIScriptContextOwner.h"
-//#include "nsIScriptGlobalObject.h"
-//#include "nsILinkHandler.h"
-//#include "nsIDOMDocument.h"
-//
-//#include "nsViewsCID.h"
-//#include "nsIDeviceContext.h"
-//#include "nsIViewManager.h"
-//#include "nsIView.h"
-//
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -113,6 +94,8 @@ public:
   ~PluginViewerImpl();
 
   nsresult CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds);
+
+  void DestroyPlugin();
 
   nsresult MakeWindow(nsNativeWidget aParent,
                       nsIDeviceContext* aDeviceContext,
@@ -183,6 +166,15 @@ PluginViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 PluginViewerImpl::~PluginViewerImpl()
 {
   NS_IF_RELEASE(mContainer);
+  if (nsnull != mInstance) {
+    DestroyPlugin();
+    NS_RELEASE(mInstance);
+  }
+  if (nsnull != mWindow) {
+    mWindow->Destroy();
+    NS_RELEASE(mWindow);
+  }
+  NS_IF_RELEASE(mURL);
 }
 
 /*
@@ -242,13 +234,13 @@ PluginViewerImpl::StartLoad(nsIURL* aURL, const char* aContentType,
   aResult = nsnull;
 
   // Only instantiate the plugin if our container can host it
-  nsIPluginHost* pm;
-  nsresult rv = mContainer->QueryCapability(kIPluginHostIID, (void **)&pm);
+  nsIPluginHost* host;
+  nsresult rv = mContainer->QueryCapability(kIPluginHostIID, (void **)&host);
   if (NS_OK == rv) {
     nsRect r;
     mWindow->GetBounds(r);
-    rv = CreatePlugin(pm, nsRect(0, 0, r.width, r.height));
-    NS_RELEASE(pm);
+    rv = CreatePlugin(host, nsRect(0, 0, r.width, r.height));
+    NS_RELEASE(host);
   }
 
   return rv;
@@ -282,6 +274,14 @@ PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds)
   delete ct;
 
   return rv;
+}
+
+void
+PluginViewerImpl::DestroyPlugin()
+{
+  if (nsnull != mInstance) {
+    mInstance->Destroy();
+  }
 }
 
 static nsEventStatus PR_CALLBACK
