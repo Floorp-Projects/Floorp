@@ -1,0 +1,246 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Netscape security libraries.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ */
+
+/*
+ * Support routines for SECItem data structure.
+ *
+ * $Id: secitem.c,v 1.1 2000/03/31 19:40:02 relyea%netscape.com Exp $
+ */
+
+#include "seccomon.h"
+#include "secitem.h"
+#include "base64.h"
+#include "secerr.h"
+
+SECItem *
+SECITEM_AllocItem(PRArenaPool *arena, SECItem *item, unsigned int len)
+{
+    SECItem *result = NULL;
+    void *mark;
+
+    if (arena != NULL) {
+	mark = PORT_ArenaMark(arena);
+    }
+
+    if (item == NULL) {
+	if (arena != NULL) {
+	    result = PORT_ArenaZAlloc(arena, sizeof(SECItem));
+	} else {
+	    result = PORT_ZAlloc(sizeof(SECItem));
+	}
+	if (result == NULL) {
+	    goto loser;
+	}
+    } else {
+	PORT_Assert(item->data == NULL);
+	result = item;
+    }
+
+    result->len = len;
+    if (len) {
+	if (arena != NULL) {
+	    result->data = PORT_ArenaAlloc(arena, len);
+	} else {
+	    result->data = PORT_Alloc(len);
+	}
+    }
+
+    if (arena != NULL) {
+	PORT_ArenaUnmark(arena, mark);
+    }
+    return(result);
+
+loser:
+    if (arena != NULL) {
+	PORT_ArenaRelease(arena, mark);
+	if (item != NULL) {
+	    item->data = NULL;
+	    item->len = 0;
+	}
+    } else {
+	if (result != NULL) {
+	    SECITEM_FreeItem(result, (item == NULL) ? PR_TRUE : PR_FALSE);
+	}
+    }
+    return(NULL);
+}
+
+SECStatus
+SECITEM_ReallocItem(PRArenaPool *arena, SECItem *item, unsigned int oldlen,
+		    unsigned int newlen)
+{
+    PORT_Assert(item != NULL);
+    if (item == NULL) {
+	/* XXX Set error.  But to what? */
+	return SECFailure;
+    }
+
+    /*
+     * If no old length, degenerate to just plain alloc.
+     */
+    if (oldlen == 0) {
+	PORT_Assert(item->data == NULL || item->len == 0);
+	if (newlen == 0) {
+	    /* Nothing to do.  Weird, but not a failure.  */
+	    return SECSuccess;
+	}
+	item->len = newlen;
+	if (arena != NULL) {
+	    item->data = PORT_ArenaAlloc(arena, newlen);
+	} else {
+	    item->data = PORT_Alloc(newlen);
+	}
+    } else {
+	if (arena != NULL) {
+	    item->data = PORT_ArenaGrow(arena, item->data, oldlen, newlen);
+	} else {
+	    item->data = PORT_Realloc(item->data, newlen);
+	}
+    }
+
+    if (item->data == NULL) {
+	return SECFailure;
+    }
+
+    return SECSuccess;
+}
+
+SECComparison
+SECITEM_CompareItem(const SECItem *a, const SECItem *b)
+{
+    unsigned m;
+    SECComparison rv;
+
+    m = ( ( a->len < b->len ) ? a->len : b->len );
+    
+    rv = (SECComparison) PORT_Memcmp(a->data, b->data, m);
+    if (rv) {
+	return rv;
+    }
+    if (a->len < b->len) {
+	return SECLessThan;
+    }
+    if (a->len == b->len) {
+	return SECEqual;
+    }
+    return SECGreaterThan;
+}
+
+PRBool
+SECITEM_ItemsAreEqual(const SECItem *a, const SECItem *b)
+{
+    if (SECITEM_CompareItem(a, b) == SECEqual)
+	return PR_TRUE;
+
+    return PR_FALSE;
+}
+
+SECItem *
+SECITEM_DupItem(const SECItem *from)
+{
+    SECItem *to;
+    
+    if ( from == NULL ) {
+	return(NULL);
+    }
+    
+    to = (SECItem *)PORT_Alloc(sizeof(SECItem));
+    if ( to == NULL ) {
+	return(NULL);
+    }
+
+    to->data = (unsigned char *)PORT_Alloc(from->len);
+    if ( to->data == NULL ) {
+	PORT_Free(to);
+	return(NULL);
+    }
+
+    to->len = from->len;
+    PORT_Memcpy(to->data, from->data, to->len);
+    
+    return(to);
+}
+
+SECStatus
+SECITEM_CopyItem(PRArenaPool *arena, SECItem *to, const SECItem *from)
+{
+    if (from->data && from->len) {
+	if ( arena ) {
+	    to->data = (unsigned char*) PORT_ArenaAlloc(arena, from->len);
+	} else {
+	    to->data = (unsigned char*) PORT_Alloc(from->len);
+	}
+	
+	if (!to->data) {
+	    return SECFailure;
+	}
+	PORT_Memcpy(to->data, from->data, from->len);
+	to->len = from->len;
+    } else {
+	to->data = 0;
+	to->len = 0;
+    }
+    return SECSuccess;
+}
+
+void
+SECITEM_FreeItem(SECItem *zap, PRBool freeit)
+{
+    if (zap) {
+	PORT_Free(zap->data);
+	zap->data = 0;
+	zap->len = 0;
+	if (freeit) {
+	    PORT_Free(zap);
+	}
+    }
+}
+
+void
+SECITEM_ZfreeItem(SECItem *zap, PRBool freeit)
+{
+    if (zap) {
+	PORT_ZFree(zap->data, zap->len);
+	zap->data = 0;
+	zap->len = 0;
+	if (freeit) {
+	    PORT_ZFree(zap, sizeof(SECItem));
+	}
+    }
+}
+
+char *
+BTOA_ConvertItemToAscii (SECItem *isrc)
+{
+    return BTOA_DataToAscii (isrc->data, isrc->len);
+}

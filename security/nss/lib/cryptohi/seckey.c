@@ -1,0 +1,1649 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Netscape security libraries.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ */
+#include "cryptohi.h"
+#include "keyhi.h"
+#include "secrng.h"
+#include "secoid.h"
+#include "secitem.h"
+#include "secder.h"
+#include "base64.h"
+#include "secasn1.h"
+#include "cert.h"
+#include "pk11func.h"
+#include "secerr.h"
+#include "secdig.h"
+#include "prtime.h"
+
+const SEC_ASN1Template CERT_SubjectPublicKeyInfoTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+	  0, NULL, sizeof(CERTSubjectPublicKeyInfo) },
+    { SEC_ASN1_INLINE,
+	  offsetof(CERTSubjectPublicKeyInfo,algorithm),
+	  SECOID_AlgorithmIDTemplate },
+    { SEC_ASN1_BIT_STRING,
+	  offsetof(CERTSubjectPublicKeyInfo,subjectPublicKey), },
+    { 0, }
+};
+
+const SEC_ASN1Template CERT_PublicKeyAndChallengeTemplate[] =
+{
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(CERTPublicKeyAndChallenge) },
+    { SEC_ASN1_ANY, offsetof(CERTPublicKeyAndChallenge,spki) },
+    { SEC_ASN1_IA5_STRING, offsetof(CERTPublicKeyAndChallenge,challenge) },
+    { 0 }
+};
+
+const SEC_ASN1Template SECKEY_RSAPublicKeyTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SECKEYPublicKey) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.rsa.modulus), },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.rsa.publicExponent), },
+    { 0, }
+};
+
+const SEC_ASN1Template SECKEY_DSAPublicKeyTemplate[] = {
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dsa.publicValue), },
+    { 0, }
+};
+
+const SEC_ASN1Template SECKEY_PQGParamsTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(PQGParams) },
+    { SEC_ASN1_INTEGER, offsetof(PQGParams,prime) },
+    { SEC_ASN1_INTEGER, offsetof(PQGParams,subPrime) },
+    { SEC_ASN1_INTEGER, offsetof(PQGParams,base) },
+    { 0, }
+};
+
+const SEC_ASN1Template SECKEY_DHPublicKeyTemplate[] = {
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.publicValue), },
+    { 0, }
+};
+
+const SEC_ASN1Template SECKEY_DHParamKeyTemplate[] = {
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.prime), },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.base), },
+    { 0, }
+};
+
+const SEC_ASN1Template SECKEY_FortezzaParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE,  0, NULL, sizeof(PQGParams) },
+    { SEC_ASN1_OCTET_STRING, offsetof(PQGParams,prime), },
+    { SEC_ASN1_OCTET_STRING, offsetof(PQGParams,subPrime), },
+    { SEC_ASN1_OCTET_STRING, offsetof(PQGParams,base), },
+    { 0 },
+};
+ 
+const SEC_ASN1Template SECKEY_FortezzaDiffParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(DiffPQGParams) },
+    { SEC_ASN1_INLINE, offsetof(DiffPQGParams,DiffKEAParams), 
+                       SECKEY_FortezzaParameterTemplate},
+    { SEC_ASN1_INLINE, offsetof(DiffPQGParams,DiffDSAParams), 
+                       SECKEY_FortezzaParameterTemplate},
+    { 0 },
+};
+
+const SEC_ASN1Template SECKEY_FortezzaPreParamTemplate[] = {
+    { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED |
+      SEC_ASN1_CONTEXT_SPECIFIC | 1, offsetof(PQGDualParams,CommParams),
+                SECKEY_FortezzaParameterTemplate},
+    { 0, }
+};
+
+const SEC_ASN1Template SECKEY_FortezzaAltPreParamTemplate[] = {
+    { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED |
+      SEC_ASN1_CONTEXT_SPECIFIC | 0, offsetof(PQGDualParams,DiffParams),
+                SECKEY_FortezzaDiffParameterTemplate},
+    { 0, }
+};
+
+const SEC_ASN1Template SECKEY_KEAPublicKeyTemplate[] = {
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.kea.publicValue), },
+    { 0, }
+};
+
+const SEC_ASN1Template SECKEY_KEAParamsTemplate[] = {
+    { SEC_ASN1_OCTET_STRING, offsetof(SECKEYPublicKey,u.kea.params.hash), }, 
+    { 0, }
+};
+
+
+/*
+ * NOTE: This only generates RSA Private Key's. If you need more,
+ * We need to pass in some more params...
+ */
+SECKEYPrivateKey *
+SECKEY_CreateRSAPrivateKey(int keySizeInBits,SECKEYPublicKey **pubk, void *cx)
+{
+    SECKEYPrivateKey *privk;
+    PK11SlotInfo *slot = PK11_GetBestSlot(CKM_RSA_PKCS_KEY_PAIR_GEN,cx);
+    PK11RSAGenParams param;
+
+    param.keySizeInBits = keySizeInBits;
+    param.pe = 65537L;
+    
+    privk = PK11_GenerateKeyPair(slot,CKM_RSA_PKCS_KEY_PAIR_GEN,&param,pubk,
+					PR_FALSE, PR_TRUE, cx);
+    PK11_FreeSlot(slot);
+    return(privk);
+}
+
+void
+SECKEY_DestroyPrivateKey(SECKEYPrivateKey *privk)
+{
+    if (privk) {
+	if (privk->pkcs11Slot) {
+	    if (privk->pkcs11IsTemp) {
+	    	PK11_DestroyObject(privk->pkcs11Slot,privk->pkcs11ID);
+	    }
+	    PK11_FreeSlot(privk->pkcs11Slot);
+
+	}
+    	if (privk->arena) {
+	    PORT_FreeArena(privk->arena, PR_TRUE);
+	}
+    }
+}
+
+void
+SECKEY_DestroyPublicKey(SECKEYPublicKey *pubk)
+{
+    if (pubk) {
+	if (pubk->pkcs11Slot) {
+	    PK11_DestroyObject(pubk->pkcs11Slot,pubk->pkcs11ID);
+	    PK11_FreeSlot(pubk->pkcs11Slot);
+	}
+    	if (pubk->arena) {
+	    PORT_FreeArena(pubk->arena, PR_FALSE);
+	}
+    }
+}
+
+SECStatus
+SECKEY_CopySubjectPublicKeyInfo(PRArenaPool *arena,
+			     CERTSubjectPublicKeyInfo *to,
+			     CERTSubjectPublicKeyInfo *from)
+{
+    SECStatus rv;
+
+    rv = SECOID_CopyAlgorithmID(arena, &to->algorithm, &from->algorithm);
+    if (rv == SECSuccess)
+	rv = SECITEM_CopyItem(arena, &to->subjectPublicKey, &from->subjectPublicKey);
+
+    return rv;
+}
+
+SECStatus
+SECKEY_KEASetParams(KEAParams * params, SECKEYPublicKey * pubKey) {
+
+    if (pubKey->keyType == fortezzaKey) {
+        /* the key is a fortezza V1 public key  */
+
+	/* obtain hash of pubkey->u.fortezza.params.prime.data +
+		          pubkey->u.fortezza.params.subPrime.data +
+			  pubkey->u.fortezza.params.base.data  */
+
+	/* store hash in params->hash */
+
+    } else if (pubKey->keyType == keaKey) {
+
+        /* the key is a new fortezza KEA public key. */
+        SECITEM_CopyItem(pubKey->arena, &params->hash, 
+	                 &pubKey->u.kea.params.hash );
+
+    } else {
+
+	/* the key has no KEA parameters */
+	return SECFailure;
+    }
+
+}
+
+
+SECStatus
+SECKEY_KEAParamCompare(CERTCertificate *cert1,CERTCertificate *cert2) 
+{
+
+    SECStatus rv;
+    SECOidData *oid=NULL;
+    CERTSubjectPublicKeyInfo * subjectSpki=NULL;
+    CERTSubjectPublicKeyInfo * issuerSpki=NULL;
+    CERTCertificate *issuerCert = NULL;
+
+    SECKEYPublicKey *pubKey1 = 0;
+    SECKEYPublicKey *pubKey2 = 0;
+
+    KEAParams params1;
+    KEAParams params2;
+
+
+    rv = SECFailure;
+
+    /* get cert1's public key */
+    pubKey1 = CERT_ExtractPublicKey(cert1);
+    if ( !pubKey1 ) {
+	return(SECFailure);
+    }
+    
+
+    /* get cert2's public key */
+    pubKey2 = CERT_ExtractPublicKey(cert2);
+    if ( !pubKey2 ) {
+	return(SECFailure);
+    }
+
+    /* handle the case when both public keys are new
+     * fortezza KEA public keys.    */
+
+    if ((pubKey1->keyType == keaKey) &&
+        (pubKey2->keyType == keaKey) ) {
+
+        rv = (SECStatus)SECITEM_CompareItem(&pubKey1->u.kea.params.hash,
+	                         &pubKey2->u.kea.params.hash);
+	goto done;
+    }
+
+    /* handle the case when both public keys are old fortezza
+     * public keys.              */
+
+    if ((pubKey1->keyType == fortezzaKey) &&
+        (pubKey2->keyType == fortezzaKey) ) {
+
+        rv = (SECStatus)SECITEM_CompareItem(&pubKey1->u.fortezza.keaParams.prime,
+	                         &pubKey2->u.fortezza.keaParams.prime);
+
+	if (rv == SECEqual) {
+	    rv = (SECStatus)SECITEM_CompareItem(&pubKey1->u.fortezza.keaParams.subPrime,
+	                             &pubKey2->u.fortezza.keaParams.subPrime);
+	}
+
+	if (rv == SECEqual) {
+	    rv = (SECStatus)SECITEM_CompareItem(&pubKey1->u.fortezza.keaParams.base,
+	                             &pubKey2->u.fortezza.keaParams.base);
+	}
+	
+	goto done;
+    }
+
+
+    /* handle the case when the public keys are a mixture of 
+     * old and new.                          */
+
+    rv = SECKEY_KEASetParams(&params1, pubKey1);
+    if (rv != SECSuccess) return rv;
+
+    rv = SECKEY_KEASetParams(&params2, pubKey2);
+    if (rv != SECSuccess) return rv;
+
+    rv = (SECStatus)SECITEM_CompareItem(&params1.hash, &params2.hash);
+
+done:
+    SECKEY_DestroyPublicKey(pubKey1);
+    SECKEY_DestroyPublicKey(pubKey2);
+
+    return rv;   /* returns SECEqual if parameters are equal */
+
+}
+
+
+/* Procedure to update the pqg parameters for a cert's public key.
+ * pqg parameters only need to be updated for DSA and fortezza certificates.
+ * The procedure uses calls to itself recursively to update a certificate
+ * issuer's pqg parameters.  Some important rules are:
+ *    - Do nothing if the cert already has PQG parameters.
+ *    - If the cert does not have PQG parameters, obtain them from the issuer.
+ *    - A valid cert chain cannot have a DSA or Fortezza cert without
+ *      pqg parameters that has a parent that is not a DSA or Fortezza cert.
+ *    - pqg paramters are stored in two different formats: the standard
+ *      DER encoded format and the fortezza-only wrapped format.  The params
+ *      should be copied from issuer to subject cert without modifying the
+ *      formats.  The public key extraction code will deal with the different
+ *      formats at the time of extraction.  */
+
+SECStatus
+seckey_UpdateCertPQGChain(CERTCertificate * subjectCert, int count)
+{
+    SECStatus rv, rvCompare;
+    SECOidData *oid=NULL;
+    int tag;
+    CERTSubjectPublicKeyInfo * subjectSpki=NULL;
+    CERTSubjectPublicKeyInfo * issuerSpki=NULL;
+    CERTCertificate *issuerCert = NULL;
+
+    rv = SECSuccess;
+
+    /* increment cert chain length counter*/
+    count++;
+
+    /* check if cert chain length exceeds the maximum length*/
+    if (count > CERT_MAX_CERT_CHAIN) {
+	return SECFailure;
+    }
+
+    oid = SECOID_FindOID(&subjectCert->subjectPublicKeyInfo.algorithm.algorithm);            
+    if (oid != NULL) {  
+        tag = oid->offset;
+             
+        /* Check if cert has a DSA or Fortezza public key. If not, return
+         * success since no PQG params need to be updated.  */
+
+	if ( (tag != SEC_OID_MISSI_KEA_DSS_OLD) &&
+	     (tag != SEC_OID_MISSI_DSS_OLD) &&
+             (tag != SEC_OID_MISSI_KEA_DSS) &&
+             (tag != SEC_OID_MISSI_DSS) &&               
+             (tag != SEC_OID_ANSIX9_DSA_SIGNATURE) &&
+             (tag != SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST) &&
+             (tag != SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST) ) {
+            
+            return SECSuccess;
+        }
+    } else {
+        return SECFailure;  /* return failure if oid is NULL */  
+    }
+
+    /* if cert has PQG parameters, return success */
+
+    subjectSpki=&subjectCert->subjectPublicKeyInfo;
+
+    if (subjectSpki->algorithm.parameters.len != 0) {
+        return SECSuccess;
+    }
+
+    /* check if the cert is self-signed */
+    rvCompare = (SECStatus)SECITEM_CompareItem(&subjectCert->derSubject,
+				    &subjectCert->derIssuer);
+	if (rvCompare == SECEqual) {
+	  /* fail since cert is self-signed and has no pqg params. */
+            return SECFailure;     
+	}
+     
+    /* get issuer cert */
+    issuerCert = CERT_FindCertIssuer(subjectCert, PR_Now(), certUsageAnyCA);
+	if ( ! issuerCert ) {
+            return SECFailure;
+	}
+
+    /* if parent is not DSA or fortezza, return failure since
+       we don't allow this case. */
+
+    oid = SECOID_FindOID(&issuerCert->subjectPublicKeyInfo.algorithm.algorithm);
+    if (oid != NULL) {  
+        tag = oid->offset;
+             
+        /* Check if issuer cert has a DSA or Fortezza public key. If not,
+         * return failure.   */
+
+	if ( (tag != SEC_OID_MISSI_KEA_DSS_OLD) &&
+	     (tag != SEC_OID_MISSI_DSS_OLD) &&
+             (tag != SEC_OID_MISSI_KEA_DSS) &&
+             (tag != SEC_OID_MISSI_DSS) &&               
+             (tag != SEC_OID_ANSIX9_DSA_SIGNATURE) &&
+             (tag != SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST) &&
+             (tag != SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST) ) {
+            
+            return SECFailure;
+        }
+    } else {
+        return SECFailure;  /* return failure if oid is NULL */  
+    }
+
+
+    /* at this point the subject cert has no pqg parameters and the
+     * issuer cert has a DSA or fortezza public key.  Update the issuer's
+     * pqg parameters with a recursive call to this same function. */
+
+    rv = seckey_UpdateCertPQGChain(issuerCert, count);
+    if (rv != SECSuccess) return rv;
+
+    /* ensure issuer has pqg parameters */
+
+    issuerSpki=&issuerCert->subjectPublicKeyInfo;
+    if (issuerSpki->algorithm.parameters.len == 0) {
+        rv = SECFailure; 
+    }
+
+    /* if update was successful and pqg params present, then copy the
+     * parameters to the subject cert's key. */
+
+    if (rv == SECSuccess) {
+        rv = SECITEM_CopyItem(subjectCert->arena,
+                              &subjectSpki->algorithm.parameters, 
+	   		      &issuerSpki->algorithm.parameters);
+    }
+
+    return rv;
+
+}
+ 
+
+SECStatus
+SECKEY_UpdateCertPQG(CERTCertificate * subjectCert)
+{
+    return(seckey_UpdateCertPQGChain(subjectCert,0));
+}
+   
+
+/* Decode the PQG parameters.  The params could be stored in two
+ * possible formats, the old fortezza-only wrapped format or
+ * the standard DER encoded format.   Store the decoded parameters in an
+ * old fortezza cert data structure */
+ 
+SECStatus
+SECKEY_FortezzaDecodePQGtoOld(PRArenaPool *arena, SECKEYPublicKey *pubk,
+                              SECItem *params) {
+        SECStatus rv;
+	PQGDualParams dual_params;
+
+    if (params == NULL) return SECFailure; 
+    
+    if (params->data == NULL) return SECFailure;
+
+    /* Check if params use the standard format.
+     * The value 0xa1 will appear in the first byte of the parameter data
+     * if the PQG parameters are not using the standard format. This
+     * code should be changed to use a better method to detect non-standard
+     * parameters.    */
+
+    if ((params->data[0] != 0xa1) &&
+        (params->data[0] != 0xa0)) {
+
+            /* PQG params are in the standard format */
+
+	    /* Store DSA PQG parameters */
+            rv = SEC_ASN1DecodeItem(arena, &pubk->u.fortezza.params,
+                              SECKEY_PQGParamsTemplate,
+                              params);
+
+	    if (rv == SECSuccess) {
+
+	        /* Copy the DSA PQG parameters to the KEA PQG parameters. */
+	        rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
+                                      &pubk->u.fortezza.params.prime);
+                if (rv != SECSuccess) return rv;
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
+                                      &pubk->u.fortezza.params.subPrime);
+                if (rv != SECSuccess) return rv;
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
+                                      &pubk->u.fortezza.params.base);
+                if (rv != SECSuccess) return rv;
+            }
+
+    } else {
+
+	dual_params.CommParams.prime.len = 0;
+        dual_params.CommParams.subPrime.len = 0;
+	dual_params.CommParams.base.len = 0;
+	dual_params.DiffParams.DiffDSAParams.prime.len = 0;
+        dual_params.DiffParams.DiffDSAParams.subPrime.len = 0;
+	dual_params.DiffParams.DiffDSAParams.base.len = 0;
+
+        /* else the old fortezza-only wrapped format is used. */
+
+	if (params->data[0] == 0xa1) {
+            rv = SEC_ASN1DecodeItem(arena, &dual_params, 
+				SECKEY_FortezzaPreParamTemplate, params);
+	} else {
+            rv = SEC_ASN1DecodeItem(arena, &dual_params, 
+	   			    SECKEY_FortezzaAltPreParamTemplate, params);
+        }
+
+        if (rv < 0) return rv;
+	
+        if ( (dual_params.CommParams.prime.len > 0) &&
+             (dual_params.CommParams.subPrime.len > 0) && 
+             (dual_params.CommParams.base.len > 0) ) {
+            /* copy in common params */
+	    
+	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.prime,
+                                  &dual_params.CommParams.prime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.subPrime,
+                                  &dual_params.CommParams.subPrime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.base,
+                                  &dual_params.CommParams.base);
+
+	    /* Copy the DSA PQG parameters to the KEA PQG parameters. */
+	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
+                                  &pubk->u.fortezza.params.prime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
+                                  &pubk->u.fortezza.params.subPrime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
+                                  &pubk->u.fortezza.params.base);
+            if (rv != SECSuccess) return rv;
+
+        } else {
+
+	    /* else copy in different params */
+
+	    /* copy DSA PQG parameters */
+	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.prime,
+                                  &dual_params.DiffParams.DiffDSAParams.prime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.subPrime,
+                                  &dual_params.DiffParams.DiffDSAParams.subPrime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.base,
+                                  &dual_params.DiffParams.DiffDSAParams.base);
+
+	    /* copy KEA PQG parameters */
+
+	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
+                                  &dual_params.DiffParams.DiffKEAParams.prime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
+                                  &dual_params.DiffParams.DiffKEAParams.subPrime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
+                                  &dual_params.DiffParams.DiffKEAParams.base);
+        }
+       
+    }
+    return rv;
+}
+
+
+/* Decode the DSA PQG parameters.  The params could be stored in two
+ * possible formats, the old fortezza-only wrapped format or
+ * the normal standard format.  Store the decoded parameters in
+ * a V3 certificate data structure.  */ 
+
+SECStatus
+SECKEY_DSADecodePQG(PRArenaPool *arena, SECKEYPublicKey *pubk, SECItem *params) {
+        SECStatus rv;
+	PQGDualParams dual_params;
+
+    if (params == NULL) return SECFailure; 
+    
+    if (params->data == NULL) return SECFailure;
+
+    /* Check if params use the standard format.
+     * The value 0xa1 will appear in the first byte of the parameter data
+     * if the PQG parameters are not using the standard format.  This
+     * code should be changed to use a better method to detect non-standard
+     * parameters.    */
+
+    if ((params->data[0] != 0xa1) &&
+        (params->data[0] != 0xa0)) {
+    
+         /* PQG params are in the standard format */
+         rv = SEC_ASN1DecodeItem(arena, &pubk->u.dsa.params,
+                             SECKEY_PQGParamsTemplate,
+                             params);
+    } else {
+
+	dual_params.CommParams.prime.len = 0;
+        dual_params.CommParams.subPrime.len = 0;
+	dual_params.CommParams.base.len = 0;
+	dual_params.DiffParams.DiffDSAParams.prime.len = 0;
+        dual_params.DiffParams.DiffDSAParams.subPrime.len = 0;
+	dual_params.DiffParams.DiffDSAParams.base.len = 0;
+
+        /* else the old fortezza-only wrapped format is used. */
+        if (params->data[0] == 0xa1) {
+            rv = SEC_ASN1DecodeItem(arena, &dual_params, 
+				SECKEY_FortezzaPreParamTemplate, params);
+	} else {
+            rv = SEC_ASN1DecodeItem(arena, &dual_params, 
+	   			    SECKEY_FortezzaAltPreParamTemplate, params);
+        }
+
+        if (rv < 0) return rv;
+
+        if ( (dual_params.CommParams.prime.len > 0) &&
+             (dual_params.CommParams.subPrime.len > 0) && 
+             (dual_params.CommParams.base.len > 0) ) {
+            /* copy in common params */
+	    
+	    rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.prime,
+                                  &dual_params.CommParams.prime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.subPrime,
+                                  &dual_params.CommParams.subPrime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.base,
+                                  &dual_params.CommParams.base);
+
+        } else {
+
+	    /* else copy in different params */
+
+	    /* copy DSA PQG parameters */
+	    rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.prime,
+                                  &dual_params.DiffParams.DiffDSAParams.prime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.subPrime,
+                                  &dual_params.DiffParams.DiffDSAParams.subPrime);
+            if (rv != SECSuccess) return rv;
+            rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.base,
+                                  &dual_params.DiffParams.DiffDSAParams.base);
+
+        }
+    }
+    return rv;
+}
+
+
+
+/* Decodes the DER encoded fortezza public key and stores the results in a
+ * structure of type SECKEYPublicKey. */
+
+SECStatus
+SECKEY_FortezzaDecodeCertKey(PRArenaPool *arena, SECKEYPublicKey *pubk,
+                             SECItem *rawkey, SECItem *params) {
+
+	unsigned char *rawptr = rawkey->data;
+	unsigned char *end = rawkey->data + rawkey->len;
+	unsigned char *clearptr;
+
+	/* first march down and decode the raw key data */
+
+	/* version */	
+	pubk->u.fortezza.KEAversion = *rawptr++;
+	if (*rawptr++ != 0x01) {
+		return SECFailure;
+	}
+
+	/* KMID */
+	PORT_Memcpy(pubk->u.fortezza.KMID,rawptr,
+				sizeof(pubk->u.fortezza.KMID));
+	rawptr += sizeof(pubk->u.fortezza.KMID);
+
+	/* clearance (the string up to the first byte with the hi-bit on */
+	clearptr = rawptr;
+	while ((rawptr < end) && (*rawptr++ & 0x80));
+
+	if (rawptr >= end) { return SECFailure; }
+	pubk->u.fortezza.clearance.len = rawptr - clearptr;
+	pubk->u.fortezza.clearance.data = 
+		(unsigned char*)PORT_ArenaZAlloc(arena,pubk->u.fortezza.clearance.len);
+	if (pubk->u.fortezza.clearance.data == NULL) {
+		return SECFailure;
+	}
+	PORT_Memcpy(pubk->u.fortezza.clearance.data,clearptr,
+					pubk->u.fortezza.clearance.len);
+
+	/* KEAPrivilege (the string up to the first byte with the hi-bit on */
+	clearptr = rawptr;
+	while ((rawptr < end) && (*rawptr++ & 0x80));
+	if (rawptr >= end) { return SECFailure; }
+	pubk->u.fortezza.KEApriviledge.len = rawptr - clearptr;
+	pubk->u.fortezza.KEApriviledge.data = 
+		(unsigned char*)PORT_ArenaZAlloc(arena,pubk->u.fortezza.KEApriviledge.len);
+	if (pubk->u.fortezza.KEApriviledge.data == NULL) {
+		return SECFailure;
+	}
+	PORT_Memcpy(pubk->u.fortezza.KEApriviledge.data,clearptr,
+				pubk->u.fortezza.KEApriviledge.len);
+
+
+	/* now copy the key. The next to bytes are the key length, and the
+	 * key follows */
+	pubk->u.fortezza.KEAKey.len = (*rawptr << 8) | rawptr[1];
+
+	rawptr += 2;
+	if (rawptr+pubk->u.fortezza.KEAKey.len > end) { return SECFailure; }
+	pubk->u.fortezza.KEAKey.data = 
+			(unsigned char*)PORT_ArenaZAlloc(arena,pubk->u.fortezza.KEAKey.len);
+	if (pubk->u.fortezza.KEAKey.data == NULL) {
+		return SECFailure;
+	}
+	PORT_Memcpy(pubk->u.fortezza.KEAKey.data,rawptr,
+					pubk->u.fortezza.KEAKey.len);
+	rawptr += pubk->u.fortezza.KEAKey.len;
+
+	/* shared key */
+	if (rawptr >= end) {
+	    pubk->u.fortezza.DSSKey.len = pubk->u.fortezza.KEAKey.len;
+	    /* this depends on the fact that we are going to get freed with an
+	     * ArenaFree call. We cannot free DSSKey and KEAKey separately */
+	    pubk->u.fortezza.DSSKey.data=
+					pubk->u.fortezza.KEAKey.data;
+	    pubk->u.fortezza.DSSpriviledge.len = 
+				pubk->u.fortezza.KEApriviledge.len;
+	    pubk->u.fortezza.DSSpriviledge.data =
+			pubk->u.fortezza.DSSpriviledge.data;
+	    goto done;
+	}
+		
+
+	/* DSS Version is next */
+	pubk->u.fortezza.DSSversion = *rawptr++;
+
+	if (*rawptr++ != 2) {
+		return SECFailure;
+	}
+
+	/* DSSPrivilege (the string up to the first byte with the hi-bit on */
+	clearptr = rawptr;
+	while ((rawptr < end) && (*rawptr++ & 0x80));
+	if (rawptr >= end) { return SECFailure; }
+	pubk->u.fortezza.DSSpriviledge.len = rawptr - clearptr;
+	pubk->u.fortezza.DSSpriviledge.data = 
+		(unsigned char*)PORT_ArenaZAlloc(arena,pubk->u.fortezza.DSSpriviledge.len);
+	if (pubk->u.fortezza.DSSpriviledge.data == NULL) {
+		return SECFailure;
+	}
+	PORT_Memcpy(pubk->u.fortezza.DSSpriviledge.data,clearptr,
+				pubk->u.fortezza.DSSpriviledge.len);
+
+	/* finally copy the DSS key. The next to bytes are the key length,
+	 *  and the key follows */
+	pubk->u.fortezza.DSSKey.len = (*rawptr << 8) | rawptr[1];
+
+	rawptr += 2;
+	if (rawptr+pubk->u.fortezza.DSSKey.len > end){ return SECFailure; }
+	pubk->u.fortezza.DSSKey.data = 
+			(unsigned char*)PORT_ArenaZAlloc(arena,pubk->u.fortezza.DSSKey.len);
+	if (pubk->u.fortezza.DSSKey.data == NULL) {
+		return SECFailure;
+	}
+	PORT_Memcpy(pubk->u.fortezza.DSSKey.data,rawptr,
+					pubk->u.fortezza.DSSKey.len);
+
+	/* ok, now we decode the parameters */
+done:
+
+        return SECKEY_FortezzaDecodePQGtoOld(arena, pubk, params);
+}
+
+
+/* Function used to determine what kind of cert we are dealing with. */
+KeyType 
+CERT_GetCertKeyType (CERTSubjectPublicKeyInfo *spki) {
+    int tag;
+    KeyType keyType;
+
+    tag = SECOID_GetAlgorithmTag(&spki->algorithm);
+    switch (tag) {
+      case SEC_OID_X500_RSA_ENCRYPTION:
+      case SEC_OID_PKCS1_RSA_ENCRYPTION:
+	keyType = rsaKey;
+	break;
+      case SEC_OID_ANSIX9_DSA_SIGNATURE:
+	keyType = dsaKey;
+	break;
+      case SEC_OID_MISSI_KEA_DSS_OLD:
+      case SEC_OID_MISSI_KEA_DSS:
+      case SEC_OID_MISSI_DSS_OLD:
+      case SEC_OID_MISSI_DSS:  
+	keyType = fortezzaKey;
+	break;
+      case SEC_OID_MISSI_KEA:
+      case SEC_OID_MISSI_ALT_KEA:
+	keyType = keaKey;
+	break;
+      case SEC_OID_X942_DIFFIE_HELMAN_KEY:
+	keyType = dhKey;
+      default:
+	keyType = nullKey;
+    }
+    return keyType;
+}
+
+static SECKEYPublicKey *
+seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
+{
+    SECKEYPublicKey *pubk;
+    SECItem os;
+    SECStatus rv;
+    PRArenaPool *arena;
+    int tag;
+
+    arena = PORT_NewArena (DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL)
+	return NULL;
+
+    pubk = (SECKEYPublicKey *) PORT_ArenaZAlloc(arena, sizeof(SECKEYPublicKey));
+    if (pubk == NULL) {
+	PORT_FreeArena (arena, PR_FALSE);
+	return NULL;
+    }
+
+    pubk->arena = arena;
+    pubk->pkcs11Slot = 0;
+    pubk->pkcs11ID = CK_INVALID_KEY;
+
+
+    /* Convert bit string length from bits to bytes */
+    os = spki->subjectPublicKey;
+    DER_ConvertBitString (&os);
+
+    tag = SECOID_GetAlgorithmTag(&spki->algorithm);
+    switch ( tag ) {
+      case SEC_OID_X500_RSA_ENCRYPTION:
+      case SEC_OID_PKCS1_RSA_ENCRYPTION:
+	pubk->keyType = rsaKey;
+	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate, &os);
+	if (rv == SECSuccess)
+	    return pubk;
+	break;
+      case SEC_OID_ANSIX9_DSA_SIGNATURE:
+	pubk->keyType = dsaKey;
+	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DSAPublicKeyTemplate, &os);
+	if (rv != SECSuccess) break;
+
+        rv = SECKEY_DSADecodePQG(arena, pubk,
+                                 &spki->algorithm.parameters); 
+
+	if (rv == SECSuccess) return pubk;
+	break;
+      case SEC_OID_X942_DIFFIE_HELMAN_KEY:
+	pubk->keyType = dhKey;
+	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DHPublicKeyTemplate, &os);
+	if (rv != SECSuccess) break;
+
+        rv = SEC_ASN1DecodeItem(arena, &pubk->u.dh,
+                             SECKEY_DHParamKeyTemplate,
+                                 &spki->algorithm.parameters); 
+
+	if (rv == SECSuccess) return pubk;
+	break;
+      case SEC_OID_MISSI_KEA_DSS_OLD:
+      case SEC_OID_MISSI_KEA_DSS:
+      case SEC_OID_MISSI_DSS_OLD:
+      case SEC_OID_MISSI_DSS:
+	pubk->keyType = fortezzaKey;
+	rv = SECKEY_FortezzaDecodeCertKey(arena, pubk, &os,
+				          &spki->algorithm.parameters);
+	if (rv == SECSuccess)
+	    return pubk;
+	break;
+
+      case SEC_OID_MISSI_KEA:
+	pubk->keyType = keaKey;
+
+        rv = SEC_ASN1DecodeItem(arena, pubk,
+                                SECKEY_KEAPublicKeyTemplate, &os);
+        if (rv != SECSuccess) break;
+
+
+        rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_KEAParamsTemplate,
+                        &spki->algorithm.parameters);
+
+	if (rv == SECSuccess)
+	    return pubk;
+
+      break;
+
+      case SEC_OID_MISSI_ALT_KEA:
+	pubk->keyType = keaKey;
+
+        rv = SECITEM_CopyItem(arena,&pubk->u.kea.publicValue,&os);
+        if (rv != SECSuccess) break;
+ 
+        rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_KEAParamsTemplate,
+                        &spki->algorithm.parameters);
+
+	if (rv == SECSuccess)
+	    return pubk;
+
+      break;
+
+
+      default:
+	rv = SECFailure;
+	break;
+    }
+
+    SECKEY_DestroyPublicKey (pubk);
+    return NULL;
+}
+
+SECKEYPublicKey *
+CERT_ExtractPublicKey(CERTCertificate *cert)
+{
+    SECStatus rv;
+
+    rv = SECKEY_UpdateCertPQG(cert);
+    if (rv != SECSuccess) return NULL;
+
+    return seckey_ExtractPublicKey(&cert->subjectPublicKeyInfo);
+}
+
+/*
+ * Get the public key for the fortezza KMID. NOTE this requires the
+ * PQG paramters to be set. We probably should have a fortezza call that 
+ * just extracts the kmid for us directly so this function can work
+ * without having the whole cert chain
+ */
+SECKEYPublicKey *
+CERT_KMIDPublicKey(CERTCertificate *cert)
+{
+    return seckey_ExtractPublicKey(&cert->subjectPublicKeyInfo);
+}
+
+/* returns key strength in bytes (not bits) */
+unsigned
+SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk)
+{
+    unsigned char b0;
+
+    /* interpret modulus length as key strength... in
+     * fortezza that's the public key length */
+
+    switch (pubk->keyType) {
+    case rsaKey:
+    	b0 = pubk->u.rsa.modulus.data[0];
+    	return b0 ? pubk->u.rsa.modulus.len : pubk->u.rsa.modulus.len - 1;
+    case dsaKey:
+    	b0 = pubk->u.dsa.publicValue.data[0];
+    	return b0 ? pubk->u.dsa.publicValue.len :
+	    pubk->u.dsa.publicValue.len - 1;
+    case dhKey:
+    	b0 = pubk->u.dh.publicValue.data[0];
+    	return b0 ? pubk->u.dh.publicValue.len :
+	    pubk->u.dh.publicValue.len - 1;
+    case fortezzaKey:
+	return MAX(pubk->u.fortezza.KEAKey.len, pubk->u.fortezza.DSSKey.len);
+    default:
+	break;
+    }
+    return 0;
+}
+
+SECKEYPrivateKey *
+SECKEY_CopyPrivateKey(SECKEYPrivateKey *privk)
+{
+    SECKEYPrivateKey *copyk;
+    PRArenaPool *arena;
+    
+    if (privk == NULL) {
+	return NULL;
+    }
+    
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	PORT_SetError (SEC_ERROR_NO_MEMORY);
+	return NULL;
+    }
+
+    copyk = (SECKEYPrivateKey *) PORT_ArenaZAlloc (arena, sizeof (SECKEYPrivateKey));
+    if (copyk) {
+	copyk->arena = arena;
+	copyk->keyType = privk->keyType;
+
+	/* copy the PKCS #11 parameters */
+	copyk->pkcs11Slot = PK11_ReferenceSlot(privk->pkcs11Slot);
+	/* if the key we're referencing was a temparary key we have just
+	 * created, that we want to go away when we're through, we need
+	 * to make a copy of it */
+	if (privk->pkcs11IsTemp) {
+	    copyk->pkcs11ID = 
+			PK11_CopyKey(privk->pkcs11Slot,privk->pkcs11ID);
+	    if (copyk->pkcs11ID == CK_INVALID_KEY) goto fail;
+	} else {
+	    copyk->pkcs11ID = privk->pkcs11ID;
+	}
+	copyk->pkcs11IsTemp = privk->pkcs11IsTemp;
+	copyk->wincx = privk->wincx;
+	return copyk;
+    } else {
+	PORT_SetError (SEC_ERROR_NO_MEMORY);
+    }
+
+fail:
+    PORT_FreeArena (arena, PR_FALSE);
+    return NULL;
+}
+
+SECKEYPublicKey *
+SECKEY_CopyPublicKey(SECKEYPublicKey *pubk)
+{
+    SECKEYPublicKey *copyk;
+    PRArenaPool *arena;
+    
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	PORT_SetError (SEC_ERROR_NO_MEMORY);
+	return NULL;
+    }
+
+    copyk = (SECKEYPublicKey *) PORT_ArenaZAlloc (arena, sizeof (SECKEYPublicKey));
+    if (copyk != NULL) {
+	SECStatus rv = SECSuccess;
+
+	copyk->arena = arena;
+	copyk->keyType = pubk->keyType;
+	copyk->pkcs11Slot = NULL;	/* go get own reference */
+	copyk->pkcs11ID = CK_INVALID_KEY;
+	switch (pubk->keyType) {
+	  case rsaKey:
+	    rv = SECITEM_CopyItem(arena, &copyk->u.rsa.modulus,
+				  &pubk->u.rsa.modulus);
+	    if (rv == SECSuccess) {
+		rv = SECITEM_CopyItem (arena, &copyk->u.rsa.publicExponent,
+				       &pubk->u.rsa.publicExponent);
+		if (rv == SECSuccess)
+		    return copyk;
+	    }
+	    break;
+	  case dsaKey:
+	    rv = SECITEM_CopyItem(arena, &copyk->u.dsa.publicValue,
+				  &pubk->u.dsa.publicValue);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.prime,
+				  &pubk->u.dsa.params.prime);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.subPrime,
+				  &pubk->u.dsa.params.subPrime);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.base,
+				  &pubk->u.dsa.params.base);
+	    break;
+          case keaKey:
+            rv = SECITEM_CopyItem(arena, &copyk->u.kea.publicValue,
+                                  &pubk->u.kea.publicValue);
+            if (rv != SECSuccess) break;
+            rv = SECITEM_CopyItem(arena, &copyk->u.kea.params.hash,
+                                  &pubk->u.kea.params.hash);
+            break;
+	  case fortezzaKey:
+	    copyk->u.fortezza.KEAversion = pubk->u.fortezza.KEAversion;
+	    copyk->u.fortezza.DSSversion = pubk->u.fortezza.DSSversion;
+	    PORT_Memcpy(copyk->u.fortezza.KMID, pubk->u.fortezza.KMID,
+			sizeof(pubk->u.fortezza.KMID));
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.clearance, 
+				  &pubk->u.fortezza.clearance);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.KEApriviledge, 
+				&pubk->u.fortezza.KEApriviledge);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.DSSpriviledge, 
+				&pubk->u.fortezza.DSSpriviledge);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.KEAKey, 
+				&pubk->u.fortezza.KEAKey);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.DSSKey, 
+				&pubk->u.fortezza.DSSKey);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.prime, 
+				  &pubk->u.fortezza.params.prime);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.subPrime, 
+				&pubk->u.fortezza.params.subPrime);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.base, 
+				&pubk->u.fortezza.params.base);
+            if (rv != SECSuccess) break;
+            rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.prime, 
+				  &pubk->u.fortezza.keaParams.prime);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.subPrime, 
+				&pubk->u.fortezza.keaParams.subPrime);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.base, 
+				&pubk->u.fortezza.keaParams.base);
+	    break;
+	  case dhKey:
+            rv = SECITEM_CopyItem(arena,&copyk->u.dh.prime,&pubk->u.dh.prime);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena,&copyk->u.dh.base,&pubk->u.dh.base);
+	    if (rv != SECSuccess) break;
+	    rv = SECITEM_CopyItem(arena, &copyk->u.dh.publicValue, 
+				&pubk->u.dh.publicValue);
+	    break;
+	  case nullKey:
+	    return copyk;
+	  default:
+	    rv = SECFailure;
+	    break;
+	}
+	if (rv == SECSuccess)
+	    return copyk;
+
+	SECKEY_DestroyPublicKey (copyk);
+    } else {
+	PORT_SetError (SEC_ERROR_NO_MEMORY);
+    }
+
+    PORT_FreeArena (arena, PR_FALSE);
+    return NULL;
+}
+
+
+SECKEYPublicKey *
+SECKEY_ConvertToPublicKey(SECKEYPrivateKey *privk)
+{
+    SECKEYPublicKey *pubk;
+    PRArenaPool *arena;
+    CERTCertificate *cert;
+    SECStatus rv;
+
+    /*
+     * First try to look up the cert.
+     */
+    cert = PK11_GetCertFromPrivateKey(privk);
+    if (cert) {
+	pubk = CERT_ExtractPublicKey(cert);
+	CERT_DestroyCertificate(cert);
+	return pubk;
+    }
+
+    /* couldn't find the cert, build pub key by hand */
+    arena = PORT_NewArena (DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	PORT_SetError (SEC_ERROR_NO_MEMORY);
+	return NULL;
+    }
+    pubk = (SECKEYPublicKey *)PORT_ArenaZAlloc(arena,
+						   sizeof (SECKEYPublicKey));
+    if (pubk == NULL) {
+	PORT_FreeArena(arena,PR_FALSE);
+	return NULL;
+    }
+    pubk->keyType = privk->keyType;
+    pubk->pkcs11Slot = NULL;
+    pubk->pkcs11ID = CK_INVALID_KEY;
+    pubk->arena = arena;
+
+    /*
+     * fortezza is at the head of this switch, since we don't want to
+     * allocate an arena... CERT_ExtractPublicKey will to that for us.
+     */
+    switch(privk->keyType) {
+      case fortezzaKey:
+      case nullKey:
+      case dhKey:
+      case dsaKey:
+	/* Nothing to query, if the cert isn't there, we're done -- no way
+	 * to get the public key */
+	break;
+      case rsaKey:
+	rv = PK11_ReadAttribute(privk->pkcs11Slot,privk->pkcs11ID,
+				CKA_MODULUS,arena,&pubk->u.rsa.modulus);
+	if (rv != SECSuccess)  break;
+	rv = PK11_ReadAttribute(privk->pkcs11Slot,privk->pkcs11ID,
+			CKA_PUBLIC_EXPONENT,arena,&pubk->u.rsa.publicExponent);
+	if (rv != SECSuccess)  break;
+	return pubk;
+	break;
+    default:
+	break;
+    }
+
+    PORT_FreeArena (arena, PR_FALSE);
+    return NULL;
+}
+
+CERTSubjectPublicKeyInfo *
+SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
+{
+    CERTSubjectPublicKeyInfo *spki;
+    PRArenaPool *arena;
+    SECItem params = { siBuffer, NULL, 0 };
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return NULL;
+    }
+
+    spki = (CERTSubjectPublicKeyInfo *) PORT_ArenaZAlloc(arena, sizeof (*spki));
+    if (spki != NULL) {
+	SECStatus rv;
+	SECItem *rv_item;
+	
+	spki->arena = arena;
+	switch(pubk->keyType) {
+	  case rsaKey:
+	    rv = SECOID_SetAlgorithmID(arena, &spki->algorithm,
+				     SEC_OID_PKCS1_RSA_ENCRYPTION, 0);
+	    if (rv == SECSuccess) {
+		/*
+		 * DER encode the public key into the subjectPublicKeyInfo.
+		 */
+		rv_item = SEC_ASN1EncodeItem(arena, &spki->subjectPublicKey,
+					     pubk, SECKEY_RSAPublicKeyTemplate);
+		if (rv_item != NULL) {
+		    /*
+		     * The stored value is supposed to be a BIT_STRING,
+		     * so convert the length.
+		     */
+		    spki->subjectPublicKey.len <<= 3;
+		    /*
+		     * We got a good one; return it.
+		     */
+		    return spki;
+		}
+	    }
+	    break;
+	  case dsaKey:
+	    /* DER encode the params. */
+	    rv_item = SEC_ASN1EncodeItem(arena, &params, &pubk->u.dsa.params,
+					 SECKEY_PQGParamsTemplate);
+	    if (rv_item != NULL) {
+		rv = SECOID_SetAlgorithmID(arena, &spki->algorithm,
+					   SEC_OID_ANSIX9_DSA_SIGNATURE,
+					   &params);
+		if (rv == SECSuccess) {
+		    /*
+		     * DER encode the public key into the subjectPublicKeyInfo.
+		     */
+		    rv_item = SEC_ASN1EncodeItem(arena, &spki->subjectPublicKey,
+						 pubk,
+						 SECKEY_DSAPublicKeyTemplate);
+		    if (rv_item != NULL) {
+			/*
+			 * The stored value is supposed to be a BIT_STRING,
+			 * so convert the length.
+			 */
+			spki->subjectPublicKey.len <<= 3;
+			/*
+			 * We got a good one; return it.
+			 */
+			return spki;
+		    }
+		}
+	    }
+	    SECITEM_FreeItem(&params, PR_FALSE);
+	    break;
+	  case keaKey:
+	  case dhKey: /* later... */
+
+	  break;  
+	  case fortezzaKey:
+#ifdef notdef
+	    /* encode the DSS parameters (PQG) */
+	    rv = FortezzaBuildParams(&params,pubk);
+	    if (rv != SECSuccess) break;
+
+	    /* set the algorithm */
+	    rv = SECOID_SetAlgorithmID(arena, &spki->algorithm,
+				       SEC_OID_MISSI_KEA_DSS, &params);
+	    PORT_Free(params.data);
+	    if (rv == SECSuccess) {
+		/*
+		 * Encode the public key into the subjectPublicKeyInfo.
+		 * Fortezza key material is not standard DER
+		 */
+		rv = FortezzaEncodeCertKey(arena,&spki->subjectPublicKey,pubk);
+		if (rv == SECSuccess) {
+		    /*
+		     * The stored value is supposed to be a BIT_STRING,
+		     * so convert the length.
+		     */
+		    spki->subjectPublicKey.len <<= 3;
+
+		    /*
+		     * We got a good one; return it.
+		     */
+		    return spki;
+		}
+	    }
+#endif
+	    break;
+	  default:
+	    break;
+	}
+    } else {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+    }
+
+    PORT_FreeArena(arena, PR_FALSE);
+    return NULL;
+}
+
+void
+SECKEY_DestroySubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki)
+{
+    if (spki && spki->arena) {
+	PORT_FreeArena(spki->arena, PR_FALSE);
+    }
+}
+
+/*
+ * this only works for RSA keys... need to do something
+ * similiar to CERT_ExtractPublicKey for other key times.
+ */
+SECKEYPublicKey *
+SECKEY_DecodeDERPublicKey(SECItem *pubkder)
+{
+    PRArenaPool *arena;
+    SECKEYPublicKey *pubk;
+    SECStatus rv;
+
+    arena = PORT_NewArena (DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	PORT_SetError (SEC_ERROR_NO_MEMORY);
+	return NULL;
+    }
+
+    pubk = (SECKEYPublicKey *) PORT_ArenaZAlloc (arena, sizeof (SECKEYPublicKey));
+    if (pubk != NULL) {
+	pubk->arena = arena;
+	pubk->pkcs11Slot = NULL;
+	pubk->pkcs11ID = 0;
+	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate,
+				pubkder);
+	if (rv == SECSuccess)
+	    return pubk;
+	SECKEY_DestroyPublicKey (pubk);
+    } else {
+	PORT_SetError (SEC_ERROR_NO_MEMORY);
+    }
+
+    PORT_FreeArena (arena, PR_FALSE);
+    return NULL;
+}
+
+/*
+ * Decode a base64 ascii encoded DER encoded public key.
+ */
+SECKEYPublicKey *
+SECKEY_ConvertAndDecodePublicKey(char *pubkstr)
+{
+    SECKEYPublicKey *pubk;
+    SECStatus rv;
+    SECItem der;
+
+    rv = ATOB_ConvertAsciiToItem (&der, pubkstr);
+    if (rv != SECSuccess)
+	return NULL;
+
+    pubk = SECKEY_DecodeDERPublicKey (&der);
+
+    PORT_Free (der.data);
+    return pubk;
+}
+
+CERTSubjectPublicKeyInfo *
+SECKEY_DecodeDERSubjectPublicKeyInfo(SECItem *spkider)
+{
+    PRArenaPool *arena;
+    CERTSubjectPublicKeyInfo *spki;
+    SECStatus rv;
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return NULL;
+    }
+
+    spki = (CERTSubjectPublicKeyInfo *)
+		PORT_ArenaZAlloc(arena, sizeof (CERTSubjectPublicKeyInfo));
+    if (spki != NULL) {
+	spki->arena = arena;
+	rv = SEC_ASN1DecodeItem(arena,spki,
+				CERT_SubjectPublicKeyInfoTemplate,spkider);
+	if (rv == SECSuccess)
+	    return spki;
+	SECKEY_DestroySubjectPublicKeyInfo(spki);
+    } else {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+    }
+
+    PORT_FreeArena(arena, PR_FALSE);
+    return NULL;
+}
+
+/*
+ * Decode a base64 ascii encoded DER encoded subject public key info.
+ */
+CERTSubjectPublicKeyInfo *
+SECKEY_ConvertAndDecodeSubjectPublicKeyInfo(char *spkistr)
+{
+    CERTSubjectPublicKeyInfo *spki;
+    SECStatus rv;
+    SECItem der;
+
+    rv = ATOB_ConvertAsciiToItem(&der, spkistr);
+    if (rv != SECSuccess)
+	return NULL;
+
+    spki = SECKEY_DecodeDERSubjectPublicKeyInfo(&der);
+
+    PORT_Free(der.data);
+    return spki;
+}
+
+/*
+ * Decode a base64 ascii encoded DER encoded public key and challenge
+ * Verify digital signature and make sure challenge matches
+ */
+CERTSubjectPublicKeyInfo *
+SECKEY_ConvertAndDecodePublicKeyAndChallenge(char *pkacstr, char *challenge,
+								void *wincx)
+{
+    CERTSubjectPublicKeyInfo *spki = NULL;
+    CERTPublicKeyAndChallenge pkac;
+    SECStatus rv;
+    SECItem signedItem;
+    PRArenaPool *arena = NULL;
+    CERTSignedData sd;
+    SECItem sig;
+    SECKEYPublicKey *pubKey = NULL;
+    int len;
+    
+    signedItem.data = NULL;
+    
+    /* convert the base64 encoded data to binary */
+    rv = ATOB_ConvertAsciiToItem(&signedItem, pkacstr);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+
+    /* create an arena */
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	goto loser;
+    }
+
+    /* decode the outer wrapping of signed data */
+    PORT_Memset(&sd, 0, sizeof(CERTSignedData));
+    rv = SEC_ASN1DecodeItem(arena, &sd, CERT_SignedDataTemplate, &signedItem );
+    if ( rv ) {
+	goto loser;
+    }
+
+    /* decode the public key and challenge wrapper */
+    PORT_Memset(&pkac, 0, sizeof(CERTPublicKeyAndChallenge));
+    rv = SEC_ASN1DecodeItem(arena, &pkac, CERT_PublicKeyAndChallengeTemplate, 
+			    &sd.data);
+    if ( rv ) {
+	goto loser;
+    }
+
+    /* decode the subject public key info */
+    spki = SECKEY_DecodeDERSubjectPublicKeyInfo(&pkac.spki);
+    if ( spki == NULL ) {
+	goto loser;
+    }
+    
+    /* get the public key */
+    pubKey = seckey_ExtractPublicKey(spki);
+    if ( pubKey == NULL ) {
+	goto loser;
+    }
+
+    /* check the signature */
+    sig = sd.signature;
+    DER_ConvertBitString(&sig);
+    rv = VFY_VerifyData(sd.data.data, sd.data.len, pubKey, &sig,
+			SECOID_GetAlgorithmTag(&(sd.signatureAlgorithm)), wincx);
+    if ( rv != SECSuccess ) {
+	goto loser;
+    }
+    
+    /* check the challenge */
+    if ( challenge ) {
+	len = PORT_Strlen(challenge);
+	/* length is right */
+	if ( len != pkac.challenge.len ) {
+	    goto loser;
+	}
+	/* actual data is right */
+	if ( PORT_Memcmp(challenge, pkac.challenge.data, len) != 0 ) {
+	    goto loser;
+	}
+    }
+    goto done;
+
+loser:
+    /* make sure that we return null if we got an error */
+    if ( spki ) {
+	SECKEY_DestroySubjectPublicKeyInfo(spki);
+    }
+    spki = NULL;
+    
+done:
+    if ( signedItem.data ) {
+	PORT_Free(signedItem.data);
+    }
+    if ( arena ) {
+	PORT_FreeArena(arena, PR_FALSE);
+    }
+    if ( pubKey ) {
+	SECKEY_DestroyPublicKey(pubKey);
+    }
+    
+    return spki;
+}
+
+void
+SECKEY_DestroyPrivateKeyInfo(SECKEYPrivateKeyInfo *pvk,
+			     PRBool freeit)
+{
+    PRArenaPool *poolp;
+
+    if(pvk != NULL) {
+	if(pvk->arena) {
+	    poolp = pvk->arena;
+	    /* zero structure since PORT_FreeArena does not support
+	     * this yet.
+	     */
+	    PORT_Memset(pvk->privateKey.data, 0, pvk->privateKey.len);
+	    PORT_Memset((char *)pvk, 0, sizeof(*pvk));
+	    if(freeit == PR_TRUE) {
+		PORT_FreeArena(poolp, PR_TRUE);
+	    } else {
+		pvk->arena = poolp;
+	    }
+	} else {
+	    SECITEM_ZfreeItem(&pvk->version, PR_FALSE);
+	    SECITEM_ZfreeItem(&pvk->privateKey, PR_FALSE);
+	    SECOID_DestroyAlgorithmID(&pvk->algorithm, PR_FALSE);
+	    PORT_Memset((char *)pvk, 0, sizeof(pvk));
+	    if(freeit == PR_TRUE) {
+		PORT_Free(pvk);
+	    }
+	}
+    }
+}
+
+void
+SECKEY_DestroyEncryptedPrivateKeyInfo(SECKEYEncryptedPrivateKeyInfo *epki,
+				      PRBool freeit)
+{
+    PRArenaPool *poolp;
+
+    if(epki != NULL) {
+	if(epki->arena) {
+	    poolp = epki->arena;
+	    /* zero structure since PORT_FreeArena does not support
+	     * this yet.
+	     */
+	    PORT_Memset(epki->encryptedData.data, 0, epki->encryptedData.len);
+	    PORT_Memset((char *)epki, 0, sizeof(*epki));
+	    if(freeit == PR_TRUE) {
+		PORT_FreeArena(poolp, PR_TRUE);
+	    } else {
+		epki->arena = poolp;
+	    }
+	} else {
+	    SECITEM_ZfreeItem(&epki->encryptedData, PR_FALSE);
+	    SECOID_DestroyAlgorithmID(&epki->algorithm, PR_FALSE);
+	    PORT_Memset((char *)epki, 0, sizeof(epki));
+	    if(freeit == PR_TRUE) {
+		PORT_Free(epki);
+	    }
+	}
+    }
+}
+
+SECStatus
+SECKEY_CopyPrivateKeyInfo(PRArenaPool *poolp,
+			  SECKEYPrivateKeyInfo *to,
+			  SECKEYPrivateKeyInfo *from)
+{
+    SECStatus rv = SECFailure;
+
+    if((to == NULL) || (from == NULL)) {
+	return SECFailure;
+    }
+
+    rv = SECOID_CopyAlgorithmID(poolp, &to->algorithm, &from->algorithm);
+    if(rv != SECSuccess) {
+	return SECFailure;
+    }
+    rv = SECITEM_CopyItem(poolp, &to->privateKey, &from->privateKey);
+    if(rv != SECSuccess) {
+	return SECFailure;
+    }
+    rv = SECITEM_CopyItem(poolp, &to->version, &from->version);
+
+    return rv;
+}
+
+SECStatus
+SECKEY_CopyEncryptedPrivateKeyInfo(PRArenaPool *poolp, 
+				   SECKEYEncryptedPrivateKeyInfo *to,
+				   SECKEYEncryptedPrivateKeyInfo *from)
+{
+    SECStatus rv = SECFailure;
+
+    if((to == NULL) || (from == NULL)) {
+	return SECFailure;
+    }
+
+    rv = SECOID_CopyAlgorithmID(poolp, &to->algorithm, &from->algorithm);
+    if(rv != SECSuccess) {
+	return SECFailure;
+    }
+    rv = SECITEM_CopyItem(poolp, &to->encryptedData, &from->encryptedData);
+
+    return rv;
+}
+
+KeyType
+SECKEY_GetPrivateKeyType(SECKEYPrivateKey *privKey)
+{
+   return privKey->keyType;
+}
+
+KeyType
+SECKEY_GetPublicKeyType(SECKEYPublicKey *pubKey)
+{
+   return pubKey->keyType;
+}

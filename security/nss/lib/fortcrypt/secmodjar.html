@@ -1,0 +1,441 @@
+<HTML>
+<--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is the Netscape security libraries.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation.  Portions created by Netscape are 
+   - Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   - 
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU General Public License Version 2 or later (the
+   - "GPL"), in which case the provisions of the GPL are applicable 
+   - instead of those above.  If you wish to allow use of your 
+   - version of this file only under the terms of the GPL and not to
+   - allow others to use your version of this file under the MPL,
+   - indicate your decision by deleting the provisions above and
+   - replace them with the notice and other provisions required by
+   - the GPL.  If you do not delete the provisions above, a recipient
+   - may use your version of this file under either the MPL or the
+   - GPL.
+-->
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Hoi-Sheung Wilson So">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.02 [en] (WinNT; I) [Netscape]">
+   <TITLE>How to Package Your Security Module for use with SmartUpdate</TITLE>
+</HEAD>
+<BODY>
+<FONT SIZE=+2>Using
+JAR Installation Manager Technology to Install Your PKCS11 Security Module</FONT>
+
+<P>Table of contents
+<BR><A HREF="#intro">I. Introduction</A>
+<BR><A HREF="#procedure">II. How to Create a Security Module JAR</A>
+<BR><A HREF="#samplescript">III. Sample Installer Script</A>
+<BR><A HREF="#reference">IV. Programmers' Reference</A>
+<BR><A HREF="#copyright">VI. Copyright Notice</A>
+<BR><A NAME="intro"></A><FONT SIZE=+1>I. Introduction</FONT>
+<BR>This docuemnt describes how to prepare your security module so that
+users can download it from the Internet, verify its integrity, and install
+by only pointing and clicking mouses.&nbsp; The packaged module is a signed
+JAR archive. This JAR archive contains a dynamically-linked library which
+implements the Security Module and a pice of installer script (.js) that
+registers and configures the newly installed module.&nbsp; SmartUpdate
+allows users to download JAR archinve that has been signed digitally by
+the software vendor.&nbsp; SmartUpdate then decompresses the JAR file,
+verify the signature and validity of the files packaged into the archive.&nbsp;
+If the signature is valid, SmartUpdate will run the installer script found
+in the archive.&nbsp; The installer script will instruct SmartUpdate to
+move the downloaded security module library to a specified location.&nbsp;
+Next, the script will register the module with Navigator, and configure
+it.
+
+<P>This document does not describe how SmartUpdate works.&nbsp; For more
+information about SmartUpdate, check out <A HREF="http://developer.netscape.com/library/documentation/communicator/jarman/index.htm">JAR
+Installation Manager</A>.
+
+<P><A NAME="procedure"></A><FONT SIZE=+1>II. How to Create a Security Module
+JAR</FONT>
+<OL>
+<LI>
+Obtain a copy of PKCS#11: Cryptographic Token Interface Standard Version
+2.00, published by <A HREF="http://www.rsa.com">RSA Laboratories</A>, Redwood
+City, California.</LI>
+
+<LI>
+Implement a PKCS#11 library according to PKCS#11 standards.</LI>
+
+<LI>
+Write a installer script that will register the module with Navigator.</LI>
+
+<LI>
+Use either JAR Packager or command line tool to package the library and
+the script in a signed JAR archive.</LI>
+
+<LI>
+Publish the JAR file on the web, and notify users to install/upgrade their
+library.</LI>
+</OL>
+<A NAME="samplescript"></A><FONT SIZE=+1>III. Sample Installer Script</FONT>
+
+<P>Functions of the following installer script:
+<BR>1. Start SmartUpdate and declares the version and the name of the module
+to be installed.
+<BR>2. Extract a library called DUMMY_DLL from the JAR archive and install
+it under the Netscape Program folder.
+<BR>3. Register the installed module by calling pkcs11.addmodule( ) method
+with information about the capabilities of the module.
+<BR>4. Check to see if pkcs11.addmodule( ) has been successful, and display
+appropriate messages.
+
+<P><TT>// Crypto Mechanism Flags</TT>
+<BR><TT>PKCS11_MECH_RSA_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;0;</TT>
+<BR><TT>PKCS11_MECH_DSA_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;1;</TT>
+<BR><TT>PKCS11_MECH_RC2_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;2;</TT>
+<BR><TT>PKCS11_MECH_RC4_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;3;</TT>
+<BR><TT>PKCS11_MECH_DES_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;4;</TT>
+<BR><TT>PKCS11_MECH_DH_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;5; //Diffie-Hellman</TT>
+<BR><TT>PKCS11_MECH_SKIPJACK_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =&nbsp;
+0x1&lt;&lt;6; //SKIPJACK algorithm as in Fortezza cards</TT>
+<BR><TT>PKCS11_MECH_RC5_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;7;</TT>
+<BR><TT>PKCS11_MECH_SHA1_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;8;</TT>
+<BR><TT>PKCS11_MECH_MD5_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;9;</TT>
+<BR><TT>PKCS11_MECH_MD2_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;10;</TT>
+<BR><TT>PKCS11_MECH_RANDOM_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;27; //Random number generator</TT>
+<BR><TT>PKCS11_PUB_READABLE_CERT_FLAG&nbsp; =&nbsp; 0x1&lt;&lt;28; //Stored
+certs can be read off the token w/o logging in</TT>
+<BR><TT>PKCS11_DISABLE_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;30; //tell Navigator to disable this slot by default</TT>
+
+<P><TT>// Important:</TT>
+<BR><TT>// 0x1&lt;&lt;11, 0x1&lt;&lt;12, ... , 0x1&lt;&lt;26, and 0x1&lt;&lt;31
+are reserved</TT>
+<BR><TT>// for internal use in Navigator.</TT>
+<BR><TT>// Therefore, these bits should always be set to 0; otherwise,</TT>
+<BR><TT>// Navigator might exhibit unpredictable behavior.</TT>
+
+<P><TT>// These flags indicate which mechanisms should be turned on by</TT>
+<BR><TT>pkcs11MechanismFlags = PKCS11_MECH_DSA_FLAG | PKCS11_MECH_SKIPJACK_FLAG
+| PKCS11_MECH_RANDOM_FLAG;</TT>
+<BR><TT>&nbsp;</TT>
+
+<P><TT>// Ciphers that support SSL or S/MIME</TT>
+<BR><TT>PKCS11_CIPHER_FORTEZZA_FLAG&nbsp;&nbsp;&nbsp; = 0x1&lt;&lt;0;</TT>
+
+<P><TT>// Important:</TT>
+<BR><TT>// 0x1&lt;&lt;11, 0x1&lt;&lt;12, ... , 0x1&lt;&lt;26, 0x1&lt;&lt;29,
+and 0x1&lt;&lt;31 are reserved</TT>
+<BR><TT>// for internal use in Navigator.</TT>
+<BR><TT>// Therefore, these bits should ALWAYS be set to 0; otherwise,</TT>
+<BR><TT>// Navigator might exhibit unpredictable behavior.</TT>
+
+<P><TT>// These flags indicate which SSL ciphers are supported</TT>
+<BR><TT>pkcs11CipherFlags = PKCS11_CIPHER_FORTEZZA_FLAG;</TT>
+<BR><TT>&nbsp;</TT>
+
+<P><TT>// Return values of pkcs11.addmodule() &amp; pkcs11.delmodule()</TT>
+<BR><TT>// success codes</TT>
+<BR><TT>JS_OK_ADD_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 3 // Successfully added a module</TT>
+<BR><TT>JS_OK_DEL_EXTERNAL_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 2 // Successfully deleted ext. module</TT>
+<BR><TT>JS_OK_DEL_INTERNAL_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 1 // Successfully deleted int. module</TT>
+
+<P><TT>// failure codes</TT>
+<BR><TT>JS_ERR_OTHER&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -1 // Other errors than the followings</TT>
+<BR><TT>JS_ERR_USER_CANCEL_ACTION&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -2 // User abort an action</TT>
+<BR><TT>JS_ERR_INCORRECT_NUM_OF_ARGUMENTS= -3 // Calling a method w/ incorrect
+# of arguments</TT>
+<BR><TT>JS_ERR_DEL_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -4 // Error deleting a module</TT>
+<BR><TT>JS_ERR_ADD_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -5 // Error adding a module</TT>
+<BR><TT>JS_ERR_BAD_MODULE_NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -6 // The module name is invalid</TT>
+<BR><TT>JS_ERR_BAD_DLL_NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -7 // The DLL name is bad</TT>
+<BR><TT>JS_ERR_BAD_MECHANISM_FLAGS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -8 // The mechanism flags are invalid</TT>
+<BR><TT>JS_ERR_BAD_CIPHER_ENABLE_FLAGS&nbsp;&nbsp; = -9 // The SSL, S/MIME
+cipher flags are invalid</TT>
+<BR>&nbsp;
+
+<P><TT>if (confirm("This script will install and configure a security module,
+do you want to continue?")) {</TT>
+<BR><TT>&nbsp;// Step 1. Create a version object and a software update
+object</TT>
+<BR><TT>&nbsp;vi = new netscape.softupdate.VersionInfo(1, 6, 0, 0);</TT>
+<BR><TT>&nbsp;su = new netscape.softupdate.SoftwareUpdate(this, "Fortezza
+Card PKCS#11 Module");</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// "Fortezza ... Module" is the logical name of the bundle</TT>
+
+<P><TT>&nbsp;// Step 2. Start the install process</TT>
+<BR><TT>&nbsp;bAbort = false;</TT>
+<BR><TT>&nbsp;err = su.StartInstall("litronic", vi, netscape.softupdate.SoftwareUpdate.FULL_INSTALL);</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// litronic is the component folder (logical)</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bAbort = bAbort || (err
+!=0);</TT>
+
+<P><TT>&nbsp;if (err == 0) {</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; // Step 3. Find out the physical location of
+the Program dir</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; Folder = su.GetFolder("Program");</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; // Step 4. Install the files. Unpack them and
+list where they go</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; err = su.AddSubcomponent("FortezzaCardDLL",
+//component name (logical)</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+vi, // version info</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"DUMMY_DLL", // source file in JAR (physical)</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Folder, // target folder (physical)</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"DUMMY_DLL", // target path &amp; filename (physical)</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+this.force); // forces update</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; bAbort = bAbort || (err !=0);</TT>
+<BR><TT>&nbsp;}</TT>
+
+<P><TT>&nbsp;// Step 5. Unless there was a problem, move files to final
+location</TT>
+<BR><TT>&nbsp;// and update the Client Version Registry</TT>
+<BR><TT>&nbsp;if (bAbort) {</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; window.alert("Installation Aborted");</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; su.AbortInstall();</TT>
+<BR><TT>&nbsp;} else {</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; err = su.FinalizeInstall();</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; window.alert("Files have been installed.\nContinue
+to setup the newly isntalled module...");</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; // Add Module</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; compFolder = su.GetComponentFolder("litronic/FortezzaCardDLL")
++ "/DUMMY_DLL";</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; result = pkcs11.addmodule("Fortezza", compFolder,
+pkcs11MechanismFlags, pkcs11CipherFlags);</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if
+( result &lt; 0) {</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+window.alert("New module setup failed.&nbsp; Error code: " + result);</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+else {</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+window.alert("New module setup completed.");</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</TT>
+<BR><TT>&nbsp;}</TT>
+<BR><TT>}</TT>
+
+<P><A NAME="reference"></A><FONT SIZE=+1>IV. Appendix A: Programmers' Refernce</FONT>
+<UL>
+<LI>
+<A HREF="#delmodule">pkcs11.addmodule( )</A></LI>
+
+<LI>
+<A HREF="#delmodule">pkcs11.delmodule( )</A></LI>
+</UL>
+
+<HR ALIGN=LEFT WIDTH="70%">
+<BR><A NAME="addmodule"></A>Name
+<BR><TT>addmodule</TT>
+<BR>Adds a PKCS#11 security module to the security module database, and
+notifies Communicator which cryptographic mechanisms should be turned on
+by default, and which SSL or S/MIME ciphers are supported.&nbsp; For security
+reasons, it will pop up a dialog box to ask the user to confirm this action.&nbsp;
+It might pop up other dialog boxes if necessary.
+
+<P>Method of
+<BR><TT>pkcs11</TT>
+
+<P>Syntax
+<BR><TT>int pkcs11.addmodule( string ModuleName,</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+string LibraryFullPath,</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int CryptoMechanismFlags,</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int CipherFlags);</TT>
+<BR>&nbsp;
+<BR>Parameters
+<TABLE BORDER WIDTH="90%" >
+<TR>
+<TD><TT>ModuleName</TT></TD>
+
+<TD>Name of the module</TD>
+</TR>
+
+<TR>
+<TD><TT>LibraryFullPath</TT></TD>
+
+<TD>The filename of the library prepended with its full path</TD>
+</TR>
+
+<TR>
+<TD><TT>CryptoMechanismFlags</TT></TD>
+
+<TD>A bit vector indicating all cryptographic mechanisms should be turned
+on by default&nbsp; (See below)</TD>
+</TR>
+
+<TR>
+<TD><TT>CipherFlags</TT></TD>
+
+<TD>A bit vector indicating all SSL or S/MIME cipher functions supported
+by the module (Seel below)</TD>
+</TR>
+</TABLE>
+Cryptographic Mechanism Flags
+<BR><TT>PKCS11_MECH_RSA_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;0;</TT>
+<BR><TT>PKCS11_MECH_DSA_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;1;</TT>
+<BR><TT>PKCS11_MECH_RC2_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;2;</TT>
+<BR><TT>PKCS11_MECH_RC4_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;3;</TT>
+<BR><TT>PKCS11_MECH_DES_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;4;</TT>
+<BR><TT>PKCS11_MECH_DH_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;5; //Diffie-Hellman</TT>
+<BR><TT>PKCS11_MECH_SKIPJACK_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =&nbsp;
+0x1&lt;&lt;6; //SKIPJACK algorithm as in Fortezza cards</TT>
+<BR><TT>PKCS11_MECH_RC5_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;7;</TT>
+<BR><TT>PKCS11_MECH_SHA1_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;8;</TT>
+<BR><TT>PKCS11_MECH_MD5_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;9;</TT>
+<BR><TT>PKCS11_MECH_MD2_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;10;</TT>
+<BR><TT>PKCS11_MECH_RANDOM_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;27; //Random number generator</TT>
+<BR><TT>PKCS11_PUB_READABLE_CERT_FLAG&nbsp; =&nbsp; 0x1&lt;&lt;28; //Stored
+certs can be read off the token w/o logging in</TT>
+<BR><TT>PKCS11_DISABLE_FLAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp; 0x1&lt;&lt;30; //tell Navigator to disable this slot by default</TT>
+
+<P>Supported SSL or S/MIME Ciphers
+<BR><TT>PKCS11_CIPHER_FORTEZZA_FLAG&nbsp;&nbsp;&nbsp; = 0x1&lt;&lt;0;</TT>
+
+<P>Important for CryptoMechanismFlags:
+<BR><TT>0x1&lt;&lt;11</TT>, <TT>0x1&lt;&lt;12</TT>, ... , <TT>0x1&lt;&lt;26</TT>,
+<TT>0x1&lt;&lt;29, </TT>and <TT>0x1&lt;&lt;31</TT> are reserved for internal
+use in Navigator.
+<BR>Therefore, these bits should always be set to 0; otherwise, Navigator
+might exhibit unpredictable behavior.
+
+<P>Important for CipherFlags:
+<BR><TT>0x1&lt;&lt;1</TT>, <TT>0x1&lt;&lt;2</TT>, ... , <TT>0x1&lt;&lt;31</TT>
+are reserved for internal use in Navigator.
+<BR>Therefore, these bits should ALWAYS be set to 0; otherwise, Navigator
+might exhibit unpredictable behavior.
+
+<P>Example of CryptoMechanismFlags and CipherFlags:
+<BR><TT>pkcs11MechanismFlags = PKCS11_MECH_DSA_FLAG | PKCS11_MECH_SKIPJACK_FLAG
+| PKCS11_MECH_RANDOM_FLAG;</TT>
+<BR><TT>pkcs11CipherFlags = PKCS11_CIPHER_FORTEZZA_FLAG;</TT>
+<BR><TT>&nbsp;</TT>
+<BR>Return Values:
+<BR><TT>// Return values of pkcs11.addmod()</TT>
+<BR><TT>// success codes</TT>
+<BR><TT>JS_OK_ADD_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 3 // Successfully added a module</TT>
+
+<P><TT>// failure codes</TT>
+<BR><TT>JS_ERR_OTHER&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -1 // Other errors than the followings</TT>
+<BR><TT>JS_ERR_USER_CANCEL_ACTION&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -2 // User abort an action</TT>
+<BR><TT>JS_ERR_INCORRECT_NUM_OF_ARGUMENTS= -3 // Calling a method w/ incorrect
+# of arguments</TT>
+<BR><TT>JS_ERR_ADD_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -5 // Error adding a module</TT>
+<BR><TT>JS_ERR_BAD_MODULE_NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -6 // The module name is invalid</TT>
+<BR><TT>JS_ERR_BAD_DLL_NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -7 // The DLL name is bad</TT>
+<BR><TT>JS_ERR_BAD_MECHANISM_FLAGS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -8 // The mechanism flags are invalid</TT>
+<BR><TT>JS_ERR_BAD_CIPHER_ENABLE_FLAGS&nbsp;&nbsp; = -9 // The SSL, S/MIME
+cipher flags are invalid</TT>
+<BR>&nbsp;
+<HR ALIGN=LEFT WIDTH="70%">
+<BR><A NAME="delmodule"></A>Name
+<BR><TT>delmodule</TT>
+<BR>Deletes a PKCS#11 security module from the module database, but does
+not physically remove the file.&nbsp; For security reasons, it will pop
+up a dialog box to ask the user to confirm this action.&nbsp; It might
+pop up other dialog boxes if necessary.
+
+<P>Method of
+<BR><TT>pkcs11</TT>
+
+<P>Syntax
+<BR><TT>int pkcs11.delmodule( string ModuleName);</TT>
+<BR>&nbsp;
+<BR>Parameters
+<TABLE BORDER WIDTH="90%" >
+<TR>
+<TD><TT>ModuleName</TT></TD>
+
+<TD>Name of the module</TD>
+</TR>
+</TABLE>
+<TT>&nbsp;</TT>
+<BR>Return Values:
+<BR><TT>// Return values of pkcs11.addmod() &amp; pkcs11.delmod()</TT>
+<BR><TT>// success codes</TT>
+<BR><TT>JS_OK_DEL_EXTERNAL_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 2 // Successfully deleted ext. module</TT>
+<BR><TT>JS_OK_DEL_INTERNAL_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 1 // Successfully deleted int. module</TT>
+
+<P><TT>// failure codes</TT>
+<BR><TT>JS_ERR_OTHER&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -1 // Other errors than the followings</TT>
+<BR><TT>JS_ERR_USER_CANCEL_ACTION&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -2 // User abort an action</TT>
+<BR><TT>JS_ERR_INCORRECT_NUM_OF_ARGUMENTS= -3 // Calling a method w/ incorrect
+# of arguments</TT>
+<BR><TT>JS_ERR_DEL_MODULE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -4 // Error deleting a module</TT>
+<BR><TT>JS_ERR_BAD_MODULE_NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -6 // The module name is invalid</TT>
+
+<P><A NAME="copyright"></A><FONT SIZE=+1>VI. Copyright Notice</FONT>
+<BR>&nbsp;
+
+<P><FONT SIZE=+4>XXX Don't know what to put here!!!</FONT>
+
+<P>Last modified 9/26/97
+</BODY>
+</HTML>

@@ -1,0 +1,136 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape security libraries.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+#
+
+VERBOSE	= 1
+include <manifest.mn>
+
+#cannot define PROGRAM in manifest compatibly with NT and UNIX
+PROGRAM = selfserv
+PROGRAM	= ./$(OBJDIR)/$(PROGRAM).exe
+include <$(DEPTH)\config\config.mak>
+
+# let manifest generate C_OBJS, it will prepend ./$(OBJDIR)/
+# rules.mak will append C_OBJS onto OBJS.
+# OBJS	= $(CSRCS:.c=.obj)
+
+# include files are looked for in $LINCS and $INCS.
+# $LINCS is in manifest.mnw, computed from REQUIRES=
+INCS = $(INCS) \
+ -I$(DEPTH)/security/lib/cert \
+ -I../include \
+ $(NULL)
+
+IGNORE_ME = \
+ -I$(DEPTH)/security/lib/key \
+ -I$(DEPTH)/security/lib/util  \
+ $(NULL)
+
+
+WINFE	= $(DEPTH)/cmd/winfe/mkfiles$(MOZ_BITS)/x86Dbg
+
+# these files are the content of libdbm
+DBM_LIB	= \
+ $(WINFE)/DB.obj \
+ $(WINFE)/HASH.obj \
+ $(WINFE)/H_BIGKEY.obj \
+ $(WINFE)/H_PAGE.obj \
+ $(WINFE)/H_LOG2.obj \
+ $(WINFE)/H_FUNC.obj \
+ $(WINFE)/HASH_BUF.obj \
+ $(NULL)
+
+MOZ_LIBS = \
+ $(WINFE)/ALLXPSTR.obj \
+ $(WINFE)/XP_ERROR.obj \
+ $(WINFE)/XPASSERT.obj \
+ $(WINFE)/XP_REG.obj \
+ $(WINFE)/XP_TRACE.obj \
+ $(DBM_LIB) \
+ $(WINFE)/XP_STR.obj \
+ $(WINFE)/MKTEMP.obj \
+ $(NULL)
+
+IGNORE_ME2 = \
+ $(WINFE)/feutil.obj \
+ $(WINFE)/fenet.obj \
+ $(WINFE)/fegui.obj \
+ $(NULL)
+
+SEC_LIBS = \
+ $(DIST)/lib/cert$(MOZ_BITS).lib \
+ $(DIST)/lib/crypto$(MOZ_BITS).lib \
+ $(DIST)/lib/hash$(MOZ_BITS).lib \
+ $(DIST)/lib/key$(MOZ_BITS).lib \
+ $(DIST)/lib/pkcs7$(MOZ_BITS).lib \
+ $(DIST)/lib/secmod$(MOZ_BITS).lib \
+ $(DIST)/lib/secutl$(MOZ_BITS).lib \
+ $(DIST)/lib/ssl$(MOZ_BITS).lib \
+ $(NULL)
+
+LLFLAGS	= $(LLFLAGS) \
+ $(SEC_LIBS) \
+ ../lib/$(OBJDIR)/sectool$(MOZ_BITS).lib \
+ $(MOZ_LIBS) \
+ $(DEPTH)/nspr/src/$(OBJDIR)/getopt.obj \
+ $(LIBNSPR) \
+ $(NULL)
+
+
+include <$(DEPTH)\config\rules.mak>
+
+INSTALL	= $(MAKE_INSTALL)
+
+objs:	$(OBJS)
+
+$(PROGRAM)::
+	$(INSTALL) $(DIST)/bin/pr3240.dll ./$(OBJDIR)
+
+programs: $(PROGRAM)
+
+install:: $(TARGETS)
+	$(INSTALL) $(TARGETS) $(DIST)/bin
+
+
+symbols:
+	@echo "CSRCS	= $(CSRCS)"
+	@echo "INCS	= $(INCS)"
+	@echo "OBJS	= $(OBJS)"
+	@echo "LIBRARY	= $(LIBRARY)"
+	@echo "PROGRAM	= $(PROGRAM)"
+	@echo "TARGETS	= $(TARGETS)"
+	@echo "DIST	= $(DIST)"
+	@echo "VERSION_NUMBER	= $(VERSION_NUMBER)"
+	@echo "WINFE	= $(WINFE)"
+	@echo "DBM_LIB	= $(DBM_LIB)"
+	@echo "INSTALL	= $(INSTALL)"
+
