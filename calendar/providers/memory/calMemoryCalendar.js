@@ -293,9 +293,9 @@ calMemoryCalendar.prototype = {
         var startTime = 0;
         var endTime = END_OF_TIME;
         if (aRangeStart)
-            startTime = aRangeStart.utcTime;
+            startTime = aRangeStart.nativeTime;
         if (aRangeEnd)
-            endTime = aRangeEnd.utcTime;
+            endTime = aRangeEnd.nativeTime;
 
         //
         // filters
@@ -340,8 +340,8 @@ calMemoryCalendar.prototype = {
             var tmpitem = item;
             if (item instanceof calIEvent) {
                 tmpitem = item.QueryInterface(calIEvent);
-                itemStartTime = item.startDate.utcTime || 0
-                itemEndTime = item.endDate.utcTime || END_OF_TIME;
+                itemStartTime = item.startDate.nativeTime || 0;
+                itemEndTime = item.endDate.nativeTime || END_OF_TIME;
                 
                 if (itemReturnOccurrences)
                     itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
@@ -352,7 +352,7 @@ calMemoryCalendar.prototype = {
                 else if (item.percentComplete < 100 && !itemNotCompletedFilter)
                     continue;
                     
-                itemEndTime = itemStartTime = item.entryTime.utcTime || 0;
+                itemEndTime = itemStartTime = item.entryTime.nativeTime || 0;
                 
                 if (itemReturnOccurrences)
                     itemtoadd = makeOccurrence(item, item.entryTime, item.entryTime);
