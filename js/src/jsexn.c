@@ -617,7 +617,8 @@ js_ReportUncaughtException(JSContext *cx)
     JSString *str;
     jsval exn;
     JSErrorReport *reportp;
-    
+    const char *bytes;
+
     if (!JS_IsExceptionPending(cx))
         return JS_FALSE;
     
@@ -643,6 +644,13 @@ js_ReportUncaughtException(JSContext *cx)
     reportp = NULL;
 #endif
 
+    if (str != NULL) {
+	bytes = js_GetStringBytes(str);
+    }
+    else {
+	bytes = "null";
+    }
+
     if (reportp == NULL) {
         /*
          * XXXmccabe todo: Instead of doing this, synthesize an error report
@@ -650,11 +658,11 @@ js_ReportUncaughtException(JSContext *cx)
          * originally thrown.
          */
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_UNCAUGHT_EXCEPTION, js_GetStringBytes(str));
+                             JSMSG_UNCAUGHT_EXCEPTION, bytes);
     } else {
         /* Flag the error as an exception. */
         reportp->flags |= JSREPORT_EXCEPTION;
-        js_ReportErrorAgain(cx, js_GetStringBytes(str), reportp);
+        js_ReportErrorAgain(cx, bytes, reportp);
     }
 
     if (exnObject != NULL)
