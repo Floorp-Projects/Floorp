@@ -123,7 +123,7 @@ my $last_moon = 0;
 
 # leave @trees empty if you don't want tinderbox details
 
-my @trees = qw (Mozilla-External SeaMonkey);
+my @trees = qw (SeaMonkey);
 if ($nick =~ /grend/) {
     @trees = qw (Grendel);
 }
