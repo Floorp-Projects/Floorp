@@ -72,9 +72,9 @@ public:
 	void CanGoForwardTest();
 	void GoForwardTest();
 	void GoToIndexTest();
-	void LoadUriTest(char *, const unsigned long);
-	void ReloadTest(const unsigned long);
-	void StopUriTest(char *, const unsigned long);
+	void LoadUriTest(char *, PRUint32);
+	void ReloadTest(PRUint32);
+	void StopUriTest(char *, PRUint32);
 	void GetDocumentTest(void);
 	void GetCurrentURITest(void);
 	void GetSHTest(void);

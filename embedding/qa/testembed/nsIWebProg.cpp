@@ -88,14 +88,50 @@ nsIWebProgress * CnsiWebProg::GetWebProgObject()
 	}
 }
 
-void CnsiWebProg::AddWebProgLstnr()
+void CnsiWebProg::AddWebProgLstnr(PRUint32 theFlag)
 {
+	char flagName[200];
+
+	switch(theFlag)
+	{
+	case nsIWebProgress::NOTIFY_STATE_REQUEST:
+		strcpy(flagName, "NOTIFY_STATE_REQUEST");
+		break;
+	case nsIWebProgress::NOTIFY_STATE_DOCUMENT:
+		strcpy(flagName, "NOTIFY_STATE_DOCUMENT");
+		break;
+	case nsIWebProgress::NOTIFY_STATE_NETWORK:
+		strcpy(flagName, "NOTIFY_STATE_NETWORK");
+		break;
+	case nsIWebProgress::NOTIFY_STATE_WINDOW:
+		strcpy(flagName, "NOTIFY_STATE_WINDOW");
+		break;
+	case nsIWebProgress::NOTIFY_STATE_ALL:
+		strcpy(flagName, "NOTIFY_STATE_ALL");
+		break;
+	case nsIWebProgress::NOTIFY_PROGRESS:
+		strcpy(flagName, "NOTIFY_PROGRESS");
+		break;
+	case nsIWebProgress::NOTIFY_STATUS:
+		strcpy(flagName, "NOTIFY_STATUS");
+		break;
+	case nsIWebProgress::NOTIFY_SECURITY:
+		strcpy(flagName, "NOTIFY_SECURITY");
+		break;
+	case nsIWebProgress::NOTIFY_LOCATION:
+		strcpy(flagName, "NOTIFY_LOCATION");
+		break;
+	case nsIWebProgress::NOTIFY_ALL:
+		strcpy(flagName, "NOTIFY_ALL");
+		break;
+	}
 			// addWebProgListener
 	nsCOMPtr<nsIWebProgress> qaWebProgress;
 	qaWebProgress = GetWebProgObject();
 	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
-	rv = qaWebProgress->AddProgressListener(listener, nsIWebProgress::NOTIFY_ALL);
+	rv = qaWebProgress->AddProgressListener(listener, theFlag);
 	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
+	FormatAndPrintOutput("WebProgressListener flag = ", flagName, 2);
 }
 
 void CnsiWebProg::RemoveWebProgLstnr()
@@ -129,7 +165,7 @@ void CnsiWebProg::OnStartTests(UINT nMenuID)
 			RunAllTests();
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_ADDPROGRESSLISTENER :
-			AddWebProgLstnr();
+			AddWebProgLstnr(nsIWebProgress::NOTIFY_ALL);
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_REMOVEPROGRESSLISTENER :
 			RemoveWebProgLstnr();
@@ -142,8 +178,44 @@ void CnsiWebProg::OnStartTests(UINT nMenuID)
 
 void CnsiWebProg::RunAllTests(void)
 {
-	AddWebProgLstnr();
-	RemoveWebProgLstnr();
+	int i;
+	PRUint32 theFlag = 0x000000ff;
+	for (i = 0; i < 10; i++) {
+		switch(i) {
+		case 0:
+			theFlag = nsIWebProgress::NOTIFY_STATE_REQUEST;
+			break;
+		case 1:
+			theFlag = nsIWebProgress::NOTIFY_STATE_DOCUMENT;
+			break;
+		case 2:
+			theFlag = nsIWebProgress::NOTIFY_STATE_NETWORK;
+			break;
+		case 3:
+			theFlag = nsIWebProgress::NOTIFY_STATE_WINDOW;
+			break;
+		case 4:
+			theFlag = nsIWebProgress::NOTIFY_STATE_ALL;
+			break;
+		case 5:
+			theFlag = nsIWebProgress::NOTIFY_PROGRESS;
+			break;
+		case 6:
+			theFlag = nsIWebProgress::NOTIFY_STATUS;
+			break;
+		case 7:
+			theFlag = nsIWebProgress::NOTIFY_SECURITY;
+			break;
+		case 8:
+			theFlag = nsIWebProgress::NOTIFY_LOCATION;
+			break;
+		case 9:
+			theFlag = nsIWebProgress::NOTIFY_ALL;
+			break;
+		}
+		AddWebProgLstnr(theFlag);
+		RemoveWebProgLstnr();
+	}
 	GetTheDOMWindow();
 }
 
