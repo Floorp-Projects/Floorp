@@ -693,7 +693,24 @@ void nsImapServerResponseParser::response_data()
       else if (!PL_strcasecmp(fNextToken, "XAOL-OPTION"))
 				skip_to_CRLF();
 			else 
-				SetSyntaxError(PR_TRUE);
+                        {
+                          // check if custom command
+                          nsXPIDLCString customCommand;
+                          fServerConnection.GetCurrentUrl()->GetCommand(getter_Copies(customCommand));
+                          if (customCommand.Equals(fNextToken))
+                          {
+                            nsCAutoString customCommandResponse;
+	                    while (Connected() && !at_end_of_line())
+                            {
+		              fNextToken = GetNextToken();
+                              customCommandResponse.Append(fNextToken);
+                              customCommandResponse.Append(" ");
+                            }
+                            fServerConnection.GetCurrentUrl()->SetCustomCommandResult(customCommandResponse.get());
+                          }
+                          else
+			    SetSyntaxError(PR_TRUE);
+                        }
 			break;
 		default:
 			if (IsNumericString(fNextToken))
