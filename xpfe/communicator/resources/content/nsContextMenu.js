@@ -459,7 +459,7 @@ nsContextMenu.prototype = {
                           "charset=" + this.target.ownerDocument.characterSet);
     },
     viewInfo : function () {
-      BrowserPageInfo();
+      BrowserPageInfo(this.target.ownerDocument);
     },
     viewFrameInfo : function () {
       BrowserPageInfo(this.target.ownerDocument);
