@@ -577,7 +577,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   // if we don't have a news host already, go get one...
   if (!m_newsHost)
   {
-      char *colon = nsnull;
       PRInt32 port = 0;
 	  aURL->GetPort(&port);
  
@@ -890,12 +889,10 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 								  char ** aCommandSpecificData)
 {
 	PRInt32 status = 0;
-	PRInt32 port = 0;
 	char *fullPath = 0;
 	char *group = 0;
     char *message_id = 0;
     char *command_specific_data = 0;
-	const char * url = 0;
 	char * s = 0;
 
 	// get the file path part and store it as the group...
@@ -2918,7 +2915,6 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
     nsresult rv = NS_OK;
 	PRInt32 status = 0;
 
-	const char * host_and_port = NULL;
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (m_firstArticle > 0) 
 	{
