@@ -2369,12 +2369,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 
       if (keysToFetch.GetSize() > 0)
       {
+        SetNumNewMessages(keysToFetch.GetSize());
         SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
-        if (flagState)
-        {
-          flagState->GetNumberOfRecentMessages(&numRecentMessages);
-          SetNumNewMessages(numRecentMessages);
-        }
       }
     }
     SyncFlags(flagState);
