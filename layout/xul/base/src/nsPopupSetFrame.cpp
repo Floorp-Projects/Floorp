@@ -406,10 +406,13 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
     return NS_OK; // No active popups
 
   nsPopupFrameList* entry = mPopupList->GetEntryByFrame(aPopup);
-  if (entry && entry->mCreateHandlerSucceeded)
+  if (!entry)
+    return NS_OK;
+
+  if (entry->mCreateHandlerSucceeded)
     ActivatePopup(entry, PR_FALSE);
 
-  if (entry && entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
+  if (entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
     // If we are a context menu, and if we are attached to a menupopup, then hiding us
     // should also hide the parent menu popup.
     nsCOMPtr<nsIAtom> tag;
