@@ -116,7 +116,6 @@ pref("browser.enable_automatic_image_resizing", true);
 pref("browser.urlbar.matchOnlyTyped", false);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
-pref("browser.turbo.enabled", false);
 pref("browser.formfill.enable", true);
 
 pref("browser.download.useDownloadDir", true);
