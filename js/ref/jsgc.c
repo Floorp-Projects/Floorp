@@ -757,6 +757,10 @@ restart:
 	GC_MARK(rt, acx->newborn[GCX_OBJECT], "newborn object", NULL);
 	GC_MARK(rt, acx->newborn[GCX_STRING], "newborn string", NULL);
 	GC_MARK(rt, acx->newborn[GCX_DOUBLE], "newborn double", NULL);
+#if JS_HAS_EXCEPTIONS
+        if (acx->throwing)
+            GC_MARK(rt, acx->exception, "exception", NULL);
+#endif
     }
 
     /* Sweep phase.  Mark in tempPool for release at label out:. */
