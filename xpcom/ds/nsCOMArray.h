@@ -72,7 +72,9 @@ protected:
     void Clear();
     PRBool InsertObjectAt(nsISupports* aObject, PRInt32 aIndex);
     PRBool ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex);
-    PRBool AppendObject(nsISupports *aObject);
+    PRBool AppendObject(nsISupports *aObject) {
+      return InsertObjectAt(aObject, Count());
+    }
     PRBool RemoveObject(nsISupports *aObject);
     PRBool RemoveObjectAt(PRInt32 aIndex);
 
