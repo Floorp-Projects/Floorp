@@ -64,7 +64,7 @@ Formatter& operator<<(Formatter &f, ICodeModule &i)
 // ICodeGenerator
 //
 
-ICodeGenerator::ICodeGenerator(World *world, JSScope *global)
+ICodeGenerator::ICodeGenerator(World *world, JSScope *global, JSClass *aClass)
     :   topRegister(0), 
         registerBase(0), 
         maxRegister(0), 
@@ -74,7 +74,8 @@ ICodeGenerator::ICodeGenerator(World *world, JSScope *global)
         mWorld(world),
         mGlobal(global),
         mInstructionMap(new InstructionMap()),
-        mWithinWith(false)
+        mWithinWith(false),
+        mClass(aClass)
 
 { 
     iCode = new InstructionStream();
@@ -1354,7 +1355,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             // to handle recursive types, such as linked list nodes.
             mGlobal->defineVariable(nameExpr->name, JSValue(thisClass));
             if (classStmt->body) {
-                ICodeGenerator fcg(mWorld, thisClass->getScope());
+                ICodeGenerator fcg(mWorld, thisClass->getScope(), thisClass);
                 StmtNode* s = classStmt->body->statements;
                 while (s) {
                     switch (s->getKind()) {
@@ -1398,8 +1399,8 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
     case StmtNode::Function:
         {
             FunctionStmtNode *f = static_cast<FunctionStmtNode *>(p);
-            ICodeGenerator icg(mWorld, mGlobal);
-            icg.allocateParameter(mWorld->identifiers[widenCString("this")]);   // always parameter #0
+            ICodeGenerator icg(mWorld, mGlobal, mClass);
+            icg.allocateParameter(mWorld->identifiers[widenCString("this")], (mClass) ? mClass : &Any_Type);   // always parameter #0
             VariableBinding *v = f->function.parameters;
             while (v) {
                 if (v->name && (v->name->getKind() == ExprNode::identifier))
