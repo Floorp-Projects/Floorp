@@ -160,6 +160,7 @@ int main(int argc, char **argv)
   return result;
 }
 
+#ifndef __GNUC__
 int PASCAL
 WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, 
         int nCmdShow)
@@ -168,3 +169,4 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam,
   gPrevInstance = prevInstance;
   return main(0, nsnull);
 }
+#endif

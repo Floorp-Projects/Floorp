@@ -167,8 +167,8 @@ private:
     static tRASGETAUTODIALENABLE mpRasGetAutodialEnable;
     static tRASGETAUTODIALPARAM mpRasGetAutodialParam;
 
-    PRBool nsRASAutodial::LoadRASapi32DLL();
-    PRBool nsRASAutodial::LoadRASdlgDLL();
+    PRBool LoadRASapi32DLL();
+    PRBool LoadRASdlgDLL();
 
 
 public:

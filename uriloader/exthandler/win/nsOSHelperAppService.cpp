@@ -41,7 +41,7 @@
 #define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
 
 // helper methods: forward declarations...
-BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen=0);
+static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen=0);
 nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension);
 nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& aFileExtension);
 

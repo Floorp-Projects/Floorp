@@ -43,7 +43,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #ifdef XP_WIN
-#include <varargs.h>
+#include <stdarg.h>
 #include <winbase.h>
 #include <winreg.h>
 #endif
@@ -401,7 +401,7 @@ nsInstallFolder::SetDirectoryPath(const nsAString& aFolderID, const nsString& aR
                 BYTE path[_MAX_PATH + 1] = { 0 };
                 DWORD type;
                 DWORD pathlen = sizeof(path);
-                char *value = (dirID==WIN_PROGRAM_FILES) ?
+                const char *value = (dirID==WIN_PROGRAM_FILES) ?
                                 "ProgramFilesDir" :
                                 "CommonFilesDir";
                 result = RegQueryValueEx( key, value, 0, &type, path, &pathlen );
