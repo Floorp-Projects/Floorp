@@ -132,4 +132,5 @@ MB_WARNING_STR=Warning
 ERROR_UNINSTALL_LOG_FOLDER=Uninstall log folder not found:%s
 MB_MESSAGE_STR=Message
 DLG_REMOVE_FILE_TITLE=Remove File?
+ERROR_GETVERSION=GetVersionEx() failed!
 
