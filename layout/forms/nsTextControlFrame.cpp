@@ -176,9 +176,8 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   } else {
     padding = (nscoord)(aCharWidth * padTextField);
   }
-#ifdef DEBUG_rods
-  printf("Padding - %d  %5.2f %d\n", aCharWidth, padTextField, padding);
-#endif
+
+  
   nscoord min = NSIntPixelsToTwips(padMinText, aPixToTwip);
   if (padding > min && (1 == shouldUsePadMinText)) {
     return padding;
@@ -288,17 +287,6 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     if (!widthExplicit) {
       desiredSize.width += scrollbarWidth;
       minSize.width     += scrollbarWidth;
-    }
-  }
-
-  if (eCompatibility_Standard == mode) {
-    nsCOMPtr<nsILookAndFeel> lookAndFeel;
-    if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
-      PRInt32 borderSize;
-      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, borderSize);
-      nscoord borderTwips = NSIntPixelsToTwips(borderSize, p2t);
-      desiredSize.width  -= borderTwips*2;
-      desiredSize.height -= borderTwips*2;
     }
   }
 
