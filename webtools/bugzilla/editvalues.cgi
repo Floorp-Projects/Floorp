@@ -253,6 +253,8 @@ if ($action eq 'delete') {
     trick_taint($field);
     trick_taint($value);
 
+    $dbh->bz_lock_tables('bugs READ', "$field WRITE");
+
     # Check if there are any bugs that still have this value.
     my $bug_ids = $dbh->selectcol_arrayref(
         "SELECT bug_id FROM bugs WHERE $field = ?", undef, $value);
@@ -260,13 +262,14 @@ if ($action eq 'delete') {
     if (scalar(@$bug_ids)) {
         # You tried to delete a field that bugs are still using.
         # You can't just delete the bugs. That's ridiculous. 
-        $dbh->do('UNLOCK TABLES');
         ThrowUserError("fieldvalue_still_has_bugs", 
                        { field => $field, value => $value,
                          count => scalar(@$bug_ids) });
     }
 
     $dbh->do("DELETE FROM $field WHERE value = ?", undef, $value);
+
+    $dbh->bz_unlock_tables();
 
     unlink "$datadir/versioncache";
 
@@ -318,7 +321,7 @@ if ($action eq 'update') {
                        {'value' => $value});
     }
 
-    $dbh->do("LOCK TABLES bugs WRITE, $field WRITE");
+    $dbh->bz_lock_tables('bugs WRITE', "$field WRITE");
 
     # Need to store because detaint_natural() will delete this if
     # invalid
@@ -326,7 +329,6 @@ if ($action eq 'update') {
     if ($sortkey != $sortkeyold) {
 
         if (!detaint_natural($sortkey)) {
-            $dbh->do('UNLOCK TABLES');
             ThrowUserError('fieldvalue_sortkey_invalid',
                            {'name' => $field,
                             'sortkey' => $stored_sortkey});
@@ -344,11 +346,9 @@ if ($action eq 'update') {
     if ($value ne $valueold) {
 
         unless ($value) {
-            $dbh->do('UNLOCK TABLES'); 
             ThrowUserError('fieldvalue_undefined');
         }
         if (ValueExists($field, $value)) {
-            $dbh->do('UNLOCK TABLES'); 
             ThrowUserError('fieldvalue_already_exists',
                            {'value' => $value,
                             'field' => $field});
@@ -366,7 +366,7 @@ if ($action eq 'update') {
         $vars->{'updated_value'} = 1;
     }
 
-    $dbh->do('UNLOCK TABLES'); 
+    $dbh->bz_unlock_tables(); 
 
     $vars->{'value'} = $value;
     $vars->{'field'} = $field;
