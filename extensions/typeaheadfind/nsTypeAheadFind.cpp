@@ -728,6 +728,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
           (aIsRepeatingSameChar && !isStartingLink) || (aIsLinksOnly && !isInsideLink)) {
         // ------ Failure ------
         // Start find again from here 
+        returnRange->CloneRange(getter_AddRefs(startPointRange));
         startPointRange->Collapse(PR_FALSE);  // collapse to end
         continue;
       }
