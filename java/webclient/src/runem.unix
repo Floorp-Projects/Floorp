@@ -20,8 +20,17 @@ CLASSNAME=org.mozilla.webclient.test.EmbeddedMozilla
 
 # For debugging...
 #${JAVA} -verbose:jni -Xcheck:jni -classpath ${CLASSES} ${CLASSNAME} $1
+echo
+echo "===================================================================="
+echo JDKHOME=${JDKHOME}
+echo "===================================================================="
+echo CLASSPATH=${CLASSES}
+echo "===================================================================="
+echo MOZILLA_FIVE_HOME=${MOZILLA_FIVE_HOME}
+echo "===================================================================="
 echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
-echo ""
+echo "===================================================================="
+echo
 ${JAVA} -classpath ${CLASSES} ${CLASSNAME} $1 $2 $3 $4 $5
 
 
