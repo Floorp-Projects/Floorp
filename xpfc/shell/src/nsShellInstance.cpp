@@ -82,11 +82,17 @@ nsShellInstance::nsShellInstance()
   mStreamManager = nsnull;
   mToolbarManager = nsnull;
   mDeviceContext = nsnull;
+  mOptState = nsnull;
+  mArgc = 0;
+  mArgv = nsnull;
 }
 
 nsShellInstance::~nsShellInstance()
 {
   //NS_ShutdownINetService();
+
+  if (nsnull != mOptState)
+  	PL_DestroyOptState(mOptState);
 
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mApplicationWindow);
@@ -187,6 +193,15 @@ void * nsShellInstance::GetNativeInstance()
 nsIPref * nsShellInstance::GetPreferences()
 {
   return (mPref) ;
+}
+
+nsresult nsShellInstance::GetCommandLineOptions(PLOptState** aOptState, const char * aOptions)
+{
+  mOptState = PL_CreateOptState(mArgc, mArgv, aOptions);
+
+  *aOptState = mOptState;
+
+  return (NS_OK) ;
 }
 
 nsIStreamManager * nsShellInstance::GetStreamManager()
