@@ -1,0 +1,105 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#  Brian Ryner <bryner@netscape.com>
+# 
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+CORE_DEPTH=$(topsrcdir)/security
+
+include $(CORE_DEPTH)/coreconf/arch.mk
+ifeq (,$(filter-out NetBSD,$(OS_TARGET)))
+include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
+else
+include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
+endif
+include $(CORE_DEPTH)/coreconf/prefix.mk
+CPU_TAG = _$(CPU_ARCH)
+LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
+CORECONF_OBJDIR=$(OBJDIR_NAME)
+
+include $(DEPTH)/config/autoconf.mk
+
+ifndef MOZ_DEBUG
+OPT_GMAKE_FLAGS = BUILD_OPT=1
+BUILD_OPT=1
+OBJDIR_TAG=_OPT
+endif
+
+DEFAULT_GMAKE_FLAGS = -f Makefile $(OPT_GMAKE_FLAGS)
+
+CORECONF_INSTALL     = $(DIST)/$(CORECONF_OBJDIR)
+CORECONF_DIST        = $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR)
+DEFAULT_GMAKE_FLAGS += DIST=$(CORECONF_DIST)
+DEFAULT_GMAKE_FLAGS += SOURCE_LIB_DIR=$(CORECONF_DIST)/lib
+DEFAULT_GMAKE_FLAGS += SOURCE_BIN_DIR=$(CORECONF_DIST)/bin
+DEFAULT_GMAKE_FLAGS += SOURCE_XP_DIR=$(CORECONF_DIST)
+
+
+DIRS		= ssl
+
+include $(topsrcdir)/config/rules.mk
+
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
+
+export::
+ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
+	if test ! -d $(MOZ_BUILD_ROOT)/security/nss; then                   \
+		cp -r $(topsrcdir)/security/nss $(MOZ_BUILD_ROOT)/security; \
+	fi;
+	if test ! -d $(MOZ_BUILD_ROOT)/security/coreconf; then              \
+		cp -r $(topsrcdir)/security/coreconf $(MOZ_BUILD_ROOT)/security; \
+	fi;
+endif
+	cd $(MOZ_BUILD_ROOT)/security/coreconf; gmake $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) moz_import
+	cd $(MOZ_BUILD_ROOT)/security/nss/lib; gmake $(DEFAULT_GMAKE_FLAGS)
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
+
+clean clobber clobber_all realclean distclean::
+ifeq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
+	cd $(MOZ_BUILD_ROOT)/security/coreconf; gmake $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/psm/ui; gmake $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/psm/server; gmake $(DEFAULT_GMAKE_FLAGS) clean
+else
+	if test -d $(MOZ_BUILD_ROOT)/security/nss; then \
+		rm -rf $(MOZ_BUILD_ROOT)/security/nss;  \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/security/coreconf; then    \
+		rm -rf $(MOZ_BUILD_ROOT)/security/coreconf;     \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/security/psm/server; then  \
+		rm -rf $(MOZ_BUILD_ROOT)/security/psm/server;   \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/security/psm/ui; then      \
+	rm -rf $(MOZ_BUILD_ROOT)/security/psm/ui;       \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/security/psm/doc; then     \
+	rm -rf $(MOZ_BUILD_ROOT)/security/psm/doc;      \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR); then      \
+		rm -rf $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR);       \
+	fi;
+endif
+
