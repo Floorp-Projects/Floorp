@@ -51,9 +51,6 @@ GLOBAL_ENTRY_START(staticCompileStub)
 		push	%eax				    /* Push the first argument to compileAndBackPatchMethod (cacheEntry) */
 		call	compileAndBackPatchMethod
 		
-		pop		%edx					/* Remove passed-in arguments to compileAndBackPatchMethod */
-		pop		%edx
-
 		mov		%ebp,%esp				/* Pop stack frame */
 		pop		%ebp
 		

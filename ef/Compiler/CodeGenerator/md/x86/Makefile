@@ -21,14 +21,15 @@
 
 DEPTH = ../../../..
 
-CPPSRCS = 		x86-win32.nad.burg.cpp			\
+CPPSRCS = 		x86.nad.burg.cpp			\
 			x86ArgumentList.cpp			\
+			x86Arith64.cpp				\
 			x86Opcode.cpp				\
-			x86Win32Emitter.cpp			\
-			x86Win32Instruction.cpp			\
-			x86Formatter.cpp			\
-			x86StdCall.cpp				\
+			x86Emitter.cpp				\
 			x86Float.cpp				\
+			x86Formatter.cpp			\
+			x86Instruction.cpp			\
+			x86StdCall.cpp				\
 			$(OS_SUPPORT)				\
 			$(NULL)
 
@@ -39,9 +40,9 @@ LOCAL_MD_EXPORTS_x86 = 	x86ArgumentList.h			\
 			x86FreeBSD_Support.h			\
 			x86Opcode.h				\
 			x86StdCall.h				\
-			x86Win32Cpu.h				\
-			x86Win32Emitter.h			\
-			x86Win32Instruction.h			\
+			x86Cpu.h				\
+			x86Emitter.h			\
+			x86Instruction.h			\
 			$(NULL)
 
 MODULE_NAME = EF
@@ -84,19 +85,19 @@ include $(DEPTH)/config/rules.mk
 #######################################################################
 
 #
-# Rules to generate x86-win32.nad.burg.[cpp][h]
+# Rules to generate x86.nad.burg.[cpp][h]
 #
 ifneq ($(OS_ARCH),WINNT)
-x86-win32.nad.burg.cpp: x86-win32.nad.burg $(BURG)
+x86.nad.burg.cpp: x86.nad.burg $(BURG)
 	$(BURG) -I -o $@ < $<
 
-x86-win32.nad.burg: x86-win32.nad $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations $(DEPTH)/Tools/Nad/nad.pl
+x86.nad.burg: x86.nad $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations $(DEPTH)/Tools/Nad/nad.pl
 	$(PERL) $(DEPTH)/Tools/Nad/nad.pl $< $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations	\
 		$(LOCAL_EXPORT_DIR)/PrimitiveOperations.h						\
 		$(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations.cpp								\
 		$<.burg.h > $@
 else
-x86-win32.nad.burg.cpp: x86-win32.nad $(BURG) $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations $(DEPTH)/Tools/Nad/nad.pl
+x86.nad.burg.cpp: x86.nad $(BURG) $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations $(DEPTH)/Tools/Nad/nad.pl
 	$(DEPTH)/config/genburg.bat $(BURG) $(DEPTH)/Tools/Nad/nad.pl $< $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations
 	cp $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations.h $(LOCAL_EXPORT_DIR)
 endif
@@ -111,7 +112,7 @@ $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations:
 # Extra cleaning
 #
 clean clobber realclean clobber_all::
-	rm -f x86-win32.nad.burg.cpp x86-win32.nad.burg.h x86-win32.nad.burg
+	rm -f x86.nad.burg.cpp x86.nad.burg.h x86.nad.burg
 
 #
 # Special rules for x86Win32Support.cpp on Windows: it currently breaks the

@@ -20,7 +20,7 @@
 //
 
 #include "x86Float.h"
-#include "x86Win32Emitter.h"
+#include "x86Emitter.h"
 #include "FloatUtils.h"
 
 // Note: In comments below, TOS = Top of FPU stack
@@ -128,7 +128,7 @@ formatToMemory(void* inStart, Uint32 /*inOffset*/, MdFormatter& /*inFormatter*/)
 //====================================================================================================
 // Instruction generation utilities
 
-InsnDoubleOpDir& x86Win32Emitter::
+InsnDoubleOpDir& x86Emitter::
 copyFromFloatToIntegerRegister(DataNode& inDataNode, InsnUseXDefineYFromPool& defInsn)
 {
     VirtualRegister& vr = defineTemporary(defInsn, 0, vrcStackSlot);
@@ -137,7 +137,7 @@ copyFromFloatToIntegerRegister(DataNode& inDataNode, InsnUseXDefineYFromPool& de
     return copyInsn;
 }
 
-InsnDoubleOpDir& x86Win32Emitter::
+InsnDoubleOpDir& x86Emitter::
 copyFromIntegerRegisterToFloat(DataNode& inDataNode, InsnUseXDefineYFromPool& defInsn)
 {
     VirtualRegister& vr = defineTemporary(defInsn, 0);
@@ -149,7 +149,7 @@ copyFromIntegerRegisterToFloat(DataNode& inDataNode, InsnUseXDefineYFromPool& de
 //====================================================================================================
 // Floating-point binary operations, i.e. add, subtract, multiply, divide, modulus
    
-void x86Win32Emitter::
+void x86Emitter::
 emit_BinaryFloat(Primitive& inPrimitive,
                  x86FloatMemoryType binary_op, x86FloatMemoryType load_op, x86FloatMemoryType store_op,
                  VRClass vrClass)
@@ -172,61 +172,61 @@ emit_BinaryFloat(Primitive& inPrimitive,
 }
 
 // Emit 32-bit float binary operation
-void x86Win32Emitter::
+void x86Emitter::
 emit_BinaryFloat32(Primitive& inPrimitive, x86FloatMemoryType binary_op)
 {
     emit_BinaryFloat(inPrimitive, binary_op, fld32, fstp32, vrcFloat);
 }
 
 // Emit 64-bit float binary operation
-void x86Win32Emitter::
+void x86Emitter::
 emit_BinaryFloat64(Primitive& inPrimitive, x86FloatMemoryType binary_op)
 {
     emit_BinaryFloat(inPrimitive, binary_op, fld64, fstp64, vrcDouble);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FAdd_F(Primitive& inPrimitive) {
     emit_BinaryFloat32(inPrimitive, fadd32);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FAdd_D(Primitive& inPrimitive) {
     emit_BinaryFloat64(inPrimitive, fadd64);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FMul_F(Primitive& inPrimitive) {
     emit_BinaryFloat32(inPrimitive, fmul32);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FMul_D(Primitive& inPrimitive) {
     emit_BinaryFloat64(inPrimitive, fmul64);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FSub_F(Primitive& inPrimitive) {
     emit_BinaryFloat32(inPrimitive, fsub32);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FSub_D(Primitive& inPrimitive) {
     emit_BinaryFloat64(inPrimitive, fsub64);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FDiv_F(Primitive& inPrimitive) {
     emit_BinaryFloat32(inPrimitive, fdiv32);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FDiv_D(Primitive& inPrimitive) {
     emit_BinaryFloat64(inPrimitive, fdiv64);
 }
 
 // FIXME - Modulus is wrapper around fmod function.  Should be changed to inline code.
-void x86Win32Emitter::
+void x86Emitter::
 emit_FRem_D(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)(void))&javaFMod);
@@ -238,7 +238,7 @@ static Flt32 fmod32(Flt32 a, Flt32 b)
     return (Flt32)javaFMod(a, b);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FRem_F(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)(void))&fmod32);
@@ -253,7 +253,7 @@ emit_FRem_F(Primitive& inPrimitive)
 //   2) Simultaneously convert and store from top of FPU stack into memory location, with possible
 //      conversion to integer type.
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_FConv(Primitive& inPrimitive)
 {
     InsnFloatMemory *loadInsn;
@@ -402,7 +402,7 @@ emit_FConv(Primitive& inPrimitive)
 // Floating-point function-call glue
 
 // Obtain the 32-bit float return value of a function call
-void x86Win32Emitter::
+void x86Emitter::
 emit_CallReturnF(InsnUseXDefineYFromPool& callInsn, DataNode& callPrimitive, DataNode& returnValProducer)
 {
     InstructionDefine& define = defineTemporaryOrder(callInsn, 1);
@@ -414,7 +414,7 @@ emit_CallReturnF(InsnUseXDefineYFromPool& callInsn, DataNode& callPrimitive, Dat
 }
 
 // Obtain the 64-bit double return value of a function call
-void x86Win32Emitter::
+void x86Emitter::
 emit_CallReturnD(InsnUseXDefineYFromPool& callInsn, DataNode& callPrimitive, DataNode& returnValProducer)
 {
     InstructionDefine& define = defineTemporaryOrder(callInsn, 1);
@@ -426,7 +426,7 @@ emit_CallReturnD(InsnUseXDefineYFromPool& callInsn, DataNode& callPrimitive, Dat
 }
 
 // Retrieve a 32-bit float argument from the call stack
-void x86Win32Emitter::
+void x86Emitter::
 emit_ArgF(PrimArg& arg, InstructionDefine& order, int curStackOffset)
 {
     InsnDoubleOpDir& loadParam = *new(mPool) InsnDoubleOpDir(&arg, mPool, raLoadI, curStackOffset, atStackOffset, atRegDirect, 1, 1);
@@ -436,7 +436,7 @@ emit_ArgF(PrimArg& arg, InstructionDefine& order, int curStackOffset)
 }
 
 // Retrieve a 64-bit double argument from the call stack
-void x86Win32Emitter::
+void x86Emitter::
 emit_ArgD(PrimArg& arg, InstructionDefine& order, int curStackOffset)
 {
     InsnFloatMemory& loadInsn = *new InsnFloatMemory(&arg, mPool, fld64, atStackOffset, curStackOffset, 1, 1);
@@ -449,7 +449,7 @@ emit_ArgD(PrimArg& arg, InstructionDefine& order, int curStackOffset)
 }
     
 // Push float function return value on top of FPU stack
-void x86Win32Emitter::
+void x86Emitter::
 emit_Result_F(Primitive& inPrimitive)
 {
     InsnFloatMemory &copyInsn = *new InsnFloatMemory(&inPrimitive, mPool, fld32, 1, 1);
@@ -463,7 +463,7 @@ emit_Result_F(Primitive& inPrimitive)
 }
 
 // Push double function return value on top of FPU stack
-void x86Win32Emitter::
+void x86Emitter::
 emit_Result_D(Primitive& inPrimitive)
 {
     InsnFloatMemory &copyInsn = *new InsnFloatMemory(&inPrimitive, mPool, fld64, 1, 1);
@@ -494,7 +494,7 @@ emit_Result_D(Primitive& inPrimitive)
     (Some changes in operand usage will appear depending on the exact pattern of primitives being matched.)
 */
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpF(Primitive& inPrimitive, DataNode &first_operand, DataNode &second_operand,
               bool negate_result, x86FloatMemoryType load_op, x86FloatMemoryType cmpOp, VRClass vrClass)
 {
@@ -562,7 +562,7 @@ emit_3wayCmpF(Primitive& inPrimitive, DataNode &first_operand, DataNode &second_
 	defineProducer(inPrimitive, extInsn, 0);			// exts(tmpVR1) -> result
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpF_G(Primitive& inPrimitive)
 {
     Primitive& cmpPrimitive = Primitive::cast(inPrimitive.nthInputVariable(0));
@@ -570,7 +570,7 @@ emit_3wayCmpF_G(Primitive& inPrimitive)
                   false, fld32, fcomp32, vrcFloat);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpF_L(Primitive& inPrimitive)
 {
     Primitive& cmpPrimitive = Primitive::cast(inPrimitive.nthInputVariable(0));
@@ -578,7 +578,7 @@ emit_3wayCmpF_L(Primitive& inPrimitive)
                   true, fld32, fcomp32, vrcFloat);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpD_G(Primitive& inPrimitive)
 {
     Primitive& cmpPrimitive = Primitive::cast(inPrimitive.nthInputVariable(0));
@@ -586,7 +586,7 @@ emit_3wayCmpD_G(Primitive& inPrimitive)
                   false, fld64, fcomp64, vrcDouble);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpD_L(Primitive& inPrimitive)
 {
     Primitive& cmpPrimitive = Primitive::cast(inPrimitive.nthInputVariable(0));
@@ -594,7 +594,7 @@ emit_3wayCmpD_L(Primitive& inPrimitive)
                   true, fld64, fcomp64, vrcDouble);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpCF_G(Primitive& inPrimitive)
 {
     Primitive& cmpPrimitive = Primitive::cast(inPrimitive.nthInputVariable(0));
@@ -602,7 +602,7 @@ emit_3wayCmpCF_G(Primitive& inPrimitive)
                   false, fld32, fcomp32, vrcFloat);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpCF_L(Primitive& inPrimitive)
 {
     Primitive& cmpPrimitive = Primitive::cast(inPrimitive.nthInputVariable(0));
@@ -610,7 +610,7 @@ emit_3wayCmpCF_L(Primitive& inPrimitive)
                   true, fld32, fcomp32, vrcFloat);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpCD_G(Primitive& inPrimitive)
 {
     Primitive& cmpPrimitive = Primitive::cast(inPrimitive.nthInputVariable(0));
@@ -618,7 +618,7 @@ emit_3wayCmpCD_G(Primitive& inPrimitive)
                   false, fld64, fcomp64, vrcDouble);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpCD_L(Primitive& inPrimitive)
 {
     Primitive& cmpPrimitive = Primitive::cast(inPrimitive.nthInputVariable(0));
@@ -630,7 +630,7 @@ emit_3wayCmpCD_L(Primitive& inPrimitive)
 // Constants
 
 // Generate 32-bit float constant
-void x86Win32Emitter::
+void x86Emitter::
 emit_LoadConstant_F(Primitive& inPrimitive)
 {
 	Uint32 constant = (*static_cast<const PrimConst *>(&inPrimitive)).value.i;
@@ -647,7 +647,7 @@ emit_LoadConstant_F(Primitive& inPrimitive)
 
 // Generate 64-bit double constant
 // FIXME: Need to create an in-memory literal pool for storing double constants, rather than using immediate instructions
-void x86Win32Emitter::
+void x86Emitter::
 emit_LoadConstant_D(Primitive& inPrimitive)
 {
 	Flt64 constant = (*static_cast<const PrimConst *>(&inPrimitive)).value.d;
@@ -671,7 +671,7 @@ emit_LoadConstant_D(Primitive& inPrimitive)
 //====================================================================================================
 // Floating-point memory operations
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Ld_F(Primitive& inPrimitive)
 {
     // Load 32-bit float into an integer register
@@ -684,7 +684,7 @@ emit_Ld_F(Primitive& inPrimitive)
 	defineProducer(inPrimitive, storeInsn, 0, vrcFloat);            // result
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Ld_D(Primitive& inPrimitive)
 {
     // Fetch from memory and temporarily push 64-bit double on the FPU stack
@@ -699,7 +699,7 @@ emit_Ld_D(Primitive& inPrimitive)
     defineProducer(inPrimitive, storeInsn, 0, vrcDouble);              // result
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_St_F(Primitive& inPrimitive)	
 {
     // Load 32-bit float into an integer register
@@ -715,7 +715,7 @@ emit_St_F(Primitive& inPrimitive)
 	defineProducer(inPrimitive, storeInsn, 0);						// memory edge out
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_St_D(Primitive& inPrimitive)	
 {
     // Temporarily push 64-bit double on the FPU stack

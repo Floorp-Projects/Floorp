@@ -22,7 +22,7 @@
 #ifndef X86_FLOAT_H
 #define X86_FLOAT_H
 
-#include "x86Win32Instruction.h"
+#include "x86Instruction.h"
 
 //-----------------------------------------------------------------------------------------------------------
 // Floating-point instructions in which one operand is a memory location.

@@ -16,17 +16,17 @@
  * Reserved.
  */
 // 
-//	x86Win32Instruction.cpp
+//	x86Instruction.cpp
 //
 //	Simon Holmes a Court
 //	Peter DeSantis
 
 #include "prtypes.h"
-#include "x86Win32Instruction.h"
+#include "x86Instruction.h"
 #include "InstructionEmitter.h"
 #include "x86Formatter.h"
 
-class x86Win32Emitter;
+class x86Emitter;
 extern char* x86GPRText[];
 
 UT_DEFINE_LOG_MODULE(x86Spill);
@@ -69,7 +69,7 @@ char* conditionalSuffixes[] =
 // Purpose:		Due to x86 behaviour of modifying source register, we must make a copy of the source before 
 //				the operation. Unnecessary copies can be removed by the register allocator.
 void x86ArgListInstruction::
-x86StandardUseDefine(x86Win32Emitter& inEmitter)
+x86StandardUseDefine(x86Emitter& inEmitter)
 {
 	InstructionUse* 	instructionUseBegin = getInstructionUseBegin();
 	InstructionDefine* 	instructionDefineBegin = getInstructionDefineBegin();

@@ -16,7 +16,7 @@
  * Reserved.
  */
 // 
-//	x86Win32Instruction.h
+//	x86Instruction.h
 //
 //	Peter DeSantis
 //	Simon Holmes a Court
@@ -83,7 +83,7 @@ public:
 	  }
 
 	// utility
-	void			    x86StandardUseDefine(x86Win32Emitter& inEmitter);
+	void			    x86StandardUseDefine(x86Emitter& inEmitter);
 
 	// virtual methods that must be written
 	virtual Uint8		opcodeSize() = 0;
@@ -541,7 +541,7 @@ public:
 					Pool& inPool, 
 					Uint8 inRegisterArguments, 
 					bool inHasReturnValue, 
-					x86Win32Emitter& inEmitter, 
+					x86Emitter& inEmitter, 
 					void (*inFunc)() = NULL, 
 					DataNode* inUseDataNode = NULL	);
 
@@ -582,7 +582,7 @@ public:
 					Pool& inPool, 
 					Uint8 inRegisterArguments, 
 					bool inHasReturnValue, 
-					x86Win32Emitter& inEmitter, 
+					x86Emitter& inEmitter, 
 					void (*inFunc)(), 
 					DataNode* inUseDataNode = NULL	) :
 				Call<tHasIncomingStore, tHasOutgoingStore, false, false>(inDataNode, inPool, inRegisterArguments, inHasReturnValue, inEmitter, inFunc, inUseDataNode) { }
@@ -598,7 +598,7 @@ class CallD_ :
 	public Call<true, true, true, true>
 {
 public:
-	inline			CallD_(DataNode*	inDataNode, Pool& inPool, Uint8 inRegisterArguments, bool inHasReturnValue, x86Win32Emitter& inEmitter) :
+	inline			CallD_(DataNode*	inDataNode, Pool& inPool, Uint8 inRegisterArguments, bool inHasReturnValue, x86Emitter& inEmitter) :
 						Call<true, true, true, true>(inDataNode, inPool, inRegisterArguments, inHasReturnValue, inEmitter) { }		
  
 	inline virtual void	formatToMemory(void* inStart, Uint32 /*inOffset*/, MdFormatter& inEmitter);
