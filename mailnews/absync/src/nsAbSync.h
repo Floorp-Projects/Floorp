@@ -84,7 +84,7 @@ typedef struct {
 #define SYNC_ALLTAGS             1000
 #define SYNC_EMAILS              2000
 #define ABSYNC_PROTOCOL          3
-#define ABSYNC_VERSION           "1"
+#define ABSYNC_VERSION           "Demo"
 
 #define SYNC_ESCAPE_ADDUSER             "op%3Dadd"
 #define SYNC_ESCAPE_MOD                 "op%3Dmod"

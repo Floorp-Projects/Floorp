@@ -27,7 +27,8 @@
 #include "nsIStringBundle.h"
 #include "prmem.h"
 
-NS_IMPL_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
+// NS_IMPL_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
 
 static NS_DEFINE_CID(kAbSync, NS_ABSYNC_SERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -119,9 +120,14 @@ NS_IMETHODIMP nsAbSyncDriver::OnStopOperation(PRInt32 aTransactionID, nsresult a
 NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus)
 {
   nsresult rv = NS_OK;
+  PRInt32  stateVar;
 	NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
 	if (NS_FAILED(rv) || !sync) 
 		return rv;
+
+  sync->GetCurrentState(&stateVar);
+  if (stateVar != nsIAbSyncState::nsIAbSyncIdle)
+    return NS_ERROR_FAILURE;
 
   mStatus = aStatus;
 
@@ -129,6 +135,16 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus)
   sync->AddSyncListener((nsIAbSyncListener *)this);
 
   rv = sync->PerformAbSync(&mTransactionID);
+  if (NS_SUCCEEDED(rv))
+  {
+    if (mStatus)
+    {
+      PRUnichar   *msgValue = nsnull;
+      msgValue = GetString(NS_ConvertASCIItoUCS2("syncConnect").GetUnicode());
+      mStatus->ShowStatusString(msgValue);
+      PR_FREEIF(msgValue);
+    }
+  }
   return rv;
 }
 
@@ -160,3 +176,4 @@ nsAbSyncDriver::GetString(const PRUnichar *aStringName)
   else
     return nsCRT::strdup(aStringName);
 }
+

@@ -488,10 +488,10 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
 
   // Ok, add the header to this protocol string information...
   if (mPostString.IsEmpty())
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=Demo&user=%s", 
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&user=%s", 
                             mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, mUserName);
   else
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=Demo&user=%s&", 
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&user=%s&", 
                             mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, mUserName);
   if (!prefixStr)
   {
