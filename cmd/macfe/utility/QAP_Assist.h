@@ -258,12 +258,12 @@ typedef struct scrollbarinfo
 class CQAPartnerTableMixin
 {
 public:
-					CQAPartnerTableMixin(LTableView *inView) : mTableView(inView) { };
-			virtual	~CQAPartnerTableMixin() { };
+					CQAPartnerTableMixin(LTableView *inView) ;
+			virtual	~CQAPartnerTableMixin() ;
 
 	virtual void	QapGetListInfo (PQAPLISTINFO pInfo) = 0;
 	virtual Ptr		QapAddCellToBuf(Ptr pBuf, Ptr pLimit, const STableCell& sTblCell) = 0;
-	virtual short	QapGetListContents(Ptr pBuf, short index) { return 0; };
+	virtual short	QapGetListContents(Ptr pBuf, short index);
 
 protected:
 	LTableView *	mTableView;

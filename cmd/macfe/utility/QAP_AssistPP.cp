@@ -66,7 +66,7 @@ To use this assistance hook with your PowerPlant application, do the following:
 #include <LPlaceHolder.h>
 #include <LStdControl.h>
 #include <LTextButton.h>
-#include <LTextEdit.h>
+#include <LTextEditView.h>
 #include <LToggleButton.h>
 #include <LView.h>
 #include <LWindow.h>
@@ -318,7 +318,7 @@ static short LPaneGetContents (LPane * lpanep, PWCINFO wcp, short * sp_count, sh
 	LEditField * leditFieldp;
 	LListBox * llistBoxp;
 	LStdControl * lstdControlp;
-	LTextEdit * ltextEditp;
+	LTextEditView * LTextEditViewp;
 	PaneIDT id;
 	Str255 str;
 	char str_name[MAC_NAME_SIZE];
@@ -353,9 +353,9 @@ static short LPaneGetContents (LPane * lpanep, PWCINFO wcp, short * sp_count, sh
 		goto Done;
 	}
 		
-	if ((ltextEditp = dynamic_cast <LTextEdit*> (lpanep)) != NULL)
+	if ((LTextEditViewp = dynamic_cast <LTextEditView*> (lpanep)) != NULL)
 	{
-		AddViewItem (lpanep, wcp, sp_count, WT_TEXT_FIELD, 0, NULL, (Handle) ltextEditp->GetMacTEH ());
+		AddViewItem (lpanep, wcp, sp_count, WT_TEXT_FIELD, 0, NULL, (Handle) LTextEditViewp->GetMacTEH ());
 		goto Done;
 	}
 		
@@ -366,7 +366,7 @@ static short LPaneGetContents (LPane * lpanep, PWCINFO wcp, short * sp_count, sh
 		AddViewItem (lpanep, wcp, sp_count, WT_ASSIST_ITEM, WC_STATIC_TEXT, (char *) str, (Handle) lpanep);
 		// Change bounding rect to textbox frame.  To do this, you need to change the access modifier of
 		// LGroupBox::CalcTextBoxFrame() from protected to public. 
-		((LGroupBox *) lpanep)->CalcTextBoxFrame (wcp [*sp_count-1].rect);	
+//		((LGroupBox *) lpanep)->CalcTextBoxFrame (wcp [*sp_count-1].rect);	
 
 		goto Done;
 	}
