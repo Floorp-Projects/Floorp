@@ -524,8 +524,9 @@
        <body>
          <![CDATA[
            if (!node) return false;
-           if (node.nodeName == "A" || node.nodeName == "INPUT" || node.nodeName == "TEXTAREA" ||
-               node.nodeName == "AREA") {
+           var tagName = node.nodeName.toUpperCase();
+           if (tagName == "A" || tagName == "INPUT" || tagName == "TEXTAREA" ||
+               tagName == "AREA") {
              return true;
            }
            
