@@ -1049,8 +1049,8 @@ select input#-moz-display {
 }
 
 select[disabled] input#-moz-display {
-  font-family: sans-serif;
-  font-size: small;
+  font-family: inherit;
+  font-size: inherit;
   border: none;
   color: gray;
   background-color: white;
@@ -1064,8 +1064,8 @@ select[disabled] input#-moz-display {
 
 /* combbox display area - active */
 select input#-moz-display:active {
-  font-family: sans-serif;
-  font-size: small;
+  font-family: inherit;
+  font-size: inherit;
   border: none;
   background-color:white;
   background-image: none;
@@ -1081,8 +1081,8 @@ select input#-moz-display:active {
 option {
   min-height: 1em;
   display:block;
-  font-family: sans-serif;
-  font-size: small;
+  font-family: inherit;
+  font-size: inherit;
   user-select: none;
 }
 
@@ -1099,7 +1099,24 @@ select[size] option {
   padding-bottom: 0px;
 }
 
-select option, select[size="1"] option {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+, select[size="1"] option {
   padding-left:   3px;
   padding-top:    0px;
   padding-right:  5px;
@@ -1112,18 +1129,18 @@ select[disabled] option {
 }
 
 /* Combobox item style */
-select option[-moz-option-selected] {
+select > option[-moz-option-selected] {
  color:white;
  background-color:rgb(51,51,102); 
 }
 
 /* List box item selected style */
-select option[disabled][-moz-option-selected] {
+select > option[disabled][-moz-option-selected] {
   color:rgb(153,153,153); 
   background-color:rgb(204,204,204); 
 }
 
-select option[disabled] {
+select > option[disabled] {
   color:rgb(153,153,153); 
   background-color:rgb(204,204,204); 
 }
@@ -1195,7 +1212,7 @@ optgroup {
   font-weight:bold;
 }
 
-optgroup option {
+optgroup > option {
   display:block;
   padding-left:20px;
   font-style:normal;
@@ -1499,7 +1516,6 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 
 :-moz-singleline-textcontrol-frame {
   overflow:hidden;
-  font-family:-moz-fixed;
 	white-space:nowrap;
 }
 
