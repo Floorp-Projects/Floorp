@@ -40,12 +40,13 @@ function init(aEvent)
     return;
   var userAgentField = document.getElementById("userAgent");
   userAgentField.value = navigator.userAgent;
-  document.documentElement.getButton("accept").focus();
-  
+
   var button = document.documentElement.getButton("extra2");
   button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
   gSelectedPage = 0;
   button.addEventListener("command", switchPage, false);
+
+  document.documentElement.getButton("accept").focus();
 }
 
 function uninit(aEvent)
