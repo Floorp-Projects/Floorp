@@ -621,6 +621,7 @@ void nsMenu::LoadSubMenu(
 	pnsMenu->SetDOMNode(menuNode);
 	pnsMenu->SetDOMElement(menuElement);
 
+	/*
     // Begin menuitem inner loop
 	unsigned short menuIndex = 0;
 
@@ -650,6 +651,7 @@ void nsMenu::LoadSubMenu(
       nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
       oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
     } // end menu item innner loop
+	*/
   }     
 }
 
