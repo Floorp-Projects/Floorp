@@ -85,11 +85,6 @@ const MessageT  cmd_Preferences     = 27;   // nil
 
 enum
 {
-};
-
-
-enum
-{
     menu_First = 128,
     menu_Apple = menu_First,
     menu_File,
@@ -446,10 +441,13 @@ int main(int argc, char **argv)
     InitializeMacToolbox();
 #endif
 
-    // Install an a Quit AppleEvent handler.
-    OSErr err = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
-                                      NewAEEventHandlerUPP(handleQuitApplication),
-                                      0, false);
+    // Install a Quit AppleEvent handler.
+#ifdef DEBUG
+  OSErr err =
+#endif
+    AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
+                          NewAEEventHandlerUPP(handleQuitApplication), 0,
+                          false);
     NS_ASSERTION((err==noErr), "AEInstallEventHandler failed");
 
 #ifdef XP_MACOSX
