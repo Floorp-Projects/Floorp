@@ -293,6 +293,17 @@ public:
     return mFloatDamage.Intersects(aIntervalBegin + mY, aIntervalEnd + mY);
   }
 
+  /**
+   * Pushes the current state of the space manager onto a state stack.
+   */
+  void PushState();
+
+  /**
+   * Restores the space manager to the state at the top of the state stack,
+   * then pops this state off the stack.
+   */
+  void PopState();
+
 #ifdef DEBUG
   /**
    * Dump the state of the spacemanager out to a file
@@ -314,6 +325,17 @@ protected:
 #ifdef NS_BUILD_REFCNT_LOGGING
     ~FrameInfo();
 #endif
+  };
+
+  // Structure that stores the current state of a frame manager for
+  // Save/Restore purposes.
+  struct SpaceManagerState {
+    nscoord mX, mY;
+    nsIFrame *mLastFrame;
+    SpaceManagerState *mNext;
+
+    SpaceManagerState() : mX(0), mY(0), mLastFrame(nsnull), mNext(nsnull) {}
+    ~SpaceManagerState() {}
   };
 
 public:
@@ -386,6 +408,8 @@ protected:
   BandList        mBandList;  // header/sentinel for circular linked list of band rects
   FrameInfo*      mFrameInfoMap;
   nsIntervalSet   mFloatDamage;
+
+  SpaceManagerState *mSavedStates;
 
 protected:
   FrameInfo* GetFrameInfoFor(nsIFrame* aFrame);
