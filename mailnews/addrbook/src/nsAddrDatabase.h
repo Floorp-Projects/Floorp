@@ -125,8 +125,7 @@ public:
 	NS_IMETHOD AddNickName(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_NickNameColumnToken, value); }
 
-	NS_IMETHOD AddPrimaryEmail(nsIMdbRow * row, const char * value)
-	{ return AddCharStringColumn(row, m_PriEmailColumnToken, value); }
+	NS_IMETHOD AddPrimaryEmail(nsIMdbRow * row, const char * value);
 
 	NS_IMETHOD Add2ndEmail(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_2ndEmailColumnToken, value); }
@@ -224,8 +223,7 @@ public:
 	NS_IMETHOD AddNotes(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_NotesColumnToken, value); }
 
-	NS_IMETHOD AddListName(nsIMdbRow * row, const char * value)
-	{ return AddCharStringColumn(row, m_ListNameColumnToken, value); }
+	NS_IMETHOD AddListName(nsIMdbRow * row, const char * value);
 
 	NS_IMETHOD AddListNickName(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_ListNickNameColumnToken, value); }
@@ -237,6 +235,8 @@ public:
 	NS_IMETHOD AddListDirNode(nsIMdbRow * listRow);
 	NS_IMETHOD CreateCollationKey(const PRUnichar *sourceStr, nsString& resultStr);
 	NS_IMETHOD GetDirectoryName(PRUnichar **name);
+
+	NS_IMETHOD FindMailListbyUnicodeName(const PRUnichar *listName, PRBool *exist);
 
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
@@ -320,6 +320,7 @@ protected:
 	nsresult NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir, nsIAddrDBListener *instigator);
 
 	nsresult GetCollationKeyGenerator();
+	nsresult AddLowercaseColumn(nsIMdbRow * row, mdb_token columnToken, const char* utf8String);
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
@@ -336,6 +337,15 @@ protected:
 	nsresult			GetLastRecorKey();
 	nsresult			UpdateLastRecordKey();
 	nsresult			CheckAndUpdateRecordKey();
+	nsresult			UpdateLowercaseEmailListName();
+	nsresult			ConvertAndAddLowercaseColumn(nsIMdbRow * row, mdb_token fromCol, mdb_token toCol);
+	nsresult			AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken, PRUnichar* pUnicodeStr);
+	nsresult			GetRowForCharColumn(const char *lowerUTF8String, mdb_column findColumn, 
+											PRBool bIsCard, nsIMdbRow **findRow);
+	nsresult			GetRowForCharColumn(const PRUnichar *unicodeStr, mdb_column findColumn, 
+											PRBool bIsCard, nsIMdbRow **findRow);
+	nsresult			CreateCardsForMailList(nsIMdbRow *pListRow, nsIEnumerator **result);
+
 
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
@@ -399,6 +409,7 @@ protected:
 	mdb_token			m_NotesColumnToken;
 	mdb_token			m_LastModDateColumnToken;
 	mdb_token			m_RecordKeyColumnToken;
+	mdb_token			m_LowerPriEmailColumnToken;
 
 	mdb_token			m_PlainTextColumnToken;
 
@@ -409,6 +420,7 @@ protected:
 	mdb_token			m_ListNickNameColumnToken;
 	mdb_token			m_ListDescriptionColumnToken;
 	mdb_token			m_ListTotalColumnToken;
+	mdb_token			m_LowerListNameColumnToken;
 
 	PRUint32			m_LastRecordKey;
 	nsIAbDirectory*		m_dbDirectory;

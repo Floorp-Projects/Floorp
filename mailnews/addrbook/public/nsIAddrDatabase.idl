@@ -56,8 +56,8 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void createNewListCardAndAddToDB(in unsigned long listRowID, in nsIAbCard newCard, in boolean beNotify);
 	void createMailListAndAddToDB(in nsIAbDirectory newList, in boolean beNotify);
 	nsIEnumerator enumerateCards(in nsIAbDirectory directory);
-	nsIEnumerator EnumerateListAddresses(in nsIAbDirectory directory);
-	void GetMailingListsFromDB(in nsIAbDirectory parentDir);
+	nsIEnumerator enumerateListAddresses(in nsIAbDirectory directory);
+	void getMailingListsFromDB(in nsIAbDirectory parentDir);
 	void deleteCard(in nsIAbCard card, in boolean beNotify);
 	void editCard(in nsIAbCard card, in boolean beNotify);
 	boolean containsCard(in nsIAbCard card);
@@ -68,6 +68,8 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	wstring getDirectoryName();
 
 	nsIAbCard getCardForEmailAddress(in nsIAbDirectory directory, in string emailAddress);
+
+	PRBool findMailListbyUnicodeName(in wstring listName);
 
 	void setAnonymousStringAttribute(in string attrname, in string value);
 	string getAnonymousStringAttribute(in string attrname);
