@@ -1,6 +1,7 @@
 messenger.jar:
 *+  content/messenger-smime/msgReadSMIMEOverlay.xul                  (content/msgReadSMIMEOverlay.xul)
 *+  content/messenger-smime/msgCompSMIMEOverlay.xul                  (content/msgCompSMIMEOverlay.xul)
+*+  content/messenger-smime/msgCompSMIMEOverlay.js                   (content/msgCompSMIMEOverlay.js)
 *+  content/messenger-smime/msgCompSecurityInfo.xul                  (content/msgCompSecurityInfo.xul)
 *+  content/messenger-smime/msgHdrViewSMIMEOverlay.js                (content/msgHdrViewSMIMEOverlay.js)
 *+  content/messenger-smime/pref-smime-advanced.xul                  (content/pref-smime-advanced.xul)
