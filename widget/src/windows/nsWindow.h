@@ -351,9 +351,11 @@ private:
   nsresult                SetWindowTranslucencyInner(PRBool aTransparent);
   PRBool                  GetWindowTranslucencyInner() { return mIsTranslucent; }
   void                    UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* aAlphas);
-  nsIWidget*              GetTopLevelWidget();
+  nsWindow*               GetTopLevelWindow();
   void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight);
   nsresult                UpdateTranslucentWindow();
+  nsresult                SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent);
+  void                    SetWindowRegionToAlphaMask();
 public:
 #endif
 
@@ -406,8 +408,9 @@ protected:
 
   static PRBool           EventIsInsideWindow(UINT Msg, nsWindow* aWindow);
 
-  static nsWindow *       GetNSWindowPtr(HWND aWnd);
+  static nsWindow*        GetNSWindowPtr(HWND aWnd);
   static BOOL             SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
+  nsWindow*               GetParent(PRBool aStopOnFirstTopLevel);
 
   void                    DispatchPendingEvents();
   virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
@@ -517,10 +520,23 @@ protected:
   HBRUSH        mBrush;
 
 #ifdef MOZ_XUL
-  HBITMAP       mMemoryBitmap;
-  HDC           mMemoryDC;
+  union
+  {
+    // Windows 2000 and newer use layered windows to support full 256 level alpha translucency
+    struct
+    {
+      HDC       mMemoryDC;
+      HBITMAP   mMemoryBitmap;
+    } w2k;
+    // Windows NT and 9x use complex shaped window regions to support 1-bit transparency masks
+    struct
+    {
+      PRPackedBool mPerformingSetWindowRgn;
+    } w9x;
+  };
   PRUint8*      mAlphaMask;
   PRPackedBool  mIsTranslucent;
+  PRPackedBool  mIsTopTranslucent;     // Topmost window itself or any of it's child windows has tranlucency enabled
 #endif
   PRPackedBool  mIsTopWidgetWindow;
   PRPackedBool  mHas3DBorder;

@@ -134,6 +134,9 @@ static const char *kMozHeapDumpMessageString = "MOZ_HeapDump";
 #define SPI_GETWHEELSCROLLLINES 104
 #endif
 
+
+#ifdef MOZ_XUL
+
 #ifndef AC_SRC_ALPHA
 #define AC_SRC_ALPHA            0x01
 #endif
@@ -144,6 +147,27 @@ static const char *kMozHeapDumpMessageString = "MOZ_HeapDump";
 
 #ifndef ULW_ALPHA
 #define ULW_ALPHA               0x00000002
+#endif
+
+
+typedef BOOL WINAPI UpdateLayeredWindowProc (HWND hWnd, HDC hdcDst, POINT *pptDst,
+                                             SIZE *psize, HDC hdcSrc, POINT *pptSrc,
+                                             COLORREF crKey, BLENDFUNCTION *pblend,
+                                             DWORD dwFlags);
+
+
+static UpdateLayeredWindowProc* GetUpdateLayeredWindowProc()
+{
+  HMODULE user32 = ::GetModuleHandle("user32.dll");
+
+  return NS_REINTERPRET_CAST(UpdateLayeredWindowProc*,
+    (user32) ? ::GetProcAddress(user32, "UpdateLayeredWindow") : nsnull);
+}
+
+static UpdateLayeredWindowProc* pUpdateLayeredWindow = GetUpdateLayeredWindowProc();
+
+static inline PRBool IsAlphaTranslucencySupported() { return pUpdateLayeredWindow != nsnull; }
+
 #endif
 
 
@@ -779,8 +803,10 @@ nsWindow::nsWindow() : nsBaseWidget()
   mHas3DBorder        = PR_FALSE;
 #ifdef MOZ_XUL
   mIsTranslucent      = PR_FALSE;
-  mMemoryBitmap       = NULL;
-  mMemoryDC           = NULL;
+  mIsTopTranslucent   = PR_FALSE;
+  w2k.mMemoryBitmap   = NULL;
+  w2k.mMemoryDC       = NULL;
+  w9x.mPerformingSetWindowRgn = PR_FALSE;
   mAlphaMask          = nsnull;
 #endif
   mWindowType         = eWindowType_child;
@@ -1655,12 +1681,9 @@ NS_METHOD nsWindow::Destroy()
 #ifdef MOZ_XUL
     if (mIsTranslucent)
     {
-      ::DeleteDC(mMemoryDC);
-      ::DeleteObject(mMemoryBitmap);
-      delete [] mAlphaMask;
+      SetupTranslucentWindowMemoryBitmap(PR_FALSE);
 
-      mMemoryDC = NULL;
-      mMemoryBitmap = NULL;
+      delete [] mAlphaMask;
       mAlphaMask = nsnull;
     }
 #endif
@@ -1701,18 +1724,22 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
-  if (mIsTopWidgetWindow) {
+  return GetParent(PR_TRUE);
+}
+
+nsWindow* nsWindow::GetParent(PRBool aStopOnFirstTopLevel)
+{
+  if (mIsTopWidgetWindow && aStopOnFirstTopLevel) {
     // Must use a flag instead of mWindowType to tell if the window is the
     // owned by the topmost widget, because a child window can be embedded inside
     // a HWND which is not associated with a nsIWidget.
     return nsnull;
   }
-  /* If this widget has already been destroyed, pretend we have no parent.
-     This corresponds to code in Destroy which removes the destroyed
-     widget from its parent's child list. */
+  // If this widget has already been destroyed, pretend we have no parent.
+  // This corresponds to code in Destroy which removes the destroyed
+  // widget from its parent's child list.
   if (mIsDestroying || mOnDestroyCalled)
     return nsnull;
-
 
   nsWindow* widget = nsnull;
   if (mWnd) {
@@ -1731,7 +1758,7 @@ nsIWidget* nsWindow::GetParent(void)
     }
   }
 
-  return (nsIWidget*)widget;
+  return widget;
 }
 
 
@@ -2535,10 +2562,9 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
     DWORD tempStyle = nsToolkit::mGetWindowLong(hwnd, GWL_STYLE);
     DWORD tempExStyle = nsToolkit::mGetWindowLong(hwnd, GWL_EXSTYLE);
 
-    style = WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
-    exStyle = tempExStyle & WS_EX_LAYERED;
-
-    if (tempExStyle & WS_EX_LAYERED) style = 0;
+    style = tempStyle & ~(WS_CAPTION | WS_THICKFRAME);
+    exStyle = tempExStyle & ~(WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE |
+                              WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
 
     mOldStyle = tempStyle;
     mOldExStyle = tempExStyle;
@@ -2591,8 +2617,8 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 #endif // NS_DEBUG
 
 #ifdef MOZ_XUL
-    if (mIsTranslucent)
-      OnPaint(mMemoryDC);
+    if (mIsTranslucent && IsAlphaTranslucencySupported())
+      OnPaint(w2k.mMemoryDC);
     else
 #endif
     {
@@ -2624,8 +2650,8 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 #endif // NS_DEBUG
 
 #ifdef MOZ_XUL
-    if (mIsTranslucent)
-      OnPaint(mMemoryDC);
+    if (mIsTranslucent && IsAlphaTranslucencySupported())
+      OnPaint(w2k.mMemoryDC);
     else
 #endif
     {
@@ -2651,8 +2677,8 @@ nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
   nsresult rv = NS_OK;
   if (mWnd) {
 #ifdef MOZ_XUL
-    if (mIsTranslucent)
-       OnPaint(mMemoryDC);
+    if (mIsTranslucent && IsAlphaTranslucencySupported())
+      OnPaint(w2k.mMemoryDC);
     else
 #endif
     {
@@ -2688,7 +2714,7 @@ NS_IMETHODIMP nsWindow::Update()
   if (mWnd)
   {
 #ifdef MOZ_XUL
-    if (mIsTranslucent)
+    if (mIsTranslucent && IsAlphaTranslucencySupported())
     {
 //      rv = UpdateTranslucentWindow();
     } else
@@ -2715,7 +2741,8 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_GRAPHIC:
       // XXX:  This is sleezy!!  Remember to Release the DC after using it!
 #ifdef MOZ_XUL
-      return (void*)(!mIsTranslucent) ? ::GetDC(mWnd) : mMemoryDC;
+      return (void*)(mIsTranslucent && IsAlphaTranslucencySupported()) ?
+        w2k.mMemoryDC : ::GetDC(mWnd);
 #else
       return (void*)::GetDC(mWnd);
 #endif
@@ -2734,7 +2761,7 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
   {
     case NS_NATIVE_GRAPHIC:
 #ifdef MOZ_XUL
-      if (!mIsTranslucent)
+      if (!(mIsTranslucent && IsAlphaTranslucencySupported()))
         ::ReleaseDC(mWnd, (HDC)data);
 #else
       ::ReleaseDC(mWnd, (HDC)data);
@@ -4228,6 +4255,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     case WM_WINDOWPOSCHANGED:
     {
+#ifdef MOZ_XUL
+      if (mIsTopTranslucent && !IsAlphaTranslucencySupported() && w9x.mPerformingSetWindowRgn)
+      {
+        result = PR_FALSE;    // Ignore events generated by SetWindowRgn
+        break;
+      }
+#endif
+
       WINDOWPOS *wp = (LPWINDOWPOS)lParam;
 
       // We only care about a resize, so filter out things like z-order
@@ -5043,7 +5078,12 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
   RECT paintRect;
+
+#ifdef MOZ_XUL
+  if (aDC || mIsTranslucent) {
+#else
   if (aDC) {
+#endif
     ::GetClientRect(mWnd, &paintRect);
   }
   else {
@@ -5093,7 +5133,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
             event.renderingContext->DestroyDrawingSurface(surf);
 
 #ifdef MOZ_XUL
-            if (mIsTranslucent)
+            if (mIsTranslucent && IsAlphaTranslucencySupported())
             {
               // Data from offscreen drawing surface was copied to memory bitmap of transparent
               // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
@@ -7147,50 +7187,21 @@ STDMETHODIMP_(LRESULT) nsWindow::LresultFromObject(REFIID riid, WPARAM wParam, L
 
 #ifdef MOZ_XUL
 
-typedef BOOL WINAPI UpdateLayeredWindowProc (HWND hWnd, HDC hdcDst, POINT *pptDst,
-                                             SIZE *psize, HDC hdcSrc, POINT *pptSrc,
-                                             COLORREF crKey, BLENDFUNCTION *pblend,
-                                             DWORD dwFlags);
-
-
-static UpdateLayeredWindowProc* pUpdateLayeredWindow = NULL;
-
-
-static PRBool IsTranslucencySupported()
+nsWindow* nsWindow::GetTopLevelWindow()
 {
-  static PRBool firstTime = PR_TRUE;
-
-  if (firstTime)
-  {
-    firstTime = PR_FALSE;
-
-    HMODULE user32 = ::GetModuleHandle("user32.dll");
-
-    if (user32)
-      pUpdateLayeredWindow = (UpdateLayeredWindowProc*)::GetProcAddress(user32, "UpdateLayeredWindow");
-  }
-
-  return pUpdateLayeredWindow != NULL;
-}
-
-nsIWidget* nsWindow::GetTopLevelWidget()
-{
-  nsIWidget* curWidget = this;
-  NS_ADDREF(curWidget);
+  nsWindow* curWindow = this;
+  NS_ADDREF(curWindow);
 
   while (PR_TRUE)
   {
-    if (mIsTopWidgetWindow)
-      return curWidget;
-    
-    nsIWidget* parentWidget = curWidget->GetParent();
+    nsWindow* parentWindow = curWindow->GetParent(PR_TRUE);
 
-    if (parentWidget)
+    if (parentWindow)
     {
-      NS_RELEASE(curWidget);
-      curWidget = parentWidget;
+      NS_RELEASE(curWindow);
+      curWindow = parentWindow;
     } else
-      return curWidget;
+      return curWindow;
   }
 }
 
@@ -7236,15 +7247,15 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight)
 
       for (PRInt32 cy = 0 ; cy < copyHeight ; cy++)
       {
-        memcpy (pDest, pSrc, copyWidth);
-        memset (pDest + copyWidth, 255, growWidth);
+        memcpy(pDest, pSrc, copyWidth);
+        memset(pDest + copyWidth, 255, growWidth);
         pSrc += mBounds.width;
         pDest += aNewWidth;
       }
 
       for (PRInt32 gy = 0 ; gy < growHeight ; gy++)
       {
-        memset (pDest, 255, aNewWidth);
+        memset(pDest, 255, aNewWidth);
         pDest += aNewWidth;
       }
     }
@@ -7255,38 +7266,34 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight)
   mAlphaMask = pBits;
 
 
-  // resize the memory bitmap
-  HDC hScreenDC = ::GetDC(NULL);
-  mMemoryBitmap = ::CreateCompatibleBitmap(hScreenDC, aNewWidth, aNewHeight);
-
-  if (mMemoryBitmap)
+  if (IsAlphaTranslucencySupported())
   {
-    HGDIOBJ oldBitmap = ::SelectObject(mMemoryDC, mMemoryBitmap);
-    ::DeleteObject(oldBitmap);
-  }
+    // resize the memory bitmap
+    HDC hScreenDC = ::GetDC(NULL);
+    w2k.mMemoryBitmap = ::CreateCompatibleBitmap(hScreenDC, aNewWidth, aNewHeight);
 
-  ::ReleaseDC(NULL, hScreenDC);
+    if (w2k.mMemoryBitmap)
+    {
+      HGDIOBJ oldBitmap = ::SelectObject(w2k.mMemoryDC, w2k.mMemoryBitmap);
+      ::DeleteObject(oldBitmap);
+    }
+
+    ::ReleaseDC(NULL, hScreenDC);
+  }
 }
 
 NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
 {
-  if (IsTranslucencySupported())
-  {
-    nsWindow* topWindow = (nsWindow*)GetTopLevelWidget();
-    aTranslucent = topWindow->GetWindowTranslucencyInner();
-    NS_RELEASE(topWindow);
-  } else
-    aTranslucent = PR_FALSE;
+  nsWindow* topWindow = GetTopLevelWindow();
+  aTranslucent = topWindow->GetWindowTranslucencyInner();
+  NS_RELEASE(topWindow);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent)
 {
-  if (!IsTranslucencySupported())
-    return NS_ERROR_NOT_IMPLEMENTED;
-
-  nsWindow* topWindow = (nsWindow*)GetTopLevelWidget();
+  nsWindow* topWindow = GetTopLevelWindow();
   nsresult rv = topWindow->SetWindowTranslucencyInner(aTranslucent);
   NS_RELEASE(topWindow);
 
@@ -7295,10 +7302,7 @@ NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent)
 
 NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
 {
-  if (!IsTranslucencySupported())
-    return NS_ERROR_NOT_IMPLEMENTED;
-
-  nsWindow* topWindow = (nsWindow*)GetTopLevelWidget();
+  nsWindow* topWindow = GetTopLevelWindow();
   topWindow->UpdateTranslucentWindowAlphaInner(aRect, aAlphas);
   NS_RELEASE(topWindow);
 
@@ -7311,8 +7315,9 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
     return NS_OK;
   
   HWND hWnd = GetTopLevelHWND(mWnd);
+  nsWindow* topWindow = GetNSWindowPtr(hWnd);
 
-  if (!GetNSWindowPtr(hWnd))
+  if (!topWindow)
   {
     NS_WARNING("Trying to use transparent chrome in an embedded context");
     return NS_ERROR_FAILURE;
@@ -7326,7 +7331,9 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
             ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
     exStyle = nsToolkit::mGetWindowLong(hWnd, GWL_EXSTYLE) &
               ~(WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
-    exStyle |= WS_EX_LAYERED;
+
+    if (IsAlphaTranslucencySupported())
+      exStyle |= WS_EX_LAYERED;
   } else
   {
     style = WindowStyle();
@@ -7335,48 +7342,65 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
   nsToolkit::mSetWindowLong(hWnd, GWL_STYLE, style);
   nsToolkit::mSetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
 
-  nsresult rv = NS_ERROR_FAILURE;
   mIsTranslucent = aTranslucent;
+  topWindow->mIsTopTranslucent = aTranslucent;
+
+  nsresult rv = NS_OK;
+  
+  if (IsAlphaTranslucencySupported())
+    rv = SetupTranslucentWindowMemoryBitmap(aTranslucent);
+
+  if (aTranslucent)
+  {
+    if (!mBounds.IsEmpty())
+    {
+      PRInt32 alphaBytes = mBounds.width * mBounds.height;
+      mAlphaMask = new PRUint8 [alphaBytes];
+
+      if (mAlphaMask)
+        memset(mAlphaMask, 255, alphaBytes);
+      else
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    } else
+      mAlphaMask = nsnull;
+  } else
+  {
+    delete [] mAlphaMask;
+    mAlphaMask = nsnull;
+  }
+
+  return rv;
+}
+
+nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
+{
+  nsresult rv = NS_ERROR_FAILURE;
 
   if (aTranslucent)
   {
     HDC hScreenDC = ::GetDC(NULL);
-    mMemoryDC = ::CreateCompatibleDC(hScreenDC);
+    w2k.mMemoryDC = ::CreateCompatibleDC(hScreenDC);
 
-    if (mMemoryDC)
+    if (w2k.mMemoryDC)
     {
-      mMemoryBitmap = ::CreateCompatibleBitmap(hScreenDC, mBounds.width, mBounds.height);
+      w2k.mMemoryBitmap = ::CreateCompatibleBitmap(hScreenDC, mBounds.width, mBounds.height);
 
-      if (mMemoryBitmap)
+      if (w2k.mMemoryBitmap)
       {
-        ::SelectObject(mMemoryDC, mMemoryBitmap);
+        ::SelectObject(w2k.mMemoryDC, w2k.mMemoryBitmap);
 
         rv = NS_OK;
-
-        if (!mBounds.IsEmpty())
-        {
-          PRInt32 alphaBytes = mBounds.width * mBounds.height;
-          mAlphaMask = new PRUint8 [alphaBytes];
-
-          if (mAlphaMask)
-            memset (mAlphaMask, 255, alphaBytes);
-          else
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else
-          mAlphaMask = nsnull;
       }
     }
 
     ::ReleaseDC(NULL, hScreenDC);
   } else
   {
-    ::DeleteDC(mMemoryDC);
-    ::DeleteObject(mMemoryBitmap);
-    delete [] mAlphaMask;
+    ::DeleteDC(w2k.mMemoryDC);
+    ::DeleteObject(w2k.mMemoryBitmap);
 
-    mMemoryDC = NULL;
-    mMemoryBitmap = NULL;
-    mAlphaMask = nsnull;
+    w2k.mMemoryDC = NULL;
+    w2k.mMemoryBitmap = NULL;
 
     rv = NS_OK;
   }
@@ -7391,22 +7415,55 @@ void nsWindow::UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* a
                aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
                "Rect is out of window bounds");
 
+  PRBool transparencyMaskChanged = PR_FALSE;
+
   if (!aRect.IsEmpty())
   {
-    PRUint8* pSrc = aAlphas;
-    PRUint8* pDest = mAlphaMask + aRect.y * mBounds.width + aRect.x;
+    PRBool skipMaskChangeCheck = IsAlphaTranslucencySupported();
+    PRUint8* pSrcRow = aAlphas;
+    PRUint8* pDestRow = mAlphaMask + aRect.y * mBounds.width + aRect.x;
 
     for (PRInt32 y = 0 ; y < aRect.height ; y++)
     {
-      memcpy (pDest, pSrc, aRect.width);
+      if (skipMaskChangeCheck)
+        memcpy(pDestRow, pSrcRow, aRect.width);
+      else
+      {
+        PRUint8* pSrc = pSrcRow;
+        PRUint8* pDest = pDestRow;
 
-      pSrc += aRect.width;
-      pDest += mBounds.width;
+        for (PRInt32 x = 0 ; x < aRect.width ; x++)
+        {
+          if (!*pDest != !*pSrc)
+          {
+            transparencyMaskChanged = PR_TRUE;
+            skipMaskChangeCheck = PR_TRUE;
+          }
+
+          *pDest++ = *pSrc++;
+        }
+      }
+
+      pSrcRow += aRect.width;
+      pDestRow += mBounds.width;
     }
   }
 
-  // The real screen update is performed in OnPaint() handler only after rendered
-  // bits from offscreen drawing surface are copied back to memory bitmap.
+  if (IsAlphaTranslucencySupported())
+  {
+    // Windows 2000 and newer versions support layered windows which allow to implement
+    // full 256 level alpha translucency.
+    // The real screen update is performed in OnPaint() handler only after rendered
+    // bits from offscreen drawing surface are copied back to memory bitmap.
+  } else
+  {
+    // Older Windows versions do not have native support for 256 level alpha translucency.
+    // By use of complex shaped window regions we can achieve the effect of 1-bit
+    // transparency map.
+
+    if (transparencyMaskChanged)
+      SetWindowRegionToAlphaMask();
+  }
 }
 
 nsresult nsWindow::UpdateTranslucentWindow()
@@ -7439,7 +7496,7 @@ nsresult nsWindow::UpdateTranslucentWindow()
 
       if (pBits)
       {
-        int lines = ::GetDIBits(mMemoryDC, mMemoryBitmap, 0, mBounds.height, pBits, &bi, DIB_RGB_COLORS);
+        int lines = ::GetDIBits(w2k.mMemoryDC, w2k.mMemoryBitmap, 0, mBounds.height, pBits, &bi, DIB_RGB_COLORS);
 
         if (lines == mBounds.height)
         {
@@ -7458,7 +7515,7 @@ nsresult nsWindow::UpdateTranslucentWindow()
             pAlpha++;
           }
 
-          lines = ::SetDIBits (hMemoryDC, hAlphaBitmap, 0, mBounds.height, pBits, &bi, DIB_RGB_COLORS);
+          lines = ::SetDIBits(hMemoryDC, hAlphaBitmap, 0, mBounds.height, pBits, &bi, DIB_RGB_COLORS);
         }
 
         delete [] pBits;
@@ -7488,6 +7545,123 @@ nsresult nsWindow::UpdateTranslucentWindow()
   }
 
   return rv;
+}
+
+void nsWindow::SetWindowRegionToAlphaMask()
+{
+  PRInt32 minX = PR_INT32_MAX, maxX = PR_INT32_MIN;
+  PRInt32 minY = PR_INT32_MAX, maxY = PR_INT32_MIN;
+  PRUint8* pPixel = mAlphaMask;
+
+  // Convert all non-zero alpha pixels to be completely opaque (255).
+  // Find minimal bounding rectangle that contains all opaque pixels.
+  for (PRInt32 y = 0 ; y < mBounds.height ; y++)
+  {
+    PRBool lineEmpty = PR_TRUE;
+
+    for (PRInt32 x = 0 ; x < mBounds.width ; x++)
+    {
+      if (*pPixel)
+      {
+        *pPixel = 255;
+        lineEmpty = PR_FALSE;
+
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+      }
+
+      pPixel++;
+    }
+
+    if (!lineEmpty)
+    {
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+
+
+  HRGN hrgnOpacityMask = ::CreateRectRgn(0, 0, 0, 0);
+  
+  if (maxY >= minY)
+  {
+    HRGN hrgnRectBlock = ::CreateRectRgn(0, 0, 0, 0);
+
+    for (PRInt32 seqY1 = minY ; seqY1 <= maxY ; seqY1++)
+    {
+      PRUint8* pRow = mAlphaMask + seqY1 * mBounds.width;
+
+      for (PRInt32 seqX1 = minX ; seqX1 <= maxX ; seqX1++)
+      {
+        if (pRow [seqX1] == 255)      // Found first opaque pixel of possibly larger block
+        {
+          // Get max sequence of continuous opaque pixels on it's right side.
+          PRInt32 seqX2 = seqX1;
+          PRInt32 sx, sy;
+
+          for (sx = seqX1 ; sx <= maxX && pRow [sx] == 255 ; sx++)
+          {
+            seqX2 = sx;
+            pRow [seqX2] = 1;         // Mark pixel as already handled
+          }
+
+          // Look if found pixel sequence can be combined with exactly same one on next line
+          PRInt32 seqY2 = seqY1;
+          PRUint8* pNextRow = pRow + mBounds.width;
+
+          for (sy = seqY1 + 1 ; sy <= maxY ; sy++)
+          {
+            // Check if line starts and ends right below the original pixel sequence
+            if (pNextRow [seqX1] != 255 ||
+                pNextRow [seqX2] != 255 ||
+                (seqX1 > minX && pNextRow [seqX1 - 1]) ||
+                (seqX2 < maxX && pNextRow [seqX2 + 1]))
+              break;
+
+            // Check if line is continuously opaque and thus exactly same to previous sequence
+            PRBool sequenceContinuous = PR_TRUE;
+
+            for (sx = seqX1 + 1 ; sx < seqX2 ; sx++)
+              if (pNextRow [sx] != 255)
+              {
+                  sequenceContinuous = PR_FALSE;
+                  break;
+              }
+
+            if (!sequenceContinuous)
+              break;
+            
+            seqY2 = sy;                                      // Include this sequence in block
+            memset(pNextRow + seqX1, 1, seqX2 - seqX1 + 1);  // and mark it as handled
+
+            pNextRow += mBounds.width;
+          }
+
+
+          // Continuous opaque region of maximal size found
+          ::SetRectRgn(hrgnRectBlock, seqX1, seqY1, seqX2 + 1, seqY2 + 1);
+          ::CombineRgn(hrgnOpacityMask, hrgnRectBlock, hrgnOpacityMask, RGN_OR);
+
+
+          if (seqX1 == minX && seqX2 == maxX)    // Whole row opaque
+          {
+            seqY1 = seqY2;    // Next sequences can start only below this block
+            break;
+          } else
+            seqX1 = seqX2;    // Next sequence on same row can only be on right side of this block
+        }
+      }
+    }
+
+    ::DeleteObject(hrgnRectBlock);
+  }
+
+  HWND hWnd = GetTopLevelHWND(mWnd);
+  nsWindow* topWindow = GetNSWindowPtr(hWnd);
+
+  topWindow->w9x.mPerformingSetWindowRgn = PR_TRUE;
+  ::SetWindowRgn(hWnd, hrgnOpacityMask, TRUE);   // Now system owns this region
+  topWindow->w9x.mPerformingSetWindowRgn = PR_FALSE;
 }
 
 #endif
