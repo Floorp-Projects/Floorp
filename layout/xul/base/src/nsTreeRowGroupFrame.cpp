@@ -247,7 +247,9 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
         PRInt32 childContentCount;
         nsCOMPtr<nsIContent> grandChild;
         childContent->ChildCount(childContentCount);
-        for (PRInt32 j = childContentCount-1; j >= 0; j--) {
+
+        PRInt32 j;
+        for (j = childContentCount-1; j >= 0; j--) {
           
           childContent->ChildAt(j, *getter_AddRefs(grandChild));
           nsCOMPtr<nsIAtom> grandChildTag;
