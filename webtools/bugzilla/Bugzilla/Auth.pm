@@ -29,6 +29,12 @@ use Bugzilla::Constants;
 # 'inherit' from the main loginmethod
 BEGIN {
     my $loginmethod = Param("loginmethod");
+    if ($loginmethod =~ /^([A-Za-z0-9_\.\-]+)$/) {
+        $loginmethod = $1;
+    }
+    else {
+        die "Badly-named loginmethod '$loginmethod'";
+    }
     require "Bugzilla/Auth/" . $loginmethod . ".pm";
 
     our @ISA;
