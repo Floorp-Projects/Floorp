@@ -75,6 +75,7 @@ OBJS=                                       \
     .\$(OBJDIR)\jsj_JSObject.obj            \
     .\$(OBJDIR)\jsj_JavaArray.obj           \
     .\$(OBJDIR)\jsj_JavaClass.obj           \
+    .\$(OBJDIR)\jsj_JavaMember.obj          \
     .\$(OBJDIR)\jsj_JavaObject.obj          \
     .\$(OBJDIR)\jsj_JavaPackage.obj         \
     .\$(OBJDIR)\jsj_array.obj               \

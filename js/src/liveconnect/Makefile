@@ -38,6 +38,7 @@ CSRCS = jsj.c		  \
 	jsj_JSObject.c	  \
 	jsj_JavaArray.c	  \
 	jsj_JavaClass.c	  \
+	jsj_JavaMember.c  \
 	jsj_JavaObject.c  \
 	jsj_JavaPackage.c \
 	jsj_array.c	  \
