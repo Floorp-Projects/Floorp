@@ -19,6 +19,9 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd" >
 
 <overlay id="navigatorOverlay"
@@ -35,7 +38,7 @@ Contributor(s): ______________________________________. -->
     <key id="openBrowserKb"     disabled="false" command="true" key="&openCmd.commandkey;" observes="Browser:OpenUrl" />
     <key id="openFileKb"        disabled="false" command="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
     <key id="printKb"           disabled="false" command="true" key="&printCmd.commandkey;" observes="Browser:Print" />
-	<key id="closeKb"           disabled="false" command="true" key="&closeCmd.commandkey;" observes="Browser:Close" />
+	<key id="key_close"/>
     <key id="quitKb"            disabled="false" command="true" key="&quitCmd.commandkey;" observes="Browser:Quit" />
 
 	<key id="goForwardKb"         disabled="false" command="true" key="&goBackCmd.commandkey;" observes="Browser:GoForward" />
@@ -58,6 +61,9 @@ Contributor(s): ______________________________________. -->
  
   <broadcaster id="Browser:Open"  value="&openCmd.label;"        										 oncommand="BrowserOpenWindow();"/>
   <broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;"        								 oncommand="BrowserOpenFileWindow();"/>
+
+  <broadcaster id="cmd_close" oncommand="BrowserClose()"/>
+
   <broadcaster id="Browser:SendPage"  value="&sendPageCmd.label;"        	disabled ="true" 			 oncommand="BrowserReload();"/>
   <broadcaster id="Browser:EditPage"  value="&editPageCmd.label;"      									 oncommand="BrowserEditPage(window.content.location.href);"/>
  	
@@ -69,9 +75,7 @@ Contributor(s): ______________________________________. -->
   <broadcaster id="Browser:Print"  value="&printCmd.label;"        										 oncommand="BrowserPrint();"/>
   
  
-  <broadcaster id="Browser:Close"  value="&closeCmd.label;"    oncommand="BrowserClose();"/>
   <broadcaster id="Browser:Quit"  value="&quitCmd.label;"      oncommand="BrowserExit();"/>
-  
   
   <broadcaster id="canGoBack" 	 value="&goBackCmd.label;" 		disabled="true" 		oncommand="BrowserBack();"/>
   <broadcaster id="canGoForward" value="&goForwardCmd.label;" disabled="true"	oncommand="BrowserForward();"/>
@@ -82,7 +86,7 @@ Contributor(s): ______________________________________. -->
 </broadcasterset>
 
 
-<menu accesskey="&fileMenu.accesskey;" value="&fileMenu.label;" id="fileMenu">
+<!--menu id="menu_File">
     <menupopup>
       <menuitem accesskey="&browserCmd.accesskey;" key="newBrowserKb" observes="Browser:NewWindow" />
 	    <menu value="&newMenu.label;" accesskey="&newMenu.accesskey;">
@@ -97,6 +101,8 @@ Contributor(s): ______________________________________. -->
 
       <menuitem accesskey="&openCmd.accesskey;" key="openBrowserKb" observes="Browser:Open"/>
       <menuitem accesskey="&openFileCmd.accesskey;" key="openFileKb" observes="Browser:OpenFile"/>
+      <menuseparator/>
+      <menuitem id="menu_close"/>
       <menuseparator/>
       <menuitem accesskey="&sendPageCmd.label;" observes="Browser:SendPage"/>
       <menuitem accesskey="&editPageCmd.label;" observes="Browser:EditPage" />
@@ -113,10 +119,9 @@ Contributor(s): ______________________________________. -->
       <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
       <menuitem accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
       <menuseparator />
-      <menuitem accesskey="&closeCmd.accesskey;" key="closeKb" observes="Browser:Close"/>
       <menuitem accesskey="&quitCmd.accesskey;" key="quitKb" observes="Browser:Quit"/>
   </menupopup>
-</menu>
+</menu-->
 
   <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" >
 	  <menupopup>
