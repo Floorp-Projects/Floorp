@@ -163,7 +163,7 @@ var downloadViewController = {
 
     var selectedItem = getSelectedItem();
     var isDownloading = selectedItem && gDownloadManager.getDownload(selectedItem.id);
-    
+
     switch (aCommand) {
     case "cmd_openfile":
       try {
@@ -174,9 +174,9 @@ var downloadViewController = {
         return false;
       }      
     case "cmd_showinshell":
-      // some apps like kazaa/morpheus let you "preview" in-progress downloads because
-      // that's possible for movies and music. for now, just disable indiscriminately.
-      return selectionCount == 1;
+      // we can't reveal until the download is complete, because we have not given
+      // the file its final name until them.
+      return selectionCount == 1 && !isDownloading;
     case "cmd_properties":
       return selectionCount == 1 && isDownloading;
     case "cmd_pause":
@@ -204,7 +204,7 @@ var downloadViewController = {
     switch (aCommand) {
     case "cmd_properties":
       selectedItem = getSelectedItem();
-      if (selectedItem)
+      if (selectedItem && gDownloadManager.getDownload(selectedItem.id))
         gDownloadManager.openProgressDialogFor(selectedItem.id, window);
       break;
     case "cmd_openfile":
@@ -327,7 +327,7 @@ function getSelectedItems()
 
 function getFileForItem(aElement)
 {
-  var itemResource = gRDFService.GetResource(aElement.id);
+  var itemResource = gRDFService.GetUnicodeResource(aElement.id);
   var fileResource = gDownloadView.database.GetTarget(itemResource, gNC_File, true);
   fileResource = fileResource.QueryInterface(Components.interfaces.nsIRDFResource);
   return createLocalFile(fileResource.Value);

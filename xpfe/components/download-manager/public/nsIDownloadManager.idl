@@ -83,41 +83,37 @@ interface nsIDownloadManager : nsISupports {
   /**
   *  Retrieves an in-progress download managed by the download manager.
   *
-  *  @param aPersistentDescriptor The unique identifier used to describe a
-  *                               a download, and an attribute of nsILocalFile.
-  *                               On Windows and Linux, this is just the path
-  *                               of the target, but on Mac this is guaranteed
-  *                               to be unique.
+  *  @param aTargetPath           A UTF8-encoded path to the target file.
   *
-  *  @return The download with the specified persistent descriptor.
+  *  @return The download with the specified path.
   */
 
-  nsIDownload getDownload(in string aPersistentDescriptor);
+  nsIDownload getDownload(in AUTF8String aTargetPath);
 
   /**
-  * Cancels the download with the specified persistent descriptor if it's
+  * Cancels the download with the specified target path if it's
   * currently in progress.  If a "persist" was specified for the download,
   * nsIWebBrowserPersist::CancelSave will be called.  If an observer was set
   * on the nsIDownload, it will be notified with the "oncancel" topic.  Clients
   * that don't provide a "persist" must listen for this topic and cancel the
   * download.
   *
-  * @param aPersistentDescriptor The persistent descriptor of the download to
+  * @param aTargetPath           The target path of the download to
   *                              be cancelled.
   */
 
-  void cancelDownload(in string aPersistentDescriptor);
+  void cancelDownload(in AUTF8String aTargetPath);
 
   /**
-  * Removes the download with the specified persistent descriptor if it's not
+  * Removes the download with the specified target path if it's not
   * currently in progress.  Whereas cancelDownload simply cancels the transfer
   * but retains information about it, removeDownload removes all knowledge of it.
   *
-  * @param aPersistentDescriptor The persistent descriptor of the download to
+  * @param aTargetPath           The target path of the download to
   *                              be removed.
   */
 
-  void removeDownload(in string aPersistentDescriptor);
+  void removeDownload(in AUTF8String aTargetPath);
 
   // UI-related methods
 
@@ -135,13 +131,13 @@ interface nsIDownloadManager : nsISupports {
   /**
   * Opens an individual progress dialog displaying progress for the download.
   *
-  * @param aPersistentDescriptor The persistent descriptor of the download to
+  * @param aTargetPath           The target path of the download to
   *                              display progress for.
   *
   * @param aParent The parent, or opener, of the front end (optional).
   */
 
-  void openProgressDialogFor(in string aPersistentDescriptor, in nsIDOMWindow aParent);
+  void openProgressDialogFor(in AUTF8String aTargetPath, in nsIDOMWindow aParent);
 
   /**
   * Called when the download manager front end is closed.  Useful for
