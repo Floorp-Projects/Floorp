@@ -42,7 +42,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-
+#include "nsIStringBundle.h"
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
 
@@ -247,7 +247,12 @@ private:
 	char	 *m_searchData;
 
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
+
 	
+	nsCOMPtr<nsIStringBundle> m_stringBundle;
+
+	nsresult GetNewsStringByName(const char *aName, PRUnichar **aString);
+
     PRInt32 PostMessageInFile(nsIFileSpec * filePath);
 
 	////////////////////////////////////////////////////////////////////////////////////////

@@ -111,15 +111,6 @@ protected:
     PRUint32    mLength;
 };
 
-// move these to a string bundle
-#define UNTIL_STRING_BUNDLES_XP_HTML_NEWS_ERROR "<TITLE>Error!</TITLE>\n<H1>Error!</H1> newsgroup server responded: <b>%.256s</b><p>\n"
-#define UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED "<b><p>Perhaps the article has expired</b><p>\n"
-#define UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT "Click here to remove all expired articles"
-#define UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED "This message does not appear to be from you.  You may only cancel your own posts, not those made by others."
-#define UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM "Are you sure you want to cancel this message?"
-#define UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED "Message cancelled."
-#define UNTIL_STRING_BUNDLES_MK_MSG_ERROR_FROM_SERVER "A News (NNTP) error occurred:  "
-
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
@@ -1098,9 +1089,11 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
 	if (NS_SUCCEEDED(rv) || dialog) {
-		nsString errorText(UNTIL_STRING_BUNDLES_MK_MSG_ERROR_FROM_SERVER);
-		errorText += m_responseText;
-          	rv = dialog->Alert(errorText.GetUnicode());  
+		nsXPIDLString errorText;
+        GetNewsStringByName("errorFromServer", getter_Copies(errorText));
+		nsAutoString combinedMsg = errorText;
+		combinedMsg += m_responseText;
+         rv = dialog->Alert(combinedMsg.GetUnicode());  
 		// XXX:  todo, check rv?
 	}
     }
@@ -1873,10 +1866,18 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         if (NS_SUCCEEDED(rv) && group_name && m_tempErrorStream) {
             PRUint32 count = 0;
             
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, UNTIL_STRING_BUNDLES_XP_HTML_NEWS_ERROR, m_responseText);
+            nsXPIDLString newsErrorStr;
+
+			GetNewsStringByName("htmlNewsError", getter_Copies(newsErrorStr));
+			nsCAutoString cString(newsErrorStr);
+
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, (const char *) cString, m_responseText);
         	m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
             
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED);
+			GetNewsStringByName("articleExpired", getter_Copies(newsErrorStr));
+			nsCAutoString cString2(newsErrorStr);
+
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, (const char *) cString2);
             m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
             
 			nsMsgKey key = nsMsgKey_None;
@@ -1887,13 +1888,15 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 				m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
 			}
 
+			GetNewsStringByName("removeExpiredArtLinkText", getter_Copies(newsErrorStr));
+			nsCAutoString cString3(newsErrorStr);
             if (m_userName) {
                 PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s@%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_userName, (const char *)m_hostName, 
-					(const char *) group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+					(const char *) group_name, (const char *) cString3);
             }
             else {
                 PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_hostName, 
-					(const char *) group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+					(const char *) group_name, (const char *) cString3);
             }
 #ifdef DEBUG_NEWS
             printf("%s\n",outputBuffer);
@@ -3306,6 +3309,53 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   return !NS_SUCCEEDED(rv);
 }
 
+/* This is the next generation string retrieval call */
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+#define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
+nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aString)
+{
+	nsresult res;
+	nsAutoString	resultString = "???";
+	if (!m_stringBundle)
+	{
+		char*       propertyURL = NEWS_MSGS_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
+		}
+	}
+	if (m_stringBundle)
+	{
+		nsAutoString unicodeName(aName);
+
+		PRUnichar *ptrv = nsnull;
+		res = m_stringBundle->GetStringFromName(unicodeName.GetUnicode(), &ptrv);
+
+		if (NS_FAILED(res)) 
+		{
+			resultString = "[StringName";
+			resultString.Append(aName);
+			resultString += "?]";
+			*aString = resultString.ToNewUnicode();
+		}
+		else
+		{
+			*aString = ptrv;
+		}
+	}
+	else
+	{
+		res = NS_OK;
+		*aString = resultString.ToNewUnicode();
+	}
+	return res;
+}
+
 // sspitzer:  PostMessageInFile is derived from nsSmtpProtocol::SendMessageInFile()
 // 
 
@@ -3784,8 +3834,9 @@ PRInt32 nsNNTPProtocol::DoCancel()
   other_random_headers = (char *) PR_Malloc (L + 20);
   body = (char *) PR_Malloc (PL_strlen (XP_AppCodeName) + 100);
   
-  nsString alertText("");
-  nsString confirmText(UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM);
+  nsXPIDLString alertText;
+  nsXPIDLString confirmText;
+  GetNewsStringByName("cancelConfirm", getter_Copies(confirmText));
 
   PRInt32 confirmCancelResult = 0;
 
@@ -3815,8 +3866,10 @@ PRInt32 nsNNTPProtocol::DoCancel()
       }
   
       if (!cancelInfo.from) {
-          alertText = UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED;
-          rv = dialog->Alert(alertText.GetUnicode());
+            nsXPIDLString newsErrorStr;
+
+          GetNewsStringByName("cancelDisallowed", getter_Copies(alertText));
+          rv = dialog->Alert(alertText);
 	  // XXX:  todo, check rv?
           
           status = MK_NNTP_CANCEL_DISALLOWED;
@@ -3841,7 +3894,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
   
   /* Last chance to cancel the cancel.
    */
-  rv = dialog->Confirm(confirmText.GetUnicode(), &confirmCancelResult);
+  rv = dialog->Confirm(confirmText, &confirmCancelResult);
   // XXX:  todo, check rv?
   
   if (confirmCancelResult != 1) {
@@ -3906,8 +3959,8 @@ PRInt32 nsNNTPProtocol::DoCancel()
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_SEND_POST_DATA_RESPONSE;
 
-    alertText = UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED;
-    rv = dialog->Alert(alertText.GetUnicode());
+    GetNewsStringByName("messageCancelled", getter_Copies(alertText));
+    rv = dialog->Alert(alertText);
     // XXX:  todo, check rv?
 
     // just me for now...
