@@ -54,7 +54,6 @@
 nsGREDirServiceProvider::nsGREDirServiceProvider()
 : mPathEnvString(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   AddGRELocationToPath();
 }
 

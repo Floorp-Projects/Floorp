@@ -555,7 +555,6 @@ nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *
 //  Printer Enumerator
 nsPrinterEnumeratorQT::nsPrinterEnumeratorQT()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorQT, nsIPrinterEnumerator)

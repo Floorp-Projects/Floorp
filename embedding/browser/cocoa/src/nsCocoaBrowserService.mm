@@ -52,7 +52,6 @@ nsCocoaBrowserService* nsCocoaBrowserService::sSingleton = nsnull;
 // nsCocoaBrowserService implementation
 nsCocoaBrowserService::nsCocoaBrowserService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCocoaBrowserService::~nsCocoaBrowserService()
