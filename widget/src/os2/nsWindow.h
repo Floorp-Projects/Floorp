@@ -247,6 +247,7 @@ protected:
    QMSG      mQmsg;
    PRBool    mIsTopWidgetWindow;
    BOOL    mIsScrollBar;
+   BOOL    mInSetFocus;
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
