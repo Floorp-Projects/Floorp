@@ -28,6 +28,7 @@ class nsJSContext : public nsIScriptContext {
 private:
   JSContext *mContext;
   nsIScriptNameSpaceManager* mNameSpaceManager;
+  PRBool mIsInitialized;
 
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -44,6 +45,7 @@ public:
   NS_IMETHOD_(void*)                     GetNativeContext();
   NS_IMETHOD     InitClasses();
   NS_IMETHOD     InitContext(nsIScriptGlobalObject *aGlobalObject);
+  NS_IMETHOD     IsContextInitialized();
   NS_IMETHOD     AddNamedReference(void *aSlot, void *aScriptObject,
                                          const char *aName);
   NS_IMETHOD     RemoveReference(void *aSlot, void *aScriptObject);

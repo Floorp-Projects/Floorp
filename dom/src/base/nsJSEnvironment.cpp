@@ -61,10 +61,12 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mContext = JS_NewContext(aRuntime, gStackSize);
   JS_SetContextPrivate(mContext, (void *)this);
   mNameSpaceManager = nsnull;
+  mIsInitialized = PR_FALSE;
 }
 
 nsJSContext::~nsJSContext()
 {
+  NS_IF_RELEASE(mNameSpaceManager);
   JS_DestroyContext(mContext);
 }
 
@@ -171,8 +173,21 @@ nsJSContext::InitClasses()
     res = NS_OK;
   }
 
+  mIsInitialized = PR_TRUE;
+
   NS_RELEASE(global);
   return res;
+}
+
+NS_IMETHODIMP     
+nsJSContext::IsContextInitialized()
+{
+  if (mIsInitialized) {
+    return NS_OK;
+  }
+  else {
+    return NS_COMFALSE;
+  }
 }
 
 NS_IMETHODIMP

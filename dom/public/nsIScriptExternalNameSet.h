@@ -45,7 +45,7 @@ class nsIScriptContext;
 class nsIScriptExternalNameSet : public nsISupports {
 public:
   /**
-   * Called for each new 
+   * Called for each new name set
    */
   NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext) = 0;
 };

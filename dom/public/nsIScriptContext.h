@@ -86,6 +86,15 @@ public:
   NS_IMETHOD InitContext(nsIScriptGlobalObject *aGlobalObject) = 0;
 
   /**
+   * Check to see if context is as yet intialized. Used to prevent
+   * reentrancy issues during the initialization process.
+   *
+   * @return NS_OK if initialized, NS_COMFALSE if not 
+   *
+   */
+  NS_IMETHOD IsContextInitialized() = 0;
+
+  /**
    * Add a reference to a script object. For garbage collected systems
    * the address of a slot to be used as a root is also provided. For
    * reference counted systems, the object is provided.
