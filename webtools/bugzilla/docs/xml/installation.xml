@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.52 2003/07/03 18:50:12 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.53 2003/07/03 20:23:43 jake%bugzilla.org Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -1334,7 +1334,6 @@ $smtp->quit;
     <section id="os-macosx">
       <title><productname>Mac OS X</productname></title>
 
-      <!-- TODO: Clean me up... (Mac OS X) -->
       <para>There are a lot of common libraries and utilities out there that
       Apple did not include with Mac OS X, but which run perfectly well on it.
       The GD library, which Bugzilla needs to do bug graphs, is one of
@@ -1346,62 +1345,57 @@ $smtp->quit;
       <ulink url="http://sourceforge.net/projects/fink/"/>.</para>
 
       <para>Follow the instructions for setting up Fink. Once it's installed,
-      you'll want to run the following as root: 
-      <command>fink install gd</command>
+      you'll want to use it to install the gd2 package.
       </para>
 
       <para>It will prompt you for a number of dependencies, type 'y' and hit
-      enter to install all of the dependencies. Then watch it work.</para>
-
-      <para>To prevent creating conflicts with the software that Apple installs
-      by default, Fink creates its own directory tree at /sw where it installs
-      most of the software that it installs. This means your libraries and
-      headers for libgd will be at /sw/lib and /sw/include instead of /usr/lib
-      and /usr/local/include. Because of these changed locations for the
-      libraries, the Perl GD module will not install directly via CPAN, because it
-      looks for the specific paths instead of getting them from your
-      environment. But there's a way around that :-)</para>
-
-      <para>Instead of typing 
-      <quote>install GD</quote>
-      at the 
-      <prompt>cpan&gt;</prompt>
-      prompt, type 
-      <command>look GD</command>. 
-      This should go through the motions of downloading the latest version of
-      the GD module, then it will open a shell and drop you into the build
-      directory. Apply <ulink url="../xml/gd-makefile.patch">this patch</ulink> 
-      to the Makefile.PL file (save the
-      patch into a file and use the command 
-      <command>patch &lt; patchfile</command>.)
-      </para>
-    
-      <para>Then, run these commands to finish the installation of the GD
-      module: 
-      <simplelist>
-        <member>
-          <command>perl Makefile.PL</command>
-        </member>
-
-        <member>
-          <command>make</command>
-        </member>
-
-        <member>
-          <command>make test</command>
-        </member>
-
-        <member>
-          <command>make install</command>
-        </member>
-
-        <member>And don't forget to run 
-        <command>exit</command>
-
-        to get back to CPAN.</member>
-      </simplelist>
+      enter to install all of the dependencies and then watch it work. You will
+      then be able to use <glossterm linkend="gloss-cpan">CPAN</glossterm> to
+      install the GD perl module.
       </para>
 
+      <note>
+        <para>To prevent creating conflicts with the software that Apple
+        installs by default, Fink creates its own directory tree at 
+        <filename class="directory">/sw</filename> where it installs most of
+        the software that it installs. This means your libraries and headers be
+        at <filename class="directory">/sw/lib</filename> and
+        <filename class="directory">/sw/include</filename> instead of
+        <filename class="directory">/usr/lib</filename> and
+        <filename class="directory">/usr/local/include</filename>. When the
+        Perl module config script asks where your libgd is, be sure to tell it
+        <filename class="directory">/sw/lib</filename>.
+        </para>
+      </note>
+
+      <para>Also available via Fink is expat. Once running using fink to
+      install the expat package you will be able to install
+      XML::Parser using CPAN. There is one caveat. Unlike recent versions of
+      the GD module, XML::Parser doesn't prompt for the location of the
+      required libraries. When using CPAN, you will need to use the following
+      command sequence:
+      </para>
+
+      <screen>
+# perl -MCPAN -e'look XML::Parser'        <co id="macosx-look"/>
+# perl Makefile.PL EXPATLIBPATH=/sw/lib EXPATINCPATH=/sw/include
+# make; make test; make install           <co id="macosx-make"/>
+# exit                                    <co id="macosx-exit"/>
+      </screen>
+      <calloutlist>
+        <callout arearefs="macosx-look macosx-exit">
+          <para>The look command will download the module and spawn a
+          new shell with the extracted files as the current working directory.
+          The exit command will return you to your original shell.
+          </para>
+        </callout>
+        <callout arearefs="macosx-make">
+          <para>You should watch the output from these make commands,
+          especially <quote>make test</quote> as errors may prevent XML::Parser
+          from functioning correctly with Bugzilla.
+          </para>
+        </callout>
+      </calloutlist>
     </section>
 
     <section id="os-mandrake">
