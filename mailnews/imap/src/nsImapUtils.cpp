@@ -268,15 +268,12 @@ nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char** uri)
 	if(!uri)
 		return NS_ERROR_NULL_POINTER;
 
-	nsAutoString tailURI(baseURI);
+	nsCAutoString tailURI(baseURI);
 
 	if (tailURI.Find(kImapRootURI) == 0)
 		tailURI.Cut(0, PL_strlen(kImapRootURI));
 
-	char *tail = tailURI.ToNewCString();
-
-	*uri = PR_smprintf("%s%s#%d", kImapMessageRootURI, tail, key);
-	nsAllocator::Free(tail);
+	*uri = PR_smprintf("%s%s#%d", kImapMessageRootURI, (const char *) tailURI, key);
 
 	return NS_OK;
 }
