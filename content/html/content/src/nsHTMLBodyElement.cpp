@@ -594,6 +594,17 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
     }
   }
 
+  // To fix the regression in bug 70831 caused by the fix to bug 67478,
+  // use the nsStyleColor that we would have used before the fix to
+  // bug 67478.
+  nsStyleColor* documentStyleColor = styleColor;
+  if (bodyStyleColor != styleColor && htmlStyleColor != styleColor) {
+    nsCompatibility mode;
+    aPresContext->GetCompatibilityMode(&mode);
+    if (eCompatibility_NavQuirks == mode)
+      documentStyleColor = bodyStyleColor;
+  }
+
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
   if (presShell) {
@@ -607,10 +618,11 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
         htmlContainer->GetAttributeStyleSheet(getter_AddRefs(styleSheet));
 
         if (styleSheet) {
-          styleSheet->SetDocumentForegroundColor(styleColor->mColor);
-          if (!(styleColor->mBackgroundFlags &
+          styleSheet->SetDocumentForegroundColor(documentStyleColor->mColor);
+          if (!(documentStyleColor->mBackgroundFlags &
                 NS_STYLE_BG_COLOR_TRANSPARENT)) {
-            styleSheet->SetDocumentBackgroundColor(styleColor->mBackgroundColor);
+            styleSheet->SetDocumentBackgroundColor(
+                          documentStyleColor->mBackgroundColor);
           }
         }
       }
