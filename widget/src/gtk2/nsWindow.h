@@ -56,6 +56,11 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtkwindow.h>
 
+#ifdef USE_XIM
+#include <gtk/gtkimmulticontext.h>
+#include "pldhash.h"
+#endif
+
 class nsWindow : public nsCommonWidget, public nsSupportsWeakReference {
 public:
     nsWindow();
@@ -228,6 +233,24 @@ public:
 
     nsWindow           *mFocusChild;
     Window              mOldFocusWindow;
+
+#ifdef USE_XIM
+    void               IMEComposeStart(void);
+    void               IMEComposeText(const PRUnichar *aText,
+                                      const PRInt32 aLen,
+                                      const gchar *aPreeditString,
+                                      const PangoAttrList *aFeedback);
+    void               IMEComposeEnd(void);
+
+    void               IMEGetShellWindow(void);
+    GtkIMContext*      IMEGetContext(void);
+    void               IMECreateContext(GdkWindow* aGdkWindow);
+ 
+    nsWindow*          mIMEShellWindow;
+    static PLDHashTable gXICLookupTable;
+    static nsWindow    *gFocusedWindow;
+#endif
+
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
     void              *SetupPluginPort(void);
