@@ -102,25 +102,14 @@ NS_IMETHODIMP CWebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstanc
 // CWebBrowserChrome::nsIWebBrowserChrome
 //*****************************************************************************   
 
-NS_IMETHODIMP CWebBrowserChrome::SetJSStatus(const PRUnichar* aStatus)
+NS_IMETHODIMP CWebBrowserChrome::SetStatus(PRUint32 statusType, const PRUnichar *status)
 {
    NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
-   mBrowserWindow->SetStatus(aStatus);
-  
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::SetJSDefaultStatus(const PRUnichar* aStatus)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::SetOverLink(const PRUnichar* aLink)
-{
-   NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   mBrowserWindow->SetOverLink(aLink);
+   if (statusType == STATUS_SCRIPT) 
+      mBrowserWindow->SetStatus(status);
+   else if (statusType == STATUS_LINK)
+      mBrowserWindow->SetOverLink(status);
   
    return NS_OK;
 }
@@ -143,20 +132,20 @@ NS_IMETHODIMP CWebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::GetChromeMask(PRUint32* aChromeMask)
+NS_IMETHODIMP CWebBrowserChrome::GetChromeFlags(PRUint32* aChromeMask)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::SetChromeMask(PRUint32 aChromeMask)
+NS_IMETHODIMP CWebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
 }
 
 
-NS_IMETHODIMP CWebBrowserChrome::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **aWebBrowser)
+NS_IMETHODIMP CWebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, nsIWebBrowser **aWebBrowser)
 {
    NS_ENSURE_ARG_POINTER(aWebBrowser);
    *aWebBrowser = nsnull;
@@ -266,10 +255,10 @@ NS_IMETHODIMP CWebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIRequ
 {
 	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 	
-    if (progressStateFlags & flag_is_network) {
-      if (progressStateFlags & flag_start)
+    if (progressStateFlags & STATE_IS_NETWORK) {
+      if (progressStateFlags & STATE_START)
          mBrowserWindow->OnStatusNetStart(progress, request, progressStateFlags, status);
-      else if (progressStateFlags & flag_stop)
+      else if (progressStateFlags & STATE_STOP)
 	      mBrowserWindow->OnStatusNetStop(progress, request, progressStateFlags, status);
     }
 
