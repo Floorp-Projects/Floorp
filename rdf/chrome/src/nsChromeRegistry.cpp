@@ -2386,7 +2386,7 @@ nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
   if (!mFormSheet) {
     nsCAutoString sheetURL;
     GetFormSheetURL(sheetURL);
-    rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), sheetURL); 
+    rv = LoadStyleSheet(getter_AddRefs(mFormSheet), sheetURL); 
     if (NS_FAILED(rv)) return rv;
   }
 
