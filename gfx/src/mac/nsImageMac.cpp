@@ -152,6 +152,7 @@ PRInt32	bufferdepth;
     mAlphaWidth = 0;
     mAlphaHeight = 0;
   }
+  mIsTopToBottom = PR_TRUE;
   return NS_OK;
 }
 
