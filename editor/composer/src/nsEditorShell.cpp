@@ -348,7 +348,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
       if (NS_SUCCEEDED(rv) && controllers)
       {
         nsCOMPtr<nsIEditorController> ieditcontroller = do_QueryInterface(controller);
-        nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
         ieditcontroller->SetEditor(editor);//weak link
 
         rv = controllers->InsertControllerAt(0,controller);
@@ -694,6 +693,16 @@ nsEditorShell::DeleteToEndOfLine()
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_NOT_INITIALIZED;
   nsresult rv = editor->DeleteSelection(nsIEditor::eToEndOfLine);
+  ScrollSelectionIntoView();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsEditorShell::DeleteToBeginningOfLine()
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = editor->DeleteSelection(nsIEditor::eToBeginningOfLine);
   ScrollSelectionIntoView();
   return rv;
 }
@@ -1975,7 +1984,7 @@ nsEditorShell::PasteAsCitedQuotation(const PRUnichar *cite)
       {
         nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
         if (mailEditor)
-          err = mailEditor->PasteAsQuotation();
+          err = mailEditor->PasteAsCitedQuotation(aCiteString);
       }
       break;
 
@@ -2015,22 +2024,28 @@ nsEditorShell::InsertAsQuotation(const PRUnichar *quotedText,
 NS_IMETHODIMP    
 nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText,
                                       const PRUnichar *cite,
+                                      const PRUnichar *charset,
                                       nsIDOMNode** aNodeInserted)
 {  
   nsresult  err = NS_NOINTERFACE;
   
+  nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
+  if (!mailEditor)
+    return NS_NOINTERFACE;
+
   nsAutoString aQuotedText(quotedText);
   nsAutoString aCiteString(cite);
+  nsAutoString aCharset(charset);
   
   switch (mEditorType)
   {
     case ePlainTextEditorType:
+      err = mailEditor->InsertAsQuotation(aQuotedText, aNodeInserted);
+      break;
+
     case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-        if (mailEditor)
-          err = mailEditor->InsertAsQuotation(aQuotedText, aNodeInserted);
-      }
+      err = mailEditor->InsertAsCitedQuotation(aQuotedText, aCiteString,
+                                               aCharset, aNodeInserted);
       break;
 
     default:
@@ -2157,6 +2172,33 @@ nsEditorShell::InsertSource(const PRUnichar *aSourceToInsert)
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
           err = htmlEditor->InsertHTML(sourceToInsert);
+      }
+      break;
+
+    default:
+      err = NS_NOINTERFACE;
+  }
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorShell::InsertSourceWithCharset(const PRUnichar *aSourceToInsert,
+                                       const PRUnichar *aCharset)
+{
+  nsresult  err = NS_NOINTERFACE;
+  
+  nsAutoString sourceToInsert(aSourceToInsert);
+  nsAutoString charset(aCharset);
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->InsertHTMLWithCharset(sourceToInsert, charset);
       }
       break;
 

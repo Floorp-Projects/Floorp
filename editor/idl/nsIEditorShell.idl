@@ -148,6 +148,7 @@ interface nsIEditorShell : nsISupports
   
   void InsertAsQuotation(in wstring quotedText, out nsIDOMNode nodeInserted);
   void InsertAsCitedQuotation(in wstring quotedText, in wstring cite,
+                              in wstring charset,
                               out nsIDOMNode nodeInserted);
   
   void SelectAll();
@@ -173,6 +174,7 @@ interface nsIEditorShell : nsISupports
   void TypedText(in wstring textToInsert, in PRInt32 actionToTake);
   void InsertText(in wstring textToInsert);
   void InsertSource(in wstring textToInsert);
+  void InsertSourceWithCharset(in wstring textToInsert, in wstring charset);
   void InsertBreak();
   
   void MakeOrChangeList(in wstring listType);
@@ -278,6 +280,7 @@ interface nsIEditorShell : nsISupports
   void DeleteCharBackward();
   void DeleteWordForward();
   void DeleteWordBackward();
+  void DeleteToBeginningOfLine();
   void DeleteToEndOfLine();
 
   void SelectElement(in nsIDOMElement element);

@@ -116,6 +116,7 @@ protected:
   nsString mDeleteCharForward;
   nsString mDeleteWordBackward;
   nsString mDeleteWordForward;
+  nsString mDeleteToBeginningOfLine;
   nsString mDeleteToEndOfLine;
 
 protected:

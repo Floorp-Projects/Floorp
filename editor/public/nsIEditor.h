@@ -57,6 +57,7 @@ public:
     ePrevious,
     eNextWord,
     ePreviousWord,
+    eToBeginningOfLine,
     eToEndOfLine
   } EDirection;
 
