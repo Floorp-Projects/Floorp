@@ -51,7 +51,7 @@
             class="panel-bar borderless" 
             onclick="sidebarOpenClosePanel(this)"
             iframe-src="rdf:http://home.netscape.com/NC-rdf#content" />
-          <html:iframe uri="rdf:*"
+          <html:iframe uri="rdf:*" content="true"
             src="rdf:http://home.netscape.com/NC-rdf#content"
             class="panel-frame" collapsed='true' flex='1*'/>
         </rule>
