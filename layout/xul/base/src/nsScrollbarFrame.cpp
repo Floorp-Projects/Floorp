@@ -66,10 +66,7 @@ public:
                                            PRInt32& aHint) const;
 
   // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
 
@@ -199,16 +196,20 @@ AnonymousElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIStyledContentIID)) {
     nsIStyledContent* tmp = this;
     *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   } else if (aIID.Equals(kIAnonymousContentIID)) {
     nsIAnonymousContent* tmp = this;
     *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
 
   return nsXMLElement::QueryInterface(aIID, aInstancePtr);                                                                                                                                                       
 }
 
+NS_IMPL_ADDREF_INHERITED(AnonymousElement, nsXMLElement)
+NS_IMPL_RELEASE_INHERITED(AnonymousElement, nsXMLElement)
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode)
 {
