@@ -1010,6 +1010,16 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
         xuldoc->RemoveSubtreeFromDocument(anonymous);
 #endif
     }
+
+    // Make sure that henceforth we don't claim that mBoundElement's children
+    // have insertion parents in the old document.
+    nsIBindingManager* bindingManager = aOldDocument->GetBindingManager();
+    for (PRUint32 i = mBoundElement->GetChildCount(); i > 0; --i) {
+      NS_ASSERTION(mBoundElement->GetChildAt(i-1),
+                   "Must have child at i for 0 <= i < GetChildCount()!");
+      bindingManager->SetInsertionParent(mBoundElement->GetChildAt(i-1),
+                                         nsnull);
+    }
   }
 
   return NS_OK;
