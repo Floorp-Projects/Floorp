@@ -248,6 +248,24 @@ if (defined $::FORM{'qa_contact'}) {
 
 ConnectToDatabase();
 
+my %ccids;
+my $origcclist = "";
+
+# We make sure to check out the CC list before we actually start touching any
+# bugs.
+if (defined $::FORM{'cc'} && defined $::FORM{'id'}) {
+    $origcclist = ShowCcList($::FORM{'id'});
+    if ($origcclist ne $::FORM{'cc'}) {
+        foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
+            if ($person ne "") {
+                my $cid = DBNameToIdAndCheck($person);
+                $ccids{$cid} = 1;
+            }
+        }
+    }
+}
+
+
 if ( Param('strictvaluechecks') ) {
     CheckFormFieldDefined(\%::FORM, 'knob');
 }
@@ -573,15 +591,7 @@ The changes made were:
         AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
     }
     
-    if (defined $::FORM{'cc'} && ShowCcList($id) ne $::FORM{'cc'}) {
-        my %ccids;
-        foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
-            if ($person ne "") {
-                my $cid = DBNameToIdAndCheck($person);
-                $ccids{$cid} = 1;
-            }
-        }
-        
+    if (defined $::FORM{'cc'} && $origcclist ne $::FORM{'cc'}) {
         SendSQL("delete from cc where bug_id = $id");
         foreach my $ccid (keys %ccids) {
             SendSQL("insert into cc (bug_id, who) values ($id, $ccid)");
