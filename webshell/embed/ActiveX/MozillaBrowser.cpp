@@ -108,7 +108,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	nsresult rv;
 
-	rv = NSRepository::CreateInstance(kWebShellCID, nsnull,
+	rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
 									kIWebShellIID,
 									(void**)&m_pIWebShell);
 	if (NS_OK != rv)
