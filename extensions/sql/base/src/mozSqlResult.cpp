@@ -114,11 +114,11 @@ mozSqlResult::~mozSqlResult()
 }
 
 
-NS_IMPL_ISUPPORTS4(mozSqlResult,
-                   mozISqlResult,
-                   mozISqlDataSource,
-                   nsIRDFDataSource,
-                   nsIRDFRemoteDataSource);
+NS_IMPL_THREADSAFE_ISUPPORTS4(mozSqlResult,
+                              mozISqlResult,
+                              mozISqlDataSource,
+                              nsIRDFDataSource,
+                              nsIRDFRemoteDataSource);
 
 NS_IMETHODIMP
 mozSqlResult::GetConnection(mozISqlConnection** aConnection)
