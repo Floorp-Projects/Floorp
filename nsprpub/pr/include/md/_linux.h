@@ -37,6 +37,8 @@
 #define _PR_SI_ARCHITECTURE "sparc"
 #elif defined(__i386__)
 #define _PR_SI_ARCHITECTURE "x86"
+#elif defined(__mips__)
+#define _PR_SI_ARCHITECTURE "mips"
 #else
 #error "Unknown CPU architecture"
 #endif
@@ -150,6 +152,18 @@ extern void _MD_CleanupBeforeExit(void);
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 #define PR_NUM_GCREGS   6
 
+#elif defined(__mips__)
+/* Linux/MIPS */
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+#define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
+#define _MD_SET_FP(_t, val) ((_t)->md.context[0].__jmpbuf[0].__fp = (val))
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) (&(_t)->md.context[0].__jmpbuf[0].__fp)
+#define _MD_SP_TYPE __ptr_t
+#else
+#error "Linux/MIPS pre-glibc2 not supported yet"
+#endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
+
 #else
 
 #error "Unknown CPU architecture"
@@ -170,6 +184,19 @@ extern void _MD_CleanupBeforeExit(void);
     _MD_GET_SP(_thread) = (unsigned char*) ((_sp) - 128); \
 	_thread->md.sp = _MD_GET_SP_PTR(_thread); \
 	_thread->md.fp = _MD_GET_FP_PTR(_thread); \
+    _MD_SET_FP(_thread, 0); \
+}
+
+#elif defined(__mips__)
+
+#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)  \
+{  \
+    *status = PR_TRUE;  \
+    (void) sigsetjmp(CONTEXT(_thread), 1);  \
+    _thread->md.context[0].__jmpbuf[0].__pc = (__ptr_t) _main;  \
+    _MD_GET_SP(_thread) = (_MD_SP_TYPE) ((_sp) - 64); \
+    _thread->md.sp = _MD_GET_SP_PTR(_thread); \
+    _thread->md.fp = _MD_GET_FP_PTR(_thread); \
     _MD_SET_FP(_thread, 0); \
 }
 
