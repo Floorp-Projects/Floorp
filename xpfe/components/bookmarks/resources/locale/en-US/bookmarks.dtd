@@ -31,8 +31,8 @@
 <!ENTITY command.newSeparator.accesskey "s">
 <!ENTITY menuitem.import.label         "Import Bookmarks...">
 <!ENTITY menuitem.export.label         "Export Bookmarks...">
-<!ENTITY menuitem.find.label           "Find in Bookmarks...">
-<!ENTITY menuitem.find.accesskey       "f">
+<!ENTITY menuitem.find.label           "Search Bookmarks...">
+<!ENTITY menuitem.find.accesskey       "s">
 <!ENTITY edit.find.keybinding          "f">
 <!ENTITY command.properties.label      "Properties">
 <!ENTITY command.properties.accesskey  "i">
