@@ -36,7 +36,8 @@ int main(int argc, char** argv)
   nsIAtom** ids = new nsIAtom*[60000];
   nsAutoString s1, s2;
   PRTime start = PR_Now();
-  for (PRInt32 i = 0; i < 60000; i++) {
+  PRInt32 i;
+  for (i = 0; i < 60000; i++) {
     char buf[1000];
     char* s = fgets(buf, sizeof(buf), fp);
     if (nsnull == s) {
