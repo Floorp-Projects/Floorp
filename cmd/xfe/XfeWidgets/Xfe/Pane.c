@@ -804,6 +804,15 @@ DefaultPaneChildAttachment(Widget child,int offset,XrmValue * value)
 static void
 PaneRegisterRepTypes(void)
 {
+	static String child_names[] = 
+    { 
+		"pane_child_none",
+		"pane_child_attachment_one",
+		"pane_child_attachment_two",
+		"pane_child_work_area_one",
+		"pane_child_work_area_two"
+    };
+
     static String drag_names[] = 
     { 
 		"pane_drag_preserve_one",
@@ -833,6 +842,8 @@ PaneRegisterRepTypes(void)
 		NULL
     };
 
+    
+    XfeRepTypeRegister(XmRPaneChildType,child_names);
     XfeRepTypeRegister(XmRPaneDragMode,drag_names);
     XfeRepTypeRegister(XmRPaneChildAttachment,attachment_names);
     XfeRepTypeRegister(XmRPaneSashType,sash_names);
