@@ -44,9 +44,11 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.1 1999/07/30 01:03:04 edburns%acm.org Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.2 1999/08/13 23:02:39 mark.lin%eng.sun.com Exp $
 
- * @see	org.mozilla.webclient.Win32BrowserControlCanvas
+ * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
+
+ * @see	org.mozilla.webclient.motif.MotifBrowserControlCanvas
 
  */
 

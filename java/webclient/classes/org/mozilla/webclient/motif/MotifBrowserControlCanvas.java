@@ -28,7 +28,7 @@ import org.mozilla.util.ParameterCheck;
 
  * There is one instance of the WebShellCanvas per top level awt Frame.
 
- * @version $Id: MotifBrowserControlCanvas.java,v 1.1 1999/08/10 18:55:00 mark.lin%eng.sun.com Exp $
+ * @version $Id: MotifBrowserControlCanvas.java,v 1.2 1999/08/13 23:02:40 mark.lin%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -74,13 +74,6 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
         this.drawingSurfaceInfo = null;
     }
 
-    /*
-    public void actionPerformed(ActionEvent e) {
-        System.out.println("process events....\n");
-        this.processEvents();
-    }
-    */
-
     public void paint(Graphics g) {
         super.paint(g);
         
@@ -89,10 +82,10 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
                 canvasWinID = this.drawingSurfaceInfo.getDrawable();
                 this.reparentWindow(this.gtkWinID, this.canvasWinID);
 
-                //Timer timer = new Timer(1, this);
-                //timer.start();
-
                 firstTime = false;
+
+                Thread mozillaEventThread = new MozillaEventThread(this);
+                mozillaEventThread.start();
             }
         }
     }
@@ -103,6 +96,13 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
         synchronized(getTreeLock()) {
             this.setGTKWindowSize(this.gtkTopWindow, width, height);
         }
+    }
+
+    /**
+     * Needed for the hashtable look up of gtkwinid <-> WebShellInitContexts
+     */
+    public int getGTKWinPtr() {
+        return this.gtkWinPtr;
     }
 
 	/**

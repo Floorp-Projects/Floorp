@@ -19,4 +19,6 @@ all:
 	${JAVAH} -jni -classpath ${CLASSES} \
 		-o ${JAVAH_OUTPUT_DIR}/motif/MotifBrowserControlCanvas.h org.mozilla.webclient.motif.MotifBrowserControlCanvas
 	${JAVAH} -jni -classpath ${CLASSES} \
+		-o ${JAVAH_OUTPUT_DIR}/motif/MozillaEventThread.h org.mozilla.webclient.motif.MozillaEventThread
+	${JAVAH} -jni -classpath ${CLASSES} \
 		-o ${JAVAH_OUTPUT_DIR}/BrowserControlMozillaShim.h org.mozilla.webclient.BrowserControlMozillaShim
