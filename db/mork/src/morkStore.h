@@ -75,64 +75,6 @@
 
 #define morkDerived_kPort  /*i*/ 0x7054 /* ascii 'pT' */
 
-/*| morkPort: 
-|*/
-class morkPort : public morkObject { // private mork port
-
-// public: // slots inherited from morkObject (meant to inform only)
-  // nsIMdbHeap*     mNode_Heap;
-  // mork_able    mNode_Mutable; // can this node be modified?
-  // mork_load    mNode_Load;    // is this node clean or dirty?
-  // mork_base    mNode_Base;    // must equal morkBase_kNode
-  // mork_derived mNode_Derived; // depends on specific node subclass
-  // mork_access  mNode_Access;  // kOpen, kClosing, kShut, or kDead
-  // mork_usage   mNode_Usage;   // kHeap, kStack, kMember, kGlobal, kNone
-  // mork_uses    mNode_Uses;    // refcount for strong refs
-  // mork_refs    mNode_Refs;    // refcount for strong refs + weak refs
-
-  // mork_color   mBead_Color;   // ID for this bead
-  // morkHandle*  mObject_Handle;  // weak ref to handle for this object
-
-public: // state is public because the entire Mork system is private
-  morkEnv*        mPort_Env;      // non-refcounted env which created port
-  morkFactory*    mPort_Factory;  // weak ref to suite factory
-  nsIMdbHeap*     mPort_Heap;     // heap in which this port allocs objects
-  
-// { ===== begin morkNode interface =====
-public: // morkNode virtual methods
-  virtual void CloseMorkNode(morkEnv* ev); // ClosePort() only if open
-  virtual ~morkPort(); // assert that ClosePort() executed earlier
-  
-public: // morkPort construction & destruction
-  morkPort(morkEnv* ev, const morkUsage& inUsage,
-     nsIMdbHeap* ioNodeHeap, // the heap (if any) for this node instance
-     morkFactory* inFactory, // the factory for this
-     nsIMdbHeap* ioPortHeap  // the heap to hold all content in the port
-     );
-  void ClosePort(morkEnv* ev); // called by CloseMorkNode();
-
-private: // copying is not allowed
-  morkPort(const morkPort& other);
-  morkPort& operator=(const morkPort& other);
-
-public: // dynamic type identification
-  mork_bool IsPort() const
-  { return IsNode() && mNode_Derived == morkDerived_kPort; }
-// } ===== end morkNode methods =====
-
-public: // other port methods
-
-
-public: // typesafe refcounting inlines calling inherited morkNode methods
-  static void SlotWeakPort(morkPort* me,
-    morkEnv* ev, morkPort** ioSlot)
-  { morkNode::SlotWeakNode((morkNode*) me, ev, (morkNode**) ioSlot); }
-  
-  static void SlotStrongPort(morkPort* me,
-    morkEnv* ev, morkPort** ioSlot)
-  { morkNode::SlotStrongNode((morkNode*) me, ev, (morkNode**) ioSlot); }
-};
-
 #define morkDerived_kStore  /*i*/ 0x7354 /* ascii 'sT' */
 
 /*| kGroundColumnSpace: we use the 'column space' as the default scope
@@ -156,8 +98,419 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
 
 /*| morkStore: 
 |*/
-class morkStore : public morkPort {
+class morkStore :  public morkObject, public nsIMdbStore {
 
+public: // state is public because the entire Mork system is private
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  morkEnv*        mPort_Env;      // non-refcounted env which created port
+  morkFactory*    mPort_Factory;  // weak ref to suite factory
+  nsIMdbHeap*     mPort_Heap;     // heap in which this port allocs objects
+  
+// { ===== begin morkNode interface =====
+public: // morkNode virtual methods
+  
+  void ClosePort(morkEnv* ev); // called by CloseMorkNode();
+
+public: // dynamic type identification
+  mork_bool IsPort() const
+  { return IsNode() && mNode_Derived == morkDerived_kPort; }
+// } ===== end morkNode methods =====
+
+public: // other port methods
+
+  // { ----- begin attribute methods -----
+//  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
+  // } ----- end attribute methods -----
+
+  // { ----- begin factory methods -----
+//  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  // } ----- end factory methods -----
+
+  // { ----- begin ref counting for well-behaved cyclic graphs -----
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+    mdb_count* outCount);  
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+    mdb_count* outCount);
+
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
+
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
+  
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  // } ----- end ref counting -----
+  
+// } ===== end nsIMdbObject methods =====
+
+// { ===== begin nsIMdbPort methods =====
+
+  // { ----- begin attribute methods -----
+  NS_IMETHOD GetIsPortReadonly(nsIMdbEnv* ev, mdb_bool* outBool);
+  NS_IMETHOD GetIsStore(nsIMdbEnv* ev, mdb_bool* outBool);
+  NS_IMETHOD GetIsStoreAndDirty(nsIMdbEnv* ev, mdb_bool* outBool);
+
+  NS_IMETHOD GetUsagePolicy(nsIMdbEnv* ev, 
+    mdbUsagePolicy* ioUsagePolicy);
+
+  NS_IMETHOD SetUsagePolicy(nsIMdbEnv* ev, 
+    const mdbUsagePolicy* inUsagePolicy);
+  // } ----- end attribute methods -----
+
+  // { ----- begin memory policy methods -----  
+  NS_IMETHOD IdleMemoryPurge( // do memory management already scheduled
+    nsIMdbEnv* ev, // context
+    mdb_size* outEstimatedBytesFreed); // approximate bytes actually freed
+
+  NS_IMETHOD SessionMemoryPurge( // request specific footprint decrease
+    nsIMdbEnv* ev, // context
+    mdb_size inDesiredBytesFreed, // approximate number of bytes wanted
+    mdb_size* outEstimatedBytesFreed); // approximate bytes actually freed
+
+  NS_IMETHOD PanicMemoryPurge( // desperately free all possible memory
+    nsIMdbEnv* ev, // context
+    mdb_size* outEstimatedBytesFreed); // approximate bytes actually freed
+  // } ----- end memory policy methods -----
+
+  // { ----- begin filepath methods -----
+  NS_IMETHOD GetPortFilePath(
+    nsIMdbEnv* ev, // context
+    mdbYarn* outFilePath, // name of file holding port content
+    mdbYarn* outFormatVersion); // file format description
+
+  NS_IMETHOD GetPortFile(
+    nsIMdbEnv* ev, // context
+    nsIMdbFile** acqFile); // acquire file used by port or store
+  // } ----- end filepath methods -----
+
+  // { ----- begin export methods -----
+  NS_IMETHOD BestExportFormat( // determine preferred export format
+    nsIMdbEnv* ev, // context
+    mdbYarn* outFormatVersion); // file format description
+
+  NS_IMETHOD
+  CanExportToFormat( // can export content in given specific format?
+    nsIMdbEnv* ev, // context
+    const char* inFormatVersion, // file format description
+    mdb_bool* outCanExport); // whether ExportSource() might succeed
+
+  NS_IMETHOD ExportToFormat( // export content in given specific format
+    nsIMdbEnv* ev, // context
+    // const char* inFilePath, // the file to receive exported content
+    nsIMdbFile* ioFile, // destination abstract file interface
+    const char* inFormatVersion, // file format description
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental export
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then the export will be finished.
+
+  // } ----- end export methods -----
+
+  // { ----- begin token methods -----
+  NS_IMETHOD TokenToString( // return a string name for an integer token
+    nsIMdbEnv* ev, // context
+    mdb_token inToken, // token for inTokenName inside this port
+    mdbYarn* outTokenName); // the type of table to access
+  
+  NS_IMETHOD StringToToken( // return an integer token for scope name
+    nsIMdbEnv* ev, // context
+    const char* inTokenName, // Latin1 string to tokenize if possible
+    mdb_token* outToken); // token for inTokenName inside this port
+    
+  // String token zero is never used and never supported. If the port
+  // is a mutable store, then StringToToken() to create a new
+  // association of inTokenName with a new integer token if possible.
+  // But a readonly port will return zero for an unknown scope name.
+
+  NS_IMETHOD QueryToken( // like StringToToken(), but without adding
+    nsIMdbEnv* ev, // context
+    const char* inTokenName, // Latin1 string to tokenize if possible
+    mdb_token* outToken); // token for inTokenName inside this port
+  
+  // QueryToken() will return a string token if one already exists,
+  // but unlike StringToToken(), will not assign a new token if not
+  // already in use.
+
+  // } ----- end token methods -----
+
+  // { ----- begin row methods -----  
+  NS_IMETHOD HasRow( // contains a row with the specified oid?
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,  // hypothetical row oid
+    mdb_bool* outHasRow); // whether GetRow() might succeed
+
+  NS_IMETHOD GetRowRefCount( // get number of tables that contain a row 
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,  // hypothetical row oid
+    mdb_count* outRefCount); // number of tables containing inRowKey 
+    
+  NS_IMETHOD GetRow( // access one row with specific oid
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,  // hypothetical row oid
+    nsIMdbRow** acqRow); // acquire specific row (or null)
+
+  NS_IMETHOD FindRow(nsIMdbEnv* ev, // search for row with matching cell
+    mdb_scope inRowScope,   // row scope for row ids
+    mdb_column inColumn,   // the column to search (and maintain an index)
+    const mdbYarn* inTargetCellValue, // cell value for which to search
+    mdbOid* outRowOid, // out row oid on match (or {0,-1} for no match)
+    nsIMdbRow** acqRow); // acquire matching row (or nil for no match)
+  // FindRow() searches for one row that has a cell in column inColumn with
+  // a contained value with the same form (i.e. charset) and is byte-wise
+  // identical to the blob described by yarn inTargetCellValue.  Both content
+  // and form of the yarn must be an exact match to find a matching row.
+  //
+  // (In other words, both a yarn's blob bytes and form are significant.  The
+  // form is not expected to vary in columns used for identity anyway.  This
+  // is intended to make the cost of FindRow() cheaper for MDB implementors,
+  // since any cell value atomization performed internally must necessarily
+  // make yarn form significant in order to avoid data loss in atomization.)
+  //
+  // FindRow() can lazily create an index on attribute inColumn for all rows
+  // with that attribute in row space scope inRowScope, so that subsequent
+  // calls to FindRow() will perform faster.  Such an index might or might
+  // not be persistent (but this seems desirable if it is cheap to do so).
+  // Note that lazy index creation in readonly DBs is not very feasible.
+  //
+  // This FindRow() interface assumes that attribute inColumn is effectively
+  // an alternative means of unique identification for a row in a rowspace,
+  // so correct behavior is only guaranteed when no duplicates for this col
+  // appear in the given set of rows.  (If more than one row has the same cell
+  // value in this column, no more than one will be found; and cutting one of
+  // two duplicate rows can cause the index to assume no other such row lives
+  // in the row space, so future calls return nil for negative search results
+  // even though some duplicate row might still live within the rowspace.)
+  //
+  // In other words, the FindRow() implementation is allowed to assume simple
+  // hash tables mapping unqiue column keys to associated row values will be
+  // sufficient, where any duplication is not recorded because only one copy
+  // of a given key need be remembered.  Implementors are not required to sort
+  // all rows by the specified column.
+  // } ----- end row methods -----
+
+  // { ----- begin table methods -----  
+  NS_IMETHOD HasTable( // supports a table with the specified oid?
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,  // hypothetical table oid
+    mdb_bool* outHasTable); // whether GetTable() might succeed
+    
+  NS_IMETHOD GetTable( // access one table with specific oid
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,  // hypothetical table oid
+    nsIMdbTable** acqTable); // acquire specific table (or null)
+  
+  NS_IMETHOD HasTableKind( // supports a table of the specified type?
+    nsIMdbEnv* ev, // context
+    mdb_scope inRowScope, // rid scope for row ids
+    mdb_kind inTableKind, // the type of table to access
+    mdb_count* outTableCount, // current number of such tables
+    mdb_bool* outSupportsTable); // whether GetTableKind() might succeed
+        
+  NS_IMETHOD GetTableKind( // access one (random) table of specific type
+    nsIMdbEnv* ev, // context
+    mdb_scope inRowScope,      // row scope for row ids
+    mdb_kind inTableKind,      // the type of table to access
+    mdb_count* outTableCount, // current number of such tables
+    mdb_bool* outMustBeUnique, // whether port can hold only one of these
+    nsIMdbTable** acqTable);       // acquire scoped collection of rows
+    
+  NS_IMETHOD
+  GetPortTableCursor( // get cursor for all tables of specific type
+    nsIMdbEnv* ev, // context
+    mdb_scope inRowScope, // row scope for row ids
+    mdb_kind inTableKind, // the type of table to access
+    nsIMdbPortTableCursor** acqCursor); // all such tables in the port
+  // } ----- end table methods -----
+
+
+  // { ----- begin commit methods -----
+
+  NS_IMETHOD ShouldCompress( // store wastes at least inPercentWaste?
+    nsIMdbEnv* ev, // context
+    mdb_percent inPercentWaste, // 0..100 percent file size waste threshold
+    mdb_percent* outActualWaste, // 0..100 percent of file actually wasted
+    mdb_bool* outShould); // true when about inPercentWaste% is wasted
+  // ShouldCompress() returns true if the store can determine that the file
+  // will shrink by an estimated percentage of inPercentWaste% (or more) if
+  // CompressCommit() is called, because that percentage of the file seems
+  // to be recoverable free space.  The granularity is only in terms of 
+  // percentage points, and any value over 100 is considered equal to 100.
+  //
+  // If a store only has an approximate idea how much space might be saved
+  // during a compress, then a best guess should be made.  For example, the
+  // Mork implementation might keep track of how much file space began with
+  // text content before the first updating transaction, and then consider
+  // all content following the start of the first transaction as potentially
+  // wasted space if it is all updates and not just new content.  (This is
+  // a safe assumption in the sense that behavior will stabilize on a low
+  // estimate of wastage after a commit removes all transaction updates.)
+  //
+  // Some db formats might attempt to keep a very accurate reckoning of free
+  // space size, so a very accurate determination can be made.  But other db
+  // formats might have difficulty determining size of free space, and might
+  // require some lengthy calculation to answer.  This is the reason for
+  // passing in the percentage threshold of interest, so that such lengthy
+  // computations can terminate early as soon as at least inPercentWaste is
+  // found, so that the entire file need not be groveled when unnecessary.
+  // However, we hope implementations will always favor fast but imprecise
+  // heuristic answers instead of extremely slow but very precise answers.
+  //
+  // If the outActualWaste parameter is non-nil, it will be used to return
+  // the actual estimated space wasted as a percentage of file size.  (This
+  // parameter is provided so callers need not call repeatedly with altered
+  // inPercentWaste values to isolate the actual wastage figure.)  Note the
+  // actual wastage figure returned can exactly equal inPercentWaste even
+  // when this grossly underestimates the real figure involved, if the db
+  // finds it very expensive to determine the extent of wastage after it is
+  // known to at least exceed inPercentWaste.  Note we expect that whenever
+  // outShould returns true, that outActualWaste returns >= inPercentWaste.
+  //
+  // The effect of different inPercentWaste values is not very uniform over
+  // the permitted range.  For example, 50 represents 50% wastage, or a file
+  // that is about double what it should be ideally.  But 99 represents 99%
+  // wastage, or a file that is about ninety-nine times as big as it should
+  // be ideally.  In the smaller direction, 25 represents 25% wastage, or
+  // a file that is only 33% larger than it should be ideally.
+  //
+  // Callers can determine what policy they want to use for considering when
+  // a file holds too much wasted space, and express this as a percentage
+  // of total file size to pass as in the inPercentWaste parameter.  A zero
+  // likely returns always trivially true, and 100 always trivially false.
+  // The great majority of callers are expected to use values from 25 to 75,
+  // since most plausible thresholds for compressing might fall between the
+  // extremes of 133% of ideal size and 400% of ideal size.  (Presumably the
+  // larger a file gets, the more important the percentage waste involved, so
+  // a sliding scale for compress thresholds might use smaller numbers for
+  // much bigger file sizes.)
+  
+  // } ----- end commit methods -----
+
+// } ===== end nsIMdbPort methods =====
+
+// { ===== begin nsIMdbStore methods =====
+
+  // { ----- begin table methods -----
+  NS_IMETHOD NewTable( // make one new table of specific type
+    nsIMdbEnv* ev, // context
+    mdb_scope inRowScope,    // row scope for row ids
+    mdb_kind inTableKind,    // the type of table to access
+    mdb_bool inMustBeUnique, // whether store can hold only one of these
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying
+    nsIMdbTable** acqTable);     // acquire scoped collection of rows
+    
+  NS_IMETHOD NewTableWithOid( // make one new table of specific type
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,   // caller assigned oid
+    mdb_kind inTableKind,    // the type of table to access
+    mdb_bool inMustBeUnique, // whether store can hold only one of these
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
+    nsIMdbTable** acqTable);     // acquire scoped collection of rows
+  // } ----- end table methods -----
+
+  // { ----- begin row scope methods -----
+  NS_IMETHOD RowScopeHasAssignedIds(nsIMdbEnv* ev,
+    mdb_scope inRowScope,   // row scope for row ids
+    mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
+    mdb_bool* outStoreAssigned); // nonzero if store db assigned specified
+
+  NS_IMETHOD SetCallerAssignedIds(nsIMdbEnv* ev,
+    mdb_scope inRowScope,   // row scope for row ids
+    mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
+    mdb_bool* outStoreAssigned); // nonzero if store db assigned specified
+
+  NS_IMETHOD SetStoreAssignedIds(nsIMdbEnv* ev,
+    mdb_scope inRowScope,   // row scope for row ids
+    mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
+    mdb_bool* outStoreAssigned); // nonzero if store db assigned specified
+  // } ----- end row scope methods -----
+
+  // { ----- begin row methods -----
+  NS_IMETHOD NewRowWithOid(nsIMdbEnv* ev, // new row w/ caller assigned oid
+    const mdbOid* inOid,   // caller assigned oid
+    nsIMdbRow** acqRow); // create new row
+
+  NS_IMETHOD NewRow(nsIMdbEnv* ev, // new row with db assigned oid
+    mdb_scope inRowScope,   // row scope for row ids
+    nsIMdbRow** acqRow); // create new row
+  // Note this row must be added to some table or cell child before the
+  // store is closed in order to make this row persist across sesssions.
+
+  // } ----- end row methods -----
+
+  // { ----- begin inport/export methods -----
+  NS_IMETHOD ImportContent( // import content from port
+    nsIMdbEnv* ev, // context
+    mdb_scope inRowScope, // scope for rows (or zero for all?)
+    nsIMdbPort* ioPort, // the port with content to add to store
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental import
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then the import will be finished.
+
+  NS_IMETHOD ImportFile( // import content from port
+    nsIMdbEnv* ev, // context
+    nsIMdbFile* ioFile, // the file with content to add to store
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental import
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then the import will be finished.
+  // } ----- end inport/export methods -----
+
+  // { ----- begin hinting methods -----
+  NS_IMETHOD
+  ShareAtomColumnsHint( // advise re shared column content atomizing
+    nsIMdbEnv* ev, // context
+    mdb_scope inScopeHint, // zero, or suggested shared namespace
+    const mdbColumnSet* inColumnSet); // cols desired tokenized together
+
+  NS_IMETHOD
+  AvoidAtomColumnsHint( // advise column with poor atomizing prospects
+    nsIMdbEnv* ev, // context
+    const mdbColumnSet* inColumnSet); // cols with poor atomizing prospects
+  // } ----- end hinting methods -----
+
+  // { ----- begin commit methods -----
+  NS_IMETHOD SmallCommit( // save minor changes if convenient and uncostly
+    nsIMdbEnv* ev); // context
+  
+  NS_IMETHOD LargeCommit( // save important changes if at all possible
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental commit
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then the commit will be finished.  Note the store is effectively write
+  // locked until commit is finished or canceled through the thumb instance.
+  // Until the commit is done, the store will report it has readonly status.
+
+  NS_IMETHOD SessionCommit( // save all changes if large commits delayed
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental commit
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then the commit will be finished.  Note the store is effectively write
+  // locked until commit is finished or canceled through the thumb instance.
+  // Until the commit is done, the store will report it has readonly status.
+
+  NS_IMETHOD
+  CompressCommit( // commit and make db physically smaller if possible
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental commit
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then the commit will be finished.  Note the store is effectively write
+  // locked until commit is finished or canceled through the thumb instance.
+  // Until the commit is done, the store will report it has readonly status.
+  
+  // } ----- end commit methods -----
+
+// } ===== end nsIMdbStore methods =====
+
+public: // typesafe refcounting inlines calling inherited morkNode methods
+  static void SlotWeakPort(morkPort* me,
+    morkEnv* ev, morkPort** ioSlot)
+  { morkNode::SlotWeakNode((morkNode*) me, ev, (morkNode**) ioSlot); }
+  
+  static void SlotStrongPort(morkPort* me,
+    morkEnv* ev, morkPort** ioSlot)
+  { morkNode::SlotStrongNode((morkNode*) me, ev, (morkNode**) ioSlot); }
 // public: // slots inherited from morkPort (meant to inform only)
   // nsIMdbHeap*     mNode_Heap;
   // mork_able    mNode_Mutable; // can this node be modified?
@@ -308,7 +661,8 @@ private: // copying is not allowed
   morkStore& operator=(const morkStore& other);
 
 public: // dynamic type identification
-  mork_bool IsStore() const
+  morkEnv*  CanUseStore(nsIMdbEnv* mev, mork_bool inMutable, mdb_err* outErr) const;
+   mork_bool IsStore() const
   { return IsNode() && mNode_Derived == morkDerived_kStore; }
 // } ===== end morkNode methods =====
 
@@ -417,7 +771,21 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
   
   static void SlotStrongStore(morkStore* me,
     morkEnv* ev, morkStore** ioSlot)
-  { morkNode::SlotStrongNode((morkNode*) me, ev, (morkNode**) ioSlot); }
+  { 
+    morkStore* store = *ioSlot;
+    if ( me != store )
+    {
+      if ( store )
+      {
+        // what if this nulls out the ev and causes asserts?
+        // can we move this after the CutStrongRef()?
+        *ioSlot = 0;
+        store->Release();
+      }
+      if ( me && me->AddRef() )
+        *ioSlot = me;
+    }
+  }
 };
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

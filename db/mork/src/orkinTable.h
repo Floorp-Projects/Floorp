@@ -98,9 +98,6 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
   
 public: // construction:
 
@@ -118,36 +115,32 @@ public: // type identification
   mork_bool IsOrkinTableHandle() const
   { return this->IsHandle() && this->IsOrkinTable(); }
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
-
+  NS_DECL_ISUPPORTS
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -155,31 +148,31 @@ public: // type identification
 // { ===== begin nsIMdbCollection methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetSeed(nsIMdbEnv* ev,
+  NS_IMETHOD GetSeed(nsIMdbEnv* ev,
     mdb_seed* outSeed);    // member change count
-  virtual mdb_err GetCount(nsIMdbEnv* ev,
+  NS_IMETHOD GetCount(nsIMdbEnv* ev,
     mdb_count* outCount); // member count
 
-  virtual mdb_err GetPort(nsIMdbEnv* ev,
+  NS_IMETHOD GetPort(nsIMdbEnv* ev,
     nsIMdbPort** acqPort); // collection container
   // } ----- end attribute methods -----
 
   // { ----- begin cursor methods -----
-  virtual mdb_err GetCursor( // make a cursor starting iter at inMemberPos
+  NS_IMETHOD GetCursor( // make a cursor starting iter at inMemberPos
     nsIMdbEnv* ev, // context
     mdb_pos inMemberPos, // zero-based ordinal pos of member in collection
     nsIMdbCursor** acqCursor); // acquire new cursor instance
   // } ----- end cursor methods -----
 
   // { ----- begin ID methods -----
-  virtual mdb_err GetOid(nsIMdbEnv* ev,
+  NS_IMETHOD GetOid(nsIMdbEnv* ev,
     mdbOid* outOid); // read object identity
-  virtual mdb_err BecomeContent(nsIMdbEnv* ev,
+  NS_IMETHOD BecomeContent(nsIMdbEnv* ev,
     const mdbOid* inOid); // exchange content
   // } ----- end ID methods -----
 
   // { ----- begin activity dropping methods -----
-  virtual mdb_err DropActivity( // tell collection usage no longer expected
+  NS_IMETHOD DropActivity( // tell collection usage no longer expected
     nsIMdbEnv* ev);
   // } ----- end activity dropping methods -----
 
@@ -188,18 +181,18 @@ public: // type identification
 // { ===== begin nsIMdbTable methods =====
 
   // { ----- begin meta attribute methods -----
-  virtual mdb_err SetTablePriority(nsIMdbEnv* ev, mdb_priority inPrio);
-  virtual mdb_err GetTablePriority(nsIMdbEnv* ev, mdb_priority* outPrio);
+  NS_IMETHOD SetTablePriority(nsIMdbEnv* ev, mdb_priority inPrio);
+  NS_IMETHOD GetTablePriority(nsIMdbEnv* ev, mdb_priority* outPrio);
   
-  virtual mdb_err GetTableBeVerbose(nsIMdbEnv* ev, mdb_bool* outBeVerbose);
-  virtual mdb_err SetTableBeVerbose(nsIMdbEnv* ev, mdb_bool inBeVerbose);
+  NS_IMETHOD GetTableBeVerbose(nsIMdbEnv* ev, mdb_bool* outBeVerbose);
+  NS_IMETHOD SetTableBeVerbose(nsIMdbEnv* ev, mdb_bool inBeVerbose);
   
-  virtual mdb_err GetTableIsUnique(nsIMdbEnv* ev, mdb_bool* outIsUnique);
+  NS_IMETHOD GetTableIsUnique(nsIMdbEnv* ev, mdb_bool* outIsUnique);
 
-  virtual mdb_err GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind);
-  virtual mdb_err GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope);
+  NS_IMETHOD GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind);
+  NS_IMETHOD GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope);
   
-  virtual mdb_err GetMetaRow(
+  NS_IMETHOD GetMetaRow(
     nsIMdbEnv* ev, // context
     const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
     mdbOid* outOid, // output meta row oid, can be nil to suppress output
@@ -229,29 +222,29 @@ public: // type identification
   // } ----- end meta attribute methods -----
 
   // { ----- begin cursor methods -----
-  virtual mdb_err GetTableRowCursor( // make a cursor, starting iteration at inRowPos
+  NS_IMETHOD GetTableRowCursor( // make a cursor, starting iteration at inRowPos
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     nsIMdbTableRowCursor** acqCursor); // acquire new cursor instance
   // } ----- end row position methods -----
 
   // { ----- begin row position methods -----
-  virtual mdb_err PosToOid( // get row member for a table position
+  NS_IMETHOD PosToOid( // get row member for a table position
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     mdbOid* outOid); // row oid at the specified position
 
-  virtual mdb_err OidToPos( // test for the table position of a row member
+  NS_IMETHOD OidToPos( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
     mdb_pos* outPos); // zero-based ordinal position of row in table
      
-  virtual mdb_err PosToRow( // test for the table position of a row member
+  NS_IMETHOD PosToRow( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     nsIMdbRow** acqRow); // acquire row at table position inRowPos
    
-  virtual mdb_err RowToPos( // test for the table position of a row member
+  NS_IMETHOD RowToPos( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow, // row to find in table
     mdb_pos* outPos); // zero-based ordinal position of row in table
@@ -259,59 +252,59 @@ public: // type identification
   // } ----- end row position methods -----
 
   // { ----- begin oid set methods -----
-  virtual mdb_err AddOid( // make sure the row with inOid is a table member 
+  NS_IMETHOD AddOid( // make sure the row with inOid is a table member 
     nsIMdbEnv* ev, // context
     const mdbOid* inOid); // row to ensure membership in table
 
-  virtual mdb_err HasOid( // test for the table position of a row member
+  NS_IMETHOD HasOid( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
     mdb_bool* outHasOid); // whether inOid is a member row
 
-  virtual mdb_err CutOid( // make sure the row with inOid is not a member 
+  NS_IMETHOD CutOid( // make sure the row with inOid is not a member 
     nsIMdbEnv* ev, // context
     const mdbOid* inOid); // row to remove from table
   // } ----- end oid set methods -----
 
   // { ----- begin row set methods -----
-  virtual mdb_err NewRow( // create a new row instance in table
+  NS_IMETHOD NewRow( // create a new row instance in table
     nsIMdbEnv* ev, // context
     mdbOid* ioOid, // please use zero (unbound) rowId for db-assigned IDs
     nsIMdbRow** acqRow); // create new row
 
-  virtual mdb_err AddRow( // make sure the row with inOid is a table member 
+  NS_IMETHOD AddRow( // make sure the row with inOid is a table member 
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow); // row to ensure membership in table
 
-  virtual mdb_err HasRow( // test for the table position of a row member
+  NS_IMETHOD HasRow( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow, // row to find in table
     mdb_bool* outHasRow); // whether row is a table member
 
-  virtual mdb_err CutRow( // make sure the row with inOid is not a member 
+  NS_IMETHOD CutRow( // make sure the row with inOid is not a member 
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow); // row to remove from table
 
-  virtual mdb_err CutAllRows( // remove all rows from the table
+  NS_IMETHOD CutAllRows( // remove all rows from the table
     nsIMdbEnv* ev); // context
   // } ----- end row set methods -----
 
   // { ----- begin hinting methods -----
-  virtual mdb_err SearchColumnsHint( // advise re future expected search cols  
+  NS_IMETHOD SearchColumnsHint( // advise re future expected search cols  
     nsIMdbEnv* ev, // context
     const mdbColumnSet* inColumnSet); // columns likely to be searched
     
-  virtual mdb_err SortColumnsHint( // advise re future expected sort columns  
+  NS_IMETHOD SortColumnsHint( // advise re future expected sort columns  
     nsIMdbEnv* ev, // context
     const mdbColumnSet* inColumnSet); // columns for likely sort requests
 
-  virtual mdb_err StartBatchChangeHint( // advise before many adds and cuts  
+  NS_IMETHOD StartBatchChangeHint( // advise before many adds and cuts  
     nsIMdbEnv* ev, // context
     const void* inLabel); // intend unique address to match end call
     // If batch starts nest by virtue of nesting calls in the stack, then
     // the address of a local variable makes a good batch start label that
     // can be used at batch end time, and such addresses remain unique.
-  virtual mdb_err EndBatchChangeHint( // advise before many adds and cuts  
+  NS_IMETHOD EndBatchChangeHint( // advise before many adds and cuts  
     nsIMdbEnv* ev, // context
     const void* inLabel); // label matching start label
     // Suppose a table is maintaining one or many sort orders for a table,
@@ -326,12 +319,12 @@ public: // type identification
   // } ----- end hinting methods -----
 
   // { ----- begin searching methods -----
-  virtual mdb_err FindRowMatches( // search variable number of sorted cols
+  NS_IMETHOD FindRowMatches( // search variable number of sorted cols
     nsIMdbEnv* ev, // context
     const mdbYarn* inPrefix, // content to find as prefix in row's column cell
     nsIMdbTableRowCursor** acqCursor); // set of matching rows
     
-  virtual mdb_err GetSearchColumns( // query columns used by FindRowMatches()
+  NS_IMETHOD GetSearchColumns( // query columns used by FindRowMatches()
     nsIMdbEnv* ev, // context
     mdb_count* outCount, // context
     mdbColumnSet* outColSet); // caller supplied space to put columns
@@ -353,18 +346,18 @@ public: // type identification
   // sorting: note all rows are assumed sorted by row ID as a secondary
   // sort following the primary column sort, when table rows are sorted.
 
-  virtual mdb_err
+  NS_IMETHOD
   CanSortColumn( // query which column is currently used for sorting
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to query sorting potential
     mdb_bool* outCanSort); // whether the column can be sorted
     
-  virtual mdb_err GetSorting( // view same table in particular sorting
+  NS_IMETHOD GetSorting( // view same table in particular sorting
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // requested new column for sorting table
     nsIMdbSorting** acqSorting); // acquire sorting for column
     
-  virtual mdb_err SetSearchSorting( // use this sorting in FindRowMatches()
+  NS_IMETHOD SetSearchSorting( // use this sorting in FindRowMatches()
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // often same as nsIMdbSorting::GetSortColumn()
     nsIMdbSorting* ioSorting); // requested sorting for some column
@@ -395,14 +388,14 @@ public: // type identification
   // { ----- begin moving methods -----
   // moving a row does nothing unless a table is currently unsorted
   
-  virtual mdb_err MoveOid( // change position of row in unsorted table
+  NS_IMETHOD MoveOid( // change position of row in unsorted table
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // row oid to find in table
     mdb_pos inHintFromPos, // suggested hint regarding start position
     mdb_pos inToPos,       // desired new position for row inRowId
     mdb_pos* outActualPos); // actual new position of row in table
 
-  virtual mdb_err MoveRow( // change position of row in unsorted table
+  NS_IMETHOD MoveRow( // change position of row in unsorted table
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow,  // row oid to find in table
     mdb_pos inHintFromPos, // suggested hint regarding start position
@@ -411,36 +404,36 @@ public: // type identification
   // } ----- end moving methods -----
   
   // { ----- begin index methods -----
-  virtual mdb_err AddIndex( // create a sorting index for column if possible
+  NS_IMETHOD AddIndex( // create a sorting index for column if possible
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // the column to sort by index
     nsIMdbThumb** acqThumb); // acquire thumb for incremental index building
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the index addition will be finished.
   
-  virtual mdb_err CutIndex( // stop supporting a specific column index
+  NS_IMETHOD CutIndex( // stop supporting a specific column index
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // the column with index to be removed
     nsIMdbThumb** acqThumb); // acquire thumb for incremental index destroy
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the index removal will be finished.
   
-  virtual mdb_err HasIndex( // query for current presence of a column index
+  NS_IMETHOD HasIndex( // query for current presence of a column index
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // the column to investigate
     mdb_bool* outHasIndex); // whether column has index for this column
 
   
-  virtual mdb_err EnableIndexOnSort( // create an index for col on first sort
+  NS_IMETHOD EnableIndexOnSort( // create an index for col on first sort
     nsIMdbEnv* ev, // context
     mdb_column inColumn); // the column to index if ever sorted
   
-  virtual mdb_err QueryIndexOnSort( // check whether index on sort is enabled
+  NS_IMETHOD QueryIndexOnSort( // check whether index on sort is enabled
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // the column to investigate
     mdb_bool* outIndexOnSort); // whether column has index-on-sort enabled
   
-  virtual mdb_err DisableIndexOnSort( // prevent future index creation on sort
+  NS_IMETHOD DisableIndexOnSort( // prevent future index creation on sort
     nsIMdbEnv* ev, // context
     mdb_column inColumn); // the column to index if ever sorted
   // } ----- end index methods -----

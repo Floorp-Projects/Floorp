@@ -81,7 +81,8 @@
 
 /*| morkEnv:
 |*/
-class morkEnv : public morkObject {
+class morkEnv : public morkObject, public nsIMdbEnv {
+  NS_DECL_ISUPPORTS_INHERITED
 
 // public: // slots inherited from morkObject (meant to inform only)
   // nsIMdbHeap*       mNode_Heap;
@@ -126,6 +127,34 @@ public: // morkNode virtual methods
   virtual void CloseMorkNode(morkEnv* ev); // CloseEnv() only if open
   virtual ~morkEnv(); // assert that CloseEnv() executed earlier
   
+  // { ----- begin attribute methods -----
+  NS_IMETHOD GetErrorCount(mdb_count* outCount,
+    mdb_bool* outShouldAbort);
+  NS_IMETHOD GetWarningCount(mdb_count* outCount,
+    mdb_bool* outShouldAbort);
+  
+  NS_IMETHOD GetEnvBeVerbose(mdb_bool* outBeVerbose);
+  NS_IMETHOD SetEnvBeVerbose(mdb_bool inBeVerbose);
+  
+  NS_IMETHOD GetDoTrace(mdb_bool* outDoTrace);
+  NS_IMETHOD SetDoTrace(mdb_bool inDoTrace);
+  
+  NS_IMETHOD GetAutoClear(mdb_bool* outAutoClear);
+  NS_IMETHOD SetAutoClear(mdb_bool inAutoClear);
+  
+  NS_IMETHOD GetErrorHook(nsIMdbErrorHook** acqErrorHook);
+  NS_IMETHOD SetErrorHook(
+    nsIMdbErrorHook* ioErrorHook); // becomes referenced
+  
+  NS_IMETHOD GetHeap(nsIMdbHeap** acqHeap);
+  NS_IMETHOD SetHeap(
+    nsIMdbHeap* ioHeap); // becomes referenced
+  // } ----- end attribute methods -----
+  
+  NS_IMETHOD ClearErrors(); // clear errors beore re-entering db API
+  NS_IMETHOD ClearWarnings(); // clear warnings
+  NS_IMETHOD ClearErrorsAndWarnings(); // clear both errors & warnings
+// } ===== end nsIMdbEnv methods =====
 public: // morkEnv construction & destruction
   morkEnv(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
     morkFactory* ioFactory, nsIMdbHeap* ioSlotHeap);
@@ -159,9 +188,6 @@ public: // utility env methods
 
 public: // other env methods
 
-  nsIMdbEnv* AcquireEnvHandle(morkEnv* ev); // mObject_Handle
-
-  // alloc and free individual handles in mEnv_HandlePool:
   morkHandleFace*  NewHandle(mork_size inSize)
   { return mEnv_HandlePool->NewHandle(this, inSize, (morkZone*) 0); }
   
@@ -195,7 +221,7 @@ public: // other env methods
   mork_bool Good() const { return ( mEnv_ErrorCount == 0 ); }
   mork_bool Bad() const { return ( mEnv_ErrorCount != 0 ); }
   
-  nsIMdbEnv* AsMdbEnv() { return mEnv_SelfAsMdbEnv; }
+  nsIMdbEnv* AsMdbEnv() { return (nsIMdbEnv *) this; }
   static morkEnv* FromMdbEnv(nsIMdbEnv* ioEnv); // dynamic type checking
   
   mork_u4 ErrorCode() const { return mEnv_ErrorCode; }

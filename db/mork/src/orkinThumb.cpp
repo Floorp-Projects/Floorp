@@ -124,7 +124,9 @@ orkinThumb::CanUseThumb(nsIMdbEnv* mev,
 
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE1(orkinThumb, nsIMdbThumb);
+
+/*virtual*/ nsrefcnt
 orkinThumb::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -134,7 +136,7 @@ orkinThumb::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinThumb::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;

@@ -98,10 +98,7 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
-  
+ 
 public: // construction:
 
   static orkinStore* MakeStore(morkEnv* ev, morkStore* ioObject);
@@ -118,36 +115,32 @@ public: // type identification
   mork_bool IsOrkinStoreHandle() const
   { return this->IsHandle() && this->IsOrkinStore(); }
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
-
+  NS_DECL_ISUPPORTS
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -155,55 +148,55 @@ public: // type identification
 // { ===== begin nsIMdbPort methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetIsPortReadonly(nsIMdbEnv* ev, mdb_bool* outBool);
-  virtual mdb_err GetIsStore(nsIMdbEnv* ev, mdb_bool* outBool);
-  virtual mdb_err GetIsStoreAndDirty(nsIMdbEnv* ev, mdb_bool* outBool);
+  NS_IMETHOD GetIsPortReadonly(nsIMdbEnv* ev, mdb_bool* outBool);
+  NS_IMETHOD GetIsStore(nsIMdbEnv* ev, mdb_bool* outBool);
+  NS_IMETHOD GetIsStoreAndDirty(nsIMdbEnv* ev, mdb_bool* outBool);
 
-  virtual mdb_err GetUsagePolicy(nsIMdbEnv* ev, 
+  NS_IMETHOD GetUsagePolicy(nsIMdbEnv* ev, 
     mdbUsagePolicy* ioUsagePolicy);
 
-  virtual mdb_err SetUsagePolicy(nsIMdbEnv* ev, 
+  NS_IMETHOD SetUsagePolicy(nsIMdbEnv* ev, 
     const mdbUsagePolicy* inUsagePolicy);
   // } ----- end attribute methods -----
 
   // { ----- begin memory policy methods -----  
-  virtual mdb_err IdleMemoryPurge( // do memory management already scheduled
+  NS_IMETHOD IdleMemoryPurge( // do memory management already scheduled
     nsIMdbEnv* ev, // context
     mdb_size* outEstimatedBytesFreed); // approximate bytes actually freed
 
-  virtual mdb_err SessionMemoryPurge( // request specific footprint decrease
+  NS_IMETHOD SessionMemoryPurge( // request specific footprint decrease
     nsIMdbEnv* ev, // context
     mdb_size inDesiredBytesFreed, // approximate number of bytes wanted
     mdb_size* outEstimatedBytesFreed); // approximate bytes actually freed
 
-  virtual mdb_err PanicMemoryPurge( // desperately free all possible memory
+  NS_IMETHOD PanicMemoryPurge( // desperately free all possible memory
     nsIMdbEnv* ev, // context
     mdb_size* outEstimatedBytesFreed); // approximate bytes actually freed
   // } ----- end memory policy methods -----
 
   // { ----- begin filepath methods -----
-  virtual mdb_err GetPortFilePath(
+  NS_IMETHOD GetPortFilePath(
     nsIMdbEnv* ev, // context
     mdbYarn* outFilePath, // name of file holding port content
     mdbYarn* outFormatVersion); // file format description
 
-  virtual mdb_err GetPortFile(
+  NS_IMETHOD GetPortFile(
     nsIMdbEnv* ev, // context
     nsIMdbFile** acqFile); // acquire file used by port or store
   // } ----- end filepath methods -----
 
   // { ----- begin export methods -----
-  virtual mdb_err BestExportFormat( // determine preferred export format
+  NS_IMETHOD BestExportFormat( // determine preferred export format
     nsIMdbEnv* ev, // context
     mdbYarn* outFormatVersion); // file format description
 
-  virtual mdb_err
+  NS_IMETHOD
   CanExportToFormat( // can export content in given specific format?
     nsIMdbEnv* ev, // context
     const char* inFormatVersion, // file format description
     mdb_bool* outCanExport); // whether ExportSource() might succeed
 
-  virtual mdb_err ExportToFormat( // export content in given specific format
+  NS_IMETHOD ExportToFormat( // export content in given specific format
     nsIMdbEnv* ev, // context
     // const char* inFilePath, // the file to receive exported content
     nsIMdbFile* ioFile, // destination abstract file interface
@@ -215,12 +208,12 @@ public: // type identification
   // } ----- end export methods -----
 
   // { ----- begin token methods -----
-  virtual mdb_err TokenToString( // return a string name for an integer token
+  NS_IMETHOD TokenToString( // return a string name for an integer token
     nsIMdbEnv* ev, // context
     mdb_token inToken, // token for inTokenName inside this port
     mdbYarn* outTokenName); // the type of table to access
   
-  virtual mdb_err StringToToken( // return an integer token for scope name
+  NS_IMETHOD StringToToken( // return an integer token for scope name
     nsIMdbEnv* ev, // context
     const char* inTokenName, // Latin1 string to tokenize if possible
     mdb_token* outToken); // token for inTokenName inside this port
@@ -230,7 +223,7 @@ public: // type identification
   // association of inTokenName with a new integer token if possible.
   // But a readonly port will return zero for an unknown scope name.
 
-  virtual mdb_err QueryToken( // like StringToToken(), but without adding
+  NS_IMETHOD QueryToken( // like StringToToken(), but without adding
     nsIMdbEnv* ev, // context
     const char* inTokenName, // Latin1 string to tokenize if possible
     mdb_token* outToken); // token for inTokenName inside this port
@@ -242,22 +235,22 @@ public: // type identification
   // } ----- end token methods -----
 
   // { ----- begin row methods -----  
-  virtual mdb_err HasRow( // contains a row with the specified oid?
+  NS_IMETHOD HasRow( // contains a row with the specified oid?
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
     mdb_bool* outHasRow); // whether GetRow() might succeed
 
-  virtual mdb_err GetRowRefCount( // get number of tables that contain a row 
+  NS_IMETHOD GetRowRefCount( // get number of tables that contain a row 
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
     mdb_count* outRefCount); // number of tables containing inRowKey 
     
-  virtual mdb_err GetRow( // access one row with specific oid
+  NS_IMETHOD GetRow( // access one row with specific oid
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
     nsIMdbRow** acqRow); // acquire specific row (or null)
 
-  virtual mdb_err FindRow(nsIMdbEnv* ev, // search for row with matching cell
+  NS_IMETHOD FindRow(nsIMdbEnv* ev, // search for row with matching cell
     mdb_scope inRowScope,   // row scope for row ids
     mdb_column inColumn,   // the column to search (and maintain an index)
     const mdbYarn* inTargetCellValue, // cell value for which to search
@@ -297,24 +290,24 @@ public: // type identification
   // } ----- end row methods -----
 
   // { ----- begin table methods -----  
-  virtual mdb_err HasTable( // supports a table with the specified oid?
+  NS_IMETHOD HasTable( // supports a table with the specified oid?
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical table oid
     mdb_bool* outHasTable); // whether GetTable() might succeed
     
-  virtual mdb_err GetTable( // access one table with specific oid
+  NS_IMETHOD GetTable( // access one table with specific oid
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical table oid
     nsIMdbTable** acqTable); // acquire specific table (or null)
   
-  virtual mdb_err HasTableKind( // supports a table of the specified type?
+  NS_IMETHOD HasTableKind( // supports a table of the specified type?
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope, // rid scope for row ids
     mdb_kind inTableKind, // the type of table to access
     mdb_count* outTableCount, // current number of such tables
     mdb_bool* outSupportsTable); // whether GetTableKind() might succeed
         
-  virtual mdb_err GetTableKind( // access one (random) table of specific type
+  NS_IMETHOD GetTableKind( // access one (random) table of specific type
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope,      // row scope for row ids
     mdb_kind inTableKind,      // the type of table to access
@@ -322,7 +315,7 @@ public: // type identification
     mdb_bool* outMustBeUnique, // whether port can hold only one of these
     nsIMdbTable** acqTable);       // acquire scoped collection of rows
     
-  virtual mdb_err
+  NS_IMETHOD
   GetPortTableCursor( // get cursor for all tables of specific type
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope, // row scope for row ids
@@ -333,7 +326,7 @@ public: // type identification
 
   // { ----- begin commit methods -----
 
-  virtual mdb_err ShouldCompress( // store wastes at least inPercentWaste?
+  NS_IMETHOD ShouldCompress( // store wastes at least inPercentWaste?
     nsIMdbEnv* ev, // context
     mdb_percent inPercentWaste, // 0..100 percent file size waste threshold
     mdb_percent* outActualWaste, // 0..100 percent of file actually wasted
@@ -398,7 +391,7 @@ public: // type identification
 // { ===== begin nsIMdbStore methods =====
 
   // { ----- begin table methods -----
-  virtual mdb_err NewTable( // make one new table of specific type
+  NS_IMETHOD NewTable( // make one new table of specific type
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope,    // row scope for row ids
     mdb_kind inTableKind,    // the type of table to access
@@ -406,7 +399,7 @@ public: // type identification
     const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying
     nsIMdbTable** acqTable);     // acquire scoped collection of rows
     
-  virtual mdb_err NewTableWithOid( // make one new table of specific type
+  NS_IMETHOD NewTableWithOid( // make one new table of specific type
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,   // caller assigned oid
     mdb_kind inTableKind,    // the type of table to access
@@ -416,28 +409,28 @@ public: // type identification
   // } ----- end table methods -----
 
   // { ----- begin row scope methods -----
-  virtual mdb_err RowScopeHasAssignedIds(nsIMdbEnv* ev,
+  NS_IMETHOD RowScopeHasAssignedIds(nsIMdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
     mdb_bool* outStoreAssigned); // nonzero if store db assigned specified
 
-  virtual mdb_err SetCallerAssignedIds(nsIMdbEnv* ev,
+  NS_IMETHOD SetCallerAssignedIds(nsIMdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
     mdb_bool* outStoreAssigned); // nonzero if store db assigned specified
 
-  virtual mdb_err SetStoreAssignedIds(nsIMdbEnv* ev,
+  NS_IMETHOD SetStoreAssignedIds(nsIMdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
     mdb_bool* outStoreAssigned); // nonzero if store db assigned specified
   // } ----- end row scope methods -----
 
   // { ----- begin row methods -----
-  virtual mdb_err NewRowWithOid(nsIMdbEnv* ev, // new row w/ caller assigned oid
+  NS_IMETHOD NewRowWithOid(nsIMdbEnv* ev, // new row w/ caller assigned oid
     const mdbOid* inOid,   // caller assigned oid
     nsIMdbRow** acqRow); // create new row
 
-  virtual mdb_err NewRow(nsIMdbEnv* ev, // new row with db assigned oid
+  NS_IMETHOD NewRow(nsIMdbEnv* ev, // new row with db assigned oid
     mdb_scope inRowScope,   // row scope for row ids
     nsIMdbRow** acqRow); // create new row
   // Note this row must be added to some table or cell child before the
@@ -445,7 +438,7 @@ public: // type identification
   // } ----- end row methods -----
 
   // { ----- begin inport/export methods -----
-  virtual mdb_err ImportContent( // import content from port
+  NS_IMETHOD ImportContent( // import content from port
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope, // scope for rows (or zero for all?)
     nsIMdbPort* ioPort, // the port with content to add to store
@@ -453,7 +446,7 @@ public: // type identification
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the import will be finished.
 
-  virtual mdb_err ImportFile( // import content from port
+  NS_IMETHOD ImportFile( // import content from port
     nsIMdbEnv* ev, // context
     nsIMdbFile* ioFile, // the file with content to add to store
     nsIMdbThumb** acqThumb); // acquire thumb for incremental import
@@ -462,23 +455,23 @@ public: // type identification
   // } ----- end inport/export methods -----
 
   // { ----- begin hinting methods -----
-  virtual mdb_err
+  NS_IMETHOD
   ShareAtomColumnsHint( // advise re shared column content atomizing
     nsIMdbEnv* ev, // context
     mdb_scope inScopeHint, // zero, or suggested shared namespace
     const mdbColumnSet* inColumnSet); // cols desired tokenized together
 
-  virtual mdb_err
+  NS_IMETHOD
   AvoidAtomColumnsHint( // advise column with poor atomizing prospects
     nsIMdbEnv* ev, // context
     const mdbColumnSet* inColumnSet); // cols with poor atomizing prospects
   // } ----- end hinting methods -----
 
   // { ----- begin commit methods -----
-  virtual mdb_err SmallCommit( // save minor changes if convenient and uncostly
+  NS_IMETHOD SmallCommit( // save minor changes if convenient and uncostly
     nsIMdbEnv* ev); // context
   
-  virtual mdb_err LargeCommit( // save important changes if at all possible
+  NS_IMETHOD LargeCommit( // save important changes if at all possible
     nsIMdbEnv* ev, // context
     nsIMdbThumb** acqThumb); // acquire thumb for incremental commit
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
@@ -486,7 +479,7 @@ public: // type identification
   // locked until commit is finished or canceled through the thumb instance.
   // Until the commit is done, the store will report it has readonly status.
 
-  virtual mdb_err SessionCommit( // save all changes if large commits delayed
+  NS_IMETHOD SessionCommit( // save all changes if large commits delayed
     nsIMdbEnv* ev, // context
     nsIMdbThumb** acqThumb); // acquire thumb for incremental commit
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
@@ -494,7 +487,7 @@ public: // type identification
   // locked until commit is finished or canceled through the thumb instance.
   // Until the commit is done, the store will report it has readonly status.
 
-  virtual mdb_err
+  NS_IMETHOD
   CompressCommit( // commit and make db physically smaller if possible
     nsIMdbEnv* ev, // context
     nsIMdbThumb** acqThumb); // acquire thumb for incremental commit

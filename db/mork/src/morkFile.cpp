@@ -116,6 +116,7 @@ morkFile::morkFile(morkEnv* ev, const morkUsage& inUsage,
   }
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(morkFile, morkObject, nsIMdbFile);
 /*public non-poly*/ void
 morkFile::CloseFile(morkEnv* ev) // called by CloseMorkNode();
 {
@@ -152,33 +153,11 @@ morkFile::AcquireFileHandle(morkEnv* ev)
   nsIMdbFile* outFile = 0;
 
 #ifdef MORK_CONFIG_USE_ORKINFILE
-  orkinFile* f = (orkinFile*) mObject_Handle;
-  if ( f ) // have an old handle?
-    f->AddStrongRef(ev->AsMdbEnv());
-  else // need new handle?
-  {
-    f = orkinFile::MakeFile(ev, this);
-    mObject_Handle = f;
-  }
-  if ( f )
-    outFile = f;
+  return this;
 #endif /*MORK_CONFIG_USE_ORKINFILE*/
   MORK_USED_1(ev);
     
   return outFile;
-}
-
-/*virtual*/ void
-morkFile::BecomeTrunk(morkEnv* ev)
-  // If this file is a file version branch created by calling AcquireBud(),
-  // BecomeTrunk() causes this file's content to replace the original
-  // file's content, typically by assuming the original file's identity.
-  // This default implementation of BecomeTrunk() does nothing, and this
-  // is appropriate behavior for files which are not branches, and is
-  // also the right behavior for files returned from AcquireBud() which are
-  // in fact the original file that has been truncated down to zero length.
-{
-  this->Flush(ev);
 }
 
 /*static*/ morkFile*
@@ -319,12 +298,103 @@ morkFile::WriteNewlines(morkEnv* ev, mork_count inNewlines)
       quantum = morkFile_kNewlinesCount;
 
     mork_size quantumSize = quantum * mork_kNewlineSize;
-    this->Write(ev, morkFile_kNewlines, quantumSize);
+    mdb_size bytesWritten;
+    this->Write(ev->AsMdbEnv(), morkFile_kNewlines, quantumSize, &bytesWritten);
     outSize += quantumSize;
     inNewlines -= quantum;
   }
   return outSize;
 }
+
+NS_IMETHODIMP
+morkFile::Eof(nsIMdbEnv* mev, mdb_pos* outPos)
+{
+  mdb_err outErr = 0;
+  mdb_pos pos = -1;
+  morkEnv *ev = morkEnv::FromMdbEnv(mev);
+  pos = Length(ev);
+  outErr = ev->AsErr();
+  if ( outPos )
+    *outPos = pos;
+  return outErr;
+}
+
+NS_IMETHODIMP
+morkFile::Get(nsIMdbEnv* mev, void* outBuf, mdb_size inSize,
+  mdb_pos inPos, mdb_size* outActualSize)
+{
+  nsresult rv = NS_OK;
+  morkEnv *ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    mdb_pos outPos;
+    Seek(mev, inPos, &outPos);
+    if ( ev->Good() )
+      rv = Read(mev, outBuf, inSize, outActualSize);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+morkFile::Put(nsIMdbEnv* mev, const void* inBuf, mdb_size inSize,
+  mdb_pos inPos, mdb_size* outActualSize)
+{
+  mdb_err outErr = 0;
+  *outActualSize = 0;
+  morkEnv *ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    mdb_pos outPos;
+
+    Seek(mev, inPos, &outPos);
+    if ( ev->Good() )
+      Write(mev, inBuf, inSize, outActualSize);
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+// { ----- begin path methods -----
+NS_IMETHODIMP
+morkFile::Path(nsIMdbEnv* mev, mdbYarn* outFilePath)
+{
+  mdb_err outErr = 0;
+  if ( outFilePath )
+    outFilePath->mYarn_Fill = 0;
+  morkEnv *ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    ev->StringToYarn(GetFileNameString(), outFilePath);
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+// } ----- end path methods -----
+  
+// { ----- begin replacement methods -----
+
+
+NS_IMETHODIMP
+morkFile::Thief(nsIMdbEnv* mev, nsIMdbFile** acqThief)
+{
+  mdb_err outErr = 0;
+  nsIMdbFile* outThief = 0;
+  morkEnv *ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    outThief = GetThief();
+    NS_IF_ADDREF(outThief);
+    outErr = ev->AsErr();
+  }
+  if ( acqThief )
+    *acqThief = outThief;
+  return outErr;
+}
+
+// } ----- end replacement methods -----
+
+// { ----- begin versioning methods -----
 
 // ````` ````` ````` ````` ````` 
 // { ===== begin morkNode interface =====
@@ -343,6 +413,8 @@ morkStdioFile::CloseMorkNode(morkEnv* ev) // CloseStdioFile() only if open
 /*public virtual*/
 morkStdioFile::~morkStdioFile() // assert CloseStdioFile() executed earlier
 {
+  if (mStdioFile_File)
+    CloseStdioFile(mMorkEnv);
   MORK_ASSERT(mStdioFile_File==0);
 }
 
@@ -416,17 +488,17 @@ morkStdioFile::CreateNewStdioFile(morkEnv* ev, nsIMdbHeap* ioHeap,
 
 
 
-/*public virtual*/ void
-morkStdioFile::BecomeTrunk(morkEnv* ev)
+NS_IMETHODIMP
+morkStdioFile::BecomeTrunk(nsIMdbEnv* ev)
   // If this file is a file version branch created by calling AcquireBud(),
   // BecomeTrunk() causes this file's content to replace the original
   // file's content, typically by assuming the original file's identity.
 {
-  this->Flush(ev);
+  return Flush(ev);
 }
 
-/*public virtual*/ morkFile*
-morkStdioFile::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
+NS_IMETHODIMP 
+morkStdioFile::AcquireBud(nsIMdbEnv * mdbev, nsIMdbHeap* ioHeap, nsIMdbFile **acquiredFile)
   // AcquireBud() starts a new "branch" version of the file, empty of content,
   // so that a new version of the file can be written.  This new file
   // can later be told to BecomeTrunk() the original file, so the branch
@@ -442,8 +514,12 @@ morkStdioFile::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
   // behavior is exhibited by the file, so crashes protect old files.
   // Note that AcquireBud() is an illegal operation on readonly files.
 {
+  NS_ENSURE_ARG(acquiredFile);
   MORK_USED_1(ioHeap);
+  nsresult rv = NS_OK;
   morkFile* outFile = 0;
+  morkEnv *ev = morkEnv::FromMdbEnv(mdbev);
+
   if ( this->IsOpenAndActiveFile() )
   {
     FILE* file = (FILE*) mStdioFile_File;
@@ -480,26 +556,27 @@ morkStdioFile::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
       
 //#endif /*MORK_WIN*/
 
-      if ( ev->Good() && this->AddStrongRef(ev) )
+      if ( ev->Good() && this->AddStrongRef(ev->AsMdbEnv()) )
+      {
         outFile = this;
+        AddRef();
+      }
     }
     else if ( mFile_Thief )
     {
-      nsIMdbFile* outBud = 0;
-      mFile_Thief->AcquireBud(ev->AsMdbEnv(), ioHeap, &outBud);
-      if ( outBud )
-        outBud->CutStrongRef(ev->AsMdbEnv()); // convert to morkFile later
+      rv = mFile_Thief->AcquireBud(ev->AsMdbEnv(), ioHeap, acquiredFile);
     }
     else
       this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
   
-  return outFile;
+  *acquiredFile = outFile;
+  return rv;
 }
 
-/*public virtual*/ mork_pos
-morkStdioFile::Length(morkEnv* ev) const
+mork_pos 
+morkStdioFile::Length(morkEnv * ev) const
 {
   mork_pos outPos = 0;
   
@@ -539,11 +616,12 @@ morkStdioFile::Length(morkEnv* ev) const
   return outPos;
 }
 
-/*public virtual*/ mork_pos
-morkStdioFile::Tell(morkEnv* ev) const
+NS_IMETHODIMP
+morkStdioFile::Tell(nsIMdbEnv* ev, mork_pos *outPos) const
 {
-  mork_pos outPos = 0;
-  
+  nsresult rv = NS_OK;
+  NS_ENSURE_ARG(outPos);  
+  morkEnv* mev = morkEnv::FromMdbEnv(ev);
   if ( this->IsOpenAndActiveFile() )
   {
     FILE* file = (FILE*) mStdioFile_File;
@@ -551,25 +629,25 @@ morkStdioFile::Tell(morkEnv* ev) const
     {
       long where = MORK_FILETELL(file);
       if ( where >= 0 )
-        outPos = where;
+        *outPos = where;
       else
-        this->new_stdio_file_fault(ev);
+        this->new_stdio_file_fault(mev);
     }
     else if ( mFile_Thief )
-      mFile_Thief->Tell(ev->AsMdbEnv(), &outPos);
+      mFile_Thief->Tell(ev, outPos);
     else
-      this->NewMissingIoError(ev);
+      this->NewMissingIoError(mev);
   }
-  else this->NewFileDownError(ev);
+  else this->NewFileDownError(mev);
 
-  return outPos;
+  return rv;
 }
 
-/*public virtual*/ mork_size
-morkStdioFile::Read(morkEnv* ev, void* outBuf, mork_size inSize)
+NS_IMETHODIMP
+morkStdioFile::Read(nsIMdbEnv* ev, void* outBuf, mork_size inSize,  mork_num *outCount)
 {
-  mork_num outCount = 0;
-  
+  nsresult rv = NS_OK;
+  morkEnv* mev = morkEnv::FromMdbEnv(ev);
   if ( this->IsOpenAndActiveFile() )
   {
     FILE* file = (FILE*) mStdioFile_File;
@@ -578,25 +656,27 @@ morkStdioFile::Read(morkEnv* ev, void* outBuf, mork_size inSize)
       long count = (long) MORK_FILEREAD(outBuf, inSize, file);
       if ( count >= 0 )
       {
-        outCount = (mork_num) count;
+        *outCount = (mork_num) count;
       }
-      else this->new_stdio_file_fault(ev);
+      else this->new_stdio_file_fault(mev);
     }
     else if ( mFile_Thief )
-      mFile_Thief->Read(ev->AsMdbEnv(), outBuf, inSize, &outCount);
+      mFile_Thief->Read(ev, outBuf, inSize, outCount);
     else
-      this->NewMissingIoError(ev);
+      this->NewMissingIoError(mev);
   }
-  else this->NewFileDownError(ev);
+  else this->NewFileDownError(mev);
 
-  return outCount;
+  return rv;
 }
 
-/*public virtual*/ mork_pos
-morkStdioFile::Seek(morkEnv* ev, mork_pos inPos)
+NS_IMETHODIMP 
+morkStdioFile::Seek(nsIMdbEnv* mdbev, mork_pos inPos, mork_pos *aOutPos)
 {
   mork_pos outPos = 0;
-  
+  nsresult rv = NS_OK;
+  morkEnv *ev = morkEnv::FromMdbEnv(mdbev);
+
   if ( this->IsOpenOrClosingNode() && this->FileActive() )
   {
     FILE* file = (FILE*) mStdioFile_File;
@@ -609,20 +689,22 @@ morkStdioFile::Seek(morkEnv* ev, mork_pos inPos)
         this->new_stdio_file_fault(ev);
     }
     else if ( mFile_Thief )
-      mFile_Thief->Seek(ev->AsMdbEnv(), inPos);
+      mFile_Thief->Seek(mdbev, inPos, aOutPos);
     else
       this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
 
-  return outPos;
+  *aOutPos = outPos;
+  return rv;
 }
 
-/*public virtual*/ mork_size
-morkStdioFile::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
+NS_IMETHODIMP 
+morkStdioFile::Write(nsIMdbEnv* mdbev, const void* inBuf, mork_size inSize, mork_size *aOutSize)
 {
   mork_num outCount = 0;
-  
+  nsresult rv = NS_OK;
+  morkEnv *ev = morkEnv::FromMdbEnv(mdbev);
   if ( this->IsOpenActiveAndMutableFile() )
   {
     FILE* file = (FILE*) mStdioFile_File;
@@ -635,18 +717,20 @@ morkStdioFile::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
         this->new_stdio_file_fault(ev);
     }
     else if ( mFile_Thief )
-      mFile_Thief->Write(ev->AsMdbEnv(), inBuf, inSize, &outCount);
+      mFile_Thief->Write(mdbev, inBuf, inSize, &outCount);
     else
       this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
 
-  return outCount;
+  *aOutSize = outCount;
+  return rv;
 }
 
-/*public virtual*/ void
-morkStdioFile::Flush(morkEnv* ev)
+NS_IMETHODIMP
+morkStdioFile::Flush(nsIMdbEnv* mdbev)
 {
+  morkEnv *ev = morkEnv::FromMdbEnv(mdbev);
   if ( this->IsOpenOrClosingNode() && this->FileActive() )
   {
     FILE* file = (FILE*) mStdioFile_File;
@@ -656,11 +740,12 @@ morkStdioFile::Flush(morkEnv* ev)
 
     }
     else if ( mFile_Thief )
-      mFile_Thief->Flush(ev->AsMdbEnv());
+      mFile_Thief->Flush(mdbev);
     else
       this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
+  return NS_OK;
 }
 
 // ````` ````` ````` `````   ````` ````` ````` `````  
@@ -815,21 +900,23 @@ morkStdioFile::CloseStdio(morkEnv* ev)
 }
 
 
-/*public virtual*/ void
-morkStdioFile::Steal(morkEnv* ev, nsIMdbFile* ioThief)
+NS_IMETHODIMP
+morkStdioFile::Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief)
   // If this file is a file version branch created by calling AcquireBud(),
   // BecomeTrunk() causes this file's content to replace the original
   // file's content, typically by assuming the original file's identity.
 {
-  if ( mStdioFile_File && this->FileActive() && this->FileIoOpen() )
+  morkEnv *mev = morkEnv::FromMdbEnv(ev);
+  if ( mStdioFile_File && FileActive() && FileIoOpen() )
   {
     FILE* file = (FILE*) mStdioFile_File;
     if ( MORK_FILECLOSE(file) < 0 )
-      this->new_stdio_file_fault(ev);
+      new_stdio_file_fault(mev);
     
     mStdioFile_File = 0;
   }
-  this->SetThief(ev, ioThief);
+  SetThief(mev, ioThief);
+  return NS_OK;
 }
 
 

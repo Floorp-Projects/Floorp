@@ -190,13 +190,6 @@ morkNode::MakeNew(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
   return node;
 }
 
-/*static*/ void
-morkNode::OnDeleteAssert(void* ioAddress) // cannot operator delete()
-{
-  MORK_USED_1(ioAddress);
-  MORK_ASSERT(morkBool_kFalse); // tell developer: must not delete nodes
-}
-
 /*public non-poly*/ void
 morkNode::ZapOld(morkEnv* ev, nsIMdbHeap* ioHeap)
 {
@@ -242,11 +235,35 @@ morkNode::CloseMorkNode(morkEnv* ev) // CloseNode() only if open
     this->MarkShut();
   }
 }
+NS_IMETHODIMP
+morkNode::CloseMdbObject(nsIMdbEnv* mev)
+{
+  return morkNode::CloseMdbObject((morkEnv *) mev);
+}
+
+mdb_err morkNode::CloseMdbObject(morkEnv *ev)
+{
+  // if only one ref, Handle_CutStrongRef will clean up better.
+  if (mNode_Uses == 1)
+    return CutStrongRef(ev);
+
+  mdb_err outErr = 0;
+  
+  if ( IsNode() && IsOpenNode() )
+  {
+    if ( ev )
+    {
+      CloseMorkNode(ev);
+      outErr = ev->AsErr();
+    }
+  }
+  return outErr;
+}
 
 /*public virtual*/
 morkNode::~morkNode() // assert that CloseNode() executed earlier
 {
-  MORK_ASSERT(this->IsShutNode());
+  MORK_ASSERT(this->IsShutNode() || IsDeadNode()); // sometimes we call destructor explictly w/o freeing object.
   mNode_Access = morkAccess_kDead;
   mNode_Usage = morkUsage_kNone;
 }
@@ -418,9 +435,9 @@ nsIMdbFile_SlotStrongFile(nsIMdbFile* self, morkEnv* ev, nsIMdbFile** ioSlot)
     if ( file )
     {
       *ioSlot = 0;
-      file->CutStrongRef(menv);
+      NS_RELEASE(file);
     }
-    if ( self && ev->Good() && (self->AddStrongRef(menv)==0) && ev->Good() )
+    if ( self && ev->Good() && (NS_ADDREF(self)>=0) && ev->Good() )
       *ioSlot = self;
   }
 }
@@ -460,6 +477,8 @@ morkNode::SlotStrongNode(morkNode* me, morkEnv* ev, morkNode** ioSlot)
   {
     if ( node )
     {
+      // what if this nulls out the ev and causes asserts?
+      // can we move this after the CutStrongRef()?
       *ioSlot = 0;
       node->CutStrongRef(ev);
     }

@@ -51,6 +51,14 @@
 #include "morkBead.h"
 #endif
 
+#ifndef _MORKCONFIG_
+#include "morkConfig.h"
+#endif
+
+#ifndef _ORKINHEAP_
+#include "orkinHeap.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #define morkDerived_kObject   /*i*/ 0x6F42 /* ascii 'oB' */
@@ -59,7 +67,7 @@
 **| and containing port to those objects that are exposed as instances of
 **| nsIMdbObject in the public interface.
 |*/
-class morkObject : public morkBead { 
+class morkObject : public morkBead, public nsIMdbObject { 
 
 // public: // slots inherited from morkNode (meant to inform only)
   // nsIMdbHeap*    mNode_Heap;
@@ -80,12 +88,55 @@ class morkObject : public morkBead {
 public: // state is public because the entire Mork system is private
 
   morkHandle*      mObject_Handle;   // weak ref to handle for this object
-  
+
+  morkEnv * mMorkEnv; // weak ref to environment this object created in.
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
   virtual void CloseMorkNode(morkEnv* ev); // CloseObject() only if open
   virtual ~morkObject(); // assert that CloseObject() executed earlier
+  void operator delete(void* ioAddress, size_t size)
+  { 
+#ifdef MORK_DEBUG_HEAP_STATS
+    mork_u4* array = (mork_u4*) ioAddress;
+    array -= 3;
+    orkinHeap *heap = (orkinHeap *) *array;
+    if (heap)
+      heap->Free(nsnull, ioAddress);
+    else
+      ::delete array;
+#else
+    ::delete ioAddress;
+#endif
+  }
+
+  NS_DECL_ISUPPORTS
+
+    // { ----- begin attribute methods -----
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
+  // } ----- end attribute methods -----
+
+  // { ----- begin factory methods -----
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  // } ----- end factory methods -----
+
+  // { ----- begin ref counting for well-behaved cyclic graphs -----
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+    mdb_count* outCount);  
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+    mdb_count* outCount);
+
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
+
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  // } ----- end ref counting -----
+  
+
 protected: // special case construction of first env without preceding env
   morkObject(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
     mork_color inBeadColor);

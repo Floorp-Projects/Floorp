@@ -87,7 +87,7 @@ morkPortTableCursor::CloseMorkNode(morkEnv* ev) // ClosePortTableCursor() only i
 /*public virtual*/
 morkPortTableCursor::~morkPortTableCursor() // ClosePortTableCursor() executed earlier
 {
-  MORK_ASSERT(this->IsShutNode());
+  CloseMorkNode(mMorkEnv);
 }
 
 /*public non-poly*/
@@ -122,6 +122,27 @@ morkPortTableCursor::morkPortTableCursor(morkEnv* ev,
       ev->NilPointerError();
   }
 }
+
+NS_IMPL_ISUPPORTS_INHERITED1(morkPortTableCursor, morkCursor, nsIMdbPortTableCursor);
+
+morkEnv*
+morkPortTableCursor::CanUsePortTableCursor(nsIMdbEnv* mev,
+  mork_bool inMutable, mdb_err* outErr) const
+{
+  morkEnv* outEnv = 0;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    if ( IsPortTableCursor() )
+      outEnv = ev;
+    else
+      NonPortTableCursorTypeError(ev);
+    *outErr = ev->AsErr();
+  }
+  MORK_ASSERT(outEnv);
+  return outEnv;
+}
+
 
 /*public non-poly*/ void
 morkPortTableCursor::ClosePortTableCursor(morkEnv* ev) 
@@ -159,23 +180,6 @@ morkPortTableCursor::NilCursorStoreError(morkEnv* ev)
 morkPortTableCursor::NonPortTableCursorTypeError(morkEnv* ev)
 {
   ev->NewError("non morkPortTableCursor");
-}
-
-orkinPortTableCursor*
-morkPortTableCursor::AcquirePortTableCursorHandle(morkEnv* ev)
-{
-  orkinPortTableCursor* outCursor = 0;
-  orkinPortTableCursor* c = (orkinPortTableCursor*) mObject_Handle;
-  if ( c ) // have an old handle?
-    c->AddStrongRef(ev->AsMdbEnv());
-  else // need new handle?
-  {
-    c = orkinPortTableCursor::MakePortTableCursor(ev, this);
-    mObject_Handle = c;
-  }
-  if ( c )
-    outCursor = c;
-  return outCursor;
 }
 
 mork_bool 
@@ -341,6 +345,129 @@ morkPortTableCursor::NextTable(morkEnv* ev)
   } while ( ev->Good() && !mPortTableCursor_SpacesDidEnd );
 
   return (morkTable*) 0;
+}
+
+
+// { ----- begin table iteration methods -----
+
+// { ===== begin nsIMdbPortTableCursor methods =====
+
+// { ----- begin attribute methods -----
+NS_IMETHODIMP
+morkPortTableCursor::SetPort(nsIMdbEnv* mev, nsIMdbPort* ioPort)
+{
+  NS_ASSERTION(PR_FALSE,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+morkPortTableCursor::GetPort(nsIMdbEnv* mev, nsIMdbPort** acqPort)
+{
+  mdb_err outErr = 0;
+  nsIMdbPort* outPort = 0;
+  morkEnv* ev =
+    this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    if ( mPortTableCursor_Store )
+      outPort = mPortTableCursor_Store->AcquireStoreHandle(ev);
+    outErr = ev->AsErr();
+  }
+  if ( acqPort )
+    *acqPort = outPort;
+  return outErr;
+}
+
+NS_IMETHODIMP
+morkPortTableCursor::SetRowScope(nsIMdbEnv* mev, // sets pos to -1
+  mdb_scope inRowScope)
+{
+  mdb_err outErr = 0;
+  morkEnv* ev =
+    this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    mCursor_Pos = -1;
+    
+    SetRowScope(ev, inRowScope);
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+NS_IMETHODIMP
+morkPortTableCursor::GetRowScope(nsIMdbEnv* mev, mdb_scope* outRowScope)
+{
+  mdb_err outErr = 0;
+  mdb_scope rowScope = 0;
+  morkEnv* ev =
+    this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    rowScope = mPortTableCursor_RowScope;
+    outErr = ev->AsErr();
+  }
+  *outRowScope = rowScope;
+  return outErr;
+}
+// setting row scope to zero iterates over all row scopes in port
+  
+NS_IMETHODIMP
+morkPortTableCursor::SetTableKind(nsIMdbEnv* mev, // sets pos to -1
+  mdb_kind inTableKind)
+{
+  mdb_err outErr = 0;
+  morkEnv* ev =
+    this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    mCursor_Pos = -1;
+    
+    SetTableKind(ev, inTableKind);
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+NS_IMETHODIMP
+morkPortTableCursor::GetTableKind(nsIMdbEnv* mev, mdb_kind* outTableKind)
+// setting table kind to zero iterates over all table kinds in row scope
+{
+  mdb_err outErr = 0;
+  mdb_kind tableKind = 0;
+  morkEnv* ev =
+    this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    tableKind = mPortTableCursor_TableKind;
+    outErr = ev->AsErr();
+  }
+  *outTableKind = tableKind;
+  return outErr;
+}
+// } ----- end attribute methods -----
+
+// { ----- begin table iteration methods -----
+NS_IMETHODIMP
+morkPortTableCursor::NextTable( // get table at next position in the db
+  nsIMdbEnv* mev, // context
+  nsIMdbTable** acqTable)
+{
+  mdb_err outErr = 0;
+  nsIMdbTable* outTable = 0;
+  morkEnv* ev =
+    CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkTable* table = NextTable(ev);
+    if ( table && ev->Good() )
+      outTable = table->AcquireTableHandle(ev);
+        
+    outErr = ev->AsErr();
+  }
+  if ( acqTable )
+    *acqTable = outTable;
+  return outErr;
 }
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

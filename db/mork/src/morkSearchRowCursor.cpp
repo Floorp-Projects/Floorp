@@ -164,7 +164,7 @@ morkSearchRowCursor::MakeUniqCursor(morkEnv* ev)
   return outCursor;
 }
 
-
+#ifdef NEEDED
 orkinTableRowCursor*
 morkSearchRowCursor::AcquireUniqueRowCursorHandle(morkEnv* ev)
 {
@@ -178,7 +178,7 @@ morkSearchRowCursor::AcquireUniqueRowCursorHandle(morkEnv* ev)
   }
   return outCursor;
 }
-
+#endif
 mork_bool
 morkSearchRowCursor::CanHaveDupRowMembers(morkEnv* ev)
 {

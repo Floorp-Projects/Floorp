@@ -125,9 +125,6 @@ public: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
 
 public: // other handle methods
   mork_bool GoodHandleTag() const

@@ -128,7 +128,9 @@ orkinFile::CanUseFile(nsIMdbEnv* mev,
 
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE1(orkinFile, nsIMdbFile);
+
+/*virtual*/ nsrefcnt
 orkinFile::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -138,7 +140,7 @@ orkinFile::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinFile::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;
@@ -483,7 +485,7 @@ orkinFile::AcquireBud(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
     if ( bud )
     {
       outBud = bud->AcquireFileHandle(ev);
-      bud->CutStrongRef(ev);
+      bud->CutStrongRef(mev);
     }
     outErr = ev->AsErr();
   }

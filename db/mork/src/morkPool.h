@@ -124,9 +124,6 @@ public: // morkNode memory management operators
   void* operator new(size_t inSize)
   { return ::operator new(inSize); }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkNode instances.  Call ZapOld() instead.
 
 public: // other pool methods
 

@@ -190,15 +190,16 @@ morkStream::PutIndent(morkEnv* ev, mork_count inDepth)
   // "indents" by inDepth, and returns the line length after indentation.
 {
   mork_size outLength = 0;
-
+  nsIMdbEnv *mev = ev->AsMdbEnv();
   if ( ev->Good() )
   {
     this->PutLineBreak(ev);
     if ( ev->Good() )
     {
       outLength = inDepth;
+      mdb_size bytesWritten;
       if ( inDepth )
-        this->Write(ev, morkStream_kSpaces, inDepth);
+        this->Write(mev, morkStream_kSpaces, inDepth, &bytesWritten);
     }
   }
   return outLength;
@@ -210,6 +211,7 @@ morkStream::PutByteThenIndent(morkEnv* ev, int inByte, mork_count inDepth)
   // "indents" by inDepth, and returns the line length after indentation.
 {
   mork_size outLength = 0;
+  nsIMdbEnv *mev = ev->AsMdbEnv();
   
   if ( inDepth > morkStream_kMaxIndentDepth )
     inDepth = morkStream_kMaxIndentDepth;
@@ -221,8 +223,9 @@ morkStream::PutByteThenIndent(morkEnv* ev, int inByte, mork_count inDepth)
     if ( ev->Good() )
     {
       outLength = inDepth;
+      mdb_size bytesWritten;
       if ( inDepth )
-        this->Write(ev, morkStream_kSpaces, inDepth);
+        this->Write(mev, morkStream_kSpaces, inDepth, &bytesWritten);
     }
   }
   return outLength;
@@ -235,6 +238,8 @@ morkStream::PutStringThenIndent(morkEnv* ev,
 // "indents" by inDepth, and returns the line length after indentation.
 {
   mork_size outLength = 0;
+  mdb_size bytesWritten;
+  nsIMdbEnv *mev = ev->AsMdbEnv();
   
   if ( inDepth > morkStream_kMaxIndentDepth )
     inDepth = morkStream_kMaxIndentDepth;
@@ -243,7 +248,7 @@ morkStream::PutStringThenIndent(morkEnv* ev,
   {
     mork_size length = MORK_STRLEN(inString);
     if ( length && ev->Good() ) // any bytes to write?
-      this->Write(ev, inString, length);
+      this->Write(mev, inString, length, &bytesWritten);
   }
   
   if ( ev->Good() )
@@ -253,7 +258,7 @@ morkStream::PutStringThenIndent(morkEnv* ev,
     {
       outLength = inDepth;
       if ( inDepth )
-        this->Write(ev, morkStream_kSpaces, inDepth);
+        this->Write(mev, morkStream_kSpaces, inDepth, &bytesWritten);
     }
   }
   return outLength;
@@ -262,13 +267,15 @@ morkStream::PutStringThenIndent(morkEnv* ev,
 mork_size
 morkStream::PutString(morkEnv* ev, const char* inString)
 {
+  nsIMdbEnv *mev = ev->AsMdbEnv();
   mork_size outSize = 0;
+  mdb_size bytesWritten;
   if ( inString )
   {
     outSize = MORK_STRLEN(inString);
     if ( outSize && ev->Good() ) // any bytes to write?
     {
-      this->Write(ev, inString, outSize);
+      this->Write(mev, inString, outSize, &bytesWritten);
     }
   }
   return outSize;
@@ -278,13 +285,15 @@ mork_size
 morkStream::PutStringThenNewline(morkEnv* ev, const char* inString)
   // PutStringThenNewline() returns total number of bytes written.
 {
+  nsIMdbEnv *mev = ev->AsMdbEnv();
   mork_size outSize = 0;
+  mdb_size bytesWritten;
   if ( inString )
   {
     outSize = MORK_STRLEN(inString);
     if ( outSize && ev->Good() ) // any bytes to write?
     {
-      this->Write(ev, inString, outSize);
+      this->Write(mev, inString, outSize, &bytesWritten);
       if ( ev->Good() )
         outSize += this->PutLineBreak(ev);
     }
@@ -332,8 +341,8 @@ morkStream::PutLineBreak(morkEnv* ev)
 // public: // virtual morkFile methods
 
 
-/*public virtual*/ void
-morkStream::Steal(morkEnv* ev, nsIMdbFile* ioThief)
+NS_IMETHODIMP
+morkStream::Steal(nsIMdbEnv* mev, nsIMdbFile* ioThief)
   // Steal: tell this file to close any associated i/o stream in the file
   // system, because the file ioThief intends to reopen the file in order
   // to provide the MDB implementation with more exotic file access than is
@@ -345,20 +354,24 @@ morkStream::Steal(morkEnv* ev, nsIMdbFile* ioThief)
   // closed (by a call to CloseMdbObject()).
 {
   MORK_USED_1(ioThief);
+  morkEnv *ev = morkEnv::FromMdbEnv(mev);
   ev->StubMethodOnlyError();
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/*public virtual*/ void
-morkStream::BecomeTrunk(morkEnv* ev)
+NS_IMETHODIMP
+morkStream::BecomeTrunk(nsIMdbEnv* mev)
   // If this file is a file version branch created by calling AcquireBud(),
   // BecomeTrunk() causes this file's content to replace the original
   // file's content, typically by assuming the original file's identity.
 {
+  morkEnv *ev = morkEnv::FromMdbEnv(mev);
   ev->StubMethodOnlyError();
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/*public virtual*/ morkFile*
-morkStream::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
+NS_IMETHODIMP
+morkStream::AcquireBud(nsIMdbEnv* mev, nsIMdbHeap* ioHeap, nsIMdbFile **acqBud)
   // AcquireBud() starts a new "branch" version of the file, empty of content,
   // so that a new version of the file can be written.  This new file
   // can later be told to BecomeTrunk() the original file, so the branch
@@ -377,6 +390,7 @@ morkStream::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
   MORK_USED_1(ioHeap);
   morkFile* outFile = 0;
   nsIMdbFile* file = mStream_ContentFile;
+  morkEnv *ev = morkEnv::FromMdbEnv(mev);
   if ( this->IsOpenAndActiveFile() && file )
   {
     // figure out how this interacts with buffering and mStream_WriteEnd:
@@ -384,20 +398,20 @@ morkStream::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
   }
   else this->NewFileDownError(ev);
   
-  return outFile;
+  *acqBud = outFile;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/*public virtual*/ mork_pos
+mork_pos 
 morkStream::Length(morkEnv* ev) const // eof
 {
   mork_pos outPos = 0;
-  
+
   nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
   {
     mork_pos contentEof = 0;
-    nsIMdbEnv* menv = ev->AsMdbEnv();
-    file->Eof(menv, &contentEof);
+    file->Eof(ev->AsMdbEnv(), &contentEof);
     if ( ev->Good() )
     {
       if ( mStream_WriteEnd ) // this stream supports writing?
@@ -445,10 +459,13 @@ void morkStream::NewPosBeyondEofError(morkEnv* ev) const
 void morkStream::NewBadCursorOrderError(morkEnv* ev) const
 { ev->NewError("bad stream cursor order"); }
 
-/*public virtual*/ mork_pos   
-morkStream::Tell(morkEnv* ev) const
+NS_IMETHODIMP 
+morkStream::Tell(nsIMdbEnv* mdbev, mork_pos *aOutPos) const
 {
-  mork_pos outPos = 0;
+  nsresult rv = NS_OK;
+  morkEnv *ev = morkEnv::FromMdbEnv(mdbev);
+
+  NS_ENSURE_ARG_POINTER(aOutPos);
   
   nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
@@ -463,7 +480,7 @@ morkStream::Tell(morkEnv* ev) const
     {
       if ( buf && at >= buf && at <= writeEnd ) 
       {
-        outPos = mStream_BufPos + (at - buf);
+        *aOutPos = mStream_BufPos + (at - buf);
       }
       else this->NewBadCursorOrderError(ev);
     }
@@ -471,25 +488,27 @@ morkStream::Tell(morkEnv* ev) const
     {
       if ( buf && at >= buf && at <= readEnd ) 
       {
-        outPos = mStream_BufPos + (at - buf);
+        *aOutPos = mStream_BufPos + (at - buf);
       }
       else this->NewBadCursorOrderError(ev);
     }
   }
   else this->NewFileDownError(ev);
 
-  return outPos;
+  return rv;
 }
 
-/*public virtual*/ mork_size  
-morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
+NS_IMETHODIMP 
+morkStream::Read(nsIMdbEnv* mdbev, void* outBuf, mork_size inSize, mork_size *aOutSize)
 {
+  NS_ENSURE_ARG_POINTER(aOutSize);
   // First we satisfy the request from buffered bytes, if any.  Then
   // if additional bytes are needed, we satisfy these by direct reads
   // from the content file without any local buffering (but we still need
   // to adjust the buffer position to reflect the current i/o point).
 
-  mork_pos outActual = 0;
+  morkEnv *ev = morkEnv::FromMdbEnv(mdbev);
+  nsresult rv = NS_OK;
 
   nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
@@ -518,7 +537,7 @@ morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
               
               at += quantum; // advance past read bytes
               mStream_At = at;
-              outActual += quantum;  // this much copied so far
+              *aOutSize += quantum;  // this much copied so far
 
               sink += quantum;   // in case we need to copy more
               inSize -= quantum; // filled this much of request
@@ -549,11 +568,11 @@ morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
               {
                 if ( actual )
                 {
-                  outActual += actual;
+                  *aOutSize += actual;
                   mStream_BufPos += actual;
                   mStream_HitEof = morkBool_kFalse;
                 }
-                else if ( !outActual )
+                else if ( !*aOutSize )
                   mStream_HitEof = morkBool_kTrue;
               }
             }
@@ -568,16 +587,18 @@ morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
   else this->NewFileDownError(ev);
   
   if ( ev->Bad() )
-    outActual = 0;
+    *aOutSize = 0;
 
-  return (mork_size) outActual;
+  return rv;
 }
 
-/*public virtual*/ mork_pos   
-morkStream::Seek(morkEnv* ev, mork_pos inPos)
+NS_IMETHODIMP 
+morkStream::Seek(nsIMdbEnv * mdbev, mork_pos inPos, mork_pos *aOutPos)
 {
-  mork_pos outPos = 0;
-
+  NS_ENSURE_ARG_POINTER(aOutPos);
+  morkEnv *ev = morkEnv::FromMdbEnv(mdbev);
+  *aOutPos = 0;
+  nsresult rv = NS_OK;
   nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenOrClosingNode() && this->FileActive() && file )
   {
@@ -589,7 +610,7 @@ morkStream::Seek(morkEnv* ev, mork_pos inPos)
     if ( writeEnd ) // file is mutable/writeonly?
     {
       if ( mStream_Dirty ) // need to commit buffer changes?
-        this->Flush(ev);
+        this->Flush(mdbev);
 
       if ( ev->Good() ) // no errors during flush or earlier?
       {
@@ -605,7 +626,7 @@ morkStream::Seek(morkEnv* ev, mork_pos inPos)
               if ( inPos <= eof ) // acceptable new position?
               {
                 mStream_BufPos = inPos; // new stream position
-                outPos = inPos;
+                *aOutPos = inPos;
               }
               else this->NewPosBeyondEofError(ev);
             }
@@ -625,7 +646,7 @@ morkStream::Seek(morkEnv* ev, mork_pos inPos)
         {
           if ( inPos <= eof ) // acceptable new position?
           {
-            outPos = inPos;
+            *aOutPos = inPos;
             mStream_BufPos = inPos; // new stream position
             mStream_At = mStream_ReadEnd = buf; // empty buffer
             if ( inPos == eof ) // notice eof reached?
@@ -640,13 +661,14 @@ morkStream::Seek(morkEnv* ev, mork_pos inPos)
   }
   else this->NewFileDownError(ev);
 
-  return outPos;
+  return rv;
 }
 
-/*public virtual*/ mork_size  
-morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
+NS_IMETHODIMP 
+morkStream::Write(nsIMdbEnv* menv, const void* inBuf, mork_size inSize, mork_size  *aOutSize)
 {
   mork_num outActual = 0;
+  morkEnv *ev = morkEnv::FromMdbEnv(menv);
 
   nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenActiveAndMutableFile() && file )
@@ -692,7 +714,7 @@ morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
               // buffer rather than write them to content file.
               
               if ( mStream_Dirty )
-                this->Flush(ev); // will update mStream_BufPos
+                this->Flush(menv); // will update mStream_BufPos
 
               at = mStream_At;
               if ( at < buf || at > end ) // bad cursor?
@@ -716,7 +738,6 @@ morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
                   // {
                   // }
 
-                  nsIMdbEnv* menv = ev->AsMdbEnv();
                   mork_num actual = 0;
                   file->Put(menv, source, inSize, mStream_BufPos, &actual);
                   if ( ev->Good() ) // no write error?
@@ -740,21 +761,25 @@ morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
   if ( ev->Bad() )
     outActual = 0;
 
-  return outActual;
+  *aOutSize = outActual;
+  return ev->AsErr();
 }
 
-/*public virtual*/ void       
-morkStream::Flush(morkEnv* ev)
+NS_IMETHODIMP     
+morkStream::Flush(nsIMdbEnv* ev)
 {
+  morkEnv *mev = morkEnv::FromMdbEnv(ev);
+  nsresult rv = NS_ERROR_FAILURE;
   nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenOrClosingNode() && this->FileActive() && file )
   {
     if ( mStream_Dirty )
-      this->spill_buf(ev);
+      this->spill_buf(mev);
 
-    file->Flush(ev->AsMdbEnv());
+    rv = file->Flush(ev);
   }
-  else this->NewFileDownError(ev);
+  else this->NewFileDownError(mev);
+  return rv;
 }
 
 // ````` ````` ````` `````   ````` ````` ````` `````  

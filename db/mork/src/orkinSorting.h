@@ -98,9 +98,6 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
   
 public: // construction:
 
@@ -118,36 +115,32 @@ public: // type identification
   mork_bool IsOrkinSortingHandle() const
   { return this->IsHandle() && this->IsOrkinSorting(); }
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
-
+  NS_DECL_ISUPPORTS
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -158,12 +151,12 @@ public: // type identification
   // sorting: note all rows are assumed sorted by row ID as a secondary
   // sort following the primary column sort, when table rows are sorted.
   
-  virtual mdb_err GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable);
-  virtual mdb_err GetSortColumn( // query which col is currently sorted
+  NS_IMETHOD GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable);
+  NS_IMETHOD GetSortColumn( // query which col is currently sorted
     nsIMdbEnv* ev, // context
     mdb_column* outColumn); // col the table uses for sorting (or zero)
 
-  virtual mdb_err SetNewCompare(nsIMdbEnv* ev,
+  NS_IMETHOD SetNewCompare(nsIMdbEnv* ev,
     nsIMdbCompare* ioNewCompare);
     // Setting the sorting's compare object will typically cause the rows
     // to be resorted, presumably in a lazy fashion when the sorting is
@@ -172,7 +165,7 @@ public: // type identification
     // implementations should revert to the default sort order, which must
     // be equivalent to whatever is used by nsIMdbFactory::MakeCompare().
 
-  virtual mdb_err GetOldCompare(nsIMdbEnv* ev,
+  NS_IMETHOD GetOldCompare(nsIMdbEnv* ev,
     nsIMdbCompare** acqOldCompare);
     // Get this sorting instance's compare object, which handles the
     // ordering of rows in the sorting, by comparing yarns from the cells
@@ -184,7 +177,7 @@ public: // type identification
   // } ----- end attribute methods -----
 
   // { ----- begin cursor methods -----
-  virtual mdb_err GetSortingRowCursor( // make a cursor, starting at inRowPos
+  NS_IMETHOD GetSortingRowCursor( // make a cursor, starting at inRowPos
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     nsIMdbTableRowCursor** acqCursor); // acquire new cursor instance
@@ -192,12 +185,12 @@ public: // type identification
   // } ----- end row position methods -----
 
   // { ----- begin row position methods -----
-  virtual mdb_err PosToOid( // get row member for a table position
+  NS_IMETHOD PosToOid( // get row member for a table position
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     mdbOid* outOid); // row oid at the specified position
     
-  virtual mdb_err PosToRow( // test for the table position of a row member
+  NS_IMETHOD PosToRow( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     nsIMdbRow** acqRow); // acquire row at table position inRowPos

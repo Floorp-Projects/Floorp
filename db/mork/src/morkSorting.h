@@ -118,9 +118,6 @@ public: // morkNode memory management operators
   void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
   { return morkNode::MakeNew(inSize, ioHeap, ev); }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkNode instances.  Call ZapOld() instead.
  
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods

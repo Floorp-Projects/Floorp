@@ -98,9 +98,6 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
   
 public: // construction:
 
@@ -119,36 +116,32 @@ public: // type identification
 
 public:
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
-
+  NS_DECL_ISUPPORTS
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -156,32 +149,32 @@ public:
 // { ===== begin nsIMdbEnv methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetErrorCount(mdb_count* outCount,
+  NS_IMETHOD GetErrorCount(mdb_count* outCount,
     mdb_bool* outShouldAbort);
-  virtual mdb_err GetWarningCount(mdb_count* outCount,
+  NS_IMETHOD GetWarningCount(mdb_count* outCount,
     mdb_bool* outShouldAbort);
   
-  virtual mdb_err GetEnvBeVerbose(mdb_bool* outBeVerbose);
-  virtual mdb_err SetEnvBeVerbose(mdb_bool inBeVerbose);
+  NS_IMETHOD GetEnvBeVerbose(mdb_bool* outBeVerbose);
+  NS_IMETHOD SetEnvBeVerbose(mdb_bool inBeVerbose);
   
-  virtual mdb_err GetDoTrace(mdb_bool* outDoTrace);
-  virtual mdb_err SetDoTrace(mdb_bool inDoTrace);
+  NS_IMETHOD GetDoTrace(mdb_bool* outDoTrace);
+  NS_IMETHOD SetDoTrace(mdb_bool inDoTrace);
   
-  virtual mdb_err GetAutoClear(mdb_bool* outAutoClear);
-  virtual mdb_err SetAutoClear(mdb_bool inAutoClear);
+  NS_IMETHOD GetAutoClear(mdb_bool* outAutoClear);
+  NS_IMETHOD SetAutoClear(mdb_bool inAutoClear);
   
-  virtual mdb_err GetErrorHook(nsIMdbErrorHook** acqErrorHook);
-  virtual mdb_err SetErrorHook(
+  NS_IMETHOD GetErrorHook(nsIMdbErrorHook** acqErrorHook);
+  NS_IMETHOD SetErrorHook(
     nsIMdbErrorHook* ioErrorHook); // becomes referenced
   
-  virtual mdb_err GetHeap(nsIMdbHeap** acqHeap);
-  virtual mdb_err SetHeap(
+  NS_IMETHOD GetHeap(nsIMdbHeap** acqHeap);
+  NS_IMETHOD SetHeap(
     nsIMdbHeap* ioHeap); // becomes referenced
   // } ----- end attribute methods -----
   
-  virtual mdb_err ClearErrors(); // clear errors beore re-entering db API
-  virtual mdb_err ClearWarnings(); // clear warnings
-  virtual mdb_err ClearErrorsAndWarnings(); // clear both errors & warnings
+  NS_IMETHOD ClearErrors(); // clear errors beore re-entering db API
+  NS_IMETHOD ClearWarnings(); // clear warnings
+  NS_IMETHOD ClearErrorsAndWarnings(); // clear both errors & warnings
 // } ===== end nsIMdbEnv methods =====
 };
 

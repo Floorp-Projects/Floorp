@@ -72,7 +72,7 @@
 
 /*| morkThumb: 
 |*/
-class morkThumb : public morkObject {
+class morkThumb : public morkObject, public nsIMdbThumb {
 
 // public: // slots inherited from morkNode (meant to inform only)
   // nsIMdbHeap*    mNode_Heap;
@@ -92,6 +92,18 @@ class morkThumb : public morkObject {
   // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 public: // state is public because the entire Mork system is private
+  NS_DECL_ISUPPORTS_INHERITED
+
+// { ===== begin nsIMdbThumb methods =====
+  NS_IMETHOD GetProgress(nsIMdbEnv* ev, mdb_count* outTotal,
+    mdb_count* outCurrent, mdb_bool* outDone, mdb_bool* outBroken);
+  
+  NS_IMETHOD DoMore(nsIMdbEnv* ev, mdb_count* outTotal,
+    mdb_count* outCurrent, mdb_bool* outDone, mdb_bool* outBroken);
+  
+  NS_IMETHOD CancelAndBreakThumb(nsIMdbEnv* ev);
+// } ===== end nsIMdbThumb methods =====
+
   // might as well include all the return values here:
   
   mork_magic   mThumb_Magic;   // magic sig different in each thumb type
@@ -158,8 +170,6 @@ public: // 'do more' methods
   void DoMore_CutIndex(morkEnv* ev);
 
 public: // other thumb methods
-
-  nsIMdbThumb* AcquireThumbHandle(morkEnv* ev); // mObject_Handle
 
   morkStore* ThumbToOpenStore(morkEnv* ev);
   // for orkinFactory::ThumbToOpenStore() after OpenFileStore()

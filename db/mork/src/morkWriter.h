@@ -255,9 +255,6 @@ public: // inlines
   mork_bool DidStartDict() const { return mWriter_DidStartDict; }
   mork_bool DidEndDict() const { return mWriter_DidEndDict; }
   
-  mork_bool NeedLineBreak() const
-  { return ( mWriter_LineSize > mWriter_MaxIndent ); }
-  
   void IndentAsNeeded(morkEnv* ev, mork_size inDepth)
   { 
     if ( mWriter_LineSize > mWriter_MaxIndent )

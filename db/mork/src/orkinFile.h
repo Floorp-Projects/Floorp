@@ -98,10 +98,7 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
-  
+ 
 public: // construction:
 
   static orkinFile* MakeFile(morkEnv* ev, morkFile* ioObject);
@@ -118,36 +115,32 @@ public: // type identification
   mork_bool IsOrkinFileHandle() const
   { return this->IsHandle() && this->IsOrkinFile(); }
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
-
+  NS_DECL_ISUPPORTS
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -155,37 +148,37 @@ public: // type identification
 // { ===== begin nsIMdbFile methods =====
 
   // { ----- begin pos methods -----
-  virtual mdb_err Tell(nsIMdbEnv* ev, mdb_pos* outPos);
-  virtual mdb_err Seek(nsIMdbEnv* ev, mdb_pos inPos);
-  virtual mdb_err Eof(nsIMdbEnv* ev, mdb_pos* outPos);
+  NS_IMETHOD Tell(nsIMdbEnv* ev, mdb_pos* outPos);
+  NS_IMETHOD Seek(nsIMdbEnv* ev, mdb_pos inPos);
+  NS_IMETHOD Eof(nsIMdbEnv* ev, mdb_pos* outPos);
   // } ----- end pos methods -----
 
   // { ----- begin read methods -----
-  virtual mdb_err Read(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
+  NS_IMETHOD Read(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
     mdb_size* outActualSize);
-  virtual mdb_err Get(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
+  NS_IMETHOD Get(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
     mdb_pos inPos, mdb_size* outActualSize);
   // } ----- end read methods -----
     
   // { ----- begin write methods -----
-  virtual mdb_err  Write(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
+  NS_IMETHOD  Write(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
     mdb_size* outActualSize);
-  virtual mdb_err  Put(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
+  NS_IMETHOD  Put(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
     mdb_pos inPos, mdb_size* outActualSize);
-  virtual mdb_err  Flush(nsIMdbEnv* ev);
+  NS_IMETHOD  Flush(nsIMdbEnv* ev);
   // } ----- end attribute methods -----
     
   // { ----- begin path methods -----
-  virtual mdb_err  Path(nsIMdbEnv* ev, mdbYarn* outFilePath);
+  NS_IMETHOD  Path(nsIMdbEnv* ev, mdbYarn* outFilePath);
   // } ----- end path methods -----
     
   // { ----- begin replacement methods -----
-  virtual mdb_err  Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief);
-  virtual mdb_err  Thief(nsIMdbEnv* ev, nsIMdbFile** acqThief);
+  NS_IMETHOD  Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief);
+  NS_IMETHOD  Thief(nsIMdbEnv* ev, nsIMdbFile** acqThief);
   // } ----- end replacement methods -----
 
   // { ----- begin versioning methods -----
-  virtual mdb_err BecomeTrunk(nsIMdbEnv* ev);
+  NS_IMETHOD BecomeTrunk(nsIMdbEnv* ev);
   // If this file is a file version branch created by calling AcquireBud(),
   // BecomeTrunk() causes this file's content to replace the original
   // file's content, typically by assuming the original file's identity.
@@ -194,7 +187,7 @@ public: // type identification
   // also the right behavior for files returned from AcquireBud() which are
   // in fact the original file that has been truncated down to zero length.
 
-  virtual mdb_err AcquireBud(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+  NS_IMETHOD AcquireBud(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
     nsIMdbFile** acqBud); // acquired file for new version of content
   // AcquireBud() starts a new "branch" version of the file, empty of content,
   // so that a new version of the file can be written.  This new file

@@ -293,7 +293,8 @@ morkHandle::Handle_GetMdbFactory(nsIMdbEnv* mev, nsIMdbFactory** acqFactory)
     morkFactory* factory = ev->mEnv_Factory;
     if ( factory )
     {
-      handle = factory->AcquireFactoryHandle(ev);
+      handle = factory;
+      NS_ADDREF(handle);
     }
     else
       this->NilFactoryError(ev);

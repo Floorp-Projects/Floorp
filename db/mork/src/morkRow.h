@@ -63,9 +63,10 @@ class nsIMdbCell;
 #define morkRow_kRewriteBit ((mork_u1) (1 << 1)) /* must rewrite all cells */
 #define morkRow_kDirtyBit   ((mork_u1) (1 << 2)) /* row has been changed */
 
-class morkRow { // row of cells
+class morkRow{ // row of cells
 
 public: // state is public because the entire Mork system is private
+
   morkRowSpace*   mRow_Space;  // mRow_Space->SpaceScope() is the row scope 
   morkRowObject*  mRow_Object; // refcount & other state for object sharing
   morkCell*       mRow_Cells;

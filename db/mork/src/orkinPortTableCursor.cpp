@@ -133,7 +133,9 @@ orkinPortTableCursor::CanUsePortTableCursor(nsIMdbEnv* mev,
 }
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE0(orkinPortTableCursor);
+
+/*virtual*/ nsrefcnt
 orkinPortTableCursor::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -143,7 +145,7 @@ orkinPortTableCursor::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinPortTableCursor::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;

@@ -64,13 +64,13 @@ private: // copying is not allowed
 public:
 
 // { ===== begin nsIMdbCompare methods =====
-  virtual mdb_err Order(nsIMdbEnv* ev,      // compare first to second yarn
+  NS_IMETHOD Order(nsIMdbEnv* ev,      // compare first to second yarn
     const mdbYarn* inFirst,   // first yarn in comparison
     const mdbYarn* inSecond,  // second yarn in comparison
     mdb_order* outOrder);     // negative="<", zero="=", positive=">"
     
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev); // does nothing
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev); // does nothing
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev); // does nothing
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev); // does nothing
 // } ===== end nsIMdbCompare methods =====
 
 };

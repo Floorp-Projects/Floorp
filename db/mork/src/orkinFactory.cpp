@@ -209,7 +209,9 @@ morkEnv* orkinFactory::GetInternalFactoryEnv(mdb_err* outErr)
 }
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE0(orkinFactory);
+
+/*virtual*/ nsrefcnt
 orkinFactory::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -219,7 +221,7 @@ orkinFactory::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinFactory::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;
@@ -319,23 +321,20 @@ orkinFactory::OpenOldFile(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
   nsIMdbFile* outFile = 0;
   morkEnv* ev = this->CanUseFactory(mev,
     /*inMutable*/ morkBool_kFalse, &outErr);
+  morkFile* file = nsnull;
   if ( ev )
   {
     morkFactory* factory = (morkFactory*) this->mHandle_Object;
     if ( !ioHeap )
       ioHeap = &factory->mFactory_Heap;
       
-    morkFile* file = morkFile::OpenOldFile(ev, ioHeap, inFilePath, inFrozen);
-    if ( file )
-    {
-      outFile = file->AcquireFileHandle(ev);
-      file->CutStrongRef(ev);
-    }
+    file = morkFile::OpenOldFile(ev, ioHeap, inFilePath, inFrozen);
+    NS_IF_ADDREF( file );
       
     outErr = ev->AsErr();
   }
   if ( acqFile )
-    *acqFile = outFile;
+    *acqFile = file;
     
   return outErr;
 }
@@ -354,23 +353,21 @@ orkinFactory::CreateNewFile(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
   nsIMdbFile* outFile = 0;
   morkEnv* ev = this->CanUseFactory(mev,
     /*inMutable*/ morkBool_kFalse, &outErr);
+  morkFile* file = nsnull;
   if ( ev )
   {
     morkFactory* factory = (morkFactory*) this->mHandle_Object;
     if ( !ioHeap )
       ioHeap = &factory->mFactory_Heap;
       
-    morkFile* file = morkFile::CreateNewFile(ev, ioHeap, inFilePath);
+    file = morkFile::CreateNewFile(ev, ioHeap, inFilePath);
     if ( file )
-    {
-      outFile = file->AcquireFileHandle(ev);
-      file->CutStrongRef(ev);
-    }
+      NS_ADDREF(file);
       
     outErr = ev->AsErr();
   }
   if ( acqFile )
-    *acqFile = outFile;
+    *acqFile = file;
     
   return outErr;
 }
@@ -400,16 +397,9 @@ orkinFactory::MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv)
       {
         newEnv->mEnv_OwnsHeap = ownsHeap;
         newEnv->mNode_Refs += morkEnv_kWeakRefCountEnvBonus;
-        
-        orkinEnv* oenv = orkinEnv::MakeEnv(fenv, newEnv);
-        if ( oenv )
-        {
-          oenv->mNode_Refs += morkEnv_kWeakRefCountEnvBonus;
-          newEnv->mEnv_SelfAsMdbEnv = oenv;
-          outEnv = oenv;
-        }
-        else
-          outErr = morkEnv_kOutOfMemoryError;
+        NS_ADDREF(newEnv);
+        newEnv->mEnv_SelfAsMdbEnv = newEnv;
+        outEnv = newEnv;
       }
       else
         outErr = morkEnv_kOutOfMemoryError;
@@ -455,7 +445,9 @@ orkinFactory::MakeCompare(nsIMdbEnv* mev, nsIMdbCompare** acqCompare)
     /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    outCompare = new orkinCompare();
+    NS_ASSERTION(PR_FALSE, "not implemented");
+    outErr = NS_ERROR_NOT_IMPLEMENTED;
+//    outCompare = new orkinCompare();
     if ( !outCompare )
       ev->OutOfMemoryError();
   }
@@ -569,19 +561,16 @@ orkinFactory::ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort(
   {
     if ( ioThumb && acqPort )
     {
-      orkinThumb* othumb = (orkinThumb*) ioThumb;
-      if ( othumb->CanUseThumb(mev, /*inMutable*/ morkBool_kFalse, &outErr) )
+      morkThumb* thumb = (morkThumb*) ioThumb;
+      morkStore* store = thumb->ThumbToOpenStore(ev);
+      if ( store )
       {
-        morkThumb* thumb = (morkThumb*) othumb->mHandle_Object;
-        morkStore* store = thumb->ThumbToOpenStore(ev);
-        if ( store )
-        {
-          store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
-          store->mStore_CanDirty = morkBool_kTrue;
-          store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
-          
-          outPort = orkinStore::MakeStore(ev, store);
-        }
+        store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
+        store->mStore_CanDirty = morkBool_kTrue;
+        store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
+        
+        NS_ADDREF(store);
+        outPort = store;
       }
     }
     else
@@ -707,11 +696,11 @@ orkinFactory::OpenFileStore( // open an existing database
           morkThumb* thumb = morkThumb::Make_OpenFileStore(ev, ioHeap, store);
           if ( thumb )
           {
-            outThumb = orkinThumb::MakeThumb(ev, thumb);
-            thumb->CutStrongRef(ev);
+            outThumb = thumb;
+            thumb->AddRef();
           }
         }
-        store->CutStrongRef(ev); // always cut ref (handle has its own ref)
+//        store->CutStrongRef(mev); // always cut ref (handle has its own ref)
       }
     }
     else
@@ -740,19 +729,16 @@ orkinFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
   {
     if ( ioThumb && acqStore )
     {
-      orkinThumb* othumb = (orkinThumb*) ioThumb;
-      if ( othumb->CanUseThumb(mev, /*inMutable*/ morkBool_kFalse, &outErr) )
+      morkThumb* thumb = (morkThumb*) ioThumb;
+      morkStore* store = thumb->ThumbToOpenStore(ev);
+      if ( store )
       {
-        morkThumb* thumb = (morkThumb*) othumb->mHandle_Object;
-        morkStore* store = thumb->ThumbToOpenStore(ev);
-        if ( store )
-        {
-          store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
-          store->mStore_CanDirty = morkBool_kTrue;
-          store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
-          
-          outStore = orkinStore::MakeStore(ev, store);
-        }
+        store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
+        store->mStore_CanDirty = morkBool_kTrue;
+        store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
+        
+        outStore = store;
+        NS_ADDREF(store);
       }
     }
     else
@@ -796,9 +782,8 @@ orkinFactory::CreateNewFileStore( // create a new db with minimal content
         store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
 
         if ( store->CreateStoreFile(ev, ioFile, inOpenPolicy) )
-          outStore = orkinStore::MakeStore(ev, store);
-          
-        store->CutStrongRef(ev); // always cut ref (handle has its own ref)
+          outStore = store;
+        NS_ADDREF(store);          
       }
     }
     else

@@ -134,6 +134,8 @@ morkRowCellCursor::morkRowCellCursor(morkEnv* ev,
   }
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(morkRowCellCursor, morkCursor, nsIMdbRowCellCursor);
+
 /*public non-poly*/ void
 morkRowCellCursor::CloseRowCellCursor(morkEnv* ev) 
 {
@@ -170,22 +172,136 @@ morkRowCellCursor::NonRowCellCursorTypeError(morkEnv* ev)
   ev->NewError("non morkRowCellCursor");
 }
 
-orkinRowCellCursor*
-morkRowCellCursor::AcquireRowCellCursorHandle(morkEnv* ev)
-{
-  orkinRowCellCursor* outCursor = 0;
-  orkinRowCellCursor* c = (orkinRowCellCursor*) mObject_Handle;
-  if ( c ) // have an old handle?
-    c->AddStrongRef(ev->AsMdbEnv());
-  else // need new handle?
-  {
-    c = orkinRowCellCursor::MakeRowCellCursor(ev, this);
-    mObject_Handle = c;
-  }
-  if ( c )
-    outCursor = c;
-  return outCursor;
-}
-
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+// { ----- begin attribute methods -----
+NS_IMETHODIMP
+morkRowCellCursor::SetRow(nsIMdbEnv* mev, nsIMdbRow* ioRow)
+{
+  mdb_err outErr = 0;
+  morkRow* row = 0;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    row = (morkRow *) ioRow;
+    morkStore* store = row->GetRowSpaceStore(ev);
+    if ( store )
+    {
+      morkRowObject* rowObj = row->AcquireRowObject(ev, store);
+      if ( rowObj )
+      {
+        morkRowObject::SlotStrongRowObject((morkRowObject*) 0, ev,
+          &mRowCellCursor_RowObject);
+          
+        mRowCellCursor_RowObject = rowObj; // take this strong ref
+        mCursor_Seed = row->mRow_Seed;
+        
+        row->GetCell(ev, mRowCellCursor_Col, &mCursor_Pos);
+      }
+    }
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+NS_IMETHODIMP
+morkRowCellCursor::GetRow(nsIMdbEnv* mev, nsIMdbRow** acqRow)
+{
+  mdb_err outErr = 0;
+  nsIMdbRow* outRow = 0;
+  morkRow* row = 0;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    morkRowObject* rowObj = mRowCellCursor_RowObject;
+    if ( rowObj )
+      outRow = rowObj->AcquireRowHandle(ev);
+
+    outErr = ev->AsErr();
+  }
+  if ( acqRow )
+    *acqRow = outRow;
+  return outErr;
+}
+// } ----- end attribute methods -----
+
+// { ----- begin cell creation methods -----
+NS_IMETHODIMP
+morkRowCellCursor::MakeCell( // get cell at current pos in the row
+  nsIMdbEnv* mev, // context
+  mdb_column* outColumn, // column for this particular cell
+  mdb_pos* outPos, // position of cell in row sequence
+  nsIMdbCell** acqCell)
+{
+  mdb_err outErr = 0;
+  nsIMdbCell* outCell = 0;
+  mdb_pos pos = 0;
+  mdb_column col = 0;
+  morkRow* row = 0;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    pos = mCursor_Pos;
+    morkCell* cell = row->CellAt(ev, pos);
+    if ( cell )
+    {
+      col = cell->GetColumn();
+      outCell = row->AcquireCellHandle(ev, cell, col, pos);
+    }
+    outErr = ev->AsErr();
+  }
+  if ( acqCell )
+    *acqCell = outCell;
+   if ( outPos )
+     *outPos = pos;
+   if ( outColumn )
+     *outColumn = col;
+     
+  return outErr;
+}
+// } ----- end cell creation methods -----
+
+// { ----- begin cell seeking methods -----
+NS_IMETHODIMP
+morkRowCellCursor::SeekCell( // same as SetRow() followed by MakeCell()
+  nsIMdbEnv* mev, // context
+  mdb_pos inPos, // position of cell in row sequence
+  mdb_column* outColumn, // column for this particular cell
+  nsIMdbCell** acqCell)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+// } ----- end cell seeking methods -----
+
+// { ----- begin cell iteration methods -----
+NS_IMETHODIMP
+morkRowCellCursor::NextCell( // get next cell in the row
+  nsIMdbEnv* mev, // context
+  nsIMdbCell* ioCell, // changes to the next cell in the iteration
+  mdb_column* outColumn, // column for this particular cell
+  mdb_pos* outPos)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+  
+NS_IMETHODIMP
+morkRowCellCursor::PickNextCell( // get next cell in row within filter set
+  nsIMdbEnv* mev, // context
+  nsIMdbCell* ioCell, // changes to the next cell in the iteration
+  const mdbColumnSet* inFilterSet, // col set of actual caller interest
+  mdb_column* outColumn, // column for this particular cell
+  mdb_pos* outPos)
+// Note that inFilterSet should not have too many (many more than 10?)
+// cols, since this might imply a potential excessive consumption of time
+// over many cursor calls when looking for column and filter intersection.
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// } ----- end cell iteration methods -----
+
+// } ===== end nsIMdbRowCellCursor methods =====
+
