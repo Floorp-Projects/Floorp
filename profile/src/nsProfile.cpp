@@ -1162,14 +1162,6 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         observerService->NotifyObservers(subject, "profile-before-change", context.get());        
     }
 
-    // Flush the stringbundle cache
-    nsCOMPtr<nsIStringBundleService> bundleService = 
-             do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = bundleService->FlushBundles();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to flush bundle cache");
-    }
-    
     // Do the profile switch    
     gProfileDataAccess->SetCurrentProfile(aCurrentProfile);
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
