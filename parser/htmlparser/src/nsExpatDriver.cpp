@@ -253,6 +253,10 @@ nsExpatDriver::nsExpatDriver()
 nsExpatDriver::~nsExpatDriver() 
 {
   NS_IF_RELEASE(mSink);
+  if (mExpatParser) {
+    XML_ParserFree(mExpatParser);
+    mExpatParser = nsnull;
+  }
 }
 
 nsresult 
