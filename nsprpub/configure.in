@@ -1466,6 +1466,9 @@ mips-sony-newsos*)
         fi
         _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Olimit 4000"
         AC_CHECK_HEADER(machine/builtins.h, AC_DEFINE(OSF1_HAVE_MACHINE_BUILTINS_H))
+    else
+        CFLAGS="$CFLAGS -mieee"
+        CXXFLAGS="$CXXFLAGS -mieee"
     fi
 
     if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
