@@ -437,7 +437,7 @@ public:
   static nsIAtom *sCellAtom;
   static nsIAtom *sTbodyAtom;
   static PRInt32 sInstanceCount;
-  static nsStyleColor sTableStyleColor;
+  static nsStyleColor *sTableStyleColor;
 };
 
 class nsSelectionIterator : public nsIBidirectionalEnumerator
@@ -620,7 +620,7 @@ nsIAtom *nsSelection::sRowAtom = 0;
 nsIAtom *nsSelection::sCellAtom = 0;
 nsIAtom *nsSelection::sTbodyAtom = 0;
 PRInt32 nsSelection::sInstanceCount = 0;
-nsStyleColor nsSelection::sTableStyleColor;
+nsStyleColor *nsSelection::sTableStyleColor = 0;
 
 static PRInt8
 GetIndexFromSelectionType(SelectionType aType)
@@ -843,15 +843,16 @@ nsSelection::nsSelection()
     sRowAtom   = NS_NewAtom("tr");
     sCellAtom  = NS_NewAtom("td");
     sTbodyAtom = NS_NewAtom("tbody");
-    sTableStyleColor.mColor =  NS_RGB(128,0,0);
-    sTableStyleColor.mBackgroundColor =  NS_RGB(128,0,0);
-    sTableStyleColor.mOpacity=  (float)1;
-    sTableStyleColor.mBackgroundAttachment=0;
-    sTableStyleColor.mBackgroundFlags=NS_STYLE_BG_IMAGE_NONE;
-    sTableStyleColor.mBackgroundRepeat=1;
-    sTableStyleColor.mBackgroundXPosition=0;
-    sTableStyleColor.mBackgroundYPosition=0;
-    sTableStyleColor.mCursor=1;
+    sTableStyleColor = new nsStyleColor();
+    sTableStyleColor->mColor =  NS_RGB(128,0,0);
+    sTableStyleColor->mBackgroundColor =  NS_RGB(128,0,0);
+    sTableStyleColor->mOpacity=  (float)1;
+    sTableStyleColor->mBackgroundAttachment=0;
+    sTableStyleColor->mBackgroundFlags=NS_STYLE_BG_IMAGE_NONE;
+    sTableStyleColor->mBackgroundRepeat=1;
+    sTableStyleColor->mBackgroundXPosition=0;
+    sTableStyleColor->mBackgroundYPosition=0;
+    sTableStyleColor->mCursor=1;
   }
   mHint = HINTLEFT;
   sInstanceCount ++;
@@ -898,6 +899,7 @@ nsSelection::~nsSelection()
     NS_IF_RELEASE(sRowAtom);
     NS_IF_RELEASE(sCellAtom);
     NS_IF_RELEASE(sTbodyAtom);
+    delete sTableStyleColor;
   }
   PRInt32 i;
   for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
@@ -1909,7 +1911,7 @@ nsSelection::GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)
 {
   if (!aStyleColor)
     return NS_ERROR_NULL_POINTER;
-  *aStyleColor = &sTableStyleColor;
+  *aStyleColor = sTableStyleColor;
   return NS_OK;
 }
 
