@@ -35,21 +35,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * This file is intended to allow for an easy synchronous interface to 
+ * the calendar methods, both for writing tests simply, and for typing at
+ * a shell by hand to experiment with calendar methods.  "make calshell" in
+ * mozilla/calendar/test (or the equivalent objdir) will start a shell with
+ * this code pre-loaded.
+ */
+ 
 const C = Components;
-const CI = C.interfaces;
+const Ci = C.interfaces;
+const CC = C.classes;
 
 const evQSvc = getService("@mozilla.org/event-queue-service;1",
                           "nsIEventQueueService");
-const evQ = evQSvc.getSpecialEventQueue(CI.nsIEventQueueService.CURRENT_THREAD_EVENT_QUEUE);
+const evQ = evQSvc.getSpecialEventQueue(Ci.nsIEventQueueService.CURRENT_THREAD_EVENT_QUEUE);
 
+// this is necessary so that the event pump isn't used with providers which
+// call the listener before returning, since it would run forever in that case.
 var done = false;
 
 function runEventPump()
 {
+    if (done) { // XXX needed?
+        done = false;
+        return;
+    }
     pumpRunning = true;
     while (pumpRunning) {
         evQ.processPendingEvents();
     }
+    done = false; // XXX needed?
+    return;
 }
 
 function stopEventPump()
@@ -70,8 +87,8 @@ function findErr(result)
 // I wonder how many copies of this are floating around
 function findIface(iface)
 {
-    for (var i in CI) {
-        if (iface.equals(CI[i])) {
+    for (var i in Ci) {
+        if (iface.equals(Ci[i])) {
             return i;
         }
     }
@@ -80,8 +97,8 @@ function findIface(iface)
 
 function findOpName(op)
 {
-    for (var i in CI.calIOperationListener) {
-        if (op == CI.calIOperationListener[i]) {
+    for (var i in Ci.calIOperationListener) {
+        if (op == Ci.calIOperationListener[i]) {
             return i;
         }
     }
@@ -90,12 +107,12 @@ function findOpName(op)
 
 function getService(contract, iface)
 {
-    return C.classes[contract].getService(CI[iface]);
+    return C.classes[contract].getService(Ci[iface]);
 }
 
 function createInstance(contract, iface)
 {
-    return C.classes[contract].createInstance(CI[iface]);
+    return C.classes[contract].createInstance(Ci[iface]);
 }
 
 function calOpListener() {
@@ -103,41 +120,120 @@ function calOpListener() {
 
 calOpListener.prototype = 
 {
+    mItems: [],
+    mDetail: null,
+    mId: null,
+    mStatus: null,
 
     onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, 
                                   aDetail) {
-        dump("onOperationComplete:\n\t");
-        dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + 
-             findOpName(aOperationType) + "\n\t" + aId + "\n\t" + aDetail +
-             "\n");
-
         stopEventPump();
-        done = true;
 
-        if (Components.isSuccessCode(aStatus)) {
-            dump("PASSED!  Listener returned failure code.\n");
-        } else {
-            dump("FAILED!  Listener returned failure code.\n");
-        }
+        this.mDetail = aDetail;
+        this.mStatus = aStatus;
+        this.mId = aId;
+
+        // XXX verify aCalendar == cal
+
+        done = true;
+        return;
     },
 
     onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, 
                           aItems) {
-        dump("onGetResult: \n\t");
-        dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + findIface(aItemType)
-             + "\n\t" + aDetail + "\n\t" + aCount + "\n\t" + aItems + "\n");
+
+        // XXX check success(?); dump un-returned data, 
+
+        this.mItems = aItems;
+
+        return;
     }
 }
 
-function GETITEM(aId) {
-  
-}
-
-const ioSvc = getService("@mozilla.org/network/io-service;1",
-                         "nsIIOService");
+const ioSvc = getService("@mozilla.org/network/io-service;1", "nsIIOService");
  
 function URLFromSpec(spec)
 {
     return ioSvc.newURI(spec, null, null);
 }
 
+/**
+ * convenience var/method for setting up the global calendarn "cal"
+ */
+var cal;
+function createCal(type, uri) {
+    cal = createInstance("@mozilla.org/calendar/calendar;1?type=" + type,
+                         Ci.calICalendar);
+
+    // if a uri has been specified, set it
+    if (uri) {
+        cal.uri = URLFromSpec(calendarUri);
+    }
+
+    return;
+}
+
+/**
+ * convenience method to create an item and potentially initialize it from ICS
+ */
+function createItem(icalString) {
+
+    var item = createInstance("@mozilla.org/calendar/event;1", Ci.calIEvent);
+    if (icalString) {
+        item.icalString = "icalString";
+    }
+
+    return item;
+}
+
+/**
+ * convenience wrappers around various calICalendar methods so that shell 
+ * callers don't have to deal with the listener
+ */
+function addItem(item) {
+    done = false;
+    var listener = new calOpListener();
+    cal.addItem(item, listener);
+    runEventPump();
+
+    if (!C.isSuccessCode(listener.mStatus)) {
+        throw new Exception(listener.mStatus, listener.mDetail);
+    }
+    return listener.mDetail.QueryInterface(Ci.calIItemBase);
+}
+
+function getItem(id) {
+    done = false;
+    var listener = new calOpListener();
+    cal.getItem(id, listener);
+    runEventPump();
+
+    if (!C.isSuccessCode(listener.mStatus)) {
+        throw new Exception(listener.mStatus, listener.mDetail);
+    }
+    return listener.mItems[0];
+}
+
+function getItems(filter, count, rangeStart, rangeEnd) {
+    done = false;
+    var listener = new calOpListener();
+    cal.getItems(filter, count, rangeStart, rangeEnd, listener);
+    runEventPump();
+
+    if (!C.isSuccessCode(listener.mStatus)) {
+        throw new Exception(listener.mStatus, listener.mDetail);
+    }
+    return listener.mItems;
+}
+
+function deleteItem(item) {
+    done = false;
+    var listener = new calOpListener();
+    cal.deleteItem(item, listener);
+    runEventPump();
+
+    if (!C.isSuccessCode(listener.mStatus)) {
+        throw new Exception(listener.mStatus, listener.mDetail);
+    }
+    return listener.mId;
+}
