@@ -213,7 +213,7 @@ pref("network.enablePad",                   false); // Allow client to do proxy 
 pref("network.padPacURL",                   ""); // The proxy autodiscovery url
 pref("wallet.captureForms",                 true);
 pref("wallet.notified",                     false);
-pref("wallet.Server",                       "");
+pref("wallet.Server",                       "http://people.netscape.com/morse/wallet/");
 
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");
