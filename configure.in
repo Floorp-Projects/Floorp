@@ -395,20 +395,28 @@ dnl By default, turn rtti and exceptions off on g++/egcs
 dnl ========================================================
 if [ test -n "$GNU_CXX" ]; then
 
-	MOZ_RTTI_FLAGS=-fno-rtti
+  MOZ_RTTI_FLAGS=-fno-rtti
+
+  AC_MSG_CHECKING(for C++ exceptions flag)
 
 dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
-    AC_TRY_RUN(
-	#include <stdio.h>
-	int main () 
-    {
-	  #if __GNUC_MINOR__ >= 8
-	  exit(0);
-      #else
-	  exit(1);
-      #endif
-	}
-	, MOZ_EXCEPTIONS_FLAGS=-fno-exceptions, MOZ_EXCEPTIONS_FLAGS=-fno-handle-exceptions, MOZ_EXCEPTIONS_FLAGS=-fno-exceptions)
+  AC_CACHE_VAL(ac_cv_cxx_exceptions_flags,
+  [echo "int main() { return 0; }" | cat > conftest.C
+
+  _tmp_output="g++-output-$$"
+
+  ${CXX-g++} -fno-handle-exceptions conftest.C > $_tmp_output 2>&1
+
+  if egrep "warning.*renamed" $_tmp_output >/dev/null 2>&1; then
+    ac_cv_cxx_exceptions_flags=-fno-exceptions
+  else
+    ac_cv_cxx_exceptions_flags=-fno-handle-exceptions
+  fi
+
+  rm -f $_tmp_output ])
+
+  AC_MSG_RESULT($ac_cv_cxx_exceptions_flags)
+  MOZ_EXCEPTIONS_FLAGS=$ac_cv_cxx_exceptions_flags
 fi
 
 dnl Put your C++ language/feature checks below
