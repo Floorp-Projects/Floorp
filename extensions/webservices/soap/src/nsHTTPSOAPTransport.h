@@ -65,8 +65,9 @@ public:
 
 NS_DECL_ISUPPORTS};
 
-class nsHTTPSOAPTransportCompletion:public nsIDOMEventListener,
-    public nsISOAPCallCompletion {
+class nsHTTPSOAPTransportCompletion : public nsIDOMEventListener,
+                                      public nsISOAPCallCompletion
+{
 public:
   nsHTTPSOAPTransportCompletion();
   nsHTTPSOAPTransportCompletion(nsISOAPCall * call,
@@ -77,7 +78,7 @@ public:
 
   NS_DECL_ISUPPORTS NS_DECL_NSISOAPCALLCOMPLETION
       // nsIDOMEventListener
-   NS_IMETHOD HandleEvent(nsIDOMEvent * aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent * aEvent);
 
 protected:
    nsCOMPtr < nsISOAPCall > mCall;
