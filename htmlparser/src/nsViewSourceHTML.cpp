@@ -361,7 +361,6 @@ CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
   mValidator=0;
   mHasOpenRoot=PR_FALSE;
   mHasOpenBody=PR_FALSE;
-  mInCDATAContainer = PR_FALSE;
 
   //set this to 1 if you want to see errors in your HTML markup.
   char* theEnvString = PR_GetEnv("MOZ_VALIDATE_HTML"); 
@@ -1112,10 +1111,6 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         mTagCount++;
 
-        if (gHTMLElements[theChild].CanContainType(kCDATA)) {
-          mInCDATAContainer = PR_TRUE;
-        }
-
         const nsAReadableString& startValue = aToken->GetStringValue();
         if(mShowErrors) {
           PRBool theChildIsValid=PR_TRUE;
@@ -1144,10 +1139,6 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_end:
       {
-        if (gHTMLElements[theChild].CanContainType(kCDATA)) {
-          mInCDATAContainer = PR_FALSE;
-        }
-
         if(theParent==theChild) {
           mTags.Truncate(mTags.Length()-1);
         }
@@ -1228,14 +1219,6 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
             AddContainmentError(eHTMLTag_text,theParent,mLineNumber);
             result=WriteTagWithError(mText,str,aToken->GetAttributeCount(),PR_FALSE);
           }
-        }
-        else if (mInCDATAContainer) {
-          // Fix bug 40809
-          nsAutoString theStr;
-          aToken->GetSource(theStr);
-          theStr.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(), NS_LITERAL_STRING("\n").get());
-          theStr.ReplaceChar(kCR,kLF);  
-          result=WriteTag(mText,theStr,aToken->GetAttributeCount(),PR_TRUE);
         }
         else {
           const nsAReadableString& str = aToken->GetStringValue();         
