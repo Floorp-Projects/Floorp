@@ -333,6 +333,7 @@ bin\chrome\venkman.jar
 bin\chrome\icons\default\venkman-window.ico
 
 [talkback]
+bin\README.txt,bin\readme.txt
 bin\components\qfaservices.dll
 bin\components\qfaservices.xpt
 bin\components\BrandRes.dll
