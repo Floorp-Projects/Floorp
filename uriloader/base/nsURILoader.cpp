@@ -65,6 +65,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsDOMError.h"
 
+#include "nsICategoryManager.h"
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -759,6 +760,33 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
     return rv;
   }
 
+  // Try to find a content listener, that had not yet the chance to register,
+  // as it is contained in a not-yet-loaded module, but which has registered a contract ID.
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (catman)
+  {
+    // see if someone has registered a content listener for aContentType with the category manager...
+    nsXPIDLCString contractidString;
+    rv = catman->GetCategoryEntry(NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+                                  aContentType, getter_Copies(contractidString));
+    if (NS_SUCCEEDED(rv) && contractidString.get())
+    {
+      nsCOMPtr<nsIURIContentListener> listener;
+      listener = do_CreateInstance(contractidString.get(), &rv);
+      if (NS_SUCCEEDED(rv)) // we did indeed have a content listener for this type!! yippee...
+      {
+        foundContentHandler = ShouldHandleContent(listener, aContentType, aIsContentPreferred, aContentTypeToUse);
+
+        if (foundContentHandler && listener)
+        {
+          *aContentListenerToUse = listener;
+          NS_IF_ADDREF(*aContentListenerToUse);
+          return rv;
+        }
+      } // if we were able to create a uri content listener...
+    } // if we got a valid contract ID
+  } // if we can get the category manager....
+ 
   // no registered content listeners to handle this type!!! so go to the register 
   // and get a registered nsIContentHandler for our content type. Hand it off 
   // to them...
