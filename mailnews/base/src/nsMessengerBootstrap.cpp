@@ -129,7 +129,8 @@ NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windo
 	// to determine if we should open a new window, or use an existing one.
   nsCOMPtr<nsIDOMWindow> newWindow;
   rv = wwatch->OpenWindow(0, chromeurl.get(), "_blank",
-                 "chrome,dialog=no,all", argsArray,
+                 "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar",
+                 argsArray,
                  getter_AddRefs(newWindow));
 
   return NS_OK;
