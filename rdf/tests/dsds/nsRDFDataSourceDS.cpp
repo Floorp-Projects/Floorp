@@ -444,7 +444,7 @@ NS_NewRDFDataSourceDataSource(nsISupports *, const nsIID& iid,
 
 {
   nsRDFDataSourceDataSource * dsds = new nsRDFDataSourceDataSource();
-
+  if (!dsds) return NS_ERROR_NOT_INITIALIZED;
   return dsds->QueryInterface(iid, result);
   
 }
