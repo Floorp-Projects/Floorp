@@ -87,10 +87,6 @@ struct InnerTableReflowState {
   // The body's available size (computed from the body's parent)
   nsSize availSize;
 
-  // Margin tracking information
-  nscoord prevMaxPosBottomMargin;
-  nscoord prevMaxNegBottomMargin;
-
   // Flags for whether the max size is unconstrained
   PRBool  unconstrainedWidth;
   PRBool  unconstrainedHeight;
@@ -109,9 +105,7 @@ struct InnerTableReflowState {
                         const nsMargin&          aBorderPadding)
     : reflowState(aReflowState)
   {
-    prevMaxPosBottomMargin = 0;
-    prevMaxNegBottomMargin = 0;
-    y=0;  // border/padding/margin???
+    y=0;  // border/padding???
 
     unconstrainedWidth = PRBool(aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
     availSize.width = aReflowState.maxSize.width;
@@ -2636,16 +2630,6 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
   if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
     DidComputeHorizontalCollapsingBorders(aPresContext, 0, 10000);
 
-  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-    // Don't forget to add in the bottom margin from our last child.
-    // Only add it in if there's room for it.
-    nscoord margin = state.prevMaxPosBottomMargin -
-      state.prevMaxNegBottomMargin;
-    if (state.availSize.height >= margin) {
-      state.y += margin;
-    }
-  }
-
 #ifdef NS_DEBUG
   //PostReflowCheck(aStatus);
 #endif
@@ -3132,30 +3116,8 @@ nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState)
   return desiredWidth;
 }
 
-// Collapse child's top margin with previous bottom margin
-nscoord nsTableFrame::GetTopMarginFor(nsIPresContext&      aCX,
-                                      InnerTableReflowState& aReflowState,
-                                      const nsMargin& aKidMargin)
-{
-  nscoord margin;
-  nscoord maxNegTopMargin = 0;
-  nscoord maxPosTopMargin = 0;
-  if ((margin = aKidMargin.top) < 0) {
-    maxNegTopMargin = -margin;
-  } else {
-    maxPosTopMargin = margin;
-  }
-
-  nscoord maxPos = PR_MAX(aReflowState.prevMaxPosBottomMargin, maxPosTopMargin);
-  nscoord maxNeg = PR_MAX(aReflowState.prevMaxNegBottomMargin, maxNegTopMargin);
-  margin = maxPos - maxNeg;
-
-  return margin;
-}
-
 // Position and size aKidFrame and update our reflow state. The origin of
-// aKidRect is relative to the upper-left origin of our frame, and includes
-// any left/top margin.
+// aKidRect is relative to the upper-left origin of our frame
 void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
                               InnerTableReflowState& aReflowState,
                               nsIFrame*          aKidFrame,
@@ -3286,22 +3248,6 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         }
       }
 
-      const nsStyleSpacing* kidSpacing;
-      kidFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)kidSpacing));
-      nsMargin kidMargin;
-      kidSpacing->GetMargin(kidMargin);
-      nscoord topMargin = GetTopMarginFor(aPresContext, aReflowState, kidMargin);
-      nscoord bottomMargin = kidMargin.bottom;
-      // Figure out the amount of available size for the child (subtract
-      // off the top margin we are going to apply to it)
-      if (PR_FALSE == aReflowState.unconstrainedHeight) {
-        kidAvailSize.height -= topMargin;
-      }
-      // Subtract off for left and right margin
-      if (PR_FALSE == aReflowState.unconstrainedWidth) {
-        kidAvailSize.width -= kidMargin.left + kidMargin.right;
-      }
-      
       nsMargin borderPadding;
       GetTableBorderForRowGroup((nsTableRowGroupFrame *)kidFrame, borderPadding);
       const nsStyleSpacing* tableSpacing;
@@ -3320,8 +3266,8 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         kidReflowState.isTopOfPage = PR_FALSE;
       }
 
-      nscoord x = borderPadding.left + kidMargin.left;
-      nscoord y = borderPadding.top + aReflowState.y + topMargin;
+      nscoord x = borderPadding.left;
+      nscoord y = borderPadding.top + aReflowState.y;
       if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 2 of frame %p with reason=%d\n", kidFrame, reason);
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
       // Did the child fit?
@@ -3335,8 +3281,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         }
       }
 
-      // Place the child after taking into account it's margin
-      aReflowState.y += topMargin;
+      // Place the child
       nsRect kidRect (x, y, desiredSize.width, desiredSize.height);
       if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
       {
@@ -3347,11 +3292,6 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
           requestedMaxElementSize = aDesiredSize.maxElementSize;
         PlaceChild(aPresContext, aReflowState, kidFrame, kidRect,
                    requestedMaxElementSize, kidMaxElementSize);
-        if (bottomMargin < 0) {
-          aReflowState.prevMaxNegBottomMargin = -bottomMargin;
-        } else {
-          aReflowState.prevMaxPosBottomMargin = bottomMargin;
-        }
       }
       childCount++;
 
@@ -3482,15 +3422,7 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
       break;
     }
 
-    // Advance y by the topMargin between children. Zero out the
-    // topMargin in case this frame is continued because
-    // continuations do not have a top margin. Update the prev
-    // bottom margin state in the body reflow state so that we can
-    // apply the bottom margin when we hit the next child (or
-    // finish).
-    //aReflowState.y += topMargin;
     nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    //kidRect.x += kidMol->margin.left;
     kidRect.y += aReflowState.y;
     const nsStyleDisplay *childDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));

@@ -46,12 +46,8 @@ struct RowGroupReflowState {
   nsIPresContext& mPresContext;  // Our pres context
   const nsHTMLReflowState& reflowState;  // Our reflow state
 
-  // The body's available size (computed from the body's parent)
+  // The available size (computed from the parent)
   nsSize availSize;
-
-  // Margin tracking information
-  nscoord prevMaxPosBottomMargin;
-  nscoord prevMaxNegBottomMargin;
 
   // Flags for whether the max size is unconstrained
   PRBool  unconstrainedWidth;
@@ -76,9 +72,7 @@ struct RowGroupReflowState {
   {
     availSize.width = reflowState.maxSize.width;
     availSize.height = reflowState.maxSize.height;
-    prevMaxPosBottomMargin = 0;
-    prevMaxNegBottomMargin = 0;
-    y=0;  // border/padding/margin???
+    y=0;  // border/padding???
     unconstrainedWidth = PRBool(reflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
     unconstrainedHeight = PRBool(reflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
     firstRow = PR_TRUE;
@@ -261,30 +255,8 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
   return NS_ERROR_FAILURE;
 }
 
-// Collapse child's top margin with previous bottom margin
-nscoord nsTableRowGroupFrame::GetTopMarginFor(nsIPresContext*      aCX,
-                                              RowGroupReflowState& aReflowState,
-                                              const nsMargin& aKidMargin)
-{
-  nscoord margin;
-  nscoord maxNegTopMargin = 0;
-  nscoord maxPosTopMargin = 0;
-  if ((margin = aKidMargin.top) < 0) {
-    maxNegTopMargin = -margin;
-  } else {
-    maxPosTopMargin = margin;
-  }
-
-  nscoord maxPos = PR_MAX(aReflowState.prevMaxPosBottomMargin, maxPosTopMargin);
-  nscoord maxNeg = PR_MAX(aReflowState.prevMaxNegBottomMargin, maxNegTopMargin);
-  margin = maxPos - maxNeg;
-
-  return margin;
-}
-
 // Position and size aKidFrame and update our reflow state. The origin of
-// aKidRect is relative to the upper-left origin of our frame, and includes
-// any left/top margin.
+// aKidRect is relative to the upper-left origin of our frame
 void nsTableRowGroupFrame::PlaceChild(nsIPresContext&      aPresContext,
 																			RowGroupReflowState& aReflowState,
 																			nsIFrame*            aKidFrame,
@@ -362,24 +334,6 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     nsHTMLReflowMetrics desiredSize(pKidMaxElementSize);
     desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
 
-    // Get top margin for this kid
-    const nsStyleSpacing* kidSpacing;
-    kidFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)kidSpacing);
-    nsMargin kidMargin;
-    kidSpacing->CalcMarginFor(this, kidMargin);
-    nscoord topMargin = GetTopMarginFor(&aPresContext, aReflowState, kidMargin);
-    nscoord bottomMargin = kidMargin.bottom;
-
-    // Figure out the amount of available size for the child (subtract
-    // off the top margin we are going to apply to it)
-    if (PR_FALSE == aReflowState.unconstrainedHeight) {
-      kidAvailSize.height -= topMargin;
-    }
-    // Subtract off for left and right margin
-    if (PR_FALSE == aReflowState.unconstrainedWidth) {
-      kidAvailSize.width -= kidMargin.left + kidMargin.right;
-    }
-
     // Reflow the child into the available space
 #if 1
     // XXX Give it as much room as it wants. We'll deal with splitting later
@@ -419,15 +373,9 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     }
 #endif
 
-    // Place the child after taking into account its margin
-    nsRect kidRect (kidMargin.left, aReflowState.y, desiredSize.width, desiredSize.height);
+    nsRect kidRect (0, aReflowState.y, desiredSize.width, desiredSize.height);
     PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
                kidMaxElementSize);
-    if (bottomMargin < 0) {
-      aReflowState.prevMaxNegBottomMargin = -bottomMargin;
-    } else {
-      aReflowState.prevMaxPosBottomMargin = bottomMargin;
-    }
 
     /* if the table has collapsing borders, we need to reset the length of the shared vertical borders
      * for the table and the cells that overlap this row
@@ -516,12 +464,6 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     }
 #endif
 
-    // Add back in the left and right margins, because one row does not 
-    // impact another row's width
-    if (PR_FALSE == aReflowState.unconstrainedWidth) {
-      kidAvailSize.width += kidMargin.left + kidMargin.right;
-    }
-
     if (PR_FALSE==aDoSiblings)
       break;
 
@@ -599,9 +541,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
     }
 
     // Place the child
-    //aReflowState.y += topMargin;
     nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    //kidRect.x += kidMol->margin.left;
     kidRect.y += aReflowState.y;
     PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize, *pKidMaxElementSize);
 
@@ -930,7 +870,6 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
       // If this is the first row frame then we need to split it
       if (nsnull == prevKidFrame) {
         // Reflow the row in the available space and have it split
-        // XXX Account for horizontal margins...
         nsSize  kidAvailSize(aReflowState.maxSize.width,
                              aReflowState.maxSize.height - bounds.y);
         nsHTMLReflowState   kidReflowState(aPresContext, kidFrame, aReflowState,
@@ -1034,16 +973,6 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
       rv = PullUpChildren(aPresContext, aDesiredSize, state, aStatus);
     }
 #endif
-  
-    if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      // Don't forget to add in the bottom margin from our last child.
-      // Only add it in if there's room for it.
-      nscoord margin = state.prevMaxPosBottomMargin -
-        state.prevMaxNegBottomMargin;
-      if (state.availSize.height >= margin) {
-        state.y += margin;
-      }
-    }
   
     // Return our desired rect
     aDesiredSize.width = aReflowState.maxSize.width;
