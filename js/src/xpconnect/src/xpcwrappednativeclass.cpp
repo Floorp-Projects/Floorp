@@ -1283,9 +1283,20 @@ nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(JSContext* cx,
                                                     JSObject* jsobj)
 {
     NS_PRECONDITION(jsobj, "bad param");
-    if(jsobj && (JS_InstanceOf(cx, jsobj, &WrappedNative_class, nsnull) ||
-                 JS_InstanceOf(cx, jsobj, &WrappedNativeWithCall_class, nsnull)))
-        return (nsXPCWrappedNative*) JS_GetPrivate(cx, jsobj);
+    JSObject* cur = jsobj;
+
+    while(cur)
+    {
+        if(JS_InstanceOf(cx, cur, &WrappedNative_class, nsnull) ||
+           JS_InstanceOf(cx, cur, &WrappedNativeWithCall_class, nsnull))
+            return (nsXPCWrappedNative*) JS_GetPrivate(cx, cur);
+        // This was an attempt to make it possible to use a wrapped
+        // native as a __proto__ for a plain JS object. There are still 
+        // problems with making this work.
+
+        // cur = JS_GetPrototype(cx, cur);
+        break;
+    }
     return nsnull;
 }
 

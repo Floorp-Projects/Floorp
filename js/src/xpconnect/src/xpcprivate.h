@@ -771,6 +771,9 @@ public:
 
     nsXPCWrappedJS* Find(REFNSIID aIID);
 
+    JSBool IsValid() const {return mJSObj != nsnull;}
+    void SystemIsBeingShutDown();
+
     virtual ~nsXPCWrappedJS();
 private:
     nsXPCWrappedJS();   // not implemented

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -765,6 +766,16 @@ main(int argc, char **argv)
 
     result = ProcessArgs(jscontext, glob, argv, argc);
 
+
+//#define TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN 1
+
+#ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
+    // test of late call and release (see below)
+    nsCOMPtr<nsIJSContextStack> bogus;
+    xpc->WrapJS(jscontext, glob, NS_GET_IID(nsIJSContextStack), 
+                (void**) getter_AddRefs(bogus));
+#endif
+
     JS_ClearScope(jscontext, glob);
     js_ForceGC(jscontext);
     JSContext *oldcx;
@@ -779,6 +790,13 @@ main(int argc, char **argv)
 
     rv = NS_ShutdownXPCOM( NULL );
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+
+#ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
+    // test of late call and release (see above)
+    JSContext* bogusCX;
+    bogus->Peek(&bogusCX);
+    bogus = nsnull;
+#endif
 
     return result;
 }

@@ -43,6 +43,9 @@
 NS_IMETHODIMP
 nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+    if(!IsValid())
+        return NS_ERROR_UNEXPECTED;
+
     if(nsnull == aInstancePtr)
     {
         NS_PRECONDITION(0, "null pointer");
@@ -250,7 +253,8 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCContext* xpcc,
 nsXPCWrappedJS::~nsXPCWrappedJS()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
-    if(mClass)
+    // Any destructors called after shutdown are just going to leak stuff.
+    if(IsValid())
     {
         XPCJSRuntime* rt = nsXPConnect::GetRuntime();
         if(rt)
@@ -266,7 +270,7 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
             }
                 JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
         }
-        NS_RELEASE(mClass);
+        NS_IF_RELEASE(mClass);
     }
     if(mNext)
         NS_DELETEXPCOM(mNext);  // cascaded delete
@@ -295,6 +299,9 @@ nsXPCWrappedJS::GetInterfaceInfo(nsIInterfaceInfo** info)
     NS_ASSERTION(GetClass(), "wrapper without class");
     NS_ASSERTION(GetClass()->GetInterfaceInfo(), "wrapper class without interface");
 
+    // Since failing to get this info will crash some platforms(!), we keep
+    // mClass valid at shutdown time.
+
     if(!(*info = GetClass()->GetInterfaceInfo()))
         return NS_ERROR_UNEXPECTED;
     NS_ADDREF(*info);
@@ -306,6 +313,8 @@ nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
                            const nsXPTMethodInfo* info,
                            nsXPTCMiniVariant* params)
 {
+    if(!IsValid())
+        return NS_ERROR_UNEXPECTED;
     return GetClass()->CallMethod(this, methodIndex, info, params);
 }
 
@@ -316,6 +325,27 @@ nsXPCWrappedJS::GetIID(nsIID** iid)
 
     *iid = (nsIID*) nsMemory::Clone(&(GetIID()), sizeof(nsIID));
     return *iid ? NS_OK : NS_ERROR_UNEXPECTED;
+}
+
+void 
+nsXPCWrappedJS::SystemIsBeingShutDown()
+{
+    // XXX It turns out that it is better to leak here then to do any Releases 
+    // and have them propagate into all sorts of mischief as the system is being
+    // shutdown. This was learned the hard way :(    
+    
+    // mJSObj == nsnull is used to indicate that the wrapper is no longer valid
+    // and that calls should fail without trying to use any of the 
+    // xpconnect mechanisms. 'IsValid' is implemented by checking this pointer.
+
+    // NOTE: that mClass is retained so that GetInterfaceInfo can continue to 
+    // work (and avoid crashing some platforms).
+
+    mJSObj = nsnull;
+    
+    // Notify other wrappers in the chain.
+    if(mNext)
+        mNext->SystemIsBeingShutDown();
 }
 
 /***************************************************************************/
