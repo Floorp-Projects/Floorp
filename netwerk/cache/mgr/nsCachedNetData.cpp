@@ -96,8 +96,12 @@ public:
 //   extra vtable pointer in nsCachedNetData
 class StreamAsFile : public nsIStreamAsFile {
 public:    
-    StreamAsFile(nsCachedNetData* cacheEntry): mCacheEntry(cacheEntry) {}
-    virtual ~StreamAsFile() {};
+    StreamAsFile(nsCachedNetData* cacheEntry): mCacheEntry(cacheEntry) {
+        NS_IF_ADDREF(mCacheEntry);
+    }
+    virtual ~StreamAsFile() {
+        NS_IF_RELEASE(mCacheEntry);
+    };
 
     NS_DECL_ISUPPORTS
 
@@ -114,7 +118,7 @@ public:
     } 
 
 protected:
-    nsCOMPtr<nsCachedNetData> mCacheEntry;
+    nsCachedNetData* mCacheEntry;
 };
 
 NS_IMPL_ADDREF(StreamAsFile)
@@ -1063,11 +1067,16 @@ public:
 
     InterceptStreamListener(nsCachedNetData *aCacheEntry,
                             nsIStreamListener *aOriginalListener):
-        mCacheEntry(aCacheEntry), mOriginalListener(aOriginalListener) {
-    NS_INIT_REFCNT(); }
+        mCacheEntry(aCacheEntry), 
+        mOriginalListener(aOriginalListener) 
+    {
+        NS_INIT_REFCNT(); 
+        NS_IF_ADDREF(mCacheEntry);
+    }
     
     virtual ~InterceptStreamListener() {
         mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
+        NS_IF_RELEASE(mCacheEntry);
     };
 
     nsresult Init(PRUint32 aStartingOffset) {
@@ -1141,7 +1150,7 @@ private:
     }
 
 private:
-    nsCOMPtr<nsCachedNetData>    mCacheEntry;
+    nsCachedNetData*            mCacheEntry;
     nsCOMPtr<nsIStreamListener>  mOriginalListener;
     nsCOMPtr<nsIOutputStream>    mCacheStream;
 
