@@ -232,7 +232,7 @@
 
 #month-view-box
 {
-   padding-top        : 20px;
+   padding-top        : 10px;
    max-width          : 660px; /* this is needed for some reason.*/
    
 }
@@ -244,6 +244,7 @@
 #month-controls-box
 {
    -moz-box-align    : center;
+	margin-bottom		: 10px;
 }
 
 /*--------------------------------------------------------------------
@@ -308,8 +309,9 @@
 
 #month-content-box
 {
-   border            :1px solid #1D7AB5;
-   padding           :2px;
+   border            : 1px solid #1D7AB5;
+   padding           : 2px;
+	background-color	: #ffffff;
 }
 
 /*--------------------------------------------------------------------
@@ -741,7 +743,7 @@
 
 #day-view-box
 {
-   padding-top             :20px;
+   padding-top             :10px;
 }
 
 /*--------------------------------------------------------------------
@@ -753,6 +755,7 @@
 {
    -moz-box-pack        : center;
    -moz-box-align       : center;
+	margin-bottom			: 10px;
 }
 
 /*--------------------------------------------------------------------
@@ -915,7 +918,7 @@
 
 #week-view-box
 {
-   padding-top             :20px;
+   padding-top             :10px;
 }
 
 #week-view-content-board
@@ -933,11 +936,7 @@
 {
    -moz-box-align          : center;
    -moz-box-pack           : center;
-}
-
-#week-title-box
-{
-   width               : 400px;
+	margin-bottom				: 10px;
 }
 
 #week-title-text
@@ -967,9 +966,37 @@
 
 /* Week View: Day name header */
 
-#weekview-daynumber-spacer-left
+#weekview-header-spacer-image
 {
-   width                :99px;
+   list-style-image     : url("chrome://calendar/skin/week-view-1px.gif");
+}
+
+#weekview-header-spacer-left
+{
+	-moz-box-align 		: start;
+	background-color		: #1D7AB5;
+}
+
+#weekview-daynumber-spacer-mid
+{
+	-moz-box-pack			: end;  
+	-moz-box-align 		: start;
+   width                : 99px;
+	background-color		: #ffffff;
+   background-image     : url("chrome://calendar/skin/week-view-1px.gif");
+   background-position  : top;
+   background-repeat    : repeat-x;
+}
+
+#weekview-daynumber-spacer-image
+{
+   list-style-image        : url("chrome://calendar/skin/week-view-corner.gif");
+}
+
+#week-view-header-days
+{
+   border-top               : 1px solid #1D7AB5;
+   border-right             : 1px solid #1D7AB5;
 }
 
 .weekview-daynumber-class
@@ -980,30 +1007,31 @@
 
 #week-view-header
 {
-	border						: 1px solid #2085c4;
-	border-bottom				: none;
    color                   : #3f7d91;
    font-size               : 11pt;
    font-family             : Arial, Helvetica;
    text-align              : center; 
    font-weight             : bold;
-}
-
-.week-header-class
-{
-   max-width               : 80px;
-   max-height              : 40px;
+   background-color	      : white;
 }
 
 
 
 /* Week View: Calendar Tree */
 
+#week-view-content-outer-box
+{
+   border-left          : 1px solid #2085c4;
+   border-bottom        : 1px solid #2085c4;
+   border-right         : 1px solid #2085c4;
+	padding					: 2px;
+   background-color     : white;
+}
+
 #week-view-content-box
 {
    overflow             : auto;
    border               : 1px solid #2085c4;
-   margin-bottom       : 5px;
 }
 
 
@@ -1087,21 +1115,18 @@
    border-bottom        : 1px solid #2085c4;
    width                : 82px;
    height               : 50px;
-   background-color     : white
+   background-color     : white;
 }
 
 #week-view-all-day-content-box
 {
-   border               : 1px solid #2085c4;
-   height           : 50px;
+	padding					: 2px;
+   background-color     : white;
+   border-top           : 1px solid #2085c4;
+   border-left          : 1px solid #2085c4;
+   border-right         : 1px solid #2085c4;
+   min-height       		: 15px;
 }
-
-#all-day-content-box-text-box
-{
-   width						: 113px;
-	max-width				: 113px;
-	min-width				: 113px;
-} 
 
 #all-day-content-box-text-title
 {
@@ -1118,11 +1143,7 @@
    -moz-box-align : start;
 }
 
-#all-day-content-box-week-1
-{
-	width				: 76px;
-}
-
+#week-view-header-spacer,
 #all-day-content-spacer
 {
   	width			: 8px;
