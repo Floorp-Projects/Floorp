@@ -50,7 +50,7 @@
     [controller loadURLString:[self directParameter]];
   }
   else
-    controller = [[NSApp delegate] openBrowserWindowWithURLString: [self directParameter]];
+    controller = [[NSApp delegate] openBrowserWindowWithURL: [self directParameter]];
 
   [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
   return nil;
