@@ -1015,7 +1015,7 @@ endif
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.cc Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
-	$(ELOG) $(CCC) $(OUTOPTIONS)$@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.cpp Makefile.in
 	$(REPORT_BUILD)
