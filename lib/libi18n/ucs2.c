@@ -1978,7 +1978,7 @@ PUBLIC uint32    INTL_TextToUnicode(
 	uTableSet tableset;
   XP_ASSERT( (CS_UNKNOWN != encoding) && (CS_DEFAULT != encoding));
 	num = LoadUCS2TableSet(encoding, &tableset,FALSE);
-	for(validlen=0;	((srclen > 0) && ((*src) != '\0') && (ubuflen > 1));
+	for(validlen=0;	((srclen > 0) &&  (ubuflen > 1));
 		srclen -= scanlen, src += scanlen, ustr++, ubuflen--,validlen++)
 	{
 		uint16 i;
