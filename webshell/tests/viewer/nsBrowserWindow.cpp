@@ -394,6 +394,12 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case EDITOR_MODE:
     DoEditorMode(mWebShell);
     break;
+
+  case VIEWER_ONE_COLUMN:
+  case VIEWER_TWO_COLUMN:
+  case VIEWER_THREE_COLUMN:
+    ShowPrintPreview(aID);
+    break;
   }
 
   return nsEventStatus_eIgnore;
@@ -820,6 +826,8 @@ nsBrowserWindow::nsBrowserWindow()
 
 nsBrowserWindow::~nsBrowserWindow()
 {
+  NS_IF_RELEASE(mPrefs);
+  NS_IF_RELEASE(mAppShell);
 }
 
 NS_IMPL_ADDREF(nsBrowserWindow)
@@ -872,9 +880,13 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
                       PRBool aAllowPlugins)
 {
   mChromeMask = aChromeMask;
-  mAppShell = aAppShell;
-  mPrefs = aPrefs;
   mAllowPlugins = aAllowPlugins;
+
+  mAppShell = aAppShell;
+  NS_IF_ADDREF(mAppShell);
+
+  mPrefs = aPrefs;
+  NS_IF_ADDREF(mPrefs);
 
   // Create top level window
   nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
@@ -929,6 +941,83 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   // Now lay it all out
   Layout(r.width, r.height);
 
+
+  return NS_OK;
+}
+
+nsresult
+nsBrowserWindow::Init(nsIAppShell* aAppShell,
+                      nsIPref* aPrefs,
+                      const nsRect& aBounds,
+                      PRUint32 aChromeMask,
+                      PRBool aAllowPlugins,
+                      nsIDocumentViewer* aDocumentViewer,
+                      nsIPresContext* aPresContext)
+{
+  mChromeMask = aChromeMask;
+  mAppShell = aAppShell;
+  mPrefs = aPrefs;
+  mAllowPlugins = aAllowPlugins;
+
+  // Create top level window
+  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+                                             (void**)&mWindow);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  nsRect r(0, 0, aBounds.width, aBounds.height);
+  mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
+                  nsnull, aAppShell);
+  mWindow->GetBounds(r);
+
+  // Create web shell
+  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
+                                    kIWebShellIID,
+                                    (void**)&mWebShell);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  r.x = r.y = 0;
+  nsRect ws = r;
+  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
+                       r.x, r.y, r.width, r.height,
+                       nsScrollPreference_kAuto, aAllowPlugins);
+  mWebShell->SetContainer((nsIWebShellContainer*) this);
+  mWebShell->SetObserver((nsIStreamObserver*)this);
+  mWebShell->SetPrefs(aPrefs);
+
+  if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
+    rv = CreateMenuBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    mWindow->GetBounds(r);
+    r.x = r.y = 0;
+  }
+
+  if (NS_CHROME_TOOL_BAR_ON & aChromeMask) {
+    rv = CreateToolBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  if (NS_CHROME_STATUS_BAR_ON & aChromeMask) {
+    rv = CreateStatusBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  // Now lay it all out
+  Layout(r.width, r.height);
+
+  // Create a document viewer and bind it to the webshell
+  nsIDocumentViewer* docv;
+  aDocumentViewer->CreateDocumentViewerUsing(aPresContext, docv);
+  mWebShell->Embed(docv, "duh", nsnull);
+  mWebShell->Show();
+  NS_RELEASE(docv);
 
   return NS_OK;
 }
@@ -1710,6 +1799,44 @@ nsBrowserWindow::DoCopy()
     }
     NS_RELEASE(shell);
   }
+}
+
+//----------------------------------------------------------------------
+
+void
+nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
+{
+  nsIContentViewer* cv = nsnull;
+  if (nsnull != mWebShell) {
+    if ((NS_OK == mWebShell->GetContentViewer(cv)) && (nsnull != cv)) {
+      nsIDocumentViewer* docv = nsnull;
+      if (NS_OK == cv->QueryInterface(kIDocumentViewerIID, (void**)&docv)) {
+        nsIPresContext* printContext;
+        if (NS_OK == NS_NewPrintPreviewContext(&printContext)) {
+          // Prepare new printContext for print-preview
+          nsIDeviceContext* dc;
+          nsIPresContext* presContext;
+          docv->GetPresContext(presContext);
+          dc = presContext->GetDeviceContext();
+          printContext->Init(dc, mPrefs);
+          NS_RELEASE(presContext);
+          NS_RELEASE(dc);
+
+          // Make a window using that content viewer
+          nsBrowserWindow* bw = new nsNativeBrowserWindow();
+          bw->Init(mAppShell, mPrefs, nsRect(0, 0, 600, 400),
+                   NS_CHROME_MENU_BAR_ON, PR_TRUE,
+                   docv, printContext);
+          bw->Show();
+
+          NS_RELEASE(printContext);
+        }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+
 }
 
 //----------------------------------------------------------------------

@@ -37,6 +37,8 @@ class nsITextWidget;
 class nsIButton;
 class nsIThrobber;
 class nsViewerApp;
+class nsIDocumentViewer;
+class nsIPresContext;
 class nsIPresShell;
 class nsIPref;
 
@@ -133,6 +135,8 @@ public:
   void DoSelectAll();
   void ForceRefresh();
 
+  void ShowPrintPreview(PRInt32 aID);
+
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
   void DumpFrames(FILE *out = stdout, nsString *aFilter = nsnull);
@@ -154,6 +158,15 @@ public:
 
   nsEventStatus ProcessDialogEvent(nsGUIEvent *aEvent);
 
+  // Initialize a second view on a different browser windows document
+  // viewer.
+  nsresult Init(nsIAppShell* aAppShell,
+                nsIPref* aPrefs,
+                const nsRect& aBounds,
+                PRUint32 aChromeMask,
+                PRBool aAllowPlugins,
+                nsIDocumentViewer* aDocViewer,
+                nsIPresContext* aPresContext);
 
   void SetApp(nsViewerApp* aApp) {
     mApp = aApp;
