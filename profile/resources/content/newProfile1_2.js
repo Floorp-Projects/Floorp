@@ -68,7 +68,16 @@ function SetFields( aElement, aValue, aDataObject )
   }
 }  
 
-
+// check to see if some user specified profile folder exists, otherwise use
+// default. 
+function initFields()
+{
+  var displayField = document.getElementById( "ProfileDir" );
+  if ( !displayField.value || !displayField.rootFolder )
+    setDisplayToDefaultFolder();
+  
+  gNewProfile1_2Bundle = document.getElementById("bundle_newProfile1_2");
+}
 
 // function createProfileWizard.js::chooseProfileFolder();
 // invoke a folder selection dialog for choosing the directory of profile storage.
