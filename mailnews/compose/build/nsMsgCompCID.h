@@ -58,6 +58,18 @@
  0xbe59dbf0, 0x2812, 0x11d3,                      \
  {0x80, 0xa3, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e}}
 
+//
+// nsSmtpServer
+//
+
+#define NS_SMTPSERVER_PROGID \
+  "component://netscape/messenger/smtp/server"
+
+#define NS_SMTPSERVER_CID                      \
+{ /* 60dc861a-56ce-11d3-9118-00a0c900d445 */   \
+  0x60dc861a,0x56ce,0x11d3,0x91,0x18,          \
+    { 0x0, 0xa0, 0xc9, 0x0, 0xd4, 0x45 }};     \
+
 #define NS_SMTPSERVICE_CID						  \
 { /* 5B6419F1-CA9B-11d2-8063-006008128C4E */      \
  0x5b6419f1, 0xca9b, 0x11d2,                      \
