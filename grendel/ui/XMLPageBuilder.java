@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import java.net.URL;
-import java.util.Hashtable;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
@@ -82,18 +81,19 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   String title;
   String id;
   String attr;
-
-  Hashtable input = new Hashtable();
+  PageModel model;
 
   /**
    * Build a menu builder which operates on XML formatted data
    * 
    * @param attr attribute
    * @param id the value of the attribute to have a match
+   * @param model the page model for the page to be created
    */
-  public XMLPageBuilder(String attr, String id) {
+  public XMLPageBuilder(String attr, String id, PageModel model) {
     this.attr = attr;
     this.id = id;
+    this.model = model;
   }
 
   /**
@@ -329,7 +329,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     
     if (item != null && ID != null) {
       System.out.println("Adding " + ID + " to list");
-      input.put(ID, item);
+      model.add(item, ID);
     }  
 
     return item;
@@ -374,7 +374,8 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
   public static void main(String[] args) throws Exception {
     javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
-    XMLPageBuilder builder = new XMLPageBuilder(args[0], args[1]);
+    PageModel model = new PageModel();
+    XMLPageBuilder builder = new XMLPageBuilder(args[0], args[1], model);
     URL url = builder.getClass().getResource("dialogs.xml");
     builder.buildFrom(url.openStream());
     JPanel panel = builder.getComponent();

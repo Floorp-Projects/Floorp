@@ -32,9 +32,12 @@ import java.text.MessageFormat;
 import java.util.Hashtable;
 import java.util.ResourceBundle;
 
+import java.io.IOException;
+
 import javax.mail.URLName;
 
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 //import netscape.orion.dialogs.AttrNotFoundException;
 //import netscape.orion.dialogs.PageModel;
@@ -55,7 +58,9 @@ public class EditHostDialog extends GeneralDialog {
 
   Hashtable fValues = null;
 
-  PageUI fPanel;
+  JPanel fPanel;
+
+  EditHostModel model;
 
   class EditHostModel extends PageModel {
     public EditHostModel(URLName aURL) {
@@ -81,23 +86,7 @@ public class EditHostDialog extends GeneralDialog {
       fValues.put(kOtherFieldKey, other ? proto : "");
       fValues.put(kHostFieldKey, host == null ? "" : host);
       fValues.put(kUserFieldKey, user == null ? "" : user);
-    }
-
-    public Object getAttribute(String aAttrib) throws AttrNotFoundException {
-      Object res = fValues.get(aAttrib);
-      if (res == null) {
-        res = fLabels.getString(aAttrib);
-      }
-      if (res == null) {
-        throw new AttrNotFoundException(aAttrib);
-      }
-      return res;
-    }
-
-    public void setAttribute(String aAttrib, Object aValue) {
-      if (fValues.containsKey(aAttrib)) {
-        fValues.put(aAttrib, aValue);
-      }
+      setStore(fValues);
     }
 
     public void actionPerformed(ActionEvent aEvent) {
@@ -108,11 +97,13 @@ public class EditHostDialog extends GeneralDialog {
     super(aParent);
 
     setModal(true);
-    EditHostModel model = new EditHostModel(aURL);
+    model = new EditHostModel(aURL);
 
     // use the XML parser to get the root XML node of the resource tree
-    XMLNode root = null;
+    // XMLNode root = null;
     URL url = getClass().getResource("dialogs.xml");
+
+    /*
     try {
       root = xml.tree.TreeBuilder.build(url, getClass());
     } catch (Exception e) {
@@ -122,20 +113,26 @@ public class EditHostDialog extends GeneralDialog {
     XMLNode editHost = root.getChild("dialog", "id", "editHost");
 
     fPanel = new PageUI(url, editHost, model);
+    */
+    XMLPageBuilder pb = new XMLPageBuilder("id", "editHost", model);
+    try {
+      pb.buildFrom(url.openStream());
+      fPanel = pb.getComponent();
+    } catch (IOException io) {
+      System.out.println(io);
+    }
 
     JOptionPane actionPanel = new JOptionPane(fPanel,
                                               JOptionPane.PLAIN_MESSAGE,
                                               JOptionPane.OK_CANCEL_OPTION);
     actionPanel.addPropertyChangeListener(new OptionListener());
-    add(actionPanel);
+    getContentPane().add(actionPanel);
 
     // XXX This is a stupid hack because PageUI doesn't to a resource lookup
     // on it's title. Bleh.
-    String title = fPanel.getTitle();
+    String title = pb.getTitle();
     if (title.charAt(0) == '$') {
-      try {
-        title = (String) model.getAttribute(title.substring(1));
-      } catch (AttrNotFoundException e) {}
+      title = (String) model.getAttribute(title.substring(1));
     }
     setTitle(title);
 
@@ -160,20 +157,21 @@ public class EditHostDialog extends GeneralDialog {
 
         if (value == JOptionPane.OK_OPTION) {
           // Grab all the values
-          fPanel.saveAll();
+          // fPanel.saveAll();
+          System.out.println(model.getAttribute("imapRadio"));
 
           String proto;
-          Boolean imap = (Boolean) fValues.get(kIMAPRadioKey);
-          Boolean pop3 = (Boolean) fValues.get(kPOPRadioKey);
+          Boolean imap = (Boolean) model.getAttribute(kIMAPRadioKey);
+          Boolean pop3 = (Boolean) model.getAttribute(kPOPRadioKey);
           if (imap.booleanValue()) {
             proto = "imap";
           } else if (pop3.booleanValue()) {
             proto = "pop3";
           } else {
-            proto = (String) fValues.get(kOtherFieldKey);
+            proto = (String) model.getAttribute(kOtherFieldKey);
           }
-          String host = (String) fValues.get(kHostFieldKey);
-          String user = (String) fValues.get(kUserFieldKey);
+          String host = (String) model.getAttribute(kHostFieldKey);
+          String user = (String) model.getAttribute(kUserFieldKey);
 
           if (user.equals("")) {
             user = null;
@@ -191,5 +189,12 @@ public class EditHostDialog extends GeneralDialog {
         }
       }
     }
+  }
+
+  public static void main(String[] args) throws Exception {
+    javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
+    EditHostDialog d = new EditHostDialog(frame, null);
+    frame.pack();
+    frame.setVisible(true);
   }
 }
