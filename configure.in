@@ -3067,12 +3067,8 @@ dnl = dnl This will enable logging of addref, release, ctor, dtor.
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(logrefcnt,
 [  --enable-logrefcnt      Enable logging of refcounts (default=debug) ],
-    _ENABLE_LOGREFCNT=1)
-if test "$_ENABLE_LOGREFCNT"; then
-    AC_DEFINE(FORCE_BUILD_REFCNT_LOGGING)
-else
-    AC_DEFINE(NO_BUILD_REFCNT_LOGGING)
-fi
+    AC_DEFINE(FORCE_BUILD_REFCNT_LOGGING),
+    AC_DEFINE(NO_BUILD_REFCNT_LOGGING))
 
 dnl ========================================================
 dnl = detect webshell leaks
