@@ -49,7 +49,7 @@
 *    (new String("function f\xB1() {}"))
 *
 *
-* See how the high-byte information (the 02) has been lost?
+* See how the high-byte information (02) has been lost?!
 * The same thing was happening with the toString() method:
 *
 *    js> f\u02B1.toString();
@@ -183,26 +183,70 @@ test();
  * Goal: recover the double-byte identifiers from f.toString()
  * by getting the very next character after each 'Z' token.
  *
- * The return value will be an array |res| indexed such that
- * |res[1]| is the 1st identifier, |res[2]| the 2nd, and so on.
+ * The return value will be an array |arr| indexed such that
+ * |arr[1]| is the 1st identifier, |arr[2]| the 2nd, and so on.
  *
+ * Note, however, f.toString() is implementation-independent.
+ * For example, it may begin with '\nfunction' instead of 'function'. 
+ *
+ * Rhino uses a Unicode representation for f.toString(); whereas
+ * SpiderMonkey uses an ASCII representation, putting escape sequences
+ * for non-ASCII characters. For example, If a function is called f\u02B1,
+ * then in Rhino the toString() method will present a 2-character Unicode
+ * string for its name, whereas SpiderMonkey will present a 7-character
+ * ASCII string for its name: the string literal 'f\u02B1'.
+ *
+ * So we force the lexer to condense the string before we use it.
+ * This will give uniform results in Rhino and SpiderMonkey.
  */
 function getIdentifiers(f)
 {
-  var res = [];
   var arr = f.toString().split('Z');
 
   /*
    * The identifiers are the 1st char of each split substring
-   * except the first one, which is just ('\n' +) 'function '.
+   * EXCEPT the first one, which is just ('\n' +) 'function '.
    *
-   * We'll store the first char of that one in |res[0]|.
-   * That way, the 1st identifier will be stored in |res[1]|,
-   * the 2nd one in |res[2]|, etc., making the indexing easy -
+   * Thus note the 1st identifier will be stored in |arr[1]|,
+   * the 2nd one in |arr[2]|, etc., making the indexing easy -
    */
   for (i in arr)
-    res.push(arr[i].charAt(0));
-  return res;
+  {
+    arr[i] = condenseStr(arr[i]);
+    arr[i] = arr[i].charAt(0);
+  }
+
+  return arr;
+}
+
+
+/*
+ * This function is the opposite of a functions like escape(), which take
+ * Unicode characters and return escape sequences for them. Here, we force
+ * the lexer to turn escape sequences back into single characters.
+ *
+ * Note we can't simply do |eval(str)|, since in practice |str| will be an
+ * identifier somewhere in the program (e.g. a function name); thus |eval(str)|
+ * would return the object that the identifier represents: not what we want.
+ *
+ * So we surround |str| lexicographically with quotes to force the lexer to
+ * evaluate it as a string. Have to strip out any linefeeds first, however -
+ */
+function condenseStr(str)
+{
+  /*
+   * You won't be able to do the next step if |str| has
+   * any carriage returns or linefeeds in it. For example:
+   *
+   *  js> eval("'" + '\nHello' + "'");
+   *  1: SyntaxError: unterminated string literal:
+   *  1: '
+   *  1: ^
+   *
+   * So replace them with the empty string -
+   */
+  str = str.replace(/[\r\n]/g, '') 
+  return eval("'" + str + "'")
 }
 
 
