@@ -498,6 +498,9 @@ CalendarEventDataSource.prototype.getAllFutureEvents = function()
 
    var Day = Today.getDate();
    
+   if( Day < 10 )
+      Day = "0"+Day;
+
    return( this.searchBySql( "SELECT * FROM VEVENT WHERE DTSTART >= '"+Year+""+Month+""+Day+"T000000'" ) );
 }
 
