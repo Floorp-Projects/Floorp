@@ -724,11 +724,14 @@ function ComposeLoad()
 
 	verifyAccounts();	// this will do migration, if we need to.
 
-	var selectNode = document.getElementById('msgRecipientType#1');
-
 	if (other_header != "") {
-		var opt = new Option(other_header + ":", "addr_other");
-		selectNode.add(opt, null); 
+        var selectNode = document.getElementById('msgRecipientType#1');
+
+        selectNode = selectNode.childNodes[0];
+        var opt = document.createElement('menuitem');
+        opt.setAttribute("data", "addr_other");
+        opt.setAttribute("value", other_header + ":");
+        selectNode.appendChild(opt);
 	}
 
     // See if we got arguments.
