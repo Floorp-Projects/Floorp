@@ -841,64 +841,60 @@ TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                 TextStyle& aTextStyle,
                                 nscoord aX, nscoord aY, nscoord aWidth)
 {
-  nsIFontMetrics* fontMetrics = aRenderingContext.GetFontMetrics();
-  if (nsnull != fontMetrics) {
-    nscolor overColor;
-    nscolor underColor;
-    nscolor strikeColor;
-    nsIStyleContext*  context = aStyleContext;
-    PRUint8 decorations = aTextStyle.mFont->mFont.decorations;
-    PRUint8 decorMask = decorations;
+  nscolor overColor;
+  nscolor underColor;
+  nscolor strikeColor;
+  nsIStyleContext*  context = aStyleContext;
+  PRUint8 decorations = aTextStyle.mFont->mFont.decorations;
+  PRUint8 decorMask = decorations;
 
-    NS_ADDREF(context);
-    do {  // find decoration colors
-      const nsStyleText* styleText = 
-                (const nsStyleText*)context->GetStyleData(eStyleStruct_Text);
-      if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
-        const nsStyleColor* styleColor =
-                (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
-        if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
-          underColor = styleColor->mColor;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-        }
-        if (NS_STYLE_TEXT_DECORATION_OVERLINE & decorMask & styleText->mTextDecoration) {
-          overColor = styleColor->mColor;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
-        }
-        if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decorMask & styleText->mTextDecoration) {
-          strikeColor = styleColor->mColor;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-        }
+  NS_ADDREF(context);
+  do {  // find decoration colors
+    const nsStyleText* styleText = 
+      (const nsStyleText*)context->GetStyleData(eStyleStruct_Text);
+    if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
+      const nsStyleColor* styleColor =
+        (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
+      if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
+        underColor = styleColor->mColor;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
       }
-      if (0 != decorMask) {
-        nsIStyleContext*  lastContext = context;
-        context = context->GetParent();
-        NS_RELEASE(lastContext);
+      if (NS_STYLE_TEXT_DECORATION_OVERLINE & decorMask & styleText->mTextDecoration) {
+        overColor = styleColor->mColor;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
       }
-    } while ((nsnull != context) && (0 != decorMask));
-    NS_IF_RELEASE(context);
-
-    nscoord offset;
-    nscoord size;
-    nscoord baseline;
-    fontMetrics->GetMaxAscent(baseline);
-    if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
-      fontMetrics->GetUnderline(offset, size);
-      if (decorations & NS_FONT_DECORATION_OVERLINE) {
-        aRenderingContext.SetColor(overColor);
-        aRenderingContext.FillRect(aX, aY, aWidth, size);
-      }
-      if (decorations & NS_FONT_DECORATION_UNDERLINE) {
-        aRenderingContext.SetColor(underColor);
-        aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
+      if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decorMask & styleText->mTextDecoration) {
+        strikeColor = styleColor->mColor;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
       }
     }
-    if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
-      fontMetrics->GetStrikeout(offset, size);
-      aRenderingContext.SetColor(strikeColor);
+    if (0 != decorMask) {
+      nsIStyleContext*  lastContext = context;
+      context = context->GetParent();
+      NS_RELEASE(lastContext);
+    }
+  } while ((nsnull != context) && (0 != decorMask));
+  NS_IF_RELEASE(context);
+
+  nscoord offset;
+  nscoord size;
+  nscoord baseline;
+  aTextStyle.mNormalFont->GetMaxAscent(baseline);
+  if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
+    aTextStyle.mNormalFont->GetUnderline(offset, size);
+    if (decorations & NS_FONT_DECORATION_OVERLINE) {
+      aRenderingContext.SetColor(overColor);
+      aRenderingContext.FillRect(aX, aY, aWidth, size);
+    }
+    if (decorations & NS_FONT_DECORATION_UNDERLINE) {
+      aRenderingContext.SetColor(underColor);
       aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
     }
-    NS_RELEASE(fontMetrics);
+  }
+  if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
+    aTextStyle.mNormalFont->GetStrikeout(offset, size);
+    aRenderingContext.SetColor(strikeColor);
+    aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
   }
 }
 
@@ -1102,8 +1098,12 @@ TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
         aRenderingContext.DrawString(runStart, pendingCount,
                                      aX, lastY, width,
                                      spacing ? sp0 : nsnull);
+
+        // Note: use aY not small-y so that decorations are drawn with
+        // respect to the normal-font not the current font.
         PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                             aX, lastY, width);
+                             aX, aY, width);
+
         aWidth -= width;
         aX += width;
         runStart = bp = bp0;
@@ -1123,8 +1123,11 @@ TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     // Measure previous run of characters using the previous font
     aRenderingContext.DrawString(runStart, pendingCount, aX, lastY, width,
                                  spacing ? sp0 : nsnull);
+
+    // Note: use aY not small-y so that decorations are drawn with
+    // respect to the normal-font not the current font.
     PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                         aX, lastY, aWidth);
+                         aX, aY, aWidth);
   }
   aTextStyle.mLastFont = lastFont;
 
