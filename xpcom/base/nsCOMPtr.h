@@ -981,4 +981,12 @@ SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
     return nsCOMPtr<nsISupports>( do_QueryInterface(lhs) ) == nsCOMPtr<nsISupports>( do_QueryInterface(rhs) );
   }
 
+template <class T>
+inline
+nsresult
+CallQueryInterface( nsCOMPtr<T>& aSourcePtr, T** aDestPtr )
+	{
+		return CallQueryInterface(aSourcePtr.get(), aDestPtr);
+	}
+
 #endif // !defined(nsCOMPtr_h___)
