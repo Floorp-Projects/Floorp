@@ -461,7 +461,7 @@ NS_IMETHODIMP nsDBFolderInfo::ChangeNumMessages(PRInt32 delta)
 	if (m_numMessages < 0)
 	{
 #ifdef DEBUG_bienvenu
-		NS_ASSERTION(FALSE, "num messages can't be < 0");
+		NS_ASSERTION(PR_FALSE, "num messages can't be < 0");
 #endif
 		m_numMessages = 0;
 	}
@@ -474,7 +474,7 @@ NS_IMETHODIMP nsDBFolderInfo::ChangeNumVisibleMessages(PRInt32 delta)
 	if (m_numVisibleMessages < 0)
 	{
 #ifdef DEBUG_bienvenu
-		NS_ASSERTION(FALSE, "num visible messages can't be < 0");
+		NS_ASSERTION(PR_FALSE, "num visible messages can't be < 0");
 #endif
 		m_numVisibleMessages = 0;
 	}

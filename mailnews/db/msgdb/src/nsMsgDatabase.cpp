@@ -154,11 +154,16 @@ nsresult nsMsgDatabase::ClearHdrCache(PRBool reInit)
 	{
     PL_DHashTableEnumerate(m_cachedHeaders, HeaderEnumerator, nsnull);
 
-    PL_DHashTableFinish(m_cachedHeaders);
     if (reInit)
+    {
+      PL_DHashTableFinish(m_cachedHeaders);
       PL_DHashTableInit(m_cachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
+    }
     else
+    {
+      PL_DHashTableDestroy(m_cachedHeaders);
       m_cachedHeaders = nsnull;
+    }
 	}
 	return NS_OK;
 }
@@ -303,8 +308,8 @@ nsresult nsMsgDatabase::ClearUseHdrCache()
 {
 	if (m_headersInUse)
 	{
-    PL_DHashTableFinish(m_headersInUse);
-    PL_DHashTableInit(m_headersInUse, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), MSG_HASH_SIZE);
+    PL_DHashTableDestroy(m_headersInUse);
+    m_headersInUse = nsnull;
 	}
 	return NS_OK;
 }
@@ -1448,7 +1453,7 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 
 	RemoveHdrFromCache(msgHdr, nsMsgKey_None);
 	nsIMdbRow* row = msgHdr->GetMDBRow();
-	ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), msgHdr->GetMDBRow());
+	ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), row);
 	row->CutAllColumns(GetEnv());
 	return ret;
 }
@@ -1879,8 +1884,8 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 	//ListContext		*listContext = NULL;
 	PRInt32			numChanged = 0;
 
-    nsISimpleEnumerator* hdrs;
-    rv = EnumerateMessages(&hdrs);
+    nsCOMPtr <nsISimpleEnumerator> hdrs;
+    rv = EnumerateMessages(getter_AddRefs(hdrs));
     if (NS_FAILED(rv))
 		return rv;
 	PRBool hasMore = PR_FALSE;
@@ -2946,7 +2951,7 @@ nsresult nsMsgDatabase::GetProperty(nsIMdbRow *row, const char *propertyName, ch
 	return err;
 }
 
-nsresult nsMsgDatabase::SetProperty(nsIMdbRow *row, const char *propertyName, char *propertyVal)
+nsresult nsMsgDatabase::SetProperty(nsIMdbRow *row, const char *propertyName, const char *propertyVal)
 {
 	nsresult err = NS_OK;
 	mdb_token	property_token;
@@ -3427,6 +3432,19 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create, nsIMsgOfflineImapOperation **offlineOp)
+{
+  NS_ASSERTION(PR_FALSE, "overridden by nsMailDatabase");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP  nsMsgDatabase::RemoveOfflineOp(nsIMsgOfflineImapOperation *op)
+{
+  NS_ASSERTION(PR_FALSE, "overridden by nsMailDatabase");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP nsMsgDatabase::ListAllOfflineMsgs(nsMsgKeyArray *outputKeys)
 {
   nsCOMPtr <nsISimpleEnumerator> enumerator;
@@ -3460,13 +3478,16 @@ NS_IMETHODIMP nsMsgDatabase::ListAllOfflineMsgs(nsMsgKeyArray *outputKeys)
   return rv;
 }
 
+NS_IMETHODIMP nsMsgDatabase::EnumerateOfflineOps(nsISimpleEnumerator **enumerator)
+{
+  NS_ASSERTION(PR_FALSE, "overridden by nsMailDatabase");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsMsgDatabase::ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds)
 {
-	nsresult ret = NS_OK;
-	if (!offlineOpIds)
-		return NS_ERROR_NULL_POINTER;
-	// technically, notimplemented, but no one's putting offline ops in anyway.
-	return ret;
+  NS_ASSERTION(PR_FALSE, "overridden by nsMailDatabase");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes)

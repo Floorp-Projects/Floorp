@@ -91,7 +91,7 @@ public:
   // these methods take the property name as a string, not a token.
   // they should be used when the properties aren't accessed a lot
   nsresult        GetProperty(nsIMdbRow *row, const char *propertyName, char **result);
-  nsresult        SetProperty(nsIMdbRow *row, const char *propertyName, char *propertyVal);
+  nsresult        SetProperty(nsIMdbRow *row, const char *propertyName, const char *propertyVal);
   nsresult        GetPropertyAsNSString(nsIMdbRow *row, const char *propertyName, nsString *result);
   nsresult        SetPropertyFromNSString(nsIMdbRow *row, const char *propertyName, nsString *propertyVal);
   nsresult        GetUint32Property(nsIMdbRow *row, const char *propertyName, PRUint32 *result, PRUint32 defaultValue = 0);
@@ -186,9 +186,9 @@ protected:
   nsresult PurgeExcessMessages(PRUint32 numHeadersToKeep, PRBool keepUnreadMessagesOnly);
 
 	// mdb bookkeeping stuff
-	nsresult			InitExistingDB();
-	nsresult			InitNewDB();
-	nsresult			InitMDBInfo();
+	virtual nsresult			InitExistingDB();
+	virtual nsresult			InitNewDB();
+	virtual nsresult			InitMDBInfo();
 
 	nsDBFolderInfo      *m_dbFolderInfo;
 	nsMsgKey            m_nextPseudoMsgKey;

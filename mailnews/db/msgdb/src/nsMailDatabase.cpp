@@ -27,17 +27,26 @@
 #include "nsFileStream.h"
 #include "nsLocalFolderSummarySpec.h"
 #include "nsFileSpec.h"
+#include "nsMsgOfflineImapOperation.h"
+#include "nsMsgFolderFlags.h"
+
+const char *kOfflineOpsScope = "ns:msg:db:row:scope:ops:all";	// scope for all offine ops table
+const char *kOfflineOpsTableKind = "ns:msg:db:table:kind:ops";
+struct mdbOid gAllOfflineOpsTableOID;
 
 
 nsMailDatabase::nsMailDatabase()
     : m_reparse(PR_FALSE), m_folderSpec(nsnull), m_folderStream(nsnull)
 {
+  m_mdbAllOfflineOpsTable = nsnull;
 }
 
 nsMailDatabase::~nsMailDatabase()
 {
 	if(m_folderSpec)
 		delete m_folderSpec;
+	if (m_mdbAllOfflineOpsTable)
+		m_mdbAllOfflineOpsTable->Release();
 }
 
 
@@ -162,6 +171,36 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
 
 	}
 	return err;
+}
+
+// get this on demand so that only db's that have offline ops will
+// create the table.	
+nsresult nsMailDatabase::GetAllOfflineOpsTable()
+{
+  nsresult rv = NS_OK;
+  if (!m_mdbAllOfflineOpsTable)
+  {
+		mdb_err err	= GetStore()->StringToToken(GetEnv(), kOfflineOpsScope, &m_offlineOpsRowScopeToken); 
+    err = GetStore()->StringToToken(GetEnv(), kOfflineOpsTableKind, &m_offlineOpsTableKindToken); 
+		gAllOfflineOpsTableOID.mOid_Scope = m_offlineOpsRowScopeToken;
+		gAllOfflineOpsTableOID.mOid_Id = 1;
+
+    rv = GetStore()->GetTable(GetEnv(), &gAllOfflineOpsTableOID, &m_mdbAllOfflineOpsTable);
+    if (rv != NS_OK)
+      rv = NS_ERROR_FAILURE;
+
+    // create new all msg hdrs table, if it doesn't exist.
+    if (NS_SUCCEEDED(rv) && !m_mdbAllOfflineOpsTable)
+    {
+	    nsIMdbStore *store = GetStore();
+	    mdb_err mdberr = (nsresult) store->NewTable(GetEnv(), m_offlineOpsRowScopeToken, 
+		    m_offlineOpsTableKindToken, PR_FALSE, nsnull, &m_mdbAllOfflineOpsTable);
+      if (mdberr != NS_OK || !m_mdbAllOfflineOpsTable)
+        rv = NS_ERROR_FAILURE;
+    }
+    NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create offline ops table");
+  }
+  return rv;
 }
 
 /* static */ nsresult nsMailDatabase::CloneInvalidDBInfoIntoNewDB(nsFileSpec &pathName, nsMailDatabase** pMailDB)
@@ -409,35 +448,19 @@ nsresult nsMailDatabase::GetFolderName(nsString &folderName)
 }
 
 
-// The master is needed to find the folder info corresponding to the db.
-// Perhaps if we passed in the folder info when we opened the db, 
-// we wouldn't need the master. I don't remember why we sometimes need to
-// get from the db to the folder info, but it's probably something like
-// some poor soul who has a db pointer but no folderInfo.
-
-
-MSG_FolderInfo *nsMailDatabase::GetFolderInfo()
+NS_IMETHODIMP  nsMailDatabase::RemoveOfflineOp(nsIMsgOfflineImapOperation *op)
 {
-	PR_ASSERT(PR_FALSE);
-	return NULL;
-}
-	
-nsresult nsMailDatabase::GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsOfflineImapOperation **)
-{
-	nsresult ret = NS_OK;
-	return ret;
-}
 
-nsresult nsMailDatabase::AddOfflineOp(nsOfflineImapOperation *op)
-{
-	nsresult ret = NS_OK;
-	return ret;
-}
+  nsresult rv = GetAllOfflineOpsTable();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-nsresult DeleteOfflineOp(nsMsgKey opKey)
-{
-	nsresult ret = NS_OK;
-	return ret;
+	if (!op || !m_mdbAllOfflineOpsTable)
+		return NS_ERROR_NULL_POINTER;
+  nsMsgOfflineImapOperation* offlineOp = NS_STATIC_CAST(nsMsgOfflineImapOperation*, op);  // closed system, so this is ok
+	nsIMdbRow* row = offlineOp->GetMDBRow();
+	nsresult ret = m_mdbAllOfflineOpsTable->CutRow(GetEnv(), row);
+	row->CutAllColumns(GetEnv());
+  return rv;
 }
 
 nsresult SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key)
@@ -451,6 +474,67 @@ nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
 {
 	nsresult ret = NS_OK;
 	return ret;
+}
+
+NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create, nsIMsgOfflineImapOperation **offlineOp)
+{
+	mdb_bool	hasOid;
+	mdbOid		rowObjectId;
+  mdb_err   err;
+
+  nsresult rv = GetAllOfflineOpsTable();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+	if (!offlineOp || !m_mdbAllOfflineOpsTable)
+		return NS_ERROR_NULL_POINTER;
+
+	*offlineOp = NULL;
+
+	rowObjectId.mOid_Id = msgKey;
+	rowObjectId.mOid_Scope = m_offlineOpsRowScopeToken;
+	err = m_mdbAllOfflineOpsTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
+	if (err == NS_OK && m_mdbStore && (hasOid  || create))
+	{
+		nsIMdbRow *offlineOpRow;
+		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &offlineOpRow);
+
+		if (err == NS_OK && offlineOpRow)
+		{
+//      *offlineOp = new nsMsgOfflineImapOperation(this, offlineOpRow);
+		}
+    if (!hasOid && m_dbFolderInfo)
+    {
+      PRInt32 newFlags;
+      m_dbFolderInfo->OrFlags(MSG_FOLDER_FLAG_OFFLINEEVENTS, &newFlags);
+    }
+	}
+
+  return (err == 0) ? NS_OK : NS_ERROR_FAILURE;
+
+}
+
+NS_IMETHODIMP nsMailDatabase::EnumerateOfflineOps(nsISimpleEnumerator **enumerator)
+{
+  NS_ASSERTION(PR_FALSE, "overridden by nsMailDatabase");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP nsMailDatabase::ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds)
+{
+  nsresult rv = GetAllOfflineOpsTable();
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes)
+{
+	if (!offlineDeletes)
+		return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = GetAllOfflineOpsTable();
+  NS_ENSURE_SUCCESS(rv, rv);
+	return rv;
 }
 
 /* static */
@@ -552,51 +636,127 @@ PRBool	nsMailDatabase::ThreadBySubjectWithoutRe()
 	return gThreadWithoutRe;
 }
 
-#ifdef DEBUG	// strictly for testing purposes
-nsresult nsMailDatabase::PrePopulate()
+class nsMsgOfflineOpEnumerator : public nsISimpleEnumerator {
+public:
+  NS_DECL_ISUPPORTS
+
+  // nsISimpleEnumerator methods:
+  NS_DECL_NSISIMPLEENUMERATOR
+
+  nsMsgOfflineOpEnumerator(nsMailDatabase* db);
+  virtual ~nsMsgOfflineOpEnumerator();
+
+protected:
+  nsresult					GetRowCursor();
+  nsresult					PrefetchNext();
+  nsMailDatabase*              mDB;
+  nsIMdbTableRowCursor*       mRowCursor;
+  nsCOMPtr <nsIMsgOfflineImapOperation> mResultOp;
+  PRBool            mDone;
+  PRBool						mNextPrefetched;
+};
+
+nsMsgOfflineOpEnumerator::nsMsgOfflineOpEnumerator(nsMailDatabase* db)
+    : mDB(db), mRowCursor(nsnull), mDone(PR_FALSE)
 {
-	nsIMsgDBHdr	*msg;
-	nsMsgHdr	*newHdr = NULL;
-	PRTime      now = PR_Now();
-
-	nsresult rv = CreateNewHdr(1, &msg);
-    if (NS_FAILED(rv)) return rv;
-    newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
-	newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
-	newHdr->SetSubject("Why the Lakers suck");
-	newHdr->SetDate(now);
-	newHdr->SetRecipients("riley@heat.com (Pat Riley)");
-    newHdr->SetRecipientsIsNewsgroup(PR_FALSE);
-	AddNewHdrToDB (newHdr, PR_TRUE);
-	newHdr->Release();
-
-	rv = CreateNewHdr(2, &msg);
-    if (NS_FAILED(rv)) return rv;
-    newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
-	newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
-	newHdr->SetSubject("Anyone here know how to shoot free throws?");
-	newHdr->SetDate(now);
-	AddNewHdrToDB (newHdr, PR_TRUE);
-	newHdr->Release();
-
-	rv = CreateNewHdr(3, &msg);
-    if (NS_FAILED(rv)) return rv;
-    newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
-	newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
-	newHdr->SetSubject("Has anyone seen my jump shot?");
-	newHdr->SetDate(now);
-	AddNewHdrToDB (newHdr, PR_TRUE);
-	newHdr->Release();
-
-	rv = CreateNewHdr(4, &msg);
-    if (NS_FAILED(rv)) return rv;
-    newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
-	newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
-	newHdr->SetSubject("Tips for fighting 7' 4\" guys");
-	newHdr->SetDate(now);
-	AddNewHdrToDB (newHdr, PR_TRUE);
-	newHdr->Release();
-	return NS_OK;
+  NS_INIT_REFCNT();
+  NS_ADDREF(mDB);
+  mNextPrefetched = PR_FALSE;
 }
 
+nsMsgOfflineOpEnumerator::~nsMsgOfflineOpEnumerator()
+{
+  if (mRowCursor)
+    mRowCursor->CutStrongRef(mDB->GetEnv());
+  NS_RELEASE(mDB);
+}
+
+NS_IMPL_ISUPPORTS1(nsMsgOfflineOpEnumerator, nsISimpleEnumerator)
+
+nsresult nsMsgOfflineOpEnumerator::GetRowCursor()
+{
+  nsresult rv = 0;
+  mDone = PR_FALSE;
+
+  if (!mDB || !mDB->m_mdbAllOfflineOpsTable)
+    return NS_ERROR_NULL_POINTER;
+
+  rv = mDB->m_mdbAllOfflineOpsTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgOfflineOpEnumerator::GetNext(nsISupports **aItem)
+{
+  if (!aItem)
+    return NS_ERROR_NULL_POINTER;
+  nsresult rv=NS_OK;
+  if (!mNextPrefetched)
+    rv = PrefetchNext();
+  if (NS_SUCCEEDED(rv))
+  {
+    if (mResultOp) 
+    {
+      *aItem = mResultOp;
+      NS_ADDREF(*aItem);
+      mNextPrefetched = PR_FALSE;
+    }
+  }
+  return rv;
+}
+
+nsresult nsMsgOfflineOpEnumerator::PrefetchNext()
+{
+  nsresult rv = NS_OK;
+  nsIMdbRow* offlineOpRow;
+  mdb_pos rowPos;
+
+  if (!mRowCursor)
+  {
+    rv = GetRowCursor();
+    if (!NS_SUCCEEDED(rv))
+      return rv;
+  }
+
+  rv = mRowCursor->NextRow(mDB->GetEnv(), &offlineOpRow, &rowPos);
+  if (!offlineOpRow) 
+  {
+    mDone = PR_TRUE;
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_FAILED(rv)) 
+  {
+    mDone = PR_TRUE;
+    return rv;
+  }
+	//Get key from row
+  mdbOid outOid;
+  nsMsgKey key=0;
+  if (offlineOpRow->GetOid(mDB->GetEnv(), &outOid) == NS_OK)
+    key = outOid.mOid_Id;
+
+#ifdef DOING_OFFLINE
+  nsIMsgOfflineImapOperation *op = new nsMsgOfflineImapOperation(mDB, offlineOpRow);
+  mResultOp = op;
+  if (!op)
+    return NS_ERROR_OUT_OF_MEMORY;
 #endif
+
+  if (mResultOp) 
+  {
+    mNextPrefetched = PR_TRUE;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMsgOfflineOpEnumerator::HasMoreElements(PRBool *aResult)
+{
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  if (!mNextPrefetched)
+    PrefetchNext();
+  *aResult = !mDone;
+  return NS_OK;
+}
+

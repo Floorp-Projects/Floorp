@@ -34,6 +34,7 @@ interface nsIMsgDBHdr;
 interface nsISimpleEnumerator;
 interface nsIMsgThread;
 interface nsIDBFolderInfo;
+interface nsIMsgOfflineImapOperation;
 
 typedef unsigned long nsMsgRetainByPreference;
 
@@ -208,7 +209,11 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // and perhaps to use the mdb batching mechanism as well.
   void StartBatch();
   void EndBatch();
-  // offline operations
+  // offline operations - we could move these into an offline operation interface
+  // but it would have to be in nsMailDatabase, since local folders can be move destinations
+  nsIMsgOfflineImapOperation GetOfflineOpForKey(in nsMsgKey messageKey, in boolean create);
+  void  RemoveOfflineOp(in nsIMsgOfflineImapOperation op);
+  nsISimpleEnumerator EnumerateOfflineOps();
   [noscript] void ListAllOfflineOpIds(in nsMsgKeyArrayPtr offlineOpIds);
   [noscript] void ListAllOfflineDeletes(in nsMsgKeyArrayPtr offlineDeletes);
   [noscript] void ListAllOfflineMsgs(in nsMsgKeyArrayPtr offlineMsgs);

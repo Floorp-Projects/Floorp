@@ -39,7 +39,7 @@ public:
   NS_IMETHOD    EndBatch();
 	NS_IMETHOD    SetSummaryValid(PRBool valid = PR_TRUE);
   NS_IMETHOD    DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
-	
+
 protected:
 	// IMAP does not set local file flags, override does nothing
 	virtual void	UpdateFolderFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, 

@@ -27,13 +27,10 @@
 #include "nsMsgMessageFlags.h"
 
 // This is the subclass of nsMsgDatabase that handles local mail messages.
-class nsOfflineImapOperation;
 class nsMsgKeyArray;
-class MSG_Master;
-class MSG_FolderInfo;
 class nsIOFileStream;
 class nsFileSpec;
-
+class nsOfflineImapOperation;
 
 // this is the version number for the mail db. If the file format changes, we 
 // just reparse the mail folder. 
@@ -60,21 +57,29 @@ public:
 	virtual nsMailDatabase	*GetMailDB() {return this;}
 
 	virtual PRUint32		GetCurVersion() {return kMailDBVersion;}
-	virtual MSG_FolderInfo *GetFolderInfo();
 	
-	nsresult				GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsOfflineImapOperation **);
-	nsresult				AddOfflineOp(nsOfflineImapOperation *op);
-	nsresult				DeleteOfflineOp(nsMsgKey opKey);
+	NS_IMETHOD			GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsIMsgOfflineImapOperation **op);
+  NS_IMETHOD      RemoveOfflineOp(nsIMsgOfflineImapOperation *op);
+
 	nsresult				SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key);
 	
     NS_IMETHOD				SetSummaryValid(PRBool valid);
 	
+  NS_IMETHOD    EnumerateOfflineOps(nsISimpleEnumerator **enumerator);
 	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
-#ifdef DEBUG	// strictly for testing purposes
-	virtual	nsresult		PrePopulate();
-#endif
+  NS_IMETHOD    ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds);
+  NS_IMETHOD    ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes);
+
+    friend class nsMsgOfflineOpEnumerator;
 protected:
-	virtual PRBool			SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
+
+  nsresult      GetAllOfflineOpsTable(); // get this on demand
+
+  nsIMdbTable       *m_mdbAllOfflineOpsTable;
+	mdb_token			m_offlineOpsRowScopeToken;
+  mdb_token     m_offlineOpsTableKindToken;
+
+  virtual PRBool			SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
 	virtual void			UpdateFolderFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, 
 									 MsgFlags flag, nsIOFileStream **ppFileStream);
 	virtual void			SetReparse(PRBool reparse);

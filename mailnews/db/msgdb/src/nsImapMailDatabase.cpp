@@ -148,7 +148,7 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 	}
 	return err;
 }
-	
+
 NS_IMETHODIMP	nsImapMailDatabase::SetSummaryValid(PRBool /* valid */)
 {
 	return NS_OK;
