@@ -59,6 +59,7 @@ class nsIChannel;
 class nsIPrincipal;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
+class nsIBindingManager;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -327,6 +328,8 @@ public:
   NS_IMETHOD FlushPendingNotifications() = 0;
 
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID) = 0;
+
+  NS_IMETHOD GetBindingManager(nsIBindingManager** aResult) = 0;
 };
 
 

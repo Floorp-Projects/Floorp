@@ -47,8 +47,6 @@
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
-#include "nsIBindableContent.h"
-#include "nsIXBLBinding.h"
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
 #include "nsIServiceManager.h"
@@ -73,8 +71,7 @@ class nsHTMLInputElement : public nsIDOMHTMLInputElement,
                            public nsIDOMNSHTMLInputElement,
                            public nsIJSScriptObject,
                            public nsIHTMLContent,
-                           public nsIFormControl,
-                           public nsIBindableContent
+                           public nsIFormControl
 {
 public:
   nsHTMLInputElement(nsIAtom* aTag);
@@ -145,11 +142,6 @@ public:
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Init() { return NS_OK; }
 
-  // nsIBindableContent
-  NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
-  NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
-  NS_IMETHOD GetBaseTag(nsIAtom** aResult);
-
   // Helper method
   NS_IMETHOD SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
                                  nsIStatefulFrame::StateType aStateType,
@@ -165,7 +157,6 @@ protected:
   PRInt32                  mType;
   PRBool                   mSkipFocusEvent;
   nsCOMPtr<nsIControllers> mControllers;
-  nsCOMPtr<nsIXBLBinding>  mBinding;
 
 
   PRBool IsImage() const {
@@ -229,11 +220,6 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIBindableContent))) {
-    *aInstancePtr = (void*)(nsIBindableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -630,30 +616,6 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
   // XXX Should focus only this presContext
   Blur();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::SetBinding(nsIXBLBinding* aBinding)
-{
-  mBinding = aBinding; // COMPtr does addref
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::GetBinding(nsIXBLBinding** aResult)
-{
-  *aResult = mBinding;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::GetBaseTag(nsIAtom** aResult)
-{
-  if (mBinding)
-    return mBinding->GetBaseTag(aResult);
-  else
-    return NS_OK;
 }
 
 NS_IMETHODIMP

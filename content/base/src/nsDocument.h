@@ -40,6 +40,7 @@
 #include "nsIContent.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsIPrincipal.h"
+#include "nsIBindingManager.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -330,6 +331,7 @@ public:
 
   NS_IMETHOD FlushPendingNotifications();
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
+  NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
 
 public:
   
@@ -470,7 +472,8 @@ protected:
   // disk file members
   nsFileSpec*     mFileSpec;
   PRInt32         mModCount;
-  
+
+  nsCOMPtr<nsIBindingManager> mBindingManager;
 };
 
 #endif /* nsDocument_h___ */

@@ -54,6 +54,7 @@
 #include "nsIFrameSelection.h"
 
 #include "nsIXBLService.h"
+#include "nsIBindingManager.h"
 
 #include "nsIAutoCopy.h"
 
@@ -94,6 +95,7 @@ static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
 static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
+static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
 
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
 
@@ -116,6 +118,7 @@ extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 
 extern nsresult NS_NewXBLService(nsIXBLService** aResult);
+extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 
 extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 
@@ -363,6 +366,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewXBLService((nsIXBLService**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewXBLService", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kBindingManagerCID)) {
+    res = NS_NewBindingManager((nsIBindingManager**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewBindingManager", res);
       return res;
     }
   }

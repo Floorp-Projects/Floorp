@@ -24,14 +24,12 @@
 #define nsXMLElement_h___
 
 #include "nsCOMPtr.h"
-#include "nsIXBLBinding.h"
 #include "nsIDOMElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIXMLContent.h"
 #include "nsIJSScriptObject.h"
 #include "nsGenericXMLElement.h"
-#include "nsIBindableContent.h"
 
 class nsIDocument;
 class nsIAtom;
@@ -42,7 +40,6 @@ class nsIWebShell;
 
 class nsXMLElement : public nsIDOMElement,
 		     public nsIXMLContent,
-         public nsIBindableContent,
 		     public nsIJSScriptObject
 {
 public:
@@ -209,11 +206,6 @@ public:
   }
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
 
-  // nsIBindableContent
-  NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
-  NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
-  NS_IMETHOD GetBaseTag(nsIAtom** aResult);
-
   // nsIJSScriptObject
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
     return mInner.AddProperty(aContext, aObj, aID, aVp);
@@ -245,7 +237,6 @@ protected:
   nsGenericXMLElement mInner;
   PRBool mIsLink;
   PRUint32 mContentID;
-  nsCOMPtr<nsIXBLBinding> mBinding;
 };
 
 #endif // nsXMLElement_h___

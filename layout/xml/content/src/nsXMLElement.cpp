@@ -111,12 +111,6 @@ nsXMLElement::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(NS_GET_IID(nsIBindableContent))) {
-    nsIBindableContent* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   
   return NS_NOINTERFACE;
 }
@@ -476,29 +470,5 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   mInner.CopyInnerTo((nsIContent *)(nsIXMLContent *)this, &it->mInner, aDeep);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
-}
-
-NS_IMETHODIMP
-nsXMLElement::SetBinding(nsIXBLBinding* aBinding) 
-{
-  mBinding = aBinding; // nsCOMPtr handles addrefing.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLElement::GetBinding(nsIXBLBinding** aResult)
-{
-  *aResult = mBinding.get();
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLElement::GetBaseTag(nsIAtom** aResult)
-{
-  if (mBinding)
-    return mBinding->GetBaseTag(aResult);
-  else
-    return NS_OK;
 }
 
