@@ -371,7 +371,7 @@ XULContentSinkImpl::MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
     nsAutoString uri;
 
     rv = mNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
-    NS_VERIFY(NS_SUCCEEDED(rv), "unable to get namespace URI");
+    //NS_VERIFY(NS_SUCCEEDED(rv), "unable to get namespace URI");
 
     // some hacky logic to try to construct an appopriate URI for the
     // namespace/tag pair.
@@ -900,34 +900,33 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
         return NS_OK;
 
     // Don't do anything if they've told us not to create a text node
-    if (! aCreateTextNode)
-        return NS_OK;
+    if (aCreateTextNode) {
+      
+      // Don't bother if there's nothing but whitespace.
+      // XXX This could cause problems...
+      if (rdf_IsDataInBuffer(mText, mTextLength)) {
 
-    // Don't bother if there's nothing but whitespace.
-    // XXX This could cause problems...
-    if (! rdf_IsDataInBuffer(mText, mTextLength))
-        return NS_OK;
+        // Don't bother if we're not in XUL document body
+        if (mState == eXULContentSinkState_InDocumentElement) {
+          // Trim the leading and trailing whitespace, create an RDF
+          // literal, and put it into the graph.
+          nsAutoString value;
+          value.Append(mText, mTextLength);
+          value.Trim(" \t\n\r");
 
-    // Don't bother if we're not in XUL document body
-    if (mState != eXULContentSinkState_InDocumentElement)
-        return NS_OK;
+          nsresult rv;
+          nsCOMPtr<nsIRDFLiteral> literal;
+          if (NS_FAILED(rv = gRDFService->GetLiteral(value, getter_AddRefs(literal)))) {
+              NS_ERROR("unable to create RDF literal");
+              return rv;
+          }
 
-    // Trim the leading and trailing whitespace, create an RDF
-    // literal, and put it into the graph.
-    nsAutoString value;
-    value.Append(mText, mTextLength);
-    value.Trim(" \t\n\r");
-
-    nsresult rv;
-    nsCOMPtr<nsIRDFLiteral> literal;
-    if (NS_FAILED(rv = gRDFService->GetLiteral(value, getter_AddRefs(literal)))) {
-        NS_ERROR("unable to create RDF literal");
-        return rv;
-    }
-
-    if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource, GetTopResource(), literal))) {
-        NS_ERROR("unable to add text to container");
-        return rv;
+          if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource, GetTopResource(), literal))) {
+              NS_ERROR("unable to add text to container");
+              return rv;
+          }
+        }
+      }
     }
 
     // Reset our text buffer
