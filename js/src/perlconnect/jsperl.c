@@ -63,9 +63,9 @@ static JSBool PVSetKey(JSContext *cx, JSObject *obj, char* name, jsval v);
 static JSBool PVConvert(JSContext *cx, JSObject *obj, JSType type, jsval *v);
 static JSBool PVFinalize(JSContext *cx, JSObject *obj);
 /* Exported functions */
-PR_PUBLIC_API(JSObject*) JS_InitPerlClass(JSContext *cx, JSObject *obj);
-PR_PUBLIC_API(JSBool) JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv);
-PR_PUBLIC_API(JSBool) SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval);
+JS_EXPORT_API(JSObject*)	JS_InitPerlClass(JSContext *cx, JSObject *obj);
+JS_EXPORT_API(JSBool)		JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv);
+JS_EXPORT_API(JSBool)		SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval);
 
 /*
     The following is required by the Perl dynamic loading mechanism to
@@ -149,7 +149,7 @@ js_InitPerlClass(JSContext *cx, JSObject *obj)
 }
 
 /* Public wrapper for the function above */
-PR_PUBLIC_API(JSObject*)
+JSObject*
 JS_InitPerlClass(JSContext *cx, JSObject *obj)
 {
     return js_InitPerlClass(cx, obj);
@@ -759,7 +759,7 @@ PVFinalize(JSContext *cx, JSObject *obj)
     Used for parameter passing. This function is also
     used by the Perl part of PerlConnect.
 */
-PR_PUBLIC_API(JSBool)
+JSBool
 JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
 {
     *sv = &sv_undef;
@@ -812,7 +812,7 @@ JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
     O.w. a PerlValue object is returned. This function is also
     used by the Perl part of PerlConnect.
 */
-PR_PUBLIC_API(JSBool)
+JSBool
 SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval){
     SV *sv;
     char* name=NULL;

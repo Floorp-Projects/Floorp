@@ -1,321 +1,323 @@
-<HTML>
-<HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=koi8-r">
-   <META NAME="Author" CONTENT="Vladimir Livshits">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 [en] (WinNT; I) [Netscape]">
-   <TITLE>PerlConnect Documentation</TITLE>
-<STYLE>
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=koi8-r">
+   <meta name="Author" content="Vladimir Livshits">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (WinNT; U) [Netscape]">
+   <title>PerlConnect Documentation</title>
+<style>
         A:link      {text-decoration: none}
         A:visited   {text-decoration: none}
-    </STYLE>
-</HEAD>
-<BODY BACKGROUND="bg.jpg">
+    </style>
+</head>
+<body background="bg.jpg">
 
-<CENTER>
-<H3>
-P<FONT SIZE=-1>ERL</FONT>C<FONT SIZE=-1>ONNECT AND</FONT><FONT SIZE=+0>
-</FONT>JS<FONT SIZE=-1>.pm</FONT></H3></CENTER>
+<center>
+<h3>
+P<font size=-1>ERL</font>C<font size=-1>ONNECT AND</font>JS<font size=-1>.pm</font></h3></center>
 
-<CENTER>U<FONT SIZE=-1>SER-LEVEL </FONT><FONT SIZE=+1>D</FONT><FONT SIZE=-1>OCUMENTATION</FONT></CENTER>
+<center>U<font size=-1>SER-LEVEL </font><font size=+1>D</font><font size=-1>OCUMENTATION</font>
+<br><a href="mailto:val4@cornell.edu">Vladimir Livshits</a>
+<br>
+<hr SIZE=1 NOSHADE WIDTH="100%"></center>
 
-<CENTER><A HREF="mailto:val4@cornell.edu">Vladimir Livshits</A></CENTER>
+<ol>
+<li>
+<a href="#Overview">Overview</a></li>
 
-<CENTER>&nbsp;
-<HR SIZE=1 NOSHADE WIDTH="100%"></CENTER>
+<li>
+<a href="#Features">Features</a></li>
 
-<OL>
-<LI>
-<A HREF="#Overview">Overview</A></LI>
+<li>
+<a href="#Design">Design</a></li>
 
-<LI>
-<A HREF="#Features">Features</A></LI>
+<li>
+<a href="#Installation">Installation</a></li>
 
-<LI>
-<A HREF="#Design">Design</A></LI>
+<li>
+<a href="#Limitations">Current Limitations and Futher Work</a></li>
+</ol>
 
-<LI>
-<A HREF="#Installation">Installation</A></LI>
-
-<LI>
-<A HREF="#Limitations">Current Limitations and Futher Work</A></LI>
-</OL>
-
-<H4>
-<A NAME="Overview"></A>Overview</H4>
+<h4>
+<a NAME="Overview"></a>Overview</h4>
 PerlConnect provides glue for the developer between JavaScript and Perl.
 It currently consists of two parts, PerlConnect implemented in C and JS.pm
-(<I>tentative name</I>), a Perl module written using XSUBs. PerlConnect
+(<i>tentative name</i>), a Perl module written using XSUBs. PerlConnect
 and JS.pm allow calling Perl from JS and JS from Perl, respectively. Whenever
 possible, it is attempted to archieve the maximum level of transparency
 for calling one language from the other. This is done by converting values
 between the two languages, creating wrappers around objects, and emulating
 the standard language syntax.
-<H4>
-<A NAME="Features"></A>PerlConnect Features</H4>
+<h4>
+<a NAME="Features"></a>PerlConnect Features</h4>
 PerlConnect allows running a Perl interpreter concurrently with your JavaScript
 embedding and executing Perl commands from JavaScript. You usually need
 to create a Perl interpreter by saysing something like this:
-<BLOCKQUOTE><TT>p = new Perl('Sys::Hostname', 'Test::Harness')</TT></BLOCKQUOTE>
+<blockquote><tt>p = new Perl('Sys::Hostname', 'Test::Harness')</tt></blockquote>
 In addition to creating an interpreter, this will also include the libraries
-you&nbsp; pass to the Perl constructor, which is equivalent to <TT>use
-Sys::Hostname; use Test::Harness</TT>. You can always include libraries
-explicitly by using <TT>p.eval('use Sys::Hostname; use Test::Harness')</TT>.
-There is also another way to do this: <TT>p.use('Sys::Hostname', 'Test::Harness')</TT>.
+you&nbsp; pass to the Perl constructor, which is equivalent to <tt>use
+Sys::Hostname; use Test::Harness</tt>. You can always include libraries
+explicitly by using <tt>p.eval('use Sys::Hostname; use Test::Harness')</tt>.
+There is also another way to do this: <tt>p.use('Sys::Hostname', 'Test::Harness')</tt>.
 As you can see, TMTOWTDI. Natura&nbsp;&nbsp;&nbsp; lly, you will want to
-look at the result of your function calls and <TT>eval</TT> statements.
+look at the result of your function calls and <tt>eval</tt> statements.
 Suppose, you do something like this:
-<BLOCKQUOTE><TT>line = p.eval("'-' x 80")</TT></BLOCKQUOTE>
+<blockquote><tt>line = p.eval("'-' x 80")</tt></blockquote>
 Perl's eval returns the last statement evaluated, unless you explicitly
-say <TT>return</TT>. So now <TT>line</TT> contains 80 dashes. You can do
+say <tt>return</tt>. So now <tt>line</tt> contains 80 dashes. You can do
 similar things with non-scalar data types:
-<BLOCKQUOTE><TT>p.use('Time::gmtime');</TT>
-<BR><TT>t = p.eval('Time::gmtime::gmtime')&nbsp;&nbsp;&nbsp; // returns
-[49,0,4,24,6,98,5,204,0]</TT></BLOCKQUOTE>
-assigns a Perl array to <TT>t</TT>. You can print <TT>t</TT>, use the <TT>for/in</TT>
+<blockquote><tt>p.use('Time::gmtime');</tt>
+<br><tt>t = p.eval('Time::gmtime::gmtime')&nbsp;&nbsp;&nbsp; // returns
+[49,0,4,24,6,98,5,204,0]</tt></blockquote>
+assigns a Perl array to <tt>t</tt>. You can print <tt>t</tt>, use the <tt>for/in</tt>
 syntax to walk through it, compute its lenght, etc. You can read and assign
 to individual elements using the standard syntax. However, PerlValues,
 that is, the value we get from Perl, don't support all the standard operations,
-for isntance, don't expect <TT>t.reverse()</TT> to work. Hashes can also
+for isntance, don't expect <tt>t.reverse()</tt> to work. Hashes can also
 be returned from Perl:
-<BLOCKQUOTE><TT>info=p.eval("{ver=>$], pid=>$$}")</TT></BLOCKQUOTE>
+<blockquote><tt>info=p.eval("{ver=>$], pid=>$$}")</tt></blockquote>
 Now you can look at individual hash keys like this:
-<BLOCKQUOTE><TT>info["ver"]</TT> or <TT>info.pid</TT></BLOCKQUOTE>
+<blockquote><tt>info["ver"]</tt> or <tt>info.pid</tt></blockquote>
 Suppose you want to use Perl to perform pattern-based string replacement.
 Here's how you can do it from JavaScript:
-<BLOCKQUOTE><TT>p.eval("\</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp; sub perl_replace(){\</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my($string, $find, $replace)
-= @_;\</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; eval(\"\\$string =~
-s/$find/$replace/g;\");\</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return $string;\</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp; }"</TT>
-<BR><TT>);</TT></BLOCKQUOTE>
+<blockquote><tt>p.eval("\</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; sub perl_replace(){\</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my($string, $find, $replace)
+= @_;\</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; eval(\"\\$string =~
+s/$find/$replace/g;\");\</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return $string;\</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; }"</tt>
+<br><tt>);</tt></blockquote>
 and now
-<BLOCKQUOTE><TT>p.perl_replace('Quick brown fox jumped over a lazy dog',
-'dog', 'rhino')</TT></BLOCKQUOTE>
+<blockquote><tt>p.perl_replace('Quick brown fox jumped over a lazy dog',
+'dog', 'rhino')</tt></blockquote>
 produces what you'd expect.
-
-<P>You can use the same syntax to call procedures defined in modules other
-than<TT> main. </TT>The example with<TT> gmtime </TT>can be rewritten like
+<p>You can use the same syntax to call procedures defined in modules other
+than<tt> main. </tt>The example with<tt> gmtime </tt>can be rewritten like
 this:
-<BLOCKQUOTE><TT>p.use('Time::gmtime');</TT>
-<BR><TT>t = p.Time.gmtime.gmtime()&nbsp;&nbsp;&nbsp; // returns [49,0,4,24,6,98,5,204,0]</TT></BLOCKQUOTE>
-&nbsp;You can reference variables exported by modules others than <TT>main</TT>
+<blockquote><tt>p.use('Time::gmtime');</tt>
+<br><tt>t = p.Time.gmtime.gmtime()&nbsp;&nbsp;&nbsp; // returns [49,0,4,24,6,98,5,204,0]</tt></blockquote>
+&nbsp;You can reference variables exported by modules others than <tt>main</tt>
 like this:
-<BLOCKQUOTE><TT>a=p.Foo.$bar </TT>or<TT> a=p.Foo["$bar"] </TT>or
-<BR><TT>a=p.Foo["@bar"]</TT>or<TT> a=p.Foo["%bar"]</TT></BLOCKQUOTE>
+<blockquote><tt>a=p.Foo.$bar </tt>or<tt> a=p.Foo["$bar"] </tt>or
+<br><tt>a=p.Foo["@bar"]</tt>or<tt> a=p.Foo["%bar"]</tt></blockquote>
 Each of the stetements above returns a either an immediate JS value, for
-scalar types, or a PerlValue for compound types. <TT>a.type </TT>contains
-the type of the PerlValue in <TT>a</TT>. <I>This may change because we
-may end up separating Perl hashes and arrays into separate classes.</I>
-<H4>
-JS.pm Features</H4>
-<I>JS.pm is much less tested then PerlConnect.</I> You should be able to
+scalar types, or a PerlValue for compound types. <tt>a.type </tt>contains
+the type of the PerlValue in <tt>a</tt>. <i>This may change because we
+may end up separating Perl hashes and arrays into separate classes.</i>
+<h4>
+JS.pm Features</h4>
+<i>JS.pm is much less tested then PerlConnect.</i> You should be able to
 do similar things from Perl. Just say
-<BLOCKQUOTE><TT>use JS;</TT>
-<BR><TT>$js = <B>new</B> JS();</TT></BLOCKQUOTE>
+<blockquote><tt>use JS;</tt>
+<br><tt>$js = <b>new</b> JS();</tt></blockquote>
 and now you can do something like this:
-<BLOCKQUOTE><TT>$js-><B>eval</B>(q/</TT>
-<BLOCKQUOTE><TT>Object o = {};</TT>
-<BR><TT>o.a = 'p';</TT>
-<BR><TT>o.b = 'q';</TT>
-<BR><TT>return o;</TT></BLOCKQUOTE>
-<TT>/);</TT></BLOCKQUOTE>
-<B>//TODO: more features and examples</B>
-<H4>
-<A NAME="Design"></A>PerlConnect Design</H4>
+<blockquote><tt>$js-><b>eval</b>(q/</tt>
+<blockquote><tt>Object o = {};</tt>
+<br><tt>o.a = 'p';</tt>
+<br><tt>o.b = 'q';</tt>
+<br><tt>return o;</tt></blockquote>
+<tt>/);</tt></blockquote>
+<b>//TODO: more features and examples</b>
+<h4>
+<a NAME="Design"></a>PerlConnect Design</h4>
 PerlConnect is written in C. It uses both JavaScript and Perl APIs and
 implements a mapping between the two. The are the following JavaScript
 objects implemented by PerlConnect:
-<BR>&nbsp;
-<CENTER><TABLE BORDER COLS=2 WIDTH="80%" >
-<TR ALIGN=CENTER BGCOLOR="#CCCCCC">
-<TD ALIGN=CENTER VALIGN=CENTER WIDTH="20%"><B>Object</B></TD>
+<br>&nbsp;
+<center><table BORDER COLS=2 WIDTH="80%" >
+<tr ALIGN=CENTER BGCOLOR="#CCCCCC">
+<td ALIGN=CENTER VALIGN=CENTER WIDTH="20%"><b>Object</b></td>
 
-<TD><B>What it does</B></TD>
-</TR>
+<td><b>What it does</b></td>
+</tr>
 
-<TR ALIGN=CENTER VALIGN=CENTER>
-<TD WIDTH="30"><TT>Perl</TT></TD>
+<tr ALIGN=CENTER VALIGN=CENTER>
+<td WIDTH="30"><tt>Perl</tt></td>
 
-<TD ALIGN=LEFT VALIGN=TOP>Perl Interpreter Object. It's prototype type
-is PerlModule, it corresponds to <TT>main::</TT>. Supports <TT>eval</TT>,
-<TT>call</TT>, <TT>use</TT>.</TD>
-</TR>
+<td ALIGN=LEFT VALIGN=TOP>Perl Interpreter Object. It's prototype type
+is PerlModule, it corresponds to <tt>main::</tt>. Supports <tt>eval</tt>,
+<tt>call</tt>,
+<tt>use</tt>.</td>
+</tr>
 
-<TR ALIGN=CENTER VALIGN=CENTER>
-<TD><TT>PerlModule</TT></TD>
+<tr ALIGN=CENTER VALIGN=CENTER>
+<td><tt>PerlModule</tt></td>
 
-<TD ALIGN=LEFT VALIGN=TOP>Implements JS-like syntax for Perl modules. Doesn't
-export provide any methods. <TT>path</TT> property shown the name of the
-Perl module the object represents.</TD>
-</TR>
+<td ALIGN=LEFT VALIGN=TOP>Implements JS-like syntax for Perl modules. Doesn't
+export provide any methods. <tt>path</tt> property shown the name of the
+Perl module the object represents.</td>
+</tr>
 
-<TR ALIGN=CENTER VALIGN=CENTER>
-<TD><TT>PerlValue</TT></TD>
+<tr ALIGN=CENTER VALIGN=CENTER>
+<td><tt>PerlValue</tt></td>
 
-<TD ALIGN=LEFT VALIGN=TOP>Represents a value returned from <TT>eval</TT>,
-<TT>call</TT>, or obtained by using the subscript notation (<TT>p.Foo["@bar"]</TT>).
-Its Perl type is stored in the <TT>type</TT> property.</TD>
-</TR>
-</TABLE></CENTER>
-&nbsp;
-<BR>See comments in the code, <TT>jsperl.c</TT> and <TT>JS.pm</TT> for
-more info.
-<BR>&nbsp;
-<H4>
-JS.pm Design</H4>
+<td ALIGN=LEFT VALIGN=TOP>Represents a value returned from <tt>eval</tt>,
+<tt>call</tt>,
+or obtained by using the subscript notation (<tt>p.Foo["@bar"]</tt>). Its
+Perl type is stored in the <tt>type</tt> property.</td>
+</tr>
+</table></center>
+
+<p>See comments in the code, <tt>jsperl.c</tt> and <tt>JS.pm</tt> for more
+info.
+<br>&nbsp;
+<h4>
+JS.pm Design</h4>
 JSConnect is written using XSUBs, the language in which Perl extentions
-are implemented. The source files are <TT>JS.xs</TT> and <TT>typemap</TT>.
-After processing them using the XSUBs compiler, <TT>xsubpp</TT>, the resulting
-C file should be compiled into a DLL. <TT>JS.pm</TT> provides bootstraping
-mechanism to load this DLL. See <TT>perlxs</TT> and <TT>perlxsstut</TT>
-man pages for more info. The following Perl packages (objects) are implemented:
-<BR>&nbsp;
-<CENTER><TABLE BORDER COLS=2 WIDTH="80%" >
-<TR ALIGN=CENTER BGCOLOR="#CCCCCC">
-<TD ALIGN=CENTER VALIGN=CENTER WIDTH="20%"><B>Package</B></TD>
+are implemented. The source files are <tt>JS.xs</tt> and <tt>typemap</tt>.
+After processing them using the XSUBs compiler, <tt>xsubpp</tt>, the resulting
+C file should be compiled into a DLL. See <tt>JS.xs</tt> for more details
+on how to to compile it. <tt>JS.pm</tt> provides bootstraping mechanism
+to load this DLL. See <tt>perlxs</tt> and <tt>perlxsstut</tt> man pages
+for more info. The following Perl packages (objects) are implemented:
+<br>&nbsp;
+<center><table BORDER COLS=2 WIDTH="80%" >
+<tr ALIGN=CENTER BGCOLOR="#CCCCCC">
+<td ALIGN=CENTER VALIGN=CENTER WIDTH="20%"><b>Package</b></td>
 
-<TD><B>What it contains</B></TD>
-</TR>
+<td><b>What it contains</b></td>
+</tr>
 
-<TR ALIGN=CENTER VALIGN=CENTER>
-<TD><TT>JS</TT></TD>
+<tr ALIGN=CENTER VALIGN=CENTER>
+<td><tt>JS</tt></td>
 
-<TD ALIGN=LEFT VALIGN=TOP>Doesn't not do anything in particular at this
-point except defining a constuctor. So one can say <TT>$js = <B>new</B>
-JS()</TT>, which will create a new runtime, add a context to it and return
+<td ALIGN=LEFT VALIGN=TOP>Doesn't not do anything in particular at this
+point except defining a constuctor. So one can say <tt>$js = <b>new</b>
+JS()</tt>, which will create a new runtime, add a context to it and return
 that Context. JS also defines a bunch of private functions called from
-C by PerlConnect. They are not exposed by default, but pushed onto <TT>@EXPORT_OK</TT>
-array instead.</TD>
-</TR>
+C by PerlConnect. They are not exposed by default, but pushed onto <tt>@EXPORT_OK</tt>
+array instead.</td>
+</tr>
 
-<TR ALIGN=CENTER VALIGN=CENTER>
-<TD><TT>JS::Runtime</TT></TD>
+<tr ALIGN=CENTER VALIGN=CENTER>
+<td><tt>JS::Runtime</tt></td>
 
-<TD ALIGN=LEFT VALIGN=TOP>Corresponds to <TT>JSRuntime*</TT> struct. Provides
+<td ALIGN=LEFT VALIGN=TOP>Corresponds to <tt>JSRuntime*</tt> struct. Provides
 a constructor and destructor. The destructor is invoked automatically,
 so you don't have to worry about Runtime deallocation. Constructor syntax
-is the following: <TT>$rt = <B>new</B> JS::Runtime(10_000)</TT>, where
-the parameter is the same number you pass to <TT>JS_NewRuntime</TT>. There
-are many private functions created in <TT>JS.xs</TT> that are not exported
-by default.</TD>
-</TR>
+is the following: <tt>$rt = <b>new</b> JS::Runtime(10_000)</tt>, where
+the parameter is the same number you pass to <tt>JS_NewRuntime</tt>. There
+are many private functions created in <tt>JS.xs</tt> that are not exported
+by default.</td>
+</tr>
 
-<TR ALIGN=CENTER VALIGN=CENTER>
-<TD><TT>JS::Context</TT></TD>
+<tr ALIGN=CENTER VALIGN=CENTER>
+<td><tt>JS::Context</tt></td>
 
-<TD ALIGN=LEFT VALIGN=TOP>Corresponds to <TT>JSContext*</TT> struct. Provides
+<td ALIGN=LEFT VALIGN=TOP>Corresponds to <tt>JSContext*</tt> struct. Provides
 a constructor and destructor. The destructor is invoked automatically,
 so you don't have to worry about Context deallocation. Constructor syntax
-is the following: <TT>$rt = <B>new</B> JS::Context($rt, 1_000)</TT>, where
-the parameter is the same number you pass to <TT>JS_NewContext</TT>. There
-are many private functions created in <TT>JS.xs</TT> that are not exported
-by default.</TD>
-</TR>
+is the following: <tt>$rt = <b>new</b> JS::Context($rt, 1_000)</tt>, where
+the parameter is the same number you pass to <tt>JS_NewContext</tt>. There
+are many private functions created in <tt>JS.xs</tt> that are not exported
+by default.</td>
+</tr>
 
-<TR>
-<TD ALIGN=CENTER><TT>JS::Object</TT></TD>
+<tr>
+<td ALIGN=CENTER><tt>JS::Object</tt></td>
 
-<TD>Corresponds to <TT>JSObject*</TT> struct. There is not that much here
-yet. This object is intended as a wrapper around the <TT>JSObject* stuct</TT>.
-Support for tying hashes and possibly arrays with <TT>JS::Objects</TT>
-is coming.</TD>
-</TR>
+<td>Corresponds to <tt>JSObject*</tt> struct. There is not that much here
+yet. This object is intended as a wrapper around the <tt>JSObject* stuct</tt>.
+Support for tying hashes and possibly arrays with <tt>JS::Objects</tt>
+is coming.</td>
+</tr>
 
-<TR>
-<TD ALIGN=CENTER><I><TT><FONT COLOR="#000000">[JS::Array]</FONT></TT></I></TD>
+<tr>
+<td ALIGN=CENTER><i><tt><font color="#000000">[JS::Array]</font></tt></i></td>
 
-<TD><I>I am not quite sure if this is needed. One might probably get away
-with just <TT>JS::Object</TT> defined. If it's implemented, it will be
-very much similar to <TT>JS::Object</TT> above.</I></TD>
-</TR>
-</TABLE></CENTER>
-&nbsp;
+<td><i>I am not quite sure if this is needed. One might probably get away
+with just <tt>JS::Object</tt> defined. If it's implemented, it will be
+very much similar to <tt>JS::Object</tt> above.</i></td>
+</tr>
+</table></center>
 
-<P>All the modules above follow the convention of storing the variable
-they return in the <TT>$this</TT> variable of the current class. So <TT>$JS::Context::this</TT>
-will always be the last context created. <I>Currently, this is where JS
-API function that require contexts get it.</I>
-<H4>
-<A NAME="Installation"></A>PerlConnect Installation</H4>
-PerlConnect requires <TT>js/src</TT> and the Perl libraries and headers.
-The only <TT>js/src</TT> file that must be included in <TT>jsapi.h</TT>.
-You need to compile it together with Perl libraries. Referer to the <TT>perlembed</TT>
+<p>All the modules above follow the convention of storing the variable
+they return in the <tt>$this</tt> variable of the current class. So <tt>$JS::Context::this</tt>
+will always be the last context created. <i>Currently, this is where JS
+API function that require contexts get it.</i>
+<h4>
+<a NAME="Installation"></a>PerlConnect Installation</h4>
+PerlConnect requires <tt>js/src</tt> and the Perl libraries and headers.
+The only <tt>js/src</tt> file that must be included in <tt>../jsapi.h</tt>.
+You need to compile it together with Perl libraries. Referer to the <tt>perlembed</tt>
 man page for more details.
-<BR><B>On WINNT:</B>
-<BR>There are MSDEV Workspace and project files in the main PerlConnect
+<br><b>On WINNT:</b>
+<br>There are MSDEV Workspace and project files in the main PerlConnect
 directory. There are two projects included in the PerlConnect workspace:
 PerlConnect and PerlConnect shell. You can use the latter to test PerlConnect.
-You will probably need to adjust the library and include paths. In particular,
-set PERL_SRC environment variable to point to the directory where you unpacked
-and compiled Perl sources.
-<BR><B>On UNIX:</B>
-<BR>Currently, you can use PerlConnect with the <TT>js.c</TT> shell. To
+You will probably need to adjust the library and include paths. It is assumed
+that the directory structure is fixed, that is, you have PerlConnect in
+<tt>js/src/perlconnect</tt>. Set PERL_SRC environment variable to point
+to the directory where you unpacked and compiled Perl sources.
+<br><b>On UNIX:</b>
+<br>Currently, you can use PerlConnect with the <tt>js.c</tt> shell. To
 compile it on UNIX, you need to set the PERLCONNECT environment variable.
-Then you can use the <TT>Makefile.ref</TT> in <TT>js/src</TT> directory.
-The makefile should read the variable from the current environment. If
-this doesn't happent, you can try using <TT>gmake PERLCONNECT=1</TT>. This
-will compile PerlConnect into <TT>js</TT>.
-<H4>
-JS.pm Installation</H4>
-The following source files are distributed: <TT>JS.pm</TT>, <TT>JS.xs</TT>,
-<TT>JS.c</TT> (produced from <TT>JS.xs</TT> by <TT>xsubpp</TT>) and <TT>JS.def</TT>
-(required by the Visual C compiler).
-<BR><B>On WINNT:</B>
-<BR>There is also a project file, <TT>JS.dsp</TT>. It automatically belongs
-to the PerlConnect workspace. This project file builds a DLL, <TT>JS.dll</TT>
+Then you can use the <tt>Makefile.ref</tt> in <tt>js/src</tt> directory.
+(<b>//TODO check this!</b>) The makefile should read the variable from
+the current environment. If this doesn't happent, you can try using <tt>gmake
+PERLCONNECT=1</tt>. This will compile PerlConnect into <tt>js</tt>.
+<h4>
+JS.pm Installation</h4>
+The following source files are distributed: <tt>JS.pm</tt>, <tt>JS.xs</tt>,
+<tt>JS.c</tt>
+(produced from <tt>JS.xs</tt> by <tt>xsubpp</tt>) and <tt>JS.def</tt> (required
+by the Visual C compiler).
+<br><b>On WINNT:</b>
+<br>There is also a project file, <tt>JS.dsp</tt>. It automatically belongs
+to the PerlConnect workspace. This project file builds a DLL, <tt>JS.dll</tt>
 which is supposed to reside where Perl's DynaLoader can find it. On my
-machine I put it under <TT>c:\perl\lib\auto\JS\JS.dll</TT>. You can also
-put it in <TT>c:\perl\lib\</TT>. See DynaLoader documentation for more
+machine I put it under <tt>c:\perl\lib\auto\JS\JS.dll</tt>. You can also
+put it in <tt>c:\perl\lib\</tt>. See DynaLoader documentation for more
 info on how dynamic libraries are found.
-<BR><B>On UNIX:</B>
-<BR><B>//TODO:</B> <B>details of the makefiles</B>
-<BR>&nbsp;
-<H4>
-<A NAME="Limitations"></A>Current Limitations of the Package and Futher
-Work</H4>
+<br><b>On UNIX:</b>
+<br><b>//TODO:</b> <b>details of the makefiles</b>
+<br>&nbsp;
+<h4>
+<a NAME="Limitations"></a>Current Limitations of the Package and Futher
+Work</h4>
 
-<OL>
-<LI>
-Perl variables currently can't be assigned to, that is, <TT>p["$a"]=100</TT>
-doesn't do anything.</LI>
+<ol>
+<li>
+Perl variables currently can't be assigned to, that is, <tt>p["$a"]=100</tt>
+doesn't do anything.</li>
 
-<LI>
+<li>
 You can only have one interpreter running at a time. Despite the fact that
 you can create multiple Perl objects on JavaScript, they all share the
-same namespace. We can probably use <TT>Safe.pm</TT> to implement independent
-namespaces.</LI>
+same namespace. We can probably use <tt>Safe.pm</tt> to implement independent
+namespaces.</li>
 
-<LI>
+<li>
 Module names resolution reports an error only when you try to evaluate
 the last element of the resolution chain. Here is what I mean: if you reference
-<TT>p.Foo.Bar.Var</TT> and <TT>For</TT> or <TT>Bar</TT> don't exist, it
-will only complain that p.Foo.Bar.Var is not a valid variable. Perl 5.005
-provides <TT>exists Foo::{Bar::}</TT> to check if Foo::Bar is a valid package.</LI>
+<tt>p.Foo.Bar.Var</tt>
+and <tt>For</tt> or <tt>Bar</tt> don't exist, it will only complain that
+p.Foo.Bar.Var is not a valid variable. Perl 5.005 provides <tt>exists Foo::{Bar::}</tt>
+to check if Foo::Bar is a valid package.</li>
 
-<LI>
-Dynamic loading of the Perl interpreter only if it is required.</LI>
+<li>
+Dynamic loading of the Perl interpreter only if it is required.</li>
 
-<LI>
-Recursive printing of Perl's arrays and hashes can be added. See Data::Dumper.pm</LI>
+<li>
+Recursive printing of Perl's arrays and hashes can be added. See Data::Dumper.pm</li>
 
-<LI>
-Full support for tied hashes and arrays in Perl</LI>
+<li>
+Full support for tied hashes and arrays in Perl</li>
 
-<LI>
+<li>
 Calling JavaScript functions and accessing variables from Perl. JavaScript
-calling syntax support using AUTOLOADing.</LI>
+calling syntax support using AUTOLOADing.</li>
 
-<LI>
-JS can be made a directory with <TT>Object.pm</TT>, <TT>Context.pm</TT>,
-etc. in it. See how C or Tk are organized on CPAN</LI>
+<li>
+JS can be made a directory with <tt>Object.pm</tt>, <tt>Context.pm</tt>,
+etc. in it. See how C or Tk are organized on CPAN</li>
 
-<LI>
-Distribution model for JS.pm. Perl provides something by default. See <TT>h2xs</TT>
-man page, for example.</LI>
-</OL>
+<li>
+Distribution model for JS.pm. Perl provides something by default. See <tt>h2xs</tt>
+man page, for example.</li>
+</ol>
 
-</BODY>
-</HTML>
+</body>
+</html>

@@ -20,11 +20,11 @@
 /* needs to include to enable the Perl object. See README.html for more      */
 /* documentation                                                             */
 
-#include "jsapi.h"
+#include "../jsapi.h"
 
 /*
     This is the only function that must be called by an
     application that wants to use PerlConnect.
 */
-extern PR_PUBLIC_API(JSObject*)
+JS_EXTERN_API(JSObject*)
 JS_InitPerlClass(JSContext *cx, JSObject *obj);
