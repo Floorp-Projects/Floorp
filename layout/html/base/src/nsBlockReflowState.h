@@ -65,8 +65,8 @@ public:
 
   PRBool CanPlaceFloater(const nsRect& aFloaterRect, PRUint8 aFloats);
 
-  void PlaceFloater(nsFloaterCache* aFloaterCache,
-                    PRBool* aIsLeftFloater);
+  void FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
+                           PRBool* aIsLeftFloater);
 
   void PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aFloaters);
 
@@ -176,6 +176,10 @@ public:
 
   // The combined area of all floaters placed so far
   nsRect mFloaterCombinedArea;
+
+  // The y-coordinate of the last floater placed. We keep this around
+  // to enforce 9.5.1 rule [2]
+  nscoord mLastFloaterY;
 
   // For unconstained-width reflow, we keep the right floaters
   // combined area stored seperately.

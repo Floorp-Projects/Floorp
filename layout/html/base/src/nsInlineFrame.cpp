@@ -355,20 +355,20 @@ NS_IMETHODIMP
 nsInlineFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {
   // The inline container frame does not handle the reflow
-  // request.  It passes it up to its parent container.  
+  // request.  It passes it up to its parent container.
 
   // If you don't already have dirty children,
   if (!(mState & NS_FRAME_HAS_DIRTY_CHILDREN)) {
     if (mParent) {
-      // Record that you are dirty and have dirty children    
+      // Record that you are dirty and have dirty children
       mState |= NS_FRAME_IS_DIRTY;
-      mState |= NS_FRAME_HAS_DIRTY_CHILDREN;      
+      mState |= NS_FRAME_HAS_DIRTY_CHILDREN; 
 
-      // Pass the reflow request up to the parent    
-      mParent->ReflowDirtyChild(aPresShell, (nsIFrame*) this);
+      // Pass the reflow request up to the parent
+      mParent->ReflowDirtyChild(aPresShell, this);
     }
     else {
-      NS_ASSERTION(0, "No parent to pass the reflow request up to.");
+      NS_ERROR("No parent to pass the reflow request up to.");
     }
   }
 

@@ -351,9 +351,10 @@ protected:
 
   nsresult ReflowFloater(nsBlockReflowState& aState,
                          nsPlaceholderFrame* aPlaceholder,
-                         nsRect& aCombinedRect,
+                         nsRect& aCombinedRectResult,
                          nsMargin& aMarginResult,
-                         nsMargin& aComputedOffsetsResult);
+                         nsMargin& aComputedOffsetsResult,
+                         nscoord& aMaxElementWidthResult);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
@@ -481,10 +482,6 @@ protected:
   static void InitDebugFlags();
 #endif
 };
-
-// Some #ifdef'd bug fixes
-#define FIX_BUG_38157 
-#define FIX_BUG_37657
 
 #endif /* nsBlockFrame_h___ */
 

@@ -4122,18 +4122,10 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     printf(": line=%p xmost=%d\n", aLine, xmost);
   }
 #endif
-  // If we're shrink wrapping our width and the line was wrapped,
-  // then make sure we take up all of the available width
-  if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aLine->IsLineWrapped()) {
-    aState.mKidXMost = aState.BorderPadding().left + aState.mContentArea.width;
-#ifdef NOISY_KIDXMOST
-    printf("%p PostPlaceLine A aState.mKidXMost=%d\n", this, aState.mKidXMost); 
-#endif
-  }
-  else if (xmost > aState.mKidXMost) {
+  if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
 #ifdef NOISY_KIDXMOST
-    printf("%p PostPlaceLine B aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+    printf("%p PostPlaceLine aState.mKidXMost=%d\n", this, aState.mKidXMost); 
 #endif
   }
 }
@@ -4778,10 +4770,14 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
 nsresult
 nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsPlaceholderFrame* aPlaceholder,
-                            nsRect& aCombinedRect,
+                            nsRect& aCombinedRectResult,
                             nsMargin& aMarginResult,
-                            nsMargin& aComputedOffsetsResult)
+                            nsMargin& aComputedOffsetsResult,
+                            nscoord& aMaxElementWidthResult)
 {
+  // Reflow the floater.
+  nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
+
 #ifdef NOISY_FLOATER
   printf("Reflow Floater %p in parent %p, availSpace(%d,%d,%d,%d)\n",
           aPlaceholder->GetOutOfFlowFrame(), this, 
@@ -4789,40 +4785,81 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
           aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
   );
 #endif
-  // XXX update this just
-  aState.GetAvailableSpace();
 
-  // Reflow the floater. Since floaters are continued we given them an
-  // unbounded height. Floaters with an auto width are sized to zero
-  // according to the css2 spec.
-  // XXX We also need to take into account whether we should clear any
-  // preceeding floaters...
+  // Compute the available width. By default, assume the width of the
+  // available space rect.
+  nscoord availWidth = aState.mAvailSpaceRect.width;
+
+  // If the floater's width is automatic, we can't let the floater's
+  // width shrink below its maxElementSize.
+  const nsStylePosition* position;
+  GetStyleData(eStyleStruct_Position, NS_REINTERPRET_CAST(const nsStyleStruct*&, position));
+
+  PRBool isAutoWidth = (eStyleUnit_Auto == position->mWidth.GetUnit());
+  if (isAutoWidth) {
+    // It's auto-width. Have we computed a max element size yet? (If
+    // not, the floater cache will have NS_UNCONSTRAINEDSIZE as the
+    // initial value.) If we _have_ computed a max element size, and
+    // its larger then the available width, pin the avaiable width to
+    // the maxElementSize.
+    if ((NS_UNCONSTRAINEDSIZE != aMaxElementWidthResult) &&
+        (aMaxElementWidthResult > availWidth)) {
+      availWidth = aMaxElementWidthResult;
+    }
+  }
+
+  // We'll need to compute the max element size if either 1) we're
+  // auto-width and we've not yet cached the value, or 2) the state
+  // wanted us to compute it anyway.
+  PRBool computeMaxElementSize =
+    (isAutoWidth && (NS_UNCONSTRAINEDSIZE == aMaxElementWidthResult)) ||
+    aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE);
+
   // XXX Why do we have to add in our border/padding?
   nsRect availSpace(aState.mAvailSpaceRect.x + aState.BorderPadding().left,
                     aState.mAvailSpaceRect.y + aState.BorderPadding().top,
-                    aState.mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
-  nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
-  PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
+                    availWidth, NS_UNCONSTRAINEDSIZE);
 
-  // Setup block reflow state to reflow the floater
+  // Setup a block reflow state to reflow the floater.
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
-                           aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE),
+                           computeMaxElementSize,
                            aState.GetFlag(BRS_COMPUTEMAXWIDTH));
+
   brc.SetNextRCFrame(aState.mNextRCFrame);
 
   // Reflow the floater
+  PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
+
   nsReflowStatus frameReflowStatus;
-  nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0,
-                                isAdjacentWithTop,
+  nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0, isAdjacentWithTop,
                                 aComputedOffsetsResult, frameReflowStatus);
-  if (PR_TRUE==brc.BlockShouldInvalidateItself()) {
+
+  if (NS_SUCCEEDED(rv) && isAutoWidth && (NS_UNCONSTRAINEDSIZE == aMaxElementWidthResult)) {
+    // We've just flowed an auto-width floater, but have not yet cached
+    // the maxElementSize. Do so now.
+    nsSize maxElementSize = brc.GetMaxElementSize();
+    aMaxElementWidthResult = maxElementSize.width;
+
+    if (aMaxElementWidthResult > availSpace.width) {
+      // The floater's maxElementSize is larger than the available
+      // width. Reflow it again, this time pinning the width to the
+      // maxElementSize.
+      availSpace.width = aMaxElementWidthResult;
+      rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0, isAdjacentWithTop,
+                           aComputedOffsetsResult, frameReflowStatus);
+    }
+  }
+
+  if (brc.BlockShouldInvalidateItself()) {
     Invalidate(aState.mPresContext, mRect);
   }
+
   if (floater == aState.mNextRCFrame) {
-    // NULL out mNextRCFrame so if we reflow it again we don't think it's still
-    // an incremental reflow
+    // Null out mNextRCFrame so if we reflow it again, we don't think
+    // it's still an incremental reflow
     aState.mNextRCFrame = nsnull;
   }
+
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -4837,7 +4874,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   aMarginResult.left = m.left;
 
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
-  aCombinedRect = metrics.mOverflowArea;
+  aCombinedRectResult = metrics.mOverflowArea;
+
   // Set the rect, make sure the view is properly sized and positioned,
   // and tell the frame we're done reflowing it
   floater->SizeTo(aState.mPresContext, metrics.width, metrics.height);
