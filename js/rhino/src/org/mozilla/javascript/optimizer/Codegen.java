@@ -1853,8 +1853,9 @@ public class Codegen extends Interpreter {
             if (itsZeroArgArray >= 0)
                 aload(itsZeroArgArray);
             else {
-                push(0);
-                addByteCode(ByteCode.ANEWARRAY, "java/lang/Object");
+                classFile.add(ByteCode.GETSTATIC,
+                        "org/mozilla/javascript/ScriptRuntime",
+                        "emptyArgs", "[Ljava/lang/Object;");
             }
         }
         else {
@@ -1918,7 +1919,7 @@ public class Codegen extends Interpreter {
         boolean isSpecialCall = node.getProp(Node.SPECIALCALL_PROP) != null;
         boolean isSimpleCall = false;
         String simpleCallName = null;
-        if (type != TokenStream.NEW) {
+        if (!firstArgDone && type != TokenStream.NEW) {
             simpleCallName = getSimpleCallName(node);
             if (simpleCallName != null && !isSpecialCall) {
                 isSimpleCall = true;
@@ -1926,8 +1927,7 @@ public class Codegen extends Interpreter {
                 aload(variableObjectLocal);
                 child = child.getNext().getNext();
                 argIndex = 0;
-                push(childCount - argSkipCount);
-                addByteCode(ByteCode.ANEWARRAY, "java/lang/Object");
+                constructArgArray(childCount - argSkipCount);
             }
         }
 
@@ -1974,10 +1974,6 @@ public class Codegen extends Interpreter {
             }
             argIndex++;
             if (argIndex == 0) {
-                                        // now we need to construct the array
-                                        // (even if there are no args to load
-                                        // into it) - REMIND could pass null
-                                        // instead ?
                 constructArgArray(childCount - argSkipCount);
             }
             child = child.getNext();
