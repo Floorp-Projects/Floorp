@@ -20,6 +20,12 @@
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
+#include "nsIMIMEService.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsInputStreamChannel methods:
@@ -181,11 +187,48 @@ nsInputStreamChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
     return NS_OK;
 }
 
+#define DUMMY_TYPE "text/html"
+
 NS_IMETHODIMP
 nsInputStreamChannel::GetContentType(char * *aContentType)
 {
-    *aContentType = nsCRT::strdup("text/html");
-    return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = NS_OK;
+
+    // Parameter validation...
+    if (!aContentType) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aContentType = nsnull;
+
+    // If we already have a content type, use it.
+    if (mContentType) {
+        *aContentType = nsCRT::strdup(mContentType);
+        if (!*aContentType) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+        return rv;
+    }
+
+    //
+    // No response yet...  Try to determine the content-type based
+    // on the file extension of the URI...
+    //
+    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = MIMEService->GetTypeFromURI(mURI, aContentType);
+        if (NS_SUCCEEDED(rv)) return rv;
+    }
+
+    // if all else fails treat it as text/html?
+	if (!*aContentType) 
+		*aContentType = nsCRT::strdup(DUMMY_TYPE);
+    if (!*aContentType) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        rv = NS_OK;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
