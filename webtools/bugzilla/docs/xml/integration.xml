@@ -38,6 +38,13 @@
     Bugzilla code, to integrate CVS and Bugzilla through CVS' ability to 
     email. Check it out at: <ulink url="http://homepages.kcbbs.gen.nz/~tonyg/"/>.
     </para>
+
+    <para>Another system capable of CVS integration with Bugzilla is
+    Scmbug. This system provides generic integration of Source code
+    Configuration Management with Bugtracking. Check it out at: <ulink
+    url="http://freshmeat.net/projects/scmbug/"/>.
+    </para>
+
   </section>
 
   <section id="scm"
@@ -64,6 +71,17 @@
     Bugzilla version you are installing. p4dti is designed to support
     multiple defect trackers, and maintains its own documentation for it.
     Please consult the pages linked above for further information.</para>
+  </section>
+
+  <section id="svn"
+  xreflabel="Subversion, a compelling replacement for CVS">
+     <title>Subversion</title>
+     <para>Subversion is a free/open-source version control system,
+     designed to overcome various limitations of CVS. Integration of
+     Subversion with Bugzilla is possible using Scmbug, a system
+     providing generic integration of Source Code Configuration
+     Management with Bugtracking. Scmbug is available at <ulink
+     url="http://freshmeat.net/projects/scmbug/"/>.</para>
   </section>
 
   <section id="tinderbox"
