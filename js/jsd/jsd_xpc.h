@@ -43,7 +43,7 @@
 #include "nspr.h"
 
 #if defined(DEBUG_rginda_l)
-#define DEBUG_verbose
+#   define DEBUG_verbose
 #endif
 
 struct LiveEphemeral {
