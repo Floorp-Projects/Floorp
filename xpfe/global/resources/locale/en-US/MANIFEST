@@ -15,3 +15,4 @@ accept2locale.properties
 languageNames.properties
 regionNames.properties
 commonDialogs.properties
+plugins.properties
