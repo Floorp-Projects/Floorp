@@ -2607,9 +2607,10 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
     FEAlert(progressString, msgWindow);
   
   
-  
+
+  // If password is bad then clean up all cached passwords.
   if (badPassword)
-    SetPassword(nsnull);
+    ForgetPassword();
   
   PRBool resetUrlState = PR_FALSE;
   if (badPassword && ++m_redirectedLogonRetries <= 3)
