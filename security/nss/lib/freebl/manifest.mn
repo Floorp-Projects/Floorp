@@ -46,13 +46,16 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	$(NULL)
 
+MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h
+MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c 
+
 ifdef MOZILLA_BSAFE_BUILD
 CSRCS = \
 	fblstdlib.c \
 	sha_fast.c \
 	md2.c \
 	md5.c \
-	dh.c \
+	dh_bsf.c \
 	blapi_bsf.c \
 	$(NULL)
 else
@@ -63,6 +66,8 @@ CSRCS = \
 	md5.c \
 	alg2268.c \
 	arcfour.c \
+	$(MPI_SRCS) \
+	dh.c \
 	$(NULL)
 endif
 
