@@ -39,6 +39,7 @@
 #include "nsWidgetDefs.h"
 #include "nsBaseWidget.h"
 #include "nsToolkit.h"
+#include "nsSwitchToUIThread.h"
 
 class nsIMenuBar;
 //class nsContextMenu;
@@ -54,7 +55,7 @@ class nsIMenuBar;
 // there to decide whether methods apply to frame or client.
 
 class nsWindow : public nsBaseWidget,
-                 public nsSwitchToPMThread
+                 public nsSwitchToUIThread
 {
  public:
    // Scaffolding
@@ -148,7 +149,7 @@ class nsWindow : public nsBaseWidget,
    virtual void   FreeNativeData( void *aDatum, PRUint32 aDataType);
 
    // nsSwitchToPMThread interface
-   NS_IMETHOD CallMethod( MethodInfo *info);
+    virtual BOOL            CallMethod(MethodInfo *info);
 
    // PM methods which need to be public (menus, etc)
    ULONG  GetNextID()    { return mNextID++; }
