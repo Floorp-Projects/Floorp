@@ -37,6 +37,7 @@
 function CalendarObject()
 {
    this.path = "";
+   this.serverNumber = 0;
    this.name = "";
    this.remote = false;
    this.remotePath = "";
@@ -45,6 +46,8 @@ function CalendarObject()
 
 function calendarManager( CalendarWindow )
 {
+   this.nextCalendarNumber = 1;
+
    this.CalendarWindow = CalendarWindow;
 
    this.calendars = new Array();
@@ -80,10 +83,7 @@ calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCal
 {
    // set up a bunch of args to pass to the dialog
    var ThisCalendarObject = new CalendarObject();
-   ThisCalendarObject.name = "";
-   ThisCalendarObject.path = "";
-   ThisCalendarObject.remotePath = "";
-
+   
    var args = new Object();
    args.mode = "new";
 
@@ -98,6 +98,30 @@ calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCal
    openDialog("chrome://calendar/content/calendarServerDialog.xul", "caAddServer", "chrome,modal", args );
 }
 
+/*
+** Launch the edit calendar file dialog
+*/
+calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditCalendarDialog( )
+{
+   //get the currently selected calendar
+
+   // set up a bunch of args to pass to the dialog
+   var ThisCalendarObject = this.getSelectedCalendar();
+   
+   var args = new Object();
+   args.mode = "edit";
+
+   var thisManager = this;
+
+   var callback = function( ThisCalendarObject ) { thisManager.editServerDialogResponse( ThisCalendarObject ) };
+
+   args.onOk =  callback;
+   args.CalendarObject = ThisCalendarObject;
+
+   // open the dialog modally
+   openDialog("chrome://calendar/content/calendarServerDialog.xul", "caEditServer", "chrome,modal", args );
+}
+
 
 /*
 ** Called when OK is clicked in the new server dialog.
@@ -106,8 +130,9 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
 {
    CalendarObject.active = true;
 
-   var CurrentNumberOfServers = this.calendars.length;
-   
+   CalendarObject.serverNumber = this.nextCalendarNumber;
+   this.nextCalendarNumber++;
+
    if( CalendarObject.path.indexOf( "http://" ) != -1 )
    {
       var profileComponent = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
@@ -116,32 +141,51 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
  
       var profileFile = profileInternal.getProfileDir(profileInternal.currentProfile);
       
-      profileFile.append("RemoteCalendar"+CurrentNumberOfServers+".ics");
+      profileFile.append("RemoteCalendar"+CalendarObject.serverNumber+".ics");
 
       CalendarObject.remotePath = CalendarObject.path;
       CalendarObject.path = profileFile.path;
       
       this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseAndRefresh );
 
-      alert( "Remote Calendar Number "+CurrentNumberOfServers+" Added" );
+      alert( "Remote Calendar Number "+CalendarObject.serverNumber+" Added" );
    }
    else
    {
-      alert( "Calendar Number "+CurrentNumberOfServers+" Added" );
+      alert( "Calendar Number "+CalendarObject.serverNumber+" Added" );
    }
   
+   
    //add the information to the preferences.
-   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CurrentNumberOfServers+".name", CalendarObject.name );
-   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CurrentNumberOfServers+".remote", true );
-   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CurrentNumberOfServers+".remotePath", CalendarObject.remotePath );
-   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CurrentNumberOfServers+".path", CalendarObject.path );
-   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CurrentNumberOfServers+".active", true );
-   this.CalendarWindow.calendarPreferences.calendarPref.setIntPref(  "servers.count", (CurrentNumberOfServers+1) );
+   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CalendarObject.serverNumber+".name", CalendarObject.name );
+   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CalendarObject.serverNumber+".remote", true );
+   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CalendarObject.serverNumber+".remotePath", CalendarObject.remotePath );
+   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CalendarObject.serverNumber+".path", CalendarObject.path );
+   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CalendarObject.serverNumber+".active", true );
+   this.CalendarWindow.calendarPreferences.calendarPref.setIntPref(  "servers.count", (parseInt( CalendarObject.serverNumber )+1) );
    
    //add this to the global calendars array
    this.calendars[ this.calendars.length ] = CalendarObject;
 
+   this.updateServerArrayText();
+
    this.addCalendarToListBox( CalendarObject );
+}
+
+
+/*
+** Called when OK is clicked in the new server dialog.
+*/
+calendarManager.prototype.editServerDialogResponse = function calMan_editServerDialogResponse( CalendarObject )
+{
+   //the only thing they could have changed is the name.
+   //get the server number of the calendar
+   //edit its name.
+   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CalendarObject.serverNumber+".name", CalendarObject.name );
+
+   //get the element and change its label
+   document.getElementById( "calendar-list-item-"+CalendarObject.serverNumber ).setAttribute( "label", CalendarObject.name );
+   document.getElementById( "calendar-list-item-"+CalendarObject.serverNumber ).calendarObject = CalendarObject;
 }
 
 
@@ -174,10 +218,32 @@ calendarManager.prototype.deleteCalendar = function calMan_deleteCalendar( ThisC
 {
    this.removeCalendar( ThisCalendarObject );
    
-   //TODO: remove it from the array
+   //remove it from the array
+   var index = 0;
+   for( var i = 0; i < this.calendars.length; i++ )
+   {
+      if( this.calendars[i] == ThisCalendarObject )
+      {
+         index = i;
+         break;
+      }
+   }
 
-   //TODO: remove it from the prefs
+   this.calendars.splice( index, 1 );
 
+   //remove it from the prefs
+   this.updateServerArrayText();
+   //http://lxr.mozilla.org/seamonkey/source/modules/libpref/public/nsIPrefBranch.idl#205
+   this.CalendarWindow.calendarPreferences.calendarPref.clearUserPref( "server"+ThisCalendarObject.serverNumber+".name" );
+   this.CalendarWindow.calendarPreferences.calendarPref.clearUserPref( "server"+ThisCalendarObject.serverNumber+".path" );
+   this.CalendarWindow.calendarPreferences.calendarPref.clearUserPref( "server"+ThisCalendarObject.serverNumber+".remote" );
+   this.CalendarWindow.calendarPreferences.calendarPref.clearUserPref( "server"+ThisCalendarObject.serverNumber+".remotePath" );
+   this.CalendarWindow.calendarPreferences.calendarPref.clearUserPref( "server"+ThisCalendarObject.serverNumber+".active" );
+
+
+   //remove the listitem
+   document.getElementById( "calendar-list-item-"+ThisCalendarObject.serverNumber ).parentNode.removeChild( document.getElementById( "calendar-list-item-"+ThisCalendarObject.serverNumber ) );
+   
    //TODO: remove the file completely
 }
 
@@ -207,22 +273,27 @@ calendarManager.prototype.getAllCalendars = function calMan_getAllCalendars()
    this.calendars[ this.calendars.length ] = thisCalendar;
    
    //go through the prefs file, calendars are stored in there.
-   var NumberOfCalendars = getIntPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.count", 1 );
+   //var NumberOfCalendars = getIntPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.count", 1 );
    
-   dump( "\nYou have "+NumberOfCalendars+" and I'm supposed to refresh teh server? "+RefreshServers );
+   var ServerArray = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.array", "" );
+   
+   var ArrayOfCalendars = ServerArray.split( "," );
    
    //don't count the default server, so this starts at 1
-   for( var i = 1; i < NumberOfCalendars; i++ )
+   for( var i = 1; i < ArrayOfCalendars.length; i++ )
    {
-      thisCalendar = new CalendarObject();
+      if( ArrayOfCalendars[i] >= this.nextCalendarNumber )
+         this.nextCalendarNumber = parseInt( ArrayOfCalendars[i] )+1;
 
-      try { 
+      thisCalendar = new CalendarObject();
       
-         thisCalendar.name = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".name", "" );
-         thisCalendar.path = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".path", "" );
-         thisCalendar.active = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".active", false );
-         thisCalendar.remote = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".remote", false );
-         thisCalendar.remotePath = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".remotePath", "" );
+      try { 
+         thisCalendar.serverNumber = ArrayOfCalendars[i];
+         thisCalendar.name = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+ArrayOfCalendars[i]+".name", "" );
+         thisCalendar.path = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+ArrayOfCalendars[i]+".path", "" );
+         thisCalendar.active = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+ArrayOfCalendars[i]+".active", false );
+         thisCalendar.remote = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+ArrayOfCalendars[i]+".remote", false );
+         thisCalendar.remotePath = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+ArrayOfCalendars[i]+".remotePath", "" );
          
          this.calendars[ this.calendars.length ] = thisCalendar;
       }
@@ -243,8 +314,8 @@ calendarManager.prototype.getAllCalendars = function calMan_getAllCalendars()
 calendarManager.prototype.addCalendarToListBox = function calMan_addCalendarToListBox( ThisCalendarObject )
 {
    var calendarListItem = document.createElement( "listitem" );
-   calendarListItem.setAttribute( "id", "calendar-list-item" );
-   calendarListItem.setAttribute( "onclick", "removeCalendar( event );" );
+   calendarListItem.setAttribute( "id", "calendar-list-item-"+ThisCalendarObject.serverNumber );
+   calendarListItem.setAttribute( "onclick", "switchCalendar( event );" );
    calendarListItem.calendarObject = ThisCalendarObject;
    calendarListItem.setAttribute( "label", ThisCalendarObject.name );
    calendarListItem.setAttribute( "flex", "1" );
@@ -268,6 +339,28 @@ calendarManager.prototype.getCalendarIndex = function calMan_getCalendarIndex( T
       }
    }
    return( false );
+}
+
+
+calendarManager.prototype.getSelectedCalendar = function calMan_getSelectedCalendar( )
+{
+   var calendarListBox = document.getElementById( "list-calendars-listbox" );
+   
+   return( calendarListBox.selectedItem.calendarObject );
+}
+
+
+calendarManager.prototype.updateServerArrayText = function calMan_updateServerArrayText( )
+{
+   var ArrayText = "";
+   var Seperator = "";
+   for ( i = 0; i < this.calendars.length; i++ ) {
+      ArrayText += Seperator;
+      ArrayText += this.calendars[i].serverNumber;
+      Seperator = ",";
+   }
+   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "servers.array", ArrayText );
+
 }
 
 var xmlhttprequest;
@@ -326,7 +419,11 @@ function onError( )
    alert( "error: Could not load remote calendar" );
 }
 
-function removeCalendar( event )
+/*
+** swithces the calendar from on to off and off to on
+*/
+
+function switchCalendar( event )
 {
    dump( "\nRemoveCalendar in calendarManager.js: button is "+event.button );
    if (event.button != 0) 
@@ -338,6 +435,18 @@ function removeCalendar( event )
       gCalendarWindow.calendarManager.addCalendar( event.currentTarget.calendarObject );
    else
       gCalendarWindow.calendarManager.removeCalendar( event.currentTarget.calendarObject );
+
+   refreshEventTree( false );
+
+   gCalendarWindow.currentView.refreshEvents();
+}
+
+
+function deleteCalendar( )
+{
+   var calendarObjectToDelete = gCalendarWindow.calendarManager.getSelectedCalendar();
+
+   gCalendarWindow.calendarManager.deleteCalendar( calendarObjectToDelete );
 
    refreshEventTree( false );
 

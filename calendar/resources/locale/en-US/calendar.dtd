@@ -248,6 +248,8 @@
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "New Server">
+<!ENTITY calendar.context.editserver.label             "Edit Server">
+<!ENTITY calendar.context.deleteserver.label           "Delete Server">
 <!ENTITY calendar.context.refreshserver.label          "Refresh Remote Calendars">
 
 <!-- About Dialog -->

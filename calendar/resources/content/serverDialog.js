@@ -113,7 +113,16 @@ function loadCalendarServerDialog()
    else
    {
       titleDataItem = document.getElementById( "data-event-title-edit" );
+
+      document.getElementById( "server-path-textbox" ).setAttribute( "readonly", "true" );
    }
+   
+   document.getElementById( "server-name-textbox" ).value = gCalendarObject.name;
+
+   if( gCalendarObject.remote == true )
+      document.getElementById( "server-path-textbox" ).value = gCalendarObject.remotePath;
+   else
+      document.getElementById( "server-path-textbox" ).value = gCalendarObject.path;
    
    // start focus on title
    

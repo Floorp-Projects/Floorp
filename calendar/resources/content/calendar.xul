@@ -95,7 +95,8 @@
    <command id="delete_todo_command" oncommand="unifinderDeleteToDoCommand()"/>
 
    <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
-   <command id="delete_server_command" oncommand="gCalendarWindow.calendarManager.deleteCalendar()"/>
+   <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
+   <command id="delete_server_command" oncommand="deleteCalendar()"/>
 
    <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
    <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
@@ -232,6 +233,8 @@
 <!-- CALENDAR LIST CONTEXT MENU -->
 <popup id="calendarlist-context-menu">
    <menuitem label="&calendar.context.newserver.label;"     observes="new_server_command"/>
+   <menuitem label="&calendar.context.editserver.label;"     observes="edit_server_command"/>
+   <menuitem label="&calendar.context.deleteserver.label;"     observes="delete_server_command"/>
    <menuitem label="&calendar.context.refreshserver.label;" observes="refresh_remote_calendars"/>
 </popup>
 
@@ -405,7 +408,6 @@
        
                   <!-- on mousedown here happens before onclick above -->
                   <treechildren tooltip="savetip" 
-                    onmousedown=""
                     onmousemove="changeToolTipTextForEvent( event )"
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
