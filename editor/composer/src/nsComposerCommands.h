@@ -77,6 +77,7 @@ protected:
 
   // are we in HTML edit mode (not source view or plain text editing)
   PRBool      EditingHTML(nsIEditorShell* inEditorShell);
+  PRBool      EditingHTML(nsIEditor* inEditorShell);
 };
 
 
@@ -110,6 +111,12 @@ protected:
   // add/remove the style
   virtual nsresult  ToggleState(nsIEditorShell *aEditorShell, const char* aTagName) = 0;
 
+  // get the current state (on or off) for this style or block format
+  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams) = 0;
+  
+  // add/remove the style
+  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName) = 0;
+
 protected:
 
   const char* mTagName;
@@ -134,7 +141,13 @@ protected:
   
   // add/remove the style
   virtual nsresult  ToggleState(nsIEditorShell *aEditorShell, const char* aTagName);
-    
+
+  // get the current state (on or off) for this style or block format
+  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  
+  // add/remove the style
+  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
+  
 };
 
 
@@ -151,6 +164,12 @@ protected:
   
   // add/remove the style
   virtual nsresult  ToggleState(nsIEditorShell *aEditorShell, const char* aTagName);
+
+  // get the current state (on or off) for this style or block format
+  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  
+  // add/remove the style
+  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
 };
 
 class nsListItemCommand : public nsBaseStateUpdatingCommand
@@ -166,6 +185,12 @@ protected:
   
   // add/remove the style
   virtual nsresult  ToggleState(nsIEditorShell *aEditorShell, const char* aTagName);
+
+  // get the current state (on or off) for this style or block format
+  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  
+  // add/remove the style
+  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
 };
 
 // Base class for commands whose state consists of a string (e.g. para format)
@@ -185,6 +210,8 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed) = 0;
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState) = 0;
+  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams) =0;
+  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState) = 0;
   
 protected:
 
@@ -203,6 +230,8 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
+  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
 
 class nsFontFaceStateCommand : public nsMultiStateCommand
@@ -214,6 +243,8 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
+  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
 
 class nsHighlightColorStateCommand : public nsMultiStateCommand
@@ -226,6 +257,8 @@ protected:
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
   NS_IMETHOD IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval);
+  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
+  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 
 };
 
@@ -238,6 +271,8 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
+  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
 
 class nsAlignCommand : public nsMultiStateCommand
@@ -249,6 +284,8 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
+  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
 
 class nsBackgroundColorStateCommand : public nsMultiStateCommand
@@ -260,6 +297,8 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
+  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
 
 

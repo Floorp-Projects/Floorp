@@ -42,6 +42,7 @@
 
 #include "IBrowserFrameGlue.h"
 #include "nsIWebBrowserChromeFocus.h"
+#include "nsICommandParams.h"
 
 class CBrowserImpl : public nsIInterfaceRequestor,
 					 public nsIWebBrowserChrome,
@@ -70,6 +71,18 @@ protected:
     PBROWSERFRAMEGLUE  m_pBrowserFrameGlue;
 
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
+};
+
+class CEditorImpl : public CBrowserImpl
+{
+public:
+  CEditorImpl(){};
+  virtual ~CEditorImpl(){};
+  NS_METHOD MakeEditable();
+  NS_METHOD AddEditorObservers(nsIObserver *aObserver);
+  NS_METHOD DoCommand(nsICommandParams *aCommandParams);
+  NS_METHOD IsCommandEnabled(const nsAString &aCommand, PRBool *retval);
+  NS_METHOD GetCommandState(nsICommandParams *aCommandParams);
 };
 
 #endif //_BROWSERIMPL_H

@@ -49,6 +49,10 @@
 #include "nsEditorCommands.h"
 
 
+#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
+#define STATE_ENABLED  NS_ConvertASCIItoUCS2("state_enabled")
+
+
 nsBaseEditorCommand::nsBaseEditorCommand()
 {
   NS_INIT_REFCNT();
@@ -85,6 +89,23 @@ nsUndoCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *aC
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP 
+nsUndoCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsUndoCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
 
 NS_IMETHODIMP
 nsRedoCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *outCmdEnabled)
@@ -110,6 +131,23 @@ nsRedoCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *aC
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP 
+nsRedoCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsRedoCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
 
 NS_IMETHODIMP
 nsCutCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *outCmdEnabled)
@@ -131,6 +169,24 @@ nsCutCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *aCo
     return aEditor->Cut();
     
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsCutCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsCutCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
 }
 
 
@@ -164,6 +220,23 @@ nsCutOrDeleteCommand::DoCommand(const nsAReadableString & aCommandName, nsISuppo
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP 
+nsCutOrDeleteCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsCutOrDeleteCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
 
 NS_IMETHODIMP
 nsCopyCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *outCmdEnabled)
@@ -187,6 +260,23 @@ nsCopyCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *aC
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP 
+nsCopyCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsCopyCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
 
 NS_IMETHODIMP
 nsCopyOrDeleteCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *outCmdEnabled)
@@ -218,6 +308,23 @@ nsCopyOrDeleteCommand::DoCommand(const nsAReadableString & aCommandName, nsISupp
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP 
+nsCopyOrDeleteCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsCopyOrDeleteCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
 
 NS_IMETHODIMP
 nsPasteCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *outCmdEnabled)
@@ -251,6 +358,25 @@ nsPasteCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *a
     
   return rv;
 }
+
+NS_IMETHODIMP 
+nsPasteCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsPasteCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
+
 
 NS_IMETHODIMP
 nsDeleteCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *outCmdEnabled)
@@ -313,6 +439,24 @@ nsDeleteCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *
   return aEditor->DeleteSelection(deleteDir);
 }
 
+NS_IMETHODIMP 
+nsDeleteCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsDeleteCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
+
 NS_IMETHODIMP
 nsSelectAllCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *outCmdEnabled)
 {
@@ -334,6 +478,25 @@ nsSelectAllCommand::DoCommand(const nsAReadableString & aCommandName, nsISupport
     
   return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP 
+nsSelectAllCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsSelectAllCommand::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
+
 
 NS_IMETHODIMP
 nsSelectionMoveCommands::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *outCmdEnabled)
@@ -445,4 +608,22 @@ nsSelectionMoveCommands::DoCommand(const nsAReadableString & aCommandName, nsISu
     return selCont->PageMove(PR_TRUE, PR_TRUE);
     
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsSelectionMoveCommands::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  return DoCommand(tString,aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsSelectionMoveCommands::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  nsString tString;
+  aParams->GetStringValue(COMMAND_NAME,tString);
+  PRBool canUndo;
+  IsCommandEnabled(tString, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
 }

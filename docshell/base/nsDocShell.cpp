@@ -78,6 +78,9 @@
 #include "nsIPrincipal.h"
 #include "nsIHistoryEntry.h"
 
+// Editor-related
+#include "nsIEditingSession.h"
+
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsICachingChannel.h"
@@ -265,6 +268,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerContainer)
+    NS_INTERFACE_MAP_ENTRY(nsIEditorDocShell)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 ///*****************************************************************************
@@ -362,6 +366,18 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         *aSink = mFind;
         NS_ADDREF((nsISupports*)*aSink);
         return NS_OK;
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIEditingSession)) && NS_SUCCEEDED(EnsureEditorData())) {
+      nsCOMPtr<nsIEditingSession> editingSession;
+      mEditorData->GetEditingSession(getter_AddRefs(editingSession));
+      if (editingSession)
+      {
+        *aSink = editingSession;
+        NS_ADDREF((nsISupports *)*aSink);
+        return NS_OK;
+      }  
+
+      return NS_NOINTERFACE;   
     }
     else {
         return QueryInterface(aIID, aSink);
@@ -5567,6 +5583,64 @@ nsDocShell::ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd)
     return NS_OK;
 }
 
+
+
+//*****************************************************************************
+// nsDocShell: nsIEditorDocShell
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::GetEditor(nsIEditor * *aEditor)
+{
+  NS_ENSURE_ARG_POINTER(aEditor);
+  nsresult rv = EnsureEditorData();
+  if (NS_FAILED(rv)) return rv;
+  
+  return mEditorData->GetEditor(aEditor);
+}
+
+NS_IMETHODIMP nsDocShell::SetEditor(nsIEditor * aEditor)
+{
+  nsresult rv = EnsureEditorData();
+  if (NS_FAILED(rv)) return rv;
+
+  return mEditorData->SetEditor(aEditor);
+}
+
+
+NS_IMETHODIMP nsDocShell::GetEditable(PRBool *aEditable)
+{
+  NS_ENSURE_ARG_POINTER(aEditable);
+  *aEditable = mEditorData && mEditorData->GetEditable();
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsDocShell::GetHasEditingSession(PRBool *aHasEditingSession)
+{
+  NS_ENSURE_ARG_POINTER(aHasEditingSession);
+  
+  if (mEditorData)
+  {
+    nsCOMPtr<nsIEditingSession> editingSession;
+    mEditorData->GetEditingSession(getter_AddRefs(editingSession));
+    *aHasEditingSession = (editingSession.get() != nsnull);
+  }
+  else
+  {
+    *aHasEditingSession = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::MakeEditable(PRBool inWaitForUriLoad)
+{
+  nsresult rv = EnsureEditorData();
+  if (NS_FAILED(rv)) return rv;
+
+  return mEditorData->MakeEditable(inWaitForUriLoad);
+}
+
 NS_IMETHODIMP
 nsDocShell::AddToGlobalHistory(nsIURI * aURI)
 {
@@ -5758,6 +5832,20 @@ nsDocShell::EnsureScriptEnvironment()
 
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsDocShell::EnsureEditorData()
+{
+  if (!mEditorData)
+  {
+    mEditorData = new nsDocShellEditorData(this);
+    if (!mEditorData) return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  return mEditorData ? NS_OK : NS_ERROR_FAILURE;
+}
+
 
 NS_IMETHODIMP nsDocShell::EnsureFind()
 {

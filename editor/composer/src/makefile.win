@@ -27,10 +27,12 @@ MODULE_NAME=nsComposerModule
 
 CPP_OBJS =                                            \
           .\$(OBJDIR)\nsEditorShell.obj              \
+          .\$(OBJDIR)\nsEditingSession.obj              \
           .\$(OBJDIR)\nsEditorShellMouseListener.obj \
           .\$(OBJDIR)\nsInterfaceState.obj           \
           .\$(OBJDIR)\nsComposerController.obj       \
           .\$(OBJDIR)\nsComposerCommands.obj         \
+          .\$(OBJDIR)\nsComposerCommandsUpdater.obj         \
           .\$(OBJDIR)\nsComposerRegistration.obj     \
           .\$(OBJDIR)\nsEditorParserObserver.obj     \
            $(NULL)
@@ -64,6 +66,7 @@ REQUIRES    = xpcom \
               gfx2 \
               webBrowser_core \
               unicharutil \
+		  commandhandler \
               $(NULL)
 
 include <$(DEPTH)/config/config.mak>

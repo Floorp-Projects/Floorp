@@ -47,6 +47,8 @@ REQUIRES = \
 	windowwatcher \
 	layout \
 	webbrowserpersist \
+	composer \
+	command_handler \
 	$(NULL)
 
 CPPSRCS		= \
@@ -57,6 +59,7 @@ CPPSRCS		= \
 		BrowserImpl.cpp \
 		BrowserImplWebPrgrsLstnr.cpp \
 		BrowserImplCtxMenuLstnr.cpp \
+		CCommandObserver.cpp \
 		Dialogs.cpp       \
 		ProfileMgr.cpp \
 		ProfilesDlg.cpp \

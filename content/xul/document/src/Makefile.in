@@ -55,10 +55,10 @@ REQUIRES	= xpcom \
 		  webshell \
       webbrwsr \
 		  unicharutil \
+		  commandhandler \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsControllerCommandManager.cpp \
 		nsElementMap.cpp \
 		nsXULCommandDispatcher.cpp \
 		nsXULContentSink.cpp \

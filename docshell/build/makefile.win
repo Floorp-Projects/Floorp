@@ -38,6 +38,9 @@ REQUIRES	= xpcom \
 		  find \
 		  gfx \
 		  history \
+		  composer \
+		  editor \
+		  commandhandler \
 		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 

@@ -3,8 +3,10 @@
 // Used by mfcembed.rc
 //
 #define IDD_ABOUTBOX                    100
+#define ID_TOOLBAR_UPDATE               101
 #define IDR_MAINFRAME                   128
 #define IDR_MOZEMBTYPE                  129
+#define IDR_EDITOR                      129
 #define IDR_CTXMENU_DOCUMENT            130
 #define IDR_CTXMENU_LINK                131
 #define IDR_CTXMENU_TEXT                132
@@ -96,8 +98,13 @@
 #define ID_EDIT_PREFERENCES             32788
 #define ID_FILE_PRINTPREVIEW            32789
 #define ID_FILE_PRINTSETUP              32790
+#define ID_NEW_EDITORWINDOW             32790
 #define ID_VIEW_FRAME_SOURCE            32791
 #define ID_OPEN_FRAME_IN_NEW_WINDOW     32792
+#define ID_BOLD                         32793
+#define ID_UNDERLINE                    32794
+#define ID_ITALICS                      32795
+#define ID_NEW_EDITWINDOW               32796
 
 // Next default values for new objects
 // 
@@ -105,8 +112,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        155
-#define _APS_NEXT_COMMAND_VALUE         32793
+#define _APS_NEXT_COMMAND_VALUE         32797
 #define _APS_NEXT_CONTROL_VALUE         1042
-#define _APS_NEXT_SYMED_VALUE           101
+#define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

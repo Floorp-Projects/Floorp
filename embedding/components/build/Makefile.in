@@ -49,6 +49,8 @@ REQUIRES	= js \
 		  content \
 		  uriloader \
 		  necko \
+		  commandhandler \
+		  content_xul \
 		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
@@ -59,6 +61,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)jsconsole_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)find_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)webbrowserpersist_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)commandhandler_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -67,6 +70,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../jsconsole/src  \
 	-I$(srcdir)/../find/src  \
 	-I$(srcdir)/../webbrowserpersist/src  \
+	-I$(srcdir/../commandhandler/src \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \

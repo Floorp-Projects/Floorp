@@ -50,6 +50,9 @@ REQUIRES	= xpcom \
 		  content \
 		  gfx \
 		  history \
+		  composer \
+		  commandhandler \
+		  editor \
 		  $(NULL)
 
 LIBRARY_NAME=basedocshell_s
@@ -71,10 +74,12 @@ XPIDLSRCS=						\
 		.\nsITextScroll.idl		\
 		.\nsIWebNavigation.idl		\
     .\nsIURIFixup.idl \
+		.\nsIEditorDocShell.idl		\
 		$(NULL)
 
 CPP_OBJS=											\
 		.\$(OBJDIR)\nsDocShell.obj			\
+		.\$(OBJDIR)\nsDocShellEditorData.obj			\
 		.\$(OBJDIR)\nsWebShell.obj          \
 		.\$(OBJDIR)\nsDocShellEnumerator.obj \
 		.\$(OBJDIR)\nsDocShellLoadInfo.obj	\

@@ -75,7 +75,7 @@ public:
 
 	CBrowserFrame* CreateNewBrowserFrame(PRUint32 chromeMask = nsIWebBrowserChrome::CHROME_ALL, 
 							PRInt32 x = -1, PRInt32 y = -1, 
-							PRInt32 cx = -1, PRInt32 cy = -1,
+							PRInt32 cx = -1, PRInt32 cy = -1,PRBool bIsEditor=PR_FALSE,
 							PRBool bShowWindow = PR_TRUE);
 	void RemoveFrameFromList(CBrowserFrame* pFrm, BOOL bCloseAppOnLastFrame = TRUE);
 

@@ -35,6 +35,8 @@ REQUIRES	= js \
 		  necko \
 		  content \
 		  uriloader \
+		  commandhandler \
+		  content_xul \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
@@ -54,6 +56,7 @@ SUB_LIBRARIES = \
 	$(DIST)\lib\appstartupnotifier_s.lib \
 	$(DIST)\lib\find_s.lib \
 	$(DIST)\lib\webbrowserpersist_s.lib \
+	$(DIST)\lib\commandhandler_s.lib \
 	$(NULL)
 
 LLIBS = \
@@ -69,6 +72,7 @@ INCS = $(INCS) \
 	-I$(DEPTH)\embedding\components\appstartup\src \
 	-I$(DEPTH)\embedding\components\find\src \
 	-I$(DEPTH)\embedding\components\webbrowserpersist\src \
+	-I$(DEPTH)\embedding\components\commandhandler\src \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

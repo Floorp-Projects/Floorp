@@ -24,6 +24,7 @@ DIRS= \
 	windowwatcher \
 	appstartup \
 	find \
+	commandhandler \
 	jsconsole \
 	ui \
         webbrowserpersist \

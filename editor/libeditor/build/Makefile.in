@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  appshell \
 		  xuldoc \
+		  commandhandler \
 		  $(NULL)
 
 ifdef MOZ_PLAINTEXT_EDITOR_ONLY
