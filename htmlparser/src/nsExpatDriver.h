@@ -59,7 +59,8 @@ public:
   virtual ~nsExpatDriver();
 
     // Load up an external stream to get external entity information
-  static nsresult OpenInputStream(const XML_Char* aURLStr, 
+  static nsresult OpenInputStream(const XML_Char* aFPIStr,
+                                  const XML_Char* aURLStr, 
                                   const XML_Char* aBaseURL,
                                   nsIInputStream** in, 
                                   nsAString& aAbsURL);
