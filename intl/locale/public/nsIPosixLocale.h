@@ -32,6 +32,10 @@
 { 0x21434951, 0xec71, 0x11d2,     \
 { 0x9e, 0x89, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}
 
+#define MAX_LANGUAGE_CODE_LEN 3
+#define MAX_COUNTRY_CODE_LEN  3
+#define MAX_LOCALE_LEN        128
+#define MAX_EXTRA_LEN         65
 
 class nsIPosixLocale : public nsISupports {
 
