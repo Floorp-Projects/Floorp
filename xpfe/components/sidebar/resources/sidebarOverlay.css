@@ -66,13 +66,14 @@ box#sidebar-box {
   margin-top: 2px;
   width: 162px;
   min-height: 1px;
-  min-width: 10px;
+  min-width: 1px;
   max-width: 400px;
   border: none;
   border-bottom: 8px solid #003366;
 }
 
 box#sidebar-panels {
+  min-width: 1px;
   min-height: 1px;
   border-bottom: 4px solid #003366;
 }
@@ -119,6 +120,7 @@ splitter.sidebar-main-header titledbutton:hover {
 titledbutton.panel-bar {
   padding: 0px;
   margin: 0px;
+  min-width: 1px;
   padding-left: 15px;
   border-top: 1px solid white;
   background-color: #CCCCCC;
