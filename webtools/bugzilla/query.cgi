@@ -250,6 +250,11 @@ foreach my $m (@::legal_target_milestone) {
 for (my $i = 0; $i < @products; ++$i) {
     my $p = $products[$i];
     
+    # Bug 190611: band-aid to avoid crashing with no versions defined
+    if (!defined ($::components{$p})) {
+        $::components{$p} = [];
+    }
+    
     # Create hash to hold attributes for each product.
     my %product = (
         'name'       => $p,
