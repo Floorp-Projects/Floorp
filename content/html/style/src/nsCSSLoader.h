@@ -116,6 +116,9 @@ public:
   // the preferred title is changed
   nsString                   mTitle;
 
+  // Charset we decided to use for the sheet
+  nsCString                  mCharset;
+
   // Parser to be told to continue parsing once the load completes
   nsCOMPtr<nsIParser>        mParserToUnblock;
 
