@@ -25,7 +25,6 @@
 
 #include "nsISupports.h"
 #include "nsIWebShellWindow.h"
-#include "nsIBrowserWindow.h"
 #include "nsGUIEvent.h"
 #include "nsIWebShell.h"  
 #include "nsIDocumentLoaderObserver.h"
@@ -62,7 +61,6 @@ class nsVoidArray;
 class nsWebShellWindow : public nsXULWindow,
                          public nsIWebShellWindow,
                          public nsIWebShellContainer,
-                         public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver,
                          public nsIPrompt,
@@ -127,13 +125,7 @@ public:
     const nsString& aAnchorAlignment);
   
   // nsIDocumentLoaderObserver
-	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
-	NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-	NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel);
-	NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
-	NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
-	NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-	NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
+   NS_DECL_NSIDOCUMENTLOADEROBSERVER
   
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
@@ -187,32 +179,6 @@ public:
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
-
-  // nsIBrowserWindow methods not already covered elsewhere
-  NS_IMETHOD Init(nsIAppShell* aAppShell,
-                  const nsRect& aBounds,
-                  PRUint32 aChromeMask,
-                  PRBool aAllowPlugins = PR_TRUE);
-  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD SizeContentTo(PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
-                          PRBool aWidthTransient, PRBool aHeightTransient);
-  NS_IMETHOD GetContentBounds(nsRect& aResult);
-  NS_IMETHOD GetWindowBounds(nsRect& aResult);
-  NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
-  NS_IMETHOD ShowAfterCreation() { mShowAfterLoad = PR_TRUE; return NS_OK; }
-  NS_IMETHOD Show() { return Show(PR_TRUE); }
-  NS_IMETHOD Hide() { return Show(PR_FALSE); }
-  NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
-  NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
-  NS_IMETHOD SetTitle(const PRUnichar* aTitle);
-  NS_IMETHOD GetTitle(PRUnichar** aResult);
-  NS_IMETHOD SetStatus(const PRUnichar* aStatus);
-  NS_IMETHOD GetStatus(const PRUnichar** aResult);
-  NS_IMETHOD SetDefaultStatus(const PRUnichar* aStatus);
-  NS_IMETHOD GetDefaultStatus(const PRUnichar** aResult);
-  NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE;};
 
   // nsINetSupport
 
