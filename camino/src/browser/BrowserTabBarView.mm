@@ -522,6 +522,8 @@ static const int kOverflowButtonMargin = 1;
 
 -(BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
 {
+  if (!mDragDest)
+    return [mTabView prepareForDragOperation:sender];
   BOOL rv = [mDragDest prepareForDragOperation: sender];
   if (!rv) {
     if (mDragDestButton)
