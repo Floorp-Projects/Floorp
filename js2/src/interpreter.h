@@ -23,6 +23,8 @@
 #include "icodegenerator.h"
 
 namespace JavaScript {
+    class JSObject;
+
 	union JSValue {
 		int8 i8;
 		uint8 u8;
@@ -34,7 +36,7 @@ namespace JavaScript {
 		uint64 u64;
 		float32 f32;
 		float64 f64;
-		void* ref;
+		JSObject* obj;
 		
 		JSValue() : f64(0.0) {}
 		
