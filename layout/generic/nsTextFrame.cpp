@@ -497,7 +497,8 @@ public:
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
   NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth);
+                                    nscoord& aDeltaWidth,
+                                    PRBool& aLastCharIsJustifiable);
 
   struct TextStyle {
     const nsStyleFont* mFont;
@@ -687,7 +688,7 @@ public:
                     nsStyleContext* aStyleContext,
                     nsPresContext* aPresContext,
                     TextPaintStyle& aStyle,
-                    PRUnichar* aBuffer, PRInt32 aLength,
+                    PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                     nscoord aX, nscoord aY,
                     nscoord aWidth,
                     SelectionDetails *aDetails = nsnull);
@@ -696,6 +697,7 @@ public:
                             TextStyle& aStyle,
                             PRUnichar* aWord,
                             PRInt32 aWordLength,
+                            PRBool aIsEndOfFrame,
                             nsTextDimensions* aDimensionsResult);
 
   PRUint32 EstimateNumChars(PRUint32 aAvailableWidth,
@@ -710,7 +712,7 @@ public:
   
   void GetTextDimensions(nsIRenderingContext& aRenderingContext,
                 TextStyle& aStyle,
-                PRUnichar* aBuffer, PRInt32 aLength,
+                PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                 nsTextDimensions* aDimensionsResult);
 
   //this returns the index into the PAINTBUFFER of the x coord aWidth(based on 0 as far left) 
@@ -718,7 +720,7 @@ public:
   //meaningful to content yet. use index buffer from prepareunicodestring to find the content offset.
   PRInt32 GetLengthSlowly(nsIRenderingContext& aRenderingContext,
                 TextStyle& aStyle,
-                PRUnichar* aBuffer, PRInt32 aLength,
+                PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                 nscoord aWidth);
 
   PRBool IsTextInSelection(nsPresContext* aPresContext,
@@ -785,7 +787,7 @@ protected:
   //factored out method for GetTextDimensions and getlengthslowly. if aGetTextDimensions is non-zero number then measure to the width field and return the length. else shove total dimensions into result
   PRInt32 GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
                 TextStyle& aStyle,
-                PRUnichar* aBuffer, PRInt32 aLength,
+                PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                 nsTextDimensions* aDimensionsResult,
                 PRBool aGetTextDimensions/* true=get dimensions false = return length up to aDimensionsResult->width size*/);
   nsresult GetContentAndOffsetsForSelection(nsPresContext*  aPresContext,nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength);
@@ -953,6 +955,7 @@ public:
   PRBool      First();
   PRBool      Next();
   PRBool      IsDone();
+  PRBool      IsLast();
 
   PRUnichar * CurrentTextUnicharPtr();
   char *      CurrentTextCStrPtr();
@@ -1161,6 +1164,12 @@ DrawSelectionIterator::Next()
 }
 
 PRBool
+DrawSelectionIterator::IsLast()
+{
+ return mDone || !mInit || mCurrentIdx + mCurrentLength >= mLength;
+}
+
+PRBool
 DrawSelectionIterator::IsDone()
 {
     return mDone || !mInit;
@@ -1182,7 +1191,7 @@ DrawSelectionIterator::CurrentTextCStrPtr()
 PRUint32
 DrawSelectionIterator::CurrentLength()
 {
-    return mCurrentLength;
+  return mCurrentLength;
 }
 
 nsTextFrame::TextPaintStyle & 
@@ -1279,6 +1288,8 @@ DrawSelectionIterator::IsBeforeOrAfter()
 #define TEXT_ISNOT_ONLY_WHITESPACE 0x00200000
 
 #define TEXT_WHITESPACE_FLAGS      0x00300000
+
+#define TEXT_IS_END_OF_LINE        0x00400000
 
 //----------------------------------------------------------------------
 
@@ -1534,6 +1545,11 @@ nsTextFrame::IsJustifiableCharacter(PRUnichar aChar, PRBool aLangIsCJ)
   return PR_FALSE;
 }
 
+inline PRBool IsEndOfLine(nsFrameState aState)
+{
+  return (aState & TEXT_IS_END_OF_LINE) ? PR_TRUE : PR_FALSE;
+}
+
 /**
  * Prepare the text in the content for rendering. If aIndexes is not nsnull
  * then fill in aIndexes's with the mapping from the original input to
@@ -1743,7 +1759,10 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   if (aJustifiableCharCount && textBuffer) {
     PRBool isCJ = IsChineseJapaneseLangGroup();
     PRIntn numJustifiableCharacter = 0;
-    for (PRInt32 i = 0; i < textLength; i++) {
+    PRInt32 justifiableRange = textLength;
+    if (IsEndOfLine(mState))
+      justifiableRange--;
+    for (PRInt32 i = 0; i < justifiableRange; i++) {
       if (IsJustifiableCharacter(textBuffer->mBuffer[i], isCJ))
         numJustifiableCharacter++;
     }
@@ -2612,10 +2631,14 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
 
 #ifdef IBMBIDI
     if (isOddLevel)
-      aOffset = mContentOffset+textLength-GetLengthSlowly(*aRendContext, ts,paintBuffer.mBuffer,textLength,adjustedX);
+      aOffset = mContentOffset + textLength -
+                GetLengthSlowly(*aRendContext, ts, paintBuffer.mBuffer,
+                                textLength, PR_TRUE, adjustedX);
     else
 #endif
-    aOffset = mContentOffset+GetLengthSlowly(*aRendContext, ts,paintBuffer.mBuffer,textLength,adjustedX);
+    aOffset = mContentOffset +
+              GetLengthSlowly(*aRendContext, ts,paintBuffer.mBuffer,
+                              textLength, PR_TRUE, adjustedX);
     PRInt32 i;
     PRInt32* ip = indexBuffer.mBuffer;
     for (i = 0;i <= mContentLength; i ++){
@@ -2638,7 +2661,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
                           nsStyleContext* aStyleContext,
                           nsPresContext* aPresContext,
                           TextPaintStyle& aTextStyle,
-                          PRUnichar* aBuffer, PRInt32 aLength,
+                          PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                           nscoord aX, nscoord aY,
                           nscoord aWidth, 
                           SelectionDetails *aDetails /*=nsnull*/)
@@ -2656,6 +2679,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     (aTextStyle.mNumJustifiableCharacterReceivingExtraJot != 0 || aTextStyle.mExtraSpacePerJustifiableCharacter != 0);
 
   PRBool isCJ = IsChineseJapaneseLangGroup();
+  PRBool isEndOfLine = aIsEndOfFrame && IsEndOfLine(mState);
 
   //German 0x00df might expand to "SS", but no need to count it for speed reason
   if (aTextStyle.mSmallCaps) {
@@ -2746,7 +2770,8 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       }
       nextFont = aTextStyle.mNormalFont;
     }
-    if (justifying && IsJustifiableCharacter(ch, isCJ)) {
+    if (justifying && (!isEndOfLine || aLength > 0)
+        && IsJustifiableCharacter(ch, isCJ)) {
       glyphWidth += aTextStyle.mExtraSpacePerJustifiableCharacter;
       if ((PRUint32)--aTextStyle.mNumJustifiableCharacterToRender
             < (PRUint32)aTextStyle.mNumJustifiableCharacterReceivingExtraJot) {
@@ -2809,11 +2834,12 @@ nsTextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
                                   TextStyle& aTextStyle,
                                   PRUnichar* aWord,
                                   PRInt32 aWordLength,
+                                  PRBool aIsEndOfFrame,
                                   nsTextDimensions* aDimensionsResult)
 {
   nsIRenderingContext& rc = *aReflowState.rendContext;
   aDimensionsResult->Clear();
-  GetTextDimensions(rc, aTextStyle, aWord, aWordLength, aDimensionsResult);
+  GetTextDimensions(rc, aTextStyle, aWord, aWordLength, aIsEndOfFrame, aDimensionsResult);
   if (aTextStyle.mLastFont != aTextStyle.mNormalFont) {
     rc.SetFont(aTextStyle.mNormalFont);
     aTextStyle.mLastFont = aTextStyle.mNormalFont;
@@ -2824,7 +2850,7 @@ nsTextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
 PRInt32
 nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
                 TextStyle& aStyle,
-                PRUnichar* aBuffer, PRInt32 aLength,
+                PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                 nsTextDimensions* aDimensionsResult,
                 PRBool aGetTextDimensions/* true=get dimensions false = return length up to aDimensionsResult.width size*/)
 {
@@ -2842,6 +2868,7 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
   PRBool justifying = aStyle.mJustifying &&
     (aStyle.mNumJustifiableCharacterReceivingExtraJot != 0 || aStyle.mExtraSpacePerJustifiableCharacter != 0);
   PRBool isCJ = IsChineseJapaneseLangGroup();
+  PRBool isEndOfLine = aIsEndOfFrame && IsEndOfLine(mState);
 
   while (--length >= 0) {
     PRUnichar ch = *inBuffer++;
@@ -2874,7 +2901,8 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
       aRenderingContext.GetTextDimensions(&ch, (PRUint32)1, glyphDimensions);
       glyphDimensions.width += aStyle.mLetterSpacing;
     }
-    if (justifying && IsJustifiableCharacter(ch, isCJ)) {
+    if (justifying && (!isEndOfLine || length > 0)
+        && IsJustifiableCharacter(ch, isCJ)) {
       glyphDimensions.width += aStyle.mExtraSpacePerJustifiableCharacter;
       if ((PRUint32)--aStyle.mNumJustifiableCharacterToMeasure
             < (PRUint32)aStyle.mNumJustifiableCharacterReceivingExtraJot) {
@@ -2901,21 +2929,23 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
 void
 nsTextFrame::GetTextDimensions(nsIRenderingContext& aRenderingContext,
                       TextStyle& aTextStyle,
-                      PRUnichar* aBuffer, PRInt32 aLength,
+                      PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                       nsTextDimensions* aDimensionsResult)
 {
-  GetTextDimensionsOrLength(aRenderingContext,aTextStyle,aBuffer,aLength,aDimensionsResult,PR_TRUE);
+  GetTextDimensionsOrLength(aRenderingContext,aTextStyle,
+                            aBuffer,aLength,aIsEndOfFrame,aDimensionsResult,PR_TRUE);
 }
 
 PRInt32 
 nsTextFrame::GetLengthSlowly(nsIRenderingContext& aRenderingContext,
                 TextStyle& aStyle,
-                PRUnichar* aBuffer, PRInt32 aLength,
+                PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                 nscoord aWidth)
 {
   nsTextDimensions dimensions;
   dimensions.width = aWidth;
-  return GetTextDimensionsOrLength(aRenderingContext,aStyle,aBuffer,aLength,&dimensions,PR_FALSE);
+  return GetTextDimensionsOrLength(aRenderingContext,aStyle,
+                                   aBuffer,aLength,aIsEndOfFrame,&dimensions,PR_FALSE);
 }
 
 void
@@ -2943,7 +2973,7 @@ nsTextFrame::ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingCon
     aTextStyle.mExtraSpacePerJustifiableCharacter = 0;
     aTextStyle.mNumJustifiableCharacterReceivingExtraJot = 0;
     
-    GetTextDimensions(aRenderingContext, aTextStyle, aBuffer, aLength, &trueDimensions);
+    GetTextDimensions(aRenderingContext, aTextStyle, aBuffer, aLength, PR_TRUE, &trueDimensions);
 
     aTextStyle.mNumJustifiableCharacterToMeasure = aNumJustifiableCharacter;
     aTextStyle.mNumJustifiableCharacterToRender = aNumJustifiableCharacter;
@@ -3034,7 +3064,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
       // simplest rendering approach
       aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
       RenderString(aRenderingContext, aStyleContext, aPresContext, aTextStyle,
-                   text, textLength, dx, dy, width);
+                   text, textLength, PR_TRUE, dx, dy, width);
     }
     else 
     {
@@ -3082,7 +3112,9 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
           nscolor    currentFGColor = iter.CurrentForeGroundColor();
           nscolor    currentBKColor;
           PRBool     isCurrentBKColorTransparent;
-          GetTextDimensions(aRenderingContext,aTextStyle,currenttext, (PRInt32)currentlength,&newDimensions);
+          PRBool     isEndOfFrame = iter.IsLast();
+          GetTextDimensions(aRenderingContext, aTextStyle, currenttext,
+                            (PRInt32)currentlength, isEndOfFrame, &newDimensions);
           if (newDimensions.width)
           {
             if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent))
@@ -3098,13 +3130,13 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
           if (isPaginated && !iter.IsBeforeOrAfter()) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor, canDarkenColor));
             RenderString(aRenderingContext, aStyleContext, aPresContext,
-                         aTextStyle, currenttext, currentlength,
+                         aTextStyle, currenttext, currentlength, isEndOfFrame,
                          currentX, dy, width, details);
           } else if (!isPaginated) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor, canDarkenColor));
             RenderString(aRenderingContext,aStyleContext, aPresContext,
-                         aTextStyle, currenttext, currentlength, currentX,
-                         dy, width, details);
+                         aTextStyle, currenttext, currentlength, isEndOfFrame,
+                         currentX, dy, width, details);
           }
 
           // increment twips X start but remember to get ready for
@@ -3118,7 +3150,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
       {
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
         RenderString(aRenderingContext, aStyleContext, aPresContext,
-                     aTextStyle, text, PRUint32(textLength),
+                     aTextStyle, text, PRUint32(textLength), PR_TRUE,
                      dx, dy, width, details);
       }
       sdptr = details;
@@ -3821,7 +3853,8 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
     if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) || ts.mJustifying)
     {
       nsTextDimensions dimensions;
-      GetTextDimensions(*inRendContext, ts, paintBuffer.mBuffer, hitLength, &dimensions);
+      GetTextDimensions(*inRendContext, ts, paintBuffer.mBuffer, hitLength,
+                        textLength == hitLength, &dimensions);
       width = dimensions.width;
     }
     else
@@ -4847,7 +4880,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
         }
         else {
           if (aTs.mSmallCaps) {
-            MeasureSmallCapsText(aReflowState, aTs, bp2, wordLen, &dimensions);
+            MeasureSmallCapsText(aReflowState, aTs, bp2, wordLen, PR_FALSE, &dimensions);
           }
           else {
             // Measure just the one word
@@ -5128,7 +5161,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
             }
             else if (aTs.mSmallCaps) {
               MeasureSmallCapsText(aReflowState, aTs, pWordBuf,
-                                   lastWordLen, &lastWordDimensions);
+                                   lastWordLen, PR_FALSE, &lastWordDimensions);
             }
             else {
               aReflowState.rendContext->GetTextDimensions(pWordBuf, lastWordLen, lastWordDimensions);
@@ -5243,6 +5276,8 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
   printf(": BeginReflow: availableSize=%d,%d\n",
          aReflowState.availableWidth, aReflowState.availableHeight);
 #endif
+
+  mState &= ~TEXT_IS_END_OF_LINE;
 
   // XXX If there's no line layout, we shouldn't even have created this
   // frame. This may happen if, for example, this is text inside a table
@@ -5577,8 +5612,12 @@ nsTextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 NS_IMETHODIMP
 nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth)
+                                    nscoord& aDeltaWidth,
+                                    PRBool& aLastCharIsJustifiable)
 {
+  aLastCharIsJustifiable = PR_FALSE;
+  mState |= TEXT_IS_END_OF_LINE;
+
   // in some situation (for instance, in wrapping mode, last space will not 
   // be added to total width if it exceed maxwidth), this flag will be set 
   // and we shouldn't trim non-added space
@@ -5616,6 +5655,9 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
           if (eStyleUnit_Coord == unit) {
             dw += textStyle->mLetterSpacing.GetCoordValue();
           }
+          aLastCharIsJustifiable = PR_TRUE;
+        } else if (IsJustifiableCharacter(ch, IsChineseJapaneseLangGroup())) {
+          aLastCharIsJustifiable = PR_TRUE;
         }
       }
     }
@@ -5852,7 +5894,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
 
     TextStyle ts(aLineLayout.mPresContext, rc, sc);
     if (ts.mSmallCaps) {
-      MeasureSmallCapsText(aReflowState, ts, bp, wordLen, &dimensions);
+      MeasureSmallCapsText(aReflowState, ts, bp, wordLen, PR_FALSE, &dimensions);
     }
     else {
       rc.GetTextDimensions(bp, wordLen, dimensions);

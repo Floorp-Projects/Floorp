@@ -295,7 +295,8 @@ public:
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
   NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth);
+                                    nscoord& aDeltaWidth,
+                                    PRBool& aLastCharIsJustifiable);
 
   // Selection Methods
   // XXX Doc me... (in nsIFrame.h puhleeze)
