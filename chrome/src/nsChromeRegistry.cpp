@@ -494,9 +494,19 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
  
   nsCAutoString finalURL;
   rv = GetBaseURL(package, provider, finalURL);
+#ifdef DEBUG
   if (NS_FAILED(rv)) {
-    NS_WARNING("chrome: failed to get base url -- using wacky default");
+    nsCAutoString msg = "chrome: failed to get base url";
+    nsXPIDLCString url;
+    rv = aChromeURL->GetSpec(getter_Copies(url));
+    if (NS_SUCCEEDED(rv)) {
+      msg += " for ";
+      msg += (const char*)url;
+    }
+    msg += " -- using wacky default";
+    NS_WARNING((const char*)msg);
   }
+#endif
   if (finalURL.IsEmpty()) {
     // hard-coded fallback
     if (provider.Equals("skin")) {
