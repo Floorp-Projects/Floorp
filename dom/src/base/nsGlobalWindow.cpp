@@ -1402,9 +1402,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     // We're leaving the DOM event loop so if we created a DOM event, release here.
     if (nsnull != *aDOMEvent) {
       nsrefcnt rc;
-      nsIDOMEvent* DOMEvent = *aDOMEvent;
-      // Release the copy since the macro will null the pointer 
-      NS_RELEASE2(DOMEvent, rc);
+      NS_RELEASE2(*aDOMEvent, rc);
       if (0 != rc) {
       //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
       //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
