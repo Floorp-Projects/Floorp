@@ -50,6 +50,8 @@ nsIAtom* nsHTMLAtoms::cellContentPseudo;
 nsIAtom* nsHTMLAtoms::cellpadding;
 nsIAtom* nsHTMLAtoms::cellspacing;
 nsIAtom* nsHTMLAtoms::ch;
+nsIAtom* nsHTMLAtoms::_char;
+nsIAtom* nsHTMLAtoms::charoff;
 nsIAtom* nsHTMLAtoms::charset;
 nsIAtom* nsHTMLAtoms::checked;
 nsIAtom* nsHTMLAtoms::choff;
@@ -283,6 +285,8 @@ void nsHTMLAtoms::AddrefAtoms()
     cellpadding = NS_NewAtom("CELLPADDING");
     cellspacing = NS_NewAtom("CELLSPACING");
     ch = NS_NewAtom("CH");
+    _char = NS_NewAtom("CHAR");
+    charoff = NS_NewAtom("CHAROFF");
     charset = NS_NewAtom("CHARSET");
     checked = NS_NewAtom("CHECKED");
     choff = NS_NewAtom("CHOFF");
@@ -513,6 +517,8 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(cellpadding);
     NS_RELEASE(cellspacing);
     NS_RELEASE(ch);
+    NS_RELEASE(_char);
+    NS_RELEASE(charoff);
     NS_RELEASE(charset);
     NS_RELEASE(checked);
     NS_RELEASE(choff);

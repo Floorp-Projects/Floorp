@@ -71,6 +71,8 @@ public:
   static nsIAtom* cellpadding;
   static nsIAtom* cellspacing;
   static nsIAtom* ch;
+  static nsIAtom* _char;
+  static nsIAtom* charoff;
   static nsIAtom* charset;
   static nsIAtom* checked;
   static nsIAtom* choff;
