@@ -38,6 +38,12 @@ class nsIDOMSelection;
 class nsIDOMSelectionListener : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMSELECTIONLISTENER_IID; return iid; }
+  enum {
+    NO_REASON = 0,
+    DRAG_REASON = 1,
+    MOUSEDOWN_REASON = 2,
+    MOUSEUP_REASON = 4
+  };
 
   NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason)=0;
 };
