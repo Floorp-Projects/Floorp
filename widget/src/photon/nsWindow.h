@@ -63,7 +63,6 @@ public:
   NS_IMETHOD           ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy);
 
   NS_IMETHOD           SetTitle(const nsString& aTitle);
-  NS_IMETHOD           Show(PRBool state);
   NS_IMETHOD           CaptureMouse(PRBool aCapture);
  
   NS_IMETHOD           ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
