@@ -99,7 +99,7 @@
 
   <!-- Reset Password -->
   <groupbox orient="vertical">
-    <caption value="&resetpassword.label;"/>
+    <caption label="&resetpassword.label;"/>
     <html>&resetpassword.text1;</html>
     <html>&resetpassword.text2;</html>
     <hbox halign="left" autostretch="never">
