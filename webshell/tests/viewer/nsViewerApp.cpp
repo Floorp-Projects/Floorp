@@ -763,7 +763,7 @@ nsViewerApp::ViewSource(nsString& aURL)
   bw->mDocShell->SetViewMode(nsIDocShell::viewSource);
   bw->SetTitle(nsAutoString("View Source").GetUnicode());
   bw->SetVisibility(PR_TRUE);
-  bw->GoTo(aURL.GetUnicode(),"view-source");
+  bw->GoTo(aURL.GetUnicode());
   NS_RELEASE(bw);
 
   return NS_OK;
