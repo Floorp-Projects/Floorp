@@ -54,9 +54,11 @@ private:
 	nsDllStatus m_status;	// holds current status
     nsIModule *m_moduleObject;
 
-    // Cache frequently asked queries
+    // Cache frequent queries
     char *m_persistentDescriptor;
     char *m_nativePath;
+
+    PRBool m_markForUnload;
 
     void Init(nsIFileSpec *dllSpec);
     void Init(const char *persistentDescriptor);
@@ -80,6 +82,9 @@ public:
 	{
 		return ((m_instance != 0) ? PR_TRUE : PR_FALSE);
 	}
+    void MarkForUnload(PRBool mark) { m_markForUnload = mark; }
+    PRBool IsMarkedForUnload(void) { return m_markForUnload; }
+
 	void *FindSymbol(const char *symbol);
 	
     PRBool HasChanged(void);
