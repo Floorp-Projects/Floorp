@@ -460,8 +460,13 @@ nsHttpTransaction::Close(nsresult reason)
     // request from the point-of-view of the server.  such duplication could
     // have dire consequences including repeated purchases, etc.
     //
+    // NOTE: because of the way SSL proxy CONNECT is implemented, it is
+    // possible that the transaction may have received data without having
+    // sent any data.  for this reason, mSendData == FALSE does not imply
+    // mReceivedData == FALSE.  (see bug 203057 for more info.)
+    //
     if (reason == NS_ERROR_NET_RESET || reason == NS_OK) {
-        if (!mSentData || (!mReceivedData && connReused)) {
+        if (!mReceivedData && (!mSentData || connReused)) {
             // if restarting fails, then we must proceed to close the pipe,
             // which will notify the channel that the transaction failed.
             if (NS_SUCCEEDED(Restart()))
