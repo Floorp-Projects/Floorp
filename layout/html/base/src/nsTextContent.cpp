@@ -311,6 +311,17 @@ public:
   virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
+  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
+                                          nsHTMLValue& aValue,
+                                          nsString& aResult) const {
+    return eContentAttr_NotThere;
+  }
+
+  virtual nsContentAttr StringToAttribute(nsIAtom* aAttribute,
+                                          const nsString& aValue,
+                                          nsHTMLValue& aResult) {
+    return eContentAttr_NotThere;
+  }
 
   PRUnichar* mText;
   PRInt32 mLength;
