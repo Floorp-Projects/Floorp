@@ -27,7 +27,7 @@
 #include "gdk/gdk.h"
 #include "prenv.h"
 #include "nsString.h"
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
 extern char* splash_xpm[];
 #else
 #include SPLASH_XPM
