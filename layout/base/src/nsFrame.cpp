@@ -296,7 +296,13 @@ NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
 
     // Let the view know
     if (nsnull != mView) {
-      mView->SetPosition(aX, aY);
+      // Position view relative to it's parent, not relative to our
+      // parent frame (our parent frame may not have a view).
+      nsIView* parentWithView;
+      nsPoint origin;
+      GetOffsetFromView(origin, parentWithView);
+      mView->SetPosition(origin.x, origin.y);
+      NS_IF_RELEASE(parentWithView);
     }
   }
 
@@ -305,22 +311,13 @@ NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
 
 NS_METHOD nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
-  //I have commented out this if test since we really need to
-  //always pass the fact that a resize was attempted to the
-  //view system. Today is 23-apr-98. If this change still looks
-  //good on or after 23-may-98, I'll kill the commented code
-  //altogether. Pretty scientific, huh? MMP
+  mRect.width = aWidth;
+  mRect.height = aHeight;
 
-//  if ((aWidth != mRect.width) || (aHeight != mRect.height)) {
-    mRect.width = aWidth;
-    mRect.height = aHeight;
-
-    // Let the view know
-    if (nsnull != mView) {
-      mView->SetDimensions(aWidth, aHeight);
-    }
-//  }
-
+  // Let the view know
+  if (nsnull != mView) {
+    mView->SetDimensions(aWidth, aHeight);
+  }
   return NS_OK;
 }
 
