@@ -7029,6 +7029,37 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
   return rv;
 }
 
+static inline void
+ReplaceFrame(nsIPresContext*  aPresContext,
+             nsIPresShell*    aPresShell,
+             nsIFrameManager* aFrameManager,
+             nsIContent*      aContent,
+             nsIFrame*        aParentFrame,
+             nsIAtom*         aListName,
+             nsIFrame*        aOldFrame,
+             nsIFrame*        aNewFrame,
+             nsIFrame*        aPlaceholderFrame)
+{
+  // Reset the primary frame mapping
+  aFrameManager->SetPrimaryFrameFor(aContent, aNewFrame);
+
+  if (aPlaceholderFrame) {
+    // Remove the association between the old frame and its placeholder
+    aFrameManager->SetPlaceholderFrameFor(aOldFrame, nsnull);
+
+    // Reuse the existing placeholder frame, and add an association to the
+    // new frame
+    aFrameManager->SetPlaceholderFrameFor(aNewFrame, aPlaceholderFrame);
+
+    // Placeholder frames have a pointer back to the out-of-flow frame.
+    // Make sure that's correct
+    ((nsPlaceholderFrame*)aPlaceholderFrame)->SetOutOfFlowFrame(aNewFrame);
+  }
+
+  // Replace the old frame with the new frame
+  aFrameManager->ReplaceFrame(*aPresContext, *aPresShell, aParentFrame,
+                              aListName, aOldFrame, aNewFrame);
+}
 
 NS_IMETHODIMP
 nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
@@ -7077,37 +7108,17 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIFrameManager> frameManager;
       presShell->GetFrameManager(getter_AddRefs(frameManager));
-      
-      // Delete the current frame
-      frameManager->RemoveFrame(*aPresContext, *presShell, parentFrame,
-                                listName, aFrame);
-      
-      // Reset the primary frame mapping
-      frameManager->SetPrimaryFrameFor(content, newFrame);
 
-      if (placeholderFrame) {
-        // Remove the association between the old frame and its placeholder
-        frameManager->SetPlaceholderFrameFor(aFrame, nsnull);
-
-        // Reuse the existing placeholder frame, and add an association to the
-        // new frame
-        frameManager->SetPlaceholderFrameFor(newFrame, placeholderFrame);
-
-        // Placeholder frames have a pointer back to the out-of-flow frame.
-        // Make sure that's correct
-        ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
-      }
-      
-      // Insert the new frame
-      frameManager->InsertFrames(*aPresContext, *presShell, parentFrame, listName,
-                                 prevSibling, newFrame);
+      // Replace the old frame with the new frame
+      ReplaceFrame(aPresContext, presShell, frameManager, content,
+                   parentFrame, listName, aFrame, newFrame, placeholderFrame);
     }
 
   } else if ((nsHTMLAtoms::object == tag.get()) ||
              (nsHTMLAtoms::embed == tag.get()) ||
              (nsHTMLAtoms::applet == tag.get())) {
     // It's an OBJECT element or APPLET, so we should display the contents
-    // instead. Create a frame based on the display type
+    // instead
     nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                   GetAbsoluteContainingBlock(aPresContext, parentFrame),
                                   GetFloaterContainingBlock(aPresContext, parentFrame));
@@ -7115,29 +7126,17 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     const nsStyleDisplay*   display = (const nsStyleDisplay*)
       styleContext->GetStyleData(eStyleStruct_Display);
 
+    // Create a frame based on the display type
     rv = ConstructFrameByDisplayType(aPresContext, state, display, content,
                                      parentFrame, styleContext, PR_FALSE, frameItems);
 
-    nsIFrame* newFrame = frameItems.childList;
     if (NS_SUCCEEDED(rv)) {
-      // Delete the current frame and insert the new frame
-      state.mFrameManager->RemoveFrame(*aPresContext, *presShell, parentFrame,
-                                       listName, aFrame);
-      if (placeholderFrame) {
-        // Remove the association between the old frame and its placeholder
-        state.mFrameManager->SetPlaceholderFrameFor(aFrame, nsnull);
+      nsIFrame* newFrame = frameItems.childList;
+      
+      // Replace the old frame with the new frame
+      ReplaceFrame(aPresContext, presShell, state.mFrameManager, content,
+                   parentFrame, listName, aFrame, newFrame, placeholderFrame);
 
-        // Reuse the existing placeholder frame, and add an association to the
-        // new frame
-        state.mFrameManager->SetPlaceholderFrameFor(newFrame, placeholderFrame);
-
-        // Placeholder frames have a pointer back to the out-of-flow frame.
-        // Make sure that's correct
-        ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
-      }
-      state.mFrameManager->InsertFrames(*aPresContext, *presShell, parentFrame,
-                                        listName, prevSibling, newFrame);
-    
       // If there are new absolutely positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
@@ -7147,7 +7146,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                                          nsLayoutAtoms::absoluteList,
                                                          state.mAbsoluteItems.childList);
       }
-
+  
       // If there are new fixed positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
@@ -7157,7 +7156,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                                       nsLayoutAtoms::fixedList,
                                                       state.mFixedItems.childList);
       }
-
+  
       // If there are new floating child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
