@@ -56,19 +56,19 @@ endif
 
 ifeq ($(MOZ_PKG_FORMAT),TAR)
 PKG_SUFFIX	= .tar
-MAKE_PACKAGE 	= tar $(TAR_CREATE_FLAGS) - $(MOZ_PKG_APPNAME) > $(PACKAGE)
+MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) > $(PACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
-MAKE_PACKAGE 	= tar $(TAR_CREATE_FLAGS) - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
+MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
 PKG_SUFFIX	= .tar.bz2
-MAKE_PACKAGE 	= tar $(TAR_CREATE_FLAGS) - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
+MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
-MAKE_PACKAGE	= $(ZIP) -vr9 $(PACKAGE) $(MOZ_PKG_APPNAME)
+MAKE_PACKAGE	= $(ZIP) -r9 $(PACKAGE) $(MOZ_PKG_APPNAME)
 endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
 PKG_SUFFIX	= .rpm
@@ -122,10 +122,11 @@ endif
 
 $(PACKAGE): $(MOZILLA_BIN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
-# NOTE: this must be a cp now that dist links into the tree so that we
+# NOTE: this must be a tar now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
-	@cp -rp ${DIST}/bin $(DIST)/$(MOZ_PKG_APPNAME)
+	@mkdir $(DIST)/$(MOZ_PKG_APPNAME)
+	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_APPNAME); tar -xf -)
 ifdef MOZ_NATIVE_NSPR
 ifndef EXCLUDE_NSPR_LIBS
 	@echo "Copying NSPR libs..."
