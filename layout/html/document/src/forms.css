@@ -374,7 +374,8 @@ input[type="submit"]:-moz-focus-inner {
 button:focus:-moz-focus-inner,
 input[type="reset"]:focus:-moz-focus-inner,
 input[type="button"]:focus:-moz-focus-inner,
-input[type="submit"]:focus:-moz-focus-inner {
+input[type="submit"]:focus:-moz-focus-inner,
+input[type="file"] > input[type="button"]:focus:-moz-focus-inner {
   border-color: ButtonText;
 }
 
