@@ -23,7 +23,6 @@
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
-#include <mshtmhst.h>   // IDocHostShowUI
 
 static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
 static const TCHAR *c_szUninitialized = _T("Method called while control is uninitialized");
@@ -99,6 +98,9 @@ CMozillaBrowser::CMozillaBrowser()
 
 	// Controls starts off unbusy
 	m_bBusy = FALSE;
+
+	// Control starts off without being a drop target
+	m_bDropTarget = FALSE;
 
  	// the IHTMLDOcument, lazy allocation.
  	m_pDocument = NULL;
@@ -254,7 +256,6 @@ LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 #ifdef USE_NGPREF
 	if (m_pIPref)
 	{
-		m_pIPref->Shutdown();
 		NS_RELEASE(m_pIPref);
 	}
 #endif
@@ -397,6 +398,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #endif /* USE_NGPREF */
 
 
+// Create and initialise the web shell
 HRESULT CMozillaBrowser::CreateWebShell() 
 {
 	NG_TRACE_METHOD(CMozillaBrowser::CreateWebShell);
@@ -419,14 +421,15 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 #ifdef USE_NGPREF
 	// Load preferences
-	rv = nsComponentManager::CreateInstance(kPrefCID, NULL, kIPrefIID, (void **) &m_pIPref);
+	rv = nsServiceManager::GetService(kPrefCID, 
+									nsIPref::GetIID(), 
+									(nsISupports **)&prefs);
 	if (NS_OK != rv)
 	{
 		NG_ASSERT(0);
 		m_sErrorMessage = _T("Error - could not create preference object");
 		return E_FAIL;
 	}
-	m_pIPref->Startup(c_szPrefsFile);
 #endif
 	
 	// Create the web shell object
@@ -448,12 +451,15 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	r.width  = rcLocation.right  - rcLocation.left;
 	r.height = rcLocation.bottom - rcLocation.top;
 
-	PRBool aAllowPlugins = PR_FALSE; // For the moment
+	PRBool aAllowPlugins = PR_TRUE;
+	PRBool aIsSunkenBorder = PR_FALSE;
 
 	rv = m_pIWebShell->Init(m_hWnd, 
 					r.x, r.y,
 					r.width, r.height,
-					nsScrollPreference_kAuto, aAllowPlugins);
+					nsScrollPreference_kAuto,
+					aAllowPlugins,
+					aIsSunkenBorder);
 	NG_ASSERT(rv == NS_OK);
 
 	// Create the container object
@@ -463,15 +469,19 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
 	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
+	m_pIWebShell->SetWebShellType(nsWebShellContent);
+
 #ifdef USE_NGPREF
 	m_pIWebShell->SetPrefs(m_pIPref);
 #endif
+
 	m_pIWebShell->Show();
 
 	return S_OK;
 }
 
 
+// Return the root DOM document
 HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 {
 	if (pDocument == NULL)
@@ -516,6 +526,7 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 
 static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
 
+// Load any browser helpers
 HRESULT CMozillaBrowser::LoadBrowserHelpers()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::LoadBrowserHelpers);
@@ -591,7 +602,7 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
 	return S_OK;
 }
 
-
+// Release browser helpers
 HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::UnloadBrowserHelpers);
@@ -934,8 +945,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Extract the post data parameter
 	nsIPostData *pIPostData = nsnull;
-	if (PostData &&
-		PostData->vt == VT_BSTR)
+	if (PostData && PostData->vt == VT_BSTR)
 	{
 		USES_CONVERSION;
 		char *szPostData = OLE2A(PostData->bstrVal);
@@ -2071,7 +2081,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsDropTarget(VARIANT_BOOL
 		RETURN_E_INVALIDARG();
 	}
 
-	*pbRegister = VARIANT_FALSE; // TODO check if registered
+	*pbRegister = m_bDropTarget ? VARIANT_TRUE : VARIANT_FALSE;
 	return S_OK;
 }
 
@@ -2086,7 +2096,45 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 		RETURN_E_UNEXPECTED();
 	}
 
-	// TODO register the window as a drop target
+	// Register the window as a drop target
+	if (bRegister == VARIANT_TRUE)
+	{
+		if (!m_bDropTarget)
+		{
+			CDropTargetInstance *pDropTarget = NULL;
+			CDropTargetInstance::CreateInstance(&pDropTarget);
+			if (pDropTarget)
+			{
+				pDropTarget->AddRef();
+
+				// Ask the site if it wants to replace this drop target for another one
+				CIPtr(IDropTarget) spDropTarget;
+				CIPtr(IDocHostUIHandler) spDocHostUIHandler = m_spClientSite;
+				if (spDocHostUIHandler)
+				{
+					if (spDocHostUIHandler->GetDropTarget(pDropTarget, &spDropTarget) != S_OK)
+					{
+						spDropTarget = pDropTarget;
+					}
+				}
+				if (spDropTarget)
+				{
+					m_bDropTarget = TRUE;
+					::RegisterDragDrop(m_hWnd, spDropTarget);
+				}
+
+				pDropTarget->Release();
+			}
+		}
+	}
+	else
+	{
+		if (m_bDropTarget)
+		{
+			m_bDropTarget = FALSE;
+			::RevokeDragDrop(m_hWnd);
+		}
+	}
 
 	return S_OK;
 }

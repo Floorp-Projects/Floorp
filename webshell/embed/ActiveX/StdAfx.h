@@ -52,6 +52,7 @@ extern CComModule _Module;
 #include <atlcom.h>
 #include <atlctl.h>
 #include <mshtml.h>
+#include <mshtmhst.h>
 #include <docobj.h>
 #include <winsock2.h>
 
@@ -92,6 +93,7 @@ typedef long int32;
 
 #include "nsIURL.h"
 #include "nsIWebShell.h"
+#include "nsIBrowserWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
@@ -126,6 +128,7 @@ typedef long int32;
 #include "CPMozillaControl.h"
 #include "MozillaBrowser.h"
 #include "WebShellContainer.h"
+#include "DropTarget.h"
 #include "guids.h"
 #endif
 
