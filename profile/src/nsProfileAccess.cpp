@@ -63,6 +63,9 @@
 #define PROFILE_NAME_ENVIRONMENT_VARIABLE "PROFILE_NAME"
 #define PROFILE_HOME_ENVIRONMENT_VARIABLE "PROFILE_HOME"
 #define DEFAULT_UNIX_PROFILE_NAME "default"
+#ifndef XP_MACOSX   /* Don't use symlink-based locking on OS X */
+#define USE_SYMLINK_LOCKING
+#endif
 #elif defined (XP_BEOS)
 #endif
 
@@ -1845,6 +1848,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
         return NS_ERROR_FAILURE;
     }
 #elif defined(XP_UNIX)
+#ifdef USE_SYMLINK_LOCKING
     nsCOMPtr<nsILocalFile> oldLockFile;
     rv = aFile->Clone((nsIFile **)((void **)getter_AddRefs(oldLockFile)));
     if (NS_FAILED(rv))
@@ -2000,6 +2004,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
         }
     }
     else if (symlink_errno != EEXIST)
+#endif /* USE_SYMLINK_LOCKING */
     {
         // Symlinks aren't supported (for example, on Win32 SAMBA servers).
         // F_SETLK is not well supported on all NFS servers, which is why we
@@ -2027,12 +2032,14 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
             return NS_ERROR_FAILURE;
         }
     }
+#ifdef USE_SYMLINK_LOCKING
     else
     {
         // Couldn't create the symlink (but symlink(2) is supported).
         // This error code will cause the right dialog to be displayed.
         return NS_ERROR_FILE_ACCESS_DENIED;
     }
+#endif /* USE_SYMLINK_LOCKING */
 #endif /* XP_UNIX */
 
     mHaveLock = PR_TRUE;
