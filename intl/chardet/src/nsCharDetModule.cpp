@@ -221,6 +221,8 @@ nsCharDetModule::GetClassObject(nsIComponentManager *aCompMgr,
       delete factory;           // XXX only works if virtual dtors were used!
     }
   }
+  else
+    rv = NS_ERROR_FACTORY_NOT_LOADED;
 
   return rv;
 }

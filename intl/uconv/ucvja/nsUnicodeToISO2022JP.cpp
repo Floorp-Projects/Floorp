@@ -150,7 +150,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
                                     char * aDest, 
                                     PRInt32 * aDestLength)
 {
-  nsresult res;
+  nsresult res = NS_OK;
 
   if (mHelper == nsnull) {
     res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
