@@ -126,7 +126,7 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   } else if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
-    NS_ADDREF_THIS();                                                    
+    NS_ADDREF_THIS();
     return NS_OK;                                                        
   } else if (aIID.Equals(nsCOMTypeInfo<nsIDOMFocusListener>::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMFocusListener*)this;
@@ -134,8 +134,10 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
-    NS_ADDREF_THIS();                                                    
     return NS_OK;   
+  } else if (aIID.Equals(nsCOMTypeInfo<nsISelectControlFrame>::GetIID())) {
+    *aInstancePtr = (void *)((nsISelectControlFrame*)this);
+    return NS_OK;
   }
 
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
@@ -311,18 +313,6 @@ nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
     presShell->ScrollFrameIntoView(this,
                    NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
 
-  }
-}
-
-// Toggle dropdown list.
-
-void 
-nsComboboxControlFrame::ToggleList(nsIPresContext* aPresContext)
-{
-  if (PR_TRUE == mDroppedDown) {
-    ShowList(aPresContext, PR_FALSE);
-  } else {
-    ShowList(aPresContext, PR_TRUE);
   }
 }
 
@@ -508,11 +498,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
 
   nscoord screenHeightInPixels = 0;
   if (NS_SUCCEEDED(GetScreenHeight(aPresContext, screenHeightInPixels))) {
-     nsRect absoluteRect;
-
-       // Get the height of the dropdown list in pixels.
-     nsRect dropdownRect;
-     dropdownFrame->GetRect(dropdownRect);
+     // Get the height of the dropdown list in pixels.
      float t2p;
      aPresContext.GetTwipsToPixels(&t2p);
      nscoord absoluteDropDownHeight = NSTwipsToIntPixels(dropdownRect.height, t2p);
@@ -691,8 +677,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
       buttonFrame->GetRect(buttonRect);
       if ((oldDisplayRect == displayRect) && (oldButtonRect == buttonRect)) {
         // Reposition the popup.
-        nsRect absoluteTwips;
-        nsRect absolutePixels;
+        //nsRect absoluteTwips;
+        //nsRect absolutePixels;
         //GetAbsoluteFramePosition(aPresContext, displayFrame,  absoluteTwips, absolutePixels);
         //PositionDropdown(aPresContext, displayRect.height, absoluteTwips, absolutePixels);
         return rv;
@@ -907,7 +893,7 @@ nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 nsresult
 nsComboboxControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  if (nsFormFrame::GetDisabled(this)) {
+  /*if (nsFormFrame::GetDisabled(this)) {
     return NS_OK;
   }
   nsRect absoluteTwips;
@@ -920,12 +906,40 @@ nsComboboxControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   PositionDropdown(*mPresContext, displayRect.height, absoluteTwips, absolutePixels);
 
   ToggleList(mPresContext);
+  mIgnoreMouseUp = PR_TRUE;
+*/
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
 // nsIComboboxControlFrame
 //----------------------------------------------------------------------
+NS_IMETHODIMP
+nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
+{ 
+  if (nsFormFrame::GetDisabled(this)) {
+    return NS_OK;
+  }
+
+  if (!mDroppedDown && aDoDropDown) {
+    nsRect absoluteTwips;
+    nsRect absolutePixels;
+    nsIFrame * displayFrame = GetDisplayFrame(*mPresContext);
+    nsRect displayRect;
+     // Get the current sizes of the combo box child frames
+    displayFrame->GetRect(displayRect);
+    GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
+    PositionDropdown(*mPresContext, displayRect.height, absoluteTwips, absolutePixels);
+
+    ToggleList(mPresContext);
+    return NS_OK;
+  } else if (mDroppedDown && !aDoDropDown) {
+    ToggleList(mPresContext);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
@@ -951,9 +965,60 @@ nsComboboxControlFrame::GetDropDown(nsIFrame** aDropDownFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
+{
+  if (aPresContext == nsnull) {
+    aPresContext = mPresContext;
+  }
+  ShowList(aPresContext, PR_FALSE);
+  mListControlFrame->CaptureMouseEvents(PR_FALSE);
 
-void
-nsComboboxControlFrame::SelectionChanged()
+  PRInt32 index;
+  mListControlFrame->GetSelectedIndex(&index);
+
+  UpdateSelection(PR_TRUE, PR_FALSE, index);
+
+  return NS_OK;
+}
+// Toggle dropdown list.
+
+NS_IMETHODIMP 
+nsComboboxControlFrame::ToggleList(nsIPresContext* aPresContext)
+{
+  if (PR_TRUE == mDroppedDown) {
+    ShowList(aPresContext, PR_FALSE);
+  } else {
+    ShowList(aPresContext, PR_TRUE);
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex)
+{
+  if (nsnull != mListControlFrame) {
+     // Check to see if the selection changed
+    if (mSelectedIndex != aNewIndex || aForceUpdate) {
+      nsAutoString newTextStr;
+      mListControlFrame->GetSelectedItem(newTextStr);
+      //XXX:TODO look at the ordinal position of the selected content in the listbox to tell
+      // if the selection has changed, rather than looking at the text string.
+      // There may be more than one item in the dropdown list with the same label. 
+      if (newTextStr != mTextStr) {
+        mTextStr = newTextStr;
+        SelectionChanged(aDoDispatchEvent);
+      }
+    } 
+    mSelectedIndex = aNewIndex;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
 {
   if (nsnull != mDisplayContent) {
     mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, mTextStr, PR_TRUE);
@@ -974,24 +1039,59 @@ nsComboboxControlFrame::SelectionChanged()
     }
   }
 
-   // Dispatch the NS_FORM_CHANGE event
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent event;
-  event.eventStructType = NS_GUI_EVENT;
-  event.widget = nsnull;
-  event.message = NS_FORM_CHANGE;
+  if (aDoDispatchEvent) {
+     // Dispatch the NS_FORM_CHANGE event
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsGUIEvent event;
+    event.eventStructType = NS_GUI_EVENT;
+    event.widget = nsnull;
+    event.message = NS_FORM_CHANGE;
 
-   // Have the content handle the event.
-  mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-   // Now have the frame handle the event
-  nsIFrame* frame = nsnull;
-  nsIFrame* dropdownFrame = GetDropdownFrame();
-  nsresult result = dropdownFrame->QueryInterface(kIFrameIID, (void**)&frame);
-  if ((NS_SUCCEEDED(result)) && (nsnull != frame)) {
-    frame->HandleEvent(*mPresContext, &event, status);
+     // Have the content handle the event.
+    mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+     // Now have the frame handle the event
+    nsIFrame* frame = nsnull;
+    nsIFrame* dropdownFrame = GetDropdownFrame();
+    nsresult result = dropdownFrame->QueryInterface(kIFrameIID, (void**)&frame);
+    if ((NS_SUCCEEDED(result)) && (nsnull != frame)) {
+      frame->HandleEvent(*mPresContext, &event, status);
+    }
   }
-  
+  return NS_OK;
 }
+
+
+//----------------------------------------------------------------------
+// nsISelectControlFrame
+//----------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsComboboxControlFrame::AddOption(PRInt32 index)
+{
+  nsISelectControlFrame* listFrame = nsnull;
+  nsIFrame* dropdownFrame = GetDropdownFrame();
+  nsresult rv = dropdownFrame->QueryInterface(nsCOMTypeInfo<nsISelectControlFrame>::GetIID(), 
+                                              (void**)&listFrame);
+  if (NS_SUCCEEDED(rv) && nsnull != listFrame) {
+    return listFrame->AddOption(index);
+  }
+  return rv;
+}
+  
+
+NS_IMETHODIMP
+nsComboboxControlFrame::RemoveOption(PRInt32 index)
+{
+  nsISelectControlFrame* listFrame = nsnull;
+  nsIFrame* dropdownFrame = GetDropdownFrame();
+  nsresult rv = dropdownFrame->QueryInterface(nsCOMTypeInfo<nsISelectControlFrame>::GetIID(), 
+                                              (void**)&listFrame);
+  if (NS_SUCCEEDED(rv) && nsnull != listFrame) {
+    return listFrame->RemoveOption(index);
+  }
+  return rv;
+}
+  
 
 NS_IMETHODIMP 
 nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 
@@ -1003,30 +1103,6 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
   }
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
-{
-  ShowList(aPresContext, PR_FALSE);
-  mListControlFrame->CaptureMouseEvents(PR_FALSE);
-
-  if (nsnull != mListControlFrame) {
-    PRInt32 index;
-    mListControlFrame->GetSelectedIndex(&index);
-     // Check to see if the selection changed
-    if (mSelectedIndex != index) {
-      mListControlFrame->GetSelectedItem(mTextStr);
-      mSelectedIndex = index;
-      //XXX:TODO look at the ordinal position of the selected content in the listbox to tell
-      // if the selection has changed, rather than looking at the text string.
-      // There may be more than one item in the dropdown list with the same label. 
-      SelectionChanged();
-    } 
   }
 
   return NS_OK;

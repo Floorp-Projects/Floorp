@@ -27,6 +27,7 @@
 #include "nsIDOMFocusListener.h"
 #include "nsVoidArray.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsISelectControlFrame.h"
 
 class nsButtonControlFrame;
 class nsTextControlFrame;
@@ -47,7 +48,8 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIComboboxControlFrame,
                                public nsIDOMMouseListener,
                                public nsIDOMFocusListener,
-                               public nsIAnonymousContentCreator
+                               public nsIAnonymousContentCreator,
+                               public nsISelectControlFrame
 
 {
 public:
@@ -123,22 +125,33 @@ public:
                                              nscoord aCharWidth) const;
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
+  NS_IMETHOD SelectionChanged(PRBool aDoDispatchEvent);// Called when the selection has changed. 
+                                                       // If the the same item in the list is selected
+                                                       // it is NOT called.
+
   // nsIFormMouseListener
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
   //nsIComboboxControlFrame
+  NS_IMETHOD IsDroppedDown(PRBool * aDoDropDown) { *aDoDropDown = mDroppedDown; return NS_OK; }
+  NS_IMETHOD ShowDropDown(PRBool aDoDropDown);
   NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame);
   NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame);
   NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext);
+  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex);
+
+  // nsISelectControlFrame
+  NS_IMETHOD AddOption(PRInt32 index);
+  NS_IMETHOD RemoveOption(PRInt32 index); 
 
   //nsIDOMEventListener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { printf("mouse clock\n"); return NS_OK; }; 
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent)       { return NS_OK; }
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent)    { return NS_OK; }
   virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent)     { return NS_OK; }
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent)      { return NS_OK; }
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
 
   //nsIDOMFocusListener
   virtual nsresult Focus(nsIDOMEvent* aEvent);
@@ -167,7 +180,6 @@ protected:
                                     nsIFrame *aFrame, 
                                     nsRect& aAbsoluteTwipsRect, 
                                     nsRect& aAbsolutePixelRect);
-  void ToggleList(nsIPresContext* aPresContext);
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
@@ -176,10 +188,8 @@ protected:
   nsIFrame* GetButtonFrame(nsIPresContext& aPresContext);
   nsIFrame* GetDisplayFrame(nsIPresContext& aPresContext);
   nsIFrame* GetDropdownFrame();
+  NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
  
-   // Called when the selection has changed. If the the same item in the list is selected
-   // it is NOT called.
-  void SelectionChanged();
 
   nsFrameList mPopupFrames;                       // additional named child list
   nsIPresContext*       mPresContext;             // XXX: Remove the need to cache the pres context.

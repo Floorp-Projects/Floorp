@@ -45,6 +45,18 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMBOBOXCONTROLFRAME_IID)
 
   /**
+   * Indicates whether the list is dropped down
+   *
+   */
+  NS_IMETHOD IsDroppedDown(PRBool * aDoDropDown) = 0;
+
+  /**
+   * Shows or hides the drop down
+   *
+   */
+  NS_IMETHOD ShowDropDown(PRBool aDoDropDown) = 0;
+
+  /**
    * Gets the Drop Down List
    *
    */
@@ -61,6 +73,15 @@ public:
    *
    */
   NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext) = 0;
+
+  /**
+   * Asks the Combobox to update the display frame
+   * aDoDispatchEvent - indicates whether an event should be dispatched to the DOM
+   * aForceUpdate - indicates whether the indexx and the text value should both be
+   *                whether the index has changed or not.
+   *
+   */
+  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex) = 0;
 
 
 };
