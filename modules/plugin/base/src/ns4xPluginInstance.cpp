@@ -365,14 +365,9 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   if ((PRInt32)mNPStream.end < streamOffset)
     mNPStream.end = streamOffset;
 
-  PRUint32 bytesToRead = mStreamBufferSize;
-  if (length < mStreamBufferSize) {
-    // do not read more that supplier wants us to read
-    bytesToRead = length;
-  }
-
   do 
   {
+    PRUint32 bytesToRead = PR_MIN(length, mStreamBufferSize);
     PRInt32 amountRead = 0;
     rv = input->Read(mStreamBuffer, bytesToRead, (PRUint32*)&amountRead);
     if (amountRead == 0 || NS_FAILED(rv)) {
