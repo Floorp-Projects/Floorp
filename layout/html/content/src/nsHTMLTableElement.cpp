@@ -863,6 +863,11 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
     if (nsGenericHTMLElement::ParseValue(aValue, min, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
+    else { 
+      // XXX this should really be NavQuirks only to allow non numeric value
+      aResult.SetPixelValue(1);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* attributes that resolve to integers or percents */
