@@ -352,8 +352,10 @@ public:
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD StartServerMode();
-    NS_IMETHOD SetIsServerMode( PRBool isServerMode );
     NS_IMETHOD OnLastWindowClosing( nsIXULWindow *aWindow );
+    NS_IMETHOD SetIsServerMode( PRBool isServerMode );
+    NS_IMETHOD EnsureProfile(nsICmdLineService* args);
+
 
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
@@ -380,7 +382,6 @@ private:
     static PRBool   InitTopicStrings();
     static int      FindTopic( HSZ topic );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
-    static nsresult EnsureProfile(nsICmdLineService* args);
     static nsresult OpenWindow( const char *urlstr, const char *args );
     static nsresult OpenBrowserWindow( const char *args, PRBool newWindow = PR_TRUE );
     static nsresult ReParent( nsISupports *window, HWND newParent );
