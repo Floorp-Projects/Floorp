@@ -24,7 +24,9 @@
  */
 
 #include "nsIGenericFactory.h"
-#include "nsIAppShellComponent.h"
+#include "nsIAppStartupNotifier.h"
+#include "nsICategoryManager.h"
+#include "nsIObserver.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -79,7 +81,7 @@ TransformiixNameset::AddNameSet(nsIScriptContext* aScriptContext)
 {
   static NS_DEFINE_CID(kXSLTProcessor_CID, TRANSFORMIIX_XSLT_PROCESSOR_CID);
   static NS_DEFINE_CID(kXPathProcessor_CID, TRANSFORMIIX_XPATH_PROCESSOR_CID);
-  nsresult result = NS_OK;
+  nsresult result;
   nsCOMPtr<nsIScriptNameSpaceManager> manager;
   
   result = aScriptContext->GetNameSpaceManager(getter_AddRefs(manager));
@@ -104,10 +106,9 @@ TransformiixNameset::AddNameSet(nsIScriptContext* aScriptContext)
 #define TRANSFORMIIX_CID   \
 { 0x878f99ae, 0x1dd2, 0x11b2, {0xad, 0xd2, 0xed, 0xf7, 0xa7, 0x2f, 0x95, 0x7b} }
 
-#define TRANSFORMIIX_CONTRACTID   \
-NS_IAPPSHELLCOMPONENT_CONTRACTID "/Transformiix;1"
+#define TRANSFORMIIX_CONTRACTID "@mozilla.org/Transformiix;1"
 
-class TransformiixComponent : public nsIAppShellComponent {
+class TransformiixComponent : public nsIObserver {
 public:
   TransformiixComponent();
   virtual ~TransformiixComponent();
@@ -117,27 +118,9 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIAppShellComponent
-  NS_DECL_NSIAPPSHELLCOMPONENT
-
-  static TransformiixComponent *GetInstance();
-  static TransformiixComponent* mInstance;
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
 };
-
-TransformiixComponent* TransformiixComponent::mInstance = nsnull;
-
-TransformiixComponent *
-TransformiixComponent::GetInstance()
-{
-  if (mInstance == nsnull) {
-    mInstance = new TransformiixComponent();
-    // Will be released in the module destructor
-    NS_IF_ADDREF(mInstance);
-  }
-
-  NS_IF_ADDREF(mInstance);
-  return mInstance;
-}
 
 TransformiixComponent::TransformiixComponent()
 {
@@ -148,33 +131,29 @@ TransformiixComponent::~TransformiixComponent()
 {
 }
 
-NS_IMPL_ISUPPORTS1(TransformiixComponent, nsIAppShellComponent)
+NS_IMPL_ISUPPORTS1(TransformiixComponent, nsIObserver)
 
 NS_IMETHODIMP
-TransformiixComponent::Initialize(nsIAppShellService *anAppShell, 
-                         nsICmdLineService  *aCmdLineService) 
+TransformiixComponent::Observe(nsISupports *aSubject,
+                               const PRUnichar *aTopic,
+                               const PRUnichar *aData) 
 {
   nsresult rv;
-  nsCOMPtr<nsIScriptNameSetRegistry> namesetService = 
-    do_GetService(kCScriptNameSetRegistryCID, &rv);
+  nsCOMPtr<nsIScriptNameSetRegistry>
+    namesetService(do_GetService(kCScriptNameSetRegistryCID, &rv));
   
   if (NS_SUCCEEDED(rv)) {
     TransformiixNameset* nameset = new TransformiixNameset();
+    if (!nameset)
+      return NS_ERROR_OUT_OF_MEMORY;
     // the NameSet service will AddRef this one
-    namesetService->AddExternalNameSet(nameset);
+    rv = namesetService->AddExternalNameSet(nameset);
   }
   
   return rv;
-
 }
 
-NS_IMETHODIMP
-TransformiixComponent::Shutdown()
-{
-  return NS_OK;
-}
-
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(TransformiixComponent, TransformiixComponent::GetInstance);
+NS_GENERIC_FACTORY_CONSTRUCTOR(TransformiixComponent);
 
 static NS_METHOD 
 RegisterTransformiix(nsIComponentManager *aCompMgr,
@@ -183,27 +162,14 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
                      const char *componentType,
                      const nsModuleComponentInfo *info)
 {
-  // get the registry
-  nsIRegistry* registry;
-  nsresult rv = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID,
-                                             NS_GET_IID(nsIRegistry),
-                                             (nsISupports**)&registry);
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> 
+    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
   if (NS_SUCCEEDED(rv)) {
-    registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-    char buffer[256];
-    char *cid = TransformiixComponent::GetCID().ToString();
-    PR_snprintf(buffer,
-                sizeof buffer,
-                "%s/%s",
-                NS_IAPPSHELLCOMPONENT_KEY,
-                cid ? cid : "unknown" );
-    nsCRT::free(cid);
-
-    nsRegistryKey key;
-    rv = registry->AddSubtree(nsIRegistry::Common,
-                              buffer,
-                              &key );
-    nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
+    rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY, "Transformiix Module",
+                        "service," TRANSFORMIIX_CONTRACTID,
+                        PR_TRUE, PR_TRUE,
+                        nsnull);
   }
   return rv;
 }
@@ -229,10 +195,4 @@ static nsModuleComponentInfo components[] = {
       nsSyncLoaderConstructor }
 };
 
-static void PR_CALLBACK
-TransformiixModuleDtor(nsIModule* self)
-{
-  NS_IF_RELEASE(TransformiixComponent::mInstance);
-}
-
-NS_IMPL_NSGETMODULE_WITH_DTOR("TransformiixModule", components, TransformiixModuleDtor)
+NS_IMPL_NSGETMODULE("TransformiixModule", components)
