@@ -76,7 +76,11 @@ var gNavigatorBundle;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
+#ifdef XP_WIN
 var gClickSelectsAll = true;
+#else
+var gClickSelectsAll = false;
+#endif
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
 var gToolbarMode = "icons";
@@ -380,10 +384,6 @@ function Startup()
     }
   }
   
-  // does clicking on the urlbar select its contents?
-  if (navigator.platform.indexOf("Win") == -1)
-    gClickSelectsAll = false;
-
   // Focus the content area unless we're loading a blank page
   var elt;
   if (uriToLoad == "about:blank" && !toolbar.hidden &&
