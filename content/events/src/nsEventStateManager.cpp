@@ -46,6 +46,7 @@
 #include "nsIWidget.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIFormControl.h"
@@ -154,8 +155,8 @@ nsEventStateManager::nsEventStateManager()
   : mGestureDownPoint(0,0),
     mCurrentFocusFrame(nsnull),
     m_haveShutdown(PR_FALSE),
-    mDOMEventLevel(0),
-    mClearedFrameRefsDuringEvent(PR_FALSE)
+    mClearedFrameRefsDuringEvent(PR_FALSE),
+    mDOMEventLevel(0)
 {
   mLastMouseOverFrame = nsnull;
   mLastDragOverFrame = nsnull;
@@ -209,6 +210,10 @@ nsEventStateManager::Init()
       mPrefBranch->GetIntPref("ui.key.generalAccessKey",
                               &nsEventStateManager::gGeneralAccesskeyModifier);
     }
+
+    nsCOMPtr<nsIPrefBranchInternal> prefBranchInt(do_QueryInterface(mPrefBranch));
+    if (prefBranchInt)
+      prefBranchInt->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
   }
 
   if (nsEventStateManager::sTextfieldSelectModel == eTextfieldSelect_unset) {
@@ -264,6 +269,10 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
+  nsCOMPtr<nsIPrefBranchInternal> prefBranchInt(do_QueryInterface(mPrefBranch));
+  if (prefBranchInt)
+    prefBranchInt->RemoveObserver("accessibility.browsewithcaret", this);
+  
   mPrefBranch = nsnull;
 
   m_haveShutdown = PR_TRUE;
@@ -293,7 +302,13 @@ nsEventStateManager::Observe(nsISupports *aSubject,
 {
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
     Shutdown();
-
+  else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    if (someData && nsDependentString(someData).Equals(NS_LITERAL_STRING("accessibility.browsewithcaret"))) {
+      PRBool browseWithCaret;
+      ResetBrowseWithCaret(&browseWithCaret);
+    }
+  }
+  
   return NS_OK;
 }
 
@@ -4994,6 +5009,15 @@ nsresult nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell, n
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsEventStateManager::GetBrowseWithCaret(PRBool *aBrowseWithCaret)
+{
+  NS_ENSURE_ARG_POINTER(aBrowseWithCaret);
+  *aBrowseWithCaret = mBrowseWithCaret;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
 {
@@ -5001,7 +5025,8 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
   // or when a document gets focused 
 
   *aBrowseWithCaret = PR_FALSE;
-
+  if (!mPresContext) return NS_ERROR_FAILURE;
+  
   nsCOMPtr<nsISupports> pcContainer;
   mPresContext->GetContainer(getter_AddRefs(pcContainer));
   PRInt32 itemType;

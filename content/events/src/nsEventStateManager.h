@@ -149,6 +149,7 @@ public:
 
   NS_IMETHOD ShiftFocus(PRBool aForward, nsIContent* aStart=nsnull);
 
+  NS_IMETHOD GetBrowseWithCaret(PRBool *aBrowseWithCaret);
   NS_IMETHOD ResetBrowseWithCaret(PRBool *aBrowseWithCaret);
 
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus);
