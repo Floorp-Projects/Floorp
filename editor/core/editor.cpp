@@ -878,24 +878,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
           }
           else
           { // we have an insertion point.  delete the thing in front of it or behind it, depending on aDir
-            nsCOMPtr<nsIDOMNode> node;
-            PRInt32 offset;
-            PRInt32 length=1;
-            result = range->GetStartParent(getter_AddRefs(node));
-            result = range->GetStartOffset(&offset);
-            nsCOMPtr<nsIDOMCharacterData> text(node);
-            if (node)
-            { // we have text, so delete a char at the proper offset
-              // XXX: doesn't handle beginning/end of text node, which needs to jump to next|prev node
-              if (nsIEditor::eRTL==aDir)
-              {
-                if (0!=offset)
-                  offset --;
-              }
-              DeleteTextTxn *txn;
-              result = CreateTxnForDeleteText(text, offset, length, &txn);
-              (*aTxn)->AppendChild(txn);
-            }
+            result = CreateTxnForDeleteInsertionPoint(range, aDir, *aTxn);
           }
         }
       }
@@ -918,6 +901,152 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
 
   return result;
 }
+
+
+//XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior are not implemented
+nsresult
+nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
+                                           nsIEditor::Direction aDir, 
+                                           EditAggregateTxn    *aTxn)
+{
+  nsCOMPtr<nsIDOMNode> node;
+  PRBool isFirst;
+  PRBool isLast;
+  PRInt32 offset;
+  PRInt32 length=1;
+
+  // get the node and offset of the insertion point
+  nsresult result = aRange->GetStartParent(getter_AddRefs(node));
+  aRange->GetStartOffset(&offset);
+
+  // determine if the insertion point is at the beginning, middle, or end of the node
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText(node);
+  if (nodeAsText)
+  {
+    PRUint32 count;
+    nodeAsText->GetLength(&count);
+    isFirst = PRBool(0==offset);
+    isLast  = PRBool(count==offset);
+  }
+  else
+  {
+    nsCOMPtr<nsIDOMNode> sibling;
+    result = node->GetPreviousSibling(getter_AddRefs(sibling));
+    if ((NS_SUCCEEDED(result)) && sibling)
+      isFirst = PR_FALSE;
+    else
+      isFirst = PR_TRUE;
+    result = node->GetNextSibling(getter_AddRefs(sibling));
+    if ((NS_SUCCEEDED(result)) && sibling)
+      isLast = PR_FALSE;
+    else
+      isLast = PR_TRUE;
+  }
+
+  // build a transaction for deleting the appropriate data
+  if ((nsIEditor::eRTL==aDir) && (PR_TRUE==isFirst))
+  { // we're backspacing from the beginning of the node.  Delete the first thing to our left
+    nsCOMPtr<nsIDOMNode> priorNode;
+    result = GetPriorNode(node, getter_AddRefs(priorNode));
+    if ((NS_SUCCEEDED(result)) && priorNode)
+    { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
+      // if it has no children, delete it
+      nsCOMPtr<nsIDOMCharacterData> priorNodeAsText(priorNode);
+      if (priorNodeAsText)
+      {
+        PRUint32 length=0;
+        priorNodeAsText->GetLength(&length);
+        if (0<length)
+        {
+          DeleteTextTxn *txn;
+          result = CreateTxnForDeleteText(priorNodeAsText, length-1, length, &txn);
+          aTxn->AppendChild(txn);
+        }
+        else
+        { // XXX: can you have an empty text node?  If so, what do you do?
+          printf("ERROR: found a text node with 0 characters\n");
+          result = NS_ERROR_UNEXPECTED;
+        }
+      }
+      else
+      { // priorNode is not text, so tell it's parent to delete it
+      }
+    }
+  }
+  else if ((nsIEditor::eLTR==aDir) && (PR_TRUE==isLast))
+  {
+  }
+  else
+  {
+    if (nodeAsText)
+    { // we have text, so delete a char at the proper offset
+      if (nsIEditor::eRTL==aDir) {
+        offset --;
+      }
+      DeleteTextTxn *txn;
+      result = CreateTxnForDeleteText(nodeAsText, offset, length, &txn);
+      aTxn->AppendChild(txn);
+    }
+    else
+    { // we're deleting a node
+    }
+  }
+  return result;
+}
+
+nsresult 
+nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+{
+  nsresult result;
+  *aResultNode = nsnull;
+  // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
+  result = aCurrentNode->GetPreviousSibling(aResultNode);
+  if ((NS_SUCCEEDED(result)) && *aResultNode)
+    return GetRightmostChild(*aResultNode, aResultNode);
+  
+  // otherwise, walk up the parent change until there is a child that comes before 
+  // the ancestor of aCurrentNode.  Then return that node's rightmost child
+
+  nsCOMPtr<nsIDOMNode> parent(aCurrentNode);
+  do {
+    nsCOMPtr<nsIDOMNode> node(parent);
+    result = node->GetParentNode(getter_AddRefs(parent));
+    if ((NS_SUCCEEDED(result)) && parent)
+    {
+      result = parent->GetPreviousSibling(getter_AddRefs(node));
+      if ((NS_SUCCEEDED(result)) && node)
+      {
+        return GetRightmostChild(node, aResultNode);
+      }
+    }
+  } while ((NS_SUCCEEDED(result)) && parent);
+
+  return result;
+}
+
+nsresult 
+nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+{
+  nsresult result;
+  return result;
+}
+
+nsresult
+nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+{
+  nsresult result = NS_OK;
+  *aResultNode = aCurrentNode;
+  return result;
+}
+
+nsresult
+nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+{
+  nsresult result = NS_OK;
+  *aResultNode = aCurrentNode;
+  return result;
+}
+
 
 nsresult 
 nsEditor::SplitNode(nsIDOMNode * aExistingRightNode,
