@@ -31,9 +31,9 @@
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/viewsource.js"/>
 
-  <commandset id="navCommands"/>
+  <commandset id="commands"/>
 
-  <stringbundleset id="navStringBundles"/>
+  <stringbundleset id="stringbundleset"/>
 
   <!-- keys are appended from the overlay -->
   <keyset id="navKeys"/>

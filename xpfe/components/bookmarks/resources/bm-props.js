@@ -174,6 +174,9 @@ function Init()
   }
 
   sizeToContent();
+  
+  // Set up the enabled of controls on the scheduling panels
+  dayRangeChange(document.getElementById("dayRange"));
 
   // set initial focus
   document.getElementById("name").focus();
@@ -357,3 +360,14 @@ function setEndHourRange()
     endHourItemNode = endHourItemNode.nextSibling;
   }
 }
+
+function dayRangeChange (aMenuList)
+{
+  var controls = ["startHourRange", "endHourRange", "duration", "bookmarkIcon", 
+                  "showAlert", "openWindow", "playSound", "durationSubLabel", 
+                  "durationLabel", "startHourRangeLabel", "endHourRangeLabel"];
+  for (var i = 0; i < controls.length; ++i)
+    document.getElementById(controls[i]).disabled = !aMenuList.value;
+}
+
+
