@@ -210,14 +210,14 @@ static nsModuleComponentInfo components[] =
     nsDragServiceConstructor },
   { "Timer",
     NS_TIMER_CID,
-	"@mozilla.org/timer;1",
-	nsTimerConstructor },
+    "@mozilla.org/timer;1",
+    nsTimerConstructor },
   { "Timer Manager",
     NS_TIMERMANAGER_CID,
-	"@mozilla.org/widget/timermanager;1",
-	nsTimerManagerConstructor },
+    "@mozilla.org/widget/timermanager;1",
+    nsTimerManagerConstructor },
 #ifdef IBMBIDI
-    { "Gtk Bidi Keyboard",
+  { "Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
@@ -225,4 +225,11 @@ static nsModuleComponentInfo components[] =
 };
 
 
-NS_IMPL_NSGETMODULE(nsWidgetModule, components)
+PR_STATIC_CALLBACK(void)
+nsWidgetWinModuleDtor(nsIModule *self)
+{
+  nsTimer::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetModule, components,
+                              nsWidgetWinModuleDtor)

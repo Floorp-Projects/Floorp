@@ -65,6 +65,9 @@ public:
                 PRUint32 aType = NS_TYPE_ONE_SHOT
                 );
 
+  // Free statics
+  static void Shutdown();
+
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD_(void) Cancel();

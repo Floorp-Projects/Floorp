@@ -51,10 +51,9 @@
 
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
-static nsCOMPtr<nsIWindowsTimerMap> sTimerMap;
-static nsCOMPtr<nsITimerQueue> sTimerQueue;
-
-class nsTimer;
+static PRBool sCachedServices = PR_FALSE;
+static nsIWindowsTimerMap *sTimerMap = nsnull;
+static nsITimerQueue *sTimerQueue = nsnull;
 
 #define NS_PRIORITY_IMMEDIATE 10
 
@@ -119,13 +118,11 @@ nsTimer::nsTimer() : nsITimer()
   mTimerID = 0;
   mTimerRunning = false;
 
-  static int cachedService = 0;
-  if (cachedService == 0) {
-    cachedService = 1;
+  if (!sCachedServices) {
+    sCachedServices = PR_TRUE;
 
-    nsresult rv;
-    sTimerMap = do_GetService(kTimerManagerCID, &rv);
-    sTimerQueue = do_GetService(kTimerManagerCID, &rv);
+    CallGetService(kTimerManagerCID, &sTimerMap);
+    CallQueryInterface(sTimerMap, &sTimerQueue);
   }
 }
 
@@ -157,6 +154,13 @@ NS_IMETHODIMP nsTimer::Init(nsTimerCallbackFunc aFunc,
   mClosure = aClosure;
 
   return Init(aDelay, aPriority, aType);
+}
+
+/* static */ void nsTimer::Shutdown()
+{
+  sCachedServices = PR_FALSE;
+  NS_IF_RELEASE(sTimerMap);
+  NS_IF_RELEASE(sTimerQueue);
 }
 
 
