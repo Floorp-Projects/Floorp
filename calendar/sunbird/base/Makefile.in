@@ -26,8 +26,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-#removed skin section for sunbird
-
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
