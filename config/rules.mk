@@ -212,6 +212,14 @@ ifdef QTDIR
 GARBAGE			+= $(MOCSRCS)
 endif
 
+ifdef SIMPLE_PROGRAMS
+GARBAGE			+= $(SIMPLE_PROGRAMS:%=%.o)
+endif
+
+ifdef HOST_SIMPLE_PROGRAMS
+GARBAGE			+= $(HOST_SIMPLE_PROGRAMS:%=%.ho)
+endif
+
 #
 # the Solaris WorkShop template repository cache.  it occasionally can get
 # out of sync, so targets like clobber should kill it.
@@ -561,7 +569,8 @@ distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
 	rm -rf $(ALL_TRASH) \
 	$(wildcard *.map) \
-	Makefile .HSancillary $(DIST_GARBAGE)
+	Makefile .HSancillary $(DIST_GARBAGE) \
+	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho)
 
 alltags:
 	rm -f TAGS
