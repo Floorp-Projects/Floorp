@@ -128,7 +128,7 @@ function ComposeStartup()
     
     // fill in Recipient type combobox
     FillRecipientTypeCombobox();
-
+    
 	if (msgComposeService)
 	{
 		msgCompose = msgComposeService.InitCompose(window, args.originalMsg, args.type, args.format, args.fieldsAddr);
@@ -159,6 +159,9 @@ function ComposeStartup()
 			}
 			else
 			{
+			    //Remove HTML toolbar as we are editing in plain text mode
+			    document.getElementById("FormatToolbar").setAttribute("hidden", true);
+
 				window.editorShell.SetEditorType("text");
 				try
 				{
