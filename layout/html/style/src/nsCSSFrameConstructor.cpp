@@ -7849,13 +7849,21 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell* aPresShell,
     // extension
     aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, altText);
     if (altText.Length() > 0) {
-      // Trim off the path part of the filename
+      // The path is a hierarchical structure of segments. Get the last substring
+      // in the path
       PRInt32 offset = altText.RFindChar('/');
       if (offset >= 0) {
         altText.Cut(0, offset + 1);
       }
 
-      // Trim off the extension
+      // Ignore fragment identifiers ('#' delimiter), query strings ('?'
+      // delimiter), and anything beginning with ';'
+      offset = altText.FindCharInSet("#?;");
+      if (offset >= 0) {
+        altText.Truncate(offset);
+      }
+
+      // Trim off any extension (including the '.')
       offset = altText.RFindChar('.');
       if (offset >= 0) {
         altText.Truncate(offset);
