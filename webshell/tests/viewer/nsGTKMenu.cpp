@@ -92,6 +92,8 @@ GtkItemFactoryEntry menu_items[] =
   { "/Debug/Show Style Size",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_SHOW_STYLE_SIZE,	nsnull },
   { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/Debug/Debug Save",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEBUGSAVE,	nsnull },
+  { "/Debug/Debug Output Text",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DISPLAYTEXT,	nsnull },
+  { "/Debug/Debug Output HTML",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DISPLAYHTML,	nsnull },
   { "/Debug/Debug Toggle Selection",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_SELECTION,nsnull },
   { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/Debug/Debug Robot",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEBUGROBOT,	nsnull },
