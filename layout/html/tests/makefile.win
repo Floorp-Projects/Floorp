@@ -66,6 +66,10 @@ LLIBS=				\
  $(DIST)\lib\raptormathmlbase_s.lib \
  $(DIST)\lib\raptormathmlcontent_s.lib	\
 !endif
+!ifdef MOZ_SVG
+ $(DIST)\lib\raptorsvgbase_s.lib      \
+ $(DIST)\lib\raptorsvgcontent_s.lib   \
+!endif
  $(DIST)\lib\img32$(VERSION_NUMBER).lib	\
  $(DIST)\lib\util.lib		\
  $(DIST)\lib\xpcom.lib	\
