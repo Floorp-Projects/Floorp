@@ -870,7 +870,6 @@ case "$target" in
     AC_DEFINE(_POSIX_SOURCE)
     AC_DEFINE(_SVID_SOURCE)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
-    LIBS="$LIBS -lc"
 
     case "${target_cpu}" in
     alpha*)
