@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#ifndef XP_UNIX
+
 #include "xp_mcom.h"
 #include "net.h"
 #include "xp_linebuf.h"
@@ -30,7 +32,6 @@ extern "C" XP_Bool ValidateDocData(MWContext *window_id)
 /* Unix: Moved these stubs to lib/xp/xp_stubs.c so we don't keep
    copying this stub function around.  Mac & Win32 should follow suit. */
 
-#ifndef XP_UNIX
 
 /* dist/public/xp/xp_linebuf.h */
 extern "C" int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,

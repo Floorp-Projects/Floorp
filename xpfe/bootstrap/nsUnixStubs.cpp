@@ -25,11 +25,6 @@
 #define MOZ_USER_DIR ".mozilla"
 #endif
 
-extern "C" XP_Bool ValidateDocData(MWContext *window_id) 
-{ 
-  printf("ValidateDocData not implemented, stubbed in webshell/tests/viewer/nsStubs.cpp\n"); 
-  return PR_TRUE; 
-} 
 
 extern "C" char *fe_GetConfigDir(void) {
   char *home = getenv("HOME");
