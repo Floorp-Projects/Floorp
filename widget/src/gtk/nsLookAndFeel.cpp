@@ -44,7 +44,8 @@ nsLookAndFeel::nsLookAndFeel()
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-  gtk_widget_destroy(mWidget);
+  //  gtk_widget_destroy(mWidget);
+  gtk_widget_unref(mWidget);
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
