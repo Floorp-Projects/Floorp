@@ -248,8 +248,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   // Get Document
-  nsCOMPtr<nsIDocument> document;
-  content->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDocument> document = content->GetDocument();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
   
   // Get shell

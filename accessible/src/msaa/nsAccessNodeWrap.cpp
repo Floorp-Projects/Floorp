@@ -225,10 +225,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributesForNames(
   if (!domElement || !content) 
     return E_FAIL;
 
-  nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(getter_AddRefs(doc));
-  
-  if (!doc)
+  if (!content->GetDocument())
     return E_FAIL;
 
   nsCOMPtr<nsINameSpaceManager> nameSpaceManager =
@@ -267,7 +264,7 @@ NS_IMETHODIMP nsAccessNodeWrap::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclar
 
   nsCOMPtr<nsIDocument> doc;
   if (content) 
-    content->GetDocument(getter_AddRefs(doc));
+    doc = content->GetDocument();
 
   if (!doc) {
     return NS_ERROR_FAILURE;
@@ -383,7 +380,7 @@ ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
   nsCOMPtr<nsIDocument> doc;
 
   if (content) 
-    content->GetDocument(getter_AddRefs(doc));
+    doc = content->GetDocument();
   else {
     // Get the document via QueryInterface, since there is no content node
     doc = do_QueryInterface(node);

@@ -477,8 +477,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
       nsCOMPtr<nsIContent> menu;
       aMenu->GetMenuContent(getter_AddRefs(menu));
       if (menu) {
-        nsCOMPtr<nsIDocument> doc;
-        menu->GetDocument(getter_AddRefs(doc));
+        nsCOMPtr<nsIDocument> doc = menu->GetDocument();
         if (doc) {
           nsCOMPtr<nsIDOMDocument> domdoc ( do_QueryInterface(doc) );
           if ( domdoc ) {
@@ -654,8 +653,7 @@ nsMenuBar::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
     if ( obs )
       obs->ContentInserted ( aDocument, aContainer, aNewIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )
@@ -708,8 +706,7 @@ nsMenuBar::ContentRemoved( nsIDocument * aDocument, nsIContent * aContainer,
     if ( obs )
       obs->ContentRemoved ( aDocument, aChild, aIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )
@@ -734,8 +731,7 @@ nsMenuBar::ContentInserted( nsIDocument * aDocument, nsIContent * aContainer,
     if ( obs )
       obs->ContentInserted ( aDocument, aChild, aIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )

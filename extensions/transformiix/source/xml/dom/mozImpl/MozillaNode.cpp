@@ -344,9 +344,7 @@ PRInt32 Node::lookupNamespaceID(nsIAtom* aPrefix)
             return nsId;
         }
 
-        nsCOMPtr<nsIContent> temp(elem);
-        rv = temp->GetParent(getter_AddRefs(elem));
-        NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
+        elem = elem->GetParent();
     }
 
     if (aPrefix == txXMLAtoms::xmlns) {

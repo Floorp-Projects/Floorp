@@ -961,7 +961,7 @@ IsTargetFocused(nsIDOMEventTarget* aTarget)
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTarget);
   if (content)
-    content->GetDocument(getter_AddRefs(doc));
+    doc = content->GetDocument();
   else
     doc = do_QueryInterface(aTarget);
 

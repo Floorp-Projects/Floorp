@@ -3907,8 +3907,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
   /* get url name as ascii string */
   nsAutoString strippedURLNameUCS2;
-  nsCOMPtr<nsIDocument> doc;
-  currentForm->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = currentForm->GetDocument();
   if (!doc) {
     return;
   }

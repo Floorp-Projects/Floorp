@@ -471,8 +471,7 @@ PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
   if (!content)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = content->GetDocument();
   if (!doc)
     return PR_FALSE;
 

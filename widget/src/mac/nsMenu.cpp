@@ -554,8 +554,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 	    // Go find the about menu item
 	    if (!mMenuContent)
       	return nsEventStatus_eConsumeNoDefault;
-	    nsCOMPtr<nsIDocument> doc; 
-	    mMenuContent->GetDocument(getter_AddRefs(doc));
+	    nsCOMPtr<nsIDocument> doc = mMenuContent->GetDocument(); 
 	    if (!doc)
       	return nsEventStatus_eConsumeNoDefault;
 	    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
@@ -1063,11 +1062,8 @@ nsMenu::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent )
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
 
     // Try to find the key node. Get the document so we can do |GetElementByID|
-    nsCOMPtr<nsIDocument> document;
-    inMenuItemContent->GetDocument(getter_AddRefs(document));
-    if ( !document ) 
-      return;
-    nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+    nsCOMPtr<nsIDOMDocument> domDocument =
+      do_QueryInterface(inMenuItemContent->GetDocument());
     if ( !domDocument )
       return;
   
@@ -1211,9 +1207,7 @@ nsMenu::OnCreate()
   // a command attribute. If so, several apptributes must potentially
   // be updated.
   if (popupContent) {
-    nsCOMPtr<nsIDocument> doc;
-    popupContent->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(popupContent->GetDocument()));
 
     PRInt32 count;
     popupContent->ChildCount(count);

@@ -272,9 +272,7 @@ NS_METHOD nsMenuItemX::DoCommand()
   nsAutoString command;
   mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
   if (!command.IsEmpty()) {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mContent->GetDocument()));
     nsCOMPtr<nsIDOMElement> commandElt;
     domDoc->GetElementById(command, getter_AddRefs(commandElt));
     nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
@@ -335,8 +333,7 @@ nsMenuItemX :: UncheckRadioSiblings(nsIContent* inCheckedContent)
   if ( ! myGroupName.Length() )        // no groupname, nothing to do
     return;
   
-  nsCOMPtr<nsIContent> parent;
-  inCheckedContent->GetParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIContent> parent = inCheckedContent->GetParent();
   if ( !parent )
     return;
 

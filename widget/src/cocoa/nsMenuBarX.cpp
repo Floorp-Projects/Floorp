@@ -249,9 +249,7 @@ nsMenuBarX :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
 void
 nsMenuBarX :: AquifyMenuBar ( )
 {
-  nsCOMPtr<nsIDocument> containingDoc;
-  mMenuBarContent->GetDocument ( getter_AddRefs(containingDoc) );
-  nsCOMPtr<nsIDOMDocument> domDoc ( do_QueryInterface(containingDoc) );
+  nsCOMPtr<nsIDOMDocument> domDoc ( do_QueryInterface(mMenuBarContent->GetDocument()) );
   if ( domDoc ) {
     // remove quit item and its separator
     HideItem ( domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull );
@@ -618,8 +616,7 @@ nsMenuBarX :: CreateAppleMenu ( nsIMenu* inMenu )
     nsCOMPtr<nsIContent> menu;
     inMenu->GetMenuContent(getter_AddRefs(menu));
     if (menu) {
-      nsCOMPtr<nsIDocument> doc;
-      menu->GetDocument(getter_AddRefs(doc));
+      nsCOMPtr<nsIDocument> doc = menu->GetDocument();
       if (doc) {
         nsCOMPtr<nsIDOMDocument> domdoc ( do_QueryInterface(doc) );
         if ( domdoc ) {
@@ -759,8 +756,7 @@ nsMenuBarX::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
     if ( obs )
       obs->ContentInserted ( aDocument, aContainer, aNewIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )
@@ -813,8 +809,7 @@ nsMenuBarX::ContentRemoved( nsIDocument * aDocument, nsIContent * aContainer,
     if ( obs )
       obs->ContentRemoved ( aDocument, aChild, aIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )
@@ -839,8 +834,7 @@ nsMenuBarX::ContentInserted( nsIDocument * aDocument, nsIContent * aContainer,
     if ( obs )
       obs->ContentInserted ( aDocument, aChild, aIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )

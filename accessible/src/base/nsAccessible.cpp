@@ -505,7 +505,7 @@ nsresult nsAccessible::GetFocusedNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aFo
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
   if (content)
-    content->GetDocument(getter_AddRefs(document));
+    document = content->GetDocument();
 
   if (!document)
     document = do_QueryInterface(aCurrentNode);
@@ -1022,8 +1022,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
          return NS_ERROR_FAILURE;  
       }
 
-      nsCOMPtr<nsIContent> parentContent;
-      aContent->GetParent(getter_AddRefs(parentContent));
+      nsCOMPtr<nsIContent> parentContent = aContent->GetParent();
       if (parentContent) {
         nsresult rv = shell->GetPrimaryFrameFor(parentContent, &frame);
         if (NS_SUCCEEDED(rv)) {
@@ -1082,9 +1081,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
       // so that an error shows when the image doesn't load.
       // We don't want that text.
 
-      nsCOMPtr<nsIDocument> doc;
-      aContent->GetDocument(getter_AddRefs(doc));
-      nsCOMPtr<nsIImageDocument> imageDoc(do_QueryInterface(doc));
+      nsCOMPtr<nsIImageDocument> imageDoc(do_QueryInterface(aContent->GetDocument()));
       if (imageDoc)  // We don't want this faux error text
         textEquivalent.Truncate();
     }
@@ -1227,8 +1224,7 @@ NS_IMETHODIMP nsAccessible::GetHTMLAccName(nsAString& _retval)
     if (formElement) {
       break;
     }
-    nsCOMPtr<nsIContent> nextParent;
-    walkUpContent->GetParent(getter_AddRefs(nextParent));
+    nsCOMPtr<nsIContent> nextParent = walkUpContent->GetParent();
     if (!nextParent) {
       break;
     }
@@ -1307,7 +1303,7 @@ NS_IMETHODIMP nsAccessible::GetXULAccName(nsAString& _retval)
       //
       //      nsCOMPtr<nsIDocument> doc;
       //      nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-      //      content->GetDocument(getter_AddRefs(doc));
+      //      doc = content->GetDocument();
       //      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
       //      if (xulDoc) {
       //        nsCOMPtr<nsIDOMNodeList>labelList;
@@ -1471,8 +1467,7 @@ nsresult nsAccessible::GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode *
   if (!content)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = content->GetDocument();
   if (!doc)
     return NS_ERROR_FAILURE;
 

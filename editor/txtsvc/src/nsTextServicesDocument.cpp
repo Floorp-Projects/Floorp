@@ -3224,19 +3224,8 @@ nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
 PRBool
 nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2)
 {
-  nsCOMPtr<nsIContent> p1;
-  nsCOMPtr<nsIContent> p2;
-  nsresult result;
-
-  result = aContent1->GetParent(getter_AddRefs(p1));
-
-  if (NS_FAILED(result))
-    return PR_FALSE;
-
-  result = aContent2->GetParent(getter_AddRefs(p2));
-
-  if (NS_FAILED(result))
-    return PR_FALSE;
+  nsIContent* p1 = aContent1->GetParent();
+  nsIContent* p2 = aContent2->GetParent();
 
   // Quick test:
 
@@ -3245,26 +3234,14 @@ nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent
 
   // Walk up the parent hierarchy looking for closest block boundary node:
 
-  nsCOMPtr<nsIContent> tmp;
-
   while (p1 && !IsBlockNode(p1))
   {
-    result = p1->GetParent(getter_AddRefs(tmp));
-
-    if (NS_FAILED(result))
-      return PR_FALSE;
-
-    p1 = tmp;
+    p1 = p1->GetParent();
   }
 
   while (p2 && !IsBlockNode(p2))
   {
-    result = p2->GetParent(getter_AddRefs(tmp));
-
-    if (NS_FAILED(result))
-      return PR_FALSE;
-
-    p2 = tmp;
+    p2 = p2->GetParent();
   }
 
   return p1 == p2;

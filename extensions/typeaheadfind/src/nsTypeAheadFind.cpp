@@ -1651,9 +1651,9 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     }
 
     // Get the parent
-    nsCOMPtr<nsIContent> parent, parentsFirstChild;
-    startContent->GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIContent> parent = startContent->GetParent();
     if (parent) {
+      nsCOMPtr<nsIContent> parentsFirstChild;
       parent->ChildAt(0, getter_AddRefs(parentsFirstChild));
       nsCOMPtr<nsITextContent> textContent =
         do_QueryInterface(parentsFirstChild);
@@ -2490,8 +2490,8 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
 
   // ---------- Is the keystroke in a new window? -------------------
 
-  nsCOMPtr<nsIDocument> doc;
-  if (NS_FAILED(targetContent->GetDocument(getter_AddRefs(doc))) || !doc) {
+  nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
+  if (!doc) {
     return NS_OK;
   }
 
