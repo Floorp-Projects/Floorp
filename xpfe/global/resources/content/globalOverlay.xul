@@ -5,7 +5,7 @@
 <!ENTITY tasksMenu.label				"Tasks">
 <!ENTITY navigatorCmd.label					"Navigator">  
 <!ENTITY messengerCmd.label					".Messenger">  
-<!ENTITY addressBookCmd.label				".Address Book">  
+<!ENTITY addressBookCmd.label				"Address Book">  
 <!ENTITY bookmarkMenu.label					".Bookmarks"> 
 <!ENTITY addBookmarkCmd.label					".Add Bookmark">  
 <!ENTITY fileBookmarkCmd.label					".File Bookmark">  
@@ -39,6 +39,8 @@
 <overlay id="globalOverlay"
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
 	<menu id="tasksMenu" name="&tasksMenu.label;">
 		<menuitem name="&navigatorCmd.label;" onclick="NavigatorWindow()"/>
