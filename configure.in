@@ -371,17 +371,13 @@ alpha*-*-linux*)
     ;;
 
 *-nto*) 
-    if test "$no_x" = "yes"; then
-	MOZ_WIDGET_TOOLKIT='photon'
-	TK_LIBS='-lphoton -lphrender'
-	AC_DEFINE(NO_X11)
-    fi
-    CFLAGS="$CFLAGS -DQNX -DNTO -D__QNXNTO__ -D_QNX_SOURCE -D_POSIX_SOURCE -D__i386__ -D_i386 -DNSCAP_NO_EXPLICIT -DNO_REGEX -DSTRINGS_ALIGNED -D_SEEKPOS_DEFINED_"
-    CXXFLAGS="$CXXFLAGS -DQNX -DNTO -D__QNXNTO__ -D_QNX_SOURCE -D_POSIX_SOURCE -D__i386__ -D_i386 -DNSCAP_NO_EXPLICIT -DNO_REGEX -DSTRINGS_ALIGNED -D_SEEKPOS_DEFINED_"
+    CFLAGS="$CFLAGS -DNTO -D__QNXNTO__ -D_QNX_SOURCE -D_POSIX_SOURCE -D__i386__ -D_i386 -DNSCAP_NO_EXPLICIT -DNO_REGEX -DSTRINGS_ALIGNED -D_SEEKPOS_DEFINED_"
+    CXXFLAGS="$CXXFLAGS -DNTO -D__QNXNTO__ -D_QNX_SOURCE -D_POSIX_SOURCE -D__i386__ -D_i386 -DNSCAP_NO_EXPLICIT -DNO_REGEX -DSTRINGS_ALIGNED -D_SEEKPOS_DEFINED_"
     _WARNINGS_CFLAGS='-w'
     _WARNINGS_CXXFLAGS='-w'
     OS_TARGET="NTO"
     MOZ_OPTIMIZE_FLAGS="-O2"
+	MOZ_DEBUG_FLAGS="-gdwarf-2"
     DSO_LDOPTS="-M $DSO_LDOPTS"
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS="-shared -Wc,-fPIC -DPIC"
@@ -716,6 +712,12 @@ if test "`echo $target_os | egrep "beos"`"; then
         MOZ_WIDGET_TOOLKIT="beos"
 fi
 
+# Photon toolkit setting for the Neutrino platform
+if test "`echo $target_os | egrep "nto"`"; then
+        MOZ_WIDGET_TOOLKIT="photon"
+        AC_DEFINE(NO_X11)
+        TK_LIBS='-lphoton -lphrender'
+fi
 
 dnl ========================================================
 dnl =
@@ -1121,7 +1123,7 @@ AC_TRY_RUN(
 	}
 	, [NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"],
 	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
-	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
+	[NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"] )
 rm -f core
 AC_MSG_RESULT("$result")
 
@@ -1140,7 +1142,7 @@ AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr$NSPR_VERSION with thread lib"
 	}
 	, [NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"],
 	[MISSING_NSPR="$MISSING_NSPR -lnspr$NSPR_VERSION" result="no"], 
-	[MISSING_NSPR="$MISSING_NSPR -lnspr$NSPR_VERSION" result="no"] )
+	[NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"] )
     rm -f core
 AC_MSG_RESULT("$result")
 fi
@@ -1310,7 +1312,7 @@ dnl By default, turn rtti and exceptions off on g++/egcs
 dnl ========================================================
 if test "$GNU_CXX"; then
 
-  _MOZ_RTTI_FLAGS=-fno-rtti
+  _MOZ_RTTI_FLAGS=${_COMPILER_PREFIX}-fno-rtti
 
   AC_MSG_CHECKING(for C++ exceptions flag)
 
@@ -1321,9 +1323,9 @@ if test "$GNU_CXX"; then
   ${CXX-g++} -c -fno-handle-exceptions conftest.C > conftest.out 2>&1
 
   if egrep "warning.*renamed" conftest.out >/dev/null; then
-    ac_cv_cxx_exceptions_flags=-fno-exceptions
+    ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-exceptions
   else
-    ac_cv_cxx_exceptions_flags=-fno-handle-exceptions
+    ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-handle-exceptions
   fi
 
   rm -f conftest*])
