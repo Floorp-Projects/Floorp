@@ -37,12 +37,14 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIJSConsoleService.h"
 #include "nsIConsoleService.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -175,9 +177,10 @@ nsresult nsJSThunk::EvaluateScript()
         if (!principal)
             return NS_ERROR_FAILURE;
 
-
         //-- Don't run if the script principal is different from the
-        //   principal of the context
+        //   principal of the context, with two exceptions: we allow
+        //   the script to run if the script has the system principal
+        //   or the context is about:blank.
         nsCOMPtr<nsIPrincipal> objectPrincipal;
         rv = securityManager->GetObjectPrincipal(
                                 (JSContext*)scriptContext->GetNativeContext(),
@@ -185,19 +188,34 @@ nsresult nsJSThunk::EvaluateScript()
                                 getter_AddRefs(objectPrincipal));
         if (NS_FAILED(rv))
             return rv;
-        nsCOMPtr<nsIPrincipal> systemPrincipal;
-        securityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+
         PRBool equals = PR_FALSE;
-        if (principal.get() != systemPrincipal.get() &&
-            (NS_FAILED(objectPrincipal->Equals(principal, &equals)) || !equals)) {
-           // Don't run the script. Print a message to the console and
-           // return undefined.
-           nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
-           if (console) {
-               console->LogStringMessage(
-                        NS_LITERAL_STRING("Attempt to load a javascript: URL from one host\nin a window displaying content from another host\nwas blocked by the security manager.").get());
-           }
-           return NS_ERROR_DOM_RETVAL_UNDEFINED;
+        if ((NS_FAILED(objectPrincipal->Equals(principal, &equals)) || !equals)) {
+            // If the principals aren't equal
+
+            nsCOMPtr<nsIPrincipal> systemPrincipal;
+            securityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+            if (principal.get() != systemPrincipal.get()) {
+                // and the script to be run does not have the system principal
+
+                nsCOMPtr<nsICodebasePrincipal> 
+                    objectCodebase(do_QueryInterface(objectPrincipal));
+                nsXPIDLCString objectOrigin;
+                rv = objectCodebase->GetOrigin(getter_Copies(objectOrigin));
+                if (PL_strcmp("about:blank", objectOrigin) != 0) {
+                    // and the target window is not about:blank, then
+                    // don't run the script. Print a message to the console and
+                    // return undefined.
+
+                    nsCOMPtr<nsIConsoleService> 
+                        console(do_GetService("@mozilla.org/consoleservice;1"));
+                    if (console) {
+                            console->LogStringMessage(
+                                NS_LITERAL_STRING("Attempt to load a javascript: URL from one host\nin a window displaying content from another host\nwas blocked by the security manager.").get());
+                    }
+                    return NS_ERROR_DOM_RETVAL_UNDEFINED;
+                }
+            }
         }
     }
     else {
