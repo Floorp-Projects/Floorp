@@ -499,10 +499,10 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
 nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,nsString& aTerminalString){
   PRBool        done=PR_FALSE; 
   nsresult      result=NS_OK; 
-  nsString      temp; 
   PRUnichar     theChar;
   nsAutoString  theRight;
   PRInt32       rpos=0;
+
 
   //We're going to try a new algorithm here. Rather than scan for the matching 
  //end tag like we used to do, we're now going to scan for whitespace and comments. 
@@ -527,51 +527,52 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         if(NS_OK==result) { 
           //result=aScanner.SkipWhitespace();
           //temp.Append("<!");
-          temp.Append(theComment.GetStringValueXXX()); 
+          mTextValue.Append(theComment.GetStringValueXXX()); 
           //temp.Append(">");
         } 
       } else { 
         //read a tag... 
-        temp+=aChar; 
-        temp+=theChar; 
-        result=aScanner.ReadUntil(temp,kGreaterThan,PR_TRUE); 
+        mTextValue+=aChar; 
+        mTextValue+=theChar; 
+        result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE); 
       } 
     } 
     else if((NS_OK==result) && ((kQuote==aChar) || kApostrophe==aChar)) {
       static nsAutoString theEndings("\n\"\'");
-      temp += aChar;
-      result=aScanner.ReadUntil(temp,theEndings,PR_TRUE,PR_FALSE);
+      mTextValue += aChar;
+      result=aScanner.ReadUntil(mTextValue,theEndings,PR_TRUE,PR_FALSE);
       if(result==NS_OK) {
         result=aScanner.GetChar(aChar);
-        if(result==NS_OK) temp += aChar; // consume the character that stopped the scan
+        if(result==NS_OK) mTextValue += aChar; // consume the character that stopped the scan
       }
     }
     else if(0<=theWhitespace2.BinarySearch(aChar)) { 
       static CWhitespaceToken theWS; 
       result=theWS.Consume(aChar,aScanner); 
       if(NS_OK==result) { 
-        temp.Append(theWS.GetStringValueXXX()); 
+        mTextValue.Append(theWS.GetStringValueXXX()); 
       } 
     } 
     else { 
-      temp+=aChar; 
-      result=aScanner.ReadUntil(temp,theTerminals,PR_TRUE,PR_FALSE); 
+      mTextValue+=aChar; 
+      result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE); 
     } 
-    temp.Right(theRight,termStrLen+10); //first, get a wad of chars from the temp string
+    mTextValue.Right(theRight,termStrLen+10); //first, get a wad of chars from the temp string
     rpos=theRight.RFindChar('<');   //now scan for the '<'
     if(-1<rpos)
       rpos=theRight.RFind(aTerminalString,PR_TRUE);
     done=PRBool(-1<rpos); 
   }  //while
-  int len=temp.Length(); 
-  temp.Truncate(len-(theRight.Length()-rpos)); 
-  mTextValue=temp; 
-
-  // Make aTerminalString contain the name of the end tag ** as seen in **
-  // the document and not the made up one.
-  theRight.Cut(0,rpos+2);
-  theRight.Truncate(theRight.Length()-1);
-  aTerminalString = theRight;
+  int len=mTextValue.Length();
+  if(NS_SUCCEEDED(result)) {
+    mTextValue.Truncate(len-(theRight.Length()-rpos)); 
+   
+    // Make aTerminalString contain the name of the end tag ** as seen in **
+    // the document and not the made up one.
+    theRight.Cut(0,rpos+2);
+    theRight.Truncate(theRight.Length()-1);
+    aTerminalString = theRight;
+  }
   return result; 
 }
 
