@@ -54,13 +54,12 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
   mJavaObject = aJavaEnv->NewGlobalRef(aJavaObject);
 
 #ifdef DEBUG_pedemonte
-  jboolean isCopy = PR_FALSE;
   jstring name;
   const char* javaObjectName = nsnull;
   jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   if (clazz) {
     name = (jstring) mJavaEnv->CallObjectMethod(clazz, getNameMID);
-    javaObjectName = mJavaEnv->GetStringUTFChars(name, &isCopy);
+    javaObjectName = mJavaEnv->GetStringUTFChars(name, nsnull);
   }
 
   nsID* iid = nsnull;
@@ -76,8 +75,7 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
   LOG(("+++ nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s iid=%s)\n", (int) this,
        mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID),
        javaObjectName ? javaObjectName : "<-->", iid_str ? iid_str : "NULL"));
-  if (isCopy)
-    mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
+  mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
   if (iid_str)
     nsMemory::Free(iid_str);
 #endif
@@ -86,20 +84,18 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
 nsJavaXPTCStub::~nsJavaXPTCStub()
 {
 #ifdef DEBUG_pedemonte
-  jboolean isCopy = PR_FALSE;
   jstring name;
   const char* javaObjectName = nsnull;
   jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   if (clazz) {
     name = (jstring) mJavaEnv->CallObjectMethod(clazz, getNameMID);
-    javaObjectName = mJavaEnv->GetStringUTFChars(name, &isCopy);
+    javaObjectName = mJavaEnv->GetStringUTFChars(name, nsnull);
   }
 
   LOG(("--- ~nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s)\n", (int) this,
        mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID),
        javaObjectName ? javaObjectName : "<-->"));
-  if (isCopy)
-    mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
+  mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
 #endif
 
   if (!mMaster) {
