@@ -23,7 +23,9 @@
 #include "xpt_xdr.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include <string.h>
 #include "prprf.h"
 
