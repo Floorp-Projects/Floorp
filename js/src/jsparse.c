@@ -272,7 +272,6 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     }
 
     JS_ENABLE_GC(cx->runtime);
-    ts->flags &= ~TSF_ERROR;
     cx->fp = fp;
     return ok;
 }
@@ -391,7 +390,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     /* Prevent GC activation on this context during compilation. */
     JS_DISABLE_GC(cx->runtime);
 
-    /* Satisfy the assertion at the top of Statements. */
+    /* Ensure that the body looks like a block statement to js_EmitTree. */
     CURRENT_TOKEN(ts).type = TOK_LC;
     pn = FunctionBody(cx, ts, fun, &funcg.treeContext);
     if (!pn) {
@@ -1085,9 +1084,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         }
 
         /*
-         * We can be sure that if it's a for/in loop, there's still an 'in'
-         * keyword here, even if Javascript recognizes it as an operator,
-         * because we've excluded it from being parsed in RelExpr by setting
+         * We can be sure that it's a for/in loop if there's still an 'in'
+         * keyword here, even if JavaScript recognizes 'in' as an operator,
+         * as we've excluded 'in' from being parsed in RelExpr by setting
          * the TCF_IN_FOR_INIT flag in our JSTreeContext.
          */
         if (pn1 && js_MatchToken(cx, ts, TOK_IN)) {
@@ -2616,6 +2615,12 @@ skip:
             pn->pn_expr = NULL;
             pn->pn_slot = -1;
             pn->pn_attrs = 0;
+
+            /* Unqualified __parent__ and __proto__ uses require activations. */
+            if (pn->pn_atom == cx->runtime->atomState.parentAtom ||
+                pn->pn_atom == cx->runtime->atomState.protoAtom) {
+                tc->flags |= TCF_FUN_HEAVYWEIGHT;
+            }
         }
         break;
 
