@@ -51,7 +51,7 @@
 #include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
-
+#include "nsRDFSort.h"
 #include "nsVoidArray.h"
 #include "nsQuickSort.h"
 #include "nsIAtom.h"
@@ -1412,29 +1412,8 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 }
 
 
-// rjc: yes, I'm lame. For the moment, "class sortState" is defined both here and in
-// nsRDFGenericBuilder.cpp so any changes made here must also (exactly) be made there also.
-
-typedef	class	sortState
-{
-public:
-	// state match strings
-	nsAutoString				sortResource, sortResource2;
-
-	// state variables
-	nsCOMPtr<nsIRDFDataSource>		mCache;
-	nsCOMPtr<nsIRDFResource>		sortProperty, sortProperty2;
-	nsCOMPtr<nsIRDFResource>		sortPropertyColl, sortPropertyColl2;
-	nsCOMPtr<nsIRDFResource>		sortPropertySort, sortPropertySort2;
-
-	nsCOMPtr<nsIContent>			lastContainer;
-	PRBool					lastWasFirst, lastWasLast;
-} sortStateClass;
-
-
-
 NS_IMETHODIMP
-XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortStateClass *sortState, nsIContent *root,
+XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSortState *sortState, nsIContent *root,
 					nsIContent *trueParent, nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
