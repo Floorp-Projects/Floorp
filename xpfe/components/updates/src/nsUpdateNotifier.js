@@ -78,10 +78,9 @@ var nsUpdateNotifier =
       try 
       {
         const kITimer = Components.interfaces.nsITimer;
-        mTimer = Components.classes["@mozilla.org/timer;1"].
+        this.mTimer = Components.classes["@mozilla.org/timer;1"].
           createInstance(kITimer);
-        mTimer.init(this, kUpdateCheckDelay,
-          kITimer.TYPE_ONE_SHOT);
+        this.mTimer.init(this, kUpdateCheckDelay, kITimer.TYPE_ONE_SHOT);
 
         // we are no longer interested in the ``domwindowopened'' topic
         var observerService = Components.
@@ -96,7 +95,7 @@ var nsUpdateNotifier =
     }
     else if (aTopic == "timer-callback")
     {
-      mTimer = null; // free up timer so it can be gc'ed
+      this.mTimer = null; // free up timer so it can be gc'ed
       this.checkForUpdate();
     }
   },
@@ -324,6 +323,41 @@ var nsUpdateDatasourceObserver =
       return false;
     }
 
+    // when we know we are updating the ``Browser'' component
+    // we can rely on Necko to give us the app version
+
+    if (aUpdateInfo.registryName == "Browser")
+      return this.neckoHaveNewer(aUpdateInfo);
+
+    return this.xpinstallHaveNewer(aUpdateInfo);
+  },
+
+  neckoHaveNewer: function(aUpdateInfo)
+  {
+    try
+    {
+      var httpHandler = Components.
+        classes["@mozilla.org/network/protocol;1?name=http"].
+        getService(Components.interfaces.nsIHttpProtocolHandler);
+      var synthesized = this.synthesizeVersion(httpHandler.misc, 
+        httpHandler.productSub);
+      var local = new nsVersion(synthesized);
+      var server = new nsVersion(aUpdateInfo.version); 
+
+      return (server.isNewerThan(local));
+    }
+    catch (ex)
+    {
+      // fail silently
+      debug("Exception getting httpHandler: " + ex);
+      return false;
+    }
+
+    return false; // return value expected from this function
+  }, 
+
+  xpinstallHaveNewer: function(aUpdateInfo)
+  {
     // XXX Once InstallTrigger is a component we will be able to
     //     get at it without needing to reference it from hiddenDOMWindow.
     //     This will enable us to |compareVersion()|s even when 
@@ -338,6 +372,42 @@ var nsUpdateDatasourceObserver =
       return true;
     return false; // already have newer version or 
                   // fail silently if old version not found on disk
+  },
+
+  synthesizeVersion: function(aMisc, aProductSub)
+  {
+    // Strip out portion of nsIHttpProtocolHandler.misc that
+    // contains version info and stuff all ``missing'' portions
+    // with a default 0 value.  We are interested in the first 3
+    // numbers delimited by periods.  The 4th comes from aProductSub.
+    // e.g., x => x.0.0, x.1 => x.1.0, x.1.2 => x.1.2, x.1.2.3 => x.1.2
+    
+    var synthesized = "0.0.0.";
+
+    // match only digits and periods after "rv:" in the misc
+    var onlyVer = /rv:([0-9.]+)/.exec(aMisc);
+
+    // original string in onlyVer[0], matched substring in onlyVer[1]
+    if (onlyVer && onlyVer.length >= 2) 
+    {
+      var parts = onlyVer[1].split('.');
+      var len = parts.length;
+      if (len > 0)
+      {
+        synthesized = "";
+
+        // extract first 3 dot delimited numbers in misc (after "rv:")
+        for (var i = 0; i < 3; ++i)
+        {
+          synthesized += ((len >= i+1) ? parts[i] : "0") + ".";
+        }
+      }
+    }
+
+    // tack on productSub for nsVersion.mBuild field if available
+    synthesized += aProductSub ? aProductSub : "0";
+   
+    return synthesized;
   },
 
   getBundle: function(aURI)
@@ -360,6 +430,70 @@ var nsUpdateDatasourceObserver =
     }
 
     return bundle;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+//
+//   nsVersion
+//
+//   Constructs a version object given a string representation.  This
+//   constructor populates the mMajor, mMinor, mRelease, and mBuild
+//   fields regardless of whether string contains all the fields.  
+//   The default for all unspecified fields is 0.
+//
+////////////////////////////////////////////////////////////////////////
+
+function nsVersion(aStringVersion)
+{
+  var parts = aStringVersion.split('.');
+  var len = parts.length;
+
+  this.mMajor   = (len >= 1) ? this.getValidInt(parts[0]) : 0;
+  this.mMinor   = (len >= 2) ? this.getValidInt(parts[1]) : 0;
+  this.mRelease = (len >= 3) ? this.getValidInt(parts[2]) : 0;
+  this.mBuild   = (len >= 4) ? this.getValidInt(parts[3]) : 0;
+}
+
+nsVersion.prototype = 
+{
+  isNewerThan: function(aOther)
+  {
+    if (this.mMajor == aOther.mMajor)
+    {
+      if (this.mMinor == aOther.mMinor)
+      {
+        if (this.mRelease == aOther.mRelease)
+        {
+          if (this.mBuild <= aOther.mBuild)
+            return false;
+          else
+            return true; // build is newer
+        }
+        else if (this.mRelease < aOther.mRelease)
+          return false;
+        else
+          return true; // release is newer
+      }
+      else if (this.mMinor < aOther.mMinor)
+        return false;
+      else
+        return true; // minor is newer
+    }
+    else if (this.mMajor < aOther.mMajor)
+      return false;
+    else
+      return true; // major is newer
+
+    return false;
+  },
+
+  getValidInt: function(aString)
+  {
+    var integer = parseInt(aString);
+    if (isNaN(integer))
+      return 0;
+    return integer;
   }
 }
 
@@ -390,13 +524,10 @@ var nsUpdateNotifierModule =
     if (kDebug)
       dump("*** Registering nsUpdateNotifier (a JavaScript Module)\n");
 
-    // XXX The new version of nsIComponentManager (once completed)
-    //     will obviate the need to QI to nsIComponentManagerObsolete.
-    //     See <http://bugzilla.mozilla.org/show_bug.cgi?id=115853>.
     aCompMgr = aCompMgr.QueryInterface(
-                 Components.interfaces.nsIComponentManagerObsolete);
-    aCompMgr.registerComponentWithType(this.mClassID, this.mClassName,
-      this.mContractID, aFileSpec, aLocation, true, true, aType);
+                 Components.interfaces.nsIComponentRegistrar);
+    aCompMgr.registerFactoryLocation(this.mClassID, this.mClassName, 
+      this.mContractID, aFileSpec, aLocation, aType);
 
     // receive startup notification from the profile manager
     // (we get |createInstance()|d at startup-notification time)
@@ -406,12 +537,9 @@ var nsUpdateNotifierModule =
 
   unregisterSelf: function(aCompMgr, aFileSpec, aLocation)
   {
-    // XXX The new version of nsIComponentManager (once completed)
-    //     will obviate the need to QI to nsIComponentManagerObsolete.
-    //     See <http://bugzilla.mozilla.org/show_bug.cgi?id=115853>.
     aCompMgr = aCompMgr.QueryInterface(
-                 Components.interfaces.nsIComponentManagerObsolete);
-    aCompMgr.unregisterComponentSpec(this.mClassID, aFileSpec);
+                 Components.interfaces.nsIComponentRegistrar);
+    aCompMgr.unregisterFactoryLocation(this.mClassID, aFileSpec);
 
     this.getCategoryManager().deleteCategoryEntry("profile-startup-category", 
       this.mContractID, true);
