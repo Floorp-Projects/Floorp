@@ -41,7 +41,9 @@ $app->run();
 # setup everything (automatically called by the constructor, above)
 sub init {
     my $self = shift;
-    $self->dump(5, '', '', '*** Started PLIF Application ***', '********************************');
+    $self->dump(10, '', '', '********************************');
+    $self->dump(5, '*** Started PLIF Application ***');
+    $self->dump(10, '********************************');
     $self->SUPER::init(@_);
     $self->initInput();
 }
@@ -101,7 +103,7 @@ sub output {
     my $self = shift;
     my($protocol, $session) = @_;
     my $default = 0;
-    if (not $protocol) {
+    if (not defined($protocol)) {
         if (defined($self->defaultOutput)) {
             return $self->defaultOutput;
         }
@@ -111,6 +113,9 @@ sub output {
         }
         $default = 1;
         $protocol = $self->selectOutputProtocol();
+    }
+    if (not defined($session)) {
+        $session = $self->getObject('session');
     }
     # There are two output models in PLIF. The first is the protocol-
     # specific-code model, the second is the string-expander

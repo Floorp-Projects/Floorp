@@ -126,7 +126,8 @@ sub objectInit {
     }
     $self->groups({%$groups}); # hash of groupID => groupName
     $self->originalGroups({%$groups}); # a backup used to make a comparison when saving the groups
-    $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
+    my %rights = map {$_ => 1} @$rights;
+    $self->rights(\%rights); # map a list of strings into a hash for easy access
     $self->{'_DIRTY'}->{'properties'} = 0;
 }
 
@@ -226,8 +227,8 @@ sub hash {
     $result->{'userID'} = $self->userID,
     $result->{'mode'} = $self->mode,
     $result->{'adminMessage'} = $self->adminMessage,
-    $result->{'groups'} = $self->groups,
-    $result->{'rights'} = keys(%{$self->rights});
+    $result->{'groups'} = $self->groups;
+    $result->{'rights'} = [keys(%{$self->rights})];
     $result->{'fields'} = {};
     foreach my $field (values(%{$self->fieldsByID})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
@@ -292,7 +293,7 @@ sub propertyGet {
     my $self = shift;
     my($name) = @_;
     if ($name eq 'groups') {
-        return {%{$self->groups}}; 
+        return {%{$self->{'groups'}}}; 
         # Create new hash so that they can't edit ours. This ensures
         # that they can't inadvertently bypass the DIRTY flagging by
         # propertySet(), above. This does mean that internally we have

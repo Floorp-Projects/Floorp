@@ -49,7 +49,7 @@ sub newPassword {
     # password for a one-time sending to the user.
     my $password = $self->generatePassword();
     my $crypt = $self->crypt($password);
-    return ($crypt, password);
+    return ($crypt, $password);
 }
 
 sub checkPassword {

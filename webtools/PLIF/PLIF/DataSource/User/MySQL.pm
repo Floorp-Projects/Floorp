@@ -45,40 +45,29 @@ sub getUserIDByUsername {
     # example, for the field 'contact.icq', the type data field might
     # contain the string 'ICQ:' and the user field might be '55378571'
     # making the username 'ICQ:55378571'.
-    my $row = $self->database($app)->execute('SELECT userData.userID
-                                              FROM userData, userDataTypes
-                                              WHERE userData.fieldID = userDataTypes.fieldID
-                                              AND userDataTypes.category = \'contact\'
-                                              AND CONCAT(userDataTypes.data, userData.data) = ?', $username)->row;
-    if (defined($row)) {
-        return $row->[0];
-    } else {
-        return undef;
-    }
+    return $self->database($app)->execute('SELECT userData.userID
+                                           FROM userData, userDataTypes
+                                           WHERE userData.fieldID = userDataTypes.fieldID
+                                           AND userDataTypes.category = \'contact\'
+                                           AND CONCAT(userDataTypes.data, userData.data) = ?', $username)->row;
     # return userID or undef
 }
 
 sub getUserIDByContactDetails {
     my $self = shift;
     my($app, $contactName, $address) = @_;
-    my $row = $self->database($app)->execute('SELECT userData.userID
-                                              FROM userData, userDataTypes
-                                              WHERE userData.fieldID = userDataTypes.fieldID
-                                              AND userDataTypes.category = \'contact\'
-                                              AND userDataTypes.name = ?
-                                              AND userData.data = ?', $contactName, $address)->row;
-    if (defined($row)) {
-        return $row->[0];
-    } else {
-        return undef;
-    }
+    return $self->database($app)->execute('SELECT userData.userID
+                                           FROM userData, userDataTypes
+                                           WHERE userData.fieldID = userDataTypes.fieldID
+                                           AND userDataTypes.category = \'contact\'
+                                           AND userDataTypes.name = ?
+                                           AND userData.data = ?', $contactName, $address)->row;
     # return userID or undef
 }
 
 sub getUserByID {
     my $self = shift;
     my($app, $id) = @_;
-    $self->notImplemented();
     my @userData = $self->database($app)->execute('SELECT userID, mode, password, adminMessage, newFieldID, newFieldValue, newFieldKey
                                                    FROM user WHERE userID = ?', $id)->row;
     if (@userData) {
@@ -356,7 +345,7 @@ sub setupInstall {
                                   category varchar(64) NOT NULL,
                                   name varchar(64) NOT NULL,
                                   type varchar(64) NOT NULL,
-                                  data text,
+                                  data text NOT NULL DEFAULT \'\',
                                   mode integer unsigned NOT NULL DEFAULT 0,
                                   UNIQUE KEY (category, name)
                                   )
