@@ -66,6 +66,10 @@ public:
   virtual PRBool CloseContainer(const nsIParserNode& aNode);
   virtual PRBool CloseTopmostContainer();
   virtual PRBool AddLeaf(const nsIParserNode& aNode);
+  virtual void WillBuildModel(void) { }
+  virtual void DidBuildModel(void){ }
+  virtual void WillInterrupt(void) { }
+  virtual void WillResume(void) { }
 
   // nsIRobotSink
   NS_IMETHOD Init(nsIURL* aDocumentURL);
