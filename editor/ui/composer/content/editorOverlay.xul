@@ -59,8 +59,8 @@
     <key id="boldkb"         key="&stylebold.keybinding;"       observes="cmd_bold" modifiers="accel"/>
     <key id="italickb"       key="&styleitalic.keybinding;"     observes="cmd_italic" modifiers="accel"/>
     <key id="underlinekb"    key="&styleunderline.keybinding;"  observes="cmd_underline" modifiers="accel"/>
+    <key id="fixedwidthkb"   key="&formatfontfixed.keybinding;" observes="cmd_tt" modifiers="accel"/>
 
-    <key id="fontfixedwidthkb"  key="&formatfontfixed.keybinding;"  oncommand="doStatefulCommand('cmd_fontFace', 'tt')"  modifiers="accel"/>
     <key id="increaseindentkb"  key="&formatindent.keybinding;"  observes="cmd_indent"  modifiers="accel"/>
     <key id="decreaseindentkb"  key="&formatoutdent.keybinding;"  observes="cmd_outdent"  modifiers="accel"/>
 
@@ -171,6 +171,7 @@
     <command id="cmd_bold"          state="false"     oncommand="goDoCommand('cmd_bold')"/>
     <command id="cmd_italic"        state="false"     oncommand="goDoCommand('cmd_italic')"/>
     <command id="cmd_underline"     state="false"     oncommand="goDoCommand('cmd_underline')"/>
+    <command id="cmd_tt"            state="false"     oncommand="goDoCommand('cmd_tt')"/>
     <command id="cmd_smiley"        state=""  />
 
     <command id="cmd_strikethrough" state="false"     oncommand="goDoCommand('cmd_strikethrough')"/>
@@ -396,7 +397,7 @@
           position="1">
       <menupopup oncommand="doStatefulCommand('cmd_fontFace', event.target.value)" onpopupshowing="initFontFaceMenu(this)">
         <menuitem label="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    value=""    type="radio" name="1" observes="cmd_renderedHTMLEnabler"/>
-        <menuitem label="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  value="tt"  type="radio" name="1" key="fontfixedwidthkb" observes="cmd_renderedHTMLEnabler"/>
+        <menuitem label="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  value="tt"  type="radio" name="1" observes="cmd_renderedHTMLEnabler"/>
         <menuseparator/>
         <menuitem label="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   value="Helvetica, Arial, sans-serif"    type="radio" name="2" observes="cmd_renderedHTMLEnabler"/>
         <menuitem label="&fontTimes.label;"         accesskey="&fonttimes.accesskey;"       value="Times New Roman, Times, serif"   type="radio" name="2" observes="cmd_renderedHTMLEnabler"/>
@@ -435,6 +436,7 @@
       <menuitem label="&styleStrikeThruCmd.label;"  accesskey="&stylestrikethru.accesskey;"   observes="cmd_strikethrough" type="checkbox"/>
       <menuitem label="&styleSuperscriptCmd.label;" accesskey="&stylesuperscript.accesskey;"  observes="cmd_superscript"   type="checkbox"/>
       <menuitem label="&styleSubscriptCmd.label;"   accesskey="&stylesubscript.accesskey;"    observes="cmd_subscript"     type="checkbox"/>
+      <menuitem label="&fontFixedWidth.label;"      accesskey="&fontfixedwidth.accesskey;"    observes="cmd_tt"            type="checkbox" key="fixedwidthkb"/>
       <menuitem label="&styleNonbreakingCmd.label;" accesskey="&stylenonbreaking.accesskey;"  observes="cmd_nobreak"       type="checkbox"/>
       <menuseparator/>
       <menuitem label="&styleEm.label;"             accesskey="&styleEm.accesskey;"           observes="cmd_em"            type="checkbox"/>
