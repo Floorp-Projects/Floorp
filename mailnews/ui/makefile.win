@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS=messenger compose preference
+DIRS=messenger compose preference ab
 
 include <$(DEPTH)\config\rules.mak>

@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = messenger compose preference
+DIRS = messenger compose preference ab
 
 include $(topsrcdir)/config/config.mk
 
