@@ -42,6 +42,9 @@ PLSRCS		= nfspwd.pl
 
 PROGRAM		= nsinstall
 
+# Indicate that this directory builds build tools.
+INTERNAL_TOOLS  = 1
+
 
 include $(DEPTH)/coreconf/config.mk
 
