@@ -42,7 +42,19 @@ else
 #
 default: $(SUBMAKEFILES)
 	$(MAKE) nspr
-	$(foreach d,0 1 9 95 96 97 98 99,$(MAKE) tier_${d} && ) echo
+	$(MAKE) tier_0
+	$(MAKE) tier_1
+	$(MAKE) tier_9
+ifdef MOZ_PSM
+	$(MAKE) tier_95
+endif
+ifdef MOZ_MAIL_NEWS
+	$(MAKE) tier_97
+endif
+ifdef MOZ_CALENDAR
+	$(MAKE) tier_98
+endif
+	$(MAKE) tier_99
 
 # Make sure that the existing rulesets work
 DIRS = $(NSPRPUB_DIR) $(foreach d,0 1 9 95 96 97 98 99, $(tier_${d}_dirs))
