@@ -112,8 +112,8 @@ function loadCalendarEventDialog()
    
    gMode = args.mode;
    
-   if( args.CategoryManager )
-      gCategoryManager = args.CategoryManager;
+   //if( args.CategoryManager )
+   //   gCategoryManager = args.CategoryManager;
 
    // remember function to call when OK is clicked
    
@@ -198,8 +198,8 @@ function loadCalendarEventDialog()
    
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
-   setFieldValue( "alarm-length-units", gEvent.alarmUnits, "data" );
-   setFieldValue( "alarm-length-units", gEvent.alarmUnits, "value" );  
+   setFieldValue( "alarm-length-units", gEvent.alarmUnits );
+
    if ( gEvent.alarmEmailAddress && gEvent.alarmEmailAddress != "" ) 
    {
       setFieldValue( "alarm-email-checkbox", true, "checked" );
@@ -233,6 +233,8 @@ function loadCalendarEventDialog()
    updateAlarmItemEnabled();
    updateInviteItemEnabled();
       
+   //updateAlarmEmailItemEnabled();
+
    /*
    ** set the advanced weekly repeating stuff
    */
@@ -310,7 +312,7 @@ function onOKCommand()
       gEvent.alarmEmailAddress = "";
    }
    gEvent.recur         = getFieldValue( "repeat-checkbox", "checked" );
-   gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value"  );  
+   gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value" );  
    gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "checked" );
    gEvent.recurInterval  = getFieldValue( "repeat-length-field" );
    
@@ -677,6 +679,7 @@ function updateRepeatItemEnabled()
    updateUntilItemEnabled();
    
    // extra interface depending on units
+   
    updateRepeatUnitExtensions();
 }
 
@@ -765,7 +768,7 @@ function updateUntilItemEnabled()
    
    var repeatEndText = document.getElementById( "repeat-end-date-text" );
    var repeatEndPicker = document.getElementById( "repeat-end-date-button" );
-   
+  
    //RADIO REQUIRES SELECTED NOT CHECKED
    if( repeatCheckBox.checked && repeatUntilRadio.selected  )
    {
@@ -912,7 +915,7 @@ function setAdvancedWeekRepeat()
 
    if( gEvent.recurWeekdays > 0 )
    {
-      for( i = 0; i < 6; i++ )
+      for( var i = 0; i < 6; i++ )
       {
          dump( gEvent.recurWeekdays | eval( "kRepeatDay_"+i ) );
    
@@ -947,7 +950,7 @@ function getAdvancedWeekRepeat()
 {
    var Total = 0;
 
-   for( i = 0; i < 7; i++ )
+   for( var i = 0; i < 7; i++ )
    {
       if( getFieldValue( "advanced-repeat-week-"+i, "checked" ) == true )
       {
@@ -973,7 +976,7 @@ function updateAdvancedWeekRepeat()
    if( repeatCheckBox.checked )
    {
       //uncheck them all
-      for( i = 0; i < 7; i++ )
+      for( var i = 0; i < 7; i++ )
       {
          setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
 
@@ -1067,7 +1070,7 @@ function getWeekNumberOfMonth()
    
    if( weekNumber > 3 )
    {
-      nextWeek = new Date( getDateTimeFieldValue( "start-date-text" ).getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
+      var nextWeek = new Date( getDateTimeFieldValue( "start-date-text" ).getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
 
       if( nextWeek.getMonth() != thisMonth )
       {
@@ -1134,8 +1137,6 @@ function setFieldValue( elementId, newValue, propertyName  )
             field.value = newValue;
          }
       }
-
-      
    }
 }
 

@@ -770,7 +770,8 @@ MonthView.prototype.clearSelectedEvent = function ( )
 
 MonthView.prototype.getVisibleEvent = function( calendarEvent )
 {
-   eventBox = document.getElementById( "month-view-event-box-"+calendarEvent.id );
+   var eventBox = document.getElementById( "month-view-event-box-"+calendarEvent.id );
+
    if ( eventBox ) 
    {
       return eventBox;

@@ -223,13 +223,13 @@
 									<hbox  id="alarm-box">
 										 <checkbox id="alarm-checkbox"  label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
 										 <spacer id="alarm-spacer" />
-										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )" value="15" />
+										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
                                
-                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural"  crop="none" label="&alarm.units.minutes;" value="minutes" >
-											  <menupopup >
-													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  crop="none" value="minutes"/>
-													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    crop="none" value="hours"/>
-													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     crop="none" value="days"/>
+                               <menulist id="alarm-length-units" labelnumber="labelplural">
+											  <menupopup>
+													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
+													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
+													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
 											  </menupopup>
 										 </menulist>
 										 
@@ -263,7 +263,7 @@
                             <checkbox id="repeat-checkbox" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
                             <textbox id="repeat-length-field" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
                                     
-                            <menulist crop="never" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
+                            <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
                                 <menupopup>
                                     <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   value="days" />
                                     <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"   selected="true" value="weeks" />
