@@ -44,6 +44,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef MOZ_DEBUG
+ENABLE_STRIP	= 1
+endif
 PROGRAM		= mozilla-installer-bin
 REQUIRES	= xpcom \
 		  jar \
