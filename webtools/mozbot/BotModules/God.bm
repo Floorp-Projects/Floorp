@@ -8,6 +8,8 @@ use vars qw(@ISA);
 @ISA = qw(BotModules);
 1;
 
+# XXX should also do autovoice
+
 sub Help {
     my $self = shift;
     my ($event) = @_;
