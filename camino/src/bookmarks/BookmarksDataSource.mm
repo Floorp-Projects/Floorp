@@ -525,6 +525,7 @@ const int kBookmarksRootItemTag = -2;
 // Called by the outliner to determine whether or not we should allow the 
 // user to edit this item. We're leaving it off for now, becaue there are
 // some usability issues with inline editing (no undo, Escape doesn't work).
+//
 - (BOOL)outlineView:(NSOutlineView *)outlineView shouldEditTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
   return NO;	//([[tableColumn identifier] isEqualToString:@"name"]);
@@ -579,7 +580,7 @@ const int kBookmarksRootItemTag = -2;
   if (!mRegisteredClient) return nil;
 
   NSString *columnName = [tableColumn identifier];
-  NSMutableAttributedString *cellValue = nil;
+  id retValue = nil;
 
   if ([columnName isEqualToString: @"name"])
   {
@@ -588,7 +589,7 @@ const int kBookmarksRootItemTag = -2;
 
       //Set cell's textual contents
       //[cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWith_nsAString: nameAttr]];
-      cellValue = [[[NSMutableAttributedString alloc] initWithString:[item name]] autorelease];
+      NSMutableAttributedString* cellValue = [[[NSMutableAttributedString alloc] initWithString:[item name]] autorelease];
       
       //Create an attributed string to hold the empty attachment, then release the components.
       NSMutableAttributedString* attachmentAttrString = [NSMutableAttributedString attributedStringWithAttachment:textAttachment];
@@ -608,8 +609,13 @@ const int kBookmarksRootItemTag = -2;
       [cellValue addAttribute:NSBaselineOffsetAttributeName
                         value:[NSNumber numberWithFloat:-3.0]
                         range:NSMakeRange(0, 1)];
+      retValue = cellValue;
   }
-  return cellValue;
+  else if ([columnName isEqualToString: @"url"])
+  {
+      retValue = [item url];
+  }
+  return retValue;
 }
 
 - (void)outlineView:(NSOutlineView *)outlineView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn byItem:(id)item

@@ -449,6 +449,9 @@ static NSArray* sToolbarDefaults = nil;
         [[self window] setFrameTopLeftPoint:topLeft];
       }
     }
+    
+    // let the in-window bookmark controller finish up some initialization
+    [mBookmarksController windowDidLoad];
 }
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
@@ -1522,7 +1525,6 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)tabView:(NSTabView *)aTabView didSelectTabViewItem:(NSTabViewItem *)aTabViewItem
 {
-NSLog(@"Notify: did select %@", [aTabViewItem label]);
   // we'll get called for the sidebar tabs as well. ignore any calls coming from
   // there, we're only interested in the browser tabs.
   if (aTabView != mTabBrowser)
@@ -2124,11 +2126,15 @@ NSLog(@"Notify: did select %@", [aTabViewItem label]);
   
   // swap out between content and bookmarks.
 	[mContentView toggleBookmarkManager:sender];
-
+//XXXXXX needed until we can turn this on full time, since it's a nib change. 
+mSidebarBookmarksDataSource->mOutlineView = mBookmarksController->mItemPane; 
+  [mSidebarBookmarksDataSource ensureBookmarks];
+  
   // if we're now showing the bm manager, force it to have focus,
   // otherwise give focus back to gecko.
   if ( [mContentView isBookmarkManagerVisible] ) {
-    //XXX set focus to appropriate area of bm manager
+    // set focus to appropriate area of bm manager
+    [mBookmarksController focus];
   }
   else {
     CHBrowserView* browserView = [mBrowserView getBrowserView];
@@ -2251,6 +2257,98 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
     mFrame = 0;
   }
 #endif
+}
+
+@end
+
+#pragma mark -
+
+@implementation BookmarksController
+
+#if 0
+- (id) init
+{
+  if ( self = [super init] )
+  {
+    mAddItemButton = nil;
+  }
+  return self;
+}
+#endif
+
+//
+// - splitViewDidResizeSubviews:
+//
+// Called when one of the views got resized. We want to ensure that the "add bookmark
+// item" button gets lined up with the left edge of the item panel. If the container/item
+// split was the one that changed, move it accordingly
+//
+- (void)splitViewDidResizeSubviews:(NSNotification *)notification
+{
+  const int kButtonGutter = 8;
+  
+  if ( [notification object] == mContainersSplit ) {
+    // get the position of the item view relative to the window and set the button
+    // to that X value. Yes, this will fall down if the bookmark view is inset from the window
+    // but i think we can safely assume it won't be.
+    NSRect windowRect = [mItemPane convertRect:[mItemPane bounds] toView:nil];
+    NSRect newButtonLocation = [mAddItemButton frame];
+    newButtonLocation.origin.x = windowRect.origin.x;
+    [mAddItemButton setFrame:newButtonLocation];
+    [mAddItemButton setNeedsDisplay:YES];
+    
+    // offset by the width of the button and the gutter and we've got the location
+    // of the add folder button next to it.
+    newButtonLocation.origin.x += newButtonLocation.size.width + kButtonGutter;
+    [mAddFolderButton setFrame:newButtonLocation];
+    [mAddFolderButton setNeedsDisplay:YES];
+  }
+}
+
+//
+// - splitView:canCollapseSubview:
+//
+// Called when appkit wants to ask if it can collapse a subview. The only subview
+// of our splits that we allow to be hidden is the search panel.
+//
+- (BOOL)splitView:(NSSplitView *)sender canCollapseSubview:(NSView *)subview
+{
+  BOOL retVal = NO;
+  // subview will be a NSScrollView, so we have to get the superview of the
+  // search pane for comparison.
+  if ( sender == mItemSearchSplit && subview == [mSearchPane superview] )
+    retVal = YES;
+  return retVal;
+}
+
+- (void)windowDidLoad
+{
+  // hide the search panel
+  
+  // set up the font on the item view to be smaller
+  NSArray* columns = [mItemPane tableColumns];
+  if ( columns ) {
+    int numColumns = [columns count];
+    NSFont* smallerFont = [NSFont systemFontOfSize:11];
+    NSLog(@"font is %@", smallerFont);
+    for ( int i = 0; i < numColumns; ++i )
+      [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
+  }
+}
+
+
+- (float)splitView:(NSSplitView *)sender constrainMinCoordinate:(float)proposedCoord ofSubviewAt:(int)offset
+{
+  const int kMinimumContainerSplitWidth = 150;
+  float retVal = proposedCoord;
+  if ( sender == mContainersSplit )
+    retVal = kMinimumContainerSplitWidth;
+  return retVal;
+}
+
+- (void) focus
+{
+  [[mItemPane window] makeFirstResponder:mItemPane];
 }
 
 @end

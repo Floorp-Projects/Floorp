@@ -78,6 +78,36 @@ class nsIDOMNode;
 
 @end
 
+#pragma mark -
+
+@interface BookmarksController : NSObject
+{
+  IBOutlet NSButton* mAddItemButton;
+  IBOutlet NSButton* mAddFolderButton;
+  
+  IBOutlet NSSplitView* mContainersSplit;       // vertical split
+  IBOutlet NSSplitView* mItemSearchSplit;       // horizontal split
+  IBOutlet NSOutlineView* mItemPane;
+  IBOutlet NSTableView* mSearchPane;            // shows search results, can be hidden
+}
+
+// Set focus to something in the bookmark manager view
+- (void) focus;
+
+- (void) windowDidLoad;
+
+// NSSplitView delegate methods
+//- (void)splitView:(NSSplitView *)sender resizeSubviewsWithOldSize:(NSSize)oldSize;
+- (float)splitView:(NSSplitView *)sender constrainMinCoordinate:(float)proposedCoord ofSubviewAt:(int)offset;
+//- (float)splitView:(NSSplitView *)sender constrainMaxCoordinate:(float)proposedCoord ofSubviewAt:(int)offset;
+//- (void)splitViewWillResizeSubviews:(NSNotification *)notification;
+- (void)splitViewDidResizeSubviews:(NSNotification *)notification;
+- (BOOL)splitView:(NSSplitView *)sender canCollapseSubview:(NSView *)subview;
+//- (float)splitView:(NSSplitView *)splitView constrainSplitPosition:(float)proposedPosition ofSubviewAt:(int)index;
+
+@end
+
+#pragma mark -
 
 typedef enum
 {
@@ -114,6 +144,7 @@ typedef enum
   
   IBOutlet BookmarksDataSource* mSidebarBookmarksDataSource;
   IBOutlet HistoryDataSource*   mHistoryDataSource;
+  IBOutlet BookmarksController* mBookmarksController;
 
   IBOutlet BookmarksToolbar*    mPersonalToolbar;
 

@@ -11,6 +11,19 @@
         {CLASS = BookmarkItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = BookmarkManagerView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {
+            CLASS = BookmarksController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mAddFolderButton = NSButton; 
+                mAddItemButton = NSButton; 
+                mContainersSplit = NSSplitView; 
+                mItemPane = NSOutlineView; 
+                mItemSearchSplit = NSSplitView; 
+                mSearchPane = NSTableView; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
             ACTIONS = {
                 addBookmark = id; 
                 addFolder = id; 
@@ -118,6 +131,7 @@
                 mAddBookmarkSheetWindow = NSWindow; 
                 mAddBookmarkTitleField = NSTextField; 
                 mBackItem = NSMenuItem; 
+                mBookmarksController = BookmarksController; 
                 mContentView = BrowserContentView; 
                 mCopyItem = NSMenuItem; 
                 mForwardItem = NSMenuItem; 
