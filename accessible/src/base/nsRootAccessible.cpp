@@ -217,7 +217,7 @@ nsresult nsRootAccessible::RemoveEventListeners()
   if (target) { 
     target->RemoveEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -542,7 +542,7 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
     nsCOMPtr<nsIDOMEventTarget> domEventTarget;
     nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
     nsCOMPtr<nsIContent> content(do_QueryInterface(domEventTarget));
-    if (!content || content->IsContentOfType(nsIContent::eHTML)) {
+    if (content && content->IsContentOfType(nsIContent::eHTML)) {
       // Kind of a hack. If we're on an HTML element we want to make sure that it wasn't
       // inserted via XBL. In that case we want the "original explicit event target".
       // The difference is not 100% clear from the API docs, 
