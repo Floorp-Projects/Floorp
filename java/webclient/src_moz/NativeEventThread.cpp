@@ -401,13 +401,21 @@ int processEventLoop(WebShellInitContext * initContext)
 #else
     // PENDING(mark): Does this work on the Mac?
     MSG msg;
+    PRBool wasHandled;
     
     if (::PeekMessage(&msg, nsnull, 0, 0, PM_NOREMOVE)) {
         if (::GetMessage(&msg, nsnull, 0, 0)) {
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
+            printMsg(&msg, msgFile);
+            wasHandled = PR_FALSE;
+            ::NS_HandleEmbeddingEvent(msg, wasHandled);
+            if (!wasHandled) {
+                ::TranslateMessage(&msg);
+                ::DispatchMessage(&msg);
+            }
         }
     }
+    // Do idle stuff
+    ::NS_DoIdleEmbeddingStuff();
 #endif
     ::PR_Sleep(PR_INTERVAL_NO_WAIT);
     
