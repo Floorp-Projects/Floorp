@@ -34,42 +34,33 @@
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
    onpopupshowing="EditorFillContextMenu(event, this);"> 
-    <menuitem id="menu_undo_cm"   label="&undoCmd.label;" accesskey="&undo.accesskey;"
-      observes="cmd_undo" oncommand="goDoCommand('cmd_undo')"/>
-    <menuitem id="menu_redo_cm"   label="&redoCmd.label;" accesskey="&redo.accesskey;"
-      observes="cmd_redo"  oncommand="goDoCommand('cmd_redo')"/>
+    <menuitem id="menu_undo_cm"   label="&undoCmd.label;" accesskey="&undo.accesskey;" command="cmd_undo"/>
+    <menuitem id="menu_redo_cm"   label="&redoCmd.label;" accesskey="&redo.accesskey;" command="cmd_redo"/>
     <menuseparator id="undoredo-separator"/>
     
-    <!-- In these commands, the "observes" is needed for proper command disabling,
-         but the "oncommand" is still needed since we can't get it from global overlay -->
-    <menuitem id="menu_cut_cm"    label="&cutCmd.label;"    accesskey="&cut.accesskey;"
-      observes="cmd_cut" oncommand="goDoCommand('cmd_cut')"/>
-    <menuitem id="menu_copy_cm"   label="&copyCmd.label;"   accesskey="&copy.accesskey;"
-      observes="cmd_copy" oncommand="goDoCommand('cmd_copy')"/>
-    <menuitem id="menu_paste_cm"  label="&pasteCmd.label;"  accesskey="&paste.accesskey;"
-      observes="cmd_paste" oncommand="goDoCommand('cmd_paste')"/>
-    <menuitem id="menu_pasteNoFormatting_cm" observes="cmd_pasteNoFormatting"/>
-    <menuitem id="menu_delete_cm" label="&deleteCmd.label;" accesskey="&delete.accesskey;"
-      observes="cmd_delete" oncommand="goDoCommand('cmd_delete')"/>
+    <menuitem id="menu_cut_cm"    label="&cutCmd.label;"    accesskey="&cut.accesskey;" command="cmd_cut"/>
+    <menuitem id="menu_copy_cm"   label="&copyCmd.label;"   accesskey="&copy.accesskey;" command="cmd_copy"/>
+    <menuitem id="menu_paste_cm"  label="&pasteCmd.label;"  accesskey="&paste.accesskey;" command="cmd_paste"/>
+    <menuitem id="menu_pasteNoFormatting_cm" command="cmd_pasteNoFormatting"/>
+    <menuitem id="menu_delete_cm" label="&deleteCmd.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
     <menuseparator id="edit-separator"/>
-    <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectall.accesskey;" 
-          observes="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
+    <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectall.accesskey;" command="cmd_selectAll"/>
     <menuseparator id="selectAll-separator"/>
     
     <!-- label and accesskey set at runtime from strings -->
     <menuitem id="removeStylesMenuitem_cm"
           observes="cmd_removeStyles"/>
-    <menuitem id="createLink_cm" label="&createLinkCmd.label;" accesskey="&createlink.accesskey;"
-          observes="cmd_link" />
+    <menuitem id="createLink_cm" label="&createLinkCmd.label;" accesskey="&createlink.accesskey;" command="cmd_link"/>
     <!-- label and accesskey set at runtime from strings -->
     <menuitem id="removeLinksMenuitem_cm" observes="cmd_removeLinks"/>
     <menuitem id="removeNamedAnchorsMenuitem_cm"  label="&formatRemoveNamedAnchors.label;"   
+          accesskey="&formatRemoveNamedAnchors.accesskey;"
           observes="cmd_removeNamedAnchors"/>
     <menuseparator id="styles-separator"/>
 
     <!-- label and accesskey are set in InitObjectProperties -->
     <menuitem id="objectProperties_cm" observes="cmd_objectProperties"/>
-    <menuitem id="editLink_cm" label="&editLinkCmd.label;" accesskey="&editlink.accesskey;" observes="cmd_editLink"/>
+    <menuitem id="editLink_cm" label="&editLinkCmd.label;" accesskey="&editlink.accesskey;" command="cmd_editLink"/>
     <menuseparator id="property-separator"/>
 
     <!-- Can't get submenus to load from a shared overlay -->
