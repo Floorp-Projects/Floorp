@@ -219,6 +219,7 @@ CLEAN :
 	-@erase "$(INTDIR)\jsdate.obj"
 	-@erase "$(INTDIR)\jsdbgapi.obj"
 	-@erase "$(INTDIR)\jsemit.obj"
+	-@erase "$(INTDIR)\jsexn.obj"
 	-@erase "$(INTDIR)\jsfun.obj"
 	-@erase "$(INTDIR)\jsgc.obj"
 	-@erase "$(INTDIR)\jsinterp.obj"
@@ -306,6 +307,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\jsdate.obj" \
 	"$(INTDIR)\jsdbgapi.obj" \
 	"$(INTDIR)\jsemit.obj" \
+	"$(INTDIR)\jsexn.obj" \
 	"$(INTDIR)\jsfun.obj" \
 	"$(INTDIR)\jsgc.obj" \
 	"$(INTDIR)\jsinterp.obj" \
@@ -361,6 +363,7 @@ CLEAN :
 	-@erase "$(INTDIR)\jsdate.obj"
 	-@erase "$(INTDIR)\jsdbgapi.obj"
 	-@erase "$(INTDIR)\jsemit.obj"
+	-@erase "$(INTDIR)\jsexn.obj"
 	-@erase "$(INTDIR)\jsfun.obj"
 	-@erase "$(INTDIR)\jsgc.obj"
 	-@erase "$(INTDIR)\jsinterp.obj"
@@ -452,6 +455,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\jsdate.obj" \
 	"$(INTDIR)\jsdbgapi.obj" \
 	"$(INTDIR)\jsemit.obj" \
+	"$(INTDIR)\jsexn.obj" \
 	"$(INTDIR)\jsfun.obj" \
 	"$(INTDIR)\jsgc.obj" \
 	"$(INTDIR)\jsinterp.obj" \
@@ -509,6 +513,7 @@ DEP_CPP_JS_C0=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
 	".\jsopcode.h"\
@@ -519,6 +524,7 @@ DEP_CPP_JS_C0=\
 	".\jsscan.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -549,9 +555,11 @@ DEP_CPP_JS_C0=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JS_C0=\
+	".\jsdb.h"\
 	".\jsdebug.h"\
 	".\jsdjava.h"\
-	".\pratomic.h"\
+	".\jsjava.h"\
+	".\jsperl.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -641,14 +649,14 @@ DEP_CPP_JSARR=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsopcode.def"\
-	".\jsopcode.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -679,7 +687,6 @@ DEP_CPP_JSARR=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSARR=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -699,6 +706,7 @@ DEP_CPP_JSATO=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -707,6 +715,7 @@ DEP_CPP_JSATO=\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -736,7 +745,6 @@ DEP_CPP_JSATO=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSATO=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -754,15 +762,18 @@ DEP_CPP_JSBOO=\
 	".\jsatom.h"\
 	".\jsbool.h"\
 	".\jscntxt.h"\
+	".\jsconfig.h"\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -785,6 +796,7 @@ DEP_CPP_JSBOO=\
 	".\prmacos.h"\
 	".\prosdep.h"\
 	".\prpcos.h"\
+	".\prprintf.h"\
 	".\prtypes.h"\
 	".\prunixos.h"\
 	".\sunos4.h"\
@@ -792,7 +804,6 @@ DEP_CPP_JSBOO=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSBOO=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -811,9 +822,11 @@ DEP_CPP_JSCNT=\
 	".\jscntxt.h"\
 	".\jsconfig.h"\
 	".\jsdbgapi.h"\
+	".\jsexn.h"\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
 	".\jsopcode.h"\
@@ -823,6 +836,7 @@ DEP_CPP_JSCNT=\
 	".\jsscan.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -854,7 +868,6 @@ DEP_CPP_JSCNT=\
 	
 NODEP_CPP_JSCNT=\
 	".\jsdebug.h"\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -876,12 +889,14 @@ DEP_CPP_JSDAT=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -899,6 +914,7 @@ DEP_CPP_JSDAT=\
 	".\prassert.h"\
 	".\prclist.h"\
 	".\prcpucfg.h"\
+	".\prdtoa.h"\
 	".\prhash.h"\
 	".\prlong.h"\
 	".\prmacos.h"\
@@ -913,7 +929,6 @@ DEP_CPP_JSDAT=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSDAT=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -936,6 +951,7 @@ DEP_CPP_JSDBG=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
 	".\jsopcode.h"\
@@ -944,6 +960,7 @@ DEP_CPP_JSDBG=\
 	".\jsregexp.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -973,7 +990,6 @@ DEP_CPP_JSDBG=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSDBG=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -990,17 +1006,25 @@ DEP_CPP_JSEMI=\
 	".\jsapi.h"\
 	".\jsatom.h"\
 	".\jscntxt.h"\
+	".\jsconfig.h"\
 	".\jsemit.h"\
+	".\jsfun.h"\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
+	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
 	".\jsopcode.h"\
+	".\jsparse.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
+	".\jsscan.h"\
 	".\jsscope.h"\
+	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1030,7 +1054,7 @@ DEP_CPP_JSEMI=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSEMI=\
-	".\pratomic.h"\
+	".\jsdebug.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1053,6 +1077,7 @@ DEP_CPP_JSFUN=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -1064,7 +1089,9 @@ DEP_CPP_JSFUN=\
 	".\jsscan.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
+	".\jsxdrapi.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
 	".\os\hpux.h"\
@@ -1094,7 +1121,6 @@ DEP_CPP_JSFUN=\
 	
 NODEP_CPP_JSFUN=\
 	".\jsdebug.h"\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1115,6 +1141,7 @@ DEP_CPP_JSGC_=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsprvtd.h"\
@@ -1122,6 +1149,7 @@ DEP_CPP_JSGC_=\
 	".\jsregexp.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1152,7 +1180,6 @@ DEP_CPP_JSGC_=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSGC_=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1177,6 +1204,7 @@ DEP_CPP_JSINT=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -1186,6 +1214,7 @@ DEP_CPP_JSINT=\
 	".\jsregexp.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1215,7 +1244,6 @@ DEP_CPP_JSINT=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSINT=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1235,11 +1263,13 @@ DEP_CPP_JSLOC=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsobj.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1269,7 +1299,6 @@ DEP_CPP_JSLOC=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSLOC=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	".\prthread.h"\
@@ -1287,16 +1316,19 @@ DEP_CPP_JSMAT=\
 	".\jsapi.h"\
 	".\jsatom.h"\
 	".\jscntxt.h"\
+	".\jsconfig.h"\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
 	".\jsmath.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1326,7 +1358,6 @@ DEP_CPP_JSMAT=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSMAT=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1347,6 +1378,7 @@ DEP_CPP_JSNUM=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -1355,6 +1387,7 @@ DEP_CPP_JSNUM=\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1386,7 +1419,6 @@ DEP_CPP_JSNUM=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSNUM=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1410,6 +1442,7 @@ DEP_CPP_JSOBJ=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -1419,7 +1452,9 @@ DEP_CPP_JSOBJ=\
 	".\jsregexp.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
+	".\jsxdrapi.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
 	".\os\hpux.h"\
@@ -1449,7 +1484,6 @@ DEP_CPP_JSOBJ=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSOBJ=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1474,6 +1508,7 @@ DEP_CPP_JSOPC=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
 	".\jsopcode.h"\
@@ -1482,6 +1517,7 @@ DEP_CPP_JSOPC=\
 	".\jsregexp.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1513,7 +1549,6 @@ DEP_CPP_JSOPC=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSOPC=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1536,6 +1571,7 @@ DEP_CPP_JSPAR=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -1547,6 +1583,7 @@ DEP_CPP_JSPAR=\
 	".\jsscan.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1578,7 +1615,6 @@ DEP_CPP_JSPAR=\
 	
 NODEP_CPP_JSPAR=\
 	".\jsdebug.h"\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1601,6 +1637,7 @@ DEP_CPP_JSREG=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -1609,7 +1646,9 @@ DEP_CPP_JSREG=\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
+	".\jsxdrapi.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
 	".\os\hpux.h"\
@@ -1638,7 +1677,6 @@ DEP_CPP_JSREG=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSREG=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1656,10 +1694,10 @@ DEP_CPP_JSSCA=\
 	".\jsatom.h"\
 	".\jscntxt.h"\
 	".\jsconfig.h"\
-	".\jsemit.h"\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -1669,6 +1707,7 @@ DEP_CPP_JSSCA=\
 	".\jsregexp.h"\
 	".\jsscan.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1701,7 +1740,6 @@ DEP_CPP_JSSCA=\
 	
 NODEP_CPP_JSSCA=\
 	".\jsdebug.h"\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1721,12 +1759,14 @@ DEP_CPP_JSSCO=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1756,7 +1796,6 @@ DEP_CPP_JSSCO=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSSCO=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1780,6 +1819,8 @@ DEP_CPP_JSSCR=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
+	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
 	".\jsopcode.h"\
@@ -1788,6 +1829,7 @@ DEP_CPP_JSSCR=\
 	".\jsregexp.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\jsxdrapi.h"\
 	".\os\aix.h"\
@@ -1811,6 +1853,7 @@ DEP_CPP_JSSCR=\
 	".\prmacos.h"\
 	".\prosdep.h"\
 	".\prpcos.h"\
+	".\prprintf.h"\
 	".\prtypes.h"\
 	".\prunixos.h"\
 	".\sunos4.h"\
@@ -1818,7 +1861,6 @@ DEP_CPP_JSSCR=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSSCR=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1841,12 +1883,16 @@ DEP_CPP_JSSTR=\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
+	".\jsopcode.def"\
+	".\jsopcode.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
 	".\jsregexp.h"\
 	".\jsscope.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -1877,7 +1923,6 @@ DEP_CPP_JSSTR=\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSSTR=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -1891,6 +1936,7 @@ NODEP_CPP_JSSTR=\
 
 SOURCE=.\prarena.c
 DEP_CPP_PRARE=\
+	".\jsstddef.h"\
 	".\prarena.h"\
 	".\prassert.h"\
 	".\prcpucfg.h"\
@@ -1924,12 +1970,17 @@ DEP_CPP_PRASS=\
 
 SOURCE=.\prdtoa.c
 DEP_CPP_PRDTO=\
+	".\jsstddef.h"\
+	".\prassert.h"\
 	".\prcpucfg.h"\
 	".\prdtoa.h"\
 	".\prprintf.h"\
 	".\prtypes.h"\
 	".\sunos4.h"\
 	{$(INCLUDE)}"\sys\TYPES.H"\
+	
+NODEP_CPP_PRDTO=\
+	".\prlock.h"\
 	
 
 "$(INTDIR)\prdtoa.obj" : $(SOURCE) $(DEP_CPP_PRDTO) "$(INTDIR)"
@@ -2050,11 +2101,13 @@ DEP_CPP_JSAPI=\
 	".\jsconfig.h"\
 	".\jsdate.h"\
 	".\jsemit.h"\
+	".\jsexn.h"\
 	".\jsfun.h"\
 	".\jsgc.h"\
 	".\jsinterp.h"\
 	".\jslock.h"\
 	".\jsmath.h"\
+	".\jsmsg.def"\
 	".\jsnum.h"\
 	".\jsobj.h"\
 	".\jsopcode.def"\
@@ -2066,6 +2119,7 @@ DEP_CPP_JSAPI=\
 	".\jsscan.h"\
 	".\jsscope.h"\
 	".\jsscript.h"\
+	".\jsstddef.h"\
 	".\jsstr.h"\
 	".\os\aix.h"\
 	".\os\bsdi.h"\
@@ -2096,7 +2150,6 @@ DEP_CPP_JSAPI=\
 	
 NODEP_CPP_JSAPI=\
 	".\jsdebug.h"\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
@@ -2109,59 +2162,167 @@ NODEP_CPP_JSAPI=\
 # Begin Source File
 
 SOURCE=.\jsxdrapi.c
-
-!IF  "$(CFG)" == "js32 - Win32 Release"
-
 DEP_CPP_JSXDR=\
 	".\jsapi.h"\
 	".\jsatom.h"\
+	".\jscntxt.h"\
+	".\jsgc.h"\
+	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsobj.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
+	".\jsregexp.h"\
 	".\jsscope.h"\
-	".\jsscript.h"\
+	".\jsstddef.h"\
+	".\jsstr.h"\
 	".\jsxdrapi.h"\
+	".\os\aix.h"\
+	".\os\bsdi.h"\
+	".\os\hpux.h"\
+	".\os\irix.h"\
+	".\os\linux.h"\
+	".\os\osf1.h"\
+	".\os\scoos.h"\
+	".\os\solaris.h"\
+	".\os\sunos.h"\
+	".\os\unixware.h"\
+	".\os\win16.h"\
+	".\os\win32.h"\
+	".\prarena.h"\
+	".\prassert.h"\
+	".\prclist.h"\
 	".\prcpucfg.h"\
 	".\prhash.h"\
+	".\prlong.h"\
+	".\prmacos.h"\
+	".\prosdep.h"\
+	".\prpcos.h"\
 	".\prtypes.h"\
+	".\prunixos.h"\
 	".\sunos4.h"\
+	{$(INCLUDE)}"\sys\STAT.H"\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_JSXDR=\
-	".\pratomic.h"\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
 
 "$(INTDIR)\jsxdrapi.obj" : $(SOURCE) $(DEP_CPP_JSXDR) "$(INTDIR)"
+
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\jsexn.c
+
+!IF  "$(CFG)" == "js32 - Win32 Release"
+
+DEP_CPP_JSEXN=\
+	".\jsapi.h"\
+	".\jsatom.h"\
+	".\jscntxt.h"\
+	".\jsconfig.h"\
+	".\jsgc.h"\
+	".\jsinterp.h"\
+	".\jslock.h"\
+	".\jsmsg.def"\
+	".\jsobj.h"\
+	".\jsprvtd.h"\
+	".\jspubtd.h"\
+	".\jsregexp.h"\
+	".\jsscope.h"\
+	".\jsstddef.h"\
+	".\jsstr.h"\
+	".\os\aix.h"\
+	".\os\bsdi.h"\
+	".\os\hpux.h"\
+	".\os\irix.h"\
+	".\os\linux.h"\
+	".\os\osf1.h"\
+	".\os\scoos.h"\
+	".\os\solaris.h"\
+	".\os\sunos.h"\
+	".\os\unixware.h"\
+	".\os\win16.h"\
+	".\os\win32.h"\
+	".\prarena.h"\
+	".\prassert.h"\
+	".\prclist.h"\
+	".\prcpucfg.h"\
+	".\prhash.h"\
+	".\prlong.h"\
+	".\prmacos.h"\
+	".\prosdep.h"\
+	".\prpcos.h"\
+	".\prtypes.h"\
+	".\prunixos.h"\
+	".\sunos4.h"\
+	{$(INCLUDE)}"\sys\STAT.H"\
+	{$(INCLUDE)}"\sys\TYPES.H"\
+	
+NODEP_CPP_JSEXN=\
+	".\prcvar.h"\
+	".\prlock.h"\
+	
+
+"$(INTDIR)\jsexn.obj" : $(SOURCE) $(DEP_CPP_JSEXN) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "js32 - Win32 Debug"
 
-DEP_CPP_JSXDR=\
+DEP_CPP_JSEXN=\
 	".\jsapi.h"\
 	".\jsatom.h"\
+	".\jscntxt.h"\
+	".\jsconfig.h"\
+	".\jsgc.h"\
+	".\jsinterp.h"\
 	".\jslock.h"\
+	".\jsmsg.def"\
 	".\jsobj.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
+	".\jsregexp.h"\
 	".\jsscope.h"\
-	".\jsscript.h"\
-	".\jsxdrapi.h"\
+	".\jsstddef.h"\
+	".\jsstr.h"\
+	".\os\aix.h"\
+	".\os\bsdi.h"\
+	".\os\hpux.h"\
+	".\os\irix.h"\
+	".\os\linux.h"\
+	".\os\osf1.h"\
+	".\os\scoos.h"\
+	".\os\solaris.h"\
+	".\os\sunos.h"\
+	".\os\unixware.h"\
+	".\os\win16.h"\
+	".\os\win32.h"\
+	".\prarena.h"\
+	".\prassert.h"\
+	".\prclist.h"\
 	".\prcpucfg.h"\
 	".\prhash.h"\
+	".\prlong.h"\
+	".\prmacos.h"\
+	".\prosdep.h"\
+	".\prpcos.h"\
 	".\prtypes.h"\
+	".\prunixos.h"\
 	".\sunos4.h"\
+	{$(INCLUDE)}"\sys\STAT.H"\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
-NODEP_CPP_JSXDR=\
-	".\pratomic.h"\
+NODEP_CPP_JSEXN=\
 	".\prcvar.h"\
 	".\prlock.h"\
 	
 
-"$(INTDIR)\jsxdrapi.obj" : $(SOURCE) $(DEP_CPP_JSXDR) "$(INTDIR)"
+"$(INTDIR)\jsexn.obj" : $(SOURCE) $(DEP_CPP_JSEXN) "$(INTDIR)"
 
 
 !ENDIF 
