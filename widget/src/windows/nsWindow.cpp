@@ -1034,10 +1034,6 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
         // any requests to activate the window while it is displayed. Windows 
         // will automatically activate the popup on the mousedown otherwise.
         if (!rollup) {
-          // if listener may request to be closed if its target was clicked
-          gRollupListener->ShouldRollupOnMouseActivate(&rollup);
-          if (rollup)
-            gRollupListener->Rollup();
           *outResult = MA_NOACTIVATE;
           return TRUE;
         }
