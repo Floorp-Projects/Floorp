@@ -60,7 +60,7 @@ mk_add_options() {
 }
 
 ac_echo_options() {
-  echo "Adding options from `pwd`/myconfig.sh:"
+  echo "Adding options from $MOZ_MYCONFIG:"
   eval "set -- $myconfig_ac_options"
   for _opt
   do
