@@ -63,12 +63,6 @@
 
 #ifdef NGEDITOR
 #include "nsIEditor.h"
-//these defines are for use with the experimental autopointers. 
-//they WILL NOT be permanent
-#define NOT_PRODUCTION_CODE
-#define USE_EXPERIMENTAL_SMART_POINTERS
-#include "COM_auto_ptr.h"
-#endif //NGEDITOR
 
 // Needed for "Find" GUI
 #include "nsIDialog.h"
@@ -103,6 +97,13 @@
 #include <windows.h>
 #endif
 
+
+//these defines are for use with the experimental autopointers. 
+//they WILL NOT be permanent
+#define NOT_PRODUCTION_CODE
+#define USE_EXPERIMENTAL_SMART_POINTERS
+#include "COM_auto_ptr.h"
+#endif //NGEDITOR
 
 // XXX For font setting below
 #include "nsFont.h"
