@@ -57,7 +57,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAPEXTENSIONSINK_IID)
   
   NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
-							   nsIMAPACLRightsInfo* aclRights) = 0;
+                               nsIMAPACLRightsInfo* aclRights) = 0;
   NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                 nsMsgKeyArray* keyArray, 
                                 const char *msgIdString,

@@ -58,11 +58,11 @@ interface nsIMsgCopyService : nsISupports {
      */
 	void CopyMessages(in nsIMsgFolder srcFolder,
 	                  in nsISupportsArray messages,
-					  in nsIMsgFolder dstFolder,
-					  in boolean isMove,
-                      in nsIMsgCopyServiceListener listener,
-					  in nsIMsgWindow msgWindow,
-					  in boolean allowUndo);
+					          in nsIMsgFolder dstFolder,
+					          in boolean isMove,
+                    in nsIMsgCopyServiceListener listener,
+					          in nsIMsgWindow msgWindow,
+					          in boolean allowUndo);
 
     /**
      *
@@ -92,7 +92,7 @@ interface nsIMsgCopyService : nsISupports {
      * result -- the result of the copy operation
      */
 	void NotifyCompletion(in nsISupports aSupport,
-						  in nsIMsgFolder dstFolder,
-                          in nsresult result);
+						            in nsIMsgFolder dstFolder,
+                        in nsresult result);
 
 };

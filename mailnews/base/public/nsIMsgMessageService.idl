@@ -85,10 +85,10 @@ interface nsIMsgMessageService : nsISupports {
     //  DisplayMessage: When you want a message displayed....
     //  aMessageURI	  is a uri representing the message to display.
     //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
-    //					  the message into. 
-	//	aCharsetOverride  (optional) character set over ride to force the message to
-	//					  use
-	//
+    //  the message into. 
+	  //	aCharsetOverride  (optional) character set over ride to force the message to
+	  //  use.
+	  //
     ///////////////////////////////////////////////////////////////////
 
 	void DisplayMessage(in string aMessageURI, 
@@ -125,10 +125,10 @@ interface nsIMsgMessageService : nsISupports {
 	 //					  appended at the end of the file. 
      ///////////////////////////////////////////////////////////////////
 
-	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile,
-                           in boolean aGenerateDummyEnvelope, 
-						   in nsIUrlListener aUrlListener, out nsIURI aURL,
-                           in boolean canonicalLineEnding, in nsIMsgWindow aMsgWindow);
+  void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile,
+                         in boolean aGenerateDummyEnvelope, 
+                         in nsIUrlListener aUrlListener, out nsIURI aURL,
+                         in boolean canonicalLineEnding, in nsIMsgWindow aMsgWindow);
 
     /////////////////////////////////////////////////////////////////////
 	// GetUrlForUri: when you have a uri and you would like to convert that
