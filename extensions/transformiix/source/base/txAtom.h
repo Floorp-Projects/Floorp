@@ -53,9 +53,8 @@
  *
  * To use this code standalone, 
  *  TX_IMPL_ATOM_STATICS;
- * has to appear in your source file. This is done by
- *  TX_IMPL_STATICS
- * defined below. XSLTProcessor.cpp does this.
+ * has to appear in your source file.
+ * XSLTProcessor.cpp does this.
  */
  
 #ifndef TRANSFRMX_ATOM_H
@@ -136,7 +135,7 @@ private:
 
 #define TX_RELEASE_ATOM(atom) {}
 
-#define TX_RELEASE_IF_ATOM(atom) {}
+#define TX_IF_RELEASE_ATOM(atom) {}
 
 #define TX_GET_ATOM_STRING(atom, str) \
     ((atom)->getString(str))
@@ -155,10 +154,10 @@ typedef nsIAtom txAtom;
 
 #define TX_RELEASE_ATOM(atom) NS_RELEASE(atom)
 
-#define TX_RELEASE_IF_ATOM(atom) NS_IF_RELEASE(atom)
+#define TX_IF_RELEASE_ATOM(atom) NS_IF_RELEASE(atom)
 
 #define TX_GET_ATOM_STRING(atom, string) \
-    NS_SUCCESS((atom)->ToString(string))
+    NS_SUCCEEDED((atom)->ToString(string.getNSString()))
 
 #endif  // TX_EXE
 

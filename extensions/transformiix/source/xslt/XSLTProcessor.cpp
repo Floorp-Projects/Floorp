@@ -51,7 +51,7 @@
 #include "Numbering.h"
 #include "Tokenizer.h"
 #include "URIUtils.h"
-#include "txAtom.h"
+#include "txAtoms.h"
 #ifndef TX_EXE
 #include "nsIObserverService.h"
 #include "nsIURL.h"
@@ -83,14 +83,12 @@ const String XSLTProcessor::NON_TEXT_TEMPLATE_WARNING =
 "templates for the following element are not allowed to generate non character data: ";
 
 /*
- * Implement static variables for standalone 
- * atomservice
- * and dom
+ * Implement static variables for atomservice and dom.
  */
 #ifdef TX_EXE
 TX_IMPL_ATOM_STATICS;
-#endif
 TX_IMPL_DOM_STATICS;
+#endif
 
 /**
  * Creates a new XSLTProcessor
@@ -166,35 +164,30 @@ NS_IMPL_RELEASE(XSLTProcessor)
 #else
 
 /*
- * Initialize atom tables, hardcode xml and xmlns prefixes.
+ * Initialize atom tables.
  */
 MBool txInit()
 {
-    if (!txAtomService::Init())
+    if (!txNamespaceManager::init())
         return MB_FALSE;
-    if (!txNamespaceManager::Init())
+    if (!txXMLAtoms::init())
         return MB_FALSE;
-    String xml;
-    xml.append("xml");
-    txXMLAtoms::XMLPrefix = TX_GET_ATOM(xml);
-    if (!txXMLAtoms::XMLPrefix)
+    if (!txXPathAtoms::init())
         return MB_FALSE;
-    xml.append("ns");
-    txXMLAtoms::XMLNSPrefix = TX_GET_ATOM(xml);
-    if (!txXMLAtoms::XMLNSPrefix)
-        return MB_FALSE;
-    return MB_TRUE;
+    return txXSLTAtoms::init();
 }
 
 /*
- * To be called when done with transformiix
+ * To be called when done with transformiix.
  *
- * Free atom table, namespace manager
+ * Free atom table, namespace manager.
  */
 MBool txShutdown()
 {
-    txNamespaceManager::Shutdown();
-    txAtomService::Shutdown();
+    txNamespaceManager::shutdown();
+    txXMLAtoms::shutdown();
+    txXPathAtoms::shutdown();
+    txXSLTAtoms::shutdown();
     return MB_TRUE;
 }
 #endif
@@ -1212,7 +1205,7 @@ void XSLTProcessor::processAction
                 }
                 break;
             }
-            // xsl:if
+            // xsl:choose
             case XSLType::CHOOSE :
             {
                 Node* tmp = actionElement->getFirstChild();
@@ -1651,7 +1644,8 @@ void XSLTProcessor::processAction
 void XSLTProcessor::processAttributeSets
     (const String& names, Node* node, ProcessorState* ps)
 {
-    if (names.isEmpty()) return;
+    if (names.isEmpty())
+        return;
 
     //-- split names
     Tokenizer tokenizer(names);

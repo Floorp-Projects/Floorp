@@ -26,9 +26,7 @@
 //
 
 #include "dom.h"
-#include "txAtom.h"
-
-const String XMLNS_ATTR = "xmlns";
+#include "txAtoms.h"
 
 //
 //Construct a new element with the specified tagName and Document owner.
@@ -59,7 +57,7 @@ Element::Element(const String& tagName, Document* owner) :
 Element::~Element()
 {
   mAttributes.clear();
-  TX_RELEASE_IF_ATOM(mLocalName);
+  TX_IF_RELEASE_ATOM(mLocalName);
 }
 
 //
@@ -86,8 +84,8 @@ PRInt32 Element::getNamespaceID()
     Node* node = this;
     while (node && node->getNodeType() == Node::ELEMENT_NODE) {
       String nsURI;
-      if (((Element*)node)->getAttr(txXMLAtoms::XMLNSPrefix,
-                                    kNameSpaceID_XMLNS, nsURI)) {
+      if (((Element*)node)->getAttr(txXMLAtoms::xmlns, kNameSpaceID_XMLNS,
+                                    nsURI)) {
         // xmlns = "" sets the default namespace ID to kNameSpaceID_None;
         if (!nsURI.isEmpty()) {
           mNamespaceID = txNamespaceManager::getNamespaceID(nsURI);
@@ -106,7 +104,7 @@ PRInt32 Element::getNamespaceID()
     nodeName.subString(0, idx, prefix);
     txAtom* prefixAtom = TX_GET_ATOM(prefix);
     mNamespaceID = lookupNamespaceID(prefixAtom);
-    TX_RELEASE_IF_ATOM(prefixAtom);
+    TX_IF_RELEASE_ATOM(prefixAtom);
   }
   return mNamespaceID;
 }
@@ -222,10 +220,10 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
         aNSID == attrNode->getNamespaceID() &&
         aLocalName == localName) {
       aValue.append(attrNode->getValue());
-      TX_RELEASE_IF_ATOM(localName);
+      TX_IF_RELEASE_ATOM(localName);
       return MB_TRUE;
     }
-    TX_RELEASE_IF_ATOM(localName);
+    TX_IF_RELEASE_ATOM(localName);
     item = item->next;
   }
   return MB_FALSE;

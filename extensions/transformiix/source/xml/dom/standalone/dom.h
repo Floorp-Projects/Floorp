@@ -154,7 +154,7 @@ class Node : public TxObject
     //txXPathNode functions
     virtual MBool getLocalName(txAtom** aLocalName) = 0;
     virtual PRInt32 getNamespaceID() = 0;
-    virtual PRInt32 lookupNamespaceID(txAtom* prefix) = 0;
+    virtual PRInt32 lookupNamespaceID(txAtom* aPrefix) = 0;
     virtual Node* getXPathParent() = 0;
 };
 
@@ -670,7 +670,7 @@ class txNamespaceManager
 public:
     static PRInt32 getNamespaceID(const String& aURI)
     {
-        if (!mNamespaces && !Init())
+        if (!mNamespaces && !init())
             return kNameSpaceID_Unknown;
         txListIterator nameIter(mNamespaces);
         PRInt32 id=0;
@@ -695,7 +695,7 @@ public:
         // empty namespace, and errors
         if (aID <= 0)
             return NULL_STRING;
-        if (!mNamespaces && !Init())
+        if (!mNamespaces && !init())
             return NULL_STRING;
         txListIterator nameIter(mNamespaces);
         String* aURI = (String*)nameIter.advance(aID);
@@ -704,10 +704,10 @@ public:
         return NULL_STRING;
     }
 
-    static MBool Init()
+    static MBool init()
     {
         NS_ASSERTION(!mNamespaces,
-                     "called without matching Shutdown()");
+                     "called without matching shutdown()");
         if (mNamespaces)
             return MB_TRUE;
         mNamespaces = new txList();
@@ -743,9 +743,9 @@ public:
         return MB_TRUE;
     }
 
-    static void Shutdown()
+    static void shutdown()
     {
-        NS_ASSERTION(mNamespaces, "called without matching Init()");
+        NS_ASSERTION(mNamespaces, "called without matching init()");
         if (!mNamespaces)
             return;
         txListIterator iter(mNamespaces);
@@ -759,19 +759,7 @@ private:
     static txList* mNamespaces;
 };
 
-//
-// Definition of txXMLAtoms
-//
-class txXMLAtoms
-{
-public:
-    static txAtom* XMLPrefix;
-    static txAtom* XMLNSPrefix;
-};
-
 #define TX_IMPL_DOM_STATICS \
-  txAtom* txXMLAtoms::XMLPrefix = 0;  \
-  txAtom* txXMLAtoms::XMLNSPrefix = 0;  \
-  txList* txNamespaceManager::mNamespaces = 0
+    txList* txNamespaceManager::mNamespaces = 0
 
 #endif

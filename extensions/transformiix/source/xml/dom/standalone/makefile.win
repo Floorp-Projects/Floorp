@@ -66,8 +66,8 @@ CPP_OBJS=					\
 EXPORTS = 					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\..\base -I..\..\dom \
-	-I..\.. -I..\..\..\net
+LINCS=-I..\..\..\base -I..\..\..\net \
+      -I..\..\..\xpath -I..\..\..\xslt
 
 LCFLAGS = \
         $(LCFLAGS) \

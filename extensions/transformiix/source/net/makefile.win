@@ -41,7 +41,7 @@ CPP_OBJS=			\
 EXPORTS = 			\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\base
+LINCS=-I$(PUBLIC)\xpcom -I..\base
 
 LCFLAGS = \
         $(LCFLAGS) \

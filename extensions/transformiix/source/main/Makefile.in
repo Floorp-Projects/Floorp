@@ -40,6 +40,7 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../base/Stack.$(OBJ_SUFFIX) \
   ../base/StringList.$(OBJ_SUFFIX) \
   ../base/Tokenizer.$(OBJ_SUFFIX) \
+  ../base/txAtoms.$(OBJ_SUFFIX) \
   ../base/TxString.$(OBJ_SUFFIX) \
   ../net/URIUtils.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/Attr.$(OBJ_SUFFIX) \

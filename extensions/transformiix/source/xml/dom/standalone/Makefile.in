@@ -46,6 +46,7 @@ CPPSRCS = Attr.cpp \
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir)/../../../base -I$(srcdir)/../../../net
+INCLUDES += -I$(srcdir)/../../../base -I$(srcdir)/../../../net \
+            -I$(srcdir)/../../../xpath -I$(srcdir)/../../../xslt
 
 install:: $(OBJS)

@@ -38,6 +38,7 @@ CPP_OBJS=                                       \
   ../base/$(OBJDIR)/Stack.obj \
   ../base/$(OBJDIR)/StringList.obj \
   ../base/$(OBJDIR)/Tokenizer.obj \
+  ../base/$(OBJDIR)/txAtoms.obj \
   ../base/$(OBJDIR)/TxString.obj \
   ../net/$(OBJDIR)/URIUtils.obj \
   ../xml/dom/standalone/$(OBJDIR)/Attr.obj \

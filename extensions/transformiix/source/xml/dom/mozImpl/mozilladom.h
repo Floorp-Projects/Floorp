@@ -96,21 +96,6 @@ class ProcessingInstruction;
 class Text;
 
 /*
- * Definition of txXMLAtoms
- */
-class txXMLAtoms
-{
-public:
-    static txAtom* XMLPrefix;
-    static txAtom* XMLNSPrefix;
-};
-
-#define TX_IMPL_DOM_STATICS \
-  txAtom* txXMLAtoms::XMLPrefix = 0;  \
-  txAtom* txXMLAtoms::XMLNSPrefix = 0
-
-
-/*
  * This macro creates a nsCOMPtr to a specific interface for the
  * wrapper's Mozilla object. The nsCOMPtr will be named like the
  * supplied class with "ns" as a prefix.
@@ -181,7 +166,7 @@ class MozillaObjectWrapper : public TxObject
         void setNSObj(nsISupports* aNsObject, Document* aOwner);
 
         nsISupports* getNSObj() const;
-   
+
     protected:
         // We want to maintain a pointer back to the aOwner document for memory
         // management.
@@ -264,7 +249,7 @@ class Node : public MozillaObjectWrapper
         // txXPathNode functions
         virtual MBool getLocalName(txAtom** aLocalName);
         virtual PRInt32 getNamespaceID();
-        virtual PRInt32 lookupNamespaceID(txAtom* prefix);
+        virtual PRInt32 lookupNamespaceID(txAtom* aPrefix);
         virtual Node* getXPathParent();
 
     protected:

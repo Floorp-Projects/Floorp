@@ -43,7 +43,8 @@ CPPSRCS	= ArrayList.cpp             \
 	SimpleErrorObserver.cpp \
 	Stack.cpp \
 	StringList.cpp \
-	Tokenizer.cpp
+	Tokenizer.cpp \
+	txAtoms.cpp
 
 ifdef TX_EXE
 	CPPSRCS	+= CommandLineUtils.cpp	\
@@ -51,6 +52,9 @@ ifdef TX_EXE
 else
 	CPPSRCS	+= MozillaString.cpp
 endif
+
 include $(topsrcdir)/config/rules.mk
+
+INCLUDES += -I$(srcdir)/../xpath -I$(srcdir)/../xslt
 
 install:: $(OBJS)

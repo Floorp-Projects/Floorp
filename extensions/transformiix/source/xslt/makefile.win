@@ -60,7 +60,7 @@ EXPORTS = 					\
 	$(NULL)
 
 !ifndef TX_EXE
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\xpath -I..\xml\dom -I..\xml\dom\mozImpl \
+LINCS=-I$(PUBLIC)\xpcom -I..\xpath -I..\xml\dom -I..\xml\dom\mozImpl \
       -I..\base -I ..\xml -I ..\xml\util -I .\util -I ..\net -I..\xml\parser -I.\functions
 !else
 LINCS=-I. -I..\base -I..\net -I..\xml -I..\xml\dom -I..\xml\util -I..\xml\parser \
