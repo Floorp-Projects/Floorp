@@ -41,7 +41,7 @@ function onLoad() {
   args.zoomOK = false;
 
   dialog = {};
-  dialog.OKButton = document.getElementById("ok");
+  dialog.OKButton = document.documentElement.getButton("accept");
 
   dialog.input = document.getElementById("zoomValue");
   dialog.input.value = args.value;

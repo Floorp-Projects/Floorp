@@ -90,10 +90,6 @@ nsHelperAppLauncherDialog.prototype= {
             html.childNodes[ 0 ].nodeValue = text;
         }
 
-        // Set up dialog button callbacks.
-        var object = this;
-        doSetOKCancel( function () { return object.onOK(); },
-                       function () { return object.onCancel(); } );
         moveToAlertPosition();
     },
 
@@ -117,8 +113,6 @@ nsHelperAppLauncherDialog.prototype= {
             } catch (exception) { 
             }
         }
-    
-        window.close();
     },
 
     // If the user presses cancel, tell the app launcher and close the dialog...
@@ -128,9 +122,6 @@ nsHelperAppLauncherDialog.prototype= {
             this.appLauncher.Cancel();
         } catch( exception ) {
         }
-    
-        // Close up dialog by returning true.
-        return true;
     },
 
     // Enable pick app button if the user chooses that option.

@@ -41,7 +41,6 @@
 
 <window
   id="profileWindow"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
   class="color-dialog non-resizable"
   title="&windowtitle.label;"
@@ -69,9 +68,9 @@
 
     <!-- instructions -->
     <deck id="prattle">
-      <html id="intro" style="width: 17em;border:1px solid transparent;" flex="1">&introgeneral.label;</html>
+      <description id="intro" style="width: 17em;border:1px solid transparent;" flex="1">&introgeneral.label;</description>
       <vbox id="manager">
-        <html style="width: 17em;" class="label">&pmTextA.label;</html>
+        <description style="width: 17em;" class="label">&pmTextA.label;</description>
         <separator/>
         <hbox>
           <vbox flex="1" id="managebuttons">

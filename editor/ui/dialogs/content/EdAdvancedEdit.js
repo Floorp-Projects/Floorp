@@ -87,7 +87,7 @@ function Startup()
   gDialog.AddJSEAttributeNameList       = document.getElementById("AddJSEAttributeNameList");
   gDialog.AddJSEAttributeValueInput     = document.getElementById("AddJSEAttributeValueInput");
   gDialog.AddJSEAttributeTree           = document.getElementById("JSEATree");
-  gDialog.okButton                      = document.getElementById("ok");
+  gDialog.okButton                      = document.documentElement.getButton("accept");
 
   // build the attribute trees
   BuildHTMLAttributeTable();
