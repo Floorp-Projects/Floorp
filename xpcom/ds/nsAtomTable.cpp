@@ -28,6 +28,38 @@
 static nsrefcnt gAtoms;
 static struct PLHashTable* gAtomHashTable;
 
+#if defined(DEBUG_kipp) && (defined(XP_UNIX) || defined(XP_PC))
+static PRIntn
+DumpAtomLeaks(PLHashEntry *he, PRIntn index, void *arg)
+{
+  AtomImpl* atom = (AtomImpl*) he->value;
+  if (atom) {
+    nsAutoString tmp;
+    atom->ToString(tmp);
+    fputs(tmp, stdout);
+    fputs("\n", stdout);
+  }
+  return HT_ENUMERATE_NEXT;
+}
+#endif
+
+NS_COM void NS_PurgeAtomTable(void)
+{
+  if (gAtomHashTable) {
+#if defined(DEBUG_kipp) && (defined(XP_UNIX) || defined(XP_PC))
+    if (0 != gAtoms) {
+      printf("*** leaking %d atoms\n", gAtoms);
+      if (getenv("MOZ_DUMP_ATOM_LEAKS")) {
+        printf("*** leaked atoms:\n");
+        PL_HashTableEnumerateEntries(gAtomHashTable, DumpAtomLeaks, 0);
+      }
+    }
+#endif
+    PL_HashTableDestroy(gAtomHashTable);
+    gAtomHashTable = nsnull;
+  }
+}
+
 AtomImpl::AtomImpl()
 {
   NS_INIT_REFCNT();
