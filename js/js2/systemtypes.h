@@ -60,6 +60,9 @@
  #endif /* AIX4_3 */
 #endif	/* XP_BEOS */
 
+// Define this if the machine natively supports 64-bit integers
+#define NATIVE_INT64
+
 // Define float32 and float64.
 typedef double float64;
 typedef float float32;
