@@ -3534,7 +3534,8 @@ nsXULDocument::StartLayout(void)
         nsRect windowBounds;
         browser->GetWindowBounds(windowBounds);
         browser->SizeWindowTo(windowBounds.width + widthDelta,
-                              windowBounds.height + heightDelta);
+                              windowBounds.height + heightDelta,
+                              PR_FALSE, PR_FALSE);
       }
 
       // XXX Moving this call up before the call to InitialReflow(), because
