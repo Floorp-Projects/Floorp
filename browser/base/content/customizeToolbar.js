@@ -247,7 +247,7 @@ var paletteDNDObserver = {
     while (toolbarItem) {
       if (toolbarItem.firstChild.id == itemID) {
         item = toolbarItem;
-        return;
+        break;
       }
       toolbarItem = toolbarItem.nextSibling;
     }
