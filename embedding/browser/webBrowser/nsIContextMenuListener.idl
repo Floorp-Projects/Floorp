@@ -1,0 +1,55 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Author:
+ *   Adam Lock <adamlock@netscape.com>
+ *
+ * Contributor(s): 
+ */
+ 
+#include "nsISupports.idl"
+
+interface nsIDOMEvent;
+interface nsIDOMNode;
+
+/**
+ * The nsIContextMenuListener interface is called on embedding clients when
+ * a context menu should be displayed.
+ */
+
+[uuid(3478b6b0-3875-11d4-94ef-0020183bf181)]
+interface nsIContextMenuListener : nsISupports
+{
+    const short CONTEXT_NONE     = 0;
+    const short CONTEXT_DEFAULT  = 1;
+    const short CONTEXT_LINK     = 2;
+    const short CONTEXT_IMAGE    = 4;
+    const short CONTEXT_DOCUMENT = 8;
+    const short CONTEXT_TEXT     = 16;
+    const short CONTEXT_UNKNOWN  = 32;
+
+    /**
+	 * Called when the user attempts to display a context menu, e.g. by
+	 * right-clicking on a link. The combination of flags indicates what was
+	 * clicked on, the DOM event and node objects allow the client to interrogate
+	 * for more information if they like.
+	 */
+    void OnShowContextMenu(in long aContextFlags, in nsIDOMEvent aEvent, in nsIDOMNode aNode);
+};
+
