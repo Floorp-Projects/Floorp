@@ -379,8 +379,8 @@ TAR = tar
 ZIP = $(MOZ_TOOLS)\bin\zip
 GZIP = gzip
 
-TARBALL = $(MOZ_SRC)\mozilla-newlayout-$(DATE)-win.tar
-TARBALL_ZIP = $(MOZ_SRC)\win-$(DATE).zip
+TARBALL = $(MOZ_SRC)\mozilla-newlayout-$(DATE)-win32.tar
+TARBALL_ZIP = $(MOZ_SRC)\mozilla-newlayout-$(DATE)-win32.zip
 
 TARFILES = mozilla
 
