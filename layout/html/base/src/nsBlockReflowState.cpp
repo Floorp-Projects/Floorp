@@ -1813,11 +1813,11 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
  */
 nsresult
 nsBlockFrame::PullFrame(nsBlockReflowState& aState,
-                         nsLineBox* aLine,
-                         nsLineBox** aFromList,
-                         PRBool aUpdateGeometricParent,
-                         nsIFrame*& aFrameResult,
-                         PRBool& aStopPulling)
+                        nsLineBox* aLine,
+                        nsLineBox** aFromList,
+                        PRBool aUpdateGeometricParent,
+                        nsIFrame*& aFrameResult,
+                        PRBool& aStopPulling)
 {
   nsLineBox* fromLine = *aFromList;
   NS_ASSERTION(nsnull != fromLine, "bad line to pull from");
@@ -1881,8 +1881,8 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 
 void
 nsBlockFrame::DidReflowLine(nsBlockReflowState& aState,
-                             nsLineBox* aLine,
-                             PRBool aLineReflowStatus)
+                            nsLineBox* aLine,
+                            PRBool aLineReflowStatus)
 {
   // If the line no longer needs a floater array, get rid of it and
   // save some memory
@@ -1900,8 +1900,8 @@ nsBlockFrame::DidReflowLine(nsBlockReflowState& aState,
 
 void
 nsBlockFrame::SlideFrames(nsIPresContext& aPresContext,
-                           nsISpaceManager* aSpaceManager,
-                           nsLineBox* aLine, nscoord aDY)
+                          nsISpaceManager* aSpaceManager,
+                          nsLineBox* aLine, nscoord aDY)
 {
 #if 0
 ListTag(stdout); printf(": SlideFrames: line=%p dy=%d\n", aDY);
@@ -1932,9 +1932,9 @@ ListTag(stdout); printf(": SlideFrames: line=%p dy=%d\n", aDY);
 
 void
 nsBlockFrame::SlideFloaters(nsIPresContext& aPresContext,
-                             nsISpaceManager* aSpaceManager,
-                             nsLineBox* aLine, nscoord aDY,
-                             PRBool aUpdateSpaceManager)
+                            nsISpaceManager* aSpaceManager,
+                            nsLineBox* aLine, nscoord aDY,
+                            PRBool aUpdateSpaceManager)
 {
   nsVoidArray* floaters = aLine->mFloaters;
   if (nsnull != floaters) {
@@ -3426,11 +3426,11 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
   return rv;
 }
 
-// XXX need code in here to join two inline lines together if a block
-// is deleted between them.
+// XXX simplify this by using RemoveChild and DeleteChildsNextInFlow
+
 nsresult
 nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
-                             nsIFrame* aDeletedFrame)
+                            nsIFrame* aDeletedFrame)
 {
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
@@ -3471,8 +3471,6 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
       aDeletedFrame->GetParent(&parent);
       NS_ASSERTION(flow == parent, "messed up delete code");
 #endif
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
-         ("nsBlockFrame::ContentDeleted: deadFrame=%p", aDeletedFrame));
 
       // See if the frame is a floater (actually, the floaters
       // placeholder). If it is, then destroy the floated frame too.
@@ -3504,12 +3502,13 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
       // Remove aDeletedFrame from the line
       if (line->mFirstChild == aDeletedFrame) {
         line->mFirstChild = nextFrame;
-        if (!line->IsBlock() && (nsnull != prevLine) && !prevLine->IsBlock()) {
-          // Make sure the previous line (if it's an inline line) gets
-          // a reflow too so that it can pullup from the line where we
-          // just removed the frame.
-          prevLine->MarkDirty();
-        }
+      }
+      if (!line->IsBlock() && (nsnull != prevLine) && !prevLine->IsBlock()) {
+        // Make sure the previous line (if it's an inline line) gets
+        // a reflow too so that it can pullup from the line where we
+        // just removed the frame.
+        prevLine->MarkDirty();
+        // XXX Note: prevLine may be in a prev-in-flow
       }
 
       // Take aDeletedFrame out of the sibling list. Note that
@@ -3744,19 +3743,14 @@ nsBlockFrame::RemoveChild(nsLineBox* aLines, nsIFrame* aChild)
       nsIFrame* nextChild;
       child->GetNextSibling(&nextChild);
       if (child == aChild) {
-        NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-           ("nsBlockFrame::RemoveChild: line=%p frame=%p",
-            line, aChild));
-        // Continuations HAVE to be at the start of a line
-        NS_ASSERTION(child == line->mFirstChild, "bad continuation");
-        line->mFirstChild = nextChild;
+        if (child == line->mFirstChild) {
+          line->mFirstChild = nextChild;
+        }
         if (0 == --line->mChildCount) {
           line->mFirstChild = nsnull;
         }
         if (nsnull != prevChild) {
-          // When nextInFlow and it's continuation are in the same
-          // container then we remove the nextInFlow from the sibling
-          // list.
+          // Take child out of sibling list too
           prevChild->SetNextSibling(nextChild);
         }
         return PR_TRUE;
