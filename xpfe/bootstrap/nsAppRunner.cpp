@@ -1057,6 +1057,9 @@ static void DumpHelp(char *appname)
   printf("%s-ProfileWizard%sStart with profile wizard.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-SelectProfile%sStart with profile selection dialog.\n",HELP_SPACER_1,HELP_SPACER_2);
+#ifdef XP_WIN32
+  printf("%s-console%sStart Mozilla with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2);
+#endif
 #ifdef MOZ_ENABLE_XREMOTE
   printf("%s-remote <command>%sExecute <command> in an already running\n"
          "%sMozilla process.  For more info, see:\n"
