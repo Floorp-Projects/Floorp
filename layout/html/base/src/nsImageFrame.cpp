@@ -1231,15 +1231,13 @@ nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
 NS_IMETHODIMP
 nsImageFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
 {
-  NS_ASSERTION(mStyleContext, "null style context is really really bad");
+  // images really CAN continue text runs, but the textFrame needs to be 
+  // educated before we can indicate that it can. For now, we handle the fixing up 
+  // of max element widths in nsLineLayout::VerticalAlignFrames, but hopefully
+  // this can be eliminated and the textFrame can be convinced to handle inlines
+  // that take up space in text runs.
 
-  // check for block element: 
-  // we only contine a text run if we are NOT acting as a block
-  const nsStyleDisplay* display =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  NS_ASSERTION(display, "null display style struct - how?");
-
-  aContinueTextRun = !(display->IsBlockLevel());
+  aContinueTextRun = PR_FALSE;
   return NS_OK;
 }
 

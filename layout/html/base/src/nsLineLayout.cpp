@@ -77,6 +77,7 @@
 #define PLACED_RIGHT 0x2
 
 #define HACK_MEW
+//#undef HACK_MEW
 #ifdef HACK_MEW
 static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFrame, PRBool& inChild)
 {
@@ -106,6 +107,37 @@ static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFra
 
   return sizes;
 }
+
+static PRBool InUnconstrainedTableCell(const nsHTMLReflowState& aBlockReflowState)
+{
+  PRBool result = PR_FALSE;
+
+  // get the parent reflow state
+  const nsHTMLReflowState* parentReflowState = aBlockReflowState.parentReflowState;
+  if (parentReflowState) {
+    // check if the frame is a tablecell
+    NS_ASSERTION(parentReflowState->mStyleDisplay, "null styleDisplay in parentReflowState unexpected");
+    if (parentReflowState->mStyleDisplay &&
+        parentReflowState->mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
+      // see if width is unconstrained or percent
+      NS_ASSERTION(parentReflowState->mStylePosition, "null stylePosition in parentReflowState unexpected");
+      if(parentReflowState->mStylePosition) {
+        switch(parentReflowState->mStylePosition->mWidth.GetUnit()) {
+          case eStyleUnit_Percent :
+          case eStyleUnit_Auto :
+          case eStyleUnit_Null :
+            result = PR_TRUE;
+            break;
+          default:
+            result = PR_FALSE;
+            break;
+        }
+      }
+    }
+  }
+  return result;
+}
+
 #endif
 
 MOZ_DECL_CTOR_COUNTER(nsLineLayout)
@@ -1861,6 +1893,13 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
   nscoord maxElementHeight = 0;
   PRBool prevFrameAccumulates = PR_FALSE;
   nscoord accumulatedWidth = 0;
+#ifdef HACK_MEW
+  PRBool strictMode = InStrictMode();
+  PRBool inUnconstrainedTable = InUnconstrainedTableCell(*mBlockReflowState);
+#endif
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  int frameCount = 0;
+#endif
 
   while (nsnull != pfd) {
 
@@ -1875,38 +1914,40 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
       else {
 
 #ifdef HACK_MEW
-        // accumulate the widths of any image frames in the current frame
-        // if there are images, accumulate the widths of the frames containing the images
+        // if in Quirks mode and in a table cell with an unconstrained width, then emulate an IE
+        // quirk to keep consecutive images from breaking the line
+        // NOTE: we check for the maxElementWidth == the CcombinedAreaWidth to detect when
+        //       a textframe has whitespace in it and thus should not be used as the basis
+        //       for accumulating the image width
         // - this is to handle images in a text run
         // - see bugs 54565, 32191, and their many dups
         // XXX - reconsider how textFrame text measurement happens and have it take into account
         //       image frames as well, thus eliminating the need for this code
-        PRBool inChild = PR_FALSE;
-        nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame, inChild);
-        // NOTE: the imgSizes do not need to be added into the width of the frame, we just
-        //       need to accumualte adjacent frames
-        PRBool curFrameAccumulates = (imgSizes > 0);
+        if (!strictMode && 
+            inUnconstrainedTable && 
+            pfd->mMaxElementSize.width == pfd->mCombinedArea.width &&
+            pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
+          PRBool inChild = PR_FALSE;
+          nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame, inChild);
+          PRBool curFrameAccumulates = (imgSizes > 0);
 
-        if (prevFrameAccumulates && curFrameAccumulates) {
+          if(!prevFrameAccumulates && !curFrameAccumulates) {
+            accumulatedWidth = mw;
+          } else if (curFrameAccumulates || prevFrameAccumulates) {
+            accumulatedWidth += mw;
+          } 
+          // now update the prevFrame
+          prevFrameAccumulates = curFrameAccumulates;
+        
+#ifdef NOISY_MAX_ELEMENT_SIZE
+          printf("(%d) last frame's MEW=%d | Accumulated MEW=%d\n", frameCount, mw, accumulatedWidth);
+#endif // NOISY_MAX_ELEMENT_SIZE
 
- #ifdef NOISY_MAX_ELEMENT_SIZE
-          printf("Contiguous continuable frames: MEW being coalessed...\n");
-          printf("last frame's MEW=%d | Accumulated MEW=%d\n", mw, accumulatedWidth+mw);
- #endif
-          // accumulate the MEW
-          accumulatedWidth += mw;
-          if (accumulatedWidth > mw)
-            mw = accumulatedWidth;
-        } else if(curFrameAccumulates) {
-          // start the accumulation (first continuable frame in potential sequence)
-          accumulatedWidth = mw;
-        } else {
-          // clear the accumulation
-          accumulatedWidth = 0;
+          mw = accumulatedWidth;
         }
-        // now update the prevFrame
-        prevFrameAccumulates = curFrameAccumulates;
-#endif
+
+#endif // HACK_MEW
+
         // and finally reset the max element width
         if (maxElementWidth < mw) {
           maxElementWidth = mw;
