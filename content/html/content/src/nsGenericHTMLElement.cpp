@@ -1357,35 +1357,6 @@ IsArea(nsIContent *aContent)
 }
 
 nsresult
-nsGenericHTMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                     nsEvent* aEvent,
-                                     nsIDOMEvent** aDOMEvent,
-                                     PRUint32 aFlags,
-                                     nsEventStatus* aEventStatus)
-{
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-
-  // Try script event handlers first
-  nsresult ret = nsGenericElement::HandleDOMEvent(aPresContext, aEvent,
-                                                  aDOMEvent, aFlags,
-                                                  aEventStatus);
-
-  if (NS_SUCCEEDED(ret) && aPresContext && 
-      nsEventStatus_eConsumeNoDefault != *aEventStatus &&
-      !(aFlags & (NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_SYSTEM_EVENT)) && 
-      aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN &&
-      !IsContentOfType(eHTML_FORM_CONTROL) &&
-      HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex) &&
-      IsFocusable()) {
-    // Any visible element is focusable if tabindex >= 0
-    ret = Focus();
-    *aEventStatus = nsEventStatus_eConsumeNoDefault;
-  }
-
-  return ret;
-}
-
-nsresult
 nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
                                                nsEvent* aEvent,
                                                nsIDOMEvent** aDOMEvent,

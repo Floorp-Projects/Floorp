@@ -1258,7 +1258,6 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
    * @return whether the frame is focusable via mouse, kbd or script.
    */
   PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
-  static nsIFrame *FocusableAncestor(nsIFrame *aFrame);
 
 protected:
   // Members
