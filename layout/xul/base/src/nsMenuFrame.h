@@ -114,7 +114,9 @@ public:
 
   void ToggleMenuState();
   void SelectMenu(PRBool aActivateFlag);
+  
   void OpenMenu(PRBool aActivateFlag);
+  
   void ActivateMenu(PRBool aActivateFlag);
 
   PRBool IsMenu();
@@ -132,6 +134,7 @@ public:
   PRBool IsGenerated();
 
 protected:
+  void OpenMenuInternal(PRBool aActivateFlag);
   void GetMenuChildrenElement(nsIContent** aResult);
 
   // Called to split the accesskey attribute up based on the specified string.
@@ -148,6 +151,11 @@ protected:
 
   // Called as a hook just before the menu goes away.
   PRBool OnDestroy();
+
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
 
 protected:
   nsFrameList mPopupFrames;

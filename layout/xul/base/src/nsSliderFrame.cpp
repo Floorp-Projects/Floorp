@@ -190,9 +190,10 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
   // if the current position changes
   if (aAttribute == nsXULAtoms::curpos) {
      CurrentPositionChanged(aPresContext);
-  } else if (aAttribute == nsXULAtoms::maxpos || 
+  } else if ((aHint != NS_STYLE_HINT_REFLOW) && 
+             (aAttribute == nsXULAtoms::maxpos || 
              aAttribute == nsXULAtoms::pageincrement ||
-             aAttribute == nsXULAtoms::increment) {
+             aAttribute == nsXULAtoms::increment)) {
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
   

@@ -155,17 +155,20 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
   mNeedsLayout = PR_TRUE;
   UpdateAttributes(*aPresContext);
 
-#if 1 // added back in because boxes now handle only redraw what is reflowed.
+  // added back in because boxes now handle only redraw what is reflowed.
   // reflow
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   
-  nsCOMPtr<nsIReflowCommand> reflowCmd;
-  nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                                        nsIReflowCommand::StyleChanged);
-  if (NS_SUCCEEDED(rv)) 
-    shell->AppendReflowCommand(reflowCmd);
-#endif
+  if (aHint != NS_STYLE_HINT_REFLOW && 
+    (aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::value ||
+    aAttribute == nsHTMLAtoms::src || aAttribute == nsXULAtoms::crop)) {
+    nsCOMPtr<nsIReflowCommand> reflowCmd;
+    nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                          nsIReflowCommand::StyleChanged);
+    if (NS_SUCCEEDED(rv)) 
+      shell->AppendReflowCommand(reflowCmd);
+  }
 
   // redraw
   mRenderer.Redraw();

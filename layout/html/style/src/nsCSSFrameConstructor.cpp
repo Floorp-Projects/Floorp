@@ -6859,7 +6859,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
           break;
         case NS_STYLE_HINT_REFLOW:
         case NS_STYLE_HINT_VISUAL:
-          break;
         case NS_STYLE_HINT_CONTENT:
           // let the frame deal with it, since we don't know how to
           result = primaryFrame->AttributeChanged(aPresContext, aContent, aAttribute, maxHint);

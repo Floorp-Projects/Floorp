@@ -373,8 +373,40 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
   }
 }  
 
+NS_IMETHODIMP
+nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint)
+{
+  if (aAttribute == nsXULAtoms::open) {
+    nsAutoString openVal;
+    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aChild);
+    domElement->GetAttribute("open", openVal);
+    if (openVal == "true")
+      OpenMenuInternal(PR_TRUE);
+    else OpenMenuInternal(PR_FALSE);
+  }
+
+  return NS_OK;
+}
+
+void
+nsMenuFrame::OpenMenu(PRBool aActivateFlag)
+{
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
+  if (aActivateFlag) {
+    // Now that the menu is opened, we should have a menupopup child built.
+    // Mark it as generated, which ensures a frame gets built.
+    MarkAsGenerated();
+
+    domElement->SetAttribute("open", "true");
+  }
+  else domElement->RemoveAttribute("open");
+}
+
 void 
-nsMenuFrame::OpenMenu(PRBool aActivateFlag) 
+nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag) 
 {
   gEatMouseMove = PR_TRUE;
 
@@ -386,12 +418,7 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     if (!OnCreate())
       return;
 
-    // Open the menu.
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
-    domElement->SetAttribute("open", "true");
-
-    // Now that the menu is opened, we should have a menupopup child built.
-    // Mark it as generated, which ensures a frame gets built.
+    // XXX Only have this here because of RDF-generated content.
     MarkAsGenerated();
 
     nsIFrame* frame = mPopupFrames.FirstChild();
@@ -427,9 +454,6 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
       menuPopup->SetCurrentMenuItem(nsnull);
 
     ActivateMenu(PR_FALSE);
-
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
-    domElement->RemoveAttribute("open");
 
     mMenuOpen = PR_FALSE;
 
@@ -958,7 +982,15 @@ nsMenuFrame::OnCreate()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_CREATE;
-  nsresult rv = mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+  
+  nsresult rv;
+  if (child) 
+    rv = child->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  else rv = mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+
   if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return PR_FALSE;
   return PR_TRUE;
@@ -971,7 +1003,15 @@ nsMenuFrame::OnDestroy()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_DESTROY;
-  nsresult rv = mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+  
+  nsresult rv;
+  if (child) 
+    rv = child->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  else rv = mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+
   if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return PR_FALSE;
   return PR_TRUE;

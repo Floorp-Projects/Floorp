@@ -57,9 +57,11 @@ nsNativeButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         /*XXXnsresult result = */GetValue(&value);
         button->SetLabel(value);
         NS_RELEASE(button);
-        nsFormFrame::StyleChangeReflow(aPresContext, this);
+        if (aHint != NS_STYLE_HINT_REFLOW) 
+          nsFormFrame::StyleChangeReflow(aPresContext, this);
       }
-    } else if (nsHTMLAtoms::size == aAttribute) {
+    } else if (nsHTMLAtoms::size == aAttribute &&
+               aHint != NS_STYLE_HINT_REFLOW) {
       nsFormFrame::StyleChangeReflow(aPresContext, this);
     }
     // Allow the base class to handle common attributes supported

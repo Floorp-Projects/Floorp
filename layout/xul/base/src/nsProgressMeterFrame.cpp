@@ -690,7 +690,9 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
     setMode(newValue);
 
     // needs to reflow so we start the timer.
-    Reflow(aPresContext);
+    if (aHint != NS_STYLE_HINT_REFLOW)
+      Reflow(aPresContext);
+
   } else if (nsHTMLAtoms::align == aAttribute) {
     nsAutoString newValue;
 
@@ -698,8 +700,8 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
     aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, newValue);
     setAlignment(newValue);
 
- 
-    Reflow(aPresContext);
+    if (aHint != NS_STYLE_HINT_REFLOW)
+      Reflow(aPresContext);
   }
 
   return NS_OK;

@@ -252,10 +252,10 @@ nsTreeRowFrame::GetCursor(nsIPresContext& aPresContext,
     nsRect rect;
     GetRect(rect);
     if (rect.x > aPoint.x || (rect.x+rect.width < aPoint.x)) {
-      aCursor = NS_STYLE_CURSOR_W_RESIZE;
+      aCursor = NS_STYLE_CURSOR_DEFAULT;
     }
     else {
-      aCursor = NS_STYLE_CURSOR_DEFAULT;
+      aCursor = NS_STYLE_CURSOR_W_RESIZE;
     }
   }
   else aCursor = NS_STYLE_CURSOR_DEFAULT;
