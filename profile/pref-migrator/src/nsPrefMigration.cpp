@@ -42,12 +42,24 @@
 
 #define PREF_FILE_HEADER_STRING "# Mozilla User Preferences    " 
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX)
+#define MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
 #define SUMMARY_SUFFIX_IN_4x ".summary"
-#else
+#define COOKIES_FILE_NAME_IN_4x "cookies"
+#elif defined(XP_MAC)
+#define MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
+#define MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x " Rules"   
 #define SUMMARY_SUFFIX_IN_4x ".snm"
+#define COOKIES_FILE_NAME_IN_4x "MagicCookie" 
+#else /* XP_PC */
+#define MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
+#define SUMMARY_SUFFIX_IN_4x ".snm"
+#define COOKIES_FILE_NAME_IN_4x "cookies.txt"
 #endif /* XP_UNIX */
+
 #define SUMMARY_SUFFIX_IN_5x ".msf"
+#define COOKIES_FILE_NAME_IN_5x "cookies.txt"
+#define MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
 
 #define PREMIGRATION_PREFIX "premigration"
 #define PREF_MAIL_DIRECTORY "mail.directory"
@@ -462,6 +474,22 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
   PR_FREEIF(news_hd_name);
 #endif /* XP_UNIX */
 
+  PRBool needToRenameFilterFiles;
+  if (PL_strcmp(MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x)) {
+#ifdef MAIL_FILTER_FILE_SUFFIX_IN_4x
+    // if our filter files had a suffix (the weren't all named the same thing)
+    // we don't need to rename them when we copy.
+    // we do that later.
+    needToRenameFilterFiles = PR_FALSE;
+#else
+    needToRenameFilterFiles = PR_TRUE;
+#endif /* MAIL_FILTER_FILE_SUFFIX_IN_4x */
+  }
+  else {
+    // if the name was the same in 4x as in 5x, no need to rename it
+    needToRenameFilterFiles = PR_FALSE;
+  }
+  
   rv = DoTheCopy(oldProfilePath, newProfilePath, PR_FALSE);
   if (NS_FAILED(rv)) return rv;
   rv = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
@@ -471,13 +499,13 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
 #endif /* XP_UNIX */
   if(hasIMAP)
   {
-    rv = DoTheCopy(oldIMAPMailPath, newIMAPMailPath, PR_TRUE);
+    rv = DoTheCopyAndRename(oldIMAPMailPath, newIMAPMailPath, PR_TRUE, needToRenameFilterFiles,MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
-    rv = DoTheCopy(oldIMAPLocalMailPath, newIMAPLocalMailPath, PR_TRUE);
+    rv = DoTheCopyAndRename(oldIMAPLocalMailPath, newIMAPLocalMailPath, PR_TRUE, needToRenameFilterFiles,MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
   }
   else {
-    rv = DoTheCopy(oldPOPMailPath, newPOPMailPath, PR_TRUE);
+    rv = DoTheCopyAndRename(oldPOPMailPath, newPOPMailPath, PR_TRUE,needToRenameFilterFiles,MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -654,14 +682,12 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
 {
   char* folderName;
   nsAutoString fileOrDirNameStr;
-  PRInt32 len;
 
   for (nsDirectoryIterator dir(inputPath, PR_FALSE); dir.Exists(); dir++)
   {
     nsFileSpec fileOrDirName = (nsFileSpec&)dir;
     folderName = fileOrDirName.GetLeafName();
     fileOrDirNameStr = folderName;
-    len = fileOrDirNameStr.Length();
     if (nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
       continue;
     else
@@ -747,18 +773,28 @@ nsPrefMigration::CheckForSpace(nsFileSpec newProfilePath, PRFloat64 requiredSpac
 }
 
 /*-------------------------------------------------------------------------
- * DoTheCopy copies the files listed in oldPath to newPath
- * 
+ * DoTheCopyAndRename copies the files listed in oldPath to newPath
+ *                    and renames files, if necessary
+ *
  * INPUT: oldPath - The old profile path plus the specific data type 
  *                  (e.g. mail or news)
  *        newPath - The new profile path plus the specific data type
+ *
+ *        readSubdirs
+ *
+ *        needToRenameFiles - do we need to search for files named oldFile
+ *                            and rename them to newFile
+ *
+ *        oldFile           - old file name (used for renaming)
+ *
+ *        newFile           - new file name (used for renaming)
  *
  * RETURNS: NS_OK if successful
  *          NS_ERROR_FAILURE if failed
  *
  *--------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSubdirs)
+nsPrefMigration::DoTheCopyAndRename(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSubdirs, PRBool needToRenameFiles, const char *oldName, const char *newName)
 {
   char* folderName = nsnull;
   nsAutoString fileOrDirNameStr;
@@ -780,13 +816,24 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
           nsFileSpec newPathExtended = newPath;
           newPathExtended += folderName;
           newPathExtended.CreateDirectory();
-          DoTheCopy(fileOrDirName, newPathExtended, PR_TRUE); /* re-enter the DoTheCopy function */
+          DoTheCopyAndRename(fileOrDirName, newPathExtended, PR_TRUE, needToRenameFiles, oldName, newName); /* re-enter the DoTheCopyAndRename function */
         }
         else
           continue;
       }
-      else
+      else {
+        // copy the file
         fileOrDirName.Copy(newPath);
+
+        if (needToRenameFiles) {
+          // rename the file, if it matches
+          if (fileOrDirNameStr == oldName) {
+            nsFileSpec newFile = newPath;
+            newFile += fileOrDirNameStr;
+            newFile.Rename(newName);
+          }
+        }
+      }
     }
   }  
   
@@ -794,6 +841,12 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
 }
 
 
+nsresult
+nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSubdirs)
+{
+  return DoTheCopyAndRename(oldPath, newPath, readSubdirs, PR_FALSE, "", "");
+}
+ 
 /*----------------------------------------------------------------------------
  * DoSpecialUpdates updates is a routine that does some miscellaneous updates 
  * like renaming certain files, etc.
@@ -802,9 +855,13 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
 nsresult
 nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
 {
-#ifdef XP_UNIX
-    printf("TODO: rename imap filter files:  mailrule to rules.dat\n");
-    printf("TODO: rename pop filter file:  mailrule to rules.dat\n");
+  nsresult rv;
+  
+#if defined(XP_UNIX)
+  printf("TODO: rename imap filter files:  mailrule to rules.dat\n");
+  printf("TODO: rename pop filter file:  mailrule to rules.dat\n");
+#elif defined(XP_MAC)
+  printf("TODO: move and rename the mail filter files\n"); 
 #endif /* XP_UNIX */
 
   nsFileSpec fs(profilePath);
@@ -823,9 +880,49 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
    */
   fsStream << PREF_FILE_HEADER_STRING << nsEndl ;
 
+  // rename the cookies file, but only if we need to.
+  if (PL_strcmp(COOKIES_FILE_NAME_IN_4x,COOKIES_FILE_NAME_IN_5x)) {
+    rv = RenameCookiesFile(profilePath);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+#ifdef MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
+  rv = RenameAndMoveFilterFiles(profilePath);
+  if (NS_FAILED(rv)) return rv;
+#endif /* MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x */
+                       
+  return rv;
+}
+
+nsresult
+nsPrefMigration::RenameAndMoveFilterFiles(nsFileSpec profilePath)
+{
+  // unlike windows and unix, in 4.x the mac stored the filter files in
+  // <profile>/<hostname> Rules
+  // instead of
+  // <profile>/ImapMail/<hostname>/rules.dat
+  //
+  // find all files in profilePath that end with MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
+  // hostname = filename - MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
+  // copy file to Mail/<hostname>/MAIL_FILTER_NAME_IN_5x
+  // or
+  // copy file to ImapMail/<hostname>/MAIL_FILTER_NAME_IN_5x
   return NS_OK;
 }
 
+nsresult
+nsPrefMigration::RenameCookiesFile(nsFileSpec profilePath)
+{
+  nsFileSpec cookiesFile(profilePath);
+
+  cookiesFile += COOKIES_FILE_NAME_IN_4x;
+  
+  // make sure it exists before you try to rename it
+  if (cookiesFile.Exists()) {
+    cookiesFile.Rename(COOKIES_FILE_NAME_IN_5x);
+  }
+  return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // DLL Entry Points:

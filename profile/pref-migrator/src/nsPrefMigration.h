@@ -73,8 +73,17 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
                          nsFileSpec newPath,
                          PRBool readSubdirs); 
 
-      nsresult DoSpecialUpdates(nsFileSpec profilePath);
+      nsresult DoTheCopyAndRename(nsFileSpec oldPath, 
+                              nsFileSpec newPath,
+                              PRBool readSubdirs,
+                              PRBool needToRenameFiles,
+                              const char *oldName,
+                              const char *newName); 
 
+      nsresult DoSpecialUpdates(nsFileSpec profilePath);
+      nsresult RenameCookiesFile(nsFileSpec profilePath);
+      nsresult RenameAndMoveFilterFiles(nsFileSpec profilePath);
+  
       nsresult SetPremigratedCharPref(const char *pref_name, char *value);
       nsresult SetPremigratedFilePref(const char *pref_name, nsFileSpec &filePath);
 

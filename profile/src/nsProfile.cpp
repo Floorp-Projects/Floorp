@@ -48,6 +48,11 @@
 #define AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE 1
 #endif
 
+#ifdef XP_UNIX
+#define USER_ENVIRONMENT_VARIABLE "USER"
+#define HOME_ENVIRONMENT_VARIABLE "HOME"
+#endif
+
 #ifndef NECKO
 #include "nsINetService.h"
 #else
@@ -2060,8 +2065,8 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 		}
 	}
 #else
-    char *unixProfileName = PR_GetEnv("USER");
-    char *unixProfileDirectory = PR_GetEnv("HOME");
+    char *unixProfileName = PR_GetEnv(USER_ENVIRONMENT_VARIABLE);
+    char *unixProfileDirectory = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
 
     if (unixProfileName && unixProfileDirectory) {
 	PL_strcpy(gOldProfiles[g_numOldProfiles], nsUnescape(unixProfileName));
