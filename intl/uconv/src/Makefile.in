@@ -118,7 +118,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DUSE_NSREG -D_IMPL_NS_INTL
+CFLAGS		+= -DUSE_NSREG
 
 # Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.
 # QNX simply objects to the way it's being redefined.

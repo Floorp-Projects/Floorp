@@ -75,8 +75,6 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE) $(DESTDIR)$(mozappdir)/res
 
-DEFINES	+= -D_IMPL_NS_INTL
-
 ifeq ($(OS_ARCH),WINNT)
 DEFINES	+= -DWIN32_LEAN_AND_MEAN
 endif

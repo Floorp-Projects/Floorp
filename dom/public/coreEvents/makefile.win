@@ -22,8 +22,6 @@
 DEPTH=..\..\..
 
 
-DEFINES=-D_IMPL_NS_DOM
-
 EXPORTS =				\
 	nsIDOMEventCapturer.h		\
 	nsIDOMEventReceiver.h		\

@@ -37,12 +37,6 @@
 #define nsComObsolete_h__
 
 /* These _IMPL_NS_*  defines should move into their own directories.  */
-#ifdef _IMPL_NS_DOM
-#define NS_DOM NS_EXPORT
-#else
-#define NS_DOM NS_IMPORT
-#endif
-
 #ifdef _IMPL_NS_WIDGET
 #define NS_WIDGET NS_EXPORT
 #else

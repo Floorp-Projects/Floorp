@@ -30,7 +30,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
-DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
+DEFINES=-DWIN32_LEAN_AND_MEAN
 
 LIBRARY_NAME=uconv
 MODULE_NAME=nsUConvModule
