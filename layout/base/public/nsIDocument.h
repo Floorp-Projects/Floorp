@@ -287,8 +287,8 @@ public:
     * NOTE: we may way to place the result in a stream,
     * but we will use a string for now -- gpk
   */
-  virtual void CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection = nsnull) = 0;
-  virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
+  NS_IMETHOD   CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection = nsnull) = 0;
+  NS_IMETHOD   ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
   virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
