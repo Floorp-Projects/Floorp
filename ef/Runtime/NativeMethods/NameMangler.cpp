@@ -58,6 +58,7 @@ Int32 NameMangler::mangleUnicodeChar(Int32 ch, char *bufptr, char *bufend)
   return len;
 }
 
+// FIXME - does not do UTF8 to unicode conversion - fur
 Int32 NameMangler::mangleUTFString(const char *name, 
 				   char *buffer, 
 				   int buflen, 
@@ -75,8 +76,11 @@ Int32 NameMangler::mangleUTFString(const char *name,
         buffer[buflen-1] = '\0';
 
         char *p = buffer;
-        while ((p = strchr(p, '/')) != 0)
-          *p = '_';
+        while (*p) {
+            if ((*p == '/') || (*p == '.'))
+                *p = '_';
+            p++;
+        }
         break;
       }
 
