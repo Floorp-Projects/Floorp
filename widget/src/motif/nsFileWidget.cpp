@@ -19,6 +19,7 @@
 #include "nsFileWidget.h"
 #include <Xm/FileSB.h>
 #include "nsXtEventHandler.h"
+#include "nsStringUtil.h"
 
 #define DBG 0
 extern XtAppContext gAppContext;
@@ -28,7 +29,8 @@ extern XtAppContext gAppContext;
 // nsFileWidget constructor
 //
 //-------------------------------------------------------------------------
-nsFileWidget::nsFileWidget(nsISupports *aOuter) : nsWindow(aOuter)
+nsFileWidget::nsFileWidget(nsISupports *aOuter) : nsWindow(aOuter),
+  mIOwnEventLoop(PR_FALSE)
 {
   //mWnd = NULL;
   mNumberOfFilters = 0;
@@ -72,7 +74,14 @@ void   nsFileWidget:: Create(nsIWidget  *aParent,
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   mWidget = XmCreateFileSelectionDialog(parentWidget, "filesb", NULL, 0);
-  //XtVaSetValues(mWidget, XmNdialogType, XmDIALOG_FULL_APPLICATION_MODAL, nsnull);
+
+  NS_ALLOC_STR_BUF(title, aTitle, 256);
+  XmString str;
+  str = XmStringCreate(title, XmFONTLIST_DEFAULT_TAG);
+  XtVaSetValues(mWidget, XmNdialogTitle, str, nsnull);
+  NS_FREE_STR_BUF(title);
+  XmStringFree(str);
+
 
   XtAddCallback(mWidget, XmNcancelCallback, nsXtWidget_FSBCancel_Callback, this);
   XtAddCallback(mWidget, XmNokCallback, nsXtWidget_FSBOk_Callback, this);
@@ -94,7 +103,7 @@ void nsFileWidget::Create(nsNativeWindow aParent,
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsFileWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult nsFileWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
 {
   static NS_DEFINE_IID(kIFileWidgetIID,    NS_IFILEWIDGET_IID);
 
@@ -103,7 +112,7 @@ nsresult nsFileWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void**) &mAggWidget;
     return NS_OK;
   }
-  return nsWindow::QueryInterface(aIID, aInstancePtr);
+  return nsWindow::QueryObject(aIID, aInstancePtr);
 }
 
 
@@ -115,6 +124,8 @@ nsresult nsFileWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 void nsFileWidget::OnOk()
 {
   XtUnmanageChild(mWidget);
+  mWasCancelled  = PR_FALSE;
+  mIOwnEventLoop = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -125,6 +136,8 @@ void nsFileWidget::OnOk()
 void nsFileWidget::OnCancel()
 {
   XtUnmanageChild(mWidget);
+  mWasCancelled  = PR_TRUE;
+  mIOwnEventLoop = PR_FALSE;
 }
 
 
@@ -138,11 +151,25 @@ void nsFileWidget::Show(PRBool bState)
   nsresult result = nsEventStatus_eIgnore;
   XtManageChild(mWidget);
 
+  // XXX Kludge: gAppContext is a global set in nsAppShell
   XEvent event;
-  for (;;) {
+  mIOwnEventLoop = PR_TRUE;
+  while (mIOwnEventLoop) {
     XtAppNextEvent(gAppContext, &event);
     XtDispatchEvent(&event);
-    printf("%d\n", event.type);
+  }
+
+  if (!mWasCancelled) {
+    XmString str;
+    char *   fileBuf;
+    XtVaGetValues(mWidget, XmNdirSpec, &str, nsnull);
+    if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &fileBuf)) {
+      // Set user-selected location of file or directory
+      mFile.SetLength(0);
+      mFile.Append(fileBuf);
+      XmStringFree(str);
+      XtFree(fileBuf);
+    }
   }
 
   /*char fileBuffer[MAX_PATH];

@@ -33,7 +33,7 @@ class nsFileWidget : public nsWindow
   public:
                             nsFileWidget(nsISupports *aOuter); 
     virtual                 ~nsFileWidget();
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+    NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
 
     void Create(nsIWidget *aParent,
                 const nsRect &aRect,
@@ -68,7 +68,8 @@ class nsFileWidget : public nsWindow
     virtual void            OnCancel();
   
   protected:
-
+     PRBool                 mIOwnEventLoop;
+     PRBool                 mWasCancelled;
      nsString               mTitle;
      nsMode                 mMode;
      nsString               mFile;
