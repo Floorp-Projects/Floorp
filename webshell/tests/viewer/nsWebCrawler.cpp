@@ -58,8 +58,8 @@
 #include "nsIContentViewerFile.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebProgress.h"
 
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
 static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
@@ -206,7 +206,6 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mPrinterTestType = 0;
   mIncludeStyleInfo = PR_TRUE;
   mLastWebShell = nsnull;
-  mLastURL = nsnull;
 }
 
 static void FreeStrings(nsVoidArray& aArray)
@@ -224,12 +223,13 @@ nsWebCrawler::~nsWebCrawler()
   FreeStrings(mSafeDomains);
   FreeStrings(mAvoidDomains);
   NS_IF_RELEASE(mLastWebShell);
-  NS_IF_RELEASE(mLastURL);
   NS_IF_RELEASE(mBrowser);
   delete mVisited;
 }
 
-NS_IMPL_ISUPPORTS1(nsWebCrawler, nsIDocumentLoaderObserver)
+NS_IMPL_ISUPPORTS2(nsWebCrawler, 
+                   nsIWebProgressListener,
+                   nsISupportsWeakReference)
 
 void
 nsWebCrawler::DumpRegressionData(nsIWebShell* aWebShell,
@@ -314,178 +314,170 @@ nsWebCrawler::DumpRegressionData(nsIWebShell* aWebShell,
 #endif
 }
 
+
+// nsIWebProgressListener implementation 
 NS_IMETHODIMP
-nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
-                                  const char* aCommand)
-{
-  if (mDelay > 0) {
-    if (mLastWebShell && mLastURL) {
-      DumpRegressionData(mLastWebShell, mLastURL);
+nsWebCrawler::OnStateChange(nsIWebProgress* aWebProgress, 
+                   nsIRequest *aRequest, 
+                   PRInt32 progressStateFlags, 
+                   nsresult aStatus) {
+    if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+        if (progressStateFlags & nsIWebProgressListener::STATE_START) {
+          if (mDelay > 0) {
+            if (mLastWebShell && mLastURL) {
+              DumpRegressionData(mLastWebShell, mLastURL);
+            }
+          }
+          NS_IF_RELEASE(mLastWebShell);
+          mBrowser->GetWebShell(mLastWebShell);
+
+          nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+          if (!channel) {
+              NS_ASSERTION(channel, "no channel avail");
+              return NS_ERROR_FAILURE;
+          }
+
+          nsCOMPtr<nsIURI> uri;
+          (void) channel->GetURI(getter_AddRefs(uri));
+          mLastURL = uri;
+        }
+
+        if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
+          nsresult rv;
+          PRTime endLoadTime = PR_Now();
+
+          nsCOMPtr<nsIURI> uri;
+          nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+          rv = channel->GetURI(getter_AddRefs(uri));
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+
+          // Ignore this notification unless its for the current url. That way
+          // we skip over embedded webshell notifications (e.g. frame cells,
+          // iframes, etc.)
+          char* spec;
+          uri->GetSpec(&spec);
+          if (!spec) {
+            nsCRT::free(spec);
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
+          nsCOMPtr<nsIURI> currentURL;
+          rv = NS_NewURI(getter_AddRefs(currentURL), mCurrentURL);
+          if (NS_FAILED(rv)) {
+            nsCRT::free(spec);
+            return rv;
+          }
+          char* spec2;
+          currentURL->GetSpec(&spec2);
+          if (!spec2) {
+            nsCRT::free(spec);
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
+          if (PL_strcmp(spec, spec2)) {
+            nsCRT::free(spec);
+            nsCRT::free(spec2);
+            return NS_OK;
+          }
+          nsCRT::free(spec2);
+
+          char buf[400];
+          PRTime delta, cvt, rounder;
+          LL_I2L(cvt, 1000);
+          LL_I2L(rounder, 499);
+          LL_SUB(delta, endLoadTime, mStartLoad);
+          LL_ADD(delta, delta, rounder);
+          LL_DIV(delta, delta, cvt);
+          PR_snprintf(buf, sizeof(buf), "%s: done loading (%lld msec)",
+                      spec, delta);
+          printf("%s\n", buf);
+          nsCRT::free(spec);
+
+          // Make sure the document bits make it to the screen at least once
+          nsIPresShell* shell = GetPresShell();
+          if (nsnull != shell) {
+            nsCOMPtr<nsIViewManager> vm;
+            shell->GetViewManager(getter_AddRefs(vm));
+            if (vm) {
+              nsIView* rootView;
+              vm->GetRootView(rootView);
+              vm->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
+            }
+            if (0 == mDelay) {
+              nsIWebShell* webShell;
+              mBrowser->GetWebShell(webShell);
+              if (webShell) {
+                DumpRegressionData(webShell, uri);
+                NS_RELEASE(webShell);
+              }
+            }
+            if (mJiggleLayout) {
+              nsRect r;
+              mBrowser->GetContentBounds(r);
+              nscoord oldWidth = r.width;
+              while (r.width > 100) {
+                r.width -= 10;
+                mBrowser->SizeWindowTo(r.width, r.height, PR_FALSE, PR_FALSE);
+              }
+              while (r.width < oldWidth) {
+                r.width += 10;
+                mBrowser->SizeWindowTo(r.width, r.height, PR_FALSE, PR_FALSE);
+              }
+            }
+
+            if (mCrawl) {
+              FindMoreURLs();
+            }
+
+            if (0 == mDelay) {
+              LoadNextURL(PR_TRUE);
+            }
+            NS_RELEASE(shell);
+          }
+          else {
+            fputs("null pres shell\n", stdout);
+          }
+
+          if (mPostExit && (0 == mQueuedLoadURLs) && (0==mPendingURLs.Count())) {
+            QueueExit();
+          }
+        }
     }
-  }
-  NS_IF_RELEASE(mLastWebShell);
-  mBrowser->GetWebShell(mLastWebShell);
-
-  NS_IF_RELEASE(mLastURL);
-  mLastURL = aURL;
-  NS_ADDREF(mLastURL);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
-                                nsIRequest* request,
-                                nsresult aStatus)
-{
-  nsresult rv;
-  PRTime endLoadTime = PR_Now();
-
-  if (loader != mDocLoader.get()) {
-    // This notifications is not for the "main" document...
     return NS_OK;
-  }
-
-  if (NS_BINDING_ABORTED == aStatus) {
-    //
-    // Sometimes a Refresh will interrupt a document that is loading...
-    // When this happens just ignore the ABORTED notification and wait
-    // for the notification that the Refreshed document has finished..
-    //
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> aURL;
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (nsnull == aURL) {
-    return NS_OK;
-  }
-
-  // Ignore this notification unless its for the current url. That way
-  // we skip over embedded webshell notifications (e.g. frame cells,
-  // iframes, etc.)
-  char* spec;
-  aURL->GetSpec(&spec);
-  if (!spec) {
-    nsCRT::free(spec);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsCOMPtr<nsIURI> currentURL;
-  rv = NS_NewURI(getter_AddRefs(currentURL), mCurrentURL);
-  if (NS_FAILED(rv)) {
-    nsCRT::free(spec);
-    return rv;
-  }
-  char* spec2;
-  currentURL->GetSpec(&spec2);
-  if (!spec2) {
-    nsCRT::free(spec);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (PL_strcmp(spec, spec2)) {
-    nsCRT::free(spec);
-    nsCRT::free(spec2);
-    return NS_OK;
-  }
-  nsCRT::free(spec2);
-
-  char buf[400];
-  PRTime delta, cvt, rounder;
-  LL_I2L(cvt, 1000);
-  LL_I2L(rounder, 499);
-  LL_SUB(delta, endLoadTime, mStartLoad);
-  LL_ADD(delta, delta, rounder);
-  LL_DIV(delta, delta, cvt);
-  PR_snprintf(buf, sizeof(buf), "%s: done loading (%lld msec)",
-              spec, delta);
-  printf("%s\n", buf);
-  nsCRT::free(spec);
-
-  // Make sure the document bits make it to the screen at least once
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsCOMPtr<nsIViewManager> vm;
-    shell->GetViewManager(getter_AddRefs(vm));
-    if (vm) {
-      nsIView* rootView;
-      vm->GetRootView(rootView);
-      vm->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
-    }
-    if (0 == mDelay) {
-      nsIWebShell* webShell;
-      mBrowser->GetWebShell(webShell);
-      if (webShell) {
-        DumpRegressionData(webShell, aURL);
-        NS_RELEASE(webShell);
-      }
-    }
-    if (mJiggleLayout) {
-      nsRect r;
-      mBrowser->GetContentBounds(r);
-      nscoord oldWidth = r.width;
-      while (r.width > 100) {
-        r.width -= 10;
-        mBrowser->SizeWindowTo(r.width, r.height, PR_FALSE, PR_FALSE);
-      }
-      while (r.width < oldWidth) {
-        r.width += 10;
-        mBrowser->SizeWindowTo(r.width, r.height, PR_FALSE, PR_FALSE);
-      }
-    }
-
-    if (mCrawl) {
-      FindMoreURLs();
-    }
-
-    if (0 == mDelay) {
-      LoadNextURL(PR_TRUE);
-    }
-    NS_RELEASE(shell);
-  }
-  else {
-    fputs("null pres shell\n", stdout);
-  }
-
-  if (mPostExit && (0 == mQueuedLoadURLs) && (0==mPendingURLs.Count())) {
-    QueueExit();
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader,
-                             nsIRequest* request)
-{
-  return NS_OK;
+nsWebCrawler::OnProgressChange(nsIWebProgress *aWebProgress,
+                                     nsIRequest *aRequest,
+                                     PRInt32 aCurSelfProgress,
+                                     PRInt32 aMaxSelfProgress,
+                                     PRInt32 aCurTotalProgress,
+                                     PRInt32 aMaxTotalProgress) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                nsIRequest* request,
-                                PRUint32 aProgress, 
-                                PRUint32 aProgressMax)
-{
-  return NS_OK;
+nsWebCrawler::OnLocationChange(nsIWebProgress* aWebProgress,
+                      nsIRequest* aRequest,
+                      nsIURI *location) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader,
-                              nsIRequest* request, 
-                              nsString& aMsg)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
-nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest* request,
-                           nsresult aStatus)
-{
-  return NS_OK;
+nsWebCrawler::OnStatusChange(nsIWebProgress* aWebProgress,
+                    nsIRequest* aRequest,
+                    nsresult aStatus,
+                    const PRUnichar* aMessage) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsWebCrawler::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                      nsIRequest *aRequest, 
+                      PRInt32 state) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 FILE*
@@ -592,12 +584,15 @@ void
 nsWebCrawler::Start()
 {
   // Enable observing each URL load...
-  nsIWebShell* shell = nsnull;
+  nsIWebShell *shell = nsnull;
   mBrowser->GetWebShell(shell);
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(shell));
-  docShell->SetDocLoaderObserver(this);
-  shell->GetDocumentLoader(*getter_AddRefs(mDocLoader));
   NS_RELEASE(shell);
+  nsCOMPtr<nsIWebProgress> progress(do_GetInterface(docShell));
+  if (!progress) return;
+
+  (void) progress->AddProgressListener((nsIWebProgressListener*)this);
+
   if (mPendingURLs.Count() >= 1) {
     mHaveURLList = PR_TRUE;
     // duplicate the last url if there is a delay since the regression data for the
