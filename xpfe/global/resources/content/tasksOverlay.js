@@ -1,7 +1,7 @@
 
 function toNavigator()
 {
-	CycleWindow('navigator:browser', 'chrome://navigator/content/navigator.xul');
+	CycleWindow('navigator:browser', getBrowserURL());
 }
 
 function toMessengerWindow()

@@ -47,6 +47,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
+#include "nsIPref.h"
 
 // XXX Get rid of this
 #pragma message("WARNING: XXX bad include, remove it.")
@@ -58,6 +59,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 //*****************************************************************************
@@ -1117,13 +1119,29 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    nsEventQueueStack queuePusher;
    NS_ENSURE_SUCCESS(queuePusher.Success(), NS_ERROR_FAILURE);
 
-   char * urlStr = "chrome://navigator/content/navigator.xul";
-   nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID));
-   NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
-
-
    nsCOMPtr<nsIURI> uri;
-   service->NewURI(urlStr, nsnull, getter_AddRefs(uri));
+
+   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+   if (prefs) {
+     char *urlStr;
+     PRBool strAllocated = PR_TRUE;
+     nsresult prefres;
+     prefres = prefs->CopyCharPref("browser.chromeURL", &urlStr);
+     if (NS_SUCCEEDED(prefres) && urlStr[0] == '\0') {
+       PL_strfree(urlStr);
+       prefres = NS_ERROR_FAILURE;
+     }
+     if (NS_FAILED(prefres)) {
+       urlStr = "chrome://navigator/content/navigator.xul";
+       strAllocated = PR_FALSE;
+     }
+
+     nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID));
+     if (service)
+       service->NewURI(urlStr, nsnull, getter_AddRefs(uri));
+     if (strAllocated)
+       PL_strfree(urlStr);
+   }
    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIXULWindow> newWindow;

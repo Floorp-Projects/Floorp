@@ -209,7 +209,7 @@ function OpenURL(event, node, root)
 		return(false);
 
 	// get right sized window
-	window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+	window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
 	return(true);
 }
 

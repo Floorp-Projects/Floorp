@@ -75,7 +75,7 @@ function OpenBookmarkURL(node, datasources)
 	// Check if we have a browser window
 	if (window.content == null)
 	{
-		window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); 
+		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); 
 	}
 	else
 	{

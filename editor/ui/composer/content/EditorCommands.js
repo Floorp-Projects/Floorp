@@ -1116,9 +1116,8 @@ function EditorPreview()
 
   // CheckAndSave doesn't tell us if the user said "Don't Save",
   // so make sure we have a url:
-  if (fileurl != "" && fileurl != "about:blank")
-  {
-    window.openDialog("chrome://navigator/content/navigator.xul",
+  if (fileurl != "" && fileurl != "about:blank") {
+    window.openDialog(getBrowserURL(),
                       "EditorPreview",
                       "chrome,all,dialog=no",
                       fileurl );
