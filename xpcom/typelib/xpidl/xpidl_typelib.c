@@ -1085,6 +1085,9 @@ typelib_op_dcl(TreeState *state)
         }
     }
 
+    /* stick retval param where we can see it later */
+    state->tree = op->op_type_spec;
+
     /* XXX unless [notxpcom] */
     if (!op_notxpcom) {
         if (op->op_type_spec) {
