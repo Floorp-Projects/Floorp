@@ -37,6 +37,11 @@ CPPSRCS=		\
 	xptcinvoke_linux_x86.cpp \
 	xptcstubs_linux_x86.cpp \
 	$(NULL)
+else
+CPPSRCS=		\
+	xptcinvoke_unsupported.cpp \
+	xptcstubs_unsupported.cpp \
+	$(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
