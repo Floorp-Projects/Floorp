@@ -277,7 +277,7 @@ NS_IMETHODIMP FileImpl::Open(
     // Resolve the alias to the original file.
     nsFileSpec original = inFile;
     PRBool ignoredResult;
-    original.ResolveAlias(ignoredResult);
+    original.ResolveSymlink(ignoredResult);
     const FSSpec& spec = original.operator const FSSpec&();
     if (nsprMode & PR_CREATE_FILE)
         err = FSpCreate(&spec, kCreator, 'TEXT', 0);
