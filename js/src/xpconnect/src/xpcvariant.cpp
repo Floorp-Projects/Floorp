@@ -352,6 +352,8 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
     nsXPTCVariant xpctvar;
     nsID iid;
     nsAutoString astring;
+    nsCAutoString cString;
+    nsUTF8String utf8String;
     PRUint32 size;
     xpctvar.flags = 0;
     JSBool success;
@@ -401,9 +403,27 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
         case nsIDataType::VTYPE_ASTRING:        
             if(NS_FAILED(variant->GetAsAString(astring)))
                 return JS_FALSE;
+            xpctvar.type = (uint8)(TD_ASTRING | XPT_TDP_POINTER);
+            xpctvar.val.p = &astring;
+            break;
+        case nsIDataType::VTYPE_DOMSTRING:
+            if(NS_FAILED(variant->GetAsAString(astring)))
+                return JS_FALSE;
             xpctvar.type = (uint8)(TD_DOMSTRING | XPT_TDP_POINTER);
             xpctvar.val.p = &astring;
             break;
+        case nsIDataType::VTYPE_CSTRING:            
+            if(NS_FAILED(variant->GetAsACString(cString)))
+                return JS_FALSE;
+            xpctvar.type = (uint8)(TD_CSTRING | XPT_TDP_POINTER);
+            xpctvar.val.p = &cString;
+            break;
+        case nsIDataType::VTYPE_UTF8STRING:            
+            if(NS_FAILED(variant->GetAsAUTF8String(utf8String)))
+                return JS_FALSE;
+            xpctvar.type = (uint8)(TD_UTF8STRING | XPT_TDP_POINTER);
+            xpctvar.val.p = &utf8String;
+            break;       
         case nsIDataType::VTYPE_CHAR_STR:       
             if(NS_FAILED(variant->GetAsString((char**)&xpctvar.val.p)))
                 return JS_FALSE;
@@ -501,6 +521,9 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
                 // The rest are illegal.
                 case nsIDataType::VTYPE_VOID:        
                 case nsIDataType::VTYPE_ASTRING:        
+                case nsIDataType::VTYPE_DOMSTRING:        
+                case nsIDataType::VTYPE_CSTRING:        
+                case nsIDataType::VTYPE_UTF8STRING:        
                 case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
                 case nsIDataType::VTYPE_STRING_SIZE_IS:        
                 case nsIDataType::VTYPE_ARRAY:
@@ -657,6 +680,26 @@ NS_IMETHODIMP_(nsresult) XPCVariant::GetAsID(nsID *retval)
 NS_IMETHODIMP XPCVariant::GetAsAString(nsAWritableString & _retval)
 {
     return nsVariant::ConvertToAString(mData, _retval);
+}
+
+/* DOMString getAsDOMString (); */
+NS_IMETHODIMP XPCVariant::GetAsDOMString(nsAWritableString & _retval)
+{
+    // A DOMString maps to an AString internally, so we can re-use
+    // ConvertToAString here.
+    return nsVariant::ConvertToAString(mData, _retval);
+}
+
+/* ACString getAsACString (); */
+NS_IMETHODIMP XPCVariant::GetAsACString(nsACString & _retval)
+{
+    return nsVariant::ConvertToACString(mData, _retval);
+}
+
+/* AUTF8String getAsAUTF8String (); */
+NS_IMETHODIMP XPCVariant::GetAsAUTF8String(nsAUTF8String & _retval)
+{
+    return nsVariant::ConvertToAUTF8String(mData, _retval);
 }
 
 /* string getAsString (); */
