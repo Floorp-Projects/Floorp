@@ -74,6 +74,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
 
   <popupset id="bookmarksPopupset"/>
+  <popupset id="aTooltipSet"/>
 
   <commands id="commands">
     <commandset id="CommandUpdate_Bookmarks"
@@ -85,7 +86,6 @@
     <commandset id="tasksCommands"/>
     <commandset id="bookmarksItems"/>
   
-
     <!-- File Menu -->
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
@@ -128,7 +128,7 @@
   </keyset>
   
   <toolbox id="bookmarks-toolbox">
-    <menubar id="main-menubar" grippy="false">
+    <menubar id="main-menubar" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup" onpopupshowing="updateSendLinkItem();">
           <menuitem label="&command.newBookmark.label;" 
@@ -233,7 +233,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar id="command-toolbar" tbalign="stretch" grippy="false">
+    <toolbar id="command-toolbar" tbalign="stretch" grippytooltip="aTooltip" grippytooltiptext="&bookmarkToolbar.tooltip;">
       <toolbarbutton id="newfolder" label="&command.newFolder.label;" 
               command="cmd_newfolder"/>
       <toolbarbutton id="newseparator" label="&command.newSeparator.label;" 
