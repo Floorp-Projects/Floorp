@@ -55,6 +55,7 @@ CPPSRCS = \
 	nsEntropyCollector.cpp \
 	nsSecureBrowserUIImpl.cpp \
 	nsBOOTModule.cpp \
+	nsSecurityWarningDialogs.cpp \
 	$(NULL)
 
 REQUIRES	= nspr \
@@ -72,6 +73,7 @@ REQUIRES	= nspr \
 		  content \
 		  unicharutil \
 		  pipnss \
+		  pref \
 		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
