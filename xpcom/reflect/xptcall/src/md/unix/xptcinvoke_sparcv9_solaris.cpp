@@ -58,25 +58,21 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
     }
     switch (l_s->type)
     {
-      case nsXPTType::T_I8     : *((PRInt64*)l_d) = l_s->val.i8;     break;
-      case nsXPTType::T_I16    : *((PRInt64*)l_d) = l_s->val.i16;    break;
-      case nsXPTType::T_I32    : *((PRInt64*)l_d) = l_s->val.i32;    break;
-      case nsXPTType::T_I64    : *((PRInt64*)l_d) = l_s->val.i64;    break;
+      case nsXPTType::T_I8     : *((PRInt64*)l_d)  = l_s->val.i8;    break;
+      case nsXPTType::T_I16    : *((PRInt64*)l_d)  = l_s->val.i16;   break;
+      case nsXPTType::T_I32    : *((PRInt64*)l_d)  = l_s->val.i32;   break;
+      case nsXPTType::T_I64    : *((PRInt64*)l_d)  = l_s->val.i64;   break;
       
-      case nsXPTType::T_U8     : *((PRInt64*)l_d) = l_s->val.u8;     break;
-      case nsXPTType::T_U16    : *((PRInt64*)l_d) = l_s->val.u16;    break;
-      case nsXPTType::T_U32    : *((PRInt64*)l_d) = l_s->val.u32;    break;
-      case nsXPTType::T_U64    : *((PRInt64*)l_d) = l_s->val.u64;    break;
+      case nsXPTType::T_U8     : *((PRUint64*)l_d) = l_s->val.u8;    break;
+      case nsXPTType::T_U16    : *((PRUint64*)l_d) = l_s->val.u16;   break;
+      case nsXPTType::T_U32    : *((PRUint64*)l_d) = l_s->val.u32;   break;
+      case nsXPTType::T_U64    : *((PRUint64*)l_d) = l_s->val.u64;   break;
       
-      case nsXPTType::T_FLOAT  : *((float*)l_d) = l_s->val.f;      break;
-      case nsXPTType::T_DOUBLE :
-      {
-        *((double*)l_d) = l_s->val.d;
-        break;
-      }
-      case nsXPTType::T_BOOL   : *((PRBool*)l_d) = l_s->val.b;      break;
-      case nsXPTType::T_CHAR   : *((PRUint64*)l_d) = l_s->val.c;      break;
-      case nsXPTType::T_WCHAR  : *((PRInt64*)l_d) = l_s->val.wc;     break;
+      case nsXPTType::T_FLOAT  : *((float*)l_d)    = l_s->val.f;     break;
+      case nsXPTType::T_DOUBLE : *((double*)l_d)   = l_s->val.d;     break;
+      case nsXPTType::T_BOOL   : *((PRBool*)l_d)   = l_s->val.b;     break;
+      case nsXPTType::T_CHAR   : *((PRUint64*)l_d) = l_s->val.c;     break;
+      case nsXPTType::T_WCHAR  : *((PRInt64*)l_d)  = l_s->val.wc;    break;
 
       default:
         // all the others are plain pointer types
