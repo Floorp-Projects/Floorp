@@ -35,7 +35,7 @@ package org.mozilla.jss;
 public final class JSSProvider extends java.security.Provider {
 
     public JSSProvider() {
-        super("Mozilla-JSS", 3.2,
+        super("Mozilla-JSS", 3.3,
                 "Provides Signature, Message Digesting, and RNG");
 
         /////////////////////////////////////////////////////////////
@@ -66,7 +66,6 @@ public final class JSSProvider extends java.security.Provider {
         // Message Digesting
         /////////////////////////////////////////////////////////////
 
-/*
         put("MessageDigest.SHA-1",
                 "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$SHA1");
         put("MessageDigest.MD2",
@@ -76,7 +75,6 @@ public final class JSSProvider extends java.security.Provider {
 
         put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
         put("Alg.Alias.MessageDigest.SHA", "SHA-1");
-*/
 
         /////////////////////////////////////////////////////////////
         // SecureRandom
