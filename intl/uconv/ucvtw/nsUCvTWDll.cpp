@@ -29,6 +29,7 @@
 #include "nsUCvTWDll.h"
 #include "nsBIG5ToUnicode.h"
 #include "nsUnicodeToBIG5.h"
+#include "nsUnicodeToBIG5NoAscii.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -81,6 +82,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToBIG5::CreateInstance,
     "Unicode",
     "BIG5"
+  },
+  {
+    &kUnicodeToBIG5NoAsciiCID,
+    nsUnicodeToBIG5NoAscii::CreateInstance,
+    "Unicode",
+    "x-x-big5"
   }
 };
 
