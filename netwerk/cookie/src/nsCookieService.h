@@ -53,6 +53,7 @@
 struct nsCookieAttributes;
 struct nsListIter;
 struct nsEnumerationData;
+class nsIPrefBranch;
 class nsICookieConsent;
 class nsICookiePermission;
 class nsIPrefBranch;
@@ -166,8 +167,7 @@ class nsCookieService : public nsICookieService
     nsresult                      Init();
 
   protected:
-    void                          InitPrefObservers();
-    nsresult                      ReadPrefs();
+    void                          PrefChanged(nsIPrefBranch *aPrefBranch);
     nsresult                      Read();
     nsresult                      Write();
     PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
@@ -179,10 +179,7 @@ class nsCookieService : public nsICookieService
     static PRBool                 IsIPAddress(const nsAFlatCString &aHost);
     static PRBool                 IsInDomain(const nsACString &aDomain, const nsACString &aHost, PRBool aIsDomain = PR_TRUE);
     static PRBool                 IsForeign(nsIURI *aHostURI, nsIURI *aFirstURI);
-    static nsCookiePolicy         GetP3PPolicy(PRInt32 aPolicy);
-    PRInt32                       SiteP3PPolicy(nsIURI *aCurrentURI, nsIChannel *aChannel);
-    nsCookieStatus                P3PDecision(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel);
-    nsCookieStatus                CheckPrefs(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const char *aCookieHeader);
+    nsCookieStatus                CheckPrefs(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const char *aCookieHeader, nsCookiePolicy &aPolicy);
     static PRBool                 CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, nsInt64 aServerTime, nsInt64 aCurrentTime, nsCookieStatus aStatus);
@@ -201,7 +198,6 @@ class nsCookieService : public nsICookieService
 
   protected:
     // cached members
-    nsCOMPtr<nsIPrefBranch>       mPrefBranch;
     nsCOMPtr<nsIFile>             mCookieFile;
     nsCOMPtr<nsIObserverService>  mObserverService;
     nsCOMPtr<nsICookieConsent>    mP3PService;
@@ -216,25 +212,6 @@ class nsCookieService : public nsICookieService
 
     // cached prefs
     PRUint8                       mCookiesPermissions;   // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, P3P}
-
-    /* mCookiesP3PString (below) consists of 8 characters having the following interpretation:
-     *   [0]: behavior for first-party cookies when site has no privacy policy
-     *   [1]: behavior for third-party cookies when site has no privacy policy
-     *   [2]: behavior for first-party cookies when site uses PII with no user consent
-     *   [3]: behavior for third-party cookies when site uses PII with no user consent
-     *   [4]: behavior for first-party cookies when site uses PII with implicit consent only
-     *   [5]: behavior for third-party cookies when site uses PII with implicit consent only
-     *   [6]: behavior for first-party cookies when site uses PII with explicit consent
-     *   [7]: behavior for third-party cookies when site uses PII with explicit consent
-     *
-     *   (note: PII = personally identifiable information)
-     *
-     * each of the eight characters can be one of the following:
-     *   'a': accept the cookie
-     *   'd': accept the cookie but downgrade it to a session cookie
-     *   'r': reject the cookie
-     */
-    nsXPIDLCString                mCookiesP3PString;
 
     // private static member, used to cache a ptr to nsCookieService,
     // so we can make nsCookieService a singleton xpcom object.

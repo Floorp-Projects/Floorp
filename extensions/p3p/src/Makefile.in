@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  xmlextras \
 		  dom \
+		  pref \
 		  $(NULL)
 
 CPPSRCS =                 \

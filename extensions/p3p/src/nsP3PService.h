@@ -39,25 +39,51 @@
 #define NS_P3PSERVICE_H__
 
 #include "nsICookieConsent.h"
+#include "nsIObserver.h"
+#include "nsAutoPtr.h"
+#include "nsString.h"
 
 class nsCompactPolicy;
-class nsIHttpChannel;
+class nsIPrefBranch;
 
 class nsP3PService : public nsICookieConsent
+                   , public nsIObserver
 {
 public:
   // nsISupports
   NS_DECL_ISUPPORTS
   // nsICookieConsent
   NS_DECL_NSICOOKIECONSENT
+  NS_DECL_NSIOBSERVER
 
   nsP3PService( );
   virtual ~nsP3PService( );
   
 protected:
+  void     PrefChanged(nsIPrefBranch *aPrefBranch);
   nsresult ProcessResponseHeader(nsIHttpChannel* aHttpChannel);
   
-  nsCompactPolicy*  mCompactPolicy;
+  nsAutoPtr<nsCompactPolicy> mCompactPolicy;
+
+  /* mCookiesP3PString (below) consists of 8 characters having the following interpretation:
+   *   [0]: behavior for first-party cookies when site has no privacy policy
+   *   [1]: behavior for third-party cookies when site has no privacy policy
+   *   [2]: behavior for first-party cookies when site uses PII with no user consent
+   *   [3]: behavior for third-party cookies when site uses PII with no user consent
+   *   [4]: behavior for first-party cookies when site uses PII with implicit consent only
+   *   [5]: behavior for third-party cookies when site uses PII with implicit consent only
+   *   [6]: behavior for first-party cookies when site uses PII with explicit consent
+   *   [7]: behavior for third-party cookies when site uses PII with explicit consent
+   *
+   *   (note: PII = personally identifiable information)
+   *
+   * each of the eight characters can be one of the following:
+   *   'a': accept the cookie
+   *   'd': accept the cookie but downgrade it to a session cookie
+   *   'r': reject the cookie
+   *   'f': flag the cookie to the user
+   */
+  nsXPIDLCString             mCookiesP3PString;
 };
 
 #endif /* nsP3PService_h__  */

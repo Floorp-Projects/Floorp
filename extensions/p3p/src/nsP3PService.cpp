@@ -37,25 +37,66 @@
 
 #include "nsP3PService.h"
 #include "nsCompactPolicy.h"
+#include "nsIServiceManager.h"
 #include "nsIHttpChannel.h"
 #include "nsIURI.h"
-#include "nsString.h"
-#include "nsCOMPtr.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+
+// pref string constants
+static const char kCookiesP3PStringPref[] = "network.cookie.p3p";
+static const char kCookiesP3PStringDefault[] = "drdraaaa";
 
 /***********************************
  *   nsP3PService Implementation   *
  ***********************************/
 
-NS_IMPL_ISUPPORTS1(nsP3PService, nsICookieConsent)
+NS_IMPL_ISUPPORTS2(nsP3PService, nsICookieConsent, nsIObserver)
 
 nsP3PService::nsP3PService() 
-  : mCompactPolicy(nsnull)
 {
+  // we can live without a prefservice, so errors here aren't fatal
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch);
+    if (prefInternal) {
+      prefInternal->AddObserver(kCookiesP3PStringPref, this, PR_TRUE);
+    }
+  }
+  PrefChanged(prefBranch);
 }
 
 nsP3PService::~nsP3PService() 
 {
-  delete mCompactPolicy;
+}
+
+void
+nsP3PService::PrefChanged(nsIPrefBranch *aPrefBranch)
+{
+  nsresult rv;
+  if (aPrefBranch) {
+    rv = aPrefBranch->GetCharPref(kCookiesP3PStringPref, getter_Copies(mCookiesP3PString));
+  }
+
+  // check for a malformed string, or no prefbranch
+  if (!aPrefBranch || NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
+    // reassign to default string
+    mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PStringDefault);
+  }
+}
+
+NS_IMETHODIMP
+nsP3PService::Observe(nsISupports     *aSubject,
+                      const char      *aTopic,
+                      const PRUnichar *aData)
+{
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
+  NS_ASSERTION(!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic),
+               "unexpected topic - we only deal with pref changes!");
+
+  PrefChanged(prefBranch);
+  return NS_OK;
 }
 
 nsresult
@@ -87,55 +128,86 @@ nsP3PService::ProcessResponseHeader(nsIHttpChannel* aHttpChannel)
 }
 
 NS_IMETHODIMP
-nsP3PService::GetConsent(const char* aURI, 
-                         nsIHttpChannel* aHttpChannel, 
-                         PRInt32* aConsent)
+nsP3PService::GetConsent(nsIURI         *aURI, 
+                         nsIHttpChannel *aHttpChannel, 
+                         PRBool          aIsForeign,
+                         nsCookiePolicy *aPolicy,
+                         nsCookieStatus *aStatus)
 {
-  nsresult result = NS_OK;
+  *aPolicy = nsICookie::POLICY_UNKNOWN;
+
+  nsCAutoString uriSpec;
+  nsresult rv = aURI->GetSpec(uriSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aHttpChannel) {
-
-#ifdef NS_DEBUG
+#ifdef DEBUG
     nsCOMPtr<nsIURI> uri;
     aHttpChannel->GetURI(getter_AddRefs(uri));  
-    
-    if (uri) {
-      nsCAutoString spec;
-      uri->GetSpec(spec);
 
-      if (aURI) {
-        NS_ASSERTION(spec.Equals(aURI), "URIs don't match");
-      }
-    }
+    PRBool equals;
+    NS_ASSERTION(uri && NS_SUCCEEDED(uri->Equals(aURI, &equals)) && equals,
+                 "URIs don't match");
 #endif
 
-    result = ProcessResponseHeader(aHttpChannel);
-    NS_ENSURE_SUCCESS(result,result);
+    rv = ProcessResponseHeader(aHttpChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   PRInt32 consent = NS_NO_POLICY;
-  result = (mCompactPolicy)? mCompactPolicy->GetConsent(aURI,consent):NS_OK;
+  if (mCompactPolicy) {
+    mCompactPolicy->GetConsent(uriSpec.get(), consent);
+  }
 
   // Map consent to cookies macro
   if (consent & NS_NO_POLICY) {
-    *aConsent = 0;
+    *aPolicy = nsICookie::POLICY_NONE;
   }
   else if (consent & (NS_NO_CONSENT|NS_INVALID_POLICY)) {
-    *aConsent = 2;
+    *aPolicy = nsICookie::POLICY_NO_CONSENT;
   }
   else if (consent & NS_IMPLICIT_CONSENT) {
-    *aConsent = 4;
+    *aPolicy = nsICookie::POLICY_IMPLICIT_CONSENT;
   }
   else if (consent & NS_EXPLICIT_CONSENT) {
-    *aConsent = 6;
+    *aPolicy = nsICookie::POLICY_EXPLICIT_CONSENT;
   }
   else if (consent & NS_NON_PII_TOKEN) {
-    *aConsent = 8; // PII not collected
+    *aPolicy = nsICookie::POLICY_NO_II;
   }  
   else {
     NS_WARNING("invalid consent");
-    *aConsent = 0;
   }
 
-  return result;
+  // munge the policy into something we can get a status from
+  nsCookiePolicy policyForStatus = *aPolicy;
+  if (policyForStatus == nsICookie::POLICY_NO_II) {
+    // the site does not collect identifiable info - treat it as if it did,
+    // and asked for explicit consent
+    policyForStatus = nsICookie::POLICY_EXPLICIT_CONSENT;
+  }
+  else if (policyForStatus == nsICookie::POLICY_UNKNOWN) {
+    // default to no policy
+    policyForStatus = nsICookie::POLICY_NONE;
+  }
+
+  // map the policy number into an index for the pref string.
+  PRInt32 index = (policyForStatus - 1) * 2 + (aIsForeign != PR_FALSE);
+
+  switch (mCookiesP3PString.CharAt(index)) {
+    case 'a':
+      *aStatus = nsICookie::STATUS_ACCEPTED;
+      break;
+    case 'd':
+      *aStatus = nsICookie::STATUS_DOWNGRADED;
+      break;
+    case 'f':
+      *aStatus = nsICookie::STATUS_FLAGGED;
+      break;
+    case 'r':
+    default:
+      *aStatus = nsICookie::STATUS_REJECTED;
+  }
+
+  return NS_OK;
 }
