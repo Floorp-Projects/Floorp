@@ -30,6 +30,7 @@
 #include "nsIComponentManager.h"
 #include "nsIDocumentLoader.h"
 #include "nsILoadGroup.h"
+#include "nsIMsgMailNewsUrl.h"
 
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
@@ -88,6 +89,22 @@ NS_IMETHODIMP nsMsgWindow::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeed
 NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
 {
 	mStatusFeedback = aStatusFeedback;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::GetMsgHeaderSink(nsIMsgHeaderSink * *aMsgHdrSink)
+{
+	if(!aMsgHdrSink)
+		return NS_ERROR_NULL_POINTER;
+
+	*aMsgHdrSink = mMsgHeaderSink;
+	NS_IF_ADDREF(*aMsgHdrSink);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::SetMsgHeaderSink(nsIMsgHeaderSink * aMsgHdrSink)
+{
+	mMsgHeaderSink = aMsgHdrSink;
 	return NS_OK;
 }
 
@@ -207,6 +224,7 @@ NS_IMETHODIMP nsMsgWindow::StopUrls()
 	return NS_ERROR_NULL_POINTER;
 }
 
+
 // nsIURIContentListener support
 NS_IMETHODIMP nsMsgWindow::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHandler **aProtocolHandler)
 {
@@ -224,7 +242,20 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand 
     // forward the DoContent call to our webshell
     nsCOMPtr<nsIURIContentListener> ctnListener = do_QueryInterface(mMessageWindowWebShell);
     if (ctnListener)
+    {
+      // get the url for the channel...let's hope it is a mailnews url so we can set our msg hdr sink on it..
+      // right now, this is the only way I can think of to force the msg hdr sink into the mime converter so it can
+      // get too it later...
+      nsCOMPtr<nsIURI> uri;
+      aChannel->GetURI(getter_AddRefs(uri));
+      if (uri)
+      {
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl(do_QueryInterface(uri));
+        if (mailnewsUrl)
+          mailnewsUrl->SetMsgWindow(this);
+      }
       return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, aChannel, aContentHandler, aAbortProcess);
+    }
   }
   return NS_OK;
 }
@@ -264,7 +295,7 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
     // we can handle this content type...but we would prefer it to be 
     // as text/xul so we can display it...
     *aCanHandleContent = PR_TRUE;
-    *aDesiredContentType = nsCRT::strdup("text/xul");
+    *aDesiredContentType = nsCRT::strdup("text/html");
   }
   else
   {

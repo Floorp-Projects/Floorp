@@ -30,6 +30,7 @@
 #include "nsIMsgFolder.h"
 #include "nsIWebShell.h"
 #include "nsIURIContentListener.h"
+#include "nsIMimeMiscStatus.h"
 
 #include "nsCOMPtr.h"
 
@@ -46,6 +47,7 @@ public:
   NS_DECL_NSIURICONTENTLISTENER
 
 protected:
+  nsCOMPtr<nsIMsgHeaderSink> mMsgHeaderSink;
 	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
 	nsCOMPtr<nsITransactionManager> mTransactionManager;
 	nsCOMPtr<nsIMessageView> mMessageView;
@@ -54,7 +56,5 @@ protected:
 	nsIWebShell *mRootWebShell;
   nsIWebShell *mMessageWindowWebShell;
 };
-
-
 
 #endif
