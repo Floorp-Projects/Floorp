@@ -76,6 +76,7 @@
 #endif
 
 #include "nsSpecialSystemDirectory.h"
+#include "nsAppFileLocationProvider.h"
 
 #if defined(XP_MAC)
 #define COMPONENT_REGISTRY_NAME "Component Registry"
@@ -502,6 +503,13 @@ nsDirectoryService::Init()
     nsDirectoryService::sDesktopDirectory           = NS_NewAtom(NS_BEOS_DESKTOP_DIR);
 #endif
 
+    // Let the list hold the only reference to the provider.
+    nsAppFileLocationProvider *defaultProvider = new nsAppFileLocationProvider;
+    if (!defaultProvider)
+        return NS_ERROR_OUT_OF_MEMORY;
+    // AppendElement returns PR_TRUE for success.
+    rv = mProviders->AppendElement(defaultProvider) ? NS_OK : NS_ERROR_FAILURE;
+
     return rv;
 }
 
@@ -633,8 +641,10 @@ static PRBool FindProviderFile(nsISupports* aElement, void *aData)
       if (prov2)
       {
           rv = prov2->GetFiles(fileData->property, (nsISimpleEnumerator **)&fileData->data);
-          if (NS_SUCCEEDED(rv) && fileData->data)
+          if (NS_SUCCEEDED(rv) && fileData->data) {
+          	  fileData->persistent = PR_FALSE; // Enumerators can never be peristent
               return PR_FALSE;
+          }
       }
   }
   else
@@ -672,7 +682,7 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
     // it is not one of our defaults, lets check any providers
     FileData fileData(prop, uuid);
 
-    mProviders->EnumerateForwards(FindProviderFile, &fileData);
+    mProviders->EnumerateBackwards(FindProviderFile, &fileData);
     if (fileData.data)
     {
         if (fileData.persistent)
@@ -741,14 +751,14 @@ nsDirectoryService::RegisterProvider(nsIDirectoryServiceProvider *prov)
     nsresult rv;
     if (!prov)
         return NS_ERROR_FAILURE;
+    if (!mProviders)
+        return NS_ERROR_NOT_INITIALIZED;
 
     nsCOMPtr<nsISupports> supports = do_QueryInterface(prov, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // AppendElement returns TRUE if it succeeded.
-    // Until this is fixed, fix up the result here.
-    rv = mProviders->AppendElement(supports) ? NS_OK : NS_ERROR_FAILURE;
-    return rv;
+    // AppendElement returns PR_TRUE for success.
+    return mProviders->AppendElement(supports) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -757,14 +767,14 @@ nsDirectoryService::UnregisterProvider(nsIDirectoryServiceProvider *prov)
     nsresult rv;
     if (!prov)
         return NS_ERROR_FAILURE;
+    if (!mProviders)
+        return NS_ERROR_NOT_INITIALIZED;
 
     nsCOMPtr<nsISupports> supports = do_QueryInterface(prov, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // AppendElement returns TRUE if it succeeded.
-    // Until this is fixed, fix up the result here.
-    rv = mProviders->RemoveElement(supports) ? NS_OK : NS_ERROR_FAILURE;
-    return rv;
+    // RemoveElement returns PR_TRUE for success.
+    return mProviders->RemoveElement(supports) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // DO NOT ADD ANY LOCATIONS TO THIS FUNCTION UNTIL YOU TALK TO: dougt@netscape.com.
