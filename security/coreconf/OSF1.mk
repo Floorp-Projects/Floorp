@@ -57,10 +57,6 @@ endif
 NON_LD_FLAGS += -ieee_with_inexact
 OS_CFLAGS    += -DOSF1 -D_REENTRANT 
 
-ifneq ($(USE_64), 1)
-	LDFLAGS += -taso
-endif
-
 ifeq ($(USE_PTHREADS),1)
 	OS_CFLAGS += -pthread
 endif
