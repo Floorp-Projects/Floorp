@@ -1500,28 +1500,42 @@ function BrowserExitPrintPreview()
   mainWin.setAttribute("onclose", gOldCloseHandler);
 }
 
+function setPrinterDefaultsForSelectedPrinter(aPrintService)
+{
+  if (gPrintSettings.printerName == "") {
+    gPrintSettings.printerName = aPrintService.defaultPrinterName;
+  }
+
+  // First get any defaults from the printer 
+  aPrintService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
+
+  // now augment them with any values from last time
+  aPrintService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSettings.kInitSaveAll);
+}
+
 function GetPrintSettings()
 {
   var prevPS = gPrintSettings;
-
   try {
     if (gPrintSettings == null) {
-      gPrintSettingsAreGlobal = gPrefService.getBoolPref("print.use_global_printsettings", false);
-      gSavePrintSettings = gPrefService.getBoolPref("print.save_print_settings", false);
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      if (pref) {
+        gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings", false);
+        gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
+      }
 
-      var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+      var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                                         .getService(Components.interfaces.nsIPrintSettingsService);
       if (gPrintSettingsAreGlobal) {
-        gPrintSettings = psService.globalPrintSettings;        
-        if (gSavePrintSettings) {
-          psService.initPrintSettingsFromPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
-        }
+        gPrintSettings = printService.globalPrintSettings;
+        setPrinterDefaultsForSelectedPrinter(printService);
       } else {
-        gPrintSettings = psService.newPrintSettings;
+        gPrintSettings = printService.newPrintSettings;
       }
     }
   } catch (e) {
-    dump("GetPrintSettings "+e);
+    dump("GetPrintSettings() "+e+"\n");
   }
 
   return gPrintSettings;
