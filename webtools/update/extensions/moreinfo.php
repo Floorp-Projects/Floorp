@@ -149,7 +149,6 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     $row = mysql_fetch_array($sql_result);
 
         $v++;
-        $id = $row["ID"];
         $vid = $row["vID"];
         $name = $row["Name"];
         $dateadded = $row["DateAdded"];
@@ -229,6 +228,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
     //No Results Returned for Main Query, throw the Incompatible Error.
     if (mysql_num_rows($sql_result)=="0") {
+        echo"<div id=\"mainContent\">";
         echo"<h1>Incompatible Extension or Extension No Longer Available</h1>\n";
         echo"The extension you requested is either incompatible with the application selected, or the version of it is no longer available on Mozilla Update.<br><br>\n";
         echo"To try your request again for a different application version, use the form below.<br>\n";
@@ -257,7 +257,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             }
         echo"</select>&nbsp;<input name=\"go\" type=\"submit\" value=\"Go\">";
         echo"</form>";
-
+        echo"</div>\n</div>\n";
 	    include"$page_footer";
         echo"</body>\n</html>\n";
         exit;
