@@ -42,7 +42,7 @@
 class nsToolboxFrame : public nsHTMLContainerFrame
 {
 public:
-  // friend nsresult NS_NewToolboxFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
+  friend nsresult NS_NewToolboxFrame(nsIFrame*& aNewFrame);
 
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
