@@ -224,41 +224,44 @@ NS_IMETHODIMP nsBrowserWindow::Create()
 
 NS_IMETHODIMP nsBrowserWindow::Destroy()
 {
-   RemoveBrowser(this);
+  RemoveBrowser(this);
 
-   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-   if(webShell)
-      {
-      //XXXTAB Should do this on the docShell
-      nsCOMPtr<nsIDocumentLoader> docLoader;
-      webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-      if(docLoader)
-         docLoader->RemoveObserver(this);
-      nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-      docShellWin->Destroy();
-      NS_RELEASE(mDocShell);
-      }
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if(webShell) {
+    //XXXTAB Should do this on the docShell
+    nsCOMPtr<nsIDocumentLoader> docLoader;
+    webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+    if(docLoader)
+       docLoader->RemoveObserver(this);
+    nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+    docShellWin->Destroy();
+    NS_RELEASE(mDocShell);
+  }
 
-   DestroyWidget(mBack);         
-   mBack = nsnull;
-   DestroyWidget(mForward);      
-   mForward = nsnull;
-   DestroyWidget(mLocation);     
-   mLocation = nsnull;
-   DestroyWidget(mStatus);       
-   mStatus = nsnull;
+  DestroyWidget(mBack);
+  NS_ASSERTION(mBack->Release() == 0, "nsBrowserWindow::Destroy - mBack is being leaked.");
 
-   if(mThrobber)
-      {
-      mThrobber->Destroy();
-      NS_RELEASE(mThrobber);
-      mThrobber = nsnull;
-      }
+  DestroyWidget(mForward);   
+  NS_ASSERTION(mForward->Release() == 0, "nsBrowserWindow::Destroy - mForward is being leaked.");
 
-   DestroyWidget(mWindow);       
-   mWindow = nsnull;
+  DestroyWidget(mLocation);     
+  NS_ASSERTION(mLocation->Release() == 0, "nsBrowserWindow::Destroy - mLocation is being leaked.");
 
-   return NS_OK;
+  DestroyWidget(mStatus);       
+  NS_ASSERTION(mStatus->Release() == 0, "nsBrowserWindow::Destroy - mStatus is being leaked.");
+
+  if (mThrobber) {
+    mThrobber->Destroy();
+    NS_ASSERTION(mThrobber->Release() == 0, "nsBrowserWindow::Destroy - mThrobber is being leaked.");
+    mThrobber = nsnull;
+  }
+
+  // Others are holding refs to this, 
+  // but it gets released OK.
+  DestroyWidget(mWindow);
+  NS_RELEASE(mWindow);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsBrowserWindow::SetPosition(PRInt32 aX, PRInt32 aY)
@@ -426,12 +429,12 @@ NS_IMETHODIMP nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
 
 void nsBrowserWindow::DestroyWidget(nsISupports* aWidget)
 {
-   if(aWidget)
-      {
-      nsCOMPtr<nsIWidget> w(do_QueryInterface(aWidget));
-      if(w)
-         w->Destroy();
-      }
+  if(aWidget) {
+    nsCOMPtr<nsIWidget> w(do_QueryInterface(aWidget));
+    if (w) {
+      w->Destroy();
+    }
+  }
 }
 
 //******* Cleanup below here *************/
