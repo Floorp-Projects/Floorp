@@ -152,8 +152,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   nsIScriptContext *context = globalObject->GetContext();
 
   void* classObject;
-  JSObject* scopeObject = globalObject->GetGlobalJSObject();
-  nsresult rv = aBinding->InitClass(mClassName, context, scopeObject, &classObject);
+  nsresult rv = aBinding->InitClass(mClassName, context, nsnull, &classObject);
   if (NS_FAILED(rv))
     return rv;
 
