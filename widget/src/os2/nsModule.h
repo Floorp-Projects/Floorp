@@ -66,7 +66,6 @@ class nsWidgetModuleData : public nsISupports
    // We're caching resource-loaded things here too.  This may be
    // better-suited elsewhere, but there shouldn't be very many of them.
    HPOINTER GetPointer( nsCursor aCursor);
-   HPOINTER GetFrameIcon();
 
    // local->Unicode cp. conversion
    ULONG ConvertToUcs( const char *szText, PRUnichar *pBuffer, ULONG ulSize);
@@ -81,22 +80,12 @@ class nsWidgetModuleData : public nsISupports
    const char *DBCSstrchr( const char *string, int c );
    const char *DBCSstrrchr( const char *string, int c );
 
-#if 0
-   HWND     GetWindowForPrinting( PCSZ pszClass, ULONG ulStyle);
-#endif
-
    nsWidgetModuleData();
   ~nsWidgetModuleData();
 
    void Init( nsIAppShell *aPrimaevalAppShell);
 
  private:
-   ULONG        idSelect;    
-   HPOINTER     hptrSelect;  // !! be more sensible about this...
-   HPOINTER     hptrFrameIcon;
-#if 0
-   nsHashtable *mWindows;
-#endif
 
    // Utility function for creating the Unicode conversion object
    int CreateUcsConverter();

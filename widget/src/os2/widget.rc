@@ -22,9 +22,6 @@
 #include <os2.h>
 #include "resource.h"
 
-/* icons */
-ICON ID_ICO_FRAME         res\frame.ico
-
 /* pointers */
 POINTER IDC_SELECTANCHOR   res\select.ptr
 POINTER IDC_ARROWNORTH     res\arrow_north.ptr

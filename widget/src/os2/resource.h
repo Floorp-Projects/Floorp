@@ -41,9 +41,6 @@
 #define IDC_CROSS                       4115
 #define IDC_HELP                        4116
 
-// Icons
-#define ID_ICO_FRAME         500
-
 // OS2TODO HCT temporary bug fix
 
 #ifndef FCF_CLOSEBUTTON // defined in the Merlin toolkit
