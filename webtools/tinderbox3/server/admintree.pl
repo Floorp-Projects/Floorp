@@ -35,7 +35,7 @@ if (!$tree) {
                  $Tinderbox3::InitialValues::min_row_size,
                  $Tinderbox3::InitialValues::max_row_size,
                  $Tinderbox3::InitialValues::default_tinderbox_view,
-                 $Tinderbox3::InitialValues::new_machines_visible,
+                 Tinderbox3::DB::sql_get_bool($Tinderbox3::InitialValues::new_machines_visible),
                  '',
                  ];
   %initial_machine_config = %Tinderbox3::InitialValues::initial_machine_config;

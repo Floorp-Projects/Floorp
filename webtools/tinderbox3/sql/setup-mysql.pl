@@ -1,4 +1,4 @@
-#!perl -I..
+#!/usr/bin/perl -I..
 use strict;
 use Getopt::Long;
 use DBI;
@@ -87,12 +87,14 @@ sub generate_create_schema_file {
   open IN, $old_create_schema;
   open OUT, ">$new_create_schema";
   while (<IN>) {
-    s/\bserial\b/int4 not null auto_increment primary key/;
-    s/\bunique\b//;
+    s/\bserial\b/int4 not null auto_increment primary key/i;
+    s/\bunique\b//i;
     if (/(create\s*table\s*)(\w+)/i) {
       my $new_table_name = lc($2);
       s/(create\s*table\s*)(\w+)/\1$new_table_name/i;
     }
+    s/\bboolean\b/bool/i;
+    s/\btimestamp\b(\s*\(\s*\d+\s*\))?/datetime/i;
     print OUT;
   }
   close OUT;
@@ -156,10 +158,6 @@ sub read_tables_sequences {
 #
 sub populate_data {
 	my ($dbname, $args) = @_;
-	require UserLogin::mysql;
-	my $sys = new UserLogin::mysql(%{$args}, db => $dbname);
-	require UserLoginInit;
-	UserLoginInit::initial_populate($sys, $args{prefix});
 }
 
 #

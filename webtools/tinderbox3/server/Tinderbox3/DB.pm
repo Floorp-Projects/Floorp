@@ -9,13 +9,15 @@ use Tinderbox3::Log;
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(get_dbh);
+our @EXPORT = qw(get_dbh sql_current_timestamp sql_abstime sql_get_last_id sql_get_timestamp sql_get_bool);
 
-our $dbname = "tbox";
+# dbtype = mysql or Pg
+our $dbtype = "mysql";
+our $dbname = "tbox3";
 our $username = "";
 our $password = "";
 sub get_dbh {
-  my $dbh = DBI->connect("dbi:Pg:dbname=$dbname", $username, $password, { RaiseError => 1, AutoCommit => 0 });
+  my $dbh = DBI->connect("dbi:$dbtype:dbname=$dbname", $username, $password, { RaiseError => 1, AutoCommit => 0 });
   return $dbh;
 }
 
@@ -70,7 +72,7 @@ sub update_patch_action {
   if ($action eq 'upload_patch' || $action eq 'edit_patch') {
     my $patch_name = $p->param('patch_name') || "";
     my $bug_id = $p->param('bug_id') || "";
-    my $in_use = $p->param('in_use') ? 'Y' : 'N';
+    my $in_use = sql_get_bool($p->param('in_use'));
     my $patch_ref = "Bug $bug_id";
     my $patch_ref_url = "http://bugzilla.mozilla.org/show_bug.cgi?id=$bug_id";
 
@@ -123,7 +125,7 @@ sub update_patch_action {
     check_edit_patch($login, $dbh, $patch_id, "start/stop using patch");
 
     if (!$patch_id) { die "Need patch id!" }
-    my $rows = $dbh->do("UPDATE tbox_patch SET in_use = ? WHERE patch_id = ?", undef, ($action eq 'start_using_patch' ? 'Y' : 'N'), $patch_id);
+    my $rows = $dbh->do("UPDATE tbox_patch SET in_use = ? WHERE patch_id = ?", undef, sql_get_bool($action eq 'start_using_patch'), $patch_id);
     if (!$rows) {
       die "Update failed.  No such tree / patch.";
     }
@@ -150,7 +152,7 @@ sub update_tree_action {
     my $min_row_size = $p->param('min_row_size') || "";
     my $max_row_size = $p->param('max_row_size') || "";
     my $default_tinderbox_view = $p->param('default_tinderbox_view') || "";
-    my $new_machines_visible = $p->param('new_machines_visible') ? 'Y' : 'N';
+    my $new_machines_visible = sql_get_bool($p->param('new_machines_visible'));
     my $editors = $p->param('editors') || "";
 
     if (!$newtree) { die "Must specify a non-blank tree!"; }
@@ -251,7 +253,7 @@ sub update_machine_action {
     # Check security
     check_edit_machine($login, $dbh, $machine_id, "edit machine");
 
-    my $visible = $p->param('visible') ? 'Y' : 'N';
+    my $visible = sql_get_bool($p->param('visible'));
     my $commands = $p->param('commands');
 
     my $rows = $dbh->do('UPDATE tbox_machine SET visible = ?, commands = ? WHERE machine_id = ?', undef, $visible, $commands, $machine_id);
@@ -345,8 +347,7 @@ sub update_bonsai_action {
       check_edit_tree($login, $dbh, $tree, "edit machine");
 
       $dbh->do("INSERT INTO tbox_bonsai (tree_name, display_name, bonsai_url, module, branch, directory, cvsroot) VALUES (?, ?, ?, ?, ?, ?, ?)", undef, $tree, $display_name, $bonsai_url, $module, $branch, $directory, $cvsroot);
-      my $bonsai_id_row = $dbh->selectrow_arrayref("SELECT currval('tbox_bonsai_bonsai_id_seq')");
-      $bonsai_id = $bonsai_id_row->[0];
+      $bonsai_id = sql_get_last_id($dbh, 'tbox_bonsai_id_seq');
     }
     $dbh->commit();
   } elsif ($action eq "delete_bonsai") {
@@ -359,6 +360,48 @@ sub update_bonsai_action {
   }
 
   return ($tree, $bonsai_id);
+}
+
+sub sql_current_timestamp {
+  return "current_timestamp()";
+}
+
+sub sql_get_timestamp {
+  my ($arg) = @_;
+  if ($dbtype eq "Pg") {
+    return "EXTRACT (EPOCH FROM $arg)";
+  } elsif ($dbtype eq "mysql") {
+    return "unix_timestamp($arg)";
+  }
+}
+
+sub sql_abstime {
+  my ($arg) = @_;
+  if ($dbtype eq "Pg") {
+    return "abstime($arg + 0)";
+  } elsif ($dbtype eq "mysql") {
+    return "from_unixtime($arg)";
+  }
+}
+
+sub sql_get_last_id {
+  my ($dbh, $sequence) = @_;
+  if ($dbtype eq "Pg") {
+    my $row = $dbh->selectrow_arrayref("SELECT currval('$sequence')");
+    return $row->[0];
+  } elsif ($dbtype eq "mysql") {
+    my $row = $dbh->selectrow_arrayref("SELECT last_insert_id()");
+    return $row->[0];
+  }
+}
+
+sub sql_get_bool {
+  my ($bool) = @_;
+  if ($dbtype eq 'Pg') {
+    return $bool ? 'Y' : 'N';
+  } elsif ($dbtype eq 'mysql') {
+    return $bool ? 1 : 0;
+  }
 }
 
 1

@@ -53,8 +53,10 @@ if (!defined($build_info)) {
   die_xml_error("No build time");
 }
 my ($build_time, $log) = @{$build_info};
+$log =~ /(.+)/;
+$log = $1;
 
-$dbh->do("UPDATE tbox_build SET status_time = current_timestamp(), status = ? WHERE machine_id = ? AND build_time = ?", undef, $status, $machine_id, $build_time);
+my $done = $dbh->do("UPDATE tbox_build SET status_time = " . Tinderbox3::DB::sql_current_timestamp() . ", status = ? WHERE machine_id = ? AND build_time = ?", undef, $status, $machine_id, $build_time);
 
 #
 # Update fields

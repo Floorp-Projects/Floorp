@@ -45,14 +45,16 @@ if (!$patch_ids) {
 #
 my $machine_info = $dbh->selectrow_arrayref("SELECT machine_id, commands FROM tbox_machine WHERE tree_name = ? AND machine_name = ? AND os = ? AND os_version = ? AND compiler = ?", undef, $tree, $machine_name, $os, $os_version, $compiler);
 if (!defined($machine_info)) {
-  $dbh->do("INSERT INTO tbox_machine (tree_name, machine_name, visible, os, os_version, compiler, clobber) VALUES (?, ?, ?, ?, ?, ?, ?)", undef, $tree, $machine_name, $new_machines_visible, $os, $os_version, $compiler, ($clobber ? 'Y' : 'N'));
-  my $machine_id = $dbh->selectrow_arrayref("SELECT currval('tbox_machine_machine_id_seq')");
-  $machine_info = [ $machine_id->[0], "" ];
+  $dbh->do("INSERT INTO tbox_machine (tree_name, machine_name, visible, os, os_version, compiler, clobber) VALUES (?, ?, ?, ?, ?, ?, ?)", undef, $tree, $machine_name, $new_machines_visible, $os, $os_version, $compiler, Tinderbox3::DB::sql_get_bool($clobber));
+  $machine_info = [ Tinderbox3::DB::sql_get_last_id($dbh, 'tbox_machine_machine_id_seq'), "" ]
 } else {
-  $dbh->do("UPDATE tbox_machine SET clobber = ? WHERE machine_id = ?", undef, ($clobber ? 'Y' : 'N'), $machine_info->[0]);
+  $dbh->do("UPDATE tbox_machine SET clobber = ? WHERE machine_id = ?", undef, Tinderbox3::DB::sql_get_bool($clobber), $machine_info->[0]);
 }
 my ($machine_id, $commands) = @{$machine_info};
 $commands ||= "";
+
+$machine_id =~ /(\d+)/;
+$machine_id = $1;
 
 #
 # Get the machine config

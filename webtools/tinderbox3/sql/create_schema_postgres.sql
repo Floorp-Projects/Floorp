@@ -15,7 +15,7 @@ CREATE TABLE tbox_tree (
   -- Default size of Tinderbox (in minutes)
   default_tinderbox_view INTEGER,
   -- Whether or not to make new Tinderboxen visible immediately
-  new_machines_visible BOOLEAN,
+  new_machines_visible BOOL,
   -- People who can edit this tree
   editors TEXT,
 
@@ -55,7 +55,7 @@ CREATE TABLE tbox_patch (
   patch_ref_url TEXT,
   patch TEXT,
   -- in_use: if true, Tinderboxes will pick up this patch
-  in_use BOOLEAN
+  in_use BOOL
 );
 
 --
@@ -70,13 +70,13 @@ CREATE TABLE tbox_machine (
   os VARCHAR(200),
   os_version VARCHAR(200),
   compiler VARCHAR(200),
-  clobber BOOLEAN,
+  clobber BOOL,
 
   -- A set of commands to give to the machine (kick is the only one right now)
   -- (will be cleared as soon as the command is given; obedience is assumed)
   commands TEXT,
   -- Whether or not this machine is visible
-  visible BOOLEAN
+  visible BOOL
 );
 
 --

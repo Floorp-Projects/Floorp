@@ -23,7 +23,7 @@ EOM
 
 my $dbh = get_dbh();
 
-my $sth = $dbh->prepare("SELECT bonsai_id, bonsai_url, module, branch, directory, cvsroot, EXTRACT(EPOCH FROM start_cache), EXTRACT(EPOCH FROM end_cache) FROM tbox_bonsai");
+my $sth = $dbh->prepare("SELECT bonsai_id, bonsai_url, module, branch, directory, cvsroot, " . Tinderbox3::DB::sql_get_timestamp("start_cache") .  ", " . Tinderbox3::DB::sql_get_timestamp("end_cache") . " FROM tbox_bonsai");
 $sth->execute();
 while (my $row = $sth->fetchrow_arrayref) {
   #Tinderbox3::Bonsai::clear_cache($dbh, $row->[0]);

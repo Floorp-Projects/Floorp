@@ -32,7 +32,7 @@ sub print_showbuilds {
     $field_processors{$field} = $processor;
     # Check if the processor is OK to put in an eval statement
     if ($processor =~ /^([A-Za-z]+)$/) {
-      my $code = "require Tinderbox3::FieldProcessors::$processor; \$field_handlers{$processor} = new Tinderbox3::FieldProcessors::$processor();";
+      my $code = "require Tinderbox3::FieldProcessors::$1; \$field_handlers{$1} = new Tinderbox3::FieldProcessors::$1();";
       eval $code;
     }
   }

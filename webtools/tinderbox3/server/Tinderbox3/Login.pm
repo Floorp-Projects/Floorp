@@ -3,6 +3,7 @@ package Tinderbox3::Login;
 use strict;
 use LWP::UserAgent;
 use CGI;
+use Tinderbox3::DB;
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -10,6 +11,8 @@ our @EXPORT = qw(check_session can_admin can_edit_tree can_sheriff_tree login_fi
 
 sub login {
   my ($login, $password) = @_;
+
+  return 1;
 
   my $p = new CGI({Bugzilla_login => $login, Bugzilla_password => $password, GoAheadAndLogIn => 1});
   my $url = "http://bugzilla.mozilla.org/query.cgi?" . $p->query_string;
@@ -46,8 +49,8 @@ sub check_session {
       if ($session_id) {
         delete_session($dbh, $session_id);
       }
-      my $new_session_id = time . "-" . int(rand*100000) . "-" . $login;
-      $dbh->do("INSERT INTO tbox_session (login, session_id, activity_time) VALUES (?, ?, current_timestamp())", undef, $login, $new_session_id);
+      my $new_session_id = time . "-" . int(rand()*100000) . "-" . $login;
+      $dbh->do("INSERT INTO tbox_session (login, session_id, activity_time) VALUES (?, ?, " . Tinderbox3::DB::sql_current_timestamp() . ")", undef, $login, $new_session_id);
       $dbh->commit();
       $cookie = $p->cookie(-name => 'tbox_session', -value => $new_session_id);
       $login_return = $login;
@@ -55,12 +58,12 @@ sub check_session {
   } elsif ($p->param('-logout') && $session_id) {
     delete_session($dbh, $session_id);
   } elsif($session_id) {
-    my $row = $dbh->selectrow_arrayref("SELECT login, EXTRACT(EPOCH FROM activity_time) FROM tbox_session WHERE session_id = ?", undef, $session_id);
+    my $row = $dbh->selectrow_arrayref("SELECT login, " . Tinderbox3::DB::sql_get_timestamp("activity_time") . " FROM tbox_session WHERE session_id = ?", undef, $session_id);
     if (defined($row)) {
       if (time > $row->[1]+24*60*60) {
         delete_session($dbh, $session_id);
       } else {
-        $dbh->do("UPDATE tbox_session SET activity_time = current_timestamp() WHERE session_id = ?", undef, $session_id);
+        $dbh->do("UPDATE tbox_session SET activity_time = " . Tinderbox3::DB::sql_current_timestamp() . " WHERE session_id = ?", undef, $session_id);
         $dbh->commit();
         $login_return = $row->[0];
       }

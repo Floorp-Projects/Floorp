@@ -151,7 +151,7 @@ sub update_cache {
     }
   }
 
-  $dbh->do("UPDATE tbox_bonsai SET start_cache = abstime(?), end_cache = abstime(?) WHERE bonsai_id = ?", undef, int($new_start_time), int($new_end_time), $bonsai_id);
+  $dbh->do("UPDATE tbox_bonsai SET start_cache = " . Tinderbox3::DB::sql_abstime("?") . ", end_cache = " . Tinderbox3::DB::sql_abstime("?") . " WHERE bonsai_id = ?", undef, int($new_start_time), int($new_end_time), $bonsai_id);
 }
 
 1

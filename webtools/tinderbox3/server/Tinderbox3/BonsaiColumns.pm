@@ -112,7 +112,7 @@ sub get_bonsai_column_queues {
     #
     # Fill in the bonsais with data
     #
-    $sth = $dbh->prepare("SELECT bonsai_id, EXTRACT(EPOCH FROM checkin_date), who, files, revisions, size_plus, size_minus, description FROM tbox_bonsai_cache WHERE checkin_date >= abstime(? + 0) AND checkin_date <= abstime(? + 0) AND bonsai_id IN (" . join(', ', map { "?" } keys %columns) . ") ORDER BY checkin_date");
+    $sth = $dbh->prepare("SELECT bonsai_id, " . Tinderbox3::DB::sql_get_timestamp("checkin_date") . ", who, files, revisions, size_plus, size_minus, description FROM tbox_bonsai_cache WHERE checkin_date >= " . Tinderbox3::DB::sql_abstime("?") . " AND checkin_date <= " . Tinderbox3::DB::sql_abstime("?") . " AND bonsai_id IN (" . join(', ', map { "?" } keys %columns) . ") ORDER BY checkin_date");
     $sth->execute($start_time, $end_time, map { $_->{BONSAI_ID} } values %columns);
     while (my $row = $sth->fetchrow_arrayref) {
       push @{$columns{$row->[0]}{EVENTS}}, {

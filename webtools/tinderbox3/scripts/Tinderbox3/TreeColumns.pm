@@ -200,11 +200,11 @@ EOM
       }
 
       # Print comment star
-      if (defined($top_event->{comments})) {
+      if (defined($top_event->{comments}) && @{$top_event->{comments}} > 0) {
         my $popup_str = "<strong>Comments</strong> (<a href='buildcomment.pl?tree=$this->{TREE}&machine_id=$this->{MACHINE_ID}&build_time=$top_event->{build_time}'>Add Comment</a>)<br>";
         foreach my $comment (sort { $b->[2] <=> $a->[2] } @{$top_event->{comments}}) {
           $popup_str .= "<a href='mailto:$comment->[0]'>$comment->[0]</a> - " . time2str("%H:%M", $comment->[2]) .
-                        "<br><pre>$comment->[1]</pre>";
+                        "<br><p><code>$comment->[1]</code></p>";
         }
 
 
@@ -280,7 +280,7 @@ sub get_tree_column_queues {
   #
   # Get the list of machines
   #
-  my $sth = $dbh->prepare("SELECT machine_id, machine_name, os, os_version, compiler, clobber FROM tbox_machine WHERE tree_name = ? AND visible");
+  my $sth = $dbh->prepare("SELECT machine_id, machine_name, os, os_version, compiler, clobber, visible FROM tbox_machine WHERE tree_name = ?");
   $sth->execute($tree);
 
   my %columns;
@@ -296,44 +296,30 @@ sub get_tree_column_queues {
   # Dump the relevant events into the columns
   #
   $sth = $dbh->prepare(
-    "SELECT b.machine_id, EXTRACT(EPOCH FROM b.build_time),
-            EXTRACT(EPOCH FROM b.status_time), b.status, b.log,
-            f.name, f.value,
-            c.login, c.build_comment, EXTRACT(EPOCH FROM c.comment_time)
+    "SELECT b.machine_id, " . Tinderbox3::DB::sql_get_timestamp("b.build_time") . ",
+            " . Tinderbox3::DB::sql_get_timestamp("b.status_time") . ", b.status, b.log
        FROM tbox_build b
-            LEFT OUTER JOIN tbox_build_field f USING (machine_id, build_time)
-            LEFT OUTER JOIN tbox_build_comment c USING (machine_id, build_time)
       WHERE b.machine_id IN (" . join(", ", map { "?" } keys %columns) . ")
-            AND b.status_time >= abstime(? + 0)
-            AND b.build_time <= abstime(? + 0)
+            AND b.status_time >= " . Tinderbox3::DB::sql_abstime("?") . "
+            AND b.build_time <= " . Tinderbox3::DB::sql_abstime("?") . "
     ORDER BY b.build_time, b.machine_id");
   $sth->execute(keys %columns, $start_time, $end_time);
-  my ($machine_id, $build_time, $event);
   while (my $build = $sth->fetchrow_arrayref) {
-    if (!defined($event) || $machine_id != $build->[0] ||
-        $build_time ne $build->[1]) {
-      if (defined($event)) {
-        # Flush previous event when machine/build changes
-        $columns{$machine_id}->add_event($event);
-      }
-      $machine_id = $build->[0];
-      $build_time = $build->[1];
-      $event = { build_time => $build->[1], status_time => $build->[2],
-                 status => $build->[3], logfile => $build->[4], fields => [] };
+    my $machine_id = $build->[0];
+    my $build_time = $build->[1];
+    my $event = { build_time => $build->[1], status_time => $build->[2],
+               status => $build->[3], logfile => $build->[4], fields => [] };
+
+    my $fields = $dbh->selectall_arrayref("SELECT name, value FROM tbox_build_field WHERE machine_id = ? AND build_time = " . Tinderbox3::DB::sql_abstime("?"), undef, $machine_id, $build_time);
+    foreach my $field (@{$fields}) {
+      push @{$event->{fields}}, [ $field->[0], $field->[1] ];
     }
-    my $field_name = $build->[5] || "";
-    if ($field_name) {
-      push @{$event->{fields}}, [ $field_name, $build->[6] ];
+
+    my $comments = $dbh->selectall_arrayref("SELECT login, build_comment, " . Tinderbox3::DB::sql_get_timestamp("comment_time") . " FROM tbox_build_comment WHERE machine_id = ? AND build_time = " . Tinderbox3::DB::sql_abstime("?"), undef, $machine_id, $build_time);
+    foreach my $comment (@{$comments}) {
+      push @{$event->{comments}}, [ $comment->[0], $comment->[1], $comment->[2] ];
     }
-    my $build_comment = $build->[8] || "";
-    if ($build_comment) {
-      if (!$event->{comments}) {
-        $event->{comments} = [];
-      }
-      push @{$event->{comments}}, [ $build->[7], $build_comment, $build->[9] ];
-    }
-  }
-  if (defined($event)) {
+
     $columns{$machine_id}->add_event($event);
   }
 
