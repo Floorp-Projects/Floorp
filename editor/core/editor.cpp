@@ -63,20 +63,8 @@ PRMonitor *getEditorMonitor() //if more than one person asks for the monitor at 
 we must be good providers of factories ect. this is where to put ALL editor exports
 */
 //BEGIN EXPORTS
-// dont ask!
-#ifdef MAC_STATIC
-extern "C" NS_EXPORT nsresult NSGetFactory_LAYOUT_DLL(const nsCID &aClass,
-nsIFactory **aFactory)
-#elif defined(MAC_SHARED)
-#pragma export on
 extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory
 **aFactory)
-#pragma export off
-// for non-mac platforms:
-#else
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory
-**aFactory)
-#endif
 {
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
@@ -196,14 +184,14 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
   nsresult t_result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
   if (NS_OK != t_result)
   {
-    NS_NOTREACHED("Init Failed");
+//    NS_NOTREACHED("Init Failed");
     return t_result;
   }
   t_result = NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
   if (NS_OK != t_result)
   {
     mKeyListenerP = 0; //dont keep the key listener if the mouse listener fails.
-    NS_NOTREACHED("Mouse Listener");
+//    NS_NOTREACHED("Mouse Listener");
     return t_result;
   }
   COM_auto_ptr<nsIDOMEventReceiver> erP;
@@ -212,7 +200,7 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
   {
     mKeyListenerP = 0;
     mMouseListenerP = 0; //dont need these if we cant register them
-    NS_NOTREACHED("query interface");
+//    NS_NOTREACHED("query interface");
     return t_result;
   }
   erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
