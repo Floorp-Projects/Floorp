@@ -251,6 +251,11 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
     // XXX It appears that the style system erronously applies the custom style rule after css style, 
     // consequently it does not properly fit into the casade. For now, assume that a border style of none
     // implies that the style has not been set.
+    // XXXldb No, there's nothing wrong with the style system.  The problem
+    // is that the author of all these table rules made them work as
+    // post-resolve callbacks, which is an override mechanism that was meant
+    // to be used for other things.  They should instead map their rule data
+    // normally (see nsIStyleRule.h).
     if (NS_STYLE_BORDER_STYLE_NONE == borderStyle) {
       // use the table's border style if it is dashed or dotted, otherwise use solid
       PRUint8 bStyle = ((NS_STYLE_BORDER_STYLE_NONE != tableBorderStyle) &&
