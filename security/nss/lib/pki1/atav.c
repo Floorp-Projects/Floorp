@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: atav.c,v $ $Revision: 1.2 $ $Date: 2001/07/19 20:40:42 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: atav.c,v $ $Revision: 1.3 $ $Date: 2001/10/15 15:01:59 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -810,6 +810,7 @@ nss_attr_to_utf8
 
     *stringForm = nssStringType_Unknown; /* force exact comparison */
   } else {
+    PRStatus status;
     rv = nssUTF8_CreateFromBER(arenaOpt, which->stringType, 
                                (NSSBER *)item);
 
@@ -817,7 +818,8 @@ nss_attr_to_utf8
       return (NSSUTF8 *)NULL;
     }
 
-    if( PR_SUCCESS != nssUTF8_Length(rv, &len) ) {
+    len = nssUTF8_Length(rv, &status);
+    if( PR_SUCCESS != status || len == 0 ) {
       nss_ZFreeIf(rv);
       return (NSSUTF8 *)NULL;
     }
@@ -1070,10 +1072,10 @@ nssATAV_CreateFromUTF8
     }
   } else {
     for( i = 0; i < nss_attribute_type_alias_count; i++ ) {
+      PRStatus status;
       const nssAttributeTypeAliasTable *e = &nss_attribute_type_aliases[i];
-      PRBool match = PR_FALSE;
-      if( PR_SUCCESS != nssUTF8_CaseIgnoreMatch(type, e->alias, 
-                                                &match) ) {
+      PRBool match = nssUTF8_CaseIgnoreMatch(type, e->alias, &status);
+      if( PR_SUCCESS != status ) {
         nss_ZFreeIf(type);
         return (NSSATAV *)NULL;
       }
@@ -1105,6 +1107,7 @@ nssATAV_CreateFromUTF8
     PRUint32 len;
     PRUint8 *c;
     PRUint8 *d;
+    PRStatus status;
     /* It's in hex */
 
     value++;
@@ -1114,7 +1117,8 @@ nssATAV_CreateFromUTF8
       return (NSSATAV *)NULL;
     }
 
-    if( PR_SUCCESS != nssUTF8_Size(value, &size) ) {
+    size = nssUTF8_Size(value, &status);
+    if( PR_SUCCESS != status ) {
       /* 
        * Only returns an error on bad pointer (nope) or string
        * too long.  The defined limits for known attributes are
@@ -1151,6 +1155,7 @@ nssATAV_CreateFromUTF8
 
     *c = 0;
   } else {
+    PRStatus status;
     PRUint32 i, len;
     PRUint8 *s;
 
@@ -1165,7 +1170,8 @@ nssATAV_CreateFromUTF8
       return (NSSATAV *)NULL;
     }
 
-    if( PR_SUCCESS != nssUTF8_Size(rv->value, &len) ) {
+    len = nssUTF8_Size(rv->value, &status);
+    if( PR_SUCCESS != status ) {
       (void)nss_ZFreeIf(rv->value);
       (void)nss_ZFreeIf(rv);
       return (NSSATAV *)NULL;
@@ -1229,8 +1235,8 @@ nssATAV_CreateFromUTF8
         return (NSSATAV *)NULL;
       }
 
-      vitem = nssASN1_EncodeDER(a, (NSSDER *)NULL, &xitem, 
-                                nssASN1Template_OctetString);
+      vitem = nssASN1_EncodeItem(a, (NSSDER *)NULL, &xitem, 
+                                 nssASN1Template_OctetString, NSSASN1DER);
       if( (NSSItem *)NULL == vitem ) {
         (void)NSSArena_Destroy(a);
         (void)nss_ZFreeIf(rv->value);
@@ -1241,8 +1247,10 @@ nssATAV_CreateFromUTF8
       rv->stringForm = nssStringType_Unknown;
     } else {
       PRUint32 length = 0;
+      PRStatus stat;
       
-      if( PR_SUCCESS != nssUTF8_Length(rv->value, &length) ) {
+      length = nssUTF8_Length(rv->value, &stat);
+      if( PR_SUCCESS != stat ) {
         (void)NSSArena_Destroy(a);
         (void)nss_ZFreeIf(rv->value);
         (void)nss_ZFreeIf(rv);
@@ -1278,8 +1286,8 @@ nssATAV_CreateFromUTF8
     ah.oid = *oidder;
     ah.value = *vitem;
 
-    status = nssASN1_EncodeDER(arenaOpt, &rv->ber, &ah, 
-                               nss_atav_template);
+    status = nssASN1_EncodeItem(arenaOpt, &rv->ber, &ah, 
+                                nss_atav_template, NSSASN1DER);
 
     if( (NSSDER *)NULL == status ) {
       (void)NSSArena_Destroy(a);
@@ -1479,6 +1487,7 @@ nssATAV_GetUTF8Encoding
   PRUint32 oidlen;
   PRUint32 valuelen;
   PRUint32 totallen;
+  PRStatus status;
 
 #ifdef NSSDEBUG
   if( PR_SUCCESS != nssATAV_verifyPointer(atav) ) {
@@ -1499,12 +1508,14 @@ nssATAV_GetUTF8Encoding
       return (NSSUTF8 *)NULL;
     }
 
-    if( PR_SUCCESS != nssUTF8_Size(oid, &oidlen) ) {
+    oidlen = nssUTF8_Size(oid, &status);
+    if( PR_SUCCESS != status ) {
       (void)nss_ZFreeIf(oid);
       return (NSSUTF8 *)NULL;
     }
   } else {
-    if( PR_SUCCESS != nssUTF8_Size(alias, &oidlen) ) {
+    oidlen = nssUTF8_Size(alias, &status);
+    if( PR_SUCCESS != status ) {
       return (NSSUTF8 *)NULL;
     }
     oid = (NSSUTF8 *)NULL;
@@ -1516,7 +1527,8 @@ nssATAV_GetUTF8Encoding
     return (NSSUTF8 *)NULL;
   }
 
-  if( PR_SUCCESS != nssUTF8_Size(value, &valuelen) ) {
+  valuelen = nssUTF8_Size(value, &status);
+  if( PR_SUCCESS != status ) {
     (void)nss_ZFreeIf(value);
     (void)nss_ZFreeIf(oid);
     return (NSSUTF8 *)NULL;
@@ -1654,6 +1666,7 @@ nssATAV_Compare
   nssStringType comparison;
   PRUint32 len1;
   PRUint32 len2;
+  PRStatus status;
 
 #ifdef DEBUG
   if( PR_SUCCESS != nssATAV_verifyPointer(atav1) ) {
@@ -1696,8 +1709,8 @@ nssATAV_Compare
   case nssStringType_TeletexString:
     break;
   case nssStringType_PrintableString:
-    return nssUTF8_PrintableMatch(atav1->value, atav2->value, 
-                                  equalp);
+    *equalp = nssUTF8_PrintableMatch(atav1->value, atav2->value, &status);
+    return status;
     /* Case-insensitive, with whitespace reduction */
     break;
   case nssStringType_UniversalString:
@@ -1708,17 +1721,19 @@ nssATAV_Compare
     break;
   case nssStringType_PHGString:
     /* Case-insensitive (XXX fgmr, actually see draft-11 pg. 21) */
-    return nssUTF8_CaseIgnoreMatch(atav1->value, atav2->value, 
-                                   equalp);
+    *equalp = nssUTF8_CaseIgnoreMatch(atav1->value, atav2->value, &status);
+    return status;
   case nssStringType_Unknown:
     break;
   }
   
-  if( PR_SUCCESS != nssUTF8_Size(atav1->value, &len1) ) {
+  len1 = nssUTF8_Size(atav1->value, &status);
+  if( PR_SUCCESS != status ) {
     return PR_FAILURE;
   }
 
-  if( PR_SUCCESS != nssUTF8_Size(atav2->value, &len2) ) {
+  len2 = nssUTF8_Size(atav2->value, &status);
+  if( PR_SUCCESS != status ) {
     return PR_FAILURE;
   }
 
