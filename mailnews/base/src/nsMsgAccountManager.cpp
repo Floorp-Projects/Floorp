@@ -2001,11 +2001,21 @@ nsMsgAccountManager::GetFirstIdentityForServer(nsIMsgIncomingServer *aServer, ns
   nsresult rv = GetIdentitiesForServer(aServer, getter_AddRefs(identities));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIMsgIdentity> identity;
-  rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
-                                  (void **)getter_AddRefs(identity));
+  // not all servers have identities
+  // for example, Local Folders
+  PRUint32 numIdentities;
+  rv = identities->Count(&numIdentities);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_IF_ADDREF(*aIdentity = identity);
+
+  if (numIdentities > 0) {
+    nsCOMPtr<nsIMsgIdentity> identity;
+    rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
+                                  (void **)getter_AddRefs(identity));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_IF_ADDREF(*aIdentity = identity);
+  }
+  else
+    *aIdentity = nsnull;
   return rv;
 }
 
