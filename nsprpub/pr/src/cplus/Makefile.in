@@ -47,7 +47,9 @@ INCLUDES = -I$(DIST)/include
 
 include $(topsrcdir)/config/rules.mk
 
-HEADERS = *.h
+DEFINES	+= -D_NSPR_BUILD_
+
+HEADERS = $(srcdir)/*.h
 
 export:: $(TARGETS)
 

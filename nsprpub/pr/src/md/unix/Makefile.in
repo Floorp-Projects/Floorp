@@ -39,8 +39,8 @@ CSRCS =          \
 	unix.c    \
 	unix_errors.c    \
 	uxproces.c \
-	uxshm.c \
 	uxrng.c \
+	uxshm.c \
 	uxwrap.c \
 	$(NULL)
 
@@ -299,6 +299,8 @@ TARGETS = $(OBJS)
 endif # ! USE_AUTOCONF
 
 INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+
+DEFINES	+= -D_NSPR_BUILD_
 
 include $(topsrcdir)/config/rules.mk
 

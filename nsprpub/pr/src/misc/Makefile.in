@@ -68,6 +68,8 @@ TARGETS	= $(OBJS)
 
 INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
 
+DEFINES	+= -D_NSPR_BUILD_
+
 RELEASE_BINS = compile-et.pl prerr.properties
 
 include $(topsrcdir)/config/rules.mk
