@@ -94,14 +94,20 @@ nsUserInfo::GetDomain(char * *aDomain)
     nsresult rv = NS_ERROR_FAILURE;
 
     struct utsname buf;
-    
+    char *domainname = nsnull;
+
     if (uname(&buf)) { 
         return rv;
     }
-    
  
-    if (buf.__domainname && nsCRT::strlen(buf.__domainname)) {   
-        *aDomain = nsCRT::strdup(buf.__domainname);
+#if 1
+    domainname = buf.__domainname;
+#else
+    domainname = buf.domainname;
+#endif
+
+    if (domainname && nsCRT::strlen(domainname)) {   
+        *aDomain = nsCRT::strdup(domainname);
         rv = NS_OK;
     }
     else {
