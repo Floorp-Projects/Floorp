@@ -410,14 +410,24 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  PRInt32              aIconId)
 {
-  // Display a recessed one pixel border in the inner area
-  PRBool clipState;
+  // Calculate the inner area
   nsRect  inner;
   GetInnerArea(&aPresContext, inner);
 
-  float p2t;
+  // Display a recessed one pixel border
+  float   p2t;
+  nscoord borderEdgeWidth;
   aPresContext.GetScaledPixelsToTwips(&p2t);
-  nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
+  borderEdgeWidth = NSIntPixelsToTwips(1, p2t);
+
+  // Make sure we have enough room to actually render the border within
+  // our frame bounds
+  if ((inner.width < 2 * borderEdgeWidth) || (inner.height < 2 * borderEdgeWidth)) {
+    return;
+  }
+
+  // Paint the border
+  nsRecessedBorder recessedBorder(borderEdgeWidth);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
                               inner, recessedBorder, mStyleContext, 0);
 
@@ -429,6 +439,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   }
 
   // Clip so we don't render outside the inner rect
+  PRBool clipState;
   aRenderingContext.PushState();
   aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect, clipState);
 
