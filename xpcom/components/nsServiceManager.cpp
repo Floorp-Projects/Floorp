@@ -226,7 +226,7 @@ nsServiceManagerImpl::nsServiceManagerImpl(void)
      *      removed once PR_CEnterMonitor(...) initializes NSPR... (rick)
      */
     (void)PR_GetCurrentThread();
-    mMonitor = PR_NewMonitor();
+    mMonitor = nsAutoMonitor::NewMonitor("nsServiceManagerImpl");
     NS_ASSERTION(mMonitor, "unable to get service manager monitor. Uh oh.");
 }
 
@@ -237,7 +237,7 @@ nsServiceManagerImpl::~nsServiceManagerImpl(void)
     }
 
     if (mMonitor) {
-        PR_DestroyMonitor(mMonitor);
+        nsAutoMonitor::DestroyMonitor(mMonitor);
         mMonitor = 0;
     }
 }
@@ -321,7 +321,6 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
 {
     PRBool serviceFound = PR_FALSE;
     nsresult rv = NS_OK;
-    nsAutoMonitor mon(mMonitor);
 
 #ifndef NS_DEBUG
     // Do entry lookup only if there is a shutdownlistener to be removed.
@@ -331,6 +330,7 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
     if (shutdownListener)
 #endif
     {
+        nsAutoMonitor mon(mMonitor);
         nsIDKey key(aClass);
         nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
 
