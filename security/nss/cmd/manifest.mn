@@ -72,6 +72,7 @@ DIRS = lib  \
  SSLsample \
  ssltap  \
  strsclnt \
+ swfort  \
  symkeyutil \
  tstclnt  \
  vfychain \
@@ -80,7 +81,6 @@ DIRS = lib  \
  $(NULL)
 
 TEMPORARILY_DONT_BUILD = \
- sha1test \
  $(NULL)
 
 # rsaperf  \
@@ -92,6 +92,5 @@ TEMPORARILY_DONT_BUILD = \
 # to build (requires allxpstr.h)
 #
 DONT_BULD = jar \
- swfort  \
  perror \
 $(NULL)

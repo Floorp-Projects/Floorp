@@ -1,4 +1,4 @@
-/* Private header file of libSSL.
+/*
  * Various and sundry protocol constants. DON'T CHANGE THESE. These
  * values are defined by the SSL 3.0 protocol specification.
  *
@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.7 2005/04/06 19:43:17 nelsonb%netscape.com Exp $ */
+/* $Id: ssl3prot.h,v 1.8 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -206,6 +206,7 @@ typedef enum {
     kea_dhe_rsa_export,
     kea_dh_anon, 
     kea_dh_anon_export, 
+    kea_fortezza, 
     kea_rsa_fips,
     kea_ecdh_ecdsa,
     kea_ecdhe_ecdsa,
@@ -258,6 +259,7 @@ typedef enum {
     ct_RSA_fixed_ECDH	=  8, 
     ct_ECDSA_fixed_ECDH	=  9, 
 
+    ct_Fortezza 	= 20
 } SSL3ClientCertificateType;
      
 typedef SECItem *SSL3DistinquishedName;
@@ -269,6 +271,18 @@ typedef struct {
      
 typedef SECItem SSL3EncryptedPreMasterSecret;
 
+/* Following struct is the format of a Fortezza ClientKeyExchange message. */
+typedef struct {
+    SECItem    y_c;
+    SSL3Opaque r_c                      [128];
+    SSL3Opaque y_signature              [40];
+    SSL3Opaque wrapped_client_write_key [12];
+    SSL3Opaque wrapped_server_write_key [12];
+    SSL3Opaque client_write_iv          [24];
+    SSL3Opaque server_write_iv          [24];
+    SSL3Opaque master_secret_iv         [24];
+    SSL3Opaque encrypted_preMasterSecret[48];
+} SSL3FortezzaKeys;
 
 typedef SSL3Opaque SSL3MasterSecret[48];
 
@@ -285,6 +299,7 @@ typedef struct {
     union {
 	SSL3EncryptedPreMasterSecret  rsa;
 	SSL3ClientDiffieHellmanPublic diffie_helman;
+	SSL3FortezzaKeys              fortezza;
     } exchange_keys;
 } SSL3ClientKeyExchange;
 
