@@ -37,7 +37,7 @@
  * encoding/creation side *and* the decoding/decryption side.  Anything
  * else should be static routines in the appropriate file.
  *
- * $Id: p7local.c,v 1.5 2002/09/07 01:48:46 jpierre%netscape.com Exp $
+ * $Id: p7local.c,v 1.6 2003/09/19 04:16:19 jpierre%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -895,6 +895,7 @@ static const SEC_ASN1Template *
 sec_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
 {
     const SEC_ASN1Template *theTemplate;
+
     SEC_PKCS7Attribute *attribute;
     SECOidData *oiddata;
     PRBool encoded;
@@ -939,7 +940,7 @@ sec_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
 	    break;
 	  case SEC_OID_PKCS9_SIGNING_TIME:
 	    encoded = PR_FALSE;
-	    theTemplate = SEC_ASN1_GET(SEC_UTCTimeTemplate);
+            theTemplate = SEC_ASN1_GET(CERT_TimeChoiceTemplate);
 	    break;
 	  /* XXX Want other types here, too */
 	}

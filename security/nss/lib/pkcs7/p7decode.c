@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.10 2003/06/19 03:48:19 nelsonb%netscape.com Exp $
+ * $Id: p7decode.c,v 1.11 2003/09/19 04:16:19 jpierre%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1437,7 +1437,7 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
     SECKEYPublicKey *publickey;
     SECItem *content_type;
     PK11SymKey *sigkey;
-    SECItem *utc_stime;
+    SECItem *encoded_stime;
     int64 stime;
     SECStatus rv;
 
@@ -1561,10 +1561,10 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
      * both on the cert verification and for importing the sender
      * email profile.
      */
-    utc_stime = SEC_PKCS7GetSigningTime (cinfo);
-    if (utc_stime != NULL) {
-	if (DER_UTCTimeToTime (&stime, utc_stime) != SECSuccess)
-	    utc_stime = NULL;	/* conversion failed, so pretend none */
+    encoded_stime = SEC_PKCS7GetSigningTime (cinfo);
+    if (encoded_stime != NULL) {
+	if (CERT_DecodeTimeChoice (&stime, encoded_stime) != SECSuccess)
+	    encoded_stime = NULL;	/* conversion failed, so pretend none */
     }
 
     /*
@@ -1576,7 +1576,7 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
      * maybe make them pass in the current time, always?).
      */
     if (CERT_VerifyCert (certdb, cert, PR_TRUE, certusage,
-			 utc_stime != NULL ? stime : PR_Now(),
+			 encoded_stime != NULL ? stime : PR_Now(),
 			 cinfo->pwfn_arg, NULL) != SECSuccess)
 	{
 	/*
@@ -1850,7 +1850,7 @@ savecert:
 	    profile = sec_PKCS7AttributeValue (attr);
 	}
 
-	rv = CERT_SaveSMimeProfile (cert, profile, utc_stime);
+	rv = CERT_SaveSMimeProfile (cert, profile, encoded_stime);
 
 	/*
 	 * Restore the saved error in case the calls above set a new
