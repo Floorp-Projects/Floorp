@@ -255,12 +255,19 @@ menuitem {
 }
 
 xpmenubar {
-	display:block;
+    display:block;
     background-color: #CCCCDD;
     border-bottom: 1px solid #9999cc;
     font: inherit;
     min-height: 2em;
     width: 100%;
+}
+
+xpmenubar[collapsed="true"] {
+	display:none;
+}
+xpmenubar[hidden="true"] {
+	display:none;
 }
 
 xpmenu {
@@ -559,64 +566,40 @@ toolbar titledbutton[disabled="true"]:active {
 	padding: 2px;
 }
 
-toolbar titledbutton[toggled="1"] {
-  border: 1px inset white;
-
-  padding-left: 3px;
-  padding-right: 1px;
-  padding-top: 3px;
-  padding-bottom: 1px;
-}
-
-xpmenubar titledbutton {
+xpmenubar button {
   border: 1px solid transparent;
-  padding-left: 4px;
-  padding-right: 4px;
 }
 
-xpmenubar.main-bar titledbutton[align="bottom"]{
-	min-width: 3.5em;
-}
-
-xpmenubar titledbutton:hover {
+xpmenubar button:hover {
   border: 1px outset white;
   color:#333366;
-  text-decoration: underline;
+  text-decoration: none;
 }
  
-xpmenubar titledbutton:hover:-moz-outline {
+xpmenubar button:hover:-moz-outline {
    border : 1px solid black;
 }
  
-xpmenubar titledbutton:active {
+xpmenubar button:active {
   text-decoration:none;
   border: 1px inset;
 }
 
-xpmenubar titledbutton:active:-moz-outline {
+xpmenubar button:active:-moz-outline {
    border : 1px solid black;
 }
  
-xpmenubar titledbutton[disabled] {
+xpmenubar button[disabled] {
 	border: 1px solid transparent;
 }
 
-xpmenubar titledbutton[disabled]:hover {
+xpmenubar button[disabled]:hover {
 	border: 1px solid transparent;
 }
 
-xpmenubar titledbutton[disabled]:active {
+xpmenubar button[disabled]:active {
 	border: 1px solid transparent;
 	padding: 2px;
-}
-
-xpmenubar titledbutton[toggled="1"] {
-  border: 1px inset white;
-
-  padding-left: 3px;
-  padding-right: 1px;
-  padding-top: 3px;
-  padding-bottom: 1px;
 }
 
 /* tree related stuff */
