@@ -6038,9 +6038,6 @@ nsImapMailFolder::CopyNextStreamMessage(PRBool copySucceeded, nsISupports *copyS
               srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
           }
        }
-       if (mailCopyState->m_listener)
-         mailCopyState->m_listener->OnStopCopy(copySucceeded ? NS_OK : NS_ERROR_FAILURE);
-
     }
     return rv;
 }
@@ -6796,7 +6793,7 @@ nsresult nsImapFolderCopyState::AdvanceToNextFolder(nsresult aStatus)
   {
     if (m_copySrvcListener)
       rv = m_copySrvcListener->OnStopCopy(aStatus);
-    delete this;
+    Release();
   }
   else
   {
@@ -6821,7 +6818,7 @@ nsImapFolderCopyState::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   {
     if (m_copySrvcListener)
       m_copySrvcListener->OnStopCopy(aExitCode);
-    delete this;
+    Release();
     return aExitCode; // or NS_OK???
   }
   nsresult rv = NS_OK;
@@ -6886,12 +6883,13 @@ nsImapFolderCopyState::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             }
           }
 
-           rv = newMsgFolder->CopyMessages(m_srcFolder,
-                               msgSupportsArray,
+          nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+          if (NS_SUCCEEDED(rv))
+            rv = copyService->CopyMessages(m_srcFolder,
+                               msgSupportsArray, newMsgFolder,
                                m_isMoveFolder,
-                               m_msgWindow,
                                this,
-                               PR_TRUE, //isFolder for future use when we do cross-server folder move/copy
+                               m_msgWindow,
                                PR_FALSE /* allowUndo */);
         }
         break;
