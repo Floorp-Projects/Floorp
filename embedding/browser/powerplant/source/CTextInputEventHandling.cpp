@@ -162,6 +162,16 @@ OSStatus CTextInputEventHandler::HandleUnicodeForKeyEvent(
   
   if (noErr != err)
     return eventParameterNotFoundErr;
+  
+  // Check first to see if the key event is a cmd-key or control-key.
+  // If so, return eventNotHandledErr, and the keydown event will end
+  // up being handled by LEventDispatcher::EventKeyDown() which is the
+  // standard PowerPlant handling.
+  UInt32 keyModifiers;  
+  err = ::GetEventParameter(keyboardEvent, kEventParamKeyModifiers, typeUInt32,
+        NULL, sizeof(UInt32), NULL, &keyModifiers);
+  if ((noErr == err) && (keyModifiers & (cmdKey | controlKey)))
+    return eventNotHandledErr;
     
   EventRecord eventRecord;                        
                        
