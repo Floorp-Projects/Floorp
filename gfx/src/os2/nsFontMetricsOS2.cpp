@@ -79,12 +79,9 @@ nsGlobalFont* nsFontMetricsOS2::gGlobalFonts = nsnull;
 static int gGlobalFontsAlloc = 0;
 int nsFontMetricsOS2::gGlobalFontsCount = 0;
 
-PLHashTable* nsFontMetricsOS2::gFontMaps = nsnull;
-
 PLHashTable* nsFontMetricsOS2::gFamilyNames = nsnull;
 
-//-- Font weight
-PLHashTable* nsFontMetricsOS2::gFontWeights = nsnull;
+PLHashTable* nsFontEnumeratorOS2::gFontTypes = nsnull;
 
 #define NS_MAX_FONT_WEIGHT 900
 #define NS_MIN_FONT_WEIGHT 100
@@ -256,20 +253,46 @@ CompareKeys(const void* aStr1, const void* aStr2)
   return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(),
     ((const nsString*) aStr2)->GetUnicode()) == 0;
 }
+
+// aName is a font family name.  see if fonts of that family exist
+//  if so, return font structure with family name
 nsFontOS2*
 nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName)
 { 
   nsFontOS2* font = nsnull;
-  char fontName[FACESIZE];
+  char familyname[FACESIZE];
   WideCharToMultiByte(0, aName->GetUnicode(), aName->Length() + 1,
-    fontName, sizeof(fontName));
+    familyname, sizeof(familyname));
+
+  char facename[FACESIZE];
+  FACENAMEDESC fnd = { sizeof(FACENAMEDESC), FWEIGHT_NORMAL,
+                       FWIDTH_DONT_CARE, 0, 0 };
+   
+  ULONG rc = ::GpiQueryFaceString( aPS, familyname, &fnd, FACESIZE, facename);
+
+  // if GpiQueryFaceString cannot find matching font
+  if( rc == GPI_ERROR )
+  {
+    FACENAMEDESC fnd2 = { sizeof(FACENAMEDESC), FWEIGHT_DONT_CARE,
+                         FWIDTH_DONT_CARE, 0, 0 };
+   
+    rc = ::GpiQueryFaceString( aPS, familyname, &fnd2, FACESIZE, facename);
+  }
+
+  // if still fails, then maybe aName is realy a font face name, not family name
+  if( rc == GPI_ERROR )
+  {
+    strcpy( facename, familyname );
+  }
+
   long lWant = 0;
   long lFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC | QF_PRIVATE,
-                                      fontName, &lWant, 0, 0),
+                                      facename, &lWant, 0, 0),
                      GPI_ALTERROR);
+
   if (lFonts > 0) {
     font = new nsFontOS2();
-    strcpy(font->mName, fontName);
+    strcpy(font->mName, familyname);
   }
   return font;
 }
@@ -511,6 +534,7 @@ nsFontMetricsOS2::FindGenericFont(HDC aPS, PRUnichar aChar)
   return nsnull;
 }
 
+// returns family name of font that can display given char
 nsFontOS2*
 nsFontMetricsOS2::FindFont(HPS aPS, PRUnichar aChar)
 {
@@ -587,6 +611,44 @@ static PFONTMETRICS getMetrics( long &lFonts, PCSZ facename, HPS hps)
         GPI_ALTERROR);
 
    return pMetrics;
+}
+
+// Utility; expects font familyname; delete [] when done.
+static PFONTMETRICS getMetrics2( long &lFonts, PCSZ familyname, HPS hps)
+{
+  char facename[FACESIZE];
+
+  FACENAMEDESC fnd = { sizeof( FACENAMEDESC), FWEIGHT_NORMAL,
+                       FWIDTH_DONT_CARE, 0, 0 };
+   
+  ULONG rc = ::GpiQueryFaceString( hps, familyname, &fnd, FACESIZE, facename);
+
+  // if GpiQueryFaceString cannot find matching font
+  if( rc == GPI_ERROR )
+  {
+    FACENAMEDESC fnd2 = { sizeof( FACENAMEDESC), FWEIGHT_DONT_CARE,
+                         FWIDTH_DONT_CARE, 0, 0 };
+   
+    rc = ::GpiQueryFaceString( hps, familyname, &fnd2, FACESIZE, facename);
+  }
+
+  // if still fails, then maybe aName is realy a font face name, not family name
+  if( rc == GPI_ERROR )
+  {
+    strcpy( facename, familyname );
+  }
+
+  LONG lWant = 0;
+  lFonts = GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE,
+                                 facename, &lWant, 0, 0),
+                GPI_ALTERROR);
+  PFONTMETRICS pMetrics = new FONTMETRICS [ lFonts];
+
+  GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE, facename,
+                        &lFonts, sizeof (FONTMETRICS), pMetrics),
+       GPI_ALTERROR);
+
+  return pMetrics;
 }
 
 nsresult nsFontMetricsOS2::RealizeFont()
@@ -681,7 +743,7 @@ HDC   ps = NULL;
 
    if (mDeviceContext->SupportsRasterFonts()) {
       long lFonts = 0; int i;
-      PFONTMETRICS pMetrics = getMetrics( lFonts, szFamily, ps);
+      PFONTMETRICS pMetrics = getMetrics2( lFonts, szFamily, ps);
 
       for (i = 0 ; i < lFonts ; i++)
          if (!(pMetrics [i].fsDefn & FM_DEFN_OUTLINE))
@@ -702,10 +764,21 @@ HDC   ps = NULL;
                         bBold ? FWEIGHT_BOLD : FWEIGHT_NORMAL,
                         FWIDTH_DONT_CARE,
                         0,
-                        bItalic ? FTYPE_ITALIC : 0 };
+                        bItalic ? FTYPE_ITALIC | FTYPE_OBLIQUE : 0 };
    
    ULONG rc = ::GpiQueryFaceString( ps, szFamily, &fnd,
                                     FACESIZE, fh->fattrs.szFacename);
+
+   if( rc == GPI_ERROR )
+   {
+      FACENAMEDESC fnd2 = { sizeof( FACENAMEDESC),
+                            bBold ? FWEIGHT_BOLD : FWEIGHT_DONT_CARE,
+                            FWIDTH_DONT_CARE,
+                            0,
+                            bItalic ? FTYPE_ITALIC | FTYPE_OBLIQUE : 0 };
+   
+      rc = ::GpiQueryFaceString( ps, szFamily, &fnd2, FACESIZE, fh->fattrs.szFacename);
+   }
 
    if( rc == GPI_ERROR)
    {  // no real font, fake it
@@ -1011,8 +1084,8 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
     for (int i=0; i < lNumFonts; i++) {
       BOOL fAlreadyFound = FALSE;
       for (int j = 0; j < gGlobalFontsCount && !fAlreadyFound; j++) {
-        if (!strcmp(gGlobalFonts[j].fontMetrics.szFacename,
-                 pFontMetrics[i].szFacename)) {
+        if (!strcmp(gGlobalFonts[j].fontMetrics.szFamilyname,
+                 pFontMetrics[i].szFamilyname)) {
               fAlreadyFound = TRUE;
          }
       }
@@ -1028,9 +1101,7 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
       }
 #endif
       // XXX ignore vertical fonts
-      if ((pFontMetrics[i].szFacename[0] == '@') ||
-          (strstr(pFontMetrics[i].szFacename, "Bold")) ||
-          (strstr(pFontMetrics[i].szFacename, "Italic")))
+      if (pFontMetrics[i].szFamilyname[0] == '@')
       {
         continue;
       }
@@ -1069,8 +1140,8 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
 
       PRUnichar name[FACESIZE];
       name[0] = L'\0';
-      MultiByteToWideChar(0, pFontMetrics[i].szFacename,
-         strlen(pFontMetrics[i].szFacename) + 1, name, sizeof(name)/sizeof(name[0]));
+      MultiByteToWideChar(0, pFontMetrics[i].szFamilyname,
+         strlen(pFontMetrics[i].szFamilyname) + 1, name, sizeof(name)/sizeof(name[0]));
       font->name = new nsString(name);
       if (!font->name) {
         gGlobalFontsCount--;
@@ -1211,8 +1282,8 @@ nsFontEnumeratorOS2::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
     array[i] = str;
   }
 
-  NS_QuickSort(array, nsFontMetricsOS2::gGlobalFontsCount, sizeof(PRUnichar*),
-    CompareFontNames, nsnull);
+  //NS_QuickSort(array, nsFontMetricsOS2::gGlobalFontsCount, sizeof(PRUnichar*),
+  //  CompareFontNames, nsnull);
 
   *aCount = nsFontMetricsOS2::gGlobalFontsCount;
   *aResult = array;
@@ -1304,6 +1375,72 @@ FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric,
   return 0;
 }
 
+typedef struct fonthash
+{
+  char* mName;
+  char* mType;
+} fontHash;
+
+static fontHash gFontTypeTable[] =
+{
+  { "devanagari mt for ibm",        "serif" },
+  { "georgia",                      "serif" },
+  { "lucida bright",                "serif" },
+  { "roman",                        "serif" },
+  { "times new roman",              "serif" },
+  { "times new roman mt 30",        "serif" },
+  { "times new roman wt j",         "serif" },
+  { "tms rmn",                      "serif" },
+  { "arial",                        "sans-serif" },
+  { "helv",                         "sans-serif" },
+  { "helvetica",                    "sans-serif" },
+  { "lucida sans",                  "sans-serif" },
+  { "monotype sans wt",             "sans-serif" },
+  { "swiss",                        "sans-serif" },
+  { "system proportional",          "sans-serif" },
+  { "thonburi",                     "sans-serif" },
+  { "verdana",                      "sans-serif" },
+  { "warpsans",                     "sans-serif" },
+  { "courier",                      "monospace" },
+  { "courier new",                  "monospace" },
+  { "courierthai",                  "monospace" },
+  { "lucida sans typewriter",       "monospace" },
+  { "monotype sans duospace wt j",  "monospace" },
+  { "system monospaced",            "monospace" },
+  { "system vio",                   "monospace" },
+  { "symbol",                       "fantasy" },
+  { "symbol set",                   "fantasy" },
+  { "wingdings",                    "fantasy" },
+
+  { nsnull, nsnull }
+};
+
+PLHashTable*
+nsFontEnumeratorOS2::InitializeFontHashes(void)
+{
+  static int gInitializedFontHashes = 0;
+  if (!gInitializedFontHashes) {
+    gInitializedFontHashes = 1;
+    gFontTypes = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, nsnull, nsnull);
+    if (!gFontTypes) {
+      return nsnull;
+    }
+    fonthash* f = gFontTypeTable;
+    while (f->mName) {
+      nsString* name = new nsString;
+      nsString* type = new nsString;
+      if (name) {
+        name->AssignWithConversion(f->mName);
+        type->AssignWithConversion(f->mType);
+        PL_HashTableAdd(gFontTypes, name, (void*) type);
+      }
+      f++;
+    }
+  }
+
+  return gFontTypes;
+}
+
 NS_IMETHODIMP
 nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
   const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
@@ -1323,14 +1460,15 @@ nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
   else {
     return NS_ERROR_NULL_POINTER;
   }
-  return EnumerateAllFonts(aCount, aResult);
-
-  if ((!strcmp(aLangGroup, "x-unicode")) ||
-      (!strcmp(aLangGroup, "x-user-def"))) {
-  }
 
   if (!gInitializedFontEnumerator) {
     if (!InitializeFontEnumerator()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  if (!gFontTypes) {
+    if (!InitializeFontHashes()) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -1340,32 +1478,33 @@ nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  int j = 0;
+
+  int count = 0;
   for (int i = 0; i < nsFontMetricsOS2::gGlobalFontsCount; i++) {
-    if (SignatureMatchesLangGroup(&nsFontMetricsOS2::gGlobalFonts[i].signature,
-                                  aLangGroup) &&
-        FontMatchesGenericType(&nsFontMetricsOS2::gGlobalFonts[i], aGeneric,
-                               aLangGroup)) {
-      PRUnichar* str = nsFontMetricsOS2::gGlobalFonts[i].name->ToNewUnicode();
-      if (!str) {
-        for (j = j - 1; j >= 0; j--) {
-          nsMemory::Free(array[j]);
-        }
-        nsMemory::Free(array);
-        return NS_ERROR_OUT_OF_MEMORY;
+    PRUnichar* str = nsFontMetricsOS2::gGlobalFonts[i].name->ToNewUnicode();
+    if (!str) {
+      for (i = count - 1; i >= 0; i--) {
+        nsMemory::Free(array[i]);
       }
-      array[j] = str;
-      j++;
+      nsMemory::Free(array);
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+    nsAutoString low(str);
+    low.ToLowerCase();
+    nsString* type = (nsString*) PL_HashTableLookup(gFontTypes, &low);
+    if( type == NULL || type->CompareWithConversion( aGeneric ) == 0 )
+      array[count++] = str;
   }
 
-  NS_QuickSort(array, j, sizeof(PRUnichar*), CompareFontNames, nsnull);
+  //NS_QuickSort(array, nsFontMetricsOS2::gGlobalFontsCount, sizeof(PRUnichar*),
+  //  CompareFontNames, nsnull);
 
-  *aCount = j;
+  *aCount = count;
   *aResult = array;
 
   return NS_OK;
 }
+
 NS_IMETHODIMP
 nsFontEnumeratorOS2::HaveFontFor(const char* aLangGroup, PRBool* aResult)
 {
