@@ -192,6 +192,12 @@ NS_IMETHODIMP IMETextTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
+NS_IMETHODIMP IMETextTxn::MarkFixed(void)
+{
+  mFixed = PR_TRUE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP IMETextTxn::GetUndoString(nsString *aString)
 {
   NS_ASSERTION(aString, "illegal value- null ptr- aString");
