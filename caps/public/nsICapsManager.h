@@ -267,5 +267,5 @@ public:
     0x307f,                                          \
     0x11d2,                                          \
     {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
-};
+}
 #endif // nsICapsManager_h___
