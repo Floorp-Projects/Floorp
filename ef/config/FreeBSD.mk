@@ -33,7 +33,7 @@ WARNING_CFLAG	= -Wall
 # used by mkdepend
 X11INCLUDES		=   -I/usr/X11R6/include
 INCLUDES		+=  -I$(subst libgcc.a,include, \
-                                      $(shell gcc -print-libgcc-file-name))
+                                      $(shell $(CC) -print-libgcc-file-name))
 
 ifeq ($(CPU_ARCH),x86)
 DEPENDFLAGS		+= -D__i386__
