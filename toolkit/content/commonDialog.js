@@ -202,8 +202,8 @@ function commonDialogOnLoad()
 
     setTimeout(commonDialogReenableButtons, delayInterval);
     
-    document.documentElement.addEventListener("blur", commonDialogBlur, false);
-    document.documentElement.addEventListener("focus", commonDialogFocus, false);
+    addEventListener("blur", commonDialogBlur, false);
+    addEventListener("focus", commonDialogFocus, false);
   }
 
   getAttention();
@@ -212,16 +212,20 @@ function commonDialogOnLoad()
 var gDelayExpired = false;
 var gBlurred = false;
 
-function commonDialogBlur()
+function commonDialogBlur(aEvent)
 {
+  if (aEvent.target != document)
+    return;
   gBlurred = true;
   document.documentElement.getButton("accept").disabled = true;
   document.documentElement.getButton("extra1").disabled = true;
   document.documentElement.getButton("extra2").disabled = true;
 }
 
-function commonDialogFocus()
+function commonDialogFocus(aEvent)
 {
+  if (aEvent.target != document)
+    return;
   gBlurred = false;
   // When refocusing the window, don't enable the buttons unless the countdown
   // delay has expired. 
