@@ -1,10 +1,49 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+
+<!-- These entity declarations will go into a separate, locale file at some point -->
+<!-- Window title -->
+<!ENTITY windowTitle.label "Image Properties">
+
+<!ENTITY locationFieldset.label "Image Location">
+<!ENTITY locationEditField.label "Image URL">
+<!ENTITY altTextEditField.label "Alternative Text">
+<!ENTITY chooseButton.label "Choose File...">
+
+<!ENTITY pixelsPopup.value "pixels">
+<!ENTITY percentPopup.value "percent">
+
+<!ENTITY dimensionsFieldset.label "Dimensions">
+<!ENTITY originalSizeRadio.label "Original Size">
+<!ENTITY customSizeRadio.label "Custom Size">
+<!ENTITY heightEditField.label "Height">
+<!ENTITY widthEditField.label "Width">
+<!ENTITY constrainCheckbox.label "Constrain">
+
+<!ENTITY alignment.label "Align Text to Image">
+<!ENTITY bottomPopup.value "at the bottom">
+<!ENTITY topPopup.value "at the top">
+<!ENTITY centerPopup.value "in the center">
+<!ENTITY wrapRightPopup.value "wrap around right side">
+<!ENTITY wrapLeftPopup.value "wrap around left side">
+
+<!ENTITY spacingFieldset.label "Spacing">
+<!ENTITY leftrightEditField.label "Left and Right">
+<!ENTITY topBottomEditField.label "Top and Bottom">
+<!ENTITY borderEditField.label "Solid Border">
+
+<!ENTITY OKButton.label "OK">
+<!ENTITY CancelButton.label "Cancel">
+<!ENTITY advancedButton.label "Advanced">
+
+]>
+
 
 <!-- dialog containing a control requiring initial setup -->
-<xul:window class="dialog" title="Image Properties"
+<xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -21,21 +60,21 @@
   <table>
     <tr>
       <td colspan="2">
-        <fieldset id="imageInfo.fieldset" ><legend align="left"> Image Information </legend>
+        <fieldset id="imageInfo.fieldset" ><legend align="left"> &locationFieldset.label; </legend>
           <table>
             <tr>
               <td align="right" valign="middle">
-                <label class="enabled"> Image URL </label>
+                <label class="enabled" for="image.srcInput"> &locationEditField.label; </label>
               </td>
               <td valign="middle">
                 <input type="text" size="30" length="30" id="image.srcInput" onkeypress="OnChangeSrc()" onchange="OnChangeSrc()"/>
-                <button class="ChooseFile" id="ChooseFile" onclick="chooseFile()"> Choose File... </button>
+                <button class="ChooseFile" id="ChooseFile" onclick="chooseFile()"> &chooseButton.label; </button>
               </td>
             </tr>
             
             <tr>
               <td align="right" valign="middle">
-                <label class="enabled"> Alternative Text </label>
+                <label class="enabled" for="image.altTextInput"> &altTextEditField.label; </label>
               </td>
               <td>
                 <input type="text" size="30" id="image.altTextInput" onchange="doValueChanged()"/>
@@ -48,13 +87,13 @@
     </tr>
     <tr>
       <td>
-        <button class="spaced" id="AdvancedButton" onclick="onAdvanced()" width="50">Advanced</button>  
+        <button class="spaced" id="AdvancedButton" onclick="onAdvanced()" width="50"> &advancedButton.label; </button>  
       </td>
       <td/>
     </tr>
     <tr id="AdvancedRow">
       <td>
-        <fieldset id="imagedimensionsFieldset" ><legend align="left">Dimensions </legend>
+        <fieldset id="imagedimensionsFieldset" ><legend align="left"> &dimensionsFieldset.label; </legend>
           <table cellspacing="0" cellpadding="0">
             <tr>
               <td>
@@ -62,7 +101,7 @@
                 <input type="radio" name="image.dimensionType" id="originalsizeRadio" onclick="doValueChanged()" checked="true" />
               </td>
               <td colspan="3">
-                <label class="disabled" for="originalsizeRadio" id="originalsizeLabel" > Original Size </label>
+                <label class="disabled" for="originalsizeRadio" id="originalsizeLabel" > &originalSizeRadio.label; </label>
               </td>
             </tr>
             <tr>
@@ -71,7 +110,7 @@
                 <input type="radio" name="image.dimensionType" id="customsizeRadio" onclick="doValueChanged()" />
               </td>
               <td colspan="3">
-                <label class="disabled" for="customsizeRadio" id="customsizeLabel" > Custom Size </label>
+                <label class="disabled" for="customsizeRadio" id="customsizeLabel" > &customSizeRadio.label; </label>
               </td>
             </tr>
           
@@ -79,13 +118,13 @@
 						<tr valign="middle">
 						  <td/>
 						  <td>
-	              <label class="disabled" for="imagewidthInput" id="imagewidthLabel"> Width </label>
+	              <label class="disabled" for="imagewidthInput" id="imagewidthLabel"> &widthEditField.label; </label>
 	            </td>
 	            <td>
 			          <input type="text" size="4" length="4" id="imagewidthInput" onchange="doValueChanged()" />
 			        </td>
 			        <td>
-                <xul:titledbutton class="popup PixelOrPercent" id="widthunitSelect" value="pixels" 
+                <xul:titledbutton class="popup PixelOrPercent" id="widthunitSelect" value="&pixelsPopup.value;" 
                      align="left" popup="PixelOrPercentMenu1" onchange="doValueChanged()" />
 	            </td>
 	          </tr>
@@ -94,13 +133,13 @@
 						<tr valign="middle">
 						  <td/>
 						  <td>
-	              <label class="disabled" for="imageheightInput" id="imageheightLabel"> Height </label>
+	              <label class="disabled" for="imageheightInput" id="imageheightLabel"> &heightEditField.label; </label>
 	            </td>
 	            <td>
 	              <input type="text" size="4" length="4" id="imageheightInput" onchange="doValueChanged()" />
 			        </td>
 			        <td>
-                <xul:titledbutton class="popup PixelOrPercent" id="heightunitSelect" value="pixels" 
+                <xul:titledbutton class="popup PixelOrPercent" id="heightunitSelect" value="&pixelsPopup.value;" 
                      align="left" popup="PixelOrPercentMenu2" onchange="doValueChanged()" />
 	            </td>
 	          </tr>
@@ -108,9 +147,10 @@
 							<!-- CONSTRAIN DIMENSIONS -->
 						<tr valign="middle">
 						  <td/>
-						  <td colspan="3">
+						  <td/>
+						  <td colspan="2">
 			          <input type="checkbox" id="constrainCheckbox"></input>
-			          <label class="disabled" id="constrainLabel" for="constrainCheckbox"> Constrain </label>
+			          <label class="disabled" id="constrainLabel" for="constrainCheckbox"> &constrainCheckbox.label; </label>
 	            </td>
 	          </tr>
 	        </table>
@@ -119,47 +159,47 @@
      </td>
       <td>
 							<!-- IMAGE ALIGNMENT -->
-        <label class="disabled" for="image.alignType" id="imagealignmentLabel"> Align Text to Image </label>
-        <xul:titledbutton class="popup PixelOrPercent" id="image.alignType" value="at the bottom" align="left" 
+        <label class="disabled" for="image.alignType" id="imagealignmentLabel"> &alignment.label; </label>
+        <xul:titledbutton class="popup PixelOrPercent" id="image.alignType" value="&bottomPopup.value;" align="left" 
              popup="ImageTextAlignment" onchange="doValueChanged()"/>
 
         <br/>
         <p/>
-        <fieldset id="spacing.fieldset"><legend align="left">Spacing </legend>
+        <fieldset id="spacing.fieldset"><legend align="left"> &spacingFieldset.label; </legend>
           <table cellspacing="0" cellpadding="0">
             <tr valign="middle">
               <td align="right">
-                <label class="disabled" for="imageleftrightInput" id="leftrightLabel"> Left and Right </label>
+                <label class="disabled" for="imageleftrightInput" id="leftrightLabel"> &leftrightEditField.label; </label>
               </td>
               <td>
                 <input type="text" size="4" length="4" maxlength="4" id="imageleftrightInput" onchange="doValueChanged()"/>
               </td>
               <td valign="middle">
-                <label class="disabled" for="imageleftrightInput" id="leftrighttypeLabel"> pixels </label>
+                <label class="disabled" for="imageleftrightInput" id="leftrighttypeLabel"> &pixelsPopup.value; </label>
               </td>
             </tr>
 
             <tr valign="middle">
               <td align="right">
-                <label class="disabled" for="imagetopbottomInput" id="topbottomLabel"> Top and Bottom </label>
+                <label class="disabled" for="imagetopbottomInput" id="topbottomLabel"> &topBottomEditField.label; </label>
               </td>
               <td>
                 <input type="text" size="4" length="4" maxlength="4" id="imagetopbottomInput" onchange="doValueChanged()"/>
               </td>
               <td valign="middle">
-                <label class="disabled" for="imagetopbottomInput" id="topbottomtypeLabel"> pixels </label>
+                <label class="disabled" for="imagetopbottomInput" id="topbottomtypeLabel"> &pixelsPopup.value; </label>
               </td>
             </tr>
 
             <tr valign="middle">
               <td align="right">
-                <label class="disabled" for="imageborderInput" id="borderLabel"> Solid Border </label>
+                <label class="disabled" for="imageborderInput" id="borderLabel"> &borderEditField.label; </label>
               </td>
               <td>
                 <input type="text" size="4" length="4" maxlength="4" id="imageborderInput" onchange="doValueChanged()" />
               </td>
               <td valign="middle">
-                <label class="disabled" for="imageborderInput" id="bordertypeLabel"> pixels </label>
+                <label class="disabled" for="imageborderInput" id="bordertypeLabel"> &pixelsPopup.value; </label>
               </td>
             </tr>
           </table>
@@ -168,8 +208,8 @@
     </tr>
     <tr>
       <td colspan="2" align="right">
-        <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
-        <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
+        <button class="spaced" id="OK" onclick="onOK()" width="50"> &OKButton.label; </button>  
+        <button class="spaced" id="Cancel" onclick="onCancel()" width="50"> &CancelButton.label; </button>
       </td>
       <td/>
     </tr>
@@ -177,25 +217,25 @@
 
 <xul:popup id="PixelOrPercentMenu1">
   <xul:menu>
-    <xul:menuitem name="pixels" onclick="SetPixelOrPercentByID('widthunitSelect', '')"/>
-    <xul:menuitem name="percent" onclick="SetPixelOrPercentByID('widthunitSelect', '%')"/>
+    <xul:menuitem name="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('widthunitSelect', '')"/>
+    <xul:menuitem name="&percentPopup.value;" onclick="SetPixelOrPercentByID('widthunitSelect', '%')"/>
   </xul:menu>
 </xul:popup>
 
 <xul:popup id="PixelOrPercentMenu2">
   <xul:menu>
-    <xul:menuitem name="pixels" onclick="SetPixelOrPercentByID('heightunitSelect', '')"/>
-    <xul:menuitem name="percent" onclick="SetPixelOrPercentByID('heightunitSelect', '%')"/>
+    <xul:menuitem name="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('heightunitSelect', '')"/>
+    <xul:menuitem name="&percentPopup.value;" onclick="SetPixelOrPercentByID('heightunitSelect', '%')"/>
   </xul:menu>
 </xul:popup>
 
 <xul:popup id="ImageTextAlignment">
   <xul:menu>
-    <xul:menuitem name="at the top" onclick="SetImageAlignment('^')"/>
-    <xul:menuitem name="in the center" onclick="SetImageAlignment('.')"/>
-    <xul:menuitem name="at the bottom" onclick="SetImageAlignment('v')"/>
-    <xul:menuitem name="wrap around right side" onclick="SetImageAlignment(']')"/>
-    <xul:menuitem name="wrap around left side" onclick="SetImageAlignment('[')"/>
+    <xul:menuitem name="&topPopup.value;" onclick="SetImageAlignment('^')"/>
+    <xul:menuitem name="&centerPopup.value;" onclick="SetImageAlignment('.')"/>
+    <xul:menuitem name="&bottomPopup.value;" onclick="SetImageAlignment('v')"/>
+    <xul:menuitem name="&wrapRightPopup.value;" onclick="SetImageAlignment(']')"/>
+    <xul:menuitem name="&wrapLeftPopup.value;" onclick="SetImageAlignment('[')"/>
   </xul:menu>
 </xul:popup>
 

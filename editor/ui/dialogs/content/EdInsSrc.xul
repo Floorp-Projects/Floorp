@@ -1,13 +1,24 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window>
+<!DOCTYPE window
+[
 
-<xul:window title="Insert HTML"
+<!-- These entity declarations will go into a separate, locale file at some point -->
+<!-- Window title -->
+<!ENTITY windowTitle.label "Insert HTML">
+<!ENTITY sourceFieldset.label "HTML Source">
+<!ENTITY sourceEditField.label "Enter HTML source to insert:">
+<!ENTITY OKButton.label "OK">
+<!ENTITY CancelButton.label "Cancel">
+
+]>
+
+<xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical">
+    align="vertical" flex="100%">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
@@ -16,22 +27,19 @@
   </script>
 
   <xul:broadcaster id="args" value=""/>
+
+  <xul:box>
+    <label class="smallmargin" id="srcMessage"> &sourceEditField.label; </label>
+  </xul:box>
+  <xul:box>
+    <textarea rows="6" cols="50" id="srcInput" />
+  </xul:box>
+
   <table>
     <tr>
-      <td>
-        <fieldset><legend align="left">HTML Source</legend>
-          <p class="smallmargin" id="srcMessage">Enter HTML source to insert:</p>
-          <input type="text" size="60" length="60" id="srcInput"></input>
-<!-- Want to use a textarea, but it doesn't work!
-          <textarea rows=6 cols="50" id="srcInput">
- -->
-        </fieldset>
-      </td>
-    </tr>
-    <tr>
-      <td  align = "right">
-        <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
-        <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
+      <td align="right">
+        <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
+        <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
       </td>
     </tr>
   </table>
