@@ -51,32 +51,14 @@ nsRDFContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
     nsAutoString s;
     nsIContent* node         = nsnull;
     nsITextContent* text     = nsnull;
-    nsIRDFResource* resource = nsnull;
-    nsIRDFLiteral* literal   = nsnull;
-    
-    if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-        nsXPIDLCString p;
-        if (NS_FAILED(rv = resource->GetValue( getter_Copies(p) )))
-            goto error;
 
-        s = p;
-    }
-    else if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-        nsXPIDLString p;
-        if (NS_FAILED(rv = literal->GetValue( getter_Copies(p) )))
-            goto error;
-
-        s = p;
-    }
-    else {
-        PR_ASSERT(0);
+    if (NS_FAILED(rv = GetTextForNode(value, s)))
         goto error;
-    }
 
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kTextNodeCID,
-                                                    nsnull,
-                                                    kIContentIID,
-                                                    (void**) &node)))
+                                                          nsnull,
+                                                          kIContentIID,
+                                                          (void**) &node)))
         goto error;
 
     if (NS_FAILED(rv = node->QueryInterface(kITextContentIID, (void**) &text)))
@@ -128,3 +110,35 @@ nsRDFContentUtils::FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody)
 
 	return(NS_ERROR_FAILURE);
 }
+
+
+
+nsresult
+nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
+{
+    nsresult rv;
+    nsIRDFResource* resource;
+    nsIRDFLiteral* literal;
+    
+    if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+        nsXPIDLCString p;
+        if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(p) ))) {
+            aResult = p;
+        }
+        NS_RELEASE(resource);
+    }
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
+        nsXPIDLString p;
+        if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(p) ))) {
+            aResult = p;
+        }
+        NS_RELEASE(literal);
+    }
+    else {
+        NS_ERROR("not a resource or a literal");
+        rv = NS_ERROR_UNEXPECTED;
+    }
+
+    return rv;
+}
+

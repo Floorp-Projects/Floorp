@@ -97,6 +97,16 @@ public:
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aValue);
 
+    nsresult
+    SetWidgetAttribute(nsIContent* aMenuItemElement,
+                       nsIRDFResource* aProperty,
+                       nsIRDFNode* aValue);
+
+    nsresult
+    UnsetWidgetAttribute(nsIContent* aMenuItemElement,
+                         nsIRDFResource* aProperty,
+                         nsIRDFNode* aValue);
+
     nsresult 
     GetRootWidgetAtom(nsIAtom** aResult) {
         NS_ADDREF(kMenuAtom);
@@ -141,6 +151,7 @@ public:
     static nsIAtom* kMenuBarAtom;
     static nsIAtom* kMenuAtom;
     static nsIAtom* kMenuItemAtom;
+    static nsIAtom* kNameAtom;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -150,6 +161,7 @@ nsrefcnt RDFMenuBuilderImpl::gRefCnt = 0;
 nsIAtom* RDFMenuBuilderImpl::kMenuAtom;
 nsIAtom* RDFMenuBuilderImpl::kMenuItemAtom;
 nsIAtom* RDFMenuBuilderImpl::kMenuBarAtom;
+nsIAtom* RDFMenuBuilderImpl::kNameAtom;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -178,6 +190,7 @@ RDFMenuBuilderImpl::RDFMenuBuilderImpl(void)
         kMenuAtom            = NS_NewAtom("menu");
         kMenuItemAtom        = NS_NewAtom("menuitem");
         kMenuBarAtom         = NS_NewAtom("menubar");
+        kNameAtom            = NS_NewAtom("name");
     }
 
     ++gRefCnt;
@@ -187,10 +200,10 @@ RDFMenuBuilderImpl::~RDFMenuBuilderImpl(void)
 {
     --gRefCnt;
     if (gRefCnt == 0) {
-        
         NS_RELEASE(kMenuAtom);
         NS_RELEASE(kMenuItemAtom);
         NS_RELEASE(kMenuBarAtom);
+        NS_RELEASE(kNameAtom);
     }
 }
 
@@ -268,7 +281,7 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
             return rv;
         }
 
-        // Ignore properties that are used to indicate "tree-ness"
+        // Ignore properties that are used to indicate containment
         if (IsContainmentProperty(aElement, property))
             continue;
 
@@ -289,35 +302,20 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
         if (rv == NS_RDF_NO_VALUE)
             continue;
 
-        nsCOMPtr<nsIRDFResource> resource;
-        nsCOMPtr<nsIRDFLiteral> literal;
-
         nsAutoString s;
-        if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, getter_AddRefs(resource)))) {
-            nsXPIDLCString uri;
-            resource->GetValue( getter_Copies(uri) );
-            s = uri;
-        }
-        else if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, getter_AddRefs(literal)))) {
-            nsXPIDLString p;
-            literal->GetValue( getter_Copies(p) );
-            s = p;
-        }
-        else {
-            NS_ERROR("not a resource or a literal");
-            return NS_ERROR_UNEXPECTED;
-        }
+        rv = nsRDFContentUtils::GetTextForNode(value, s);
+        if (NS_FAILED(rv)) return rv;
 
-        menuItem->SetAttribute(nameSpaceID, tag, s, PR_FALSE);
+        rv = menuItem->SetAttribute(nameSpaceID, tag, s, PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
 
-        nsString nameAtom;
-        tag->ToString(nameAtom);
-        if (nameAtom == "Name")
-        {
-            nsIAtom* lowerName = NS_NewAtom("name");
+        // XXX This should go away and just be determined dynamically;
+        // e.g., by setting an attribute on the "xul:menu" tag
+        nsAutoString tagStr;
+        tag->ToString(tagStr);
+        if (tagStr.EqualsIgnoreCase("name")) {
             // Hack to ensure that we add in a lowercase name attribute also.
-            menuItem->SetAttribute(kNameSpaceID_None, lowerName, s, PR_FALSE);
-            NS_RELEASE(lowerName);
+            menuItem->SetAttribute(kNameSpaceID_None, kNameAtom, s, PR_FALSE);
         }
     }
 
@@ -343,6 +341,113 @@ RDFMenuBuilderImpl::RemoveWidgetItem(nsIContent* aMenuItemElement,
                                      nsIRDFResource* aProperty,
                                      nsIRDFResource* aValue)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    // Find the doomed kid and blow it away.
+    PRInt32 count;
+    if (NS_FAILED(rv = aMenuItemElement->ChildCount(count)))
+        return rv;
+
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIContent> kid;
+        rv = aMenuItemElement->ChildAt(i, *getter_AddRefs(kid));
+        if (NS_FAILED(rv)) return rv;
+
+        // Make sure it's a <xul:menu> or <xul:menuitem>
+        PRInt32 nameSpaceID;
+        rv = kid->GetNameSpaceID(nameSpaceID);
+        if (NS_FAILED(rv)) return rv;
+
+        if (nameSpaceID != kNameSpaceID_XUL)
+            continue; // wrong namespace
+
+        nsCOMPtr<nsIAtom> tag;
+        rv = kid->GetTag(*getter_AddRefs(tag));
+        if (NS_FAILED(rv)) return rv;
+
+        if ((tag.get() != kMenuItemAtom) &&
+            (tag.get() != kMenuAtom))
+            continue; // wrong tag
+
+        // Now get the resource ID from the RDF:ID attribute. We do it
+        // via the content model, because you're never sure who
+        // might've added this stuff in...
+        nsCOMPtr<nsIRDFResource> resource;
+        rv = GetElementResource(kid, getter_AddRefs(resource));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving resource");
+        if(NS_FAILED(rv)) return rv;
+
+        if (resource.get() != aValue)
+            continue; // not the resource we want
+
+        // Fount it! Now kill it.
+        rv = aMenuItemElement->RemoveChildAt(i, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove xul:menu[item] from xul:menu");
+        if (NS_FAILED(rv)) return rv;
+
+        return NS_OK;
+    }
+
+    // XXX make this a warning
+    NS_WARNING("unable to find child to remove");
+    return NS_OK;
 }
+
+nsresult
+RDFMenuBuilderImpl::SetWidgetAttribute(nsIContent* aMenuItemElement,
+                                       nsIRDFResource* aProperty,
+                                       nsIRDFNode* aValue)
+{
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tag;
+    rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag));
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString value;
+    rv = nsRDFContentUtils::GetTextForNode(aValue, value);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aMenuItemElement->SetAttribute(nameSpaceID, tag, value, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX This should go away and just be determined dynamically;
+    // e.g., by setting an attribute on the "xul:menu" tag.
+    nsAutoString tagStr;
+    tag->ToString(tagStr);
+    if (tagStr.EqualsIgnoreCase("name")) {
+        // Hack to ensure that we add in a lowercase name attribute also.
+        aMenuItemElement->SetAttribute(kNameSpaceID_None, kNameAtom, value, PR_TRUE);
+    }
+
+    return NS_OK;
+}
+
+nsresult
+RDFMenuBuilderImpl::UnsetWidgetAttribute(nsIContent* aMenuItemElement,
+                                         nsIRDFResource* aProperty,
+                                         nsIRDFNode* aValue)
+{
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tag;
+    rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aMenuItemElement->UnsetAttribute(nameSpaceID, tag, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX This should go away and just be determined dynamically;
+    // e.g., by setting an attribute on the "xul:menu" tag.
+    nsAutoString tagStr;
+    tag->ToString(tagStr);
+    if (tagStr.EqualsIgnoreCase("name")) {
+        // Hack to ensure that we add in a lowercase name attribute also.
+        aMenuItemElement->UnsetAttribute(kNameSpaceID_None, kNameAtom, PR_TRUE);
+    }
+
+    return NS_OK;
+}
+

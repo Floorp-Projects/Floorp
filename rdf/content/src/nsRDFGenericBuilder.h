@@ -105,6 +105,16 @@ public:
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aValue) = 0;
 
+    virtual nsresult
+    SetWidgetAttribute(nsIContent* aWidgetElement,
+                       nsIRDFResource* aProperty,
+                       nsIRDFNode* aValue) = 0;
+
+    virtual nsresult
+    UnsetWidgetAttribute(nsIContent* aWidgetElement,
+                         nsIRDFResource* aProperty,
+                         nsIRDFNode* aValue) = 0;
+
     virtual PRBool
     IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty);
 

@@ -655,11 +655,7 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
             // tree property. So this won't be a new row in the
             // table. See if we can use it to set a cell value on the
             // current element.
-            /* XXX: WHAT THE HECK IS THIS HERE FOR? - Dave
-            if (NS_FAILED(rv = SetCellValue(element, aPredicate, aObject))) {
-                NS_ERROR("unable to set cell value");
-                return rv;
-            }*/
+            return SetWidgetAttribute(element, aPredicate, aObject);
         }
     }
     return NS_OK;
@@ -737,11 +733,7 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
             // tree property. So this won't be a new row in the
             // table. See if we can use it to set a cell value on the
             // current element.
-            /* XXX: WHAT THE HECK IS THIS HERE FOR? - Dave
-            if (NS_FAILED(rv = SetCellValue(element, aPredicate, aObject))) {
-                NS_ERROR("unable to set cell value");
-                return rv;
-            }*/
+            return UnsetWidgetAttribute(element, aPredicate, aObject);
         }
     }
     return NS_OK;

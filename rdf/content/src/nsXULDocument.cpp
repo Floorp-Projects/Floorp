@@ -493,7 +493,10 @@ public:
 
     // nsIRDFDocument interface
     NS_IMETHOD SetRootResource(nsIRDFResource* resource);
-    NS_IMETHOD SplitProperty(nsIRDFResource* aResource, PRInt32* aNameSpaceID, nsIAtom** aTag);
+    NS_IMETHOD SplitProperty(nsIRDFResource* aResource,
+                             PRInt32* aNameSpaceID,
+                             nsIAtom** aTag);
+
     NS_IMETHOD AddElementForResource(nsIRDFResource* aResource, nsIContent* aElement);
     NS_IMETHOD RemoveElementForResource(nsIRDFResource* aResource, nsIContent* aElement);
     NS_IMETHOD GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements);
@@ -928,11 +931,11 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     // not a XUL fragment.
     if (mFragmentRoot == nsnull) {
 
-        nsIRDFCompositeDataSource* db;
+        nsCOMPtr<nsIRDFCompositeDataSource> db;
         rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
                                                 nsnull,
                                                 kIRDFCompositeDataSourceIID,
-                                                (void**) &db);
+                                                (void**) getter_AddRefs(db));
 
         if (NS_FAILED(rv)) {
             NS_ERROR("couldn't create composite datasource");

@@ -148,7 +148,8 @@ class RDFElementImpl : public nsIDOMXULElement,
                        public nsIDOMEventReceiver,
                        public nsIScriptObjectOwner,
                        public nsIJSScriptObject,
-                       public nsIStyledContent
+                       public nsIStyledContent,
+                       public nsIXMLContent
 {
 public:
     RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag);
@@ -226,7 +227,7 @@ public:
       const nsIAtom* aAttribute,
       PRInt32 *aHint) const;
 
-    // nsIXMLContent (no longer implemented)
+    // nsIXMLContent
     NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
     NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
     NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
@@ -331,6 +332,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mChildren(nsnull),
       mParent(nsnull),
       mNameSpace(nsnull),
+      mNameSpacePrefix(nsnull),
       mNameSpaceID(aNameSpaceID),
       mTag(aTag),
       mListenerManager(nsnull),
@@ -439,7 +441,7 @@ NS_NewRDFElement(PRInt32 aNameSpaceId,
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(element);
-    *aResult = element;
+    *aResult = (nsIStyledContent*) element;
     return NS_OK;
 }
 
@@ -458,7 +460,10 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     if (iid.Equals(nsIStyledContent::GetIID()) ||
         iid.Equals(kIContentIID) ||
         iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIContent*, this);
+        *result = NS_STATIC_CAST(nsIStyledContent*, this);
+    }
+    else if (iid.Equals(nsIXMLContent::GetIID())) {
+        *result = NS_STATIC_CAST(nsIXMLContent*, this);
     }
     else if (iid.Equals(nsIDOMXULElement::GetIID()) ||
              iid.Equals(kIDOMElementIID) ||
@@ -639,7 +644,7 @@ RDFElementImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
     if (nsnull != mParent) {
         PRInt32 pos;
-        mParent->IndexOf(this, pos);
+        mParent->IndexOf(NS_STATIC_CAST(nsIStyledContent*, this), pos);
         if (pos > -1) {
             nsIContent* prev;
             mParent->ChildAt(--pos, prev);
@@ -664,7 +669,7 @@ RDFElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
 {
     if (nsnull != mParent) {
         PRInt32 pos;
-        mParent->IndexOf(this, pos);
+        mParent->IndexOf(NS_STATIC_CAST(nsIStyledContent*, this), pos);
         if (pos > -1) {
             nsIContent* next;
             mParent->ChildAt(++pos, next);
@@ -688,7 +693,7 @@ RDFElementImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
     nsresult rv;
     if (! mAttributes) {
-        rv = NS_NewXULAttributes(&mAttributes, this);
+        rv = NS_NewXULAttributes(&mAttributes, NS_STATIC_CAST(nsIStyledContent*, this));
         if (NS_FAILED(rv))
             return rv;
     }
@@ -1013,21 +1018,27 @@ RDFElementImpl::SetContainingNameSpace(nsINameSpace* aNameSpace)
 NS_IMETHODIMP
 RDFElementImpl::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
 {
-    aNameSpace = mNameSpace;
-    NS_IF_ADDREF(aNameSpace);
+    if (mNameSpace) {
+        NS_ADDREF(mNameSpace);
+        aNameSpace = mNameSpace;
+        return NS_OK;
+    }
+    else if (mParent) {
+        nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(mParent) );
+        if (xml)
+            return xml->GetContainingNameSpace(aNameSpace);
+    }
+
+    aNameSpace = nsnull;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 RDFElementImpl::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
 {
-    NS_PRECONDITION(aNameSpacePrefix != nsnull, "null ptr");
-    if (! aNameSpacePrefix)
-        return NS_ERROR_NULL_POINTER;
-
     NS_IF_RELEASE(mNameSpacePrefix);
     mNameSpacePrefix = aNameSpacePrefix;
-    NS_ADDREF(mNameSpacePrefix);
+    NS_IF_ADDREF(mNameSpacePrefix);
     return NS_OK;
 }
 
@@ -1286,7 +1297,7 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
         // the old document.
         if (resource) {
             if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
-                rv = rdfDoc->RemoveElementForResource(resource, this);
+                rv = rdfDoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
                 NS_ASSERTION(NS_SUCCEEDED(rv), "error unmapping resource from element");
             }
         }
@@ -1320,7 +1331,7 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
         // new document.
         if (resource) {
             if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
-                rv = rdfDoc->AddElementForResource(resource, this);
+                rv = rdfDoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
                 NS_ASSERTION(NS_SUCCEEDED(rv), "error mapping resource to element");
             }
         }
@@ -1461,13 +1472,13 @@ RDFElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     PRBool insertOk = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
     if (insertOk) {
         NS_ADDREF(aKid);
-        aKid->SetParent(this);
+        aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildInserted(this, aIndex);
         nsIDocument* doc = mDocument;
         if (nsnull != doc) {
             aKid->SetDocument(doc, PR_TRUE);
             if (aNotify) {
-                doc->ContentInserted(this, aKid, aIndex);
+                doc->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
             }
         }
     }
@@ -1493,13 +1504,13 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     PRBool replaceOk = mChildren->ReplaceElementAt(aKid, aIndex);
     if (replaceOk) {
         NS_ADDREF(aKid);
-        aKid->SetParent(this);
+        aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
         nsIDocument* doc = mDocument;
         if (nsnull != doc) {
             aKid->SetDocument(doc, PR_TRUE);
             if (aNotify) {
-                doc->ContentReplaced(this, oldKid, aKid, aIndex);
+                doc->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
             }
         }
         oldKid->SetDocument(nsnull, PR_TRUE);
@@ -1516,7 +1527,7 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     if (NS_FAILED(rv = EnsureContentsGenerated()))
         return rv;
 
-    NS_PRECONDITION((nsnull != aKid) && (aKid != this), "null ptr");
+    NS_PRECONDITION((nsnull != aKid) && (aKid != NS_STATIC_CAST(nsIStyledContent*, this)), "null ptr");
 
     if (! mChildren) {
         if (NS_FAILED(NS_NewISupportsArray(&mChildren)))
@@ -1526,13 +1537,13 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     PRBool appendOk = mChildren->AppendElement(aKid);
     if (appendOk) {
         NS_ADDREF(aKid);
-        aKid->SetParent(this);
+        aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         // ranges don't need adjustment since new child is at end of list
         nsIDocument* doc = mDocument;
         if (nsnull != doc) {
             aKid->SetDocument(doc, PR_TRUE);
             if (aNotify) {
-                doc->ContentInserted(this, aKid, mChildren->Count() - 1);
+                doc->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, mChildren->Count() - 1);
             }
         }
     }
@@ -1557,7 +1568,7 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         //nsRange::OwnerChildRemoved(this, aIndex, oldKid);
         if (aNotify) {
             if (nsnull != doc) {
-                doc->ContentRemoved(this, oldKid, aIndex);
+                doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
             }
         }
         oldKid->SetDocument(nsnull, PR_TRUE);
@@ -1619,16 +1630,24 @@ static char kNameSpaceSeparator[] = ":";
     // tag. You'll start seeing problems when the same name is used in
     // different namespaces.
     //
-    // See http://bugzilla.mozilla.org/show_bug.cgi?id=3275 for more
-    // info.
+    // See http://bugzilla.mozilla.org/show_bug.cgi?id=3275 and 3334
+    // for more info.
 
     aNameSpaceID = kNameSpaceID_None;
     if (0 < prefix.Length()) {
-        nsIAtom* nameSpaceAtom = NS_NewAtom(prefix);
-        if (mNameSpace) {
-            mNameSpace->FindNameSpaceID(nameSpaceAtom, aNameSpaceID);
+        nsCOMPtr<nsIAtom> nameSpaceAtom( getter_AddRefs(NS_NewAtom(prefix)) );
+        if (! nameSpaceAtom)
+            return NS_ERROR_FAILURE;
+
+        nsresult rv;
+        nsCOMPtr<nsINameSpace> ns;
+        rv = GetContainingNameSpace(*getter_AddRefs(ns));
+        if (NS_FAILED(rv)) return rv;
+
+        if (ns) {
+            rv = ns->FindNameSpaceID(nameSpaceAtom, aNameSpaceID);
+            if (NS_FAILED(rv)) return rv;
         }
-        NS_RELEASE(nameSpaceAtom);
     }
 
     aName = NS_NewAtom(name);
@@ -1639,8 +1658,21 @@ NS_IMETHODIMP
 RDFElementImpl::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, 
                                          nsIAtom*& aPrefix)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX mNameSpace will _always_ be null, so this really depends on
+    // fixing Bugs 3275 & 3334, resolving how to map scoped namespace
+    // prefixes back and forth from the graph.
+    nsresult rv;
+
+    nsCOMPtr<nsINameSpace> ns;
+    rv = GetContainingNameSpace(*getter_AddRefs(ns));
+    if (NS_FAILED(rv)) return rv;
+
+    if (ns) {
+        return ns->FindNameSpacePrefix(aNameSpaceID, aPrefix);
+    }
+
+    aPrefix = nsnull;
+    return NS_OK;
 }
 
 
@@ -1665,7 +1697,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     nsresult rv = NS_OK;
 
     if (! mAttributes) {
-        rv = NS_NewXULAttributes(&mAttributes, this);
+        rv = NS_NewXULAttributes(&mAttributes, NS_STATIC_CAST(nsIStyledContent*, this));
         if (NS_FAILED(rv))
             return rv;
     }
@@ -1708,7 +1740,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         attr->mValue = aValue;
     }
     else { // didn't find it
-        rv = NS_NewXULAttribute(&attr, this, aNameSpaceID, aName, aValue);
+        rv = NS_NewXULAttribute(&attr, NS_STATIC_CAST(nsIStyledContent*, this), aNameSpaceID, aName, aValue);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1769,7 +1801,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     }
 
     if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-        mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);
+        mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aName, NS_STYLE_HINT_UNKNOWN);
     }
 
     // Check to see if this is the RDF:container property; if so, and
@@ -1958,7 +1990,9 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
    
       // Notify document
       if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-          mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);
+          mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
+                                      aName,
+                                      NS_STYLE_HINT_UNKNOWN);
       }
     }
 
@@ -2391,7 +2425,7 @@ RDFElementImpl::EnsureContentsGenerated(void) const
                                                  (void**) getter_AddRefs(rdfDoc))))
         return rv;
 
-    rv = rdfDoc->CreateContents(unconstThis);
+    rv = rdfDoc->CreateContents((nsIStyledContent*) unconstThis);
     NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
     return rv;
 }
