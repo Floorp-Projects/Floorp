@@ -21,6 +21,7 @@ nsQuickSort.h
 nsCharTraits.h
 nsAReadableString.h
 nsAWritableString.h
+nsPrintfCString.h
 nsReadableUtils.h
 nsSharedBufferList.h
 nsSharedString.h
