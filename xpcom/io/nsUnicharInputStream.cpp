@@ -152,7 +152,7 @@ public:
 protected:
   PRInt32 Fill(nsresult * aErrorCode);
 
-  static PRInt32 CountValidUTF8Bytes(const char *aBuf, PRInt32 aMaxBytes);
+  static void CountValidUTF8Bytes(const char *aBuf, PRUint32 aMaxBytes, PRUint32& aValidUTF8bytes, PRUint32& aValidUCS2bytes);
 
   nsCOMPtr<nsIInputStream> mInput;
   nsCOMPtr<nsIByteBuffer> mByteData;
@@ -246,23 +246,24 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
   NS_ASSERTION(remainder + nb == mByteData->GetLength(), "bad nb");
 
   // Now convert as much of the byte buffer to unicode as possible
-  PRInt32 srcLen = CountValidUTF8Bytes(mByteData->GetBuffer(),remainder + nb);
-  NS_ASSERTION( (remainder+nb >= srcLen), "cannot be longer than out buffer");
+  PRUint32 srcLen, dstLen;
+  CountValidUTF8Bytes(mByteData->GetBuffer(),remainder + nb, srcLen, dstLen);
 
-  NS_ConvertUTF8toUCS2
-    unicodeValue(Substring(mByteData->GetBuffer(),
-                           mByteData->GetBuffer() + srcLen));
-  PRInt32 dstLen = unicodeValue.Length();
-  
   // the number of UCS2 characters should always be <= the number of
   // UTF8 chars
-  NS_ASSERTION(dstLen <= mUnicharData->GetBufferSize(),
+  NS_ASSERTION( (remainder+nb >= srcLen), "cannot be longer than out buffer");
+  NS_ASSERTION(PRInt32(dstLen) <= mUnicharData->GetBufferSize(),
                "Ouch. I would overflow my buffer if I wasn't so careful.");
-  if (dstLen > mUnicharData->GetBufferSize()) return 0;
+  if (PRInt32(dstLen) > mUnicharData->GetBufferSize()) return 0;
   
-  memcpy((void *)mUnicharData->GetBuffer(),
-                (void *)unicodeValue.get(), dstLen*sizeof(PRUnichar));
-
+  ConvertUTF8toUCS2 converter(mUnicharData->GetBuffer());
+  
+  nsASingleFragmentCString::const_char_iterator start = mByteData->GetBuffer();
+  nsASingleFragmentCString::const_char_iterator end = mByteData->GetBuffer() + srcLen;
+            
+  copy_string(start, end, converter);
+  NS_ASSERTION(converter.Length() == dstLen, "length mismatch");
+               
   mUnicharDataOffset = 0;
   mUnicharDataLength = dstLen;
   mByteDataOffset = srcLen;
@@ -270,15 +271,17 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
   return dstLen;
 }
 
-PRInt32
-UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRInt32 aMaxBytes)
+void
+UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRUint32 aMaxBytes, PRUint32& aValidUTF8bytes, PRUint32& aValidUCS2chars)
 {
   const char *c = aBuffer;
   const char *end = aBuffer + aMaxBytes;
   const char *lastchar = c;     // pre-initialize in case of 0-length buffer
-  
+  PRUint32 ucs2bytes = 0;
   while (c < end && *c) {
     lastchar = c;
+    ucs2bytes++;
+    
     if (UTF8traits::isASCII(*c))
       c++;
     else if (UTF8traits::is2byte(*c))
@@ -296,10 +299,13 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRInt32 aMaxBytes)
       break; // Otherwise we go into an infinite loop.  But what happens now?
     }
   }
-  if (c > end)
+  if (c > end) {
     c = lastchar;
+    ucs2bytes--;
+  }
 
-  return c - aBuffer;
+  aValidUTF8bytes = c - aBuffer;
+  aValidUCS2chars = ucs2bytes;
 }
 
 NS_COM nsresult
