@@ -31,6 +31,7 @@ Rights Reserved.
 		<tree id="dirTree" 
 			  class="abDirectory" 
 			  flex="100%"
+			  ref="abdirectory://" open="true"
 			  rdf:datasources="rdf:addressdirectory"
 			  onclick="return ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
 			
@@ -59,10 +60,7 @@ Rights Reserved.
 
 			<treechildren id="dirTreeBody"
 						  rdf:containment="http://home.netscape.com/NC-rdf#child"
-						  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild"
-						  open="true">
-				<treeitem ref="abdirectory://" open="true">
-				</treeitem>
+						  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
 			</treechildren>
 		</tree>
 
