@@ -128,13 +128,13 @@ SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-ifndef MOZ_ENABLE_LIBXUL
 STACKWALK_SRC_LCSRCS =               \
 		nsStackFrameUnix.cpp \
 		nsStackFrameUnix.h   \
 		$(NULL)
 
 STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRCS))
+ifndef MOZ_ENABLE_LIBXUL
 CPPSRCS           += nsStackFrameUnix.cpp
 endif
 SHAREDCPPSRCS	  += nsSigHandlers.cpp
