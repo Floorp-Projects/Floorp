@@ -40,14 +40,15 @@ public:
     nsMemoryCacheDevice();
     virtual ~nsMemoryCacheDevice();
 
-    virtual nsresult  Init();
+    virtual nsresult        Init();
+    virtual nsresult        Shutdown();
 
-    virtual const char *   GetDeviceID(void);
+    virtual const char *    GetDeviceID(void);
 
-    virtual nsresult       BindEntry( nsCacheEntry * entry );
-    virtual nsCacheEntry * FindEntry( nsCString * key );
-    virtual void           DoomEntry( nsCacheEntry * entry );
-    virtual nsresult       DeactivateEntry( nsCacheEntry * entry );
+    virtual nsresult        BindEntry( nsCacheEntry * entry );
+    virtual nsCacheEntry *  FindEntry( nsCString * key );
+    virtual void            DoomEntry( nsCacheEntry * entry );
+    virtual nsresult        DeactivateEntry( nsCacheEntry * entry );
 
     virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
                                            nsCacheAccessMode mode,
@@ -59,6 +60,8 @@ public:
     virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize );
 
     virtual nsresult Visit( nsICacheVisitor * visitor );
+
+    virtual nsresult        EvictEntries(const char * clientID);
     
     static int PR_CALLBACK MemoryCacheSizeChanged(const char * pref, void * closure);
  

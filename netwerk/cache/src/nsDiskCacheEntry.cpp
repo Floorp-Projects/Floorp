@@ -21,9 +21,20 @@
  *    Patrick C. Beard <beard@netscape.com>
  */
 
+#include <limits.h>
+
 #include "nsDiskCacheEntry.h"
 
 NS_IMPL_ISUPPORTS0(nsDiskCacheEntry);
+
+PLDHashNumber
+nsDiskCacheEntry::Hash(const char* key)
+{
+    PLDHashNumber h = 0;
+    for (const PRUint8* s = (PRUint8*) key; *s != '\0'; ++s)
+        h = (h >> (PL_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
+    return (h == 0 ? ULONG_MAX : h);
+}
 
 /******************************************************************************
  *  nsCacheEntryHashTable
@@ -70,7 +81,7 @@ nsDiskCacheEntryHashTable::Init()
 nsDiskCacheEntry *
 nsDiskCacheEntryHashTable::GetEntry(const char * key)
 {
-    return GetEntry(::PL_DHashStringKey(NULL, key));
+    return GetEntry(nsDiskCacheEntry::Hash(key));
 }
 
 

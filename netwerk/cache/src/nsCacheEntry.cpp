@@ -36,8 +36,8 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
                            PRBool               streamBased,
                            nsCacheStoragePolicy storagePolicy)
     : mKey(key),
-      mFetchCount(1),
-      mLastValidated(0),
+      mFetchCount(0),
+      mLastFetched(0),
       mExpirationTime(0),
       mFlags(0),
       mDataSize(0),
@@ -50,8 +50,6 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
     PR_INIT_CLIST(&mRequestQ);
     PR_INIT_CLIST(&mDescriptorQ);
 
-    mLastFetched = SecondsFromPRTime(PR_Now());
-    
     if (streamBased) MarkStreamBased();
     SetStoragePolicy(storagePolicy);
 }
@@ -65,49 +63,28 @@ nsCacheEntry::~nsCacheEntry()
 
 
 void
-nsCacheEntry::SetDataSize( PRUint32   size)
+nsCacheEntry::Fetched()
 {
-    mDataSize = size;
-    mLastModified = SecondsFromPRTime(PR_Now());
-    MarkEntryDirty();
-}
-
-
-nsresult
-nsCacheEntry::GetSecurityInfo( nsISupports ** result)
-{
-    NS_ENSURE_ARG_POINTER(result);
-    NS_IF_ADDREF(*result = mSecurityInfo);
-    return NS_OK;
-}
-
-
-nsresult
-nsCacheEntry::SetSecurityInfo( nsISupports *  info)
-{
-    mSecurityInfo = info;
-    return NS_OK;
+    mLastFetched = SecondsFromPRTime(PR_Now());
+    ++mFetchCount;
 }
 
 
 nsresult
 nsCacheEntry::GetData(nsISupports **result)
 {
-    if (!result)         
-        return NS_ERROR_NULL_POINTER;
-
+    NS_ENSURE_ARG_POINTER(result);
     NS_IF_ADDREF(*result = mData);
     return NS_OK;
 }
 
-
-nsresult
-nsCacheEntry::SetData(nsISupports * data)
+void
+nsCacheEntry::TouchData()
 {
     mLastModified = SecondsFromPRTime(PR_Now());
-    mData = data;
-    return NS_OK;
+    MarkDataDirty();
 }
+
 
 
 nsresult
@@ -133,27 +110,9 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
         return rv;
 
     mMetaSize = mMetaData->Size();                // calc new meta data size
-    mLastModified = SecondsFromPRTime(PR_Now());  // time stamp the entry
-    MarkMetaDataDirty();                          // mark it dirty
     return rv;
 }
 
-
-#if 0
-nsresult
-nsCacheEntry::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
-                               PRUint32 *                     count)
-{
-    if (!array || !count)  return NS_ERROR_NULL_POINTER;
-
-    if (!mMetaData) {
-        *array = nsnull;
-        *count = 0;
-        return NS_OK;
-    }
-    return mMetaData->GetKeyValueArray(array, count);
-}
-#endif
 
 nsresult
 nsCacheEntry::FlattenMetaData(char ** data, PRUint32 * size)
@@ -176,8 +135,45 @@ nsCacheEntry::UnflattenMetaData(char * data, PRUint32 size)
     mMetaData = nsCacheMetaData::Create();
     if (!mMetaData)
         return NS_ERROR_OUT_OF_MEMORY;
-    return mMetaData->UnflattenMetaData(data, size);
+    nsresult rv = mMetaData->UnflattenMetaData(data, size);
+    if (NS_SUCCEEDED(rv))
+        mMetaSize = mMetaData->Size();
+    return rv;
 }
+
+
+void
+nsCacheEntry::TouchMetaData()
+{
+    mLastModified = SecondsFromPRTime(PR_Now());
+    MarkMetaDataDirty();
+}
+
+#if 0
+nsresult
+nsCacheEntry::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
+                               PRUint32 *                     count)
+{
+    if (!array || !count)  return NS_ERROR_NULL_POINTER;
+
+    if (!mMetaData) {
+        *array = nsnull;
+        *count = 0;
+        return NS_OK;
+    }
+    return mMetaData->GetKeyValueArray(array, count);
+}
+#endif
+
+
+nsresult
+nsCacheEntry::GetSecurityInfo( nsISupports ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    NS_IF_ADDREF(*result = mSecurityInfo);
+    return NS_OK;
+}
+
 
 /**
  *  cache entry states
@@ -361,17 +357,6 @@ nsCacheEntryInfo::GetLastModified(PRUint32 * lastModified)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetLastValidated(PRUint32 * lastValidated)
-{
-    NS_ENSURE_ARG_POINTER(lastValidated);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-
-    *lastValidated = mCacheEntry->LastValidated();
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsCacheEntryInfo::GetExpirationTime(PRUint32 * expirationTime)
 {
     NS_ENSURE_ARG_POINTER(expirationTime);
@@ -423,14 +408,15 @@ nsCacheEntryHashTable::ops =
 
 
 nsCacheEntryHashTable::nsCacheEntryHashTable()
-    : initialized(0)
+    : initialized(PR_FALSE)
 {
 }
 
 
 nsCacheEntryHashTable::~nsCacheEntryHashTable()
 {
-    PL_DHashTableFinish(&table);
+    if (initialized)
+        PL_DHashTableFinish(&table);
 }
 
 

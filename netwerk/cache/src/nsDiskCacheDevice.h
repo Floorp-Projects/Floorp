@@ -10,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is nsMemoryCacheDevice.h, released February 20, 2001.
+ * The Original Code is nsDiskCacheDevice.h, released February 20, 2001.
  * 
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
@@ -18,7 +18,8 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 20-February-2001
+ *    Gordon Sheridan <gordon@netscape.com>
+ *    Patrick C. Beard <beard@netscape.com>
  */
 
 #ifndef _nsDiskCacheDevice_h_
@@ -31,16 +32,22 @@
 #include "nsIObserver.h"
 
 class nsDiskCacheEntry;
+class nsDiskCacheMap;
+class nsDiskCacheRecord;
+
 class nsISupportsArray;
+class nsIInputStream;
+class nsIOutputStream;
 
 class nsDiskCacheDevice : public nsCacheDevice {
 public:
     nsDiskCacheDevice();
     virtual ~nsDiskCacheDevice();
 
-    nsresult  Init();
+    static nsresult         Create(nsCacheDevice **result);
 
-    static nsresult  Create(nsCacheDevice **result);
+    virtual nsresult        Init();
+    virtual nsresult        Shutdown();
 
     virtual const char *    GetDeviceID(void);
     virtual nsCacheEntry *  FindEntry(nsCString * key);
@@ -59,6 +66,8 @@ public:
     
     virtual nsresult        Visit(nsICacheVisitor * visitor);
 
+    virtual nsresult        EvictEntries(const char * clientID);
+
 /* private: */
     void                    setPrefsObserver(nsIObserver* observer);
     void                    getPrefsObserver(nsIObserver ** result);
@@ -66,10 +75,15 @@ public:
     void                    setCacheCapacity(PRUint32 capacity);
     PRUint32                getCacheCapacity();
     PRUint32                getCacheSize();
+    PRUint32                getEntryCount();
 
+    nsresult getFileForHashNumber(PLDHashNumber hashNumber, PRBool meta, PRUint32 generation, nsIFile ** result);
     nsresult getFileForKey(const char* key, PRBool meta, PRUint32 generation, nsIFile ** result);
     nsresult getFileForDiskCacheEntry(nsDiskCacheEntry * diskEntry, PRBool meta, nsIFile ** result);
+
     static nsresult getTransportForFile(nsIFile* file, nsCacheAccessMode mode, nsITransport ** result);
+    static nsresult openInputStream(nsIFile* file, nsIInputStream ** result);
+    static nsresult openOutputStream(nsIFile* file, nsIOutputStream ** result);
 
     nsresult visitEntries(nsICacheVisitor * visitory);
     
@@ -84,16 +98,19 @@ public:
     nsresult scanDiskCacheEntries(nsISupportsArray ** result);
     nsresult evictDiskCacheEntries();
     
-    nsresult writeCacheInfo();
-    nsresult readCacheInfo();
+    nsresult readCacheMap();
+    nsresult writeCacheMap();
 
+    nsresult updateCacheMap(nsDiskCacheEntry * diskEntry);
+    nsresult evictDiskCacheRecord(nsDiskCacheRecord * record);
+    
 private:
+    PRBool                      mInitialized;
     nsCOMPtr<nsIObserver>       mPrefsObserver;
     nsCOMPtr<nsILocalFile>      mCacheDirectory;
     nsDiskCacheEntryHashTable   mBoundEntries;
     PRUint32                    mCacheCapacity;
-    PRUint32                    mCacheSize;
-    PRBool                      mInitialized;
+    nsDiskCacheMap*             mCacheMap;
 };
 
 #endif // _nsDiskCacheDevice_h_

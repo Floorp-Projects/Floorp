@@ -44,7 +44,7 @@ public:
     {
         NS_INIT_ISUPPORTS();
         PR_INIT_CLIST(this);
-        mHashNumber = ::PL_DHashStringKey(NULL, entry->Key()->get());
+        mHashNumber = Hash(entry->Key()->get());
     }
 
     virtual ~nsDiskCacheEntry()
@@ -88,6 +88,8 @@ public:
     {
         return mHashNumber;
     }
+    
+    static PLDHashNumber Hash(const char* key);
     
 private:
 #ifdef MOZ_NEW_CACHE_REUSE_TRANSPORTS
