@@ -21,6 +21,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): Mike Potter  <mikep@oeone.com>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +48,22 @@
 
 <overlay id="calendarRepeatOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!-- Javascript DTD To Variable -->
+<script type="application/x-javascript">
+  var repeatOfthemonthLabel = "&newevent.advanced.repeat.ofthemonth.label;";
+  var repeatOntheLabel = "&newevent.advanced.repeat.onthe.label;";
+  var repeatLastLabel = "&newevent.advanced.repeat.last.label;";
+  var firstLabel = "&newevent.advanced.repeat.first.label;";
+  var secondLabel = "&newevent.advanced.repeat.second.label;";
+  var thirdLabel = "&newevent.advanced.repeat.third.label;";
+  var fourthLabel = "&newevent.advanced.repeat.fourth.label;";
+  var lastLabel = "&newevent.advanced.repeat.last.label;";
+  var firstExtension = "&newevent.advanced.repeat.first.extension;";
+  var secondExtension = "&newevent.advanced.repeat.second.extension;";
+  var thirdExtension = "&newevent.advanced.repeat.third.extension;";
+  var nthExtension = "&newevent.advanced.repeat.nth.extension;";
+</script>
 
    <!-- Repeat -->    
       <vbox id="repeat-outer-box">

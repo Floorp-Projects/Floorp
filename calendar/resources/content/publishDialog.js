@@ -76,7 +76,7 @@ function loadCalendarPublishDialog()
       document.getElementById( "publish-username-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.username", "" );
       document.getElementById( "publish-password-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.password", "" );
    }
-   document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", "Publish" );   
+   document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", publishButtonLabel );   
    
    checkURLField( );
 
@@ -101,7 +101,7 @@ function onOKCommand()
    document.getElementById( "publish-progressmeter" ).setAttribute( "mode", "undetermined" );
    // call caller's on OK function
    gOnOkFunction( CalendarPublishObject );
-   document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", "Close" );   
+   document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", closeButtonLabel );   
    document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "oncommand", "closeDialog()" );   
    document.getElementById( "publish-progressmeter" ).setAttribute( "mode", "determined" );
    return( false );

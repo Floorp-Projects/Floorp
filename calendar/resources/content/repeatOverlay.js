@@ -23,6 +23,7 @@
  *                 Colin Phillips <colinp@oeone.com> 
  *                 Chris Charabaruk <ccharabaruk@meldstar.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -410,20 +411,20 @@ function updateAdvancedRepeatDayOfMonth()
 
    var weekNumber = getWeekNumberOfMonth();
 
-   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", "On the "+dayNumber+dayExtension+" of the month" );
+   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", repeatOntheLabel+dayNumber+dayExtension+repeatOfthemonthLabel );
    
    if( weekNumber == 4 && isLastDayOfWeekOfMonth() )
    {
       //enable
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+" of the month" );
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+repeatOfthemonthLabel );
 
       document.getElementById( "advanced-repeat-dayofweek-last" ).removeAttribute( "collapsed" );
 
-      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", "Last "+getDayOfWeek( dayNumber )+" of the month" );
+      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", repeatLastLabel+getDayOfWeek( dayNumber )+repeatOfthemonthLabel );
    }
    else if( weekNumber == 4 && !isLastDayOfWeekOfMonth() )
    {
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+" of the month" );
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+repeatOfthemonthLabel );
 
       document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
    }
@@ -432,7 +433,7 @@ function updateAdvancedRepeatDayOfMonth()
       //disable
       document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "collapsed", "true" );
 
-      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", "Last "+getDayOfWeek( dayNumber )+" of the month" );
+      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", repeatLastLabel+getDayOfWeek( dayNumber )+repeatOfthemonthLabel );
    }
 
    
@@ -509,15 +510,15 @@ function getDayExtension( dayNumber )
       case 1:
       case 21:
       case 31:
-         return( "st" );
+         return( firstExtension );
       case 2:
       case 22:
-         return( "nd" );
+         return( secondExtension );
       case 3:
       case 23:
-         return( "rd" );
+         return( thirdExtension );
       default:
-         return( "th" );
+         return( nthExtension );
    }
 }
 
@@ -629,15 +630,15 @@ function getWeekNumberText( weekNumber )
    switch( weekNumber )
    {
    case 1:
-      return( "First" );
+      return( firstLabel );
    case 2:
-      return( "Second" );
+      return( secondLabel );
    case 3:
-      return( "Third" );
+      return( thirdLabel );
    case 4:
-      return( "Fourth" );
+      return( fourthLabel );
    case 5:
-      return( "Last" );
+      return( lastLabel );
    default:
       return( false );
    }

@@ -67,6 +67,11 @@
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/publishDialog.js"/>
    
+   <script type="application/x-javascript" >
+   var publishButtonLabel = "&calendar.publish.publish.button;" ;
+   var closeButtonLabel = "&calendar.publish.close.button;" ;
+   </script>
+
    <!-- Data used in JS from dtd -->
    
    <keyset id="dialogKeys"/>

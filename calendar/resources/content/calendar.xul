@@ -163,6 +163,7 @@
 <script type="application/x-javascript">
   var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
   var confirmDeleteUntitledEvent = "&calendar.confirm.deleteuntitledevent;";
+  var defaultCalendarFileName = "&calendar.file.default.name;";
 </script>
 
 <!-- Javascript includes -->

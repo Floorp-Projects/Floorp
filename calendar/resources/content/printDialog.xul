@@ -63,7 +63,7 @@
 
 <dialog
    id="calendar-new-printwindow"
-   title="Print A Calendar"
+   title="&calendar.print.window.title;"
    onload="loadCalendarPrintDialog()"
    buttons="accept,cancel"
    ondialogaccept="printCalendar()"
@@ -72,13 +72,13 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:nc="http://home.netscape.com/NC-rdf#">
     
+<!-- Javascript DTD To Variable -->                    
+<script type="application/x-javascript">               
+  var calendarxxxxxx = "&calendar.print.window.title;";
+</script>                                              
    
-<!-- Javascript DTD To Variable -->
-<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-
-
 <!-- Javascript includes -->
-
+<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 
@@ -131,7 +131,7 @@ var descriptionTag="&newevent.description.label;"
                      <row align="center">
                      <spacer />
                      <hbox class="field-label-box-class" pack="end">
-                      <label value="Select your options below, and use OK to print" />
+                      <label value="&calendar.print.selectoptions.label;" />
                       </hbox>
                      </row>
 
@@ -147,12 +147,12 @@ var descriptionTag="&newevent.description.label;"
                      <row align="center">
                         <spacer />
                         <radiogroup id="view-field" >
-                           <caption label="Select View to Print" />
+                           <caption label="&calendar.print.selectviews.label;" />
                            <radio label="&calendar.monthview.button.label;"  value="month" selected="true" />
                            <radio label="&calendar.weekview.button.label;"  value="week"/>
                            <radio label="&calendar.multiweekview.button.label;"  value="multiweek"/>
                            <radio label="&calendar.dayview.button.label;"  value="day"/>
-                           <radio label="List Selected Events"  value="list"/>
+                           <radio label="&calendar.print.listselected.label;"  value="list"/>
                         </radiogroup>
                      </row>
 
@@ -177,7 +177,7 @@ var descriptionTag="&newevent.description.label;"
                      <!-- Calendar Status -->
                      <row align="center" collapsed="true">
                       <spacer />
-                        <checkbox id="status-checkbox" checked="false" label="Print only items with this status:"/>
+                        <checkbox id="status-checkbox" checked="false" label="&calendar.print.onlyitemsstatus.label;"/>
                      </row>
                      <row align="center" collapsed="true">
                         <spacer />
@@ -194,7 +194,7 @@ var descriptionTag="&newevent.description.label;"
                      <!-- Categories -->
                      <row align="center" collapsed="true">
                       <spacer />
-                        <checkbox id="category-checkbox" checked="false" label="Print only items with this category:"/>
+                        <checkbox id="category-checkbox" checked="false" label="&calendar.print.onlyitemscategory.label;"/>
                      </row>
 
                      <row align="center" collapsed="true">

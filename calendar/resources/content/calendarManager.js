@@ -86,7 +86,7 @@ function calendarManager( CalendarWindow )
                          
       var node = this.rootContainer.addNode( "calendar0" );
    
-      node.setAttribute( "http://home.netscape.com/NC-rdf#name", "My Calendar" );
+      node.setAttribute( "http://home.netscape.com/NC-rdf#name", defaultCalendarFileName );
       node.setAttribute( "http://home.netscape.com/NC-rdf#path", profileFile.path );
       node.setAttribute( "http://home.netscape.com/NC-rdf#active", "true" );
       node.setAttribute( "http://home.netscape.com/NC-rdf#remote", "false" );
