@@ -251,10 +251,9 @@ interface nsIHTMLEditor : nsISupports
 
   /**
    * Insert some HTML source, interpreting
-   * the string argument according to the given charset.
+   * the string argument according to the given context.
    *
    * @param aInputString   the string to be inserted
-   * @param aCharset       Charset of string
    * @param aContextStr    Context of insertion
    * @param aInfoStr       Related info to aInputString 
    * @param aFlavor        Transferable flavor, can be ""
@@ -264,15 +263,14 @@ interface nsIHTMLEditor : nsISupports
    * @param aDeleteSelection    used with aDestNode during drag&drop 
    * @param aCollapseSelection  used with aDestNode during drag&drop
    */
-  void insertHTMLWithCharsetAndContext(in AString aInputString,
-                                       in AString aCharset,
-                                       in AString aContextStr,
-                                       in AString aInfoStr,
-                                       in AString aFlavor,
-                                       in nsIDOMDocument aSourceDoc,
-                                       in nsIDOMNode aDestinationNode,
-                                       in long aDestinationOffset,
-                                       in boolean aDeleteSelection);
+  void insertHTMLWithContext(in AString aInputString,
+                             in AString aContextStr,
+                             in AString aInfoStr,
+                             in AString aFlavor,
+                             in nsIDOMDocument aSourceDoc,
+                             in nsIDOMNode aDestinationNode,
+                             in long aDestinationOffset,
+                             in boolean aDeleteSelection);
 
 
   /** 

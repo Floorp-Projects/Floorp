@@ -1849,6 +1849,7 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
     return res;
   }
   
+  // if there is no font face, check for tt
   res = GetInlinePropertyBase(nsEditProperty::tt, nsnull, nsnull, &first, &any, &all,nsnull);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed

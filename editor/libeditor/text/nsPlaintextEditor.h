@@ -95,7 +95,6 @@ public:
   NS_IMETHOD InsertAsCitedQuotation(const nsAString& aQuotedText,
                                     const nsAString& aCitation,
                                     PRBool aInsertHTML,
-                                    const nsAString& aCharset,
                                     nsIDOMNode** aNodeInserted);
   NS_IMETHOD Rewrap(PRBool aRespectNewlines);
   NS_IMETHOD StripCites();

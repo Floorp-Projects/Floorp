@@ -1736,7 +1736,6 @@ NS_IMETHODIMP
 nsPlaintextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                           const nsAString& aCitation,
                                           PRBool aInsertHTML,
-                                          const nsAString& aCharset,
                                           nsIDOMNode **aNodeInserted)
 {
   return InsertAsQuotation(aQuotedText, aNodeInserted);
