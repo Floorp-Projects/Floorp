@@ -45,7 +45,7 @@ function filterEditorOnLoad()
 function onOk()
 {
     saveFilter();
-
+    window.close();
 }
 
 // set scope on all visible searhattribute tags
@@ -92,7 +92,8 @@ function initializeDialog(filter)
     // now test by initializing the psuedo <searchterm>
     var scope = getScope(filter);
     var filterRowContainer = document.getElementById("filterTermList");
-    var numTerms = filter.numTerms;
+    var searchTerms = filter.searchTerms;
+    var numTerms = searchTerms.Count();
     for (var i=0; i<numTerms; i++) {
       var filterRow = createFilterRow(i);
       filterRowContainer.appendChild(filterRow);
@@ -104,8 +105,7 @@ function initializeDialog(filter)
           filterTermObject.searchScope = scope;
           var searchTerm =
               filter.searchTerms.QueryElementAt(i, Components.interfaces.nsIMsgSearchTerm);
-          if (searchTerm)
-              filterTermObject.searchTerm = searchTerm;
+          if (searchTerm) filterTermObject.searchTerm = searchTerm;
 
       }
       else {
@@ -197,8 +197,11 @@ function saveFilter() {
     var searchTerms = gFilter.searchTerms;
     
     for (var i = 0; i<searchTermElements.length; i++) {
-        dump("Saving filter " + i + "\n");
-        searchTermElements[i].save();
+        try {
+            searchTermElements[i].save();
+        } catch (ex) {
+            dump("**** error: " + ex + "\n");
+        }
     }
     
 

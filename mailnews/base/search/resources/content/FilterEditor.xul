@@ -53,12 +53,7 @@ Rights Reserved.
     <box orient="horizontal">
     </box>
     <box style="min-height:200px">
-    <searchterms id="searchterms">
-      <searchterm id="searchTerm"
-                searchattribute="searchAttr"
-                searchoperator="searchOp"
-                searchvalue="searchValue"/>
-    </searchterms>
+    <searchterms id="searchterms"/>
     <tree class="inset" flex="1" id="searchTermTree">
       <treecol width="1*"/>
       <treecol width="4*"/>
