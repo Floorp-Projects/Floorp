@@ -45,7 +45,7 @@ static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
  AppCores
 *********************************************/
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCores.h"
 
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
     goto done;
   }
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 	rv = nsRepository::CreateInstance(kAppCoresCID, nsnull, kIAppCoresIID, (void**) &gAppCores);
 	if (rv == NS_OK) {
 		if (gAppCores->Startup() != NS_OK) {
@@ -237,7 +237,7 @@ done:
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   }
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
   if (nsnull != gAppCores) {
 		gAppCores->Shutdown();
 		NS_RELEASE(gAppCores);

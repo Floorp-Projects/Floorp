@@ -22,7 +22,7 @@
 #include "nsICmdLineService.h"
 #include "nsAppShellCIDs.h"
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCores.h"
 #include "nsIDOMMailCore.h"
@@ -89,7 +89,7 @@ NS_SetupRegistry_1()
   nsRepository::RegisterFactory(kCAppShellServiceCID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCmdLineServiceCID,  APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
   nsRepository::RegisterFactory(kAppCoresCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kMailCoreCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kToolbarCoreCID,    APPCORES_DLL, PR_FALSE, PR_FALSE);
