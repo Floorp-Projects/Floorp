@@ -45,21 +45,18 @@ var PrintUtils = {
 
   showPageSetup: function ()
   {
-    var didOK = false;
     try {
-      var webBrowserPrint = this.getWebBrowserPrint();
       var printSettings = this.getPrintSettings();
-
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                      .getService(Components.interfaces.nsIPrintingPromptService);
-      didOK = PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
-      if (didOK)
-        this.savePrintSettings();
+      PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
+      this.savePrintSettings();
 
     } catch (e) {
       dump("showPageSetup "+e+"\n");
+      return false;
     }
-    return didOK;
+    return true;
   },
 
   print: function ()
