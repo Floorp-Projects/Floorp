@@ -73,8 +73,13 @@ public:
 
     nsresult
     Cancel(void) {
+      if (!mAborted) {
         mAborted = PR_TRUE;
         return mEventQueueStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_ABORTED, nsnull);
+      } else {
+        // Cancel has already been called...  Do not fire another OnStopRequest!
+        return NS_OK;
+      }
     }
 
     nsresult
