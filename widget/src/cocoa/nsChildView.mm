@@ -98,6 +98,10 @@
 
 - (BOOL)childViewHasPlugin;
 
+ // called on a timer two seconds after a mouse down to see if we should display
+ // a context menu (click-hold)
+- (void)clickHoldCallback:(id)inEvent;
+
 @end
 
 
@@ -2480,17 +2484,47 @@ nsChildView::Idle()
   mGeckoChild->UpdateWidget(r, rendContext);
 }
 
+//
+// -clickHoldCallback:
+//
+// called from a timer two seconds after a mouse down to see if we should display
+// a context menu (click-hold). |anEvent| is the original mouseDown event. If we're
+// still in that mouseDown by this time, put up the context menu, otherwise just
+// fuhgeddaboutit. |anEvent| has been retained by the OS until after this callback
+// fires so we're ok there.
+//
+- (void)clickHoldCallback:(id)theEvent;
+{
+  if( theEvent == [NSApp currentEvent] ) {
+    // we're still in the middle of the same mousedown event here, activate
+    // click-hold context menu by triggering the right mouseDown action.
+    NSEvent* clickHoldEvent = [NSEvent mouseEventWithType:NSRightMouseDown
+                                                  location:[theEvent locationInWindow]
+                                             modifierFlags:[theEvent modifierFlags]
+                                                 timestamp:[theEvent timestamp]
+                                              windowNumber:[theEvent windowNumber]
+                                                   context:[theEvent context]
+                                               eventNumber:[theEvent eventNumber]
+                                                clickCount:[theEvent clickCount]
+                                                  pressure:[theEvent pressure]];
+    [self rightMouseDown:clickHoldEvent];
+  }
+}
+
 - (void)mouseDown:(NSEvent *)theEvent
 {
   // if the command and alt keys are held down, initiate hand scrolling
   if ([ChildView areHandScrollModifiers:[theEvent modifierFlags]]) {
     [self startHandScroll: theEvent];
     // needed to change the focus, among other things, since we don't
-	// get to do that below.
+    // get to do that below.
     [super mouseDown:theEvent];
     return;                     // do not pass this mousedown event to gecko
   }
-  
+
+  // fire off timer to check for click-hold after two seconds. retains |theEvent|
+  [self performSelector:@selector(clickHoldCallback:) withObject:theEvent afterDelay:2.0];
+
   nsMouseEvent geckoEvent;
   [self convert:theEvent message:NS_MOUSE_LEFT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
