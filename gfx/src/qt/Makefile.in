@@ -94,6 +94,15 @@ DEFINES         += -D_TIME_H=1
 endif
 endif
 
+ifdef MOZ_ENABLE_POSTSCRIPT
+DEFINES         += -DUSE_POSTSCRIPT
+endif
+
+ifdef MOZ_ENABLE_XPRINT
+DEFINES         += -DUSE_XPRINT -DUSE_MOZILLA_TYPES
+EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \

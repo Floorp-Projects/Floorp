@@ -42,13 +42,19 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecQT.h"
+#ifdef USE_POSTSCRIPT
 #include "nsIDeviceContextSpecPS.h"
+#endif
 #include "nsIPrintSettings.h"
 #include "nsCOMPtr.h"
+//XXX WHAT IN THE WORLD VV ??
 #include "../gtk/nsPrintdGTK.h"
 
-class nsDeviceContextSpecQT : public nsIDeviceContextSpec, 
-                              public nsIDeviceContextSpecPS
+class nsDeviceContextSpecQT
+: public nsIDeviceContextSpec
+#ifdef USE_POSTSCRIPT
+, public nsIDeviceContextSpecPS
+#endif
 {
 public:
 /**

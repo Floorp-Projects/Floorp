@@ -52,9 +52,10 @@
 #include "nsGfxCIID.h"
 #include "nsRenderingContextQT.h" 
 
+#ifdef USE_POSTSCRIPT
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
-
+#endif
 
 #include <qpaintdevicemetrics.h>
 #include <qscrollbar.h>
@@ -394,11 +395,11 @@ nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                        nsIDeviceContext *&aContext)
 {
   dmsg(ENTER, "GetDeviceContextFor");
-
+  nsresult rv;
+#ifdef USE_POSTSCRIPT
   static NS_DEFINE_CID(kCDeviceContextPS,NS_DEVICECONTEXTPS_CID);
   
   // Create a Postscript device context 
-  nsresult rv;
   nsIDeviceContextPS *dcps;
   
   rv = nsComponentManager::CreateInstance(kCDeviceContextPS,nsnull,
@@ -413,6 +414,10 @@ nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
   rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
                             (void**)&aContext);
   NS_RELEASE(dcps);
+#else
+  //XXX add xprint support
+  rv = NS_ERROR_NOT_IMPLEMENTED;
+#endif
   dmsg(EXIT, "GetDeviceContextFor");
   return rv;
 }
