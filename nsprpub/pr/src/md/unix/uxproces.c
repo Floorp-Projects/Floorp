@@ -145,6 +145,7 @@ ForkAndExec(
     int nEnv, idx;
     char *const *childEnvp;
     char **newEnvp = NULL;
+    int flags;
 	
     process = PR_NEW(PRProcess);
     if (!process) {
@@ -200,6 +201,10 @@ ForkAndExec(
                     _exit(1);  /* failed */
                 }
                 close(attr->stdinFd->secret->md.osfd);
+                flags = fcntl(0, F_GETFL, 0);
+                if (flags & O_NONBLOCK) {
+                    fcntl(0, F_SETFL, flags & ~O_NONBLOCK);
+                }
             }
             if (attr->stdoutFd
                     && attr->stdoutFd->secret->md.osfd != 1) {
@@ -207,6 +212,10 @@ ForkAndExec(
                     _exit(1);  /* failed */
                 }
                 close(attr->stdoutFd->secret->md.osfd);
+                flags = fcntl(1, F_GETFL, 0);
+                if (flags & O_NONBLOCK) {
+                    fcntl(1, F_SETFL, flags & ~O_NONBLOCK);
+                }
             }
             if (attr->stderrFd
                     && attr->stderrFd->secret->md.osfd != 2) {
@@ -214,6 +223,10 @@ ForkAndExec(
                     _exit(1);  /* failed */
                 }
                 close(attr->stderrFd->secret->md.osfd);
+                flags = fcntl(2, F_GETFL, 0);
+                if (flags & O_NONBLOCK) {
+                    fcntl(2, F_SETFL, flags & ~O_NONBLOCK);
+                }
             }
             if (attr->currentDirectory) {
                 if (chdir(attr->currentDirectory) < 0) {
