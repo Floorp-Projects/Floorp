@@ -37,12 +37,7 @@ function checkSubmitEnable() {
     }  
   }
   
-  if (enable) {
-    document.getElementById("send-feedback").removeAttribute("disabled");  
-  }
-  else {  
-    document.getElementById("send-feedback").setAttribute("disabled", "true");
-  }
+  document.getElementById("send-feedback").disabled = !enable;
 }
 
 function onLoad() {
@@ -75,10 +70,10 @@ function onLoad() {
       </td>
     </tr>
     <tr>
-      <td class="label">Email (optional):</td>
+      <td class="label">Email:</td>
       <td class="widget">
         <input id="email" name="email" type="text"
-               value="[% form.email FILTER html %]"/>
+               value="[% form.email FILTER html %]"/> (optional)
       </td>
     </tr>
     <tr>
@@ -97,7 +92,7 @@ function onLoad() {
     </tr>
     <tr>
       <td class="label">
-        Feedback Summary: 
+        Summary: 
       </td>
       <td class="widget">
         <input id="subject" name="subject" type="text"
@@ -109,7 +104,7 @@ function onLoad() {
         Detailed Comments: 
       </td>
       <td class="widget">
-        <textarea id="comments" name="comments" wrap="hard"
+        <textarea id="comments" name="comments" wrap="hard" cols="72"
         >[% form.comments FILTER html %]</textarea>
       </td>
     </tr>
