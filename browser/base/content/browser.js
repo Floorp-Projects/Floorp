@@ -723,7 +723,7 @@ function loadOneOrMoreURIs(aURIString)
 function constructGoMenuItem(goMenu, beforeItem, url, title)
 {
   var menuitem = document.createElementNS(kXULNS, "menuitem");
-  menuitem.setAttribute("url", url);
+  menuitem.setAttribute("statustext", url);
   menuitem.setAttribute("label", title);
   goMenu.insertBefore(menuitem, beforeItem);
   return menuitem;
