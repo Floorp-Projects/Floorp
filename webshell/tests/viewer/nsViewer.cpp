@@ -115,6 +115,7 @@ static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
+static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 
 #ifdef VIEWER_PLUGINS
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
@@ -126,6 +127,7 @@ static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIChildWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
 
 #ifdef VIEWER_PLUGINS
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
@@ -295,6 +297,21 @@ DocObserver::QueryInterface(const nsIID& aIID,
 }
 
 NS_IMETHODIMP
+DocObserver::SetTitle(const nsString& aTitle)
+{
+  gTheViewer->mTitle = aTitle;
+  gTheViewer->mWD->windowWidget->SetTitle(aTitle);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::GetTitle(nsString& aResult)
+{
+  aResult = gTheViewer->mTitle;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DocObserver::WillLoadURL(nsIWebShell* aShell, const nsString& aURL)
 {
   return NS_OK;
@@ -303,7 +320,7 @@ DocObserver::WillLoadURL(nsIWebShell* aShell, const nsString& aURL)
 NS_IMETHODIMP
 DocObserver::BeginLoadURL(nsIWebShell* aShell, const nsString& aURL)
 {
-  gTheViewer->mUpdateThrobber = PR_TRUE;
+  gTheViewer->mThrobber->Start();
   gTheViewer->mLocation->SetText(aURL);
   return NS_OK;
 }
@@ -311,7 +328,7 @@ DocObserver::BeginLoadURL(nsIWebShell* aShell, const nsString& aURL)
 NS_IMETHODIMP
 DocObserver::EndLoadURL(nsIWebShell* aShell, const nsString& aURL)
 {
-  gTheViewer->mUpdateThrobber = PR_FALSE;
+  gTheViewer->mThrobber->Stop();
   return NS_OK;
 }
 
@@ -346,14 +363,6 @@ DocObserver::LoadURL(const nsString& aURLSpec,
                              aPostData, aExtraInfo, anObserver);
 }
 #endif
-
-// Pass title information through to all of the web widgets that
-// belong to this document.
-NS_IMETHODIMP DocObserver::SetTitle(const nsString& aTitle)
-{
-  mWindowWidget->SetTitle(aTitle);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 DocObserver::BeginUpdate()
@@ -482,18 +491,9 @@ DocObserver::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
   }
   fputs(": stop\n", stdout);
 
-#ifdef VIEWER_UI
-  //stop the throbber...
-  if (nsnull != mViewer)
-  {
-    nsRect trect;
-    mViewer->mUpdateThrobber = PR_FALSE;
-    mViewer->mThrobberIdx = 0;
-    mViewer->mThrobber->GetBounds(trect);
-    mViewer->mThrobber->Invalidate(PR_FALSE);
+  if (nsnull != gTheViewer->mThrobber) {
+    gTheViewer->mThrobber->Stop();
   }
-#endif
-
   return NS_OK;
 }
 
@@ -582,8 +582,7 @@ nsViewer::Layout(WindowData* aWindowData, int aWidth, int aHeight)
     }
 
     if (mThrobber) {
-        mThrobber->Resize(rr.width - THROBBER_WIDTH, 0, THROBBER_WIDTH,
-                          THROBBER_HEIGHT, PR_TRUE);
+        mThrobber->MoveTo(rr.width - THROBBER_WIDTH, 0);
     }
 
     // inset the web widget
@@ -711,208 +710,6 @@ void nsViewer::ProcessArguments(int argc, char **argv)
   if (i < argc) {
     startURL = argv[i];
   }
-}
-
-//----------------------------------------------------------------------
-// Throbber Implementation
-//----------------------------------------------------------------------
-
-class ThrobObserver : public nsIImageRequestObserver {
-public:
-    ThrobObserver();
-    ~ThrobObserver();
- 
-    NS_DECL_ISUPPORTS
-
-    virtual void Notify(nsIImageRequest *aImageRequest,
-                        nsIImage *aImage,
-                        nsImageNotification aNotificationType,
-                        PRInt32 aParam1, PRInt32 aParam2,
-                        void *aParam3);
-
-    virtual void NotifyError(nsIImageRequest *aImageRequest,
-                             nsImageError aErrorType);
-};
-
-ThrobObserver::ThrobObserver()
-{
-}
-
-ThrobObserver::~ThrobObserver()
-{
-}
-
-static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
-
-NS_IMPL_ISUPPORTS(ThrobObserver, kIImageObserverIID)
-
-void  
-ThrobObserver::Notify(nsIImageRequest *aImageRequest,
-                   nsIImage *aImage,
-                   nsImageNotification aNotificationType,
-                   PRInt32 aParam1, PRInt32 aParam2,
-                   void *aParam3)
-{
-}
-
-void 
-ThrobObserver::NotifyError(nsIImageRequest *aImageRequest,
-                        nsImageError aErrorType)
-{
-}
-
-static void throb_timer_callback(nsITimer *aTimer, void *aClosure)
-{
-  nsViewer *viewer = (nsViewer *)aClosure;
-
-  if (viewer->mUpdateThrobber)
-  {
-    nsRect trect;
-
-    viewer->mThrobberIdx++;
-
-    if (viewer->mThrobberIdx >= THROB_NUM)
-      viewer->mThrobberIdx = 0;
-
-    viewer->mThrobber->GetBounds(trect);
-    viewer->mThrobber->Invalidate(PR_TRUE);
-  }
-
-  nsresult rv = NS_NewTimer(&viewer->mThrobTimer);
-
-  if (NS_OK == rv)
-     viewer->mThrobTimer->Init(throb_timer_callback, viewer, 33);
-}
-
-void nsViewer::LoadThrobberImages()
-{
-  char url[2000];
-
-  mThrobberImages = new nsVoidArray(THROB_NUM);
-
-  if ((nsnull != mThrobberImages) &&
-      (NS_OK == NS_NewImageGroup(&mThrobberImageGroup)))
-  {
-    nsIRenderingContext *drawCtx = mThrobber->GetRenderingContext();
-    mThrobberImageGroup->Init(drawCtx);
-    NS_RELEASE(drawCtx);
-  }
-
-  nsresult rv = NS_NewTimer(&mThrobTimer);
-
-  if (NS_OK == rv)
-     mThrobTimer->Init(throb_timer_callback, this, 33);
-  
-  for (PRInt32 cnt = 0; cnt < THROB_NUM; cnt++)
-  {
-    sprintf(url, THROBBER_AT, cnt);
-    ThrobObserver *observer = new ThrobObserver();
-    nscolor bgcolor = NS_RGB(0, 0, 0);
-    mThrobberImages->InsertElementAt(mThrobberImageGroup->GetImage(url,
-                                                                   observer,
-                                                                   &bgcolor,
-                                                                   THROBBER_WIDTH - 2,
-                                                                   THROBBER_HEIGHT - 2, 0), cnt);
-  }
-}
-
-void nsViewer::DestroyThrobberImages()
-{
-  if (nsnull != mThrobberImageGroup)
-  {
-    if (nsnull != mThrobTimer)
-    {
-      mThrobTimer->Cancel();     //XXX this should not be necessary. MMP
-      NS_RELEASE(mThrobTimer);
-    }
-
-    mThrobberImageGroup->Interrupt();
-
-    for (PRInt32 cnt = 0; cnt < THROB_NUM; cnt++)
-    {
-      nsIImageRequest *imgreq;
-
-      imgreq = (nsIImageRequest *)mThrobberImages->ElementAt(cnt);
-
-      if (nsnull != imgreq)
-      {
-        NS_RELEASE(imgreq);
-        mThrobberImages->ReplaceElementAt(nsnull, cnt);
-      }
-    }
-
-    delete mThrobberImages;
-  }
-}
-
-nsEventStatus PR_CALLBACK HandleThrobberEvent(nsGUIEvent *aEvent)
-{
-  switch (aEvent->message)
-  {
-    case NS_PAINT:
-    {
-      nsPaintEvent *pe = (nsPaintEvent *)aEvent;
-      nsIRenderingContext *cx = pe->renderingContext;
-      nsRect bounds;
-      nsIImageRequest *imgreq;
-      nsIImage *img;
-   
-      pe->widget->GetBounds(bounds);
-
-      cx->SetClipRect(*pe->rect, nsClipCombine_kReplace);
-
-      cx->SetColor(NS_RGB(255, 255, 255));
-      cx->DrawLine(0, bounds.height - 1, 0, 0);
-      cx->DrawLine(0, 0, bounds.width, 0);
-
-      cx->SetColor(NS_RGB(128, 128, 128));
-      cx->DrawLine(bounds.width - 1, 1, bounds.width - 1, bounds.height - 1);
-      cx->DrawLine(bounds.width - 1, bounds.height - 1, 0, bounds.height - 1);
-
-      imgreq = (nsIImageRequest *)gTheViewer->mThrobberImages->ElementAt(gTheViewer->mThrobberIdx);
-
-      if ((nsnull == imgreq) || (nsnull == (img = imgreq->GetImage())))
-      {
-        char str[3];
-        nsFont tfont = nsFont("monospace", 0, 0, 0, 0, 10);
-        nsIFontMetrics *met;
-        nscoord w, h;
-
-        cx->SetColor(NS_RGB(0, 0, 0));
-        cx->FillRect(1, 1, bounds.width - 2, bounds.height - 2);
-
-        sprintf(str, "%02d", gTheViewer->mThrobberIdx);
-
-        cx->SetColor(NS_RGB(255, 255, 255));
-        cx->SetFont(tfont);
-        met = cx->GetFontMetrics();
-        w = met->GetWidth(str[0]) + met->GetWidth(str[1]);
-        h = met->GetHeight();
-        cx->DrawString(str, 2, (bounds.width - w) >> 1, (bounds.height - h) >> 1, 0);
-      }
-      else
-      {
-        cx->DrawImage(img, 1, 1);
-        NS_RELEASE(img);
-      }
-
-      break;
-    }
-
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      gTheViewer->GoTo(nsString("http://www.mozilla.org"));
-      break;
-
-    case NS_MOUSE_ENTER:
-      aEvent->widget->SetCursor(eCursor_hyperlink);
-      break;
-
-    case NS_MOUSE_EXIT:
-      aEvent->widget->SetCursor(eCursor_standard);
-      break;
-  }
-
-  return nsEventStatus_eIgnore;
 }
 
 //----------------------------------------------------------------------
@@ -1503,6 +1300,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   NSRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kWebShellCID, WEB_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
 
 #ifdef VIEWER_PLUGINS
@@ -1601,12 +1399,10 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     // Add a throbber
   rect.SetRect(bounds.width - THROBBER_WIDTH, 0,
                THROBBER_WIDTH, THROBBER_HEIGHT);
-  NSRepository::CreateInstance(kCChildIID, nsnull, kIChildWidgetIID,
+  NSRepository::CreateInstance(kThrobberCID, nsnull, kIThrobberIID,
                                (void**)&mThrobber);
-  mThrobber->Create(wd->windowWidget, rect, HandleThrobberEvent, NULL);
-  mThrobber->Show(PR_TRUE);
-
-  LoadThrobberImages();
+  mThrobber->Init(wd->windowWidget, rect);
+  mThrobber->Show();
 
   wd->windowWidget->SetBackgroundColor(NS_RGB(255, 0, 0));
 #endif
@@ -1887,7 +1683,7 @@ static void DumpAWebShell(nsIWebShell* aShell, FILE* out, PRInt32 aIndent)
 {
   nsAutoString name;
   nsIWebShell* parent;
-  PRInt32 i, j, n;
+  PRInt32 i, n;
 
   for (i = aIndent; --i >= 0; ) fprintf(out, "  ");
 
