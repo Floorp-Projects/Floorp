@@ -206,7 +206,7 @@ DayView.prototype.refreshEvents = function( )
             }
          }
          SortedOtherSpotArray = new Array();
-         SortedOtherSpotArray = calendarEventDisplay.OtherSpotArray.sort( gCalendarWindow.compareNumbers );
+         SortedOtherSpotArray = calendarEventDisplay.OtherSpotArray.sort( this.calendarWindow.compareNumbers );
          LowestNumber = this.calendarWindow.getLowestElementNotInArray( SortedOtherSpotArray );
          
          //this is the actual spot (0 -> n) that the event will go in on the day view.
@@ -399,11 +399,11 @@ DayView.prototype.switchTo = function( )
    monthViewButton.removeAttribute( "disabled" );
    weekViewButton.removeAttribute( "disabled" );
    dayViewButton.setAttribute( "disabled", "true" );
-
+   
    // switch views in the deck
    
    var calendarDeckItem = document.getElementById( "calendar-deck" );
-   calendarDeckItem.setAttribute( "selectedIndex", 2 );
+   calendarDeckItem.selectedIndex = 2;
 }
 
 
@@ -563,10 +563,8 @@ DayView.prototype.selectBoxForEvent = function( calendarEvent )
 */
 DayView.prototype.clearSelectedEvent = function( )
 {
-   gCalendarWindow.EventSelection.emptySelection();
+   this.calendarWindow.EventSelection.emptySelection();
 
-   //Event = gCalendarWindow.getSelectedEvent();
-   
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
    for( i = 0; i < ArrayOfBoxes.length; i++ )

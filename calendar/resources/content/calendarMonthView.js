@@ -161,6 +161,8 @@ function MonthView( calendarWindow )
    
    this.dayNumberItemArray = new Array();
    this.dayBoxItemArray = new Array();
+   this.kungFooDeathGripOnEventBoxes = new Array();
+   this.dayBoxItemByDateArray = new Array();
    
    var dayItemIndex = 0;
    
@@ -228,10 +230,10 @@ MonthView.prototype.refreshEvents = function( )
       dayItem.numEvents = 0;
    }  
    
+   this.kungFooDeathGripOnEventBoxes = new Array();
+   
    // add each calendarEvent
    
-   this.kungFooDeathGripOnEventBoxes = new Array();
-
    for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
    {
       var calendarEventDisplay = monthEventList[ eventIndex ];
@@ -386,7 +388,7 @@ MonthView.prototype.switchTo = function( )
    // switch views in the deck
    
    var calendarDeckItem = document.getElementById( "calendar-deck" );
-   calendarDeckItem.setAttribute( "selectedIndex", 0 );
+   calendarDeckItem.selectedIndex = 0;
 }
 
 
@@ -593,8 +595,8 @@ MonthView.prototype.hiliteTodaysDate = function( )
    if ( Year == Today.getFullYear() && Month == Today.getMonth() ) 
    {
       var ThisBox = this.dayBoxItemByDateArray[ Today.getDate() ];
-      
-      ThisBox.setAttribute( "today", "true" );
+      if( ThisBox )
+         ThisBox.setAttribute( "today", "true" );
    }
 }
 

@@ -441,7 +441,7 @@ WeekView.prototype.switchTo = function( )
    // switch views in the deck
 
    var calendarDeckItem = document.getElementById( "calendar-deck" );
-   calendarDeckItem.setAttribute( "selectedIndex", 1 );
+   calendarDeckItem.selectedIndex = 1;
 }
 
 

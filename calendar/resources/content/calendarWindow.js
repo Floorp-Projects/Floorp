@@ -61,7 +61,27 @@ function CalendarWindow( calendarDataSource )
    // after this
    
    this.currentView = null;   
-   this.switchToMonthView();
+   
+   //depending on the selected index, change views to that view.
+   var SelectedIndex = document.getElementById( "calendar-deck" ).selectedIndex;
+   
+   switch( SelectedIndex )
+   {
+      case "1":
+         this.currentView = this.weekView;
+
+         break;
+      case "2":
+         this.currentView = this.dayView;
+
+         break;
+      default:
+         this.currentView = this.monthView;
+
+         break;
+   }
+      
+
    
    // now that all is set up we can start to observe the data source
    
@@ -77,7 +97,7 @@ function CalendarWindow( calendarDataSource )
       {
          // called when the data source has finished loading
          
-         calendarWindow.currentView.refreshEvents( );
+         //calendarWindow.currentView.refreshEvents( );
       },
       onStartBatch   : function()
       {

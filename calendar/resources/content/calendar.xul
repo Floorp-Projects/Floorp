@@ -211,7 +211,7 @@
          </splitter>
    		
          <!-- Begin Day/Month/Week Deck -->
-         <deck id="calendar-deck" selectedIndex="0" flex="1">
+         <deck id="calendar-deck" persist="selectedIndex" flex="1">
    				 
    			 <!-- Calendar Month View -->
    			    

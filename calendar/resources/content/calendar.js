@@ -147,13 +147,13 @@ function calendarInit()
    
    gCalendarWindow = new CalendarWindow( gEventSource );
    
+   gCalendarWindow.currentView.switchTo( gCalendarWindow.currentView );
+
+   gCalendarWindow.currentView.refresh( gCalendarWindow.currentView );
+
    // set up the unifinder
    
    prepareCalendarUnifinder( );
-
-   // show the month view, with today selected
-   
-   gCalendarWindow.switchToMonthView( );
 
    update_date( );
    	
