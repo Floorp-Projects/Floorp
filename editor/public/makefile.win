@@ -25,6 +25,7 @@ DEPTH=..\..
 EXPORTS =		                         \
     nsIEditActionListener.h	         \
     nsIEditor.h	                     \
+    nsIEditorController.h              \
     nsEditorCID.h	                   \
     nsICiter.h	                     \
     nsIEditorIMESupport.h            \

@@ -75,6 +75,11 @@
 #include "nsIPrompt.h"
 #include "nsICommonDialogs.h"
 
+#include "nsIEditorController.h"
+#include "nsEditorController.h"
+#include "nsIControllers.h"
+
+
 ///////////////////////////////////////
 // Editor Includes
 ///////////////////////////////////////
@@ -117,6 +122,8 @@ static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
+static NS_DEFINE_CID(kEditorControllerCID,      NS_EDITORCONTROLLER_CID);
+
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 
@@ -328,6 +335,26 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   rv = editor->AddDocumentStateListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
   
+
+  if (NS_SUCCEEDED(rv) && mContentWindow)
+  {
+    nsCOMPtr<nsIController> controller;
+    nsCOMPtr<nsIControllers> controllers;
+    rv = nsComponentManager::CreateInstance(kEditorControllerCID, nsnull, nsIController::GetIID(), getter_AddRefs(controller));
+    if (NS_SUCCEEDED(rv) && controller)
+    {
+      rv = mContentWindow->GetControllers(getter_AddRefs(controllers));
+      if (NS_SUCCEEDED(rv) && controllers)
+      {
+        nsCOMPtr<nsIEditorController> ieditcontroller = do_QueryInterface(controller);
+        nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+        ieditcontroller->SetEditor(editor);//weak link
+
+        rv = controllers->InsertControllerAt(0,controller);
+      }
+    }
+  }
+
   // now all the listeners are set up, we can call PostCreate
   rv = editor->PostCreate();
   if (NS_FAILED(rv)) return rv;
@@ -3585,7 +3612,6 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
     res = PrepareDocumentForEditing(aUrl);
     SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "false" );
   }
-  
   return res;
 }
 

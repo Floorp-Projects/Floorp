@@ -25,6 +25,8 @@
 #include "nsEditorCID.h"
 #include "nsEditorShell.h"		// for the CID
 #include "nsEditor.h"				// for gInstanceCount
+#include "nsEditorController.h" //CID
+
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -33,6 +35,7 @@
 //
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
 
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
@@ -54,6 +57,8 @@ static nsModuleComponentInfo components[] = {
     { "HTML Editor", NS_HTMLEDITOR_CID,
       "component://netscape/editor/htmleditor", nsHTMLEditorConstructor, },
 #endif
+    { "Editor Shell Controller", NS_EDITORCONTROLLER_CID,
+      "component://netscape/editor/editorcontroller", nsEditorControllerConstructor, },
     { "Editor Shell Component", NS_EDITORSHELL_CID,
       "component://netscape/editor/editorshell", nsEditorShellConstructor, },
     { "Editor Shell Spell Checker", NS_EDITORSHELL_CID,
