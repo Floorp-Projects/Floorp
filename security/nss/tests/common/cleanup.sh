@@ -1,4 +1,4 @@
-#! /bin/sh  
+#!/bin/sh
 #
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -34,54 +34,15 @@
 #
 ########################################################################
 #
-# mozilla/security/nss/tests/perf/perf.sh
+# mozilla/security/nss/tests/common/cleanup.sh
 #
-# script run from the nightly NSS QA to measure nss performance
+# Script to clean up after NSS QA suites
 # needs to work on all Unix and Windows platforms
 #
-# special strings
-# ---------------
-#   FIXME ... known problems, search for this string
-#   NOTE .... unexpected behavior
-#
 ########################################################################
-#
-############################## perf_init ##############################
-# local shell function to initialize this script
-########################################################################
-perf_init()
-{
-  SCRIPTNAME="perf.sh"
-  if [ -z "${INIT_SOURCED}" ] ; then
-      cd ../common
-      . init.sh
-  fi
-  SCRIPTNAME="perf.sh"
-  PERFDIR=${HOSTDIR}/perf
-  mkdir -p ${PERFDIR}
-}
-
-perf_init
-RSAPERF_OUT=`rsaperf -i 300 -s -n none`
-RSAPERF_OUT=`echo $RSAPERF_OUT | sed \
-                -e "s/^/RSAPERF: $OBJDIR /" \
-                -e 's/microseconds/us/' \
-                -e 's/milliseconds/ms/' \
-                -e 's/seconds/s/' \
-                -e 's/ minutes, and /_min_/'`
-
-echo "$RSAPERF_OUT"
 
 
-
-#FIXME
-#export RSAPERF_OUT
-#
-#perl -e '
-
-#@rsaperf=split(/ /, $ENV{RSAPERF_OUT});
-
-#echo "${RSAPERF_OUT}" | read IT_NUM T1 T2 TOT_TIM TOT_TIM_U \
-    #T3 T4 T5 AVRG_TIM AVRG_TIM_U
-
-#300 iterations in 8.881 seconds one operation every 29606 microseconds
+if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
+    html "</BODY></HTML>" 
+    rm -f ${TEMPFILES} 2>/dev/null
+fi

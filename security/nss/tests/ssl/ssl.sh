@@ -1,406 +1,291 @@
 #! /bin/sh
 #
-# This is just a quick script so we can still run our testcases.
-# Longer term we need a scriptable test environment..
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape security libraries.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
 #
-. ../common/init.sh
-CURDIR=`pwd`
-echo "PATH=$PATH"
-echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-PORT=${PORT-8443}
+#
+########################################################################
+#
+# mozilla/security/nss/tests/ssl/ssl.sh
+#
+# Script to test NSS SSL
+#
+# needs to work on all Unix and Windows platforms
+#
+# special strings
+# ---------------
+#   FIXME ... known problems, search for this string
+#   NOTE .... unexpected behavior
+#
+########################################################################
 
-# Test case files
-SSLCOV=${CURDIR}/sslcov.txt
-SSLAUTH=${CURDIR}/sslauth.txt
-SSLSTRESS=${CURDIR}/sslstress.txt
-REQUEST_FILE=${CURDIR}/sslreq.txt
-
-#temparary files
-TMP=${TMP-/tmp}
-PWFILE=${TMP}/tests.pw.$$
-CERTSCRIPT=${TMP}/tests_certs.$$
-NOISE_FILE=${TMP}/tests_noise.$$
-SERVEROUTFILE=${TMP}/tests_server.$$
-SERVERPID=${TMP}/tests_pid.$$
-CERTUTILOUT=${TMP}/certutilout.$$
-
-TEMPFILES="${PWFILE} ${CERTSCRIPT} ${SERVEROUTFILE} ${NOISE_FILE} ${SERVERPID} ${CERTUTILOUT}"
-
-none=1
-coverage=0
-auth=0
-stress=0
-certs=1
-fileout=0
-
-Exit()
+############################## ssl_init ################################
+# local shell function to initialize this script
+########################################################################
+ssl_init()
 {
-	echo $1
-	rm -f ${TEMPFILES}
-	if [ -f "${SERVERPID}" ]
-	then
-		${KILL} `cat ${SERVERPID}`
-	fi
-	exit 1
+  SCRIPTNAME=ssl.sh      # sourced - $0 would point to all.sh
+
+  if [ -z "${CLEANUP}" ] ; then     # if nobody else is responsible for
+      CLEANUP="${SCRIPTNAME}"       # cleaning this script will do it
+  fi
+  
+  if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
+      cd ../common
+      . init.sh
+  fi
+  if [ ! -r $CERT_LOG_FILE ]; then  # we need certificates here
+      cd ../cert
+      . cert.sh
+  fi
+  SCRIPTNAME=ssl.sh
+  echo "$SCRIPTNAME: SSL tests ==============================="
+
+  grep "SUCCESS: SSL passed" $CERT_LOG_FILE >/dev/null || {
+      html_head "SSL Test failure"
+      Exit 8 "Fatal - SSL of cert.sh needs to pass first"
+  }
+
+  PORT=${PORT-8443}
+
+  # Test case files
+  SSLCOV=${QADIR}/ssl/sslcov.txt
+  SSLAUTH=${QADIR}/ssl/sslauth.txt
+  SSLSTRESS=${QADIR}/ssl/sslstress.txt
+  REQUEST_FILE=${QADIR}/ssl/sslreq.txt
+
+  #temparary files
+  SERVEROUTFILE=${TMP}/tests_server.$$
+  SERVERPID=${TMP}/tests_pid.$$
+
+  R_SERVERPID=../tests_pid.$$
+
+  TEMPFILES="$TMPFILES ${SERVEROUTFILE}  ${SERVERPID}"
+
+  fileout=0 #FIXME, looks like all.sh tried to turn this on but actually didn't
+  #fileout=1
+  #verbose="-v" #FIXME - see where this is usefull
+  cd ${CLIENTDIR}
 }
 
+########################### is_selfserv_alive ##########################
+# local shell function to exit with a fatal error if selfserver is not
+# running
+########################################################################
 is_selfserv_alive()
 {
-	#echo "Testing if server is alive..."
-	if [ ! -f "${SERVERPID}" ]
-	then
-		echo "Error - selfserver pid file ${SERVERPID} does not exist"
-		sleep 5
-		if [ ! -f "${SERVERPID}" ]
-		then
-			echo "<TR><TD>fatal error - no serverpidfile</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-			echo "</TABLE><BR>" >> ${RESULTS}
-			Exit "Fatal Error - selfserver pid file ${SERVERPID} still does not exist - exiting"
-		fi
-	fi
-	PID=`cat ${SERVERPID}`
-	SERVER_OK="FALSE"
-	if [ `uname -s` = "SunOS" ]
-	then
-		/usr/5bin/ps -e | grep $PID >/dev/null && SERVER_OK="TRUE"
-	else
-		ps -e | grep $PID >/dev/null && SERVER_OK="TRUE"
-	fi
-	if [ "$SERVER_OK" = "FALSE" ]
-	then
-		echo "<TR><TD>fatal error - no selfserverprocess</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-		echo "</TABLE><BR>" >> ${RESULTS}
-		Exit "Fatal Error - selfserver process not detectable"
-	fi
+  if [ ! -f "${SERVERPID}" ]; then
+      echo "$SCRIPTNAME: Error - selfserv PID file ${SERVERPID} doesn't exist"
+      sleep 5
+      if [ ! -f "${SERVERPID}" ]; then
+          Exit 9 "Fatal - selfserv pid file ${SERVERPID} does not exist"
+      fi
+  fi
+  PID=`cat ${SERVERPID}`
+  $PS -e | grep $PID >/dev/null || \
+      Exit 10 "Fatal - selfserv process not detectable"
 }
 
-for i in $*
-do
-	case $i in
-		[aA][lL]*)
-			none=0; coverage=1; auth=1; stress=1;;
-		[aA][uU]*)
-			none=0; auth=1;;
-		[Nn][Oo][aA][uU]*)
-			auth=0;;
-		[Cc][Oo]*)
-			none=0; coverage=1;;
-		[Nn][Oo][Cc][Oo]*)
-			coverage=0;;
-		[Cc][Ee]*)
-			none=0; certs=1;;
-		[Nn][Oo][Cc][Ee]*)
-			certs=0;;
-		[Ss]*)
-			none=0; stress=1;;
-		[Nn][Oo][Ss]*)
-			stress=0;;
-		[Vv][Ee][Rr][Bb]*)
-			verbose=-v;;
-		f)
-			fileout=1;
-	esac
-done
+########################### wait_for_selfserv ##########################
+# local shell function to wait until selfserver is running and initialized
+########################################################################
+wait_for_selfserv()
+{
+  echo "tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE} "
+  #echo "tstclnt -q started at `date`"
+  tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}
+  if [ $? -ne 0 ]; then
+      html_failed "<TR><TD> Wait for Server "
+      echo "RETRY: tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}"
+      tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}
+  elif [ sparam = "-c ABCDEFabcdefghijklm" ] ; then # "$1" = "cov" ] ; then
+      html_passed "<TR><TD> Wait for Server"
+  fi
+  is_selfserv_alive
+}
 
-if [ $none -eq 1 ]; then
-	coverage=1
-	auth=1
-	stress=1
-fi
+########################### kill_selfserv ##############################
+# local shell function to kill the selfserver after the tests are done
+########################################################################
+kill_selfserv()
+{
+  ${KILL} `cat ${SERVERPID}`
+  wait `cat ${SERVERPID}`
+  if [ ${fileout} -eq 1 ]; then
+      cat ${SERVEROUTFILE}
+  fi
+  ${SLEEP}  #FIXME linux waits 30 seconds - find a shorter way (sockets free)
+  rm ${SERVERPID}
+}
 
-#
-# should also try to kill any running server
-#
-trap "rm -f ${TEMPFILES}; Exit Signal_caught" 2 3
+########################### start_selfserv #############################
+# local shell function to start the selfserver with the parameters required 
+# for this test and log information (parameters, start time)
+# also: wait until the server is up and running
+########################################################################
+start_selfserv()
+{
+  if [ -n "$testname" ] ; then
+      echo "$SCRIPTNAME: $testname ----"
+  fi
+  sparam=`echo $sparam | sed -e 's;_; ;g'`
+  echo "selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOST}.${DOMSUF} \\"
+  echo "         -w nss ${sparam} -i ${R_SERVERPID} $verbose &"
+  echo "selfserv started at `date`"
+  if [ ${fileout} -eq 1 ]; then
+      selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOST}.${DOMSUF} \
+               -w nss ${sparam} -i ${R_SERVERPID} $verbose \
+               > ${SERVEROUTFILE} 2>&1 &
+  else
+      selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOST}.${DOMSUF} \
+               -w nss ${sparam} -i ${R_SERVERPID} $verbose &
+  fi
+  wait_for_selfserv
+}
 
-CADIR=${HOSTDIR}/CA
-SERVERDIR=${HOSTDIR}/server
-CLIENTDIR=${HOSTDIR}/client
+############################## ssl_cov #################################
+# local shell function to perform SSL Cipher Coverage tests
+########################################################################
+ssl_cov()
+{
+  html_head "SSL Cipher Coverage"
 
-if [ $certs -eq 1 ]; then
-# Generate noise for our CA cert.
-#
-# NOTE: these keys are only suitable for testing, as this whole thing bypasses
-# the entropy gathering. Don't use this method to generate keys and certs for
-# product use or deployment.
-#
-	ps -efl > ${NOISE_FILE} 2>&1
-	ps aux >> ${NOISE_FILE} 2>&1
-	netstat >> ${NOISE_FILE} 2>&1
-	date >> ${NOISE_FILE} 2>&1
+  testname=""
+  sparam="-c ABCDEFabcdefghijklm"
+  start_selfserv # Launch the server
+               
+  cat ${SSLCOV} | while read tls param testname
+  do
+      if [ $tls != "#" ]; then
+          echo "$SCRIPTNAME: running $testname ----------------------------"
+          TLS_FLAG=-T
+          if [ $tls = "TLS" ]; then
+              TLS_FLAG=""
+          fi
+          sparam=""
+          if [ ${param} = "i" ]; then
+              sparam='-c i'
+          fi
 
-#
-# build the TEMP CA used for testing purposes
-#
-	echo "<TABLE BORDER=1><TR><TH COLSPAN=3>Certutil Tests</TH></TR>" >> ${RESULTS}
-	echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
-	echo "********************** Creating a CA Certificate **********************"
-	if [ ! -d ${CADIR} ]; then
-		mkdir -p ${CADIR}
-	fi
-	cd ${CADIR}
-	echo nss > ${PWFILE}
-	echo "certutil -N -d . -f ${PWFILE} 2>&1"
-	certutil -N -d . -f ${PWFILE} 2>&1
+          is_selfserv_alive
+          echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} \\"
+          echo "        -f -d . << ${REQUEST_FILE}"
+          tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
+                  -d . < ${REQUEST_FILE}
+          html_msg $? 0 "${testname}"
+      fi
+  done
 
-	echo initialized
-	echo 5 > ${CERTSCRIPT}
-	echo 9 >> ${CERTSCRIPT}
-	echo n >> ${CERTSCRIPT}
-	echo y >> ${CERTSCRIPT}
-	echo 3 >> ${CERTSCRIPT}
-	echo n >> ${CERTSCRIPT}
-	echo 5 >> ${CERTSCRIPT}
-	echo 6 >> ${CERTSCRIPT}
-	echo 7 >> ${CERTSCRIPT}
-	echo 9 >> ${CERTSCRIPT}
-	echo n >> ${CERTSCRIPT}
-	echo "certutil -S -n \"TestCA\" -s \"CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US\" -t \"CTu,CTu,CTu\" -v 60 -x -d . -1 -2 -5 -f ${PWFILE} -z ${NOISE_FILE} 2>&1"
-	certutil -S -n "TestCA" -s "CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -t "CTu,CTu,CTu" -v 60 -x -d . -1 -2 -5 -f ${PWFILE} -z ${NOISE_FILE} < ${CERTSCRIPT} 2>&1
+  kill_selfserv
+  html "</TABLE><BR>"
+}
 
-	if [ $? -ne 0 ]; then
-		echo "<TR><TD>Creating CA Cert</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-	else
-		echo "<TR><TD>Creating CA Cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-	fi
+############################## ssl_auth ################################
+# local shell function to perform SSL  Client Authentication tests
+########################################################################
+ssl_auth()
+{
+  html_head "SSL Client Authentication"
 
-	echo "**************** Creating Client CA Issued Certificate ****************"
-	netstat >> ${NOISE_FILE} 2>&1
-	date >> ${NOISE_FILE} 2>&1
-	if [ ! -d ${CLIENTDIR} ]; then
-		mkdir -p ${CLIENTDIR}
-	fi
-	cd ${CLIENTDIR}
-	echo "certutil -N -d . -f ${PWFILE} 2>&1"
-	certutil -N -d . -f ${PWFILE} 2>&1
-	if [ $? -ne 0 ]; then
-		CERTFAILED=${CERTFAILED-"Init DB"}
-	fi
-	echo "Import the root CA"
-	echo "certutil -L -n \"TestCA\" -r -d ../CA > root.cert 2>>$CERTUTILOUT"
-	certutil -L -n "TestCA" -r -d ../CA > root.cert 2>>$CERTUTILOUT
+  cat ${SSLAUTH} | while read value sparam cparam testname
+  do
+      if [ $value != "#" ]; then
+          cparam=`echo $cparam | sed -e 's;_; ;g'`
+          start_selfserv
 
-	cat $CERTUTILOUT
+          echo "tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} \\"
+          echo "        < ${REQUEST_FILE}"
+          tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} < ${REQUEST_FILE}
+          ret=$?
 
-	if [ $? -ne 0 ]; then
-		CERTFAILED=${CERTFAILED-"Export Root"}
-	fi
-	echo "certutil -A -n \"TestCA\" -t \"TC,TC,TC\" -f ${PWFILE} -d . -i root.cert 2>&1"
-	certutil -A -n "TestCA" -t "TC,TC,TC" -f ${PWFILE} -d . -i root.cert 2>&1
-	if [ $? -ne 0 ]; then
-		CERTFAILED=${CERTFAILED-"Import Root"}
-	fi
-	echo "Generate a Certificate request"
-	echo " certutil -R -s \"CN=Test User, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d . -f ${PWFILE} -z ${NOISE_FILE} -o req 2>&1"
-	certutil -R -s "CN=Test User, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -d . -f ${PWFILE} -z ${NOISE_FILE} -o req 2>&1
-	if [ $? -ne 0 ]; then
-		CERTFAILED=${CERTFAILED-"Generate Request"}
-	fi
-	echo "Sign the Certificate request"
-	echo "certutil -C -c "TestCA" -m 3 -v 60 -d ../CA -f ${PWFILE} -i req -o user.cert 2>&1"
-	certutil -C -c "TestCA" -m 3 -v 60 -d ../CA -i req -o user.cert -f ${PWFILE} 2>&1
-	if [ $? -ne 0 ]; then
-		CERTFAILED=${CERTFAILED-"Sign User Cert"}
-	fi
-	echo "Import the new Cert"
-	echo "certutil -A -n \"TestUser\" -t \"u,u,u\" -d . -f ${PWFILE} -i user.cert 2>&1"
-	certutil -A -n "TestUser" -t "u,u,u" -d . -f ${PWFILE} -i user.cert 2>&1
-	if [ $? -ne 0 ]; then
-		CERTFAILED=${CERTFAILED-"Import User"}
-	fi
-	if [ -n "${CERTFAILED}" ]; then
-		echo "<TR><TD>Creating User Cert</TD><TD bgcolor=red>Failed ($CERTFAILED)</TD><TR>" >> ${RESULTS}
-	else
-		echo "<TR><TD>Creating User Cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-	fi
+          # the NT client does not return the same error code as Unix
+          # FIXME - this is a serious bug in the NT testclient
+          if [ ${OS_ARCH} = "WINNT" -a $value -ne 0 -a $ret -ne 0 ]; then
+              echo "$SCRIPTNAME: WARNING! Testclient returned $ret, expect "
+              echo "             $value (no error as tmp workaround)"
+              value=$ret
+          fi
 
-	echo "***** Creating Server CA Issued Certificate for ${HOST}.${DOMSUF} *****"
-	netstat >> ${NOISE_FILE} 2>&1
-	date >> ${NOISE_FILE} 2>&1
-	if [ ! -d ${SERVERDIR} ]; then
-		mkdir -p ${SERVERDIR}
-	fi
-	cd ${SERVERDIR}
-	cp ../CA/*.db .
-	echo "certutil -S -n \"${HOST}.${DOMSUF}\" -s \"CN=${HOST}.${DOMSUF}, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -t \"Pu,Pu,Pu\" -c "TestCA" -v 60 -d . -f ${PWFILE} -z ${NOISE_FILE} 2>&1"
-	certutil -S -n "${HOST}.${DOMSUF}" -s "CN=${HOST}.${DOMSUF}, O=BOGUS Netscape, L=Mountain View, ST=California, C=US" -t "Pu,Pu,Pu" -c "TestCA" -m 1 -v 60 -d . -f ${PWFILE} -z ${NOISE_FILE} 2>&1
-	if [ $? -ne 0 ]; then
-		echo "<TR><TD>Creating Server Cert</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-	else
-		echo "<TR><TD>Creating Server Cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-	fi
-	echo "</TABLE><BR>" >> ${RESULTS}
+          html_msg $ret $value "${testname}" \
+                   "produced a returncode of $ret, expected is $value"
+          kill_selfserv
+      fi
+  done
 
-	rm -f ${TEMPFILES}
-fi
+  html "</TABLE><BR>"
+}
 
 
-# OK now lets run the tests....
-if [ $coverage -eq 1 ]; then
-	echo "********************* SSL Cipher Coverage ****************************"
-	echo "<TABLE BORDER=1><TR><TH COLSPAN=3>SSL Cipher Coverage</TH></TR>" >> ${RESULTS}
-	echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
-	cd ${CLIENTDIR}
+############################## ssl_stress ##############################
+# local shell function to perform SSL stress test
+########################################################################
+ssl_stress()
+{
+  html_head "SSL Stress Test"
 
-	# Launch the server
-	echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss -c ABCDEFabcdefghijklm & "
-	if [ ${fileout} -eq 1 ]; then
-		selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss -c ABCDEFabcdefghijklm > ${SERVEROUTFILE} 2>&1 &
-	else
-		selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss -i ${SERVERPID} -c ABCDEFabcdefghijklm &
-	fi
-	# wait until it's alive
-	echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}"
-	tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
-	if [ $? -ne 0 ]; then
-		echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-	else
-		echo "<TR><TD> Wait for Server </TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-	fi
+  cat ${SSLSTRESS} | while read value sparam cparam testname
+  do
+      if [ $value != "#" ]; then
+          cparam=`echo $cparam | sed -e 's;_; ;g'`
+          start_selfserv
 
-	cat ${SSLCOV} | while read tls param testname
-	do
-		if [ $tls != "#" ]; then
-			echo "********************* $testname ****************************"
-			TLS_FLAG=-T
-			if [ $tls = "TLS" ]; then
-				TLS_FLAG=""
-			fi
-			sparam=""
-			if [ ${param} = "i" ]; then
-				sparam='-c i'
-			fi
+          echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose \\"
+          echo "         ${HOST}.${DOMSUF}"
+          echo "strsclnt started at `date`"
+          strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF}
+          echo "strsclnt completed at `date`"
 
-			is_selfserv_alive
-			echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . redir from ${REQUEST_FILE}"
-			tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
-			if [ $? -ne 0 ]; then
-				echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-			else
-				echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-			fi
-		fi
-	done
-	# now kill the server
-	${KILL} `cat ${SERVERPID}`
-	wait `cat ${SERVERPID}`
-	if [ ${fileout} -eq 1 ]; then
-		cat ${SERVEROUTFILE}
-	fi
-	${SLEEP}
+          html_msg $? $value "${testname}"
+          kill_selfserv
+      fi
+  done
 
-	echo "</TABLE><BR>" >> ${RESULTS}
-fi
+  html "</TABLE><BR>"
+}
 
-if [ $auth -eq 1 ]; then
-	echo "********************* SSL Client Auth ****************************"
-	cd ${CLIENTDIR}
-	echo "<TABLE BORDER=1><TR><TH COLSPAN=3>SSL Client Authentication</TH></TR>" >> ${RESULTS}
-	echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
+############################## ssl_cleanup #############################
+# local shell function to finish this script (no exit since it might be
+# sourced)
+########################################################################
+ssl_cleanup()
+{
+  rm $SERVERPID 2>/dev/null
+  cd ${QADIR}
+  . common/cleanup.sh
+}
 
-	cat ${SSLAUTH} | while read value sparam cparam testname
-	do
-		if [ $value != "#" ]; then
-			echo "***** $testname ****"
-			sparam=`echo $sparam | sed -e 's;_; ;g'`
-			cparam=`echo $cparam | sed -e 's;_; ;g'`
-			echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &"
-			if [ ${fileout} -eq 1 ]; then
-				selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} > ${SERVEROUTFILE} 2>&1 &
-			else
-				selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
-			fi
-			echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} redir from ${REQUEST_FILE}"
-			tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
-			if [ $? -ne 0 ]; then
-				echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-				echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} redir from ${REQUEST_FILE}"
-				tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
-			fi
-			pwd
-			is_selfserv_alive
-			echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} redir from ${REQUEST_FILE}"
-			tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} < ${REQUEST_FILE}
-			ret=$?
+################## main #################################################
 
-#
-# for some reason the NT client does not return the same error code as Unix
-# (sigh).
-#
-			if [ ${OS_ARCH} = "WINNT" ]; then
-				if [ $value -ne 0 ]; then
-					if [ $ret -ne 0 ]; then
-						value=$ret
-					fi
-				fi
-			fi
-
-			if [ $ret -ne $value ]; then
-				echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-				echo "FAILURE: test $testname produced a returncode of $ret, expected is $value O_CRON = $O_CRON"
-			else
-				echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-				echo "test $testname produced a returncode of $ret as expected "
-			fi
-			${KILL} `cat ${SERVERPID}`
-			wait `cat ${SERVERPID}`
-			if [ ${fileout} -eq 1 ]; then
-				cat ${SERVEROUTFILE}
-			fi
-			${SLEEP}
-		fi
-	done
-
-	echo "</TABLE><BR>" >> ${RESULTS}
-fi
-
-
-if [ $stress -eq 1 ]; then
-	echo "********************* Stress Test ****************************"
-	cd ${CLIENTDIR}
-	echo "<TABLE BORDER=1><TR><TH COLSPAN=3>SSL Stress Test</TH></TR>" >> ${RESULTS}
-	echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
-
-	cat ${SSLSTRESS} | while read value sparam cparam testname
-	do
-		if [ $value != "#" ]; then
-			echo "********************* $testname ****************************"
-			sparam=`echo $sparam | sed -e 's;_; ;g'`
-			cparam=`echo $cparam | sed -e 's;_; ;g'`
-			echo "selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose & started at `date`"
-			if [ ${fileout} -eq 1 ]; then
-				selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose > ${SERVEROUTFILE} 2>&1 &
-			else
-				selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose &
-			fi
-			echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE} started at `date`"
-			tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
-			if [ $? -ne 0 ]; then
-				echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-				echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} redir from ${REQUEST_FILE}"
-				tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
-			fi
-
-			is_selfserv_alive
-			echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF} started at `date`"
-			strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF}
-			echo "strsclnt completed at `date`"
-
-			if [ $? -ne $value ]; then
-				echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-			else
-				echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-			fi
-			${KILL} `cat ${SERVERPID}`
-			wait `cat ${SERVERPID}`
-			if [ ${fileout} -eq 1 ]; then
-				cat ${SERVEROUTFILE}
-			fi
-			${SLEEP}
-		fi
-	done
-
-	echo "</TABLE><BR>" >> ${RESULTS}
-fi
-
-rm -f ${TEMPFILES}
+ssl_init
+ssl_cov
+ssl_auth
+ssl_stress
+ssl_cleanup

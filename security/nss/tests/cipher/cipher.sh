@@ -1,211 +1,110 @@
 #! /bin/ksh  
 #
-# This is just a quick script so we can still run our testcases.
-# Longer term we need a scriptable test environment..
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape security libraries.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
 #
-. ../common/init.sh
-CURDIR=`pwd`
-
-CIPHERDIR=${HOSTDIR}/cipher
-CIPHERTESTDIR=${CURDIR}/../../cmd/bltest
-
-echo "<HTML><BODY>" >> ${RESULTS}
-
-#temporary files
-TMP=${TMP-/tmp}
-
-#TEMPFILES="${NOISE_FILE}"
-
 #
-# should also try to kill any running server
+########################################################################
 #
-#trap "rm -f ${TEMPFILES};  exit"  2 3
+# mozilla/security/nss/tests/cipher/cipher.sh
+#
+# Script to test NSS ciphers
+#
+# needs to work on all Unix and Windows platforms
+#
+# special strings
+# ---------------
+#   FIXME ... known problems, search for this string
+#   NOTE .... unexpected behavior
+#
+########################################################################
 
-mkdir -p ${CIPHERDIR}
+############################## cipher_init #############################
+# local shell function to initialize this script
+########################################################################
+cipher_init()
+{
+  SCRIPTNAME="cipher.sh"
+  if [ -z "${CLEANUP}" ] ; then     # if nobody else is responsible for
+      CLEANUP="${SCRIPTNAME}"       # cleaning this script will do it
+  fi
+  if [ -z "${INIT_SOURCED}" ] ; then
+      cd ../common
+      . init.sh
+  fi
+  SCRIPTNAME="cipher.sh"
+  html_head "Cipher Tests"
 
-echo "<TABLE BORDER=1><TR><TH COLSPAN=3>Cipher Tests</TH></TR>" >> ${RESULTS}
-echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
+  CIPHERDIR=${HOSTDIR}/cipher
+  CIPHERTESTDIR=${QADIR}/../cmd/bltest
 
-echo "bltest -T -m des_ecb -E -d ${CIPHERTESTDIR}"
-bltest -T -m des_ecb -E -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"DES ECB Encrypt"}
-fi
-echo "bltest -T -m des_ecb -D -d ${CIPHERTESTDIR}"
-bltest -T -m des_ecb -D -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"DES ECB Encrypt"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>DES ECB</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>DES ECB</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+  CIPHER_TXT=${QADIR}/cipher/cipher.txt
 
-echo "bltest -T -m des_cbc -E -d ${CIPHERTESTDIR}"
-bltest -T -m des_cbc -E -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"DES CBC Encrypt"}
-fi
-echo "bltest -T -m des_cbc -D -d ${CIPHERTESTDIR}"
-bltest -T -m des_cbc -D -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"DES CBC Encrypt"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>DES CBC</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>DES CBC</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+  mkdir -p ${CIPHERDIR}
 
-echo "bltest -T -m des3_ecb -E -d ${CIPHERTESTDIR}"
-bltest -T -m des3_ecb -E -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"3DES ECB Encrypt"}
-fi
-echo "bltest -T -m des3_ecb -D -d ${CIPHERTESTDIR}"
-bltest -T -m des3_ecb -D -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"3DES ECB Encrypt"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>3DES ECB</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>3DES ECB</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+  cd ${CIPHERTESTDIR}
+}
 
-echo "bltest -T -m des3_cbc -E -d ${CIPHERTESTDIR}"
-bltest -T -m des3_cbc -E -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"3DES CBC Encrypt"}
-fi
-echo "bltest -T -m des3_cbc -D -d ${CIPHERTESTDIR}"
-bltest -T -m des3_cbc -D -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"3DES CBC Encrypt"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>3DES CBC</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>3DES CBC</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+############################## cipher_main #############################
+# local shell function to test NSS ciphers
+########################################################################
+cipher_main()
+{
+  cat ${CIPHER_TXT} | while read EXP_RET PARAM TESTNAME
+  do
+      if [ -n "$EXP_RET" -a "$EXP_RET" != "#" ] ; then
+          PARAM=`echo $PARAM | sed -e "s/_-/ -/g"`
+          TESTNAME=`echo $TESTNAME | sed -e "s/_/ /g"`
+          echo "$SCRIPTNAME: $TESTNAME --------------------------------"
+          echo "bltest -T -m $PARAM -d ."
 
-echo "bltest -T -m rc2_ecb -E -d ${CIPHERTESTDIR}"
-bltest -T -m rc2_ecb -E -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"RC2 ECB Encrypt"}
-fi
-echo "bltest -T -m rc2_ecb -D -d ${CIPHERTESTDIR}"
-bltest -T -m rc2_ecb -D -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"RC2 ECB Encrypt"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>RC2 ECB</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>RC2 ECB</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+          bltest -T -m $PARAM -d .
+          html_msg $? $EXP_RET "$TESTNAME"
+      fi
+  done
+}
 
-echo "bltest -T -m rc2_cbc -E -d ${CIPHERTESTDIR}"
-bltest -T -m rc2_cbc -E -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"RC2 CBC Encrypt"}
-fi
-echo "bltest -T -m rc2_cbc -D -d ${CIPHERTESTDIR}"
-bltest -T -m rc2_cbc -D -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"RC2 CBC Encrypt"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>RC2 CBC</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>RC2 CBC</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+############################## cipher_cleanup ############################
+# local shell function to finish this script (no exit since it might be
+# sourced)
+########################################################################
+cipher_cleanup()
+{
+  html "</TABLE><BR>"
+  cd ${QADIR}
+  . common/cleanup.sh
+}
 
-echo "bltest -T -m rc4 -E -d ${CIPHERTESTDIR}"
-bltest -T -m rc4 -E -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"RC4 Encrypt"}
-fi
-echo "bltest -T -m rc4 -D -d ${CIPHERTESTDIR}"
-bltest -T -m rc4 -D -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"RC4 Encrypt"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>RC4</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>RC4</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+################## main #################################################
 
-echo "bltest -T -m rsa -E -d ${CIPHERTESTDIR}"
-bltest -T -m rsa -E -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"RSA Encrypt"}
-fi
-echo "bltest -T -m rsa -D -d ${CIPHERTESTDIR}"
-bltest -T -m rsa -D -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"RSA Encrypt"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>RSA</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>RSA</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-
-echo "bltest -T -m dsa -S -d ${CIPHERTESTDIR}"
-bltest -T -m dsa -S -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"DSA Sign"}
-fi
-echo "bltest -T -m dsa -V -d ${CIPHERTESTDIR}"
-bltest -T -m dsa -V -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"DSA Verify"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>DSA</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>DSA</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-
-echo "bltest -T -m md2 -H -d ${CIPHERTESTDIR}"
-bltest -T -m md2 -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"MD2 Hash"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>MD2</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>MD2</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-
-echo "bltest -T -m md5 -H -d ${CIPHERTESTDIR}"
-bltest -T -m md5 -H -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"MD5 Hash"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>MD5</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>MD5</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-
-echo "bltest -T -m sha1 -H -d ${CIPHERTESTDIR}"
-bltest -T -m sha1 -H -d ${CIPHERTESTDIR}
-if [ $? -ne 0 ]; then
-   CIPHERFAILED=${CIPHERFAILED-"SHA1 Hash"}
-fi
-if [ -n "${CIPHERFAILED}" ]; then
-    echo "<TR><TD>SHA1</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>SHA1</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-
-echo "</TABLE><BR>" >> ${RESULTS}
-
-#rm -f ${TEMPFILES}
-cd ${CURDIR}
-
-echo "</BODY></HTML>" >> ${RESULTS}
+cipher_init
+cipher_main
+cipher_cleanup
