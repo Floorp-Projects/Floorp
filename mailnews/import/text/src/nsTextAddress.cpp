@@ -47,6 +47,8 @@ nsTextAddress::nsTextAddress()
 {
     m_database = nsnull;
     m_fieldMap = nsnull;
+    m_LFCount = 0;
+    m_CRCount = 0;
 }
 
 nsTextAddress::~nsTextAddress()
@@ -845,43 +847,39 @@ char * nsTextAddress::str_getline( char **next )
  */
 nsresult nsTextAddress::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32& stopPos)
 {
-    PRInt32 LFCount = 0;
-    PRInt32 CRCount = 0;
-
     for (; stopPos < len; stopPos++) 
     {
         char c = buf[stopPos];
 
         if (c == 0xA)
         {
-            LFCount++;
+            m_LFCount++;
         }
         else if (c == 0xD)
         {
-            CRCount++;
+            m_CRCount++;
         }
         else if ( c != 0xA && c != 0xD)
         {
-            if (LFCount == 0 && CRCount == 0)
+            if (m_LFCount == 0 && m_CRCount == 0)
                  m_ldifLine.Append(c);
-            else if (( LFCount > 1) || ( CRCount > 2 && LFCount ) ||
-                ( !LFCount && CRCount > 1 ))
+            else if (( m_LFCount > 1) || ( m_CRCount > 2 && m_LFCount ) ||
+                ( !m_LFCount && m_CRCount > 1 ))
             {
                 return NS_OK;
             }
-            else if ((LFCount == 1 || CRCount == 1))
+            else if ((m_LFCount == 1 || m_CRCount == 1))
             {
-                 m_ldifLine.Append('\n');
-                 m_ldifLine.Append(c);
-                LFCount = 0;
-                CRCount = 0;
+                m_ldifLine.Append('\n');
+                m_ldifLine.Append(c);
+                m_LFCount = 0;
+                m_CRCount = 0;
             }
         }
     }
-    if ((LFCount == 1 || CRCount == 1) && stopPos == len)
-        m_ldifLine.Append('\n');
-    if ((stopPos == len) && (LFCount > 1) || (CRCount > 2 && LFCount) ||
-        (!LFCount && CRCount > 1))
+
+    if ((stopPos == len) && (m_LFCount > 1) || (m_CRCount > 2 && m_LFCount) ||
+        (!m_LFCount && m_CRCount > 1))
         return NS_OK;
     else
         return NS_ERROR_FAILURE;
@@ -894,7 +892,8 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
     PRInt32 startPos = 0;
     PRInt32 len = 0;
     PRBool bEof = PR_FALSE;
-    nsVoidArray listPosArray;
+    nsVoidArray listPosArray;   // where each list/group starts in ldif file
+    nsVoidArray listSizeArray;  // size of the list/group info
     PRInt32 savedStartPos = 0;
     PRInt32 filePos = 0;
 
@@ -906,14 +905,14 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
 
             while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, startPos)))
             {
-                if (m_ldifLine.Find("groupOfNames") == -1)
+                 if (m_ldifLine.Find("groupOfNames") == -1)
                     AddLdifRowToDatabase(PR_FALSE);
                 else
                 {
                     //keep file position for mailing list
                     listPosArray.AppendElement((void*)savedStartPos);
-                    if (m_ldifLine.Length() > 0)
-                        m_ldifLine.Truncate();
+                    listSizeArray.AppendElement((void*)(filePos + startPos-savedStartPos));
+                    ClearLdifRecordBuffer();
                 }
                 savedStartPos = filePos + startPos;
             }
@@ -924,19 +923,27 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
     //last row
     if (m_ldifLine.Length() > 0 && m_ldifLine.Find("groupOfNames") == -1)
         AddLdifRowToDatabase(PR_FALSE); 
+
     // mail Lists
-    PRInt32 i;
+    PRInt32 i, pos, size;
     PRInt32 listTotal = listPosArray.Count();
+    char *listBuf;
+    ClearLdifRecordBuffer();  // make sure the buffer is clean
     for (i = 0; i < listTotal; i++)
     {
-        PRInt32 pos = NS_PTR_TO_INT32(listPosArray.ElementAt(i));
+        pos  = NS_PTR_TO_INT32(listPosArray.ElementAt(i));
+        size = NS_PTR_TO_INT32(listSizeArray.ElementAt(i));
         if (NS_SUCCEEDED(pSrc->Seek(pos)))
         {
-            if (NS_SUCCEEDED(pSrc->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)
+            // Allocate enough space for the lists/groups as the size varies.
+            listBuf = (char *) PR_Malloc(size);
+            if (!listBuf)
+              continue;
+            if (NS_SUCCEEDED(pSrc->Read(&listBuf, size, &len)) && len > 0)
             {
                 startPos = 0;
 
-                while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, startPos)))
+                while (NS_SUCCEEDED(GetLdifStringRecord(listBuf, len, startPos)))
                 {
                     if (m_ldifLine.Find("groupOfNames") != -1)
                     {
@@ -946,6 +953,7 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
                     }
                 }
             }
+            PR_FREEIF(listBuf);
         }
     }
     return NS_OK;
@@ -987,8 +995,18 @@ void nsTextAddress::AddLdifRowToDatabase(PRBool bIsList)
     if (bIsList)
         m_database->AddListDirNode(newRow);
         
-    if (m_ldifLine.Length() > 0)
-        m_ldifLine.Truncate();
+    // Clear buffer for next record
+    ClearLdifRecordBuffer();
+}
+
+void nsTextAddress::ClearLdifRecordBuffer()
+{
+  if (m_ldifLine.Length() > 0)
+  {
+      m_ldifLine.Truncate();
+      m_LFCount = 0;
+      m_CRCount = 0;
+  }
 }
 
 // We have two copies of this function in the code, one here for import and 

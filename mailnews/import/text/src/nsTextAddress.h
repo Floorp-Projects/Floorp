@@ -68,9 +68,12 @@ private:
 	nsresult	ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress);
 	void		AddLdifRowToDatabase( PRBool bIsList);
 	void		AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList);
+  void    ClearLdifRecordBuffer();
 
 private:
-	nsCString			m_ldifLine;
+	nsCString		m_ldifLine;
+  PRInt32     m_LFCount;
+  PRInt32     m_CRCount;
 	char				m_delim;
 	nsIAddrDatabase *	m_database;
 	nsIImportFieldMap *	m_fieldMap;
