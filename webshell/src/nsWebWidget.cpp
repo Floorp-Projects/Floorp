@@ -36,6 +36,7 @@
 #include "nsWidgetsCID.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptContextOwner.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsICSSParser.h"
@@ -55,7 +56,7 @@
   ((nsWebWidget*) ((char*)this - nsWebWidget::GetOuterOffset()))
 
 // Machine independent implementation portion of the web widget
-class WebWidgetImpl : public nsIWebWidget {
+class WebWidgetImpl : public nsIWebWidget, public nsIScriptContextOwner {
 public:
   WebWidgetImpl();
   ~WebWidgetImpl();
@@ -115,8 +116,8 @@ public:
   virtual PRBool GetShowFrameBorders();
   virtual nsIWidget* GetWWWindow();
   NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
+  NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
   NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument);
-  NS_IMETHOD ReleaseScriptContext();
 
 private:
   nsresult ProvideDefaultHandlers();
@@ -149,6 +150,7 @@ private:
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
+static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 //nsIWebWidget* WebWidgetImpl::gRootWebWidget = nsnull;
@@ -166,6 +168,11 @@ nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
   if (aIID.Equals(kIWebWidgetIID)) {
     *aInstancePtr = (void*)(nsIWebWidget*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptContextOwnerIID)) {
+    *aInstancePtr = (void*)(nsIScriptContextOwner*)this;
     AddRef();
     return NS_OK;
   }
@@ -681,6 +688,9 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
     }
   }
 
+  // Set the script object owner to ourselves
+  doc->SetScriptContextOwner(this);
+  
   // Now load the document
   mPresShell->EnterReflowLock();
   doc->LoadURL(url, aListener, this, aPostData);
@@ -1022,9 +1032,17 @@ nsresult WebWidgetImpl::GetScriptContext(nsIScriptContext **aContext)
 
   if (NS_OK == res) {
     *aContext = mScriptContext;
+    NS_ADDREF(mScriptContext);
   }
 
   return res;
+}
+
+nsresult WebWidgetImpl::ReleaseScriptContext(nsIScriptContext *aContext)
+{
+  NS_IF_RELEASE(aContext);
+
+  return NS_OK;
 }
 
 nsresult WebWidgetImpl::GetDOMDocument(nsIDOMDocument** aDocument)
@@ -1041,14 +1059,6 @@ nsresult WebWidgetImpl::GetDOMDocument(nsIDOMDocument** aDocument)
   }
 
   return res;
-}
-
-nsresult WebWidgetImpl::ReleaseScriptContext()
-{
-  NS_IF_RELEASE(mScriptContext);
-  mScriptContext = nsnull;
-
-  return NS_OK;
 }
 
 /*******************************************
