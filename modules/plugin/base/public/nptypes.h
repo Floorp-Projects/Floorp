@@ -44,6 +44,9 @@
 #if defined(WIN32) || defined(OS2)
 typedef int int32_t;
 typedef unsigned int uint32_t;
+#elif defined(AIX)
+typedef int int32_t;
+typedef unsigned int uint32_t;
 #else
 #include <stdint.h>
 
