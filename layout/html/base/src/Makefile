@@ -64,3 +64,6 @@ LCFLAGS += -D_IMPL_NS_HTML
 INCLUDES += -I../../style/src -I../../../base/src
 
 include $(DEPTH)/config/rules.mk
+
+install::
+	$(MAKE_INSTALL) broken-image.gif $(DIST)/bin/res/html

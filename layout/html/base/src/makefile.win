@@ -101,5 +101,8 @@ include <$(DEPTH)\layout\config\rules.mak>
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
+install::
+	$(MAKE_INSTALL) broken-image.gif $(DIST)\bin\res\html
+
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
