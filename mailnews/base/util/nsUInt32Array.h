@@ -32,7 +32,7 @@ public:
 
 	// State/attribute member functions
 	PRUint32          GetSize() const;
-	PRBool            SetSize(PRUint32 nNewSize, PRUint32 nGrowBy = -1);
+	PRBool            SetSize(PRUint32 nNewSize, PRUint32 nGrowBy = 0);
 
 	// Accessor member functions
 	PRUint32            &ElementAt(PRUint32 nIndex);
@@ -50,7 +50,7 @@ public:
 	void               SetAtGrow(PRUint32 nIndex, PRUint32 newElement);
 
 	// Sorting member functions
-	void               QuickSort(int (*compare) (const void *elem1, const void *elem2) = NULL);
+	void               QuickSort(int (*compare) (const void *elem1, const void *elem2, void *) = NULL);
 
 	// Overloaded operators
 	PRUint32             operator[](PRUint32 nIndex) const { return GetAt(nIndex); }

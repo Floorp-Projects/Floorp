@@ -20,6 +20,7 @@
 
 #include "MailNewsTypes.h"
 #include "nsUInt32Array.h"
+#include "nsQuickSort.h"
 
 nsUInt32Array::nsUInt32Array()
 {
@@ -261,7 +262,7 @@ void nsUInt32Array::CopyArray(nsUInt32Array &oldA)
 
 /////////////////////////////////////////////////////////////////////////////
 
-static int CompareDWord (const void *v1, const void *v2)
+static int CompareDWord (const void *v1, const void *v2, void *)
 {
 	// QuickSort callback to compare array values
 	PRUint32 i1 = *(PRUint32 *)v1;
@@ -269,12 +270,9 @@ static int CompareDWord (const void *v1, const void *v2)
 	return i1 - i2;
 }
 
-void nsUInt32Array::QuickSort (int (*compare) (const void *elem1, const void *elem2))
+void nsUInt32Array::QuickSort (int (*compare) (const void *elem1, const void *elem2, void *data))
 {
 	// we don't have a quick sort method in mozilla yet....commenting out for now.
-	NS_ASSERTION(0, "quick sort not implemented yet");
-#if 0
 	if (m_nSize > 1)
-		XP_QSORT (m_pData, m_nSize, sizeof(void*), compare ? compare : CompareDWord);
-#endif
+		nsQuickSort(m_pData, m_nSize, sizeof(void*), compare ? compare : CompareDWord, nsnull);
 }
