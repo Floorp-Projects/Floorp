@@ -91,17 +91,17 @@
 	margin: 0;
 }
 
-.opinions-date {
+.opinions-info {
 	font-size: 85%;
 	margin: 0 0 0.5em 0;
 }
 
-.opinions-date a {
+.opinions-info a {
 	text-decoration: none;
 	color: #666;
 }
 
-.opinions-date a:hover {
+.opinions-info a:hover {
 	text-decoration: underline;
 }
 

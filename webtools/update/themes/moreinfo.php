@@ -420,8 +420,11 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
                 $commentdate = gmdate("F d, Y g:ia", strtotime("$commentdate")); //Create Customizeable Datestamp
 
                 echo"<li>\n";
-                echo"<h4>$commenttitle by $commentname</h4>\n";
-                echo"<p class=\"opinions-date\"><a href=\"#permalink\">$commentdate</a></p>\n";
+                echo"<h4>$commenttitle</h4>\n";
+                echo"<p class=\"opinions-info\">";
+                echo"by $commentname, ";
+                echo"<a href=\"#permalink\">$commentdate</a>";
+                echo"</p>\n";
                 echo"<p class=\"opinions-text\">$commentnotes</P>\n";
             if ($rating != NULL) {
                 echo"<p class=\"opinions-rating\" title=\"$rating of 5 stars\">";
@@ -592,8 +595,11 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
                 echo"<li>\n";
                 echo"<a name=\"$commentid\"></a>\n";
-                echo"<h4>$title by $name</h4>\n";
-                echo"<p class=\"opinions-date\"><a href=\"#$commentid\">$date</a></p>\n";
+                echo"<h4>$title</h4>\n";
+                echo"<p class=\"opinions-info\">";
+                echo"by $name, ";
+                echo"<a href=\"#$commentid\">$date</a>";
+                echo"</p>\n";               
                 echo"<p class=\"opinions-text\">$notes</P>\n";
             if ($rating != NULL) {
                 echo"<p class=\"opinions-rating\" title=\"$rating of 5 stars\">";
