@@ -13,6 +13,7 @@ DEPTH = ../../..
 EXPORTS = \
     nsISMTPService.h \
     nsIMIMEService.h \
+	nsISMTPObserver.h \
 	nsIMessage.h \
 	$(NULL)
 

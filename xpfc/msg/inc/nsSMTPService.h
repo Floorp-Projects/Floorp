@@ -30,8 +30,16 @@ public:
 
   NS_IMETHOD Init() ;
 
-  NS_IMETHOD SendMail(nsString& aServer, nsString& aFrom, nsString& aTo, nsString& aSubject, nsString& aBody) ;
-  NS_IMETHOD SendMail(nsString& aServer, nsIMessage& aMessage) ;
+  NS_IMETHOD SendMail(nsString& aServer, 
+                      nsString& aFrom, 
+                      nsString& aTo, 
+                      nsString& aSubject, 
+                      nsString& aBody,
+                      nsISMTPObserver * aObserver = nsnull);
+
+  NS_IMETHOD SendMail(nsString& aServer, 
+                      nsIMessage& aMessage,
+                      nsISMTPObserver * aObserver = nsnull);
 
 
 protected:
