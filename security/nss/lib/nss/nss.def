@@ -366,6 +366,8 @@ CERT_DecodeOidSequence;
 CERT_DecodeUserNotice;
 CERT_DecodeCertificatePoliciesExtension;
 CERT_DestroyCertificatePoliciesExtension;
+CERT_FindCertByNicknameOrEmailAddr;
+CERT_FindCertByNickname;
 CERT_GenTime2FormattedAscii;
 CERT_Hexify;
 CERT_CompareName;
