@@ -200,8 +200,6 @@ my ($t, $e);
 $t = $e = &query_to_english;
 $t =~ s/<[^>]*>//g;
 
-$::query_debug = $::FORM{'debug'};
-
 my %mod_map = ();
 my $result= &query_checkins( %mod_map );
 
