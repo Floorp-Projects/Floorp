@@ -1042,6 +1042,18 @@ ifndef COMPILER_DEPEND
 #
 _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 
+ifeq ($(OS_ARCH),WINNT)
+define MAKE_DEPS_AUTO
+if test -d $(@D); then \
+	set -e ; \
+	touch $(_MDDEPFILE) && \
+	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(srcdir)/$(<F) >/dev/null 2>&1 && \
+	mv $(_MDDEPFILE) $(_MDDEPFILE).old && \
+	cat $(_MDDEPFILE).old | sed -e "s|^$(srcdir)/||g" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
+	echo "Building deps for $(srcdir)/$(<F)"; \
+fi
+endef
+else
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
 	set -e ; \
@@ -1052,6 +1064,7 @@ if test -d $(@D); then \
 	echo "Building deps for $<"; \
 fi
 endef
+endif # WINNT
 
 endif # !COMPILER_DEPEND
 
@@ -1728,12 +1741,21 @@ else # ! COMPILER_DEPEND
 
 ifndef MOZ_AUTO_DEPS
 
+ifeq ($(OS_ARCH),WINNT)
+define MAKE_DEPS_NOAUTO
+	set -e ; \
+	touch $@ && \
+	$(MKDEPEND) -w1024 -o'.$(OBJ_SUFFIX)' -f$@ $(DEFINES) $(ACDEFINES) $(INCLUDES) $(srcdir)/$(<F) >/dev/null 2>&1 && \
+	mv $@ $@.old && cat $@.old | sed "s|^$(srcdir)/||g" > $@ && rm -f $@.old
+endef
+else
 define MAKE_DEPS_NOAUTO
 	set -e ; \
 	touch $@ && \
 	$(MKDEPEND) -w1024 -o'.$(OBJ_SUFFIX)' -f$@ $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
 	mv $@ $@.old && cat $@.old | sed "s|^$(<D)/||g" > $@ && rm -f $@.old
 endef
+endif # WINNT
 
 $(MDDEPDIR)/%.pp: %.c
 	$(REPORT_BUILD)
