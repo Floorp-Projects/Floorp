@@ -23,6 +23,9 @@
     <command id="cmd:toggleSubDocs" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleSubDocs()"/>
 
+    <command id="cmd:toggleWhitespaceNodes" viewer="dom"
+             oncommand="inspector.getViewer('dom').toggleWhitespaceNodes()"/>
+
     <command id="cmd:flashSelected" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleFlashSelected()"/>
       

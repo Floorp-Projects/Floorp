@@ -8,6 +8,9 @@
   <!ENTITY cmdToggleAnonContent.label "Show Anonymous Content">
   <!ENTITY cmdToggleAnonContent.accesskey "a">
 
+  <!ENTITY cmdToggleWhitespaceNodes.label "Show Whitespace Nodes">
+  <!ENTITY cmdToggleWhitespaceNodes.accesskey "W">
+
   <!ENTITY cmdFlashSelected.label "Blink Selected Element">
 
   <!ENTITY cmdToggleAttributes.label "Show Attributes">
@@ -36,5 +39,3 @@
   <!ENTITY stateHover.label ":hover">
   <!ENTITY stateActive.label ":active">
   <!ENTITY stateFocus.label ":focus">
-  
-  
