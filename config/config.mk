@@ -121,7 +121,7 @@ LOCAL_SUN4	:= /usr/local/sun4/bin/
 NS_BIN		:= /tools/ns/bin/
 NS_LIB		:= /tools/ns/lib
 JAVA_LIB	:= /usr/local/netscape/java/lib
-XFEPRIVDIR	:= $(DEPTH)/../ns_priv/xfe/
+XFEPRIVDIR	:= $(DEPTH)/../ns/cmd/xfe/
 else
 NS_LIB		:= .
 JAVA_LIB	:= .
