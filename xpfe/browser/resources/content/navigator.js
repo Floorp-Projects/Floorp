@@ -560,20 +560,8 @@
 
   function BrowserEditBookmarks()
   {
-    var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("toolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/samples/bookmarks.xul",window);
-    }
+    window.open("resource:/res/samples/bookmarks.xul", "BookmarksWindow", "chrome");
   }
-
-
-
 
   function BrowserPrintPreview()
   {
