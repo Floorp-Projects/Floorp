@@ -691,6 +691,11 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get document charset!");
 
+    if (characterSet.IsEmpty()) {
+      // fall back to ISO-8851-1, see bug 118404
+      characterSet = NS_LITERAL_STRING("ISO-8859-1");
+    }
+    
     nsCOMPtr<nsICharsetConverterManager> charsetConv =
       do_GetService(kCharsetConverterManagerCID, &rv);
 
