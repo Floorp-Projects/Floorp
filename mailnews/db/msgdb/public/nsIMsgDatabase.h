@@ -107,6 +107,7 @@ public:
   NS_IMETHOD ListAllKeys(nsMsgKeyArray &outputKeys) = 0;
 #endif
   NS_IMETHOD EnumerateMessages(nsIEnumerator* *result) = 0;
+  NS_IMETHOD EnumerateThreads(nsIEnumerator* *result) = 0;
 
   // helpers for user command functions like delete, mark read, etc.
 

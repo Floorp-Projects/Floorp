@@ -1766,6 +1766,8 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::Next(void)
 			return rv;
 
         mResultThread = new nsMsgThread(mDB, table);
+		if(mResultThread)
+			NS_ADDREF(mResultThread);
     } while (mFilter && mFilter(mResultThread, mClosure) != NS_OK);
 	return rv;
 }
