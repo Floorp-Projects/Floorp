@@ -344,7 +344,7 @@ treechildren::-moz-tree-image(remote-err) {
 /* ::::: format toolbar ::::: */
 
 #FormatToolbar > toolbarbutton {
-  min-width: 3em;
+  min-width: 32px;
   list-style-image: url("chrome://editor/skin/icons/btn2.gif");
 }
  
