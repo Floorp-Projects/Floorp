@@ -37,6 +37,7 @@
 #include "nsIDocShell.h"         
 #include "nsIBaseWindow.h"       
 #include "nsIAppShellService.h"
+#include "nsIProfileInternal.h"
 #include "rdf.h"
 
 // These are needed to load a URL in a browser window.
@@ -295,10 +296,11 @@ private:
     static PRBool   InitTopicStrings();
     static int      FindTopic( HSZ topic );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
+    static nsresult EnsureProfile(nsICmdLineService* args);
     static nsresult OpenWindow( const char *urlstr, const char *args );
     static nsresult OpenBrowserWindow( const char *args, PRBool newWindow = PR_TRUE );
     static nsresult ReParent( nsISupports *window, HWND newParent );
-    static nsresult HandleArbitraryStartup(nsICmdLineService *args);
+    static nsresult GetStartupURL(nsICmdLineService *args, nsCString& taskURL);
     static int   mConversations;
     enum {
         topicOpenURL,
@@ -1122,7 +1124,8 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching browser on url [%s]...\n", (const char*)arg );
 #endif
-      (void)OpenBrowserWindow( arg, newWindow );
+      if (NS_SUCCEEDED(EnsureProfile(args)))
+        (void)OpenBrowserWindow( arg );
       return;
     }
 
@@ -1134,14 +1137,18 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching chrome url [%s]...\n", (const char*)arg );
 #endif
-      (void)OpenWindow( arg, "" );
+      if (NS_SUCCEEDED(EnsureProfile(args)))
+        (void)OpenWindow( arg, "" );
       return;
     }
 
     // try using the command line service to get the url
-    rv = HandleArbitraryStartup(args);
-    if (NS_SUCCEEDED(rv))
+    nsCString taskURL;
+    rv = GetStartupURL(args, taskURL);
+    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(EnsureProfile(args))) {
+      (void)OpenWindow(taskURL, "");
       return;
+    }
 
     // try for the "-kill" argument, to shut down the server
     rv = args->GetCmdLineValue( "-kill", getter_Copies(arg));
@@ -1171,6 +1178,9 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
       "@mozilla.org/commandlinehandler/general-startup;1?type=browser";
     nsCOMPtr<nsICmdLineHandler> handler = do_GetService(contractID, &rv);
     if (NS_FAILED(rv)) return;
+    
+    rv = EnsureProfile(args);
+    if (NS_FAILED(rv)) return;
       
     nsXPIDLString defaultArgs;
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
@@ -1179,9 +1189,9 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     if (defaultArgs) {
       nsCAutoString url;
       url.AssignWithConversion( defaultArgs );
-      OpenBrowserWindow((const char*)url, newWindow);
+      OpenBrowserWindow((const char*)url);
     } else {
-      OpenBrowserWindow("about:blank", newWindow);
+      OpenBrowserWindow("about:blank");
     }
 }
 
@@ -1339,6 +1349,43 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     delete [] argv;
 
     return rv;
+}
+
+// Check the needsProfileUI attribute of the native app and,
+// if so, do it. Once this suceeds, set the attribute to false
+// so we can only do this once.
+nsresult
+nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
+{
+  nsresult rv = NS_OK;  
+  nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv );
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsINativeAppSupport> nativeApp;
+  rv = appShell->GetNativeAppSupport(getter_AddRefs(nativeApp));
+  if (NS_FAILED(rv)) return rv;
+  PRBool needsProfileUI;
+  rv = nativeApp->GetNeedsProfileUI(&needsProfileUI);
+  if (NS_FAILED(rv)) return rv; 
+
+  nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+ 
+  if (needsProfileUI) {
+    // We need profile UI because we started in
+    // server mode and could not show it then.
+    rv = profileMgr->StartupWithArgs(args, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    nativeApp->SetNeedsProfileUI(PR_FALSE);
+  }
+  else {
+    // Even if not started in server mode, ensure
+    // that we have a profile. We can hit this case
+    // if somebody double-clicks the app twice.
+    PRBool haveProfile = PR_FALSE;
+    (void)profileMgr->IsCurrentProfileAvailable(&haveProfile);
+    if (!haveProfile) return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -1596,10 +1643,10 @@ nsNativeAppSupportWin::StartServerMode() {
 }
 
 
-// go through the command line arguments, and try to load
-// a handler for one, until we succeed
+// go through the command line arguments, and try to load a handler
+// for one, and when we do, get the chrome URL for its task
 nsresult
-nsNativeAppSupportWin::HandleArbitraryStartup(nsICmdLineService *args)
+nsNativeAppSupportWin::GetStartupURL(nsICmdLineService *args, nsCString& taskURL)
 {
     nsresult rv;
     
@@ -1614,6 +1661,7 @@ nsNativeAppSupportWin::HandleArbitraryStartup(nsICmdLineService *args)
     rv = handler->GetChromeUrlForTask(getter_Copies(url));
     if (NS_FAILED(rv)) return rv;
 
-    return OpenWindow(url, "");
+    taskURL.Assign(url.get());
+    return NS_OK;
 }
 
