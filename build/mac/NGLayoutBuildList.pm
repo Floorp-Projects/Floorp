@@ -111,6 +111,9 @@ sub Checkout()
 	
 	if ($main::pull{lizard})
 	{
+		my($XTCOM_BRANCH) = "XPCOM_BRANCH";
+				
+		$session->checkout("mozilla/modules/libpref",$XTCOM_BRANCH) || die "checkout failure";
 		$session->checkout("mozilla/LICENSE") || die "checkout failure";
 		$session->checkout("mozilla/LEGAL") || die "checkout failure";
 		$session->checkout("mozilla/config") || die "checkout failure";
@@ -122,7 +125,6 @@ sub Checkout()
 		$session->checkout("mozilla/nav-java") || die "checkout failure";
 		$session->checkout("mozilla/js") || die "checkout failure";
 		$session->checkout("mozilla/modules/security/freenav") || die "checkout failure";
-		$session->checkout("mozilla/modules/libpref") || die "checkout failure";
 		$session->checkout("mozilla/lib/libparse") || die "checkout failure";
 		$session->checkout("mozilla/lib/layout") || die "checkout failure";
 		$session->checkout("mozilla/lib/libstyle") || die "checkout failure";
