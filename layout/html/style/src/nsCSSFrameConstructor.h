@@ -215,6 +215,15 @@ protected:
                                   nsAbsoluteItems& aFixedItems,
                                   nsTableCreator&  aTableCreator);
 
+  nsresult ConstructTableColFrameOnly(nsIPresContext*  aPresContext,
+                                      nsIContent*      aContent,
+                                      nsIFrame*        aParentFrame,
+                                      nsIStyleContext* aStyleContext,
+                                      nsAbsoluteItems& aAbsoluteItems,
+                                      nsIFrame*&       aNewColFrame,
+                                      nsAbsoluteItems& aFixedItems,
+                                      nsTableCreator&  aTableCreator);
+
   nsresult ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                    nsIContent*      aContent,
                                    nsIFrame*        aParentFrame,
@@ -374,6 +383,9 @@ protected:
   nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
                                     nsIContent* aContent);
 
+  nsresult RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
+                                           nsIContent* aContent,
+                                           nsIAtom* aAttribute);
 
   nsresult CreateContinuingOuterTableFrame(nsIPresContext*  aPresContext,
                                            nsIFrame*        aFrame,
