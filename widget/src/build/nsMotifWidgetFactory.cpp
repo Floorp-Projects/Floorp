@@ -44,10 +44,6 @@
 
 #include "nsImageButton.h"
 #include "nsMenuButton.h"
-#include "nsToolbar.h"
-#include "nsToolbarManager.h"
-#include "nsToolbarItemHolder.h"
-
 
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
