@@ -135,7 +135,6 @@ nsChildView::nsChildView() : nsBaseWidget() , nsDeleteObserved(this)
 {
   WIDGET_SET_CLASSNAME("nsChildView");
 
-  mParent = nsnull;
   mWindow = nil;
   mView = nil;
 
@@ -180,8 +179,6 @@ nsChildView::~nsChildView()
       {
         nsChildView* childWindow = static_cast<nsChildView*>(static_cast<nsIWidget*>(child));
         NS_RELEASE(child);
-
-        childWindow->mParent = nsnull;
       }
     } while (NS_SUCCEEDED(children->Next()));     
   }
@@ -208,9 +205,8 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData,
-                      nsNativeWidget aNativeParent) // should always be nil here
+                      nsNativeWidget aNativeParent)
 {
-  mParent = aParent;
   mBounds = aRect;
 
 //  CalcWindowRegions();
@@ -220,13 +216,17 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
 
   // inherit things from the parent view and create our parallel 
   // NSView in the Cocoa display system
-  if (mParent) {
-    SetBackgroundColor(mParent->GetBackgroundColor());
-    SetForegroundColor(mParent->GetForegroundColor());
+  NSView* parentView = nsnull;
+  if ( aParent ) {
+    SetBackgroundColor(aParent->GetBackgroundColor());
+    SetForegroundColor(aParent->GetForegroundColor());
 
-    // inherit the top-level window. NS_NATIVE_DISPLAY is the NSWindow that rules us all
-    mWindow = (NSWindow*)aParent->GetNativeData(NS_NATIVE_DISPLAY);
-  
+    // inherit the top-level window. NS_NATIVE_WIDGET is always a NSView
+    // regardless of if we're asking a window or a view (for compatibility
+    // with windows).
+    parentView = (NSView*)aParent->GetNativeData(NS_NATIVE_WIDGET);
+ 
+#if 0
     // get the event sink for our view. Walk up the parent chain to the
     // toplevel window, it's the sink.
     nsCOMPtr<nsIWidget> curr = aParent;
@@ -238,19 +238,25 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     }
     nsCOMPtr<nsIEventSink> sink ( do_QueryInterface(topLevel) );
     NS_ASSERTION(sink, "no event sink, event dispatching will not work");
+#endif
+    
+  }
+  else 
+    parentView = NS_REINTERPRET_CAST(NSView*,aNativeParent);
 
-    // create our parallel NSView and hook it up to our parent. Recall
-    // that NS_NATIVE_WINDOW is the NSView.
-    NSRect r;
-    ConvertGeckoToCocoaRect(mBounds, r);
-    mView = [[ChildView alloc] initWithGeckoChild:this eventSink:sink];
-    [mView setFrame:r];
-    
-    NSView* superView = (NSView*)aParent->GetNativeData(NS_NATIVE_WINDOW);
-    NS_ASSERTION(superView && mView, "couldn't hook up new NSView in hierarchy");
-    if ( superView && mView )
-      [superView addSubview:mView];
-    
+  NS_ASSERTION(parentView, "no parent view at all :(");
+  
+  // create our parallel NSView and hook it up to our parent. Recall
+  // that NS_NATIVE_WIDGET is the NSView.
+  NSRect r;
+  ConvertGeckoToCocoaRect(mBounds, r);
+  mView = [[ChildView alloc] initWithGeckoChild:this eventSink:nsnull];
+  [mView setFrame:r];
+  
+  NS_ASSERTION(parentView && mView, "couldn't hook up new NSView in hierarchy");
+  if ( parentView && mView ) {
+    [parentView addSubview:mView];
+    mWindow = [parentView window];
   }
   
   return NS_OK;
@@ -276,7 +282,7 @@ NS_IMETHODIMP nsChildView::Create(nsIWidget *aParent,
 
 //-------------------------------------------------------------------------
 //
-// Creates a main nsChildView using a native widget
+// Creates a main nsChildView using a native widget (an NSView)
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Create(nsNativeWidget aNativeParent,
@@ -287,11 +293,9 @@ NS_IMETHODIMP nsChildView::Create(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  // we know that whatever is passed in for |aNativeParent| really is
-  // a nsIWidget since all our impls of NS_NATIVE_WIDGET return things
-  // that are nsIWidgets. Such terrible apis.
-  return(Create((nsIWidget*)aNativeParent, aRect, aHandleEventFunction,
-                  aContext, aAppShell, aToolkit, aInitData));
+  // what we're passed in |aNativeParent| is an NSView. 
+  return(StandardCreate(nsnull, aRect, aHandleEventFunction,
+                  aContext, aAppShell, aToolkit, aInitData, aNativeParent));
 }
 
 //-------------------------------------------------------------------------
@@ -307,7 +311,6 @@ NS_IMETHODIMP nsChildView::Destroy()
 
   nsBaseWidget::OnDestroy();
   nsBaseWidget::Destroy();
-  mParent = nsnull;
 
   // just to be safe. If we're going away and for some reason we're still
   // the rollup widget, rollup and turn off capture.
@@ -323,16 +326,7 @@ NS_IMETHODIMP nsChildView::Destroy()
 }
 
 #pragma mark -
-//-------------------------------------------------------------------------
-//
-// Get this nsChildView parent
-//
-//-------------------------------------------------------------------------
-nsIWidget* nsChildView::GetParent(void)
-{
-  NS_IF_ADDREF(mParent);
-  return  mParent;
-}
+
 
 //-------------------------------------------------------------------------
 //
@@ -345,28 +339,29 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 
   switch (aDataType) 
   {
-	  case NS_NATIVE_WIDGET:            // the widget implementation
-    	retVal = (void*)this;
-    	break;
-
-    case NS_NATIVE_WINDOW:            // the native child area
+    case NS_NATIVE_WIDGET:            // the NSView
+    case NS_NATIVE_DISPLAY:
       retVal = (void*)mView;
       break;
-      
-    case NS_NATIVE_DISPLAY:           // the native window
-      retVal = (void*)mWindow;
-    	break;
 
+    case NS_NATIVE_WINDOW:
+      retVal = [mView window];
+      break;
+      
     case NS_NATIVE_GRAPHIC:           // quickdraw port (for now)
       retVal = [mView qdPort];
       break;
       
     case NS_NATIVE_REGION:
     {
-#if 0
+#if 1
       //FIXME - this will leak.
       RgnHandle visRgn = ::NewRgn();
-      ::GetPortVisibleRegion([mView qdPort], visRgn);
+      GrafPtr port = [mView qdPort];
+      //printf("asked for visrgn, port is %d\n", port);
+      //QDDebugPrintPortInfo(port);
+      if (port)
+        ::GetPortVisibleRegion([mView qdPort], visRgn);
       retVal = (void*)visRgn;
       //retVal = (void*)mVisRegion;
 #endif
@@ -374,22 +369,12 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
     }
       
     case NS_NATIVE_OFFSETX:
-    {
-      nsPoint point(0,0);
-      point.MoveTo(mBounds.x, mBounds.y);
-      LocalToWindowCoordinate(point);
-      retVal = (void*)point.x;
+      retVal = (void*)mBounds.x;
       break;
-    }
 
     case NS_NATIVE_OFFSETY:
-    {
-      nsPoint point(0,0);
-      point.MoveTo(mBounds.x, mBounds.y);
-      LocalToWindowCoordinate(point);
-      retVal = (void*)point.y;
+      retVal = (void*)mBounds.y;
       break;
-    }
     
 #if 0
     case NS_NATIVE_COLORMAP:
@@ -814,9 +799,8 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
 {
   if ((mBounds.x != aX) || (mBounds.y != aY))
   {
-    // Invalidate the current location (unless it's the top-level window)
-    if (mParent != nsnull)
-      Invalidate(PR_FALSE);
+    // Invalidate the current location
+    Invalidate(PR_FALSE);
     [[mView superview] setNeedsDisplayInRect:[mView frame]];    //XXX needed?
     
     // Set the bounds
@@ -1719,6 +1703,7 @@ NS_IMETHODIMP nsChildView::GetAttention()
 
 NS_IMETHODIMP nsChildView::ResetInputState()
 {
+#if 0
   // currently, the nsMacEventHandler is owned by nsCocoaWindow, which is the top level window
   // we delegate this call to its parent
   nsCOMPtr<nsIWidget> parent = getter_AddRefs(GetParent());
@@ -1731,6 +1716,7 @@ NS_IMETHODIMP nsChildView::ResetInputState()
       return kb->ResetInputState();
     }
   }
+#endif
   return NS_ERROR_ABORT;
 }
 
@@ -1925,10 +1911,10 @@ NS_IMETHODIMP nsChildView::ResetInputState()
 
   // setup modifier keys
   unsigned int modifiers = [inEvent modifierFlags];
-	outGeckoEvent->isShift = ((modifiers & NSShiftKeyMask) != 0);
-	outGeckoEvent->isControl = ((modifiers & NSControlKeyMask) != 0);
-	outGeckoEvent->isAlt = ((modifiers & NSAlternateKeyMask) != 0);
-	outGeckoEvent->isMeta = ((modifiers & NSCommandKeyMask) != 0);
+  outGeckoEvent->isShift = ((modifiers & NSShiftKeyMask) != 0);
+  outGeckoEvent->isControl = ((modifiers & NSControlKeyMask) != 0);
+  outGeckoEvent->isAlt = ((modifiers & NSAlternateKeyMask) != 0);
+  outGeckoEvent->isMeta = ((modifiers & NSCommandKeyMask) != 0);
 
   // convert point to view coordinate system
   NSPoint localPoint = [self convertPoint:mouseLoc fromView:nil];

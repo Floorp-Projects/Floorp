@@ -138,7 +138,6 @@ public:
                                 nsNativeWidget aNativeParent = nsnull);
 
     NS_IMETHOD              Destroy();
-    virtual nsIWidget*      GetParent(void);
 
     NS_IMETHOD              Show(PRBool aState);
     NS_IMETHOD              IsVisible(PRBool & aState);
@@ -233,7 +232,6 @@ protected:
   const char*       gInstanceClassName;
 #endif
 
-  nsIWidget*      mParent;    // my parent. could be a childview or a window [WEAK]
   NSWindow*       mWindow;    // shortcut to the top window, [WEAK]
   
   ChildView*      mView;      // my parallel cocoa view, [STRONG]

@@ -775,18 +775,18 @@ nsCocoaWindow::GetNativeData(PRUint32 aDataType)
   void* retVal = nsnull;
   
   switch ( aDataType ) {
-    case NS_NATIVE_WIDGET:            // the widget implementation
-      retVal = (void*)this;
-      break;
-
-    case NS_NATIVE_WINDOW:            // the native content view
+    
+    // to emulate how windows works, we always have to return a NSView
+    // for NS_NATIVE_WIDGET
+    case NS_NATIVE_WIDGET:
+    case NS_NATIVE_DISPLAY:
       retVal = [mWindow contentView];
       break;
       
-    case NS_NATIVE_DISPLAY:           // the native window
-      retVal = (void*)mWindow;
+    case NS_NATIVE_WINDOW:  
+      retVal = mWindow;
       break;
-
+      
     case NS_NATIVE_GRAPHIC:          // quickdraw port of top view (for now)
       retVal = [[mWindow contentView] qdPort];
       break;
@@ -1592,26 +1592,26 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 void
 nsCocoaWindow::ReportSizeEvent()
 {
-	// nsEvent
-	nsSizeEvent sizeEvent;
-	sizeEvent.eventStructType = NS_SIZE_EVENT;
-	sizeEvent.message			= NS_SIZE;
-	sizeEvent.point.x			= 0;
-	sizeEvent.point.y			= 0;
-	sizeEvent.time				= PR_IntervalNow();
+  // nsEvent
+  nsSizeEvent sizeEvent;
+  sizeEvent.eventStructType = NS_SIZE_EVENT;
+  sizeEvent.message     = NS_SIZE;
+  sizeEvent.point.x     = 0;
+  sizeEvent.point.y     = 0;
+  sizeEvent.time        = PR_IntervalNow();
 
-	// nsGUIEvent
-	sizeEvent.widget			= this;
-	sizeEvent.nativeMsg		= nsnull;
+  // nsGUIEvent
+  sizeEvent.widget      = this;
+  sizeEvent.nativeMsg   = nsnull;
 
-	// nsSizeEvent
-	sizeEvent.windowSize	= &mBounds;
-	sizeEvent.mWinWidth		= mBounds.width;
-	sizeEvent.mWinHeight	= mBounds.height;
+  // nsSizeEvent
+  sizeEvent.windowSize  = &mBounds;
+  sizeEvent.mWinWidth   = mBounds.width;
+  sizeEvent.mWinHeight  = mBounds.height;
   
-	// dispatch event
-	nsEventStatus status = nsEventStatus_eIgnore;
-	DispatchEvent(&sizeEvent, status);
+  // dispatch event
+  nsEventStatus status = nsEventStatus_eIgnore;
+  DispatchEvent(&sizeEvent, status);
 }
 
 
