@@ -45,8 +45,19 @@
 
 #include "nsISupports.h"
 
+#define NS_ISECURITYCONTEXT_IID                          \
+{ /* {209B1120-4C41-11d2-A1CB-00805F8F694D} */         \
+    0x209b1120,                                      \
+    0x4c41,                                          \
+    0x11d2,                                          \
+    { 0xa1, 0xcb, 0x0, 0x80, 0x5f, 0x8f, 0x69, 0x4d } \
+}
+
 class nsISecurityContext : public nsISupports {
 public:
+
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISECURITYCONTEXT_IID)
+
     /**
      * Get the security context to be used in LiveConnect.
      * This is used for JavaScript <--> Java.
@@ -115,12 +126,5 @@ public:
 #define nsSecurityTarget_TerminalEmulator "TerminalEmulator"                // enables socket connections, property read and to link dynamic libraries.  
 
 
-#define NS_ISECURITYCONTEXT_IID                          \
-{ /* {209B1120-4C41-11d2-A1CB-00805F8F694D} */         \
-    0x209b1120,                                      \
-    0x4c41,                                          \
-    0x11d2,                                          \
-    { 0xa1, 0xcb, 0x0, 0x80, 0x5f, 0x8f, 0x69, 0x4d } \
-}
 
 #endif // nsISecurityContext_h___
