@@ -34,7 +34,7 @@
 /*
  * PKCS7 creation.
  *
- * $Id: p7create.c,v 1.2 2001/01/07 07:56:33 nelsonb%netscape.com Exp $
+ * $Id: p7create.c,v 1.3 2001/09/20 21:37:16 relyea%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -43,7 +43,6 @@
 #include "secasn1.h"
 #include "secitem.h"
 #include "secoid.h"
-#include "secpkcs5.h"
 #include "pk11func.h"
 #include "prtime.h"
 #include "secerr.h"

@@ -35,7 +35,7 @@
  * PKCS7 implementation -- the exported parts that are used whether
  * creating or decoding.
  *
- * $Id: p7common.c,v 1.1 2000/03/31 19:16:04 relyea%netscape.com Exp $
+ * $Id: p7common.c,v 1.2 2001/09/20 21:37:15 relyea%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -43,7 +43,6 @@
 #include "cert.h"
 #include "secitem.h"
 #include "secoid.h"
-#include "secpkcs5.h"
 #include "pk11func.h"
 
 /*

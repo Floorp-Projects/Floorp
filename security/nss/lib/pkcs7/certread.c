@@ -40,7 +40,7 @@
 #include "secasn1.h"
 #include "secoid.h"
 
-SEC_ASN1_MKSUB(SEC_AnyTemplate);
+SEC_ASN1_MKSUB(SEC_AnyTemplate)
 
 SECStatus
 SEC_ReadPKCS7Certs(SECItem *pkcs7Item, CERTImportCertificateFunc f, void *arg)
