@@ -846,7 +846,7 @@ function BrowserLoadURL(aTriggeringEvent)
         aTriggeringEvent && 'altKey' in aTriggeringEvent &&
         aTriggeringEvent.altKey) {
       _content.focus();
-      var t = getBrowser().addTab(getShortcutOrURI(url)); // open link in new tab
+      var t = getBrowser().addTab(url); // open link in new tab
       getBrowser().selectedTab = t;
       gURLBar.value = url;
       event.preventDefault();
@@ -855,7 +855,7 @@ function BrowserLoadURL(aTriggeringEvent)
       event.stopPropagation();
     }
     else  
-      loadURI(getShortcutOrURI(url));
+      loadURI(url);
     _content.focus();
   }
 }
@@ -1224,19 +1224,22 @@ function canonizeUrl(aTriggeringEvent)
   if (!gURLBar)
     return;
   
+  var url = gURLBar.value;
   if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
       aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
       aTriggeringEvent.shiftKey)
     // Tack http://www. and .org on.
-    gURLBar.value = "http://www." + gURLBar.value + ".org/";
+    url = "http://www." + url + ".org/";
   else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
       aTriggeringEvent.ctrlKey)
     // Tack www. and .com on.
-    gURLBar.value = "http://www." + gURLBar.value + ".com/";
+    url = "http://www." + url + ".com/";
   else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
       aTriggeringEvent.shiftKey)
     // Tack www. and .org on.
-    gURLBar.value = "http://www." + gURLBar.value + ".net/";
+    url = "http://www." + url + ".net/";
+
+  gURLBar.value = getShortcutOrURI(url);
 }
 
 function UpdatePageProxyState()
