@@ -420,8 +420,8 @@ namespace MetaData {
                   INIT_STRINGATOM(Function),
                   INIT_STRINGATOM(Object),
                   INIT_STRINGATOM(object),
-                  Empty_StringAtom(allocStringPtr(&world.identifiers[""])),
-                  Dollar_StringAtom(allocStringPtr(&world.identifiers["$"])),
+                  Empty_StringAtom(allocStringPtr("")),
+                  Dollar_StringAtom(allocStringPtr("$")),
                   INIT_STRINGATOM(prototype),
                   INIT_STRINGATOM(length),
                   INIT_STRINGATOM(toString),
@@ -440,6 +440,12 @@ namespace MetaData {
         sp = execStack = new js2val[INITIAL_EXEC_STACK];
         execStackLimit = execStack + INITIAL_EXEC_STACK;
         activationStackTop = activationStack = new ActivationFrame[MAX_ACTIVATION_STACK];
+    }
+
+    JS2Engine::~JS2Engine()
+    {
+        delete [] execStack;
+        delete [] activationStack;
     }
 
 #ifdef DEBUG

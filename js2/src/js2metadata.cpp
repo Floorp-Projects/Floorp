@@ -3447,6 +3447,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         targetList.clear();
         JS2Object::clear(this); // don't blow off the contents of 'this' as the destructors for
                                 // embedded objects will get messed up (as they run on exit).
+        delete engine;
+        if (bCon) delete bCon;
     }
 
     JS2Class *JS2Metadata::objectType(JS2Object *obj)
@@ -4679,8 +4681,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 }
                 else
                     if (p->isString()) {
+                        String t;
                         String *s = (String *)(p + 1);
-                        s->erase();
+                        *s = t;
                     }
                 released += returnToPond(p);
             }

@@ -179,6 +179,7 @@ class JS2Engine {
 public:
 
     JS2Engine(World &world);
+    ~JS2Engine();
 
     js2val interpret(Phase execPhase, BytecodeContainer *targetbCon, Environment *env);
     js2val interpreterLoop();

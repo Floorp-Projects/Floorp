@@ -153,10 +153,12 @@ namespace MetaData {
         }
         catch (Exception &x) {
             referenceArena->clear();
+            delete referenceArena;
             referenceArena = oldArena;
             throw x;
         }
         referenceArena->clear();
+        delete referenceArena;
         referenceArena = oldArena;
 
         bCon->emitOp(eReturnVoid, lastPos);
