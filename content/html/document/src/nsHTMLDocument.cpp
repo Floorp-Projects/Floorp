@@ -339,6 +339,13 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
             	charset = requestCharset;
             }
        }
+       const PRUnichar* forceCharsetFromWebShell = NULL;
+       rv = webShell->GetForceCharacterSet(&forceCharsetFromWebShell);
+       if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) {
+            charset = forceCharsetFromWebShell;
+            //TODO: we should define appropriate constant for force charset
+            charsetSource = kCharsetFromPreviousLoading;  
+       }
     }
     NS_IF_RELEASE(webShell);
 #endif
