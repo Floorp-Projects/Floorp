@@ -1039,7 +1039,7 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
 //----------------------------------------------------------------------
 
 /* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
-static nsresult
+static NS_METHOD
 RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 		 const char *registryLocation, const char *componentType)
 {
@@ -1053,7 +1053,7 @@ RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
-static nsresult
+static NS_METHOD
 UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 		   const char *registryLocation)
 {
