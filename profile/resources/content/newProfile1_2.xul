@@ -1,24 +1,20 @@
 <?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
 <!--
 
-  The contents of this file are subject to the Netscape Public
-  License Version 1.1 (the "License"); you may not use this file
-  except in compliance with the License. You may obtain a copy of
-  the License at http://www.mozilla.org/NPL/
- 
-  Software distributed under the License is distributed on an "AS
-  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-  implied. See the License for the specific language governing
-  rights and limitations under the License.
- 
-  The Original Code is mozilla.org code.
- 
-  The Initial Developer of the Original Code is Netscape
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
   Communications Corporation.  Portions created by Netscape are
-  Copyright (C) 1998 Netscape Communications Corporation. All
-  Rights Reserved.
- 
-  Contributor(s): 
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
 
 -->
 
@@ -26,13 +22,14 @@
 
 <?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://profile/skin/pwiz_panels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://profile/skin/newProfile1_2.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_2.dtd" >
 <window 
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
 	width="500" height="500"
-	onload="parent.wizardPageLoaded('newProfile1_2');"> 
+	onload="parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
   <html:script language="JavaScript" src="newProfile1_2.js"/>
@@ -42,10 +39,11 @@
     <spring flex="50%"/>
     <html:div>&pnl2.pname.label;</html:div> 
     <html:div class="input1">
-      <html:input type="text" id="ProfileName" value="mozProfile" style="width: 95%"/>
+      <html:input type="text" id="ProfileName" value="mozProfile" style="width: 95%"
+        onkeyup="ProfileNameExists(this);"/>
       <spring flex="5%"/>
     </html:div>
-    <html:div style="padding-bottom: 0px;">
+    <html:div id="folderintro" style="padding-bottom: 0px;">
       &pnl2.pdir.label;
       <html:span id="deffoldername">&pnl2.deffldr.label;</html:span>
     </html:div> 
@@ -53,15 +51,15 @@
       <html:div class="dirLabel" flex="100%">
         <!-- replace this button with an input field when they start responding
              to css styles properly as the cropping is a problem. -->
-        <titledbutton class="dialog push" id="ProfileDir" value="" crop="right"/>
+        <titledbutton id="ProfileDir" flex="100%" value="" crop="right"/>
       </html:div>
       <spring flex="100%"/>
       <box align="vertical" id="folderbuttons">
-        <titledbutton class="dialog push" value="&button.choosefolder.label;" onclick="getProfileDir(null,true);"/>
+        <titledbutton value="&button.choosefolder.label;" onclick="getProfileDir(null,true);"/>
       </box>
       <spring flex="5%"/>
     </box>
-    <html:div>&pnl2.finish.text;</html:div> 
+    <html:div id="finishtext">&pnl2.finish.text;</html:div> 
     <spring flex="50%"/>
   </box>
 

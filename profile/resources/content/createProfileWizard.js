@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,251 +19,118 @@
  *
  * Contributor(s):
  *   Ben Goodger (30/09/99)
- */
+ */ 
 
 // The WIZARD of GORE
 
-// NOTICE! Wanting to add a panel to this wizard? Follow these instructions:
-/* 1) Add your panel to the testMap Below. If you're adding your panel after
-      the last one, remember to set the "next" property on that element to the
-      idfier of your panel, and make the "next" property on your panel null.
-      This is important because the state of the Next/Back buttons depends on
-      correct filling of testMap.
-   2) You must create GetFields and SetFields functions in the JS file
-      associated with your panel XUL file. This is true even if your panel
-      contains no fields, only text, as functions in this file will expect to
-      find them. if you do not plan to include data fields, simply include empty
-      functions
-
-   PERSISTING & SAVING DATA:
-   3) You are responsible for collecting data from your panel. You do this with
-      the GetFields function in your panel JS file. However you do this, this
-      function must return an array with the following format:
-         [[identifier, value],[identifier,value],...]
-      where identifier is some string identifier of the element (usually just
-      the ID attribute), and the value is the value being saved.
-      Make sure you don't choose an identifier that conflicts with one used
-      for any other panel. It is recommended you choose something fairly unique.
-   4) You are responsible for setting the contents of your panel. You do this
-      with the SetFields function, which is called for each element you've saved
-      when the panel loads. This function can set attributes, use DOM
-      manipulation, whatever you deem necessary to populate the panel.
-
-    You can find examples of usage of GetFields and SetFields in
-    newProfile1_2.js
-
- */
-
-var wizardMap = ["newProfile1_1.xul"];
-var content;
-var wizardHash = new Array;
-var firstTime = true;
-
 var profile = Components.classes["component://netscape/profile/manager"].createInstance();
-profile = profile.QueryInterface(Components.interfaces.nsIProfile);
+profile = profile.QueryInterface(Components.interfaces.nsIProfile); 
 
-// Navigation Set for pages contained in wizard
-var testMap = {
-  newProfile1_1: { previous: null, next: "newProfile1_2" },
-  newProfile1_2: { previous: "newProfile1_1", next: null},
-}
-var pagePrefix = "chrome://profile/content/";
-var pagePostfix=".xul";
-var currentPageTag;
-
-
-var profName = "";
-var profDir = "";
-
-function wizardPageLoaded(tag)
-{
-  if (firstTime)
-    Startup();
-  currentPageTag = tag;
-  SetButtons();
-  populatePage();
+// Navigation Set for pages contained in wizard 
+var wizardMap = {
+  newProfile1_1: { previous: null,              next: "newProfile1_2",    finish: false },
+  newProfile1_2: { previous: "newProfile1_1",   next: null,               finish: true },
 }
 
-var backButton = null;
-var nextButton = null;
-var finishButton = null;
+// page specific variables
+var profName      = "";
+var profDir       = "";
+var wizardManager = null;
 
-function loadPage(thePage)
+// startup procedure
+function Startup( startPage, frame_id )
 {
-  if (!firstTime)
-    saveData();
-  displayPage(thePage);
-  firstTime = false;
-  return(true);
-}
-
-function SetButtons()
-{
-  if (!currentPageTag)
-    return;
-  if (!backButton)
-    backButton = document.getElementById("back");
-  if (!nextButton)
-    nextButton = document.getElementById("next");
-
-  nextTag = testMap[currentPageTag].next;
-  if (nextTag) {
-    var nextLabel = bundle.GetStringFromName("nextButtonLabel");
-    nextButton.setAttribute("value",nextLabel);
-    nextButton.setAttribute("onclick","onNext()");
+  if( frame_id == "" ) {
+    dump("Please supply a content_frame ID!");
+    return false;
   }
-  else {
-    var finishLabel = bundle.GetStringFromName("finishButtonLabel");
-    nextButton.setAttribute("value",finishLabel);
-    nextButton.setAttribute("onclick","onFinish(opener)");
-  }
+  
+  // instantiate the Wizard Manager
+  wizardManager                   = new WizardManager( frame_id, null, null, wizardMap );
+  wizardManager.URL_PagePrefix    = "chrome://profile/content/";
+  wizardManager.URL_PagePostfix   = ".xul";
 
-  prevTag = testMap[currentPageTag].previous;
-  if (prevTag)
-    backButton.setAttribute("disabled", "false");
-  else
-    backButton.setAttribute("disabled", "true");
-}
-
-function onNext()
-{
-  //dump("in onnext\n");
-  if (nextButton.getAttribute("disabled") == "true") {
-     return;
-  }
-  saveData();
-  var nextPageTag = testMap[currentPageTag].next;
-  var url = getUrlFromTag(nextPageTag);
-  displayPage(url);
-}
-
-function onBack()
-{
-  //dump("in onback\n");
-  if (backButton.getAttribute("disabled") == "true")
-    return;
-
-  saveData();
-  previousPageTag = testMap[currentPageTag].previous;
-  var url = getUrlFromTag(previousPageTag);
-  displayPage(url);
-}
-
-function displayPage(content)
-{
-  if (content != "") {
-    var contentFrame = document.getElementById("content");
-    if (contentFrame)
-      contentFrame.setAttribute("src", content);
-  }
-}
-
-
-function populatePage()
-{
-  var contentWindow = window.frames["content"];
-  var doc = contentWindow.document;
-  for (var i in wizardHash)
-    contentWindow.SetFields(i,wizardHash[i]);
-}
-
-function saveData()
-{
-  var contentWindow = window.frames["content"];
-  var data = contentWindow.GetFields();
-  if (data != undefined)  {
-    for (var i = 0; i < data.length; i++)
-      wizardHash[data[i][0]] = data[i][1];
-  }
+  // set the button handler functions
+  wizardManager.SetHandlers( null, null, onFinish, onCancel, null, null );
+  // load the start page
+  dump("calling loadpage...\n");
+  dump("startPage:: " + startPage + "\n");
+	wizardManager.LoadPage( startPage, false );
 }
 
 function onCancel()
 {
-  // we came from the profile manager window...
-  if (top.window.opener) {
-    //dump("just close\n");
+  if( top.window.opener )
     window.close();
-  }
-  else {
-    //dump("exit\n");
+  else { 
     try {
-      profile.forgetCurrentProfile();
+    	profile.forgetCurrentProfile();
     }
     catch (ex) {
-      dump("failed to forget current profile.\n");
+    	dump("failed to forget current profile.\n");
     }
     ExitApp();
   }
 }
 
-// utility functions
-function getUrlFromTag(title)
+function onFinish()
 {
-  return pagePrefix + title + pagePostfix;
-}
-
-function Startup()
-{
-  //dump("Doing Startup...\n");
-}
-
-function onFinish(opener)
-{
-  // lets check if we're at final stage using null
-  if (testMap[currentPageTag].next)
+  // check if we're at final stage 
+  if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
     return;
 
-  try {
-    saveData();
-    proceed = processCreateProfileData();
-    if (proceed) {
-      if (opener) {
-        opener.CreateProfile();
-        window.close();
-      }
-      else {
-        ExitApp();
-      }
-    }
-  }
-  catch (ex) {
-    alert("Failed to create a profile.");
-  }
+  var tag =  wizardManager.WSM.GetTagFromURL( wizardManager.content_frame.src, "/", ".xul" );
+  wizardManager.WSM.SavePageData( tag, null, null, null );
+  proceed = processCreateProfileData();
+	if( proceed ) {
+		if( window.opener ) {
+			window.opener.CreateProfile();
+			window.close();
+		} 
+    else 
+      ExitApp();
+	}
+	else
+		return;
 }
 
+/** void processCreateProfileData( void ) ;
+ *  - purpose: 
+ *  - in:  nothing
+ *  - out: nothing
+ **/               
 function processCreateProfileData()
 {
-  //Process Create Profile Data
-  var i;
-
-  for (i in wizardHash) {
-    if (i == "ProfileName") {
-      profName = wizardHash[i];
-    }
-    if (i == "ProfileDir") {
-      profDir = wizardHash[i];
-    }
-  }
+	//Process Create Profile Data
+  var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
+  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
+  
   try {
-    //dump("name,dir = " + profName + "," + profDir + "\n");
-    if (profName == "") {
-      alert("You need to enter a profile name.");
-      return false;
-    }
-    if (profile.profileExists(profName)) {
-      alert("That profile name already exists.");
-      return false;
-    }
-    profile.createNewProfile(profName, profDir);
-    profile.startApprunner(profName);
+    // note: deleted check for empty profName string here as this should be
+    //       done by panel. -bmg (31/10/99)
+		// todo: move this check into the panel itself, activated ontyping :P
+    //       this should definetly be moved to that page.. but how about providing
+    //       user with some feedback about what's wrong. .. TOOLTIP! o_O
+    //       or.. some sort of onblur notification. like a dialog then, or a 
+    //       dropout layery thing. yeah. something like that to tell them when 
+    //       it happens, not when the whole wizard is complete. blah. 
+    if( profile.profileExists( profName ) )	{
+			return false;
+		}
+		profile.createNewProfile( profName, profDir );
+		profile.startApprunner( profName );
+		return true;
   }
-  catch (ex) {
-    alert("Failed to create a profile.");
-    return false;
+  catch(e) {
+    dump("*** Failed to create a profile\n");
   }
-  return true;
 }
 
+/** void ExitApp( void ) ;
+ *  - purpose: quits the application properly and finally, stops event loop
+ *  - in:  nothing
+ *  - out: nothing
+ **/               
 function ExitApp()
 {
   // Need to call this to stop the event loop
@@ -273,4 +139,6 @@ function ExitApp()
   appShell.Quit();
 }
 
+// load string bundle
 var bundle = srGetStrBundle("chrome://profile/locale/createProfileWizard.properties");
+
