@@ -173,7 +173,7 @@ new_input_data(const char *filename, IncludePathEntry *include_path)
 #if defined(XP_MAC) && defined(XPIDL_PLUGIN)
     /* on Mac, fopen knows how to find files. */
     inputfile = fopen(filename, "r");
-#elif defined(XP_OS2)
+#elif defined(XP_OS2) || defined(XP_WIN32)
     /*
      * if filename is fully qualified (starts with driver letter), then
      * just call fopen();  else, go with fopen_from_includes()
