@@ -272,6 +272,22 @@
     }
   }
   
+  function BrowserNewTextEditorWindow()
+  {
+    core = XPAppCoresManager.Find("toolkitCore");
+    if ( !core ) {
+        core = new ToolkitCore();
+        if ( core ) {
+            core.Init("toolkitCore");
+        }
+    }
+    if ( core ) {
+        core.ShowWindowWithArgs( "chrome://editor/content/TextEditorAppShell.xul", window, "chrome://editor/content/EditorInitPagePlain.html" );
+    } else {
+        dump("Error; can't create toolkitCore\n");
+    }
+  }
+  
   function BrowserEditPage(url)
   {
     core = XPAppCoresManager.Find("toolkitCore");

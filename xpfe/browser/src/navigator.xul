@@ -137,6 +137,7 @@
 <!ENTITY navigatorCmd.label "Navigator">
 <!ENTITY messengerCmd.label "Messenger">
 <!ENTITY editorCmd.label "Editor">
+<!ENTITY textEditorCmd.label "Plaintext Editor">
 <!ENTITY manageHistoryCmd.label "Manage History">
 <!ENTITY chatCmd.label "Chat">
 <!ENTITY shoppingCartCmd.label "Shopping Cart">
@@ -468,6 +469,7 @@
       <menuitem name="&navigatorCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
       <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />
+      <menuitem name="&textEditorCmd.label;"    onclick="BrowserNewTextEditorWindow();" />
       <menuitem name="&manageHistoryCmd.label;"    onclick="OpenHistoryView();" />
       <menuitem name="&chatCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&shoppingCartCmd.label;" onclick="BrowserReload();"/>
