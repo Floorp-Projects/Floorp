@@ -127,8 +127,8 @@ CFormElement *CFormElement::GetFormElement(CAbstractCX *pCX, LO_FormElementData 
 	    pRetval = (CFormElement *)pFormData->ele_minimal.FE_Data;
     }
 
-    //	Set up and/or update the relevant information in the class.
-    if(pRetval != NULL)	{
+    //	Set up and/or update the relevant information in the class, if possible.
+    if(pCX && pRetval != NULL)	{
 	    pRetval->SetContext(pCX);
     }
 
