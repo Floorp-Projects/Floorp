@@ -69,6 +69,8 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
                                       aDirtyRect, rect, *color, *spacing, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *spacing, mStyleContext, skipSides);
+      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
     }
   }
 

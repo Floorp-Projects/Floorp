@@ -5167,6 +5167,9 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *spacing, mStyleContext,
                                 skipSides);
+
+      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
   }
 
   // Child elements have the opportunity to override the visibility
