@@ -61,9 +61,10 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
         mLastResult(NS_OK),
         mPendingResult(NS_OK),
         mSecurityManager(nsnull),
-        mSecurityManagerFlags(0),
         mException(nsnull),
-        mCallingLangType(LANG_UNKNOWN)
+        mCallingLangType(LANG_UNKNOWN),
+        mSecurityManagerFlags(0),
+        mMarked((JSPackedBool) JS_FALSE)
 {
     MOZ_COUNT_CTOR(XPCContext);
 

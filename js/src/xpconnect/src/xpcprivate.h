@@ -611,41 +611,33 @@ public:
     XPCJSRuntime* GetRuntime() const {return mRuntime;}
     JSContext* GetJSContext() const {return mJSContext;}
 
-    // LangType is used in Mark, if you add more languages here, be sure to
-    // adjust MARK_FLAG to the bit past the last one used for languages
-    enum LangType {LANG_UNKNOWN, LANG_JS, LANG_NATIVE, MARK_FLAG = 1 << 2};
+    enum LangType {LANG_UNKNOWN, LANG_JS, LANG_NATIVE};
     
     // Mark functions used by SyncXPCContextList
-    void Mark() { mCallingLangType = (LangType)(mCallingLangType | MARK_FLAG); }
-    void Unmark() { mCallingLangType = (LangType)(mCallingLangType & ~MARK_FLAG); }
-    JSBool IsMarked() const { return mCallingLangType & MARK_FLAG; }
-    // The mark flag is used very briefly thus we should never need to
-    // Address it here
+    void Mark()             {mMarked = (JSPackedBool) JS_TRUE;}
+    void Unmark()           {mMarked = (JSPackedBool) JS_FALSE;}
+    JSBool IsMarked() const {return (JSBool) mMarked;}
+
     LangType GetCallingLangType() const
         {
-            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType"); 
             return mCallingLangType;
         }
     LangType SetCallingLangType(LangType lt)
         {
-            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType"); 
             LangType tmp = mCallingLangType; 
             mCallingLangType = lt; 
             return tmp;
         }
     JSBool CallerTypeIsJavaScript() const 
         {
-            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType"); 
             return LANG_JS == mCallingLangType;
         }
     JSBool CallerTypeIsNative() const 
         {
-            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType"); 
             return LANG_NATIVE == mCallingLangType;
         }
     JSBool CallerTypeIsKnown() const 
         {
-            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType");
             return LANG_UNKNOWN != mCallingLangType;
         }
 
@@ -713,9 +705,10 @@ private:
     nsresult mLastResult;
     nsresult mPendingResult;
     nsIXPCSecurityManager* mSecurityManager;
-    PRUint16 mSecurityManagerFlags;
     nsIException* mException;
     LangType mCallingLangType;
+    PRUint16 mSecurityManagerFlags;
+    JSPackedBool mMarked;
 };
 
 /***************************************************************************/
