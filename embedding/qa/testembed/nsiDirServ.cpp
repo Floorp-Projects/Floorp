@@ -133,7 +133,7 @@ void CNsIDirectoryService::Init()
 
 	rv = theDirService->Init();
 	RvTestResult(rv, "rv Init() test", 1);
-
+	RvTestResultDlg(rv, "rv Init() test", true);
 }
 void CNsIDirectoryService::RegisterProvider()
 {
@@ -151,7 +151,7 @@ void CNsIDirectoryService::RegisterProvider()
 	}
 	rv= theDirService->RegisterProvider(provider);
 	RvTestResult(rv, "rv RegisterProvider() test", 1);
-
+	RvTestResultDlg(rv, "rv RegisterProvider() test");
 }
 void CNsIDirectoryService::UnRegisterProvider()
 {
@@ -170,6 +170,7 @@ void CNsIDirectoryService::UnRegisterProvider()
 	rv= theDirService->RegisterProvider(provider);
 	rv= theDirService->UnregisterProvider(provider);
 	RvTestResult(rv, "rv UnRegisterProvider() test", 1);
+	RvTestResultDlg(rv, "rv UnRegisterProvider() test");
 }
 
 

@@ -88,7 +88,7 @@ Element ReqTable[] = {
 	{"http://www.intel.com/",    1, 1, 1, 0, 0, 0, 0},
 	{"http://www.aol.com/",      0, 1, 0, 0, 0, 1, 1},
 	{"https://www.yahoo.com/",   1, 1, 1, 1, 0, 1, 1},
-	{" data:text/plain;charset=iso-8859-7,%be%fg%be",
+	{"data:text/plain;charset=iso-8859-7,%be%fg%be",
 								1, 1, 1, 1, 0, 1, 1},
 	{"file://C|/Program Files/", 1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.netscape.com/",  1, 1, 1, 1, 0, 1, 1},
@@ -223,7 +223,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	nsCOMPtr<nsIChannel> theChannel;
 
 	theSpec = ReqTable[i].theUrl;
-	FormatAndPrintOutput("the input uri = ", theSpec, 2);
+	FormatAndPrintOutput("the input uri = ", theSpec, 1);
 
 	rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
 
@@ -240,6 +240,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	   else
 		  QAOutput("The in/out URIs don't MATCH.", 1);
 	   RvTestResult(rv, "NS_NewURI", 1);
+	   RvTestResultDlg(rv, "NS_NewURI", true);
 	}
 
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
@@ -248,8 +249,10 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	   QAOutput("We didn't get the Channel. Test failed.", 1);
 	   return NULL;
 	}
-	else
+	else {
 	   RvTestResult(rv, "NS_NewChannel", 1);
+	   RvTestResultDlg(rv, "NS_NewURI");
+	}
 
 	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
 	nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
@@ -258,6 +261,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	// this calls nsIStreamListener::OnDataAvailable()
 	rv = theChannel->AsyncOpen(listener, nsnull);
 	RvTestResult(rv, "AsyncOpen()", 1);
+	RvTestResultDlg(rv, "AsyncOpen()");
 
 	return theChannel;
 }
@@ -270,6 +274,7 @@ void CNsIRequest::IsPendingReqTest(nsIRequest *request)
 
 	rv = request->IsPending(&reqPending);
     RvTestResult(rv, "nsIRequest::IsPending() rv test", 1);
+	RvTestResultDlg(rv, "nsIRequest::IsPending() rv test()");
 
 	if (!reqPending)
 		QAOutput("Pending request = false.", 1);
@@ -284,8 +289,9 @@ void CNsIRequest::GetStatusReqTest(nsIRequest *request)
 
 	rv = request->GetStatus(&theStatusError);
     RvTestResult(rv, "nsIRequest::GetStatus() test", 1);
-    RvTestResult(rv, "the returned status error test", 1);
-
+	RvTestResultDlg(rv, "nsIRequest::GetStatus() test");
+    RvTestResult(theStatusError, "the returned status error test", 1);
+    RvTestResultDlg(theStatusError, "the returned status error test");
 } 
 
 void CNsIRequest::SuspendReqTest(nsIRequest *request)
@@ -294,6 +300,7 @@ void CNsIRequest::SuspendReqTest(nsIRequest *request)
 
 	rv = request->Suspend();
     RvTestResult(rv, "nsIRequest::Suspend() test", 1);
+    RvTestResultDlg(rv, "nsIRequest::Suspend() test");
 }
 
 void CNsIRequest::ResumeReqTest(nsIRequest *request)
@@ -302,6 +309,7 @@ void CNsIRequest::ResumeReqTest(nsIRequest *request)
 
 	rv = request->Resume();
     RvTestResult(rv, "nsIRequest::Resume() test", 1);
+    RvTestResultDlg(rv, "nsIRequest::Resume() test");
 }
 
 void CNsIRequest::CancelReqTest(nsIRequest *request)
@@ -311,7 +319,9 @@ void CNsIRequest::CancelReqTest(nsIRequest *request)
 
 	rv = request->Cancel(status);
     RvTestResult(rv, "nsIRequest::Cancel() rv test", 1);
+    RvTestResultDlg(rv, "nsIRequest::Cancel() test");
     RvTestResult(status, "nsIRequest::Cancel() status test", 1);
+    RvTestResultDlg(status, "nsIRequest::Cancel() status test");
 }
 
 void CNsIRequest::SetLoadGroupTest(nsIRequest *request,
@@ -322,6 +332,7 @@ void CNsIRequest::SetLoadGroupTest(nsIRequest *request,
 
 	rv = request->SetLoadGroup(theLoadGroup);
     RvTestResult(rv, "nsIRequest::SetLoadGroup() rv test", 1);
+    RvTestResultDlg(rv, "nsIRequest::SetLoadGroup() rv test");
 }
 
 void CNsIRequest::GetLoadGroupTest(nsIRequest *request)
@@ -332,8 +343,10 @@ void CNsIRequest::GetLoadGroupTest(nsIRequest *request)
 
 	rv = request->GetLoadGroup(getter_AddRefs(theLoadGroup));
     RvTestResult(rv, "nsIRequest::GetLoadGroup() rv test", 1);
+    RvTestResultDlg(rv, "nsIRequest::GetLoadGroup() rv test");
 
 	rv = theLoadGroup->GetRequests(getter_AddRefs(theSimpEnum));
     RvTestResult(rv, "nsIRequest:: LoadGroups' GetRequests() rv test", 1);
+    RvTestResultDlg(rv, "nsIRequest:: LoadGroups' GetRequests() rv test");
 }
 

@@ -70,20 +70,20 @@ public:
 public:
 
 	// individual nsISHistory tests
-	void GetCountTest(nsISHistory *, PRInt32 *);
-	void GetIndexTest(nsISHistory *, PRInt32 *);
-	void GetMaxLengthTest(nsISHistory *, PRInt32 *);
-	void SetMaxLengthTest(nsISHistory *, PRInt32);
-	void GetEntryAtIndexTest(nsISHistory *, nsIHistoryEntry *, PRInt32 theIndex);
-	void GetURIHistTest(nsIHistoryEntry *);
-	void GetTitleHistTest(nsIHistoryEntry *);
-	void GetIsSubFrameTest(nsIHistoryEntry *);
-	void GetSHEnumTest(nsISHistory*, nsISimpleEnumerator *);
-	void SimpleEnumTest(nsISimpleEnumerator *);
-	void PurgeHistoryTest(nsISHistory *, PRInt32);
+	void GetCountTest(nsISHistory *, PRInt32 *, PRInt16);
+	void GetIndexTest(nsISHistory *, PRInt32 *, PRInt16);
+	void GetMaxLengthTest(nsISHistory *, PRInt32 *, PRInt16);
+	void SetMaxLengthTest(nsISHistory *, PRInt32, PRInt16);
+	void GetEntryAtIndexTest(nsISHistory *, nsIHistoryEntry *, PRInt32 theIndex, PRInt16);
+	void GetURIHistTest(nsIHistoryEntry *, PRInt16);
+	void GetTitleHistTest(nsIHistoryEntry *, PRInt16);
+	void GetIsSubFrameTest(nsIHistoryEntry *, PRInt16);
+	void GetSHEnumTest(nsISHistory*, nsISimpleEnumerator *, PRInt16);
+	void SimpleEnumTest(nsISimpleEnumerator *, PRInt16);
+	void PurgeHistoryTest(nsISHistory *, PRInt32, PRInt16);
 	void RunAllTests();
 	void OnStartTests(UINT nMenuID);
-	void RunAllHistoryEntryTests();
+	void RunAllHistoryEntryTests(PRInt16);
 	// Generated message map functions
 protected:
 

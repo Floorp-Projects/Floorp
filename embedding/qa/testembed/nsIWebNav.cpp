@@ -48,6 +48,7 @@
 #include "testembed.h"
 #include "qautils.h"
 #include "nsiwebnav.h"
+#include "UrlDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -113,8 +114,7 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 			GoToIndexTest();
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_LOADURI :
-			LoadUriTest(UrlTable[0].theUri, UrlTable[1].theFlag);
-			FormatAndPrintOutput("the loadFlag = ", nsIWebNavigation::LOAD_FLAGS_MASK, 2);
+			LoadUriTest(nsnull, nsnull, 1);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_RELOAD  :
 			ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
@@ -269,10 +269,28 @@ void CNsIWebNav::GoToIndexTest()
    RvTestResult(rv, "GotoIndex() test", 2);
 }
 
-void CNsIWebNav::LoadUriTest(char *theUrl, PRUint32 theFlag)
+void CNsIWebNav::LoadUriTest(char *theUrl, PRUint32 theFlag,
+							 PRInt16 displayMode)
 {
    char theTotalString[500];
    char theFlagName[200];
+
+   if (displayMode == 1)	// load just one url from Url dialog
+   {
+	  CUrlDialog myDialog;
+      if (myDialog.DoModal() == IDOK)
+	  {
+		QAOutput("Begin Change URL test.", 1);
+		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
+								myDialog.m_flagvalue, nsnull,nsnull, nsnull);
+
+	    RvTestResult(rv, "rv LoadURI() test", 1);
+		FormatAndPrintOutput("The url = ", myDialog.m_urlfield, 2);
+		FormatAndPrintOutput("The flag = ", myDialog.m_flagvalue, 1);
+		QAOutput("End Change URL test.", 1);
+	  }
+	  return;
+   }
 
    switch(theFlag)
    {

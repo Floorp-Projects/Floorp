@@ -508,9 +508,10 @@ NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 {
 	nsCString stringMsg;
 
+	RvTestResult(rv, "nsIStreamListener::OnStopRequest rv input", 1);
 	RequestName(request, stringMsg, 1);
 	QAOutput("##### END: nsIStreamListener::OnStopRequest() #####");
-	
+		
 	return NS_OK;
 }
 
