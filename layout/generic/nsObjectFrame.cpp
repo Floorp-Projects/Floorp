@@ -1435,6 +1435,9 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
           NS_RELEASE(inst);
         }
 
+        //~~~
+        mInstanceOwner->ReleasePluginPort();
+
 		if (mWidget)
 		{
 			PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
@@ -2584,7 +2587,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
         }
         else
         {
-          // mPluginWindow.window = (nsPluginPort *)mWidget->GetNativeData(NS_NATIVE_WINDOW);
           mPluginWindow.window = GetPluginPort();
           mPluginWindow.type = nsPluginWindowType_Window;
 
