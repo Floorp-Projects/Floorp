@@ -20,6 +20,9 @@
 #include "nsIXlibWindowService.h"
 
 #include "nsWidget.h"
+#include "nsIEventListener.h"
+#include "nsIMenuListener.h"
+#include "nsIMouseListener.h"
 #include "nsGfxCIID.h"
 
 #include "xlibrgb.h"

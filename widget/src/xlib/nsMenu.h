@@ -22,8 +22,8 @@
 #include "nsWidget.h"
 #include "nsIMenu.h"
 #include "nsISupportsArray.h"
+#include "nsIMenuListener.h"
 
-class nsIMenuListener;
 
 /**
  * Native Win32 button wrapper

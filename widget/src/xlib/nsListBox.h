@@ -21,6 +21,7 @@
 
 #include "nsWidget.h"
 #include "nsIListBox.h"
+#include "nsIListWidget.h"
 
 /**
  * Native Win32 Listbox wrapper

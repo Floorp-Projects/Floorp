@@ -21,6 +21,7 @@
 
 #include "nsWidget.h"
 #include "nsIComboBox.h"
+#include "nsIListWidget.h"
 
 class nsComboBox : public nsWidget,
                    public nsIListWidget,
