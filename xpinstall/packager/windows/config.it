@@ -632,6 +632,7 @@ Description Short=Spellchecker
 Description Long=for spellchecking
 Archive=spellcheck.xpi
 $InstallSize$:spellcheck
+$InstallSizeSystem$
 $InstallSizeArchive$:spellcheck.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\myspell.dll
