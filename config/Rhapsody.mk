@@ -37,7 +37,7 @@ G++INCLUDES		= -I/usr/include/g++
 LOC_LIB_DIR		= 
 MOTIF			=
 MOTIFLIB		=
-OS_LIBS			=
+OS_LIBS			= -lstdc++
 NO_X11          = 1
 
 PLATFORM_FLAGS		= -DRHAPSODY -Wall -pipe
