@@ -362,7 +362,7 @@ nsresult COtherDTD::HandleStyleToken(CToken* aToken){
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
+PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   return CNavDTD::CanContain(aParent,aChild);
 }
 
