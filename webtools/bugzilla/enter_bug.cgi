@@ -179,12 +179,14 @@ my $component_popup = make_popup('component', $::components{$product},
 PutHeader ("Enter Bug");
 
 print "
-<FORM NAME=enterForm METHOD=POST ACTION=\"post_bug.cgi\">
+<FORM METHOD=POST ACTION=\"post_bug.cgi\">
 <INPUT TYPE=HIDDEN NAME=bug_status VALUE=NEW>
-<INPUT TYPE=HIDDEN NAME=reporter VALUE=$::COOKIE{'Bugzilla_login'}>
+<INPUT TYPE=HIDDEN NAME=reporter VALUE=\"$::COOKIE{'Bugzilla_login'}\">
 <INPUT TYPE=HIDDEN NAME=product VALUE=\""  . value_quote($product) . "\">
   <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>
   <TR>
+    <td ALIGN=right valign=top><B>Reporter:</B></td>
+    <td valign=top>$::COOKIE{'Bugzilla_login'}</td>
     <td ALIGN=right valign=top><B>Product:</B></td>
     <td valign=top>$product</td>
   </TR>
@@ -192,12 +194,12 @@ print "
     <td ALIGN=right valign=top><B>Version:</B></td>
     <td>" . Version_element(pickversion(), $product) . "</td>
     <td align=right valign=top><b><a href=\"describecomponents.cgi?product=" .
-    url_quote($product) . "\">Component:</b></td>
+    url_quote($product) . "\">Component:</a></b></td>
     <td>$component_popup</td>
   </TR>
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
   <TR>
-    <td align=right><b><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></td>
+    <td align=right><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></td>
     <TD>$platform_popup</TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#op_sys\">OS:</A></B></TD>
     <TD>$opsys_popup</TD>
@@ -222,8 +224,7 @@ print "
   </TR>
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
   <tr>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned To:
-        </A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned To:</A></B></TD>
     <TD colspan=5>$assign_element
     (Leave blank to assign to default owner for component)</td>
   </tr>
@@ -248,7 +249,7 @@ print "
   </TR>
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
   <tr>
-    <td aligh=right valign=top><B>Description:</b>
+    <td align=right valign=top><B>Description:</b>
     <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>" .
     value_quote(formvalue('comment')) .
     "</TEXTAREA><BR></td>
