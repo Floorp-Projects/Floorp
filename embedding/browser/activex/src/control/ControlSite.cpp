@@ -71,6 +71,12 @@ CControlSite::CControlSite()
     m_bAmbientShowGrabHandles = true;
     m_bAmbientAppearance = true; // 3d
 
+    // Windowless variables
+    m_hDCBuffer = NULL;
+    m_hRgnBuffer = NULL;
+    m_hBMBufferOld = NULL;
+    m_hBMBuffer = NULL;
+
     // Add the control to the list
     m_cControlList.push_back(this);
 }
@@ -698,7 +704,11 @@ HRESULT STDMETHODCALLTYPE CControlSite::OnInPlaceActivateEx(/* [out] */ BOOL __R
     }
     if (dwFlags & ACTIVATE_WINDOWLESS)
     {
-        // TODO check if control is windowless
+        if (!m_bSupportWindowlessActivation)
+        {
+            return E_INVALIDARG;
+        }
+        m_bWindowless = TRUE;
     }
     return S_OK;
 }
@@ -761,13 +771,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::GetDC(/* [in] */ LPCRECT pRect, /* [in] 
         return E_INVALIDARG;
     }
 
-    if (grfFlags & OLEDC_NODRAW)
-    {
-        *phDC = m_hDCBuffer;
-        return S_OK;
-    }
-   
-       // Can't do nested painting
+    // Can't do nested painting
     if (m_hDCBuffer != NULL)
     {
         return E_UNEXPECTED;
@@ -783,7 +787,6 @@ HRESULT STDMETHODCALLTYPE CControlSite::GetDC(/* [in] */ LPCRECT pRect, /* [in] 
     m_dwBufferFlags = grfFlags;
 
     // See if the control wants a DC that is onscreen or offscreen
-    
     if (m_dwBufferFlags & OLEDC_OFFSCREEN)
     {
         m_hDCBuffer = CreateCompatibleDC(NULL);
@@ -840,7 +843,8 @@ HRESULT STDMETHODCALLTYPE CControlSite::ReleaseDC(/* [in] */ HDC hDC)
     }
 
     // Test if the DC was offscreen or onscreen
-    if (m_dwBufferFlags & OLEDC_OFFSCREEN)
+    if ((m_dwBufferFlags & OLEDC_OFFSCREEN) &&
+        !(m_dwBufferFlags & OLEDC_NODRAW))
     {
         // BitBlt the buffer into the control's object
         SetViewportOrgEx(m_hDCBuffer, 0, 0, NULL);
@@ -859,7 +863,6 @@ HRESULT STDMETHODCALLTYPE CControlSite::ReleaseDC(/* [in] */ HDC hDC)
     }
 
     // Clean up settings ready for next drawing
-
     if (m_hRgnBuffer)
     {
         SelectClipRgn(m_hDCBuffer, NULL);
@@ -874,7 +877,15 @@ HRESULT STDMETHODCALLTYPE CControlSite::ReleaseDC(/* [in] */ HDC hDC)
         m_hBMBuffer = NULL;
     }
 
-    ::ReleaseDC(m_hWndParent, m_hDCBuffer);
+    // Delete the DC
+    if (m_dwBufferFlags & OLEDC_OFFSCREEN)
+    {
+        ::DeleteDC(m_hDCBuffer);
+    }
+    else
+    {
+        ::ReleaseDC(m_hWndParent, m_hDCBuffer);
+    }
     m_hDCBuffer = NULL;
 
     return S_OK;

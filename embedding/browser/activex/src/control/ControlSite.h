@@ -59,7 +59,6 @@
     COM_INTERFACE_ENTRY(IOleCommandTarget) \
     COM_INTERFACE_ENTRY(IServiceProvider)
 
-
 //
 // Class for hosting an ActiveX control
 //
@@ -92,7 +91,7 @@ class CControlSite :    public CComObjectRootEx<CComSingleThreadModel>,
                         public IServiceProvider,
                         public IOleCommandTargetImpl<CControlSite>
 {
-protected:
+public:
 // Site management values
     // Handle to parent window
     HWND m_hWndParent;
@@ -110,11 +109,12 @@ protected:
     unsigned m_bInPlaceLocked:1;
     // Flag indicating if the site allows windowless controls
     unsigned m_bSupportWindowlessActivation:1;
-    // Flag indicating if control is windowless
+    // Flag indicating if control is windowless (after being created)
     unsigned m_bWindowless:1;
     // Flag indicating if only safely scriptable controls are allowed
     unsigned m_bSafeForScriptingObjectsOnly:1;
 
+protected:
 // Pointers to object interfaces
     // Raw pointer to the object
     CComPtr<IUnknown> m_spObject;
