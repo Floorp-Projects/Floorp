@@ -1074,5 +1074,6 @@ nsFormControlHelper::RestoreContentState(nsIFrame* aFrame,
     return NS_OK;
   }
 
+  NS_NOTREACHED("no content");
   return NS_ERROR_FAILURE;
 }

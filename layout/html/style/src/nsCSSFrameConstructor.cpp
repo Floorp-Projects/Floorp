@@ -739,11 +739,17 @@ public:
   nsPseudoFrames            mPseudoFrames;
 
   // Constructor
+  // Use the passed-in history state.
   nsFrameConstructorState(nsIPresContext*        aPresContext,
                           nsIFrame*              aFixedContainingBlock,
                           nsIFrame*              aAbsoluteContainingBlock,
                           nsIFrame*              aFloaterContainingBlock,
-                          nsILayoutHistoryState* aFrameState);
+                          nsILayoutHistoryState* aHistoryState);
+  // Get the history state from the pres context's pres shell.
+  nsFrameConstructorState(nsIPresContext*        aPresContext,
+                          nsIFrame*              aFixedContainingBlock,
+                          nsIFrame*              aAbsoluteContainingBlock,
+                          nsIFrame*              aFloaterContainingBlock);
 
   // Function to push the existing absolute containing block state and
   // create a new scope
@@ -762,17 +768,33 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresCon
                                                  nsIFrame*              aFixedContainingBlock,
                                                  nsIFrame*              aAbsoluteContainingBlock,
                                                  nsIFrame*              aFloaterContainingBlock,
-                                                 nsILayoutHistoryState* aFrameState)
+                                                 nsILayoutHistoryState* aHistoryState)
   : mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloaterContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
-    mFrameState(aFrameState),
+    mFrameState(aHistoryState),
     mPseudoFrames()
 {
   aPresContext->GetShell(getter_AddRefs(mPresShell));
   mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
+}
+
+nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresContext,
+                                                 nsIFrame*              aFixedContainingBlock,
+                                                 nsIFrame*              aAbsoluteContainingBlock,
+                                                 nsIFrame*              aFloaterContainingBlock)
+  : mFixedItems(aFixedContainingBlock),
+    mAbsoluteItems(aAbsoluteContainingBlock),
+    mFloatedItems(aFloaterContainingBlock),
+    mFirstLetterStyle(PR_FALSE),
+    mFirstLineStyle(PR_FALSE),
+    mPseudoFrames()
+{
+  aPresContext->GetShell(getter_AddRefs(mPresShell));
+  mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
+  mPresShell->GetHistoryState(getter_AddRefs(mFrameState));
 }
 
 void
@@ -1286,7 +1308,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
                                                    nsIContent*      aContent,
                                                    nsIStyleContext* aStyleContext,
                                                    nsIAtom*         aPseudoElement,
-                                                   PRBool           aForBlock,
+                                                   PRBool           aForBlock, // XXXldb unused
                                                    nsIFrame**       aResult)
 {
   *aResult = nsnull; // initialize OUT parameter
@@ -3415,7 +3437,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   nsFrameConstructorState state(aPresContext,
                                       nsnull,
                                       nsnull,
-                                      nsnull,
                                       nsnull);
 
   nsIFrame* parentFrame = viewportFrame;
@@ -3844,9 +3865,13 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       } else if (aIsFixedPositioned) {
         geometricParent = aState.mFixedItems.containingBlock;
       }
+      // Save the history state so we don't restore during construction
+      // since the complete tree is required before we restore.
+      nsILayoutHistoryState *historyState = aState.mFrameState;
+      aState.mFrameState = nsnull;
       // Initialize the combobox frame
-      InitAndRestoreFrame(aPresContext, aState, aContent, 
-                          geometricParent, aStyleContext, nsnull, comboboxFrame);
+      InitAndRestoreFrame(aPresContext, aState, aContent, geometricParent,
+                          aStyleContext, nsnull, comboboxFrame);
 
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, comboboxFrame,
                                                aStyleContext, aParentFrame, PR_FALSE);
@@ -3854,81 +3879,88 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       // Combobox - Old Native Implementation
       ///////////////////////////////////////////////////////////////////
       nsIComboboxControlFrame* comboBox = nsnull;
-      if (NS_SUCCEEDED(comboboxFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboBox))) {
-        comboBox->SetFrameConstructor(this);
+      CallQueryInterface(comboboxFrame, &comboBox);
+      NS_ASSERTION(comboBox, "NS_NewComboboxControlFrame returned frame that "
+                             "doesn't implement nsIComboboxControlFrame");
+      comboBox->SetFrameConstructor(this);
 
-          // Create a listbox
-        nsIFrame * listFrame;
-        rv = NS_NewListControlFrame(aPresShell, &listFrame);
+        // Create a listbox
+      nsIFrame * listFrame;
+      rv = NS_NewListControlFrame(aPresShell, &listFrame);
 
-          // Notify the listbox that it is being used as a dropdown list.
-        nsIListControlFrame * listControlFrame;
-        if (NS_SUCCEEDED(listFrame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&listControlFrame))) {
-          listControlFrame->SetComboboxFrame(comboboxFrame);
+        // Notify the listbox that it is being used as a dropdown list.
+      nsIListControlFrame * listControlFrame;
+      rv = CallQueryInterface(listFrame, &listControlFrame);
+      if (NS_SUCCEEDED(rv)) {
+        listControlFrame->SetComboboxFrame(comboboxFrame);
+      }
+         // Notify combobox that it should use the listbox as it's popup
+      comboBox->SetDropDown(listFrame);
+
+        // Resolve psuedo element style for the dropdown list 
+      nsCOMPtr<nsIStyleContext> listStyle;
+      rv = aPresContext->ResolvePseudoStyleContextFor(aContent, 
+                                              nsHTMLAtoms::dropDownListPseudo, 
+                                              aStyleContext,
+                                              PR_FALSE,
+                                              getter_AddRefs(listStyle));
+
+      // Initialize the scroll frame positioned. Note that it is NOT
+      // initialized as absolutely positioned.
+      nsIFrame* newFrame = nsnull;
+      nsIFrame* scrolledFrame = nsnull;
+      NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
+
+      InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame, scrolledFrame, aContent, comboboxFrame,
+                           listStyle, PR_FALSE, PR_FALSE, PR_TRUE);
+      newFrame = listFrame;
+      // XXX Temporary for Bug 19416
+      {
+        nsIView * lstView;
+        scrolledFrame->GetView(aPresContext, &lstView);
+        if (lstView) {
+          lstView->IgnoreSetPosition(PR_TRUE);
         }
-           // Notify combobox that it should use the listbox as it's popup
-        comboBox->SetDropDown(listFrame);
-     
-          // Resolve psuedo element style for the dropdown list 
-        nsCOMPtr<nsIStyleContext> listStyle;
-        rv = aPresContext->ResolvePseudoStyleContextFor(aContent, 
-                                                nsHTMLAtoms::dropDownListPseudo, 
-                                                aStyleContext,
-                                                PR_FALSE,
-                                                getter_AddRefs(listStyle));
+      }
 
-        // Initialize the scroll frame positioned. Note that it is NOT initialized as
-        // absolutely positioned.
-        nsIFrame* newFrame = nsnull;
-        nsIFrame* scrolledFrame = nsnull;
-        NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
+        // Set flag so the events go to the listFrame not child frames.
+        // XXX: We should replace this with a real widget manager similar
+        // to how the nsFormControlFrame works. Re-directing events is a temporary Kludge.
+      nsIView *listView; 
+      listFrame->GetView(aPresContext, &listView);
+      NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
+      nsIWidget * viewWidget;
+      listView->GetWidget(viewWidget);
+      //viewWidget->SetOverrideShow(PR_TRUE);
+      NS_RELEASE(viewWidget);
+      //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
-        InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame, scrolledFrame, aContent, comboboxFrame,
-                             listStyle, PR_FALSE, PR_FALSE, PR_TRUE);
-        newFrame = listFrame;
-        // XXX Temporary for Bug 19416
-        {
-          nsIView * lstView;
-          scrolledFrame->GetView(aPresContext, &lstView);
-          if (lstView) {
-            lstView->IgnoreSetPosition(PR_TRUE);
-          }
-        }
+      // Create display and button frames from the combobox's anonymous content
+      nsFrameItems childItems;
+      CreateAnonymousFrames(aPresShell, aPresContext, nsHTMLAtoms::combobox,
+                            aState, aContent, comboboxFrame, childItems);
+  
+      comboboxFrame->SetInitialChildList(aPresContext, nsnull,
+                                         childItems.childList);
 
-          // Set flag so the events go to the listFrame not child frames.
-          // XXX: We should replace this with a real widget manager similar
-          // to how the nsFormControlFrame works. Re-directing events is a temporary Kludge.
-        nsIView *listView; 
-        listFrame->GetView(aPresContext, &listView);
-        NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
-        nsIWidget * viewWidget;
-        listView->GetWidget(viewWidget);
-        //viewWidget->SetOverrideShow(PR_TRUE);
-        NS_RELEASE(viewWidget);
-        //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
+      // Initialize the additional popup child list which contains the
+      // dropdown list frame.
+      nsFrameItems popupItems;
+      popupItems.AddChild(listFrame);
+      comboboxFrame->SetInitialChildList(aPresContext,
+                                         nsLayoutAtoms::popupList,
+                                         popupItems.childList);
 
-        nsIFrame* frame = nsnull;
-        if (NS_SUCCEEDED(comboboxFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame))) {
-          nsFrameItems childItems;
-        
-            // Create display and button frames from the combobox'es anonymous content
-          CreateAnonymousFrames(aPresShell, aPresContext, nsHTMLAtoms::combobox, aState, aContent, frame,
-                                childItems);
-      
-          frame->SetInitialChildList(aPresContext, nsnull,
-                                 childItems.childList);
-
-            // Initialize the additional popup child list which contains the dropdown list frame.
-          nsFrameItems popupItems;
-          popupItems.AddChild(listFrame);
-          frame->SetInitialChildList(aPresContext, nsLayoutAtoms::popupList,
-                                      popupItems.childList);
-        }
-         // Don't process, the children, They are already processed by the InitializeScrollFrame
-         // call above.
-        aProcessChildren = PR_FALSE;
-        aNewFrame = comboboxFrame;
-        aFrameHasBeenInitialized = PR_TRUE;
+      // Don't process, the children, They are already processed by the
+      // InitializeScrollFrame call above.
+      aProcessChildren = PR_FALSE;
+      aNewFrame = comboboxFrame;
+      aFrameHasBeenInitialized = PR_TRUE;
+      aState.mFrameState = historyState;
+      if (aState.mFrameState && aState.mFrameManager) {
+        // Restore frame state for the entire subtree of |comboboxFrame|.
+        aState.mFrameManager->RestoreFrameState(aPresContext, comboboxFrame,
+                                                aState.mFrameState);
       }
     } else {
       ///////////////////////////////////////////////////////////////////
@@ -6355,7 +6387,9 @@ nsCSSFrameConstructor::InitAndRestoreFrame(nsIPresContext*          aPresContext
                        aStyleContext, aPrevInFlow);
 
   if (aState.mFrameState && aState.mFrameManager) {
-    aState.mFrameManager->RestoreFrameState(aPresContext, aNewFrame, aState.mFrameState);
+    // Restore frame state for just the newly created frame.
+    aState.mFrameManager->RestoreFrameStateFor(aPresContext, aNewFrame,
+                                               aState.mFrameState);
   }
 
   return rv;
@@ -7946,8 +7980,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   nsFrameItems            frameItems;
   nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                 GetAbsoluteContainingBlock(aPresContext, parentFrame),
-                                GetFloaterContainingBlock(aPresContext, parentFrame),
-                                nsnull);
+                                GetFloaterContainingBlock(aPresContext, parentFrame));
 
   // See if the containing block has :first-letter style applied.
   PRBool haveFirstLetterStyle, haveFirstLineStyle;
@@ -9140,7 +9173,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       }
       if (shell && parentFrame) {
         nsFrameConstructorState state(aPresContext,
-                                      nsnull, nsnull, nsnull, nsnull);
+                                      nsnull, nsnull, nsnull);
         AddDummyFrameToSelect(aPresContext, shell, state,
                               selectFrame, parentFrame, nsnull,
                               aContainer, selectElement);
@@ -9447,8 +9480,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                     GetAbsoluteContainingBlock(aPresContext,
                                                                parentFrame),
                                     GetFloaterContainingBlock(aPresContext,
-                                                              parentFrame),
-                                    nsnull);
+                                                              parentFrame));
       RecoverLetterFrames(shell, aPresContext, state, containingBlock);
     }
 
@@ -10724,7 +10756,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 
     // Now initialize the frame construction state
     nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
-                                  absoluteContainingBlock, floaterContainingBlock, nsnull);
+                                  absoluteContainingBlock,
+                                  floaterContainingBlock);
     nsFrameItems            frameItems;
     const nsStyleDisplay*   display =
       NS_STATIC_CAST(const nsStyleDisplay*, styleContext->GetStyleData(eStyleStruct_Display));
@@ -10910,7 +10943,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell* aPresShell,
         NS_NewTableCaptionFrame(aPresShell, &captionFrame);
         nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                       GetAbsoluteContainingBlock(aPresContext, newFrame),
-                                      captionFrame, nsnull);
+                                      captionFrame);
         captionFrame->Init(aPresContext, caption, newFrame, captionStyle, nsnull);
         ProcessChildren(aPresShell, aPresContext, state, caption, captionFrame,
                         PR_TRUE, childItems, PR_TRUE);
@@ -10977,7 +11010,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
           nsIContent*             headerFooter;
           nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                         GetAbsoluteContainingBlock(aPresContext, newFrame),
-                                        nsnull, nsnull);
+                                        nsnull);
 
           NS_NewTableRowGroupFrame(aPresShell, &headerFooterFrame);
           rowGroupFrame->GetContent(&headerFooter);
@@ -12774,7 +12807,7 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
     nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                   GetAbsoluteContainingBlock(aPresContext, aParentFrame),
                                   GetFloaterContainingBlock(aPresContext, aParentFrame), 
-                                  mTempFrameTreeState);
+                                  mTempFrameTreeState); // XXXldb not |aFrameState|?
 
     nsCOMPtr<nsIStyleContext> styleContext;
     rv = ResolveStyleContext(aPresContext, aParentFrame, aChild,

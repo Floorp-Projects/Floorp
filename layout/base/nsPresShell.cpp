@@ -2667,11 +2667,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (rootFrame) {
-    nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
-    if (historyState) {
-      mFrameManager->RestoreFrameState(mPresContext, rootFrame, historyState);
-    }
-
     MOZ_TIMER_DEBUGLOG(("Reset and start: Reflow: PresShell::InitialReflow(), this=%p\n", this));
     MOZ_TIMER_RESET(mReflowWatch);
     MOZ_TIMER_START(mReflowWatch);
@@ -5174,31 +5169,6 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 
   nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
   VERIFY_STYLE_TREE;
-
-  nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
-  if (NS_SUCCEEDED(rv) && historyState) {
-    // If history state has been set by session history, ask the frame manager 
-    // to restore frame state for the frame hierarchy created for the chunk of
-    // content that just came in.
-    // That is the frames with numbers after aNewIndexInContainer.
-    PRInt32 count = 0;
-    aContainer->ChildCount(count);
-
-    PRInt32 i;
-    nsCOMPtr<nsIContent> newChild;
-    for (i = aNewIndexInContainer; i < count; ++i) {
-      aContainer->ChildAt(i, *getter_AddRefs(newChild));
-      if (!newChild) {
-        // We should never get here.
-        NS_ERROR("Got a null child when restoring state!");
-        continue;
-      }
-      nsIFrame* frame;
-      rv = GetPrimaryFrameFor(newChild, &frame);
-      if (NS_SUCCEEDED(rv) && nsnull != frame)
-        mFrameManager->RestoreFrameState(mPresContext, frame, historyState);
-    }
-  }
 
   MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_STOP(mFrameCreationWatch);
