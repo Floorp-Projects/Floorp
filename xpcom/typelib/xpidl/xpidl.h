@@ -242,6 +242,12 @@ gboolean
 verify_method_declaration(IDL_tree method_tree);
 
 /*
+ * Verifies the interface declaration
+ */ 
+gboolean
+verify_interface_declaration(IDL_tree method_tree);
+
+/*
  * Verify that a native declaration has an associated C++ expression, i.e. that
  * it's of the form native <idl-name>(<c++-name>)
  */
