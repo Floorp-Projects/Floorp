@@ -143,8 +143,8 @@ pref("font.name.monospace.zh-CN", "isas-song ti-gb2312.1980-0");
 // below a certian pixel size scaled fonts produce poor results
 pref("font.scale.outline.min",      6);
 pref("font.scale.bitmap.min",       12);
-pref("font.scale.bitmap.undersize", 90);
-pref("font.scale.bitmap.oversize",  110);
+pref("font.scale.bitmap.undersize", 80);
+pref("font.scale.bitmap.oversize",  120);
 
 pref("font.scale.outline.min.ja",      10);
 pref("font.scale.bitmap.min.ja",       14);
