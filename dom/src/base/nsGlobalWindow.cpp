@@ -4721,9 +4721,14 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     // propagate the error to anyone who cares about it from this
     // point anyway so we just drop it.
 
+    // If all timeouts were cleared and |timeout != aTimeout| then
+    // |timeout| may be the last reference to the timeout so check if
+    // it was cleared before releasing it.
+    PRBool timeout_was_cleared = timeout->mCleared;
+
     timeout->Release(contextKungFuDeathGrip);
 
-    if (timeout->mCleared) {
+    if (timeout_was_cleared) {
       // The running timeout's window was cleared, this means that
       // ClearAllTimeouts() was called from a *nested* call, possibly
       // through a timeout that fired while a modal (to this window)
