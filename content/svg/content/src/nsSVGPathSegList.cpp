@@ -149,7 +149,7 @@ nsSVGPathSegList::SetValueString(const nsAString& aValue)
     NS_ERROR("path data parse error!");    
     PRInt32 count = data.Count();
     for (PRInt32 i=0; i<count; ++i) {
-      nsIDOMSVGPathSeg* seg = ElementAt(i);
+      nsIDOMSVGPathSeg* seg = (nsIDOMSVGPathSeg*)data.ElementAt(i);
       NS_RELEASE(seg);
     }
   }
