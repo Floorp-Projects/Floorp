@@ -5,6 +5,23 @@
  *  Simple test cases for matching OctalEscapeSequences.
  *  Author:             christine@netscape.com
  *  Date:               19 February 1999
+ *
+ *  Revised:            02 August 2002
+ *  Author:             pschwartau@netscape.com
+ *
+ *  WHY:  the original test expected the regexp /.\011/ 
+ *        to match 'a' + String.fromCharCode(0) + '11'
+ *
+ *  This is incorrect: the string is a 4-character string consisting of
+ *  the characters <'a'>, <nul>, <'1'>, <'1'>. By contrast, the \011 in the
+ *  regexp should be parsed as a single token: it is the octal escape sequence
+ *  for the horizontal tab character '\t' === '\u0009' === '\x09' === '\011'. 
+ *
+ *  So the regexp consists of 2 characters: <any-character>, <'\t'>.
+ *  There is no match between the regexp and the string.
+ *
+ *  See the testcase ecma_3/RegExp/octal-002.js for an elaboration.
+ *
  */
     var SECTION = "RegExp/octal-003.js";
     var VERSION = "ECMA_2";
@@ -13,7 +30,7 @@
 
     startTest();
 
-    AddRegExpCases( /.\011/, "/\\011/", "a" + String.fromCharCode(0) + "11", "a\\011", 0, ["a%0011"] );
+    AddRegExpCases( /.\011/, "/\\011/", "a" + String.fromCharCode(0) + "11", "a\\011", 0, null );
 
     test();
 
