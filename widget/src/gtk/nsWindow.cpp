@@ -345,12 +345,21 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
 {
     switch(aDataType) {
       case NS_NATIVE_WINDOW:
+#ifdef NS_GTK_REF
+	return (void *)gdk_window_ref(GTK_LAYOUT(mWidget)->bin_window);
+#else
 	return (void *)GTK_LAYOUT(mWidget)->bin_window;
+#endif
       case NS_NATIVE_DISPLAY:
 	return (void *)GDK_DISPLAY();
       case NS_NATIVE_WIDGET:
+#ifdef NS_GTK_REF
+	gtk_widget_ref(mWidget);
+#endif
 	return (void *)mWidget;
       case NS_NATIVE_GRAPHIC:
+       /* GetSharedGC ups the ref count on the GdkGC so make sure you release
+	* it afterwards. */
         return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
       default:
 	break;

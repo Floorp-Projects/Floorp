@@ -161,15 +161,6 @@ PRInt32  nsListBox::GetItemCount()
 PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 {
   gtk_clist_remove(GTK_CLIST(mCList), aPosition);
-/*
-  int count = 0;
-  XtVaGetValues(mCList, XmNitemCount, &count, nsnull);
-  if (aPosition >= 0 && aPosition < count) {
-    XmListDeletePos(mCList, aPosition+1);
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-*/
   return PR_TRUE;
 }
 
@@ -190,24 +181,6 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
     result = PR_TRUE;
   }
   return result;
-
-#if 0
-  XmStringTable list;
-
-  int count = 0;
-  XtVaGetValues(mCList,  XmNitems, &list, XmNitemCount, &count, nsnull);
-
-  if (aPosition >= 0 && aPosition < count) {
-    char * text;
-    if (XmStringGetLtoR(list[aPosition], XmFONTLIST_DEFAULT_TAG, &text)) {
-      anItem.SetLength(0);
-      anItem.Append(text);
-      XtFree(text);
-      result = PR_TRUE;
-    }
-  }
-  return result;
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -267,13 +240,6 @@ PRInt32 nsListBox::GetSelectedIndex()
 NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 {
   gtk_clist_select_row(GTK_CLIST(mCList), aPosition, 0);
-/*
-  int count = 0;
-  XtVaGetValues(mCList,  XmNitemCount, &count, nsnull);
-  if (aPosition >= 0 && aPosition < count) {
-    XmListSelectPos(mCList, aPosition+1, PR_FALSE);
-  }
-*/
   return NS_OK;
 }
 
@@ -284,7 +250,10 @@ NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32 nsListBox::GetSelectedCount()
 {
-  return (PRInt32)g_list_length(GTK_CLIST(mCList)->selection);
+  if (!GTK_CLIST(mCList)->selection)
+    return 0;
+  else
+    return (PRInt32)g_list_length(GTK_CLIST(mCList)->selection);
 }
 
 //-------------------------------------------------------------------------
@@ -330,7 +299,6 @@ NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 NS_METHOD nsListBox::Deselect()
 {
   gtk_clist_unselect_all(GTK_CLIST(mCList));
-//  XtVaSetValues(mCList, XmNselectedItemCount, 0, NULL);
   return NS_OK;
 }
 
