@@ -1667,8 +1667,8 @@ nsDownloadsDataSource::GetTarget(nsIRDFResource* aSource, nsIRDFResource* aPrope
         fph->GetURLSpecFromFile(lf, fileURL);
         
         nsAutoString iconURL(NS_LITERAL_STRING("moz-icon://"));
-        nsAutoString pathTemp; pathTemp.AssignWithConversion(fileURL);
-        iconURL += pathTemp + NS_LITERAL_STRING("?size=32");
+        AppendUTF8toUTF16(fileURL, iconURL);
+        iconURL.AppendLiteral("?size=32");
 
         nsCOMPtr<nsIRDFResource> result;
         gRDFService->GetUnicodeResource(iconURL, getter_AddRefs(result));
