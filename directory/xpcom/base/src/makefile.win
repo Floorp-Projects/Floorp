@@ -23,21 +23,23 @@ MODULE = mozldap
 LIBNAME = .\$(OBJDIR)\mozldap
 DLL = $(LIBNAME).dll
 
+LLIBS = $(LIBNSPR) \
+	$(DIST)\lib\xpcom.lib \
+	$(DIST)\lib\nsldap32v40.lib \
+	$(NULL)
 
-CPP_OBJS = nsLDAPService.cpp         \
-           nsLDAPProtocolHandler.cpp \
-           nsLDAPProtocolModule.cpp  \
-           nsLDAPChannel.cpp         \
-           nsLDAPURI.cpp             \
-           nsLDAPMessage.cpp         \
-           nsLDAPConnection.cpp      \
-           nsLDAPOperation.cpp       \
-           ldapSearch.cpp            \
+CPP_OBJS = .\$(OBJDIR)\nsLDAPService.obj         \
+           .\$(OBJDIR)\nsLDAPProtocolHandler.obj \
+           .\$(OBJDIR)\nsLDAPProtocolModule.obj  \
+           .\$(OBJDIR)\nsLDAPChannel.obj         \
+           .\$(OBJDIR)\nsLDAPURL.obj             \
+           .\$(OBJDIR)\nsLDAPMessage.obj         \
+	   .\$(OBJDIR)\nsLDAPConnection.obj      \
+           .\$(OBJDIR)\nsLDAPOperation.obj       \
            $(NULL)
 
-LLIBS =    $(DIST)\lib\liblber_s.lib \
-           $(DIST)\lib\libldap_s.lib \
-		   $(NULL)
+C_OBJS = .\$(OBJDIR)\nsLDAPConnectionCallbacks.obj \
+	 $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

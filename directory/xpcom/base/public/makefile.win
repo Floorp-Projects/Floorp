@@ -21,10 +21,15 @@ MODULE= mozldap
 
 include <$(DEPTH)\config\config.mak>
 
-XPIDLSRCS= nsILDAPConnection.idl \
-            nsILDAPOperation.idl  \
-            nsILDAPMessage.idl    \
-            nsILDAPURI.idl        \
-            $(NULL)
+EXPORTS= \
+         nsLDAP.h \
+         $(NULL)
+
+XPIDLSRCS= .\nsILDAPConnection.idl \
+           .\nsILDAPOperation.idl  \
+           .\nsILDAPMessage.idl    \
+           .\nsILDAPURL.idl        \
+           .\nsILDAPMessageListener.idl \
+           $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
