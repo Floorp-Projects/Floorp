@@ -2491,7 +2491,29 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     if (pfd->mVerticalAlign == VALIGN_OTHER) {
       // Text frames do not contribute to the min/max Y values for the
       // line (instead their parent frame's font-size contributes).
+      // XXXrbs -- relax this restriction because it causes text frames
+      //           to jam together when 'font-size-adjust' is enabled
+      //           and layout is using dynamic font heights (bug 20394)
+      //        -- Note #1: With this code enabled and with the fact that we are not
+      //           using Em[Ascent|Descent] as nsDimensions for text metrics in
+      //           GFX mean that the discussion in bug 13072 cannot hold.
+      //        -- Note #2: We still don't want empty-text frames to interfere.
+      //           For example in quirks mode, avoiding empty text frames prevents
+      //           "tall" lines around elements like <hr> since the rules of <hr>
+      //           in quirks.css have pseudo text contents with LF in them.
+#if 0
       if (!pfd->GetFlag(PFD_ISTEXTFRAME)) {
+#else
+      // Only consider non empty text frames when line-height=normal
+      PRBool canUpdate = !pfd->GetFlag(PFD_ISTEXTFRAME);
+      if (!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
+        const nsStyleText* textStyle;
+        frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+        canUpdate = textStyle->mLineHeight.GetUnit() == eStyleUnit_Normal ||
+                    textStyle->mLineHeight.GetUnit() == eStyleUnit_Null;
+      }
+      if (canUpdate) {
+#endif
         nscoord yTop, yBottom;
         if (frameSpan) {
           // For spans that were are now placing, use their position

@@ -56,7 +56,7 @@
 
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextWin)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
@@ -104,30 +104,6 @@ nsFontMetricsWinConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     result = new nsFontMetricsWinA();
   else
     result = new nsFontMetricsWin();
-
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv;
-  NS_ADDREF(result);
-  rv = result->QueryInterface(aIID, aResult);
-  NS_RELEASE(result);
-  return rv;
-}
-
-static NS_IMETHODIMP
-nsRenderingContextWinConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  *aResult = nsnull;
-
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsRenderingContextWin* result;
-  if (UseAFunctions())
-    result = new nsRenderingContextWinA();
-  else
-    result = new nsRenderingContextWin();
 
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;

@@ -110,16 +110,20 @@ static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kEventStateManagerCID, NS_EVENTSTATEMANAGER_CID);
 
 nsPresContext::nsPresContext()
-  : mDefaultFont("serif", NS_FONT_STYLE_NORMAL,
-                 NS_FONT_VARIANT_NORMAL,
-                 NS_FONT_WEIGHT_NORMAL,
-                 0,
-                 NSIntPointsToTwips(12)),
-    mDefaultFixedFont("monospace", NS_FONT_STYLE_NORMAL,
-                      NS_FONT_VARIANT_NORMAL,
-                      NS_FONT_WEIGHT_NORMAL,
-                      0,
-                      NSIntPointsToTwips(10))
+  : mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
+    mDefaultFixedFont("monospace", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(10)),
+    mDefaultSerifFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
+    mDefaultSansSerifFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
+    mDefaultMonospaceFont("monospace", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(10)),
+    mDefaultCursiveFont("cursive", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, 
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
+    mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, 
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12))
 {
   NS_INIT_REFCNT();
   mCompatibilityMode = eCompatibility_Standard;
@@ -144,6 +148,9 @@ nsPresContext::nsPresContext()
   
   mUseDocumentColors = PR_TRUE;
   mUseDocumentFonts = PR_TRUE;
+
+  // the minimum font-size is unconstrained by default
+  mMinimumFontSize = 0;
 
   mLinkColor = NS_RGB(0x33, 0x33, 0xFF);
   mVisitedLinkColor = NS_RGB(0x66, 0x00, 0xCC);
@@ -204,60 +211,165 @@ nsPresContext::~nsPresContext()
 
 NS_IMPL_ISUPPORTS2(nsPresContext, nsIPresContext, nsIObserver)
 
+#define MAKE_FONT_PREF_KEY(_pref, _s0, _s1) \
+ _pref.Assign(_s0); \
+ _pref.Append(_s1);
+
+static const char* const kGenericFont[] = {
+  ".variable.",
+  ".fixed.",
+  ".serif.", 
+  ".sans-serif.", 
+  ".monospace.",
+  ".cursive.",
+  ".fantasy."
+};
+
 void
 nsPresContext::GetFontPreferences()
 {
-  if (mPrefs) {
-    char* value = nsnull;
-    mPrefs->CopyCharPref("font.default", &value);
-    if (value) {
-      mDefaultFont.name.AssignWithConversion(value);
-      nsMemory::Free(value);
-      value = nsnull;
+  if (!mPrefs || !mLanguage)
+    return;
+
+  /* Fetch the font prefs to be used -- see bug 61883 for details.
+     Not all prefs are needed upfront. Some are fallback prefs intended
+     for the GFX font sub-system...
+
+  1) unit : assumed to be the same for all language groups -------------
+  font.size.unit = px | pt    XXX could be folded in the size... bug 90440
+
+  2) attributes for generic fonts --------------------------------------
+  font.default = serif | sans-serif - fallback generic font
+  font.name.[generic].[langGroup] = current user' selected font on the pref dialog
+  font.name-list.[generic].[langGroup] = fontname1, fontname2, ... [factory pre-built list]
+  font.size.[generic].[langGroup] = integer - settable by the user
+  font.size-adjust.[generic].[langGroup] = "float" - settable by the user
+  font.minimum-size.[langGroup] = integer - settable by the user
+  */
+
+  float p2t;
+  GetScaledPixelsToTwips(&p2t);
+  mDefaultVariableFont.size = NSFloatPixelsToTwips((float)16, p2t);
+  mDefaultFixedFont.size = NSFloatPixelsToTwips((float)13, p2t);
+
+  nsAutoString langGroup;
+  nsCOMPtr<nsIAtom> langGroupAtom;
+  mLanguage->GetLanguageGroup(getter_AddRefs(langGroupAtom));
+  langGroupAtom->ToString(langGroup);
+
+  nsCAutoString pref;
+  nsXPIDLString value;
+  nsXPIDLCString cvalue;
+
+  // get the current applicable font-size unit
+  enum {eUnit_unknown = -1, eUnit_px, eUnit_pt};
+  PRInt32 unit = eUnit_px;
+  nsresult rv = mPrefs->CopyCharPref("font.size.unit", getter_Copies(cvalue));
+  if (NS_SUCCEEDED(rv)) {
+    if (!PL_strcmp(cvalue.get(), "px")) {
+      unit = eUnit_px;
     }
-    if (mLanguage) {
-      nsAutoString pref; pref.AssignWithConversion("font.size.variable.");
-      const PRUnichar* langGroup = nsnull;
-      nsCOMPtr<nsIAtom> langGroupAtom;
-      mLanguage->GetLanguageGroup(getter_AddRefs(langGroupAtom));
-      langGroupAtom->GetUnicode(&langGroup);
-      pref.Append(langGroup);
-      char name[128];
-      pref.ToCString(name, sizeof(name));
-      PRInt32 variableSize = 16;
-      mPrefs->GetIntPref(name, &variableSize);
-      pref.AssignWithConversion("font.size.fixed.");
-      pref.Append(langGroup);
-      pref.ToCString(name, sizeof(name));
-      PRInt32 fixedSize = 13;
-      mPrefs->GetIntPref(name, &fixedSize);
-      char* unit = nsnull;
-      mPrefs->CopyCharPref("font.size.unit", &unit);
-      char* defaultUnit = "px";
-      if (!unit) {
-        unit = defaultUnit;
-      }
-      if (!PL_strcmp(unit, "px")) {
-        float p2t;
-        GetScaledPixelsToTwips(&p2t);
-        mDefaultFont.size = NSFloatPixelsToTwips((float) variableSize, p2t);
-        mDefaultFixedFont.size = NSFloatPixelsToTwips((float) fixedSize, p2t);
-      }
-      else if (!PL_strcmp(unit, "pt")) {
-        mDefaultFont.size = NSIntPointsToTwips(variableSize);
-        mDefaultFixedFont.size = NSIntPointsToTwips(fixedSize);
+    else if (!PL_strcmp(cvalue.get(), "pt")) {
+      unit = eUnit_pt;
+    }
+    else {
+      NS_WARNING("unexpected font-size unit -- expected: 'px' or 'pt'");
+      unit = eUnit_unknown;
+    }
+  }
+
+  // get font.minimum-size.[langGroup]
+  PRInt32 size;
+  pref.Assign("font.minimum-size."); pref.Append(NS_ConvertUCS2toUTF8(langGroup));
+  rv = mPrefs->GetIntPref(pref.get(), &size);
+  if (NS_SUCCEEDED(rv)) {
+    if (unit == eUnit_px) {
+      mMinimumFontSize = NSFloatPixelsToTwips((float)size, p2t);
+    }
+    else if (unit == eUnit_pt) {
+      mMinimumFontSize = NSIntPointsToTwips(size);
+    }
+  }
+
+  // get attributes specific to each generic font
+  nsCAutoString generic_dot_langGroup;
+  for (PRInt32 eType = eDefaultFont_Variable; eType < eDefaultFont_COUNT; ++eType) {
+    generic_dot_langGroup.Assign(kGenericFont[eType]);
+    generic_dot_langGroup.Append(NS_ConvertUCS2toUTF8(langGroup));
+
+    nsFont* font;
+    switch (eType) {
+      case eDefaultFont_Variable:  font = &mDefaultVariableFont;  break;
+      case eDefaultFont_Fixed:     font = &mDefaultFixedFont;     break;
+      case eDefaultFont_Serif:     font = &mDefaultSerifFont;     break;
+      case eDefaultFont_SansSerif: font = &mDefaultSansSerifFont; break;
+      case eDefaultFont_Monospace: font = &mDefaultMonospaceFont; break;
+      case eDefaultFont_Cursive:   font = &mDefaultCursiveFont;   break;
+      case eDefaultFont_Fantasy:   font = &mDefaultFantasyFont;   break;
+      default: NS_ERROR("not reached - bogus to silence some compilers"); break;
+    }
+
+    // set the default variable font (the other fonts are seen as 'generic' fonts
+    // in GFX and will be queried there when hunting for alternative fonts)
+    if (eType == eDefaultFont_Variable) {
+      MAKE_FONT_PREF_KEY(pref, "font.name", generic_dot_langGroup);
+      rv = mPrefs->CopyUnicharPref(pref.get(), getter_Copies(value));
+      if (NS_SUCCEEDED(rv)) {
+        font->name.Assign(value);
       }
       else {
-        float p2t;
-        GetScaledPixelsToTwips(&p2t);
-        mDefaultFont.size = NSFloatPixelsToTwips((float) variableSize, p2t);
-        mDefaultFixedFont.size = NSFloatPixelsToTwips((float) fixedSize, p2t);
+        rv = mPrefs->CopyUnicharPref("font.default", getter_Copies(value));
+        if (NS_SUCCEEDED(rv)) {
+          mDefaultVariableFont.name.Assign(value);
+        }
+      } 
+    }
+    else {
+      if (eType == eDefaultFont_Monospace) {
+        // This takes care of the confusion whereby people often expect "monospace" 
+        // to have the same default font-size as "-moz-fixed" (this tentative
+        // size may be overwritten with the specific value for "monospace" when
+        // "font.size.monospace.[langGroup]" is read -- see below)
+        font->size = mDefaultFixedFont.size;
       }
-      if (unit != defaultUnit) {
-        nsMemory::Free(unit);
-        unit = nsnull;
+      else if (eType != eDefaultFont_Fixed) {
+        // all the other generic fonts are initialized with the size of the
+        // variable font, but their specific size can supersede later -- see below
+        font->size = mDefaultVariableFont.size;
       }
     }
+
+    // Bug 84398: for spec purists, a different font-size only applies to the
+    // .variable. and .fixed. fonts and the other fonts should get |font-size-adjust|.
+    // The problem is that only GfxWin has the support for |font-size-adjust|. So for
+    // parity, we enable the ability to set a different font-size on all platforms.
+
+    // get font.size.[generic].[langGroup]
+    // size=0 means 'Auto', i.e., generic fonts retain the size of the variable font
+    MAKE_FONT_PREF_KEY(pref, "font.size", generic_dot_langGroup);
+    rv = mPrefs->GetIntPref(pref, &size);
+    if (NS_SUCCEEDED(rv) && size > 0) {
+      if (unit == eUnit_px) {
+        font->size = NSFloatPixelsToTwips((float)size, p2t);
+      }
+      else if (unit == eUnit_pt) {
+        font->size = NSIntPointsToTwips(size);
+      }
+    }
+
+    // get font.size-adjust.[generic].[langGroup]
+    // XXX only applicable on GFX ports that handle |font-size-adjust|
+    MAKE_FONT_PREF_KEY(pref, "font.size-adjust", generic_dot_langGroup);
+    rv = mPrefs->CopyCharPref(pref.get(), getter_Copies(cvalue));
+    if (NS_SUCCEEDED(rv)) {
+      font->sizeAdjust = (float)atof(cvalue.get());
+    }
+
+#ifdef DEBUG_rbs
+    nsCAutoString family(NS_ConvertUCS2toUTF8(font->name));
+    printf("%s Family-list:%s size:%d sizeAdjust:%.2f\n",
+            generic_dot_langGroup.get(), family.get(), font->size, font->sizeAdjust);
+#endif
   }
 }
 
@@ -379,25 +491,38 @@ nsPresContext::GetUserPreferences()
 }
 
 NS_IMETHODIMP
-nsPresContext::GetCachedBoolPref(PRUint32 prefType, PRBool &aValue)
+nsPresContext::GetCachedBoolPref(const PRUint32 aPrefType, PRBool& aValue)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
 
-  switch(prefType) {
+  switch (aPrefType) {
   case kPresContext_UseDocumentFonts :
     aValue = mUseDocumentFonts;
-    rv = NS_OK;
     break;
   case kPresContext_UseDocumentColors:
     aValue = mUseDocumentColors;
-    rv = NS_OK;
     break;
   case kPresContext_UnderlineLinks:
     aValue = mUnderlineLinks;
-    rv = NS_OK;
     break;
   default :
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_INVALID_ARG;
+    NS_ERROR("invalid arg");
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetCachedIntPref(const PRUint32 aPrefType, PRInt32& aValue) 
+{
+  nsresult rv = NS_OK;
+  switch (aPrefType) {
+    case kPresContext_MinimumFontSize:
+      aValue = mMinimumFontSize;
+      break;
+    default:
+      rv = NS_ERROR_INVALID_ARG;
+      NS_ERROR("invalid arg");
   }
   return rv;
 }
@@ -835,43 +960,75 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::GetDefaultFont(nsFont& aResult)
+nsPresContext::GetDefaultFont(const PRUint8 aFontID, nsFont& aResult)
 {
-  aResult = mDefaultFont;
-  return NS_OK;
+  nsresult rv = NS_OK;
+  switch (aFontID) {
+    // Special (our default variable width font and fixed width font)
+    case kPresContext_DefaultVariableFont_ID:
+      aResult = mDefaultVariableFont;
+      break;
+    case kPresContext_DefaultFixedFont_ID:
+      aResult = mDefaultFixedFont;
+      break;
+    // CSS
+    case kGenericFont_serif:
+      aResult = mDefaultSerifFont;
+      break;
+    case kGenericFont_sans_serif:
+      aResult = mDefaultSansSerifFont;
+      break;
+    case kGenericFont_monospace:
+      aResult = mDefaultMonospaceFont;
+      break;
+    case kGenericFont_cursive:
+      aResult = mDefaultCursiveFont;
+      break;
+    case kGenericFont_fantasy: 
+      aResult = mDefaultFantasyFont;
+      break;
+    default:
+      rv = NS_ERROR_INVALID_ARG;
+      NS_ERROR("invalid arg");
+      break;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
-nsPresContext::SetDefaultFont(const nsFont& aFont)
+nsPresContext::SetDefaultFont(const PRUint8 aFontID, const nsFont& aFont)
 {
-  mDefaultFont = aFont;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetDefaultFixedFont(nsFont& aResult)
-{
-  aResult = mDefaultFixedFont;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultFixedFont(const nsFont& aFont)
-{
-  mDefaultFixedFont = aFont;
-  return NS_OK;
-}
-
-const nsFont&
-nsPresContext::GetDefaultFontDeprecated()
-{
-  return mDefaultFont;
-}
-
-const nsFont&
-nsPresContext::GetDefaultFixedFontDeprecated()
-{
-  return mDefaultFixedFont;
+  nsresult rv = NS_OK;
+  switch (aFontID) {
+    // Special (our default variable width font and fixed width font)
+    case kPresContext_DefaultVariableFont_ID: 
+      mDefaultVariableFont = aFont;
+      break;
+    case kPresContext_DefaultFixedFont_ID:
+      mDefaultFixedFont = aFont;
+      break;
+    // CSS
+    case kGenericFont_serif:
+      mDefaultSerifFont = aFont;
+      break;
+    case kGenericFont_sans_serif:
+      mDefaultSansSerifFont = aFont;
+      break;
+    case kGenericFont_monospace:
+      mDefaultMonospaceFont = aFont;
+      break;
+    case kGenericFont_cursive:
+      mDefaultCursiveFont = aFont;
+      break;
+    case kGenericFont_fantasy: 
+      mDefaultFantasyFont = aFont;
+      break;
+    default:
+      rv = NS_ERROR_INVALID_ARG;
+      NS_ERROR("invalid arg");
+      break;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -22,7 +22,7 @@
 #include "nsIRenderingContext.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetricsWin.h"
 #include "nsPoint.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -141,24 +141,31 @@ public:
                       PRInt32 *aFontID);
   NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth);
   NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
-  NS_IMETHOD GetWidth(const char *aString,
-                      PRInt32     aLength,
-                      PRInt32     aAvailWidth,
-                      PRInt32*    aBreaks,
-                      PRInt32     aNumBreaks,
-                      nscoord&    aWidth,
-                      PRInt32&    aNumCharsFit,
-                      PRInt32*    aFontID);
   NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
                       nscoord& aWidth, PRInt32 *aFontID);
-  NS_IMETHOD GetWidth(const PRUnichar *aString,
-                      PRInt32          aLength,
-                      PRInt32          aAvailWidth,
-                      PRInt32*         aBreaks,
-                      PRInt32          aNumBreaks,
-                      nscoord&         aWidth,
-                      PRInt32&         aNumCharsFit,
-                      PRInt32*         aFontID);
+
+  NS_IMETHOD GetTextDimensions(const char* aString, PRUint32 aLength,
+                               nsTextDimensions& aDimensions);
+  NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
+                               nsTextDimensions& aDimensions, PRInt32 *aFontID);
+  NS_IMETHOD GetTextDimensions(const char*       aString,
+                               PRInt32           aLength,
+                               PRInt32           aAvailWidth,
+                               PRInt32*          aBreaks,
+                               PRInt32           aNumBreaks,
+                               nsTextDimensions& aDimensions,
+                               PRInt32&          aNumCharsFit,
+                               nsTextDimensions& aLastWordDimensions,
+                               PRInt32*          aFontID = nsnull);
+  NS_IMETHOD GetTextDimensions(const PRUnichar*  aString,
+                               PRInt32           aLength,
+                               PRInt32           aAvailWidth,
+                               PRInt32*          aBreaks,
+                               PRInt32           aNumBreaks,
+                               nsTextDimensions& aDimensions,
+                               PRInt32&          aNumCharsFit,
+                               nsTextDimensions& aLastWordDimensions,
+                               PRInt32*          aFontID = nsnull);
 
   NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
@@ -168,6 +175,14 @@ public:
                         PRInt32 aFontID,
                         const nscoord* aSpacing);
   NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                        PRInt32 aFontID,
+                        const nscoord* aSpacing);
+
+  NS_IMETHOD DrawString2(const char *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        const nscoord* aSpacing);
+  NS_IMETHOD DrawString2(const PRUnichar *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
                         PRInt32 aFontID,
                         const nscoord* aSpacing);
 
@@ -255,6 +270,7 @@ protected:
   nscolor           mCurrBrushColor;
   HBRUSH            mCurrBrush;
   nsIFontMetrics    *mCurrFontMetrics;
+  nsFontWin         *mCurrFontWin;
   HFONT             mCurrFont;
   nscolor           mCurrPenColor;
   HPEN              mCurrPen;
@@ -269,28 +285,6 @@ protected:
 #ifdef IBMBIDI
   PRBool            mRightToLeftText;
 #endif // IBMBIDI
-};
-
-
-// The following is a workaround for a Japanese Windows 95 problem.
-
-class nsRenderingContextWinA : public nsRenderingContextWin
-{
-public:
-  NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                      nscoord& aWidth, PRInt32 *aFontID);
-  NS_IMETHOD GetWidth(const PRUnichar *aString,
-                      PRInt32          aLength,
-                      PRInt32          aAvailWidth,
-                      PRInt32*         aBreaks,
-                      PRInt32          aNumBreaks,
-                      nscoord&         aWidth,
-                      PRInt32&         aNumCharsFit,
-                      PRInt32*         aFontID);
-  NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        PRInt32 aFontID,
-                        const nscoord* aSpacing);
 };
 
 #endif /* nsRenderingContextWin_h___ */
