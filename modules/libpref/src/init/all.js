@@ -23,15 +23,7 @@
 // SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 //  The first character after a period must be alphabetic.
 
-config("timebomb.expiration_time",-1);
-config("timebomb.warning_time",-1);
-config("timebomb.relative_timebomb_secret_name","general.bproxy_cert_digest");
-config("timebomb.relative_timebomb_days",-1);
-config("timebomb.relative_timebomb_warning_days",-1);
-
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
-
-pref("general.bproxy_cert_digest",0);
 
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
