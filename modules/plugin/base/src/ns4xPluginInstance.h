@@ -161,6 +161,11 @@ public:
 protected:
 
     nsresult InitializePlugin(nsIPluginInstancePeer* peer);
+
+    /**
+     * Calls NPP_GetValue
+     */
+    nsresult GetValueInternal(NPPVariable variable, void* value);
     
     /**
      * The plugin instance peer for this instance.
