@@ -91,7 +91,7 @@
 		        <spring flex="80%"/>
 
             <!--box align="horizontal"-->
-                <html:button id="dialog.cancel" onclick="cancel()">&dialogCancel.label;</html:button>
+                <titledbutton class="dialog push" id="dialog.cancel" disabled="false" onclick="cancel()" value="&dialogCancel.label;"/>
             <!--/box-->
         </box>
     </box>

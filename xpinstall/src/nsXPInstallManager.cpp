@@ -61,7 +61,7 @@ static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 #define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
 
 nsXPInstallManager::nsXPInstallManager()
-  : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), mFinalizing(PR_FALSE)
+  : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), mFinalizing(PR_FALSE), mCancelled(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 
@@ -272,6 +272,13 @@ NS_IMETHODIMP nsXPInstallManager::DialogOpened(nsISupports* aWindow)
 NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 {
     nsresult rv;
+
+    if (mCancelled)
+    {
+        Shutdown();
+        return NS_OK; // don't try to download anymore
+    }
+
     if ( mNextItem < mTriggers->Size() )
     {
         // download the next item in list
@@ -303,7 +310,6 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
         else
         {
             // We have one to download
-
             // --- figure out a temp file name
             nsSpecialSystemDirectory temp(nsSpecialSystemDirectory::OS_TemporaryDirectory);
             PRInt32 pos = mItem->mURL.RFindChar('/');
@@ -353,6 +359,12 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
     {
         // all downloaded, queue them for installation
 
+        // can't cancel from here on cause we can't undo installs in a multitrigger
+        if (mProxy)
+            mProxy->StartInstallPhase();
+        else if (mDlg)
+            mDlg->StartInstallPhase();
+
         NS_WITH_SERVICE(nsISoftwareUpdate, softupdate, nsSoftwareUpdate::GetCID(), &rv);
         if (NS_SUCCEEDED(rv))
         {
@@ -392,8 +404,8 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 NS_IMETHODIMP
 nsXPInstallManager::CancelInstall()
 {
-  nsresult rv = NS_OK;
-  return rv;
+  mCancelled = PR_TRUE; // set by dialog thread
+  return NS_OK;
 }
 
 void nsXPInstallManager::Shutdown()
@@ -484,6 +496,7 @@ nsXPInstallManager::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                                   nsresult status, const PRUnichar *errorMsg)
 {
     nsresult rv;
+
     switch( status ) 
     {
 
@@ -531,6 +544,13 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
     nsresult err;
     char buffer[1025];
     
+    if (mCancelled)
+    {
+        // XXX forcing a CloseStream doesn't appear to call closesocket() (on Win32 at least),
+        // XXX so the socket lingers open but no bits are flowing in apparently; need to follow up
+        return OnStopRequest(channel, ctxt, NS_BINDING_ABORTED, (const PRUnichar *)0);
+    }
+
     do 
     {
         err = pIStream->Read(buffer, 1024, &amt);
@@ -555,13 +575,19 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
 NS_IMETHODIMP 
 nsXPInstallManager::OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
 {
-     return mProxy->SetProgress(aProgress, aProgressMax);
+    if (!mCancelled)
+        return mProxy->SetProgress(aProgress, aProgressMax);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUnichar *aMsg)
 {
-    return mProxy->SetActionText(aMsg);
+    if (!mCancelled)
+        return mProxy->SetActionText(aMsg);
+
+    return NS_OK;
 }
 
 // nsIInterfaceRequestor method

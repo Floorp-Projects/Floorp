@@ -244,6 +244,17 @@ nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax)
 }
 
 NS_IMETHODIMP
+nsInstallProgressDialog::StartInstallPhase()
+{
+    nsresult rv = NS_OK;
+
+    // don't care if this fails
+    setDlgAttribute("dialog.cancel", "disabled", nsString("true"));
+
+    return rv;
+}
+
+NS_IMETHODIMP
 nsInstallProgressDialog::GetCancelStatus(PRBool *_retval)
 {
     *_retval = PR_FALSE;
