@@ -34,7 +34,7 @@
     #define DOM_DLL        "DOM_DLL"
 
 #else /* XP_UNIX etc. */
-    #define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
+    #define PARSER_DLL "libhtmlpars"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
 #endif
 

@@ -23,7 +23,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
+MODULE		= widget
 
 SIMPLE_PROGRAMS = dirpicker$(BIN_SUFFIX)
 

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
+MODULE		= layout
 LIBRARY_NAME	= gfxxprt
 IS_COMPONENT	= 1
 
@@ -63,7 +63,7 @@ endif
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
 
-LLIBS		+= $(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorgfx.a
+LLIBS		+= $(DIST)/lib/libxpcom.a $(DIST)/lib/libgkgfx.a
 
 INCLUDES	+= \
 		-I$(srcdir)/../gtk \

@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= raptorsvgbase_s
+LIBRARY_NAME	= gksvgbase_s
 
 CPPSRCS		= \
   nsSVGContainerFrame.cpp \

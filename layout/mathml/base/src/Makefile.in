@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = raptormathmlbase_s
+LIBRARY_NAME = gkmathmlbase_s
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../base/src		\

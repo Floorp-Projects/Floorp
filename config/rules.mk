@@ -541,7 +541,8 @@ distclean:: $(SUBMAKEFILES)
 	rm -rf $(ALL_TRASH) \
 	$(wildcard *.map) \
 	Makefile .HSancillary $(DIST_GARBAGE) \
-	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho)
+	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) \
+	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX))
 
 alltags:
 	rm -f TAGS

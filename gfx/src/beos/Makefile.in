@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
+MODULE		= layout
 LIBRARY_NAME	= gfx_beos
 
 
@@ -49,7 +49,7 @@ CXXFLAGS	+= $(TK_CFLAGS)
 INCLUDES	+= $(TK_CFLAGS)
 
 EXTRA_DSO_LDOPTS += \
-	-lraptorgfx \
+	-lgkgfx \
 	$(XPCOM_LIBS) \
 	$(TK_LIBS) \
 	$(NSPR_LIBS) 

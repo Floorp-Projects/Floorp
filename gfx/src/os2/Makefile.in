@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
+MODULE		= layout
 LIBRARY_NAME	= gfx_os2
 
 

@@ -53,8 +53,8 @@
 #define RAPTORBASE_DLL "base.shlb"
 #define XPCOM_DLL "XPCOM_DLL"
 #else /* else XP_MAC */
-#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
-#define RAPTORBASE_DLL "libraptorbase"MOZ_DLL_SUFFIX
+#define NETLIB_DLL "libnecko"MOZ_DLL_SUFFIX
+#define RAPTORBASE_DLL "libgklayout"MOZ_DLL_SUFFIX
 #define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #endif /* XP_MAC */
 #endif /* XP_PC */

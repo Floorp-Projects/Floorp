@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 IS_COMPONENT=1
-MODULE		= raptor
+MODULE		= appshell
 LIBRARY_NAME	= nsappshell
 SHORT_LIBNAME	= appshell
 

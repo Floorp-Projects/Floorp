@@ -38,8 +38,8 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(addprefix $(DIST)/lib/libraptorwidget,$(addsuffix _s.$(LIB_SUFFIX),$(MOZ_WIDGET_TOOLKIT))) \
-		$(DIST)/lib/libraptorbasewidget_s.$(LIB_SUFFIX) \
+		$(addprefix $(DIST)/lib/libwidget,$(addsuffix _s.$(LIB_SUFFIX),$(MOZ_WIDGET_TOOLKIT))) \
+		$(DIST)/lib/libxpwidgets_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -39,24 +39,24 @@ LOCAL_INCLUDES	= -I$(srcdir)/../style/src
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS += nggfx
 else
-EXTRA_DSO_LIBS += raptorgfx
+EXTRA_DSO_LIBS += gkgfx
 endif
 
 EXTRA_DSO_LIBS += jsdom
 
 LIBS		= \
-		$(DIST)/lib/libraptorhtmlbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libnglhtmlcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorhtmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorhtmlforms_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorhtmlstyle_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorhtmltable_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorlayout_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorevents_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorxmlcontent_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorxmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorxulbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libraptorxulcontent_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkhtmlbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkhtmlcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkhtmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkhtmlforms_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkhtmlstyle_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkhtmltable_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkxmlcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkxmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkxulbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkxulcon_s.$(LIB_SUFFIX) \
 		$(MOZ_JS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(TK_LIBS) \

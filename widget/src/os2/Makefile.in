@@ -71,7 +71,7 @@ CPPSRCS		= \
 #              nsTabWidget.cpp \
 #              nsTooltipWidget.cpp \
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
 	  	$(EXTRA_DSO_LIBS) \

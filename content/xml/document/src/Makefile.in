@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= raptorxmldoc_s
+LIBRARY_NAME	= gkxmldoc_s
 
 
 CPPSRCS		= \
@@ -56,6 +56,5 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../html/style/src \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../xul/content/src \
-		-I$(DIST)/public/raptor \
 		$(NULL)
 

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
+MODULE		= layout
 LIBRARY_NAME	= gfx_gtk
 IS_COMPONENT	= 1
 
@@ -63,7 +63,7 @@ CFLAGS		+= $(TK_CFLAGS)
 endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
-		-lraptorgfx \
+		-lgkgfx \
 		$(NULL)
 
 DEFINES		+= -D_IMPL_NS_GFXNONXP

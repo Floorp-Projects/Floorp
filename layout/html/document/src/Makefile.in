@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= raptorhtmldoc_s
+LIBRARY_NAME	= gkhtmldoc_s
 
 
 CPPSRCS		= \
@@ -63,7 +63,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../../style/src \
 		-I$(srcdir)/../../table/src \
 		-I$(srcdir)/../../dom \
-		-I$(DIST)/public/raptor \
 		$(NULL)
 
 GARBAGE		+= $(DIST)/bin/res/ua.css $(DIST)/bin/res/html.css $(DIST)/bin/res/quirk.css $(DIST)/bin/res/arrow.gif

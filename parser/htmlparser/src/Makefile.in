@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= htmlparser
-LIBRARY_NAME	= raptorhtmlpars
+LIBRARY_NAME	= htmlpars
 IS_COMPONENT	= 1
 SHORT_LIBNAME	= htmlpars
 EXTRA_DSO_LIBS	= expat_s xmltok_s mozutil_s

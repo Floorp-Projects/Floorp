@@ -7,6 +7,8 @@
 
 #ifdef XP_PC
 #define PARSER_DLL "gkparser.dll"
+#elif defined(XP_UNIX) || defined(XP_BEOS)
+#define PARSER_DLL "libhtmlpars"MOZ_DLL_SUFFIX
 #else
 #define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
 #endif

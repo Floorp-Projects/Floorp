@@ -56,7 +56,7 @@ CPPSRCS		= \
 		nsXtManageWidget.cpp \
 		$(NULL)
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_MOTIF_LDFLAGS)

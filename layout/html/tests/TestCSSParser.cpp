@@ -50,9 +50,9 @@
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
+#define NETLIB_DLL "libnecko"MOZ_DLL_SUFFIX
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
-#define LAYOUT_DLL    "libraptorhtml"MOZ_DLL_SUFFIX
+#define LAYOUT_DLL    "libgklayout"MOZ_DLL_SUFFIX
 #endif
 #endif
 
