@@ -66,7 +66,7 @@ protected:
     double mSum;
     double mSumOfSquares;
 
-    static PLHashNumber HashPRInt32(const void* aKey);
+    static PLHashNumber PR_CALLBACK HashPRInt32(const void* aKey);
 };
 
 
