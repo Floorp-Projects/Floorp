@@ -39,7 +39,6 @@
             data.wrap            = document.getElementById("data.wrap");
             data.searchBackwards = document.getElementById("data.searchBackwards");
             data.execute         = document.getElementById("data.execute");
-            dumpData();
         }
 
         function initDialog() {
@@ -102,7 +101,6 @@
             } else {
                 data.searchBackwards.setAttribute( "value", "false" );
             }
-            dumpData();
         }
 
         function dumpData() {
@@ -147,7 +145,6 @@
             data.execute.setAttribute( "wrap", data.wrap.getAttribute("value") );
 
             // Fire command.
-            dumpData();
             data.execute.setAttribute( "command", "find" );
         }
 
