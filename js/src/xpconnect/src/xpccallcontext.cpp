@@ -338,6 +338,10 @@ XPCCallContext::~XPCCallContext()
             JS_DestroyContext(mJSContext);
             mXPC->SyncJSContexts();
         }
+        else
+        {
+            JS_ClearNewbornRoots(mJSContext);
+        }
     }
 
     NS_IF_RELEASE(mXPC);
