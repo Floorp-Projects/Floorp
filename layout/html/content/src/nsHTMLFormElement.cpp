@@ -317,28 +317,30 @@ nsHTMLFormElement::Submit()
 NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
-  // XXX Need to do something special with mailto: or news: URLs
   nsIDocument* doc = nsnull; // Strong
   nsresult res = GetDocument(doc);
   if (NS_SUCCEEDED(res) && doc) {
-    // Make sure the presentation is up-to-date
-    doc->FlushPendingNotifications();
+    PRInt32 numShells = doc->GetNumberOfShells();
+    nsCOMPtr<nsIPresContext> context;
+    for (PRInt32 i=0; i<numShells; i++) {
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
+      if (shell) {
+        res = shell->GetPresContext(getter_AddRefs(context));
+        if (NS_SUCCEEDED(res) && context) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_GUI_EVENT;
+          event.message = NS_FORM_RESET;
+          event.isShift = PR_FALSE;
+          event.isControl = PR_FALSE;
+          event.isAlt = PR_FALSE;
+          event.isMeta = PR_FALSE;
+          event.clickCount = 0;
+          event.widget = nsnull;
 
-    nsIPresShell *shell = doc->GetShellAt(0); // Strong
-    if (nsnull != shell) {
-      nsIFrame* frame;
-      shell->GetPrimaryFrameFor(this, &frame);
-      if (frame) {
-        nsIFormManager* formMan = nsnull;
-        res = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
-        if (NS_SUCCEEDED(res) && formMan) {
-          nsCOMPtr<nsIPresContext> presContext;
-          shell->GetPresContext(getter_AddRefs(presContext));
-          
-          res = formMan->OnReset(presContext);
+          res = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
       }
-      NS_RELEASE(shell);
     }
     NS_RELEASE(doc);
   }
@@ -433,8 +435,42 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
                            PRUint32 aFlags,
                            nsEventStatus* aEventStatus)
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+  nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
+      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
+
+    switch (aEvent->message) {
+      case NS_FORM_RESET:
+      {
+       // XXX Need to do something special with mailto: or news: URLs
+       nsIDocument* doc = nsnull; // Strong
+       nsresult res = GetDocument(doc);
+       if (NS_SUCCEEDED(res) && doc) {
+         // Make sure the presentation is up-to-date
+         doc->FlushPendingNotifications();
+         NS_RELEASE(doc);
+       }
+
+       nsCOMPtr<nsIPresShell> shell;
+       aPresContext->GetShell(getter_AddRefs(shell));
+       if (shell) {
+         nsIFrame* frame;
+         shell->GetPrimaryFrameFor(this, &frame);
+         if (frame) {
+           nsIFormManager* formMan = nsnull;
+           ret = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
+           if (NS_SUCCEEDED(ret) && formMan) {
+             ret = formMan->OnReset(aPresContext);
+           }
+         }
+       }
+      }
+      break;
+    }
+  }
+  return ret;
 }
 
 // nsIForm
