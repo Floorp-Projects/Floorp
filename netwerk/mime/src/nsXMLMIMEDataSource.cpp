@@ -288,10 +288,10 @@ nsXMLMIMEDataSource::GetEnumerator(nsISimpleEnumerator* *aEnumerator) {
 
 NS_IMETHODIMP
 nsXMLMIMEDataSource::Serialize() {
-return NS_ERROR_FAILURE;
-#if 0
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIChannel> channel;
+
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
   if(NS_FAILED(rv)) return rv ;
  
@@ -310,7 +310,7 @@ return NS_ERROR_FAILURE;
   	return rv;
   nsCString buffer;
   nsXPIDLCString cdata;
-  nsXPIDLString unidata;
+ 
   
   buffer="<?xml version=\"1.0\"?>\r";
   PRUint32 bytesWritten;
@@ -326,12 +326,15 @@ return NS_ERROR_FAILURE;
 			return rv;
 			
 		buffer="<mimetype ";
-		rv = info->GetDescription( getter_Copies( unidata ) );
+		
+		PRUnichar* unidata;
+		rv = info->GetDescription( &unidata  );
 		if ( NS_FAILED ( rv ) )
 			return rv;
 		buffer+= kDescription;
 		buffer+="=\"";
-		nsString temp = unidata;
+		nsString temp( unidata );
+		nsAllocator::Free( unidata );
 		char* utf8 = temp.ToNewUTF8String();
 		buffer+=utf8;
 		nsAllocator::Free( utf8 );
@@ -394,8 +397,6 @@ return NS_ERROR_FAILURE;
   rv = stream->Close();
 
   return rv;
-#endif
-
 }
 
 nsresult
@@ -690,10 +691,13 @@ nsXMLMIMEDataSource::InitFromFile( nsIFile*  aFile  )
   // we don't need to worry about notification callbacks
  nsCOMPtr<nsIInputStream> stream;
  rv = channel->OpenInputStream( getter_AddRefs( stream ) ) ;
-
+ if(NS_FAILED(rv))  return rv ;
+    
  PRUint32 streamLength;
  PRInt64 fileLength;
- aFile->GetFileSize( &fileLength );
+ rv = aFile->GetFileSize( &fileLength );
+ if( NS_FAILED(rv)) return rv ;
+ 
  LL_L2I( streamLength,fileLength  );
  
  char* buffer = new char[streamLength ];
