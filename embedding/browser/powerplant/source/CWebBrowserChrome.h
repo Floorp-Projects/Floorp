@@ -29,8 +29,8 @@
 
 // Interfaces Needed
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebBrowserSiteWindow.h"
 #include "nsIWebProgressListener.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIContextMenuListener.h"
@@ -40,15 +40,12 @@
 // Other
 #include "nsIWebBrowser.h"
 
-#include <vector>
-using namespace std;
-
 class CBrowserWindow;
 class CBrowserShell;
 
 class CWebBrowserChrome : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
-                           public nsIWebBrowserSiteWindow,
+                           public nsIEmbeddingSiteWindow,
                            public nsIPrompt,
                            public nsIInterfaceRequestor,
                            public nsIContextMenuListener,
@@ -61,7 +58,7 @@ public:
    NS_DECL_ISUPPORTS
    NS_DECL_NSIWEBBROWSERCHROME
    NS_DECL_NSIWEBPROGRESSLISTENER
-   NS_DECL_NSIWEBBROWSERSITEWINDOW
+   NS_DECL_NSIEMBEDDINGSITEWINDOW
    NS_DECL_NSIPROMPT
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSICONTEXTMENULISTENER
@@ -80,9 +77,7 @@ protected:
    
    Boolean mPreviousBalloonState;     // are balloons on or off?
    
-   nsCOMPtr<nsIPrompt> mPrompter;
-   
-   static vector<CWebBrowserChrome*> mgBrowserList;
+   nsCOMPtr<nsIPrompt> mPrompter;   
 };
 
 #endif /* __CWebBrowserChrome__ */
