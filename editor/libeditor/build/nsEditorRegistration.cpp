@@ -46,6 +46,9 @@
 #include "nsIControllerContext.h"
 #include "nsIControllerCommandTable.h"
 #include "nsIServiceManager.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsCOMPtr.h"
 
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "nsHTMLEditor.h"
@@ -58,15 +61,80 @@
 
 static NS_DEFINE_CID(kEditorCommandTableCID, NS_EDITORCOMMANDTABLE_CID);
 
+PR_STATIC_CALLBACK(nsresult) Initialize(nsIModule* self);
+static void Shutdown();
+
+class EditorShutdownObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(EditorShutdownObserver, nsIObserver)
+
+NS_IMETHODIMP
+EditorShutdownObserver::Observe(nsISupports *aSubject,
+                                const char *aTopic,
+                                const PRUnichar *someData)
+{
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
+    Shutdown();
+  return NS_OK;
+}
+
+static PRBool gInitialized = PR_FALSE;
+
 PR_STATIC_CALLBACK(nsresult)
 Initialize(nsIModule* self)
 {
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
-    nsEditProperty::RegisterAtoms();
-#endif
+  NS_PRECONDITION(!gInitialized, "module already initialized");
+  if (gInitialized) {
     return NS_OK;
+  }
+
+  gInitialized = PR_TRUE;
+
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+  nsEditProperty::RegisterAtoms();
+  nsTextServicesDocument::RegisterAtoms();
+#endif
+
+  // Add our shutdown observer.
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+
+  if (observerService) {
+    nsCOMPtr<EditorShutdownObserver> observer =
+      new EditorShutdownObserver();
+
+    if (!observer) {
+      Shutdown();
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    observerService->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  } else {
+    NS_WARNING("Could not get an observer service.  We will leak on shutdown.");
+  }
+
+  return NS_OK;
 }
 
+// static
+void
+Shutdown()
+{
+  NS_PRECONDITION(gInitialized, "module not initialized");
+  if (!gInitialized)
+    return;
+
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+  nsHTMLEditor::Shutdown();
+  nsTextServicesDocument::Shutdown();
+#endif
+}
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 

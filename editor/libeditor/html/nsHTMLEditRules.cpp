@@ -63,6 +63,7 @@
 #include "nsISelectionController.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
+#include "nsIRangeUtils.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
 #include "nsIPresShell.h"
@@ -5014,7 +5015,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
     
     // check if block is entirely inside range
     nsCOMPtr<nsIContent> brContentBlock = do_QueryInterface(brBlock);
-    res = mHTMLEditor->mRangeHelper->CompareNodeToRange(brContentBlock, range, &nodeBefore, &nodeAfter);
+    res = mHTMLEditor->sRangeHelper->CompareNodeToRange(brContentBlock, range, &nodeBefore, &nodeAfter);
     
     // if block isn't contained, forgo grabbing the br in the expanded selection
     if (nodeBefore || nodeAfter)
@@ -5246,9 +5247,9 @@ nsHTMLEditRules::NormalizeSelection(nsISelection *inSelection)
   // then just leave things alone.
   
   PRInt16 comp;
-  comp = mHTMLEditor->mRangeHelper->ComparePoints(startNode, startOffset, newEndNode, newEndOffset);
+  comp = mHTMLEditor->sRangeHelper->ComparePoints(startNode, startOffset, newEndNode, newEndOffset);
   if (comp == 1) return NS_OK;  // new end before old start
-  comp = mHTMLEditor->mRangeHelper->ComparePoints(newStartNode, newStartOffset, endNode, endOffset);
+  comp = mHTMLEditor->sRangeHelper->ComparePoints(newStartNode, newStartOffset, endNode, endOffset);
   if (comp == 1) return NS_OK;  // new start after old end
   
   // otherwise set selection to new values.  
@@ -7266,7 +7267,7 @@ nsHTMLEditRules::PinSelectionToNewBlock(nsISelection *aSelection)
   if (NS_FAILED(res)) return res;
   temp = selNode;
   
-  // use ranges and mRangeHelper to compare sel point to new block
+  // use ranges and sRangeHelper to compare sel point to new block
   nsCOMPtr<nsIDOMRange> range = do_CreateInstance("@mozilla.org/content/range;1");
   res = range->SetStart(selNode, selOffset);
   if (NS_FAILED(res)) return res;
@@ -7275,7 +7276,7 @@ nsHTMLEditRules::PinSelectionToNewBlock(nsISelection *aSelection)
   nsCOMPtr<nsIContent> block (do_QueryInterface(mNewBlock));
   if (!block) return NS_ERROR_NO_INTERFACE;
   PRBool nodeBefore, nodeAfter;
-  res = mHTMLEditor->mRangeHelper->CompareNodeToRange(block, range, &nodeBefore, &nodeAfter);
+  res = mHTMLEditor->sRangeHelper->CompareNodeToRange(block, range, &nodeBefore, &nodeAfter);
   if (NS_FAILED(res)) return res;
   
   if (nodeBefore && nodeAfter)

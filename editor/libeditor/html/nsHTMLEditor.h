@@ -55,7 +55,6 @@
 #include "nsICSSLoader.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsITableLayout.h"
-#include "nsIRangeUtils.h"
 
 #include "nsEditRules.h"
 
@@ -83,6 +82,7 @@ class nsIClipboard;
 class TypeInState;
 class nsIContentFilter;
 class nsIURL;
+class nsIRangeUtils;
 
 /**
  * The HTML editor implementation.<br>
@@ -787,8 +787,6 @@ protected:
   // Used by GetFirstSelectedCell and GetNextSelectedCell
   PRInt32  mSelectedCellIndex;
 
-  nsCOMPtr<nsIRangeUtils> mRangeHelper;
-
   nsString mLastStyleSheetURL;
   nsString mLastOverrideStyleSheetURL;
 
@@ -804,9 +802,14 @@ protected:
   nsVoidArray mDefaultStyles;
 
   // Maintain a static parser service ...
-  static nsCOMPtr<nsIParserService> sParserService;
-  // ... which means that we need an instance count to know when to delete it
-  static PRInt32 sInstanceCount;
+  static nsIParserService* sParserService;
+
+  // And a static range utils service
+  static nsIRangeUtils* sRangeHelper;
+
+public:
+  // ... which means that we need to listen to shutdown
+  static void Shutdown();
 
 protected:
 

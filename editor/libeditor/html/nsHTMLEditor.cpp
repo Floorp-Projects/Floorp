@@ -85,6 +85,7 @@
 #include "nsIContentIterator.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
+#include "nsIRangeUtils.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsIURL.h"
@@ -136,8 +137,8 @@ static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 
-nsCOMPtr<nsIParserService> nsHTMLEditor::sParserService;
-PRInt32 nsHTMLEditor::sInstanceCount = 0;
+nsIParserService* nsHTMLEditor::sParserService;
+nsIRangeUtils* nsHTMLEditor::sRangeHelper;
 
 // some prototypes for rules creation shortcuts
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
@@ -167,7 +168,6 @@ nsHTMLEditor::nsHTMLEditor()
   mUnderlineAtom = do_GetAtom("u");
   mFontAtom = do_GetAtom("font");
   mLinkAtom = do_GetAtom("a");
-  ++sInstanceCount;
 } 
 
 nsHTMLEditor::~nsHTMLEditor()
@@ -199,14 +199,19 @@ nsHTMLEditor::~nsHTMLEditor()
   NS_IF_RELEASE(mTypeInState);
   mSelectionListenerP = nsnull;
 
-  if (--sInstanceCount == 0 && sParserService)
-    sParserService = 0;
-
   if (mHTMLCSSUtils)
     delete mHTMLCSSUtils;
   
   // free any default style propItems
   RemoveAllDefaultProperties();
+}
+
+/* static */
+void
+nsHTMLEditor::Shutdown()
+{
+  NS_IF_RELEASE(sParserService);
+  NS_IF_RELEASE(sRangeHelper);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditor, nsEditor)
@@ -233,8 +238,11 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   nsresult result = NS_OK, rulesRes = NS_OK;
 
   // make a range util object for comparing dom points
-  mRangeHelper = do_CreateInstance("@mozilla.org/content/range-utils;1");
-  if (!mRangeHelper) return NS_ERROR_NULL_POINTER;
+  if (!sRangeHelper) {
+    result = CallGetService("@mozilla.org/content/range-utils;1",
+                            &sRangeHelper);
+    if (!sRangeHelper) return result;
+  }
    
   if (1)
   {
@@ -575,7 +583,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
   if (!tagAtom) return NS_ERROR_NULL_POINTER;
 
   if (!sParserService) {
-    sParserService = do_GetService("@mozilla.org/parser/parser-service;1", &rv);
+    rv = CallGetService("@mozilla.org/parser/parser-service;1", &sParserService);
     if (NS_FAILED(rv)) return rv;
   }
 
