@@ -485,8 +485,9 @@ void nsFontMetricsGTK::RealizeFont()
 
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))
   {
-    /* this will only be provided from adobe .afm fonts */
-    mUnderlineOffset = NSToIntRound(pr * f);
+    /* this will only be provided from adobe .afm fonts and TrueType
+     * fonts served by xfsft (not xfstt!) */
+    mUnderlineOffset = -NSToIntRound(pr * f);
 #ifdef REALLY_NOISY_FONTS
     printf("underlineOffset=%d\n", mUnderlineOffset);
 #endif
