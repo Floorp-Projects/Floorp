@@ -131,6 +131,10 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   htmlReflow->WillReflow(mPresContext);
 
 #ifdef DEBUG
+  mMetrics.width = nscoord(0xdeadbeef);
+  mMetrics.height = nscoord(0xdeadbeef);
+  mMetrics.ascent = nscoord(0xdeadbeef);
+  mMetrics.descent = nscoord(0xdeadbeef);
   if (nsnull != mMetrics.maxElementSize) {
     mMetrics.maxElementSize->width = nscoord(0xdeadbeef);
     mMetrics.maxElementSize->height = nscoord(0xdeadbeef);
@@ -164,6 +168,15 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     printf(" didn't set max-element-size!\n");
     mMetrics.maxElementSize->width = 0;
     mMetrics.maxElementSize->height = 0;
+  }
+  if ((mMetrics.width == nscoord(0xdeadbeef)) ||
+      (mMetrics.height == nscoord(0xdeadbeef)) ||
+      (mMetrics.ascent == nscoord(0xdeadbeef)) ||
+      (mMetrics.descent == nscoord(0xdeadbeef))) {
+    printf("nsBlockReflowContext: ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" didn't set whad %d,%d,%d,%d!\n", mMetrics.width, mMetrics.height,
+           mMetrics.ascent, mMetrics.descent);
   }
 #endif
 
