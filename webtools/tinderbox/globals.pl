@@ -201,11 +201,21 @@ sub load_buildlog {
     
       my ($bw) = Backwards->new("$t->{name}/build.dat") or die;
 
+      my $tooearly = 0;
       while( $_ = $bw->readline ) {
             chomp;
             ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
                 split( /\|/ );
-	    last if $buildtime < $mindate;
+            if ($buildtime < $mindate) {
+                # Occasionally, a build might show up with a bogus time.  So,
+                # we won't judge ourselves as having hit the end until we
+                # hit a full 20 lines in a row that are too early.
+                if ($tooearly++ > 20) {
+                    last;
+                }
+                next;
+            }
+            $tooearly = 0;
             $buildrec = {    
                         mailtime => $mailtime,
                         buildtime => $buildtime,
