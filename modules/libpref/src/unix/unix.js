@@ -358,4 +358,7 @@ pref("print.postscript.nativefont.zh-CN",          "");
 pref("print.postscript.nativefont.zh-TW",          "");
 
 pref("mail.signature_date", 0);
+
+// until bug #130581 is fixed, we need to override this on linux
+pref("mail.compose.max_recycled_windows", 0);
 // EOF.
