@@ -3714,8 +3714,10 @@ get_inner_gdk_window (GdkWindow *aWindow,
 inline PRBool
 is_context_menu_key(const nsKeyEvent& aKeyEvent)
 {
-    return (aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
-            !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt);
+    return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
+             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt) ||
+            (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.isShift &&
+             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt));
 }
 
 void
