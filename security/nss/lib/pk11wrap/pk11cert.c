@@ -52,6 +52,9 @@
 #include "secerr.h"
 #include "sslerr.h"
 
+#define NSSCKT_H /* we included pkcs11t.h, so block ckt.h from including nssckt.h */
+#include "ckt.h"
+
 #define PK11_SEARCH_CHUNKSIZE 10
 
 CK_OBJECT_HANDLE
@@ -396,6 +399,126 @@ CERTCertificate
     return cert;
 }
 
+CK_TRUST
+pk11_GetTrustField(PK11SlotInfo *slot, PRArenaPool *arena, 
+                   CK_OBJECT_HANDLE id, CK_ATTRIBUTE_TYPE type)
+{
+  CK_TRUST rv = 0;
+  SECItem item;
+
+  item.data = NULL;
+  item.len = 0;
+
+  if( SECSuccess == PK11_ReadAttribute(slot, id, type, arena, &item) ) {
+    PORT_Assert(item.len == sizeof(CK_TRUST));
+    PORT_Memcpy(&rv, item.data, sizeof(CK_TRUST));
+    /* Damn, is there an endian problem here? */
+    return rv;
+  }
+
+  return 0;
+}
+
+PRBool
+pk11_HandleTrustObject(PK11SlotInfo *slot, CERTCertificate *cert, CERTCertTrust *trust)
+{
+  PRArenaPool *arena;
+
+  CK_ATTRIBUTE tobjTemplate[] = {
+    { CKA_CLASS, NULL, 0 },
+    { CKA_CERT_SHA1_HASH, NULL, 0 },
+  };
+
+  CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
+  CK_OBJECT_HANDLE tobjID;
+  unsigned char sha1_hash[SHA1_LENGTH];
+
+  CK_TRUST digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment,
+    keyAgreement, keyCertSign, crlSign, serverAuth, clientAuth, codeSigning,
+    emailProtection, ipsecEndSystem, ipsecTunnel, ipsecUser, timeStamping;
+
+  SECItem item;
+
+  PK11_HashBuf(SEC_OID_SHA1, sha1_hash, cert->derCert.data, cert->derCert.len);
+
+  PK11_SETATTRS(&tobjTemplate[0], CKA_CLASS, &tobjc, sizeof(tobjc));
+  PK11_SETATTRS(&tobjTemplate[1], CKA_CERT_SHA1_HASH, sha1_hash, 
+                SHA1_LENGTH);
+
+  tobjID = pk11_FindObjectByTemplate(slot, tobjTemplate, 
+                                     sizeof(tobjTemplate)/sizeof(tobjTemplate[0]));
+  if( CK_INVALID_KEY == tobjID ) {
+    return PR_FALSE;
+  }
+
+  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if( NULL == arena ) return PR_FALSE;
+
+  /* Unfortunately, it seems that PK11_GetAttributes doesn't deal
+   * well with nonexistant attributes.  I guess we have to check 
+   * the trust info fields one at a time.
+   */
+
+  /* We could verify CKA_CERT_HASH here */
+
+  /* We could verify CKA_EXPIRES here */
+
+  /* "Usage" trust information */
+  /* digitalSignature = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_DIGITAL_SIGNATURE); */
+  /* nonRepudiation   = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_NON_REPUDIATION); */
+  /* keyEncipherment  = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_KEY_ENCIPHERMENT); */
+  /* dataEncipherment = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_DATA_ENCIPHERMENT); */
+  /* keyAgreement     = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_KEY_AGREEMENT); */
+  /* keyCertSign      = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_KEY_CERT_SIGN); */
+  /* crlSign          = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_CRL_SIGN); */
+
+  /* "Purpose" trust information */
+  serverAuth       = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_SERVER_AUTH);
+  /* clientAuth       = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_CLIENT_AUTH); */
+  codeSigning      = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_CODE_SIGNING);
+  emailProtection  = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_EMAIL_PROTECTION);
+  /* ipsecEndSystem   = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_IPSEC_END_SYSTEM); */
+  /* ipsecTunnel      = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_IPSEC_TUNNEL); */
+  /* ipsecUser        = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_IPSEC_USER); */
+  /* timeStamping     = pk11_GetTrustField(slot, arena, tobjID, CKA_TRUST_TIME_STAMPING); */
+
+  /* Here's where the fun logic happens.  We have to map back from the key usage,
+   * extended key usage, purpose, and possibly other trust values into the old
+   * trust-flags bits.
+   */
+
+  /* First implementation: keep it simple for testing.  We can study what other
+   * mappings would be appropriate and add them later.. fgmr 20000724 */
+
+  if( serverAuth & CKT_NETSCAPE_TRUSTED ) {
+    trust->sslFlags |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
+  }
+
+  if( serverAuth & CKT_NETSCAPE_TRUSTED_DELEGATOR ) {
+    trust->sslFlags |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA | CERTDB_NS_TRUSTED_CA;
+  }
+
+  if( emailProtection & CKT_NETSCAPE_TRUSTED ) {
+    trust->emailFlags |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
+  }
+
+  if( emailProtection & CKT_NETSCAPE_TRUSTED_DELEGATOR ) {
+    trust->emailFlags |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA | CERTDB_NS_TRUSTED_CA;
+  }
+
+  if( codeSigning & CKT_NETSCAPE_TRUSTED ) {
+    trust->objectSigningFlags |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
+  }
+
+  if( codeSigning & CKT_NETSCAPE_TRUSTED_DELEGATOR ) {
+    trust->objectSigningFlags |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA | CERTDB_NS_TRUSTED_CA;
+  }
+
+  /* There's certainly a lot more logic that can go here.. */
+
+  return PR_TRUE;
+}
+
 /*
  * Build an CERTCertificate structure from a PKCS#11 object ID.... certID
  * Must be a CertObject. This code does not explicitly checks that.
@@ -442,6 +565,14 @@ PK11_MakeCertFromHandle(PK11SlotInfo *slot,CK_OBJECT_HANDLE certID,
 	PORT_Memset(trust,0, sizeof(CERTCertTrust));
 	cert->trust = trust;
 	/* build some cert trust flags */
+
+    /* First, see if there's a trust object for this cert. */
+    /* For the first implementation, we'll just check this slot
+     * and worry about overriding trust info later. */
+    if( pk11_HandleTrustObject(slot, cert, trust) ) {
+      ;
+    } else
+
 	if (CERT_IsCACert(cert, &type)) {
 	    unsigned int trustflags = CERTDB_VALID_CA;
 	   
