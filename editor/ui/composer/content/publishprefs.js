@@ -521,14 +521,14 @@ function PublishSiteNameExists(name, publishSiteData, skipSiteIndex)
 // docUrl: Document URL with or without filename
 //         (Must end in "/" if no filename)
 // dirObj.value =  the directory of the document URL 
-//      relative to the base publishing URL, using "/" if none
+//      relative to the base publishing URL, using "" if none
 //
 // XXX: Currently finds the site with the longest-matching url;
 //      should we look for the shortest instead? Or match just the host portion?
 function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
 {
   if (dirObj)
-    dirObj.value = "/";
+    dirObj.value = "";
 
   if (!publishSiteData || !docUrl || GetScheme(docUrl) == "file")
     return -1;
@@ -559,7 +559,7 @@ function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
     }
   }
 
-  // Get directory name from the end of url (may be just "/")
+  // Get directory name from the end of url
   if (dirObj && siteIndex >= 0 && urlLen > siteUrlLen)
     dirObj.value = FormatDirForPublishing(docUrl.slice(siteUrlLen));
 

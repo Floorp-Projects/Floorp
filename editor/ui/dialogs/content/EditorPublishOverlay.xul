@@ -35,7 +35,7 @@
     <caption label="&serverInfo.label;"/>
     <hbox align="center">
       <label value="&siteName.label;"/>
-      <textbox id="SiteNameInput" class="MinWidth20em" oninput="onInputSettings();"/>
+      <textbox id="SiteNameInput" class="MinWidth20em" oninput="onInputSettings();" flex="1"/>
     </hbox>
     <spacer class="spacer"/>
     <label value="&siteUrl.label;"/>

@@ -285,9 +285,9 @@ function UpdateSettings()
   {
     // Init new site profile
     gPublishSiteData[gCurrentSiteIndex] = {};
-    gPublishSiteData[gCurrentSiteIndex].docDir = "/";
-    gPublishSiteData[gCurrentSiteIndex].otherDir = "/";
-    gPublishSiteData[gCurrentSiteIndex].dirList = ["/"];
+    gPublishSiteData[gCurrentSiteIndex].docDir = "";
+    gPublishSiteData[gCurrentSiteIndex].otherDir = "";
+    gPublishSiteData[gCurrentSiteIndex].dirList = [""];
   }
 
   gPublishSiteData[gCurrentSiteIndex].siteName = newName;

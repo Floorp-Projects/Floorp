@@ -184,18 +184,15 @@ function Startup()
     // No selected site -- assume same directory
     gDialog.OtherDirRadiogroup.selectedItem = gDialog.SameLocationRadio;
   }
-  else
+  else if (gPublishSiteData[gDialog.SiteList.selectedIndex].docDir == 
+        gPublishSiteData[gDialog.SiteList.selectedIndex].otherDir)
   {
     // For now, check "same location" if dirs are already set to same directory
-    if (gPublishSiteData[gDialog.SiteList.selectedIndex].docDir == 
-        gPublishSiteData[gDialog.SiteList.selectedIndex].otherDir)
-    {
-      gDialog.OtherDirRadiogroup.selectedItem = gDialog.SameLocationRadio;
-    }
-    else
-    {
-      gDialog.OtherDirRadiogroup.selectedItem = gDialog.OtherDirRadiogroup;
-    }
+    gDialog.OtherDirRadiogroup.selectedItem = gDialog.SameLocationRadio;
+  }
+  else
+  {
+    gDialog.OtherDirRadiogroup.selectedItem = gDialog.UseSubdirRadio;
   }
 
   doEnabling();
@@ -215,7 +212,13 @@ function FillSiteList()
   for (i = 0; i < count; i++)
   {
     var name = gPublishSiteData[i].siteName;
-    var menuitem = AppendStringToMenulist(gDialog.SiteList, name);
+    var menuitem = AppendLabelAndValueToMenulist(gDialog.SiteList, name);
+
+    // XXX Bug 131481: Using "max-width" style and "crop" attribute 
+    //     don't constrain grid width properly, resulting in cut-off buttons
+    //     One workaround is to truncate label strings to prevent this problem
+    // ...TruncateStringAtWordEnd(name, 20, true), name);
+
     // Highlight the default site
     if (name == gDefaultSiteName)
     {
@@ -346,6 +349,9 @@ function SwitchPanel(panel)
       gDialog.SettingsTab.selected = null;
     }
     gCurrentPanel = panel;
+    // This is done to show/compensate for bug 131481
+    //  Dialog is resized to incorrect size, but at least buttons aren't cut off!
+//    window.sizeToContent();
   }
 }
 
@@ -440,7 +446,6 @@ function ValidateSettings()
     return false;
   }
 
-  //TODO: If publish scheme = "ftp" we should encourage user to supply the http BrowseUrl
   var browseUrl = GetBrowseUrlInput();
 
   var username = TrimString(gDialog.UsernameInput.value);
@@ -516,8 +521,13 @@ function ValidateSettings()
   {
     // Update selected item if sitename changed 
     var selectedItem = gDialog.SiteList.selectedItem;
-    if (selectedItem && selectedItem.getAttribute("label") != siteName)
+    if (selectedItem && selectedItem.getAttribute("value") != siteName)
     {
+      // The real sitename
+      selectedItem.setAttribute("value", siteName);
+
+      // Truncate string to show in the menulist
+      //var truncatedName = TruncateStringAtWordEnd(siteName, 20, true);
       selectedItem.setAttribute("label", siteName);
       gDialog.SiteList.setAttribute("label", siteName);
     }
@@ -579,7 +589,6 @@ function ValidateData()
     ShowErrorInPanel(gPublishPanel, "MissingPublishFilename", gDialog.FilenameInput);
     return false;
   }
-
   gReturnData.filename = filename;
 
   return true;
