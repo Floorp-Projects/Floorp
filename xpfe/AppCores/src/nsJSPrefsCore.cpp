@@ -29,7 +29,8 @@
 #include "nsIDOMPrefsCore.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsDOMCID.h"
 
 
@@ -316,6 +317,48 @@ PrefsCoreCancelPrefs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 }
 
 
+//
+// Native method SetSubstitutionVar
+//
+PR_STATIC_CALLBACK(JSBool)
+PrefsCoreSetSubstitutionVar(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMPrefsCore *nativeThis = (nsIDOMPrefsCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->SetSubstitutionVar(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function SetSubstitutionVar requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for PrefsCore
@@ -353,6 +396,7 @@ static JSFunctionSpec PrefsCoreMethods[] =
   {"PanelLoaded",          PrefsCorePanelLoaded,     1},
   {"SavePrefs",          PrefsCoreSavePrefs,     0},
   {"CancelPrefs",          PrefsCoreCancelPrefs,     0},
+  {"SetSubstitutionVar",          PrefsCoreSetSubstitutionVar,     2},
   {0}
 };
 
@@ -369,8 +413,10 @@ PrefsCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsIScriptNameSpaceManager* manager;
   nsIDOMPrefsCore *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
+  nsIJSNativeInitializer* initializer = nsnull;
 
   static NS_DEFINE_IID(kIDOMPrefsCoreIID, NS_IDOMPREFSCORE_IID);
+  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
   result = context->GetNameSpaceManager(&manager);
   if (NS_OK != result) {
@@ -383,7 +429,7 @@ PrefsCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
   }
 
-  result = nsRepository::CreateInstance(classID,
+  result = nsComponentManager::CreateInstance(classID,
                                         nsnull,
                                         kIDOMPrefsCoreIID,
                                         (void **)&nativeThis);
@@ -391,7 +437,16 @@ PrefsCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
   }
 
-  // XXX We should be calling Init() on the instance
+  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
+  if (NS_OK == result) {
+    result = initializer->Initialize(cx, argc, argv);
+    NS_RELEASE(initializer);
+
+    if (NS_OK != result) {
+      NS_RELEASE(nativeThis);
+      return JS_FALSE;
+    }
+  }
 
   result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
   if (NS_OK != result) {

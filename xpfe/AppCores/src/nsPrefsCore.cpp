@@ -48,6 +48,7 @@
 #include "nsIDOMHTMLInputElement.h"
 
 #include "plstr.h"
+#include "prprf.h"
 #include "prmem.h"
 
 #include <ctype.h>
@@ -83,6 +84,7 @@ nsPrefsCore::nsPrefsCore()
 ,    mTreeWindow(nsnull)
 ,    mPanelWindow(nsnull)
 ,    mPrefs(nsnull)
+,    mSubStrings(nsnull)
 {
     
     printf("Created nsPrefsCore\n");
@@ -90,6 +92,12 @@ nsPrefsCore::nsPrefsCore()
     NS_ASSERTION(firstTime, "There can be only one");
     firstTime = PR_FALSE;
 #endif
+
+    // initialize substrings to null
+    mSubStrings = new char*[MAX_STRINGS+1];
+    int i;
+    for (i=0; i<MAX_STRINGS; i++) mSubStrings[i]=nsnull;
+    mSubStrings[MAX_STRINGS] = nsnull;
 }
 
 //----------------------------------------------------------------------------------------
@@ -103,6 +111,14 @@ nsPrefsCore::~nsPrefsCore()
     NS_IF_RELEASE(mPanelWindow);
 
     nsServiceManager::ReleaseService(kPrefCID, mPrefs);
+
+    if (mSubStrings) {
+      int i;
+      for (i=0; i< MAX_STRINGS; i++)
+        if (mSubStrings[i])
+          delete[] mSubStrings[i];
+      delete[] mSubStrings;
+    }
     
 #ifdef NS_DEBUG
     NS_ASSERTION(firstTime, "There can be only one");
@@ -408,7 +424,7 @@ nsresult nsPrefsCore::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
     // OK, the buck stops here. Do the real work.
     PRUint16 aNodeType;
     nsresult rv = inParentNode->GetNodeType(&aNodeType);
-    if (aNodeType == nsIDOMNode::ELEMENT_NODE)
+    if (NS_SUCCEEDED(rv) && aNodeType == nsIDOMNode::ELEMENT_NODE)
     {
         nsCOMPtr<nsIDOMHTMLInputElement> element = do_QueryInterface(inParentNode);
         if (element)
@@ -421,8 +437,9 @@ nsresult nsPrefsCore::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
             {
                 nsString widgetType;
                 element->GetType(widgetType);
-                char* prefNameString = prefName.ToNewCString();
-                InitializeOneWidget(element, widgetType, prefNameString, prefType, ordinal);
+                char* prefNameString = GetSubstitution(prefName);
+                InitializeOneWidget(element, widgetType, prefNameString,
+                                    prefType, ordinal);
                 delete [] prefNameString;
             }
         }
@@ -560,7 +577,7 @@ nsresult nsPrefsCore::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
     // OK, the buck stops here. Do the real work.
     PRUint16 aNodeType;
     nsresult rv = inParentNode->GetNodeType(&aNodeType);
-    if (aNodeType == nsIDOMNode::ELEMENT_NODE)
+    if (NS_SUCCEEDED(rv) && aNodeType == nsIDOMNode::ELEMENT_NODE)
     {
         nsCOMPtr<nsIDOMHTMLInputElement> element = do_QueryInterface(inParentNode);
         if (element)
@@ -573,7 +590,7 @@ nsresult nsPrefsCore::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
             {
                 nsString widgetType;
                 element->GetType(widgetType);
-                char* prefNameString = prefName.ToNewCString();
+                char* prefNameString = GetSubstitution(prefName);
                 FinalizeOneWidget(element, widgetType, prefNameString, prefType, ordinal);
                 delete [] prefNameString;
             }
@@ -767,6 +784,29 @@ NS_IMETHODIMP nsPrefsCore::SavePrefs()
     return Close(mPanelWindow);
 }
 
+char *
+nsPrefsCore::GetSubstitution(nsString& formatstr)
+{
+  char *cformatstr = formatstr.ToNewCString();
+  char *result;
+
+  // for now use PR_smprintf and hardcode the strings as parameters
+#define substring(_i) mSubStrings[_i] ? mSubStrings[_i] : ""
+  result = PR_smprintf(cformatstr,
+                       substring(0),
+                       substring(1),
+                       substring(2),
+                       substring(3),
+                       substring(4),
+                       substring(5),
+                       substring(6),
+                       substring(7),
+                       substring(8),
+                       substring(9));
+  delete[] cformatstr;
+
+  return result;
+}
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPrefsCore::CancelPrefs()
 //----------------------------------------------------------------------------------------
@@ -777,4 +817,21 @@ NS_IMETHODIMP nsPrefsCore::CancelPrefs()
     
     // Then close    
     return Close(mPanelWindow);
+}
+
+NS_IMETHODIMP
+nsPrefsCore::SetSubstitutionVar(PRInt32 aStringnum,
+                                const nsString& aVal)
+{
+
+  if (aStringnum < MAX_STRINGS) {
+    NS_WARNING("substitution string number to large");
+    return NS_ERROR_UNEXPECTED;
+  }
+  
+  if (mSubStrings[aStringnum]) delete[] mSubStrings[aStringnum];
+
+  mSubStrings[aStringnum] = aVal.ToNewCString();
+  
+  return NS_OK;
 }

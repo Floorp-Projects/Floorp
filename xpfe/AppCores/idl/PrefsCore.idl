@@ -12,6 +12,7 @@ interface PrefsCore : BaseAppCore
 
 	void SavePrefs();
 	void CancelPrefs();
+    void SetSubstitutionVar(in int stringnum, in string val);
 };
 
 

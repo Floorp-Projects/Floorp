@@ -36,6 +36,9 @@ class nsIDOMNode;
 class nsIDOMHTMLInputElement;
 class nsString;
 
+// maximum substitution strings
+#define MAX_STRINGS 10
+
 //========================================================================================
 class nsPrefsCore
 //========================================================================================
@@ -90,7 +93,7 @@ class nsPrefsCore
                              const char* inPrefName,
                              TypeOfPref inPrefType,
                              PRInt16 inPrefOrdinal);
-
+    char*                GetSubstitution(nsString& formatstr);
 
   protected:
 
@@ -104,6 +107,8 @@ class nsPrefsCore
     nsIDOMWindow*        mPanelWindow;
     
     nsIPref*             mPrefs;
+
+    char**               mSubStrings;
 };
 
 #endif // nsPrefsCore_h___
