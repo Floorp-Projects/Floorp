@@ -574,31 +574,12 @@ public class ScriptRuntime {
      * See ECMA 9.5.
      */
     public static int toInt32(Object val) {
-        // 0x100000000 gives me a numeric overflow...
-        double two32 = 4294967296.0;
-        double two31 = 2147483648.0;
-
         // short circuit for common small values; TokenStream
         // returns them as Bytes.
         if (val instanceof Byte)
             return ((Number)val).intValue();
 
-        double d = toNumber(val);
-        if (d != d || d == 0.0 ||
-            d == Double.POSITIVE_INFINITY ||
-            d == Double.NEGATIVE_INFINITY)
-            return 0;
-
-        d = Math.IEEEremainder(d, two32);
-
-        d = d >= 0
-            ? d
-            : d + two32;
-
-        if (d >= two31)
-            return (int)(d - two32);
-        else
-            return (int)d;
+        return toInt32(toNumber(val));
     }
 
     public static int toInt32(Object[] args, int index) {
@@ -606,25 +587,30 @@ public class ScriptRuntime {
     }
 
     public static int toInt32(double d) {
-        // 0x100000000 gives me a numeric overflow...
-        double two32 = 4294967296.0;
-        double two31 = 2147483648.0;
 
-        if (d != d || d == 0.0 ||
-            d == Double.POSITIVE_INFINITY ||
-            d == Double.NEGATIVE_INFINITY)
+        if (d != d
+            || d == Double.POSITIVE_INFINITY
+            || d == Double.NEGATIVE_INFINITY)
+        {
             return 0;
+        }
 
+        int id = (int)d;
+        if (id == d) {
+            // This covers -0.0 as well
+            return id;
+        }
+
+        d = (d >= 0) ? Math.floor(d) : Math.ceil(d);
+
+        double two32 = 4294967296.0;
         d = Math.IEEEremainder(d, two32);
+        // (double)(long)d == d should hold here
 
-        d = d >= 0
-            ? d
-            : d + two32;
-
-        if (d >= two31)
-            return (int)(d - two32);
-        else
-            return (int)d;
+        long l = (long)d;
+        // returning (int)d does not work as d can be outside int range
+        // but the result must always be 32 lower bits of l
+        return (int)l;
     }
 
     /**
