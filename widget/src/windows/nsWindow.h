@@ -153,6 +153,7 @@ protected:
     static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
     virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
     virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
+    virtual PRBool          DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
     nsresult                MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
     nsresult                DynamicMenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
     nsIMenuItem *           FindMenuItem(nsIMenu * aMenu, PRUint32 aId);

@@ -431,6 +431,11 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
   return ConvertStatus(status);
 }
 
+PRBool nsWindow::DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus) {
+  DispatchEvent(event, aStatus);
+  return ConvertStatus(aStatus);
+}
+
 //-------------------------------------------------------------------------
 //
 // Dispatch standard event
@@ -3102,6 +3107,7 @@ PRBool nsWindow::OnPaint()
     nsRect    bounds;
     PRBool result = PR_TRUE;
     PAINTSTRUCT ps;
+    nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
 #ifdef NS_DEBUG
     HRGN debugPaintFlashRegion = NULL;
@@ -3159,7 +3165,7 @@ PRBool nsWindow::OnPaint()
                 if (NS_OK == winrc->CreateDrawingSurface(hDC, surf))
                 {
                   event.renderingContext->Init(mContext, surf);
-                  result = DispatchWindowEvent(&event);
+                  result = DispatchWindowEvent(&event, eventStatus);
                   event.renderingContext->DestroyDrawingSurface(surf);
                 }
 
@@ -3180,11 +3186,16 @@ PRBool nsWindow::OnPaint()
 #ifdef NS_DEBUG
     if (debug_WantPaintFlashing())
     {
-      ::InvertRgn(debugPaintFlashDC, debugPaintFlashRegion);
-      int x;
-      for (x = 0; x < 1000000; x++);
-      ::InvertRgn(debugPaintFlashDC, debugPaintFlashRegion);
-      for (x = 0; x < 1000000; x++);
+         // Only flash paint events which have not ignored the paint message.
+        // Those that ignore the paint message aren't painting anything so there
+        // is only the overhead of the dispatching the paint event.
+      if (nsEventStatus_eIgnore != eventStatus) {
+        ::InvertRgn(debugPaintFlashDC, debugPaintFlashRegion);
+        int x;
+        for (x = 0; x < 1000000; x++);
+        ::InvertRgn(debugPaintFlashDC, debugPaintFlashRegion);
+        for (x = 0; x < 1000000; x++);
+      }
       ::ReleaseDC(mWnd, debugPaintFlashDC);
       ::DeleteObject(debugPaintFlashRegion);
     }
