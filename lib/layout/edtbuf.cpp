@@ -11044,7 +11044,6 @@ void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y )
 // this routine is called when the mouse goes down.
 void CEditBuffer::StartSelection( int32 x, int32 y, XP_Bool doubleClick ){
     VALIDATE_TREE(this);
-    m_bUseCurrentTextFormat = FALSE;
     ClearPhantomInsertPoint();
     {
         // This is a hack to avoid auto-scrolling to the old selection.
@@ -11076,6 +11075,10 @@ void CEditBuffer::StartSelection( int32 x, int32 y, XP_Bool doubleClick ){
         LO_Click( m_pContext, x, y, FALSE );
 #endif /* LAYERS */
     }
+    CEditElement *pPrev;
+    // If we set caret at beginning of a text element, 
+    //  use its formating with next text typed
+    m_bUseCurrentTextFormat = (m_pCurrent &&  m_pCurrent->IsText() && m_iCurrentOffset == 0 ) ? TRUE : FALSE;
 }
 
 // Note: By using MoveAndHideCaretInTable,
@@ -11221,7 +11224,9 @@ void CEditBuffer::SelectObject( int32 x, int32 y ){
 #else
     LO_SelectObject(m_pContext, x, y);
 #endif
-    m_bUseCurrentTextFormat = FALSE;
+    // If we set caret at beginning of a text element, 
+    //  use its formating with next text typed
+    m_bUseCurrentTextFormat = (m_pCurrent &&  m_pCurrent->IsText() && m_iCurrentOffset == 0 ) ? TRUE : FALSE;
 }
 
 //
