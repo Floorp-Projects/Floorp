@@ -478,7 +478,11 @@ else
 ifeq ($(OS_ARCH),WINNT)
 	$(CCC) -Fo$@ -c $(CFLAGS) $*.cpp
 else
+ifdef XP_OS2_VACPP
+	$(CCC) -Fo$@ -c $(CFLAGS) $*.cpp
+else
 	$(CCC) -o $@ -c $(CFLAGS) $*.cpp
+endif
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
