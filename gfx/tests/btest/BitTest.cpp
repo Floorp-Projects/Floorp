@@ -54,7 +54,7 @@ static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
 static char* class1Name = "ImageTest";
 
-static HANDLE           gInstance, gPrevInstance;
+static HINSTANCE        gInstance;
 static nsIImageManager  *gImageManager = nsnull;
 static nsIImageGroup    *gImageGroup = nsnull;
 static nsIImageRequest  *gImageReq = nsnull;
@@ -287,8 +287,8 @@ nsresult          rv;
     bits2 = gImage->GetBits();
     gSrcbits = ::CreateDIBitmap(gScreendc,(BITMAPINFOHEADER*)gBlendImage->GetBitInfo(), CBM_INIT, bits1, (LPBITMAPINFO)gBlendImage->GetBitInfo(), DIB_RGB_COLORS);
     gDestbits = ::CreateDIBitmap(gScreendc,(BITMAPINFOHEADER*)gImage->GetBitInfo(), CBM_INIT, bits2, (LPBITMAPINFO)gImage->GetBitInfo(), DIB_RGB_COLORS);
-    gSobits = ::SelectObject(gSrcdc, gSrcbits);
-    gDobits = ::SelectObject(gDestdc, gDestbits);
+    gSobits = (HBITMAP)::SelectObject(gSrcdc, gSrcbits);
+    gDobits = (HBITMAP)::SelectObject(gDestdc, gDestbits);
 
     rv = NSRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&gImageblender);
     gImageblender->Init(gSrcdc,gDestdc);
@@ -325,13 +325,13 @@ BITMAP              srcinfo;
 LPBITMAPINFOHEADER  srcbinfo;
 nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
-  dstdc = aBlender->GetDstDS();
+  dstdc = (HDC)aBlender->GetDstDS();
 
   aBlender->RestoreImage(dstdc);
 
   // this takes the Destination DC and copies the information into aImage
   tb1 = CreateCompatibleBitmap(dstdc,3,3);
-  srcbits = ::SelectObject(dstdc, tb1);
+  srcbits = (HBITMAP)::SelectObject(dstdc, tb1);
   numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
   // put into a DIB
   BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
@@ -516,8 +516,8 @@ LPBITMAPINFOHEADER  srcbinfo;
 nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
 
-  srcdc = aBlender->GetSrcDS();
-  dstdc = aBlender->GetDstDS();
+  srcdc = (HDC)aBlender->GetSrcDS();
+  dstdc = (HDC)aBlender->GetDstDS();
 
   result = aBlender->Blend(aSX,aSY,aWidth,aHeight,dstdc,0, 0,aBlendAmount,aBuff);
 
@@ -525,7 +525,7 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
     {
     // this takes the Destination DC and copies the information into aImage
     tb1 = CreateCompatibleBitmap(dstdc,3,3);
-    srcbits = ::SelectObject(dstdc, tb1);
+    srcbits = (HBITMAP)::SelectObject(dstdc, tb1);
     numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
     // put into a DIB
     BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
@@ -1133,7 +1133,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
 //------------------------------------------------------------
 
 int PASCAL
-WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
+WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
   gInstance = instance;
 
