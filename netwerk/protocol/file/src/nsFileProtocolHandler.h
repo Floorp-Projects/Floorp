@@ -26,7 +26,7 @@ class nsIRunnable;
 class nsFileChannel;
 class nsIThreadPool;
 
-#define NS_FILE_TRANSPORT_WORKER_COUNT  4
+#define NS_FILE_TRANSPORT_WORKER_COUNT  1//4
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FILEPROTOCOLHANDLER_CID                   \
