@@ -90,7 +90,6 @@ JSJ_LIB			= -ljsj
 endif
 
 BASE_LIBS		= \
-			-lmozreg \
 			-lmozjs \
 			-lxpcom \
 			-lmozutil \

@@ -27,7 +27,6 @@ CPPSRCS		= rdfpoll.cpp
 
 BASE_LIBS	= \
 		$(ZLIB_LIBS) \
-		-lmozreg \
 		-lmozjs \
 		-lxpcom \
 		-lmozutil \

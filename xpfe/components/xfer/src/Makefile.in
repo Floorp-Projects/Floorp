@@ -35,7 +35,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		-lxpcom \
-		-lmozreg \
 		-lmozjs \
 		-lneckoutil_s \
 		$(ZLIB_LIBS) \

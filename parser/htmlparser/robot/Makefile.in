@@ -52,7 +52,6 @@ LIBS		= \
 		-limg \
 		-lmozutil \
 		-lxpcom \
-		-lmozreg \
 		$(TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

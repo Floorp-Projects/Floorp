@@ -30,7 +30,6 @@ CPPSRCS		= RobotMain.cpp
 
 LIBS		= \
 		-lDebugRobot \
-		-lmozreg \
 		-lxpcom \
 		$(NSPR_LIBS) \
 		$(NULL)

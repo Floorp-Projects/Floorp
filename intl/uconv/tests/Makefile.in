@@ -34,7 +34,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../ucvja \
 		$(NULL)
 
-LIBS		+= $(NSPR_LIBS) -L$(DIST)/bin -lxpcom -lmozreg -luconv
+LIBS		+= $(NSPR_LIBS) -L$(DIST)/bin -lxpcom -luconv
 
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)

@@ -25,7 +25,6 @@ ZLIB_LIBS = -lz
 TIMER_LIBS = -ltimer_s
 
 BASE_LIBS =          \
-        -lmozreg        \
         -lmozjs \
 		$(TIMER_LIBS) \
         -lxpcom      \

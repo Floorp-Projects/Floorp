@@ -41,7 +41,6 @@ LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo
 endif
 
 LIBS		= \
-		-lmozreg \
 		-lmozjs \
 		-lxpcom \
 		-lmozutil \
