@@ -28,8 +28,8 @@
     
 */
 XPTC_InvokeByIndex:
-        save    %sp,-(64 + 16),%sp   ! room for the register window and
-                                    ! struct pointer, rounded up to 0 % 16
+        save    %sp,-(64 + 32),%sp   ! room for the register window and
+                                    ! struct pointer, rounded up to 0 % 32
         mov     %i2,%o0             ! paramCount
         call    invoke_count_words  ! returns the required stack size in %o0
         mov     %i3,%o1             ! params
