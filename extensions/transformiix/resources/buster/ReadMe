@@ -5,7 +5,7 @@ in http://www.axel.pike.org/mozilla/xalan.tar.gz. Please see the included
 LICENSE.txt or http://xml.apache.org/dist/LICENSE.txt for terms of 
 distributing those files.
 
-To use the buster, open buster.xul with a XSLT enabled Mozilla.
+To use the buster, open buster.xul with an XSLT enabled Mozilla.
 Open the rdf index file shipped with the test package into the 
 "Xalan index", and the available tests will show up as a tree.
 Once you have selected the tests you're interested in, press the button
