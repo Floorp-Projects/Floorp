@@ -2406,7 +2406,20 @@ nsresult nsImapMailFolder::GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDow
 
 NS_IMETHODIMP nsImapMailFolder::OnNewIdleMessages()
 {
-  SetPerformingBiff(PR_TRUE);
+  PRBool checkAllFolders = PR_FALSE;
+
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) 
+    // This pref might not exist, which is OK. 
+    (void) prefBranch->GetBoolPref("mail.check_all_imap_folders_for_new", &checkAllFolders); 
+
+  // only trigger biff if we're checking all new folders for new messages, or this particular folder,
+  // but excluding trash,junk, sent, and no select folders, by default.
+  if ((checkAllFolders && 
+    !(mFlags & (MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_JUNK | MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_IMAP_NOSELECT)))
+    || (mFlags & (MSG_FOLDER_FLAG_CHECK_NEW|MSG_FOLDER_FLAG_INBOX)))
+    SetPerformingBiff(PR_TRUE);
+
   return UpdateFolder(nsnull);
 }
 
