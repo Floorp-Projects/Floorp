@@ -45,7 +45,8 @@
  *   XPI Stub Glue
  *------------------------------------------------------------------------*/
 typedef nsresult (*pfnXPI_Init) 
-                 (const char *aProgramDir, pfnXPIProgress progressCB);
+                 (const char *aProgramDir, const char *aLogName,
+                  pfnXPIProgress progressCB);
 typedef nsresult (*pfnXPI_Install) 
                  (const char *file, const char *args, long flags);
 typedef void     (*pfnXPI_Exit)();

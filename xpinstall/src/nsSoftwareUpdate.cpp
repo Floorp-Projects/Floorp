@@ -99,6 +99,7 @@ static NS_DEFINE_CID(knsRegistryCID, NS_REGISTRY_CID);
 
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
 nsCOMPtr<nsIFile> nsSoftwareUpdate::mProgramDir = nsnull;
+char*             nsSoftwareUpdate::mLogName = nsnull;
 
 #if NOTIFICATION_ENABLE
 #include "nsUpdateNotification.h"
@@ -182,6 +183,8 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
     //NS_IF_RELEASE( mProgramDir );
     NS_IF_RELEASE (mMasterListener);
     mInstance = nsnull;
+
+    PR_FREEIF(mLogName);
 }
 
 
@@ -533,12 +536,15 @@ nsSoftwareUpdate::RegisterNameset()
 
 
 NS_IMETHODIMP
-nsSoftwareUpdate::StubInitialize(nsIFile *aDir)
+nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
 {
     if (mStubLockout)
         return NS_ERROR_ABORT;
     else if ( !aDir )
         return NS_ERROR_NULL_POINTER;
+
+    if (logName)
+        PL_strcpy(mLogName, logName);
 
     // only allow once, it could be a mess if we've already started installing
     mStubLockout = PR_TRUE;

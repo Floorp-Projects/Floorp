@@ -364,7 +364,7 @@ printf("DEBUG: libpath = >>%s<<\n", libpath);
 	}
     DUMP("xpistub symbols loaded");
 
-    rv = aStub->fn_init(aDestination, ProgressCallback);
+    rv = aStub->fn_init(aDestination, NULL, ProgressCallback);
 
 #ifdef DEBUG
 printf("DEBUG: XPI_Init returned 0x%.8X\n", rv);

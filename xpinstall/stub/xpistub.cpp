@@ -91,6 +91,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 #else
                                     const char*         aProgramDir,
 #endif
+                                    const char*         aLogName,
                                     pfnXPIProgress      progressCB )
 {
     nsresult              rv;
@@ -199,7 +200,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 #endif    
     
     if (hook && iDirSpec)
-        hook->StubInitialize( iDirSpec );
+        hook->StubInitialize( iDirSpec, aLogName );
     else
         return NS_ERROR_NULL_POINTER;
 
