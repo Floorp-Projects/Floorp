@@ -579,6 +579,10 @@ nsFileChannel::Process(void)
     return;
 
   error:
+    // Map EOF to NS_OK for the OnStopBinding(...) notification...
+    if (NS_BASE_STREAM_EOF == mStatus) {
+      mStatus = NS_OK;
+    }
     mState = ENDING;
     return;
 }
