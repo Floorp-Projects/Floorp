@@ -30,8 +30,8 @@
  ***********************************************************************/
 
 
-#ifndef _nsString1
-#define _nsString1
+#ifndef _NSSTRING
+#define _NSSTRING
 
 
 #include "prtypes.h"
@@ -39,18 +39,9 @@
 #include "nsIAtom.h"
 #include <iostream.h>
 #include <stdio.h>
-#include "nsStr.h"
-
-#ifndef USE_STRING2
-#define nsString1     nsString
-#define nsAutoString1 nsAutoString
-#else 
-#include "nsString2.h"  //get new string class
-#endif
-
 class nsISizeOfHandler;
 
-class NS_BASE nsString1 {
+class NS_BASE nsString {
   public: 
 
 /**
@@ -59,30 +50,30 @@ class NS_BASE nsString1 {
  * was to allow developers direct access to the underlying buffer for
  * performance reasons. 
  */
-nsString1();
+nsString();
 
 /**
  * This constructor accepts an isolatin string
  * @param   an ascii is a ptr to a 1-byte cstr
  */
-nsString1(const char* aCString);
+nsString(const char* aCString);
 
 /**
  * This is our copy constructor 
- * @param   reference to another nsString1
+ * @param   reference to another nsString
  */
-nsString1(const nsString1&);
+nsString(const nsString&);
 
 /**
  * Constructor from a unicode string
  * @param   anicodestr pts to a unicode string
  */
-nsString1(const PRUnichar* aUnicode);    
+nsString(const PRUnichar* aUnicode);    
 
 /**
  * Virtual Destructor
  */
-virtual ~nsString1();
+virtual ~nsString();
 
 
 /**
@@ -145,14 +136,14 @@ const PRUnichar* GetUnicode(void) const;
  * @param 
  * @return
  */
-//operator const PRUnichar*() const;
+operator const PRUnichar*() const;
 
 /**
  * Retrieve unicode char at given index
  * @param   offset into string
  * @return  PRUnichar* to internal string
  */
-//PRUnichar operator()(PRInt32 anIndex) const;
+PRUnichar operator()(PRInt32 anIndex) const;
 
 /**
  * Retrieve reference to unicode char at given index
@@ -192,35 +183,35 @@ PRBool SetCharAt(PRUnichar aChar,PRInt32 anIndex);
  * @param   aString -- 2nd string to be appended
  * @return  new string
  */
-nsString1 operator+(const nsString1& aString);
+nsString operator+(const nsString& aString);
 
 /**
  * create a new string by adding this to the given buffer.
  * @param   aCString is a ptr to cstring to be added to this
  * @return  newly created string
  */
-nsString1 operator+(const char* aCString);
+nsString operator+(const char* aCString);
 
 /**
  * create a new string by adding this to the given char.
  * @param   aChar is a char to be added to this
  * @return  newly created string
  */
-nsString1 operator+(char aChar);
+nsString operator+(char aChar);
 
 /**
  * create a new string by adding this to the given buffer.
  * @param   aStr unichar buffer to be added to this
  * @return  newly created string
  */
-nsString1 operator+(const PRUnichar* aBuffer);
+nsString operator+(const PRUnichar* aBuffer);
 
 /**
  * create a new string by adding this to the given char.
  * @param   aChar is a unichar to be added to this
  * @return  newly created string
  */
-nsString1 operator+(PRUnichar aChar);
+nsString operator+(PRUnichar aChar);
 
 /**
  * Converts all chars in internal string to lower
@@ -230,7 +221,7 @@ void ToLowerCase();
 /**
  * Converts all chars in given string to lower
  */
-void ToLowerCase(nsString1& aString) const;
+void ToLowerCase(nsString& aString) const;
 
 /**
  * Converts all chars in given string to upper
@@ -246,13 +237,13 @@ void ToUCS2(PRInt32 aStartOffset);
 /**
  * Converts all chars in internal string to upper
  */
-void ToUpperCase(nsString1& aString) const;
+void ToUpperCase(nsString& aString) const;
 
 /**
  * Creates a duplicate clone (ptr) of this string.
  * @return  ptr to clone of this string
  */
-nsString1* ToNewString() const;
+nsString* ToNewString() const;
 
 /**
  * Creates an ascii clone of this string
@@ -274,7 +265,7 @@ char* ToCString(char* aBuf,PRInt32 aBufLength) const;
  * @param   aString to hold copy of this
  * @return  nada.
  */
-void Copy(nsString1& aString) const;
+void Copy(nsString& aString) const;
 
 /**
  * Creates an unichar clone of this string
@@ -307,72 +298,79 @@ PRInt32 ToInteger(PRInt32* aErrorCode,PRInt32 aRadix=10) const;
             if you want me to determine its length
  * @return  this
  */
-nsString1& SetString(const PRUnichar* aStr,PRInt32 aLength=-1);
-nsString1& SetString(const char* aCString,PRInt32 aLength=-1);
-nsString1& SetString(const nsString1& aString);
+nsString& SetString(const PRUnichar* aStr,PRInt32 aLength=-1);
+
+/**
+ * assign given char* to this string
+ * @param   aCString: buffer to be assigned to this 
+ * @param   alength is the length of the given str (or -1)
+            if you want me to determine its length
+ * @return  this
+ */
+nsString& SetString(const char* aCString,PRInt32 aLength=-1);
 
 /**
  * assign given string to this one
  * @param   aString: string to be added to this
  * @return  this
  */
-nsString1& operator=(const nsString1& aString);
+nsString& operator=(const nsString& aString);
 
 /**
  * assign given char* to this string
  * @param   aCString: buffer to be assigned to this 
  * @return  this
  */
-nsString1& operator=(const char* aCString);
+nsString& operator=(const char* aCString);
 
 /**
  * assign given char to this string
  * @param   aChar: char to be assignd to this
  * @return  this
  */
-nsString1& operator=(char aChar);
+nsString& operator=(char aChar);
 
 /**
  * assign given unichar* to this string
  * @param   aBuffer: unichar buffer to be assigned to this 
  * @return  this
  */
-nsString1& operator=(const PRUnichar* aBuffer);
+nsString& operator=(const PRUnichar* aBuffer);
 
 /**
  * assign given char to this string
  * @param   aChar: char to be assignd to this
  * @return  this
  */
-nsString1& operator=(PRUnichar aChar);
+nsString& operator=(PRUnichar aChar);
 
 /**
  * append given string to this string
  * @param   aString : string to be appended to this
  * @return  this
  */
-nsString1& operator+=(const nsString1& aString);
+nsString& operator+=(const nsString& aString);
 
 /**
  * append given buffer to this string
  * @param   aCString: buffer to be appended to this
  * @return  this
  */
-nsString1& operator+=(const char* aCString);
+nsString& operator+=(const char* aCString);
 
 /**
  * append given buffer to this string
  * @param   aBuffer: buffer to be appended to this
  * @return  this
  */
-nsString1& operator+=(const PRUnichar* aBuffer);
+nsString& operator+=(const PRUnichar* aBuffer);
 
 /**
  * append given char to this string
  * @param   aChar: char to be appended to this
  * @return  this
  */
-nsString1& operator+=(PRUnichar aChar);
+nsString& operator+=(PRUnichar aChar);
 
 /**
  * append given string to this string
@@ -381,7 +379,7 @@ nsString1& operator+=(PRUnichar aChar);
             if you want me to determine its length
  * @return  this
  */
-nsString1& Append(const nsString1& aString,PRInt32 aLength=-1);
+nsString& Append(const nsString& aString,PRInt32 aLength=-1);
 
 /**
  * append given string to this string
@@ -390,14 +388,14 @@ nsString1& Append(const nsString1& aString,PRInt32 aLength=-1);
             if you want me to determine its length
  * @return  this
  */
-nsString1& Append(const char* aCString,PRInt32 aLength=-1);
+nsString& Append(const char* aCString,PRInt32 aLength=-1);
 
 /**
  * append given string to this string
  * @param   aString : string to be appended to this
  * @return  this
  */
-nsString1& Append(char aChar);
+nsString& Append(char aChar);
 
 /**
  * append given unichar buffer to this string
@@ -406,14 +404,14 @@ nsString1& Append(char aChar);
             if you want me to determine its length
  * @return  this
  */
-nsString1& Append(const PRUnichar* aBuffer,PRInt32 aLength=-1);
+nsString& Append(const PRUnichar* aBuffer,PRInt32 aLength=-1);
 
 /**
  * append given unichar character to this string
  * @param   aChar is the char to be appended to this
  * @return  this
  */
-nsString1& Append(PRUnichar aChar);
+nsString& Append(PRUnichar aChar);
 
 /**
  * Append an integer onto this string
@@ -421,14 +419,14 @@ nsString1& Append(PRUnichar aChar);
  * @param aRadix specifies 8,10,16
  * @return this
  */
-nsString1& Append(PRInt32 aInteger,PRInt32 aRadix); //radix=8,10 or 16
+nsString& Append(PRInt32 aInteger,PRInt32 aRadix); //radix=8,10 or 16
 
 /**
  * Append a float value onto this string
  * @param aFloat is the float to be appended
  * @return this
  */
-nsString1& Append(float aFloat);
+nsString& Append(float aFloat);
               
 /*
  *  Copies n characters from this string to given string,
@@ -439,7 +437,7 @@ nsString1& Append(float aFloat);
  *  @param   aCount -- number of chars to copy
  *  @return  number of chars copied
  */
-PRInt32 Left(nsString1& aCopy,PRInt32 aCount) const;
+PRInt32 Left(nsString& aCopy,PRInt32 aCount) const;
 
 /*
  *  Copies n characters from this string to given string,
@@ -451,7 +449,7 @@ PRInt32 Left(nsString1& aCopy,PRInt32 aCount) const;
  *  @param   anOffset -- position where copying begins
  *  @return  number of chars copied
  */
-PRInt32 Mid(nsString1& aCopy,PRInt32 anOffset,PRInt32 aCount) const;
+PRInt32 Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) const;
 
 /*
  *  Copies n characters from this string to given string,
@@ -462,7 +460,7 @@ PRInt32 Mid(nsString1& aCopy,PRInt32 anOffset,PRInt32 aCount) const;
  *  @param  aCount -- number of chars to copy
  *  @return number of chars copied
  */
-PRInt32 Right(nsString1& aCopy,PRInt32 aCount) const;
+PRInt32 Right(nsString& aCopy,PRInt32 aCount) const;
 
 /*
  *  This method inserts n chars from given string into this
@@ -473,7 +471,7 @@ PRInt32 Right(nsString1& aCopy,PRInt32 aCount) const;
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return number of chars inserted into this.
  */
-PRInt32 Insert(const nsString1& aCopy,PRInt32 anOffset,PRInt32 aCount=-1);
+PRInt32 Insert(const nsString& aCopy,PRInt32 anOffset,PRInt32 aCount=-1);
 
 /**
  * Insert a single unicode char into this string at
@@ -493,7 +491,7 @@ PRInt32 Insert(PRUnichar aChar,PRInt32 anOffset);
  *  @param  aCount -- number of chars to be cut
  *  @return *this
  */
-nsString1& Cut(PRInt32 anOffset,PRInt32 aCount);
+nsString& Cut(PRInt32 anOffset,PRInt32 aCount);
 
 /**
  *  This method is used to remove all occurances of the
@@ -502,7 +500,7 @@ nsString1& Cut(PRInt32 anOffset,PRInt32 aCount);
  *  @param  aSet -- characters to be cut from this
  *  @return *this 
  */
-nsString1& StripChars(const char* aSet);
+nsString& StripChars(const char* aSet);
 
 /**
  *  This method is used to replace all occurances of the
@@ -511,14 +509,14 @@ nsString1& StripChars(const char* aSet);
  *  @param  
  *  @return *this 
  */
-nsString1& ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar);
+nsString& ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar);
 
 /**
  *  This method strips whitespace throughout the string
  *  
  *  @return  this
  */
-nsString1& StripWhitespace();
+nsString& StripWhitespace();
 
 /**
  *  This method trims characters found in aTrimSet from
@@ -528,7 +526,7 @@ nsString1& StripWhitespace();
  *           both ends
  *  @return  this
  */
-nsString1& Trim(const char* aSet,
+nsString& Trim(const char* aSet,
                PRBool aEliminateLeading=PR_TRUE,
                PRBool aEliminateTrailing=PR_TRUE);
 
@@ -541,7 +539,7 @@ nsString1& Trim(const char* aSet,
  *  @param   aEliminateTrailing controls stripping of trailing ws
  *  @return  this
  */
-nsString1& CompressWhitespace( PRBool aEliminateLeading=PR_TRUE,
+nsString& CompressWhitespace( PRBool aEliminateLeading=PR_TRUE,
                               PRBool aEliminateTrailing=PR_TRUE);
 
 /**
@@ -590,7 +588,7 @@ PRInt32 BinarySearch(PRUnichar aChar) const;
  */
 PRInt32 Find(const char* aString) const;
 PRInt32 Find(const PRUnichar* aString) const;
-PRInt32 Find(const nsString1& aString) const;
+PRInt32 Find(const nsString& aString) const;
 
 /**
  *  Search for given char within this string
@@ -608,7 +606,7 @@ PRInt32 Find(PRUnichar aChar,PRInt32 offset=0) const;
  * @return -1 if not found, else the offset in this
  */
 PRInt32 FindCharInSet(const char* aString,PRInt32 anOffset=0) const;
-PRInt32 FindCharInSet(nsString1& aString,PRInt32 anOffset=0) const;
+PRInt32 FindCharInSet(nsString& aString,PRInt32 anOffset=0) const;
 
 /**
  * This method searches this string for the last character
@@ -618,7 +616,7 @@ PRInt32 FindCharInSet(nsString1& aString,PRInt32 anOffset=0) const;
  * @return -1 if not found, else the offset in this
  */
 PRInt32 RFindCharInSet(const char* aString,PRInt32 anOffset=0) const;
-PRInt32 RFindCharInSet(nsString1& aString,PRInt32 anOffset=0) const;
+PRInt32 RFindCharInSet(nsString& aString,PRInt32 anOffset=0) const;
 
 
 /**
@@ -629,7 +627,7 @@ PRInt32 RFindCharInSet(nsString1& aString,PRInt32 anOffset=0) const;
  */
 PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE) const;
-PRInt32 RFind(const nsString1& aString,PRBool aIgnoreCase=PR_FALSE) const;
+PRInt32 RFind(const nsString& aString,PRBool aIgnoreCase=PR_FALSE) const;
 
 /**
  * This methods scans the string backwards, looking for the given char
@@ -650,7 +648,7 @@ PRInt32 RFind(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE) const;
  * @param   aIgnoreCase tells us how to treat case
  * @return  -1,0,1
  */
-virtual PRInt32 Compare(const nsString1 &aString,PRBool aIgnoreCase=PR_FALSE) const;
+virtual PRInt32 Compare(const nsString &aString,PRBool aIgnoreCase=PR_FALSE) const;
 virtual PRInt32 Compare(const char *aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aLength=-1) const;
 virtual PRInt32 Compare(const PRUnichar *aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aLength=-1) const;
 
@@ -659,7 +657,7 @@ virtual PRInt32 Compare(const PRUnichar *aString,PRBool aIgnoreCase=PR_FALSE,PRI
  * @param aString is the string to be compared to this
  * @return  TRUE or FALSE
  */
-PRBool  operator==(const nsString1 &aString) const;
+PRBool  operator==(const nsString &aString) const;
 PRBool  operator==(const char *aString) const;
 PRBool  operator==(const PRUnichar* aString) const;
 PRBool  operator==(PRUnichar* aString) const;
@@ -669,7 +667,7 @@ PRBool  operator==(PRUnichar* aString) const;
  * @param aString is the string to be compared to this
  * @return  TRUE 
  */
-PRBool  operator!=(const nsString1 &aString) const;
+PRBool  operator!=(const nsString &aString) const;
 PRBool  operator!=(const char *aString) const;
 PRBool  operator!=(const PRUnichar* aString) const;
 
@@ -678,7 +676,7 @@ PRBool  operator!=(const PRUnichar* aString) const;
  * @param aString is the string to be compared to this
  * @return  TRUE or FALSE
  */
-PRBool  operator<(const nsString1 &aString) const;
+PRBool  operator<(const nsString &aString) const;
 PRBool  operator<(const char *aString) const;
 PRBool  operator<(const PRUnichar* aString) const;
 
@@ -687,7 +685,7 @@ PRBool  operator<(const PRUnichar* aString) const;
  * @param aString is the string to be compared to this
  * @return  TRUE or FALSE
  */
-PRBool  operator>(const nsString1 &S) const;
+PRBool  operator>(const nsString &S) const;
 PRBool  operator>(const char *aCString) const;
 PRBool  operator>(const PRUnichar* aString) const;
 
@@ -696,7 +694,7 @@ PRBool  operator>(const PRUnichar* aString) const;
  * @param aString is the string to be compared to this
  * @return  TRUE or FALSE
  */
-PRBool  operator<=(const nsString1 &S) const;
+PRBool  operator<=(const nsString &S) const;
 PRBool  operator<=(const char *aCString) const;
 PRBool  operator<=(const PRUnichar* aString) const;
 
@@ -705,7 +703,7 @@ PRBool  operator<=(const PRUnichar* aString) const;
  * @param aString is the string to be compared to this
  * @return  TRUE or FALSE
  */
-PRBool  operator>=(const nsString1 &S) const;
+PRBool  operator>=(const nsString &S) const;
 PRBool  operator>=(const char* aCString) const;
 PRBool  operator>=(const PRUnichar* aString) const;
 
@@ -719,7 +717,7 @@ PRBool  operator>=(const PRUnichar* aString) const;
  * @param  aLength -- optional length of given string.
  * @return TRUE if equal
  */
-PRBool  Equals(const nsString1& aString) const;
+PRBool  Equals(const nsString& aString) const;
 PRBool  Equals(const char* aString,PRInt32 aLength=-1) const;   
 PRBool  Equals(const nsIAtom *aAtom) const;
 
@@ -742,7 +740,7 @@ PRBool  Equals(const PRUnichar* s1, const PRUnichar* s2) const;
  * @param  aLength -- optional length of given string.
  * @return TRUE if equal
  */
-PRBool  EqualsIgnoreCase(const nsString1& aString) const;
+PRBool  EqualsIgnoreCase(const nsString& aString) const;
 PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aLength=-1) const;
 PRBool  EqualsIgnoreCase(const nsIAtom *aAtom) const;
 
@@ -770,34 +768,34 @@ typedef PRUnichar chartype;
 #endif
 };
 
-ostream& operator<<(ostream& os,nsString1& aString);
-extern NS_BASE int fputs(const nsString1& aString, FILE* out);
+ostream& operator<<(ostream& os,nsString& aString);
+extern NS_BASE int fputs(const nsString& aString, FILE* out);
 
 //----------------------------------------------------------------------
 
 /**
- * A version of nsString1 which is designed to be used as an automatic
+ * A version of nsString which is designed to be used as an automatic
  * variable.  It attempts to operate out of a fixed size internal
  * buffer until too much data is added; then a dynamic buffer is
  * allocated and grown as necessary.
  */
 // XXX template this with a parameter for the size of the buffer?
-class NS_BASE nsAutoString1 : public nsString1 {
+class NS_BASE nsAutoString : public nsString {
 public:
-                nsAutoString1();
-                nsAutoString1(const nsString1& other);
-                nsAutoString1(const nsAutoString1& other);
-                nsAutoString1(PRUnichar aChar);
-                nsAutoString1(const char* aCString);
-                nsAutoString1(const PRUnichar* us, PRInt32 uslen = -1);
-  virtual       ~nsAutoString1();
+                nsAutoString();
+                nsAutoString(const nsString& other);
+                nsAutoString(const nsAutoString& other);
+                nsAutoString(PRUnichar aChar);
+                nsAutoString(const char* aCString);
+                nsAutoString(const PRUnichar* us, PRInt32 uslen = -1);
+  virtual       ~nsAutoString();
 
-  nsAutoString1& operator=(const nsString1& aString) {nsString1::operator=(aString); return *this;}
-  nsAutoString1& operator=(const nsAutoString1& aString) {nsString1::operator=(aString); return *this;}
-  nsAutoString1& operator=(const char* aCString) {nsString1::operator=(aCString); return *this;}
-  nsAutoString1& operator=(char aChar) {nsString1::operator=(aChar); return *this;}
-  nsAutoString1& operator=(const PRUnichar* aBuffer) {nsString1::operator=(aBuffer); return *this;}
-  nsAutoString1& operator=(PRUnichar aChar) {nsString1::operator=(aChar); return *this;}
+  nsAutoString& operator=(const nsString& aString) {nsString::operator=(aString); return *this;}
+  nsAutoString& operator=(const nsAutoString& aString) {nsString::operator=(aString); return *this;}
+  nsAutoString& operator=(const char* aCString) {nsString::operator=(aCString); return *this;}
+  nsAutoString& operator=(char aChar) {nsString::operator=(aChar); return *this;}
+  nsAutoString& operator=(const PRUnichar* aBuffer) {nsString::operator=(aBuffer); return *this;}
+  nsAutoString& operator=(PRUnichar aChar) {nsString::operator=(aChar); return *this;}
 
   virtual void  SizeOf(nsISizeOfHandler* aHandler) const;
 
@@ -809,7 +807,7 @@ protected:
   chartype mBuf[32];
 };
 
-ostream& operator<<(ostream& os,nsAutoString1& aString);
+ostream& operator<<(ostream& os,nsAutoString& aString);
 
 #endif
 
