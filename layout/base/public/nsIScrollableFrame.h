@@ -28,6 +28,7 @@
 #include "nsIViewManager.h"
 
 class nsIFrame;
+class nsIBox;
 class nsIPresContext;
 
 // IID for the nsIScrollableFrame interface
@@ -115,6 +116,7 @@ public:
                                     PRBool aVerticalVisible,
                                     PRBool aHorizontalVisible) = 0;
 
+  NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult) = 0;
 };
 
 #endif

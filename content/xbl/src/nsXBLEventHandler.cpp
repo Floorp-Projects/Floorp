@@ -609,7 +609,8 @@ nsXBLEventHandler::GetController(nsIController** aResult)
   }
 
   // Return the first controller.
-  // XXX Just ditch this stupid controllers array.  It was a bad idea.
+  // XXX This code should be checking the command name and using supportscommand and
+  // iscommandenabled.
   if (controllers) {
     controllers->GetControllerAt(0, aResult);
   }
