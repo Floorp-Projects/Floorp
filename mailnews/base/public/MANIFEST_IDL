@@ -22,6 +22,7 @@ nsIMsgSignature.idl
 nsIMsgThread.idl
 nsIMsgVCard.idl
 nsIUrlListener.idl
+nsIUrlListenerManager.idl
 nsIMsgBiffManager.idl
 nsIMsgCopyService.idl
 nsIMsgCopyServiceListener.idl
