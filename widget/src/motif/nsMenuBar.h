@@ -24,6 +24,7 @@
 
 #include "nsIMenuBar.h"
 #include "nsIMenuListener.h"
+#include "nsVoidArray.h"
 
 class nsIWidget;
 
@@ -55,7 +56,7 @@ public:
   NS_IMETHOD RemoveMenu(const PRUint32 aCount);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
-
+  NS_IMETHOD Paint();
 protected:
   PRUint32    mNumMenus;
   Widget      mMenu;
