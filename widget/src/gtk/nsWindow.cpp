@@ -595,6 +595,11 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
   return NS_OK;
 }
 
+NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
+{
+  return NS_ERROR_FAILURE; // DRaM
+}
+
 //----------------------------------------------------------------------
 
 

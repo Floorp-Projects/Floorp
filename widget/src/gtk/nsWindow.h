@@ -61,6 +61,7 @@ public:
     nsresult             SetIcon(GdkPixmap *window_pixmap, 
                                  GdkBitmap *window_mask);
     NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
+    NS_IMETHOD           ShowMenuBar(PRBool aShow);
 
     NS_IMETHOD           SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
     NS_IMETHOD           UpdateTooltips(nsRect* aNewTips[]);

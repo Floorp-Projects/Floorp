@@ -764,8 +764,15 @@ NS_METHOD nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
 {
   g_print("bleh\n");
-    NS_NOTYETIMPLEMENTED("nsWidget::SetMenuBar");
-    return NS_OK;
+  NS_NOTYETIMPLEMENTED("nsWidget::SetMenuBar");
+  return NS_OK;
+}
+
+NS_METHOD nsWidget::ShowMenuBar(PRBool aShow)
+{
+  g_print("bleh\n");
+  NS_NOTYETIMPLEMENTED("nsWidget::ShowMenuBar");
+  return NS_OK;
 }
 
 nsresult nsWidget::CreateWidget(nsIWidget *aParent,

@@ -518,10 +518,19 @@ class nsIWidget : public nsISupports {
      * Set the widget's MenuBar.
      * Must be called after Create.
      *
-     * @param aTitle string displayed as the title of the widget
+     * @param aMenuBar the menubar
      */
 
     NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar) = 0;
+
+    /**
+     * Set the widget's MenuBar's visibility, without affecting ownership
+     * or any other sticky considerations.
+     *
+     * @param aShow PR_TRUE to show, PR_FALSE to hide
+     */
+
+    NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;
 
     /**
      * Set the collection of tooltip rectangles.
