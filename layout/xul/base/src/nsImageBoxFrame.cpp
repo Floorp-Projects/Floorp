@@ -90,6 +90,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIDOMDocument.h"
 #include "nsIEventQueueService.h"
+#include "nsTransform2D.h"
 
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
@@ -510,10 +511,17 @@ nsImageBoxFrame::PaintImage(nsIPresContext* aPresContext,
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 
   if (imgCon) {
-    nsPoint p(rect.x, rect.y);
-    rect.x = 0;
-    rect.y = 0;
-    aRenderingContext.DrawImage(imgCon, &rect, &p);
+    if (rect.width == mImageSize.width && rect.height == mImageSize.height) {
+      nsPoint p(rect.x, rect.y);
+      rect.x = 0;
+      rect.y = 0;
+      aRenderingContext.DrawImage(imgCon, &rect, &p);
+    }
+    else {
+      nsRect src(rect.x, rect.y, mImageSize.width, mImageSize.height);
+      rect.x = rect.y = 0;
+      aRenderingContext.DrawScaledImage(imgCon, &src, &rect);
+    }
   }
 
 #else
@@ -622,15 +630,11 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsImageBoxFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
-  if (DoesNeedRecalc(mImageSize)) {
-     CacheImageSize(aState);
-  }
-
-  aSize = mImageSize;
+  // An image can always scale down to (0,0).
+  aSize.width = aSize.height = 0;
   AddBorderAndPadding(aSize);
   AddInset(aSize);
   nsIBox::AddCSSMinSize(aState, this, aSize);
-
   return NS_OK;
 }
 
