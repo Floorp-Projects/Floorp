@@ -1,0 +1,2 @@
+# target: chrome.shlb
+mozilla/rdf/chrome/src/nsChromeRegistry.cpp
