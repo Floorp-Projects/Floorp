@@ -90,10 +90,11 @@
     </radiogroup>
 
     <separator/>
-
-    <checkbox id="networkWarnAboutCookies" value="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
-              pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
-              prefattribute="checked"/>
+    <box autostretch="never">
+      <checkbox id="networkWarnAboutCookies" value="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
+                pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
+                prefattribute="checked"/>
+    </box>
 
     <separator/>
 

@@ -34,14 +34,10 @@
         orient="vertical" title="&window.title;"
         onload="parent.initPanel('chrome://communicator/content/pref/pref-wallet.xul');">
 
-  <script language="JavaScript">
+  <script type="text/javascript">
   <![CDATA[
     var _elementIDs = ["walletCaptureForms"];
-  ]]>
-  </script>
-          
-  <script language="JavaScript">
-  <![CDATA[
+
     function viewWallet()
     {
       window.openDialog(
@@ -71,9 +67,11 @@
                  prefattribute="value"/>
     </box>
 -->
-    <checkbox id="walletCaptureForms" value="&walletEnabled.label;" accesskey="&walletEnabled.accesskey;"
-              pref="true" preftype="bool" prefstring="wallet.captureForms"
-              prefattribute="checked"/>
+    <box autostretch="never">
+      <checkbox id="walletCaptureForms" value="&walletEnabled.label;" accesskey="&walletEnabled.accesskey;"
+                pref="true" preftype="bool" prefstring="wallet.captureForms"
+                prefattribute="checked"/>
+    </box>
     <box autostretch="never" halign="right">
       <button class="dialog" value="&viewWallet.label;" accesskey="&viewWallet.accesskey;" 
               oncommand="viewWallet();"/>

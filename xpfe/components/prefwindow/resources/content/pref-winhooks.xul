@@ -41,7 +41,7 @@
         onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');"
         orient="vertical">
 
-<script language="JavaScript" src="chrome://communicator/content/pref/pref-winhooks.js"></script>
+<script type="text/javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
     
     <box class="box-smallheader" title="&title.label;"/>
 
@@ -80,7 +80,9 @@
             </box>
         </titledbox>
         <!-- Misc -->
-        <checkbox id="showDialog" value="&showDialog.label;"/>
+        <box autostretch="never">
+          <checkbox id="showDialog" value="&showDialog.label;"/>
+        </box>
 
 </window>
 

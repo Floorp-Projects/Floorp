@@ -29,16 +29,15 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bm-props.dtd" >
 
-<window
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	title="&bookmarks.windowtitle.label;"
-	onload="Init()" style="width: 36em;"
-	class="dialog" orient="vertical">
+<window	xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&bookmarks.windowtitle.label;"
+        onload="Init();" style="width: 36em;"
+        class="dialog" orient="vertical">
  
-	<script language="Javascript" src="chrome://global/content/globalOverlay.js"></script>
-	<script language="JavaScript" src="chrome://global/content/strres.js"></script>
-	<script language="JavaScript" src="chrome://communicator/content/bookmarks/bm-props.js"></script>
+	<script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
+	<script type="text/javascript" src="chrome://global/content/strres.js"/>
+	<script type="text/javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
 
 <keyset id="keyset"/>  
   
@@ -163,11 +162,12 @@
 
 		<titledbox orient="vertical">
 			<title><text value="&notifications.legend.label;" /></title>
-
-			<checkbox id="bookmarkIcon" value="&notification.icon.label;" />
-			<checkbox id="showAlert" value="&notification.alert.label;" />
-			<checkbox id="openWindow" value="&notification.window.label;" />
-			<checkbox id="playSound" value="&notification.sound.label;" />
+                        <vbox autostretch="never"> 
+                          <checkbox id="bookmarkIcon" value="&notification.icon.label;"/>
+                          <checkbox id="showAlert" value="&notification.alert.label;"/>
+                          <checkbox id="openWindow" value="&notification.window.label;"/>
+                          <checkbox id="playSound" value="&notification.sound.label;"/>
+                        </vbox>
 		</titledbox>
 	</titledbox>
   </tabpanel>

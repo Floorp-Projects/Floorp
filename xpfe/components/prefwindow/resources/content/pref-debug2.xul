@@ -45,12 +45,14 @@
 
   <titledbox orient="vertical">
     <title><text value="&debugNetworking.label;"/></title>
-    <checkbox id="browserEnableKeepAlive" value="&debugEnableKeepAlive.label;"
-              pref="true" preftype="bool" prefstring="network.http.keep-alive"
-              prefattribute="checked"/>
-    <checkbox id="browserEnablePipelining" value="&debugEnablePipelining.label;"
-              pref="true" preftype="bool" prefstring="network.http.pipelining"
-              prefattribute="checked"/>
+    <vbox autostretch="never">
+      <checkbox id="browserEnableKeepAlive" value="&debugEnableKeepAlive.label;"
+                pref="true" preftype="bool" prefstring="network.http.keep-alive"
+                prefattribute="checked"/>
+      <checkbox id="browserEnablePipelining" value="&debugEnablePipelining.label;"
+                pref="true" preftype="bool" prefstring="network.http.pipelining"
+                prefattribute="checked"/>
+    </vbox>
     <text class="label" value="&httpVersion.label;"  for="httpVersionString"/>
     <textfield id="httpVersionString" wsm_persist="true"  maxlength="3" flex="0"
               pref="true" preftype="string" prefstring="network.http.version"

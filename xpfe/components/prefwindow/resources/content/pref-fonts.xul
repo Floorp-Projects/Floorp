@@ -26,15 +26,15 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
 <window id="fontPanel"
         xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         title="&window.title;" 
         orient="vertical"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-fonts.xul');">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-fonts.xul');">
 
-  <script language="javascript" src="chrome://communicator/content/pref/pref-fonts.js"></script>
-  <script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script language="javaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script type="text/javascript" src="chrome://communicator/content/pref/pref-fonts.js"/>
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
 
   <box class="box-smallheader" title="&lHeader;"/>
   
@@ -201,10 +201,12 @@
 
     <separator class="thin"/>
     
-    <!-- note that this removes the ability to select dynamic fonts -->
-    <checkbox id="browserUseDocumentFonts" 
-              value="&useDocumentFonts.label;" accesskey="&useDocumentFonts.accesskey;"
-              preftype="int" prefstring="browser.display.use_document_fonts"/>
+    <box autostretch="never">
+      <!-- note that this removes the ability to select dynamic fonts -->
+      <checkbox id="browserUseDocumentFonts" 
+                value="&useDocumentFonts.label;" accesskey="&useDocumentFonts.accesskey;"
+                preftype="int" prefstring="browser.display.use_document_fonts"/>
+    </box>
 
   </titledbox>
 
