@@ -229,26 +229,23 @@ final class PK11KeyWrapper implements KeyWrapper {
     private void checkParams(AlgorithmParameterSpec params)
         throws InvalidAlgorithmParameterException
     {
-        Class paramClass = algorithm.getParameterClass();
-        if(params==null) {
-            if(paramClass != null) {
-                // this algorithm takes a parameter, but none was given
-                throw new InvalidAlgorithmParameterException(algorithm+
-                    " requires an algorithm parameter");
+        if( ! algorithm.isValidParameterObject(params) ) {
+            String name = "null";
+            if( params != null ) {
+                name = params.getClass().getName();
             }
-        } else {
-            if( paramClass == null ) {
-                //this algorithm doesn't take a param, but one was given
-                throw new InvalidAlgorithmParameterException(algorithm+
-                    " does not take a parameter");
-            } else if( ! ( paramClass.isInstance(params) ) ) {
-                throw new InvalidAlgorithmParameterException(algorithm+
-                    " expects a parameter of type "+paramClass);
+            throw new InvalidAlgorithmParameterException(
+                algorithm + " cannot use a " + name + " parameter");
+        }
+        if( params instanceof IVParameterSpec ) {
+            IV = ((IVParameterSpec)params).getIV();
+        }
+        try {
+            if( params instanceof javax.crypto.spec.IvParameterSpec ) {
+                IV = ((javax.crypto.spec.IvParameterSpec)params).getIV();
             }
-
-            if( params instanceof IVParameterSpec ) {
-                IV = ((IVParameterSpec)params).getIV();
-            }
+        } catch(NoClassDefFoundError e) {
+            // we must be running in JDK < 1.4. Ignore.
         }
     }
 

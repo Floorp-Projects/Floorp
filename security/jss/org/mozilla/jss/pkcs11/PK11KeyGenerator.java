@@ -95,11 +95,17 @@ public final class PK11KeyGenerator implements KeyGenerator {
     public void initialize(int strength)
         throws InvalidAlgorithmParameterException
     {
-        // validate the strength for our algorithm
-        if( PBEKeyGenParams.class.equals(algorithm.getParameterClass())) {
+        // if this algorithm only accepts PBE key gen params, it can't
+        // use a strength
+        Class[] paramClasses = algorithm.getParameterClasses();
+        if( paramClasses.length == 1 &&
+                paramClasses[0].equals(PBEKeyGenParams.class) )
+        {
             throw new InvalidAlgorithmParameterException("PBE keygen "+
                 "algorithms require PBEKeyGenParams ");
         }
+
+        // validate the strength for our algorithm
         if( ! algorithm.isValidStrength(strength) ) {
             throw new InvalidAlgorithmParameterException(strength+
                 " is not a valid strength for "+algorithm);
@@ -116,16 +122,15 @@ public final class PK11KeyGenerator implements KeyGenerator {
     public void initialize(AlgorithmParameterSpec parameters)
         throws InvalidAlgorithmParameterException
     {
-        if( PBEKeyGenParams.class.equals(algorithm.getParameterClass())) {
-            if( ! (parameters instanceof PBEKeyGenParams) ) {
-                throw new InvalidAlgorithmParameterException(
-                    "PBE keygen algorithms require PBEKeyGenParams");
+        if( ! algorithm.isValidParameterObject(parameters) ) {
+            String name = "null";
+            if( parameters != null ) {
+                name = parameters.getClass().getName();
             }
-            this.parameters = parameters;
-        } else {
             throw new InvalidAlgorithmParameterException(
-                algorithm+" does not take any parameters");
+                algorithm + " cannot use a " + name + " parameter");
         }
+        this.parameters = parameters;
     }
 
 
@@ -136,7 +141,10 @@ public final class PK11KeyGenerator implements KeyGenerator {
     public SymmetricKey generate()
         throws IllegalStateException, TokenException, CharConversionException
     {
-        if( PBEKeyGenParams.class.equals(algorithm.getParameterClass())) {
+        Class[] paramClasses = algorithm.getParameterClasses();
+        if( paramClasses.length == 1 &&
+            paramClasses[0].equals(PBEKeyGenParams.class) )
+        {
             if(parameters==null || !(parameters instanceof PBEKeyGenParams)) {
                 throw new IllegalStateException(
                     "PBE keygen algorithms require PBEKeyGenParams");
@@ -170,7 +178,10 @@ public final class PK11KeyGenerator implements KeyGenerator {
     public byte[] generatePBE_IV()
         throws TokenException, CharConversionException
     {
-        if( PBEKeyGenParams.class.equals(algorithm.getParameterClass())) {
+        Class[] paramClasses = algorithm.getParameterClasses();
+        if( paramClasses.length == 1 &&
+            paramClasses[0].equals(PBEKeyGenParams.class) )
+        {
             if(parameters==null || !(parameters instanceof PBEKeyGenParams)) {
                 throw new IllegalStateException(
                     "PBE keygen algorithms require PBEKeyGenParams");

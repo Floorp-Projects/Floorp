@@ -42,8 +42,7 @@ import java.security.NoSuchAlgorithmException;
 public class KeyWrapAlgorithm extends Algorithm {
     protected KeyWrapAlgorithm(int oidTag, String name, Class paramClass,
         boolean padded, int blockSize) {
-        super(oidTag, name);
-        parameterClass = paramClass;
+        super(oidTag, name, null, paramClass);
         this.padded = padded;
         this.blockSize = blockSize;
         if( name != null ) {
@@ -51,7 +50,6 @@ public class KeyWrapAlgorithm extends Algorithm {
         }
     }
 
-    private Class parameterClass;
     private boolean padded;
     private int blockSize;
 
@@ -66,14 +64,6 @@ public class KeyWrapAlgorithm extends Algorithm {
         } else {
             return (KeyWrapAlgorithm) alg;
         }
-    }
-
-    /**
-     * The type of parameter that this algorithm expects.  Returns
-     *   <code>null</code> if this algorithm does not take any parameters.
-     */
-    public Class getParameterClass() {
-        return parameterClass;
     }
 
     public boolean isPadded() {

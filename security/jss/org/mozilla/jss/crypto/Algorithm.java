@@ -68,7 +68,21 @@ public class Algorithm {
                         Class paramClass)
     {
         this(oidIndex, name, oid);
-        this.parameterClass = paramClass;
+        if( paramClass == null ) {
+            this.parameterClasses = new Class[0];
+        } else {
+            this.parameterClasses = new Class[1];
+            this.parameterClasses[0] = paramClass;
+        }
+    }
+
+    protected Algorithm(int oidIndex, String name, OBJECT_IDENTIFIER oid,
+                        Class []paramClasses)
+    {
+        this(oidIndex, name, oid);
+        if( paramClasses != null ) {
+            this.parameterClasses = paramClasses;
+        }
     }
 
 	/**
@@ -94,9 +108,48 @@ public class Algorithm {
     /**
      * The type of parameter that this algorithm expects.  Returns
      *   <code>null</code> if this algorithm does not take any parameters.
+     * If the algorithm can accept more than one type of parameter,
+     *   this method returns only one of them. It is better to call
+     *   <tt>getParameterClasses()</tt>.
+     * @deprecated Call <tt>getParameterClasses()</tt> instead.
      */
     public Class getParameterClass() {
-        return parameterClass;
+        if( parameterClasses.length == 0) {
+            return null;
+        } else {
+            return parameterClasses[0];
+        }
+    }
+
+    /**
+     * The types of parameter that this algorithm expects.  Returns
+     *   <code>null</code> if this algorithm does not take any parameters.
+     */
+    public Class[] getParameterClasses() {
+        return (Class[]) parameterClasses.clone();
+    }
+
+    /**
+     * Returns <tt>true</tt> if the given Object can be used as a parameter
+     * for this algorithm.
+     * <p>If <tt>null</tt> is passed in, this method will return <tt>true</tt>
+     *      if this algorithm takes no parameters, and <tt>false</tt>
+     *      if this algorithm does take parameters.
+     */
+    public boolean isValidParameterObject(Object o) {
+        if( o == null ) {
+            return (parameterClasses.length == 0);
+        }
+        if( parameterClasses.length == 0 ){
+            return false;
+        }
+        Class c = o.getClass();
+        for( int i = 0; i < parameterClasses.length; ++i) {
+            if( c.equals( parameterClasses[i] ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -105,7 +158,7 @@ public class Algorithm {
     protected int oidIndex;
 	String name;
     protected OBJECT_IDENTIFIER oid;
-    private Class parameterClass=null;
+    private Class[] parameterClasses=new Class[0];
 
     //////////////////////////////////////////////////////////////
     // Algorithm OIDs
