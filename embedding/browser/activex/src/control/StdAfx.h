@@ -37,15 +37,6 @@
 #define _ATL_APARTMENT_THREADED
 #define _ATL_STATIC_REGISTRY
 
-// Comment these out as appropriate
-#ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
-#define USE_CONTROL
-#endif
-
-#ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
-#define USE_PLUGIN
-#endif
-
 // ATL headers
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override
@@ -75,7 +66,6 @@ typedef long int32;
 
 // Mozilla headers
 
-#ifdef USE_CONTROL
 #include "xp_core.h"
 #include "jscompat.h"
 
@@ -90,6 +80,8 @@ typedef long int32;
 #include "nsViewsCID.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
+#include "nsICookieService.h"
 
 #include "nsIHTTPChannel.h"
 
@@ -122,7 +114,6 @@ typedef long int32;
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
-#endif
 
 // Mozilla control headers
 #include "resource.h"
@@ -139,24 +130,12 @@ typedef long int32;
 #include "ControlSite.h"
 #include "ControlSiteIPFrame.h"
 
-#ifdef USE_CONTROL
 #include "IEHtmlDocument.h"
 #include "CPMozillaControl.h"
 #include "MozillaBrowser.h"
 #include "WebShellContainer.h"
 #include "DropTarget.h"
 #include "guids.h"
-#endif
-
-#ifdef USE_PLUGIN
-#include "npapi.h"
-#include "nsIFactory.h"
-#include "nsIPlugin.h"
-#include "nsIPluginInstance.h"
-#include "ActiveXPlugin.h"
-#include "ActiveXPluginInstance.h"
-#include "ActiveScriptSite.h"
-#endif
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.

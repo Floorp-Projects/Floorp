@@ -23,6 +23,8 @@
 #include "stdafx.h"
 #include <string.h>
 #include <string>
+#include <objidl.h>
+#include <comdef.h>
 
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
@@ -77,6 +79,7 @@ CMozillaBrowser::CMozillaBrowser()
 
 	// Initialize layout interfaces
     m_pIWebShell = nsnull;
+
 	m_pIPref = nsnull;
     m_pIServiceManager = nsnull;
 
@@ -132,7 +135,7 @@ STDMETHODIMP CMozillaBrowser::InterfaceSupportsErrorInfo(REFIID riid)
 		&IID_IWebBrowser2,
 		&IID_IWebBrowserApp
 	};
-	for (int i=0;i<sizeof(arr)/sizeof(arr[0]);i++)
+	for (int i=0;i<(sizeof(arr)/sizeof(arr[0]));i++)
 	{
 		if (InlineIsEqualGUID(*arr[i],riid))
 			return S_OK;
@@ -263,6 +266,8 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 // Handle WM_PAINT windows message (and IViewObject::Draw) 
 HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnDraw);
+
     if (m_pIWebShell == nsnull)
 	{
 		RECT& rc = *(RECT*)di.prcBounds;
@@ -273,19 +278,22 @@ HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
 	return S_OK;
 }
 
-
 // Handle ID_PAGESETUP command
 LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnPageSetup);
 	MessageBox(_T("No page setup yet!"), _T("Control Message"), MB_OK);
+
 	// TODO show the page setup dialog
+
 	return 0;
 }
-
 
 // Handle ID_PRINT command
 LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnPrint);
+
 	nsresult res;
 
 	// Print the contents
@@ -306,13 +314,107 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 
 LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	MessageBox(_T("No Save As Yet!"), _T("Control Message"), MB_OK);
-	// TODO show the save as dialog
-	return 0;
+	NG_TRACE_METHOD(CMozillaBrowser::OnSaveAs);
+
+	OPENFILENAME SaveFileName;
+
+	char szFile[256];
+	char szFileTitle[256];
+	BSTR pageName = NULL;
+
+	SaveFileName.lStructSize = sizeof(SaveFileName);
+	SaveFileName.hwndOwner = m_hWnd;
+	SaveFileName.hInstance = NULL;
+	SaveFileName.lpstrFilter = "Web Page, HTML Only (*.htm;*.html)\0*.htm;*.html\0Text File (*.txt)\0*.txt\0"; 
+	//TODO:	The IE control allows you to also save as "Web Page, complete" where all of the page's images are saved
+	//		in a directory along with the web page.  This doesn't appear to be directly supported by Mozilla, but
+	//		could be implemented here if deemed necessary.  (Web Page, complete (*.htm;*.html)\0*.htm;*.html\0)
+	SaveFileName.lpstrCustomFilter = NULL; 
+	SaveFileName.nMaxCustFilter = NULL; 
+	SaveFileName.nFilterIndex = 1; 
+	SaveFileName.lpstrFile = szFile; 
+	SaveFileName.nMaxFile = sizeof(szFile); 
+	SaveFileName.lpstrFileTitle = szFileTitle;
+	SaveFileName.nMaxFileTitle = sizeof(szFileTitle); 
+	SaveFileName.lpstrInitialDir = NULL; 
+	SaveFileName.lpstrTitle = NULL; 
+	SaveFileName.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT; 
+	SaveFileName.nFileOffset = NULL; 
+	SaveFileName.nFileExtension = NULL; 
+	SaveFileName.lpstrDefExt = "htm"; 
+	SaveFileName.lCustData = NULL; 
+	SaveFileName.lpfnHook = NULL; 
+	SaveFileName.lpTemplateName = NULL; 
+
+
+	//Get the title of the current web page to set as the default filename.
+	char szTmp[256];
+	get_LocationName(&pageName);
+	strcpy(szTmp, _bstr_t(pageName));
+	
+	int j = 0;									//The SaveAs dialog will fail if szFile contains any "bad" characters.
+	for (int i=0; szTmp[i]!='\0'; i++) {		//This hunk of code attempts to mimick the IE way of replacing "bad"
+		switch(szTmp[i]) {						//characters with "good" characters.
+			case '\\':
+			case '*':
+			case '|':
+			case ':':
+			case '"':
+			case '>':
+			case '<':
+			case '?':
+				break;
+			case '.':
+				if (szTmp[i+1] != '\0') {
+					szFile[j] = '_';
+					j++;
+				}
+				break;
+			case '/':
+				szFile[j] = '-';
+				j++;
+				break;
+			default:
+				szFile[j] = szTmp[i];
+				j++;
+		}
+	}
+	szFile[j] = '\0';
+
+	HRESULT res = S_OK;
+	if ( GetSaveFileName(&SaveFileName) ) {		
+		//Get the current DOM document
+		nsIDOMDocument* pDocument = nsnull;
+		res = GetDOMDocument(&pDocument);
+		if ( FAILED(res) )
+			return res;
+		
+		//Get an nsIDiskDocument interface to the DOM document
+		nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(pDocument);
+		if (!diskDoc)
+			return E_NOINTERFACE;
+		
+		//Set the file type specified by the user
+		//Add the correct file extension if none is specified
+		nsIDiskDocument::ESaveFileType saveFileType;
+		if ( SaveFileName.nFilterIndex == 2 )		//SaveAs text file
+			saveFileType = nsIDiskDocument::eSaveFileText;
+		else										//SaveAs html file
+			saveFileType = nsIDiskDocument::eSaveFileHTML;
+
+		//Create an nsFilelSpec from the selected file path.
+		nsFileSpec fileSpec(szFile, PR_FALSE);
+		
+		//Save the file.
+		res = diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, saveFileType, "");
+	}
+	return res;
 }
 
 LRESULT CMozillaBrowser::OnProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnProperties);
+
 	MessageBox(_T("No Properties Yet!"), _T("Control Message"), MB_OK);
 	// TODO show the properties dialog
 	return 0;
@@ -320,6 +422,8 @@ LRESULT CMozillaBrowser::OnProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 
 LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnCut);
+
 	nsresult res;
 	
 	nsIPresShell* pIPresShell = nsnull;
@@ -345,6 +449,8 @@ LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 
 LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnCopy);
+
 	nsresult res;
 	
 	nsIPresShell* pIPresShell = nsnull;
@@ -362,6 +468,8 @@ LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 
 LRESULT CMozillaBrowser::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnPaste);
+
 	MessageBox(_T("No Paste Yet!"), _T("Control Message"), MB_OK);
 	// TODO enable pasting
 	return 0;
@@ -369,6 +477,8 @@ LRESULT CMozillaBrowser::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 
 LRESULT CMozillaBrowser::OnSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnSelectAll);
+
 	MessageBox(_T("No Select All Yet!"), _T("Control Message"), MB_OK);
 	// TODO enable Select All
 	return 0;
@@ -376,7 +486,9 @@ LRESULT CMozillaBrowser::OnSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 
 // Handle ID_VIEWSOURCE command
 LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
-{	
+{
+	NG_TRACE_METHOD(CMozillaBrowser::OnViewSource);
+
 	// Get the url from the web shell
 	const PRUnichar *pszUrl = nsnull;
 	PRInt32 aHistoryIndex;
@@ -438,9 +550,10 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 // Test if the browser is in a valid state
 BOOL CMozillaBrowser::IsValid()
 {
+	NG_TRACE_METHOD(CMozillaBrowser::IsValid);
+
 	return (m_pIWebShell == nsnull) ? FALSE : TRUE;
 }
-
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -525,7 +638,7 @@ HRESULT CMozillaBrowser::TermWebShell()
 
 // Create and initialise the web shell
 HRESULT CMozillaBrowser::CreateWebShell() 
-{
+{	
 	NG_TRACE_METHOD(CMozillaBrowser::CreateWebShell);
 
 	if (m_pIWebShell != nsnull)
@@ -544,7 +657,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	nsresult rv;
 
-	// Load preferences
+	// Load preferences service
 	rv = nsServiceManager::GetService(kPrefCID, 
 									nsIPref::GetIID(), 
 									(nsISupports **)&m_pIPref);
@@ -554,6 +667,10 @@ HRESULT CMozillaBrowser::CreateWebShell()
 		NG_TRACE(_T("Could not create preference object rv=%08x\n"), (int) rv);
 		m_sErrorMessage = _T("Error - could not create preference object");
 		return E_FAIL;
+	}
+	else {
+		rv = m_pIPref->StartUp();		//Initialize the preference service
+		rv = m_pIPref->ReadUserPrefs();	//Reads from default_prefs.js
 	}
 	
 	// Create the web shell object
@@ -567,6 +684,13 @@ HRESULT CMozillaBrowser::CreateWebShell()
 		m_sErrorMessage = _T("Error - could not create web shell, check PATH settings");
 		return E_FAIL;
 	}
+
+	// Register the cookie service
+	NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+	if (NS_FAILED(rv) || (cookieService == nsnull)) {
+		NG_TRACE(_T("Could not register the cookie manager.  rv=%08x\n"), (int) rv);
+	}
+	// TODO make the cookie service persistent.  Currently does not save or load cookies to/from disk.
 
 	// Initialise the web shell, making it fit the control dimensions
 
@@ -585,6 +709,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 					nsScrollPreference_kAuto,
 					aAllowPlugins,
 					aIsSunkenBorder);
+	
 	NG_ASSERT(NS_SUCCEEDED(rv));
 
 	// Create the container object
@@ -606,6 +731,8 @@ HRESULT CMozillaBrowser::CreateWebShell()
 // Turns the editor mode on or off
 HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::SetEditorMode);
+
 	m_bEditorMode = FALSE;
 	if (bEnabled && m_pEditor == nsnull)
 	{
@@ -663,6 +790,8 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 
 HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::OnEditorCommand);
+
 	static nsIAtom * propB = NS_NewAtom("b");       
 	static nsIAtom * propI = NS_NewAtom("i");     
 	static nsIAtom * propU = NS_NewAtom("u");     
@@ -731,6 +860,7 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::GetPresShell);
+
 	nsresult res;
 	
 	// Test for stupid args
@@ -776,6 +906,7 @@ HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::GetDOMDocument);
+
 	nsresult res;
 
 	// Test for stupid args
@@ -921,6 +1052,8 @@ HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 
 HRESULT CMozillaBrowser::InPlaceActivate(LONG iVerb, const RECT* prcPosRect)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::InPlaceActivate);
+
 	HRESULT hr;
 
 	if (m_spClientSite == NULL)
@@ -1055,6 +1188,8 @@ HRESULT CMozillaBrowser::InPlaceActivate(LONG iVerb, const RECT* prcPosRect)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetClientSite(IOleClientSite **ppClientSite)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::GetClientSite);
+
 	NG_ASSERT(ppClientSite);
 
 	// This fixes a problem in the base class which asserts if the client
@@ -1140,7 +1275,6 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 			sUrl = A2T(szBuffer);
 		}
 	}
-
 	// Navigate to the home page
 	Navigate(T2OLE(sUrl), NULL, NULL, NULL, NULL);
 	
@@ -1167,7 +1301,6 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoSearch(void)
 		// TODO find and navigate to the search page stored in prefs
 		//      and not this hard coded address
 	}
-
 	Navigate(T2OLE(sUrl), NULL, NULL, NULL, NULL);
 	
 	return S_OK;
@@ -1215,7 +1348,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		Flags->vt != VT_NULL)
 	{
 		CComVariant vFlags;
-		if (vFlags.ChangeType(VT_I4, Flags) != S_OK)
+		if ( vFlags.ChangeType(VT_I4, Flags) != S_OK )
 		{
 			NG_ASSERT(0);
 			RETURN_E_INVALIDARG();
@@ -1260,7 +1393,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		lFlags &= ~(navOpenInNewWindow);
 		if ((bCancel == VARIANT_FALSE) && spDispNew)
 		{
-			CIPtr(IWebBrowser2) spOther = spDispNew;;
+			CIPtr(IWebBrowser2) spOther = spDispNew;
 			if (spOther)
 			{
 				CComVariant vURL(URL);
@@ -1291,7 +1424,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	// Load the URL	
 	char *tmpCommand = sCommand.ToNewCString();
 	nsresult res = m_pIWebShell->LoadURL(sUrl.GetUnicode()); 
-	
+
 /*	, tmpCommand, pIPostData, bModifyHistory);
 	  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIInputStream* aPostDataStream=nsnull,
@@ -1339,7 +1472,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	if (Level)
 	{
 		CComVariant vLevelAsInt;
-		if (vLevelAsInt.ChangeType(VT_I4, Level) != S_OK)
+		if ( vLevelAsInt.ChangeType(VT_I4, Level) != S_OK )
 		{
 			NG_ASSERT(0);
 			RETURN_E_UNEXPECTED();
@@ -1594,6 +1727,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Left(long Left)
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
+	
+	//TODO: Implement put_Left - Should set the left position of this control.
 	return S_OK;
 }
 
@@ -1723,16 +1858,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 	}
 
 	// Get the url from the web shell
-	const PRUnichar *pszLocationName = nsnull;
-	m_pIWebShell->GetTitle(&pszLocationName);
-	if (pszLocationName == nsnull)
+	nsXPIDLString szLocationName;
+	m_pIWebShell->GetTitle(getter_Copies(szLocationName));
+	if (nsnull == (const PRUnichar *) szLocationName)
 	{
 		RETURN_E_UNEXPECTED();
 	}
 
 	// Convert the string to a BSTR
 	USES_CONVERSION;
-	LPOLESTR pszConvertedLocationName = W2OLE(const_cast<PRUnichar *>(pszLocationName));
+	LPCOLESTR pszConvertedLocationName = W2COLE((const PRUnichar *) szLocationName);
 	*LocationName = SysAllocString(pszConvertedLocationName);
 
 	return S_OK;
@@ -1938,7 +2073,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_HWND(long __RPC_FAR *pHWND)
 		RETURN_E_INVALIDARG();
 	}
 
-	//This generates an exception in the IE control.
+	//This is supposed to return a handle to the IE main window.  Since that doesn't exist
+	//in the control's case, this shouldn't do anything.
 	*pHWND = NULL;
 	return S_OK;
 }
@@ -2079,6 +2215,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusText(BSTR __RPC_FAR *Status
 	}
 
 	//TODO: Implement get_StatusText
+	//NOTE: This function is related to the MS status bar which doesn't exist in this control.  Needs more
+	//		investigation, but probably doesn't apply.
 	*StatusText = SysAllocString(L"");
 	return S_OK;
 }
@@ -2095,6 +2233,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusText(BSTR StatusText)
 	}
 
 	//TODO: Implement put_StatusText
+	//NOTE: This function is related to the MS status bar which doesn't exist in this control.  Needs more
+	//		investigation, but probably doesn't apply.
 	return S_OK;
 }
 
@@ -2235,7 +2375,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate2(VARIANT __RPC_FAR *URL, VAR
 #endif
 
 	CComVariant vURLAsString;
-	if (vURLAsString.ChangeType(VT_BSTR, URL) != S_OK)
+	if ( vURLAsString.ChangeType(VT_BSTR, URL) != S_OK )
 	{
 		RETURN_E_INVALIDARG();
 	}
@@ -2483,28 +2623,31 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 				pDropTarget->AddRef();
 				pDropTarget->SetOwner(this);
 
+
 				// Ask the site if it wants to replace this drop target for another one
 				CIPtr(IDropTarget) spDropTarget;
 				CIPtr(IDocHostUIHandler) spDocHostUIHandler = m_spClientSite;
 				if (spDocHostUIHandler)
 				{
-					if (spDocHostUIHandler->GetDropTarget(pDropTarget, &spDropTarget) != S_OK)
+					//if (spDocHostUIHandler->GetDropTarget(pDropTarget, &spDropTarget) != S_OK)
+					if (spDocHostUIHandler->GetDropTarget(pDropTarget, &spDropTarget) == S_OK)
 					{
-						spDropTarget = pDropTarget;
+						m_bDropTarget = TRUE;
+						::RegisterDragDrop(m_hWnd, spDropTarget);
+						//spDropTarget = pDropTarget;
 					}
 				}
-				if (spDropTarget)
+				else
+				//if (spDropTarget)
 				{
 					m_bDropTarget = TRUE;
-					::RegisterDragDrop(m_hWnd, spDropTarget);
+					::RegisterDragDrop(m_hWnd, pDropTarget);
+					//::RegisterDragDrop(m_hWnd, spDropTarget);
 				}
-
 				pDropTarget->Release();
 			}
-
 			// Now revoke any child window drop targets and pray they aren't
 			// reset by the layout engine.
-
 			::EnumChildWindows(m_hWnd, EnumChildProc, (LPARAM) this);
 		}
 	}
@@ -2630,7 +2773,6 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 	//TODO:  Not sure if this should actually be implemented or not.
 	return S_OK;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Ole Command Handlers

@@ -2,7 +2,7 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Thu Nov 11 22:06:45 1999
+/* at Tue Dec 07 23:42:45 1999
  */
 /* Compiler settings for MozillaControl.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
@@ -85,6 +85,16 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 /* library MOZILLACONTROLLib */
 /* [helpstring][version][uuid] */ 
 
+#ifndef __exdisp_h__
+#define __exdisp_h__
+typedef /* [helpstring][uuid] */ 
+enum CommandStateChangeConstants
+    {	CSC_UPDATECOMMANDS	= 0xffffffff,
+	CSC_NAVIGATEFORWARD	= 0x1,
+	CSC_NAVIGATEBACK	= 0x2
+    }	CommandStateChangeConstants;
+
+#endif
 
 EXTERN_C const IID LIBID_MOZILLACONTROLLib;
 
