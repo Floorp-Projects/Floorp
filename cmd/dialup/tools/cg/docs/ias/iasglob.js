@@ -21,6 +21,7 @@
 
 // iasglob.js
 
+
 //THE FOLLOWING FUNCTION IS LOCATION DEPENDANT
 
 function refreshConfigFrame(fileName)
@@ -299,7 +300,7 @@ function isAlphaNumeric(inLetter)
 	if ((inLetter != null) && (inLetter != ""))
 	{
 
-		if ((!isNaN(parseInt(inLetter))) && (parseInt(inLetter >= 0)) && (parseInt(inLetter <=9)))
+		if ((!isNaN(parseInt(inLetter))) && (parseInt(inLetter) >= 0) && (parseInt(inLetter) <=9))
 			outValue = true;
 		else
 		{
@@ -370,6 +371,7 @@ function askIASFileNameAndSave()
 	var sName 	= 	getGlobal("SiteName");
 	var save 	= 	null;
 	
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
 	//flush data from currenly open tab into globals
 	if (parent.tabs && parent.tabs.tabbody && parent.tabs.tabbody.saveData)
@@ -408,7 +410,7 @@ function askIASFileNameAndSave()
 			var fName = prompt("Enter the file name for this configuration (must end with .IAS)", sgName);
 			
 			//if they entered an improper suffix, prompt again, and again
-			while ((fName != null) && (fName.substring(fName.length-4, fName.length)  != ".IAS"))
+			while ((fName != null) && ((fName.substring(fName.length-4, fName.length)  != ".IAS") && (fName.substring(fName.length-4, fName.length)  != ".ias")))
 			{
 				sgName = suggestIASFileName(fName);
 				fName = prompt("Enter the fileName for this configuration (must end with .IAS)", sgName);
@@ -445,6 +447,8 @@ function askIASFileNameAndSave()
 		//save the file
 		writeToFile(fName);
 		refreshConfigFrame(fName);
+		top.globals.document.setupPlugin.FlushCache();
+		alert("This file is saved as " + top.globals.getConfigFolder(self) + fName);
 		return fName;
 	}
 	else
@@ -529,6 +533,7 @@ function saveNewOrOldFile()
 	if (fileName == false)
 		return fileName;
 
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
 	//flush data from currenly open tab into globals
 	if(parent.tabs && parent.tabs.tabbody && parent.tabs.tabbody.saveData)
@@ -550,6 +555,8 @@ function saveNewOrOldFile()
 	{
 		//debug("Saving: without asking to: " + fileName);
 		writeToFile(fileName);
+		top.globals.document.setupPlugin.FlushCache();
+		//alert("This file is saved as " + top.globals.getConfigFolder(self) + fileName);
 	}
 	return fileName;
 }
