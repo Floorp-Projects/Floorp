@@ -104,7 +104,7 @@ function onAdvanced(event)
       else
         window.alert(alertMsg);
 
-      return false;
+      return;
     }
 
     // fix for bug #60647
