@@ -15,7 +15,8 @@ bin/libnspr3.so
 bin/libplc3.so
 bin/libplds3.so
 bin/libxpcom.so
-bin/components/libxpistub.so
+; this file doesn't seem to be here. -blizzard
+; bin/components/libxpistub.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
 bin/component.reg
@@ -72,7 +73,6 @@ bin/components/libmozucth.so
 bin/components/libmozxfer.so
 bin/components/libnecko.so
 bin/components/libnecko_about.so
-bin/components/libnecko_cache.so
 bin/components/libnecko_data.so
 bin/components/libnecko_file.so
 bin/components/libnecko_ftp.so
@@ -124,7 +124,6 @@ bin/components/necko_file.xpt
 bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
 bin/components/necko_socket.xpt
-bin/components/necko_res.xpt
 bin/components/necko_stream_converter.xpt
 bin/components/nkcache.xpt
 bin/components/nsSidebar.js
@@ -146,12 +145,14 @@ bin/components/xpcom_base.xpt
 bin/components/xpcom_ds.xpt
 bin/components/xpcom_io.xpt
 bin/components/xpconnect.xpt
-bin/components/bs.xpt
+; this is only there if you build the irc client
+; bin/components/bs.xpt
 bin/components/chrome.xpt
 bin/components/docshell.xpt
 bin/components/jsurl.xpt
 bin/components/layout.xpt
-bin/components/libbs.so
+; this is only there if you build the irc client
+; bin/components/libbs.so
 bin/components/libjsloader.so
 bin/components/libnecko_cache.so
 bin/components/libnecko_jar.so
@@ -163,7 +164,6 @@ bin/components/libsample.so
 bin/components/libsearch.so
 bin/components/necko_jar.xpt
 bin/components/necko_res.xpt
-bin/components/nkcache.xpt
 bin/components/nsCategoryManager.js
 bin/components/nsSample.js
 bin/components/prefmigr.xpt
@@ -210,7 +210,8 @@ bin/defaults/pref/initpref.js
 bin/defaults/pref/unix.js
 bin/defaults/pref/xpinstall.js
 bin/defaults/profile/*
-bin/plugins/*
+; this is only here if you have plugins -blizzard
+; bin/plugins/*
 bin/res/entityTables/*
 bin/res/FieldSchema.tbl
 bin/res/SchemaConcat.tbl
@@ -230,12 +231,14 @@ bin/res/throbber/*
 bin/res/toolbar/*
 bin/res/ua.css
 
-bin/irc/*
+; this is only there if you build the irc client
+; bin/irc/*
 
 ;[editor]
-bin/chrome/editor/content/default/*
-bin/chrome/editor/locale/en-US/*
-bin/chrome/editor/skin/default/*
+; these are redundant because bin/chrome/editor/* is listed above -blizzard
+; bin/chrome/editor/content/default/*
+; bin/chrome/editor/locale/en-US/*
+; bin/chrome/editor/skin/default/*
 
 [mail]
 bin/components/addrbook.xpt
@@ -247,9 +250,7 @@ bin/components/libmimeemitter.so
 bin/components/libmork.so
 bin/components/libmsgcompose.so
 bin/components/libmsgdb.so
-bin/components/libmsgdb.so
 bin/components/libmsgimap.so
-bin/components/libmsgnews.so
 bin/components/libmsgnews.so
 bin/components/libvcard.so
 bin/components/mailnews.xpt
@@ -267,4 +268,5 @@ bin/chrome/addressbook/*
 bin/chrome/messenger/*
 bin/chrome/messengercompose/*
 bin/defaults/pref/mailnews.js
-bin/help/mailhelp/*
+; this doesn't seem to be in the tree. -blizzard
+;bin/help/mailhelp/*
