@@ -1565,3 +1565,19 @@ nsNntpIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
     *aSupportLevel = OFFLINE_SUPPORT_LEVEL_EXTENDED;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aCopiesAndFoldersOnServer)
+{
+    NS_ENSURE_ARG_POINTER(aCopiesAndFoldersOnServer);
+
+    /**
+     * When a news account is created, the copies and folder prefs for the 
+     * associated identity don't point to folders on the server. 
+     * This makes sense, since there is no "Drafts" folder on a news server.
+     * They'll point to the ones on "Local Folders"
+     */
+
+    *aCopiesAndFoldersOnServer = PR_FALSE;
+    return NS_OK;
+}

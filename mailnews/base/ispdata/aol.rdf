@@ -15,6 +15,7 @@
             <NC:type>imap</NC:type>
             <NC:rememberPassword>false</NC:rememberPassword>
             <NC:redirectorType>aol</NC:redirectorType>
+            <NC:defaultCopiesAndFoldersPrefsToServer>false</NC:defaultCopiesAndFoldersPrefsToServer>
             <NC:ServerType-imap>
               <NC:nsIImapIncomingServer>
                 <NC:deleteModel>2</NC:deleteModel>

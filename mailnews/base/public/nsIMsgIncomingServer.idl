@@ -240,6 +240,20 @@ interface nsIMsgIncomingServer : nsISupports {
 	
   /* does this server have disk space settings? */
   readonly attribute boolean supportsDiskSpace;
+
+  /**
+   * If the server supports Fcc/Sent/etc, default prefs can point to 
+   * the server. Otherwise, copies and folders prefs should point to
+   * Local Folders.
+   *
+   * By default this value is set to true via global pref 'allows_specialfolders_usage'
+   * (mailnews.js). For Nntp, the value is overridden to be false.
+   * If ISPs want to modify this value, they should do that in their rdf file
+   * by using this attribute. Please look at mozilla/mailnews/base/ispdata/aol.rdf for
+   * usage example.
+   */
+  attribute boolean defaultCopiesAndFoldersPrefsToServer;
+
 };
 
 %{C++

@@ -1378,19 +1378,6 @@ nsNntpService::GetNeedToBuildSpecialFolderURIs(PRBool *needToBuildSpecialFolderU
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsNntpService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
-{
-	NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);
-	// when a news account is created, the copies and folder prefs for the associated identity
-	// don't point to folders on the server. 
-	// this makes sense, since there is no "Drafts" folder on a news server.
-	// they'll point to the ones on "Local Folders"
-	*aDefaultCopiesAndFoldersPrefsToServer = PR_FALSE;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsNntpService::GetSpecialFoldersDeletionAllowed(PRBool *specialFoldersDeletionAllowed)
 {

@@ -3117,15 +3117,6 @@ nsImapService::GetNeedToBuildSpecialFolderURIs(PRBool *needToBuildSpecialFolderU
 }        
 
 NS_IMETHODIMP
-nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
-{
-    NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);
-    // Need to create required special folders on the server. Return true.
-    *aDefaultCopiesAndFoldersPrefsToServer = PR_TRUE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsImapService::GetSpecialFoldersDeletionAllowed(PRBool *specialFoldersDeletionAllowed)
 {
     NS_ENSURE_ARG_POINTER(specialFoldersDeletionAllowed);

@@ -171,17 +171,6 @@ nsNoneService::GetCanGetMessages(PRBool *aCanGetMessages)
     return NS_OK;
 }  
 
-NS_IMETHODIMP
-nsNoneService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
-{
-    NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);
-    // when a "none" server is created (like "Local Folders")
-	// the copies and folder prefs for the associated identity
-    // point to folders on this server.
-    *aDefaultCopiesAndFoldersPrefsToServer = PR_TRUE;
-    return NS_OK;
-}   
-
 NS_IMETHODIMP 
 nsNoneService::GetDefaultDoBiff(PRBool *aDoBiff)
 {

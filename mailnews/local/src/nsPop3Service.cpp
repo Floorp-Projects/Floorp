@@ -577,17 +577,6 @@ nsPop3Service::GetDefaultServerPort(PRBool isSecure, PRInt32 *aPort)
 }
 
 NS_IMETHODIMP
-nsPop3Service::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
-{
-    NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);
-    // when a pop3 server is created, the copies and folder prefs for the associated identity
-    // point to folders on this server.
-	// when we create a pop server, we give it its own Drafts, Sent, Templates, etc folders.
-    *aDefaultCopiesAndFoldersPrefsToServer = PR_TRUE;
-    return NS_OK;
-} 
-
-NS_IMETHODIMP
 nsPop3Service::GetSpecialFoldersDeletionAllowed(PRBool *specialFoldersDeletionAllowed)
 {
     NS_ENSURE_ARG_POINTER(specialFoldersDeletionAllowed);

@@ -1353,6 +1353,9 @@ NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, EmptyTrashOnExit,
                         "empty_trash_on_exit");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, CanDelete, "canDelete");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, LoginAtStartUp, "login_at_startup");
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, 
+                        DefaultCopiesAndFoldersPrefsToServer, 
+                        "allows_specialfolders_usage");
 
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
                         LimitMessageSize,

@@ -339,11 +339,10 @@ function setPickersState(enablePickerId, disablePickerId, event)
     if (!account) return;
 
     var server = account.incomingServer;
-    var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
 
     // if special folders are not to be made on the server, 
     // then Local Folders is the home for it's special folders
-    if (!protocolInfo.defaultCopiesAndFoldersPrefsToServer) {
+    if (!server.defaultCopiesAndFoldersPrefsToServer) {
         selectedElementUri = parent.accountManager.localFoldersServer.serverURI;
     }        
     else

@@ -74,6 +74,7 @@ public:
     NS_IMETHODIMP ForgetPassword();
     NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
+    NS_IMETHOD GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aCopiesAndFoldersOnServer);
 
 protected:
 	nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,

@@ -497,10 +497,8 @@ function verifyLocalFoldersAccount(account) {
     var server = account.incomingServer;
     var identity = account.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
 
-	// use server type to get the protocol info
-	var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
-	// for this protocol, do we default the folder prefs to this server, or to the "Local Folders" server
-	defaultCopiesAndFoldersPrefsToServer = protocolinfo.defaultCopiesAndFoldersPrefsToServer;
+	// for this server, do we default the folder prefs to this server, or to the "Local Folders" server
+	var defaultCopiesAndFoldersPrefsToServer = server.defaultCopiesAndFoldersPrefsToServer;
 
 	if (!localMailServer) {
         	// dump("Creating local mail account\n");
