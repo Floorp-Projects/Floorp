@@ -754,14 +754,6 @@ sub GetLongDescriptionAsHTML {
     return $result;
 }
 
-sub ShowCcList {
-   my ($num) = (@_);
-   
-   my $ccSet = new RelationSet();
-   $ccSet->mergeFromDB("select who from cc where bug_id=$num");
-   return $ccSet->toString();
-}
-
 # Fills in a hashtable with info about the columns for the given table in the
 # database.  The hashtable has the following entries:
 #   -list-  the list of column names
