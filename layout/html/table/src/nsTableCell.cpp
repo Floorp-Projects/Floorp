@@ -32,6 +32,8 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLETEXT_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLETEXT_SID);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -181,6 +183,97 @@ void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   nsTableContent::SetAttribute(aAttribute, aValue);
 }
 
+
+void nsTableCell::MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth)
+{
+  for (PRInt32 index = 0; index < 4; index++)
+    aBorderStyle.mSizeFlag[index] = NS_STYLE_BORDER_WIDTH_LENGTH_VALUE; 
+
+  aBorderStyle.mSize.top    = 
+  aBorderStyle.mSize.left   = 
+  aBorderStyle.mSize.bottom = 
+  aBorderStyle.mSize.right  = aBorderWidth;
+
+
+  aBorderStyle.mStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_INSET; 
+  aBorderStyle.mStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_INSET; 
+  aBorderStyle.mStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  aBorderStyle.mStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  
+  NS_ColorNameToRGB("white",&aBorderStyle.mColor[NS_SIDE_TOP]);
+  NS_ColorNameToRGB("white",&aBorderStyle.mColor[NS_SIDE_LEFT]);
+
+  // This should be the background color of the tables 
+  // container
+  NS_ColorNameToRGB("gray",&aBorderStyle.mColor[NS_SIDE_BOTTOM]);
+  NS_ColorNameToRGB("gray",&aBorderStyle.mColor[NS_SIDE_RIGHT]);
+}
+
+
+void nsTableCell::MapBorderMarginPaddingInto(nsIStyleContext* aContext,
+                                             nsIPresContext* aPresContext)
+{
+  // Check to see if the table has either cell padding or 
+  // Cell spacing defined for the table. If true, then
+  // this setting overrides any specific border, margin or 
+  // padding information in the cell. If these attributes
+  // are not defined, the the cells attributes are used
+  
+  nsHTMLValue padding_value;
+  nsHTMLValue spacing_value;
+  nsHTMLValue border_value;
+
+  nsContentAttr padding_result;
+  nsContentAttr spacing_result;
+  nsContentAttr border_result;
+
+  NS_ASSERTION(mTable,"Table Must not be null");
+  if (!mTable)
+    return;
+
+  padding_result = mTable->GetAttribute(nsHTMLAtoms::cellpadding,padding_value);
+  spacing_result = mTable->GetAttribute(nsHTMLAtoms::cellspacing,spacing_value);
+  border_result = mTable->GetAttribute(nsHTMLAtoms::border,border_value);
+
+  // check to see if cellpadding or cellspacing is defined
+  if (spacing_result == eContentAttr_HasValue || padding_result == eContentAttr_HasValue)
+  {
+    nscoord   padding = 0;
+    nscoord   spacing = 0;
+    nscoord   border  = 0;
+
+    float     p2t = aPresContext->GetPixelsToTwips();
+    if (padding_result == eContentAttr_HasValue)
+      padding = p2t*(float)padding_value.GetIntValue(); 
+    
+    if (spacing_result == eContentAttr_HasValue)
+      spacing = p2t*(float)spacing_value.GetIntValue(); 
+
+    nsStyleSpacing* spacingData = (nsStyleSpacing*)aContext->GetData(kStyleSpacingSID);
+    spacingData->mMargin.SizeTo(spacing,spacing,spacing,spacing);
+    spacingData->mPadding.top     = 
+    spacingData->mPadding.left    = 
+    spacingData->mPadding.bottom  = 
+    spacingData->mPadding.right   =  padding; 
+
+    nsStyleBorder& borderData = *(nsStyleBorder*)aContext->GetData(kStyleBorderSID);
+    if (border_result == eContentAttr_HasValue)
+    {
+      // The HTML rule is that if the table's border style is 
+      // zero, then the cell's border width is also zero, 
+      // otherwise the cell's border width is one
+ 
+      PRInt32 intValue = border_value.GetIntValue();
+      if (intValue > 0)
+        intValue = 1;
+      border = p2t*(float)intValue; 
+      MapHTMLBorderStyle(borderData,border);
+    }
+  }
+}
+
+
+
 void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
                                     nsIPresContext* aPresContext)
 {
@@ -193,21 +286,10 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     text->mTextAlign = value.GetIntValue();
   }
 
-  // border; inherit from table if specified otherwise it's zero
-  nsIContent* table = mParent;
-  while (nsnull != table) {
-    nsIAtom* tag = table->GetTag();
-    if (nsHTMLAtoms::table == tag) {
-      break;
-    }
-    table = table->GetParent();
-  }
-  if (nsnull != table) {
-    nsTablePart::GetTableBorder((nsIHTMLContent*)table, aContext,
-                                aPresContext, PR_TRUE);
-  }
-
+  MapBorderMarginPaddingInto(aContext,aPresContext);
   MapBackgroundAttributesInto(aContext, aPresContext);
+
+
 }
 
 void nsTableCell::SetRowSpan(int aRowSpan)

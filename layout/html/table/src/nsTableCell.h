@@ -18,9 +18,12 @@
 #ifndef nsTableCell_h__
 #define nsTableCell_h__
 
+#include "nscoord.h"
 #include "nscore.h"
 #include "nsTableContent.h"
 #include "nsTableRow.h"
+
+struct nsStyleBorder;
 
 /**
  * nsTableCell is the content object that represents table cells 
@@ -91,6 +94,11 @@ public:
 
   virtual void MapAttributesInto(nsIStyleContext* aContext,
                                  nsIPresContext* aPresContext);
+
+ 
+  virtual void MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth);
+  virtual void MapBorderMarginPaddingInto(nsIStyleContext* aContext,
+                                          nsIPresContext* aPresContext);
 
   /** @return the number of rows spanned by this cell.  Always >= 1 */
   virtual int GetRowSpan ();
