@@ -156,6 +156,8 @@ protected:
 
 protected:
   nsIWidget*			mParent;
+  
+  // The Widget's bounds in the coordinate system of the parent widget
   nsRect      			mBounds;
   PRBool     	 		mVisible;
   PRBool     	 		mEnabled;
