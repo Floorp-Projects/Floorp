@@ -116,7 +116,7 @@ ${CXX} ${OPTS} || exit $?
 rm -f ${NEW_i}
 
 # Really only needed for NSPR now.
-if [ "${PLATFORM}" = "IRIX" -a $OBJ != $OBJECT ]; then
+if [ "${PLATFORM}" = "IRIX" -a "$OBJ" != "$OBJECT" ]; then
 	OBJ=$OBJECT
 fi
 
