@@ -116,7 +116,9 @@ function ChangeFolderByDOMNode(folderNode)
   var viewType = 0;
   var resource = RDF.GetResource(uri);
   var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-  if (msgfolder)
+  // don't get the db if this folder is a server
+  // we're going to be display account central
+  if (msgfolder && !msgfolder.isServer)
   {
     var msgdb = msgfolder.getMsgDatabase(msgWindow);
     if (msgdb)
