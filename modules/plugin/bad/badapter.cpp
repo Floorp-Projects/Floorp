@@ -103,6 +103,19 @@ public:
             PRUint32 postHeadersLength = 0, 
             const char* postHeaders = NULL);
 
+    NS_IMETHOD
+    RegisterPlugin(REFNSIID aCID,
+                   const char* aPluginName,
+                   const char* aDescription,
+                   const char** aMimeTypes,
+                   const char** aMimeDescriptions,
+                   const char** aFileExtensions,
+                   PRInt32 aCount);
+
+    NS_IMETHOD
+    UnregisterPlugin(REFNSIID aCID);
+
+
    /**
      * RegisterService may be called explicitly to register a service
      * with the service manager. If a service is not registered explicitly,
@@ -1161,6 +1174,28 @@ CPluginManager::PostURL(nsISupports* pluginInst,
     instancePeer->Release();
     inst->Release();
     return fromNPError[err];
+}
+
+
+NS_IMETHODIMP
+CPluginManager::RegisterPlugin(REFNSIID aCID,
+                               const char* aPluginName,
+                               const char* aDescription,
+                               const char** aMimeTypes,
+                               const char** aMimeDescriptions,
+                               const char** aFileExtensions,
+                               PRInt32 aCount)
+{
+    // XXXwaterson I don't think we need to do anything here.
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CPluginManager::UnregisterPlugin(REFNSIID aCID)
+{
+    // XXXwaterson I don't think we need to do anything here.
+    return NS_OK;
 }
 
 NS_METHOD
