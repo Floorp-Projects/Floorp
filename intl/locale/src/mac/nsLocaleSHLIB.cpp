@@ -39,6 +39,12 @@
 
 #include "nsCollationCID.h"
 #if TARGET_CARBON
+// we currently do not define the USE_UCCOLLATIONKEY becaues it is broken on MacOS X and
+// crash a lot.
+// #define USE_UCCOLLATIONKEY
+#endif
+
+#ifdef USE_UCCOLLATIONKEY
 #include "nsCollationMacUC.h"
 #else
 #include "nsCollationMac.h"
@@ -74,7 +80,7 @@ ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 MAKE_CTOR(CreateLocaleService, nsILocaleService, NS_NewLocaleService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacLocale)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationFactory)
-#if TARGET_CARBON
+#ifdef USE_UCCOLLATIONKEY 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMacUC)
 #else
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMac)
@@ -103,7 +109,7 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Collation",
     NS_COLLATION_CID,
     NULL,
-#if TARGET_CARBON
+#ifdef USE_UCCOLLATIONKEY
     nsCollationMacUCConstructor },
 #else
     nsCollationMacConstructor },
