@@ -110,7 +110,7 @@
   <label value="&autocompletePreview.label;"/>
   <dialogheader>
     <vbox height="159">
-      <image id="imgAutoFill"/>
+      <image id="imgAutoFill" style="min-width: 401px;"/>
       <image id="imgShowPopup" src="chrome://communicator/content/pref/autocomplete-showpopup.gif"/>
       <image id="imgShowSearch" src="chrome://communicator/content/pref/autocomplete-showsearch.gif"/>
     </vbox>
