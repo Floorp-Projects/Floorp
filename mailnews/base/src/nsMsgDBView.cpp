@@ -2793,12 +2793,12 @@ nsMsgDBView::SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMs
 #ifdef DEBUG
         // double check the assumptions
         if (mJunkKeys.GetSize())
-          NS_ASSERTION(mJunkTargetFolder == nsnull, "junk folder should be null, no keys yet");
-        else
         {
-          NS_ASSERTION(!mJunkTargetFolder, "should have a junk folder at this point");
-          NS_ASSERTION(mJunkTargetFolder == destFolder, "junk folder doesn't match");
+          NS_ASSERTION(mJunkTargetFolder, "should have a junk folder at this point");
+          NS_ASSERTION(mJunkTargetFolder.get() == destFolder.get(), "junk folder doesn't match");
         }
+        else
+          NS_ASSERTION(mJunkTargetFolder == nsnull, "junk folder should be null, no keys yet");
 #endif
         // save off msg key and folder
         mJunkKeys.Add(msgKey);
