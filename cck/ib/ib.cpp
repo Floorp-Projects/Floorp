@@ -674,7 +674,7 @@ void AddThirdParty()
 	CString tpComp2		= GetGlobal("CustomComponent23");
 	CString tpCompSize1	= GetGlobal("ComponentSize");
 	CString tpCompSize2	= GetGlobal("ModuleSize");
-	char *componentName;
+	CString componentName;
 	CString cName;
 	CString compSDesc	= "Description Short=";
 	CString compLDesc	= "Description Long=";
@@ -737,9 +737,7 @@ void AddThirdParty()
 
 	if ((firstSix.CompareNoCase("Please") != 0) && !(tpCompPath1.IsEmpty()))
 	{
-		componentstr.Format("C%d", (numComponents));
-        strcpy(tempcomponentstr, componentstr);
-        GetPrivateProfileString("Setup Type2", tempcomponentstr, "", componentName, MAX_SIZE, iniSrcPath);
+		componentName.Format("C%d", (numComponents));
 		cName.Format("C%d", componentOrder);
 		componentOrder++;
 
@@ -755,9 +753,7 @@ void AddThirdParty()
 	firstSix = tpCompPath2.Left(6);
 	if ((firstSix.CompareNoCase("Please") != 0) && !(tpCompPath2.IsEmpty()))
 	{
-		componentstr.Format("C%d", (numComponents));
-        strcpy(tempcomponentstr, componentstr);
-		GetPrivateProfileString("Setup Type2", tempcomponentstr, "", componentName, MAX_SIZE, iniSrcPath);
+		componentName.Format("C%d", (numComponents));
 		cName.Format("C%d", componentOrder);
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
