@@ -98,9 +98,12 @@ iframe {
 	list-style-image:url("chrome://messenger/skin/trash.gif");
 }
 
-#button-print {
-	list-style-image:url("chrome://global/skin/print.gif");
-}
+#button-print 
+  {
+    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
+	  list-style-image      : url("chrome://global/skin/print.gif");
+    margin                : 0px;
+  }
 
 #button-stop {
 	list-style-image:url("chrome://global/skin/stop.gif");

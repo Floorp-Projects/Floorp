@@ -66,6 +66,17 @@
     list-style-image        : inherit;
   }
 
+.button-toolbar-2.menubutton-dual-button
+  {
+    list-style-image        : inherit;
+    margin                  : 4px 7px 1px 1px;
+  }  
+
+.button-toolbar-2.menubutton-dual-button > .button-internal-box > .button-text-container
+  {
+    padding-top             : 5px;
+  }
+  
 .menubutton-dual-dropmarker
   {
     background              : transparent;
@@ -83,6 +94,19 @@
     margin-left             : 32px;
     margin-bottom           : 1px;
   }
-
   
+.button-toolbar-2 + .menubutton-dual-dropmarker-box  
+  {
+    margin-left             : 28px;
+    margin-bottom           : 1em;
+  }
+  
+/*  
+  
+  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+        <xul:image class="button-icon" inherits="src"/>
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value,accesskey,crop"/>
+        </xul:box>
+      </xul:box>
   

@@ -16,6 +16,11 @@ menuitem[menuactive="true"][disabled="true"]
 	  color                 : graytext;
   }
 
+menuitem[default="true"]
+  {
+    font-weight           : bold;
+  }  
+  
 /* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup 
   {

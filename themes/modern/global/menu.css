@@ -15,6 +15,11 @@ menu, menuitem
 	  vertical-align        : middle;
   }
 
+menuitem[default="true"]
+  {
+    font-weight           : bold;
+  }  
+  
 menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"]
@@ -119,6 +124,7 @@ popup > menuitem[menuactive="true"]
 .menu-text 
   {
     padding-left          : 15px;
+    font-weight           : inherit;
   }
 
 .menu-accel 

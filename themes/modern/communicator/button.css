@@ -154,7 +154,7 @@
   .button-toolbar-2[disabled="true"]:hover:active
     {
       background-image    : url("chrome://global/skin/button28-bg-disabled.gif");
-      margin              : 3px 7px 1px 1px;
+      margin              : 4px 7px 1px 1px;
       border              : none;
     }
     
