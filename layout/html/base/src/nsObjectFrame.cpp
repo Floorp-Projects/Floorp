@@ -31,7 +31,6 @@
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
 #include "nsString.h"
-#include "nsIContentViewerContainer.h"
 #include "prmem.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
@@ -44,6 +43,7 @@
 #include "nsILinkHandler.h"
 #include "nsIJVMPluginTagInfo.h"
 #include "nsIWebShell.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIBrowserWindow.h"
 #include "nsINameSpaceManager.h"
 #include "nsIEventListener.h"
@@ -597,9 +597,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     NS_ADDREF(mInstanceOwner);
     mInstanceOwner->Init(&aPresContext, this);
 
-    nsISupports               *container = nsnull;
-    nsIPluginHost             *pluginHost = nsnull;
-    nsIContentViewerContainer *cv = nsnull;
+    nsCOMPtr<nsISupports>     container;
+    nsCOMPtr<nsIPluginHost>   pluginHost;
     nsIURI* baseURL = nsnull;
     nsIURI* fullURL = nsnull;
 
@@ -660,19 +659,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         }
 
         // get the nsIPluginHost interface
-        if((rv = aPresContext.GetContainer(&container)) != NS_OK)
-	        return rv;
-        if((rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv)) != NS_OK)
-        {
-		      NS_RELEASE(container); 
-          return rv;
-        }
-	      if((rv = cv->QueryCapability(kIPluginHostIID, (void **)&pluginHost)) != NS_OK)
-        {
-		      NS_RELEASE(container); 
-          NS_RELEASE(cv); 
-          return rv;
-        }
+        NS_ENSURE_SUCCESS(aPresContext.GetContainer(getter_AddRefs(container)), 
+         NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
+        NS_ENSURE_TRUE(requestor, NS_ERROR_FAILURE);
+
+        NS_ENSURE_SUCCESS(requestor->GetInterface(NS_GET_IID(nsIPluginHost),
+            getter_AddRefs(pluginHost)), NS_ERROR_FAILURE);
 
         mInstanceOwner->SetPluginHost(pluginHost);
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
@@ -710,19 +704,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	      }
 
           // get the nsIPluginHost interface
-          if((rv = aPresContext.GetContainer(&container)) != NS_OK)
-	          return rv;
-          if((rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv)) != NS_OK)
-          {
-		        NS_RELEASE(container); 
-            return rv;
-          }
-	        if((rv = cv->QueryCapability(kIPluginHostIID, (void **)&pluginHost)) != NS_OK)
-          {
-		        NS_RELEASE(container); 
-            NS_RELEASE(cv); 
-            return rv;
-          }
+          NS_ENSURE_SUCCESS(aPresContext.GetContainer(getter_AddRefs(container)), 
+           NS_ERROR_FAILURE);
+
+          nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
+          NS_ENSURE_TRUE(requestor, NS_ERROR_FAILURE);
+
+          NS_ENSURE_SUCCESS(requestor->GetInterface(NS_GET_IID(nsIPluginHost),
+               getter_AddRefs(pluginHost)), NS_ERROR_FAILURE);
 
           mInstanceOwner->SetPluginHost(pluginHost);
           if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
@@ -736,9 +725,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
 	    NS_IF_RELEASE(baseURL);
 	    NS_IF_RELEASE(fullURL);
-	    NS_IF_RELEASE(pluginHost);
-	    NS_IF_RELEASE(cv);
-	    NS_IF_RELEASE(container);
 
       // finish up
       if(rv == NS_OK)
@@ -765,19 +751,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 		  return rv;
 
     // get the nsIPluginHost interface
-    if((rv = aPresContext.GetContainer(&container)) != NS_OK)
-		  return rv;
-	  if((rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv)) != NS_OK)
-    {
-		  NS_RELEASE(container); 
-      return rv;
-    }
-    if((rv = cv->QueryCapability(kIPluginHostIID, (void **)&pluginHost)) != NS_OK)
-    {
-		  NS_RELEASE(container); 
-      NS_RELEASE(cv); 
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(aPresContext.GetContainer(getter_AddRefs(container)), 
+     NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
+    NS_ENSURE_TRUE(requestor, NS_ERROR_FAILURE);
+
+    NS_ENSURE_SUCCESS(requestor->GetInterface(NS_GET_IID(nsIPluginHost),
+        getter_AddRefs(pluginHost)), NS_ERROR_FAILURE);
 
     mInstanceOwner->SetPluginHost(pluginHost);
 
@@ -858,9 +839,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	  NS_IF_RELEASE(atom);
 	  NS_IF_RELEASE(baseURL);
 	  NS_IF_RELEASE(fullURL);
-	  NS_IF_RELEASE(pluginHost);
-	  NS_IF_RELEASE(cv);
-	  NS_IF_RELEASE(container);
   }
   else
     rv = ReinstantiatePlugin(aPresContext, aMetrics, aReflowState);
