@@ -319,9 +319,54 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
         Str255 fontName;
         SInt16 fontSize;
         Style fontStyle;
-        ::GetThemeFont(fontID, smSystemScript, fontName, &fontSize, &fontStyle);
+
+        ScriptCode sysScript = ::GetScriptManagerVariable (smSysScript);
+        
+        // the Korean , TradChinese and SimpChinese localization return very ugly
+        // font face for theme font, the size of ASCII part in those font very small and
+        // they look very very poor on QuickDraw without anti-alias. We need to use the roman
+        // theme font instead so the user can read those UI
+        
+        if ((smKorean == sysScript) ||
+            (smTradChinese == sysScript) ||
+            (smSimpChinese == sysScript))
+          sysScript = smRoman;
+          
+        ::GetThemeFont(fontID, sysScript, fontName, &fontSize, &fontStyle);
         fontName[fontName[0]+1] = 0;
-        aFont->name.AssignWithConversion( (char*)&fontName[1] );
+        
+        // the theme font could contains font name in different encoding. 
+        // we need ot covert them to unicode according to the font's text encoding.
+        aFont->name.Truncate(0);
+        TECObjectRef converter = 0;
+        TextEncoding fontEncoding = 0;
+        TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
+                                                            kTextEncodingDefaultVariant,
+                                                            kTextEncodingDefaultFormat);
+        FMFontFamily fontFamily;
+        fontFamily = ::FMGetFontFamilyFromName(fontName);
+        OSStatus err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+        if (err == noErr)
+        {
+           err = ::TECCreateConverter(&converter, fontEncoding, unicodeEncoding);
+           if (err == noErr)
+           {
+               PRUnichar unicodeFontName[sizeof(fontName)];
+               ByteCount actualInputLength, actualOutputLength;
+               err = ::TECConvertText(converter, &fontName[1], fontName[0], 
+                                      &actualInputLength, 
+                                      (TextPtr)unicodeFontName, sizeof(unicodeFontName),
+                                      &actualOutputLength);  
+               unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = PRUnichar('\0');
+               aFont->name.Assign(unicodeFontName);
+               ::TECDisposeConverter(converter);
+           }             
+        }
+        NS_ASSERTION(aFont->name.Length() > 0, "empty font name");
+        if (aFont->name.Length()  == 0) 
+        {
+           aFont->name.AssignWithConversion( (char*)&fontName[1], fontName[0] );
+        }
         aFont->size = NSToCoordRound(float(fontSize) * dev2app);
 
         if (fontStyle & bold)
