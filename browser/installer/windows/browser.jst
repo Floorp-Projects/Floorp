@@ -340,6 +340,10 @@ function upgradeCleanup()
   // UA/app version strings if we do not remove them. 
   deleteThisFile("Program",	    "defaults/pref/bug259708.js");
   
+  // Remove non-linked xpt files for rev'd interfaces; this prevents a
+  // conflict if you had previously installed a zip build in the app directory.
+  deleteThisFile("Components",  "autocomplete.xpt");
+
   // Now clean up Uninstall entries that may be laying around in the
   // registry for older versions of the software that we're overwriting/
   // upgrading...

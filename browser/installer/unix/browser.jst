@@ -33,6 +33,10 @@ function upgradeCleanup()
   deleteThisFile("Components",    "util.xpt");
   deleteThisFile("Components",    "compreg.dat");
   deleteThisFile("Components",    "xpti.dat");
+
+  // Remove non-linked xpt files for rev'd interfaces; this prevents a
+  // conflict if you had previously installed a zip build in the app directory.
+  deleteThisFile("Components",    "autocomplete.xpt");
   
   // Remove defunct defaults files. 
   deleteThisFile("Program",	      "defaults/pref/all.js");
