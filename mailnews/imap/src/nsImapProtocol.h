@@ -430,7 +430,7 @@ private:
     PRBool DeleteMailboxRespectingSubscriptions(const char *mailboxName);
     PRBool  RenameMailboxRespectingSubscriptions(const char *existingName, 
                                                  const char *newName, 
-                                                 XP_Bool reallyRename);
+                                                 PRBool reallyRename);
     // notify the fe that a folder was deleted
     void FolderDeleted(const char *mailboxName);
 	// notify the fe that a folder creation failed
