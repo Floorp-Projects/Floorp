@@ -517,13 +517,19 @@ var BookmarksCommand = {
         var item = aSelection.item[i];
         saveURL(item.Value, BookmarksUtils.getProperty(item, "Name"), null, true);
       }      
-      else if (aTargetBrowser == "properties")
-        openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul", "", "centerscreen,chrome,resizable=no", aSelection.item[i].Value);      
       else if (type == "Bookmark" || type == "")
         this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
       else if (type == "FolderGroup" || type == "Folder" || type == "PersonalToolbarFolder")
         this.openGroupBookmark(aSelection.item[i].Value, aTargetBrowser);
     }
+  },
+  
+  openBookmarkProperties: function (aSelection) 
+  {
+    // Bookmark Properties dialog is only ever opened with one selection 
+    // (command is disabled otherwise)
+    var bookmark = aSelection.item[0].Value;
+    return openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul", "", "centerscreen,chrome,dependent,resizable=no", bookmark);      
   },
 
   // requires utilityOverlay.js if opening in new window for getTopWin()
@@ -620,10 +626,25 @@ var BookmarksCommand = {
   {
     var name      = BookmarksUtils.getLocaleString("ile_newfolder");
     var rFolder   = BMSVC.createFolder(name);
-    var selection = BookmarksUtils.getSelectionFromResource(rFolder);
+    
+    var selection = BookmarksUtils.getSelectionFromResource(rFolder, aTarget.parent);
     var ok        = BookmarksUtils.insertSelection("newfolder", selection, aTarget);
-    if (ok)
-      this.openBookmark(selection, "properties");
+    if (ok) {
+      var propWin = this.openBookmarkProperties(selection);
+      
+      function canceledNewFolder()
+      {
+        BookmarksCommand.deleteBookmark(selection);
+        propWin.document.documentElement.removeEventListener("dialogcancel", canceledNewFolder, false);
+        propWin.removeEventListener("load", propertiesWindowLoad, false);
+      }
+      
+      function propertiesWindowLoad()
+      {
+        propWin.document.documentElement.addEventListener("dialogcancel", canceledNewFolder, false);
+      }
+      propWin.addEventListener("load", propertiesWindowLoad, false);
+    }
   },
 
   createNewSeparator: function (aTarget)
@@ -880,7 +901,7 @@ var BookmarksController = {
       break;
     case "cmd_bm_rename":
     case "cmd_bm_properties":
-      BookmarksCommand.openBookmark(aSelection, "properties");
+      BookmarksCommand.openBookmarkProperties(aSelection);
       break;
     case "cmd_bm_find":
       BookmarksCommand.findBookmark();
