@@ -78,7 +78,7 @@ nsCodebasePrincipal::HashCode(PRUint32 * code)
 NS_IMETHODIMP
 nsCodebasePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 {
-	PRInt16 * oType;
+	PRInt16 * oType = 0;
 	other->GetType(oType);
 	*result = (itsType == oType) ? PR_TRUE : PR_FALSE;	
 	return NS_OK;

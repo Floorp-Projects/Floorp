@@ -19,7 +19,7 @@
 #ifndef _NS_SYSTEM_PRIVILEGE_TABLE_H_
 #define _NS_SYSTEM_PRIVILEGE_TABLE_H_
 
-#include "nsTarget.h"
+#include "nsITarget.h"
 #include "nsIPrivilege.h"
 #include "nsPrivilegeTable.h"
 #include "nsCom.h"
@@ -29,10 +29,9 @@ class nsSystemPrivilegeTable : public nsPrivilegeTable {
 
 public:
 
-	/* Public Methods */
 	nsSystemPrivilegeTable(void);
 
-	virtual nsIPrivilege * Get(nsTarget * a);
+	virtual nsIPrivilege * Get(nsITarget * a);
 };
 
 #endif /* _NS_SYSTEM_PRIVILEGE_TABLE_H_ */

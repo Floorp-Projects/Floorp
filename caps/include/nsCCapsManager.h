@@ -71,7 +71,7 @@ CreateCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLe
  * @param state  - the return value is passed in this parameter.
  */
 NS_IMETHOD
-GetPermission(nsIPrincipal * prin, nsTarget * target, PRInt16 * privilegeState);
+GetPermission(nsIPrincipal * prin, nsITarget * target, PRInt16 * privilegeState);
 
 /**
  * Set the permission state for given principal and target. This wouldn't 
@@ -83,7 +83,7 @@ GetPermission(nsIPrincipal * prin, nsTarget * target, PRInt16 * privilegeState);
  *                 and target parameters.
  */
 NS_IMETHOD
-SetPermission(nsIPrincipal * prin, nsTarget* target, PRInt16 * privilegeState);
+SetPermission(nsIPrincipal * prin, nsITarget* target, PRInt16 * privilegeState);
 
 /**
  * Prompts the user if they want to grant permission for the given principal and 
@@ -95,7 +95,7 @@ SetPermission(nsIPrincipal * prin, nsTarget* target, PRInt16 * privilegeState);
  *                 target
  */
 NS_IMETHOD
-AskPermission(nsIPrincipal * prin, nsTarget * target, PRInt16 * privilegeState);
+AskPermission(nsIPrincipal * prin, nsITarget * target, PRInt16 * privilegeState);
 
 
 
@@ -215,7 +215,7 @@ GetPrincipalArraySize(void *prinArrayArg, PRUint32 *result);
 /* The following interfaces will replace all of the following old calls.
  *
  * nsCapsGetPermission(struct nsPrivilege *privilege)
- * nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsTarget *target)
+ * nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsITarget *target)
  *
  */
 NS_IMETHOD

@@ -27,7 +27,7 @@
 #include "nsCertificatePrincipal.h"
 #include "nsIPrivilege.h"
 #include "nsPrivilegeTable.h"
-#include "nsTarget.h"
+#include "nsITarget.h"
 #include "nsCCapsManager.h"
 #include "nsCCapsManagerFactory.h"
 
@@ -58,7 +58,7 @@ nsCapsInitialize()
 {
 	if(bNSCapsInitialized_g == PR_TRUE) return PR_TRUE;
 	bNSCapsInitialized_g = PR_TRUE;
-	nsIPrincipal * sysPrin;
+	nsIPrincipal * sysPrin = NULL;
 /*
 #if defined(_WIN32)
 //	sysPrin = CreateSystemPrincipal("java/classes/java40.jar", "java/lang/Object.class");
@@ -105,28 +105,28 @@ nsCapsRegisterPrincipal(class nsIPrincipal *principal)
 }
 
 PR_IMPLEMENT(PRBool) 
-nsCapsEnablePrivilege(void * context, class nsTarget * target, PRInt32 callerDepth)
+nsCapsEnablePrivilege(void * context, class nsITarget * target, PRInt32 callerDepth)
 {
 	nsPrivilegeManager * nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
 	return (nsPrivManager == NULL) ? PR_FALSE : nsPrivManager->EnablePrivilege(context, target, callerDepth);
 }
 
 PR_IMPLEMENT(PRBool) 
-nsCapsIsPrivilegeEnabled(void* context, class nsTarget *target, PRInt32 callerDepth)
+nsCapsIsPrivilegeEnabled(void* context, class nsITarget *target, PRInt32 callerDepth)
 {
 	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
 	return (nsPrivManager == NULL) ? PR_FALSE : nsPrivManager->IsPrivilegeEnabled(context, target, callerDepth);
 }
 
 PR_IMPLEMENT(PRBool) 
-nsCapsRevertPrivilege(void* context, class nsTarget *target, PRInt32 callerDepth)
+nsCapsRevertPrivilege(void* context, class nsITarget * target, PRInt32 callerDepth)
 {
 	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
 	return (nsPrivManager == NULL ) ? PR_FALSE : nsPrivManager->RevertPrivilege(context, target, callerDepth);
 }
 
 PR_IMPLEMENT(PRBool) 
-nsCapsDisablePrivilege(void* context, class nsTarget *target, PRInt32 callerDepth)
+nsCapsDisablePrivilege(void* context, class nsITarget * target, PRInt32 callerDepth)
 {
 	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
 	return (nsPrivManager == NULL) ? PR_FALSE : nsPrivManager->DisablePrivilege(context, target, callerDepth);
@@ -241,8 +241,8 @@ nsCapsGetPrincipalArraySize(void *prinArrayArg)
 }
 
 /* wrappers for nsTarget object */
-PR_IMPLEMENT(class nsTarget *) 
-nsCapsFindTarget(char *name)
+PR_IMPLEMENT(class nsITarget *) 
+nsCapsFindTarget(char * name)
 {
   return nsTarget::FindTarget(name);
 }
@@ -258,7 +258,7 @@ nsCapsGetPermission(nsIPrivilege * privilege)
 
 /* wrappers for nsPrivilegeTable object */
 PR_IMPLEMENT(nsIPrivilege *)
-nsCapsGetPrivilege(nsPrivilegeTable * annotation, class nsTarget * target)
+nsCapsGetPrivilege(nsPrivilegeTable * annotation, class nsITarget * target)
 {
 	return annotation->Get(target);
 }

@@ -19,17 +19,12 @@
 #ifndef _NS_TARGET_H_
 #define _NS_TARGET_H_
 
-#include <string.h>
-#include "prtypes.h"
-#include "plhash.h"
 #include "nsHashtable.h"
 #include "nsVector.h"
-//#include "nsCaps.h"
 #include "nsIPrincipal.h"
 #include "nsIPrivilege.h"
+#include "nsITarget.h"
 #include "nsUserDialogHelper.h"
-
-typedef nsVector nsTargetArray;
 
 PR_BEGIN_EXTERN_C
 #include "jpermission.h"
@@ -47,115 +42,96 @@ extern char* capsGetString(int id);
 
 PR_END_EXTERN_C
 
+extern PRBool CreateSystemTargets(nsIPrincipal * sysPrin);
 
-extern PRBool CreateSystemTargets(nsIPrincipal *sysPrin);
-
-class nsTarget {
+class nsTarget : public nsITarget {
 
 public:
 
-	/* Public Methods */
+	NS_DECL_ISUPPORTS
+
+	nsTarget(char *name, nsIPrincipal * prin, 
+		PRInt32 risk = JavaSecUI_targetRiskHigh(), 
+		/* XXX: char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), */
+		char * riskColor = "High", char * description = NULL, char * detailDescription = NULL,
+		char * url = NULL, nsTargetArray* targetArray = NULL)
+	{
+		this->Init(name, prin, targetArray, risk, riskColor, description, detailDescription, url);
+	}
+
+	nsTarget(char *name, nsIPrincipal * prin, 
+		PRInt32 risk = JavaSecUI_targetRiskHigh(), 
+		/* XXX: char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), */
+		char * riskColor = "High", int desc_id = 0, int detail_desc_id = 0,
+		int help_url_id = 0, nsTargetArray* targetArray = NULL);
 
 	virtual ~nsTarget(void);
 
-	nsTarget(char *name, nsIPrincipal * prin, 
-		PRInt32 risk = JavaSecUI_targetRiskHigh(), 
-		/* XXX: char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), */
-		char * riskColor = "High",
-		char * description = NULL, 
-		char * detailDescription = NULL,
-		char * url = NULL, 
-		nsTargetArray* targetArray = NULL)
-	{
-		this->Init(name, prin, targetArray, risk, riskColor, description, detailDescription, url);
-    }
+	static nsITarget * FindTarget(nsITarget * target);
 
-	nsTarget(char *name, nsIPrincipal * prin, 
-		PRInt32 risk = JavaSecUI_targetRiskHigh(), 
-		/* XXX: char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), */
-		char * riskColor = "High",
-		int desc_id = 0, 
-		int detail_desc_id = 0,
-		int help_url_id = 0, 
-		nsTargetArray* targetArray = NULL);
+	static nsITarget * FindTarget(char * name);
 
-	nsTarget * RegisterTarget(void);
+	static nsITarget * FindTarget(char * name, nsIPrincipal *prin);
 
-	nsTarget * RegisterTarget(void* context);
+	static nsITarget * GetTargetFromDescription(char *a);
 
-	static nsTarget * FindTarget(nsTarget *target);
+	static nsTargetArray * GetAllRegisteredTargets(void);
 
-	static nsTarget * FindTarget(char * name);
+	nsIPrivilege * CheckPrivilegeEnabled(nsTargetArray * targetArray, void *data);
 
-	static nsTarget * FindTarget(char * name, nsIPrincipal *prin);
+	nsIPrivilege * CheckPrivilegeEnabled(nsTargetArray * targetArray);
 
-	nsIPrivilege * CheckPrivilegeEnabled(nsTargetArray* prinArray, void *data);
+	nsIPrivilege * CheckPrivilegeEnabled(nsIPrincipal *p, void * data);
 
-	nsIPrivilege * CheckPrivilegeEnabled(nsTargetArray* prinArray);
+	NS_IMETHOD RegisterTarget(void * context, nsITarget * * target);
 
-	nsIPrivilege * CheckPrivilegeEnabled(nsIPrincipal *p, void *data);
+	NS_IMETHOD EnablePrivilege(nsIPrincipal * prin, void * data, nsIPrivilege * * priv);
 
-	virtual nsIPrivilege * EnablePrivilege(nsIPrincipal *prin, void *data);
-
+//	virtual nsIPrivilege * EnablePrivilege(nsIPrincipal *prin, void *data);
+//seems more likely to bleong to nsIPrivilege
 	nsIPrivilege * GetPrincipalPrivilege(nsIPrincipal *prin, void *data);
 
-	nsTargetArray* GetFlattenedTargetArray(void);
+	NS_IMETHOD GetFlattenedTargetArray(nsTargetArray * * targs);
 
-	static nsTargetArray* GetAllRegisteredTargets(void);
+	NS_IMETHOD GetRisk(char * * risk);
 
-	char * GetRisk(void);
+	NS_IMETHOD GetRiskColor(char * * riskColor);
 
-	char * GetRiskColor(void);
+	NS_IMETHOD GetDescription(char * * description);
 
-	char * GetDescription(void);
+	NS_IMETHOD GetDetailDescription(char * * detailedDescription);
 
-	char * GetDetailDescription(void);
+	NS_IMETHOD GetHelpURL(char * * helpUrl);
 
-	static nsTarget * GetTargetFromDescription(char *a);
+	NS_IMETHOD GetDetailedInfo(void *a, char * * dinfo);
 
-	char * GetHelpURL(void);
+	NS_IMETHOD GetPrincipal (nsIPrincipal * * prin);
 
-	char * GetDetailedInfo(void *a);
+	NS_IMETHOD GetName(char * * name);
 
-	nsIPrincipal * GetPrincipal(void);
+	NS_IMETHOD IsRegistered(PRBool * result);
 
-	char * GetName(void);
+	NS_IMETHOD Equals(nsITarget * other, PRBool * eq);
 
-	PRBool Equals(nsTarget *a);
+	NS_IMETHOD HashCode(PRUint32 * code);
 
-	PRInt32 HashCode(void);
-
-	char * ToString(void);
-
-	PRBool IsRegistered(void);
+	NS_IMETHOD ToString(char * * result);
 
 private:
 
 	/* Private Field Accessors */
 	char * itsName;
-
 	nsIPrincipal * itsPrincipal;
-
-	PRInt32 itsRisk;
-
-	char * itsRiskColorStr;
-
-	char * itsDescriptionStr;
-
-	char * itsDetailDescriptionStr;
-
-	char * itsURLStr;
-
 	PRBool itsRegistered;
-
-	nsTargetArray* itsTargetArray;
-
-	nsTargetArray* itsExpandedTargetArray;
-	
-	char *itsString;
-
+	PRInt32 itsRisk;
+	char * itsRiskColorStr;
+	char * itsDescriptionStr;
+	char * itsDetailDescriptionStr;
+	char * itsURLStr;
+	nsTargetArray * itsTargetArray;
+	nsTargetArray * itsExpandedTargetArray;
+	char * itsString;
 	PRUint32 itsDescriptionHash;
-
 	static PRBool theInited;
 
 	/* Private Methods */
@@ -169,22 +145,26 @@ private:
 
 class TargetKey: public nsHashKey {
 public:
-  nsTarget *itsTarget;
-  TargetKey(nsTarget *targ) {
-    itsTarget = targ;
-  }
-  
-  PRUint32 HashValue(void) const {
-    return itsTarget->HashCode();
-  }
+	nsITarget * itsTarget;
+	TargetKey(nsITarget * targ) {
+		itsTarget = targ;
+	}
 
-  PRBool Equals(const nsHashKey *aKey) const {
-    return (itsTarget->Equals(((const TargetKey *) aKey)->itsTarget));
-  }
+	PRUint32 HashValue(void) const {
+		PRUint32 code=0;
+		itsTarget->HashCode(& code);
+		return NS_OK;
+	}
 
-  nsHashKey *Clone(void) const {
-    return new TargetKey(itsTarget);
-  }
+	PRBool Equals(const nsHashKey * aKey) const {
+		PRBool eq;
+		itsTarget->Equals(((const TargetKey *) aKey)->itsTarget, & eq);
+		return eq;
+	}
+
+	nsHashKey * Clone(void) const {
+		return new TargetKey(itsTarget);
+	}
 };
 
 /* XXX: IMO, IntegerKey and StringKey should be part of xpcom */

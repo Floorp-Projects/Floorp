@@ -321,9 +321,9 @@ extern int  CAPS_TARGET_URL_ALL_JS_PERMISSION;
 #define TARGET_STR " Target: "
 #define PRIN_STR " Principal: "
 
-static nsHashtable *theTargetRegistry = new nsHashtable();
-static nsHashtable *theSystemTargetRegistry = new nsHashtable();
-static nsHashtable *theDescToTargetRegistry = new nsHashtable();
+static nsHashtable * theTargetRegistry = new nsHashtable();
+static nsHashtable * theSystemTargetRegistry = new nsHashtable();
+static nsHashtable * theDescToTargetRegistry = new nsHashtable();
 
 static PRBool AddToTargetArray(nsHashKey * aKey, void * aData, void * closure);
 
@@ -334,36 +334,41 @@ extern "C" {
 #include "jpermission.h"
 
 PR_PUBLIC_API(void)
-java_netscape_security_getTargetDetails(const char *charSetName, 
-                                        char* targetName, 
+java_netscape_security_getTargetDetails(const char * charSetName, char * targetName, 
                                         char** details, char **risk)
 {
 	if (!targetName) return; 
-	nsTarget *target = nsTarget::GetTargetFromDescription(targetName);
-	*risk = target->GetRisk();
-	nsTargetArray *primitiveTargets = target->GetFlattenedTargetArray();
+	nsITarget * target = nsTarget::GetTargetFromDescription(targetName);
+	target->GetRisk(risk);
+	nsTargetArray * primitiveTargets;
+	target->GetFlattenedTargetArray(& primitiveTargets);
 
 	/* Count the length of string buffer to allocate */
 	int len=0;
 	int extra_len = strlen("<option>") + strlen(" (") + strlen(")");
 	int i;
 	for (i = primitiveTargets->GetSize(); i-- > 0;) {
-	  nsTarget *primTarget = (nsTarget *)primitiveTargets->Get(i);
-	  len += extra_len + strlen(primTarget->GetDescription()) + 
-	         strlen(primTarget->GetRisk());
+		nsTarget *primTarget = (nsTarget *)primitiveTargets->Get(i);
+		char * targetRisk, * targetDescription;
+		primTarget->GetDescription(& targetDescription);
+		primTarget->GetRisk(& targetRisk);
+		len += extra_len + strlen(targetDescription) + strlen(targetRisk);
 	}
 	  
 	char *desc = new char[len+1];
 	desc[0] = '\0';
 	for (i = primitiveTargets->GetSize(); i-- > 0;) {
-	  nsTarget *primTarget = (nsTarget *)primitiveTargets->Get(i);
-	  XP_STRCAT(desc, "<option>");
-	  XP_STRCAT(desc, primTarget->GetDescription());
-	  XP_STRCAT(desc, " (");
-	  XP_STRCAT(desc, primTarget->GetRisk());
-	  XP_STRCAT(desc, ")");
+		nsITarget *primTarget = (nsITarget *)primitiveTargets->Get(i);
+		char * targetRisk, * targetDescription;
+		primTarget->GetDescription(& targetDescription);
+		primTarget->GetRisk(& targetRisk);
+		XP_STRCAT(desc, "<option>");
+		XP_STRCAT(desc, targetDescription);
+		XP_STRCAT(desc, " (");
+		XP_STRCAT(desc, targetRisk);
+		XP_STRCAT(desc, ")");
 	}
-	*details = desc;
+	* details = desc;
 	// Should we consider caching the details desc?
 }
 
@@ -418,7 +423,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                   CAPS_TARGET_DESC_FILE_READ,
                                   CAPS_TARGET_DETAIL_DESC_FILE_READ,
                                   CAPS_TARGET_URL_FILE_READ);
-  FileReadTarg->RegisterTarget();
+  FileReadTarg->RegisterTarget(NULL,NULL);
   
   FileWriteTarg = new nsUserTarget("UniversalFileWrite", sysPrin,
                                    targetRiskHigh,
@@ -426,35 +431,35 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                    CAPS_TARGET_DESC_FILE_WRITE,
                                    CAPS_TARGET_DETAIL_DESC_FILE_WRITE,
                                    CAPS_TARGET_URL_FILE_WRITE);
-  FileWriteTarg->RegisterTarget();
+  FileWriteTarg->RegisterTarget(NULL,NULL);
   FileDeleteTarg = new nsUserTarget("UniversalFileDelete", sysPrin,
                                     targetRiskHigh,
                                     targetRiskColorHigh,
                                     CAPS_TARGET_DESC_FILE_DELETE,
                                     CAPS_TARGET_DETAIL_DESC_FILE_DELETE,
                                     CAPS_TARGET_URL_FILE_DELETE);
-  FileDeleteTarg->RegisterTarget();
+  FileDeleteTarg->RegisterTarget(NULL,NULL);
   ImpersonatorTarg = new nsTarget("Impersonator", sysPrin,
                                   targetRiskHigh,
                                   targetRiskColorHigh,
                                   CAPS_TARGET_DESC_IMPERSONATOR,
                                   CAPS_TARGET_DETAIL_DESC_IMPERSONATOR,
                                   CAPS_TARGET_URL_IMPERSONATOR);
-  ImpersonatorTarg->RegisterTarget();
+  ImpersonatorTarg->RegisterTarget(NULL,NULL);
   BrowserReadTarg = new nsUserTarget("UniversalBrowserRead", sysPrin,
                                      targetRiskMedium,
                                      targetRiskColorMedium,
                                      CAPS_TARGET_DESC_BROWSER_READ,
                                      CAPS_TARGET_DETAIL_DESC_BROWSER_READ,
                                      CAPS_TARGET_URL_BROWSER_READ);
-  BrowserReadTarg->RegisterTarget();
+  BrowserReadTarg->RegisterTarget(NULL,NULL);
   BrowserWriteTarg = new nsUserTarget("UniversalBrowserWrite", sysPrin,
                                       targetRiskHigh,
                                       targetRiskColorHigh,
                                       CAPS_TARGET_DESC_BROWSER_WRITE,
                                       CAPS_TARGET_DETAIL_DESC_BROWSER_WRITE,
                                       CAPS_TARGET_URL_BROWSER_WRITE);
-  BrowserWriteTarg->RegisterTarget();
+  BrowserWriteTarg->RegisterTarget(NULL,NULL);
   UniversalPreferencesReadTarg = new nsUserTarget("UniversalPreferencesRead", 
                                                   sysPrin,
                                                   targetRiskMedium,
@@ -462,7 +467,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                                   CAPS_TARGET_DESC_PREFS_READ,
                                                   CAPS_TARGET_DETAIL_DESC_PREFS_READ,
                                                   CAPS_TARGET_URL_PREFS_READ);
-  UniversalPreferencesReadTarg->RegisterTarget();
+  UniversalPreferencesReadTarg->RegisterTarget(NULL,NULL);
   UniversalPreferencesWriteTarg = new nsUserTarget("UniversalPreferencesWrite", 
                                                    sysPrin,
                                                    targetRiskHigh,
@@ -470,14 +475,14 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                                    CAPS_TARGET_DESC_PREFS_WRITE,
                                                    CAPS_TARGET_DETAIL_DESC_PREFS_WRITE,
                                                    CAPS_TARGET_URL_PREFS_WRITE);
-  UniversalPreferencesWriteTarg->RegisterTarget();
+  UniversalPreferencesWriteTarg->RegisterTarget(NULL,NULL);
   SendMailTarg = new nsUserTarget("UniversalSendMail", sysPrin,
                                   targetRiskMedium,
                                   targetRiskColorMedium,
                                   CAPS_TARGET_DESC_SEND_MAIL,
                                   CAPS_TARGET_DETAIL_DESC_SEND_MAIL,
                                   CAPS_TARGET_URL_SEND_MAIL);
-  SendMailTarg->RegisterTarget();
+  SendMailTarg->RegisterTarget(NULL,NULL);
   
   RegistryPrivateTarg = new nsUserTarget("PrivateRegistryAccess", sysPrin,
                                          targetRiskLow,
@@ -485,7 +490,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                          CAPS_TARGET_DESC_REG_PRIVATE,
                                          CAPS_TARGET_DETAIL_DESC_REG_PRIVATE,
                                          CAPS_TARGET_URL_REG_PRIVATE);
-  RegistryPrivateTarg->RegisterTarget();
+  RegistryPrivateTarg->RegisterTarget(NULL,NULL);
   
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(1, 1);
@@ -498,7 +503,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                           CAPS_TARGET_DETAIL_DESC_REG_STANDARD,
                                           CAPS_TARGET_URL_REG_STANDARD,
                                           targetPtrArray);
-  RegistryStandardTarg->RegisterTarget();
+  RegistryStandardTarg->RegisterTarget(NULL,NULL);
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(1, 1);
   i = 0;
@@ -511,7 +516,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                        CAPS_TARGET_DETAIL_DESC_REG_ADMIN,
                                        CAPS_TARGET_URL_REG_ADMIN,
                                        targetPtrArray);
-  RegistryAdminTarg->RegisterTarget();
+  RegistryAdminTarg->RegisterTarget(NULL,NULL);
   UninstallTarg = new nsUserTarget("Uninstall", 
                                     sysPrin,
                                     targetRiskHigh,
@@ -519,7 +524,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                     CAPS_TARGET_DESC_UNINSTALL,
                                     CAPS_TARGET_DETAIL_DESC_UNINSTALL,
                                     CAPS_TARGET_URL_UNINSTALL);
-  UninstallTarg->RegisterTarget();
+  UninstallTarg->RegisterTarget(NULL,NULL);
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(4,1);
   i=0;
@@ -535,7 +540,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                         CAPS_TARGET_DETAIL_DESC_SOFTWAREINSTALL,
                                         CAPS_TARGET_URL_SOFTWAREINSTALL,
                                         targetPtrArray);
-  SoftwareInstallTarg->RegisterTarget();
+  SoftwareInstallTarg->RegisterTarget(NULL,NULL);
 
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(1, 1);
@@ -549,7 +554,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                         CAPS_TARGET_DETAIL_DESC_SILENTINSTALL,
                                         CAPS_TARGET_URL_SILENTINSTALL,
                                         targetPtrArray);
-  SilentInstallTarg->RegisterTarget();
+  SilentInstallTarg->RegisterTarget(NULL,NULL);
   nsTarget *SiteArchiveTarget = new nsUserTarget("SiteArchiveTarget",    
                                                  sysPrin,
                                                  targetRiskHigh,
@@ -557,7 +562,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                                  CAPS_TARGET_DESC_SAR,
                                                  CAPS_TARGET_DETAIL_DESC_SAR,
                                                  CAPS_TARGET_URL_SAR);
-  SiteArchiveTarget->RegisterTarget();
+  SiteArchiveTarget->RegisterTarget(NULL,NULL);
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(1, 1);
   i=0;
@@ -569,7 +574,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                               CAPS_TARGET_DETAIL_DESC_CANVAS_ACCESS,
                               CAPS_TARGET_URL_CANVAS_ACCESS, 
                               targetPtrArray);
-  userTarg->RegisterTarget();
+  userTarg->RegisterTarget(NULL,NULL);
   
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(3, 1);
@@ -585,14 +590,13 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                                              CAPS_TARGET_DETAIL_DESC_FILE_ACCESS,
                                              CAPS_TARGET_URL_FILE_ACCESS,
                                              targetPtrArray);
-  UniversalFileAccessTarg->RegisterTarget();
+  UniversalFileAccessTarg->RegisterTarget(NULL,NULL);
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(2, 1);
   i=0;
   targetPtrArray->Set(i++, (void *)BrowserReadTarg);
   targetPtrArray->Set(i++, (void *)BrowserWriteTarg);
-  UniversalBrowserAccessTarg = 
-    new nsUserTarget("UniversalBrowserAccess",
+  UniversalBrowserAccessTarg = new nsUserTarget("UniversalBrowserAccess",
                      sysPrin,
                      targetRiskHigh,
                      targetRiskColorHigh,
@@ -600,7 +604,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                      CAPS_TARGET_DETAIL_DESC_BROWSER_ACCESS,
                      CAPS_TARGET_URL_BROWSER_ACCESS,
                      targetPtrArray);
-  UniversalBrowserAccessTarg->RegisterTarget();
+  UniversalBrowserAccessTarg->RegisterTarget(NULL,NULL);
   
   // a macro Target for PE
   targetPtrArray = new nsTargetArray();
@@ -618,7 +622,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                               CAPS_TARGET_DETAIL_DESC_ACCOUNT_SETUP,
                               CAPS_TARGET_URL_ACCOUNT_SETUP,
                               targetPtrArray);
-  userTarg->RegisterTarget();
+  userTarg->RegisterTarget(NULL,NULL);
   
 
   /* Permission to All privileges in Java */
@@ -628,7 +632,7 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                             CAPS_TARGET_DESC_ALL_JAVA_PERMISSION,
                             CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION,
                             CAPS_TARGET_URL_ALL_JAVA_PERMISSION);
-  target->RegisterTarget();
+  target->RegisterTarget(NULL,NULL);
   /* Permission to All privileges in Java */
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(7, 1);
@@ -648,15 +652,16 @@ CreateSystemTargets(nsIPrincipal * sysPrin)
                             CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION,
                             CAPS_TARGET_URL_ALL_JS_PERMISSION,
                             targetPtrArray);
-  target->RegisterTarget();
+  target->RegisterTarget(NULL,NULL);
 
   return PR_TRUE;
 }
 
+// PUBLIC METHODS 
 
-//
-// 			PUBLIC METHODS 
-//
+static NS_DEFINE_IID(kITargetIID, NS_ITARGET_IID);
+
+NS_IMPL_ISUPPORTS(nsTarget, kITargetIID);
 
 nsTarget::nsTarget(char *name, nsIPrincipal * prin, PRInt32 risk, char * riskColor, 
 					int desc_id, int detail_desc_id, int help_url_id, nsTargetArray * targetArray)
@@ -674,7 +679,6 @@ nsTarget::nsTarget(char *name, nsIPrincipal * prin, PRInt32 risk, char * riskCol
 	XP_FREE(url);
 }
 
-
 nsTarget::~nsTarget(void)
 {
 	if (itsName) delete []itsName;
@@ -687,91 +691,83 @@ nsTarget::~nsTarget(void)
 	if (itsExpandedTargetArray) delete []itsExpandedTargetArray;
 }
 
-nsTarget * 
-nsTarget::RegisterTarget()
+NS_IMETHODIMP
+nsTarget::RegisterTarget(void * context, nsITarget * * targetResult)
 {
-  return RegisterTarget(NULL);
-}
-
-nsTarget * 
-nsTarget::RegisterTarget(void *context)
-{
-	nsTarget *targ;
+	nsITarget * targ;
 	nsCaps_lock();
 	TargetKey targKey(this);
 	if (!theTargetRegistry) theTargetRegistry = new nsHashtable();
-	targ = (nsTarget *) theTargetRegistry->Get(&targKey);
+	targ = (nsITarget *) theTargetRegistry->Get(& targKey);
 	if (targ != NULL) {
-	  PR_ASSERT(this == targ);
-	  nsCaps_unlock();
-	  return targ;
+		PR_ASSERT(this == targ);
+		nsCaps_unlock();
+		targetResult = & targ;
+		return NS_OK;
 	}
-	nsPrivilegeManager *mgr = nsPrivilegeManager::GetPrivilegeManager();
+	nsPrivilegeManager * mgr = nsPrivilegeManager::GetPrivilegeManager();
 	if ((mgr != NULL) && (context != NULL) && 
-	    (!mgr->CheckMatchPrincipal(context, itsPrincipal, 1))) {
-	  nsCaps_unlock();
-	  return NULL;
+		(!mgr->CheckMatchPrincipal(context, itsPrincipal, 1))) {
+		nsCaps_unlock();
+		targetResult = NULL;
+		return NS_OK;
 	}
-	//
 	// otherwise, add the target to the registry
-	//
 	// TODO: make sure the caller has the given principal -- you
 	// shouldn't be allowed to register a target under a principal
 	// you don't own.
-	//
 	theTargetRegistry->Put(&targKey, this); // hash table will "canonicalize" name
 	if (!theSystemTargetRegistry) theSystemTargetRegistry = new nsHashtable();
 	PRBool eq;
 	itsPrincipal->Equals(nsPrivilegeManager::GetSystemPrincipal(),&eq);
 	if (eq) {
-	  IntegerKey ikey(PL_HashString(itsName));
-	  theSystemTargetRegistry->Put(&ikey, this); 
+		IntegerKey ikey(PL_HashString(itsName));
+		theSystemTargetRegistry->Put(&ikey, this); 
 	}
-
 	// The following hash table is used by the Admin UI. It finds
 	// the actual target given a description
-
 	IntegerKey ikey(itsDescriptionHash);
 	if (!theDescToTargetRegistry) theDescToTargetRegistry = new nsHashtable();
 	theDescToTargetRegistry->Put(&ikey, this);
 	itsRegistered = PR_TRUE;
 	nsCaps_unlock();
-	return this;
+	* targetResult = this;
+	return NS_OK;
 }
 
-nsTarget * 
-nsTarget::FindTarget(nsTarget * target)
+nsITarget * 
+nsTarget::FindTarget(nsITarget * target)
 {
 	TargetKey targKey(target);
-	return (nsTarget *) theTargetRegistry->Get(&targKey);
+	return (nsITarget *) theTargetRegistry->Get(& targKey);
 }
 
-nsTarget * 
+nsITarget * 
 nsTarget::FindTarget(char * name)
 {
 	IntegerKey ikey(PL_HashString(name));
-	return (nsTarget *)theSystemTargetRegistry->Get(&ikey);
+	return (nsITarget *)theSystemTargetRegistry->Get(&ikey);
 }
 
-nsTarget * 
+nsITarget * 
 nsTarget::FindTarget(char * name, nsIPrincipal * prin)
 {
 	PRBool eq;
 	prin->Equals(nsPrivilegeManager::GetSystemPrincipal(),&eq);
 	if (eq) return nsTarget::FindTarget(name);
 	/* name and principal combination uniquely identfies a target */
-	nsTarget* targ = new nsTarget((char *)name, prin, 
+	nsITarget * targ = new nsTarget((char *)name, prin, 
 	                              nsRiskType_HighRisk,
 	                              JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH),
 	                              (char*)NULL, (char*)NULL, (char*)NULL, 
 	                              (nsTargetArray*)NULL);
-	nsTarget* ret_val = nsTarget::FindTarget(targ);
+	nsITarget* ret_val = nsTarget::FindTarget(targ);
 	delete targ;
 	return ret_val;
 }
 
 //WHAT THE HELL IS VOID * DATA????????????????????????????????????????????????????
-
+// these methods are already done by the privilege manager, get them outa here
 nsIPrivilege * 
 nsTarget::CheckPrivilegeEnabled(nsPrincipalArray * prinArray, void * data)
 {
@@ -790,13 +786,14 @@ nsTarget::CheckPrivilegeEnabled(nsIPrincipal *p, void *data)
 	return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 }
 
-nsIPrivilege * 
-nsTarget::EnablePrivilege(nsIPrincipal * prin, void *data)
+NS_IMETHODIMP
+nsTarget::EnablePrivilege(nsIPrincipal * prin, void * data, nsIPrivilege * * priv)
 {
 	PRBool eq;
 	itsPrincipal->Equals(prin, & eq);
-	return (eq) ? nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Session)
+	* priv = (eq) ? nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Session)
 	: nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
+	return NS_OK;
 }
 
 nsIPrivilege * 
@@ -805,10 +802,14 @@ nsTarget::GetPrincipalPrivilege(nsIPrincipal * prin, void *data)
 	return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 }
 
-nsTargetArray * 
-nsTarget::GetFlattenedTargetArray(void)
+NS_IMETHODIMP
+nsTarget::GetFlattenedTargetArray(nsTargetArray ** targsResult)
 {
-	if (itsExpandedTargetArray != NULL) return itsExpandedTargetArray;  
+	if (itsExpandedTargetArray != NULL)
+	{
+		* targsResult = itsExpandedTargetArray;
+		return NS_OK;
+	}
 	// We must populate the cached value of the Expansion
 	nsHashtable *targetHash = new nsHashtable();
 	nsTargetArray *expandedTargetArray = new nsTargetArray();
@@ -817,7 +818,8 @@ nsTarget::GetFlattenedTargetArray(void)
 	delete targetHash;
 	itsExpandedTargetArray = expandedTargetArray; 
 	// expandedTargetArray->FreeExtra();
-	return itsExpandedTargetArray;
+	* targsResult = itsExpandedTargetArray;
+	return NS_OK;
 }
 
 void 
@@ -840,7 +842,7 @@ static PRBool
 AddToTargetArray(nsHashKey * aKey, void * aData, void * closure) 
 {
 	TargetKey * targetKey = (TargetKey *) aKey;
-	nsTarget * target = targetKey->itsTarget;
+	nsITarget * target = targetKey->itsTarget;
 	nsTargetArray *targetArray = (nsTargetArray *) aData;
 	return (targetArray->Add((void *)target) >= 0) ? PR_TRUE : PR_FALSE;
 }
@@ -857,110 +859,123 @@ nsTarget::GetAllRegisteredTargets(void)
 	return NULL;
 }
 
-char *
-nsTarget::GetRisk(void)
+NS_IMETHODIMP
+nsTarget::GetRisk(char * * risk)
 {
-	return JavaSecUI_targetRiskStr(itsRisk);
+	* risk = JavaSecUI_targetRiskStr(itsRisk);
+	return NS_OK;
 }
 
-char *
-nsTarget::GetRiskColor(void)
+NS_IMETHODIMP
+nsTarget::GetRiskColor(char * * result)
 {
-	return itsRiskColorStr;
+	result = (itsRiskColorStr) ? & itsRiskColorStr : NULL;
+	return NS_OK;
 }
 
-char * 
-nsTarget::GetDescription(void)
+NS_IMETHODIMP
+nsTarget::GetDescription(char * * result)
 {
-	return itsDescriptionStr;
+	result = (itsDescriptionStr) ? & itsDescriptionStr : NULL;
+	return NS_OK;
 }
 
-char * 
-nsTarget::GetDetailDescription(void)
+NS_IMETHODIMP
+nsTarget::GetDetailDescription(char * * result)
 {
-	return itsDetailDescriptionStr;
+	result = (itsDetailDescriptionStr) ? & itsDetailDescriptionStr : NULL;
+	return NS_OK;
 }
 
-nsTarget * 
+nsITarget * 
 nsTarget::GetTargetFromDescription(char *a)
 {
 	IntegerKey ikey(PL_HashString(a));
-	return (nsTarget *) theDescToTargetRegistry->Get(&ikey);
+	return (nsITarget *) theDescToTargetRegistry->Get(&ikey);
 }
 
-char * 
-nsTarget::GetHelpURL(void)
+NS_IMETHODIMP
+nsTarget::GetHelpURL(char * * result)
 {
-	return itsURLStr;
+	result = (itsURLStr) ? & itsURLStr : NULL;
+	return NS_OK;
 }
 
-char * 
-nsTarget::GetDetailedInfo(void *a)
+NS_IMETHODIMP
+nsTarget::GetDetailedInfo(void * a, char * * dinfo)
 {
-	return "";
+	* dinfo = "";
+	return NS_OK;
 }
 
-nsIPrincipal * 
-nsTarget::GetPrincipal(void)
+NS_IMETHODIMP
+nsTarget::GetPrincipal(nsIPrincipal * * prin)
 {
-	return itsPrincipal;
+	prin = (itsPrincipal) ? & itsPrincipal : NULL;
+	return NS_OK;
 }
 
-char * 
-nsTarget::GetName(void)
+NS_IMETHODIMP
+nsTarget::GetName(char * * result)
 {
-	return itsName;
+	result = (itsName) ? & itsName : NULL;
+	return NS_OK;
 }
 
-PRBool 
-nsTarget::Equals(nsTarget *obj)
+NS_IMETHODIMP
+nsTarget::Equals(nsITarget * other, PRBool * result)
 {
 	PRBool bSameName, bSamePrin;
-	if (obj == this) return PR_TRUE;
-	bSameName = ((strcmp(itsName, obj->itsName) == 0) ? PR_TRUE : PR_FALSE);
+	if (other == this) * result = PR_TRUE;
+	char * otherName;
+	other->GetName(& otherName);
+	bSameName = ((strcmp(itsName, otherName) == 0) ? PR_TRUE : PR_FALSE);
+	nsIPrincipal * otherPrin;
+	other->GetPrincipal(& otherPrin);
 	(itsPrincipal == NULL)
-	? bSamePrin = ((obj->itsPrincipal == NULL) ? PR_TRUE : PR_FALSE)
-	: itsPrincipal->Equals(obj->itsPrincipal, & bSamePrin);
-	return (bSameName && bSamePrin) ? PR_TRUE : PR_FALSE;
+	? bSamePrin = ((otherPrin == NULL) ? PR_TRUE : PR_FALSE)
+	: itsPrincipal->Equals(otherPrin, & bSamePrin);
+	* result =  (bSameName && bSamePrin) ? PR_TRUE : PR_FALSE;
+	return NS_OK;
 }
 
-PRInt32 
-nsTarget::HashCode(void) 
-{	PRUint32 code;
-	(itsPrincipal != NULL) ? itsPrincipal->HashCode(& code) : code = 0;
-	return PL_HashString(itsName) + code;
-}
-
-char * 
-nsTarget::ToString(void) 
+NS_IMETHODIMP
+nsTarget::HashCode(PRUint32 * code) 
 {
-	if (itsString != NULL) return itsString;
-	const char * prinStr;
-	if (itsPrincipal != NULL) itsPrincipal->ToString((char * *)& prinStr);
-	else prinStr = "<none>";
-	char * itsString = new char [strlen(TARGET_STR) + strlen(itsName) + 
-	                             strlen(PRIN_STR) + strlen(prinStr) + 1];
+	PRUint32 prinCode = 0;
+	if (itsPrincipal != NULL) itsPrincipal->HashCode(& prinCode);
+	* code =  PL_HashString(itsName) + prinCode;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTarget::ToString(char * * result) 
+{
+	if (itsString != NULL) result = & itsString;
+	char * prinStr = "<none>";
+	if (itsPrincipal != NULL)  itsPrincipal->ToString(& prinStr);
+	itsString = new char [strlen(TARGET_STR) + strlen(itsName) + strlen(PRIN_STR) + strlen(prinStr) + 1];
 	XP_STRCPY(itsString, TARGET_STR); 
 	XP_STRCAT(itsString, itsName); 
 	XP_STRCAT(itsString, PRIN_STR); 
 	XP_STRCAT(itsString, prinStr); 
-	return itsString;
+	result = & itsString;
+	return NS_OK;
 }
 
-PRBool 
-nsTarget::IsRegistered(void) 
+NS_IMETHODIMP
+nsTarget::IsRegistered(PRBool * result) 
 {
-	return itsRegistered;
+	* result = itsRegistered;
+	return NS_OK;
 }
 
-//
-// 			PRIVATE METHODS 
-//
+// PRIVATE METHODS 
 
 void 
-nsTarget::Init(char *name, nsIPrincipal * prin, nsTargetArray * targetArray, 
-                    PRInt32 risk, char * riskColor, char * description, 
-                    char * detailDescription, char * url)
+nsTarget::Init(char * name, nsIPrincipal * prin, nsTargetArray * targetArray, 
+				PRInt32 risk, char * riskColor, char * description, 
+				char * detailDescription, char * url)
 {
 	PR_ASSERT(name != NULL);
 	PR_ASSERT(prin != NULL);
@@ -1002,7 +1017,7 @@ nsTarget::Init(char *name, nsIPrincipal * prin, nsTargetArray * targetArray,
 
 static PRBool initialize(void) 
 {
-  return PR_TRUE;
+	return PR_TRUE;
 }
 
 PRBool nsTarget::theInited = initialize();

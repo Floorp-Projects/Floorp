@@ -36,11 +36,11 @@ public:
 
 	PRBool IsEmpty(void);
 
-	virtual nsIPrivilege * Get(nsTarget * t);
+	virtual nsIPrivilege * Get(nsITarget * t);
 
-	nsIPrivilege * Put(nsTarget * a, nsIPrivilege * priv);
+	nsIPrivilege * Put(nsITarget * t, nsIPrivilege * priv);
 
-	nsIPrivilege * Remove(nsTarget * key);
+	nsIPrivilege * Remove(nsITarget * key);
 
 	nsPrivilegeTable * Clone(void);
 

@@ -22,12 +22,11 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIPrincipal.h"
-#include "nsTarget.h"
-//class nsITarget;
-class nsICapsSecurityCallbacks;
+#include "nsITarget.h"
+#include "nsICapsSecurityCallbacks.h"
 
 
-#define NS_ALL_PRIVILEGES         ((nsITarget*)NULL)
+#define NS_ALL_PRIVILEGES ((nsITarget *)NULL)
 
 
 /**
@@ -73,7 +72,7 @@ public:
      * @param state  - the return value is passed in this parameter.
      */
     NS_IMETHOD
-    GetPermission(nsIPrincipal* prin, nsTarget * target, PRInt16 * privilegeState) = 0;
+    GetPermission(nsIPrincipal * prin, nsITarget * target, PRInt16 * privilegeState) = 0;
 
     /**
      * Set the permission state for given principal and target. This wouldn't 
@@ -85,7 +84,7 @@ public:
      *                 and target parameters.
      */
     NS_IMETHOD
-    SetPermission(nsIPrincipal* prin, nsTarget * target, PRInt16 * privilegeState) = 0;
+    SetPermission(nsIPrincipal * prin, nsITarget * target, PRInt16 * privilegeState) = 0;
 
     /**
      * Prompts the user if they want to grant permission for the given principal and 
@@ -97,7 +96,7 @@ public:
      *                 target
      */
     NS_IMETHOD
-    AskPermission(nsIPrincipal* prin, nsTarget * target, PRInt16 * privilegeState) = 0;
+    AskPermission(nsIPrincipal * prin, nsITarget * target, PRInt16 * privilegeState) = 0;
 
     /* 
      * All of the following methods are used by JS (the code located
@@ -111,7 +110,7 @@ public:
      * @param result - is true if principal was successfully registered with the system
      */
     NS_IMETHOD
-    Initialize(PRBool *result) = 0;
+    Initialize(PRBool * result) = 0;
 
     /**
      * Initializes the capabilities frame walking code.
@@ -119,7 +118,7 @@ public:
      * @param aInterface - interface for calling frame walking code.
      */
     NS_IMETHOD
-    InitializeFrameWalker(nsICapsSecurityCallbacks* aInterface) = 0;
+    InitializeFrameWalker(nsICapsSecurityCallbacks * aInterface) = 0;
 
     /**
      * Registers the given Principal with the system.
@@ -143,7 +142,7 @@ public:
      *                 target
      */
     NS_IMETHOD
-    EnablePrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result) = 0;
+    EnablePrivilege(void * context, const char * targetName, PRInt32 callerDepth, PRBool *result) = 0;
 
     /**
      * Returns if the user granted permission for the principal located at the given 
@@ -231,7 +230,7 @@ public:
      *
      */
     NS_IMETHOD
-    IsAllowed(void *annotation, char* target, PRBool *result) = 0;
+    IsAllowed(void *annotation, char * target, PRBool *result) = 0;
 
     /* XXX: TODO: We need to set up the JS frame walking callbacks */
 

@@ -47,7 +47,7 @@ nsPrivilegeTable::IsEmpty(void)
 }
 
 nsIPrivilege * 
-nsPrivilegeTable::Get(nsTarget *target)
+nsPrivilegeTable::Get(nsITarget * target)
 {
 	if (itsTable == NULL) 
 		return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
@@ -59,7 +59,7 @@ nsPrivilegeTable::Get(nsTarget *target)
 }
 
 nsIPrivilege * 
-nsPrivilegeTable::Put(nsTarget * target, nsIPrivilege * priv)
+nsPrivilegeTable::Put(nsITarget * target, nsIPrivilege * priv)
 {
 	nsCaps_lock();
 	if (itsTable == NULL) this->itsTable = new nsHashtable();
@@ -70,7 +70,7 @@ nsPrivilegeTable::Put(nsTarget * target, nsIPrivilege * priv)
 }
 
 nsIPrivilege * 
-nsPrivilegeTable::Remove(nsTarget * target)
+nsPrivilegeTable::Remove(nsITarget * target)
 {
 	if (itsTable == NULL) return NULL;
 	TargetKey targKey(target);
@@ -84,7 +84,7 @@ nsPrivilegeTable *
 nsPrivilegeTable::Clone(void)
 {
 	nsCaps_lock();
-	nsPrivilegeTable *newbie = new nsPrivilegeTable();
+	nsPrivilegeTable * newbie = new nsPrivilegeTable();
 	if (itsTable != NULL) newbie->itsTable = itsTable->Clone();
 	nsCaps_unlock();
 	return newbie;

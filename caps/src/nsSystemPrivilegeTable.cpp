@@ -24,7 +24,7 @@ nsSystemPrivilegeTable::nsSystemPrivilegeTable(void) : nsPrivilegeTable()
 }
 
 nsIPrivilege * 
-nsSystemPrivilegeTable::Get(nsTarget *a)
+nsSystemPrivilegeTable::Get(nsITarget * a)
 {
 	return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Forever);
 }

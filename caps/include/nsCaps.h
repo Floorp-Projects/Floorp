@@ -38,16 +38,16 @@ PR_EXTERN(PRBool)
 nsCapsRegisterPrincipal(class nsIPrincipal * principal); 
 
 PR_EXTERN(PRBool) 
-nsCapsEnablePrivilege(void* context, class nsTarget *target, PRInt32 callerDepth);
+nsCapsEnablePrivilege(void* context, class nsITarget * target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsIsPrivilegeEnabled(void* context, class nsTarget *target, PRInt32 callerDepth);
+nsCapsIsPrivilegeEnabled(void* context, class nsITarget * target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsRevertPrivilege(void* context, class nsTarget *target, PRInt32 callerDepth);
+nsCapsRevertPrivilege(void* context, class nsITarget * target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsDisablePrivilege(void* context, class nsTarget *target, PRInt32 callerDepth);
+nsCapsDisablePrivilege(void* context, class nsITarget * target, PRInt32 callerDepth);
 
 PR_EXTERN(void*) 
 nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth);
@@ -93,9 +93,9 @@ PR_EXTERN(PRUint32)
 nsCapsGetPrincipalArraySize(void * prinArray);
 
 
-/* wrappers for nsTarget object */
-PR_EXTERN(class nsTarget *) 
-nsCapsFindTarget(char *name);
+/* wrappers for nsITarget object */
+PR_EXTERN(class nsITarget *) 
+nsCapsFindTarget(char * name);
 
 
 /* wrappers for nsPrivilege object */
@@ -105,7 +105,7 @@ nsCapsGetPermission(class nsIPrivilege * privilege);
 
 /* wrappers for nsPrivilegeTable object */
 PR_EXTERN(nsIPrivilege *)
-nsCapsGetPrivilege(nsPrivilegeTable * annotation, class nsTarget * target);
+nsCapsGetPrivilege(nsPrivilegeTable * annotation, class nsITarget * target);
 
 /* Methods for stack walking */
 

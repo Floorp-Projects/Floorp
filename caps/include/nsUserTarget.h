@@ -23,7 +23,7 @@
 #include "prtypes.h"
 #include "nsTarget.h"
 #include "nsPrivilege.h"
-//#include "nsPrincipal.h"
+#include "nsPrivilegeManager.h"
 #include "nsCom.h"
 
 /* Any methods that is not defined here is in Java */
@@ -37,8 +37,8 @@ public:
 	virtual ~nsUserTarget(void);
 
 	nsUserTarget(char *name, nsIPrincipal * prin, PRInt32 risk, 
-					char *riskColor, char *description, 
-					char *detailDescription, char *url)
+					char * riskColor, char * description, 
+					char * detailDescription, char * url)
 	: nsTarget(name, prin, risk, riskColor, description, detailDescription, url, NULL)
 	{
 	}
@@ -46,7 +46,7 @@ public:
 	nsUserTarget(char *name, nsIPrincipal * prin, PRInt32 risk, 
 					char *riskColor, char *description, 
 					char *detailDescription, char *url, 
-					nsTargetArray *targetArray) 
+					nsTargetArray * targetArray) 
 	: nsTarget(name, prin, risk, riskColor, description, detailDescription, url, targetArray)
 	{
 	}
@@ -66,7 +66,7 @@ public:
 					int desc_id, 
 					int detail_desc_id,
 					int help_url_id,
-					nsTargetArray *targetArray) 
+					nsTargetArray * targetArray) 
 	: nsTarget(name, prin, risk, riskColor, desc_id, detail_desc_id, 
 					help_url_id, targetArray)
 	{

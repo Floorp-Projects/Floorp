@@ -15,19 +15,19 @@ public:
 	}
 
 	PRUint32 HashValue(void) const {
-		PRUint32 * code;
+		PRUint32 * code = 0;
 		itsPrincipal->HashCode(code);
 		return *code;
 	}
 
 	PRBool Equals(const nsHashKey * aKey) const {
-		PRBool * result;
-		itsPrincipal->Equals(((const PrincipalKey *) aKey)->itsPrincipal, result);
-		return *result;
+		PRBool result = PR_FALSE;
+		itsPrincipal->Equals(((const PrincipalKey *) aKey)->itsPrincipal,& result);
+		return result;
 	}
 
 	nsHashKey * Clone(void) const {
-	  return new PrincipalKey(itsPrincipal);
+		return new PrincipalKey(itsPrincipal);
 	}
 };
 
