@@ -849,9 +849,9 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsHTMLAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
-          nsLinkState state;
-          if (nsStyleUtil::IsHTMLLink(aContent, tag, aPresContext, &state)) {
-            switch (state) {
+          nsLinkState linkState;
+          if (nsStyleUtil::IsHTMLLink(aContent, tag, aPresContext, &linkState)) {
+            switch (linkState) {
               case eLinkState_Unvisited:
                 if (nsnull != mLinkRule) {
                   aResults->AppendElement(mLinkRule);
