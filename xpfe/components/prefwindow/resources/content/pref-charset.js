@@ -120,16 +120,16 @@ function LoadAvailableCharSets()
 
 		//select first item in list box
 
-		item = available_charsets_treeroot.firstChild;
+		//item = available_charsets_treeroot.firstChild;
 
-		if (item) try {
-			available_charsets.selectItem(item);
-			available_charsets.ensureElementIsVisible(item);
-		}
+		//if (item) try {
+		//	available_charsets.selectItem(item);
+		//	available_charsets.ensureElementIsVisible(item);
+		//}
 		
-		catch (ex) {
-			dump("Not able to select first avail. charset.\n");
-		}
+		//catch (ex) {
+		//	dump("Not able to select first avail. charset.\n");
+		//}
 
 }
 
