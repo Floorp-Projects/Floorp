@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <stdio.h>
 
 #include "parser.h"
 #include "world.h"
