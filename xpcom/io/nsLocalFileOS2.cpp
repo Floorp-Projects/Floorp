@@ -2102,9 +2102,9 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
         s++;
     }
     // Escape the path with the directory mask
-    nsCAutoString tmp = ePath;
+    nsCAutoString tmp(ePath);
     tmp.ReplaceChar(":", '|');
-    nsCAutoString escPath = "file://";
+    nsCAutoString escPath("file://");
 	escPath += tmp;
 //    rv = nsURLEscape(ePath,nsIIOService::url_Directory + nsIIOService::url_Forced, escPath);
 //    if (NS_SUCCEEDED(rv)) {
