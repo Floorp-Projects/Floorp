@@ -93,5 +93,6 @@ function sidebarOpenURL(event, treeitem, root)
 	  {
 		openTopWin(id);
 	  }
+          return true;
 }
 
