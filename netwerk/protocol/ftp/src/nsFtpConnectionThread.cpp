@@ -285,7 +285,6 @@ DataRequestForwarder::RetryConnection()
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder RetryConnection \n", this));
 
     mRetrying = PR_TRUE;
-    mDelayedOnStartFired = PR_FALSE;
 }
 
 NS_IMETHODIMP 
@@ -1544,17 +1543,10 @@ nsFtpState::R_retr() {
         if (st)
             st->SetReuseConnection(PR_FALSE);
         mDPipe = 0;
-        mDPipeRequest->Cancel(NS_OK);
-        mDPipeRequest = 0;
 
         return FTP_S_PASV;
     }
 
-    nsresult rv = mDPipeRequest->Resume();
-    if (NS_FAILED(rv)) {
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) dataPipe->Resume (rv=%x)\n", this, rv));
-        return FTP_ERROR;
-    }
     return FTP_S_CWD;
 }
 
@@ -1795,13 +1787,6 @@ nsFtpState::R_pasv() {
 
     if (mRETRFailed)
         return FTP_S_CWD;
-
-    // Suspend the read
-    rv = mDPipeRequest->Suspend();
-    if (NS_FAILED(rv)){
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) dataPipe->Suspend failed (rv=%x)\n", this, rv));
-        return FTP_ERROR;
-    }
 
     return FTP_S_SIZE;
 }
