@@ -111,6 +111,7 @@
 #include "nsContentUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
+#include "nsIXPointer.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -2448,6 +2449,15 @@ NS_IMETHODIMP
 nsDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange)
 {
   NS_ERROR("nsDocument::EvaluateFIXptr() should be overriden by subclass!");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::EvaluateXPointer(const nsAString& aExpression,
+                             nsIXPointerResult **aResult)
+{
+  NS_ERROR("nsDocument::EvaluateXPointer() should be overriden by subclass!");
 
   return NS_OK;
 }

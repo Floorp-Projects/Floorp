@@ -39,6 +39,8 @@
 
 #include "nsIDOMDocument.idl"
 
+interface nsIXPointerResult;
+
 [scriptable, uuid(8816d003-e7c8-4065-8827-829b8d07b6e0)]
 interface nsIDOMXMLDocument : nsIDOMDocument
 {
@@ -53,4 +55,9 @@ interface nsIDOMXMLDocument : nsIDOMDocument
   * @return            The range object that results from evaluation
   */
   nsIDOMRange               evaluateFIXptr(in DOMString expression);
+
+ /**
+  * Evaluate XPointer expression.
+  */
+  nsIXPointerResult evaluateXPointer(in DOMString expression);
 };

@@ -87,6 +87,7 @@
 #include "nsIPageSequenceFrame.h"
 #include "nsICaret.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIXPointer.h"
 #include "nsIXMLDocument.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIScrollableView.h"
@@ -1284,8 +1285,6 @@ protected:
   nsresult SetPrefColorRules(void);
   nsresult SetPrefLinkRules(void);
   nsresult SetPrefFocusRules(void);
-
-  nsresult SelectRange(nsIDOMRange *aRange);
 
   // IMPORTANT: The ownership implicit in the following member variables has been 
   // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
@@ -4044,8 +4043,31 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     }
   }
 
-  // Finally try FIXptr
+  // Try XPointer
   nsCOMPtr<nsIDOMRange> jumpToRange;
+  nsCOMPtr<nsIXPointerResult> xpointerResult;
+  if (!content) {
+    nsCOMPtr<nsIDOMXMLDocument> xmldoc = do_QueryInterface(mDocument);
+    if (xmldoc) {
+      xmldoc->EvaluateXPointer(aAnchorName, getter_AddRefs(xpointerResult));
+      if (xpointerResult) {
+        xpointerResult->Item(0, getter_AddRefs(jumpToRange));
+        if (!jumpToRange) {
+          // We know it was an XPointer, so there is no point in
+          // trying any other pointer types, let's just return
+          // an error.
+          return NS_ERROR_FAILURE;
+        }
+        nsCOMPtr<nsIDOMNode> node;
+        jumpToRange->GetStartContainer(getter_AddRefs(node));
+        if (node) {
+          content = do_QueryInterface(node);
+        }
+      }
+    }
+  }
+
+  // Finally try FIXptr
   if (!content) {
     nsCOMPtr<nsIDOMXMLDocument> xmldoc = do_QueryInterface(mDocument);
     if (xmldoc) {
@@ -4054,7 +4076,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         nsCOMPtr<nsIDOMNode> node;
         jumpToRange->GetStartContainer(getter_AddRefs(node));
         if (node) {
-          node->QueryInterface(NS_GET_IID(nsIContent),getter_AddRefs(content));
+          content = do_QueryInterface(node);
         }
       }
     }
@@ -4092,7 +4114,26 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         if (jumpToRange) {
           if (!selectAnchor)
             jumpToRange->Collapse(PR_TRUE);
-          SelectRange(jumpToRange);
+
+          nsCOMPtr<nsISelection> sel;
+          if (NS_SUCCEEDED(
+              GetSelection(nsISelectionController::SELECTION_NORMAL,
+                           getter_AddRefs(sel))) &&
+              sel) {
+            sel->RemoveAllRanges();
+            sel->AddRange(jumpToRange);
+          }
+          
+          if (selectAnchor && xpointerResult) {
+            // Select the rest (if any) of the ranges in XPointerResult
+            PRUint32 count, i;
+            xpointerResult->GetLength(&count);
+            for (i = 1; i < count; i++) { // jumpToRange is i = 0
+              nsCOMPtr<nsIDOMRange> range;
+              xpointerResult->Item(i, getter_AddRefs(range));
+              sel->AddRange(range);
+            }
+          }
         }
         
         if (esm) {
@@ -4124,19 +4165,6 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         }
       }
     }
-  }
-
-  return rv;
-}
-
-nsresult
-PresShell::SelectRange(nsIDOMRange *aRange)
-{
-  nsCOMPtr<nsISelection> sel;
-  nsresult rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
-  if (NS_SUCCEEDED(rv) && sel) {
-    sel->RemoveAllRanges();
-    sel->AddRange(aRange);
   }
 
   return rv;

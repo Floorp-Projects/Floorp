@@ -42,10 +42,17 @@
 #include "nsCRT.h"
 #include "nsIScriptSecurityManager.h"
 #include "txURIUtils.h"
+#include "nsXPath1Scheme.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPath1SchemeProcessor)
 
 /* 1c1a3c01-14f6-11d6-a7f2-ea502af815dc */
 #define TRANSFORMIIX_DOMCI_EXTENSION_CID   \
 { 0x1c1a3c01, 0x14f6, 0x11d6, {0xa7, 0xf2, 0xea, 0x50, 0x2a, 0xf8, 0x15, 0xdc} }
+
+/* {0C351177-0159-4500-86B0-A219DFDE4258} */
+#define TRANSFORMIIX_XPATH1_SCHEME_CID \
+{ 0xc351177, 0x159, 0x4500, { 0x86, 0xb0, 0xa2, 0x19, 0xdf, 0xde, 0x42, 0x58 } }
 
 #define TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID \
 "@mozilla.org/transformiix-domci-extender;1"
@@ -264,7 +271,11 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Transformiix DOMCI Extender",
       TRANSFORMIIX_DOMCI_EXTENSION_CID,
       TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
-      NS_DOMCI_EXTENSION_CONSTRUCTOR(Transformiix) }
+      NS_DOMCI_EXTENSION_CONSTRUCTOR(Transformiix) },
+    { "XPath1 XPointer Scheme Processor",
+      TRANSFORMIIX_XPATH1_SCHEME_CID,
+      NS_XPOINTER_SCHEME_PROCESSOR_BASE "xpath1",
+      nsXPath1SchemeProcessorConstructor }
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(TransformiixModule, gComponents,

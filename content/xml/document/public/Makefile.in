@@ -28,6 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
 
+XPIDLSRCS = \
+	nsIXPointer.idl \
+	nsIModifyableXPointer.idl \
+	$(NULL)
+
 EXPORTS		= \
 		nsIXMLContentSink.h \
 		nsIXMLDocument.h \
