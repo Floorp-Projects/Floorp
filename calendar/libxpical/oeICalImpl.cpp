@@ -658,20 +658,24 @@ oeICalImpl::SetServer( const char *str ) {
         return NS_OK;
     }
     
-    icalcomponent *comp;
-    for( comp = icalfileset_get_first_component( stream );
-        comp != 0;
-        comp = icalfileset_get_next_component( stream ) ) {
+    nsresult rv;
+    icalcomponent *vcalendar;
+    icalcomponent *vevent;
+    oeICalEventImpl *icalevent;
+    for( vcalendar = icalfileset_get_first_component( stream );
+        vcalendar != 0;
+        vcalendar = icalfileset_get_next_component( stream ) ) {
         
-        nsresult rv;
-        oeICalEventImpl *icalevent;
-        if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &icalevent ))) {
-            return rv;
-        }
-        
-        icalevent->ParseIcalComponent( comp );
+        for( vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
+            vevent != 0;
+            vevent = icalcomponent_get_next_component( vcalendar, ICAL_VEVENT_COMPONENT ) ) {
 
-        m_eventlist.Add( icalevent );
+            if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &icalevent ))) {
+                return rv;
+            }
+            icalevent->ParseIcalComponent( vevent );
+            m_eventlist.Add( icalevent );
+        }
     }
     
     icalfileset_free(stream);

@@ -897,9 +897,9 @@ NS_IMETHODIMP oeICalEventImpl::ParseIcalString(const char *aNewVal)
     printf( "ParseIcalString( %s )\n", aNewVal );
 #endif
     
-    icalcomponent *vcalendar = icalparser_parse_string( aNewVal );
-    ParseIcalComponent( vcalendar );
-    icalcomponent_free( vcalendar );
+    icalcomponent *vevent = icalparser_parse_string( aNewVal );
+    ParseIcalComponent( vevent );
+    icalcomponent_free( vevent );
 
     return NS_OK;
 }
@@ -974,16 +974,15 @@ NS_IMETHODIMP oeICalEventImpl::SetSnoozeTime( PRTime snoozetime )
     return NS_OK;
 }
 
-void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
+void oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "ParseIcalComponent()\n" );
 #endif
 
-    icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
     if ( !vevent ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalEventImpl::ParseIcalComponent() failed: VEVENT not found!\n" );
+        printf( "oeICalEventImpl::ParseIcalComponent() failed: vevent is NULL!\n" );
         #endif
         return;
     }
