@@ -50,6 +50,7 @@
 #include "nsCSSOMFactory.h"
 #include "nsEventStateManager.h"
 #include "nsGenericElement.h"
+#include "nsGenericDOMDataNode.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLContentSerializer.h"
@@ -218,6 +219,7 @@ Shutdown(nsIModule* aSelf)
 
   nsRange::Shutdown();
   nsGenericElement::Shutdown();
+  nsGenericDOMDataNode::Shutdown();
 
   // Release all of our atoms
   nsColorNames::ReleaseTable();

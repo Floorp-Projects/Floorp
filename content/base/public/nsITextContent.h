@@ -52,7 +52,7 @@ class nsTextFragment;
  */
 class nsITextContent : public nsIContent {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ITEXT_CONTENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXT_CONTENT_IID)
 
   /**
    * Get direct access (but read only) to the text in the text content.

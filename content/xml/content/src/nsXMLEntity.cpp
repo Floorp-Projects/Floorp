@@ -36,19 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsIDOMEntity.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIContent.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsGenericElement.h"
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
-#include "nsIXMLContent.h"
 
 
-class nsXMLEntity : public nsIDOMEntity,
-                    public nsIContent
+class nsXMLEntity : public nsGenericDOMDataNode,
+                    public nsIDOMEntity
 {
 public:
   nsXMLEntity(const nsAReadableString& aName, 
@@ -58,20 +53,19 @@ public:
   virtual ~nsXMLEntity();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
 
   // nsIDOMEntity
-  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId);
-  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId);
-  NS_IMETHOD    GetNotationName(nsAWritableString& aNotationName);
+  NS_DECL_NSIDOMENTITY
 
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
 
 #ifdef DEBUG
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
@@ -80,8 +74,7 @@ protected:
   // the generic CharacterData inner object, even though PIs are not
   // character data. This is done simply for convenience and should
   // be changed if this restricts what should be done for character data.
-  nsGenericDOMDataNode mInner;
-  nsString mName;
+  nsAutoString mName;
   nsString mPublicId;
   nsString mSystemId;
   nsString mNotationName;
@@ -94,25 +87,22 @@ NS_NewXMLEntity(nsIContent** aInstancePtrResult,
                 const nsAReadableString& aSystemId,
                 const nsAReadableString& aNotationName)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIContent* it = new nsXMLEntity(aName, aPublicId, aSystemId, aNotationName);
+  *aInstancePtrResult = new nsXMLEntity(aName, aPublicId, aSystemId,
+                                        aNotationName);
+  NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
 
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIContent), (void **) aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 nsXMLEntity::nsXMLEntity(const nsAReadableString& aName,
                          const nsAReadableString& aPublicId,
                          const nsAReadableString& aSystemId,
                          const nsAReadableString& aNotationName) :
-  mName(aName), mPublicId(aPublicId), mSystemId(aSystemId), mNotationName(aNotationName)
+  mName(aName), mPublicId(aPublicId), mSystemId(aSystemId),
+  mNotationName(aNotationName)
 {
-  NS_INIT_REFCNT();
 }
 
 nsXMLEntity::~nsXMLEntity()
@@ -122,14 +112,14 @@ nsXMLEntity::~nsXMLEntity()
 
 // QueryInterface implementation for nsXMLEntity
 NS_INTERFACE_MAP_BEGIN(nsXMLEntity)
-  NS_INTERFACE_MAP_ENTRY_DOM_DATA()
   NS_INTERFACE_MAP_ENTRY(nsIDOMEntity)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Entity)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsXMLEntity)
-NS_IMPL_RELEASE(nsXMLEntity)
+NS_IMPL_ADDREF_INHERITED(nsXMLEntity, nsGenericDOMDataNode)
+NS_IMPL_RELEASE_INHERITED(nsXMLEntity, nsGenericDOMDataNode)
 
 
 NS_IMETHODIMP    
@@ -168,13 +158,6 @@ nsXMLEntity::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP 
-nsXMLEntity::GetNodeInfo(nsINodeInfo*& aResult) const
-{
-  aResult = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXMLEntity::GetNodeName(nsAWritableString& aNodeName)
 {
   aNodeName.Assign(mName);
@@ -191,21 +174,17 @@ nsXMLEntity::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsXMLEntity::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsXMLEntity* it = new nsXMLEntity(mName,
-                                    mSystemId,
-                                    mPublicId,
-                                    mNotationName);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+  *aReturn = new nsXMLEntity(mName, mSystemId, mPublicId, mNotationName);
+  NS_ENSURE_TRUE(*aReturn, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
 }
 
 #ifdef DEBUG
 NS_IMETHODIMP
 nsXMLEntity::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
+  NS_PRECONDITION(mDocument, "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -237,51 +216,17 @@ nsXMLEntity::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
-nsXMLEntity::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
+nsXMLEntity::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const
 {
   return NS_OK;
 }
-#endif
 
-NS_IMETHODIMP
-nsXMLEntity::HandleDOMEvent(nsIPresContext* aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus)
-{
-  // We should never be getting events
-  NS_ASSERTION(0, "event handler called for entity");
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-NS_IMETHODIMP
-nsXMLEntity::GetContentID(PRUint32* aID) 
-{
-  *aID = 0;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXMLEntity::SetContentID(PRUint32 aID) 
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP_(PRBool)
-nsXMLEntity::IsContentOfType(PRUint32 aFlags)
-{
-  return PR_FALSE;
-}
-
-#ifdef DEBUG
 NS_IMETHODIMP
 nsXMLEntity::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   if (!aResult) return NS_ERROR_NULL_POINTER;
   PRUint32 sum;
-  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  nsGenericDOMDataNode::SizeOf(aSizer, &sum);
   PRUint32 ssize;
   mName.SizeOf(aSizer, &ssize);
   sum = sum - sizeof(mName) + ssize;

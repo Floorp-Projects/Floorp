@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsIDOMNotation.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
@@ -47,8 +46,8 @@
 #include "nsIXMLContent.h"
 
 
-class nsXMLNotation : public nsIDOMNotation,
-                      public nsIContent
+class nsXMLNotation : public nsGenericDOMDataNode,
+                      public nsIDOMNotation
 {
 public:
   nsXMLNotation(const nsAReadableString& aName,
@@ -57,29 +56,25 @@ public:
   virtual ~nsXMLNotation();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
 
   // nsIDOMNotation
-  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId);
-  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId);
+  NS_DECL_NSIDOMNOTATION
 
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
-
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#ifdef DEBUG 
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
+ NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
+  // nsIContent
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+
 protected:
-  // XXX Processing instructions are currently implemented by using
-  // the generic CharacterData inner object, even though PIs are not
-  // character data. This is done simply for convenience and should
-  // be changed if this restricts what should be done for character data.
-  nsGenericDOMDataNode mInner;
-  nsString mName;
+  nsAutoString mName;
   nsString mPublicId;
   nsString mSystemId;
 };
@@ -90,16 +85,12 @@ NS_NewXMLNotation(nsIContent** aInstancePtrResult,
                   const nsAReadableString& aPublicId,
                   const nsAReadableString& aSystemId)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIContent* it = new nsXMLNotation(aName, aPublicId, aSystemId);
+  *aInstancePtrResult = new nsXMLNotation(aName, aPublicId, aSystemId);
+  NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
 
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIContent), (void **) aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 nsXMLNotation::nsXMLNotation(const nsAReadableString& aName,
@@ -107,7 +98,6 @@ nsXMLNotation::nsXMLNotation(const nsAReadableString& aName,
                              const nsAReadableString& aSystemId) :
   mName(aName), mPublicId(aPublicId), mSystemId(aSystemId)
 {
-  NS_INIT_REFCNT();
 }
 
 nsXMLNotation::~nsXMLNotation()
@@ -117,14 +107,14 @@ nsXMLNotation::~nsXMLNotation()
 
 // QueryInterface implementation for nsXMLNotation
 NS_INTERFACE_MAP_BEGIN(nsXMLNotation)
-  NS_INTERFACE_MAP_ENTRY_DOM_DATA()
   NS_INTERFACE_MAP_ENTRY(nsIDOMNotation)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Notation)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsXMLNotation)
-NS_IMPL_RELEASE(nsXMLNotation)
+NS_IMPL_ADDREF_INHERITED(nsXMLNotation, nsGenericDOMDataNode)
+NS_IMPL_RELEASE_INHERITED(nsXMLNotation, nsGenericDOMDataNode)
 
 
 NS_IMETHODIMP    
@@ -154,13 +144,6 @@ nsXMLNotation::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsXMLNotation::GetNodeInfo(nsINodeInfo*& aResult) const
-{
-  aResult = nsnull;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXMLNotation::GetNodeName(nsAWritableString& aNodeName)
 {
@@ -178,20 +161,19 @@ nsXMLNotation::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsXMLNotation::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsXMLNotation* it = new nsXMLNotation(mName,
-                                        mSystemId,
-                                        mPublicId);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+  *aReturn = new nsXMLNotation(mName, mSystemId, mPublicId);
+  NS_ENSURE_TRUE(*aReturn, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 #ifdef DEBUG
 NS_IMETHODIMP
 nsXMLNotation::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
+  NS_PRECONDITION(mDocument, "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -218,51 +200,17 @@ nsXMLNotation::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
-nsXMLNotation::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const 
+nsXMLNotation::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const 
 {
   return NS_OK;
 }
-#endif
 
-NS_IMETHODIMP
-nsXMLNotation::HandleDOMEvent(nsIPresContext* aPresContext,
-                              nsEvent* aEvent,
-                              nsIDOMEvent** aDOMEvent,
-                              PRUint32 aFlags,
-                              nsEventStatus* aEventStatus)
-{
-  // We should never be getting events
-  NS_ASSERTION(0, "event handler called for notation");
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-NS_IMETHODIMP
-nsXMLNotation::GetContentID(PRUint32* aID) 
-{
-  *aID = 0;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXMLNotation::SetContentID(PRUint32 aID) 
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP_(PRBool)
-nsXMLNotation::IsContentOfType(PRUint32 aFlags)
-{
-  return PR_FALSE;
-}
-
-#ifdef DEBUG
 NS_IMETHODIMP
 nsXMLNotation::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   if (!aResult) return NS_ERROR_NULL_POINTER;
   PRUint32 sum;
-  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  nsGenericDOMDataNode::SizeOf(aSizer, &sum);
   PRUint32 ssize;
   mName.SizeOf(aSizer, &ssize);
   sum = sum - sizeof(mName) + ssize;
@@ -273,3 +221,4 @@ nsXMLNotation::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   return NS_OK;
 }
 #endif
+

@@ -7540,7 +7540,6 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
   nsCOMPtr<nsIDOMNode>  focusNode;
   nsCOMPtr<nsIContent> focusContent;
   PRInt32 focusOffset;
-  PRInt32 frameOffset = 0;
   nsIFrame *focusFrame = 0;
 
   focusOffset = FetchFocusOffset();

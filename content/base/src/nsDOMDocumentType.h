@@ -45,7 +45,12 @@
 #include "nsString.h"
 #include "nsISizeOfHandler.h"
 
-class nsDOMDocumentType : public nsIContent,
+// XXX DocumentType is currently implemented by inheriting the generic
+// CharacterData object, even though DocumentType is not character
+// data. This is done simply for convenience and should be changed if
+// this restricts what should be done for character data.
+
+class nsDOMDocumentType : public nsGenericDOMDataNode,
                           public nsIDOMDocumentType
 {
 public:
@@ -59,27 +64,22 @@ public:
   virtual ~nsDOMDocumentType();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
 
   // nsIDOMDocumentType
   NS_DECL_NSIDOMDOCUMENTTYPE
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
 protected:
-  // XXX DocumentType is currently implemented by using the generic
-  // CharacterData inner object, even though DocumentType is not
-  // character data. This is done simply for convenience and should
-  // be changed if this restricts what should be done for character data.
-  nsGenericDOMDataNode mInner;
   nsString mName;
   nsIDOMNamedNodeMap* mEntities;
   nsIDOMNamedNodeMap* mNotations;

@@ -105,6 +105,11 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
     SetTo(aOther.Get1b(), aOther.GetLength());
   }
 
+  if (aOther.mState.mIsBidi) {
+    // Carry over BIDI state from aOther
+    mState.mIsBidi = PR_TRUE;
+  }
+
   return *this;
 }
 
