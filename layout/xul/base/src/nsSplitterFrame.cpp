@@ -44,6 +44,8 @@
 #include "nsFrameNavigator.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
+#include "nsIStyleContext.h"
+#include "nsWidgetsCID.h"
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -114,6 +116,7 @@ public:
 
   enum ResizeType { Closest, Farthest, Grow };
   enum State { Open, Collapsed, Dragging };
+  enum CollapseDirection { Before, After, None };
 
   ResizeType GetResizeBefore();
   ResizeType GetResizeAfter();
@@ -122,6 +125,7 @@ public:
   nsresult CaptureMouse(PRBool aGrabMouseEvents);
   PRBool IsMouseCaptured();
   void Reverse(nsSplitterInfo*& aIndexes, PRInt32 aCount);
+  CollapseDirection GetCollapseDirection();
 
   nsSplitterFrame* mSplitter;
   PRBool mDidDrag;
@@ -242,12 +246,11 @@ nsSplitterFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   mContent->ChildCount(count); 
 
   // create a grippy if we have no children and teh collapse attribute is before or after.
-  if (count == 0) {
-    nsString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::collapse, value))
+  if (count == 0) 
+  {
+    nsSplitterFrameImpl::CollapseDirection d = mImpl->GetCollapseDirection();
+    if (d != nsSplitterFrameImpl::None)
     {
-     if (value.EqualsIgnoreCase("after") || value.EqualsIgnoreCase("before"))
-     {
         // create a spring
         nsCOMPtr<nsIContent> content;
         NS_CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, content);
@@ -263,10 +266,22 @@ nsSplitterFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
         content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_FALSE);
         aAnonymousChildren.AppendElement(content);
      }
-    }
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSplitterFrame::GetCursor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor)
+{
+   if (IsHorizontal())
+      aCursor = NS_STYLE_CURSOR_N_RESIZE;
+   else
+      aCursor = NS_STYLE_CURSOR_W_RESIZE;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -330,6 +345,13 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
   GetView(&view);
   view->SetContentTransparency(PR_TRUE);
   view->SetZIndex(kMaxZ);
+  nsWidgetInitData widgetData;
+  widgetData.mWindowType = eWindowType_child;
+  widgetData.mBorderStyle = eBorderStyle_default;
+  static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
+  view->CreateWidget(kCChildCID,
+                     &widgetData,
+                     nsnull);
 
   mImpl->AddListener();
 
@@ -487,17 +509,43 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
            else 
                bounded = PR_TRUE;
 
-		   // nscoord diff = pos - mCurrentPos;
-           int i;
+		   int i;
            for (i=0; i < mChildInfosBeforeCount; i++) 
                mChildInfosBefore[i].changed = mChildInfosBefore[i].current;
            
            for (i=0; i < mChildInfosAfterCount; i++) 
                mChildInfosAfter[i].changed = mChildInfosAfter[i].current;
 
+            nscoord oldPos = pos;
+
             ResizeChildTo(pos, mChildInfosBefore, mChildInfosAfter, mChildInfosBeforeCount, mChildInfosAfterCount, bounded);
 
-			//mCurrentPos = diff + mCurrentPos;
+            if (oldPos > 0 && oldPos > pos)
+            {
+                printf("Collapse right\n");
+                if (GetCollapseDirection() == After) {
+                      mSplitter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "collapsed", PR_TRUE);
+                      AdjustChildren(aPresContext);
+                      AddListener();
+                      CaptureMouse(PR_FALSE);
+                      mPressed = PR_FALSE;                   
+                      return;
+                }
+
+            }
+
+            if (oldPos < 0 && oldPos < pos)
+            {
+                printf("Collapse left\n");
+                if (GetCollapseDirection() == Before) {
+                  mSplitter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "collapsed", PR_TRUE);
+                  AdjustChildren(aPresContext);
+                  AddListener();
+                  CaptureMouse(PR_FALSE);
+                  mPressed = PR_FALSE;                   
+                  return;
+                }
+            }
 
            // printf("----- resize ----- ");
             /*
@@ -554,15 +602,18 @@ nsSplitterFrameImpl :: CaptureMouse(PRBool aGrabMouseEvents)
   mSplitter->GetView(&view);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
+  nsCOMPtr<nsIWidget> widget;
 
   if (view) {
     view->GetViewManager(*getter_AddRefs(viewMan));
-
+    view->GetWidget(*getter_AddRefs(widget));
     if (viewMan) {
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
+        widget->CaptureMouse(PR_TRUE);
       } else {
         viewMan->GrabMouseEvents(nsnull,result);
+        widget->CaptureMouse(PR_FALSE);
       }
     }
   }
@@ -740,8 +791,8 @@ nsSplitterFrameImpl::MouseMove(nsIDOMEvent* aMouseEvent)
   if (IsMouseCaptured())
     return NS_OK;
 
-  if (mState == Collapsed)
-     return NS_OK;
+ // if (mState == Collapsed)
+ //    return NS_OK;
 
 
   mSplitter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "dragging", PR_TRUE);
@@ -764,19 +815,52 @@ nsSplitterFrameImpl::Reverse(nsSplitterInfo*& aChildInfos, PRInt32 aCount)
     aChildInfos = infos;
 }
 
+nsSplitterFrameImpl::CollapseDirection
+nsSplitterFrameImpl::GetCollapseDirection()
+{
+    nsString value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == mSplitter->mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::collapse, value))
+    {
+     if (value.EqualsIgnoreCase("before"))
+         return Before;
+     else if (value.EqualsIgnoreCase("after"))
+         return After;
+     else 
+       return None;
+    } else {
+        return None;
+    }
+}
+
 void
 nsSplitterFrameImpl::UpdateState()
 {
+
+
+  // states
+  //
+  // Open      -> Dragging
+  // Open      -> Collapsed
+  // Collapsed -> Open
+  // Collapsed -> Dragging
+  // Dragging  -> Open
+  // Dragging  -> Collapsed (auto collapse)
+
   State newState = GetState(); 
 
+  // if the state are the same we are done
   if (newState == mState)
 	  return;
 
-   nsString style;
+  nsString style;
 
   if (mState == Collapsed) {
+      // Collapsed -> Open
+      // Collapsed -> Dragging
+
+      // set the old style back
     style = mCollapsedChildStyle;
-  } else {
+  } else if ((mState == Open || mState == Dragging) && newState == Collapsed) {
     // when clicked see if we are in a splitter. 
     nsIFrame* splitter = mSplitter;
 
@@ -784,34 +868,29 @@ nsSplitterFrameImpl::UpdateState()
     nsCOMPtr<nsIContent> content;
     splitter->GetContent(getter_AddRefs(content));
 
-    // get the collapse attribute. If the attribute is not set collapse
-    // the child before otherwise collapse the child after
-    PRBool before = PR_TRUE;
-    nsString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::collapse, value))
-    {
-     if (value.EqualsIgnoreCase("before"))
-         before = PR_TRUE;
-     else if (value.EqualsIgnoreCase("after"))
-         before = PR_FALSE;
-     else 
-       return;
+ 
+    CollapseDirection d = GetCollapseDirection();
+
+    if (d != None) {
+        // find the child just in the box just before the splitter. If we are not currently collapsed then
+        // then get the childs style attribute and store it. Then set the child style attribute to be display none.
+        // if we are already collapsed then set the child's style back to our stored value.
+        nsIFrame* child = nsFrameNavigator::GetChildBeforeAfter(splitter,(d == Before));
+        if (child == nsnull)
+          return;
+
+        child->GetContent(getter_AddRefs(mCollapsedChild));
+
+        style = "visibility: collapse";
+        mCollapsedChildStyle = "";
+        mCollapsedChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, mCollapsedChildStyle);
     } else {
+        mState = newState;
         return;
     }
-
-    // find the child just in the box just before the splitter. If we are not currently collapsed then
-    // then get the childs style attribute and store it. Then set the child style attribute to be display none.
-    // if we are already collapsed then set the child's style back to our stored value.
-    nsIFrame* child = nsFrameNavigator::GetChildBeforeAfter(splitter,before);
-    if (child == nsnull)
+  } else {
+      mState = newState;
       return;
-
-    child->GetContent(getter_AddRefs(mCollapsedChild));
-
-    style = "visibility: collapse";
-    mCollapsedChildStyle = "";
-    mCollapsedChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, mCollapsedChildStyle);
   }
 
   mCollapsedChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, style, PR_TRUE);
@@ -960,17 +1039,15 @@ nsSplitterFrameImpl::ResizeChildTo(nscoord& aDiff,
   mSplitter->GetView(&v);
   v->GetViewManager(*getter_AddRefs(vm));
   v->GetBounds(vr);
-  nsRect invalid(0,0,0,0);
+  nsRect invalid;
   if (mParentBox->IsHorizontal()) {
       mSplitter->MoveTo(mSplitterPos + aDiff, r.y);
       vm->MoveViewTo(v, mSplitterViewPos + aDiff, vr.y);
-      invalid.width = r.width + PR_ABS(aDiff);
-      invalid.x = PR_MAX(mSplitterPos,mSplitterPos + aDiff);
+      invalid.UnionRect(r,mSplitter->mRect);
   } else {
       mSplitter->MoveTo(r.x, mSplitterPos + aDiff);
       vm->MoveViewTo(v, vr.x, mSplitterViewPos + aDiff);
-      invalid.height = r.height + PR_ABS(aDiff);
-      invalid.y = PR_MAX(mSplitterPos, mSplitterPos + aDiff);
+      invalid.UnionRect(r,mSplitter->mRect);
   }
 
   // redraw immediately only what changed. This is animation so 

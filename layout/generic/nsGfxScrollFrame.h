@@ -35,8 +35,8 @@ class nsISupportsArray;
  * or remove the scrolled frame
  */
 class nsGfxScrollFrame : public nsHTMLContainerFrame, 
-                                nsIAnonymousContentCreator,
-                                nsIDocumentObserver {
+                         public nsIAnonymousContentCreator,
+                         public nsIDocumentObserver {
 public:
   friend nsresult NS_NewGfxScrollFrame(nsIFrame** aNewFrame);
 

@@ -1672,6 +1672,11 @@ nsBoxDebugInner::PaintSprings(nsIPresContext& aPresContext, nsIRenderingContext&
         const nsStyleColor* debugColor =
         (const nsStyleColor*)debugStyle->GetStyleData(eStyleStruct_Color);
 
+        nsMargin margin(0,0,0,0);
+        debugSpacing->GetMargin(margin);
+
+        border += margin;
+
         nsRect inner(0,0,mOuter->mRect.width, mOuter->mRect.height);
         inner.Deflate(border);
 
@@ -1696,12 +1701,12 @@ nsBoxDebugInner::PaintSprings(nsIPresContext& aPresContext, nsIRenderingContext&
             x = inner.x;
             y = inner.y + onePixel;
             x += debugBorder.left;
-            springSize = debugBorder.top - onePixel*2;
+            springSize = debugBorder.top - onePixel*4;
         } else {
             x = inner.y;
             y = inner.x + onePixel;
             x += debugBorder.top;
-            springSize = debugBorder.left - onePixel*2;
+            springSize = debugBorder.left - onePixel*4;
         }
 
         for (int i=0; i < mOuter->mSpringCount; i++) {
@@ -1830,6 +1835,9 @@ nsBoxFrameInner::GetDebugInset(nsMargin& inset)
         (const nsStyleSpacing*)style->GetStyleData(eStyleStruct_Spacing);
 
         debugSpacing->GetBorderPadding(inset);
+        nsMargin margin(0,0,0,0);
+        debugSpacing->GetMargin(margin);
+        inset += margin;
     }
 }
 

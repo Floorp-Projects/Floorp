@@ -855,14 +855,14 @@ tabcontrol {
 *:-moz-horizontal-box-debug {
   border: 2px solid blue;
   border-top-width: 10px;
-  padding: 1px;
+  padding: 2px;
   color: white;
 }
 
 *:-moz-vertical-box-debug {
   border: 2px solid red;
   border-left-width: 10px;
-  padding: 1px;
+  padding: 2px;
   color: white;
 }
 */
@@ -874,24 +874,32 @@ tabcontrol {
   border: 2px solid blue;
   border-top-width: 10px;
   color: white;
+  padding: 2px;
+  margin: 2px;
 }
 
 *[debug="true"]:-moz-vertical-box-debug {
-  border: 2px solid blue;
-  border-top-width: 10px;
-  color: white;
-}
-
-*[debug="true"] *:-moz-horizontal-box-debug {
   border: 2px solid red;
   border-left-width: 10px;
   color: white;
+  padding: 2px;
+  margin: 2px;
+}
+
+*[debug="true"] *:-moz-horizontal-box-debug {
+  border: 2px solid blue;
+  border-top-width: 10px;
+  color: white;
+  padding: 2px;
+  margin: 2px;
 }
 
 *[debug="true"] *:-moz-vertical-box-debug {
   border: 2px solid red;
   border-left-width: 10px;
   color: white;
+  padding: 2px;
+  margin: 2px;
 }
 
 

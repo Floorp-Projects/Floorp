@@ -21,10 +21,10 @@
 
 #include "nsHTMLImageLoader.h"
 #include "nsLeafFrame.h"
-#include "nsButtonFrameRenderer.h"
 #include "nsIBox.h"
 
 class nsIPopUpMenu;
+class nsTitledButtonRenderer;
 
 class nsTitledButtonFrame : public nsLeafFrame, public nsIBox
 {
@@ -84,6 +84,7 @@ public:
                          nsEventStatus& aEventStatus);
 
  
+  ~nsTitledButtonFrame();
 protected:
 
   enum CheckState { eUnset, eOff, eOn, eMixed } ;
@@ -166,12 +167,8 @@ private:
   nsRect mTitleRect;
   PRBool mNeedsLayout;
   nscoord mSpacing;
-  //nsSize mMinSize;
-  nsButtonFrameRenderer mRenderer;
+  nsTitledButtonRenderer* mRenderer;
   PRBool mHasImage;
-
- // nsIPopUpMenu * mPopUpMenu;
- // PRBool         mMenuIsPoppedUp;
  
 }; // class nsTitledButtonFrame
 
