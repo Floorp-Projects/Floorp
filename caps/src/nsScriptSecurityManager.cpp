@@ -2529,25 +2529,31 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 
 {
     NS_ASSERTION(sizeof(long) == sizeof(void*), "long and void* have different lengths on this platform. This may cause a security failure.");
+}
 
+
+nsresult nsScriptSecurityManager::Init()
+{
     JSContext* cx = GetSafeJSContext();
+    if (!cx) return NS_ERROR_FAILURE;   // this can happen of xpt loading fails
+    
     if (sCallerID == JSVAL_VOID)
         sCallerID = STRING_TO_JSVAL(::JS_InternString(cx, "caller"));
     if (sEnabledID == JSVAL_VOID)
         sEnabledID = STRING_TO_JSVAL(::JS_InternString(cx, "enabled"));
 
-    InitPrefs();
+    nsresult rv = InitPrefs();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     //-- Register security check callback in the JS engine
     //   Currently this is used to control access to function.caller
-    nsresult rv;
     nsCOMPtr<nsIJSRuntimeService> runtimeService =
         do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get runtime service");
+    NS_ENSURE_SUCCESS(rv, rv);
 
     JSRuntime *rt;
     rv = runtimeService->GetRuntime(&rt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get current JS runtime");
+    NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
     JSCheckAccessOp oldCallback =
@@ -2556,7 +2562,10 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 
     // For now, assert that no callback was set previously
     NS_ASSERTION(!oldCallback, "Someone already set a JS CheckObjectAccess callback");
+    return NS_OK;
 }
+
+static nsScriptSecurityManager *gScriptSecMan = nsnull;
 
 jsval nsScriptSecurityManager::sCallerID   = JSVAL_VOID;
 jsval nsScriptSecurityManager::sEnabledID   = JSVAL_VOID;
@@ -2568,6 +2577,7 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void)
     NS_IF_RELEASE(mSystemPrincipal);
     delete mPrincipals;
     delete mCapabilities;
+    gScriptSecMan = nsnull;
 }
 
 void
@@ -2577,38 +2587,48 @@ nsScriptSecurityManager::Shutdown()
     sEnabledID = JSVAL_VOID;
 }
 
-static nsScriptSecurityManager *ssecMan = NULL;
-
 nsScriptSecurityManager *
 nsScriptSecurityManager::GetScriptSecurityManager()
 {
-    if (!ssecMan)
+    if (!gScriptSecMan)
     {
-        ssecMan = new nsScriptSecurityManager();
-        if (!ssecMan)
-            return NULL;
+        nsScriptSecurityManager* ssManager = new nsScriptSecurityManager();
+        if (!ssManager)
+            return nsnull;
         nsresult rv;
-
-        rv = nsJSPrincipals::Startup();
-
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "can't initialize JS engine security protocol glue!");
-
-        nsCOMPtr<nsIXPConnect> xpc =
-            do_GetService(nsIXPConnect::GetCID(), &rv);
-        if (NS_SUCCEEDED(rv) && xpc)
-        {
-            rv = xpc->SetDefaultSecurityManager(
-                            NS_STATIC_CAST(nsIXPCSecurityManager*, ssecMan),
-                            nsIXPCSecurityManager::HOOK_ALL);
-
-            NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                             "failed to install xpconnect security manager!");
+        rv = ssManager->Init();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to initialize nsScriptSecurityManager");
+        if (NS_FAILED(rv)) {
+            delete ssManager;
+            return nsnull;
         }
-        else
-            NS_WARNING("can't get xpconnect to install security manager!");
+ 
+        rv = nsJSPrincipals::Startup();
+        if (NS_FAILED(rv)) {
+            NS_WARNING("can't initialize JS engine security protocol glue!");
+            delete ssManager;
+            return nsnull;
+        }
+ 
+        nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
+        if (NS_FAILED(rv) || !xpc) {
+            NS_WARNING("Failed to get the XPConnect service");
+            delete ssManager;
+            return nsnull;
+        }
+ 
+            rv = xpc->SetDefaultSecurityManager(
+                        NS_STATIC_CAST(nsIXPCSecurityManager*, ssManager),
+                            nsIXPCSecurityManager::HOOK_ALL);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Failed to install xpconnect security manager!");
+            delete ssManager;
+            return nsnull;
+        }
+
+        gScriptSecMan = ssManager;
     }
-    return ssecMan;
+    return gScriptSecMan;
 }
 
 // Currently this nsGenericFactory constructor is used only from FastLoad
@@ -2618,8 +2638,8 @@ nsSystemPrincipal *
 nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 {
     nsIPrincipal *sysprin = nsnull;
-    if (ssecMan)
-        ssecMan->GetSystemPrincipal(&sysprin);
+    if (gScriptSecMan)
+        gScriptSecMan->GetSystemPrincipal(&sysprin);
     return NS_STATIC_CAST(nsSystemPrincipal*, sysprin);
 }
 
