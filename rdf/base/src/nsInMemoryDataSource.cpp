@@ -1308,7 +1308,7 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
         }
     }
 
-    return NS_OK;
+    return NS_RDF_ASSERTION_ACCEPTED;
 }
 
 
@@ -1446,7 +1446,7 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
         }
     }
 
-    return NS_OK;
+    return NS_RDF_ASSERTION_ACCEPTED;
 }
 
 

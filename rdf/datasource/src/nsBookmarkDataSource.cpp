@@ -421,8 +421,9 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 		return rv;
 	}
 
-	if (NS_FAILED(rv = mDataSource->Assert(bookmark, kRDF_type, kNC_Bookmark, PR_TRUE)))
-	{
+	rv = mDataSource->Assert(bookmark, kRDF_type, kNC_Bookmark, PR_TRUE);
+    if (rv != NS_RDF_ASSERTION_ACCEPTED)
+    {
 		NS_ERROR("unable to add bookmark to data source");
 		return rv;
 	}
@@ -435,7 +436,9 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 			NS_ERROR("unable to create literal for bookmark name");
 			return rv;
 		}
-		if (NS_FAILED(rv = mDataSource->Assert(bookmark, kNC_Name, literal, PR_TRUE)))
+
+		rv = mDataSource->Assert(bookmark, kNC_Name, literal, PR_TRUE);
+        if (rv != NS_RDF_ASSERTION_ACCEPTED)
 		{
 			NS_ERROR("unable to set bookmark name");
 			return rv;
@@ -463,8 +466,12 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 		}
 		if (rv != NS_RDF_NO_VALUE)
 		{
-			if (NS_FAILED(rv = mDataSource->Assert(bookmark, kNC_ShortcutURL,
-				shortcutLiteral, PR_TRUE)))
+			rv = mDataSource->Assert(bookmark,
+                                     kNC_ShortcutURL,
+                                     shortcutLiteral,
+                                     PR_TRUE);
+
+            if (rv != NS_RDF_ASSERTION_ACCEPTED)
 			{
 				NS_ERROR("unable to set bookmark shortcut URL");
 				return(rv);
@@ -533,7 +540,8 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aCont
         return rv;
     }
 
-    if (NS_FAILED(rv = mDataSource->Assert(folder, kNC_Name, literal, PR_TRUE))) {
+    rv = mDataSource->Assert(folder, kNC_Name, literal, PR_TRUE);
+    if (rv != NS_RDF_ASSERTION_ACCEPTED) {
         NS_ERROR("unable to set folder name");
         return rv;
     }
@@ -548,7 +556,8 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aCont
         return rv;
     }
 
-    if (NS_FAILED(rv = mDataSource->Assert(folder, kRDF_type, kNC_Folder, PR_TRUE))) {
+    rv = mDataSource->Assert(folder, kRDF_type, kNC_Folder, PR_TRUE);
+    if (rv != NS_RDF_ASSERTION_ACCEPTED) {
         NS_ERROR("unable to mark new folder as folder");
         return rv;
     }
@@ -628,7 +637,7 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
     }
 
     rv = mDataSource->Assert(aSource, aLabel, literal, PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to assert time");
+    NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert time");
 
     NS_RELEASE(literal);
     return rv;

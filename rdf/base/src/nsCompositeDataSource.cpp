@@ -741,40 +741,84 @@ CompositeDataSourceImpl::GetTargets(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::Assert(nsIRDFResource* source, 
-                                nsIRDFResource* property, 
-                                nsIRDFNode* target,
-                                PRBool tv)
+CompositeDataSourceImpl::Assert(nsIRDFResource* aSource, 
+                                nsIRDFResource* aProperty, 
+                                nsIRDFNode* aTarget,
+                                PRBool aTruthValue)
 {
-    // Need to add back the stuff for unblocking ...
+    nsresult rv;
+
+    // XXX Need to add back the stuff for unblocking ...
+
+    // We iterate backwards from the last data source which was added
+    // ("the most remote") to the first ("the most local"), trying to
+    // apply the assertion in each.
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
-        if (NS_SUCCEEDED(ds->Assert(source, property, target, tv)))
-            return NS_OK;
+        rv = ds->Assert(aSource, aProperty, aTarget, aTruthValue);
+        if (NS_RDF_ASSERTION_ACCEPTED == rv)
+            return rv;
+
+        if (NS_FAILED(rv))
+            return rv;
     }
 
-    return NS_ERROR_FAILURE;
+    // nobody wanted to accept it
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::Unassert(nsIRDFResource* source,
-                                  nsIRDFResource* property,
-                                  nsIRDFNode* target)
+CompositeDataSourceImpl::Unassert(nsIRDFResource* aSource,
+                                  nsIRDFResource* aProperty,
+                                  nsIRDFNode* aTarget)
 {
     nsresult rv;
+
+    // Iterate through each of the datasources, starting with "the
+    // most local" and moving to "the most remote". If _any_ of the
+    // datasources have the assertion, attempt to unassert it.
+    PRBool unasserted = PR_TRUE;
+    PRInt32 i;
     PRInt32 count = mDataSources.Count();
-
-    for (PRInt32 i = 0; i < count; ++i) {
+    for (i = 0; i < count; ++i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
-        if (NS_FAILED(rv = ds->Unassert(source, property, target)))
-            break;
+
+        PRBool hasAssertion;
+        rv = ds->HasAssertion(aSource, aProperty, aTarget, PR_TRUE, &hasAssertion);
+        if (NS_FAILED(rv)) return rv;
+
+        if (hasAssertion) {
+            rv = ds->Unassert(aSource, aProperty, aTarget);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv != NS_RDF_ASSERTION_ACCEPTED) {
+                unasserted = PR_FALSE;
+                break;
+            }
+        }
     }
 
-    if (NS_FAILED(rv)) {
-        nsIRDFDataSource* ds0 = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[0]);
-        rv = ds0->Assert(source, property, target, PR_FALSE);
+    // Either none of the datasources had it, or they were all willing
+    // to let it be unasserted.
+    if (unasserted)
+        return NS_RDF_ASSERTION_ACCEPTED;
+
+    // If we get here, one of the datasources already had the
+    // assertion, and was adamant about not letting us remove
+    // it. Iterate from the "most local" to the "most remote"
+    // attempting to assert the negation...
+    for (i = 0; i < count; ++i) {
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+        rv = ds->Assert(aSource, aProperty, aTarget, PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
+
+        // Did it take?
+        if (rv == NS_RDF_ASSERTION_ACCEPTED)
+            return rv;
     }
-    return rv;
+
+    // Couln't get anyone to accept the negation, either.
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 NS_IMETHODIMP
