@@ -472,6 +472,7 @@ tbx_dirs()
         TRD="${HOST}${TBX_NOBITS}-`date +%Y%m%d-%H.%M`"
         RESULTDIR="${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
         if [ ${DOMSUF} = "mcom.com" -o  ${DOMSUF} = "netscape.com" -o ${DOMSUF} = "nscp.aoltw.net" ] ; then
+            UX_D0=/share/builds/sbsrel2/nss
             URL="sbs-rel.nscp.aoltw.net"
             RESULTDIRURL="http://${URL}${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
         else
