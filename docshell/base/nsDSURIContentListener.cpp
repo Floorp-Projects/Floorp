@@ -225,14 +225,3 @@ nsDocShell* nsDSURIContentListener::DocShell()
 {
    return mDocShell;
 }
-
-void nsDSURIContentListener::GetPresContext(nsIPresContext** aPresContext)
-{
-   *aPresContext = mPresContext;
-   NS_IF_ADDREF(*aPresContext);
-}
-
-void nsDSURIContentListener::SetPresContext(nsIPresContext* aPresContext)
-{
-   mPresContext = aPresContext;
-}
