@@ -140,7 +140,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
 
             if ((jsdthreadstate->stackDepth == 0 && !frame) ||
                 (jsdthreadstate->stackDepth == 1 && frame &&
-                 !JSD_IS_DEBUG_ENABLED(jsdc, frame->jsdscript)))
+                 frame->jsdscript && !JSD_IS_DEBUG_ENABLED(jsdc, frame->jsdscript)))
             {
                 /*
                  * if we failed to create the first frame, or the top frame
