@@ -858,7 +858,7 @@ char *str;
 void
 polllistener::AfterDispatch()
 {
-
+#ifndef XP_MAC
   NET_PollSockets();
-
+#endif
 }
