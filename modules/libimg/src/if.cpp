@@ -833,29 +833,33 @@ il_size(il_container *ic)
 #endif
 #endif
 
-unsigned int
+int
 IL_StreamWriteReady(il_container *ic)
 {
-    uint request_size = 1;
+ 
+    nsresult rv= NS_OK;
+    PRUint32 chunksize;
 
     if (ic->imgdec)
-      request_size = ic->imgdec->ImgDWriteReady();
+          rv = ic->imgdec->ImgDWriteReady(&chunksize);
 
-    if (!request_size)
-        return 0;
-
+      if(NS_FAILED(rv))
+          return -1;
 	/*
      * It could be that layout aborted image loading by calling IL_FreeImage
      * before the netlib finished transferring data.  Don't do anything.
      */
-	if (ic->state == IC_ABORT_PENDING)
-        return IL_OFFSCREEN_CHUNK;
 
-	if (!ic->sized)
+    if(ic->state == IC_ABORT_PENDING)
+        chunksize = IL_OFFSCREEN_CHUNK;
+	else if (!ic->sized)
 		/* A (small) default initial chunk */
-		return IL_SIZE_CHUNK;
+        chunksize = IL_SIZE_CHUNK;
+    else
+        chunksize = IL_PREFERRED_CHUNK;
 
-    return IL_PREFERRED_CHUNK;
+    return chunksize;
+
 }
 
 /* Given the first few bytes of a stream, identify the image format */
@@ -938,10 +942,10 @@ IL_Type(const char *buf, int32 len)
     return il_type(IL_UNKNOWN, buf, len);
 }
 
-int 
+int
 IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
 {
-	unsigned int err = 0;
+    nsresult rv;
 
     ILTRACE(4, ("il: write with %5d bytes for %s\n", len, ic->url_address));
 
@@ -951,24 +955,24 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
      * us data.  Force the netlib to abort.
      */
     if (ic->state == IC_ABORT_PENDING)
-        return -1;
+        return NS_ERROR_FAILURE;
 
     /* Has user hit the stop button ? */
     if (il_image_stopped(ic))
-        return -1;
+        return NS_ERROR_FAILURE;
 
     ic->bytes_consumed += len;
     
-	  if (len)
-		   err = ic->imgdec->ImgDWrite(str,  len);
+	if (len)
+		   rv = ic->imgdec->ImgDWrite(str,  len);
 
       /* Notify observers of image progress. */
     il_progress_notify(ic);
 
-	  if (err < 0)
-		  return err;
-	  else
-	   	return len;
+    if(NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	else
+        return NS_OK;
 }
 
 
@@ -976,6 +980,7 @@ int
 IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 {
   int ret =0;
+  nsresult rv = NS_OK;
 
 	PR_ASSERT(ic);
 	PR_ASSERT(ic->image);
@@ -1010,7 +1015,6 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 
 
 	/* Grab the URL's expiration date */
-	nsresult result;
 
 	if (ic->url)
 	  ic->expires = ic->url->GetExpires();
@@ -1034,20 +1038,19 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
             , imgtype );
 
     static NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
-    result = nsComponentManager::CreateInstance(imgtypestr, NULL,    
+    rv = nsComponentManager::CreateInstance(imgtypestr, NULL,    
                                                 kIImgDecoderIID, // XXX was previously kImgDecoderIID
                                                 (void **)&imgdec);
 
-  if (NS_FAILED(result))
+  if (NS_FAILED(rv))
     return MK_IMAGE_LOSSAGE;
   
   
   imgdec->SetContainer(ic);
-  // NS_ADDREF(imgdec); Dont need this as we aren't releasing the addref from CreateInstance
   ic->imgdec = imgdec;
   
-  ret = imgdec->ImgDInit();
-  if(ret == 0)
+  rv = imgdec->ImgDInit();
+  if(NS_FAILED(rv))
   {
     ILTRACE(0,("il: image init failed"));
     return MK_OUT_OF_MEMORY;
