@@ -507,6 +507,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   if (aFeatures) {
     features.Assign(aFeatures);
     featuresSpecified = PR_TRUE;
+    features.StripWhitespace();
   }
 
   chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified, aDialog);
@@ -1289,10 +1290,13 @@ nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
   char *comma, *equal;
   PRInt32 found = 0;
 
-  while (PR_TRUE) {
-    while (nsCRT::IsAsciiSpace(*aOptions))
-      ++aOptions;
+#ifdef DEBUG
+    nsCAutoString options(aOptions);
+    NS_ASSERTION(options.FindCharInSet(" \n\r\t") == kNotFound, 
+                  "There should be no whitespace in this string!");
+#endif
 
+  while (PR_TRUE) {
     comma = PL_strchr(aOptions, ',');
     if (comma)
       *comma = '\0';
