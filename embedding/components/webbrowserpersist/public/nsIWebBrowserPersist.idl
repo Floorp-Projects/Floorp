@@ -56,6 +56,8 @@ interface nsIWebBrowserPersist : nsISupports
   const unsigned long PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS = 64;
   /** Make changes to original dom rather than cloning nodes */
   const unsigned long PERSIST_FLAGS_FIXUP_ORIGINAL_DOM = 128;
+  /** Fix links relative to destination location (not origin) */
+  const unsigned long PERSIST_FLAGS_FIXUP_LINKS_TO_DESTINATION = 256;
 
   /** Flags governing how data is fetched from the network. */
   attribute unsigned long persistFlags;
