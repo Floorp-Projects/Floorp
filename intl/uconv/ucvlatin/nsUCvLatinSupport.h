@@ -236,6 +236,25 @@ protected:
 };
 
 //----------------------------------------------------------------------
+// Class nsBasicEncoder [declaration]
+
+class nsBasicEncoder : public nsIUnicodeEncoder, public nsICharRepresentable
+{
+  NS_DECL_ISUPPORTS
+
+public:
+  /**
+   * Class constructor.
+   */
+  nsBasicEncoder();
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsBasicEncoder();
+
+};
+//----------------------------------------------------------------------
 // Class nsEncoderSupport [declaration]
 
 /**
@@ -249,9 +268,8 @@ protected:
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsEncoderSupport : public nsIUnicodeEncoder, public nsICharRepresentable
+class nsEncoderSupport :  public nsBasicEncoder
 {
-  NS_DECL_ISUPPORTS
 
 protected:
 
