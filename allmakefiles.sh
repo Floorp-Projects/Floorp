@@ -222,6 +222,11 @@ js/src/xpconnect/tools/idl/Makefile
 js/src/xpconnect/tools/idl/Makefile
 "
 
+MAKEFILES_jsdebugger="
+js/jsd/Makefile
+js/jsd/idl/Makefile
+"
+
 MAKEFILES_content="
 content/Makefile
 content/base/Makefile
@@ -1016,6 +1021,9 @@ for extension in $MOZ_EXTENSIONS; do
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/irc/Makefile
             " ;;
+        venkman ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    extensions/venkman/Makefile"
+	    ;;
 	transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    $MAKEFILES_transformiix"
 	    ;;
@@ -1100,6 +1108,7 @@ $MAKEFILES_leaky
 $MAKEFILES_jpeg
 $MAKEFILES_jprof
 $MAKEFILES_js
+$MAKEFILES_jsdebugger
 $MAKEFILES_l10n
 $MAKEFILES_l10n_lang
 $MAKEFILES_langpacks
