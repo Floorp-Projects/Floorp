@@ -2638,16 +2638,6 @@ if test "$MOZ_MAIL_NEWS"; then
 fi
 AC_SUBST(MOZ_MAIL_NEWS)
 
-dnl xpcom standalone. Disabled by default
-XPCOM_STANDALONE=
-MOZ_ARG_ENABLE_BOOL(xpcom-standalone,
-[  --enable-xpcom-standalone     Build XPCOM Standalone],
-  XPCOM_STANDALONE=1 )
-if test "$XPCOM_STANDALONE"; then
-  AC_DEFINE(XPCOM_STANDALONE)
-fi
-AC_SUBST(XPCOM_STANDALONE)
-
 dnl make sure that we compile in multi-processor support
 NS_MT_SUPPORTED=1
 AC_DEFINE(NS_MT_SUPPORTED)
