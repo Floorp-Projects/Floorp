@@ -461,7 +461,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, folder, b4, &nativeRet))
+    if(NS_OK == nativeThis->AddDirectory(b0, b1, b2, folder, b4, &nativeRet))
     {
       *rval = INT_TO_JSVAL(nativeRet);
     }
