@@ -300,6 +300,7 @@
 #define HG02700 "NIKI"
 #define HG99877 "prefapi.h"
 #define HG02902 "msgsend.h"
+#define HG98214 "rosetta.h"
 #define HG72621
 #define HG10828
 #define HG82727

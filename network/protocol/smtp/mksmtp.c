@@ -22,6 +22,7 @@
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "rosetta.h"
 #include "mkutils.h"
+#include "netutils.h"
 
 #if defined(MOZILLA_CLIENT) || defined(LIBNET_SMTP)
 #if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)

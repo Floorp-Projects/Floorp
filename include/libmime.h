@@ -38,7 +38,7 @@ typedef struct MimeHeaders
 {
   char *all_headers;			/* A char* of the entire header section. */
   int32 all_headers_fp;			/* The length (it is not NULL-terminated.) */
-  int32 all_headers_size;		/* The size of the allocated block. */
+  uint32 all_headers_size;		/* The size of the allocated block. */
 
   XP_Bool done_p;				/* Whether we've read the end-of-headers marker
 								   (the terminating blank line.) */
@@ -56,7 +56,7 @@ typedef struct MimeHeaders
 
 
   char *obuffer;				/* This buffer is used for output. */
-  int32 obuffer_size;
+  uint32 obuffer_size;
   int32 obuffer_fp;
 
   char *munged_subject;			/* What a hack.  This is a place to write down

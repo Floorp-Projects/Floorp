@@ -27,6 +27,7 @@
 
 #include "rosetta.h"
 #include "mkutils.h"
+#include "netutils.h"
 
 #ifdef MOZILLA_CLIENT
 
@@ -35,7 +36,7 @@
 #include "mime.h"
 #include "shist.h"
 #include "glhist.h"
-#include "xp_reg.h"
+/*#include "xp_reg.h"*/
 #include "mknews.h"
 #include "mktcp.h"
 #include "mkparse.h"
@@ -63,7 +64,7 @@
 #include "prefapi.h"	
 #include "xplocale.h"
 
-#include "xp_sock.h"
+/*#include "xp_sock.h"*/
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
 
@@ -505,7 +506,7 @@ PUBLIC void net_graceful_shutdown(PRFileDesc *sock, XP_Bool isSecure)
 	if (int_pref > 0 && int_pref < 4)
 	{
 		HG32949
-			XP_SOCK_SHUTDOWN(sock, (int)(int_pref-1));
+			PR_Shutdown(sock, (int)(int_pref-1));
 	}
 }
 
