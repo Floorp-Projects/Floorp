@@ -95,6 +95,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/otherbutton28-bg-active.gif \
 		$(srcdir)/toolbar-begincap.gif \
 		$(srcdir)/toolbar-endcap.gif \
+		$(srcdir)/toolbar-dropdown.gif \
 		$(srcdir)/n-box.gif \
 		$(srcdir)/search.gif \
 		$(srcdir)/animthrob.gif \
