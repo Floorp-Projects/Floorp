@@ -801,7 +801,12 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
   }
 #endif
 
-//XXX not now  NS_PRECONDITION((aMaxSize.width > 0) && (aMaxSize.height > 0), "unexpected max size");
+  if (eReflowReason_Initial == aReflowState.reason) {
+    nsresult rv = ProcessInitialReflow(aPresContext);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
 
   PRBool        reflowMappedOK = PR_TRUE;
 
