@@ -315,13 +315,14 @@ FileSystemDataSource::FileSystemDataSource(void)
         nsCOMPtr<nsIFile> file;
         NS_GetSpecialDirectory(NS_BEOS_SETTINGS_DIR, getter_AddRefs(file));
 
-        file->Append(NS_LITERAL_CSTRING("NetPositive"));
-        file->Append(NS_LITERAL_CSTRING("Bookmarks"));
+        file->AppendNative(NS_LITERAL_CSTRING("NetPositive"));
+        file->AppendNative(NS_LITERAL_CSTRING("Bookmarks"));
 
         nsCOMPtr<nsIURI> furi;
         NS_NewFileURI(getter_AddRefs(furi), file); 
-        lf->GetSpec(ieFavoritesDir);
-        file->GetNativePath(&netPositiveDir)
+        nsCAutoString favoritesDir;
+        file->GetNativePath(favoritesDir);
+        netPositiveDir = ToNewCString(favoritesDir);
 
 #endif
 
@@ -1603,11 +1604,10 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
     if (strncmp(uri, netPositiveDir, strlen(netPositiveDir)) == 0)
     {
         PRBool value;
-        if ((NS_SUCCEEDED(aFileLocal->IsFile(&value) && value) ||
-             (NS_SUCCEEDED(aFileLocal->IsDirectory(&value) && value))
+        if ((NS_SUCCEEDED(aFileLocal->IsFile(&value) && value)) ||
+            (NS_SUCCEEDED(aFileLocal->IsDirectory(&value) && value)))
         {
             nsXPIDLCString nativeURI;
-            aFileLocal->GetSpec(getter_Copies(spec));
 
             rv = NS_ERROR_FAILURE;
             if (nativeURI)
@@ -1629,8 +1629,12 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
             }
             if (NS_OK != rv)
             {
-                name = NS_ConvertUTF8toUCS2(spec.GetLeafName());
-                rv = NS_OK;
+                nsCAutoString leafName;
+                rv = aFileLocal->GetNativeLeafName(leafName);
+                if (NS_SUCCEEDED(rv)) {
+                    name = NS_ConvertUTF8toUCS2(leafName);
+                    rv = NS_OK;
+                }
             }
         }
     }
@@ -1803,13 +1807,12 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
     NS_GetFileFromURLSpec(NS_ConvertUCS2toUTF8(aFileURL), getter_AddRefs(f)); 
 
     nsCOMPtr<nsIURI> furi;
-    NS_NewFileURI(getter_AddRefs(furi), lf); 
+    NS_NewFileURI(getter_AddRefs(furi), f); 
 
     nsXPIDLCString nativeURI;
-    furi->GetSpec(getter_Copies(spec);
 
     PRBool value;
-    if (NS_SUCCEEDED(f->IsFile(&value) && value)
+    if (NS_SUCCEEDED(f->IsFile(&value) && value))
     {
         if (nativeURI)
         {
