@@ -253,6 +253,7 @@ XFE_WIDGETS_BM_LIB			= $(DIST)/lib/libXfeBm.a
 XFE_WIDGETS_COMBO_BOX_LIB	= $(DIST)/lib/libXfeComboBox.a
 XFE_WIDGETS_CAPTION_LIB		= $(DIST)/lib/libXfeCaption.a
 XFE_WIDGETS_TOOL_BAR_LIB	= $(DIST)/lib/libXfeToolBar.a
+XFE_WIDGETS_TOOL_TIP_LIB	= $(DIST)/lib/libXfeToolTip.a
 
 ifneq ($(OS_ARCH),IRIX) 
 ifneq ($(OS_ARCH),FreeBSD)
@@ -303,6 +304,7 @@ BASIC_LIBS	= \
 		  $(DTWIDGETS_LIB) \
 		  $(XFE_WIDGETS_BM_LIB) \
 		  $(XFE_WIDGETS_TOOL_BAR_LIB) \
+		  $(XFE_WIDGETS_TOOL_TIP_LIB) \
 		  $(XFE_WIDGETS_LIB) \
 		  $(DIST)/lib/libxlate.a \
 		  $(DIST)/lib/libmimetype.a \
@@ -1133,6 +1135,9 @@ $(XFE_WIDGETS_CAPTION_LIB):
 
 $(XFE_WIDGETS_TOOL_BAR_LIB):
 	cd XfeWidgets/XfeToolBar; $(MAKE)
+
+$(XFE_WIDGETS_TOOL_TIP_LIB):
+	cd XfeWidgets/XfeToolTip; $(MAKE)
 
 $(XFE2_LIB):
 	cd src; $(MAKE)
