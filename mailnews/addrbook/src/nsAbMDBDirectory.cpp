@@ -1023,7 +1023,7 @@ NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddres
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAbCard> cardExists; 
-  mDatabase->GetCardFromAttribute(this, kPriEmailColumn, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, getter_AddRefs(cardExists));
+  mDatabase->GetCardFromAttribute(this, kLowerPriEmailColumn, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, getter_AddRefs(cardExists));
   if (cardExists)
     *aCardExists = PR_TRUE;
   return NS_OK;

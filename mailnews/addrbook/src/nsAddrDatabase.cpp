@@ -87,8 +87,6 @@ const char *kDataRowScope = "ns:addrbk:db:row:scope:data:all";
 #define PURGE_CUTOFF_COUNT 50
 
 const char *kRecordKeyColumn = "RecordKey";
-const char *kLowerPriEmailColumn = "LowercasePrimaryEmail";
-
 const char *kLastRecordKeyColumn = "LastRecordKey";
 
 const char *kMailListTotalLists = "ListTotalLists";    // total number of mail list in a mailing list
@@ -1054,7 +1052,7 @@ nsresult nsAddrDatabase::UpdateLowercaseEmailListName()
     return NS_ERROR_FAILURE;
   
   do
-  {   //add lowercase primary emial to each card and mailing list row
+  {   //add lowercase primary email to each card and mailing list row
     merror = rowCursor->NextRow(GetEnv(), &findRow, &rowPos);
     if (merror ==NS_OK && findRow)
     {

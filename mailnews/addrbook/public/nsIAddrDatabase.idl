@@ -118,7 +118,8 @@ interface nsIMdbRow;
 #define kMailListNickName         "ListNickName"
 #define kMailListDescription      "ListDescription"
 #define kMailListTotalAddresses   "ListTotalAddresses"
-
+// not shown in the UI
+#define kLowerPriEmailColumn      "LowercasePrimaryEmail"
 %}
 
 [scriptable, uuid(ca536e0e-1dd1-11b2-951a-e02b86e4f60e)]
