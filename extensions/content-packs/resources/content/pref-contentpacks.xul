@@ -91,7 +91,7 @@
       if (newContentPack && (newContentPack != oldContentPack))
       {
         try {
-          chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
+          chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
           chromeRegistry.selectLocale(newContentPack, true);
           shouldRemoveFaslFile = true;
           observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
@@ -119,7 +119,7 @@
       if (newLanguagePack && (newLanguagePack != oldLanguagePack))
       {
         try {
-          chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
+          chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
           chromeRegistry.selectLocale(newLanguagePack, true);
           shouldRemoveFaslFile = true;
           observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
