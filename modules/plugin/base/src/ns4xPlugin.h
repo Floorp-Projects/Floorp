@@ -58,20 +58,28 @@
 #define NP_EXPORT
 #endif
 
+#if defined(XP_WIN)
+#define NS_4XPLUGIN_CALLBACK(_type, _name) _type (__stdcall * _name)
+#elif defined(XP_OS2)
+#define NS_4XPLUGIN_CALLBACK(_type, _name) _type (_System * _name)
+#else
+#define NS_4XPLUGIN_CALLBACK(_type, _name) _type (* _name)
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 
 // XXX These are defined in platform specific FE directories right now :-/
 
-#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
-typedef NS_CALLBACK_(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
-typedef NS_CALLBACK_(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
-typedef NS_CALLBACK_(NPError, NP_PLUGINUNIXINIT) (const NPNetscapeFuncs* pCallbacks,NPPluginFuncs* fCallbacks);
-typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);
+#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINUNIXINIT) (const NPNetscapeFuncs* pCallbacks,NPPluginFuncs* fCallbacks);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 #endif
 
 #ifdef XP_MAC
-typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);
-typedef NS_CALLBACK_(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFuncs* pCallbacks, NPP_ShutdownUPP* unloadUpp);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFuncs* pCallbacks, NPP_ShutdownUPP* unloadUpp);
 #endif
 
 class nsIServiceManagerObsolete;

@@ -39,12 +39,11 @@
 #include "nsURLDataCallback.h"
 #include "npn.h"
 
-#define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
-#define NS_CALLBACK(_name) nsresult (__stdcall * _name)
+#define NS_4XPLUGIN_CALLBACK(_type, _name) _type (__stdcall * _name)
 
-typedef NS_CALLBACK_(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
-typedef NS_CALLBACK_(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
-typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 
 const kArraySizeIncrement = 10;
 
