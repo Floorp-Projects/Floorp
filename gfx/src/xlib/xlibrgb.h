@@ -159,6 +159,9 @@ xlib_rgb_get_cmap (void);
 Visual *
 xlib_rgb_get_visual (void);
 
+XVisualInfo *
+xlib_rgb_get_visual_info (void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

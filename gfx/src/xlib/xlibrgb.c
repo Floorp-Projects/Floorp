@@ -107,7 +107,7 @@ struct _XlibRgbInfo
   Display          *display;
   Screen           *screen;
   int               screen_num;
-  XVisualInfo      *visual;
+  XVisualInfo      *x_visual_info;
   Colormap          cmap;
   XColor           *cmap_colors;
   Visual           *default_visualid;
@@ -297,11 +297,11 @@ xlib_rgb_try_colormap (int nr, int ng, int nb)
 
   if (image_info->cmap_alloced) {
     cmap = image_info->cmap;
-    visual = image_info->visual;
+    visual = image_info->x_visual_info;
   }
   else {
     cmap = image_info->default_colormap;
-    visual = image_info->visual;
+    visual = image_info->x_visual_info;
   }
   colors_needed = nr * ng * nb;
   for (i = 0; i < 256; i++)
@@ -609,18 +609,18 @@ xlib_rgb_choose_visual (void)
      the allocated visual list above. */
   final_visual = malloc(sizeof(XVisualInfo));
   memcpy(final_visual, best_visual, sizeof(XVisualInfo));
-  image_info->visual = final_visual;
+  image_info->x_visual_info = final_visual;
   XFree(visuals);
   /* set up the shift and the precision for the red, green and blue.
      this only applies to cool visuals like true color and direct color. */
-  if (image_info->visual->class == TrueColor ||
-      image_info->visual->class == DirectColor) {
-    image_info->red_shift = xlib_get_shift_from_mask(image_info->visual->red_mask);
-    image_info->red_prec = xlib_get_prec_from_mask(image_info->visual->red_mask);
-    image_info->green_shift = xlib_get_shift_from_mask(image_info->visual->green_mask);
-    image_info->green_prec = xlib_get_prec_from_mask(image_info->visual->green_mask);
-    image_info->blue_shift = xlib_get_shift_from_mask(image_info->visual->blue_mask);
-    image_info->blue_prec = xlib_get_prec_from_mask(image_info->visual->blue_mask);
+  if (image_info->x_visual_info->class == TrueColor ||
+      image_info->x_visual_info->class == DirectColor) {
+    image_info->red_shift = xlib_get_shift_from_mask(image_info->x_visual_info->red_mask);
+    image_info->red_prec = xlib_get_prec_from_mask(image_info->x_visual_info->red_mask);
+    image_info->green_shift = xlib_get_shift_from_mask(image_info->x_visual_info->green_mask);
+    image_info->green_prec = xlib_get_prec_from_mask(image_info->x_visual_info->green_mask);
+    image_info->blue_shift = xlib_get_shift_from_mask(image_info->x_visual_info->blue_mask);
+    image_info->blue_prec = xlib_get_prec_from_mask(image_info->x_visual_info->blue_mask);
   }
 }
 
@@ -694,7 +694,7 @@ xlib_rgb_init (Display *display, Screen *screen)
       image_info->display = display;
       image_info->screen = screen;
       image_info->screen_num = DefaultScreen(display);
-      image_info->visual = NULL;
+      image_info->x_visual_info = NULL;
       image_info->cmap = 0;
       image_info->default_visualid = DefaultVisual(display, image_info->screen_num);
       image_info->default_colormap = DefaultColormap(display, image_info->screen_num);
@@ -726,22 +726,22 @@ xlib_rgb_init (Display *display, Screen *screen)
 
       xlib_rgb_choose_visual ();
 
-      if ((image_info->visual->class == PseudoColor ||
-	   image_info->visual->class == StaticColor) &&
-	  image_info->visual->depth < 8 &&
-	  image_info->visual->depth >= 3)
+      if ((image_info->x_visual_info->class == PseudoColor ||
+	   image_info->x_visual_info->class == StaticColor) &&
+	  image_info->x_visual_info->depth < 8 &&
+	  image_info->x_visual_info->depth >= 3)
 	{
 	  image_info->cmap = image_info->default_colormap;
 	  xlib_rgb_colorcube_222 ();
 	}
-      else if (image_info->visual->class == PseudoColor)
+      else if (image_info->x_visual_info->class == PseudoColor)
 	{
 	  if (xlib_rgb_install_cmap ||
-	      image_info->visual->visualid != image_info->default_visualid->visualid)
+	      image_info->x_visual_info->visualid != image_info->default_visualid->visualid)
 	    {
 	      image_info->cmap = XCreateColormap(image_info->display,
 						 DefaultRootWindow(image_info->display),
-						 image_info->visual->visual,
+						 image_info->x_visual_info->visual,
 						 AllocNone);
 	      image_info->cmap_alloced = TRUE;
 	    }
@@ -749,7 +749,7 @@ xlib_rgb_init (Display *display, Screen *screen)
 	    {
 	      image_info->cmap = XCreateColormap(image_info->display,
 						 DefaultRootWindow(image_info->display),
-						 image_info->visual->visual,
+						 image_info->x_visual_info->visual,
 						 AllocNone);
 	      image_info->cmap_alloced = TRUE;
 	      xlib_rgb_do_colormaps ();
@@ -764,11 +764,11 @@ xlib_rgb_init (Display *display, Screen *screen)
 	      image_info->cmap = image_info->default_colormap;
 	}
 #ifdef ENABLE_GRAYSCALE
-      else if (image_info->visual->class == GrayScale)
+      else if (image_info->x_visual_info->class == GrayScale)
 	{
 	  image_info->cmap = XCreateColormap(image_info->display,
 					     DefaultRootWindow(image_info->display),
-					     image_info->visual->visual,
+					     image_info->x_visual_info->visual,
 					     AllocNone);
 	  xlib_rgb_set_gray_cmap (image_info->cmap);
 	  image_info->cmap_alloced = TRUE;
@@ -777,26 +777,26 @@ xlib_rgb_init (Display *display, Screen *screen)
       else
 	{
 	  /* Always install colormap in direct color. */
-	  if (image_info->visual->class != DirectColor && 
-	      image_info->visual->visualid == image_info->default_visualid->visualid)
+	  if (image_info->x_visual_info->class != DirectColor && 
+	      image_info->x_visual_info->visualid == image_info->default_visualid->visualid)
 	    image_info->cmap = image_info->default_colormap;
 	  else
 	    {
 	      image_info->cmap = XCreateColormap(image_info->display,
 						 DefaultRootWindow(image_info->display),
-						 image_info->visual->visual,
+						 image_info->x_visual_info->visual,
 						 AllocNone);
 	      image_info->cmap_alloced = TRUE;
 	    }
 	}
 
-      image_info->bitmap = (image_info->visual->depth == 1);
+      image_info->bitmap = (image_info->x_visual_info->depth == 1);
 
       for (i = 0; i < N_IMAGES; i++) {
 	if (image_info->bitmap) {
 	  /* Use malloc() instead of g_malloc since X will free() this mem */
 	  static_image[i] = XCreateImage(image_info->display,
-					 image_info->visual->visual,
+					 image_info->x_visual_info->visual,
 					 1,
 					 XYBitmap,
 					 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT,
@@ -808,15 +808,15 @@ xlib_rgb_init (Display *display, Screen *screen)
 	}
 	else {
 	  static_image[i] = XCreateImage(image_info->display,
-					 image_info->visual->visual,
-					 (unsigned int)image_info->visual->depth,
+					 image_info->x_visual_info->visual,
+					 (unsigned int)image_info->x_visual_info->depth,
 					 ZPixmap,
 					 0, 0,
 					 IMAGE_WIDTH,
 					 IMAGE_HEIGHT,
 					 32, 0);
 	  /* remove this when we are using shared memory.. */
-	  static_image[i]->data = malloc((size_t)IMAGE_WIDTH * IMAGE_HEIGHT * image_info->visual->depth);
+	  static_image[i]->data = malloc((size_t)IMAGE_WIDTH * IMAGE_HEIGHT * image_info->x_visual_info->depth);
 	  static_image[i]->bitmap_bit_order = MSBFirst;
 	  static_image[i]->byte_order = MSBFirst;
 	}
@@ -854,19 +854,19 @@ xlib_rgb_xpixel_from_rgb (uint32 rgb)
 	((rgb & 0xff00) >> 7) +
 	(rgb & 0xff) > 510;
     }
-  else if (image_info->visual->class == PseudoColor)
+  else if (image_info->x_visual_info->class == PseudoColor)
     pixel = colorcube[((rgb & 0xf00000) >> 12) |
 		     ((rgb & 0xf000) >> 8) |
 		     ((rgb & 0xf0) >> 4)];
-  else if (image_info->visual->depth < 8 &&
-	   image_info->visual->class == StaticColor)
+  else if (image_info->x_visual_info->depth < 8 &&
+	   image_info->x_visual_info->class == StaticColor)
     {
       pixel = colorcube_d[((rgb & 0x800000) >> 17) |
 			 ((rgb & 0x8000) >> 12) |
 			 ((rgb & 0x80) >> 7)];
     }
-  else if (image_info->visual->class == TrueColor ||
-	   image_info->visual->class == DirectColor)
+  else if (image_info->x_visual_info->class == TrueColor ||
+	   image_info->x_visual_info->class == DirectColor)
     {
 #ifdef VERBOSE
       printf ("shift, prec: r %d %d g %d %d b %d %d\n",
@@ -888,14 +888,14 @@ xlib_rgb_xpixel_from_rgb (uint32 rgb)
 		 (8 - image_info->blue_prec)) <<
 		image_info->blue_shift));
     }
-  else if (image_info->visual->class == StaticGray ||
-	   image_info->visual->class == GrayScale)
+  else if (image_info->x_visual_info->class == StaticGray ||
+	   image_info->x_visual_info->class == GrayScale)
     {
       int gray = ((rgb & 0xff0000) >> 16) +
 	((rgb & 0xff00) >> 7) +
 	(rgb & 0xff);
 
-      return gray >> (10 - image_info->visual->depth);
+      return gray >> (10 - image_info->x_visual_info->depth);
     }
 
   return pixel;
@@ -2427,7 +2427,7 @@ xlib_rgb_convert_gray4 (XImage *image,
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax;
-  shift = 9 - image_info->visual->depth;
+  shift = 9 - image_info->x_visual_info->depth;
   for (y = 0; y < height; y++)
     {
       bp2 = bptr;
@@ -2463,7 +2463,7 @@ xlib_rgb_convert_gray4_pack (XImage *image,
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + (ax >> 1);
-  shift = 9 - image_info->visual->depth;
+  shift = 9 - image_info->x_visual_info->depth;
   for (y = 0; y < height; y++)
     {
       bp2 = bptr;
@@ -2513,7 +2513,7 @@ xlib_rgb_convert_gray4_d (XImage *image,
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax;
-  prec = image_info->visual->depth;
+  prec = image_info->x_visual_info->depth;
   right = 8 - prec;
   for (y = 0; y < height; y++)
     {
@@ -2555,7 +2555,7 @@ xlib_rgb_convert_gray4_d_pack (XImage *image,
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + (ax >> 1);
-  prec = image_info->visual->depth;
+  prec = image_info->x_visual_info->depth;
   right = 8 - prec;
   for (y = 0; y < height; y++)
     {
@@ -2856,11 +2856,11 @@ xlib_rgb_select_conv (XImage *image, ByteOrder byte_order)
   XlibRgbConvFunc conv_indexed, conv_indexed_d;
   Bool mask_rgb, mask_bgr;
 
-  depth = image_info->visual->depth;
+  depth = image_info->x_visual_info->depth;
   bpp = image->bits_per_pixel;
   if (xlib_rgb_verbose)
     printf ("Chose visual 0x%x, image bpp=%d, %s first\n",
-	    (int)image_info->visual->visual->visualid,
+	    (int)image_info->x_visual_info->visual->visualid,
 	    bpp, byte_order == LSB_FIRST ? "lsb" : "msb");
 
 #if G_BYTE_ORDER == G_BIG_ENDIAN
@@ -2869,13 +2869,13 @@ xlib_rgb_select_conv (XImage *image, ByteOrder byte_order)
   byterev = (byte_order == MSB_FIRST);
 #endif
 
-  vtype = image_info->visual->class;
+  vtype = image_info->x_visual_info->class;
   if (vtype == DirectColor)
     vtype = TrueColor;
 
-  red_mask = image_info->visual->red_mask;
-  green_mask = image_info->visual->green_mask;
-  blue_mask = image_info->visual->blue_mask;
+  red_mask = image_info->x_visual_info->red_mask;
+  green_mask = image_info->x_visual_info->green_mask;
+  blue_mask = image_info->x_visual_info->blue_mask;
 
   mask_rgb = red_mask == 0xff0000 && green_mask == 0xff00 && blue_mask == 0xff;
   mask_bgr = red_mask == 0xff && green_mask == 0xff00 && blue_mask == 0xff0000;
@@ -3289,8 +3289,8 @@ xlib_draw_gray_image (Drawable drawable,
 {
   if (image_info->bpp == 1 &&
       image_info->gray_cmap == NULL &&
-      (image_info->visual->class == PseudoColor ||
-       image_info->visual->class == GrayScale))
+      (image_info->x_visual_info->class == PseudoColor ||
+       image_info->x_visual_info->class == GrayScale))
     xlib_rgb_make_gray_cmap (image_info);
   
   if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
@@ -3318,8 +3318,8 @@ xlib_rgb_cmap_new (uint32 *colors, int n_colors)
   cmap = malloc(sizeof(XlibRgbCmap));
   memcpy (cmap->colors, colors, n_colors * sizeof(uint32));
   if (image_info->bpp == 1 &&
-      (image_info->visual->class == PseudoColor ||
-       image_info->visual->class == GrayScale))
+      (image_info->x_visual_info->class == PseudoColor ||
+       image_info->x_visual_info->class == GrayScale))
     for (i = 0; i < n_colors; i++)
       {
 	rgb = colors[i];
@@ -3384,7 +3384,17 @@ xlib_rgb_get_visual (void)
 {
   /* xlib_rgb_init (); */
   if (image_info)
-    return image_info->visual->visual;
+    return image_info->x_visual_info->visual;
+  else
+    return 0;
+}
+
+XVisualInfo *
+xlib_rgb_get_visual_info (void)
+{
+  /* xlib_rgb_init (); */
+  if (image_info)
+    return image_info->x_visual_info;
   else
     return 0;
 }
