@@ -8,14 +8,15 @@ window {
   background-color: white;
 }
 
-treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treerow > treecell > titledbutton {
+treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treerow > treecell > .tree-icon {
   list-style-image: url("chrome://sidebar/skin/flames.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#MsgNewMessages"] > treerow > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#MsgNewMessages"] > treerow > treecell > .tree-icon {
   list-style-image: url("chrome://messenger/skin/folderHasMail.gif");
 }
 
-treeitem[type="http://www.mozilla.org/rdf#XPInstallNotification"] > treerow > treecell > titledbutton {
+treeitem[type="http://www.mozilla.org/rdf#XPInstallNotification"] > treerow > treecell > .tree-icon {
   list-style-image: url("resource:/res/xpinstall/notification.gif");
 }
+
