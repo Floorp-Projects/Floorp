@@ -143,6 +143,17 @@ function onCancel()
 
 function onServerClick(event)
 {
+    // Return if same server is selected.
+    var item = event.target;
+    if (item.id == gCurrentServerURI)
+      return;
+
+    // Save the current filters to disk before switching because
+    // the dialog may be closed and we'll lose current filters.
+    var filterList = currentFilterList();
+    if (filterList) 
+      filterList.saveToDefaultFile();
+
     var item = event.target;
     selectServer(item.id);
 }
@@ -189,7 +200,7 @@ function setServer(uri)
    SetFolderPicker(firstFolderURI, "runFiltersFolder");
    updateButtons();
 
-   gCurrentServerURI = firstFolderURI;
+   gCurrentServerURI = uri;
 }
 
 function toggleFilter(aFilterURI)
