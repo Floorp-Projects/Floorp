@@ -18,7 +18,7 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-MODULE=absyncsvc 
+MODULE=absyncsv 
 
 ################################################################################
 ## exports
@@ -30,7 +30,7 @@ EXPORTS =               		\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\absyncsvc
+LIBNAME = .\$(OBJDIR)\absyncsv
 DLL = $(LIBNAME).dll
 
 OBJS=\

@@ -1,4 +1,11 @@
 mailnews/Makefile
+mailnews/absync/build/Makefile
+mailnews/absync/Makefile
+mailnews/absync/public/Makefile
+mailnews/absync/resources/locale/en-US/Makefile
+mailnews/absync/resources/locale/Makefile
+mailnews/absync/resources/Makefile
+mailnews/absync/src/Makefile
 mailnews/addrbook/Makefile
 mailnews/addrbook/build/Makefile
 mailnews/addrbook/public/Makefile

@@ -299,6 +299,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */
     if (mSyncMojo)
       mSyncMojo->GetAbSyncMojoResults(&mCookie);
 
+    mSyncMojo = nsnull;
     NotifyListenersOnStopAuthOperation(aStatus, aMsg, tProtResponse);
     KickTheSyncOperation();
   }
