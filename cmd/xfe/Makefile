@@ -501,6 +501,14 @@ ifndef NO_MOCHA
 #BASIC_LIBS      += $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a 
 BASIC_DSOS      += -ljs -ljsj
 BASIC_LIBS	+= $(DIST)/lib/libmocha.a
+ifdef DOM
+# the DOM code calls back into layout.
+BASIC_LIBS      += $(DIST)/lib/liblay.a
+endif
+endif
+
+ifdef DOM
+BASIC_LIBS	+= $(DIST)/lib/libdom.a
 endif
 
 # Post-Java libs
