@@ -1227,7 +1227,7 @@ nsObjectFrame::InstantiateWidget(nsIPresContext*          aPresContext,
 
   nsCOMPtr<nsIWidget> parent;
   parentWithView->GetOffsetFromWidget(nsnull, nsnull, *getter_AddRefs(parent));
-  mWidget->Create(parent, r, nsnull, nsnull);
+  mWidget->Create(NS_STATIC_CAST(nsIWidget*, parent), r, nsnull, nsnull);
 
   mWidget->Show(PR_TRUE);
   return rv;
