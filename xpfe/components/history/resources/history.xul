@@ -129,23 +129,23 @@ function doSort(sortColName)
   </html:script>
 
   <menubar>
-    <menu name="&fileMenu.label;">
-      <menuitem name="&newWinCmd.label;" onclick="HistoryNewWindow();"/>
-      <separator/>
-      <menuitem name="&closeCmd.label;"/>
+    <menu value="&fileMenu.label;">
+      <menuitem value="&newWinCmd.label;" onaction="HistoryNewWindow();"/>
+      <menuseparator/>
+      <menuitem value="&closeCmd.label;"/>
     </menu>
-    <menu name="&editMenu.label;">
-      <menuitem name="&undoCmd.label;"/>
-      <menuitem name="&redoCmd.label;"/>
-      <separator/>
-      <menuitem name="&cutCmd.label;"/>
-      <menuitem name="&copyCmd.label;"/>
-      <menuitem name="&pasteCmd.label;"/>
-      <menuitem name="&deleteCmd.label;"/>
-      <menuitem name="&selAllCmd.label;"/>
-      <separator/>
-      <menuitem name="&findHisCmd.label;"/>
-      <menuitem name="&findAgainCmd.label;"/>
+    <menu value="&editMenu.label;">
+      <menuitem value="&undoCmd.label;"/>
+      <menuitem value="&redoCmd.label;"/>
+      <menuseparator/>
+      <menuitem value="&cutCmd.label;"/>
+      <menuitem value="&copyCmd.label;"/>
+      <menuitem value="&pasteCmd.label;"/>
+      <menuitem value="&deleteCmd.label;"/>
+      <menuitem value="&selAllCmd.label;"/>
+      <menuseparator/>
+      <menuitem value="&findHisCmd.label;"/>
+      <menuitem value="&findAgainCmd.label;"/>
     </menu>
   </menubar>
 
