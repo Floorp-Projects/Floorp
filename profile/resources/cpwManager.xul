@@ -3,13 +3,11 @@
 
 <!DOCTYPE window>
 
-<html:div flex="100%">
-
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  title="Profile Manager"> 
+  title="Profile Manager" align="vertical"> 
 
 
 <html:script>
