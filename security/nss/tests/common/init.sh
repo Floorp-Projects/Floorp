@@ -1,103 +1,302 @@
 #! /bin/sh
 #
-#  Initialize a bunch of variables that may tests would be interested in
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape security libraries.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
 #
 #
+########################################################################
+#
+# mozilla/security/nss/tests/common/init.sh
+#
+# initialization for NSS QA, can be included multiple times
+# from all.sh and the individual scripts
+#
+# variables, utilities and shellfunctions global to NSS QA
+# needs to work on all Unix and Windows platforms
+#
+# included from (don't expect this to be up to date)
+# --------------------------------------------------
+#   all.sh
+#   ssl.sh
+#   sdr.sh
+#   cipher.sh
+#   perf.sh
+#   cert.sh
+#   smime.sh
+#   tools.sh
+#
+# special strings
+# ---------------
+#   FIXME ... known problems, search for this string
+#   NOTE .... unexpected behavior
+#
+# NOTE:
+# -----
+#    Unlike the old QA this is based on files sourcing each other
+#    This is done to save time, since a great portion of time is lost
+#    in calling and sourcing the same things multiple times over the
+#    network. Also, this way all scripts have all shell function  available
+#    and a completely common environment
+#
+########################################################################
 
-mozilla_root=`(cd ../../../..; pwd)`
-MOZILLA_ROOT=${MOZILLA_ROOT-$mozilla_root}
 
-common=`(cd ../common; pwd)`
-COMMON=${TEST_COMMON-$common}
+if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
-qascript_dir=`(cd ..; pwd)`
-QASCRIPT_DIR=${QASCRIPT_DIR-$qascript_dir}
-export QASCRIPT_DIR
+    Exit()
+    {
+        if [ -n "$1" ] ; then
+            echo "$SCRIPTNAME: Exit: $*"
+            html_failed "<TR><TD>$*"
+        fi
+        echo "</TABLE><BR>" >> ${RESULTS}
+        if [ -n "${TAILPID}" ]; then
+            ${KILL} "${TAILPID}"
+        fi
+        if [ -n "${SERVERPID}" -a -f "${SERVERPID}" ]; then
+            ${KILL} `cat ${SERVERPID}`
+        fi
+        CLEANUP=${SCRIPTNAME}
+        cd ${QADIR}
+        . common/cleanup.sh
+        case $1 in
+            [0-4][0-9]|[0-9])
+                exit $1;
+                ;;
+            *)
+                exit 1
+                ;;
+        esac
+    }
 
-DIST=${DIST-${MOZILLA_ROOT}/dist}
-SECURITY_ROOT=${SECURITY_ROOT-${MOZILLA_ROOT}/security/nss}
-TESTDIR=${TESTDIR-${MOZILLA_ROOT}/tests_results/security}
-OBJDIR=`cd ../common; gmake objdir_name` 
-OS_ARCH=`cd ../common; gmake os_arch`
+    html() #########################    write the results.html file
+    {      # 3 functions so we can put targets in the output.log easier
+        echo $* >>${RESULTS}
+    }
+    html_passed()
+    {
+        html "$* ${HTML_PASSED}"
+    }
+    html_failed()
+    {
+        html "$* ${HTML_FAILED}"
+    }
+    html_head()
+    {
+        html "<TABLE BORDER=1><TR><TH COLSPAN=3>$*</TH></TR>"
+        html "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" 
+        echo "$SCRIPTNAME: $* ==============================="
+    }
+    html_msg()
+    {
+        if [ "$1" -ne "$2" ] ; then
+            html_failed "<TR><TD>$3"
+            if [ -n "$4" ] ; then
+                echo "$SCRIPTNAME: $3 $4 FAILED"
+            fi
+        else
+            html_passed "<TR><TD>$3"
+            if [ -n "$4" ] ; then
+                echo "$SCRIPTNAME: $3 $4 PASSED"
+            fi
+        fi
+    }
 
-if [ ${OS_ARCH} = "WINNT" ]; then
-	PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
-else
-	PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
-fi
-PATH=`perl $QASCRIPT_DIR/path_uniq -d ';' "$PATH"`
-export PATH
+    SCRIPTNAME=init.sh
 
-LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
-SHLIB_PATH=${DIST}/${OBJDIR}/lib
-LIBPATH=${DIST}/${OBJDIR}/lib
-export LD_LIBRARY_PATH SHLIB_PATH LIBPATH
-#echo "LD_LIBRARY_PATH SHLIB_PATH LIBPATH=$LD_LIBRARY_PATH"
+    mozilla_root=`(cd ../../../..; pwd)`
+    MOZILLA_ROOT=${MOZILLA_ROOT-$mozilla_root}
 
-if [ ! -d ${TESTDIR} ]; then
-	echo "Creating ${TESTDIR}"
-   mkdir -p ${TESTDIR}
-fi
+    qadir=`(cd ..; pwd)`
+    QADIR=${QADIR-$qadir}
 
-if [ -z "${HOST}" ]; then 
-  echo "HOST environment variable is not defined."; exit 1
-fi
-if [ -z "${DOMSUF}" ]; then 
-	DOMSUF=`domainname`
-	export DOMSUF
-	if  [ -z "${DOMSUF}" ]; then
-  		echo "DOMSUF environment variable is not defined."; exit 1
-	fi
-fi
+    common=${QADIR}/common
+    COMMON=${TEST_COMMON-$common}
+    export COMMON
 
-#if [ ! -s "${HOSTDIR}" ]; then -s means different things to different tests...
-if [ ! -d "${HOSTDIR}" ]; then
-	#echo "No hostdir"
-    if [ -f ${TESTDIR}/${HOST} ]; then
-		version=`cat ${TESTDIR}/${HOST}`
-	else
-    	version=1
+    DIST=${DIST-${MOZILLA_ROOT}/dist}
+    SECURITY_ROOT=${SECURITY_ROOT-${MOZILLA_ROOT}/security/nss}
+    TESTDIR=${TESTDIR-${MOZILLA_ROOT}/tests_results/security}
+    OBJDIR=`(cd $COMMON; gmake objdir_name)`
+    OS_ARCH=`(cd $COMMON; gmake os_arch)`
+    OS_NAME=`uname -s | sed -e "s/-[0-9]*\.[0-9]*//"`
+
+    if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME"  != "CYGWIN_NT" ]; then
+        PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
+        PATH=`perl ../path_uniq -d ';' "$PATH"`
+    else
+        PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
+        PATH=`perl ../path_uniq -d ':' "$PATH"`
     fi
-	if [ -z "${version}" ]; then 	# for some starnge reason this file 
-									# gets truncated at times...
-		for w in `ls -d ${TESTDIR}/${HOST}.[0-9]* 2>/dev/null | 
-			sort -t '.' -n | sed -e "s/.*${HOST}.//"` ; do  
-			version=`expr $w + 1`
-		done
-		if [ -z "${version}" ]; then
-			version=1
-		fi
-	fi
-    expr $version + 1 > ${TESTDIR}/${HOST}
 
-    HOSTDIR=${TESTDIR}/${HOST}'.'$version
-fi
+    LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
+    SHLIB_PATH=${DIST}/${OBJDIR}/lib
+    LIBPATH=${DIST}/${OBJDIR}/lib
 
-if [ ! -d ${HOSTDIR} ]; then
-   mkdir -p ${HOSTDIR}
-fi
+    if [ ! -d "${TESTDIR}" ]; then
+        echo "$SCRIPTNAME init: Creating ${TESTDIR}"
+        mkdir -p ${TESTDIR}
+    fi
 
-RESULTS=${HOSTDIR}/results.html
-if [ ! -f "${RESULTS}" ]; then
+    case $HOST in
+        *\.*)
+            HOST=`echo $HOST | sed -e "s/\..*//"`
+            ;;
+        ?*)
+            ;;
+        *)
+            echo "$SCRIPTNAME: HOST environment variable is not defined."
+            exit 1 #does not need to be Exit, very early in script
+            ;;
+    esac
 
-	cp ${COMMON}/results_header.html ${RESULTS}
-	echo "<H4>Platform: ${OBJDIR}<BR>" >> ${RESULTS}
-	echo "Test Run: ${HOST}.$version</H4>" >> ${RESULTS}
-	echo "<HR><BR>" >> ${RESULTS}
+    if [ -z "${DOMSUF}" ]; then
+        DOMSUF=`domainname`
+        if  [ -z "${DOMSUF}" ]; then
+            echo "$SCRIPTNAME: DOMSUF environment variable is not defined."
+            exit 1 #does not need to be Exit, very early in script
+        fi
+    fi
 
-	echo "********************************************"
-	echo "   Platform: ${OBJDIR}"
-	echo "   Results: ${HOST}.$version"
-	echo "********************************************"
-fi
+#NOTE - this HOSTDIR migh not be set at the time of this test!!!
+# the original had a -s maybe meant -z???? - first replaced it with -d
+#which worked, but resulted in [ ! -d "" ] which doesn't make a lot of sense
 
+    if [ -z "${HOSTDIR}" ]; then
+        if [ -f "${TESTDIR}/${HOST}" ]; then
+            version=`cat ${TESTDIR}/${HOST}`
+        else
+            version=1
+        fi
+        if [ -z "${version}" ]; then    # for some strange reason this file
+                                        # gets truncated at times... Windos
+            for w in `ls -d ${TESTDIR}/${HOST}.[0-9]* 2>/dev/null |
+                sort -t '.' -n | sed -e "s/.*${HOST}.//"` ; do
+                version=`expr $w + 1`
+            done
+            if [ -z "${version}" ]; then
+                version=1
+            fi
+        fi
+        expr $version + 1 > ${TESTDIR}/${HOST}
 
-KILL="kill"
-if  [ ${OS_ARCH} = "Linux" ]; then
+        HOSTDIR=${TESTDIR}/${HOST}'.'$version
+
+        mkdir -p ${HOSTDIR}
+    fi
+
+    if [ -z "${RESULTS}" ]; then
+        RESULTS=${HOSTDIR}/results.html
+    fi
+    if [ ! -f "${RESULTS}" ]; then
+        cp ${COMMON}/results_header.html ${RESULTS}
+        html "<H4>Platform: ${OBJDIR}<BR>" 
+        html "Test Run: ${HOST}.$version</H4>" 
+        html "<HR><BR>" 
+        html "<HTML><BODY>" 
+
+        echo "********************************************"
+        echo "   Platform: ${OBJDIR}"
+        echo "   Results: ${HOST}.$version"
+        echo "********************************************"
+    fi
+    if [ -z "${LOGFILE}" ]; then
+        LOGFILE=${HOSTDIR}/output.log
+    fi
+    if [ ! -f "${LOGFILE}" ]; then
+        touch ${LOGFILE}
+    fi
+
+    KILL="kill"
+    if  [ "${OS_ARCH}" = "Linux" ]; then
         SLEEP="sleep 30"
+    fi
+    if [ `uname -s` = "SunOS" ]; then
+        PS="/usr/5bin/ps"
+    else
+        PS="ps"
+    fi
+   
+
+    CURDIR=`pwd`
+
+    HTML_FAILED='</TD><TD bgcolor=red>Failed</TD><TR>'
+    HTML_PASSED='</TD><TD bgcolor=lightGreen>Passed</TD><TR>'
+
+    CU_ACTION='Unknown certutil action'
+
+    # would like to preserve some tmp files, also easier to see if there 
+    # are "leftovers" - another possibility ${HOSTDIR}/tmp
+
+    TMP=${HOSTDIR}      #TMP=${TMP-/tmp}
+
+    CADIR=${HOSTDIR}/CA
+    SERVERDIR=${HOSTDIR}/server
+    CLIENTDIR=${HOSTDIR}/client
+    ALICEDIR=${HOSTDIR}/alicedir
+    BOBDIR=${HOSTDIR}/bobdir
+    DAVEDIR=${HOSTDIR}/dave
+
+    PWFILE=${TMP}/tests.pw.$$
+    CERTSCRIPT=${TMP}/tests_certs.$$
+    NOISE_FILE=${TMP}/tests_noise.$$
+
+    # we need relative pathnames of these files abd directories, since our 
+    # tools can't handle the unix style absolut pathnames on cygnus
+
+    R_CADIR=../CA
+    R_SERVERDIR=../server
+    R_CLIENTDIR=../client
+    R_ALICEDIR=../alicedir
+    R_BOBDIR=../bobdir
+    R_DAVEDIR=../dave
+
+    R_PWFILE=../tests.pw.$$
+    R_CERTSCRIPT=../tests_certs.$$
+    R_NOISE_FILE=../tests_noise.$$
+
+    # a new log file, short - fast to search, mostly for tools to
+    # see if their portion of the cert has succeeded, also for me -
+    CERT_LOG_FILE=${HOSTDIR}/cert.log      #the output.log is so crowded...
+
+    TEMPFILES="${PWFILE} ${CERTSCRIPT} ${NOISE_FILE}"
+    trap "Exit $0 Signal_caught" 2 3
+
+    export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH
+    export DOMSUF
+    export KILL SLEEP PS
+    export MOZILLA_ROOT SECURITY_ROOT DIST TESTDIR OBJDIR HOSTDIR QADIR
+    export LOGFILE SCRIPTNAME
+
+
+    SCRIPTNAME=$0
+    INIT_SOURCED=TRUE   #whatever one does - NEVER export this one please
 fi
-
-export  KILL
-
-INIT_SOURCED=TRUE
-

@@ -1,308 +1,165 @@
 #! /bin/sh  
 #
-# This is just a quick script so we can still run our testcases.
-# Longer term we need a scriptable test environment..
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
 #
-. ../common/init.sh
-CURDIR=`pwd`
-
-SMIMEDIR=${HOSTDIR}/smime
-CADIR=${SMIMEDIR}/cadir
-ALICEDIR=${SMIMEDIR}/alicedir
-BOBDIR=${SMIMEDIR}/bobdir
-
-echo "<HTML><BODY>" >> ${RESULTS}
-
-SONMI_DEBUG=ON	#we see starnge problems on hpux 64 - save all output
-		# for now
-
-#temporary files
-if [ -n "$SONMI_DEBUG" -a "$SONMI_DEBUG" = "ON" ]
-then
-	TMP=${SMIMEDIR}
-	PWFILE=${TMP}/tests.pw
-	CERTSCRIPT=${TMP}/tests_certs
-	NOISE_FILE=${TMP}/tests_noise
-	CERTUTILOUT=${TMP}/certutil_out
-
-	TEMPFILES=""
-else
-	TMP=${TMP-/tmp}
-	PWFILE=${TMP}/tests.pw.$$
-	CERTSCRIPT=${TMP}/tests_certs.$$
-	NOISE_FILE=${TMP}/tests_noise.$$
-	CERTUTILOUT=${TMP}/certutil_out.$$
-
-	TEMPFILES="${PWFILE} ${CERTSCRIPT} ${NOISE_FILE} ${CERTUTILOUT}"
-	#
-	# should also try to kill any running server
-	#
-	trap "rm -f ${TEMPFILES};  exit"  2 3
-fi
-
-mkdir -p ${SMIMEDIR}
-mkdir -p ${CADIR}
-mkdir -p ${ALICEDIR}
-mkdir -p ${BOBDIR}
-cd ${CADIR}
-
-rm ${CERTUTILOUT} 2>/dev/null
-
-# Generate noise for our CA cert.
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
 #
-# NOTE: these keys are only suitable for testing, as this whole thing bypasses
-# the entropy gathering. Don't use this method to generate keys and certs for
-# product use or deployment.
+# The Original Code is the Netscape security libraries.
 #
-ps -efl > ${NOISE_FILE} 2>&1
-ps aux >> ${NOISE_FILE} 2>&1
-netstat >> ${NOISE_FILE} 2>&1
-date >> ${NOISE_FILE} 2>&1
-
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
 #
-# build the TEMP CA used for testing purposes
-# 
-echo "<TABLE BORDER=1><TR><TH COLSPAN=3>Certutil Tests</TH></TR>" >> ${RESULTS}
-echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
-echo "********************** Creating a CA Certificate **********************"
-echo nss > ${PWFILE}
-echo "   certutil -N -d ${CADIR} -f ${PWFILE} " 
-certutil -N -d ${CADIR} -f ${PWFILE}  2>&1
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable
+# instead of those above.  If you wish to allow use of your
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+#
+#
+########################################################################
+#
+# mozilla/security/nss/tests/smime/smime.sh
+#
+# Script to test NSS smime
+#
+# needs to work on all Unix and Windows platforms
+#
+# special strings
+# ---------------
+#   FIXME ... known problems, search for this string
+#   NOTE .... unexpected behavior
+#
+########################################################################
 
-echo initialized
-echo 5 > ${CERTSCRIPT}
-echo 9 >> ${CERTSCRIPT}
-echo n >> ${CERTSCRIPT}
-echo y >> ${CERTSCRIPT}
-echo 3 >> ${CERTSCRIPT}
-echo n >> ${CERTSCRIPT}
-echo 5 >> ${CERTSCRIPT}
-echo 6 >> ${CERTSCRIPT}
-echo 7 >> ${CERTSCRIPT}
-echo 9 >> ${CERTSCRIPT}
-echo n >> ${CERTSCRIPT}
-echo    "certutil -S -n \"TestCA\" -s \"CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US\" -t \"CTu,CTu,CTu\" -v 60 -x -d ${CADIR} -1 -2 -5 -f ${PWFILE} -z ${NOISE_FILE} " 
-certutil -S -n "TestCA" -s "CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -t "CTu,CTu,CTu" -v 60 -x -d ${CADIR} -1 -2 -5 -f ${PWFILE} -z ${NOISE_FILE} < ${CERTSCRIPT}  2>&1
+############################## smime_init ##############################
+# local shell function to initialize this script
+########################################################################
+smime_init()
+{
+  SCRIPTNAME=smime.sh      # sourced - $0 would point to all.sh
 
-if [ $? -ne 0 ]; then
-    echo "<TR><TD>Creating CA Cert</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>Creating CA Cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-echo "   certutil -L -n \"TestCA\" -r -d ${CADIR} > root.cert"
-certutil -L -n "TestCA" -r -d ${CADIR} > root.cert 2>${CERTUTILOUT}
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Export Root"}
-fi
-cat ${CERTUTILOUT}
-rm ${CERTUTILOUT} 2>/dev/null
+  if [ -z "${CLEANUP}" ] ; then     # if nobody else is responsible for
+      CLEANUP="${SCRIPTNAME}"       # cleaning this script will do it
+  fi
 
-echo "**************** Creating Client CA Issued Certificates ****************"
-echo "   certutil -N -d ${ALICEDIR} -f ${PWFILE} "
-certutil -N -d ${ALICEDIR} -f ${PWFILE}  2>&1
-netstat >> ${NOISE_FILE} 2>&1
-date >> ${NOISE_FILE} 2>&1
-cd ${ALICEDIR}
-echo "Import the root CA"
-echo "   certutil -A -n \"TestCA\" -t \"TC,TC,TC\" -f ${PWFILE} -d ${ALICEDIR} -i ${CADIR}/root.cert "
-certutil -A -n "TestCA" -t "TC,TC,TC" -f ${PWFILE} -d ${ALICEDIR} -i ${CADIR}/root.cert  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Import Root"}
-fi
-echo "Generate a Certificate request"
-echo  "  certutil -R -s \"CN=Alice, E=alice@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${ALICEDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req "
-certutil -R -s "CN=Alice, E=alice@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -d ${ALICEDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Generate Request"}
-fi
-echo "Sign the Certificate request"
-echo  "certutil -C -c \"TestCA\" -m 3 -v 60 -d ${CADIR} -f ${PWFILE} -i req -o alice.cert "
-certutil -C -c "TestCA" -m 3 -v 60 -d ${CADIR} -i req -o alice.cert -f ${PWFILE}  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Sign Alice's Cert"}
-fi
-echo "Import the new Cert"
-echo "certutil -A -n \"Alice\" -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i alice.cert "
-certutil -A -n "Alice" -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i alice.cert  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Import Alice's cert"}
-fi
-if [ -n "${CERTFAILED}" ]; then
-    echo "<TR><TD>Creating Alice's email cert</TD><TD bgcolor=red>Failed ($CERTFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>Creating Alice's email cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+  if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
+      cd ../common
+      . init.sh
+  fi
+  if [ ! -r $CERT_LOG_FILE ]; then  # we need certificates here
+      cd ../cert
+      . cert.sh
+  fi
+  SCRIPTNAME=smime.sh
+  html_head "S/MIME Tests"
 
-netstat >> ${NOISE_FILE} 2>&1
-date >> ${NOISE_FILE} 2>&1
-echo "certutil  -N -d ${BOBDIR} -f  "
-certutil -N -d ${BOBDIR} -f ${PWFILE}  2>&1
-cd ${BOBDIR}
-echo "Import the root CA"
-echo "   certutil -A -n \"TestCA\" -t \"TC,TC,TC\" -f ${PWFILE} -d ${BOBDIR} -i ${CADIR}/root.cert "
-certutil -A -n "TestCA" -t "TC,TC,TC" -f ${PWFILE} -d ${BOBDIR} -i ${CADIR}/root.cert  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Import Root"}
-fi
-echo "Generate a Certificate request"
-echo  "  certutil -R -s \"CN=Bob, E=bob@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${BOBDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req "
-certutil -R -s "CN=Bob, E=bob@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -d ${BOBDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Generate Request"}
-fi
-echo "Sign the Certificate request"
-echo  "certutil -C -c "TestCA" -m 4 -v 60 -d ${CADIR} -f ${PWFILE} -i req -o bob.cert "
-certutil -C -c "TestCA" -m 4 -v 60 -d ${CADIR} -i req -o bob.cert -f ${PWFILE}  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Sign Bob's cert"}
-fi
-echo "Import the new Cert"
-echo "certutil -A -n \"Bob\" -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i bob.cert "
-certutil -A -n "Bob" -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i bob.cert  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Import Bob's cert"}
-fi
-if [ -n "${CERTFAILED}" ]; then
-    echo "<TR><TD>Creating Bob's email cert</TD><TD bgcolor=red>Failed ($CERTFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "<TR><TD>Creating Bob's email cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+  grep "SUCCESS: SMIME passed" $CERT_LOG_FILE >/dev/null || {
+      Exit 11 "Fatal - S/MIME of cert.sh needs to pass first"
+  }
 
-netstat >> ${NOISE_FILE} 2>&1
-date >> ${NOISE_FILE} 2>&1
-cd ${CADIR}
-echo "Generate a third cert"
-echo "certutil -S -n \"Dave\" -c \"TestCA\" -t \"u,u,u\" -s \"CN=Dave, E=dave@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${CADIR} -f ${PWFILE} -z ${NOISE_FILE} -m 5 -v 60 "
-certutil -S -n "Dave" -c "TestCA" -t "u,u,u" -s "CN=Dave, E=dave@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US" -d ${CADIR} -f ${PWFILE} -z ${NOISE_FILE} -m 5 -v 60  2>&1
+  SMIMEDIR=${HOSTDIR}/smime
+  R_SMIMEDIR=../smime
+  mkdir -p ${SMIMEDIR}
+  cd ${SMIMEDIR}
+  cp ${QADIR}/smime/alice.txt ${SMIMEDIR}
+}
 
-echo "Import Alices's cert into Bob's db"
-echo "certutil -E -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i ${ALICEDIR}/alice.cert "
-certutil -E -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i ${ALICEDIR}/alice.cert  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Import Alice's cert into Bob's db"}
-fi
-echo "Import Bob's cert into Alice's db"
-echo "certutil -E -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i ${BOBDIR}/bob.cert "
-certutil -E -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i ${BOBDIR}/bob.cert  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Import Bob's cert into Alice's db"}
-fi
-echo "Import Dave's cert into Alice's and Bob's dbs"
-echo "   certutil -L -n \"Dave\" -r -d ${CADIR} > dave.cert"
-certutil -L -n "Dave" -r -d ${CADIR} > dave.cert 2>${CERTUTILOUT}
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Export Dave's cert"}
-fi
-cat ${CERTUTILOUT}
-rm ${CERTUTILOUT} 2>/dev/null
-echo "certutil -E -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i ${CADIR}/dave.cert "
-certutil -E -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i ${CADIR}/dave.cert  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Import Dave's cert into Alice's db"}
-fi
-echo "certutil -E -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i ${CADIR}/dave.cert "
-certutil -E -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i ${CADIR}/dave.cert  2>&1
-if [ $? -ne 0 ]; then
-   CERTFAILED=${CERTFAILED-"Import Dave's cert into Bob's db"}
-fi
-echo "</TABLE><BR>" >> ${RESULTS}
 
-echo "********************* S/MIME testing  ****************************"
-echo "<TABLE BORDER=1><TR><TH COLSPAN=3>S/MIME tests</TH></TR>" >> ${RESULTS}
-echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
-cd ${SMIMEDIR}
-cp ${CURDIR}/alice.txt ${SMIMEDIR}
-# Test basic signed and enveloped messages from 1 --> 2
-echo "cmsutil -S -N Alice -i alice.txt -d ${ALICEDIR} -p nss -o alice.sig"
-cmsutil -S -N Alice -i alice.txt -d ${ALICEDIR} -p nss -o alice.sig
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Create Signature Alice"}
-fi
-echo "cmsutil -D -i alice.sig -d ${BOBDIR} -o alice.data1"
-cmsutil -D -i alice.sig -d ${BOBDIR} -o alice.data1
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Decode Alice's Signature"}
-fi
-echo "diff alice.txt alice.data1"
-diff alice.txt alice.data1
-if [ $? -ne 0 ]; then
-   echo "Signing attached message Failed ($CMSFAILED)" 
-   echo "<TR><TD>Signing attached message</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-   echo "Signing attached message Passed" 
-   echo "<TR><TD>Signing attached message</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-echo "cmsutil -E -r bob@bogus.com -i alice.txt -d ${ALICEDIR} -p nss -o alice.env"
-cmsutil -E -r bob@bogus.com -i alice.txt -d ${ALICEDIR} -p nss -o alice.env
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Create Enveloped Data Alice"}
-fi
-echo "cmsutil -D -i alice.env -d ${BOBDIR} -p nss -o alice.data1"
-cmsutil -D -i alice.env -d ${BOBDIR} -p nss -o alice.data1
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Decode Enveloped Data Alice"}
-fi
-echo "diff alice.txt alice.data1"
-diff alice.txt alice.data1
-if [ $? -ne 0 ]; then
-   echo "Enveloped Data Failed ($CMSFAILED)" 
-   echo "<TR><TD>Enveloped Data</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-   echo "Enveloped Data Passed"
-   echo "<TR><TD>Enveloped Data</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-# multiple recip
-#cmsutil -E -i alicecc.txt -d alicedir -o alicecc.env -r bob@bogus.com,dave@bogus.com
-#cmsutil -D -i alicecc.env -d bobdir -p nss
+############################## smime_main ##############################
+# local shell function to test basic signed and enveloped messages 
+# from 1 --> 2"
+########################################################################
+smime_main()
+{
 
-#certs-only
-echo "cmsutil -O -r \"Alice,bob@bogus.com,dave@bogus.com\" -d ${ALICEDIR} > co.der"
-cmsutil -O -r "Alice,bob@bogus.com,dave@bogus.com" -d ${ALICEDIR} > co.der
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Create Certs-Only Alice"}
-fi
-echo "cmsutil -D -i co.der -d ${BOBDIR}"
-cmsutil -D -i co.der -d ${BOBDIR}
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Verify Certs-Only by CA"}
-fi
-if [ -n "${CMSFAILED}" ]; then
-    echo "Sending certs-only message Failed ($CMSFAILED)"
-    echo "<TR><TD>Sending certs-only message</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "Sending certs-only message Passed"
-    echo "<TR><TD>Sending certs-only message</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
-echo "cmsutil -C -i alice.txt -e alicehello.env -d ${ALICEDIR} -r \"bob@bogus.com\" > alice.enc"
-cmsutil -C -i alice.txt -e alicehello.env -d ${ALICEDIR} -r "bob@bogus.com" > alice.enc
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Create Encrypted-Data"}
-fi
-#echo "cmsutil -C -i bob.txt -e alicehello.env -d ${ALICEDIR} -r \"alice@bogus.com\" > bob.enc"
-#cmsutil -C -i bob.txt -e alicehello.env -d ${ALICEDIR} -r "alice@bogus.com" > bob.enc
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Create Encrypted-Data"}
-fi
-echo "cmsutil -D -i alice.enc -d ${BOBDIR} -e alicehello.env -p nss -o alice.data2"
-cmsutil -D -i alice.enc -d ${BOBDIR} -e alicehello.env -p nss -o alice.data2
-diff alice.txt alice.data2
-if [ $? -ne 0 ]; then
-   CMSFAILED=${CMSFAILED-"Decode Encrypted-Data"}
-fi
-if [ -n "${CMSFAILED}" ]; then
-    echo "Encrypted-Data message Failed ($CMSFAILED)"
-    echo "<TR><TD>Encrypted-Data message</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
-else
-    echo "Encrypted-Data message Passed"
-    echo "<TR><TD>Encrypted-Data message</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-fi
+  echo "$SCRIPTNAME: Signing Attached Message ------------------------------"
+  echo "cmsutil -S -N Alice -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.sig"
+  cmsutil -S -N Alice -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.sig
+  html_msg $? 0 "Create Signature Alice" "."
 
-echo "</TABLE><BR>" >> ${RESULTS}
+  echo "cmsutil -D -i alice.sig -d ${R_BOBDIR} -o alice.data1"
+  cmsutil -D -i alice.sig -d ${R_BOBDIR} -o alice.data1
+  html_msg $? 0 "Decode Alice's Signature" "."
 
-if [ "$SONMI_DEBUG" != "ON"  -a -n "$TEMPFILES" ]
-then
-	rm -f ${TEMPFILES}
-fi
-cd ${CURDIR}
+  echo "diff alice.txt alice.data1"
+  diff alice.txt alice.data1
+  html_msg $? 0 "Compare Decoded Signature and Original" "."
 
-echo "</BODY></HTML>" >> ${RESULTS}
+  echo "$SCRIPTNAME: Enveloped Data Tests ------------------------------"
+  echo "cmsutil -E -r bob@bogus.com -i alice.txt -d ${R_ALICEDIR} -p nss \\"
+  echo "        -o alice.env"
+  cmsutil -E -r bob@bogus.com -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.env
+  html_msg $? 0 "Create Enveloped Data Alice" "."
+
+  echo "cmsutil -D -i alice.env -d ${R_BOBDIR} -p nss -o alice.data1"
+  cmsutil -D -i alice.env -d ${R_BOBDIR} -p nss -o alice.data1
+  html_msg $? 0 "Decode Enveloped Data Alice" "."
+
+  echo "diff alice.txt alice.data1"
+  diff alice.txt alice.data1
+  html_msg $? 0 "Compare Decoded Enveloped Data and Original" "."
+
+  # multiple recip
+  #cmsutil -E -i alicecc.txt -d ${R_ALICEDIR} -o alicecc.env \
+  #        -r bob@bogus.com,dave@bogus.com
+  #cmsutil -D -i alicecc.env -d ${R_BOBDIR} -p nss
+  
+  echo "$SCRIPTNAME: Sending CERTS-ONLY Message ------------------------------"
+  echo "cmsutil -O -r \"Alice,bob@bogus.com,dave@bogus.com\" \\"
+  echo "        -d ${R_ALICEDIR} > co.der"
+  cmsutil -O -r "Alice,bob@bogus.com,dave@bogus.com" -d ${R_ALICEDIR} > co.der
+  html_msg $? 0 "Create Certs-Only Alice" "."
+
+  echo "cmsutil -D -i co.der -d ${R_BOBDIR}"
+  cmsutil -D -i co.der -d ${R_BOBDIR}
+  html_msg $? 0 "Verify Certs-Only by CA" "."
+
+  echo "$SCRIPTNAME: Encrypted-Data Message ---------------------------------"
+  echo "cmsutil -C -i alice.txt -e alicehello.env -d ${R_ALICEDIR} \\"
+  echo "        -r \"bob@bogus.com\" > alice.enc"
+  cmsutil -C -i alice.txt -e alicehello.env -d ${R_ALICEDIR} \
+          -r "bob@bogus.com" > alice.enc
+  html_msg $? 0 "Create Encrypted-Data" "."
+
+  echo "cmsutil -D -i alice.enc -d ${R_BOBDIR} -e alicehello.env -p nss \\"
+  echo "        -o alice.data2"
+  cmsutil -D -i alice.enc -d ${R_BOBDIR} -e alicehello.env -p nss -o alice.data2
+  html_msg $? 0 "Decode Encrypted-Data" "."
+
+  diff alice.txt alice.data2
+  html_msg $? 0 "Compare Decoded and Original Data" "."
+}
+  
+############################## smime_cleanup ###########################
+# local shell function to finish this script (no exit since it might be
+# sourced)
+########################################################################
+smime_cleanup()
+{
+  html "</TABLE><BR>"
+  cd ${QADIR}
+  . common/cleanup.sh
+}
+
+################## main #################################################
+
+smime_init
+smime_main
+smime_cleanup
+
