@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.13 2002/06/17 18:46:27 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.14 2002/06/18 16:41:41 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -269,7 +269,7 @@ DB * rdbopen(const char *appName, const char *prefix,
     DB *db;
 
     if (pk11_rdbfunc) {
-	db = (*pk11_rdbfunc)(appName,prefix,type,flags);
+	db = (*pk11_rdbfunc)(appName,prefix,type,rdbmapflags(flags));
 	return db;
     }
 
