@@ -129,48 +129,10 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 }
 
 NS_IMETHODIMP
-nsIOService::ExtractScheme(const char* inURI, PRUint32 *startPos, PRUint32 *endPos,
-                           char* *scheme)
+nsIOService::ExtractScheme(const char* inURI, PRUint32 *startPos, 
+                           PRUint32 *endPos, char* *scheme)
 {
-    // search for something up to a colon, and call it the scheme
-    NS_ENSURE_ARG_POINTER(inURI);
-
-    const char* uri = inURI;
-
-    // skip leading white space
-    while (nsCRT::IsAsciiSpace(*uri))
-        uri++;
-
-    PRUint32 start = uri - inURI;
-    if (startPos) {
-        *startPos = start;
-    }
-
-    PRUint32 length = 0;
-    char c;
-    while ((c = *uri++) != '\0') {
-        if (c == ':') {
-            if (endPos) {
-                *endPos = start + length + 1;
-            }
-
-            if (scheme) {
-                char* str = (char*)nsAllocator::Alloc(length + 1);
-                if (str == nsnull)
-                    return NS_ERROR_OUT_OF_MEMORY;
-                nsCRT::memcpy(str, &inURI[start], length);
-                str[length] = '\0';
-                *scheme = str;
-            }
-            return NS_OK;
-        }
-        else if (nsCRT::IsAsciiAlpha(c)) {
-            length++;
-        }
-        else 
-            break;
-    }
-    return NS_ERROR_MALFORMED_URI;
+    return ExtractURLScheme(inURI, startPos, endPos, scheme);
 }
 
 nsresult
