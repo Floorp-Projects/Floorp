@@ -40,6 +40,10 @@ public:
 
   nsInternetConfigService();
   virtual ~nsInternetConfigService();
+protected:
+  // some private helper methods...
+  nsresult FillMIMEInfoForICEntry(ICMapEntry& entry, nsIMIMEInfo ** mimeinfo);
+  
 };
 
 #endif

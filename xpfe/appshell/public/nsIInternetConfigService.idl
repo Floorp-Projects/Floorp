@@ -45,7 +45,12 @@ interface nsIInternetConfigService : nsISupports
   
   boolean hasProtocalHandler(in string protocol);
   
-  void fillInMIMEInfo(in string mimetype, in nsIURL url, out nsIMIMEInfo mimeinfo);
+  // pass in a mime type or a file extension.....
+  void fillInMIMEInfo(in string mimetype, in string aFileExtension, out nsIMIMEInfo mimeinfo);
+  
+  void getMIMEInfoFromExtension(in string aFileExt, out nsIMIMEInfo mimeinfo);
+  
+  void getMIMEInfoFromTypeCreator(in PRUint32 aType, in PRUint32 aCreator, in string aFileExt, out nsIMIMEInfo mimeInfo);
   
   void getDownloadFolder(out FSSpec fsspec);
   
