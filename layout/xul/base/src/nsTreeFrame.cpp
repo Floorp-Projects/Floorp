@@ -261,6 +261,9 @@ void nsTreeFrame::FireChangeHandler(nsIPresContext& aPresContext)
 
   event.message = NS_FORM_CHANGE;
   if (nsnull != mContent) {
+
+    // Set up the target by doing a PreHandleEvent
+
     mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
   }
 }
