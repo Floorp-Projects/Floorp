@@ -253,7 +253,8 @@ extern "C" NS_EXPORT int DebugRobot(
       ww->SetObserver(pl);
       const char* spec;
       (void)url->GetSpec(&spec);
-      ww->LoadURL(nsString(spec));/* XXX hook up stream listener here! */
+      nsAutoString theSpec(spec);
+      ww->LoadURL(theSpec.GetUnicode());/* XXX hook up stream listener here! */
       while (!g_bReadyForNextUrl) {
         if (yieldProc != NULL) {
           const char* spec;
