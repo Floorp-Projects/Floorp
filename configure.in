@@ -176,6 +176,8 @@ AS=
 AS_DASH_C_FLAG='-c'
 NS_USE_NATIVE=
 DLL_SUFFIX="so"
+OS_TARGET=
+_COMPILER_PREFIX=
 
 dnl GNU specific defaults
 dnl ========================================================
@@ -365,6 +367,31 @@ alpha*-*-linux*)
     fi
     ;;
 
+*-nto*) 
+    if test "$no_x" = "yes"; then
+	MOZ_TOOLKIT='photon'
+	TK_LIBS='-lphoton -lphrender'
+	AC_DEFINE(NO_X11)
+    fi
+    CFLAGS="$CFLAGS -DQNX -DNTO -D__QNXNTO__ -D_QNX_SOURCE -D_POSIX_SOURCE -D__i386__ -D_i386 -DNSCAP_NO_EXPLICIT -DNO_REGEX -DSTRINGS_ALIGNED -D_SEEKPOS_DEFINED_"
+    CXXFLAGS="$CXXFLAGS -DQNX -DNTO -D__QNXNTO__ -D_QNX_SOURCE -D_POSIX_SOURCE -D__i386__ -D_i386 -DNSCAP_NO_EXPLICIT -DNO_REGEX -DSTRINGS_ALIGNED -D_SEEKPOS_DEFINED_"
+    _WARNINGS_CFLAGS='-w'
+    _WARNINGS_CXXFLAGS='-w'
+    OS_TARGET="NTO"
+    MOZ_OPTIMIZE_FLAGS="-O2"
+    DSO_LDOPTS="-M $DSO_LDOPTS"
+    DSO_CFLAGS=''
+    DSO_PIC_CFLAGS="-shared -Wc,-fPIC -DPIC"
+    MKSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS)'
+    MKCSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS)'
+    AR='qcc -Vgcc_ntox86 -M -a $@'
+    _DEFINES_CFLAGS='-Wp,-include,$(DEPTH)/config-defs.h'
+    _DEFINES_CXXFLAGS='-Wp,-include,$(DEPTH)/config-defs.h'
+    _PREPROCESSOR_PREFIX="-Wp,"
+    _COMPILER_PREFIX="-Wc,"
+    _LINKER_PREFIX="-Wl,"      
+    ;;
+
 *-openbsd*)
     DLL_SUFFIX="so.1.0"
     DSO_CFLAGS=''
@@ -394,6 +421,14 @@ alpha*-*-osf*)
         DSO_CFLAGS=
         MKSHLIB_FORCE_ALL='-all'
         MKSHLIB_UNFORCE_ALL='-none'
+    fi
+    ;;
+
+*-qnx*) 
+    if test "$no_x" = "yes"; then
+	MOZ_TOOLKIT='photon'
+	TK_LIBS='-lphoton -lphrender'
+	AC_DEFINE(NO_X11)
     fi
     ;;
 
@@ -943,22 +978,6 @@ then
 	rm -f conftest*
 
 	case "$target" in
-	    *-*-solaris*) 
-    			AC_DEFINE(_REENTRANT) 
-			if test ! "$GNU_CC"; then
-				CFLAGS="$CFLAGS -mt" 
-				CXXFLAGS="$CXXFLAGS -mt" 
-			fi
-			;;
-
-	    *-*-linux*) 
-			AC_DEFINE(_REENTRANT) 
-			;;
-
-	    alpha*-*-osf*)
-			AC_DEFINE(_REENTRANT)
-			;;
-
 	    *-*-freebsd*)
 			AC_DEFINE(_REENTRANT)
 			AC_DEFINE(_THREAD_SAFE)
@@ -967,6 +986,26 @@ then
 				PTHREAD_LDFLAGS=""
 			else
 				PTHREAD_LDFLAGS="-lc_r"
+			fi
+			;;
+
+	    *-*-linux*) 
+			AC_DEFINE(_REENTRANT) 
+			;;
+
+	    *-*-nto*) 
+			AC_DEFINE(_REENTRANT) 
+			;;
+
+	    alpha*-*-osf*)
+			AC_DEFINE(_REENTRANT)
+			;;
+
+	    *-*-solaris*) 
+    			AC_DEFINE(_REENTRANT) 
+			if test ! "$GNU_CC"; then
+				CFLAGS="$CFLAGS -mt" 
+				CXXFLAGS="$CXXFLAGS -mt" 
 			fi
 			;;
 	esac
@@ -2110,7 +2149,10 @@ AC_DEFINE(STANDALONE_IMAGE_LIB)
 STANDALONE_IMAGE_LIB=1
 AC_SUBST(STANDALONE_IMAGE_LIB)
 
-OS_TARGET=`uname -s`
+if test -z "$OS_TARGET"
+then
+  OS_TARGET=`uname -s`
+fi
 AC_SUBST(OS_TARGET)
 
 if test "$OS_TARGET" = "OS2"; then
