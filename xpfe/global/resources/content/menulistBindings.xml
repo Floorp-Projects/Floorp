@@ -81,7 +81,7 @@
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button top" allowevents="true" 
-                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
           <xul:image class="menubutton-dropmarker"/>
         </xul:box>
@@ -93,7 +93,7 @@
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button left" allowevents="true" 
-                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
           <xul:image class="menubutton-dropmarker"/>
         </xul:box>
@@ -105,7 +105,7 @@
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button right" allowevents="true" 
-                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
           <xul:image class="menubutton-dropmarker"/>
         </xul:box>
@@ -117,7 +117,7 @@
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button bottom" allowevents="true" 
-                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
           <xul:image class="menubutton-dropmarker"/>
         </xul:box>
@@ -128,7 +128,7 @@
   <binding id="menubutton-dual-ex" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-top">
     <content excludes="template,observes,menupopup">
       <xul:button class="menubutton-dual-ex-button top" allowevents="true" 
-                  inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey,disabled"
+                  inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"
                   onmouseover="this.parentNode.buttonover = true;"
                   onmouseout="this.parentNode.buttonover = false;"
                   onmousedown="this.parentNode.buttondown = true;"

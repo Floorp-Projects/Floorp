@@ -1538,15 +1538,15 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
 
       // Figure out if this token contains a :. 
       nsAutoString attrTok; attrTok.AssignWithConversion(token);
-      PRInt32 index = attrTok.Find(":", PR_TRUE);
+      PRInt32 index = attrTok.Find("=", PR_TRUE);
       if (index != -1) {
         // This attribute maps to something different.
         nsAutoString left, right;
         attrTok.Left(left, index);
         attrTok.Right(right, attrTok.Length()-index-1);
 
-        atom = getter_AddRefs(NS_NewAtom(left.GetUnicode()));
-        attribute = getter_AddRefs(NS_NewAtom(right.GetUnicode()));
+        atom = getter_AddRefs(NS_NewAtom(right.GetUnicode()));
+        attribute = getter_AddRefs(NS_NewAtom(left.GetUnicode()));
       }
       else {
         nsAutoString tok; tok.AssignWithConversion(token);
@@ -1599,6 +1599,10 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
           domElement->AppendChild(textNode, getter_AddRefs(dummy));
         }
       }
+
+      // Now remove the inherits attribute from the cloned element.  It is used
+      // on the template only, and we don't need it anymore.
+      aElement->UnsetAttribute(kNameSpaceID_None, kInheritsAtom, PR_FALSE);
 
       token = nsCRT::strtok( newStr, ", ", &newStr );
     }

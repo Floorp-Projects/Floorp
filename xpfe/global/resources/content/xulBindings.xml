@@ -71,7 +71,7 @@
   <binding id="menuitem">
     <content autostretch="never" excludes="template,observes,menupopup">
       <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
-      <xul:text class="menu-accel" inherits="acceltext:value"/>
+      <xul:text class="menu-accel" inherits="value=acceltext"/>
     </content>
     <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
@@ -85,7 +85,7 @@
         <xul:image/>
       </xul:box>
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
-      <xul:text class="menu-iconic-accel" inherits="acceltext:value"/>
+      <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
     <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
@@ -99,7 +99,7 @@
         <xul:image/>
       </xul:box>
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
-      <xul:text class="menu-iconic-accel" inherits="acceltext:value"/>
+      <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
       <xul:box orient="vertical" autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>

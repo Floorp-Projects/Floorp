@@ -8,9 +8,9 @@
   <binding id="smallheader">
     <content>
       <xul:box class="box-smallheader-box toolbar-primary" autostretch="never" flex="1">
-        <xul:text class="box-smallheader-left" inherits="title:value"/>
+        <xul:text class="box-smallheader-left" inherits="value=title"/>
         <xul:spring flex="1"/>
-        <xul:text class="box-smallheader-right" inherits="description:value"/>
+        <xul:text class="box-smallheader-right" inherits="value=description"/>
       </xul:box>
     </content>
     <interface>
@@ -40,7 +40,7 @@
       <xul:box class="box-status-bg toolbar-standard" flex="1">
         <xul:text class="box-status-text" inherits="value"/>
         <xul:spring flex="1"/>
-        <xul:text class="box-status-progress" inherits="progress:value"/>
+        <xul:text class="box-status-progress" inherits="value=progress"/>
       </xul:box>  
     </content>
   </binding>
