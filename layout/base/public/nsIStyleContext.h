@@ -342,6 +342,7 @@ struct nsBorderEdges
 inline nsBorderEdges::nsBorderEdges()
 {
   mMaxBorderWidth.SizeTo(0,0,0,0);
+  mOutsideEdge = PR_TRUE;
 };
 
 
