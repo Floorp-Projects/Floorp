@@ -402,15 +402,18 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                               nsCSSSelector* aSelector, nsIContent* aContent)
 {
   PRBool  result = PR_FALSE;
-  nsIAtom*  contentTag = aContent->GetTag();
+  nsIAtom*  contentTag;
+  aContent->GetTag(contentTag);
 
   if ((nsnull == aSelector->mTag) || (aSelector->mTag == contentTag)) {
     if ((nsnull != aSelector->mClass) || (nsnull != aSelector->mID) || 
         (nsnull != aSelector->mPseudoClass)) {
       nsIHTMLContent* htmlContent;
       if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-        nsIAtom* contentClass = htmlContent->GetClass();
-        nsIAtom* contentID = htmlContent->GetID();
+        nsIAtom* contentClass;
+        htmlContent->GetClass(contentClass);
+        nsIAtom* contentID;
+        htmlContent->GetID(contentID);
         if ((nsnull == aSelector->mClass) || (aSelector->mClass == contentClass)) {
           if ((nsnull == aSelector->mID) || (aSelector->mID == contentID)) {
             if ((contentTag == nsHTMLAtoms::a) && (nsnull != aSelector->mPseudoClass)) {
@@ -420,9 +423,9 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
               if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
                   (nsnull != linkHandler)) {
                 nsAutoString base, href;  // XXX base??
-                nsContentAttr attrState = htmlContent->GetAttribute("href", href);
+                nsresult attrState = htmlContent->GetAttribute("href", href);
 
-                if (eContentAttr_HasValue == attrState) {
+                if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
                   nsIURL* docURL = nsnull;
                   nsIDocument* doc = nsnull;
                   aContent->GetDocument(doc);
@@ -563,14 +566,15 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         BuildHash();
       }
       ContentEnumData data(aPresContext, aContent, aParentFrame, aResults);
-      nsIAtom* tagAtom = aContent->GetTag();
+      nsIAtom* tagAtom;
+      aContent->GetTag(tagAtom);
       nsIAtom* idAtom = nsnull;
       nsIAtom* classAtom = nsnull;
 
       nsIHTMLContent* htmlContent;
       if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-        idAtom = htmlContent->GetID();
-        classAtom = htmlContent->GetClass();
+        htmlContent->GetID(idAtom);
+        htmlContent->GetClass(classAtom);
         NS_RELEASE(htmlContent);
       }
 

@@ -478,13 +478,13 @@ nsCSSInlineFrame::CreateNewFrames(nsIPresContext* aPresContext)
 
   nsresult rv;
   PRInt32 lastContentIndex;
-  lastContentIndex = mContent->ChildCount();
+  mContent->ChildCount(lastContentIndex);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsCSSInlineFrame::CreateNewFrames: kidContentIndex=%d lastContentIndex=%d childPrevInFlow=%p",
       kidContentIndex, lastContentIndex, childPrevInFlow));
   while (kidContentIndex < lastContentIndex) {
     nsIContent* kid;
-    kid = mContent->ChildAt(kidContentIndex);
+    mContent->ChildAt(kidContentIndex, kid);
     if (nsnull == kid) {
       // Our content container is bad
       break;
@@ -629,7 +629,7 @@ nsCSSInlineFrame::ReflowMapped(nsCSSInlineReflowState& aState,
         // the child we just reflowed happens to be the last
         // possible child we can contain.
         PRInt32 lastContentIndex;
-        lastContentIndex = mContent->ChildCount();
+        mContent->ChildCount(lastContentIndex);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("nsCSSInlineFrame::ReflowMapped: HERE kidContentIndex=%d lastContentIndex=%d frame=%p c=%c kidRS=%x",
       kidContentIndex, lastContentIndex, child, mLastContentIsComplete ? 'T' : 'F', aReflowStatus));
@@ -793,7 +793,7 @@ nsCSSInlineFrame::PullUpChildren(nsCSSInlineReflowState& aState,
         // the child we just reflowed happens to be the last
         // possible child we can contain.
         PRInt32 lastContentIndex;
-        lastContentIndex = mContent->ChildCount();
+        mContent->ChildCount(lastContentIndex);
         if (++kidContentIndex == lastContentIndex) {
           // We are complete. Yippee. :-)
           aReflowStatus &= ~NS_FRAME_NOT_COMPLETE;

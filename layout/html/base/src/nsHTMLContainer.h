@@ -29,26 +29,35 @@ public:
   nsHTMLContainer(nsIAtom* aTag);
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
-  virtual PRBool CanContainChildren() const;
-  virtual PRInt32 ChildCount() const;
-  virtual nsIContent* ChildAt(PRInt32 aIndex) const;
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const;
+
+  NS_IMETHOD ChildCount(PRInt32& aResult) const;
+
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
 
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
   NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
-  virtual void Compact();
+  NS_IMETHOD Compact();
 
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext);
+
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const;
 
   NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
   NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes);
@@ -70,9 +79,6 @@ protected:
   virtual ~nsHTMLContainer();
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const;
 
   /**
    * Helper method that maps "background" and "bgcolor" into

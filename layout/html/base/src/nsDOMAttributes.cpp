@@ -322,7 +322,7 @@ nsresult nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode)
   attribute->GetValue(value);
   NS_RELEASE(attribute);
 
-  mContent.SetAttribute(name, value);
+  mContent.SetAttribute(name, value, PR_TRUE);
   return NS_OK;
 }
 
@@ -346,7 +346,8 @@ nsresult nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsAutoString name, value;
   nsISupportsArray *attributes = nsnull;
   if (NS_OK == NS_NewISupportsArray(&attributes)) {
-    PRInt32 count = mContent.GetAllAttributeNames(attributes);
+    PRInt32 count;
+    mContent.GetAllAttributeNames(attributes, count);
     if (count > 0) {
       if ((PRInt32)aIndex < count) {
         nsISupports *att = attributes->ElementAt(aIndex);
@@ -354,7 +355,7 @@ nsresult nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
         nsIAtom *atName = nsnull;
         if (nsnull != att && NS_OK == att->QueryInterface(kIAtom, (void**)&atName)) {
           atName->ToString(name);
-          if (eContentAttr_NotThere != mContent.GetAttribute(name, value)) {
+          if (NS_CONTENT_ATTR_NOT_THERE != mContent.GetAttribute(name, value)) {
             *aReturn = (nsIDOMNode *)new nsDOMAttribute(name, value);
             res = NS_OK;
           }
@@ -370,7 +371,9 @@ nsresult nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 
 nsresult nsDOMAttributeMap::GetLength(PRUint32 *aLength)
 {
-  *aLength = mContent.GetAttributeCount();
+  PRInt32 n;
+  mContent.GetAttributeCount(n);
+  *aLength = PRUint32(n);
   return NS_OK;
 }
 

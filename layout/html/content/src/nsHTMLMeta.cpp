@@ -26,10 +26,10 @@ class nsHTMLMeta : public nsHTMLMetaSuper {
 public:
   nsHTMLMeta(nsIAtom* aTag);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
 protected:
   virtual ~nsHTMLMeta();
@@ -44,7 +44,7 @@ nsHTMLMeta::~nsHTMLMeta()
 {
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLMeta::CreateFrame(nsIPresContext*  aPresContext,
                         nsIFrame*        aParentFrame,
                         nsIStyleContext* aStyleContext,

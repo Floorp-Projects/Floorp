@@ -169,7 +169,7 @@ public:
                           nsIPresContext* aPresContext);
   virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
 private: 
   // These are not supported and are not implemented! 
@@ -1053,7 +1053,8 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
   }
 }
 
-void CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -1079,6 +1080,8 @@ void CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
     fputs("{ null declaration }", out);
   }
   fputs("\n", out);
+
+  return NS_OK;
 }
 
 NS_HTML nsresult

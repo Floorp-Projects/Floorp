@@ -620,7 +620,8 @@ ContentTag(nsIContent* aContent, PRIntn aSlot)
   static char buf0[100], buf1[100], buf2[100];
   static char* bufs[] = { buf0, buf1, buf2 };
   char* buf = bufs[aSlot];
-  nsIAtom* atom = aContent->GetTag();
+  nsIAtom* atom;
+  aContent->GetTag(atom);
   if (nsnull != atom) {
     nsAutoString tmp;
     atom->ToString(tmp);
@@ -678,7 +679,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
       frame->ContentAppended(this, mPresContext, aContainer);
       break;
     }
-    parentContainer = parentContainer->GetParent();
+    parentContainer->GetParent(parentContainer);
   }
 
   ExitReflowLock();

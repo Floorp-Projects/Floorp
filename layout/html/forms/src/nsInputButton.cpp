@@ -69,14 +69,15 @@ public:
   nsInputButton (nsIAtom* aTag, nsIFormManager* aManager,
                  nsButtonType aType);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
 
   nsButtonType GetButtonType() { return mType; }
   nsButtonTagType GetButtonTagType() { return mTagType; }
@@ -303,18 +304,18 @@ nsInputButton::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
 }
 
-void
-nsInputButton::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+NS_IMETHODIMP
+nsInputButton::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                            PRBool aNotify)
 {
   nsHTMLValue val;
   if (ParseImageProperty(aAttribute, aString, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  nsInputButtonSuper::SetAttribute(aAttribute, aString);
+  return nsInputButtonSuper::SetAttribute(aAttribute, aString, aNotify);
 }
 
-void
+NS_IMETHODIMP
 nsInputButton::MapAttributesInto(nsIStyleContext* aContext, 
                                  nsIPresContext* aPresContext)
 {
@@ -330,6 +331,7 @@ nsInputButton::MapAttributesInto(nsIStyleContext* aContext,
     MapImageBorderInto(aContext, aPresContext, blue);
   }
   nsInputButtonSuper::MapAttributesInto(aContext, aPresContext);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -514,7 +516,7 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
     if (kButton_Image == GetButtonType()) { // there is an image
       // Setup url before starting the image load
       nsAutoString src;
-      if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) {
         mImageLoader.SetURL(src);
       }
       mImageLoader.GetDesiredSize(aPresContext, aReflowState, aDesiredLayoutSize);
@@ -589,8 +591,8 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
   }
 
   nsString value;
-  nsContentAttr status = ((nsHTMLTagContent*)content)->GetAttribute(nsHTMLAtoms::value, value);
-  if (eContentAttr_HasValue == status) {  
+  nsresult status = ((nsHTMLTagContent*)content)->GetAttribute(nsHTMLAtoms::value, value);
+  if (NS_CONTENT_ATTR_HAS_VALUE == status) {  
     button->SetLabel(value);
   } 
   else {
@@ -685,6 +687,6 @@ NS_NewHTMLInputBrowse(nsIHTMLContent** aInstancePtrResult,
   nsAutoString label;
   nsInputButton* button = (nsInputButton *)*aInstancePtrResult;
   button->GetDefaultLabel(label);
-  button->SetAttribute(nsHTMLAtoms::value, label);
+  button->SetAttribute(nsHTMLAtoms::value, label, PR_FALSE);
   return result;
 }

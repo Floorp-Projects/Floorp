@@ -135,19 +135,20 @@ class BRPart : public nsHTMLTagContent {
 public:
   BRPart(nsIAtom* aTag);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const;
 
 protected:
   virtual ~BRPart();
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const;
 };
 
 BRPart::BRPart(nsIAtom* aTag)
@@ -159,7 +160,7 @@ BRPart::~BRPart()
 {
 }
 
-nsresult
+NS_IMETHODIMP
 BRPart::CreateFrame(nsIPresContext*  aPresContext,
                     nsIFrame*        aParentFrame,
                     nsIStyleContext* aStyleContext,
@@ -182,20 +183,21 @@ static nsHTMLTagContent::EnumTable kClearTable[] = {
   { 0 }
 };
 
-void
-BRPart::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+NS_IMETHODIMP
+BRPart::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                     PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::clear) {
     nsHTMLValue value;
     if (ParseEnumValue(aString, kClearTable, value)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, value);
+      nsHTMLTagContent::SetAttribute(aAttribute, value, aNotify);
     }
-    return;
+    return NS_OK;
   }
-  nsHTMLTagContent::SetAttribute(aAttribute, aString);
+  return nsHTMLTagContent::SetAttribute(aAttribute, aString, aNotify);
 }
 
-void
+NS_IMETHODIMP
 BRPart::MapAttributesInto(nsIStyleContext* aContext,
                           nsIPresContext* aPresContext)
 {
@@ -208,9 +210,10 @@ BRPart::MapAttributesInto(nsIStyleContext* aContext,
       display->mBreakType = value.GetIntValue();
     }
   }
+  return NS_OK;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 BRPart::AttributeToString(nsIAtom*     aAttribute,
                           nsHTMLValue& aValue,
                           nsString&    aResult) const
@@ -219,10 +222,10 @@ BRPart::AttributeToString(nsIAtom*     aAttribute,
     if ((eHTMLUnit_Enumerated == aValue.GetUnit()) &&
         (NS_STYLE_CLEAR_NONE != aValue.GetIntValue())) {
       EnumValueToString(aValue, kClearTable, aResult);
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 //----------------------------------------------------------------------

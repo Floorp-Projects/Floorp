@@ -55,21 +55,22 @@ class SpacerPart : public nsHTMLTagContent {
 public:
   SpacerPart(nsIAtom* aTag);
 
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext);
+  NS_IMETHOD AttributeToString(nsIAtom*     aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString&    aResult) const;
 
   PRUint8 GetType();
 
 protected:
   virtual ~SpacerPart();
-  nsContentAttr AttributeToString(nsIAtom*     aAttribute,
-                                  nsHTMLValue& aValue,
-                                  nsString&    aResult) const;
 };
 
 //----------------------------------------------------------------------
@@ -114,23 +115,23 @@ SpacerFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
   nscoord height = 0;
   SpacerPart* part = (SpacerPart*) mContent;/* XXX decouple */
   PRUint8 type = part->GetType();
-  nsContentAttr ca;
+  nsresult ca;
   if (type != TYPE_IMAGE) {
     nsHTMLValue val;
     ca = part->GetAttribute(nsHTMLAtoms::size, val);
-    if (eContentAttr_HasValue == ca) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
       width = val.GetPixelValue();
     }
   } else {
     nsHTMLValue val;
     ca = part->GetAttribute(nsHTMLAtoms::width, val);
-    if (eContentAttr_HasValue == ca) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
       if (eHTMLUnit_Pixel == val.GetUnit()) {
         width = val.GetPixelValue();
       }
     }
     ca = part->GetAttribute(nsHTMLAtoms::height, val);
-    if (eContentAttr_HasValue == ca) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
       if (eHTMLUnit_Pixel == val.GetUnit()) {
         height = val.GetPixelValue();
       }
@@ -207,7 +208,7 @@ SpacerPart::GetType()
 {
   PRUint8 type = TYPE_WORD;
   nsHTMLValue value;
-  if (eContentAttr_HasValue ==
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
       nsHTMLTagContent::GetAttribute(nsHTMLAtoms::type, value)) {
     if (eHTMLUnit_Enumerated == value.GetUnit()) {
       type = value.GetIntValue();
@@ -224,34 +225,33 @@ static nsHTMLTagContent::EnumTable kTypeTable[] = {
   { 0 }
 };
 
-void
-SpacerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+SpacerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                         PRBool aNotify)
 {
   nsHTMLValue val;
   if (aAttribute == nsHTMLAtoms::type) {
     if (ParseEnumValue(aValue, kTypeTable, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
     ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     ParseAlignParam(aValue, val);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if ((aAttribute == nsHTMLAtoms::width) ||
            (aAttribute == nsHTMLAtoms::height)) {
     ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  else {
-    nsHTMLTagContent::SetAttribute(aAttribute, aValue);
-  }
+  return nsHTMLTagContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-void
+NS_IMETHODIMP
 SpacerPart::MapAttributesInto(nsIStyleContext* aContext,
                               nsIPresContext* aPresContext)
 {
@@ -285,9 +285,10 @@ SpacerPart::MapAttributesInto(nsIStyleContext* aContext,
       break;
     }
   }
+  return NS_OK;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 SpacerPart::AttributeToString(nsIAtom*     aAttribute,
                               nsHTMLValue& aValue,
                               nsString&    aResult) const
@@ -295,16 +296,16 @@ SpacerPart::AttributeToString(nsIAtom*     aAttribute,
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
       EnumValueToString(aValue, kTypeTable, aResult);
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
       AlignParamToString(aValue, aResult);
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 nsresult

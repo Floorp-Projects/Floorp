@@ -35,12 +35,13 @@ void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
 
   // Create a frame for the body child
   PRInt32 i, n;
-  n = mContent->ChildCount();
+  mContent->ChildCount(n);
   for (i = 0; i < n; i++) {
-    nsIContent* child = mContent->ChildAt(i);
+    nsIContent* child;
+    mContent->ChildAt(i, child);
     if (nsnull != child) {
       nsIAtom* tag;
-      tag = child->GetTag();
+      child->GetTag(tag);
       // XXX added frameset check, is it necessary, what is a page frame anyway
       if ((nsHTMLAtoms::body == tag) || (nsHTMLAtoms::frameset == tag)) {
         // Create a frame

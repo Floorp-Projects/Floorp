@@ -37,7 +37,7 @@ public:
 
   virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext) = 0;
 
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };
 
 #endif /* nsIStyleRule_h___ */

@@ -210,11 +210,13 @@ nsHTMLContent::IsSynthetic(PRBool& aResult)
   return NS_OK;
 }
 
-void nsHTMLContent::Compact()
+NS_IMETHODIMP
+nsHTMLContent::Compact()
 {
+  return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLContent::GetDocument(nsIDocument*& aResult) const
 {
   aResult = mDocument;
@@ -222,40 +224,54 @@ nsHTMLContent::GetDocument(nsIDocument*& aResult) const
   return NS_OK;
 }
 
-void nsHTMLContent::SetDocument(nsIDocument* aDocument)
+NS_IMETHODIMP
+nsHTMLContent::SetDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument;
+  return NS_OK;
 }
 
-nsIContent* nsHTMLContent::GetParent() const
+NS_IMETHODIMP
+nsHTMLContent::GetParent(nsIContent*& aResult) const
 {
   NS_IF_ADDREF(mParent);
-  return mParent;
+  aResult = mParent;
+  return NS_OK;
 }
 
-void nsHTMLContent::SetParent(nsIContent* aParent)
+NS_IMETHODIMP
+nsHTMLContent::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
+  return NS_OK;
 }
 
-PRBool nsHTMLContent::CanContainChildren() const
+NS_IMETHODIMP
+nsHTMLContent::CanContainChildren(PRBool& aResult) const
 {
-  return PR_FALSE;
+  aResult = PR_FALSE;
+  return NS_OK;
 }
 
-PRInt32 nsHTMLContent::ChildCount() const
+NS_IMETHODIMP
+nsHTMLContent::ChildCount(PRInt32& aCount) const
 {
-  return 0;
+  aCount = 0;
+  return NS_OK;
 }
 
-nsIContent* nsHTMLContent::ChildAt(PRInt32 aIndex) const
+NS_IMETHODIMP
+nsHTMLContent::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
-PRInt32 nsHTMLContent::IndexOf(nsIContent* aPossibleChild) const
+NS_IMETHODIMP
+nsHTMLContent::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
 {
-  return -1;
+  aResult = -1;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -282,79 +298,110 @@ nsHTMLContent::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
-void nsHTMLContent::SetAttribute(const nsString& aName, const nsString& aValue)
+NS_IMETHODIMP
+nsHTMLContent::SetAttribute(const nsString& aName, const nsString& aValue,
+                            PRBool aNotify)
 {
+  return NS_OK;
 }
 
-nsContentAttr nsHTMLContent::GetAttribute(const nsString& aName,
-                                          nsString& aResult) const
-{
-  aResult.SetLength(0);
-  return eContentAttr_NotThere;
-}
-
-void nsHTMLContent::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
-{
-}
-
-nsContentAttr nsHTMLContent::GetAttribute(nsIAtom *aAttribute,
-                                          nsString &aResult) const
+NS_IMETHODIMP
+nsHTMLContent::GetAttribute(const nsString& aName,
+                            nsString& aResult) const
 {
   aResult.SetLength(0);
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-void nsHTMLContent::SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue)
+NS_IMETHODIMP
+nsHTMLContent::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                            PRBool aNotify)
 {
+  return NS_OK;
 }
 
-void nsHTMLContent::UnsetAttribute(nsIAtom* aAttribute)
+NS_IMETHODIMP
+nsHTMLContent::GetAttribute(nsIAtom *aAttribute,
+                            nsString &aResult) const
 {
+  aResult.SetLength(0);
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-nsContentAttr nsHTMLContent::GetAttribute(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue) const
+NS_IMETHODIMP
+nsHTMLContent::SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
+                            PRBool aNotify)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLContent::UnsetAttribute(nsIAtom* aAttribute)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLContent::GetAttribute(nsIAtom* aAttribute,
+                            nsHTMLValue& aValue) const
 {
   aValue.Reset();
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-PRInt32 nsHTMLContent::GetAllAttributeNames(nsISupportsArray* aArray) const
+NS_IMETHODIMP
+nsHTMLContent::GetAllAttributeNames(nsISupportsArray* aArray,
+                                    PRInt32& aCount) const
 {
-  return 0;
+  aCount = 0;
+  return NS_OK;
 }
 
-PRInt32 nsHTMLContent::GetAttributeCount(void) const 
+NS_IMETHODIMP
+nsHTMLContent::GetAttributeCount(PRInt32& aCount) const 
 {
-  return 0;
+  aCount = 0;
+  return NS_OK;
 }
 
-void nsHTMLContent::SetID(nsIAtom* aID)
+NS_IMETHODIMP
+nsHTMLContent::SetID(nsIAtom* aID)
 {
+  return NS_OK;
 }
 
-nsIAtom* nsHTMLContent::GetID(void) const
+NS_IMETHODIMP
+nsHTMLContent::GetID(nsIAtom*& aResult) const
 {
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
-void nsHTMLContent::SetClass(nsIAtom* aClass)
+NS_IMETHODIMP
+nsHTMLContent::SetClass(nsIAtom* aClass)
 {
+  return NS_OK;
 }
 
-nsIAtom* nsHTMLContent::GetClass(void) const
+NS_IMETHODIMP
+nsHTMLContent::GetClass(nsIAtom*& aResult) const
 {
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
-nsIStyleRule* nsHTMLContent::GetStyleRule(void)
+NS_IMETHODIMP
+nsHTMLContent::GetStyleRule(nsIStyleRule*& aResult)
 {
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
-void nsHTMLContent::MapAttributesInto(nsIStyleContext* aContext, 
-                                      nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsHTMLContent::MapAttributesInto(nsIStyleContext* aContext, 
+                                 nsIPresContext* aPresContext)
 {
+  return NS_OK;
 }
 
 
@@ -362,9 +409,8 @@ void nsHTMLContent::ListAttributes(FILE* out) const
 {
   nsISupportsArray* attrs;
   if (NS_OK == NS_NewISupportsArray(&attrs)) {
-    GetAllAttributeNames(attrs);
-    PRInt32 count = attrs->Count();
-    PRInt32 index;
+    PRInt32 index, count;
+    GetAllAttributeNames(attrs, count);
     for (index = 0; index < count; index++) {
       // name
       nsIAtom* attr = (nsIAtom*)attrs->ElementAt(index);
@@ -385,14 +431,16 @@ void nsHTMLContent::ListAttributes(FILE* out) const
   }
 }
 
-void nsHTMLContent::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+nsHTMLContent::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(nsnull != mDocument, "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  nsIAtom* tag = GetTag();
+  nsIAtom* tag;
+  GetTag(tag);
   if (tag != nsnull) {
     nsAutoString buf;
     tag->ToString(buf);
@@ -404,10 +452,14 @@ void nsHTMLContent::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, " RefCount=%d<\n", mRefCnt);
 
-  if (CanContainChildren()) {
-    PRInt32 kids = ChildCount();
+  PRBool canHaveKids;
+  CanContainChildren(canHaveKids);
+  if (canHaveKids) {
+    PRInt32 kids;
+    ChildCount(kids);
     for (index = 0; index < kids; index++) {
-      nsIContent* kid = ChildAt(index);
+      nsIContent* kid;
+      ChildAt(index, kid);
       kid->List(out, aIndent + 1);
       NS_RELEASE(kid);
     }
@@ -415,6 +467,7 @@ void nsHTMLContent::List(FILE* out, PRInt32 aIndent) const
 
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
   fputs(">\n", out);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -431,41 +484,26 @@ nsHTMLContent::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
   // XXX mScriptObject
 }
 
-nsIAtom* nsHTMLContent::GetTag() const
+NS_IMETHODIMP
+nsHTMLContent::GetTag(nsIAtom*& aResult) const
 {
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
-void nsHTMLContent::ToHTML(FILE* out) const
+NS_IMETHODIMP
+nsHTMLContent::ToHTML(FILE* out) const
 {
   nsAutoString tmp;
   ToHTMLString(tmp);
   fputs(tmp, out);
+  return NS_OK;
 }
 
 nsIContentDelegate* nsHTMLContent::GetDelegate(nsIPresContext* aCX)
 {
   gContentDelegate->AddRef();
   return gContentDelegate;
-}
-
-void nsHTMLContent::NewGlobalAtom(const char* aString, nsIAtom** aAtomResult)
-{
-  if (nsnull == *aAtomResult) {
-    *aAtomResult = NS_NewAtom(aString);
-  } else {
-    NS_ADDREF(*aAtomResult);
-  }
-}
-
-void nsHTMLContent::ReleaseGlobalAtom(nsIAtom** aAtomResult)
-{
-  nsIAtom* atom = *aAtomResult;
-  if (nsnull != atom) {
-    if (0 == atom->Release()) {
-      *aAtomResult = nsnull;
-    }
-  }
 }
 
 nsresult nsHTMLContent::ResetScriptObject()
@@ -524,9 +562,11 @@ NS_IMETHODIMP
 nsHTMLContent::GetPreviousSibling(nsIDOMNode** aNode)
 {
   if (nsnull != mParent) {
-    PRInt32 pos = mParent->IndexOf(this);
+    PRInt32 pos;
+    mParent->IndexOf(this, pos);
     if (pos > -1) {
-      nsIContent* prev = mParent->ChildAt(--pos);
+      nsIContent* prev;
+      mParent->ChildAt(--pos, prev);
       if (nsnull != prev) {
         nsresult res = prev->QueryInterface(kIDOMNodeIID, (void**)aNode);
         NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
@@ -546,9 +586,11 @@ NS_IMETHODIMP
 nsHTMLContent::GetNextSibling(nsIDOMNode** aNextSibling)
 {
   if (nsnull != mParent) {
-    PRInt32 pos = mParent->IndexOf(this);
+    PRInt32 pos;
+    mParent->IndexOf(this, pos);
     if (pos > -1 ) {
-      nsIContent* prev = mParent->ChildAt(++pos);
+      nsIContent* prev;
+      mParent->ChildAt(++pos, prev);
       if (nsnull != prev) {
         nsresult res = prev->QueryInterface(kIDOMNodeIID, (void**)aNextSibling);
         NS_ASSERTION(NS_OK == res, "Must be a DOM Node");

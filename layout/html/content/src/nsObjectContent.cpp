@@ -33,7 +33,7 @@ nsObjectContent::~nsObjectContent()
 {
 }
 
-nsresult
+NS_IMETHODIMP
 nsObjectContent::CreateFrame(nsIPresContext*  aPresContext,
                              nsIFrame*        aParentFrame,
                              nsIStyleContext* aStyleContext,
@@ -49,43 +49,42 @@ nsObjectContent::CreateFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-void
-nsObjectContent::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+NS_IMETHODIMP
+nsObjectContent::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                              PRBool aNotify)
 {
   nsHTMLValue val;
   if (aAttribute == nsHTMLAtoms::align) {
     if (ParseAlignParam(aString, val)) {
       // Reflect the attribute into the syle system
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (ParseImageProperty(aAttribute, aString, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  else {
-    nsObjectContentSuper::SetAttribute(aAttribute, aString);
-  }
+  return nsObjectContentSuper::SetAttribute(aAttribute, aString, aNotify);
 }
 
-nsContentAttr
+NS_IMETHODIMP
 nsObjectContent::AttributeToString(nsIAtom* aAttribute,
                                    nsHTMLValue& aValue,
                                    nsString& aResult) const
 {
-  nsContentAttr ca = eContentAttr_NotThere;
+  nsresult ca = NS_CONTENT_ATTR_NOT_THERE;
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
       AlignParamToString(aValue, aResult);
-      ca = eContentAttr_HasValue;
+      ca = NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (ImagePropertyToString(aAttribute, aValue, aResult)) {
-    ca = eContentAttr_HasValue;
+    ca = NS_CONTENT_ATTR_HAS_VALUE;
   }
   return ca;
 }
 
-void
+NS_IMETHODIMP
 nsObjectContent::MapAttributesInto(nsIStyleContext* aContext, 
                                    nsIPresContext* aPresContext)
 {
@@ -121,4 +120,5 @@ nsObjectContent::MapAttributesInto(nsIStyleContext* aContext,
   }
   MapImagePropertiesInto(aContext, aPresContext);
   MapImageBorderInto(aContext, aPresContext, nsnull);
+  return NS_OK;
 }

@@ -136,8 +136,7 @@ nsHTMLHR::GetAlign(nsString& aAlign) {
 
 NS_IMETHODIMP
 nsHTMLHR::SetAlign(const nsString& aAlign) {
-  mInner.SetAttribute(nsHTMLAtoms::align, aAlign);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::align, aAlign, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -145,7 +144,7 @@ nsHTMLHR::GetNoShade(PRBool* aNoShade)
 {
   nsHTMLValue val;
   *aNoShade =
-    eContentAttr_HasValue == mInner.GetAttribute(nsHTMLAtoms::noshade, val);
+   NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(nsHTMLAtoms::noshade, val);
   return NS_OK;
 }
 
@@ -153,8 +152,7 @@ NS_IMETHODIMP
 nsHTMLHR::SetNoShade(PRBool aNoShade)
 {
   nsAutoString empty;
-  mInner.SetAttribute(nsHTMLAtoms::noshade, empty);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::noshade, empty, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -167,8 +165,7 @@ nsHTMLHR::GetSize(nsString& aSize)
 NS_IMETHODIMP
 nsHTMLHR::SetSize(const nsString& aSize)
 {
-  mInner.SetAttribute(nsHTMLAtoms::size, aSize);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::size, aSize, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -181,8 +178,7 @@ nsHTMLHR::GetWidth(nsString& aWidth)
 NS_IMETHODIMP
 nsHTMLHR::SetWidth(const nsString& aWidth)
 {
-  mInner.SetAttribute(nsHTMLAtoms::width, aWidth);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::width, aWidth, PR_TRUE);
 }
 
 static nsHTMLGenericContent::EnumTable kAlignTable[] = {
@@ -192,7 +188,7 @@ static nsHTMLGenericContent::EnumTable kAlignTable[] = {
   { 0 }
 };
 
-nsContentAttr
+NS_IMETHODIMP
 nsHTMLHR::StringToAttribute(nsIAtom* aAttribute,
                             const nsString& aValue,
                             nsHTMLValue& aResult)
@@ -200,25 +196,25 @@ nsHTMLHR::StringToAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::width) {
     nsHTMLGenericContent::ParseValueOrPercent(aValue, aResult,
                                               eHTMLUnit_Pixel);
-    return eContentAttr_HasValue;
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::size) {
     nsHTMLGenericContent::ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel);
-    return eContentAttr_HasValue;
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::noshade) {
     aResult.SetEmptyValue();
-    return eContentAttr_HasValue;
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (nsHTMLGenericContent::ParseEnumValue(aValue, kAlignTable, aResult)) {
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 nsHTMLHR::AttributeToString(nsIAtom* aAttribute,
                             nsHTMLValue& aValue,
                             nsString& aResult) const
@@ -226,13 +222,13 @@ nsHTMLHR::AttributeToString(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
       nsHTMLGenericContent::EnumValueToString(aValue, kAlignTable, aResult);
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-void
+NS_IMETHODIMP
 nsHTMLHR::MapAttributesInto(nsIStyleContext* aContext,
                             nsIPresContext* aPresContext)
 {
@@ -259,6 +255,7 @@ nsHTMLHR::MapAttributesInto(nsIStyleContext* aContext,
       pos->mWidth.SetPercentValue(value.GetPercentValue());
     }
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -27,70 +27,22 @@ class nsHTMLTitle : public nsHTMLTitleSuper {
 public:
   nsHTMLTitle(nsIAtom* aTag, const nsString& aTitle);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
-  virtual void List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
 
-  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
 protected:
   virtual ~nsHTMLTitle();
   nsString mTitle;
 };
-
-nsHTMLTitle::nsHTMLTitle(nsIAtom* aTag, const nsString& aTitle)
-  : nsHTMLTitleSuper(aTag), mTitle(aTitle)
-{
-}
-
-nsHTMLTitle::~nsHTMLTitle()
-{
-}
-
-nsresult
-nsHTMLTitle::CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult)
-{
-  nsIFrame* frame;
-  nsFrame::NewFrame(&frame, this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
-void
-nsHTMLTitle::List(FILE* out, PRInt32 aIndent) const
-{
-  NS_PRECONDITION(nsnull != mDocument, "bad content");
-
-  PRInt32 index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsIAtom* tag = GetTag();
-  if (tag != nsnull) {
-    nsAutoString buf;
-    tag->ToString(buf);
-    fputs(buf, out);
-    NS_RELEASE(tag);
-  }
-
-  ListAttributes(out);
-
-  fprintf(out, " RefCount=%d<", mRefCnt);
-  fputs(mTitle, out);
-  fputs(">\n", out);
-}
 
 nsresult
 NS_NewHTMLTitle(nsIHTMLContent** aInstancePtrResult,
@@ -107,6 +59,56 @@ NS_NewHTMLTitle(nsIHTMLContent** aInstancePtrResult,
   return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
 }
 
+nsHTMLTitle::nsHTMLTitle(nsIAtom* aTag, const nsString& aTitle)
+  : nsHTMLTitleSuper(aTag), mTitle(aTitle)
+{
+}
+
+nsHTMLTitle::~nsHTMLTitle()
+{
+}
+
+NS_IMETHODIMP
+nsHTMLTitle::CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult)
+{
+  nsIFrame* frame;
+  nsFrame::NewFrame(&frame, this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTitle::List(FILE* out, PRInt32 aIndent) const
+{
+  NS_PRECONDITION(nsnull != mDocument, "bad content");
+
+  PRInt32 index;
+  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsIAtom* tag;
+  GetTag(tag);
+  if (tag != nsnull) {
+    nsAutoString buf;
+    tag->ToString(buf);
+    fputs(buf, out);
+    NS_RELEASE(tag);
+  }
+
+  ListAttributes(out);
+
+  fprintf(out, " RefCount=%d<", mRefCnt);
+  fputs(mTitle, out);
+  fputs(">\n", out);
+  return NS_OK;
+}
+
 /**
  * Translate the content object into the (XIF) XML Interchange Format
  * XIF is an intermediate form of the content model, the buffer
@@ -118,7 +120,8 @@ NS_NewHTMLTitle(nsIHTMLContent** aInstancePtrResult,
       EndConvertToXIF
  */
 
-void nsHTMLTitle::BeginConvertToXIF(nsXIFConverter& aConverter) const
+NS_IMETHODIMP
+nsHTMLTitle::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
   if (nsnull != mTag)
   {
@@ -126,15 +129,18 @@ void nsHTMLTitle::BeginConvertToXIF(nsXIFConverter& aConverter) const
     mTag->ToString(name);
     aConverter.BeginContainer(name);
   }
-
+  return NS_OK;
 }
 
-void nsHTMLTitle::ConvertContentToXIF(nsXIFConverter& aConverter) const
+NS_IMETHODIMP
+nsHTMLTitle::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
   aConverter.AddContent(mTitle);
+  return NS_OK;
 }
 
-void nsHTMLTitle::FinishConvertToXIF(nsXIFConverter& aConverter) const
+NS_IMETHODIMP
+nsHTMLTitle::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
   if (nsnull != mTag)
   {  
@@ -142,4 +148,5 @@ void nsHTMLTitle::FinishConvertToXIF(nsXIFConverter& aConverter) const
     mTag->ToString(name);
     aConverter.EndContainer(name);
   }
+  return NS_OK;
 }

@@ -176,21 +176,22 @@ protected:
 class nsHTMLFrame : public nsHTMLContainer {
 public:
  
-  virtual nsresult  CreateFrame(nsIPresContext*  aPresContext,
-                                nsIFrame*        aParentFrame,
-                                nsIStyleContext* aStyleContext,
-                                nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
   PRBool GetURL(nsString& aURLSpec);
   PRBool GetName(nsString& aName);
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   nsScrollPreference GetScrolling();
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
   nsFrameborder GetFrameBorder();
   PRBool IsInline() { return mInline; }
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
   PRInt32 GetMarginWidth(nsIPresContext* aPresContext);
   PRInt32 GetMarginHeight(nsIPresContext* aPresContext);  
 
@@ -652,7 +653,8 @@ nsHTMLFrame::~nsHTMLFrame()
   mParentWebWidget = nsnull;
 }
 
-void nsHTMLFrame::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+nsHTMLFrame::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
   fprintf(out, "%X ", this);
@@ -661,24 +663,27 @@ void nsHTMLFrame::List(FILE* out, PRInt32 aIndent) const
   } else {
     fprintf(out, "\n");
   }
-  nsHTMLContent::List(out, aIndent);
+  return nsHTMLContent::List(out, aIndent);
 }
 
-void nsHTMLFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+NS_IMETHODIMP
+nsHTMLFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                          PRBool aNotify)
 {
   nsHTMLValue val;
   if (ParseImageProperty(aAttribute, aString, val)) { // convert width or height to pixels
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  nsHTMLContainer::SetAttribute(aAttribute, aString);
+  return nsHTMLContainer::SetAttribute(aAttribute, aString, aNotify);
 }
 
 
-void nsHTMLFrame::MapAttributesInto(nsIStyleContext* aContext, 
-                                     nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsHTMLFrame::MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext)
 {
   MapImagePropertiesInto(aContext, aPresContext);
+  return NS_OK;
 }
 
 PRInt32 nsHTMLFrame::GetMargin(nsIAtom* aType, nsIPresContext* aPresContext) 
@@ -687,7 +692,7 @@ PRInt32 nsHTMLFrame::GetMargin(nsIAtom* aType, nsIPresContext* aPresContext)
   nsAutoString strVal;
   PRInt32 intVal;
 
-  if (eContentAttr_HasValue == (GetAttribute(aType, strVal))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(aType, strVal))) {
     PRInt32 status;
     intVal = strVal.ToInteger(&status);
     if (intVal < 0) {
@@ -727,7 +732,7 @@ nsHTMLFrame::CreateFrame(nsIPresContext*  aPresContext,
 PRBool nsHTMLFrame::GetURL(nsString& aURLSpec)
 {
   nsHTMLValue value;
-  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::src, value))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(nsHTMLAtoms::src, value))) {
     if (eHTMLUnit_String == value.GetUnit()) {
       value.GetStringValue(aURLSpec);
       return PR_TRUE;
@@ -740,7 +745,7 @@ PRBool nsHTMLFrame::GetURL(nsString& aURLSpec)
 PRBool nsHTMLFrame::GetName(nsString& aName)
 {
   nsHTMLValue value;
-  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::name, value))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(nsHTMLAtoms::name, value))) {
     if (eHTMLUnit_String == value.GetUnit()) {
       value.GetStringValue(aName);
       return PR_TRUE;
@@ -753,7 +758,7 @@ PRBool nsHTMLFrame::GetName(nsString& aName)
 nsScrollPreference nsHTMLFrame::GetScrolling()
 {
   nsHTMLValue value;
-  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::scrolling, value))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(nsHTMLAtoms::scrolling, value))) {
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString scrolling;
       value.GetStringValue(scrolling);
@@ -771,7 +776,7 @@ nsScrollPreference nsHTMLFrame::GetScrolling()
 nsFrameborder nsHTMLFrame::GetFrameBorder()
 {
   nsHTMLValue value;
-  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::frameborder, value))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(nsHTMLAtoms::frameborder, value))) {
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString frameborder;
       value.GetStringValue(frameborder);

@@ -133,7 +133,8 @@ nsHTMLBase::CreateFrame(nsIPresContext* aPresContext,
 {
   nsIStyleContext* kidSC;
   // XXX Cheesy hack for text
-  nsIAtom* tag = aKid->GetTag();
+  nsIAtom* tag;
+  aKid->GetTag(tag);
   if (nsnull == tag) {
     kidSC = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::text, aParentFrame);
   } else {

@@ -254,17 +254,19 @@ nsInputFile::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   return PR_TRUE;
 }
 
-void nsInputFile::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsInputFile::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify)
 {
   // get the text and set its relevant attributes 
   if ((aAttribute == nsHTMLAtoms::size) || (aAttribute == nsHTMLAtoms::maxlength) || 
       (aAttribute == nsHTMLAtoms::value) || 
       (aAttribute == nsHTMLAtoms::disabled) || (aAttribute == nsHTMLAtoms::readonly)) 
   {
-    mTextField->SetAttribute(aAttribute, aValue);
+    mTextField->SetAttribute(aAttribute, aValue, aNotify);
   }
  
-  nsInputFileSuper::SetAttribute(aAttribute, aValue); 
+  return nsInputFileSuper::SetAttribute(aAttribute, aValue, aNotify);
 }
 
 nsresult

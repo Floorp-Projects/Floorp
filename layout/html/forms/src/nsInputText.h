@@ -39,15 +39,16 @@ public:
   typedef nsInput nsInputTextSuper;
   nsInputText (nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aResult) const;
 
   virtual PRInt32 GetMaxNumValues();
   

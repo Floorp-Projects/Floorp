@@ -64,14 +64,18 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const;
 
   NS_FORWARD_IDOMNODE(nsHTMLImageSuper::)
   NS_FORWARD_IDOMELEMENT(nsHTMLImageSuper::)
@@ -85,9 +89,6 @@ protected:
   virtual ~nsHTMLImage();
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const;
   void TriggerReflow();
 };
 
@@ -432,9 +433,9 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
     // Setup url before starting the image load
     nsAutoString src, base;
-    if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) {
       mImageLoader.SetURL(src);
-      if (eContentAttr_HasValue ==
+      if (NS_CONTENT_ATTR_HAS_VALUE ==
           mContent->GetAttribute(NS_HTML_BASE_HREF, base)) {
         mImageLoader.SetBaseHREF(base);
       }
@@ -606,7 +607,7 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
       // No image yet. Draw the icon that indicates we're loading, and display
       // the alt-text
       nsAutoString altText;
-      if (eContentAttr_HasValue == mContent->GetAttribute("ALT", altText)) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ALT", altText)) {
         // Display a recessed one-pixel border in the inner area
         nsRect  inner;
         GetInnerArea(&aPresContext, inner);
@@ -711,14 +712,14 @@ PRBool
 ImageFrame::IsServerImageMap()
 {
   nsAutoString ismap;
-  return eContentAttr_HasValue == mContent->GetAttribute("ismap", ismap);
+  return NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ismap", ismap);
 }
 
 PRIntn
 ImageFrame::GetSuppress()
 {
   nsAutoString s;
-  if (eContentAttr_HasValue == mContent->GetAttribute("ismap", s)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ismap", s)) {
     if (s.EqualsIgnoreCase("true")) {
       return SUPPRESS;
     } else if (s.EqualsIgnoreCase("false")) {
@@ -860,7 +861,7 @@ ImageFrame::ContentChanged(nsIPresShell*   aShell,
 
   // Get src attribute's value and construct a new absolute url from it
   nsAutoString newSRC;
-  if (eContentAttr_HasValue == mContent->GetAttribute("SRC", newSRC)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", newSRC)) {
     if (!oldSRC.Equals(newSRC)) {
       mSizeFrozen = PR_TRUE;
 
@@ -961,46 +962,49 @@ nsHTMLImage::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 {
 }
 
-void
-nsHTMLImage::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+NS_IMETHODIMP
+nsHTMLImage::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                          PRBool aNotify)
 {
   nsHTMLValue val;
   if (aAttribute == nsHTMLAtoms::ismap) {
     val.SetEmptyValue();
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::usemap) {
     nsAutoString usemap(aString);
     usemap.StripWhitespace();
     val.SetStringValue(usemap);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (ParseAlignParam(aString, val)) {
       // Reflect the attribute into the syle system
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     else {
       val.SetStringValue(aString);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (aAttribute == nsHTMLAtoms::src) {
     nsAutoString src(aString);
     src.StripWhitespace();
     val.SetStringValue(src);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    nsresult rv = nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+    // XXX use aNotify!!!
     TriggerReflow();
+    return rv;
   }
   else if (aAttribute == nsHTMLAtoms::lowsrc) {
     nsAutoString lowsrc(aString);
     lowsrc.StripWhitespace();
     val.SetStringValue(lowsrc);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::alt) {
     val.SetStringValue(aString);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
     PRIntn suppress = DEFAULT_SUPPRESS;
@@ -1011,27 +1015,26 @@ nsHTMLImage::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
       suppress = DONT_SUPPRESS;
     }
     val.SetIntValue(suppress, eHTMLUnit_Enumerated);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (ParseImageProperty(aAttribute, aString, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  else {
-    // Use default attribute catching code
-    nsHTMLImageSuper::SetAttribute(aAttribute, aString);
-  }
+
+  // Use default attribute catching code
+  return nsHTMLImageSuper::SetAttribute(aAttribute, aString, aNotify);
 }
 
-nsContentAttr
+NS_IMETHODIMP
 nsHTMLImage::AttributeToString(nsIAtom* aAttribute,
                                nsHTMLValue& aValue,
                                nsString& aResult) const
 {
-  nsContentAttr ca = eContentAttr_NotThere;
+  nsresult ca = NS_CONTENT_ATTR_NOT_THERE;
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
       AlignParamToString(aValue, aResult);
-      ca = eContentAttr_HasValue;
+      ca = NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
@@ -1041,15 +1044,15 @@ nsHTMLImage::AttributeToString(nsIAtom* aAttribute,
     case DONT_SUPPRESS:    aResult.Append("false"); break;
     case DEFAULT_SUPPRESS: break;
     }
-    ca = eContentAttr_HasValue;
+    ca = NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (ImagePropertyToString(aAttribute, aValue, aResult)) {
-    ca = eContentAttr_HasValue;
+    ca = NS_CONTENT_ATTR_HAS_VALUE;
   }
   return ca;
 }
 
-void
+NS_IMETHODIMP
 nsHTMLImage::MapAttributesInto(nsIStyleContext* aContext, 
                                nsIPresContext* aPresContext)
 {
@@ -1085,6 +1088,7 @@ nsHTMLImage::MapAttributesInto(nsIStyleContext* aContext,
   }
   MapImagePropertiesInto(aContext, aPresContext);
   MapImageBorderInto(aContext, aPresContext, nsnull);
+  return NS_OK;
 }
 
 void
@@ -1122,7 +1126,7 @@ nsHTMLImage::GetLowSrc(nsString& aLowSrc)
 NS_IMETHODIMP    
 nsHTMLImage::SetLowSrc(const nsString& aLowSrc)
 {
-  SetAttribute(nsHTMLAtoms::lowsrc, aLowSrc);
+  SetAttribute(nsHTMLAtoms::lowsrc, aLowSrc, PR_TRUE);
 
   return NS_OK;
 }
@@ -1138,7 +1142,7 @@ nsHTMLImage::GetName(nsString& aName)
 NS_IMETHODIMP    
 nsHTMLImage::SetName(const nsString& aName)
 {
-  SetAttribute(nsHTMLAtoms::name, aName);
+  SetAttribute(nsHTMLAtoms::name, aName, PR_TRUE);
 
   return NS_OK;
 }
@@ -1154,7 +1158,7 @@ nsHTMLImage::GetAlign(nsString& aAlign)
 NS_IMETHODIMP    
 nsHTMLImage::SetAlign(const nsString& aAlign)
 {
-  SetAttribute(nsHTMLAtoms::align, aAlign);
+  SetAttribute(nsHTMLAtoms::align, aAlign, PR_TRUE);
 
   return NS_OK;
 }
@@ -1170,7 +1174,7 @@ nsHTMLImage::GetAlt(nsString& aAlt)
 NS_IMETHODIMP    
 nsHTMLImage::SetAlt(const nsString& aAlt)
 {
-  SetAttribute(nsHTMLAtoms::alt, aAlt);
+  SetAttribute(nsHTMLAtoms::alt, aAlt, PR_TRUE);
 
   return NS_OK;
 }
@@ -1186,7 +1190,7 @@ nsHTMLImage::GetBorder(nsString& aBorder)
 NS_IMETHODIMP    
 nsHTMLImage::SetBorder(const nsString& aBorder)
 {
-  SetAttribute(nsHTMLAtoms::border, aBorder);
+  SetAttribute(nsHTMLAtoms::border, aBorder, PR_TRUE);
 
   return NS_OK;
 }
@@ -1202,7 +1206,7 @@ nsHTMLImage::GetHeight(nsString& aHeight)
 NS_IMETHODIMP    
 nsHTMLImage::SetHeight(const nsString& aHeight)
 {
-  SetAttribute(nsHTMLAtoms::height, aHeight);
+  SetAttribute(nsHTMLAtoms::height, aHeight, PR_TRUE);
 
   return NS_OK;
 }
@@ -1218,7 +1222,7 @@ nsHTMLImage::GetHspace(nsString& aHspace)
 NS_IMETHODIMP    
 nsHTMLImage::SetHspace(const nsString& aHspace)
 {
-  SetAttribute(nsHTMLAtoms::hspace, aHspace);
+  SetAttribute(nsHTMLAtoms::hspace, aHspace, PR_TRUE);
 
   return NS_OK;
 }
@@ -1228,7 +1232,7 @@ nsHTMLImage::GetIsMap(PRBool* aIsMap)
 {
   nsAutoString result;
 
-  *aIsMap = (PRBool)(eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::ismap, result)); 
+  *aIsMap = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsHTMLAtoms::ismap, result)); 
 
   return NS_OK;
 }
@@ -1237,7 +1241,7 @@ NS_IMETHODIMP
 nsHTMLImage::SetIsMap(PRBool aIsMap)
 {
   if (PR_TRUE == aIsMap) {
-    SetAttribute(nsHTMLAtoms::ismap, "");
+    SetAttribute(nsHTMLAtoms::ismap, "", PR_TRUE);
   }
   else {
     UnsetAttribute(nsHTMLAtoms::ismap);
@@ -1257,7 +1261,7 @@ nsHTMLImage::GetLongDesc(nsString& aLongDesc)
 NS_IMETHODIMP    
 nsHTMLImage::SetLongDesc(const nsString& aLongDesc)
 {
-  SetAttribute(nsHTMLAtoms::longdesc, aLongDesc);
+  SetAttribute(nsHTMLAtoms::longdesc, aLongDesc, PR_TRUE);
 
   return NS_OK;
 }
@@ -1273,7 +1277,7 @@ nsHTMLImage::GetSrc(nsString& aSrc)
 NS_IMETHODIMP    
 nsHTMLImage::SetSrc(const nsString& aSrc)
 {
-  SetAttribute(nsHTMLAtoms::src, aSrc);
+  SetAttribute(nsHTMLAtoms::src, aSrc, PR_TRUE);
 
   return NS_OK;
 }
@@ -1289,7 +1293,7 @@ nsHTMLImage::GetUseMap(nsString& aUseMap)
 NS_IMETHODIMP    
 nsHTMLImage::SetUseMap(const nsString& aUseMap)
 {
-  SetAttribute(nsHTMLAtoms::usemap, aUseMap);
+  SetAttribute(nsHTMLAtoms::usemap, aUseMap, PR_TRUE);
 
   return NS_OK;
 }
@@ -1305,7 +1309,7 @@ nsHTMLImage::GetVspace(nsString& aVspace)
 NS_IMETHODIMP    
 nsHTMLImage::SetVspace(const nsString& aVspace)
 {
-  SetAttribute(nsHTMLAtoms::vspace, aVspace);
+  SetAttribute(nsHTMLAtoms::vspace, aVspace, PR_TRUE);
 
   return NS_OK;
 }
@@ -1321,7 +1325,7 @@ nsHTMLImage::GetWidth(nsString& aWidth)
 NS_IMETHODIMP    
 nsHTMLImage::SetWidth(const nsString& aWidth)
 {
-  SetAttribute(nsHTMLAtoms::width, aWidth);
+  SetAttribute(nsHTMLAtoms::width, aWidth, PR_TRUE);
 
   return NS_OK;
 }

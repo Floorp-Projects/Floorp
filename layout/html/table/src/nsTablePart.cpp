@@ -198,10 +198,12 @@ nsTablePart::AppendChildTo (nsIContent * aContent, PRBool aNotify)
       }
       // find last row group, if ! implicit, make one, append there
       nsTableRowGroup *group = nsnull;
-      int index = ChildCount ();
+      int index;
+      ChildCount (index);
       while ((0 < index) && (nsnull==group))
       {
-        nsIContent *child = ChildAt (--index);    // child: REFCNT++
+        nsIContent *child;
+        ChildAt (--index, child);    // child: REFCNT++
         if (nsnull != child)
         {
           nsTableContent * content = (nsTableContent *)child;
@@ -265,7 +267,10 @@ nsTablePart::AppendChildTo (nsIContent * aContent, PRBool aNotify)
     {
       if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChildTo -- content not handled!!!\n");
       nsTableCaption *caption = nsnull;
-      nsIContent *lastChild = ChildAt (ChildCount() - 1); // lastChild: REFCNT++
+      nsIContent *lastChild;
+      PRInt32 numKids;
+      ChildCount(numKids);
+      ChildAt (numKids - 1, lastChild); // lastChild: REFCNT++
       if (nsnull != lastChild)
       {
         nsTableContent * content = (nsTableContent *)lastChild;
@@ -320,9 +325,11 @@ NS_IMETHODIMP
 nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
                              PRBool aNotify)
 {
+  PRInt32 numKids;
+  ChildCount(numKids);
   NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
-  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
-  if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
+  NS_PRECONDITION(0<=aIndex && aIndex<numKids, "bad aIndex arg to ReplaceChildAt");
+  if ((nsnull==aContent) || !(0<=aIndex && aIndex<numKids))
     return NS_OK;
 
   nsresult rv = NS_OK;
@@ -332,7 +339,8 @@ nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
        (contentType == nsITableContent::kTableColGroupType) ||
        (contentType == nsITableContent::kTableRowGroupType))
   {
-    nsIContent *lastChild = ChildAt (aIndex);// lastChild: REFCNT++
+    nsIContent *lastChild;
+    ChildAt (aIndex, lastChild);// lastChild: REFCNT++
     rv = nsHTMLContainer::ReplaceChildAt (aContent, aIndex, PR_FALSE);
     if (NS_OK == rv)
     {
@@ -353,11 +361,14 @@ nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
 NS_IMETHODIMP
 nsTablePart::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
 {
-  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to RemoveChildAt");
-  if (!(0<=aIndex && aIndex<ChildCount()))
+  PRInt32 numKids;
+  ChildCount(numKids);
+  NS_PRECONDITION(0<=aIndex && aIndex<numKids, "bad aIndex arg to RemoveChildAt");
+  if (!(0<=aIndex && aIndex<numKids))
     return NS_OK;
 
-  nsIContent * lastChild = ChildAt (aIndex);    // lastChild: REFCNT++
+  nsIContent * lastChild;
+  ChildAt (aIndex, lastChild);    // lastChild: REFCNT++
   nsresult rv = nsHTMLContainer::RemoveChildAt (aIndex, PR_FALSE);
   if (NS_OK == rv)
   {
@@ -386,15 +397,18 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
   // find the last row group of this kind and insert this row group after it
   // if there is no row group of this type already in the table, 
   // find the appropriate slot depending on this row group tag
-  nsIAtom * rowGroupTag = aContent->GetTag();
-  int childCount = ChildCount ();
+  nsIAtom * rowGroupTag;
+  aContent->GetTag(rowGroupTag);
+  PRInt32 childCount;
+  ChildCount (childCount);
   nsIAtom * tHeadTag = NS_NewAtom(kRowGroupHeadTagString); // tHeadTag: REFCNT++
   nsIAtom * tFootTag = NS_NewAtom(kRowGroupFootTagString); // tFootTag: REFCNT++
   nsIAtom * tBodyTag = NS_NewAtom(kRowGroupBodyTagString); // tBodyTag: REFCNT++
   for (childIndex = 0; childIndex < childCount; childIndex++)
   {
     nsITableContent *tableContentInterface = nsnull;
-    nsIContent * child = ChildAt(childIndex); // tableChild: REFCNT++
+    nsIContent * child;
+    ChildAt(childIndex, child); // tableChild: REFCNT++
     nsresult rv = child->QueryInterface(kITableContentIID, 
                                          (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
     if (NS_FAILED(rv))
@@ -415,7 +429,9 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
     // if we've found a row group, our action depends on what kind of row group
     else if (tableChildType == nsITableContent::kTableRowGroupType)
     {
-      nsIAtom * tableChildTag = tableChild->GetTag();
+      // XXX we are leaking tableChildTag
+      nsIAtom * tableChildTag;
+      tableChild->GetTag(tableChildTag);
       NS_RELEASE(child);                                             // tableChild: REFCNT-- (c)
       NS_RELEASE(tableContentInterface);                                    // tableContentInterface: REFCNT--
       // if aContent is a header and the current child is a header, keep going
@@ -478,10 +494,12 @@ PRBool nsTablePart::AppendColGroup(nsTableColGroup *aContent)
   // find the last column group and insert this column group after it.
   // if there is no column group already in the table, make this the first child
   // after any caption
-  int childCount = ChildCount ();
+  PRInt32 childCount;
+  ChildCount (childCount);
   for (childIndex = 0; childIndex < childCount; childIndex++)
   {
-    nsIContent *child = ChildAt(childIndex);                            // child: REFCNT++
+    nsIContent *child;
+    ChildAt(childIndex, child);                         // child: REFCNT++
     nsITableContent *tableContentInterface = nsnull;
     nsresult rv = child->QueryInterface(kITableContentIID, 
                                          (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
@@ -535,11 +553,13 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
   // find last col group, if ! implicit, make one, append there
   nsTableColGroup *group = nsnull;
   PRBool foundColGroup = PR_FALSE;
-  int index = ChildCount ();
+  PRInt32 index;
+  ChildCount (index);
   while ((0 < index) && (PR_FALSE==foundColGroup))
   {
     nsITableContent *tableContentInterface = nsnull;
-    nsIContent *child = ChildAt (--index);                          // child: REFCNT++
+    nsIContent *child;
+    ChildAt (--index, child);                          // child: REFCNT++
     nsresult rv = child->QueryInterface(kITableContentIID, 
                                          (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
     NS_RELEASE(child);                                            // tableChild: REFCNT-- (a)
@@ -585,11 +605,13 @@ PRBool nsTablePart::AppendCaption(nsTableCaption *aContent)
     printf ("nsTablePart::AppendCaption -- adding a caption.\n");
   // find the last caption and insert this caption after it.
   // if there is no caption already in the table, make this the first child
-  int childCount = ChildCount ();
+  PRInt32 childCount;
+  ChildCount (childCount);
   for (childIndex = 0; childIndex < childCount; childIndex++)
   {
     nsITableContent *tableContentInterface = nsnull;
-    nsIContent *child = ChildAt (childIndex);                          // child: REFCNT++
+    nsIContent *child;
+    ChildAt (childIndex, child);                      // child: REFCNT++
     nsresult rv = child->QueryInterface(kITableContentIID, 
                                          (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
     NS_RELEASE(child);                                            // tableChild: REFCNT-- (a)
@@ -630,7 +652,9 @@ nsTablePart::CreateFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
-void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify)
 {
   nsHTMLValue val;
 
@@ -638,8 +662,7 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   if (aAttribute == nsHTMLAtoms::width) 
   {
     ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if ( aAttribute == nsHTMLAtoms::cols)
   { // it'll either be empty, or have an integer value
@@ -652,8 +675,7 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     {
       ParseValue(aValue, 0, val, eHTMLUnit_Integer);
     }
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if ( aAttribute == nsHTMLAtoms::border)
   {
@@ -667,42 +689,38 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     {
       ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
     }
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::cellspacing ||
            aAttribute == nsHTMLAtoms::cellpadding) 
   {
     ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) 
   {
     ParseColor(aValue, val);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (ParseTableAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
-    return;
   }
   /* HTML 4 attributes */
   // TODO: only partially implemented
   else if (aAttribute == nsHTMLAtoms::summary) {
     val.SetStringValue(aValue);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
 
   // Use default attribute catching code
-  nsHTMLTagContent::SetAttribute(aAttribute, aValue);
+  return nsHTMLTagContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
-                                    nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -780,6 +798,8 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
 
   //background: color
   MapBackgroundAttributesInto(aContext, aPresContext);
+
+  return NS_OK;
 }
 
 void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,

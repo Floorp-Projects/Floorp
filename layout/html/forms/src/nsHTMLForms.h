@@ -139,7 +139,7 @@ NS_NewHTMLInputRadio(nsIHTMLContent** aInstancePtrResult,
   */
 extern nsresult
 NS_NewHTMLSelect(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag, nsIFormManager* aManager, PRInt32 aHackIndex = -1);
+                 nsIAtom* aTag, nsIFormManager* aManager);
 
 /** 
   * Construct an nsIHTMLContent with behavior of an html input text

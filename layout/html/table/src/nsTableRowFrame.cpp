@@ -511,7 +511,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
 
   for (;;) {
     // Get the next content object
-    nsIContent* cell = mContent->ChildAt(kidIndex);
+    nsIContent* cell;
+    mContent->ChildAt(kidIndex, cell);
     if (nsnull == cell) {
       break;  // no more content
     }

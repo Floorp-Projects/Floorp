@@ -307,7 +307,8 @@ HRuleFrame::GetThickness()
     // Winner. Get the size attribute to determine how thick the HR
     // should be.
     nsHTMLValue value;
-    if (eContentAttr_HasValue == hc->GetAttribute(nsHTMLAtoms::size, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        hc->GetAttribute(nsHTMLAtoms::size, value)) {
       if (value.GetUnit() == eHTMLUnit_Pixel) {
         PRInt32 pixels = value.GetPixelValue();
         switch (pixels) {

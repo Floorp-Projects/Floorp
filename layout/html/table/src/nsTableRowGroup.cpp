@@ -79,25 +79,26 @@ nsrefcnt nsTableRowGroup::Release(void)
   return mRefCnt;
 }
 
-void nsTableRowGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsTableRowGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                              PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aAttribute, "bad attribute arg");
   nsHTMLValue val;
   if ((aAttribute == nsHTMLAtoms::align) &&
       ParseDivAlignParam(aValue, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if ((aAttribute == nsHTMLAtoms::valign) &&
       ParseAlignParam(aValue, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  nsTableContent::SetAttribute(aAttribute, aValue);
+  return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-void nsTableRowGroup::MapAttributesInto(nsIStyleContext* aContext,
-                                        nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsTableRowGroup::MapAttributesInto(nsIStyleContext* aContext,
+                                   nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -122,6 +123,7 @@ void nsTableRowGroup::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
   }
+  return NS_OK;
 }
 
 nsresult
@@ -168,10 +170,12 @@ nsTableRowGroup::AppendChildTo (nsIContent *aContent, PRBool aNotify)
   {
     // find last row, if ! implicit, make one, append there
     nsTableRow *row = nsnull;
-    int index = ChildCount ();
+    PRInt32 index;
+    ChildCount (index);
     while ((0 < index) && (nsnull==row))
     {
-      nsIContent *child = ChildAt (--index);  // child: REFCNT++    
+      nsIContent *child;
+      ChildAt (--index, child);  // child: REFCNT++    
       if (nsnull != child)
       {
         if (IsRow(child))
@@ -234,9 +238,11 @@ NS_IMETHODIMP
 nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
                                  PRBool aNotify)
 {
+  PRInt32 numKids;
+  ChildCount(numKids);
   NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
-  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
-  if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
+  NS_PRECONDITION(0<=aIndex && aIndex<numKids, "bad aIndex arg to ReplaceChildAt");
+  if ((nsnull==aContent) || !(0<=aIndex && aIndex<numKids))
     return NS_ERROR_FAILURE;
 
   // is aContent a TableRow?
@@ -249,7 +255,8 @@ nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
     return NS_ERROR_FAILURE;
   }
 
-  nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++
+  nsIContent * lastChild;
+  ChildAt (aIndex, lastChild);  // lastChild: REFCNT++
   nsresult result = nsTableContent::ReplaceChildAt (aContent, aIndex, PR_FALSE);
   if (NS_OK==result)
   {
@@ -268,11 +275,14 @@ nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
 NS_IMETHODIMP
 nsTableRowGroup::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
 {
-  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to RemoveChildAt");
-  if (!(0<=aIndex && aIndex<ChildCount()))
+  PRInt32 numKids;
+  ChildCount(numKids);
+  NS_PRECONDITION(0<=aIndex && aIndex<numKids, "bad aIndex arg to RemoveChildAt");
+  if (!(0<=aIndex && aIndex<numKids))
     return NS_ERROR_FAILURE;
 
-  nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++   
+  nsIContent * lastChild;
+  ChildAt (aIndex, lastChild);  // lastChild: REFCNT++   
   nsresult result = nsTableContent::RemoveChildAt (aIndex, PR_FALSE);
   if (NS_OK==result)
   {

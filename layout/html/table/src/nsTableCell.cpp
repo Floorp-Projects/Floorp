@@ -180,66 +180,61 @@ nsTableCell::CreateFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
-void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aAttribute, "bad attribute arg");
   nsHTMLValue val;
   if ((aAttribute == nsHTMLAtoms::align) &&
       ParseDivAlignParam(aValue, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if ((aAttribute == nsHTMLAtoms::valign) &&
       ParseAlignParam(aValue, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if (aAttribute == nsHTMLAtoms::background) {
     nsAutoString href(aValue);
     href.StripWhitespace();
-    nsHTMLTagContent::SetAttribute(aAttribute, href);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, href, aNotify);
   }
   if (aAttribute == nsHTMLAtoms::bgcolor) {
     ParseColor(aValue, val);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if (aAttribute == nsHTMLAtoms::rowspan) {
     ParseValue(aValue, 1, 10000, val, eHTMLUnit_Integer);
     SetRowSpan(val.GetIntValue());
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if (aAttribute == nsHTMLAtoms::colspan) {
     ParseValue(aValue, 1, 1000, val, eHTMLUnit_Integer);
     SetColSpan(val.GetIntValue());
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if (aAttribute == nsHTMLAtoms::width) {
     ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if (aAttribute == nsHTMLAtoms::height) {
     ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if (aAttribute == nsHTMLAtoms::nowrap) {
     val.SetEmptyValue();
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
+
   // Use default attribute catching code
-  nsTableContent::SetAttribute(aAttribute, aValue);
+  return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
 
 
-void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
-                                    nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -299,6 +294,8 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
     }
   }
+
+  return NS_OK;
 }
 
 void
@@ -309,7 +306,7 @@ nsTableCell::MapBackgroundAttributesInto(nsIStyleContext* aContext,
   nsStyleColor* color=nsnull;
 
   // background
-  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::background, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsHTMLAtoms::background, value)) {
     if (eHTMLUnit_String == value.GetUnit()) {
       color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
       SetBackgroundFromAttribute(color, &value);
@@ -317,7 +314,7 @@ nsTableCell::MapBackgroundAttributesInto(nsIStyleContext* aContext,
   }
 
   // bgcolor
-  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
     if (eHTMLUnit_Color == value.GetUnit()) {
       if (nsnull==color)
         color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
@@ -361,15 +358,15 @@ void nsTableCell::SetBackgroundFromAttribute(nsStyleColor *aColor, nsHTMLValue *
   aColor->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 nsTableCell::AttributeToString(nsIAtom* aAttribute,
                                nsHTMLValue& aValue,
                                nsString& aResult) const
 {
-  nsContentAttr ca = eContentAttr_NotThere;
+  nsresult ca = NS_CONTENT_ATTR_NOT_THERE;
   if (aAttribute == nsHTMLAtoms::valign) {
     AlignParamToString(aValue, aResult);
-    ca = eContentAttr_HasValue;
+    ca = NS_CONTENT_ATTR_HAS_VALUE;
   }
   else {
     ca = nsTableContent::AttributeToString(aAttribute, aValue, aResult);

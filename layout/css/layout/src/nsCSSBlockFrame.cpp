@@ -860,11 +860,12 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
   mNextListOrdinal = -1;
   nsIContent* blockContent;
   mBlock->GetContent(blockContent);
-  nsIAtom* tag = blockContent->GetTag();
+  nsIAtom* tag;
+  blockContent->GetTag(tag);
   if ((tag == nsHTMLAtoms::ul) || (tag == nsHTMLAtoms::ol) ||
       (tag == nsHTMLAtoms::menu) || (tag == nsHTMLAtoms::dir)) {
     nsHTMLValue value;
-    if (eContentAttr_HasValue ==
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
         ((nsIHTMLContent*)blockContent)->GetAttribute(nsHTMLAtoms::start,
                                                       value)) {
       if (eHTMLUnit_Integer == value.GetUnit()) {
@@ -872,6 +873,7 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
       }
     }
   }
+  NS_IF_RELEASE(tag);
   NS_RELEASE(blockContent);
 }
 
@@ -1034,7 +1036,8 @@ nsCSSBlockFrame::ListTag(FILE* out) const
 {
   if ((nsnull != mGeometricParent) && IsPseudoFrame()) {
     fprintf(out, "*block<");
-    nsIAtom* atom = mContent->GetTag();
+    nsIAtom* atom;
+    mContent->GetTag(atom);
     if (nsnull != atom) {
       nsAutoString tmp;
       atom->ToString(tmp);
@@ -1416,7 +1419,8 @@ nsCSSBlockFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
       // bullet crated. Check to see if the first child of the
       // container is a synthetic object; if it is, then don't make a
       // bullet (XXX what a hack!).
-      nsIContent* firstContent = mContent->ChildAt(0);
+      nsIContent* firstContent;
+      mContent->ChildAt(0, firstContent);
       if (nsnull != firstContent) {
         PRBool is;
         firstContent->IsSynthetic(is);
@@ -1738,13 +1742,13 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
   // Now create frames for all of the new content.
   nsresult rv;
   PRInt32 lastContentIndex;
-  lastContentIndex = mContent->ChildCount();
+  mContent->ChildCount(lastContentIndex);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsCSSBlockFrame::CreateNewFrames: kidContentIndex=%d lastContentIndex=%d",
       kidContentIndex, lastContentIndex));
   for (; kidContentIndex < lastContentIndex; kidContentIndex++) {
     nsIContent* kid;
-    kid = mContent->ChildAt(kidContentIndex);
+    mContent->ChildAt(kidContentIndex, kid);
     if (nsnull == kid) {
       break;
     }
@@ -3055,7 +3059,8 @@ nsCSSBlockFrame::ContentInserted(nsIPresShell*   aShell,
   // Find the frame that precedes this frame
   nsIFrame* prevSibling = nsnull;
   if (aIndexInParent > 0) {
-    nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
+    nsIContent* precedingContent;
+    aContainer->ChildAt(aIndexInParent - 1, precedingContent);
     prevSibling = aShell->FindFrameWithContent(precedingContent);
     NS_ASSERTION(nsnull != prevSibling, "no frame for preceding content");
     NS_RELEASE(precedingContent);
@@ -3256,7 +3261,8 @@ nsCSSBlockFrame::ContentDeleted(nsIPresShell*   aShell,
   nsIFrame* deadFrame;
   nsIFrame* prevSibling;
   if (aIndexInParent > 0) {
-    nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
+    nsIContent* precedingContent;
+    aContainer->ChildAt(aIndexInParent - 1, precedingContent);
     prevSibling = aShell->FindFrameWithContent(precedingContent);
     NS_RELEASE(precedingContent);
 

@@ -57,7 +57,9 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
   // Have we created the absolutely positioned item yet?
   if (nsnull == mFrame) {
     // If the content object is a container then wrap it in a body pseudo-frame
-    if (mContent->CanContainChildren()) {
+    PRBool canHaveKids;
+    mContent->CanContainChildren(canHaveKids);
+    if (canHaveKids) {
       nsBodyFrame::NewFrame(&mFrame, mContent, this);
 
       // Use our style context for the pseudo-frame

@@ -40,41 +40,47 @@ public:
    * If this html content is a container, then compact asks it to minimize
    * it's storage usage.
    */
-  virtual void Compact() = 0;
+  NS_IMETHOD Compact() = 0;
 
-  virtual void SetAttribute(const nsString& aName, const nsString& aValue) = 0;
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue) = 0;
-  virtual void SetAttribute(nsIAtom* aAttribute,
-                            const nsHTMLValue& aValue=nsHTMLValue::kNull) = 0;
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue,
+                          PRBool aNotify) = 0;
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify) = 0;
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,
+                          const nsHTMLValue& aValue,
+                          PRBool aNotify) = 0;
 
-  virtual void UnsetAttribute(nsIAtom* aAttribute) = 0;
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute) = 0;
 
-  virtual nsContentAttr GetAttribute(const nsString& aName,
-                                     nsString& aResult) const = 0;
-  virtual nsContentAttr GetAttribute(nsIAtom *aAttribute,
-                                     nsString &aResult) const = 0;
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue) const = 0;
-  virtual PRInt32 GetAllAttributeNames(nsISupportsArray* aArray) const = 0;
-  virtual PRInt32 GetAttributeCount(void) const = 0;
+  NS_IMETHOD GetAttribute(const nsString& aName,
+                          nsString& aResult) const = 0;
+  NS_IMETHOD GetAttribute(nsIAtom *aAttribute,
+                          nsString &aResult) const = 0;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aValue) const = 0;
+  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
+                                  PRInt32& aCountResult) const = 0;
+  NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const = 0;
 
-  virtual void      SetID(nsIAtom* aID) = 0;
-  virtual nsIAtom*  GetID(void) const = 0;
-  virtual void      SetClass(nsIAtom* aClass) = 0;  // XXX this will have to change for CSS2
-  virtual nsIAtom*  GetClass(void) const = 0;  // XXX this will have to change for CSS2
+  NS_IMETHOD SetID(nsIAtom* aID) = 0;
+  NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
+  // XXX this will have to change for CSS2
+  NS_IMETHOD SetClass(nsIAtom* aClass) = 0;
+  // XXX this will have to change for CSS2
+  NS_IMETHOD GetClass(nsIAtom*& aResult) const = 0;
 
-  virtual nsIStyleRule* GetStyleRule(void) = 0;
+  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult) = 0;
 
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext) = 0;
 
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const = 0;
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const = 0;
 
-  virtual nsContentAttr StringToAttribute(nsIAtom* aAttribute,
-                                          const nsString& aValue,
-                                          nsHTMLValue& aResult) = 0;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsString& aValue,
+                               nsHTMLValue& aResult) = 0;
 
   /**
    * Translate this piece of content to html. Note that this only
@@ -84,20 +90,18 @@ public:
    */
   // XXX add in output character set information so that we know how
   // to encode non 7 bit characters
-  virtual void ToHTMLString(nsString& aResult) const = 0;
+  NS_IMETHOD ToHTMLString(nsString& aResult) const = 0;
 
-
-  virtual void ToHTML(FILE* out) const = 0;
-
+  NS_IMETHOD ToHTML(FILE* out) const = 0;
 
   /**
    * Used by the html content's delegate to create a frame
    * for the content.
    */
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult) = 0;
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult) = 0;
 };
 
 #endif /* nsIHTMLContent_h___ */

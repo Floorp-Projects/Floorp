@@ -26,23 +26,21 @@
 
 class nsObjectContent : public nsObjectContentSuper {
 public:
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
-
-  void SetAttribute(nsIAtom* aAttribute, const nsString& aString);
-
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                          PRBool aNotify);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const;
 
 protected:
   nsObjectContent(nsIAtom* aTag);
   virtual ~nsObjectContent();
-
-  nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                  nsHTMLValue& aValue,
-                                  nsString& aResult) const;
 };
 
 #endif /* nsObjectContent_h___ */

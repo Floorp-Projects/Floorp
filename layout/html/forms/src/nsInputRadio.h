@@ -32,15 +32,16 @@ public:
   typedef nsInput nsInputRadioSuper;
   nsInputRadio (nsIAtom* aTag, nsIFormManager* aManager);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aResult) const;
 
   static const nsString* kTYPE;
 
@@ -52,8 +53,8 @@ public:
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
 
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
   virtual void Reset();
 
 protected:

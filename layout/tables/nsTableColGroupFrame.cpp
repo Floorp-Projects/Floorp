@@ -75,7 +75,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
   for (;;)
   {
     // get the next content child, breaking if there is none
-    nsIContentPtr kid = mContent->ChildAt(kidIndex);   // kid: REFCNT++
+    nsIContentPtr kid;
+    mContent->ChildAt(kidIndex, kid.AssignRef());   // kid: REFCNT++
     if (kid.IsNull()) {
       break;
     }

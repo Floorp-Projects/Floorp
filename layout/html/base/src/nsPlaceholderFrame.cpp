@@ -106,7 +106,8 @@ nsPlaceholderFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
     // content children rather than create a table frame and let it map the
     // children...
     PRBool select = PR_FALSE;
-    nsIAtom* atom = mContent->GetTag();
+    nsIAtom* atom;
+    mContent->GetTag(atom);
     nsAutoString tmp;
     if (nsnull != atom) {
       atom->ToString(tmp);
@@ -121,7 +122,9 @@ nsPlaceholderFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
     }
     // XXX end hack
 
-    if (mContent->CanContainChildren() && !select) {
+    PRBool canHaveKids;
+    mContent->CanContainChildren(canHaveKids);
+    if (canHaveKids && !select) {
       nsBodyFrame::NewFrame(&mAnchoredItem, mContent, this);
 
       // Use our style context for the pseudo-frame

@@ -35,14 +35,15 @@ class nsHTMLTagContent : public nsHTMLContent, public nsIDOMHTMLElement, public 
 public:
 
   // nsIContent
-  virtual nsIAtom* GetTag() const;
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
   // nsIHTMLContent
   /**
    * Translate the content object into it's source html format
    */
-  virtual void ToHTMLString(nsString& out) const;
+  NS_IMETHOD ToHTMLString(nsString& aResult) const;
 
   /**
    * Translate the content object into the (XIF) XML Interchange Format
@@ -52,19 +53,19 @@ public:
    * BeginConvertToXIF -- opens a container and writes out the attributes
    * ConvertContentToXIF -- typically does nothing unless there is text content
    * FinishConvertToXIF -- closes a container
-
-
-  */
-  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
+   */
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
   
   /**
    * Generic implementation of SetAttribute that translates aName into
    * an uppercase'd atom and invokes SetAttribute(atom, aValue).
    */
-  virtual void SetAttribute(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD SetAttribute(const nsString& aName,
+                          const nsString& aValue,
+                          PRBool aNotify);
 
   /**
    * Generic implementation of GetAttribute that knows how to map
@@ -76,40 +77,40 @@ public:
    * method if the default string conversions used don't apply
    * correctly to the given attribute.
    */
-  virtual nsContentAttr GetAttribute(const nsString& aName,
-                                     nsString& aResult) const;
+  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aResult) const;
+  NS_IMETHOD GetAttribute(nsIAtom *aAttribute, nsString &aResult) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
 
-  virtual nsContentAttr GetAttribute(nsIAtom *aAttribute,
-                                     nsString &aResult) const;
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,
+                          const nsHTMLValue& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
+                                  PRInt32& aCountResult) const;
+  NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const;
+  NS_IMETHOD SetID(nsIAtom* aID);
+  NS_IMETHOD GetID(nsIAtom*& aResult) const;
+  // XXX this will have to change for CSS2
+  NS_IMETHOD SetClass(nsIAtom* aClass);
+  // XXX this will have to change for CSS2
+  NS_IMETHOD GetClass(nsIAtom*& aResult) const;
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue);
-  virtual void UnsetAttribute(nsIAtom* aAttribute);
+  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult);
 
-  /**
-   * Subclasses must override to fill the value object for values that
-   * are not stored in mAttributes. If the returned value is of an
-   * enumerated type then the subclass must also override the
-   * AttributeToString method (see the comment on the other GetAttribute
-   * method)
-   */
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue) const;
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const;
 
-  virtual PRInt32 GetAllAttributeNames(nsISupportsArray* aArray) const;
-  virtual PRInt32 GetAttributeCount(void) const;
-
-  virtual void      SetID(nsIAtom* aID);
-  virtual nsIAtom*  GetID(void) const;
-  virtual void      SetClass(nsIAtom* aClass);  // XXX this will have to change for CSS2
-  virtual nsIAtom*  GetClass(void) const;  // XXX this will have to change for CSS2
-
-  virtual nsIStyleRule* GetStyleRule(void);
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsString& aValue,
+                               nsHTMLValue& aResult);
 
   // Override from nsHTMLContent to allow setting of event handlers once
   // tag content is added to the doc tree.
-  virtual void SetDocument(nsIDocument* aDocument);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument);
 
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
@@ -232,22 +233,6 @@ public:
     */
   static PRBool TableCaptionAlignParamToString(const nsHTMLValue& aValue,
                                                nsString& aResult);
-
-  /**
-   * Helper method used by GetAttribute to map an attribute
-   * to a string value.
-   */
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const;
-
-  /**
-   * Helper method used by SetAttribute to map a string to an
-   * attribute value.
-   */
-  virtual nsContentAttr StringToAttribute(nsIAtom* aAttribute,
-                                          const nsString& aValue,
-                                          nsHTMLValue& aResult);
 
 protected:
   nsHTMLTagContent();

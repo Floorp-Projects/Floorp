@@ -60,19 +60,20 @@ public:
   NS_IMETHOD_(nsrefcnt) Release();
 
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext);
 
   /** @see nsIHTMLContent::CreateFrame */
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
   /** returns nsITableContent::kTableRowGroupType */
-  int GetType();
+  virtual int GetType();
 
   /* ----------- overrides from nsTableContent ---------- */
 
@@ -107,6 +108,9 @@ protected:
 
 };
 
+
+// XXX this is a virtual method so inlining just causes code
+// duplication. don't do this!
 
 /** returns nsITableContent::kTableRowGroupType */
 inline int nsTableRowGroup::GetType()

@@ -92,13 +92,12 @@ struct RowGroupReflowState {
 nsTableRowGroupFrame::nsTableRowGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsContainerFrame(aContent, aParentFrame)
 {
-  mType = aContent->GetTag();       // mType: REFCNT++
+  aContent->GetTag(mType);       // mType: REFCNT++
 }
 
 nsTableRowGroupFrame::~nsTableRowGroupFrame()
 {
-  if (nsnull!=mType)
-    NS_RELEASE(mType);              // mType: REFCNT--
+  NS_IF_RELEASE(mType);              // mType: REFCNT--
 }
 
 NS_METHOD nsTableRowGroupFrame::GetRowGroupType(nsIAtom *& aType)
@@ -740,7 +739,8 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 
   for (;;) {
     // Get the next content object
-    nsIContentPtr kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid;
+    mContent->ChildAt(kidIndex, kid.AssignRef());
     if (kid.IsNull()) {
       result = NS_FRAME_COMPLETE;
       break;
@@ -1113,16 +1113,18 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
     // Did we successfully reflow our mapped children?
     if (PR_TRUE == reflowMappedOK) {
       // Any space left?
+      PRInt32 numKids;
+      mContent->ChildCount(numKids);
       if (state.availSize.height <= 0) {
         // No space left. Don't try to pull-up children or reflow unmapped
-        if (NextChildOffset() < mContent->ChildCount()) {
+        if (NextChildOffset() < numKids) {
           aStatus = NS_FRAME_NOT_COMPLETE;
         }
-      } else if (NextChildOffset() < mContent->ChildCount()) {
+      } else if (NextChildOffset() < numKids) {
         // Try and pull-up some children from a next-in-flow
         if (PullUpChildren(&aPresContext, state, aDesiredSize.maxElementSize)) {
           // If we still have unmapped children then create some new frames
-          if (NextChildOffset() < mContent->ChildCount()) {
+          if (NextChildOffset() < numKids) {
             aStatus = ReflowUnmappedChildren(&aPresContext, state, aDesiredSize.maxElementSize);
           }
         } else {

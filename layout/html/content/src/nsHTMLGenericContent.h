@@ -98,15 +98,16 @@ struct nsHTMLGenericContent {
 
   // Implementation for nsIContent
   nsresult GetDocument(nsIDocument*& aResult) const;
-  void SetDocument(nsIDocument* aDocument);
-  nsIContent* GetParent() const;
-  void SetParent(nsIContent* aParent);
+  nsresult SetDocument(nsIDocument* aDocument);
+  nsresult GetParent(nsIContent*& aResult) const;
+  nsresult SetParent(nsIContent* aParent);
   nsresult IsSynthetic(PRBool& aResult);
-  nsIAtom* GetTag() const;
-  void SetAttribute(const nsString& aName, const nsString& aValue);
-  nsContentAttr GetAttribute(const nsString& aName, nsString& aResult) const;
+  nsresult GetTag(nsIAtom*& aResult) const;
+  nsresult SetAttribute(const nsString& aName, const nsString& aValue,
+                        PRBool aNotify);
+  nsresult GetAttribute(const nsString& aName, nsString& aResult) const;
   nsIContentDelegate* GetDelegate(nsIPresContext* aCX);
-  void List(FILE* out, PRInt32 aIndent) const;
+  nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult HandleDOMEvent(nsIPresContext& aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
@@ -114,25 +115,26 @@ struct nsHTMLGenericContent {
                           nsEventStatus& aEventStatus);
 
   // Implementation for nsIHTMLContent
-  void Compact();
-  void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  void SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue);
-  void UnsetAttribute(nsIAtom* aAttribute);
-  nsContentAttr GetAttribute(nsIAtom *aAttribute,
-                             nsString &aResult) const;
-  nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                             nsHTMLValue& aValue) const;
-  PRInt32 GetAllAttributeNames(nsISupportsArray* aArray) const;
-  PRInt32 GetAttributeCount(void) const;
-  void SetID(nsIAtom* aID);
-  nsIAtom* GetID(void) const;
-  void SetClass(nsIAtom* aClass);
-  nsIAtom* GetClass(void) const;
-  nsIStyleRule* GetStyleRule(void);
-  void MapAttributesInto(nsIStyleContext* aStyleContext,
-                         nsIPresContext* aPresContext);
-  void ToHTMLString(nsString& aResult) const;
-  void ToHTML(FILE* out) const;
+  nsresult Compact();
+  nsresult SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                        PRBool aNotify);
+  nsresult SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
+                        PRBool aNotify);
+  nsresult UnsetAttribute(nsIAtom* aAttribute);
+  nsresult GetAttribute(nsIAtom *aAttribute, nsString &aResult) const;
+  nsresult GetAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
+  nsresult GetAllAttributeNames(nsISupportsArray* aArray,
+                                PRInt32& aCount) const;
+  nsresult GetAttributeCount(PRInt32& aResult) const;
+  nsresult SetID(nsIAtom* aID);
+  nsresult GetID(nsIAtom*& aResult) const;
+  nsresult SetClass(nsIAtom* aClass);
+  nsresult GetClass(nsIAtom*& aResult) const;
+  nsresult GetStyleRule(nsIStyleRule*& aResult);
+  nsresult MapAttributesInto(nsIStyleContext* aStyleContext,
+                             nsIPresContext* aPresContext);
+  nsresult ToHTMLString(nsString& aResult) const;
+  nsresult ToHTML(FILE* out) const;
   nsresult CreateFrame(nsIPresContext*  aPresContext,
                        nsIFrame*        aParentFrame,
                        nsIStyleContext* aStyleContext,
@@ -144,9 +146,9 @@ struct nsHTMLGenericContent {
                                   nsHTMLValue& aValue,
                                   REFNSIID aIID);
 
-  nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                  nsHTMLValue& aValue,
-                                  nsString& aResult) const;
+  nsresult AttributeToString(nsIAtom* aAttribute,
+                             nsHTMLValue& aValue,
+                             nsString& aResult) const;
 
   void ListAttributes(FILE* out) const;
 
@@ -253,22 +255,27 @@ struct nsHTMLGenericLeafContent : public nsHTMLGenericContent {
 
   // Remainder of nsIHTMLContent (and nsIContent)
   nsresult SizeOf(nsISizeOfHandler* aHandler) const;
-  void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  void ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  void FinishConvertToXIF(nsXIFConverter& aConverter) const;
-  void Compact() {
+  nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
+  nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult Compact() {
+    return NS_OK;
   }
-  PRBool CanContainChildren() const {
-    return PR_FALSE;
+  nsresult CanContainChildren(PRBool& aResult) const {
+    aResult = PR_FALSE;
+    return NS_OK;
   }
-  PRInt32 ChildCount() const {
-    return 0;
+  nsresult ChildCount(PRInt32& aResult) const {
+    aResult = 0;
+    return NS_OK;
   }
-  nsIContent* ChildAt(PRInt32 aIndex) const {
-    return nsnull;
+  nsresult ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+    aResult = nsnull;
+    return NS_OK;
   }
-  PRInt32 IndexOf(nsIContent* aPossibleChild) const {
-    return -1;
+  nsresult IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
+    aResult = -1;
+    return NS_OK;
   }
   nsresult InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) {
     return NS_OK;
@@ -308,14 +315,14 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
 
   // Remainder of nsIHTMLContent (and nsIContent)
   nsresult SizeOf(nsISizeOfHandler* aHandler) const;
-  void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  void ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  void FinishConvertToXIF(nsXIFConverter& aConverter) const;
-  void Compact();
-  PRBool CanContainChildren() const;
-  PRInt32 ChildCount() const;
-  nsIContent* ChildAt(PRInt32 aIndex) const;
-  PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+  nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
+  nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult Compact();
+  nsresult CanContainChildren(PRBool& aResult) const;
+  nsresult ChildCount(PRInt32& aResult) const;
+  nsresult ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+  nsresult IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
   nsresult InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
   nsresult ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
   nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
@@ -498,146 +505,149 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
     return _g.ResetScriptObject();                       \
   }
 
-#define NS_IMPL_ICONTENT_USING_GENERIC(_g)                                   \
-  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                      \
-    return _g.GetDocument(aResult);                                          \
-  }                                                                          \
-  virtual void SetDocument(nsIDocument* aDocument) {                         \
-    _g.SetDocument(aDocument);                                               \
-  }                                                                          \
-  virtual nsIContent* GetParent() const {                                    \
-    return _g.GetParent();                                                   \
-  }                                                                          \
-  virtual void SetParent(nsIContent* aParent) {                              \
-    _g.SetParent(aParent);                                                   \
-  }                                                                          \
-  virtual PRBool CanContainChildren() const {                                \
-    return _g.CanContainChildren();                                          \
-  }                                                                          \
-  virtual PRInt32 ChildCount() const {                                       \
-    return _g.ChildCount();                                                  \
-  }                                                                          \
-  virtual nsIContent* ChildAt(PRInt32 aIndex) const {                        \
-    return _g.ChildAt(aIndex);                                               \
-  }                                                                          \
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const {                \
-    return _g.IndexOf(aPossibleChild);                                       \
-  }                                                                          \
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,                 \
-                           PRBool aNotify) {                                 \
-    return _g.InsertChildAt(aKid, aIndex, aNotify);                          \
-  }                                                                          \
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,                \
-                            PRBool aNotify) {                                \
-    return _g.ReplaceChildAt(aKid, aIndex, aNotify);                         \
-  }                                                                          \
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {               \
-    return _g.AppendChildTo(aKid, aNotify);                                  \
-  }                                                                          \
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {                 \
-    return _g.RemoveChildAt(aIndex, aNotify);                                \
-  }                                                                          \
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                  \
-    return _g.IsSynthetic(aResult);                                          \
-  }                                                                          \
-  virtual nsIAtom* GetTag() const {                                          \
-    return _g.GetTag();                                                      \
-  }                                                                          \
-  virtual void SetAttribute(const nsString& aName, const nsString& aValue) { \
-    _g.SetAttribute(aName, aValue);                                          \
-  }                                                                          \
-  virtual nsContentAttr GetAttribute(const nsString& aName,                  \
-                                     nsString& aResult) const {              \
-    return _g.GetAttribute(aName, aResult);                                  \
-  }                                                                          \
-  virtual nsIContentDelegate* GetDelegate(nsIPresContext* aCX) {             \
-    return _g.GetDelegate(aCX);                                              \
-  }                                                                          \
-  virtual void List(FILE* out, PRInt32 aIndent) const {                      \
-    _g.List(out, aIndent);                                                   \
-  }                                                                          \
-  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
-    _g.BeginConvertToXIF(aConverter);                                        \
-  }                                                                          \
-  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
-    _g.ConvertContentToXIF(aConverter);                                      \
-  }                                                                          \
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
-    _g.FinishConvertToXIF(aConverter);                                       \
-  }                                                                          \
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const {                      \
-    return _g.SizeOf(aHandler);                                              \
-  }                                                                          \
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                    \
-                            nsEvent* aEvent,                                 \
-                            nsIDOMEvent** aDOMEvent,                         \
-                            PRUint32 aFlags,                                 \
+#define NS_IMPL_ICONTENT_USING_GENERIC(_g)                                 \
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
+    return _g.GetDocument(aResult);                                        \
+  }                                                                        \
+  NS_IMETHOD SetDocument(nsIDocument* aDocument) {                         \
+    return _g.SetDocument(aDocument);                                      \
+  }                                                                        \
+  NS_IMETHOD GetParent(nsIContent*& aResult) const {                       \
+    return _g.GetParent(aResult);                                          \
+  }                                                                        \
+  NS_IMETHOD SetParent(nsIContent* aParent) {                              \
+    return _g.SetParent(aParent);                                          \
+  }                                                                        \
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {                   \
+    return _g.CanContainChildren(aResult);                                 \
+  }                                                                        \
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {                          \
+    return _g.ChildCount(aResult);                                         \
+  }                                                                        \
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {         \
+    return _g.ChildAt(aIndex, aResult);                                    \
+  }                                                                        \
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const { \
+    return _g.IndexOf(aPossibleChild, aResult);                            \
+  }                                                                        \
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,               \
+                           PRBool aNotify) {                               \
+    return _g.InsertChildAt(aKid, aIndex, aNotify);                        \
+  }                                                                        \
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,              \
+                            PRBool aNotify) {                              \
+    return _g.ReplaceChildAt(aKid, aIndex, aNotify);                       \
+  }                                                                        \
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {             \
+    return _g.AppendChildTo(aKid, aNotify);                                \
+  }                                                                        \
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               \
+    return _g.RemoveChildAt(aIndex, aNotify);                              \
+  }                                                                        \
+  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
+    return _g.IsSynthetic(aResult);                                        \
+  }                                                                        \
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
+    return _g.GetTag(aResult);                                             \
+  }                                                                        \
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue,   \
+                          PRBool aNotify) {                                \
+    return _g.SetAttribute(aName, aValue, aNotify);                        \
+  }                                                                        \
+  NS_IMETHOD GetAttribute(const nsString& aName,                           \
+                          nsString& aResult) const {                       \
+    return _g.GetAttribute(aName, aResult);                                \
+  }                                                                        \
+  virtual nsIContentDelegate* GetDelegate(nsIPresContext* aCX) {           \
+    return _g.GetDelegate(aCX);                                            \
+  }                                                                        \
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
+    return _g.List(out, aIndent);                                          \
+  }                                                                        \
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+    return _g.BeginConvertToXIF(aConverter);                               \
+  }                                                                        \
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+    return _g.ConvertContentToXIF(aConverter);                             \
+  }                                                                        \
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+    return _g.FinishConvertToXIF(aConverter);                              \
+  }                                                                        \
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const {                    \
+    return _g.SizeOf(aHandler);                                            \
+  }                                                                        \
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
+                            nsEvent* aEvent,                               \
+                            nsIDOMEvent** aDOMEvent,                       \
+                            PRUint32 aFlags,                               \
                             nsEventStatus& aEventStatus);
 
-#define NS_IMPL_IHTMLCONTENT_USING_GENERIC(_g)                             \
-  virtual void Compact() {                                                 \
-    _g.Compact();                                                          \
-  }                                                                        \
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue) { \
-    _g.SetAttribute(aAttribute, aValue);                                   \
-  }                                                                        \
-  virtual void SetAttribute(nsIAtom* aAttribute,                           \
-                            const nsHTMLValue& aValue) {                   \
-    _g.SetAttribute(aAttribute, aValue);                                   \
-  }                                                                        \
-  virtual void UnsetAttribute(nsIAtom* aAttribute) {                       \
-    _g.UnsetAttribute(aAttribute);                                         \
-  }                                                                        \
-  virtual nsContentAttr GetAttribute(nsIAtom *aAttribute,                  \
-                                     nsString &aResult) const {            \
-    return _g.GetAttribute(aAttribute, aResult);                           \
-  }                                                                        \
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,                  \
-                                     nsHTMLValue& aValue) const {          \
-    return _g.GetAttribute(aAttribute, aValue);                            \
-  }                                                                        \
-  virtual PRInt32 GetAllAttributeNames(nsISupportsArray* aArray) const {   \
-    return _g.GetAllAttributeNames(aArray);                                \
-  }                                                                        \
-  virtual PRInt32 GetAttributeCount(void) const {                          \
-    return _g.GetAttributeCount();                                         \
-  }                                                                        \
-  virtual void SetID(nsIAtom* aID) {                                       \
-    _g.SetID(aID);                                                         \
-  }                                                                        \
-  virtual nsIAtom* GetID() const {                                         \
-    return _g.GetID();                                                     \
-  }                                                                        \
-  virtual void SetClass(nsIAtom* aClass) {                                 \
-    _g.SetClass(aClass);                                                   \
-  }                                                                        \
-  virtual nsIAtom* GetClass() const {                                      \
-    return _g.GetClass();                                                  \
-  }                                                                        \
-  virtual nsIStyleRule* GetStyleRule() {                                   \
-    return _g.GetStyleRule();                                              \
-  }                                                                        \
-  virtual void ToHTMLString(nsString& aResult) const {                     \
-    _g.ToHTMLString(aResult);                                              \
-  }                                                                        \
-  virtual void ToHTML(FILE* out) const {                                   \
-    _g.ToHTML(out);                                                        \
-  }                                                                        \
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,              \
-                               nsIFrame*        aParentFrame,              \
-                               nsIStyleContext* aStyleContext,             \
-                               nsIFrame*&       aResult) {                 \
-    return _g.CreateFrame(aPresContext, aParentFrame, aStyleContext,       \
-                          aResult);                                        \
-  }                                                                        \
-  virtual nsContentAttr StringToAttribute(nsIAtom* aAttribute,             \
-                                          const nsString& aValue,          \
-                                          nsHTMLValue& aResult);           \
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,             \
-                                          nsHTMLValue& aValue,             \
-                                          nsString& aResult) const;        \
-  virtual void MapAttributesInto(nsIStyleContext* aContext,                \
-                                 nsIPresContext* aPresContext);
+#define NS_IMPL_IHTMLCONTENT_USING_GENERIC(_g)                         \
+  NS_IMETHOD Compact() {                                               \
+    return _g.Compact();                                               \
+  }                                                                    \
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue, \
+                          PRBool aNotify) {                            \
+    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
+  }                                                                    \
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,                         \
+                          const nsHTMLValue& aValue, PRBool aNotify) { \
+    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
+  }                                                                    \
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute) {                     \
+    return _g.UnsetAttribute(aAttribute);                              \
+  }                                                                    \
+  NS_IMETHOD GetAttribute(nsIAtom *aAttribute,                         \
+                          nsString &aResult) const {                   \
+    return _g.GetAttribute(aAttribute, aResult);                       \
+  }                                                                    \
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,                         \
+                          nsHTMLValue& aValue) const {                 \
+    return _g.GetAttribute(aAttribute, aValue);                        \
+  }                                                                    \
+  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,            \
+                                  PRInt32& aResult) const {            \
+    return _g.GetAllAttributeNames(aArray, aResult);                   \
+  }                                                                    \
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {               \
+    return _g.GetAttributeCount(aResult);                              \
+  }                                                                    \
+  NS_IMETHOD  SetID(nsIAtom* aID) {                                    \
+    return _g.SetID(aID);                                              \
+  }                                                                    \
+  NS_IMETHOD GetID(nsIAtom*& aResult) const {                          \
+    return _g.GetID(aResult);                                          \
+  }                                                                    \
+  NS_IMETHOD SetClass(nsIAtom* aClass) {                               \
+    return _g.SetClass(aClass);                                        \
+  }                                                                    \
+  NS_IMETHOD GetClass(nsIAtom*& aResult) const {                       \
+    return _g.GetClass(aResult);                                       \
+  }                                                                    \
+  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult) {                    \
+    return _g.GetStyleRule(aResult);                                   \
+  }                                                                    \
+  NS_IMETHOD ToHTMLString(nsString& aResult) const {                   \
+    return _g.ToHTMLString(aResult);                                   \
+  }                                                                    \
+  NS_IMETHOD ToHTML(FILE* out) const {                                 \
+    return _g.ToHTML(out);                                             \
+  }                                                                    \
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,                \
+                         nsIFrame*        aParentFrame,                \
+                         nsIStyleContext* aStyleContext,               \
+                         nsIFrame*&       aResult) {                   \
+    return _g.CreateFrame(aPresContext, aParentFrame, aStyleContext,   \
+                          aResult);                                    \
+  }                                                                    \
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
+                               const nsString& aValue,                 \
+                               nsHTMLValue& aResult);                  \
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
+                               nsHTMLValue& aValue,                    \
+                               nsString& aResult) const;               \
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,              \
+                               nsIPresContext* aPresContext);
 
 /**
  * This macro implements the portion of query interface that is

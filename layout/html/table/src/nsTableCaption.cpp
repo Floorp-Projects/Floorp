@@ -76,21 +76,23 @@ int nsTableCaption::GetType()
   return nsITableContent::kTableCaptionType;
 }
 
-void nsTableCaption::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsTableCaption::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                             PRBool aNotify)
 {
   nsHTMLValue val;
 
   if (aAttribute == nsHTMLAtoms::align) {
     if (ParseTableCaptionAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
-    return;
   }
-  nsTableContent::SetAttribute(aAttribute, aValue);
+  return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-void nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,
-                                    nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,
+                                  nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -121,10 +123,11 @@ void nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mTextAlign = alignValue;
     }
   }
+  return NS_OK;
 }
 
 
-nsresult
+NS_IMETHODIMP
 nsTableCaption::CreateFrame(nsIPresContext* aPresContext,
                             nsIFrame* aParentFrame,
                             nsIStyleContext* aStyleContext,

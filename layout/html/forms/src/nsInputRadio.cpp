@@ -135,8 +135,9 @@ nsInputRadio::~nsInputRadio()
 {
 }
 
-void nsInputRadio::MapAttributesInto(nsIStyleContext* aContext, 
-                                     nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsInputRadio::MapAttributesInto(nsIStyleContext* aContext, 
+                                nsIPresContext* aPresContext)
 {
   float p2t = aPresContext->GetPixelsToTwips();
   nscoord pad = NSIntPixelsToTwips(3, p2t);
@@ -162,6 +163,8 @@ void nsInputRadio::MapAttributesInto(nsIStyleContext* aContext,
     nsInput::MapAttributesInto(aContext, aPresContext);
   }
   NS_IF_RELEASE(formMan);
+
+  return NS_OK;
 }
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -240,18 +243,21 @@ void nsInputRadio::GetType(nsString& aResult) const
   aResult = "radio";
 }
 
-void nsInputRadio::SetAttribute(nsIAtom* aAttribute,
-                                const nsString& aValue)
+NS_IMETHODIMP
+nsInputRadio::SetAttribute(nsIAtom* aAttribute,
+                           const nsString& aValue,
+                           PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::checked) {
     mInitialChecked = PR_TRUE;
     mForcedChecked = PR_TRUE;
   }
-  nsInputRadioSuper::SetAttribute(aAttribute, aValue);
+  return nsInputRadioSuper::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-nsContentAttr nsInputRadio::GetAttribute(nsIAtom* aAttribute,
-                                         nsHTMLValue& aResult) const
+NS_IMETHODIMP
+nsInputRadio::GetAttribute(nsIAtom* aAttribute,
+                           nsHTMLValue& aResult) const
 {
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::checked) {

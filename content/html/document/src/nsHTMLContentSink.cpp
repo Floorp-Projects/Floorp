@@ -320,7 +320,7 @@ AddAttributes(const nsIParserNode& aNode,
     GetAttributeValueAt(aNode, i, v);
 
     // Add attribute to content
-    content->SetAttribute(k, v);
+    content->SetAttribute(k, v, PR_FALSE);
   }
   return NS_OK;
 }
@@ -1651,11 +1651,11 @@ HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 {
   if (mBaseHREF.Length() > 0) {
     nsHTMLValue value(mBaseHREF);
-    aContent->SetAttribute(nsHTMLAtoms::_baseHref, value);
+    aContent->SetAttribute(nsHTMLAtoms::_baseHref, value, PR_FALSE);
   }
   if (mBaseTarget.Length() > 0) {
     nsHTMLValue value(mBaseTarget);
-    aContent->SetAttribute(nsHTMLAtoms::_baseTarget, value);
+    aContent->SetAttribute(nsHTMLAtoms::_baseTarget, value, PR_FALSE);
   }
 }
 

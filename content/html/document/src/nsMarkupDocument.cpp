@@ -222,16 +222,15 @@ void nsMarkupDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode
     content->IsSynthetic(isSynthetic);
     if (PR_FALSE == isSynthetic)
     {
-      nsIAtom* tag = content->GetTag();
+      nsIAtom* tag;
+      content->GetTag(tag);
       if (tag != nsnull)
       {
-        if (tag != nsnull) 
-        {
-          nsString str;
-          tag->ToString(str);
-          if (str.EqualsIgnoreCase("Head"))
-            StyleSheetsToXIF(aConverter);
-        }
+        nsString str;
+        tag->ToString(str);
+        if (str.EqualsIgnoreCase("Head"))
+          StyleSheetsToXIF(aConverter);
+        NS_RELEASE(tag);
       }
     }
   }

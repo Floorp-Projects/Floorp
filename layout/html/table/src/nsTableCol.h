@@ -75,16 +75,17 @@ public:
   /** returns nsITableContent::kTableCellType */
   virtual int GetType();
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext);
 
   /** @see nsIHTMLContent::CreateFrame */
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
   /** return the number of columns this content object represents.  always >= 1*/
   virtual int GetRepeat ();

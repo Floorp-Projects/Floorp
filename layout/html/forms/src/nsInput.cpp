@@ -101,8 +101,9 @@ void nsInput::SetContent(const nsString& aValue)
   }
 }
 
-void nsInput::MapAttributesInto(nsIStyleContext* aContext, 
-                                nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsInput::MapAttributesInto(nsIStyleContext* aContext, 
+                           nsIPresContext* aPresContext)
 {
   if (ALIGN_UNSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
@@ -122,6 +123,7 @@ void nsInput::MapAttributesInto(nsIStyleContext* aContext,
     }
   }
   MapImagePropertiesInto(aContext, aPresContext);
+  return NS_OK;
 }
 
 
@@ -308,7 +310,9 @@ void nsInput::CacheAttribute(const nsString& aValue, PRInt32 aMinValue, PRInt32&
   aLoc = ((NS_OK == status) && (intVal >= aMinValue)) ? intVal : aMinValue;
 }
 
-void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                      PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::type) { // You cannot set the type of a form element
     ;
@@ -327,33 +331,35 @@ void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     if (ParseAlignParam(aValue, val)) {
       mAlign = val.GetIntValue();
       // Reflect the attribute into the syle system
-      nsHTMLTagContent::SetAttribute(aAttribute, val);  // is this needed?
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);  // is this needed?
     } else {
       mAlign = ALIGN_UNSET;
     }
-    return;
   }
+
   // XXX the following is necessary so that MapAttributesInto gets called
-  nsInputSuper::SetAttribute(aAttribute, aValue); 
+  return nsInputSuper::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-nsContentAttr nsInput::GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const
+nsresult nsInput::GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const
 {
   aValue.Reset();
   if (nsnull == aLoc) {
-    return eContentAttr_NotThere;
+    return NS_CONTENT_ATTR_NOT_THERE;
   } 
   else {
     aValue.SetStringValue(*aLoc);
-    return eContentAttr_HasValue;
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 }
 
-nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHTMLUnit aUnit) const
+nsresult
+nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue,
+                           nsHTMLUnit aUnit) const
 {
   aValue.Reset();
   if (aLoc <= ATTR_NOTSET) {
-    return eContentAttr_NotThere;
+    return NS_CONTENT_ATTR_NOT_THERE;
   } 
   else {
     if (eHTMLUnit_Pixel == aUnit) {
@@ -364,22 +370,23 @@ nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHT
         aValue.SetEmptyValue();
       }
       else {
-        return eContentAttr_NotThere;
+        return NS_CONTENT_ATTR_NOT_THERE;
       }
     }
     else {
       aValue.SetIntValue(aLoc, aUnit);
     }
 
-    return eContentAttr_HasValue;
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 }
 
-nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const
+NS_IMETHODIMP
+nsInput::GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const
 {
   nsHTMLValue htmlValue;
-  nsContentAttr result = GetAttribute(aAttribute, htmlValue);
-  if (eContentAttr_HasValue == result) {
+  nsresult result = GetAttribute(aAttribute, htmlValue);
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     if (eHTMLUnit_Empty == htmlValue.GetUnit()) {
       aValue = 1;
     }
@@ -389,27 +396,28 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const
     else {
       aValue = htmlValue.GetIntValue();
     }
-    return eContentAttr_HasValue;
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else {
     aValue = ATTR_NOTSET;
     // XXX for bool values, this should return 0
-    return eContentAttr_NoValue;
+    return NS_CONTENT_ATTR_NO_VALUE;
   }
 }
 
-nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
-                                    nsHTMLValue& aValue) const
+NS_IMETHODIMP
+nsInput::GetAttribute(nsIAtom* aAttribute,
+                      nsHTMLValue& aValue) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     nsAutoString tmp;
     GetType(tmp);
     if (tmp.Length() == 0) {    // derivatives that don't support type return zero length string
-      return eContentAttr_NotThere;
+      return NS_CONTENT_ATTR_NOT_THERE;
     }
     else {
       aValue.SetStringValue(tmp);
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   } 
   else if (aAttribute == nsHTMLAtoms::name) {
@@ -449,7 +457,7 @@ nsInput::GetDefaultValue(nsString& aDefaultValue)
 NS_IMETHODIMP    
 nsInput::SetDefaultValue(const nsString& aDefaultValue)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::value, aDefaultValue);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::value, aDefaultValue, PR_TRUE);
 
   return NS_OK;
 }
@@ -493,7 +501,7 @@ nsInput::GetAccept(nsString& aAccept)
 NS_IMETHODIMP    
 nsInput::SetAccept(const nsString& aAccept)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::accept, aAccept);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::accept, aAccept, PR_TRUE);
 
   return NS_OK;
 }
@@ -509,7 +517,7 @@ nsInput::GetAccessKey(nsString& aAccessKey)
 NS_IMETHODIMP    
 nsInput::SetAccessKey(const nsString& aAccessKey)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::accesskey, aAccessKey);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::accesskey, aAccessKey, PR_TRUE);
 
   return NS_OK;
 }
@@ -525,7 +533,7 @@ nsInput::GetAlign(nsString& aAlign)
 NS_IMETHODIMP    
 nsInput::SetAlign(const nsString& aAlign)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::align, aAlign);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::align, aAlign, PR_TRUE);
 
   return NS_OK;
 }
@@ -541,7 +549,7 @@ nsInput::GetAlt(nsString& aAlt)
 NS_IMETHODIMP    
 nsInput::SetAlt(const nsString& aAlt)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::alt, aAlt);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::alt, aAlt, PR_TRUE);
 
   return NS_OK;
 }
@@ -567,7 +575,7 @@ nsInput::GetDisabled(PRBool* aDisabled)
 {
   nsAutoString result;
 
-  *aDisabled = (PRBool)(eContentAttr_HasValue == ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::disabled, result)); 
+  *aDisabled = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE == ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::disabled, result)); 
   
   return NS_OK;
 }
@@ -576,7 +584,7 @@ NS_IMETHODIMP
 nsInput::SetDisabled(PRBool aDisabled)
 {
   if (PR_TRUE == aDisabled) {
-    ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::disabled, "");
+    ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::disabled, "", PR_TRUE);
   }
   else {
     UnsetAttribute(nsHTMLAtoms::disabled);
@@ -602,7 +610,7 @@ nsInput::SetMaxLength(PRInt32 aMaxLength)
   nsHTMLValue val;
   
   val.SetIntValue(aMaxLength, eHTMLUnit_Integer);
-  ((nsHTMLTagContent *)this)->SetAttribute(nsHTMLAtoms::maxlength, val);
+  ((nsHTMLTagContent *)this)->SetAttribute(nsHTMLAtoms::maxlength, val, PR_TRUE);
 
   return NS_OK;
 }
@@ -610,7 +618,7 @@ nsInput::SetMaxLength(PRInt32 aMaxLength)
 NS_IMETHODIMP    
 nsInput::SetName(const nsString& aName)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::name, aName);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::name, aName, PR_TRUE);
 
   return NS_OK;
 }
@@ -620,7 +628,7 @@ nsInput::GetReadOnly(PRBool* aReadOnly)
 {
   nsAutoString result;
 
-  *aReadOnly = (PRBool)(eContentAttr_HasValue == ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::readonly, result)); 
+  *aReadOnly = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE == ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::readonly, result)); 
 
   return NS_OK;
 }
@@ -629,7 +637,7 @@ NS_IMETHODIMP
 nsInput::SetReadOnly(PRBool aReadOnly)
 {
   if (PR_TRUE == aReadOnly) {
-    ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::readonly, "");
+    ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::readonly, "", PR_TRUE);
   }
   else {
     UnsetAttribute(nsHTMLAtoms::readonly);
@@ -649,7 +657,7 @@ nsInput::GetSize(nsString& aSize)
 NS_IMETHODIMP    
 nsInput::SetSize(const nsString& aSize)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::size, aSize);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::size, aSize, PR_TRUE);
 
   return NS_OK;
 }
@@ -665,7 +673,7 @@ nsInput::GetSrc(nsString& aSrc)
 NS_IMETHODIMP    
 nsInput::SetSrc(const nsString& aSrc)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::src, aSrc);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::src, aSrc, PR_TRUE);
 
   return NS_OK;
 }
@@ -687,7 +695,7 @@ nsInput::SetTabIndex(PRInt32 aTabIndex)
   nsHTMLValue val;
   
   val.SetIntValue(aTabIndex, eHTMLUnit_Integer);
-  ((nsHTMLTagContent *)this)->SetAttribute(nsHTMLAtoms::tabindex, val);
+  ((nsHTMLTagContent *)this)->SetAttribute(nsHTMLAtoms::tabindex, val, PR_TRUE);
 
   return NS_OK;
 }
@@ -711,7 +719,7 @@ nsInput::GetUseMap(nsString& aUseMap)
 NS_IMETHODIMP    
 nsInput::SetUseMap(const nsString& aUseMap)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::usemap, aUseMap);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::usemap, aUseMap, PR_TRUE);
 
   return NS_OK;
 }
@@ -727,7 +735,7 @@ nsInput::GetValue(nsString& aValue)
 NS_IMETHODIMP    
 nsInput::SetValue(const nsString& aValue)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::value, aValue);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::value, aValue, PR_TRUE);
 
   return NS_OK;
 }

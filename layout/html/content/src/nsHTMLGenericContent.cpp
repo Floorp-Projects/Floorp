@@ -513,7 +513,7 @@ DOMAttributeMap::SetNamedItem(nsIDOMNode *aNode)
   attribute->GetValue(value);
   NS_RELEASE(attribute);
 
-  mContent.SetAttribute(name, value);
+  mContent.SetAttribute(name, value, PR_TRUE);
   return NS_OK;
 }
 
@@ -538,7 +538,8 @@ DOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsAutoString name, value;
   nsISupportsArray *attributes = nsnull;
   if (NS_OK == NS_NewISupportsArray(&attributes)) {
-    PRInt32 count = mContent.GetAllAttributeNames(attributes);
+    PRInt32 count;
+    mContent.GetAllAttributeNames(attributes, count);
     if (count > 0) {
       if ((PRInt32)aIndex < count) {
         nsISupports *att = attributes->ElementAt(aIndex);
@@ -546,7 +547,7 @@ DOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
         nsIAtom *atName = nsnull;
         if (nsnull != att && NS_OK == att->QueryInterface(kIAtom, (void**)&atName)) {
           atName->ToString(name);
-          if (eContentAttr_NotThere != mContent.GetAttribute(name, value)) {
+          if (NS_CONTENT_ATTR_NOT_THERE != mContent.GetAttribute(name, value)) {
             *aReturn = (nsIDOMNode *)new DOMAttribute(name, value);
             res = NS_OK;
           }
@@ -563,8 +564,10 @@ DOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 nsresult
 DOMAttributeMap::GetLength(PRUint32 *aLength)
 {
-  *aLength = mContent.GetAttributeCount();
-  return NS_OK;
+  PRInt32 n;
+  nsresult rv = mContent.GetAttributeCount(n);
+  *aLength = PRUint32(n);
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -662,9 +665,11 @@ nsresult
 nsHTMLGenericContent::GetPreviousSibling(nsIDOMNode** aNode)
 {
   if (nsnull != mParent) {
-    PRInt32 pos = mParent->IndexOf(mContent);
+    PRInt32 pos;
+    mParent->IndexOf(mContent, pos);
     if (pos > -1) {
-      nsIContent* prev = mParent->ChildAt(--pos);
+      nsIContent* prev;
+      mParent->ChildAt(--pos, prev);
       if (nsnull != prev) {
         nsresult res = prev->QueryInterface(kIDOMNodeIID, (void**)aNode);
         NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
@@ -681,9 +686,11 @@ nsresult
 nsHTMLGenericContent::GetNextSibling(nsIDOMNode** aNextSibling)
 {
   if (nsnull != mParent) {
-    PRInt32 pos = mParent->IndexOf(mContent);
+    PRInt32 pos;
+    mParent->IndexOf(mContent, pos);
     if (pos > -1 ) {
-      nsIContent* prev = mParent->ChildAt(++pos);
+      nsIContent* prev;
+      mParent->ChildAt(++pos, prev);
       if (nsnull != prev) {
         nsresult res = prev->QueryInterface(kIDOMNodeIID,(void**)aNextSibling);
         NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
@@ -734,7 +741,7 @@ nsresult
 nsHTMLGenericContent::SetDOMAttribute(const nsString& aName,
                                       const nsString& aValue)
 {
-  SetAttribute(aName, aValue);
+  SetAttribute(aName, aValue, PR_TRUE);
   return NS_OK;
 }
 
@@ -754,7 +761,7 @@ nsHTMLGenericContent::GetAttributeNode(const nsString& aName,
                                        nsIDOMAttribute** aReturn)
 {
   nsAutoString value;
-  if (eContentAttr_NotThere != GetAttribute(aName, value)) {
+  if (NS_CONTENT_ATTR_NOT_THERE != GetAttribute(aName, value)) {
     *aReturn = new DOMAttribute(aName, value);
   }
   return NS_OK;
@@ -773,7 +780,7 @@ nsHTMLGenericContent::SetAttributeNode(nsIDOMAttribute* aAttribute)
     if (NS_OK == res) {
       res = aAttribute->GetValue(value);
       if (NS_OK == res) {
-        SetAttribute(name, value);
+        SetAttribute(name, value, PR_TRUE);
       }
     }
   }
@@ -824,7 +831,7 @@ nsHTMLGenericContent::GetId(nsString& aId)
 nsresult
 nsHTMLGenericContent::SetId(const nsString& aId)
 {
-  SetAttribute(nsHTMLAtoms::id, aId);
+  SetAttribute(nsHTMLAtoms::id, aId, PR_TRUE);
   return NS_OK;
 }
 
@@ -838,7 +845,7 @@ nsHTMLGenericContent::GetTitle(nsString& aTitle)
 nsresult
 nsHTMLGenericContent::SetTitle(const nsString& aTitle)
 {
-  SetAttribute(nsHTMLAtoms::title, aTitle);
+  SetAttribute(nsHTMLAtoms::title, aTitle, PR_TRUE);
   return NS_OK;
 }
 
@@ -852,7 +859,7 @@ nsHTMLGenericContent::GetLang(nsString& aLang)
 nsresult
 nsHTMLGenericContent::SetLang(const nsString& aLang)
 {
-  SetAttribute(nsHTMLAtoms::lang, aLang);
+  SetAttribute(nsHTMLAtoms::lang, aLang, PR_TRUE);
   return NS_OK;
 }
 
@@ -866,7 +873,7 @@ nsHTMLGenericContent::GetDir(nsString& aDir)
 nsresult
 nsHTMLGenericContent::SetDir(const nsString& aDir)
 {
-  SetAttribute(nsHTMLAtoms::dir, aDir);
+  SetAttribute(nsHTMLAtoms::dir, aDir, PR_TRUE);
   return NS_OK;
 }
 
@@ -880,7 +887,7 @@ nsHTMLGenericContent::GetClassName(nsString& aClassName)
 nsresult
 nsHTMLGenericContent::SetClassName(const nsString& aClassName)
 {
-  SetAttribute(nsHTMLAtoms::kClass, aClassName);
+  SetAttribute(nsHTMLAtoms::kClass, aClassName, PR_TRUE);
   return NS_OK;
 }
 
@@ -892,7 +899,7 @@ nsHTMLGenericContent::GetDocument(nsIDocument*& aResult) const
   return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericContent::SetDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument;
@@ -902,52 +909,56 @@ nsHTMLGenericContent::SetDocument(nsIDocument* aDocument)
   // doing a GetAttribute for every type of handler.
   if (nsnull != mAttributes) {
     nsHTMLValue val;
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onclick, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onclick, val))
       AddScriptEventListener(nsHTMLAtoms::onclick, val, kIDOMMouseListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::ondblclick, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::ondblclick, val))
       AddScriptEventListener(nsHTMLAtoms::onclick, val, kIDOMMouseListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmousedown, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmousedown, val))
       AddScriptEventListener(nsHTMLAtoms::onmousedown, val, kIDOMMouseListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseup, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseup, val))
       AddScriptEventListener(nsHTMLAtoms::onmouseup, val, kIDOMMouseListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseover, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseover, val))
       AddScriptEventListener(nsHTMLAtoms::onmouseover, val, kIDOMMouseListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseout, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseout, val))
       AddScriptEventListener(nsHTMLAtoms::onmouseout, val, kIDOMMouseListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeydown, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeydown, val))
       AddScriptEventListener(nsHTMLAtoms::onkeydown, val, kIDOMKeyListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeyup, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeyup, val))
       AddScriptEventListener(nsHTMLAtoms::onkeyup, val, kIDOMKeyListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeypress, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeypress, val))
       AddScriptEventListener(nsHTMLAtoms::onkeypress, val, kIDOMKeyListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmousemove, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmousemove, val))
       AddScriptEventListener(nsHTMLAtoms::onmousemove, val, kIDOMMouseMotionListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onload, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onload, val))
       AddScriptEventListener(nsHTMLAtoms::onload, val, kIDOMLoadListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onunload, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onunload, val))
       AddScriptEventListener(nsHTMLAtoms::onunload, val, kIDOMLoadListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onabort, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onabort, val))
       AddScriptEventListener(nsHTMLAtoms::onabort, val, kIDOMLoadListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onerror, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onerror, val))
       AddScriptEventListener(nsHTMLAtoms::onerror, val, kIDOMLoadListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onfocus, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onfocus, val))
       AddScriptEventListener(nsHTMLAtoms::onfocus, val, kIDOMFocusListenerIID);
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onblur, val))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onblur, val))
       AddScriptEventListener(nsHTMLAtoms::onblur, val, kIDOMFocusListenerIID);
   }
+
+  return NS_OK;
 }
 
-nsIContent*
-nsHTMLGenericContent::GetParent() const
+nsresult
+nsHTMLGenericContent::GetParent(nsIContent*& aResult) const
 {
   NS_IF_ADDREF(mParent);
-  return mParent;
+  aResult = mParent;
+  return NS_OK;;
 }
 
-void
+nsresult
 nsHTMLGenericContent::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
+  return NS_OK;
 }
 
 nsresult
@@ -956,11 +967,13 @@ nsHTMLGenericContent::IsSynthetic(PRBool& aResult)
   return PR_FALSE;
 }
 
-nsIAtom*
-nsHTMLGenericContent::GetTag() const
+
+nsresult
+nsHTMLGenericContent::GetTag(nsIAtom*& aResult) const
 {
   NS_IF_ADDREF(mTag);
-  return mTag;
+  aResult = mTag;
+  return NS_OK;
 }
 
 //void
@@ -1027,101 +1040,115 @@ nsHTMLGenericContent::HandleDOMEvent(nsIPresContext& aPresContext,
   return ret;
 }
 
-void
+nsresult
 nsHTMLGenericContent::SetAttribute(const nsString& aName,
-                                   const nsString& aValue)
+                                   const nsString& aValue,
+                                   PRBool aNotify)
 {
   nsAutoString upper;
   aName.ToUpperCase(upper);
   nsIAtom* attr = NS_NewAtom(upper);
-  SetAttribute(attr, aValue);
+  nsresult rv = SetAttribute(attr, aValue, aNotify);
   NS_RELEASE(attr);
+  return rv;
 }
 
-void
+nsresult
 nsHTMLGenericContent::SetAttribute(nsIAtom* aAttribute,
-                                   const nsString& aValue)
+                                   const nsString& aValue,
+                                   PRBool aNotify)
 {
+  nsresult rv = NS_OK;
   if (nsnull == mAttributes) {
-    NS_NewHTMLAttributes(&mAttributes, mContent);
+    rv = NS_NewHTMLAttributes(&mAttributes, mContent);
+    if (NS_OK != rv) {
+      return rv;
+    }
   }
   if (nsnull != mAttributes) {
+    PRInt32 na;
     nsHTMLValue hval;
-    if (eContentAttr_HasValue ==
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
         mContent->StringToAttribute(aAttribute, aValue, hval)) {
-      mAttributes->SetAttribute(aAttribute, hval);
+      rv = mAttributes->SetAttribute(aAttribute, hval, na);
     }
     else if (nsHTMLAtoms::style == aAttribute) {
       // XXX the style sheet language is a document property that
       // should be used to lookup the style sheet parser to parse the
       // attribute.
       nsICSSParser* css;
-      nsresult rv = NS_NewCSSParser(&css);
+      rv = NS_NewCSSParser(&css);
       if (NS_OK != rv) {
-        return;
+        return rv;
       }
       nsIStyleRule* rule;
       rv = css->ParseDeclarations(aValue, nsnull, rule);
       if ((NS_OK == rv) && (nsnull != rule)) {
-        mAttributes->SetAttribute(aAttribute, nsHTMLValue(rule));
+        rv = mAttributes->SetAttribute(aAttribute, nsHTMLValue(rule), na);
         NS_RELEASE(rule);
       }
       NS_RELEASE(css);
     }
     else {
-      mAttributes->SetAttribute(aAttribute, aValue);
+      rv = mAttributes->SetAttribute(aAttribute, aValue, na);
     }
   }
+  return rv;
 }
 
-void
+nsresult
 nsHTMLGenericContent::SetAttribute(nsIAtom* aAttribute,
-                                   const nsHTMLValue& aValue)
+                                   const nsHTMLValue& aValue,
+                                   PRBool aNotify)
 {
+  nsresult rv = NS_OK;
   if (nsnull == mAttributes) {
-    NS_NewHTMLAttributes(&mAttributes, mContent);
+    rv = NS_NewHTMLAttributes(&mAttributes, mContent);
   }
   if (nsnull != mAttributes) {
-    mAttributes->SetAttribute(aAttribute, aValue);
+    PRInt32 na;
+    rv = mAttributes->SetAttribute(aAttribute, aValue, na);
   }
+  return rv;
 }
 
-void
+nsresult
 nsHTMLGenericContent::UnsetAttribute(nsIAtom* aAttribute)
 {
   if (nsnull != mAttributes) {
-    PRInt32 count = mAttributes->UnsetAttribute(aAttribute);
+    PRInt32 count;
+    mAttributes->UnsetAttribute(aAttribute, count);
     if (0 == count) {
       NS_RELEASE(mAttributes);
     }
   }
+  return NS_OK;
 }
 
-nsContentAttr
+nsresult
 nsHTMLGenericContent::GetAttribute(const nsString& aName,
                                    nsString& aResult) const
 {
   nsAutoString upper;
   aName.ToUpperCase(upper);
   nsIAtom* attr = NS_NewAtom(upper);
-  nsContentAttr result = GetAttribute(attr, aResult);
+  nsresult result = GetAttribute(attr, aResult);
   NS_RELEASE(attr);
   return result;
 }
 
-
-nsContentAttr
+nsresult
 nsHTMLGenericContent::GetAttribute(nsIAtom *aAttribute,
                                    nsString &aResult) const
 {
   nsHTMLValue value;
-  nsContentAttr result = GetAttribute(aAttribute, value);
+  nsresult result = GetAttribute(aAttribute, value);
 
   char cbuf[20];
   nscolor color;
-  if (eContentAttr_HasValue == result) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     // Try subclass conversion routine first
-    if (eContentAttr_HasValue ==
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
         mContent->AttributeToString(aAttribute, value, aResult)) {
       return result;
     }
@@ -1164,14 +1191,14 @@ nsHTMLGenericContent::GetAttribute(nsIAtom *aAttribute,
     default:
     case eHTMLUnit_Enumerated:
       NS_NOTREACHED("no default enumerated value to string conversion");
-      result = eContentAttr_NotThere;
+      result = NS_CONTENT_ATTR_NOT_THERE;
       break;
     }
   }
   return result;
 }
 
-nsContentAttr
+nsresult
 nsHTMLGenericContent::GetAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aValue) const
 {
@@ -1179,96 +1206,116 @@ nsHTMLGenericContent::GetAttribute(nsIAtom* aAttribute,
     return mAttributes->GetAttribute(aAttribute, aValue);
   }
   aValue.Reset();
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-PRInt32
-nsHTMLGenericContent::GetAllAttributeNames(nsISupportsArray* aArray) const
+nsresult
+nsHTMLGenericContent::GetAllAttributeNames(nsISupportsArray* aArray,
+                                           PRInt32& aCount) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->GetAllAttributeNames(aArray);
+    return mAttributes->GetAllAttributeNames(aArray, aCount);
   }
-  return 0;
+  aCount = 0;
+  return NS_OK;
 }
 
-PRInt32
-nsHTMLGenericContent::GetAttributeCount(void) const
+nsresult
+nsHTMLGenericContent::GetAttributeCount(PRInt32& aCount) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->Count();
+    return mAttributes->Count(aCount);
   }
-  return 0;
+  aCount = 0;
+  return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericContent::SetID(nsIAtom* aID)
 {
+  nsresult rv = NS_OK;
   if (nsnull != aID) {
     if (nsnull == mAttributes) {
-      NS_NewHTMLAttributes(&mAttributes, mContent);
+      rv = NS_NewHTMLAttributes(&mAttributes, mContent);
+      if (NS_OK != rv) {
+        return rv;
+      }
     }
     if (nsnull != mAttributes) {
-      mAttributes->SetID(aID);
+      PRInt32 na;
+      rv = mAttributes->SetID(aID, na);
     }
   }
   else {
     if (nsnull != mAttributes) {
-      PRInt32 count = mAttributes->SetID(nsnull);
+      PRInt32 count;
+      rv = mAttributes->SetID(nsnull, count);
       if (0 == count) {
         NS_RELEASE(mAttributes);
       }
     }
   }
+  return rv;
 }
 
-nsIAtom*
-nsHTMLGenericContent::GetID(void) const
+nsresult
+nsHTMLGenericContent::GetID(nsIAtom*& aResult) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->GetID();
+    return mAttributes->GetID(aResult);
   }
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericContent::SetClass(nsIAtom* aClass)
 {
+  nsresult rv = NS_OK;
   if (nsnull != aClass) {
     if (nsnull == mAttributes) {
-      NS_NewHTMLAttributes(&mAttributes, mContent);
+      rv = NS_NewHTMLAttributes(&mAttributes, mContent);
+      if (NS_OK != rv) {
+        return rv;
+      }
     }
     if (nsnull != mAttributes) {
-      mAttributes->SetClass(aClass);
+      PRInt32 na;
+      rv = mAttributes->SetClass(aClass, na);
     }
   }
   else {
     if (nsnull != mAttributes) {
-      PRInt32 count = mAttributes->SetClass(nsnull);
+      PRInt32 count;
+      rv = mAttributes->SetClass(nsnull, count);
       if (0 == count) {
         NS_RELEASE(mAttributes);
       }
     }
   }
+  return rv;
 }
 
-nsIAtom*
-nsHTMLGenericContent::GetClass(void) const
+nsresult
+nsHTMLGenericContent::GetClass(nsIAtom*& aResult) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->GetClass();
+    return mAttributes->GetClass(aResult);
   }
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
-nsIStyleRule*
-nsHTMLGenericContent::GetStyleRule(void)
+nsresult
+nsHTMLGenericContent::GetStyleRule(nsIStyleRule*& aResult)
 {
   nsIStyleRule* result = nsnull;
 
   if (nsnull != mAttributes) {
     mAttributes->QueryInterface(kIStyleRuleIID, (void**)&result);
   }
-  return result;
+  aResult = result;
+  return NS_OK;
 }
 
 nsIContentDelegate*
@@ -1283,9 +1330,8 @@ nsHTMLGenericContent::ListAttributes(FILE* out) const
 {
   nsISupportsArray* attrs;
   if (NS_OK == NS_NewISupportsArray(&attrs)) {
-    GetAllAttributeNames(attrs);
-    PRInt32 count = attrs->Count();
-    PRInt32 index;
+    PRInt32 index, count;
+    GetAllAttributeNames(attrs, count);
     for (index = 0; index < count; index++) {
       // name
       nsIAtom* attr = (nsIAtom*)attrs->ElementAt(index);
@@ -1306,7 +1352,7 @@ nsHTMLGenericContent::ListAttributes(FILE* out) const
   }
 }
 
-void
+nsresult
 nsHTMLGenericContent::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(nsnull != mDocument, "bad content");
@@ -1314,7 +1360,8 @@ nsHTMLGenericContent::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  nsIAtom* tag = GetTag();
+  nsIAtom* tag;
+  GetTag(tag);
   if (tag != nsnull) {
     nsAutoString buf;
     tag->ToString(buf);
@@ -1328,26 +1375,34 @@ nsHTMLGenericContent::List(FILE* out, PRInt32 aIndent) const
   mContent->Release();
   fprintf(out, " refcount=%d<", r);
 
-  if (mContent->CanContainChildren()) {
+  PRBool canHaveKids;
+  mContent->CanContainChildren(canHaveKids);
+  if (canHaveKids) {
     fputs("\n", out);
-    PRInt32 kids = mContent->ChildCount();
+    PRInt32 kids;
+    mContent->ChildCount(kids);
     for (index = 0; index < kids; index++) {
-      nsIContent* kid = mContent->ChildAt(index);
+      nsIContent* kid;
+      mContent->ChildAt(index, kid);
       kid->List(out, aIndent + 1);
       NS_RELEASE(kid);
     }
     for (index = aIndent; --index >= 0; ) fputs("  ", out);
   }
   fputs(">\n", out);
+
+  return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericContent::ToHTML(FILE* out) const
 {
   nsAutoString tmp;
-  ToHTMLString(tmp);
+  nsresult rv = ToHTMLString(tmp);
   fputs(tmp, out);
+  return rv;
 }
+
 // XXX i18n: this is wrong (?) because we need to know the outgoing
 // character set (I think)
 static void
@@ -1376,7 +1431,7 @@ QuoteForHTML(const nsString& aValue, nsString& aResult)
   aResult.Append('"');
 }
 
-void
+nsresult
 nsHTMLGenericContent::ToHTMLString(nsString& aBuf) const
 {
   aBuf.Truncate(0);
@@ -1394,8 +1449,8 @@ nsHTMLGenericContent::ToHTMLString(nsString& aBuf) const
     nsISupportsArray* attrs;
     nsresult rv = NS_NewISupportsArray(&attrs);
     if (NS_OK == rv) {
-      mAttributes->GetAllAttributeNames(attrs);
-      PRInt32 i, n = attrs->Count();
+      PRInt32 i, n;
+      mAttributes->GetAllAttributeNames(attrs, n);
       nsAutoString name, value, quotedValue;
       for (i = 0; i < n; i++) {
         nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
@@ -1415,6 +1470,7 @@ nsHTMLGenericContent::ToHTMLString(nsString& aBuf) const
   }
 
   aBuf.Append('>');
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1608,7 +1664,7 @@ nsHTMLGenericContent::AddScriptEventListener(nsIAtom* aAttribute,
   return ret;
 }
 
-nsContentAttr
+nsresult
 nsHTMLGenericContent::AttributeToString(nsIAtom* aAttribute,
                                         nsHTMLValue& aValue,
                                         nsString& aResult) const
@@ -1618,11 +1674,11 @@ nsHTMLGenericContent::AttributeToString(nsIAtom* aAttribute,
       nsIStyleRule* rule = (nsIStyleRule*) aValue.GetISupportsValue();
       // rule->ToString(str);
       aResult = "XXX style rule ToString goes here";
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   aResult.Truncate();
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 PRBool
@@ -1851,9 +1907,10 @@ nsHTMLGenericLeafContent::Equals(nsIDOMNode* aNode, PRBool aDeep,
   return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericLeafContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
+  nsresult rv = NS_OK;
   if (nsnull != mTag)
   {
     nsAutoString name;
@@ -1865,11 +1922,11 @@ nsHTMLGenericLeafContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
   if (nsnull != mAttributes) 
   {
     nsISupportsArray* attrs;
-    nsresult rv = NS_NewISupportsArray(&attrs);
+    rv = NS_NewISupportsArray(&attrs);
     if (NS_OK == rv) 
     {
-      mAttributes->GetAllAttributeNames(attrs);
-      PRInt32 i, n = attrs->Count();
+      PRInt32 i, n;
+      mAttributes->GetAllAttributeNames(attrs, n);
       nsAutoString name, value;
       for (i = 0; i < n; i++) 
       {
@@ -1884,14 +1941,16 @@ nsHTMLGenericLeafContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
       NS_RELEASE(attrs);
     }
   }
+  return rv;
 }
 
-void
+nsresult
 nsHTMLGenericLeafContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
+  return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericLeafContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
   if (nsnull != mTag)
@@ -1900,6 +1959,7 @@ nsHTMLGenericLeafContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
     mTag->ToString(name);
     aConverter.EndLeaf(name);    
   }
+  return NS_OK;
 }
 
 // XXX not really implemented (yet)
@@ -2006,9 +2066,10 @@ static void
 SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
 {
   PRInt32 i, n;
-  n = aContent->ChildCount();
+  aContent->ChildCount(n);
   for (i = 0; i < n; i++) {
-    nsIContent* child = aContent->ChildAt(i);
+    nsIContent* child;
+    aContent->ChildAt(i, child);
     if (nsnull != child) {
       child->SetDocument(aDocument);
       SetDocumentInChildrenOf(child, aDocument);
@@ -2046,7 +2107,8 @@ nsHTMLGenericContainerContent::InsertBefore(nsIDOMNode* aNewChild,
       res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
       NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
       if (NS_OK == res) {
-        PRInt32 pos = IndexOf(refContent);
+        PRInt32 pos;
+        IndexOf(refContent, pos);
         if (pos >= 0) {
           SetDocumentInChildrenOf(newContent, mDocument);
           res = InsertChildAt(newContent, pos, PR_TRUE);
@@ -2076,7 +2138,8 @@ nsHTMLGenericContainerContent::ReplaceChild(nsIDOMNode* aNewChild,
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
-    PRInt32 pos = IndexOf(content);
+    PRInt32 pos;
+    IndexOf(content, pos);
     if (pos >= 0) {
       nsIContent* newContent = nsnull;
       nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
@@ -2102,7 +2165,8 @@ nsHTMLGenericContainerContent::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** a
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
-    PRInt32 pos = IndexOf(content);
+    PRInt32 pos;
+    IndexOf(content, pos);
     if (pos >= 0) {
       res = RemoveChildAt(pos, PR_TRUE);
       *aReturn = aOldChild;
@@ -2127,9 +2191,10 @@ nsHTMLGenericContainerContent::SizeOf(nsISizeOfHandler* aHandler) const
   return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericContainerContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
+  nsresult rv = NS_OK;
   if (nsnull != mTag)
   {
     nsAutoString name;
@@ -2141,11 +2206,11 @@ nsHTMLGenericContainerContent::BeginConvertToXIF(nsXIFConverter& aConverter) con
   if (nsnull != mAttributes) 
   {
     nsISupportsArray* attrs;
-    nsresult rv = NS_NewISupportsArray(&attrs);
+    rv = NS_NewISupportsArray(&attrs);
     if (NS_OK == rv) 
     {
-      mAttributes->GetAllAttributeNames(attrs);
-      PRInt32 i, n = attrs->Count();
+      PRInt32 i, n;
+      mAttributes->GetAllAttributeNames(attrs, n);
       nsAutoString name, value;
       for (i = 0; i < n; i++) 
       {
@@ -2160,14 +2225,16 @@ nsHTMLGenericContainerContent::BeginConvertToXIF(nsXIFConverter& aConverter) con
       NS_RELEASE(attrs);
     }
   }
+  return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericContainerContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
+  return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericContainerContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
   if (nsnull != mTag)
@@ -2176,41 +2243,49 @@ nsHTMLGenericContainerContent::FinishConvertToXIF(nsXIFConverter& aConverter) co
     mTag->ToString(name);
     aConverter.EndContainer(name);
   }
+  return NS_OK;
 }
 
-void
+nsresult
 nsHTMLGenericContainerContent::Compact()
 {
   mChildren.Compact();
+  return NS_OK;
 }
 
-PRBool
-nsHTMLGenericContainerContent::CanContainChildren() const
+nsresult
+nsHTMLGenericContainerContent::CanContainChildren(PRBool& aResult) const
 {
-  return PR_TRUE;
+  aResult = PR_TRUE;
+  return NS_OK;
 }
 
-PRInt32
-nsHTMLGenericContainerContent::ChildCount() const
+nsresult
+nsHTMLGenericContainerContent::ChildCount(PRInt32& aCount) const
 {
-  return mChildren.Count();
+  aCount = mChildren.Count();
+  return NS_OK;
 }
 
-nsIContent*
-nsHTMLGenericContainerContent::ChildAt(PRInt32 aIndex) const
+nsresult
+nsHTMLGenericContainerContent::ChildAt(PRInt32 aIndex,
+                                       nsIContent*& aResult) const
 {
   nsIContent *child = (nsIContent*) mChildren.ElementAt(aIndex);
   if (nsnull != child) {
     NS_ADDREF(child);
   }
-  return child;
+  aResult = child;
+  return NS_OK;
 }
 
-PRInt32
-nsHTMLGenericContainerContent::IndexOf(nsIContent* aPossibleChild) const
+nsresult
+nsHTMLGenericContainerContent::IndexOf(nsIContent* aPossibleChild,
+                                       PRInt32& aIndex) const
 {
   NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
-  return mChildren.IndexOf(aPossibleChild);
+  aIndex = mChildren.IndexOf(aPossibleChild);
+  return NS_OK;
 }
 
 nsresult
