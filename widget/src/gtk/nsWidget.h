@@ -223,6 +223,9 @@ private:
   static gint RealizeSignal(GtkWidget *      aWidget, 
                             gpointer         aData);
 
+
+protected:
+
   //////////////////////////////////////////////////////////////////
   //
   // GTK event support methods
@@ -239,7 +242,12 @@ private:
                       nsMouseEvent &   anEvent,
                       PRUint32         aEventType);
 
-protected:
+#ifdef DEBUG
+  void DebugPrintMouseEvent(nsMouseEvent & aEvent,
+                            char *         sMessage,
+                            GtkWidget *    aGtkWidget);
+#endif
+
     GtkWidget *mWidget;
     nsIWidget *mParent;
 
