@@ -41,6 +41,14 @@
 #include "prefapi.h"
 #include "edt.h"
 
+#define SIMULATE_WIN95_ON_NT true
+#ifdef SIMULATE_WIN95_ON_NT
+#define IsRunningOnNT	FALSE
+#else
+#define IsRunningOnNT	sysInfo.m_bWinNT
+#endif
+
+
 #ifdef XP_WIN32
 static BOOL intlUnicodeFlag(int16 wincsid);
 #define INIT_FLAG_FOR_CSID(c) { CIntlWin::flagTable[(c) & MASK_FLAG_TABLE] = intlUnicodeFlag(c);}
@@ -181,7 +189,7 @@ unsigned int lang_table[] =
         IDS_LANGUAGE_VIETNAMESE_TCVN, CS_VIET_TCVN, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, 0,
         IDS_LANGUAGE_VIETNAMESE_VNI, CS_VIET_VNI, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, 0,
 	IDS_LANGUAGE_THAI, CS_TIS620, CS_TIS620, 0,
-	IDS_LANGUAGE_UTF8, CS_UTF8, CS_UTF8, CS_UTF7, CS_UCS2, CS_UCS2_SWAP, 0,
+	IDS_LANGUAGE_UTF8, CS_UTF8, CS_UTF8, CS_UTF7, CS_UCS2, CS_UCS2_SWAP, CS_T61, 0,
 	IDS_LANGUAGE_USERDEFINED, CS_USER_DEFINED_ENCODING, CS_USER_DEFINED_ENCODING, 0,
 	UINT_MAX
 };
@@ -848,7 +856,7 @@ static BOOL intlUnicodeFlag(int16 wincsid)
           )
 			return FALSE;
 
-		if(sysInfo.m_bWinNT)
+		if(IsRunningOnNT)
 			return TRUE;
 		else
 			return FALSE;
@@ -1006,7 +1014,7 @@ int CIntlWin::DrawTextEx(int16 wincsid, HDC hdc, LPSTR lpchText, int cchText,LPR
 	{
 
 		// DrawTextExW and DrawTextW is not working on Win95 right now. See Note above
-		if( (sysInfo.m_bWinNT) && (wlen = MultiByteToWideChar(wincsid, lpchText, cchText)))
+		if( (IsRunningOnNT) && (wlen = MultiByteToWideChar(wincsid, lpchText, cchText)))
 		{
 			return ::DrawTextW(hdc, m_wConvBuf, wlen, lprc, dwDTFormat);
 		}
@@ -1014,10 +1022,19 @@ int CIntlWin::DrawTextEx(int16 wincsid, HDC hdc, LPSTR lpchText, int cchText,LPR
 		SIZE sz;
 		CIntlWin::GetTextExtentPoint(wincsid, hdc, lpchText, cchText, &sz);
 
+		if(dwDTFormat & DT_CALCRECT)
+		{
+			lprc->top = 0;
+			lprc->left = 0;
+			lprc->right = sz.cx;
+			lprc->bottom = sz.cy;
+			return sz.cy;
+		}		
+
 		//	Caculate X 
 		x = lprc->left;
 		if(dwDTFormat & DT_CENTER)	
-			x = (lprc->right + lprc->right - sz.cx) / 2;
+			x = (lprc->left + lprc->right - sz.cx) / 2;
 		else if(dwDTFormat & DT_RIGHT)
 			x = lprc->right - sz.cx;
 
@@ -1028,16 +1045,11 @@ int CIntlWin::DrawTextEx(int16 wincsid, HDC hdc, LPSTR lpchText, int cchText,LPR
 		else if(dwDTFormat & DT_BOTTOM)
 			y = lprc->bottom - sz.cy;
 
-		if(dwDTFormat & DT_CALCRECT)
-		{
-			lprc->right = x + sz.cx;
-			return sz.cy;
-		}		
 		return  CIntlWin::TextOut(wincsid, hdc, x, y, lpchText, cchText);
 	}
     else
 	{
-		if (sysInfo.m_bWinNT)
+		if (IsRunningOnNT)
 			iRetval =  ::DrawText(hdc, lpchText, cchText, lprc, dwDTFormat);
 		else
 			iRetval =  ::DrawTextEx(hdc, lpchText, cchText, lprc, dwDTFormat, lpDTParams);
