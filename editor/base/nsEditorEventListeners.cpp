@@ -167,6 +167,8 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
         //return NS_OK to allow page scrolling.
         return NS_OK;
       	break;
+      default:
+        return NS_OK; // this indicates that we have not handled the keyDown event in any way.
       }
     }
   }
