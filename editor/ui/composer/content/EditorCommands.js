@@ -471,6 +471,50 @@ function CheckSpelling()
   
 // --------------------------- Debug stuff ---------------------------
 
+function EditorGetNodeFromOffsets(offsets)
+{
+  var node = null;
+  var i;
+
+  node = appCore.editorDocument;
+
+  for (i = 0; i < offsets.length; i++)
+  {
+    node = node.childNodes[offsets[i]];
+  }
+
+  return node;
+}
+
+function EditorSetSelectionFromOffsets(selRanges)
+{
+  var rangeArr, start, end, i, node, offset;
+  var selection = appCore.editorSelection;
+
+  selection.clearSelection();
+
+  for (i = 0; i < selRanges.length; i++)
+  {
+    rangeArr = selRanges[i];
+    start    = rangeArr[0];
+    end      = rangeArr[1];
+
+    var range = appCore.editorDocument.createRange();
+
+    node   = EditorGetNodeFromOffsets(start[0]);
+    offset = start[1];
+
+    range.setStart(node, offset);
+
+    node   = EditorGetNodeFromOffsets(end[0]);
+    offset = end[1];
+
+    range.setEnd(node, offset);
+
+    selection.addRange(range);
+  }
+}
+
 function EditorTestSelection()
 {
   if (appCore)
