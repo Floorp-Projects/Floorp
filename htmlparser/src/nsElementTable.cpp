@@ -77,7 +77,7 @@ TagList  gDLRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_apple
 TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
 TagList  gDTKids={1,{eHTMLTag_dt}};
 TagList  gFieldsetKids={2,{eHTMLTag_legend,eHTMLTag_text}};
-TagList  gFontKids={2,{eHTMLTag_legend,eHTMLTag_text}};
+TagList  gFontKids={3,{eHTMLTag_legend,eHTMLTag_table,eHTMLTag_text}}; // Added table to fix bug 93365
 TagList  gFormKids={1,{eHTMLTag_keygen}};
 TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
 
