@@ -988,6 +988,7 @@ net_build_http_request (URL_Struct * URL_s,
     size_t csize;        /* size of command */
     const char *tempURL=NULL;
     char *proxyServer=NULL;
+    int tmpSize = 0;
         
     /* begin the request */
     switch(URL_s->method) {
@@ -1076,16 +1077,18 @@ net_build_http_request (URL_Struct * URL_s,
             | GET_SEARCH_PART);
 
         if(url_minus_hash) {
-            BlockAllocCat(*command, (size_t) csize, url_minus_hash, PL_strlen(url_minus_hash));
-            csize += PL_strlen(url_minus_hash);
+            tmpSize = PL_strlen(url_minus_hash);
+            BlockAllocCat(*command, (size_t) csize, url_minus_hash, tmpSize);
+            csize += tmpSize;
             PR_Free(url_minus_hash);
         }
 
     } else {
         /* else use just the path and search stuff */
         char *path = NET_ParseURL(URL_s->address, GET_PATH_PART | GET_SEARCH_PART);
-        BlockAllocCat(*command, csize, path, PL_strlen(path));
-        csize += PL_strlen(path);
+        tmpSize = PL_strlen(path);
+        BlockAllocCat(*command, csize, path, tmpSize);
+        csize += tmpSize;
         PR_Free(path);
     }
 
@@ -1106,13 +1109,15 @@ net_build_http_request (URL_Struct * URL_s,
         {
             /* add the If-None-Match header */
             PL_strcpy(line_buffer, "If-None-Match: \"");
+            tmpSize = PL_strlen(line_buffer);
             BlockAllocCat(*command, csize,
-                line_buffer, PL_strlen(line_buffer));
-            csize += PL_strlen(line_buffer);
+                line_buffer, tmpSize);
+            csize += tmpSize;
+            tmpSize = PL_strlen(URL_s->etag);
             BlockAllocCat(*command, csize, 
                 URL_s->etag,
-                PL_strlen(URL_s->etag));
-            csize += PL_strlen(URL_s->etag);
+                tmpSize);
+            csize += tmpSize;
             /* Closing " */
             BlockAllocCat(*command, csize,
                 "\"",
@@ -1172,8 +1177,9 @@ net_build_http_request (URL_Struct * URL_s,
                 sprintf(&line_buffer[PL_strlen(line_buffer)], 
                     "; length=%ld" CRLF,
                     URL_s->real_content_length);
-            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-            csize += PL_strlen(line_buffer);
+            tmpSize = PL_strlen(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, tmpSize);
+            csize += tmpSize;
 
             /* reset the expires since we will want to
              * either get a new one from the server or
@@ -1183,8 +1189,9 @@ net_build_http_request (URL_Struct * URL_s,
         } /* end if last_modified */
 
         if(URL_s->http_headers) {  /* use headers that were passed in */
-            BlockAllocCat(*command, csize, URL_s->http_headers, PL_strlen(URL_s->http_headers));
-            csize += PL_strlen(URL_s->http_headers);
+            tmpSize = PL_strlen(URL_s->http_headers);
+            BlockAllocCat(*command, csize, URL_s->http_headers, tmpSize);
+            csize += tmpSize;
 
         } else {
 
@@ -1195,18 +1202,17 @@ net_build_http_request (URL_Struct * URL_s,
                     && ( (meth == URL_MOVE_METHOD)
                         || (meth == URL_COPY_METHOD) )
             ){
-                int len=0;
                 if(meth == URL_MOVE_METHOD) {
                     sprintf(line_buffer, "New-uri: %s", URL_s->destination);
-                    len=PL_strlen(line_buffer);
-                    BlockAllocCat(*command, csize, line_buffer, len);
-                    csize+=len;
+                    tmpSize = PL_strlen(line_buffer);
+                    BlockAllocCat(*command, csize, line_buffer, tmpSize);
+                    csize+=tmpSize;
                 } else if(meth == URL_COPY_METHOD) {
                     ;/* some http copy syntax */
                 }
 
-                BlockAllocCat(*command, csize, CRLF, PL_strlen(CRLF));
-                csize += PL_strlen(CRLF);
+                BlockAllocCat(*command, csize, CRLF, 2);
+                csize += 2;
             }
             /* sendRefererHeader is set in NET_SetSendRefererHeaderPref in mkhttp.c. 
              This condition is set via a javascript pref and was implemented to 
@@ -1230,8 +1236,9 @@ net_build_http_request (URL_Struct * URL_s,
                     char *colon=NULL, *refToSend=NULL;
                     TRACEMSG(("Sending referer field"));
                     PL_strcpy(line_buffer, "Referer: ");
-                    BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-                    csize += PL_strlen(line_buffer);
+                    tmpSize = PL_strlen(line_buffer);
+                    BlockAllocCat(*command, csize, line_buffer, tmpSize);
+                    csize += tmpSize;
           
                     /* The URL_s->referer can contain a username and password as it draws
                      * this data from the session history. The session history can contain 
@@ -1272,9 +1279,9 @@ net_build_http_request (URL_Struct * URL_s,
                     } /* End colon */
 
                     refToSend= newReferer ? newReferer : URL_s->referer;
-                    BlockAllocCat(*command,  csize, refToSend,
-                        PL_strlen(refToSend));
-                    csize += PL_strlen(refToSend);
+                    tmpSize = PL_strlen(refToSend);
+                    BlockAllocCat(*command,  csize, refToSend, tmpSize);
+                    csize += tmpSize;
                     BlockAllocCat(*command, csize, CRLF, 2);
                     csize += 2;
                     PR_FREEIF(newReferer);
@@ -1294,8 +1301,9 @@ net_build_http_request (URL_Struct * URL_s,
             sprintf (&line_buffer[PL_strlen(line_buffer)], 
                 "User-Agent: %.100s/%.90s" CRLF,
                 XP_AppCodeName, XP_AppVersion);
-            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-            csize += PL_strlen(line_buffer);
+            tmpSize = PL_strlen(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, tmpSize);
+            csize += tmpSize;
 
             if(URL_s->force_reload) {
                 BlockAllocCat(*command, csize, "Pragma: no-cache" CRLF, 18);
@@ -1308,17 +1316,19 @@ net_build_http_request (URL_Struct * URL_s,
                 PR_ASSERT(!PL_strstr(URL_s->range_header, tmp_str));
 #endif
 #define REQUEST_RANGE_HEADER "Range: "
+                tmpSize = PL_strlen(REQUEST_RANGE_HEADER);
                 BlockAllocCat(*command, csize, 
                     REQUEST_RANGE_HEADER,
-                    PL_strlen(REQUEST_RANGE_HEADER));
-                csize += PL_strlen(REQUEST_RANGE_HEADER);
+                    tmpSize);
+                csize += tmpSize;
+                tmpSize = PL_strlen(URL_s->range_header);
                 BlockAllocCat(*command, csize, 
                     URL_s->range_header,
-                    PL_strlen(URL_s->range_header));
-                csize += PL_strlen(URL_s->range_header);
+                    tmpSize);
+                csize += tmpSize;
                 BlockAllocCat(*command, csize, 
-                    CRLF, PL_strlen(CRLF));
-                csize += PL_strlen(CRLF);
+                    CRLF, 2);
+                csize += 2;
             } /* end url_s->range_header */
 
 #define OLD_RANGE_SUPPORT
@@ -1334,17 +1344,19 @@ net_build_http_request (URL_Struct * URL_s,
 #endif
 #undef REQUEST_RANGE_HEADER
 #define REQUEST_RANGE_HEADER "Request-Range: "
+                tmpSize = PL_strlen(REQUEST_RANGE_HEADER);
                 BlockAllocCat(*command, csize,
                     REQUEST_RANGE_HEADER,
-                    PL_strlen(REQUEST_RANGE_HEADER));
-                csize += PL_strlen(REQUEST_RANGE_HEADER);
+                    tmpSize);
+                csize += tmpSize;
+                tmpSize = PL_strlen(URL_s->range_header);
                 BlockAllocCat(*command, csize,
                     URL_s->range_header,
-                    PL_strlen(URL_s->range_header));
-                csize += PL_strlen(URL_s->range_header);
+                    tmpSize);
+                csize += tmpSize;
                 BlockAllocCat(*command, csize,
-                    CRLF, PL_strlen(CRLF));
-                csize += PL_strlen(CRLF);
+                    CRLF, 2);
+                csize += 2;
             } /* end url_s->range_header */
 #endif
 
@@ -1352,7 +1364,6 @@ net_build_http_request (URL_Struct * URL_s,
                 char * host = NET_ParseURL(URL_s->address, GET_HOST_PART);
 
                 if(host) {
-                    int len;
 
 #define HOST_HEADER "Host: "
                     BlockAllocCat(*command, 
@@ -1360,10 +1371,10 @@ net_build_http_request (URL_Struct * URL_s,
                         HOST_HEADER,  
                         sizeof(HOST_HEADER)-1);
                     csize += sizeof(HOST_HEADER)-1;
-                    len = PL_strlen(host);
-                    BlockAllocCat(*command, csize, host, len);
+                    tmpSize = PL_strlen(host);
+                    BlockAllocCat(*command, csize, host, tmpSize);
 
-                    csize += len;
+                    csize += tmpSize;
 
                     PR_Free(host);
 
@@ -1375,8 +1386,9 @@ net_build_http_request (URL_Struct * URL_s,
 #ifdef SEND_FROM_FIELD
             sprintf(line_buffer, "From: %.256s%c%c", 
                 FE_UsersMailAddress() ? FE_UsersMailAddress() : "unregistered", CR,LF);
-            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-            csize += PL_strlen(line_buffer);
+            tmpSize = PL_strlen(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, tmpSize);
+            csize += tmpSize;
 #endif /* SEND_FROM_FIELD */
 
             if(CLEAR_CACHE_BIT(format_out) != FO_INTERNAL_IMAGE)
@@ -1389,13 +1401,15 @@ net_build_http_request (URL_Struct * URL_s,
                     IMAGE_GIF, IMAGE_XBM, IMAGE_JPG, IMAGE_PJPG, IMAGE_PNG);
             }
 
-            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-            csize += PL_strlen(line_buffer);
+            tmpSize = PL_strlen(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, tmpSize);
+            csize += tmpSize;
 
             /* add Accept-Encoding Header */
             sprintf(line_buffer, "Accept-Encoding: %s" CRLF, ENCODING_GZIP2);
-            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-            csize += PL_strlen(line_buffer);
+            tmpSize = PL_strlen(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, tmpSize);
+            csize += tmpSize;
 
 #ifdef MOZILLA_CLIENT
 #define SEND_ACCEPT_LANGUAGE 1
@@ -1406,8 +1420,9 @@ net_build_http_request (URL_Struct * URL_s,
                 {
                     sprintf(line_buffer, "Accept-Language: %s" CRLF, 
                         acceptlang );
-                    BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-                    csize += PL_strlen(line_buffer);
+                    tmpSize = PL_strlen(line_buffer);
+                    BlockAllocCat(*command, csize, line_buffer, tmpSize);
+                    csize += tmpSize;
                 }
             }
 #endif /* SEND_ACCEPT_LANGUAGE */
@@ -1420,8 +1435,9 @@ net_build_http_request (URL_Struct * URL_s,
                 {
                     sprintf(line_buffer, "Accept-Charset: %s" CRLF, 
                         acceptCharset );
-                    BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-                    csize += PL_strlen(line_buffer);
+                    tmpSize = PL_strlen(line_buffer);
+                    BlockAllocCat(*command, csize, line_buffer, tmpSize);
+                    csize += tmpSize;
                 }
             }
 #endif /* SEND_ACCEPT_CHARSET */
@@ -1461,8 +1477,9 @@ net_build_http_request (URL_Struct * URL_s,
                     PR_Free(proxyServer);
                 cd->sent_proxy_auth = TRUE;
                 sprintf(line_buffer, "Proxy-authorization: %.3840s%c%c", auth, CR, LF);
-                BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-                csize += PL_strlen(line_buffer);
+                tmpSize = PL_strlen(line_buffer);
+                BlockAllocCat(*command, csize, line_buffer, tmpSize);
+                csize += tmpSize;
                 TRACEMSG(("HTTP: Sending proxy-authorization: %s", auth));
             } else {
                 TRACEMSG(("HTTP: Not sending proxy authorization (yet)"));
@@ -1479,8 +1496,9 @@ net_build_http_request (URL_Struct * URL_s,
             if (NULL!=(auth=NET_BuildAuthString(window_id, URL_s))) 
             {
                 cd->sent_authorization = TRUE;
-                BlockAllocCat(*command, csize, auth, PL_strlen(auth));
-                csize += PL_strlen(auth);
+                tmpSize = PL_strlen(auth);
+                BlockAllocCat(*command, csize, auth, tmpSize);
+                csize += tmpSize;
                 TRACEMSG(("HTTP: Sending authorization: %s", auth));
             } else {
                 TRACEMSG(("HTTP: Not sending authorization (yet)"));
@@ -1488,17 +1506,17 @@ net_build_http_request (URL_Struct * URL_s,
 
             if (NULL!=(auth=NET_GetCookie(window_id, URL_s->address))) 
             {
-                int len;
                 PL_strcpy(line_buffer, "Cookie: ");
+                tmpSize = PL_strlen(line_buffer);
                 BlockAllocCat(*command, csize, 
-                    line_buffer, PL_strlen(line_buffer));
+                    line_buffer, tmpSize);
         
-                csize += PL_strlen(line_buffer);
-                len = PL_strlen(auth);
-                BlockAllocCat(*command, csize, auth, len);
-                csize += len;
-                BlockAllocCat(*command, csize, CRLF, PL_strlen(CRLF));
-                csize += PL_strlen(CRLF);
+                csize += tmpSize;
+                tmpSize = PL_strlen(auth);
+                BlockAllocCat(*command, csize, auth, tmpSize);
+                csize += tmpSize;
+                BlockAllocCat(*command, csize, CRLF, 2);
+                csize += 2;
                 TRACEMSG(("HTTP: Sending Cookie: %s", auth));
                 PR_Free(auth);
             } else {
