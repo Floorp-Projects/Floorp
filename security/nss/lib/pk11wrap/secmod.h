@@ -77,6 +77,7 @@ SEC_BEGIN_PROTOS
 
 /* protoypes */
 extern void SECMOD_init(char *dbname);
+extern void SECMOD_Shutdown(void);
 extern SECMODModuleList *SECMOD_GetDefaultModuleList(void);
 extern SECMODListLock *SECMOD_GetDefaultModuleListLock(void);
 

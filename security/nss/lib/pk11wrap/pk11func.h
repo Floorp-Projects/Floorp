@@ -116,6 +116,7 @@ SECStatus PK11_ResetToken(PK11SlotInfo *slot, char *sso_pwd);
  * Manage the built-In Slot Lists
  ************************************************************/
 SECStatus PK11_InitSlotLists(void);
+void PK11_DestroySlotLists(void);
 PK11SlotList *PK11_GetSlotList(CK_MECHANISM_TYPE type);
 void PK11_LoadSlotList(PK11SlotInfo *slot, PK11PreSlotInfo *psi, int count);
 void PK11_ClearSlotList(PK11SlotInfo *slot);
