@@ -226,6 +226,8 @@ JS_CFILES =		\
 	prmjtime.c	\
 	$(NULL)
 
+PREDIRS	+= fdlibm
+
 ifdef USE_MSVC
 FDLIBM_LIBRARY = fdlibm/$(OBJDIR)/fdlibm.lib
 else
