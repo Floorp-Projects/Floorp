@@ -2980,7 +2980,7 @@ nsTableFrame::OrderRowGroups(nsVoidArray& aChildren,
   nsIFrame* head = nsnull;
   nsIFrame* foot = nsnull;
   if (aFirstBody) {
-    aFirstBody = nsnull;
+    *aFirstBody = nsnull;
   }
   nsIFrame* kidFrame = mFrames.FirstChild();
   nsVoidArray nonRowGroups;

@@ -908,7 +908,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
         // Calculate the available width for the table cell using the known
         // column widths
         nscoord availWidth;
-        if (frameState & NS_FRAME_FIRST_REFLOW) {
+        if (!mPrevInFlow && (frameState & NS_FRAME_FIRST_REFLOW)) {
           // This is the initial reflow for the cell and so we do an unconstrained
           // reflow.
           // Note: don't assume that we have known column widths. If we don't, then
@@ -943,7 +943,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
 
           // If it's a dirty frame, then check whether it's the initial reflow
           nsReflowReason  reason = eReflowReason_Resize;
-          if (frameState & NS_FRAME_FIRST_REFLOW) {
+          if (!mPrevInFlow && (frameState & NS_FRAME_FIRST_REFLOW)) {
             // Newly inserted frame
             reason = eReflowReason_Initial;
 
