@@ -49,16 +49,19 @@ namespace LexUtils {
     {
         string8_citer p1 = s1.begin();
         string8_citer p2 = s2_begin;
-        string8::difference_type s2_size = s2_end - s2_begin - 1;
+        string8_citer s1_end = s1.end();
 
-        while (p1 != s1.end() && p2 != s2_end) {
-            if (toupper(*p1) != toupper(*p2))
-                return (toupper(*p1) < toupper(*p2)) ? -1 : 1;
+        while (p1 != s1_end && p2 != s2_end) {
+            int c1 = toupper(*p1);
+            int c2 = toupper(*p2);
+            if (c1 != c2)
+                return (c1 < c2) ? -1 : 1;
             ++p1; ++p2;
         }
 
-        int diff = s1.size() - s2_size;
-        return (diff == 0) ? 0 : (diff < 0) ? -1 : 1;
+        string8::difference_type s1_size = s1_end - s1.begin();
+        string8::difference_type s2_size = s2_end - s2_begin;
+        return (s1_size == s2_size) ? 0 : (s1_size < s2_size) ? -1 : 1;
     }
     
     TokenLocation
