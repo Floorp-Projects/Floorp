@@ -2054,8 +2054,7 @@ public:
 
     static nsresult CheckForException(XPCCallContext & ccx,
                                       const char * aPropertyName,
-                                      const char * anInterfaceName,
-                                      nsresult aPendingResult);
+                                      const char * anInterfaceName);
 private:
     nsXPCWrappedJSClass();   // not implemented
     nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,

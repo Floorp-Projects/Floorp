@@ -343,6 +343,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
 
         scriptEval.StartEvaluating(xpcWrappedJSErrorReporter);
 
+        xpcc->SetPendingResult(pending_result);
         xpcc->SetException(nsnull);
         ccx.GetThreadData()->SetException(nsnull);
 
@@ -485,23 +486,9 @@ pre_call_clean_up:
                 JS_smprintf_free(sz);
         }
 
-        // Get this right away in case we do something below to cause JS code
-        // to run on this JSContext.  And get it whether success or not so that
-        // scriptable methods that must return NS_COMFALSE or another non-NS_OK
-        // success code can do so when implemented by JS.
-        //
-        // Reset the pending result in our context to NS_OK only if it is no
-        // longer NS_OK.  NB: don't use NS_FAILED here -- we must reset it even
-        // if pending_result is a success code such as NS_COMFALSE.
-        pending_result = xpcc->GetPendingResult();
-        if (pending_result != NS_OK)
-        {
-            xpcc->SetPendingResult(NS_OK);
-        }
-
         if (!success)
         {
-            retval = nsXPCWrappedJSClass::CheckForException(ccx, name.get(), "IDispatch", pending_result);
+            retval = nsXPCWrappedJSClass::CheckForException(ccx, name.get(), "IDispatch");
             goto done;
         }
 
