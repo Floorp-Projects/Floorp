@@ -1,0 +1,3 @@
+# target: chromeDebug.shlb
+mozilla/rdf/chrome/build/nsChromeFactory.cpp
+mozilla/rdf/chrome/build/nsChromeRegistry.cpp
