@@ -849,8 +849,10 @@
             else
               i++;
           }
-          if (didSuppressSelect)
+          if (didSuppressSelect) {
             parentNode._suppressOnSelect = false;
+            parentNode._fireOnSelect();
+          }
         }
       ]]>
       </handler>
