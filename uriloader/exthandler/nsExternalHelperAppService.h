@@ -186,6 +186,8 @@ protected:
   PRPackedBool mReceivedDispositionInfo;
   PRPackedBool mStopRequestIssued; 
   PRPackedBool mProgressListenerInitialized;
+  // This is set when handling something with "Content-Disposition: attachment"
+  PRPackedBool mHandlingAttachment;
   PRInt64 mTimeDownloadStarted;
   PRInt32 mContentLength;
   PRInt32 mProgress; // Number of bytes received (for sending progress notifications).
