@@ -95,7 +95,7 @@ static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 //#define TEST_SANITY
 
 #ifdef DEBUG_rods
-#define DO_NOISY_REFLOW
+//#define DO_NOISY_REFLOW
 #endif
 
 /**
@@ -752,23 +752,13 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
 
   // get our desiredSize
   if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
-    if (aReflowState.availableWidth != NS_INTRINSICSIZE && 
-        aReflowState.availableWidth > 0 && aReflowState.availableWidth < prefSize.width) {
-      computedSize.width = aReflowState.availableWidth;
-    } else {
-      computedSize.width = prefSize.width;
-    }
+    computedSize.width = prefSize.width;
   } else {
     computedSize.width += m.left + m.right;
   }
 
   if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
-    if (aReflowState.availableHeight != NS_INTRINSICSIZE && 
-      aReflowState.availableHeight > 0 && aReflowState.availableHeight < prefSize.height) {
-      computedSize.height = aReflowState.availableHeight;
-    } else {
-      computedSize.height = prefSize.height;
-    }
+    computedSize.height = prefSize.height;
   } else {
     computedSize.height += m.top + m.bottom;
   }
