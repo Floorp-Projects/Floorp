@@ -15,7 +15,7 @@
       <property name="disabled"   onset="if (val) this.setAttribute('disabled', 'true');
                                          else this.removeAttribute('disabled');
                                          return val;"
-                                  onget="return this.hasAttribute('disabled');"/>                                  
+                                  onget="return this.getAttribute('disabled') == 'true';"/>
       <property name="image"      onset="return this.setAttribute('image',val);"
                                   onget="return this.getAttribute('image');"/>
       <property name="accessKey"  onset="return this.setAttribute('accesskey',val);"
