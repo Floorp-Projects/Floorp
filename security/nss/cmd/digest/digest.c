@@ -176,7 +176,6 @@ int
 main(int argc, char **argv)
 {
     char *progName;
-    int opt;
     FILE *inFile, *outFile;
     char *hashName;
     SECOidData *hashOID;

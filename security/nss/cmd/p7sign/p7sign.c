@@ -38,7 +38,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.9 2004/04/25 15:02:49 gerv%gerv.net Exp $
+ * $Id: p7sign.c,v 1.10 2004/10/07 04:10:52 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -131,7 +131,6 @@ static int
 SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert, 
          PRBool encapsulated)
 {
-    int nb;
     char digestdata[32];
     unsigned int len;
     SECItem digest, data2sign;
