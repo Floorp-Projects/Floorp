@@ -120,69 +120,11 @@ sub Checkout()
 	#//
 	#//	Checkout commands
 	#//
-	if ($main::pull{lizard})
+	if ($main::pull{all})
 	{
-		$session->checkout("mozilla/LICENSE")				|| die "checkout failure";
-		$session->checkout("mozilla/LEGAL")					|| die "checkout failure";
-		$session->checkout("mozilla/config")				|| die "checkout failure";
-		$session->checkout("mozilla/dbm")					|| die "checkout failure";
-		$session->checkout("mozilla/lib/liblayer")			|| die "checkout failure";
-		$session->checkout("mozilla/modules/zlib")			|| die "checkout failure";
-		$session->checkout("mozilla/modules/libutil")		|| die "checkout failure";
-		$session->checkout("mozilla/nsprpub")				|| die "checkout failure";
-		$session->checkout("mozilla/sun-java")				|| die "checkout failure";
-		$session->checkout("mozilla/nav-java")				|| die "checkout failure";
-		$session->checkout("mozilla/js")					|| die "checkout failure";
-		$session->checkout("mozilla/modules/security/freenav")			|| die "checkout failure";
+		$session->checkout("RaptorMac")				|| die "checkout failure";
 		$session->checkout("mozilla/modules/libpref",$LIBPREF_BRANCH)	|| die "checkout failure";
-		$session->checkout("mozilla/modules/plugin")		|| die "checkout failure";
-	 $session->checkout("mozilla/modules/oji")				|| die "checkout failure";
-	}
-	if ($main::pull{xpcom})
-	{
-		$session->checkout("mozilla/modules/libreg")		|| die "checkout failure";
-		$session->checkout("mozilla/xpcom")					|| die "checkout failure";
-	}
-	if ($main::pull{imglib})
-	{
-		$session->checkout("mozilla/jpeg")					|| die "checkout failure";
-		$session->checkout("mozilla/modules/libutil")		|| die "checkout failure";
-		$session->checkout("mozilla/modules/libimg")		|| die "checkout failure";
-	}
-	if ($main::pull{netlib})
-	{
-		$session->checkout("mozilla/lib/xp")				|| die "checkout failure";
-		$session->checkout("mozilla/lib/libpwcac")			|| die "checkout failure";
-		$session->checkout("mozilla/network")				|| die "checkout failure";
-		$session->checkout("mozilla/include")				|| die "checkout failure";
-	}
-	if ($main::pull{nglayout})
-	{
-		$session->checkout("mozilla/base")					|| die "checkout failure";
-		$session->checkout("mozilla/dom")					|| die "checkout failure";
-		$session->checkout("mozilla/gfx")					|| die "checkout failure";
-		$session->checkout("mozilla/htmlparser")			|| die "checkout failure";
-		$session->checkout("mozilla/layout")				|| die "checkout failure";
-		$session->checkout("mozilla/view")					|| die "checkout failure";
-		$session->checkout("mozilla/webshell")				|| die "checkout failure";
-		$session->checkout("mozilla/widget")				|| die "checkout failure";
-	}
-	if ($main::pull{mac})
-	{
-		$session->checkout("mozilla/build/mac")				|| die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe/applevnt")	|| die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe/central")		|| die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe/gui")			|| die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe/include")		|| die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe/pch")			|| die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe/projects")	|| die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe/utility")		|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/MacMemoryAllocator")	|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/NSStdLib")		|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/MoreFiles")		|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/NSRuntime")		|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/Misc")			|| die "checkout failure";
-	}
+ }
 }
 
 
