@@ -739,7 +739,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 {
 	nsresult err = NS_COMFALSE;
 	nsString2 n_str(eOneByte);
-	unsigned char* n_header = nsnull;
+	const char* n_header = nsnull;
 	if(nsMsgSearchOpIsEmpty != m_operator)	// Save some performance for opIsEmpty
 	{
 #ifdef DO_I18N
@@ -752,6 +752,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 		NS_ASSERTION(n_str, "failed get normalized string");
 		NS_ASSERTION(n_header, "failed get normalized header");
 #else
+		n_header = stringToMatch->GetBuffer() ;
 		n_str = m_value.u.string;
 #endif // DO_I18N
 	}
