@@ -30,6 +30,7 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
   mThumbSize = 0;
   mLineIncrement = 1;
   mIsVertical = aIsVertical;
+  mRenderingContext = nsnull;
 };
 
 nsScrollbar::~nsScrollbar()
@@ -180,4 +181,5 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
   result = PR_FALSE;
   return result;
 }
+
 
