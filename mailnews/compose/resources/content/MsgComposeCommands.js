@@ -137,8 +137,26 @@ function ComposeStartup()
 
     // autoselect the first identity.  soon, we'll be smarter about this
     // and select the one that is appropriate.  bug #10235
-    if (identitySelect) {
-	identitySelect.selectedIndex = 0;
+    try {
+	// find args.preselectid and choose it.
+	// dump("args.preselectid = " + args.preselectid + "\n");
+	options = identitySelect.options
+	var preselectindex = 0;
+	for (i=0;i<options.length;i++) {
+		// dump(options[i].value + "\n");
+		if (options[i].value == args.preselectid) {
+			preselectindex = i;
+			break;
+		}
+	}
+	identitySelect.selectedIndex = preselectindex;
+    }
+    catch (ex) {
+	// dump("failed to preselect an identity\n");
+	if (identitySelect && identitySelect.options && (identitySelect.options.length >0)) {
+		// just pick the first one
+		identitySelect.selectedIndex = 0;
+	}
     }
 
     // fill in Recipient type combobox
@@ -443,7 +461,7 @@ function SelectAddress()
 function queryISupportsArray(supportsArray, iid) {
     var result = new Array;
     for (var i=0; i<supportsArray.Count(); i++) {
-	dump(i + "," + result[i] + "\n");
+      // dump(i + "," + result[i] + "\n");
       result[i] = supportsArray.GetElementAt(i).QueryInterface(iid);
     }
     return result;
@@ -467,13 +485,13 @@ function fillIdentitySelect(selectElement)
 {
     var identities = GetIdentities();
 	
-    dump("identities = " + identities + "\n");
+    // dump("identities = " + identities + "\n");
 
     for (var i=0; i<identities.length; i++)
     {
 		var identity = identities[i];
 		var opt = new Option(identity.identityName, identity.key);
-		dump(i + " = " + identity.identityName + "," +identity.key + "\n");
+		// dump(i + " = " + identity.identityName + "," +identity.key + "\n");
 
 		selectElement.add(opt, null);
     }
@@ -487,7 +505,7 @@ function getCurrentIdentity()
     // fill in Identity combobox
     var identitySelect = document.getElementById("msgIdentity");
     var identityKey = identitySelect.value;
-    dump("Looking for identity " + identityKey + "\n");
+    // dump("Looking for identity " + identityKey + "\n");
     var identity = accountManager.getIdentity(identityKey);
     
     return identity;
@@ -579,7 +597,7 @@ function GenerateAttachmentsString()
 
 function RemoveLastAttachment()
 {
-	dump("RemoveLastAttachment()\n");
+	// dump("RemoveLastAttachment()\n");
 	selectNode = document.getElementById('attachments');
 	i = selectNode.options.length;
 	if (i > 0) {

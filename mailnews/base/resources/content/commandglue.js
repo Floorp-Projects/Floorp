@@ -26,6 +26,8 @@
 
 var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);		
+var mailSession = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession); 
+var accountManager = mailSession.accountManager;
 
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
@@ -49,13 +51,34 @@ function ComposeMessage(type, format)
 //
 //format: 0=default (use preference), 1=HTML, 2=plain text
 {
-	var folderTree = GetFolderTree();
-        var selectedFolderList = folderTree.selectedItems;
-        if(selectedFolderList.length > 0)
-        {
-                var selectedFolder = selectedFolderList[0]; 
-		var uri = selectedFolder.getAttribute('id');
-		dump("selectedFolder uri = " + uri + "\n");
+        var identity = null;
+
+	try 
+	{
+		var folderTree = GetFolderTree();
+		var selectedFolderList = folderTree.selectedItems;
+		if(selectedFolderList.length > 0)
+		{
+			var selectedFolder = selectedFolderList[0]; 
+			var uri = selectedFolder.getAttribute('id');
+			// dump("selectedFolder uri = " + uri + "\n");
+
+			// get the server associated with this uri
+			var server = accountManager.FindServerUsingURI(uri);
+			// dump("server = " + server + "\n");
+			// get the identity associated with this server
+			var identities = accountManager.GetIdentitiesForServer(server);
+			// dump("identities = " + identities + "\n");
+			// just get the first one
+			if (identities.Count() > 0 ) {
+				identity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity);  
+			}
+		}
+		// dump("identity = " + identity + "\n");
+	}
+	catch (ex) 
+	{
+		// dump("failed to get an identity to pre-select\n");
 	}
 
 	dump("\nComposeMessage from XUL\n");
@@ -69,7 +92,7 @@ function ComposeMessage(type, format)
 	
 	if (type == 0) //new message
 	{
-		msgComposeService.OpenComposeWindow(null, null, 0, format, null, null);
+		msgComposeService.OpenComposeWindow(null, null, 0, format, null, identity);
 		return;
 	}
 		
@@ -94,7 +117,7 @@ function ComposeMessage(type, format)
 				{
 					if (appCore)
 						object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
-					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, object, null);
+					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, object, identity);
 				}
 				else
 				{
@@ -108,7 +131,7 @@ function ComposeMessage(type, format)
 			{
 				if (appCore)
 					object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
-				msgComposeService.OpenComposeWindow(null, uri, type, format, object, null);
+				msgComposeService.OpenComposeWindow(null, uri, type, format, object, identity);
 			}
 		}
 		else

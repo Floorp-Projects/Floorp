@@ -41,6 +41,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIFileLocator.h" 
 #include "nsFileLocations.h" 
+#include "nsIURL.h"
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -64,6 +65,7 @@ static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID); 
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);   
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -2290,6 +2292,54 @@ nsMsgAccountManager::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
 }
 
 NS_IMETHODIMP
+nsMsgAccountManager::FindServerUsingURI(const char* uri, nsIMsgIncomingServer **aResult)
+{
+	nsresult rv;
+    	nsXPIDLCString username;
+    	nsXPIDLCString hostname;
+    	nsXPIDLCString scheme;
+    	nsXPIDLCString type;
+    	nsCOMPtr <nsIURL> url;
+
+    	if (!uri) return NS_ERROR_NULL_POINTER;
+    
+    	rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), getter_AddRefs(url)); 
+        if (NS_FAILED(rv)) return rv;
+    
+    	rv = url->SetSpec(uri);
+        if (NS_FAILED(rv)) return rv;
+    
+    	rv = url->GetHost(getter_Copies(hostname));
+        if (NS_FAILED(rv)) return rv;
+        rv = url->GetPreHost(getter_Copies(username));
+        if (NS_FAILED(rv)) return rv;
+        rv = url->GetScheme(getter_Copies(scheme));
+        if (NS_FAILED(rv)) return rv;
+    
+    	if (PL_strcmp("imap", (const char *)scheme) == 0) {
+    		rv = FindServer(username, hostname, "imap", aResult);
+    	}
+    	else if (PL_strcmp("news", (const char *)scheme) == 0) {
+    		rv = FindServer(username, hostname, "nntp", aResult);
+    	}
+    	else if (PL_strcmp("mailbox", (const char *)scheme) == 0) {
+    		// mailbox:/ can be "pop3" or "none" (a.k.a, local mail)
+    		rv = FindServer(username, hostname, "pop3", aResult);
+    		if (NS_FAILED(rv)) {
+    			rv = FindServer(username, hostname, "none", aResult);
+    		}
+    	}
+    	else {
+#ifdef DEBUG_ACCOUNTMANAGER
+		NS_ASSERTION(0,"FindServerUsingURI failed because scheme was unrecognized");
+#endif
+    		rv = NS_ERROR_FAILURE;
+    	}
+    	
+    	return rv;
+}
+
+NS_IMETHODIMP
 nsMsgAccountManager::FindServer(const char* username,
                                 const char* hostname,
                                 const char* type,
@@ -2297,7 +2347,11 @@ nsMsgAccountManager::FindServer(const char* username,
 {
   nsresult rv;
   nsCOMPtr<nsISupportsArray> servers;
-  
+	
+#ifdef DEBUG_ACCOUNTMANAGER_
+  printf("FindServer(%s,%s,%s,??)\n", username,hostname,type);
+#endif
+ 
   rv = GetAllServers(getter_AddRefs(servers));
   if (NS_FAILED(rv)) return rv;
 

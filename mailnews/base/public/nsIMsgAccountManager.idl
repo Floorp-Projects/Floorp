@@ -83,10 +83,13 @@ interface nsIMsgAccountManager : nsISupports {
   /*
    * search for the server with the given username, hostname, and type
    * the type is the same as is specified in the preferences,
-   * i.e. "imap", "pop3", or "nntp"
+   * i.e. "imap", "pop3", "none", or "nntp"
    */
   nsIMsgIncomingServer
       FindServer(in string userName, in string hostname, in string type);
+
+  nsIMsgIncomingServer
+	FindServerUsingURI(in string uri);
 
   /**
    * find the index of this server in the (ordered) list of accounts

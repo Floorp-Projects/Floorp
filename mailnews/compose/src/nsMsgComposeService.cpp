@@ -26,6 +26,8 @@
 #include "nsIWebShell.h"
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMToolkitCore.h"
+#include "nsXPIDLString.h"
+#include "nsIMsgIdentity.h"
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
@@ -90,6 +92,16 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 
 	args.Append("format=");
 	args.Append(format);
+
+	if (identity) {
+		nsXPIDLCString key;
+		rv = identity->GetKey(getter_Copies(key));
+		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
+			args.Append(",");
+			args.Append("preselectid=");
+			args.Append(key);
+		}
+	}
 
 	if (originalMsgURI && *originalMsgURI)
 	{
