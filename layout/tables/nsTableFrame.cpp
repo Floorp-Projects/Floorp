@@ -5062,6 +5062,7 @@ static PRUint8 styleToPriority[13] = { 0,  // NS_STYLE_BORDER_STYLE_NONE
   * @param aSide            - the side of the frame
   * @param aStyle           - the border style
   * @param aColor           - the border color
+  * @param aTableIsLTR      - table direction is LTR
   * @param aIgnoreTableEdge - if is a table edge any borders set for the purpose
   *                           of satisfying the rules attribute should be ignored
   */
@@ -5070,13 +5071,21 @@ GetColorAndStyle(const nsIFrame*  aFrame,
                  PRUint8          aSide,
                  PRUint8&         aStyle,
                  nscolor&         aColor,
+                 PRBool           aTableIsLTR,
                  PRBool           aIgnoreTableEdge)
 {
   NS_PRECONDITION(aFrame, "null frame");
   // initialize out arg
   aColor = 0;
   const nsStyleBorder* styleData = aFrame->GetStyleBorder();
-
+  if(!aTableIsLTR) { // revert the directions
+    if (NS_SIDE_RIGHT == aSide) {
+      aSide = NS_SIDE_LEFT;
+    }
+    else if (NS_SIDE_LEFT == aSide) {
+      aSide = NS_SIDE_RIGHT;
+    }
+  }
   aStyle = styleData->GetBorderStyle(aSide);
 
   // if the rules marker is set, set the style either to none or remove the mask
@@ -5109,6 +5118,7 @@ GetColorAndStyle(const nsIFrame*  aFrame,
   * @param aSide            - the side of the frame
   * @param aStyle           - the border style
   * @param aColor           - the border color
+  * @param aTableIsLTR      - table direction is LTR
   * @param aIgnoreTableEdge - if is a table edge any borders set for the purpose
   *                           of satisfying the rules attribute should be ignored
   */
@@ -5117,9 +5127,10 @@ GetPaintStyleInfo(const nsIFrame*  aFrame,
                   PRUint8          aSide,
                   PRUint8&         aStyle,
                   nscolor&         aColor,
+                  PRBool           aTableIsLTR,
                   PRBool           aIgnoreTableEdge)
 {
-  GetColorAndStyle(aFrame, aSide, aStyle, aColor, aIgnoreTableEdge);
+  GetColorAndStyle(aFrame, aSide, aStyle, aColor, aTableIsLTR, aIgnoreTableEdge);
   if ((NS_STYLE_BORDER_STYLE_INSET    == aStyle) || 
       (NS_STYLE_BORDER_STYLE_BG_INSET == aStyle)) {
     aStyle = NS_STYLE_BORDER_STYLE_RIDGE;
@@ -5136,6 +5147,7 @@ GetPaintStyleInfo(const nsIFrame*  aFrame,
   * @param aSide            - the side of the frame
   * @param aStyle           - the border style
   * @param aColor           - the border color
+  * @param aTableIsLTR      - table direction is LTR
   * @param aIgnoreTableEdge - if is a table edge any borders set for the purpose
   *                           of satisfying the rules attribute should be ignored
   * @param aWidth           - the border width in px.
@@ -5146,11 +5158,12 @@ GetColorAndStyle(const nsIFrame*  aFrame,
                  PRUint8          aSide,
                  PRUint8&         aStyle,
                  nscolor&         aColor,
+                 PRBool           aTableIsLTR,
                  PRBool           aIgnoreTableEdge,
                  nscoord&         aWidth,
                  float            aTwipsToPixels)
 {
-  GetColorAndStyle(aFrame, aSide, aStyle, aColor, aIgnoreTableEdge);
+  GetColorAndStyle(aFrame, aSide, aStyle, aColor, aTableIsLTR, aIgnoreTableEdge);
   if ((NS_STYLE_BORDER_STYLE_NONE == aStyle) ||
       (NS_STYLE_BORDER_STYLE_HIDDEN == aStyle)) {
     aWidth = 0;
@@ -5158,6 +5171,14 @@ GetColorAndStyle(const nsIFrame*  aFrame,
   }
   const nsStyleBorder* styleData = aFrame->GetStyleBorder();
   nscoord width;
+  if(!aTableIsLTR) { // revert the directions
+    if (NS_SIDE_RIGHT == aSide) {
+      aSide = NS_SIDE_LEFT;
+    }
+    else if (NS_SIDE_LEFT == aSide) {
+      aSide = NS_SIDE_RIGHT;
+    }
+  }
   styleData->CalcBorderFor(aFrame, aSide, width);
   aWidth = NSToCoordRound(aTwipsToPixels * (float)width);
 }
@@ -5277,6 +5298,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
                const nsIFrame*  aRowGroupFrame,
                const nsIFrame*  aRowFrame,
                const nsIFrame*  aCellFrame,
+               PRBool           aTableIsLTR,
                PRBool           aIgnoreTableEdge,
                PRUint8          aSide,
                PRBool           aAja,
@@ -5287,7 +5309,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
 
   // start with the table as dominant if present
   if (aTableFrame) {
-    GetColorAndStyle(aTableFrame, aSide, border.style, border.color, aIgnoreTableEdge, border.width, aTwipsToPixels);
+    GetColorAndStyle(aTableFrame, aSide, border.style, border.color, aTableIsLTR, aIgnoreTableEdge, border.width, aTwipsToPixels);
     border.owner = eTableOwner;
     if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
       return border;
@@ -5295,7 +5317,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the colgroup is dominant
   if (aColGroupFrame) {
-    GetColorAndStyle(aColGroupFrame, aSide, tempBorder.style, tempBorder.color, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
+    GetColorAndStyle(aColGroupFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
     tempBorder.owner = (aAja && !horizontal) ? eAjaColGroupOwner : eColGroupOwner;
     // pass here and below PR_FALSE for aSecondIsHorizontal as it is only used for corner calculations.
     border = CompareBorders(!CELL_CORNER, border, tempBorder, PR_FALSE);
@@ -5305,7 +5327,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the col is dominant
   if (aColFrame) {
-    GetColorAndStyle(aColFrame, aSide, tempBorder.style, tempBorder.color, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
+    GetColorAndStyle(aColFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
     tempBorder.owner = (aAja && !horizontal) ? eAjaColOwner : eColOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, PR_FALSE);
     if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
@@ -5314,7 +5336,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the rowgroup is dominant
   if (aRowGroupFrame) {
-    GetColorAndStyle(aRowGroupFrame, aSide, tempBorder.style, tempBorder.color, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
+    GetColorAndStyle(aRowGroupFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
     tempBorder.owner = (aAja && horizontal) ? eAjaRowGroupOwner : eRowGroupOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, PR_FALSE);
     if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
@@ -5323,7 +5345,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the row is dominant
   if (aRowFrame) {
-    GetColorAndStyle(aRowFrame, aSide, tempBorder.style, tempBorder.color, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
+    GetColorAndStyle(aRowFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
     tempBorder.owner = (aAja && horizontal) ? eAjaRowOwner : eRowOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, PR_FALSE);
     if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
@@ -5332,7 +5354,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the cell is dominant
   if (aCellFrame) {
-    GetColorAndStyle(aCellFrame, aSide, tempBorder.style, tempBorder.color, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
+    GetColorAndStyle(aCellFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, aIgnoreTableEdge, tempBorder.width, aTwipsToPixels);
     tempBorder.owner = (aAja) ? eAjaCellOwner : eCellOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, PR_FALSE);
   }
@@ -5717,6 +5739,12 @@ LimitBorderWidth(PRUint16 aWidth)
    5) Store the bottom-left corner, if (a) on the bottom edge of the table or (b) if the left edge hits 
       the top side of a colspan in its interior. Never store the corner otherwise, since it will 
       get stored as a right-top corner by a cell from below.
+
+   XXX the BC-RTL hack - The correct fix would be a rewrite as described in bug 203686.
+   In order to draw borders in rtl conditions somehow correct, the existing structure which relies
+   heavily on the assumption that the next cell sibling will be on the right side, has been modified.
+   We flip the border during painting and during style lookup. Look for tableIsLTR for places where
+   the flipping is done.
  */
 
 #define TOP_DAMAGED(aRowIndex)    ((aRowIndex) >= propData->mDamageArea.y) 
@@ -5735,12 +5763,22 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
   nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT0();
   PRInt32 numRows = GetRowCount();
   PRInt32 numCols = GetColCount();
-
+  
   // Get the property holding the table damage area and border widths
   BCPropertyData* propData = 
     (BCPropertyData*)nsTableFrame::GetProperty(&aPresContext, this, nsLayoutAtoms::tableBCProperty, PR_FALSE);
   if (!propData) ABORT0();
 
+  PRBool tableIsLTR = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
+  PRUint8 firstSide, secondSide;
+  if (tableIsLTR) {
+    firstSide  = NS_SIDE_LEFT;
+    secondSide = NS_SIDE_RIGHT;
+  }
+  else {
+    firstSide  = NS_SIDE_RIGHT;
+    secondSide = NS_SIDE_LEFT;
+  }
   CheckFixDamageArea(numRows, numCols, propData->mDamageArea);
   // calculate an expanded damage area 
   nsRect damageArea(propData->mDamageArea);
@@ -5806,11 +5844,12 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         nsIFrame* colFrame = GetColFrame(colX); if (!colFrame) ABORT0();
         nsIFrame* cgFrame = colFrame->GetParent(); if (!cgFrame) ABORT0();
         currentBorder = CompareBorders(this, cgFrame, colFrame, info.rg, info.topRow,
-                                       info.cell, TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
+                                       info.cell, tableIsLTR, TABLE_EDGE, NS_SIDE_TOP,
+                                       !ADJACENT, t2p);
         // update/store the top left & top right corners of the seg 
         BCCornerInfo& tlCorner = topCorners[colX]; // top left
         if (0 == colX) {
-          tlCorner.Set(NS_SIDE_RIGHT, currentBorder);
+          tlCorner.Set(NS_SIDE_RIGHT, currentBorder); // we are on right hand side of the corner
         }
         else {
           tlCorner.Update(NS_SIDE_RIGHT, currentBorder);
@@ -5835,18 +5874,18 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         //calculate column continuous borders
         //we only need to do this once, so we'll do it only on the first row
         currentBorder = CompareBorders(this, cgFrame, colFrame, info.rg,
-                                       info.topRow, nsnull, TABLE_EDGE,
-                                       NS_SIDE_TOP, !ADJACENT, t2p);
+                                       info.topRow, nsnull, tableIsLTR, 
+                                       TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
         ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_TOP,
                                                                  currentBorder.width);
         if (numCols == cellEndColIndex + 1) {
           currentBorder = CompareBorders(this, cgFrame, colFrame, nsnull,
-                                         nsnull, nsnull, TABLE_EDGE,
+                                         nsnull, nsnull, tableIsLTR, TABLE_EDGE,
                                          NS_SIDE_RIGHT, !ADJACENT, t2p);
         }
         else {
           currentBorder = CompareBorders(nsnull, cgFrame, colFrame, nsnull,
-                                         nsnull, nsnull, !TABLE_EDGE,
+                                         nsnull, nsnull, tableIsLTR, !TABLE_EDGE,
                                          NS_SIDE_RIGHT, !ADJACENT, t2p);
         }
         ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_RIGHT,
@@ -5857,20 +5896,20 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
       //because it must include the table in the collapse
       if (info.topRow) {
         currentBorder = CompareBorders(this, nsnull, nsnull, info.rg,
-                                       info.topRow, nsnull, TABLE_EDGE,
-                                       NS_SIDE_TOP, !ADJACENT, t2p);
+                                       info.topRow, nsnull, tableIsLTR,
+                                       TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
         info.topRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
       }
       if (info.cgRight && info.cg) {
         //calculate continuous top colgroup border once per colgroup
         currentBorder = CompareBorders(this, info.cg, nsnull, info.rg,
-                                       info.topRow, nsnull, TABLE_EDGE,
-                                       NS_SIDE_TOP, !ADJACENT, t2p);
+                                       info.topRow, nsnull, tableIsLTR, 
+                                       TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
         info.cg->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
       }
       if (0 == info.colIndex) {
         currentBorder = CompareBorders(this, info.cg, info.leftCol, nsnull,
-                                       nsnull, nsnull, TABLE_EDGE,
+                                       nsnull, nsnull, tableIsLTR, TABLE_EDGE,
                                        NS_SIDE_LEFT, !ADJACENT, t2p);
         mBits.mLeftContBCBorder = currentBorder.width;
       }
@@ -5901,7 +5940,7 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
         rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
         currentBorder = CompareBorders(this, info.cg, info.leftCol, info.rg, rowFrame, info.cell, 
-                                       TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT, t2p);
+                                       tableIsLTR, TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT, t2p);
         BCCornerInfo& tlCorner = (0 == rowX) ? topCorners[0] : bottomCorners[0]; // top left
         tlCorner.Update(NS_SIDE_BOTTOM, currentBorder);
         tableCellMap->SetBCBorderCorner(eTopLeft, *info.cellMap, iter.mRowGroupStart, rowX, 
@@ -5915,7 +5954,7 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         // update the left border of the cell, col and table
         DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
         if (info.cell) {
-          info.cell->SetBorderWidth(NS_SIDE_LEFT, PR_MAX(smallHalf, info.cell->GetBorderWidth(NS_SIDE_LEFT)));
+          info.cell->SetBorderWidth(firstSide, PR_MAX(smallHalf, info.cell->GetBorderWidth(firstSide)));
         }
         if (info.leftCol) {
           info.leftCol->SetLeftBorderWidth(PR_MAX(smallHalf, info.leftCol->GetLeftBorderWidth()));
@@ -5924,16 +5963,17 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         //get row continuous borders
         if (rowFrame) {
           currentBorder = CompareBorders(this, info.cg, info.leftCol,
-                                         info.rg, rowFrame, nsnull,
+                                         info.rg, rowFrame, nsnull, tableIsLTR,
                                          TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT, t2p);
-          rowFrame->SetContinuousBCBorderWidth(NS_SIDE_LEFT, currentBorder.width);
+          rowFrame->SetContinuousBCBorderWidth(firstSide, currentBorder.width);
         }
       }
       //get row group continuous borders
       if (info.rgBottom && info.rg) { //once per row group, so check for bottom
         currentBorder = CompareBorders(this, info.cg, info.leftCol, info.rg, nsnull,
-                                       nsnull,  TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT, t2p);
-        info.rg->SetContinuousBCBorderWidth(NS_SIDE_LEFT, currentBorder.width);
+                                       nsnull, tableIsLTR, TABLE_EDGE, NS_SIDE_LEFT,
+                                       !ADJACENT, t2p);
+        info.rg->SetContinuousBCBorderWidth(firstSide, currentBorder.width);
       }
     }
 
@@ -5947,7 +5987,7 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
         rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
         currentBorder = CompareBorders(this, info.cg, info.rightCol, info.rg, rowFrame, info.cell, 
-                                       TABLE_EDGE, NS_SIDE_RIGHT, ADJACENT, t2p);
+                                       tableIsLTR, TABLE_EDGE, NS_SIDE_RIGHT, ADJACENT, t2p);
         // update/store the top right & bottom right corners 
         BCCornerInfo& trCorner = (0 == rowX) ? topCorners[cellEndColIndex + 1] : bottomCorners[cellEndColIndex + 1]; 
         trCorner.Update(NS_SIDE_BOTTOM, currentBorder);   // top right
@@ -5965,7 +6005,7 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         // update the affected borders of the cell, col, and table
         DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
         if (info.cell) {
-          info.cell->SetBorderWidth(NS_SIDE_RIGHT, PR_MAX(largeHalf, info.cell->GetBorderWidth(NS_SIDE_RIGHT)));
+          info.cell->SetBorderWidth(secondSide, PR_MAX(largeHalf, info.cell->GetBorderWidth(secondSide)));
         }
         if (info.rightCol) {
           info.rightCol->SetRightBorderWidth(PR_MAX(largeHalf, info.rightCol->GetRightBorderWidth()));
@@ -5974,17 +6014,17 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         //get row continuous borders
         if (rowFrame) {
           currentBorder = CompareBorders(this, info.cg, info.rightCol, info.rg,
-                                         rowFrame, nsnull, TABLE_EDGE,
+                                         rowFrame, nsnull, tableIsLTR, TABLE_EDGE,
                                          NS_SIDE_RIGHT, ADJACENT, t2p);
-          rowFrame->SetContinuousBCBorderWidth(NS_SIDE_RIGHT, currentBorder.width);
+          rowFrame->SetContinuousBCBorderWidth(secondSide, currentBorder.width);
         }
       }
       //get row group continuous borders
       if (info.rgBottom && info.rg) { //once per rg, so check for bottom
         currentBorder = CompareBorders(this, info.cg, info.rightCol, info.rg, 
-                                       nsnull, nsnull, TABLE_EDGE,
+                                       nsnull, nsnull, tableIsLTR, TABLE_EDGE,
                                        NS_SIDE_RIGHT, ADJACENT, t2p);
-        info.rg->SetContinuousBCBorderWidth(NS_SIDE_RIGHT, currentBorder.width);
+        info.rg->SetContinuousBCBorderWidth(secondSide, currentBorder.width);
       }
     }
     else {
@@ -5994,10 +6034,10 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         iter.PeekRight(info, rowX, ajaInfo);
         const nsIFrame* cg = (info.cgRight) ? info.cg : nsnull;
         currentBorder = CompareBorders(nsnull, cg, info.rightCol, nsnull, nsnull, info.cell,
-                                       !TABLE_EDGE, NS_SIDE_RIGHT, ADJACENT, t2p);
+                                       tableIsLTR, !TABLE_EDGE, NS_SIDE_RIGHT, ADJACENT, t2p);
         cg = (ajaInfo.cgLeft) ? ajaInfo.cg : nsnull;
         adjacentBorder = CompareBorders(nsnull, cg, ajaInfo.leftCol, nsnull, nsnull, ajaInfo.cell, 
-                                        !TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT, t2p);
+                                        tableIsLTR, !TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT, t2p);
         currentBorder = CompareBorders(!CELL_CORNER, currentBorder, adjacentBorder, !HORIZONTAL);
                           
         segLength = PR_MAX(1, ajaInfo.rowIndex + ajaInfo.rowSpan - rowX);
@@ -6012,13 +6052,13 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
           // update the borders of the cells and cols affected 
           DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
           if (info.cell) {
-            info.cell->SetBorderWidth(NS_SIDE_RIGHT, PR_MAX(largeHalf, info.cell->GetBorderWidth(NS_SIDE_RIGHT)));
+            info.cell->SetBorderWidth(secondSide, PR_MAX(largeHalf, info.cell->GetBorderWidth(secondSide)));
           }
           if (info.rightCol) {
             info.rightCol->SetRightBorderWidth(PR_MAX(largeHalf, info.rightCol->GetRightBorderWidth()));
           }
           if (ajaInfo.cell) {
-            ajaInfo.cell->SetBorderWidth(NS_SIDE_LEFT, PR_MAX(smallHalf, ajaInfo.cell->GetBorderWidth(NS_SIDE_LEFT)));
+            ajaInfo.cell->SetBorderWidth(firstSide, PR_MAX(smallHalf, ajaInfo.cell->GetBorderWidth(firstSide)));
           }
           if (ajaInfo.leftCol) {
             ajaInfo.leftCol->SetLeftBorderWidth(PR_MAX(smallHalf, ajaInfo.leftCol->GetLeftBorderWidth()));
@@ -6033,10 +6073,10 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         if (rowX != info.rowIndex) {
           const nsIFrame* rg = (priorAjaInfo.rgBottom) ? priorAjaInfo.rg : nsnull;
           currentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, priorAjaInfo.bottomRow, priorAjaInfo.cell,
-                                         !TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
+                                         tableIsLTR, !TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
           rg = (ajaInfo.rgTop) ? ajaInfo.rg : nsnull;
           adjacentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, ajaInfo.topRow, ajaInfo.cell,
-                                          !TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
+                                          tableIsLTR, !TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
           currentBorder = CompareBorders(!CELL_CORNER, currentBorder, adjacentBorder, HORIZONTAL);
           trCorner->Update(NS_SIDE_RIGHT, currentBorder);
         }
@@ -6074,7 +6114,7 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         nsIFrame* colFrame = GetColFrame(colX); if (!colFrame) ABORT0();
         nsIFrame* cgFrame = colFrame->GetParent(); if (!cgFrame) ABORT0();
         currentBorder = CompareBorders(this, cgFrame, colFrame, info.rg, info.bottomRow, info.cell,
-                                       TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
+                                       tableIsLTR, TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
         // update/store the bottom left & bottom right corners 
         BCCornerInfo& blCorner = bottomCorners[colX]; // bottom left
         blCorner.Update(NS_SIDE_RIGHT, currentBorder);
@@ -6112,19 +6152,22 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         lastBottomBorders[colX] = lastBottomBorder;
         //get col continuous border
         currentBorder = CompareBorders(this, cgFrame, colFrame, info.rg, info.bottomRow,
-                                       nsnull, TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
+                                       nsnull, tableIsLTR, TABLE_EDGE, NS_SIDE_BOTTOM,
+                                       ADJACENT, t2p);
         ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM,
                                                                 currentBorder.width);
       }
       //get row group/col group continuous border
       if (info.rg) {
         currentBorder = CompareBorders(this, nsnull, nsnull, info.rg, info.bottomRow,
-                                       nsnull, TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
+                                       nsnull, tableIsLTR, TABLE_EDGE, NS_SIDE_BOTTOM,
+                                       ADJACENT, t2p);
         info.rg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
       }
       if (info.cg) {
         currentBorder = CompareBorders(this, info.cg, nsnull, info.rg, info.bottomRow,
-                                       nsnull, TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
+                                       nsnull, tableIsLTR, TABLE_EDGE, NS_SIDE_BOTTOM,
+                                       ADJACENT, t2p);
         info.cg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
       }
     }
@@ -6134,10 +6177,10 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         iter.PeekBottom(info, colX, ajaInfo);
         const nsIFrame* rg = (info.rgBottom) ? info.rg : nsnull;
         currentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, info.bottomRow, info.cell, 
-                                       !TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
+                                       tableIsLTR, !TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
         rg = (ajaInfo.rgTop) ? ajaInfo.rg : nsnull;
         adjacentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, ajaInfo.topRow, ajaInfo.cell, 
-                                        !TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
+                                        tableIsLTR, !TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
         currentBorder = CompareBorders(!CELL_CORNER, currentBorder, adjacentBorder, HORIZONTAL);
         segLength = PR_MAX(1, ajaInfo.colIndex + ajaInfo.colSpan - colX);
         segLength = PR_MIN(segLength, info.colIndex + info.colSpan - colX);
@@ -6217,10 +6260,12 @@ nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
         //will know whether *this* row is at the bottom
         const nsIFrame* rg = (info.rgBottom) ? info.rg : nsnull;
         currentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, info.bottomRow,
-                                       nsnull, !TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT, t2p);
+                                       nsnull, tableIsLTR, !TABLE_EDGE, NS_SIDE_BOTTOM,
+                                       ADJACENT, t2p);
         rg = (ajaInfo.rgTop) ? ajaInfo.rg : nsnull;
         adjacentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, ajaInfo.topRow,
-                                        nsnull, !TABLE_EDGE, NS_SIDE_TOP, !ADJACENT, t2p);
+                                        nsnull, tableIsLTR, !TABLE_EDGE, NS_SIDE_TOP,
+                                        !ADJACENT, t2p);
         currentBorder = CompareBorders(PR_FALSE, currentBorder, adjacentBorder, HORIZONTAL);
         if (ajaInfo.topRow) {
           ajaInfo.topRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
@@ -6970,7 +7015,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
 
           switch (info.owner) {
           case eTableOwner:
-            ::GetPaintStyleInfo(this, side, style, color, PR_FALSE);
+            ::GetPaintStyleInfo(this, side, style, color, tableIsLTR, PR_FALSE);
             break;
           case eAjaColGroupOwner: 
             side = NS_SIDE_RIGHT;
@@ -6981,7 +7026,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
             if (col) {
               nsIFrame* cg = col->GetParent();
               if (cg) {
-                ::GetPaintStyleInfo(cg, side, style, color, ignoreIfRules);
+                ::GetPaintStyleInfo(cg, side, style, color, tableIsLTR, ignoreIfRules);
               }
             }
             break;
@@ -6992,7 +7037,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
             } // and fall through
           case eColOwner:
             if (col) {
-              ::GetPaintStyleInfo(col, side, style, color, ignoreIfRules);
+              ::GetPaintStyleInfo(col, side, style, color, tableIsLTR, ignoreIfRules);
             }
             break;
           case eAjaRowGroupOwner:
@@ -7000,7 +7045,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
           case eRowGroupOwner:
             NS_ASSERTION(iter.IsLeftMostTable() || iter.IsRightMostTable(), "program error");
             if (rowGroup) {
-              ::GetPaintStyleInfo(rowGroup, side, style, color, ignoreIfRules);
+              ::GetPaintStyleInfo(rowGroup, side, style, color, tableIsLTR, ignoreIfRules);
             }
             break;
           case eAjaRowOwner:
@@ -7008,7 +7053,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
           case eRowOwner: 
             NS_ASSERTION(iter.IsLeftMostTable() || iter.IsRightMostTable(), "program error");
             if (row) {
-              ::GetPaintStyleInfo(row, side, style, color, ignoreIfRules);
+              ::GetPaintStyleInfo(row, side, style, color, tableIsLTR, ignoreIfRules);
             }
             break;
           case eAjaCellOwner:
@@ -7016,7 +7061,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
             cell = info.ajaCell; // and fall through
           case eCellOwner:
             if (cell) {
-              ::GetPaintStyleInfo(cell, side, style, color, PR_FALSE);
+              ::GetPaintStyleInfo(cell, side, style, color, tableIsLTR, PR_FALSE);
             }
             break;
           }
@@ -7095,7 +7140,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
 
           switch (horSeg.owner) {
           case eTableOwner:
-            ::GetPaintStyleInfo(this, side, style, color, PR_FALSE);
+            ::GetPaintStyleInfo(this, side, style, color, tableIsLTR, PR_FALSE);
             break;
           case eAjaColGroupOwner: 
             NS_ASSERTION(PR_FALSE, "program error"); // and fall through
@@ -7103,7 +7148,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
             NS_ASSERTION(iter.IsTopMostTable() || iter.IsBottomMostTable(), "program error");
             col = firstInFlow->GetColFrame(iter.x - 1); if (!col) ABORT0();
             nsIFrame* cg = col->GetParent(); if (!cg) ABORT0();
-            ::GetPaintStyleInfo(cg, side, style, color, ignoreIfRules);
+            ::GetPaintStyleInfo(cg, side, style, color, tableIsLTR, ignoreIfRules);
             break;
           }
           case eAjaColOwner: 
@@ -7111,14 +7156,14 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
           case eColOwner:
             NS_ASSERTION(iter.IsTopMostTable() || iter.IsBottomMostTable(), "program error");
             col = firstInFlow->GetColFrame(iter.x - 1); if (!col) ABORT0();
-            ::GetPaintStyleInfo(col, side, style, color, ignoreIfRules);
+            ::GetPaintStyleInfo(col, side, style, color, tableIsLTR, ignoreIfRules);
             break;
           case eAjaRowGroupOwner: 
             side = NS_SIDE_BOTTOM;
             rg = (iter.IsBottomMostTable()) ? iter.rg : iter.prevRg; // and fall through
           case eRowGroupOwner:
             if (rg) {
-              ::GetPaintStyleInfo(rg, side, style, color, ignoreIfRules);
+              ::GetPaintStyleInfo(rg, side, style, color, tableIsLTR, ignoreIfRules);
             }
             break;
           case eAjaRowOwner: 
@@ -7126,7 +7171,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
             row = (iter.IsBottomMostTable()) ? iter.row : iter.prevRow; // and fall through
           case eRowOwner:
             if (row) {
-              ::GetPaintStyleInfo(row, side, style, color, iter.IsBottomMostTable());
+              ::GetPaintStyleInfo(row, side, style, color, tableIsLTR, iter.IsBottomMostTable());
             }
             break;
           case eAjaCellOwner:
@@ -7136,7 +7181,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
             // and fall through
           case eCellOwner:
             if (cell) {
-              ::GetPaintStyleInfo(cell, side, style, color, PR_FALSE);
+              ::GetPaintStyleInfo(cell, side, style, color, tableIsLTR, PR_FALSE);
             }
             break;
           }
