@@ -27,7 +27,6 @@ CPPSRCS		= nntpTest.cpp
 
 LIBS = \
 	-lxpcom	\
-	-lmozdbm	\
 	-lmozjs	\
 	-lmsgbaseutil \
 	$(MOZ_TIMER_LIBS) \

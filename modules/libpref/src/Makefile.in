@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= pref
 LIBRARY_NAME	= pref
 
-REQUIRES	= js pref dbm security ldap img layer xpcom util
+REQUIRES	= js pref security ldap img layer xpcom util
 
 
 PREF_JS_EXPORTS	= 	$(srcdir)/initpref.js \

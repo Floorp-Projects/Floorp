@@ -62,7 +62,7 @@ CSRCS		+= \
 EXPORTS		= xp_linebuf.h
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= js dbm security img util jtools layer java lay style pref rdf privacy parse
+REQUIRES	= js security img util jtools layer java lay style pref rdf privacy parse
 
 include $(topsrcdir)/config/rules.mk
 

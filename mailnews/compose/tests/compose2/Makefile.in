@@ -42,7 +42,6 @@ LIBS		= \
 		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
 		-lpwcac \
-		-lmozdbm \
 		-lmozjs \
 		-lraptorgfx \
 		$(NULL)

@@ -26,6 +26,6 @@ LIBRARY_NAME	= pwcac
 
 CSRCS		= pwcacapi.c
 
-REQUIRES	= js dbm img layer util pref security
+REQUIRES	= js img layer util pref security
 
 include $(topsrcdir)/config/rules.mk

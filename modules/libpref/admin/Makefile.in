@@ -30,7 +30,7 @@ XFEDIR		= $(DEPTH)/cmd/xfe
 
 CSRCS		= prefldap.c icondata.c
 
-REQUIRES	= dbm ldap js pref
+REQUIRES	= ldap js pref
 
 include $(topsrcdir)/config/rules.mk
 

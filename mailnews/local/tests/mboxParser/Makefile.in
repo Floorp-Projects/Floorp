@@ -40,7 +40,6 @@ LIBS		= \
 		-lnetlib \
 		-lxpcom \
 		-lpwcac \
-		-lmozdbm \
 		-lmozjs \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

@@ -29,7 +29,6 @@ CPPSRCS		= pop3Test.cpp
 LIBS = \
 	-lmsgbaseutil \
 	-lxpcom	\
-	-lmozdbm	\
 	-lmozjs	\
 	$(MOZ_TIMER_LIBS) \
 	$(NSPR_LIBS) \

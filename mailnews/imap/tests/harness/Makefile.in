@@ -31,7 +31,6 @@ LIBS =	\
 		-L$(DIST)/lib			\
 		-L$(DIST)/bin			\
 		-lxpcom \
-		-lmozdbm \
 		-lmozjs \
 		-lmsgbaseutil \
 		$(MOZ_TIMER_LIBS) \

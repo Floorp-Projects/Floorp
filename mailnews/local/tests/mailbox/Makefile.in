@@ -44,7 +44,6 @@ LIBS		= \
 		-lnetlib \
 		-lxpcom \
 		-lpwcac \
-		-lmozdbm \
 		-lmozjs \
 		-lmork \
 		-lmsgbaseutil \

@@ -39,7 +39,6 @@ LIBS		= \
 		-lnetwork \
 		-lnetlib \
 		-lpwcac \
-		-lmozdbm \
 		-lmozjs \
 		-lraptorgfx \
 		$(DIST)/lib/libmsgnews_s.a \
