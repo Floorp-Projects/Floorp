@@ -103,7 +103,7 @@ public:
 
   NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
-  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *aRect);
+  NS_IMETHOD  SetViewChildClip(nsIView *aView, nsRect *aRect);
 
   NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible);
 
@@ -185,7 +185,7 @@ private:
 	PRBool CreateDisplayList(nsIView *aView, PRInt32 *aIndex, nscoord aOriginX, nscoord aOriginY,
 	                       nsIView *aRealView, const nsRect *aDamageRect = nsnull,
 	                       nsIView *aTopView = nsnull, nscoord aX = 0, nscoord aY = 0);
-	PRBool AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags);
+	PRBool AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY);
 	nsresult OptimizeDisplayList(const nsRect& aDamageRect);
 	void ShowDisplayList(PRInt32 flatlen);
 	void ComputeViewOffset(nsIView *aView, nsPoint *aOrigin, PRInt32 aFlag);

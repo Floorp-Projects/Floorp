@@ -770,7 +770,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
       pKid->GetBounds(trect);
 
-      if (trect.Contains(x, y))
+      if (PointIsInside(*pKid, x, y))
       {
         //the x, y position of the event in question
         //is inside this child view, so give it the
@@ -1046,29 +1046,23 @@ NS_IMETHODIMP nsView :: GetBounds(nsRect &aBounds) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
+NS_IMETHODIMP nsView :: SetChildClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
 {
   NS_PRECONDITION(aLeft <= aRight && aTop <= aBottom, "bad clip values");
   mClip.mLeft = aLeft;
   mClip.mTop = aTop;
   mClip.mRight = aRight;
   mClip.mBottom = aBottom;
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom,
-                                PRBool &aResult) const
+NS_IMETHODIMP nsView :: GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const
 {
-  if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom)) {
-    aResult = PR_FALSE;
-  } else {
-    *aLeft = mClip.mLeft;
-    *aTop = mClip.mTop;
-    *aRight = mClip.mRight;
-    *aBottom = mClip.mBottom;
-    aResult = PR_TRUE;
-  }
-
+  *aLeft = mClip.mLeft;
+  *aTop = mClip.mTop;
+  *aRight = mClip.mRight;
+  *aBottom = mClip.mBottom; 
   return NS_OK;
 }
 
@@ -1612,3 +1606,77 @@ nsIView *rootView;
   
   return PR_FALSE;
 }
+
+PRBool nsView::PointIsInside(nsIView& aView, nscoord x, nscoord y) const
+{
+  nsRect clippedRect;
+  PRBool empty;
+  PRBool clipped;
+  aView.GetClippedRect(clippedRect, clipped, empty);
+  if (PR_TRUE == empty) {
+    // Rect is completely clipped out so point can not
+    // be inside it.
+    return PR_FALSE;
+  }
+
+  // Check to see if the point is within the clipped rect.
+  if (clippedRect.Contains(x, y)) {
+    return PR_TRUE;
+  } else {
+    return PR_FALSE;
+  } 
+}
+
+
+NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const
+{
+  // Keep track of the view's offset
+  // from its ancestor.
+  nscoord ancestorX = 0;
+  nscoord ancestorY = 0;
+
+  aEmpty = PR_FALSE;
+  aIsClipped = PR_FALSE;
+  
+  GetBounds(aClippedRect);
+  nsIView* parentView;
+  GetParent(parentView);
+
+  // Walk all of the way up the views to see if any
+  // ancestor sets the NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN
+  while (parentView) {  
+     PRUint32 flags;
+     parentView->GetViewFlags(&flags);
+     if (flags & NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN) {
+      aIsClipped = PR_TRUE;
+      // Adjust for clip specified by ancestor
+      nscoord clipLeft;
+      nscoord clipTop;
+      nscoord clipRight;
+      nscoord clipBottom;
+      parentView->GetChildClip(&clipLeft, &clipTop, &clipRight, &clipBottom);
+      nsRect clipRect;
+      //Offset the cliprect by the amount the child offsets from the parent
+      clipRect.x = clipLeft + ancestorX;
+      clipRect.y = clipTop + ancestorY;
+      clipRect.width = clipRight - clipLeft;
+      clipRect.height = clipBottom - clipTop;
+      PRBool overlap = aClippedRect.IntersectRect(clipRect, aClippedRect);
+      if (!overlap) {
+        aEmpty = PR_TRUE; // Does not intersect so the rect is empty.
+        return NS_OK;
+      }
+    }
+
+    nsRect bounds;
+    parentView->GetBounds(bounds);
+    ancestorX -= bounds.x;
+    ancestorY -= bounds.y;
+
+    parentView->GetParent(parentView);
+  }
+ 
+  return NS_OK;
+}
+
+

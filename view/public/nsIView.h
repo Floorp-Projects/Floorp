@@ -201,14 +201,16 @@ public:
   NS_IMETHOD  GetBounds(nsRect &aBounds) const = 0;
 
   /**
-   * Called to indicate that the clip of the view has been changed.
+   * Called to set the clip of the children of this view.
    * The clip is relative to the origin of the view.
+   * All of the children of this view will be clipped using
+   * the specified rectangle
    * @param aLeft new left position
    * @param aTop new top position
    * @param aRight new right position
    * @param aBottom new bottom position
    */
-  NS_IMETHOD  SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom) = 0;
+  NS_IMETHOD  SetChildClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom) = 0;
 
   /**
    * Called to get the dimensions and position of the clip for the view.
@@ -216,10 +218,8 @@ public:
    * @param aTop top position
    * @param aRight right position
    * @param aBottom bottom position
-   * @result PR_TRUE of there actually is a clip for the view, else PR_FALSE
    */
-  NS_IMETHOD  GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom,
-                      PRBool &aResult) const = 0;
+  NS_IMETHOD  GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const = 0;
 
   /**
    * Called to indicate that the visibility of a view has been
@@ -507,6 +507,15 @@ public:
    */
   NS_IMETHOD SynchWidgetSizePosition() = 0;
 
+  /**
+   * Return a rectangle containing the view's bounds adjusted for it's ancestors clipping
+   * @param aClippedRect views bounds adjusted for ancestors clipping. If aEmpty is TRUE it
+   * aClippedRect is set to an empty rect.
+   * @param aIsClipped returns with PR_TRUE if view's rectangle is clipped by an ancestor
+   * @param aEmpty returns with PR_TRUE if view's rectangle is 'clipped out'
+   */
+  NS_IMETHOD GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const = 0;
+
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
@@ -565,9 +574,14 @@ private:
 #define NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX          0x0020
 // indicatest hat the view is a floating view.
 #define NS_VIEW_PUBLIC_FLAG_FLOATING             0x0040
+
 // set if our widget resized. 
 #define NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED       0x0080
 // set if our widget moved. 
 #define NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED         0x0100
+
+// indicates that the view should clip its child views using ClipRect specified 
+// by SetClip
+#define NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN         0x0200
 
 #endif

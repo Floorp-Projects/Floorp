@@ -101,7 +101,7 @@ public:
 
   NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
-  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *aRect);
+  NS_IMETHOD  SetViewChildClip(nsIView *aView, nsRect *aRect);
 
   NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible);
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):  Patrick C. Beard <beard@netscape.com>
+ *                  Kevin McCluskey  <kmcclusk@netscape.com>
  */
 
 #include "nsViewManager2.h"
@@ -52,6 +53,7 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 #define POP_CLIP			0x00000004
 #define VIEW_TRANSPARENT	0x00000008
 #define VIEW_TRANSLUCENT	0x00000010
+#define VIEW_CLIPPED 	 0x00000020
 
 // Uncomment the following to use the nsIBlender. Turned off for now,
 // so that we won't crash.
@@ -733,7 +735,16 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 			if (element->mFlags & VIEW_RENDERED) {
 				// typical case, just rendering a view.
 				// RenderView(element->mView, aRC, aRect, element->mBounds, aResult);
-				RenderDisplayListElement(element, aRC);
+        if (element->mFlags & VIEW_CLIPPED) {
+            //Render the view using the clip rect set by it's ancestors
+          aRC.PushState();
+          aRC.SetClipRect(element->mBounds, nsClipCombine_kIntersect, clipEmpty);
+          RenderDisplayListElement(element, aRC);
+          aRC.PopState(clipEmpty);
+        } else {
+          RenderDisplayListElement(element, aRC);
+        }
+        
 			} else {
 				// special case, pushing or popping clipping.
 				if (element->mFlags & PUSH_CLIP) {
@@ -1080,28 +1091,18 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
    // without invalidating. This is a performance 
    // enhancement since invalidating a native widget
    // can be expensive.
+   // This also checks for silly request like aRect.width = 0 or aRect.height = 0
   if (! IsRectVisible(aView, aRect)) {
     return NS_OK;
   }
 
 	if (!mRefreshEnabled) {
 		// accumulate this rectangle in the view's dirty region, so we can process it later.
-		if (aRect.width != 0 && aRect.height != 0) {
-			AddRectToDirtyRegion(aView, aRect);
-			++mUpdateCnt;
-		}
+		AddRectToDirtyRegion(aView, aRect);
+		++mUpdateCnt;
 		return NS_OK;
 	}
 
-	// Ignore any silly requests...
-	if ((aRect.width == 0) || (aRect.height == 0))
-		return NS_OK;
-
-	// is this view even visible?
-	nsViewVisibility  visibility;
-	aView->GetVisibility(visibility);
-	if (visibility == nsViewVisibility_kHide)
-		return NS_OK; 
 
 	// Find the nearest view (including this view) that has a widget
 	nsIView *widgetView = GetWidgetView(aView);
@@ -1598,12 +1599,12 @@ NS_IMETHODIMP nsViewManager2::ResizeView(nsIView *aView, nscoord width, nscoord 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager2::SetViewClip(nsIView *aView, nsRect *aRect)
+NS_IMETHODIMP nsViewManager2::SetViewChildClip(nsIView *aView, nsRect *aRect)
 {
 	NS_ASSERTION(!(nsnull == aView), "no view");
 	NS_ASSERTION(!(nsnull == aRect), "no clip");
 
-	aView->SetClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
+	aView->SetChildClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
 
 	UpdateView(aView, *aRect, NS_VMREFRESH_NO_SYNC);
 
@@ -2190,7 +2191,8 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 		aTopView = aView;
 
 	nsRect bounds;
-	aView->GetBounds(bounds);
+  aView->GetBounds(bounds);
+
 
 	if (aView == aTopView) {
 		bounds.x = 0;
@@ -2218,7 +2220,7 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 			bounds.x -= aOriginX;
 			bounds.y -= aOriginY;
 
-			retval = AddToDisplayList(aIndex, aView, bounds, bounds, POP_CLIP);
+			retval = AddToDisplayList(aIndex, aView, bounds, bounds, POP_CLIP, aX, aY);
 
 			if (retval)
 				return retval;
@@ -2249,8 +2251,9 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 
 	//  if (clipper)
 	if (isClipView && (!hasWidget || (hasWidget && isParentView))) {
-		if (childCount > 0)
-			retval = AddToDisplayList(aIndex, aView, bounds, bounds, PUSH_CLIP);
+    if (childCount > 0) {
+			retval = AddToDisplayList(aIndex, aView, bounds, bounds, PUSH_CLIP, aX, aY);
+    }
 	} else if (!retval)	{
 		nsViewVisibility  visibility;
 		float             opacity;
@@ -2275,7 +2278,7 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 			if (opacity < 1.0f)
 				flags |= VIEW_TRANSLUCENT;
 #endif
-			retval = AddToDisplayList(aIndex, aView, bounds, irect, flags);
+			retval = AddToDisplayList(aIndex, aView, bounds, irect, flags, aX, aY);
 
 			if (retval || !transparent && (opacity == 1.0f) && (irect == *aDamageRect))
 				retval = PR_TRUE;
@@ -2296,8 +2299,12 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 	return retval;
 }
 
-PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags)
+PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags,nscoord aAbsX, nscoord aAbsY)
 {
+  PRBool empty;
+  PRBool clipped;
+  nsRect clipRect;
+
 	PRInt32 index = (*aIndex)++;
 	DisplayListElement2* element = (DisplayListElement2*) mDisplayList->ElementAt(index);
 	if (element == nsnull) {
@@ -2309,10 +2316,23 @@ PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect 
 		mDisplayList->ReplaceElementAt(element, index);
 	}
 
+  // Calculate absolute clipped position of view
+  aView->GetClippedRect(clipRect, clipped, empty);  
+  clipRect.x += aAbsX;
+  clipRect.y += aAbsY;
+
 	element->mView = aView;
-	element->mBounds = aClipRect;
 	element->mDirty = aDirtyRect;
-	element->mFlags = aFlags;
+  if (clipped) { 
+    // Use bounds calculated by above and indicate
+    // it should be clipped
+    element->mBounds = clipRect;
+	  element->mFlags = aFlags | VIEW_CLIPPED;
+  } else {
+    // Use the bounds passed in
+    element->mBounds = aClipRect;
+	  element->mFlags = aFlags;
+  }
 	
 	// count number of opaque views.
 	if (aFlags == VIEW_RENDERED)
@@ -2574,6 +2594,17 @@ nsresult nsViewManager2::GetAbsoluteRect(nsIView *aView, const nsRect &aRect,
 
 PRBool nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect)
 {
+  if (aRect.width == 0 || aRect.height == 0) {
+    return PR_FALSE;
+  }
+
+	// is this view even visible?
+	nsViewVisibility  visibility;
+	aView->GetVisibility(visibility);
+  if (visibility == nsViewVisibility_kHide) {
+		return PR_FALSE; 
+  }
+
    // Calculate the absolute coordinates for the visible rectangle   
   nsRect visibleRect;
   if (GetVisibleRect(visibleRect) == NS_ERROR_FAILURE) {

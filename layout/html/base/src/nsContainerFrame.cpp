@@ -551,11 +551,16 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
         if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
           left += display->mClip.left;
         }
-        aView->SetClip(left, top, right, bottom);
-
+        // Set clipping of child views.
+        aView->SetChildClip(left, top, right, bottom);
+        PRUint32 vflags;
+        aView->GetViewFlags(&vflags);
+        aView->SetViewFlags(vflags | NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
       } else {
-        // Make sure no clip is set
-        aView->SetClip(0, 0, 0, 0);
+        // Remove clipping of child views.
+        PRUint32 vflags;
+        aView->GetViewFlags(&vflags);
+        aView->SetViewFlags(vflags & ~NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
       }
     }
 
