@@ -215,7 +215,7 @@ nsNode3Tearoff::GetTextContent(nsAString &aTextContent)
     return node->GetNodeValue(aTextContent);
   }
 
-  nsIDocument *doc = mContent->GetDocument();
+  nsIDocument *doc = mContent->GetOwnerDoc();
   if (!doc) {
     NS_ERROR("Need a document to do text serialization");
 
