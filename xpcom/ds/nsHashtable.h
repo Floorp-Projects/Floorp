@@ -205,6 +205,13 @@ class NS_COM nsISupportsKey : public nsHashKey {
     nsISupports* mKey;
     
   public:
+    nsISupportsKey(const nsISupportsKey& aKey) : mKey(aKey.mKey) {
+#ifdef DEBUG
+        mKeyType = SupportsKey;
+#endif
+        NS_IF_ADDREF(mKey);
+    }
+
     nsISupportsKey(nsISupports* key) {
 #ifdef DEBUG
         mKeyType = SupportsKey;
@@ -267,6 +274,12 @@ class nsVoidKey : public nsHashKey {
     void* mKey;
     
   public:
+    nsVoidKey(const nsVoidKey& aKey) : mKey(aKey.mKey) {
+#ifdef DEBUG
+        mKeyType = aKey.mKeyType;
+#endif
+    }
+
     nsVoidKey(void* key) {
 #ifdef DEBUG
         mKeyType = VoidKey;
@@ -300,6 +313,12 @@ class NS_COM nsIDKey : public nsHashKey {
     nsID mID;
     
   public:
+    nsIDKey(const nsIDKey& aKey) : mID(aKey.mID) {
+#ifdef DEBUG
+          mKeyType = IDKey;
+#endif
+    }
+
     nsIDKey(const nsID &aID) {
 #ifdef DEBUG
         mKeyType = IDKey;
@@ -339,6 +358,7 @@ class NS_COM nsCStringKey : public nsHashKey {
         OWN         // to be free'd in key dtor. Clones make their own copy.
     };
 
+    nsCStringKey(const nsCStringKey& aStrKey);
     nsCStringKey(const char* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
     nsCStringKey(const nsAFlatCString& str);
     nsCStringKey(const nsACString& str);
@@ -372,6 +392,7 @@ class NS_COM nsStringKey : public nsHashKey {
         OWN         // to be free'd in key dtor. Clones make their own copy.
     };
 
+    nsStringKey(const nsStringKey& aKey);
     nsStringKey(const PRUnichar* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
     nsStringKey(const nsAFlatString& str);
     nsStringKey(const nsAString& str);
@@ -405,6 +426,7 @@ class NS_COM nsOpaqueKey : public nsHashKey {
         OWN         // to be free'd in key dtor. Clones make their own copy.
     };
 
+    nsOpaqueKey(const nsOpaqueKey& aKey);
     nsOpaqueKey(const char* buf, PRUint32 bufLen, Ownership own = OWN_CLONE);
     ~nsOpaqueKey(void);
 

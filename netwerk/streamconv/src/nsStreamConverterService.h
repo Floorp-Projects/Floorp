@@ -80,19 +80,25 @@ private:
 // used  to establish discovered vertecies.
 enum BFScolors {white, gray, black};
 
-typedef struct _BFSState {
+struct BFSState {
     BFScolors   color;
     PRInt32     distance;
-    nsHashKey  *predecessor;
-} BFSState;
+    nsCStringKey  *predecessor;
+    ~BFSState() {
+        delete predecessor;
+    }
+};
 
 // adjacency list and BFS hashtable data class.
-typedef struct _tableData {
+struct SCTableData {
     nsCStringKey *key;
     union _data {
         BFSState *state;
         nsISupportsArray *edges;
     } data;
-} SCTableData;
 
+    SCTableData(nsCStringKey* aKey) : key(aKey) {
+        data.state = nsnull;
+    }
+};
 #endif // __nsstreamconverterservice__h___
