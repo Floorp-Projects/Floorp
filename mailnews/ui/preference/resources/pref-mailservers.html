@@ -1,0 +1,100 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Mailservers')">
+<DIV ID=top>
+<SPAN ID=lefttext>Mail Servers</SPAN>
+</DIV>
+
+<br>
+Incoming Mail Servers
+<table ID="tableb">
+	<FORM>
+		<tr><td> 
+			<select name="textstyle" size=5>
+			<option value="0">dredd.mcom.com
+			</select>
+		</td></tr>
+		<tr><td> 
+			<input name=choose type="button" value="Add...">
+			<input name=choose type="button" value="Edit...">
+			<input name=choose type="button" value="Delete">
+			<input name=choose type="button" value="Set as Default">
+		</td></tr>
+	</FORM>
+	<tr><td>To set server properties (such as checking for new messages automatically), select a server and then click Edit. 
+	</td></tr>
+</table>
+ 
+<br>
+Outgoing Mail Server
+<table ID="tableb">
+		<tr><td>Outgoing mail (SMTP) server:
+			<input name="smtpserver" type="text" value=""
+			 id="pref:string:network.hosts.smtp_server" size="20"> 
+		</td></tr>
+		<tr><td>Outgoing mail server user name:
+			<input name="smtpusername" type="text" value=""
+			 id="pref:string:mail.smtp_name" size="20"> 
+		</td></tr>
+		<tr><td>
+			Use Secure Socket Layer(SSL) or TLS for outgoing messages:
+		</td></tr>
+		<tr><td>
+			<input name=sslmag type="radio" id="pref:0:int:mail.smtp.ssl" checked>Never
+			<input name=sslmag type="radio" id="pref:1:int:mail.smtp.ssl">If Possible
+			<input name=sslmag type="radio" id="pref:2:int:mail.smtp.ssl">Always
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			Local mail directory:
+		</td></tr>
+		<tr><td>
+			<input name="maildir" type="text" value=""
+			 id="pref:string:mail.directory" size="40"> 
+			 <input name=choose type="button" value="Choose...">
+		</td></tr>
+	</FORM>
+</table>
+ 
+</body>

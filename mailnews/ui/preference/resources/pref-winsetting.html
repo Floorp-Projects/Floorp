@@ -1,0 +1,83 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Window Setting')">
+<DIV ID=top>
+<SPAN ID=lefttext>Window Setting</SPAN>
+</DIV>
+
+<br>
+<table ID="tableb">
+	<FORM>
+		<tr><td>Choose which layout you prefer for the Messenger window:
+			<input name=winlayout type="radio" id="pref:0:int:mail.pane_arrangement" checked> 
+			<img src="winclassic.gif" >
+			<input name=winlayout type="radio" id="pref:1:int:mail.pane_arrangement">
+			<img src="winwide.gif">
+		</td></tr>
+	</FORM>
+	<tr><td>If you prefer fewer windows, unselect these options, and Messenger will open items into existing windows.</td></tr>
+</table>
+
+<br>
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input type="checkbox" id="pref:1:int:mailnews.reuse_thread_window2">Double-clicking a folder or a newsgroup opens it in a new window
+		</td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:1:int:mailnews.reuse_message_window">Double-clicking a message opens it in a new window
+		</td></tr>
+	</FORM>
+	<tr><td>If you prefer fewer windows, unselect these options, and Messenger will open items into existing windows.</td></tr>
+</table>
+
+<br>
+The Newsgroups menu item or button:
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input name=opennews type="radio" id="pref:0:int:news.use_message_center" checked>Opens newsgroups in a Messenger window
+		</td></tr>
+		<tr><td>
+			<input name=opennews type="radio" id="pref:1:int:news.use_message_center">Opens the Message Center
+		</td></tr>
+	</FORM>
+</table>
+ 
+</body>

@@ -1,0 +1,77 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Identity')">
+<DIV ID=top>
+<SPAN ID=lefttext>Identity</SPAN>
+</DIV>
+
+<br>
+<table ID="tableb">
+	<tr><td>The information below is needed before you can send mail. 
+	If you do not know the information requested, please contact your system 
+	administrator or Internet Service Provider.</td></tr>
+	<FORM>
+		<tr><td>Your Name:</td></tr>
+		<tr><td><input name="fullname" type="text" value=""
+				 id="pref:string:mail.identity.username" size="54">
+		</td></tr>
+		<tr><td>Email Address:</td></tr>
+		<tr><td><input name="email" type="text" value=""
+				 id="pref:string:mail.identity.useremail" size="54">
+		</td></tr>
+		<tr><td>Reply-to address(only needed if different from email address):</td></tr>   
+		<tr><td><input name="replyto" type="text" value=""
+				 id="pref:string:mail.identity.reply_to" size="54">
+		</td></tr>
+		<tr><td>Organization:</td></tr>
+		<tr><td><input name="organization" type="text" value=""
+				 id="pref:string:mail.identity.organization" size="54">
+		</td></tr>
+		<tr><td>Signature File:</td></tr>
+		<tr><td><input name="sigfile" type="text" value=""
+				 id="pref:string:mail.identity.signature_file" size="44">
+			    <input name=choose type="button" value="Choose">
+		</td></tr>
+		<tr><td><input type="checkbox" id="pref:0:bool:mail.attach_vcard">Attach my personal card to messages (as a vCard)
+				<input name=editcard type="button" value="Edit Card">
+		</td></tr>
+	</FORM>
+</table>
+
+</body>

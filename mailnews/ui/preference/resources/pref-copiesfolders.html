@@ -1,0 +1,95 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Copies and Folders')">
+<DIV ID=top>
+<SPAN ID=lefttext>Copies and Folders</SPAN>
+</DIV>
+
+<br>
+When sending a mail message, automatically
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:mail.use_fcc">Place a copy in FOLDER
+			<input name=choose type="button" value="Choose Folder...">
+		</td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:mail.cc_self">BCC: EMAIL
+		</td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:mail.use_default_cc">BCC Other Address:
+			<input name="keepdays" type="text" value=""
+			 id="pref:string:mail.default_cc" size="10"> 
+		</td></tr>
+	</FORM>
+</table>
+ 
+<br>
+When sending a newsgroup message, automatically
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:news.use_fcc">Place a copy in FOLDER
+			<input name=choose type="button" value="Choose Folder...">
+		</td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:news.cc_self">BCC: EMAIL
+		</td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:news.use_default_cc">BCC Other Address:
+			<input name="keepdays" type="text" value=""
+			 id="pref:string:news.default_cc" size="10"> 
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+Storage for Drafts and Templates
+<table ID="tableb">
+	<FORM>
+		<tr><td>Keep Draft in FOLDER
+			<input name=choose type="button" value="Choose Folder...">
+		</td></tr>
+		<tr><td>Keep Templates in FOLDER
+			<input name=choose type="button" value="Choose Folder...">
+		</td></tr>
+	</FORM>
+</table>
+
+</body>

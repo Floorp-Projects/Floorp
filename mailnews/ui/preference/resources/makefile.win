@@ -1,0 +1,56 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..\..
+IGNORE_MANIFEST=1
+
+DEFINES=-DWIN32_LEAN_AND_MEAN
+MODULE=mailnews
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: 
+	$(MAKE_INSTALL) pref-mailnews.html	$(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-identity.html	$(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-mailservers.html $(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-newsservers.html $(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-addressing.html $(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-messages.html $(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-winsetting.html $(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-copiesfolders.html $(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-formatting.html $(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-receipts.html	$(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) custreceipt.html	$(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) pref-diskspace.html	$(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) winclassic.gif	$(DIST)\bin\res\mailnews\preference
+	$(MAKE_INSTALL) winwide.gif	$(DIST)\bin\res\mailnews\preference
+
+clobber::
+	rm -f $(DIST)\res\mailnews\preference\pref-mailnews.html
+	rm -f $(DIST)\res\mailnews\preference\pref-identity.html
+	rm -f $(DIST)\res\mailnews\preference\pref-mailservers.html
+	rm -f $(DIST)\res\mailnews\preference\pref-newsservers.html
+	rm -f $(DIST)\res\mailnews\preference\pref-addressing.html
+	rm -f $(DIST)\res\mailnews\preference\pref-messages.html
+	rm -f $(DIST)\res\mailnews\preference\pref-winsetting.html
+	rm -f $(DIST)\res\mailnews\preference\pref-copiesfolders.html
+	rm -f $(DIST)\res\mailnews\preference\pref-formatting.html
+	rm -f $(DIST)\res\mailnews\preference\pref-receipts.html
+	rm -f $(DIST)\res\mailnews\preference\custreceipt.html
+	rm -f $(DIST)\res\mailnews\preference\pref-diskspace.html
+	rm -f $(DIST)\res\mailnews\preference\winclassic.gif
+	rm -f $(DIST)\res\mailnews\preference\winwide.gif

@@ -1,4 +1,4 @@
-#!gmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,16 +15,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../..
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+DEPTH=..\..\..
 
-include $(DEPTH)/config/autoconf.mk
+DIRS= resources
 
-DIRS = messenger compose preference
-
-include $(topsrcdir)/config/config.mk
-
-include $(topsrcdir)/config/rules.mk
-
+include <$(DEPTH)\config\rules.mak>

@@ -15,16 +15,40 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../..
+DEPTH = ../../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = messenger compose preference
-
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
+PREFERENCES_DIR = $(DIST)/bin/res/mailnews/preference
+
+EXPORT_RESOURCE_PREFERENCES = \
+	$(srcdir)/pref-mailnews.html \
+	$(srcdir)/pref-identity.html \
+	$(srcdir)/pref-mailservers.html \
+	$(srcdir)/pref-newsservers.html \
+	$(srcdir)/pref-addressing.html \
+	$(srcdir)/pref-messages.html \
+	$(srcdir)/pref-winsetting.html \
+	$(srcdir)/pref-copiesfolders.html \
+	$(srcdir)/pref-formatting.html \
+	$(srcdir)/pref-receipts.html \
+	$(srcdir)/custreceipt.html \
+	$(srcdir)/pref-diskspace.html \
+	$(srcdir)/winclassic.gif \
+	$(srcdir)/winwide.gif \
+	$(NULL)
+
+EXPORT_RESOURCE_PREFS_TO_REMOVE := $(addprefix $(PREFERENCES_DIR)/, $(EXPORT_RESOURCE_PREFERENCES))
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_PREFERENCES) $(PREFERENCES_DIR)
+
+clobber::
+	$(RM) $(EXPORT_RESOURCE_PREFS_TO_REMOVE)
