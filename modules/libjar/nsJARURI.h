@@ -37,7 +37,8 @@ public:
     virtual ~nsJARURI();
    
     nsresult Init(const char *charsetHint);
-    nsresult FormatSpec(const nsACString &entryPath, nsACString &result);
+    nsresult FormatSpec(const nsACString &entryPath, nsACString &result,
+                        PRBool aIncludeScheme = PR_TRUE);
 
 protected:
     nsCOMPtr<nsIURI> mJARFile;
