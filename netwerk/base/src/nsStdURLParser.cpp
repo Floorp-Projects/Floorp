@@ -64,7 +64,7 @@ nsStdURLParser::ParseAtScheme(const char* i_Spec, char* *o_Scheme,
         return rv;
     }
 
-    static const char delimiters[] = "/:@?"; //this order is optimized.
+    static const char delimiters[] = "/:@?#"; //this order is optimized.
     char* brk = PL_strpbrk(i_Spec, delimiters);
 
     if (!brk) // everything is a host
@@ -79,6 +79,7 @@ nsStdURLParser::ParseAtScheme(const char* i_Spec, char* *o_Scheme,
     {
     case '/' :
     case '?' :
+    case '#' :
         // If the URL starts with a slash then everything is a path
         if (brk == i_Spec)
         {
@@ -181,7 +182,7 @@ nsStdURLParser::ParseAtPreHost(const char* i_Spec, char* *o_Username,
     if (fwdPtr && (*fwdPtr != '\0') && (*fwdPtr == '/'))
         fwdPtr++;
 
-    static const char delimiters[] = "/:@?"; 
+    static const char delimiters[] = "/:@?#"; 
     char* brk = PL_strpbrk(fwdPtr, delimiters);
 	char* brk2 = nsnull;
 
@@ -250,7 +251,7 @@ nsStdURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
     nsresult rv = NS_OK;
 
     int len = PL_strlen(i_Spec);
-    static const char delimiters[] = ":/?"; //this order is optimized.
+    static const char delimiters[] = ":/?#"; //this order is optimized.
     char* brk = PL_strpbrk(i_Spec, delimiters);
     if (!brk) // everything is a host
     {
@@ -263,6 +264,7 @@ nsStdURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
     {
     case '/' :
     case '?' :
+    case '#' :
         // Get the Host, the rest is Path
         rv = ExtractString((char*)i_Spec, o_Host, (brk - i_Spec));
         if (NS_FAILED(rv))
