@@ -68,3 +68,4 @@ mailnews/ui/compose/Makefile
 mailnews/ui/compose/resources/Makefile
 mailnews/ui/ab/Makefile
 mailnews/public/Makefile
+mailnews/idl/Makefile
