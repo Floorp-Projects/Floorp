@@ -55,14 +55,14 @@ function isPhishingURL(aLinkNode, aSilentMode)
   var phishingType = kPhishingNotSuspicious;
   var href = aLinkNode.href;
   var linkTextURL = {};
+  var unobscuredHostName = {};
 
   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   hrefURL  = ioService.newURI(href, null, null);
   
-  // (1) if the host name is an IP address then block the url...
-  // TODO: add support for IPv6
-  var ipv4HostRegExp = new RegExp(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);  // IPv4
-  if (ipv4HostRegExp.test(hrefURL.host))
+  unobscuredHostName.value = hrefURL.host;
+  
+  if (hostNameIsIPAddress(hrefURL.host, unobscuredHostName))
     phishingType = kPhishingWithIPAddress;
   else if (misMatchedHostWithLinkText(aLinkNode, hrefURL, linkTextURL))
     phishingType = kPhishingWithMismatchedHosts;
@@ -70,7 +70,7 @@ function isPhishingURL(aLinkNode, aSilentMode)
   var isPhishingURL = phishingType != kPhishingNotSuspicious;
 
   if (!aSilentMode && isPhishingURL) // allow the user to over ride the decision
-    isPhishingURL = confirmSuspiciousURL(phishingType, hrefURL);
+    isPhishingURL = confirmSuspiciousURL(phishingType, unobscuredHostName.value);
 
   return isPhishingURL;
 }
@@ -98,18 +98,83 @@ function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
   return false;
 }
 
+// returns true if the hostName is an IP address
+// if the host name is an obscured IP address, returns the unobscured host
+function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
+{
+  // TODO: Add Support for IPv6
+  
+  // scammers frequently obscure the IP address by encoding each component as octal, hex
+  // or in some cases a mix match of each. The IP address could also be represented as a DWORD.
+
+  // break the IP address down into individual components.
+  var ipComponents = aHostName.split(".");
+
+  // if we didn't find at least 4 parts to our IP address it either isn't a numerical IP 
+  // or it is encoded as a dword
+  if (ipComponents.length < 4)
+  {
+    // Convert to a binary to test for possible DWORD.
+    var binaryDword = parseInt(aHostName).toString(2);
+    
+    if (isNaN(binaryDword))
+      return false;
+
+    // convert the dword into its component IP parts. 
+    ipComponents = new Array;
+    ipComponents[0] = (aHostName >> 24) & 255;
+    ipComponents[1] = (aHostName >> 16) & 255;
+    ipComponents[2] = (aHostName >>  8) & 255;
+    ipComponents[3] = (aHostName & 255);
+  }
+  else
+  {
+    for (var index = 0; index < ipComponents.length; index++)
+    {
+      // by leaving the radix parameter blank, we can handle IP addresses 
+      //where one component is hex, another is octal, etc. 
+      ipComponents[index] = parseInt(ipComponents[index]); 
+    }
+  }
+
+  // make sure each part of the IP address is in fact a number
+  for (var index = 0; index < ipComponents.length; index++)
+    if (isNaN(ipComponents[index])) // if any part of the IP address is not a number, then we can safely return
+      return false;
+
+  var hostName = ipComponents[0] + '.' +  ipComponents[1] + '.' + ipComponents[2] + '.' + ipComponents[3];
+
+  // only set aUnobscuredHostName if we are looking at an IPv4 host name
+  if (isIPv4HostName(hostName))
+  {
+    aUnobscuredHostName.value = hostName;
+    return true;
+  }
+
+  return false;
+}
+
+function isIPv4HostName(aHostName)
+{
+  var ipv4HostRegExp = new RegExp(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);  // IPv4
+  if (ipv4HostRegExp.test(aHostName))
+    return true;
+  else
+    return false;
+}
+
 // returns true if the user confirms the URL is a scam
-function confirmSuspiciousURL(phishingType, hrefURL)
+function confirmSuspiciousURL(aPhishingType, aSuspiciousHostName)
 {
   var brandShortName = gBrandBundle.getString("brandRealShortName");
   var titleMsg = gMessengerBundle.getString("confirmPhishingTitle");
   var dialogMsg;
 
-  switch (phishingType)
+  switch (aPhishingType)
   {
     case kPhishingWithIPAddress:
     case kPhishingWithMismatchedHosts:
-      dialogMsg = gMessengerBundle.getFormattedString("confirmPhishingUrl" + phishingType, [brandShortName, hrefURL.host], 2);
+      dialogMsg = gMessengerBundle.getFormattedString("confirmPhishingUrl" + aPhishingType, [brandShortName, aSuspiciousHostName], 2);
       break;
     default:
       return false;
