@@ -986,14 +986,11 @@ nsComponentManagerImpl::ReadPersistentRegistry()
 
     // populate Category Manager. need to get this early so that we don't get 
     // skipped by 'goto out'
-    nsCOMPtr<nsICategoryManager> catman;
     nsresult rv = GetService(kCategoryManagerCID, 
                              NS_GET_IID(nsICategoryManager), 
-                             getter_AddRefs(catman));    
+                             getter_AddRefs(mCategoryManager));    
     if (NS_FAILED(rv))
         return rv;
-
-    nsCOMPtr<nsIFactory> categoryManagerFactory;
 
     nsAutoMonitor mon(mMon);
     nsManifestLineReader reader;
@@ -1186,12 +1183,12 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         if (3 != reader.ParseLine(values, lengths, 3))
             break;
 
-        catman->AddCategoryEntry(values[0], 
-                                 values[1], 
-                                 values[2], 
-                                 PR_TRUE, 
-                                 PR_TRUE, 
-                                 0);
+        mCategoryManager->AddCategoryEntry(values[0], 
+                                           values[1], 
+                                           values[2], 
+                                           PR_TRUE, 
+                                           PR_TRUE, 
+                                           0);
     }
 
     mRegistryDirty = PR_FALSE;
@@ -1305,8 +1302,10 @@ nsComponentManagerImpl::WriteCategoryManagerToRegistry(PRFileDesc* fd)
     nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsISupportsCString> supStr;
 
-    if (!mCategoryManager)
-        return NS_OK;
+    if (!mCategoryManager) {
+        NS_WARNING("Could not access category manager.  Will not be able to save categories!");
+        return NS_ERROR_UNEXPECTED;
+    }
 
     nsresult rv = mCategoryManager->EnumerateCategories(getter_AddRefs(outerEnum));
     if (NS_FAILED(rv)) return rv;
@@ -3048,14 +3047,13 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
     rv = iim->AutoRegisterInterfaces();
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    mCategoryManager = catman;
+    if (!mCategoryManager) {
+        NS_WARNING("mCategoryManager is null");
+        return NS_ERROR_UNEXPECTED;
+	}
 
     nsCOMPtr<nsISimpleEnumerator> loaderEnum;
-    rv = catman->EnumerateCategory("component-loader",
+    rv = mCategoryManager->EnumerateCategory("component-loader",
                                    getter_AddRefs(loaderEnum));
     if (NS_FAILED(rv)) return rv;
 
