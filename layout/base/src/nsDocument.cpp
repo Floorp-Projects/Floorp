@@ -1169,10 +1169,15 @@ nsIContent* nsDocument::GetNextContent(nsIContent *aContent) const
     {
       PRInt32     index = parent->IndexOf(aContent);
       PRInt32     count = parent->ChildCount();
-      if (index+1 < count)
+      if (index+1 < count) {
         result = parent->ChildAt(index+1);
-      else
+        // Get first child down the tree
+        while (result->ChildCount() > 0) {
+          result = result->ChildAt(0);
+        }
+      } else {
         result = GetNextContent(parent);
+      }
     }
   }
   return result;
