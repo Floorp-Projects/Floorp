@@ -25,6 +25,7 @@
 #include "mkutils.h"
 #include "mkgeturl.h"
 #include "mkformat.h"
+#include "netutils.h"
 
 static char *net_default_types [] = {
 # include "mktypes.h"
@@ -570,19 +571,19 @@ _cinfo_parse_mimetypes(XP_File fp, char *t, Bool is_local)
 		StrAllocCopy(src_string, t);
 	  }
 
-	while((*t) && (XP_IS_SPACE(*t)))
+	while((*t) && (NET_IS_SPACE(*t)))
 	  ++t;
 
 	if(*t && (*t != '#')) {
 	  ext = t;
-	  while((*ext) && (!XP_IS_SPACE(*ext))) ++ext;
+	  while((*ext) && (!NET_IS_SPACE(*ext))) ++ext;
 	  if((*ext))
 		*ext++ = '\0';
 
 	  cd = NULL;
 
 	  while((*ext)) {
-		while((*ext) && (XP_IS_SPACE(*ext))) ++ext;
+		while((*ext) && (NET_IS_SPACE(*ext))) ++ext;
 
 		if((*ext)) {
 		  if(!cd) {
@@ -596,7 +597,7 @@ _cinfo_parse_mimetypes(XP_File fp, char *t, Bool is_local)
 
 		  cd->is_modified = FALSE; /* default is not modified in any way */
 		  end = ext+1;
-		  while((*end) && (!XP_IS_SPACE(*end))) ++end;
+		  while((*end) && (!NET_IS_SPACE(*end))) ++end;
 		  if(*end)
 			*end++ = '\0';
 		  net_cdata_new_ext(ext, cd);
@@ -659,7 +660,7 @@ cinfo_parse_mcc_line(char *line, Bool is_external, Bool is_local,
 	  if((*t) && (*t != '#')) {
 		while(1) {
 
-		  while(*t && XP_IS_SPACE(*t)) ++t;
+		  while(*t && NET_IS_SPACE(*t)) ++t;
 		  if(!(*t))
 			break;
 		  name = t;
@@ -671,11 +672,11 @@ cinfo_parse_mcc_line(char *line, Bool is_external, Bool is_local,
 			  NET_cdataFree(cd);
 			return (-1);
 		  }
-		  for(u = t - 1; XP_IS_SPACE(*u); --u)
+		  for(u = t - 1; NET_IS_SPACE(*u); --u)
 		    ;
 		  *(u+1) = '\0';   /* terminate name */
 		  ++t;
-		  while(*t && (*t != '\"') && (XP_IS_SPACE(*t))) ++t;
+		  while(*t && (*t != '\"') && (NET_IS_SPACE(*t))) ++t;
 		  if(!(*t)) {
 			TRACEMSG(("line %d: empty value", ln));
 			if(cd)
@@ -694,7 +695,7 @@ cinfo_parse_mcc_line(char *line, Bool is_external, Bool is_local,
 		  }
 		  else {
 			value = t;
-			while(*t && (!XP_IS_SPACE(*t))) ++t;
+			while(*t && (!NET_IS_SPACE(*t))) ++t;
 			/* null t is okay */
 		  }
 		  if(*t) *t++ = '\0';
@@ -947,7 +948,7 @@ NET_cdataCommit(char * mimeType, char * cdataString)
 	  return;
 	while (*citer != 0)    /* Parse the string. Skip all non-c*/
 	  {
-		if (isalnum(*citer) && (newExIndex < 29)) /* XP_IS_ALPHA(*citer) */
+		if (isalnum(*citer) && (newExIndex < 29)) /* NET_IS_ALPHA(*citer) */
 		  newExtension[newExIndex++] = *citer;
 		else if (PL_strlen(newExtension) > 0)
 		  {

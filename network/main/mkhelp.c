@@ -452,14 +452,14 @@ net_get_html_help_token(char *line_data, char**next_word)
 	if(next_word)
 		*next_word = NULL;
 	
-	while(XP_IS_SPACE(*line)) line++;
+	while(NET_IS_SPACE(*line)) line++;
 	
 	if(*line != '=')
 		return(NULL);
 
 	line++; /* go past '=' */
 
-	while(XP_IS_SPACE(*line)) line++;
+	while(NET_IS_SPACE(*line)) line++;
 
 	if(*line != '"')
 		return(NULL);
@@ -473,7 +473,7 @@ net_get_html_help_token(char *line_data, char**next_word)
 			if(next_word)
 			  {
 				*next_word = cp+1;
-				while(XP_IS_SPACE(*(*next_word))) (*next_word)++;
+				while(NET_IS_SPACE(*(*next_word))) (*next_word)++;
 			  }
 			break;
 		  }

@@ -77,6 +77,7 @@
 #include "jspubtd.h"
 #endif
 
+/* nglayout should render the prefered image load hack obsolete */
 #ifndef MODULAR_NETLIB
 #include "libimg.h"             /* Image Lib public API. */ 
 #include "il_strm.h"             /* Image Lib public API. */
@@ -1236,7 +1237,7 @@ net_release_urls_for_processing(XP_Bool release_prefered, XP_Bool release_prefet
 		if(!release_prefered
 		   || ( (wus->format_out != FO_INTERNAL_IMAGE
 			    && wus->format_out != FO_CACHE_AND_INTERNAL_IMAGE)
-#ifdef MOZILLA_CLIENT
+#if defined(MOZILLA_CLIENT) && !defined(MODULAR_NETLIB)
 			    || IL_PreferredStream(wus->URL_s) ) )
 #else
 		  ) )
@@ -2746,11 +2747,11 @@ redo_load_switch:   /* come here on file/ftp retry */
 			)
 		&& ((this_entry->proxy_conf =
 		     pacf_find_proxies_for_url(window_id, URL_s)) != NULL)
-		&& ((pacf_status = pacf_get_proxy_addr(window_id,
+		&& (pacf_status = pacf_get_proxy_addr(window_id,
 							 this_entry->proxy_conf,
 							 &this_entry->proxy_addr,
 							 &this_entry->socks_host,
-							 &this_entry->socks_port)) != NULL)
+							 &this_entry->socks_port))
 		&& this_entry->proxy_addr
 		)
 	  {

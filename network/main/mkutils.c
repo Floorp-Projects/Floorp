@@ -1646,8 +1646,8 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 
                 if (URL_s->window_target == NULL)
 		  {
-			if ((XP_IS_ALPHA(value[0]) != FALSE)||
-			    (XP_IS_DIGIT(value[0]) != FALSE)||
+			if ((NET_IS_ALPHA(value[0]) != FALSE)||
+			    (NET_IS_DIGIT(value[0]) != FALSE)||
 			    (value[0] == '_'))
 			  {
 				StrAllocCopy(URL_s->window_target, value);
@@ -1811,7 +1811,7 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 		    LOSER] blah blah blah
 	   */
 	  const char *s = input;
-	  while (s < end && XP_IS_SPACE (*s)) s++;
+	  while (s < end && NET_IS_SPACE (*s)) s++;
 	  while (s < end && *s >= 'A' && *s <= 'Z') s++;
 
 	  if (s >= end)
@@ -1850,8 +1850,8 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 		 things like "NotHTTP://xxx"
 	   */
 	  int type = 0;
-	  if(!XP_IS_SPACE(*cp) &&
-		 (cp == input || (!XP_IS_ALPHA(cp[-1]) && !XP_IS_DIGIT(cp[-1]))) &&
+	  if(!NET_IS_SPACE(*cp) &&
+		 (cp == input || (!NET_IS_ALPHA(cp[-1]) && !NET_IS_DIGIT(cp[-1]))) &&
 		 (type = NET_URL_Type(cp)) != 0)
 		{
 		  const char *cp2;
@@ -1859,7 +1859,7 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 		  for(cp2=cp; cp2 < end; cp2++)
 			{
 			  /* These characters always mark the end of the URL. */
-			  if (XP_IS_SPACE(*cp2) ||
+			  if (NET_IS_SPACE(*cp2) ||
 				  *cp2 == '<' || *cp2 == '>' ||
 				  *cp2 == '`' || *cp2 == ')' ||
 				  *cp2 == '\'' || *cp2 == '"' ||
@@ -2416,15 +2416,9 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		/* write all the post data to a file first
 		 * so that we can send really big stuff
 		 */
-#ifdef XP_MAC	/* This should really be for all platforms but I am fixing a bug for final release */
   		tmpfilename = WH_TempName (xpFileToPost, "nsform");
 		if (!tmpfilename) return 0;
   		fp = XP_FileOpen (tmpfilename, xpFileToPost, XP_FILE_WRITE_BIN);
-#else
-  		tmpfilename = WH_TempName (xpTemporary, "nsform");
-		if (!tmpfilename) return 0;
-  		fp = XP_FileOpen (tmpfilename, xpTemporary, XP_FILE_WRITE_BIN);
-#endif
   		if (!fp) {
 			PR_Free(tmpfilename);
 			return 0;
