@@ -681,13 +681,13 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       )
       &&
         (
-          SmilyHit(aInString, aInLength, col0, ":-)", 3, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":)",  2, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":-(", 3, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":(",  2, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";-)", 3, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";)", 2, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";-P", 3, "<img src=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(aInString, aInLength, col0, ":-)", 3, "<img src=\"chrome://editor/content/images/smile.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":)",  2, "<img src=\"chrome://editor/content/images/s_smile.gif\" alt=\":)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":-(", 3, "<img src=\"chrome://editor/content/images/frown.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":(",  2, "<img src=\"chrome://editor/content/images/s_frown.gif\" alt=\":(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ";-)", 3, "<img src=\"chrome://editor/content/images/wink.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ";)", 2, "<img src=\"chrome://editor/content/images/s_wink.gif\" alt=\";)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":-P", 3, "<img src=\"chrome://editor/content/images/sick.gif\" alt=\":-P\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
         )
     )
   {
@@ -707,13 +707,13 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       )
       &&
         (
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-)", 3, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":)",  2, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-(", 3, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":(",  2, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";-)", 3, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";)", 2, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";-P", 3, "<img src=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(aInString, aInLength, PR_FALSE, ":-)", 3, "<img src=\"chrome://editor/content/images/smile.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":)",  2, "<img src=\"chrome://editor/content/images/s_smile.gif\" alt=\":)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":-(", 3, "<img src=\"chrome://editor/content/images/frown.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":(",  2, "<img src=\"chrome://editor/content/images/s_frown.gif\" alt=\":(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ";-)", 3, "<img src=\"chrome://editor/content/images/wink.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ";)", 2, "<img src=\"chrome://editor/content/images/s_wink.gif\" alt=\";)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":-P", 3, "<img src=\"chrome://editor/content/images/sick.gif\" alt=\":-P\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
         )
     )
   {

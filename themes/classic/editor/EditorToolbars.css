@@ -139,48 +139,57 @@ button.edit-mode[selected="1"]:hover:active
     list-style-image      : url("chrome://editor/skin/images/bold-hover-active.gif");
   } 
 
+#smilyPopup{
+
+    width : 130px;
+}
+
 #smileButton {
-  list-style-image:url(chrome://messenger/skin/smile.gif); 
+  list-style-image:url("chrome://editor/skin/images/smile.gif"); 
 }
 
-#smileButton:hover, #smileButton[toggled="true"]:hover:active {
-  list-style-image:url(chrome://messenger/skin/smile.gif); 
+menu:hover > #smileButton, 
+menu:hover:active > #smileButton[toggled="true"] {
+	list-style-image:url("chrome://editor/skin/images/smile_hover.gif");
 }
 
-#smileButton[toggled="true"], #smileButton:hover:active {
-  list-style-image:url(chrome://messenger/skin/smile.gif); 
+menu:hover:active > #smileButton,
+menu:hover > #smileButton[toggled="true"] {
+	list-style-image:url("chrome://editor/skin/images/smile_active.gif");
 }
 
-#smileButton[disabled="true"], #smileButton[disabled="true"]:hover:active {
-  list-style-image:url(chrome://messenger/skin/smile.gif); 
+#smileButton[disabled="true"], 
+menu:hover > #smileButton[disabled="true"], 
+menu:hover:active > #smileButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/smile_disabled.gif");
 }
 
 #insert-smile {
-  list-style-image:url(chrome://messenger/skin/smile.gif); 
+  list-style-image:url(chrome://editor/skin/images/smile.gif); 
 }
 
 #insert-sick {
-  list-style-image:url(chrome://messenger/skin/sick.gif); 
+  list-style-image:url(chrome://editor/skin/images/sick.gif); 
 }
 
 #insert-frown {
-  list-style-image:url(chrome://messenger/skin/frown.gif); 
+  list-style-image:url(chrome://editor/skin/images/frown.gif); 
 }
 
 #insert-wink {
-  list-style-image:url(chrome://messenger/skin/wink.gif); 
+  list-style-image:url(chrome://editor/skin/images/wink.gif); 
 }
 
 #insert-smile5 {
-  list-style-image:url(chrome://messenger/skin/smile.gif); 
+  list-style-image:url(chrome://editor/skin/images/s_smile.gif); 
 }
 
 #insert-smile6 {
-  list-style-image:url(chrome://messenger/skin/frown.gif); 
+  list-style-image:url(chrome://editor/skin/images/s_frown.gif); 
 }
 
 #insert-smile7 {
-  list-style-image:url(chrome://messenger/skin/wink.gif); 
+  list-style-image:url(chrome://editor/skin/images/s_wink.gif); 
 }
 
 
