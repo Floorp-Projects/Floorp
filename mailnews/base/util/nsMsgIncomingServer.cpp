@@ -33,6 +33,7 @@
 #include "nsIPrompt.h"
 #include "nsXPIDLString.h"
 #include "nsIRDFService.h"
+#include "nsIMsgProtocolInfo.h"
 #include "nsRDFCID.h"
 
 #ifdef DEBUG_seth
@@ -505,11 +506,14 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
     nsXPIDLCString type;
     GetType(getter_Copies(type));
 
-    nsCString pathPref("mail.root.");
-    pathPref += type;
+    nsCAutoString progid(NS_MSGPROTOCOLINFO_PROGID_PREFIX);
+    progid += type;
+
+    NS_WITH_SERVICE(nsIMsgProtocolInfo, protocolInfo, progid, &rv);
+    if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIFileSpec> path;
-    rv = m_prefs->GetFilePref(pathPref, getter_AddRefs(path));
+    rv = protocolInfo->GetDefaultLocalPath(getter_AddRefs(path));
     if (NS_FAILED(rv)) return rv;
     
     path->CreateDir();
