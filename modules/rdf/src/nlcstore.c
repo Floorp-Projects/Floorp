@@ -268,7 +268,7 @@ DBM_GetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep, siz
   key.size = keySize;
   db = getUSDB(rdf, u, s, inversep);
   if (db == NULL) {
-    XP_ASSERT(db);
+/*    XP_ASSERT(db); */
     *size = 0;
     freeKey(keyData, u, s, inversep);
     return NULL;
@@ -300,7 +300,7 @@ DBM_PutSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep, voi
   CHECK_VAR1(keyData);
   db = getUSDB(rdf, u, s, inversep);
   if (db == NULL) { 
-    XP_ASSERT(db);
+/*    XP_ASSERT(db); */
     freeKey(keyData, u, s, inversep);
     return ;
   } 
@@ -333,7 +333,7 @@ nlocalStoreHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_
   if (data == NULL) return 0;
   while (n < size) {
     DBMAs nas = nthdbmas(data, n);
-    XP_ASSERT(nas);
+/*    XP_ASSERT(nas); */
     if (nas == NULL) break;
     if ((type ==  valueTypeOfAs(nas)) && (tvOfAs(nas) == tv) && 
 	(invp  ? valueEqual(type, dataOfDBMAs(nas), u) : valueEqual(type, dataOfDBMAs(nas), v))) {
@@ -360,7 +360,7 @@ nlocalStoreGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s,
   if (data == NULL) return 0;
   while (n < size) {
     DBMAs       nas = nthdbmas(data, n);
-    XP_ASSERT(nas);
+/*    XP_ASSERT(nas); */
     if (nas == NULL) break;
     if (type == valueTypeOfAs(nas)) {
       if (type == RDF_STRING_TYPE) {
