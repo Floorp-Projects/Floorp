@@ -247,4 +247,35 @@ private:
   const char* mKey;
 };
 
+/**
+ * hashkey wrapper for const char*; at construction, this class duplicates
+ * a string pointed to by the pointer so that it doesn't matter whether or not
+ * the string lives longer than the hash table.
+ */
+class NS_COM nsCharPtrHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef const char* KeyType;
+  typedef const char* KeyTypePointer;
+
+  nsCharPtrHashKey(const char* aKey) : mKey(strdup(aKey)) { }
+  nsCharPtrHashKey(const nsCharPtrHashKey& toCopy) : mKey(strdup(toCopy.mKey)) { }
+  ~nsCharPtrHashKey() { if (mKey) free(NS_CONST_CAST(char *, mKey)); }
+
+  const char* GetKey() const { return mKey; }
+  const char* GetKeyPointer() const { return mKey; }
+  PRBool KeyEquals(KeyTypePointer aKey) const
+  {
+    return !strcmp(mKey, aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return nsCRT::HashCode(aKey); }
+
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+  const char* mKey;
+};
+
 #endif // nsTHashKeys_h__
