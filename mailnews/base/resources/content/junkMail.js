@@ -115,8 +115,13 @@ function setupForAccountFromFolder(aURI)
   document.getElementById("moveOnSpam").checked = obj.settings.moveOnSpam;
   document.getElementById("moveTargetMode").selectedItem = document.getElementById("moveTargetMode" + obj.settings.moveTargetMode);
 
-  // if there is a target account, use it.  else use the current account
-  SetFolderPicker(obj.settings.actionTargetAccount ? obj.settings.actionTargetAccount : obj.server.serverURI, "actionTargetAccount");
+  // the default account should be the current account
+  // unless you can't create a folder on that server
+  // or search on that account (for purge)
+  // in which case, use Local Folders
+  var defaultAccountURI = obj.server.canCreateFoldersOnServer && obj.server.canSearchMessages ? obj.server.serverURI : "mailbox://nobody@Local%20Folders";
+  // if there is a target account, use it else use the default account
+  SetFolderPicker(obj.settings.actionTargetAccount ? obj.settings.actionTargetAccount : defaultAccountURI, "actionTargetAccount");
   
   if (obj.settings.actionTargetFolder)
     SetFolderPicker(obj.settings.actionTargetFolder, "actionTargetFolder");

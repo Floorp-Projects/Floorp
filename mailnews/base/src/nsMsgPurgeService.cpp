@@ -270,9 +270,11 @@ nsresult nsMsgPurgeService::PerformPurge()
           PRBool serverBusy = PR_FALSE;
           PRBool serverRequiresPassword = PR_TRUE;
           PRBool userAuthenticated;
+          PRBool canSearchMessages = PR_FALSE;
           junkFolderServer->GetIsAuthenticated(&userAuthenticated);
           junkFolderServer->GetServerBusy(&serverBusy);
           junkFolderServer->GetServerRequiresPasswordForBiff(&serverRequiresPassword);
+          junkFolderServer->GetCanSearchMessages(&canSearchMessages);
           // Make sure we're logged on before doing the search (assuming we need to be)
           // and make sure the server isn't already in the middle of downloading new messages
           // and make sure a search isn't already going on
@@ -280,7 +282,7 @@ nsresult nsMsgPurgeService::PerformPurge()
           PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] (server busy? %s)", serverIndex, serverBusy ? "true" : "false"));
           PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] (serverRequiresPassword? %s)", serverIndex, serverRequiresPassword ? "true" : "false"));
           PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] (userAuthenticated? %s)", serverIndex, userAuthenticated ? "true" : "false"));
-          if (!mSearchSession && !serverBusy && (!serverRequiresPassword || userAuthenticated))
+          if (canSearchMessages && !mSearchSession && !serverBusy && (!serverRequiresPassword || userAuthenticated))
           {
             PRInt32 purgeInterval;
             spamSettings->GetPurgeInterval(&purgeInterval);
@@ -289,6 +291,7 @@ nsresult nsMsgPurgeService::PerformPurge()
             break;
           }
           else {
+            NS_ASSERTION(canSearchMessages, "unexpected, you should be able to search");
             PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] not a good time for this server, try again later", serverIndex));
           }
         }
