@@ -44,12 +44,12 @@ interface nsIOutlinerView : nsISupports
   // with the hint that there are no cells in this row and that it should draw
   // a separator.  It uses the border properties on the separator pseudoclass
   // to draw the separator.
-  nsISupportsArray getRowProperties(in long index);
+  void getRowProperties(in long index, in nsISupportsArray properties);
 
   // An atomized list of properties for a given cell.  Each property, x, that
   // the store gives back will cause the pseudoclass :moz-outliner-cell-x
   // to be matched on the ::moz-outliner-cell pseudoelement.
-  nsISupportsArray getCellProperties(in long row, in wstring colID);
+  void getCellProperties(in long row, in wstring colID, in nsISupportsArray properties);
   
   // The text for a given cell.  If a column consists only of an image, then
   // the empty string is returned.  The level is an integer value that represents

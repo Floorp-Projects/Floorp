@@ -29,6 +29,58 @@
 
 class nsSupportsHashtable;
 
+class nsTransitionKey : public nsHashKey
+{
+public:
+  PRInt32 mState;
+  nsCOMPtr<nsIAtom> mInputSymbol;
+
+  nsTransitionKey(PRInt32 aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {};
+
+  PRUint32 HashCode(void) const {
+    // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
+    PRInt32 hb = mState << 16;
+    PRInt32 lb = (((PRInt32)mInputSymbol.get()) << 16) >> 16;
+    return hb+lb;
+  }
+
+  PRBool Equals(const nsHashKey *aKey) const {
+    nsTransitionKey* key = (nsTransitionKey*)aKey;
+    return key->mState == mState && key->mInputSymbol == mInputSymbol;
+  }
+
+  nsHashKey *Clone(void) const {
+    return new nsTransitionKey(mState, mInputSymbol);
+  }
+};
+
+class nsOutlinerStyleCache
+{
+public:
+  nsOutlinerStyleCache() :mTransitionTable(nsnull), mCache(nsnull) {};
+  virtual ~nsOutlinerStyleCache() { delete mTransitionTable; delete mCache; };
+
+protected:
+  // A transition table for a deterministic finite automaton.  The DFA
+  // takes as its input an ordered set of pseudoelements.  It transitions
+  // from state to state by looking up entries in the transition table (which is
+  // a mapping from (S,i)->S', where S is the current state, i is the next
+  // pseudoelement in the input word, and S' is the state to transition to.
+  //
+  // If S' is not found, it is constructed and entered into the hashtable
+  // under the key (S,i).
+  //
+  // Once the entire word has been consumed, the final state is used
+  // to reference the cache table to locate the style context.
+  nsHashtable* mTransitionTable;
+
+  // The cache of all active style contexts.  This is a hash from 
+  // a final state in the DFA, Sf, to the resultant style context.  
+  nsSupportsHashtable* mCache;
+
+
+};
+
 class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject
 {
 public:
@@ -65,26 +117,38 @@ protected:
   nsOutlinerBodyFrame(nsIPresShell* aPresShell);
   virtual ~nsOutlinerBodyFrame();
 
+  // Returns the height of rows in the tree.
+  PRInt32 GetRowHeight();
+
+  // Returns our height once border and padding have been removed.
+  PRInt32 GetTotalHeight();
+
+  // Looks up a style context in the style cache.  On a cache miss we resolve
+  // the pseudo-styles passed in and place them into the cache.
+  nsresult GetPseudoStyleContext(nsIStyleContext** aResult);
+
 protected: // Data Members
   // The current view for this outliner widget.  We get all of our row and cell data
   // from the view.
   nsCOMPtr<nsIOutlinerView> mView;    
   
-  // A cache of all the style contexts we have seen for rows of the tree.  This is a mapping from
+  // A cache of all the style contexts we have seen for rows and cells of the tree.  This is a mapping from
   // a list of atoms to a corresponding style context.  This cache stores every combination that
-  // occurs in the tree, so for n distinct row properties, this cache could have 2 to the n entries
+  // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
   // (the power set of all row properties).
-  nsSupportsHashtable* mRowStyleCache;
-
-  // A cache of all the style contexts we have seen for cells of the tree.  This is a mapping from
-  // a list of atoms to a corresponding style context.  This cache stores every combination that
-  // occurs in the tree, so for n distinct cell properties, this cache could have 2 to the n entries
-  // (the power set of all cell properties).
-  nsSupportsHashtable* mCellStyleCache;
+  nsOutlinerStyleCache mStyleCache;
 
   // The index of the first visible row and the # of rows visible onscreen.  
   // The outliner only examines onscreen rows, starting from
   // this index and going up to index+pageCount.
   PRInt32 mTopRowIndex;
   PRInt32 mPageCount;
+
+  // Cached heights.
+  PRInt32 mTotalHeight;
+  PRInt32 mRowHeight;
+
+  // A scratch array used when looking up cached style contexts.
+  nsCOMPtr<nsISupportsArray> mScratchArray;
+
 }; // class nsOutlinerBodyFrame
