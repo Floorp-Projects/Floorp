@@ -38,6 +38,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
+#include "nsIRDFXMLSink.h"
 #include "nsCRT.h"
 #include "rdf.h"
 #include "nsIServiceManager.h"
@@ -978,6 +979,13 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCString &aFileName,
                                                      NS_GET_IID(nsIRDFDataSource),
                                                      (void**) aResult);
   if (NS_FAILED(rv)) return rv;
+
+  // Seed the datasource with the ``chrome'' namespace
+  nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(*aResult);
+  if (sink) {
+    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(NS_NewAtom("c"));
+    sink->AddNameSpace(prefix, NS_ConvertASCIItoUCS2(CHROME_URI));
+  }
 
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(*aResult);
   if (! remote)

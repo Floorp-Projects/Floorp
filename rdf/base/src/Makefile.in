@@ -35,12 +35,15 @@ CPPSRCS		= \
 		nsContainerEnumerator.cpp \
 		nsDefaultResourceFactory.cpp \
 		nsInMemoryDataSource.cpp \
+		nsNameSpaceMap.cpp \
 		nsRDFContentSink.cpp \
 		nsRDFContainer.cpp \
 		nsRDFContainerUtils.cpp \
 		nsRDFParserUtils.cpp \
 		nsRDFService.cpp \
 		nsRDFXMLDataSource.cpp \
+		nsRDFXMLParser.cpp \
+		nsRDFXMLSerializer.cpp \
 		rdfutil.cpp \
 		$(NULL)
 
