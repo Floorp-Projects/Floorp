@@ -62,6 +62,7 @@
 #include "nsFileStream.h"
 #include "nsIFileSpec.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsMsgUtils.h"
 
 #include "nsIPref.h"
 
