@@ -30,12 +30,14 @@
 #include "nsHTTPCompressConv.h"
 #include "mozTXTToHTMLConv.h"
 #include "nsUnknownDecoder.h"
+#include "nsTXTToHTMLConv.h"
 
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewMultiMixedConv (nsMultiMixedConv** result);
 nsresult MOZ_NewTXTToHTMLConv (mozTXTToHTMLConv** result);
 nsresult NS_NewHTTPChunkConv  (nsHTTPChunkConv ** result);
 nsresult NS_NewHTTPCompressConv  (nsHTTPCompressConv ** result);
+nsresult NS_NewNSTXTToHTMLConv(nsTXTToHTMLConv** result);
 
 static NS_IMETHODIMP                 
 CreateNewFTPDirListingConv(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
@@ -184,6 +186,38 @@ CreateNewUnknownDecoderFactory(nsISupports *aOuter, REFNSIID aIID, void **aResul
   return rv;
 }
 
+static NS_IMETHODIMP
+CreateNewNSTXTToHTMLConvFactory(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = nsnull;
+
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
+  nsTXTToHTMLConv *inst;
+  
+  inst = new nsTXTToHTMLConv();
+  if (!inst) return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(inst);
+  rv = inst->Init();
+  if (NS_FAILED(rv)) {
+    delete inst;
+    return rv;
+  }
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+
+
 // The list of components we register
 static nsModuleComponentInfo components[] =
 {
@@ -211,12 +245,6 @@ static nsModuleComponentInfo components[] =
       NS_MULTIMIXEDCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY "?from=multipart/mixed?to=*/*",
       CreateNewMultiMixedConvFactory
-    },
-
-    { "TXTToHTMLConverter", 
-      MOZITXTTOHTMLCONV_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html", 
-      CreateNewTXTToHTMLConvFactory
     },
     { "Unknown Content-Type Decoder",
       NS_UNKNOWNDECODER_CID,
@@ -261,6 +289,11 @@ static nsModuleComponentInfo components[] =
       NS_HTTPCOMPRESSCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY "?from=deflate?to=uncompressed",
       CreateNewHTTPCompressConvFactory
+    },
+    { "NSTXTToHTMLConverter",
+      NS_NSTXTTOHTMLCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html",
+      CreateNewNSTXTToHTMLConvFactory
     }
 };
 
