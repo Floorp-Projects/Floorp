@@ -73,6 +73,7 @@ static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
 
 NS_NAMED_LITERAL_STRING(gSkinSelectedTopic, "skin-selected");
 NS_NAMED_LITERAL_STRING(gLocaleSelectedTopic, "locale-selected");
+NS_NAMED_LITERAL_STRING(gInstallRestartTopic, "xpinstall-restart");
 
 nsAppShellService::nsAppShellService() : 
   mAppShell( nsnull ),
@@ -877,7 +878,8 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
         mAppShell->ListenToEventQueue(eq, PR_FALSE);
     }
   } else if (topic.Equals(gSkinSelectedTopic) ||
-             topic.Equals(gLocaleSelectedTopic)) {
+             topic.Equals(gLocaleSelectedTopic) ||
+             topic.Equals(gInstallRestartTopic)) {
     if (mNativeAppSupport)
       mNativeAppSupport->SetIsServerMode(PR_FALSE);
   }
@@ -907,11 +909,13 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
       os->AddObserver(weObserve, topicB.get());
       os->AddObserver(weObserve, gSkinSelectedTopic.get());
       os->AddObserver(weObserve, gLocaleSelectedTopic.get());
+      os->AddObserver(weObserve, gInstallRestartTopic.get());
     } else {
       os->RemoveObserver(weObserve, topicA.get());
       os->RemoveObserver(weObserve, topicB.get());
       os->RemoveObserver(weObserve, gSkinSelectedTopic.get());
       os->RemoveObserver(weObserve, gLocaleSelectedTopic.get());
+      os->RemoveObserver(weObserve, gInstallRestartTopic.get());
     }
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, glop);
   }
