@@ -23,6 +23,9 @@
  */
 
 #include "nsSharedBufferList.h"
+#include "nsAlgorithm.h"
+  // for |copy_string|
+#include <new.h>
 
 
 void
@@ -45,25 +48,24 @@ nsSharedBufferList::~nsSharedBufferList()
   }
 
 
-template <class CharT>
 nsSharedBufferList::Buffer*
-nsSharedBufferList::NewBuffer( const CharT* aData, PRUint32 aDataLength, PRUint32 aAdditionalSpace )
+nsSharedBufferList::NewBuffer( const PRUnichar* aData, PRUint32 aDataLength, PRUint32 aAdditionalSpace )
   {
-    size_t    object_size    = ((sizeof(Buffer) + sizeof(CharT) - 1) / sizeof(CharT)) * sizeof(CharT);
+    size_t    object_size    = ((sizeof(Buffer) + sizeof(PRUnichar) - 1) / sizeof(PRUnichar)) * sizeof(PRUnichar);
     PRUint32  buffer_length  = aDataLength + aAdditionalSpace;
-    size_t    buffer_size    = size_t(buffer_length) * sizeof(CharT);
+    size_t    buffer_size    = size_t(buffer_length) * sizeof(PRUnichar);
 
     void* object_ptr = operator new(object_size + buffer_size);
     if ( object_ptr )
       {
-        typedef CharT* CharT_ptr;
-        CharT* buffer_ptr = CharT_ptr(NS_STATIC_CAST(unsigned char*, object_ptr) + object_size);
+        typedef PRUnichar* PRUnichar_ptr;
+        PRUnichar* buffer_ptr = PRUnichar_ptr(NS_STATIC_CAST(unsigned char*, object_ptr) + object_size);
         if ( aDataLength )
           {
-            CharT* toBegin = buffer_ptr;
+            PRUnichar* toBegin = buffer_ptr;
             copy_string(aData, aData+aDataLength, toBegin);
           }
-        return new (object_ptr) Buffer(buffer_ptr, buffer_length, aDataLength);
+        return new (object_ptr) Buffer(buffer_ptr, buffer_ptr+aDataLength, buffer_ptr, buffer_ptr+buffer_length);
       }
 
     return 0;
@@ -80,12 +82,12 @@ nsSharedBufferList::LinkBuffer( Buffer* aPrevBuffer, Buffer* aNewBuffer, Buffer*
     NS_ASSERTION(aNextBuffer || mLastBuffer == aPrevBuffer, "aNextBuffer || mLastBuffer == aPrevBuffer");
     NS_ASSERTION(!aNextBuffer || aNextBuffer->mPrev == aPrevBuffer, "!aNextBuffer || aNextBuffer->mPrev == aPrevBuffer");
 
-    if ( aNewBuffer->mPrev = aPrevBuffer )
+    if ( (aNewBuffer->mPrev = aPrevBuffer) )
       aPrevBuffer->mNext = aNewBuffer;
     else
       mFirstBuffer = aNewBuffer;
 
-    if ( aNewBuffer->mNext = aNextBuffer )
+    if ( (aNewBuffer->mNext = aNextBuffer) )
       aNextBuffer->mPrev = aNewBuffer;
     else
       mLastBuffer = aNewBuffer;
@@ -94,23 +96,27 @@ nsSharedBufferList::LinkBuffer( Buffer* aPrevBuffer, Buffer* aNewBuffer, Buffer*
   }
 
 void
-nsSharedBufferList::SplitBuffer( Buffer* aBufferToSplit, PRUint32 aSplitPosition )
+nsSharedBufferList::SplitBuffer( const Position& aSplitPosition )
   {
-    NS_ASSERTION(aBufferToSplit, "aBufferToSplit");
-    NS_ASSERTION(aSplitPosition <= aBufferToSplit->DataLength(), "aSplitPosition <= aBufferToSplit->DataLength()");
+    Buffer* bufferToSplit = aSplitPosition.mBuffer;
 
-    if ( (aBufferToSplit->DataLength() >> 1) > aSplitPosition )
+    NS_ASSERTION(bufferToSplit, "bufferToSplit");
+
+    ptrdiff_t splitOffset = aSplitPosition.mPosInBuffer - bufferToSplit->DataStart();
+
+    NS_ASSERTION(0 <= splitOffset && splitOffset <= bufferToSplit->DataLength(), "|splitOffset| within buffer");
+
+    if ( (bufferToSplit->DataLength() >> 1) > splitOffset )
       {
-        Buffer* new_buffer = NewBuffer(aBufferToSplit->DataStart(), aSplitPosition);
-        LinkBuffer(aBufferToSplit->mPrev, new_buffer, aBufferToSplit);
-        aBufferToSplit->mDataStart += aSplitPosition;
-        aBufferToSplit->DataLength() -= aSplitPosition;
+        Buffer* new_buffer = NewBuffer(bufferToSplit->DataStart(), PRUint32(splitOffset));
+        LinkBuffer(bufferToSplit->mPrev, new_buffer, bufferToSplit);
+        bufferToSplit->DataStart(aSplitPosition.mPosInBuffer);
       }
     else
       {
-        Buffer* new_buffer = NewBuffer(aBufferToSplit->mDataStart+aSplitPosition, aBufferToSplit->DataLength()-aSplitPosition);
-        LinkBuffer(aBufferToSplit, new_buffer, aBufferToSplit->mNext);
-        aBufferToSplit->DataLength() = aSplitPosition;
+        Buffer* new_buffer = NewBuffer(bufferToSplit->DataStart()+splitOffset, PRUint32(bufferToSplit->DataLength()-splitOffset));
+        LinkBuffer(bufferToSplit, new_buffer, bufferToSplit->mNext);
+        bufferToSplit->DataEnd(aSplitPosition.mPosInBuffer);
       }
   }
 

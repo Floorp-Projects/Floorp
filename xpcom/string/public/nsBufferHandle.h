@@ -25,6 +25,18 @@
 #ifndef nsBufferHandle_h___
 #define nsBufferHandle_h___
 
+#include <stddef.h>
+  // for |ptrdiff_t|
+
+#include "prtypes.h"
+  // for |PRBool|
+
+#include "nsDebug.h"
+  // for |NS_ASSERTION|
+
+#include "nsMemory.h"
+  // for |nsMemory::Free|
+
   /**
    *
    */
@@ -32,28 +44,22 @@ template <class CharT>
 class nsBufferHandle
   {
     public:
+      nsBufferHandle( CharT* aDataStart, CharT* aDataEnd ) : mDataStart(aDataStart), mDataEnd(aDataEnd) { }
 
-      ptrdiff_t
-      DataLength() const
-        {
-          return mDataEnd - mDataStart;
-        }
+      void          DataStart( CharT* aNewDataStart )       { mDataStart = aNewDataStart; }
+      CharT*        DataStart()                             { return mDataStart; }
+      const CharT*  DataStart() const                       { return mDataStart; }
 
-      const CharT*
-      DataStart() const
-        {
-          return mDataStart;
-        }
+      void          DataEnd( CharT* aNewDataEnd )           { mDataEnd = aNewDataEnd; }
+      CharT*        DataEnd()                               { return mDataEnd; }
+      const CharT*  DataEnd() const                         { return mDataEnd; }
 
-      const CharT*
-      DataEnd() const
-        {
-          return mDataEnd;
-        }
+//    void          DataLength( ptrdiff_t aNewDataLength )  { mDataEnd = mDataStart+aNewDataLength; }
+      ptrdiff_t     DataLength() const                      { return mDataEnd - mDataStart; }
 
     protected:
-      const CharT*  mDataStart;
-      const CharT*  mDataEnd;
+      CharT*  mDataStart;
+      CharT*  mDataEnd;
   };
 
 
@@ -63,7 +69,7 @@ class nsBufferHandle
    */
 template <class CharT>
 class nsSharedBufferHandle
-    : public nsStringFragmentHandle<CharT>
+    : public nsBufferHandle<CharT>
   {
     protected:
       enum
@@ -77,6 +83,12 @@ class nsSharedBufferHandle
         };
 
     public:
+      nsSharedBufferHandle( CharT* aDataStart, CharT* aDataEnd )
+          : nsBufferHandle(aDataStart, aDataEnd)
+        {
+          mFlags |= kIsShared;
+        }
+
       ~nsSharedBufferHandle();
 
       void
@@ -124,11 +136,28 @@ class nsXXXBufferHandle
     : public nsSharedBufferHandle<CharT>
   {
     public:
-      nsXXXBufferHandle() { mFlags |= kIsStorageDefinedSeparately; }
+      nsXXXBufferHandle( CharT* aDataStart, CharT* aDataEnd, CharT* aStorageStart, CharT* aStorageEnd )
+          : nsSharedBufferHandle(aDataStart, aDataEnd),
+            mStorageStart(aStorageStart),
+            mStorageEnd(aStorageEnd)
+        {
+          mFlags |= kIsStorageDefinedSeparately;
+        }
+
+      void          StorageStart( CharT* aNewStorageStart )       { mStorageStart = aNewStorageStart; }
+      CharT*        StorageStart()                                { return mStorageStart; }
+      const CharT*  StorageStart() const                          { return mStorageStart; }
+
+      void          StorageEnd( CharT* aNewStorageEnd )           { mStorageEnd = aNewStorageEnd; }
+      CharT*        StorageEnd()                                  { return mStorageEnd; }
+      const CharT*  StorageEnd() const                            { return mStorageEnd; }
+
+//    void          StorageLength( ptrdiff_t aNewStorageLength )  { mStorageEnd = mStorageStart+aNewStorageLength; }
+      ptrdiff_t     StorageLength() const                         { return mStorageEnd - mStorageStart; }
 
     protected:
-      const CharT*  mStorageStart;
-      const CharT*  mStorageEnd;
+      CharT*  mStorageStart;
+      CharT*  mStorageEnd;
   };
 
 template <class CharT>
@@ -141,7 +170,7 @@ nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
       {
         CharT* string_storage = mDataStart;
         if ( mFlags & kIsStorageDefinedSeparately )
-          string_storage = NS_STATIC_CAST(nsXXXBufferHandle*, this)->mStorageStart;
+          string_storage = NS_REINTERPRET_CAST(typename nsXXXBufferHandle<CharT>*, this)->StorageStart();
         nsMemory::Free(string_storage);
       }
   }
