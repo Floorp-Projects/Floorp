@@ -3120,8 +3120,13 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
       if (!mCurrentFocus && oldFocus) {
         // ChangeFocus failed to move focus to nextFocus because a blur handler
         // made it unfocusable. (bug #118685)
-        mCurrentTarget = nsnull;
-        return ShiftFocusInternal(aForward, oldFocus);
+        // Try again unless it's from the same point, bug 232368.
+        if (oldFocus != aStart) {
+          mCurrentTarget = nsnull;
+          return ShiftFocusInternal(aForward, oldFocus);
+        } else {
+          return NS_OK;
+        }
       } else {
         GetFocusedFrame(&mCurrentTarget);
         if (mCurrentTarget)
