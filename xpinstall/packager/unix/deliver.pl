@@ -144,6 +144,10 @@ spew("Completed copying build files");
 system("perl xptlink.pl -o unix -s $topobjdir/dist -d $STAGE -v");
 spew("Completed xptlinking"); 
 
+#// change the permissions in the staging area, stopgap for creating 
+#// group/world writeable files in /usr for standard installs
+system("chmod og-w -R $STAGE");
+
 #// call makeall.pl tunneling args (delivers .xpis to $topobjdir/installer/stage)
 chdir("$topsrcdir/xpinstall/packager/unix");
 system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI");
