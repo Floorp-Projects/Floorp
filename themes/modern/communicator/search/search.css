@@ -105,4 +105,7 @@ titledbutton.panelbtn {
     margin-right          : 0px;
   }
   
-  
+#saveQueryButton > stack > box > .button-text-mid
+  {
+    font-weight         : normal;
+  }
