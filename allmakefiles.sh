@@ -61,10 +61,10 @@ db/mdb/public/Makefile
 db/mork/Makefile
 db/mork/build/Makefile
 db/mork/src/Makefile
-#dbm/Makefile
-#dbm/include/Makefile
-#dbm/src/Makefile
-#dbm/tests/Makefile
+dbm/Makefile
+dbm/include/Makefile
+dbm/src/Makefile
+dbm/tests/Makefile
 dom/Makefile
 dom/public/Makefile
 dom/public/base/Makefile
@@ -478,6 +478,7 @@ xpcom/reflect/xptcall/src/Makefile
 xpcom/reflect/xptcall/src/md/Makefile
 xpcom/reflect/xptcall/src/md/test/Makefile
 xpcom/reflect/xptcall/src/md/unix/Makefile
+xpcom/reflect/xptcall/src/md/win32/Makefile
 xpcom/reflect/xptcall/tests/Makefile
 xpcom/reflect/xptinfo/Makefile
 xpcom/reflect/xptinfo/public/Makefile
