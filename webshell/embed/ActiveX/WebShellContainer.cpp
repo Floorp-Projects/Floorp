@@ -5,6 +5,7 @@
 
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+/* static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID); */
 
 
 CWebShellContainer::CWebShellContainer(CMozillaBrowser *pOwner)
