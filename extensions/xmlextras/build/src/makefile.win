@@ -23,7 +23,6 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  js \
-		  layout \
 		  widget \
 		  caps \
 		  necko \
