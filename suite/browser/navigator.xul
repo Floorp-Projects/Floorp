@@ -21,7 +21,7 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 
-<?xml-stylesheet href="chrome:/global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?> 
 
