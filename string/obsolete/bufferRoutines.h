@@ -436,7 +436,10 @@ void CopyChars2To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
   PRUnichar* theSource=(PRUnichar*)aSource;
   PRUnichar* from= theSource+anOffset;
 
-  memcpy((void*)to,(void*)from,aCount*sizeof(PRUnichar));
+  if(aCount == 1)
+    *to = *from;
+  else
+    memcpy((void*)to,(void*)from,aCount*sizeof(PRUnichar));
 }
 
 
