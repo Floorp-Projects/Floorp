@@ -35,6 +35,25 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOUTLINERBOXOBJECT
 
+  // Painting methods.
+  // Paint is the generic nsIFrame paint method.  We override this method
+  // to paint our contents (our rows and cells).
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
+  NS_IMETHOD PaintRow(int aRowIndex, 
+                      nsIPresContext*      aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      const nsRect&        aDirtyRect,
+                      nsFramePaintLayer    aWhichLayer);
+  NS_IMETHOD PaintCell(int aRowIndex, 
+                       const PRUnichar* aColID, 
+                       nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       const nsRect&        aDirtyRect,
+                       nsFramePaintLayer    aWhichLayer);
+
   friend nsresult NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame);
 
