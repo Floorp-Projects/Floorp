@@ -1,0 +1,27 @@
+
+/* NEW WIDGET LANDING <menubutton> */
+menubutton:hover, menubutton[open="true"] {
+  border: 1px solid #000000;
+}
+
+menubutton > button, menubutton:hover > button {
+  border: 0px;
+  margin: 0px;
+}
+
+menubutton > .menu-dropmarker {
+  border: 1px outset #CCCCCC;
+  list-style-image: url("chrome://global/skin/scroll-down.gif");
+  padding: 0px 2px 0px 2px;
+}
+
+menubutton[open="true"] > .menu-dropmarker {
+  border: 1px inset #CCCCCC;
+  padding: 1px 1px -1px 3px;
+}
+
+menubutton menupopup, menulist menupopup {
+  border-left: 1px solid #000000;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+}

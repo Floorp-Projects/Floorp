@@ -1,6 +1,11 @@
 tasksOverlay.css
 globalBindings.xml
 global.css
+button.css
+checkbox.css
+menubutton.css
+menulist.css
+radio.css
 scrollbars.css
 commonDialog.css
 dialogOverlay.css
@@ -41,7 +46,9 @@ scroll-thumb-horiz.gif
 scroll-thumb-horiz-hover.gif
 scroll-thumb-horiz-disabled.gif
 opentwisty.gif
+opentwisty-selected.gif
 closedtwisty.gif
+closedtwisty-selected.gif
 alert-icon.gif
 error-icon.gif
 message-icon.gif
