@@ -1250,7 +1250,6 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_layer:
   case eHTMLTag_ilayer:
-  case eHTMLTag_nolayer:
   case eHTMLTag_unknown:
   case eHTMLTag_userdefined:
     rv = NS_NewHTMLUnknownElement(aResult, aNodeInfo);

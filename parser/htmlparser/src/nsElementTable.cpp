@@ -85,8 +85,8 @@ TagList  gContainsOpts={3,{eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script}};
 TagList  gContainsParam={1,{eHTMLTag_param}};
 TagList  gColgroupKids={1,{eHTMLTag_col}}; 
 TagList  gAddressKids={1,{eHTMLTag_p}};
-TagList  gBodyKids={9, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
-                        eHTMLTag_noscript,eHTMLTag_nolayer,eHTMLTag_script,eHTMLTag_li,eHTMLTag_param}}; // Added PARAM for bug 54448
+TagList  gBodyKids={8, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
+                        eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_li,eHTMLTag_param}}; // Added PARAM for bug 54448
 TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
 
 TagList  gDLRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_dd}};
@@ -874,15 +874,6 @@ void InitializeElementTable(void) {
       /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
       /*special props, prop-range*/       0, kNoPropRange,
       /*special parents,kids,skip*/       &gNoframeRoot,0,eHTMLTag_unknown); 
-
-    Initialize( 
-      /*tag*/                             eHTMLTag_nolayer,
-      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
-      /*special props, prop-range*/       kRequiresBody, kNoPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_noscript,

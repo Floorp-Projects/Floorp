@@ -187,8 +187,6 @@ static const PRUnichar sHTMLTagUnicodeName_noembed[] =
   {'n', 'o', 'e', 'm', 'b', 'e', 'd', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_noframes[] =
   {'n', 'o', 'f', 'r', 'a', 'm', 'e', 's', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_nolayer[] =
-  {'n', 'o', 'l', 'a', 'y', 'e', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_noscript[] =
   {'n', 'o', 's', 'c', 'r', 'i', 'p', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_object[] =
