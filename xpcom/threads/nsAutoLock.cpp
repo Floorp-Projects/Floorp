@@ -266,6 +266,9 @@ nsAutoLockBase::nsAutoLockBase(void* addr, nsAutoLockType type)
         if (stackTop->mAddr == addr) {
             // Ignore reentry: it's legal for monitors, and NSPR will assert
             // if you reenter a PRLock.
+        } else if (!addr) {
+            // Ignore null addresses: the caller promises not to use the
+            // lock at all, and NSPR will assert if you enter it.
         } else {
             const void* node =
 #ifdef NS_TRACE_MALLOC_XXX
@@ -304,16 +307,20 @@ nsAutoLockBase::nsAutoLockBase(void* addr, nsAutoLockType type)
     mAddr = addr;
     mDown = stackTop;
     mType = type;
-    (void) PR_SetThreadPrivate(LockStackTPI, this);
+    if (mAddr)
+        (void) PR_SetThreadPrivate(LockStackTPI, this);
 }
 
 nsAutoLockBase::~nsAutoLockBase()
 {
-    (void) PR_SetThreadPrivate(LockStackTPI, mDown);
+    if (mAddr)
+        (void) PR_SetThreadPrivate(LockStackTPI, mDown);
 }
 
 void nsAutoLockBase::Show()
 {
+    if (!mAddr)
+        return;
     nsAutoLockBase* curr = (nsAutoLockBase*) PR_GetThreadPrivate(LockStackTPI);
     nsAutoLockBase* prev = nsnull;
     while (curr != mDown) {
@@ -328,6 +335,8 @@ void nsAutoLockBase::Show()
 
 void nsAutoLockBase::Hide()
 {
+    if (!mAddr)
+        return;
     nsAutoLockBase* curr = (nsAutoLockBase*) PR_GetThreadPrivate(LockStackTPI);
     nsAutoLockBase* prev = nsnull;
     while (curr != this) {
@@ -369,6 +378,10 @@ void nsAutoMonitor::DestroyMonitor(PRMonitor* mon)
 
 void nsAutoMonitor::Enter()
 {
+    if (!mAddr) {
+        NS_ERROR("It is not legal to enter a null monitor");
+        return;
+    }
 #ifdef DEBUG
     nsAutoLockBase* stackTop =
         (nsAutoLockBase*) PR_GetThreadPrivate(LockStackTPI);
@@ -382,6 +395,10 @@ void nsAutoMonitor::Enter()
 
 void nsAutoMonitor::Exit()
 {
+    if (!mAddr) {
+        NS_ERROR("It is not legal to exit a null monitor");
+        return;
+    }
 #ifdef DEBUG
     (void) PR_SetThreadPrivate(LockStackTPI, mDown);
 #endif
