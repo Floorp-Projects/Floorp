@@ -5316,7 +5316,6 @@ mingw*|cygwin*|msvc*|mks*)
         PERL="\$(CYGWIN_WRAPPER) $PERL"
     fi
     CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
-    AC_SUBST(CYGDRIVE_MOUNT)
     ;;
 esac
 
@@ -5329,6 +5328,8 @@ msvc*|mks*|cygwin*|mingw*)
     my_perl=$PERL
     ;;
 esac
+
+AC_SUBST(CYGDRIVE_MOUNT)
 
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$my_perl $my_srcdir/config/milestone.pl -topsrcdir $my_srcdir`
