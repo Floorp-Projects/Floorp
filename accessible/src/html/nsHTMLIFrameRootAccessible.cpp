@@ -56,36 +56,42 @@ nsHTMLIFrameAccessible::nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible*
   /* attribute wstring accName; */
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccName(nsAString& aAccName) 
 { 
-  return GetTitle(aAccName);
+  nsresult rv = GetTitle(aAccName);
+  if (NS_FAILED(rv) || aAccName.IsEmpty())
+    rv = GetURL(aAccName);
+  return rv;
 }
 
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccValue(nsAString& aAccValue) 
 { 
-  return GetURL(aAccValue);
+  return NS_OK;
 }
 
 /* nsIAccessible getAccFirstChild (); */
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccFirstChild(nsIAccessible **_retval)
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccFirstChild(nsIAccessible **aChild)
 {
-  return mRootAccessible->GetAccFirstChild(_retval);
+  NS_IF_ADDREF(*aChild = mRootAccessible);
+  return NS_OK;
 }
 
 /* nsIAccessible getAccLastChild (); */
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccLastChild(nsIAccessible **_retval)
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccLastChild(nsIAccessible **aChild)
 {
-  return mRootAccessible->GetAccLastChild(_retval);
+  NS_IF_ADDREF(*aChild = mRootAccessible);
+  return NS_OK;
 }
 
 /* long getAccChildCount (); */
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccChildCount(PRInt32 *_retval)
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccChildCount(PRInt32 *aNumChildren)
 {
-  return mRootAccessible->GetAccChildCount(_retval);
+  *aNumChildren = 1;
+  return NS_OK;
 }
 
 /* unsigned long getAccRole (); */
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_PANE;
+  *_retval = ROLE_CLIENT;
   return NS_OK;
 }
 
@@ -352,13 +358,6 @@ nsHTMLIFrameRootAccessible::~nsHTMLIFrameRootAccessible()
 {
 }
 
-NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccRole(PRUint32 *_retval)
-{
-  // prevent |this| from being cached by nsAccessible::CacheOptimizations
-  *_retval = ROLE_NOTHING;
-  return NS_OK;
-}
-
 /* void addAccessibleEventListener (in nsIAccessibleEventListener aListener); */
 NS_IMETHODIMP nsHTMLIFrameRootAccessible::AddAccessibleEventListener(nsIAccessibleEventListener *aListener)
 {
@@ -380,3 +379,18 @@ NS_IMETHODIMP nsHTMLIFrameRootAccessible::RemoveAccessibleEventListener()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_PANE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccName(nsAString& aAccName)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccValue(nsAString& aAccValue)
+{
+  return GetURL(aAccValue);
+}
