@@ -29,6 +29,7 @@
 #include "Command.h"
 #include "xfe2_extern.h"
 #include "xpgetstr.h"
+#include "RDFImage.h"
 
 #include <XmL/Tree.h>
 #include <Xfe/Xfe.h>
@@ -57,6 +58,7 @@ extern int XP_BKMKS_LESS_THAN_ONE_HOUR_AGO;
 extern "C"
 {
    extern PRBool fe_getPixelFromRGB(MWContext *, char * rgbString, Pixel * pixel);
+   extern void treeview_bg_image_cb(XtPointer clientData);
 };
 
 
@@ -216,6 +218,8 @@ XFE_RDFTreeView::~XFE_RDFTreeView()
 	{
         delete _popup;
 	}
+    // Remove yourself from the RDFImage's listener list
+    XFE_RDFImage::removeListener(this);
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -577,9 +581,9 @@ XFE_RDFTreeView::setHTView(HT_View htview)
 	{
 		return;
 	}
-	
+    setHTTreeViewProperties(_ht_rdfView);	
 	fill_tree();
-    setHTTreeViewProperties(_ht_rdfView);
+
 }
 //////////////////////////////////////////////////////////////////////
 HT_View
@@ -1020,9 +1024,29 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
 
    /* viewBGURL */
   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->viewBGURL, HT_COLUMN_STRING, &data);
+
    if (data)
    {
-     /*   Do the RDFImage thing here */
+      /*   Do the RDFImage thing here */
+      char * imageURL = (char *)data;
+      XFE_RDFImage * rdfImage=NULL;
+      Pixmap         image, mask;
+
+
+      rdfImage = XFE_RDFImage::isImageAvailable(imageURL);
+      if (rdfImage) {
+         image = rdfImage->getPixmap();
+         mask = rdfImage->getMask();
+         XtVaSetValues(m_widget, XmNbackgroundPixmap, image, NULL);
+      }
+      else {
+
+         rdfImage = new XFE_RDFImage(m_toplevel, (void *) this, (char *) data, CONTEXT_DATA(m_contextData)->colormap, m_widget);
+         rdfImage->setCompleteCallback((completeCallbackPtr)treeview_bg_image_cb, (void *) m_widget);
+         rdfImage->loadImage();
+      }
+      
+    
    }
 
 
@@ -1158,7 +1182,22 @@ fe_getPixelFromRGB(MWContext * context, char * color, Pixel *pixel)
 
     return (bColorsFound);
 }
+};
 
+extern "C"
+{
+void
+treeview_bg_image_cb(XtPointer client_data)
+{
+   
+     callbackClientData * cb = (callbackClientData *) client_data;
+     Widget tree = (Widget )cb->widget;
+     Dimension b_width=0, b_height=0;
+
+     XtVaSetValues(tree, XmNbackgroundPixmap, cb->image, NULL);
+     XP_FREE(cb);
+
+}
 
 };   /* extern C  */
 
