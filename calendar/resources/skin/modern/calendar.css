@@ -1132,7 +1132,7 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
 }
 
 
-treechildren:-moz-tree-cell-text(focus, selected) {
+treechildren:-moz-tree-cell-text(selected) {
    color                  : white;
 }
 

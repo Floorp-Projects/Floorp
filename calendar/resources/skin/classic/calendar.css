@@ -1127,7 +1127,7 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
 }
 
-treechildren:-moz-tree-cell-text(focus, selected) {
+treechildren:-moz-tree-cell-text(selected) {
    color                  : HighlightText;
 }
 
