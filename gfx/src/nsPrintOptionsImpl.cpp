@@ -107,7 +107,8 @@ nsPrintOptions::nsPrintOptions() :
   mHowToEnableFrameUI(kFrameEnableNone),
   mPageNumJust(kJustLeft),
   mIsCancelled(PR_FALSE),
-  mPrintPageDelay(500)
+  mPrintPageDelay(500),
+  mPrintSilent(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 
