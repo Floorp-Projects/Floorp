@@ -42,7 +42,8 @@
 #include "nsMacMessageSink.h"
 #include "nsWatchTask.h"
 
-
+#include "nsIInternetConfigService.h"
+#include "nsIMIMEInfo.h"
 
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
@@ -488,135 +489,104 @@ nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* out
 void
 nsFilePicker :: MapFilterToFileTypes ( )
 {
-	OSType			tempOSType;
-	ICInstance		icInstance;
-	OSStatus			icErr;
-	Handle			mappings = NewHandleClear(4);
-	ICAttr			attr;
-	ICMapEntry		icEntry;
-	
-	// assume we're going to show all files until proven otherwise with
-	// a filter that isn't "*"
-	mAllFilesDisplayed = PR_TRUE;
-	
-	// grab the IC mappingDB so that it's a little faster looping over the file
-	// types.
-	icErr = ICStart(&icInstance, 'MOZZ');
-	if (icErr == noErr)
-	{
-#if !TARGET_CARBON
-    // This routine does nothing under carbon, but is required for non-carbon.
-    // Not sure why.
-    icErr = ICFindConfigFile(icInstance, 0, nil);
-#endif
-    if (icErr == noErr) {
-      icErr = ICFindPrefHandle(icInstance, kICMapping, &attr, mappings);
-      if (icErr != noErr)
-        goto bail_w_IC;
+  nsCOMPtr<nsIInternetConfigService> icService ( do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID) );
+  NS_ASSERTION(icService, "Can't get InternetConfig Service, bailing out");
+  if ( !icService ) {
+    // We couldn't get the IC Service, bail. Since |mAllFilesDisplayed| is still
+    // set, the dialog will allow selection of all files. 
+    return;
+  }
+  
+  if (mFilters.Count())
+  {
+    // First we allocate the memory for the Mac type lists
+    for (PRUint32 loop1 = 0; loop1 < mFilters.Count() && loop1 < kMaxTypeListCount; loop1++)
+    {
+      mTypeLists[loop1] =
+        (NavTypeListPtr)NewPtrClear(sizeof(NavTypeList) + kMaxTypesPerFilter * sizeof(OSType));     
+      if ( !mTypeLists[loop1] )
+        return;                     // don't worry, we'll clean up in the dtor
     }
-    else
-      goto bail_w_IC;
-	}
-	else
-		goto bail_wo_IC;
-	
-	
-	if (mFilters.Count())
-	{
-		// First we allocate the memory for the Mac type lists
-		for (PRUint32 loop1 = 0; loop1 < mFilters.Count() && loop1 < kMaxTypeListCount; loop1++)
-		{
-			mTypeLists[loop1] =
-				(NavTypeListPtr)NewPtrClear(sizeof(NavTypeList) + kMaxTypesPerFilter * sizeof(OSType));
-			
-			if (mTypeLists[loop1] == nil)
-				goto bail_w_IC;
-		}
-		
-		// Now loop through each of the filter strings
+    
+    // Now loop through each of the filter strings
     for (PRUint32 loop1 = 0; loop1 < mFilters.Count(); loop1++)
-  	{
-  		const nsString& filterWide = *mFilters[loop1];
-  		char* filter = ToNewCString(filterWide);
+    {
+      const nsString& filterWide = *mFilters[loop1];
+      char* filter = ToNewCString(filterWide);
 
       NS_ASSERTION ( filterWide.Length(), "Oops. filepicker.properties not correctly installed");       
-  		if ( filterWide.Length() && filter )
-  		{
+      if ( filterWide.Length() && filter )
+      {
         PRUint32 filterIndex = 0;         // Index into the filter string
-        PRUint32 typeTempIndex = 1;       // Index into the temp string for a single filter type
+        PRUint32 typeTempIndex = 0;       // Index into the temp string for a single filter type
         PRUint32 typesInThisFilter = 0;   // Count for # of types in this filter
         bool finishedThisFilter = false;  // Flag so we know when we're finsihed with the filter
-        Str255 typeTemp;
+        char typeTemp[256];
         char tempChar;           // char we're currently looking at
 
         // Loop through the characters of filter string. Every time we get to a
         // semicolon (or a null, meaning we've hit the end of the full string)
         // then we've found the filter and can pass it off to IC to get a macOS 
         // file type out of it.
-  			do
-	  		{
-	  		  tempChar = filter[filterIndex];
-	  			if ((tempChar == ';') || (tempChar == 0)) {   // End of filter type reached
-	  				typeTemp[typeTempIndex] = 0;                // turn it into a pString 
-	  				typeTemp[0] = typeTempIndex - 1;
-	  				
-	  				// to make it easier to match file extensions while we're filtering, flatten
-	  				// out the list. Ignore filters that are just "*" and also remove the
-	  				// leading "*" from filters we do add.
-	  				if ( typeTemp[0] > 1 )
-	  				  mFlatFilters.AppendCString ( nsCString((char*)&typeTemp[2]) );  // cut out the "*"
-	  				
-	  				// ask IC if it's not "all files" (designated by "*")
-	  				if ( !(typeTemp[0] == 1 && typeTemp[1] == '*') ) {
-	  				  mAllFilesDisplayed = PR_FALSE;
-	  				  			
-  	  				icErr = ICMapEntriesFilename(icInstance, mappings, typeTemp, &icEntry);
-  	  				if (icErr != icPrefNotFoundErr)
-  	  				{
-  	  					bool addToList = true;
-  	  					tempOSType = icEntry.fileType;
-  	  					for (PRUint32 typeIndex = 0; typeIndex < typesInThisFilter; typeIndex++)
-  	  					{
-  	  						if (mTypeLists[loop1]->osType[typeIndex] == tempOSType)
-  	  						{
-  	  							addToList = false;
-  	  							break;
-  	  						}
-  	  					}
-  	  					if (addToList && typesInThisFilter < kMaxTypesPerFilter)
-  	  						mTypeLists[loop1]->osType[typesInThisFilter++] = tempOSType;
-  	  				}
-	  				} // if not "*"
-	  				
-	  				typeTempIndex = 1;			// Reset the temp string for the type
-	  				typeTemp[0] = 0;
-	  				if (tempChar == 0)
-	  					finishedThisFilter = true;
-	  			}
-	  			else
-	  			{
-	  			  // strip out whitespace as we goe
-	  			  if ( tempChar != ' ' )
-	  				  typeTemp[typeTempIndex++] = tempChar;
-	  			}
-	  			
-	  			filterIndex++;
-	  		} while (!finishedThisFilter);
-	  		
-	  		// Set how many OSTypes we actually found
-	  		mTypeLists[loop1]->osTypeCount = typesInThisFilter;
-	  		
-	  		nsMemory :: Free ( NS_REINTERPRET_CAST(void*, filter) );
-  		}
+        do
+        {
+          tempChar = filter[filterIndex];
+          if ((tempChar == ';') || (tempChar == 0)) {   // End of filter type reached
+            typeTemp[typeTempIndex] = '\0';             // null terminate
+            
+            // to make it easier to match file extensions while we're filtering, flatten
+            // out the list. Ignore filters that are just "*" and also remove the
+            // leading "*" from filters we do add.
+            if ( strlen(typeTemp) > 1 )
+              mFlatFilters.AppendCString ( nsCString((char*)&typeTemp[1]) );  // cut out the "*"
+            
+            // ask IC if it's not "all files" (designated by "*")
+            if ( !(typeTemp[1] == '\0' && typeTemp[0] == '*') ) {
+              mAllFilesDisplayed = PR_FALSE;
+              
+              nsCOMPtr<nsIMIMEInfo> icEntry;
+              icService->GetMIMEInfoFromExtension(typeTemp, getter_AddRefs(icEntry));
+              if ( icEntry )
+              {
+                bool addToList = true;
+                OSType tempOSType;
+                icEntry->GetMacType(NS_REINTERPRET_CAST(PRUint32*, (&tempOSType)));
+                for (PRUint32 typeIndex = 0; typeIndex < typesInThisFilter; typeIndex++)
+                {
+                  if (mTypeLists[loop1]->osType[typeIndex] == tempOSType)
+                  {
+                    addToList = false;
+                    break;
+                  }
+                }
+                if (addToList && typesInThisFilter < kMaxTypesPerFilter)
+                  mTypeLists[loop1]->osType[typesInThisFilter++] = tempOSType;
+              }
+            } // if not "*"
+            
+            typeTempIndex = 0;      // Reset the temp string for the type
+            if (tempChar == '\0')
+              finishedThisFilter = true;
+          }
+          else
+          {
+            // strip out whitespace as we go
+            if ( tempChar != ' ' )
+              typeTemp[typeTempIndex++] = tempChar;
+          }
+          
+          filterIndex++;
+        } while (!finishedThisFilter);
+        
+        // Set how many OSTypes we actually found
+        mTypeLists[loop1]->osTypeCount = typesInThisFilter;
+        
+        nsMemory :: Free ( NS_REINTERPRET_CAST(void*, filter) );
+      }
     }
-	}
+  }
 
-bail_w_IC:
-	ICStop(icInstance);
-
-bail_wo_IC:
-  ;
-}
+} // MapFilterToFileTypes
 
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
