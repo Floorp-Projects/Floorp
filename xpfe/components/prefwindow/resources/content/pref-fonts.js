@@ -140,7 +140,7 @@ function selectLang()
 		{
 			if (pref)
 			{
-				var selectVal = pref.CopyUniCharPref(fontPrefstring);
+				var selectVal = pref.CopyUnicharPref(fontPrefstring);
 			}
 		}
 		catch(ex)
