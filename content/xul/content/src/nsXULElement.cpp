@@ -2436,48 +2436,32 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     nsCOMPtr<nsIAtom> attrName = aNodeInfo->GetNameAtom();
     PRInt32 attrns = aNodeInfo->GetNamespaceID();
 
-    nsresult rv = EnsureAttributes();
-    if (NS_FAILED(rv)) return rv;
-
-    nsAutoString oldValue;
-    nsXULAttribute* attr = FindLocalAttribute(aNodeInfo);
-    nsXULPrototypeAttribute *protoattr = nsnull;
-    if (attr) {
-        attr->GetValue(oldValue);
-    } else {
-        // Don't have it locally, but might be shadowing a prototype attribute.
-        protoattr = FindPrototypeAttribute(aNodeInfo);
-        if (protoattr) {
-            protoattr->mValue.GetValue(oldValue);
-        }
-    }
-
-    if ((attr || protoattr) && oldValue.Equals(aValue)) {
-        // do nothing if there is no change
-        return NS_OK;
-    }
-
-    // Send the update notification _before_ changing anything
-    if (mDocument && aNotify) {
-        mDocument->BeginUpdate();
+    // XXXwaterson should likely also be conditioned on aNotify. Do we
+    // need to BeginUpdate() here as well?
+    if (mDocument) {
         mDocument->AttributeWillChange(this, attrns, attrName);
     }
 
-    // Check to see if the CLASS attribute is being set.  If so, we need to
-    // rebuild our class list.
+    nsresult rv = EnsureAttributes();
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX Class and Style attribute setting should be checking for the XUL namespace!
+
+    // Check to see if the CLASS attribute is being set.  If so, we need to rebuild our
+    // class list.
     if (aNodeInfo->Equals(nsXULAtoms::clazz, kNameSpaceID_None)) {
         Attributes()->UpdateClassList(aValue);
     }
 
-    // Check to see if the STYLE attribute is being set.  If so, we need to
-    // create a new style rule based off the value of this attribute, and we
-    // need to let the document know about the StyleRule change.
-    // XXXbz this should not be checking for mDocument; it should get
-    // the document off the nodeinfo
-    if (aNodeInfo->Equals(nsXULAtoms::style, kNameSpaceID_None) && mDocument) {
+    // Check to see if the STYLE attribute is being set.  If so, we need to create a new
+    // style rule based off the value of this attribute, and we need to let the document
+    // know about the StyleRule change.
+    if (aNodeInfo->Equals(nsXULAtoms::style, kNameSpaceID_None) &&
+        (mDocument != nsnull)) {
         nsCOMPtr <nsIURI> docURL;
         mDocument->GetBaseURL(getter_AddRefs(docURL));
         Attributes()->UpdateStyleRule(docURL, aValue);
+        // XXX Some kind of special document update might need to happen here.
     }
 
     nsCOMPtr<nsIAtom> tag;
@@ -2485,21 +2469,33 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
 
     if (tag == nsXULAtoms::window &&
         aNodeInfo->Equals(nsXULAtoms::hidechrome)) {
-      nsAutoString val(aValue);
+      nsAutoString val;
+      val.Assign(aValue);
       HideWindowChrome(val.EqualsIgnoreCase("true"));
     }
 
     // XXX need to check if they're changing an event handler: if so, then we need
     // to unhook the old one.
 
-    // Save whether this is a modification before we muck with the attr pointer.
-    PRBool modification = attr || protoattr; 
+    nsXULAttribute* attr = FindLocalAttribute(aNodeInfo);
+    PRBool modification;
+    nsAutoString oldValue;
 
     if (attr) {
+        attr->GetValue(oldValue);
         attr->SetValueInternal(aValue);
+        modification = PR_TRUE;
     }
     else {
-        // Need to create a local attr
+        // Don't have it locally, but might be shadowing a prototype attribute.
+        nsXULPrototypeAttribute *protoattr = FindPrototypeAttribute(aNodeInfo);
+        if (protoattr) {
+            protoattr->mValue.GetValue(oldValue);
+            modification = PR_TRUE;
+        } else {
+            modification = PR_FALSE;
+        }
+
         rv = nsXULAttribute::Create(NS_STATIC_CAST(nsIStyledContent*, this),
                                     aNodeInfo, aValue, &attr);
         if (NS_FAILED(rv)) return rv;
@@ -2560,7 +2556,8 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
 
         mDocument->AttributeChanged(this, attrns, attrName, modHint,
                                     StyleHintFor(NodeInfo()));
-        mDocument->EndUpdate();
+
+        // XXXwaterson do we need to mDocument->EndUpdate() here?
       }
     }
 
