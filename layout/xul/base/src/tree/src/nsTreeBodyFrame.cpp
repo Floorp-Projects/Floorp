@@ -531,6 +531,10 @@ nsOutlinerBodyFrame::SetFocused(PRBool aFocused)
 NS_IMETHODIMP 
 nsOutlinerBodyFrame::GetOutlinerBody(nsIDOMElement** aElement)
 {
+  NS_ASSERTION(mContent, "no content, see bug #104878");
+  if (!mContent)
+    return NS_ERROR_NULL_POINTER;
+
   return mContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aElement);
 }
 
