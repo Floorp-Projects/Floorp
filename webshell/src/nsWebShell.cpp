@@ -245,6 +245,7 @@ public:
                      const PRUint32 localIP = 0);
 
   NS_IMETHOD Stop(void);
+
 #ifdef NECKO
   NS_IMETHOD Reload(nsLoadFlags aType);
 #else
@@ -484,8 +485,11 @@ protected:
   nsString mName;
   nsString mDefaultCharacterSet;
 
+
   nsVoidArray mHistory;
   PRInt32 mHistoryIndex;
+
+
   nsIGlobalHistory* mHistoryService;
   nsISessionHistory * mSHist;
 
@@ -716,12 +720,14 @@ nsWebShell::~nsWebShell()
   ReleaseChildren();
 #endif
 
+
   // Free up history memory
   PRInt32 i, n = mHistory.Count();
   for (i = 0; i < n; i++) {
     nsString* s = (nsString*) mHistory.ElementAt(i);
     delete s;
   }
+
 
   DestroyPluginHost();
 }
@@ -2176,7 +2182,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 		}
   }
    
-
   nsString* url = new nsString(uriSpec);
   if (aModifyHistory) {
     // Discard part of history that is no longer reachable
@@ -2201,6 +2206,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     mHistory.ReplaceElementAt(url, mHistoryIndex);
   }
   ShowHistory();
+
 
   /* The session History may have changed the URL. So pass on the
    * right one for loading 
@@ -2294,18 +2300,28 @@ nsWebShell::StopAfterURLAvailable()
 }
 
 
+
+/* The generic session History code here is now obsolete.
+ * Use nsISessionHistory instead
+ */
 #ifdef NECKO
 NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
 #else
 NS_IMETHODIMP nsWebShell::Reload(nsURLReloadType aType)
 #endif
 {
+#ifdef OLD_HISTORY
   nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
   if (nsnull != s) {
     // XXX What about the post data?
     return LoadURL(s->GetUnicode(), nsnull, PR_FALSE, aType);
   }
   return NS_ERROR_FAILURE;
+#else
+  if (mSHist) 
+     return mSHist->Reload(this, aType);
+  return NS_OK;
+#endif  
 }
 
 //----------------------------------------
@@ -2315,30 +2331,62 @@ NS_IMETHODIMP nsWebShell::Reload(nsURLReloadType aType)
 NS_IMETHODIMP
 nsWebShell::Back(void)
 {
+#ifdef OLD_HISTORY
   return GoTo(mHistoryIndex - 1);
+#else
+  if (mSHist)
+    return mSHist->GoBack(this);
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
 nsWebShell::CanBack(void)
 {
-  return (mHistoryIndex > 0 ? NS_OK : NS_COMFALSE);
+#ifdef OLD_HISTORY
+  return (mHistoryIndex  > mHistory.Count() - 1 ? NS_OK : NS_COMFALSE);
+#else
+  if (mSHist) {
+    PRBool result=PR_TRUE;
+    mSHist->canBack(result);
+    return  (result ? NS_OK : NS_COMFALSE);   
+  }
+  return NS_OK;
+#endif
+
 }
 
 NS_IMETHODIMP
 nsWebShell::Forward(void)
 {
+#ifdef OLD_HISTORY
   return GoTo(mHistoryIndex + 1);
+#else
+  if (mSHist)
+    return mSHist->GoForward(this);
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
 nsWebShell::CanForward(void)
 {
+#ifdef OLD_HISTORY
   return (mHistoryIndex  < mHistory.Count() - 1 ? NS_OK : NS_COMFALSE);
+#else
+  if (mSHist) {
+    PRBool result=PR_TRUE;
+    mSHist->canForward(result);
+    return  (result ? NS_OK : NS_COMFALSE);   
+  }
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
 nsWebShell::GoTo(PRInt32 aHistoryIndex)
 {
+#ifdef OLD_HISTORY
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
   if ((aHistoryIndex >= 0) &&
       (aHistoryIndex < mHistory.Count())) {
@@ -2368,19 +2416,37 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
                    0);            // load attributes
   }
   return rv;
+#else
+   if (mSHist)
+     return mSHist->Goto(aHistoryIndex, this, PR_FALSE);
+   return NS_OK;
+
+
+#endif
+
 }
 
 NS_IMETHODIMP
 nsWebShell::GetHistoryLength(PRInt32& aResult)
 {
+#ifdef OLD_HISTORY
   aResult = mHistory.Count();
+#else
+  if (mSHist)
+    return mSHist->getHistoryLength(aResult);
+#endif 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::GetHistoryIndex(PRInt32& aResult)
 {
+#ifdef OLD_HISTORY
   aResult = mHistoryIndex;
+#else
+  if (mSHist)
+    return mSHist->getCurrentIndex(aResult);
+#endif
   return NS_OK;
 }
 
@@ -2388,6 +2454,7 @@ NS_IMETHODIMP
 nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
 {
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
+#ifdef OLD_HISTORY
   if ((aHistoryIndex >= 0) &&
       (aHistoryIndex <= mHistory.Count() - 1)) {
     nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
@@ -2396,13 +2463,18 @@ nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
     }
     rv = NS_OK;
   }
+#else
+  if (mSHist)
+     return mSHist->GetURLForIndex(aHistoryIndex, aURLResult);
+
+#endif
   return rv;
 }
 
 void
 nsWebShell::ShowHistory()
 {
-#ifdef NS_DEBUG
+#ifdef OLD_HISTORY
   if (WEB_LOG_TEST(gLogModule, WEB_TRACE_HISTORY)) {
     PRInt32 i, n = mHistory.Count();
     for (i = 0; i < n; i++) {
@@ -2419,6 +2491,7 @@ nsWebShell::ShowHistory()
   }
 #endif
 }
+
 
 //----------------------------------------
 
@@ -2605,26 +2678,57 @@ nsWebShell::LoadDocument(const char* aURL,
   return NS_OK;
 }
 
+
+
 NS_IMETHODIMP
 nsWebShell::ReloadDocument(const char* aCharset, 
                            nsCharsetSource aSource)
 {
+
+
   // XXX hack. kee the aCharset and aSource wait to pick it up
   mHintCharset = aCharset;
   mHintCharsetSource= aSource;
-  
-  nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
+  nsString * s=nsnull;
+
+  /* The generic session history code that is in webshell 
+   * is now obsolete. Use nsISessionHistory instead
+   */
+#ifdef OLD_HISTORY  
+  s = (nsString*) mHistory.ElementAt(mHistoryIndex);
+#else
+  if (mSHist) {
+     PRInt32  index = 0;
+     nsresult rv;
+     rv = mSHist->getCurrentIndex(index);
+     if (NS_SUCCEEDED(rv)) {
+        PRUnichar * url=nsnull;
+        rv = mSHist->GetURLForIndex(index, &url);
+        if (NS_SUCCEEDED(rv))
+          s = new nsString(url);       
+     }
+  }
+
+#endif
 
   nsresult rv = NS_OK;
   if(s) {
     char* url = s->ToNewCString();
     if(url) {
+#ifdef  OLD_HISTORY
       mHistoryIndex--;
+#endif  /* OLD_HISTORY */
+      /* When using nsISessionHistory, the refresh callback should
+       * probably call LoadURL with PR_FALSE as the third argument.
+       * Not sure how well this method is being used.
+       */
       rv =  this->RefreshURL((const char*)url,0,PR_FALSE);
       delete [] url;
     }
+    delete s;
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
