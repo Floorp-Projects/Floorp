@@ -5,3 +5,4 @@ GtkMozillaInputStream.lo
 nsSetupRegistry.lo
 .libs
 libgtkmozilla.la
+nsNewTimer.lo

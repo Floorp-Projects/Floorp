@@ -6,3 +6,4 @@ libtool
 config.status
 stamp-h
 Makefile
+mozilla_config.mk
