@@ -25,10 +25,11 @@ extern JSObject *			gGlobalConfigObject;
 extern JSClass				global_class;
 extern JSClass				autoconf_class;
 extern JSPropertySpec		autoconf_props[];
+extern JSFunctionSpec       autoconf_methods[];
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-extern char *				gfilename;
-extern char *				glifilename;
+extern char *				gFileName;
+extern char *				gLIFileName;
 #endif /*PREF_SUPPORT_OLD_PATH_STRINGS*/
 
 extern struct CallbackNode*	gCallbacks;
@@ -49,7 +50,7 @@ extern int pref_CompareStrings(const void *v1, const void *v2);
 NSPR_END_EXTERN_C
 
 /* Possibly exportable */
-#if !defined(PREF_SUPPORT_OLD_PATH_STRINGS) && defined(__cplusplus)
+#if defined(__cplusplus)
 extern PrefResult PREF_SavePrefFileSpecWith(
 	const nsFileSpec& fileSpec,
 	PLHashEnumerator heSaveProc);
