@@ -130,13 +130,9 @@ nsMimeConverter::DecodeMimeHeader(const char *header,
                                   PRBool override_charset,
                                   PRBool eatContinuations)
 {
-  char *retString = MIME_DecodeMimeHeader(header, default_charset, 
+  *decodedString = MIME_DecodeMimeHeader(header, default_charset, 
                                           override_charset,
                                           eatContinuations);
-  if (retString == NULL)
-    return NS_ERROR_FAILURE;
-
-  *decodedString = retString;
   return NS_OK;
 }
 

@@ -625,11 +625,8 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 
     // we're going to need a converter to convert
     nsresult rv = mUnicodeConverter->DecodeMimeHeader(value, getter_Copies(tValue));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && tValue)
     {
-      if (!tValue)
-        return NS_OK;
-
       newValue = nsEscapeHTML(tValue);
     }
     else

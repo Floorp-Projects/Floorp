@@ -88,9 +88,9 @@ Rights Reserved.
 <!ENTITY unsubscribeNewsgroupCmd.label "Unsubscribe">
 <!ENTITY selectMenu.label "Select">  
 <!ENTITY selectMenu.accesskey "l">  
-<!ENTITY selectThreadCmd.label ".Thread">  
+<!ENTITY selectThreadCmd.label "Thread">  
 <!ENTITY selectThreadCmd.accesskey "t">  
-<!ENTITY selectFlaggedCmd.label ".Flagged Messages">  
+<!ENTITY selectFlaggedCmd.label "Flagged Messages">  
 <!ENTITY selectFlaggedCmd.accesskey "f">  
 <!ENTITY selectInvertCmd.label ".Invert Selection">  
 <!ENTITY selectInvertCmd.accesskey "i">  
@@ -144,6 +144,10 @@ Rights Reserved.
 <!ENTITY sortByUnreadCmd.accesskey "n">  
 <!ENTITY sortByOrderReceivedCmd.label "Order Received">  
 <!ENTITY sortByOrderReceivedCmd.accesskey "o">  
+<!ENTITY sortAscending.label "Ascending">
+<!ENTITY sortAscending.accesskey "a">
+<!ENTITY sortDescending.label "Descending">
+<!ENTITY sortDescending.accesskey "d">
 <!ENTITY msgsMenu.label "Messages"> 
 <!ENTITY msgsMenu.accesskey "a"> 
 <!ENTITY threadsMsgsCmd.label "Threaded">  

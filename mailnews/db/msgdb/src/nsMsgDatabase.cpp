@@ -2692,9 +2692,12 @@ nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_t
 
                 ret = converter->DecodeMimeHeader(cSender.get(), &resultStr,
                                                   charset, characterSetOverride);
-                if (NS_SUCCEEDED(ret))
+                if (NS_SUCCEEDED(ret) && resultStr)
                 {
                     ret = headerParser->ExtractHeaderAddressName ("UTF-8", resultStr, getter_Copies(name));
+                }
+                else {
+                  ret = headerParser->ExtractHeaderAddressName ("UTF-8", cSender.get(), getter_Copies(name));
                 }
                 PR_FREEIF(resultStr);
                 PR_FREEIF(charset);

@@ -92,9 +92,6 @@ function HandleColumnClick(columnID)
     SetHiddenAttributeOnThreadOnlyColumns("true");  // this will hide them
   }
   
-  dump("XXX fix UpdateSortMenu()\n");
-  //UpdateSortMenu(columnID);
-
   ShowAppropriateColumns();
   PersistViewAttributesOnFolder();
 }
@@ -216,6 +213,16 @@ function MsgSortThreadPane(sortType)
 
     ShowAppropriateColumns();
     PersistViewAttributesOnFolder();
+}
+
+function MsgSortAscending()
+{
+    gDBView.sort(gDBView.sortType, nsMsgViewSortOrder.ascending);
+}
+
+function MsgSortDescending()
+{
+    gDBView.sort(gDBView.sortType, nsMsgViewSortOrder.descending);
 }
 
 function IsSpecialFolderSelected(flags)

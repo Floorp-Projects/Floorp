@@ -121,6 +121,8 @@ Rights Reserved.
          valueMessages="&deleteMsgsCmd.label;"/>
   <command id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
   <command id="cmd_selectAll"/>
+  <command id="cmd_selectThread" oncommand="goDoCommand('cmd_selectThread')"/>
+  <command id="cmd_selectFlagged" oncommand="goDoCommand('cmd_selectFlagged')"/>
 </commandset>
 
 <commandset id="mailSearchMenuItems"
@@ -818,6 +820,16 @@ Rights Reserved.
             observes="cmd_editDraft"/>
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
+      <menu label="&selectMenu.label;" accesskey="&selectMenu.accesskey;">
+        <menupopup>
+          <menuitem label="&selectThreadCmd.label;"
+           accesskey="&selectThreadCmd.accesskey;"
+           observes="cmd_selectThread"/>
+          <menuitem label="&selectFlaggedCmd.label;"
+           accesskey="&selectFlaggedCmd.accesskey;"
+           observes="cmd_selectFlagged"/>
+        </menupopup>
+      </menu>
       <menuseparator/>
       <menuitem label="&filtersCmd.label;"
                       accesskey="&filtersCmd.accesskey;"
@@ -851,7 +863,7 @@ Rights Reserved.
        oncommand="MsgToggleMessagePane();"/>
       <menuseparator/>
       <menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" label="&sortMenu.label;">
-        <menupopup>
+        <menupopup oncreate="InitViewSortByMenu()">
           <menuitem id="sortByDateMenuitem" type="checkbox" label="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" oncommand="MsgSortByDate()"/>
           <menuitem id="sortByFlagMenuitem" type="checkbox" label="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" oncommand="MsgSortByFlagged()"/>
           <menuitem id="sortByOrderReceivedMenuitem" type="checkbox" label="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" oncommand="MsgSortByOrderReceived()"/>
@@ -861,6 +873,9 @@ Rights Reserved.
           <menuitem id="sortByStatusMenuitem" type="checkbox" label="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" oncommand="MsgSortByStatus()"/>
           <menuitem id="sortBySubjectMenuitem" type="checkbox" label="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" oncommand="MsgSortBySubject()"/>
           <menuitem id="sortByUnreadMenuitem" type="checkbox" label="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByUnread()"/>
+          <menuseparator/>
+          <menuitem id="sortAscending" type="checkbox" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="MsgSortAscending()"/>
+          <menuitem id="sortDescending" type="checkbox" label="&sortDescending.label;" accesskey="&sortDescending.accesskey;" oncommand="MsgSortDescending()"/>
         </menupopup>
       </menu>
       <menu label="&msgsMenu.label;" id="viewMessagesMenu" accesskey="&msgsMenu.accesskey;">

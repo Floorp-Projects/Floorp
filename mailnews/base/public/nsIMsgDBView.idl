@@ -169,6 +169,9 @@ interface nsMsgViewCommandType
   const nsMsgViewCommandTypeValue selectAll = 15;
   const nsMsgViewCommandTypeValue downloadSelectedForOffline = 16;
   const nsMsgViewCommandTypeValue downloadFlaggedForOffline = 17;
+
+  const nsMsgViewCommandTypeValue selectThread = 18;
+  const nsMsgViewCommandTypeValue selectFlagged = 19;
 };
 
 [scriptable, uuid(65903eb2-1dd2-11b2-ac45-c5b69c1618d7)]

@@ -108,10 +108,36 @@ function view_init()
   document.commandDispatcher.updateCommands('create-menu-view');
 }
 
+function setSortByMenuItemCheckState(id, value)
+{
+    var menuitem = document.getElementById(id);
+    if (menuitem) {
+      menuitem.setAttribute("checked", value);
+    }
+}
+
+function InitViewSortByMenu()
+{
+    var sortType = gDBView.sortType;
+
+    setSortByMenuItemCheckState("sortByDateMenuitem", (sortType == nsMsgViewSortType.byDate));
+    setSortByMenuItemCheckState("sortByFlagMenuitem", (sortType == nsMsgViewSortType.byFlagged));
+    setSortByMenuItemCheckState("sortByOrderReceivedMenuitem", (sortType == nsMsgViewSortType.byId));
+    setSortByMenuItemCheckState("sortByPriorityMenuitem", (sortType == nsMsgViewSortType.byPriority));
+    setSortByMenuItemCheckState("sortBySenderMenuitem", (sortType == nsMsgViewSortType.byAuthor));
+    setSortByMenuItemCheckState("sortBySizeMenuitem", (sortType == nsMsgViewSortType.bySize));
+    setSortByMenuItemCheckState("sortByStatusMenuitem", (sortType == nsMsgViewSortType.byStatus));
+    setSortByMenuItemCheckState("sortBySubjectMenuitem", (sortType == nsMsgViewSortType.bySubject));
+    setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
+
+    var sortOrder = gDBView.sortOrder;
+
+    setSortByMenuItemCheckState("sortAscending", (sortOrder == nsMsgViewSortOrder.ascending));
+    setSortByMenuItemCheckState("sortDescending", (sortOrder == nsMsgViewSortOrder.descending));
+}
+
 function InitViewMessagesMenu()
 {
-  dump("init view messages\n");
-
   var allMenuItem = document.getElementById("viewAllMessagesMenuItem");
   var viewFlags = gDBView.viewFlags;
   var viewType = gDBView.viewType;

@@ -152,20 +152,17 @@ var ThreadPaneController =
     // if the user invoked a key short cut then it is possible that we got here for a command which is
     // really disabled. kick out if the command should be disabled.
     if (!this.isCommandEnabled(command)) return;
+    if (!gDBView) return;
 
 		switch ( command )
 		{
 			case "cmd_selectAll":
-      if (gDBView) 
-      {
-        // if in threaded mode, the view will expand all before selecting all
-        gDBView.doCommand(nsMsgViewCommandType.selectAll)
-        if (gDBView.numSelected != 1) 
-        {
-          ClearMessagePane();
-        }
-      }			
-      break;
+                // if in threaded mode, the view will expand all before selecting all
+                gDBView.doCommand(nsMsgViewCommandType.selectAll)
+                if (gDBView.numSelected != 1) {
+                    ClearMessagePane();
+                }
+                break;
 		}
 	},
 	
@@ -244,6 +241,8 @@ var DefaultController =
       case "cmd_killThread":
       case "cmd_toggleWorkOffline":
       case "cmd_close":
+      case "cmd_selectThread":
+      case "cmd_selectFlagged":
 				return true;
 			default:
 				return false;
@@ -334,15 +333,12 @@ var DefaultController =
 			case "cmd_findAgain":
 				return IsFindEnabled();
 				break;
+            case "cmd_selectThread":
 			case "cmd_expandAllThreads":
-                if (gDBView)
-                    gDBView.getCommandStatus(nsMsgViewCommandType.expandAll, enabled, checkStatus);
-                return enabled.value;
-				break;
 			case "cmd_collapseAllThreads":
-                if (gDBView)
-                    gDBView.getCommandStatus(nsMsgViewCommandType.collapseAll, enabled, checkStatus);
-                return enabled.value;
+                // these are enabled on when we are in threaded mode
+                if (!gDBView) return false;
+                return (gDBView.sortType == nsMsgViewSortType.byThread);
 				break;
 			case "cmd_nextFlaggedMsg":
 			case "cmd_previousFlaggedMsg":
@@ -372,6 +368,7 @@ var DefaultController =
 				return IsFolderCharsetEnabled();
       case "cmd_close":
       case "cmd_toggleWorkOffline":
+            case "cmd_selectFlagged":
         return true;
 			default:
 				return false;
@@ -542,6 +539,12 @@ var DefaultController =
       case "cmd_toggleWorkOffline":
         MsgToggleWorkOffline();
         return;
+            case "cmd_selectThread":
+                gDBView.doCommand(nsMsgViewCommandType.selectThread);
+                break;
+            case "cmd_selectFlagged":
+                gDBView.doCommand(nsMsgViewCommandType.selectFlagged);
+                break;
 		}
 	},
 	

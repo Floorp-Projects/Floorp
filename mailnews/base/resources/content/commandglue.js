@@ -648,30 +648,6 @@ function UpdateSortIndicator(column,sortDirection)
   // this is obsolete
 }
 
-function UpdateSortMenu(currentSortColumn)
-{
-/*
-  UpdateSortMenuitem(currentSortColumn, "sortByDateMenuitem", "DateColumn");
-  UpdateSortMenuitem(currentSortColumn, "sortByFlagMenuitem", "FlaggedButtonColumn");
-  UpdateSortMenuitem(currentSortColumn, "sortByOrderReceivedMenuitem", "OrderReceivedColumn");
-  UpdateSortMenuitem(currentSortColumn, "sortByPriorityMenuitem", "PriorityColumn");
-  UpdateSortMenuitem(currentSortColumn, "sortBySenderMenuitem", "AuthorColumn");
-  UpdateSortMenuitem(currentSortColumn, "sortBySizeMenuitem", "MemoryColumn");
-  UpdateSortMenuitem(currentSortColumn, "sortByStatusMenuitem", "StatusColumn");
-  UpdateSortMenuitem(currentSortColumn, "sortBySubjectMenuitem", "SubjectColumn");
-  UpdateSortMenuitem(currentSortColumn, "sortByUnreadMenuitem", "UnreadButtonColumn");
-*/
-}
-
-function UpdateSortMenuitem(currentSortColumnID, menuItemID, columnID)
-{
-  var menuItem = document.getElementById(menuItemID);
-  if(menuItem)
-  {
-    menuItem.setAttribute("checked", currentSortColumnID == columnID);
-  }
-}
-
 function SortFolderPane(column, sortKey)
 {
   var node = FindInSidebar(window, column);

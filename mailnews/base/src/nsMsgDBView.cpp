@@ -954,7 +954,7 @@ NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement *
     }
     else  // unreadCol
     {
-      printf("fix me\n");
+      NS_ASSERTION(0,"fix this");
       performSort = PR_FALSE;
     }
     break;
@@ -970,8 +970,8 @@ NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement *
       m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
     }
     else {
+      NS_ASSERTION(0,"fix this");
       //sortType = nsMsgViewSortType::byTotal;
-      printf("fix me\n");
       performSort = PR_FALSE;
     }
     break;
@@ -1325,6 +1325,16 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
         mOutliner->Invalidate();
     }
     break;
+  case nsMsgViewCommandType::selectThread:
+#ifdef DEBUG_seth
+    printf("get the current index, expand the thread, and select all messages in that thread.\n");
+#endif
+    break;
+  case nsMsgViewCommandType::selectFlagged:
+#ifdef DEBUG_seth
+    printf("clear current selection, and then select all flagged messages, we may have to expand all first to look for them\n");
+#endif
+    break;
   case nsMsgViewCommandType::markAllRead:
     if (m_folder)
       rv = m_folder->MarkAllMessagesRead();
@@ -1375,10 +1385,6 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
   case nsMsgViewCommandType::downloadFlaggedForOffline:
   case nsMsgViewCommandType::markAllRead:
     *selectable_p = PR_TRUE;
-    break;
-  case nsMsgViewCommandType::expandAll:
-  case nsMsgViewCommandType::collapseAll:
-    *selectable_p = (m_sortType == nsMsgViewSortType::byThread);
     break;
   default:
     NS_ASSERTION(PR_FALSE, "invalid command type");
@@ -3306,13 +3312,13 @@ nsresult nsMsgDBView::MarkThreadRead(nsIMsgThread *threadHdr, nsMsgViewIndex thr
     }
 
     if (bRead) {
-        printf("fix this\n");
+        NS_ASSERTION(0,"fix this");
         //threadHdr->SetNumNewChildren(0);
     }
     else {
         PRUint32 numChildren;
         threadHdr->GetNumChildren(&numChildren);
-        printf("fix this\n");
+        NS_ASSERTION(0,"fix this");
         //threadHdr->SetNumNewChildren(numChildren);
     }
     return NS_OK;
@@ -3682,7 +3688,7 @@ nsresult nsMsgDBView::FindNextUnread(nsMsgKey startId, nsMsgKey *pResultKey,
     }
     // found unread message but we don't know the thread
     if (*pResultKey != nsMsgKey_None && resultThreadId && *resultThreadId == nsMsgKey_None) {
-        printf("fix this\n");
+        NS_ASSERTION(0,"fix this");
         //*resultThreadId = m_db->GetThreadIdForMsgId(*pResultKey);
     }
     return rv;
@@ -3707,7 +3713,7 @@ nsresult nsMsgDBView::FindPrevUnread(nsMsgKey startKey, nsMsgKey *pResultKey,
         PRUint32 flags = m_flags.GetAt(curIndex);
 
         if (curIndex != startIndex && flags & MSG_VIEW_FLAG_ISTHREAD && flags & MSG_FLAG_ELIDED) {
-            printf("fix this\n");
+            NS_ASSERTION(0,"fix this");
             //nsMsgKey threadId = m_keys.GetAt(curIndex);
             //rv = m_db->GetUnreadKeyInThread(threadId, pResultKey, resultThreadId);
             if (NS_SUCCEEDED(rv) && (*pResultKey != nsMsgKey_None))
@@ -3721,7 +3727,7 @@ nsresult nsMsgDBView::FindPrevUnread(nsMsgKey startKey, nsMsgKey *pResultKey,
     }
     // found unread message but we don't know the thread
     if (*pResultKey != nsMsgKey_None && resultThreadId && *resultThreadId == nsMsgKey_None) {
-        printf("fix this\n");
+        NS_ASSERTION(0,"fix this");
         //*resultThreadId = m_db->GetThreadIdForMsgId(*pResultKey);
     }
     return rv;
