@@ -50,19 +50,14 @@
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
 static char*          gHeaderComment = "<!-- This page was created by the Gecko output system. -->";
 static char*          gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
 const  int            gTabSize=2;
 
 static const nsString gMozDirty = NS_ConvertToString("_moz_dirty");
-
-static PRBool IsInline(eHTMLTags aTag);
-static PRBool IsBlockLevel(eHTMLTags aTag);
-static PRInt32 BreakBeforeOpen(eHTMLTags aTag);
-static PRInt32 BreakAfterOpen(eHTMLTags aTag);
-static PRInt32 BreakBeforeClose(eHTMLTags aTag);
-static PRInt32 BreakAfterClose(eHTMLTags aTag);
-static PRBool IndentChildren(eHTMLTags aTag);
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -115,6 +110,7 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream()
   mLowerCaseTags = PR_TRUE;  
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
   memset(mDirtyStack,0,sizeof(mDirtyStack));
+  mDTD = 0;
   mHTMLStackPos = 0;
   mColPos = 0;
   mIndent = 0;
@@ -166,8 +162,10 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
 
 nsHTMLContentSinkStream::~nsHTMLContentSinkStream()
 {
-    if (mBuffer)
-      nsMemory::Free(mBuffer);
+  NS_IF_RELEASE(mDTD);
+
+  if (mBuffer)
+    nsMemory::Free(mBuffer);
 }
 
 /**
@@ -1111,6 +1109,159 @@ nsHTMLContentSinkStream::CloseContainer(const nsIParserNode& aNode){
   return NS_OK;
 }
 
+/**
+  * Find out from the parser whether a node is a block node.
+  */
+PRBool nsHTMLContentSinkStream::IsBlockLevel(eHTMLTags aTag) 
+{
+  if (!mDTD)
+  {
+    nsCOMPtr<nsIParser> parser;
+    nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                                     nsnull, 
+                                                     kCParserIID, 
+                                                     (void **)&parser);
+    if (NS_FAILED(rv)) return rv;
+    if (!parser) return NS_ERROR_FAILURE;
+
+    nsAutoString htmlmime (NS_LITERAL_STRING("text/html"));
+    rv = parser->CreateCompatibleDTD(&mDTD, 0, eViewNormal,
+                                     &htmlmime, eDTDMode_transitional);
+  /* XXX Note: We output linebreaks for blocks.
+     I.e. we output linebreaks for "unknown" inline tags.
+     I just hunted such a bug for <q>, same for <ins>, <col> etc..
+     Better fallback to inline. /BenB */
+    if (NS_FAILED(rv) || !mDTD)
+      return PR_FALSE;
+  }
+
+  // Now we can get the inline status from the DTD:
+  return mDTD->IsBlockElement(aTag, eHTMLTag_unknown);
+}
+
+/**
+  * **** Pretty Printing Methods ******
+  *
+  */
+
+/**
+  * Desired line break state before the open tag.
+  */
+PRBool nsHTMLContentSinkStream::BreakBeforeOpen(eHTMLTags aTag)
+{
+ PRBool  result = PR_FALSE;
+  switch (aTag)
+  {
+    case  eHTMLTag_html:
+      result = PR_FALSE;
+    break;
+
+    default:
+      result = IsBlockLevel(aTag);
+  }
+  return result;
+}
+
+/**
+  * Desired line break state after the open tag.
+  */
+PRBool nsHTMLContentSinkStream::BreakAfterOpen(eHTMLTags aTag)
+{
+  PRBool  result = PR_FALSE;
+  switch (aTag)
+  {
+    case eHTMLTag_html:
+    case eHTMLTag_body:
+    case eHTMLTag_ul:
+    case eHTMLTag_ol:
+    case eHTMLTag_table:
+    case eHTMLTag_tbody:
+    case eHTMLTag_style:
+    case eHTMLTag_br:
+      result = PR_TRUE;
+      break;
+
+    default:
+      break;
+  }
+  return result;
+}
+
+/**
+  * Desired line break state before the close tag.
+  */
+PRBool nsHTMLContentSinkStream::BreakBeforeClose(eHTMLTags aTag)
+{
+  PRBool  result = PR_FALSE;
+
+  switch (aTag)
+  {
+    case eHTMLTag_html:
+    case eHTMLTag_head:
+    case eHTMLTag_body:
+    case eHTMLTag_ul:
+    case eHTMLTag_ol:
+    case eHTMLTag_table:
+    case eHTMLTag_tbody:
+    case eHTMLTag_style:
+      result = PR_TRUE;
+      break;
+
+    default:
+      break;
+  }
+  return result;
+}
+
+/**
+  * Desired line break state after the close tag.
+  */
+PRBool nsHTMLContentSinkStream::BreakAfterClose(eHTMLTags aTag)
+{
+  PRBool  result = PR_FALSE;
+
+  switch (aTag)
+  {
+    case  eHTMLTag_html:
+    case  eHTMLTag_tr:
+    case  eHTMLTag_th:
+    case  eHTMLTag_td:
+    case  eHTMLTag_pre:
+      result = PR_TRUE;
+    break;
+
+    default:
+      result = IsBlockLevel(aTag);
+  }
+  return result;
+}
+
+/**
+  * Indent/outdent when the open/close tags are encountered.
+  * This implies that BreakAfterOpen() and BreakBeforeClose()
+  * are true no matter what those methods return.
+  */
+PRBool nsHTMLContentSinkStream::IndentChildren(eHTMLTags aTag)
+{
+  PRBool result = PR_FALSE;
+
+  switch (aTag)
+  {
+    case eHTMLTag_table:
+    case eHTMLTag_ul:
+    case eHTMLTag_ol:
+    case eHTMLTag_tbody:
+    case eHTMLTag_form:
+    case eHTMLTag_frameset:
+      result = PR_TRUE;      
+      break;
+
+    default:
+      result = PR_FALSE;
+      break;
+  }
+  return result;  
+}
 
 /**
   * This method gets called when the parser begins the process
@@ -1174,183 +1325,5 @@ NS_IMETHODIMP
 nsHTMLContentSinkStream::NotifyError(const nsParserError* aError)
 {
   return NS_OK;
-}
-
-/////////////////////////////////////////////////////////////
-////  Useful static methods
-/////////////////////////////////////////////////////////////
-
-static PRBool IsInline(eHTMLTags aTag)
-{
-  PRBool  result = PR_FALSE;
-
-  switch (aTag)
-  {
-    case  eHTMLTag_a:
-    case  eHTMLTag_address:
-    case  eHTMLTag_big:
-    case  eHTMLTag_blink:
-    case  eHTMLTag_b:
-    case  eHTMLTag_br:
-    case  eHTMLTag_cite:
-    case  eHTMLTag_code:
-    case  eHTMLTag_dfn:
-    case  eHTMLTag_em:
-    case  eHTMLTag_font:
-    case  eHTMLTag_img:
-    case  eHTMLTag_i:
-    case  eHTMLTag_kbd:
-    case  eHTMLTag_keygen:
-    case  eHTMLTag_nobr:
-    case  eHTMLTag_samp:
-    case  eHTMLTag_small:
-    case  eHTMLTag_spacer:
-    case  eHTMLTag_span:      
-    case  eHTMLTag_strike:
-    case  eHTMLTag_strong:
-    case  eHTMLTag_sub:
-    case  eHTMLTag_sup:
-    case  eHTMLTag_textarea:
-    case  eHTMLTag_tt:
-    case  eHTMLTag_u:
-    case  eHTMLTag_var:
-    case  eHTMLTag_wbr:
-      result = PR_TRUE;
-      break;
-
-    default:
-      break;
-
-  }
-  return result;
-}
-
-static PRBool IsBlockLevel(eHTMLTags aTag) 
-{
-  return !IsInline(aTag);
-}
-
-/**
-  * **** Pretty Printing Methods ******
-  *
-  */
-
-/**
-  * Desired line break state before the open tag.
-  */
-static PRBool BreakBeforeOpen(eHTMLTags aTag)
-{
- PRBool  result = PR_FALSE;
-  switch (aTag)
-  {
-    case  eHTMLTag_html:
-      result = PR_FALSE;
-    break;
-
-    default:
-      result = IsBlockLevel(aTag);
-  }
-  return result;
-}
-
-/**
-  * Desired line break state after the open tag.
-  */
-static PRBool BreakAfterOpen(eHTMLTags aTag)
-{
-  PRBool  result = PR_FALSE;
-  switch (aTag)
-  {
-    case eHTMLTag_html:
-    case eHTMLTag_body:
-    case eHTMLTag_ul:
-    case eHTMLTag_ol:
-    case eHTMLTag_table:
-    case eHTMLTag_tbody:
-    case eHTMLTag_style:
-    case eHTMLTag_br:
-      result = PR_TRUE;
-      break;
-
-    default:
-      break;
-  }
-  return result;
-}
-
-/**
-  * Desired line break state before the close tag.
-  */
-static PRBool BreakBeforeClose(eHTMLTags aTag)
-{
-  PRBool  result = PR_FALSE;
-
-  switch (aTag)
-  {
-    case eHTMLTag_html:
-    case eHTMLTag_head:
-    case eHTMLTag_body:
-    case eHTMLTag_ul:
-    case eHTMLTag_ol:
-    case eHTMLTag_table:
-    case eHTMLTag_tbody:
-    case eHTMLTag_style:
-      result = PR_TRUE;
-      break;
-
-    default:
-      break;
-  }
-  return result;
-}
-
-/**
-  * Desired line break state after the close tag.
-  */
-static PRBool BreakAfterClose(eHTMLTags aTag)
-{
-  PRBool  result = PR_FALSE;
-
-  switch (aTag)
-  {
-    case  eHTMLTag_html:
-    case  eHTMLTag_tr:
-    case  eHTMLTag_th:
-    case  eHTMLTag_td:
-    case  eHTMLTag_pre:
-      result = PR_TRUE;
-    break;
-
-    default:
-      result = IsBlockLevel(aTag);
-  }
-  return result;
-}
-
-/**
-  * Indent/outdent when the open/close tags are encountered.
-  * This implies that BreakAfterOpen() and BreakBeforeClose()
-  * are true no matter what those methods return.
-  */
-static PRBool IndentChildren(eHTMLTags aTag)
-{
-  PRBool result = PR_FALSE;
-
-  switch (aTag)
-  {
-    case eHTMLTag_table:
-    case eHTMLTag_ul:
-    case eHTMLTag_ol:
-    case eHTMLTag_tbody:
-    case eHTMLTag_form:
-    case eHTMLTag_frameset:
-      result = PR_TRUE;      
-      break;
-
-    default:
-      result = PR_FALSE;
-      break;
-  }
-  return result;  
 }
 

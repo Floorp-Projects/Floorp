@@ -158,7 +158,8 @@ protected:
                      nsString     & aStr,
                      nsIDOMNode * aCurrentBlock);
 
-  PRBool NodeIsBlock(nsIDOMNode * aNode, PRBool aPreIsBlock = PR_TRUE) const;
+  PRInt32 GetTagID(nsString& aName) const;
+  PRBool NodeIsBlock(nsIDOMNode * aNode) const;
   nsIDOMNode * FindBlockParent(nsIDOMNode * aNode, 
                                PRBool aSkipThisContent = PR_FALSE);
 
