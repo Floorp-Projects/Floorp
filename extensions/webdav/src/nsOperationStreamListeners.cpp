@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsWebDAVInternal.h"
+
 #include "nsIHttpChannel.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
@@ -53,8 +55,6 @@
 
 #include "nsIWebDAVResource.h"
 #include "nsIWebDAVListener.h"
-
-#include "nsWebDAVInternal.h"
 
 #include "nsString.h"
 

@@ -40,6 +40,10 @@
 #ifndef nsWebDAVInternal_h__
 #define nsWebDAVInternal_h__
 
+#if defined(MOZ_LOGGING)
+#define FORCE_PR_LOG
+#endif
+
 #include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
