@@ -50,11 +50,11 @@ NS_IMETHODIMP NS_NewISO88591ToUnicode(nsISupports* aOuter,
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_utMappingTable[] = {
+static const PRUint16 g_utMappingTable[] = {
 #include "cp1252.ut"
 };
 
-static PRInt16 g_utShiftTable[] =  {
+static const PRInt16 g_utShiftTable[] =  {
   0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };

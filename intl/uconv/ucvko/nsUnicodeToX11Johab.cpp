@@ -313,7 +313,7 @@ NS_IMETHODIMP nsUnicodeToX11Johab::GetMaxLength(
 // 151	    // The base font index for leading consonants
 // 152	
 // 153	    static final short[] lconBase = {
-static PRUint16 lconBase[] = {
+static const PRUint16 lconBase[] = {
 /* 154 */       // modern leading consonants (19)
 /* 155 */       1, 11, 21, 31, 41, 51,
 /* 156 */       61, 71, 81, 91, 101, 111,
@@ -341,7 +341,7 @@ static PRUint16 lconBase[] = {
 // 177	    // The base font index for vowels
 // 178	
 // 179     static final short[] vowBase = {
-static PRUint16 vowBase[] = {
+static const PRUint16 vowBase[] = {
 /* 180 */      // modern vowels (filler + 21)
 /* 181 */      0,311,314,317,320,323,   // (Fill), A, AE, YA, YAE, EO
 /* 182 */      326,329,332,335,339,343, // E, YEO, YE, O, WA, WAE
@@ -363,7 +363,7 @@ static PRUint16 vowBase[] = {
 // 204	    // The base font index for trailing consonants
 // 205	
 // 206	    static final short[] tconBase = {
-static PRUint16 tconBase[] = {
+static const PRUint16 tconBase[] = {
 // 207	        // modern trailing consonants (filler + 27)
 /* 208	*/      0, 
 /* 209	*/      405, 409, 413, 417, 421,
@@ -391,7 +391,7 @@ static PRUint16 tconBase[] = {
 // 230	    // in absence of trailing consonant
 // 231	
 // 232	    static final short[] lconMap1 = {
-static PRUint8 lconMap1[] = {
+static const PRUint8 lconMap1[] = {
 /* 233	*/      0,0,0,0,0,0,     // (Fill), A, AE, YA, YAE, EO
 /* 234	*/      0,0,0,1,3,3,     // E, YEO, YE, O, WA, WAE
 /* 235	*/      3,1,2,4,4,4,     // OI, YO, U, WEO, WE, WI
@@ -412,7 +412,7 @@ static PRUint8 lconMap1[] = {
 // 251	    // The mapping from vowels to leading consonant type
 // 252	    // in presence of trailing consonant
 // 253	
-static PRUint8 lconMap2[] = {
+static const PRUint8 lconMap2[] = {
 // 254	    static final short[] lconMap2 = {
 /* 255	*/      5,5,5,5,5,5,     // (Fill), A, AE, YA, YAE, EO
 /* 256	*/      5,5,5,6,8,8,     // E, YEO, YE, O, WA, WAE
@@ -433,7 +433,7 @@ static PRUint8 lconMap2[] = {
 // 272	
 // 273	    // vowel type ; 1 = o and its alikes, 0 = others            
 // 274	    static final short[] vowType = {
-static PRUint8 vowType[] = {
+static const PRUint8 vowType[] = {
 /* 275	*/      0,0,0,0,0,0,
 /* 276	*/      0,0,0,1,1,1,
 /* 277	*/      1,1,0,0,0,0,
@@ -454,7 +454,7 @@ static PRUint8 vowType[] = {
 // 293	    // The mapping from trailing consonants to vowel type
 // 294	
 // 295	    static final int[] tconType = {
-static PRUint8 tconType[] = {
+static const PRUint8 tconType[] = {
 /* 296	*/      0, 1, 1, 1, 2, 1,
 /* 297	*/      1, 1, 1, 1, 1, 1,
 /* 298	*/      1, 1, 1, 1, 1, 1,
@@ -478,7 +478,7 @@ static PRUint8 tconType[] = {
 // 315	    // The mapping from vowels to trailing consonant type
 // 316	
 // 317	    static final int[] tconMap = {
-static PRUint8 tconMap[] = {
+static const PRUint8 tconMap[] = {
 /* 318	*/      0, 0, 2, 0, 2, 1,  // (Fill), A, AE, YA, YAE, EO
 /* 319	*/      2, 1, 2, 3, 0, 0,  // E, YEO, YE, O, WA, WAE
 /* 320	*/      0, 3, 3, 1, 1, 1,  // OI, YO, U, WEO, WE, WI

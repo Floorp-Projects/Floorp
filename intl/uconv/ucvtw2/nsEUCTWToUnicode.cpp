@@ -27,44 +27,44 @@
 // Global functions and data [declaration]
 
 
-static PRInt16 g_ASCIIShiftTable[] =  {
+static const PRInt16 g_ASCIIShiftTable[] =  {
   0, u1ByteCharset,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-static PRInt16 g_CNS1ShiftTable[] =  {
+static const PRInt16 g_CNS1ShiftTable[] =  {
   0, u2BytesGRCharset,  
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
 
 
-static PRInt16 g_CNS2ShiftTable[] =  {
+static const PRInt16 g_CNS2ShiftTable[] =  {
   0, u2BytesGRPrefix8EA2Charset,  
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
-static PRInt16 g_CNS3ShiftTable[] =  {
+static const PRInt16 g_CNS3ShiftTable[] =  {
   0, u2BytesGRPrefix8EA3Charset,  
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
-static PRInt16 g_CNS4ShiftTable[] =  {
+static const PRInt16 g_CNS4ShiftTable[] =  {
   0, u2BytesGRPrefix8EA4Charset,  
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
-static PRInt16 g_CNS5ShiftTable[] =  {
+static const PRInt16 g_CNS5ShiftTable[] =  {
   0, u2BytesGRPrefix8EA5Charset,  
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
-static PRInt16 g_CNS6ShiftTable[] =  {
+static const PRInt16 g_CNS6ShiftTable[] =  {
   0, u2BytesGRPrefix8EA6Charset,  
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
-static PRInt16 g_CNS7ShiftTable[] =  {
+static const PRInt16 g_CNS7ShiftTable[] =  {
   0, u2BytesGRPrefix8EA7Charset,  
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
 
 
-static PRInt16 *g_EUCTWShiftTableSet [] = {
+static const PRInt16 *g_EUCTWShiftTableSet [] = {
   g_ASCIIShiftTable,
   g_CNS1ShiftTable,
   g_CNS2ShiftTable,
@@ -75,7 +75,7 @@ static PRInt16 *g_EUCTWShiftTableSet [] = {
   g_CNS7ShiftTable
 };
 
-static PRUint16 *g_EUCTWMappingTableSet [] ={
+static const PRUint16 *g_EUCTWMappingTableSet [] ={
   g_ASCIIMappingTable,
   g_utCNS1MappingTable,
   g_utCNS2MappingTable,
@@ -86,7 +86,7 @@ static PRUint16 *g_EUCTWMappingTableSet [] ={
   g_utCNS7MappingTable
 };
 
-static uRange g_EUCTWRanges[] = {
+static const uRange g_EUCTWRanges[] = {
   { 0x00, 0x7E },
   { 0xA1, 0xFE },
   { 0x8E, 0x8E },

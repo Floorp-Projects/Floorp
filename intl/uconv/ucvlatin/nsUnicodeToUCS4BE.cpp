@@ -26,11 +26,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_UCS4BEMappingTable[] = {
+static const PRUint16 g_UCS4BEMappingTable[] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0xFFFF, 0x0000
 };
 
-static PRInt16 g_UCS4BEShiftTable[] =  {
+static const PRInt16 g_UCS4BEShiftTable[] =  {
   0, u4BytesCharset, 
   ShiftCell(0,      0, 0, 0, 0, 0, 0, 0) 
 };

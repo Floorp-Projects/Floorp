@@ -51,11 +51,11 @@ NS_IMETHODIMP NS_NewUnicodeToUTF8(nsISupports* aOuter,
 }
 
 
-static PRUint16 g_UTF8MappingTable[] = {
+static const PRUint16 g_UTF8MappingTable[] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0xFFFF, 0x0000
 };
 
-static PRInt16 g_UTF8ShiftTable[] =  {
+static const PRInt16 g_UTF8ShiftTable[] =  {
   3, uMultibytesCharset, 
   ShiftCell(u1ByteChar,       1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F), 
   ShiftCell(u2BytesUTF8,      2, 0xC0, 0xDF, 0x00, 0x00, 0x07, 0xFF), 

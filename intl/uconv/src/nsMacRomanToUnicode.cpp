@@ -50,11 +50,11 @@ NS_IMETHODIMP NS_NewMacRomanToUnicode(nsISupports* aOuter,
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_MacRomanMappingTable[] = {
+static const PRUint16 g_MacRomanMappingTable[] = {
 #include "macroman.ut"
 };
 
-static PRInt16 g_MacRomanShiftTable[] =  {
+static const PRInt16 g_MacRomanShiftTable[] =  {
   1, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };

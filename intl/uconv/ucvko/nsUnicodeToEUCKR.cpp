@@ -27,27 +27,27 @@
 // Global functions and data [declaration]
 
 
-static PRUint16 gAsciiShiftTable[] =  {
+static const PRUint16 gAsciiShiftTable[] =  {
   0, u1ByteCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
-static PRUint16 gKSC5601ShiftTable[] =  {
+static const PRUint16 gKSC5601ShiftTable[] =  {
   0, u2BytesGRCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
-static PRUint16 gComposedHangulShiftTable[] =  {
+static const PRUint16 gComposedHangulShiftTable[] =  {
   0, uComposedHangulCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
-static PRUint16 *g_EUCKRMappingTable[3] = {
+static const PRUint16 *g_EUCKRMappingTable[3] = {
   g_AsciiMapping,
   g_ufKSC5601Mapping,
   g_HangulNullMapping
 };
 
-static PRUint16 *g_EUCKRShiftTable[3] =  {
+static const PRUint16 *g_EUCKRShiftTable[3] =  {
   gAsciiShiftTable,
   gKSC5601ShiftTable,
   gComposedHangulShiftTable

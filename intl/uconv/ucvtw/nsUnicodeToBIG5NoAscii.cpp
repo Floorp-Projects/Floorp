@@ -26,7 +26,7 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 gBig5ShiftTable[] =  {
+static const PRUint16 gBig5ShiftTable[] =  {
   0, u2BytesCharset,
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };

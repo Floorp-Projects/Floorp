@@ -28,24 +28,24 @@
 // Global functions and data [declaration]
 
 
-static PRUint16 gAsciiShiftTable[] =  {
+static const PRUint16 gAsciiShiftTable[] =  {
   0, u1ByteCharset,
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
-static PRUint16 gBig5HKSCSShiftTable[] =  {
+static const PRUint16 gBig5HKSCSShiftTable[] =  {
   0, u2BytesCharset,
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
 
-static PRUint16 *g_Big5HKSCSMappingTable[] = {
+static const PRUint16 *g_Big5HKSCSMappingTable[] = {
   g_ASCIIMapping,
   g_ufBig5Mapping,
   g_ufBig5HKSCSMapping
 };
 
-static PRUint16 *g_Big5HKSCSShiftTable[] =  {
+static const PRUint16 *g_Big5HKSCSShiftTable[] =  {
   gAsciiShiftTable,
   gBig5HKSCSShiftTable,
   gBig5HKSCSShiftTable

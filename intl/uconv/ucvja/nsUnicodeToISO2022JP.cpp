@@ -31,28 +31,28 @@ static NS_DEFINE_CID(kUnicodeEncodeHelperCID, NS_UNICODEENCODEHELPER_CID);
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ufAsciiMapping [] = {
+static const PRUint16 g_ufAsciiMapping [] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
 };
 
-static PRInt16 g_ufAsciiShift [] =  { 
+static const PRInt16 g_ufAsciiShift [] =  { 
   0, u1ByteCharset, 
   ShiftCell(0,0,0,0,0,0,0,0) 
 };
 
-static PRInt16 g_uf0201Shift [] =  {
+static const PRInt16 g_uf0201Shift [] =  {
   2, u1ByteCharset ,
   ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
   ShiftCell(u1ByteChar,   1, 0xA1, 0xDF, 0x00, 0xA1, 0x00, 0xDF),
 };
 
-static PRInt16 g_uf0208Shift [] =  {
+static const PRInt16 g_uf0208Shift [] =  {
   0, u2BytesCharset,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
 #define SIZE_OF_TABLES 5
-static PRUint16 * g_ufMappingTables[SIZE_OF_TABLES] = {
+static const PRUint16 * g_ufMappingTables[SIZE_OF_TABLES] = {
   g_ufAsciiMapping,             // ASCII           ISOREG 6
   g_uf0201GLMapping,            // JIS X 0201-1976 ISOREG 14
   g_uf0208Mapping,              // JIS X 0208-1983 ISOREG 87
@@ -60,7 +60,7 @@ static PRUint16 * g_ufMappingTables[SIZE_OF_TABLES] = {
   g_uf0208Mapping,              // JIS X 0208-1978 ISOREG 42
 };
 
-static PRInt16 * g_ufShiftTables[SIZE_OF_TABLES] = {
+static const PRInt16 * g_ufShiftTables[SIZE_OF_TABLES] = {
   g_ufAsciiShift,               // ASCII           ISOREG 6
   g_uf0201Shift,                // JIS X 0201-1976 ISOREG 14
   g_uf0208Shift,                // JIS X 0208-1983 ISOREG 87
