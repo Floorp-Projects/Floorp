@@ -571,14 +571,17 @@ struct nsRecessedBorder : public nsStyleSpacing {
     mBorder.SetTop(styleCoord);
     mBorder.SetRight(styleCoord);
     mBorder.SetBottom(styleCoord);
-    mBorderStyle[0] = NS_STYLE_BORDER_STYLE_INSET;
-    mBorderStyle[1] = NS_STYLE_BORDER_STYLE_INSET;
-    mBorderStyle[2] = NS_STYLE_BORDER_STYLE_INSET;
-    mBorderStyle[3] = NS_STYLE_BORDER_STYLE_INSET;
-    mBorderColor[0] = 0;
-    mBorderColor[1] = 0;
-    mBorderColor[2] = 0;
-    mBorderColor[3] = 0;
+
+    mBorderStyle[0] = NS_STYLE_BORDER_STYLE_INSET;  
+    mBorderStyle[1] = NS_STYLE_BORDER_STYLE_INSET;  
+    mBorderStyle[2] = NS_STYLE_BORDER_STYLE_INSET;  
+    mBorderStyle[3] = NS_STYLE_BORDER_STYLE_INSET;  
+
+    mBorderColor[0] = 0;  
+    mBorderColor[1] = 0;  
+    mBorderColor[2] = 0;  
+    mBorderColor[3] = 0;  
+
     mHasCachedMargin = mHasCachedPadding = mHasCachedBorder = PR_FALSE;
   }
 };
