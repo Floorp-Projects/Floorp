@@ -1,0 +1,115 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is
+ *  Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "mozIStorageValueArray.idl"
+
+interface mozIStorageConnection;
+interface mozIStorageDataSet;
+interface nsISimpleEnumerator;
+
+[scriptable, uuid(656aa634-36e2-4977-802e-79bce39c1024)]
+interface mozIStorageStatement : mozIStorageValueArray {
+  /**
+   * Initialize this query with the given SQL statement.
+   *
+   */
+  void initialize (in mozIStorageConnection aDBConnection, in AUTF8String aSQLStatement);
+
+  mozIStorageStatement clone ();
+
+  /*
+   * Number of parameters
+   */
+  readonly attribute unsigned long parameterCount;
+
+  /*
+   * Reset parameters/statement execution
+   */
+  void reset ();
+
+  /*
+   * Parameter binding
+   */
+  void bindCStringParameter (in unsigned long aParamIndex, in string aValue);
+  void bindUTF8StringParameter (in unsigned long aParamIndex, in AUTF8String aValue);
+
+  void bindWStringParameter (in unsigned long aParamIndex, in wstring aValue);
+  void bindStringParameter (in unsigned long aParamIndex, in AString aValue);
+
+  void bindDoubleParameter (in unsigned long aParamIndex, in double aValue);
+  void bindInt32Parameter (in unsigned long aParamIndex, in long aValue);
+  void bindInt64Parameter (in unsigned long aParamIndex, in long long aValue);
+
+  void bindNullParameter (in unsigned long aParamIndex);
+
+  void bindDataParameter (in unsigned long aParamIndex, [array,size_is(aValueSize)] in octet aValue, in unsigned long aValueSize);
+
+  // void bindParameters (in string aFormatString, ...);
+
+  /**
+   * Execute the query, ignoring any results.  This is accomplished
+   * by calling step() once, and then calling reset().
+   *
+   * Error and last insert info, etc. are available from
+   * the mozStorageConnection.
+   */
+  void execute ();
+
+  /**
+   * Execute the query, using any currently-bound parameters.
+   *
+   * @returns a mozIStorageDataSet containing all the rows of the query
+   * result.
+   */
+  mozIStorageDataSet executeDataSet ();
+
+  /**
+   * Execute a query, using any currently-bound parameters.  Reset
+   * must be called on the statement after the last call of
+   * executeStep.
+   *
+   * @returns a boolean indicating whether there are more rows or not;
+   * row data may be accessed using mozIStorageValueArray methods on
+   * the statement.
+   *
+   */
+  boolean executeStep ();
+
+};
+
