@@ -236,12 +236,13 @@ PRUint32 nsCRT::strlen(const PRUnichar* s)
 /**
  * Compare unichar string ptrs, stopping at the 1st null 
  * NOTE: If both are null, we return 0.
- * @update  gess7/30/98
+ * NOTE: We terminate the search upon encountering a NULL
+ *
+ * @update  gess 11/10/99
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2)
-{
+PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2) {
   if(s1 && s2) {
     for (;;) {
       PRUnichar c1 = *s1++;
@@ -259,12 +260,13 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2)
 /**
  * Compare unichar string ptrs, stopping at the 1st null or nth char.
  * NOTE: If either is null, we return 0.
- * @update  gess7/30/98
+ * NOTE: We DO NOT terminate the search upon encountering NULL's before N
+ *
+ * @update  gess 11/10/99
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
-{
+PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n) {
   if(s1 && s2) { 
     if(n != 0) {
       do {
@@ -274,23 +276,22 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
           if (c1 < c2) return -1;
           return 1;
         }
-        if ((0==c1) || (0==c2)) break;
       } while (--n != 0);
     }
   }
   return 0;
 }
 
-
 /**
  * Compare unichar string ptrs without regard to case
  * NOTE: If both are null, we return 0.
- * @update  gess7/30/98
+ * NOTE: We terminate the search upon encountering NULL
+ *
+ * @update  gess 11/10/99
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2)
-{
+PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2) {
   if(s1 && s2) {
     for (;;) {
       PRUnichar c1 = *s1++;
@@ -313,12 +314,13 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2)
  * Compare unichar string ptrs, stopping at the 1st null or nth char;
  * also ignoring the case of characters.
  * NOTE: If both are null, we return 0.
- * @update  gess7/30/98
+ * NOTE: We DO NOT terminate the search upon encountering NULL's before N
+ *
+ * @update  gess 11/10/99
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
-{
+PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n) {
   if(s1 && s2) {
     if(n != 0){
       do {
@@ -332,7 +334,6 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
             return 1;
           }
         }
-        if ((0==c1) || (0==c2)) break;
       } while (--n != 0);
     }
   }
@@ -343,13 +344,14 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
 /**
  * Compare a unichar string ptr to cstring.
  * NOTE: If both are null, we return 0.
+ * NOTE: We terminate the search upon encountering NULL's
+ *
  * @update  gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2)
-{
+PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2) {
   if(s1 && s2) {
     for (;;) {
       PRUnichar c1 = *s1++;
@@ -368,15 +370,16 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2)
 /**
  * Compare a unichar string ptr to cstring, up to N chars.
  * NOTE: If both are null, we return 0.
- * @update  gess7/30/98
+ * NOTE: We DO NOT terminate the search upon encountering NULL's before N
+ *
+ * @update  gess 11/10/99
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRUint32 n)
-{
+PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRUint32 n) {
   if(s1 && s2) {
-    if(n != 0){
+    if(0<n){
       do {
         PRUnichar c1 = *s1++;
         PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
@@ -384,23 +387,24 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRUint32 n)
           if (c1 < c2) return -1;
           return 1;
         }
-        if ((0==c1) || (0==c2)) break;
       } while (--n != 0);
     }
   }
   return 0;
 }
 
+
 /**
  * Compare a unichar string ptr to cstring without regard to case
  * NOTE: If both are null, we return 0.
- * @update  gess7/30/98
+ * NOTE: We terminate the search upon encountering NULL's 
+ *
+ * @update  gess 11/10/99
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2)
-{
+PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2) {
   if(s1 && s2) {
     for (;;) {
       PRUnichar c1 = *s1++;
@@ -422,13 +426,14 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2)
 /**
  * Caseless compare up to N chars between unichar string ptr to cstring.
  * NOTE: If both are null, we return 0.
- * @update  gess7/30/98
+ * NOTE: We DO NOT terminate the search upon encountering NULL's before N
+ *
+ * @update  gess 11/10/99
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRUint32 n)
-{
+PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRUint32 n) {
   if(s1 && s2){
     if(n != 0){
       do {
@@ -442,12 +447,12 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRUint32 n)
             return 1;
           }
         }
-        if (c1 == 0) break;
       } while (--n != 0);
     }
   }
   return 0;
 }
+
 
 PRUnichar* nsCRT::strdup(const PRUnichar* str)
 {

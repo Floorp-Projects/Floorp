@@ -43,6 +43,7 @@
 //static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
 
 static const PRUnichar gCommonEmptyBuffer[1] = {0};
+static nsresult gStringAcquiredMemory = NS_OK;
 
 /**
  * This method initializes all the members of the nsStr structure 
@@ -303,10 +304,15 @@ void nsStr::ChangeCase(nsStr& aDest,PRBool aToUpper) {
 }
 
 /**
- * 
- * @update	gess1/7/99
- * @param 
- * @return
+ * This method removes characters from the given set from this string.
+ * NOTE: aSet is a char*, and it's length is computed using strlen, which assumes null termination.
+ *
+ * @update	gess 11/7/99
+ * @param aDest
+ * @param aSet
+ * @param aEliminateLeading
+ * @param aEliminateTrailing
+ * @return nothing
  */
 void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){
 
@@ -622,12 +628,12 @@ PRBool nsStr::Alloc(nsStr& aDest,PRUint32 aCount) {
   PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
   aDest.mStr = (char*)nsAllocator::Alloc(theSize);
 
-  PRBool result=PR_FALSE;
   if(aDest.mStr) {
     aDest.mOwnsBuffer=1;
-    result=PR_TRUE;
+    gStringAcquiredMemory=PR_TRUE;
   }
-  return result;
+  else gStringAcquiredMemory=PR_FALSE;
+  return gStringAcquiredMemory;
 }
 
 PRBool nsStr::Free(nsStr& aDest){
@@ -655,6 +661,16 @@ PRBool nsStr::Realloc(nsStr& aDest,PRUint32 aCount){
     aDest.mOwnsBuffer=temp.mOwnsBuffer;
   }
   return result;
+}
+
+/**
+ * Retrieve last memory error
+ *
+ * @update  gess 10/11/99
+ * @return  memory error (usually returns NS_OK)
+ */
+PRBool nsStr::DidAcquireMemory(void) {
+  return gStringAcquiredMemory;
 }
 
 //----------------------------------------------------------------------------------------

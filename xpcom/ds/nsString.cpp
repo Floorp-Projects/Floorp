@@ -87,26 +87,7 @@ nsCString::nsCString(const char* aCString,PRInt32 aLength) {
  */
 nsCString::nsCString(const PRUnichar* aString,PRInt32 aLength)  {  
   nsStr::Initialize(*this,eOneByte);
-
-  if(aString && aLength){
-    nsStr temp;
-    Initialize(temp,eTwoByte);
-    temp.mUStr=(PRUnichar*)aString;
-
-    if(0<aLength) {
-        //this has to be done to make sure someone doesn't tell us
-        //aCount=n but offer a string whose len<aCount
-      temp.mLength=aLength;
-      PRInt32 pos=nsStr::FindChar(temp,0,PR_FALSE,0);
-      if((0<=pos) && (pos<(PRInt32)mLength)) {
-        aLength=temp.mLength=pos;
-      }
-    }
-    else aLength=temp.mLength=nsCRT::strlen(aString);
-
-    if(0<aLength)
-      nsStr::Append(*this,temp,0,aLength);
-  }
+  Assign(aString,aLength);
 }
 
 /**
@@ -248,11 +229,11 @@ PRBool nsCString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
   PRBool result=PR_FALSE;
   if(anIndex<mLength){
     mStr[anIndex]=(char)aChar;
-// SOON!   if(0==aChar) mLength=anIndex;
     result=PR_TRUE;
   }
   return result;
 }
+
 
 /*********************************************************
   append (operator+) METHODS....
@@ -803,19 +784,21 @@ nsCString& nsCString::Assign(const char* aCString,PRInt32 aCount) {
 nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
   nsStr::Truncate(*this,0);
 
-  if(aString){
+  if(aString && aCount){
     nsStr temp;
     Initialize(temp,eTwoByte);
     temp.mUStr=(PRUnichar*)aString;
 
     if(0<aCount) {
-        //this has to be done to make sure someone doesn't tell us
-        //aCount=n but offer a string whose len<aCount
       temp.mLength=aCount;
-      PRInt32 pos=nsStr::FindChar(temp,0,PR_FALSE,0);
-      if((0<=pos) && (pos<aCount)) {
-        aCount=temp.mLength=pos;
-      }
+
+      // If this assertion fires, the caller is probably lying about the length of
+      //   the passed-in string.  File a bug on the caller.
+#ifdef NS_DEBUG
+      PRInt32 len=nsCRT::strlen(aString);
+      NS_ASSERTION(aCount <= len, "potential error in Assign(PRUnichar*)");
+#endif
+
     }
     else aCount=temp.mLength=nsCRT::strlen(aString);
 
@@ -824,6 +807,7 @@ nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
   }
   return *this;
 }
+
 
 /**
  * assign given unichar to this string
@@ -913,13 +897,15 @@ nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
     temp.mStr=(char*)aCString;
 
     if(0<aCount) {
-        //this has to be done to make sure someone doesn't tell us
-        //aCount=n but offer a string whose len<aCount
       temp.mLength=aCount;
-      PRInt32 pos=nsStr::FindChar(temp,0,PR_FALSE,0);
-      if((0<=pos) && (pos<aCount)) {
-        aCount=temp.mLength=pos;
-      }
+
+      // If this assertion fires, the caller is probably lying about the length of
+      //   the passed-in string.  File a bug on the caller.
+#ifdef NS_DEBUG
+      PRInt32 len=strlen(aCString);
+      NS_ASSERTION(aCount <= len, "potential error in Append(char*)");
+#endif
+
     }
     else aCount=temp.mLength=nsCRT::strlen(aCString);
 
@@ -1099,13 +1085,15 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
     temp.mStr=(char*)aCString;
 
     if(0<aCount) {
-        //this has to be done to make sure someone doesn't tell us
-        //aCount=n but offer a string whose len<aCount
       temp.mLength=aCount;
-      PRInt32 pos=nsStr::FindChar(temp,0,PR_FALSE,0);
-      if((0<=pos) && (pos<aCount)) {
-        aCount=temp.mLength=pos;
-      }
+
+      // If this assertion fires, the caller is probably lying about the length of
+      //   the passed-in string.  File a bug on the caller.
+#ifdef NS_DEBUG
+      PRInt32 len=strlen(aCString);
+      NS_ASSERTION(aCount <= len, "potential error in Insert(char*)");
+#endif
+
     }
     else aCount=temp.mLength=nsCRT::strlen(aCString);
 
