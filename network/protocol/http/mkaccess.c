@@ -2031,6 +2031,7 @@ net_IntSetCookieString(MWContext * context,
 #if defined(CookieManagement)
 
 	    {
+		Bool old_cookie_remember_checked = cookie_remember_checked;
 		XP_Bool userHasAccepted = FE_CheckConfirm
 		    (context,
 		     new_string,
@@ -2038,13 +2039,18 @@ net_IntSetCookieString(MWContext * context,
 		     &cookie_remember_checked);
 		PR_FREEIF(new_string);
 		PR_FREEIF(remember_string);
-
 		if (cookie_remember_checked) {
 		net_lock_cookie_permission_list();
 		net_AddCookiePermission
 		    (host_from_header, userHasAccepted, TRUE);
 		net_unlock_cookie_permission_list();
 		}
+
+		if (old_cookie_remember_checked != cookie_remember_checked) {
+		    cookie_permissions_changed = TRUE;
+		    net_SaveCookiePermissions(NULL);
+		}
+
 
 		if (!userHasAccepted) {
 		    return;
@@ -2387,6 +2393,15 @@ net_SaveCookiePermissions(char * filename)
 	}
     }
 
+    /* save current state of cookie nag-box's checkmark */
+    XP_FileWrite("@@@@", -1, fp);
+    XP_FileWrite("\t", 1, fp);
+    if (cookie_remember_checked) {
+        XP_FileWrite("TRUE", -1, fp);
+    } else {
+        XP_FileWrite("FALSE", -1, fp);
+    }
+
     cookie_permissions_changed = FALSE;
     XP_FileClose(fp);
     net_unlock_cookie_permission_list();
@@ -2406,6 +2421,7 @@ net_ReadCookiePermissions(char * filename)
     XP_File fp;
     char buffer[PERMISSION_LINE_BUFFER_SIZE];
     char *host, *permission;
+    Bool permission_value;
 
     if(!(fp = XP_FileOpen(filename, xpHTTPCookiePermission, XP_FILE_READ)))
 	return(-1);
@@ -2420,6 +2436,7 @@ net_ReadCookiePermissions(char * filename)
         if (*buffer == '#' || *buffer == CR || *buffer == LF || *buffer == 0) {
 	    continue;
 	}
+
 	host = buffer;
 
         if( !(permission = PL_strchr(host, '\t')) ) {
@@ -2431,10 +2448,15 @@ net_ReadCookiePermissions(char * filename)
 	}
         XP_StripLine(permission); /* remove '\n' from end of permission */
 
-        if(!PL_strcmp(permission, "TRUE")) {
-	    net_AddCookiePermission(host, TRUE, FALSE);
+	/*
+         * a host value of "@@@@" is a special code designating the
+         * state of the cookie nag-box's checkmark
+	 */
+        permission_value = (!PL_strcmp(permission, "TRUE"));
+        if (!PL_strcmp(host, "@@@@")) {
+	    cookie_remember_checked = permission_value;
 	} else {
-	    net_AddCookiePermission(host, FALSE, FALSE);
+	    net_AddCookiePermission(host, permission_value, FALSE);
 	}
     }
 
