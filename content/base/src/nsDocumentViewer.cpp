@@ -377,6 +377,13 @@ DocumentViewerImpl::~DocumentViewerImpl()
   if (mPresShell) {
     // Break circular reference (or something)
     mPresShell->EndObservingDocument();
+    nsCOMPtr<nsIDOMSelection> selection;
+    nsresult rv;
+    rv = GetDocumentSelection(getter_AddRefs(selection));
+    if (NS_FAILED(rv) || !selection) 
+      return;
+    if (mSelectionListener)
+      selection->RemoveSelectionListener(mSelectionListener);
   }
   
 }
@@ -1661,7 +1668,7 @@ nsresult nsDocViwerSelectionListener::Init(DocumentViewerImpl *aDocViewer)
 }
 
 
-NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *)
+NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *, short)
 {
   NS_ASSERTION(mDocViewer, "Should have doc viewer!");
 

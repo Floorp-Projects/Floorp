@@ -1681,6 +1681,7 @@ nsSelection::SetMouseDownState(PRBool aState)
     mSelectingTableCells = PR_FALSE;
     mStartSelectedCell = nsnull;
     mEndSelectedCell = nsnull;
+    NotifySelectionListeners(SELECTION_NORMAL);
   }
   return NS_OK;
 }
@@ -1999,7 +2000,7 @@ nsSelection::NotifySelectionListeners(SelectionType aType)
     nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
     nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
     if (thisListener)
-    	thisListener->NotifySelectionChanged(domdoc,mDomSelections[idx]);
+    	thisListener->NotifySelectionChanged(domdoc,mDomSelections[idx], (short) mMouseDownState);
   }
 	return NS_OK;
 }

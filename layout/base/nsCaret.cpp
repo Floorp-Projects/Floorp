@@ -308,7 +308,7 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
 #endif
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *)
+NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *, short)
 {
 
 	if (mVisible)
@@ -596,6 +596,7 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 		
 		mLastCaretFrame->GetPointFromOffset(presContext, localRC, mLastContentOffset, &framePos);
 		caretRect += framePos;
+
 		
 		//printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
 		

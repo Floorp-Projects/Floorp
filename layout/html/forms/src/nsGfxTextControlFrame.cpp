@@ -4552,7 +4552,7 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsEnderEventListener::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *)
+nsEnderEventListener::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *, short)
 {
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
   if (gfxFrame && mContent)
