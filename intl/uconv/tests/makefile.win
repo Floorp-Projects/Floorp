@@ -20,7 +20,7 @@
 # Contributor(s): 
 
 DEPTH = ..\..\..
-
+REQUIRES = uconv string
 MAKE_OBJ_TYPE = EXE
 
 PROG1 = .\$(OBJDIR)\convperf.exe

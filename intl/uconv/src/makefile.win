@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+REQUIRES	= xpcom string intl locale chardet necko rdf pref
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN

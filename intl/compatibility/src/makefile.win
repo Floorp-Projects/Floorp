@@ -40,6 +40,7 @@ CPP_OBJS= \
 MODULE=intlcmpt
 LIBRARY_NAME=intlcmpt
 MODULE_NAME=I18nCompatibility
+REQUIRES=xpcom string
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor
 
