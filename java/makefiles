@@ -1,6 +1,7 @@
 java/Makefile
 java/util/Makefile
 java/util/classes/Makefile
+java/build/Makefile
 java/webclient/Makefile
 java/webclient/classes_spec/Makefile
 java/webclient/src_share/Makefile
