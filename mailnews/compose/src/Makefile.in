@@ -49,6 +49,15 @@ CPPSRCS = \
 	nsComposerNameSet.cpp \
 	$(NULL)
 
+EXTRA_DSO_LDOPTS =	\
+	-L$(DIST)/bin	\
+	-ljs		\
+	-lraptorbase	\
+	-lxpcom	\
+	-lxp			\
+	$(NSPR_LIBS)	\
+	$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
