@@ -253,6 +253,7 @@ public:
     PRBool                       IsEmpty() const { return Length() == 0; }
     
     PRUint32                     Length() const { return mData ? mData->mLength : 0; }
+    void                         SetLength(PRUint32 inLength) { ReallocData(inLength); }
     void                         CopyFrom(const char* inData, PRUint32 inLength);
     void                         LeafReplace(char inSeparator, const char* inLeafName);
     char*                        GetLeaf(char inSeparator) const; // use PR_Free()
