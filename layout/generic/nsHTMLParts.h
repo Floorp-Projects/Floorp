@@ -229,7 +229,7 @@ NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsIAtom* aTag);
  * Returns some other error on error.
  * Returns NS_OK on success
  */
-extern nsresult
+PR_EXTERN(nsresult)
 NS_CreateHTMLElement(nsIHTMLContent** aResult,
                      const nsString& aTag);
 
