@@ -135,13 +135,13 @@ nsFontMetricsPS :: Destroy()
 void
 nsFontMetricsPS::RealizeFont()
 {  
-double  fontsize;
+float fontsize;
 float dev2app;
 
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
   nscoord onePixel = NSToCoordRound(1 * dev2app);
 
-  fontsize = mFont->size/20.0;
+  fontsize = mFont->size/20.0f;
 
   mXHeight = NSToCoordRound((float)((fontsize*mAFMInfo->mPSFontInfo->mXHeight)/1000.0)*dev2app);
   mSuperscriptOffset = mXHeight;
