@@ -24,16 +24,19 @@
 class nsIWidget;
 class nsIMenuItem;
 
-gint nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
-gint nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
-gint nsGtkWidget_ExposureMask_EventHandler(GtkWidget * w, GdkEventExpose * event, gpointer p);
-gint nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget * w, GdkEvent * event, gpointer p);
-gint nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
-gint nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
-gint nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
-gint nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
-gint nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
-gint nsGtkWidget_Resize_EventHandler(GtkWidget *w, GtkAllocation *allocation, gpointer data);
+gint handle_configure_event(GtkWidget *w, GdkEventConfigure *event, gpointer p);
+gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p);
+gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p);
+gint handle_button_release_event(GtkWidget *w, GdkEventButton * event, gpointer p);
+gint handle_motion_notify_event(GtkWidget *w, GdkEventMotion * event, gpointer p);
+gint handle_enter_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer p);
+gint handle_leave_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer p);
+
+gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p);
+gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p);
+
+void handle_scrollbar_value_changed(GtkAdjustment *adjustment, gpointer p);
+
 
 //----------------------------------------------------
 
@@ -42,14 +45,15 @@ gint nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p);
 
 //----------------------------------------------------
 gint nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p);
-gint nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p);
+
+
 
 gint CheckButton_Toggle_Callback(GtkWidget *w, gpointer p);
 
 gint nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p);
 gint nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p);
 
-gint nsGtkWidget_Text_Callback(GtkWidget *w, GdkEvent* event, gpointer p);
+gint nsGtkWidget_Text_Callback(GtkWidget *w, GdkEventKey* event, gpointer p);
 gint nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p);
 
 gint nsGtkWidget_Refresh_Callback(gpointer call_data);

@@ -66,6 +66,8 @@ public:
     NS_IMETHOD              GetClientBounds(nsRect &aRect);
     NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
 
+    void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
+
     NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD              Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
     NS_IMETHOD              Update();
@@ -95,13 +97,13 @@ public:
      // Utility methods
     virtual  PRBool OnPaint(nsPaintEvent &event);
     virtual  void   OnDestroy();
-    PRBool   OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
+    PRBool   OnKey(nsKeyEvent &aEvent);
     PRBool   DispatchFocus(nsGUIEvent &aEvent);
     virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
     void     SetIgnoreResize(PRBool aIgnore);
     PRBool   IgnoreResize();
     PRUint32 GetYCoord(PRUint32 aNewY);
-    virtual  PRBool OnResize(nsSizeEvent &aEvent);
+    virtual  PRBool OnResize(nsRect &aWindowRect);
 
      // Resize event management
     void   SetResizeRect(nsRect& aRect);

@@ -74,7 +74,7 @@ NS_METHOD nsScrollbar::CreateNative (GtkWidget * parentWindow)
 
   gtk_signal_connect (GTK_OBJECT (mAdjustment),
 		      "value_changed",
-		      GTK_SIGNAL_FUNC (nsGtkWidget_Scrollbar_Callback),
+		      GTK_SIGNAL_FUNC (handle_scrollbar_value_changed),
 		      this);
 
   return NS_OK;
@@ -250,7 +250,7 @@ PRBool nsScrollbar::OnPaint (nsPaintEvent & aEvent)
 }
 
 
-PRBool nsScrollbar::OnResize (nsSizeEvent & aEvent)
+PRBool nsScrollbar::OnResize (nsRect &aWindowRect)
 {
   return PR_FALSE;
 }

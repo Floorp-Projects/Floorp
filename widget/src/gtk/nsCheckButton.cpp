@@ -155,7 +155,7 @@ PRBool nsCheckButton::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
-PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
+PRBool nsCheckButton::OnResize(nsRect &aWindowRect)
 {
   return PR_FALSE;
 }

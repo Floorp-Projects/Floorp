@@ -40,7 +40,7 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool  OnResize(nsSizeEvent &aEvent);
+  virtual PRBool  OnResize(nsRect &aWindowRect);
 
 protected:
   NS_METHOD CreateNative(GtkWidget *parentWindow);
