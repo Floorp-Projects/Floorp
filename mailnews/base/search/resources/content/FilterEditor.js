@@ -161,6 +161,7 @@ function saveFilter() {
         if (!targetUri || targetUri == "") {
             var str = Bundle.GetStringFromName("mustSelectFolder");
             window.alert(str);
+            gFilter = null;
             return false;
         }
         gFilter.actionTargetFolderUri = targetUri;
@@ -170,13 +171,17 @@ function saveFilter() {
         if (!gActionPriority.selectedItem) {
             var str = Bundle.GetStringFromName("mustSelectPriority");
             window.alert(str);
+            gFilter = null;
             return false;
         }
         gFilter.actionPriority = gActionPriority.selectedItem.getAttribute("data");
     }
+
     
-    if (isNewFilter)
+    if (isNewFilter) {
+        dump("new filter.. inserting into " + gFilterList + "\n");
         gFilterList.insertFilterAt(0, gFilter);
+    }
 
     // success!
     return true;

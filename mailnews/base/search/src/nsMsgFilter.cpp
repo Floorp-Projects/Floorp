@@ -49,6 +49,7 @@ nsMsgRuleAction::~nsMsgRuleAction()
 
 
 nsMsgFilter::nsMsgFilter() :
+    m_type(1),
     m_filterList(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -472,8 +473,8 @@ nsresult nsMsgFilter::SaveRule()
 	GetActionFilingStr(m_action.m_type, actionFilingStr);
 
 	err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr);
-	if (!NS_SUCCEEDED(err))
-		return err;
+    NS_ENSURE_SUCCESS(err, err);
+
 	switch(m_action.m_type)
 	{
 	case nsMsgFilterAction::MoveToFolder:
