@@ -48,6 +48,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIWebBrowserFind.h"
+#include "nsIWebBrowserFocus.h"
 #include "nsWeakPtr.h"
 
 #include <UModalDialogs.h>
@@ -253,10 +254,16 @@ void CBrowserShell::AdjustCursorSelf(Point				/* inPortPt */,
 
 void CBrowserShell::BeTarget()
 {
+    nsCOMPtr<nsIWebBrowserFocus>  focus(do_GetInterface(mWebBrowser));
+    if (focus)
+        focus->Activate();
 }
 
 void CBrowserShell::DontBeTarget()
 {
+    nsCOMPtr<nsIWebBrowserFocus>  focus(do_GetInterface(mWebBrowser));
+    if (focus)
+        focus->Deactivate();
 }
 
 Boolean CBrowserShell::HandleKeyPress(const EventRecord	&inKeyEvent)
