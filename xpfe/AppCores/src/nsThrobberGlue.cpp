@@ -27,7 +27,8 @@
 
 #include "nsThrobberGlue.h"
 #include "nsIFactory.h"
-
+#include "pratom.h"
+#include "nsAppCores.h"
 
 // IID's
 static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
@@ -153,16 +154,18 @@ nsThrobberGlue::Stop()
   return NS_OK;
 }
 
+#ifdef USE_THROBBER_GLUE_FACTORY
 
 //----------------------------------------------------------------------
 // Factory code for creating nsThrobberGlue's
-// I copied this shitty code from someone else, this is not my fault
+// *** Do we really need one of these? This should be mostly internal
+// *** to the browser appCore stuff and not really exposed to js.
 
 class nsThrobberGlueFactory : public nsIFactory
 {
 public:
   nsThrobberGlueFactory();
-  ~nsThrobberGlueFactory();
+  virtual ~nsThrobberGlueFactory();
 
   // nsISupports methods
   NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);
@@ -183,11 +186,13 @@ private:
 nsThrobberGlueFactory::nsThrobberGlueFactory()
 {
   mRefCnt = 0;
+  IncInstanceCount();
 }
 
 nsThrobberGlueFactory::~nsThrobberGlueFactory()
 {
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+  DecInstanceCount();
 }
 
 nsresult
@@ -207,7 +212,7 @@ nsThrobberGlueFactory::QueryInterface(const nsIID &aIID, void **aResult)
   }
 
   if (*aResult == NULL) {
-    return NS_NOINTERFACE;
+    return NS_ERROR_NO_INTERFACE;
   }
 
   NS_ADDREF_THIS();  // Increase reference count for caller
@@ -235,43 +240,34 @@ nsThrobberGlueFactory::CreateInstance(nsISupports *aOuter,
                                   const nsIID &aIID,
                                   void **aResult)
 {
-  nsresult rv;
+    if (aResult == NULL)
+        return NS_ERROR_NULL_POINTER;
 
-  if ( !aResult )
-    return NS_ERROR_NULL_POINTER;
-  *aResult = nsnull;
+    *aResult = NULL;
 
-  nsThrobberGlue* inst = new nsThrobberGlue();
-  if ( inst ) {
-    NS_ADDREF(inst);
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-  }
-  else
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  
-  return rv;
+    /* do I have to use iSupports? */
+    nsThrobberGlue *inst = new nsThrobberGlue();
+
+    if (inst == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult result =  inst->QueryInterface(aIID, aResult);
+
+    if (result != NS_OK)
+        delete inst;
+
+    return result;
 }
 
 nsresult
 nsThrobberGlueFactory::LockFactory(PRBool aLock)
 {
-  // Not implemented in simplest case.
+  if (aLock)
+      IncLockCount();
+  else
+      DecLockCount();
+
   return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult
-NS_NewThrobberGlueFactory(nsIFactory** aFactory)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst = new nsThrobberGlueFactory();
-  if (nsnull == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aFactory = inst;
-  return rv;
-}
-
+#endif // USE_THROBBER_GLUE_FACTORY
