@@ -129,16 +129,20 @@ function downloadCompleted(aDownload)
 
     var id = aDownload.targetFile.path;
     
-    // Refresh the icon, so that executable icons are shown.
-    var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
-    var contentType = mimeService.getTypeFromFile(aDownload.targetFile);
-    
-    var listItem = document.getElementById(id);
-    var oldImage = listItem.getAttribute("image");
-    // I tack on the content-type here as a hack to bypass the cache which seems
-    // to be interfering despite the fact the image has 'validate="always"' set
-    // on it. 
-    listItem.setAttribute("image", oldImage + "&contentType=" + contentType);
+    // getTypeFromFile fails if it can't find a type for this file. Handle this gracefully.
+    try {
+      // Refresh the icon, so that executable icons are shown.
+      var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
+      var contentType = mimeService.getTypeFromFile(aDownload.targetFile);
+
+      var listItem = document.getElementById(id);
+      var oldImage = listItem.getAttribute("image");
+      // I tack on the content-type here as a hack to bypass the cache which seems
+      // to be interfering despite the fact the image has 'validate="always"' set
+      // on it. 
+      listItem.setAttribute("image", oldImage + "&contentType=" + contentType);
+    } catch (e) {
+    }
     
     var dlRes = rdf.GetUnicodeResource(id);
   
