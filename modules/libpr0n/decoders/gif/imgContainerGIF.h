@@ -32,7 +32,7 @@
 
 #include "imgIContainerObserver.h"
 #include "imgIContainer.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "imgIDecoderObserver.h"
@@ -130,27 +130,11 @@ private:
     DISPOSE_RESTORE_PREVIOUS = 3  //!< Restore the previous (composited) frame
   };
 
-  inline PRUint32 inlinedGetNumFrames() {
-    PRUint32 nframes;
-    mFrames.Count(&nframes);
-    return nframes;
-  }
+  inline gfxIImageFrame* inlinedGetCurrentFrame() {
+    if (mLastCompositedFrameIndex == mCurrentAnimationFrameIndex)
+      return mCompositingFrame;
 
-  inline nsresult inlinedGetFrameAt(PRUint32 index, gfxIImageFrame **_retval) {
-    // callers DO try to go past the end
-    nsISupports *_elem = mFrames.ElementAt(index);
-    if (!_elem) return NS_ERROR_FAILURE;
-    *_retval = NS_STATIC_CAST(gfxIImageFrame*, _elem);
-    return NS_OK;
-  }
-
-  inline nsresult inlinedGetCurrentFrame(gfxIImageFrame **_retval) {
-    if (mLastCompositedFrameIndex == mCurrentAnimationFrameIndex) {
-      *_retval = mCompositingFrame;
-      NS_ADDREF(*_retval);
-      return NS_OK;
-    }
-    return inlinedGetFrameAt(mCurrentAnimationFrameIndex, _retval);
+    return mFrames[mCurrentAnimationFrameIndex];
   }
 
   /** Function for doing the frame compositing of animations
@@ -162,10 +146,10 @@ private:
    * @param aNextFrame  Frame we need to incorperate/display
    * @param aNextFrameIndex Position of aNextFrame in mFrames list
    */
-  NS_IMETHODIMP DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
-                            gfxIImageFrame* aPrevFrame,
-                            gfxIImageFrame* aNextFrame,
-                            PRInt32 aNextFrameIndex);
+  nsresult DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
+                       gfxIImageFrame* aPrevFrame,
+                       gfxIImageFrame* aNextFrame,
+                       PRInt32 aNextFrameIndex);
 
   /**
    * Combine aOverlayFrame's mask into aCompositingFrame's mask.
@@ -221,33 +205,33 @@ private:
 
 
   //! imgIContainerObserver; used for telling observers that the frame changed
-  nsWeakPtr            mObserver;
+  nsWeakPtr                  mObserver;
   //! All the <gfxIImageFrame>s of the GIF
-  nsSupportsArray      mFrames;
+  nsCOMArray<gfxIImageFrame> mFrames;
 
   //! Size of GIF (not necessarily the frame)
-  nsSize               mSize;
+  nsSize                     mSize;
   //! Area of the first frame that needs to be redrawn on subsequent loops
-  nsRect               mFirstFrameRefreshArea;
+  nsRect                     mFirstFrameRefreshArea;
 
-  PRInt32              mCurrentDecodingFrameIndex; // 0 to numFrames-1
-  PRInt32              mCurrentAnimationFrameIndex; // 0 to numFrames-1
+  PRInt32                    mCurrentDecodingFrameIndex; // 0 to numFrames-1
+  PRInt32                    mCurrentAnimationFrameIndex; // 0 to numFrames-1
   //! Track the last composited frame for Optimizations (See DoComposite code)
-  PRInt32              mLastCompositedFrameIndex;
+  PRInt32                    mLastCompositedFrameIndex;
   //! Whether we can assume there will be no more frames
   //! (and thus loop the animation)
-  PRBool               mDoneDecoding;
+  PRBool                     mDoneDecoding;
 
 
   //! Are we currently animating the GIF?
-  PRBool               mAnimating;
+  PRBool                     mAnimating;
   //! See imgIContainer for mode constants
-  PRUint16             mAnimationMode;
+  PRUint16                   mAnimationMode;
   //! # loops remaining before animation stops (-1 no stop)
-  PRInt32              mLoopCount;
+  PRInt32                    mLoopCount;
 
   //! Timer to animate multiframed images
-  nsCOMPtr<nsITimer>   mTimer;
+  nsCOMPtr<nsITimer>         mTimer;
 
   /** For managing blending of frames
    *
@@ -257,7 +241,7 @@ private:
    *       mLastCompositedFrameIndex to -1.  Code assume that if
    *       mLastCompositedFrameIndex >= 0 then mCompositingFrame exists.
    */
-  nsCOMPtr<gfxIImageFrame> mCompositingFrame;
+  nsCOMPtr<gfxIImageFrame>   mCompositingFrame;
 
   /** the previous composited frame, for DISPOSE_RESTORE_PREVIOUS
    *
@@ -265,7 +249,7 @@ private:
    * stored in cases where the GIF specifies it wants the last frame back
    * when it's done with the current frame.
    */
-  nsCOMPtr<gfxIImageFrame> mCompositingPrevFrame;
+  nsCOMPtr<gfxIImageFrame>   mCompositingPrevFrame;
 };
 
 #endif /* __imgContainerGIF_h__ */
