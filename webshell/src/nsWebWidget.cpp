@@ -37,8 +37,10 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
-
 #include "nsICSSParser.h"
+
+#include "prprf.h"
+#include "prtime.h"
 
 #define UA_CSS_URL "resource:/res/ua.css"
 
@@ -441,10 +443,23 @@ NS_IMETHODIMP WebWidgetImpl::LoadURL(const nsString& aURLSpec)
     mViewManager->SetWindowDimensions(width, height);
   }
 
+  PRTime start = PR_Now();
+
   // Now load the document
   mPresShell->EnterReflowLock();
   doc->LoadURL(url);
   mPresShell->ExitReflowLock();
+
+  PRTime end = PR_Now();
+  PRTime conversion, ustoms;
+  LL_I2L(ustoms, 1000);
+  LL_SUB(conversion, end, start);
+  LL_DIV(conversion, conversion, ustoms);
+  char buf[500];
+  PR_snprintf(buf, sizeof(buf),
+              "loading the document took %lldms\n",
+              conversion);
+  puts(buf);
 
   NS_RELEASE(doc);
 
