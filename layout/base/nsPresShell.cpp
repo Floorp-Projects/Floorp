@@ -866,7 +866,7 @@ public:
                                          PRBool                        aProcessDummyLayoutRequest = PR_TRUE);  
   NS_IMETHOD CancelAllReflowCommands();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
-  NS_IMETHOD FlushPendingNotifications(PRBool aUpdateViews=PR_FALSE);
+  NS_IMETHOD FlushPendingNotifications(PRBool aUpdateViews);
 
   /**
    * Post a request to handle a DOM event after Reflow has finished.
@@ -4792,7 +4792,7 @@ PresShell::HandlePostedReflowCallbacks()
    mFirstCallbackEventRequest = mLastCallbackEventRequest = nsnull;
 
    if (shouldFlush)
-     FlushPendingNotifications();
+     FlushPendingNotifications(PR_FALSE);
 }
 
 void
@@ -4908,7 +4908,7 @@ PresShell::EndReflowBatching(PRBool aFlushPendingReflows)
   nsresult rv = NS_OK;
   mBatchReflows = PR_FALSE;
   if (aFlushPendingReflows) {
-    rv = FlushPendingNotifications();
+    rv = FlushPendingNotifications(PR_FALSE);
   }
   return rv;
 }
@@ -5836,7 +5836,7 @@ PresShell::DidCauseReflow()
   mViewManager->CacheWidgetChanges(PR_FALSE);
 
   if (!gAsyncReflowDuringDocLoad && mDocumentLoading) {
-    FlushPendingNotifications();
+    FlushPendingNotifications(PR_FALSE);
   }
 
   return NS_OK;
