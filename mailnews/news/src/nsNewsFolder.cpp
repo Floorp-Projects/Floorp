@@ -813,44 +813,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetDeletable(PRBool *deletable)
 #endif
 }
  
-NS_IMETHODIMP nsMsgNewsFolder::GetCanCreateChildren(PRBool *canCreateChildren)
-{  
-  if(!canCreateChildren)
-    return NS_ERROR_NULL_POINTER;
-
-  *canCreateChildren = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgNewsFolder::GetCanBeRenamed(PRBool *canBeRenamed)
-{
-#if 0
-  if(!canBeRenamed)
-    return NS_ERROR_NULL_POINTER;
-
-    // The root mail folder can't be renamed
-  if (mDepth < 2)
-    *canBeRenamed = PR_FALSE;
-
-  // Here's a weird case necessitated because we don't have a separate
-  // preference for any folder name except the FCC folder (Sent). Others
-  // are known by name, and as such, can't be renamed. I guess.
-  else if (mFlags & MSG_FOLDER_FLAG_TRASH ||
-      mFlags & MSG_FOLDER_FLAG_DRAFTS ||
-      mFlags & MSG_FOLDER_FLAG_QUEUE ||
-      mFlags & MSG_FOLDER_FLAG_INBOX ||
-      mFlags & MSG_FOLDER_FLAG_TEMPLATES)
-      *canBeRenamed = PR_FALSE;
-  else 
-    *canBeRenamed = PR_TRUE;
-
-  return NS_OK;
-#else
-  NS_ASSERTION(0,"GetCanBeRenamed() not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
 NS_IMETHODIMP nsMsgNewsFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 {
   NS_ASSERTION(0,"GetRequiresCleanup not implemented");

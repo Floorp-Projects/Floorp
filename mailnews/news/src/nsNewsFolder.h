@@ -76,8 +76,6 @@ public:
 
 	NS_IMETHOD GetExpungedBytesCount(PRUint32 *count);
 	NS_IMETHOD GetDeletable (PRBool *deletable); 
-	NS_IMETHOD GetCanCreateChildren (PRBool *canCreateChildren) ;
-	NS_IMETHOD GetCanBeRenamed (PRBool *canBeRenamed);
 	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
 
 	NS_IMETHOD GetSizeOnDisk(PRUint32 *size);

@@ -94,7 +94,19 @@ interface nsIMsgFolder : nsIFolder {
   readonly attribute boolean isServer;
   readonly attribute boolean canSubscribe;
   readonly attribute boolean canFileMessages;
+
+  /**
+   * does this folder allow subfolders?
+   * for example, newsgroups cannot have subfolders, and the INBOX
+   * on some IMAP servers cannot have subfolders
+   */
   readonly attribute boolean canCreateSubfolders;
+
+  /**
+   * can you change the name of this folder?
+   * for example, newsgroups
+   * and some special folders can't be renamed
+   */
   readonly attribute boolean canRename;
 
   /**
@@ -160,19 +172,6 @@ interface nsIMsgFolder : nsIFolder {
    */
 	readonly attribute boolean deletable;
 
-  /**
-   * does this folder allow subfolders?
-   * for example, newsgroups cannot have subfolders, and the INBOX
-   * on some IMAP servers cannot have subfolders
-   */
-	readonly attribute boolean canCreateChildren;
-
-  /**
-   * can you change the name of this folder?
-   * for example, newsgroups cannot be renamed
-   */
-	readonly attribute boolean canBeRenamed;
-  
   /**
    * should we be displaying recipients instead of the sender?
    * for example, in the Sent folder, recipients are more relevant

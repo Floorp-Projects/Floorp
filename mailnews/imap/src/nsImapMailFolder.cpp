@@ -831,19 +831,6 @@ NS_IMETHODIMP nsImapMailFolder::GetDeletable (PRBool *deletable)
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetCanCreateChildren (PRBool
-                                                      *canCreateChildren) 
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::GetCanBeRenamed (PRBool *canBeRenamed)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
-
 NS_IMETHODIMP nsImapMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 {
     nsresult rv = NS_ERROR_FAILURE;

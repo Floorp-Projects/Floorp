@@ -201,39 +201,6 @@ NS_IMETHODIMP nsMsgImapMailFolder::GetDeletable (PRBool *deletable)
 	return NS_OK;
 }
  
-NS_IMETHODIMP nsMsgImapMailFolder::GetCanCreateChildren (PRBool *canCreateChildren)
-{	
-	if(!canCreateChildren)
-		return NS_ERROR_NULL_POINTER;
-
-	*canCreateChildren = PR_TRUE;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgImapMailFolder::GetCanBeRenamed (PRBool *canBeRenamed)
-{
-	if(!canBeRenamed)
-		return NS_ERROR_NULL_POINTER;
-
-	  // The root mail folder can't be renamed
-	if (mDepth < 2)
-		*canBeRenamed = PR_FALSE;
-
-  // Here's a weird case necessitated because we don't have a separate
-  // preference for any folder name except the FCC folder (Sent). Others
-  // are known by name, and as such, can't be renamed. I guess.
-  else if (mFlags & MSG_FOLDER_FLAG_TRASH ||
-      mFlags & MSG_FOLDER_FLAG_DRAFTS ||
-      mFlags & MSG_FOLDER_FLAG_QUEUE ||
-      mFlags & MSG_FOLDER_FLAG_INBOX ||
-			mFlags & MSG_FOLDER_FLAG_TEMPLATES)
-      *canBeRenamed = PR_FALSE;
-  else 
-		*canBeRenamed = PR_TRUE;
-
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgImapMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 {
 #ifdef HAVE_PORT

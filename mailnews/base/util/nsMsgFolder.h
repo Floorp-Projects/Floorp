@@ -100,8 +100,6 @@ public:
   NS_IMETHOD GetTotalMessages(PRBool deep, PRInt32 *_retval);
   NS_IMETHOD GetExpungedBytesCount(PRUint32 *aExpungedBytesCount);
   NS_IMETHOD GetDeletable(PRBool *aDeletable);
-  NS_IMETHOD GetCanCreateChildren(PRBool *aCanCreateChildren);
-  NS_IMETHOD GetCanBeRenamed(PRBool *aCanBeRenamed);
   NS_IMETHOD GetRequiresCleanup(PRBool *aRequiresCleanup);
   NS_IMETHOD ClearRequiresCleanup(void);
   NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);

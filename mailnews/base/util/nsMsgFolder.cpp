@@ -566,10 +566,30 @@ nsMsgFolder::GetCanRename(PRBool *aResult)
   PRBool isServer = PR_FALSE;
   nsresult rv = GetIsServer(&isServer);
   if (NS_FAILED(rv)) return rv;
-  
+  	
   // by default, you can't rename servers, only folders
   // if otherwise, override it.
-  *aResult = !isServer;
+  if (isServer) {
+	*aResult = PR_FALSE;
+  }
+  // old comment, from the 4.x code base:
+  // Here's a weird case necessitated because we don't have a separate
+  // preference for any folder name except the FCC folder (Sent). Others
+  // are known by name, and as such, can't be renamed. I guess.
+  //
+  // new comment:
+  // we have prefs for drafts and templates now, can we remove those
+  // parts of this case?
+  else if (mFlags & MSG_FOLDER_FLAG_TRASH ||
+      mFlags & MSG_FOLDER_FLAG_DRAFTS ||
+      mFlags & MSG_FOLDER_FLAG_QUEUE ||
+      mFlags & MSG_FOLDER_FLAG_INBOX ||
+      mFlags & MSG_FOLDER_FLAG_TEMPLATES) {
+        *aResult = PR_FALSE;
+  }
+  else {
+	*aResult = PR_TRUE;
+  }
   return NS_OK;
 }
 
@@ -1339,24 +1359,6 @@ NS_IMETHODIMP nsMsgFolder::GetDeletable(PRBool *deletable)
 		return NS_ERROR_NULL_POINTER;
 
 	*deletable = PR_FALSE;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolder::GetCanCreateChildren(PRBool *canCreateChildren)
-{
-	if(!canCreateChildren)
-		return NS_ERROR_NULL_POINTER;
-
-	*canCreateChildren = PR_FALSE;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolder::GetCanBeRenamed(PRBool *canBeRenamed)
-{
-	if(!canBeRenamed)
-		return NS_ERROR_NULL_POINTER;
-
-	*canBeRenamed = PR_FALSE;
 	return NS_OK;
 }
 
