@@ -3684,7 +3684,6 @@ nsImapProtocol::ShowProgress()
 	{
 		PRUnichar *progressString = NULL;
 		progressString = IMAPGetStringByID(m_progressStringId);
-		const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
 //		progressString = PR_sprintf_append(progressString, XP_GetString(m_progressStringId), (mailboxName) ? mailboxName : "", ++m_progressIndex, m_progressCount);
 		if (progressString)
 			PercentProgressUpdateEvent(progressString,(100*(++m_progressIndex))/m_progressCount );
@@ -3700,7 +3699,6 @@ nsImapProtocol::ShowProgress()
 void
 nsImapProtocol::ProgressEventFunctionUsingId(PRUint32 aMsgId)
 {
-	PRUnichar *status = IMAPGetStringByID(aMsgId);
     if (m_imapMiscellaneousSink)
 	{
         m_imapMiscellaneousSink->ProgressStatus(this, aMsgId);
