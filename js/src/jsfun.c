@@ -1403,7 +1403,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * collected_args and its tokenstream in one swoop.
          */
         mark = JS_ARENA_MARK(&cx->tempPool);
-        JS_ARENA_ALLOCATE(cp, &cx->tempPool, (args_length+1) * sizeof(jschar));
+        JS_ARENA_ALLOCATE_CAST(cp, jschar *, &cx->tempPool,
+                               (args_length+1) * sizeof(jschar));
         if (!cp)
             return JS_FALSE;
         collected_args = cp;

@@ -104,6 +104,12 @@ struct JSArenaPool {
 #endif
 
 #define JS_ARENA_ALLOCATE(p, pool, nb)                                        \
+    JS_ARENA_ALLOCATE_CAST(p, void *, pool, nb)
+
+#define JS_ARENA_ALLOCATE_TYPE(p, type, pool)                                 \
+    JS_ARENA_ALLOCATE_CAST(p, type *, pool, sizeof(type))
+
+#define JS_ARENA_ALLOCATE_CAST(p, type, pool, nb)                             \
     JS_BEGIN_MACRO                                                            \
 	JSArena *_a = (pool)->current;                                        \
 	size_t _nb = JS_ARENA_ALIGN(pool, nb);                                \
@@ -113,11 +119,14 @@ struct JSArenaPool {
 	    _p = (jsuword)JS_ArenaAllocate(pool, _nb);                        \
 	else                                                                  \
 	    _a->avail = _q;                                                   \
-	*(void**)&p = (void *)_p;                                             \
+	p = (type) _p;                                                        \
 	JS_ArenaCountAllocation(pool, nb);                                    \
     JS_END_MACRO
 
 #define JS_ARENA_GROW(p, pool, size, incr)                                    \
+    JS_ARENA_GROW_CAST(p, void *, pool, size, incr)
+
+#define JS_ARENA_GROW_CAST(p, type, pool, size, incr)                         \
     JS_BEGIN_MACRO                                                            \
 	JSArena *_a = (pool)->current;                                        \
 	size_t _incr = JS_ARENA_ALIGN(pool, incr);                            \
@@ -128,7 +137,7 @@ struct JSArenaPool {
 	    _a->avail = _q;                                                   \
 	    JS_ArenaCountInplaceGrowth(pool, size, incr);                     \
 	} else {                                                              \
-	    *(void**)&p = JS_ArenaGrow(pool, p, size, incr);                  \
+	    p = (type) JS_ArenaGrow(pool, p, size, incr);                     \
 	}                                                                     \
 	JS_ArenaCountGrowth(pool, size, incr);                                \
     JS_END_MACRO

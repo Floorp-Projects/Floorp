@@ -2027,7 +2027,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
      */
     length = 2 * sizeof(JSSubString) * re->parenCount;
     mark = JS_ARENA_MARK(&cx->tempPool);
-    JS_ARENA_ALLOCATE(parsub, &cx->tempPool, length);
+    JS_ARENA_ALLOCATE_CAST(parsub, JSSubString *, &cx->tempPool, length);
     if (!parsub) {
 	JS_ReportOutOfMemory(cx);
 	return JS_FALSE;

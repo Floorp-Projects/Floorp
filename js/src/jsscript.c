@@ -293,7 +293,7 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 	mark = JS_ARENA_MARK(&cx->tempPool);
 	ATOM_LIST_INIT(&al);
 	for (i = 0; i < length; i++) {
-	    JS_ARENA_ALLOCATE(ale, &cx->tempPool, sizeof(*ale));
+	    JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &cx->tempPool);
 	    if (!ale ||
 		!XDRAtom1(xdr, ale)) {
 		if (!ale)

@@ -107,9 +107,10 @@ EmitCheck(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t delta)
         cgincr = delta * sizeof(jsbytecode);
         if (base) {
             cgsize = length * sizeof(jsbytecode);
-            JS_ARENA_GROW(base, &cx->codePool, cgsize, cgincr);
+            JS_ARENA_GROW_CAST(base, jsbytecode *, &cx->codePool, cgsize,
+                               cgincr);
         } else {
-            JS_ARENA_ALLOCATE(base, &cx->codePool, cgincr);
+            JS_ARENA_ALLOCATE_CAST(base, jsbytecode *, &cx->codePool, cgincr);
         }
         if (!base) {
             JS_ReportOutOfMemory(cx);
@@ -1108,7 +1109,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 /* Avoid bloat for a compilation unit with many switches. */
                 mark = JS_ARENA_MARK(&cx->tempPool);
                 tablesize = (size_t)tablen * sizeof *table;
-                JS_ARENA_ALLOCATE(table, &cx->tempPool, tablesize);
+                JS_ARENA_ALLOCATE_CAST(table, JSParseNode **, &cx->tempPool,
+                                       tablesize);
                 if (!table) {
                     JS_ReportOutOfMemory(cx);
                     return JS_FALSE;
@@ -2527,10 +2529,10 @@ AllocSrcNote(JSContext *cx, JSCodeGenerator *cg)
         pool = &cx->notePool;
         incr = SNINCR_SIZE;
         if (!cg->notes) {
-            JS_ARENA_ALLOCATE(cg->notes, pool, incr);
+            JS_ARENA_ALLOCATE_CAST(cg->notes, jssrcnote *, pool, incr);
         } else {
             size = cg->noteCount * sizeof(jssrcnote);
-            JS_ARENA_GROW(cg->notes, pool, size, incr);
+            JS_ARENA_GROW_CAST(cg->notes, jssrcnote *, pool, size, incr);
         }
         if (!cg->notes) {
             JS_ReportOutOfMemory(cx);
@@ -2628,7 +2630,7 @@ GrowSrcNotes(JSContext *cx, JSCodeGenerator *cg)
     incr = SNINCR_SIZE;
     size = cg->noteCount * sizeof(jssrcnote);
     size = JS_ROUNDUP(size, incr);
-    JS_ARENA_GROW(cg->notes, pool, size, incr);
+    JS_ARENA_GROW_CAST(cg->notes, jssrcnote *, pool, size, incr);
     if (!cg->notes) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -2752,7 +2754,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
      */
     if (!cg->tryBase) {
         size = JS_ROUNDUP(size, TNINCR_SIZE);
-        JS_ARENA_ALLOCATE(cg->tryBase, &cx->tempPool, size);
+        JS_ARENA_ALLOCATE_CAST(cg->tryBase, JSTryNote *, &cx->tempPool, size);
         if (!cg->tryBase)
             return JS_FALSE;
         cg->tryNoteSpace = size;
@@ -2762,7 +2764,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
         incr = size - cg->tryNoteSpace;
         incr = JS_ROUNDUP(incr, TNINCR_SIZE);
         size = cg->tryNoteSpace;
-        JS_ARENA_GROW(cg->tryBase, &cx->tempPool, size, incr);
+        JS_ARENA_GROW_CAST(cg->tryBase, JSTryNote *, &cx->tempPool, size, incr);
         if (!cg->tryBase)
             return JS_FALSE;
         cg->tryNoteSpace = size + incr;
