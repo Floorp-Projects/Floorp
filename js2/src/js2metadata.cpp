@@ -84,7 +84,7 @@ namespace MetaData {
             p = p->next;
         }
     }
-     
+
     FunctionInstance *JS2Metadata::validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
     {
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
@@ -2593,6 +2593,8 @@ doUnary:
                 bCon->emitOp(eReturnVoid, p->pos);
                 env->removeTopFrame();
                 restoreCompilationUnit(oldData);
+                bCon->emitOp(eFunction, p->pos);
+                bCon->addObject(f->obj);
             }
             break;
         default:
