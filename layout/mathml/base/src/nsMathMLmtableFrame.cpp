@@ -105,21 +105,48 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsReflowStatus&          aStatus)
 {
-  // we want to return a table that is centered about the axis
+  // we want to return a table that is centered acoording to the align attribute
   nsresult rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
-  nsCOMPtr<nsIFontMetrics> fm;
-  aReflowState.rendContext->SetFont(font.mFont);
-  aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
+  // see if the user has set the align attribute on the <mtable>
+  // should we also check <mstyle>
+  nsAutoString value;
+  PRBool alignAttribute = PR_FALSE;
 
-  nscoord axisHeight;
-  GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
+  if (NS_CONTENT_ATTR_HAS_VALUE == 
+      nsMathMLContainerFrame::GetAttribute(mContent, nsnull,
+                   nsMathMLAtoms::align_, value)) {
+    if (value.EqualsWithConversion("top")) {
+      aDesiredSize.ascent = 0;
+      aDesiredSize.descent = aDesiredSize.height;
+      alignAttribute = PR_TRUE;
+    }
+    else if (value.EqualsWithConversion("bottom")) {
+      aDesiredSize.ascent = aDesiredSize.height;
+      aDesiredSize.descent = 0;
+      alignAttribute = PR_TRUE;
+    }
+    else if (value.EqualsWithConversion("center") ||
+             value.EqualsWithConversion("baseline")) {
+      aDesiredSize.ascent = aDesiredSize.height/2;
+      aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
+      alignAttribute = PR_TRUE;
+    }
+  }
+  if (!alignAttribute) {
+    // by default, center about the axis
 
-  // center about the axis
-  aDesiredSize.ascent = aDesiredSize.height/2 + axisHeight;
-  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
+    nsStyleFont font;
+    mStyleContext->GetStyle(eStyleStruct_Font, font);
+    nsCOMPtr<nsIFontMetrics> fm;
+    aReflowState.rendContext->SetFont(font.mFont);
+    aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
+    nscoord axisHeight;
+    nsMathMLContainerFrame::GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
+
+    aDesiredSize.ascent = aDesiredSize.height/2 + axisHeight;
+    aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
+  }
 
   // just make-up a bounding metrics
   mBoundingMetrics.Clear();
