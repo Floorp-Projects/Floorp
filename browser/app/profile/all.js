@@ -638,3 +638,10 @@ pref("signon.expireMasterPassword",         false);
 
 pref("network.protocol-handler.external.mailto", true); // for mail
 pref("network.protocol-handler.external.news" , true); // for news 
+
+// Default security warning dialogs to off
+pref("security.warn_entering_secure", false);
+pref("security.warn_entering_weak", false);
+pref("security.warn_leaving_secure", false);
+pref("security.warn_viewing_mixed", false);
+pref("security.warn_submit_insecure", false);
