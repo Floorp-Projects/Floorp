@@ -529,9 +529,12 @@ function SidebarTogglePanel(panel_menuitem) {
                                   RDF.GetLiteral(new_exclude));
     }
   }
+
+  // force all the sidebars to update
+  refresh_all_sidebars();
+
   // Write the modified panels out.
   sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
-  refresh_all_sidebars();
 }
 
 // Use an assertion to pass a "refresh" event to all the sidebars.
