@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIFrameLoader.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMWindow.h"
@@ -59,6 +58,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsFrameLoader.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -83,72 +83,12 @@
 // we'd need to re-institute a fixed version of bug 98158.
 #define MAX_DEPTH_CONTENT_FRAMES 10
 
-
-class nsFrameLoader : public nsIFrameLoader
-{
-public:
-  nsFrameLoader();
-  virtual ~nsFrameLoader();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIFrameLoader
-  NS_IMETHOD Init(nsIContent *aOwner);
-  NS_IMETHOD LoadFrame();
-  NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
-  NS_IMETHOD Destroy();
-
-protected:
-  nsresult EnsureDocShell();
-  void GetURL(nsAString& aURL);
-
-  nsCOMPtr<nsIDocShell> mDocShell;
-
-  nsIContent *mOwnerContent; // WEAK
-};
-
-nsresult
-NS_NewFrameLoader(nsIFrameLoader **aFrameLoader)
-{
-  *aFrameLoader = new nsFrameLoader();
-  NS_ENSURE_TRUE(*aFrameLoader, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aFrameLoader);
-
-  return NS_OK;
-}
-
-nsFrameLoader::nsFrameLoader()
-  : mOwnerContent(nsnull)
-{
-}
-
 nsFrameLoader::~nsFrameLoader()
 {
   Destroy();
 }
 
-
-// QueryInterface implementation for nsFrameLoader
-NS_INTERFACE_MAP_BEGIN(nsFrameLoader)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(nsFrameLoader)
-NS_IMPL_RELEASE(nsFrameLoader)
-
-NS_IMETHODIMP
-nsFrameLoader::Init(nsIContent *aOwner)
-{
-  mOwnerContent = aOwner; // WEAK
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 nsFrameLoader::LoadFrame()
 {
   NS_ENSURE_TRUE(mOwnerContent, NS_ERROR_NOT_INITIALIZED);
@@ -323,7 +263,7 @@ nsFrameLoader::LoadFrame()
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
 {
   *aDocShell = nsnull;
@@ -342,7 +282,7 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsFrameLoader::Destroy()
 {
   if (mOwnerContent) {
@@ -368,8 +308,6 @@ nsFrameLoader::Destroy()
   }
 
   mDocShell = nsnull;
-
-  return NS_OK;
 }
 
 nsresult
@@ -565,7 +503,7 @@ nsFrameLoader::EnsureDocShell()
 }
 
 void
-nsFrameLoader::GetURL(nsAString& aURI)
+nsFrameLoader::GetURL(nsString& aURI)
 {
   aURI.Truncate();
 

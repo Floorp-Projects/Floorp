@@ -3363,17 +3363,9 @@ nsGenericHTMLFormElement::FindAndSetForm()
 
 //----------------------------------------------------------------------
 
-nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
-{
-  if (mFrameLoader) {
-    mFrameLoader->Destroy();
-  }
-}
-
 NS_INTERFACE_MAP_BEGIN(nsGenericHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 nsresult
@@ -3422,25 +3414,9 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
     return NS_OK;
   }
 
-  nsresult rv = NS_NewFrameLoader(getter_AddRefs(mFrameLoader));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mFrameLoader->Init(this);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
-{
-  NS_IF_ADDREF(*aFrameLoader = mFrameLoader);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::SetFrameLoader(nsIFrameLoader *aFrameLoader)
-{
-  mFrameLoader = aFrameLoader;
+  mFrameLoader = new nsFrameLoader(this);
+  if (!mFrameLoader)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
@@ -3484,12 +3460,10 @@ nsGenericHTMLFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
   nsGenericHTMLElement::SetDocument(aDocument, aDeep,
                                     aCompileEventHandlers);
 
-  if (!aDocument && mFrameLoader) {
+  if (!aDocument) {
     // This iframe is being taken out of the document, destroy the
     // iframe's frame loader (doing that will tear down the window in
     // this iframe).
-
-    mFrameLoader->Destroy();
 
     mFrameLoader = nsnull;
   }
@@ -3526,6 +3500,12 @@ nsGenericHTMLFrameElement::HandleChromeEvent(nsPresContext* aPresContext,
                                              nsEventStatus* aEventStatus)
 {
   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
+}
+
+PRBool
+nsGenericHTMLFrameElement::IsContentOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eELEMENT | eHTML | eFRAME_ELEMENT));
 }
 
 //----------------------------------------------------------------------

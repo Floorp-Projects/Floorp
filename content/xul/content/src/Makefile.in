@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 		  xultmpl \
 		  webshell \
 		  view \
+		  docshell \
 		  $(NULL)
 
 EXPORTS		= \

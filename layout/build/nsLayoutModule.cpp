@@ -97,7 +97,6 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsISelection.h"
 #include "nsIXBLService.h"
-#include "nsIFrameLoader.h"
 #include "nsICaret.h"
 #include "nsJSEnvironment.h"
 #include "nsLayoutAtoms.h"
@@ -475,7 +474,6 @@ nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewXBLService(nsIXBLService** aResult);
 nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
-nsresult NS_NewFrameLoader(nsIFrameLoader** aResult);
 nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 
@@ -584,7 +582,6 @@ MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSan
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateBindingManager,           nsIBindingManager,           NS_NewBindingManager)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
-MAKE_CTOR(CreateFrameLoader,              nsIFrameLoader,              NS_NewFrameLoader)
 MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewComputedDOMStyle)
 #ifdef MOZ_XUL
 MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXULSortService)
@@ -1160,11 +1157,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_CONTENTPOLICY_CID,
     NS_CONTENTPOLICY_CONTRACTID,
     CreateContentPolicy },
-
-  { "Frame Loader",
-    NS_FRAMELOADER_CID,
-    NS_FRAMELOADER_CONTRACTID,
-    CreateFrameLoader },
 
   { "DOM CSS Computed Style Declaration",
     NS_COMPUTEDDOMSTYLE_CID,
