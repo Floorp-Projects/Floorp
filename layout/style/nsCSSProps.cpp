@@ -843,7 +843,7 @@ nsCSSProps::SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
 {
   PRInt32 i = 1;
   for (;;) {
-    if (aTable[i] < 0) {
+    if (aTable[i] == -1 && aTable[i-1] == -1) {
       break;
     }
     if (aValue == aTable[i]) {
