@@ -67,7 +67,9 @@ _IMGCB_DestroyPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap)
 }
 
 JMC_PUBLIC_API(void)
-_IMGCB_DisplayPixmap(struct IMGCB* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i, jint j, jint k)
+_IMGCB_DisplayPixmap(struct IMGCB* self, jint op, void* a, IL_Pixmap* b,
+					 IL_Pixmap* c, jint d, jint e, jint f, jint g,
+					 jint h, jint i, jint j, jint k)
 {
 }
 
