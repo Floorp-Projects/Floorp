@@ -60,6 +60,8 @@
 #define PAIRWISE_DIGEST_LENGTH			SHA1_LENGTH /* 160-bits */
 #define PAIRWISE_MESSAGE_LENGTH			20          /* 160-bits */
 
+static const SECItem pk11_null_params = { 0 };
+
 /* forward static declarations. */
 static PK11SymKey *pk11_DeriveWithTemplate(PK11SymKey *baseKey, 
 	CK_MECHANISM_TYPE derive, SECItem *param, CK_MECHANISM_TYPE target, 
@@ -3440,7 +3442,8 @@ PK11_DestroyContext(PK11Context *context, PRBool freeit)
     /* initialize the critical fields of the context */
     if (context->savedData != NULL ) PORT_Free(context->savedData);
     if (context->key) PK11_FreeSymKey(context->key);
-    if (context->param) SECITEM_FreeItem(context->param, PR_TRUE);
+    if (context->param && context->param != &pk11_null_params)
+	SECITEM_FreeItem(context->param, PR_TRUE);
     if (context->sessionLock) PZ_DestroyLock(context->sessionLock);
     PK11_FreeSlot(context->slot);
     if (freeit) PORT_Free(context);
@@ -3635,7 +3638,15 @@ static PK11Context *pk11_CreateNewContextInSlot(CK_MECHANISM_TYPE type,
     /* save the parameters so that some digesting stuff can do multiple
      * begins on a single context */
     context->type = type;
-    context->param = SECITEM_DupItem(param);
+    if (param) {
+	if (param->len > 0) {
+	    context->param = SECITEM_DupItem(param);
+	} else {
+	    context->param = (SECItem *)&pk11_null_params;
+	}
+    } else {
+	context->param = NULL;
+    }
     context->init = PR_FALSE;
     context->sessionLock = PZ_NewLock(nssILockPK11cxt);
     if ((context->param == NULL) || (context->sessionLock == NULL)) {
