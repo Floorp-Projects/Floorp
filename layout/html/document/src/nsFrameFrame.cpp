@@ -222,6 +222,12 @@ public:
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                        nsDidReflowStatus aStatus);
 
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD GetParentContent(nsIContent*& aContent);
   PRBool GetURL(nsIContent* aContent, nsString& aResult);
   PRBool GetName(nsIContent* aContent, nsString& aResult);
@@ -232,8 +238,10 @@ public:
 
   nsresult ReloadURL(nsIPresContext* aPresContext);
 
+friend class nsHTMLFrameOuterFrame;
+
 protected:
-  nsresult CreateDocShell(nsIPresContext* aPresContext, const nsSize& aSize);
+  nsresult CreateDocShell(nsIPresContext* aPresContext);
   nsresult DoLoadURL(nsIPresContext* aPresContext);
 
   virtual ~nsHTMLFrameInnerFrame();
@@ -302,8 +310,58 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);
     mIsInline = frameElem ? PR_FALSE : PR_TRUE;
   }
-  return nsHTMLFrameOuterFrameSuper::Init(aPresContext, aContent, aParent,
-                                          aContext, aPrevInFlow);
+
+  nsresult rv =  nsHTMLFrameOuterFrameSuper::Init(aPresContext, aContent, aParent,
+                                                  aContext, aPrevInFlow);
+  if (NS_FAILED(rv))
+    return rv;
+
+  const nsStyleDisplay* disp;
+  aParent->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
+  if (disp->mDisplay == NS_STYLE_DISPLAY_DECK) {
+    nsIView* view = nsnull;
+    GetView(aPresContext, &view);
+
+    if (!view) {
+      nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
+      GetView(aPresContext, &view);
+    }
+
+    nsIWidget* widget;
+    view->GetWidget(widget);
+
+    if (!widget)
+      view->CreateWidget(kCChildCID);   
+  }
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIFrame* firstChild = new (shell.get()) nsHTMLFrameInnerFrame;
+  if (firstChild) {
+    mFrames.SetFrames(firstChild);
+    // Resolve the style context for the inner frame
+    nsresult rv = NS_OK;
+    nsIStyleContext *innerStyleContext = nsnull;
+    rv = aPresContext->ResolveStyleContextFor(mContent, mStyleContext,
+                                              PR_FALSE,
+                                              &innerStyleContext);
+    if (NS_SUCCEEDED(rv)) {
+      rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);
+      // have to release the context: Init does its own AddRef...
+      NS_RELEASE(innerStyleContext);
+    } else {
+      NS_WARNING( "Error resolving style for InnerFrame in nsHTMLFrameOuterFrame");
+    }
+    if (NS_FAILED(rv)){
+      NS_WARNING( "Error initializing InnerFrame in nsHTMLFrameOuterFrame");
+      return rv;
+    }
+  } else {
+    NS_WARNING("no memory allocating inner frame in nsHTMLFrameOuterFrame");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
 }
 
 PRIntn
@@ -415,36 +473,6 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  nsIFrame* firstChild = mFrames.FirstChild();
-  if (nsnull == firstChild) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    firstChild = new (shell.get()) nsHTMLFrameInnerFrame;
-    if (firstChild) {
-      mFrames.SetFrames(firstChild);
-      // Resolve the style context for the inner frame
-      nsresult rv = NS_OK;
-      nsIStyleContext *innerStyleContext = nsnull;
-      rv = aPresContext->ResolveStyleContextFor(mContent, mStyleContext,
-                                                PR_FALSE,
-                                                &innerStyleContext);
-      if (NS_SUCCEEDED(rv)) {
-        rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);
-        // have to release the context: Init does its own AddRef...
-        NS_RELEASE(innerStyleContext);
-      } else {
-        NS_WARNING( "Error resolving style for InnerFrame in nsHTMLFrameOuterFrame");
-      }
-      if (NS_FAILED(rv)){
-        NS_WARNING( "Error initializing InnerFrame in nsHTMLFrameOuterFrame");
-        return rv;
-      }
-    } else {
-      NS_WARNING("no memory allocating inner frame in nsHTMLFrameOuterFrame");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
- 
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
   nsPoint offset(0,0);
   nsMargin border = aReflowState.mComputedBorderPadding;
@@ -462,6 +490,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // Reflow the child and get its desired size
+  nsIFrame* firstChild = mFrames.FirstChild();
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, firstChild,
                                      innerSize);
@@ -536,6 +565,39 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
         if (framesetFrame) {
           framesetFrame->RecalculateBorderResize();
         }
+      }
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::type) {
+    nsHTMLFrameInnerFrame* firstChild = NS_STATIC_CAST(nsHTMLFrameInnerFrame*,
+                                        mFrames.FirstChild());
+    if (!firstChild)
+      return NS_OK;
+
+    nsAutoString value;
+    aChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
+    
+    // Notify our enclosing chrome that the primary content shell
+    // has changed.
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(firstChild->mSubShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(firstChild->mSubShell));
+  
+    // If our container is a web-shell, inform it that it has a new
+    // child. If it's not a web-shell then some things will not operate
+    // properly.
+    nsCOMPtr<nsISupports> container;
+    aPresContext->GetContainer(getter_AddRefs(container));
+    if (container) {
+      nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
+      if (parentAsNode) {
+        nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsNode));
+        
+        nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+        parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+        if (parentTreeOwner)
+          parentTreeOwner->ContentShellAdded(docShellAsItem, 
+            value.EqualsIgnoreCase("content-primary") ? PR_TRUE : PR_FALSE, 
+            value.get());
       }
     }
   }
@@ -902,8 +964,7 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
-                                      const nsSize& aSize)
+nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext)
 {
   nsresult rv;
   nsCOMPtr<nsIContent> parentContent;
@@ -1065,7 +1126,7 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
   nsIView* parView;
   nsPoint origin;
   GetOffsetFromView(aPresContext, origin, &parView);  
-  nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
+  nsRect viewBounds(origin.x, origin.y, 10, 10);
 
   nsCOMPtr<nsIViewManager> viewMan;
   presShell->GetViewManager(getter_AddRefs(viewMan));  
@@ -1089,8 +1150,7 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
   nsCOMPtr<nsIWidget> widget;
   view->GetWidget(*getter_AddRefs(widget));
 
-  mSubShell->InitWindow(nsnull, widget, 0, 0, NSToCoordRound(aSize.width * t2p),
-    NSToCoordRound(aSize.height * t2p));
+  mSubShell->InitWindow(nsnull, widget, 0, 0, 10, 10);
   mSubShell->Create();
 
   mSubShell->SetVisibility(PR_TRUE);
@@ -1271,6 +1331,40 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
+nsHTMLFrameInnerFrame::Init(nsIPresContext*  aPresContext,
+                            nsIContent*      aContent,
+                            nsIFrame*        aParent,
+                            nsIStyleContext* aContext,
+                            nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // determine if we are a printcontext
+  PRBool shouldCreateDoc = PR_TRUE;
+  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+  if  (thePrinterContext) {
+    // we are printing
+    shouldCreateDoc = PR_FALSE;
+  }
+  
+  if (!mCreatingViewer && shouldCreateDoc) {
+    // create the web shell
+    // we do this even if the size is not positive (bug 11762)
+    // we do this even if there is no src (bug 16218)
+    if (!mSubShell)
+      rv = CreateDocShell(aPresContext);
+    // Whether or not we had to create a webshell, load the document
+    if (NS_SUCCEEDED(rv)) {
+      DoLoadURL(aPresContext);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
@@ -1286,30 +1380,6 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = NS_OK;
 
   // use the max size set in aReflowState by the nsHTMLFrameOuterFrame as our size
-
-  // determine if we are a printcontext
-
-  PRBool shouldCreateDoc = PR_TRUE;
-  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  if  (thePrinterContext) {
-    // we are printing
-    shouldCreateDoc = PR_FALSE;
-  }
-
-  
-  if (!mCreatingViewer && shouldCreateDoc) {
-    // create the web shell
-    // we do this even if the size is not positive (bug 11762)
-    // we do this even if there is no src (bug 16218)
-    if (!mSubShell) {
-      nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-      rv = CreateDocShell(aPresContext, maxSize);
-    }
-    // Whether or not we had to create a webshell, load the document
-    if (NS_SUCCEEDED(rv)) {
-      DoLoadURL(aPresContext);
-    }
-  }
 
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
 
