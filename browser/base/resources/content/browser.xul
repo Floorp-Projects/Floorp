@@ -25,7 +25,6 @@ Contributor(s): ______________________________________. -->
 
 <?xul-overlay href="chrome://browser/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/bookmarks/bookmarksOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 
 
