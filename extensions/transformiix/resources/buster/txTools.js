@@ -20,7 +20,7 @@
  *   Axel Hecht <axel@pike.org> (Original Author)
  */
 
-var name_array,index_array,__docSet;
+var name_array,index_array;
 
 function do_transforms(new_name_array,new_number_array,verbose){
   if (new_name_array) {
@@ -31,8 +31,7 @@ function do_transforms(new_name_array,new_number_array,verbose){
     dump("==============================\n");
   }
   if (name_array.length){
-    current=name_array.shift();
-    __docSet=new txDocSet(current,index_array.shift());
+    new txDocSet(name_array.shift(),index_array.shift());
   }
 }
 
@@ -43,17 +42,17 @@ function txDocSet(name,index,verbose){
   if (verbose) this.mVerbose=verbose;
   this.mSource = document.implementation.createDocument("","",null);
   this.mStyle = document.implementation.createDocument("","",null);
-  this.mReference = document.implementation.createDocument("","",null);
   this.mResult = document.implementation.createDocument("","",null);
-  this.mSource.addEventListener("load",this.docLoaded,false);
-  this.mStyle.addEventListener("load",this.styleLoaded,false);
-  this.mReference.addEventListener("load",this.refLoaded,false);
+  this.mSource.addEventListener("load",this.loaded(1),false);
+  this.mStyle.addEventListener("load",this.loaded(2),false);
   this.mSource.load(this.mBase+"conf/"+name+".xml");
   this.mStyle.load(this.mBase+"conf/"+name+".xsl");
   this.mIsError = name.match(/\/err\//);
   if (this.mIsError){
-    this.mLoaded = 2;
+    this.stuffLoaded(4);
   } else {
+    this.mReference = document.implementation.createDocument("","",null);
+    this.mReference.addEventListener("load",this.loaded(4),false);
     this.mReference.load(this.mBase+"conf-gold/"+name+".out");
   }
 }
@@ -70,17 +69,27 @@ txDocSet.prototype = {
   mLoaded    : 0,
   mIndex     : 0,
 
-  styleLoaded  : function(e){
-    __docSet.stuffLoaded(1);
+  loaded  : function(i) {
+    var self = this;
+    return function(e) { return self.stuffLoaded(i); };
   },
-  docLoaded  : function(e){
-    __docSet.stuffLoaded(4);
-  },
-  refLoaded  : function(e){
-    __docSet.stuffLoaded(2);
-  },
-  stuffLoaded  : function(mask){
-    __docSet.mLoaded+=mask;
+  stuffLoaded  : function(mask) {
+    if (mask==4 && this.mReference) {
+      var docElement=this.mReference.documentElement;
+      if (docElement && docElement.nodeName=="parsererror") {
+        try {
+          var text=loadFile(docElement.baseURI);
+          this.mReference.removeChild(docElement);
+          var wrapper=this.mReference.createElement("transformiix:result");
+          var textNode=this.mReference.createTextNode(text);
+          wrapper.appendChild(textNode);
+          this.mReference.appendChild(wrapper);
+        }
+        catch (e) {
+        }
+      }
+    }
+    this.mLoaded+=mask;
     if (this.mLoaded==7){
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var txProc = new XSLTProcessor(),isGood=false;
@@ -91,6 +100,7 @@ txDocSet.prototype = {
         DumpDOM(this.mResult);
         handle_result(this.mIndex,true);
       } else {
+        this.mReference.normalize();
         try{
           isGood = DiffDOM(this.mResult.documentElement,this.mReference.documentElement);
         } catch (e) {isGood = false;};
@@ -113,3 +123,24 @@ txDocSet.prototype = {
     }
   }
 };
+
+const IOSERVICE_CTRID = "@mozilla.org/network/io-service;1";
+const nsIIOService    = Components.interfaces.nsIIOService;
+const SIS_CTRID       = "@mozilla.org/scriptableinputstream;1"
+const nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;
+
+function loadFile(url)
+{
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var serv = Components.classes[IOSERVICE_CTRID].getService(nsIIOService);
+    if (!serv)
+        throw Components.results.ERR_FAILURE;
+    
+    var chan = serv.newChannel(url, null);
+
+    var instream = 
+        Components.classes[SIS_CTRID].createInstance(nsIScriptableInputStream);
+    instream.init(chan.open());
+
+    return instream.read(instream.available());
+}
