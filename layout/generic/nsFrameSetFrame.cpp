@@ -1039,7 +1039,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
           borderFrame->mPrevNeighbor = lastRow; 
           borderFrame->mNextNeighbor = cellIndex.y;  
         } else {
-          ChildAt(borderChildX, (nsIFrame*&)borderFrame);
+          borderFrame = (nsHTMLFramesetBorderFrame*)FrameAt(mFirstChild, borderChildX);
           borderChildX++;
         }
         nsSize borderSize(aDesiredSize.width, borderWidth);
@@ -1059,7 +1059,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
             borderFrame->mPrevNeighbor = lastCol; 
             borderFrame->mNextNeighbor = cellIndex.x;  
           } else {         
-            ChildAt(borderChildX, (nsIFrame*&)borderFrame);
+            borderFrame = (nsHTMLFramesetBorderFrame*)FrameAt(mFirstChild, borderChildX);
             borderChildX++;
           }
           nsSize borderSize(borderWidth, aDesiredSize.height);
@@ -1217,7 +1217,7 @@ nsHTMLFramesetFrame::CanResize(PRBool aVertical, PRBool aLeft)
   if (aVertical) {
     startX = (aLeft) ? 0 : mNumCols-1;
     for (childX = startX; childX < mNonBorderChildCount; childX += mNumCols) {
-      ChildAt(childX, child);
+      child = FrameAt(mFirstChild, childX);
       if (!CanChildResize(aVertical, aLeft, childX, ChildIsFrameset(child))) {
         return PR_FALSE;
       }
@@ -1226,7 +1226,7 @@ nsHTMLFramesetFrame::CanResize(PRBool aVertical, PRBool aLeft)
     startX = (aLeft) ? 0 : (mNumRows - 1) * mNumCols;
     PRInt32 endX = startX + mNumCols;
     for (childX = startX; childX < endX; childX++) {
-      ChildAt(childX, child);
+      child = FrameAt(mFirstChild, childX);
       if (!CanChildResize(aVertical, aLeft, childX, ChildIsFrameset(child))) {
         return PR_FALSE;
       }
@@ -1259,8 +1259,7 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
 PRBool 
 nsHTMLFramesetFrame::CanChildResize(PRBool aVertical, PRBool aLeft, PRInt32 aChildX, PRBool aFrameset) 
 {
-  nsIFrame* child;
-  ChildAt(aChildX, child);
+  nsIFrame* child = FrameAt(mFirstChild, aChildX);
   if (aFrameset) {
     return ((nsHTMLFramesetFrame*)child)->CanResize(aVertical, aLeft);
   } else {
@@ -1314,9 +1313,11 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext& aPresContext, nsHTMLFrameset
     mMinDrag = NSIntPixelsToTwips(2, p2t);  // set min drag and min frame size to 2 pixels
   }
 
+#if 0
   PRInt32 index;
   IndexOf(aBorder, index);
   NS_ASSERTION((nsnull != aBorder) && (index >= 0), "invalid dragger");
+#endif
   nsIView* view;
   GetView(view);
   if (view) {

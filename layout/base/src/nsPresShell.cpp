@@ -31,6 +31,7 @@
 #include "nsVoidArray.h"
 #include "nsIPref.h"
 #include "nsIViewObserver.h"
+#include "nsContainerFrame.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -977,14 +978,12 @@ ShowDiffs(nsIFrame* k1, nsIFrame* k2, const nsRect& r1, const nsRect& r2)
 static void
 CompareTrees(nsIFrame* aA, nsIFrame* aB)
 {
-  PRInt32 n1, n2;
-  aA->ChildCount(n1);
-  aB->ChildCount(n2);
-  NS_ASSERTION(n1 == n2, "child counts don't match");
-
   nsIFrame* k1, *k2;
   aA->FirstChild(k1);
   aB->FirstChild(k2);
+  NS_ASSERTION(nsContainerFrame::LengthOf(k1) == nsContainerFrame::LengthOf(k2),
+               "child counts don't match");
+
   nsRect r1, r2;
   nsIView* v1, *v2;
   nsIWidget* w1, *w2;

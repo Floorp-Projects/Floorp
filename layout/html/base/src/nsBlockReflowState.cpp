@@ -3558,8 +3558,8 @@ nsBlockFrame::DeleteNextInFlowsFor(nsIPresContext& aPresContext, nsIFrame* aChil
 #ifdef NS_DEBUG
   PRInt32   childCount;
   nsIFrame* firstChild;
-  nextInFlow->ChildCount(childCount);
   nextInFlow->FirstChild(firstChild);
+  childCount = LengthOf(firstChild);
   NS_ASSERTION((0 == childCount) && (nsnull == firstChild),
                "deleting !empty next-in-flow");
 #endif

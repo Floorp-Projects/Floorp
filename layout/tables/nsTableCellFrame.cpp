@@ -1133,7 +1133,7 @@ NS_METHOD nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {

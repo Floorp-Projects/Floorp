@@ -133,8 +133,7 @@ nsTableRowGroupFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   mChildCount = LengthOf(mFirstChild);
 
   // XXX TEMP CODE UNTIL nsContainerFrame GOES AWAY...
-  nsIFrame* lastChild;
-  LastChild(lastChild);
+  nsIFrame* lastChild = LastFrame(mFirstChild);
   if (nsnull != lastChild) {
     lastChild->GetContentIndex(mLastContentOffset);
   }
@@ -455,10 +454,9 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
 #ifdef NS_DEBUG
   NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
 
-  nsIFrame* lastChild;
+  nsIFrame* lastChild = LastFrame(mFirstChild);
   PRInt32   lastIndexInParent;
 
-  LastChild(lastChild);
   lastChild->GetContentIndex(lastIndexInParent);
 	NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
 #endif
@@ -527,10 +525,8 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
 #ifdef NS_DEBUG
   PRInt32        kidIndex = NextChildOffset();
 #endif
-  nsIFrame*      prevKidFrame;
+  nsIFrame*      prevKidFrame = LastFrame(mFirstChild);
    
-  LastChild(prevKidFrame);
-
   // This will hold the prevKidFrame's mLastContentIsComplete
   // status. If we have to push the frame that follows prevKidFrame
   // then this will become our mLastContentIsComplete state. Since
@@ -919,7 +915,7 @@ nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*      aP
 
   } else {
     // Get the last frame
-    LastChild(lastKidFrame);
+    lastKidFrame = LastFrame(mFirstChild);
   }
 
   // XXX Deal with cells that have rowspans.
@@ -1145,7 +1141,7 @@ NS_METHOD nsTableRowGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {

@@ -769,8 +769,7 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
       // hook lastColGroupFrame into child list
       if (nsnull==firstRowGroupFrame)
       { // make lastColGroupFrame the last frame
-        nsIFrame *lastChild=nsnull;
-        LastChild(lastChild);
+        nsIFrame *lastChild = LastFrame(mFirstChild);
         lastChild->SetNextSibling(lastColGroupFrame);
       }
       else
@@ -1433,7 +1432,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*         aPresCo
 
   } else {
     // Get the last frame
-    LastChild(lastKidFrame);
+    lastKidFrame = LastFrame(mFirstChild);
   }
 
   // Update our running y-offset to reflect the bottommost child
@@ -2104,10 +2103,9 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
 #ifdef NS_DEBUG
   NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
 
-  nsIFrame* lastChild;
+  nsIFrame* lastChild = LastFrame(mFirstChild);
   PRInt32   lastIndexInParent;
 
-  LastChild(lastChild);
   lastChild->GetContentIndex(lastIndexInParent);
   NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
 #endif
@@ -2176,10 +2174,8 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
 #ifdef NS_DEBUG
   PRInt32        kidIndex = NextChildOffset();
 #endif
-  nsIFrame*      prevKidFrame;
+  nsIFrame*      prevKidFrame = LastFrame(mFirstChild);
    
-  LastChild(prevKidFrame);
-
   // This will hold the prevKidFrame's mLastContentIsComplete
   // status. If we have to push the frame that follows prevKidFrame
   // then this will become our mLastContentIsComplete state. Since
@@ -2611,11 +2607,13 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
         PRInt32 colGroupStartingIndex = ((nsTableColGroupFrame *)childFrame)->GetStartColumnIndex();
         if (aColIndex >= colGroupStartingIndex)
         { // the cell's col might be in this col group
-          PRInt32 childCount;
-          childFrame->ChildCount(childCount);
+          // XXX FIX ME...
+          nsIFrame* firstChild;
+          childFrame->FirstChild(firstChild);
+          PRInt32 childCount = LengthOf(firstChild);
           if (aColIndex < colGroupStartingIndex + childCount)
           { // yep, we've found it
-            childFrame->ChildAt(aColIndex-colGroupStartingIndex, (nsIFrame *&)aColFrame);
+            aColFrame = (nsTableColFrame*)FrameAt(firstChild, aColIndex-colGroupStartingIndex);
             break;
           }
         }
@@ -3398,7 +3396,7 @@ NS_METHOD nsTableFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter)
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {

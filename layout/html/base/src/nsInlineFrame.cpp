@@ -146,7 +146,7 @@ nsInlineFrame::AppendNewFrames(nsIPresContext* aPresContext,
     lastFrame = nsnull;
     mFirstChild = aNewFrame;
   } else {
-    LastChild(lastFrame);
+    LastFrame(mFirstChild);
     lastFrame->SetNextSibling(aNewFrame);
   }
   mChildCount += LengthOf(aNewFrame);
@@ -937,8 +937,7 @@ nsInlineFrame::DrainOverflowLists()
   // Our overflow list goes to the end of our child list
   if (nsnull != mOverflowList) {
     // Append the overflow list to the end of our child list
-    nsIFrame* lastFrame;
-    LastChild(lastFrame);
+    nsIFrame* lastFrame = LastFrame(mFirstChild);
     if (nsnull == lastFrame) {
       mFirstChild = mOverflowList;
       mFirstChild->GetContentIndex(mFirstContentOffset);
