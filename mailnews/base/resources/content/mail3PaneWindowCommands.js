@@ -621,6 +621,7 @@ var DefaultController =
                 return;
       case "cmd_search":
         MsgSearchMessages();
+        return;
       case "button_mark":
 			case "cmd_markAsRead":
 				MsgMarkMsgAsRead(null);
