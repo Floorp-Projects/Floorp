@@ -84,7 +84,7 @@
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLFragmentContentSink.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIHTMLToTextSink.h"
 #include "nsILayoutDebugger.h"
 #include "nsINameSpaceManager.h"
@@ -540,7 +540,6 @@ MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNam
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
 MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
 MAKE_CTOR(CreateDocumentViewer,           nsIDocumentViewer,           NS_NewDocumentViewer)
-MAKE_CTOR(CreateHTMLStyleSheet,           nsIHTMLStyleSheet,           NS_NewHTMLStyleSheet)
 MAKE_CTOR(CreateCSSStyleSheet,            nsICSSStyleSheet,            NS_NewCSSStyleSheet)
 MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTMLDocument)
 MAKE_CTOR(CreateHTMLCSSStyleSheet,        nsIHTMLCSSStyleSheet,        NS_NewHTMLCSSStyleSheet)
@@ -934,11 +933,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_DOCUMENT_VIEWER_CID,
     nsnull,
     CreateDocumentViewer },
-
-  { "HTML Style Sheet",
-    NS_HTMLSTYLESHEET_CID,
-    nsnull,
-    CreateHTMLStyleSheet },
 
   { "CSS Style Sheet",
     NS_CSS_STYLESHEET_CID,

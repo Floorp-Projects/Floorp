@@ -44,13 +44,13 @@
 #include "nsIStyleRule.h"
 
 class nsIAtom;
-class nsIHTMLStyleSheet;
+class nsHTMLStyleSheet;
 class nsRuleWalker;
 
 class nsMappedAttributes : public nsIStyleRule
 {
 public:
-  nsMappedAttributes(nsIHTMLStyleSheet* aSheet,
+  nsMappedAttributes(nsHTMLStyleSheet* aSheet,
                      nsMapRuleToAttributesFunc aMapRuleFunc);
 
   void* operator new(size_t size, PRUint32 aAttrCount = 1) CPP_THROW_NEW;
@@ -75,8 +75,8 @@ public:
   {
     mSheet = nsnull;
   }
-  void SetStyleSheet(nsIHTMLStyleSheet* aSheet);
-  nsIHTMLStyleSheet* GetStyleSheet()
+  void SetStyleSheet(nsHTMLStyleSheet* aSheet);
+  nsHTMLStyleSheet* GetStyleSheet()
   {
     return mSheet;
   }
@@ -133,7 +133,7 @@ private:
 #ifdef DEBUG
   PRUint16 mBufferSize;
 #endif
-  nsIHTMLStyleSheet* mSheet; //weak
+  nsHTMLStyleSheet* mSheet; //weak
   nsMapRuleToAttributesFunc mRuleMapper;
   void* mAttrs[1];
 };

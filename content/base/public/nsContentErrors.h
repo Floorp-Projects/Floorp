@@ -52,7 +52,7 @@
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_CONTENT, 1)
 
 
-/** Error codes for nsIHTMLStyleSheet */
+/** Error codes for nsHTMLStyleSheet */
 // XXX this is not really used
 #define NS_HTML_STYLE_PROPERTY_NOT_THERE \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_CONTENT, 2)

@@ -27,68 +27,41 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
+
+#include "nsHTMLStyleSheet.h"
 #include "nsINameSpaceManager.h"
-#include "nsIHTMLStyleSheet.h"
-#include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "pldhash.h"
 #include "nsMappedAttributes.h"
 #include "nsILink.h"
-#include "nsIStyleRuleProcessor.h"
-#include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
-#include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
-#include "nsLayoutAtoms.h"
-#include "nsLayoutCID.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsCSSAnonBoxes.h"
 
 #include "nsRuleWalker.h"
 
-class HTMLColorRule : public nsIStyleRule {
-public:
-  HTMLColorRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~HTMLColorRule();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-
-  // The new mapping function.
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-
-#ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-  nscolor             mColor;
-  nsIHTMLStyleSheet*  mSheet;
-};
-
-HTMLColorRule::HTMLColorRule(nsIHTMLStyleSheet* aSheet)
+nsHTMLStyleSheet::HTMLColorRule::HTMLColorRule(nsHTMLStyleSheet* aSheet)
   : mSheet(aSheet)
 {
 }
 
-HTMLColorRule::~HTMLColorRule()
+nsHTMLStyleSheet::HTMLColorRule::~HTMLColorRule()
 {
 }
 
-NS_IMPL_ISUPPORTS1(HTMLColorRule, nsIStyleRule)
+NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::HTMLColorRule, nsIStyleRule)
 
 NS_IMETHODIMP
-HTMLColorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+nsHTMLStyleSheet::HTMLColorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   NS_IF_ADDREF(mSheet);
   aSheet = mSheet;
@@ -96,7 +69,7 @@ HTMLColorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 }
 
 NS_IMETHODIMP
-HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
+nsHTMLStyleSheet::HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSID == eStyleStruct_Color) {
     if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null)
@@ -107,51 +80,32 @@ HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
+nsHTMLStyleSheet::HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
 {
   return NS_OK;
 }
 #endif
 
-class GenericTableRule: public nsIStyleRule {
-public:
-  GenericTableRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~GenericTableRule();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-
-  // The new mapping function.
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-
-#ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-  nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
-};
-
-GenericTableRule::GenericTableRule(nsIHTMLStyleSheet* aSheet)
+nsHTMLStyleSheet::GenericTableRule::GenericTableRule(nsHTMLStyleSheet* aSheet)
 {
   mSheet = aSheet;
 }
 
-GenericTableRule::~GenericTableRule()
+nsHTMLStyleSheet::GenericTableRule::~GenericTableRule()
 {
 }
 
-NS_IMPL_ISUPPORTS1(GenericTableRule, nsIStyleRule)
+NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::GenericTableRule, nsIStyleRule)
 
 NS_IMETHODIMP
-GenericTableRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+nsHTMLStyleSheet::GenericTableRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   aSheet = mSheet;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GenericTableRule::MapRuleInfoInto(nsRuleData* aRuleData)
+nsHTMLStyleSheet::GenericTableRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   // Nothing to do.
   return NS_OK;
@@ -159,29 +113,18 @@ GenericTableRule::MapRuleInfoInto(nsRuleData* aRuleData)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-GenericTableRule::List(FILE* out, PRInt32 aIndent) const
+nsHTMLStyleSheet::GenericTableRule::List(FILE* out, PRInt32 aIndent) const
 {
   return NS_OK;
 }
 #endif
 
-// -----------------------------------------------------------
-// this rule handles <th> inheritance
-// -----------------------------------------------------------
-class TableTHRule: public GenericTableRule {
-public:
-  TableTHRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~TableTHRule();
-
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-};
-
-TableTHRule::TableTHRule(nsIHTMLStyleSheet* aSheet)
+nsHTMLStyleSheet::TableTHRule::TableTHRule(nsHTMLStyleSheet* aSheet)
 : GenericTableRule(aSheet)
 {
 }
 
-TableTHRule::~TableTHRule()
+nsHTMLStyleSheet::TableTHRule::~TableTHRule()
 {
 }
 
@@ -201,7 +144,7 @@ static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleDa
 }
 
 NS_IMETHODIMP
-TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
+nsHTMLStyleSheet::TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData && aRuleData->mSID == eStyleStruct_Text) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
@@ -295,23 +238,12 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
   }
 }
 
-// -----------------------------------------------------------
-// this rule handles borders on a <thead>, <tbody>, <tfoot> when rules is set on its <table>
-// -----------------------------------------------------------
-class TableTbodyRule: public GenericTableRule {
-public:
-  TableTbodyRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~TableTbodyRule();
-
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-};
-
-TableTbodyRule::TableTbodyRule(nsIHTMLStyleSheet* aSheet)
+nsHTMLStyleSheet::TableTbodyRule::TableTbodyRule(nsHTMLStyleSheet* aSheet)
 : GenericTableRule(aSheet)
 {
 }
 
-TableTbodyRule::~TableTbodyRule()
+nsHTMLStyleSheet::TableTbodyRule::~TableTbodyRule()
 {
 }
 
@@ -324,7 +256,7 @@ static void TbodyPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aR
 }
 
 NS_IMETHODIMP
-TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
+nsHTMLStyleSheet::TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
@@ -334,23 +266,12 @@ TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
 }
 // -----------------------------------------------------------
 
-// -----------------------------------------------------------
-// this rule handles borders on a <row> when rules is set on its <table>
-// -----------------------------------------------------------
-class TableRowRule: public GenericTableRule {
-public:
-  TableRowRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~TableRowRule();
-
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-};
-
-TableRowRule::TableRowRule(nsIHTMLStyleSheet* aSheet)
+nsHTMLStyleSheet::TableRowRule::TableRowRule(nsHTMLStyleSheet* aSheet)
 : GenericTableRule(aSheet)
 {
 }
 
-TableRowRule::~TableRowRule()
+nsHTMLStyleSheet::TableRowRule::~TableRowRule()
 {
 }
 
@@ -363,7 +284,7 @@ static void RowPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRul
 }
 
 NS_IMETHODIMP
-TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
+nsHTMLStyleSheet::TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
@@ -372,23 +293,12 @@ TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
-// -----------------------------------------------------------
-// this rule handles borders on a <colgroup> when rules is set on its <table>
-// -----------------------------------------------------------
-class TableColgroupRule: public GenericTableRule {
-public:
-  TableColgroupRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~TableColgroupRule();
-
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-};
-
-TableColgroupRule::TableColgroupRule(nsIHTMLStyleSheet* aSheet)
+nsHTMLStyleSheet::TableColgroupRule::TableColgroupRule(nsHTMLStyleSheet* aSheet)
 : GenericTableRule(aSheet)
 {
 }
 
-TableColgroupRule::~TableColgroupRule()
+nsHTMLStyleSheet::TableColgroupRule::~TableColgroupRule()
 {
 }
 
@@ -401,7 +311,7 @@ static void ColgroupPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData*
 }
 
 NS_IMETHODIMP
-TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
+nsHTMLStyleSheet::TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
@@ -410,23 +320,12 @@ TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
-// -----------------------------------------------------------
-// this rule handles borders on a <col> when rules is set on its <table>
-// -----------------------------------------------------------
-class TableColRule: public GenericTableRule {
-public:
-  TableColRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~TableColRule();
-
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-};
-
-TableColRule::TableColRule(nsIHTMLStyleSheet* aSheet)
+nsHTMLStyleSheet::TableColRule::TableColRule(nsHTMLStyleSheet* aSheet)
 : GenericTableRule(aSheet)
 {
 }
 
-TableColRule::~TableColRule()
+nsHTMLStyleSheet::TableColRule::~TableColRule()
 {
 }
 
@@ -439,7 +338,7 @@ static void ColPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRul
 }
 
 NS_IMETHODIMP
-TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
+nsHTMLStyleSheet::TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
@@ -497,102 +396,8 @@ static PLDHashTableOps MappedAttrTable_Ops = {
 
 // -----------------------------------------------------------
 
-class HTMLStyleSheetImpl : public nsIHTMLStyleSheet,
-                           public nsIStyleRuleProcessor {
-public:
-  HTMLStyleSheetImpl(void);
-  nsresult Init();
-
-  NS_DECL_ISUPPORTS
-
-  // nsIStyleSheet api
-  NS_IMETHOD GetURL(nsIURI*& aURL) const;
-  NS_IMETHOD GetTitle(nsString& aTitle) const;
-  NS_IMETHOD GetType(nsString& aType) const;
-  NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
-  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
-  NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const;
-  NS_IMETHOD_(PRBool) HasRules() const;
-
-  NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
-  
-  NS_IMETHOD SetEnabled(PRBool aEnabled);
-
-  NS_IMETHOD GetComplete(PRBool& aComplete) const;
-  NS_IMETHOD SetComplete();
-  
-  // style sheet owner info
-  NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const;  // will be null
-  NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
-
-  NS_IMETHOD SetOwningDocument(nsIDocument* aDocumemt);
-
-  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                   nsIStyleRuleProcessor* aPrevProcessor);
-
-  // nsIStyleRuleProcessor API
-  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
-                           nsIAtom* aMedium);
-
-  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
-                           nsIAtom* aMedium);
-
-  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsIAtom* aMedium,
-                                    nsReStyleHint* aResult);
-
-  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                        nsIAtom* aMedium,
-                                        nsReStyleHint* aResult);
-
-  // nsIHTMLStyleSheet api
-  NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
-  NS_IMETHOD Reset(nsIURI* aURL);
-  NS_IMETHOD GetLinkColor(nscolor& aColor);
-  NS_IMETHOD GetActiveLinkColor(nscolor& aColor);
-  NS_IMETHOD GetVisitedLinkColor(nscolor& aColor);
-  NS_IMETHOD SetLinkColor(nscolor aColor);
-  NS_IMETHOD SetActiveLinkColor(nscolor aColor);
-  NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
-
-  // Mapped Attribute management methods
-  NS_IMETHOD UniqueMappedAttributes(nsMappedAttributes* aMapped,
-                                    nsMappedAttributes*& aUniqueMapped);
-  NS_IMETHOD DropMappedAttributes(nsMappedAttributes* aMapped);
-
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-private: 
-  // These are not supported and are not implemented! 
-  HTMLStyleSheetImpl(const HTMLStyleSheetImpl& aCopy); 
-  HTMLStyleSheetImpl& operator=(const HTMLStyleSheetImpl& aCopy); 
-
-protected:
-  virtual ~HTMLStyleSheetImpl();
-
-protected:
-  nsIURI*              mURL;
-  nsIDocument*         mDocument;
-  HTMLColorRule*       mLinkRule;
-  HTMLColorRule*       mVisitedRule;
-  HTMLColorRule*       mActiveRule;
-  HTMLColorRule*       mDocumentColorRule;
-  TableTbodyRule*      mTableTbodyRule;
-  TableRowRule*        mTableRowRule;
-  TableColgroupRule*   mTableColgroupRule;
-  TableColRule*        mTableColRule;
-  TableTHRule*         mTableTHRule;
-
-  PLDHashTable         mMappedAttrTable;
-};
-
-
-HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
-  : nsIHTMLStyleSheet(),
-    mRefCnt(0),
-    mURL(nsnull),
+nsHTMLStyleSheet::nsHTMLStyleSheet(void)
+  : mURL(nsnull),
     mDocument(nsnull),
     mLinkRule(nsnull),
     mVisitedRule(nsnull),
@@ -603,7 +408,7 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
 }
 
 nsresult
-HTMLStyleSheetImpl::Init()
+nsHTMLStyleSheet::Init()
 {
   mTableTbodyRule = new TableTbodyRule(this);
   if (!mTableTbodyRule)
@@ -633,7 +438,7 @@ HTMLStyleSheetImpl::Init()
   return NS_OK;
 }
 
-HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
+nsHTMLStyleSheet::~nsHTMLStyleSheet()
 {
   NS_IF_RELEASE(mURL);
   if (nsnull != mLinkRule) {
@@ -676,11 +481,11 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
     PL_DHashTableFinish(&mMappedAttrTable);
 }
 
-NS_IMPL_ISUPPORTS3(HTMLStyleSheetImpl, nsIHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
+NS_IMPL_ISUPPORTS2(nsHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                          nsIStyleRuleProcessor* /*aPrevProcessor*/)
+nsHTMLStyleSheet::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
+                                        nsIStyleRuleProcessor* /*aPrevProcessor*/)
 {
   aProcessor = this;
   NS_ADDREF(aProcessor);
@@ -707,8 +512,8 @@ static nsresult GetBodyColor(nsIPresContext* aPresContext, nscolor* aColor)
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
-                                  nsIAtom* aMedium)
+nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData,
+                                nsIAtom* aMedium)
 {
   nsIStyledContent *styledContent = aData->mStyledContent;
 
@@ -789,9 +594,9 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
 
 // Test if style is dependent on content state
 NS_IMETHODIMP
-HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                           nsIAtom* aMedium,
-                                           nsReStyleHint* aResult)
+nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
+                                         nsIAtom* aMedium,
+                                         nsReStyleHint* aResult)
 {
   if (mActiveRule &&
       (aData->mStateMask & NS_EVENT_STATE_ACTIVE) &&
@@ -807,9 +612,9 @@ HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                               nsIAtom* aMedium,
-                                               nsReStyleHint* aResult)
+nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                             nsIAtom* aMedium,
+                                             nsReStyleHint* aResult)
 {
   // Result is true for |href| changes on HTML links if we have link rules.
   nsIStyledContent *styledContent = aData->mStyledContent;
@@ -837,8 +642,8 @@ HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
 
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
-                                  nsIAtom* aMedium)
+nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData,
+                                nsIAtom* aMedium)
 {
   nsIAtom* pseudoTag = aData->mPseudoTag;
   if (pseudoTag == nsCSSAnonBoxes::tableCol) {
@@ -853,7 +658,7 @@ HTMLStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
 
   // nsIStyleSheet api
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetURL(nsIURI*& aURL) const
+nsHTMLStyleSheet::GetURL(nsIURI*& aURL) const
 {
   aURL = mURL;
   NS_IF_ADDREF(aURL);
@@ -861,80 +666,80 @@ HTMLStyleSheetImpl::GetURL(nsIURI*& aURL) const
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetTitle(nsString& aTitle) const
+nsHTMLStyleSheet::GetTitle(nsString& aTitle) const
 {
   aTitle.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetType(nsString& aType) const
+nsHTMLStyleSheet::GetType(nsString& aType) const
 {
   aType.Assign(NS_LITERAL_STRING("text/html"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetMediumCount(PRInt32& aCount) const
+nsHTMLStyleSheet::GetMediumCount(PRInt32& aCount) const
 {
   aCount = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
+nsHTMLStyleSheet::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
 {
   aMedium = nsnull;
   return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP_(PRBool)
-HTMLStyleSheetImpl::UseForMedium(nsIAtom* aMedium) const
+nsHTMLStyleSheet::UseForMedium(nsIAtom* aMedium) const
 {
   return PR_TRUE; // works for all media
 }
 
 NS_IMETHODIMP_(PRBool)
-HTMLStyleSheetImpl::HasRules() const
+nsHTMLStyleSheet::HasRules() const
 {
   return PR_TRUE; // We have rules at all reasonable times
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetApplicable(PRBool& aApplicable) const
+nsHTMLStyleSheet::GetApplicable(PRBool& aApplicable) const
 {
   aApplicable = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::SetEnabled(PRBool aEnabled)
+nsHTMLStyleSheet::SetEnabled(PRBool aEnabled)
 { // these can't be disabled
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetComplete(PRBool& aComplete) const
+nsHTMLStyleSheet::GetComplete(PRBool& aComplete) const
 {
   aComplete = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::SetComplete()
+nsHTMLStyleSheet::SetComplete()
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetParentSheet(nsIStyleSheet*& aParent) const
+nsHTMLStyleSheet::GetParentSheet(nsIStyleSheet*& aParent) const
 {
   aParent = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetOwningDocument(nsIDocument*& aDocument) const
+nsHTMLStyleSheet::GetOwningDocument(nsIDocument*& aDocument) const
 {
   aDocument = mDocument;
   NS_IF_ADDREF(aDocument);
@@ -942,14 +747,14 @@ HTMLStyleSheetImpl::GetOwningDocument(nsIDocument*& aDocument) const
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
+nsHTMLStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument; // not refcounted
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
+nsresult
+nsHTMLStyleSheet::Init(nsIURI* aURL, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aURL && aDocument, "null ptr");
   if (! aURL || ! aDocument)
@@ -964,8 +769,8 @@ HTMLStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::Reset(nsIURI* aURL)
+nsresult
+nsHTMLStyleSheet::Reset(nsIURI* aURL)
 {
   NS_IF_RELEASE(mURL);
   mURL = aURL;
@@ -996,8 +801,8 @@ HTMLStyleSheetImpl::Reset(nsIURI* aURL)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::GetLinkColor(nscolor& aColor)
+nsresult
+nsHTMLStyleSheet::GetLinkColor(nscolor& aColor)
 {
   if (!mLinkRule) {
     return NS_HTML_STYLE_PROPERTY_NOT_THERE;
@@ -1008,8 +813,8 @@ HTMLStyleSheetImpl::GetLinkColor(nscolor& aColor)
   }
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::GetActiveLinkColor(nscolor& aColor)
+nsresult
+nsHTMLStyleSheet::GetActiveLinkColor(nscolor& aColor)
 {
   if (!mActiveRule) {
     return NS_HTML_STYLE_PROPERTY_NOT_THERE;
@@ -1020,8 +825,8 @@ HTMLStyleSheetImpl::GetActiveLinkColor(nscolor& aColor)
   }
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::GetVisitedLinkColor(nscolor& aColor)
+nsresult
+nsHTMLStyleSheet::GetVisitedLinkColor(nscolor& aColor)
 {
   if (!mVisitedRule) {
     return NS_HTML_STYLE_PROPERTY_NOT_THERE;
@@ -1032,8 +837,8 @@ HTMLStyleSheetImpl::GetVisitedLinkColor(nscolor& aColor)
   }
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
+nsresult
+nsHTMLStyleSheet::SetLinkColor(nscolor aColor)
 {
   if (mLinkRule) {
     if (mLinkRule->mColor == aColor)
@@ -1052,8 +857,8 @@ HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
 }
 
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
+nsresult
+nsHTMLStyleSheet::SetActiveLinkColor(nscolor aColor)
 {
   if (mActiveRule) {
     if (mActiveRule->mColor == aColor)
@@ -1071,8 +876,8 @@ HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
+nsresult
+nsHTMLStyleSheet::SetVisitedLinkColor(nscolor aColor)
 {
   if (mVisitedRule) {
     if (mVisitedRule->mColor == aColor)
@@ -1090,37 +895,33 @@ HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::UniqueMappedAttributes(nsMappedAttributes* aMapped,
-                                           nsMappedAttributes*& aUniqueMapped)
+already_AddRefed<nsMappedAttributes>
+nsHTMLStyleSheet::UniqueMappedAttributes(nsMappedAttributes* aMapped)
 {
-  aUniqueMapped = nsnull;
   if (!mMappedAttrTable.ops) {
     PRBool res = PL_DHashTableInit(&mMappedAttrTable, &MappedAttrTable_Ops,
                                    nsnull, sizeof(MappedAttrTableEntry), 16);
     if (!res) {
       mMappedAttrTable.ops = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
+      return nsnull;
     }
   }
   MappedAttrTableEntry *entry = NS_STATIC_CAST(MappedAttrTableEntry*,
     PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_ADD));
   if (!entry)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
   if (!entry->mAttributes) {
     // We added a new entry to the hashtable, so we have a new unique set.
     entry->mAttributes = aMapped;
   }
-  aUniqueMapped = entry->mAttributes;
-  NS_ADDREF(aUniqueMapped);
-
-  return NS_OK;
+  NS_ADDREF(entry->mAttributes); // for caller
+  return entry->mAttributes;
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::DropMappedAttributes(nsMappedAttributes* aMapped)
+void
+nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
 {
-  NS_ENSURE_TRUE(aMapped, NS_OK);
+  NS_ENSURE_TRUE(aMapped, /**/);
 
   NS_ASSERTION(mMappedAttrTable.ops, "table uninitialized");
 #ifdef DEBUG
@@ -1130,12 +931,10 @@ HTMLStyleSheetImpl::DropMappedAttributes(nsMappedAttributes* aMapped)
   PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_REMOVE);
 
   NS_ASSERTION(entryCount == mMappedAttrTable.entryCount, "not removed");
-
-  return NS_OK;
 }
 
 #ifdef DEBUG
-void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
+void nsHTMLStyleSheet::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -1152,11 +951,11 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
 // XXX For convenience and backwards compatibility
 nsresult
-NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
+NS_NewHTMLStyleSheet(nsHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
                      nsIDocument* aDocument)
 {
   nsresult rv;
-  nsIHTMLStyleSheet* sheet;
+  nsHTMLStyleSheet* sheet;
   if (NS_FAILED(rv = NS_NewHTMLStyleSheet(&sheet)))
     return rv;
 
@@ -1171,11 +970,11 @@ NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL,
 
 
 nsresult
-NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult)
+NS_NewHTMLStyleSheet(nsHTMLStyleSheet** aInstancePtrResult)
 {
   NS_ASSERTION(aInstancePtrResult, "null out param");
 
-  HTMLStyleSheetImpl *it = new HTMLStyleSheetImpl();
+  nsHTMLStyleSheet *it = new nsHTMLStyleSheet();
   if (!it) {
     *aInstancePtrResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;

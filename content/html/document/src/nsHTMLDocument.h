@@ -53,7 +53,7 @@
 #include "pldhash.h"
 #include "nsIHttpChannel.h"
 #include "nsIHTMLCSSStyleSheet.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 
 // Document.Write() related
 #include "nsIWyciwygChannel.h"

@@ -59,7 +59,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsIFocusController.h"
 #include "nsMappedAttributes.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
 #include "nsIHTMLContent.h"
 #include "nsILink.h"
@@ -1278,7 +1278,7 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
   ReparseStyleAttribute();
   if (!doNothing && mDocument) {
-    nsIHTMLStyleSheet* sheet = mDocument->GetAttributeStyleSheet();
+    nsHTMLStyleSheet* sheet = mDocument->GetAttributeStyleSheet();
     if (sheet) {
       mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
     }
@@ -1614,7 +1614,7 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 
   if (aNamespaceID == kNameSpaceID_None) {
     if (IsAttributeMapped(aAttribute)) {
-      nsIHTMLStyleSheet* sheet = mDocument ?
+      nsHTMLStyleSheet* sheet = mDocument ?
         mDocument->GetAttributeStyleSheet() : nsnull;
       rv = mAttrsAndChildren.SetAndTakeMappedAttr(aAttribute, aParsedValue,
                                                   this, sheet);

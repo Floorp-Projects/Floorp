@@ -46,7 +46,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDocument.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIDOMMutationEvent.h"
 
 class nsHTMLUnknownElement : public nsGenericHTMLElement,

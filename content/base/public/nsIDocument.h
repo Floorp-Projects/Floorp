@@ -84,7 +84,7 @@ class nsIScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;
 class nsICSSLoader;
-class nsIHTMLStyleSheet;
+class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 
 // IID for the nsIDocument interface
@@ -428,7 +428,7 @@ public:
    * Get this document's attribute stylesheet.  May return null if
    * there isn't one.
    */
-  virtual nsIHTMLStyleSheet* GetAttributeStyleSheet() const = 0;
+  virtual nsHTMLStyleSheet* GetAttributeStyleSheet() const = 0;
 
   /**
    * Get this document's inline style sheet.  May return null if there

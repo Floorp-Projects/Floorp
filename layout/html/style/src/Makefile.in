@@ -55,7 +55,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
-		nsIHTMLStyleSheet.h \
 		nsCSSFrameConstructor.h \
 		$(NULL)
 
