@@ -25,6 +25,7 @@ CPPSRCS = \
     nsStreamManager.cpp \
     nsStreamObject.cpp \
     nsXPFCDataCollectionManager.cpp \
+    nsXPFCOutBoxManager.cpp \
 	$(NULL)
 
 REQUIRES = dom xpcom raptor pref js netlib

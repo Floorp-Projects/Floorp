@@ -85,6 +85,7 @@ static NS_DEFINE_IID(kCXPFCContentSink,           NS_XPFCXMLCONTENTSINK_IID);
 static NS_DEFINE_IID(kCXPFCToolbar,               NS_XPFC_TOOLBAR_CID);
 static NS_DEFINE_IID(kCXPFCToolbarManager,        NS_XPFCTOOLBAR_MANAGER_CID);
 static NS_DEFINE_IID(kCXPFCDataCollectionManager, NS_XPFCDATACOLLECTION_MANAGER_CID);
+static NS_DEFINE_IID(kCXPFCOutBoxManager,         NS_XPFCOUTBOX_MANAGER_CID);
 static NS_DEFINE_IID(kCXPFCDialog,                NS_XPFC_DIALOG_CID);
 static NS_DEFINE_IID(kCXPFCButton,                NS_XPFC_BUTTON_CID);
 static NS_DEFINE_IID(kCXPButton,                  NS_XP_BUTTON_CID);
