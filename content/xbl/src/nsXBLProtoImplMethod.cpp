@@ -47,56 +47,6 @@
 #include "nsXBLProtoImplMethod.h"
 #include "nsIScriptContext.h"
 
-static nsIJSRuntimeService* gJSRuntimeService = nsnull;
-static JSRuntime* gScriptRuntime = nsnull;
-static PRInt32 gScriptRuntimeRefcnt = 0;
-
-static nsresult
-AddJSGCRoot(void* aScriptObjectRef, const char* aName)
-{
-  if (++gScriptRuntimeRefcnt == 1 || !gScriptRuntime) {
-    CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
-                   &gJSRuntimeService);
-    if (! gJSRuntimeService) {
-        NS_NOTREACHED("couldn't add GC root");
-        return NS_ERROR_FAILURE;
-    }
-
-    gJSRuntimeService->GetRuntime(&gScriptRuntime);
-    if (! gScriptRuntime) {
-        NS_NOTREACHED("couldn't add GC root");
-        return NS_ERROR_FAILURE;
-    }
-  }
-
-  PRBool ok;
-  ok = ::JS_AddNamedRootRT(gScriptRuntime, aScriptObjectRef, aName);
-  if (! ok) {
-    NS_NOTREACHED("couldn't add GC root");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
-static nsresult
-RemoveJSGCRoot(void* aScriptObjectRef)
-{
-  if (!gScriptRuntime) {
-    NS_NOTREACHED("couldn't remove GC root");
-    return NS_ERROR_FAILURE;
-  }
-
-  ::JS_RemoveRootRT(gScriptRuntime, aScriptObjectRef);
-
-  if (--gScriptRuntimeRefcnt == 0) {
-    NS_RELEASE(gJSRuntimeService);
-    gScriptRuntime = nsnull;
-  }
-
-  return NS_OK;
-}
-
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod)
 
 nsXBLProtoImplMethod::nsXBLProtoImplMethod(const PRUnichar* aName) :
