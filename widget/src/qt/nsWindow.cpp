@@ -377,12 +377,12 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::SetTitle()\n"));
-    if (!mShell)
+    if (!mWidget)
     {
         return NS_ERROR_FAILURE;
     }
     char * titleStr = aTitle.ToNewCString();
-    mShell->setCaption(titleStr);
+    mWidget->setCaption(titleStr);
     delete[] titleStr;
     return NS_OK;
 }
@@ -461,8 +461,8 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
                        x, 
                        y, 
                        mPixmap, 
-                       0, 
-                       0, 
+                       x, 
+                       y, 
                        //mPixmap->width(), 
                        //mPixmap->height(), 
                        //mWidget->width(),
