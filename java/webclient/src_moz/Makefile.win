@@ -158,7 +158,9 @@ include <$(DEPTH)\config\rules.mak>
 buildRunems:
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
+!ifdef MOZ_DEBUG
 	copy $(DIST)\bin\windbgdlg.exe $(JDKHOME)\bin
+!endif
 !ifdef BAL_INTERFACE
 !else
 !ifndef PACKAGE_BUILD

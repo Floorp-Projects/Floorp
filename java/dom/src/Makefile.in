@@ -28,6 +28,25 @@ MODULE		= javadom
 LIBRARY_NAME	= javadom
 IS_COMPONENT	= 1
 
+REQUIRES	= xpcom \
+		  string \
+ 		  embed_base \
+ 		  webBrowser_core \
+ 		  webshell \
+ 		  windowwatcher \
+ 		  profile \
+ 		  necko \
+ 		  docshell \
+ 		  dom \
+ 		  widget \
+ 		  uriloader \
+ 		  shistory \
+ 		  webbrowserpersist \
+ 		  content \
+ 		  gfx \
+ 		  $(NULL)
+ 
+
 CPPSRCS		= \
 	nsJavaDOMImpl.cpp
 

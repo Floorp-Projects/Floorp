@@ -546,11 +546,7 @@ JNIEnv* nsJavaDOMImpl::GetJNIEnv() {
    if (!jvm) {
 	StartJVM();
    }
-#ifdef XP_PC
    jvm->AttachCurrentThread((void**)&env,NULL);
-#else
-   jvm->AttachCurrentThread(&env,NULL);
-#endif
 #endif /* JAVA_DOM_OJI_ENABLE */
    return env;
 }
@@ -596,11 +592,7 @@ void nsJavaDOMImpl::StartJVM(void) {
 #ifdef DEBUG
   printf("classpath is \"%s\"\n", vm_args.classpath);
 #endif // DEBUG
-#ifdef XP_PC
   jint rv = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
-#else
-  jint rv = JNI_CreateJavaVM(&jvm, &env, &vm_args);
-#endif
   if (rv < 0) {
     printf("\n JAVA DOM: could not start jvm\n");
   } else {

@@ -40,8 +40,8 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 DIRS = 	external \
 	util \
 	dom \
-	xpcom \
-	webclient
+	webclient \
+	build
 else
 ifneq ($(BUILD_BLACKCONNECT_ONLY),)
 DIRS = 	external \

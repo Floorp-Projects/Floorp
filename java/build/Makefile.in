@@ -29,7 +29,7 @@ PACKAGE_LIB=$(PACKAGE_DIR)/lib
 PACKAGE_EXAMPLE=$(PACKAGE_DIR)/example
 
 ifeq ($(PACKAGE_VER),)
-PACKAGE_VER=1_1
+PACKAGE_VER=1.2
 endif
 
 
@@ -106,7 +106,6 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	cp -R $(DIST)/classes/org/mozilla/util $(DIST)/../java/build/org/mozilla
 	cp -R $(DIST)/classes/org/mozilla/dom $(DIST)/../java/build/org/mozilla
 	cp -R $(DIST)/classes/org/mozilla/webclient $(DIST)/../java/build/org/mozilla
-	cp -R $(DIST)/classes/org/mozilla/xpcom $(DIST)/../java/build/org/mozilla
 	cp -R $(DIST)/classes/org/w3c $(DIST)/../java/build/org
 	cd $(DIST)/../java/build
 	$(JDKHOME)/bin/jar -cvfM0 webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
@@ -117,17 +116,6 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	cp $(DIST)/bin/components/libjavadom.so $(PACKAGE_LIB)/libjavadom.so
 	cp $(DIST)/bin/libwebclient.so $(PACKAGE_LIB)/libwebclient.so
 	cp $(DIST)/bin/libwebclientstub.so $(PACKAGE_LIB)/libwebclientstub.so
-	cp $(DIST)/bin/components/libbcorb.so $(PACKAGE_LIB)/libbcorb.so
-	cp $(DIST)/bin/libblackconnectjni.so $(PACKAGE_LIB)/libblackconnectjni.so
-	cp $(DIST)/bin/components/libbcjavastubs.so $(PACKAGE_LIB)/libbcjavastubs.so
-	cp $(DIST)/bin/components/libjavaloader.so $(PACKAGE_LIB)/libjavaloader.so
-	cp $(DIST)/bin/components/libbcxpcomstubs.so $(PACKAGE_LIB)/libbcxpcomstubs.so
-	cp $(DIST)/bin/regxpcom $(PACKAGE_LIB)/regxpcom
-	chmod 775 $(PACKAGE_LIB)/libbcorb.so
-	chmod 775 $(PACKAGE_LIB)/libbcjavastubs.so
-	chmod 775 $(PACKAGE_LIB)/libjavaloader.so
-	chmod 775 $(PACKAGE_LIB)/libbcxpcomstubs.so
-	chmod 775 $(PACKAGE_LIB)/regxpcom
 	chmod 775 $(PACKAGE_LIB)/libjavadomjni.so
 	chmod 775 $(PACKAGE_LIB)/libjavadom.so
 	chmod 775 $(PACKAGE_LIB)/libwebclient.so
@@ -138,7 +126,6 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	@echo cp ../lib/libwebclientstub.so ../.. >> runem_unix_commercial.bat
 	@echo cp ../lib/libjavadom.so ../../components >> runem_unix_commercial.bat
 	@echo cp ../lib/libjavadomjni.so ../.. >> runem_unix_commercial.bat
-	@echo cp ../lib/libblackconnectjni.so ../.. >> runem_unix_commercial.bat
 	@echo $(SET_CLASSPATH)../lib/webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar>> runem_unix_commercial.bat
 	@echo $(PERL) ./runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) %1% >> runem_unix_commercial.bat
 	cp -f runem_unix_commercial.bat $(PACKAGE_EXAMPLE)/runem.bat
@@ -150,7 +137,7 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	chmod 775 $(DIST)/symlink.sh
 	cp $(DIST)/../java/build/README.WEBCLIENT $(PACKAGE_DIR)/README.WEBCLIENT
 	cd $(DIST) ; \
-	zip -r webclient_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
+	$(JDKHOME)/bin/jar -cvfM0 webclient_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
 else
 ifneq ($(BUILD_BLACKCONNECT_ONLY),)
 	if test ! -d $(PACKAGE_DIR) ; then mkdir $(PACKAGE_DIR) ; else true ; fi ;

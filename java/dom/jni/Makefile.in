@@ -24,6 +24,25 @@ VPATH		= $(topsrcdir)/java/dom/jni
 
 JAVAHOME        = $(JDKHOME)
 
+REQUIRES	= xpcom \
+ 		  javadom \
+ 		  string \
+ 		  embed_base \
+ 		  webBrowser_core \
+ 		  webshell \
+ 		  windowwatcher \
+ 		  profile \
+ 		  necko \
+ 		  docshell \
+ 		  dom \
+ 		  widget \
+ 		  uriloader \
+ 		  shistory \
+ 		  webbrowserpersist \
+ 		  content \
+ 		  gfx \
+ 		  $(NULL)
+ 
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= javadomjni
@@ -73,6 +92,8 @@ JAVA_CLS= \
 	org.mozilla.dom.events.MouseEventImpl \
 	org.mozilla.dom.events.UIEventImpl \
  $(NULL)
+
+INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/linux
 
 JAVAH_PROG=$(JDKHOME)/bin/javah
 JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)

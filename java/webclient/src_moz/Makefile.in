@@ -61,6 +61,34 @@ else
 LIBRARY_NAME	= webclient
 endif
 
+REQUIRES	= xpcom \
+ 		  layout \
+ 		  shistory \
+ 		  appcomps \
+ 		  appshell \
+ 		  pref \
+ 		  locale \
+ 		  intl \
+ 		  rdf \
+ 		  bookmarks \
+ 		  content \
+ 		  editor \
+ 		  string \
+ 		  embed_base \
+ 		  webBrowser_core \
+ 		  webbrwsr \
+ 		  webshell \
+ 		  windowwatcher \
+ 		  profile \
+ 		  necko \
+ 		  docshell \
+ 		  dom \
+ 		  widget \
+ 		  uriloader \
+ 		  webbrowserpersist \
+ 		  gfx \
+ 		  $(NULL)
+ 
 CPPSRCS = \
 	ns_util.cpp \
 	ns_util_export.cpp \

@@ -74,7 +74,7 @@ sub init() {
         $file_separator = "\/"; 
         $JAVA="java";
     }
-    $javahome=$ENV{"JAVAHOME"};
+    $javahome=$ENV{"JDKHOME"} . $file_separator . "bin";
     unless(-f "$javahome$file_separator$JAVA") {
         die "Can't find java executable $javahome$file_separator$JAVA";
     }
