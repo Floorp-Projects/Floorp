@@ -23,6 +23,12 @@
 #ifndef __CBrowserShell__
 #define __CBrowserShell__
 
+#include <LView.h>
+#include <LCommander.h>
+#include <LPeriodical.h>
+#include <LListener.h>
+#include <LString.h>
+
 #include "nsIWebBrowser.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebNavigation.h"
@@ -91,6 +97,7 @@ public:
 	
 	// CBrowserShell
 	NS_METHOD               SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWindow);
+	NS_METHOD				GetWebBrowser(nsIWebBrowser** aBrowser);
 	
 	Boolean                 CanGoBack();
 	Boolean                 CanGoForward();
