@@ -82,7 +82,7 @@ void nsTableCaptionFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
     // Resolve style and set the style context
     nsIStyleContext* styleContext =
       aPresContext->ResolveStyleContextFor(mContent, this);             // styleContext: ADDREF++
-    mFirstChild->SetStyleContext(styleContext);
+    mFirstChild->SetStyleContext(aPresContext,styleContext);
     NS_RELEASE(styleContext);                                           // styleContext: ADDREF--
   } else {
     nsTableCaptionFrame* prevFrame = (nsTableCaptionFrame *)mPrevInFlow;

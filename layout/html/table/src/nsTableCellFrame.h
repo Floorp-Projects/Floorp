@@ -72,6 +72,7 @@ public:
 
   virtual ~nsTableCellFrame();
 
+ 
 protected:
 
   /** protected constructor.
@@ -84,6 +85,16 @@ protected:
   /** Create a psuedo-frame for this caption.  Handles continuing frames as needed.
     */
   virtual void CreatePsuedoFrame(nsIPresContext* aPresContext);
+
+  // Subclass hook for style post processing
+  NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  void      MapTextAttributes(nsIPresContext* aPresContext);
+  void      MapBorderMarginPadding(nsIPresContext* aPresContext);
+  void      MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth);
+
+
+ 
+  
 
 
 };

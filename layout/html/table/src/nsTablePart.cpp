@@ -153,6 +153,14 @@ nsTablePart::~nsTablePart()
   }
 }
 
+/**
+  */
+/*
+nsTablePart::void compact() {
+  compact();
+}
+*/
+
 // for debugging only
 nsrefcnt nsTablePart::AddRef(void)
 {
@@ -1064,7 +1072,6 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
       break;
     }
   }
-
   // border
   GetTableBorder(this, aContext, aPresContext, PR_FALSE);
 }
