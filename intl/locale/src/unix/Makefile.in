@@ -38,10 +38,8 @@ SHARED_LIBRARY_LIBS = ../libnslocale_s.a
 CPPSRCS		= \
 		nsCollationUnix.cpp \
 		nsDateTimeFormatUnix.cpp \
-		nsLocaleFactoryUnix.cpp \
 		nsLocaleModule.cpp \
 		nsPosixLocale.cpp \
-		nsPosixLocaleFactory.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \

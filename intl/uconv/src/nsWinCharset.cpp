@@ -30,9 +30,6 @@
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
 
-NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
-NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
-
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt= 0;
 
@@ -112,8 +109,8 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	//
 	// convert locale name to a code page (through the LCID)
 	//
-	nsresult result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,nsnull,kIWin32LocaleIID,
-												getter_AddRefs(winLocale));
+	nsresult result;
+  winLocale = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID, &result);
 	result = winLocale->GetPlatformLocale(&localeAsNSString,&localeAsLCID);
 	if (NS_FAILED(result)) { *_retValue = charset.ToNewUnicode(); return result; }
 

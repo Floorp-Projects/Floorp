@@ -35,8 +35,7 @@ DLLNAME = nslocale
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 #RESFILE = $(DLLNAME).res
 
-CPPSRCS		=	nsLocale.cpp				\
-				nsLocaleFactory.cpp			\
+CPPSRCS		=		nsLocale.cpp				\
 				nsLocaleService.cpp			\
 				nsFontPackageService.cpp		\
 				nsFontPackageHandler.cpp		\
@@ -46,13 +45,13 @@ CPPSRCS		=	nsLocale.cpp				\
 
 
 CPP_OBJS	=	.\$(OBJDIR)\nsLocale.obj			\
-				.\$(OBJDIR)\nsLocaleFactory.obj		\
 				.\$(OBJDIR)\nsLocaleService.obj		\
 				.\$(OBJDIR)\nsFontPackageService.obj	\
 				.\$(OBJDIR)\nsFontPackageHandler.obj	\
 				.\$(OBJDIR)\nsLanguageAtomService.obj	\
-				.\$(OBJDIR)\nsScriptableDateFormat.obj		\
-				.\$(OBJDIR)\nsCollation.obj
+				.\$(OBJDIR)\nsScriptableDateFormat.obj	\
+				.\$(OBJDIR)\nsCollation.obj		\
+				.\$(OBJDIR)\dlldeps.obj
 
 LINCS		= -I.						\
 			  -I$(PUBLIC)\raptor		\

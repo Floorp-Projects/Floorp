@@ -21,276 +21,80 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "nsIComponentManager.h"
-#include "nsCOMPtr.h"
-#include "nsIFactory.h"
-
-#include "nsILocaleService.h"
-#include "nsILocaleFactory.h"
-#include "nsLocaleFactory.h"
-#include "nsLocaleCID.h"
-#include "nsCollationWin.h"
-#include "nsDateTimeFormatWin.h"
-#include "nsIScriptableDateFormat.h"
-#include "nsLocaleFactoryWin.h"
-#include "nsIWin32LocaleImpl.h"
-#include "nsIWin32LocaleFactory.h"
-#include "nsDateTimeFormatCID.h"
 #include "nsCollationCID.h"
-#include "nsIServiceManager.h"
-#include "nsILanguageAtomService.h"
+#include "nsCollationWin.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsDateTimeFormatWin.h"
 #include "nsIFontPackageService.h"
+#include "nsIGenericFactory.h"
+#include "nsILocaleService.h"
+#include "nsIScriptableDateFormat.h"
+#include "nsIServiceManager.h"
+#include "nsLanguageAtomService.h"
+#include "nsLocaleCID.h"
+#include "nsIWin32LocaleImpl.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
-//
-// kLocaleFactory for the nsILocaleFactory interface and friends
-//
-NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
-NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
-NS_DEFINE_IID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
-NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
-NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
-
-//
-// for language atoms
-//
-NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
-//
-// for font package service
-//
-NS_DEFINE_CID(kFontPackageServiceCID, NS_FONTPACKAGESERVICE_CID);
-
-//
-// for the collation and formatting interfaces
-//
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
-NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);                                                         
-NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);                                                         
-NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
-NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
-NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
-
-//
-// private entry points used for debugging
-//
-#ifdef DEBUG
-void test_internal_tables(void);
-#endif
-
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aContractID,
-                                           nsIFactory **aFactory)
-{
-	nsIFactory*	factoryInstance;
-	nsresult		res;
-
-#ifdef DEBUG_tague
-	test_internal_tables();
-#endif
-
-	if (aFactory == NULL) return NS_ERROR_NULL_POINTER;
-
-	//
-	// first check for the nsILocaleFactory interfaces
-	//  
-	if (aClass.Equals(kLocaleFactoryCID))
-	{
-		factoryInstance = new nsLocaleFactory();
-		res = CallQueryInterface(factoryInstance, aFactory);
-
-		if (NS_FAILED(res))
-		{
-			*aFactory = NULL;
-			delete factoryInstance;
-		}
-
-			return res;
-	}
-
-	if (aClass.Equals(kLocaleServiceCID)) {
-		factoryInstance = new nsLocaleServiceFactory();
-		res = CallQueryInterface(factoryInstance, aFactory);
-		if (NS_FAILED(res)) { *aFactory=NULL; delete factoryInstance; }
-		return res;
-	}
-	//
-	// okay about bout nsIWin32LocaleManager
-	//
-	if (aClass.Equals(kWin32LocaleFactoryCID))
-	{
-		factoryInstance = new nsIWin32LocaleFactory();
-		res = CallQueryInterface(factoryInstance, aFactory);
-		if (NS_FAILED(res))
-		{
-			*aFactory=NULL;
-			delete factoryInstance;
-		}
-
-		return res;
-	}
-	//
-	// let the nsLocaleFactoryWin logic take over from here
-	//
-	factoryInstance = new nsLocaleWinFactory(aClass);
-
-	if(NULL == factoryInstance) 
-	{
-		return NS_ERROR_OUT_OF_MEMORY;  
-	}
-
-	res = CallQueryInterface(factoryInstance, aFactory);
-	if (NS_FAILED(res))
-	{
-		*aFactory = NULL;
-		delete factoryInstance;
-	}
-
-	return res;
+#define MAKE_CTOR(ctor_, iface_, func_)                   \
+static NS_IMETHODIMP                                      \
+ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
+{                                                         \
+  *aResult = nsnull;                                      \
+  if (aOuter)                                             \
+    return NS_ERROR_NO_AGGREGATION;                       \
+  iface_* inst;                                           \
+  nsresult rv = func_(&inst);                             \
+  if (NS_SUCCEEDED(rv)) {                                 \
+    rv = inst->QueryInterface(aIID, aResult);             \
+    NS_RELEASE(inst);                                     \
+  }                                                       \
+  return rv;                                              \
 }
 
-// 
-// From bug #5564, it looks likes these functions are no longer needed on Windows and actually case
-//  performance problems, so I'm ifdef-ing them out. 
-//
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
-{
-  nsresult rv;
+MAKE_CTOR(CreateLocaleService, nsILocaleService, NS_NewLocaleService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIWin32LocaleImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatWin)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableDateTimeFormat)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLanguageAtomService)
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
+// The list of components we register
+static nsModuleComponentInfo gComponents[] = {
+  { "nsLocaleService component",
+    NS_LOCALESERVICE_CID,
+    NS_LOCALESERVICE_CONTRACTID,
+    CreateLocaleService },
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           NS_GET_IID(nsIComponentManager), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
+  { "Platform locale",
+    NS_WIN32LOCALE_CID,
+    NS_WIN32LOCALE_CONTRACTID,
+    nsIWin32LocaleImplConstructor },
 
-	//
-	// register the generic factory
-	//
-	rv = compMgr->RegisterComponent(kLocaleFactoryCID,"nsLocale component",
-		NS_LOCALE_CONTRACTID,path,PR_TRUE,PR_TRUE);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: RegisterFactory failed.");
-	if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+  { "Collation factory",
+    NS_COLLATIONFACTORY_CID,
+    NULL,
+    nsCollationFactoryConstructor },
 
-	//
-	// register the service 
-	//
-	rv = compMgr->RegisterComponent(kLocaleServiceCID,"nsLocaleService component",
-		NS_LOCALESERVICE_CONTRACTID,path,PR_TRUE,PR_TRUE);
-	if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+  { "Collation",
+    NS_COLLATION_CID,
+    NULL,
+    nsCollationWinConstructor },
 
+  { "Date/Time formatter",
+    NS_DATETIMEFORMAT_CID,
+    NULL,
+    nsDateTimeFormatWinConstructor },
 
-	//
-	// register the windows specific factory
-	//
-	rv = compMgr->RegisterComponent(kWin32LocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register nsIWin32LocaleFactory failed.");
-  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+  { "Scriptable Date Format",
+    NS_SCRIPTABLEDATEFORMAT_CID,
+    NS_SCRIPTABLEDATEFORMAT_CONTRACTID,
+    NS_NewScriptableDateFormat },
 
-	//
-	// register the collation factory
-	//
-	rv = compMgr->RegisterComponent(kCollationFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register CollationFactory failed.");
-  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
-	
-	//
-	// register the collation interface
-	//
-	rv = compMgr->RegisterComponent(kCollationCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register Collation failed.");
-  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
-	
-	//
-	// register the date time formatter
-	//
-	rv = compMgr->RegisterComponent(kDateTimeFormatCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register DateTimeFormat failed.");
-  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+  { "Language Atom Service",
+    NS_LANGUAGEATOMSERVICE_CID,
+    NS_LANGUAGEATOMSERVICE_CONTRACTID,
+    nsLanguageAtomServiceConstructor },
+};
 
-	//
-	// register the scriptable date time formatter
-	//
-	rv = compMgr->RegisterComponent(kScriptableDateFormatCID, "Scriptable Date Format", 
-    NS_SCRIPTABLEDATEFORMAT_CONTRACTID, path, PR_TRUE, PR_TRUE);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register ScriptableDateFormat failed.");
-  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
-
-  //
-  // register the language atom service
-  //
-  rv = compMgr->RegisterComponent(kLanguageAtomServiceCID,
-    "Language Atom Service", NS_LANGUAGEATOMSERVICE_CONTRACTID, path, PR_TRUE,
-    PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv),
-    "nsLocaleTest: Register LanguageAtomService failed.");
-  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
-
-  //
-  // register the font package service
-  //
-  rv = compMgr->RegisterComponent(kFontPackageServiceCID,
-    "Font Package Service", NS_FONTPACKAGESERVICE_CONTRACTID, path, PR_TRUE,
-    PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv),
-    "nsLocaleTest: Register FontPackageService failed.");
-  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-}
-
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char * path)
-{
-
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           NS_GET_IID(nsIComponentManager), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-	rv = compMgr->UnregisterComponent(kLocaleFactoryCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-	rv = compMgr->UnregisterComponent(kLocaleServiceCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-	rv = compMgr->UnregisterComponent(kWin32LocaleFactoryCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-	rv = compMgr->UnregisterComponent(kCollationFactoryCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-	rv = compMgr->UnregisterComponent(kCollationCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-	rv = compMgr->UnregisterComponent(kDateTimeFormatCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-	rv = compMgr->UnregisterComponent(kScriptableDateFormatCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-	rv = compMgr->UnregisterComponent(kLanguageAtomServiceCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-	rv = compMgr->UnregisterComponent(kFontPackageServiceCID, path);
-	if (NS_FAILED(rv)) goto done;
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-}
-
+NS_IMPL_NSGETMODULE(nsLocaleModule, gComponents)

@@ -23,7 +23,6 @@
 #include "nsCOMPtr.h"
 #include "nsILocale.h"
 #include "nsILocaleService.h"
-#include "nsLocaleFactory.h"
 #include "nsLocale.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
@@ -32,53 +31,17 @@
 #include <ctype.h>
 
 #if defined(XP_WIN)
-#include "nsIWin32Locale.h"
-#endif
-#ifdef XP_OS2
-#include "unidef.h"
-#include "nsIOS2Locale.h"
-#endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#include <locale.h>
-#include <stdlib.h>
-#include "nsIPosixLocale.h"
-#endif
-#ifdef XP_MAC
-#include <script.h>
-#include "nsIMacLocale.h"
-#endif
-
-//
-// iids
-//
-static NS_DEFINE_IID(kILocaleIID,NS_ILOCALE_IID);
-#if defined(XP_WIN)
-static NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
-#endif
-#ifdef XP_OS2
-static NS_DEFINE_IID(kIOS2LocaleIID,NS_IOS2LOCALE_IID);
-#endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
-static NS_DEFINE_IID(kIPosixLocaleIID,NS_IPOSIXLOCALE_IID);
-#endif
-#ifdef XP_MAC
-static NS_DEFINE_IID(kIMacLocaleIID,NS_IMACLOCALE_IID);
-#endif
-
-//
-// cids
-//
-#if defined(XP_WIN)
-static NS_DEFINE_CID(kWin32LocaleFactoryCID,NS_WIN32LOCALEFACTORY_CID);
-#endif
-#ifdef XP_OS2
-static NS_DEFINE_CID(kOS2LocaleFactoryCID,NS_OS2LOCALEFACTORY_CID);
-#endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
-static NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
-#endif
-#ifdef XP_MAC
-static NS_DEFINE_CID(kMacLocaleFactoryCID,NS_MACLOCALEFACTORY_CID);
+#  include "nsIWin32Locale.h"
+#elif defined(XP_OS2)
+#  include "unidef.h"
+#  include "nsIOS2Locale.h"
+#elif defined(XP_UNIX) || defined(XP_BEOS)
+#  include <locale.h>
+#  include <stdlib.h>
+#  include "nsIPosixLocale.h"
+#elif defined(XP_MAC)
+#  include <script.h>
+#  include "nsIMacLocale.h"
 #endif
 
 //
@@ -181,49 +144,48 @@ nsLocaleService::nsLocaleService(void)
 {
 	NS_INIT_REFCNT();
 #if defined(XP_WIN)
-	nsIWin32Locale*	win32Converter;
+    nsresult result;
+	nsCOMPtr<nsIWin32Locale> win32Converter
+        = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID, &result);
+
 	nsString		xpLocale;
-	nsresult result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
-						NULL,kIWin32LocaleIID,(void**)&win32Converter);
 	NS_ASSERTION(win32Converter!=NULL,"nsLocaleService: can't get win32 converter\n");
-	if (NS_SUCCEEDED(result) && win32Converter!=nsnull) {
+	if (NS_SUCCEEDED(result) && win32Converter) {
 		
 		//
 		// get the system LCID
 		//
 		LCID win_lcid = GetSystemDefaultLCID();
-		if (win_lcid==0) { win32Converter->Release(); return;}
+		if (win_lcid==0) { return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
-		if (NS_FAILED(result)) { win32Converter->Release(); return;}
+		if (NS_FAILED(result)) { return;}
 		result = NewLocale(xpLocale.get(), &mSystemLocale);
-		if (NS_FAILED(result)) { win32Converter->Release(); return;}
+		if (NS_FAILED(result)) { return;}
 
 		//
 		// get the application LCID
 		//
 		win_lcid = GetUserDefaultLCID();
-		if (win_lcid==0) { win32Converter->Release(); return;}
+		if (win_lcid==0) { return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
-		if (NS_FAILED(result)) { win32Converter->Release(); return;}
+		if (NS_FAILED(result)) { return;}
 		result = NewLocale(xpLocale.get(), &mApplicationLocale);
-		if (NS_FAILED(result)) { win32Converter->Release(); return;}
-	
-		win32Converter->Release();
+		if (NS_FAILED(result)) { return;}
 	}
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
-    nsIPosixLocale* posixConverter;
+    nsresult result;
+    nsCOMPtr<nsIPosixLocale> posixConverter =
+        do_CreateInstance(NS_POSIXLOCALE_CONTRACTID, &result);
+
     nsAutoString xpLocale, platformLocale;
-    nsresult result = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,
-                           NULL,kIPosixLocaleIID,(void**)&posixConverter);
-    if (NS_SUCCEEDED(result) && posixConverter!=nsnull) {
+    if (NS_SUCCEEDED(result) && posixConverter) {
         nsAutoString category, category_platform;
         nsLocale* resultLocale;
         int i;
 
         resultLocale = new nsLocale();
         if ( resultLocale == NULL ) { 
-            posixConverter->Release(); 
             return; 
         }
         for( i = 0; i < LocaleListLength; i++ ) {
@@ -249,7 +211,6 @@ nsLocaleService::nsLocaleService(void)
                 }
             }
             if (NS_FAILED(result)) {
-                posixConverter->Release();
                 nsCRT::free(lc_temp);
                 return;
             }
@@ -257,18 +218,17 @@ nsLocaleService::nsLocaleService(void)
             resultLocale->AddCategory(category_platform.get(),platformLocale.get());
             nsCRT::free(lc_temp);
         }
-        (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
-        (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mApplicationLocale);
-        posixConverter->Release();
+        (void)resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)&mSystemLocale);
+        (void)resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)&mApplicationLocale);
     }  // if ( NS_SUCCEEDED )...
        
 #endif // XP_UNIX || XP_BEOS
 #if defined(XP_OS2)
-    nsCOMPtr<nsIOS2Locale> os2Converter;
+    nsresult result;
+    nsCOMPtr<nsIOS2Locale> os2Converter
+        = do_CreateInstance(NS_OS2LOCALE_CONTRACTID, &result);
     nsAutoString xpLocale;
-    nsresult result = nsComponentManager::CreateInstance(kOS2LocaleFactoryCID,
-                           NULL,kIOS2LocaleIID,(void**)getter_AddRefs(os2Converter));
-    if (NS_SUCCEEDED(result) && os2Converter!=nsnull) {
+    if (NS_SUCCEEDED(result) && os2Converter) {
         nsAutoString category;
         nsLocale* resultLocale;
         int i;
@@ -311,8 +271,8 @@ nsLocaleService::nsLocaleService(void)
             UniFreeMem(lc_temp);
         }
         UniFreeLocaleObject(locale_object);
-        (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
-        (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mApplicationLocale);
+        (void)resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)&mSystemLocale);
+        (void)resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)&mApplicationLocale);
     }  // if ( NS_SUCCEEDED )...
 
 #endif
@@ -321,10 +281,10 @@ nsLocaleService::nsLocaleService(void)
 	long script = GetScriptManagerVariable(smSysScript);
 	long lang = GetScriptVariable(smSystemScript,smScriptLang);
 	long region = GetScriptManagerVariable(smRegionCode);
-	nsCOMPtr<nsIMacLocale> macConverter;
-	nsresult result = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,
-						NULL,kIMacLocaleIID,(void**)getter_AddRefs(macConverter));
-	if (NS_SUCCEEDED(result) && macConverter!=nsnull) {
+    nsresult result;
+	nsCOMPtr<nsIMacLocale> macConverter
+        = do_CreateInstance(NS_MACLOCALE_CONTRACTID, &result);
+	if (NS_SUCCEEDED(result) && macConverter) {
 		nsString xpLocale;
 		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region,&xpLocale);
 		if (NS_SUCCEEDED(result)) {
@@ -363,7 +323,7 @@ nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
 		if (NS_FAILED(result)) { delete resultLocale; return result;}
 	}
 
-	return resultLocale->QueryInterface(kILocaleIID,(void**)_retval);
+	return resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)_retval);
 }
 
 
@@ -375,7 +335,7 @@ nsLocaleService::NewLocaleObject(nsILocaleDefinition *localeDefinition, nsILocal
 	nsLocale* new_locale = new nsLocale(NS_STATIC_CAST(nsLocaleDefinition*,localeDefinition)->mLocaleDefinition);
 	if (!new_locale) return NS_ERROR_OUT_OF_MEMORY;
 
-	return new_locale->QueryInterface(kILocaleIID,(void**)_retval);
+	return new_locale->QueryInterface(NS_GET_IID(nsILocale),(void**)_retval);
 }
 
 
@@ -535,7 +495,10 @@ NS_NewLocaleService(nsILocaleService** result)
   if(!result)
     return NS_ERROR_NULL_POINTER;
   *result = new nsLocaleService();
-  return (nsnull == *result) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  if (! *result)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*result);
+  return NS_OK;
 }
 
 
@@ -567,34 +530,4 @@ nsLocaleDefinition::SetLocaleCategory(const PRUnichar *category, const PRUnichar
 		return mLocaleDefinition->AddCategory(category,value);
 	
 	return NS_ERROR_FAILURE;
-}
-
-
-nsLocaleServiceFactory::nsLocaleServiceFactory()
-{
-  NS_INIT_REFCNT();
-}
-
-nsLocaleServiceFactory::~nsLocaleServiceFactory()
-{
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleServiceFactory,nsIFactory)
-
-NS_IMETHODIMP
-nsLocaleServiceFactory::CreateInstance(nsISupports* aOuter,
-  REFNSIID aIID, void** aResult)
-{
-	nsILocaleService*	locale_service;	
-	NS_NewLocaleService(&locale_service);
-
-	return locale_service->QueryInterface(aIID,aResult);
-
-}
-
-NS_IMETHODIMP
-nsLocaleServiceFactory::LockFactory(PRBool aLock)
-{
-
-  return NS_OK;
 }

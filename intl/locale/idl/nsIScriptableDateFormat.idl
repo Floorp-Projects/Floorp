@@ -54,7 +54,8 @@ enum
 
 #define NS_SCRIPTABLEDATEFORMAT_CONTRACTID "@mozilla.org/intl/scriptabledateformat;1"
 
-extern nsISupports *NEW_SCRIPTABLE_DATEFORMAT(void);
+extern NS_IMETHODIMP
+NS_NewScriptableDateFormat(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 %}
 
 [scriptable, uuid(0c89efb0-1aae-11d3-9141-006008a6edf6)]

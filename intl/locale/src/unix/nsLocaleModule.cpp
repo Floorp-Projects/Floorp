@@ -20,318 +20,82 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#include "nspr.h"
-#include "nsString.h"
-#include "nsCOMPtr.h"
-#include "nsIModule.h"
-#include "nsIComponentManager.h"
-#include "nsIFactory.h"
-#include "nsIGenericFactory.h"
 
-#include "nsILocaleService.h"
-#include "nsILocaleFactory.h"
-#include "nsLocaleFactory.h"
-#include "nsLocaleCID.h"
-#include "nsIPosixLocale.h"
-#include "nsPosixLocale.h"
-#include "nsPosixLocaleFactory.h"
-#include "nsCollationUnix.h"
-#include "nsIScriptableDateFormat.h"
-#include "nsDateTimeFormatUnix.h"
-#include "nsLocaleFactoryUnix.h"
-#include "nsDateTimeFormatCID.h"
 #include "nsCollationCID.h"
-#include "nsLocaleSO.h"
+#include "nsCollationUnix.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsDateTimeFormatUnix.h"
+#include "nsIComponentManager.h"
+#include "nsIGenericFactory.h"
+#include "nsILocaleService.h"
+#include "nsIScriptableDateFormat.h"
 #include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
 #include "nsLanguageAtomService.h"
+#include "nsLocaleCID.h"
+#include "nsLocaleSO.h"
+#include "nsPosixLocale.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
-//
-// kLocaleFactory for the nsILocaleFactory interface
-//
-NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
-NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
-NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
-NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
-
-//
-// for language atoms
-//
-NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
-
-//
-// for the collation and formatting interfaces
-//
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
-NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);                                                         
-NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);                                                         
-NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
-NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
-NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
-
-// Module implementation for the Locale library
-class nsLocaleModule : public nsIModule
-{
-public:
-  nsLocaleModule();
-  virtual ~nsLocaleModule();
-
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIMODULE
-
-protected:
-  nsresult Initialize();
-
-  void Shutdown();
-
-  PRBool mInitialized;
-};
-
-//----------------------------------------------------------------------
-
-static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
-
-nsLocaleModule::nsLocaleModule()
-  : mInitialized(PR_FALSE)
-{
-  NS_INIT_ISUPPORTS();
+#define MAKE_CTOR(ctor_, iface_, func_)                   \
+static NS_IMETHODIMP                                      \
+ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
+{                                                         \
+  *aResult = nsnull;                                      \
+  if (aOuter)                                             \
+    return NS_ERROR_NO_AGGREGATION;                       \
+  iface_* inst;                                           \
+  nsresult rv = func_(&inst);                             \
+  if (NS_SUCCEEDED(rv)) {                                 \
+    rv = inst->QueryInterface(aIID, aResult);             \
+    NS_RELEASE(inst);                                     \
+  }                                                       \
+  return rv;                                              \
 }
 
-nsLocaleModule::~nsLocaleModule()
-{
-  Shutdown();
-}
 
-NS_IMPL_ISUPPORTS(nsLocaleModule, kIModuleIID)
-
-// Perform our one-time intialization for this module
-nsresult
-nsLocaleModule::Initialize()
-{
-  if (mInitialized) {
-    return NS_OK;
-  }
-  mInitialized = PR_TRUE;
-  return NS_OK;
-}
-
-// Shutdown this module, releasing all of the module resources
-void
-nsLocaleModule::Shutdown()
-{
-}
-
-// Create a factory object for creating instances of aClass.
-NS_IMETHODIMP
-nsLocaleModule::GetClassObject(nsIComponentManager *aCompMgr,
-                               const nsCID& aClass,
-                               const nsIID& aIID,
-                               void** r_classObj)
-{
-  nsresult rv;
-
-  // Defensive programming: Initialize *r_classObj in case of error below
-  if (!r_classObj) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *r_classObj = NULL;
-
-  // Do one-time-only initialization if necessary
-  if (!mInitialized) {
-    rv = Initialize();
-    if (NS_FAILED(rv)) {
-      // Initialization failed! yikes!
-      return rv;
-    }
-  }
-
-  nsCOMPtr<nsIFactory> fact;
-
-  // first check for the nsILocaleFactory interfaces
-	if (aClass.Equals(kLocaleFactoryCID)) {
-		nsLocaleFactory *factory = new nsLocaleFactory();
-    if (!factory) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    else {
-      fact = do_QueryInterface(factory, &rv);
-      if (!fact) {
-        delete factory;
-      }
-    }
-	}
-  else if (aClass.Equals(kLocaleServiceCID)) {
-		nsLocaleServiceFactory *factory = new nsLocaleServiceFactory();
-    if (!factory) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    else {
-      fact = do_QueryInterface(factory, &rv);
-      if (!fact) {
-        delete factory;
-      }
-    }
-  }
-  else if (aClass.Equals(kPosixLocaleFactoryCID)) {
-		nsPosixLocaleFactory *factory = new nsPosixLocaleFactory();
-    if (!factory) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    else {
-      fact = do_QueryInterface(factory, &rv);
-      if (!fact) {
-        delete factory;
-      }
-    }
-  }
-  else {
-    // let the nsLocaleUnixFactory logic take over from here
-    nsLocaleUnixFactory* factory = new nsLocaleUnixFactory(aClass);
-    if (!factory) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    else {
-      fact = do_QueryInterface(factory, &rv);
-      if (!fact) {
-        delete factory;
-      }
-    }
-  }
-
-  if (fact) {
-    rv = fact->QueryInterface(aIID, r_classObj);
-  }
-
-  return rv;
-}
-
-//----------------------------------------
-
-struct Components {
-  const char* mDescription;
-  const nsID* mCID;
-  const char* mContractID;
-};
+MAKE_CTOR(CreateLocaleService, nsILocaleService, NS_NewLocaleService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPosixLocale)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationUnix)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatUnix)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableDateTimeFormat)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLanguageAtomService)
 
 // The list of components we register
-static Components gComponents[] = {
-  { "nsLocale component", &kLocaleFactoryCID,
-    NS_LOCALE_CONTRACTID, },
-  { "nsLocaleService component", &kLocaleServiceCID,
-    NS_LOCALESERVICE_CONTRACTID, },
-  { "Posix locale", &kPosixLocaleFactoryCID,
-    NULL, },
-  { "Collation factory", &kCollationFactoryCID,
-    NULL, },
-  { "Collation", &kCollationCID,
-    NULL, },
-  { "Date/Time formatter", &kDateTimeFormatCID,
-    NULL, },
-  { "Scriptable Date Format", &kScriptableDateFormatCID,
-    NS_SCRIPTABLEDATEFORMAT_CONTRACTID, },
-  { "Language Atom Service", &kLanguageAtomServiceCID,
-    NS_LANGUAGEATOMSERVICE_CONTRACTID, },
+static nsModuleComponentInfo gComponents[] = {
+  { "nsLocaleService component",
+    NS_LOCALESERVICE_CID,
+    NS_LOCALESERVICE_CONTRACTID,
+    CreateLocaleService },
+
+  { "Platform locale",
+    NS_POSIXLOCALE_CID,
+    NS_POSIXLOCALE_CONTRACTID,
+    nsPosixLocaleConstructor },
+
+  { "Collation factory",
+    NS_COLLATIONFACTORY_CID,
+    NULL,
+    nsCollationFactoryConstructor },
+
+  { "Collation",
+    NS_COLLATION_CID,
+    NULL,
+    nsCollationUnixConstructor },
+
+  { "Date/Time formatter",
+    NS_DATETIMEFORMAT_CID,
+    NULL,
+    nsDateTimeFormatUnixConstructor },
+
+  { "Scriptable Date Format",
+    NS_SCRIPTABLEDATEFORMAT_CID,
+    NS_SCRIPTABLEDATEFORMAT_CONTRACTID,
+    NS_NewScriptableDateFormat },
+
+  { "Language Atom Service",
+    NS_LANGUAGEATOMSERVICE_CID,
+    NS_LANGUAGEATOMSERVICE_CONTRACTID,
+    nsLanguageAtomServiceConstructor },
 };
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
-NS_IMETHODIMP
-nsLocaleModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFile* aPath,
-                             const char* registryLocation,
-                             const char* componentType)
-{
-  nsresult rv = NS_OK;
-
-#ifdef DEBUG
-  printf("*** Registering locale components\n");
-#endif
-
-  Components* cp = gComponents;
-  Components* end = cp + NUM_COMPONENTS;
-  while (cp < end) {
-    rv = aCompMgr->RegisterComponentWithType(*cp->mCID, cp->mDescription,
-                                             cp->mContractID, aPath, 
-                                             registryLocation, PR_TRUE,
-                                             PR_TRUE, componentType);
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsLocaleModule: unable to register %s component => %x\n",
-             cp->mDescription, rv);
-#endif
-      break;
-    }
-    cp++;
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsLocaleModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFile* aPath,
-                               const char* registryLocation)
-{
-#ifdef DEBUG
-  printf("*** Unregistering locale components\n");
-#endif
-  Components* cp = gComponents;
-  Components* end = cp + NUM_COMPONENTS;
-  while (cp < end) {
-    nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsLocaleModule: unable to unregister %s component => %x\n",
-             cp->mDescription, rv);
-#endif
-    }
-    cp++;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocaleModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-  if (!okToUnload) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *okToUnload = PR_FALSE;
-  return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-
-static nsLocaleModule *gModule = NULL;
-
-extern "C" NS_EXPORT 
-nsresult NSGETMODULE_ENTRY_POINT(nsLocaleModule)(nsIComponentManager *servMgr,
-                                                 nsIFile* location,
-                                                 nsIModule** return_cobj)
-{
-  nsresult rv = NS_OK;
-
-  NS_ASSERTION(return_cobj, "Null argument");
-  NS_ASSERTION(gModule == NULL, "nsLocaleModule: Module already created.");
-
-  // Create an initialize the layout module instance
-  nsLocaleModule *m = new nsLocaleModule();
-  if (!m) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Increase refcnt and store away nsIModule interface to m in return_cobj
-  rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-  if (NS_FAILED(rv)) {
-    delete m;
-    m = nsnull;
-  }
-  gModule = m;                  // WARNING: Weak Reference
-  return rv;
-}
+NS_IMPL_NSGETMODULE(nsLocaleModule, gComponents)

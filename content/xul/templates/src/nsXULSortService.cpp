@@ -136,9 +136,6 @@ static NS_DEFINE_IID(kICollationFactoryIID,   NS_ICOLLATIONFACTORY_IID);
 
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
-static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
-static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
-
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

@@ -32,11 +32,8 @@
 #define LOCALE_HASH_SIZE	0xFF
 
 
-NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
-NS_DEFINE_IID(kLocaleCID, NS_LOCALE_CID);
-
 /* nsILocale */
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocale,nsILocale)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocale, nsILocale)
 
 nsLocale::nsLocale(void)
 :	fHashtable(nsnull), fCategoryCount(0)

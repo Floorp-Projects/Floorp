@@ -29,11 +29,8 @@
 #include "prprf.h"
 #include "nsFileSpec.h"
 
-NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
-NS_DEFINE_IID(kPosixLocaleCID, NS_POSIXLOCALE_CID);
-
 /* nsPosixLocale ISupports */
-NS_IMPL_ISUPPORTS(nsPosixLocale,kIPosixLocaleIID)
+NS_IMPL_ISUPPORTS1(nsPosixLocale, nsIPosixLocale)
 
 nsPosixLocale::nsPosixLocale(void)
 {

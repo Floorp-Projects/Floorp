@@ -42,6 +42,10 @@ protected:
   void DoRestoreLocale();
 
 public: 
+  nsCollationUnix();
+
+  virtual ~nsCollationUnix(); 
+
   NS_DECL_ISUPPORTS
     
   // compare two strings
@@ -70,10 +74,6 @@ public:
   // init this interface to a specified locale (should only be called by collation factory)
   //
   NS_IMETHOD Initialize(nsILocale* locale);
-
-  nsCollationUnix();
-
-  virtual ~nsCollationUnix(); 
 };
 
 #endif  /* nsCollationUnix_h__ */

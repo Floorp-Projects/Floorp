@@ -30,7 +30,6 @@ EXPORTS=\
 	nsDateTimeFormatCID.h      \
 	nsICollation.h				\
 	nsIDateTimeFormat.h			\
-	nsILocaleFactory.h			\
 	nsLocaleCID.h				\
 	nsIWin32Locale.h			\
 	$(NULL)
