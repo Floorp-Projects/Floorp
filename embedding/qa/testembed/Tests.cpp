@@ -612,7 +612,7 @@ void CTests::GetCountTest(nsISHistory *theSessionHistory, PRInt32 *numEntries)
 {
     rv = theSessionHistory->GetCount(numEntries);
 	if (*numEntries < 0)
-		CQaUtils::QAOutput("numEntries for GetCount() is <= zero. Test failed.", 1);
+		CQaUtils::QAOutput("numEntries for GetCount() is < 0. Test failed.", 1);
 	else {
 		CQaUtils::FormatAndPrintOutput("number of entries = ", *numEntries, 2);
 		CQaUtils::RvTestResult(rv, "GetCount() (count attribute) test", 2);
@@ -622,8 +622,8 @@ void CTests::GetCountTest(nsISHistory *theSessionHistory, PRInt32 *numEntries)
 void CTests::GetIndexTest(nsISHistory *theSessionHistory, PRInt32 *theIndex)
 {
 	rv = theSessionHistory->GetIndex(theIndex);
-	if (*theIndex < 0 )
-		CQaUtils::QAOutput("theIndex for GetIndex() is < zero. Test failed.", 1);
+	if (*theIndex < 0)
+		CQaUtils::QAOutput("theIndex for GetIndex() is < 0. Test failed.", 1);
 	else
 		CQaUtils::RvTestResult(rv, "GetIndex() (index attribute) test", 2);
 }
