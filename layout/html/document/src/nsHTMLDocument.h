@@ -42,6 +42,10 @@ public:
     return offsetof(nsHTMLDocument,mIHTMLDocument);
   }
 
+  virtual nsresult            CreateElement(nsString &aTagName, 
+                                            nsIDOMAttributeList *aAttributes, 
+                                            nsIDOMElement **aElement);
+
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);
 

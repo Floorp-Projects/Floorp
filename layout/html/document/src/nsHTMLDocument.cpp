@@ -26,8 +26,11 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIImageMap.h"
+#include "nsIHTMLContent.h"
+#include "nsIDOMElement.h"
 
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 NS_LAYOUT nsresult
@@ -182,6 +185,27 @@ void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet
   else {
     aSet->AppendDocStyleSheet(aSheet);
   }
+}
+
+nsresult nsHTMLDocument::CreateElement(nsString &aTagName, 
+                                       nsIDOMAttributeList *aAttributes, 
+                                       nsIDOMElement **aElement)
+{
+  nsIHTMLContent* container = nsnull;
+  nsAutoString    tmp(aTagName);
+  nsIAtom*        atom;
+  nsresult        rv;
+
+  tmp.ToUpperCase();
+  atom = NS_NewAtom(tmp);
+
+  rv = NS_NewHTMLContainer(&container, atom);
+  if (NS_OK == rv) {
+    rv = container->QueryInterface(kIDOMElementIID, (void**)aElement);
+  }
+
+  NS_RELEASE(atom);
+  return rv;
 }
 
 //----------------------------------------------------------------------
