@@ -32,15 +32,15 @@
  * GPL.
  */
 
-#ifndef nspr_rhapsody_defs_h___
-#define nspr_rhapsody_defs_h___
+#ifndef nspr_darwin_defs_h___
+#define nspr_darwin_defs_h___
 
 #include "prthread.h"
 
 #include <sys/syscall.h>
 
-#define PR_LINKER_ARCH	"rhapsody"
-#define _PR_SI_SYSNAME  "RHAPSODY"
+#define PR_LINKER_ARCH	"darwin"
+#define _PR_SI_SYSNAME  "DARWIN"
 #ifdef i386
 #define _PR_SI_ARCHITECTURE "x86"
 #else
@@ -219,4 +219,4 @@ extern PRIntervalTime   _PR_UNIX_TicksPerSecond(void);
 /* For writev() */
 #include <sys/uio.h>
 
-#endif /* nspr_rhapsody_defs_h___ */
+#endif /* nspr_darwin_defs_h___ */
