@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  string \
 		  timer \
+		  necko \
 		  $(NULL)
 
 XPIDLSRCS = oeIICal.idl

@@ -47,6 +47,9 @@
 #include "stdlib.h"   
 #include "nsCOMPtr.h"
 #include "nsISimpleEnumerator.h"
+#include "nsString.h"
+#include "nsIURL.h"
+#include "nsNetCID.h"
                              
 extern "C" {
     #include "icalss.h"
@@ -633,7 +636,16 @@ oeICalImpl::SetServer( const char *str ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::SetServer(%s)\n", str );
 #endif
-	strcpy( serveraddr, str );
+
+    if( strncmp( str, "file:///", strlen( "file:///" ) ) == 0 ) {
+        nsCOMPtr<nsIURL> url( do_CreateInstance(NS_STANDARDURL_CONTRACTID) );
+        nsCString filePath;
+        filePath = str;
+        url->SetSpec( filePath );
+        url->GetFilePath( filePath );
+        strcpy( serveraddr, filePath.get() );
+    } else
+	    strcpy( serveraddr, str );
 
     icalfileset *stream;
     
