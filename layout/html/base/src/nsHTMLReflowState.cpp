@@ -440,7 +440,8 @@ GetNearestContainingBlock(nsIFrame* aFrame, nsMargin& aContentArea)
     PRBool    isBlock;
 
     aFrame->GetFrameType(&frameType);
-    isBlock = frameType == nsLayoutAtoms::blockFrame;
+    isBlock = (frameType == nsLayoutAtoms::blockFrame) ||
+              (frameType == nsLayoutAtoms::areaFrame);
     NS_IF_RELEASE(frameType);
 
     if (isBlock) {
