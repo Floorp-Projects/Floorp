@@ -60,10 +60,6 @@ xul|*.select-outlinercol {
   padding: 0px !important;
 }
 
-xul|*.select-outlinercols > xul|outlinercolpicker {
-  display: none;
-}
-
 /* ::::: outliner rows ::::: */
 
 xul|*.select-outlinerbody:-moz-outliner-row {
