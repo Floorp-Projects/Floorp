@@ -38,8 +38,6 @@ chdir $root_dir
 #utime($read_time, $end_time, $timestamp_file) 
 #  or die "Can't update timestamp on $timestamp_file: $!";
 
-#CREATE TABLE entries (id INT PRIMARY KEY, protocol VARCHAR(4), protocol_version VARCHAR(5), client VARCHAR(15), date_time DATETIME, method VARCHAR(4), file_id INT, status CHAR(3), bytes INT, site_id TINYINT, log_id INT);
-
 # Regular expressions that grab data from the log entries; pre-defined
 # and pre-compiled here for performance.  The backslash in [^\"]
 # isn't necessary for Perl but fixes indenting confusion in emacs.
@@ -62,14 +60,17 @@ my $dbh = DBI->connect($dsn,
 # Prepare the statements we're going to use to insert HTTP log entries into
 # the database.
 my $insert_entry_sth = $dbh->prepare("INSERT INTO entries (id, protocol, protocol_version, 
-                                      client, date_time, method, file_id, status, bytes, site_id, log_id)
-                                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                      client, date_time, method, file_id, status, bytes, 
+                                      query_id, site_id, log_id)
+                                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 my $insert_file_sth = $dbh->prepare("INSERT INTO files (id, path, name) VALUES (?, ?, ?)");
 my $get_file_id_sth = $dbh->prepare("SELECT id FROM files WHERE path = ? AND name = ?");
 my $get_log_status_sth = $dbh->prepare("SELECT id, status FROM logs WHERE path = ? AND name = ?");
 my $insert_log_sth = $dbh->prepare("INSERT INTO logs (id, path, name, site_id, status) VALUES (?, ?, ?, ?, ?)");
 my $update_log_sth = $dbh->prepare("UPDATE logs SET status = ? WHERE id = ?");
 my $get_site_id_sth = $dbh->prepare("SELECT id FROM sites WHERE abbr = ?");
+my $get_query_id_sth = $dbh->prepare("SELECT id FROM queries WHERE query = ?");
+my $insert_query_sth = $dbh->prepare("INSERT INTO queries (id, query) VALUES (?, ?)");
 
 # Get the last unique ID from the database so we know what the next one 
 # should be. XXX These assume only one script process will ever be running
@@ -80,6 +81,7 @@ my $get_site_id_sth = $dbh->prepare("SELECT id FROM sites WHERE abbr = ?");
 # a second process access the database at all.
 my ($entry_id) = $dbh->selectrow_array("SELECT MAX(id) FROM entries") || 0;
 my ($max_file_id) = $dbh->selectrow_array("SELECT MAX(id) FROM files") || 0;
+my ($max_query_id) = $dbh->selectrow_array("SELECT MAX(id) FROM queries") || 0;
 
 my $seen = 0;
 my $entered = 0;
@@ -207,7 +209,16 @@ sub process_log {
         next unless $status == 200 || $status == 206;
 
         # Strip the URL query string, if any, from the file string.
-        $file = (split(/\?/, $file))[0];
+        ($file, my $query) = (split(/\?/, $file));
+
+	my $query_id;
+	if ($query) {
+	    ($query_id) = $dbh->selectrow_array($get_query_id_sth, {}, $query);
+	    if (!$query_id) {
+	        $query_id = ++$max_query_id;
+	        $insert_query_sth->execute($query_id, $query);
+	    }
+	}
 
         # Split up the file string into a path and a name.
         $file =~ /^(.*)\/([^\/]*)$/;
@@ -262,7 +273,7 @@ sub process_log {
         ++$log_entered;
         $insert_entry_sth->execute($entry_id, $protocol, $protocol_version, $host, 
                                    $date_time, $method, $file_id, $status, $bytes, 
-				   $site_id, $log_id);
+				   $query_id, $site_id, $log_id);
     }
     close(LOGFILE);
     $update_log_sth->execute("processed", $log_id) || die $dbh->errstr;
