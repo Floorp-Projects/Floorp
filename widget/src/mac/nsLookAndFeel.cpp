@@ -56,7 +56,7 @@ nsLookAndFeel::~nsLookAndFeel()
 {
 }
 
-nsresult nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
+nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 {
     nsresult res = NS_OK;
 
