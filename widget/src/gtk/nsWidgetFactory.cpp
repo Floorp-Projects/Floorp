@@ -56,7 +56,6 @@
 #include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
-#include "nsScrollbar.h"
 #include "nsSound.h"
 #include "nsGtkMozRemoteHelper.h"
 #include "nsBidiKeyboard.h"
@@ -81,64 +80,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGtkXRemoteWidgetHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 
-static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  nsresult rv;
-  nsISupports *inst = nsnull;
-
-  if ( NULL == aResult )
-  {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = NULL;
-  if (NULL != aOuter)
-  {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-  
-  inst = (nsISupports *)(nsBaseWidget *)(nsWidget *)new nsScrollbar(PR_FALSE);
-  if (inst == NULL)
-  {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
-}
-
-static nsresult nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  nsresult rv;
-  nsISupports *inst = nsnull;
-
-  if ( NULL == aResult )
-  {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = NULL;
-  if (NULL != aOuter)
-  {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-  
-  inst = (nsISupports *)(nsBaseWidget *)(nsWidget *)new nsScrollbar(PR_TRUE);
-  if (inst == NULL)
-  {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
-}
-
 static const nsModuleComponentInfo components[] =
 {
   { "Gtk nsWindow",
@@ -157,14 +98,6 @@ static const nsModuleComponentInfo components[] =
     NS_CHECKBUTTON_CID,
     "@mozilla.org/widgets/checkbutton/gtk;1",
     nsCheckButtonConstructor },
-  { "Gtk Horiz Scrollbar",
-    NS_HORZSCROLLBAR_CID,
-    "@mozilla.org/widgets/horizscroll/gtk;1",
-    nsHorizScrollbarConstructor },
-  { "Gtk Vert Scrollbar",
-    NS_VERTSCROLLBAR_CID,
-    "@mozilla.org/widgets/vertscroll/gtk;1",
-    nsVertScrollbarConstructor },
   { "Gtk Text Widget",
     NS_TEXTFIELD_CID,
     "@mozilla.org/widgets/textwidget/gtk;1",

@@ -49,7 +49,6 @@
 #include "nsToolkit.h"
 #include "nsLookAndFeel.h"
 #include "nsFilePicker.h"
-#include "nsScrollbar.h"
 #include "nsBidiKeyboard.h"
 
 // Drag & Drop, Clipboard
@@ -74,58 +73,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 
-static nsresult nsHorizScrollbarConstructor(nsISupports *aOuter,REFNSIID aIID,
-                                            void **aResult)
-{
-  nsresult rv;
-  nsISupports *inst = nsnull;
-
-  if (NULL == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = NULL;
-  if (NULL != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-  inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_FALSE);
-  if (inst == NULL) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID,aResult);
-  NS_RELEASE(inst);
-
-  return rv;
-}
-
-static nsresult nsVertScrollbarConstructor(nsISupports *aOuter,REFNSIID aIID,
-                                           void **aResult)
-{
-  nsresult rv;
-  nsISupports *inst = nsnull;
-
-  if (NULL == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = NULL;
-  if (NULL != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-  inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_TRUE);
-  if (inst == NULL) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
-}  
-
 static const nsModuleComponentInfo components[] =
 {
   { "BeOS nsWindow",
@@ -136,14 +83,6 @@ static const nsModuleComponentInfo components[] =
     NS_CHILD_CID,
     "@mozilla.org/widgets/child_window/beos;1",
     ChildWindowConstructor },
-  { "BeOS Horiz Scrollbar",
-    NS_HORZSCROLLBAR_CID,
-    "@mozilla.org/widgets/horizscroll/beos;1",
-    nsHorizScrollbarConstructor },
-  { "BeOS Vert Scrollbar",
-    NS_VERTSCROLLBAR_CID,
-    "@mozilla.org/widgets/vertscroll/beos;1",
-    nsVertScrollbarConstructor },
   { "BeOS AppShell",
     NS_APPSHELL_CID,
     "@mozilla.org/widget/appshell/beos;1",

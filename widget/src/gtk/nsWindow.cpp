@@ -2526,11 +2526,6 @@ NS_IMETHODIMP nsWindow::GetScreenBounds(nsRect &aRect)
 }
 
 
-PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
-{
-  return PR_FALSE;
-}
-
 //-------------------------------------------------------------------------
 //
 // Hide or show this component

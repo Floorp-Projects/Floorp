@@ -84,7 +84,6 @@ CPPSRCS			= nsAppShell.cpp \
 		nsMenuBarX.cpp \
 		nsMenuItemX.cpp \
 		nsMimeMapper.cpp \
-		nsScrollbar.cpp \
 		nsNativeScrollbar.cpp \
 		nsSound.cpp \
 		nsTextWidget.cpp \

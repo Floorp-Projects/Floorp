@@ -46,7 +46,6 @@
 #include "nsGfxCIID.h"
 #include "nsIScrollableView.h"
 #include "nsView.h"
-#include "nsIScrollbar.h"
 #include "nsISupportsArray.h"
 #include "nsICompositeListener.h"
 #include "nsCOMPtr.h"
@@ -1953,7 +1952,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         nsView* baseView;
         nsView* view;
         nsPoint offset;
-        nsIScrollbar* sb;
         PRBool capturedEvent = PR_FALSE;
 
         if (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_KEY_EVENT(aEvent) ||
@@ -1973,11 +1971,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         else if (nsnull != mKeyGrabber && (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent))) {
           view = mKeyGrabber;
           capturedEvent = PR_TRUE;
-        }
-        else if (NS_OK == aEvent->widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void**)&sb)) {
-          view = baseView;
-          capturedEvent = PR_TRUE;
-          NS_RELEASE(sb);
         }
         else {
           view = baseView;

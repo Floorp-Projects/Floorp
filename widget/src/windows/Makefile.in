@@ -61,7 +61,6 @@ CPPSRCS		= \
 	nsClipboard.cpp  \
 	nsWindow.cpp         \
 	nsFilePicker.cpp     \
-	nsScrollbar.cpp      \
 	nsAppShell.cpp       \
 	nsLookAndFeel.cpp    \
 	nsToolkit.cpp        \

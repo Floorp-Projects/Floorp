@@ -48,7 +48,6 @@ EXTRA_DSO_LIBS = gkgfx
 
 CPPSRCS		= \
 		nsView.cpp \
-		nsScrollingView.cpp \
 		nsScrollPortView.cpp \
 		nsViewManager.cpp \
 		$(NULL)

@@ -39,7 +39,6 @@
 #include "nsIWidget.h"
 #include "nsUnitConversion.h"
 #include "nsIPresContext.h"
-#include "nsIScrollbar.h"
 #include "nsIDeviceContext.h"
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"

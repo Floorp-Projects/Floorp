@@ -47,7 +47,6 @@
 #include "nsIToolkit.h"
 #include "nsIWidget.h"
 #include "nsICheckButton.h"
-#include "nsIScrollbar.h"
 #include "nsITextWidget.h"
 
 
@@ -59,7 +58,6 @@ static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
-static NS_DEFINE_IID(kIScrollBarIID, NS_ISCROLLBAR_IID);
 
 
 NS_WIDGET nsresult 
@@ -170,33 +168,6 @@ NS_CreateTextWidget(nsISupports* aParent,
 }
 
 
-
-NS_WIDGET nsresult 
-NS_CreateScrollBar(nsISupports* aParent, 
-									nsIScrollbar* aWidget, 
-									const nsRect& aRect, 
-									EVENT_CALLBACK aHandleEventFunction)
-{
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
-
-  nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    NS_IF_RELEASE(widget);
-	}
-  else
-  {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
-  }
-
-	if (aParent)
-	  NS_IF_RELEASE(parent);
-
-  return NS_OK;
-}
 
 extern NS_WIDGET nsresult 
 NS_ShowWidget(nsISupports* aWidget, PRBool aShow)
