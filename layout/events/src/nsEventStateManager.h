@@ -27,6 +27,7 @@
 #include "nsGUIEvent.h"
 class nsIDocument;
 class nsIScrollableView;
+class nsISelfScrollingFrame;
 
 /*
  * Event listener manager
@@ -79,6 +80,9 @@ protected:
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
+  nsISelfScrollingFrame* GetNearestSelfScrollingFrame(nsIFrame* aFrame);
+
+  nsIFrame* GetDocumentFrame(nsIPresContext& aPresContext);
 
   // routines for the d&d gesture tracking state machine
   void BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
