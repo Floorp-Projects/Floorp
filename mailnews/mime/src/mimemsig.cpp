@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 
-#include "mimerosetta.h"
 #include "modmimee.h"
 #include "mimemsig.h"
 #include "nspr.h"

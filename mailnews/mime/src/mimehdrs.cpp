@@ -21,7 +21,6 @@
  */
 #include "nsCOMPtr.h"
 #include "msgCore.h"
-#include "mimerosetta.h"
 #include "mimei.h"
 #include "libi18n.h"
 #include "modmime.h"

@@ -35,7 +35,6 @@
 #include "mimebuf.h"
 #include "mimemapl.h"
 #include "edt.h"
-#include "mimerosetta.h"
 #include "proto.h"
 #include "prprf.h"
 #include "intl_csi.h"

@@ -24,7 +24,6 @@
 #define _MIMEPBUF_H_
 
 #include "mimei.h"
-#include "mimerosetta.h"
 
 /* This file provides the ability to save up the entire contents of a MIME
    object (of arbitrary size), and then emit it all at once later.  The

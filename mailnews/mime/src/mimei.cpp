@@ -25,7 +25,6 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
-#include "mimerosetta.h"
 
 #ifdef MOZ_SECURITY
 #include HG01966

@@ -22,7 +22,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIMimeEmitter.h"
-#include "mimerosetta.h"
 #include "mimemsg.h"
 #include "mimemoz2.h"
 #include "prmem.h"
