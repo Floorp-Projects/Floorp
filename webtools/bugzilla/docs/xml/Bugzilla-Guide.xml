@@ -92,7 +92,7 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 <!-- Header -->
 
   <bookinfo>
-    <title>The Bugzilla Guide</title>
+    <title>The Bugzilla Guide - &bz-ver; <![%bz-devel;[Development ]]>Release</title>
 
     <authorgroup>
       <author>
@@ -106,8 +106,6 @@ try to avoid clutter and feel free to waste space in the code to make it more re
         <surname>Team</surname>
       </author>
     </authorgroup>
-
-    <edition>&bz-ver; <![%bz-devel;[Development ]]>Release</edition>
 
     <pubdate>&bz-date;</pubdate>
 
