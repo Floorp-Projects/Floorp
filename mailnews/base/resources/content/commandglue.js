@@ -154,9 +154,9 @@ function ChangeFolderByURI(uri)
   var msgfolder =
       resource.QueryInterface(Components.interfaces.nsIMsgFolder);
   if (msgfolder.isServer)
-      window.title = "Netscape: " + msgfolder.name;
+      window.title = msgfolder.name;
   else
-      window.title = "Netscape: " + msgfolder.name + " on " +
+      window.title = msgfolder.name + " on " +
           msgfolder.server.prettyName;
 
   var folder = GetThreadTreeFolder();
