@@ -95,8 +95,19 @@ LIBRARY_NAME=network
 EXTRA_LIBS=
 
 REQUIRES= foo parse jtools java zlib nspr dbm util network js security
-EXPORTS= mkstream.h mkformat.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
-	mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h
+EXPORTS= mkstream.h \
+	 mkformat.h \
+	 mkparse.h \
+	 mkfsort.h \
+	 mksort.h \
+	 mkgeturl.h \
+ 	 mkselect.h \
+	 mktcp.h \
+	 netutils.h \
+	 mkpadpac.h \
+	 mkautocf.h \
+	 mkutils.h \
+	 mkhelp.h
 
 C_OBJS = \
 	$(NULL)
