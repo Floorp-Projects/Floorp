@@ -446,7 +446,6 @@ progressmeter {
    -moz-box-pack: inherit;
    -moz-box-align: inherit;
    -moz-box-direction: inherit;
-   direction: ltr;
 }
 
 /********** label **********/
