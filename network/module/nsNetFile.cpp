@@ -6,6 +6,10 @@
 #include "direct.h"
 #include <time.h>
 
+char USER_DIR[_MAX_PATH];
+char CACHE_DIR[_MAX_PATH];
+char DEF_DIR[_MAX_PATH];
+
 static NS_DEFINE_IID(kINetFileIID, NS_INETFILE_IID);
 
 NS_IMPL_ISUPPORTS(nsNetFile, kINetFileIID);

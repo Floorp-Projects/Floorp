@@ -31,9 +31,14 @@
 
 #ifdef NS_NET_FILE
 
+extern char *USER_DIR;
+extern char *CACHE_DIR;
+extern char *DEF_DIR;
+
 // For xp to ns file translation
 #include "nsINetFile.h"
 #include "nsVoidArray.h"
+#include "direct.h"
 
 // The nsINetfile
 static nsINetFile *fileMgr = nsnull;
@@ -1000,6 +1005,33 @@ NET_I_XP_FileSeek(XP_File fp, long offset, int origin) {
 // Directories and files are platform specific.
 PUBLIC PRBool
 NET_InitFilesAndDirs(void) {
+    PRFileInfo dir;
+    PRStatus status;
+    char tmpBuf[_MAX_PATH];
+#ifdef XP_PC
+    char *mDirDel = "\\";
+#elif XP_MAC
+    char *mDirDel = ":";
+#else
+    char *mDirDel = "/";
+#endif
+    
+    // Setup directories, step 1.
+    USER_DIR = _getcwd(USER_DIR, _MAX_PATH);
+    CACHE_DIR = _getcwd(CACHE_DIR, _MAX_PATH);
+    DEF_DIR = _getcwd(DEF_DIR, _MAX_PATH);
+
+    // setup the cache dir.
+    PL_strcpy(tmpBuf, CACHE_DIR);
+    sprintf(CACHE_DIR,"%s%s%s%s", tmpBuf, mDirDel, "cache", mDirDel);
+    status = PR_GetFileInfo(CACHE_DIR, &dir);
+    if (status == PR_FAILURE) {
+        // Create the dir.
+        status = PR_MkDir(CACHE_DIR, 0600);
+        if (status != PR_SUCCESS) {
+            ; // bummer!
+        }
+    }
 
     if (!fileMgr) {
         if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
