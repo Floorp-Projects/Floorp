@@ -81,6 +81,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
@@ -602,8 +603,18 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
                                    getter_AddRefs(mNavigatorHolder));
           }
 
+          JSObject *gsp =
+            nsWindowSH::GetInvalidatedGlobalScopePolluter(cx, mJSObject);
+
           ::JS_ClearScope(cx, mJSObject);
           ::JS_ClearRegExpStatics(cx);
+
+          if (gsp) {
+            nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
+
+            nsWindowSH::InstallGlobalScopePolluter(cx, mJSObject, gsp,
+                                                   html_doc);
+          }
 
           mIsScopeClear = PR_TRUE;
         }
@@ -642,18 +653,23 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
   mDocument = aDocument;
 
   if (mDocument && mContext) {
+    JSObject *gsp =
+      nsWindowSH::GetInvalidatedGlobalScopePolluter(cx, mJSObject);
 
     if (mIsScopeClear) {
       mContext->InitContext(this);
+    } else {
+      // If we didn't clear the scope (i.e. the old document was
+      // about:blank) then we need to update the cached document
+      // property on the window to reflect the new document and not the
+      // old one.
+
+      nsWindowSH::OnDocumentChanged(cx, mJSObject, this);
     }
 
-    // If we didn't clear the scope (i.e. the old document was
-    // about:blank) then we need to update the cached document
-    // property on the window to reflect the new document and not the
-    // old one. And even if we did clear the scope, we need to notify
-    // the scriptable helper about the document change.
+    nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
 
-    nsWindowSH::OnDocumentChanged(cx, mJSObject, this);
+    nsWindowSH::InstallGlobalScopePolluter(cx, mJSObject, gsp, html_doc);
   }
 
   // Clear our mutation bitfield.
