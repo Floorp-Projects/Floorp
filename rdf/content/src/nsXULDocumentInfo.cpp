@@ -75,8 +75,8 @@ XULDocumentInfoImpl::~XULDocumentInfoImpl(void)
 
 nsresult
 XULDocumentInfoImpl::Init(nsIDocument* aDocument, nsIRDFResource* aResource) {
-  NS_IF_RELEASE(aDocument);
-  NS_IF_RELEASE(aResource);
+  NS_IF_RELEASE(mParentDocument);
+  NS_IF_RELEASE(mFragmentRoot);
 
   mParentDocument = aDocument;
   mFragmentRoot = aResource;

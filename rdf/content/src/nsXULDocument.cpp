@@ -975,10 +975,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     }
 
     {
-        nsCOMPtr<nsIWebShell> webShell;
-        aContainer->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
-
-        if (NS_FAILED(rv = sink->Init(this, webShell, mDocumentDataSource))) {
+        if (NS_FAILED(rv = sink->Init(this, mDocumentDataSource))) {
             NS_ERROR("Unable to initialize XUL content sink");
             return rv;
         }
