@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.5 2002/11/02 01:51:40 nelsonb%netscape.com Exp $
+ * $Id: blapit.h,v 1.6 2002/11/16 03:21:53 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPIT_H_
@@ -73,6 +73,7 @@
 #define SHA256_LENGTH 		32 	/* bytes */
 #define SHA384_LENGTH 		48 	/* bytes */
 #define SHA512_LENGTH 		64 	/* bytes */
+#define HASH_LENGTH_MAX         SHA512_LENGTH
 
 /*
  * Input block size for each hash algorithm.
