@@ -614,3 +614,4 @@ nsXMLMIMEDataSource::GetFromTypeCreator(PRUint32 aType, PRUint32 aCreator, const
 	 
 	 return NS_ERROR_FAILURE;
 }
+

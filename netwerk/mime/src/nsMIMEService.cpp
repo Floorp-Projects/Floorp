@@ -243,3 +243,4 @@ nsMIMEService::GetNativeDataSource(nsIMIMEDataSource * *aNativeDataSource)
 	NS_IF_ADDREF( *aNativeDataSource );
 	return NS_OK;
 }
+
