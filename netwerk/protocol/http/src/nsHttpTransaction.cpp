@@ -118,7 +118,8 @@ nsHttpTransaction::~nsHttpTransaction()
 
 nsresult
 nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
-                                nsIInputStream *requestStream)
+                                nsIInputStream *requestBody,
+                                PRBool requestBodyHasHeaders)
 {
     nsresult rv;
 
@@ -164,9 +165,11 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     }
 #endif
 
-    mReqUploadStream = requestStream;
-    if (!mReqUploadStream)
-        // Write out end-of-headers sequence if NOT uploading data:
+    mReqUploadStream = requestBody;
+
+    // If the request body does not include headers or if there is no request
+    // body, then we must add the header/body separator manually.
+    if (!requestBodyHasHeaders || !requestBody)
         mReqHeaderBuf.Append("\r\n");
 
     // Create a string stream for the request header buf

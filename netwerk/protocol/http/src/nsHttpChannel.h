@@ -172,6 +172,7 @@ private:
     PRPackedBool                      mCachedContentIsValid;
     PRPackedBool                      mResponseHeadersModified;
     PRPackedBool                      mCanceled;
+    PRPackedBool                      mUploadStreamHasHeaders;
 };
 
 #endif // nsHttpChannel_h__
