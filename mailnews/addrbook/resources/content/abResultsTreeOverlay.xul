@@ -27,11 +27,12 @@ Rights Reserved.
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 	<!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
-	 <tree id="resultsTree"
+	<tree id="resultsTree"
 		  class="abResults" 
 		  style="width:100%; height:100%"
 		  datasources="rdf:addressdirectory rdf:addresscard"
 		  onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
+		  onblur="goOnEvent(this,'blur')"
 		  ondblclick="top.AbEditCard()"
 		  containment="http://home.netscape.com/NC-rdf#CardChild">
 
@@ -39,7 +40,7 @@ Rights Reserved.
 			<rule>
 				<treechildren>
 					<treeitem uri="...">
-						<treerow >
+						<treerow>
 					    	<treecell class="cardicon" value="rdf:http://home.netscape.com/NC-rdf#DisplayName"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>

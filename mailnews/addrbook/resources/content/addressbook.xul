@@ -46,7 +46,7 @@ Rights Reserved.
 <commands id="commands">
 	<commandset id="CommandUpdate_AddressBook"
 				commandupdater="true"
-				events="focus,blur,tree-select"
+				events="focus,tree-select"
 				oncommandupdate="CommandUpdate_AddressBook()"/>
 	
 	<commandset id="globalEditMenuItems"/>

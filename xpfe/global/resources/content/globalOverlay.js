@@ -114,8 +114,6 @@ function goUpdateCommand(command)
 	
 	if ( controller )
 		enabled = controller.isCommandEnabled(command);
-	else
-		goSetMenuValue(command, 'valueDefault');
 		
 	goSetCommandEnabled(command, enabled);
 }
@@ -145,7 +143,8 @@ function goSetCommandEnabled(id, enabled)
 function goSetMenuValue(command, valueAttribute)
 {
 	var commandNode = top.document.getElementById(command);
-	if ( commandNode ) {
+	if ( commandNode )
+	{
 		var value = commandNode.getAttribute(valueAttribute);
 		if ( value )
 			commandNode.setAttribute('value', value);
@@ -162,6 +161,23 @@ function goUpdateGlobalEditMenuItems()
 	goUpdateCommand('cmd_selectAll');
 	goUpdateCommand('cmd_delete');
 }
+
+// this function is used to inform all the controllers attached to a node that an event has occurred
+// (e.g. the tree controllers need to be informed of blur events so that they can change some of the
+// menu items back to their default values)
+function goOnEvent(node, event)
+{
+	var numControllers = node.controllers.getControllerCount();
+	var controller;
+	
+	for ( var controllerIndex = 0; controllerIndex < numControllers; controllerIndex++ )
+	{
+		controller = node.controllers.getControllerAt(controllerIndex);
+		if ( controller )
+			controller.onEvent(event);
+	}
+}
+
 
 // This used to be BrowserNewEditorWindow in navigator.js
 function NewEditorWindow()

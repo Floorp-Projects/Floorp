@@ -67,6 +67,16 @@ var ResultsPaneController =
 				}
 				break;
 		}
+	},
+	
+	onEvent: function(event)
+	{
+		dump("onEvent("+event+")\n");
+		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+		{
+			goSetMenuValue('cmd_delete', 'valueDefault');
+		}
 	}
 };
 
@@ -128,6 +138,16 @@ var DirPaneController =
 				if ( dirTree )
 					top.addressbook.DeleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
 				break;
+		}
+	},
+	
+	onEvent: function(event)
+	{
+		dump("onEvent("+event+")\n");
+		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+		{
+			goSetMenuValue('cmd_delete', 'valueDefault');
 		}
 	}
 };

@@ -31,9 +31,9 @@ Rights Reserved.
 		  class="abDirectory" 
 		  style="width:100%; height:100%"
 		  ref="abdirectory://"
-		  open="true"
 		  datasources="rdf:addressdirectory"
-		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');">
+		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
+		  onblur="goOnEvent(this,'blur')">
 		
 		<template>
 			<rule>

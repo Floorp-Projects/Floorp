@@ -54,7 +54,7 @@ Rights Reserved.
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
 				commandupdater="true"
-				events="focus,blur,tree-select"
+				events="focus,tree-select"
 				oncommandupdate="goUpdateCommand('button_delete')"/>
 
 	<commandset id="globalEditMenuItems"/>

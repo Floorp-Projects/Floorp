@@ -83,6 +83,16 @@ var FolderPaneController =
 				//MsgDeleteFolder();
 				break;
 		}
+	},
+	
+	onEvent: function(event)
+	{
+		dump("onEvent("+event+")\n");
+		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+		{
+			goSetMenuValue('cmd_delete', 'valueDefault');
+		}
 	}
 };
 
@@ -169,6 +179,16 @@ var ThreadPaneController =
 			case "cmd_redo":
 				messenger.Redo();
 				break;
+		}
+	},
+	
+	onEvent: function(event)
+	{
+		dump("onEvent("+event+")\n");
+		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+		{
+			goSetMenuValue('cmd_delete', 'valueDefault');
 		}
 	}
 };

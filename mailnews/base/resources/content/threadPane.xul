@@ -31,6 +31,7 @@ Rights Reserved.
 
 <tree datasources="rdf:null" id="threadTree" style="width: 100%; height: 100%"
 	  		  onselect="top.ThreadPaneSelectionChange(event.target); document.commandDispatcher.updateCommands('tree-select');"
+			  onblur="goOnEvent(this,'blur')"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild">
 
   <template>
@@ -39,10 +40,9 @@ Rights Reserved.
 		<treeitem uri="..."
 			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
   			 Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
-  		     Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
-		>
-	  		<treerow   >
-
+  		     Priority="rdf:http://home.netscape.com/NC-rdf#Priority">
+  		     
+	  		<treerow>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
 				<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Subject"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender"/>
