@@ -194,7 +194,7 @@ function onMultilineInputKeyPress (e)
         if ((e.ctrlKey || e.metaKey) && e.keyCode == 40)
         {
             /* ctrl/meta-down, switch to single line mode */
-            multilineInputMode (false);
+            dispatch ("pref multiline false");
         }
     }
 }
@@ -266,7 +266,7 @@ function onInputKeyPress (e)
             if (e.ctrlKey || e.metaKey)
             {
                 /* ctrl/meta-up, switch to multi line mode */
-                multilineInputMode (true);
+                dispatch ("pref multiline true");
             }
             else
             {
