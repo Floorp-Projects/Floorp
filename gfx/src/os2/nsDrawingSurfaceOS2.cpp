@@ -325,9 +325,11 @@ nsresult nsOffscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
                                    (PBITMAPINFO2)mInfoHeader), GPI_ALTERROR);
 
 #ifdef DEBUG
-   if( rc != mInfoHeader->cy) PMERROR( "GpiQueryBitmapBits");
-   printf( "Lock, requested %d x %d and got %d x %d\n",
-           aWidth, aHeight, (int) mInfoHeader->cx, aHeight);
+   if( rc != mScans) {
+     PMERROR( "GpiQueryBitmapBits");
+     printf( "Lock, requested %d x %d and got %d x %d\n",
+             aWidth, aHeight, (int) mInfoHeader->cx, aHeight);
+   }
 #endif
 
    // Okay.  Now have current state of bitmap in mBits.
