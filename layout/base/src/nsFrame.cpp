@@ -276,14 +276,14 @@ nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 nsrefcnt nsFrame::AddRef(void)
 {
-  NS_ERROR("not supported");
-  return 0;
+  NS_WARNING("not supported for frames");
+  return 1;
 }
 
 nsrefcnt nsFrame::Release(void)
 {
-  NS_ERROR("not supported");
-  return 0;
+  NS_WARNING("not supported for frames");
+  return 1;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1140,25 +1140,6 @@ NS_METHOD nsFrame::Reflow(nsIPresContext&      aPresContext,
 
   return NS_OK;
 }
-
-// XXX CONSTRUCTION
-#if 0
-NS_METHOD nsFrame::ContentAppended(nsIPresShell*   aShell,
-                                   nsIPresContext* aPresContext,
-                                   nsIContent*     aContainer)
-{
-  return NS_OK;
-}
-
-NS_METHOD nsFrame::ContentInserted(nsIPresShell*   aShell,
-                                   nsIPresContext* aPresContext,
-                                   nsIContent*     aContainer,
-                                   nsIContent*     aChild,
-                                   PRInt32         aIndexInParent)
-{
-  return NS_OK;
-}
-#endif
 
 NS_METHOD nsFrame::ContentReplaced(nsIPresShell*   aShell,
                                    nsIPresContext* aPresContext,
