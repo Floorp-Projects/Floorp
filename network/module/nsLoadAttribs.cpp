@@ -251,8 +251,6 @@ nsLoadAttribs::GetByteRangeHeader(char **aByteRangeHeader)
   return rv;
 }
 
-
-
 // Creation routines
 NS_NET nsresult NS_NewLoadAttribs(nsILoadAttribs** aInstancePtrResult) {
   nsILoadAttribs* it;
