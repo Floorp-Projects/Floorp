@@ -315,11 +315,8 @@ protected:
                       PRUint32         aEventType);
 
 #ifdef DEBUG
-  void DebugPrintEvent(nsGUIEvent & aEvent,
-                       char *         sMessage,
-                       GtkWidget *    aGtkWidget,
-                       PRBool         aPrintCoords,
-                       PRBool         aPrintXID);
+  void DebugPrintEvent(nsGUIEvent &   aEvent,
+                       GtkWidget *    aGtkWidget);
 #endif
 
     GtkWidget *mWidget;

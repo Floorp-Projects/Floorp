@@ -973,6 +973,10 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
 {
   NS_ADDREF(event->widget);
 
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(*event,mWidget);
+#endif
+
   if (nsnull != mMenuListener) {
     if (NS_MENU_EVENT == event->eventStructType)
       aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *event));
@@ -1194,49 +1198,63 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 // Turning TRACE_EVENTS on will cause printfs for all
 // mouse events that are dispatched.
 //
-// Motion events are extra noisy so they get their own
-// define: TRACE_EVENTS_MOTION
+// These are extra noisy, and thus have their own switch:
+//
+// NS_MOUSE_MOVE
+// NS_PAINT
+// NS_MOUSE_ENTER, NS_MOUSE_EXIT
 //
 //////////////////////////////////////////////////////////////////
 
 #undef TRACE_EVENTS
 #undef TRACE_EVENTS_MOTION
+#undef TRACE_EVENTS_PAINT
+#undef TRACE_EVENTS_CROSSING
 
 #ifdef DEBUG
 void
 nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
-                          char *         sMessage,
-                          GtkWidget *    aGtkWidget,
-                          PRBool         aPrintCoords,
-                          PRBool         aPrintXID)
+                          GtkWidget *    aGtkWidget)
 {
+#ifndef TRACE_EVENTS_MOTION
+  if (aEvent.message == NS_MOUSE_MOVE)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_PAINT
+  if (aEvent.message == NS_PAINT)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_CROSSING
+  if (aEvent.message == NS_MOUSE_ENTER || aEvent.message == NS_MOUSE_EXIT)
+  {
+    return;
+  }
+#endif
+
   static int sPrintCount=0;
 
-  printf("%4d %-14s(this=%-8p , name=%-12s",
+  printf("%4d %-26s(this=%-8p , name=%-12s",
          sPrintCount++,
-         sMessage,
+         (const char *) nsAutoCString(GuiEventToString(aEvent)),
          this,
-         gtk_widget_get_name(aGtkWidget));
+         aGtkWidget ? gtk_widget_get_name(aGtkWidget) : "null");
          
-  if (aPrintXID)
+  Window win = 0;
+  
+  if (aGtkWidget && GTK_WIDGET_REALIZED(aGtkWidget))
   {
-    printf(" , xid=%-8p",
-           GDK_WINDOW_XWINDOW(mWidget->window));
+    win = GDK_WINDOW_XWINDOW(aGtkWidget->window);
   }
-
-  printf(" , event=%-16s",
-         (const char *) nsAutoCString(GuiEventToString(aEvent)));
-
-  if (aPrintCoords)
-  {
-    printf(" , x=%-3d, y=%d)",
-           aEvent.point.x,
-           aEvent.point.y);
-  }
-  else
-  {
-    printf(")");
-  }
+  
+  printf(" , xid=%-8p",(void *) win);
+  
+  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
 
   printf("\n");
 }
@@ -1301,10 +1319,6 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
     event.time = aGdkMotionEvent->time;
   }
   
-#ifdef TRACE_EVENTS_MOTION
-  DebugPrintEvent(event,"Motion",mWidget,PR_FALSE,PR_TRUE);
-#endif
-  
   AddRef();
 
   DispatchMouseEvent(event);
@@ -1329,16 +1343,11 @@ nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext)
   event.point.x = 17;
   event.point.y = 19;
 
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Motion",mWidget,PR_FALSE,PR_TRUE);
-#endif
-  
   AddRef();
 
   DispatchMouseEvent(event);
 
   Release();
-
 }
 
 
@@ -1349,10 +1358,6 @@ nsWidget::OnDragBeginSignal(GdkDragContext * aGdkDragContext)
 
   event.message = NS_MOUSE_MOVE;
   event.eventStructType = NS_MOUSE_EVENT;
-  
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Drag",mWidget,PR_FALSE,PR_TRUE);
-#endif
   
   AddRef();
 
@@ -1376,10 +1381,6 @@ nsWidget::OnDragDropSignal(GdkDragContext *aDragContext)
   event.point.x = 17;
   event.point.y = 19;
 
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Drop",mWidget,PR_FALSE,PR_TRUE);
-#endif
-  
   AddRef();
 
   DispatchWindowEvent(&event);
@@ -1417,10 +1418,6 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
     event.time = aGdkCrossingEvent->time;
   }
 
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Enter",mWidget,PR_FALSE,PR_TRUE);
-#endif
-
   AddRef();
 
   DispatchMouseEvent(event);
@@ -1455,10 +1452,6 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
     event.point.y = nscoord(aGdkCrossingEvent->y);
     event.time = aGdkCrossingEvent->time;
   }
-
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Leave",mWidget,PR_FALSE,PR_TRUE);
-#endif
 
   AddRef();
 
@@ -1535,10 +1528,6 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"ButtonPress",mWidget,PR_FALSE,PR_TRUE);
-#endif
-
   // Set the button motion target and remeber the widget and root coords
   sButtonMotionTarget = this;
 
@@ -1583,10 +1572,6 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"ButtonRelease",mWidget,PR_FALSE,PR_TRUE);
-#endif
-
   if (nsnull != sButtonMotionTarget)
   {
     sButtonMotionTarget = nsnull;
@@ -1621,10 +1606,6 @@ nsWidget::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
   event.point.x = 0;
   event.point.y = 0;
 
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"FocusIn",mWidget,PR_FALSE,PR_TRUE);
-#endif
-  
   AddRef();
   
   DispatchFocus(event);
@@ -1651,10 +1632,6 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
   event.point.x = 0;
   event.point.y = 0;
 
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"FocusOut",mWidget,PR_FALSE,PR_TRUE);
-#endif
-  
   AddRef();
   
   DispatchFocus(event);
