@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2002/05/01 02:52:46 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/02 01:40:42 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -66,8 +66,6 @@ use FileStructure;
             $FileStructure::DEFAULT_HTML_PAGE
             );
 
-    HTMLPopUp::regenerate_HTML_pages();
-
     $out = <<EOF;
 Content-type: text/html
 
@@ -80,7 +78,7 @@ Content-type: text/html
 <FONT SIZE="+2">
 Regenerating HTML now.<br>
 Please refresh the page when the redirect is complete.<br>
-Sending you to the <A HREF="$url">default Tinderbox page</A>.
+Sending you back to the regenerated <A HREF="$url">Tinderbox page</A>.
 </FONT>
 </TD></TR></TABLE>
 </CENTER>
@@ -90,6 +88,8 @@ EOF
 ;
 
     print $out;
+
+    HTMLPopUp::regenerate_HTML_pages();
 
     exit 0;		
 }
