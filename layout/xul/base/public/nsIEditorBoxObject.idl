@@ -33,17 +33,19 @@
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the NPL, the GPL or the LGPL.
- *
+*
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIBoxObject.idl"
 
 interface nsIEditorShell;
+interface nsIDocShell;
 
 [scriptable, uuid(14B3B669-3414-4548-AA03-EDF257D889C8)]
 interface nsIEditorBoxObject : nsISupports
 {
   readonly attribute nsIEditorShell editorShell;
+  readonly attribute nsIDocShell docShell;
 };
 
 %{C++
