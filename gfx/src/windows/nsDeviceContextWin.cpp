@@ -452,19 +452,10 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsF
   // The mPixelScale will be a "1" for the screen and could be
   // any value when going to a printer, for example mPixleScale is
   // 6.25 when going to a 600dpi printer.
-  LONG logHeight = LONG((float(ptrLogFont->lfHeight) * mPixelScale)+0.5); // round up
-
+  // round, but take into account whether it is negative
+  LONG logHeight = LONG((float(ptrLogFont->lfHeight) * mPixelScale) + (ptrLogFont->lfHeight < 0 ? -0.5 : 0.5)); // round up
   int pointSize = -MulDiv(logHeight, 72, ::GetDeviceCaps(aHDC, LOGPIXELSY));
-  //printf("\n\n Default Font size: %dpt\n", pointSize);
-  // As far as I can tell the Default size 8pt
-  // increase it by 2 points to match Windows GUI
-  if (anID == eSystemAttr_Font_Button || 
-      anID == eSystemAttr_Font_Field ||
-      anID == eSystemAttr_Font_List ||
-      anID == eSystemAttr_Font_Widget ||
-      anID == eSystemAttr_Font_Caption) {
-    pointSize += 2;
-  }
+
   aFont->size = NSIntPointsToTwips(pointSize);
 
   return NS_OK;
