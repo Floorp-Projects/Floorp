@@ -203,6 +203,24 @@
     </content>
   </binding>
   
+  <binding id="menubutton-single-top">
+    <content includes="menupopup">
+      <xul:box class="button-internal-box" autostretch="never" orient="vertical" flex="1">
+        <xul:image class="menubutton-single-icon"/>
+        <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="menubutton-single-bottom">
+    <content includes="menupopup">
+      <xul:box class="button-internal-box" autostretch="never" orient="vertical" flex="1">
+        <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
+        <xul:image class="menubutton-single-icon"/>
+      </xul:box>
+    </content>
+  </binding>
+
 <!-- 
   BINDING : menubutton-icon
   XUL REPRESENTATION : <menubutton class="menubutton-icon">
@@ -340,6 +358,5 @@
       <xul:text class="menubutton-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
     </content>
   </binding>  
-  
   
 </bindings>
