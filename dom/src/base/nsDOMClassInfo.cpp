@@ -1059,7 +1059,7 @@ nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
       break;
     }
 
-    nsIInterfaceInfo *tmp = if_info;
+    nsCOMPtr<nsIInterfaceInfo> tmp(if_info);
     tmp->GetParent(getter_AddRefs(if_info));
   }
 
