@@ -1136,6 +1136,11 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 
   mCurrentURI = aLocation;
 
+  // If the location change does not have a corresponding request, then we
+  // assume that it does not impact the security state.
+  if (!aRequest)
+    return NS_OK;
+
   // The location bar has changed, so we must update the security state.  The
   // only concern with doing this here is that a page may transition from being
   // reported as completely secure to being reported as partially secure
