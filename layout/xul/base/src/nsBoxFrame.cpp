@@ -231,7 +231,16 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
 
   nsSpaceManager* spaceManager = new nsSpaceManager(this);
   mInner->mSpaceManager = spaceManager;
+
+#ifdef DEBUG_evaughan
+  // This function is incredibly expensive in profiles. Unless it can be optimized, and
+  // because it's being used for debug purposes only, this call is being commented out.
+  // Contact hyatt@netscape.com if you have any questions.  Do not put it back in
+  // until the speed issues with the pseudostyle probes have been resolved, as this
+  // call substantially impacts box performance.
   mInner->UpdatePseudoElements(aPresContext);
+#endif
+
   mInner->mHorizontal = GetInitialAlignment();
   return rv;
 }

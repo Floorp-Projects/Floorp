@@ -1878,7 +1878,7 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 
     NS_PRECONDITION((nsnull != aKid) && (aKid != NS_STATIC_CAST(nsIStyledContent*, this)), "null ptr");
 
-    if (! mChildren) {
+    if (!mChildren) {
         rv = NS_NewISupportsArray(getter_AddRefs(mChildren));
         if (NS_FAILED(rv)) return rv;
     }
