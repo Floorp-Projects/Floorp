@@ -36,6 +36,7 @@ CPPSRCS		= \
 		xpclog.cpp \
 		xpcmaps.cpp \
 		xpcmodule.cpp \
+		xpcruntimesvc.cpp \
 		xpcstack.cpp \
 		xpcthreadcontext.cpp \
 		xpcthrower.cpp \
