@@ -8344,7 +8344,7 @@ lo_SkipInitialSpace ( LO_TextBlock * block )
 	if ( ( breakIndex == 0 ) && ( breakIndex < block->break_write_index ) && XP_IS_SPACE ( block->text_buffer[ 0 ] ) )
 		{
 		breakLong = block->break_table[ breakIndex >> 3 ];
-		breakLong >>= ( 7 - breakIndex & 0x7 ) << 2;
+		breakLong >>= ( 7 - ( breakIndex & 0x7 ) ) << 2;
 		
 		if ( breakLong == 0 )
 			{
