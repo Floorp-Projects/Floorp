@@ -181,7 +181,7 @@ EmbedWindow::GetChromeFlags(PRUint32 *aChromeFlags)
 NS_IMETHODIMP
 EmbedWindow::SetChromeFlags(PRUint32 aChromeFlags)
 {
-  mOwner->mChromeMask = aChromeFlags;
+  mOwner->SetChromeMask(aChromeFlags);
   return NS_OK;
 }
 
