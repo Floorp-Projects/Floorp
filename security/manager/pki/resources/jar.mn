@@ -3,6 +3,8 @@ pippki.jar:
     content/pippki/changepassword.xul        (content/changepassword.xul)
     content/pippki/getpassword.xul           (content/getpassword.xul)
     content/pippki/password.js               (content/password.js)
+    content/pippki/resetpassword.xul         (content/resetpassword.xul)
+    content/pippki/resetpassword.js          (content/resetpassword.js)
     content/pippki/PrefOverlay.xul           (content/PrefOverlay.xul)
     content/pippki/pref-security.js          (content/pref-security.js)
     content/pippki/pref-ssl.xul              (content/pref-ssl.xul)

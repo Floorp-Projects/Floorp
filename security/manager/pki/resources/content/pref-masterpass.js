@@ -99,3 +99,10 @@ function ChangePW()
               internal_token.tokenName,
               "chrome,resizable=1,modal=1,dialog=1");
 }
+
+function ResetPW()
+{
+  window.open("chrome://pippki/content/resetpassword.xul",
+              internal_token.tokenName,
+              "centerscreen,chrome,resizable=1,modal=1,dialog=1");
+}

@@ -97,4 +97,18 @@
     </hbox>
   </groupbox>
 
+  <!-- Reset Password -->
+  <groupbox orient="vertical">
+    <label value="&resetpassword.label;"/>
+    <html>&resetpassword.text1;</html>
+    <html>&resetpassword.text2;</html>
+    <hbox halign="left" autostretch="never">
+      <button class="dialog" label="&resetpassword.button;" disabled="false"
+              oncommand="ResetPW();"
+              id="resetPasswordButton"
+              pref="true" preftype="bool" prefattribute="disabled"
+              prefstring="security.disable_button.resetPassword"/>
+    </hbox>
+  </groupbox>
+
 </window>
