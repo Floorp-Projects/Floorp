@@ -70,6 +70,9 @@ const PRInt32 kBackward = 1;
 #include "nsHTMLContentSinkStream.h"
 #endif
 
+// XXX Used to control whether we implement document.layers
+//#define NS_IMPLEMENT_DOCUMENT_LAYERS
+
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
@@ -110,6 +113,7 @@ nsHTMLDocument::nsHTMLDocument()
   mEmbeds = nsnull;
   mLinks = nsnull;
   mAnchors = nsnull;
+  mLayers = nsnull;
   mNamedItems = nsnull;
   mParser = nsnull;
   nsHTMLAtoms::AddrefAtoms();
@@ -144,6 +148,7 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mEmbeds);
   NS_IF_RELEASE(mLinks);
   NS_IF_RELEASE(mAnchors);
+  NS_IF_RELEASE(mLayers);
   if (nsnull != mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mAttrStyleSheet);
@@ -231,6 +236,7 @@ nsHTMLDocument::Reset(nsIURL *aURL)
   NS_IF_RELEASE(mEmbeds);
   NS_IF_RELEASE(mLinks);
   NS_IF_RELEASE(mAnchors);
+  NS_IF_RELEASE(mLayers);
 
   for (i = 0; i < mImageMaps.Count(); i++) {
     nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
@@ -1570,11 +1576,42 @@ nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
   return NS_OK;
 }
 
+PRBool
+nsHTMLDocument::MatchLayers(nsIContent *aContent, nsString* aData)
+{
+  nsIAtom *name;
+  aContent->GetTag(name);
+  nsAutoString attr;
+  PRBool result = PR_FALSE;
+  
+  if ((nsnull != name) && 
+      ((nsHTMLAtoms::layer == name) || (nsHTMLAtoms::ilayer == name))) {
+    result = PR_TRUE;
+  }
+
+  NS_IF_RELEASE(name);
+  return result;
+}
+
 NS_IMETHODIMP    
 nsHTMLDocument::GetLayers(nsIDOMHTMLCollection** aLayers)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef NS_IMPLEMENT_DOCUMENT_LAYERS
+  if (nsnull == mLayers) {
+    mAnchors = new nsContentList(this, MatchLayers, nsnull);
+    if (nsnull == mLayers) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mLayers);
+  }
+
+  *aLayers = (nsIDOMHTMLCollection *)mLayers;
+  NS_ADDREF(mLayers);
+#else
+  *aLayers = nsnull;
+#endif
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1615,13 +1652,20 @@ IsNamedItem(nsIContent* aContent, nsIAtom *aTag,
             PRBool aInForm, nsString& aName)
 {
   // Only the content types reflected in Level 0 with a NAME
-  // attribute are registered. Images and forms always get 
+  // attribute are registered. Images, layers and forms always get 
   // reflected up to the document. Applets and embeds only go
   // to the closest container (which could be a form).
   if ((aTag == nsHTMLAtoms::img) || (aTag == nsHTMLAtoms::form) ||
       (!aInForm && ((aTag == nsHTMLAtoms::applet) || 
                     (aTag == nsHTMLAtoms::embed)))) {
     if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aName)) {
+      return PR_TRUE;
+    }
+  }
+
+  if ((aTag == nsHTMLAtoms::layer) || (aTag == nsHTMLAtoms::ilayer)) {
+    if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aName)) ||
+        (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aName))) {
       return PR_TRUE;
     }
   }

@@ -167,6 +167,7 @@ public:
   static nsIAtom* ibPseudo;
   static nsIAtom* id;
   static nsIAtom* iframe;
+  static nsIAtom* ilayer;
   static nsIAtom* img;
   static nsIAtom* index;
   static nsIAtom* input;
@@ -175,6 +176,7 @@ public:
   static nsIAtom* label;
   static nsIAtom* labelContentPseudo;
   static nsIAtom* lang;
+  static nsIAtom* layer;
   static nsIAtom* layout;
   static nsIAtom* li;
   static nsIAtom* link;
@@ -313,6 +315,7 @@ public:
   static nsIAtom* wrappedFramePseudo;
 
   static nsIAtom* zindex;
+  static nsIAtom* z_index;
 };
 
 #endif /* nsHTMLAtoms_h___ */
