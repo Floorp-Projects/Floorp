@@ -774,7 +774,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT 
 	{
 		return E_INVALIDARG;
 	}
-
+#if 0 /* XXX */
 	PropertyList::iterator i;
 	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
 	{
@@ -792,7 +792,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT 
 	p.vValue = vtValue;
 
 	m_PropertyList.push_back(p);
-		
+#endif /* 0 */		
 	return S_OK;
 }
 
@@ -808,7 +808,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __
 	}
 	
 	VariantInit(pvtValue);
-	
+#if 0 /* XXX */
 	PropertyList::iterator i;
 	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
 	{
@@ -820,7 +820,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __
 			return S_OK;
 		}
 	}
-
+#endif /* 0 */
 	return S_OK;
 }
 
