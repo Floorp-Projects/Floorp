@@ -79,28 +79,7 @@ static NS_DEFINE_IID(kJoinTableCellsTxnIID,    JOIN_CELLS_TXN_IID);
 NS_IMETHODIMP nsHTMLEditor::InsertTable()
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
-//#if 0
-  result = nsEditor::BeginTransaction();
-
-  nsCOMPtr<nsIDOMNode> newNode;
-  nsAutoString tag("table");
-  result = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
-  if( NS_SUCCEEDED(result))
-  {
-    nsAutoString tag("tr");
-    nsCOMPtr<nsIDOMNode> ParentNode;
-    ParentNode = newNode;
-    result = nsEditor::CreateNode(tag, ParentNode, 0, getter_AddRefs(newNode));
-    if( NS_SUCCEEDED(result))
-    {
-      nsAutoString tag("td");
-      ParentNode = newNode;
-      result = nsEditor::CreateNode(tag, ParentNode, 0, getter_AddRefs(newNode));
-    }
-  }
-  result = nsEditor::EndTransaction();
-//#endif
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsHTMLEditor::CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn)
@@ -109,53 +88,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateTxnForInsertTable(const nsIDOMElement *aTableN
   {
     return NS_ERROR_NULL_POINTER;
   }
-  // DELETE THIS AFTER IMPLEMENTING METHOD
-  nsresult  result = NS_ERROR_NOT_IMPLEMENTED;
-#if 0
-  nsresult  result = NS_ERROR_UNEXPECTED; 
-  nsCOMPtr<nsIDOMSelection> selection;
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
-  if ((NS_SUCCEEDED(result)) && selection)
-  {
-    nsCOMPtr<nsIEnumerator> enumerator;
-    enumerator = selection;
-    if (enumerator)
-    {
-      enumerator->First(); 
-      nsISupports *currentItem;
-      result = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
-      {
-        result = NS_ERROR_UNEXPECTED; 
-        // XXX: we'll want to deleteRange if the selection isn't just an insertion point
-        // for now, just insert text after the start of the first node
-        nsCOMPtr<nsIDOMRange> range(currentItem);
-        if (range)
-        {
-          nsCOMPtr<nsIDOMNode> node;
-          result = range->GetStartParent(getter_AddRefs(node));
-          if ((NS_SUCCEEDED(result)) && (node))
-          {
-            result = NS_ERROR_UNEXPECTED; 
-            nsCOMPtr<nsIDOMCharacterData> nodeAsText(node);
-            if (nodeAsText)
-            {
-              PRInt32 offset;
-              range->GetStartOffset(&offset);
-              result = TransactionFactory::GetNewTransaction(kInsertTableTxnIID, (EditTxn **)aTxn);
-              if (nsnull!=*aTxn) {
-                result = (*aTxn)->Init(nodeAsText, offset, aTableNode, mPresShell);
-              }
-              else
-                result = NS_ERROR_OUT_OF_MEMORY;
-            }
-          }
-        }
-      }
-    }
-  }
-#endif
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
@@ -190,7 +123,6 @@ NS_IMETHODIMP nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
 
 NS_IMETHODIMP nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
