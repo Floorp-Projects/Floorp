@@ -32,7 +32,8 @@ static NS_DEFINE_IID(kILocaleOS2IID, NS_IOS2LOCALE_IID);
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS(nsDateTimeFormatOS2,kIDateTimeFormatIID)
+// NS_IMPL_ISUPPORTS(nsDateTimeFormatOS2,kIDateTimeFormatIID)
+NS_IMPL_THREADSAFE_ISUPPORTS(nsDateTimeFormatOS2,kIDateTimeFormatIID)
 
 // ctor/dtor
 nsDateTimeFormatOS2::nsDateTimeFormatOS2()
