@@ -255,43 +255,15 @@ nsFrameItems::AddChild(nsIFrame* aChild)
 
 // Structure used when constructing formatting object trees. Contains
 // state information needed for absolutely positioned elements
-struct nsAbsoluteItems {
+struct nsAbsoluteItems : nsFrameItems {
   nsIFrame* const containingBlock;  // containing block for absolutely positioned elements
-  nsIFrame*       childList;        // list of absolutely positioned child frames
 
   nsAbsoluteItems(nsIFrame* aContainingBlock);
-
-  // Adds a child frame to the list of absolutely positioned child frames
-  void  AddAbsolutelyPositionedChild(nsIFrame* aChildFrame);
 };
 
 nsAbsoluteItems::nsAbsoluteItems(nsIFrame* aContainingBlock)
   : containingBlock(aContainingBlock)
 {
-  childList = nsnull;
-}
-
-void
-nsAbsoluteItems::AddAbsolutelyPositionedChild(nsIFrame* aChildFrame)
-{
-#ifdef NS_DEBUG
-  nsIFrame* parent;
-  aChildFrame->GetParent(parent);
-  NS_PRECONDITION(parent == containingBlock, "bad geometric parent");
-#endif
-
-  if (nsnull == childList) {
-    childList = aChildFrame;
-  } else {
-    // Get the last frane in the list
-    nsIFrame* lastChild = nsnull;
-
-    for (nsIFrame* f = childList; nsnull != f; f->GetNextSibling(f)) {
-      lastChild = f;
-    }
-
-    lastChild->SetNextSibling(aChildFrame);
-  }
 }
 
 // -----------------------------------------------------------
@@ -2002,7 +1974,7 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
       // Add the absolutely positioned frame to its containing block's list
       // of child frames
-      aAbsoluteItems.AddAbsolutelyPositionedChild(newFrame);
+      aAbsoluteItems.AddChild(newFrame);
 
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
@@ -2081,7 +2053,7 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
 
         // Add the absolutely positioned frame to its containing block's list
         // of child frames
-        aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+        aAbsoluteItems.AddChild(aNewFrame);
 
         // Add the placeholder frame to the flow
         aNewFrame = placeholderFrame;
@@ -2201,7 +2173,7 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
 
       // Add the absolutely positioned frame to its containing block's list
       // of child frames
-      aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+      aAbsoluteItems.AddChild(aNewFrame);
 
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
@@ -2715,7 +2687,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
 
         // Add the absolutely positioned frame to its containing block's list
         // of child frames
-        aAbsoluteItems.AddAbsolutelyPositionedChild(newFrame);
+        aAbsoluteItems.AddChild(newFrame);
 
         // Add the placeholder frame to the flow
         aFrameItems.AddChild(placeholderFrame);
@@ -2820,7 +2792,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
 
     // Add the absolutely positioned frame to its containing block's list
     // of child frames
-    aAbsoluteItems.AddAbsolutelyPositionedChild(newFrame);
+    aAbsoluteItems.AddChild(newFrame);
 
     // Add the placeholder frame to the flow
     aFrameItems.AddChild(placeholderFrame);
