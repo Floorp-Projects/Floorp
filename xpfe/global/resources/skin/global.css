@@ -1610,6 +1610,27 @@ html|input[type=radio][disabled] {
 
 
 /********** checkbox **********/
+
+checkbox {
+  list-style-image: url(chrome://global/skin/scroll-up.gif);
+}
+
+checkbox[checked="true"] {
+  list-style-image: url(chrome://global/skin/scroll-down.gif);
+}
+
+radio {
+  list-style-image: url(chrome://global/skin/scroll-up.gif);
+}
+
+radio[checked="true"] {
+  list-style-image: url(chrome://global/skin/scroll-down.gif);
+}
+
+radiogroup {
+  border: 1px solid black;
+}
+
 html|input[type=checkbox] {
   padding: 0px 1px 1px 0px;
   margin: 3px 5px 4px 3px;

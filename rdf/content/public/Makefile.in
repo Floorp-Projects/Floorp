@@ -49,6 +49,7 @@ EXPORTS		= \
         nsIDOMXULTitledButtonElement.h \
 		nsIDOMXULCheckboxElement.h \
 		nsIDOMXULRadioElement.h \
+		nsIDOMXULRadioGroupElement.h \
 		nsIDOMXULMenuListElement.h \
 		$(NULL)
 

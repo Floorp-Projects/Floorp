@@ -96,6 +96,7 @@
 #include "nsXULTitledButtonElement.h"
 #include "nsXULCheckboxElement.h"
 #include "nsXULRadioElement.h"
+#include "nsXULRadioGroupElement.h"
 #include "nsXULMenuListElement.h"
 
 #include "prlog.h"
@@ -296,6 +297,7 @@ nsIAtom*             nsXULElement::kWindowAtom;
 nsIAtom*             nsXULElement::kNullAtom;
 nsIAtom*             nsXULElement::kCheckboxAtom;
 nsIAtom*             nsXULElement::kRadioAtom;
+nsIAtom*             nsXULElement::kRadioGroupAtom;
 nsIAtom*             nsXULElement::kMenuListAtom;
 nsIAtom*             nsXULElement::kMenuButtonAtom;
 
@@ -367,6 +369,7 @@ nsXULElement::Init()
         kWindowAtom         = NS_NewAtom("window");
         kCheckboxAtom       = NS_NewAtom("checkbox");
         kRadioAtom          = NS_NewAtom("radio");
+        kRadioGroupAtom     = NS_NewAtom("radiogroup");
         kMenuListAtom     = NS_NewAtom("menulist");
         kMenuButtonAtom     = NS_NewAtom("menubutton");
         kNullAtom           = NS_NewAtom("");
@@ -449,6 +452,7 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kWindowAtom);
         NS_IF_RELEASE(kCheckboxAtom);
         NS_IF_RELEASE(kRadioAtom);
+        NS_IF_RELEASE(kRadioGroupAtom);
         NS_IF_RELEASE(kMenuListAtom);
         NS_IF_RELEASE(kMenuButtonAtom);
         NS_IF_RELEASE(kNullAtom);
@@ -717,6 +721,20 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
             if (NS_FAILED(rv)) return rv;
 
             if ((mSlots->mInnerXULElement = new nsXULRadioElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioGroupElement)) &&
+             (NameSpaceID() == kNameSpaceID_XUL) &&
+             (Tag() == kRadioGroupAtom)) {
+        // We delegate XULRadioElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULRadioGroupElement(this)) == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1787,6 +1805,10 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         else if (Tag() == kRadioAtom) {
             fn = NS_NewScriptXULRadioElement;
             rootname = "nsXULRadioElement::mScriptObject";
+        }
+        else if (Tag() == kRadioGroupAtom) {
+            fn = NS_NewScriptXULRadioGroupElement;
+            rootname = "nsXULRadioGroupElement::mScriptObject";
         }
         else if (Tag() == kMenuListAtom) {
             fn = NS_NewScriptXULMenuListElement;

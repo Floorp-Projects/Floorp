@@ -450,3 +450,13 @@ grippy {
    display: block;
 }
 
+
+/********** checkbox **********/
+
+checkbox {
+  behavior: url(resource:/chrome/xulBindings.xml#checkbox);
+}
+
+radiogroup {
+  behavior: url(resource:/chrome/xulBindings.xml#radiogroup);
+}

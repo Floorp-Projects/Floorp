@@ -45,6 +45,7 @@ CPPSRCS		= \
 		nsJSXULTitledButtonElement.cpp \
 		nsJSXULCheckboxElement.cpp \
 		nsJSXULRadioElement.cpp \
+		nsJSXULRadioGroupElement.cpp \
 		nsJSXULMenuListElement.cpp \
 		nsRDFDOMNodeList.cpp \
 		nsXULElement.cpp \
@@ -68,6 +69,7 @@ CPPSRCS		= \
 		nsXULTitledButtonElement.cpp \
 		nsXULCheckboxElement.cpp \
 		nsXULRadioElement.cpp \
+		nsXULRadioGroupElement.cpp \
 		nsXULMenuListElement.cpp \
 		$(NULL)
 

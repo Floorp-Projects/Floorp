@@ -934,6 +934,7 @@
     "xulmenulistelement.value", \
     "xulpopupelement.openpopup", \
     "xulpopupelement.closepopup", \
+    "xulradiogroupelement.selecteditem", \
     "xulradioelement.accesskey", \
     "xulradioelement.checked", \
     "xulradioelement.crop", \

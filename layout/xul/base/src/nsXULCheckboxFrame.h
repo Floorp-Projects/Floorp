@@ -30,12 +30,7 @@ public:
 
   friend nsresult NS_NewXULCheckboxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
-
   PRIntn GetDefaultAlignment();
-  void ToggleCheckState();
 
 }; // class nsXULCheckboxFrame
 
