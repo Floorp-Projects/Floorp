@@ -53,6 +53,7 @@
 #define FORCE_PR_LOG 1
 #endif
 
+#include <string.h>
 #include <stdlib.h>
 
 #if defined(HAVE_GSSAPI_H)
