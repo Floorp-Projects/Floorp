@@ -24,14 +24,17 @@
     <tr>
       <th>Compiler</th>
       <th>Version</th>
+      <th>Compiler flags</th>
     </tr>
     <tr>
       <td>@CC@</td>
       <td>@CC_VERSION@</td>
+      <td>@CFLAGS@</td>
     </tr>
     <tr>
       <td>@CXX@</td>
       <td>@CXX_VERSION@</td>
+      <td>@CXXFLAGS@ @CPPFLAGS@</td>
     </tr>
   </tbody>
 </table>
