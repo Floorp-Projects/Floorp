@@ -991,6 +991,16 @@ void MRJContext::setProxyInfoForURL(char * url, JMProxyType proxyType)
 
 #if TARGET_CARBON
 
+void* TimedMessage::operator new(size_t n)
+{
+    return (void*) NewPtr(n);
+}
+
+void TimedMessage::operator delete(void* ptr)
+{
+    DisposePtr(Ptr(ptr));
+}
+
 TimedMessage::TimedMessage()
     :   mTimerUPP(NULL)
 {
@@ -1006,12 +1016,13 @@ OSStatus TimedMessage::send()
 {
     EventLoopTimerRef timerRef;
     return ::InstallEventLoopTimer(::GetMainEventLoop(), 0, 0,
-                                 mTimerUPP, this, &timerRef);
-    // XXX does this leak timers? should the timer be released right here?
+                                   mTimerUPP, this, &timerRef);
 }
 
 pascal void TimedMessage::TimedMessageHandler(EventLoopTimerRef inTimer, void *inUserData)
 {
+    // prevent this timer from ever firing again.
+    RemoveEventLoopTimer(inTimer);
     TimedMessage* message = reinterpret_cast<TimedMessage*>(inUserData);
     message->execute();
     delete message;
