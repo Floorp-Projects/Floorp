@@ -249,6 +249,7 @@ public:
                         PRInt32 aStartOffset,
                         nsIContent **aResultContent, 
                         PRInt32 *aContentOffset,
+                        nsIFrame **aResultFrame,
                         PRBool aEatingWS);
 
   NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
@@ -1717,7 +1718,6 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
       PRUnichar* text = paintBuf;
       nsPoint origin;
       nsIView * view;
-      GetView(&view);
       GetOffsetFromView(origin, &view);
       PRBool found = BinarySearchForPosition(acx, text, origin.x, 0, 0,
                                              PRInt32(textLength),
@@ -1731,17 +1731,6 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
         if (PRInt32(aXCoord) - origin.x > textWidth+charWidth) {
           index++;
         }
-
-        /*offset = 0;
-        PRInt32 j;
-        PRInt32* ptr = ip;
-        for (j=0;j<=PRInt32(mContentLength);j++) {
-          if (*ptr == index+mContentOffset) {
-            offset = j;//+mContentOffset;
-            break;
-          }
-          ptr++;
-        }      */
       }
 
       if (ip != indicies) {
@@ -1980,6 +1969,7 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
                         PRInt32 aStartOffset,
                         nsIContent **aResultContent, 
                         PRInt32 *aContentOffset,
+                        nsIFrame **aResultFrame,
                         PRBool aEatingWS) 
 {
 
@@ -1990,7 +1980,11 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
   if (aStartOffset < mContentOffset){
     aStartOffset = mContentOffset;
   }
-
+  if (aAmount == eSelectLine)
+  {
+      return nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, aStartOffset,
+                        aResultContent, aContentOffset, aResultFrame,aEatingWS);
+  }
   if (aStartOffset > (mContentOffset + mContentLength)){
     nsIFrame *nextInFlow;
     nextInFlow = GetNextInFlow();
@@ -1999,7 +1993,7 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
       return NS_ERROR_INVALID_ARG;
     }
     return nextInFlow->PeekOffset(aTracker, aDesiredX, aAmount,aDirection,aStartOffset,
-                        aResultContent,aContentOffset,aEatingWS);
+                        aResultContent,aContentOffset,aResultFrame,aEatingWS);
   }
 
 
@@ -2079,11 +2073,11 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
     if (!found){
       if (frameUsed){
         result = frameUsed->PeekOffset(aTracker, aDesiredX, eSelectCharacter, aDirection,  start, aResultContent, 
-              aContentOffset, aEatingWS);
+              aContentOffset, aResultFrame,aEatingWS);
       }
       else {//reached end ask the frame for help
         result = nsFrame::PeekOffset(aTracker, aDesiredX, eSelectCharacter, aDirection, start, aResultContent,
-                  aContentOffset, aEatingWS);
+                  aContentOffset, aResultFrame,aEatingWS);
       }
     }
     else {
@@ -2192,11 +2186,11 @@ printf("aEatingWS = %s\n" , aEatingWS ? "TRUE" : "FALSE");
     if (!found || (*aContentOffset > (mContentOffset + mContentLength)) || (*aContentOffset < mContentOffset)){ //gone too far
       if (frameUsed){
         result = frameUsed->PeekOffset(aTracker, aDesiredX, aAmount, aDirection,  start, aResultContent, 
-              aContentOffset, aEatingWS);
+              aContentOffset, aResultFrame,aEatingWS);
       }
       else {//reached end ask the frame for help
         result = nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, start, aResultContent,
-                  aContentOffset, aEatingWS);
+                  aContentOffset, aResultFrame,aEatingWS);
       }
     }
     else {
@@ -2205,19 +2199,6 @@ printf("aEatingWS = %s\n" , aEatingWS ? "TRUE" : "FALSE");
         (*aResultContent)->AddRef();
     }
   }
-    break;
-  case eSelectLine : 
-    {
-      // Cleanup
-      if (paintBuf != paintBufMem) {
-        delete [] paintBuf;
-      }
-      if (ip != indicies) {
-        delete [] ip;
-      }
-      return nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, aStartOffset,
-                        aResultContent, aContentOffset, aEatingWS);
-    }
     break;
   default: result = NS_ERROR_FAILURE; break;
   }
@@ -2235,6 +2216,7 @@ printf("aEatingWS = %s\n" , aEatingWS ? "TRUE" : "FALSE");
     *aContentOffset = aStartOffset;
     result = NS_OK;
   }
+  *aResultFrame = this;
   return result;
 }
 
@@ -2269,6 +2251,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
         nsCOMPtr<nsIDOMNode> endNode;
         PRInt32 startOffset;
         PRInt32 endOffset;
+        nsIFrame *resultFrame;
         //peeks{}
         rv = PeekOffset(tracker, 
                         0, 
@@ -2277,6 +2260,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         startPos,
                         getter_AddRefs(startContent), 
                         &startOffset,
+                        &resultFrame,
                         PR_FALSE);
         if (NS_FAILED(rv))
           return rv;
@@ -2287,6 +2271,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         startPos,
                         getter_AddRefs(endContent), 
                         &endOffset,
+                        &resultFrame,
                         PR_FALSE);
         if (NS_FAILED(rv))
           return rv;
