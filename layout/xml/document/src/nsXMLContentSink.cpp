@@ -457,7 +457,7 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
 
     nsIAtom* nameSpacePrefix = CutNameSpacePrefix(name);
     nsIAtom* nameAtom = NS_NewAtom(name);
-    PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+    PRInt32 nameSpaceID = (nsnull == nameSpacePrefix) ? kNameSpaceID_None : GetNameSpaceId(nameSpacePrefix);
     if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
       NS_RELEASE(nameAtom);
       name.Insert("xmlns:", 0);
