@@ -987,18 +987,6 @@ nsresult nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
 	if(mView)
 	{
-		// Popup window should be placed relative to its parent window.
-		if (mWindowType == eWindowType_popup && mBorderlessParent) 
-		{
-			BWindow *parentwindow = mBorderlessParent->Window();
-			if (parentwindow && parentwindow->Lock()) 
-			{
-				BPoint p = mBorderlessParent->ConvertToScreen(BPoint(aX,aY));
-				aX = (nscoord)p.x;
-				aY = (nscoord)p.y;
-				parentwindow->Unlock();
-			}
-		}
 		if(mView->LockLooper())
 			mustunlock = true;
 
