@@ -346,15 +346,9 @@ NS_IMETHODIMP nsFrame::GetContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::GetStyleContext(nsIPresContext*   aPresContext,
-                                   nsIStyleContext*& aStyleContext)
+NS_IMETHODIMP nsFrame::GetStyleContext(nsIStyleContext*& aStyleContext) const
 {
-  if ((nsnull == mStyleContext) && (nsnull != aPresContext)) {
-    mStyleContext = aPresContext->ResolveStyleContextFor(mContent, mGeometricParent); // XXX should be content parent???
-    if (nsnull != mStyleContext) {
-      DidSetStyleContext(aPresContext);
-    }
-  }
+  NS_ASSERTION(nsnull != mStyleContext, "frame should always have style context");
   NS_IF_ADDREF(mStyleContext);
   aStyleContext = mStyleContext;
   return NS_OK;
@@ -388,6 +382,45 @@ NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& 
     aStyleStruct = mStyleContext->GetStyleData(aSID);
   } else {
     aStyleStruct = nsnull;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
+                                             nsIStyleContext* aNewParentContext)
+{
+  NS_ASSERTION(nsnull != mStyleContext, "null style context");
+  if (nsnull != mStyleContext) {
+    nsIAtom*  pseudoTag = nsnull;
+    mStyleContext->GetPseudoType(pseudoTag);
+    nsIStyleContext*  parent = aNewParentContext;
+    if (nsnull == aNewParentContext) {
+      parent = mStyleContext->GetParent();
+    }
+    nsIStyleContext*  newContext;
+    if (nsnull != pseudoTag) {
+      newContext = 
+        aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag, parent);
+    }
+    else {
+      newContext = aPresContext->ResolveStyleContextFor(mContent, parent);
+    }
+    if (nsnull == aNewParentContext) {
+      NS_IF_RELEASE(parent);
+    }
+
+    NS_ASSERTION(nsnull != newContext, "failed to get new style context");
+    if (nsnull != newContext) {
+      if (newContext != mStyleContext) {
+        NS_RELEASE(mStyleContext);
+        mStyleContext = newContext;
+        DidSetStyleContext(aPresContext);
+      }
+      else {
+        NS_RELEASE(newContext);
+        mStyleContext->RemapStyle(aPresContext);
+      }
+    }
   }
   return NS_OK;
 }

@@ -116,12 +116,13 @@ public:
   NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;
-  NS_IMETHOD  GetStyleContext(nsIPresContext* aContext,
-                              nsIStyleContext*& aStyleContext);
+  NS_IMETHOD  GetStyleContext(nsIStyleContext*& aStyleContext) const;
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
                               nsIStyleContext* aContext);
   NS_IMETHOD  GetStyleData(nsStyleStructID aSID,
                            const nsStyleStruct*& aStyleStruct) const;
+  NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
+                                    nsIStyleContext* aNewParentContext);
   NS_IMETHOD  GetContentParent(nsIFrame*& aParent) const;
   NS_IMETHOD  SetContentParent(const nsIFrame* aParent);
   NS_IMETHOD  GetGeometricParent(nsIFrame*& aParent) const;
