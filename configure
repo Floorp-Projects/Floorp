@@ -9900,6 +9900,7 @@ if test "${enable_tests+set}" = set; then
 fi
 
 
+
 MOZ_MONOLITHIC_TOOLKIT=1
 
 case "$target" in
