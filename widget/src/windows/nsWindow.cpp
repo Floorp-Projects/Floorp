@@ -5841,12 +5841,6 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 
     NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
 
-    COMPOSITIONFORM compForm;
-    compForm.dwStyle = CFS_POINT;
-    compForm.ptCurrentPos.x = event.theReply.mCursorPosition.x;
-    compForm.ptCurrentPos.y = event.theReply.mCursorPosition.y;
-    NS_IMM_SETCOMPOSITIONWINDOW(hIMEContext, &compForm);
-
     // somehow the "Intellegent ABC IME" in Simplified Chinese
     // window listen to the caret position to decide where to put the
     // candidate window
@@ -5917,12 +5911,6 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
     }
 
     NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
-
-    COMPOSITIONFORM compForm;
-    compForm.dwStyle = CFS_POINT;
-    compForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
-    compForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
-    NS_IMM_SETCOMPOSITIONWINDOW(hIMEContext, &compForm);
 
     sIMECompCharPos = (RECT*)PR_MALLOC(IME_MAX_CHAR_POS*sizeof(RECT));
     if (sIMECompCharPos) {
