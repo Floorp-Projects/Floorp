@@ -246,6 +246,7 @@ protected:
 
   nscoord GetTopMarginFor(nsIPresContext* aCX,
                           nsBlockReflowState& aState,
+                          nsIFrame* aKidFrame,
                           nsStyleMolecule* aKidMol,
                           PRBool aIsInline);
 
