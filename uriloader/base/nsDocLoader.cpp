@@ -1878,6 +1878,12 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
 
         if (NS_FAILED(rv)) {
             printf("DocLoaderFactory: Unable to create ContentViewer for content-type: %s\n", aContentType);
+            if ( m_Container ) {
+                // Give content container a chance to do something with this URL.
+                rv = m_Container->HandleUnknownContentType( aURL, aContentType, m_Command );
+            }
+            // Stop the binding.
+            // This crashes on Unix/Mac... Stop();
             goto done;
         }
 

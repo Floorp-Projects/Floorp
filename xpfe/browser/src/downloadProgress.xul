@@ -104,13 +104,13 @@
             
             // Update status (nnn of mmm)
             var status = "( ";
-            status += Math.round( bytes/1000 );
+            status += Math.round( bytes/1024 );
             status += "K of ";
-            status += Math.round( max/1000 );
+            status += Math.round( max/1024 );
             status += "K bytes ";
             if ( rate ) {
                 status += "at ";
-                status += Math.round( (rate*10)/1000 ) / 10;
+                status += Math.round( (rate*10)/1024 ) / 10;
                 status += "K bytes/sec )";
             } else {
                 status += ")";

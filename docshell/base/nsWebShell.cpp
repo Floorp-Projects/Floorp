@@ -142,6 +142,9 @@ public:
                    const char* aCommand,
                    nsISupports* aExtraInfo);
   NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
+  NS_IMETHOD HandleUnknownContentType( nsIURL* aURL,
+                                       const char *aContentType,
+                                       const char *aCommand );
 
   // nsIWebShell
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
@@ -712,6 +715,15 @@ nsWebShell::GetContentViewer(nsIContentViewer** aResult)
     NS_IF_ADDREF(mContentViewer);
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::HandleUnknownContentType( nsIURL* aURL,
+                                      const char *aContentType,
+                                      const char *aCommand ) {
+    // If we have a doc loader observer, let it respond to this.
+    return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( aURL, aContentType, aCommand )
+                              : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
