@@ -76,7 +76,7 @@ public class Main {
     public static int exec(String args[]) {
         Context cx = Context.enter();
         // Create the top-level scope object.
-        global = new Global(cx);
+        global = getGlobal();
         errorReporter = new ToolErrorReporter(false, global.getErr());
         cx.setErrorReporter(errorReporter);
 
@@ -97,6 +97,18 @@ public class Main {
 
         cx.exit();
         return exitCode;
+    }
+
+    public static Global getGlobal() {
+        if (global == null) {
+            try {
+                global = new Global(Context.enter());
+            }
+            finally {
+                Context.exit();
+            }
+        }
+        return global;
     }
 
     /**
@@ -174,7 +186,7 @@ public class Main {
         if (filename == null || filename.equals("-")) {
             if (filename == null) {
                 // print implementation version 
-                System.out.println(cx.getImplementationVersion());
+                getOut().println(cx.getImplementationVersion());
             }
 
             // Use the interpreter for interactive input
@@ -360,27 +372,27 @@ public class Main {
     }
 
     public static InputStream getIn() {
-        return Global.getInstance(global).getIn();
+        return Global.getInstance(getGlobal()).getIn();
     }
     
     public static void setIn(InputStream in) {
-        Global.getInstance(global).setIn(in);
+        Global.getInstance(getGlobal()).setIn(in);
     }
 
     public static PrintStream getOut() {
-        return Global.getInstance(global).getOut();
+        return Global.getInstance(getGlobal()).getOut();
     }
     
     public static void setOut(PrintStream out) {
-        Global.getInstance(global).setOut(out);
+        Global.getInstance(getGlobal()).setOut(out);
     }
 
     public static PrintStream getErr() { 
-        return Global.getInstance(global).getErr();
+        return Global.getInstance(getGlobal()).getErr();
     }
 
     public static void setErr(PrintStream err) {
-        Global.getInstance(global).setErr(err);
+        Global.getInstance(getGlobal()).setErr(err);
     }
 
     static protected ToolErrorReporter errorReporter;
