@@ -171,11 +171,11 @@ void* nsDeque::Peek() {
 void* nsDeque::PopBack(void) {
   void* result=0;
   if(mSize>0) {
-    int offset=mOrigin+mSize;
+    int offset=mOrigin+mSize-1;
     if(offset>=mCapacity) 
       offset-=mCapacity;
-    result=mData[offset-1];
-    mData[offset-1]=0;
+    result=mData[offset];
+    mData[offset]=0;
     mSize--;
     if(0==mSize)
       mOrigin=0;
