@@ -6,7 +6,7 @@
 pkg="org.mozilla"
 
 CATALINA_HOME=/usr/local/tomcat
-AXISLIB=$(AXIS_HOME)/lib
+AXIS_LIB=$(AXIS_HOME)/lib
 AXISCLASSPATH=$(AXIS_LIB)/axis.jar:$(AXIS_LIB)/commons-discovery.jar:$(AXIS_LIB)/commons-logging.jar:$(AXIS_LIB)/jaxrpc.jar:$(AXIS_LIB)/saaj.jar:$(AXIS_LIB)/log4j-1.2.8.jar:$(AXIS_LIB)/wsdl4j.jar:$(CATALINA_HOME)/webapps/axis/WEB-INF/lib/mysql-connector.jar
 CLASSPATH=$(AXIS_HOME):$(CATALINA_HOME)/webapps/axis/WEB-INF/classes:$(AXISCLASSPATH)
 JAVA_ENDORSED_DIRS=$CATALINA_HOME/bin
