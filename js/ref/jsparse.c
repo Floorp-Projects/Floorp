@@ -204,6 +204,14 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 	stop = TOK_EOF;
     }
 
+    /*
+     * Prevent GC activation on this context (possible if out of memory when
+     * atomizing, or from pre-ECMAv2 switch case expr eval in the unlikely
+     * case of a branch-callback -- unlikely because it means the switch case
+     * must have called a function).
+     */
+    cx->gcDisabled++;
+
     ok = JS_TRUE;
     do {
 	ts->flags |= TSF_REGEXP;
@@ -245,6 +253,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     } while (ok);
 
 out:
+    cx->gcDisabled--;
     cx->fp = fp;
     if (!ok)
 	CLEAR_PUSHBACK(ts);
@@ -353,6 +362,9 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
 	return JS_FALSE;
     }
 
+    /* Prevent GC activation on this context during compilation. */
+    cx->gcDisabled++;
+
     /* Satisfy the assertion at the top of Statements. */
     ts->token.type = TOK_LC;
     pn = FunctionBody(cx, ts, fun, &funcg.treeContext);
@@ -364,6 +376,8 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
 	if (ok)
 	    ok = js_EmitFunctionBody(cx, &funcg, pn, fun);
     }
+
+    cx->gcDisabled--;
     js_ResetCodeGenerator(cx, &funcg);
     return ok;
 }

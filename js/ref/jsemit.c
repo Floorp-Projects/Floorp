@@ -756,18 +756,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		    script = js_NewScriptFromCG(cx, &cg2, NULL);
 		    if (!script)
 			return JS_FALSE;
-
-		    /*
-		     * XXX The GC must not run during this case expr eval, so
-		     * kludge cx->gcDisabled to keep it at bay.  The current GC
-		     * rules say that the GC can run only when no requests are
-		     * active, or when the only active request explicitly calls
-		     * JS_GC or JS_MaybeGC from its branch callback.
-		     */
-		    cx->gcDisabled++;
 		    ok = js_Execute(cx, cx->fp->scopeChain, script, NULL,
 				    cx->fp, JS_FALSE, &pn3->pn_val);
-		    cx->gcDisabled--;
 		    js_DestroyScript(cx, script);
 		    if (!ok)
 			return JS_FALSE;
