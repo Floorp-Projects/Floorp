@@ -62,7 +62,7 @@ classic.jar:
 +  skin/classic/global/filepicker/folder-new.gif                  (filepicker/folder-new.gif)
 +  skin/classic/global/filepicker/folder-up.gif                   (filepicker/folder-up.gif)
 +  skin/classic/global/icons/Error.png                            (icons/Error.png)
-+  skin/classic/global/icons/Folder-item.png                      (icons/Folder-item.png)
++  skin/classic/global/icons/Folder-item.png                      (icons/folder-item.png)
 +  skin/classic/global/icons/Message.png                          (icons/Message.png)
 +  skin/classic/global/icons/Question.png                         (icons/Question.png)
 +  skin/classic/global/icons/Warning.png                          (icons/Warning.png)
