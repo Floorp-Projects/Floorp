@@ -68,6 +68,15 @@ function sortDate(a, b) {
   }
 }
 
+function formatDate(date) {
+  var modDate = new Date(date);
+  return gDateService.FormatDateTime("", gDateService.dateFormatShort,
+                                     gDateService.timeFormatSeconds,
+                                     modDate.getFullYear(), modDate.getMonth()+1,
+                                     modDate.getDate(), modDate.getHours(),
+                                     modDate.getMinutes(), modDate.getSeconds());
+}
+
 function nsFileView() {
   this.mShowHiddenFiles = false;
   this.mDirectoryFilter = false;
@@ -92,11 +101,13 @@ function nsFileView() {
   this.mFileAtom = atomService.getAtom("file");
 }
 
-nsFileView.prototype = {
+/* class constants */
 
-  SORTTYPE_NAME: 1,
-  SORTTYPE_SIZE: 2,
-  SORTTYPE_DATE: 3,
+nsFileView.SORTTYPE_NAME = 1;
+nsFileView.SORTTYPE_SIZE = 2;
+nsFileView.SORTTYPE_DATE = 3;
+
+nsFileView.prototype = {
 
   /* readonly attribute long rowCount; */
   set rowCount(c) { throw "readonly property"; },
@@ -193,14 +204,10 @@ nsFileView.prototype = {
     } else if (colID == "LastModifiedColumn") {
       if (!("cachedDate" in file)) {
         // perhaps overkill, but lets get the right locale handling
-        var modDate = new Date(file.file.lastModificationDate);
-        file.cachedDate = gDateService.FormatDateTime("", gDateService.dateFormatShort,
-                                                      gDateService.timeFormatSeconds,
-                                                      modDate.getFullYear(), modDate.getMonth()+1,
-                                                      modDate.getDate(), modDate.getHours(),
-                                                      modDate.getMinutes(), modDate.getSeconds());
+        file.cachedDate = file.file.lastModificationDate;
+        file.cachedDateText = formatDate(file.cachedDate);
       }
-      return file.cachedDate;
+      return file.cachedDateText;
     } else if (colID == "FileSizeColumn") {
       if (isdir) {
         return "";
@@ -319,9 +326,11 @@ nsFileView.prototype = {
       case nsFileView.SORTTYPE_DATE:
         for (i = 0; i < this.mDirList.length; i++) {
           this.mDirList[i].cachedDate = this.mDirList[i].file.lastModificationDate;
+          this.mDirList[i].cachedDateText = formatDate(this.mDirList[i].cachedDate);
         }
         for (i = 0; i < this.mFilteredFiles.length; i++) {
           this.mFilteredFiles[i].cachedDate = this.mFilteredFiles[i].file.lastModificationDate;
+          this.mFilteredFiles[i].cachedDateText = formatDate(this.mFilteredFiles[i].cachedDate);
         }
         compareFunc = sortDate;
         break;
@@ -355,7 +364,20 @@ nsFileView.prototype = {
 
     while (dirEntries.hasMoreElements()) {
       nextFile = dirEntries.getNext().QueryInterface(nsIFile);
-      if (nextFile.isDirectory()) {
+      // XXXjag hack for bug 82355 till symlink handling is fixed (bug 57995)
+      var isDir = false;
+      try {
+        isDir = nextFile.isDirectory();
+      } catch (e) {
+        // this here to fool the rest of the code into thinking
+        // this is a nsIFile object
+        nextFile = { unicodeLeafName : nextFile.unicodeLeafName,
+                     fileSize : 0,
+                     lastModificationDate : 0,
+                     isHidden: function() { return false; } };
+      }
+      // end of hack
+      if (isDir) {
         if (!nextFile.isHidden() || this.mShowHiddenFiles) {
           fileobj = new Object();
           fileobj.file = nextFile;
