@@ -144,15 +144,14 @@ nsEditor::nsEditor()
 :  mPresShellWeak(nsnull)
 ,  mViewManager(nsnull)
 ,  mUpdateCount(0)
-,  mActionListeners(nsnull)
-,  mDocDirtyState(-1)
-,  mDocWeak(nsnull)
 ,  mPlaceHolderTxn(nsnull)
 ,  mPlaceHolderName(nsnull)
 ,  mPlaceHolderBatch(0)
 ,  mTxnStartNode(nsnull)
 ,  mTxnStartOffset(0)
-
+,  mActionListeners(nsnull)
+,  mDocDirtyState(-1)
+,  mDocWeak(nsnull)
 {
   //initialize member variables here
   NS_INIT_REFCNT();

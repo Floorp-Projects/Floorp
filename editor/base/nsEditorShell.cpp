@@ -260,23 +260,19 @@ nsEditorShell::Init()
   mEditorTypeString = editorType;
   mEditorTypeString.ToLowerCase();
 
-  nsIStringBundleService* service;
-
   // Get pointer to our string bundle
-  nsresult res = nsServiceManager::GetService(kCStringBundleServiceCID,
-                                   nsIStringBundleService::GetIID(), 
-                                   (nsISupports**)&service);
-  if (NS_SUCCEEDED(res) && service)
-  {
-    nsILocale* locale = nsnull;
-    res = service->CreateBundle(EDITOR_BUNDLE_URL, locale, 
-                                   getter_AddRefs(mStringBundle));
-    // We don't need to keep service around once we created the bundle
-    nsServiceManager::ReleaseService(kCStringBundleServiceCID, service);
-  } else {
+  nsresult res;
+  NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &res);
+  if (NS_FAILED(res)) { 
     printf("ERROR: Failed to get StringBundle Service instance.\n");
+    return res;
   }
+  nsILocale* locale = nsnull;
+  res = service->CreateBundle(EDITOR_BUNDLE_URL, locale, 
+                                 getter_AddRefs(mStringBundle));
 
+  // XXX: why are we returning NS_OK here rather than res?
+  // is it ok to fail to get a string bundle?  if so, it should be documented.
   return NS_OK;
 }
 
@@ -1044,28 +1040,20 @@ nsEditorShell::CreateWindowWithURL(const char* urlStr)
   /*
    * Create the Application Shell instance...
    */
-  nsIAppShellService* appShell = nsnull;
-  rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    nsIAppShellService::GetIID(),
-                                    (nsISupports**)&appShell);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv)) { return rv; }
 
   nsCOMPtr<nsIURI> url = nsnull;
   nsCOMPtr<nsIWebShellWindow> newWindow;
   
   rv = NS_NewURL(getter_AddRefs(url), urlStr);
-  if (NS_FAILED(rv) || !url)
-    goto done;
-
+  if (NS_FAILED(rv)) return rv;
+  if (!url) { return NS_ERROR_NULL_POINTER; }
+  
+  // XXX: does CreateTopLevelWindow return a result we should be returning?
   appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, NS_CHROME_ALL_CHROME,
               nsnull, 615, 480, getter_AddRefs(newWindow));
   
-done:
-  /* Release the shell... */
-  if (nsnull != appShell) {
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  }
 #else
 
 
@@ -1075,22 +1063,13 @@ done:
   /*
    * Create the toolkit core instance...
    */
-  nsIDOMToolkitCore* toolkit = nsnull;
-  rv = nsServiceManager::GetService(kToolkitCoreCID,
-                                    nsIDOMToolkitCore::GetIID(),
-                                    (nsISupports**)&toolkit);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_WITH_SERVICE(nsIDOMToolkitCore, toolkit, kToolkitCoreCID, &rv);
+  if (NS_FAILED(rv)) { return rv; }
 
   //nsIWebShellWindow* newWindow = nsnull;
   
   toolkit->ShowWindowWithArgs( urlStr, nsnull, "chrome://editor/content/EditorInitPage.html" );
   
-  /* Release the toolkit... */
-  if (nsnull != toolkit) {
-    nsServiceManager::ReleaseService(kToolkitCoreCID, toolkit);
-  }
-
 #endif
 
   return rv;
@@ -1381,18 +1360,13 @@ nsEditorShell::Exit()
   //   user canceled an action along the way
   if (NS_SUCCEEDED(rv) && result)
   {
-    nsIAppShellService* appShell = nsnull;
 
     /*
      * Create the Application Shell instance...
      */
-    rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                               nsIAppShellService::GetIID(),
-                                               (nsISupports**)&appShell);
-    if (NS_SUCCEEDED(rv)) {
-      appShell->Quit();
-      nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-    } 
+    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+    if (NS_FAILED(rv)) { return rv; }
+    appShell->Quit();
   }
   return NS_OK; //Why not return rv?
 }
@@ -1880,32 +1854,23 @@ nsEditorShell::DoFind(PRBool aFindNext)
   PRBool foundIt = PR_FALSE;
   
   // Get find component.
-  nsIFindComponent *findComponent;
-  nsresult rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
-                                     nsIFindComponent::GetIID(),
-                                     (nsISupports**)&findComponent );
-  if ( NS_SUCCEEDED(rv) && findComponent )
+  nsresult rv;
+  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_PROGID, &rv);
+  NS_ASSERTION(((NS_SUCCEEDED(rv)) && findComponent), "GetService failed for find component.");
+  if (NS_FAILED(rv)) { return rv; }
+
+  // make the search context if we need to
+  if (!mSearchContext)
   {
-    // make the search context if we need to
-    if (!mSearchContext)
-    {
-      rv = findComponent->CreateContext( mContentAreaWebShell, nsnull, getter_AddRefs(mSearchContext));
-    }
-    
-    if (NS_SUCCEEDED(rv))
-    {
-      if (aFindNext)
-        rv = findComponent->FindNext(mSearchContext, &foundIt);
-      else
-        rv = findComponent->Find(mSearchContext, &foundIt);
-    }
-    
-    // Release the service.
-    nsServiceManager::ReleaseService( NS_IFINDCOMPONENT_PROGID, findComponent );
+    rv = findComponent->CreateContext( mContentAreaWebShell, nsnull, getter_AddRefs(mSearchContext));
   }
-  else
+  
+  if (NS_SUCCEEDED(rv))
   {
-    NS_ASSERTION(0, "GetService failed for find component.");
+    if (aFindNext)
+      rv = findComponent->FindNext(mSearchContext, &foundIt);
+    else
+      rv = findComponent->Find(mSearchContext, &foundIt);
   }
 
   return rv;
