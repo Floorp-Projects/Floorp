@@ -109,8 +109,9 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
           do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         didExecute->SetData(PR_FALSE);
-        observerService->NotifyObservers(didExecute, "nsWebBrowserFind_FindAgain", mFindBackwards? NS_LITERAL_STRING("up").get()
-                                                                                                 : NS_LITERAL_STRING("down").get());
+        NS_NAMED_LITERAL_STRING(downString, "down");
+        NS_NAMED_LITERAL_STRING(upString, "up");
+        observerService->NotifyObservers(didExecute, "nsWebBrowserFind_FindAgain", mFindBackwards? upString.get(): downString.get());
         didExecute->GetData(outDidFind);
         if (*outDidFind)
             return NS_OK;
