@@ -1926,6 +1926,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     // black
     gdk_window_set_back_pixmap(mShell->window, NULL, FALSE);
 
+    if (!topLevelParent) {
+      GdkWindow* dialoglead = mShell->window;
+      gdk_window_set_group(dialoglead, dialoglead);
+    }
     gtk_signal_connect(GTK_OBJECT(mShell),
                        "delete_event",
                        GTK_SIGNAL_FUNC(handle_delete_event),

@@ -2107,6 +2107,11 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                                          topLevelParent);
             mTransientParent = topLevelParent;
             // add ourselves to the parent window's window group
+            if (!topLevelParent) {
+                gtk_widget_realize(mShell);
+                GdkWindow* dialoglead = mShell->window;
+                gdk_window_set_group(dialoglead, dialoglead);
+            }
             if (parentArea) {
                 nsWindow *parentnsWindow =
                     get_window_for_gdk_window(parentArea->inner_window);
