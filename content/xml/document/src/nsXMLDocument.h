@@ -82,13 +82,6 @@ public:
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIDOMDocument interface
-  NS_IMETHOD CreateCDATASection(const nsAString& aData,
-                                nsIDOMCDATASection** aReturn);
-  NS_IMETHOD CreateEntityReference(const nsAString& aName,
-                                   nsIDOMEntityReference** aReturn);
-  NS_IMETHOD CreateProcessingInstruction(const nsAString& aTarget,
-                                         const nsAString& aData,
-                                         nsIDOMProcessingInstruction** aReturn);
   NS_IMETHOD GetElementById(const nsAString& aElementId,
                             nsIDOMElement** aReturn);
 

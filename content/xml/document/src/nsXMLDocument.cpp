@@ -60,8 +60,6 @@
 #include "nsIDOMText.h"
 #include "nsIBaseWindow.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMCDATASection.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMDocumentType.h"
 #include "nsINameSpaceManager.h"
 #include "nsICSSLoader.h"
@@ -747,61 +745,8 @@ nsXMLDocument::InternalGetNumberOfStyleSheets() const
   return count;
 }
 
-// nsIDOMDocument interface
-NS_IMETHODIMP    
-nsXMLDocument::CreateCDATASection(const nsAString& aData,
-                                  nsIDOMCDATASection** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+// nsIDOMNode interface
 
-  nsReadingIterator<PRUnichar> begin;
-  nsReadingIterator<PRUnichar> end;
-  aData.BeginReading(begin);
-  aData.EndReading(end);
-  if (FindInReadable(NS_LITERAL_STRING("]]>"),begin,end))
-    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
-
-  nsCOMPtr<nsIContent> content;
-  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(content));
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = CallQueryInterface(content, aReturn);
-    (*aReturn)->AppendData(aData);
-  }
-
-  return rv;
-}
- 
-NS_IMETHODIMP    
-nsXMLDocument::CreateEntityReference(const nsAString& aName,
-                                     nsIDOMEntityReference** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  *aReturn = nsnull;
-  return NS_OK;
-}
- 
-NS_IMETHODIMP    
-nsXMLDocument::CreateProcessingInstruction(const nsAString& aTarget, 
-                                           const nsAString& aData, 
-                                           nsIDOMProcessingInstruction** aReturn)
-{
-  *aReturn = nsnull;
-
-  nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIContent> content;
-  rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content), aTarget, aData);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return CallQueryInterface(content, aReturn);
-}
- 
 NS_IMETHODIMP    
 nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
@@ -907,6 +852,8 @@ MatchElementId(nsIContent *aContent, const nsACString& aUTF8Id, const nsAString&
 
   return result;
 }
+
+// nsIDOMDocument interface
 
 NS_IMETHODIMP
 nsXMLDocument::GetElementById(const nsAString& aElementId,

@@ -63,6 +63,8 @@
 #include "nsIDOMDocumentXBL.h"
 #include "nsGenericElement.h"
 #include "nsIDOMEventGroup.h"
+#include "nsIDOMCDATASection.h"
+#include "nsIDOMProcessingInstruction.h"
 
 #include "nsRange.h"
 #include "nsIDOMText.h"
@@ -2183,8 +2185,25 @@ NS_IMETHODIMP
 nsDocument::CreateCDATASection(const nsAString& aData,
                                nsIDOMCDATASection** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsReadingIterator<PRUnichar> begin;
+  nsReadingIterator<PRUnichar> end;
+  aData.BeginReading(begin);
+  aData.EndReading(end);
+  if (FindInReadable(NS_LITERAL_STRING("]]>"),begin,end))
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(content));
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = CallQueryInterface(content, aReturn);
+    (*aReturn)->AppendData(aData);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2192,8 +2211,18 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
                                         const nsAString& aData,
                                         nsIDOMProcessingInstruction** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReturn = nsnull;
+
+  nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> content;
+  rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content), aTarget, aData);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return CallQueryInterface(content, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2246,8 +2275,10 @@ NS_IMETHODIMP
 nsDocument::CreateEntityReference(const nsAString& aName,
                                   nsIDOMEntityReference** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  *aReturn = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
