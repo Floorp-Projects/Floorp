@@ -104,7 +104,7 @@ private:
     void                    EvictLookup( nsDNSLookup * lookup);
     void                    AddToEvictionQ( nsDNSLookup *  lookup);
     void                    AbortLookups();
-    
+    nsresult                ShutdownInternal();
         
     static PRBool           gNeedLateInitialization;
     static PLDHashTableOps  gHashTableOps;
@@ -125,9 +125,10 @@ private:
 
     enum {
         DNS_NOT_INITIALIZED = 0,
-        DNS_RUNNING         = 1,
-        DNS_SHUTTING_DOWN   = 2,
-        DNS_SHUTDOWN        = 3
+        DNS_ONLINE          = 1,
+        DNS_OFFLINE         = 2,
+        DNS_SHUTTING_DOWN   = 3,
+        DNS_SHUTDOWN        = 4
     };
 
 #if defined(XP_MAC)

@@ -941,6 +941,11 @@ nsDNSService::Init()
 	PRStatus status = PR_SUCCESS;
 #endif
 
+    if (mState == DNS_OFFLINE) {
+        mState = DNS_ONLINE;
+        return NS_OK;
+    }
+    
     NS_ASSERTION(mDNSServiceLock == nsnull, "nsDNSService not shut down");
     if (mDNSServiceLock)  return NS_ERROR_ALREADY_INITIALIZED;
 
@@ -994,7 +999,7 @@ nsDNSService::Init()
     rv = InstallPrefObserver();
     if (NS_FAILED(rv))  return rv;
 
-    mState = DNS_RUNNING;
+    mState = DNS_ONLINE;
     return NS_OK;
 
 #if defined(XP_WIN)
@@ -1055,7 +1060,7 @@ nsDNSService::LateInit()
 
 nsDNSService::~nsDNSService()
 {
-    nsresult rv = Shutdown();
+    nsresult rv = ShutdownInternal();
     NS_ASSERTION(NS_SUCCEEDED(rv), "DNS shutdown failed");
     NS_ASSERTION(mThread == nsnull, "DNS shutdown failed");
     NS_ASSERTION(mDNSServiceLock == nsnull, "DNS shutdown failed");
@@ -1380,7 +1385,7 @@ nsDNSService::Lookup(const char*     hostName,
     nsresult rv;
     nsDNSRequest * request = nsnull;
     *result = nsnull;
-    if (!mDNSServiceLock || (mState != DNS_RUNNING))  return NS_ERROR_OFFLINE;
+    if (!mDNSServiceLock || (mState != DNS_ONLINE))  return NS_ERROR_OFFLINE;
     else {
         nsAutoLock  dnsLock(mDNSServiceLock);
         
@@ -1582,6 +1587,8 @@ nsDNSService::AbortLookups()
 NS_IMETHODIMP
 nsDNSService::Resolve(const char *i_hostname, char **o_ip)
 {
+    if (!mDNSServiceLock || (mState != DNS_ONLINE))  return NS_ERROR_OFFLINE;
+
     // Beware! This does not check for an IP address already in hostname.
     NS_ENSURE_ARG_POINTER(o_ip);
     *o_ip = 0;
@@ -1711,6 +1718,13 @@ nsDNSService::IsInNet(const char * ipaddr,
 
 NS_IMETHODIMP
 nsDNSService::Shutdown()
+{
+    mState = DNS_OFFLINE;
+    return NS_OK;
+}
+
+nsresult
+nsDNSService::ShutdownInternal()
 {
     nsresult rv = NS_OK;
 
