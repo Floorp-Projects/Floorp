@@ -1330,14 +1330,6 @@
           
           this.outliner.setAttribute("height", height);
           this.outliner.setAttribute("hidescrollbar", view.rowCount <= rows);
-          
-          // XXX horrible hack to workaround for bug 86551
-          // outliner will refuse to recognize initial height of 0 unless
-          // we force frame reconstruction via setting the style attribute
-          if (!("__firstPaint__" in this)) {
-            this.__firstPaint__ = true;
-            this.outliner.setAttribute("style", this.outliner.getAttribute("style"));
-          }
         ]]></body>
       </method>
 
