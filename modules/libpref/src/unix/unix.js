@@ -81,6 +81,9 @@ pref("applications.tn3270", "xterm -e tn3270 %h");
 pref("applications.rlogin", "xterm -e rlogin %h");
 pref("applications.rlogin_with_user", "xterm -e rlogin %h -l %u");
 pref("applications.tmp_dir", "/tmp");
+// Choose print module. Default is "auto" which selects Xprint module
+// if the XPSERVERLIST env var is set
+pref("print.print_method", 0); // 0=auto, 1=Xprint, 2=PostScript, 3=reserved
 // On Solaris/IRIX, this should be "lp"
 pref("print.print_command", "lpr");
 pref("print.print_reversed", false);

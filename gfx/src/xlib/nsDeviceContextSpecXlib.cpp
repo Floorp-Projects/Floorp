@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  */
 
@@ -347,21 +347,21 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::GetUserCancelled(PRBool &aCancel)
   return NS_OK;
 }
 
-#ifdef USE_XPRINT
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrintMethod(int &aMethod)
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrintMethod(PrintMethod &aMethod)
 {
   nsresult rv;
   nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && pPrefs) {
-    PRInt32 method = NS_DEFAULT_PRINT_METHOD;
+    PRInt32 method = (PRInt32)pmAuto;
     (void) pPrefs->GetIntPref("print.print_method", &method);
-    aMethod = method;
+    aMethod = (PrintMethod)method;
+    if (aMethod == pmAuto)
+      aMethod = NS_DEFAULT_PRINT_METHOD;
   } else {
     aMethod = NS_DEFAULT_PRINT_METHOD;
   }
   return NS_OK;
 }
-#endif /* USE_XPRINT */
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::ClosePrintManager()
 {

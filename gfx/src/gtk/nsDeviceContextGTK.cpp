@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
  */
 
 #include <math.h>
@@ -437,55 +438,65 @@ NS_IMETHODIMP nsDeviceContextGTK::GetClientRect(nsRect &aRect)
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                                      nsIDeviceContext *&aContext)
+                                                       nsIDeviceContext *&aContext)
 {
+  nsresult                 rv;
+  PrintMethod              method;
+  nsDeviceContextSpecGTK  *spec = NS_STATIC_CAST(nsDeviceContextSpecGTK *, aDevice);
+  
+  rv = spec->GetPrintMethod(method);
+  if (NS_FAILED(rv)) 
+    return rv;
+
 #ifdef USE_XPRINT
-  int method=-1;
-  nsDeviceContextSpecGTK *spec = NS_STATIC_CAST(nsDeviceContextSpecGTK *, aDevice);
-  spec->GetPrintMethod(method);
-
-  if (method == 1) { // XPRINT
+  if (method == pmXprint) { // XPRINT
     static NS_DEFINE_CID(kCDeviceContextXp, NS_DEVICECONTEXTXP_CID);
-    nsresult rv;
     nsCOMPtr<nsIDeviceContextXp> dcxp(do_CreateInstance(kCDeviceContextXp, &rv));
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context");    
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context.");    
     if (NS_FAILED(rv)) 
       return rv;
-
-    dcxp->SetSpec(aDevice);
-    dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
-                                (nsIDeviceContext*)this);
-  
+    
+    rv = dcxp->SetSpec(aDevice);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    rv = dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
+                                   (nsIDeviceContext*)this);
+    if (NS_FAILED(rv)) 
+      return rv;
+      
     rv = dcxp->QueryInterface(NS_GET_IID(nsIDeviceContext),
                               (void **)&aContext);
     return rv;
   }
-  // default/PS
+  else
 #endif /* USE_XPRINT */
-  static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
+  if (method == pmPostScript) { // PostScript
+    // default/PS
+    static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
   
-  // Create a Postscript device context 
-  nsresult rv;
-  nsIDeviceContextPS *dcps;
+    // Create a Postscript device context 
+    nsCOMPtr<nsIDeviceContextPS> dcps(do_CreateInstance(kCDeviceContextPS, &rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context.");
+    if (NS_FAILED(rv)) 
+      return rv;
   
-  rv = nsComponentManager::CreateInstance(kCDeviceContextPS,
-                                          nsnull,
-                                          NS_GET_IID(nsIDeviceContextPS),
-                                          (void **)&dcps);
+    rv = dcps->SetSpec(aDevice);
+    if (NS_FAILED(rv)) 
+      return rv;
+      
+    rv = dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
+                                   (nsIDeviceContext*)this);
+    if (NS_FAILED(rv)) 
+      return rv;
 
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
+    rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
+                              (void **)&aContext);
+    return rv;
+  }
   
-  dcps->SetSpec(aDevice);
-  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
-                            (nsIDeviceContext*)this);
-
-  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
-                            (void **)&aContext);
-
-  NS_RELEASE(dcps);
-  
-  return rv;
+  NS_WARNING("no print module created.");
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::BeginDocument(PRUnichar * aTitle)
