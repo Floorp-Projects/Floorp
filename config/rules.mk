@@ -419,13 +419,13 @@ distclean::
 
 #
 # Tags: emacs (etags), vi (ctags)
-# TAG_PROGRAM := ctags -F -
+# TAG_PROGRAM := ctags -L -
 #
-TAG_PROGRAM := etags -a
+TAG_PROGRAM := xargs etags -a
 
 alltags:
 	rm -f TAGS
-	find $(topsrcdir) -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' -o -name '*.idl' \) -print | xargs $(TAG_PROGRAM)
+	find $(topsrcdir) -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' -o -name '*.idl' \) -print | $(TAG_PROGRAM)
 
 #
 # Turn on C++ linking if we have any .cpp files
