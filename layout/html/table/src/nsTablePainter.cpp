@@ -267,7 +267,10 @@ TableBackgroundPainter::~TableBackgroundPainter()
     for (PRUint32 i = 0; i < mNumCols; i++) {
       if (mCols[i].mColGroup != lastColGroup) {
         lastColGroup = mCols[i].mColGroup;
-        lastColGroup->Destroy(mPresContext);
+        NS_ASSERTION(mCols[i].mColGroup, "colgroup data should not be null - bug 237421");
+        // we need to wallpaper a over zero pointer deref, bug 237421 will have the real fix
+        if(lastColGroup)
+          lastColGroup->Destroy(mPresContext);
         delete lastColGroup;
       }
       mCols[i].mColGroup = nsnull;
