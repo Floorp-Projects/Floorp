@@ -1021,6 +1021,7 @@ case "$target" in
         WIDGET_DLL='\"gkwidget$(DLL_SUFFIX)\"'
         GFXWIN_DLL='\"gkgfxwin$(DLL_SUFFIX)\"'
     fi
+    AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(_WIN32)
     AC_DEFINE(WIN32)
