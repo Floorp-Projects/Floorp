@@ -250,7 +250,6 @@ done:
 NS_METHOD nsAppShell::Exit()
 {
   gtk_main_quit ();
-  gtk_exit(0);
 
   return NS_OK;
 }
