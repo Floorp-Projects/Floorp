@@ -194,7 +194,9 @@
 
       <method name="onTextEntered">
         <body><![CDATA[
-          return this.fireEvent("textentered", this.mEnterEvent);
+          var rv = this.fireEvent("textentered", this.mEnterEvent);
+          this.mEnterEvent = null;
+          return rv;
         ]]></body>
       </method>
 
