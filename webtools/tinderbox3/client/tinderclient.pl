@@ -26,6 +26,7 @@ $args{throttle} = 60;
 $args{statusinterval} = 15;
 GetOptions(\%args, "throttle:i", "url:s",
                    "trust!", "usepatches!", "usecommands!", "usemozconfig!",
+                   "upgrade!", "upgrade_url:s",
                    "cvs_co_date:s", "cvsroot:s", "tests:s", "clobber!",
                    "lowbandwidth!", "statusinterval:s",
                    "upload_ssh_loc:s", "upload_ssh_dir:s", "upload_dir:s",
@@ -49,6 +50,7 @@ MachineName: the name of this machine (how it is identified and will show up on
            mozconfig, patches or anything else
 --nousecommands: don't obey commands from the server, such as kick or clobber
 --noupgrade: do not upgrade tinderclient.pl automatically from server
+--upgrade_url: url to upgrade from
 --dir: the directory to work in
 --lowbandwidth: transfer less verbose info to the server
 --help: show this message
@@ -244,6 +246,7 @@ sub parse_content {
   my ($content_ref, $is_start) = @_;
   if ($this->{CONFIG}{usecommands}) {
     foreach (split(/,/, $this->parse_simple_tag($content_ref, "commands"))) {
+      $this->print_log("---> New command $_! <---\n");
       $this->{COMMANDS}{$_} = 1;
     }
   }
@@ -373,6 +376,7 @@ sub eat_command {
   my $this = shift;
   my ($command) = @_;
   if ($this->{COMMANDS}{$command}) {
+    $this->print_log("---> Eating command $command! <---\n");
     delete $this->{COMMANDS}{$command};
     return 1;
   }
@@ -466,6 +470,7 @@ OS: $this->{SYSINFO}{OS}
 $this->{SYSINFO}{OS_VERSION}
 Compiler: $this->{SYSINFO}{COMPILER} $this->{SYSINFO}{COMPILER_VERSION}
 Tinderbox Client: $TinderClient::VERSION
+Tinderbox Client Last Modified: @{[$this->get_prog_mtime()]}
 Tinderbox Protocol: $TinderClient::PROTOCOL_VERSION
 Arguments: @{[join ' ', @{$this->{ORIGINAL_ARGS}}]}
 URL: $this->{CONFIG}{url}
@@ -490,18 +495,21 @@ sub maybe_throttle {
   }
 }
 
+sub get_prog_mtime {
+  my @prog_stat = stat($0);
+  my $prog_mtime = $prog_stat[9];
+  my $time_str = time2str($prog_mtime);
+}
+
 sub maybe_upgrade {
   my $this = shift;
   if ($this->{CONFIG}{upgrade} && $this->{CONFIG}{upgrade_url}) {
-    my @prog_stat = stat($0);
-    my $prog_mtime = $prog_stat[9];
-    my $time_str = time2str($prog_mtime);
-
+    my $time_str = $this->get_prog_mtime();
     $this->start_section("CHECKING FOR UPGRADE");
     $this->print_log("URL: $this->{CONFIG}{upgrade_url}\n");
     $this->print_log("If-Modified-Since: $time_str\n");
     my $req = new HTTP::Request(GET => $this->{CONFIG}{upgrade_url});
-    $req->header('If-Modified-Since' => time2str($prog_mtime));
+    $req->header('If-Modified-Since' => $time_str);
     my $res = $this->{UA}->request($req);
     if ($res->code() == 200) {
       open PROG, $0;
@@ -518,10 +526,13 @@ sub maybe_upgrade {
       $this->print_log("Executing newly upgraded script ...\n");
       print "UPGRADING!  Throttling just for fun first ...\n";
       $this->build_finish(303);
-      # Throttle just in case we get in an upgrade client loop
-      $this->maybe_throttle();
-      exec("perl", $0, @{$this->{ORIGINAL_ARGS}});
-    } elsif ($res->code() == 302) {
+      eval {
+        # Throttle just in case we get in an upgrade client loop
+        $this->maybe_throttle();
+        exec("perl", $0, @{$this->{ORIGINAL_ARGS}});
+      };
+      exit(0);
+    } elsif ($res->code() == 304) {
       $this->print_log("Perl script not modified\n");
     } else {
       $this->print_log("Connection or URL failure (" . $res->code() . ")\n");
@@ -559,7 +570,7 @@ sub build_iteration {
   #
   if (!$this->build_start()) {
     $this->maybe_throttle();
-    next;
+    return;
   }
 
   my $err = 0;
@@ -721,6 +732,8 @@ sub get_config {
       push @{$build_vars->{PATCHES}}, $1;
     }
   }
+
+  $persistent_vars->{LAST_CHECKOUT} = 0 if !exists($persistent_vars->{LAST_CHECKOUT});
 }
 
 sub finish_build {
@@ -731,6 +744,12 @@ sub do_action {
   my ($client, $config, $persistent_vars, $build_vars) = @_;
   my $init_tree_status = 1;
 
+  #
+  # We will only build if:
+  # - new patches were downloaded
+  # - checkout brought something down
+  # - the build command was specified
+  #
   $build_vars->{SHOULD_BUILD} = 0;
 
   #
@@ -818,10 +837,16 @@ EOM
   #
   # Checkout
   #
-  # If cvs co date is off, do nothing
-  # If cvs co date exists, and is the same as last time, we already checked
-  # out, so do nothing
-  # If it is blank, we check out every time
+  # - If cvs co date is off, do nothing
+  # - If cvs co date exists, and is the same as last time, we already checked
+  #   out, so do nothing
+  # - If it is blank, we check out every time
+  # - If we are asked to do "checkout" or this is a new build, we check out
+  #   regardless (and we *always* do a full checkout, not fast-update).
+  my $err = 0;
+  if ($client->eat_command("checkout")) {
+    $please_checkout = 1;
+  }
   if ($please_checkout ||
       ($config->{cvs_co_date} ne "off" &&
       !($config->{cvs_co_date} &&
@@ -830,24 +855,43 @@ EOM
       # XXX $::ENV?
       $ENV{MOZ_CO_DATE} = $config->{cvs_co_date};
     }
-    $client->do_command("make -f client.mk checkout", $init_tree_status+1,
-                        sub {
-                          if ($_[0] =~ /^[UP] /) {
-                            $build_vars->{SHOULD_BUILD} = 1;
-                          }
-                          if ($config->{lowbandwidth} && $_[0] =~ /\? /) {
-                            return "";
-                          }
-                          return $_[0];
-                        });
+    my $parsing_code = sub {
+                         if ($_[0] =~ /^[UP] /) {
+                           $build_vars->{SHOULD_BUILD} = 1;
+                         }
+                         if ($config->{lowbandwidth} && $_[0] =~ /\? /) {
+                           return "";
+                         }
+                         return $_[0];
+                       };
+
+    #
+    # We only want to do a full, slow make -f client.mk checkout if:
+    # - this is the first time this program has been called
+    # - 24 hours have passed since the last checkout was done
+    # - we were given a "checkout" command or this is the first checkout
+    # - there is a cvs_co_date
+    #
+    # All other times we do fast-update.
+    #
+    if ($config->{cvs_co_date} || $please_checkout ||
+        (time - $persistent_vars->{LAST_CHECKOUT}) >= (24*60*60)) {
+      $err = $client->do_command("make -f client.mk checkout", $init_tree_status+1, $parsing_code);
+      $persistent_vars->{LAST_CHECKOUT} = time;
+    } else {
+      $err = $client->do_command("make -f client.mk fast-update", $init_tree_status+1, $parsing_code);
+    }
+    if ($err) {
+      $persistent_vars->{LAST_CHECKOUT} = 0;
+    }
+
     $persistent_vars->{LAST_CVS_CO_DATE} = $config->{cvs_co_date};
   }
 
   #
   # Apply patches
   #
-  my $result = 0;
-  if (@{$build_vars->{PATCHES}}) {
+  if (!$err && @{$build_vars->{PATCHES}}) {
     #
     # If the set of patches is different, we need to rebuild
     #
@@ -859,13 +903,13 @@ EOM
       my $patch = $client->get_patch($patch_id);
       $client->print_log("PATCH: $patch\n");
       if (! $patch) {
-        $result = 200;
+        $err = 200;
       } else {
-        my $err = $client->do_command("patch --dry-run -Nt -p0 < $patch", $init_tree_status+2);
-        if (!$err) {
-          $err = $client->do_command("patch -Nt -p0 < $patch", $init_tree_status);
+        my $local_err = $client->do_command("patch --dry-run -Nt -p0 < $patch", $init_tree_status+2);
+        if (!$local_err) {
+          $local_err = $client->do_command("patch -Nt -p0 < $patch", $init_tree_status);
         }
-        if ($err) {
+        if ($local_err) {
           unlink($patch);
         }
       }
@@ -880,18 +924,25 @@ EOM
   # - when we need to build and we are a clobber build
   # - when there is a clobber command in the queue or the mozconfig changed
   #
-  if (($build_vars->{SHOULD_BUILD} && $config->{clobber}) ||
-      $client->eat_command("clobber") || $please_clobber) {
+  if (!$err && (($build_vars->{SHOULD_BUILD} && $config->{clobber}) ||
+      $client->eat_command("clobber") || $please_clobber)) {
     # XXX only the rm -rf is necessary now, this is temporary while I clean out
     # my personal trees
     if (-f "Makefile") {
-      $client->do_command("make -f client.mk distclean", $init_tree_status+2);
+      $client->do_command("make distclean", $init_tree_status+2);
     }
     $client->do_command("rm -rf objdir", $init_tree_status+2);
     $build_vars->{SHOULD_BUILD} = 1;
   }
 
-  return $result;
+  #
+  # If the build command is specified, we build no matter what
+  #
+  if ($build_vars->eat_command("build")) {
+    $build_vars->{SHOULD_BUILD} = 1;
+  }
+
+  return $err;
 }
 
 
@@ -968,6 +1019,9 @@ sub do_action {
       # Find zipped build
       my ($local_file) = glob("objdir/dist/mozilla*.tgz");
       if (!$local_file) {
+        ($local_file) = glob("objdir/dist/mozilla*.tar.gz");
+      }
+      if (!$local_file) {
         ($local_file) = glob("objdir/dist/mozilla*.zip");
       }
 
@@ -975,7 +1029,7 @@ sub do_action {
       if ($local_file) {
         $local_file =~ /([^\/]*)$/;
         my $upload_file = $1;
-        $upload_file =~ s/(\.[^.]*)$/-$build_id$1/;
+        $upload_file =~ s/(\..*)$/-$build_id$1/;
         upload_build($config, $build_vars, $local_file, $upload_file);
       }
     }
