@@ -988,8 +988,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
       DWORD pos = ::GetMessagePos();
       POINT cpos;
 
-      cpos.x = (short)LOWORD(pos);
-      cpos.y = (short)HIWORD(pos);
+      cpos.x = GET_X_LPARAM(pos);
+      cpos.y = GET_Y_LPARAM(pos);
 
       if (mWnd != NULL) {
         ::ScreenToClient(mWnd, &cpos);
@@ -1173,8 +1173,8 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
   ::GetWindowRect(aWindow->mWnd, &r);
   DWORD pos = ::GetMessagePos();
   POINT mp;
-  mp.x = (short)LOWORD(pos);
-  mp.y = (short)HIWORD(pos);
+  mp.x = GET_X_LPARAM(pos);
+  mp.y = GET_Y_LPARAM(pos);
 
   // was the event inside this window?
   return (PRBool) PtInRect(&r, mp);
@@ -3752,8 +3752,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_MOVE: // Window moved 
           {
-            PRInt32 x = (PRInt32)LOWORD(lParam); // horizontal position in screen coordinates 
-            PRInt32 y = (PRInt32)HIWORD(lParam); // vertical position in screen coordinates 
+            PRInt32 x = GET_X_LPARAM(lParam); // horizontal position in screen coordinates 
+            PRInt32 y = GET_Y_LPARAM(lParam); // vertical position in screen coordinates 
             result = OnMove(x, y); 
           }
           break;
@@ -3925,8 +3925,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             {
               POINT mp;
               DWORD pos = ::GetMessagePos();
-              mp.x      = (short)LOWORD(pos);
-              mp.y      = (short)HIWORD(pos);
+              mp.x      = GET_X_LPARAM(pos);
+              mp.y      = GET_Y_LPARAM(pos);
               PRBool userMovedMouse = PR_FALSE;
               if ((gLastMouseMovePoint.x != mp.x) ||
                   (gLastMouseMovePoint.y != mp.y)) {
@@ -4456,8 +4456,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           // window.  We need to give it to the child window
           
           POINT point;
-          point.x = (short) LOWORD(lParam);
-          point.y = (short) HIWORD(lParam);
+          point.x = GET_X_LPARAM(lParam);
+          point.y = GET_Y_LPARAM(lParam);
           HWND destWnd = ::WindowFromPoint(point);
           
           // Since we receive mousewheel events for as long as
@@ -5091,8 +5091,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
   LONG curMsgTime = ::GetMessageTime();
   POINT mp;
   DWORD pos = ::GetMessagePos();
-  mp.x      = (short)LOWORD(pos);
-  mp.y      = (short)HIWORD(pos);
+  mp.x      = GET_X_LPARAM(pos);
+  mp.y      = GET_Y_LPARAM(pos);
   PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mp.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
                                    (abs(gLastMousePoint.y - mp.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
@@ -5124,8 +5124,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
   else if (aEventType == NS_MOUSE_LEFT_BUTTON_UP || aEventType == NS_MOUSE_MIDDLE_BUTTON_UP || aEventType == NS_MOUSE_RIGHT_BUTTON_UP) {
     // remember when this happened for the next mouse down
     DWORD pos = ::GetMessagePos();
-    gLastMousePoint.x = (short)LOWORD(pos);
-    gLastMousePoint.y = (short)HIWORD(pos);
+    gLastMousePoint.x = GET_X_LPARAM(pos);
+    gLastMousePoint.y = GET_Y_LPARAM(pos);
   }
   else if (aEventType == NS_MOUSE_LEFT_BUTTON_DOWN || aEventType == NS_MOUSE_MIDDLE_BUTTON_DOWN || aEventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
     // now look to see if we want to convert this to a double- or triple-click
@@ -5218,21 +5218,19 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
       } else {
         POINT mp;
         DWORD pos = ::GetMessagePos();
-        mp.x      = (short)LOWORD(pos);
-        mp.y      = (short)HIWORD(pos);
+        mp.x      = GET_X_LPARAM(pos);
+        mp.y      = GET_Y_LPARAM(pos);
 
         // OK, now find out if we are still inside
         // the captured native window
-        POINT cpos;
-        cpos.x = (short)LOWORD(pos);
-        cpos.y = (short)HIWORD(pos);
 
-        nsWindow * someWindow = NULL;
+        nsWindow * someWindow = nsnull;
         HWND hWnd = ::WindowFromPoint(mp);
         if (hWnd != NULL) {
+          POINT cpos = mp;
           ::ScreenToClient(hWnd, &cpos);
           RECT r;
-          VERIFY(::GetWindowRect(hWnd, &r));
+          VERIFY(::GetClientRect(hWnd, &r));
           if (cpos.x >= r.left && cpos.x <= r.right &&
               cpos.y >= r.top && cpos.y <= r.bottom) {
             // yes we are so we should be able to get a valid window
@@ -6655,8 +6653,8 @@ void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITI
   point.y = 0;
   DWORD pos = ::GetMessagePos();
 
-  point.x = (short)LOWORD(pos);
-  point.y = (short)HIWORD(pos);
+  point.x = GET_X_LPARAM(pos);
+  point.y = GET_Y_LPARAM(pos);
 
   if (mWnd != NULL) {
     ::ScreenToClient(mWnd, &point);

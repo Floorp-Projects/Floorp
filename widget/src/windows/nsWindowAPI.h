@@ -60,4 +60,12 @@ typedef BOOL (WINAPI *NS_UnregisterClass) (LPCWSTR, HINSTANCE);
 typedef BOOL (WINAPI *NS_SHGetPathFromIDList) (LPCITEMIDLIST, LPWSTR);
 typedef LPITEMIDLIST (WINAPI *NS_SHBrowseForFolder) (LPBROWSEINFOW);
 
+// Avoid including windowsx.h to prevent macro pollution
+#ifndef GET_X_LPARAM
+#define GET_X_LPARAM(pt) (short(LOWORD(pt)))
+#endif
+#ifndef GET_Y_LPARAM
+#define GET_Y_LPARAM(pt) (short(HIWORD(pt)))
+#endif
+
 #endif /* WindowAPI_h__ */

@@ -1021,8 +1021,8 @@ void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD tim
       else {
         POINT mp;
         DWORD pos = ::GetMessagePos();
-        mp.x = LOWORD(pos);
-        mp.y = HIWORD(pos);
+        mp.x = GET_X_LPARAM(pos);
+        mp.y = GET_Y_LPARAM(pos);
 
         if (::WindowFromPoint(mp) != mHoldMouse->GetWindowHandle()) {
             ::ScreenToClient(mHoldMouse->GetWindowHandle(), &mp);
