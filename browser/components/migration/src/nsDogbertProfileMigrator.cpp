@@ -58,11 +58,6 @@
 #include "nsReadableUtils.h"
 #include "prprf.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#define NEED_TO_FIX_4X_COOKIES 1
-#define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
-#endif /* XP_MAC */
-
 #define PREF_FILE_HEADER_STRING "# Mozilla User Preferences    " 
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -333,8 +328,7 @@ nsDogbertProfileMigrator::CopyCookies(PRBool aReplace)
   return rv;
 }
 
-#ifdef NEED_TO_FIX_4X_COOKIES
-// XXXben need to rewrite this to downconvert buffers properly, right now this is pretty broken.
+#if NEED_TO_FIX_4X_COOKIES
 nsresult
 nsDogbertProfileMigrator::FixDogbertCookies()
 {
@@ -361,6 +355,9 @@ nsDogbertProfileMigrator::FixDogbertCookies()
   do {
     nsresult rv = lineInputStream->ReadLine(buffer, &moreData);
     if (NS_FAILED(rv)) return rv;
+    
+    if (!moreData)
+      break;
 
     // skip line if it is a comment or null line
     if (buffer.IsEmpty() || buffer.CharAt(0) == '#' ||
@@ -405,9 +402,13 @@ nsDogbertProfileMigrator::FixDogbertCookies()
     outBuffer.Append(PRUnichar('\t'));
     outBuffer.Append(suffix);
 
-    fileOutputStream->Write((const char*)outBuffer.get(), outBuffer.Length(), &written);
+    nsCAutoString convertedBuffer;
+    convertedBuffer.Assign(NS_ConvertUCS2toUTF8(outBuffer));
+    fileOutputStream->Write(convertedBuffer.get(), convertedBuffer.Length(), &written);
   }
-  while (moreData);
+  while (1);
+  
+  return NS_OK;
 }
 
 #endif // NEED_TO_FIX_4X_COOKIES
@@ -492,7 +493,7 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
     targetBuffer.Append("\r\n");
     outputStream->Write(targetBuffer.get(), targetBuffer.Length(), &bytesWritten);
   }
-  while (moreData);
+  while (1);
 
   return NS_OK;
 }

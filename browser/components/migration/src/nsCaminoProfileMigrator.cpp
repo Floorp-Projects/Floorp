@@ -35,51 +35,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef dogbertprofilemigrator___h___
-#define dogbertprofilemigrator___h___
-
-#include "nsIBrowserProfileMigrator.h"
-#include "nsILocalFile.h"
+#include "nsBrowserProfileMigratorUtils.h"
+#include "nsCaminoProfileMigrator.h"
+#include "nsIObserverService.h"
+#include "nsIProfile.h"
+#include "nsIProfileInternal.h"
+#include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "nsNetscapeProfileMigratorBase.h"
-#include "nsString.h"
+#include "nsISupportsPrimitives.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#define NEED_TO_FIX_4X_COOKIES 1
-#define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
-#endif /* XP_MAC */
+///////////////////////////////////////////////////////////////////////////////
+// nsCaminoProfileMigrator
 
-class nsIFile;
+NS_IMPL_ISUPPORTS1(nsCaminoProfileMigrator, nsIBrowserProfileMigrator)
 
-class nsDogbertProfileMigrator : public nsNetscapeProfileMigratorBase, 
-                                 public nsIBrowserProfileMigrator
+static nsIObserverService* sObserverService = nsnull;
+
+nsCaminoProfileMigrator::nsCaminoProfileMigrator()
 {
-public:
-  NS_DECL_NSIBROWSERPROFILEMIGRATOR
-  NS_DECL_ISUPPORTS
+  CallGetService("@mozilla.org/observer-service;1", &sObserverService);
+}
 
-  nsDogbertProfileMigrator();
-  virtual ~nsDogbertProfileMigrator();
+nsCaminoProfileMigrator::~nsCaminoProfileMigrator()
+{
+  NS_IF_RELEASE(sObserverService);
+}
 
-public:
-  static nsresult GetHomepage(void* aTransform, nsIPrefBranch* aBranch);
-  static nsresult GetImagePref(void* aTransform, nsIPrefBranch* aBranch);
+///////////////////////////////////////////////////////////////////////////////
+// nsIBrowserProfileMigrator
 
-protected:
-  nsresult CopyPreferences(PRBool aReplace);
-  nsresult TransformPreferences(const nsAString& aSourcePrefFileName,
-                                const nsAString& aTargetPrefFileName);
-  
-  nsresult CopyCookies(PRBool aReplace);
-#ifdef NEED_TO_FIX_4X_COOKIES
-  nsresult FixDogbertCookies();
-#endif
+NS_IMETHODIMP
+nsCaminoProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+{
+  nsresult rv = NS_OK;
 
-  nsresult CopyBookmarks(PRBool aReplace);
-  nsresult MigrateDogbertBookmarks();
+  NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
-private:
-  nsCOMPtr<nsISupportsArray> mProfiles;
-};
- 
-#endif
+  NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsCaminoProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCaminoProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
+{
+  *aResult = nsnull;
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsCaminoProfileMigrator
+

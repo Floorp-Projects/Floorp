@@ -69,6 +69,19 @@
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
 
+#ifdef XP_WIN
+#define OPERA_PREFERENCES_FOLDER_NAME NS_LITERAL_STRING("Opera")
+#define OPERA_PREFERENCES_FILE_NAME NS_LITERAL_STRING("opera6.ini")
+#define OPERA_HISTORY_FILE_NAME NS_LITERAL_STRING("global.dat")
+#define OPERA_BOOKMARKS_FILE_NAME NS_LITERAL_STRING("opera6.adr")
+#elif defined(XP_MACOSX)
+#define OPERA_PREFERENCES_FOLDER_NAME NS_LITERAL_STRING("Opera 6 Preferences")
+#define OPERA_PREFERENCES_FILE_NAME NS_LITERAL_STRING("Opera 6 Preferences")
+#define OPERA_HISTORY_FILE_NAME NS_LITERAL_STRING("Opera Global History")
+#define OPERA_BOOKMARKS_FILE_NAME NS_LITERAL_STRING("Bookmarks")
+#endif
+#define OPERA_COOKIES_FILE_NAME NS_LITERAL_STRING("cookies4.dat")
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsBrowserProfileMigrator
 
@@ -112,12 +125,14 @@ nsOperaProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
   nsCOMPtr<nsISupportsArray> profiles;
   GetSourceProfiles(getter_AddRefs(profiles));
 
+#ifndef XP_MACOSX
   if (profiles) {
     PRUint32 count;
     profiles->Count(&count);
     *aResult = count > 1;
   }
   else
+#endif
     *aResult = PR_FALSE;
 
   return NS_OK;
@@ -132,10 +147,11 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 
     nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
     nsCOMPtr<nsILocalFile> file;
+#ifdef XP_WIN
     fileLocator->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
 
     // Opera profile lives under %APP_DATA%\Opera\<operaver>\profile 
-    file->Append(NS_LITERAL_STRING("Opera"));
+    file->Append(NS_LITERAL_STRING(OPERA_PREFERENCES_FOLDER_NAME));
 
     nsCOMPtr<nsISimpleEnumerator> e;
     file->GetDirectoryEntries(getter_AddRefs(e));
@@ -158,6 +174,21 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 
       e->HasMoreElements(&hasMore);
     }
+#elif defined (XP_MACOSX)
+    fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
+    
+    file->Append(NS_LITERAL_STRING("Preferences"));
+    file->Append(OPERA_PREFERENCES_FOLDER_NAME);
+    
+    PRBool exists;
+    file->Exists(&exists);
+    
+    if (exists) {
+      nsCOMPtr<nsISupportsString> string(do_CreateInstance("@mozilla.org/supports-string;1"));
+      string->SetData(OPERA_PREFERENCES_FOLDER_NAME);
+      mProfiles->AppendElement(string);
+    }
+#endif
   }
 
   *aResult = mProfiles;
@@ -252,7 +283,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
 {
   nsCOMPtr<nsIFile> operaPrefs;
   mOperaProfile->Clone(getter_AddRefs(operaPrefs));
-  operaPrefs->Append(NS_LITERAL_STRING("opera6.ini"));
+  operaPrefs->Append(OPERA_PREFERENCES_FILE_NAME);
 
   nsCAutoString path;
   operaPrefs->GetNativePath(path);
@@ -306,6 +337,8 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         case _OPM(BOOL):
           valStr = val;
           transform->boolValue = valStr.ToInteger(&strerr) != 0;
+          break;
+        default:
           break;
         }
         transform->prefHasValue = PR_TRUE;
@@ -456,7 +489,7 @@ nsOperaProfileMigrator::CopyCookies(PRBool aReplace)
   mOperaProfile->Clone(getter_AddRefs(temp));
   nsCOMPtr<nsILocalFile> historyFile(do_QueryInterface(temp));
 
-  historyFile->Append(NS_LITERAL_STRING("cookies4.dat"));
+  historyFile->Append(OPERA_COOKIES_FILE_NAME);
 
   nsCOMPtr<nsIInputStream> fileStream;
   NS_NewLocalFileInputStream(getter_AddRefs(fileStream), historyFile);
@@ -757,8 +790,7 @@ nsOperaProfileMigrator::CopyHistory(PRBool aReplace)
   nsCOMPtr<nsIFile> temp;
   mOperaProfile->Clone(getter_AddRefs(temp));
   nsCOMPtr<nsILocalFile> historyFile(do_QueryInterface(temp));
-
-  historyFile->Append(NS_LITERAL_STRING("global.dat"));
+  historyFile->Append(OPERA_HISTORY_FILE_NAME);
 
   nsCOMPtr<nsIInputStream> fileStream;
   NS_NewLocalFileInputStream(getter_AddRefs(fileStream), historyFile);
@@ -815,7 +847,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   // Find Opera Bookmarks
   nsCOMPtr<nsIFile> operaBookmarks;
   mOperaProfile->Clone(getter_AddRefs(operaBookmarks));
-  operaBookmarks->Append(NS_LITERAL_STRING("opera6.adr"));
+  operaBookmarks->Append(OPERA_BOOKMARKS_FILE_NAME);
 
   nsCOMPtr<nsIInputStream> fileInputStream;
   NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), operaBookmarks);
@@ -844,7 +876,9 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   else
     parentFolder = root;
 
+#ifdef XP_WIN
   CopySmartKeywords(bms, bundle, parentFolder);
+#endif
 
   nsCOMPtr<nsIRDFResource> toolbar;
   bms->GetBookmarksToolbarFolder(getter_AddRefs(toolbar));
@@ -855,6 +889,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   return ParseBookmarksFolder(lineInputStream, parentFolder, toolbar, bms);
 }
 
+#ifdef XP_WIN
 nsresult
 nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS, 
                                           nsIStringBundle* aBundle, 
@@ -958,6 +993,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
 
   return rv;
 }
+#endif
 
 void
 nsOperaProfileMigrator::ClearToolbarFolder(nsIBookmarksService* aBookmarksService, nsIRDFResource* aToolbarFolder)
@@ -1133,14 +1169,64 @@ nsOperaProfileMigrator::GetOperaProfile(const PRUnichar* aProfile, nsILocalFile*
 {
   nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
   nsCOMPtr<nsILocalFile> file;
+#ifdef XP_WIN
   fileLocator->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
 
   // Opera profile lives under %APP_DATA%\Opera\<operaver>\profile 
-  file->Append(NS_LITERAL_STRING("Opera"));
+  file->Append(OPERA_PREFERENCES_FOLDER_NAME);
   file->Append(nsDependentString(aProfile));
   file->Append(NS_LITERAL_STRING("profile"));
+#elif defined (XP_MACOSX)
+  fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
+    
+  file->Append(NS_LITERAL_STRING("Preferences"));
+  file->Append(OPERA_PREFERENCES_FOLDER_NAME);
+#endif    
 
   *aFile = file;
   NS_ADDREF(*aFile);
+}
+
+void SetProxyPref(const nsACString& aHostPort, const char* aPref, 
+                  const char* aPortPref, nsIPrefBranch* aPrefs) 
+{
+  nsCAutoString hostPort(aHostPort);  
+  PRInt32 portDelimOffset = hostPort.RFindChar(':');
+  if (portDelimOffset) {
+    nsCAutoString host(Substring(hostPort, 0, portDelimOffset));    
+    nsCAutoString port(Substring(hostPort, portDelimOffset + 1, hostPort.Length() - portDelimOffset + 1));
+    
+    aPrefs->SetCharPref(aPref, host.get());
+    PRInt32 stringErr;
+    PRInt32 portValue = port.ToInteger(&stringErr);
+    aPrefs->SetIntPref(aPortPref, portValue);
+  }
+  else {
+    aPrefs->SetCharPref(aPref, hostPort.get());
+  }
+}
+
+void ParseOverrideServers(char* aServers, nsIPrefBranch* aBranch)
+{
+  // First check to see if the value is "<local>", if so, set the field to 
+  // "localhost,127.0.0.1"
+  nsCAutoString override; override = (char*)aServers;
+  if (override.Equals("<local>")) {
+    aBranch->SetCharPref("network.proxy.no_proxies_on", "localhost,127.0.0.1");
+  }
+  else {
+    // If it's not, then replace every ";" character with ","
+    PRInt32 offset = 0, temp = 0;
+    while (offset != -1) {
+      offset = override.FindChar(';', offset);
+      const nsACString& host = Substring(override, temp, offset < 0 ? override.Length() - temp : offset - temp);
+      if (host.Equals("<local>"))
+        override.Replace(temp, 7, NS_LITERAL_CSTRING("localhost,127.0.0.1"));
+      temp = offset + 1;
+      if (offset != -1)
+        override.Replace(offset, 1, NS_LITERAL_CSTRING(","));
+    }
+    aBranch->SetCharPref("network.proxy.no_proxies_on", override.get());
+  }
 }
 
