@@ -680,7 +680,7 @@ nsHTMLInputElement::GetStyleHintForAttributeChange(
     PRInt32 *aHint) const
 {
   if (nsHTMLAtoms::checked == aAttribute ||
-      nsHTMLAtoms::value) {
+      nsHTMLAtoms::value  == aAttribute) {
     *aHint = (nsnull != mWidget ? NS_STYLE_HINT_CONTENT : NS_STYLE_HINT_REFLOW);
   } else {
     nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
