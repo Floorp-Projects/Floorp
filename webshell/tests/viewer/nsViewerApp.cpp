@@ -157,12 +157,23 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 void
 nsViewerApp::Destroy()
 {
+  nsresult rv;
+
   // Close all of our windows
   nsBrowserWindow::CloseAllWindows();
 
   // Release the crawler
-  NS_IF_RELEASE(mCrawler);
+  if (nsnull != mCrawler) {
+    // break cycle between crawler and window.
+    mCrawler->SetBrowserWindow(nsnull);
+    NS_RELEASE(mCrawler);
+  }
 
+  NS_WITH_SERVICE(nsIMetaCharsetService, metacharset, kMetaCharsetCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = metacharset->End();
+  }
+  
 #ifndef NECKO
   // Only shutdown if Initialize has been called...
   if (PR_TRUE == mIsInitialized) {
@@ -193,16 +204,9 @@ nsViewerApp::SetupRegistry()
 
   NS_SetupRegistry();
 
-  nsIMetaCharsetService* metacharset;
-  rv = nsServiceManager::GetService(kMetaCharsetCID,
-                                    kIMetaCharsetServiceIID,
-                                    (nsISupports **) &metacharset);
-  if(!NS_FAILED(rv)) {
+  NS_WITH_SERVICE(nsIMetaCharsetService, metacharset, kMetaCharsetCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
     rv = metacharset->Start();
-  }
-
-  if(!NS_FAILED(rv)) {
-    rv = nsServiceManager::ReleaseService(kMetaCharsetCID, metacharset);
   }
 
   // Register our browser window factory
