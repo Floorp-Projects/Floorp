@@ -873,17 +873,26 @@ nsMimeXULEmitter::DumpSubjectFromDate()
 nsresult
 nsMimeXULEmitter::DumpToCC()
 {
-  UtilityWriteCRLF("<toolbar>");
+  char * toField = GetHeaderValue(HEADER_TO);
+  char * ccField = GetHeaderValue(HEADER_CC);
+  char * bccField = GetHeaderValue(HEADER_BCC);
 
+  // only dump these fields if we have at least one of them! When displaying news
+  // messages that didn't have a to or cc field, we'd always get an empty box
+  // which looked weird.
+  if (toField || ccField || bccField)
+  {
+    UtilityWriteCRLF("<toolbar>");
     UtilityWriteCRLF("<box name=\"header-part2\" align=\"vertical\" flex=\"1\">");
 
-      OutputGenericHeader(HEADER_TO);
-      OutputGenericHeader(HEADER_CC);
-      OutputGenericHeader(HEADER_BCC);
+    OutputGenericHeader(HEADER_TO);
+    OutputGenericHeader(HEADER_CC);
+    OutputGenericHeader(HEADER_BCC);
 
     UtilityWriteCRLF("</box>");
+    UtilityWriteCRLF("</toolbar>");
+  }
 
-  UtilityWriteCRLF("</toolbar>");
   return NS_OK;
 }
 
