@@ -69,6 +69,11 @@ public:
                    nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
                    nsDrawingSurface aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
                    nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0)) = 0;
+
+  NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsIRenderingContext *aSrc,
+                   nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                   nsIRenderingContext *aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
+                   nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0)) = 0;
 };
 
 #endif

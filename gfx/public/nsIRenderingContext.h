@@ -102,6 +102,27 @@ public:
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext) = 0;
 
   /**
+   * Lock a rect of the drawing surface associated with the
+   * rendering context. do not attempt to use any of the Rendering Context
+   * rendering or state management methods until the drawing surface has
+   * been Unlock()ed. if a drawing surface is Lock()ed with this method,
+   * it must be Unlock()ed by calling UnlockDrawingSurface() rather than
+   * just calling the Unlock() method on the drawing surface directly.
+   * see nsIDrawingSurface.h for more information
+   * @return error status
+   **/
+  NS_IMETHOD LockDrawingSurface(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
+                                void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
+                                PRUint32 aFlags) = 0;
+
+  /**
+   * Unlock a rect of the drawing surface associated with the rendering
+   * context. see nsIDrawingSurface.h for more information.
+   * @return error status
+   **/
+  NS_IMETHOD UnlockDrawingSurface(void) = 0;
+
+  /**
    * Selects an offscreen drawing surface into the RenderingContext to draw to.
    * @param aSurface is the offscreen surface we are going to draw to.
    *        if nsnull, the original drawing surface obtained at initialization

@@ -71,6 +71,14 @@ public:
    * @return error status
    **/
   NS_IMETHOD ReleaseDC(void) = 0;
+
+  /**
+   * If ReleaseDC() truly destroys the state in the DC
+   * this will return PR_TRUE.
+   * @param  aDestructive out parameter for destructiveness
+   * @return error status
+   **/
+  NS_IMETHOD IsReleaseDCDestructive(PRBool *aDestructive) = 0;
 };
 
 #endif  // nsIDrawingSurfaceWin_h___ 

@@ -601,6 +601,24 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
 }
 
 #pragma mark -
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
+                                                          PRUint32 aWidth, PRUint32 aHeight,
+                                                          void **aBits, PRInt32 *aStride,
+                                                          PRInt32 *aWidthBytes, PRUint32 aFlags)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::UnlockDrawingSurface(void)
+{
+  return NS_OK;
+}
+
 //------------------------------------------------------------------------
 
 

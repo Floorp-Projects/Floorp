@@ -234,6 +234,19 @@ NS_IMETHODIMP nsRenderingContextMotif :: CommonInit()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextMotif :: LockDrawingSurface(PRInt32 aX, PRInt32 aY,
+                                                          PRUint32 aWidth, PRUint32 aHeight,
+                                                          void **aBits, PRInt32 *aStride,
+                                                          PRInt32 *aWidthBytes, PRUint32 aFlags)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextMotif :: UnlockDrawingSurface(void)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsRenderingContextMotif :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
