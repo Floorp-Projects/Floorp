@@ -74,11 +74,18 @@ private:
   nsCOMPtr<nsIMsgFolder> m_folderDoingEmptyTrash;
   PRBool m_emptyTrashInProgress;
 
-  nsCAutoString mAccountKeyList;
+  nsCString mAccountKeyList;
   
   PRBool m_haveShutdown;
   PRBool m_shutdownInProgress;
 
+  /* we call FindServer() a lot.  so cache the last server found */
+  nsCOMPtr <nsIMsgIncomingServer> m_lastFindServerResult;
+  nsCString m_lastFindServerHostName;
+  nsCString m_lastFindServerUserName;
+  nsCString m_lastFindServerType;
+
+  nsresult SetLastServerFound(nsIMsgIncomingServer *server, const char *hostname, const char *username, const char *type);
 
   /* internal creation routines - updates m_identities and m_incomingServers */
   nsresult createKeyedAccount(const char* key,

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
+ * Seth Spitzer <sspitzer@netscape.com>
  */
 
 /*
@@ -126,9 +127,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsMsgAccountManager,
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
   m_defaultAccount(null_nsCOMPtr()),
+  m_emptyTrashInProgress(PR_FALSE),
   m_haveShutdown(PR_FALSE),
   m_shutdownInProgress(PR_FALSE),
-  m_emptyTrashInProgress(PR_FALSE),
   m_prefs(0)
 {
   NS_INIT_REFCNT();
@@ -561,10 +562,22 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = aAccount->GetIncomingServer(getter_AddRefs(server));
   if (NS_SUCCEEDED(rv) && server) {
-
     nsXPIDLCString serverKey;
     rv = server->GetKey(getter_Copies(serverKey));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // invalidate the FindServer() cache if we are removing the cached server
+    if (m_lastFindServerResult) {
+        nsXPIDLCString cachedServerKey;
+        rv = m_lastFindServerResult->GetKey(getter_Copies(cachedServerKey));
+        NS_ENSURE_SUCCESS(rv,rv);
     
+        if (!nsCRT::strcmp((const char *)serverKey,(const char *)cachedServerKey)) {
+            rv = SetLastServerFound(nsnull,"","","");
+            NS_ENSURE_SUCCESS(rv,rv);
+        }
+    }
+
     nsCStringKey hashKey(serverKey);
     
     nsIMsgIncomingServer* removedServer =
@@ -1498,6 +1511,23 @@ nsMsgAccountManager::FindServer(const char* username,
   printf("FindServer(%s,%s,%s,??)\n", username,hostname,type);
 #endif
  
+  if ((!nsCRT::strcmp((hostname?hostname:""),(const char *)m_lastFindServerHostName)) &&
+      (!nsCRT::strcmp((username?username:""),(const char *)m_lastFindServerUserName)) &&
+      (!nsCRT::strcmp((type?type:""),(const char *)m_lastFindServerType)) &&
+      m_lastFindServerResult) {
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("HIT:   FindServer() cache\n");
+#endif
+    *aResult = m_lastFindServerResult;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+  }
+#ifdef DEBUG_ACCOUNTMANAGER
+  else {
+    printf("MISS:  FindServer() cache\n");
+  }
+#endif
+
   rv = GetAllServers(getter_AddRefs(servers));
   if (NS_FAILED(rv)) return rv;
 
@@ -1517,6 +1547,11 @@ nsMsgAccountManager::FindServer(const char* username,
   servers->EnumerateForwards(findServer, (void *)&serverInfo);
 
   if (!serverInfo.server) return NS_ERROR_UNEXPECTED;
+
+  // cache for next time
+  rv = SetLastServerFound(serverInfo.server, hostname, username, type);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   *aResult = serverInfo.server;
   NS_ADDREF(*aResult);
   
@@ -1906,4 +1941,15 @@ nsMsgAccountManager::GetEmptyTrashInProgress(PRBool *bVal)
   NS_ENSURE_ARG_POINTER(bVal);
   *bVal = m_emptyTrashInProgress;
   return NS_OK;
+}
+
+nsresult 
+nsMsgAccountManager::SetLastServerFound(nsIMsgIncomingServer *server, const char *hostname, const char *username, const char *type)
+{
+    m_lastFindServerResult = server;
+    m_lastFindServerHostName = hostname;
+    m_lastFindServerUserName = username;
+    m_lastFindServerType = type;
+    
+    return NS_OK;
 }
