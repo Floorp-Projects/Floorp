@@ -426,6 +426,13 @@ elif test "$OS_ARCH" = "CYGWIN32_NT"; then
     fi
 fi
 
+if test -n "$MOZILLA_CLIENT" && test "$OS_ARCH" = "WINNT"; then
+    OS_TARGET=WIN95
+    MOZ_WIN32_TARGET=WIN95
+    if test -n "$MOZ_DEBUG"; then
+        USE_DEBUG_RTL=1
+    fi
+fi
 if test -z "$OS_TARGET"; then
     OS_TARGET=$OS_ARCH
 fi
@@ -868,6 +875,7 @@ case "$target" in
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
+        STRIP='echo not_strip'
         NSINSTALL=nsinstall
         INSTALL='${NSINSTALL}'
         RC=rc.exe
