@@ -426,8 +426,14 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
                                     PR_TRUE, nsnull, dispToken);
       // RFC 2183, section 2.8 says that an unknown disposition
       // value should be treated as "attachment"
+      // XXXbz this code is duplicated in GetFilenameAndExtensionFromChannel in
+      // nsExternalHelperAppService.  Factor it out!
       if (NS_FAILED(rv) || 
-          (!dispToken.LowerCaseEqualsLiteral("inline") &&
+          (// Some broken sites just send
+           // Content-Disposition: ; filename="file"
+           // screen those out here.
+           !dispToken.IsEmpty() &&
+           !dispToken.LowerCaseEqualsLiteral("inline") &&
           // Broken sites just send
           // Content-Disposition: filename="file"
           // without a disposition token... screen those out.
