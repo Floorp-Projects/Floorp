@@ -327,7 +327,7 @@ public:
   nsFormControlEnumerator(nsHTMLFormElement* aForm);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISIMPLEENUMERATOR;
+  NS_DECL_NSISIMPLEENUMERATOR
 
 private:
   nsHTMLFormElement* mForm;
