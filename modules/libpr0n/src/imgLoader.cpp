@@ -291,8 +291,6 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   PRBool bHasExpired      = PR_FALSE;
   PRBool bValidateRequest = PR_FALSE;
 
-  PRBool addToLoadGroup   = PR_TRUE;
-
   // XXX For now ignore the cache key. We will need it in the future
   // for correctly dealing with image load requests that are a result
   // of post data.
@@ -524,10 +522,6 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
     // Update the request's LoadId
     request->SetLoadId(aCX);
-
-    // request is already loaded, no need to add anything to the
-    // loadgroup.
-    addToLoadGroup = PR_FALSE;
   }
 
   LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
@@ -537,9 +531,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
   imgRequestProxy *proxy = (imgRequestProxy *)*_retval;
 
-  if (addToLoadGroup) {
-    proxy->AddToLoadGroup();
-  }
+  // Note that it's OK to add here even if the request is done.  If it is,
+  // it'll send a OnStopRequest() to the proxy in NotifyProxyListener and the
+  // proxy will be removed from the loadgroup.
+  proxy->AddToLoadGroup();
 
   // if we have to validate the request, then we will send the
   // notifications later.
