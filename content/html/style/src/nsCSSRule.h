@@ -66,8 +66,6 @@ public:
   NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule);
 
   // nsIStyleRule methods
-  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 

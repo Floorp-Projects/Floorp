@@ -125,13 +125,6 @@ nsCSSRule::SetParentRule(nsICSSGroupRule* aRule)
 }
 
 NS_IMETHODIMP
-nsCSSRule::GetStrength(PRInt32& aStrength) const
-{
-  aStrength = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsCSSRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   return NS_OK;

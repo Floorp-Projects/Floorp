@@ -353,8 +353,6 @@ public:
   // nsIStyleRule 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet);
-  // Strength is an out-of-band weighting, always 0 here
-  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
   
   // The new mapping functions.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
@@ -767,13 +765,6 @@ nsHTMLMappedAttributes::SetStyleSheet(nsIHTMLStyleSheet* aSheet)
   }
   mSheet = aSheet;  // not ref counted
   mUniqued = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLMappedAttributes::GetStrength(PRInt32& aStrength) const
-{
-  aStrength = 0;
   return NS_OK;
 }
 

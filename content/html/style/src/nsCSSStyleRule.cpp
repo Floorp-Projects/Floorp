@@ -951,9 +951,6 @@ public:
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
-  // Strength is an out-of-band weighting, useful for mapping CSS ! important
-  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
@@ -1007,14 +1004,6 @@ CSSImportantRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   NS_IF_ADDREF(mSheet);
   aSheet = mSheet;
-  return NS_OK;
-}
-
-// Strength is an out-of-band weighting, useful for mapping CSS ! important
-NS_IMETHODIMP
-CSSImportantRule::GetStrength(PRInt32& aStrength) const
-{
-  aStrength = 1;
   return NS_OK;
 }
 
@@ -1432,8 +1421,6 @@ public:
 
 //  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
 //  NS_IMETHOD HashValue(PRUint32& aValue) const;
-  // Strength is an out-of-band weighting, useful for mapping CSS ! important
-  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
   virtual nsCSSSelector* FirstSelector(void);
   virtual void AddSelector(const nsCSSSelector& aSelector);
@@ -1631,14 +1618,6 @@ CSSStyleRuleImpl::HashValue(PRUint32& aValue) const
   return NS_OK;
 }
 #endif
-
-// Strength is an out-of-band weighting, useful for mapping CSS ! important
-NS_IMETHODIMP
-CSSStyleRuleImpl::GetStrength(PRInt32& aStrength) const
-{
-  aStrength = 0;
-  return NS_OK;
-}
 
 nsCSSSelector* CSSStyleRuleImpl::FirstSelector(void)
 {
