@@ -130,6 +130,7 @@ protected:
   nsresult WillLoadHTML(nsISelection *aSelection, PRBool *aCancel);
   nsresult WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
+  nsresult SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRBool *aHandled);
   nsresult WillDeleteSelection(nsISelection *aSelection, nsIEditor::EDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
   nsresult JoinBlocks(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *aLeftBlock, 

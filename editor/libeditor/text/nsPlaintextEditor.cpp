@@ -1685,7 +1685,8 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
 
   // It's best to put a blank line after the quoted text so that mails
   // written without thinking won't be so ugly.
-  quotedStuff.Append(PRUnichar('\n'));
+  if (!aQuotedText.IsEmpty() && (aQuotedText.Last() != PRUnichar('\n')))
+    quotedStuff.Append(PRUnichar('\n'));
 
   nsCOMPtr<nsIDOMNode> preNode;
   // get selection
