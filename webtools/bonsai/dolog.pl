@@ -1,4 +1,35 @@
 #! /tools/ns/bin/perl5
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is the Bonsai CVS tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are Copyright (C) 1998
+# Netscape Communications Corporation. All Rights Reserved.
+
+
+# You need to put this in your CVSROOT directory, and check it in.  (Change the
+# first line above to point to a real live perl5.)  Then, add a line to your
+# CVSROOT/loginfo file that says something like:
+#
+#      ALL      $CVSROOT/CVSROOT/dolog.pl -r /cvsroot bonsai-checkin-daemon@my.bonsai.machine
+#
+# Replace "/cvsroot" with the name of the CVS root directory, and
+# "my.bonsai.machine" with the name of the machine Bonsai runs on.
+# Now, on my.bonsai.machine, add a mail alias so that mail sent to 
+# "bonsai-checkin-daemon" will get piped to handleCheckinMail.tcl.
+# The first argument to handleCheckinMail.tcl is the directory that
+# bonsai is installed in.
 
 use Socket;
 
