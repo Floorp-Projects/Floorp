@@ -469,6 +469,7 @@ Java_org_mozilla_jss_pkcs11_PK11Store_deleteCert
     }
 
     status = PK11_DeleteTokenCertAndKey(cert, NULL);
+    status = SEC_DeletePermCertificate(cert);
 
 finish: 
     return;
