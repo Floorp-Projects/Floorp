@@ -141,7 +141,7 @@ void InitAllocationEvent(GtkAllocation *aAlloc,
 
   anEvent.eventStructType = NS_SIZE_EVENT;
 
-  if (aAlloc != NULL) {
+  if (aAlloc != nsnull) {
     nsRect *foo = new nsRect(aAlloc->x, aAlloc->y, aAlloc->width, aAlloc->height);
     anEvent.windowSize = foo;
     anEvent.point.x = aAlloc->x;
@@ -164,7 +164,7 @@ void InitConfigureEvent(GdkEventConfigure *aConf,
 
   anEvent.eventStructType = NS_SIZE_EVENT;
 
-  if (aConf != NULL) {
+  if (aConf != nsnull) {
   /* do we accually need to alloc a new rect, or can we just set the
      current one */
     nsRect *foo = new nsRect(aConf->x, aConf->y, aConf->width, aConf->height);
@@ -189,7 +189,7 @@ void InitExposeEvent(GdkEventExpose *aGEE,
 
   anEvent.eventStructType = NS_PAINT_EVENT;
 
-  if (aGEE != NULL) {
+  if (aGEE != nsnull) {
     nsRect *rect = new nsRect(aGEE->area.x, aGEE->area.y,
                               aGEE->area.width, aGEE->area.height);
     anEvent.rect = rect;
@@ -203,7 +203,7 @@ void UninitExposeEvent(GdkEventExpose *aGEE,
                               nsPaintEvent &anEvent,
                               PRUint32   aEventType)
 {
-  if (aGEE != NULL) {
+  if (aGEE != nsnull) {
     delete anEvent.rect;
   }
 }
@@ -221,7 +221,7 @@ void InitKeyEvent(GdkEventKey *aGEK,
 
   anEvent.eventStructType = NS_KEY_EVENT;
 
-  if (aGEK != NULL) {
+  if (aGEK != nsnull) {
     anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
     //
     // As per joki: as long as we're using ASCII rather than Unicode,
@@ -418,7 +418,7 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
 
   nsIMenuListener *menuListener = nsnull;
   nsIMenuItem *menuItem = (nsIMenuItem *)p;
-  if (menuItem != NULL) {
+  if (menuItem != nsnull) {
     nsMenuEvent mevent;
     mevent.message = NS_MENU_SELECTED;
     mevent.eventStructType = NS_MENU_EVENT;
@@ -448,7 +448,7 @@ void menu_map_handler(GtkWidget *w, gpointer p)
 { 
   nsIMenuListener *menuListener = nsnull;
   nsIMenu *menu = (nsIMenu *)p;
-  if (menu != NULL) {
+  if (menu != nsnull) {
     nsMenuEvent mevent;
     mevent.message = NS_MENU_SELECTED;
     mevent.eventStructType = NS_MENU_EVENT;
@@ -461,12 +461,13 @@ void menu_map_handler(GtkWidget *w, gpointer p)
     nsEventStatus status;
       
     menu->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
+
     if(menuListener) {
       menuListener->MenuConstruct(
         mevent,
-      	NULL,   //parent window
-	NULL,   //menuNode
-	NULL ); // webshell
+      	nsnull,   //parent window
+	nsnull,   //menuNode
+	nsnull ); // webshell
       NS_IF_RELEASE(menuListener);
     }
   }
@@ -475,9 +476,9 @@ void menu_map_handler(GtkWidget *w, gpointer p)
 //==============================================================
 void menu_unmap_handler(GtkWidget *w, gpointer p)
 {
-  nsIMenuListener *menuListener = NULL;
+  nsIMenuListener *menuListener = nsnull;
   nsIMenu *menu = (nsIMenu *)p;
-  if (menu != NULL) {
+  if (menu != nsnull) {
     nsMenuEvent mevent;
     mevent.message = NS_MENU_SELECTED;
     mevent.eventStructType = NS_MENU_EVENT;
