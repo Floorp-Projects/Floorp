@@ -29,7 +29,7 @@
 
 class nsIJVMPlugin;
 class nsISecureEnv;
-
+class nsISecurityContext;
 /**
  * Creates a proxy JNIEnv using the given JVM plugin, and optional native JNIEnv*.
  */
@@ -47,4 +47,10 @@ void DeleteProxyJNI(JNIEnv* proxyEnv);
  */
 nsISecureEnv* GetSecureEnv(JNIEnv* proxyEnv);
 
+/**
+ * Sets SecurityCotext for proxy env
+ */
+void SetSecurityContext(JNIEnv* proxyEnv, nsISecurityContext *context);
+
 #endif /* PROXY_JNI_H */
+

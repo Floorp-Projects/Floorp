@@ -235,7 +235,14 @@ private:
 	static ProxyJNIEnv& GetProxyEnv(JNIEnv* env) { return *(ProxyJNIEnv*)env; }
 	static nsISecureEnv* GetSecureEnv(JNIEnv* env) { return ((ProxyJNIEnv*)env)->mSecureEnv; }
 
-	nsISecurityContext* getContext() { return JVM_GetJSSecurityContext(); }
+	nsISecurityContext* getContext() { 
+        if (!mContext) {
+            return  JVM_GetJSSecurityContext();
+        } else {
+            mContext->AddRef();
+            return mContext;
+        }
+    }
 
 	static jint JNICALL GetVersion(JNIEnv* env)
 	{
@@ -1108,6 +1115,7 @@ public:
 	~ProxyJNIEnv();
 	
 	nsISecureEnv* getSecureEnv() { return mSecureEnv; }
+    void SetSecurityContext(nsISecurityContext *context) { mContext = context;}
 };
 
 JNINativeInterface_ ProxyJNIEnv::theFuncs = {
@@ -1531,4 +1539,9 @@ nsISecureEnv* GetSecureEnv(JNIEnv* env)
 {
 	ProxyJNIEnv* proxyEnv = (ProxyJNIEnv*)env;
 	return proxyEnv->getSecureEnv();
+}
+
+void SetSecurityContext(JNIEnv* env, nsISecurityContext *context) {
+    ProxyJNIEnv* proxyEnv = (ProxyJNIEnv*)env;
+    proxyEnv->SetSecurityContext(context);
 }
