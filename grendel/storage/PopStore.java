@@ -120,6 +120,8 @@ public class PopStore extends Store {
       check(readln(), "USER command not accepted");
       writeln("PASS " + password);
       if (!resultOK(readln())) {
+      	fSocket.close();
+      	fSocket = null;         // Otherwise it thinks we're still connected
         return false;           // Authentication failed.
       }
     } catch (UnknownHostException e) {
