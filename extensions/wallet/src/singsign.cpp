@@ -3323,6 +3323,10 @@ SINGSIGN_RememberSignonData
 {
 }
 
+PUBLIC void
+SINGSIGN_SignonViewerReturn () {
+}
+
 void
 SINGSIGN_DisplaySignonInfoAsHTML()
 {
