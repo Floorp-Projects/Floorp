@@ -462,9 +462,14 @@ NS_IMETHODIMP
 nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 {
   if (!mInitialized) {
-    nsFileSpec path;
-    nsresult rv = GetPath(path);
-    if (NS_FAILED(rv)) return rv;
+	nsresult rv;
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+	nsFileSpec path;
+	rv = pathSpec->GetFileSpec(&path);
+	if (NS_FAILED(rv)) return rv;
 	
     rv = CreateSubFolders(path);
     if (NS_FAILED(rv)) return rv;
@@ -494,8 +499,13 @@ nsresult nsMsgNewsFolder::GetDatabase()
 {
 	if (!mDatabase)
 	{
-		nsNativeFileSpec path;
-		nsresult rv = GetPath(path);
+		nsCOMPtr<nsIFileSpec> pathSpec;
+		nsresult rv;
+		rv = GetPath(getter_AddRefs(pathSpec));
+		if (NS_FAILED(rv)) return rv;
+
+		nsFileSpec path;
+		rv = pathSpec->GetFileSpec(&path);
 		if (NS_FAILED(rv)) return rv;
 
 		nsresult folderOpen = NS_OK;
@@ -627,8 +637,12 @@ NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
   if(!url)
     return NS_ERROR_NULL_POINTER;
 
+  nsCOMPtr<nsIFileSpec> pathSpec;
+  nsresult rv = GetPath(getter_AddRefs(pathSpec));
+  if (NS_FAILED(rv)) return rv;
+
   nsFileSpec path;
-  nsresult rv = GetPath(path);
+  rv = pathSpec->GetFileSpec(&path);
   if (NS_FAILED(rv)) return rv;
 #if defined(XP_MAC)
   nsAutoString tmpPath((nsFilePath)path, eOneByte);	//ducarroz: please don't cast a nsFilePath to char* on Mac
@@ -1046,18 +1060,19 @@ NS_IMETHODIMP nsMsgNewsFolder::GetRememberedPassword(char ** password)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
+NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsIFileSpec** aPathName)
 {
+  nsresult rv;
   if (! mPath) {
     mPath = new nsNativeFileSpec("");
     if (! mPath)
     	return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = nsNewsURI2Path(kNewsRootURI, mURI, *mPath);
+    rv = nsNewsURI2Path(kNewsRootURI, mURI, *mPath);
     if (NS_FAILED(rv)) return rv;
   }
-  aPathName = *mPath;
-  return NS_OK;
+  rv = NS_NewFileSpecWithSpec(*mPath, aPathName);
+  return rv;
 }
 
 /* this is news, so remember that DeleteMessage is really CANCEL */

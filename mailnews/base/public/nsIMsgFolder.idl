@@ -20,9 +20,9 @@
 #include "nsIFolder.idl"
 #include "nsIMsgThread.idl"
 #include "nsIMsgIncomingServer.idl"
+#include "nsIFileSpec.idl"
 
 %{ C++
-#include "nsFileSpec.h"
 #include "nsISupportsArray.h"
 #include "nsIMessage.h"
 #include "nsITransactionManager.h"
@@ -136,6 +136,8 @@ interface nsIMsgFolder : nsIFolder {
 	readonly attribute wstring NewMessagesNotificationDescription;
 	readonly attribute nsIMsgFolder RootFolder;
   readonly attribute nsIMsgDatabase msgDatabase;
+
+	readonly attribute nsIFileSpec Path;
 };
 
 

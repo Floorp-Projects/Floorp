@@ -286,10 +286,13 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 {
   if (!mInitialized) {
-    nsFileSpec path;
-    nsresult rv = GetPath(path);
+    nsCOMPtr<nsIFileSpec> pathSpec;
+    nsresult rv = GetPath(getter_AddRefs(pathSpec));
     if (NS_FAILED(rv)) return rv;
 	
+	nsFileSpec path;
+	rv = pathSpec->GetFileSpec(&path);
+    if (NS_FAILED(rv)) return rv;
 #if 0
 	//Make sure our path isn't the empty path.
 	nsFileSpec emptyPath("");
@@ -339,8 +342,12 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 	nsresult rv = NS_OK;
 	if (!mDatabase)
 	{
-		nsNativeFileSpec path;
-		rv = GetPath(path);
+		nsCOMPtr<nsIFileSpec> pathSpec;
+		rv = GetPath(getter_AddRefs(pathSpec));
+		if (NS_FAILED(rv)) return rv;
+
+		nsFileSpec path;
+		rv = pathSpec->GetFileSpec(&path);
 		if (NS_FAILED(rv)) return rv;
 
 #if 0
@@ -413,17 +420,24 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
 {
-  const char *urlScheme = "mailbox:";
+	const char *urlScheme = "mailbox:";
 
-  if(!url)
-    return NS_ERROR_NULL_POINTER;
+	if(!url)
+		return NS_ERROR_NULL_POINTER;
 
-  nsFileSpec path;
-  nsresult rv = GetPath(path);
-  if (NS_FAILED(rv)) return rv;
-  nsAutoString tmpPath((nsFilePath)path, eOneByte);
-  *url = PR_smprintf("%s%s", urlScheme, tmpPath.GetBuffer());
-  return NS_OK;
+	nsresult rv;
+
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+	nsFileSpec path;
+	rv = pathSpec->GetFileSpec(&path);
+	if (NS_FAILED(rv)) return rv;
+
+	nsAutoString tmpPath((nsFilePath)path, eOneByte);
+	*url = PR_smprintf("%s%s", urlScheme, tmpPath.GetBuffer());
+	return NS_OK;
 
 }
 
@@ -435,9 +449,12 @@ nsresult nsMsgLocalMailFolder::CreateDirectoryForFolder(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
 
-	rv = GetPath(path);
-	if(NS_FAILED(rv))
-		return rv;
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+	rv = pathSpec->GetFileSpec(&path);
+	if (NS_FAILED(rv)) return rv;
 
 	if(!path.IsDirectory())
 	{
@@ -550,8 +567,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 		mDatabase = null_nsCOMPtr();
 	}
 
-    nsFileSpec path;
-    rv = GetPath(path);
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+	nsFileSpec path;
+	rv = pathSpec->GetFileSpec(&path);
+	if (NS_FAILED(rv)) return rv;
 
 	//Clean up .sbd folder if it exists.
 	if(NS_SUCCEEDED(rv))
@@ -995,18 +1017,20 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsIFileSpec ** aPathName)
 {
+	nsresult rv;
   if (! mPath) {
-  	mPath = new nsNativeFileSpec("");
+  	mPath = new nsFileSpec("");
   	if (! mPath)
   		return NS_ERROR_OUT_OF_MEMORY;
   
     nsresult rv = nsLocalURI2Path(kMailboxRootURI, mURI, *mPath);
     if (NS_FAILED(rv)) return rv;
   }
-  aPathName = *mPath;
-  return NS_OK;
+  rv = NS_NewFileSpecWithSpec(*mPath, aPathName);
+
+  return rv;
 }
 
 // OK, this is kind of silly, but for now, we'll just tack the subFolderName
@@ -1181,8 +1205,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
 	else
 		return NS_MSG_FOLDER_BUSY;
 
+	nsresult rv;
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
 	nsFileSpec path;
-	GetPath(path);
+	rv = pathSpec->GetFileSpec(&path);
+	if (NS_FAILED(rv)) return rv;
+
 	mCopyState = new nsLocalMailCopyState;
 	if(!mCopyState)
 		return NS_ERROR_OUT_OF_MEMORY;

@@ -161,18 +161,20 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 	return nsMsgFolder::QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetPathName(nsNativeFileSpec& aPathName)
+NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec** aPathName)
 {
+	nsresult rv;
     if (! m_pathName) 
     {
     	m_pathName = new nsNativeFileSpec("");
     	if (! m_pathName)
     		return NS_ERROR_OUT_OF_MEMORY;
    
-        nsresult rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
+        rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
         if (NS_FAILED(rv)) return rv;
     }
-    aPathName = *m_pathName;
+	rv = NS_NewFileSpecWithSpec(*m_pathName, aPathName);
+
 	return NS_OK;
 }
 
@@ -301,9 +303,13 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (!m_initialized)
     {
         nsresult rv = NS_OK;
-        nsNativeFileSpec path;
-        rv = GetPathName(path);
-        if (NS_FAILED(rv)) return rv;
+		nsCOMPtr<nsIFileSpec> pathSpec;
+		rv = GetPath(getter_AddRefs(pathSpec));
+		if (NS_FAILED(rv)) return rv;
+
+		nsFileSpec path;
+		rv = pathSpec->GetFileSpec(&path);
+		if (NS_FAILED(rv)) return rv;
 
 		// host directory does not need .sbd tacked on
 		if (mDepth > 0)
@@ -384,8 +390,12 @@ nsresult nsImapMailFolder::GetDatabase()
 	nsresult folderOpen = NS_OK;
 	if (!mDatabase)
 	{
-		nsNativeFileSpec path;
-		nsresult rv = GetPathName(path);
+		nsCOMPtr<nsIFileSpec> pathSpec;
+		nsresult rv = GetPath(getter_AddRefs(pathSpec));
+		if (NS_FAILED(rv)) return rv;
+
+		nsFileSpec path;
+		rv = pathSpec->GetFileSpec(&path);
 		if (NS_FAILED(rv)) return rv;
 
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
@@ -473,11 +483,14 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 {
 	nsresult rv = NS_OK;
     
-	nsFileSpec path;
 	//Get a directory based on our current path.
-	rv = GetPathName(path);
-	if(NS_FAILED(rv))
-		return rv;
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+	nsFileSpec path;
+	rv = pathSpec->GetFileSpec(&path);
+	if (NS_FAILED(rv)) return rv;
 
 	rv = CreateDirectoryForFolder(path);
 	if(NS_FAILED(rv))
@@ -843,9 +856,15 @@ nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
 	nsresult rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-	   nsNativeFileSpec dbName;
 
-		GetPathName(dbName);
+		nsCOMPtr<nsIFileSpec> pathSpec;
+		rv = GetPath(getter_AddRefs(pathSpec));
+		if (NS_FAILED(rv)) return rv;
+
+		nsFileSpec dbName;
+		rv = pathSpec->GetFileSpec(&dbName);
+		if (NS_FAILED(rv)) return rv;
+
 		openErr = mailDBFactory->Open(dbName, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
 	}
 
@@ -1107,9 +1126,14 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 {
 	nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-    nsNativeFileSpec dbName;
 
-    GetPathName(dbName);
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+    nsFileSpec dbName;
+	rv = pathSpec->GetFileSpec(&dbName);
+	if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManager::CreateInstance(kCImapDB, nsnull,
                                             nsIMsgDatabase::GetIID(),

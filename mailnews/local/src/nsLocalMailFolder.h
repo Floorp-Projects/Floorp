@@ -101,7 +101,7 @@ public:
 	NS_IMETHOD GetNewMessages();
 
 	// nsIMsgMailFolder
-	NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
+	NS_IMETHOD GetPath(nsIFileSpec ** aPathName);
 
 	//nsICopyMessageListener
 	NS_IMETHOD BeginCopy(nsIMessage *message);

@@ -59,8 +59,6 @@ public:
 	virtual ~nsImapMailFolder();
 
 	NS_DECL_ISUPPORTS_INHERITED
-    // nsIMsgImapMailFolder methods
-    NS_IMETHOD GetPathName(nsNativeFileSpec& aPathName);
 
     // nsICollection methods:
     NS_IMETHOD Enumerate(nsIEnumerator* *result);
@@ -112,6 +110,7 @@ public:
                                          **message);
     NS_IMETHOD GetNewMessages();
 
+    NS_IMETHOD GetPath(nsIFileSpec** aPathName);
     // nsIImapMailFolderSink methods
     // Tell mail master about a discovered imap mailbox
     NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,

@@ -92,8 +92,7 @@ public:
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
   NS_IMETHOD GetNewMessages();
 
-	// nsIMsgNewsFolder
-  NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
+  NS_IMETHOD GetPath(nsIFileSpec** aPathName);
   
   NS_IMETHOD GetMsgKeySetStr(char * *aMsgKeySetStr);
   NS_IMETHOD SetMsgKeySetStr(char * aMsgKeySetStr);
