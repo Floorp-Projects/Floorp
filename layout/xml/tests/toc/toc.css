@@ -1,0 +1,53 @@
+
+toc {
+  position:fixed;
+  top:0; 
+  left:0; 
+  width:12em; 
+  height:100%;
+  border-right: 1px solid black;
+  background-color: #CCE6F3;
+  font-family: Arial;
+  scrolling: auto;
+  color: darkblue;
+}
+
+toc title {
+  font-size:12pt;
+  font-weight: bold;
+  background-color: black;
+  color:white;
+}
+
+level1 {
+   display: block;
+   list-style-position: inside;
+   font-size:12pt;
+   font-weight:bold;
+   margin-left: 4px;
+   margin-bottom: 2px;
+   cursor: pointer;
+}
+
+level2 {
+   display: block;
+   list-style-position: inside;
+   font-size:11pt;
+   margin-left: 8px;
+   margin-bottom: 2px;
+   cursor: pointer;
+}
+
+level3 {
+   display: list-item;
+   list-style-position: inside;
+   font-size: 8pt;
+   margin-left: 12px;
+   margin-bottom: 2px;
+   cursor: pointer;
+}
+
+toc img {
+   margin-right: 1em;
+}
+
