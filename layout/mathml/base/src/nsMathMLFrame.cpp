@@ -31,6 +31,8 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSRule.h"
 #include "nsICSSStyleRule.h"
+#include "nsStyleChangeList.h"
+#include "nsIFrameManager.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 #include "nsContentCID.h"
@@ -580,7 +582,7 @@ GetMathMLAttributeStyleSheet(nsIDocument*    aDocument,
   NS_ADDREF(*aSheet);
 }
 
-/* static */ void
+/* static */ PRInt32
 nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
                                     nsIContent*     aContent)
 {
@@ -588,7 +590,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
   PRInt32 attrCount;
   aContent->GetAttrCount(attrCount);
   if (!attrCount)
-    return;
+    return 0;
 
   // need to initialize here -- i.e., after registering nsMathMLAtoms
   static const nsCSSMapping
@@ -609,8 +611,9 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDOMCSSStyleSheet> domSheet;
 
   PRInt32 nameSpaceID;
-  nsCOMPtr<nsIAtom> attrAtom;
   nsCOMPtr<nsIAtom> prefix;
+  nsCOMPtr<nsIAtom> attrAtom;
+  PRInt32 ruleCount = 0;
   for (PRInt32 i = 0; i < attrCount; ++i) {
     aContent->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrAtom), *getter_AddRefs(prefix));
 
@@ -635,7 +638,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     if (attrAtom == nsMathMLAtoms::fontsize_ || attrAtom == nsMathMLAtoms::mathsize_) {
       nsCSSValue cssValue;
       nsAutoString numericValue(attrValue);
-      if (!nsMathMLFrame::ParseNumericValue(numericValue, cssValue))
+      if (!ParseNumericValue(numericValue, cssValue))
         continue;
       // on exit, ParseNumericValue also returns a nicer string
       // in which the whitespace before the unit is cleaned up 
@@ -655,16 +658,16 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
       // point where we encounter attributes that actually matter
       aContent->GetDocument(*getter_AddRefs(doc));
       if (!doc) 
-        return;
+        return 0;
       GetMathMLAttributeStyleSheet(doc, getter_AddRefs(sheet));
       if (!sheet)
-        return;
+        return 0;
       // by construction, these cannot be null at this point
       cssSheet = do_QueryInterface(sheet);
       domSheet = do_QueryInterface(sheet);
       NS_ASSERTION(cssSheet && domSheet, "unexpected null pointers");
       // we will keep the sheet orphan as we populate it. This way,
-      // observers of the dcoument won't be notified and we avoid any troubles
+      // observers of the document won't be notified and we avoid any troubles
       // that may come from reconstructing the frame tree. Our rules only need
       // a re-resolve of style data and a reflow, not a reconstruct-all...
       sheet->SetOwningDocument(nsnull);
@@ -680,9 +683,40 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     //XXX possibly check for duplicate, but might be faster to just insert
     PRUint32 index;
     domSheet->InsertRule(cssRule, pos, &index);
+    ++ruleCount;
   }
   // restore the sheet to its owner
   if (sheet) {
     sheet->SetOwningDocument(doc);
   }
+
+  return ruleCount;
+}
+
+/* static */ PRInt32
+nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
+                                    nsIFrame*       aFrame)
+{
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  PRInt32 ruleCount = MapAttributesIntoCSS(aPresContext, content);
+  if (!ruleCount)
+    return 0;
+
+  // now, re-resolve the style contexts in our subtree
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager> fm;
+    presShell->GetFrameManager(getter_AddRefs(fm));
+    if (fm) {
+      PRInt32 maxChange, minChange = NS_STYLE_HINT_NONE;
+      nsStyleChangeList changeList;
+      fm->ComputeStyleChangeFor(aPresContext, aFrame,
+                                kNameSpaceID_None, nsnull,
+                                changeList, minChange, maxChange);
+    }
+  }
+
+  return ruleCount;
 }

@@ -367,6 +367,7 @@ public:
   {
     nsresult rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected data
+    nsMathMLContainerFrame::MapAttributesIntoCSS(aPresContext, this);
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(aPresContext, this);
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
     return rv;
@@ -436,6 +437,7 @@ public:
   {
     nsresult rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected data
+    nsMathMLContainerFrame::MapAttributesIntoCSS(aPresContext, this);
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(aPresContext, this);
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
     return rv;

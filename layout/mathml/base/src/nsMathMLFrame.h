@@ -421,11 +421,14 @@ public:
                 nscoord&             aAxisHeight);
 
   // ================
-  // helper to map attributes into CSS rules (work-around to bug 69409 which
+  // helpers to map attributes into CSS rules (work-around to bug 69409 which
   // is not scheduled to be fixed anytime soon)
-  static void
+  static PRInt32
   MapAttributesIntoCSS(nsIPresContext* aPresContext,
                        nsIContent*     aContent);
+  static PRInt32
+  MapAttributesIntoCSS(nsIPresContext* aPresContext,
+                       nsIFrame*       aFrame);
 
 protected:
   // information about the presentation policy of the frame
