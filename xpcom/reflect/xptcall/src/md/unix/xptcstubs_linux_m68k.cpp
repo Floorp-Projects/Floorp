@@ -121,17 +121,16 @@ extern "C" {
 #define STUB_ENTRY(n) \
 nsresult nsXPTCStubBase::Stub##n() \
 { \
-  register nsresult result; \
+  register nsresult result asm("d0"); \
+  void *frame = __builtin_frame_address(0); \
   __asm__ __volatile__( \
-    "lea   %/a6@(12), %/a0\n\t"       /* args */ \
-    "movl  %/a0, %/sp@-\n\t" \
-    "movl  #"#n", %/sp@-\n\t"       /* method index */ \
-    "movl  %/a6@(8), %/sp@-\n\t"      /* this */ \
+    "pea   %2@(12)\n\t"             /* args */ \
+    "pea  "#n"\n\t"                 /* method index */ \
+    "movl  %1, %/sp@-\n\t"          /* this */ \
     "jbsr  PrepareAndDispatch\n\t" \
-    "movl  %/d0, %0\n\t" \
-    "addl  #12, %/sp" \
+    "addw  #12, %/sp" \
     : "=d" (result)     /* %0 */ \
-    : \
+    : "a" (this), "a" (frame) \
     : "a0", "a1", "d0", "d1", "memory" ); \
     return result; \
 }
