@@ -2004,6 +2004,9 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     si_Reject *reject;
     SignonViewerDialog *dlg;
     int i;
+    char * view_sites = NULL;
+    char * view_cookies = NULL;
+    char * heading = NULL;
 
     static XPDialogInfo dialogInfo = {
 	0,
@@ -2018,6 +2021,8 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 	return;
     }
     StrAllocCopy(buffer2, "");
+    StrAllocCopy (view_cookies, XP_GetString(MK_SIGNON_VIEW_SIGNONS));
+    StrAllocCopy (view_sites, XP_GetString(MK_SIGNON_VIEW_REJECTS));
 
     /* generate initial section of html file */
     g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -2079,6 +2084,7 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     }
     FLUSH_BUFFER
 
+    StrAllocCopy (heading, XP_GetString(MK_SIGNON_YOUR_SIGNONS));
     g += PR_snprintf(buffer+g, BUFLEN-g,
 ");\n"
 "\n"
@@ -2166,11 +2172,9 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "                  \"<P>\" +\n"
 "                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
 "      );\n",
-	    XP_GetString(MK_SIGNON_VIEW_SIGNONS),
-	    XP_GetString(MK_SIGNON_VIEW_REJECTS),
-	    XP_GetString(MK_SIGNON_YOUR_SIGNONS)
-	);
+	view_cookies, view_sites, heading);
     FLUSH_BUFFER
+    PR_FREEIF(heading);
 
     /* generate the html for the list of signons */
     URL_ptr = si_signon_list;
@@ -2198,6 +2202,7 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     }
 
     /* generate next section of html file */
+    StrAllocCopy (heading, XP_GetString(MK_SIGNON_YOUR_SIGNON_REJECTS));
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "      top.frames[list_frame].document.write(\n"
 "                  \"</SELECT>\" +\n"
@@ -2250,11 +2255,9 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "                  \"<P>\" +\n"
 "                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
 "      );\n",
-	    XP_GetString(MK_SIGNON_VIEW_SIGNONS),
-	    XP_GetString(MK_SIGNON_VIEW_REJECTS),
-	    XP_GetString(MK_SIGNON_YOUR_SIGNON_REJECTS)
-	);
+	view_cookies, view_sites, heading);
     FLUSH_BUFFER
+    PR_FREEIF(heading);
 
     /* generate the html for the list of rejects */
     signonNum = 0;
@@ -2298,8 +2301,7 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "          \"&nbsp;\" +\n"
 "          \"<INPUT type=BUTTON \" +\n"
 "                 \"value=Remove \" +\n"
-"                 \"onclick=top.DeleteItemSelected();\" +\n"
-"                 \"name=BUTTON>\" +\n"
+"                 \"onclick=top.DeleteItemSelected();>\" +\n"
 "          \"<DIV align=right>\" +\n"
 "            \"<INPUT type=BUTTON value=OK width=80 onclick=parent.clicker(this,window.parent)>\" +\n"
 "            \" &nbsp;&nbsp;\" +\n"
@@ -2396,10 +2398,10 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 
     si_unlock_signon_list();
 
-    /* free buffer since it is no longer needed */
-    if (buffer) {
-	PR_Free(buffer);
-    }
+    /* free some strings that are no longer needed */
+    PR_FREEIF(view_cookies);
+    PR_FREEIF(view_sites);
+    PR_FREEIF(buffer);
 
     /* put html just generated into strings->arg[2] and invoke HTML dialog */
     if (buffer2) {
