@@ -10062,7 +10062,7 @@ case "$target" in
     *-netbsd*)    MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-aix*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-osf*)     MOZ_MONOLITHIC_TOOLKIT= ;;
-    *-hpux11.*)   MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-hpux*)      MOZ_MONOLITHIC_TOOLKIT= ;;
     *-nto*)       MOZ_MONOLITHIC_TOOLKIT= ;;
 esac
 
