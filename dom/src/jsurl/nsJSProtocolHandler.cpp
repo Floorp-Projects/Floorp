@@ -153,14 +153,18 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
     // Finally, we have everything needed to evaluate the expression.
 
     nsString result;
-    rv = scriptContext->EvaluateString(nsString(script),
-                                       nsnull,  // obj
-                                       principal,
-                                       nsnull,  // url
-                                       0,       // line no
-                                       nsnull,
-                                       result,
-                                       aIsUndefined);
+    {
+      nsAutoString scriptString;
+      scriptString.AssignWithConversion(script);
+      rv = scriptContext->EvaluateString(scriptString,
+                                         nsnull,  // obj
+                                         principal,
+                                         nsnull,  // url
+                                         0,       // line no
+                                         nsnull,
+                                         result,
+                                         aIsUndefined);
+    }
     // XXXbe this should not decimate! pass back UCS-2 to necko
     *aRetValue = result.ToNewCString();
     return rv;
