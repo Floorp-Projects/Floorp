@@ -28,7 +28,7 @@
 // we will implement these interfaces
 #include "nsIGtkEmbed.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIBaseWindow.h"
+#include "nsIWebBrowserSiteWindow.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebProgress.h"
@@ -54,7 +54,7 @@
 
 class GtkMozEmbedChrome : public nsIGtkEmbed,
                           public nsIWebBrowserChrome,
-                          public nsIBaseWindow,
+                          public nsIWebBrowserSiteWindow,
                           public nsIURIContentListener,
                           public nsIDocShellTreeOwner,
                           public nsIInterfaceRequestor,
@@ -88,7 +88,7 @@ public:
 
   NS_DECL_NSIDOCSHELLTREEOWNER
 
-  NS_DECL_NSIBASEWINDOW
+  NS_DECL_NSIWEBBROWSERSITEWINDOW
 
   NS_DECL_NSIPROMPT
 
