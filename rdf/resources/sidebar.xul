@@ -60,6 +60,7 @@ function doSort(sortColName)
 <xul:tree datasources="rdf:find rdf:files rdf:ftp rdf:bookmarks rdf:history">
   <xul:treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <xul:treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <xul:treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
   <xul:treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
 
   <xul:treehead>
@@ -72,6 +73,10 @@ function doSort(sortColName)
       	<xul:observes element="URLColumn" attribute="sortActive"/>
       	<xul:observes element="URLColumn" attribute="sortDirection"/>
       	URL</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/NC-rdf#ShortcutURL' onclick="return doSort('ShortcutURLColumn');">
+      	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
+      	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
+      	Shortcut URL</xul:treecell>
       <xul:treecell resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' onclick="return doSort('LastModColumn');">
       	<xul:observes element="LastModColumn" attribute="sortActive"/>
       	<xul:observes element="LastModColumn" attribute="sortDirection"/>
@@ -84,10 +89,12 @@ function doSort(sortColName)
       <xul:treecell>Bookmarks</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
+      <xul:treecell></xul:treecell>
     </xul:treeitem>
 
     <xul:treeitem id="NC:FilesRoot">
       <xul:treecell>File System</xul:treecell>
+      <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
@@ -96,10 +103,12 @@ function doSort(sortColName)
       <xul:treecell>History By Site</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
+      <xul:treecell></xul:treecell>
     </xul:treeitem>
 
     <xul:treeitem id="NC:HistoryByDate">
       <xul:treecell>History By Date</xul:treecell>
+      <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
