@@ -373,6 +373,27 @@ function Startup()
 
   //initConsoleListener();
 
+  // XXXjag work-around for bug 113076
+  // there's another bug where we throw an exception when getting
+  // sessionHistory if it is null, which I'm exploiting here to
+  // detect the situation described in bug 113076.
+  try {
+    getBrowser().sessionHistory;
+  } catch (e) {
+    // sessionHistory wasn't set from the browser's constructor
+    // so we'll just have to set it here.
+ 
+    // Wire up session and global history before any possible
+    // progress notifications for back/forward button updating
+    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                                             .createInstance(Components.interfaces.nsISHistory);
+
+    // wire up global history.  the same applies here.
+    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                  .getService(Components.interfaces.nsIGlobalHistory);
+    getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
+  }
+
   // hook up UI through progress listener
   getBrowser().addProgressListener(window.XULBrowserWindow);
 
