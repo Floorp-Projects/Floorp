@@ -443,14 +443,14 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   aPresContext->GetScaledPixelsToTwips(p2t);
   nsIHTMLContent* hc;
   if (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
-    hc->GetAttribute(nsHTMLAtoms::marginwidth, value);
+    hc->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) { // marginwidth is set in body 
       marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       if (marginWidth < 0) {
         marginWidth = 0;
       }
     }
-    hc->GetAttribute(nsHTMLAtoms::marginheight, value);
+    hc->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) { // marginheight is set in body
       marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       if (marginHeight < 0) {

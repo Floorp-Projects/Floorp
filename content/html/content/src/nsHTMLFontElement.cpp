@@ -162,7 +162,7 @@ nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue,
+                                     const nsHTMLValue& aValue,
                                      nsString& aResult) const
 {
   if ((aAttribute == nsHTMLAtoms::size) ||
@@ -334,10 +334,9 @@ nsHTMLFontElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLFontElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

@@ -360,7 +360,7 @@ nsHTMLSelectElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLSelectElement::AttributeToString(nsIAtom* aAttribute,
-                              nsHTMLValue& aValue,
+                              const nsHTMLValue& aValue,
                               nsString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
@@ -619,9 +619,9 @@ nsOptionList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
       if (NS_OK == result) {
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
-        if (((content->GetAttribute("NAME", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+        if (((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name))) ||
-            ((content->GetAttribute("ID", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+            ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
           result = option->QueryInterface(kIDOMNodeIID, (void **)aReturn);
         }
@@ -647,10 +647,9 @@ nsOptionList::Clear()
 
 NS_IMETHODIMP
 nsHTMLSelectElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

@@ -133,7 +133,7 @@ protected:
 
   PRBool IsImage() const {
     nsAutoString tmp;
-    mInner.GetAttribute(nsHTMLAtoms::type, tmp);
+    mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, tmp);
     return tmp.EqualsIgnoreCase("image");
   }
 };
@@ -252,20 +252,20 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetDefaultValue(nsString& aDefaultValue)
 {
-  return mInner.GetAttribute(nsHTMLAtoms::value, aDefaultValue);
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);
 }
 
 NS_IMETHODIMP 
 nsHTMLInputElement::SetDefaultValue(const nsString& aDefaultValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::value, aDefaultValue, PR_TRUE); 
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue, PR_TRUE); 
 }
 
 NS_IMETHODIMP 
 nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
 {
   nsHTMLValue val;                                                 
-  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::checked, val);       
+  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::checked, val);       
   *aDefaultChecked = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
   return NS_OK;                                                     
 }
@@ -273,11 +273,11 @@ nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
 NS_IMETHODIMP
 nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
 {
-  nsAutoString empty;                                               
+  nsHTMLValue empty(eHTMLUnit_Empty);
   if (aDefaultChecked) {                                                     
-    return mInner.SetAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
+    return mInner.SetHTMLAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
   } else {                                                            
-    mInner.UnsetAttribute(nsHTMLAtoms::checked, PR_TRUE);             
+    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);             
     return NS_OK;                                                   
   }                                                                 
 }
@@ -302,7 +302,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 NS_IMETHODIMP
 nsHTMLInputElement::GetType(nsString& aValue)
 {
-  mInner.GetAttribute(nsHTMLAtoms::type, aValue);
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, aValue);
   return NS_OK;
 }
 
@@ -323,7 +323,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
     }
   } 
 
-  return mInner.GetAttribute(nsHTMLAtoms::value, aValue);
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue);
 }
 
 
@@ -343,7 +343,7 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
     }
   }
 
-  return mInner.SetAttribute(nsHTMLAtoms::value, aValue, PR_TRUE); 
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue, PR_TRUE); 
 }
 
 NS_IMETHODIMP 
@@ -382,8 +382,8 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
   GetType(&type);
   if ((NS_FORM_INPUT_CHECKBOX == type) || (NS_FORM_INPUT_RADIO == type)) {
     nsAutoString value;
-    value = (aValue) ? "1" : "0";
-    mInner.SetAttribute("checked", value, PR_TRUE);
+    value = (aValue) ? "1" : "0"; // XXX this should use nsHTMLValue and store an empty or not
+    mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, value, PR_TRUE);
   } 
 
   return SetDefaultChecked(aValue);
@@ -524,7 +524,7 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
-                                      nsHTMLValue& aValue,
+                                      const nsHTMLValue& aValue,
                                       nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
@@ -675,7 +675,6 @@ nsHTMLInputElement::SetWidget(nsIWidget* aWidget)
 
 NS_IMETHODIMP 
 nsHTMLInputElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
@@ -683,7 +682,7 @@ nsHTMLInputElement::GetStyleHintForAttributeChange(
       nsHTMLAtoms::value  == aAttribute) {
     *aHint = (nsnull != mWidget ? NS_STYLE_HINT_CONTENT : NS_STYLE_HINT_REFLOW);
   } else {
-    nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+    nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   }
   return NS_OK;
 }

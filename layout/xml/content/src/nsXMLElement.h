@@ -101,18 +101,19 @@ public:
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {
     return mInner.GetTag(aResult);
   }
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue,
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
                           PRBool aNotify);
-  NS_IMETHOD GetAttribute(const nsString& aName,
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           nsString& aResult) const {
-    return mInner.GetAttribute(aName, aResult);
+    return mInner.GetAttribute(aNameSpaceID, aName, aResult);
   }
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {
-    return mInner.UnsetAttribute(aAttribute, aNotify);
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify) {
+    return mInner.UnsetAttribute(aNameSpaceID, aName, aNotify);
   }
-  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
-                                  PRInt32& aResult) const {
-    return mInner.GetAllAttributeNames(aArray, aResult);
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                PRInt32& aNameSpaceID, 
+                                nsIAtom*& aName) const {
+    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName);
   }
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
     return mInner.GetAttributeCount(aResult);

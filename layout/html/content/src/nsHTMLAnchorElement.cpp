@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsINameSpaceManager.h"
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
@@ -208,7 +209,7 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::AttributeToString(nsIAtom* aAttribute,
-                                       nsHTMLValue& aValue,
+                                       const nsHTMLValue& aValue,
                                        nsString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
@@ -245,7 +246,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
     // If this anchor element has an HREF then it is sensitive to
     // mouse events (otherwise ignore them).
     nsAutoString href;
-    nsresult result = GetAttribute(nsString("href"), href);
+    nsresult result = GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
     if (NS_CONTENT_ATTR_HAS_VALUE == result) {
       switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -271,10 +272,10 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
         if (activeLink == this) {
           if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
             nsAutoString base, target;
-            GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-            GetAttribute(nsString("target"), target);
+            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base);
+            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
             if (target.Length() == 0) {
-              GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+              GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, target);
             }
             mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
                                base, href, target, PR_TRUE);
@@ -291,10 +292,10 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       case NS_MOUSE_ENTER:
       {
         nsAutoString base, target;
-        GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-        GetAttribute(nsString("target"), target);
+        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base);
+        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
         if (target.Length() == 0) {
-          GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+          GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, target);
         }
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
                            base, href, target, PR_FALSE);
@@ -320,10 +321,9 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

@@ -271,7 +271,7 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
-                                       nsHTMLValue& aValue,
+                                       const nsHTMLValue& aValue,
                                        nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
@@ -334,11 +334,11 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
         if (activeLink == this) {
           if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
             nsAutoString base, href, target;
-            GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-            GetAttribute(nsString("href"), href);
-            GetAttribute(nsString("target"), target);
+            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base);
+            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
+            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
             if (target.Length() == 0) {
-              GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+              GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, target);
             }
             mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_TRUE);
             aEventStatus = nsEventStatus_eConsumeNoDefault; 
@@ -355,11 +355,11 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
       //mouse enter doesn't work yet.  Use move until then.
       {
         nsAutoString base, href, target;
-        GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-        GetAttribute(nsString("href"), href);
-        GetAttribute(nsString("target"), target);
+        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base);
+        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
+        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
         if (target.Length() == 0) {
-          GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+          GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, target);
         }
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
@@ -419,10 +419,9 @@ nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
 
 NS_IMETHODIMP
 nsHTMLButtonElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

@@ -60,7 +60,7 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
   // Strength is an out-of-band weighting, always 0 here
-  NS_IMETHOD GetStrength(PRInt32& aStrength);
+  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
                           nsIPresContext* aPresContext);
@@ -84,7 +84,7 @@ public:
   NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   // Strength is an out-of-band weighting, always maxint here
-  NS_IMETHOD GetStrength(PRInt32& aStrength);
+  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, 
                           nsIPresContext* aPresContext);
@@ -243,7 +243,7 @@ BodyRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 // Strength is an out-of-band weighting, useful for mapping CSS ! important
 // always 0 here
 NS_IMETHODIMP
-BodyRule::GetStrength(PRInt32& aStrength)
+BodyRule::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 0;
   return NS_OK;
@@ -266,14 +266,14 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
       if (0 < attrCount) {
         // if marginwidth/marginheigth is set in our attribute zero out left,right/top,bottom padding
         // nsBodyFrame::DidSetStyleContext will add the appropriate values to padding 
-        mPart->GetAttribute(nsHTMLAtoms::marginwidth, value);
+        mPart->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
         if (eHTMLUnit_Pixel == value.GetUnit()) {
           styleSpacing->mPadding.SetLeft(zero);
           styleSpacing->mPadding.SetRight(zero);
           count++;
         }
 
-        mPart->GetAttribute(nsHTMLAtoms::marginheight, value);
+        mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
         if (eHTMLUnit_Pixel == value.GetUnit()) {
           styleSpacing->mPadding.SetTop(zero);
           styleSpacing->mPadding.SetBottom(zero);
@@ -394,7 +394,7 @@ BodyFixupRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 
 // Strength is an out-of-band weighting, always MaxInt here
 NS_IMETHODIMP
-BodyFixupRule::GetStrength(PRInt32& aStrength)
+BodyFixupRule::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 2000000000;
   return NS_OK;
@@ -525,7 +525,7 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLBodyElement::AttributeToString(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue,
+                                     const nsHTMLValue& aValue,
                                      nsString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
@@ -729,10 +729,9 @@ nsHTMLBodyElement::GetInlineStyleRule(nsIStyleRule*& aResult)
 
 NS_IMETHODIMP
 nsHTMLBodyElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

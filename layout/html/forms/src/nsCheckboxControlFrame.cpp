@@ -147,7 +147,7 @@ nsCheckboxControlFrame::GetChecked(PRBool* aResult)
     result = mContent->QueryInterface(kIHTMLContentIID, (void**)&iContent);
     if ((NS_OK == result) && iContent) {
       nsHTMLValue value;
-      result = iContent->GetAttribute(nsHTMLAtoms::checked, value);
+      result = iContent->GetHTMLAttribute(nsHTMLAtoms::checked, value);
       if (NS_CONTENT_ATTR_HAS_VALUE == result) {
         *aResult = PR_TRUE;
       }

@@ -129,19 +129,22 @@ public:
     { return mInner.RemoveChildAt(aIndex, aNotify); }
   NS_IMETHOD IsSynthetic(PRBool& aResult)
     { return mInner.IsSynthetic(aResult); }
-  NS_IMETHOD SetAttribute(const nsString& aName,
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsString& aValue,
                           PRBool aNotify)
     { return NS_OK; }
-  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aResult) const
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                          nsString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+                            PRBool aNotify)
     { return NS_OK; }
-  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
-                                  PRInt32& aCountResult) const
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                PRInt32& aNameSpaceID, 
+                                nsIAtom*& aName) const
     { 
-      aCountResult = 0;
-      return NS_OK;
+      aName = nsnull;
+      return NS_ERROR_ILLEGAL_VALUE;
     }
   NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const
     { 

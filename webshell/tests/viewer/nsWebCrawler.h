@@ -142,6 +142,9 @@ protected:
   nsIAtom* mLinkTag;
   nsIAtom* mFrameTag;
   nsIAtom* mIFrameTag;
+  nsIAtom* mHrefAttr;
+  nsIAtom* mSrcAttr;
+  nsIAtom* mBaseHrefAttr;
   AtomHashTable* mVisited;
   nsString* mFilter;
   nsString mOutputDir;

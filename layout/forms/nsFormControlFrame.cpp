@@ -49,6 +49,7 @@
 #include "nsIContent.h"
 #include "nsGlobalVariables.h"
 #include "nsStyleUtil.h"
+#include "nsINameSpaceManager.h"
 
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -524,7 +525,7 @@ nsFormControlFrame::GetMaxLength(PRInt32* aSize)
   mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
     nsHTMLValue value;
-    result = content->GetAttribute(nsHTMLAtoms::maxlength, value);
+    result = content->GetHTMLAttribute(nsHTMLAtoms::maxlength, value);
     if (eHTMLUnit_Integer == value.GetUnit()) { 
       *aSize = value.GetIntValue();
     }
@@ -542,7 +543,7 @@ nsFormControlFrame::GetSize(PRInt32* aSize) const
   mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
     nsHTMLValue value;
-    result = content->GetAttribute(nsHTMLAtoms::size, value);
+    result = content->GetHTMLAttribute(nsHTMLAtoms::size, value);
     if (eHTMLUnit_Integer == value.GetUnit()) { 
       *aSize = value.GetIntValue();
     }
@@ -575,7 +576,7 @@ nsFormControlFrame::GetName(nsString* aResult)
     result = mContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
     if ((NS_OK == result) && formControl) {
       nsHTMLValue value;
-      result = formControl->GetAttribute(nsHTMLAtoms::name, value);
+      result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
       if (NS_CONTENT_ATTR_HAS_VALUE == result) {
         if (eHTMLUnit_String == value.GetUnit()) {
           value.GetStringValue(*aResult);
@@ -596,7 +597,7 @@ nsFormControlFrame::GetValue(nsString* aResult)
     result = mContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
     if ((NS_OK == result) && formControl) {
       nsHTMLValue value;
-      result = formControl->GetAttribute(nsHTMLAtoms::value, value);
+      result = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
       if (NS_CONTENT_ATTR_HAS_VALUE == result) {
         if (eHTMLUnit_String == value.GetUnit()) {
           value.GetStringValue(*aResult);
@@ -788,12 +789,12 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
   nsAutoString valAttr;
   nsresult valStatus = NS_CONTENT_ATTR_NOT_THERE;
   if (nsnull != aSpec.mColValueAttr) {
-    valStatus = hContent->GetAttribute(aSpec.mColValueAttr, valAttr);
+    valStatus = hContent->GetAttribute(kNameSpaceID_HTML, aSpec.mColValueAttr, valAttr);
   }
   nsHTMLValue colAttr;
   nsresult colStatus = NS_CONTENT_ATTR_NOT_THERE;
   if (nsnull != aSpec.mColSizeAttr) {
-    colStatus = hContent->GetAttribute(aSpec.mColSizeAttr, colAttr);
+    colStatus = hContent->GetHTMLAttribute(aSpec.mColSizeAttr, colAttr);
   }
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
@@ -842,7 +843,7 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
   nsHTMLValue rowAttr;
   nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
   if (nsnull != aSpec.mRowSizeAttr) {
-    rowStatus = hContent->GetAttribute(aSpec.mRowSizeAttr, rowAttr);
+    rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
   }
   if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
     PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());

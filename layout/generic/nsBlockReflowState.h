@@ -4408,7 +4408,7 @@ nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
   if (mContent && (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc))) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE ==
-        hc->GetAttribute(nsHTMLAtoms::start, value)) {
+        hc->GetHTMLAttribute(nsHTMLAtoms::start, value)) {
       if (eHTMLUnit_Integer == value.GetUnit()) {
         ordinal = value.GetIntValue();
         if (ordinal <= 0) {

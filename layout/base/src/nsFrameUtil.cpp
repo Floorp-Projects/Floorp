@@ -25,6 +25,7 @@
 #include "nsIURL.h"
 #include "nsIInputStream.h"
 #include "nsHTMLEntities.h" 
+#include "nsINameSpaceManager.h" 
 #include "stdlib.h"
 
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
@@ -164,22 +165,24 @@ static nsresult
 AddAttributes(const nsIParserNode& aNode, nsIContent* aContent)
 {
   // Add tag attributes to the content attributes
-  nsAutoString k, v;
+  nsAutoString name, value;
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
     const nsString& key = aNode.GetKeyAt(i);
-    k.Truncate();
-    k.Append(key);
+    // XXX need to parse namespace from name
+    // XXX need to uppercase name if HTML namespace
+    key.ToUpperCase(name);
 
-    nsAutoString value;
-    if (NS_CONTENT_ATTR_NOT_THERE == aContent->GetAttribute(k, value)) {
+    nsIAtom* nameAtom = NS_NewAtom(name);    
+    if (NS_CONTENT_ATTR_NOT_THERE == aContent->GetAttribute(kNameSpaceID_None, nameAtom, value)) {
       // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, v);
+      GetAttributeValueAt(aNode, i, value);
 
       // Add attribute to content
-      aContent->SetAttribute(k, v, PR_FALSE);
+      aContent->SetAttribute(kNameSpaceID_None, nameAtom, value, PR_FALSE);
     }
+    NS_RELEASE(nameAtom);
   }
   return NS_OK;
 }

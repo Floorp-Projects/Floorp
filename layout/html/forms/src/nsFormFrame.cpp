@@ -242,7 +242,7 @@ nsFormFrame::GetMethod(PRInt32* aMethod)
     result = mContent->QueryInterface(kIHTMLContentIID, (void**)&form);
     if ((NS_OK == result) && form) {
       nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == (form->GetAttribute(nsHTMLAtoms::method, value))) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == (form->GetHTMLAttribute(nsHTMLAtoms::method, value))) {
         if (eHTMLUnit_Enumerated == value.GetUnit()) {
           *aMethod = value.GetIntValue();
           NS_RELEASE(form);
@@ -265,7 +265,7 @@ nsFormFrame::GetEnctype(PRInt32* aEnctype)
     result = mContent->QueryInterface(kIHTMLContentIID, (void**)&form);
     if ((NS_OK == result) && form) {
       nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == (form->GetAttribute(nsHTMLAtoms::enctype, value))) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == (form->GetHTMLAttribute(nsHTMLAtoms::enctype, value))) {
         if (eHTMLUnit_Enumerated == value.GetUnit()) {
           *aEnctype = value.GetIntValue();
           NS_RELEASE(form);
@@ -1173,7 +1173,7 @@ nsFormFrame::GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent)
     content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
     if (nsnull != htmlContent) {
       nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetAttribute(nsHTMLAtoms::disabled, value)) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::disabled, value)) {
         result = PR_TRUE;
       }
       NS_RELEASE(htmlContent);
@@ -1199,7 +1199,7 @@ nsFormFrame::GetReadonly(nsIFrame* aChildFrame, nsIContent* aContent)
     content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
     if (nsnull != htmlContent) {
       nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetAttribute(nsHTMLAtoms::readonly, value)) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::readonly, value)) {
         result = PR_TRUE;
       }
       NS_RELEASE(htmlContent);
@@ -1225,7 +1225,7 @@ nsFormFrame::GetName(nsIFrame* aChildFrame, nsString& aName, nsIContent* aConten
     result = content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
     if (NS_SUCCEEDED(result) && (nsnull != htmlContent)) {
       nsHTMLValue value;
-      result = htmlContent->GetAttribute(nsHTMLAtoms::name, value);
+      result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::name, value);
       if (NS_CONTENT_ATTR_HAS_VALUE == result) {
         if (eHTMLUnit_String == value.GetUnit()) {
           value.GetStringValue(aName);
@@ -1254,7 +1254,7 @@ nsFormFrame::GetValue(nsIFrame* aChildFrame, nsString& aValue, nsIContent* aCont
     result = content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
     if (NS_SUCCEEDED(result) && (nsnull != htmlContent)) {
       nsHTMLValue value;
-      result = htmlContent->GetAttribute(nsHTMLAtoms::value, value);
+      result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::value, value);
       if (NS_CONTENT_ATTR_HAS_VALUE == result) {
         if (eHTMLUnit_String == value.GetUnit()) {
           value.GetStringValue(aValue);

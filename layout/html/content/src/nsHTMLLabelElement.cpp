@@ -214,7 +214,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 NS_IMETHODIMP
 nsHTMLLabelElement::GetHtmlFor(nsString& aValue)
 {
-  mInner.GetAttribute(nsHTMLAtoms::_for, aValue);                 
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_for, aValue);                 
   return NS_OK;                                                    
 }  
 
@@ -225,7 +225,7 @@ nsHTMLLabelElement::SetHtmlFor(const nsString& aValue)
   static char whitespace[] = " \r\n\t";
   nsString value(aValue);
   value.Trim(whitespace, PR_TRUE, PR_TRUE);
-  return mInner.SetAttribute(nsHTMLAtoms::defaultvalue, value, PR_TRUE);
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue, value, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -238,7 +238,7 @@ nsHTMLLabelElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLLabelElement::AttributeToString(nsIAtom* aAttribute,
-                                      nsHTMLValue& aValue,
+                                      const nsHTMLValue& aValue,
                                       nsString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
@@ -272,10 +272,9 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLLabelElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

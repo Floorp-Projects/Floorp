@@ -49,6 +49,7 @@
 #include "nsRepository.h"
 #include "nsParserCIID.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsINameSpaceManager.h"
 
 #ifdef PCB_USE_PROTOCOL_CONNECTION
 // beard: how else would we get the referrer to a URL?
@@ -697,7 +698,7 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent)
   
   if ((nsnull != name) && 
       (area.EqualsIgnoreCase(name) || anchor.EqualsIgnoreCase(name)) &&
-      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute("HREF", attr))) {
+      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, attr))) {
       result = PR_TRUE;
   }
 
@@ -733,7 +734,7 @@ nsHTMLDocument::MatchAnchors(nsIContent *aContent)
   
   if ((nsnull != name) && 
       anchor.EqualsIgnoreCase(name) &&
-      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute("NAME", attr))) {
+      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, attr))) {
       result = PR_TRUE;
   }
 
@@ -860,15 +861,14 @@ nsHTMLDocument::Writeln(JSContext *cx, jsval *argv, PRUint32 argc)
 nsIContent *
 nsHTMLDocument::MatchName(nsIContent *aContent, const nsString& aName)
 {
-  static nsAutoString name("NAME"), id("ID");
   nsAutoString value;
   nsIContent *result = nsnull;
 
-  if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(id, value)) &&
+  if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, value)) &&
       aName.Equals(value)) {
     return aContent;
   }
-  else if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(name, value)) &&
+  else if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, value)) &&
            aName.Equals(value)) {
     return aContent;
   }
@@ -1050,8 +1050,6 @@ static PRBool
 IsNamedItem(nsIContent* aContent, nsIAtom *aTag,
             PRBool aInForm, nsString& aName)
 {
-  static nsAutoString name("NAME");
-
   // Only the content types reflected in Level 0 with a NAME
   // attribute are registered. Images and forms always get 
   // reflected up to the document. Applets and embeds only go
@@ -1059,7 +1057,7 @@ IsNamedItem(nsIContent* aContent, nsIAtom *aTag,
   if ((aTag == nsHTMLAtoms::img) || (aTag == nsHTMLAtoms::form) ||
       (!aInForm && ((aTag == nsHTMLAtoms::applet) || 
                     (aTag == nsHTMLAtoms::embed)))) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(name, aName)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aName)) {
       return PR_TRUE;
     }
   }

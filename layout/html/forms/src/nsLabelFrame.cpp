@@ -196,7 +196,7 @@ nsLabelFrame::GetFor(nsString& aResult)
     result = mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
     if ((NS_OK == result) && htmlContent) {
       nsHTMLValue value;
-      result = htmlContent->GetAttribute(nsHTMLAtoms::_for, value);
+      result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::_for, value);
       if (NS_CONTENT_ATTR_HAS_VALUE == result) {
         if (eHTMLUnit_String == value.GetUnit()) {
           value.GetStringValue(aResult);
@@ -286,7 +286,7 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
         if ((NS_OK == result) && (nsnull != htmlContent)) {
           nsHTMLValue value;
           nsAutoString id;
-          result = htmlContent->GetAttribute(nsHTMLAtoms::id, value);
+          result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::id, value);
           if ((NS_CONTENT_ATTR_HAS_VALUE == result) && (eHTMLUnit_String == value.GetUnit())) {
             value.GetStringValue(id);
             id.Trim(whitespace, PR_TRUE, PR_TRUE);    

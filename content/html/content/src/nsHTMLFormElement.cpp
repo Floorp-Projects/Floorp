@@ -252,13 +252,13 @@ nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 NS_IMETHODIMP
 nsHTMLFormElement::GetName(nsString& aValue)
 {
-  return mInner.GetAttribute(nsHTMLAtoms::name, aValue);
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aValue);
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::SetName(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::name, aValue, PR_TRUE);
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aValue, PR_TRUE);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
@@ -352,7 +352,7 @@ nsHTMLFormElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLFormElement::AttributeToString(nsIAtom* aAttribute,
-                              nsHTMLValue& aValue,
+                              const nsHTMLValue& aValue,
                               nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::method) {
@@ -439,7 +439,7 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild, PRBool aChildIsRef)
 NS_IMETHODIMP
 nsHTMLFormElement::GetEncoding(nsString& aEncoding)
 {
-  return mInner.GetAttribute(nsHTMLAtoms::encoding, aEncoding);
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::encoding, aEncoding);
 }
  
 NS_IMETHODIMP    
@@ -581,9 +581,9 @@ nsFormControlList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
       if (NS_OK == result) {
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
-        if (((content->GetAttribute("NAME", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+        if (((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name))) ||
-            ((content->GetAttribute("ID", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+            ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
           result = control->QueryInterface(kIDOMNodeIID, (void **)aReturn);
         }
@@ -597,10 +597,9 @@ nsFormControlList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

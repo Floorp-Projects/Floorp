@@ -275,7 +275,7 @@ nsHTMLTextAreaElement::GetValue(nsString& aValue)
     }
   } 
 
-  return mInner.GetAttribute(nsHTMLAtoms::value, aValue);
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue);
 }
 
 
@@ -291,13 +291,13 @@ nsHTMLTextAreaElement::SetValue(const nsString& aValue)
     }
   }
 
-  return mInner.SetAttribute(nsHTMLAtoms::value, aValue, PR_TRUE); 
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue, PR_TRUE); 
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
 {
-  mInner.GetAttribute(nsHTMLAtoms::defaultvalue, aDefaultValue);                 
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue, aDefaultValue);                 
   return NS_OK;                                                    
 }  
 
@@ -308,8 +308,8 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
   static char whitespace[] = " \r\n\t";
   nsString value(aDefaultValue);
   value.Trim(whitespace, PR_TRUE, PR_FALSE);
-  mInner.SetAttribute(nsHTMLAtoms::defaultvalue, value, PR_TRUE);
-  mInner.SetAttribute(nsHTMLAtoms::value, value, PR_TRUE);
+  mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue, value, PR_TRUE);
+  mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, value, PR_TRUE);
   return NS_OK;
 
 }
@@ -344,7 +344,7 @@ nsHTMLTextAreaElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::AttributeToString(nsIAtom* aAttribute,
-                                         nsHTMLValue& aValue,
+                                         const nsHTMLValue& aValue,
                                          nsString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
@@ -447,10 +447,9 @@ nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

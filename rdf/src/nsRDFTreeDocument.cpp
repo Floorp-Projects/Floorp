@@ -23,6 +23,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
 #include "nsIServiceManager.h"
+#include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFDocument.h"
 #include "rdf.h"
@@ -120,12 +121,26 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
+static nsIAtom* kIdAtom;
+static nsIAtom* kOpenAtom;
+
 RDFTreeDocumentImpl::RDFTreeDocumentImpl(void)
 {
+  if (nsnull == kIdAtom) {
+    kIdAtom = NS_NewAtom("ID");
+    kOpenAtom = NS_NewAtom("open");
+  }
+  else {
+    NS_ADDREF(kIdAtom);
+    NS_ADDREF(kOpenAtom);
+  }
 }
 
 RDFTreeDocumentImpl::~RDFTreeDocumentImpl(void)
 {
+  nsrefcnt refcnt;
+  NS_RELEASE2(kIdAtom, refcnt);
+  NS_RELEASE2(kOpenAtom, refcnt);
 }
 
 
@@ -238,12 +253,12 @@ RDFTreeDocumentImpl::AddTreeChild(nsIRDFContent* parent,
 
     s = p;
 
-    if (NS_FAILED(rv = child->SetAttribute("ID", s, PR_FALSE)))
+    if (NS_FAILED(rv = child->SetAttribute(kNameSpaceID_HTML, kIdAtom, s, PR_FALSE)))
         goto done;
 
 #define ALL_NODES_OPEN_HACK
 #ifdef ALL_NODES_OPEN_HACK
-    if (NS_FAILED(rv = child->SetAttribute("OPEN", "TRUE", PR_FALSE)))
+    if (NS_FAILED(rv = child->SetAttribute(kNameSpaceID_None, kOpenAtom, "TRUE", PR_FALSE)))
         goto done;
 #endif
 

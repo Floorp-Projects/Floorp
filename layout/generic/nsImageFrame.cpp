@@ -44,6 +44,7 @@
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDeviceContext.h"
+#include "nsINameSpaceManager.h"
 
 #ifndef _WIN32
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
@@ -423,11 +424,11 @@ nsImageFrame::Reflow(nsIPresContext&          aPresContext,
   // source URL and base URL
   if (eReflowReason_Initial == aReflowState.reason) {
     nsAutoString src, base;
-    if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) &&
+    if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) &&
         (src.Length() > 0)) {
       mImageLoader.SetURL(src);
       if (NS_CONTENT_ATTR_HAS_VALUE ==
-          mContent->GetAttribute(NS_HTML_BASE_HREF, base)) {
+          mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base)) {
         mImageLoader.SetBaseHREF(base);
       }
     }
@@ -637,7 +638,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   // If there's still room, display the alt-text
   if (!inner.IsEmpty()) {
     nsAutoString altText;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ALT", altText)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::alt, altText)) {
       DisplayAltText(aPresContext, aRenderingContext, altText, inner);
     }
   }
@@ -715,7 +716,7 @@ nsImageFrame::GetImageMap()
 {
   if (nsnull == mImageMap) {
     nsAutoString usemap;
-    mContent->GetAttribute("usemap", usemap);
+    mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);
     if (0 == usemap.Length()) {
       return nsnull;
     }
@@ -767,14 +768,14 @@ PRBool
 nsImageFrame::IsServerImageMap()
 {
   nsAutoString ismap;
-  return NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ismap", ismap);
+  return NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::ismap, ismap);
 }
 
 PRIntn
 nsImageFrame::GetSuppress()
 {
   nsAutoString s;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("suppress", s)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::suppress, s)) {
     if (s.EqualsIgnoreCase("true")) {
       return SUPPRESS;
     } else if (s.EqualsIgnoreCase("false")) {
@@ -848,9 +849,9 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
       else {
         suppress = GetSuppress();
         nsAutoString baseURL;
-        mContent->GetAttribute(NS_HTML_BASE_HREF, baseURL);
+        mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, baseURL);
         nsAutoString src;
-        mContent->GetAttribute("src", src);
+        mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
         NS_MakeAbsoluteURL(docURL, baseURL, src, absURL);
 
         // Note: We don't subtract out the border/padding here to remain
@@ -938,7 +939,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
     mImageLoader.GetURL(oldSRC);
     nsAutoString newSRC;
 
-    aChild->GetAttribute("src", newSRC);
+    aChild->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, newSRC);
     if (!oldSRC.Equals(newSRC)) {
       mSizeFrozen = PR_TRUE;
       

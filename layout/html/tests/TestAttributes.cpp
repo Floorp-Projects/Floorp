@@ -31,6 +31,7 @@
 #include "nsMarkupDocument.h"
 #include "nsIURL.h"
 #include "nsIDOMText.h"
+#include "nsINameSpaceManager.h"
 
 void testAttributes(nsIHTMLContent* content) {
   nsIAtom* sBORDER = NS_NewAtom("BORDER");
@@ -41,46 +42,45 @@ void testAttributes(nsIHTMLContent* content) {
   nsString sempty("");
   nsString sfoo_gif("foo.gif");
 
-  content->SetAttribute(sBORDER, nsHTMLValue::kNull, PR_FALSE);
-  content->SetAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Pixel), PR_FALSE);
-  content->SetAttribute(sHEIGHT, sempty, PR_FALSE);
-  content->SetAttribute(sSRC, sfoo_gif, PR_FALSE);
+  content->SetHTMLAttribute(sBORDER, nsHTMLValue::kNull, PR_FALSE);
+  content->SetHTMLAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Pixel), PR_FALSE);
+  content->SetAttribute(kNameSpaceID_HTML, sHEIGHT, sempty, PR_FALSE);
+  content->SetAttribute(kNameSpaceID_HTML, sSRC, sfoo_gif, PR_FALSE);
 
   nsHTMLValue ret;
   nsresult rv;
-  rv = content->GetAttribute(sBORDER, ret);
+  rv = content->GetHTMLAttribute(sBORDER, ret);
   if ((rv != NS_CONTENT_ATTR_NO_VALUE) || (ret.GetUnit() != eHTMLUnit_Null)) {
     printf("test 0 failed\n");
   }
 
-  rv = content->GetAttribute(sWIDTH, ret);
+  rv = content->GetHTMLAttribute(sWIDTH, ret);
   if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (! (ret == nsHTMLValue(5, eHTMLUnit_Pixel)))) {
     printf("test 1 failed\n");
   }
 
-  rv = content->GetAttribute(sBAD, ret);
+  rv = content->GetHTMLAttribute(sBAD, ret);
   if (rv != NS_CONTENT_ATTR_NOT_THERE) {
     printf("test 2 failed\n");
   }
 
-  // Same, except different case strings
-
-  nsString sborder("border");
-  nsString strRet;
-  rv = ((nsIContent*)content)->GetAttribute(sborder, strRet);
-  if (rv != NS_CONTENT_ATTR_NO_VALUE) {
-    printf("test 3 (case comparison) failed\n");
-  }
-
-  content->UnsetAttribute(sWIDTH, PR_FALSE);
+  content->UnsetAttribute(kNameSpaceID_HTML, sWIDTH, PR_FALSE);
 
   nsISupportsArray* allNames;
   NS_NewISupportsArray(&allNames);
 
   PRInt32 na;
-  content->GetAllAttributeNames(allNames, na);
+  content->GetAttributeCount(na);
   if (na != 3) {
     printf("test 5 (unset attriubte) failed\n");
+  }
+  PRInt32 index;
+  for (index = 0; index < na; index++) {
+    nsIAtom* name;
+    PRInt32 nameSpaceID;
+    content->GetAttributeNameAt(index, nameSpaceID, name);
+    allNames->AppendElement(name);
+    NS_RELEASE(name);
   }
 
   PRBool borderFound = PR_FALSE,heightFound = PR_FALSE,srcFound = PR_FALSE;

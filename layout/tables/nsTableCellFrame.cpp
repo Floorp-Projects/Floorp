@@ -170,7 +170,7 @@ PRInt32 nsTableCellFrame::GetRowSpan()
   if (NS_OK==rv)
   {
     nsHTMLValue val;
-    hc->GetAttribute(nsHTMLAtoms::rowspan, val); 
+    hc->GetHTMLAttribute(nsHTMLAtoms::rowspan, val); 
     if (eHTMLUnit_Integer == val.GetUnit()) { 
        rowSpan=val.GetIntValue(); 
     }
@@ -187,7 +187,7 @@ PRInt32 nsTableCellFrame::GetColSpan()
   if (NS_OK==rv)
   {
     nsHTMLValue val;
-    hc->GetAttribute(nsHTMLAtoms::colspan, val); 
+    hc->GetHTMLAttribute(nsHTMLAtoms::colspan, val); 
     if (eHTMLUnit_Integer == val.GetUnit()) { 
        colSpan=val.GetIntValue(); 
     }

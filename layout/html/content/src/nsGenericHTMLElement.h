@@ -26,6 +26,7 @@
 #include "nsHTMLValue.h"
 #include "nsVoidArray.h"
 #include "nsIJSScriptObject.h"
+#include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 
 extern const nsIID kIDOMHTMLElementIID;
 extern const nsIID kIHTMLContentIID;
@@ -50,6 +51,15 @@ public:
   nsGenericHTMLElement();
   ~nsGenericHTMLElement();
 
+  // Implementation for nsIDOMElement
+  nsresult    GetDOMAttribute(const nsString& aName, nsString& aReturn);
+  nsresult    SetDOMAttribute(const nsString& aName, const nsString& aValue);
+  nsresult    RemoveAttribute(const nsString& aName);
+  nsresult    GetAttributeNode(const nsString& aName,
+                               nsIDOMAttr** aReturn);
+  nsresult    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
+  nsresult    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
+
   // Implementation for nsIDOMHTMLElement
   nsresult    GetId(nsString& aId);
   nsresult    SetId(const nsString& aId);
@@ -66,27 +76,24 @@ public:
   // Implementation for nsIContent
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
-  nsresult SetAttribute(const nsString& aName, const nsString& aValue,
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
                         PRBool aNotify);
-  nsresult GetAttribute(const nsString& aName, nsString& aResult) const;
-  nsresult UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify);
-  nsresult GetAllAttributeNames(nsISupportsArray* aArray,
-                                PRInt32& aCount) const;
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
+  nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
+  nsresult GetAttributeNameAt(PRInt32 aIndex,
+                              PRInt32& aNameSpaceID, 
+                              nsIAtom*& aName) const;
   nsresult GetAttributeCount(PRInt32& aResult) const;
   nsresult List(FILE* out, PRInt32 aIndent) const;
 
   // Implementation for nsIHTMLContent
   nsresult Compact();
-  nsresult SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                        PRBool aNotify);
-  nsresult SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                        PRBool aNotify);
-  nsresult GetAttribute(nsIAtom *aAttribute, nsString &aResult) const;
-  nsresult GetAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
-  nsresult SetID(nsIAtom* aID);
+  nsresult SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
+                            PRBool aNotify);
+  nsresult GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
   nsresult GetID(nsIAtom*& aResult) const;
-  nsresult SetClass(nsIAtom* aClass);
-  nsresult GetClass(nsIAtom*& aResult) const;
+  nsresult GetClasses(nsVoidArray& aArray) const;
+  nsresult HasClass(nsIAtom* aClass) const;
   nsresult GetContentStyleRule(nsIStyleRule*& aResult);
   nsresult GetInlineStyleRule(nsIStyleRule*& aResult);
   nsresult ToHTMLString(nsString& aResult) const;
@@ -94,7 +101,7 @@ public:
 
   //----------------------------------------
   nsresult AttributeToString(nsIAtom* aAttribute,
-                             nsHTMLValue& aValue,
+                             const nsHTMLValue& aValue,
                              nsString& aResult) const;
 
   void ListAttributes(FILE* out) const;
@@ -399,33 +406,22 @@ public:
   NS_IMETHOD Compact() {                                               \
     return _g.Compact();                                               \
   }                                                                    \
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue, \
-                          PRBool aNotify) {                            \
-    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
+  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,                     \
+                              const nsHTMLValue& aValue, PRBool aNotify) { \
+    return _g.SetHTMLAttribute(aAttribute, aValue, aNotify);           \
   }                                                                    \
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,                         \
-                          const nsHTMLValue& aValue, PRBool aNotify) { \
-    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
-  }                                                                    \
-  NS_IMETHOD GetAttribute(nsIAtom *aAttribute,                         \
-                          nsString &aResult) const {                   \
-    return _g.GetAttribute(aAttribute, aResult);                       \
-  }                                                                    \
-  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,                         \
-                          nsHTMLValue& aValue) const {                 \
-    return _g.GetAttribute(aAttribute, aValue);                        \
-  }                                                                    \
-  NS_IMETHOD  SetID(nsIAtom* aID) {                                    \
-    return _g.SetID(aID);                                              \
+  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,                     \
+                              nsHTMLValue& aValue) const {             \
+    return _g.GetHTMLAttribute(aAttribute, aValue);                    \
   }                                                                    \
   NS_IMETHOD GetID(nsIAtom*& aResult) const {                          \
     return _g.GetID(aResult);                                          \
   }                                                                    \
-  NS_IMETHOD SetClass(nsIAtom* aClass) {                               \
-    return _g.SetClass(aClass);                                        \
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const {                   \
+    return _g.GetClasses(aArray);                                      \
   }                                                                    \
-  NS_IMETHOD GetClass(nsIAtom*& aResult) const {                       \
-    return _g.GetClass(aResult);                                       \
+  NS_IMETHOD HasClass(nsIAtom* aClass) const {                         \
+    return _g.HasClass(aClass);                                        \
   }                                                                    \
   NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) {             \
     return _g.GetContentStyleRule(aResult);                            \
@@ -443,45 +439,32 @@ public:
                                const nsString& aValue,                 \
                                nsHTMLValue& aResult);                  \
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
-                               nsHTMLValue& aValue,                    \
+                               const nsHTMLValue& aValue,              \
                                nsString& aResult) const;               \
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;  \
-  NS_IMETHOD GetStyleHintForAttributeChange(                           \
-    const nsIContent *aNode,                                           \
-    const nsIAtom* aAttribute,                                         \
-    PRInt32 *aHint) const;                                             
+  NS_IMETHOD GetStyleHintForAttributeChange(const nsIAtom* aAttribute, \
+                                            PRInt32 *aHint) const;                                             
   
 #define NS_IMPL_IHTMLCONTENT_USING_GENERIC2(_g)                        \
   NS_IMETHOD Compact() {                                               \
     return _g.Compact();                                               \
   }                                                                    \
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue, \
-                          PRBool aNotify) {                            \
-    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
+  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,                     \
+                              const nsHTMLValue& aValue, PRBool aNotify) { \
+    return _g.SetHTMLAttribute(aAttribute, aValue, aNotify);           \
   }                                                                    \
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,                         \
-                          const nsHTMLValue& aValue, PRBool aNotify) { \
-    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
-  }                                                                    \
-  NS_IMETHOD GetAttribute(nsIAtom *aAttribute,                         \
-                          nsString &aResult) const {                   \
-    return _g.GetAttribute(aAttribute, aResult);                       \
-  }                                                                    \
-  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,                         \
-                          nsHTMLValue& aValue) const {                 \
-    return _g.GetAttribute(aAttribute, aValue);                        \
-  }                                                                    \
-  NS_IMETHOD  SetID(nsIAtom* aID) {                                    \
-    return _g.SetID(aID);                                              \
+  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,                     \
+                              nsHTMLValue& aValue) const {             \
+    return _g.GetHTMLAttribute(aAttribute, aValue);                    \
   }                                                                    \
   NS_IMETHOD GetID(nsIAtom*& aResult) const {                          \
     return _g.GetID(aResult);                                          \
   }                                                                    \
-  NS_IMETHOD SetClass(nsIAtom* aClass) {                               \
-    return _g.SetClass(aClass);                                        \
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const {                   \
+    return _g.GetClasses(aArray);                                      \
   }                                                                    \
-  NS_IMETHOD GetClass(nsIAtom*& aResult) const {                       \
-    return _g.GetClass(aResult);                                       \
+  NS_IMETHOD HasClass(nsIAtom* aClass) const {                         \
+    return _g.HasClass(aClass);                                        \
   }                                                                    \
   NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult);              \
   NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult);               \
@@ -495,13 +478,11 @@ public:
                                const nsString& aValue,                 \
                                nsHTMLValue& aResult);                  \
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
-                               nsHTMLValue& aValue,                    \
+                               const nsHTMLValue& aValue,              \
                                nsString& aResult) const;               \
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;  \
-  NS_IMETHOD GetStyleHintForAttributeChange(                           \
-    const nsIContent *aNode,                                           \
-    const nsIAtom* aAttribute,                                         \
-    PRInt32 *aHint) const;
+  NS_IMETHOD GetStyleHintForAttributeChange(const nsIAtom* aAttribute, \
+                                            PRInt32 *aHint) const;
 
 /**
  * This macro implements the portion of query interface that is
@@ -531,13 +512,13 @@ public:
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsString& aValue)                             \
   {                                                                  \
-    mInner.GetAttribute(nsHTMLAtoms::_atom, aValue);                 \
+    mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue); \
     return NS_OK;                                                    \
   }                                                                  \
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsString& aValue)                       \
   {                                                                  \
-    return mInner.SetAttribute(nsHTMLAtoms::_atom, aValue, PR_TRUE); \
+    return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue, PR_TRUE); \
   }
 
 /**
@@ -550,19 +531,19 @@ public:
   _class::Get##_method(PRBool* aValue)                                \
   {                                                                   \
     nsHTMLValue val;                                                  \
-    nsresult rv = mInner.GetAttribute(nsHTMLAtoms::_atom, val);       \
+    nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::_atom, val);   \
     *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                        \
     return NS_OK;                                                     \
   }                                                                   \
   NS_IMETHODIMP                                                       \
   _class::Set##_method(PRBool aValue)                                 \
   {                                                                   \
-    nsAutoString empty;                                               \
+    nsHTMLValue empty(eHTMLUnit_Empty);                               \
     if (aValue) {                                                     \
-      return mInner.SetAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE); \
+      return mInner.SetHTMLAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE); \
     }                                                                 \
     else {                                                            \
-      mInner.UnsetAttribute(nsHTMLAtoms::_atom, PR_TRUE);             \
+      mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, PR_TRUE);  \
       return NS_OK;                                                   \
     }                                                                 \
   }
@@ -579,7 +560,7 @@ public:
     nsHTMLValue value;                                              \
     *aValue = -1;                                                   \
     if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
-        mInner.GetAttribute(nsHTMLAtoms::_atom, value)) {           \
+        mInner.GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {       \
       if (value.GetUnit() == eHTMLUnit_Integer) {                   \
         *aValue = value.GetIntValue();                              \
       }                                                             \
@@ -590,7 +571,7 @@ public:
   _class::Set##_method(PRInt32 aValue)                              \
   {                                                                 \
     nsHTMLValue value(aValue, eHTMLUnit_Integer);                   \
-    return mInner.SetAttribute(nsHTMLAtoms::_atom, value, PR_TRUE); \
+    return mInner.SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE); \
   }
 
 #endif /* nsGenericHTMLElement_h___ */

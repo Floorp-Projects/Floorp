@@ -36,6 +36,7 @@
 #include "nsLayoutCID.h"
 #include "nsRect.h"
 #include "plhash.h"
+#include "nsINameSpaceManager.h"
 
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -165,6 +166,9 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mLinkTag = NS_NewAtom("A");
   mFrameTag = NS_NewAtom("FRAME");
   mIFrameTag = NS_NewAtom("IFRAME");
+  mHrefAttr = NS_NewAtom("HREF");
+  mSrcAttr = NS_NewAtom("SRC");
+  mBaseHrefAttr = NS_NewAtom("_BASE_HREF");
   mVisited = new AtomHashTable();
   mVerbose = nsnull;
   mRegressing = PR_FALSE;
@@ -190,6 +194,9 @@ nsWebCrawler::~nsWebCrawler()
   NS_IF_RELEASE(mLinkTag);
   NS_IF_RELEASE(mFrameTag);
   NS_IF_RELEASE(mIFrameTag);
+  NS_IF_RELEASE(mHrefAttr);
+  NS_IF_RELEASE(mSrcAttr);
+  NS_IF_RELEASE(mBaseHrefAttr);
   delete mVisited;
   if (nsnull!=mFilter)
     delete mFilter;
@@ -574,12 +581,12 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     // Get absolute url that tag targets
     nsAutoString base, src, absURLSpec;
     if (atom == mLinkTag) {
-      aNode->GetAttribute("href", src);
+      aNode->GetAttribute(kNameSpaceID_HTML, mHrefAttr, src);
     }
     else {
-      aNode->GetAttribute("src", src);
+      aNode->GetAttribute(kNameSpaceID_HTML, mSrcAttr, src);
     }
-    aNode->GetAttribute("_base_href", base);/* XXX not public knowledge! */
+    aNode->GetAttribute(kNameSpaceID_HTML, mBaseHrefAttr, base);/* XXX not public knowledge! */
     nsIURL* docURL = aDocument->GetDocumentURL();
     nsresult rv = NS_MakeAbsoluteURL(docURL, base, src, absURLSpec);
     if (NS_OK == rv) {
@@ -779,14 +786,19 @@ LoadOneTree(const nsString& aBaseName, const nsString& aOutputName,
   return NS_OK;
 }
 
+static nsIAtom* kX = NS_NewAtom("x");
+static nsIAtom* kY = NS_NewAtom("y");
+static nsIAtom* kW = NS_NewAtom("w");
+static nsIAtom* kH = NS_NewAtom("h");
+
 static void
 GetBBOX(nsIXMLContent* aContent, nsString& aResult)
 {
   nsAutoString x, y, w, h;
-  aContent->GetAttribute("x", x);
-  aContent->GetAttribute("y", y);
-  aContent->GetAttribute("w", w);
-  aContent->GetAttribute("h", h);
+  aContent->GetAttribute(kNameSpaceID_None, kX, x);
+  aContent->GetAttribute(kNameSpaceID_None, kY, y);
+  aContent->GetAttribute(kNameSpaceID_None, kW, w);
+  aContent->GetAttribute(kNameSpaceID_None, kH, h);
   aResult = x;
   aResult.Append(",");
   aResult.Append(y);

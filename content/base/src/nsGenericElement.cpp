@@ -55,7 +55,6 @@
 #include "prmem.h"
 
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLAttributes.h"
 
 NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -366,7 +365,13 @@ nsDOMAttributeMap::GetNamedItem(const nsString &aAttrName,
                               nsIDOMNode** aAttribute)
 {
   nsAutoString value;
-  mContent->GetAttribute(aAttrName, value);
+  // XXX need to parse namespace fom attribute name
+  // XXX need to uppercace name only if HTML namespace
+  nsAutoString upper;
+  aAttrName.ToUpperCase(upper);
+  nsIAtom* nameAtom = NS_NewAtom(upper);
+  mContent->GetAttribute(kNameSpaceID_HTML, nameAtom, value);
+  NS_RELEASE(nameAtom);
   *aAttribute  = (nsIDOMNode *) new nsDOMAttribute(aAttrName, value);
   return NS_OK;
 }
@@ -387,7 +392,12 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
   attribute->GetValue(value);
   NS_RELEASE(attribute);
 
-  mContent->SetAttribute(name, value, PR_TRUE);
+  // XXX need to parse namespace from attribute name
+  // XXX also need to uppercase name only if HTML namespace
+  name.ToUpperCase();
+  nsIAtom* nameAtom = NS_NewAtom(name);
+  mContent->SetAttribute(kNameSpaceID_HTML, nameAtom, value, PR_TRUE);
+  NS_RELEASE(nameAtom);
   return NS_OK;
 }
 
@@ -396,10 +406,12 @@ nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
 {
   nsresult res = GetNamedItem(aName, aReturn);
   if (NS_OK == res) {
+    // XXX need to parse namespace from attribute name
+    // XXX need to uppercase only if HTML namespace
     nsAutoString upper;
     aName.ToUpperCase(upper);
     nsIAtom* attr = NS_NewAtom(upper);
-    mContent->UnsetAttribute(attr, PR_TRUE);
+    mContent->UnsetAttribute(kNameSpaceID_HTML, attr, PR_TRUE);
   }
 
   return res;
@@ -409,27 +421,19 @@ nsresult
 nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsresult res = NS_ERROR_FAILURE;
-  nsAutoString name, value;
-  nsISupportsArray *attributes = nsnull;
-  if (NS_OK == NS_NewISupportsArray(&attributes)) {
-    PRInt32 count;
-    mContent->GetAllAttributeNames(attributes, count);
-    if (count > 0) {
-      if ((PRInt32)aIndex < count) {
-        nsISupports *att = attributes->ElementAt(aIndex);
-        static NS_DEFINE_IID(kIAtom, NS_IATOM_IID);
-        nsIAtom *atName = nsnull;
-        if (nsnull != att && NS_OK == att->QueryInterface(kIAtom, (void**)&atName)) {
-          atName->ToString(name);
-          if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(name, value)) {
-            *aReturn = (nsIDOMNode *)new nsDOMAttribute(name, value);
-            res = NS_OK;
-          }
-          NS_RELEASE(atName);
-        }
-      }
+
+  PRInt32 nameSpaceID;
+  nsIAtom*  nameAtom = nsnull;
+  if (NS_SUCCEEDED(mContent->GetAttributeNameAt(aIndex, nameSpaceID, nameAtom))) {
+    nsAutoString value;
+    if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(nameSpaceID, nameAtom, value)) {
+      // XXX need to prefix namespace if present
+      nsAutoString name;
+      nameAtom->ToString(name);
+      *aReturn = (nsIDOMNode *)new nsDOMAttribute(name, value);
+      res = NS_OK;
     }
-    NS_RELEASE(attributes);
+    NS_RELEASE(nameAtom);
   }
 
   return res;
@@ -745,6 +749,8 @@ nsGenericElement::GetTagName(nsString& aTagName)
 {
   aTagName.Truncate();
   if (nsnull != mTag) {
+    // note that we assume no namespace here, subclasses that support
+    // namespaces must override
     mTag->ToString(aTagName);
   }
   return NS_OK;
@@ -753,37 +759,52 @@ nsGenericElement::GetTagName(nsString& aTagName)
 nsresult
 nsGenericElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
 {
-  mContent->GetAttribute(aName, aReturn);
+  // XXX need to parse namespace from name
+  // XXX need to uppercase name if HTML namespace
+  nsIAtom* nameAtom = NS_NewAtom(aName);
+  mContent->GetAttribute(kNameSpaceID_None, nameAtom, aReturn);
+  NS_RELEASE(nameAtom);
   return NS_OK;
 }
 
 nsresult
 nsGenericElement::SetDOMAttribute(const nsString& aName,
-                                      const nsString& aValue)
+                                  const nsString& aValue)
 {
-  mContent->SetAttribute(aName, aValue, PR_TRUE);
+  // XXX need to parse namespace from name
+  // XXX need to uppercase name if HTML namespace
+  nsIAtom* nameAtom = NS_NewAtom(aName);
+  mContent->SetAttribute(kNameSpaceID_None, nameAtom, aValue, PR_TRUE);
+  NS_RELEASE(nameAtom);
   return NS_OK;
 }
 
 nsresult
 nsGenericElement::RemoveAttribute(const nsString& aName)
 {
-  nsAutoString upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* attr = NS_NewAtom(upper);
-  mContent->UnsetAttribute(attr, PR_TRUE);
-  NS_RELEASE(attr);
+  // XXX need to parse namespace from name
+  // XXX need to uppercase name if HTML namespace
+  nsIAtom* nameAtom = NS_NewAtom(aName);
+  mContent->UnsetAttribute(kNameSpaceID_None, nameAtom, PR_TRUE);
+  NS_RELEASE(nameAtom);
   return NS_OK;
 }
 
 nsresult
 nsGenericElement::GetAttributeNode(const nsString& aName,
-                                       nsIDOMAttr** aReturn)
+                                   nsIDOMAttr** aReturn)
 {
+  // XXX need to parse namespace from name
+  // XXX need to uppercase name if HTML namespace
+  nsIAtom* nameAtom = NS_NewAtom(aName);
   nsAutoString value;
-  if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(aName, value)) {
+  if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(kNameSpaceID_None, nameAtom, value)) {
     *aReturn = new nsDOMAttribute(aName, value);
   }
+  else {
+    *aReturn = nsnull;
+  }
+  NS_RELEASE(nameAtom);
   return NS_OK;
 }
 
@@ -801,7 +822,11 @@ nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
     if (NS_OK == res) {
       res = aAttribute->GetValue(value);
       if (NS_OK == res) {
-        mContent->SetAttribute(name, value, PR_TRUE);
+        // XXX need to parse namespace from name
+        // XXX need to uppercase name if HTML namespace
+        nsIAtom* nameAtom = NS_NewAtom(name);
+        mContent->SetAttribute(kNameSpaceID_None, nameAtom, value, PR_TRUE);
+        NS_RELEASE(nameAtom);
       }
     }
   }
@@ -820,10 +845,11 @@ nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
     nsAutoString name;
     res = aAttribute->GetName(name);
     if (NS_OK == res) {
-      nsAutoString upper;
-      name.ToUpperCase(upper);
-      nsIAtom* attr = NS_NewAtom(upper);
-      mContent->UnsetAttribute(attr, PR_TRUE);
+      // XXX need to parse namespace from name
+      // XXX need to uppercase name if HTML namespace
+      nsIAtom* nameAtom = NS_NewAtom(name);
+      mContent->UnsetAttribute(kNameSpaceID_None, nameAtom, PR_TRUE);
+      NS_RELEASE(nameAtom);
     }
   }
 
@@ -1454,57 +1480,25 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 
 //----------------------------------------------------------------------
 
-// Nothing for now, though XMLContent might want to define this
-// to deal with certain types of attributes with the HTML namespace
-static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
-                  nsIStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+struct nsGenericAttribute
 {
-}
-
-// XXX This routine was copied from EnsureWriteableAttributes and
-// modified slightly. Could be shared code.
-static nsresult EnsureWritableAttributes(nsIContent* aContent,
-                                         nsIHTMLAttributes*& aAttributes, 
-                                         PRBool aCreate)
-{
-  nsresult  result = NS_OK;
-
-  if (nsnull == aAttributes) {
-    if (PR_TRUE == aCreate) {
-      if (NS_OK == result) {
-        result = NS_NewHTMLAttributes(&aAttributes, nsnull, &MapAttributesInto);
-        if (NS_OK == result) {
-          aAttributes->AddContentRef();
-        }
-      }
-    }
+  nsGenericAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue)
+    : mNameSpaceID(aNameSpaceID),
+      mName(aName),
+      mValue(aValue)
+  {
+    NS_IF_ADDREF(mName);
   }
-  else {
-    // To allow for the case where the attribute set is shared
-    // between content.
-    PRInt32 contentRefCount;
-    aAttributes->GetContentRefCount(contentRefCount);
-    if (1 < contentRefCount) {
-      nsIHTMLAttributes*  attrs;
-      result = aAttributes->Clone(&attrs);
-      if (NS_OK == result) {
-        aAttributes->ReleaseContentRef();
-        NS_RELEASE(aAttributes);
-        aAttributes = attrs;
-        aAttributes->AddContentRef();
-      }
-    }
-  }
-  return result;
-}
 
-static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
-{
-  aAttributes->ReleaseContentRef();
-  NS_RELEASE(aAttributes);
-}
+  ~nsGenericAttribute(void)
+  {
+    NS_IF_RELEASE(mName);
+  }
+
+  PRInt32   mNameSpaceID;
+  nsIAtom*  mName;
+  nsString  mValue;
+};
 
 nsGenericContainerElement::nsGenericContainerElement()
 {
@@ -1513,13 +1507,19 @@ nsGenericContainerElement::nsGenericContainerElement()
 
 nsGenericContainerElement::~nsGenericContainerElement()
 {
-  PRInt32 n = mChildren.Count();
-  for (PRInt32 i = 0; i < n; i++) {
-    nsIContent* kid = (nsIContent *)mChildren.ElementAt(i);
+  PRInt32 count = mChildren.Count();
+  PRInt32 index;
+  for (index = 0; index < count; index++) {
+    nsIContent* kid = (nsIContent *)mChildren.ElementAt(index);
     NS_RELEASE(kid);
   }
   if (nsnull != mAttributes) {
-    ReleaseAttributes(mAttributes);
+    count = mAttributes->Count();
+    for (index = 0; index < count; index++) {
+      nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+      delete attr;
+    }
+    delete mAttributes;
   }
 }
 
@@ -1823,162 +1823,173 @@ nsGenericContainerElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aRetu
 
 
 nsresult 
-nsGenericContainerElement::SetAttribute(const nsString& aName, 
+nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                                         const nsString& aValue,
                                         PRBool aNotify)
 {
-  nsresult rv = NS_OK;;
-
-  nsIAtom* attr = NS_NewAtom(aName);
-  rv = EnsureWritableAttributes(mContent, mAttributes, PR_TRUE);
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 count;
-    rv = mAttributes->SetAttribute(attr, aValue, count);
-    if (0 == count) {
-      ReleaseAttributes(mAttributes);
-    }
-    if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-      mDocument->AttributeChanged(mContent, attr, NS_STYLE_HINT_UNKNOWN);
-    }
+  NS_ASSERTION(kNameSpaceID_Unknown != aNameSpaceID, "must have name space ID");
+  if (kNameSpaceID_Unknown == aNameSpaceID) {
+    return NS_ERROR_ILLEGAL_VALUE;
   }
-  NS_RELEASE(attr);
+  NS_ASSERTION(nsnull != aName, "must have attribute name");
+  if (nsnull == aName) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  return rv;
-}
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
-nsresult 
-nsGenericContainerElement::GetAttribute(const nsString& aName, 
-                                        nsString& aResult) const
-{
-  nsresult rv = NS_OK;;
-
-  nsIAtom* attr = NS_NewAtom(aName);
-  nsHTMLValue value;
-  char cbuf[20];
-  nscolor color;
+  if (nsnull == mAttributes) {
+    mAttributes = new nsVoidArray();
+  }
   if (nsnull != mAttributes) {
-    rv = mAttributes->GetAttribute(attr, value);
-    if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-      // XXX Again this is code that is copied from nsGenericHTMLElement
-      // and could potentially be shared. In any case, we don't expect
-      // anything that's not a string.
-      // Provide default conversions for most everything
-      switch (value.GetUnit()) {
-        case eHTMLUnit_Empty:
-          aResult.Truncate();
-          break;
-
-        case eHTMLUnit_String:
-        case eHTMLUnit_Null:
-          value.GetStringValue(aResult);
-          break;
-
-        case eHTMLUnit_Integer:
-          aResult.Truncate();
-          aResult.Append(value.GetIntValue(), 10);
-          break;
-
-        case eHTMLUnit_Pixel:
-          aResult.Truncate();
-          aResult.Append(value.GetPixelValue(), 10);
-          break;
-
-        case eHTMLUnit_Percent:
-          aResult.Truncate(0);
-          aResult.Append(PRInt32(value.GetPercentValue() * 100.0f), 10);
-          aResult.Append('%');
-          break;
-
-        case eHTMLUnit_Color:
-          color = nscolor(value.GetColorValue());
-          PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
-                      NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
-          aResult.Truncate(0);
-          aResult.Append(cbuf);
-          break;
-          
-        default:
-        case eHTMLUnit_Enumerated:
-          NS_NOTREACHED("no default enumerated value to string conversion");
-          rv = NS_CONTENT_ATTR_NOT_THERE;
-          break;
+    nsGenericAttribute* attr;
+    PRInt32 index;
+    PRInt32 count = mAttributes->Count();
+    for (index = 0; index < count; index++) {
+      attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+      if ((aNameSpaceID == attr->mNameSpaceID) && (aName == attr->mName)) {
+        attr->mValue = aValue;
+        rv = NS_OK;
+        break;
+      }
+    }
+    
+    if (index >= count) { // didn't find it
+      attr = new nsGenericAttribute(aNameSpaceID, aName, aValue);
+      if (nsnull != attr) {
+        mAttributes->AppendElement(attr);
+        rv = NS_OK;
       }
     }
   }
-  else {
-    rv = NS_CONTENT_ATTR_NOT_THERE;
+
+  if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
+    mDocument->AttributeChanged(mContent, aName, NS_STYLE_HINT_UNKNOWN);
   }
-  NS_RELEASE(attr);
-  
+
   return rv;
 }
 
 nsresult 
-nsGenericContainerElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
+nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                                        nsString& aResult) const
 {
-  nsresult rv = NS_OK;;
+  NS_ASSERTION(nsnull != aName, "must have attribute name");
+  if (nsnull == aName) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  rv = EnsureWritableAttributes(mContent, mAttributes, PR_FALSE);
+  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+
   if (nsnull != mAttributes) {
-    PRInt32 count;
-    rv = mAttributes->UnsetAttribute(aAttribute, count);
-    if (0 == count) {
-      ReleaseAttributes(mAttributes);
+    PRInt32 count = mAttributes->Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
+      if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
+        aResult = attr->mValue;
+        if (0 < aResult.Length()) {
+          rv = NS_CONTENT_ATTR_HAS_VALUE;
+        }
+        else {
+          rv = NS_CONTENT_ATTR_NO_VALUE;
+        }
+        break;
+      }
+    }
+  }
+
+  return rv;
+}
+
+nsresult 
+nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                                          PRBool aNotify)
+{
+  NS_ASSERTION(nsnull != aName, "must have attribute name");
+  if (nsnull == aName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsresult rv = NS_OK;
+
+  if (nsnull != mAttributes) {
+    PRInt32 count = mAttributes->Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+      if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
+        mAttributes->RemoveElementAt(index);
+        delete attr;
+        break;
+      }
     }
 
     if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-      mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
+      mDocument->AttributeChanged(mContent, aName, NS_STYLE_HINT_UNKNOWN);
     }
   }
 
   return rv;
 }
 
-nsresult 
-nsGenericContainerElement::GetAllAttributeNames(nsISupportsArray* aArray,
-                                                PRInt32& aCount) const
+nsresult
+nsGenericContainerElement::GetAttributeNameAt(PRInt32 aIndex,
+                                              PRInt32& aNameSpaceID, 
+                                              nsIAtom*& aName) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->GetAllAttributeNames(aArray, aCount);
+    nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(aIndex);
+    if (nsnull != attr) {
+      aNameSpaceID = attr->mNameSpaceID;
+      aName = attr->mName;
+      NS_IF_ADDREF(aName);
+      return NS_OK;
+    }
   }
-  aCount = 0;
-  return NS_OK;
+  aNameSpaceID = kNameSpaceID_None;
+  aName = nsnull;
+  return NS_ERROR_ILLEGAL_VALUE;
 }
 
 nsresult 
 nsGenericContainerElement::GetAttributeCount(PRInt32& aResult) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->Count(aResult);
+    aResult = mAttributes->Count();
   }
-  aResult = 0;
+  else {
+    aResult = 0;
+  }
   return NS_OK;
 }
 
 void
 nsGenericContainerElement::ListAttributes(FILE* out) const
 {
-  nsISupportsArray* attrs;
-  if (NS_OK == NS_NewISupportsArray(&attrs)) {
-    PRInt32 index, count;
-    GetAllAttributeNames(attrs, count);
-    for (index = 0; index < count; index++) {
-      // name
-      nsIAtom* attr = (nsIAtom*)attrs->ElementAt(index);
-      nsAutoString buffer;
-      attr->ToString(buffer);
+  PRInt32 index, count;
+  GetAttributeCount(count);
 
-      // value
-      nsAutoString value;
-      GetAttribute(buffer, value);
-      buffer.Append("=");
-      buffer.Append(value);
+  for (index = 0; index < count; index++) {
+    const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
+    nsAutoString buffer;
 
-      fputs(" ", out);
-      fputs(buffer, out);
-      NS_RELEASE(attr);
+    if (kNameSpaceID_None != attr->mNameSpaceID) {  // prefix namespace
+      buffer.Append(attr->mNameSpaceID, 10);
+      buffer.Append(':');
     }
-    NS_RELEASE(attrs);
+
+    // name
+    nsAutoString name;
+    attr->mName->ToString(name);
+    buffer.Append(name);
+
+    // value
+    buffer.Append("=");
+    buffer.Append(attr->mValue);
+
+    fputs(" ", out);
+    fputs(buffer, out);
   }
 }
 

@@ -21,7 +21,6 @@
 #include "nsIDocument.h"
 #include "nsIAtom.h"
 #include "nsIEventListenerManager.h"
-#include "nsIHTMLAttributes.h"
 #include "nsIDOMScriptObjectFactory.h"
 
 #include "nsIEventStateManager.h"
@@ -45,6 +44,10 @@ NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIXMLContentIID, (void**) aInstancePtrResult);
 }
 
+static nsIAtom* kLinkAtom;  // XXX these should get moved to nsXMLAtoms
+static nsIAtom* kHrefAtom;
+static nsIAtom* kShowAtom;
+
 nsXMLElement::nsXMLElement(nsIAtom *aTag)
 {
   NS_INIT_REFCNT();
@@ -53,11 +56,26 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
   mNameSpaceID = kNameSpaceID_None;
   mScriptObject = nsnull;
   mIsLink = PR_FALSE;
+
+  if (nsnull == kLinkAtom) {
+    kLinkAtom = NS_NewAtom("link");
+    kHrefAtom = NS_NewAtom("href");
+    kShowAtom = NS_NewAtom("show");
+  }
+  else {
+    NS_ADDREF(kLinkAtom);
+    NS_ADDREF(kHrefAtom);
+    NS_ADDREF(kShowAtom);
+  }
 }
  
 nsXMLElement::~nsXMLElement()
 {
   NS_IF_RELEASE(mNameSpacePrefix);
+  nsrefcnt  refcnt;
+  NS_RELEASE2(kLinkAtom, refcnt);
+  NS_RELEASE2(kHrefAtom, refcnt);
+  NS_RELEASE2(kShowAtom, refcnt);
 }
 
 NS_IMETHODIMP 
@@ -166,20 +184,19 @@ nsXMLElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 }
 
 NS_IMETHODIMP 
-nsXMLElement::SetAttribute(const nsString& aName, 
-			   const nsString& aValue,
-			   PRBool aNotify)
+nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+			                     const nsString& aValue,
+			                     PRBool aNotify)
 {
-  // XXX It sucks that we have to do a couple of strcmps for
+  // XXX It sucks that we have to do a strcmp for
   // every attribute set. It might be a bit more expensive
   // to create an atom.
-  // XXX this is wrong anyway, the attributes need to use the 
-  // namespace ID, not the prefix
-  if (aName.Equals("xml:link") && (aValue.Equals("simple"))) {
+  if ((kNameSpaceID_XML == aNameSpaceID) && 
+      (aName == kLinkAtom) && (aValue.Equals("simple"))) {
     mIsLink = PR_TRUE;
   }
 
-  return mInner.SetAttribute(aName, aValue, aNotify);
+  return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);
 }
 
 NS_IMETHODIMP 
@@ -221,8 +238,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
 	          nsLinkVerb verb = eLinkVerb_Replace;
 	          base.Truncate();
 	          target.Truncate();
-            GetAttribute(nsString("href"), href);
-            GetAttribute(nsString("show"), show);
+            GetAttribute(kNameSpaceID_XML, kHrefAtom, href);
+            GetAttribute(kNameSpaceID_XML, kShowAtom, show);
 	          // XXX Should probably do this using atoms 
 	          if (show.Equals("new")) {
 	            verb = eLinkVerb_New;
@@ -245,9 +262,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
       //mouse enter doesn't work yet.  Use move until then.
       {
         nsAutoString base, href, target;
-	base.Truncate();
-	target.Truncate();
-        GetAttribute(nsString("href"), href);
+        GetAttribute(kNameSpaceID_XML, kHrefAtom, href);
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }

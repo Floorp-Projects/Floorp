@@ -21,6 +21,9 @@
 #include "nsIDOMNode.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
+#include "nsINameSpaceManager.h"
+
+#include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
 
 nsContentList::nsContentList(nsIDocument *aDocument)
 {
@@ -197,9 +200,9 @@ nsContentList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
     if (nsnull != content) {
       nsAutoString name;
       // XXX Should it be an EqualsIgnoreCase?
-      if (((content->GetAttribute("NAME", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+      if (((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
            (aName.Equals(name))) ||
-          ((content->GetAttribute("ID", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+          ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
            (aName.Equals(name)))) {
         return content->QueryInterface(kIDOMNodeIID, (void **)aReturn);
       }

@@ -26,6 +26,7 @@
 #include "nsUnitConversion.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
+#include "nsINameSpaceManager.h"
 
 // Spacer type's
 #define TYPE_WORD  0            // horizontal space
@@ -84,19 +85,19 @@ SpacerFrame::Reflow(nsIPresContext&          aPresContext,
   if (nsnull != hc) {
     if (type != TYPE_IMAGE) {
       nsHTMLValue val;
-      ca = hc->GetAttribute(nsHTMLAtoms::size, val);
+      ca = hc->GetHTMLAttribute(nsHTMLAtoms::size, val);
       if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
         width = val.GetPixelValue();
       }
     } else {
       nsHTMLValue val;
-      ca = hc->GetAttribute(nsHTMLAtoms::width, val);
+      ca = hc->GetHTMLAttribute(nsHTMLAtoms::width, val);
       if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
         if (eHTMLUnit_Pixel == val.GetUnit()) {
           width = val.GetPixelValue();
         }
       }
-      ca = hc->GetAttribute(nsHTMLAtoms::height, val);
+      ca = hc->GetHTMLAttribute(nsHTMLAtoms::height, val);
       if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
         if (eHTMLUnit_Pixel == val.GetUnit()) {
           height = val.GetPixelValue();
@@ -143,7 +144,8 @@ SpacerFrame::GetType()
 {
   PRUint8 type = TYPE_WORD;
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("type", value)) {
+  // XXX this would be better served by storing as an enumerated value
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, value)) {
     if (value.EqualsIgnoreCase("line") ||
         value.EqualsIgnoreCase("vert") ||
         value.EqualsIgnoreCase("vertical")) {

@@ -312,7 +312,7 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext)
   nsIHTMLContent* content = nsnull;
   mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
   if (nsnull != content) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::border, htmlVal))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::border, htmlVal))) {
       nsHTMLUnit unit = htmlVal.GetUnit();
       PRInt32 intVal = 0;
       if (eHTMLUnit_Pixel == unit) {
@@ -493,7 +493,7 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
   nsIHTMLContent* content = nsnull;
   nsresult result = mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
   if (nsnull != content) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(aAttrType, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetHTMLAttribute(aAttrType, value)) {
       if (eHTMLUnit_String == value.GetUnit()) {
         value.GetStringValue(rowsCols);
         nsFramesetSpec* specs = new nsFramesetSpec[gMaxNumRowColSpecs];
@@ -688,7 +688,7 @@ nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent, PRBool aStandardMod
 {
   if (nsnull != aContent) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttribute(nsHTMLAtoms::frameborder, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetHTMLAttribute(nsHTMLAtoms::frameborder, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
         PRInt32 intValue;
         intValue = value.GetIntValue();
@@ -751,7 +751,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor()
   mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
   if (nsnull != content) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::bordercolor, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
       if (value.GetUnit() == eHTMLUnit_Color) {
         result = value.GetColorValue();
       } else if (value.GetUnit() == eHTMLUnit_String) {
@@ -777,7 +777,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
   aContent->QueryInterface(kIHTMLContentIID, (void**)&content);
   if (nsnull != content) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::bordercolor, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
       if (value.GetUnit() == eHTMLUnit_Color) {
         result = value.GetColorValue();
       } else if (value.GetUnit() == eHTMLUnit_String) {
@@ -1240,7 +1240,7 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
     content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
     if (nsnull != htmlContent) {
       nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetAttribute(nsHTMLAtoms::noresize, value)) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::noresize, value)) {
         result = PR_TRUE;
       }
       NS_RELEASE(htmlContent);

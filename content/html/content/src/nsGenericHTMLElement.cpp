@@ -128,7 +128,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
 
   *aDecl = nsnull;
   if (nsnull != mContent) {
-    mContent->GetAttribute(nsHTMLAtoms::style, val);
+    mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
     if (eHTMLUnit_ISupports == val.GetUnit()) {
       rule = (nsIStyleRule*) val.GetISupportsValue();
       result = rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule);
@@ -146,9 +146,9 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
           cssRule->SetDeclaration(*aDecl);
           cssRule->SetWeight(0x7fffffff);
           rule = (nsIStyleRule *)cssRule;
-          result = mContent->SetAttribute(nsHTMLAtoms::style, 
-                                          nsHTMLValue(cssRule), 
-                                          PR_FALSE);
+          result = mContent->SetHTMLAttribute(nsHTMLAtoms::style, 
+                                              nsHTMLValue(cssRule), 
+                                              PR_FALSE);
           NS_RELEASE(cssRule);
         }
         else {
@@ -242,73 +242,156 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   }
 }
 
+  // Implementation for nsIDOMElement
+nsresult
+nsGenericHTMLElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
+{
+  nsAutoString  upper;
+  aName.ToUpperCase(upper);
+  return nsGenericElement::GetDOMAttribute(upper, aReturn);
+}
+
+nsresult
+nsGenericHTMLElement::SetDOMAttribute(const nsString& aName, const nsString& aValue)
+{
+  nsAutoString  upper;
+  aName.ToUpperCase(upper);
+  return nsGenericElement::SetDOMAttribute(upper, aValue);
+}
+
+nsresult
+nsGenericHTMLElement::RemoveAttribute(const nsString& aName)
+{
+  nsAutoString  upper;
+  aName.ToUpperCase(upper);
+  return nsGenericElement::RemoveAttribute(upper);
+}
+
+nsresult
+nsGenericHTMLElement::GetAttributeNode(const nsString& aName,
+                                       nsIDOMAttr** aReturn)
+{
+  nsAutoString  upper;
+  aName.ToUpperCase(upper);
+  return nsGenericElement::GetAttributeNode(upper, aReturn);
+}
+
+nsresult
+nsGenericHTMLElement::SetAttributeNode(nsIDOMAttr* aAttribute, nsIDOMAttr** aReturn)
+{
+  NS_PRECONDITION(nsnull != aAttribute, "null attribute");
+
+  nsresult res = NS_ERROR_FAILURE;
+
+  if (nsnull != aAttribute) {
+    nsAutoString name, value;
+    res = aAttribute->GetName(name);
+    if (NS_OK == res) {
+      res = aAttribute->GetValue(value);
+      if (NS_OK == res) {
+        // XXX need to parse out namespace
+        // XXX need to only uppercase if HTML namespace (or none since this is an HTML element)
+        name.ToUpperCase();
+        nsIAtom* nameAtom = NS_NewAtom(name);
+        mContent->SetAttribute(kNameSpaceID_HTML, nameAtom, value, PR_TRUE);
+        NS_RELEASE(nameAtom);
+      }
+    }
+  }
+  return res;
+}
+
+nsresult
+nsGenericHTMLElement::RemoveAttributeNode(nsIDOMAttr* aAttribute, nsIDOMAttr** aReturn)
+{
+  NS_PRECONDITION(nsnull != aAttribute, "null attribute");
+
+  nsresult res = NS_ERROR_FAILURE;
+
+  if (nsnull != aAttribute) {
+    nsAutoString name;
+    res = aAttribute->GetName(name);
+    if (NS_OK == res) {
+      // XXX need to parse out namespace
+      // XXX need to only uppercase if HTML namespace (or none since this is an HTML element)
+      name.ToUpperCase();
+      nsIAtom* nameAtom = NS_NewAtom(name);
+      mContent->UnsetAttribute(kNameSpaceID_HTML, nameAtom, PR_TRUE);
+      NS_RELEASE(nameAtom);
+    }
+  }
+
+  return res;
+}
+
+
 nsresult
 nsGenericHTMLElement::GetId(nsString& aId)
 {
-  GetAttribute(nsHTMLAtoms::id, aId);
+  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aId);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetId(const nsString& aId)
 {
-  SetAttribute(nsHTMLAtoms::id, aId, PR_TRUE);
+  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aId, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetTitle(nsString& aTitle)
 {
-  GetAttribute(nsHTMLAtoms::title, aTitle);
+  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, aTitle);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetTitle(const nsString& aTitle)
 {
-  SetAttribute(nsHTMLAtoms::title, aTitle, PR_TRUE);
+  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, aTitle, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetLang(nsString& aLang)
 {
-  GetAttribute(nsHTMLAtoms::lang, aLang);
+  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::lang, aLang);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetLang(const nsString& aLang)
 {
-  SetAttribute(nsHTMLAtoms::lang, aLang, PR_TRUE);
+  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::lang, aLang, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetDir(nsString& aDir)
 {
-  GetAttribute(nsHTMLAtoms::dir, aDir);
+  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::dir, aDir);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetDir(const nsString& aDir)
 {
-  SetAttribute(nsHTMLAtoms::dir, aDir, PR_TRUE);
+  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::dir, aDir, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetClassName(nsString& aClassName)
 {
-  GetAttribute(nsHTMLAtoms::kClass, aClassName);
+  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, aClassName);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetClassName(const nsString& aClassName)
 {
-  SetAttribute(nsHTMLAtoms::kClass, aClassName, PR_TRUE);
+  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, aClassName, PR_TRUE);
   return NS_OK;
 }
 
@@ -398,19 +481,6 @@ nsGenericHTMLElement::GetNameSpaceID(PRInt32& aID) const
 //  }
 //}
 
-nsresult
-nsGenericHTMLElement::SetAttribute(const nsString& aName,
-                                   const nsString& aValue,
-                                   PRBool aNotify)
-{
-  nsAutoString upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* attr = NS_NewAtom(upper);
-  nsresult rv = SetAttribute(attr, aValue, aNotify);
-  NS_RELEASE(attr);
-  return rv;
-}
-
 #if 0
 static nsGenericHTMLElement::EnumTable kDirTable[] = {
   { "ltr", NS_STYLE_DIRECTION_LTR },
@@ -420,29 +490,21 @@ static nsGenericHTMLElement::EnumTable kDirTable[] = {
 #endif
 
 nsresult
-nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
+nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute,
                                    const nsString& aValue,
                                    PRBool aNotify)
 {
   nsresult  result = NS_OK;
-#if 0
-  if (nsHTMLAtoms::dir == aAttribute) {
-    nsHTMLValue val;
-    if (ParseEnumValue(aValue, kDirTable, val)) {
-      result = SetAttribute(aAttribute, val, aNotify);
-    }
-    else {
-      result = SetStringAttribute(aAttribute, aValue, aNotify);
-    }
+  NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
+               (kNameSpaceID_Unknown == aNameSpaceID), 
+               "html content only holds HTML attributes");
+
+  if ((kNameSpaceID_HTML != aNameSpaceID) && 
+      (kNameSpaceID_Unknown != aNameSpaceID)) {
+    return NS_ERROR_ILLEGAL_VALUE;
   }
-  else if (nsHTMLAtoms::lang == aAttribute) {
-    result = SetStringAttribute(aAttribute, aValue, aNotify);
-  }
-  else if (nsHTMLAtoms::title == aAttribute) {
-    result = SetStringAttribute(aAttribute, aValue, aNotify);
-  }
-  else
-#endif
+
   if (nsHTMLAtoms::style == aAttribute) {
     // XXX the style sheet language is a document property that
     // should be used to lookup the style sheet parser to parse the
@@ -455,7 +517,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
     nsIStyleRule* rule;
     result = css->ParseDeclarations(aValue, nsnull, rule);
     if ((NS_OK == result) && (nsnull != rule)) {
-      result = SetAttribute(aAttribute, nsHTMLValue(rule), aNotify);
+      result = SetHTMLAttribute(aAttribute, nsHTMLValue(rule), aNotify);
       NS_RELEASE(rule);
     }
     NS_RELEASE(css);
@@ -490,16 +552,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
       AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID); 
     else if (nsHTMLAtoms::onpaint == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
-    // check for class and upper case it
-    else if (nsHTMLAtoms::kClass == aAttribute) {
-      nsAutoString buffer;
-      aValue.ToUpperCase(buffer);
-      nsIAtom* classAtom = NS_NewAtom(buffer);
-      result = SetClass(classAtom);
-      NS_RELEASE(classAtom);
-      return result;
-    }
-
+   
     nsHTMLValue val;
     nsIHTMLContent* htmlContent;
     
@@ -510,7 +563,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
     if (NS_CONTENT_ATTR_NOT_THERE !=
         htmlContent->StringToAttribute(aAttribute, aValue, val)) {
       // string value was mapped to nsHTMLValue, set it that way
-      result = SetAttribute(aAttribute, val, aNotify);
+      result = SetHTMLAttribute(aAttribute, val, aNotify);
       NS_RELEASE(htmlContent);
       return result;
     }
@@ -544,9 +597,9 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
 }
 
 nsresult
-nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
-                                   const nsHTMLValue& aValue,
-                                   PRBool aNotify)
+nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
+                                       const nsHTMLValue& aValue,
+                                       PRBool aNotify)
 {
   nsresult  result = NS_OK;
   nsIHTMLContent* htmlContent;
@@ -600,9 +653,19 @@ nsGenericHTMLElement::MapCommonAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 nsresult
-nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
+nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify)
 {
   nsresult result = NS_OK;
+
+  NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
+               (kNameSpaceID_Unknown == aNameSpaceID), 
+               "html content only holds HTML attributes");
+
+  if ((kNameSpaceID_HTML != aNameSpaceID) && 
+      (kNameSpaceID_Unknown != aNameSpaceID)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   nsIHTMLContent* htmlContent;
 
   result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
@@ -634,23 +697,20 @@ nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
 }
 
 nsresult
-nsGenericHTMLElement::GetAttribute(const nsString& aName,
-                                   nsString& aResult) const
-{
-  nsAutoString upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* attr = NS_NewAtom(upper);
-  nsresult result = GetAttribute(attr, aResult);
-  NS_RELEASE(attr);
-  return result;
-}
-
-nsresult
-nsGenericHTMLElement::GetAttribute(nsIAtom *aAttribute,
+nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                                    nsString &aResult) const
 {
+  NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
+               (kNameSpaceID_Unknown == aNameSpaceID), 
+               "html content only holds HTML attributes");
+
+  if ((kNameSpaceID_HTML != aNameSpaceID) && 
+      (kNameSpaceID_Unknown != aNameSpaceID)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   nsHTMLValue value;
-  nsresult result = GetAttribute(aAttribute, value);
+  nsresult result = GetHTMLAttribute(aAttribute, value);
 
   char cbuf[20];
   nscolor color;
@@ -714,8 +774,8 @@ nsGenericHTMLElement::GetAttribute(nsIAtom *aAttribute,
 }
 
 nsresult
-nsGenericHTMLElement::GetAttribute(nsIAtom* aAttribute,
-                                   nsHTMLValue& aValue) const
+nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
+                                       nsHTMLValue& aValue) const
 {
   if (nsnull != mAttributes) {
     return mAttributes->GetAttribute(aAttribute, aValue);
@@ -724,56 +784,27 @@ nsGenericHTMLElement::GetAttribute(nsIAtom* aAttribute,
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-nsresult
-nsGenericHTMLElement::GetAllAttributeNames(nsISupportsArray* aArray,
-                                           PRInt32& aCount) const
+nsresult 
+nsGenericHTMLElement::GetAttributeNameAt(PRInt32 aIndex,
+                                         PRInt32& aNameSpaceID, 
+                                         nsIAtom*& aName) const
 {
+  aNameSpaceID = kNameSpaceID_HTML;
   if (nsnull != mAttributes) {
-    return mAttributes->GetAllAttributeNames(aArray, aCount);
+    return mAttributes->GetAttributeNameAt(aIndex, aName);
   }
-  aCount = 0;
-  return NS_OK;
+  aName = nsnull;
+  return NS_ERROR_ILLEGAL_VALUE;
 }
 
 nsresult
 nsGenericHTMLElement::GetAttributeCount(PRInt32& aCount) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->Count(aCount);
+    return mAttributes->GetAttributeCount(aCount);
   }
   aCount = 0;
   return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::SetID(nsIAtom* aID)
-{
-  nsresult result = NS_OK;
-  nsIHTMLContent* htmlContent;
-
-  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
-  if (NS_OK != result) {
-    return result;
-  }
-  if (nsnull != mDocument) {  // set attr via style sheet
-    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    if (nsnull != sheet) {
-      result = sheet->SetIDFor(aID, htmlContent, mAttributes);
-      NS_RELEASE(sheet);
-    }
-  }
-  else {  // manage this ourselves and re-sync when we connect to doc
-    EnsureWritableAttributes(htmlContent, mAttributes, PRBool(nsnull != aID));
-    if (nsnull != mAttributes) {
-      PRInt32 count;
-      result = mAttributes->SetID(aID, count);
-      if (0 == count) {
-        ReleaseAttributes(mAttributes);
-      }
-    }
-  }
-  NS_RELEASE(htmlContent);
-  return result;
 }
 
 nsresult
@@ -787,44 +818,21 @@ nsGenericHTMLElement::GetID(nsIAtom*& aResult) const
 }
 
 nsresult
-nsGenericHTMLElement::SetClass(nsIAtom* aClass)
+nsGenericHTMLElement::GetClasses(nsVoidArray& aArray) const
 {
-  nsresult result = NS_OK;
-  nsIHTMLContent* htmlContent;
-
-  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
-  if (NS_OK != result) {
-    return result;
+  if (nsnull != mAttributes) {
+    return mAttributes->GetClasses(aArray);
   }
-  if (nsnull != mDocument) {  // set attr via style sheet
-    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    if (nsnull != sheet) {
-      result = sheet->SetClassFor(aClass, htmlContent, mAttributes);
-      NS_RELEASE(sheet);
-    }
-  }
-  else {  // manage this ourselves and re-sync when we connect to doc
-    EnsureWritableAttributes(htmlContent, mAttributes, PRBool(nsnull != aClass));
-    if (nsnull != mAttributes) {
-      PRInt32 count;
-      result = mAttributes->SetClass(aClass, count);
-      if (0 == count) {
-        ReleaseAttributes(mAttributes);
-      }
-    }
-  }
-  NS_RELEASE(htmlContent);
-  return result;
+  return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::GetClass(nsIAtom*& aResult) const
+nsGenericHTMLElement::HasClass(nsIAtom* aClass) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->GetClass(aResult);
+    return mAttributes->HasClass(aClass);
   }
-  aResult = nsnull;
-  return NS_OK;
+  return NS_COMFALSE;
 }
 
 nsresult
@@ -863,27 +871,25 @@ nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule*& aResult)
 void
 nsGenericHTMLElement::ListAttributes(FILE* out) const
 {
-  nsISupportsArray* attrs;
-  if (NS_OK == NS_NewISupportsArray(&attrs)) {
-    PRInt32 index, count;
-    GetAllAttributeNames(attrs, count);
-    for (index = 0; index < count; index++) {
-      // name
-      nsIAtom* attr = (nsIAtom*)attrs->ElementAt(index);
-      nsAutoString buffer;
-      attr->ToString(buffer);
+  PRInt32 index, count;
+  GetAttributeCount(count);
+  for (index = 0; index < count; index++) {
+    // name
+    nsIAtom* attr = nsnull;
+    PRInt32 nameSpaceID;
+    GetAttributeNameAt(index, nameSpaceID, attr);
+    nsAutoString buffer;
+    attr->ToString(buffer);
 
-      // value
-      nsAutoString value;
-      GetAttribute(buffer, value);
-      buffer.Append("=");
-      buffer.Append(value);
+    // value
+    nsAutoString value;
+    GetAttribute(nameSpaceID, attr, value);
+    buffer.Append("=");
+    buffer.Append(value);
 
-      fputs(" ", out);
-      fputs(buffer, out);
-      NS_RELEASE(attr);
-    }
-    NS_RELEASE(attrs);
+    fputs(" ", out);
+    fputs(buffer, out);
+    NS_RELEASE(attr);
   }
 }
 
@@ -982,26 +988,23 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
   }
 
   if (nsnull != mAttributes) {
-    nsISupportsArray* attrs;
-    nsresult rv = NS_NewISupportsArray(&attrs);
-    if (NS_OK == rv) {
-      PRInt32 i, n;
-      mAttributes->GetAllAttributeNames(attrs, n);
-      nsAutoString name, value, quotedValue;
-      for (i = 0; i < n; i++) {
-        nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
-        atom->ToString(name);
-        aBuf.Append(' ');
-        aBuf.Append(name);
-        value.Truncate();
-        GetAttribute(name, value);
-        if (value.Length() > 0) {
-          aBuf.Append('=');
-          NS_QuoteForHTML(value, quotedValue);
-          aBuf.Append(quotedValue);
-        }
+    PRInt32 index, count;
+    mAttributes->GetAttributeCount(count);
+    nsAutoString name, value, quotedValue;
+    for (index = 0; index < count; index++) {
+      nsIAtom* atom = nsnull;
+      mAttributes->GetAttributeNameAt(index, atom);
+      atom->ToString(name);
+      aBuf.Append(' ');
+      aBuf.Append(name);
+      value.Truncate();
+      GetAttribute(kNameSpaceID_HTML, atom, value);
+      NS_RELEASE(atom);
+      if (value.Length() > 0) {
+        aBuf.Append('=');
+        NS_QuoteForHTML(value, quotedValue);
+        aBuf.Append(quotedValue);
       }
-      NS_RELEASE(attrs);
     }
   }
 
@@ -1014,7 +1017,7 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
 
 nsresult
 nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
-                                        nsHTMLValue& aValue,
+                                        const nsHTMLValue& aValue,
                                         nsString& aResult) const
 {
   if (nsHTMLAtoms::style == aAttribute) {
@@ -1836,24 +1839,20 @@ nsGenericHTMLLeafElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
   // Add all attributes to the convert
   if (nsnull != mAttributes) 
   {
-    nsISupportsArray* attrs;
-    rv = NS_NewISupportsArray(&attrs);
-    if (NS_OK == rv) 
+    PRInt32 index, count;
+    mAttributes->GetAttributeCount(count);
+    nsAutoString name, value;
+    for (index = 0; index < count; index++) 
     {
-      PRInt32 i, n;
-      mAttributes->GetAllAttributeNames(attrs, n);
-      nsAutoString name, value;
-      for (i = 0; i < n; i++) 
-      {
-        nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
-        atom->ToString(name);
+      nsIAtom* atom = nsnull;
+      mAttributes->GetAttributeNameAt(index, atom);
+      atom->ToString(name);
 
-        value.Truncate();
-        GetAttribute(name, value);
-        
-        aConverter.AddHTMLAttribute(name,value);
-      }
-      NS_RELEASE(attrs);
+      value.Truncate();
+      GetAttribute(kNameSpaceID_HTML, atom, value);
+      NS_RELEASE(atom);
+      
+      aConverter.AddHTMLAttribute(name,value);
     }
   }
   return rv;
@@ -2205,24 +2204,20 @@ nsGenericHTMLContainerElement::BeginConvertToXIF(nsXIFConverter& aConverter) con
   // Add all attributes to the convert
   if (nsnull != mAttributes) 
   {
-    nsISupportsArray* attrs;
-    rv = NS_NewISupportsArray(&attrs);
-    if (NS_OK == rv) 
+    PRInt32 index, count;
+    mAttributes->GetAttributeCount(count);
+    nsAutoString name, value;
+    for (index = 0; index < count; index++) 
     {
-      PRInt32 i, n;
-      mAttributes->GetAllAttributeNames(attrs, n);
-      nsAutoString name, value;
-      for (i = 0; i < n; i++) 
-      {
-        nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
-        atom->ToString(name);
+      nsIAtom* atom = nsnull;
+      mAttributes->GetAttributeNameAt(index, atom);
+      atom->ToString(name);
 
-        value.Truncate();
-        GetAttribute(name, value);
-        
-        aConverter.AddHTMLAttribute(name,value);
-      }
-      NS_RELEASE(attrs);
+      value.Truncate();
+      GetAttribute(kNameSpaceID_HTML, atom, value);
+      NS_RELEASE(atom);
+      
+      aConverter.AddHTMLAttribute(name,value);
     }
   }
   return NS_OK;

@@ -31,6 +31,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
 #include "nsIServiceManager.h"
+#include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFDocument.h"
 #include "rdfutil.h"
@@ -65,12 +66,22 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
+static nsIAtom* kIdAtom;
+
 RDFHTMLDocumentImpl::RDFHTMLDocumentImpl(void)
 {
+  if (nsnull == kIdAtom) {
+    kIdAtom = NS_NewAtom("ID");
+  }
+  else {
+    NS_ADDREF(kIdAtom);
+  }
 }
 
 RDFHTMLDocumentImpl::~RDFHTMLDocumentImpl(void)
 {
+  nsrefcnt refcnt;
+  NS_RELEASE2(kIdAtom, refcnt);
 }
 
 nsresult
@@ -105,7 +116,7 @@ RDFHTMLDocumentImpl::AddTreeChild(nsIRDFContent* parent,
 
     s = p;
 
-    if (NS_FAILED(rv = child->SetAttribute("ID", s, PR_FALSE)))
+    if (NS_FAILED(rv = child->SetAttribute(kNameSpaceID_HTML, kIdAtom, s, PR_FALSE)))
         goto done;
 
     rv = parent->AppendChildTo(child, PR_TRUE);
