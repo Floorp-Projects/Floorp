@@ -58,6 +58,7 @@
 #include "nsEscape.h"
 
 #define EXTRA_SAFETY_SPACE 3096
+#define kLargeNumberOfMessages 50000
 
 static PRLogModuleInfo *POP3LOGMODULE = nsnull;
 
@@ -1281,7 +1282,8 @@ nsPop3Protocol::GurlResponse()
 PRInt32 nsPop3Protocol::SendList()
 {
     m_pop3ConData->msg_info = (Pop3MsgInfo *) 
-        PR_CALLOC(sizeof(Pop3MsgInfo) *	m_pop3ConData->number_of_messages);
+      PR_CALLOC(sizeof(Pop3MsgInfo) *
+      (m_pop3ConData->number_of_messages < kLargeNumberOfMessages ? m_pop3ConData->number_of_messages : kLargeNumberOfMessages));
     if (!m_pop3ConData->msg_info)
         return(MK_OUT_OF_MEMORY);
     m_pop3ConData->next_state_after_response = POP3_GET_LIST;
@@ -1343,6 +1345,19 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
 			token = nsCRT::strtok(newStr, " ", &newStr);
 			if (token)
 				m_pop3ConData->msg_info[msg_num-1].size = atol(token);
+
+      if (msg_num >= kLargeNumberOfMessages && msg_num < m_pop3ConData->number_of_messages)
+      {
+        m_pop3ConData->msg_info = (Pop3MsgInfo *)   //allocate space for next entry
+          PR_REALLOC(m_pop3ConData->msg_info, sizeof(Pop3MsgInfo) * (msg_num + 1));
+        if (!m_pop3ConData->msg_info)
+        {
+          m_pop3ConData->number_of_messages = msg_num; //so that we don't try to free not allocated entries!
+          return(MK_OUT_OF_MEMORY);
+        }
+        m_pop3ConData->msg_info[msg_num].size = 0; //initialize
+        m_pop3ConData->msg_info[msg_num].uidl = nsnull;
+      }
 		}
 	}
 
