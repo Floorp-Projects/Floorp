@@ -3518,6 +3518,11 @@ nsDocument::RenameNode(nsIDOMNode *aNode,
                        const nsAString& qualifiedName,
                        nsIDOMNode **aReturn)
 {
+  if (!aNode) {
+    // not an element or attribute
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+  
   PRUint16 nodeType;
   aNode->GetNodeType(&nodeType);
   if (nodeType == nsIDOMNode::ELEMENT_NODE ||
