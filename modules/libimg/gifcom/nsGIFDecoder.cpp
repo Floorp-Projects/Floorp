@@ -57,25 +57,24 @@ GIFDecoder::~GIFDecoder(void)
 NS_IMETHODIMP
 GIFDecoder::ImgDInit()
 {
+   int ret;
+
    if(ilContainer != NULL) {
-     return(il_gif_init(ilContainer));
-  }
-  else {
-    return NS_OK;
-  }
+     ret=il_gif_init(ilContainer);
+    
+     if(ret==1)
+       return NS_OK;
+   }
+   return NS_ERROR_FAILURE;  
 }
 
 
 NS_IMETHODIMP 
-GIFDecoder::ImgDWriteReady(PRUint32 *chunksizep)
+GIFDecoder::ImgDWriteReady(PRUint8 *min_read)
 {
-  int ret;
 
   if(ilContainer != NULL) {
-     ret = il_gif_write_ready(ilContainer);
-
-     if(ret != 0)
-         return NS_ERROR_FAILURE;
+     *min_read = il_gif_write_ready(ilContainer);
   }
   return NS_OK;
 }
@@ -83,7 +82,7 @@ GIFDecoder::ImgDWriteReady(PRUint32 *chunksizep)
 NS_IMETHODIMP
 GIFDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 {
-  int ret;
+  int ret = 0;
 
   if( ilContainer != NULL ) {
      ret = il_gif_write(ilContainer, buf,len);
