@@ -124,15 +124,10 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
 NS_IMETHODIMP nsChromeTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
-	/*
-	Called when a content shell is added to the the docShell Tree.
-	aContentShell - the docShell that has been added.
-	aPrimary - true if this is the primary content shell
-	aID - the ID of the docShell that has been added.
-	*/
+   nsContentShellInfo* shellInfo = new nsContentShellInfo(aID, aPrimary, aContentShell);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   mXULWindow->mContentShells.AppendElement((void*)shellInfo);
+
    return NS_OK;
 }
 
@@ -162,22 +157,19 @@ NS_IMETHODIMP nsChromeTreeOwner::GetNewBrowserChrome(PRInt32 aChromeFlags,
 NS_IMETHODIMP nsChromeTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   // Ignore wigdet parents for now.  Don't think those are a vaild thing to call.
+   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, PR_FALSE), NS_ERROR_FAILURE);
+
    return NS_OK;
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::Create()
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::Destroy()
 {
-   // We don't support the dynamic destroy and recreate on the object.  Just
-   // create a new object!
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -221,24 +213,27 @@ NS_IMETHODIMP nsChromeTreeOwner::Repaint(PRBool aForce)
 NS_IMETHODIMP nsChromeTreeOwner::GetParentWidget(nsIWidget** aParentWidget)
 {
    NS_ENSURE_ARG_POINTER(aParentWidget);
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   NS_ENSURE_STATE(mXULWindow->mWindow);
+
+   *aParentWidget = mXULWindow->mWindow->GetParent();
    return NS_OK;
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
 {
    NS_ENSURE_ARG_POINTER(aParentNativeWindow);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   nsCOMPtr<nsIWidget> parentWidget;
+   NS_ENSURE_SUCCESS(GetParentWidget(getter_AddRefs(parentWidget)), NS_ERROR_FAILURE);
+
+   *aParentNativeWindow = parentWidget->GetNativeData(NS_NATIVE_WIDGET);
+   
    return NS_OK;
 }
 
@@ -262,8 +257,9 @@ NS_IMETHODIMP nsChromeTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   *aMainWidget = mXULWindow->mWindow;
+   NS_IF_ADDREF(*aMainWidget);
+
    return NS_OK;
 }
 
