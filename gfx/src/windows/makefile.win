@@ -48,7 +48,11 @@ LINCS= \
         -I$(PUBLIC)\raptor \
         -I$(PUBLIC)\xpcom \
 !if defined(NGLAYOUT_DDRAW)
+!if "$(MOZ_VCVER)" == "50"
+		-I$(NGLAYOUT_DDRAW)\include \
+!else
 		-I$(NGLAYOUT_DDRAW)\inc \
+!endif
 !endif
         $(NULL)
 
@@ -66,9 +70,13 @@ LLIBS=				\
  $(DIST)\lib\netlib.lib       \
  $(DIST)\lib\raptorgfx_s.lib \
 !if defined(NGLAYOUT_DDRAW)
- $(NGLAYOUT_DDRAW)\lib\dxguid.lib \
- $(NGLAYOUT_DDRAW)\lib\ddraw.lib \
  ole32.lib \
+ $(NGLAYOUT_DDRAW)\lib\ddraw.lib \
+!if "$(MOZ_VCVER)" == "50"
+ $(NGLAYOUT_DDRAW)\lib\uuid.lib \
+!else
+ $(NGLAYOUT_DDRAW)\lib\dxguid.lib \
+!endif
 !endif
  $(LIBNSPR)  
 
