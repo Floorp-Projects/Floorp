@@ -42,7 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
-#include "nsIByteArrayInputStream.h"
+#include "nsIStringStream.h"
 #include "nsReadableUtils.h"
 #include "nsIMultiPartChannel.h"
 #include "nsCRT.h"
@@ -420,7 +420,7 @@ nsMultiMixedConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *
     return NS_OK;
 }
 
-#define ERR_OUT { nsMemory::Free(buffer); return rv; }
+#define ERR_OUT { free(buffer); return rv; }
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
@@ -432,35 +432,33 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
 
     nsresult rv = NS_OK;
     char *buffer = nsnull;
-    PRUint32 bufLen = count, read;
+    PRUint32 bufLen = 0, read = 0;
 
     NS_ASSERTION(request, "multimixed converter needs a request");
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
     if (NS_FAILED(rv)) return rv;
-    
-    buffer = (char*)nsMemory::Alloc(bufLen);
-    if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = inStr->Read(buffer, bufLen, &read);
-    if (NS_FAILED(rv) || read == 0) return rv;
-    NS_ASSERTION(read == bufLen, "poor data size assumption");
-    
-    if (mBufLen) {
-		// incorporate any buffered data into the parsing
-        char *tmp = (char*)nsMemory::Alloc(mBufLen + bufLen);
-        if (!tmp) {
-            nsMemory::Free(buffer);
+    // fill buffer
+    {
+        bufLen = count + mBufLen;
+        buffer = (char *) malloc(bufLen);
+        if (!buffer)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        if (mBufLen) {
+            // incorporate any buffered data into the parsing
+            memcpy(buffer, mBuffer, mBufLen);
+            free(mBuffer);
+            mBuffer = 0;
         }
-        memcpy(tmp, mBuffer, mBufLen);
-        nsMemory::Free(mBuffer);
-        mBuffer = nsnull;
-        memcpy(tmp+mBufLen, buffer, bufLen);
-        nsMemory::Free(buffer);
-        buffer = tmp;
-        bufLen += mBufLen;
+        
+        rv = inStr->Read(buffer + mBufLen, count, &read);
+
         mBufLen = 0;
+
+        if (NS_FAILED(rv) || read == 0) return rv;
+        NS_ASSERTION(read == count, "poor data size assumption");
     }
 
     char *cursor = buffer;
@@ -481,18 +479,18 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             // skip this check, and try again the next time OnData()
             // is called.
             mFirstOnData = PR_TRUE;
-        } else if (!PL_strnstr(cursor, token, mTokenLen+2)) {
-            bufLen = read + mTokenLen + 1;
-            char *tmp = (char*)nsMemory::Alloc(bufLen);
-            if (!tmp) {
-                nsMemory::Free(buffer);
+        }
+        else if (!PL_strnstr(cursor, token, mTokenLen+2)) {
+            buffer = (char *) realloc(buffer, bufLen + mTokenLen + 1);
+            if (!buffer)
                 return NS_ERROR_OUT_OF_MEMORY;
-            }
-            memcpy(tmp, token, mTokenLen);
-            memcpy(tmp+mTokenLen, "\n", 1);
-            memcpy(tmp+mTokenLen+1, cursor, read);
-            nsMemory::Free(buffer);
-            buffer = tmp;
+
+            memmove(buffer+mTokenLen+1, buffer, bufLen);
+            memcpy(buffer, token, mTokenLen);
+            buffer[mTokenLen] = '\n';
+
+            bufLen += (mTokenLen + 1);
+
             // need to reset cursor to the buffer again (bug 100595)
             cursor = buffer;
         }
@@ -520,12 +518,9 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
 
         if (*(token+mTokenLen+1) == '-') {
 			// This was the last delimiter so we can stop processing
-            bufLen = token - cursor;
-            rv = SendData(cursor, bufLen);
-            nsMemory::Free(buffer);
+            rv = SendData(cursor, token - cursor);
+            free(buffer);
             if (NS_FAILED(rv)) return rv;
-            buffer = nsnull;
-            bufLen = 0;
             return SendStop(NS_OK);
         }
 
@@ -536,6 +531,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             bufLen -= token - cursor;
             if (NS_FAILED(rv)) ERR_OUT
         }
+        // XXX else NS_ASSERTION(token == cursor, "?");
         token += mTokenLen;
         bufLen -= mTokenLen;
         tokenLinefeed = PushOverLine(token, bufLen);
@@ -550,19 +546,20 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             if (done) {
                 rv = SendStart(channel);
                 if (NS_FAILED(rv)) ERR_OUT
-            } else {
+            }
+            else {
                 // we haven't finished processing header info.
                 // we'll break out and try to process later.
                 mProcessingHeaders = PR_TRUE;
                 break;
             }
-        } else {
+        }
+        else {
             mNewPart = PR_TRUE;
             rv = SendStop(NS_OK);
             if (NS_FAILED(rv)) ERR_OUT
-            // reset to the token to front.
-            // this allows us to treat the token
-            // as a starting token.
+            // reset the token to front. this allows us to treat
+            // the token as a starting token.
             token -= mTokenLen + tokenLinefeed;
             bufLen += mTokenLen + tokenLinefeed;
             cursor = token;
@@ -575,9 +572,9 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
 
     // carry over
     PRUint32 bufAmt = 0;
-    if (mProcessingHeaders) {
+    if (mProcessingHeaders)
         bufAmt = bufLen;
-    } else {
+    else {
         // if the data ends in a linefeed, and we're in the middle
         // of a "part" (ie. mPartChannel exists) don't bother
         // buffering, go ahead and send the data we have. Otherwise
@@ -599,8 +596,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         if (NS_FAILED(rv)) ERR_OUT
     }
 
-    nsMemory::Free(buffer);
-
+    free(buffer);
     return rv;
 }
 
@@ -671,7 +667,7 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
             (void) SendData(mBuffer, mBufLen);
             // don't bother checking the return value here, if the send failed
             // we're done anyway as we're in the OnStop() callback.
-            nsMemory::Free(mBuffer);
+            free(mBuffer);
             mBuffer = nsnull;
             mBufLen = 0;
         }
@@ -711,7 +707,7 @@ nsMultiMixedConv::nsMultiMixedConv() {
 nsMultiMixedConv::~nsMultiMixedConv() {
     NS_ASSERTION(!mBuffer, "all buffered data should be gone");
     if (mBuffer) {
-        nsMemory::Free(mBuffer);
+        free(mBuffer);
         mBuffer = nsnull;
     }
 }
@@ -720,7 +716,7 @@ nsresult
 nsMultiMixedConv::BufferData(char *aData, PRUint32 aLen) {
     NS_ASSERTION(!mBuffer, "trying to over-write buffer");
 
-    char *buffer = (char*)nsMemory::Alloc(aLen);
+    char *buffer = (char *) malloc(aLen);
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     memcpy(buffer, aData, aLen);
@@ -814,9 +810,9 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     
     if (!mPartChannel) return NS_ERROR_FAILURE; // something went wrong w/ processing
 
-
     if (mContentLength != -1) {
         // make sure that we don't send more than the mContentLength
+        // XXX why? perhaps the Content-Length header was actually wrong!!
         if ((aLen + mTotalSent) > PRUint32(mContentLength))
             aLen = mContentLength - mTotalSent;
 
@@ -824,41 +820,34 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
             return NS_OK;
     }
 
+    PRUint32 offset = mTotalSent;
     mTotalSent += aLen;
 
-    char *tmp = (char*)nsMemory::Alloc(aLen); // byteArray stream owns this mem
-    if (!tmp) return NS_ERROR_OUT_OF_MEMORY;
-    
-    memcpy(tmp, aBuffer, aLen);
-    
-    nsCOMPtr<nsIByteArrayInputStream> byteArrayStream;
-    
-    rv = NS_NewByteArrayInputStream(getter_AddRefs(byteArrayStream), tmp, aLen);
-    if (NS_FAILED(rv)) {
-        nsMemory::Free(tmp);
+    nsCOMPtr<nsIStringInputStream> ss(
+            do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
+    if (NS_FAILED(rv))
         return rv;
-    }
 
-    nsCOMPtr<nsIInputStream> inStream = do_QueryInterface(byteArrayStream, &rv);
+    rv = ss->ShareData(aBuffer, aLen);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIInputStream> inStream(do_QueryInterface(ss, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 len;
-    rv = inStream->Available(&len);
-    if (NS_FAILED(rv)) return rv;
-
-    return mFinalListener->OnDataAvailable(mPartChannel, mContext, inStream, 0, len);
+    return mFinalListener->OnDataAvailable(mPartChannel, mContext, inStream, offset, aLen);
 }
 
 PRInt32
 nsMultiMixedConv::PushOverLine(char *&aPtr, PRUint32 &aLen) {
     PRInt32 chars = 0;
-    if (*aPtr == nsCRT::CR || *aPtr == nsCRT::LF) {
-        if (aPtr[1] == nsCRT::LF)
+    if ((aLen > 0) && (*aPtr == nsCRT::CR || *aPtr == nsCRT::LF)) {
+        if ((aLen > 1) && (aPtr[1] == nsCRT::LF))
             chars++;
         chars++;
+        aPtr += chars;
+        aLen -= chars;
     }
-    aPtr += chars;
-    aLen -= chars;
     return chars;
 }
 
@@ -866,36 +855,37 @@ nsresult
 nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr, 
                                PRUint32 &aLen, PRBool *_retval) {
     // NOTE: this data must be ascii.
+    // NOTE: aPtr is NOT null terminated!
 	nsresult rv = NS_OK;
     char *cursor = aPtr, *newLine = nsnull;
     PRUint32 cursorLen = aLen;
     PRBool done = PR_FALSE;
     PRUint32 lineFeedIncrement = 1;
     
-    mContentLength = -1;
-    while ( (cursorLen > 0) 
-            && (newLine = PL_strchr(cursor, nsCRT::LF)) ) {
+    mContentLength = -1; // XXX what if we were already called?
+    while (cursorLen && (newLine = (char *) memchr(cursor, nsCRT::LF, cursorLen))) {
         // adjust for linefeeds
-        if ( (newLine > cursor) && (newLine[-1] == nsCRT::CR) ) { // CRLF
-             lineFeedIncrement = 2;
-             newLine--;
+        if ((newLine > cursor) && (newLine[-1] == nsCRT::CR) ) { // CRLF
+            lineFeedIncrement = 2;
+            newLine--;
         }
+        else
+            lineFeedIncrement = 1; // reset
 
         if (newLine == cursor) {
-            // move the newLine beyond the double linefeed marker
-            if (cursorLen >= lineFeedIncrement) {
-                newLine += lineFeedIncrement;
-            }
-            cursorLen -= (newLine - cursor);
-            cursor = newLine;
+            // move the newLine beyond the linefeed marker
+            NS_ASSERTION(cursorLen >= lineFeedIncrement, "oops!");
+
+            cursor += lineFeedIncrement;
+            cursorLen -= lineFeedIncrement;
 
             done = PR_TRUE;
             break;
         }
 
         char tmpChar = *newLine;
-        *newLine = '\0';
-        char *colon = PL_strchr(cursor, ':');
+        *newLine = '\0'; // cursor is now null terminated
+        char *colon = (char *) strchr(cursor, ':');
         if (colon) {
             *colon = '\0';
             nsCAutoString headerStr(cursor);
@@ -926,12 +916,12 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                 // something like: Content-range: bytes 7000-7999/8000
                 char* tmpPtr;
 
-                tmpPtr = PL_strchr(colon + 1, '/');
+                tmpPtr = (char *) strchr(colon + 1, '/');
                 if (tmpPtr) 
                     *tmpPtr = '\0';
 
                 // pass the bytes-unit and the SP
-                char *range = PL_strchr(colon + 2, ' ');
+                char *range = (char *) strchr(colon + 2, ' ');
 
                 if (!range)
                     return NS_ERROR_FAILURE;
@@ -940,7 +930,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                     mByteRangeStart = mByteRangeEnd = 0;
                 }
                 else {
-                    tmpPtr = PL_strchr(range, '-');
+                    tmpPtr = (char *) strchr(range, '-');
                     if (!tmpPtr)
                         return NS_ERROR_FAILURE;
                     
@@ -960,7 +950,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
         newLine += lineFeedIncrement;
         cursorLen -= (newLine - cursor);
         cursor = newLine;
-    } // end while (newLine)
+    }
 
     aPtr = cursor;
     aLen = cursorLen;
@@ -975,27 +965,27 @@ nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
     const char *token = mToken.get();
     char *cur = aCursor;
 
-    NS_ASSERTION(token && aCursor && *token, "bad data");
+    if (!(token && aCursor && *token)) {
+        NS_WARNING("bad data");
+        return nsnull;
+    }
 
-    if( mTokenLen > aLen ) return nsnull;
+    for (; aLen >= mTokenLen; aCursor++, aLen--) {
+        if (!memcmp(aCursor, token, mTokenLen) ) {
+            if ((aCursor - cur) >= 2) {
+                // back the cursor up over a double dash for backwards compat.
+                if ((*(aCursor-1) == '-') && (*(aCursor-2) == '-')) {
+                    aCursor -= 2;
+                    aLen += 2;
 
-    for( ; aLen >= mTokenLen; aCursor++, aLen-- )
-        if( *token == *aCursor)
-            if(!memcmp(aCursor, token, mTokenLen) ) {
-                if ( (aCursor - cur) >= 2) {
-                    // back the cursor up over a double dash for backwards compat.
-                    if ( (*(aCursor-1) == '-') && (*(aCursor-2) == '-') ) {
-                        aCursor -= 2;
-                        aLen += 2;
-
-                        // we're playing w/ double dash tokens, adjust.
-                        nsCAutoString newToken(NS_LITERAL_CSTRING("--") + mToken);
-                        mToken = newToken;
-                        mTokenLen += 2;
-                    }
+                    // we're playing w/ double dash tokens, adjust.
+                    mToken.Assign(aCursor, mTokenLen + 2);
+                    mTokenLen = mToken.Length();
                 }
-                return aCursor;
             }
+            return aCursor;
+        }
+    }
 
     return nsnull;
 }
