@@ -107,9 +107,9 @@ public:
 
 ImageListener::ImageListener(nsImageDocument* aDoc)
 {
+  NS_INIT_ISUPPORTS();
   mDocument = aDoc;
   NS_ADDREF(aDoc);
-  mRefCnt = 1;
 }
 
 ImageListener::~ImageListener()
@@ -118,7 +118,7 @@ ImageListener::~ImageListener()
   NS_IF_RELEASE(mNextStream);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(ImageListener, NS_GET_IID(nsIStreamListener))
+NS_IMPL_THREADSAFE_ISUPPORTS1(ImageListener, nsIStreamListener)
 
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
@@ -190,6 +190,8 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
                                    nsIStreamListener **aDocListener,
                                    PRBool aReset)
 {
+  NS_ASSERTION(aDocListener, "null aDocListener");
+
   nsresult rv = Init();
 
   if (NS_FAILED(rv) && rv != NS_ERROR_ALREADY_INITIALIZED) {
@@ -209,6 +211,10 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
   }
 
   *aDocListener = new ImageListener(this);
+  if (!*aDocListener)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aDocListener);
 
   return NS_OK;
 }
