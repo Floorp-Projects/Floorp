@@ -162,6 +162,7 @@
   #define HAVE_CPP_ACCESS_CHANGING_USING
   #define HAVE_CPP_AMBIGUITY_RESOLVING_USING
   #define HAVE_CPP_EXPLICIT
+  #define HAVE_CPP_TYPENAME
   #define HAVE_CPP_BOOL
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
@@ -175,6 +176,7 @@
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 
   #define HAVE_CPP_EXPLICIT
+  #define HAVE_CPP_TYPENAME
   #define HAVE_CPP_ACCESS_CHANGING_USING
 
   #if (_MSC_VER<1100)
@@ -188,6 +190,14 @@
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 //#define HAVE_CPP_2BYTE_WCHAR_T
+#endif
+
+  // until we get an autoconf test for this, we'll assume it's on (since we're using it already)
+#define HAVE_CPP_TYPENAME
+
+  /* waiting to find out if OS/2 VisualAge participates in autoconf */
+#ifdef XP_OS2_VACPP
+  #undef HAVE_CPP_TYPENAME
 #endif
 
 
@@ -206,6 +216,10 @@
   */
 #ifndef HAVE_CPP_EXPLICIT
   #define explicit
+#endif
+
+#ifndef HAVE_CPP_TYPENAME
+  #define typename
 #endif
 
 #ifdef HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX

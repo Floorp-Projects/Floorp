@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Original Author:
@@ -133,7 +133,7 @@ class nsReadingIterator
           return *get();
         }
 
-//#if 0
+#if 0
         // An iterator really deserves this, but some compilers (notably IBM VisualAge for OS/2)
         //  don't like this when |CharT| is a type without members.
       pointer
@@ -141,7 +141,7 @@ class nsReadingIterator
         {
           return get();
         }
-//#endif
+#endif
 
       nsReadingIterator<CharT>&
       operator++()
@@ -1122,14 +1122,17 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
     nsReadingIterator<CharT> leftIter( lhs.BeginReading() );
     nsReadingIterator<CharT> rightIter( rhs.BeginReading() );
 
+    int result;
+
     for (;;)
       {
         PRUint32 lengthAvailable = PRUint32( NS_MIN(leftIter.size_forward(), rightIter.size_forward()) );
 
         if ( lengthAvailable > lengthToCompare )
           lengthAvailable = lengthToCompare;
-        
-        if ( int result = nsCharTraits<CharT>::compare(leftIter.get(), rightIter.get(), lengthAvailable) )
+
+          // Note: |result| should be declared in this |if| expression, but some compilers don't like that
+        if ( (result = nsCharTraits<CharT>::compare(leftIter.get(), rightIter.get(), lengthAvailable)) != 0 )
           return result;
 
         if ( !(lengthToCompare -= lengthAvailable) )

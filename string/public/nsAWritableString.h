@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Original Author:
@@ -95,7 +95,7 @@ class nsWritingIterator
           return *get();
         }
 
-//#if 0
+#if 0
         // An iterator really deserves this, but some compilers (notably IBM VisualAge for OS/2)
         //  don't like this when |CharT| is a type without members.
       pointer
@@ -103,7 +103,7 @@ class nsWritingIterator
         {
           return get();
         }
-//#endif
+#endif
 
       nsWritingIterator<CharT>&
       operator++()
