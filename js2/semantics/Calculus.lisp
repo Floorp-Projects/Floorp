@@ -12,10 +12,23 @@
 ;;; 
 ;;; The Initial Developer of the Original Code is Netscape Communications
 ;;; Corporation.  Portions created by Netscape Communications Corporation are
-;;; Copyright (C) 1999 Netscape Communications Corporation.  All
+;;; Copyright (C) 1999-2002 Netscape Communications Corporation.  All
 ;;; Rights Reserved.
 ;;; 
 ;;; Contributor(s):   Waldemar Horwat <waldemar@acm.org>
+;;;
+;;; Alternatively, the contents of this file may be used under the terms of
+;;; either the GNU General Public License Version 2 or later (the "GPL"), or
+;;; the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+;;; in which case the provisions of the GPL or the LGPL are applicable instead
+;;; of those above. If you wish to allow use of your version of this file only
+;;; under the terms of either the GPL or the LGPL, and not to allow others to
+;;; use your version of this file under the terms of the MPL, indicate your
+;;; decision by deleting the provisions above and replace them with the notice
+;;; and other provisions required by the GPL or the LGPL. If you do not delete
+;;; the provisions above, a recipient may use your version of this file under
+;;; the terms of any one of the MPL, the GPL or the LGPL.
+
 
 ;;;
 ;;; ECMAScript semantic calculus
@@ -1052,23 +1065,25 @@
 ;;; TYPES
 
 (deftype typekind ()
-         '(member            ;tag              ;parameters
-           :bottom           ;nil              ;nil
-           :void             ;nil              ;nil
-           :boolean          ;nil              ;nil
-           :integer          ;nil              ;nil
-           :rational         ;nil              ;nil
-           :finite64         ;nil              ;nil    ;All non-zero finite 64-bit double-precision floating-point numbers
-           :character        ;nil              ;nil
-           :->               ;nil              ;(result-type arg1-type arg2-type ... argn-type)
-           :string           ;nil              ;(character)
-           :vector           ;nil              ;(element-type)
-           :list-set         ;nil              ;(element-type)
-           :range-set        ;nil              ;(element-type)
-           :tag              ;tag              ;nil
-           :denormalized-tag ;tag              ;nil
-           :union            ;nil              ;(type ... type) sorted by ascending serial numbers
-           :writable-cell))  ;nil              ;(element-type)
+         '(member            ;tag            ;parameters
+           :bottom           ;nil            ;nil
+           :void             ;nil            ;nil
+           :boolean          ;nil            ;nil
+           :integer          ;nil            ;nil
+           :rational         ;nil            ;nil
+           :finite64         ;nil            ;nil    ;All non-zero finite 64-bit double-precision floating-point numbers
+           :character        ;nil            ;nil
+           :->               ;nil            ;(result-type arg1-type arg2-type ... argn-type)
+           :string           ;nil            ;(character)
+           :vector           ;nil            ;(element-type)
+           :list-set         ;nil            ;(element-type)
+           :range-set        ;nil            ;(element-type)
+           :bit-set          ;(tag ... tag)  ;(element-type)  ;element-type is the type of the union of the tags
+           :restricted-set   ;(n ... n)      ;(bit-set-type)  ;n's are in ascending numerical order; use :bottom or :bit-set insetad for the trivial cases
+           :tag              ;tag            ;nil
+           :denormalized-tag ;tag            ;nil
+           :union            ;nil            ;(type ... type) sorted by ascending serial numbers
+           :writable-cell))  ;nil            ;(element-type)
 
 ;A denormalized-tag is a singleton tag type whose value carries no meaning.
 ;
@@ -1088,7 +1103,8 @@
   (name nil :type symbol)                          ;This type's name; nil if this type is anonymous
   (serial-number nil :type integer)                ;This type's unique serial number
   (kind nil :type typekind :read-only t)           ;This type's kind
-  (tag nil :type (or null tag) :read-only t)       ;This type's tag
+  (tag nil :read-only t)                           ;This type's tag; ordered list of tags for bit-set;
+  ;                                                ;  set of included subsets represented as a sorted list of integers for restricted-set
   (parameters nil :type list :read-only t)         ;List of parameter types (either types or symbols if forward-referenced) describing a compound type
   (=-name nil :type symbol)                        ;Lazily computed name of a function that compares two values of this type for equality; nil if not known yet
   (/=-name nil :type symbol))                      ;Name of a function that complements = or nil if none
@@ -1129,16 +1145,57 @@
 (defun make-range-set-type (world element-type)
   (make-type world :range-set nil (list element-type) intset=-name nil))
 
-(declaim (inline set-element-type))
+(defun make-bit-set-type (world tags)
+  (let ((element-type (make-union-type world (mapcar #'(lambda (tag) (make-tag-type world tag)) tags))))
+    (make-type world :bit-set tags (list element-type) '= '/=)))
+
+; values must be sorted in ascending numerical order.
+(defun make-restricted-set-type (world bit-set-type values)
+  (assert-true (bit-set-type? bit-set-type))
+  (if (endp values)
+    (world-bottom-type world)
+    (progn
+      (when *value-asserts*
+        (let ((prev -1))
+          (dolist (v values)
+            (unless (and (integerp v) (> v prev))
+              (error "Bad restricted-set set of values: ~S" values))
+            (setq prev v))
+          (unless (< prev (ash 1 (length (type-tag bit-set-type))))
+            (error "Bad restricted-set set of values: ~S" values))))
+      (if (= (length values) (ash 1 (length (type-tag bit-set-type))))
+        bit-set-type
+        (make-type world :restricted-set values (list bit-set-type) '= '/=)))))
+
+
+; Return the bit-set type underlying a bit-set or restricted-set.
+(defun underlying-bit-set-type (type)
+  (ecase (type-kind type)
+    (:bit-set type)
+    (:restricted-set (first (type-parameters type)))))
+
+
+; Return the ordered list of keywords in a bit-set or restricted-set type.
+(defun set-type-keywords (type)
+  (ecase (type-kind type)
+    (:bit-set (mapcar #'tag-name (type-tag type)))
+    (:restricted-set (set-type-keywords (first (type-parameters type))))))
+
+
+(defun bit-set-type? (v)
+  (and (type? v) (eq (type-kind v) :bit-set)))
+
+
 (defun set-element-type (type)
-  (assert-true (member (type-kind type) '(:list-set :range-set)))
-  (car (type-parameters type)))
+  (ecase (type-kind type)
+    ((:list-set :range-set :bit-set) (first (type-parameters type)))
+    (:restricted-set (set-element-type (first (type-parameters type))))))
 
 
-(declaim (inline collection-element-type))
 (defun collection-element-type (type)
-  (assert-true (member (type-kind type) '(:vector :string :list-set :range-set)))
-  (car (type-parameters type)))
+  (ecase (type-kind type)
+    ((:vector :string :list-set :range-set :bit-set) (first (type-parameters type)))
+    (:restricted-set (set-element-type (first (type-parameters type))))))
 
 
 (declaim (inline make-tag-type))
@@ -1599,6 +1656,21 @@
       (:range-set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
                     (format stream "range-set ~@_")
                     (print-type (set-element-type type) stream)))
+      (:bit-set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                  (format stream "bit-set")
+                  (dolist (keyword (set-type-keywords type))
+                    (format stream " ~:_~A" keyword))))
+      (:restricted-set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                         (format stream "restricted-set")
+                         (dolist (keyword (set-type-keywords type))
+                           (format stream " ~:_~A" keyword))
+                         (format stream " ~_")
+                         (pprint-logical-block (stream (type-tag type) :prefix "{" :suffix "}")
+                           (pprint-exit-if-list-exhausted)
+                           (loop
+                             (print-value (pprint-pop) type stream)
+                             (pprint-exit-if-list-exhausted)
+                             (format stream " ~:_")))))
       (:tag (let ((tag (type-tag type)))
               (pprint-logical-block (stream nil :prefix "(" :suffix ")")
                 (format stream "tag ~@_~A" (tag-name tag)))))
@@ -1720,9 +1792,37 @@
 (defun scan-list-set (world allow-forward-references element-type)
   (make-list-set-type world (scan-type world element-type allow-forward-references)))
 
+
 ; (range-set <element-type>)
 (defun scan-range-set (world allow-forward-references element-type)
   (make-range-set-type world (scan-type world element-type allow-forward-references)))
+
+
+; (bit-set <tag> ... <tag>)
+(defun scan-bit-set (world allow-forward-references &rest tag-names)
+  (declare (ignore allow-forward-references))
+  (make-bit-set-type world (mapcar #'(lambda (tag-name)
+                                       (let ((tag (scan-tag world tag-name)))
+                                         (unless (tag-keyword tag)
+                                           (error "Only singleton tags may be part of a bit-set"))
+                                         tag))
+                                   tag-names)))
+
+
+; (restricted-set <bit-set-type> <value-expr> ... <value-expr>)
+(defun scan-restricted-set (world allow-forward-references bit-set-type-expr &rest value-exprs)
+  (let ((bit-set-type (scan-type world bit-set-type-expr allow-forward-references)))
+    (unless (bit-set-type? bit-set-type)
+      (error "~S must be a bit-set" bit-set-type-expr))
+    (let ((values (mapcar #'(lambda (value-expr)
+                              (assert-type (eval-typed-value world value-expr bit-set-type) integer))
+                          value-exprs)))
+      (setq values (sort values #'<))
+      (let ((length1 (length values)))
+        (delete-adjacent-duplicates values :test #'=)
+        (unless (= (length values) length1)
+          (error "Duplicate restricted-set value in ~S" value-exprs)))
+      (make-restricted-set-type world bit-set-type values))))
 
 
 ; (tag <tag> ... <tag>)
@@ -2235,6 +2335,22 @@
     (type-env-add-binding type-env name type (type-env-local-mode binding) t)))
 
 
+; Nondestructively unshadow the type of the binding of name in type-env and return two values:
+;   the previous binding of name;
+;   the new type-env.
+(defun type-env-unnarrow-binding (type-env name)
+  (let* ((bindings (type-env-bindings type-env))
+         (shadow-tail (assert-non-null (member name bindings :test #'eq :key #'car)))
+         (tail (cdr shadow-tail))
+         (old-binding (assoc name tail :test #'eq)))
+    (unless old-binding
+      (error "Can't unshadow ~S" name))
+    (let ((unshadowed-bindings (nconc (ldiff bindings shadow-tail) tail)))
+      (values
+       old-binding
+       (make-type-env unshadowed-bindings (type-env-live type-env))))))
+
+
 ; Mark name as an initialized variable.  It should have been declared as :uninitialized.
 (defun type-env-initialize-var (type-env name)
   (if (type-env-initialized type-env name)
@@ -2322,11 +2438,24 @@
 ;;;   A vector (represented by a list)
 ;;;   A list-set (represented by an unordered list of its elements)
 ;;;   A range-set of integers or characters (represented by an intset of its elements converted to integers)
+;;;   A bit-set (represented by an integer with 1's in bits corresponding to present tags)  ***** Not implemented yet *****
+;;;   A restricted-set (represented by an integer with 1's in bits corresponding to present tags)  ***** Not implemented yet *****
 ;;;   A tag (represented by either a keyword or a list (keyword [serial-num] field-value1 ... field-value n));
 ;;;     serial-num is a unique integer present only on mutable tag instances.
 ;;;   A writable-cell (represented by a cons whose car is a flag that is true if the cell is initialized
 ;;;     and cdr is nil or the value)
 
+
+; Return the bit-set value as a list of tag keywords.
+(defun bit-set-to-list (value bit-set-type)
+  (assert-true (and (bit-set-type? bit-set-type) (integerp value) (>= value 0) (< value (ash 1 (length (type-tag bit-set-type))))))
+  (let ((tags-present nil))
+    (dolist (tag (type-tag bit-set-type))
+      (when (oddp value)
+        (push (assert-non-null (tag-keyword tag)) tags-present))
+      (setq value (ash value -1)))
+    (nreverse tags-present)))
+  
 
 ; Return true if the value appears to have the given tag.  This function
 ; may return false positives (return true when the value doesn't actually
@@ -2370,6 +2499,8 @@
     (:vector (value-list-has-type value (vector-element-type type) shallow))
     (:list-set (value-list-has-type value (set-element-type type) shallow))
     (:range-set (valid-intset? value))
+    (:bit-set (and (integerp value) (<= 0 value) (< value (ash 1 (length (type-tag type))))))
+    (:restricted-set (member value (type-tag type)))
     (:tag (value-has-tag value (type-tag type) shallow))
     (:union (some #'(lambda (subtype) (value-has-type value subtype shallow))
                   (type-parameters type)))
@@ -2391,6 +2522,16 @@
            (value-list-has-type (cdr values) type shallow))))
 
 
+; Print the values list using set notation.
+(defun print-set-of-values (values element-type stream)
+  (pprint-logical-block (stream values :prefix "{" :suffix "}")
+    (pprint-exit-if-list-exhausted)
+    (loop
+      (print-value (pprint-pop) element-type stream)
+      (pprint-exit-if-list-exhausted)
+      (format stream " ~:_"))))
+
+
 ; Print the value nicely on the given stream.  type is the value's type.
 (defun print-value (value type &optional (stream t))
   (assert-true (value-has-type value type t))
@@ -2408,17 +2549,7 @@
                    (print-value (pprint-pop) element-type stream)
                    (pprint-exit-if-list-exhausted)
                    (format stream " ~:_")))))
-    (:list-set
-     (let ((element-type (set-element-type type))
-           (elements (if (eq (type-kind type) :list-set)
-                       value
-                       (hash-table-keys value))))
-       (pprint-logical-block (stream elements :prefix "{" :suffix "}")
-         (pprint-exit-if-list-exhausted)
-         (loop
-           (print-value (pprint-pop) element-type stream)
-           (pprint-exit-if-list-exhausted)
-           (format stream " ~:_")))))
+    (:list-set (print-set-of-values value (set-element-type type) stream))
     (:range-set (let ((converter (range-set-out-converter (set-element-type type))))
                   (pprint-logical-block (stream value :prefix "{" :suffix "}")
                     (pprint-exit-if-list-exhausted)
@@ -2431,6 +2562,7 @@
                           (write (list (funcall converter value1) (funcall converter value2)) :stream stream))))
                     (pprint-exit-if-list-exhausted)
                     (format stream " ~:_"))))
+    ((:bit-set :restricted-set) (print-set-of-values (bit-set-to-list value (underlying-bit-set-type type)) (set-element-type type) stream))
     (:tag (let ((tag (type-tag type)))
             (if (tag-keyword tag)
               (write value :stream stream)
@@ -2678,6 +2810,10 @@
     (values (widening-coercion-code world expected-type type value value-expr) annotated-expr)))
 
 
+(defun eval-typed-value (world value-expr expected-type)
+  (eval (scan-typed-value world *null-type-env* value-expr expected-type)))
+
+
 ; Same as scan-value except that ensure that the value has type bottom or void.
 ; Return three values:
 ;   The expression's value (a lisp expression)
@@ -2713,7 +2849,7 @@
 ;   The annotated value-expr
 (defun scan-set-value (world type-env value-expr)
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
-    (unless (member (type-kind type) '(:list-set :range-set))
+    (unless (member (type-kind type) '(:list-set :range-set :bit-set :restricted-set))
       (error "Value ~S:~A should be a set" value-expr (print-type-to-string type)))
     (values value type annotated-expr)))
 
@@ -2727,7 +2863,7 @@
 (defun scan-collection-value (world type-env value-expr)
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
     (let ((kind (type-kind type)))
-      (unless (member kind '(:string :vector :list-set :range-set))
+      (unless (member kind '(:string :vector :list-set :range-set :bit-set :restricted-set))
         (error "Value ~S:~A should be a vector or a set" value-expr (print-type-to-string type)))
       (values value kind (collection-element-type type) annotated-expr))))
 
@@ -3421,6 +3557,13 @@
        (list 'expr-annotation:special-form special-form set1-annotated-expr set2-annotated-expr)))))
 
 
+(defun bit-set-index-code (type elt-code)
+  (let ((keywords (set-type-keywords type)))
+    (if (keywordp elt-code)
+      (position elt-code keywords)
+      (list 'position elt-code (list 'quote keywords)))))
+
+
 ; (set-in <elt-expr> <set-expr>)
 ; Returns true if <elt-expr> is a member of the set <set-expr>.
 (defun scan-set-in (world type-env special-form elt-expr set-expr)
@@ -3430,7 +3573,8 @@
         (values
          (ecase (type-kind set-type)
            (:list-set (list* 'member elt-code set-code (element-test world elt-type)))
-           (:range-set (list 'intset-member? (range-set-in-converter-expr elt-type elt-code) set-code)))
+           (:range-set (list 'intset-member? (range-set-in-converter-expr elt-type elt-code) set-code))
+           ((:bit-set :restricted-set) (list 'logbitp (bit-set-index-code set-type elt-code) set-code)))
          (world-boolean-type world)
          (list 'expr-annotation:special-form special-form :member-10 elt-annotated-expr set-annotated-expr))))))
 
@@ -3444,7 +3588,8 @@
         (values
          (ecase (type-kind set-type)
            (:list-set (list 'not (list* 'member elt-code set-code (element-test world elt-type))))
-           (:range-set (list 'not (list 'intset-member? (range-set-in-converter-expr elt-type elt-code) set-code))))
+           (:range-set (list 'not (list 'intset-member? (range-set-in-converter-expr elt-type elt-code) set-code)))
+           ((:bit-set :restricted-set) (list 'not (list 'logbitp (bit-set-index-code set-type elt-code) set-code))))
          (world-boolean-type world)
          (list 'expr-annotation:special-form special-form :not-member-10 elt-annotated-expr set-annotated-expr))))))
 
@@ -3458,6 +3603,13 @@
   (or (intset-min set)
       (error "elt-of called on empty set")))
 
+(defun bit-set-elt-of (set keywords)
+  (dolist (keyword keywords)
+    (when (oddp set)
+      (return-from bit-set-elt-of keyword))
+    (setq set (ash set -1)))
+  (error "bit-set-elt-of called on empty set"))
+
 ; (elt-of <elt-expr>)
 ; Returns any element of <set-expr>, which must be a nonempty set.
 (defun scan-elt-of (world type-env special-form set-expr)
@@ -3466,7 +3618,8 @@
       (values
        (ecase (type-kind set-type)
          (:list-set (list 'elt-of set-code))
-         (:range-set (range-set-out-converter-expr elt-type (list 'range-set-elt-of set-code))))
+         (:range-set (range-set-out-converter-expr elt-type (list 'range-set-elt-of set-code)))
+         ((:bit-set :restricted-set) (list 'bit-set-elt-of set-code (list 'quote (set-type-keywords set-type)))))
        elt-type
        (list 'expr-annotation:special-form special-form set-annotated-expr)))))
 
@@ -3483,7 +3636,8 @@
      (ecase collection-kind
        (:string `(zerop (length ,collection-code)))
        ((:vector :list-set) (list 'endp collection-code))
-       (:range-set (list 'intset-empty collection-code)))
+       (:range-set (list 'intset-empty collection-code))
+       ((:bit-set :restricted-set) (list '= collection-code 0)))
      (world-boolean-type world)
      (list 'expr-annotation:special-form special-form collection-kind collection-annotated-expr))))
 
@@ -3498,7 +3652,8 @@
      (ecase collection-kind
        (:string `(/= (length ,collection-code) 0))
        ((:vector :list-set) collection-code)
-       (:range-set `(not (intset-empty ,collection-code))))
+       (:range-set `(not (intset-empty ,collection-code)))
+       ((:bit-set :restricted-set) (list '/= collection-code 0)))
      (world-boolean-type world)
      (list 'expr-annotation:special-form special-form collection-kind collection-annotated-expr))))
 
@@ -3511,7 +3666,8 @@
     (values
      (ecase collection-kind
        ((:string :vector :list-set) (list 'length collection-code))
-       (:range-set (list 'intset-length collection-code)))
+       (:range-set (list 'intset-length collection-code))
+       ((:bit-set :restricted-set) (list 'logcount collection-code)))
      (world-integer-type world)
      (list 'expr-annotation:special-form special-form collection-annotated-expr))))
 
@@ -3540,7 +3696,8 @@
            (local-type-env (if define-true
                              (type-env-unreserve-binding type-env var element-type)
                              (type-env-add-binding type-env var element-type :const))))
-      (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
+      (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env) (scan-condition world local-type-env condition-expr)
+        (declare (ignore false-type-env))
         (let ((result-annotated-expr (list 'expr-annotation:special-form special-form 'some collection-annotated-expr var condition-annotated-expr))
               (coerced-collection-code (if (eq collection-kind :string) `(coerce ,collection-code 'list) collection-code)))
           (if define-true
@@ -3551,7 +3708,7 @@
                     (setq ,var ,v)
                     (return t))))
              result-annotated-expr
-             local-type-env
+             true-type-env
              type-env)
             (values
              `(some #'(lambda (,var) ,condition-code) ,coerced-collection-code)
@@ -3590,10 +3747,10 @@
           (let* ((source-is-vector (member collection-kind '(:string :vector)))
                  (source-is-string (eq collection-kind :string))
                  (destination-is-string (and source-is-vector (eq value-type (world-character-type world))))
-                 (result-type (ecase collection-kind
+                 (result-type (case collection-kind
                                 ((:string :vector) (make-vector-type world value-type))
                                 (:list-set (make-list-set-type world value-type))
-                                (:range-set (error "Map not implemented on range-sets"))))
+                                (t (error "Map not implemented on this kind of a set"))))
                  (destination-sequence-type (if destination-is-string 'string 'list))
                  (result-annotated-expr (list 'expr-annotation:special-form special-form collection-kind collection-annotated-expr var value-annotated-expr condition-annotated-expr)))
             (cond
@@ -3682,6 +3839,49 @@
                             position-alist)))))
          result-type
          (list 'expr-annotation:special-form special-form record-type label record-annotated-expr))))))
+
+
+; (set-field <expr> <label> <field-expr> ... <label> <field-expr>)
+; Return a new tuple or record with its fields the same as in <expr> except for the specified ones.
+(defun scan-set-field (world type-env special-form record-expr &rest labels-and-exprs)
+  (multiple-value-bind (record-code record-type record-annotated-expr) (scan-value world type-env record-expr)
+    (let ((n-replaced-fields (length labels-and-exprs)))
+      (when (oddp n-replaced-fields)
+        (error "Label without a field value in set-field"))
+      (setq n-replaced-fields (/ n-replaced-fields 2))
+      (unless (eq (type-kind record-type) :tag)
+        (error "Value ~S:~A should be a tuple or a record" record-expr (print-type-to-string record-type)))
+      (let* ((tag (type-tag record-type))
+             (mutable (tag-mutable tag))
+             (fields (tag-fields tag))
+             (record-var (gen-local-var record-code))
+             (n-fields (length fields))
+             (replacements nil)
+             (annotated-fields nil))
+        (unless (> n-fields n-replaced-fields)
+          (error "set-field replaces all fields in the tuple or record"))
+        (dotimes (i n-fields)
+          (push (gen-nth-code (+ i (if mutable 2 1)) record-var) replacements))
+        (when mutable
+          (push '(incf *record-counter*) replacements))
+        (push (list 'quote (tag-name tag)) replacements)
+        (do ((replacement-mask 0))
+            ((endp labels-and-exprs))
+          (let ((label (pop labels-and-exprs))
+                (field-expr (pop labels-and-exprs)))
+            (multiple-value-bind (position field-type mutable) (scan-label tag label)
+              (declare (ignore mutable))
+              (when (logbitp position replacement-mask)
+                (error "Duplicate set-field label ~S" label))
+              (setq replacement-mask (dpb 1 (byte 1 position) replacement-mask))
+              (multiple-value-bind (field-code field-annotated-expr)
+                                   (scan-typed-value world type-env field-expr field-type)
+                (setf (nth position replacements) field-code)
+                (push (list label field-annotated-expr) annotated-fields)))))
+        (values
+         (cons 'list replacements)
+         record-type
+         (list* 'expr-annotation:special-form special-form record-type record-annotated-expr annotated-fields))))))
 
 
 
@@ -4090,28 +4290,38 @@
            (cons (list* special-form name-and-arg-binding-exprs result-type-expr body-annotated-stmts) rest-annotated-stmts)))))))
 
 
-; (<- <name> <value>)
+; (<- <name> <value> [:end-narrow])
 ; Mutate the local or global variable.
-(defun scan-<- (world type-env rest-statements last special-form name value-expr)
+(defun scan-<- (world type-env rest-statements last special-form name value-expr &optional end-narrow)
+  (unless (member end-narrow '(nil :end-narrow))
+    (error "Bad flag ~S given to <-"))
   (let* ((symbol (scan-name world name))
          (symbol-binding (type-env-get-local type-env symbol))
+         (type-env2 type-env)
          type)
     (if symbol-binding
       (case (type-env-local-mode symbol-binding)
-        (:var (setq type (type-env-local-type symbol-binding)))
+        (:var
+          (when end-narrow
+            (multiple-value-setq (symbol-binding type-env2) (type-env-unnarrow-binding type-env symbol)))
+          (setq type (type-env-local-type symbol-binding)))
         (:uninitialized
+         (when end-narrow
+           (error ":end-narrow not applicable to uninitialized variables"))
          (setq type (type-env-local-type symbol-binding))
-         (setq type-env (type-env-initialize-var type-env symbol)))
+         (setq type-env2 (type-env-initialize-var type-env2 symbol)))
         (t (error "Local variable ~A not writable" name)))
       (progn
         (setq type (symbol-type symbol))
         (unless type
           (error "Unknown local or global variable ~A" name))
         (unless (get symbol :mutable)
-          (error "Global variable ~A not writable" name))))
+          (error "Global variable ~A not writable" name))
+        (when end-narrow
+          (error ":end-narrow not applicable to global variables"))))
     (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr type)
       (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                           (scan-statements world type-env rest-statements last)
+                           (scan-statements world type-env2 rest-statements last)
         (values
          (cons (if symbol-binding
                  (list 'setq (type-env-local-name symbol-binding) value-code)
@@ -4731,6 +4941,7 @@
      ;;Tuples and Records
      (new scan-new depict-new)
      (& scan-& depict-&)
+     (set-field scan-set-field depict-set-field)
      
      ;;Unions
      (in scan-in depict-in)
