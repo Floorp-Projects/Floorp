@@ -272,8 +272,9 @@ Rights Reserved.
 <!ENTITY searchParentParentCmd.accesskey "">
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "w">
-<!ENTITY searchMailCmd.label "Search Mail/News Messages">
-<!ENTITY searchMailCmd.accesskey "m">
+<!ENTITY searchMailCmd.label "Search Messages...">
+<!ENTITY searchMailCmd.accesskey "M">
+<!ENTITY searchMailCmd.key "f">
 
 <!-- Go Menu -->
 

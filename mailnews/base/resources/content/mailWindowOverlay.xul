@@ -278,6 +278,7 @@ Rights Reserved.
              oncommand="goDoCommand('cmd_getMsgsForAuthAccounts');"
              modifiers="accel, shift"/>
   <key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
+  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="MsgSearchMessages()" modifiers="accel, shift"/>
   <key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
   <keyset id="viewZoomKeys"/>
   <!-- Tab Keys -->
@@ -968,7 +969,7 @@ Rights Reserved.
       <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
       <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
       <menuseparator/>
-      <menuitem label="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
+      <menuitem label="&searchMailCmd.label;" key="key_searchMail" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages()"/>
       <menuseparator/>
       <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin(xlateURL('urn:clienturl:srchmenu:srchinternet'));"/>
     </menupopup>
