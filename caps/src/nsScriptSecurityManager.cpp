@@ -454,7 +454,7 @@ nsScriptSecurityManager::CheckScriptAccessInternal(JSContext *cx,
         nsCOMPtr<nsIPrincipal> objectPrincipal;
         if (aObj)
         {
-            if (NS_FAILED(GetObjectPrincipal(cx, NS_STATIC_CAST(JSObject*, aObj),
+            if (NS_FAILED(GetObjectPrincipal(cx, NS_REINTERPRET_CAST(JSObject*, aObj),
                                              getter_AddRefs(objectPrincipal))))
                 return NS_ERROR_FAILURE;
         }
