@@ -21,8 +21,6 @@
  */
 
 // Mac specific preference defaults
-// TBD: Move Mac-specific Mime fields here?
-
 platform.mac = true;
 
 pref("browser.mac.show_tool_tips",              true);
@@ -30,6 +28,8 @@ pref("browser.mac.use_internet_config",         false);
 pref("browser.mac.active_scrolling",            true);
 pref("browser.mac.use_utility_pattern",         false);
 pref("browser.mac.use_grayscale_form_controls", true);
+
+pref("browser.drag_out_of_frame_style", 1);
 
 pref("editor.use_html_editor",              false);
 pref("editor.use_image_editor",             false);
