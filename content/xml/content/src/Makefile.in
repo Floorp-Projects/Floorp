@@ -42,6 +42,10 @@ CPPSRCS =				\
 	nsGenericXMLElement.cpp		\
 	nsXMLCDATASection.cpp		\
 	nsXMLProcessingInstruction.cpp	\
+	nsXMLEntity.cpp \
+	nsXMLNotation.cpp \
+	nsXMLDocumentType.cpp \
+	nsXMLNamedNodeMap.cpp \
 	$(NULL)
 
 EXPORTS = \
