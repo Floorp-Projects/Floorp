@@ -595,9 +595,10 @@ wallet_GetEnabledPref(void)
 {
   /* This pref is not in the prefs panel.  It's purpose is to remove wallet from all UI */
   static PRBool first_time = PR_TRUE;
-  static PRBool enabled = PR_FALSE;
+  static PRBool enabled = PR_TRUE;
   if (first_time) {
-    PRBool x = SI_GetBoolPref(pref_enabled, PR_FALSE);
+    first_time = PR_FALSE;
+    PRBool x = SI_GetBoolPref(pref_enabled, PR_TRUE);
     enabled = x;
   }
   return enabled;
