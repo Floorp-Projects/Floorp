@@ -462,9 +462,7 @@ LINK_LIBS= \
 !endif
 !ifdef MOZ_LDAP
     $(DIST)\lib\ldapurl.lib \
-!ifdef MOZ_JAVA
     $(DIST)\lib\nsldap32v30.lib \
-!endif
 !endif
     $(DIST)\lib\unicvt32.lib \
 !ifdef JAVA_OR_OJI
