@@ -573,6 +573,10 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
             return rv;
         }
 
+        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
+        if (rv == NS_RDF_NO_VALUE)
+            continue;
+
         if (NS_FAILED(AppendChild(aElement, child))) {
             NS_ERROR("problem appending child to content model");
             return rv;
@@ -1446,6 +1450,11 @@ RDFXULBuilderImpl::CreateElement(nsIRDFResource* aResource,
         return rv;
     }
 
+    NS_ASSERTION(rv != NS_RDF_NO_VALUE, "no node type");
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_ERROR_UNEXPECTED;
+        
+
     nsCOMPtr<nsIRDFResource> type;
     if (NS_FAILED(rv = typeNode->QueryInterface(kIRDFResourceIID, getter_AddRefs(type)))) {
         NS_ERROR("type wasn't a resource");
@@ -1572,6 +1581,10 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
             NS_ERROR("unable to get value for property");
             return rv;
         }
+
+        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
+        if (rv == NS_RDF_NO_VALUE)
+            continue;
 
         // Add the attribute to the newly constructed element
         if (NS_FAILED(rv = AddAttribute(element, property, value))) {

@@ -728,6 +728,9 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
     if (NS_FAILED(rv = ds->GetTarget(container, kRDF_nextVal, PR_TRUE, &nextValNode)))
         goto done;
 
+    if (rv == NS_RDF_NO_VALUE)
+        goto done;
+
     if (NS_FAILED(rv = nextValNode->QueryInterface(kIRDFLiteralIID, (void**) &nextValLiteral)))
         goto done;
 
@@ -841,6 +844,10 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
             return rv;
         }
 
+        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null item in cursor");
+        if (rv == NS_RDF_NO_VALUE)
+            continue;
+
         PRBool eq;
         if (NS_FAILED(rv = element->EqualsNode(aElement, &eq))) {
             NS_ERROR("severe error on equality check");
@@ -885,6 +892,10 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
                 NS_ERROR("unable to get element from cursor");
                 return rv;
             }
+
+            NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
+            if (rv == NS_RDF_NO_VALUE)
+                continue;
 
             if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
                 NS_ERROR("unable to get element's ordinal index");
@@ -1032,6 +1043,10 @@ rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
                 return rv;
             }
 
+            NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
+            if (rv == NS_RDF_NO_VALUE)
+                continue;
+
             if (NS_FAILED(rv = aDataSource->Unassert(aContainer, ordinal, element))) {
                 NS_ERROR("unable to remove element from container");
                 return rv;
@@ -1114,6 +1129,10 @@ rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
             NS_ERROR("unable to get element from cursor");
             return rv;
         }
+
+        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
+        if (rv == NS_RDF_NO_VALUE)
+            continue;
 
         // Okay, we've found it.
         nsCOMPtr<nsIRDFResource> ordinal;

@@ -184,6 +184,9 @@ ContainerCursorImpl::Advance(void)
     if (NS_FAILED(rv = mDataSource->GetTarget(mContainer, kRDF_nextVal, PR_TRUE, &nextNode)))
         goto done;
 
+    if (rv == NS_RDF_NO_VALUE)
+        goto done;
+
     if (NS_FAILED(rv = nextNode->QueryInterface(kIRDFLiteralIID, (void**) &nextVal)))
         goto done;
 
