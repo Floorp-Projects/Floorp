@@ -1,4 +1,27 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *  Stuart Parmenter <pavlov@netscape.com>
+ *  Brian Ryner <bryner@netscape.com>
+ *  Jan Varga <varga@utcru.sk>
+ */
 
 const nsILocalFile        = Components.interfaces.nsILocalFile;
 const nsILocalFile_PROGID = "component://mozilla/file/local";
@@ -12,7 +35,15 @@ var filePickerMode;
 var currentFilter;
 var lastClicked;
 
+var directoryTree;
+var textInput;
+
+var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");   
+
 function onLoad() {
+
+  directoryTree = document.getElementById("directoryTree");
+  textInput = document.getElementById("textInput");
 
   if (window.arguments) {
     var o = window.arguments[0];
@@ -29,7 +60,6 @@ function onLoad() {
     window.title = title;
 
     if (initialText) {
-      textInput = document.getElementById("textInput");
       textInput.value = initialText;
     }
     /* build filter popup */
@@ -63,7 +93,9 @@ function onLoad() {
   retvals.buttonStatus = nsIFilePicker.returnCancel;
   addToHistory(sfile.path);
 
-  getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
+  getDirectoryContents(directoryTree, sfile.directoryEntries);
+
+  textInput.focus();
 }
 
 function onFilterChanged(target)
@@ -132,7 +164,7 @@ function onOK()
   case nsIFilePicker.modeSave:
     if (isFile) {
       // we need to pop up a dialog asking if you want to save
-      rv = window.confirm(file.path + "already exists.  Do you want to replace it?");
+      rv = window.confirm(file.path + " " + bundle.GetStringFromName("confirmFileReplacing"));
       if (rv)
         ret = nsIFilePicker.returnReplace;
       else
@@ -168,25 +200,48 @@ function onCancel()
   return true;
 }
 
-function onClick(e) {
-
+// node corresponds to treerow
+function doConfirm(node) {
   var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
-  file.initWithPath(e.target.parentNode.getAttribute("path"));
+  file.initWithPath(node.getAttribute("path"));
 
-  if (!file.isDirectory()) {
+  if (file.isDirectory()) {
+    gotoDirectory(file.path);
+  }
+  else if (file.isFile()) {
+    /* what about symlinks? what if they symlink to a directory? */
+    return doOKButton();
+  }
+}
+
+function onClick(e) {
+  if ( e.detail == 2 )
+    doConfirm(e.target.parentNode);
+}
+
+function onKeyup(e) {
+  if (directoryTree.selectedItems.length == 0 ) {
+    directoryTree.selectItem(directoryTree.getItemAtIndex(0)); 
+    return;
+  }
+  
+  if (e.keyCode == 13) {
+    doConfirm(e.target.selectedItems[0].firstChild);
+  }
+  else if (e.keyCode == 8)
+    goUp();
+}
+
+function onSelect(e) {
+  if (e.target.selectedItems.length != 1)
+    return;
+  var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
+  var path = e.target.selectedItems[0].firstChild.getAttribute("path");
+  file.initWithPath(path);
+  if (file.isFile()) {
     textInput = document.getElementById("textInput");
     textInput.value = file.leafName;
     lastClicked = file.leafName;
-  }
-
-  if (e.detail == 2) {
-    if (file.isDirectory()) {
-      gotoDirectory(file.path);
-    }
-    else if (file.isFile()) {
-	/* what about symlinks? what if they symlink to a directory? */
- 	return doOKButton();
-    }
   }
 }
 
@@ -352,11 +407,9 @@ function getDirectoryContents(parentElement, dirContents)
 }
 
 function clearTree() {
-  var tree = document.getElementById("directoryList");
-
   /* lets make an assumption that the tree children are at the end of the tree... */
-  if (tree.lastChild)
-    tree.removeChild(tree.lastChild);
+  if (directoryTree.lastChild)
+    directoryTree.removeChild(directoryTree.lastChild);
 }
 
 
@@ -392,7 +445,7 @@ function loadDirectory() {
     if (sfile.isDirectory()) {
       clearTree();
       try {
-        getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
+        getDirectoryContents(directoryTree, sfile.directoryEntries);
       } catch(ex) { dump("getDirectoryContents() failed\n"); }
       addToHistory(sfile.path);
       textInput = document.getElementById("textInput");
