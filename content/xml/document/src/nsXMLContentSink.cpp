@@ -149,7 +149,8 @@ nsXMLContentSink::nsXMLContentSink()
     mPrettyPrintXML(PR_TRUE),
     mPrettyPrintHasSpecialRoot(PR_FALSE),
     mPrettyPrintHasFactoredElements(PR_FALSE),
-    mHasProcessedBase(PR_FALSE)
+    mHasProcessedBase(PR_FALSE),
+    mAllowAutoXLinks(PR_TRUE)
 {
 }
 
@@ -193,6 +194,16 @@ nsXMLContentSink::WillBuildModel(void)
 {
   // Notify document that the load is beginning
   mDocument->BeginLoad();
+
+  // Check for correct load-command for maybe prettyprinting
+  if (mPrettyPrintXML) {
+    nsAutoString command;
+    mParser->GetCommand(command);
+    if (!command.Equals(NS_LITERAL_STRING("view"))) {
+      mPrettyPrintXML = PR_FALSE;
+    }
+  }
+  
   return NS_OK;
 }
 
@@ -206,15 +217,11 @@ nsXMLContentSink::MaybePrettyPrint()
     return NS_OK;
   }
 
-  // Check for correct load-command
-  nsAutoString command;
-  mParser->GetCommand(command);
-  if (!command.Equals(NS_LITERAL_STRING("view"))) {
-    mPrettyPrintXML = PR_FALSE;
-
-    return NS_OK;
+  // Reenable the CSSLoader so that the prettyprinting stylesheets can load
+  if (mCSSLoader) {
+    mCSSLoader->SetEnabled(PR_TRUE);
   }
-
+  
   nsCOMPtr<nsXMLPrettyPrinter> printer;
   nsresult rv = NS_NewXMLPrettyPrinter(getter_AddRefs(printer));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -555,7 +562,10 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
     rv = ProcessBASETag(aContent);
     mHasProcessedBase = PR_TRUE;
   }
-  else if (nodeInfo->Equals(nsHTMLAtoms::meta, kNameSpaceID_XHTML)) {
+  else if (nodeInfo->Equals(nsHTMLAtoms::meta, kNameSpaceID_XHTML) &&
+           // Need to check here to make sure this meta tag does not set
+           // mPrettyPrintXML to false when we have a special root!
+           (!mPrettyPrintXML || !mPrettyPrintHasSpecialRoot)) {
     rv = ProcessMETATag(aContent);
   }
   else if (nodeInfo->Equals(nsHTMLAtoms::link, kNameSpaceID_XHTML) ||
@@ -1087,6 +1097,18 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
            (tagAtom == nsLayoutAtoms::stylesheet ||
             tagAtom == nsLayoutAtoms::transform))) {
         mPrettyPrintHasSpecialRoot = PR_TRUE;
+        if (mPrettyPrintXML) {
+          // In this case, disable script execution, stylesheet
+          // loading, and auto XLinks since we plan to prettyprint.
+          mAllowAutoXLinks = PR_FALSE;
+          nsIScriptLoader* scriptLoader = mDocument->GetScriptLoader();
+          if (scriptLoader) {
+            scriptLoader->SetEnabled(PR_FALSE);
+          }
+          if (mCSSLoader) {
+            mCSSLoader->SetEnabled(PR_FALSE);
+          }
+        }        
       }
 
       mDocElement = content;
@@ -1519,7 +1541,7 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
   }
 
   // Give autoloading links a chance to fire
-  if (mDocShell) {
+  if (mDocShell && mAllowAutoXLinks) {
     nsCOMPtr<nsIXMLContent> xmlcontent(do_QueryInterface(aContent));
     if (xmlcontent) {
       nsresult rv = xmlcontent->MaybeTriggerAutoLink(mDocShell);
