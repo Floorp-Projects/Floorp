@@ -597,9 +597,10 @@ il_gif_compute_percentage_complete(int row, il_container *ic)
 }
 
 /* Maximum # of bytes to read ahead while waiting for delay_time to expire.
-   We limit this number to remain within WIN16 malloc limitations */
+   We no longer limit this number to remain within WIN16 malloc limitations
+   of 0xffff */
 
-#define MAX_READ_AHEAD  (60000L)
+#define MAX_READ_AHEAD  (0xFFFFFFL)
 
 PRUint8
 il_gif_write_ready(il_container *ic)
