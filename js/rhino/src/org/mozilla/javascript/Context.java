@@ -82,8 +82,8 @@ import org.mozilla.javascript.debug.*;
  */
 
 public class Context {
-    public static String languageVersionProperty = "language version";
-    public static String errorReporterProperty   = "error reporter";
+    public static final String languageVersionProperty = "language version";
+    public static final String errorReporterProperty   = "error reporter";
     
     /**
      * Create a new Context.
