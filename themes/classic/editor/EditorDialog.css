@@ -51,10 +51,6 @@ groupbox {
   min-width: 20em;
 }
 
-.big-left-margin {
-  margin-left:    10px;
-}
-
 .bold {
   font-weight: bold;
 }

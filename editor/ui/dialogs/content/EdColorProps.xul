@@ -55,7 +55,7 @@
         accesskey="&customColorsRadio.accessKey;"
         tooltiptext="&customColorsRadio.tooltip;" />
     </radiogroup>
-    <hbox class="big-left-margin">
+    <hbox class="indent">
       <grid>
         <columns><column/><column/></columns>
         <rows>
