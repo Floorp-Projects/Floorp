@@ -16,18 +16,13 @@
  * Reserved.
  */
 
-#define NSPIPE2
-
 #include "nspr.h"
 #include "nsIURL.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPAtoms.h"
 #include "nsHTTPEnums.h"
-#ifndef NSPIPE2
-#include "nsIBuffer.h"
-#else
 #include "nsIPipe.h"
-#endif
+#include "nsIStringStream.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsString.h"
@@ -46,7 +41,6 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
     nsIChannel* i_Transport):
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
-    mRequest(nsnull),
     mUsingProxy(PR_FALSE)
 {
     NS_INIT_REFCNT();
@@ -76,8 +70,6 @@ nsHTTPRequest::~nsHTTPRequest()
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPRequest [this=%x].\n", this));
-
-    NS_IF_RELEASE(mRequest);
 
     mTransport = null_nsCOMPtr();
 /*
@@ -161,75 +153,61 @@ nsHTTPRequest::Resume(void)
 }
 
 
-
 // Finally our own methods...
-nsresult
-nsHTTPRequest::Build()
+
+nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
 {
     nsresult rv;
-
-    if (mRequest) {
-        NS_ERROR("Request already built!");
-        return NS_ERROR_FAILURE;
-    }
-
     if (!mURI) {
         NS_ERROR("No URL to build request for!");
         return NS_ERROR_NULL_POINTER;
     }
 
-    // Create the Input Stream for writing the request...
-#ifndef NSPIPE2
-    nsCOMPtr<nsIBuffer> buf;
-    rv = NS_NewBuffer(getter_AddRefs(buf), NS_HTTP_REQUEST_SEGMENT_SIZE,
-                      NS_HTTP_REQUEST_BUFFER_SIZE, nsnull);
-    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(!mTransport, "Transport being overwritten!");
+    mTransport = aTransport;
 
-    rv = NS_NewBufferInputStream(&mRequest, buf);
-    if (NS_FAILED(rv)) return rv;
-#else
-    nsCOMPtr<nsIBufferOutputStream> out;
-    rv = NS_NewPipe(&mRequest, getter_AddRefs(out), nsnull,
-                    NS_HTTP_REQUEST_SEGMENT_SIZE, NS_HTTP_REQUEST_BUFFER_SIZE);
-    if (NS_FAILED(rv)) return rv;
-#endif
+    mUsingProxy = aIsProxied;
+    if (mUsingProxy) {
+        // Additional headers for proxy usage
+        //SetHeader(nsHTTPAtoms::Pragma, "no-cache");
+        // When Keep-Alive gets ready TODO
+        //SetHeader(nsHTTPAtoms::Proxy-Connection, "Keep-Alive");
+    }
 
     //
-    // Write the request into the stream...
+    // Build up the request into mRequestBuffer...
     //
     nsXPIDLCString autoBuffer;
-    nsString2 lineBuffer;
-    nsStr::Initialize(lineBuffer, eOneByte);
+    nsAutoString   autoString;
+
+    mRequestBuffer.Truncate();
+
     PRUint32 bytesWritten = 0;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPRequest::Build() [this=%x].  Building Request string.",
+           ("nsHTTPRequest::Build() [this=%x].  Building Request string.\n",
             this));
+    //
+    // Build the request line...
+    //
+    // ie. Method SP Request-URI SP HTTP-Version CRLF
+    //
+    mRequestBuffer.Append(MethodToString(mMethod));
 
-    // Write the request method and HTTP version.
-    lineBuffer.Append(MethodToString(mMethod));
-
-    rv = mUsingProxy ? mURI->GetSpec(getter_Copies(autoBuffer)) : 
-        mURI->GetPath(getter_Copies(autoBuffer));
-    lineBuffer.Append(autoBuffer);
+    if (mUsingProxy) {
+        rv = mURI->GetSpec(getter_Copies(autoBuffer));
+    } else {
+        rv = mURI->GetPath(getter_Copies(autoBuffer));
+    }
+    mRequestBuffer.Append(autoBuffer);
     
     //Trim off the # portion if any...
-    int refLocation = lineBuffer.RFind("#");
+    int refLocation = mRequestBuffer.RFind("#");
     if (-1 != refLocation)
-        lineBuffer.Truncate(refLocation);
+        mRequestBuffer.Truncate(refLocation);
 
-    lineBuffer.Append(" HTTP/1.0"CRLF);
-    
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("\tnsHTTPRequest.\tFirst line: %s", lineBuffer.GetBuffer()));
+    mRequestBuffer.Append(" HTTP/1.0"CRLF);
 
-    rv = out->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
-                    &bytesWritten);
-#ifdef DEBUG_gagan    
-    printf(lineBuffer.GetBuffer());
-#endif
-    if (NS_FAILED(rv)) return rv;
-    
 /*    switch (mMethod)
     {
         case HM_GET:
@@ -251,11 +229,11 @@ nsHTTPRequest::Build()
             break;
     }
 */
-
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("\tnsHTTPRequest.\tRequest Headers:\n"));
-
+    //
     // Write the request headers, if any...
+    //
+    // ie. field-name ":" [field-value] CRLF
+    //
     nsCOMPtr<nsISimpleEnumerator> enumerator;
     rv = mHeaders.GetEnumerator(getter_AddRefs(enumerator));
 
@@ -275,82 +253,59 @@ nsHTTPRequest::Build()
                 header->GetField(getter_AddRefs(headerAtom));
                 header->GetValue(getter_Copies(autoBuffer));
 
-                headerAtom->ToString(lineBuffer);
-                lineBuffer.Append(": ");
-                lineBuffer.Append(autoBuffer);
-                lineBuffer.Append(CRLF);
+                headerAtom->ToString(autoString);
+                mRequestBuffer.Append(autoString);
 
-                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-                       ("\tnsHTTPRequest [this=%x].\t\t%s\n",
-                        this, lineBuffer.GetBuffer()));
-
-                out->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
-                           &bytesWritten);
+                mRequestBuffer.Append(": ");
+                mRequestBuffer.Append(autoBuffer);
+                mRequestBuffer.Append(CRLF);
             }
             enumerator->HasMoreElements(&bMoreHeaders);
         }
     }
 
-    nsCOMPtr<nsIInputStream> stream;
     NS_ASSERTION(mConnection, "Connection disappeared!");
-    if (NS_FAILED(mConnection->GetPostDataStream(getter_AddRefs(stream))))
-            return NS_ERROR_FAILURE;
+
+    //
+    // Get the stream containing the POST data (if any).  This will be
+    // written to the server after the request has been written...
+    //
+    rv = mConnection->GetPostDataStream(getter_AddRefs(mPostDataStream));
+    if (NS_FAILED(rv)) return rv;
 
     // Currently nsIPostStreamData contains the header info and the data.
     // So we are forced to putting this here in the end. 
     // This needs to change! since its possible for someone to modify it
     // TODO- Gagan
-
-    if (stream)
-    {
-        NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
-
-        PRUint32 length = 1024;
-//        stream->Available(&length);  XXX Not implemented.... :)
-
-        // TODO Change reading from nsIInputStream to nsIBuffer
-        char* tempBuff = new char[length];
-        if (!tempBuff)
-            return NS_ERROR_OUT_OF_MEMORY;
-	while (0 < length) {
-          if (NS_FAILED(stream->Read(tempBuff, length, &length)))
-          {
-            NS_ASSERTION(0, "Failed to read post data!");
-            delete[] tempBuff;
-            tempBuff = 0;
-            return NS_ERROR_FAILURE;
-          }
-          else
-          {
-            if (!length) break;
-            PRUint32 writtenLength;
-            out->Write(tempBuff, length, &writtenLength);
-#ifdef DEBUG_gagan    
-    printf(tempBuff);
-#endif
-            // ASSERT that you wrote length = stream's length
-            NS_ASSERTION(writtenLength == length, "Failed to write post data!");
-            if (writtenLength != length) break;
-          }
-	}
-        delete[] tempBuff;
-        tempBuff = 0;
-    }
-    else 
-    {
-
-        // Write the final \r\n
-        rv = out->Write(CRLF, PL_strlen(CRLF), &bytesWritten);
-#ifdef DEBUG_gagan    
-    printf(CRLF);
-#endif
-        if (NS_FAILED(rv)) return rv;
+    if (!mPostDataStream) {
+        mRequestBuffer.Append(CRLF);
     }
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPRequest::Build() [this=%x].\tFinished building request.\n",
-            this));
+           ("\nnsHTTPRequest::Build() [this=%x].\tWriting Request:\n"
+            "=== Start\n%s=== End\n",
+            this, mRequestBuffer.GetBuffer()));
 
+    //
+    // Create a string stream to feed to the socket transport.  This stream
+    // contains only the request.  Any POST data will be sent in a second
+    // AsyncWrite to the server..
+    //
+    nsCOMPtr<nsISupports> result;
+    nsCOMPtr<nsIInputStream> stream;
+
+    rv = NS_NewCharInputStream(getter_AddRefs(result), 
+                               mRequestBuffer.GetBuffer());
+    if (NS_FAILED(rv)) return rv;
+
+    stream = do_QueryInterface(result, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    //
+    // Write the request to the server.  
+    //
+    rv = aTransport->AsyncWrite(stream, 0, mRequestBuffer.Length(), 
+                                mConnection, this);
     return rv;
 }
 
@@ -413,28 +368,13 @@ nsHTTPRequest::GetHTTPVersion(HTTPVersion* o_Version)
     return NS_OK;
 }
 
-NS_METHOD
-nsHTTPRequest::GetInputStream(nsIInputStream* *o_Stream)
-{
-    if (o_Stream)
-    {
-        if (!mRequest)
-        {
-            Build();
-        }
-        mRequest->QueryInterface(NS_GET_IID(nsIInputStream), (void**)o_Stream);
-        return NS_OK;
-    }
-    else
-        return NS_ERROR_NULL_POINTER;
 
-}
 
 NS_IMETHODIMP
 nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Context)
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPRequest [this=%x]. Starting to write request to server.\n",
+           ("nsHTTPRequest [this=%x]. Starting to write data to the server.\n",
             this));
     return NS_OK;
 }
@@ -446,23 +386,46 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
 {
     nsresult rv = iStatus;
     
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPRequest [this=%x]. Finished writing request to server."
-            "\tStatus: %x\n", 
-            this, iStatus));
-
     if (NS_SUCCEEDED(rv)) {
+      //
+      // Write the POST data out to the server...
+      //
+      if (mPostDataStream) {
+        NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
+
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+               ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n",
+                this));
+        //
+        // Make sure that the stream is closed, so the transport will know
+        // when all of the POST data has been read...
+        //
+        mPostDataStream->Close();
+
+        rv = mTransport->AsyncWrite(mPostDataStream, 0, -1, mConnection, this);
+
+        /* the mPostDataStream is released below... */
+      }
+      //
+      // Prepare to receive the response...
+      //
+      else {
         nsHTTPResponseListener* pListener;
         
-        //Prepare to receive the response!
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+               ("nsHTTPRequest [this=%x]. Finished writing request to server."
+                "\tStatus: %x\n", 
+                this, iStatus));
+
         pListener = new nsHTTPResponseListener(mConnection);
         if (pListener) {
-            NS_ADDREF(pListener);
-            rv = mTransport->AsyncRead(0, -1, i_Context, pListener);
-            NS_RELEASE(pListener);
+          NS_ADDREF(pListener);
+          rv = mTransport->AsyncRead(0, -1, i_Context, pListener);
+          NS_RELEASE(pListener);
         } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
+          rv = NS_ERROR_OUT_OF_MEMORY;
         }
+      }
     }
     //
     // An error occurred when trying to write the request to the server!
@@ -490,24 +453,15 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
         rv = iStatus;
     }
  
+    //
+    // These resouces are no longer needed...
+    //
+    mRequestBuffer.Truncate();
+    mPostDataStream = null_nsCOMPtr();
+
     return rv;
 }
 
-NS_IMETHODIMP
-nsHTTPRequest::SetTransport(nsIChannel* i_Transport, PRBool i_UsingProxy)
-{
-    NS_ASSERTION(!mTransport, "Transport being overwritten!");
-    mTransport = i_Transport;
-    mUsingProxy = i_UsingProxy;
-    if (mUsingProxy)
-    {
-        // Additional headers for proxy usage
-        //SetHeader(nsHTTPAtoms::Pragma, "no-cache");
-        // When Keep-Alive gets ready TODO
-        //SetHeader(nsHTTPAtoms::Proxy-Connection, "Keep-Alive");
-    }
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTTPRequest::SetConnection(nsHTTPChannel* i_Connection)
