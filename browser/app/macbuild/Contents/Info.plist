@@ -133,7 +133,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.5</string>
+	<string>0.6.1</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 </dict>
