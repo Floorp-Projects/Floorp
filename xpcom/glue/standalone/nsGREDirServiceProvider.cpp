@@ -112,7 +112,10 @@ nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
   //---------------------------------------------------------------
   if(strcmp(prop, NS_GRE_DIR) == 0)
   {
-    return GRE_GetGREDirectory(_retval);
+    nsILocalFile* lfile = nsnull;
+    nsresult rv = GRE_GetGREDirectory(&lfile);
+    *_retval = lfile;
+    return rv;
   }
 
   return NS_ERROR_FAILURE;
