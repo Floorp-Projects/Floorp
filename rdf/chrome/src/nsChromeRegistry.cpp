@@ -81,6 +81,8 @@ public:
 protected:
     nsresult EnsureRegistryDataSource();
     nsresult GetSkinOrContentResource(const nsString& aChromeType, nsIRDFResource** aResult);
+    nsresult GetChromeBase(nsString& aResult, nsIRDFResource* aChromeResource);
+    nsresult GetMainChromeFile(nsString& aResult, nsIRDFResource* aChromeResource);
 };
 
 PRUint32 nsChromeRegistry::gRefCnt = 0;
@@ -244,6 +246,34 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
         return rv;
     }
 
+    nsString chromeBase;
+    if (NS_FAILED(rv = GetChromeBase(chromeBase, chromeResource))) {
+        NS_ERROR("Unable to retrieve codebase for chrome entry.");
+        return rv;
+    }
+
+    // Check to see if we should append the "main" entry in the registry.
+    // Only do this when the user doesn't have anything following "skin"
+    // or "content" in the specified URL.
+    if (restOfURL == "/skin" || restOfURL == "/skin/" ||
+        restOfURL == "/content" || restOfURL == "/content/")
+    {
+        // Append the "main" entry.
+        nsString mainFile;
+        if (NS_FAILED(rv = GetMainChromeFile(mainFile, chromeResource))) {
+            NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
+            return rv;
+        }
+        chromeBase += mainFile;
+    }
+    else
+    {
+        // XXX Just append the rest of the URL following the skin or content.
+    }
+
+    char* finalDecision = chromeBase.ToNewCString();
+    aChromeURL->SetSpec(finalDecision);
+    delete []finalDecision;
     return NS_OK;
 }
 
@@ -303,15 +333,21 @@ nsChromeRegistry::GetSkinOrContentResource(const nsString& aChromeType,
         return rv;
     }
     delete []url;
-
-    // We have obtained a resource. We need to retrieve the value
-    // of the base property, ensure that it ends with a slash, and
-    // then append it to the main property.  (XXX Deal with JAR archives,
-    // which should be able to leverage resource URLS dealing with JAR
-    // archives.
-
     return NS_OK;
 }
+
+nsresult 
+nsChromeRegistry::GetChromeBase(nsString& aResult, nsIRDFResource* aChromeResource)
+{
+    return NS_OK;
+}
+
+nsresult
+nsChromeRegistry::GetMainChromeFile(nsString& aResult, nsIRDFResource* aChromeResource)
+{
+    return NS_OK;
+}
+
 nsresult
 NS_NewChromeRegistry(nsIChromeRegistry** aResult)
 {
