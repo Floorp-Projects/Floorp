@@ -75,9 +75,7 @@ FE_DEFINE(GetFormElementValue,void, (MWContext * context, LO_FormElementStruct *
 FE_DEFINE(ResetFormElement,void, (MWContext * context, LO_FormElementStruct * form_element))
 FE_DEFINE(SetFormElementToggle,void, (MWContext * context, LO_FormElementStruct * form_element, XP_Bool toggle))
 FE_DEFINE(FreeEmbedElement,void, (MWContext *context, LO_EmbedStruct *))
-#ifdef SHACK
 FE_DEFINE(FreeBuiltinElement,void, (MWContext *context, LO_BuiltinStruct *))
-#endif
 #endif /* MOZ_NGLAYOUT */
 FE_DEFINE(CreateEmbedWindow, void, (MWContext *context, NPEmbeddedApp *app))
 FE_DEFINE(SaveEmbedWindow, void, (MWContext *context, NPEmbeddedApp *app))
@@ -93,9 +91,7 @@ FE_DEFINE(DisplaySubtext,void, (MWContext * context, int iLocation, LO_TextStruc
 FE_DEFINE(DisplayText,void, (MWContext * context, int iLocation, LO_TextStruct *text, XP_Bool need_bg))
 #ifndef MOZ_NGLAYOUT
 FE_DEFINE(DisplayEmbed,void, (MWContext * context, int iLocation ,LO_EmbedStruct *embed_struct))
-#ifdef SHACK
 FE_DEFINE(DisplayBuiltin,void, (MWContext * context, int iLocation ,LO_BuiltinStruct *builtin_struct))
-#endif
 #endif /* MOZ_NGLAYOUT */
 FE_DEFINE(DisplayJavaApp,void, (MWContext * context, int iLocation ,LO_JavaAppStruct *java_struct))
 #ifndef MOZ_NGLAYOUT
