@@ -2688,6 +2688,14 @@ NS_IMETHODIMP
 XULDocumentImpl::SetForm(nsIDOMHTMLFormElement* aForm)
 {
     mHiddenForm = dont_QueryInterface(aForm);
+
+    // Set the document.
+    nsCOMPtr<nsIContent> formContent = do_QueryInterface(aForm);
+    formContent->SetDocument(this, PR_TRUE);
+
+    // Forms are containers, and as such take up a bit of space.
+    // Set a style attribute to keep the hidden form from showing up.
+    mHiddenForm->SetAttribute("style", "margin:0em");
     return NS_OK;
 }
 

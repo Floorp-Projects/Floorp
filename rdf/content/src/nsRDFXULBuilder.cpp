@@ -733,13 +733,12 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
 
       nsCOMPtr<nsIDOMHTMLFormElement> htmlFormElement = do_QueryInterface(newElement);
       if (htmlFormElement) {
-        mDocument->SetForm(htmlFormElement);
-    
         nsCOMPtr<nsIContent> content = do_QueryInterface(htmlFormElement);
         if (content) {
-          // Add this node as a child
-          mRoot->InsertChildAt(content, 0, PR_FALSE);
+          // Set the parent.
+          content->SetParent(mRoot);
         }
+        mDocument->SetForm(htmlFormElement);
       }
     }
 
