@@ -739,10 +739,10 @@ static unsigned gFirstUserCollection = 0;
     [fileScanner setScanLocation:([fileScanner scanLocation] + 7)];
   } else {
     isNetscape = NO;
-    aRange = [fileAsString rangeOfString:@"<bookmarkInfo>" options:NSCaseInsensitiveSearch];
+    aRange = [fileAsString rangeOfString:@"<bookmarkInfo" options:NSCaseInsensitiveSearch];
     if (aRange.location != NSNotFound)
-      // omniweb setup - start at <bookmarkInfo>
-      [fileScanner scanUpToString:@"<bookmarkInfo>" intoString:NULL];
+      // omniweb setup - start at <bookmarkInfo
+      [fileScanner scanUpToString:@"<bookmarkInfo" intoString:NULL];
     else {
       NSLog(@"Unrecognized style of Bookmark File.  Read fails.");
       [fileScanner release];
@@ -827,8 +827,10 @@ static unsigned gFirstUserCollection = 0;
           if (tempRange.location != NSNotFound)
             [(BookmarkFolder *)currentItem setIsGroup:YES];          
         } else {
-          [tokenScanner scanUpToString:@"<a>" intoString:NULL];
-          [tokenScanner setScanLocation:([tokenScanner scanLocation]+3)];
+            // have to do this in chunks to handle omniweb 5
+          [tokenScanner scanUpToString:@"<a" intoString:NULL];
+          [tokenScanner scanUpToString:@">" intoString:NULL];
+          [tokenScanner setScanLocation:([tokenScanner scanLocation]+1)];
           [tokenScanner scanUpToString:@"</a>" intoString:&tempItem];
           [currentItem setTitle:[tempItem stringByRemovingAmpEscapes]];
         }
