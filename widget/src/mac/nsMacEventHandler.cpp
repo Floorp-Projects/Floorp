@@ -1152,8 +1152,8 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 		{		
 			sLastClickCount ++;
 			
-			if (sLastClickCount == 2)
-				aMessage = NS_MOUSE_LEFT_DOUBLECLICK;
+//			if (sLastClickCount == 2)
+//				aMessage = NS_MOUSE_LEFT_DOUBLECLICK;
 		}
 		else
 		{
