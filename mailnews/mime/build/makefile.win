@@ -16,14 +16,32 @@
 DEPTH=..\..\..
 MODULE=mime
 
+EXPORTS=								\
+			nsMsgMimeCID.h				\
+			$(NULL)
 
 ################################################################################
-## exports
+## library
 
-EXPORTS =              		\
-			nsMsgMimeCID.h  \
-	        $(NULL)
+LIBNAME = .\$(OBJDIR)\mime
+DLL = $(LIBNAME).dll
 
-include <$(DEPTH)/config/rules.mak>
+CPP_OBJS=\
+	.\$(OBJDIR)\nsMimeModule.obj	\
+	$(NULL)
+
+LLIBS=										\
+			$(LLIBS)						\
+			$(LIBNSPR)						\
+			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
+			$(DIST)\lib\xpcom.lib       	\
+            $(DIST)\lib\mime_s.lib		\
+			$(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
 
 

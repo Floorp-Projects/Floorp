@@ -23,10 +23,14 @@ include <$(DEPTH)\config\config.mak>
 ## exports
 
 EXPORTS =								\
-		nsMimeTypes.h		\
-		nsMimeStringResources.h		\
+        nsMsgHeaderParser.h             \
+        nsMimeURLUtils.h                \
+        nsStreamConverter.h             \
+		nsMimeTypes.h		            \
+		nsMimeStringResources.h		    \
 		nsMimeObjectClassAccess.h		\
 		nsMimeConverter.h				\
+        nsMimeHeaders.h                 \
 		mimetext.h						\
 		mimeleaf.h						\
 		mimecth.h						\
@@ -48,9 +52,7 @@ EXPORTS =								\
 ################################################################################
 ## library
 
-
-LIBNAME = .\$(OBJDIR)\mime
-DLL = $(LIBNAME).dll
+LIBRARY_NAME=mime_s
 
 DEFINES= -DEBUG_rhp
 
@@ -60,7 +62,6 @@ LCFLAGS =		   \
         $(NULL)
 
 OBJS=											\
-		.\$(OBJDIR)\nsMimeFactory.obj			\
 		.\$(OBJDIR)\nsMimeObjectClassAccess.obj	\
 		.\$(OBJDIR)\nsMimeConverter.obj			\
 #
@@ -111,15 +112,10 @@ OBJS=											\
 		$(NULL)
 
 
-LLIBS=										\
-			$(LLIBS)						\
-			$(LIBNSPR)						\
-			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
-			$(DIST)\lib\xpcom.lib       	\
-			$(NULL)
-
 include <$(DEPTH)/config/rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
