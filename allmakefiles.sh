@@ -350,6 +350,7 @@ widget/src/beos/Makefile
 widget/src/build/Makefile
 widget/src/gtk/Makefile
 widget/src/motif/Makefile
+widget/src/motif/app_context/Makefile
 widget/src/photon/Makefile
 widget/src/rhapsody/Makefile
 widget/src/xlib/Makefile

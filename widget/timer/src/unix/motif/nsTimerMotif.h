@@ -53,6 +53,7 @@ public:
 
 private:
   nsresult Init(PRUint32 aDelay);
+  nsresult InitAppContext();
 
   PRUint32             mDelay;
   nsTimerCallbackFunc  mFunc;
@@ -61,6 +62,7 @@ private:
   // PRBool            mRepeat;
   nsTimerMotif *       mNext;
   XtIntervalId         mTimerId; 
+  XtAppContext         mAppContext;
 };
 
 #endif // __nsTimerMotif_h

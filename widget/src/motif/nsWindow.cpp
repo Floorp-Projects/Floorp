@@ -379,7 +379,7 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  mAppContext = ((nsAppShell *) aAppShell)->GetAppContext();
+  mAppContext = nsAppShell::GetAppContext();
 
       // keep a reference to the device context
     if (aContext) {

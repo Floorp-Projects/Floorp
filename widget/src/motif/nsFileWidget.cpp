@@ -22,6 +22,8 @@
 #include "nsStringUtil.h"
 #include "nsAppShell.h"
 
+#include "xlibrgb.h"
+
 NS_IMPL_ADDREF(nsFileWidget)
 NS_IMPL_RELEASE(nsFileWidget)
 
@@ -64,7 +66,7 @@ NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
   mTitle.Append(aTitle);
   mMode = aMode;
 
-  mAppContext = ((nsAppShell *) aAppShell)->GetAppContext();
+  mAppContext = nsAppShell::GetAppContext();
 
   Widget parentWidget = nsnull;
 

@@ -21,6 +21,9 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsICmdLineService.h"
+
+#include "nsIMotifAppContextService.h"
+
 #include <stdlib.h>
 
 #ifdef LINUX
@@ -59,6 +62,7 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
   return NS_OK;
 }
 
+XtAppContext nsAppShell::sAppContext = nsnull;
 
 //-------------------------------------------------------------------------
 //
@@ -87,7 +91,7 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 
   XtSetLanguageProc(NULL, NULL, NULL);
 							
-  mTopLevel = XtAppInitialize(&mAppContext,   // app_context_return
+  mTopLevel = XtAppInitialize(&sAppContext,   // app_context_return
                               "nsAppShell",   // application_class
                               NULL,           // options
                               0,              // num_options
@@ -97,13 +101,17 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
                               NULL,           // args
                               0);             // num_args
 
-  xlib_set_xt_app_context(mAppContext);
+  xlib_set_xt_app_context(sAppContext);
+
+  printf("nsAppShell::Create() app_context = %p\n",sAppContext);
 
   xlib_rgb_init(XtDisplay(mTopLevel), XtScreen(mTopLevel));
 
   printf("xlib_rgb_init(display=%p,screen=%p)\n",
          XtDisplay(mTopLevel),
          XtScreen(mTopLevel));
+
+  SetAppContext(sAppContext);
 
   return NS_OK;
 }
@@ -164,7 +172,7 @@ done:
 
   printf("Calling XtAppAddInput() with event queue\n");
 
-  XtAppAddInput(mAppContext,
+  XtAppAddInput(nsAppShell::GetAppContext(),
                 EQueue->GetEventQueueSelectFD(),
                 (XtPointer) XtInputReadMask, 
                 event_processor_callback, 
@@ -184,7 +192,7 @@ done:
 
   for (;;) 
   {
-    XtAppNextEvent(mAppContext, &event);
+    XtAppNextEvent(sAppContext, &event);
 
     XtDispatchEvent(&event);
 
@@ -264,9 +272,53 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
+
 NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
                                             PRBool *aForWindow)
 {
   //XXX:Implement this.
   return NS_OK;
+}
+
+static NS_DEFINE_CID(kCMotifAppContextServiceCID, NS_MOTIF_APP_CONTEXT_SERVICE_CID);
+
+//-------------------------------------------------------------------------
+//
+// SetAppContext
+//
+//-------------------------------------------------------------------------
+/* static */ void 
+nsAppShell::SetAppContext(XtAppContext aAppContext)
+{
+  NS_ASSERTION(aAppContext != nsnull,"App context cant be null.");
+
+  static PRBool once = PR_TRUE;
+
+  if (once)
+  {
+    once = PR_FALSE;
+
+    nsresult   rv;
+    nsIMotifAppContextService * ac_service = nsnull;
+    
+    rv = nsComponentManager::CreateInstance(kCMotifAppContextServiceCID,
+                                            nsnull,
+                                            nsIMotifAppContextService::GetIID(),
+                                            (void **)& ac_service);
+    
+    NS_ASSERTION(rv == NS_OK,"Cannot obtain app context service.");
+
+    if (ac_service)
+    {
+      printf("nsAppShell::SetAppContext() ac_service = %p\n",ac_service);
+
+      nsresult rv2 = ac_service->SetAppContext(aAppContext);
+
+      NS_ASSERTION(rv2 == NS_OK,"Cannot set the app context.");
+
+      printf("nsAppShell::SetAppContext() All is ok.\n");
+
+      NS_RELEASE(ac_service);
+    }
+  }
 }

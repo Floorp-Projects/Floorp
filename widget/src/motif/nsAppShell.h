@@ -31,7 +31,6 @@ class nsAppShell : public nsIAppShell
 {
   private:
     Widget              mTopLevel;
-    XtAppContext        mAppContext;
     nsDispatchListener* mDispatchListener;
 
   public:
@@ -54,7 +53,13 @@ class nsAppShell : public nsIAppShell
                                             PRBool *aForWindow);
 
 
-  XtAppContext GetAppContext() { return mAppContext; }
+  static XtAppContext GetAppContext() { return sAppContext; }
+
+private:
+
+  static void SetAppContext(XtAppContext aAppContext);
+
+  static XtAppContext        sAppContext;
 };
 
 #endif // nsAppShell_h__
