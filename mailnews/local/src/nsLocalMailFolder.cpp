@@ -1639,7 +1639,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 	if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
 
 	PRUint32 readCount, maxReadCount = FOUR_K -1;
-  mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
+	mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
 
   while (aLength > 0)
   {
@@ -1648,23 +1648,31 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     
     rv = aIStream->Read(mCopyState->m_dataBuffer, maxReadCount, &readCount);
     mCopyState->m_dataBuffer[readCount] ='\0';
-    *(mCopyState->m_fileStream) << mCopyState->m_dataBuffer;
-
-    // CopyFileMessage() and CopyMessages() from servers other than mailbox
-    if (mCopyState->m_parseMsgState)
     {
       char* start = mCopyState->m_dataBuffer;
-      char* end = PL_strstr(mCopyState->m_dataBuffer, MSG_LINEBREAK);
+      char* end = nsnull;
+      char* strPtr = nsnull;
+	  PRUint32 linebreak_len = 1;      
+      end = PL_strstr(mCopyState->m_dataBuffer, "\r");
+      if (!end)
+      	end = PL_strstr(mCopyState->m_dataBuffer, "\n");
+      else if (*(end+1) == LF)
+      	linebreak_len++;
       
       while (start && end)
       {
-        mCopyState->m_parseMsgState->ParseAFolderLine(start,
+		mCopyState->m_fileStream->write(start, end-start); 
+		if (mCopyState->m_parseMsgState)
+        	mCopyState->m_parseMsgState->ParseAFolderLine(start,
                                                       end-start +
-                                                      MSG_LINEBREAK_LEN);
-        start = end+MSG_LINEBREAK_LEN;
+                                                      linebreak_len);
+        *(mCopyState->m_fileStream) << MSG_LINEBREAK;                                              
+        start = end+linebreak_len;
         if (start >= &mCopyState->m_dataBuffer[readCount])
           break;
-        end = PL_strstr(start, MSG_LINEBREAK);
+        end = PL_strstr(start, "\r");
+        if (!end)
+        	end = PL_strstr(start, "\n");
       }
     }
 
