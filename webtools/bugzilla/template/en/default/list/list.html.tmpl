@@ -32,7 +32,7 @@
 
 [% title = "$terms.Bug List" %]
 [% IF searchname %]
-  [% title = title _ ": " _ searchname FILTER html %]
+  [% title = title _ ": " _ searchname %]
 [% END %]
 
 [% style_urls = [ "css/buglist.css" ] %]
