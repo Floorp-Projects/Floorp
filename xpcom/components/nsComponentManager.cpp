@@ -319,7 +319,13 @@ nsresult nsComponentManagerImpl::Init(void)
 
 #ifdef USE_REGISTRY
         NR_StartupRegistry();
-        PlatformInit();
+        {
+            nsresult ret;
+            ret = PlatformInit();
+            if( NS_FAILED( ret ) ) {
+                return ret;
+            }
+        }
 #endif
 
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
