@@ -3642,10 +3642,21 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, PRUint32 aLoadType)
 
     UpdateCurrentGlobalHistory();
     PRBool updateHistory = PR_TRUE;
+    PRBool equalUri = PR_FALSE;
 
+    // Get the post data from the channel
+    nsCOMPtr<nsIInputStream> inputStream;
+    if (aChannel) {
+        nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+ 
+        if(httpChannel) {
+            httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+        }
+    }
     // Determine if this type of load should update history
     if (aLoadType & LOAD_FLAGS_BYPASS_HISTORY ||
-        aLoadType & LOAD_CMD_RELOAD || aLoadType & LOAD_CMD_HISTORY)
+        aLoadType & LOAD_CMD_RELOAD || aLoadType & LOAD_CMD_HISTORY ||
+        (mCurrentURI && NS_SUCCEEDED(mCurrentURI->Equals(aURI, &equalUri)) && equalUri && !inputStream))
     {
       updateHistory = PR_FALSE;
     }
