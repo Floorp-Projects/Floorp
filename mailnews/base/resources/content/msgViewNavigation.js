@@ -99,9 +99,9 @@ function GetSubFoldersInFolderPaneOrder(folder)
 function FindNextChildFolder(folder)
 {
   // if there is unread mail in the trash, sent, drafts, unsent messages
-  // or templates folders, we ignore it
-  // when doing cross folder "next" navigation
-  if (IsSpecialFolder(folder, MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE | MSG_FOLDER_FLAG_TEMPLATES))
+  // templates or junk special folder, 
+  // we ignore it when doing cross folder "next" navigation
+  if (IsSpecialFolder(folder, MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE | MSG_FOLDER_FLAG_TEMPLATES | MSG_FOLDER_FLAG_JUNK))
     return null;
 
   if (folder.getNumUnread(false) > 0)
