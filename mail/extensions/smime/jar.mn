@@ -2,8 +2,11 @@ messenger.jar:
 *+  content/messenger-smime/msgReadSMIMEOverlay.xul                  (content/msgReadSMIMEOverlay.xul)
 *+  content/messenger-smime/msgCompSMIMEOverlay.xul                  (content/msgCompSMIMEOverlay.xul)
 *+  content/messenger-smime/msgHdrViewSMIMEOverlay.js                (content/msgHdrViewSMIMEOverlay.js)
+*+  content/messenger/am-smime.xul                                   (content/am-smime.xul)
+*+  content/messenger/am-smime.js                                    (content/am-smime.js)
 
 classic.jar:
-+   skin/classic/messenger/smime/msgCompSMIMEOverlay.css               (skin/msgCompSMIMEOverlay.css)
++   skin/classic/messenger/smime/msgCompSMIMEOverlay.css             (skin/msgCompSMIMEOverlay.css)
 
-
+en-US.jar:
++   locale/en-US/messenger/am-smime.dtd                              (locale/am-smime.dtd)

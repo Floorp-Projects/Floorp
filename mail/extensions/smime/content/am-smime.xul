@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-2001 Netscape Communications Corporation. All Rights Reserved.
+#
+#
+# Contributors:
+#   ddrinan@netscape.com
+#   Scott MacGregor <mscott@netscape.com>
+#
+
+<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
+
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/am-smime.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        onload="parent.onPanelLoaded('am-smime.xul');"
+        orient="vertical">
+ 
+  <stringbundle id="bundle_smime" src="chrome://messenger/locale/am-smime.properties"/> 
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-smime.js"/>
+    
+  <dialogheader title="&securityTitle.label;"/>
+
+  <label hidden="true" wsm_persist="true" id="identity.encryptionpolicy" />
+
+  <description>&securityHeading.label;</description>
+
+  <groupbox id="signing.titlebox">
+    <caption label="&signingGroupTitle.label;"/>
+    
+    <label value="&signingCert.message;"/>
+
+    <hbox align="center">
+      <textbox id="identity.signing_cert_name" wsm_persist="true" flex="1" 
+             readonly="true" disabled="true"/>
+
+      <button id="signingCertSelectButton"
+              label="&certificate.button;"
+              oncommand="smimeSelectCert('identity.signing_cert_name')"/>
+ 
+      <button id="signingCertClearButton"
+              label="&certificate_clear.button;"
+              oncommand="smimeClearCert('identity.signing_cert_name')"/>
+    </hbox>
+    
+    <separator class="thin"/>
+
+    <checkbox id="identity.sign_mail" wsm_persist="true" label="&signMessage.label;"/>
+  </groupbox>
+
+  <groupbox id="encryption.titlebox">
+    <caption label="&encryptionGroupTitle.label;"/>
+
+    <label value="&encryptionCert.message;"/>
+    
+    <hbox align="center">
+      <textbox id="identity.encryption_cert_name" wsm_persist="true" flex="1" 
+               readonly="true" disabled="true"/>
+
+      <button id="encryptionCertSelectButton"
+              label="&certificate.button;"
+              oncommand="smimeSelectCert('identity.encryption_cert_name')"/>
+      
+      <button id="encryptionCertClearButton"
+              label="&certificate_clear.button;"
+              oncommand="smimeClearCert('identity.encryption_cert_name')"/>
+    </hbox>
+
+    <separator class="thin"/>
+
+    <label value="&encryptionChoiceLabel.label;"/>
+
+    <radiogroup id="encryptionChoices">
+      <radio id="encrypt_mail_never" wsm_persist="true" value="0"
+             label="&neverEncrypt.label;"/>
+
+      <radio id="encrypt_mail_always" wsm_persist="true" value="2"
+              label="&alwaysEncryptMessage.label;"/>
+    </radiogroup>
+  </groupbox> 
+  
+  <!-- Certificate manager -->
+  <groupbox>
+    <caption label="&managecerts.label;"/>
+    <description>&managecerts.text;</description>
+    <hbox align="right">
+      <button label="&managecerts.button;"
+              oncommand="openCertManager();" 
+              id="openCertManagerButton"
+              accesskey="&managecerts.accesskey;"/>
+    </hbox>
+  </groupbox>
+     
+</page>
