@@ -389,7 +389,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
         mNeedsFontSpec=PR_FALSE;
       }
 
-      while(NS_OK==result){
+      while(NS_SUCCEEDED(result)){
         CToken* theToken=mTokenizer->PopToken();
         if(theToken) {
           result=HandleToken(theToken,aParser);
@@ -971,33 +971,48 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
             else return kEOF;
           }
         }
-      }
-      
-      WriteTag(theContext.mTokenNode,*mSink,theEndTag,mIsHTML,mIsPlaintext,theContext);
-      
-      // We make sure to display the title on the view source window.
-      
-      if(eHTMLTag_title == theTag){
-        nsCParserNode attrNode(theToken,mLineNumber,GetTokenRecycler());
-        CToken* theNextToken = mTokenizer->PopToken();
-        if(theNextToken) {
-          theType=eHTMLTokenTypes(theNextToken->GetTokenType());
-          if(eToken_text==theType) {
-            attrNode.SetSkippedContent(theNextToken->GetStringValueXXX());
-          } 
+#if 0
+        if(mParser) {
+          nsAutoString      charsetValue;
+          nsCharsetSource   charsetSource;
+          CObserverService& theService=mParser->GetObserverService();
+          CParserContext*   pc=mParser->PeekContext(); 
+          void*             theDocID=(pc)? pc->mKey:0; 
+    
+          mParser->GetDocumentCharset(charsetValue,charsetSource);
+          result=theService.Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,
+                                   kViewSourceCommand,charsetValue,charsetSource);
         }
-        result= OpenHead(attrNode);
-        if(NS_OK==result) {
-          if(mSink) {
-            mSink->SetTitle(attrNode.GetSkippedContent());
+#endif
+        if(NS_SUCCEEDED(result)) {
+
+          WriteTag(theContext.mTokenNode,*mSink,theEndTag,mIsHTML,mIsPlaintext,theContext);
+      
+          // We make sure to display the title on the view source window.
+      
+          if(eHTMLTag_title == theTag){
+            nsCParserNode attrNode(theToken,mLineNumber,GetTokenRecycler());
+            CToken* theNextToken = mTokenizer->PopToken();
+            if(theNextToken) {
+              theType=eHTMLTokenTypes(theNextToken->GetTokenType());
+              if(eToken_text==theType) {
+                attrNode.SetSkippedContent(theNextToken->GetStringValueXXX());
+              } 
+            }
+            result= OpenHead(attrNode);
+            if(NS_OK==result) {
+              if(mSink) {
+                mSink->SetTitle(attrNode.GetSkippedContent());
+              }
+              if(NS_OK==result)
+                result=CloseHead(attrNode);
+            }
+            const nsString& theText=attrNode.GetSkippedContent();
+            ::WriteText(theText,*mSink,PR_FALSE,mIsPlaintext,theContext);
           }
-          if(NS_OK==result)
-            result=CloseHead(attrNode);
         }
-        const nsString& theText=attrNode.GetSkippedContent();
-        ::WriteText(theText,*mSink,PR_FALSE,mIsPlaintext,theContext);
+        break;
       }
-      break;
     case eToken_end:
       WriteTag(theContext.mTokenNode,*mSink,theEndTag,mIsHTML,mIsPlaintext,theContext);
       break;

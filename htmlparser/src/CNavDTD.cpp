@@ -714,7 +714,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
               if(gHTMLElements[eHTMLTag_body].SectionContains(theTag,PR_TRUE)){
                 mTokenizer->PushTokenFront(aToken); //put this token back...
                 mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content
-                theToken=(CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body);
+                theToken=(CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theTag=eHTMLTag_body);
                 //now open a body...
               }
             }
@@ -1087,12 +1087,15 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   } 
 
   if(mParser) {
-    nsAutoString charsetValue;
-    nsCharsetSource charsetSource;
+    nsAutoString      charsetValue;
+    nsCharsetSource   charsetSource;
+    CObserverService& theService=mParser->GetObserverService();
+    CParserContext*   pc=mParser->PeekContext(); 
+    void*             theDocID=(pc)? pc->mKey:0; 
+    
     mParser->GetDocumentCharset(charsetValue,charsetSource);
-    CParserContext* pc=mParser->PeekContext(); 
-    void* theDocID=(pc) ? pc->mKey : 0; 
-    result=(mParser->GetObserverService()).Notify(aTag,aNode,(PRUint32)theDocID,this,charsetValue,charsetSource);
+    result=theService.Notify(aTag,aNode,(PRUint32)theDocID,kHTMLTextContentType,
+                             charsetValue,charsetSource);
   }
 
 
