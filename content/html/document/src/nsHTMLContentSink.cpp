@@ -2396,7 +2396,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     }
     NS_RELEASE(docURL);
     rv = NS_NewURL(&url, nsnull, absURL);
-    delete src;
     if (NS_OK != rv) {
       return rv;
     }
