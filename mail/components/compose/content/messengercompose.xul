@@ -421,6 +421,7 @@
         <menupopup id="menu_HelpPopup">
           <menuitem accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
           <menuitem accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
+          <menuseparator/>
           <menuitem accesskey="&aboutCmd.accesskey;"
                     label="&aboutCmd.label;"
                     oncommand="window.openDialog('chrome://messenger/content/aboutDialog.xul', 'About', 'modal,centerscreen,chrome,resizable=no');"/>
@@ -488,7 +489,7 @@
   <hbox flex="1">
     <vbox id="sidebar-box" hidden="true">
       <sidebarheader align="center">
-        <label id="sidebar-title" value="Addresses"/>
+        <label id="sidebar-title" value="&addressesSidebarTitle.label;"/>
         <spacer flex="1"/>
         <toolbarbutton class="ab-closebutton" oncommand="toggleAddressPicker();"/>      
       </sidebarheader>  

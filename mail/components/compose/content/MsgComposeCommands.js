@@ -2888,7 +2888,7 @@ function toggleAddressPicker()
     // we do this lazily here, so we don't spend time when bringing up the compose window loading the address book
     // data sources. Only when the user opens the address picker do we set the src url for the sidebar...
     if (sidebarUrl == "")
-      sidebar.setAttribute("src", "chrome://messenger/content/addressbook/abSelectAddresses-panel.xul");
+      sidebar.setAttribute("src", "chrome://messenger/content/addressbook/abContactsPanel.xul");
     menuItem.setAttribute("checked","true");
   }
   else

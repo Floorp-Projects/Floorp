@@ -95,8 +95,8 @@
 <!ENTITY customizeToolbar.label "Customize...">
 <!ENTITY customizeToolbar.accesskey "C">
 
-<!ENTITY addressSidebar.label "Address Sidebar"> 
-<!ENTITY addressSidebar.accesskey "A"> 
+<!ENTITY addressSidebar.label "Contacts Sidebar"> 
+<!ENTITY addressSidebar.accesskey "o"> 
 
 <!-- Format Menu -->
 <!ENTITY formatMenu.label "Format">
@@ -105,8 +105,6 @@
 <!-- Options Menu -->
 <!ENTITY optionsMenu.label "Options">
 <!ENTITY optionsMenu.accesskey "p">
-<!ENTITY selectAddressCmd.label "Select Addresses...">
-<!ENTITY selectAddressCmd.accesskey "c">
 <!ENTITY checkSpellingCmd.label "Check Spelling...">
 <!ENTITY checkSpellingCmd.key "K">
 <!ENTITY checkSpellingCmd.accesskey "S">
@@ -168,7 +166,7 @@
 <!-- Mail Toolbar -->
 <!ENTITY sendButton.label "Send">
 <!ENTITY quoteButton.label "Quote">
-<!ENTITY addressButton.label "Address">
+<!ENTITY addressButton.label "Contacts">
 <!ENTITY attachButton.label "Attach">
 <!ENTITY spellingButton.label "Spelling">
 <!ENTITY saveButton.label "Save">
@@ -236,3 +234,6 @@
 <!ENTITY selectAll.accesskey "A">
 <!ENTITY addAttachment.label "Add Attachment">
 <!ENTITY addAttachment.accesskey "t">
+
+<!-- Title for the address picker panel -->
+<!ENTITY addressesSidebarTitle.label "Contacts">
