@@ -28,6 +28,7 @@
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIGenericFactory.h"
 #include "nsIAllocator.h"
 #include "nsIXPConnect.h"
 #include "nsIInterfaceInfo.h"
@@ -613,6 +614,7 @@ class nsXPCWrappedNative : public nsIXPConnectWrappedNative
     NS_IMETHOD GetIID(nsIID** iid); // returns IAllocatator alloc'd copy
     NS_IMETHOD DebugDump(int depth);
     NS_IMETHOD SetFinalizeListener(nsIXPConnectFinalizeListener* aListener);
+    NS_IMETHOD GetJSObjectPrototype(JSObject** aJSObj);
 
 public:
     static nsXPCWrappedNative* GetNewOrUsedWrapper(XPCContext* xpcc,

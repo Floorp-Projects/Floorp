@@ -55,6 +55,12 @@
 { 0x4dd7ec80, 0x30d9, 0x11d3,\
     { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
 
+// {DC5FDE90-439D-11d3-988C-006008962422}
+#define NS_OVERLOADED_CID \
+{ 0xdc5fde90, 0x439d, 0x11d3, \
+    { 0x98, 0x8c, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+
+
 // 'namespace' class
 class xpctest
 {
@@ -70,6 +76,9 @@ public:
 
   static const nsID& GetStringTestCID() {static nsID cid = NS_STRING_TEST_CID; return cid;}
   static NS_METHOD ConstructStringTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetOverloadedCID() {static nsID cid = NS_OVERLOADED_CID; return cid;}
+  static NS_METHOD ConstructOverloaded(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
     xpctest();  // not implemented

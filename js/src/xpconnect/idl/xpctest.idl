@@ -133,3 +133,9 @@ interface nsIXPCTestString : nsISupports {
     void GetStringB(out string s);
     void GetStringC([shared,retval] out string s);
 };
+
+[scriptable, uuid(0ff4faf0-439a-11d3-988c-006008962422)]
+interface nsIXPCTestOverloaded : nsISupports {
+    void Foo1(in PRInt32 p1);
+    void Foo2(in PRInt32 p1, in PRInt32 p2);
+};
