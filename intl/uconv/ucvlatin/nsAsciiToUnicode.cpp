@@ -42,8 +42,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
+// use iso-8859-1 decoder to interpret us-ascii. Some websites are mistakenly 
+// labeled as us-ascii for iso-8859-1. Be generous here should be fine. 
+
 static const PRUint16 g_utMappingTable[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+#include "../src/cp1252.ut"
 };
 
 static const PRInt16 g_utShiftTable[] =  {
