@@ -116,6 +116,8 @@ static PRBool QuitOnTimeout = PR_FALSE;
 
 static SSL3Statistics * ssl3stats;
 
+static int failed_already = 0;
+
 
 char * ownPasswd( PK11SlotInfo *slot, PRBool retry, void *arg)
 {
@@ -603,6 +605,7 @@ handle_connection( PRFileDesc *ssl_sock, int connection)
 	errWarn("PR_Write");
 	PR_Free(buf);
 	buf = 0;
+        failed_already = 1;
 	return SECFailure;
     }
     printSecurityInfo(ssl_sock);
@@ -1084,7 +1087,7 @@ main(int argc, char **argv)
 	exitVal = (ssl3stats->hsh_sid_cache_misses != connections) ||
                 (certsTested != connections);
 
-
+    exitVal = ( exitVal || failed_already );
     NSS_Shutdown();
     PR_Cleanup();
     return exitVal;
