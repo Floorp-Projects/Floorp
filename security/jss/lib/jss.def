@@ -218,3 +218,10 @@ Java_org_mozilla_jss_pkcs11_PK11Store_getEncryptedPrivateKeyInfo;
 ;+    local:
 ;+       *;
 ;+};
+;+JSS_3.1.1 {       # JSS 3.1.1 release
+;+    global:
+Java_org_mozilla_jss_ssl_SSLServerSocket_setReuseAddress;
+Java_org_mozilla_jss_ssl_SSLServerSocket_getReuseAddress;
+;+    local:
+;+       *;
+;+};

@@ -222,3 +222,51 @@ finish:
         (*env)->ReleaseStringUTFChars(env, nicknameStr, nickname);
     }
 }
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLServerSocket_setReuseAddress(
+    JNIEnv *env, jobject self, jboolean reuse)
+{
+    JSSL_SocketData *sock;
+    PRStatus status;
+    PRSocketOptionData sockOptData;
+
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
+
+    sockOptData.option = PR_SockOpt_Reuseaddr;
+    sockOptData.value.reuse_addr = ((reuse == JNI_TRUE) ? PR_TRUE : PR_FALSE );
+
+    status = PR_SetSocketOption(sock->fd, &sockOptData);
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "PR_SetSocketOption failed");
+        goto finish;
+    }
+
+finish:
+    return;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_mozilla_jss_ssl_SSLServerSocket_getReuseAddress(
+    JNIEnv *env, jobject self)
+{
+    JSSL_SocketData *sock;
+    PRStatus status;
+    PRSocketOptionData sockOptData;
+
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
+
+    sockOptData.option = PR_SockOpt_Reuseaddr;
+
+    status = PR_GetSocketOption(sock->fd, &sockOptData);
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "PR_SetSocketOption failed");
+        goto finish;
+    }
+
+finish:
+    /* If we got here via failure, reuse_addr might be uninitialized. But in
+     * that case we're throwing an exception, so the return value doesn't
+     * matter. */
+    return ((sockOptData.value.reuse_addr == PR_TRUE) ? JNI_TRUE : JNI_FALSE);
+}

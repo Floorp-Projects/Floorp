@@ -88,6 +88,26 @@ public class SSLServerSocket extends java.net.ServerSocket {
                 SSLCertificateApprovalCallback certApprovalCallback)
         throws IOException 
     {
+        this(port,backlog, bindAddr, certApprovalCallback, false);
+    }
+
+    /**
+     * Creates a server socket listening on the given port.
+     * @param backlog The size of the socket's listen queue.
+     * @param bindAddr The local address to which to bind. If null, an
+     *      unspecified local address will be bound to.
+     * @param certApprovalCallback Will get called to approve any certificate
+     *      presented by the client.
+     * @param reuseAddr Reuse the local bind port; this parameter sets
+     *      the <tt>SO_REUSEADDR</tt> option on the socket before calling
+     *      <tt>bind()</tt>. The default is <tt>false</tt> for backward
+     *      compatibility.
+     */
+    public SSLServerSocket(int port, int backlog, InetAddress bindAddr,
+                SSLCertificateApprovalCallback certApprovalCallback,
+                boolean reuseAddr)
+        throws IOException 
+    {
         // Dance the dance of fools.  The superclass doesn't have a default
         // constructor, so we have to trick it here. This is an example
         // of WHY WE SHOULDN'T BE EXTENDING SERVERSOCKET.
@@ -99,6 +119,8 @@ public class SSLServerSocket extends java.net.ServerSocket {
             base.socketCreate(this, certApprovalCallback, null) );
 
         base.setProxy(sockProxy);
+
+        setReuseAddress(reuseAddr);
 
         // bind it to the local address and port
         if( bindAddr == null ) {
@@ -149,6 +171,9 @@ public class SSLServerSocket extends java.net.ServerSocket {
     public int getSoTimeout() {
         return base.getTimeout();
     }
+
+    protected native void setReuseAddress(boolean reuse) throws SocketException;
+    protected native boolean getReuseAddress() throws SocketException;
 
     private native byte[] socketAccept(SSLSocket s, int timeout,
         boolean handshakeAsClient) throws SocketException;
