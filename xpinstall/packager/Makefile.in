@@ -98,11 +98,7 @@ endif
 	@echo "Creating package directory..."
 # Only zip/unzip preserve BeOS' special file attributes
 ifeq ($(OS_ARCH),BeOS)
-	@rm -f $(DIST)/package.zip
-	@mkdir $(DIST)/package
-	@(cd $(DIST)/bin ; zip -r0 ../package.zip .)
-	@(cd $(DIST)/package; unzip ../package.zip)
-	@rm -f $(DIST)/package.zip
+	@copyattr -v -d -r $(DIST)/bin $(DIST)/package
 else
 	@cp -rp ${DIST}/bin $(DIST)/package
 endif
