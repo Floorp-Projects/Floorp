@@ -581,6 +581,50 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
 #endif
 
 
+#define AUTO_FONTDATA_BUFFER_SIZE 16384 /* 16K */
+
+class nsAutoFontDataBuffer {
+public:
+  nsAutoFontDataBuffer();
+  ~nsAutoFontDataBuffer();
+
+  PRUint8* GetArray(PRInt32 aMinLength = 0);
+
+private:
+  PRUint8* mArray;
+  PRUint8  mAutoArray[AUTO_FONTDATA_BUFFER_SIZE];
+  PRInt32  mCount;
+};
+
+nsAutoFontDataBuffer::nsAutoFontDataBuffer()
+  : mArray(mAutoArray),
+    mCount(AUTO_FONTDATA_BUFFER_SIZE)
+{
+}
+
+nsAutoFontDataBuffer::~nsAutoFontDataBuffer()
+{
+  if (mArray && (mArray != mAutoArray)) {
+    delete [] mArray;
+  }
+}
+
+PRUint8*
+nsAutoFontDataBuffer::GetArray(PRInt32 aMinCount)
+{
+  if (aMinCount > mCount) {
+    PRUint8* newArray = new PRUint8[aMinCount];
+    if (!newArray) {
+      return nsnull;
+    }
+    if (mArray != mAutoArray) {
+      delete [] mArray;
+    }
+    mArray = newArray;
+    mCount = aMinCount;
+  }
+  return mArray;
+}
 
 static PRUint16
 GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
@@ -629,13 +673,13 @@ GetNAME(HDC aDC, nsString* aName)
   if (!len) {
     return eGetName_OtherError;
   }
-  PRUint8* buf = (PRUint8*) nsMemory::Alloc(len);
+  nsAutoFontDataBuffer buffer;
+  PRUint8* buf = buffer.GetArray(len);
   if (!buf) {
     return eGetName_OtherError;
   }
   DWORD newLen = GetFontData(aDC, NAME, 0, buf, len);
   if (newLen != len) {
-    nsMemory::Free(buf);
     return eGetName_OtherError;
   }
   PRUint8* p = buf + 2;
@@ -663,7 +707,6 @@ GetNAME(HDC aDC, nsString* aName)
     }
   }
   if (i == n) {
-    nsMemory::Free(buf);
     return eGetName_OtherError;
   }
   p = buf + offset + idOffset;
@@ -673,8 +716,6 @@ GetNAME(HDC aDC, nsString* aName)
     p += 2;
     aName->Append(c);
   }
-
-  nsMemory::Free(buf);
 
   return eGetName_OK;
 }
@@ -707,25 +748,24 @@ GetIndexToLocFormat(HDC aDC)
   return 1;
 }
 
-static PRUint8*
-GetSpaces(HDC aDC, PRUint32* aMaxGlyph)
+static nsresult
+GetSpaces(HDC aDC, PRUint32* aMaxGlyph, nsAutoFontDataBuffer& aIsSpace)
 {
   int isLong = GetIndexToLocFormat(aDC);
   if (isLong < 0) {
-    return nsnull;
+    return NS_ERROR_FAILURE;
   }
   DWORD len = GetFontData(aDC, LOCA, 0, nsnull, 0);
   if ((len == GDI_ERROR) || (!len)) {
-    return nsnull;
+    return NS_ERROR_FAILURE;
   }
-  PRUint8* buf = (PRUint8*) nsMemory::Alloc(len);
+  PRUint8* buf = aIsSpace.GetArray(len);
   if (!buf) {
-    return nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   DWORD newLen = GetFontData(aDC, LOCA, 0, buf, len);
   if (newLen != len) {
-    nsMemory::Free(buf);
-    return nsnull;
+    return NS_ERROR_FAILURE;
   }
   if (isLong) {
     DWORD longLen = ((len / 4) - 1);
@@ -754,7 +794,7 @@ GetSpaces(HDC aDC, PRUint32* aMaxGlyph)
     }
   }
 
-  return buf;
+  return NS_OK;
 }
 
 // The following is a workaround for a Japanese Windows 95 problem.
@@ -1265,19 +1305,14 @@ enum {
   eTTFormat12SegmentedCoverage = 12,
 };
 
-nsresult 
+static void 
 ReadCMAPTableFormat12(PRUint8* aBuf, PRInt32 len, PRUint32 **aExtMap) 
 {
   PRUint8* p = aBuf;
   PRUint8* end = aBuf + len;
   PRUint32 i;
 
-  PRUint16 format = GET_SHORT(p);
-  p += sizeof(PRUint16); 
-  if (format != eTTFormat12SegmentedCoverage) {
-    nsMemory::Free(aBuf);
-    return nsnull;
-  }
+  p += sizeof(PRUint16); // skip format
   p += sizeof(PRUint16); // skip reserve field
   PRUint32 tabLen = GET_LONG(p);
   p += sizeof(PRUint32); // skip tableLen
@@ -1299,30 +1334,21 @@ ReadCMAPTableFormat12(PRUint8* aBuf, PRInt32 len, PRUint32 **aExtMap)
       if (!aExtMap[plane]) {
         aExtMap[plane] = new PRUint32[UCS2_MAP_LEN];
         if (!aExtMap[plane])
-          return NS_ERROR_FAILURE;
+          return; // i.e., we will only retain the BMP and what we were able to allocate so far
       }
       ADD_GLYPH(aExtMap[plane], c & 0xffff);
     }
     p += sizeof(PRUint32); // skip startGlyphID  field
   }
-
-  return NS_OK;
 }
 
 
-nsresult 
+static void 
 ReadCMAPTableFormat4(PRUint8* aBuf, PRInt32 aLength, PRUint32* aMap, PRUint8* aIsSpace) 
 {
-  PRUint8* p;
+  PRUint8* p = aBuf;
   PRUint8* end = aBuf + aLength;
   PRUint32 i;
-
-  p = aBuf;
-  PRUint16 format = GET_SHORT(p);
-  if (format != eTTFormat4SegmentMappingToDeltaValues) {
-    nsMemory::Free(aBuf);
-    return nsnull;
-  }
 
   // XXX byte swapping only required for little endian (ifdef?)
   while (p < end) {
@@ -1388,31 +1414,27 @@ ReadCMAPTableFormat4(PRUint8* aBuf, PRInt32 aLength, PRUint32* aMap, PRUint8* aI
     }
   }
   //printf("\n");
-
-  return NS_OK;
 }
 
 PRUint16*
 nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFontType, PRUint8& aCharset)
 {
-  PRUint32 map[UCS2_MAP_LEN];
   PRUint16 *ccmap = nsnull;
-
   DWORD len = GetFontData(aDC, CMAP, 0, nsnull, 0);
   if ((len == GDI_ERROR) || (!len)) {
     return nsnull;
   }
-
-  PRUint8* buf = (PRUint8*) nsMemory::Alloc(len);
+  nsAutoFontDataBuffer buffer;
+  PRUint8* buf = buffer.GetArray(len);
   if (!buf) {
     return nsnull;
   }
   DWORD newLen = GetFontData(aDC, CMAP, 0, buf, len);
   if (newLen != len) {
-    nsMemory::Free(buf);
     return nsnull;
   }
 
+  PRUint32 map[UCS2_MAP_LEN];
   nsCRT::memset(map, 0, sizeof(map));
   PRUint8* p = buf + sizeof(PRUint16); // skip version, move to numberSubtables
   PRUint16 n = GET_SHORT(p); // get numberSubtables
@@ -1440,58 +1462,55 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFont
         if (NS_SUCCEEDED(GetEncoding(aShortName, encoding))) {
           aCharset = DEFAULT_CHARSET;
           aFontType = eFontType_NonUnicode;
-          nsMemory::Free(buf);
           return GetCCMapThroughConverter(aShortName);
         } // if GetEncoding();
-        keepFormat = eTTFormat4SegmentMappingToDeltaValues;
-        keepOffset = offset;
+        PRUint16 format = GET_SHORT(buf+offset);
+        if (format == eTTFormat4SegmentMappingToDeltaValues) {
+          keepFormat = eTTFormat4SegmentMappingToDeltaValues;
+          keepOffset = offset;
+        }
       } // if (encodingID == eTTMicrosoftEncodingUnicode) 
       else if (encodingID == eTTMicrosoftEncodingSymbol) { // symbol
         aCharset = SYMBOL_CHARSET;
         aFontType = eFontType_NonUnicode;
-        nsMemory::Free(buf);
         return GetCCMapThroughConverter(aShortName);
       } // if (encodingID == eTTMicrosoftEncodingSymbol)
       else if (encodingID == eTTMicrosoftEncodingUCS4) {
-        keepFormat = eTTFormat12SegmentedCoverage;
-        keepOffset = offset;
-        // we don't want to try anything else when this format is available.
-        break;
+        PRUint16 format = GET_SHORT(buf+offset);
+        if (format == eTTFormat12SegmentedCoverage) {
+          keepFormat = eTTFormat12SegmentedCoverage;
+          keepOffset = offset;
+          // we don't want to try anything else when this format is available.
+          break;
+        }
       }
     } // if (platformID == eTTPlatformIDMicrosoft) 
   } // for loop
 
 
-  nsresult res;
   if (eTTFormat12SegmentedCoverage == keepFormat) {
     PRUint32* extMap[EXTENDED_UNICODE_PLANES+1];
     extMap[0] = map;
     nsCRT::memset(extMap+1, 0, sizeof(PRUint32*)*EXTENDED_UNICODE_PLANES);
-    res = ReadCMAPTableFormat12(buf+keepOffset, len-keepOffset, extMap);
-    if (NS_SUCCEEDED(res)) {
-      ccmap = MapToCCMapExt(map, extMap+1, EXTENDED_UNICODE_PLANES);
-      aCharset = DEFAULT_CHARSET;
-      aFontType = eFontType_Unicode;
-    }
+    ReadCMAPTableFormat12(buf+keepOffset, len-keepOffset, extMap);
+    ccmap = MapToCCMapExt(map, extMap+1, EXTENDED_UNICODE_PLANES);
     for (i = 1; i <= EXTENDED_UNICODE_PLANES; ++i) {
       if (extMap[i])
         delete [] extMap[i];
     }
+    aCharset = DEFAULT_CHARSET;
+    aFontType = eFontType_Unicode;
   }
   else if (eTTFormat4SegmentMappingToDeltaValues == keepFormat) {
     PRUint32 maxGlyph;
-    PRUint8* isSpace = GetSpaces(aDC, &maxGlyph);
-    if (isSpace) {
-      res = ReadCMAPTableFormat4(buf+keepOffset, len-keepOffset, map, isSpace);
-      nsMemory::Free(isSpace);
-      if (NS_SUCCEEDED(res))
-        ccmap = MapToCCMap(map);
+    nsAutoFontDataBuffer isSpace;
+    if (NS_SUCCEEDED(GetSpaces(aDC, &maxGlyph, isSpace))) {
+      ReadCMAPTableFormat4(buf+keepOffset, len-keepOffset, map, isSpace.GetArray());
+      ccmap = MapToCCMap(map);
       aCharset = DEFAULT_CHARSET;
       aFontType = eFontType_Unicode;
     }
   }
-
-  nsMemory::Free(buf);
 
   return ccmap;
 }
@@ -1631,6 +1650,7 @@ GetGlyphIndices(HDC              aDC,
   if (!aString || !aBuffer)
     return nsnull;
 
+  nsAutoFontDataBuffer buffer;
   PRUint8* buf = nsnull;
   DWORD len = -1;
   
@@ -1649,13 +1669,12 @@ GetGlyphIndices(HDC              aDC,
     if ((len == GDI_ERROR) || (!len)) {
       return nsnull;
     }
-    buf = (PRUint8*) nsMemory::Alloc(len);
+    buf = buffer.GetArray(len);
     if (!buf) {
       return nsnull;
     }
     DWORD newLen = GetFontData(aDC, CMAP, 0, buf, len);
     if (newLen != len) {
-      nsMemory::Free(buf);
       return nsnull;
     }
     PRUint8* p = buf + sizeof(PRUint16); // skip version, move to numberOfSubtables
@@ -1676,13 +1695,11 @@ GetGlyphIndices(HDC              aDC,
     }
     if (i == n) {
       NS_WARNING("nsFontMetricsWin::GetGlyphIndices() called for a non-unicode font!");
-      nsMemory::Free(buf);
       return nsnull;
     }
     p = buf + offset;
     PRUint16 format = GET_SHORT(p);
     if (format != eTTFormat4SegmentMappingToDeltaValues) {
-      nsMemory::Free(buf);
       return nsnull;
     }
     PRUint8* end = buf + len;
@@ -1702,9 +1719,12 @@ GetGlyphIndices(HDC              aDC,
       if (GetNAME(aDC, &name) == eGetName_OK) {
         info = (nsFontInfo*)PL_HashTableLookup(nsFontMetricsWin::gFontMaps, &name);
         if (info) {
-          info->mCMAP.mData = buf;
-          info->mCMAP.mLength = len;
-          *aCMAP = &(info->mCMAP);
+          info->mCMAP.mData = (PRUint8*)nsMemory::Alloc(len);
+          if (info->mCMAP.mData) {
+            memcpy(info->mCMAP.mData, buf, len);
+            info->mCMAP.mLength = len;
+            *aCMAP = &(info->mCMAP);
+          }          
         }
       }
     }
@@ -1755,10 +1775,6 @@ GetGlyphIndices(HDC              aDC,
       result[i] = GetGlyphIndex(segCount, endCode, startCode,
                                 idRangeOffset, idDelta, end, 
                                 aString[i]);
-    }
-
-    if (!aCMAP) { // free work-space if the CMAP is not to be cached
-      nsMemory::Free(buf);
     }
 
     return result;
