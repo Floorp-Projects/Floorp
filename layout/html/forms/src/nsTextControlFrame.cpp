@@ -40,6 +40,10 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 
+#include "nsCSSRendering.h"
+#include "nsIDeviceContext.h"
+#include "nsIFontMetrics.h"
+
 #ifdef SingleSignon
 #include "nsIDocument.h"
 #include "prmem.h"
@@ -478,4 +482,103 @@ NS_IMETHODIMP
 nsTextControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TextControl", aResult);
+}
+
+void nsTextControlFrame::GetCurrentText(nsString & aText)
+{
+  nsIDOMHTMLInputElement* inputElement;
+  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+    inputElement->GetValue(aText);
+    NS_RELEASE(inputElement);
+  }
+}
+
+void
+nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
+                                     nsIRenderingContext& aRenderingContext,
+                                     const nsRect& aDirtyRect)
+{
+#ifdef XP_PC
+  aRenderingContext.PushState();
+
+    nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsMargin border;
+    spacing->CalcBorderFor(this, border);
+
+    float p2t;
+    aPresContext.GetScaledPixelsToTwips(p2t);
+    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+    nsRect outside(0, 0, mRect.width, mRect.height);
+    outside.Deflate(border);
+    outside.Deflate(onePixel, onePixel);
+
+    nsRect inside(outside);
+    inside.Deflate(onePixel, onePixel);
+
+  /*if (mGotFocus) { // draw dashed line to indicate selection, XXX don't calc rect every time
+    PRUint8 borderStyles[4];
+    nscolor borderColors[4];
+    nscolor black = NS_RGB(0,0,0);
+    for (PRInt32 i = 0; i < 4; i++) {
+      borderStyles[i] = NS_STYLE_BORDER_STYLE_DOTTED;
+      borderColors[i] = black;
+    }
+    nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, outside,
+                                    inside, PR_FALSE, nsnull);
+  }*/
+
+  float appUnits;
+  float devUnits;
+  float scale;
+  nsIDeviceContext * context;
+  aRenderingContext.GetDeviceContext(context);
+
+  context->GetCanonicalPixelScale(scale);
+  context->GetAppUnitsToDevUnits(devUnits);
+  context->GetDevUnitsToAppUnits(appUnits);
+
+  //aRenderingContext.SetColor(NS_RGB(192,192,192));
+  //aRenderingContext.FillRect(inside);
+
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  nsFont font(aPresContext.GetDefaultFixedFont()); 
+  GetFont(&aPresContext, font);
+
+  aRenderingContext.SetFont(font);
+
+  nscoord textWidth;
+  nscoord textHeight;
+  nsString text;
+  GetCurrentText(text);
+  aRenderingContext.GetWidth(text, textWidth);
+
+  nsIFontMetrics* metrics;
+  context->GetMetricsFor(font, metrics);
+  metrics->GetHeight(textHeight);
+
+  nscoord x = inside.x + onePixel + onePixel;
+  nscoord y = ((inside.height  - textHeight) / 2)  + inside.y;
+
+  aRenderingContext.DrawString(text, x, y, 0); 
+  NS_RELEASE(context);
+
+  PRBool status;
+  aRenderingContext.PopState(status);
+#endif
+}
+
+NS_METHOD 
+nsTextControlFrame::Paint(nsIPresContext& aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect)
+{
+#ifdef XP_PC
+  PaintTextControl(aPresContext, aRenderingContext, aDirtyRect);
+#endif
+  return NS_OK;
 }
