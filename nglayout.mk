@@ -30,7 +30,7 @@ XPCOM_BRANCH = XPCOM_BRANCH
 # CVS commands to pull the appropriate branch versions
 CVSCO_XPCOM = $(CVSCO) -r $(XPCOM_BRANCH)
 CVSCO_IMGLIB = $(CVSCO) -r $(IMGLIB_BRANCH)
-CVSCO_NETLIB = $(CVSCO) -A
+CVSCO_NETLIB = $(CVSCO)
 CVSCO_NGLAYOUT = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 
@@ -39,6 +39,7 @@ CVSCO_LIZARD = $(CVSCO)
 ifndef NGLAYOUT_PASS2
 DIRS =				\
   config			\
+  dbm				\
   nsprpub			\
   jpeg				\
   modules/libreg		\
@@ -53,6 +54,7 @@ DIRS =				\
   modules/libimg		\
   base				\
   lib/xp			\
+  lib/libpwcac			\
   network			\
   lib/liblayer/include
 else
@@ -135,6 +137,7 @@ pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout
 pull_lizard:
 	cd $(MOZ_SRC)/.; \
 	$(CVSCO_LIZARD) mozilla/config; \
+	$(CVSCO_LIZARD) mozilla/dbm; \
 	$(CVSCO_LIZARD) mozilla/build/build_number; \
 	$(CVSCO_LIZARD) mozilla/cmd/xfe/icons/icondata.h; \
 	$(CVSCO_LIZARD) mozilla/lib/liblayer; \
@@ -148,8 +151,8 @@ pull_lizard:
 
 pull_xpcom:
 	cd $(MOZ_SRC)/.; \
-	$(CVSCO_XPCOM) mozilla/modules/libreg; \
-	$(CVSCO_XPCOM) mozilla/xpcom; \
+	$(CVSCO) -A mozilla/modules/libreg; \
+	$(CVSCO) -A mozilla/xpcom; \
 	$(CVSCO_XPCOM) mozilla/modules/libpref
 
 pull_imglib:
@@ -161,6 +164,7 @@ pull_imglib:
 pull_netlib:
 	cd $(MOZ_SRC)/.; \
 	$(CVSCO_NETLIB) mozilla/lib/xp; \
+	$(CVSCO_NETLIB) mozilla/lib/libpwcac; \
 	$(CVSCO_NETLIB) mozilla/network; \
 	$(CVSCO_NETLIB) mozilla/include
 
