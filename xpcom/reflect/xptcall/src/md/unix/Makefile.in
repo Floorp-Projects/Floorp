@@ -68,17 +68,10 @@ CPPSRCS		= \
 		  xptcinvoke_sparc_solaris.cpp \
 		  xptcstubs_sparc_solaris.cpp \
 		  $(NULL)
-ifeq ($(GNU_CC),1)
 ASFILES		= \
 		  xptcinvoke_asm_sparc_solaris_GCC.s \
 		  xptcstubs_asm_sparc_solaris.s \
 		  $(NULL)
-else
-ASFILES		= \
-		  xptcinvoke_asm_sparc_solaris_SUNW.s \
-		  xptcstubs_asm_sparc_solaris.s \
-		  $(NULL)
-endif
 endif
 endif
 
