@@ -87,4 +87,19 @@ struct nsMargin {
                                                  return *this;}
 };
 
+#ifdef NS_COORD_IS_FLOAT
+struct nsIntMargin {
+  PRInt32 left, top, right, bottom;
+
+  // Constructors
+  nsIntMargin() {}
+  nsIntMargin(const nsIntMargin& aMargin) {*this = aMargin;}
+  nsIntMargin(PRInt32 aLeft,  PRInt32 aTop,
+              PRInt32 aRight, PRInt32 aBottom) {left = aLeft; top = aTop;
+                                                right = aRight; bottom = aBottom;}
+};
+#else
+typedef nsMargin nsIntMargin;
+#endif
+
 #endif /* NSMARGIN_H */

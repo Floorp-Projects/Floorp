@@ -49,9 +49,8 @@
 /// handy constants
 #define TWIPS_PER_POINT_INT           20
 #define TWIPS_PER_POINT_FLOAT         20.0f
-#define CEIL_CONST_FLOAT              (1.0f - 0.5f*FLT_EPSILON)
-#define ROUND_EXCLUSIVE_CONST_FLOAT   (0.5f*CEIL_CONST_FLOAT)
 #define ROUND_CONST_FLOAT             0.5f
+#define CEIL_CONST_FLOAT              (1.0f - 0.5f*FLT_EPSILON)
 
 
 /*
@@ -59,25 +58,30 @@
  */
 inline nscoord NSToCoordFloor(float aValue)
 {
+#ifdef NS_COORD_IS_FLOAT
+  return floorf(aValue);
+#else
   return ((0.0f <= aValue) ? nscoord(aValue) : nscoord(aValue - CEIL_CONST_FLOAT));
+#endif
 }
 
 inline nscoord NSToCoordCeil(float aValue)
 {
+#ifdef NS_COORD_IS_FLOAT
+  return ceilf(aValue);
+#else
   return ((0.0f <= aValue) ? nscoord(aValue + CEIL_CONST_FLOAT) : nscoord(aValue));
+#endif
 }
 
 inline nscoord NSToCoordRound(float aValue)
 {
+#ifdef NS_COORD_IS_FLOAT
+  return floorf(aValue + ROUND_CONST_FLOAT);
+#else
   return ((0.0f <= aValue) ? nscoord(aValue + ROUND_CONST_FLOAT) : nscoord(aValue - ROUND_CONST_FLOAT));
+#endif
 }
-
-inline nscoord NSToCoordRoundExclusive(float aValue)
-{
-  return ((0.0f <= aValue) ? nscoord(aValue + ROUND_EXCLUSIVE_CONST_FLOAT) :
-                             nscoord(aValue - ROUND_EXCLUSIVE_CONST_FLOAT));
-}
-
 
 /*
  * Int Rounding Functions
@@ -97,13 +101,6 @@ inline PRInt32 NSToIntRound(float aValue)
   return ((0.0f <= aValue) ? PRInt32(aValue + ROUND_CONST_FLOAT) : PRInt32(aValue - ROUND_CONST_FLOAT));
 }
 
-inline PRInt32 NSToIntRoundExclusive(float aValue)
-{
-  return ((0.0f <= aValue) ? PRInt32(aValue + ROUND_EXCLUSIVE_CONST_FLOAT) :
-                             PRInt32(aValue - ROUND_EXCLUSIVE_CONST_FLOAT));
-}
-
-
 /* 
  * Twips/Points conversions
  */
@@ -114,7 +111,9 @@ inline nscoord NSFloatPointsToTwips(float aPoints)
 
 inline nscoord NSIntPointsToTwips(PRInt32 aPoints)
 {
-  return nscoord(aPoints * TWIPS_PER_POINT_INT);
+  // If nscoord is a float, do the multiplication as float to avoid
+  // overflow
+  return nscoord(aPoints) * TWIPS_PER_POINT_INT;
 }
 
 inline PRInt32 NSTwipsToIntPoints(nscoord aTwips)
@@ -142,12 +141,20 @@ inline float NSTwipsToFloatPoints(nscoord aTwips)
  */
 inline nscoord NSFloatPixelsToTwips(float aPixels, float aTwipsPerPixel)
 {
-  return NSToCoordRound(aPixels * aTwipsPerPixel);
+  nscoord r = NSToCoordRound(aPixels * aTwipsPerPixel);
+  VERIFY_COORD(r);
+  return r;
 }
 
 inline nscoord NSIntPixelsToTwips(PRInt32 aPixels, float aTwipsPerPixel)
 {
-  return NSToCoordRound(float(aPixels) * aTwipsPerPixel);
+#ifdef NS_COORD_IS_FLOAT
+  nscoord r = aPixels * aTwipsPerPixel;
+#else
+  nscoord r = NSToCoordRound(float(aPixels) * aTwipsPerPixel);
+#endif
+  VERIFY_COORD(r);
+  return r;
 }
 
 inline float NSTwipsToFloatPixels(nscoord aTwips, float aPixelsPerTwip)
