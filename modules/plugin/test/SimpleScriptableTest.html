@@ -1,0 +1,69 @@
+<HTML>
+<H1> Simple XPConnect Scriptable Sample Plug-in </H1>
+
+<p> 
+
+This sample plug-in demonstrates how to write a XPConnect-enabled plug-in. You
+should see in the plug-in rectangle below with the text "Hello World". The text
+box and buttons demostrate calling the scriptable xpcom interfaces of the plugin
+from JavaScript.
+
+<HR>
+
+<center>
+
+<EMBED type=application/x-simple-plugin name="simple1" width=400 height=300>
+
+<script>
+
+function GetText()
+{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    
+    document.the_form.the_text.value = 
+        document.simple1.nsISimplePluginInstance.text;
+}
+
+function SetText()
+{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    
+    document.simple1.nsISimplePluginInstance.text = 
+        document.the_form.the_text.value;
+}
+
+</script>
+
+<form name ="the_form">
+<INPUT TYPE="text" NAME="the_text" VALUE="some text" SIZE="25">
+<input	type=button value="Set Text" onclick='SetText()'>
+<input	type=button value="Get Text" onclick='GetText()'>
+</form>
+
+<hr>
+
+</center>
+
+<h4>Problems?</h4>
+
+<ul>
+
+<p><li><b>Can't load pluign</b>:
+Copy the compiled plugin to your plugins directory 
+
+<p><li><b>JavaScript error in the JavaScript console talking about how 
+XPConnect can't build a wrapper</b>: 
+Copy the type library (nsISimplePluginInstance.xpt) to the mozilla components
+directory.
+
+<p><li><b>Plugin loads, but when I push the 'Set Text' button the plugin text 
+is not updated</b>: 
+Are you not running Windows? Only the Windows version updates text the plugin 
+draws. But the calls from JS to the plugin should work on all platforms.
+[We welcome fixes to the samples if you'd like to submit them]
+
+</ul>
+
+<HR>
+
+</HTML>

@@ -28,6 +28,10 @@ DEPTH = ..\..\..
 
 REQUIRES = java plug xpcom raptor
 
+XPIDLSRCS = \
+	.\nsISimplePluginInstance.idl \
+	$(NULL)
+
 OBJS = .\$(OBJDIR)\npsimple.obj
 #       .\$(OBJDIR)\stubs.obj \
 #       .\$(OBJDIR)\stubs2.obj
@@ -48,7 +52,7 @@ MAKE_OBJ_TYPE=DLL
 DLLNAME=npsimple.dll
 PDBFILE=npsimple.pdb
 MAPFILE=npsimple.map
-DEFFILE=Simple32.def
+#DEFFILE=Simple32.def
 RESFILE=Simple32.res
 
 #//------------------------------------------------------------------------

@@ -30,6 +30,8 @@ MODULE		= npsimple
 LIBRARY_NAME	= npsimple
 IS_COMPONENT	= 1
 
+XPIDLSRCS	= nsISimplePluginInstance.idl
+
 CPPSRCS		= npsimple.cpp
 
 LOCAL_INCLUDES	= -I$(srcdir)/.. -I$(srcdir)/../../public

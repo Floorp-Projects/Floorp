@@ -47,6 +47,9 @@
 #include "nsIFactory.h"
 #include "nsString.h"
 #include "simpleCID.h"
+
+#include "nsISimplePluginInstance.h"
+
 /*------------------------------------------------------------------------------
  * Windows Includes
  *----------------------------------------------------------------------------*/
@@ -222,8 +225,13 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 // SimplePluginInstance represents an instance of the SimplePlugin class.
 
-class SimplePluginInstance : public nsIPluginInstance {
+class SimplePluginInstance : 
+    public nsIPluginInstance, 
+    public nsISimplePluginInstance {
 public:
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEPLUGININSTANCE
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIEventHandler:
@@ -281,13 +289,12 @@ public:
     NS_IMETHOD
     GetValue(nsPluginInstanceVariable variable, void *value);
 
+
     ////////////////////////////////////////////////////////////////////////////
     // SimplePluginInstance specific methods:
 
     SimplePluginInstance(void);
     virtual ~SimplePluginInstance(void);
-
-    NS_DECL_ISUPPORTS
 
     void            PlatformNew(void);
     nsresult        PlatformDestroy(void);
@@ -301,12 +308,13 @@ public:
     PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 #endif
 
+    char*                       fText;
+
 protected:
     nsIPluginInstancePeer*      fPeer;
     nsPluginWindow*             fWindow;
     nsPluginMode                fMode;
     PlatformInstance            fPlatform;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -690,24 +698,27 @@ SimplePlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID,
 ////////////////////////////////////////////////////////////////////////////////
 
 SimplePluginInstance::SimplePluginInstance(void)
-    : fPeer(NULL), fWindow(NULL), fMode(nsPluginMode_Embedded)
+    : fPeer(NULL), fWindow(NULL), fMode(nsPluginMode_Embedded), fText(NULL)
 {
     NS_INIT_REFCNT();
     gPluginObjectCount++;
+
+    static const char text[] = "Hello World!";
+    fText = (char*) nsAllocator::Clone(text, sizeof(text));
 }
 
 SimplePluginInstance::~SimplePluginInstance(void)
 {
     gPluginObjectCount--;
+    if(fText)
+        nsAllocator::Free(fText);
     PlatformDestroy(); // Perform platform specific cleanup
 }
 
 // These macros produce simple version of QueryInterface and AddRef.
 // See the nsISupports.h header file for details.
 
-NS_IMPL_QUERY_INTERFACE(SimplePluginInstance, kIPluginInstanceIID);
-NS_IMPL_ADDREF(SimplePluginInstance);
-NS_IMPL_RELEASE(SimplePluginInstance);
+NS_IMPL_ISUPPORTS2(SimplePluginInstance, nsIPluginInstance, nsISimplePluginInstance)
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NewInstance:
@@ -855,6 +866,52 @@ SimplePluginInstance::NewStream(nsIPluginStreamListener** listener)
         *listener = sl;
     }
     
+    return NS_OK;
+}
+
+
+/* attribute string text; */
+NS_IMETHODIMP SimplePluginInstance::GetText(char * *aText)
+{
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::GetText\n");
+#endif
+    
+    if(!fText)
+    {
+        *aText = NULL;
+        return NS_OK;        
+    }
+    char* ptr = *aText = (char*) nsAllocator::Clone(fText, strlen(fText)+1);
+    return ptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+NS_IMETHODIMP SimplePluginInstance::SetText(const char * aText)
+{
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::SetText\n");
+#endif
+
+    if(fText)
+    {
+        nsAllocator::Free(fText);
+        fText = NULL;
+    }
+
+    if(aText)
+    {
+        fText = (char*) nsAllocator::Clone(aText, strlen(aText)+1);
+        if(!fText)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+#ifdef XP_PC
+        if(fPlatform.fhWnd) {
+            InvalidateRect( fPlatform.fhWnd, NULL, TRUE );
+            UpdateWindow( fPlatform.fhWnd );
+        }
+#endif
+
+    }
+
     return NS_OK;
 }
 
@@ -1249,7 +1306,6 @@ SimplePluginInstance::PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPAR
       case WM_PAINT: {
           PAINTSTRUCT paintStruct;
           HDC hdc;
-          static const char str[] = "Hello, World!";
 
           hdc = BeginPaint( hWnd, &paintStruct );
 
@@ -1257,7 +1313,8 @@ SimplePluginInstance::PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPAR
             FillRect(hdc, &paintStruct.rcPaint, 
                      (HBRUSH) GetStockObject(WHITE_BRUSH)); 
           
-          TextOut(hdc, 0, 0, str, sizeof(str)-1);
+          if(inst->fText)
+            TextOut(hdc, 0, 0, inst->fText, strlen(inst->fText));
 
           EndPaint( hWnd, &paintStruct );
           break;
