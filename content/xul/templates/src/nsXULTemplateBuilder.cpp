@@ -2574,7 +2574,9 @@ protected:
     nsRuleNetwork mRules;
     PRInt32       mContentVar;
     PRInt32       mContainerVar;
+    nsString      mContainerSymbol;
     PRInt32       mMemberVar;
+    nsString      mMemberSymbol;
     ConflictSet   mConflictSet;
     ContentSupportMap mContentSupportMap;
     NodeSet       mRDFTests;
@@ -4375,8 +4377,6 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
     // XXXwaterson Unfortunately, this could also lead to retractions;
     // e.g., (contaner ?a ^empty false) could become "unmatched". How
     // to track those?
-    nsresult rv;
-
     ClusterKeySet::ConstIterator last = aNewKeys.Last();
     for (ClusterKeySet::ConstIterator key = aNewKeys.First(); key != last; ++key) {
         MatchSet* matches;
@@ -4437,14 +4437,15 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
             nsCOMPtr<nsIContent> tmpl;
             bestmatch->mRule->GetContent(getter_AddRefs(tmpl));
 
-            rv = BuildContentFromTemplate(tmpl, content, content, PR_TRUE,
-                                          VALUE_TO_IRDFRESOURCE(key->mMemberValue),
-                                          PR_TRUE, bestmatch, nsnull, nsnull);
-
-            if (NS_FAILED(rv)) return rv;
+            BuildContentFromTemplate(tmpl, content, content, PR_TRUE,
+                                     VALUE_TO_IRDFRESOURCE(key->mMemberValue),
+                                     PR_TRUE, bestmatch, nsnull, nsnull);
 
             // Update the 'empty' attribute
             SetEmpty(content, bestmatch);
+
+            // Remember the best match as the new "last" match
+            matches->SetLastMatch(bestmatch);
         }
     }
 
@@ -5713,12 +5714,13 @@ nsXULTemplateBuilder::CreateContainerContents(nsIContent* aElement,
         nsCOMPtr<nsIContent> tmpl;
         match->mRule->GetContent(getter_AddRefs(tmpl));
 
-        rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_TRUE,
-                                      VALUE_TO_IRDFRESOURCE(key->mMemberValue),
-                                      aNotify, match,
-                                      aContainer, aNewIndexInContainer);
+        BuildContentFromTemplate(tmpl, aElement, aElement, PR_TRUE,
+                                 VALUE_TO_IRDFRESOURCE(key->mMemberValue),
+                                 aNotify, match,
+                                 aContainer, aNewIndexInContainer);
 
-        if (NS_FAILED(rv)) return rv;
+        // Remember this as the "last" match
+        matches->SetLastMatch(match);
     }
 
     return NS_OK;
@@ -6564,8 +6566,18 @@ nsXULTemplateBuilder::CompileRules()
         }
     }
 
-    // Found a template; check against any (optional) rules...
     if (tmpl) {
+        // Found a template
+        
+        // Set the "container" and "member" variables, if the user has
+        // specified them.
+        mContainerSymbol.Truncate();
+        tmpl->GetAttribute(kNameSpaceID_None, nsXULAtoms::container, mContainerSymbol);
+
+        mMemberSymbol.Truncate();
+        tmpl->GetAttribute(kNameSpaceID_None, nsXULAtoms::member, mMemberSymbol);
+
+        // Compile the rules beneath it (if there are any)...
         PRInt32    count;
         rv = tmpl->ChildCount(count);
         if (NS_FAILED(rv)) return rv;
@@ -6902,16 +6914,92 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
     if (! rule)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    if (mContainerSymbol.Length()) {
+        // If the container symbol was explictly declared on the
+        // <template> tag, or was implictly defined by parsing a
+        // previous rule's conditions, then add it to the rule's
+        // symbol table.
+        //
+        // Otherwise, we'll just infer the container symbol from the
+        // <content> condition.
+        rule->AddSymbol(mContainerSymbol, mContainerVar);
+    }
+
+    rule->SetContainerVariable(mContainerVar);
+
+    if (! mMemberSymbol.Length()) {
+        // If the member variable hasn't already been specified, then
+        // grovel over <action> to find it. We'll use the first one
+        // that we find in a breadth-first search.
+        nsVoidArray unvisited;
+        unvisited.AppendElement(action.get());
+
+        while (unvisited.Count()) {
+            nsIContent* next = NS_STATIC_CAST(nsIContent*, unvisited[0]);
+            unvisited.RemoveElementAt(0);
+
+            nsAutoString uri;
+            next->GetAttribute(kNameSpaceID_None, nsXULAtoms::uri, uri);
+
+            if (uri[0] == PRUnichar('?')) {
+                // Found it.
+                mMemberSymbol = uri;
+                rule->AddSymbol(uri, mMemberVar);
+                break;
+            }
+
+            // otherwise, append the children to the unvisited list: this
+            // results in a breadth-first search.
+            PRInt32 count;
+            next->ChildCount(count);
+
+            for (PRInt32 i = 0; i < count; ++i) {
+                nsCOMPtr<nsIContent> child;
+                next->ChildAt(i, *getter_AddRefs(child));
+
+                unvisited.AppendElement(child.get());
+            }
+        }
+    }
+
+    // If we can't find a member symbol, then we're out of luck. Bail.
+    if (! mMemberSymbol.Length()) {
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("xultemplate[%p] could not deduce member variable", this));
+
+        delete rule;
+        return NS_OK;
+    }
+
+    rule->AddSymbol(mMemberSymbol, mMemberVar);
+    rule->SetMemberVariable(mMemberVar);
+
     InnerNode* last;
     rv = CompileConditions(rule, conditions, aParentNode, &last);
-    if (NS_FAILED(rv)) return rv;
+
+    // If the rule compilation failed, or we don't have a container
+    // symbol, then we have to bail.
+    if (NS_FAILED(rv)) {
+        delete rule;
+        return rv;
+    }
+
+    if (!mContainerSymbol.Length()) {
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("xultemplate[%p] could not deduce container variable", this));
+
+        delete rule;
+        return NS_OK;
+    }
 
     // And now add the instantiation node: it owns the rule now.
     InstantiationNode* instnode =
         new InstantiationNode(mConflictSet, rule, mDB);
 
-    if (! instnode)
+    if (! instnode) {
+        delete rule;
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     last->AddChild(instnode);
     mRules.AddNode(instnode);
@@ -6924,43 +7012,6 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
     if (bindings) {
         rv = CompileBindings(rule, bindings);
         if (NS_FAILED(rv)) return rv;
-    }
-
-    // grovel over <action> to find MemberVariable.
-    //
-    // XXXwaterson assume that the first "uri='?var'" attribute that
-    // we find in a breadth-first descent is the member variable?
-    // Maybe we should add an attribute on the <action> tag that lets
-    // the user specify the member variable.
-    nsVoidArray unvisited;
-    unvisited.AppendElement(action.get());
-
-    while (unvisited.Count()) {
-        nsIContent* next = NS_STATIC_CAST(nsIContent*, unvisited[0]);
-        unvisited.RemoveElementAt(0);
-
-        nsAutoString uri;
-        next->GetAttribute(kNameSpaceID_None, nsXULAtoms::uri, uri);
-
-        if (uri[0] == PRUnichar('?')) {
-            PRInt32 membervar = rule->LookupSymbol(uri);
-            if (membervar) {
-                rule->SetMemberVariable(membervar);
-                break;
-            }
-        }
-
-        // otherwise, append the children to the unvisited list: this
-        // results in a breadth-first search.
-        PRInt32 count;
-        next->ChildCount(count);
-
-        for (PRInt32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIContent> child;
-            next->ChildAt(i, *getter_AddRefs(child));
-
-            unvisited.AppendElement(child.get());
-        }
     }
 
     return NS_OK;
@@ -7217,7 +7268,18 @@ nsXULTemplateBuilder::CompileContentCondition(Rule* aRule,
 
     PRInt32 urivar = aRule->LookupSymbol(uri);
     if (! urivar) {
-        mRules.CreateVariable(&urivar);
+        if (! mContainerSymbol.Length()) {
+            // If the container symbol was not explictly declared on
+            // the <template> tag, or we haven't seen a previous rule
+            // whose <content> condition defined it, then we'll
+            // implictly define it *now*.
+            mContainerSymbol = uri;
+            urivar = mContainerVar;
+        }
+        else {
+            mRules.CreateVariable(&urivar);
+        }
+
         aRule->AddSymbol(uri, urivar);
     }
 
@@ -7234,9 +7296,6 @@ nsXULTemplateBuilder::CompileContentCondition(Rule* aRule,
 
     if (! testnode)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    // XXXwaterson More assumptions about this being run once...
-    aRule->SetContainerVariable(urivar);
 
     *aResult = testnode;
     return NS_OK;
