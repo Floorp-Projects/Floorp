@@ -277,6 +277,7 @@ nsPopupSetFrame::Layout(nsBoxLayoutState& aState)
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
       viewManager->ResizeView(view, bounds.width, bounds.height);
+      viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
     }
   }
 
