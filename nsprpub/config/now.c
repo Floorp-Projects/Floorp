@@ -58,7 +58,6 @@ int main(int argc, char **argv)
 
 #elif defined(WIN32)
     __int64 now;
-    long long now;
     struct timeb b;
     ftime(&b);
     now = b.time;
