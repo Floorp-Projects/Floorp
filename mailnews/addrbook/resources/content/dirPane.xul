@@ -18,7 +18,8 @@
 
 <tree class="abDirectory" rdf:datasources="rdf:addressdirectory" id="dirTree" onclick="return ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
 	<template>
-		<rule rootcontainment="treechildren" subcontainment="treechildren">
+		<rule>
+          <treechildren>
 			<treeitem uri="...">
 				<treerow >
 					<treecell>
@@ -27,6 +28,7 @@
 					</treecell>
 				</treerow>
 			</treeitem>
+          </treechildren>
 		</rule>
 	</template>
 

@@ -22,7 +22,8 @@
 	<tree rdf:datasources="rdf:msgaccountmanager" onclick="showPage(event)" id="accounttree">
 
 	  <template>
-	  	<rule rootcontainment="treechildren" subcontainment="treechildren">
+	  	<rule>
+                        <treechildren>
 			<treeitem uri="...">
 		  		<treerow >
 					<treecell>
@@ -30,6 +31,7 @@
 					</treecell>
 		  		</treerow>
 			</treeitem>
+                        </treechildren>
 		</rule>
 	  </template>
 

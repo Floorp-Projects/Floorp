@@ -38,31 +38,35 @@
   <html:script src="flash.js" />
 
   <tree id="tree"
+        ref="NC:FlashRoot"
         flex="100%"
-		style="height: 100%"
+        style="height: 100%"
         datasources="rdf:null"
+        rdf:containment="http://home.netscape.com/NC-rdf#child" 
         onclick="OpenURL(event.target.parentNode.parentNode);">
 
     <template>
-      <rule rootcontainment="treechildren" subcontainment="treechildren">
-        <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
-          <treerow>
-            <treecell>
-              <treeindentation />
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#source" align="right" />
-            </treecell>
+      <rule>
+        <treechildren>
+          <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
+            <treerow>
+              <treecell>
+                <treeindentation />
+                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#source" align="right" />
+              </treecell>
 
-            <treecell>
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="right"
-                            style="list-style-image: none;" />
-            </treecell>
+              <treecell>
+                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="right"
+                              style="list-style-image: none;" />
+              </treecell>
 
-            <treecell>
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#timestamp" align="right"
-                            style="list-style-image: none;" />
-            </treecell>
-          </treerow>
-        </treeitem>
+              <treecell>
+                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#timestamp" align="right"
+                              style="list-style-image: none;" />
+              </treecell>
+            </treerow>
+          </treeitem>
+        </treechildren>
       </rule>
     </template>
 
@@ -78,7 +82,5 @@
         <treecell>&tree.header.time.label;</treecell>
       </treerow>
     </treehead>
-
-    <treechildren ref="NC:FlashRoot" rdf:containment="http://home.netscape.com/NC-rdf#child" open="true" />
   </tree>
 </window>

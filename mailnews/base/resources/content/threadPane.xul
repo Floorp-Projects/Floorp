@@ -42,7 +42,8 @@ Rights Reserved.
 <tree style="height: 100%" datasources="rdf:mailnewsfolders rdf:mailnewsmessages" id="threadTree" onclick="return parent.parent.parent.LoadMessage(event.target.parentNode.parentNode)" containment="http://home.netscape.com/NC-rdf#MessageChild">
 
   <template>
-  	<rule rootcontainment="treechildren" subcontainment="treechildren">
+  	<rule>
+          <treechildren>
 		<treeitem uri="..."
   		  Status="rdf:http://home.netscape.com/NC-rdf#Status">
 	  		<treerow >
@@ -70,6 +71,7 @@ Rights Reserved.
 				</treecell>
 	  		</treerow>
 		</treeitem>
+          </treechildren>
 	</rule>
   </template>
 
@@ -93,10 +95,6 @@ Rights Reserved.
 		<treecell onclick="return top.SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages');">&totalColumn.label;</treecell>
     </treerow>
   </treehead>
-  
-
-  <treechildren id="" name="threadTreeBody" open="true">
-  </treechildren>
 </tree>
 </html:div>
 </window>

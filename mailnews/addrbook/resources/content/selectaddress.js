@@ -121,13 +121,7 @@ function saChangeDirectoryByURI(uri)
 {
 	var tree = frames["resultsFrame"].document.getElementById('resultTree');
 	//dump("tree = " + tree + "\n");
-
-	var treechildrenList = tree.getElementsByTagName('treechildren');
-	if ( treechildrenList.length == 1 )
-	{
-		var body = treechildrenList[0];
-		body.setAttribute('id', uri);// body no longer valid after setting id.
-	}
+	tree.setAttribute('ref', uri);// body no longer valid after setting id.
 }
 
 

@@ -95,14 +95,15 @@
 	<menu />
 </popup>
 
-<tree  id="bookmarksTree" context="contextual"
+<tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
        onclick="return DoSingleClick(event, event.target);"
        ondblclick="return OpenURL(event,event.target.parentNode.parentNode.parentNode);"
        style="height:100%;">
 
   <template>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
+    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+      <treechildren>
        <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell>
@@ -110,9 +111,11 @@
            </treecell>
          </treerow>
        </treeitem>  		
+      </treechildren>
      </rule>
 
-     <rule rootcontainment="treechildren" subcontainment="treechildren">
+     <rule>
+      <treechildren>
        <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell>
@@ -140,6 +143,7 @@
 
          </treerow>
        </treeitem>
+      </treechildren>
      </rule>
   </template>
 
@@ -184,8 +188,6 @@
 
     </treerow>
   </treehead>
-
-  <treechildren ref="NC:BookmarksRoot" open="true" />
 </tree>
 
 </xul:window>

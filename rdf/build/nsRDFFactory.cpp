@@ -65,12 +65,8 @@ static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,         NS_RDFFILESYSTEMDATASO
 static NS_DEFINE_CID(kRDFSearchDataSourceCID,             NS_RDFSEARCHDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFFindDataSourceCID,               NS_RDFFINDDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFFTPDataSourceCID,                NS_RDFFTPDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFHTMLBuilderCID,                  NS_RDFHTMLBUILDER_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,           NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFMenuBuilderCID,                  NS_RDFMENUBUILDER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,                      NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFToolbarBuilderCID,               NS_RDFTOOLBARBUILDER_CID);
-static NS_DEFINE_CID(kRDFTreeBuilderCID,                  NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,                NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,                   NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,                  NS_XULCONTENTSINK_CID);
@@ -80,6 +76,7 @@ static NS_DEFINE_CID(kXULDocumentInfoCID,                 NS_XULDOCUMENTINFO_CID
 static NS_DEFINE_CID(kXULPopupListenerCID,                NS_XULPOPUPLISTENER_CID);
 static NS_DEFINE_CID(kXULKeyListenerCID,                  NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULFocusTrackerCID,                 NS_XULFOCUSTRACKER_CID);
+static NS_DEFINE_CID(kXULTemplateBuilderCID,              NS_XULTEMPLATEBUILDER_CID);
 
 class RDFFactoryImpl : public nsIFactory
 {
@@ -224,20 +221,8 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewXULDocumentInfo((nsIXULDocumentInfo**) &inst)))
             return rv;
     }
-    else if (mClassID.Equals(kRDFHTMLBuilderCID)) {
-        if (NS_FAILED(rv = NS_NewRDFHTMLBuilder((nsIRDFContentModelBuilder**) &inst)))
-            return rv;
-    }
-    else if (mClassID.Equals(kRDFMenuBuilderCID)) {
-        if (NS_FAILED(rv = NS_NewRDFMenuBuilder((nsIRDFContentModelBuilder**) &inst)))
-            return rv;
-    }
-    else if (mClassID.Equals(kRDFToolbarBuilderCID)) {
-        if (NS_FAILED(rv = NS_NewRDFToolbarBuilder((nsIRDFContentModelBuilder**) &inst)))
-            return rv;
-    }
-    else if (mClassID.Equals(kRDFTreeBuilderCID)) {
-        if (NS_FAILED(rv = NS_NewRDFTreeBuilder((nsIRDFContentModelBuilder**) &inst)))
+    else if (mClassID.Equals(kXULTemplateBuilderCID)) {
+        if (NS_FAILED(rv = NS_NewXULTemplateBuilder((nsIRDFContentModelBuilder**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFXULBuilderCID)) {
@@ -415,11 +400,6 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          NS_RDF_PROGID "/container-utils",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kRDFHTMLBuilderCID,
-                                         "RDF HTML Builder",
-                                         NS_RDF_PROGID "/html-builder",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFServiceCID,
                                          "RDF Service",
                                          NS_RDF_PROGID "/rdf-service",
@@ -430,19 +410,9 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          NS_RDF_PROGID "/xul-sort-service",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kRDFTreeBuilderCID,
-                                         "RDF Tree Builder",
-                                         NS_RDF_PROGID "/tree-builder",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kRDFMenuBuilderCID,
-                                         "RDF Menu Builder",
-                                         NS_RDF_PROGID "/menu-builder",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kRDFToolbarBuilderCID,
-                                         "RDF Toolbar Builder",
-                                         NS_RDF_PROGID "/toolbar-builder",
+    rv = compMgr->RegisterComponent(kXULTemplateBuilderCID,
+                                         "XUL Template Builder",
+                                         NS_RDF_PROGID "/xul-template-builder",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFXULBuilderCID,
@@ -524,17 +494,11 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFContentSinkCID,         aPath);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kRDFHTMLBuilderCID,         aPath);
-    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFServiceCID,             aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kXULSortServiceCID,         aPath);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kRDFTreeBuilderCID,         aPath);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kRDFMenuBuilderCID,         aPath);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kRDFToolbarBuilderCID,      aPath);
+    rv = compMgr->UnregisterComponent(kXULTemplateBuilderCID,     aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFXULBuilderCID,          aPath);
     if (NS_FAILED(rv)) goto done;

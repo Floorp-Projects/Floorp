@@ -41,8 +41,20 @@
         flex="100%"
 		style="height: 100%"
         datasources="rdf:softwareupdates"
-        onclick="OpenURL(event, event.target.parentNode);">
-    
+        onclick="OpenURL(event, event.target.parentNode);"
+        ref="NC:SoftwareUpdateRoot">
+
+    <template>
+      <treechildren>
+        <treeitem uri="...">
+          <treerow>
+            <treecell><treeindentation/><titledbutton /><text value="rdf:http://home.netscape.com/NC-rdf#title"/></treecell>
+            <treecell><text value="rdf:http://home.netscape.com/NC-rdf#description"/></treecell>
+            <treecell><text value="rdf:http://home.netscape.com/NC-rdf#version"/></treecell>
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </template>
     
     
 
@@ -57,8 +69,5 @@
         <treecell>&tree.header.version.label;</treecell>
       </treerow>
     </treehead>
-
-
-    <treechildren ref="NC:SoftwareUpdateRoot" rdf:containment="http://home.netscape.com/NC-rdf#child" open="true" />
   </tree>
 </window>

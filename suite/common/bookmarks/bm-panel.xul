@@ -33,38 +33,40 @@
 	<menu />
 </popup>
 
-<tree id="bookmarksTree" context="contextual"
+<tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
       datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch" 
       ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
 
   <!-- Commented out until new tree content model and template builder can play nice -->
   <template>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator"
-          rootcontainment="treechildren" subcontainment="treechildren">
-      <treeitem uri="...">
-        <treerow>
-          <treecell>
-            <html:hr width="75%" align="center" size="1" />
-          </treecell>
-        </treerow>
-      </treeitem>  		
+    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+      <treechildren>
+        <treeitem uri="...">
+          <treerow>
+            <treecell>
+              <html:hr width="75%" align="center" size="1" />
+            </treecell>
+          </treerow>
+        </treeitem>  		
+      </treechildren>
     </rule>
   	
-    <rule rootcontainment="treechildren" subcontainment="treechildren">
-      <treeitem uri="...">
-        <treerow>
-          <treecell>
-            <treeindentation />
-            <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
-                          align="right" />
-          </treecell>
-        </treerow>
-      </treeitem>
+    <rule>
+      <treechildren>
+        <treeitem uri="...">
+          <treerow>
+            <treecell>
+              <treeindentation />
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
+                            align="right" />
+            </treecell>
+          </treerow>
+        </treeitem>
+      </treechildren>
     </rule>
   </template>
 
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treechildren id="NC:BookmarksRoot" open="true" />
 </tree>
 
 </window>

@@ -37,7 +37,8 @@
 <html:div flex="100%">
 <tree style="height: 100%" rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="folderTree" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" onclick="return top.ChangeFolderByDOMNode(event.target.parentNode.parentNode)">
   <template>
-  	<rule rootcontainment="treechildren" subcontainment="treechildren">
+  	<rule>
+          <treechildren>
 		<treeitem uri="..."
 		  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 		  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState">
@@ -57,6 +58,7 @@
 				</treecell>
 	  		</treerow>
 		</treeitem>
+           </treechildren>
 	</rule>
   </template>
 

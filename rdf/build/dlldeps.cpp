@@ -26,6 +26,7 @@
 void XXXNeverCalled()
 {
     nsAutoString s;
+    nsCAutoString cs;
 
     // nsRDFParserUtils
     nsRDFParserUtils::EntityToUnicode("");
@@ -36,12 +37,12 @@ void XXXNeverCalled()
     // nsRDFContentUtils
     nsRDFContentUtils::AttachTextNode(nsnull, nsnull);
     nsRDFContentUtils::FindChildByTag(nsnull, 0, nsnull, nsnull);
-    nsRDFContentUtils::FindChildByTagAndResource(nsnull, 0, nsnull, nsnull, nsnull);
+    nsRDFContentUtils::FindChildByResource(nsnull, nsnull, nsnull);
     nsRDFContentUtils::GetElementResource(nsnull, nsnull);
     nsRDFContentUtils::GetElementRefResource(nsnull, nsnull);
     nsRDFContentUtils::GetTextForNode(nsnull, s);
     nsRDFContentUtils::GetElementLogString(nsnull, s);
-    nsRDFContentUtils::MakeElementURI(nsnull, s, s);
+    nsRDFContentUtils::MakeElementURI(nsnull, s, cs);
     nsRDFContentUtils::MakeElementID(nsnull, s, s);
 
     // rdfutils

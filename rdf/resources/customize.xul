@@ -53,11 +53,13 @@
 
       <tree id="other-panels" style="width:15em;height:15em;"
             datasources="resource://res/rdf/sidebar-registry.rdf"
-    		onclick="selected()" >
+            onclick="selected()"
+            ref="NC:SidebarRoot" >
     
         <!-- The template we'll use to build rows in the content model. -->
         <template>
-          <rule rootcontainment="treechildren" subcontainment="treechildren">
+          <rule>
+            <treechildren>
             <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
               <treerow>
                 <treecell>
@@ -67,6 +69,7 @@
                 </treecell>
               </treerow>
             </treeitem>
+            </treechildren>
           </rule>
         </template>
 
@@ -75,9 +78,6 @@
             <treecell>Name</treecell>
           </treerow>
         </treehead>
-  
-        <!-- The tree body: it's rooted at sitemap1.rdf's root -->
-        <treechildren id="other-panels-children" ref="NC:SidebarRoot" open="true"/>
       </tree>
   
     <box align="vertical" class="button-group">

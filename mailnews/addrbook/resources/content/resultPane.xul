@@ -23,7 +23,8 @@
 		  rdf:containment="http://home.netscape.com/NC-rdf#CardChild">
 
 		<template>
-			<rule rootcontainment="treechildren" subcontainment="treechildren">
+			<rule>
+              <treechildren>
 				<treeitem uri="...">
 			  		<treerow >
 						<treecell>
@@ -38,6 +39,7 @@
 						</treecell>
 			  		</treerow>
 				</treeitem>
+              </treechildren>
 			</rule>
 		</template>
 

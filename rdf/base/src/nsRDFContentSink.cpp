@@ -529,10 +529,6 @@ RDFContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 RDFContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 {
-#ifdef DEBUG
-    const nsString& text = aNode.GetText();
-#endif
-
     FlushText();
 
     nsIRDFResource* resource;
@@ -540,13 +536,14 @@ RDFContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
         // XXX parser didn't catch unmatched tags?
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
-            char* tag = text.ToNewCString();
+            const nsString& tagStr = aNode.GetText();
+            char* tagCStr = tagStr.ToNewCString();
 
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("rdfxml: extra close tag '%s' at line %d",
-                    tag, aNode.GetSourceLineNumber()));
+                    tagCStr, aNode.GetSourceLineNumber()));
 
-            delete[] tag;
+            delete[] tagCStr;
         }
 #endif
 

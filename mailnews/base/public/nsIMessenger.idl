@@ -24,7 +24,6 @@
 %{C++
 #include "nsIDOMWindow.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMXULTreeElement.h"
 #include "nsIDOMXULElement.h"
 %}
 
@@ -39,12 +38,12 @@ interface nsIMessenger : nsISupports {
 	void Open3PaneWindow();
     void SetWindow(in nsIDOMWindow ptr);
     void OpenURL(in string str);
-    void DeleteMessages(in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
+    void DeleteMessages(in nsIDOMXULElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
     void DeleteFolders(in nsIRDFCompositeDataSource db, in nsIDOMXULElement parentFolder, in nsIDOMXULElement folder);
 	void CopyMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement srcFolderElement,
 					  in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages,
 					  in boolean isMove);
-    nsISupports GetRDFResourceForMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
+    nsISupports GetRDFResourceForMessage(in nsIDOMXULElement tree, in nsIDOMNodeList node);
 	void Exit();
     void Close();
     void OnUnload();

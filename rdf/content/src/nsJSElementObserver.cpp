@@ -51,7 +51,7 @@ NS_DEF_PTR(nsIDOMElementObserver);
 PR_STATIC_CALLBACK(JSBool)
 GetElementObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMElementObserver *a = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
+  nsIDOMElementObserver *a = (nsIDOMElementObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -61,6 +61,7 @@ GetElementObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -85,7 +86,7 @@ GetElementObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetElementObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMElementObserver *a = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
+  nsIDOMElementObserver *a = (nsIDOMElementObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -95,6 +96,7 @@ SetElementObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -149,7 +151,7 @@ ResolveElementObserver(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 ElementObserverOnSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
+  nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMElementPtr b0;
   nsAutoString b1;
   nsAutoString b2;
@@ -211,7 +213,7 @@ ElementObserverOnSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 PR_STATIC_CALLBACK(JSBool)
 ElementObserverOnRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
+  nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMElementPtr b0;
   nsAutoString b1;
 
@@ -270,7 +272,7 @@ ElementObserverOnRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
 PR_STATIC_CALLBACK(JSBool)
 ElementObserverOnSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
+  nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMElementPtr b0;
   nsIDOMAttrPtr b1;
 
@@ -335,7 +337,7 @@ ElementObserverOnSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsva
 PR_STATIC_CALLBACK(JSBool)
 ElementObserverOnRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
+  nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMElementPtr b0;
   nsIDOMAttrPtr b1;
 

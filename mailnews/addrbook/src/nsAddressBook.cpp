@@ -27,7 +27,7 @@
 #include "prprf.h"	 
 
 #include "nsCOMPtr.h"
-#include "nsIDOMXULTreeElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"
@@ -55,7 +55,7 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 	nsresult rv = NS_OK;
 	PRUint32 listLength;
 	nsIDOMNode *node;
-	nsIDOMXULTreeElement *xulElement;
+	nsIDOMXULElement *xulElement;
 	nsIRDFResource *resource;
 
 	if(!resourceArray)
@@ -109,7 +109,7 @@ NS_IMPL_ISUPPORTS(nsAddressBook, nsIAddressBook::GetIID());
 //
 
 NS_IMETHODIMP nsAddressBook::DeleteCards
-(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
+(nsIDOMXULElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
 {
 	nsresult rv;
 
@@ -206,7 +206,7 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
 }
 
 NS_IMETHODIMP nsAddressBook::DeleteAddressBook
-(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
+(nsIDOMXULElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
 {
 	nsresult rv;
 

@@ -31,21 +31,15 @@ CPPSRCS =				\
 	nsJSNodeObserver.cpp		\
 	nsJSXULDocument.cpp		\
 	nsJSXULElement.cpp		\
-	nsJSXULTreeElement.cpp		\
 	nsJSXULFocusTracker.cpp \
 	nsRDFContentUtils.cpp           \
 	nsRDFDOMNodeList.cpp		\
 	nsRDFElement.cpp		\
 	nsRDFGenericBuilder.cpp		\
-	nsRDFHTMLBuilder.cpp		\
-	nsRDFMenuBuilder.cpp		\
-	nsRDFToolbarBuilder.cpp		\
-	nsRDFTreeBuilder.cpp		\
 	nsRDFXULBuilder.cpp		\
 	nsXULAttributes.cpp		\
 	nsXULDocument.cpp               \
-    nsXULSortService.cpp            \
-	nsXULTreeElement.cpp		\
+	nsXULSortService.cpp            \
 	nsXULDocumentInfo.cpp		\
 	nsXULPopupListener.cpp \
 	nsXULFocusTracker.cpp \

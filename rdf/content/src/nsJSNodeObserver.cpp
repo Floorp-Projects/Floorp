@@ -48,7 +48,7 @@ NS_DEF_PTR(nsIDOMNodeObserver);
 PR_STATIC_CALLBACK(JSBool)
 GetNodeObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNodeObserver *a = (nsIDOMNodeObserver*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeObserver *a = (nsIDOMNodeObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -58,6 +58,7 @@ GetNodeObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -82,7 +83,7 @@ GetNodeObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetNodeObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNodeObserver *a = (nsIDOMNodeObserver*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeObserver *a = (nsIDOMNodeObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -92,6 +93,7 @@ SetNodeObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -146,8 +148,7 @@ ResolveNodeObserver(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 NodeObserverOnSetNodeValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNodePtr b0;
   nsAutoString b1;
 
@@ -206,8 +207,7 @@ NodeObserverOnSetNodeValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 NodeObserverOnInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
   nsIDOMNodePtr b2;
@@ -281,8 +281,7 @@ NodeObserverOnInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 NodeObserverOnReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
   nsIDOMNodePtr b2;
@@ -356,8 +355,7 @@ NodeObserverOnReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 NodeObserverOnRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
 
@@ -422,8 +420,7 @@ NodeObserverOnRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 PR_STATIC_CALLBACK(JSBool)
 NodeObserverOnAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+  nsIDOMNodeObserver *nativeThis = (nsIDOMNodeObserver*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
 

@@ -71,7 +71,7 @@ function GetThreadTree()
 function GetThreadTreeFolder()
 {
   var tree = GetThreadTree();
-  return tree.childNodes[9];
+  return tree;
 }
 
 function FindMessenger()
@@ -194,7 +194,7 @@ function ChangeFolderByURI(uri)
 {
   var folder = GetThreadTreeFolder();
   var beforeTime = new Date();
-  folder.setAttribute('id', uri);
+  folder.setAttribute('ref', uri);
   var afterTime = new Date();
   var timeToLoad = (afterTime.getTime() - beforeTime.getTime())/1000;
   if(showPerformance)

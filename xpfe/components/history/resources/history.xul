@@ -153,8 +153,8 @@ function doSort(sortColName)
       ondblclick="return OpenURL(event,event.target.parentNode.parentNode);">
 
   <template>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator"
-          rootcontainment="treechildren" subcontainment="treechildren">
+    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+      <treechildren>
       <treeitem uri="...">
         <treerow>
           <treecell>
@@ -164,9 +164,11 @@ function doSort(sortColName)
           <treecell></treecell>
         </treerow>
       </treeitem>  		
+      </treechildren>
     </rule>
   	
-    <rule rootcontainment="treechildren" subcontainment="treechildren">
+    <rule>
+      <treechildren>
       <treeitem uri="...">
         <treerow>
           <treecell>
@@ -185,6 +187,7 @@ function doSort(sortColName)
           </treecell>
         </treerow>
       </treeitem>
+      </treechildren>
     </rule>
   </template>
 

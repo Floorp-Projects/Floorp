@@ -156,6 +156,14 @@ Rights Reserved.
     	<separator/>
 		<menu name="&fileCarbonCopyCmd.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
 			onclick="MessageFcc(event.target)">
+                  <template>
+                    <rule iscontainer="true" isempty="false">
+                      <menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </rule>
+                    <rule>
+                      <menuitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" onclick="MsgCopyMessage(event.target)" />
+                    </rule>
+                  </template>
 		</menu>
     </menu>
 	<menu id="tasksMenu"/>

@@ -46,7 +46,7 @@
 #include "nsIMsgFolder.h"
 #include "nsIPop3Service.h"
 
-#include "nsIDOMXULTreeElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"
@@ -100,12 +100,12 @@ public:
   NS_IMETHOD GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement);
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
-  NS_IMETHOD DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
+  NS_IMETHOD DeleteMessages(nsIDOMXULElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
   NS_IMETHOD DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXULElement *parentFolder, nsIDOMXULElement *folder);
 
   NS_IMETHOD CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement *srcFolderElement,
 						  nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove);
-  NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
+  NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULElement *tree,
                                       nsIDOMNodeList *nodeList, nsISupports
                                       **aSupport); 
   NS_IMETHOD Exit();
@@ -150,7 +150,7 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 	nsresult rv = NS_OK;
 	PRUint32 listLength;
 	nsIDOMNode *node;
-	nsIDOMXULTreeElement *xulElement;
+	nsIDOMXULElement *xulElement;
 	nsIRDFResource *resource;
 
 	if(!resourceArray)
@@ -465,7 +465,7 @@ nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 }
 
 NS_IMETHODIMP
-nsMessenger::DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList)
+nsMessenger::DeleteMessages(nsIDOMXULElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList)
 {
 	nsresult rv;
 
@@ -664,7 +664,7 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement 
 }
 
 NS_IMETHODIMP
-nsMessenger::GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
+nsMessenger::GetRDFResourceForMessage(nsIDOMXULElement *tree,
                                        nsIDOMNodeList *nodeList, nsISupports
                                        **aSupport) 
 {

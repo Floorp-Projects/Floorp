@@ -27,29 +27,23 @@ LCFLAGS = \
         $(NULL)
 
 CPP_OBJS=\
+	.\$(OBJDIR)\nsJSXULFocusTracker.obj       \
 	.\$(OBJDIR)\nsRDFGenericBuilder.obj       \
-	.\$(OBJDIR)\nsRDFMenuBuilder.obj          \
-	.\$(OBJDIR)\nsRDFToolbarBuilder.obj       \
 	.\$(OBJDIR)\nsXULAttributes.obj		  \
+	.\$(OBJDIR)\nsXULFocusTracker.obj         \
+	.\$(OBJDIR)\nsXULPopupListener.obj        \
         .\$(OBJDIR)\nsJSElementObserver.obj       \
         .\$(OBJDIR)\nsJSNodeObserver.obj          \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
-        .\$(OBJDIR)\nsJSXULTreeElement.obj        \
-		.\$(OBJDIR)\nsJSXULFocusTracker.obj		  \
         .\$(OBJDIR)\nsRDFContentUtils.obj         \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFElement.obj              \
-        .\$(OBJDIR)\nsRDFHTMLBuilder.obj          \
-        .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
         .\$(OBJDIR)\nsRDFXULBuilder.obj           \
         .\$(OBJDIR)\nsXULDocument.obj             \
-	    .\$(OBJDIR)\nsXULDocumentInfo.obj	  \
-		.\$(OBJDIR)\nsXULPopupListener.obj  \
-		.\$(OBJDIR)\nsXULFocusTracker.obj \
-        .\$(OBJDIR)\nsXULSortService.obj          \
-        .\$(OBJDIR)\nsXULTreeElement.obj          \
+        .\$(OBJDIR)\nsXULDocumentInfo.obj	  \
         .\$(OBJDIR)\nsXULKeyListener.obj          \
+        .\$(OBJDIR)\nsXULSortService.obj          \
 	$(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements

@@ -93,6 +93,16 @@ Rights Reserved.
 				<tree id="dirTree" class="abDirectory" flex="100%"
 						rdf:datasources="rdf:addressdirectory"
 						onclick="return saChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
+                    <template>
+                      <treechildren>
+                        <treeitem uri="...">
+                          <treerow>
+                            <treecell><text value="http://home.netscape.com/NC-rdf#DirName" /></treecell>
+                          </treerow>
+                        </treeitem>
+                      </treechildren>
+                    </template>
+
 					<treecol style="width:100%" rdf:resource="http://home.netscape.com/NC-rdf#DirName" />
 					<treehead>
 						<treerow>

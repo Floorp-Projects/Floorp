@@ -71,17 +71,14 @@
     var tree = document.getElementById("tree");
     dump("tree = " + tree + "\n");
 
-    var body = tree.childNodes[2]; // template, treehead, treechildren
-    dump("body = " + body + "\n");
-
-    var currentRef = body.getAttribute("ref");
+    var currentRef = tree.getAttribute("ref");
     dump("currentRef = " + currentRef + "\n");
 
     if (currentRef == "NC:BookmarksRoot") {
-      body.setAttribute("ref", "NC:PersonalToolbarFolder");
+      tree.setAttribute("ref", "NC:PersonalToolbarFolder");
     }
     else {
-      body.setAttribute("ref", "NC:BookmarksRoot");
+      tree.setAttribute("ref", "NC:BookmarksRoot");
     }
   }
   </html:script>
@@ -92,31 +89,35 @@
     <html:button onclick="MutateBody();">Swap Body (Bookmarks Root/Personal Toolbar Folder)</html:button>
   </box>
 
-  <tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
+  <tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);" ref="NC:BookmarksRoot">
     <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
-         <treeitem uri="...">
-           <treerow>
-             <treecell>
-               <html:hr width="75%" align="center" size="1" />
-             </treecell>
-           </treerow>
-         </treeitem>  		
-       </rule>
+      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+        <treechildren>
+          <treeitem uri="...">
+            <treerow>
+              <treecell>
+                <html:hr width="75%" align="center" size="1" />
+              </treecell>
+            </treerow>
+          </treeitem>  		
+        </treechildren>
+      </rule>
 
-       <rule rootcontainment="treechildren" subcontainment="treechildren">
-         <treeitem uri="...">
-           <treerow>
-             <treecell>
-               <treeindentation />
-               <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
-             </treecell>
-             <treecell>
-               <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
-             </treecell>
-           </treerow>
-         </treeitem>
-       </rule>
+      <rule>
+        <treechildren>
+          <treeitem uri="...">
+            <treerow>
+              <treecell>
+                <treeindentation />
+                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+              </treecell>
+              <treecell>
+                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+              </treecell>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
     </template>
 
     <treehead>
@@ -125,8 +126,6 @@
         <treecell>URL</treecell>
       </treerow>
     </treehead>
-
-    <treechildren id="treeroot" ref="NC:BookmarksRoot" open="true" />
   </tree>
 
 </window>

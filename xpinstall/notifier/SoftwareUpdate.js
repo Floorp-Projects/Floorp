@@ -18,7 +18,7 @@
 
     // the location of the flash registry.
 
-    var localSoftwareUpdateRegistry = 'resource:/res/rdf/SoftwareUpdates.rdf'; 
+    var localSoftwareUpdateRegistry = 'resource:/res/xpinstall/SoftwareUpdates.rdf'; 
 
 
     function Init()
@@ -145,8 +145,7 @@
             // TODO
 
             // XXX hack to force the tree to rebuild
-            var treebody = document.getElementById('NC:SoftwareUpdateRoot');
-            treebody.setAttribute('id', 'NC:SoftwareUpdateRoot');
+            tree.setAttribute('ref', 'NC:SoftwareUpdateRoot');
         }
     }
 
