@@ -145,7 +145,7 @@ moz_get_debugger()
 
 	for d in $debuggers
 	do
-		dpath=`which ddd`
+		dpath=`which ${d}`
 	
 		if [ -x "$dpath" ]
 		then
