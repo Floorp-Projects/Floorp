@@ -62,7 +62,7 @@ function fillDialog()
   // this is necessary for window.find()
   dialog.findKey.value           = gFindInst.searchString ? gFindInst.searchString : findService.searchString;
   dialog.caseSensitive.checked   = gFindInst.matchCase ? gFindInst.matchCase : findService.matchCase;
-  dialog.wrap.checked            = gFindInst.wrapFind ? gFindInst.wrapFind : findService.wrapFind;
+  // Don't initialize Wrap here, we just want it to be checked. 
   var findBackwards              = gFindInst.findBackwards ? gFindInst.findBackwards : findService.findBackwards;
   if (findBackwards)
     dialog.rg.selectedItem = dialog.up;
