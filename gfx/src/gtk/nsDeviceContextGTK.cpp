@@ -659,15 +659,21 @@ int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
   return 0;
 }
 
+#define DEFAULT_TWIP_FONT_SIZE 240
+
 nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   : mDefaultFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                 NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 240),
+                 NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE,
+                 DEFAULT_TWIP_FONT_SIZE),
     mButtonFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 240),
+                NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE,
+                DEFAULT_TWIP_FONT_SIZE),
     mFieldFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-               NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 240),
+               NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE,
+               DEFAULT_TWIP_FONT_SIZE),
     mMenuFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-               NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 240)
+               NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE,
+               DEFAULT_TWIP_FONT_SIZE)
 {
   /*
    * Much of the widget creation code here is similar to the code in
@@ -749,10 +755,82 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
 
 }
 
+#if 0 // debugging code to list the font properties
+static void
+ListFontProps(XFontStruct *aFont, Display *aDisplay)
+{
+  printf("\n\n");
+  for (int i = 0, n = aFont->n_properties; i < n; ++i) {
+    XFontProp *prop = aFont->properties + i;
+    char *atomName = ::XGetAtomName(aDisplay, prop->name);
+    // 500 is just a guess
+    char *cardName = (prop->card32 > 0 && prop->card32 < 500)
+                       ? ::XGetAtomName(aDisplay, prop->card32)
+                       : 0;
+    printf("%s : %ld (%s)\n", atomName, prop->card32, cardName?cardName:"");
+    ::XFree(atomName);
+    if (cardName)
+      ::XFree(cardName);
+  }
+  printf("\n\n");
+}
+#endif
+
+static void
+AppendFontName(XFontStruct* aFontStruct, nsString& aString, Display *aDisplay)
+{
+  unsigned long pr = 0;
+  ::XGetFontProperty(aFontStruct, XA_FAMILY_NAME, &pr);
+  if (!pr)
+    ::XGetFontProperty(aFontStruct, XA_FULL_NAME, &pr);
+  if (pr) {
+    char *fontName = ::XGetAtomName(aDisplay, pr);
+    aString.AppendWithConversion(fontName);
+    ::XFree(fontName);
+  }
+}
+
+static PRUint16
+GetFontWeight(XFontStruct* aFontStruct, Display *aDisplay)
+{
+  PRUint16 weight = NS_FONT_WEIGHT_NORMAL;
+
+  // WEIGHT_NAME seems more reliable than WEIGHT, where 10 can mean
+  // anything.  Check both, and make it bold if either says so.
+  unsigned long pr = 0;
+  Atom weightName = ::XInternAtom(aDisplay, "WEIGHT_NAME", True);
+  if (weightName != None) {
+    ::XGetFontProperty(aFontStruct, weightName, &pr);
+    if (pr) {
+      char *weightString = ::XGetAtomName(aDisplay, pr);
+      if (nsCRT::strcasecmp(weightString, "bold") == 0)
+        weight = NS_FONT_WEIGHT_BOLD;
+      ::XFree(weightString);
+    }
+  }
+
+  pr = 0;
+  ::XGetFontProperty(aFontStruct, XA_WEIGHT, &pr);
+  if ( pr > 10 )
+    weight = NS_FONT_WEIGHT_BOLD;
+
+  return weight;
+}
+
+static nscoord
+GetFontSize(XFontStruct *aFontStruct, float aPixelsToTwips)
+{
+  unsigned long pr = 0;
+  Atom pixelSizeAtom = ::XInternAtom(GDK_DISPLAY(), "PIXEL_SIZE", 0);
+  ::XGetFontProperty(aFontStruct, pixelSizeAtom, &pr);
+  if (!pr)
+    return DEFAULT_TWIP_FONT_SIZE;
+  return NSIntPixelsToTwips(pr, aPixelsToTwips);
+}
+
 nsresult
 nsSystemFontsGTK::GetSystemFontInfo(GdkFont* iFont, nsFont* aFont, float aPixelsToTwips) const
 {
-  nsresult status = NS_OK;
   GdkFont *theFont = iFont;
 
   aFont->style       = NS_FONT_STYLE_NORMAL;
@@ -771,65 +849,44 @@ nsSystemFontsGTK::GetSystemFontInfo(GdkFont* iFont, nsFont* aFont, float aPixels
   if (!theFont)
     theFont = ::gdk_font_load( GDK_DEFAULT_FONT2 );
   
-  if (!theFont) {
-    status = NS_ERROR_FAILURE;
+  if (!theFont)
+    return NS_ERROR_FAILURE;
+
+  Display *fontDisplay = GDK_FONT_XDISPLAY(theFont);
+  if (theFont->type == GDK_FONT_FONT) {
+    XFontStruct *fontStruct =
+        NS_STATIC_CAST(XFontStruct*, GDK_FONT_XFONT(theFont));
+
+    aFont->name.Truncate();
+    AppendFontName(fontStruct, aFont->name, fontDisplay);
+    aFont->weight = GetFontWeight(fontStruct, fontDisplay);
+    aFont->size = GetFontSize(fontStruct, aPixelsToTwips);
   } else {
-    XFontStruct *fontInfo = (XFontStruct *)GDK_FONT_XFONT( theFont );
-    unsigned long pr = 0;
+    NS_ASSERTION(theFont->type == GDK_FONT_FONTSET,
+                 "theFont->type can only have two values");
 
-#if 0 // debugging code to list the font properties
-    printf("\n\n");
-    for (int i = 0, n = fontInfo->n_properties; i < n; ++i) {
-      XFontProp *prop = fontInfo->properties + i;
-      char *atomName = XGetAtomName(GDK_FONT_XDISPLAY(theFont), prop->name);
-      // 500 is just a guess
-      char *cardName = (prop->card32 > 0 && prop->card32 < 500)
-                       ? XGetAtomName(GDK_FONT_XDISPLAY(theFont), prop->card32)
-                       : 0;
-      printf("%s : %ld (%s)\n", atomName, prop->card32, cardName?cardName:"");
-      XFree(atomName);
-      if (cardName)
-        XFree(cardName);
+    XFontSet fontSet = NS_STATIC_CAST(XFontSet, GDK_FONT_XFONT(theFont));
+    XFontStruct **fontStructs;
+    char **fontNames;
+    int numFonts = ::XFontsOfFontSet(fontSet, &fontStructs, &fontNames);
+    if (numFonts == 0)
+      return NS_ERROR_FAILURE;
+
+    // Use the weight and size from the first font, but append all
+    // the names.
+    aFont->weight = GetFontWeight(*fontStructs, fontDisplay);
+    aFont->size = GetFontSize(*fontStructs, aPixelsToTwips);
+    nsString& fontName = aFont->name;
+    fontName.Truncate();
+    for (;;) {
+      AppendFontName(*fontStructs, fontName, fontDisplay);
+      ++fontStructs;
+      --numFonts;
+      if (numFonts == 0)
+        break;
+      fontName.AppendWithConversion(",");
     }
-    printf("\n\n");
-#endif
-
-    ::XGetFontProperty( fontInfo, XA_FAMILY_NAME, &pr );
-    if (!pr)
-      ::XGetFontProperty( fontInfo, XA_FULL_NAME, &pr );
-    if (pr) {
-      char *fontName = XGetAtomName( GDK_FONT_XDISPLAY(theFont), pr );
-      aFont->name.AssignWithConversion( fontName );
-      ::XFree( fontName );
-    }
-  
-    // WEIGHT_NAME seems more reliable than WEIGHT, where 10 can mean
-    // anything.  Check both, and make it bold if either says so.
-    pr = 0;
-    Atom weightName = XInternAtom( GDK_FONT_XDISPLAY(theFont),
-                                   "WEIGHT_NAME", True );
-    if (weightName != None) {
-      ::XGetFontProperty( fontInfo, weightName, &pr );
-      if (pr) {
-        char *weight = XGetAtomName( GDK_FONT_XDISPLAY(theFont), pr );
-        if (nsCRT::strcasecmp(weight, "bold") == 0)
-          aFont->weight = NS_FONT_WEIGHT_BOLD;
-        ::XFree( weight );
-      }
-    }
-
-    pr = 0;
-    ::XGetFontProperty( fontInfo, XA_WEIGHT, &pr );
-    if ( pr > 10 )
-      aFont->weight = NS_FONT_WEIGHT_BOLD;
-    
-    pr = 0;
-    Atom pixelSizeAtom = ::XInternAtom(GDK_DISPLAY(), "PIXEL_SIZE", 0);
-    ::XGetFontProperty( fontInfo, pixelSizeAtom, &pr );
-    if (pr)
-      aFont->size = NSIntPixelsToTwips(pr, aPixelsToTwips);
-
-    status = NS_OK;
   }
-  return status;
+
+  return NS_OK;
 }
