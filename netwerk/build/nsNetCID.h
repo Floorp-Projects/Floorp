@@ -336,13 +336,20 @@
  * netwerk/protocol/http/ classes
  */
 
-// This protocol handler implements both HTTP and HTTPS
 #define NS_HTTPPROTOCOLHANDLER_CID \
 { /* 4f47e42e-4d23-4dd3-bfda-eb29255e9ea3 */         \
     0x4f47e42e,                                      \
     0x4d23,                                          \
     0x4dd3,                                          \
     {0xbf, 0xda, 0xeb, 0x29, 0x25, 0x5e, 0x9e, 0xa3} \
+}
+
+#define NS_HTTPSPROTOCOLHANDLER_CID \
+{ /* dccbe7e4-7750-466b-a557-5ea36c8ff24e */         \
+    0xdccbe7e4,                                      \
+    0x7750,                                          \
+    0x466b,                                          \
+    {0xa5, 0x57, 0x5e, 0xa3, 0x6c, 0x8f, 0xf2, 0x4e} \
 }
 
 #define NS_HTTPBASICAUTH_CID \

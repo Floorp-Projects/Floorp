@@ -72,10 +72,6 @@ public:
     nsHttpHandler();
     virtual ~nsHttpHandler();
 
-    // Implement our own create function so we can register ourselves as both
-    // the HTTP and HTTPS handler.
-    static NS_METHOD Create(nsISupports *outer, REFNSIID iid, void **result);
-
     // Returns a pointer to the one and only HTTP handler
     static nsHttpHandler *get() { return mGlobalInstance; }
 
@@ -315,6 +311,29 @@ private:
     // mSendSecureXSiteReferrer: default is false, 
     // if true allow referrer headers between secure non-matching hosts
     PRPackedBool   mSendSecureXSiteReferrer;
+};
+
+//-----------------------------------------------------------------------------
+// nsHttpsHandler - thin wrapper to distinguish the HTTP handler from the
+//                  HTTPS handler (even though they share the same impl).
+//-----------------------------------------------------------------------------
+
+class nsHttpsHandler : public nsIHttpProtocolHandler
+                     , public nsSupportsWeakReference
+{
+public:
+    // we basically just want to override GetScheme and GetDefaultPort...
+    // all other methods should be forwarded to the nsHttpHandler instance.
+    
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIPROTOCOLHANDLER
+    NS_FORWARD_NSIPROXIEDPROTOCOLHANDLER (nsHttpHandler::get()->)
+    NS_FORWARD_NSIHTTPPROTOCOLHANDLER    (nsHttpHandler::get()->)
+
+    nsHttpsHandler() { NS_INIT_ISUPPORTS(); }
+    virtual ~nsHttpsHandler() { }
+
+    nsresult Init();
 };
 
 #endif // nsHttpHandler_h__

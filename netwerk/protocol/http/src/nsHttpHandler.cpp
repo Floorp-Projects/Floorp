@@ -165,33 +165,6 @@ nsHttpHandler::~nsHttpHandler()
     mGlobalInstance = nsnull;
 }
 
-NS_METHOD
-nsHttpHandler::Create(nsISupports *outer, REFNSIID iid, void **result)
-{
-    nsresult rv;
-    if (outer)
-        return NS_ERROR_NO_AGGREGATION;
-    nsHttpHandler *handler = get();
-    if (!handler) {
-        // create the one any only instance of nsHttpHandler
-        NS_NEWXPCOM(handler, nsHttpHandler);
-        if (!handler)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(handler);
-        rv = handler->Init();
-        if (NS_FAILED(rv)) {
-            LOG(("nsHttpHandler::Init failed [rv=%x]\n", rv));
-            NS_RELEASE(handler);
-            return rv;
-        }
-    }
-    else
-        NS_ADDREF(handler);
-    rv = handler->QueryInterface(iid, result);
-    NS_RELEASE(handler);
-    return rv;
-}
-
 nsresult
 nsHttpHandler::Init()
 {
@@ -1805,13 +1778,15 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsHttpHandler,
 NS_IMETHODIMP
 nsHttpHandler::GetScheme(nsACString &aScheme)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aScheme = NS_LITERAL_CSTRING("http");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetDefaultPort(PRInt32 *aDefaultPort)
+nsHttpHandler::GetDefaultPort(PRInt32 *result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = 80;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2177,4 +2152,67 @@ nsPipelineEnqueueState::Cleanup()
     for (PRInt32 i=0; i < mAppendedTrans.Count(); i++)
         delete GetAppendedTrans(i);
     mAppendedTrans.Clear();
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpsHandler implementation
+//-----------------------------------------------------------------------------
+
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsHttpsHandler,
+                              nsIHttpProtocolHandler,
+                              nsIProxiedProtocolHandler,
+                              nsIProtocolHandler,
+                              nsISupportsWeakReference)
+
+nsresult
+nsHttpsHandler::Init()
+{
+    nsCOMPtr<nsIProtocolHandler> httpHandler(
+            do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http"));
+    NS_ASSERTION(httpHandler.get() != nsnull, "no http handler?");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpsHandler::GetScheme(nsACString &aScheme)
+{
+    aScheme = NS_LITERAL_CSTRING("https");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpsHandler::GetDefaultPort(PRInt32 *aPort)
+{
+    NS_ENSURE_ARG_POINTER(aPort);
+    *aPort = 443;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpsHandler::GetProtocolFlags(PRUint32 *aProtocolFlags)
+{
+    return nsHttpHandler::get()->GetProtocolFlags(aProtocolFlags);
+}
+
+NS_IMETHODIMP
+nsHttpsHandler::NewURI(const nsACString &aSpec,
+                       const char *aOriginCharset,
+                       nsIURI *aBaseURI,
+                       nsIURI **_retval)
+{
+    return nsHttpHandler::get()->NewURI(aSpec, aOriginCharset, aBaseURI, _retval);
+}
+
+NS_IMETHODIMP
+nsHttpsHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
+{
+    return nsHttpHandler::get()->NewChannel(aURI, _retval);
+}
+
+NS_IMETHODIMP
+nsHttpsHandler::AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval)
+{
+    // don't override anything.  
+    *_retval = PR_FALSE;
+    return NS_OK;
 }
