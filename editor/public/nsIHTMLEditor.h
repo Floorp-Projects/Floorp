@@ -173,6 +173,7 @@ public:
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)=0;
+  NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement)=0;
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
   NS_IMETHOD SelectElement(nsIDOMElement* aElement)=0;
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement)=0;

@@ -1840,6 +1840,25 @@ nsEditorShell::InsertElement(nsIDOMElement *element, PRBool deleteSelection)
 }
 
 NS_IMETHODIMP
+nsEditorShell::SaveHLineSettings(nsIDOMElement* aElement)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          return htmlEditor->SaveHLineSettings(aElement);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP
 nsEditorShell::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
   nsresult  result = NS_NOINTERFACE;

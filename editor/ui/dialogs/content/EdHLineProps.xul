@@ -23,7 +23,7 @@
                 Height:
               </td>
               <td colspan="2">
-                <input type="text" id="width" size="4" maxlength="4"/>
+                <input type="text" id="height" size="4" maxlength="4"/>
               </td>
             </tr>
             <tr>              
@@ -34,7 +34,7 @@
                 <input type="text" id="width" size="4" maxlength="4"/>
               </td>
               <td>
-                <xul:titledbutton class="push popup" id="PixelOrPercent" value="pixels" align="left" />
+                <xul:titledbutton class="push popup" id="pixelOrPercentButton" value="pixels" align="left" popup="PixelOrPercentMenu" />
               </td>
             </tr>
           </table>
@@ -55,14 +55,25 @@
         <label><input type="checkbox" id="3dShading"/>3-D Shading</label>
       </td>
       <td align="right">
-        <button id="SaveDefault">Save settings as default</button>
+        <button id="SaveDefault" onclick="onSaveDefault()">Save settings</button>
       </td>
     </tr>
     <tr>
     <td colspan="2" align="right">
+      <hr width="100%"/>
+      <button class="spaced" id="Advanced" onclick="onAdvanced()">Advanced Attributes</button>  
       <button class="spaced" id="OK" onclick="onOK()">OK</button>  
       <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
     </td>
   </tr>
 </table>
+
+<xul:popup id="PixelOrPercentMenu">
+  <xul:menu>
+    <xul:menuitem name="pixels" onclick="SetPixelOrPercent('')"/>
+    <xul:menuitem name="percent" onclick="SetPixelOrPercent('%')"/>
+  </xul:menu>
+</xul:popup>
+
 </xul:window>
+

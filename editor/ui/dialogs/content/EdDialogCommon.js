@@ -22,6 +22,22 @@ function AppendStringToList(list, string)
   }
 }
 
+// "value" may be a number or string type
+function ValidateNumberString(value, minValue, maxValue)
+{
+  // Get the number version
+  number = value - 0;
+  if ((value+"") != "") {
+    if (number && number >= minValue && number <= maxValue ){
+      // Return string version of the number
+      return number + "";
+    }
+  }
+  // Return an empty string to indicate error
+  //TODO: Popup a message box telling the user about the error
+  return "";
+}
+
 // All dialogs share this simple method
 function onCancel()
 {

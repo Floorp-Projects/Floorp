@@ -45,6 +45,7 @@
 #include "nsIFileWidget.h" // for GetLocalFileURL stuff
 #include "nsWidgetsCID.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIPref.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 
@@ -53,7 +54,6 @@
 #endif // ENABLE_JS_EDITOR_LOG
 
 static NS_DEFINE_IID(kInsertHTMLTxnIID, NS_INSERT_HTML_TXN_IID);
-
 static NS_DEFINE_CID(kEditorCID,      NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,  NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
@@ -2147,6 +2147,62 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   {
     // TODO: Get the text of the selection and build a suggested Name
     //  Replace spaces with "_" 
+  } else if (TagName.Equals("hr"))
+  {
+    // Hard coded defaults in case there's no prefs
+    nsAutoString align("center");
+    nsAutoString width("100%");
+    nsAutoString height("2");
+    PRBool bNoShade = PR_FALSE;
+
+    if (mPrefs)
+    {
+      char buf[16];
+      PRInt32 iAlign;
+      if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.align", &iAlign)))
+      {
+        switch (iAlign) {
+          case 1:
+            align = "left";
+            break;
+          case 3:
+            align = "right";
+            break;
+        }
+      }
+      PRInt32 iHeight;
+      if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.height", &iHeight)))
+      {
+        itoa(iHeight, buf, 16);
+        if (buf)
+        {
+          height = buf;
+        }
+      }
+      PRInt32 iWidth;
+      PRBool  bPercent;
+      if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.width", &iWidth)) &&
+          NS_SUCCEEDED(mPrefs->GetBoolPref("editor.hrule.width_percent", &bPercent)))
+      {
+        itoa(iWidth, buf, 16);
+        if (buf)
+        {
+          width = buf;
+          if (bPercent)
+            width.Append("%");
+        }
+      }
+      PRBool  bShading;
+      if (NS_SUCCEEDED(mPrefs->GetBoolPref("editor.hrule.shading", &bShading)))
+      {
+        bNoShade = !bShading;
+      }
+    }
+    newElement->SetAttribute("align", align);
+    newElement->SetAttribute("height", height);
+    newElement->SetAttribute("width", width);
+    if (bNoShade)    
+      newElement->SetAttribute("noshade", "");
   }
   // ADD OTHER DEFAULT ATTRIBUTES HERE
 
@@ -2199,6 +2255,46 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 
   }
   
+  return res;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::SaveHLineSettings(nsIDOMElement* aElement)
+{
+  nsresult res=NS_ERROR_NOT_INITIALIZED;
+  if (!aElement || !mPrefs)
+    return res;
+
+  nsAutoString align, width, height, noshade;
+  res = NS_ERROR_UNEXPECTED;
+  if (NS_SUCCEEDED(aElement->GetAttribute("align", align)) &&
+      NS_SUCCEEDED(aElement->GetAttribute("height", height)) &&
+      NS_SUCCEEDED(aElement->GetAttribute("width", width)) &&
+      NS_SUCCEEDED(aElement->GetAttribute("noshade", noshade)))
+  {
+    PRInt32 iAlign = 0;
+    if (align == "center")
+      iAlign = 1;
+    else if (align == "right")
+      iAlign = 2;
+    mPrefs->SetIntPref("editor.hrule.align", iAlign);
+
+    char heightChar[32] = {""};
+    PRInt32 iHeight = atoi(height.ToCString(heightChar, 32));
+    if (iHeight > 0)
+      mPrefs->SetIntPref("editor.hrule.height", iHeight);
+
+    char widthChar[32] = {""};
+    PRInt32 iWidth = atoi(width.ToCString(widthChar, 32));
+    if (iWidth > 0) {
+      mPrefs->SetIntPref("editor.hrule.height", iWidth);
+      mPrefs->SetBoolPref("editor.hrule.width_percent", (width.Find("%") > 0));
+    }
+
+    mPrefs->SetBoolPref("editor.hrule.shading", (noshade == ""));
+    res = NS_OK;
+  }
+        
   return res;
 }
 
