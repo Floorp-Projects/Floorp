@@ -5110,7 +5110,7 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
   }
   if (cellData->IsColSpan()) {
     aColIndex -= cellData->GetColSpanOffset();
-    cellData = cellMap->GetDataAt(*mTableCellMap, rowIndex, aColIndex, PR_FALSE);
+    cellData = cellMap->GetDataAt(*mTableCellMap, rgRowIndex, aColIndex, PR_FALSE);
   }
   SetInfo(nextRow, aColIndex, cellData, aAjaInfo, cellMap);
 }
@@ -5805,8 +5805,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
 
     cellEndRowIndex = info.rowIndex + info.rowSpan - 1;
     cellEndColIndex = info.colIndex + info.colSpan - 1;
-    PRBool isBottomRight = (info.rowIndex == (numRows - 1)) && (info.colIndex == (numCols - 1));
-
+    
     PRBool bottomRowSpan = PR_FALSE;
     // see if lastTopBorder, lastBottomBorder need to be reset
     if (iter.IsNewRow()) { 
@@ -5814,12 +5813,12 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
       lastBottomBorder.Reset(cellEndRowIndex + 1, info.rowSpan);
     }
     else if (info.colIndex > damageArea.x) {
-      BCCellBorder& prevBorder = lastBottomBorders[info.colIndex - 1];
-      if (info.rowIndex > prevBorder.index - prevBorder.span) { 
+      lastBottomBorder = lastBottomBorders[info.colIndex - 1];
+      if (info.rowIndex > lastBottomBorder.index - lastBottomBorder.span) { 
         // the top border's left edge butts against the middle of a rowspan
         lastTopBorder.Reset(info.rowIndex, info.rowSpan);
       }
-      if (prevBorder.index > (cellEndRowIndex + 1)) { 
+      if (lastBottomBorder.index > (cellEndRowIndex + 1)) { 
         // the bottom border's left edge butts against the middle of a rowspan
         lastBottomBorder.Reset(cellEndRowIndex + 1, info.rowSpan);
         bottomRowSpan = PR_TRUE;
@@ -6050,10 +6049,16 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         brCorner.Update(NS_SIDE_LEFT, owner, ownerBStyle, ownerWidth, ownerColor); 
         if (numCols == colX + 1) { // lower right corner of the table
           tableCellMap->SetBCBorderCorner(eBottomRight, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex,               
-                                          colX, brCorner.ownerSide, brCorner.subWidth, brCorner.bevel, isBottomRight);  
+                                          colX, brCorner.ownerSide, brCorner.subWidth, brCorner.bevel, PR_TRUE);  
         }
         // update lastBottomBorder and see if a new segment starts
         startSeg = SetHorBorder(ownerBStyle, ownerWidth, ownerColor, blCorner, lastBottomBorder);
+        if (!startSeg) { 
+           // make sure that we did not compare apples to oranges i.e. the current border 
+           // should be a continuation of the lastBottomBorder, as it is a bottom border 
+           // add 1 to the cellEndRowIndex
+           startSeg = (lastBottomBorder.index != cellEndRowIndex + 1); 
+        }
         // store the border segment in the cell map and update cellBorders
         tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex, 
                                       colX, 1, owner, ownerWidth, startSeg);
@@ -6096,7 +6101,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
           if (prevRowIndex > cellEndRowIndex + 1) { // hits a rowspan on the right
             update = PR_FALSE; // the corner was taken care of during the cell on the left
           }
-          else if (prevRowIndex < cellEndRowIndex) { // spans below the cell to the left
+          else if (prevRowIndex < cellEndRowIndex + 1) { // spans below the cell to the left
             topCorners[colX] = blCorner;
             blCorner.Set(NS_SIDE_RIGHT, owner, ownerBStyle, ownerWidth, ownerColor); 
             update = PR_FALSE;
@@ -6120,6 +6125,12 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         }
         // update lastBottomBorders and see if a new segment starts
         startSeg = SetHorBorder(ownerBStyle, ownerWidth, ownerColor, blCorner, lastBottomBorder);
+        if (!startSeg) { 
+           // make sure that we did not compare apples to oranges i.e. the current border 
+           // should be a continuation of the lastBottomBorder, as it is a bottom border 
+           // add 1 to the cellEndRowIndex
+           startSeg = (lastBottomBorder.index != cellEndRowIndex + 1); 
+        }
         lastBottomBorder.index = cellEndRowIndex + 1;
         lastBottomBorder.span = info.rowSpan;
         for (PRInt32 cX = colX; cX < colX + segLength; cX++) {
