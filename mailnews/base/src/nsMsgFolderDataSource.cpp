@@ -192,6 +192,20 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTarget(nsIRDFResource* source,
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source));
   if (folder) {
     rv = createFolderNode(folder, property, target);
+#if 0
+    nsXPIDLCString srcval;
+    nsXPIDLCString propval;
+    nsXPIDLCString targetval;
+    source->GetValue(getter_Copies(srcval));
+    property->GetValue(getter_Copies(propval));
+    //    (*target)->GetValue(getter_Copies(targetval));
+
+    printf("nsMsgFolderDataSource::GetTarget(%s, %s, %s, (%s))\n",
+           (const char*)srcval,
+           (const char*)propval, tv ? "TRUE" : "FALSE",
+           (const char*)"");
+#endif
+    
   }
   else
 	  return NS_RDF_NO_VALUE;
@@ -217,6 +231,19 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
   if(!targets)
 	  return NS_ERROR_NULL_POINTER;
 
+#if 0
+  nsXPIDLCString srcval;
+  nsXPIDLCString propval;
+  nsXPIDLCString targetval;
+  source->GetValue(getter_Copies(srcval));
+  property->GetValue(getter_Copies(propval));
+  //    (*target)->GetValue(getter_Copies(targetval));
+  
+  printf("nsMsgFolderDataSource::GetTargets(%s, %s, %s, (%s))\n",
+         (const char*)srcval,
+         (const char*)propval, tv ? "TRUE" : "FALSE",
+         (const char*)"");
+#endif
   *targets = nsnull;
 
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
@@ -337,6 +364,11 @@ NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
   if (NS_SUCCEEDED(rv)) {
     fflush(stdout);
     rv = getFolderArcLabelsOut(folder, getter_AddRefs(arcs));
+#if 0
+    nsXPIDLCString srcval;
+    source->GetValue(getter_Copies(srcval));
+    printf("nsMsgFolderDataSource::ArcLabelsOut(%s)\n", (const char*)srcval);
+#endif
   }
   else {
     // how to return an empty cursor?
