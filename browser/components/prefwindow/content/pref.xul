@@ -7,7 +7,11 @@
 
 <dialog id="prefDialog" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+#ifdef XP_WIN
         title="&prefWindow.title;" 
+#else
+        title="&prefWindowUnix.title;"
+#endif
         style="&prefWindow.size;"
         buttons="accept,cancel" windowtype="Browser:Options"
         onload="Startup();" onunload="Shutdown();"
