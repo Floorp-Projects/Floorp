@@ -83,11 +83,8 @@ EXPORTS		+= nsLocalFileUnix.h
 endif
 
 XPIDLSRCS	= \
-		nsIBaseStream.idl \
 		nsIBinaryInputStream.idl \
 		nsIBinaryOutputStream.idl  \
-		nsIBufferInputStream.idl \
-		nsIBufferOutputStream.idl \
 		nsIFile.idl \
 		nsIFileSpec.idl \
 		nsIInputStream.idl \

@@ -362,6 +362,26 @@ public:
       return NS_OK;
   }
 
+  NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) {
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD GetObserver(nsIInputStreamObserver * *aObserver) {
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD SetObserver(nsIInputStreamObserver * aObserver) {
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // Implementation
   void SetBuffer(const char* aBuffer, PRUint32 aSize) {
       mBuffer = aBuffer;

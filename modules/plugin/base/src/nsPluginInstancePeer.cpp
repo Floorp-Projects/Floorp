@@ -164,21 +164,8 @@ public:
 	virtual ~nsPluginStreamToFile();
 
 	NS_DECL_ISUPPORTS
-
-	// nsIOutputStream interface
+	NS_DECL_NSIOUTPUTSTREAM
  
-	NS_IMETHOD
-	Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
-
-    NS_IMETHOD Flush() {
-        return NS_OK;
-    }
-
-	// nsIBaseStream interface
-
-    NS_IMETHOD
-	Close(void);
-
 protected:
 	char* mTarget;
 	nsFileURL mFileURL;
@@ -268,6 +255,12 @@ nsresult nsPluginStreamToFile::QueryInterface(const nsIID& aIID,
 }
 
 NS_IMETHODIMP
+nsPluginStreamToFile::Flush()
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 {
 	// write the data to the file and update the target
@@ -280,6 +273,48 @@ nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteC
 	mOwner->GetURL(mFileURL.GetAsString(), mTarget, nsnull);
 
 	return NS_OK;
+}
+    
+NS_IMETHODIMP
+nsPluginStreamToFile::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteFrom");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::SetNonBlocking(PRBool aNonBlocking)
+{
+    NS_NOTREACHED("SetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::GetObserver(nsIOutputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::SetObserver(nsIOutputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

@@ -33,8 +33,8 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsIProgressEventSink.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsIStreamIO.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIFile.h"
@@ -45,13 +45,15 @@ class nsIInterfaceRequestor;
 
 class nsFileTransport : public nsIChannel, 
                         public nsIRunnable,
-                        public nsIPipeObserver
+                        public nsIInputStreamObserver,
+                        public nsIOutputStreamObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
-    NS_DECL_NSIPIPEOBSERVER
+    NS_DECL_NSIINPUTSTREAMOBSERVER
+    NS_DECL_NSIOUTPUTSTREAMOBSERVER
     NS_DECL_NSIRUNNABLE
 
     nsFileTransport();
@@ -121,8 +123,8 @@ protected:
     // reading state varialbles:
     nsCOMPtr<nsIStreamListener>         mListener;
     nsCOMPtr<nsIInputStream>            mSource;
-    nsCOMPtr<nsIBufferInputStream>      mBufferInputStream;
-    nsCOMPtr<nsIBufferOutputStream>     mBufferOutputStream;
+    nsCOMPtr<nsIInputStream>            mInputStream;
+    nsCOMPtr<nsIOutputStream>           mOutputStream;
 
     // writing state variables:
     nsCOMPtr<nsIStreamObserver>         mObserver;

@@ -41,12 +41,10 @@ nsBufferedStream::~nsBufferedStream()
     Close();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsBufferedStream, 
-                              nsIBaseStream,
-                              nsISeekableStream);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsBufferedStream, nsISeekableStream);
 
 nsresult
-nsBufferedStream::Init(nsIBaseStream* stream, PRUint32 bufferSize)
+nsBufferedStream::Init(nsISupports* stream, PRUint32 bufferSize)
 {
     NS_ASSERTION(stream, "need to supply a stream");
     NS_ASSERTION(mStream == nsnull, "already inited");
@@ -61,14 +59,11 @@ nsBufferedStream::Init(nsIBaseStream* stream, PRUint32 bufferSize)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBufferedStream::Close()
 {
     nsresult rv = NS_OK;
-    if (mStream) {
-        rv = mStream->Close();
-        NS_RELEASE(mStream);
-        mStream = nsnull;
+    if (mBuffer) {
         delete[] mBuffer;
         mBuffer = nsnull;
         mBufferSize = 0;
@@ -174,7 +169,14 @@ nsBufferedInputStream::Init(nsIInputStream* stream, PRUint32 bufferSize)
 NS_IMETHODIMP
 nsBufferedInputStream::Close()
 {
-    return nsBufferedStream::Close();
+    nsresult rv1 = NS_OK, rv2;
+    if (mStream) {
+        rv1 = Source()->Close();
+        NS_RELEASE(mStream);
+    }
+    rv2 = nsBufferedStream::Close();
+    if (NS_FAILED(rv1)) return rv1;
+    return rv2;
 }
 
 NS_IMETHODIMP
@@ -204,6 +206,34 @@ nsBufferedInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
     }
     *result = read;
     return (read > 0 || rv == NS_BASE_STREAM_CLOSED) ? NS_OK : rv;
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -261,14 +291,19 @@ nsBufferedOutputStream::Init(nsIOutputStream* stream, PRUint32 bufferSize)
 NS_IMETHODIMP
 nsBufferedOutputStream::Close()
 {
-    nsresult rv1, rv2;
+    nsresult rv1, rv2 = NS_OK, rv3;
     rv1 = Flush();
     // If we fail to Flush all the data, then we close anyway and drop the
     // remaining data in the buffer. We do this because it's what Unix does
     // for fclose and close. However, we report the error from Flush anyway.
-    rv2 = nsBufferedStream::Close();
+    if (mStream) {
+        rv2 = Sink()->Close();
+        NS_RELEASE(mStream);
+    }
+    rv3 = nsBufferedStream::Close();
     if (NS_FAILED(rv1)) return rv1;
-    return rv2;
+    if (NS_FAILED(rv2)) return rv2;
+    return rv3;
 }
 
 NS_IMETHODIMP
@@ -313,6 +348,48 @@ nsBufferedOutputStream::Flush(void)
     nsCRT::memcpy(mBuffer, mBuffer + amt, rem);
     mCursor = rem;
     return NS_ERROR_FAILURE;        // didn't flush all
+}
+    
+NS_IMETHODIMP
+nsBufferedOutputStream::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteFrom");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBufferedOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBufferedOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBufferedOutputStream::SetNonBlocking(PRBool aNonBlocking)
+{
+    NS_NOTREACHED("SetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBufferedOutputStream::GetObserver(nsIOutputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBufferedOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

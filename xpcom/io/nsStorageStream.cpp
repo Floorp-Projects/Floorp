@@ -33,7 +33,7 @@
 #include "nsSegmentedBuffer.h"
 #include "nsCOMPtr.h"
 #include "prbit.h"
-
+#include "nsIInputStream.h"
 #include "prlog.h"
 
 #if defined(PR_LOGGING)
@@ -208,6 +208,48 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
     return rv;
 }
 
+NS_IMETHODIMP 
+nsStorageStream::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteFrom");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsStorageStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsStorageStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsStorageStream::SetNonBlocking(PRBool aNonBlocking)
+{
+    NS_NOTREACHED("SetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsStorageStream::GetObserver(nsIOutputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsStorageStream::SetObserver(nsIOutputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 nsStorageStream::GetLength(PRUint32 *aLength)
 {
@@ -307,7 +349,6 @@ public:
     }
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSIINPUTSTREAM
 
 protected:
@@ -398,6 +439,34 @@ nsStorageInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
 	return NS_BASE_STREAM_WOULD_BLOCK;
     else
 	return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsStorageInputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsStorageInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsStorageInputStream::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD

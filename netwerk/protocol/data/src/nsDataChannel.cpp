@@ -30,8 +30,8 @@
 #include "plbase64.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPipe.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -73,7 +73,8 @@ typedef struct _writeData {
 } writeData;
 
 static NS_METHOD
-nsReadData(void* closure, // the data from
+nsReadData(nsIOutputStream* out,
+           void* closure, // the data from
            char* toRawSegment, // where to put the data
            PRUint32 offset, // where to start
            PRUint32 count, // how much data is there
@@ -157,8 +158,8 @@ nsDataChannel::ParseData() {
         cleanup = PR_TRUE;
     }
     
-    nsCOMPtr<nsIBufferInputStream> bufInStream;
-    nsCOMPtr<nsIBufferOutputStream> bufOutStream;
+    nsCOMPtr<nsIInputStream> bufInStream;
+    nsCOMPtr<nsIOutputStream> bufOutStream;
 
     rv = NS_NewPipe(getter_AddRefs(bufInStream), getter_AddRefs(bufOutStream));
     if (NS_FAILED(rv)) return rv;

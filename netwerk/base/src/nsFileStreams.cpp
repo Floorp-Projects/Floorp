@@ -275,11 +275,9 @@ nsFileStream::~nsFileStream()
     Close();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsFileStream, 
-                              nsIBaseStream,
-                              nsISeekableStream);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileStream, nsISeekableStream);
 
-NS_IMETHODIMP
+nsresult
 nsFileStream::Close()
 {
     if (mFD) {
@@ -388,6 +386,34 @@ nsFileInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFileInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileInputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileInputStream::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileOutputStream
 
@@ -457,6 +483,48 @@ nsFileOutputStream::Flush(void)
         return NS_ErrorAccordingToNSPR();
     }
     return NS_OK;
+}
+    
+NS_IMETHODIMP
+nsFileOutputStream::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteFrom");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileOutputStream::SetNonBlocking(PRBool aNonBlocking)
+{
+    NS_NOTREACHED("SetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileOutputStream::GetObserver(nsIOutputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

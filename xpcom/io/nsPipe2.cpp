@@ -22,8 +22,8 @@
  */
 
 #include "nsIPipe.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsSegmentedBuffer.h"
 #include "nsAutoLock.h"
 #include "nsIServiceManager.h"
@@ -39,15 +39,23 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define GET_INPUTSTREAM_PIPE(_this) \
+    ((nsPipe*)((char*)(_this) - offsetof(nsPipe, mInput)))
+
+#define GET_OUTPUTSTREAM_PIPE(_this) \
+    ((nsPipe*)((char*)(_this) - offsetof(nsPipe, mOutput)))
+
+////////////////////////////////////////////////////////////////////////////////
+
 class nsPipe : public nsIPipe
 {
 public:
-    // We can't inherit from both nsIBufferInputStream and nsIBufferOutputStream
+    // We can't inherit from both nsIInputStream and nsIOutputStream
     // because they collide on their Close method. Consequently we nest their
     // implementations to avoid the extra object allocation, and speed up method
     // invocation between them and the nsPipe's buffer  manipulation methods.
 
-    class nsPipeInputStream : public nsIBufferInputStream {
+    class nsPipeInputStream : public nsIInputStream {
     public:
         NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr); 
         NS_IMETHOD_(nsrefcnt) AddRef(void); 
@@ -57,25 +65,34 @@ public:
         // nsIInputStream methods:
         NS_IMETHOD Available(PRUint32 *result);
         NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount);
-        // nsIBufferInputStream methods:
-        NS_IMETHOD GetBuffer(nsIBuffer * *aBuffer) {
-            return NS_ERROR_NOT_IMPLEMENTED;
-        }
+        // nsIInputStream methods:
         NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void* closure, PRUint32 count,
                                 PRUint32 *readCount);
         NS_IMETHOD Search(const char *forString, PRBool ignoreCase, PRBool *found,
                           PRUint32 *offsetSearchedTo);
         NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
         NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
+        NS_IMETHOD GetObserver(nsIInputStreamObserver* *result) {
+            *result = mObserver;
+            NS_IF_ADDREF(*result);
+            return NS_OK;
+        }
+
+        NS_IMETHOD SetObserver(nsIInputStreamObserver* obs) {
+            mObserver = obs;
+            return NS_OK;
+        }
 
         nsPipeInputStream() : mReaderRefCnt(0), mBlocking(PR_TRUE) {}
         nsresult Fill();
+
     protected:
         nsrefcnt        mReaderRefCnt; // separate refcnt so that we know when to close the consumer
         PRBool          mBlocking;
+        nsCOMPtr<nsIInputStreamObserver> mObserver;
     };
 
-    class nsPipeOutputStream : public nsIBufferOutputStream {
+    class nsPipeOutputStream : public nsIOutputStream {
     public:
         NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr); 
         NS_IMETHOD_(nsrefcnt) AddRef(void); 
@@ -84,20 +101,29 @@ public:
         NS_IMETHOD Close(void);
         NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount);
         NS_IMETHOD Flush(void);
-        // nsIBufferOutputStream methods:
-        NS_IMETHOD GetBuffer(nsIBuffer * *aBuffer) {
-            return NS_ERROR_NOT_IMPLEMENTED;
-        }
+        // nsIOutputStream methods:
         NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
                                  PRUint32 *writeCount);
         NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount);
         NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
         NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
+        NS_IMETHOD GetObserver(nsIOutputStreamObserver* *result) {
+            *result = mObserver;
+            NS_IF_ADDREF(*result);
+            return NS_OK;
+        }
+
+        NS_IMETHOD SetObserver(nsIOutputStreamObserver* obs) {
+            mObserver = obs;
+            return NS_OK;
+        }
 
         nsPipeOutputStream() : mWriterRefCnt(0), mBlocking(PR_TRUE) {}
+
     protected:
         nsrefcnt        mWriterRefCnt; // separate refcnt so that we know when to close the producer
         PRBool          mBlocking;
+        nsCOMPtr<nsIOutputStreamObserver> mObserver;
     };
 
     friend class nsPipeInputStream;
@@ -106,35 +132,28 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIPipe methods:
-    NS_IMETHOD Initialize(PRUint32 segmentSize, PRUint32 maxSize, 
-                          nsIPipeObserver *observer, nsIMemory *segmentAllocator) {
+    NS_IMETHOD Initialize(PRUint32 segmentSize, PRUint32 maxSize,
+                          PRBool nonBlockingIn, PRBool nonBlockingOut,
+                          nsIMemory *segmentAllocator) {
         nsresult rv;
+        mMonitor = PR_NewMonitor();
+        if (mMonitor == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
         rv = mBuffer.Init(segmentSize, maxSize, segmentAllocator);
-        if (NS_FAILED(rv)) return rv;
-        mObserver = observer;
+        GetInputStream()->SetNonBlocking(nonBlockingIn);
+        GetOutputStream()->SetNonBlocking(nonBlockingOut);
         return NS_OK;
     }
 
-    NS_IMETHOD GetInputStream(nsIBufferInputStream * *aInputStream) {
+    NS_IMETHOD GetInputStream(nsIInputStream * *aInputStream) {
         *aInputStream = &mInput;
         NS_IF_ADDREF(*aInputStream);
         return NS_OK;
     }
 
-    NS_IMETHOD GetOutputStream(nsIBufferOutputStream * *aOutputStream) {
+    NS_IMETHOD GetOutputStream(nsIOutputStream * *aOutputStream) {
         *aOutputStream = &mOutput;
         NS_IF_ADDREF(*aOutputStream);
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetObserver(nsIPipeObserver* *result) {
-        *result = mObserver;
-        NS_IF_ADDREF(*result);
-        return NS_OK;
-    }
-
-    NS_IMETHOD SetObserver(nsIPipeObserver* obs) {
-        mObserver = obs;
         return NS_OK;
     }
 
@@ -142,6 +161,7 @@ public:
     nsPipe();
     virtual ~nsPipe();
 
+    PRMonitor* GetMonitor() { return mMonitor; }
     nsPipeInputStream* GetInputStream() { return &mInput; }
     nsPipeOutputStream* GetOutputStream() { return &mOutput; }
 
@@ -152,11 +172,11 @@ public:
                              PRUint32 *resultSegmentLen);
 
 protected:
+    PRMonitor*          mMonitor;
     nsPipeInputStream   mInput;
     nsPipeOutputStream  mOutput;
 
     nsSegmentedBuffer   mBuffer;
-    nsCOMPtr<nsIPipeObserver> mObserver;
 
     char*               mReadCursor;
     char*               mReadLimit;
@@ -167,17 +187,12 @@ protected:
     nsresult            mCondition;
 };
 
-#define GET_INPUTSTREAM_PIPE(_this) \
-    ((nsPipe*)((char*)(_this) - offsetof(nsPipe, mInput)))
-
-#define GET_OUTPUTSTREAM_PIPE(_this) \
-    ((nsPipe*)((char*)(_this) - offsetof(nsPipe, mOutput)))
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsPipe methods:
 
 nsPipe::nsPipe()
-    : mReadCursor(nsnull),
+    : mMonitor(nsnull),
+      mReadCursor(nsnull),
       mReadLimit(nsnull),
       mWriteCursor(nsnull),
       mWriteLimit(nsnull),
@@ -188,6 +203,7 @@ nsPipe::nsPipe()
 
 nsPipe::~nsPipe()
 {
+    if (mMonitor) PR_DestroyMonitor(mMonitor);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsPipe);
@@ -198,18 +214,14 @@ nsPipe::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (aInstancePtr == nsnull)
         return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(NS_GET_IID(nsIBufferInputStream)) ||
-        aIID.Equals(NS_GET_IID(nsIInputStream)) ||
-        aIID.Equals(NS_GET_IID(nsIBaseStream))) {
-        nsIBufferInputStream* in = GetInputStream();
+    if (aIID.Equals(NS_GET_IID(nsIInputStream))) {
+        nsIInputStream* in = GetInputStream();
         NS_ADDREF(in);
         *aInstancePtr = in;
         return NS_OK;
     }
-    if (aIID.Equals(NS_GET_IID(nsIBufferOutputStream)) ||
-        aIID.Equals(NS_GET_IID(nsIOutputStream)) ||
-        aIID.Equals(NS_GET_IID(nsIBaseStream))) {
-        nsIBufferOutputStream* out = GetOutputStream();
+    if (aIID.Equals(NS_GET_IID(nsIOutputStream))) {
+        nsIOutputStream* out = GetOutputStream();
         NS_ADDREF(out);
         *aInstancePtr = out;
         return NS_OK;
@@ -228,7 +240,7 @@ nsPipe::GetReadSegment(PRUint32 segmentLogicalOffset,
                        const char* *resultSegment,
                        PRUint32 *resultSegmentLen)
 {
-    nsAutoCMonitor mon(this);
+    nsAutoMonitor mon(mMonitor);
 
     PRInt32 offset = (PRInt32)segmentLogicalOffset;
     PRInt32 segCount = mBuffer.GetSegmentCount();
@@ -266,7 +278,7 @@ nsresult
 nsPipe::GetWriteSegment(char* *resultSegment,
                         PRUint32 *resultSegmentLen)
 {
-    nsAutoCMonitor mon(this);
+    nsAutoMonitor mon(mMonitor);
 
     *resultSegment = nsnull;
     *resultSegmentLen = 0;
@@ -314,20 +326,20 @@ NS_IMETHODIMP
 nsPipe::nsPipeInputStream::Close(void)
 {
     nsPipe* pipe = GET_INPUTSTREAM_PIPE(this);
-    nsAutoCMonitor mon(pipe);
+    nsAutoMonitor mon(pipe->GetMonitor());
 
     pipe->mCondition = NS_BASE_STREAM_CLOSED;
     pipe->mBuffer.Empty();
     pipe->mWriteCursor = nsnull;
     pipe->mWriteLimit = nsnull;
-    if (pipe->mObserver) {
-        nsCOMPtr<nsIPipeObserver> obs = pipe->mObserver;
+    if (mObserver) {
+        nsCOMPtr<nsIInputStreamObserver> obs = mObserver;
         mon.Exit();     // XXXbe avoid deadlock better
-        nsresult rv = obs->OnClose(pipe);
+        nsresult rv = obs->OnClose(this);
         mon.Enter();
         NS_ASSERTION(NS_SUCCEEDED(rv), "OnClose failed");
         // don't return error from OnClose -- its not our problem
-        pipe->mObserver = nsnull;       // so we don't call OnClose again
+        mObserver = nsnull;       // so we don't call OnClose again
     }
     return NS_OK;
 }
@@ -336,7 +348,7 @@ NS_IMETHODIMP
 nsPipe::nsPipeInputStream::Available(PRUint32 *result)
 {
     nsPipe* pipe = GET_INPUTSTREAM_PIPE(this);
-    nsAutoCMonitor mon(pipe);
+    nsAutoMonitor mon(pipe->GetMonitor());
 
     PRUint32 len = pipe->mBuffer.GetSize();
     if (pipe->mReadCursor) 
@@ -355,7 +367,7 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
                                         PRUint32 *readCount)
 {
     nsPipe* pipe = GET_INPUTSTREAM_PIPE(this);
-    nsAutoCMonitor mon(pipe);
+    nsAutoMonitor mon(pipe->GetMonitor());
 
     nsresult rv = NS_OK;
     PRUint32 readBufferLen;
@@ -371,9 +383,9 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             rv = pipe->mCondition;
             if (*readCount > 0 || NS_FAILED(rv))
                 goto done;      // don't Fill if we've got something
-            if (pipe->mObserver) {
+            if (mObserver) {
                 mon.Exit();     // XXXbe avoid deadlock better
-                rv = pipe->mObserver->OnEmpty(pipe);
+                rv = mObserver->OnEmpty(this);
                 mon.Enter();
                 if (NS_FAILED(rv)) goto done;
             }
@@ -386,10 +398,16 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
 
         readBufferLen = PR_MIN(readBufferLen, amt);
         while (readBufferLen > 0) {
-            PRUint32 writeCount;
-            rv = writer(closure, readBuffer, *readCount, readBufferLen, &writeCount);
+            PRUint32 writeCount = 0;
+            rv = writer(this, closure, readBuffer, *readCount, readBufferLen, &writeCount);
             if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK)
                 goto done;
+            NS_ASSERTION(writeCount <= readBufferLen, "writer returned bad writeCount");
+            readBuffer += writeCount;
+            readBufferLen -= writeCount;
+            *readCount += writeCount;
+            amt -= writeCount;
+            pipe->mReadCursor += writeCount;
             if (writeCount == 0 || rv == NS_BASE_STREAM_WOULD_BLOCK) {
                 rv = pipe->mCondition;
                 if (*readCount > 0 || NS_FAILED(rv))
@@ -400,20 +418,14 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
                 // else we filled the pipe, so go around again
                 continue;
             }
-            NS_ASSERTION(writeCount <= readBufferLen, "writer returned bad writeCount");
-            readBuffer += writeCount;
-            readBufferLen -= writeCount;
-            *readCount += writeCount;
-            amt -= writeCount;
-            pipe->mReadCursor += writeCount;
         }
         if (pipe->mReadCursor == pipe->mReadLimit) {
             pipe->mReadCursor = nsnull;
             pipe->mReadLimit = nsnull;
             PRBool empty = pipe->mBuffer.DeleteFirstSegment();
-            if (empty && pipe->mObserver) {
+            if (empty && mObserver) {
                 mon.Exit();     // XXXbe avoid deadlock better
-                rv = pipe->mObserver->OnEmpty(pipe);
+                rv = mObserver->OnEmpty(this);
                 mon.Enter();
                 mon.Notify();   // wake up writer
                 if (NS_FAILED(rv))
@@ -428,14 +440,14 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
     }
 
     if (rv == NS_BASE_STREAM_CLOSED) {    // EOF
-        if (pipe->mObserver) {
-            nsCOMPtr<nsIPipeObserver> obs = pipe->mObserver;
+        if (mObserver) {
+            nsCOMPtr<nsIInputStreamObserver> obs = mObserver;
             mon.Exit();     // XXXbe avoid deadlock better
-            nsresult rv2 = obs->OnClose(pipe);
+            nsresult rv2 = obs->OnClose(this);
             mon.Enter();
             NS_ASSERTION(NS_SUCCEEDED(rv2), "OnClose failed");
             // don't return error from OnClose -- its not our problem
-            pipe->mObserver = nsnull;       // so we don't call OnClose again
+            mObserver = nsnull;       // so we don't call OnClose again
         }
         rv = NS_OK;
     }
@@ -447,7 +459,7 @@ nsresult
 nsPipe::nsPipeInputStream::Fill()
 {
     nsPipe* pipe = GET_INPUTSTREAM_PIPE(this);
-    nsAutoCMonitor mon(pipe);
+    nsAutoMonitor mon(pipe->GetMonitor());
 
     nsresult rv;
     while (PR_TRUE) {
@@ -474,7 +486,8 @@ nsPipe::nsPipeInputStream::Fill()
 }
 
 static NS_METHOD
-nsWriteToRawBuffer(void* closure,
+nsWriteToRawBuffer(nsIInputStream* inStr,
+                   void* closure,
                    const char* fromRawSegment,
                    PRUint32 offset,
                    PRUint32 count,
@@ -608,7 +621,7 @@ NS_IMETHODIMP
 nsPipe::nsPipeOutputStream::Close(void)
 {
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
-    nsAutoCMonitor mon(pipe);
+    nsAutoMonitor mon(pipe->GetMonitor());
     if (pipe->mCondition == NS_OK)
         pipe->mCondition = NS_BASE_STREAM_CLOSED;
     nsresult rv = mon.Notify();   // wake up the writer
@@ -625,12 +638,12 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
 {
     nsresult rv = NS_OK;
 #ifdef MASK_PREMATURE_STREAM_RELEASE
-    nsCOMPtr<nsIBufferOutputStream> kungFuDeathGrip(this);
+    nsCOMPtr<nsIOutputStream> kungFuDeathGrip(this);
 #endif
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
     PRUint32 amt = count;
     {
-        nsAutoCMonitor mon(pipe);
+        nsAutoMonitor mon(pipe->GetMonitor());
 
         *writeCount = 0;
         if (NS_FAILED(pipe->mCondition)
@@ -648,9 +661,9 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             if (writeBufLen == 0) {
                 if (*writeCount > 0 && !mBlocking)
                     goto done;
-                if (pipe->mObserver/* && *writeCount == 0*/) {
+                if (mObserver/* && *writeCount == 0*/) {
                     mon.Exit();     // XXXbe avoid deadlock better
-                    rv = pipe->mObserver->OnFull(pipe);
+                    rv = mObserver->OnFull(this);
                     mon.Enter();
                     if (NS_FAILED(rv)) goto done;
                 }
@@ -664,8 +677,15 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             writeBufLen = PR_MIN(writeBufLen, amt);
             while (writeBufLen > 0) {
                 PRUint32 readCount = 0;
-                rv = reader(closure, writeBuf, *writeCount, writeBufLen, &readCount);
+                rv = reader(this, closure, writeBuf, *writeCount, writeBufLen, &readCount);
                 if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+                    NS_ASSERTION(readCount <= writeBufLen, "reader returned bad readCount");
+                    writeBuf += readCount;
+                    writeBufLen -= readCount;
+                    *writeCount += readCount;
+                    amt -= readCount;
+                    pipe->mWriteCursor += readCount;
+
                     // The reader didn't have anything else to put in the buffer, so
                     // call flush to notify the guy downstream, hoping that he'll somehow
                     // wake up the guy upstream to eventually produce more data for us.
@@ -705,15 +725,16 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
         ;
     }   // exit monitor
 
-    if (pipe->mObserver && *writeCount > 0) {
-        pipe->mObserver->OnWrite(pipe, *writeCount);
+    if (mObserver && *writeCount > 0) {
+        mObserver->OnWrite(this, *writeCount);
     }
     NS_ASSERTION(*writeCount <= count, "wrote more than expected");
     return *writeCount == 0 ? rv : NS_OK;
 }
 
 static NS_METHOD
-nsReadFromRawBuffer(void* closure,
+nsReadFromRawBuffer(nsIOutputStream* outStr,
+                    void* closure,
                     char* toRawSegment,
                     PRUint32 offset,
                     PRUint32 count,
@@ -737,7 +758,7 @@ NS_IMETHODIMP
 nsPipe::nsPipeOutputStream::Flush(void)
 {
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
-    nsAutoCMonitor mon(pipe);
+    nsAutoMonitor mon(pipe->GetMonitor());
     nsresult rv = NS_OK;
     PRBool firstTime = PR_TRUE;
     while (PR_TRUE) {
@@ -769,7 +790,8 @@ nsPipe::nsPipeOutputStream::Flush(void)
 }
 
 static NS_METHOD
-nsReadFromInputStream(void* closure,
+nsReadFromInputStream(nsIOutputStream* outStr,
+                      void* closure,
                       char* toRawSegment, 
                       PRUint32 offset,
                       PRUint32 count,
@@ -809,11 +831,13 @@ static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 
 NS_COM nsresult
-NS_NewPipe(nsIBufferInputStream* *inStrResult,
-           nsIBufferOutputStream* *outStrResult,
-           nsIPipeObserver* observer,
+NS_NewPipe(nsIInputStream* *inStrResult,
+           nsIOutputStream* *outStrResult,
            PRUint32 segmentSize,
-           PRUint32 maxSize)
+           PRUint32 maxSize,
+           PRBool nonBlockingInput,
+           PRBool nonBlockingOutput,
+           nsIMemory* memory)
 {
     nsresult rv;
     NS_ASSERTION(segmentSize > 0, "need to supply segmentSize for buffer");
@@ -831,13 +855,18 @@ NS_NewPipe(nsIBufferInputStream* *inStrResult,
     }
 #endif
 #endif
-    NS_WITH_SERVICE(nsIMemory, alloc, *cid, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMemory> alloc = memory;
+    if (alloc == nsnull) {
+        alloc = do_GetService(*cid, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     nsPipe* pipe = new nsPipe();
     if (pipe == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    rv = pipe->Initialize(segmentSize, maxSize, observer, alloc);
+    rv = pipe->Initialize(segmentSize, maxSize, 
+                          nonBlockingInput, nonBlockingOutput,
+                          alloc);
     if (NS_FAILED(rv)) {
         delete pipe;
         return rv;

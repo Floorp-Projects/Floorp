@@ -58,16 +58,16 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsFileStream : public nsIBaseStream, 
-                     public nsISeekableStream
+class nsFileStream : public nsISeekableStream
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSISEEKABLESTREAM
 
     nsFileStream();
     virtual ~nsFileStream();
+
+    nsresult Close();
 
 protected:
     PRFileDesc*         mFD;
@@ -80,7 +80,6 @@ class nsFileInputStream : public nsFileStream,
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIFILEINPUTSTREAM
 
@@ -98,7 +97,6 @@ class nsFileOutputStream : public nsFileStream,
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSIOUTPUTSTREAM
     NS_DECL_NSIFILEOUTPUTSTREAM
 

@@ -30,19 +30,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBufferedStream : public nsIBaseStream, 
-                         public nsISeekableStream
+class nsBufferedStream : public nsISeekableStream
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSISEEKABLESTREAM
 
     nsBufferedStream();
     virtual ~nsBufferedStream();
 
+    nsresult Close();
+
 protected:
-    nsresult Init(nsIBaseStream* stream, PRUint32 bufferSize);
+    nsresult Init(nsISupports* stream, PRUint32 bufferSize);
     NS_IMETHOD Fill() = 0;
     NS_IMETHOD Flush() = 0;
 
@@ -58,7 +58,7 @@ protected:
     // or the end of the buffer for output streams, and is relative to 
     // mBufferStartOffset:
     PRUint32                    mFillPoint;
-    nsIBaseStream*              mStream;        // cast to appropriate subclass
+    nsISupports*                mStream;        // cast to appropriate subclass
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,6 @@ class nsBufferedInputStream : public nsBufferedStream,
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIBUFFEREDINPUTSTREAM
 
@@ -94,7 +93,6 @@ class nsBufferedOutputStream : public nsBufferedStream,
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSIOUTPUTSTREAM
     NS_DECL_NSIBUFFEREDOUTPUTSTREAM
 

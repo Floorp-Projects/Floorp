@@ -280,6 +280,26 @@ public:
       return NS_OK;
   }
 
+  NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) {
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD GetObserver(nsIInputStreamObserver * *aObserver) {
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD SetObserver(nsIInputStreamObserver * aObserver) {
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // Implementation
   void SetBuffer(const char* aBuffer, PRUint32 aSize) {
       mBuffer = aBuffer;
@@ -343,7 +363,7 @@ public:
 	NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; }
     NS_IMETHOD SetContentType(const char *aContentType) { return NS_OK; }
 	NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { *aContentLength = 0; return NS_OK; }
-    NS_IMETHOD SetContentLength(PRInt32 aContentLength) { NS_NOTREACHED("SetContentLength"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD SetContentLength(PRInt32 aContentLength) { NS_NOTREACHED("SetContentLength"); NS_NOTREACHED("NOTREACHED"); return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD GetTransferOffset(PRUint32 *aTransferOffset) { NS_NOTREACHED("GetTransferOffset"); return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetTransferOffset(PRUint32 aTransferOffset) { NS_NOTREACHED("SetTransferOffset"); return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD GetTransferCount(PRInt32 *aTransferCount) { NS_NOTREACHED("GetTransferCount"); return NS_ERROR_NOT_IMPLEMENTED; }
@@ -830,6 +850,7 @@ nsXULDocument::GetPrincipal(nsIPrincipal **aPrincipal)
 NS_IMETHODIMP
 nsXULDocument::AddPrincipal(nsIPrincipal *aPrincipal)
 {
+    NS_NOTREACHED("AddPrincipal");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

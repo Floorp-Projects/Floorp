@@ -34,7 +34,7 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIOutputStream.h"
 #include "nsHTTPResponseListener.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamObserver.h"
@@ -153,7 +153,7 @@ protected:
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 
     nsCOMPtr<nsIStreamListener>         mResponseDataListener;
-    nsCOMPtr<nsIBufferOutputStream>     mBufOutputStream;
+    nsCOMPtr<nsIOutputStream>           mBufOutputStream;
 
     PRUint32                            mLoadAttributes;
 

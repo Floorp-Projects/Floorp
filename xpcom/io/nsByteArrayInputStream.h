@@ -27,9 +27,6 @@ class nsByteArrayInputStream : public nsIByteArrayInputStream
     // nsISupports methods
     NS_DECL_ISUPPORTS
 
-    // nsIBaseStream methods
-    NS_DECL_NSIBASESTREAM
-
     // nsIInputStream methods
     NS_DECL_NSIINPUTSTREAM
     

@@ -18,13 +18,19 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  */
-#include "nsIBaseStream.idl"
+
+#include "nsISupports.idl"
 
 interface nsIInputStream;
 
 [scriptable, uuid(a2a32f90-9b90-11d3-a189-0050041caf44)] 
-interface nsIScriptableInputStream : nsIBaseStream 
+interface nsIScriptableInputStream : nsISupports
 { 
+    /** 
+     * Closes the stream. 
+     */
+    void close();
+
     /** Wrap the given nsIInputStream with this nsIScriptableInputStream. 
      *  @param aInputStream [in] parameter providing the stream to wrap 
      */ 

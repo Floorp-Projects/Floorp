@@ -32,7 +32,6 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsIBufferInputStream.h"
 #include "nsCRT.h"
 #include "nsIChannel.h"
 #include "nsIURL.h"

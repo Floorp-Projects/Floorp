@@ -106,10 +106,10 @@ protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
 
-    nsresult ParseStatusLine(nsIBufferInputStream* in, PRUint32 aLength,
+    nsresult ParseStatusLine(nsIInputStream* in, PRUint32 aLength,
                              PRUint32 *aBytesRead);
 
-    nsresult ParseHTTPHeader(nsIBufferInputStream* in, PRUint32 aLength, 
+    nsresult ParseHTTPHeader(nsIInputStream* in, PRUint32 aLength, 
                              PRUint32* aBytesRead);
 
 protected:

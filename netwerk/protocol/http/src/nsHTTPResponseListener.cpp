@@ -26,7 +26,7 @@
 #include "nsHTTPResponseListener.h"
 #include "nsIChannel.h"
 #include "nsISocketTransport.h"
-#include "nsIBufferInputStream.h"
+#include "nsIInputStream.h"
 #include "nsHTTPChannel.h"
 #include "nsHTTPResponse.h"
 #include "nsCRT.h"
@@ -290,7 +290,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
          return NS_OK;
 
     NS_ASSERTION(i_pStream, "No stream supplied by the transport!") ;
-    nsCOMPtr<nsIBufferInputStream> bufferInStream = 
+    nsCOMPtr<nsIInputStream> bufferInStream = 
         do_QueryInterface(i_pStream) ;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
@@ -848,32 +848,38 @@ nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener,
 }
 
 static NS_METHOD
-nsWriteToString(void* closure,
-                const char* fromRawSegment,
-                PRUint32 offset,
-                PRUint32 count,
-                PRUint32 *writeCount) 
+nsWriteLineToString(nsIInputStream* in,
+                    void* closure,
+                    const char* fromRawSegment,
+                    PRUint32 offset,
+                    PRUint32 count,
+                    PRUint32 *writeCount) 
 {
-  nsString *str =(nsString*) closure;
+  nsCString* str = (nsCString*)closure;
+  *writeCount = 0;
 
-  str->AppendWithConversion(fromRawSegment, count) ;
-  *writeCount = count;
-  
-  return NS_OK;
+  const char* buf = fromRawSegment;
+  while (count-- > 0) {
+    const char c = *buf++;
+    (*writeCount)++;
+    if (c == LF) {
+      break;
+    }
+  }
+  str->Append(fromRawSegment, *writeCount);
+  return NS_BASE_STREAM_WOULD_BLOCK;
 }
 
 
-nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in, 
+nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in, 
                                                PRUint32 aLength,
                                                PRUint32 *aBytesRead) 
 {
   nsresult rv = NS_OK;
-
-  PRBool bFoundString = PR_FALSE;
-  PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
+  PRUint32 actualBytesRead;
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-("nsHTTPServerListener::ParseStatusLine [this=%x].\taLength=%d\n", 
+         ("nsHTTPServerListener::ParseStatusLine [this=%x].\taLength=%d\n", 
           this, aLength)) ;
 
   *aBytesRead = 0;
@@ -883,26 +889,9 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
     return NS_ERROR_FAILURE;
   }
 
-  // Look for the LF which ends the Status-Line.
-  // n.b. Search looks at all pending data not just the first aLength bytes
-  rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd) ;
-  if (NS_FAILED(rv)) return rv;
-  if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
-
-  if (!bFoundString) {
-    //
-    // This is a partial header...  Read the entire buffer and wait for
-    // more data...
-    //
-    totalBytesToRead = aLength;
-  } else {
-    // Do not forget to include the LF character in the read...
-    totalBytesToRead = offsetOfEnd+1;
-  }
-
-  rv = in->ReadSegments(nsWriteToString, 
-(void*) &mHeaderBuffer, 
-                        totalBytesToRead, 
+  rv = in->ReadSegments(nsWriteLineToString, 
+                        (void*) &mHeaderBuffer, 
+                        aLength, 
                         &actualBytesRead) ;
   if (NS_FAILED(rv)) return rv;
 
@@ -910,8 +899,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
 
   PRUint32 bL = mHeaderBuffer.Length() ;
 
-  if (bL > 0
-      && PL_strncmp(mHeaderBuffer, "HTTP/", bL > 5 ? 5 : bL)) 
+  if (bL > 0 && mHeaderBuffer.Find("HTTP/", PR_FALSE, 0, 5) != 0) 
   {
       // this is simple http response
       mSimpleResponse = PR_TRUE;
@@ -926,10 +914,10 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
   }
 
   // Wait for more data to arrive before processing the header...
-  if (!bFoundString) return NS_OK;
+  if (bL > 0 && mHeaderBuffer.CharAt(bL - 1) != LF) return NS_OK;
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n"
+         ("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n"
          , this, mHeaderBuffer.GetBuffer()) ) ;
 
   //
@@ -950,7 +938,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
       // Pretend that the headers have been consumed.
       //
       PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-("\tParseStatusLine [this=%x]. HTTP/0.9 Server Response!"
+             ("\tParseStatusLine [this=%x]. HTTP/0.9 Server Response!"
               " Hold onto you seats!\n", this)) ;
 
       mResponse->SetStatus(200) ;
@@ -965,14 +953,12 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
   return rv;
 }
 
-nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
+nsresult nsHTTPServerListener::ParseHTTPHeader(nsIInputStream* in,
                                                PRUint32 aLength,
                                                PRUint32 *aBytesRead) 
 {
   nsresult rv = NS_OK;
-
-  PRBool bFoundString;
-  PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
+  PRUint32 totalBytesToRead = aLength, actualBytesRead;
 
   *aBytesRead = 0;
 
@@ -986,73 +972,45 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
   // a CRLF.  Header values may be extended over multiple lines by preceeding
   // each extra line with linear white space...
   //
+  PRInt32 newlineOffset = 0;
   do {
+    // Append the buffer into the header string...
+    rv = in->ReadSegments(nsWriteLineToString, 
+                          (void*) &mHeaderBuffer, 
+                          totalBytesToRead, 
+                          &actualBytesRead);
+    if (NS_FAILED(rv)) return rv;
+    if (actualBytesRead == 0)
+      break;
+
+    *aBytesRead += actualBytesRead;
+    totalBytesToRead -= actualBytesRead;
+
     //
     // If last character in the header string is a LF, then the header 
     // may be complete...
     //
-    if (!mHeaderBuffer.IsEmpty() && mHeaderBuffer.Last() == '\n') {
-      // This line is either LF or CRLF so the header is complete...
-      if (mHeaderBuffer.Length() <= 2) {
-          break;
-      }
-
-      rv = in->Search(" ", PR_FALSE, &bFoundString, &offsetOfEnd) ;
-      if (NS_FAILED(rv)) return rv;
-      if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
-
-      // Need to wait for more data to see if the header is complete
-      if (!bFoundString && offsetOfEnd == 0) 
-          return NS_OK;     
-
-      if (!bFoundString || offsetOfEnd != 0) {
-          // then check for tab too
-          rv = in->Search("\t", PR_FALSE, &bFoundString, &offsetOfEnd) ;
-          if (NS_FAILED(rv)) return rv;
-          if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
-
-          NS_ASSERTION(!(!bFoundString && offsetOfEnd == 0) , 
-                  "should have been checked above") ;
-          if (!bFoundString || offsetOfEnd != 0) {
-              break; // neither space nor tab, so jump out of the loop
-          }
-      }
-      // else, go around the loop again and accumulate the rest of the header...
+    newlineOffset = mHeaderBuffer.FindChar(LF, PR_FALSE, newlineOffset);
+    if (newlineOffset == -1)
+      return NS_OK;
+    
+    // This line is either LF or CRLF so the header is complete...
+    if (mHeaderBuffer.Length() <= 2) {
+      break;
     }
 
-    // Look for the next LF in the buffer...
-    rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd) ;
-    if (NS_FAILED(rv)) return rv;
-    if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
+    if ((PRUint32)newlineOffset == mHeaderBuffer.Length())
+      return NS_OK;
 
-
-    if (!bFoundString) {
-      //
-      // The buffer contains a partial header.  Read the entire buffer 
-      // and wait for more data...
-      //
-      totalBytesToRead = aLength;
-    } else {
-    // Do not forget to include the LF character in the read...
-      totalBytesToRead = offsetOfEnd+1;
-    }
-
-    // Append the buffer into the header string...
-    rv = in->ReadSegments(nsWriteToString, 
-(void*) &mHeaderBuffer, 
-                          totalBytesToRead, 
-                          &actualBytesRead) ;
-    if (NS_FAILED(rv)) return rv;
-
-    *aBytesRead += actualBytesRead;
-
-    // Partial header - wait for more data to arrive...
-    if (!bFoundString) return NS_OK;
-
-  } while (PR_TRUE) ;
+    const char* buf = mHeaderBuffer.GetBuffer();
+    const char charAfterNewline = buf[newlineOffset + 1];
+    if ((charAfterNewline != ' ') || (charAfterNewline != '\t'))
+      break;
+    newlineOffset++;
+  } while (PR_TRUE);
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-("\tParseHTTPHeader [this=%x].\tGot header string:%s\n",
+         ("\tParseHTTPHeader [this=%x].\tGot header string:%s\n",
           this, mHeaderBuffer.GetBuffer()) ) ;
 
   //

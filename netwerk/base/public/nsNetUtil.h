@@ -391,7 +391,7 @@ NS_NewAsyncStreamListener(nsIStreamListener **result,
 
 inline nsresult
 NS_NewSyncStreamListener(nsIInputStream **inStream, 
-                         nsIBufferOutputStream **outStream,
+                         nsIOutputStream **outStream,
                          nsIStreamListener **listener)
 {
     nsresult rv;

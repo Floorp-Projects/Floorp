@@ -111,9 +111,7 @@ nsDirectoryIndexStream::Create(nsIFile* aDir, nsIInputStream** aResult)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsDirectoryIndexStream,
-                   nsIInputStream,
-                   nsIBaseStream)
+NS_IMPL_ISUPPORTS1(nsDirectoryIndexStream, nsIInputStream)
 
 NS_IMETHODIMP
 nsDirectoryIndexStream::Close()
@@ -269,4 +267,32 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
     *aReadCount = nread;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDirectoryIndexStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDirectoryIndexStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDirectoryIndexStream::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDirectoryIndexStream::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

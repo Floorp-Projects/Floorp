@@ -46,11 +46,21 @@ class BasicStringImpl
         NS_IMETHOD                      Read(char* aBuf,
                                             PRUint32 aCount,
                                             PRUint32 *aReadCount);
+        NS_IMETHOD                      ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) = 0;
+        NS_IMETHOD                      GetObserver(nsIInputStreamObserver * *aObserver);
+        NS_IMETHOD                      SetObserver(nsIInputStreamObserver * aObserver); 
 
         // nsIOutputStream interface
         NS_IMETHOD                      Write(const char* aBuf,
                                             PRUint32 aCount,
                                             PRUint32 *aWriteCount);
+        NS_IMETHOD                      WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
+        NS_IMETHOD                      WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval);
+        NS_IMETHOD                      GetNonBlocking(PRBool *aNonBlocking);
+        NS_IMETHOD                      SetNonBlocking(PRBool aNonBlocking);
+        NS_IMETHOD                      GetObserver(nsIOutputStreamObserver * *aObserver);
+        NS_IMETHOD                      SetObserver(nsIOutputStreamObserver * aObserver);
+
     public:
         
         // nsISupports interface
@@ -183,6 +193,20 @@ NS_IMETHODIMP BasicStringImpl::Read(char* aBuf, PRUint32 aCount, PRUint32 *aRead
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BasicStringImpl::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+BasicStringImpl::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP BasicStringImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 //----------------------------------------------------------------------------------------
@@ -202,6 +226,48 @@ NS_IMETHODIMP BasicStringImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32
   return NS_OK;
 }
     
+NS_IMETHODIMP 
+BasicStringImpl::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *result)
+{
+    NS_NOTREACHED("WriteFrom");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+BasicStringImpl::WriteSegments(nsReadSegmentFun reader, void * closure, 
+                               PRUint32 count, PRUint32 *result)
+{
+    NS_NOTREACHED("WriteSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+BasicStringImpl::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+BasicStringImpl::SetNonBlocking(PRBool aNonBlocking)
+{
+    NS_NOTREACHED("SetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+BasicStringImpl::GetObserver(nsIOutputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+BasicStringImpl::SetObserver(nsIOutputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //----------------------------------------------------------------------------------------
 PRInt32 BasicStringImpl::write(const char*, PRUint32)
@@ -245,6 +311,18 @@ class ConstCharImpl
                                             return aCount;
                                         }
         
+        NS_IMETHOD                      ReadSegments(nsWriteSegmentFun writer, void * closure,
+                                                     PRUint32 aCount, PRUint32 *result) {
+                                            nsresult rv;
+                                            PRInt32 maxCount = mLength - mOffset;
+                                            if ((PRInt32)aCount > maxCount)
+                                                aCount = maxCount;
+                                            rv = writer(this, closure, mConstString + mOffset, 
+                                                        0, aCount, result);
+                                            if (NS_SUCCEEDED(rv))
+                                                mOffset += *result;
+                                            return rv;
+                                        }
 
     protected:
     
@@ -404,9 +482,6 @@ NS_IMPL_QUERY_HEAD(BasicStringImpl)
   NS_IMPL_QUERY_BODY(nsIRandomAccessStore)
   NS_IMPL_QUERY_BODY(nsIOutputStream)
   NS_IMPL_QUERY_BODY(nsIInputStream)
-  if ( aIID.Equals(NS_GET_IID(nsIBaseStream)) )
-    foundInterface = NS_STATIC_CAST(nsIBaseStream*, NS_STATIC_CAST(nsIOutputStream*, this));
-  else
 NS_IMPL_QUERY_TAIL(nsIOutputStream)
 
 //----------------------------------------------------------------------------------------

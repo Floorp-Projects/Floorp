@@ -54,7 +54,6 @@ class WriteStreamWrapper : public nsIOutputStream
   Create(nsDiskCacheRecordChannel* aChannel, nsIOutputStream *aBaseStream, nsIOutputStream* *aWrapper);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIBASESTREAM
   NS_DECL_NSIOUTPUTSTREAM
 
   private:
@@ -95,6 +94,48 @@ WriteStreamWrapper::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWr
   nsresult rv = mBaseStream->Write(aBuffer, aCount, aNumWritten);
   mChannel->NotifyStorageInUse(*aNumWritten);
   return rv;
+}
+    
+NS_IMETHODIMP
+WriteStreamWrapper::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteFrom");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WriteStreamWrapper::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WriteStreamWrapper::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WriteStreamWrapper::SetNonBlocking(PRBool aNonBlocking)
+{
+    NS_NOTREACHED("SetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WriteStreamWrapper::GetObserver(nsIOutputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WriteStreamWrapper::SetObserver(nsIOutputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

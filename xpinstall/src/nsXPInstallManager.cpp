@@ -35,7 +35,6 @@
 #include "nsIFileTransportService.h"
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
-#include "nsIBufferInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"

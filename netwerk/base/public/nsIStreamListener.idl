@@ -22,9 +22,9 @@
 
 #include "nsIStreamObserver.idl"
 
-interface nsIBufferInputStream;
 interface nsIInputStream;
-interface nsIBufferOutputStream;
+interface nsIInputStream;
+interface nsIOutputStream;
 interface nsIEventQueue;
 
 [scriptable, uuid(1a637020-1482-11d3-9333-00104ba0fd40)]
@@ -70,7 +70,7 @@ interface nsISyncStreamListener : nsIStreamListener
      * Initializes an nsISyncStreamListener. 
      */
     void init(out nsIInputStream inStream,
-              out nsIBufferOutputStream outStream);
+              out nsIOutputStream outStream);
 };
 
 %{C++

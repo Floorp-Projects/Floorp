@@ -92,7 +92,7 @@ void XXXNeverCalled()
     nsSupportsArray();
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
-    NS_NewPipe(NULL, NULL, NULL, 0, 0);
+    NS_NewPipe(NULL, NULL, 0, 0, PR_FALSE, PR_FALSE, NULL);
     nsFileSpec s;
     nsFixedSizeAllocator a;
     a.Init(0, 0, 0, 0, 0);

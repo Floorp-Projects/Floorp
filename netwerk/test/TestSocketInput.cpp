@@ -35,7 +35,7 @@
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
-#include "nsIBufferInputStream.h"
+#include "nsIInputStream.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);

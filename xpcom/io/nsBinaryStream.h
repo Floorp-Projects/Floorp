@@ -34,9 +34,6 @@ private:
     // nsISupports methods
     NS_DECL_ISUPPORTS
 
-    // nsIBaseStream methods
-    NS_DECL_NSIBASESTREAM
-
     // nsIOutputStream methods
     NS_DECL_NSIOUTPUTSTREAM
 
@@ -59,9 +56,6 @@ public:
 private:
     // nsISupports methods
     NS_DECL_ISUPPORTS
-
-    // nsIBaseStream methods
-    NS_DECL_NSIBASESTREAM
 
     // nsIInputStream methods
     NS_DECL_NSIINPUTSTREAM

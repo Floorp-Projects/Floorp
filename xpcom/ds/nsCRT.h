@@ -29,8 +29,8 @@
 #include "prtypes.h"
 #include "nsCppSharedAllocator.h"
 
-#define CR '\015'
-#define LF '\012'
+#define CR '\015'       // \r
+#define LF '\012'       // \n
 #define VTAB '\013'
 #define FF '\014'
 #define TAB '\011'

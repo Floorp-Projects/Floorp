@@ -176,6 +176,26 @@ public:
         return NS_OK;
     }
 
+    NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) {
+        NS_NOTREACHED("ReadSegments");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {
+        NS_NOTREACHED("GetNonBlocking");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD GetObserver(nsIInputStreamObserver * *aObserver) {
+        NS_NOTREACHED("GetObserver");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD SetObserver(nsIInputStreamObserver * aObserver) {
+        NS_NOTREACHED("SetObserver");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
     NS_IMETHOD
     Close() {
         nsresult rv = mSyncStream->Close();
@@ -278,7 +298,7 @@ private:
     PRBool                      mSuspended;      // Suspend() has been called
 };
 
-NS_IMPL_ISUPPORTS4(AsyncReadStreamAdaptor, nsIInputStream, nsIBaseStream,
+NS_IMPL_ISUPPORTS3(AsyncReadStreamAdaptor, nsIInputStream, 
                    nsIStreamListener, nsIStreamObserver)
 
 // The only purpose of this output stream wrapper is to adjust the cache's
@@ -307,6 +327,12 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD
+    Close() { return mBaseStream->Close(); }
+
+    NS_IMETHOD
+    Flush() { return mBaseStream->Flush(); }
+
+    NS_IMETHOD
     Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritten) {
         *aNumWritten = 0;
         nsresult rv = mBaseStream->Write(aBuffer, aCount, aNumWritten);
@@ -315,10 +341,40 @@ public:
     }
 
     NS_IMETHOD
-    Flush() { return mBaseStream->Flush(); }
+    WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval) {
+        NS_NOTREACHED("WriteFrom");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     NS_IMETHOD
-    Close() { return mBaseStream->Close(); }
+    WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval) {
+        NS_NOTREACHED("WriteSegments");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    GetNonBlocking(PRBool *aNonBlocking) {
+        NS_NOTREACHED("GetNonBlocking");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    SetNonBlocking(PRBool aNonBlocking) {
+        NS_NOTREACHED("SetNonBlocking");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    GetObserver(nsIOutputStreamObserver * *aObserver) {
+        NS_NOTREACHED("GetObserver");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    SetObserver(nsIOutputStreamObserver * aObserver) {
+        NS_NOTREACHED("SetObserver");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
 private:
     nsCOMPtr<nsIOutputStream>   mBaseStream;

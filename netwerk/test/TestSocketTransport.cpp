@@ -34,21 +34,15 @@
 #include "pprio.h"	// PR_Init_Log
 #endif
 
-#define NSPIPE2
-
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
-#ifndef NSPIPE2
-#include "nsIBuffer.h"
-#else
 #include "nsIPipe.h"
-#endif
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
@@ -166,12 +160,8 @@ public:
   }
 
 protected:
-#ifndef NSPIPE2
-  nsIBuffer* mBuffer;
-#else
-  nsIBufferOutputStream* mOut;
-#endif
-  nsIBufferInputStream* mStream;
+  nsIOutputStream* mOut;
+  nsIInputStream* mStream;
 
   nsIInputStream*  mInStream;
   nsIOutputStream* mOutStream;
@@ -300,11 +290,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
   mBytesRead    = 0;
 
   mTransport = nsnull;
-#ifndef NSPIPE2
-  mBuffer    = nsnull;
-#else
   mOut       = nsnull;
-#endif
   mStream    = nsnull;
 
   mInStream  = nsnull;
@@ -326,12 +312,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
     if (mIsAsync) {
       // Create a stream for the data being written to the server...
       if (NS_SUCCEEDED(rv)) {
-#ifndef NSPIPE2
-        rv = NS_NewBuffer(&mBuffer, 1024, 4096, nsnull);
-        rv = NS_NewBufferInputStream(&mStream, mBuffer);
-#else
-        rv = NS_NewPipe(&mStream, &mOut, nsnull, 1024, 4096);
-#endif
+        rv = NS_NewPipe(&mStream, &mOut, 1024, 4096);
       }
     } 
     // Synchronous transport...
@@ -348,11 +329,7 @@ TestConnection::~TestConnection()
   NS_IF_RELEASE(mTransport);
   // Async resources...
   NS_IF_RELEASE(mStream);
-#ifndef NSPIPE2
-  NS_IF_RELEASE(mBuffer);
-#else
   NS_IF_RELEASE(mOut);
-#endif
 
   // Sync resources...
   NS_IF_RELEASE(mInStream);
@@ -448,15 +425,7 @@ nsresult TestConnection::WriteBuffer(void)
     // Async case...
     //
     if (mStream) {
-#if 0
-      rv = mStream->Fill(buffer, size, &bytesWritten);
-#else
-#ifndef NSPIPE2
-      rv = mBuffer->Write(buffer, size, &bytesWritten);
-#else
       rv = mOut->Write(buffer, size, &bytesWritten);
-#endif
-#endif
 
       // Write the buffer to the server...
       if (NS_SUCCEEDED(rv)) {

@@ -41,7 +41,7 @@
 #include "nsIStringStream.h"
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
-#include "nsIBufferInputStream.h"
+#include "nsIInputStream.h"
 #include "CRtfDTD.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"

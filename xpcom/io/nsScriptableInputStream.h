@@ -38,9 +38,6 @@ public:
     // nsISupports methods
     NS_DECL_ISUPPORTS
 
-    // nsIBaseStream methods
-    NS_DECL_NSIBASESTREAM
-
     // nsIScriptableInputStream methods
     NS_DECL_NSISCRIPTABLEINPUTSTREAM
 

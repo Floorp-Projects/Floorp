@@ -22,7 +22,7 @@
 #include "nsByteArrayInputStream.h"
 #include "nsMemory.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsByteArrayInputStream, nsIInputStream, nsIBaseStream, nsIByteArrayInputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsByteArrayInputStream, nsIInputStream, nsIByteArrayInputStream)
 
 nsByteArrayInputStream::nsByteArrayInputStream (char *buffer, PRUint32 bytes)
     : _buffer (buffer), _nbytes (bytes), _pos (0)
@@ -79,6 +79,34 @@ nsByteArrayInputStream::Read (char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead
         }
     }
     return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsByteArrayInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsByteArrayInputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsByteArrayInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsByteArrayInputStream::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

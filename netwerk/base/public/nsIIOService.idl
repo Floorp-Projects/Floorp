@@ -104,6 +104,15 @@ interface nsIIOService : nsISupports
      */
     attribute boolean offline;
 
+    /**
+     * Consumes all input from the channel, feading data to the specified stream 
+     * listener. The function does not return until either all the data is 
+     * consumed, or an error occurs.
+     */
+    void consumeInput(in nsIChannel channel, 
+                      in nsISupports ctxt,
+                      in nsIStreamListener consumer);
+
     ////////////////////////////////////////////////////////////////////////////
     // URL parsing utilities
 

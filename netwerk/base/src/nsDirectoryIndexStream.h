@@ -48,9 +48,6 @@ public:
     // nsISupportsInterface
     NS_DECL_ISUPPORTS
 
-    // nsIBaseStream interface
-    NS_DECL_NSIBASESTREAM
-
     // nsIInputStream interface
     NS_DECL_NSIINPUTSTREAM
 };

@@ -84,6 +84,7 @@ nsHTTPEncodeStream::Available(PRUint32 *result)
 {
     // XXX Ugh! This requires buffering up the translation so that you can
     // count it, because to walk it consumes the input.
+    NS_NOTREACHED("Available");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -158,6 +159,34 @@ nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
         outBufCnt -= amt;
     }
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -23,14 +23,8 @@
 
 #include "nsIThread.h"
 #include "nsIRunnable.h"
-#if 0   // obsolete old implementation
-#include "nsIByteBufferInputStream.h"
-#endif
-#ifdef OLD_BUFFERS
-#include "nsIBuffer.h"
-#endif
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "prinrval.h"
@@ -98,7 +92,7 @@ protected:
     PRUint32            mCount;
 };
 
-NS_IMPL_ISUPPORTS(nsReceiver, NS_GET_IID(nsIRunnable));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsReceiver, nsIRunnable);
 
 nsresult
 TestPipe(nsIInputStream* in, nsIOutputStream* out)
@@ -208,7 +202,7 @@ protected:
     PRUint32            mReceived;
 };
 
-NS_IMPL_ISUPPORTS(nsShortReader, NS_GET_IID(nsIRunnable));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsShortReader, nsIRunnable);
 
 nsresult
 TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
@@ -255,27 +249,29 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPipeObserver : public nsIPipeObserver {
+class nsPipeObserver : public nsIInputStreamObserver, 
+                       public nsIOutputStreamObserver
+{
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD OnFull(nsIPipe *pipe) {
-        printf("OnFull pipe=%p\n", pipe);
+    NS_IMETHOD OnFull(nsIOutputStream *outStr) {
+        printf("OnFull outStr=%p\n", outStr);
         return NS_OK;
     }
 
-    NS_IMETHOD OnWrite(nsIPipe *pipe, PRUint32 amount) {
-        printf("OnWrite pipe=%p amount=%d\n", pipe, amount);
+    NS_IMETHOD OnWrite(nsIOutputStream *outStr, PRUint32 amount) {
+        printf("OnWrite outStr=%p amount=%d\n", outStr, amount);
         return NS_OK;
     }
 
-    NS_IMETHOD OnEmpty(nsIPipe *pipe) {
-        printf("OnEmpty pipe=%p\n", pipe);
+    NS_IMETHOD OnEmpty(nsIInputStream* inStr) {
+        printf("OnEmpty inStr=%p\n", inStr);
         return NS_OK;
     }
 
-    NS_IMETHOD OnClose(nsIPipe *pipe) {
-        printf("OnClose pipe=%p\n", pipe);
+    NS_IMETHOD OnClose(nsIInputStream* inStr) {
+        printf("OnClose inStr=%p\n", inStr);
         return NS_OK;
     }
 
@@ -283,7 +279,7 @@ public:
     virtual ~nsPipeObserver() {}
 };
 
-NS_IMPL_ISUPPORTS(nsPipeObserver, NS_GET_IID(nsIPipeObserver));
+NS_IMPL_ISUPPORTS2(nsPipeObserver, nsIInputStreamObserver, nsIOutputStreamObserver);
 
 nsresult
 TestPipeObserver()
@@ -294,14 +290,14 @@ TestPipeObserver()
     NS_ADDREF(obs);
 
     printf("TestPipeObserver: OnWrite and OnFull should be called once, OnEmpty should be called twice.\n");
-    nsIBufferInputStream* in;
-    nsIBufferOutputStream* out;
-    rv = NS_NewPipe(&in, &out, obs, 20, 20);
+    nsIInputStream* in;
+    nsIOutputStream* out;
+    rv = NS_NewPipe(&in, &out, 20, 20, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = in->SetNonBlocking(PR_TRUE);
+    rv = in->SetObserver(obs);
     if (NS_FAILED(rv)) return rv;
-    rv = out->SetNonBlocking(PR_TRUE);
+    rv = out->SetObserver(obs);
     if (NS_FAILED(rv)) return rv;
 
     char buf[] = "puirt a beul: a style of Gaelic vocal music intended for dancing.";
@@ -335,31 +331,34 @@ TestPipeObserver()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPump : public nsIPipeObserver, public nsIRunnable {
+class nsPump : public nsIInputStreamObserver, 
+               public nsIOutputStreamObserver,
+               public nsIRunnable
+{
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD OnFull(nsIPipe *pipe) {
-        printf("OnFull pipe=%p\n", pipe);
+    NS_IMETHOD OnFull(nsIOutputStream *outStr) {
+        printf("OnFull outStr=%p\n", outStr);
         nsAutoCMonitor mon(this);
         mon.Notify();
         return NS_OK;
     }
 
-    NS_IMETHOD OnWrite(nsIPipe *pipe, PRUint32 amount) {
-        printf("OnWrite pipe=%p amount=%d\n", pipe, amount);
+    NS_IMETHOD OnWrite(nsIOutputStream *outStr, PRUint32 amount) {
+        printf("OnWrite outStr=%p amount=%d\n", outStr, amount);
         return NS_OK;
     }
 
-    NS_IMETHOD OnEmpty(nsIPipe *pipe) {
-        printf("OnEmpty pipe=%p\n", pipe);
+    NS_IMETHOD OnEmpty(nsIInputStream *inStr) {
+        printf("OnEmpty inStr=%p\n", inStr);
         nsAutoCMonitor mon(this);
         mon.Notify();
         return NS_OK;
     }
 
-    NS_IMETHOD OnClose(nsIPipe *pipe) {
-        printf("OnClose pipe=%p\n", pipe);
+    NS_IMETHOD OnClose(nsIInputStream *inStr) {
+        printf("OnClose inStr=%p\n", inStr);
         nsAutoCMonitor mon(this);
         mon.Notify();
         return NS_OK;
@@ -389,8 +388,8 @@ public:
         return rv;
     }
 
-    nsPump(nsIBufferInputStream* in,
-           nsIBufferOutputStream* out)
+    nsPump(nsIInputStream* in,
+           nsIOutputStream* out)
         : mIn(in), mOut(out), mCount(0) {
         NS_INIT_REFCNT();
     }
@@ -399,12 +398,13 @@ public:
     }
 
 protected:
-    nsCOMPtr<nsIBufferInputStream>      mIn;
-    nsCOMPtr<nsIBufferOutputStream>     mOut;
+    nsCOMPtr<nsIInputStream>      mIn;
+    nsCOMPtr<nsIOutputStream>     mOut;
     PRUint32                            mCount;
 };
 
-NS_IMPL_ISUPPORTS2(nsPump, nsIPipeObserver, nsIRunnable)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsPump, nsIInputStreamObserver, 
+                              nsIOutputStreamObserver, nsIRunnable)
 
 nsresult
 TestChainedPipes()
@@ -412,14 +412,14 @@ TestChainedPipes()
     nsresult rv;
     printf("TestChainedPipes\n");
 
-    nsIBufferInputStream* in1;
-    nsIBufferOutputStream* out1;
-    rv = NS_NewPipe(&in1, &out1, nsnull, 20, 1999);
+    nsIInputStream* in1;
+    nsIOutputStream* out1;
+    rv = NS_NewPipe(&in1, &out1, 20, 1999);
     if (NS_FAILED(rv)) return rv;
 
-    nsIBufferInputStream* in2;
-    nsIBufferOutputStream* out2;
-    rv = NS_NewPipe(&in2, &out2, nsnull, 200, 401);
+    nsIInputStream* in2;
+    nsIOutputStream* out2;
+    rv = NS_NewPipe(&in2, &out2, 200, 401);
     if (NS_FAILED(rv)) return rv;
 
     nsIThread* thread;
@@ -476,34 +476,15 @@ void
 RunTests(PRUint32 segSize, PRUint32 segCount)
 {
     nsresult rv;
-    nsIBufferInputStream* in;
-    nsIBufferOutputStream* out;
+    nsIInputStream* in;
+    nsIOutputStream* out;
     PRUint32 bufSize;
-#ifdef OLD_BUFFERS
-    bufSize = (segSize + nsIBuffer::SEGMENT_OVERHEAD) * segCount;
-    printf("Testing Old Pipes: segment size %d buffer size %d\n", segSize, segSize * segCount);
 
-    printf("Testing long writes...\n");
-    rv = NS_NewPipe(&in, &out, segSize + nsIBuffer::SEGMENT_OVERHEAD, bufSize, PR_TRUE, nsnull);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
-    rv = TestPipe(in, out);
-    NS_RELEASE(in);
-    NS_RELEASE(out);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipe failed");
-
-    printf("Testing short writes...\n");
-    rv = NS_NewPipe(&in, &out, segSize + nsIBuffer::SEGMENT_OVERHEAD, bufSize, PR_TRUE, nsnull);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
-    rv = TestShortWrites(in, out);
-    NS_RELEASE(in);
-    NS_RELEASE(out);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipe failed");
-#endif
     bufSize = segSize * segCount;
     printf("Testing New Pipes: segment size %d buffer size %d\n", segSize, bufSize);
 
     printf("Testing long writes...\n");
-    rv = NS_NewPipe(&in, &out, nsnull, segSize, bufSize);
+    rv = NS_NewPipe(&in, &out, segSize, bufSize);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
     rv = TestPipe(in, out);
     NS_RELEASE(in);
@@ -511,7 +492,7 @@ RunTests(PRUint32 segSize, PRUint32 segCount)
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipe failed");
 
     printf("Testing short writes...\n");
-    rv = NS_NewPipe(&in, &out, nsnull, segSize, bufSize);
+    rv = NS_NewPipe(&in, &out, segSize, bufSize);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
     rv = TestShortWrites(in, out);
     NS_RELEASE(in);
@@ -520,7 +501,7 @@ RunTests(PRUint32 segSize, PRUint32 segCount)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#if 0
 void
 TestSearch(const char* delim, PRUint32 segSize)
 {
@@ -528,9 +509,9 @@ TestSearch(const char* delim, PRUint32 segSize)
     // need at least 2 segments to test boundary conditions:
     PRUint32 bufDataSize = segSize * 2;
     PRUint32 bufSize = segSize * 2;
-    nsIBufferInputStream* in;
-    nsIBufferOutputStream* out;
-    rv = NS_NewPipe(&in, &out, nsnull, segSize, bufSize);
+    nsIInputStream* in;
+    nsIOutputStream* out;
+    rv = NS_NewPipe(&in, &out, segSize, bufSize);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
     out->SetNonBlocking(PR_TRUE);
 
@@ -550,7 +531,7 @@ TestSearch(const char* delim, PRUint32 segSize)
                 NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
             }
         }
-        
+
         // now search for the delimiter
         PRBool found;
         PRUint32 offset;
@@ -568,7 +549,7 @@ TestSearch(const char* delim, PRUint32 segSize)
     NS_RELEASE(in);
     NS_RELEASE(out);
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG
@@ -593,7 +574,7 @@ main(int argc, char* argv[])
 #endif
 
 #if 0   // obsolete old implementation
-    rv = NS_NewPipe(&in, &out, PR_TRUE, 4096 * 4);
+    rv = NS_NewPipe(&in, &out, 4096 * 4);
     if (NS_FAILED(rv)) {
         printf("NewPipe failed\n");
         return -1;
@@ -607,9 +588,11 @@ main(int argc, char* argv[])
         return -1;
     }
 #endif
+#if 0
     TestSearch("foo", 8);
     TestSearch("bar", 6);
     TestSearch("baz", 2);
+#endif
 
     rv = TestPipeObserver();
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipeObserver failed");

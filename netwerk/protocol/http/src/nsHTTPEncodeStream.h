@@ -33,7 +33,6 @@ class nsHTTPEncodeStream : public nsIInputStream,
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
 

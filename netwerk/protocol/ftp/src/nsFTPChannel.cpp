@@ -257,7 +257,7 @@ nsFTPChannel::OpenInputStream(nsIInputStream **result)
     // and the FTP thread get's the output stream end.
     // The FTP thread will write to the output stream end
     // when data become available to it.
-    nsCOMPtr<nsIBufferOutputStream> bufOutStream; // we don't use this piece
+    nsCOMPtr<nsIOutputStream> bufOutStream; // we don't use this piece
     nsCOMPtr<nsIStreamListener>     listener;
     rv = NS_NewSyncStreamListener(result, getter_AddRefs(bufOutStream),
                                   getter_AddRefs(listener));

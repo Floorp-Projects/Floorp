@@ -23,7 +23,7 @@
 #include "nsScriptableInputStream.h"
 #include "nsMemory.h"
 
-NS_IMPL_ISUPPORTS2(nsScriptableInputStream, nsIBaseStream, nsIScriptableInputStream);
+NS_IMPL_ISUPPORTS1(nsScriptableInputStream, nsIScriptableInputStream);
 
 // nsIBaseStream methods
 NS_IMETHODIMP
