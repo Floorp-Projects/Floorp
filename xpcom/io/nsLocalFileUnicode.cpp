@@ -231,6 +231,13 @@ nsFSStringConversion::UCSToNewFS( const PRUnichar* aIn, char** aOut)
    {
         PRInt32 inLength = nsCRT::strlen(aIn);
         PRInt32 outLength;
+        // Need to clear up the buffer because a encoder returning
+        // NS_OK_UDEC_MOREINPUT for an unconvertable aIn lead a new
+        // file name in aIn to be _appended_ to the end of the encoder buffer.
+        // (bug 133216 and bug 131161)
+        res= mEncoder->Reset(); 
+        if(NS_FAILED(res)) 
+           return res;
         res= mEncoder->GetMaxLength(aIn, inLength,&outLength);
         if(NS_SUCCEEDED(res)) {
            *aOut = (char*)nsMemory::Alloc(outLength+1);
@@ -260,6 +267,13 @@ nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
    {
         PRInt32 inLength = strlen(aIn);
         PRInt32 outLength;
+        // Need to clear up the buffer because a decoder returning 
+        // NS_OK_UDEC_MOREINPUT for an unconvertable aIn lead a new 
+        // file name in aIn to be _appended_ to the end of the decoder buffer.  
+        // (bug 133216 and bug 131161)
+        res= mDecoder->Reset(); 
+        if(NS_FAILED(res)) 
+           return res;
         res= mDecoder->GetMaxLength(aIn, inLength,&outLength);
         if(NS_SUCCEEDED(res)) {
            *aOut = (PRUnichar*)nsMemory::Alloc(2*(outLength+1));
