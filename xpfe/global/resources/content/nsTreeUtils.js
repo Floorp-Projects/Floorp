@@ -275,9 +275,11 @@ function fillViewMenu(popup)
           if (skip_column != tree_column && tree_column.getAttribute("collapsed") != "true") {
               // Construct an entry for each cell in the row.
               var column_name = tree_column.getAttribute("label");
+              var column_accesskey = treecolumn.getAttribute("accesskey");
               var item = document.createElement("menuitem");
               item.setAttribute("type", "radio");
               item.setAttribute("name", "sort_column");
+              item.setAttribute("accesskey", column_accesskey);
               if (column_name == "")
                   column_name = tree_column.getAttribute("display");
               var name = name_template.replace(/%NAME%/g, column_name);
