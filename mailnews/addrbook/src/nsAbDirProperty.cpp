@@ -219,6 +219,10 @@ NS_IMETHODIMP
 nsAbDirProperty::RemoveElementsFromAddressList()
 { return NS_OK; }
 
+NS_IMETHODIMP 
+nsAbDirProperty::RemoveEmailAddressAt(PRUint32 aIndex)
+{ return NS_OK; }
+
 nsresult nsAbDirProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
 	if (aName)

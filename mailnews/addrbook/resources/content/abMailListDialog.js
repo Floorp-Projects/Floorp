@@ -61,38 +61,38 @@ function GetListValue(mailList, doAdd)
 			var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
 		else
 			var cardproperty = mailList.addressLists.GetElementAt(pos);
-		if (cardproperty)
+
+		if (fieldValue == "")
+		{
+			if (doAdd == false && cardproperty) 
+				mailList.removeEmailAddressAt(pos);
+		}
+		else if (cardproperty)
 		{
 			cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
 			if (cardproperty)
 			{
-				if (fieldValue != "")
+				var beginpos = fieldValue.search('<');
+				var endpos = fieldValue.search('>');
+				if (beginpos != -1)
 				{
-					var beginpos = fieldValue.search('<');
-					var endpos = fieldValue.search('>');
-					if (beginpos != -1)
-					{
-						beginpos++;
-						var newValue = fieldValue.slice(beginpos, endpos);
-						cardproperty.primaryEmail = newValue;
-					}
-					else
-						cardproperty.primaryEmail = fieldValue;
-					if (doAdd || (doAdd == false && pos >= oldTotal))
-						mailList.addressLists.AppendElement(cardproperty);
-					pos++;
+					beginpos++;
+					var newValue = fieldValue.slice(beginpos, endpos);
+					cardproperty.primaryEmail = newValue;
 				}
 				else
-				{
-					if (doAdd == false)
-					{
-						cardproperty.primaryEmail = fieldValue;
-						pos++;
-					}
-				}
+					cardproperty.primaryEmail = fieldValue;
+				if (doAdd || (doAdd == false && pos >= oldTotal))
+					mailList.addressLists.AppendElement(cardproperty);
+				pos++;
 			}
 		}
 	    i++;
+	}
+	if (doAdd == false && i < oldTotal)
+	{
+		for (j = i; j < oldTotal; j++)
+			mailList.addressLists.RemoveElementAt(j);
 	}
 	return true;
 }
@@ -159,6 +159,8 @@ function OnLoadMailList()
 		}
 	}
 	
+	AppendnewRowAndSetFocus();
+
 	// focus on first name
 	var listName = document.getElementById('ListName');
 	if ( listName )
@@ -198,35 +200,48 @@ function OnLoadEditList()
 	document.getElementById('ListNickName').value = editList.listNickName;
 	document.getElementById('ListDescription').value = editList.description;
 
-	var treeChildren = document.getElementById('addressList');
-	var newTreeChildrenNode = treeChildren.cloneNode(false);
-	var templateNode = treeChildren.firstChild;	
-	top.MAX_RECIPIENTS = 0;
-
 	if (editList.addressLists)
 	{
 		var total = editList.addressLists.Count();
 dump("*** editList.Count = "+total+"\n");
-		for ( var i = 0;  i < total; i++ )
+		if (total)
 		{
-			var card = editList.addressLists.GetElementAt(i);
-			card = card.QueryInterface(Components.interfaces.nsIAbCard);
-			var address;
-			if (card.name.length)
-				address = card.name + " <" + card.primaryEmail + ">";
-			else
-				address = card.primaryEmail;
-			SetInputValue(address, newTreeChildrenNode, templateNode);
-		}
+			var treeChildren = document.getElementById('addressList');
+			var newTreeChildrenNode = treeChildren.cloneNode(false);
+			var templateNode = treeChildren.firstChild;	
+
+			top.MAX_RECIPIENTS = 0;
+			for ( var i = 0;  i < total; i++ )
+			{
+				var card = editList.addressLists.GetElementAt(i);
+				card = card.QueryInterface(Components.interfaces.nsIAbCard);
+				var address;
+				if (card.name.length)
+					address = card.name + " <" + card.primaryEmail + ">";
+				else
+					address = card.primaryEmail;
+				SetInputValue(address, newTreeChildrenNode, templateNode);
+			}
+			var parent = treeChildren.parentNode; 
+			parent.replaceChild(newTreeChildrenNode, treeChildren);
+		} 
 	}
 
-    var parent = treeChildren.parentNode; 
-    parent.replaceChild(newTreeChildrenNode, treeChildren); 
+	AppendnewRowAndSetFocus();
 
 	// focus on first name
 	var listName = document.getElementById('ListName');
 	if ( listName )
 		listName.focus();
+}
+
+function AppendnewRowAndSetFocus()
+{
+	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
+	if ( lastInput && lastInput.value ) 
+		awAppendNewRow(true);
+	else
+		awSetFocus(top.MAX_RECIPIENTS, lastInput);
 }
 
 function SetInputValue(inputValue, parentNode, templateNode)
@@ -259,8 +274,11 @@ function awNotAnEmptyArea(event)
 	event.preventBubble();
 }
 
-function awClickEmptySpace(setFocus)
+function awClickEmptySpace(targ, setFocus)
 {
+	if (targ.localName != 'treechildren')
+		return;
+
 	dump("awClickEmptySpace\n");
 	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 

@@ -62,10 +62,14 @@ Rights Reserved.
 		<box orient="vertical" flex="80%">
 			<tree id="addressListTree"		
 				  rows="8"
-				  flex="100%"
-				  onclick="awClickEmptySpace(true)"
+				  onclick="awClickEmptySpace(event.target, true)"
 				  style="border:solid black 1px">
-				<treechildren id="addressList">
+
+				<treecolgroup>
+				<treecol flex="1"/>
+				</treecolgroup>
+
+				<treechildren flex="1" id="addressList">
 					<treeitem>
 						<treerow>
 							<treecell allowevents="true">

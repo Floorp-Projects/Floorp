@@ -69,6 +69,7 @@ public:
 	NS_IMETHOD ClearDatabase();
 	NS_IMETHOD NotifyDirItemAdded(nsISupports *item) { return NotifyItemAdded(item);}
 	NS_IMETHOD RemoveElementsFromAddressList();
+	NS_IMETHOD RemoveEmailAddressAt(PRUint32 aIndex);
 
 	PRBool IsMailingList(){ return (mIsMailingList == 1); }
 

@@ -421,6 +421,16 @@ NS_IMETHODIMP nsAbDirectory::RemoveElementsFromAddressList()
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsAbDirectory::RemoveEmailAddressAt(PRUint32 aIndex)
+{
+	if (m_AddressList)
+	{
+		return m_AddressList->RemoveElementAt(aIndex);
+	}
+	else
+		return NS_ERROR_FAILURE;
+}
+
 nsresult nsAbDirectory::RemoveCardFromAddressList(const nsIAbCard* card)
 {
 	nsresult rv = NS_OK;
@@ -477,7 +487,31 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 			if (card)
 			{
 				if (IsMailingList())
+				{
 					mDatabase->DeleteCardFromMailList(this, card, PR_TRUE);
+
+					PRUint32 cardTotal;
+					PRInt32 i;
+					rv = m_AddressList->Count(&cardTotal);
+					for (i = cardTotal - 1; i >= 0; i--)
+					{						
+						nsISupports* pSupport = m_AddressList->ElementAt(i);
+						if (!pSupport)
+							continue;
+
+						nsCOMPtr<nsIAbCard> arrayCard(do_QueryInterface(pSupport, &rv));
+						if (arrayCard)
+						{
+							PRUint32 tableID, rowID, cardTableID, cardRowID; 
+							arrayCard->GetDbTableID(&tableID);
+							arrayCard->GetDbRowID(&rowID);
+							card->GetDbTableID(&cardTableID);
+							card->GetDbRowID(&cardRowID);
+							if (tableID == cardTableID && rowID == cardRowID)
+								m_AddressList->RemoveElementAt(i);
+						}
+					}
+				}
 				else
 				{
 					mDatabase->DeleteCard(card, PR_TRUE);
