@@ -51,6 +51,7 @@
 
 #include "nsSpecialSystemDirectory.h"	// For exe dir
 
+#include "nsIJSContextStack.h"
 
 /***************************************************************************/
 
@@ -373,11 +374,11 @@ Process(JSContext *cx, JSObject *obj, char *filename)
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
         script = JS_CompileScript(cx, obj, buffer, strlen(buffer),
-#ifdef JSDEBUGGER
+//#ifdef JSDEBUGGER
                                   "typein",
-#else
-                                  NULL,
-#endif
+//#else
+//                                  NULL,
+//#endif
                                   startline);
         if (script) {
             JSErrorReporter older;
@@ -537,6 +538,19 @@ main(int argc, char **argv)
         return 1;
     }
 
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
+    if(NS_FAILED(rv))
+    {
+        printf("failed to get the nsThreadJSContextStack service!\n");
+        return 1;
+    }
+    if(NS_FAILED(cxstack->Push(jscontext)))
+    {
+        printf("failed to get push the current jscontext on the nsThreadJSContextStack service!\n");
+        return 1;
+    }
+
     glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
     if (!glob)
         return 1;
@@ -553,6 +567,7 @@ main(int argc, char **argv)
 
     result = ProcessArgs(jscontext, glob, argv, argc);
 
+    xpc->AbandonJSContext(jscontext);
     NS_RELEASE(xpc);
     JS_DestroyContext(jscontext);
     JS_DestroyRuntime(rt);

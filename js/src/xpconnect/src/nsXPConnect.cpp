@@ -108,8 +108,8 @@ nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= NULL*/)
     return xpcc;
 }
 
-// static 
-XPCJSThrower* 
+// static
+XPCJSThrower*
 nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= NULL */)
 {
     XPCJSThrower* thrower;
@@ -121,10 +121,10 @@ nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= NULL */)
     if(!xpc)
         NS_RELEASE(xpcl);
     return thrower;
-}        
+}
 
-// static 
-JSBool 
+// static
+JSBool
 nsXPConnect::IsISupportsDescendent(nsIInterfaceInfo* info)
 {
     if(!info)
@@ -149,7 +149,7 @@ nsXPConnect::IsISupportsDescendent(nsIInterfaceInfo* info)
     }
     NS_RELEASE(oldest);
     return retval;
-}        
+}
 
 nsXPConnect::nsXPConnect()
     :   mContextMap(NULL),
@@ -206,7 +206,7 @@ nsXPConnect::InitJSContext(JSContext* aJSContext,
     if(aGlobalJSObj &&
        !mContextMap->Find(aJSContext) &&
        NewContext(aJSContext, aGlobalJSObj)&&
-       (!AddComponentsObject || 
+       (!AddComponentsObject ||
         NS_SUCCEEDED(AddNewComponentsObject(aJSContext, aGlobalJSObj))))
     {
         return NS_OK;
@@ -232,7 +232,7 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
         {
             if(JS_InitStandardClasses(aJSContext, wrapper->GetJSObject()) &&
                xpcc->Init(wrapper->GetJSObject()) &&
-               (!AddComponentsObject || 
+               (!AddComponentsObject ||
                 NS_SUCCEEDED(AddNewComponentsObject(aJSContext, NULL))))
             {
                 *aWrapper = wrapper;
@@ -288,7 +288,7 @@ nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
     JSObject* comp_jsobj;
     comp_wrapper->GetJSObject(&comp_jsobj);
     jsval comp_jsval = OBJECT_TO_JSVAL(comp_jsobj);
-    success = JS_SetProperty(aJSContext, aGlobalJSObj, 
+    success = JS_SetProperty(aJSContext, aGlobalJSObj,
                              "Components", &comp_jsval);
     NS_RELEASE(comp_wrapper);
     NS_RELEASE(comp);
@@ -304,7 +304,7 @@ nsXPConnect::CreateComponentsObject(nsIXPCComponents** aComponentsObj)
     if(!(*aComponentsObj = new nsXPCComponents()))
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
-}        
+}
 
 XPCContext*
 nsXPConnect::NewContext(JSContext* cx, JSObject* global,
@@ -349,7 +349,7 @@ nsXPConnect::WrapNative(JSContext* aJSContext,
         {
             *aWrapper = wrapper;
             return NS_OK;
-        }        
+        }
     }
     XPC_LOG_ERROR(("nsXPConnect::WrapNative failed"));
     *aWrapper = NULL;
@@ -376,7 +376,7 @@ nsXPConnect::WrapJS(JSContext* aJSContext,
         {
             *aWrapper = wrapper;
             return NS_OK;
-        }        
+        }
     }
     XPC_LOG_ERROR(("nsXPConnect::WrapJS failed"));
     *aWrapper = NULL;
@@ -440,7 +440,7 @@ nsXPConnect::SetSecurityManagerForJSContext(JSContext* aJSContext,
     nsIXPCSecurityManager* oldManager = xpcc->GetSecurityManager();
     if(oldManager)
         NS_RELEASE(oldManager);
-    
+
     xpcc->SetSecurityManager(aManager);
     xpcc->SetSecurityManagerFlags(flags);
     return NS_OK;
@@ -470,6 +470,58 @@ nsXPConnect::GetSecurityManagerForJSContext(JSContext* aJSContext,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPConnect::GetCurrentJSStack(nsIJSStackFrameLocation** aStack)
+{
+    if(!aStack)
+    {
+        NS_ASSERTION(0,"called GetCurrentJSStack with null pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
+
+    if(NS_FAILED(rv))
+    {
+        NS_ASSERTION(0,"could not get nsThreadJSContextStack service");
+        return NS_ERROR_FAILURE;
+    }
+
+    JSContext* cx;
+    if(NS_FAILED(cxstack->Peek(&cx)) || !cx)
+    {
+        // no current context available
+        *aStack = nsnull;
+        return NS_OK;
+    }
+
+    *aStack = XPCJSStack::CreateStack(cx);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPConnect::CreateStackFrameLocation(JSBool isJSFrame,
+                                      const char* aFilename,
+                                      const char* aFunctionName,
+                                      PRInt32 aLineNumber,
+                                      nsIJSStackFrameLocation* aCaller,
+                                      nsIJSStackFrameLocation** aStack)
+{
+    if(!aStack)
+    {
+        NS_ASSERTION(0,"called CreateStackFrameLocation with null pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aStack = XPCJSStack::CreateStackFrameLocation(isJSFrame,
+                                                   aFilename,
+                                                   aFunctionName,
+                                                   aLineNumber,
+                                                   aCaller);
+    return *aStack ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+/***************************************************************************/
 // has to go somewhere...
 nsXPCArbitraryScriptable::nsXPCArbitraryScriptable()
 {
@@ -515,11 +567,11 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int depth)
 {
 #ifdef DEBUG
     if(!depth)
-        return NS_OK;        
+        return NS_OK;
     if(!p)
     {
         XPC_LOG_ALWAYS(("*** Cound not dump object with NULL address"));
-        return NS_OK;        
+        return NS_OK;
     }
 
     nsIXPConnect* xpc;
@@ -565,5 +617,5 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int depth)
     else
         XPC_LOG_ALWAYS(("*** Cound not dump the nsISupports @ %x", p));
 #endif
-    return NS_OK;        
-}        
+    return NS_OK;
+}

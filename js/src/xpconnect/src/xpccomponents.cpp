@@ -420,4 +420,8 @@ nsXPCComponents::GetClasses(nsIXPCClasses * *aClasses)
     return NS_ERROR_UNEXPECTED;
 }
 
-
+NS_IMETHODIMP
+nsXPCComponents::GetStack(nsIJSStackFrameLocation * *aStack)
+{
+    return nsXPConnect::GetXPConnect()->GetCurrentJSStack(aStack);
+}        

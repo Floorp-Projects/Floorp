@@ -82,7 +82,8 @@ XPCJSThrower::Verbosify(JSContext* cx,
 }
 
 void
-XPCJSThrower::ThrowBadResultException(JSContext* cx,
+XPCJSThrower::ThrowBadResultException(uintN errNum,
+                                      JSContext* cx,
                                       nsXPCWrappedNativeClass* clazz,
                                       const XPCNativeMemberDescriptor* desc,
                                       nsresult result)
@@ -91,7 +92,7 @@ XPCJSThrower::ThrowBadResultException(JSContext* cx,
     const char* format;
     JSString* str = NULL;
 
-    format = mFormats[XPCJSError::NATIVE_RETURNED_FAILURE].format;
+    format = mFormats[errNum].format;
 
     sz = JS_smprintf("%s 0x%x", format, result);
 
@@ -143,8 +144,8 @@ XPCJSThrower::ThrowBadParamException(uintN errNum,
 void
 XPCJSThrower::ThrowException(uintN errNum,
                     JSContext* cx,
-                    nsXPCWrappedNativeClass* clazz,
-                    const XPCNativeMemberDescriptor* desc)
+                    nsXPCWrappedNativeClass* clazz /* = nsnull */,
+                    const XPCNativeMemberDescriptor* desc /* = nsnull */)
 {
     char* sz;
     const char* format;

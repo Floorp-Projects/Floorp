@@ -38,6 +38,8 @@
 #include "nsIGenericFactory.h"
 #include "nsSpecialSystemDirectory.h"	// For exe dir
 
+#include "nsIJSContextStack.h"
+
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
@@ -219,8 +221,8 @@ public:
                              double            p10,
                              PRBool            p11,
                              char              p12,
-                             PRUnichar            p13,
-                             nsID*             p14,
+                             PRUnichar         p13,
+                             const nsID*       p14,
                              const char*       p15,
                              const PRUnichar*  p16);
     NS_IMETHOD SendInOutManyTypes(PRUint8*    p1,
@@ -265,6 +267,9 @@ public:
 
     /* nsISupports ReturnInterface (in nsISupports obj); */
     NS_IMETHOD ReturnInterface(nsISupports *obj, nsISupports **_retval);
+
+    /* nsIJSStackFrameLocation GetStack (); */
+    NS_IMETHOD GetStack(nsIJSStackFrameLocation **_retval);
 
     MyEcho();
 private:
@@ -355,7 +360,7 @@ MyEcho::SendManyTypes(PRUint8              p1,
                       PRBool            p11,
                       char              p12,
                       PRUnichar            p13,
-                      nsID*             p14,
+                      const nsID*       p14,
                       const char*       p15,
                       const PRUnichar*  p16)
 {
@@ -452,6 +457,39 @@ MyEcho::ReturnInterface(nsISupports *obj, nsISupports **_retval)
         NS_ADDREF(obj);
     *_retval = obj;
     return NS_OK;
+}
+
+/* nsIJSStackFrameLocation GetStack (); */
+NS_IMETHODIMP
+MyEcho::GetStack(nsIJSStackFrameLocation **_retval)
+{
+    nsIJSStackFrameLocation* stack = nsnull;
+    if(!_retval)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv))
+    {
+        nsIJSStackFrameLocation* jsstack;
+        if(NS_SUCCEEDED(xpc->GetCurrentJSStack(&jsstack)))
+        {
+            xpc->CreateStackFrameLocation(JS_FALSE,
+                                          __FILE__,
+                                          "MyEcho::GetStack",                          
+                                          __LINE__,
+                                          jsstack,
+                                          &stack);
+            NS_RELEASE(jsstack);
+        }
+    }
+
+    if(stack)
+    {
+        *_retval = stack;
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
 }        
 
 /***************************************************************************/
@@ -510,7 +548,7 @@ MySecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISuppor
         case OK_ALL:
             return NS_OK;
         case VETO_ALL:
-            JS_SetPendingException(aJSContext, 
+            JS_SetPendingException(aJSContext,
                 STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
                     "security exception")));
             return NS_ERROR_FAILURE;
@@ -528,7 +566,7 @@ MySecMan::CanCreateInstance(JSContext * aJSContext, const nsCID & aCID)
         case OK_ALL:
             return NS_OK;
         case VETO_ALL:
-            JS_SetPendingException(aJSContext, 
+            JS_SetPendingException(aJSContext,
                 STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
                     "security exception")));
             return NS_ERROR_FAILURE;
@@ -546,7 +584,7 @@ MySecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
         case OK_ALL:
             return NS_OK;
         case VETO_ALL:
-            JS_SetPendingException(aJSContext, 
+            JS_SetPendingException(aJSContext,
                 STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
                     "security exception")));
             return NS_ERROR_FAILURE;
@@ -564,7 +602,7 @@ MySecMan::CanCallMethod(JSContext * aJSContext, const nsIID & aIID, nsISupports 
         case OK_ALL:
             return NS_OK;
         case VETO_ALL:
-            JS_SetPendingException(aJSContext, 
+            JS_SetPendingException(aJSContext,
                 STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
                     "security exception")));
             return NS_ERROR_FAILURE;
@@ -582,7 +620,7 @@ MySecMan::CanGetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports
         case OK_ALL:
             return NS_OK;
         case VETO_ALL:
-            JS_SetPendingException(aJSContext, 
+            JS_SetPendingException(aJSContext,
                 STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
                     "security exception")));
             return NS_ERROR_FAILURE;
@@ -600,7 +638,7 @@ MySecMan::CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports
         case OK_ALL:
             return NS_OK;
         case VETO_ALL:
-            JS_SetPendingException(aJSContext, 
+            JS_SetPendingException(aJSContext,
                 STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
                     "security exception")));
             return NS_ERROR_FAILURE;
@@ -943,12 +981,12 @@ int main()
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  getService no veto: ");
-    t = "try{Components.classes.allocator.getService(); print('passed');}catch(e){failed = true; print('failed');}";
+    t = "try{Components.classes.nsIXPConnect.getService(); print('passed');}catch(e){failed = true; print('failed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  getService with veto: ");
-    t = "try{Components.classes.allocator.getService(); failed = true; print('failed');}catch(e){print('passed');}";
+    t = "try{Components.classes.nsIXPConnect.getService(); failed = true; print('failed');}catch(e){print('passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 
@@ -1040,20 +1078,20 @@ sm_test_done:
         char* b_out;
 
         printf("ArgumentFormatter test: ");
-        
-        argv = JS_PushArguments(jscontext, &mark, "s %ip s", 
+
+        argv = JS_PushArguments(jscontext, &mark, "s %ip s",
                                 a_in, &nsITestXPCFoo2::GetIID(), foo, b_in);
 
         if(argv)
         {
             nsISupports* fooc;
             nsTestXPCFoo* foog;
-            if(JS_ConvertArguments(jscontext, 3, argv, "s %ip s", 
+            if(JS_ConvertArguments(jscontext, 3, argv, "s %ip s",
                                    &a_out, &fooc, &b_out))
             {
                 if(fooc)
                 {
-                    if(NS_SUCCEEDED(fooc->QueryInterface(nsTestXPCFoo::GetIID(), 
+                    if(NS_SUCCEEDED(fooc->QueryInterface(nsTestXPCFoo::GetIID(),
                                     (void**)&foog)))
                     {
                         if(foog == foo)
@@ -1090,6 +1128,62 @@ sm_test_done:
         }
     }
 
+
+    {
+        // ThreadJSContextStack test
+
+        printf("ThreadJSContextStack tests...\n");
+
+        nsresult rv;
+        NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+
+        if(NS_SUCCEEDED(rv))
+        {
+            PRInt32 count;
+            if(NS_SUCCEEDED(stack->GetCount(&count)))
+                printf("\tstack->GetCount() : %s\n",
+                        count == 0 ? "passed" : "failed!");
+            else
+                printf("\tstack->GetCount() failed!\n");
+
+            if(NS_FAILED(stack->Push(jscontext)))
+                printf("\tstack->Push() failed!\n");
+            else
+                printf("\tstack->Push() passed\n");
+
+            if(NS_SUCCEEDED(stack->GetCount(&count)))
+                printf("\tstack->GetCount() : %s\n",
+                        count == 1 ? "passed" : "failed!");
+            else
+                printf("\tstack->GetCount() failed!\n");
+
+            JSContext* testCX;
+            if(NS_FAILED(stack->Peek(&testCX)))
+                printf("\tstack->Peek() failed!\n");
+
+            if(jscontext == testCX)
+                printf("\tstack->Push/Peek : passed\n");
+            else
+                printf("\tstack->Push/Peek : failed\n");
+
+            if(NS_FAILED(stack->Pop(&testCX)))
+                printf("\tstack->Pop() failed!\n");
+
+            if(jscontext == testCX)
+                printf("\tstack->Push/Pop : passed\n");
+            else
+                printf("\tstack->Push/Pop : failed\n");
+
+            if(NS_SUCCEEDED(stack->GetCount(&count)))
+                printf("\tstack->GetCount() : %s\n",
+                        count == 0 ? "passed" : "failed!");
+            else
+                printf("\tstack->GetCount() failed!\n");
+        }
+        else
+            printf("\tfailed to get nsThreadJSContextStack service!\n");
+
+    }
 
 
     // cleanup

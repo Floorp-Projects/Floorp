@@ -48,6 +48,10 @@
 #include "xpcjsid.h"
 #include "prlong.h"
 
+#include "nsIJSContextStack.h"
+#include "prthread.h"
+#include "nsDeque.h"
+
 #include "nsIScriptObjectOwner.h"   // for DOM hack in xpcconvert.cpp
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -104,6 +108,15 @@ class nsXPConnect : public nsIXPConnect
     NS_IMETHOD GetSecurityManagerForJSContext(JSContext* aJSContext,
                                     nsIXPCSecurityManager** aManager,
                                     PRUint16* flags);
+
+    NS_IMETHOD GetCurrentJSStack(nsIJSStackFrameLocation** aStack);
+
+    NS_IMETHOD CreateStackFrameLocation(JSBool isJSFrame,
+                                        const char* aFilename,
+                                        const char* aFunctionName,
+                                        PRInt32 aLineNumber,
+                                        nsIJSStackFrameLocation* aCaller,
+                                        nsIJSStackFrameLocation** aStack);
 
     // non-interface implementation
 public:
@@ -169,12 +182,12 @@ public:
         IDX_TOTAL_COUNT // just a count of the above
     };
 
-    jsid GetStringID(uintN index) const 
+    jsid GetStringID(uintN index) const
     {
         NS_ASSERTION(index < IDX_TOTAL_COUNT, "index out of range");
         return mStrIDs[index];
     }
-    const char* GetStringName(uintN index) const 
+    const char* GetStringName(uintN index) const
     {
         NS_ASSERTION(index < IDX_TOTAL_COUNT, "index out of range");
         return mStrings[index];
@@ -183,14 +196,14 @@ public:
     nsresult GetLastResult() {return mLastResult;}
     void SetLastResult(nsresult rc) {mLastResult = rc;}
 
-    nsIXPCSecurityManager* GetSecurityManager() const 
+    nsIXPCSecurityManager* GetSecurityManager() const
         {return mSecurityManager;}
-    void SetSecurityManager(nsIXPCSecurityManager* aSecurityManager) 
+    void SetSecurityManager(nsIXPCSecurityManager* aSecurityManager)
         {mSecurityManager = aSecurityManager;}
 
     PRUint16 GetSecurityManagerFlags() const
         {return mSecurityManagerFlags;}
-    void SetSecurityManagerFlags(PRUint16 f) 
+    void SetSecurityManagerFlags(PRUint16 f)
         {mSecurityManagerFlags = f;}
 
     JSBool Init(JSObject* aGlobalObj = NULL);
@@ -243,7 +256,8 @@ struct XPCJSError
 class XPCJSThrower
 {
 public:
-    void ThrowBadResultException(JSContext* cx,
+    void ThrowBadResultException(uintN errNum,
+                                 JSContext* cx,
                                  nsXPCWrappedNativeClass* clazz,
                                  const XPCNativeMemberDescriptor* desc,
                                  nsresult result);
@@ -256,8 +270,8 @@ public:
 
     void ThrowException(uintN errNum,
                         JSContext* cx,
-                        nsXPCWrappedNativeClass* clazz,
-                        const XPCNativeMemberDescriptor* desc);
+                        nsXPCWrappedNativeClass* clazz = nsnull,
+                        const XPCNativeMemberDescriptor* desc = nsnull);
 
     XPCJSThrower(JSBool Verbose = JS_FALSE);
     ~XPCJSThrower();
@@ -327,7 +341,7 @@ private:
     nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
                         nsIInterfaceInfo* aInfo);
 
-    JSContext* GetJSContext() const 
+    JSContext* GetJSContext() const
         {return mXPCContext ? mXPCContext->GetJSContext() : NULL;}
     JSObject*  CreateIIDJSObject(REFNSIID aIID);
     JSObject*  NewOutObject();
@@ -479,10 +493,10 @@ public:
     const char* GetMemberName(const XPCNativeMemberDescriptor* desc) const;
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
-    JSContext* GetJSContext() const 
+    JSContext* GetJSContext() const
         {return mXPCContext ? mXPCContext->GetJSContext() : NULL;}
     nsIXPCScriptable* GetArbitraryScriptable() const
-        {return mXPCContext ? 
+        {return mXPCContext ?
                     mXPCContext->GetXPConnect()->GetArbitraryScriptable() :
                     NULL;}
 
@@ -556,7 +570,8 @@ private:
                                  const XPCNativeMemberDescriptor* desc,
                                  nsresult result)
         {nsXPConnect::GetJSThrower()->
-                ThrowBadResultException(cx, this, desc, result);}
+                ThrowBadResultException(XPCJSError::NATIVE_RETURNED_FAILURE,
+                                        cx, this, desc, result);}
 
     void ThrowBadParamException(uintN errNum,
                                 JSContext* cx,
@@ -793,6 +808,9 @@ public:
     /* readonly attribute nsIXPCClasses classes; */
     NS_IMETHOD GetClasses(nsIXPCClasses * *aClasses);
 
+    /* readonly attribute nsIJSStackFrameLocation stack; */
+    NS_IMETHOD GetStack(nsIJSStackFrameLocation * *aStack);
+
     nsXPCComponents();
     virtual ~nsXPCComponents();
 private:
@@ -811,6 +829,64 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
                          uintN argc, jsval *argv, jsval *vp);
 
 extern JSBool xpc_WrappedNativeJSOpsOneTimeInit();
+
+/***************************************************************************/
+
+#define NS_XPC_THREAD_JSCONTEXT_STACK_CID  \
+{ 0xff8c4d10, 0x3194, 0x11d3, \
+    { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+
+class nsXPCThreadJSContextStackImpl : public nsIJSContextStack
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    /* readonly attribute PRInt32 Count; */
+    NS_IMETHOD GetCount(PRInt32 *aCount);
+
+    /* JSContext Peek (); */
+    NS_IMETHOD Peek(JSContext * *_retval);
+
+    /* JSContext Pop (); */
+    NS_IMETHOD Pop(JSContext * *_retval);
+
+    /* void Push (in JSContext cx); */
+    NS_IMETHOD Push(JSContext * cx);
+
+public:
+    static nsXPCThreadJSContextStackImpl* GetSingleton();
+
+private:
+    // hide ctor and dtor
+    nsXPCThreadJSContextStackImpl();
+    virtual ~nsXPCThreadJSContextStackImpl();
+};
+
+/***************************************************************************/
+class XPCJSStackFrame;
+
+class XPCJSStack
+{
+public:
+    static nsIJSStackFrameLocation* CreateStack(JSContext* cx);
+
+    static nsIJSStackFrameLocation* CreateStackFrameLocation(
+                                        JSBool isJSFrame,
+                                        const char* aFilename,
+                                        const char* aFunctionName,
+                                        PRInt32 aLineNumber,
+                                        nsIJSStackFrameLocation* aCaller);
+friend class XPCJSStackFrame;
+private:    
+    XPCJSStack();
+    ~XPCJSStack();
+
+    void AddRef();
+    void Release();
+
+    XPCJSStackFrame* mTopFrame;
+    int mRefCount;
+};
 
 /***************************************************************************/
 

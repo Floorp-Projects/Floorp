@@ -47,7 +47,7 @@ public:
                              PRBool            p11,
                              char              p12,
                              PRUnichar            p13,
-                             nsID*             p14,
+                             const nsID*       p14,
                              const char*       p15,
                              const PRUnichar*  p16);
     NS_IMETHOD SendInOutManyTypes(PRUint8*    p1,
@@ -92,6 +92,9 @@ public:
 
     /* nsISupports ReturnInterface (in nsISupports obj); */
     NS_IMETHOD ReturnInterface(nsISupports *obj, nsISupports **_retval);
+
+    /* nsIJSStackFrameLocation GetStack (); */
+    NS_IMETHOD GetStack(nsIJSStackFrameLocation **_retval);
 
     xpctestEcho();
 private:
@@ -180,7 +183,7 @@ xpctestEcho::SendManyTypes(PRUint8              p1,
                       PRBool            p11,
                       char              p12,
                       PRUnichar            p13,
-                      nsID*             p14,
+                      const nsID*       p14,
                       const char*       p15,
                       const PRUnichar*  p16)
 {
@@ -277,12 +280,45 @@ xpctestEcho::ReturnInterface(nsISupports *obj, nsISupports **_retval)
         NS_ADDREF(obj);
     *_retval = obj;
     return NS_OK;
-}        
+}
+
+/* nsIJSStackFrameLocation GetStack (); */
+NS_IMETHODIMP
+xpctestEcho::GetStack(nsIJSStackFrameLocation **_retval)
+{
+    nsIJSStackFrameLocation* stack = nsnull;
+    if(!_retval)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv))
+    {
+        nsIJSStackFrameLocation* jsstack;
+        if(NS_SUCCEEDED(xpc->GetCurrentJSStack(&jsstack)))
+        {
+            xpc->CreateStackFrameLocation(JS_FALSE,
+                                          __FILE__,
+                                          "xpctestEcho::GetStack",
+                                          __LINE__,
+                                          jsstack,
+                                          &stack);
+            NS_RELEASE(jsstack);
+        }
+    }
+
+    if(stack)
+    {
+        *_retval = stack;
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
 
 /***************************************************************************/
 
-// static 
-NS_IMETHODIMP 
+// static
+NS_IMETHODIMP
 xpctest::ConstructEcho(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -302,4 +338,4 @@ xpctest::ConstructEcho(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     }
 
     return rv;
-}        
+}
