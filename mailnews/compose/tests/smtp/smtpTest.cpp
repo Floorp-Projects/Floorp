@@ -447,6 +447,9 @@ int main()
 	// has the ability to take nsnull as a parameter. Once that happens,
 	// prefs will do the work of figuring out which prefs file to load...
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
+    if (NS_FAILED(result) || (prefs == nsnull)) {
+        exit(result);
+    }
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
