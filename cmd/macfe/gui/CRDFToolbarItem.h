@@ -31,6 +31,7 @@
 
 #include "htrdf.h"
 #include "CImageIconMixin.h"
+#include "CDynamicTooltips.h"
 
 
 //
@@ -54,7 +55,7 @@ protected:
 
 	HT_Resource HTNode ( ) { return mNode; }
 	const HT_Resource HTNode ( ) const { return mNode; }
-	
+		
 private:
 
 	HT_Resource mNode;
@@ -76,7 +77,8 @@ private:
 //
 // It's a button, it's a slicer, it's a mulcher, it's a ....
 //
-class CRDFPushButton : public CRDFToolbarItem, public LControl, public CImageIconMixin
+class CRDFPushButton : public CRDFToolbarItem, public LControl, public CImageIconMixin,
+						public CDynamicTooltipMixin
 {
 public:
 	CRDFPushButton ( HT_Resource inNode ) ;
@@ -85,8 +87,12 @@ public:
 	void SetTrackInside(bool inInside) { mTrackInside = inInside; }
 	bool IsTrackInside() const { return mTrackInside; }
 
+		// returns how the buttons wants to display: icon only, icon & text, text only
+		// based on the properties in HT.
+	UInt32 CalcDisplayMode ( ) const;
+	
 	virtual void PutInside ( LView *inView, Boolean inOrient = true) { 
-		LPane::PutInside(inView, inOrient); 
+		LPane::PutInside(inView, inOrient);
 	}
 	virtual void ResizeFrameTo ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh ) {
 		LPane::ResizeFrameTo(inWidth, inHeight, inRefresh);
@@ -124,12 +130,19 @@ protected:
 		// handle control tracking
 	virtual void HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boolean inPrevInside) ;
 	virtual void DoneTracking ( SInt16 inHotSpot, Boolean /* inGoodTrack */) ;
-
+	virtual void HotSpotResult ( Int16 inHotSpot );
+	
 	bool IsMouseInFrame ( ) const { return mMouseInFrame; } ;
+
+		// calculate tooltip to display title
+	virtual void FindTooltipForMouseLocation ( const EventRecord& inMacEvent,
+												StringPtr outTip );
 	
 private:
 
 	UInt32 CalcAlignment ( UInt32 inTopAlignment, Uint32 inSideAlignment ) const;
+	void AttachTooltip ( ) ;
+	void AttachContextMenu ( ) ;
 	
 	StRegion mButtonMask;
 	Rect mCachedButtonFrame;

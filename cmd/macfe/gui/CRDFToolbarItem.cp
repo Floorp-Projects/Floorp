@@ -37,6 +37,8 @@
 #include "UGraphicGizmos.h"
 #include "UGAAppearance.h"
 #include "URDFUtilities.h"
+#include "CBrowserWindow.h"
+#include "uapp.h"
 
 
 extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
@@ -46,7 +48,6 @@ CRDFToolbarItem :: CRDFToolbarItem ( HT_Resource inNode )
 	: mNode(inNode)
 {
 	Assert_(mNode != NULL);
-
 }
 
 
@@ -69,6 +70,11 @@ CRDFPushButton :: CRDFPushButton ( HT_Resource inNode )
 	// first param is the alignment when the icon is one top, the 2nd when the icon is on the side.
 	mTitleAlignment = CalcAlignment(kAlignCenterBottom, kAlignCenterRight);
 	mGraphicAlignment = CalcAlignment(kAlignCenterTop, kAlignCenterLeft);
+	
+	mCurrentMode = CalcDisplayMode();
+	
+	AttachTooltip();
+	AttachContextMenu();
 }
 
 
@@ -76,6 +82,35 @@ CRDFPushButton :: ~CRDFPushButton ( )
 {
 
 }
+
+
+//
+// CalcDisplayMode
+//
+// Computes the appropriate FE constant for the toolbar mode given what is in HT. Because this
+// property can be specified/overridden, we have to check several places in a cascading
+// manner: 1) check the node; if not there, 2) check the view the node is in.
+//
+UInt32
+CRDFPushButton :: CalcDisplayMode ( ) const
+{
+	Uint32 retVal = eTOOLBAR_TEXT_AND_ICONS;
+	char* data = NULL;
+	if ( ! HT_GetTemplateData(HTNode(), gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING, &data) )
+		if ( ! HT_GetTemplateData(HT_TopNode(HT_GetView(HTNode())), gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING, &data) )
+			data = NULL;
+
+	if ( data ) {
+		if ( strcmp(data, "text") == 0 )
+			retVal = eTOOLBAR_TEXT;
+		else if ( strcmp(data, "pictures") == 0 )
+			retVal = eTOOLBAR_ICONS;
+	}
+	
+	return retVal;
+	
+} // CalcDisplayMode
+
 
 //
 // CalcAlignment
@@ -147,15 +182,80 @@ CRDFPushButton :: CalcTitleFrame ( )
 void
 CRDFPushButton :: CalcGraphicFrame ( )
 {
-	// The container for the graphic starts out as the whole
-	// button area.
+	// The container for the graphic starts out as a 32x32 area. If HT tells us 
+	// the icon is a small icon, use 16x16. If the icon image is loaded, use its
+	// width and height.
 	Rect theContainerFrame = mCachedButtonFrame;
-	Rect theImageFrame = theContainerFrame;
+	Rect theImageFrame = { 0, 0, 32, 32 };
+	char* url = HT_GetIconURL ( HTNode(), PR_TRUE, HT_TOOLBAR_ENABLED );
+	if ( url ) {
+		if ( strncmp(url, "icon/small", 4) == 0 )
+			theImageFrame.right = theImageFrame.bottom = 16;
+		else {
+			SetImageURL(url);
+			
+			SDimension16 imageSize;
+			if ( GetImageDimensions(imageSize) ) {
+				theImageFrame.right = imageSize.width;
+				theImageFrame.bottom = imageSize.height;
+			}
+		}
+	}
 	
 	UGraphicGizmos::AlignRectOnRect(theImageFrame, theContainerFrame, mGraphicAlignment);
 	UGraphicGizmos::PadAlignedRect(theImageFrame, mGraphicPadPixels, mGraphicAlignment);
 	mCachedGraphicFrame = theImageFrame;
 }
+
+
+//
+// AttachTooltip
+//
+// Creates the tooltip that asks HT to fill it in
+//
+void
+CRDFPushButton :: AttachTooltip ( )
+{
+	CToolTipAttachment* tip = new CToolTipAttachment(80, 11508);
+	Assert_(tip != NULL);
+	if ( tip )
+		AddAttachment(tip);
+
+} // AttachTooltip
+
+
+//
+// AttachContextMenu
+//
+// Creates a context menu attachment that will be filled in from HT.
+//
+void
+CRDFPushButton :: AttachContextMenu ( )
+{
+//	CToolbarContextMenuAttachment* menuAtt = new CToolbarContextMenuAttachment ( HTNode() );
+
+
+} // AttachContextMenu
+
+
+//
+// FindTooltipForMouseLocation
+//
+// Dredge the tooltip text out of HT for this button
+//
+void
+CRDFPushButton :: FindTooltipForMouseLocation ( const EventRecord& inMacEvent, StringPtr outTip )
+{
+	char* name = HT_GetNodeName(HTNode());
+	if ( name ) {
+		outTip[0] = strlen(name);
+		strcpy ( (char*) &outTip[1], name );
+	}
+	else
+		*outTip = 0;
+
+} // FindTooltipForMouseLocation
+
 
 //
 // PrepareDrawButton
@@ -266,19 +366,37 @@ CRDFPushButton :: DrawButtonTitle ( )
 void
 CRDFPushButton :: DrawButtonGraphic ( )
 {
-	char* url = NULL;
-	PRBool success = HT_GetTemplateData ( HTNode(), gNavCenter->toolbarEnabledIcon, HT_COLUMN_STRING, &url );
-	if ( success && url ) {
-
-		// setup where we should draw
-		Point topLeft;
-		topLeft.h = mCachedGraphicFrame.left; topLeft.v = mCachedGraphicFrame.top;
-		uint16 width = mCachedGraphicFrame.right - mCachedGraphicFrame.left;
-		uint16 height = mCachedGraphicFrame.bottom - mCachedGraphicFrame.top;
+	const ResIDT cFolderIconID = kGenericFolderIconResource;
+	const ResIDT cItemIconID = 15313;
+	const ResIDT cFileIconID = kGenericDocumentIconResource;
+	
+	// figure out which graphic to display. We need to check for pressed before rollover because
+	// rollover will always be true when tracking a mouseDown, but not vice-versa.
+	HT_IconType displayType = HT_TOOLBAR_ENABLED;
+	if ( !IsEnabled() )
+		displayType = HT_TOOLBAR_DISABLED;
+	else if ( IsTrackInside() )
+		displayType = HT_TOOLBAR_PRESSED;
+	else if ( IsMouseInFrame() )
+		displayType = HT_TOOLBAR_ROLLOVER;
 		
-		// draw
-		SetImageURL ( url );
-		DrawImage ( topLeft, kTransformNone, width, height );
+	char* url = HT_GetIconURL ( HTNode(), PR_TRUE, displayType );
+	if ( url ) {
+		if ( strncmp(url, "icon", 4) != 0 ) {
+			// setup where we should draw
+			Point topLeft;
+			topLeft.h = mCachedGraphicFrame.left; topLeft.v = mCachedGraphicFrame.top;
+			//uint16 width = 0;
+			//uint16 height = 0;
+			
+			// draw
+			SetImageURL ( url );
+			DrawImage ( topLeft, kTransformNone, 0, 0 );
+		}
+		else {
+			SInt32 iconID = HT_IsContainer(HTNode()) ? cFolderIconID : cItemIconID;
+			::PlotIconID(&mCachedGraphicFrame, atNone, kTransformNone, iconID);
+		}
 	}
 	
 } // DrawButtonGraphic
@@ -368,6 +486,10 @@ CRDFPushButton :: DrawButtonHilited ( )
 void
 CRDFPushButton :: ImageIsReady ( )
 {
+	// image dimensions have probably changed, and now that we know what they are, we
+	// should recompute accordingly.
+	CalcGraphicFrame();
+	
 	Refresh();	// for now.
 
 } // ImageIsReady
@@ -381,7 +503,7 @@ CRDFPushButton :: ImageIsReady ( )
 void
 CRDFPushButton :: DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const
 {
-	::FrameRect ( &mCachedGraphicFrame );		//еее this is wrong!
+//	::FrameRect ( &mCachedGraphicFrame );		//еее this is wrong!
 
 } // DrawStandby
 
@@ -441,13 +563,73 @@ CRDFPushButton :: HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boo
 } // HotSpotAction
 
 
+void
+CRDFPushButton :: HotSpotResult(Int16 inHotSpot)
+{
+	const char* url = HT_GetNodeURL(HTNode());
+	if ( strncmp(url, "command:", 8) == 0 )
+	{
+		// We're a command, baby.  Look up our FE command and execute it.
+		//UINT nCommand = theApp.m_pBrowserCommandMap->GetFEResource(url);
+		//WFE_GetOwnerFrame(this)->PostMessage(WM_COMMAND, MAKEWPARAM(nCommand, nCommand), 0);
+		BroadcastValueMessage();
+		DebugStr("\pExecuting command; g");
+	}
+	else if ( !HT_IsContainer(HTNode()) && !HT_IsSeparator(HTNode()) )
+	{
+		// we're a plain old url (personal toolbar style). Launch it if HT says we're allowed to.
+		if ( !URDFUtilities::LaunchNode(HTNode()) )
+			CFrontApp::DoGetURL( url );
+	}
+	else {
+	
+		// we're a popdown treeview. Open it the way it wants to be opened
+		// convert local to port coords for this cell
+		Rect portRect;
+		CalcPortFrameRect ( portRect );
+		
+		// find the Browser window and tell it to show a popdown with
+		// the give HT_Resource for this cell
+		LView* top=GetSuperView();
+		while ( top->GetSuperView() )
+			top = top->GetSuperView();
+
+		// popdown the tree			
+		CBrowserWindow* browser = dynamic_cast<CBrowserWindow*>(top);
+		Assert_(browser != NULL);
+		if ( browser ) {
+			switch ( HT_GetTreeStateForButton(HTNode()) ) {
+				
+				case HT_DOCKED_WINDOW:
+					browser->OpenDockedTreeView ( HTNode() );
+					break;
+					
+				case HT_STANDALONE_WINDOW:		
+					LCommander::GetTopCommander()->ProcessCommand(cmd_NCOpenNewWindow, HTNode() );
+					break;
+				
+				case HT_POPUP_WINDOW:			
+					browser->PopDownTreeView ( portRect.left, portRect.bottom + 5, HTNode() );
+					break;
+				
+				default:
+					DebugStr("\pHT_GetTreeStateForButton returned unknown type");
+					break;
+			} // case of which tree type to create
+		} // if browser window found
+		
+	} // else create a tree
+	
+} // HotSpotResult
+
+
 //
 // DoneTracking
 //
 // Reset the toolbar back to its original state.
 //
 void
-CRDFPushButton :: DoneTracking( SInt16 inHotSpot, Boolean inGoodTrack )
+CRDFPushButton :: DoneTracking ( SInt16 inHotSpot, Boolean inGoodTrack )
 {		
 	SetTrackInside(false);
 
@@ -459,6 +641,8 @@ CRDFPushButton :: DoneTracking( SInt16 inHotSpot, Boolean inGoodTrack )
 	else
 		MouseLeave();		// mouse has left the building. Redraw the correct state now, not later
 }
+
+
 
 #pragma mark -
 
