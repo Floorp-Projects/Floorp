@@ -246,10 +246,10 @@ protected:
   // has completed (vertical alignment, horizontal alignment,
   // justification and relative positioning).
 
-#ifdef AIX
-public:
-#endif /* AIX */
   struct PerSpanData;
+  struct PerFrameData;
+  friend struct PerSpanData;
+  friend struct PerFrameData;
   struct PerFrameData {
     // link to next/prev frame in same span
     PerFrameData* mNext;
@@ -277,16 +277,13 @@ public:
     // Other state we use
     PRUint8 mVerticalAlign;
   };
-#ifdef AIX
-protected:
-#endif /* AIX */
   PerFrameData mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES];
   PerFrameData* mFrameFreeList;
   PRInt32 mInitialFramesFreed;
 
 #ifdef AIX
 public:
-#endif /* AIX */
+#endif
   struct PerSpanData {
     union {
       PerSpanData* mParent;
@@ -321,7 +318,7 @@ public:
   };
 #ifdef AIX
 protected:
-#endif /* AIX */
+#endif
   PerSpanData mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS];
   PerSpanData* mSpanFreeList;
   PRInt32 mInitialSpansFreed;
