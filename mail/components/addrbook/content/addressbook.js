@@ -251,7 +251,8 @@ function SetNameColumn(cmd)
 
 function CommandUpdate_AddressBook()
 {
-	goUpdateCommand('button_delete');
+  goUpdateCommand('cmd_delete');
+  goUpdateCommand('button_delete');
 }
 
 function ResultsPaneSelectionChanged()
@@ -413,35 +414,36 @@ function AbPrintCardInternal(doPrintPreview, msgType)
   if (!uri)
     return;
 
-	var statusFeedback;
-	statusFeedback = Components.classes["@mozilla.org/messenger/statusfeedback;1"].createInstance();
-	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
+   var statusFeedback;
+   statusFeedback = Components.classes["@mozilla.org/messenger/statusfeedback;1"].createInstance();
+   statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
-	var selectionArray = new Array(numSelected);
+   var selectionArray = new Array(numSelected);
 
-	var totalCard = 0;
+   var totalCard = 0;
 
-	for(var i = 0; i < numSelected; i++)
-	{
-		var card = selectedItems[i];
-    var printCardUrl = CreatePrintCardUrl(card);
-		if (printCardUrl)
-		{
-			selectionArray[totalCard++] = printCardUrl;
-		}
-	}
+   for (var i = 0; i < numSelected; i++)
+   {
+     var card = selectedItems[i];
+     var printCardUrl = CreatePrintCardUrl(card);
+     if (printCardUrl)
+     {
+        selectionArray[totalCard++] = printCardUrl;
+     }
+  }
 
-  if (!gPrintSettings) {
+  if (!gPrintSettings)
+  {
     gPrintSettings = GetPrintSettings();
   }
 
-	printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
-										"",
-										"chrome,dialog=no,all",
-										totalCard, selectionArray, statusFeedback, 
-                    gPrintSettings, doPrintPreview, msgType);
+  printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
+                                         "",
+                                         "chrome,dialog=no,all",
+                                          totalCard, selectionArray, statusFeedback, 
+                                          gPrintSettings, doPrintPreview, msgType);
 
-	return;
+  return;
 }
 
 function AbPrintCard()
@@ -536,55 +538,33 @@ function AbExport()
 
 function AbDeleteDirectory()
 {
-    var selectedABURI = GetSelectedDirectory();
-    if (!selectedABURI) return;
+  var selectedABURI = GetSelectedDirectory();
+  if (!selectedABURI)
+    return;
 
-    var isPersonalOrCollectedAbsSelectedForDeletion = false;
-    var parentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    if (!parentArray) 
-      return; 
+  var parentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  if (!parentArray) 
+    return; 
 
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-
-    // check to see if personal or collected address books is selected for deletion.
-    // if yes, prompt the user an appropriate message saying these cannot be deleted
-    if ((selectedABURI != kCollectedAddressbookURI) &&
-        (selectedABURI != kPersonalAddressbookURI)) {
-      var parentRow = GetParentRow(dirTree, dirTree.currentIndex);
-      var parentId;
-      if (parentRow == -1)
-        parentId = "moz-abdirectory://";
-      else	
-        parentId = dirTree.builderView.getResourceAtIndex(parentRow).Value;
-
-      var parentDir = GetDirectoryFromURI(parentId);
-      parentArray.AppendElement(parentDir);
-    }
-    else {
-      promptService.alert(window,
-          gAddressBookBundle.getString("cannotDeleteTitle"), 
-          gAddressBookBundle.getString("cannotDeleteMessage"));
-      return;
-    }
-
-    var confirmDeleteMessage;
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+ 
+  var parentRow = GetParentRow(dirTree, dirTree.currentIndex);
+  var parentId = (parentRow == -1) ? "moz-abdirectory://" : dirTree.builderView.getResourceAtIndex(parentRow).Value;
+  var parentDir = GetDirectoryFromURI(parentId);
+  parentArray.AppendElement(parentDir);
     
-    var directory = GetDirectoryFromURI(selectedABURI);
-    if (directory.isMailList) 
-      confirmDeleteMessage = gAddressBookBundle.getString("confirmDeleteMailingList");
-    else
-      confirmDeleteMessage = gAddressBookBundle.getString("confirmDeleteAddressbook");
+  var directory = GetDirectoryFromURI(selectedABURI);
+  var confirmDeleteMessage = gAddressBookBundle.getString(directory.isMailList ? "confirmDeleteMailingList" : "confirmDeleteAddressbook");
 
-    if (!promptService.confirm(window, null, confirmDeleteMessage))
-       return;
+  if (!promptService.confirm(window, null, confirmDeleteMessage))
+    return;
 
-    var resourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    var selectedABResource = GetDirectoryFromURI(selectedABURI).QueryInterface(Components.interfaces.nsIRDFResource);
+  var resourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  var selectedABResource = GetDirectoryFromURI(selectedABURI).QueryInterface(Components.interfaces.nsIRDFResource);
+  resourceArray.AppendElement(selectedABResource);
 
-    resourceArray.AppendElement(selectedABResource);
-
-    top.addressbook.deleteAddressBooks(dirTree.database, parentArray, resourceArray);
-    SelectFirstAddressBook();
+  top.addressbook.deleteAddressBooks(dirTree.database, parentArray, resourceArray);
+  SelectFirstAddressBook();
 }
 
 function SetStatusText(total)

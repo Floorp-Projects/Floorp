@@ -167,7 +167,12 @@ var DirPaneController =
       case "button_delete":
         if (command == "cmd_delete")
           goSetMenuValue(command, "valueAddressBook");
+        
         selectedDir = GetSelectedDirectory();
+        
+        if (selectedDir == kPersonalAddressbookURI || selectedDir == kCollectedAddressbookURI)
+          return false;
+
         if (selectedDir) {
           // If the selected directory is an ldap directory
           // and if the prefs for this directory are locked
