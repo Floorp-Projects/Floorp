@@ -1952,72 +1952,64 @@ public class Codegen extends Interpreter {
         }
 
         String className;
-        String methodNameNewObj;
-        String methodNameCall;
+        String methodName;
         String callSignature;
 
         if (isSpecialCall) {
-            className        = "org/mozilla/javascript/ScriptRuntime";
-            methodNameNewObj = "newObjectSpecial";
-            methodNameCall   = "callSpecial";
-            if (type != TokenStream.NEW) {
-                callSignature    = "(Lorg/mozilla/javascript/Context;" +
-                                     "Ljava/lang/Object;" +
-                                     "Ljava/lang/Object;" +
-                                     "[Ljava/lang/Object;" +
-                                     "Lorg/mozilla/javascript/Scriptable;" +
-                                     "Lorg/mozilla/javascript/Scriptable;" +
-                                     "Ljava/lang/String;I)";   // filename & linenumber
+            className = "org/mozilla/javascript/ScriptRuntime";
+            if (type == TokenStream.NEW) {
+                methodName = "newObjectSpecial";
+                callSignature = "(Lorg/mozilla/javascript/Context;"
+                                +"Ljava/lang/Object;"
+                                +"[Ljava/lang/Object;"
+                                +"Lorg/mozilla/javascript/Scriptable;"
+                                +")Lorg/mozilla/javascript/Scriptable;";
+                aload(variableObjectLocal);
+            } else {
+                methodName = "callSpecial";
+                callSignature = "(Lorg/mozilla/javascript/Context;"
+                                +"Ljava/lang/Object;"
+                                +"Ljava/lang/Object;"
+                                +"[Ljava/lang/Object;"
+                                +"Lorg/mozilla/javascript/Scriptable;"
+                                +"Lorg/mozilla/javascript/Scriptable;"
+                                +"Ljava/lang/String;I"  // filename, linenumber
+                                +")Ljava/lang/Object;";
                 aload(thisObjLocal);
                 aload(variableObjectLocal);
                 push(itsSourceFile == null ? "" : itsSourceFile);
                 push(itsLineNumber);
-            } else {
-                callSignature    = "(Lorg/mozilla/javascript/Context;" +
-                                    "Ljava/lang/Object;" +
-                                    "[Ljava/lang/Object;" +
-                                    "Lorg/mozilla/javascript/Scriptable;)";
-                aload(variableObjectLocal);
             }
+        } else if (isSimpleCall) {
+            className = "org/mozilla/javascript/optimizer/OptRuntime";
+            methodName = "callSimple";
+            callSignature = "(Lorg/mozilla/javascript/Context;"
+                            +"Ljava/lang/String;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +"[Ljava/lang/Object;"
+                            +")Ljava/lang/Object;";
         } else {
-            methodNameNewObj = "newObject";
-            if (isSimpleCall) {
-                callSignature  = "(Lorg/mozilla/javascript/Context;" +
-                                  "Ljava/lang/String;" +
-                                  "Lorg/mozilla/javascript/Scriptable;" +
-                                  "[Ljava/lang/Object;)";
-                methodNameCall = "callSimple";
-                className      = "org/mozilla/javascript/optimizer/OptRuntime";
+            className = "org/mozilla/javascript/ScriptRuntime";
+            aload(variableObjectLocal);
+            if (type == TokenStream.NEW) {
+                methodName = "newObject";
+                callSignature = "(Lorg/mozilla/javascript/Context;"
+                                +"Ljava/lang/Object;"
+                                +"[Ljava/lang/Object;"
+                                +"Lorg/mozilla/javascript/Scriptable;"
+                                +")Lorg/mozilla/javascript/Scriptable;";
             } else {
-                aload(variableObjectLocal);
-                if (type == TokenStream.NEW) {
-                    callSignature    = "(Lorg/mozilla/javascript/Context;" +
-                                        "Ljava/lang/Object;" +
-                                        "[Ljava/lang/Object;" +
-                                        "Lorg/mozilla/javascript/Scriptable;)";
-                } else {
-                    callSignature    = "(Lorg/mozilla/javascript/Context;" +
-                                        "Ljava/lang/Object;" +
-                                        "Ljava/lang/Object;" +
-                                        "[Ljava/lang/Object;" +
-                                        "Lorg/mozilla/javascript/Scriptable;)";
-                }
-                methodNameCall   = "call";
-                className        = "org/mozilla/javascript/ScriptRuntime";
+                methodName = "call";
+                callSignature = "(Lorg/mozilla/javascript/Context;"
+                                 +"Ljava/lang/Object;"
+                                 +"Ljava/lang/Object;"
+                                 +"[Ljava/lang/Object;"
+                                 +"Lorg/mozilla/javascript/Scriptable;"
+                                 +")Ljava/lang/Object;";
             }
         }
 
-        if (type == TokenStream.NEW) {
-            addStaticInvoke(className,
-                            methodNameNewObj,
-                            callSignature
-                            +"Lorg/mozilla/javascript/Scriptable;");
-        } else {
-            addStaticInvoke(className,
-                            methodNameCall,
-                            callSignature
-                            +"Ljava/lang/Object;");
-        }
+        addStaticInvoke(className, methodName, callSignature);
     }
 
     private void visitStatement(Node node)
