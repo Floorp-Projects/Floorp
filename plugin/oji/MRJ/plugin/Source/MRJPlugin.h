@@ -347,10 +347,7 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    Print(nsPluginPrint* platformPrint)
-    {
-		return NS_ERROR_NOT_IMPLEMENTED;
-    }
+    Print(nsPluginPrint* platformPrint);
 
     /**
      * Returns the value of a variable associated with the plugin instance.

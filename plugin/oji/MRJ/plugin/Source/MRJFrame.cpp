@@ -188,3 +188,14 @@ void MRJFrame::menuSelected(UInt32 message, SInt16 modifiers)
 			::JMMenuSelected(::JMGetFrameContext(mFrameRef), menu, item);
 	}
 }
+
+void MRJFrame::print(GrafPtr printingPort, Point frameOrigin)
+{
+	OSStatus status = JMDrawFrameInPort(mFrameRef, printingPort, frameOrigin, printingPort->clipRgn, false);
+	if (status != noErr) {
+		::MoveTo(10, 12);
+		::TextFont(0);
+		::TextSize(12);
+		::DrawString("\pMRJPlugin:  printing failed.");
+	}
+}
