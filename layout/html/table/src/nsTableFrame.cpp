@@ -3163,6 +3163,19 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+NS_METHOD nsTableFrame::GetBorderPlusMarginPadding(nsMargin& aResult)
+{
+  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin borderPadding;
+  GetTableBorder (borderPadding);
+  nsMargin padding;
+  mySpacing->GetPadding(padding);
+  borderPadding += padding;
+  aResult = borderPadding;
+  return NS_OK;
+}
+
 NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext& aPresContext,
                                           nsHTMLReflowMetrics& aDesiredSize,
                                           const nsHTMLReflowState& aReflowState,
@@ -3171,14 +3184,8 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext& aPresContext,
   if (PR_TRUE==gsDebugIR) printf("\nTIF IR: IncrementalReflow\n");
   nsresult  rv = NS_OK;
 
-  // create an inner table reflow state
-  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
-  GetTableBorder (borderPadding);
-  nsMargin padding;
-  mySpacing->GetPadding(padding);
-  borderPadding += padding;
+  GetBorderPlusMarginPadding(borderPadding);
   InnerTableReflowState state(aPresContext, aReflowState, borderPadding);
 
   // determine if this frame is the target or not

@@ -416,6 +416,8 @@ public:
 
   static PRBool IsFinalPass(const nsReflowState& aReflowState);
 
+  NS_METHOD GetBorderPlusMarginPadding(nsMargin& aResult);
+
 protected:
 
   /** protected constructor.
@@ -431,6 +433,7 @@ protected:
 
   virtual PRBool ParentDisablesSelection() const; //override default behavior
 
+public:
   /** first pass of ResizeReflow.  
     * lays out all table content with aMaxSize(NS_UNCONSTRAINEDSIZE,NS_UNCONSTRAINEDSIZE) and
     * a non-null aMaxElementSize so we get all the metrics we need to do column balancing.
@@ -450,6 +453,7 @@ protected:
                                nsReflowReason           aReason,
                                PRBool                   aDoSiblings);
 
+protected:
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
     * Pass 2 is executed every time the table needs to resize.  An optimization is included
@@ -463,7 +467,7 @@ protected:
                                nsReflowStatus&          aStatus);
 
 // begin incremental reflow methods
-
+  
   /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
     * commands to child elements.  This is done by processing the reflow command,
     * rebalancing column widths (if necessary), then comparing the resulting column widths

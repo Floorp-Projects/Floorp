@@ -1152,6 +1152,11 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
       rv = IR_RowInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
                           (nsTableRowFrame *)objectFrame, PR_FALSE);
     }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
+    {
+      rv = IR_RowGroupInserted(aPresContext, aDesiredSize, aReflowState, aStatus,
+                               (nsTableRowGroupFrame*)objectFrame, PR_FALSE);
+    }
     else
     {
       rv = AddFrame(aReflowState.reflowState, objectFrame);
@@ -1165,6 +1170,11 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     {
       rv = IR_RowAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
                           (nsTableRowFrame *)objectFrame);
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
+    {
+      rv = IR_RowGroupInserted(aPresContext, aDesiredSize, aReflowState, aStatus,
+                               (nsTableRowGroupFrame*)objectFrame, PR_FALSE);
     }
     else
     { // no optimization to be done for Unknown frame types, so just reuse the Inserted method
@@ -1184,6 +1194,11 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     {
       rv = IR_RowRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
                          (nsTableRowFrame *)objectFrame);
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
+    {
+      rv = IR_RowGroupRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                             (nsTableRowGroupFrame *)objectFrame);
     }
     else
     {
@@ -1215,6 +1230,42 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   if (mNextInFlow) {
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
+  return rv;
+}
+
+NS_METHOD nsTableRowGroupFrame::IR_RowGroupInserted(nsIPresContext&        aPresContext,
+                                                    nsHTMLReflowMetrics&   aDesiredSize,
+                                                    RowGroupReflowState&   aReflowState,
+                                                    nsReflowStatus&        aStatus,
+                                                    nsTableRowGroupFrame * aInsertedFrame,
+                                                    PRBool                 aReplace)
+{
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupInserted for frame %p\n", aInsertedFrame);
+  nsresult rv = AddFrame(aReflowState.reflowState, aInsertedFrame);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  aReflowState.tableFrame->InvalidateCellMap();
+  aReflowState.tableFrame->InvalidateColumnCache();
+
+  return rv;
+}
+
+NS_METHOD nsTableRowGroupFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
+                                                   nsHTMLReflowMetrics&   aDesiredSize,
+                                                   RowGroupReflowState& aReflowState,
+                                                   nsReflowStatus&        aStatus,
+                                                   nsTableRowGroupFrame * aDeletedFrame)
+{
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupRemoved for frame %p\n", aDeletedFrame);
+  nsresult rv = mFrames.DeleteFrame(aPresContext, aDeletedFrame);
+  aReflowState.tableFrame->InvalidateCellMap();
+  aReflowState.tableFrame->InvalidateColumnCache();
+
+  // if any column widths have to change due to this, rebalance column widths
+  //XXX need to calculate this, but for now just do it
+  aReflowState.tableFrame->InvalidateColumnWidths();
+
   return rv;
 }
 
