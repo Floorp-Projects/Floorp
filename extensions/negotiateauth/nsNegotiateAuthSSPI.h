@@ -12,16 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Negotiateauth
+ * The Original Code is the SSPI NegotiateAuth Module.
  *
- * The Initial Developer of the Original Code is Daniel Kouril.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Daniel Kouril <kouril@ics.muni.cz> (original author)
- *   Wyllys Ingersoll <wyllys.ingersoll@sun.com>
- *   Christopher Nebergall <cneberg@sandia.gov>
  *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,30 +35,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHttpNegotiateAuth_h__
-#define nsHttpNegotiateAuth_h__
+#ifndef nsNegotiateAuthSSPI_h__
+#define nsNegotiateAuthSSPI_h__
 
-#include "nsIHttpAuthenticator.h"
-#include "nsIURI.h"
-#include "nsSubstring.h"
+#include "nsIAuthModule.h"
+#include "nsString.h"
 
-// The nsGssapiAuth class provides responses for the GSS-API Negotiate method
+#include <windows.h>
+
+#define SECURITY_WIN32 1
+#include <security.h>
+#include <rpc.h>
+
+// The nsNegotiateAuth class provides responses for the GSS-API Negotiate method
 // as specified by Microsoft in draft-brezak-spnego-http-04.txt
 
-class nsHttpNegotiateAuth : public nsIHttpAuthenticator
+class nsNegotiateAuth : public nsIAuthModule
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIHTTPAUTHENTICATOR
+    NS_DECL_NSIAUTHMODULE
+
+    nsNegotiateAuth();
 
 private:
-    // returns true if URI is accepted by the list of hosts in the pref
-    PRBool TestPref(nsIURI *, const char *pref);
+    ~nsNegotiateAuth();
 
-    PRBool MatchesBaseURI(const nsCSubstring &scheme,
-                          const nsCSubstring &host,
-                          PRInt32             port,
-                          const char         *baseStart,
-                          const char         *baseEnd);
+    void Reset();
+
+private:
+    CredHandle   mCred;
+    CtxtHandle   mCtxt;
+    nsCString    mServiceName;
+    PRUint32     mServiceFlags;
 };
-#endif /* nsHttpNegotiateAuth_h__ */
+
+#endif /* nsNegotiateAuthSSPI_h__ */

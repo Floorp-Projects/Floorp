@@ -49,8 +49,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= negotiateauth
 LIBRARY_NAME	= negotiateauth
-# Do not set EXPORT_LIBRARY as we do not want negotiateauth in the static libs list
-#EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 
 REQUIRES	= \
@@ -73,11 +71,24 @@ ifneq (,$(GSSAPI_LIBS))
 LOCAL_INCLUDES	  = -DUSE_GSSAPI $(GSSAPI_INCLUDES)
 EXTRA_DSO_LDOPTS += $(GSSAPI_LIBS)
 CPPSRCS		 += nsNegotiateAuthGSSAPI.cpp
-endif
+
+# Do not set EXPORT_LIBRARY as we do not want negotiateauth in the static
+# libs list
+#EXPORT_LIBRARY	  = 1
 
 # make sure this component is never statically linked into the main
 # application.  this is necessary since we don't want to force users
 # to install GSSAPI libraries in order to use the rest of mozilla ;-)
-FORCE_SHARED_LIB= 1
+FORCE_SHARED_LIB  = 1
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES	  = -DUSE_SSPI
+CPPSRCS		 += nsNegotiateAuthSSPI.cpp
+
+# On Windows, we allow this module to be included in the static build.
+EXPORT_LIBRARY	  = 1
+MODULE_NAME	  = nsNegotiateAuthModule
+endif
 
 include $(topsrcdir)/config/rules.mk
