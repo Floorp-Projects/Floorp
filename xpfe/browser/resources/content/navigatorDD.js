@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  - Kevin Puetz (puetz@iastate.edu)
  */
 
 //
@@ -40,7 +41,7 @@ try {
   gDragDropEnabled = pref.GetBoolPref("xpfe.dragdrop.enable");
 }
 catch (ex) {
-  dump("assuming d&d is off for Navigator\n");
+  dump("assuming d&d is off for Personal Toolbar\n");
 }  
 
 
@@ -406,3 +407,57 @@ function DragProxyIcon ( event )
   
 } // DragProxyIcon
 
+
+//
+// DragContentLink
+//
+// Called when the user is starting a drag from the a content-area link. Basically
+// just gets the url from the link and places the data (as plain text) in the drag service.
+//
+// This is by no means the final implementation, just another example of what you can do with
+// JS. Much still left to do here.
+// 
+function DragContentLink ( event )
+{
+  var target = event.target;
+  var dragStarted = false;
+  var dragService = 
+    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
+  if ( dragService ) {
+    var trans = 
+      Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+    if ( trans ) {
+      trans.addDataFlavor("text/unicode");
+      var genTextData =
+        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+      if ( genTextData ) {
+      
+        // pull the url out of the link
+        var href = enclosingLink(target);
+        if ( href == "" )
+          return;
+        var id = href
+        genTextData.data = id;
+      
+        dump("ID: " + id + "\n");
+
+        trans.setTransferData ( "text/unicode", genTextData, id.length * 2 );  // double byte data
+        var transArray = 
+          Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+        if ( transArray ) {
+          // put it into the transferable as an |nsISupports|
+          var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+          transArray.AppendElement(genTrans);
+          var nsIDragService = Components.interfaces.nsIDragService;
+          dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+                                              nsIDragService.DRAGDROP_ACTION_MOVE );
+          dragStarted = true;
+        }
+      } // if data object
+    } // if transferable
+  } // if drag service
+
+  if ( dragStarted )               // don't propagate the event if a drag has begun
+    event.preventBubble();
+  
+} // DragContentLink
