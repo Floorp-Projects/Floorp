@@ -1494,7 +1494,7 @@ nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
                                    PRInt32      aModType)
 {
   // XXX: Uh, none of this nsIDocumentObserver stuff is needed if the
-  // blow code isn't needed.
+  // below code isn't needed.
 #if 0
   //printf("AttributeChanged\n");
   PRInt32 i;
