@@ -786,6 +786,13 @@ gc_root_marker(JSHashEntry *he, intN i, void *arg)
                 break;
             }
         }
+        if (!root_points_to_gcArenaPool && he->value) {
+            fprintf(stderr, 
+              "Error: The address passed to JS_AddNamedRoot currently "
+              "holds an invalid jsval.\n "
+              "  This is usually caused by a missing call to JS_RemoveRoot.\n "
+              "  Root name is \"%s\".\n", (const char *) he->value); 
+        }
         JS_ASSERT(root_points_to_gcArenaPool);
 #endif
 
