@@ -87,11 +87,11 @@ include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-	$(MAKE_INSTALL) svg.dtd $(DIST)\bin\dtd
+	$(MAKE_INSTALL) svg.dtd $(DIST)\bin\res\dtd
 	$(MAKE_INSTALL) svg.css $(DIST)\bin\res
 	$(PERL) install-svg-css.pl $(DIST)\bin\res\ua.css
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-	rm -f $(DIST)\bin\dtd\svg.dtd
+	rm -f $(DIST)\bin\res\dtd\svg.dtd
 	rm -f $(DIST)\bin\res\svg.css

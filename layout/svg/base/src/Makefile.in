@@ -93,4 +93,4 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/svg.dtd \
 		$(NULL)
 libs::
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/dtd
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/dtd

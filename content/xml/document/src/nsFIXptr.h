@@ -39,7 +39,7 @@
 
 
 /**
- * Implementation for FIXptr, a W3C NOTE.
+ * Implementation for FIXptr, a W3C proposal.
  *
  * http://lists.w3.org/Archives/Public/www-xml-linking-comments/2001AprJun/att-0074/01-NOTE-FIXptr-20010425.htm
  *

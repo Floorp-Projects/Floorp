@@ -68,4 +68,4 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/xhtml11.dtd \
 		$(NULL)
 libs::
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/dtd
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/dtd

@@ -192,7 +192,7 @@ sub InstallNonChromeResources()
     #// Make aliases of resource files
     #//
     
-    MakeAlias(":mozilla:content:xml:content:src:xhtml11.dtd",                          "$dist_dir"."dtd:");
+    MakeAlias(":mozilla:content:xml:content:src:xhtml11.dtd",                          "$dist_dir"."res:dtd:");
     
     if (! $main::options{mathml})
     {
