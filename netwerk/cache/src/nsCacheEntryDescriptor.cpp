@@ -29,7 +29,7 @@
 #include "nsReadableUtils.h"
 #include "nsIOutputStream.h"
 
-NS_IMPL_ISUPPORTS1(nsCacheEntryDescriptor, nsICacheEntryDescriptor)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor, nsICacheEntryDescriptor)
 
 
 nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
@@ -518,13 +518,18 @@ nsTransportWrapper::OpenOutputStream(PRUint32            offset,
     // Create the underlying output stream using the wrapped transport.
     nsCOMPtr<nsIOutputStream> output;    
     rv = mTransport->OpenOutputStream(offset, count, flags, getter_AddRefs(output));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;    
 
-    // Wrap this output stream, with a stream that monitors how much data gets written,
-    // to maintain the cache entry's size, and to inform the cache device. Eventually,
-    // this mechanism will provide a way for the cache device to enforce space limits,
+    // Wrap this output stream with a stream that monitors how much data gets written,
+    // maintains the cache entry's size, and informs the cache device.
+    // This mechanism provides a way for the cache device to enforce space limits,
     // and to drive cache entry eviction.
     nsCacheEntryDescriptor * descriptor = GET_DESCRIPTOR_FROM_TRANSPORT_WRAPPER(this);
+    
+    // reset datasize of entry based on offset so OnWrite calculates delta changes correctly.
+    rv = descriptor->SetDataSize(offset);
+    if (NS_FAILED(rv)) return rv;
+    
     return NewOutputStreamWrapper(result, descriptor, output);
 }
 
