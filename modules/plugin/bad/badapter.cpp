@@ -75,7 +75,6 @@ public:
            const char* url, 
            const char* target = NULL,
            nsIPluginStreamListener* streamListener = NULL,
-           nsPluginStreamType streamType = nsPluginStreamType_Normal,
            const char* altHost = NULL,
            const char* referrer = NULL,
            PRBool forceJSEnabled = PR_FALSE);
@@ -88,7 +87,6 @@ public:
             PRBool isFile = PR_FALSE,
             const char* target = NULL,
             nsIPluginStreamListener* streamListener = NULL,
-            nsPluginStreamType streamType = nsPluginStreamType_Normal,
             const char* altHost = NULL, 
             const char* referrer = NULL,
             PRBool forceJSEnabled = PR_FALSE,
@@ -141,7 +139,7 @@ public:
      *  @return number of bytes read or -1 if error
      */   
     NS_IMETHOD
-    Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aWriteCount); 
+    Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount); 
 
     //////////////////////////////////////////////////////////////////////////
     //
@@ -261,6 +259,54 @@ protected:
 
 #ifdef NEW_PLUGIN_STREAM_API
 
+
+class CPluginStreamInfo : public nsIPluginStreamInfo {
+public:
+    NS_DECL_ISUPPORTS
+
+	CPluginStreamInfo(nsIPluginInputStream* inStr, nsMIMEType type, PRBool seekable)
+		 : mInputStream(inStr), mMimeType(type), mIsSeekable(seekable) {}
+
+	virtual ~CPluginStreamInfo() {}
+
+	NS_METHOD
+	GetContentType(nsMIMEType* result)
+	{
+		*result = mMimeType;
+		return NS_OK;
+	}
+
+	NS_METHOD
+	IsSeekable(PRBool* result)
+	{
+		*result = mIsSeekable;
+		return NS_OK;
+	}
+
+	NS_METHOD
+	GetLength(PRUint32* result)
+	{
+		return mInputStream->GetLength(result);
+	}
+
+	NS_METHOD
+	GetLastModified(PRUint32* result)
+	{
+		return mInputStream->GetLastModified(result);
+	}
+
+	NS_METHOD
+	RequestRead(nsByteRange* rangeList)
+	{
+		return mInputStream->RequestRead(rangeList);
+	}
+
+private:
+	nsIPluginInputStream* mInputStream;
+	nsMIMEType mMimeType;
+	PRBool mIsSeekable;
+};
+
 class CPluginInputStream : public nsIPluginInputStream {
 public:
 
@@ -283,7 +329,7 @@ public:
      *  @return error status
      */
     NS_IMETHOD
-    GetLength(PRInt32 *aLength);
+    GetLength(PRUint32 *aLength);
 
     /** Read data from the stream.
      *  @param aErrorCode the error code if an error occurs
@@ -296,7 +342,7 @@ public:
      *  @return error status
      */   
     NS_IMETHOD
-    Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aReadCount); 
+    Read(char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aReadCount); 
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginInputStream:
@@ -311,8 +357,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // CPluginInputStream specific methods:
 
-    CPluginInputStream(nsIPluginStreamListener* listener,
-                       nsPluginStreamType streamType);
+    CPluginInputStream(nsIPluginStreamListener* listener);
     virtual ~CPluginInputStream(void);
 
     void SetStreamInfo(NPP npp, NPStream* stream) {
@@ -325,11 +370,34 @@ public:
 
     nsresult SetReadBuffer(PRUint32 len, const char* buffer) {
         // XXX this has to be way more sophisticated
-        mBuffer = strdup(buffer);
+        mBuffer = dup(len, buffer);
         mBufferLength = len;
         mAmountRead = 0;
         return NS_OK;
     }
+    
+    char* dup(PRUint32 len, const char* buffer) {
+    	char* result = new char[len];
+    	if (result != NULL) {
+    		const char *src = buffer;
+    		char *dest = result; 
+    		while (len-- > 0)
+    			*dest++ = *src++;
+    	}
+    	return result;
+    }
+
+	nsIPluginStreamInfo* CreatePluginStreamInfo(nsMIMEType type, PRBool seekable) {
+		if (mStreamInfo == NULL) {
+			mStreamInfo = new CPluginStreamInfo(this, type, seekable);
+			mStreamInfo->AddRef();
+		}
+		return mStreamInfo;
+	}
+	
+	nsIPluginStreamInfo* GetPluginStreamInfo() {
+		return mStreamInfo;
+	}
 
 protected:
     const char* mURL;
@@ -340,7 +408,7 @@ protected:
     char* mBuffer;
     PRUint32 mBufferLength;
     PRUint32 mAmountRead;
-
+    nsIPluginStreamInfo* mStreamInfo;
 };
 
 #else // !NEW_PLUGIN_STREAM_API
@@ -464,6 +532,7 @@ NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 
 #ifdef NEW_PLUGIN_STREAM_API
+NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 NS_DEFINE_IID(kIPluginInputStreamIID, NS_IPLUGININPUTSTREAM_IID);
 #else // !NEW_PLUGIN_STREAM_API
 NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
@@ -516,7 +585,7 @@ char* NPP_GetMIMEDescription(void)
     //fprintf(stderr, "MIME description\n");
     if (thePlugin == NULL) {
         freeFac = 1;
-        NSGetFactory(kIPluginIID, (nsIFactory** )(&thePlugin));
+        NSGetFactory(kIPluginIID, NULL, (nsIFactory** )&thePlugin);
     }
     //fprintf(stderr, "Allocated Plugin 0x%08x\n", thePlugin);
     const char * ret;
@@ -557,7 +626,7 @@ NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
     //fprintf(stderr, "MIME description\n");
     if (thePlugin == NULL) {
         freeFac = 1;
-        if (NSGetFactory(kIPluginIID, (nsIFactory** )(&thePlugin)) != NS_OK)
+        if (NSGetFactory(kIPluginIID, NULL, (nsIFactory**)&thePlugin ) != NS_OK)
             return NPERR_GENERIC_ERROR;
     }
     //fprintf(stderr, "Allocated Plugin 0x%08x\n", thePlugin);
@@ -601,10 +670,9 @@ NPP_Initialize(void)
     // On UNIX the plugin might have been created when calling NPP_GetMIMEType.
     if (thePlugin == NULL) {
         // create nsIPlugin factory
-        error = (NPError)NSGetFactory(kIPluginIID, (nsIFactory**) &thePlugin);
+        error = (NPError)NSGetFactory(kIPluginIID, NULL, (nsIFactory**)&thePlugin );
 	    if (error == NS_OK) {
 	    	thePlugin->AddRef();
-	        thePlugin->Initialize(thePluginManager);
 	    }
 	}
 	
@@ -801,10 +869,9 @@ NPP_NewStream(NPP instance,
     CPluginInputStream* inStr = (CPluginInputStream*)stream->notifyData;
     if (inStr == NULL)
         return NPERR_GENERIC_ERROR;
-    nsPluginStreamInfo info;
-    info.contentType = type;
-    info.seekable = seekable;
-    nsresult err = inStr->GetListener()->OnStartBinding(stream->url, &info);
+    
+    nsIPluginStreamInfo* info = inStr->CreatePluginStreamInfo(type, seekable);
+    nsresult err = inStr->GetListener()->OnStartBinding(stream->url, info);
     if (err) return err;
 
     inStr->SetStreamInfo(instance, stream);
@@ -891,7 +958,7 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
         return -1;
     nsresult err = inStr->SetReadBuffer((PRUint32)len, (const char*)buffer);
     if (err != NS_OK) return -1;
-    err = inStr->GetListener()->OnDataAvailable(stream->url, inStr, offset, len);
+    err = inStr->GetListener()->OnDataAvailable(stream->url, inStr, offset, len, inStr->GetPluginStreamInfo());
     if (err != NS_OK) return -1;
     return len;
     
@@ -901,7 +968,7 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
     if( theStream == 0 )
         return -1;
 		
-    PRInt32 count;
+    PRUint32 count;
     nsresult err = theStream->Write((const char* )buffer, offset, len, &count);
     return (err == NS_OK) ? count : -1;
 
@@ -929,7 +996,7 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPReason reason)
     CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
     if (inStr == NULL)
         return NPERR_GENERIC_ERROR;
-    inStr->GetListener()->OnStopBinding(stream->url, (nsPluginReason)reason);
+    inStr->GetListener()->OnStopBinding(stream->url, (nsPluginReason)reason, inStr->GetPluginStreamInfo());
     inStr->Release();
     stream->pdata = NULL;
     
@@ -1012,7 +1079,7 @@ NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 #ifdef NEW_PLUGIN_STREAM_API
 
         CPluginInputStream* inStr = (CPluginInputStream*)notifyData;
-        (void)inStr->GetListener()->OnStopBinding(url, (nsPluginReason)reason);
+        (void)inStr->GetListener()->OnStopBinding(url, (nsPluginReason)reason, inStr->GetPluginStreamInfo());
     
 #else // !NEW_PLUGIN_STREAM_API
 
@@ -1144,7 +1211,6 @@ CPluginManager::GetURL(nsISupports* pluginInst,
                        const char* url, 
                        const char* target,
                        nsIPluginStreamListener* streamListener,
-                       nsPluginStreamType streamType,
                        const char* altHost,
                        const char* referrer,
                        PRBool forceJSEnabled)
@@ -1166,7 +1232,7 @@ CPluginManager::GetURL(nsISupports* pluginInst,
 
     NPError err;
     if (streamListener) {
-        CPluginInputStream* inStr = new CPluginInputStream(streamListener, streamType);
+        CPluginInputStream* inStr = new CPluginInputStream(streamListener);
         if (inStr == NULL) {
             instancePeer->Release();
             inst->Release();
@@ -1192,7 +1258,6 @@ CPluginManager::PostURL(nsISupports* pluginInst,
                         PRBool isFile,
                         const char* target,
                         nsIPluginStreamListener* streamListener,
-                        nsPluginStreamType streamType,
                         const char* altHost, 
                         const char* referrer,
                         PRBool forceJSEnabled,
@@ -1217,7 +1282,7 @@ CPluginManager::PostURL(nsISupports* pluginInst,
 
     NPError err;
     if (streamListener) {
-        CPluginInputStream* inStr = new CPluginInputStream(streamListener, streamType);
+        CPluginInputStream* inStr = new CPluginInputStream(streamListener);
         if (inStr == NULL) {
             instancePeer->Release();
             inst->Release();
@@ -1668,8 +1733,8 @@ CPluginManagerStream::~CPluginManagerStream(void)
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 
 NS_METHOD
-CPluginManagerStream::Write(const char* buffer, PRInt32 offset, PRInt32 len, 
-                            PRInt32 *aWriteCount)
+CPluginManagerStream::Write(const char* buffer, PRUint32 offset, PRUint32 len, 
+                            PRUint32 *aWriteCount)
 {
     assert( npp != NULL );
     assert( pstream != NULL );
@@ -1757,20 +1822,29 @@ NS_IMPL_QUERY_INTERFACE(CPluginManagerStream, kIOutputStreamIID);
 
 #ifdef NEW_PLUGIN_STREAM_API
 
-CPluginInputStream::CPluginInputStream(nsIPluginStreamListener* listener,
-                                       nsPluginStreamType streamType)
-    : mListener(listener), mStreamType(streamType),
+NS_IMPL_ISUPPORTS(CPluginStreamInfo, kIPluginStreamInfoIID);
+
+CPluginInputStream::CPluginInputStream(nsIPluginStreamListener* listener)
+    : mListener(listener), mStreamType(nsPluginStreamType_Normal),
       mNPP(NULL), mStream(NULL),
-      mBuffer(NULL), mBufferLength(0), mAmountRead(0)
+      mBuffer(NULL), mBufferLength(0), mAmountRead(0),
+      mStreamInfo(NULL)
 {
     NS_INIT_REFCNT();
-    mListener->AddRef();
+
+    if (mListener != NULL) {
+        mListener->AddRef();
+        mListener->GetStreamType(&mStreamType);
+    }
 }
 
 CPluginInputStream::~CPluginInputStream(void)
 {
-    mListener->Release();
-    free(mBuffer);
+	NS_IF_RELEASE(mListener);
+
+    delete mBuffer;
+    
+    NS_IF_RELEASE(mStreamInfo);
 }
 
 NS_IMPL_ISUPPORTS(CPluginInputStream, kIPluginInputStreamIID);
@@ -1785,18 +1859,18 @@ CPluginInputStream::Close(void)
 }
 
 NS_METHOD
-CPluginInputStream::GetLength(PRInt32 *aLength)
+CPluginInputStream::GetLength(PRUint32 *aLength)
 {
     *aLength = mStream->end;
     return NS_OK;
 }
 
 NS_METHOD
-CPluginInputStream::Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aReadCount)
+CPluginInputStream::Read(char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aReadCount)
 {
-    if (aOffset > (PRInt32)mBufferLength)
+    if (aOffset > mBufferLength)
         return NS_ERROR_FAILURE;        // XXX right error?
-    PRUint32 cnt = PR_MIN(aCount, (PRInt32)mBufferLength - aOffset);
+    PRUint32 cnt = PR_MIN(aCount, mBufferLength - aOffset);
     memcpy(aBuf, &mBuffer[aOffset], cnt);
     *aReadCount = cnt;
     mAmountRead -= cnt;
