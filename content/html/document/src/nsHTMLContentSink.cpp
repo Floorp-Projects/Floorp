@@ -1154,18 +1154,14 @@ HTMLContentSink::ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
 
   const nsString& content = aNode.GetSkippedContent();
 
-#if XXX_chris_karnaze_writes_this_part
   nsresult rv = NS_NewHTMLTextArea(aInstancePtrResult, atom, mCurrentForm);
   if ((NS_OK == rv) && (nsnull != *aInstancePtrResult)) {
     // Add remaining attributes from the tag
     rv = AddAttributes(aNode, *aInstancePtrResult);
-    if (0 < content.Length()) {
-      ((nsHTMLTextArea*)*aInstancePtrResult)->SetContent(content);
-    }
+    //if (0 < content.Length()) {
+    //  ((nsTextArea*)*aInstancePtrResult)->SetContent(content);
+    //}
   }
-#else
-  nsresult rv = NS_NewHTMLText(aInstancePtrResult, content.GetUnicode(), content.Length());
-#endif
 
   NS_RELEASE(atom);
   return rv;
