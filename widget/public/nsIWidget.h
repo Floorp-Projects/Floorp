@@ -371,15 +371,27 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetFocus(void) = 0;
 
     /**
-     * Get this widget's outside dimensions relative to it's parent widget
+     * Get this widget's outside dimensions relative to its parent widget
      *
-     * @param aRect on return it holds the  x. y, width and height of this widget
+     * @param aRect on return it holds the  x, y, width and height of this widget
      *
      */
     NS_IMETHOD GetBounds(nsRect &aRect) = 0;
-  
-    
+
+
     /**
+     * Get this widget's outside dimensions in global coordinates. (One might think this
+     * could be accomplished by stringing together other methods in this interface, but
+     * then one would bloody one's nose on different coordinate system handling by different
+     * platforms.)
+     *
+     * @param aRect on return it holds the  x, y, width and height of this widget
+     *
+     */
+    NS_IMETHOD GetScreenBounds(nsRect &aRect) = 0;
+
+
+  /**
      * Get this widget's client area dimensions, if the window has a 3D border appearance
      * this returns the area inside the border, The x and y are always zero
      *
