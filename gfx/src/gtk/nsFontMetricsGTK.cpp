@@ -236,7 +236,7 @@ static nsFontCharSetInfo CNS116437 =
 static nsFontCharSetInfo GB2312 =
   { "gb_2312-80", DoubleByteConvert, 1 };
 static nsFontCharSetInfo GBK =
-  { "x-gbk", DoubleByteConvert, 1};
+  { "x-gbk-noascii", DoubleByteConvert, 1};
 static nsFontCharSetInfo JISX0208 =
   { "jis_0208-1983", DoubleByteConvert, 1 };
 static nsFontCharSetInfo JISX0212 =
@@ -334,6 +334,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "gb2312.1980-0",      &GB2312        },
   { "gb2312.1980-1",      &GB2312        },
   { "gb13000.1993-1",     &GBK           },
+  { "gbk-0",              &GBK           },
   { "hp-japanese15",      &Unknown       },
   { "hp-japaneseeuc",     &Unknown       },
   { "hp-roman8",          &Unknown       },
