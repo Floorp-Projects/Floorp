@@ -36,6 +36,7 @@ CPPSRCS		= \
                   nsUnicodeToISO2022KR.cpp \
                   nsCP949ToUnicode.cpp \
                   nsUnicodeToCP949.cpp \
+                  nsUnicodeToX11Johab.cpp \
 		  nsUCvKOSupport.cpp \
                   nsUCvKODll.cpp \
 		  $(NULL)
