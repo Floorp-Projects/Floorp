@@ -4446,7 +4446,7 @@ si_StrippedURL (char* URLName) {
     /* remove everything in result after last slash (e.g., index.html) */
     s = result;
     t = 0;
-    while (s = (char*) XP_STRCHR(s+1, '/')) {
+    while ((s = (char*) XP_STRCHR(s+1, '/'))) {
 	t = s;
     }
     if (t) {
@@ -4455,11 +4455,11 @@ si_StrippedURL (char* URLName) {
 
     /* remove socket number from result */
     s = result;
-    while (s = (char*) XP_STRCHR(s+1, ':')) {
+    while ((s = (char*) XP_STRCHR(s+1, ':'))) {
 	/* s is at next colon */
         if (*(s+1) != '/') {
             /* and it's not :// so it must be start of socket number */
-            if (t = (char*) XP_STRCHR(s+1, '/')) {
+            if ((t = (char*) XP_STRCHR(s+1, '/'))) {
 		/* t is at slash terminating the socket number */
 		do {
 		    /* copy remainder of t to s */
@@ -5242,7 +5242,7 @@ si_SaveSignonDataLocked(char * filename) {
 		XP_FileWrite(LINEBREAK, -1, fp);
                 XP_FileWrite("=", -1, fp); /* precede values with '=' */
 		if (data->isPassword) {
-		    if (mungedValue = SECNAV_MungeString(data->value)) {
+		    if ((mungedValue = SECNAV_MungeString(data->value))) {
                         XP_FileWrite(mungedValue, -1, fp);
                         XP_FREE(mungedValue);
                     } else {
@@ -5441,9 +5441,11 @@ SI_RestoreOldSignonData
 	    data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
 	    while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
 		if (data->isPassword) {
-		    StrAllocCopy(
-			(char *)form_element->element_data->ele_text.default_text,
-			data->value);
+		    char* default_text =
+			(char*)(form_element->element_data->ele_text.default_text);
+		    StrAllocCopy(default_text, data->value);
+		    form_element->element_data->ele_text.default_text =
+			(unsigned long *)default_text;
 		    si_unlock_signon_list();
 		    return;
 		}
@@ -5469,9 +5471,11 @@ SI_RestoreOldSignonData
 	while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
 	    if(XP_STRCMP(data->name,
 		    (char *)form_element->element_data->ele_text.name)==0) {
-		StrAllocCopy(
-		    (char *)form_element->element_data->ele_text.default_text,
-		    data->value);
+		char* default_text =
+		    (char*)(form_element->element_data->ele_text.default_text);
+		StrAllocCopy(default_text, data->value);
+		form_element->element_data->ele_text.default_text =
+		    (unsigned long *)default_text;
 		si_unlock_signon_list();
 		return;
 	    }
