@@ -784,6 +784,29 @@ case "$target" in
 
     ;;
 
+*-darwin*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(DARWIN)
+    AC_DEFINE(HAVE_BSD_FLOCK)
+    CFLAGS="$CFLAGS -Wmost -fno-common -pipe"
+    if echo $OS_TEST | grep -c 86 2>/dev/null; then
+        CFLAGS="$CFLAGS -mno-486"
+        AC_DEFINE(i386)
+        CPU_ARCH=i386
+    else
+        AC_DEFINE(ppc)
+        CPU_ARCH=ppc
+    fi
+    DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@'
+    # Use the standard preprocessor (cpp)
+    CFLAGS="$CFLAGS -traditional-cpp"
+    MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
+    DLL_SUFFIX=dylib
+    USE_PTHREADS=1
+    MDCPUCFG_H=_darwin.cfg
+    PR_MD_CSRCS=darwin.c
+    ;;
+
 *-dgux*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
@@ -1415,27 +1438,6 @@ mips-sony-newsos*)
     USE_NSPR_THREADS=1
     MDCPUCFG_H=_qnx.cfg
     PR_MD_CSRCS=qnx.c
-    ;;
-
-*-darwin*)
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(DARWIN)
-    AC_DEFINE(HAVE_BSD_FLOCK)
-    CFLAGS="$CFLAGS -Wmost -fno-common -pipe"
-    if echo $OS_TEST | grep -c 86 2>/dev/null; then
-        CFLAGS="$CFLAGS -mno-486"
-        AC_DEFINE(i386)
-        CPU_ARCH=i386
-    else
-        AC_DEFINE(ppc)
-        CPU_ARCH=ppc
-    fi
-    DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load'
-    MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
-    DLL_SUFFIX=dylib
-    USE_PTHREADS=1
-    MDCPUCFG_H=_darwin.cfg
-    PR_MD_CSRCS=darwin.c
     ;;
 
 *-*-sco*)
