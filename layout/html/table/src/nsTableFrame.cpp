@@ -2358,17 +2358,14 @@ nsTableFrame::AppendFrames(nsIPresContext* aPresContext,
     f->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
 
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-      // Append the new col group frame
-      mColGroups.AppendFrame(nsnull, f);
       if (!firstAppendedColGroup) {
         firstAppendedColGroup = f;
-        nsIFrame* lastChild = mFrames.LastChild();
-        nsTableColGroupFrame* lastColGroup = 
-          (nsTableColGroupFrame*)GetFrameAtOrBefore(aPresContext, this, lastChild,
-                                                    nsLayoutAtoms::tableColGroupFrame);
+        nsTableColGroupFrame* lastColGroup = (nsTableColGroupFrame *)mColGroups.LastChild();
         startColIndex = (lastColGroup) 
           ? lastColGroup->GetStartColumnIndex() + lastColGroup->GetColCount() : 0;
       }
+      // Append the new col group frame
+      mColGroups.AppendFrame(nsnull, f);
     } else if (IsRowGroup(display->mDisplay)) {
       nsIFrame* prevSibling = mFrames.LastChild();
       // Append the new row group frame to the sibling chain
